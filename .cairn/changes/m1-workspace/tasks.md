@@ -1,13 +1,14 @@
 # M1 implementation tasks
 
-All tasks are open. Package validation does not complete an implementation task.
+Tasks 1.1 and 1.2 are complete. Toolchain selection is blocked by the [Octet invocation mismatch](implementation.md#blocker-and-next-check).
+Package validation does not complete the remaining implementation tasks.
 Each phase starts after the previous phase passes its required checks.
 All commands use the dedicated implementation worktree as the explicit root.
 
 ## Phase 1: Baseline and compatible inputs
 
-- [ ] [serial] 1.1 Run the document baseline and all three Cairn gates. Record the exact commands, outcomes, and independent M1 acceptance scope. r[VT-M1-07]
-- [ ] [serial] 1.2 Review published Octet and upstream Charon/Aeneas/Lean contracts. Record exact candidate revisions, consumed interfaces, ownership boundaries, and compatibility constraints. r[VT-M1-01]
+- [x] [serial] 1.1 Run the document baseline and all three Cairn gates. Record the exact commands, outcomes, and independent M1 acceptance scope. r[VT-M1-07] Evidence: [baseline](implementation.md#baseline).
+- [x] [serial] 1.2 Review published Octet and upstream Charon/Aeneas/Lean contracts. Record exact candidate revisions, consumed interfaces, ownership boundaries, and compatibility constraints. r[VT-M1-01] Evidence: [dependency review](implementation.md#published-dependency-review).
 - [ ] [serial] 1.3 Select immutable tools and targets through an actual extraction probe. Let Nix generate the lock and reject missing pins or mismatched Charon/backend inputs. r[VT-M1-01]
 - [ ] [serial] 1.4 Name the exact extraction, inventory, architecture, and Miri commands in the implementation runbook. Retain failed probes without claiming compatibility. r[VT-M1-01] r[VT-M1-06] r[VT-M1-07]
 
