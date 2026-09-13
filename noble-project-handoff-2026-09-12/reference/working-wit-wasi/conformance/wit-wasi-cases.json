@@ -1,0 +1,146 @@
+{
+  "document": "SPEC-W001",
+  "revision": "0.1.0-draft.1",
+  "status": "expected-not-run",
+  "cases": [
+    {
+      "id": "WI-01",
+      "name": "import-typed-word",
+      "requirements": [
+        "WI-WIT-01",
+        "WI-WIT-03"
+      ],
+      "expected": "A versioned WIT function import generates a statically typed Noble word with ordered parameters/results and a conservative WitOpId effect.",
+      "status": "not-run"
+    },
+    {
+      "id": "WI-02",
+      "name": "reject-export-mismatch",
+      "requirements": [
+        "WI-WIT-05"
+      ],
+      "expected": "A Noble export whose closed stack interface cannot match the selected WIT function is rejected before component emission.",
+      "status": "not-run"
+    },
+    {
+      "id": "WI-03",
+      "name": "lossless-type-mapping",
+      "requirements": [
+        "WI-WIT-02"
+      ],
+      "expected": "Boundary conversion preserves exact WIT type distinctions; a lossy implicit narrowing is rejected.",
+      "status": "not-run"
+    },
+    {
+      "id": "WI-04",
+      "name": "owned-resource-move-only",
+      "requirements": [
+        "WI-RES-01"
+      ],
+      "expected": "An owned WIT resource cannot be duped, quoted, or generically serialized and transfers ownership exactly once.",
+      "status": "not-run"
+    },
+    {
+      "id": "WI-05",
+      "name": "borrow-resource-no-escape",
+      "requirements": [
+        "WI-RES-02"
+      ],
+      "expected": "A borrowed WIT resource cannot escape its declared adapter/borrow scope.",
+      "status": "not-run"
+    },
+    {
+      "id": "WI-06",
+      "name": "forged-handle-rejected",
+      "requirements": [
+        "WI-RES-03"
+      ],
+      "expected": "A forged, stale, wrong-type, or wrong-context resource handle is rejected at the boundary.",
+      "status": "not-run"
+    },
+    {
+      "id": "WI-07",
+      "name": "wit-import-effect",
+      "requirements": [
+        "WI-WIT-04"
+      ],
+      "expected": "An imported WIT function is not inferred pure solely from its WIT signature.",
+      "status": "not-run"
+    },
+    {
+      "id": "WI-08",
+      "name": "effect-not-authority",
+      "requirements": [
+        "WI-AUTH-01"
+      ],
+      "expected": "A program with the correct WIT effect/import contract is denied when the linked host/profile does not grant the required authority.",
+      "status": "not-run"
+    },
+    {
+      "id": "WI-09",
+      "name": "world-build-identity",
+      "requirements": [
+        "WI-WORLD-01",
+        "WI-ID-01"
+      ],
+      "expected": "Changing a versioned WIT world/interface input changes the build context and is not treated as an invisible linker substitution.",
+      "status": "not-run"
+    },
+    {
+      "id": "WI-10",
+      "name": "program-not-raw-wit",
+      "requirements": [
+        "WI-PROG-01"
+      ],
+      "expected": "Program<S,T,e> cannot be exported as a raw address or unspecified generic WIT function handle.",
+      "status": "not-run"
+    },
+    {
+      "id": "WI-11",
+      "name": "wasi03-async-order",
+      "requirements": [
+        "WI-ASYNC-01",
+        "WI-ASYNC-02"
+      ],
+      "expected": "A native async WIT call may suspend but later sequential Noble words do not begin early or reorder.",
+      "status": "not-run"
+    },
+    {
+      "id": "WI-12",
+      "name": "stream-future-cleanup",
+      "requirements": [
+        "WI-ASYNC-03",
+        "WI-ASYNC-05"
+      ],
+      "expected": "stream<T>/future<T> boundary values preserve typed completion/cancellation/resource cleanup rules.",
+      "status": "not-run"
+    },
+    {
+      "id": "WI-13",
+      "name": "wasi02-explicit-compat",
+      "requirements": [
+        "WI-WASI-03"
+      ],
+      "expected": "A WASI 0.2 component is accepted only through the explicit compatibility profile, not silently as 0.3.",
+      "status": "not-run"
+    },
+    {
+      "id": "WI-14",
+      "name": "preserves-not-capability",
+      "requirements": [
+        "WI-SYN-02"
+      ],
+      "expected": "A Preserves payload cannot become a live WIT/Noble resource or capability without an explicit validated adapter.",
+      "status": "not-run"
+    },
+    {
+      "id": "WI-15",
+      "name": "cross-language-component",
+      "requirements": [
+        "WI-WASI-04"
+      ],
+      "expected": "A Noble component interoperates through its WIT world with an independently generated Component Model peer.",
+      "status": "not-run"
+    }
+  ]
+}

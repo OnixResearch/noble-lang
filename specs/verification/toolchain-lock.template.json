@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "revision": "0.1.0-draft.5",
+  "status": "unselected-template-not-a-lock",
+  "production": {"rust": null, "target": null, "panic_strategy": null, "features": [], "wasmtime": null, "wasm_tools": null, "wit_bindgen": null, "wasi_packages": null, "component_features": null, "nixpkgs": null, "octet": null},
+  "proof": {"primary_route": "charon-aeneas-lean", "lean": null, "proof_libraries": null, "charon": null, "aeneas": null, "aeneas_lean_backend": null, "extraction_rustc": null},
+  "extraction": {"source_inventory": null, "features_and_targets": [], "external_models": [], "generation_configuration": null, "coverage_run": null, "refinement_run": null},
+  "program_contracts": {"contract_ir": null, "claim_exporter": null, "rule_library": null, "companion_encoding": null, "applicability_guards": null, "acceptance_policy": null, "compatibility_run": null},
+  "optional_boundary_tools": {"verus": null},
+  "approved_exception_records": [],
+  "backend_experiments": {"selected_representation": null, "wasm_features": null, "engine_revision": null, "workload_revision": null, "optimization_mode": null, "limits": null},
+  "native_assurance": {"miri_rustc": null, "targets": [], "memory_models": [], "configuration": null, "compatibility_run": null},
+  "optional_byte_view_dependency": null,
+  "adapter_revisions": [],
+  "required_pin_fields": ["immutable_revision", "artifact_digest", "configuration", "compatibility_run"],
+  "instruction": "Select compatible Charon/Aeneas/Lean pins and run extraction during M1/M2. Select remaining real pins during M3/M5. Let Nix create flake.lock. Verus requires a reviewed non-kernel exception and its own full pin set. Null fields cannot support a release or proof claim."
+}

@@ -1,0 +1,61 @@
+{
+  "document": "SPEC-S001",
+  "revision": "0.1.0-draft.1",
+  "status": "open",
+  "obligations": [
+    {
+      "id": "SO-01",
+      "status": "open",
+      "claim": "Accepted core executions have no forbidden stuck state and no undefined-behavior semantic outcome.",
+      "route": "Lean 4"
+    },
+    {
+      "id": "SO-02",
+      "status": "open",
+      "claim": "Representation/eligibility rules prevent resource or authority forgery through ordinary data.",
+      "route": "Lean 4"
+    },
+    {
+      "id": "SO-03",
+      "status": "open",
+      "claim": "Effect soundness covers every finite execution prefix, including denied and failed host requests.",
+      "route": "Lean 4"
+    },
+    {
+      "id": "SO-04",
+      "status": "open",
+      "claim": "Whole-configuration resource ownership is preserved modulo declared host transitions.",
+      "route": "Lean 4"
+    },
+    {
+      "id": "SO-05",
+      "status": "open",
+      "claim": "Syntax/untrusted metadata cannot become callable without validation/preparation.",
+      "route": "Lean 4 + checker refinement"
+    },
+    {
+      "id": "SO-06",
+      "status": "open",
+      "claim": "Public host/resource wrappers establish internal verified preconditions from hostile representations.",
+      "route": "Verus / checked-wrapper evidence"
+    },
+    {
+      "id": "SO-07",
+      "status": "open",
+      "claim": "Selected Noble-to-Wasm lowering preserves the claimed safety-relevant behavior/failure relation.",
+      "route": "backend proof or translation validation"
+    },
+    {
+      "id": "SO-08",
+      "status": "open",
+      "claim": "Standard concurrency semantics preserve isolation, scope-owned state, protocol typing, and capability checks.",
+      "route": "Lean 4 after profile freeze"
+    },
+    {
+      "id": "SO-09",
+      "status": "open",
+      "claim": "Concrete concurrency runtime machinery refines SO-08 under documented synchronization assumptions.",
+      "route": "Verus / mixed implementation evidence"
+    }
+  ]
+}

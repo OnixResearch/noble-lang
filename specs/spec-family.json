@@ -1,0 +1,99 @@
+{
+  "revision": "0.1.0-draft.5",
+  "normative_documents": [
+    {
+      "id": "SPEC-0001",
+      "path": "../.cairn/specs/language/spec.md",
+      "source": "../noble-project-handoff-2026-09-12/reference/working-wit-wasi/SPEC-0001-wit-wasi-preview.md",
+      "compatibility_path": "SPEC-0001.md",
+      "cairn_id": "language"
+    },
+    {
+      "id": "SPEC-S001",
+      "path": "../.cairn/specs/safety/spec.md",
+      "source": "../noble-project-handoff-2026-09-12/reference/working-safety/SAFETY.md",
+      "compatibility_path": "SAFETY.md",
+      "cairn_id": "safety"
+    },
+    {
+      "id": "SPEC-W001",
+      "path": "../.cairn/specs/wit-wasi/spec.md",
+      "source": "../noble-project-handoff-2026-09-12/reference/working-wit-wasi/WIT-WASI.md",
+      "compatibility_path": "WIT-WASI.md",
+      "cairn_id": "wit-wasi"
+    },
+    {
+      "id": "SPEC-V001",
+      "path": "../.cairn/specs/verification/spec.md",
+      "source": "../noble-project-handoff-2026-09-12/reference/working-safety/VERIFICATION-safety-preview.md",
+      "compatibility_path": "VERIFICATION.md",
+      "cairn_id": "verification"
+    },
+    {
+      "id": "IMPL-V001",
+      "path": "../.cairn/specs/verification-toolchain/spec.md",
+      "source": "../noble-project-handoff-2026-09-12/reference/baseline/VERIFICATION-TOOLCHAIN.md",
+      "compatibility_path": "VERIFICATION-TOOLCHAIN.md",
+      "cairn_id": "verification-toolchain"
+    },
+    {
+      "id": "SPEC-V002",
+      "path": "../.cairn/specs/program-contracts/spec.md",
+      "source": "../noble-project-handoff-2026-09-12/reference/baseline/PROGRAM-CONTRACTS.md",
+      "compatibility_path": "PROGRAM-CONTRACTS.md",
+      "cairn_id": "program-contracts"
+    },
+    {
+      "id": "SPEC-B001",
+      "path": "../.cairn/specs/core-bootstrap/spec.md",
+      "compatibility_path": "CORE-BOOTSTRAP.md",
+      "cairn_id": "core-bootstrap"
+    },
+    {
+      "id": "SPEC-BE001",
+      "path": "../.cairn/specs/backend-experiments/spec.md",
+      "compatibility_path": "BACKEND-EXPERIMENTS.md",
+      "cairn_id": "backend-experiments"
+    },
+    {
+      "id": "SPEC-R001",
+      "path": "../.cairn/specs/resource-adapters/spec.md",
+      "compatibility_path": "RESOURCE-ADAPTERS.md",
+      "cairn_id": "resource-adapters"
+    },
+    {
+      "id": "SPEC-EV001",
+      "path": "../.cairn/specs/evidence/spec.md",
+      "compatibility_path": "EVIDENCE.md",
+      "cairn_id": "evidence"
+    },
+    {
+      "id": "SPEC-DX001",
+      "path": "../.cairn/specs/developer-experience/spec.md",
+      "compatibility_path": "DEVELOPER-EXPERIENCE.md",
+      "cairn_id": "developer-experience"
+    },
+    {
+      "id": "SPEC-CALC001",
+      "path": "../.cairn/specs/calculator/spec.md",
+      "compatibility_path": "CALCULATOR.md",
+      "cairn_id": "calculator"
+    }
+  ],
+  "scenario_files": [
+    "conformance/cases.json",
+    "conformance/safety-cases.json",
+    "conformance/wit-wasi-cases.json",
+    "conformance/identity-cases.json",
+    "conformance/resource-cases.json",
+    "conformance/adaptation-cases.json",
+    "conformance/verification-cases.json",
+    "conformance/contract-cases.json",
+    "conformance/developer-experience-cases.json",
+    "conformance/language-workflow-cases.json",
+    "conformance/calculator-cases.json",
+    "conformance/worker-cases.json",
+    "conformance/octet-adoption-cases.json"
+  ],
+  "lifecycle": ".cairn"
+}

@@ -1,0 +1,168 @@
+{
+  "schema_version": 1,
+  "revision": "0.1.0-draft.5",
+  "origin": "typed-worker-contract-new-unexecuted-designs",
+  "cases": [
+    {
+      "id": "WORKER-01", "profile": "Worker-Design", "kind": "runtime",
+      "requirements": ["K-PROG-09", "K-PROG-10", "DX-MODULE-03", "P-PREPARE-01", "RA-ASYNC-02", "RA-ASYNC-03", "RA-ASYNC-04", "H-OUTCOME-01", "H-OUTCOME-02"],
+      "input": {
+        "harness": "generated-worker-state-and-cancellation", "candidate_supplied_after_coordinator_compilation": true,
+        "expected_interface": "State Event -- State List<Action> ! {}", "schemas": "exact-resource-free-worker-v1",
+        "initial_state": {"count": {"type": "I64", "value": "0"}, "pending": null},
+        "events": [{"kind": "Submit", "attempt": "attempt-1", "text": "ping"}, {"kind": "Cancelled", "attempt": "attempt-1"}],
+        "shell_authority": "independently-authorized-send-capability", "capability_captured_by_worker": false,
+        "task_order": ["admission-commit", "cancellation-commit", "late-native-completion"],
+        "worker_service_access": "none", "preparation_service": "explicit-before-invocation",
+        "transition_controls": [
+          {"case": "submit-while-pending", "count": {"type": "I64", "value": "1"}, "pending": "attempt-1", "event": {"kind": "Submit", "attempt": "attempt-2", "text": "ignored"}, "expected_count": {"type": "I64", "value": "1"}, "expected_pending": "attempt-1", "expected_actions": []},
+          {"case": "cancel-wrong-attempt", "count": {"type": "I64", "value": "1"}, "pending": "attempt-1", "event": {"kind": "Cancelled", "attempt": "attempt-2"}, "expected_count": {"type": "I64", "value": "1"}, "expected_pending": "attempt-1", "expected_actions": []},
+          {"case": "cancel-without-pending-attempt", "count": {"type": "I64", "value": "1"}, "pending": null, "event": {"kind": "Cancelled", "attempt": "attempt-1"}, "expected_count": {"type": "I64", "value": "1"}, "expected_pending": null, "expected_actions": []},
+          {"case": "wrapping-submission-count", "count": {"type": "I64", "value": "9223372036854775807"}, "pending": null, "event": {"kind": "Submit", "attempt": "attempt-1", "text": "ping"}, "expected_count": {"type": "I64", "value": "-9223372036854775808"}, "expected_pending": "attempt-1", "expected_actions": [{"kind": "Send", "attempt": "attempt-1", "text": "ping"}]}
+        ]
+      },
+      "expected": {
+        "stage": "prepare-worker-shell-and-retirement", "outcome": "cancelled-without-resurrection",
+        "states": [{"count": {"type": "I64", "value": "1"}, "pending": "attempt-1"}, {"count": {"type": "I64", "value": "1"}, "pending": null}],
+        "actions": [[{"kind": "Send", "attempt": "attempt-1", "text": "ping"}], []],
+        "worker_host_requests": 0, "shell_operation_attempts": 1, "preparation_trace_separate": true,
+        "owner_after_admission": "task", "state_at_cancel_ack": "Retiring", "pins_at_cancel_ack": 1,
+        "state_after_late_completion": "Retired", "pins_after_late_completion": 0,
+        "successful_result_deliveries": 0, "late_worker_events": 0, "owner_resurrections": 0,
+        "external_send_outcome_at_cancel": "unknown", "external_rollback_claimed": false
+      },
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "WORKER-02", "profile": "Worker-Design", "kind": "static",
+      "requirements": ["K-PROG-09", "K-PROG-10", "K-EFFECT-05", "K-TYPE-02", "DX-MODULE-03"],
+      "input": {"harness": "worker-interface-rejection", "expected_interface_owner": "consumer", "variants": [
+        {"case": "reversed-state-event-stack", "outcome": "interface-reject"},
+        {"case": "extra-output-value", "outcome": "interface-reject"},
+        {"case": "same-layout-different-schema-identity", "outcome": "schema-reject"},
+        {"case": "effect-outside-dispatch-ceiling", "outcome": "effect-reject"},
+        {"case": "resource-hidden-in-worker-capture", "outcome": "eligibility-reject"},
+        {"case": "heterogeneous-list-without-adapter", "outcome": "interface-reject"}
+      ]},
+      "expected": {"stage": "static", "outcome": "reject-each-variant", "guest_requests": 0, "protected_operations": 0, "dynamic_Any_fallback": false, "implicit_schema_conversion": false},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "WORKER-03", "profile": "Worker-Design", "kind": "runtime",
+      "requirements": ["K-PROG-09", "K-PROG-10", "K-EFFECT-05", "K-PROG-06"],
+      "input": {"harness": "runtime-selected-effect-adaptation", "operands_supplied_after_compilation": true, "compiler_service": "disabled", "program_interfaces": ["I64 -- I64 ! {}", "I64 -- I64 ! {test.emit}"], "destination_interface": "I64 -- I64 ! {test.emit}", "adaptation": "prechecked-effect-inclusion-rule", "operations": ["adapt", "store-in-list", "select", "duplicate", "compose"]},
+      "expected": {"stage": "runtime-builders", "outcome": "checked-common-interface", "source_compiler_calls": 0, "guest_requests": 0, "protected_operations": 0, "recipe_nodes_unchanged_by_widening": true, "original_interface_unchanged": true, "destination_witness_retained": true, "duplicate_interfaces": "same-instantiation", "authority_created": false, "identity_comparison_includes_interface_witness": true},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "WORKER-04", "profile": "Worker-Design", "kind": "identity",
+      "requirements": ["P-ROUND-01", "P-ROUND-02", "P-PACK-01", "P-PACK-02", "P-ID-04"],
+      "input": {"harness": "program-round-trip-and-import", "expected_interface": "unchanged-instantiated-interface", "context": "same-exact-semantic-dependencies", "captured_data": "runtime-supplied-text", "self_reference": "retained-owner-identity", "preparation_authority": "explicit", "export_authority": "explicit-for-destination-and-capture", "limits": "sufficient", "variants": ["reflect-prepare", "export-import", "rebound-display-name-original-dependency-retained", "different-optimizer-same-semantics"]},
+      "expected": {"stage": "identity-after-local-admission", "outcome": "preserve-each-variant", "normalized_recipe": "same", "interface_witnesses": "same", "captures": "same", "dependency_identities": "same", "recursive_owner": "same", "abstract_program_value_identity": "same", "artifact_bytes_required_identical": false, "budget_outcomes_required_identical": false, "unchecked_acceptance_transferred": false, "proof_applicability_transferred": false, "live_authority_transferred": false, "stable_wire_encoding_claimed": false, "candidate_body_requests": 0},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "WORKER-05", "profile": "Worker-Design", "kind": "admission",
+      "requirements": ["P-ROUND-02", "P-PACK-01", "P-PACK-02", "K-CHECK-06"],
+      "input": {"harness": "hostile-worker-package", "variants": [
+        {"case": "missing-exact-transitive-dependency", "outcome": "reject"},
+        {"case": "same-name-wrong-host-contract-version", "outcome": "reject"},
+        {"case": "capture-schema-witness-mismatch", "outcome": "reject"},
+        {"case": "foreign-scoped-self-owner", "outcome": "reject"},
+        {"case": "invalid-body-with-accepted-flag-and-digest", "outcome": "reject"},
+        {"case": "unrelated-executable-artifact", "outcome": "reject"},
+        {"case": "unsupported-format-revision", "outcome": "unsupported"}
+      ], "dependency_fetch_authority": "absent"},
+      "expected": {"stage": "import-admission", "outcome": "no-variant-admitted", "guest_requests": 0, "protected_operations": 0, "implicit_fetches": 0, "version_substitutions": 0, "partial_programs_published": 0, "signature_or_digest_bypasses_checks": false},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "WORKER-06", "profile": "Worker-Design", "kind": "admission",
+      "requirements": ["K-CHECK-07", "B-CHECK-07", "B-RESULT-01"],
+      "input": {"harness": "admission-budget-boundaries", "scope": "supported-finite-candidate-subset", "limit_categories": ["input-bytes", "decoded-nodes", "nesting", "dependency-traversal", "type-stack-size", "checking-work", "memory", "diagnostic-output"], "other_limits": "sufficient", "cases_per_category": ["at-limit", "one-unit-over-limit"], "diagnostic_control": "invalid-candidate-at-limit-and-truncated-one-unit-over", "valid_candidate_categories": "all-except-diagnostic-output", "nested_stage_control": "shared-remaining-request-budget"},
+      "expected": {"stage": "bounded-admission", "outcome": "each-boundary-matches", "at_limit_valid_candidate": "accepted", "over_limit_valid_candidate": "exhausted", "diagnostic_limit_on_invalid_candidate": "invalid-with-truncated-diagnostic", "guest_requests": 0, "protected_operations": 0, "over_limit_partial_programs": 0, "nested_budget_reset": false, "allocation_before_limit_check": false, "exhaustion_proves_invalidity": false},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "WORKER-07", "profile": "Worker-Design", "kind": "admission",
+      "requirements": ["K-CHECK-06", "K-CHECK-07", "B-CHECK-07", "B-RESULT-01"],
+      "input": {"harness": "candidate-witness-boundary", "expected_interface_owner": "consumer-not-producer", "variants": [
+        {"case": "cyclic-witness-premises", "outcome": "invalid"},
+        {"case": "missing-premise", "outcome": "invalid"},
+        {"case": "witness-for-another-node", "outcome": "invalid"},
+        {"case": "infinite-type-equation", "outcome": "invalid"},
+        {"case": "candidate-replaces-expected-interface", "outcome": "invalid"},
+        {"case": "candidate-selects-unadmitted-environment", "outcome": "invalid"},
+        {"case": "unsupported-witness", "outcome": "unsupported"},
+        {"case": "unsupported-candidate-format", "outcome": "unsupported"},
+        {"case": "injected-checker-internal-failure", "outcome": "internal-failure"}
+      ]},
+      "expected": {"stage": "acceptance", "outcome": "no-variant-admitted", "guest_requests": 0, "protected_operations": 0, "accepted_programs": 0, "prior_session_unchanged": true, "fallback_checker_used": false},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "WORKER-08", "profile": "Worker-Design", "kind": "adapter",
+      "requirements": ["RA-ASYNC-02", "RA-ASYNC-03", "RA-ASYNC-04", "RA-ASYNC-05", "H-OUTCOME-01"],
+      "input": {"harness": "async-task-owner-races", "variants": [
+        {"case": "cancel-before-completion", "order": ["admit", "cancel", "complete", "deliver"], "terminal_state": "Retired", "result_deliveries": 0, "result_owner": "none", "pins_at_cancel_ack": 1},
+        {"case": "complete-cancel-before-delivery", "order": ["admit", "complete-with-resource-result", "cancel", "deliver"], "terminal_state": "Retired", "result_deliveries": 0, "result_owner": "none", "undelivered_result_retired": true},
+        {"case": "delivery-before-cancel", "order": ["admit", "complete", "deliver", "cancel"], "terminal_state": "Delivered", "result_deliveries": 1, "result_owner": "receiver", "late_cancel_revokes_result": false},
+        {"case": "domain-error-returns-owner", "order": ["admit", "complete-with-declared-error-owner", "deliver"], "terminal_state": "Delivered", "result_deliveries": 1, "result_owner": "receiver-error-branch", "normal_typed_return": true},
+        {"case": "task-quota-preflight-failure", "order": ["deny-admission"], "terminal_state": "NotAdmitted", "result_deliveries": 0, "result_owner": "caller-input", "protected_operations": 0},
+        {"case": "buffer-quota-preflight-failure", "order": ["deny-admission"], "terminal_state": "NotAdmitted", "result_deliveries": 0, "result_owner": "caller-input", "protected_operations": 0},
+        {"case": "stale-generation-completion", "order": ["admit-new-generation", "old-generation-complete"], "terminal_state": "Pending", "result_deliveries": 0, "result_owner": "task", "current_generation_changed": false},
+        {"case": "wrong-context-callback", "order": ["admit", "foreign-context-complete"], "terminal_state": "Pending", "result_deliveries": 0, "result_owner": "task", "current_generation_changed": false},
+        {"case": "duplicate-completion-after-retirement", "order": ["admit", "cancel", "complete", "duplicate-complete"], "terminal_state": "Retired", "result_deliveries": 0, "result_owner": "none", "native_pin_releases": 1},
+        {"case": "oversized-buffered-result", "order": ["admit", "result-exceeds-reservation", "finish-retirement"], "terminal_state": "Retired", "result_deliveries": 0, "result_owner": "none", "primary_outcome": "budget-exhaustion"},
+        {"case": "trap-with-native-pin", "order": ["admit", "trap", "late-native-completion"], "terminal_state": "Retired", "result_deliveries": 0, "result_owner": "none", "primary_outcome": "trap"},
+        {"case": "delivery-before-ready", "order": ["admit", "deliver"], "terminal_state": "Pending", "result_deliveries": 0, "result_owner": "task"},
+        {"case": "repeated-cancellation-during-retirement", "order": ["admit", "cancel", "cancel"], "terminal_state": "Retiring", "result_deliveries": 0, "result_owner": "host-retirement", "cleanup_restarted": false}
+      ]},
+      "expected": {"stage": "local-task-transitions", "outcome": "each-order-matches", "owner_resurrections": 0, "double_releases": 0, "unaccounted_pins": 0, "cancellation_ack_proves_native_completion": false, "automatic_retry": false, "distributed_exactly_once_claimed": false},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "WORKER-09", "profile": "Worker-Design", "kind": "runtime",
+      "requirements": ["H-LIMIT-02", "H-LIMIT-03", "H-OUTCOME-01", "RA-ASYNC-05"],
+      "input": {"harness": "bounded-worker-execution", "accounting_revision": "symbolic-test-profile-v1", "max_guest_work_between_checks": 8, "variants": [
+        {"case": "finite-pure-step", "outcome": "normal-return", "typed_output": true},
+        {"case": "domain-Result-error", "outcome": "normal-return", "typed_output": true},
+        {"case": "pure-loop-work-limit", "outcome": "budget-exhaustion", "typed_output": false},
+        {"case": "runtime-builder-allocation-limit", "outcome": "budget-exhaustion", "typed_output": false},
+        {"case": "nested-invocation-budget", "outcome": "budget-exhaustion", "typed_output": false},
+        {"case": "host-deadline-native-work-outstanding", "outcome": "host-deadline", "typed_output": false, "native_owner": "host-retirement"},
+        {"case": "permitted-suspension", "outcome": "suspended", "typed_output": false, "pending_owner": "task"},
+        {"case": "guest-trap", "outcome": "trap", "typed_output": false},
+        {"case": "cancelled-invocation", "outcome": "cancelled", "typed_output": false},
+        {"case": "runtime-internal-failure", "outcome": "internal-failure", "typed_output": false}
+      ]},
+      "expected": {"stage": "bounded-execution", "outcome": "each-outcome-distinct", "observed_max_guest_work_between_checks": 8, "pure_code_exempt_from_limits": false, "nested_budget_reset": false, "failed_output_exposed_as_T": false, "host_deadline_is_deterministic_fuel": false, "exhaustion_proves_divergence": false, "budget_silently_increased": false, "cross_backend_budget_equality_required": false},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "WORKER-10", "profile": "Worker-Design", "kind": "runtime",
+      "requirements": ["H-OUTCOME-01", "H-OUTCOME-02", "H-LIMIT-02", "S-EFFECT-03"],
+      "input": {"harness": "bounded-operation-observation", "declared_effects": ["test.send"], "invocation": "invocation-1", "operations": [
+        {"attempt": "attempt-1", "observations": ["requested", "admitted", "completed"]},
+        {"attempt": "attempt-2", "observations": ["requested", "denied"]},
+        {"attempt": "attempt-3", "observations": ["requested", "admitted", "externally-unknown"]}
+      ], "terminal_event": "cancellation", "variants": ["sufficient-observation-budget", "observation-output-exhausted", "diagnostic-output-exhausted"]},
+      "expected": {"stage": "host-outcome-record", "outcome": "cancelled-with-prior-effects-retained", "required_fields": ["invocation", "program-build-context", "execution-profile", "primary-outcome", "ownership-disposition", "operation-attempt-correlation", "omitted-observation-scope", "unknown-operation-outcomes"], "primary_outcome": "cancelled", "guest_requests": 3, "protected_operation_admissions": 2, "completed_operations": 1, "denied_attempt_counted_as_request": true, "attempt_3_outcome": "unknown", "omission_marked_when_exhausted": true, "prior_effects_rolled_back": false, "effect_plan_counts_as_completion": false, "missing_observations_imply_no_effects": false, "automatic_retry": false},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "WORKER-11", "profile": "Worker-Design", "kind": "review",
+      "requirements": ["K-SCOPE-01", "K-SCOPE-04", "EV-STATE-03", "EV-GATE-01"],
+      "input": {"harness": "worker-delivery-gates", "milestones": ["MW1", "MW2"], "open_gates": ["worker-interface-checker", "declared-schemas-and-modules", "preparation-service", "package-encoding", "bounded-execution-profile", "native-async-interfaces"]},
+      "expected": {"stage": "scope-review", "outcome": "design-only-until-executed-evidence", "new_kernel_syntax": false, "bootstrap_expanded": false, "ordinary_core_blocked": false, "calculator_replaced": false, "swarm_runtime_claimed": false, "durable_replay_claimed": false, "syndicate_replaced": false},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "WORKER-12", "profile": "Worker-Design", "kind": "runtime",
+      "requirements": ["P-PACK-01", "K-SCOPE-05", "H-HOST-02", "S-EFFECT-03"],
+      "input": {"harness": "captured-data-export-authority", "capture": "synthetic-private-text", "declared_effects": ["test.code-export"], "destination_authority": "denied", "program_valid": true, "digest_valid": true},
+      "expected": {"stage": "export-authorization", "outcome": "denied", "guest_requests": 1, "protected_operations": 0, "capture_published": false, "capturability_grants_export_authority": false, "candidate_body_requests": 0, "denial_recorded": true},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    }
+  ]
+}

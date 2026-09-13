@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "revision": "0.1.0-draft.5",
+  "origin": "developer-experience-new-unexecuted-designs",
+  "cases": [
+    {
+      "id": "DX-01", "profile": "Core-Bootstrap", "kind": "static",
+      "requirements": ["DX-DIAG-01", "B-DIAG-01"],
+      "input": {"harness": "stack-diagnostics", "variants": [
+        {"source": "1 true +", "failure": "word-input-type"},
+        {"source": "true [ 1 ] [ false ] if", "failure": "branch-output-type"},
+        {"source": "dup", "input_stack": ["Resource<test.counter>"], "failure": "resource-duplication", "value_origin": "unavailable"}
+      ]},
+      "expected": {"stage": "static", "outcome": "reject-each-variant", "diagnostic_fields": ["word_or_join", "required_stack", "actual_stack", "constraint", "source_span", "value_origin_or_unavailable"], "guest_requests": 0, "protected_operations": 0},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "DX-02", "profile": "Editor-Draft", "kind": "admission",
+      "requirements": ["DX-HOLE-01"],
+      "input": {"harness": "incomplete-syntax-not-source-grammar", "nodes": ["integer:1", "editor-hole", "word:+"], "variants": ["editor-analysis", "direct-admission", "nested-quotation-admission", "serialized-candidate-admission"]},
+      "expected": {"stage": "analysis-and-admission", "outcome": "analysis-reports-constraints-all-admissions-reject", "hole_required_output_suffix": ["I64"], "unresolved_constraints_retained": true, "accepted_program_created": false, "guest_requests": 0, "protected_operations": 0},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "DX-03", "profile": "Declared-Types-Draft", "kind": "static",
+      "requirements": ["DX-TYPE-01", "DX-TYPE-02"],
+      "input": {"harness": "declared-types-structured-not-source-grammar", "variants": [
+        {"case": "UserId-to-OrderId-same-I64-layout", "outcome": "reject"},
+        {"case": "UserId-to-UserId", "outcome": "accept"},
+        {"case": "private-constructor-from-outside-module", "outcome": "reject"},
+        {"case": "variant-elimination-missing-constructor", "outcome": "reject"},
+        {"case": "variant-elimination-all-constructors-compatible-stacks", "outcome": "accept"},
+        {"case": "opaque-resource-wrapper-dup-drop-or-capture", "outcome": "reject-each-operation"}
+      ]},
+      "expected": {"stage": "static", "outcome": "each-variant-matches", "guest_requests": 0, "protected_operations": 0},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "DX-04", "profile": "Result-Library-Draft", "kind": "runtime",
+      "requirements": ["DX-RESULT-01", "DX-RESULT-02"],
+      "input": {"harness": "ordinary-result-combinators", "operations": ["map-success", "map-error", "chain", "recover"], "variants": ["success", "error"], "callbacks": "distinct-trace-markers-and-declared-effects", "ownership_negative": "unselected-branch-implicitly-drops-resource"},
+      "expected": {"stage": "check-and-run", "outcome": "selected-callback-only", "callback_selection": {"map-success": "success-only", "map-error": "error-only", "chain": "success-only", "recover": "error-only"}, "effects_conservatively_include_callback": true, "ownership_negative": "static-rejection", "new_expression_forms": 0},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "DX-05", "profile": "Identity-Tooling-Draft", "kind": "identity",
+      "requirements": ["DX-IDENTITY-01", "DX-CACHE-01"],
+      "input": {"harness": "semantic-diff-and-evidence-cache", "variants": [
+        {"change": "none-all-bindings-known-and-policy-revalidated", "reuse": "compatible-record-not-fresh-execution"},
+        {"change": "captured-value-or-resolved-dependency", "reuse": "reject-stale-subject"},
+        {"change": "build-only-backend-change", "reuse": "reject-execution-record-semantic-identity-unchanged"},
+        {"change": "proof-assumption-or-tool-revision", "reuse": "revalidate-before-reuse"},
+        {"change": "unknown-environment-input", "reuse": "reject-current-execution-evidence"},
+        {"change": "consumer-policy-denies", "reuse": "reject-admission"}
+      ]},
+      "expected": {"stage": "cache-admission", "outcome": "each-variant-matches", "hash_grants_authority": false, "cache_hit_proves_claim": false},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "DX-06", "profile": "Test-Host-Draft", "kind": "adapter",
+      "requirements": ["DX-HOST-01", "DX-HOST-02"],
+      "input": {"harness": "explicit-scripted-test-host", "operation": "test.clock", "script": [42], "variants": ["authorized-matching-interface", "denied", "missing-mapping", "incompatible-interface", "second-request-script-exhausted", "unexpected-operation"]},
+      "expected": {"stage": "adapter", "outcome": "authorized-returns-42-all-other-variants-fail-explicitly", "real_host_fallback_calls": 0, "declared_effect_preserved": true, "denied_request_recorded": true, "report_fields": ["substitutions", "adapter_versions", "scripted_inputs", "host_requests"], "real_host_evidence": false},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    }
+  ]
+}

@@ -1,0 +1,175 @@
+{
+  "schema_version": 1,
+  "revision": "0.1.0-draft.5",
+  "origin": "exact-calculator-new-unexecuted-designs",
+  "cases": [
+    {
+      "id": "CALC-01", "profile": "Calculator-Design", "kind": "runtime",
+      "requirements": ["CALC-NUM-01", "CALC-NUM-03", "CALC-NUM-04", "CALC-NUM-05", "CALC-PARSE-01"],
+      "input": {"harness": "calculator-exact-expression-matrix", "numeric_mode": "exact-rational", "vectors": [
+        {"expression": "1 / 3 + 1 / 6", "numerator": "1", "denominator": "2"},
+        {"expression": "0.1 + 0.2", "numerator": "3", "denominator": "10"},
+        {"expression": "0.00000000000000000001", "numerator": "1", "denominator": "100000000000000000000"},
+        {"expression": "9223372036854775807 + 1", "numerator": "9223372036854775808", "denominator": "1"},
+        {"expression": "9007199254740993 - 9007199254740992", "numerator": "1", "denominator": "1"},
+        {"expression": "2 + 3 * 4", "numerator": "14", "denominator": "1"},
+        {"expression": "(2 + 3) * 4", "numerator": "20", "denominator": "1"},
+        {"expression": "10 - 3", "numerator": "7", "denominator": "1"},
+        {"expression": "8 / 4 / 2", "numerator": "1", "denominator": "1"},
+        {"expression": "-2^2", "numerator": "-4", "denominator": "1"},
+        {"expression": "(-2)^2", "numerator": "4", "denominator": "1"},
+        {"expression": "2^3^2", "numerator": "512", "denominator": "1"},
+        {"expression": "2^-3", "numerator": "1", "denominator": "8"},
+        {"expression": "4^(2/2)", "numerator": "4", "denominator": "1"},
+        {"expression": "0^0", "numerator": "1", "denominator": "1"}
+      ]},
+      "expected": {"stage": "calculator-runtime", "outcome": "each-exact-vector-matches", "binary_float_parsing": false, "fixed_width_narrowing": false, "all_results_normalized": true},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "CALC-02", "profile": "Calculator-Design", "kind": "runtime",
+      "requirements": ["CALC-PARSE-01", "CALC-PARSE-02", "CALC-STATE-02"],
+      "input": {"harness": "calculator-diagnostic-matrix", "environment": "empty", "vectors": [
+        {"expression": "1 + )", "category": "SyntaxError", "span": [4, 5]},
+        {"expression": "1 2", "category": "TrailingInput", "span": [2, 3]},
+        {"expression": "missing + 1", "category": "UnknownName", "span": [0, 7]},
+        {"expression": "2(3)", "category": "TrailingInput", "span": [1, 2]},
+        {"expression": "0.1.2", "category": "SyntaxError", "span": [3, 4]}
+      ], "span_units": "utf8-bytes-half-open"},
+      "expected": {"stage": "calculator-validation", "outcome": "each-diagnostic-matches", "state_unchanged": true, "silent_correction": false, "calculator_core_host_requests": 0},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "CALC-03", "profile": "Calculator-Design", "kind": "runtime",
+      "requirements": ["CALC-NUM-04", "CALC-NUM-05", "CALC-STATE-02"],
+      "input": {"harness": "calculator-numeric-error-matrix", "vectors": [
+        {"expression": "1 / 0", "category": "DivisionByZero"},
+        {"expression": "0 / 0", "category": "DivisionByZero"},
+        {"expression": "0^-1", "category": "DivisionByZero"},
+        {"expression": "4^(1/2)", "category": "NonIntegerExponent"}
+      ]},
+      "expected": {"stage": "calculator-runtime", "outcome": "each-error-matches", "state_unchanged": true, "successful_numeric_result": false, "calculator_core_host_requests": 0},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "CALC-04", "profile": "Calculator-Design", "kind": "runtime",
+      "requirements": ["CALC-NUM-02"],
+      "input": {"harness": "rational-construction-and-decoding", "paths": ["constructor", "decoder"], "vectors": [
+        {"numerator": "2", "denominator": "4", "result": {"numerator": "1", "denominator": "2"}},
+        {"numerator": "-4", "denominator": "-8", "result": {"numerator": "1", "denominator": "2"}},
+        {"numerator": "1", "denominator": "-2", "result": {"numerator": "-1", "denominator": "2"}},
+        {"numerator": "0", "denominator": "-7", "result": {"numerator": "0", "denominator": "1"}},
+        {"numerator": "1", "denominator": "0", "error": "ZeroDenominator"}
+      ]},
+      "expected": {"stage": "numeric-library", "outcome": "each-path-and-vector-matches", "invalid_rat_exposed": false, "equality_uses_normalized_value": true},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "CALC-05", "profile": "Calculator-Design", "kind": "runtime",
+      "requirements": ["CALC-SCOPE-02", "CALC-NUM-06"],
+      "input": {"harness": "calculator-I64-boundary", "vectors": [
+        {"direction": "to-I64", "numerator": "9223372036854775807", "denominator": "1", "value": "9223372036854775807"},
+        {"direction": "to-I64", "numerator": "-9223372036854775808", "denominator": "1", "value": "-9223372036854775808"},
+        {"direction": "to-I64", "numerator": "9223372036854775808", "denominator": "1", "error": "OutOfRange"},
+        {"direction": "to-I64", "numerator": "-9223372036854775809", "denominator": "1", "error": "OutOfRange"},
+        {"direction": "to-I64", "numerator": "1", "denominator": "2", "error": "NonIntegral"},
+        {"direction": "from-I64", "value": "-9223372036854775808", "numerator": "-9223372036854775808", "denominator": "1"}
+      ], "core_source": "9223372036854775807 1 +"},
+      "expected": {"stage": "numeric-boundary", "outcome": "each-conversion-matches", "core_output": {"type": "I64", "value": "-9223372036854775808"}, "implicit_conversion": false, "core_semantics_changed": false},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "CALC-06", "profile": "Calculator-Design", "kind": "runtime",
+      "requirements": ["CALC-STATE-01", "CALC-STATE-02", "CALC-BOUND-01"],
+      "input": {"harness": "calculator-lexical-session", "operations": [
+        {"operation": "define-variable", "name": "x", "expression": "10"},
+        {"operation": "define-function", "name": "f", "parameters": ["y"], "body": "x + y"},
+        {"operation": "define-variable", "name": "x", "expression": "20"},
+        {"operation": "evaluate", "expression": "f(1)", "expected_fraction": "11/1"},
+        {"operation": "define-function", "name": "g", "parameters": ["x"], "body": "x + 1"},
+        {"operation": "evaluate", "expression": "g(2)", "expected_fraction": "3/1"},
+        {"operation": "define-variable", "name": "x", "expression": "1 / 0", "expected_error": "DivisionByZero"},
+        {"operation": "evaluate", "expression": "x", "expected_fraction": "20/1"},
+        {"operation": "evaluate", "expression": "f(1, 2)", "expected_error": "WrongArity"}
+      ]},
+      "expected": {"stage": "calculator-session", "outcome": "each-operation-matches", "failed_submission_state_unchanged": true, "earlier_function_rebound": false, "calculator_core_host_requests": 0},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "CALC-07", "profile": "Calculator-Design", "kind": "runtime",
+      "requirements": ["CALC-STATE-01", "CALC-STATE-02", "CALC-PARSE-02"],
+      "input": {"harness": "calculator-definition-admission", "variants": [
+        {"case": "unused-body-with-unknown-name", "outcome": "UnknownName"},
+        {"case": "duplicate-parameter-name", "outcome": "DefinitionError"},
+        {"case": "self-recursive-definition", "outcome": "DefinitionError"},
+        {"case": "cyclic-imported-definition-graph", "outcome": "DefinitionError"},
+        {"case": "resource-capability-capture", "outcome": "DefinitionError"},
+        {"case": "zero-argument-function-body-1-divided-by-0", "outcome": "definition-accepted-body-not-evaluated"},
+        {"case": "call-that-zero-argument-function", "outcome": "DivisionByZero"}
+      ]},
+      "expected": {"stage": "calculator-definition-validation", "outcome": "each-variant-matches", "rejected_definition_installed": false, "evaluations_during_definition_admission": 0, "calculator_core_host_requests": 0},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "CALC-08", "profile": "Calculator-Design", "kind": "runtime",
+      "requirements": ["CALC-NUM-01", "CALC-LIMIT-01", "CALC-STATE-02", "CALC-DISPLAY-01"],
+      "input": {"harness": "calculator-independent-budget-limits", "limit_categories": ["input-bytes", "numeric-digits", "intermediate-integer-bits", "syntax-depth", "call-depth", "evaluation-work", "output-size"], "control": "exceed-one-limit-with-other-budgets-sufficient", "state_control": "definition-result-exceeds-output-budget-before-commit", "accounting_contract": "implementation-entry-gate-open"},
+      "expected": {"stage": "calculator-budget", "outcome": "ResourceLimit-for-each-category", "state_unchanged": true, "approximation_fallback": false, "wrapped_result": false, "quota_counts_as_success": false, "host_timeout_is_resource_limit": false},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "CALC-09", "profile": "Calculator-Design", "kind": "runtime",
+      "requirements": ["CALC-DISPLAY-01", "CALC-APPROX-01"],
+      "input": {"harness": "calculator-exact-display", "vectors": [
+        {"fraction": "2/1", "mode": "default", "display": "2"},
+        {"fraction": "3/10", "mode": "default", "display": "3/10"},
+        {"fraction": "3/10", "mode": "finite-decimal", "display": "0.3"},
+        {"fraction": "1/3", "mode": "finite-decimal", "display": "1/3"}
+      ], "later_features": ["approximation", "symbolic-expressions", "trigonometry", "units", "real-arithmetic", "complex-arithmetic"]},
+      "expected": {"stage": "calculator-formatting", "outcome": "exact-display-or-explicit-unsupported-feature", "silent_approximation": false, "truncated_decimal_labeled_exact": false},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "CALC-10", "profile": "AI-Authoring-Design", "kind": "review",
+      "requirements": ["CALC-AI-04", "DX-DIAG-01", "DX-HOLE-01"],
+      "input": {"harness": "calculator-authoring-tool-boundary", "variants": [
+        {"case": "stale-base-revision", "outcome": "reject-before-publication"},
+        {"case": "text-edit-invalid-stack", "outcome": "acceptance-reject"},
+        {"case": "structured-edit-invalid-stack", "outcome": "acceptance-reject"},
+        {"case": "editor-hole", "outcome": "incomplete-not-executable"},
+        {"case": "unavailable-origin-span", "outcome": "provenance-unavailable"}
+      ]},
+      "expected": {"stage": "authoring-tool", "outcome": "each-variant-matches", "same_acceptance_boundary": true, "invalid_edit_published": false, "candidate_body_host_requests": 0},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "CALC-11", "profile": "AI-Authoring-Design", "kind": "review",
+      "requirements": ["CALC-AI-01", "CALC-AI-02", "CALC-AI-03"],
+      "input": {"harness": "calculator-benchmark-integrity", "task_families": ["exact-evaluator", "integer-powers", "lexical-functions", "parser-repair", "numeric-capacity"], "authoring_routes": ["stack-only", "local-names", "structured-edits"], "variants": [
+        {"case": "producer-removes-failing-test", "outcome": "reject-task-integrity"},
+        {"case": "producer-strengthens-precondition", "outcome": "reject-task-integrity"},
+        {"case": "producer-adds-authority", "outcome": "reject-task-integrity"},
+        {"case": "producer-reports-success-but-hidden-test-fails", "outcome": "incorrect-success-claim"},
+        {"case": "unsupported-authoring-route", "outcome": "unsupported-visible"},
+        {"case": "run-timeout", "outcome": "timeout-visible"},
+        {"case": "harness-error", "outcome": "harness-error-visible"}
+      ], "required_record_fields": ["model_version", "task_revision", "starting_revision", "prompts", "supplied_context", "tool_interfaces", "budgets", "attempts", "patches", "compiler_diagnostics", "compiler_backend_revision", "numeric_library_revision", "outcomes"], "metrics": ["first_attempt_acceptance", "final_acceptance", "repair_attempts", "total_tokens", "elapsed_time", "regressions", "incorrect_success_claims"]},
+      "expected": {"stage": "benchmark-harness", "outcome": "each-control-matches", "independent_acceptance_required": true, "producer_can_change_acceptance": false, "failed_runs_omitted": false, "universal_AI_suitability_claimed": false},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "CALC-12", "profile": "Calculator-Design", "kind": "review",
+      "requirements": ["CALC-EVIDENCE-01", "CALC-EVIDENCE-02"],
+      "input": {"harness": "calculator-independent-oracle-controls", "incorrect_implementations": ["integer-division", "binary-float-decimal-parser", "I64-wrapping", "reversed-subtraction", "left-associated-power", "non-normalized-rational", "failure-mutates-session"], "invalid_evidence": ["proof-for-wrapping-I64", "proof-for-handwritten-reference-only", "proof-with-unmet-zero-divisor-precondition", "unrelated-Wasm"]},
+      "expected": {"stage": "calculator-evidence", "outcome": "reject-each-incorrect-result-or-unsupported-claim", "shared_implementation_is_sole_oracle": false, "actual_Noble_backend_required": true, "tests_establish_universal_proof": false},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "CALC-13", "profile": "Calculator-Design", "kind": "review",
+      "requirements": ["CALC-SCOPE-01", "CALC-SCOPE-02", "CALC-BOUND-01", "CALC-GATE-01"],
+      "input": {"harness": "calculator-implementation-entry-gates", "required_gates": ["M4", "exact-numeric-library", "declarations-and-modules", "iteration-or-recursion", "text-processing", "error-schemas", "budget-accounting", "definition-command-grammar"], "variants": ["host-only-calculator", "I64-only-demo", "ambient-file-access", "application-parser-as-Noble-backend", "open-required-library-gate"]},
+      "expected": {"stage": "application-delivery", "outcome": "reject-each-as-complete-calculator", "bootstrap_expanded": false, "calculator_blocks_M4": false, "new_kernel_mechanisms_required": false},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    }
+  ]
+}

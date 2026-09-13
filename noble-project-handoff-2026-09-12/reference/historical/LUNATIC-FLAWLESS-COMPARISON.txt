@@ -1,0 +1,248 @@
+**Lunatic is close to the runtime philosophy we’ve been discussing for Noble. Flawless addresses a different, complementary problem: preserving a computation’s progress when the runtime or machine disappears.** Both are valuable references, but neither replaces Noble’s purpose as a language. ([github.com](https://github.com/lunatic-solutions/lunatic))
+
+One qualification: I couldn’t retrieve the current Noble spec files here. I’m comparing against our discussed design direction—a small, typed, compositional language with programs-as-data and a Wasm target—not claiming that every Noble capability below is already implemented.
+
+## The fundamental comparison
+
+| Dimension | Noble’s intended direction | Lunatic | Flawless |
+|---|---|---|---|
+| **What it is** | A language, with a compiler and execution model | An Erlang-inspired runtime for Wasm | A durable-execution engine, with Rust workflow libraries |
+| **Central abstraction** | Composable program values: quotations | Isolated processes communicating through messages | Workflows whose progress can be reconstructed from recorded history |
+| **Main question** | How do we express, inspect, check, and compose programs? | How do many concurrent computations run without corrupting one another? | How does unfinished computation survive external failure? |
+| **Failure approach** | Something we must specify at the appropriate layer | Isolation, process links, supervision and restarting | Deterministic replay using persisted results of nondeterministic operations |
+| **Best role for us** | The language we are building | Reference for concurrency and service-runtime design | Reference for optional durable execution |
+
+Lunatic’s SDK exposes processes, mailboxes, protocols and supervisors; Flawless describes workflows as ordinary Rust functions compiled to Wasm, with recovery based on an execution log. These are different abstractions, not competing syntaxes for the same thing. ([docs.rs](https://docs.rs/lunatic/latest/lunatic/))
+
+## 1. Lunatic strongly validates our concurrency direction
+
+The important similarity is **sequential-looking code inside a concurrent runtime**.
+
+Lunatic’s processes are preemptively scheduled. Its runtime uses an asynchronous executor, allowing guest code to wait for I/O without occupying an executor thread for the entire wait. That is precisely the distinction we were discussing earlier: the programmer can write direct-style code even though the implementation is asynchronous. ([github.com](https://github.com/lunatic-solutions/rust-lib))
+
+For Noble, that supports this direction:
+
+> Ordinary code describes operations in sequence. Explicit concurrency constructs describe which computations may overlap. The runtime handles suspension and scheduling.
+
+We do not need to expose an `async`/`await` distinction everywhere merely because the implementation uses asynchronous I/O. Wasmtime itself demonstrates ordinary Wasm calls invoking asynchronous host functions, so this approach does not require adopting Lunatic wholesale. ([docs.wasmtime.dev](https://docs.wasmtime.dev/examples-async.html))
+
+### What I would borrow
+
+**Isolation as an explicit boundary.** Lunatic gives processes separate memory, with communication through messages rather than shared pointers. Its process configuration also controls resource limits and access permissions. Those are useful precedents for running untrusted or independently failing Noble components. ([docs.rs](https://docs.rs/lunatic/latest/lunatic/))
+
+**Runtime-enforced scheduling.** We should not require every user-written loop to voluntarily cooperate for the rest of the application to remain responsive. Wasmtime offers fuel-based yielding and epoch-based interruption, although those mechanisms have different costs and determinism properties. ([docs.wasmtime.dev](https://docs.wasmtime.dev/api/wasmtime/struct.Config.html))
+
+**Supervision above ordinary function calls.** Restart policies belong around independently managed computations, rather than being an implicit property of every expression.
+
+### What I would not copy wholesale
+
+I would **not make every quotation, function call, or parallel operation a separate Wasm process**.
+
+For Noble, I would distinguish:
+
+| Concept | Intended meaning |
+|---|---|
+| **Quotation** | A program value that can be composed and called |
+| **Task** | A running computation with a result and a defined lifetime |
+| **Actor/service** | A longer-lived computation with identity, messages and lifecycle management |
+| **Durable workflow** | A computation whose progress survives runtime restarts |
+
+These might share implementation machinery, but they should not automatically have identical semantics.
+
+For example, computing two independent values concurrently should not necessarily require mailboxes, registered process names, restart strategies, or serialization. Conversely, a service that must contain faults deserves a stronger boundary than an ordinary task.
+
+**My recommendation: borrow Lunatic’s execution mechanics, but do not make its process abstraction the meaning of all Noble computation.**
+
+## 2. Flawless exposes a failure problem that supervision does not solve
+
+Consider this business operation:
+
+```text
+validate order → charge customer → send receipt
+```
+
+Suppose the machine stops after charging the customer.
+
+Restarting the worker restores a running worker. It does not, by itself, tell the worker whether the charge happened or where to resume. This is the distinction Flawless’s own introduction makes between ordinary application errors and failures that terminate the executing process. ([flawless.dev](https://flawless.dev/docs))
+
+Flawless handles recovery by re-executing deterministic computation while supplying previously recorded results for completed nondeterministic operations. It reconstructs state rather than needing to save the entire stack and heap after every instruction. ([flawless.dev](https://flawless.dev/))
+
+The practical distinction is:
+
+> **Supervision restores a running computation. Durable execution can restore its recorded progress.**
+
+They work well together. A supervisor could restart a workflow executor, which then recovers the workflow’s progress.
+
+### This is a natural extension for Noble—but not a free consequence of quotations
+
+Our programs-as-data direction gives us a useful way to represent the work to execute. It does not automatically make that work durable.
+
+A future durable Noble execution would need a contract along these lines:
+
+```text
+recoverable execution =
+    fixed program and dependencies
+  + initial input
+  + recorded nondeterministic observations
+  + defined effect-recovery rules
+```
+
+That is an architectural proposal, not something we get merely by serializing a quotation.
+
+For example, saving:
+
+```text
+[ validate-order charge-customer send-receipt ]
+```
+
+does not tell us which operations already happened. Saving the quotation and its current data stack still does not necessarily resolve an external request that was in flight during a crash.
+
+### The most important detail: ambiguous outcomes
+
+Flawless’s detailed retry documentation is more careful than a broad “exactly once” slogan. When a request may have reached an external service but its response was not received, Flawless returns `RequestInterrupted` rather than automatically repeating it. Its `.idempotent()` option lets the developer declare that repetition is safe. ~~~~~~~~~~~~~~~~~~~~~~
+
+That suggests an important distinction for Noble’s future effect interface:
+
+```text
+known success
+known failure
+unknown external outcome
+```
+
+An unknown outcome is not simply another retryable error. A payment might have succeeded even though we lost the response. Marking an operation retryable does not make the remote operation idempotent.
+
+**I would borrow this explicit treatment of uncertainty before borrowing any promise of transparent persistence.**
+
+Durability should also not promise to repair a deterministic programming bug. Replaying the same faulty computation may simply reproduce the same fault; recovery and code-upgrade policies remain necessary.
+
+## 3. Noble’s distinctive value is at the language level
+
+The key question is not whether Noble can also spawn actors or run durable workflows. It is:
+
+> **What becomes easier because the program itself is a small, typed, composable value?**
+
+That is where I think Noble remains interesting.
+
+### Composition before execution
+
+Our existing quotation examples illustrate the direction:
+
+```text
+41 [ 1 + ] call
+
+20 [ 1 + ] [ 2 * ] compose call
+```
+
+The program fragment is something we manipulate before executing it.
+
+I would extend that principle carefully to larger programs: composition should preserve information about inputs, outputs and permitted effects, rather than simply glue together opaque runtime jobs.
+
+Lunatic provides an execution environment for guest languages; Flawless provides durable execution for Rust workflows. Neither choice, on its own, determines the quotation algebra or program-manipulation facilities we want Noble to offer. ([github.com](https://github.com/lunatic-solutions/lunatic))
+
+### Checking which execution environments a program can use
+
+A useful Noble design goal would be to distinguish questions such as:
+
+- Does this program have the required inputs and compose correctly?
+- What effects and authority does it require?
+- Can its captured data and effects be supported by a remote or durable executor?
+
+Those are related questions, but not interchangeable ones.
+
+For instance, “this quotation is well typed” should not imply “this quotation can be persisted.” A well-typed quotation might capture a live socket or a host-specific resource.
+
+Likewise:
+
+> **Portable code does not imply portable authority.**
+
+I would require an explicit policy for restoring or reacquiring capabilities. Deserializing a saved program should not silently resurrect access that has since been revoked.
+
+This is a potential advantage of designing the language and its host interface together. It is not an advantage we can claim until the checks and enforcement actually exist.
+
+### A smaller semantic target
+
+For our formal-verification direction, I would keep the initial proof target focused: quotation composition, evaluation, type safety, and the boundary between pure computation and host operations.
+
+That gives us a manageable foundation without simultaneously promising proofs of a distributed scheduler, durable storage, remote API behavior and every possible restart policy.
+
+**The language can be small even when some execution environments are sophisticated.**
+
+## 4. What belongs in Noble’s core?
+
+These projects reinforce the case for separating the layers.
+
+My proposed arrangement would be:
+
+```text
+Noble language
+    values, quotations, composition, types
+                    │
+         explicit execution interface
+                    │
+    ┌───────────────┼────────────────┐
+    │               │                │
+local execution   isolated services  durable workflows
+                  + supervision      + recovery history
+```
+
+These need not be mutually exclusive: an isolated service could execute durable workflows.
+
+**The core** should establish program meaning, composition and the rules governing interaction with the host.
+
+**The ordinary runtime** should implement execution, suspension, resource accounting and whatever scheduling guarantees we actually specify.
+
+**Libraries** should provide convenient policies and combinators: scoped concurrency, message-handling loops, supervision strategies, retry policies and workflow helpers.
+
+**A durable execution environment** should supply persistent history, replay, effect recovery and compatibility checks.
+
+The important qualification is that “library API” does not mean “library-only implementation.” Supervision needs lifecycle support; strong isolation needs enforcement; durability needs persistent runtime machinery.
+
+My preference is:
+
+> **Make durability optional, but avoid language semantics that make a sound durable executor unnecessarily difficult.**
+
+A small script should not need a workflow database just to evaluate a quotation.
+
+## 5. Two constraints we should design for early
+
+### Replay needs more than a Wasm target
+
+Wasm is a useful foundation, not an automatic determinism guarantee. Wasmtime’s documentation specifically calls out nondeterministic imports, floating-point NaN representations, relaxed SIMD and memory/table growth behavior. ([docs.wasmtime.dev](https://docs.wasmtime.dev/examples-deterministic-wasm-execution.html))
+
+For a durable Noble profile, I would additionally require us to control or record every concurrency outcome the program can observe. For example, receiving message A before message B may change subsequent effects. Recording HTTP responses while ignoring message order would not be enough.
+
+We would not necessarily need to reproduce every invisible scheduling decision. We would need to reproduce the decisions that affect observable behavior.
+
+### Recovery needs stable code identity
+
+I would not replay an old history against whatever happens to be the newest implementation of a word.
+
+A future execution record should identify the relevant program, dependencies and execution contract. Content-addressed code could help identify them, but retaining the actual artifacts and defining compatibility remain separate requirements.
+
+For an initial implementation, I would favor **pinning existing executions to their original code** over transparent migration of arbitrary running programs. New executions can use new versions; migration can be a later, explicit feature.
+
+## 6. Should we build on these projects directly?
+
+### Lunatic: plausible experimental backend, not an automatic foundation
+
+Lunatic is available under MIT/Apache-2.0 licensing. It also exposes runtime-specific functionality, and its README explicitly distinguishes its compatibility goals from complete WASI compatibility. Targeting Wasm alone therefore does not establish that Noble could use all Lunatic features without bindings or adapters. ([github.com](https://github.com/lunatic-solutions/lunatic))
+
+I would use it as a concrete reference for process boundaries, scheduling and supervision, and evaluate an adapter separately. I would not make the Noble language specification depend on Lunatic’s particular host API.
+
+### Flawless: strong design reference, less straightforward as our runtime foundation
+
+Flawless’s published installation documentation describes its engine as a closed-source binary, while its workflow libraries are open source. The documented workflow-authoring path is Rust. ([flawless.dev](https://flawless.dev/docs/installation))
+
+That makes it useful to study or integrate with, but not a source implementation we can simply adapt into Noble’s runtime. Sharing Wasm as a compilation target does not make the workflow ABI interchangeable.
+
+## My conclusion
+
+**Lunatic helps answer how Noble computations should coexist. Flawless helps answer how selected Noble computations could survive interruption. Noble still needs to answer how programs are represented, composed and checked.**
+
+I would take three decisions from this comparison:
+
+1. **Keep direct-style code**, with explicit concurrency and runtime-managed suspension.
+2. **Separate ordinary tasks, isolated services and durable workflows**, rather than force everything into one process abstraction.
+3. **Keep durability out of the mandatory core**, while designing an explicit effect boundary that can support recording and replay.
+
+The strongest direction is not “Noble is Lunatic plus Flawless.” It is **a small language whose program model works cleanly with execution environments inspired by both.**

@@ -1,0 +1,121 @@
+<!-- Generated compatibility view. Edit .cairn/specs/evidence/spec.md instead. -->
+# Conformance and evidence records
+
+Document: SPEC-EV001  
+Revision: 0.1.0-draft.5  
+Status: Record schema and document checks only
+
+## Independent dimensions
+
+**EV-STATE-01.** Every scenario MUST carry independent implementation, execution, proof, and trust fields. One successful dimension MUST NOT imply success in another.
+
+| Field | Allowed values |
+|---|---|
+| `implementation` | `absent`, `partial`, `implemented`, `unsupported` |
+| `execution` | `not-run`, `passed`, `failed`, `timeout`, `unsupported` |
+| `proof` | `open`, `accepted`, `failed`, `not-applicable` |
+| `trust` | `unassessed`, `explicit` |
+
+**EV-STATE-02.** Execution or proof results other than unexecuted/open states MUST identify their evidence. Evidence binds a subject, revision, configuration, claim, assumptions, and result. `implemented` alone is not an executed result.
+
+A failed test and an open proof can coexist with implemented code. A document-validator pass belongs to the document check lane, not to scenario execution.
+
+SPEC-V002 adds claim outcomes: `proved`, `disproved`, `unknown`, `timeout`, `unsupported`, `error`, and `not-run`. These describe propositions and proof attempts, not the independent status fields in this document. A rejected proof does not establish a false proposition. Fixture expectations that name `proved` are not accepted-proof evidence.
+
+**EV-STATE-03.** A greenfield snapshot MUST NOT report Noble runtime execution or accepted proofs without concrete implementation and evidence records. The current snapshot records no such results.
+
+## Scenario shape
+
+Each file names `schema_version`, the specification `revision`, its origin, and a `cases` array. Each case has:
+
+1. A stable `id`, `profile`, and `kind`.
+2. Nonempty requirement references from the current family.
+3. An `input` object containing source or a named structured harness with parameters.
+4. An `expected` object naming the observation stage, outcome, and discriminating observations.
+5. A `state` object and an `evidence` array.
+
+**EV-CASE-01.** Requirement references MUST resolve against the current revision. Unsupported or incomplete harness designs remain visible and unexecuted.
+
+Kinds are `static`, `runtime`, `admission`, `adapter`, `identity`, and `review`. A release-policy review is not a runtime language test.
+
+[Contract scenarios](conformance/contract-cases.json) use `Contracts-Draft` for the selected optional profile. Their logical predicates, symbolic artifact identities, and companion operations are harness inputs, not frozen Noble source syntax. Proof, runtime, and admission observations require their own executed evidence.
+
+`Backend-Experiment`, `Decoder-Experiment`, `Implementation-Policy`, and `Contract-Design` label test-design lanes, not new language conformance profiles. A compile-fail design in a review record is not an executed Rust test.
+
+`I64` values in JSON use decimal strings inside typed records. This prevents a JavaScript JSON parser from losing integer precision. Expected stacks are bottom to top.
+
+The [calculator scenarios](conformance/calculator-cases.json) use `Calculator-Design` and `AI-Authoring-Design` as application/test lanes. Their expression strings are calculator input, not Noble source. Exact numerators, denominators, and conversion values use decimal strings. These records do not select portable Noble encodings. Calculator validation errors occur inside an accepted application and are not Noble static-rejection results.
+
+**EV-CASE-02.** A static or admission rejection MUST observe zero candidate-body host requests and zero protected operations. Compiler-service effects, where applicable, are recorded separately.
+
+**EV-CASE-03.** Authority denial requires a declared effect that includes the request. A denied request counts toward the effect trace. Denial MUST NOT substitute for static effect rejection.
+
+**EV-CASE-04.** Runtime builder cases MUST obtain operands after compilation and disable the Noble preparation service during execution. Optimized literal-only examples do not satisfy them.
+
+**EV-CASE-05.** A matrix case MUST report every input combination and its expected outcome. Missing or unsupported elements MUST NOT count as passed coverage.
+
+The [language-workflow scenarios](conformance/language-workflow-cases.json) use design-lane labels, not new conformance profiles. Property-runner and documentation-harness tests retain their own subject and outcomes. A successful harness control does not mark its embedded Noble example as executed or proved.
+
+The [worker scenarios](conformance/worker-cases.json) use `Worker-Design`, not a new language or concurrency profile. [WORKER-CONFORMANCE.md](WORKER-CONFORMANCE.md) separates pure worker requests, compiler-service effects, shell actions, and native retirement. Cancellation acknowledgement does not establish external completion. Round-trip expectations retain the canonical encoding gate.
+
+Harness names and symbolic operation IDs describe future test drivers. They do not freeze source annotation syntax, canonical identifier bytes, or an executable test implementation. The validator checks record structure, not language behavior.
+
+## Requirement index
+
+[requirements.json](requirements.json) is a derived index of every numbered requirement in the registered normative documents. It records document ownership, planned evidence routes, scenario links, and open test-design gaps.
+
+**EV-TRACE-01.** Every numbered requirement MUST have a declared evidence route. A requirement with no concrete scenario remains `test-design-open`, not covered or passed.
+
+The index uses these planned routes:
+
+| Families | Planned evidence |
+|---|---|
+| `K`, `P`, `B` | semantic tests, reference-model proof, review |
+| `BE` | experiment tests, correspondence evidence, review |
+| `W`, `H`, `S`, `WI`, `RA` | boundary tests, correspondence evidence, review |
+| `C`, `EV` | validation/release-policy tests and review |
+| `DX` | semantic tests, policy tests, and review |
+| `CALC` | application tests, benchmark-policy tests, and review |
+| `V`, `VT`, `VC` | proof or scoped assumption review, with implementation tests where relevant |
+
+Routes do not prove completion. Exact theorem links and execution observations belong in evidence records as implementation proceeds.
+
+The Aeneas-first scope rules in VT-SCOPE-01 through VT-SCOPE-05 additionally require a production-source inventory. The requirement index does not replace function-level extraction and refinement coverage. Parser, backend, resource, runtime, and CLI work must remain visible even before implementation.
+
+**EV-TRACE-02.** Regenerating the index MUST NOT manufacture test results or overwrite observed evidence. The index contains only derived planning metadata. Scenario states and the obligation ledger remain separate files.
+
+## Bound evidence and imported tool results
+
+**EV-BIND-01.** A reusable evidence record MUST bind its subject, claim, source scope, semantic dependencies, policy, toolchain, target/features, command, inputs, assumptions, and result. Digests and versioned references can identify those inputs. Missing relevant bindings or unknown coverage MUST block reuse for a required claim.
+
+Consumers select the expected subject, claim, policy, and trust context independently of producer-supplied evidence. A changed binding requires renewed applicability validation. Old evidence can remain valid for its historical subject without satisfying the current gate. A producer cannot establish trust by replacing both an artifact and its unkeyed digest.
+
+**EV-TIER-01.** Imported Octet results MUST preserve their lint, policy, transcript, integrity, or formal-proof role without promotion. Formal-proof claims require the existing verifier-backed evidence and exact subject correspondence. Fixture-scoped extraction, source-shape conformance, and artifact verification MUST NOT establish whole-kernel correctness or release eligibility.
+
+The record MUST retain each required phase outcome and each incomplete scope. An omitted or failed phase cannot become an overall acceptance through a successful sibling phase. A type-valid configuration is not executed policy enforcement. These rules extend existing evidence bindings without making every receipt a proof or changing ordinary program admission.
+
+[Octet adoption cases](conformance/octet-adoption-cases.json) contain explicit stale-binding, tier-promotion, and incomplete-coverage controls. These are unexecuted designs. The document validator does not invoke Octet or a proof tool.
+
+## Release claims
+
+**EV-GATE-01.** A release claim MUST identify its supported subset and all applicable gates. Passing document validation cannot satisfy compiler, resource, component, or safety conformance.
+
+Proof obligations in [verification/obligations.json](verification/obligations.json) remain open. They name expected claims, not completed Lean declarations.
+
+**EV-GATE-02.** A proof accepted under a narrower subset or different configuration MUST NOT silently close a broader obligation. Trust assumptions and cross-tool boundaries remain explicit.
+
+## Document checks
+
+```sh
+bun tools/check-specs.mjs
+bun tools/check-specs.mjs --self-test
+```
+
+After intentional requirement or scenario changes:
+
+```sh
+bun tools/check-specs.mjs --refresh-ledger
+bun tools/check-specs.mjs
+```
+
+The refresh command changes only derived requirement metadata. It does not change scenario states or proof status. Selected oracle checks reject known specification regressions; they do not implement the referenced harnesses.

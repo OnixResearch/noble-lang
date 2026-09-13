@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "revision": "0.1.0-draft.5",
+  "origin": "language-workflow-new-unexecuted-designs",
+  "cases": [
+    {
+      "id": "DX-07", "profile": "Local-Binding-Design", "kind": "review",
+      "requirements": ["DX-LOCAL-01", "DX-LOCAL-02"],
+      "input": {"harness": "local-binding-lowering-design", "task": "compute subtotal plus tax while retaining original subtotal", "stack_only_source": "dup dup 10 / +", "initial_stack": [{"type": "I64", "value": "100"}], "binding_form": "structured lexical binding of subtotal; return subtotal and subtotal plus subtotal divided by ten", "variants": ["pure-equivalence", "resource-read-twice", "unused-resource-binding", "resource-quotation-capture", "data-capture", "shadowing"]},
+      "expected": {"stage": "design-and-lowering", "outcome": "design-gate-remains-open-until-syntax-and-lowering-evidence", "pure_output": [{"type": "I64", "value": "100"}, {"type": "I64", "value": "110"}], "pure_effects": [], "resource_variants": "reject-each", "data_capture": "retained-in-recipe", "shadowing": "resolved-lexically-not-dynamically", "new_kernel_operations": 0},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "DX-08", "profile": "Module-Design", "kind": "admission",
+      "requirements": ["DX-MODULE-01", "DX-MODULE-02"],
+      "input": {"harness": "explicit-module-linking", "required_operation": "test.emit : Text -- ! {test.emit}", "variants": [
+        {"binding": "matching-declared-operation", "outcome": "link-without-execution"},
+        {"binding": "missing", "outcome": "reject"},
+        {"binding": "wrong-input-type", "outcome": "reject"},
+        {"binding": "incompatible-effect-bound", "outcome": "reject"},
+        {"binding": "import-time-host-initializer", "outcome": "reject-implicit-execution"}
+      ]},
+      "expected": {"stage": "link-admission", "outcome": "each-variant-matches", "guest_requests": 0, "protected_operations": 0, "ambient_fallback_calls": 0, "acquired_authority": false},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "DX-09", "profile": "Module-Design", "kind": "runtime",
+      "requirements": ["DX-MODULE-02"],
+      "input": {"harness": "linked-module-authority-and-resolution", "original_binding": "version-A", "rebound_display_name": "version-B", "existing_program": "resolved-to-version-A", "operation": "test.emit", "authority": "denied", "declared_effects": ["test.emit"]},
+      "expected": {"stage": "runtime", "outcome": "denied-request-for-version-A", "guest_requests": 1, "protected_operations": 0, "version_B_invoked": false, "effect_request_recorded": true},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "DX-10", "profile": "Property-Test-Design", "kind": "review",
+      "requirements": ["DX-PROPERTY-01", "DX-PROPERTY-02"],
+      "input": {"harness": "bounded-property-runner-controls", "properties": ["compatible-composition-interface", "retained-recipe-structure", "reference-result-and-effect-agreement"], "max_trials": 100, "max_shrink_steps": 50, "variants": [
+        {"control": "same-seed-revisions-bounds-and-environment", "outcome": "replay-same-trials"},
+        {"control": "generator-emits-invalid-candidate", "outcome": "generator-failure-not-passed-coverage"},
+        {"control": "seeded-result-disagreement", "outcome": "counterexample"},
+        {"control": "shrinker-breaks-input-interface", "outcome": "reject-shrink-retain-prior-counterexample"},
+        {"control": "shrinker-changes-failure-predicate", "outcome": "reject-shrink-retain-prior-counterexample"},
+        {"control": "shrink-budget-exhausted", "outcome": "retain-reproduced-failure-report-exhaustion"},
+        {"control": "trial-budget-exhausted-before-result", "outcome": "exhaustion-not-counterexample-or-pass"},
+        {"control": "malformed-candidate-fuzzing", "outcome": "separate-lane"}
+      ]},
+      "expected": {"stage": "property-harness", "outcome": "each-control-matches", "independent_acceptance_required": true, "universal_proof_claimed": false, "replay_fields": ["subject", "property", "generator_revision", "shrinker_revision", "seed", "bounds", "environment", "outcomes"]},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "DX-11", "profile": "Protocol-Type-Design", "kind": "review",
+      "requirements": ["DX-PROTOCOL-01", "DX-PROTOCOL-02"],
+      "input": {"harness": "transaction-owner-protocol", "states": ["Open", "Committed", "Unknown"], "operation": "commit-consumes-Open", "variants": [
+        {"case": "successful-commit", "outcome": "Committed-owner-only"},
+        {"case": "commit-Committed-owner", "outcome": "static-rejection"},
+        {"case": "reuse-consumed-Open-owner", "outcome": "static-rejection"},
+        {"case": "forged-or-stale-runtime-handle", "outcome": "runtime-rejection-before-host-operation"},
+        {"case": "host-confirms-no-transition-and-returns-owner", "outcome": "Open-owner-in-error-branch"},
+        {"case": "host-outcome-ambiguous", "outcome": "Unknown-owner-no-automatic-retry"},
+        {"case": "cleanup-Unknown-owner", "outcome": "explicit-boundary-contract-required"}
+      ]},
+      "expected": {"stage": "protocol-design", "outcome": "each-variant-accounted-before-profile-acceptance", "implicit_owner_duplication": false, "runtime_validation_required": true, "host_model_required_for_behavioral_proof": true, "protocol_syntax_selected": false},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "DX-12", "profile": "Documentation-Test-Design", "kind": "review",
+      "requirements": ["DX-DOC-01", "DX-DOC-02"],
+      "input": {"harness": "compiler-backed-documentation", "variants": [
+        {"source": "41 [ 1 + ] run", "mode": "runtime", "expected_value": {"type": "I64", "value": "42"}},
+        {"source": "1 true +", "mode": "static-rejection", "expected_diagnostic": "word-input-type", "guest_requests": 0},
+        {"case": "compiler-absent", "outcome": "not-run"},
+        {"case": "runtime-example-only-typechecked", "outcome": "runtime-not-run"},
+        {"case": "unsupported-example", "outcome": "unsupported-visible-in-coverage"},
+        {"case": "mismatched-output", "outcome": "failed-visible-in-coverage"},
+        {"case": "execution-timeout", "outcome": "timeout-visible-in-coverage"},
+        {"case": "effectful-example-without-explicit-test-host", "outcome": "reject-run-no-ambient-credentials"}
+      ]},
+      "expected": {"stage": "documentation-harness", "outcome": "each-variant-matches-when-implemented", "actual_compiler_required": true, "runtime_backend_required_for_runtime_claim": true, "rendered_text_match_sufficient": false, "example_pass_is_proof": false},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    }
+  ]
+}

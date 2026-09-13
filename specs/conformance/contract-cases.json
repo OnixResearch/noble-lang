@@ -1,0 +1,112 @@
+{
+  "schema_version": 1,
+  "revision": "0.1.0-draft.5",
+  "origin": "new-first-class-contract-scenarios-not-executed",
+  "cases": [
+    {
+      "id": "CONTRACT-01", "profile": "Contracts-Draft", "kind": "review",
+      "requirements": ["VC-BOOT-01", "VC-INPUT-01", "VC-INPUT-03", "VC-NUM-01", "VC-LIB-01", "VC-GATE-01", "VT-CONTRACT-01"],
+      "input": {"harness": "prove-accepted-increment", "source": "[ 1 + ]", "subject": "actual-accepted-program", "claim_kind": "partial-correctness", "precondition": "true", "postcondition": "output = wrap64(input + 1)", "stack_tail": "unchanged", "vectors": [{"input": {"type": "I64", "value": "41"}, "output": {"type": "I64", "value": "42"}}, {"input": {"type": "I64", "value": "9223372036854775807"}, "output": {"type": "I64", "value": "-9223372036854775808"}}]},
+      "expected": {"stage": "contract-proof", "outcome": "proved-for-exact-subject", "lean_kernel_check_required": true, "total_correctness_claimed": false, "vectors_establish_universal_proof": false, "export_correspondence_required": true},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "CONTRACT-02", "profile": "Contracts-Draft", "kind": "admission",
+      "requirements": ["VC-ID-02", "VC-EVIDENCE-01", "VC-EVIDENCE-02", "VC-VALUE-02", "VC-VALUE-03", "VC-ADMIT-04", "VT-CONTRACT-02"],
+      "input": {"harness": "changed-contract-binding", "proof": "valid-only-for-original-context", "variants": ["captured-value", "program-operand", "instantiated-interface", "logical-definition", "host-contract", "semantic-revision", "consumer-policy", "current-environment-fact"]},
+      "expected": {"stage": "evidence-admission", "outcome": "reject-each-variant-until-revalidated", "new_certified_status": false, "old_theorem_automatically_false": false, "guest_requests": 0, "protected_operations": 0},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "CONTRACT-03", "profile": "Contracts-Draft", "kind": "runtime",
+      "requirements": ["VC-COMPOSE-01", "VC-COMPOSE-02", "VC-VALUE-01", "VC-LIB-02", "VC-LIB-04", "VC-GATE-02"],
+      "input": {"harness": "compose-certified-increments", "programs": ["[ 1 + ]", "[ 1 + ]"], "claim_kind": "partial-correctness", "precondition": "true", "intermediate_implication": "prechecked-true-implies-true", "templates": "prechecked-Lean-rules", "compiler_service": "disabled", "proof_search": "disabled", "argument": {"type": "I64", "value": "9223372036854775807"}},
+      "expected": {"stage": "normal-return", "outcome": "certified-composition", "output": {"type": "I64", "value": "-9223372036854775807"}, "postcondition": "output = wrap64(input + 2)", "claim_kind": "partial-correctness", "prover_calls": 0, "candidate_prepare_requests": 0, "assumptions_dropped": false, "underlying_recipe_matches_plain_compose": true},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "CONTRACT-04", "profile": "Contracts-Draft", "kind": "admission",
+      "requirements": ["VC-COMPOSE-01", "VC-BUILD-03", "VC-LIB-02"],
+      "input": {"harness": "missing-composition-implication", "left": "[ 1 + ]", "right": "[ 1 + ]", "left_precondition": "true", "right_precondition": "input >= 0", "counterexample_initial_input": {"type": "I64", "value": "-2"}, "intermediate_output": {"type": "I64", "value": "-1"}, "ordinary_interfaces_match": true, "implication_evidence": "absent"},
+      "expected": {"stage": "companion-composition", "outcome": "unresolved-implication", "ordinary_composition_valid": true, "new_certified_status": false, "guest_requests": 0, "protected_operations": 0},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "CONTRACT-05", "profile": "Contracts-Draft", "kind": "runtime",
+      "requirements": ["VC-BUILD-01", "VC-BUILD-02", "VC-ID-02", "VC-LIB-03", "VC-LIB-04", "VC-GATE-02"],
+      "input": {"harness": "instantiate-certified-runtime-builder", "builder": "quote [ + ] compose", "theorem": "forall-n-I64-runtime-builder-family", "captures_supplied_after_compilation": true, "compiler_service": "disabled", "proof_search": "disabled", "instances": [{"capture": {"type": "I64", "value": "7"}, "argument": {"type": "I64", "value": "41"}, "output": {"type": "I64", "value": "48"}}, {"capture": {"type": "I64", "value": "-1"}, "argument": {"type": "I64", "value": "41"}, "output": {"type": "I64", "value": "40"}}]},
+      "expected": {"stage": "normal-return", "outcome": "each-instance-bound-and-certified", "same_compiled_builder": true, "program_value_identity_relation": "different", "prover_calls": 0, "candidate_prepare_requests": 0, "literal_specialization_sufficient": false},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "CONTRACT-06", "profile": "Contracts-Draft", "kind": "admission",
+      "requirements": ["VC-VALUE-02", "VC-VALUE-03", "VC-EVIDENCE-03", "VC-LIB-04", "VC-GATE-02"],
+      "input": {"harness": "forged-companion-and-derivation", "variants": ["serialized-certified-true", "forged-constructor-tag", "unknown-rule", "cyclic-derivation", "missing-premise", "wrong-family-instantiation", "exhausted-replay-budget"]},
+      "expected": {"stage": "evidence-admission", "outcome": "reject-each-variant", "new_certified_status": false, "guest_requests": 0, "protected_operations": 0},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "CONTRACT-07", "profile": "Contracts-Draft", "kind": "admission",
+      "requirements": ["VC-LOGIC-02", "VC-NUM-01", "VC-USE-01", "VC-ADMIT-05"],
+      "input": {"harness": "certified-invocation-false-guard", "program": "[ 1 + ]", "proof": "valid-conditional-monotonicity-theorem", "precondition": "input < 9223372036854775807", "postcondition": "output > input", "argument": {"type": "I64", "value": "9223372036854775807"}, "guard_correspondence": "prechecked"},
+      "expected": {"stage": "applicability", "outcome": "precondition-reject", "conditional_theorem_valid": true, "candidate_body_started": false, "guest_requests": 0, "protected_operations": 0},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "CONTRACT-08", "profile": "Contracts-Draft", "kind": "runtime",
+      "requirements": ["VC-USE-01", "VC-ADMIT-01", "VC-TOOL-04", "VC-GATE-03"],
+      "input": {"harness": "certified-invocation-true-guard", "program": "[ 1 + ]", "precondition": "input < 9223372036854775807", "argument": {"type": "I64", "value": "9223372036854775806"}, "guard_correspondence": "prechecked", "evidence": "accepted-for-exact-subject-and-policy", "artifact_correspondence": "recorded-trusted-build", "host_authority": "independently-checked", "proof_search": "disabled"},
+      "expected": {"stage": "normal-return", "outcome": "certified-invocation", "output": {"type": "I64", "value": "9223372036854775807"}, "prover_calls": 0, "verified_backend_claimed": false, "guard_erased": false, "underlying_program_identity_changed": false},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "CONTRACT-09", "profile": "Contracts-Draft", "kind": "review",
+      "requirements": ["VC-TOOL-01", "VC-TOOL-02", "VC-TOOL-03", "VC-TOOL-04", "VC-EVIDENCE-04", "VT-CONTRACT-02"],
+      "input": {"harness": "claim-outcome-and-required-build", "proof_policy": "strict-Lean", "other_admission_conditions": "satisfied", "attempts": [{"case": "accepted-exact-proof", "outcome": "proved", "release_allowed": true}, {"case": "checked-refutation", "outcome": "disproved", "release_allowed": false}, {"case": "bare-solver-answer", "outcome": "unknown", "release_allowed": false}, {"case": "rejected-proof-term", "outcome": "error", "release_allowed": false}, {"case": "unfinished-or-sorry-proof", "outcome": "error", "release_allowed": false}, {"case": "proof-timeout", "outcome": "timeout", "release_allowed": false}, {"case": "unsupported-predicate", "outcome": "unsupported", "release_allowed": false}, {"case": "no-attempt", "outcome": "not-run", "release_allowed": false}, {"case": "execution-fuel-exhausted", "outcome": "unknown", "release_allowed": false}]},
+      "expected": {"stage": "proof-required-build", "outcome": "only-applicable-proved-claim-releases", "failed_proof_implies_disproof": false, "solver_success_is_accepted_proof": false, "fuel_exhaustion_proves_divergence": false, "independent_recheck_required": true},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "CONTRACT-10", "profile": "Contracts-Draft", "kind": "runtime",
+      "requirements": ["K-VERIFY-03", "VC-SCOPE-03", "VC-VALUE-01", "VC-VALUE-04", "VC-VALUE-05", "VC-ID-01", "VC-TOOL-04", "VC-GATE-02"],
+      "input": {"harness": "first-class-companion-transport-and-inspection", "subject": "[ 1 + ]", "companion_payloads": "immutable-resource-free", "operations": ["pass-as-argument", "return-as-result", "store-in-homogeneous-list", "inspect-contract-and-evidence-reference", "explicitly-project-program"], "proof_terms": "outside-Wasm", "proof_services": "disabled", "debug_metadata": "stripped"},
+      "expected": {"stage": "normal-return", "outcome": "all-operations-preserve-companion-contract", "underlying_program_identity": "unchanged", "underlying_reflected_recipe": "unchanged", "selected_inspection_metadata_retained": true, "prover_calls": 0, "implicit_evidence_fetches": 0, "host_only_metadata_sufficient": false, "authority_created": false},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "CONTRACT-11", "profile": "Contracts-Draft", "kind": "runtime",
+      "requirements": ["VC-SCOPE-01", "VC-SCOPE-02", "VC-BUILD-02", "P-VERIFY-02"],
+      "input": {"harness": "ordinary-execution-without-contract-profile", "source": "41 [ 1 + ] run", "proof_policy": "optional", "proof_evidence": "absent", "proof_services": "disabled", "compiler_service": "disabled"},
+      "expected": {"stage": "normal-return", "outcome": "ordinary-success", "output": {"type": "I64", "value": "42"}, "behavioral_certification_claimed": false, "prover_calls": 0, "candidate_prepare_requests": 0},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "CONTRACT-12", "profile": "Contracts-Draft", "kind": "static",
+      "requirements": ["VC-INPUT-04", "VC-VALUE-04", "VC-TOOL-04"],
+      "input": {"harness": "ghost-and-evidence-eligibility", "variants": ["resource-in-ghost-capture", "service-capability-in-pure-evidence", "runtime-value-from-erased-ghost"]},
+      "expected": {"stage": "contract-and-eligibility-check", "outcome": "reject-each-variant", "resource_ownership_duplicated": false, "guest_requests": 0, "protected_operations": 0},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "CONTRACT-13", "profile": "Contracts-Draft", "kind": "admission",
+      "requirements": ["VC-ADMIT-01", "VC-ADMIT-03", "VC-GATE-03"],
+      "input": {"harness": "certified-source-unrelated-Wasm", "proof_subject": "increment-program", "evidence": "valid-for-increment", "supplied_artifact": "unrelated-program-with-same-stack-interface", "required_correspondence": "exact-subject-to-artifact", "host_authority": "otherwise-valid"},
+      "expected": {"stage": "artifact-admission", "outcome": "correspondence-reject", "candidate_body_started": false, "guest_requests": 0, "protected_operations": 0},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "CONTRACT-14", "profile": "Contracts-Draft", "kind": "admission",
+      "requirements": ["VC-INPUT-01", "VC-INPUT-03", "VC-EVIDENCE-01", "VC-EVIDENCE-02", "VC-TOOL-03", "VT-CONTRACT-01"],
+      "input": {"harness": "contract-export-statement-mismatch", "trusted_subject": "actual-accepted-increment-program", "trusted_claim": "output = wrap64(input + 1)", "producer": "untrusted-exporter-or-proof-generator", "variants": ["changed-body", "weakened-postcondition", "strengthened-precondition", "rebound-logical-definition", "unbounded-integer-model"]},
+      "expected": {"stage": "statement-admission", "outcome": "reject-each-unapproved-change", "same_display_name_sufficient": false, "independent_expected_claim_required": true, "guest_requests": 0, "protected_operations": 0},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "CONTRACT-15", "profile": "Contracts-Draft", "kind": "static",
+      "requirements": ["VC-INPUT-01", "VC-INPUT-02", "VC-TOOL-01", "VC-GATE-01"],
+      "input": {"harness": "invalid-or-unsupported-contract-input", "subject": "[ 1 + ]", "variants": [{"case": "unbound-contract-variable", "diagnostic": "invalid"}, {"case": "predicate-type-mismatch", "diagnostic": "invalid"}, {"case": "unsupported-host-protocol", "diagnostic": "unsupported"}], "proof_policy": "required"},
+      "expected": {"stage": "contract-elaboration", "outcome": "reject-contract-only", "ordinary_program_valid": true, "claim_silently_weakened": false, "required_proof_admission": "blocked", "guest_requests": 0, "protected_operations": 0},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    }
+  ]
+}

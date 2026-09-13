@@ -1,0 +1,148 @@
+{
+  "schema_version": 1,
+  "revision": "0.1.0-draft.5",
+  "origin": "octet-contract-adoption-new-unexecuted-designs",
+  "cases": [
+    {
+      "id": "OCTET-01", "profile": "Octet-Adoption-Design", "kind": "runtime",
+      "requirements": ["H-AUTH-01", "H-AUTH-02", "H-AUTH-03", "H-RECEIPT-01", "H-RECEIPT-02"],
+      "input": {"harness": "protected-operation-authority-chain", "authority_facts": "host-validated-independent-of-producer", "plan": "exact-operation-arguments-and-context", "witness_mode": "one-shot", "variants": [
+        {"case": "allow-and-observed-success", "witnesses_created": 1, "witness_consumptions": 1, "protected_operations": 1, "receipt": "operation-success"},
+        {"case": "deny", "witnesses_created": 0, "witness_consumptions": 0, "protected_operations": 0, "receipt": "denial"},
+        {"case": "preflight-capacity-failure", "witnesses_created": 1, "witness_consumptions": 0, "protected_operations": 0, "receipt": "preflight-failure", "caller_retains_valid_witness": true},
+        {"case": "external-outcome-unknown-after-commit", "witnesses_created": 1, "witness_consumptions": 1, "protected_operations": 1, "receipt": "unknown", "witness_restored": false}
+      ]},
+      "expected": {"stage": "host-admission-and-observation", "outcome": "each-phase-distinct", "pure_decision_creates_live_authority": false, "admission_commit_before_protected_operation": true, "attempt_recorded_with_commit": true, "automatic_retry": false, "receipt_grants_authority": false},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "OCTET-02", "profile": "Octet-Adoption-Design", "kind": "runtime",
+      "requirements": ["H-AUTH-02", "H-AUTH-03", "H-AUTH-04", "H-HOST-02"],
+      "input": {"harness": "authorization-binding-and-replay", "declared_effects": ["test.protected-send"], "variants": ["changed-operation-contract", "changed-plan-target", "changed-plan-amount", "wrong-actor", "wrong-owner-context", "changed-policy-revision", "expired", "revoked", "quota-exhausted", "missing-current-facts", "wrong-resource-kind", "stale-generation", "consumed-witness-replay", "serialized-witness-tag"]},
+      "expected": {"stage": "protected-entry-validation", "outcome": "deny-each-variant", "requests_per_variant": 1, "protected_operations": 0, "attempts_admitted": 0, "resource_resurrections": 0, "missing_fact_defaults_to_allow": false, "digest_alone_sufficient": false},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "OCTET-03", "profile": "Octet-Adoption-Design", "kind": "static",
+      "requirements": ["H-AUTH-04", "K-TYPE-02", "DX-TYPE-04"],
+      "input": {"harness": "live-witness-construction-boundary", "variants": ["allow-data-as-resource", "raw-id-as-resource", "default-construct-witness", "public-field-construction", "dup-live-witness", "drop-live-witness", "capture-live-witness", "serialize-live-witness"]},
+      "expected": {"stage": "static", "outcome": "reject-each-variant", "guest_requests": 0, "protected_operations": 0, "live_witnesses_created": 0, "new_kernel_type_required": false},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "OCTET-04", "profile": "Octet-Adoption-Design", "kind": "adapter",
+      "requirements": ["H-RECEIPT-01", "H-RECEIPT-02", "H-OUTCOME-02", "RA-ASYNC-04"],
+      "input": {"harness": "observation-and-receipt-constructor-boundary", "variants": [
+        {"case": "matching-approved-success-observation", "receipt": "operation-success", "trusted": true},
+        {"case": "matching-approved-failure-observation", "receipt": "operation-failure", "trusted": true},
+        {"case": "plan-as-success", "receipt": "reject"},
+        {"case": "witness-as-success", "receipt": "reject"},
+        {"case": "attempt-as-success", "receipt": "reject"},
+        {"case": "failed-observation-as-success", "receipt": "reject"},
+        {"case": "unknown-observation-as-success", "receipt": "reject"},
+        {"case": "missing-observation-as-success", "receipt": "reject"},
+        {"case": "different-attempt-observation", "receipt": "reject"},
+        {"case": "schema-valid-import-without-provenance", "receipt": "untrusted-description", "trusted": false},
+        {"case": "cancelled-invocation-late-confirmed-external-success", "receipt": "operation-success", "trusted": true, "invocation_outcome": "cancelled", "successful_task_deliveries": 0}
+      ]},
+      "expected": {"stage": "receipt-admission", "outcome": "each-claim-scoped", "owner_resurrections": 0, "receipt_is_capability": false, "receipt_is_arbitrary_behavioral_proof": false, "integrity_is_authenticity": false},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "OCTET-05", "profile": "Octet-Adoption-Design", "kind": "review",
+      "requirements": ["DX-PROTOCOL-03", "VT-OCTET-02"],
+      "input": {"harness": "finite-lifecycle-coverage", "states": ["Pending", "Ready", "Retiring", "Retired", "Delivered"], "events": ["Complete", "Deliver", "Cancel"], "variants": [
+        {"case": "all-pairs-explicit-with-invalid-results", "outcome": "coverage-accepted"},
+        {"case": "named-alternative-groups-cover-all-pairs", "outcome": "coverage-accepted"},
+        {"case": "missing-pair", "outcome": "reject"},
+        {"case": "wildcard-covers-new-event", "outcome": "reject"},
+        {"case": "guard-without-remaining-case", "outcome": "reject"},
+        {"case": "changed-schema-reuses-old-coverage", "outcome": "reject"},
+        {"case": "unsupported-transition-shape", "outcome": "unsupported"}
+      ]},
+      "expected": {"stage": "lifecycle-design-and-implementation-gate", "outcome": "each-coverage-control-matches", "constructor_pairs": 15, "invalid_transition_preserves_declared_ownership": true, "all_Noble_programs_require_FSM_profile": false, "full_async_protocol_coverage_claimed": false, "coverage_proves_liveness": false},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "OCTET-06", "profile": "Octet-Adoption-Design", "kind": "admission",
+      "requirements": ["DX-TYPE-03", "DX-TYPE-04", "VT-OCTET-02"],
+      "input": {"harness": "nominal-domain-constructor-paths", "variants": [
+        {"case": "valid-approved-constructor", "outcome": "accepted"},
+        {"case": "valid-explicit-unit-conversion", "outcome": "accepted"},
+        {"case": "valid-zero-budget", "outcome": "accepted-data-with-no-work-authorized"},
+        {"case": "AttemptId-as-TaskGeneration", "outcome": "type-reject"},
+        {"case": "AdmissionBudget-as-ExecutionFuel", "outcome": "type-reject"},
+        {"case": "duration-as-byte-count", "outcome": "type-reject"},
+        {"case": "primitive-alias-as-nominal-identity", "outcome": "type-reject"},
+        {"case": "unchecked-overflowing-unit-conversion", "outcome": "invariant-reject"},
+        {"case": "default-bypasses-invariant", "outcome": "invariant-reject"},
+        {"case": "decoder-bypasses-invariant", "outcome": "invariant-reject"},
+        {"case": "package-literal-forges-opaque-value", "outcome": "invariant-reject"}
+      ]},
+      "expected": {"stage": "type-and-constructor-admission", "outcome": "each-domain-control-matches", "guest_requests": 0, "protected_operations": 0, "invariant_failure_defaulted_to_success": false, "core_I64_wrapping_changed": false, "general_refinement_inference_required": false},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "OCTET-07", "profile": "Octet-Adoption-Design", "kind": "admission",
+      "requirements": ["DX-MODULE-04", "K-EFFECT-01", "K-CHECK-07", "VT-OCTET-03"],
+      "input": {"harness": "resolved-effect-contract-closure", "variants": [
+        {"case": "exact-resolved-pure-dependencies", "outcome": "accepted"},
+        {"case": "typed-indirect-call-with-complete-allowed-bound", "outcome": "accepted"},
+        {"case": "supported-self-recursion-with-checked-signature", "outcome": "accepted-without-termination-claim"},
+        {"case": "pure-display-name-calls-clock-under-empty-bound", "outcome": "effect-reject"},
+        {"case": "summary-erases-known-direct-effect", "outcome": "effect-reject"},
+        {"case": "wrong-provider-summary-identity", "outcome": "reject"},
+        {"case": "missing-operation-contract", "outcome": "reject"},
+        {"case": "unresolved-call-without-trusted-interface", "outcome": "reject"},
+        {"case": "closure-budget-exhausted", "outcome": "exhausted"}
+      ]},
+      "expected": {"stage": "resolved-module-admission", "outcome": "each-effect-control-matches", "guest_requests": 0, "protected_operations": 0, "unknown_defaults_to_pure": false, "all_runtime_program_values_must_be_enumerated": false, "source_token_receipt_replaces_language_judgment": false},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "OCTET-08", "profile": "Octet-Adoption-Design", "kind": "review",
+      "requirements": ["VT-OCTET-01", "VT-OCTET-02", "VT-OCTET-03"],
+      "input": {"harness": "Rust-architecture-policy-controls", "variants": [
+        {"case": "complete-gated-policy-and-compiler-facts", "outcome": "scoped-policy-acceptance"},
+        {"case": "deterministic-profile-without-architecture-pointer", "outcome": "architecture-gate-unsatisfied"},
+        {"case": "inventory-or-advisory-only", "outcome": "architecture-gate-unsatisfied"},
+        {"case": "stale-Nickel-export", "outcome": "reject"},
+        {"case": "undeclared-role-or-provider", "outcome": "reject"},
+        {"case": "adapter-constructed-in-domain-core", "outcome": "reject"},
+        {"case": "executor-without-witness-contract", "outcome": "reject"},
+        {"case": "receipt-constructor-without-observation", "outcome": "reject"},
+        {"case": "missing-required-compiler-facts", "outcome": "blocking-unknown"},
+        {"case": "collection-limit-exceeded", "outcome": "blocking-unknown"},
+        {"case": "uncovered-production-binary", "outcome": "blocking-unknown"},
+        {"case": "unsupported-required-target-feature-set", "outcome": "blocking-unknown"},
+        {"case": "lint-passed-architecture-failed", "outcome": "admission-denied"},
+        {"case": "finding-allowance-or-warning-budget", "outcome": "reject"}
+      ]},
+      "expected": {"stage": "implementation-policy", "outcome": "each-policy-control-matches", "full_deny_all_replaced_by_profile": false, "source_identity_baseline_is_finding_allowance": false, "no_std_proves_purity": false, "Octet_was_executed_by_document_validator": false},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "OCTET-09", "profile": "Octet-Adoption-Design", "kind": "review",
+      "requirements": ["EV-BIND-01", "EV-TIER-01", "VT-OCTET-03"],
+      "input": {"harness": "evidence-binding-and-tier-controls", "required_bindings": ["subject", "claim", "source-scope", "semantic-dependencies", "policy", "toolchain", "target-features", "command", "inputs", "assumptions", "result"], "variants": [
+        {"case": "same-bindings-current-policy", "outcome": "reuse-at-original-tier"},
+        {"case": "changed-source-policy-provider-or-toolchain", "outcome": "revalidate-before-reuse"},
+        {"case": "missing-binding-or-unknown-coverage", "outcome": "block-required-claim"},
+        {"case": "failed-or-omitted-required-phase", "outcome": "block-required-claim"},
+        {"case": "source-lint-result-as-formal-proof", "outcome": "reject-tier-promotion"},
+        {"case": "artifact-integrity-as-authenticity", "outcome": "reject-tier-promotion"},
+        {"case": "fixture-Charon-analysis-as-Noble-kernel-proof", "outcome": "reject-scope-promotion"},
+        {"case": "producer-replaces-artifact-and-digest", "outcome": "independent-trust-context-still-required"}
+      ]},
+      "expected": {"stage": "evidence-admission", "outcome": "each-evidence-control-matches", "historical_evidence_erased": false, "consumer_claim_selected_by_producer": false, "successful_sibling_phase_hides_failure": false, "typed_policy_is_executed_enforcement": false},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "OCTET-10", "profile": "Octet-Adoption-Design", "kind": "review",
+      "requirements": ["K-SCOPE-01", "VT-OCTET-01", "VT-OCTET-03", "EV-TIER-01"],
+      "input": {"harness": "Octet-adoption-scope", "design_source_revision": "cf04e894e53eb0947230118a086ef6066ddba38c", "milestones": ["M1", "M5", "M6", "MW1", "MW2"]},
+      "expected": {"stage": "scope-review", "outcome": "spec-adaptation-not-implementation", "new_kernel_syntax": false, "bootstrap_expanded": false, "Rust_recursion_lint_is_Noble_recursion_ban": false, "Aeneas_route_replaced": false, "Verus_migration_required": false, "Octet_implementation_imported": false, "toolchain_pin_selected_by_design_reference": false, "ambient_sibling_dependency_allowed": false, "runtime_or_proof_claimed": false},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    }
+  ]
+}

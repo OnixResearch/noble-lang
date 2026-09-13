@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "revision": "0.1.0-draft.5",
+  "origin": "new-Aeneas-first-assurance-policy-scenarios-not-executed",
+  "cases": [
+    {
+      "id": "VERIFY-01",
+      "profile": "Implementation-Policy",
+      "kind": "review",
+      "requirements": ["VT-SCOPE-01", "VT-SCOPE-05", "VT-AENEAS-03", "VT-AENEAS-04", "V-GATE-05"],
+      "input": {"harness": "assurance-coverage", "scope": "one-kernel-validation-function", "actual_rust_extracted": true, "source_configuration_matches": true, "required_functions": 1, "accounted_functions": 1, "generated_functions_edited": false, "refinement": "kernel-checked-against-reviewed-contract", "extraction_assumptions": "explicit"},
+      "expected": {"stage": "assurance-gate", "outcome": "accept-named-scope-only", "whole_kernel_verified": false, "whole_project_verified": false, "wasm_preservation_proved": false},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"},
+      "evidence": []
+    },
+    {
+      "id": "VERIFY-02",
+      "profile": "Implementation-Policy",
+      "kind": "review",
+      "requirements": ["VT-SCOPE-01", "VT-SCOPE-05", "VT-CI-05"],
+      "input": {"harness": "assurance-coverage-omissions", "variants": ["frontend-parser-body", "backend-emitter-body", "runtime-transition", "adapter-wrapper", "cli-decision", "macro-generated-body", "feature-target-body"], "compiler_source_inventory_contains_body": true, "verification_inventory_contains_body": false},
+      "expected": {"stage": "assurance-gate", "outcome": "reject-each-variant", "missing_body_ignored": false},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"},
+      "evidence": []
+    },
+    {
+      "id": "VERIFY-03",
+      "profile": "Implementation-Policy",
+      "kind": "review",
+      "requirements": ["VT-SCOPE-02", "VT-SCOPE-03", "VT-SCOPE-04", "VT-AENEAS-02"],
+      "input": {"harness": "kernel-exception-denial", "function": "resource-retirement-decision", "semantic_owner": "kernel", "variants": ["unsupported-Rust-construct", "unsafe-body", "move-body-to-adapter-crate", "replace-Aeneas-with-Verus", "desired-result-axiom"]},
+      "expected": {"stage": "assurance-gate", "outcome": "reject-each-variant", "kernel_exception_accepted": false, "moving_crate_changes_semantic_owner": false},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"},
+      "evidence": []
+    },
+    {
+      "id": "VERIFY-04",
+      "profile": "Implementation-Policy",
+      "kind": "review",
+      "requirements": ["VT-SCOPE-03", "VT-SCOPE-04", "VT-AENEAS-05", "VT-BRIDGE-01", "VT-WRAP-02"],
+      "input": {"harness": "external-effect-exception-review", "scope": "native-host-object-release-body", "semantic_decision": "separate-Aeneas-refined-retirement-transition", "required_record_fields": ["symbols", "source_configuration", "owner", "constraint_or_diagnostic", "contract", "assumptions", "evidence", "reassessment_condition"], "variants": ["complete-reviewed-record", "missing-owner", "missing-contract", "whole-crate-scope", "unreviewed-record"]},
+      "expected": {"stage": "assurance-gate", "outcome": "accept-complete-boundary-record-reject-other-variants", "aeneas_verified_body": false, "physical_release_proved_by_plan": false, "synchronization_proved_by_sequential_transition": false, "correspondence_obligation_closed_by_exception": false},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"},
+      "evidence": []
+    },
+    {
+      "id": "VERIFY-05",
+      "profile": "Implementation-Policy",
+      "kind": "review",
+      "requirements": ["VT-SCOPE-05", "VT-AENEAS-04", "VT-AENEAS-05", "VT-LEAN-01", "VT-CI-05", "V-GATE-05"],
+      "input": {"harness": "incomplete-refinement-gate", "extraction": "passed", "variants": ["proof-not-run", "proof-failed", "proof-timeout", "proof-unsupported", "sorryAx", "unexplained-external-model", "stale-source-configuration", "hand-edited-generated-function", "proof-of-separate-reference-only"]},
+      "expected": {"stage": "assurance-gate", "outcome": "reject-each-variant", "extraction_implies_refinement": false},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"},
+      "evidence": []
+    }
+  ]
+}

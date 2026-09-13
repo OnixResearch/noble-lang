@@ -1,0 +1,178 @@
+{
+  "schema_version": 1,
+  "revision": "0.1.0-draft.5",
+  "origin": "external-study-adaptations-new-unexecuted-designs",
+  "cases": [
+    {
+      "id": "ADAPT-01", "profile": "Core-Bootstrap", "kind": "static",
+      "requirements": ["B-CHECK-06", "B-DIAG-01", "K-CONTROL-01"],
+      "input": {"harness": "branch-join-diagnostics", "variants": [
+        {"source": "true [ 1 ] [ \"x\" ] if", "failure": "output-type"},
+        {"source": "true [ 1 ] [ 1 2 ] if", "failure": "output-arity"},
+        {"source": "true [ 1 \"x\" ] [ \"x\" 1 ] if", "failure": "output-order"}
+      ]},
+      "expected": {"stage": "static", "outcome": "reject-each-variant", "implicit_union_join": false, "diagnostic_fields": ["join", "expected_stack", "actual_stack", "source_location"], "guest_requests": 0, "protected_operations": 0},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "ADAPT-02", "profile": "Resources-Draft", "kind": "static",
+      "requirements": ["B-CHECK-06", "K-TYPE-02", "K-DATA-01", "K-CONTROL-01"],
+      "input": {"harness": "checked-sum-payload-elimination", "input_type": "Sum<Resource<test.counter>,I64>", "left_branch": "[ test.release 0 ]", "right_branch": "[ 1 + ]", "host_contract": "test.release : S Resource<test.counter> -- S ! {test.release}"},
+      "expected": {"stage": "static", "outcome": "accept", "output_stack": ["I64"], "effects": ["test.release"], "sum_is_data": false, "sum_is_capturable": false, "right_payload_is_data": true, "resource_branch_accounts_for_owner": true, "guest_requests": 0, "protected_operations": 0},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "ADAPT-03", "profile": "Core-Bootstrap", "kind": "admission",
+      "requirements": ["B-CHECK-06", "B-IMPL-03", "K-TYPE-02"],
+      "input": {"harness": "forged-branch-witness", "checked_input": "Resource<test.counter>", "advertised_refinement": "Data", "candidate_operation": "quote", "predicate_result": true},
+      "expected": {"stage": "acceptance", "outcome": "reject", "accepted_program_created": false, "guest_requests": 0, "protected_operations": 0},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "ADAPT-04", "profile": "Decoder-Experiment", "kind": "adapter",
+      "requirements": ["S-DECODE-01", "S-DECODE-02", "S-DECODE-03", "VT-NATIVE-02", "VT-NATIVE-03"],
+      "input": {"harness": "owned-versus-byte-view-decoder", "format": "experiment-only-not-canonical-Noble-encoding", "layout": ["version:u8=1", "tag:u8=0", "reserved:u16le=0", "length:u32le", "payload:bytes[length]"], "max_payload_bytes": 16, "trailing_bytes": "reject", "implementations": ["owned-reference", "optional-zerocopy-adapter"], "variants": [
+        {"id": "valid", "hex": "0100000003000000616263", "outcome": "candidate", "payload_hex": "616263"},
+        {"id": "short-header", "hex": "01000000", "outcome": "reject"},
+        {"id": "short-payload", "hex": "0100000004000000616263", "outcome": "reject"},
+        {"id": "unknown-version", "hex": "0200000003000000616263", "outcome": "reject"},
+        {"id": "unknown-tag", "hex": "01ff000003000000616263", "outcome": "reject"},
+        {"id": "reserved-bits", "hex": "0100010003000000616263", "outcome": "reject"},
+        {"id": "length-limit", "hex": "01000000ffffffff", "outcome": "reject"},
+        {"id": "trailing-byte", "hex": "010000000000000000", "outcome": "reject"}
+      ], "start_offsets": [0, 1]},
+      "expected": {"stage": "decoding", "outcome": "paired-results-match-each-variant-at-each-offset", "accepted_program_created": false, "unchecked_length_allocation": false, "unselected_adapter": "not-run-not-passed"},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "ADAPT-05", "profile": "Decoder-Experiment", "kind": "adapter",
+      "requirements": ["S-DECODE-02", "VT-NATIVE-02"],
+      "input": {"harness": "external-buffer-lifetime", "initial_payload_hex": "616263", "callback_payload_hex": "646566", "variants": [
+        {"storage": "unprotected-external-view", "event": "callback-mutates-payload", "outcome": "reject-before-view-escapes"},
+        {"storage": "unprotected-external-view", "event": "suspension", "outcome": "reject-before-view-escapes"},
+        {"storage": "safely-copied-complete-record", "event": "callback-mutates-source", "outcome": "retain-616263"},
+        {"storage": "header-copy-with-unprotected-payload", "event": "callback-mutates-payload", "outcome": "reject-before-view-escapes"}
+      ]},
+      "expected": {"stage": "adapter", "outcome": "each-storage-contract-enforced", "immutable_marker_freezes_external_storage": false, "use_after_invalidation": false},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "ADAPT-06", "profile": "Core-Bootstrap", "kind": "admission",
+      "requirements": ["S-DECODE-01", "B-IMPL-03"],
+      "input": {"harness": "layout-valid-forged-candidate", "representation_valid": true, "source": "\"audit\" test.emit", "input_stack": [], "output_stack": [], "host_contracts": {"test.emit": "Text -- ! {test.emit}"}, "non_effect_derivations": "valid", "advertised_effects": [], "required_effects": ["test.emit"]},
+      "expected": {"stage": "acceptance", "outcome": "reject", "accepted_program_created": false, "guest_requests": 0, "protected_operations": 0},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "ADAPT-07", "profile": "Implementation-Policy", "kind": "review",
+      "requirements": ["S-DECODE-03"],
+      "input": {"harness": "native-bytes-identity-shortcut", "proposal": "Use IntoBytes output of a native-layout struct as ProgramValueId input", "canonical_schema_selected": false},
+      "expected": {"stage": "design-review", "outcome": "reject", "canonical_encoding_gate_closed": false, "dependency_selected": false},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "not-applicable", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "ADAPT-08", "profile": "Backend-Experiment", "kind": "static",
+      "requirements": ["BE-ARITY-01", "B-DIAG-01"],
+      "input": {"harness": "hidden-argument-dropping-adapter", "interface_scope": "closed-complete-stacks", "producer_output": ["Resource<test.counter>", "I64"], "consumer_input": ["I64"], "promised_output": ["I64"], "proposed_adaptation": "discard-owner-slot"},
+      "expected": {"stage": "backend-interface-check", "outcome": "reject", "artifact_emitted": false, "guest_requests": 0, "protected_operations": 0},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "ADAPT-09", "profile": "Backend-Experiment", "kind": "runtime",
+      "requirements": ["BE-DYNAMIC-01", "BE-LIMIT-01", "BE-REFLECT-01", "BE-REPORT-01"],
+      "input": {"harness": "bounded-runtime-composition-trees", "candidate": "each-supported-comparison-candidate", "operands": "post-compilation-inputs", "compiler_service": "disabled", "initial": {"type": "I64", "value": "20"}, "leaves": "runtime-supplied alternating increment and double programs, starting with increment", "limits": {"recipe_leaves": 256, "composition_depth": 256, "allocation_bytes": "record-with-run", "execution_stack_bytes": "record-with-run"}, "variants": [
+        {"shape": "left", "leaf_count": 255, "outcome": "normal"},
+        {"shape": "left", "leaf_count": 256, "outcome": "normal"},
+        {"shape": "left", "leaf_count": 257, "outcome": "construction-quota"},
+        {"shape": "right", "leaf_count": 255, "outcome": "normal"},
+        {"shape": "right", "leaf_count": 256, "outcome": "normal"},
+        {"shape": "right", "leaf_count": 257, "outcome": "construction-quota"},
+        {"shape": "balanced", "leaf_count": 255, "outcome": "normal"},
+        {"shape": "balanced", "leaf_count": 256, "outcome": "normal"},
+        {"shape": "balanced", "leaf_count": 257, "outcome": "construction-quota"}
+      ], "normal_result_oracle": "left fold from 20: even zero-based leaf adds 1; odd leaf multiplies by 2; each operation wraps as I64"},
+      "expected": {"stage": "builder-and-run", "outcome": "all-declared-variants-accounted", "normal_recipes": "same-ordered-leaves-for-equal-leaf-count", "candidate_prepare_requests": 0, "guest_requests": 0, "protected_operations": 0, "new_wasm_types_per_tree": 0, "quota_is_success": false, "cleanup_accounted": true},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "ADAPT-10", "profile": "Backend-Experiment", "kind": "runtime",
+      "requirements": ["BE-DYNAMIC-01", "BE-REFLECT-01", "P-RECIPE-01", "P-RECIPE-02"],
+      "input": {"harness": "optimized-program-reachability", "compiler_service": "disabled", "capture": "post-compilation I64 input", "constructor": "quote", "debug_metadata": "stripped", "variants": [
+        {"path": "collection-retrieval", "observation": "run-pushes-captured-I64-and-reflect-retains-literal"},
+        {"path": "returned-program", "observation": "run-pushes-captured-I64-and-reflect-retains-literal"},
+        {"path": "reflection-only", "observation": "reflect-retains-literal-without-execution"}
+      ]},
+      "expected": {"stage": "runtime", "outcome": "preserve-each-observation", "reflection_uses_addresses": false, "candidate_prepare_requests": 0, "guest_requests": 0, "protected_operations": 0},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "ADAPT-11", "profile": "Component-Sync-Bootstrap", "kind": "adapter",
+      "requirements": ["BE-BOUNDARY-01", "WI-WIT-07", "S-DECODE-02"],
+      "input": {"harness": "independent-peer-string-list-conversion", "variants": [
+        {"value": "string:héllo", "fault": "none", "outcome": "lossless-round-trip"},
+        {"value": "list<u8>:0,127,255", "fault": "none", "outcome": "lossless-round-trip"},
+        {"value": "string:héllo", "fault": "allocation-quota", "outcome": "defined-failure-with-cleanup"},
+        {"value": "list<u8>:0,127,255", "fault": "allocation-quota", "outcome": "defined-failure-with-cleanup"},
+        {"value": "string:invalid-UTF8", "fault": "malformed-peer-bytes", "outcome": "reject-with-cleanup"},
+        {"value": "list<u8>:truncated", "fault": "malformed-peer-range", "outcome": "reject-with-cleanup"}
+      ]},
+      "expected": {"stage": "component-boundary", "outcome": "each-conversion-accounted", "record": ["ABI_revision", "allocations", "copies", "buffer_owners", "cleanup"], "partial_trusted_values_published": 0, "internal_gc_implies_zero_copy": false, "m3_probe_closes_m5": false},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "ADAPT-12", "profile": "Implementation-Policy", "kind": "review",
+      "requirements": ["BE-COMPARE-01", "BE-CONFIG-01", "BE-REPORT-01", "EV-GATE-01"],
+      "input": {"harness": "backend-selection-record-policy", "synthetic_records_only": true, "variants": [
+        {"working_candidates": 1, "m3_execution_gates": "passed", "other_candidate": "evidenced-blocker", "metrics": "scoped-or-explicitly-unknown", "pins": "recorded", "outcome": "eligible-for-selection"},
+        {"working_candidates": 0, "m3_execution_gates": "not-run", "other_candidate": "evidenced-blocker", "metrics": "unknown", "pins": "recorded", "outcome": "cannot-close-M3"},
+        {"working_candidates": 1, "m3_execution_gates": "passed", "other_candidate": "unsupported-recorded-as-fastest", "metrics": "fabricated-zero", "pins": "recorded", "outcome": "reject-report"},
+        {"working_candidates": 1, "m3_execution_gates": "passed", "other_candidate": "evidenced-blocker", "metrics": "present", "pins": "missing", "outcome": "reject-report"},
+        {"working_candidates": 1, "m3_execution_gates": "failed", "other_candidate": "evidenced-blocker", "metrics": "fast", "pins": "recorded", "outcome": "cannot-close-M3"}
+      ]},
+      "expected": {"stage": "selection-review", "outcome": "enforce-each-record-policy", "two_production_backends_required": false, "backend_selected_by_fixture": false},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "not-applicable", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "ADAPT-13", "profile": "Implementation-Policy", "kind": "review",
+      "requirements": ["VT-NATIVE-01", "VT-NATIVE-02", "VT-NATIVE-03", "EV-GATE-02"],
+      "input": {"harness": "native-boundary-evidence-policy", "variants": [
+        {"safety_argument": "missing", "miri": "passed-scoped", "outcome": "reject-claim"},
+        {"safety_argument": "cited-with-assumptions", "miri": "required-but-unsupported", "outcome": "required-lane-unmet"},
+        {"safety_argument": "cited-with-assumptions", "miri": "upstream-only", "outcome": "Noble-lane-unmet"},
+        {"safety_argument": "cited-with-assumptions", "miri": "passed-scoped-pinned", "outcome": "scoped-evidence-only"}
+      ]},
+      "expected": {"stage": "assurance-review", "outcome": "enforce-each-evidence-boundary", "wasm_correspondence_proven": false, "all_targets_covered": false},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "not-applicable", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "ADAPT-14", "profile": "Contract-Design", "kind": "review",
+      "requirements": ["VC-LOGIC-06"],
+      "input": {"harness": "initial-final-contract-counterexample", "before": {"type": "I64", "value": "100"}, "amount": {"type": "I64", "value": "10"}, "after": {"type": "I64", "value": "110"}, "preconditions": "nonnegative balances and amount; addition stays in signed-I64 range", "snapshot_condition": "after = before + amount", "incorrect_condition": "after = after + amount"},
+      "expected": {"stage": "contract-design", "outcome": "distinguish-initial-and-final", "snapshot_condition": true, "incorrect_condition": false, "universal_proof_claimed": false},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "not-applicable", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "ADAPT-15", "profile": "Core-Bootstrap", "kind": "admission",
+      "requirements": ["VC-ADMIT-05", "S-DECODE-01"],
+      "input": {"harness": "mandatory-admission-check-all-build-modes", "candidate": "layout-valid-forged-empty-effects-for-test.emit", "source": "\"audit\" test.emit", "input_stack": [], "output_stack": [], "host_contracts": {"test.emit": "Text -- ! {test.emit}"}, "non_effect_derivations": "valid", "advertised_effects": [], "variants": [
+        {"build": "debug", "optional_proof": "absent", "outcome": "reject"},
+        {"build": "release", "optional_proof": "absent", "outcome": "reject"},
+        {"build": "debug", "optional_proof": "unrelated-valid-proof", "outcome": "reject"},
+        {"build": "release", "optional_proof": "unrelated-valid-proof", "outcome": "reject"}
+      ]},
+      "expected": {"stage": "acceptance", "outcome": "reject-in-all-modes", "accepted_program_created": false, "guest_requests": 0, "protected_operations": 0},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "ADAPT-16", "profile": "Implementation-Policy", "kind": "review",
+      "requirements": ["B-IMPL-03", "S-DECODE-01", "VT-NATIVE-02"],
+      "input": {"harness": "rust-public-api-compile-fail", "variants": [
+        {"attempt": "pass ProgramValueId where BuildKey is required without conversion", "outcome": "compile-fail"},
+        {"attempt": "construct AcceptedProgram through public fields", "outcome": "compile-fail"},
+        {"attempt": "return borrowed byte view beyond backing owner's lifetime", "outcome": "compile-fail"}
+      ]},
+      "expected": {"stage": "Rust-test-harness", "outcome": "reject-each-forbidden-public-api-use", "guest_nominal_syntax_added": false},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "not-applicable", "trust": "unassessed"}, "evidence": []
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "package": "noble-safety-0.1.0-draft.1",
+  "generated_at": "2026-09-12",
+  "status": "passed-structural-only",
+  "checks": {
+    "safety_markdown_exists": true,
+    "decision_register_exists": true,
+    "amendment_exists": true,
+    "spec_preview_exists": true,
+    "verification_preview_exists": true,
+    "json_parses": true,
+    "safety_requirement_count": 37,
+    "conformance_case_count": 15,
+    "proof_obligation_count": 9,
+    "runtime_tests_executed": false,
+    "formal_proofs_completed": false
+  }
+}

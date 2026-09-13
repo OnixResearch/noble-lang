@@ -1,0 +1,57 @@
+{
+  "snapshot_date": "2026-09-12",
+  "project": "noble",
+  "handoff_status": "design-and-specification-snapshot",
+  "canonical_integrated_spec_exists": false,
+  "selected_surface": {
+    "execute_word": "run",
+    "reflection_word": "reflect",
+    "comment_prefix": "#"
+  },
+  "core": {
+    "program_type": "Program<S,T,e>",
+    "wasm_execution_substrate": true,
+    "production_second_vm": false
+  },
+  "safety": {
+    "status": "selected-working-draft",
+    "guest_unsafe_escape": false,
+    "language_level_ub": false,
+    "requirements": 37,
+    "conformance_cases": 15,
+    "proof_obligations": 9,
+    "runtime_tests_executed": false,
+    "formal_proofs_completed": false
+  },
+  "wit_wasi": {
+    "status": "selected-working-draft",
+    "wit_standard_external_interface": true,
+    "component_model_standard_artifact": true,
+    "preferred_wasi_family": "0.3",
+    "conformance_cases": 15,
+    "all_new_cases_not_run": true
+  },
+  "concurrency": {
+    "selected_direction": "Syndicate/Synit + Preserves",
+    "formal_merged_profile_exists": false,
+    "beam_first_package_status": "historical/reconcile"
+  },
+  "choreography": {
+    "status": "draft-needs-reconciliation-with-syndicate"
+  },
+  "verification": {
+    "lean_reference_model": true,
+    "charon_aeneas_checker_route": true,
+    "verus_selected_imperative_components": true,
+    "reported_completed_proofs_in_project_package": false
+  },
+  "implementation_status": "unknown-from-handoff; inspect repository and rerun tests",
+  "highest_risks": [
+    "parallel spec previews can overwrite each other's requirements",
+    "surface terminology differs from historical baseline",
+    "standard Syndicate concurrency direction is not yet a formal merged spec",
+    "implementation state is not represented by current spec documents",
+    "canonical Noble program encoding/hash remains open",
+    "backend/component correspondence remains open"
+  ]
+}

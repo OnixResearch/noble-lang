@@ -1,0 +1,39 @@
+Created **the choreography specification package**, including new specifications, additive amendment patches, and updated integration copies of the core and verification documents.
+
+**[Download the complete specification package](sandbox:/mnt/data/noble-choreography-specs-0.1.0-draft.1.zip)** · [Package overview](sandbox:/mnt/data/noble-choreography-0.1.0-draft.1/README.md)
+
+## New specifications
+
+| Document | What it specifies |
+|---|---|
+| **[SPEC-CH001 — Choreographies as Data](sandbox:/mnt/data/noble-choreography-0.1.0-draft.1/CHOREOGRAPHY.md)** | First-class protocol descriptions, logical roles, located-value availability, local computations, transfers, scoped choices, branch joins, checking, and endpoint projection. |
+| **[SPEC-CH002 — Communication and Sessions](sandbox:/mnt/data/noble-choreography-0.1.0-draft.1/COMMUNICATION-HOST.md)** | Session admission, authenticated role binding, message identity, handoff semantics, wire-data eligibility, resource ownership, buffering, cancellation, failure, and restart. |
+| **[SPEC-CH003 — Choreography Verification](sandbox:/mnt/data/noble-choreography-0.1.0-draft.1/CHOREOGRAPHY-VERIFICATION.md)** | Concurrent semantics, projection correctness, conditional progress, Lean/Aeneas/Verus responsibilities, proof obligations, and implementation trust boundaries. |
+| **[Decision register](sandbox:/mnt/data/noble-choreography-0.1.0-draft.1/CHOREOGRAPHY-DECISIONS.md)** | Selected first-profile restrictions, their rationale, deferred features, and remaining implementation decisions. |
+| **[References and traceability](sandbox:/mnt/data/noble-choreography-0.1.0-draft.1/REFERENCES-CHOREOGRAPHY.md)** | ChoRus references, source-supported observations, and the distinction between those precedents and Noble-specific choices. |
+
+## Important choices captured
+
+**Choreography remains outside the kernel.** It adds an optional protocol library, checking/projection facility, and communication profile—not another expression form or extra parameters on every `Program<S,T,e>`. Ordinary `quote`, `compose`, `call`, and `reify` remain unchanged, preserving the existing small-core boundary. fileciteturn2file4L88-L100
+
+**The first profile is deliberately finite and explicit.** It supports fixed logical roles, immutable-data transfers, local programs, participation scopes, and boolean choices. One role selects each branch, and every other member of that choice’s scope receives a notification. Protocol recursion, dynamic membership, replicated control evaluation, notification-elision inference, and in-session protocol switching are deferred.
+
+**Ordering and failure have explicit meanings.** Choreographic sequence preserves each role’s order and communication dependencies; it is not a global barrier. A successful transfer means the receiver accepted the payload—not that subsequent remote work completed. Timeouts and cancellation do not imply an agreed branch, rollback, safe retry, or exactly-once business effects.
+
+Live resources remain invocation inputs, never captured protocol state. The initial wire-data profile also excludes `Program`, `Syntax`, and resource-bearing values; portable code transport remains a separate loading and authorization problem.
+
+## Existing-spec integration
+
+The **[amendment guide](sandbox:/mnt/data/noble-choreography-0.1.0-draft.1/CHOREOGRAPHY-AMENDMENT.md)** contains five exact patches and their updated previews. The principal combined preview is:
+
+**[Core specification + verification + choreography](sandbox:/mnt/data/noble-choreography-0.1.0-draft.1/amendments/previews/core-verification-choreography.md)**
+
+There is a separate patch for the original, pre-verification baseline. The guide identifies which alternative to use and keeps unrelated syntax work—including the `#` comment direction—untouched.
+
+## Examples and validation
+
+The package includes **two structured examples**: request/response, and a worker/store protocol covering both success and failure. It also contains **68 conformance scenarios**, **16 proof obligations**, and **13 recorded implementation/transport boundaries**.
+
+The [package checks passed](sandbox:/mnt/data/noble-choreography-0.1.0-draft.1/validation/report.json): all five patches applied exactly to their recorded baselines, requirement references and package-owned links resolved, and both examples passed fixture-metadata lint.
+
+**No Noble execution or formal proof is claimed.** The runtime scenarios remain `not-run`, and the proof obligations remain `open`. These are generated draft specifications and updated working copies; the original Project sources were not overwritten.

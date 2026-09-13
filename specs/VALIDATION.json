@@ -1,0 +1,1335 @@
+{
+  "revision": "0.1.0-draft.5",
+  "validator": {
+    "file": "tools/check-specs.mjs",
+    "sha256": "19665b17d314d3d5a65ffb3a5b7c2201e67795ae3917b079fe91dab20b5e7ada",
+    "adapter": {
+      "file": "tools/cairn-specs.mjs",
+      "sha256": "1a70d85f6fda26546571037244ae42e6c74c2e3df891f5d7b32e43e462678c3e"
+    }
+  },
+  "lane": "document-validation-only",
+  "result": "passed",
+  "runner": {
+    "bun": "1.3.13",
+    "node_api": "24.3.0"
+  },
+  "documents": 12,
+  "requirements": 475,
+  "scenarios": 149,
+  "scenarios_executed": 0,
+  "open_test_design": 189,
+  "proof_obligations": 30,
+  "completed_proofs": 0,
+  "self_tests": [
+    {
+      "name": "valid-family",
+      "expected": "accept",
+      "result": "passed"
+    },
+    {
+      "name": "missing-native-spec",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "broken-native-link",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "legacy-authority-regression",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "missing-native-lifecycle",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "malformed-json",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "missing-state",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "unknown-requirement",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "duplicate-requirement",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "dropped-inherited-requirement",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "broken-link",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "unsafe-effect-oracle",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "identity-version-regression",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "legacy-list-example",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "greenfield-false-pass",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "accepted-proof-without-source",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "roadmap-cycle",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "missing-milestone",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "missing-ledger-row",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "removed-normative-document",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "duplicate-case",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "unsupported-is-not-executed",
+      "expected": "accept",
+      "result": "passed"
+    },
+    {
+      "name": "added-unexecuted-scenario",
+      "expected": "accept",
+      "result": "passed"
+    },
+    {
+      "name": "implemented-failed-open-is-valid",
+      "expected": "accept",
+      "result": "passed"
+    },
+    {
+      "name": "mismatched-execution-evidence",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "removed-backend-document",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "stale-roadmap-revision",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "stale-obligation-revision",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "missing-native-gate",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "missing-backend-candidate",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "premature-backend-selection",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "review-only-backend-selection",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "implicit-union-join",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "marker-does-not-freeze-storage",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "layout-does-not-grant-acceptance",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "hidden-argument-dropping",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "per-tree-wasm-type",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "reflection-as-address",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "GC-premature-pin-release",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "false-zero-copy",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "wrong-postcondition",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "disabled-release-guard",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "missing-guard-matrix-cell",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "template-selects-dependency",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "Aeneas-policy-missing",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "Aeneas-checker-only-regression",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "Aeneas-kernel-optional-regression",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "Aeneas-false-coverage-inventory",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "Aeneas-mandatory-Verus-regression",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "Aeneas-resource-route-regression",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "Aeneas-missing-extraction-gate",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "Aeneas-narrow-proof-overclaim",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "Aeneas-frontend-omission",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "Aeneas-kernel-exception",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "Aeneas-plan-is-not-execution",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "Aeneas-exception-missing-owner",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "Aeneas-extraction-is-not-proof",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "Aeneas-unsupported-proof-omission",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "contracts-host-only-regression",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "contracts-mandatory-proof-regression",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "contracts-missing-outcome",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "contracts-resource-dependency",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "contracts-missing-export-gate",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "contracts-unrelated-proof",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "contracts-incorrect-overflow",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "contracts-untyped-integer",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "contracts-invalid-positive-guard-vector",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "contracts-stale-capture-accepted",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "contracts-runtime-prover",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "contracts-strength-promotion",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "contracts-missing-implication-accepted",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "contracts-literal-only-family",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "contracts-cyclic-evidence-omitted",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "contracts-precondition-bypass",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "contracts-guard-erased",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "contracts-solver-success-promoted",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "contracts-timeout-releases",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "contracts-erased-inspection",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "contracts-ordinary-run-certified",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "contracts-ghost-resource-copy",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "contracts-unrelated-Wasm-executed",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "contracts-producer-selects-claim",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "contracts-unsupported-weakened",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "calculator-document-removed",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "calculator-truncating-policy",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "calculator-false-benchmark-pass",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "calculator-truncated-division",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "calculator-rounded-decimal",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "calculator-lossy-JSON-number",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "calculator-left-associated-power",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "calculator-missing-exact-vector",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "calculator-zero-division-success",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "calculator-negative-denominator",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "calculator-noncanonical-zero",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "calculator-decoder-bypasses-invariant",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "calculator-I64-wrap-changed",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "calculator-I64-narrowing-accepted",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "calculator-failed-definition-commits",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "calculator-definition-runs-body",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "calculator-missing-budget-category",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "calculator-quota-falls-back-to-float",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "calculator-formatting-limit-after-commit",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "calculator-rounded-display-is-exact",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "calculator-stale-edit-accepted",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "calculator-producer-changes-tests",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "calculator-failed-runs-omitted",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "calculator-cost-metric-omitted",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "calculator-circular-oracle",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "calculator-test-is-proof",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "calculator-bootstrap-expanded",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "calculator-missing-library-gate",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "calculator-precedes-core",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "calculator-blocks-bootstrap",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "worker-valid-object-key-order",
+      "expected": "accept",
+      "result": "passed"
+    },
+    {
+      "name": "worker-scenarios-unregistered",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "worker-false-runtime-claim",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "worker-new-kernel-syntax",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "worker-missing-package-gate",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "worker-missing-async-dependency",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "worker-missing-round-trip-requirement",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "worker-missing-admission-budget-gate",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "worker-missing-async-ownership-gate",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "worker-literal-only",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "worker-captured-capability",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "worker-pure-worker-issues-effects",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "worker-premature-pin-release",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "worker-late-success-delivery",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "worker-Any-fallback",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "worker-runtime-compiler",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "worker-erased-effect-witness",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "worker-mutated-original-interface",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "worker-round-trip-artifact-equality",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "worker-transferred-acceptance",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "worker-changed-round-trip-context",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "worker-implicit-dependency-fetch",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "worker-digest-bypasses-admission",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "worker-budget-reset",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "worker-allocation-before-limit",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "worker-producer-selects-interface",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "worker-fallback-checker",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "worker-cancel-means-native-finished",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "worker-pure-code-unbounded",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "worker-wrong-interruption-bound",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "worker-failed-stack-returned",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "worker-effects-rolled-back",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "worker-hidden-observation-truncation",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "worker-plan-is-execution",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "worker-swarm-overclaim",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "worker-unauthorized-capture-export",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "worker-invalid-state-vector",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "worker-missing-matrix-row-WORKER-02",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "worker-missing-matrix-row-WORKER-05",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "worker-missing-matrix-row-WORKER-07",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "worker-missing-matrix-row-WORKER-08",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "worker-missing-matrix-row-WORKER-09",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "worker-missing-budget-category",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "worker-missing-state-control",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "worker-counter-overflow-regression",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "worker-wrong-attempt-clears-state",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "worker-cancelled-buffered-result-leaks",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "worker-revoke-already-delivered-owner",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "worker-trap-misreported-as-cancelled",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "worker-incomplete-operation-correlation",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "worker-missing-request-observation",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "octet-valid-matrix-order",
+      "expected": "accept",
+      "result": "passed"
+    },
+    {
+      "name": "octet-adoption-scenarios-unregistered",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "octet-adoption-runtime-overclaim",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "octet-adoption-Aeneas-replaced",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "octet-adoption-lints-replace-architecture",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "octet-missing-gate-M1",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "octet-missing-gate-M5",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "octet-missing-gate-M6",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "octet-missing-gate-MW1",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "octet-missing-gate-MW2",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "octet-producer-authority-facts",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "octet-pure-authority-mint",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "octet-execute-before-consume",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "octet-missing-facts-allow",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "octet-data-mints-witness",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "octet-receipt-is-capability",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "octet-wrong-FSM-pair-count",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "octet-FSM-is-full-async-proof",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "octet-refinement-solver-required",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "octet-unknown-call-is-pure",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "octet-indirect-calls-need-enumeration",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "octet-profile-replaces-deny-all",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "octet-identity-baseline-allows-findings",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "octet-phase-failure-hidden",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "octet-producer-selects-claim",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "octet-Rust-lint-bans-Noble-recursion",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "octet-design-reference-selects-pin",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "octet-denial-mints-witness",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "octet-denial-performs-operation",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "octet-preflight-consumes-witness",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "octet-unknown-restores-witness",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "octet-plan-becomes-success-receipt",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "octet-imported-description-trusted",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "octet-late-effect-success-uncancels-task",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "octet-wildcard-establishes-FSM-coverage",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "octet-invalid-decoder-value-accepted",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "octet-summary-erases-direct-effect",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "octet-uncovered-binary-accepted",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "octet-fixture-analysis-promoted",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "octet-missing-control-OCTET-01",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "octet-missing-control-OCTET-02",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "octet-missing-control-OCTET-03",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "octet-missing-control-OCTET-04",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "octet-missing-control-OCTET-05",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "octet-missing-control-OCTET-06",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "octet-missing-control-OCTET-07",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "octet-missing-control-OCTET-08",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "octet-missing-control-OCTET-09",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "octet-missing-evidence-binding",
+      "expected": "reject",
+      "result": "passed"
+    }
+  ],
+  "inputs": [
+    {
+      "file": ".cairn/MIGRATION.md",
+      "sha256": "e05f953b21ae5551711f99b85588b966a04c83f751e6faabdcadd9c6f38184f4"
+    },
+    {
+      "file": ".cairn/README.md",
+      "sha256": "dd5517d604f0fee38dd7710b03e9dc14b66aa796a211af5a6cac808130e3e396"
+    },
+    {
+      "file": ".cairn/specs/backend-experiments/spec.md",
+      "sha256": "390d7f91cd1c3273fdc55b0ad32c7bc86353cfb11629c7537dd3118b05e296c3"
+    },
+    {
+      "file": ".cairn/specs/calculator/spec.md",
+      "sha256": "c30c602bf3a3ce116a214a525ae23cf8da9d85df433dc93953eb1340dc9fb35a"
+    },
+    {
+      "file": ".cairn/specs/core-bootstrap/spec.md",
+      "sha256": "a848532226cbd9ecbb975ebacce7805a38d8f760b63aba2fe2e20da549e41862"
+    },
+    {
+      "file": ".cairn/specs/developer-experience/spec.md",
+      "sha256": "347bad553dc27d3f034da6d6df592c953fbf44de36e5fe8a3d0218f46153007a"
+    },
+    {
+      "file": ".cairn/specs/evidence/spec.md",
+      "sha256": "734e69c0ab9527a96fb58736e6093eb8b28328957fb4fea6fff1a22756f23732"
+    },
+    {
+      "file": ".cairn/specs/language/spec.md",
+      "sha256": "a8c217d1b88f58fc0737377be282c418a62f2c8e52bf8a995af942ac38f6778b"
+    },
+    {
+      "file": ".cairn/specs/program-contracts/spec.md",
+      "sha256": "c754e9520f01137d520a0caf78a92ab33c32356cc71c02b49312e78ba9e40ccd"
+    },
+    {
+      "file": ".cairn/specs/resource-adapters/spec.md",
+      "sha256": "63da5c866b0fe73cae10ae4a724ac6c4f8e05b4122eb4385bddfaf15fbd8fc92"
+    },
+    {
+      "file": ".cairn/specs/safety/spec.md",
+      "sha256": "8c6c8014652c9c3b4fba7df65d05156f48e5d563b9e1d69cea3195a6df6d08a1"
+    },
+    {
+      "file": ".cairn/specs/verification-toolchain/spec.md",
+      "sha256": "ff08f37fa0c1256c5fb86319fdfe4e7b772e1073d45d8660f3d511ec2bc99919"
+    },
+    {
+      "file": ".cairn/specs/verification/spec.md",
+      "sha256": "c13e05b012b18dc70ebd27c233894408a056382d999a76003e73f6d21e2abe2f"
+    },
+    {
+      "file": ".cairn/specs/wit-wasi/spec.md",
+      "sha256": "fc2e23db5ecfd0ef3b2a375bb39f22eda267d9bc831a7051a064793b6c6176e7"
+    },
+    {
+      "file": "noble-project-handoff-2026-09-12/reference/baseline/PROGRAM-CONTRACTS.md",
+      "sha256": "48728d6a7f52217a33cce6dc8740d8ee77db46dcb113dc2ea8b6796a7b72a30c"
+    },
+    {
+      "file": "noble-project-handoff-2026-09-12/reference/baseline/VERIFICATION-TOOLCHAIN.md",
+      "sha256": "e85908eed3d2d93783417fd5fa8d5b44b099d4f2bc17e34682ef134c3bce1185"
+    },
+    {
+      "file": "noble-project-handoff-2026-09-12/reference/working-safety/SAFETY.md",
+      "sha256": "cda675cf08da5c46dec6baa8f286553c9cf09c382465c98b6adc041f229b086e"
+    },
+    {
+      "file": "noble-project-handoff-2026-09-12/reference/working-safety/VERIFICATION-safety-preview.md",
+      "sha256": "ff14ca0b7a54a1b4f85dd8e38756a332a24feae211846c012b9bd6ef9613546a"
+    },
+    {
+      "file": "noble-project-handoff-2026-09-12/reference/working-wit-wasi/SPEC-0001-wit-wasi-preview.md",
+      "sha256": "b926577363a12e619dadeec8861afbcc213a5e976f356b4417d8052de80d7248"
+    },
+    {
+      "file": "noble-project-handoff-2026-09-12/reference/working-wit-wasi/WIT-WASI.md",
+      "sha256": "d171a294ef66da3dbb7507fc5b4ea575927a2cf1b76739a546e090012dddf8ed"
+    },
+    {
+      "file": "README.md",
+      "sha256": "31be2a9803231ffa594b1faf36bef6faca8d29e14523a73334ec51d416b6a1e0"
+    },
+    {
+      "file": "specs/BACKEND-EXPERIMENTS.md",
+      "sha256": "3e339894fb8fdb1f9296aeff94b3fae281741b63f8586f4d550a63ff0669eb32"
+    },
+    {
+      "file": "specs/CALCULATOR.md",
+      "sha256": "88019854306afdecbbf6786af10ecc9d061bee1090494d668e973a06230db790"
+    },
+    {
+      "file": "specs/conformance/adaptation-cases.json",
+      "sha256": "05cadb40fbc21875af6e9238c456dd0d39f4e32ca0d7744a9814aad564676121"
+    },
+    {
+      "file": "specs/conformance/calculator-cases.json",
+      "sha256": "2afc188ff6d2abca2d85b879e65235ee833ed7e72add24df68ea5c027a405202"
+    },
+    {
+      "file": "specs/conformance/cases.json",
+      "sha256": "278b1c341804527ee1a0e3822e2daef446799bea12764313b4d96c927a54497c"
+    },
+    {
+      "file": "specs/conformance/contract-cases.json",
+      "sha256": "30b7bbc85d4a0d5241c9e2eb86a569e119d6dd396e1a39647ffc8617f4668341"
+    },
+    {
+      "file": "specs/conformance/developer-experience-cases.json",
+      "sha256": "f5417d3c44a0fd0773ca64d9db4f8bd5e05fc0a7271907303fa2734a22798ede"
+    },
+    {
+      "file": "specs/conformance/identity-cases.json",
+      "sha256": "2b3ff7e7e74ea4347586bcdd0ca0761081759b294ac4747dc8fac02d9523cf8b"
+    },
+    {
+      "file": "specs/conformance/language-workflow-cases.json",
+      "sha256": "7846e322fb064ab50f9ddbce88af6e5d922f7ae4d2f8a595e8c87a3fc17fcb4f"
+    },
+    {
+      "file": "specs/conformance/octet-adoption-cases.json",
+      "sha256": "ecfa0844abf54f42a66a03ae6de89a6f3afda8c4047f54ecd9aaf1019858c104"
+    },
+    {
+      "file": "specs/conformance/resource-cases.json",
+      "sha256": "1e850b67970e97b8ee367ebc782bde423d6a9b042538bfa2a4f9fe3a3ee0d12c"
+    },
+    {
+      "file": "specs/conformance/safety-cases.json",
+      "sha256": "993c6c4fe252d1be768ab3701e468ae2b250bb880cb4649e16f4cb0c5021460c"
+    },
+    {
+      "file": "specs/conformance/verification-cases.json",
+      "sha256": "34af0eb7b9c90651cae8d5ad087e7c29bb4e5faa028049e9bf30ca8b96f64c52"
+    },
+    {
+      "file": "specs/conformance/wit-wasi-cases.json",
+      "sha256": "e4a9256d89fa311fa5e090c48704ff95d78b9d1816efadf65342f10f4d72eeba"
+    },
+    {
+      "file": "specs/conformance/worker-cases.json",
+      "sha256": "cd7b9cbbf4e4dda219c1376d4769ad5476cbf213f31aa60f030d2a24ad95c07b"
+    },
+    {
+      "file": "specs/CORE-BOOTSTRAP.md",
+      "sha256": "5c59dc73629efc8ff2eedb321b7d8cc037c819998fbb1b20041cffa203405629"
+    },
+    {
+      "file": "specs/DECISIONS.md",
+      "sha256": "495b798512a2af936c2dcb1dc6f930bbdf29fa5d860abcacc7b1190d27bab0a6"
+    },
+    {
+      "file": "specs/DEVELOPER-EXPERIENCE.md",
+      "sha256": "c6ffc629555e2024cc6c54eec914ca6066e3139cc3f3ee8050f960672a41c1b4"
+    },
+    {
+      "file": "specs/EVIDENCE.md",
+      "sha256": "8f7450c579c167dc7e1bec8d9573947f125481ab0c9bb03130e7b6bf39fd5ef0"
+    },
+    {
+      "file": "specs/OCTET-ADOPTION.md",
+      "sha256": "3e71174e1de31fd9184cbb92328fbe51cfe6d7cdc6247042813f923d1336eaa4"
+    },
+    {
+      "file": "specs/PROGRAM-CONTRACTS.md",
+      "sha256": "fcc10a9a047074a0ce1bc0241f2df35abf4bf9b375fb9680c4213f580cbc8c4f"
+    },
+    {
+      "file": "specs/README.md",
+      "sha256": "94928d5e1a0e7f903d0f1a7117cc16c2b12a8122d156411f14115850ac90d016"
+    },
+    {
+      "file": "specs/requirements.json",
+      "sha256": "5c48c4f705a2cfb478f28b2020a70e33ade59adb6ae0cdb31d69e89c27a9da92"
+    },
+    {
+      "file": "specs/RESOURCE-ADAPTERS.md",
+      "sha256": "f8fec554f12c94eb5ec6be52cd25ffe35502144d1527f6477b0b0166a39c0139"
+    },
+    {
+      "file": "specs/REVIEW-RESOLUTION.md",
+      "sha256": "8b6e354643213a7f5e089e1aeaf83fb8fd009310c9ec3143766da2bb14895cfa"
+    },
+    {
+      "file": "specs/roadmap.json",
+      "sha256": "0a2747b9ad585c16b0bef640f56e17a17ece360a5dcb01a893d7141e1b682514"
+    },
+    {
+      "file": "specs/ROADMAP.md",
+      "sha256": "338708a5d10696ffc1fa4de21798137ad5d73644bbe63ce49eb456d12b25df4b"
+    },
+    {
+      "file": "specs/SAFETY.md",
+      "sha256": "809a60e008e4654a1eeb2cafd6aeae81852d35e9866b5626a487d83fa1def57b"
+    },
+    {
+      "file": "specs/SOURCES.md",
+      "sha256": "3a9a61e03a4479f7d90bd014b59672634a9b6b4ac0693e186a880e3609c05d17"
+    },
+    {
+      "file": "specs/SPEC-0001.md",
+      "sha256": "ef2bb305e5d59de218ab18c03a67e5085b718d5e2c83719e4f16ce406ff1a2c8"
+    },
+    {
+      "file": "specs/spec-family.json",
+      "sha256": "455fd0db6fddba8ad80fc9bf4424bc843c94ff7fc3c7a4461eed867fadf5dac4"
+    },
+    {
+      "file": "specs/STATUS.json",
+      "sha256": "66e2c48d4346872d031cff0a5bf68510e06bfc23e80c21177585e7758940ddfc"
+    },
+    {
+      "file": "specs/VERIFICATION-TOOLCHAIN.md",
+      "sha256": "9ae540e3c1292c59175dfd52d9a6969d5c3809cef2aa0a7e395a21b7b3ed447f"
+    },
+    {
+      "file": "specs/VERIFICATION.md",
+      "sha256": "40156c670558ccabdfdec8350383e9c31093ebb9d3ee3f287eb8f4d01e3f6edf"
+    },
+    {
+      "file": "specs/verification/obligations.json",
+      "sha256": "b284a6b6a8b700a162345ae77ffef3735529437cb3fa86e726dd8e15910da18a"
+    },
+    {
+      "file": "specs/verification/toolchain-lock.template.json",
+      "sha256": "61e2b4bc56ce4582e84c09fad5d2a568a3ca4ac5329513cfedc4ede490f7bcec"
+    },
+    {
+      "file": "specs/WIT-WASI.md",
+      "sha256": "7754f1e9b803612b630aaefa20b3447f2cac30a5c7a58bcc3dfd1b640a7bd851"
+    },
+    {
+      "file": "specs/WORKER-CONFORMANCE.md",
+      "sha256": "1037c412b995f84258e232dcbcef9e0fb46101328918248e81b534c2a29b5bf2"
+    }
+  ],
+  "non_claims": [
+    "No Noble execution",
+    "No proof checking",
+    "No Component Model conformance",
+    "No complete semantic coverage claim"
+  ]
+}

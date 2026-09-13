@@ -1,0 +1,15 @@
+{
+  "revision": "0.1.0-draft.1",
+  "status": "structural-validation-only",
+  "checks": {
+    "normative_requirement_ids_unique": true,
+    "conformance_requirement_refs_resolve": true,
+    "conformance_case_count": 15,
+    "all_scenarios_not_run": true,
+    "integrated_preview_contains_component_section": true,
+    "integrated_preview_preserves_run_reflect": true,
+    "integrated_preview_contains_G11": true
+  },
+  "missing_requirement_refs": [],
+  "note": "These are document/package checks, not Noble compiler/runtime tests, Component Model conformance results, or proofs."
+}

@@ -1,0 +1,104 @@
+{
+  "change_issues": [],
+  "changes": 0,
+  "cross_repo_dependencies": [],
+  "cross_repo_evidence_issues": [],
+  "findings": [],
+  "issues": [],
+  "layout": "cairn",
+  "policy": "cairn-default",
+  "resolution": {
+    "diagnostics": [],
+    "locator_consulted": false,
+    "registry_lookup": "local_locator_only",
+    "selected": {
+      "project_identity": null,
+      "root": ".",
+      "source": "explicit_root",
+      "store_id": null,
+      "store_identity": null
+    },
+    "valid": true
+  },
+  "spec_findings": [],
+  "spec_issues": [],
+  "spec_substance": [
+    {
+      "path": "./.cairn/specs/backend-experiments/spec.md",
+      "requirement_blocks": 9,
+      "scenario_blocks": 16,
+      "substantive_requirement_blocks": 9
+    },
+    {
+      "path": "./.cairn/specs/calculator/spec.md",
+      "requirement_blocks": 23,
+      "scenario_blocks": 36,
+      "substantive_requirement_blocks": 23
+    },
+    {
+      "path": "./.cairn/specs/core-bootstrap/spec.md",
+      "requirement_blocks": 18,
+      "scenario_blocks": 21,
+      "substantive_requirement_blocks": 18
+    },
+    {
+      "path": "./.cairn/specs/developer-experience/spec.md",
+      "requirement_blocks": 25,
+      "scenario_blocks": 30,
+      "substantive_requirement_blocks": 25
+    },
+    {
+      "path": "./.cairn/specs/evidence/spec.md",
+      "requirement_blocks": 14,
+      "scenario_blocks": 11,
+      "substantive_requirement_blocks": 14
+    },
+    {
+      "path": "./.cairn/specs/language/spec.md",
+      "requirement_blocks": 148,
+      "scenario_blocks": 96,
+      "substantive_requirement_blocks": 148
+    },
+    {
+      "path": "./.cairn/specs/program-contracts/spec.md",
+      "requirement_blocks": 51,
+      "scenario_blocks": 72,
+      "substantive_requirement_blocks": 51
+    },
+    {
+      "path": "./.cairn/specs/resource-adapters/spec.md",
+      "requirement_blocks": 18,
+      "scenario_blocks": 29,
+      "substantive_requirement_blocks": 18
+    },
+    {
+      "path": "./.cairn/specs/safety/spec.md",
+      "requirement_blocks": 40,
+      "scenario_blocks": 44,
+      "substantive_requirement_blocks": 40
+    },
+    {
+      "path": "./.cairn/specs/verification-toolchain/spec.md",
+      "requirement_blocks": 49,
+      "scenario_blocks": 41,
+      "substantive_requirement_blocks": 49
+    },
+    {
+      "path": "./.cairn/specs/verification/spec.md",
+      "requirement_blocks": 36,
+      "scenario_blocks": 5,
+      "substantive_requirement_blocks": 36
+    },
+    {
+      "path": "./.cairn/specs/wit-wasi/spec.md",
+      "requirement_blocks": 44,
+      "scenario_blocks": 39,
+      "substantive_requirement_blocks": 44
+    }
+  ],
+  "specs_validated": 12,
+  "substance": [],
+  "substance_findings": [],
+  "substance_issues": [],
+  "valid": true
+}

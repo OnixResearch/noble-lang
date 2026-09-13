@@ -1,0 +1,97 @@
+{
+  "document": "SPEC-S001",
+  "revision": "0.1.0-draft.1",
+  "status": "expected-not-run",
+  "cases": [
+    {
+      "id": "S-CASE-01",
+      "family": "language",
+      "expect": "static-reject",
+      "scenario": "A checked body would require a wrong operand type/stack shape."
+    },
+    {
+      "id": "S-CASE-02",
+      "family": "language",
+      "expect": "defined-failure",
+      "scenario": "A bounds-invalid container access uses the selected checked/trapping contract and cannot corrupt memory."
+    },
+    {
+      "id": "S-CASE-03",
+      "family": "authority",
+      "expect": "deny",
+      "scenario": "An integer/bytes value is presented as a live resource handle without a validated host-issued capability."
+    },
+    {
+      "id": "S-CASE-04",
+      "family": "resource",
+      "expect": "static-reject",
+      "scenario": "A live resource or resource-bearing aggregate is passed to generic dup/drop/quote/serialization."
+    },
+    {
+      "id": "S-CASE-05",
+      "family": "effect",
+      "expect": "deny-or-static-reject",
+      "scenario": "A program with empty effect bound attempts a guest host operation."
+    },
+    {
+      "id": "S-CASE-06",
+      "family": "authority",
+      "expect": "deny",
+      "scenario": "A program whose effect set names fs.read runs without an authorized Directory/resource."
+    },
+    {
+      "id": "S-CASE-07",
+      "family": "loading",
+      "expect": "reject",
+      "scenario": "A valid Wasm module arrives with forged Noble recipe/type metadata and no trusted correspondence path."
+    },
+    {
+      "id": "S-CASE-08",
+      "family": "host-boundary",
+      "expect": "reject",
+      "scenario": "A host callback returns a stale/wrong-kind/cross-context resource representation."
+    },
+    {
+      "id": "S-CASE-09",
+      "family": "wire",
+      "expect": "reject",
+      "scenario": "Malformed or over-limit Preserves input is received at a standard-concurrency boundary."
+    },
+    {
+      "id": "S-CASE-10",
+      "family": "wire",
+      "expect": "reject",
+      "scenario": "A valid Preserves value fails the declared protocol schema and must not enter typed Noble code."
+    },
+    {
+      "id": "S-CASE-11",
+      "family": "concurrency",
+      "expect": "unrepresentable-or-reject",
+      "scenario": "Two standard-profile actors attempt direct shared mutable Noble memory rather than dataspace/resource interaction."
+    },
+    {
+      "id": "S-CASE-12",
+      "family": "concurrency",
+      "expect": "cleanup",
+      "scenario": "A facet/actor terminates and its scope-owned assertions/interests/subordinate conversational activity are retired/retracted."
+    },
+    {
+      "id": "S-CASE-13",
+      "family": "runtime",
+      "expect": "defined-failure",
+      "scenario": "Execution budget or memory quota is exhausted; result is a specified profile failure, not language-level undefined behavior."
+    },
+    {
+      "id": "S-CASE-14",
+      "family": "source-safety",
+      "expect": "unavailable",
+      "scenario": "Guest source attempts an unsafe/transmute/raw-pointer escape from the checked semantics."
+    },
+    {
+      "id": "S-CASE-15",
+      "family": "advanced-types",
+      "expect": "gate",
+      "scenario": "A future dependent/higher-rank/subtyping feature may only join the stable-safe subset after affected checker/proof obligations are complete."
+    }
+  ]
+}

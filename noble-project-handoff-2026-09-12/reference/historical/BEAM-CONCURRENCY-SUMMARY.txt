@@ -1,0 +1,40 @@
+**Written and packaged the specifications:** first-party concurrency libraries backed by an explicit runtime profile, without adding actors to Noble’s language kernel.
+
+**[Download the complete specification package](sandbox:/mnt/data/noble-concurrency-0.1.0-draft.1.zip)** · [Package overview](sandbox:/mnt/data/noble-concurrency-0.1.0-draft.1/README.md)
+
+## New and updated specifications
+
+| Document | What it specifies |
+|---|---|
+| **[Standard Execution Profile — SPEC-E001](sandbox:/mnt/data/noble-concurrency-0.1.0-draft.1/EXECUTION-PROFILE.md)** | Task admission, owned scopes, cancellation, termination, resource cleanup, scheduling, isolation, bounded channels, request/reply bookkeeping, and runtime inspection. |
+| **[Standard Concurrency Libraries — LIB-C001](sandbox:/mnt/data/noble-concurrency-0.1.0-draft.1/CONCURRENCY-LIBRARY.md)** | Scoped-task combinators, typed service loops, state-machine runners, supervision, restart policies, and a separately scoped demand-stream extension. |
+| **[Integrated Core Specification — SPEC-0001](sandbox:/mnt/data/noble-concurrency-0.1.0-draft.1/SPEC-0001.md)** | Updated working copy retaining the existing verification extension and adding the platform boundary, profile references, and conditional concurrency release gates. |
+| **[Concurrent Verification Extension — SPEC-V003](sandbox:/mnt/data/noble-concurrency-0.1.0-draft.1/CONCURRENCY-VERIFICATION.md)** | Concurrent ownership, synchronization races, effect histories, interference assumptions, conditional fairness, and implementation-verification boundaries. |
+| **[BEAM Ecosystem References — REF-BEAM001](sandbox:/mnt/data/noble-concurrency-0.1.0-draft.1/REFERENCES-BEAM-ECOSYSTEM.md)** | Registers Erlang, OTP, Elixir, Gleam, and BEAM/ERTS as architectural references, with primary sources and explicit distinctions between their mechanisms and Noble’s adaptations. |
+| **[Concurrency Decisions — DEC-C001](sandbox:/mnt/data/noble-concurrency-0.1.0-draft.1/CONCURRENCY-DECISIONS.md)** | Records the selected policies, their rationale, and the implementation choices that remain open. |
+
+I also updated working copies of **[VERIFICATION.md](sandbox:/mnt/data/noble-concurrency-0.1.0-draft.1/VERIFICATION.md)**, **[PROGRAM-CONTRACTS.md](sandbox:/mnt/data/noble-concurrency-0.1.0-draft.1/PROGRAM-CONTRACTS.md)**, and **[VERIFICATION-TOOLCHAIN.md](sandbox:/mnt/data/noble-concurrency-0.1.0-draft.1/VERIFICATION-TOOLCHAIN.md)** to connect them to the concurrency workstream.
+
+## Important choices in this draft
+
+**The kernel stays small; the service platform is standardized.** No actor expression, implicit mailbox, continuation mechanism, or resource-capturing closure is introduced. Pure/configuration hosts may omit concurrency; a host claiming the standard service platform must supply the specified runtime guarantees. This preserves the existing distinction between checked programs and running tasks, and the rule that sequential composition does not imply concurrency. fileciteturn0file4L63-L78 fileciteturn0file4L88-L100
+
+**Tasks have owners, even when their supervising code fails.** Admission atomically registers a child and transfers supported input resources before execution. There is no unrestricted detach operation. Scope cleanup relies on host accounting, not on a crashed supervisor successfully running its finalizers.
+
+**Communication is typed and bounded.** The initial channel contract uses resource-free data payloads, finite message and byte limits, and explicit accounting for blocked senders. Endpoints and reply tokens remain move-only capabilities. Additional send permissions require an explicit host operation rather than generic duplication.
+
+**Restart reconstructs an instance; it does not resurrect one.** Child specifications contain immutable configuration and checked entry programs. Each attempt receives fresh, explicitly authorized resources and a new incarnation identity. The first supervision strategy restarts children independently, with restart budgets, bounded backoff, readiness checks, and shutdown taking precedence over restart.
+
+**Timeout, cancellation, and cleanup are different outcomes.** Request failures preserve the distinction between *not started* and *may have run*. There are no automatic request retries. Native work that cannot be stopped remains owned and charged under an explicit quarantine report rather than being reported as successfully cleaned up.
+
+**Concurrency gets its own verification obligations.** A sequential handle-table proof is not treated as proof of concurrent cancellation, queue safety, or scheduler fairness. Pure transition-function proofs also remain separate from proofs about their effectful runners.
+
+## Validation and integration
+
+The package includes **[66 conformance scenarios](sandbox:/mnt/data/noble-concurrency-0.1.0-draft.1/conformance/concurrency-cases.json)** and **[12 concurrency proof obligations](sandbox:/mnt/data/noble-concurrency-0.1.0-draft.1/verification/concurrency-obligations.json)**. Runtime scenarios are marked **`not-run`**; proof obligations are **`open`**.
+
+Package validation passed: requirement references, fixture structure, baseline fingerprints, Markdown checks, and all five exact patch routes. The **[validation report](sandbox:/mnt/data/noble-concurrency-0.1.0-draft.1/VALIDATION.json)** distinguishes those checks from runtime tests and proofs.
+
+The **[amendment guide](sandbox:/mnt/data/noble-concurrency-0.1.0-draft.1/CONCURRENCY-AMENDMENT.md)** provides scoped patches so newer syntax/tooling changes can be preserved. This work introduces no punctuation and does not revert the direction to use `#` for comments.
+
+**These are generated working copies and patches; the existing Project sources have not been overwritten.**

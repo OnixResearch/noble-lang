@@ -1,0 +1,6406 @@
+{
+  "revision": "0.1.0-draft.5",
+  "generated_by": "bun tools/check-specs.mjs --refresh-ledger",
+  "meaning": "planned evidence routes and scenario links; not conformance or proof results",
+  "requirements": [
+    {
+      "id": "B-CHECK-01",
+      "document": "../.cairn/specs/core-bootstrap/spec.md",
+      "document_id": "SPEC-B001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "CORE-16"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "B-CHECK-02",
+      "document": "../.cairn/specs/core-bootstrap/spec.md",
+      "document_id": "SPEC-B001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "B-CHECK-03",
+      "document": "../.cairn/specs/core-bootstrap/spec.md",
+      "document_id": "SPEC-B001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "CORE-07"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "B-CHECK-04",
+      "document": "../.cairn/specs/core-bootstrap/spec.md",
+      "document_id": "SPEC-B001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "CORE-15"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "B-CHECK-05",
+      "document": "../.cairn/specs/core-bootstrap/spec.md",
+      "document_id": "SPEC-B001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "CORE-16"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "B-CHECK-06",
+      "document": "../.cairn/specs/core-bootstrap/spec.md",
+      "document_id": "SPEC-B001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "ADAPT-01",
+        "ADAPT-02",
+        "ADAPT-03"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "B-CHECK-07",
+      "document": "../.cairn/specs/core-bootstrap/spec.md",
+      "document_id": "SPEC-B001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "WORKER-06",
+        "WORKER-07"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "B-DIAG-01",
+      "document": "../.cairn/specs/core-bootstrap/spec.md",
+      "document_id": "SPEC-B001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "ADAPT-01",
+        "ADAPT-08",
+        "DX-01"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "B-GATE-01",
+      "document": "../.cairn/specs/core-bootstrap/spec.md",
+      "document_id": "SPEC-B001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "CORE-01"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "B-IMPL-01",
+      "document": "../.cairn/specs/core-bootstrap/spec.md",
+      "document_id": "SPEC-B001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "B-IMPL-02",
+      "document": "../.cairn/specs/core-bootstrap/spec.md",
+      "document_id": "SPEC-B001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "B-IMPL-03",
+      "document": "../.cairn/specs/core-bootstrap/spec.md",
+      "document_id": "SPEC-B001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "ADAPT-03",
+        "ADAPT-06",
+        "ADAPT-16"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "B-RESULT-01",
+      "document": "../.cairn/specs/core-bootstrap/spec.md",
+      "document_id": "SPEC-B001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "WORKER-06",
+        "WORKER-07"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "B-RESULT-02",
+      "document": "../.cairn/specs/core-bootstrap/spec.md",
+      "document_id": "SPEC-B001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "CORE-08"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "B-SCOPE-01",
+      "document": "../.cairn/specs/core-bootstrap/spec.md",
+      "document_id": "SPEC-B001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "B-SCOPE-02",
+      "document": "../.cairn/specs/core-bootstrap/spec.md",
+      "document_id": "SPEC-B001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "B-WASM-01",
+      "document": "../.cairn/specs/core-bootstrap/spec.md",
+      "document_id": "SPEC-B001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "CORE-03"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "B-WASM-02",
+      "document": "../.cairn/specs/core-bootstrap/spec.md",
+      "document_id": "SPEC-B001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "CORE-09"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "BE-ARITY-01",
+      "document": "../.cairn/specs/backend-experiments/spec.md",
+      "document_id": "SPEC-BE001",
+      "evidence_routes": [
+        "experiment-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "ADAPT-08"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "BE-BOUNDARY-01",
+      "document": "../.cairn/specs/backend-experiments/spec.md",
+      "document_id": "SPEC-BE001",
+      "evidence_routes": [
+        "experiment-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "ADAPT-11"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "BE-COMPARE-01",
+      "document": "../.cairn/specs/backend-experiments/spec.md",
+      "document_id": "SPEC-BE001",
+      "evidence_routes": [
+        "experiment-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "ADAPT-12"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "BE-CONFIG-01",
+      "document": "../.cairn/specs/backend-experiments/spec.md",
+      "document_id": "SPEC-BE001",
+      "evidence_routes": [
+        "experiment-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "ADAPT-12"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "BE-DYNAMIC-01",
+      "document": "../.cairn/specs/backend-experiments/spec.md",
+      "document_id": "SPEC-BE001",
+      "evidence_routes": [
+        "experiment-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "ADAPT-09",
+        "ADAPT-10",
+        "CORE-03",
+        "CORE-05"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "BE-LIMIT-01",
+      "document": "../.cairn/specs/backend-experiments/spec.md",
+      "document_id": "SPEC-BE001",
+      "evidence_routes": [
+        "experiment-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "ADAPT-09"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "BE-REFLECT-01",
+      "document": "../.cairn/specs/backend-experiments/spec.md",
+      "document_id": "SPEC-BE001",
+      "evidence_routes": [
+        "experiment-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "ADAPT-09",
+        "ADAPT-10",
+        "CORE-05",
+        "CORE-09"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "BE-REPORT-01",
+      "document": "../.cairn/specs/backend-experiments/spec.md",
+      "document_id": "SPEC-BE001",
+      "evidence_routes": [
+        "experiment-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "ADAPT-09",
+        "ADAPT-12"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "BE-RESOURCE-01",
+      "document": "../.cairn/specs/backend-experiments/spec.md",
+      "document_id": "SPEC-BE001",
+      "evidence_routes": [
+        "experiment-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "RA-CASE-05"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "C-TEST-01",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "policy-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "C-TEST-02",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "policy-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "C-TEST-03",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "policy-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "C-TEST-04",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "policy-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "C-VERIFY-01",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "policy-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "C-VERIFY-02",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "policy-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "C-VERIFY-03",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "policy-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "C-WIT-01",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "policy-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "C-WIT-02",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "policy-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "C-WIT-03",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "policy-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "C-WIT-04",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "policy-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "C-WIT-05",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "policy-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "C-WIT-06",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "policy-test",
+        "review"
+      ],
+      "scenarios": [
+        "WI-15"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "CALC-AI-01",
+      "document": "../.cairn/specs/calculator/spec.md",
+      "document_id": "SPEC-CALC001",
+      "evidence_routes": [
+        "application-test",
+        "benchmark-policy-test",
+        "review"
+      ],
+      "scenarios": [
+        "CALC-11"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "CALC-AI-02",
+      "document": "../.cairn/specs/calculator/spec.md",
+      "document_id": "SPEC-CALC001",
+      "evidence_routes": [
+        "application-test",
+        "benchmark-policy-test",
+        "review"
+      ],
+      "scenarios": [
+        "CALC-11"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "CALC-AI-03",
+      "document": "../.cairn/specs/calculator/spec.md",
+      "document_id": "SPEC-CALC001",
+      "evidence_routes": [
+        "application-test",
+        "benchmark-policy-test",
+        "review"
+      ],
+      "scenarios": [
+        "CALC-11"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "CALC-AI-04",
+      "document": "../.cairn/specs/calculator/spec.md",
+      "document_id": "SPEC-CALC001",
+      "evidence_routes": [
+        "application-test",
+        "benchmark-policy-test",
+        "review"
+      ],
+      "scenarios": [
+        "CALC-10"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "CALC-APPROX-01",
+      "document": "../.cairn/specs/calculator/spec.md",
+      "document_id": "SPEC-CALC001",
+      "evidence_routes": [
+        "application-test",
+        "benchmark-policy-test",
+        "review"
+      ],
+      "scenarios": [
+        "CALC-09"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "CALC-BOUND-01",
+      "document": "../.cairn/specs/calculator/spec.md",
+      "document_id": "SPEC-CALC001",
+      "evidence_routes": [
+        "application-test",
+        "benchmark-policy-test",
+        "review"
+      ],
+      "scenarios": [
+        "CALC-06",
+        "CALC-13"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "CALC-DISPLAY-01",
+      "document": "../.cairn/specs/calculator/spec.md",
+      "document_id": "SPEC-CALC001",
+      "evidence_routes": [
+        "application-test",
+        "benchmark-policy-test",
+        "review"
+      ],
+      "scenarios": [
+        "CALC-08",
+        "CALC-09"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "CALC-EVIDENCE-01",
+      "document": "../.cairn/specs/calculator/spec.md",
+      "document_id": "SPEC-CALC001",
+      "evidence_routes": [
+        "application-test",
+        "benchmark-policy-test",
+        "review"
+      ],
+      "scenarios": [
+        "CALC-12"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "CALC-EVIDENCE-02",
+      "document": "../.cairn/specs/calculator/spec.md",
+      "document_id": "SPEC-CALC001",
+      "evidence_routes": [
+        "application-test",
+        "benchmark-policy-test",
+        "review"
+      ],
+      "scenarios": [
+        "CALC-12"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "CALC-GATE-01",
+      "document": "../.cairn/specs/calculator/spec.md",
+      "document_id": "SPEC-CALC001",
+      "evidence_routes": [
+        "application-test",
+        "benchmark-policy-test",
+        "review"
+      ],
+      "scenarios": [
+        "CALC-13"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "CALC-LIMIT-01",
+      "document": "../.cairn/specs/calculator/spec.md",
+      "document_id": "SPEC-CALC001",
+      "evidence_routes": [
+        "application-test",
+        "benchmark-policy-test",
+        "review"
+      ],
+      "scenarios": [
+        "CALC-08"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "CALC-NUM-01",
+      "document": "../.cairn/specs/calculator/spec.md",
+      "document_id": "SPEC-CALC001",
+      "evidence_routes": [
+        "application-test",
+        "benchmark-policy-test",
+        "review"
+      ],
+      "scenarios": [
+        "CALC-01",
+        "CALC-08"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "CALC-NUM-02",
+      "document": "../.cairn/specs/calculator/spec.md",
+      "document_id": "SPEC-CALC001",
+      "evidence_routes": [
+        "application-test",
+        "benchmark-policy-test",
+        "review"
+      ],
+      "scenarios": [
+        "CALC-04"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "CALC-NUM-03",
+      "document": "../.cairn/specs/calculator/spec.md",
+      "document_id": "SPEC-CALC001",
+      "evidence_routes": [
+        "application-test",
+        "benchmark-policy-test",
+        "review"
+      ],
+      "scenarios": [
+        "CALC-01"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "CALC-NUM-04",
+      "document": "../.cairn/specs/calculator/spec.md",
+      "document_id": "SPEC-CALC001",
+      "evidence_routes": [
+        "application-test",
+        "benchmark-policy-test",
+        "review"
+      ],
+      "scenarios": [
+        "CALC-01",
+        "CALC-03"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "CALC-NUM-05",
+      "document": "../.cairn/specs/calculator/spec.md",
+      "document_id": "SPEC-CALC001",
+      "evidence_routes": [
+        "application-test",
+        "benchmark-policy-test",
+        "review"
+      ],
+      "scenarios": [
+        "CALC-01",
+        "CALC-03"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "CALC-NUM-06",
+      "document": "../.cairn/specs/calculator/spec.md",
+      "document_id": "SPEC-CALC001",
+      "evidence_routes": [
+        "application-test",
+        "benchmark-policy-test",
+        "review"
+      ],
+      "scenarios": [
+        "CALC-05"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "CALC-PARSE-01",
+      "document": "../.cairn/specs/calculator/spec.md",
+      "document_id": "SPEC-CALC001",
+      "evidence_routes": [
+        "application-test",
+        "benchmark-policy-test",
+        "review"
+      ],
+      "scenarios": [
+        "CALC-01",
+        "CALC-02"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "CALC-PARSE-02",
+      "document": "../.cairn/specs/calculator/spec.md",
+      "document_id": "SPEC-CALC001",
+      "evidence_routes": [
+        "application-test",
+        "benchmark-policy-test",
+        "review"
+      ],
+      "scenarios": [
+        "CALC-02",
+        "CALC-07"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "CALC-SCOPE-01",
+      "document": "../.cairn/specs/calculator/spec.md",
+      "document_id": "SPEC-CALC001",
+      "evidence_routes": [
+        "application-test",
+        "benchmark-policy-test",
+        "review"
+      ],
+      "scenarios": [
+        "CALC-13"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "CALC-SCOPE-02",
+      "document": "../.cairn/specs/calculator/spec.md",
+      "document_id": "SPEC-CALC001",
+      "evidence_routes": [
+        "application-test",
+        "benchmark-policy-test",
+        "review"
+      ],
+      "scenarios": [
+        "CALC-05",
+        "CALC-13"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "CALC-STATE-01",
+      "document": "../.cairn/specs/calculator/spec.md",
+      "document_id": "SPEC-CALC001",
+      "evidence_routes": [
+        "application-test",
+        "benchmark-policy-test",
+        "review"
+      ],
+      "scenarios": [
+        "CALC-06",
+        "CALC-07"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "CALC-STATE-02",
+      "document": "../.cairn/specs/calculator/spec.md",
+      "document_id": "SPEC-CALC001",
+      "evidence_routes": [
+        "application-test",
+        "benchmark-policy-test",
+        "review"
+      ],
+      "scenarios": [
+        "CALC-02",
+        "CALC-03",
+        "CALC-06",
+        "CALC-07",
+        "CALC-08"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "DX-CACHE-01",
+      "document": "../.cairn/specs/developer-experience/spec.md",
+      "document_id": "SPEC-DX001",
+      "evidence_routes": [
+        "semantic-test",
+        "policy-test",
+        "review"
+      ],
+      "scenarios": [
+        "DX-05"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "DX-DIAG-01",
+      "document": "../.cairn/specs/developer-experience/spec.md",
+      "document_id": "SPEC-DX001",
+      "evidence_routes": [
+        "semantic-test",
+        "policy-test",
+        "review"
+      ],
+      "scenarios": [
+        "CALC-10",
+        "DX-01"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "DX-DOC-01",
+      "document": "../.cairn/specs/developer-experience/spec.md",
+      "document_id": "SPEC-DX001",
+      "evidence_routes": [
+        "semantic-test",
+        "policy-test",
+        "review"
+      ],
+      "scenarios": [
+        "DX-12"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "DX-DOC-02",
+      "document": "../.cairn/specs/developer-experience/spec.md",
+      "document_id": "SPEC-DX001",
+      "evidence_routes": [
+        "semantic-test",
+        "policy-test",
+        "review"
+      ],
+      "scenarios": [
+        "DX-12"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "DX-HOLE-01",
+      "document": "../.cairn/specs/developer-experience/spec.md",
+      "document_id": "SPEC-DX001",
+      "evidence_routes": [
+        "semantic-test",
+        "policy-test",
+        "review"
+      ],
+      "scenarios": [
+        "CALC-10",
+        "DX-02"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "DX-HOST-01",
+      "document": "../.cairn/specs/developer-experience/spec.md",
+      "document_id": "SPEC-DX001",
+      "evidence_routes": [
+        "semantic-test",
+        "policy-test",
+        "review"
+      ],
+      "scenarios": [
+        "DX-06"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "DX-HOST-02",
+      "document": "../.cairn/specs/developer-experience/spec.md",
+      "document_id": "SPEC-DX001",
+      "evidence_routes": [
+        "semantic-test",
+        "policy-test",
+        "review"
+      ],
+      "scenarios": [
+        "DX-06"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "DX-IDENTITY-01",
+      "document": "../.cairn/specs/developer-experience/spec.md",
+      "document_id": "SPEC-DX001",
+      "evidence_routes": [
+        "semantic-test",
+        "policy-test",
+        "review"
+      ],
+      "scenarios": [
+        "DX-05"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "DX-LOCAL-01",
+      "document": "../.cairn/specs/developer-experience/spec.md",
+      "document_id": "SPEC-DX001",
+      "evidence_routes": [
+        "semantic-test",
+        "policy-test",
+        "review"
+      ],
+      "scenarios": [
+        "DX-07"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "DX-LOCAL-02",
+      "document": "../.cairn/specs/developer-experience/spec.md",
+      "document_id": "SPEC-DX001",
+      "evidence_routes": [
+        "semantic-test",
+        "policy-test",
+        "review"
+      ],
+      "scenarios": [
+        "DX-07"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "DX-MODULE-01",
+      "document": "../.cairn/specs/developer-experience/spec.md",
+      "document_id": "SPEC-DX001",
+      "evidence_routes": [
+        "semantic-test",
+        "policy-test",
+        "review"
+      ],
+      "scenarios": [
+        "DX-08"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "DX-MODULE-02",
+      "document": "../.cairn/specs/developer-experience/spec.md",
+      "document_id": "SPEC-DX001",
+      "evidence_routes": [
+        "semantic-test",
+        "policy-test",
+        "review"
+      ],
+      "scenarios": [
+        "DX-08",
+        "DX-09"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "DX-MODULE-03",
+      "document": "../.cairn/specs/developer-experience/spec.md",
+      "document_id": "SPEC-DX001",
+      "evidence_routes": [
+        "semantic-test",
+        "policy-test",
+        "review"
+      ],
+      "scenarios": [
+        "WORKER-01",
+        "WORKER-02"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "DX-MODULE-04",
+      "document": "../.cairn/specs/developer-experience/spec.md",
+      "document_id": "SPEC-DX001",
+      "evidence_routes": [
+        "semantic-test",
+        "policy-test",
+        "review"
+      ],
+      "scenarios": [
+        "OCTET-07"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "DX-PROPERTY-01",
+      "document": "../.cairn/specs/developer-experience/spec.md",
+      "document_id": "SPEC-DX001",
+      "evidence_routes": [
+        "semantic-test",
+        "policy-test",
+        "review"
+      ],
+      "scenarios": [
+        "DX-10"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "DX-PROPERTY-02",
+      "document": "../.cairn/specs/developer-experience/spec.md",
+      "document_id": "SPEC-DX001",
+      "evidence_routes": [
+        "semantic-test",
+        "policy-test",
+        "review"
+      ],
+      "scenarios": [
+        "DX-10"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "DX-PROTOCOL-01",
+      "document": "../.cairn/specs/developer-experience/spec.md",
+      "document_id": "SPEC-DX001",
+      "evidence_routes": [
+        "semantic-test",
+        "policy-test",
+        "review"
+      ],
+      "scenarios": [
+        "DX-11"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "DX-PROTOCOL-02",
+      "document": "../.cairn/specs/developer-experience/spec.md",
+      "document_id": "SPEC-DX001",
+      "evidence_routes": [
+        "semantic-test",
+        "policy-test",
+        "review"
+      ],
+      "scenarios": [
+        "DX-11"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "DX-PROTOCOL-03",
+      "document": "../.cairn/specs/developer-experience/spec.md",
+      "document_id": "SPEC-DX001",
+      "evidence_routes": [
+        "semantic-test",
+        "policy-test",
+        "review"
+      ],
+      "scenarios": [
+        "OCTET-05"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "DX-RESULT-01",
+      "document": "../.cairn/specs/developer-experience/spec.md",
+      "document_id": "SPEC-DX001",
+      "evidence_routes": [
+        "semantic-test",
+        "policy-test",
+        "review"
+      ],
+      "scenarios": [
+        "DX-04"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "DX-RESULT-02",
+      "document": "../.cairn/specs/developer-experience/spec.md",
+      "document_id": "SPEC-DX001",
+      "evidence_routes": [
+        "semantic-test",
+        "policy-test",
+        "review"
+      ],
+      "scenarios": [
+        "DX-04"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "DX-TYPE-01",
+      "document": "../.cairn/specs/developer-experience/spec.md",
+      "document_id": "SPEC-DX001",
+      "evidence_routes": [
+        "semantic-test",
+        "policy-test",
+        "review"
+      ],
+      "scenarios": [
+        "DX-03"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "DX-TYPE-02",
+      "document": "../.cairn/specs/developer-experience/spec.md",
+      "document_id": "SPEC-DX001",
+      "evidence_routes": [
+        "semantic-test",
+        "policy-test",
+        "review"
+      ],
+      "scenarios": [
+        "DX-03"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "DX-TYPE-03",
+      "document": "../.cairn/specs/developer-experience/spec.md",
+      "document_id": "SPEC-DX001",
+      "evidence_routes": [
+        "semantic-test",
+        "policy-test",
+        "review"
+      ],
+      "scenarios": [
+        "OCTET-06"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "DX-TYPE-04",
+      "document": "../.cairn/specs/developer-experience/spec.md",
+      "document_id": "SPEC-DX001",
+      "evidence_routes": [
+        "semantic-test",
+        "policy-test",
+        "review"
+      ],
+      "scenarios": [
+        "OCTET-03",
+        "OCTET-06"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "EV-BIND-01",
+      "document": "../.cairn/specs/evidence/spec.md",
+      "document_id": "SPEC-EV001",
+      "evidence_routes": [
+        "policy-test",
+        "review"
+      ],
+      "scenarios": [
+        "OCTET-09"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "EV-CASE-01",
+      "document": "../.cairn/specs/evidence/spec.md",
+      "document_id": "SPEC-EV001",
+      "evidence_routes": [
+        "policy-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "EV-CASE-02",
+      "document": "../.cairn/specs/evidence/spec.md",
+      "document_id": "SPEC-EV001",
+      "evidence_routes": [
+        "policy-test",
+        "review"
+      ],
+      "scenarios": [
+        "S-CASE-05"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "EV-CASE-03",
+      "document": "../.cairn/specs/evidence/spec.md",
+      "document_id": "SPEC-EV001",
+      "evidence_routes": [
+        "policy-test",
+        "review"
+      ],
+      "scenarios": [
+        "S-CASE-06",
+        "WI-08"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "EV-CASE-04",
+      "document": "../.cairn/specs/evidence/spec.md",
+      "document_id": "SPEC-EV001",
+      "evidence_routes": [
+        "policy-test",
+        "review"
+      ],
+      "scenarios": [
+        "CORE-03"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "EV-CASE-05",
+      "document": "../.cairn/specs/evidence/spec.md",
+      "document_id": "SPEC-EV001",
+      "evidence_routes": [
+        "policy-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "EV-GATE-01",
+      "document": "../.cairn/specs/evidence/spec.md",
+      "document_id": "SPEC-EV001",
+      "evidence_routes": [
+        "policy-test",
+        "review"
+      ],
+      "scenarios": [
+        "ADAPT-12",
+        "WORKER-11"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "EV-GATE-02",
+      "document": "../.cairn/specs/evidence/spec.md",
+      "document_id": "SPEC-EV001",
+      "evidence_routes": [
+        "policy-test",
+        "review"
+      ],
+      "scenarios": [
+        "ADAPT-13"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "EV-STATE-01",
+      "document": "../.cairn/specs/evidence/spec.md",
+      "document_id": "SPEC-EV001",
+      "evidence_routes": [
+        "policy-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "EV-STATE-02",
+      "document": "../.cairn/specs/evidence/spec.md",
+      "document_id": "SPEC-EV001",
+      "evidence_routes": [
+        "policy-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "EV-STATE-03",
+      "document": "../.cairn/specs/evidence/spec.md",
+      "document_id": "SPEC-EV001",
+      "evidence_routes": [
+        "policy-test",
+        "review"
+      ],
+      "scenarios": [
+        "WORKER-11"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "EV-TIER-01",
+      "document": "../.cairn/specs/evidence/spec.md",
+      "document_id": "SPEC-EV001",
+      "evidence_routes": [
+        "policy-test",
+        "review"
+      ],
+      "scenarios": [
+        "OCTET-09",
+        "OCTET-10"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "EV-TRACE-01",
+      "document": "../.cairn/specs/evidence/spec.md",
+      "document_id": "SPEC-EV001",
+      "evidence_routes": [
+        "policy-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "EV-TRACE-02",
+      "document": "../.cairn/specs/evidence/spec.md",
+      "document_id": "SPEC-EV001",
+      "evidence_routes": [
+        "policy-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "H-AUTH-01",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "OCTET-01"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "H-AUTH-02",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "OCTET-01",
+        "OCTET-02"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "H-AUTH-03",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "OCTET-01",
+        "OCTET-02"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "H-AUTH-04",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "OCTET-02",
+        "OCTET-03"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "H-HOST-01",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "H-HOST-02",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "OCTET-02",
+        "WORKER-12"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "H-HOST-03",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "H-LIMIT-01",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "H-LIMIT-02",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "WORKER-09",
+        "WORKER-10"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "H-LIMIT-03",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "WORKER-09"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "H-LOAD-01",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "H-OUTCOME-01",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "WORKER-01",
+        "WORKER-08",
+        "WORKER-09",
+        "WORKER-10"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "H-OUTCOME-02",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "OCTET-04",
+        "WORKER-01",
+        "WORKER-10"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "H-RECEIPT-01",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "OCTET-01",
+        "OCTET-04"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "H-RECEIPT-02",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "OCTET-01",
+        "OCTET-04"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "H-REPL-01",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "H-REPL-02",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "H-REPL-03",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "H-SAFE-01",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "H-SAFE-02",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "H-SAFE-03",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "H-SAFE-04",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "K-CHECK-01",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "CORE-04"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "K-CHECK-02",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "K-CHECK-03",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "K-CHECK-04",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "K-CHECK-05",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "K-CHECK-06",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "WORKER-05",
+        "WORKER-07"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "K-CHECK-07",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "OCTET-07",
+        "WORKER-06",
+        "WORKER-07"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "K-CONTROL-01",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "ADAPT-01",
+        "ADAPT-02"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "K-DATA-01",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "ADAPT-02"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "K-DATA-02",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "CORE-05"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "K-DEF-01",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "K-DEF-02",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "K-DEF-03",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "K-EFFECT-01",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "CORE-06",
+        "OCTET-07"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "K-EFFECT-02",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "K-EFFECT-03",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "K-EFFECT-04",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "K-EFFECT-05",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "WORKER-02",
+        "WORKER-03"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "K-ERROR-01",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "CORE-18"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "K-ERROR-02",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "K-ERROR-03",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "K-EVAL-01",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "CORE-02"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "K-EVAL-02",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "K-EVAL-03",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "K-EVAL-04",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "CORE-17"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "K-NUM-01",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "CORE-14"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "K-PROG-01",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "K-PROG-02",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "K-PROG-03",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "CORE-08"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "K-PROG-04",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "CORE-01"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "K-PROG-05",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "CORE-02",
+        "CORE-07"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "K-PROG-06",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "CORE-03",
+        "CORE-04",
+        "WORKER-03"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "K-PROG-07",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "K-PROG-08",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "K-PROG-09",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "WORKER-01",
+        "WORKER-02",
+        "WORKER-03"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "K-PROG-10",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "WORKER-01",
+        "WORKER-02",
+        "WORKER-03"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "K-RES-01",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "K-RES-02",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "CORE-15"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "K-RES-03",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "K-RES-04",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "K-SAFE-01",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "K-SAFE-02",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "K-SAFE-03",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "K-SAFE-04",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "K-SAFE-05",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "K-SCOPE-01",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "OCTET-10",
+        "WORKER-11"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "K-SCOPE-02",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "K-SCOPE-03",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "K-SCOPE-04",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "WORKER-11"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "K-SCOPE-05",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "CORE-06",
+        "WORKER-12"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "K-STACK-01",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "K-STATUS-01",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "K-SYN-01",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "CORE-18"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "K-SYN-02",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "K-SYN-03",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "CORE-08"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "K-SYN-04",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "CORE-11",
+        "CORE-12"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "K-SYN-05",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "CORE-13"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "K-TYPE-01",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "K-TYPE-02",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "ADAPT-02",
+        "ADAPT-03",
+        "CORE-15",
+        "OCTET-03",
+        "WORKER-02"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "K-VERIFY-01",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "K-VERIFY-02",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "K-VERIFY-03",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "CONTRACT-10"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "P-AUTH-01",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "P-ID-01",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "ID-01"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "P-ID-02",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "ID-02"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "P-ID-03",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "ID-05"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "P-ID-04",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "WORKER-04"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "P-ID-05",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "P-ID-06",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "P-ID-07",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "P-ID-08",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "ID-03",
+        "ID-04"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "P-PACK-01",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "WORKER-04",
+        "WORKER-05",
+        "WORKER-12"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "P-PACK-02",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "WORKER-04",
+        "WORKER-05"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "P-PREPARE-01",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "WORKER-01"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "P-PREPARE-02",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "P-PREPARE-03",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "P-PREPARE-04",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "P-RECIPE-01",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "ADAPT-10"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "P-RECIPE-02",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "ADAPT-10",
+        "CORE-09"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "P-RECIPE-03",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "P-RECIPE-04",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "P-REFLECT-01",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "CORE-09"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "P-REFLECT-02",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "P-REFLECT-03",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "P-ROUND-01",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "WORKER-04"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "P-ROUND-02",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "WORKER-04",
+        "WORKER-05"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "P-STAGE-01",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "CORE-10"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "P-STAGE-02",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "P-VERIFY-01",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "P-VERIFY-02",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "CONTRACT-11"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "RA-ASYNC-01",
+      "document": "../.cairn/specs/resource-adapters/spec.md",
+      "document_id": "SPEC-R001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "RA-CASE-04"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "RA-ASYNC-02",
+      "document": "../.cairn/specs/resource-adapters/spec.md",
+      "document_id": "SPEC-R001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "WORKER-01",
+        "WORKER-08"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "RA-ASYNC-03",
+      "document": "../.cairn/specs/resource-adapters/spec.md",
+      "document_id": "SPEC-R001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "WORKER-01",
+        "WORKER-08"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "RA-ASYNC-04",
+      "document": "../.cairn/specs/resource-adapters/spec.md",
+      "document_id": "SPEC-R001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "OCTET-04",
+        "WORKER-01",
+        "WORKER-08"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "RA-ASYNC-05",
+      "document": "../.cairn/specs/resource-adapters/spec.md",
+      "document_id": "SPEC-R001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "WORKER-08",
+        "WORKER-09"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "RA-CLEAN-01",
+      "document": "../.cairn/specs/resource-adapters/spec.md",
+      "document_id": "SPEC-R001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "RA-CASE-05",
+        "RA-CASE-08",
+        "RA-CASE-09"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "RA-CLEAN-02",
+      "document": "../.cairn/specs/resource-adapters/spec.md",
+      "document_id": "SPEC-R001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "RA-CASE-05",
+        "RA-CASE-06",
+        "RA-CASE-09"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "RA-CLEAN-03",
+      "document": "../.cairn/specs/resource-adapters/spec.md",
+      "document_id": "SPEC-R001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "RA-CASE-06"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "RA-CLEAN-04",
+      "document": "../.cairn/specs/resource-adapters/spec.md",
+      "document_id": "SPEC-R001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "RA-OWN-01",
+      "document": "../.cairn/specs/resource-adapters/spec.md",
+      "document_id": "SPEC-R001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "RA-CASE-07",
+        "RA-CASE-08"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "RA-OWN-02",
+      "document": "../.cairn/specs/resource-adapters/spec.md",
+      "document_id": "SPEC-R001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "RA-CASE-05"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "RA-SCOPE-01",
+      "document": "../.cairn/specs/resource-adapters/spec.md",
+      "document_id": "SPEC-R001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "RA-CASE-04"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "RA-SCOPE-02",
+      "document": "../.cairn/specs/resource-adapters/spec.md",
+      "document_id": "SPEC-R001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "RA-CASE-02",
+        "RA-CASE-09"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "RA-STATE-01",
+      "document": "../.cairn/specs/resource-adapters/spec.md",
+      "document_id": "SPEC-R001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "RA-CASE-01"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "RA-STATE-02",
+      "document": "../.cairn/specs/resource-adapters/spec.md",
+      "document_id": "SPEC-R001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "RA-CASE-03"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "RA-STATE-03",
+      "document": "../.cairn/specs/resource-adapters/spec.md",
+      "document_id": "SPEC-R001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "RA-CASE-01",
+        "RA-CASE-06"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "RA-TYPE-01",
+      "document": "../.cairn/specs/resource-adapters/spec.md",
+      "document_id": "SPEC-R001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "RA-CASE-01"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "RA-TYPE-02",
+      "document": "../.cairn/specs/resource-adapters/spec.md",
+      "document_id": "SPEC-R001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "RA-CASE-02"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "S-CLAIM-01",
+      "document": "../.cairn/specs/safety/spec.md",
+      "document_id": "SPEC-S001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "S-CLAIM-02",
+      "document": "../.cairn/specs/safety/spec.md",
+      "document_id": "SPEC-S001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "S-CONC-01",
+      "document": "../.cairn/specs/safety/spec.md",
+      "document_id": "SPEC-S001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "S-CASE-11"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "S-CONC-02",
+      "document": "../.cairn/specs/safety/spec.md",
+      "document_id": "SPEC-S001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "S-CASE-11"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "S-CONC-03",
+      "document": "../.cairn/specs/safety/spec.md",
+      "document_id": "SPEC-S001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "S-CASE-12"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "S-CONC-04",
+      "document": "../.cairn/specs/safety/spec.md",
+      "document_id": "SPEC-S001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "S-CASE-09",
+        "S-CASE-10"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "S-CONC-05",
+      "document": "../.cairn/specs/safety/spec.md",
+      "document_id": "SPEC-S001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "S-CASE-10"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "S-CONC-06",
+      "document": "../.cairn/specs/safety/spec.md",
+      "document_id": "SPEC-S001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "S-DECODE-01",
+      "document": "../.cairn/specs/safety/spec.md",
+      "document_id": "SPEC-S001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "ADAPT-04",
+        "ADAPT-06",
+        "ADAPT-15",
+        "ADAPT-16"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "S-DECODE-02",
+      "document": "../.cairn/specs/safety/spec.md",
+      "document_id": "SPEC-S001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "ADAPT-04",
+        "ADAPT-05",
+        "ADAPT-11"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "S-DECODE-03",
+      "document": "../.cairn/specs/safety/spec.md",
+      "document_id": "SPEC-S001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "ADAPT-04",
+        "ADAPT-07"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "S-EFFECT-01",
+      "document": "../.cairn/specs/safety/spec.md",
+      "document_id": "SPEC-S001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "S-CASE-05",
+        "S-CASE-16"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "S-EFFECT-02",
+      "document": "../.cairn/specs/safety/spec.md",
+      "document_id": "SPEC-S001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "S-CASE-05",
+        "S-CASE-16"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "S-EFFECT-03",
+      "document": "../.cairn/specs/safety/spec.md",
+      "document_id": "SPEC-S001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "S-CASE-06",
+        "WORKER-10",
+        "WORKER-12"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "S-GATE-01",
+      "document": "../.cairn/specs/safety/spec.md",
+      "document_id": "SPEC-S001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "S-GATE-02",
+      "document": "../.cairn/specs/safety/spec.md",
+      "document_id": "SPEC-S001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "S-GATE-03",
+      "document": "../.cairn/specs/safety/spec.md",
+      "document_id": "SPEC-S001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "S-CASE-15"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "S-HOST-01",
+      "document": "../.cairn/specs/safety/spec.md",
+      "document_id": "SPEC-S001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "S-CASE-08"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "S-HOST-02",
+      "document": "../.cairn/specs/safety/spec.md",
+      "document_id": "SPEC-S001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "S-CASE-08"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "S-HOST-03",
+      "document": "../.cairn/specs/safety/spec.md",
+      "document_id": "SPEC-S001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "S-CASE-07",
+        "S-CASE-16"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "S-HOST-04",
+      "document": "../.cairn/specs/safety/spec.md",
+      "document_id": "SPEC-S001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "S-LANG-01",
+      "document": "../.cairn/specs/safety/spec.md",
+      "document_id": "SPEC-S001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "S-CASE-14"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "S-LANG-02",
+      "document": "../.cairn/specs/safety/spec.md",
+      "document_id": "SPEC-S001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "S-CASE-14"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "S-LANG-03",
+      "document": "../.cairn/specs/safety/spec.md",
+      "document_id": "SPEC-S001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "S-CASE-13"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "S-LANG-04",
+      "document": "../.cairn/specs/safety/spec.md",
+      "document_id": "SPEC-S001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "S-CASE-02"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "S-LANG-05",
+      "document": "../.cairn/specs/safety/spec.md",
+      "document_id": "SPEC-S001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "S-MEM-01",
+      "document": "../.cairn/specs/safety/spec.md",
+      "document_id": "SPEC-S001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "S-CASE-02"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "S-MEM-02",
+      "document": "../.cairn/specs/safety/spec.md",
+      "document_id": "SPEC-S001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "S-CASE-03",
+        "S-CASE-08"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "S-MEM-03",
+      "document": "../.cairn/specs/safety/spec.md",
+      "document_id": "SPEC-S001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "S-CASE-09"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "S-MEM-04",
+      "document": "../.cairn/specs/safety/spec.md",
+      "document_id": "SPEC-S001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "S-RES-01",
+      "document": "../.cairn/specs/safety/spec.md",
+      "document_id": "SPEC-S001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "S-CASE-04"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "S-RES-02",
+      "document": "../.cairn/specs/safety/spec.md",
+      "document_id": "SPEC-S001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "S-CASE-03"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "S-RES-03",
+      "document": "../.cairn/specs/safety/spec.md",
+      "document_id": "SPEC-S001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "S-CASE-03"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "S-RES-04",
+      "document": "../.cairn/specs/safety/spec.md",
+      "document_id": "SPEC-S001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "S-CASE-04"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "S-RES-05",
+      "document": "../.cairn/specs/safety/spec.md",
+      "document_id": "SPEC-S001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "S-CASE-12"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "S-TYPE-01",
+      "document": "../.cairn/specs/safety/spec.md",
+      "document_id": "SPEC-S001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "S-CASE-01"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "S-TYPE-02",
+      "document": "../.cairn/specs/safety/spec.md",
+      "document_id": "SPEC-S001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "CORE-10",
+        "S-CASE-07"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "S-VERIFY-01",
+      "document": "../.cairn/specs/safety/spec.md",
+      "document_id": "SPEC-S001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "S-VERIFY-02",
+      "document": "../.cairn/specs/safety/spec.md",
+      "document_id": "SPEC-S001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "S-VERIFY-03",
+      "document": "../.cairn/specs/safety/spec.md",
+      "document_id": "SPEC-S001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "S-CASE-15"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "V-AUTH-01",
+      "document": "../.cairn/specs/verification/spec.md",
+      "document_id": "SPEC-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "V-CHECK-01",
+      "document": "../.cairn/specs/verification/spec.md",
+      "document_id": "SPEC-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "CORE-16"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "V-CHECK-02",
+      "document": "../.cairn/specs/verification/spec.md",
+      "document_id": "SPEC-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "V-CHECK-03",
+      "document": "../.cairn/specs/verification/spec.md",
+      "document_id": "SPEC-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "V-CHECK-04",
+      "document": "../.cairn/specs/verification/spec.md",
+      "document_id": "SPEC-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "V-CHECK-05",
+      "document": "../.cairn/specs/verification/spec.md",
+      "document_id": "SPEC-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "V-CHECK-06",
+      "document": "../.cairn/specs/verification/spec.md",
+      "document_id": "SPEC-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "V-CLAIM-01",
+      "document": "../.cairn/specs/verification/spec.md",
+      "document_id": "SPEC-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "V-CORE-01",
+      "document": "../.cairn/specs/verification/spec.md",
+      "document_id": "SPEC-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "V-CORE-02",
+      "document": "../.cairn/specs/verification/spec.md",
+      "document_id": "SPEC-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "V-CORE-03",
+      "document": "../.cairn/specs/verification/spec.md",
+      "document_id": "SPEC-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "V-EFFECT-01",
+      "document": "../.cairn/specs/verification/spec.md",
+      "document_id": "SPEC-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "CORE-17"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "V-EFFECT-02",
+      "document": "../.cairn/specs/verification/spec.md",
+      "document_id": "SPEC-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "V-EVIDENCE-01",
+      "document": "../.cairn/specs/verification/spec.md",
+      "document_id": "SPEC-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "V-EVIDENCE-02",
+      "document": "../.cairn/specs/verification/spec.md",
+      "document_id": "SPEC-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "V-EVIDENCE-03",
+      "document": "../.cairn/specs/verification/spec.md",
+      "document_id": "SPEC-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "V-EVIDENCE-04",
+      "document": "../.cairn/specs/verification/spec.md",
+      "document_id": "SPEC-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "V-GATE-01",
+      "document": "../.cairn/specs/verification/spec.md",
+      "document_id": "SPEC-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "V-GATE-02",
+      "document": "../.cairn/specs/verification/spec.md",
+      "document_id": "SPEC-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "V-GATE-03",
+      "document": "../.cairn/specs/verification/spec.md",
+      "document_id": "SPEC-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "V-GATE-04",
+      "document": "../.cairn/specs/verification/spec.md",
+      "document_id": "SPEC-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "V-GATE-05",
+      "document": "../.cairn/specs/verification/spec.md",
+      "document_id": "SPEC-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "VERIFY-01",
+        "VERIFY-05"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "V-MODEL-01",
+      "document": "../.cairn/specs/verification/spec.md",
+      "document_id": "SPEC-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "V-MODEL-02",
+      "document": "../.cairn/specs/verification/spec.md",
+      "document_id": "SPEC-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "V-MODEL-03",
+      "document": "../.cairn/specs/verification/spec.md",
+      "document_id": "SPEC-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "V-MODEL-04",
+      "document": "../.cairn/specs/verification/spec.md",
+      "document_id": "SPEC-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "V-NUM-01",
+      "document": "../.cairn/specs/verification/spec.md",
+      "document_id": "SPEC-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "CORE-14"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "V-OBS-01",
+      "document": "../.cairn/specs/verification/spec.md",
+      "document_id": "SPEC-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "V-RESOURCE-01",
+      "document": "../.cairn/specs/verification/spec.md",
+      "document_id": "SPEC-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "V-RESOURCE-02",
+      "document": "../.cairn/specs/verification/spec.md",
+      "document_id": "SPEC-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "V-RESOURCE-03",
+      "document": "../.cairn/specs/verification/spec.md",
+      "document_id": "SPEC-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "V-SAFE-01",
+      "document": "../.cairn/specs/verification/spec.md",
+      "document_id": "SPEC-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "V-SAFE-02",
+      "document": "../.cairn/specs/verification/spec.md",
+      "document_id": "SPEC-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "V-SAFE-03",
+      "document": "../.cairn/specs/verification/spec.md",
+      "document_id": "SPEC-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "V-SAFE-04",
+      "document": "../.cairn/specs/verification/spec.md",
+      "document_id": "SPEC-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "V-STATUS-01",
+      "document": "../.cairn/specs/verification/spec.md",
+      "document_id": "SPEC-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "VC-ADMIT-01",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "CONTRACT-08",
+        "CONTRACT-13"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VC-ADMIT-02",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "VC-ADMIT-03",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "CONTRACT-13"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VC-ADMIT-04",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "CONTRACT-02"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VC-ADMIT-05",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "ADAPT-15",
+        "CONTRACT-07"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VC-BOOT-01",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "CONTRACT-01"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VC-BUILD-01",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "CONTRACT-05"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VC-BUILD-02",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "CONTRACT-05",
+        "CONTRACT-11"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VC-BUILD-03",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "CONTRACT-04"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VC-COMPOSE-01",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "CONTRACT-03",
+        "CONTRACT-04"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VC-COMPOSE-02",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "CONTRACT-03"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VC-EVIDENCE-01",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "CONTRACT-02",
+        "CONTRACT-14"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VC-EVIDENCE-02",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "CONTRACT-02",
+        "CONTRACT-14"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VC-EVIDENCE-03",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "CONTRACT-06"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VC-EVIDENCE-04",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "CONTRACT-09"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VC-GATE-01",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "CONTRACT-01",
+        "CONTRACT-15"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VC-GATE-02",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "CONTRACT-03",
+        "CONTRACT-05",
+        "CONTRACT-06",
+        "CONTRACT-10"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VC-GATE-03",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "CONTRACT-08",
+        "CONTRACT-13"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VC-ID-01",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "CONTRACT-10"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VC-ID-02",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "CONTRACT-02",
+        "CONTRACT-05"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VC-ID-03",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "VC-INPUT-01",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "CONTRACT-01",
+        "CONTRACT-14",
+        "CONTRACT-15"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VC-INPUT-02",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "CONTRACT-15"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VC-INPUT-03",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "CONTRACT-01",
+        "CONTRACT-14"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VC-INPUT-04",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "CONTRACT-12"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VC-LIB-01",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "CONTRACT-01"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VC-LIB-02",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "CONTRACT-03",
+        "CONTRACT-04"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VC-LIB-03",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "CONTRACT-05"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VC-LIB-04",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "CONTRACT-03",
+        "CONTRACT-05",
+        "CONTRACT-06"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VC-LOGIC-01",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "VC-LOGIC-02",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "CONTRACT-07"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VC-LOGIC-03",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "VC-LOGIC-04",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "VC-LOGIC-05",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "VC-LOGIC-06",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "ADAPT-14"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VC-NUM-01",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "CONTRACT-01",
+        "CONTRACT-07"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VC-REWRITE-01",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "VC-REWRITE-02",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "VC-SCOPE-01",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "CONTRACT-11"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VC-SCOPE-02",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "CONTRACT-11"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VC-SCOPE-03",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "CONTRACT-10"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VC-TOOL-01",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "CONTRACT-09",
+        "CONTRACT-15"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VC-TOOL-02",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "CONTRACT-09"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VC-TOOL-03",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "CONTRACT-09",
+        "CONTRACT-14"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VC-TOOL-04",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "CONTRACT-08",
+        "CONTRACT-09",
+        "CONTRACT-10",
+        "CONTRACT-12"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VC-USE-01",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "CONTRACT-07",
+        "CONTRACT-08"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VC-VALUE-01",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "CONTRACT-03",
+        "CONTRACT-10"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VC-VALUE-02",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "CONTRACT-02",
+        "CONTRACT-06"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VC-VALUE-03",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "CONTRACT-02",
+        "CONTRACT-06"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VC-VALUE-04",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "CONTRACT-10",
+        "CONTRACT-12"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VC-VALUE-05",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "CONTRACT-10"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VT-AENEAS-01",
+      "document": "../.cairn/specs/verification-toolchain/spec.md",
+      "document_id": "IMPL-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "VT-AENEAS-02",
+      "document": "../.cairn/specs/verification-toolchain/spec.md",
+      "document_id": "IMPL-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "VERIFY-03"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VT-AENEAS-03",
+      "document": "../.cairn/specs/verification-toolchain/spec.md",
+      "document_id": "IMPL-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "VERIFY-01"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VT-AENEAS-04",
+      "document": "../.cairn/specs/verification-toolchain/spec.md",
+      "document_id": "IMPL-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "VERIFY-01",
+        "VERIFY-05"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VT-AENEAS-05",
+      "document": "../.cairn/specs/verification-toolchain/spec.md",
+      "document_id": "IMPL-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "VERIFY-04",
+        "VERIFY-05"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VT-AENEAS-06",
+      "document": "../.cairn/specs/verification-toolchain/spec.md",
+      "document_id": "IMPL-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "VT-AENEAS-07",
+      "document": "../.cairn/specs/verification-toolchain/spec.md",
+      "document_id": "IMPL-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "VT-BRIDGE-01",
+      "document": "../.cairn/specs/verification-toolchain/spec.md",
+      "document_id": "IMPL-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "VERIFY-04"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VT-BRIDGE-02",
+      "document": "../.cairn/specs/verification-toolchain/spec.md",
+      "document_id": "IMPL-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "VT-BRIDGE-03",
+      "document": "../.cairn/specs/verification-toolchain/spec.md",
+      "document_id": "IMPL-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "VT-BRIDGE-04",
+      "document": "../.cairn/specs/verification-toolchain/spec.md",
+      "document_id": "IMPL-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "VT-CI-01",
+      "document": "../.cairn/specs/verification-toolchain/spec.md",
+      "document_id": "IMPL-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "VT-CI-02",
+      "document": "../.cairn/specs/verification-toolchain/spec.md",
+      "document_id": "IMPL-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "VT-CI-03",
+      "document": "../.cairn/specs/verification-toolchain/spec.md",
+      "document_id": "IMPL-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "VT-CI-04",
+      "document": "../.cairn/specs/verification-toolchain/spec.md",
+      "document_id": "IMPL-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "VT-CI-05",
+      "document": "../.cairn/specs/verification-toolchain/spec.md",
+      "document_id": "IMPL-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "VERIFY-02",
+        "VERIFY-05"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VT-CONTRACT-01",
+      "document": "../.cairn/specs/verification-toolchain/spec.md",
+      "document_id": "IMPL-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "CONTRACT-01",
+        "CONTRACT-14"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VT-CONTRACT-02",
+      "document": "../.cairn/specs/verification-toolchain/spec.md",
+      "document_id": "IMPL-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "CONTRACT-02",
+        "CONTRACT-09"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VT-LEAN-01",
+      "document": "../.cairn/specs/verification-toolchain/spec.md",
+      "document_id": "IMPL-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "VERIFY-05"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VT-LEAN-02",
+      "document": "../.cairn/specs/verification-toolchain/spec.md",
+      "document_id": "IMPL-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "VT-LEAN-03",
+      "document": "../.cairn/specs/verification-toolchain/spec.md",
+      "document_id": "IMPL-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "VT-NATIVE-01",
+      "document": "../.cairn/specs/verification-toolchain/spec.md",
+      "document_id": "IMPL-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "ADAPT-13"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VT-NATIVE-02",
+      "document": "../.cairn/specs/verification-toolchain/spec.md",
+      "document_id": "IMPL-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "ADAPT-04",
+        "ADAPT-05",
+        "ADAPT-13",
+        "ADAPT-16"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VT-NATIVE-03",
+      "document": "../.cairn/specs/verification-toolchain/spec.md",
+      "document_id": "IMPL-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "ADAPT-04",
+        "ADAPT-13"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VT-OCTET-01",
+      "document": "../.cairn/specs/verification-toolchain/spec.md",
+      "document_id": "IMPL-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "OCTET-08",
+        "OCTET-10"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VT-OCTET-02",
+      "document": "../.cairn/specs/verification-toolchain/spec.md",
+      "document_id": "IMPL-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "OCTET-05",
+        "OCTET-06",
+        "OCTET-08"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VT-OCTET-03",
+      "document": "../.cairn/specs/verification-toolchain/spec.md",
+      "document_id": "IMPL-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "OCTET-07",
+        "OCTET-08",
+        "OCTET-09",
+        "OCTET-10"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VT-PIN-01",
+      "document": "../.cairn/specs/verification-toolchain/spec.md",
+      "document_id": "IMPL-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "VT-PIN-02",
+      "document": "../.cairn/specs/verification-toolchain/spec.md",
+      "document_id": "IMPL-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "VT-PIN-03",
+      "document": "../.cairn/specs/verification-toolchain/spec.md",
+      "document_id": "IMPL-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "VT-ROLE-01",
+      "document": "../.cairn/specs/verification-toolchain/spec.md",
+      "document_id": "IMPL-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "VT-ROLE-02",
+      "document": "../.cairn/specs/verification-toolchain/spec.md",
+      "document_id": "IMPL-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "VT-ROLE-03",
+      "document": "../.cairn/specs/verification-toolchain/spec.md",
+      "document_id": "IMPL-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "VT-SANDBOX-01",
+      "document": "../.cairn/specs/verification-toolchain/spec.md",
+      "document_id": "IMPL-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "VT-SANDBOX-02",
+      "document": "../.cairn/specs/verification-toolchain/spec.md",
+      "document_id": "IMPL-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "VT-SANDBOX-03",
+      "document": "../.cairn/specs/verification-toolchain/spec.md",
+      "document_id": "IMPL-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "VT-SCOPE-01",
+      "document": "../.cairn/specs/verification-toolchain/spec.md",
+      "document_id": "IMPL-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "VERIFY-01",
+        "VERIFY-02"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VT-SCOPE-02",
+      "document": "../.cairn/specs/verification-toolchain/spec.md",
+      "document_id": "IMPL-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "VERIFY-03"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VT-SCOPE-03",
+      "document": "../.cairn/specs/verification-toolchain/spec.md",
+      "document_id": "IMPL-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "VERIFY-03",
+        "VERIFY-04"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VT-SCOPE-04",
+      "document": "../.cairn/specs/verification-toolchain/spec.md",
+      "document_id": "IMPL-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "VERIFY-03",
+        "VERIFY-04"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VT-SCOPE-05",
+      "document": "../.cairn/specs/verification-toolchain/spec.md",
+      "document_id": "IMPL-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "VERIFY-01",
+        "VERIFY-02",
+        "VERIFY-05"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VT-VERUS-01",
+      "document": "../.cairn/specs/verification-toolchain/spec.md",
+      "document_id": "IMPL-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "VT-VERUS-02",
+      "document": "../.cairn/specs/verification-toolchain/spec.md",
+      "document_id": "IMPL-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "VT-VERUS-03",
+      "document": "../.cairn/specs/verification-toolchain/spec.md",
+      "document_id": "IMPL-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "VT-VERUS-04",
+      "document": "../.cairn/specs/verification-toolchain/spec.md",
+      "document_id": "IMPL-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "VT-VERUS-05",
+      "document": "../.cairn/specs/verification-toolchain/spec.md",
+      "document_id": "IMPL-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "VT-WRAP-01",
+      "document": "../.cairn/specs/verification-toolchain/spec.md",
+      "document_id": "IMPL-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "VT-WRAP-02",
+      "document": "../.cairn/specs/verification-toolchain/spec.md",
+      "document_id": "IMPL-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "VERIFY-04"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VT-WRAP-03",
+      "document": "../.cairn/specs/verification-toolchain/spec.md",
+      "document_id": "IMPL-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "W-COMP-01",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "W-COMP-02",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "W-EXEC-01",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "W-EXEC-02",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "CORE-03",
+        "CORE-05"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "W-EXEC-03",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "CORE-09"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "W-EXEC-04",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "W-INTEROP-01",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "W-INTEROP-02",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "W-VERIFY-01",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "W-VERIFY-02",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "W-WASI-01",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "W-WASI-02",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "W-WASI-03",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "W-WASI-04",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "W-WASI-05",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "W-WIT-01",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "W-WIT-02",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "W-WIT-03",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "W-WIT-04",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "W-WIT-05",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "W-WIT-06",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "W-WIT-07",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "W-WIT-08",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "WI-ARCH-01",
+      "document": "../.cairn/specs/wit-wasi/spec.md",
+      "document_id": "SPEC-W001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "WI-17"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "WI-ARCH-02",
+      "document": "../.cairn/specs/wit-wasi/spec.md",
+      "document_id": "SPEC-W001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "WI-17"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "WI-ARCH-03",
+      "document": "../.cairn/specs/wit-wasi/spec.md",
+      "document_id": "SPEC-W001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "WI-17"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "WI-ARCH-04",
+      "document": "../.cairn/specs/wit-wasi/spec.md",
+      "document_id": "SPEC-W001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "WI-17"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "WI-ASYNC-01",
+      "document": "../.cairn/specs/wit-wasi/spec.md",
+      "document_id": "SPEC-W001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "WI-11"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "WI-ASYNC-02",
+      "document": "../.cairn/specs/wit-wasi/spec.md",
+      "document_id": "SPEC-W001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "WI-11"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "WI-ASYNC-03",
+      "document": "../.cairn/specs/wit-wasi/spec.md",
+      "document_id": "SPEC-W001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "WI-12"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "WI-ASYNC-04",
+      "document": "../.cairn/specs/wit-wasi/spec.md",
+      "document_id": "SPEC-W001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "WI-16"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "WI-ASYNC-05",
+      "document": "../.cairn/specs/wit-wasi/spec.md",
+      "document_id": "SPEC-W001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "WI-12"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "WI-AUTH-01",
+      "document": "../.cairn/specs/wit-wasi/spec.md",
+      "document_id": "SPEC-W001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "WI-08"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "WI-AUTH-02",
+      "document": "../.cairn/specs/wit-wasi/spec.md",
+      "document_id": "SPEC-W001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "WI-AUTH-03",
+      "document": "../.cairn/specs/wit-wasi/spec.md",
+      "document_id": "SPEC-W001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "WI-ID-01",
+      "document": "../.cairn/specs/wit-wasi/spec.md",
+      "document_id": "SPEC-W001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "ID-02",
+        "ID-06",
+        "WI-09"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "WI-ID-02",
+      "document": "../.cairn/specs/wit-wasi/spec.md",
+      "document_id": "SPEC-W001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "WI-ID-03",
+      "document": "../.cairn/specs/wit-wasi/spec.md",
+      "document_id": "SPEC-W001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "ID-06"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "WI-ID-04",
+      "document": "../.cairn/specs/wit-wasi/spec.md",
+      "document_id": "SPEC-W001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "ID-03",
+        "ID-06"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "WI-ID-05",
+      "document": "../.cairn/specs/wit-wasi/spec.md",
+      "document_id": "SPEC-W001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "ID-04"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "WI-PROG-01",
+      "document": "../.cairn/specs/wit-wasi/spec.md",
+      "document_id": "SPEC-W001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "WI-10"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "WI-PROG-02",
+      "document": "../.cairn/specs/wit-wasi/spec.md",
+      "document_id": "SPEC-W001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "WI-PROG-03",
+      "document": "../.cairn/specs/wit-wasi/spec.md",
+      "document_id": "SPEC-W001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "WI-RES-01",
+      "document": "../.cairn/specs/wit-wasi/spec.md",
+      "document_id": "SPEC-W001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "WI-04"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "WI-RES-02",
+      "document": "../.cairn/specs/wit-wasi/spec.md",
+      "document_id": "SPEC-W001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "WI-05"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "WI-RES-03",
+      "document": "../.cairn/specs/wit-wasi/spec.md",
+      "document_id": "SPEC-W001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "WI-06"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "WI-RES-04",
+      "document": "../.cairn/specs/wit-wasi/spec.md",
+      "document_id": "SPEC-W001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "WI-12"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "WI-RES-05",
+      "document": "../.cairn/specs/wit-wasi/spec.md",
+      "document_id": "SPEC-W001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "WI-05"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "WI-SAFE-01",
+      "document": "../.cairn/specs/wit-wasi/spec.md",
+      "document_id": "SPEC-W001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "WI-06"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "WI-SAFE-02",
+      "document": "../.cairn/specs/wit-wasi/spec.md",
+      "document_id": "SPEC-W001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "WI-14"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "WI-SAFE-03",
+      "document": "../.cairn/specs/wit-wasi/spec.md",
+      "document_id": "SPEC-W001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "WI-17"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "WI-SYN-01",
+      "document": "../.cairn/specs/wit-wasi/spec.md",
+      "document_id": "SPEC-W001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "WI-SYN-02",
+      "document": "../.cairn/specs/wit-wasi/spec.md",
+      "document_id": "SPEC-W001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "WI-14"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "WI-SYN-03",
+      "document": "../.cairn/specs/wit-wasi/spec.md",
+      "document_id": "SPEC-W001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "WI-WASI-01",
+      "document": "../.cairn/specs/wit-wasi/spec.md",
+      "document_id": "SPEC-W001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "WI-WASI-02",
+      "document": "../.cairn/specs/wit-wasi/spec.md",
+      "document_id": "SPEC-W001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "WI-17"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "WI-WASI-03",
+      "document": "../.cairn/specs/wit-wasi/spec.md",
+      "document_id": "SPEC-W001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "WI-13"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "WI-WASI-04",
+      "document": "../.cairn/specs/wit-wasi/spec.md",
+      "document_id": "SPEC-W001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "WI-15"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "WI-WIT-01",
+      "document": "../.cairn/specs/wit-wasi/spec.md",
+      "document_id": "SPEC-W001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "WI-01"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "WI-WIT-02",
+      "document": "../.cairn/specs/wit-wasi/spec.md",
+      "document_id": "SPEC-W001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "WI-03"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "WI-WIT-03",
+      "document": "../.cairn/specs/wit-wasi/spec.md",
+      "document_id": "SPEC-W001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "WI-01"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "WI-WIT-04",
+      "document": "../.cairn/specs/wit-wasi/spec.md",
+      "document_id": "SPEC-W001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "WI-07"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "WI-WIT-05",
+      "document": "../.cairn/specs/wit-wasi/spec.md",
+      "document_id": "SPEC-W001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "WI-02"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "WI-WIT-06",
+      "document": "../.cairn/specs/wit-wasi/spec.md",
+      "document_id": "SPEC-W001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "WI-03"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "WI-WIT-07",
+      "document": "../.cairn/specs/wit-wasi/spec.md",
+      "document_id": "SPEC-W001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "ADAPT-11"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "WI-WORLD-01",
+      "document": "../.cairn/specs/wit-wasi/spec.md",
+      "document_id": "SPEC-W001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "WI-09"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "WI-WORLD-02",
+      "document": "../.cairn/specs/wit-wasi/spec.md",
+      "document_id": "SPEC-W001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "WI-02"
+      ],
+      "test_design": "scenario-described-not-executed"
+    }
+  ]
+}
