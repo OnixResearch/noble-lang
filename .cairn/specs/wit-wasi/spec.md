@@ -166,7 +166,7 @@ Here `WitOpId` identifies the exact versioned WIT package, interface, and functi
 
 This schematic signature applies to directly lowered parameters and results. Synchronous borrowed imports use the owner-threading adapter in SPEC-R001. Generated bindings publish the adapted signature explicitly.
 
-A reviewed Noble contract can establish a more specific effect bound. The absence of WIT effect annotations does not justify narrowing.
+Every guest-requested import MUST retain its `WitOpId` in the effect bound, including imports with reviewed deterministic or side-effect-free implementations. Such review does not remove the boundary request. Host-operation internals remain separate from request accounting under V-EFFECT-01. This profile defines no pure foreign-call exemption.
 
 
 <!-- cairn:scenario-links:start -->
@@ -178,12 +178,20 @@ A reviewed Noble contract can establish a more specific effect bound. The absenc
 
 This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
 
+#### Scenario: WI-07 for WI-WIT-03
+
+- GIVEN the `Component-Sync-Bootstrap` profile and every field of `input` in [WI-07](../../../specs/conformance/wit-wasi-cases.json)
+- WHEN the `static` procedure for case `WI-07` runs against those inputs
+- THEN the observations match every field of `expected` in case `WI-07`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
 <!-- cairn:scenario-links:end -->
 
 ### Requirement: WI-WIT-04
 r[WI-WIT-04]
 
-**WI-WIT-04.** A WIT import MUST be treated as potentially effectful by default. A WIT function signature alone MUST NOT be interpreted as proof of purity, determinism, termination, authorization, or absence of external interaction.
+**WI-WIT-04.** A WIT import MUST contribute its operation identity to the effect bound. A signature or reviewed purity claim MUST NOT erase that requirement. A WIT signature alone MUST NOT establish purity, determinism, termination, authorization, or absence of external interaction.
 
 
 <!-- cairn:scenario-links:start -->

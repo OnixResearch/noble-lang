@@ -56,7 +56,7 @@
     {
       "path": "./.cairn/specs/language/spec.md",
       "requirement_blocks": 148,
-      "scenario_blocks": 96,
+      "scenario_blocks": 97,
       "substantive_requirement_blocks": 148
     },
     {
@@ -74,7 +74,7 @@
     {
       "path": "./.cairn/specs/safety/spec.md",
       "requirement_blocks": 40,
-      "scenario_blocks": 44,
+      "scenario_blocks": 46,
       "substantive_requirement_blocks": 40
     },
     {
@@ -92,7 +92,7 @@
     {
       "path": "./.cairn/specs/wit-wasi/spec.md",
       "requirement_blocks": 44,
-      "scenario_blocks": 39,
+      "scenario_blocks": 40,
       "substantive_requirement_blocks": 44
     }
   ],

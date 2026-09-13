@@ -9,7 +9,22 @@
     {"id":"WI-04","profile":"Component-Sync-Bootstrap","kind":"static","requirements":["WI-RES-01"],"input":{"harness":"owned-resource-eligibility","wit_type":"own<counter>","operations":["dup","quote","generic-serialization"]},"expected":{"stage":"check","outcome":"eligibility-reject","guest_requests":0,"protected_operations":0},"state":{"implementation":"absent","execution":"not-run","proof":"open","trust":"unassessed"},"evidence":[]},
     {"id":"WI-05","profile":"Component-Sync-Bootstrap","kind":"static","requirements":["WI-RES-02","WI-RES-05"],"input":{"harness":"borrow-escape","borrow_scope":"call-1","escape_targets":["returned-pair","quotation-capture","session-storage","borrowed-export"]},"expected":{"stage":"adapter-check","outcome":"matrix-specific-rejection","outcomes_by_target":{"returned-pair":"borrow-escape-reject","quotation-capture":"eligibility-reject","session-storage":"borrow-escape-reject","borrowed-export":"unsupported"},"guest_requests":0,"protected_operations":0},"state":{"implementation":"absent","execution":"not-run","proof":"open","trust":"unassessed"},"evidence":[]},
     {"id":"WI-06","profile":"Component-Sync-Bootstrap","kind":"adapter","requirements":["WI-RES-03","WI-SAFE-01"],"input":{"harness":"component-handle-validation","valid_context":"instance-A","mutations":["forged-slot","stale-generation","wrong-type","instance-B"]},"expected":{"stage":"adapter","outcome":"invalid-handle","protected_operations":0},"state":{"implementation":"absent","execution":"not-run","proof":"open","trust":"unassessed"},"evidence":[]},
-    {"id":"WI-07","profile":"Component-Sync-Bootstrap","kind":"static","requirements":["WI-WIT-04"],"input":{"harness":"import-effect-check","operation":"noble-test:math/arithmetic@1.0.0#inc","claimed_effects":[],"reviewed_pure_contract":false},"expected":{"stage":"check","outcome":"effect-reject","guest_requests":0,"protected_operations":0},"state":{"implementation":"absent","execution":"not-run","proof":"open","trust":"unassessed"},"evidence":[]},
+    {
+      "id": "WI-07", "profile": "Component-Sync-Bootstrap", "kind": "static",
+      "requirements": ["WI-WIT-03", "WI-WIT-04", "W-WIT-03", "S-EFFECT-01", "S-EFFECT-02"],
+      "input": {
+        "harness": "import-effect-check-matrix", "operation": "noble-test:math/arithmetic@1.0.0#inc",
+        "interface": "I64 -- I64", "non_effect_derivations": "valid",
+        "variants": [
+          {"reviewed_pure_contract": false, "claimed_effects": [], "outcome": "effect-reject"},
+          {"reviewed_pure_contract": true, "claimed_effects": [], "outcome": "effect-reject"},
+          {"reviewed_pure_contract": false, "claimed_effects": ["noble-test:math/arithmetic@1.0.0#inc"], "outcome": "accept"},
+          {"reviewed_pure_contract": true, "claimed_effects": ["noble-test:math/arithmetic@1.0.0#inc"], "outcome": "accept"}
+        ]
+      },
+      "expected": {"stage": "check", "outcome": "each-effect-bound-matches", "reviewed_purity_removes_operation_id": false, "guest_requests": 0, "protected_operations": 0},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
     {"id":"WI-08","profile":"Component-Sync-Bootstrap","kind":"runtime","requirements":["WI-AUTH-01","EV-CASE-03"],"input":{"harness":"import-authority-denial","operation":"noble-test:store/api@1.0.0#read","declared_effects":["noble-test:store/api@1.0.0#read"],"host_grant":false},"expected":{"stage":"authorization","outcome":"denied","guest_requests":1,"protected_operations":0},"state":{"implementation":"absent","execution":"not-run","proof":"open","trust":"unassessed"},"evidence":[]},
     {"id":"WI-09","profile":"Component-Sync-Bootstrap","kind":"identity","requirements":["WI-WORLD-01","WI-ID-01"],"input":{"harness":"world-build-key","world_before":"noble-test:math/demo@1.0.0","world_after":"noble-test:math/demo@1.1.0"},"expected":{"stage":"build-key","outcome":"different","definition_identity":"determined-by-resolved-dependencies-not-world-label-alone"},"state":{"implementation":"absent","execution":"not-run","proof":"open","trust":"unassessed"},"evidence":[]},
     {"id":"WI-10","profile":"Component-Sync-Bootstrap","kind":"static","requirements":["WI-PROG-01"],"input":{"harness":"program-export","noble_type":"Program<I64,I64,{}>","wit_representation":"u32-address","declared_program_adapter":false},"expected":{"stage":"export-check","outcome":"unsupported","guest_requests":0,"protected_operations":0},"state":{"implementation":"absent","execution":"not-run","proof":"open","trust":"unassessed"},"evidence":[]},

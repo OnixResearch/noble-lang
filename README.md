@@ -29,6 +29,7 @@ This is a specification example, not an executed result.
 
 ```sh
 bun tools/cairn-specs.mjs --self-test
+bun test tools/cairn-specs.test.mjs tools/check-specs.test.mjs
 bun tools/check-specs.mjs --self-test
 bun tools/cairn.mjs validate --root .
 ```

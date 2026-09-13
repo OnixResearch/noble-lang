@@ -385,6 +385,14 @@ This is a scenario design, not an execution result. The case's `state` and `evid
 
 This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
 
+#### Scenario: WI-07 for S-EFFECT-01
+
+- GIVEN the `Component-Sync-Bootstrap` profile and every field of `input` in [WI-07](../../../specs/conformance/wit-wasi-cases.json)
+- WHEN the `static` procedure for case `WI-07` runs against those inputs
+- THEN the observations match every field of `expected` in case `WI-07`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
 <!-- cairn:scenario-links:end -->
 
 ### Requirement: S-EFFECT-02
@@ -409,6 +417,14 @@ This is a scenario design, not an execution result. The case's `state` and `evid
 - GIVEN the `Wasm-Draft` profile and every field of `input` in [S-CASE-16](../../../specs/conformance/safety-cases.json)
 - WHEN the `admission` procedure for case `S-CASE-16` runs against those inputs
 - THEN the observations match every field of `expected` in case `S-CASE-16`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: WI-07 for S-EFFECT-02
+
+- GIVEN the `Component-Sync-Bootstrap` profile and every field of `input` in [WI-07](../../../specs/conformance/wit-wasi-cases.json)
+- WHEN the `static` procedure for case `WI-07` runs against those inputs
+- THEN the observations match every field of `expected` in case `WI-07`
 
 This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
 

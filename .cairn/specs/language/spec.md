@@ -2171,11 +2171,18 @@ Test design remains open for this requirement. No scenario or execution evidence
 ### Requirement: W-WIT-03
 r[W-WIT-03]
 
-**W-WIT-03.** A generated import for a WIT function MUST have a statically known Noble stack interface. Imported WIT functions are conservatively effectful unless a stronger reviewed Noble contract establishes otherwise; a WIT signature alone is not a purity, determinism, termination, or authority proof.
+**W-WIT-03.** A generated import for a WIT function MUST have a statically known Noble stack interface. Its effect bound MUST include the requested `WitOpId`, even for a reviewed deterministic or side-effect-free implementation. A WIT signature alone MUST NOT establish purity, determinism, termination, or authority. SPEC-W001 defines no pure foreign-call exemption.
 
 
 <!-- cairn:scenario-links:start -->
-Test design remains open for this requirement. No scenario or execution evidence is supplied.
+#### Scenario: WI-07 for W-WIT-03
+
+- GIVEN the `Component-Sync-Bootstrap` profile and every field of `input` in [WI-07](../../../specs/conformance/wit-wasi-cases.json)
+- WHEN the `static` procedure for case `WI-07` runs against those inputs
+- THEN the observations match every field of `expected` in case `WI-07`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
 <!-- cairn:scenario-links:end -->
 
 ### Requirement: W-WIT-04

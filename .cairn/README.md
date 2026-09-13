@@ -57,6 +57,7 @@ bun tools/cairn.mjs spec list --root .
 bun tools/cairn.mjs spec show core-bootstrap --root .
 bun tools/cairn.mjs validate --root .
 bun tools/cairn-specs.mjs --self-test
+bun test tools/cairn-specs.test.mjs tools/check-specs.test.mjs
 bun tools/check-specs.mjs --self-test
 ```
 
@@ -67,6 +68,8 @@ The initial invocation can fetch and build Cairn.
 
 Cairn checks requirement structure and scenario clauses.
 The local checks cover compatibility drift, source links, requirement preservation, scenario references, status fields, and roadmap dependencies.
+They reject review-only execution evidence outside review scenarios and require an explicit claim in each evidence record.
+Proof obligations use the same evidence checks. Accepted and failed obligations require proof evidence with the matching obligation ID and result.
 These checks do not execute Noble or discharge proofs.
 
 ## Edit a specification
@@ -77,8 +80,13 @@ These checks do not execute Noble or discharge proofs.
 4. Run `bun tools/check-specs.mjs --refresh-ledger --self-test --report` to refresh the requirement ledger and document receipt.
 5. Run `bun tools/cairn.mjs validate --root .` to validate the native specifications.
 
-Each imported requirement retains its `**ID.**` label after its Cairn heading and bare requirement marker.
-The adapter checks that these identities agree.
+Each requirement uses `### Requirement: ID` and a matching `r[ID]` marker.
+Imported requirements also retain their `**ID.**` labels.
+New native requirements do not need those labels before regeneration.
+The adapter adds missing compatibility labels and preserves the ordered native IDs.
+The ledger uses the same fence-aware native parser. Fenced examples do not create requirements or historical preservation obligations.
+Generated-region comments inside fenced examples remain literal text. Regeneration preserves those examples and encodes local link paths after rebasing them.
+The adapter rejects missing markers, mismatched identities, duplicate IDs, and malformed generated regions before writing any specification or compatibility view.
 Generated scenario regions link to exact case IDs and their complete `input` and `expected` fields.
 They do not create new tests or close missing test designs.
 

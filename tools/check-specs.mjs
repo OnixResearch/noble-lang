@@ -5,7 +5,7 @@ import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
-import { canonicalPath } from './cairn-specs.mjs';
+import { canonicalPath, nativeRequirementIds, legacyRequirementIds } from './cairn-specs.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const CORE_SPEC = canonicalPath('SPEC-0001.md');
@@ -118,7 +118,7 @@ const ROUTES = {
   CALC: ['application-test', 'benchmark-policy-test', 'review'],
 };
 
-function loadBundle(root) {
+export function loadBundle(root) {
   const texts = new Map();
   const paths = new Set();
   function visit(relative) {
@@ -133,10 +133,6 @@ function loadBundle(root) {
   }
   visit('');
   return { texts, paths };
-}
-
-function requirementIds(text) {
-  return [...text.matchAll(/^\*\*([A-Z][A-Z0-9-]*-\d+)\.\*\*/gm)].map(match => match[1]);
 }
 
 function object(value) {
@@ -155,7 +151,7 @@ function parse(bundle, file) {
 }
 
 function requirements(bundle, family) {
-  return family.normative_documents.flatMap(doc => requirementIds(bundle.texts.get(path.posix.join('specs', doc.path)) ?? '')
+  return family.normative_documents.flatMap(doc => nativeRequirementIds(bundle.texts.get(path.posix.join('specs', doc.path)) ?? '')
     .map(id => ({ id, document: doc.path, document_id: doc.id })));
 }
 
@@ -163,7 +159,7 @@ function allCases(bundle, family) {
   return family.scenario_files.flatMap(file => parse(bundle, `specs/${file}`).cases);
 }
 
-function deriveLedger(bundle) {
+export function deriveLedger(bundle) {
   const family = parse(bundle, 'specs/spec-family.json');
   const cases = allCases(bundle, family);
   return {
@@ -180,6 +176,30 @@ function deriveLedger(bundle) {
       };
     }),
   };
+}
+
+// This checks the fixture contract, not a Noble import or effect derivation.
+function validateWitEffectOracle(get, check) {
+  const c = get('WI-07');
+  const operation = 'noble-test:math/arithmetic@1.0.0#inc';
+  const expected = [
+    [false, [], 'effect-reject'], [true, [], 'effect-reject'],
+    [false, [operation], 'accept'], [true, [operation], 'accept'],
+  ];
+  check(c?.kind === 'static' && c.profile === 'Component-Sync-Bootstrap'
+    && sameStrings(c.requirements, ['WI-WIT-03', 'WI-WIT-04', 'W-WIT-03', 'S-EFFECT-01', 'S-EFFECT-02'])
+    && c.input?.harness === 'import-effect-check-matrix' && c.input.operation === operation
+    && c.input.interface === 'I64 -- I64' && c.input.non_effect_derivations === 'valid',
+  'WIT effect oracle: input and requirement bindings');
+  const variants = c?.input?.variants;
+  check(Array.isArray(variants) && variants.length === expected.length
+    && expected.every(([reviewed, effects, outcome]) => variants.some(v => v?.reviewed_pure_contract === reviewed
+      && sameStrings(v.claimed_effects, effects) && v.outcome === outcome)),
+  'WIT effect oracle: every reviewed/unreviewed request bound');
+  check(c?.expected?.stage === 'check' && c.expected.outcome === 'each-effect-bound-matches'
+    && c.expected.reviewed_purity_removes_operation_id === false
+    && c.expected.guest_requests === 0 && c.expected.protected_operations === 0,
+  'WIT effect oracle: static observations');
 }
 
 // Check discriminating contract-fixture expectations only; no Noble or Lean execution.
@@ -678,7 +698,7 @@ function validateOctetAdoptionOracles(get, check) {
     runtime_or_proof_claimed: false }, 'adoption non-claims');
 }
 
-function validate(bundle, { ignoreLedger = false } = {}) {
+export function validate(bundle, { ignoreLedger = false } = {}) {
   const errors = [];
   const check = (condition, message) => { if (!condition) errors.push(message); };
   let family, status, roadmap, cases;
@@ -760,8 +780,8 @@ function validate(bundle, { ignoreLedger = false } = {}) {
         const sourcePath = path.posix.normalize(path.posix.join('specs', doc.source));
         const source = bundle.texts.get(sourcePath);
         check(source !== undefined, `source missing: ${sourcePath}`);
-        const retained = new Set(requirementIds(text));
-        for (const id of requirementIds(source ?? '')) check(retained.has(id), `dropped requirement: ${id}`);
+        const retained = new Set(nativeRequirementIds(text));
+        for (const id of legacyRequirementIds(source ?? '')) check(retained.has(id), `dropped requirement: ${id}`);
       }
     }
     for (const id of REQUIRED_DOCUMENTS) check(seenDocs.has(id), `required document missing: ${id}`);
@@ -773,7 +793,17 @@ function validate(bundle, { ignoreLedger = false } = {}) {
       check((ROUTES[req.id.split('-')[0]] ?? []).length > 0, `missing evidence route: ${req.id}`);
     }
     const seenCases = new Set();
-    const requireEvidence = (state, evidence, id) => {
+    const checkGreenfield = (state, id, { compiler = true, runtime = false } = {}) => {
+      if (!status.compiler_exists && compiler) {
+        check(!EXECUTED.includes(state?.execution), `greenfield execution claim: ${id}`);
+        check(state?.implementation !== 'implemented', `greenfield implementation claim: ${id}`);
+      }
+      if (!status.runtime_exists && runtime) {
+        check(!EXECUTED.includes(state?.execution), `absent runtime execution claim: ${id}`);
+      }
+      if (!status.proof_implementation_exists) check(state?.proof !== 'accepted', `greenfield proof claim: ${id}`);
+    };
+    const requireEvidence = (state, evidence, id, { review = false } = {}) => {
       check(object(state), `state missing: ${id}`);
       if (!object(state)) return;
       for (const [key, values] of Object.entries(STATES)) check(values.includes(state[key]), `state ${key}: ${id}`);
@@ -783,13 +813,15 @@ function validate(bundle, { ignoreLedger = false } = {}) {
         check(evidence.length > 0, `evidence required: ${id}`);
       }
       if (EXECUTED.includes(state.execution)) {
-        check(evidence.some(e => ['test', 'review'].includes(e.kind) && e.result === state.execution), `execution evidence mismatch: ${id}`);
+        const executionKinds = review ? ['test', 'review'] : ['test'];
+        check(evidence.some(e => executionKinds.includes(e?.kind) && e.result === state.execution), `execution evidence mismatch: ${id}`);
       }
       if (['accepted', 'failed'].includes(state.proof)) {
-        check(evidence.some(e => ['lean-kernel', 'aeneas-lean', 'verus', 'translation-validation'].includes(e.kind)
+        check(evidence.some(e => ['lean-kernel', 'aeneas-lean', 'verus', 'translation-validation'].includes(e?.kind)
           && e.result === state.proof), `proof evidence mismatch: ${id}`);
       }
       for (const record of evidence) {
+        check(typeof record?.claim === 'string' && record.claim.trim().length > 0, `evidence claim: ${id}`);
         check(object(record) && record.subject === id && record.revision === REVISION
           && typeof record.kind === 'string' && typeof record.result === 'string'
           && typeof record.source_revision === 'string' && record.source_revision.length > 0
@@ -811,21 +843,29 @@ function validate(bundle, { ignoreLedger = false } = {}) {
       check(object(c.input) && (typeof c.input.source === 'string' || typeof c.input.harness === 'string'
         || (Array.isArray(c.input.submissions) && c.input.submissions.length > 0)), `case input: ${c.id}`);
       check(object(c.expected) && typeof c.expected.stage === 'string' && typeof c.expected.outcome === 'string', `case expected: ${c.id}`);
-      requireEvidence(c.state, c.evidence, c.id);
+      requireEvidence(c.state, c.evidence, c.id, { review: c.kind === 'review' });
       if (['static', 'admission'].includes(c.kind)) {
         check(c.expected?.guest_requests === 0 && c.expected?.protected_operations === 0, `rejection trace: ${c.id}`);
       }
-      if (!status.compiler_exists && c.kind !== 'review') {
-        check(!['passed', 'failed', 'timeout'].includes(c.state?.execution), `greenfield execution claim: ${c.id}`);
-        check(c.state?.implementation !== 'implemented', `greenfield implementation claim: ${c.id}`);
-      }
-      if (!status.runtime_exists && c.kind === 'runtime') {
-        check(!EXECUTED.includes(c.state?.execution), `absent runtime execution claim: ${c.id}`);
-      }
-      if (!status.proof_implementation_exists) check(c.state?.proof !== 'accepted', `greenfield proof claim: ${c.id}`);
+      checkGreenfield(c.state, c.id, { compiler: c.kind !== 'review', runtime: c.kind === 'runtime' });
     }
-    for (const component of status.components) requireEvidence(component, component.evidence, component.id);
+    const runtimeComponents = new Set(['wasm-runtime', 'component-adapters', 'syndicate-profile', 'exact-calculator']);
+    for (const component of status.components) {
+      requireEvidence(component, component.evidence, component.id);
+      checkGreenfield(component, component.id, { runtime: runtimeComponents.has(component.id) });
+    }
     const get = id => cases.find(c => c.id === id);
+    validateWitEffectOracle(get, check);
+    const localBinding = get('DX-07');
+    check(localBinding?.input?.stack_only_source === 'dup 10 +'
+      && localBinding.input.binding_form === 'structured lexical binding of subtotal; return subtotal and wrap64(subtotal + 10)',
+    'local binding oracle: selected arithmetic');
+    const i64Stack = (stack, values) => Array.isArray(stack) && stack.length === values.length
+      && stack.every((value, index) => value?.type === 'I64' && value.value === values[index]);
+    check(i64Stack(localBinding?.input?.initial_stack, ['100'])
+      && i64Stack(localBinding?.expected?.pure_output, ['100', '110'])
+      && sameStrings(localBinding?.expected?.pure_effects, []) && localBinding?.expected?.new_kernel_operations === 0,
+    'local binding oracle: expected stack');
     const effect = get('S-CASE-05');
     check(effect?.kind === 'static' && effect.expected?.outcome === 'effect-reject'
       && effect.expected?.guest_requests === 0, 'effect oracle: S-CASE-05 must reject before a request');
@@ -936,7 +976,10 @@ function validate(bundle, { ignoreLedger = false } = {}) {
     for (const obligation of obligations.obligations) {
       check(['open', 'accepted', 'failed'].includes(obligation.status), `obligation status: ${obligation.id}`);
       check(typeof obligation.claim === 'string' && typeof obligation.route === 'string' && Array.isArray(obligation.evidence), `obligation schema: ${obligation.id}`);
-      if (obligation.status !== 'open') check(obligation.evidence.length > 0, `obligation evidence: ${obligation.id}`);
+      // Project the proof ledger into the same evidence policy as scenarios and components.
+      // These neutral fields do not assert implementation, execution, or assessed trust.
+      requireEvidence({ implementation: 'absent', execution: 'not-run', proof: obligation.status,
+        trust: 'unassessed' }, obligation.evidence, obligation.id);
       if (!status.proof_implementation_exists) check(obligation.status !== 'accepted', `greenfield obligation claim: ${obligation.id}`);
     }
     for (const [id, route] of Object.entries({ ...AENEAS_ROUTES, ...CONTRACT_ROUTES })) {
@@ -1071,12 +1114,19 @@ function selfTest(base) {
   run('malformed-json', b => b.texts.set('specs/STATUS.json', '{'), 'schema/read failure');
   run('missing-state', b => changeJson(b, 'specs/conformance/cases.json', p => delete p.cases[0].state.execution), 'state execution');
   run('unknown-requirement', b => changeJson(b, 'specs/conformance/cases.json', p => p.cases[0].requirements.push('K-MISSING-99')), 'unresolved requirement');
-  run('duplicate-requirement', b => b.texts.set(CORE_SPEC, b.texts.get(CORE_SPEC) + '\n**K-SYN-01.** duplicate\n'), 'duplicate requirement');
-  run('dropped-inherited-requirement', b => b.texts.set(SAFETY_SPEC, b.texts.get(SAFETY_SPEC).replace('**S-LANG-01.**', 'removed')), 'dropped requirement');
+  run('duplicate-requirement', b => b.texts.set(CORE_SPEC, b.texts.get(CORE_SPEC) + '\n### Requirement: K-SYN-01\nr[K-SYN-01]\n\nDuplicate MUST fail.\n'), 'duplicate requirement');
+  run('dropped-inherited-requirement', b => b.texts.set(SAFETY_SPEC,
+    b.texts.get(SAFETY_SPEC).replaceAll('S-LANG-01', 'S-REMOVED-01')), 'dropped requirement');
   run('broken-link', b => b.texts.set('specs/README.md', b.texts.get('specs/README.md') + '\n[missing](absent.md)\n'), 'broken local link');
   run('unsafe-effect-oracle', b => changeJson(b, 'specs/conformance/safety-cases.json', p => {
     const c = p.cases.find(c => c.id === 'S-CASE-05'); c.expected.outcome = 'deny-or-static-reject'; c.expected.guest_requests = 1;
   }), 'effect oracle');
+  run('WIT-purity-does-not-erase-request', b => changeJson(b, 'specs/conformance/wit-wasi-cases.json', p => {
+    p.cases.find(c => c.id === 'WI-07').input.variants.find(v => v.reviewed_pure_contract && !v.claimed_effects.length).outcome = 'accept';
+  }), 'WIT effect oracle');
+  run('WIT-effect-matrix-must-be-complete', b => changeJson(b, 'specs/conformance/wit-wasi-cases.json', p => {
+    p.cases.find(c => c.id === 'WI-07').input.variants.pop();
+  }), 'WIT effect oracle');
   run('identity-version-regression', b => changeJson(b, 'specs/conformance/identity-cases.json', p => p.cases.find(c => c.id === 'ID-03').expected.definition = 'same'), 'identity oracle');
   run('legacy-list-example', b => b.texts.set(CORE_SPEC, b.texts.get(CORE_SPEC).replace('[ drop run ]', '[ drop call ]')), 'surface: legacy');
   run('greenfield-false-pass', b => changeJson(b, 'specs/conformance/cases.json', p => p.cases[0].state.execution = 'passed'), 'greenfield execution');
@@ -1096,16 +1146,60 @@ function selfTest(base) {
     changeJson(b, 'specs/STATUS.json', p => { p.compiler_exists = true; p.runtime_exists = true; });
     changeJson(b, 'specs/conformance/cases.json', p => {
       const c = p.cases[0]; c.state.implementation = 'implemented'; c.state.execution = 'failed';
-      c.evidence.push({ kind: 'test', subject: c.id, revision: REVISION, source_revision: 'synthetic-self-test-only', configuration: { toolchain: 'synthetic' }, result: 'failed', assumptions: [] });
+      c.evidence.push({ kind: 'test', subject: c.id, claim: `Declared checks for ${c.id}`, revision: REVISION, source_revision: 'synthetic-self-test-only', configuration: { toolchain: 'synthetic' }, result: 'failed', assumptions: [] });
     });
   }, null);
   run('mismatched-execution-evidence', b => {
     changeJson(b, 'specs/STATUS.json', p => { p.compiler_exists = true; p.runtime_exists = true; });
     changeJson(b, 'specs/conformance/cases.json', p => {
       const c = p.cases[0]; c.state.implementation = 'implemented'; c.state.execution = 'passed';
-      c.evidence.push({ kind: 'test', subject: c.id, revision: REVISION, source_revision: 'synthetic', configuration: { toolchain: 'synthetic' }, result: 'failed', assumptions: [] });
+      c.evidence.push({ kind: 'test', subject: c.id, claim: `Declared checks for ${c.id}`, revision: REVISION, source_revision: 'synthetic', configuration: { toolchain: 'synthetic' }, result: 'failed', assumptions: [] });
     });
   }, 'execution evidence mismatch');
+  const componentEvidence = (id, kind, result) => ({ kind, subject: id, claim: `Declared checks for ${id}`, revision: REVISION,
+    source_revision: 'synthetic-self-test-only', configuration: { toolchain: 'synthetic' }, result, assumptions: [] });
+  for (const execution of EXECUTED) {
+    run(`component-runtime-${execution}-without-runtime`, b => changeJson(b, 'specs/STATUS.json', p => {
+      p.compiler_exists = true;
+      const c = p.components.find(c => c.id === 'wasm-runtime');
+      c.implementation = 'implemented'; c.execution = execution;
+      c.evidence = [componentEvidence(c.id, 'test', execution)];
+    }), 'absent runtime execution claim: wasm-runtime');
+  }
+  run('component-implemented-without-compiler', b => changeJson(b, 'specs/STATUS.json', p => {
+    p.components.find(c => c.id === 'core-checker').implementation = 'implemented';
+  }), 'greenfield implementation claim: core-checker');
+  run('component-executed-without-compiler', b => changeJson(b, 'specs/STATUS.json', p => {
+    const c = p.components.find(c => c.id === 'core-checker');
+    c.execution = 'passed'; c.evidence = [componentEvidence(c.id, 'test', 'passed')];
+  }), 'greenfield execution claim: core-checker');
+  run('component-proof-without-proof-implementation', b => changeJson(b, 'specs/STATUS.json', p => {
+    const c = p.components.find(c => c.id === 'core-checker');
+    c.proof = 'accepted'; c.evidence = [componentEvidence(c.id, 'lean-kernel', 'accepted')];
+  }), 'greenfield proof claim: core-checker');
+  run('component-implemented-failed-open-is-valid', b => changeJson(b, 'specs/STATUS.json', p => {
+    p.compiler_exists = true; p.runtime_exists = true;
+    const c = p.components.find(c => c.id === 'wasm-runtime');
+    c.implementation = 'implemented'; c.execution = 'failed';
+    c.evidence = [componentEvidence(c.id, 'test', 'failed')];
+  }), null);
+  run('component-checker-test-without-runtime-is-valid', b => changeJson(b, 'specs/STATUS.json', p => {
+    p.compiler_exists = true;
+    const c = p.components.find(c => c.id === 'core-checker');
+    c.implementation = 'implemented'; c.execution = 'passed';
+    c.evidence = [componentEvidence(c.id, 'test', 'passed')];
+  }), null);
+  run('component-proof-with-implementation-is-valid', b => changeJson(b, 'specs/STATUS.json', p => {
+    p.proof_implementation_exists = true;
+    const c = p.components.find(c => c.id === 'core-checker');
+    c.proof = 'accepted'; c.evidence = [componentEvidence(c.id, 'lean-kernel', 'accepted')];
+  }), null);
+  run('local-binding-undefined-division', b => changeJson(b, 'specs/conformance/language-workflow-cases.json', p => {
+    p.cases.find(c => c.id === 'DX-07').input.stack_only_source = 'dup dup 10 / +';
+  }), 'local binding oracle: selected arithmetic');
+  run('local-binding-wrong-output', b => changeJson(b, 'specs/conformance/language-workflow-cases.json', p => {
+    p.cases.find(c => c.id === 'DX-07').expected.pure_output[1].value = '111';
+  }), 'local binding oracle: expected stack');
   const adaptation = (b, id, change) => changeJson(b, 'specs/conformance/adaptation-cases.json', p => change(p.cases.find(c => c.id === id)));
   run('removed-backend-document', b => changeJson(b, 'specs/spec-family.json', p => p.normative_documents = p.normative_documents.filter(d => d.id !== 'SPEC-BE001')), 'required document missing');
   run('stale-roadmap-revision', b => changeJson(b, 'specs/roadmap.json', p => p.revision = 'obsolete'), 'revision: roadmap');
@@ -1119,7 +1213,7 @@ function selfTest(base) {
     changeJson(b, 'specs/STATUS.json', p => { p.compiler_exists = true; p.runtime_exists = true; });
     changeJson(b, 'specs/roadmap.json', p => {
       const m = p.milestones.find(m => m.id === 'M3'); m.status = 'completed'; m.comparison.selected_backend = 'wasm-gc';
-      m.comparison.evidence.push({ kind: 'review', subject: 'M3-backend-comparison', revision: REVISION,
+      m.comparison.evidence.push({ kind: 'review', subject: 'M3-backend-comparison', claim: 'M3 comparison gates', revision: REVISION,
         source_revision: 'synthetic-self-test-only', configuration: { toolchain: 'synthetic' }, result: 'passed', assumptions: [] });
     });
   }, 'backend selection requires an executed comparison');
@@ -1385,4 +1479,6 @@ function main() {
   console.log(JSON.stringify({ ...result.summary, lane: report.lane, result: report.result, self_tests_passed: tests.length }, null, 2));
 }
 
-try { main(); } catch (error) { console.error(`spec validation failed: ${error.message}`); process.exitCode = 1; }
+if (import.meta.main) {
+  try { main(); } catch (error) { console.error(`spec validation failed: ${error.message}`); process.exitCode = 1; }
+}

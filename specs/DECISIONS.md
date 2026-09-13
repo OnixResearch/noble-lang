@@ -21,7 +21,7 @@ This register consolidates current decisions. The old registers remain historica
 | ID | Decision | Consequence |
 |---|---|---|
 | ND-06 | Preserve no guest unsafe, no language UB, and recursive ownership | Host representations require checked boundaries |
-| ND-07 | A denied host request still belongs to the effect trace | Empty-effect rejection cannot pass through runtime authority denial |
+| ND-07 | Every guest-requested host operation belongs to the effect bound, including denied requests and reviewed deterministic WIT imports | Neither authority denial nor a purity review erases a boundary request |
 | ND-08 | Resolved versioned WIT operations are semantic dependencies | Their changes affect dependent definition/program identity |
 | ND-09 | Build-only adapters remain separate from semantic identity | Identical WIT shapes alone do not prove identical Noble semantics |
 | ND-10 | The first borrow support is synchronous, adapter-local, and owner-threaded | Borrowed exports, escape, same-owner reentrancy, and suspension are unsupported |

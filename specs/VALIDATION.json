@@ -2,10 +2,10 @@
   "revision": "0.1.0-draft.5",
   "validator": {
     "file": "tools/check-specs.mjs",
-    "sha256": "19665b17d314d3d5a65ffb3a5b7c2201e67795ae3917b079fe91dab20b5e7ada",
+    "sha256": "11ab1b37056de867568dd460475c6916908c296c173a8a9929c57b9523a53fb7",
     "adapter": {
       "file": "tools/cairn-specs.mjs",
-      "sha256": "1a70d85f6fda26546571037244ae42e6c74c2e3df891f5d7b32e43e462678c3e"
+      "sha256": "d11728d44cffb20f42d952a3ed6a3a0b5015de65f2f4390192e7aa1e5b8b0cd5"
     }
   },
   "lane": "document-validation-only",
@@ -18,7 +18,7 @@
   "requirements": 475,
   "scenarios": 149,
   "scenarios_executed": 0,
-  "open_test_design": 189,
+  "open_test_design": 188,
   "proof_obligations": 30,
   "completed_proofs": 0,
   "self_tests": [
@@ -79,6 +79,16 @@
     },
     {
       "name": "unsafe-effect-oracle",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "WIT-purity-does-not-erase-request",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "WIT-effect-matrix-must-be-complete",
       "expected": "reject",
       "result": "passed"
     },
@@ -144,6 +154,61 @@
     },
     {
       "name": "mismatched-execution-evidence",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "component-runtime-passed-without-runtime",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "component-runtime-failed-without-runtime",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "component-runtime-timeout-without-runtime",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "component-implemented-without-compiler",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "component-executed-without-compiler",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "component-proof-without-proof-implementation",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "component-implemented-failed-open-is-valid",
+      "expected": "accept",
+      "result": "passed"
+    },
+    {
+      "name": "component-checker-test-without-runtime-is-valid",
+      "expected": "accept",
+      "result": "passed"
+    },
+    {
+      "name": "component-proof-with-implementation-is-valid",
+      "expected": "accept",
+      "result": "passed"
+    },
+    {
+      "name": "local-binding-undefined-division",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "local-binding-wrong-output",
       "expected": "reject",
       "result": "passed"
     },
@@ -1095,7 +1160,7 @@
     },
     {
       "file": ".cairn/README.md",
-      "sha256": "dd5517d604f0fee38dd7710b03e9dc14b66aa796a211af5a6cac808130e3e396"
+      "sha256": "1681f56c42dd2268b9faa9a1858ffbd58e514a97f795c0967c6e8662d87d37be"
     },
     {
       "file": ".cairn/specs/backend-experiments/spec.md",
@@ -1115,11 +1180,11 @@
     },
     {
       "file": ".cairn/specs/evidence/spec.md",
-      "sha256": "734e69c0ab9527a96fb58736e6093eb8b28328957fb4fea6fff1a22756f23732"
+      "sha256": "aa93e455e30bce9d48def2dd0696acee857a7417d75ebc4db34d559cd85a5d4c"
     },
     {
       "file": ".cairn/specs/language/spec.md",
-      "sha256": "a8c217d1b88f58fc0737377be282c418a62f2c8e52bf8a995af942ac38f6778b"
+      "sha256": "4f6b8faf6e91630bb644c3f9de274c4a101814101b22f6edda9ace5ee4027039"
     },
     {
       "file": ".cairn/specs/program-contracts/spec.md",
@@ -1131,7 +1196,7 @@
     },
     {
       "file": ".cairn/specs/safety/spec.md",
-      "sha256": "8c6c8014652c9c3b4fba7df65d05156f48e5d563b9e1d69cea3195a6df6d08a1"
+      "sha256": "b9abe780d921287c459f2e9af81ca2828a63504e8adba3d0002ae62c54afe294"
     },
     {
       "file": ".cairn/specs/verification-toolchain/spec.md",
@@ -1143,7 +1208,7 @@
     },
     {
       "file": ".cairn/specs/wit-wasi/spec.md",
-      "sha256": "fc2e23db5ecfd0ef3b2a375bb39f22eda267d9bc831a7051a064793b6c6176e7"
+      "sha256": "a0832b66da1a6aebdc20dced3b498e8a435c1fee9c272e8f07a488af32382718"
     },
     {
       "file": "noble-project-handoff-2026-09-12/reference/baseline/PROGRAM-CONTRACTS.md",
@@ -1171,7 +1236,7 @@
     },
     {
       "file": "README.md",
-      "sha256": "31be2a9803231ffa594b1faf36bef6faca8d29e14523a73334ec51d416b6a1e0"
+      "sha256": "255257403dcc46305bac95451b39b03f68a942ef8929384da9e827021d8a95a1"
     },
     {
       "file": "specs/BACKEND-EXPERIMENTS.md",
@@ -1207,7 +1272,7 @@
     },
     {
       "file": "specs/conformance/language-workflow-cases.json",
-      "sha256": "7846e322fb064ab50f9ddbce88af6e5d922f7ae4d2f8a595e8c87a3fc17fcb4f"
+      "sha256": "46a1b7f54c7d455b5fffb40bc0a4dc48e90286ea2d06e6301e040250678828ea"
     },
     {
       "file": "specs/conformance/octet-adoption-cases.json",
@@ -1227,7 +1292,7 @@
     },
     {
       "file": "specs/conformance/wit-wasi-cases.json",
-      "sha256": "e4a9256d89fa311fa5e090c48704ff95d78b9d1816efadf65342f10f4d72eeba"
+      "sha256": "2e555354e010a7fba51a1e135429c9b37bb0596ea853987e35664f4f608318c9"
     },
     {
       "file": "specs/conformance/worker-cases.json",
@@ -1239,7 +1304,7 @@
     },
     {
       "file": "specs/DECISIONS.md",
-      "sha256": "495b798512a2af936c2dcb1dc6f930bbdf29fa5d860abcacc7b1190d27bab0a6"
+      "sha256": "33f5a0a3dfc079096f0febc4ee056d97f362b60655dda9c05c90cd4d59b61338"
     },
     {
       "file": "specs/DEVELOPER-EXPERIENCE.md",
@@ -1247,7 +1312,7 @@
     },
     {
       "file": "specs/EVIDENCE.md",
-      "sha256": "8f7450c579c167dc7e1bec8d9573947f125481ab0c9bb03130e7b6bf39fd5ef0"
+      "sha256": "a9e9ae4459925f51024bd155f0e41e8ca54d104b2d3bc37bce6831699e2fda42"
     },
     {
       "file": "specs/OCTET-ADOPTION.md",
@@ -1263,7 +1328,7 @@
     },
     {
       "file": "specs/requirements.json",
-      "sha256": "5c48c4f705a2cfb478f28b2020a70e33ade59adb6ae0cdb31d69e89c27a9da92"
+      "sha256": "7368aa4098a63f127912c0ba82229981f875c4b74b16ef839d33f987017c7538"
     },
     {
       "file": "specs/RESOURCE-ADAPTERS.md",
@@ -1291,7 +1356,7 @@
     },
     {
       "file": "specs/SPEC-0001.md",
-      "sha256": "ef2bb305e5d59de218ab18c03a67e5085b718d5e2c83719e4f16ce406ff1a2c8"
+      "sha256": "5b5ca153efeb01197744a67d4f8941034995adc389fe8e1f142725904acb09d1"
     },
     {
       "file": "specs/spec-family.json",
@@ -1319,7 +1384,7 @@
     },
     {
       "file": "specs/WIT-WASI.md",
-      "sha256": "7754f1e9b803612b630aaefa20b3447f2cac30a5c7a58bcc3dfd1b640a7bd851"
+      "sha256": "4e68288632a21be74598649492d41d93cb1214309f191a89d95b7d66fc81f4d0"
     },
     {
       "file": "specs/WORKER-CONFORMANCE.md",

@@ -41,6 +41,10 @@ r[EV-STATE-02]
 
 A failed test and an open proof can coexist with implemented code. A document-validator pass belongs to the document check lane, not to scenario execution.
 
+Each evidence record MUST include a nonempty `claim` string that states the observed or proved claim. Non-review scenario results and component execution results MUST cite `test` evidence with the same execution outcome. Only scenarios whose `kind` is `review` can use review evidence for their execution field. Other evidence can accompany a result but cannot replace its required evidence class. Document validation checks these fields, not the truth of the claim.
+
+The proof-obligation ledger MUST use the same evidence rules as scenario and component records. Each `accepted` or `failed` obligation MUST cite proof evidence with its own obligation ID and the same result. Review or test evidence alone MUST NOT establish a proof result. All supplied records MUST retain the required bindings, including records attached to open obligations.
+
 SPEC-V002 adds claim outcomes: `proved`, `disproved`, `unknown`, `timeout`, `unsupported`, `error`, and `not-run`. These describe propositions and proof attempts, not the independent status fields in this document. A rejected proof does not establish a false proposition. Fixture expectations that name `proved` are not accepted-proof evidence.
 
 
@@ -178,6 +182,8 @@ Test design remains open for this requirement. No scenario or execution evidence
 r[EV-TRACE-01]
 
 **EV-TRACE-01.** Every numbered requirement MUST have a declared evidence route. A requirement with no concrete scenario remains `test-design-open`, not covered or passed.
+
+Native requirement headings and matching `r[ID]` markers own the index. Legacy labels support historical preservation checks only. Fenced examples MUST NOT create requirements, scenario targets, or preservation obligations.
 
 The index uses these planned routes:
 

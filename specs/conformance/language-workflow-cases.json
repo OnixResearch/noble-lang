@@ -6,7 +6,7 @@
     {
       "id": "DX-07", "profile": "Local-Binding-Design", "kind": "review",
       "requirements": ["DX-LOCAL-01", "DX-LOCAL-02"],
-      "input": {"harness": "local-binding-lowering-design", "task": "compute subtotal plus tax while retaining original subtotal", "stack_only_source": "dup dup 10 / +", "initial_stack": [{"type": "I64", "value": "100"}], "binding_form": "structured lexical binding of subtotal; return subtotal and subtotal plus subtotal divided by ten", "variants": ["pure-equivalence", "resource-read-twice", "unused-resource-binding", "resource-quotation-capture", "data-capture", "shadowing"]},
+      "input": {"harness": "local-binding-lowering-design", "task": "add a fixed surcharge of ten while retaining original subtotal", "stack_only_source": "dup 10 +", "initial_stack": [{"type": "I64", "value": "100"}], "binding_form": "structured lexical binding of subtotal; return subtotal and wrap64(subtotal + 10)", "variants": ["pure-equivalence", "resource-read-twice", "unused-resource-binding", "resource-quotation-capture", "data-capture", "shadowing"]},
       "expected": {"stage": "design-and-lowering", "outcome": "design-gate-remains-open-until-syntax-and-lowering-evidence", "pure_output": [{"type": "I64", "value": "100"}, {"type": "I64", "value": "110"}], "pure_effects": [], "resource_variants": "reject-each", "data_capture": "retained-in-recipe", "shadowing": "resolved-lexically-not-dynamically", "new_kernel_operations": 0},
       "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
     },

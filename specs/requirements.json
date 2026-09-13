@@ -3312,7 +3312,8 @@
       ],
       "scenarios": [
         "S-CASE-05",
-        "S-CASE-16"
+        "S-CASE-16",
+        "WI-07"
       ],
       "test_design": "scenario-described-not-executed"
     },
@@ -3327,7 +3328,8 @@
       ],
       "scenarios": [
         "S-CASE-05",
-        "S-CASE-16"
+        "S-CASE-16",
+        "WI-07"
       ],
       "test_design": "scenario-described-not-executed"
     },
@@ -5736,8 +5738,10 @@
         "correspondence",
         "review"
       ],
-      "scenarios": [],
-      "test_design": "test-design-open"
+      "scenarios": [
+        "WI-07"
+      ],
+      "test_design": "scenario-described-not-executed"
     },
     {
       "id": "W-WIT-04",
@@ -6314,7 +6318,8 @@
         "review"
       ],
       "scenarios": [
-        "WI-01"
+        "WI-01",
+        "WI-07"
       ],
       "test_design": "scenario-described-not-executed"
     },

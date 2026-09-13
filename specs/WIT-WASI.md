@@ -63,9 +63,9 @@ Here `WitOpId` identifies the exact versioned WIT package, interface, and functi
 
 This schematic signature applies to directly lowered parameters and results. Synchronous borrowed imports use the owner-threading adapter in SPEC-R001. Generated bindings publish the adapted signature explicitly.
 
-A reviewed Noble contract can establish a more specific effect bound. The absence of WIT effect annotations does not justify narrowing.
+Every guest-requested import MUST retain its `WitOpId` in the effect bound, including imports with reviewed deterministic or side-effect-free implementations. Such review does not remove the boundary request. Host-operation internals remain separate from request accounting under V-EFFECT-01. This profile defines no pure foreign-call exemption.
 
-**WI-WIT-04.** A WIT import MUST be treated as potentially effectful by default. A WIT function signature alone MUST NOT be interpreted as proof of purity, determinism, termination, authorization, or absence of external interaction.
+**WI-WIT-04.** A WIT import MUST contribute its operation identity to the effect bound. A signature or reviewed purity claim MUST NOT erase that requirement. A WIT signature alone MUST NOT establish purity, determinism, termination, authorization, or absence of external interaction.
 
 **WI-WIT-05.** A Noble export implementing a WIT function MUST have a closed, WIT-lowerable external interface. The component adapter SHALL invoke that program against an isolated adapter stack containing only the declared parameters and SHALL validate that its normal results match the declared WIT result contract. An ambient Noble stack tail MUST NOT cross a component boundary implicitly.
 

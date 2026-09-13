@@ -32,15 +32,24 @@ const START = '<!-- cairn:scenario-links:start -->';
 const END = '<!-- cairn:scenario-links:end -->';
 const WRAPPER = '\n<!-- cairn:purpose:start -->\n## Purpose\n\nThis accepted specification records Noble draft contracts, not completed implementation.\nOriginal requirement IDs, explanatory prose, examples, and open decisions remain authoritative.\nScenario clauses refer to unexecuted designs in the conformance ledger.\n\n## Requirements\n<!-- cairn:purpose:end -->\n';
 
+// Encode each path segment, including parentheses that delimit Markdown links.
+function encodeLinkPath(file) {
+  return file.split('/').map(part => encodeURIComponent(part)
+    .replace(/[!'()*]/g, char => '%' + char.charCodeAt(0).toString(16).toUpperCase())).join('/');
+}
+
 export function rebaseLinks(text, from, to, targets) {
-  return text.replace(/(\[[^\]\n]*\]\()([^\s)]+)(\))/g, (match, prefix, target, suffix) => {
-    if (/^[a-z][a-z0-9+.-]*:/i.test(target) || target.startsWith('#')) return match;
-    const [file, ...fragment] = target.split('#');
-    const resolved = path.posix.normalize(path.posix.join(path.posix.dirname(from), decodeURIComponent(file)));
-    const destination = targets.get(resolved) ?? resolved;
-    const relative = path.posix.relative(path.posix.dirname(to), destination);
-    return `${prefix}${relative}${fragment.length ? '#' + fragment.join('#') : ''}${suffix}`;
-  });
+  const prose = proseLines(text);
+  // Link-like strings inside fenced examples are literal text, not destinations.
+  return text.split('\n').map((line, index) => prose[index] === null ? line
+    : line.replace(/(\[[^\]\n]*\]\()([^\s)]+)(\))/g, (match, prefix, target, suffix) => {
+      if (/^[a-z][a-z0-9+.-]*:/i.test(target) || target.startsWith('#')) return match;
+      const [file, ...fragment] = target.split('#');
+      const resolved = path.posix.normalize(path.posix.join(path.posix.dirname(from), decodeURIComponent(file)));
+      const destination = targets.get(resolved) ?? resolved;
+      const relative = path.posix.relative(path.posix.dirname(to), destination);
+      return `${prefix}${encodeLinkPath(relative)}${fragment.length ? '#' + fragment.join('#') : ''}${suffix}`;
+    })).join('\n');
 }
 
 function scenarioLinks(id, cases, destination) {
@@ -51,7 +60,7 @@ function scenarioLinks(id, cases, destination) {
   }
   for (const c of linked) {
     const file = path.posix.relative(path.posix.dirname(destination), `specs/${c.file}`);
-    const reference = `[${c.id}](${file})`;
+    const reference = `[${c.id}](${encodeLinkPath(file)})`;
     lines.push(`#### Scenario: ${c.id} for ${id}`, '',
       `- GIVEN the \`${c.profile}\` profile and every field of \`input\` in ${reference}`,
       `- WHEN the \`${c.kind}\` procedure for case \`${c.id}\` runs against those inputs`,
@@ -62,19 +71,112 @@ function scenarioLinks(id, cases, destination) {
   return '\n' + lines.join('\n') + '\n';
 }
 
+// Ignore fenced examples when reading requirement identities and generated regions.
+function proseLines(markdown) {
+  let fence;
+  const prose = markdown.split('\n').map(line => {
+    const delimiter = line.match(/^\s*(`{3,}|~{3,})(.*)$/);
+    if (fence) {
+      if (delimiter && delimiter[1][0] === fence[0] && delimiter[1].length >= fence.length
+        && !delimiter[2].trim()) fence = undefined;
+      return null;
+    }
+    if (delimiter) { fence = delimiter[1]; return null; }
+    return line;
+  });
+  if (fence) throw new Error('unclosed code fence');
+  return prose;
+}
+
+function stripScenarioRegions(markdown) {
+  const lines = markdown.split('\n');
+  const prose = proseLines(markdown);
+  const regions = [];
+  let start, offset = 0;
+  for (const [index, line] of lines.entries()) {
+    if (prose[index] === START) {
+      if (start !== undefined) throw new Error('nested scenario region');
+      start = offset;
+    } else if (prose[index] === END) {
+      if (start === undefined) throw new Error('orphan scenario region end');
+      regions.push({ start, end: Math.min(markdown.length, offset + line.length + 1) });
+      start = undefined;
+    }
+    offset += line.length + 1;
+  }
+  if (start !== undefined) throw new Error('unclosed scenario region');
+  let result = '', cursor = 0;
+  for (let { start, end } of regions) {
+    // Remove only the separators added by scenarioLinks and output.join.
+    // A final generated region has two leading separators instead of a trailing one.
+    if (markdown[start - 1] === '\n') start--;
+    if (end === markdown.length) {
+      if (markdown[start - 1] === '\n') start--;
+    } else if (markdown[end] === '\n') end++;
+    result += markdown.slice(cursor, Math.max(cursor, start));
+    cursor = Math.max(cursor, end);
+  }
+  return result + markdown.slice(cursor);
+}
+
+function nativeRequirements(markdown) {
+  const prose = proseLines(markdown);
+  const entries = [];
+  const seen = new Set();
+  const markers = new Set(), labels = new Set();
+  const nextContent = start => {
+    while (start < prose.length && prose[start]?.trim() === '') start++;
+    return start;
+  };
+  for (const [start, line] of prose.entries()) {
+    if (!line?.startsWith('### Requirement:')) continue;
+    const id = line.match(/^### Requirement: ([A-Z][A-Z0-9-]*-\d+)$/)?.[1];
+    if (!id) throw new Error(`invalid requirement heading: ${line}`);
+    if (seen.has(id)) throw new Error(`duplicate requirement: ${id}`);
+    seen.add(id);
+    const marker = nextContent(start + 1);
+    if (prose[marker] !== `r[${id}]`) throw new Error(`requirement marker identity mismatch: ${id}`);
+    markers.add(marker);
+    const body = nextContent(marker + 1);
+    const label = prose[body]?.match(REQUIREMENT)?.[1];
+    if (label && label !== id) throw new Error(`legacy requirement identity mismatch: ${id} -> ${label}`);
+    if (label) labels.add(body);
+    entries.push({ id, start, marker, labeled: Boolean(label) });
+  }
+  for (const [index, line] of prose.entries()) {
+    if (line?.startsWith('r[') && !markers.has(index)) throw new Error(`unscoped requirement marker: ${line}`);
+    if (line?.match(REQUIREMENT) && !labels.has(index)) throw new Error(`unscoped legacy requirement identity: ${line}`);
+  }
+  if (!entries.length) throw new Error('no native requirements');
+  return entries;
+}
+
+// Native headings own current IDs; historical inputs retain their legacy labels.
+// Both readers share the same fence handling as conversion.
+export function nativeRequirementIds(markdown) {
+  return nativeRequirements(markdown).map(entry => entry.id);
+}
+
+export function legacyRequirementIds(markdown) {
+  return proseLines(markdown).flatMap(line => {
+    const id = line?.match(REQUIREMENT)?.[1];
+    return id ? [id] : [];
+  });
+}
+
 export function toCairn(source, name, cases) {
-  if (source.includes('<!-- cairn:') || /^r\[/m.test(source)) throw new Error(`already converted input: ${name}`);
+  const prose = proseLines(source);
+  if (prose.some(line => line?.includes('<!-- cairn:') || line?.startsWith('r['))) throw new Error(`already converted input: ${name}`);
   if (!source.startsWith('# ')) throw new Error(`missing title: ${name}`);
   const destination = canonicalPath(name);
-  const lines = source.split('\n');
+  // Rebase source prose before mixing it with destination-relative generated links.
+  const lines = rebaseLinks(source, `specs/${name}`, destination, mapping).split('\n');
   const output = [];
   const seen = new Set();
   let active;
-  let fenced = false;
   for (const [index, line] of lines.entries()) {
-    const boundary = /^\s*(```|~~~)/.test(line);
-    const id = !fenced && !boundary ? line.match(REQUIREMENT)?.[1] : undefined;
-    if (!fenced && !boundary && active && (id || /^#{1,6} /.test(line))) {
+    const id = prose[index]?.match(REQUIREMENT)?.[1];
+    if (active && (id || /^#{1,6} /.test(prose[index] ?? ''))) {
       output.push(scenarioLinks(active, cases, destination));
       active = undefined;
     }
@@ -86,44 +188,53 @@ export function toCairn(source, name, cases) {
     }
     output.push(line);
     if (index === 0) output.push(WRAPPER);
-    if (boundary) fenced = !fenced;
   }
-  if (fenced) throw new Error(`unclosed code fence: ${name}`);
   if (!seen.size) throw new Error(`no requirements: ${name}`);
   if (active) output.push(scenarioLinks(active, cases, destination));
-  // Scenario links already use destination-relative paths; rebase source prose first.
-  const rendered = output.join('\n');
-  const regions = rendered.split(/(\n<!-- cairn:scenario-links:start -->[\s\S]*?<!-- cairn:scenario-links:end -->\n)/g);
-  return regions.map(region => region.startsWith('\n' + START) ? region
-    : rebaseLinks(region, `specs/${name}`, destination, mapping)).join('');
+  return output.join('\n');
 }
 
 export function toLegacy(markdown, name) {
-  const stripped = markdown
-    .replace('\n' + WRAPPER, '')
-    .replace(/^### Requirement: ([A-Z][A-Z0-9-]*-\d+)\nr\[\1\]\n\n/gm, '')
-    .replace(/\n\n<!-- cairn:scenario-links:start -->(?:(?!<!-- cairn:scenario-links:end -->)[\s\S])*<!-- cairn:scenario-links:end -->\n$/, '')
-    .replace(/\n<!-- cairn:scenario-links:start -->[\s\S]*?<!-- cairn:scenario-links:end -->\n\n?/g, '');
-  return rebaseLinks(stripped, canonicalPath(name), `specs/${name}`, reverseMapping);
+  const entries = nativeRequirements(markdown);
+  const lines = markdown.split('\n');
+  for (const { id, start, marker, labeled } of entries.reverse()) {
+    const count = marker - start + 1 + (lines[marker + 1] === '' ? 1 : 0);
+    // Native IDs are authoritative. Add a compatibility label when one is absent.
+    lines.splice(start, count, ...(labeled ? [] : [`**${id}.**`, '']));
+  }
+  let stripped = lines.join('\n');
+  // The generated purpose wrapper belongs directly after the title, never inside an example.
+  const titleEnd = stripped.indexOf('\n');
+  if (stripped.startsWith('\n' + WRAPPER, titleEnd)) {
+    stripped = stripped.slice(0, titleEnd) + stripped.slice(titleEnd + WRAPPER.length + 1);
+  }
+  return rebaseLinks(stripScenarioRegions(stripped), canonicalPath(name), `specs/${name}`, reverseMapping);
 }
 
 function view(markdown, name) {
   return `<!-- Generated compatibility view. Edit ${canonicalPath(name)} instead. -->\n` + toLegacy(markdown, name);
 }
 
+export function regenerate(markdown, name, cases) {
+  const identities = nativeRequirements(markdown).map(entry => entry.id);
+  const canonical = toCairn(toLegacy(markdown, name), name, cases);
+  assert.deepEqual(nativeRequirements(canonical).map(entry => entry.id), identities,
+    `regeneration changed requirement identities: ${canonicalPath(name)}`);
+  return canonical;
+}
+
 export function checkConversion(documents, cases) {
   const errors = [];
   const identities = new Set();
   for (const { name, canonical, compatibility } of documents) {
-    const legacy = toLegacy(canonical, name);
     try {
-      if (toCairn(legacy, name, cases) !== canonical) errors.push(`Cairn structure or scenario links stale: ${canonicalPath(name)}`);
+      if (regenerate(canonical, name, cases) !== canonical) errors.push(`Cairn structure or scenario links stale: ${canonicalPath(name)}`);
+      if (view(canonical, name) !== compatibility) errors.push(`compatibility view stale: specs/${name}`);
+      for (const { id } of nativeRequirements(canonical)) {
+        if (identities.has(id)) errors.push(`duplicate requirement: ${id}`);
+        identities.add(id);
+      }
     } catch (error) { errors.push(error.message); }
-    if (view(canonical, name) !== compatibility) errors.push(`compatibility view stale: specs/${name}`);
-    for (const match of legacy.matchAll(/^\*\*([A-Z][A-Z0-9-]*-\d+)\.\*\*/gm)) {
-      if (identities.has(match[1])) errors.push(`duplicate requirement: ${match[1]}`);
-      identities.add(match[1]);
-    }
   }
   for (const c of cases) {
     for (const id of c.requirements) if (!identities.has(id)) errors.push(`unresolved scenario requirement: ${c.id} -> ${id}`);
@@ -151,7 +262,26 @@ function selfTest() {
   const fenced = source + '\n```text\n**EXAMPLE-01.** Not a requirement.\n```\n';
   assert.equal(toLegacy(toCairn(fenced, name, cases), name), fenced);
   assert.throws(() => toCairn(source + '\n```\n', name, cases), /unclosed/);
-  return 13;
+  const native = canonical + '\n### Requirement: B-SCOPE-03\nr[B-SCOPE-03]\n\nThe checker MUST reject unsupported input.\n\n#### Scenario: Unsupported input\n\n- GIVEN unsupported input\n- WHEN the checker validates it\n- THEN the checker rejects it\n';
+  const regenerated = regenerate(native, name, cases);
+  assert.ok(regenerated.includes('r[B-SCOPE-03]'), 'native requirement identity survives regeneration');
+  assert.ok(regenerated.includes('#### Scenario: Unsupported input'), 'authored scenario survives regeneration');
+  assert.equal(regenerate(regenerated, name, cases), regenerated, 'regeneration is idempotent');
+  assert.throws(() => toLegacy(canonical.replace('**B-SCOPE-02.**', '**B-SCOPE-03.**'), name), /identity/);
+  assert.throws(() => toLegacy(canonical.replace('r[B-SCOPE-02]', 'r[B-SCOPE-03]'), name), /identity/);
+  assert.throws(() => toLegacy(native + '\n### Requirement: B-SCOPE-03\nr[B-SCOPE-03]\n\nDuplicate MUST fail.\n', name), /duplicate/);
+  assert.throws(() => toLegacy(canonical.replace('r[B-SCOPE-02]\n', ''), name), /marker/);
+  const linkedCases = [...cases, { ...cases[0], id: 'CORE-NEW', requirements: ['B-SCOPE-03'] }];
+  const linked = regenerate(native, name, linkedCases);
+  assert.deepEqual(checkConversion([{ name, canonical: linked, compatibility: view(linked, name) }], linkedCases), []);
+  assert.ok(linked.includes('#### Scenario: CORE-NEW for B-SCOPE-03'));
+  assert.deepEqual(nativeRequirements(regenerated).map(entry => entry.id), ['B-SCOPE-01', 'B-SCOPE-02', 'B-SCOPE-03']);
+  assert.throws(() => regenerate(canonical + '\nr[B-ORPHAN-01]\n', name, cases), /unscoped/);
+  for (const fence of ['```', '~~~~']) {
+    const example = source + `\n${fence}markdown\n### Requirement: B-EXAMPLE-01\nr[B-EXAMPLE-01]\n\n**B-EXAMPLE-01.** This is example text.\n${fence}\n`;
+    assert.equal(toLegacy(toCairn(example, name, cases), name), example, 'fenced native syntax is not a requirement');
+  }
+  return 26;
 }
 
 // Filesystem shell: plan all outputs and check round trips before the first write.
@@ -194,7 +324,7 @@ function main() {
       assert.equal(doc.path, '../' + canonicalPath(name), 'canonical manifest path');
       assert.equal(doc.cairn_id, SPEC_SLUGS[name], 'Cairn spec identity');
       const current = read(canonicalPath(name));
-      const canonical = args.includes('--write-views') ? toCairn(toLegacy(current, name), name, cases) : current;
+      const canonical = args.includes('--write-views') ? regenerate(current, name, cases) : current;
       return { name, canonical, compatibility: args.includes('--write-views') ? view(canonical, name) : read(`specs/${name}`) };
     });
     const errors = checkConversion(documents, cases);
