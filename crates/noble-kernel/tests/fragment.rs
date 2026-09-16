@@ -160,7 +160,7 @@ fn oversized_instantiations_reject_before_use() {
     };
     assert_eq!(
         swap.check_inst(&big_stack, 3, 256, 16),
-        Err(InstError::Oversized)
+        Err(InstError::OversizedStack)
     );
     assert!(swap.check_inst(&big_stack, 4, 256, 16).is_ok());
 }

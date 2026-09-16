@@ -3,6 +3,9 @@
 
 extern crate alloc;
 
+pub mod candidate;
+pub mod check;
+pub mod env;
 pub mod scheme;
 pub mod types;
 

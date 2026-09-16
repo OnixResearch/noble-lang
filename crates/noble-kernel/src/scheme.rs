@@ -113,8 +113,12 @@ pub enum InstError {
     UnknownVariable,
     /// The instantiation carries a wrong number of bindings.
     ArityMismatch,
-    /// A binding exceeds a declared size limit before use.
-    Oversized,
+    /// A bound stack exceeds the declared stack-height limit.
+    OversizedStack,
+    /// A bound type exceeds the declared type-size limit.
+    OversizedType,
+    /// A bound effect set exceeds the environment's effect-identity count.
+    OversizedEffects,
 }
 
 /// One variable's concrete value.
@@ -238,22 +242,22 @@ impl Scheme {
             match (binding, kind) {
                 (Binding::Stack(stack), VarKind::Stack) => {
                     if stack.len() as u64 > u64::from(max_stack) {
-                        return Err(InstError::Oversized);
+                        return Err(InstError::OversizedStack);
                     }
                     for ty in stack {
                         if ty.size() > max_type {
-                            return Err(InstError::Oversized);
+                            return Err(InstError::OversizedType);
                         }
                     }
                 }
                 (Binding::Value(ty), VarKind::Value) => {
                     if ty.size() > max_type {
-                        return Err(InstError::Oversized);
+                        return Err(InstError::OversizedType);
                     }
                 }
                 (Binding::Effect(set), VarKind::Effect) => {
                     if set.len() as u64 > u64::from(max_effects) {
-                        return Err(InstError::Oversized);
+                        return Err(InstError::OversizedEffects);
                     }
                 }
                 _ => return Err(InstError::KindMismatch),
