@@ -32,9 +32,9 @@ pub struct Scheme {
     /// Kinds of the scheme's variables, indexed by `Variable`.
     pub var_kinds: alloc::vec::Vec<VariableKind>,
     /// Required invocation stack pattern, bottom-first.
-    pub stack_in: alloc::vec::Vec<crate::shapes::StackPart>,
+    pub stack_in: alloc::vec::Vec<crate::shapes::Pattern>,
     /// Result stack pattern, bottom-first.
-    pub stack_out: alloc::vec::Vec<crate::shapes::StackPart>,
+    pub stack_out: alloc::vec::Vec<crate::shapes::Pattern>,
     /// Latent effect bound pattern.
     pub effects: alloc::vec::Vec<crate::shapes::EffectSlot>,
 }
@@ -153,7 +153,7 @@ impl Scheme {
     /// Substitute a stack pattern to a concrete stack.
     pub fn subst_stack(
         &self,
-        parts: &[crate::shapes::StackPart],
+        parts: &[crate::shapes::Pattern],
         inst: &Inst,
     ) -> Result<alloc::vec::Vec<crate::types::Ty>, InstError> {
         let mut out: alloc::vec::Vec<crate::types::Ty> =
@@ -162,21 +162,19 @@ impl Scheme {
         let mut failure: Option<InstError> = None;
         while part_index < parts.len() {
             let step = match &parts[part_index] {
-                crate::shapes::StackPart::Pattern(pattern) => {
-                    match self.subst_pattern(pattern, inst) {
-                        Ok(ty) => {
-                            out.push(ty);
-                            Ok(())
-                        }
-                        Err(problem) => Err(problem),
-                    }
-                }
-                crate::shapes::StackPart::Stack(var) => match inst.stack(*var) {
+                crate::shapes::Pattern::StackVar(var) => match inst.stack(*var) {
                     Some(segment) => {
                         out.extend_from_slice(segment);
                         Ok(())
                     }
                     None => Err(InstError::UnknownVariable),
+                },
+                pattern => match self.subst_pattern(pattern, inst) {
+                    Ok(ty) => {
+                        out.push(ty);
+                        Ok(())
+                    }
+                    Err(problem) => Err(problem),
                 },
             };
             match step {

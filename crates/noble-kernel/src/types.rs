@@ -87,18 +87,11 @@ impl EffSet {
     }
 }
 
-/// A monomorphic program type: invocation stack, result stack, latent bound.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct ProgramTy {
-    /// Required invocation stack, bottom-first.
-    pub stack_in: alloc::vec::Vec<Ty>,
-    /// Result stack, bottom-first.
-    pub stack_out: alloc::vec::Vec<Ty>,
-    /// Latent host-operation bound.
-    pub effects: EffSet,
-}
-
 /// A type in the fragment's finite universe.
+///
+/// The program case carries its stacks and bound directly, so the type family
+/// is self-recursive: mutually recursive types would leave Aeneas' dependency
+/// analysis with mixed declaration groups it refuses to translate.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Ty {
     /// The unit type.
@@ -117,8 +110,12 @@ pub enum Ty {
     Sum(alloc::boxed::Box<Ty>, alloc::boxed::Box<Ty>),
     /// A homogeneous list.
     List(alloc::boxed::Box<Ty>),
-    /// A first-class program value.
-    Program(alloc::boxed::Box<ProgramTy>),
+    /// A first-class program type: required stack, result stack, latent bound.
+    Program(
+        alloc::boxed::Box<alloc::vec::Vec<Ty>>,
+        alloc::boxed::Box<alloc::vec::Vec<Ty>>,
+        EffSet,
+    ),
     /// An opaque resource kind; never data-eligible.
     Resource(ResourceKind),
 }
@@ -130,11 +127,11 @@ impl Ty {
         stack_out: alloc::vec::Vec<Ty>,
         effects: EffSet,
     ) -> Ty {
-        Ty::Program(alloc::boxed::Box::new(ProgramTy {
-            stack_in,
-            stack_out,
+        Ty::Program(
+            alloc::boxed::Box::new(stack_in),
+            alloc::boxed::Box::new(stack_out),
             effects,
-        }))
+        )
     }
 
     /// The recursive `Data` eligibility predicate.
@@ -161,7 +158,7 @@ impl Ty {
                     work.push(right);
                 }
                 Ty::List(item) => work.push(item),
-                Ty::Unit | Ty::Bool | Ty::I64 | Ty::Text | Ty::Syntax | Ty::Program(_) => {}
+                Ty::Unit | Ty::Bool | Ty::I64 | Ty::Text | Ty::Syntax | Ty::Program(_, _, _) => {}
             }
         }
         is_data

@@ -11,10 +11,10 @@ pub(crate) fn literal_scheme(lit: crate::untrusted::Lit) -> crate::words::Scheme
     };
     crate::words::Scheme {
         var_kinds: alloc::vec![crate::words::VariableKind::Stack],
-        stack_in: alloc::vec![crate::shapes::StackPart::Stack(crate::words::Variable(0))],
+        stack_in: alloc::vec![crate::shapes::Pattern::StackVar(crate::words::Variable(0))],
         stack_out: alloc::vec![
-            crate::shapes::StackPart::Stack(crate::words::Variable(0)),
-            crate::shapes::StackPart::Pattern(pattern),
+            crate::shapes::Pattern::StackVar(crate::words::Variable(0)),
+            pattern,
         ],
         effects: alloc::vec![],
     }
@@ -29,20 +29,14 @@ pub(crate) fn quotation_scheme() -> crate::words::Scheme {
             crate::words::VariableKind::Stack,
             crate::words::VariableKind::Effect
         ],
-        stack_in: alloc::vec![crate::shapes::StackPart::Stack(crate::words::Variable(0))],
+        stack_in: alloc::vec![crate::shapes::Pattern::StackVar(crate::words::Variable(0))],
         stack_out: alloc::vec![
-            crate::shapes::StackPart::Stack(crate::words::Variable(0)),
-            crate::shapes::StackPart::Pattern(crate::shapes::Pattern::Program(
-                alloc::boxed::Box::new(crate::shapes::Signature {
-                    stack_in: alloc::vec![crate::shapes::StackPart::Stack(crate::words::Variable(
-                        1
-                    ))],
-                    stack_out: alloc::vec![crate::shapes::StackPart::Stack(
-                        crate::words::Variable(2)
-                    )],
-                    effects: alloc::vec![crate::shapes::EffectSlot::Var(crate::words::Variable(3))],
-                }),
-            )),
+            crate::shapes::Pattern::StackVar(crate::words::Variable(0)),
+            crate::shapes::Pattern::program(
+                alloc::vec![crate::shapes::Pattern::StackVar(crate::words::Variable(1))],
+                alloc::vec![crate::shapes::Pattern::StackVar(crate::words::Variable(2))],
+                alloc::vec![crate::shapes::EffectSlot::Var(crate::words::Variable(3))],
+            ),
         ],
         effects: alloc::vec![],
     }

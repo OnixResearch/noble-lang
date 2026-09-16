@@ -7,7 +7,12 @@
 /// Local bound for one pattern walk; beyond it validation fails closed.
 const WORK_CAP: usize = 512;
 
-/// A type pattern over concrete constructors and value variables.
+/// A type pattern over concrete constructors, value variables, and whole-stack
+/// variables.
+///
+/// The program case carries its stacks and effect pattern directly, so the
+/// family is self-recursive: mutually recursive pattern types would leave
+/// Aeneas' dependency analysis with mixed declaration groups it refuses.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Pattern {
     /// The unit type.
@@ -26,32 +31,33 @@ pub enum Pattern {
     Sum(alloc::boxed::Box<Pattern>, alloc::boxed::Box<Pattern>),
     /// A list pattern.
     List(alloc::boxed::Box<Pattern>),
-    /// A program pattern with its own stack and effect patterns.
-    Program(alloc::boxed::Box<Signature>),
+    /// A program pattern: required stack, result stack, effect pattern.
+    Program(
+        alloc::boxed::Box<alloc::vec::Vec<Pattern>>,
+        alloc::boxed::Box<alloc::vec::Vec<Pattern>>,
+        alloc::boxed::Box<alloc::vec::Vec<EffectSlot>>,
+    ),
     /// An opaque resource kind.
     Resource(crate::types::ResourceKind),
     /// A value-type variable.
     Var(crate::words::Variable),
+    /// A whole-stack variable standing for zero or more stack positions.
+    StackVar(crate::words::Variable),
 }
 
-/// A program pattern inside a scheme.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Signature {
-    /// Required stack pattern, bottom-first.
-    pub stack_in: alloc::vec::Vec<StackPart>,
-    /// Result stack pattern, bottom-first.
-    pub stack_out: alloc::vec::Vec<StackPart>,
-    /// Latent effect pattern.
-    pub effects: alloc::vec::Vec<EffectSlot>,
-}
-
-/// One stack position in a pattern stack.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum StackPart {
-    /// A pattern occupying one position.
-    Pattern(Pattern),
-    /// A whole-stack variable standing for zero or more positions.
-    Stack(crate::words::Variable),
+impl Pattern {
+    /// Build a program pattern.
+    pub fn program(
+        stack_in: alloc::vec::Vec<Pattern>,
+        stack_out: alloc::vec::Vec<Pattern>,
+        effects: alloc::vec::Vec<EffectSlot>,
+    ) -> Pattern {
+        Pattern::Program(
+            alloc::boxed::Box::new(stack_in),
+            alloc::boxed::Box::new(stack_out),
+            alloc::boxed::Box::new(effects),
+        )
+    }
 }
 
 /// One effect position in a scheme bound.
@@ -72,10 +78,10 @@ pub enum Defect {
     KindMismatch,
 }
 
-/// One walk step: a pattern to inspect, part list, or effect-slot list.
+/// One walk step: a pattern to inspect, a pattern stack, or an effect-slot list.
 enum Step<'a> {
     Pattern(&'a Pattern),
-    Parts(&'a [StackPart]),
+    Parts(&'a [Pattern]),
     Slots(&'a [EffectSlot]),
 }
 
@@ -126,16 +132,16 @@ fn require_slots(kinds: &[crate::words::VariableKind], slots: &[EffectSlot]) -> 
 /// Require every stack part to match its kind, queueing nested patterns.
 fn require_parts<'a>(
     kinds: &[crate::words::VariableKind],
-    parts: &'a [StackPart],
+    parts: &'a [Pattern],
     mut work: alloc::vec::Vec<Step<'a>>,
 ) -> Result<alloc::vec::Vec<Step<'a>>, Defect> {
     let mut index = 0;
     let mut defect: Option<Defect> = None;
     while index < parts.len() {
         let step = match &parts[index] {
-            StackPart::Stack(var) => require_kind(kinds, *var, crate::words::VariableKind::Stack),
-            StackPart::Pattern(pattern) => {
-                work.push(Step::Pattern(pattern));
+            Pattern::StackVar(var) => require_kind(kinds, *var, crate::words::VariableKind::Stack),
+            part => {
+                work.push(Step::Pattern(part));
                 Ok(())
             }
         };
@@ -163,6 +169,9 @@ fn require_pattern<'a>(
         Pattern::Var(var) => {
             require_kind(kinds, *var, crate::words::VariableKind::Value).map(|()| work)
         }
+        Pattern::StackVar(var) => {
+            require_kind(kinds, *var, crate::words::VariableKind::Stack).map(|()| work)
+        }
         Pattern::Pair(left, right) | Pattern::Sum(left, right) => {
             work.push(Step::Pattern(left));
             work.push(Step::Pattern(right));
@@ -172,10 +181,10 @@ fn require_pattern<'a>(
             work.push(Step::Pattern(item));
             Ok(work)
         }
-        Pattern::Program(signature) => {
-            work.push(Step::Parts(&signature.stack_in));
-            work.push(Step::Parts(&signature.stack_out));
-            work.push(Step::Slots(&signature.effects));
+        Pattern::Program(stack_in, stack_out, effects) => {
+            work.push(Step::Parts(stack_in));
+            work.push(Step::Parts(stack_out));
+            work.push(Step::Slots(effects));
             Ok(work)
         }
         Pattern::Unit
@@ -190,8 +199,8 @@ fn require_pattern<'a>(
 /// Validate one signature's parts and effects against the declared kinds.
 pub fn validate(
     kinds: &[crate::words::VariableKind],
-    stack_in: &[StackPart],
-    stack_out: &[StackPart],
+    stack_in: &[Pattern],
+    stack_out: &[Pattern],
     effects: &[EffectSlot],
 ) -> Result<(), Defect> {
     let mut work: alloc::vec::Vec<Step> = alloc::vec::Vec::with_capacity(8);

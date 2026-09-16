@@ -54,7 +54,7 @@ fn count_children(node: &crate::types::Ty) -> usize {
     match node {
         crate::types::Ty::Pair(_, _) | crate::types::Ty::Sum(_, _) => 2,
         crate::types::Ty::List(_) => 1,
-        crate::types::Ty::Program(program) => program.stack_in.len() + program.stack_out.len(),
+        crate::types::Ty::Program(stack_in, stack_out, _) => stack_in.len() + stack_out.len(),
         crate::types::Ty::Unit
         | crate::types::Ty::Bool
         | crate::types::Ty::I64
@@ -111,16 +111,16 @@ fn queue_children<'a>(
             todo.push((node, true));
             todo.push((item, false));
         }
-        crate::types::Ty::Program(program) => {
+        crate::types::Ty::Program(stack_in, stack_out, _) => {
             todo.push((node, true));
             let mut index = 0;
-            while index < program.stack_in.len() {
-                todo.push((&program.stack_in[index], false));
+            while index < stack_in.len() {
+                todo.push((&stack_in[index], false));
                 index += 1;
             }
             index = 0;
-            while index < program.stack_out.len() {
-                todo.push((&program.stack_out[index], false));
+            while index < stack_out.len() {
+                todo.push((&stack_out[index], false));
                 index += 1;
             }
         }

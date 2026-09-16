@@ -4,7 +4,7 @@ fn unit() -> crate::words::Scheme {
     super::scheme(
         alloc::vec![crate::words::VariableKind::Stack],
         alloc::vec![super::stack_var(0)],
-        alloc::vec![super::stack_var(0), super::pattern(super::UNIT)],
+        alloc::vec![super::stack_var(0), super::UNIT],
         alloc::vec![],
     )
 }
@@ -23,10 +23,10 @@ fn pair_word() -> crate::words::Scheme {
         ],
         alloc::vec![
             super::stack_var(0),
-            super::pattern(super::pair(
+            super::pair(
                 crate::shapes::Pattern::Var(crate::words::Variable(1)),
                 crate::shapes::Pattern::Var(crate::words::Variable(2))
-            )),
+            ),
         ],
         alloc::vec![],
     )
@@ -41,10 +41,10 @@ fn unpair() -> crate::words::Scheme {
         ],
         alloc::vec![
             super::stack_var(0),
-            super::pattern(super::pair(
+            super::pair(
                 crate::shapes::Pattern::Var(crate::words::Variable(1)),
                 crate::shapes::Pattern::Var(crate::words::Variable(2))
-            )),
+            ),
         ],
         alloc::vec![
             super::stack_var(0),
@@ -65,10 +65,10 @@ fn inl() -> crate::words::Scheme {
         alloc::vec![super::stack_var(0), super::value_var(1)],
         alloc::vec![
             super::stack_var(0),
-            super::pattern(super::sum(
+            super::sum(
                 crate::shapes::Pattern::Var(crate::words::Variable(1)),
                 crate::shapes::Pattern::Var(crate::words::Variable(2))
-            )),
+            ),
         ],
         alloc::vec![],
     )
@@ -84,10 +84,10 @@ fn inr() -> crate::words::Scheme {
         alloc::vec![super::stack_var(0), super::value_var(2)],
         alloc::vec![
             super::stack_var(0),
-            super::pattern(super::sum(
+            super::sum(
                 crate::shapes::Pattern::Var(crate::words::Variable(1)),
                 crate::shapes::Pattern::Var(crate::words::Variable(2))
-            )),
+            ),
         ],
         alloc::vec![],
     )
@@ -105,20 +105,20 @@ fn case() -> crate::words::Scheme {
         ],
         alloc::vec![
             super::stack_var(0),
-            super::pattern(super::sum(
+            super::sum(
                 crate::shapes::Pattern::Var(crate::words::Variable(1)),
                 crate::shapes::Pattern::Var(crate::words::Variable(2))
-            )),
-            super::pattern(super::program(
+            ),
+            super::program(
                 alloc::vec![super::stack_var(0), super::value_var(1)],
                 alloc::vec![super::stack_var(3)],
                 alloc::vec![super::effect_var(4)],
-            )),
-            super::pattern(super::program(
+            ),
+            super::program(
                 alloc::vec![super::stack_var(0), super::value_var(2)],
                 alloc::vec![super::stack_var(3)],
                 alloc::vec![super::effect_var(5)],
-            )),
+            ),
         ],
         alloc::vec![super::stack_var(3)],
         alloc::vec![super::effect_var(4), super::effect_var(5)],
@@ -135,17 +135,17 @@ fn if_word() -> crate::words::Scheme {
         ],
         alloc::vec![
             super::stack_var(0),
-            super::pattern(super::BOOL),
-            super::pattern(super::program(
+            super::BOOL,
+            super::program(
                 alloc::vec![super::stack_var(0)],
                 alloc::vec![super::stack_var(1)],
                 alloc::vec![super::effect_var(2)],
-            )),
-            super::pattern(super::program(
+            ),
+            super::program(
                 alloc::vec![super::stack_var(0)],
                 alloc::vec![super::stack_var(1)],
                 alloc::vec![super::effect_var(3)],
-            )),
+            ),
         ],
         alloc::vec![super::stack_var(1)],
         alloc::vec![super::effect_var(2), super::effect_var(3)],
@@ -161,9 +161,7 @@ fn nil() -> crate::words::Scheme {
         alloc::vec![super::stack_var(0)],
         alloc::vec![
             super::stack_var(0),
-            super::pattern(super::list(crate::shapes::Pattern::Var(
-                crate::words::Variable(1)
-            ))),
+            super::list(crate::shapes::Pattern::Var(crate::words::Variable(1))),
         ],
         alloc::vec![],
     )
@@ -178,15 +176,11 @@ fn cons() -> crate::words::Scheme {
         alloc::vec![
             super::stack_var(0),
             super::value_var(1),
-            super::pattern(super::list(crate::shapes::Pattern::Var(
-                crate::words::Variable(1)
-            ))),
+            super::list(crate::shapes::Pattern::Var(crate::words::Variable(1))),
         ],
         alloc::vec![
             super::stack_var(0),
-            super::pattern(super::list(crate::shapes::Pattern::Var(
-                crate::words::Variable(1)
-            ))),
+            super::list(crate::shapes::Pattern::Var(crate::words::Variable(1))),
         ],
         alloc::vec![],
     )
@@ -203,25 +197,21 @@ fn list_case() -> crate::words::Scheme {
         ],
         alloc::vec![
             super::stack_var(0),
-            super::pattern(super::list(crate::shapes::Pattern::Var(
-                crate::words::Variable(1)
-            ))),
-            super::pattern(super::program(
+            super::list(crate::shapes::Pattern::Var(crate::words::Variable(1))),
+            super::program(
                 alloc::vec![super::stack_var(0)],
                 alloc::vec![super::stack_var(2)],
                 alloc::vec![super::effect_var(3)],
-            )),
-            super::pattern(super::program(
+            ),
+            super::program(
                 alloc::vec![
                     super::stack_var(0),
                     super::value_var(1),
-                    super::pattern(super::list(crate::shapes::Pattern::Var(
-                        crate::words::Variable(1)
-                    )))
+                    super::list(crate::shapes::Pattern::Var(crate::words::Variable(1)))
                 ],
                 alloc::vec![super::stack_var(2)],
                 alloc::vec![super::effect_var(4)],
-            )),
+            ),
         ],
         alloc::vec![super::stack_var(2)],
         alloc::vec![super::effect_var(3), super::effect_var(4)],
@@ -231,8 +221,8 @@ fn list_case() -> crate::words::Scheme {
 fn test_emit() -> crate::words::Scheme {
     super::scheme(
         alloc::vec![crate::words::VariableKind::Stack],
-        alloc::vec![super::stack_var(0), super::pattern(super::TEXT)],
-        alloc::vec![super::stack_var(0), super::pattern(super::UNIT)],
+        alloc::vec![super::stack_var(0), super::TEXT],
+        alloc::vec![super::stack_var(0), super::UNIT],
         alloc::vec![crate::shapes::EffectSlot::Effect(
             crate::contracts::TEST_EMIT
         )],

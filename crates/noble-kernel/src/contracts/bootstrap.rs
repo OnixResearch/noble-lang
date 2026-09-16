@@ -9,16 +9,12 @@ const I64: crate::shapes::Pattern = crate::shapes::Pattern::I64;
 const TEXT: crate::shapes::Pattern = crate::shapes::Pattern::Text;
 const SYNTAX: crate::shapes::Pattern = crate::shapes::Pattern::Syntax;
 
-fn stack_var(index: u32) -> crate::shapes::StackPart {
-    crate::shapes::StackPart::Stack(crate::words::Variable(index))
+fn stack_var(index: u32) -> crate::shapes::Pattern {
+    crate::shapes::Pattern::StackVar(crate::words::Variable(index))
 }
 
-fn value_var(index: u32) -> crate::shapes::StackPart {
-    crate::shapes::StackPart::Pattern(crate::shapes::Pattern::Var(crate::words::Variable(index)))
-}
-
-fn pattern(item: crate::shapes::Pattern) -> crate::shapes::StackPart {
-    crate::shapes::StackPart::Pattern(item)
+fn value_var(index: u32) -> crate::shapes::Pattern {
+    crate::shapes::Pattern::Var(crate::words::Variable(index))
 }
 
 fn effect_var(index: u32) -> crate::shapes::EffectSlot {
@@ -38,21 +34,17 @@ fn list(item: crate::shapes::Pattern) -> crate::shapes::Pattern {
 }
 
 fn program(
-    item_in: alloc::vec::Vec<crate::shapes::StackPart>,
-    item_out: alloc::vec::Vec<crate::shapes::StackPart>,
+    item_in: alloc::vec::Vec<crate::shapes::Pattern>,
+    item_out: alloc::vec::Vec<crate::shapes::Pattern>,
     effects: alloc::vec::Vec<crate::shapes::EffectSlot>,
 ) -> crate::shapes::Pattern {
-    crate::shapes::Pattern::Program(alloc::boxed::Box::new(crate::shapes::Signature {
-        stack_in: item_in,
-        stack_out: item_out,
-        effects,
-    }))
+    crate::shapes::Pattern::program(item_in, item_out, effects)
 }
 
 fn scheme(
     var_kinds: alloc::vec::Vec<crate::words::VariableKind>,
-    stack_in: alloc::vec::Vec<crate::shapes::StackPart>,
-    stack_out: alloc::vec::Vec<crate::shapes::StackPart>,
+    stack_in: alloc::vec::Vec<crate::shapes::Pattern>,
+    stack_out: alloc::vec::Vec<crate::shapes::Pattern>,
     effects: alloc::vec::Vec<crate::shapes::EffectSlot>,
 ) -> crate::words::Scheme {
     crate::words::Scheme {
@@ -111,11 +103,11 @@ fn dip() -> crate::words::Scheme {
         alloc::vec![
             stack_var(0),
             value_var(1),
-            pattern(program(
+            program(
                 alloc::vec![stack_var(0)],
                 alloc::vec![stack_var(2)],
                 alloc::vec![effect_var(3)],
-            )),
+            ),
         ],
         alloc::vec![stack_var(2), value_var(1)],
         alloc::vec![effect_var(3)],
@@ -125,8 +117,8 @@ fn dip() -> crate::words::Scheme {
 fn arith() -> crate::words::Scheme {
     scheme(
         alloc::vec![crate::words::VariableKind::Stack],
-        alloc::vec![stack_var(0), pattern(I64), pattern(I64)],
-        alloc::vec![stack_var(0), pattern(I64)],
+        alloc::vec![stack_var(0), I64, I64],
+        alloc::vec![stack_var(0), I64],
         alloc::vec![],
     )
 }
@@ -141,11 +133,11 @@ fn quote() -> crate::words::Scheme {
         alloc::vec![stack_var(0), value_var(1)],
         alloc::vec![
             stack_var(0),
-            pattern(program(
+            program(
                 alloc::vec![stack_var(2)],
                 alloc::vec![stack_var(2), value_var(1)],
                 alloc::vec![],
-            )),
+            ),
         ],
         alloc::vec![],
     )
@@ -163,24 +155,24 @@ fn compose() -> crate::words::Scheme {
         ],
         alloc::vec![
             stack_var(0),
-            pattern(program(
+            program(
                 alloc::vec![stack_var(1)],
                 alloc::vec![stack_var(2)],
                 alloc::vec![effect_var(4)],
-            )),
-            pattern(program(
+            ),
+            program(
                 alloc::vec![stack_var(2)],
                 alloc::vec![stack_var(3)],
                 alloc::vec![effect_var(5)],
-            )),
+            ),
         ],
         alloc::vec![
             stack_var(0),
-            pattern(program(
+            program(
                 alloc::vec![stack_var(1)],
                 alloc::vec![stack_var(3)],
                 alloc::vec![effect_var(4), effect_var(5)],
-            )),
+            ),
         ],
         alloc::vec![],
     )
@@ -195,11 +187,11 @@ fn run() -> crate::words::Scheme {
         ],
         alloc::vec![
             stack_var(0),
-            pattern(program(
+            program(
                 alloc::vec![stack_var(0)],
                 alloc::vec![stack_var(1)],
                 alloc::vec![effect_var(2)],
-            )),
+            ),
         ],
         alloc::vec![stack_var(1)],
         alloc::vec![effect_var(2)],
@@ -216,13 +208,13 @@ fn reflect() -> crate::words::Scheme {
         ],
         alloc::vec![
             stack_var(0),
-            pattern(program(
+            program(
                 alloc::vec![stack_var(1)],
                 alloc::vec![stack_var(2)],
                 alloc::vec![effect_var(3)],
-            )),
+            ),
         ],
-        alloc::vec![stack_var(0), pattern(SYNTAX)],
+        alloc::vec![stack_var(0), SYNTAX],
         alloc::vec![],
     )
 }

@@ -61,6 +61,9 @@ def ofIds (ids : List EffId) : EffSet := ids.foldl (fun acc id => insert id acc)
 /-- Inclusion: every identity here is present in `other`. -/
 def Subset (a b : EffSet) : Prop := ∀ id, id ∈ a.ids → id ∈ b.ids
 
+/-- Decidable inclusion, for the reference checker's guards. -/
+def subsetOf (a b : EffSet) : Bool := a.ids.all (fun id => b.ids.elem id)
+
 /-- The number of identities. -/
 def card (s : EffSet) : Nat := s.ids.length
 
@@ -132,6 +135,11 @@ namespace TyList
 def length : TyList → Nat
   | TyList.nil => 0
   | TyList.cons _ rest => 1 + rest.length
+
+/-- The entries as a list, bottom first. -/
+def toList : TyList → List Ty
+  | nil => []
+  | cons head rest => head :: rest.toList
 
 /-- Concatenation. -/
 def append : TyList → TyList → TyList

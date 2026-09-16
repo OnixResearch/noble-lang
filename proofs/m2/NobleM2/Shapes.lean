@@ -62,4 +62,14 @@ mutual
 
 end
 
+/-- The number of entries of one stack pattern. -/
+def PartList.length : PartList → Nat
+  | .nil => 0
+  | .cons _ rest => 1 + rest.length
+
+/-- The number of effect slots of one effect pattern. -/
+def SlotList.length : SlotList → Nat
+  | .nil => 0
+  | .cons _ rest => 1 + rest.length
+
 end NobleM2

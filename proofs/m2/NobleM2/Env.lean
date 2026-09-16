@@ -51,49 +51,37 @@ structure Env where
   effects : List EffId
   deriving Repr, DecidableEq, Inhabited
 
-namespace Env
-
 /-- The scheme of a definition. -/
-def scheme (env : Env) (def : Nat) : Option Scheme := env.defs[def]?
+def Env.scheme (env : Env) (index : Nat) : Option Scheme := env.defs[index]?
 
 /-- The behavior of a definition. -/
-def kind (env : Env) (def : Nat) : Option Behavior := env.kinds[def]?
+def Env.kind (env : Env) (index : Nat) : Option Behavior := env.kinds[index]?
 
 /-- Whether the environment provides this effect identity. -/
-def knowsEffect (env : Env) (id : EffId) : Bool := env.effects.elem id
+def Env.knowsEffect (env : Env) (id : EffId) : Bool := env.effects.elem id
 
 /-- The number of definitions. -/
-def length (env : Env) : Nat := env.defs.length
-
-end Env
-
-namespace PartList
+def Env.length (env : Env) : Nat := env.defs.length
 
 /-- Build a stack pattern from a list. -/
-def ofList : List StackPart → PartList
+def PartList.ofList : List StackPart → PartList
   | [] => .nil
   | head :: rest => .cons head (ofList rest)
 
 /-- The entries of a stack pattern. -/
-def toList : PartList → List StackPart
+def PartList.toList : PartList → List StackPart
   | .nil => []
   | .cons head rest => head :: rest.toList
 
-end PartList
-
-namespace SlotList
-
 /-- Build an effect pattern from a list. -/
-def ofList : List EffectSlot → SlotList
+def SlotList.ofList : List EffectSlot → SlotList
   | [] => .nil
   | head :: rest => .cons head (ofList rest)
 
 /-- The entries of an effect pattern. -/
-def toList : SlotList → List EffectSlot
+def SlotList.toList : SlotList → List EffectSlot
   | .nil => []
   | .cons head rest => head :: rest.toList
-
-end SlotList
 
 /-- A whole-stack variable entry. -/
 def stackVar (index : Nat) : StackPart := .stack index

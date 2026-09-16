@@ -215,14 +215,12 @@ fn resource_eligibility_rejects_duplication() -> Result<(), String> {
     let maker = noble_kernel::contracts::Definition(22);
     env.defs.push(noble_kernel::words::Scheme {
         var_kinds: vec![noble_kernel::words::VariableKind::Stack],
-        stack_in: vec![noble_kernel::shapes::StackPart::Stack(
+        stack_in: vec![noble_kernel::shapes::Pattern::StackVar(
             noble_kernel::words::Variable(0),
         )],
         stack_out: vec![
-            noble_kernel::shapes::StackPart::Stack(noble_kernel::words::Variable(0)),
-            noble_kernel::shapes::StackPart::Pattern(noble_kernel::shapes::Pattern::Resource(
-                noble_kernel::contracts::FIXTURE_RESOURCE,
-            )),
+            noble_kernel::shapes::Pattern::StackVar(noble_kernel::words::Variable(0)),
+            noble_kernel::shapes::Pattern::Resource(noble_kernel::contracts::FIXTURE_RESOURCE),
         ],
         effects: vec![],
     });

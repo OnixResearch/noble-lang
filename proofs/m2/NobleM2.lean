@@ -2,3 +2,6 @@ import NobleM2.Types
 import NobleM2.Shapes
 import NobleM2.Words
 import NobleM2.Env
+import NobleM2.Candidate
+import NobleM2.Judgment
+import NobleM2.Check
