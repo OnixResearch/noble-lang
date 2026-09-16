@@ -79,10 +79,13 @@ pub enum Defect {
 }
 
 /// One walk step: a pattern to inspect, a pattern stack, or an effect-slot list.
-enum Step<'a> {
-    Pattern(&'a Pattern),
-    Parts(&'a [Pattern]),
-    Slots(&'a [EffectSlot]),
+///
+/// Steps own their patterns: a reference into the signature under validation
+/// cannot be carried across the owned queue Aeneas interprets.
+enum Step {
+    Pattern(Pattern),
+    Parts(alloc::vec::Vec<Pattern>),
+    Slots(alloc::vec::Vec<EffectSlot>),
 }
 
 /// Require one variable to carry exactly the declared kind.
@@ -130,18 +133,18 @@ fn require_slots(kinds: &[crate::words::VariableKind], slots: &[EffectSlot]) -> 
 }
 
 /// Require every stack part to match its kind, queueing nested patterns.
-fn require_parts<'a>(
+fn require_parts(
     kinds: &[crate::words::VariableKind],
-    parts: &'a [Pattern],
-    mut work: alloc::vec::Vec<Step<'a>>,
-) -> Result<alloc::vec::Vec<Step<'a>>, Defect> {
+    parts: alloc::vec::Vec<Pattern>,
+    mut work: alloc::vec::Vec<Step>,
+) -> Result<alloc::vec::Vec<Step>, Defect> {
     let mut index = 0;
     let mut defect: Option<Defect> = None;
     while index < parts.len() {
         let step = match &parts[index] {
             Pattern::StackVar(var) => require_kind(kinds, *var, crate::words::VariableKind::Stack),
             part => {
-                work.push(Step::Pattern(part));
+                work.push(Step::Pattern(part.clone()));
                 Ok(())
             }
         };
@@ -160,35 +163,35 @@ fn require_parts<'a>(
 }
 
 /// Require one pattern to match its kind, queueing its sub-patterns.
-fn require_pattern<'a>(
+fn require_pattern(
     kinds: &[crate::words::VariableKind],
-    pattern: &'a Pattern,
-    mut work: alloc::vec::Vec<Step<'a>>,
-) -> Result<alloc::vec::Vec<Step<'a>>, Defect> {
+    pattern: Pattern,
+    mut work: alloc::vec::Vec<Step>,
+) -> Result<alloc::vec::Vec<Step>, Defect> {
     match pattern {
-        Pattern::Var(var) => match require_kind(kinds, *var, crate::words::VariableKind::Value) {
+        Pattern::Var(var) => match require_kind(kinds, var, crate::words::VariableKind::Value) {
             Ok(()) => Ok(work),
             Err(problem) => Err(problem),
         },
         Pattern::StackVar(var) => {
-            match require_kind(kinds, *var, crate::words::VariableKind::Stack) {
+            match require_kind(kinds, var, crate::words::VariableKind::Stack) {
                 Ok(()) => Ok(work),
                 Err(problem) => Err(problem),
             }
         }
         Pattern::Pair(left, right) | Pattern::Sum(left, right) => {
-            work.push(Step::Pattern(left));
-            work.push(Step::Pattern(right));
+            work.push(Step::Pattern(*left));
+            work.push(Step::Pattern(*right));
             Ok(work)
         }
         Pattern::List(item) => {
-            work.push(Step::Pattern(item));
+            work.push(Step::Pattern(*item));
             Ok(work)
         }
         Pattern::Program(stack_in, stack_out, effects) => {
-            work.push(Step::Parts(stack_in));
-            work.push(Step::Parts(stack_out));
-            work.push(Step::Slots(effects));
+            work.push(Step::Parts(*stack_in));
+            work.push(Step::Parts(*stack_out));
+            work.push(Step::Slots(*effects));
             Ok(work)
         }
         Pattern::Unit
@@ -208,9 +211,9 @@ pub fn validate(
     effects: &[EffectSlot],
 ) -> Result<(), Defect> {
     let mut work: alloc::vec::Vec<Step> = alloc::vec::Vec::with_capacity(8);
-    work.push(Step::Parts(stack_in));
-    work.push(Step::Parts(stack_out));
-    work.push(Step::Slots(effects));
+    work.push(Step::Parts(stack_in.to_vec()));
+    work.push(Step::Parts(stack_out.to_vec()));
+    work.push(Step::Slots(effects.to_vec()));
     let mut defect: Option<Defect> = None;
     while let Some(step) = work.pop() {
         if work.len() >= WORK_CAP {
@@ -218,7 +221,7 @@ pub fn validate(
             break;
         }
         let outcome = match step {
-            Step::Slots(slots) => match require_slots(kinds, slots) {
+            Step::Slots(slots) => match require_slots(kinds, &slots) {
                 Ok(()) => Ok(work),
                 Err(problem) => Err(problem),
             },

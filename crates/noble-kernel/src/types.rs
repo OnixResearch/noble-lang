@@ -178,8 +178,8 @@ impl Ty {
     /// including through `Pair`, `Sum`, and `List` alternatives. A walk that
     /// exceeds the local bound fails closed.
     pub fn is_data(&self) -> bool {
-        let mut work: alloc::vec::Vec<&Ty> = alloc::vec::Vec::with_capacity(8);
-        work.push(self);
+        let mut work: alloc::vec::Vec<Ty> = alloc::vec::Vec::with_capacity(8);
+        work.push(self.clone());
         let mut is_data = true;
         while let Some(node) = work.pop() {
             if work.len() >= WORK_CAP {
@@ -192,10 +192,10 @@ impl Ty {
                     break;
                 }
                 Ty::Pair(left, right) | Ty::Sum(left, right) => {
-                    work.push(left);
-                    work.push(right);
+                    work.push(*left);
+                    work.push(*right);
                 }
-                Ty::List(item) => work.push(item),
+                Ty::List(item) => work.push(*item),
                 Ty::Unit | Ty::Bool | Ty::I64 | Ty::Text | Ty::Syntax | Ty::Program(_, _, _) => {}
             }
         }
@@ -208,7 +208,7 @@ impl Ty {
             todo: alloc::vec::Vec::with_capacity(8),
             sizes: alloc::vec::Vec::with_capacity(8),
         };
-        walk.todo.push((self, false));
+        walk.todo.push((self.clone(), false));
         let mut outcome = size::Step::Continue;
         while matches!(outcome, size::Step::Continue) {
             let (next, step) = size::walk_step(walk);

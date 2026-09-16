@@ -109,10 +109,10 @@ fn step(
     };
     match node {
         crate::untrusted::Node::Literal { .. } | crate::untrusted::Node::Invocation { .. } => {
-            fold_current(machine, frame, node_id, node, context)
+            fold_current(machine, frame, node_id, &node, context)
         }
         crate::untrusted::Node::Quotation { .. } => {
-            open_current(machine, frame, node_id, node, context)
+            open_current(machine, frame, node_id, &node, context)
         }
     }
 }

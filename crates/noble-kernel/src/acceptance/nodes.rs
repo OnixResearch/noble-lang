@@ -1,15 +1,19 @@
 //! Node lookup and literal, invocation, and quotation folding.
 
-pub(super) fn node_of<'a>(
-    candidate: &'a crate::untrusted::Candidate,
+/// Fetch one node, rejecting a reference outside the finite arena.
+///
+/// The node returns owned: a reference into the candidate arena cannot be
+/// carried across the machine state the extraction interpreter tracks.
+pub(super) fn node_of(
+    candidate: &crate::untrusted::Candidate,
     node_id: crate::untrusted::NodeId,
     context: &super::parts::Ctx,
-) -> Result<&'a crate::untrusted::Node, super::Fail> {
+) -> Result<crate::untrusted::Node, super::Fail> {
     match usize::try_from(node_id.0)
         .ok()
         .and_then(|index| candidate.nodes.get(index))
     {
-        Some(node) => Ok(node),
+        Some(node) => Ok(node.clone()),
         None => Err(super::parts::invalid(
             context,
             super::parts::site(Some(node_id), None),

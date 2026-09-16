@@ -131,6 +131,15 @@ fn project(
     at: super::Site,
     ctx: &super::Ctx,
 ) -> Result<crate::untrusted::Interface, super::super::Fail> {
+    // Read the eligible binding as an owned value first: a reference into the
+    // instantiation cannot be carried across the substitutions below.
+    let eligible: Option<crate::types::Ty> = match data_var {
+        Some(var) => match inst.value(var) {
+            Some(ty) => Some(ty.clone()),
+            None => return Err(instantiation_invalid(at, ctx)),
+        },
+        None => None,
+    };
     let stack_in = match scheme.subst_stack(&scheme.stack_in, inst) {
         Ok(stack) => stack,
         Err(_) => return Err(instantiation_invalid(at, ctx)),
@@ -165,21 +174,15 @@ fn project(
             crate::untrusted::Constraint::UnknownEffect(id),
         ));
     }
-    if let Some(var) = data_var {
-        match inst.value(var) {
-            Some(ty) => {
-                if !ty.is_data() {
-                    let considered = ty.clone();
-                    return Err(super::invalid(
-                        ctx,
-                        at,
-                        alloc::vec::Vec::new(),
-                        alloc::vec::Vec::new(),
-                        crate::untrusted::Constraint::Eligibility(considered),
-                    ));
-                }
-            }
-            None => return Err(instantiation_invalid(at, ctx)),
+    if let Some(ty) = eligible {
+        if !ty.is_data() {
+            return Err(super::invalid(
+                ctx,
+                at,
+                alloc::vec::Vec::new(),
+                alloc::vec::Vec::new(),
+                crate::untrusted::Constraint::Eligibility(ty),
+            ));
         }
     }
     Ok(crate::untrusted::Interface {

@@ -4,9 +4,12 @@
 //! `walk_step`) so no loop body returns early.
 
 /// One size walk's threaded state.
-pub(super) struct Walk<'a> {
+///
+/// The work stack holds owned nodes: references into the tree under walk
+/// cannot be carried across the owned size stack Aeneas interprets.
+pub(super) struct Walk {
     /// Nodes still to visit, with their expansion markers.
-    pub(super) todo: alloc::vec::Vec<(&'a crate::types::Ty, bool)>,
+    pub(super) todo: alloc::vec::Vec<(crate::types::Ty, bool)>,
     /// Sizes already computed, in visit order.
     pub(super) sizes: alloc::vec::Vec<u32>,
 }
@@ -22,7 +25,7 @@ pub(super) enum Step {
 }
 
 /// Run one size-walk step, returning the updated state and its outcome.
-pub(super) fn walk_step(mut walk: Walk<'_>) -> (Walk<'_>, Step) {
+pub(super) fn walk_step(mut walk: Walk) -> (Walk, Step) {
     match walk.todo.pop() {
         None => (walk, Step::Done),
         Some((node, expanded)) => {
@@ -30,7 +33,7 @@ pub(super) fn walk_step(mut walk: Walk<'_>) -> (Walk<'_>, Step) {
                 return (walk, Step::Failed);
             }
             if expanded {
-                let (next_sizes, total) = take_sizes(walk.sizes, count_children(node));
+                let (next_sizes, total) = take_sizes(walk.sizes, count_children(&node));
                 walk.sizes = next_sizes;
                 match total {
                     Some(total) => {
@@ -40,7 +43,7 @@ pub(super) fn walk_step(mut walk: Walk<'_>) -> (Walk<'_>, Step) {
                     None => (walk, Step::Failed),
                 }
             } else {
-                let (todo, sizes) = queue_children(node, walk.todo, walk.sizes);
+                let (todo, sizes) = queue_children(&node, walk.todo, walk.sizes);
                 walk.todo = todo;
                 walk.sizes = sizes;
                 (walk, Step::Continue)
@@ -93,34 +96,37 @@ fn take_sizes(
 
 /// Queue one unexpanded node: its expansion marker and its children in order,
 /// or its unit size when it holds no children.
-fn queue_children<'a>(
-    node: &'a crate::types::Ty,
-    mut todo: alloc::vec::Vec<(&'a crate::types::Ty, bool)>,
+///
+/// The queue holds owned nodes: a reference into the tree under walk cannot be
+/// carried across the owned size stack Aeneas interprets.
+fn queue_children(
+    node: &crate::types::Ty,
+    mut todo: alloc::vec::Vec<(crate::types::Ty, bool)>,
     mut sizes: alloc::vec::Vec<u32>,
 ) -> (
-    alloc::vec::Vec<(&'a crate::types::Ty, bool)>,
+    alloc::vec::Vec<(crate::types::Ty, bool)>,
     alloc::vec::Vec<u32>,
 ) {
     match node {
         crate::types::Ty::Pair(left, right) | crate::types::Ty::Sum(left, right) => {
-            todo.push((node, true));
-            todo.push((left, false));
-            todo.push((right, false));
+            todo.push((node.clone(), true));
+            todo.push(((**left).clone(), false));
+            todo.push(((**right).clone(), false));
         }
         crate::types::Ty::List(item) => {
-            todo.push((node, true));
-            todo.push((item, false));
+            todo.push((node.clone(), true));
+            todo.push(((**item).clone(), false));
         }
         crate::types::Ty::Program(stack_in, stack_out, _) => {
-            todo.push((node, true));
+            todo.push((node.clone(), true));
             let mut index = 0;
             while index < stack_in.len() {
-                todo.push((&stack_in[index], false));
+                todo.push((stack_in[index].clone(), false));
                 index += 1;
             }
             index = 0;
             while index < stack_out.len() {
-                todo.push((&stack_out[index], false));
+                todo.push((stack_out[index].clone(), false));
                 index += 1;
             }
         }
