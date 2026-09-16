@@ -33,17 +33,19 @@ impl crate::words::Scheme {
             match task {
                 Task::Emit(segment) => segments.push(segment),
                 Task::Finish(node) => {
-                    let right = segments
-                        .pop()
-                        .ok_or(crate::words::InstError::OversizedType)?;
-                    let left = segments
-                        .pop()
-                        .ok_or(crate::words::InstError::OversizedType)?;
+                    let right =
+                        attempt!(segments.pop().ok_or(crate::words::InstError::OversizedType));
+                    let left =
+                        attempt!(segments.pop().ok_or(crate::words::InstError::OversizedType));
                     let built = match node {
-                        crate::shapes::Pattern::Pair(_, _) => pair_segment(left, right, false)?,
-                        crate::shapes::Pattern::Sum(_, _) => pair_segment(left, right, true)?,
+                        crate::shapes::Pattern::Pair(_, _) => {
+                            attempt!(pair_segment(left, right, false))
+                        }
+                        crate::shapes::Pattern::Sum(_, _) => {
+                            attempt!(pair_segment(left, right, true))
+                        }
                         crate::shapes::Pattern::List(_) => {
-                            let inner = single(left)?;
+                            let inner = attempt!(single(left));
                             alloc::vec![crate::types::Ty::List(alloc::boxed::Box::new(inner))]
                         }
                         crate::shapes::Pattern::Var(_)
@@ -60,33 +62,38 @@ impl crate::words::Scheme {
                     segments.push(built);
                 }
                 Task::Expand(signature) => {
-                    let count = signature.stack_in.len() + signature.stack_out.len();
                     let mut collected: alloc::vec::Vec<alloc::vec::Vec<crate::types::Ty>> =
-                        alloc::vec::Vec::with_capacity(count.max(4));
-                    for _ in 0..count {
-                        collected.push(
-                            segments
-                                .pop()
-                                .ok_or(crate::words::InstError::OversizedType)?,
+                        alloc::vec::Vec::with_capacity(
+                            (signature.stack_in.len() + signature.stack_out.len()).max(4),
                         );
+                    let mut popped = 0;
+                    while popped < signature.stack_in.len() + signature.stack_out.len() {
+                        collected.push(attempt!(segments
+                            .pop()
+                            .ok_or(crate::words::InstError::OversizedType)));
+                        popped += 1;
                     }
                     collected.reverse();
                     let mut parts = collected.into_iter();
                     let mut stack_in: alloc::vec::Vec<crate::types::Ty> =
                         alloc::vec::Vec::with_capacity(signature.stack_in.len().max(4));
-                    for _ in 0..signature.stack_in.len() {
+                    let mut in_step = 0;
+                    while in_step < signature.stack_in.len() {
                         if let Some(segment) = parts.next() {
                             stack_in.extend(segment);
                         }
+                        in_step += 1;
                     }
                     let mut stack_out: alloc::vec::Vec<crate::types::Ty> =
                         alloc::vec::Vec::with_capacity(signature.stack_out.len().max(4));
-                    for _ in 0..signature.stack_out.len() {
+                    let mut out_step = 0;
+                    while out_step < signature.stack_out.len() {
                         if let Some(segment) = parts.next() {
                             stack_out.extend(segment);
                         }
+                        out_step += 1;
                     }
-                    let effects = self.subst_effects(&signature.effects, inst)?;
+                    let effects = attempt!(self.subst_effects(&signature.effects, inst));
                     segments.push(alloc::vec![crate::types::Ty::program(
                         stack_in, stack_out, effects
                     )]);
@@ -111,10 +118,10 @@ impl crate::words::Scheme {
                         segments.push(alloc::vec![crate::types::Ty::Resource(*kind)])
                     }
                     crate::shapes::Pattern::Var(var) => {
-                        let ty = inst
+                        let ty = attempt!(inst
                             .value(*var)
                             .cloned()
-                            .ok_or(crate::words::InstError::UnknownVariable)?;
+                            .ok_or(crate::words::InstError::UnknownVariable));
                         segments.push(alloc::vec![ty]);
                     }
                     crate::shapes::Pattern::Pair(left, right)
@@ -129,31 +136,33 @@ impl crate::words::Scheme {
                     }
                     crate::shapes::Pattern::Program(signature) => {
                         work.push(Task::Expand(signature));
-                        for part in signature
-                            .stack_in
-                            .iter()
-                            .chain(signature.stack_out.iter())
-                            .rev()
-                        {
+                        let out_len = signature.stack_out.len();
+                        let in_len = signature.stack_in.len();
+                        let mut part_index = 0;
+                        while part_index < in_len + out_len {
+                            let part = if part_index < out_len {
+                                &signature.stack_out[out_len - 1 - part_index]
+                            } else {
+                                &signature.stack_in[in_len + out_len - 1 - part_index]
+                            };
                             match part {
                                 crate::shapes::StackPart::Pattern(item) => {
                                     work.push(Task::Part(item))
                                 }
                                 crate::shapes::StackPart::Stack(var) => {
-                                    let segment = inst
+                                    let segment = attempt!(inst
                                         .stack(*var)
-                                        .ok_or(crate::words::InstError::UnknownVariable)?;
+                                        .ok_or(crate::words::InstError::UnknownVariable));
                                     work.push(Task::Emit(segment.to_vec()));
                                 }
                             }
+                            part_index += 1;
                         }
                     }
                 },
             }
         }
-        let mut out = segments
-            .pop()
-            .ok_or(crate::words::InstError::OversizedType)?;
+        let mut out = attempt!(segments.pop().ok_or(crate::words::InstError::OversizedType));
         if segments.is_empty() && out.len() == 1 {
             match out.pop() {
                 Some(ty) => Ok(ty),
@@ -184,8 +193,8 @@ fn pair_segment(
     right: alloc::vec::Vec<crate::types::Ty>,
     is_sum: bool,
 ) -> Result<alloc::vec::Vec<crate::types::Ty>, crate::words::InstError> {
-    let left_ty = single(left)?;
-    let right_ty = single(right)?;
+    let left_ty = attempt!(single(left));
+    let right_ty = attempt!(single(right));
     let built = if is_sum {
         crate::types::Ty::Sum(
             alloc::boxed::Box::new(left_ty),

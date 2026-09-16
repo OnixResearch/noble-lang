@@ -79,17 +79,24 @@ enum Step<'a> {
     Slots(&'a [EffectSlot]),
 }
 
-fn kind_of(
+/// Require one variable to carry exactly the declared kind.
+fn require_kind(
     kinds: &[crate::words::VariableKind],
     var: crate::words::Variable,
-) -> Result<crate::words::VariableKind, Defect> {
+    expected: crate::words::VariableKind,
+) -> Result<(), Defect> {
     let index = match usize::try_from(var.0) {
         Ok(index) => index,
         Err(_) => return Err(Defect::UnknownVariable),
     };
-    match kinds.get(index) {
-        Some(kind) => Ok(*kind),
-        None => Err(Defect::UnknownVariable),
+    let kind = match kinds.get(index) {
+        Some(kind) => *kind,
+        None => return Err(Defect::UnknownVariable),
+    };
+    if kind == expected {
+        Ok(())
+    } else {
+        Err(Defect::KindMismatch)
     }
 }
 
@@ -110,31 +117,33 @@ pub fn validate(
         }
         match step {
             Step::Slots(slots) => {
-                for slot in slots {
-                    if let EffectSlot::Var(var) = slot {
-                        if kind_of(kinds, *var)? != crate::words::VariableKind::Effect {
-                            return Err(Defect::KindMismatch);
-                        }
+                let mut index = 0;
+                while index < slots.len() {
+                    if let EffectSlot::Var(var) = &slots[index] {
+                        attempt!(require_kind(
+                            kinds,
+                            *var,
+                            crate::words::VariableKind::Effect
+                        ));
                     }
+                    index += 1;
                 }
             }
             Step::Parts(parts) => {
-                for part in parts {
-                    match part {
+                let mut index = 0;
+                while index < parts.len() {
+                    match &parts[index] {
                         StackPart::Stack(var) => {
-                            if kind_of(kinds, *var)? != crate::words::VariableKind::Stack {
-                                return Err(Defect::KindMismatch);
-                            }
+                            attempt!(require_kind(kinds, *var, crate::words::VariableKind::Stack))
                         }
                         StackPart::Pattern(pattern) => work.push(Step::Pattern(pattern)),
                     }
+                    index += 1;
                 }
             }
             Step::Pattern(pattern) => match pattern {
                 Pattern::Var(var) => {
-                    if kind_of(kinds, *var)? != crate::words::VariableKind::Value {
-                        return Err(Defect::KindMismatch);
-                    }
+                    attempt!(require_kind(kinds, *var, crate::words::VariableKind::Value))
                 }
                 Pattern::Pair(left, right) | Pattern::Sum(left, right) => {
                     work.push(Step::Pattern(left));

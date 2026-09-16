@@ -173,16 +173,22 @@ impl Ty {
                 let mut total = 1u32;
                 match node {
                     Ty::Pair(_, _) | Ty::Sum(_, _) => {
-                        total = total.saturating_add(sizes.pop()?);
-                        total = total.saturating_add(sizes.pop()?);
+                        let size = attempt_optional!(sizes.pop());
+                        total = total.saturating_add(size);
+                        let size = attempt_optional!(sizes.pop());
+                        total = total.saturating_add(size);
                     }
                     Ty::List(_) => {
-                        total = total.saturating_add(sizes.pop()?);
+                        let size = attempt_optional!(sizes.pop());
+                        total = total.saturating_add(size);
                     }
                     Ty::Program(program) => {
                         let count = program.stack_in.len() + program.stack_out.len();
-                        for _ in 0..count {
-                            total = total.saturating_add(sizes.pop()?);
+                        let mut step = 0;
+                        while step < count {
+                            let size = attempt_optional!(sizes.pop());
+                            total = total.saturating_add(size);
+                            step += 1;
                         }
                     }
                     Ty::Unit | Ty::Bool | Ty::I64 | Ty::Text | Ty::Syntax | Ty::Resource(_) => {}
@@ -202,8 +208,15 @@ impl Ty {
                 }
                 Ty::Program(program) => {
                     todo.push((node, true));
-                    for ty in program.stack_in.iter().chain(program.stack_out.iter()) {
-                        todo.push((ty, false));
+                    let mut index = 0;
+                    while index < program.stack_in.len() {
+                        todo.push((&program.stack_in[index], false));
+                        index += 1;
+                    }
+                    index = 0;
+                    while index < program.stack_out.len() {
+                        todo.push((&program.stack_out[index], false));
+                        index += 1;
                     }
                 }
                 Ty::Unit | Ty::Bool | Ty::I64 | Ty::Text | Ty::Syntax | Ty::Resource(_) => {

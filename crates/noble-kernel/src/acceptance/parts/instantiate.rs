@@ -86,7 +86,7 @@ pub(crate) fn apply(
     at: super::Site,
     ctx: &super::Ctx,
 ) -> Result<crate::untrusted::Interface, super::super::Fail> {
-    check_bounds(scheme, inst, at, ctx)?;
+    attempt!(check_bounds(scheme, inst, at, ctx));
     project(scheme, inst, data_var, at, ctx)
 }
 
@@ -149,18 +149,22 @@ fn project(
         Ok(effects) => effects,
         Err(_) => return Err(instantiation_invalid(at, ctx)),
     };
-    super::limits_of(&stack_in, ctx)?;
-    super::limits_of(&stack_out, ctx)?;
-    for id in effects.as_slice() {
-        if !ctx.env.knows_effect(*id) {
+    attempt!(super::limits_of(&stack_in, ctx));
+    attempt!(super::limits_of(&stack_out, ctx));
+    let effect_ids = effects.as_slice();
+    let mut index = 0;
+    while index < effect_ids.len() {
+        let id = effect_ids[index];
+        if !ctx.env.knows_effect(id) {
             return Err(super::invalid(
                 ctx,
                 at,
                 alloc::vec::Vec::new(),
                 alloc::vec::Vec::new(),
-                crate::untrusted::Constraint::UnknownEffect(*id),
+                crate::untrusted::Constraint::UnknownEffect(id),
             ));
         }
+        index += 1;
     }
     if let Some(var) = data_var {
         match inst.value(var) {

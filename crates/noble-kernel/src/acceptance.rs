@@ -51,7 +51,7 @@ fn run(
     request: &crate::untrusted::Request,
     candidate: &crate::untrusted::Candidate,
 ) -> Result<crate::untrusted::Checked, Fail> {
-    preflight(env, request, candidate)?;
+    attempt!(preflight(env, request, candidate));
     let context = parts::Ctx { request, env };
     let mut state = State {
         work: request.limits.work,
@@ -71,7 +71,7 @@ fn run(
             Some(id) => *id,
             None => {
                 let parent = frames.pop();
-                match frames::complete_frame(frame, parent, candidate, &context)? {
+                match attempt!(frames::complete_frame(frame, parent, candidate, &context)) {
                     frames::Completion::Entry(effects) => {
                         return Ok(crate::untrusted::Checked {
                             interface: crate::untrusted::Interface {
@@ -88,7 +88,7 @@ fn run(
                         interface,
                         joined,
                     } => {
-                        state.work = parts::charge(state.work, cost)?;
+                        state.work = attempt!(parts::charge(state.work, cost));
                         state
                             .derivations
                             .push(crate::untrusted::Derivation { node, interface });
@@ -98,11 +98,11 @@ fn run(
                 }
             }
         };
-        let node = node_of(candidate, node_id, &context)?;
+        let node = attempt!(node_of(candidate, node_id, &context));
         match node {
             crate::untrusted::Node::Literal { .. } | crate::untrusted::Node::Invocation { .. } => {
-                let (cost, joined, interface) = fold_node(frame, node_id, node, &context)?;
-                state.work = parts::charge(state.work, cost)?;
+                let (cost, joined, interface) = attempt!(fold_node(frame, node_id, node, &context));
+                state.work = attempt!(parts::charge(state.work, cost));
                 state.derivations.push(crate::untrusted::Derivation {
                     node: node_id,
                     interface,
@@ -110,8 +110,9 @@ fn run(
                 frames.push(frames::advance(joined));
             }
             crate::untrusted::Node::Quotation { .. } => {
-                let (cost, parent, child) = open_quotation(frame, node_id, node, &context)?;
-                state.work = parts::charge(state.work, cost)?;
+                let (cost, parent, child) =
+                    attempt!(open_quotation(frame, node_id, node, &context));
+                state.work = attempt!(parts::charge(state.work, cost));
                 frames.push(parent);
                 frames.push(child);
             }
@@ -153,10 +154,10 @@ fn fold_node(
         crate::untrusted::Node::Literal { lit, inst } => {
             let scheme = parts::instantiate::literal_scheme(*lit);
             let at = parts::site(Some(node_id), None);
-            let cost = parts::scheme_cost(&scheme)?;
-            let interface = parts::instantiate::apply(&scheme, inst, None, at, context)?;
-            let cost = cost.saturating_add(parts::join_cost(&interface)?);
-            let joined = parts::join(frame, &interface, at, context)?;
+            let cost = attempt!(parts::scheme_cost(&scheme));
+            let interface = attempt!(parts::instantiate::apply(&scheme, inst, None, at, context));
+            let cost = cost.saturating_add(attempt!(parts::join_cost(&interface)));
+            let joined = attempt!(parts::join(frame, &interface, at, context));
             Ok((cost, joined, interface))
         }
         crate::untrusted::Node::Invocation { def, inst } => {
@@ -174,10 +175,12 @@ fn fold_node(
             };
             let at = parts::site(Some(node_id), Some(*def));
             let data_var = parts::instantiate::data_slot(context.env.kind(*def));
-            let cost = parts::scheme_cost(&scheme)?;
-            let interface = parts::instantiate::apply(&scheme, inst, data_var, at, context)?;
-            let cost = cost.saturating_add(parts::join_cost(&interface)?);
-            let joined = parts::join(frame, &interface, at, context)?;
+            let cost = attempt!(parts::scheme_cost(&scheme));
+            let interface = attempt!(parts::instantiate::apply(
+                &scheme, inst, data_var, at, context
+            ));
+            let cost = cost.saturating_add(attempt!(parts::join_cost(&interface)));
+            let joined = attempt!(parts::join(frame, &interface, at, context));
             Ok((cost, joined, interface))
         }
         crate::untrusted::Node::Quotation { .. } => Err(Fail::Internal),
@@ -200,14 +203,14 @@ fn open_quotation(
         }
     };
     let scheme = parts::instantiate::quotation_scheme();
-    let cost = parts::scheme_cost(&scheme)?;
-    parts::instantiate::apply(
+    let cost = attempt!(parts::scheme_cost(&scheme));
+    attempt!(parts::instantiate::apply(
         &scheme,
         inst,
         None,
         parts::site(Some(node_id), None),
         context,
-    )?;
+    ));
     if frame.depth.saturating_add(1) > context.request.limits.depth {
         return Err(Fail::Exhausted(crate::untrusted::LimitKind::Depth));
     }
@@ -259,26 +262,33 @@ fn preflight(
     if node_count > u64::from(request.limits.nodes) {
         return Err(Fail::Exhausted(crate::untrusted::LimitKind::Nodes));
     }
-    for scheme in &env.defs {
+    let mut index = 0;
+    while index < env.defs.len() {
+        let scheme = &env.defs[index];
         if scheme.validate().is_err() {
             return Err(Fail::Unsupported(
                 crate::untrusted::UnsupportedKind::SchemeForm,
             ));
         }
+        index += 1;
     }
     let context = parts::Ctx { request, env };
-    parts::limits_of(&request.expected.stack_in, &context)?;
-    parts::limits_of(&request.expected.stack_out, &context)?;
-    for id in request.expected.allowed_effects.as_slice() {
-        if !env.knows_effect(*id) {
+    attempt!(parts::limits_of(&request.expected.stack_in, &context));
+    attempt!(parts::limits_of(&request.expected.stack_out, &context));
+    let allowed_effects = request.expected.allowed_effects.as_slice();
+    let mut index = 0;
+    while index < allowed_effects.len() {
+        let id = allowed_effects[index];
+        if !env.knows_effect(id) {
             return Err(parts::invalid(
                 &context,
                 parts::site(None, None),
                 alloc::vec::Vec::new(),
                 alloc::vec::Vec::new(),
-                crate::untrusted::Constraint::UnknownEffect(*id),
+                crate::untrusted::Constraint::UnknownEffect(id),
             ));
         }
+        index += 1;
     }
     Ok(())
 }

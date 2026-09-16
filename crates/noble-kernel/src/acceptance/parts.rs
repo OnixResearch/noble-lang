@@ -74,7 +74,9 @@ pub(crate) fn limits_of(stack: &[crate::types::Ty], ctx: &Ctx) -> Result<(), sup
             crate::untrusted::LimitKind::StackHeight,
         ));
     }
-    for ty in stack {
+    let mut index = 0;
+    while index < stack.len() {
+        let ty = &stack[index];
         if ty
             .size()
             .is_none_or(|size| size > ctx.request.limits.type_size)
@@ -83,6 +85,7 @@ pub(crate) fn limits_of(stack: &[crate::types::Ty], ctx: &Ctx) -> Result<(), sup
                 crate::untrusted::LimitKind::TypeSize,
             ));
         }
+        index += 1;
     }
     Ok(())
 }
@@ -125,7 +128,7 @@ pub(crate) fn join(
     joined.stack.truncate(keep);
     joined.stack.extend_from_slice(&interface.stack_out);
     joined.effects = joined.effects.union(&interface.effects);
-    limits_of(&joined.stack, ctx)?;
+    attempt!(limits_of(&joined.stack, ctx));
     Ok(joined)
 }
 
@@ -138,11 +141,14 @@ fn match_tail(
         return Some(crate::untrusted::Constraint::StackJoin);
     }
     let offset = stack.len() - expected.len();
-    for (index, ty) in expected.iter().enumerate() {
+    let mut index = 0;
+    while index < expected.len() {
+        let ty = &expected[index];
         if &stack[offset + index] != ty {
             let actual = tail_copy(stack, expected.len());
             return Some(mismatch_constraint(expected, &actual));
         }
+        index += 1;
     }
     None
 }
@@ -176,18 +182,24 @@ fn same_multiset(left: &[crate::types::Ty], right: &[crate::types::Ty]) -> bool 
         return false;
     }
     let mut used = alloc::vec![false; right.len()];
-    for item in left {
+    let mut item_index = 0;
+    while item_index < left.len() {
+        let item = &left[item_index];
         let mut is_found = false;
-        for (index, other) in right.iter().enumerate() {
+        let mut index = 0;
+        while index < right.len() {
+            let other = &right[index];
             if !used[index] && other == item {
                 used[index] = true;
                 is_found = true;
                 break;
             }
+            index += 1;
         }
         if !is_found {
             return false;
         }
+        item_index += 1;
     }
     true
 }

@@ -30,7 +30,7 @@
     "max_function_safety_facts": 4096,
     "max_implementations": 1024,
     "max_items": 4096,
-    "max_modules": 64,
+    "max_modules": 1024,
     "max_shard_bytes": 16777216,
     "max_shards": 16,
     "max_signatures": 4096,

@@ -122,7 +122,10 @@ impl Scheme {
         if inst.bindings.len() != self.var_kinds.len() {
             return Err(InstError::ArityMismatch);
         }
-        for (binding, kind) in inst.bindings.iter().zip(self.var_kinds.iter()) {
+        let mut binding_index = 0;
+        while binding_index < inst.bindings.len() && binding_index < self.var_kinds.len() {
+            let binding = &inst.bindings[binding_index];
+            let kind = &self.var_kinds[binding_index];
             match (binding, kind) {
                 (Binding::Stack(segment), VariableKind::Stack) => {
                     let height = match u64::try_from(segment.len()) {
@@ -132,15 +135,18 @@ impl Scheme {
                     if height > u64::from(max_stack) {
                         return Err(InstError::OversizedStack);
                     }
-                    for ty in segment {
-                        let size = ty.size().ok_or(InstError::OversizedType)?;
+                    let mut ty_index = 0;
+                    while ty_index < segment.len() {
+                        let size =
+                            attempt!(segment[ty_index].size().ok_or(InstError::OversizedType));
                         if size > max_type {
                             return Err(InstError::OversizedType);
                         }
+                        ty_index += 1;
                     }
                 }
                 (Binding::Value(ty), VariableKind::Value) => {
-                    let size = ty.size().ok_or(InstError::OversizedType)?;
+                    let size = attempt!(ty.size().ok_or(InstError::OversizedType));
                     if size > max_type {
                         return Err(InstError::OversizedType);
                     }
@@ -161,6 +167,7 @@ impl Scheme {
                 | (Binding::Effect(_), VariableKind::Stack)
                 | (Binding::Effect(_), VariableKind::Value) => return Err(InstError::KindMismatch),
             }
+            binding_index += 1;
         }
         Ok(())
     }
@@ -173,16 +180,19 @@ impl Scheme {
     ) -> Result<alloc::vec::Vec<crate::types::Ty>, InstError> {
         let mut out: alloc::vec::Vec<crate::types::Ty> =
             alloc::vec::Vec::with_capacity(parts.len().max(4));
-        for part in parts {
+        let mut part_index = 0;
+        while part_index < parts.len() {
+            let part = &parts[part_index];
             match part {
                 crate::shapes::StackPart::Pattern(pattern) => {
-                    out.push(self.subst_pattern(pattern, inst)?)
+                    out.push(attempt!(self.subst_pattern(pattern, inst)))
                 }
                 crate::shapes::StackPart::Stack(var) => {
-                    let segment = inst.stack(*var).ok_or(InstError::UnknownVariable)?;
+                    let segment = attempt!(inst.stack(*var).ok_or(InstError::UnknownVariable));
                     out.extend_from_slice(segment);
                 }
             }
+            part_index += 1;
         }
         Ok(out)
     }
@@ -195,14 +205,17 @@ impl Scheme {
     ) -> Result<crate::types::EffSet, InstError> {
         let bound = slots.len().saturating_mul(4).saturating_add(4);
         let mut ids: alloc::vec::Vec<crate::types::EffId> = alloc::vec::Vec::with_capacity(bound);
-        for slot in slots {
+        let mut slot_index = 0;
+        while slot_index < slots.len() {
+            let slot = &slots[slot_index];
             match slot {
                 crate::shapes::EffectSlot::Effect(id) => ids.push(*id),
                 crate::shapes::EffectSlot::Var(var) => {
-                    let set = inst.effects(*var).ok_or(InstError::UnknownVariable)?;
+                    let set = attempt!(inst.effects(*var).ok_or(InstError::UnknownVariable));
                     ids.extend_from_slice(set.as_slice());
                 }
             }
+            slot_index += 1;
         }
         Ok(crate::types::EffSet::from_ids(&ids))
     }

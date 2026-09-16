@@ -106,13 +106,16 @@ fn index(def: Definition) -> Option<usize> {
 
 /// Build the bootstrap environment with the fixed v0 contract table.
 pub fn environment() -> Result<Env, crate::shapes::Defect> {
+    let table = bootstrap::data::table();
     let mut defs: alloc::vec::Vec<crate::words::Scheme> = alloc::vec::Vec::with_capacity(32);
     let mut kinds: alloc::vec::Vec<Behavior> = alloc::vec::Vec::with_capacity(32);
-    for (kind, scheme) in bootstrap::data::table() {
-        scheme.validate()?;
-        defs.push(scheme);
-        kinds.push(kind);
+    let mut index = 0;
+    while index < table.len() {
+        attempt!(table[index].1.validate());
+        kinds.push(table[index].0);
+        index += 1;
     }
+    defs.extend(table.into_iter().map(|(_, scheme)| scheme));
     Ok(Env {
         defs,
         kinds,

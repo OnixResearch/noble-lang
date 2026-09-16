@@ -84,15 +84,15 @@ pub(super) fn complete_frame(
                 | None => return Err(super::Fail::Internal),
             };
             let scheme = super::parts::instantiate::quotation_scheme();
-            let interface = super::parts::instantiate::apply(
+            let interface = attempt!(super::parts::instantiate::apply(
                 &scheme,
                 &inst,
                 None,
                 super::parts::site(Some(node_id), None),
                 ctx,
-            )?;
-            let cost = super::parts::join_cost(&interface)?;
-            let joined = super::parts::join(
+            ));
+            let cost = attempt!(super::parts::join_cost(&interface));
+            let joined = attempt!(super::parts::join(
                 parent_frame,
                 &interface,
                 super::parts::site(
@@ -100,7 +100,7 @@ pub(super) fn complete_frame(
                     super::parts::definition_of(candidate, node_id),
                 ),
                 ctx,
-            )?;
+            ));
             Ok(Completion::Step {
                 cost,
                 node: node_id,
