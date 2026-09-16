@@ -1,12 +1,7 @@
 //! Untrusted candidate data, the acceptance request, and the outcome domain.
 //!
-//! Nothing in this module is trusted: a [`Candidate`] is decoded input, and
-//! only [`Outcome::Accepted`] carries a checked result.
-
-use crate::env::DefId;
-use crate::scheme::Inst;
-use crate::types::{EffId, EffSet, Ty};
-use alloc::vec::Vec;
+//! Nothing in this module is trusted: a `Candidate` is decoded input, and only
+//! `Outcome::Accepted` carries a checked result.
 
 /// Format revision every candidate must carry.
 pub const CANDIDATE_FORMAT: u32 = 0;
@@ -32,12 +27,12 @@ pub enum Lit {
 
 impl Lit {
     /// The literal's type.
-    pub fn ty(&self) -> Ty {
+    pub fn ty(&self) -> crate::types::Ty {
         match self {
-            Lit::I64(_) => Ty::I64,
-            Lit::Bool(_) => Ty::Bool,
-            Lit::Text => Ty::Text,
-            Lit::Unit => Ty::Unit,
+            Lit::I64(_) => crate::types::Ty::I64,
+            Lit::Bool(_) => crate::types::Ty::Bool,
+            Lit::Text => crate::types::Ty::Text,
+            Lit::Unit => crate::types::Ty::Unit,
         }
     }
 }
@@ -51,22 +46,22 @@ pub enum Node {
         /// The literal payload.
         lit: Lit,
         /// Instantiation of the literal's scheme.
-        inst: Inst,
+        inst: crate::words::Inst,
     },
     /// A resolved invocation with a fresh instantiation.
     Invocation {
         /// The exact environment definition.
-        def: DefId,
+        def: crate::contracts::Definition,
         /// Instantiation of the definition's scheme.
-        inst: Inst,
+        inst: crate::words::Inst,
     },
     /// A quotation literal over a finite body.
     Quotation {
         /// The body's node references.
-        body: Vec<NodeId>,
+        body: alloc::vec::Vec<NodeId>,
         /// Instantiation of the quotation scheme, binding the surrounding
         /// stack `R` and the body interface `A -- C ! e`.
-        inst: Inst,
+        inst: crate::words::Inst,
     },
 }
 
@@ -78,20 +73,20 @@ pub struct Candidate {
     /// Semantic revision.
     pub revision: u32,
     /// The finite node arena.
-    pub nodes: Vec<Node>,
+    pub nodes: alloc::vec::Vec<Node>,
     /// The entry body's node references, in order.
-    pub body: Vec<NodeId>,
+    pub body: alloc::vec::Vec<NodeId>,
 }
 
 /// The independently supplied expected interface and allowed effect bound.
 #[derive(Clone, Debug)]
 pub struct Expected {
     /// The required entry stack, bottom-first.
-    pub stack_in: Vec<Ty>,
+    pub stack_in: alloc::vec::Vec<crate::types::Ty>,
     /// The required result stack, bottom-first.
-    pub stack_out: Vec<Ty>,
+    pub stack_out: alloc::vec::Vec<crate::types::Ty>,
     /// The allowed effect bound the derived bound must fit inside.
-    pub allowed_effects: EffSet,
+    pub allowed_effects: crate::types::EffSet,
 }
 
 /// Declared finite limits. Every stage charges before its next bounded step.
@@ -128,11 +123,11 @@ pub struct Request {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Interface {
     /// Required invocation stack, bottom-first.
-    pub stack_in: Vec<Ty>,
+    pub stack_in: alloc::vec::Vec<crate::types::Ty>,
     /// Result stack, bottom-first.
-    pub stack_out: Vec<Ty>,
+    pub stack_out: alloc::vec::Vec<crate::types::Ty>,
     /// Latent effect bound.
-    pub effects: EffSet,
+    pub effects: crate::types::EffSet,
 }
 
 /// One node's retained derivation.
@@ -150,7 +145,7 @@ pub struct Checked {
     /// The accepted interface at the expected stacks.
     pub interface: Interface,
     /// One entry per checked node occurrence, in visit order.
-    pub derivations: Vec<Derivation>,
+    pub derivations: alloc::vec::Vec<Derivation>,
 }
 
 /// Which declared limit was exceeded.
@@ -191,11 +186,11 @@ pub enum Constraint {
     /// The stack holds the right types in the wrong order.
     StackOrder,
     /// The derived bound contains an identity outside the allowed bound.
-    EffectInclusion(EffId),
+    EffectInclusion(crate::types::EffId),
     /// A `Data`-requiring word met a non-capturable type.
-    Eligibility(Ty),
+    Eligibility(crate::types::Ty),
     /// An effect identity the environment does not provide.
-    UnknownEffect(EffId),
+    UnknownEffect(crate::types::EffId),
     /// An instantiation binding's kind or variable is malformed.
     InstantiationKind,
     /// An instantiation's binding count is malformed.
@@ -203,7 +198,7 @@ pub enum Constraint {
     /// A node reference points outside the finite arena.
     MalformedReference(NodeId),
     /// A definition identity is not in the environment.
-    UnknownDefinition(DefId),
+    UnknownDefinition(crate::contracts::Definition),
 }
 
 /// One rejection's diagnostic.
@@ -212,11 +207,11 @@ pub struct Diagnostic {
     /// The failing node, or `None` when the request's entry is at fault.
     pub node: Option<NodeId>,
     /// The failing word, when a word is at fault.
-    pub def: Option<DefId>,
-    /// The expected stack shapes, top segment first examined bottom-first.
-    pub expected: Vec<Ty>,
+    pub def: Option<crate::contracts::Definition>,
+    /// The expected stack shapes.
+    pub expected: alloc::vec::Vec<crate::types::Ty>,
     /// The actual stack shapes.
-    pub actual: Vec<Ty>,
+    pub actual: alloc::vec::Vec<crate::types::Ty>,
     /// The violated constraint.
     pub constraint: Constraint,
     /// Whether value-origin provenance is available; v0 reports it as absent.
@@ -228,7 +223,7 @@ pub struct Diagnostic {
 /// The five-way outcome domain. Only acceptance carries a checked program.
 #[derive(Clone, Debug)]
 pub enum Outcome {
-    /// The candidate checked; the checked interface and derivations are returned.
+    /// The candidate checked; the checked interface and derivations return.
     Accepted(Checked),
     /// The candidate is well-formed input but does not derive.
     Invalid(Diagnostic),

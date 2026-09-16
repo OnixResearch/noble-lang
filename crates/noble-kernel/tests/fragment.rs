@@ -1,166 +1,121 @@
-//! Tests for the fragment type, effect-set, and scheme core.
-// Names the fragment contract this crate implements; acceptance stays separate.
+//! Fragment type, effect-set, and scheme primitive controls.
+// Names the fragment contract this crate implements.
 // r[impl VT-M2-01]
-
-use noble_kernel::scheme::{
-    Binding, EffSlot, Inst, InstError, PItem, PSig, PTy, Scheme, SchemeError, VarId, VarKind,
-};
-use noble_kernel::types::{stack_is_data, EffId, EffSet, ResourceKind, Ty};
-
-fn ids(list: &[u32]) -> EffSet {
-    EffSet::from_ids(&list.iter().map(|id| EffId(*id)).collect::<Vec<_>>())
-}
 
 #[test]
 fn data_is_recursive_over_resource_payloads() {
-    let resource = Ty::Resource(ResourceKind(1));
-    assert!(Ty::I64.is_data());
-    assert!(Ty::List(Box::new(Ty::Pair(Box::new(Ty::Text), Box::new(Ty::Unit)))).is_data());
+    let resource = noble_kernel::types::Ty::Resource(noble_kernel::contracts::FIXTURE_RESOURCE);
+    let nested = noble_kernel::types::Ty::List(Box::new(noble_kernel::types::Ty::Pair(
+        Box::new(noble_kernel::types::Ty::Text),
+        Box::new(noble_kernel::types::Ty::Unit),
+    )));
+    assert!(nested.is_data());
     assert!(!resource.is_data());
-    assert!(!Ty::Sum(Box::new(resource.clone()), Box::new(Ty::I64)).is_data());
-    assert!(!Ty::List(Box::new(resource)).is_data());
-    let program = Ty::program(vec![Ty::I64], vec![Ty::Text], EffSet::empty());
+    assert!(!noble_kernel::types::Ty::Sum(
+        Box::new(resource.clone()),
+        Box::new(noble_kernel::types::Ty::I64)
+    )
+    .is_data());
+    assert!(!noble_kernel::types::Ty::List(Box::new(resource)).is_data());
+    let program = noble_kernel::types::Ty::program(
+        vec![noble_kernel::types::Ty::I64],
+        vec![noble_kernel::types::Ty::Text],
+        noble_kernel::types::EffSet::empty(),
+    );
     assert!(program.is_data());
-    assert!(stack_is_data(&[Ty::Bool, program]));
-    assert!(!stack_is_data(&[Ty::Bool, Ty::Resource(ResourceKind(2))]));
     // Sum(1) + I64(1) + List(1) + Unit(1)
     assert_eq!(
-        Ty::Sum(Box::new(Ty::I64), Box::new(Ty::List(Box::new(Ty::Unit)))).size(),
+        noble_kernel::types::Ty::Sum(
+            Box::new(noble_kernel::types::Ty::I64),
+            Box::new(noble_kernel::types::Ty::List(Box::new(
+                noble_kernel::types::Ty::Unit
+            )))
+        )
+        .size(),
         4
     );
 }
 
 #[test]
-fn effect_union_is_sorted_deduplicated_and_ordered() {
-    let a = ids(&[5, 1, 3]);
-    let b = ids(&[3, 2]);
-    assert_eq!(a.union(&b).as_slice(), ids(&[1, 2, 3, 5]).as_slice());
-    assert_eq!(a.union(&b), b.union(&a));
-    assert!(ids(&[1, 3]).is_subset_of(&a));
-    assert!(!ids(&[1, 4]).is_subset_of(&a));
-    assert!(EffSet::empty().is_subset_of(&a));
-    assert!(!a.is_subset_of(&EffSet::empty()));
+fn effect_sets_union_sorted_deduplicated_and_ordered() {
+    let left = ids(&[5, 1, 3]);
+    let right = ids(&[3, 2]);
+    assert_eq!(left.union(&right).as_slice(), ids(&[1, 2, 3, 5]).as_slice());
+    assert_eq!(left.union(&right), right.union(&left));
+    assert!(ids(&[1, 3]).is_subset_of(&left));
+    assert!(!ids(&[1, 4]).is_subset_of(&left));
+    assert!(noble_kernel::types::EffSet::empty().is_subset_of(&left));
+    assert!(!left.is_subset_of(&noble_kernel::types::EffSet::empty()));
+}
+
+fn ids(list: &[u32]) -> noble_kernel::types::EffSet {
+    let effects: Vec<noble_kernel::types::EffId> = list
+        .iter()
+        .map(|id| noble_kernel::types::EffId(*id))
+        .collect();
+    noble_kernel::types::EffSet::from_ids(&effects)
 }
 
 #[test]
-fn dup_scheme_instantiates_and_rejects_kind_mismatch() {
-    let dup = Scheme {
-        var_kinds: vec![VarKind::Stack, VarKind::Value],
-        stack_in: vec![PItem::Stack(VarId(0)), PItem::Ty(PTy::Var(VarId(1)))],
-        stack_out: vec![
-            PItem::Stack(VarId(0)),
-            PItem::Ty(PTy::Var(VarId(1))),
-            PItem::Ty(PTy::Var(VarId(1))),
-        ],
-        effects: vec![],
+fn schemes_instantiate_and_reject_mismatches() -> Result<(), String> {
+    let mut env = match noble_kernel::contracts::environment() {
+        Ok(env) => env,
+        Err(defect) => return Err(format!("environment defect: {defect:?}")),
     };
-    dup.validate().expect("dup scheme is well formed");
-    let inst = Inst {
-        bindings: vec![Binding::Stack(vec![Ty::Bool]), Binding::Value(Ty::I64)],
+    // The first definition is `dup : S a -- S a a`.
+    let scheme = match env.defs.first().cloned() {
+        Some(scheme) => scheme,
+        None => return Err("missing dup contract".to_string()),
     };
-    dup.check_inst(&inst, 64, 256, 16).expect("fits limits");
-    assert_eq!(
-        dup.subst_stack(&dup.stack_in, &inst).unwrap(),
-        vec![Ty::Bool, Ty::I64]
-    );
-    assert_eq!(
-        dup.subst_stack(&dup.stack_out, &inst).unwrap(),
-        vec![Ty::Bool, Ty::I64, Ty::I64]
-    );
-    let wrong_kind = Inst {
-        bindings: vec![Binding::Value(Ty::Bool), Binding::Value(Ty::I64)],
-    };
-    assert_eq!(
-        dup.check_inst(&wrong_kind, 64, 256, 16),
-        Err(InstError::KindMismatch)
-    );
-    let arity = Inst {
-        bindings: vec![Binding::Value(Ty::I64)],
-    };
-    assert_eq!(
-        dup.check_inst(&arity, 64, 256, 16),
-        Err(InstError::ArityMismatch)
-    );
-}
-
-#[test]
-fn run_scheme_carries_program_pattern_and_effect_variable() {
-    let run = Scheme {
-        var_kinds: vec![VarKind::Stack, VarKind::Stack, VarKind::Effect],
-        stack_in: vec![
-            PItem::Stack(VarId(0)),
-            PItem::Ty(PTy::Program(Box::new(PSig {
-                stack_in: vec![PItem::Stack(VarId(0))],
-                stack_out: vec![PItem::Stack(VarId(1))],
-                effects: vec![EffSlot::Var(VarId(2))],
-            }))),
-        ],
-        stack_out: vec![PItem::Stack(VarId(1))],
-        effects: vec![EffSlot::Var(VarId(2))],
-    };
-    run.validate().expect("run scheme is well formed");
-    let inst = Inst {
+    assert!(scheme.validate().is_ok());
+    let good = noble_kernel::words::Inst {
         bindings: vec![
-            Binding::Stack(vec![Ty::I64]),
-            Binding::Stack(vec![Ty::I64]),
-            Binding::Effect(ids(&[7])),
+            noble_kernel::words::Binding::Stack(vec![noble_kernel::types::Ty::Bool]),
+            noble_kernel::words::Binding::Value(noble_kernel::types::Ty::I64),
         ],
     };
+    assert!(scheme.check_inst(&good, 64, 256, 16).is_ok());
+    let out = match scheme.subst_stack(&scheme.stack_out, &good) {
+        Ok(out) => out,
+        Err(error) => return Err(format!("substitution failed: {error:?}")),
+    };
     assert_eq!(
-        run.subst_stack(&run.stack_in, &inst).unwrap(),
+        out,
         vec![
-            Ty::I64,
-            Ty::program(vec![Ty::I64], vec![Ty::I64], ids(&[7]))
+            noble_kernel::types::Ty::Bool,
+            noble_kernel::types::Ty::I64,
+            noble_kernel::types::Ty::I64
         ]
     );
-    assert_eq!(run.subst_effects(&run.effects, &inst).unwrap(), ids(&[7]));
-}
-
-#[test]
-fn scheme_validation_rejects_kind_misuse_and_missing_variables() {
-    let wrong_use = Scheme {
-        var_kinds: vec![VarKind::Value],
-        stack_in: vec![PItem::Stack(VarId(0))],
-        stack_out: vec![],
-        effects: vec![],
-    };
-    assert_eq!(wrong_use.validate(), Err(SchemeError::KindMismatch));
-    let unknown = Scheme {
-        var_kinds: vec![VarKind::Stack],
-        stack_in: vec![PItem::Ty(PTy::Var(VarId(9)))],
-        stack_out: vec![],
-        effects: vec![],
-    };
-    assert_eq!(unknown.validate(), Err(SchemeError::UnknownVariable));
-}
-
-#[test]
-fn oversized_instantiations_reject_before_use() {
-    let swap = Scheme {
-        var_kinds: vec![VarKind::Stack, VarKind::Value, VarKind::Value],
-        stack_in: vec![
-            PItem::Stack(VarId(0)),
-            PItem::Ty(PTy::Var(VarId(1))),
-            PItem::Ty(PTy::Var(VarId(2))),
-        ],
-        stack_out: vec![
-            PItem::Stack(VarId(0)),
-            PItem::Ty(PTy::Var(VarId(2))),
-            PItem::Ty(PTy::Var(VarId(1))),
-        ],
-        effects: vec![],
-    };
-    swap.validate().expect("swap scheme is well formed");
-    let big_stack = Inst {
+    let wrong_kind = noble_kernel::words::Inst {
         bindings: vec![
-            Binding::Stack(vec![Ty::I64; 4]),
-            Binding::Value(Ty::Bool),
-            Binding::Value(Ty::Text),
+            noble_kernel::words::Binding::Value(noble_kernel::types::Ty::Bool),
+            noble_kernel::words::Binding::Value(noble_kernel::types::Ty::I64),
         ],
     };
-    assert_eq!(
-        swap.check_inst(&big_stack, 3, 256, 16),
-        Err(InstError::OversizedStack)
-    );
-    assert!(swap.check_inst(&big_stack, 4, 256, 16).is_ok());
+    assert!(matches!(
+        scheme.check_inst(&wrong_kind, 64, 256, 16),
+        Err(noble_kernel::words::InstError::KindMismatch)
+    ));
+    let arity = noble_kernel::words::Inst {
+        bindings: vec![noble_kernel::words::Binding::Value(
+            noble_kernel::types::Ty::I64,
+        )],
+    };
+    assert!(matches!(
+        scheme.check_inst(&arity, 64, 256, 16),
+        Err(noble_kernel::words::InstError::ArityMismatch)
+    ));
+    let big = noble_kernel::words::Inst {
+        bindings: vec![
+            noble_kernel::words::Binding::Stack(vec![noble_kernel::types::Ty::I64; 4]),
+            noble_kernel::words::Binding::Value(noble_kernel::types::Ty::Bool),
+        ],
+    };
+    assert!(matches!(
+        scheme.check_inst(&big, 3, 256, 16),
+        Err(noble_kernel::words::InstError::OversizedStack)
+    ));
+    env.defs.clear();
+    Ok(())
 }

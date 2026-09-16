@@ -3,11 +3,12 @@
 
 extern crate alloc;
 
-pub mod candidate;
-pub mod check;
-pub mod env;
-pub mod scheme;
+pub mod acceptance;
+pub mod contracts;
+pub mod shapes;
 pub mod types;
+pub mod untrusted;
+pub mod words;
 
 /// Outcome of consuming one unit from an explicitly supplied budget.
 pub enum BudgetOutcome {

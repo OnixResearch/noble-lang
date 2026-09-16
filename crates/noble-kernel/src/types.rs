@@ -1,11 +1,11 @@
-//! Fragment v0 types: value, stack, and program types, effect sets, and the
-//! recursive `Data` eligibility predicate.
+//! Fragment v0 value, stack, and program types.
 //!
-//! Stacks are ordered bottom-first: the last element is the stack top, which
-//! matches the specification's "top on the right" notation.
+//! Trees are walked iteratively with explicit, bounded work stacks; no
+//! operation recurses and no walk grows without a local bound. Stacks are
+//! ordered bottom-first, matching the specification's "top on the right".
 
-use alloc::boxed::Box;
-use alloc::vec::Vec;
+/// Local bound for one type walk; beyond it every predicate fails closed.
+const WORK_CAP: usize = 512;
 
 /// Stable identity of a resource kind supplied by the environment.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -17,17 +17,18 @@ pub struct EffId(pub u32);
 
 /// A finite set of effect identities, kept sorted and deduplicated.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct EffSet(Vec<EffId>);
+pub struct EffSet(alloc::vec::Vec<EffId>);
 
 impl EffSet {
     /// The empty bound.
     pub fn empty() -> Self {
-        EffSet(Vec::new())
+        EffSet(alloc::vec::Vec::new())
     }
 
     /// Build from a list, sorting and deduplicating.
     pub fn from_ids(ids: &[EffId]) -> Self {
-        let mut sorted = ids.to_vec();
+        let mut sorted = alloc::vec::Vec::with_capacity(ids.len().max(4));
+        sorted.extend_from_slice(ids);
         sorted.sort_unstable();
         sorted.dedup();
         EffSet(sorted)
@@ -38,23 +39,26 @@ impl EffSet {
         self.0.binary_search(&id).is_ok()
     }
 
-    /// Least upper bound. Union is associative, commutative, and idempotent.
+    /// Least upper bound.
     pub fn union(&self, other: &EffSet) -> EffSet {
-        let mut out = Vec::with_capacity(self.0.len() + other.0.len());
-        let (mut i, mut j) = (0usize, 0usize);
-        while i < self.0.len() || j < other.0.len() {
-            let take_left = j == other.0.len() || (i < self.0.len() && self.0[i] < other.0[j]);
-            let take_right = i == self.0.len() || (j < other.0.len() && other.0[j] < self.0[i]);
+        let mut out = alloc::vec::Vec::with_capacity(self.0.len() + other.0.len());
+        let mut left = 0usize;
+        let mut right = 0usize;
+        while left < self.0.len() || right < other.0.len() {
+            let take_left =
+                right == other.0.len() || (left < self.0.len() && self.0[left] < other.0[right]);
+            let take_right =
+                left == self.0.len() || (right < other.0.len() && other.0[right] < self.0[left]);
             if take_left {
-                out.push(self.0[i]);
-                i += 1;
+                out.push(self.0[left]);
+                left += 1;
             } else if take_right {
-                out.push(other.0[j]);
-                j += 1;
+                out.push(other.0[right]);
+                right += 1;
             } else {
-                out.push(self.0[i]);
-                i += 1;
-                j += 1;
+                out.push(self.0[left]);
+                left += 1;
+                right += 1;
             }
         }
         EffSet(out)
@@ -71,8 +75,8 @@ impl EffSet {
     }
 
     /// Number of identities.
-    pub fn len(&self) -> usize {
-        self.0.len()
+    pub fn len(&self) -> u64 {
+        u64::try_from(self.0.len()).unwrap_or(u64::MAX)
     }
 
     /// Whether the set is empty.
@@ -81,14 +85,13 @@ impl EffSet {
     }
 }
 
-/// A monomorphic program type: invocation stack `in`, result stack `out`, and
-/// the latent effect bound.
+/// A monomorphic program type: invocation stack, result stack, latent bound.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ProgramTy {
     /// Required invocation stack, bottom-first.
-    pub stack_in: Vec<Ty>,
+    pub stack_in: alloc::vec::Vec<Ty>,
     /// Result stack, bottom-first.
-    pub stack_out: Vec<Ty>,
+    pub stack_out: alloc::vec::Vec<Ty>,
     /// Latent host-operation bound.
     pub effects: EffSet,
 }
@@ -107,21 +110,25 @@ pub enum Ty {
     /// Inert syntax produced by `reflect`.
     Syntax,
     /// A product of two payloads.
-    Pair(Box<Ty>, Box<Ty>),
+    Pair(alloc::boxed::Box<Ty>, alloc::boxed::Box<Ty>),
     /// A sum of two payloads.
-    Sum(Box<Ty>, Box<Ty>),
+    Sum(alloc::boxed::Box<Ty>, alloc::boxed::Box<Ty>),
     /// A homogeneous list.
-    List(Box<Ty>),
+    List(alloc::boxed::Box<Ty>),
     /// A first-class program value.
-    Program(Box<ProgramTy>),
+    Program(alloc::boxed::Box<ProgramTy>),
     /// An opaque resource kind; never data-eligible.
     Resource(ResourceKind),
 }
 
 impl Ty {
     /// Build a program type.
-    pub fn program(stack_in: Vec<Ty>, stack_out: Vec<Ty>, effects: EffSet) -> Ty {
-        Ty::Program(Box::new(ProgramTy {
+    pub fn program(
+        stack_in: alloc::vec::Vec<Ty>,
+        stack_out: alloc::vec::Vec<Ty>,
+        effects: EffSet,
+    ) -> Ty {
+        Ty::Program(alloc::boxed::Box::new(ProgramTy {
             stack_in,
             stack_out,
             effects,
@@ -131,35 +138,88 @@ impl Ty {
     /// The recursive `Data` eligibility predicate.
     ///
     /// A resource anywhere inside a payload makes the whole value ineligible,
-    /// including through `Pair`, `Sum`, and `List` alternatives.
+    /// including through `Pair`, `Sum`, and `List` alternatives. A walk that
+    /// exceeds the local bound fails closed.
     pub fn is_data(&self) -> bool {
-        match self {
-            Ty::Unit | Ty::Bool | Ty::I64 | Ty::Text | Ty::Syntax | Ty::Program(_) => true,
-            Ty::Pair(a, b) | Ty::Sum(a, b) => a.is_data() && b.is_data(),
-            Ty::List(item) => item.is_data(),
-            Ty::Resource(_) => false,
+        let mut work: alloc::vec::Vec<&Ty> = alloc::vec::Vec::with_capacity(8);
+        work.push(self);
+        while let Some(node) = work.pop() {
+            if work.len() >= WORK_CAP {
+                return false;
+            }
+            match node {
+                Ty::Resource(_) => return false,
+                Ty::Pair(left, right) | Ty::Sum(left, right) => {
+                    work.push(left);
+                    work.push(right);
+                }
+                Ty::List(item) => work.push(item),
+                Ty::Unit | Ty::Bool | Ty::I64 | Ty::Text | Ty::Syntax | Ty::Program(_) => {}
+            }
         }
+        true
     }
 
     /// A size measure used by the declared type-size limit.
     pub fn size(&self) -> u32 {
-        match self {
-            Ty::Pair(a, b) | Ty::Sum(a, b) => {
-                1u32.saturating_add(a.size()).saturating_add(b.size())
+        let mut todo: alloc::vec::Vec<(&Ty, bool)> = alloc::vec::Vec::with_capacity(8);
+        let mut sizes: alloc::vec::Vec<u32> = alloc::vec::Vec::with_capacity(8);
+        todo.push((self, false));
+        while let Some((node, expanded)) = todo.pop() {
+            if todo.len() >= WORK_CAP {
+                return u32::MAX;
             }
-            Ty::List(item) => 1u32.saturating_add(item.size()),
-            Ty::Program(program) => {
+            if expanded {
                 let mut total = 1u32;
-                for ty in &program.stack_in {
-                    total = total.saturating_add(ty.size());
+                match node {
+                    Ty::Pair(_, _) | Ty::Sum(_, _) => {
+                        if let Some(right) = sizes.pop() {
+                            total = total.saturating_add(right);
+                        }
+                        if let Some(left) = sizes.pop() {
+                            total = total.saturating_add(left);
+                        }
+                    }
+                    Ty::List(_) => {
+                        if let Some(inner) = sizes.pop() {
+                            total = total.saturating_add(inner);
+                        }
+                    }
+                    Ty::Program(program) => {
+                        let count = program.stack_in.len() + program.stack_out.len();
+                        for _ in 0..count {
+                            if let Some(inner) = sizes.pop() {
+                                total = total.saturating_add(inner);
+                            }
+                        }
+                    }
+                    Ty::Unit | Ty::Bool | Ty::I64 | Ty::Text | Ty::Syntax | Ty::Resource(_) => {}
                 }
-                for ty in &program.stack_out {
-                    total = total.saturating_add(ty.size());
-                }
-                total
+                sizes.push(total);
+                continue;
             }
-            Ty::Unit | Ty::Bool | Ty::I64 | Ty::Text | Ty::Syntax | Ty::Resource(_) => 1,
+            match node {
+                Ty::Pair(left, right) | Ty::Sum(left, right) => {
+                    todo.push((node, true));
+                    todo.push((left, false));
+                    todo.push((right, false));
+                }
+                Ty::List(item) => {
+                    todo.push((node, true));
+                    todo.push((item, false));
+                }
+                Ty::Program(program) => {
+                    todo.push((node, true));
+                    for ty in program.stack_in.iter().chain(program.stack_out.iter()) {
+                        todo.push((ty, false));
+                    }
+                }
+                Ty::Unit | Ty::Bool | Ty::I64 | Ty::Text | Ty::Syntax | Ty::Resource(_) => {
+                    sizes.push(1)
+                }
+            }
         }
+        sizes.pop().unwrap_or(u32::MAX)
     }
 }
 
