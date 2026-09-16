@@ -166,11 +166,15 @@ fn require_pattern<'a>(
     mut work: alloc::vec::Vec<Step<'a>>,
 ) -> Result<alloc::vec::Vec<Step<'a>>, Defect> {
     match pattern {
-        Pattern::Var(var) => {
-            require_kind(kinds, *var, crate::words::VariableKind::Value).map(|()| work)
-        }
+        Pattern::Var(var) => match require_kind(kinds, *var, crate::words::VariableKind::Value) {
+            Ok(()) => Ok(work),
+            Err(problem) => Err(problem),
+        },
         Pattern::StackVar(var) => {
-            require_kind(kinds, *var, crate::words::VariableKind::Stack).map(|()| work)
+            match require_kind(kinds, *var, crate::words::VariableKind::Stack) {
+                Ok(()) => Ok(work),
+                Err(problem) => Err(problem),
+            }
         }
         Pattern::Pair(left, right) | Pattern::Sum(left, right) => {
             work.push(Step::Pattern(left));

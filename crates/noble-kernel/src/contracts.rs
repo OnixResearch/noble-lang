@@ -86,7 +86,16 @@ impl Env {
 
     /// Whether the environment provides this effect identity.
     pub fn knows_effect(&self, id: crate::types::EffId) -> bool {
-        self.effects.contains(&id)
+        let mut index = 0;
+        let mut is_known = false;
+        while index < self.effects.len() {
+            if self.effects[index] == id {
+                is_known = true;
+                break;
+            }
+            index += 1;
+        }
+        is_known
     }
 
     /// Number of definitions.
@@ -96,7 +105,7 @@ impl Env {
 
     /// Whether the environment has no definitions.
     pub fn is_empty(&self) -> bool {
-        self.defs.is_empty()
+        self.defs.len() == 0
     }
 }
 
@@ -126,7 +135,11 @@ pub fn environment() -> Result<Env, crate::shapes::Defect> {
     if let Some(problem) = defect {
         return Err(problem);
     }
-    defs.extend(table.into_iter().map(|(_, scheme)| scheme));
+    let mut table_index = 0;
+    while table_index < table.len() {
+        defs.push(table[table_index].1.clone());
+        table_index += 1;
+    }
     Ok(Env {
         defs,
         kinds,

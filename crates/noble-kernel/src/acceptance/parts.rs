@@ -226,11 +226,17 @@ pub(crate) fn first_extra(
     derived: &crate::types::EffSet,
     allowed: &crate::types::EffSet,
 ) -> Option<crate::types::EffId> {
-    derived
-        .as_slice()
-        .iter()
-        .find(|id| !allowed.contains(**id))
-        .copied()
+    let ids = derived.as_slice();
+    let mut index = 0;
+    let mut extra: Option<crate::types::EffId> = None;
+    while index < ids.len() {
+        if !allowed.contains(ids[index]) {
+            extra = Some(ids[index]);
+            break;
+        }
+        index += 1;
+    }
+    extra
 }
 
 /// Build one diagnostic under the declared diagnostic budget.

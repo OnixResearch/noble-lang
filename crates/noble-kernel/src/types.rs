@@ -28,17 +28,46 @@ impl EffSet {
     }
 
     /// Build from a list, sorting and deduplicating.
+    ///
+    /// The insertion walk is explicit: slice sort helpers draw core iterator
+    /// code into the extraction subject, which Aeneas cannot translate.
     pub fn from_ids(ids: &[EffId]) -> Self {
-        let mut sorted = alloc::vec::Vec::with_capacity(ids.len().max(4));
-        sorted.extend_from_slice(ids);
-        sorted.sort_unstable();
-        sorted.dedup();
+        let mut sorted: alloc::vec::Vec<EffId> = alloc::vec::Vec::with_capacity(ids.len().max(4));
+        let mut index = 0;
+        while index < ids.len() {
+            let id = ids[index];
+            let mut position = 0;
+            let mut is_placed = false;
+            while position < sorted.len() && !is_placed {
+                if sorted[position] == id {
+                    is_placed = true;
+                } else if sorted[position] > id {
+                    sorted.insert(position, id);
+                    is_placed = true;
+                } else {
+                    position += 1;
+                }
+            }
+            if !is_placed {
+                sorted.push(id);
+            }
+            index += 1;
+        }
         EffSet(sorted)
     }
 
     /// Membership.
     pub fn contains(&self, id: EffId) -> bool {
-        self.0.binary_search(&id).is_ok()
+        let mut index = 0;
+        let mut is_found = false;
+        while index < self.0.len() {
+            if self.0[index] == id {
+                is_found = true;
+                break;
+            }
+            index += 1;
+        }
+        is_found
     }
 
     /// Least upper bound.
@@ -68,7 +97,16 @@ impl EffSet {
 
     /// Inclusion: every identity here is present in `other`.
     pub fn is_subset_of(&self, other: &EffSet) -> bool {
-        self.0.iter().all(|id| other.contains(*id))
+        let mut index = 0;
+        let mut is_subset = true;
+        while index < self.0.len() {
+            if !other.contains(self.0[index]) {
+                is_subset = false;
+                break;
+            }
+            index += 1;
+        }
+        is_subset
     }
 
     /// The sorted identities.
@@ -83,7 +121,7 @@ impl EffSet {
 
     /// Whether the set is empty.
     pub fn is_empty(&self) -> bool {
-        self.0.is_empty()
+        self.0.len() == 0
     }
 }
 
@@ -185,5 +223,14 @@ impl Ty {
 }
 
 pub fn stack_is_data(stack: &[Ty]) -> bool {
-    stack.iter().all(Ty::is_data)
+    let mut index = 0;
+    let mut is_data = true;
+    while index < stack.len() {
+        if !stack[index].is_data() {
+            is_data = false;
+            break;
+        }
+        index += 1;
+    }
+    is_data
 }
