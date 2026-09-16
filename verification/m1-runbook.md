@@ -2,11 +2,11 @@
 
 ## Read the command state first
 
-**M1 acceptance is not available.** The commands in sections 1–4 exist. Section 5 reserves interfaces for later implementation tasks.
+**This runbook records the command plan.** The commands in sections 1–4 exist; section 5 lists reserved interfaces for later implementation tasks.
 A missing reserved command is unfinished work, not a passing rejection control.
-This runbook completes command planning, not the source inventory, native controls, CI, or independent acceptance.
+The source inventory, native controls, CI, and acceptance results are recorded separately.
 
-The [active tasks](../.cairn/changes/m1-workspace/tasks.md) control completion.
+The [completed task record](../.cairn/archive/2026-09-15-m1-workspace/tasks.md) controls completion.
 The [control matrix](m1-controls.md) maps each required positive observation and rejection to a command family.
 The [selection policy](../policy/tool-selection.ncl) owns the current configuration.
 This document does not create a second configuration authority.
@@ -317,4 +317,4 @@ The [control matrix](m1-controls.md) describes which failures must block each cl
 
 Do not sync or archive Noble until all 21 implementation tasks and their required controls pass.
 Before later worktree removal, preserve its ignored artifacts and run the drain-evidence guard with the exact worktree path.
-The current worktree stays staged and uncommitted.
+The change was archived after implementation acceptance; this runbook remains the command plan.

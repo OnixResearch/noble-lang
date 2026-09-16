@@ -207,7 +207,7 @@ Noble now pins that revision in Nix and pre-commit. Reviewed source, file, and t
 At that adoption, all eleven checks passed, including the unchanged required thread-local fixture.
 Two boundary baselines and eleven negatives matched. Five workspace Rust tests and 100 Bun regressions passed.
 No production source, architecture policy, target, fixture, or extraction input changed.
-The [adoption evidence](../.cairn/changes/m1-workspace/body-owner-adoption-evidence.md) records the exact commands and limits.
+The [adoption evidence](../.cairn/archive/2026-09-15-m1-workspace/body-owner-adoption-evidence.md) records the exact commands and limits.
 Task 2.2, randomness coverage, the remaining M1 matrix, and independent acceptance remain open.
 
 ## Randomness control and provider gap

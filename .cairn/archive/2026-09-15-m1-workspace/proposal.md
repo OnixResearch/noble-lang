@@ -45,7 +45,7 @@ The accepted Rust-to-Lean route remains mandatory for the entire semantic kernel
 
 ## Impact
 
-**Planning files:** `.cairn/changes/m1-workspace/` records progress. Accepted specs, compatibility views, ledgers, and milestone status stay unchanged.
+**Planning files:** `.cairn/archive/2026-09-15-m1-workspace/` records progress. Accepted specs, compatibility views, ledgers, and milestone status stay unchanged.
 
 **Implementation files:** the worktree now contains the Rust workspace, Nix-generated lock, policy, hook, and extraction probe.
 The [component review](../../../verification/component-review.md) records the published Octet repairs and the passing incremental workspace gates.

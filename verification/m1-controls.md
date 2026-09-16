@@ -3,7 +3,7 @@
 ## Interpretation
 
 The [runbook](m1-runbook.md) names the exact commands and reserved interfaces.
-The [acceptance delta](../.cairn/changes/m1-workspace/specs/verification-toolchain/spec.md) remains normative.
+The [accepted requirement deltas](../.cairn/archive/2026-09-15-m1-workspace/specs/verification-toolchain/spec.md) remain normative.
 This matrix does not mark a scenario, proof, or M1 implementation task complete by itself.
 
 - **Observed** means a retained local run covers the stated narrow scope.
