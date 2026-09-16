@@ -82,6 +82,12 @@ All other obligations remain open.
 
 **Rationale:** EV-BIND-01, EV-TIER-01, V-CLAIM-01, V-EVIDENCE-04; the validator rejects an `accepted` obligation while the greenfield flag is false, so the flag and the records move together.
 
+### Decision: Comply with the full deny-all catalog in the checker's style
+
+**Choice:** The checker, its environment, and its tests conform to every cataloged Tiger-style rule with no waiver and no budget: modules of at most 300 lines, short functions split at phase boundaries, no self-recursion (explicit bounded work stacks), no caller-owned mutation in pure functions (state transitions are returned), collection growth with explicit capacity or a local bound, fixed-width integers at public boundaries, no trait-less imports (fully qualified paths), no `unwrap`, `expect`, or `panic` in checked code, exhaustive enum matches, and compliant naming (acronyms, boolean predicates, no path-word repetition).
+
+**Rationale:** M1 established the deny-all catalog without disabled lints, warning budgets, or finding baselines (VT-M1-05, VT-OCTET-01..03). The first extraction probe measured 293 catalog findings across the initial fragment modules and one incomplete architecture shard, so the feasible checker shape is the iterative, value-passing one the catalog demands — which also matches the Aeneas extraction subset (no mutable-argument generics, bounded loops, explicit state). The style pass is a redesign of the internals, not a scope reduction: every rule and limit control stays.
+
 ## Requirement Traceability
 
 The [delta](specs/verification-toolchain/spec.md) contains every new task-linked requirement (VT-M2-01 through VT-M2-04).
