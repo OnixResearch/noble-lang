@@ -2,6 +2,9 @@
 import { test } from 'bun:test';
 import assert from 'node:assert/strict';
 import { fileURLToPath } from 'node:url';
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
 import { loadBundle, validate, deriveLedger } from './check-specs.mjs';
 import { canonicalPath, regenerate, toLegacy, checkConversion } from './cairn-specs.mjs';
 
@@ -29,6 +32,36 @@ function scenarioResult(bundle, result, kind = 'test', mutate = () => {}) {
 function rejects(bundle, diagnostic) {
   assert.ok(validate(bundle).errors.some(error => error.includes(diagnostic)), diagnostic);
 }
+
+for (const file of ['verification/runbook-probe.md', 'proofs/m1/runbook-probe.md']) {
+  test(`runbook links stay checked: ${file}`, () => {
+    const bundle = fixture();
+    const target = path.posix.join(path.posix.dirname(file), 'fixture target.md');
+    bundle.texts.set(file, '[fixture](fixture%20target.md)\n');
+    bundle.texts.set(target, '# Fixture\n');
+    bundle.paths.add(file);
+    bundle.paths.add(target);
+    assert.deepEqual(validate(bundle).errors, []);
+    bundle.paths.delete(target);
+    bundle.texts.delete(target);
+    rejects(bundle, `broken local link: ${file}`);
+  });
+}
+
+test('document discovery omits private evidence and compiler caches, not runbooks', () => {
+  const root = mkdtempSync(path.join(tmpdir(), 'noble-document-scope-'));
+  try {
+    for (const dir of ['.pi', '.octet', 'proofs/m1/.lake', 'verification', 'proofs/m1']) {
+      mkdirSync(path.join(root, dir), { recursive: true });
+      writeFileSync(path.join(root, dir, 'probe.md'), '# Probe\n');
+    }
+    const bundle = loadBundle(root);
+    assert.deepEqual([...bundle.texts.keys()].sort(), ['proofs/m1/probe.md', 'verification/probe.md']);
+    assert.ok([...bundle.paths].every(name => !name.split('/').some(part => ['.pi', '.octet', '.lake'].includes(part))));
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
 
 test('current family passes document validation', () => {
   assert.deepEqual(validate(baseline).errors, []);

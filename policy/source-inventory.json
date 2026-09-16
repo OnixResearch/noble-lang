@@ -1,0 +1,236 @@
+{
+  "dependencies": [
+    {
+      "callee": "noble-kernel",
+      "caller": "noble-cli",
+      "edge_kind": "normal"
+    }
+  ],
+  "exceptions": [],
+  "future_components": [
+    {
+      "name": "Wasmtime",
+      "status": "open"
+    },
+    {
+      "name": "WIT",
+      "status": "open"
+    },
+    {
+      "name": "Verus",
+      "status": "open"
+    },
+    {
+      "name": "byte-view dependency",
+      "status": "open"
+    }
+  ],
+  "macro_origins": [
+    "<builtin>",
+    "std::assert",
+    "std::assert_eq",
+    "std::eprintln",
+    "std::format_args_nl",
+    "std::prelude::v1::test",
+    "std::println",
+    "std::vec"
+  ],
+  "owner": "noble-maintainers",
+  "schema_version": "noble-source-inventory-policy/v1",
+  "scope_note": "Named M1 workspace scope only: the noble-kernel and noble-cli packages on the selected target. This is not a whole-project verification claim.",
+  "subjects": [
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "The M1 transition. Task 1.3 and 1.4 recorded a compatibility probe, but no source-bound integrated extraction gate exists yet, so this stays open work until task 3.1 binds it.",
+      "package": "noble-kernel",
+      "qualified_path": "noble_kernel::consume_budget",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Shell entry point. The shell owns orchestration and effect execution; it is not an Aeneas extraction subject in M1.",
+      "package": "noble-cli",
+      "qualified_path": "noble_cli::main",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Shell argument capture. The only approved ambient-environment allowance.",
+      "package": "noble-cli",
+      "qualified_path": "noble_cli::read_arguments",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Shell input parsing with a typed error outcome.",
+      "package": "noble-cli",
+      "qualified_path": "noble_cli::parse_budget",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Unprotected console effect executed by the composition root.",
+      "package": "noble-cli",
+      "qualified_path": "noble_cli::write_outcome",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Shell diagnostic text for invalid input.",
+      "package": "noble-cli",
+      "qualified_path": "noble_cli::input_error_message",
+      "refinement": "open"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Test-harness entry point generated for the library test unit. No Noble-authored source body.",
+      "package": "noble-kernel",
+      "qualified_path": "noble_kernel::main",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Generated test-harness item. No Noble-authored source body.",
+      "package": "noble-kernel",
+      "qualified_path": "noble_kernel::main::test",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Generated test-harness item. No Noble-authored source body.",
+      "package": "noble-cli",
+      "qualified_path": "noble_cli::main::test",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Anonymous closure inside an accounted shell body. It has no independent obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/main.rs:1565:1571",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Kernel outcome type. A type declaration, not a body.",
+      "package": "noble-kernel",
+      "qualified_path": "noble_kernel::BudgetOutcome",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Core prelude import marker.",
+      "package": "noble-kernel",
+      "qualified_path": "noble_kernel::core",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Import marker within the kernel root.",
+      "package": "noble-kernel",
+      "qualified_path": "noble_kernel::{use#0}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Shell error type. A type declaration, not a body.",
+      "package": "noble-cli",
+      "qualified_path": "noble_cli::InputError",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Standard-library import marker.",
+      "package": "noble-cli",
+      "qualified_path": "noble_cli::std",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Import marker within the shell root.",
+      "package": "noble-cli",
+      "qualified_path": "noble_cli::{use#0}",
+      "refinement": "not-applicable"
+    }
+  ],
+  "test_subjects": [
+    "budget::main",
+    "budget::main::test",
+    "budget::positive_budget_decrements_once",
+    "budget::std",
+    "budget::test",
+    "budget::zero_budget_is_exhausted",
+    "budget::{use#0}",
+    "noble-kernel::closure@crates/noble-kernel/tests/budget.rs:30:333",
+    "noble-kernel::closure@crates/noble-kernel/tests/budget.rs:365:516",
+    "noble-cli::closure@crates/noble-cli/tests/smoke.rs:30:634",
+    "noble-cli::closure@crates/noble-cli/tests/smoke.rs:666:1756",
+    "noble-cli::closure@crates/noble-cli/tests/smoke.rs:1883:2468",
+    "smoke::main",
+    "smoke::main::test",
+    "smoke::shell_calls_the_real_transition",
+    "smoke::shell_rejects_invalid_input_without_transition_output",
+    "smoke::shell_rejects_non_utf8_budget",
+    "smoke::shell_rejects_non_utf8_budget::INVALID_UTF8_BYTE",
+    "smoke::std",
+    "smoke::test",
+    "smoke::{use#0}"
+  ],
+  "tools": [
+    {
+      "category": "proof-tool",
+      "name": "aeneas"
+    },
+    {
+      "category": "lifecycle-tool",
+      "name": "cairn"
+    },
+    {
+      "category": "proof-tool",
+      "name": "charon"
+    },
+    {
+      "category": "rust-toolchain",
+      "name": "extraction_rust"
+    },
+    {
+      "category": "proof-tool",
+      "name": "lean"
+    },
+    {
+      "category": "policy-tool",
+      "name": "nickel"
+    },
+    {
+      "category": "architecture-tool",
+      "name": "octet"
+    },
+    {
+      "category": "architecture-tool",
+      "name": "octet_standards"
+    },
+    {
+      "category": "rust-toolchain",
+      "name": "quality_rust"
+    },
+    {
+      "category": "compatibility-tool",
+      "name": "upstream_pin_check"
+    }
+  ]
+}

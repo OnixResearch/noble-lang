@@ -30,7 +30,10 @@ const reverseMapping = new Map([...mapping].map(([a, b]) => [b, a]));
 const REQUIREMENT = /^\*\*([A-Z][A-Z0-9-]*-\d+)\.\*\*/;
 const START = '<!-- cairn:scenario-links:start -->';
 const END = '<!-- cairn:scenario-links:end -->';
-const WRAPPER = '\n<!-- cairn:purpose:start -->\n## Purpose\n\nThis accepted specification records Noble draft contracts, not completed implementation.\nOriginal requirement IDs, explanatory prose, examples, and open decisions remain authoritative.\nScenario clauses refer to unexecuted designs in the conformance ledger.\n\n## Requirements\n<!-- cairn:purpose:end -->\n';
+const WRAPPER = '\n<!-- cairn:purpose:start -->\n## Purpose\n\nThis accepted specification records Noble draft contracts, not completed implementation.\nOriginal requirement IDs, explanatory prose, examples, and open decisions remain authoritative.\nScenario clauses refer to unexecuted designs in the conformance ledger.\n\n## Requirements\n\n<!-- cairn:purpose:end -->\n';
+// Cairn's sync normalises a blank line before the end marker; conversions written
+// before that normalisation must still round-trip, so both forms are accepted.
+const LEGACY_WRAPPER = WRAPPER.replace('## Requirements\n\n<!--', '## Requirements\n<!--');
 
 // Encode each path segment, including parentheses that delimit Markdown links.
 function encodeLinkPath(file) {
@@ -205,8 +208,11 @@ export function toLegacy(markdown, name) {
   let stripped = lines.join('\n');
   // The generated purpose wrapper belongs directly after the title, never inside an example.
   const titleEnd = stripped.indexOf('\n');
-  if (stripped.startsWith('\n' + WRAPPER, titleEnd)) {
-    stripped = stripped.slice(0, titleEnd) + stripped.slice(titleEnd + WRAPPER.length + 1);
+  const wrapperSpan = [WRAPPER, LEGACY_WRAPPER]
+    .map(form => '\n' + form)
+    .find(form => stripped.startsWith(form, titleEnd));
+  if (wrapperSpan) {
+    stripped = stripped.slice(0, titleEnd) + stripped.slice(titleEnd + wrapperSpan.length);
   }
   return rebaseLinks(stripScenarioRegions(stripped), canonicalPath(name), `specs/${name}`, reverseMapping);
 }

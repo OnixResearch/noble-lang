@@ -8,6 +8,7 @@ Original requirement IDs, explanatory prose, examples, and open decisions remain
 Scenario clauses refer to unexecuted designs in the conformance ledger.
 
 ## Requirements
+
 <!-- cairn:purpose:end -->
 
 

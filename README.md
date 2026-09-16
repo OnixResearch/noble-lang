@@ -47,4 +47,10 @@ These checks do not run Noble or prove its safety.
 | [REVIEW.md](REVIEW.md) and `review/` | Original review and its evidence |
 | `noble-project-handoff-2026-09-12/` and the ZIP | Preserved historical snapshot, not current instructions |
 
-No runtime feature or proof is complete. The next implementation milestone creates the Rust/Nix workspace and its quality gates.
+No runtime feature or proof is complete. M1 is active.
+The [budget extraction probe](proofs/m1/README.md) covers one internal Rust function and its generated Lean module.
+The [component review](verification/component-review.md) records the published Octet repairs, pinned tools, and passing incremental workspace gates.
+The [tool-selection boundary](verification/tool-selection.md) separates immutable configuration checks from executed extraction and scoped Miri observations.
+The [M1 runbook](verification/m1-runbook.md) separates available procedures from reserved inventory, native, and acceptance commands.
+The [control matrix](verification/m1-controls.md) records observed, historical, and planned scopes. Full M1 acceptance remains open.
+The [boundary controls](verification/boundary-controls.md) retain the successful body-owner repair. A new randomness control exposes a missing compiler effect. Task 2.2 and M1 acceptance remain open.

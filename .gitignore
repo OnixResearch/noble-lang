@@ -1,3 +1,7 @@
 .pi/
 node_modules/
 target/
+.lake/
+.octet/
+proofs/m1/NobleKernel.lean
+proofs/m1/translation.json

@@ -1,0 +1,7 @@
+# Based on the template from the reviewed Octet revision below.
+repos:
+  - repo: ssh://git@github.com/OnixResearch/octet
+    rev: 235255bc4972ced9128fd5b4d1ec66ff7508ded4
+    hooks:
+      - id: octet-deny-all
+        args: ["--workspace", "--", "--all-targets", "--all-features"]

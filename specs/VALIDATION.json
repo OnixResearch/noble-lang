@@ -2,23 +2,23 @@
   "revision": "0.1.0-draft.5",
   "validator": {
     "file": "tools/check-specs.mjs",
-    "sha256": "11ab1b37056de867568dd460475c6916908c296c173a8a9929c57b9523a53fb7",
+    "sha256": "8a78e193b9c48c6f484b659755a803dace8646b3ac4b64062c6cd42fbfabec39",
     "adapter": {
       "file": "tools/cairn-specs.mjs",
-      "sha256": "d11728d44cffb20f42d952a3ed6a3a0b5015de65f2f4390192e7aa1e5b8b0cd5"
+      "sha256": "6a74835f67bfee09cd2ffc2e10ccb47500a319ea0d5e1333164c79b176ec605d"
     }
   },
   "lane": "document-validation-only",
   "result": "passed",
   "runner": {
-    "bun": "1.3.13",
-    "node_api": "24.3.0"
+    "bun": "1.4.2",
+    "node_api": "26.3.0"
   },
   "documents": 12,
-  "requirements": 475,
+  "requirements": 482,
   "scenarios": 149,
   "scenarios_executed": 0,
-  "open_test_design": 188,
+  "open_test_design": 195,
   "proof_obligations": 30,
   "completed_proofs": 0,
   "self_tests": [
@@ -1155,6 +1155,42 @@
   ],
   "inputs": [
     {
+      "file": ".cairn/changes/m1-workspace/body-owner-adoption-evidence.md",
+      "sha256": "23c0e9d5af81874ddd6fdce58f00a275d0579c339cc9cd41f6552f8241ff82e7"
+    },
+    {
+      "file": ".cairn/changes/m1-workspace/boundary-evidence.md",
+      "sha256": "91f62e452f6b0f8e3797af906598ba662a88f72d72f4248ef528558365083216"
+    },
+    {
+      "file": ".cairn/changes/m1-workspace/design.md",
+      "sha256": "f8715f0f547ef58d61080142cecce55d9f43012dfc0b8f89c7bff25746c36ad4"
+    },
+    {
+      "file": ".cairn/changes/m1-workspace/proposal.md",
+      "sha256": "0792d42d6a8a22bc5006942f7023a4335538240e537c7d12be311dfffdc8a69e"
+    },
+    {
+      "file": ".cairn/changes/m1-workspace/randomness-evidence.md",
+      "sha256": "a249322fd256916da45143eae2520b233e30ddee1841d6580a201c20ec370bb8"
+    },
+    {
+      "file": ".cairn/changes/m1-workspace/runbook-evidence.md",
+      "sha256": "ab13f3a668c80cb7777b066adb459cd2fdf12252fa80104f197cf2e47807bbae"
+    },
+    {
+      "file": ".cairn/changes/m1-workspace/specs/verification-toolchain/spec.md",
+      "sha256": "6ec110e0d44779db1c912429317acd2aa7084aeac80b35aaaaf9b4608acbb529"
+    },
+    {
+      "file": ".cairn/changes/m1-workspace/tasks.md",
+      "sha256": "999be42e3ba65849d3c62b5db7353e4017fb34d0bbb6884fbd0cfbb31eb4e837"
+    },
+    {
+      "file": ".cairn/changes/m1-workspace/tool-selection-evidence.md",
+      "sha256": "10db8514e8b7e462f62e05e90d9d8af5968f1392e9288a42766d82436be31d7a"
+    },
+    {
       "file": ".cairn/MIGRATION.md",
       "sha256": "e05f953b21ae5551711f99b85588b966a04c83f751e6faabdcadd9c6f38184f4"
     },
@@ -1164,51 +1200,51 @@
     },
     {
       "file": ".cairn/specs/backend-experiments/spec.md",
-      "sha256": "390d7f91cd1c3273fdc55b0ad32c7bc86353cfb11629c7537dd3118b05e296c3"
+      "sha256": "ca8eab980d23082ad9dddcf1be4fd7f0b4ccf0431ea7a43d074fd27d7d8f9c16"
     },
     {
       "file": ".cairn/specs/calculator/spec.md",
-      "sha256": "c30c602bf3a3ce116a214a525ae23cf8da9d85df433dc93953eb1340dc9fb35a"
+      "sha256": "b05fc86d58aaf466e8cd488694ad50c8006ba912348496acb8df256c577fa3c9"
     },
     {
       "file": ".cairn/specs/core-bootstrap/spec.md",
-      "sha256": "a848532226cbd9ecbb975ebacce7805a38d8f760b63aba2fe2e20da549e41862"
+      "sha256": "b11219a90ee9363aa70a9aceddfa5b9b8f0e1f2666504f0690537555bc46012d"
     },
     {
       "file": ".cairn/specs/developer-experience/spec.md",
-      "sha256": "347bad553dc27d3f034da6d6df592c953fbf44de36e5fe8a3d0218f46153007a"
+      "sha256": "f27e3e2f81846b4e42b060213f5ca4fb435c5f511cd8e18efd04babcdd328408"
     },
     {
       "file": ".cairn/specs/evidence/spec.md",
-      "sha256": "aa93e455e30bce9d48def2dd0696acee857a7417d75ebc4db34d559cd85a5d4c"
+      "sha256": "09f1082f9093919af8de1cfa997dbc050a8b47618f0a4515ba04ea0ea58f028a"
     },
     {
       "file": ".cairn/specs/language/spec.md",
-      "sha256": "4f6b8faf6e91630bb644c3f9de274c4a101814101b22f6edda9ace5ee4027039"
+      "sha256": "fad3fe01f0063145c8c18c752c12c34b2b9c0e14e0e589419b0880a7fa68c27d"
     },
     {
       "file": ".cairn/specs/program-contracts/spec.md",
-      "sha256": "c754e9520f01137d520a0caf78a92ab33c32356cc71c02b49312e78ba9e40ccd"
+      "sha256": "08db014ba34c69090e026da86f9a993d7334c44de62fbbdab21c2a9094440e3b"
     },
     {
       "file": ".cairn/specs/resource-adapters/spec.md",
-      "sha256": "63da5c866b0fe73cae10ae4a724ac6c4f8e05b4122eb4385bddfaf15fbd8fc92"
+      "sha256": "75789a2d212cc6a5bea2fe045e9e24d847f482ba043c9acf8ac710c2cef29ca2"
     },
     {
       "file": ".cairn/specs/safety/spec.md",
-      "sha256": "b9abe780d921287c459f2e9af81ca2828a63504e8adba3d0002ae62c54afe294"
+      "sha256": "8475e26b4fa5f1a03d8d271447ed0103be8c2f42c5b01dfc65757575a696304a"
     },
     {
       "file": ".cairn/specs/verification-toolchain/spec.md",
-      "sha256": "ff08f37fa0c1256c5fb86319fdfe4e7b772e1073d45d8660f3d511ec2bc99919"
+      "sha256": "2185d6e38b28656fd6dac5ba4b210dc51792a266f98be53cc934d55adcb42e9b"
     },
     {
       "file": ".cairn/specs/verification/spec.md",
-      "sha256": "c13e05b012b18dc70ebd27c233894408a056382d999a76003e73f6d21e2abe2f"
+      "sha256": "5fceae3cd9facb44b98f67ddd8ef518996b8f2b5fb5100fbfbd0d9fe71030edf"
     },
     {
       "file": ".cairn/specs/wit-wasi/spec.md",
-      "sha256": "a0832b66da1a6aebdc20dced3b498e8a435c1fee9c272e8f07a488af32382718"
+      "sha256": "97a0d73cddcbda507eb01f97fbac7be6bd7015a0099ce067d0795175b8432151"
     },
     {
       "file": "noble-project-handoff-2026-09-12/reference/baseline/PROGRAM-CONTRACTS.md",
@@ -1235,8 +1271,12 @@
       "sha256": "d171a294ef66da3dbb7507fc5b4ea575927a2cf1b76739a546e090012dddf8ed"
     },
     {
+      "file": "proofs/m1/README.md",
+      "sha256": "71339f530754314e1943b65da3412a3d426b48b19e06e695a7f0608ed135ac74"
+    },
+    {
       "file": "README.md",
-      "sha256": "255257403dcc46305bac95451b39b03f68a942ef8929384da9e827021d8a95a1"
+      "sha256": "7cf56d708899bac9db429cff9c05205e9e1acb65a5118ee44fd76abf546d9e4f"
     },
     {
       "file": "specs/BACKEND-EXPERIMENTS.md",
@@ -1328,7 +1368,7 @@
     },
     {
       "file": "specs/requirements.json",
-      "sha256": "7368aa4098a63f127912c0ba82229981f875c4b74b16ef839d33f987017c7538"
+      "sha256": "eb5a8cdc904a363ecb02983d218ac3ae3be9cec5f84ea40713db6659574c091c"
     },
     {
       "file": "specs/RESOURCE-ADAPTERS.md",
@@ -1368,7 +1408,7 @@
     },
     {
       "file": "specs/VERIFICATION-TOOLCHAIN.md",
-      "sha256": "9ae540e3c1292c59175dfd52d9a6969d5c3809cef2aa0a7e395a21b7b3ed447f"
+      "sha256": "b5f3d93e2f37baf784393fcb13f00651a37baccdaa74a2382da4d7a61d95f18b"
     },
     {
       "file": "specs/VERIFICATION.md",
@@ -1389,6 +1429,42 @@
     {
       "file": "specs/WORKER-CONFORMANCE.md",
       "sha256": "1037c412b995f84258e232dcbcef9e0fb46101328918248e81b534c2a29b5bf2"
+    },
+    {
+      "file": "verification/boundary-controls.md",
+      "sha256": "a4364f5aea2053ece4c86b712f96878e805939fd6460d586faf3eef435e9a185"
+    },
+    {
+      "file": "verification/component-review.md",
+      "sha256": "d55765ddad77e71c7521412c35983b3bf114d86cb070ccdb4550c60b3c59fd5c"
+    },
+    {
+      "file": "verification/extraction.md",
+      "sha256": "865b5692b8494510cc8b6d4a2e6e7f022694d84c7d2ac681f4d4c4a5dc06544e"
+    },
+    {
+      "file": "verification/m1-controls.md",
+      "sha256": "b14d88481cd5990a67202fbd6ad66cc05b19830642cb8717d1a09fc95558b7f1"
+    },
+    {
+      "file": "verification/m1-runbook.md",
+      "sha256": "b0208f6a26949d935318b23bb5d9a20beacea32d704c79e9f0d5ea5edfac8418"
+    },
+    {
+      "file": "verification/m1-scope-review.md",
+      "sha256": "0dc645e8901687a75bffbd6db1d7c51bd32a3ef9744b3ba1eb67d1fb499c9be6"
+    },
+    {
+      "file": "verification/native-assurance.md",
+      "sha256": "6e32ac021f1ee84628e56aaf46bf45e88c00ab99e275b1130b75ec37e52e33d2"
+    },
+    {
+      "file": "verification/source-inventory.md",
+      "sha256": "695c3df16923f929afb5029161d0499146b3a934582868e39604c944b958ac96"
+    },
+    {
+      "file": "verification/tool-selection.md",
+      "sha256": "c1a22d9add2d58917b922e4e411bacca2faf9e5569efd9feddb47eefd3ad07c0"
     }
   ],
   "non_claims": [

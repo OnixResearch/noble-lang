@@ -1,0 +1,38 @@
+{
+  "schema_version": "octet-nickel-export-manifest/v1",
+  "generator": "octet-standards.nickel-export-helper/v1",
+  "nickel_identity": "nickel-lang-cli nickel 1.17.0 (rev 1320a98)",
+  "exports": [
+    {
+      "family_id": "octet.project-architecture-policy",
+      "output_format": "json",
+      "source": {
+        "path": "policy/architecture.ncl",
+        "blake3": "698d06d7effdead122265806d0311503a08a014c593ac9aa5dec09bce90dabf4",
+        "bytes": 3361
+      },
+      "dependencies": [
+        {
+          "path": "policy/architecture.contracts.ncl",
+          "blake3": "7dd57d4b850e3eb80ad15831866184b0247ac634d2bacda9f53bd7d3f3c64a5b",
+          "bytes": 12853
+        }
+      ],
+      "output": {
+        "path": "policy/architecture.json",
+        "blake3": "72ecccc3068b02e7562c5fa6ab5cee94e91f721791f2fbe56090ce52e72e3889",
+        "bytes": 3556
+      },
+      "selector": "",
+      "contract": "ProjectArchitecturePolicy and ProjectArchitecturePolicyRules",
+      "generation_command": "nickel export --format json policy/architecture.ncl",
+      "command_argv": [
+        "nickel",
+        "export",
+        "--format",
+        "json",
+        "policy/architecture.ncl"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,151 @@
+{
+  "admission": null,
+  "capability_classifications": [
+    {
+      "core_handling": "forbidden",
+      "executor_role": "composition-root",
+      "family": "environment",
+      "rationale": "Only the CLI reads process arguments."
+    },
+    {
+      "core_handling": "forbidden",
+      "executor_role": "composition-root",
+      "family": "observability",
+      "rationale": "Only the CLI writes smoke outcomes and diagnostics."
+    },
+    {
+      "core_handling": "forbidden",
+      "executor_role": "composition-root",
+      "family": "unsafe-code",
+      "rationale": "All Noble-owned Rust forbids unsafe code. No unsafe executor exists."
+    }
+  ],
+  "collection_limits": {
+    "max_artifact_bytes": 67108864,
+    "max_calls": 8192,
+    "max_configurations": 512,
+    "max_constructors": 4096,
+    "max_effects": 4096,
+    "max_expansions": 4096,
+    "max_function_safety_facts": 4096,
+    "max_implementations": 1024,
+    "max_items": 4096,
+    "max_modules": 64,
+    "max_shard_bytes": 16777216,
+    "max_shards": 16,
+    "max_signatures": 4096,
+    "max_span_bytes": 1048576,
+    "max_spans": 8192,
+    "max_traits": 512,
+    "max_type_shapes": 4096,
+    "max_types": 4096,
+    "max_units": 16,
+    "max_unknowns": 4096,
+    "max_value_flow_bodies": 4096,
+    "max_value_flow_rounds": 64,
+    "max_value_flow_steps": 65536,
+    "max_value_provenance_facts": 8192
+  },
+  "core_no_std": [
+    {
+      "scope": "noble-kernel"
+    }
+  ],
+  "dependency_rules": [
+    {
+      "allowed_callee_roles": [
+        "domain-core"
+      ],
+      "caller_role": "domain-core",
+      "edge_kinds": [
+        "normal",
+        "build"
+      ]
+    },
+    {
+      "allowed_callee_roles": [
+        "domain-core"
+      ],
+      "caller_role": "composition-root",
+      "edge_kinds": [
+        "normal",
+        "build"
+      ]
+    }
+  ],
+  "mode": "gate",
+  "non_claims": [
+    "complete-fcis-proof",
+    "complete-hexagonal-proof",
+    "runtime-determinism",
+    "whole-program-correctness",
+    "release-eligibility"
+  ],
+  "outbound_effects": [
+    {
+      "authority": "unprotected",
+      "executor_methods": [
+        "noble_cli::main",
+        "noble_cli::write_outcome"
+      ],
+      "executor_scope": "crates/noble-cli/src",
+      "family": "observability",
+      "protected": null,
+      "rationale": "The internal smoke route writes only its outcome or a usage error. It grants no protected capability."
+    }
+  ],
+  "ports": [],
+  "production": {
+    "packages": [
+      "noble-kernel",
+      "noble-cli"
+    ],
+    "source_scopes": [
+      "crates/noble-kernel/src",
+      "crates/noble-cli/src"
+    ],
+    "targets": [
+      {
+        "default_features": true,
+        "features": [],
+        "triple": "x86_64-unknown-linux-gnu"
+      }
+    ]
+  },
+  "project_id": "noble",
+  "provider_classifications": [],
+  "roles": [
+    {
+      "role": "domain-core",
+      "scope": "noble-kernel",
+      "scope_kind": "package"
+    },
+    {
+      "role": "composition-root",
+      "scope": "noble-cli",
+      "scope_kind": "package"
+    },
+    {
+      "role": "domain-core",
+      "scope": "crates/noble-kernel/src",
+      "scope_kind": "source"
+    },
+    {
+      "role": "composition-root",
+      "scope": "crates/noble-cli/src",
+      "scope_kind": "source"
+    },
+    {
+      "role": "test",
+      "scope": "crates/noble-kernel/tests",
+      "scope_kind": "source"
+    },
+    {
+      "role": "test",
+      "scope": "crates/noble-cli/tests",
+      "scope_kind": "source"
+    }
+  ],
+  "schema_version": "octet-project-architecture-policy/v1",
+  "waivers": []
+}

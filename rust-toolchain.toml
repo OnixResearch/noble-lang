@@ -1,0 +1,4 @@
+[toolchain]
+channel = "nightly-2026-03-21"
+components = ["rust-src", "rustfmt", "clippy", "rustc-dev", "llvm-tools-preview"]
+profile = "default"

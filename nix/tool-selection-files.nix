@@ -1,0 +1,13 @@
+[
+  "flake.nix"
+  "flake.lock"
+  "nix/offline-inputs.nix"
+  ".pre-commit-config.yaml"
+  "rust-toolchain.toml"
+  "Cargo.toml"
+  "Cargo.lock"
+  "crates/noble-kernel/Cargo.toml"
+  "proofs/m1/lakefile.toml"
+  "proofs/m1/lake-manifest.json"
+  "proofs/m1/lean-toolchain"
+]

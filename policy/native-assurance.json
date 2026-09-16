@@ -1,0 +1,93 @@
+{
+  "compiler_tools": [
+    {
+      "name": "cargo-octet",
+      "role": "architecture-collector"
+    },
+    {
+      "name": "charon",
+      "role": "extraction"
+    },
+    {
+      "name": "aeneas",
+      "role": "extraction"
+    },
+    {
+      "name": "lean",
+      "role": "proof-assistant"
+    },
+    {
+      "name": "miri",
+      "role": "interpreter"
+    }
+  ],
+  "dependencies": {
+    "fixture_only": [
+      {
+        "lock": "verification/fixtures/randomness.Cargo.lock",
+        "name": "getrandom",
+        "purpose": "Boundary randomness fixture only. It is not a production dependency and establishes no dependency safety.",
+        "version": "0.4.3"
+      }
+    ],
+    "production": []
+  },
+  "foreign_libraries": [],
+  "miri": {
+    "flags": [
+      "-Zmiri-strict-provenance"
+    ],
+    "required": true,
+    "required_tests": [
+      "budget"
+    ],
+    "subject": "crates/noble-kernel/Cargo.toml",
+    "target": "x86_64-unknown-linux-gnu",
+    "toolchain": "nightly-2026-08-18",
+    "unsupported_configurations": []
+  },
+  "owned_unsafe": {
+    "accounting_basis": [
+      "workspace-lint-unsafe-code-forbid",
+      "compiler-function-safety-facts-absent",
+      "compiler-foreign-item-facts-absent"
+    ],
+    "expectation": "empty",
+    "sites": []
+  },
+  "owner": "noble-maintainers",
+  "required_packages": [
+    "noble-kernel",
+    "noble-cli"
+  ],
+  "required_targets": [
+    {
+      "default_features": true,
+      "features": [],
+      "triple": "x86_64-unknown-linux-gnu"
+    }
+  ],
+  "safety_arguments": [
+    {
+      "argument": "Safe sequential Rust with explicit owned inputs. The workspace forbids unsafe_code, and no compiler function-safety or foreign-item fact exists for this crate.",
+      "scope": "noble-kernel"
+    },
+    {
+      "argument": "Shell-only orchestration and unprotected console output. The workspace forbids unsafe_code in this crate too.",
+      "scope": "noble-cli"
+    }
+  ],
+  "schema_version": "noble-native-assurance-policy/v1",
+  "scope_note": "Named M1 workspace scope: noble-kernel and noble-cli on x86_64-unknown-linux-gnu. This records native and dependency scope, not whole-program soundness.",
+  "target_assumptions": [
+    {
+      "assumptions": [
+        "64-bit little-endian target",
+        "strict provenance is the required Miri model",
+        "no target-specific native library is linked"
+      ],
+      "target": "x86_64-unknown-linux-gnu",
+      "word_bits": 64
+    }
+  ]
+}

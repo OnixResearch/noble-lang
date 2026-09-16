@@ -1,0 +1,155 @@
+{
+  "claims": [
+    "selection-policy-only",
+    "execution-required-for-compatibility",
+    "refinement-open",
+    "m1-acceptance-open"
+  ],
+  "configuration": {
+    "aeneas_args": [
+      "-backend",
+      "lean",
+      "-abort-on-error",
+      "-warnings-as-errors",
+      "-no-progress-bar",
+      "-emit-json"
+    ],
+    "all_features": true,
+    "cargo_args": [
+      "--lib",
+      "--all-features",
+      "--target",
+      "x86_64-unknown-linux-gnu",
+      "--locked",
+      "--offline"
+    ],
+    "charon_args": [
+      "--preset=aeneas",
+      "--error-on-warnings"
+    ],
+    "default_features": true,
+    "extraction_profile": "dev",
+    "extraction_rust": "nightly-2026-08-18",
+    "extraction_subject": "crates/noble-kernel/Cargo.toml",
+    "features": [],
+    "host": "x86_64-linux",
+    "lean_heartbeats": 1000000,
+    "lean_recursion_depth": 2048,
+    "lean_timeout_seconds": 900,
+    "miri_flags": [
+      "-Zmiri-strict-provenance"
+    ],
+    "miri_rust": "nightly-2026-08-18",
+    "overflow_checks": true,
+    "panic": "unwind",
+    "quality_rust": "nightly-2026-03-21",
+    "target": "x86_64-unknown-linux-gnu",
+    "translator_timeout_seconds": 120,
+    "word_bits": 64
+  },
+  "file_sha256": {
+    ".pre-commit-config.yaml": "100d0fac74955fbdcda81f6fa5068f6a0ef15d6d2ca31642735da238516300da",
+    "Cargo.lock": "fba0a000d46eff8d0aefdda76e234c4a11494be63a436d42afcb7386bf9cc679",
+    "Cargo.toml": "5f1e06e7c582d0a84b7557598cc204186ac5255501150d9e725784b6dce1fbf8",
+    "crates/noble-kernel/Cargo.toml": "19e6c70441ef5d51b9caf828ecb4a7432c8bd7efc40bfdafa158d4d95efc949b",
+    "flake.lock": "3c0558d476937ec8d50f2e2185847ea33ea9d394e5f228f6f103b9fa5ffc3d2d",
+    "flake.nix": "475aaad09ff95c4f5472a9a160c81fea5962895ecc0d5bc7630446f14c68f918",
+    "nix/offline-inputs.nix": "9d35078501b7e138659434fe98baff1b9e0128973d454500c344161e193d69c7",
+    "proofs/m1/lake-manifest.json": "2b876b213022b444fbe1b1118283dcec613f2cb5fa1d6aed08339f356775dd8f",
+    "proofs/m1/lakefile.toml": "99c002cbb3acacde1c2ee1e8c9c02a0ca7a18a0938a7bcdefde6621888855c5d",
+    "proofs/m1/lean-toolchain": "efac0b94923b2d8b6840cd35be9177ad0fc5ab2332f4f4311c98712cee92fdee",
+    "rust-toolchain.toml": "7bfd3ca943dcce5b34de4c5f57414eae7496a698034208cf026690ada5130271"
+  },
+  "future_unselected": [
+    "Wasmtime",
+    "WIT",
+    "Verus",
+    "byte-view dependency"
+  ],
+  "lean": {
+    "archive_sha256": "07a633cc8d9151cbc08825ea4cdda50d4b02a2c9cb852c0131b13046f49cad7f",
+    "archive_url": "https://github.com/leanprover/lean4/releases/download/v4.31.0/lean-4.31.0-linux.tar.zst",
+    "backend_subdir": "backends/lean",
+    "backend_url": "https://github.com/AeneasVerif/aeneas",
+    "rev": "68218e876d2a38b1985b8590fff244a83c321783",
+    "toolchain": "leanprover/lean4:v4.31.0",
+    "version": "4.31.0"
+  },
+  "schema_version": "noble-tool-selection-policy/v1",
+  "sources": {
+    "aeneas": {
+      "narHash": "sha256-V6H12+Qg3qlZBGdjoTHCbYWSOwcdZ86XCxOkWURo6Qs=",
+      "rev": "505b6ca35217e7be5c96c3e2f8045edfbdf47291"
+    },
+    "aeneas_nixpkgs": {
+      "narHash": "sha256-4vhDuZ7OZaZmKKrnDpxLZZpGIJvAeMtK6FKLJYUtAdw=",
+      "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4"
+    },
+    "cairn": {
+      "narHash": "sha256-r6maRgum3TeE17B/prR6ixA4R5CuLdEOAN8CWAD+zMg=",
+      "rev": "15f00875562025e7ea7e0d1f4af24d1a2e2ac06f"
+    },
+    "charon": {
+      "narHash": "sha256-T5YOon6o64//bS5NihALMrDGivJNwvmoJRoKIGITEmc=",
+      "rev": "b104e24fea7d721b71e6c39fd70f26ff20bc0980"
+    },
+    "extraction_nixpkgs": {
+      "narHash": "sha256-1+YGJM7PLfvTsbUxDHKj0NcuEXYFHfZBDuajujCcVmY=",
+      "rev": "643809054d65fdd466a63e3155b8c498cb483c04"
+    },
+    "nixpkgs": {
+      "narHash": "sha256-9tpvMGFteZnd3gRQZFlRCohVpqooygFuy9yjuyRL2C0=",
+      "rev": "9cf7092bdd603554bd8b63c216e8943cf9b12512"
+    },
+    "octet": {
+      "narHash": "sha256-4vFO0V3jtN4GrFbIcqHPqjaZdQK5tQof682BFOKiFtw=",
+      "rev": "235255bc4972ced9128fd5b4d1ec66ff7508ded4"
+    },
+    "rust_overlay": {
+      "narHash": "sha256-KlepQu/O5m11lAjcJ4ER5bc6bIzyX2UMPDARzMzQfIw=",
+      "rev": "e598b37857b895b81020a65a802ef55f5bbed72f"
+    }
+  },
+  "tool_paths": {
+    "aeneas": {
+      "derivation": "/nix/store/1x90ighanbdkhaxyc33dd2kv7j8pgpxh-ocaml5.2.1-aeneas-0.1.0.drv",
+      "output": "/nix/store/4a6mwly7yrbpr675xq9r399nf75d7d71-ocaml5.2.1-aeneas-0.1.0"
+    },
+    "cairn": {
+      "derivation": "/nix/store/c34azbr57788nd8d7yi83rxxnb143pdb-cairn-0.1.0.drv",
+      "output": "/nix/store/bvz6kl88qkfi15n8ml1xr7p22syykggd-cairn-0.1.0"
+    },
+    "charon": {
+      "derivation": "/nix/store/4cbk4z12wcjr68zrryb7wim5vlh719l2-charon.drv",
+      "output": "/nix/store/ka61j6d6zy8zg91ynlbd6nmjssyynrpl-charon"
+    },
+    "extraction_rust": {
+      "derivation": "/nix/store/jjyd99rqsd7zbkwzyqma7qcc61l71kfw-rust-default-1.100.0-nightly-2026-08-18.drv",
+      "output": "/nix/store/wq92i79ivn1w1nrdhmzl1mqx0wcyrawi-rust-default-1.100.0-nightly-2026-08-18"
+    },
+    "lean": {
+      "derivation": "/nix/store/93d3dz41ps7wqq9lbs1cysnx34d43pqr-noble-lean-release-4.31.0.drv",
+      "output": "/nix/store/hbxwgcbpkyqllqzq7cidhnvhgb60jb9q-noble-lean-release-4.31.0"
+    },
+    "nickel": {
+      "derivation": "/nix/store/fnvv96qkzwb6rfxh7mxkxgx9akcjgqyv-nickel-lang-rev-fixup-1.17.0.drv",
+      "output": "/nix/store/ck3a4k9az87z5rjwgy8nmpcs34xp9cc5-nickel-lang-rev-fixup-1.17.0"
+    },
+    "octet": {
+      "derivation": "/nix/store/7iqww35i0mvd8bkv0gckq826q6b2kf21-cargo-octet-0.1.0.drv",
+      "output": "/nix/store/vj0sg5rn291z78im7gd2cqzqzd0bq3zy-cargo-octet-0.1.0"
+    },
+    "octet_standards": {
+      "derivation": "/nix/store/ackprds206cvvx31x6b1dwarwc812jpv-octet-standards-0.1.0.drv",
+      "output": "/nix/store/fh39gx0hwply5mblzd11g7xysc1ihh14-octet-standards-0.1.0"
+    },
+    "quality_rust": {
+      "derivation": "/nix/store/zxvqck0x496vcj2qn1r0wil6bb85zj7b-rust-default-1.96.0-nightly-2026-03-21.drv",
+      "output": "/nix/store/1yvh3d6y3fj3xk2dgwczrp1dj5svd92c-rust-default-1.96.0-nightly-2026-03-21"
+    },
+    "upstream_pin_check": {
+      "derivation": "/nix/store/abf9q3r42bql84jmywvw8q0r9q7ya84n-aeneas-check-charon-pin.drv",
+      "output": "/nix/store/b34wcdj3gbjf03dzi5y8ghv23bsc3aya-aeneas-check-charon-pin"
+    }
+  }
+}

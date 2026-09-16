@@ -118,12 +118,18 @@ const ROUTES = {
   CALC: ['application-test', 'benchmark-policy-test', 'review'],
 };
 
+// Document scope only. This discovery is not the compiler/source inventory.
+function checkedMarkdown(file) {
+  return file.endsWith('.md') && (file === 'README.md'
+    || ['specs/', '.cairn/', 'verification/', 'proofs/'].some(prefix => file.startsWith(prefix)));
+}
+
 export function loadBundle(root) {
   const texts = new Map();
   const paths = new Set();
   function visit(relative) {
     for (const entry of readdirSync(path.join(root, relative), { withFileTypes: true })) {
-      if (['.git', 'node_modules', 'target', 'build', '.direnv'].includes(entry.name)) continue;
+      if (['.git', '.pi', '.octet', '.lake', 'node_modules', 'target', 'build', '.direnv'].includes(entry.name)) continue;
       const name = path.posix.join(relative, entry.name);
       if (entry.isSymbolicLink()) continue;
       paths.add(name);
@@ -960,7 +966,7 @@ export function validate(bundle, { ignoreLedger = false } = {}) {
     check(!core.includes('[ drop call ]'), 'surface: legacy list example');
     check(!core.includes('No async ABI or stream surface API is frozen here.'), 'async: stale blanket ABI statement');
     for (const [file, text] of bundle.texts) {
-      if (!(file.startsWith('specs/') || file.startsWith('.cairn/') || file === 'README.md') || !file.endsWith('.md')) continue;
+      if (!checkedMarkdown(file)) continue;
       for (const match of text.matchAll(/\[[^\]\n]*\]\(([^)\s]+)\)/g)) {
         const target = match[1];
         if (/^https?:\/\//.test(target) || target.startsWith('#')) continue;
@@ -1470,7 +1476,7 @@ function main() {
     ...result.summary,
     self_tests: tests,
     inputs: [...bundle.texts].filter(([name]) => (name.startsWith('specs/') && name !== 'specs/VALIDATION.json')
-      || (name.startsWith('.cairn/') && name.endsWith('.md')) || name === 'README.md' || sourcePaths.has(name))
+      || checkedMarkdown(name) || sourcePaths.has(name))
       .sort(([a], [b]) => a.localeCompare(b, 'en'))
       .map(([file, text]) => ({ file, sha256: createHash('sha256').update(text).digest('hex') })),
     non_claims: ['No Noble execution', 'No proof checking', 'No Component Model conformance', 'No complete semantic coverage claim'],

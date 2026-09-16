@@ -17,7 +17,7 @@ A build-only skeleton cannot satisfy M1 without actual extraction, source accoun
 The [spec delta](specs/verification-toolchain/spec.md) adds VT-M1-01 through VT-M1-07 to the existing verification-toolchain capability.
 These requirements specialize the M1 exit criteria. They do not weaken accepted verification or evidence requirements.
 The [design](design.md) maps each requirement to implementation work and acceptance controls.
-All [implementation tasks](tasks.md) remain open in this planning package.
+The [implementation tasks](tasks.md) record current progress. Planning approval alone does not complete those tasks.
 
 ## Dependencies and Scope
 
@@ -27,7 +27,8 @@ M2 and M3 depend on M1, but this package does not implement either milestone.
 The first required host configuration is `x86_64-linux` with Rust target `x86_64-unknown-linux-gnu`.
 Every compatible feature set and every workspace target belongs to the quality gate.
 Additional host support requires an explicit matrix and executed evidence before a support claim.
-The first compatible toolchain and Octet revision remain selection tasks, not assumed facts.
+The [selection evidence](tool-selection-evidence.md) records the immutable tools, scoped compatibility runs, and rejection controls.
+The complete M1 assurance matrix remains open.
 
 ### In scope
 
@@ -44,11 +45,12 @@ The accepted Rust-to-Lean route remains mandatory for the entire semantic kernel
 
 ## Impact
 
-**Planning files:** only `.cairn/changes/m1-workspace/` changes now. Accepted specs, compatibility views, ledgers, and milestone status stay unchanged.
+**Planning files:** `.cairn/changes/m1-workspace/` records progress. Accepted specs, compatibility views, ledgers, and milestone status stay unchanged.
 
-**Implementation files:** expected additions include `Cargo.toml`, `Cargo.lock`, `flake.nix`, the Nix-generated `flake.lock`, and `crates/noble-kernel/` and `crates/noble-cli/`.
-Policy, inventory, proof-build, hook, and CI files will accompany those additions.
-The design names proposed paths without treating absent files as completed artifacts.
+**Implementation files:** the worktree now contains the Rust workspace, Nix-generated lock, policy, hook, and extraction probe.
+The [component review](../../../verification/component-review.md) records the published Octet repairs and the passing incremental workspace gates.
+Complete inventories, CI, rejection controls, and independent acceptance remain open.
+Existing files do not establish completion of the implementation checklist.
 
 **Compatibility:** no Noble syntax, stack semantics, public encoding, or runtime behavior changes in this package.
 Existing Bun document checks and the pinned Cairn runner remain supported.

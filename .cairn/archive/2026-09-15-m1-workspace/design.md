@@ -7,8 +7,10 @@ The repository contains twelve accepted draft specs, document validators, and un
 [The toolchain policy](../../specs/verification-toolchain/spec.md) requires Charon → Aeneas → Lean for the semantic kernel.
 [The evidence policy](../../specs/evidence/spec.md) separates document results, test results, extraction, and proofs.
 
-This design adds no implementation evidence. The existing toolchain-lock template still contains unselected fields.
-All work below belongs to the open tasks in this change.
+The original planning design added no implementation evidence. The historical toolchain-lock template remains unselected.
+The [selection evidence](tool-selection-evidence.md) records the later scoped compatibility result.
+The [implementation runbook](../../../verification/m1-runbook.md) distinguishes current commands from reserved interfaces.
+The [control matrix](../../../verification/m1-controls.md) maps each required family without claiming unexecuted work.
 
 ## Goals and Non-goals
 
@@ -147,12 +149,12 @@ The following map preserves every requirement assigned to M1 in `specs/roadmap.j
 
 ## Planned Artifacts
 
-These paths are proposed implementation outputs, not present artifacts or completed work.
+These paths include current building blocks and reserved outputs. The runbook records their availability, not M1 acceptance.
 
 | Area | Paths and contents |
 |---|---|
 | Workspace | `Cargo.toml`, `Cargo.lock`, `crates/noble-kernel/`, `crates/noble-cli/` |
-| Reproducible tools | `flake.nix`, Nix-generated `flake.lock`, `verification/toolchain-lock.json` |
+| Reproducible tools | `flake.nix`, Nix-generated `flake.lock`, `policy/tool-selection.ncl`, and its checked JSON export |
 | Source and native scope | `verification/` inventories, exceptions, dependency records, evidence schemas, and gate tests |
 | Architecture policy | `policy/architecture.ncl`, checked export, freshness manifest, `dylint.toml` |
 | Extraction | `proofs/` build configuration, generated-module destination, and bounded extraction entry point |
@@ -183,7 +185,8 @@ nix flake check -L
 ```
 
 The Nix checks also run document regressions, policy freshness, architecture enforcement, source coverage, extraction, and the declared native-assurance lane.
-The first implementation task must name their exact commands before the corresponding tasks can close.
+Task 1.4 names their exact command contracts in the implementation runbook before the corresponding tasks can close.
+Inventory collection precedes extraction, and classification comparison follows extraction. This ordering avoids a circular input dependency.
 No unavailable future command counts as an executed check in this proposal.
 
 | Control | Positive observation | Required rejection |
@@ -219,4 +222,4 @@ After sync, regenerate compatibility views and requirement ledgers for the accep
 Check that every new native requirement lands in the accepted specification.
 After the final post-sync checks pass, mark the implementation checklist complete.
 Archive follows the completed checklist and its unblocked dry-run plan.
-This planning commit leaves M1 `not-started` and all implementation tasks unchecked.
+The original planning commit left M1 `not-started`. The active checklist now records subsequent work without closing M1.

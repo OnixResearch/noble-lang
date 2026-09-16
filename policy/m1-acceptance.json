@@ -1,0 +1,120 @@
+{
+  "claimed_scope": "smoke",
+  "forbidden_promotions": [
+    "lint-as-refinement",
+    "architecture-as-refinement",
+    "miri-as-refinement",
+    "generated-lean-as-refinement",
+    "receipt-replay-as-refinement",
+    "test-evidence-as-production",
+    "document-check-as-implementation"
+  ],
+  "non_claims": [
+    "acceptance-is-not-authentication",
+    "smoke-scope-is-not-whole-program-correctness",
+    "extraction-is-not-refinement"
+  ],
+  "owner": "noble-maintainers",
+  "pins": {
+    "aeneas": "505b6ca35217e7be5c96c3e2f8045edfbdf47291",
+    "charon": "b104e24fea7d721b71e6c39fd70f26ff20bc0980",
+    "extraction_rust": "nightly-2026-08-18",
+    "lean_rev": "68218e876d2a38b1985b8590fff244a83c321783",
+    "octet": "235255bc4972ced9128fd5b4d1ec66ff7508ded4",
+    "quality_rust": "nightly-2026-03-21"
+  },
+  "refinement_required": false,
+  "required_packages": [
+    "noble-kernel",
+    "noble-cli"
+  ],
+  "required_phases": [
+    {
+      "binding": "none",
+      "id": "format",
+      "kind": "scoped-check"
+    },
+    {
+      "binding": "none",
+      "id": "rust-tests",
+      "kind": "scoped-check"
+    },
+    {
+      "binding": "none",
+      "id": "clippy",
+      "kind": "scoped-check"
+    },
+    {
+      "binding": "none",
+      "id": "documents",
+      "kind": "scoped-check"
+    },
+    {
+      "binding": "none",
+      "id": "cairn",
+      "kind": "scoped-check"
+    },
+    {
+      "binding": "policy",
+      "id": "policy",
+      "kind": "scoped-check"
+    },
+    {
+      "binding": "selection",
+      "id": "octet",
+      "kind": "scoped-check"
+    },
+    {
+      "binding": "selection",
+      "id": "tool-selection",
+      "kind": "scoped-check"
+    },
+    {
+      "binding": "selection",
+      "id": "tool-versions",
+      "kind": "scoped-check"
+    },
+    {
+      "binding": "selection",
+      "id": "tool-overrides",
+      "kind": "scoped-check"
+    },
+    {
+      "binding": "selection",
+      "id": "boundary-controls",
+      "kind": "scoped-check"
+    },
+    {
+      "binding": "inventory",
+      "id": "source-coverage",
+      "kind": "scoped-check"
+    },
+    {
+      "binding": "inventory",
+      "id": "native-assurance",
+      "kind": "scoped-check"
+    },
+    {
+      "binding": "inventory",
+      "id": "extraction",
+      "kind": "tool-run"
+    },
+    {
+      "binding": "selection",
+      "id": "miri",
+      "kind": "tool-run"
+    }
+  ],
+  "required_target": {
+    "default_features": true,
+    "features": [],
+    "triple": "x86_64-unknown-linux-gnu"
+  },
+  "schema_version": "noble-m1-acceptance-expectation/v1",
+  "subject": {
+    "milestone": "M1",
+    "repository": "Noble",
+    "scope": "named M1 workspace scope: noble-kernel and noble-cli",
+    "task_range": "1.1-5.5"
+  }
+}
