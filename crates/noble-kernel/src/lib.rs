@@ -1,6 +1,11 @@
 #![no_std]
 //! Deterministic internal transitions. This crate does not evaluate Noble programs.
 
+extern crate alloc;
+
+pub mod scheme;
+pub mod types;
+
 /// Outcome of consuming one unit from an explicitly supplied budget.
 pub enum BudgetOutcome {
     Remaining(u32),
