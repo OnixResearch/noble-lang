@@ -1,7 +1,8 @@
 //! Iterative post-order substitution of one pattern into a concrete type.
 //!
 //! One bounded work stack drives the walk; nested program patterns expand
-//! through explicit segments, and no step recurses.
+//! through explicit segments, and no step recurses. Each step threads its
+//! stacks in and returns them, so no loop body returns early.
 
 /// Local bound for one substitution walk; beyond it substitution rejects.
 const WORK_CAP: usize = 512;
@@ -15,6 +16,27 @@ enum Task<'a> {
     Emit(alloc::vec::Vec<crate::types::Ty>),
 }
 
+/// The state one substitution walk threads through.
+struct Walk<'a> {
+    /// Pending tasks.
+    work: alloc::vec::Vec<Task<'a>>,
+    /// Finished segments, oldest segment first.
+    segments: alloc::vec::Vec<alloc::vec::Vec<crate::types::Ty>>,
+}
+
+/// One walk step's outcome.
+enum StepResult {
+    /// More tasks remain.
+    Continue,
+    /// Every task was processed.
+    Done,
+    /// The walk rejected the pattern.
+    Failed(crate::words::InstError),
+}
+
+/// One step's returned state: the walk and the step outcome.
+type StepState<'a> = (Walk<'a>, Result<(), crate::words::InstError>);
+
 impl crate::words::Scheme {
     /// Substitute one type pattern to a concrete type.
     pub fn subst_pattern(
@@ -22,189 +44,238 @@ impl crate::words::Scheme {
         pattern: &crate::shapes::Pattern,
         inst: &crate::words::Inst,
     ) -> Result<crate::types::Ty, crate::words::InstError> {
-        let mut work: alloc::vec::Vec<Task> = alloc::vec::Vec::with_capacity(8);
-        let mut segments: alloc::vec::Vec<alloc::vec::Vec<crate::types::Ty>> =
-            alloc::vec::Vec::with_capacity(8);
-        work.push(Task::Part(pattern));
-        while let Some(task) = work.pop() {
-            if work.len() >= WORK_CAP {
-                return Err(crate::words::InstError::OversizedType);
-            }
-            match task {
-                Task::Emit(segment) => segments.push(segment),
-                Task::Finish(node) => {
-                    let right =
-                        attempt!(segments.pop().ok_or(crate::words::InstError::OversizedType));
-                    let left =
-                        attempt!(segments.pop().ok_or(crate::words::InstError::OversizedType));
-                    let built = match node {
-                        crate::shapes::Pattern::Pair(_, _) => {
-                            attempt!(pair_segment(left, right, false))
-                        }
-                        crate::shapes::Pattern::Sum(_, _) => {
-                            attempt!(pair_segment(left, right, true))
-                        }
-                        crate::shapes::Pattern::List(_) => {
-                            let inner = attempt!(single(left));
-                            alloc::vec![crate::types::Ty::List(alloc::boxed::Box::new(inner))]
-                        }
-                        crate::shapes::Pattern::Var(_)
-                        | crate::shapes::Pattern::Program(_)
-                        | crate::shapes::Pattern::Unit
-                        | crate::shapes::Pattern::Bool
-                        | crate::shapes::Pattern::I64
-                        | crate::shapes::Pattern::Text
-                        | crate::shapes::Pattern::Syntax
-                        | crate::shapes::Pattern::Resource(_) => {
-                            return Err(crate::words::InstError::KindMismatch)
-                        }
-                    };
-                    segments.push(built);
-                }
-                Task::Expand(signature) => {
-                    let mut collected: alloc::vec::Vec<alloc::vec::Vec<crate::types::Ty>> =
-                        alloc::vec::Vec::with_capacity(
-                            (signature.stack_in.len() + signature.stack_out.len()).max(4),
-                        );
-                    let mut popped = 0;
-                    while popped < signature.stack_in.len() + signature.stack_out.len() {
-                        collected.push(attempt!(segments
-                            .pop()
-                            .ok_or(crate::words::InstError::OversizedType)));
-                        popped += 1;
-                    }
-                    collected.reverse();
-                    let mut parts = collected.into_iter();
-                    let mut stack_in: alloc::vec::Vec<crate::types::Ty> =
-                        alloc::vec::Vec::with_capacity(signature.stack_in.len().max(4));
-                    let mut in_step = 0;
-                    while in_step < signature.stack_in.len() {
-                        if let Some(segment) = parts.next() {
-                            stack_in.extend(segment);
-                        }
-                        in_step += 1;
-                    }
-                    let mut stack_out: alloc::vec::Vec<crate::types::Ty> =
-                        alloc::vec::Vec::with_capacity(signature.stack_out.len().max(4));
-                    let mut out_step = 0;
-                    while out_step < signature.stack_out.len() {
-                        if let Some(segment) = parts.next() {
-                            stack_out.extend(segment);
-                        }
-                        out_step += 1;
-                    }
-                    let effects = attempt!(self.subst_effects(&signature.effects, inst));
-                    segments.push(alloc::vec![crate::types::Ty::program(
-                        stack_in, stack_out, effects
-                    )]);
-                }
-                Task::Part(node) => match node {
-                    crate::shapes::Pattern::Unit => {
-                        segments.push(alloc::vec![crate::types::Ty::Unit])
-                    }
-                    crate::shapes::Pattern::Bool => {
-                        segments.push(alloc::vec![crate::types::Ty::Bool])
-                    }
-                    crate::shapes::Pattern::I64 => {
-                        segments.push(alloc::vec![crate::types::Ty::I64])
-                    }
-                    crate::shapes::Pattern::Text => {
-                        segments.push(alloc::vec![crate::types::Ty::Text])
-                    }
-                    crate::shapes::Pattern::Syntax => {
-                        segments.push(alloc::vec![crate::types::Ty::Syntax])
-                    }
-                    crate::shapes::Pattern::Resource(kind) => {
-                        segments.push(alloc::vec![crate::types::Ty::Resource(*kind)])
-                    }
-                    crate::shapes::Pattern::Var(var) => {
-                        let ty = attempt!(inst
-                            .value(*var)
-                            .cloned()
-                            .ok_or(crate::words::InstError::UnknownVariable));
-                        segments.push(alloc::vec![ty]);
-                    }
-                    crate::shapes::Pattern::Pair(left, right)
-                    | crate::shapes::Pattern::Sum(left, right) => {
-                        work.push(Task::Finish(node));
-                        work.push(Task::Part(left));
-                        work.push(Task::Part(right));
-                    }
-                    crate::shapes::Pattern::List(item) => {
-                        work.push(Task::Finish(node));
-                        work.push(Task::Part(item));
-                    }
-                    crate::shapes::Pattern::Program(signature) => {
-                        work.push(Task::Expand(signature));
-                        let out_len = signature.stack_out.len();
-                        let in_len = signature.stack_in.len();
-                        let mut part_index = 0;
-                        while part_index < in_len + out_len {
-                            let part = if part_index < out_len {
-                                &signature.stack_out[out_len - 1 - part_index]
-                            } else {
-                                &signature.stack_in[in_len + out_len - 1 - part_index]
-                            };
-                            match part {
-                                crate::shapes::StackPart::Pattern(item) => {
-                                    work.push(Task::Part(item))
-                                }
-                                crate::shapes::StackPart::Stack(var) => {
-                                    let segment = attempt!(inst
-                                        .stack(*var)
-                                        .ok_or(crate::words::InstError::UnknownVariable));
-                                    work.push(Task::Emit(segment.to_vec()));
-                                }
-                            }
-                            part_index += 1;
-                        }
-                    }
-                },
-            }
+        let mut walk = Walk {
+            work: alloc::vec::Vec::with_capacity(8),
+            segments: alloc::vec::Vec::with_capacity(8),
+        };
+        walk.work.push(Task::Part(pattern));
+        let mut outcome = StepResult::Continue;
+        while matches!(outcome, StepResult::Continue) {
+            let (next, step) = walk_step(self, inst, walk);
+            walk = next;
+            outcome = step;
         }
-        let mut out = attempt!(segments.pop().ok_or(crate::words::InstError::OversizedType));
-        if segments.is_empty() && out.len() == 1 {
-            match out.pop() {
-                Some(ty) => Ok(ty),
-                None => Err(crate::words::InstError::OversizedType),
+        match outcome {
+            StepResult::Failed(problem) => Err(problem),
+            StepResult::Continue | StepResult::Done => {
+                let out = match walk.segments.pop() {
+                    Some(segment) => segment,
+                    None => return Err(crate::words::InstError::OversizedType),
+                };
+                if walk.segments.is_empty() {
+                    super::segments::single(out)
+                } else {
+                    Err(crate::words::InstError::OversizedType)
+                }
             }
-        } else {
-            Err(crate::words::InstError::OversizedType)
         }
     }
 }
 
-fn single(
-    segment: alloc::vec::Vec<crate::types::Ty>,
-) -> Result<crate::types::Ty, crate::words::InstError> {
-    let mut items = segment;
-    if items.len() == 1 {
-        match items.pop() {
-            Some(ty) => Ok(ty),
-            None => Err(crate::words::InstError::OversizedType),
-        }
-    } else {
-        Err(crate::words::InstError::OversizedType)
-    }
-}
-
-fn pair_segment(
-    left: alloc::vec::Vec<crate::types::Ty>,
-    right: alloc::vec::Vec<crate::types::Ty>,
-    is_sum: bool,
-) -> Result<alloc::vec::Vec<crate::types::Ty>, crate::words::InstError> {
-    let left_ty = attempt!(single(left));
-    let right_ty = attempt!(single(right));
-    let built = if is_sum {
-        crate::types::Ty::Sum(
-            alloc::boxed::Box::new(left_ty),
-            alloc::boxed::Box::new(right_ty),
-        )
-    } else {
-        crate::types::Ty::Pair(
-            alloc::boxed::Box::new(left_ty),
-            alloc::boxed::Box::new(right_ty),
-        )
+/// Run one substitution step, returning the updated walk and its outcome.
+fn walk_step<'a>(
+    scheme: &crate::words::Scheme,
+    inst: &crate::words::Inst,
+    walk: Walk<'a>,
+) -> (Walk<'a>, StepResult) {
+    let mut walk = walk;
+    let task = match walk.work.pop() {
+        Some(task) => task,
+        None => return (walk, StepResult::Done),
     };
-    Ok(alloc::vec![built])
+    if walk.work.len() >= WORK_CAP {
+        return (
+            walk,
+            StepResult::Failed(crate::words::InstError::OversizedType),
+        );
+    }
+    let (next, outcome) = match task {
+        Task::Emit(segment) => {
+            walk.segments.push(segment);
+            (walk, Ok(()))
+        }
+        Task::Finish(node) => finish_task(node, walk),
+        Task::Expand(signature) => expand_task(scheme, signature, inst, walk),
+        Task::Part(node) => part_task(node, inst, walk),
+    };
+    match outcome {
+        Ok(()) => (next, StepResult::Continue),
+        Err(problem) => (next, StepResult::Failed(problem)),
+    }
+}
+
+/// Complete one `pair`, `sum`, or `list` pattern from its finished segments.
+fn finish_task<'a>(node: &'a crate::shapes::Pattern, mut walk: Walk<'a>) -> StepState<'a> {
+    let right = match walk.segments.pop() {
+        Some(segment) => segment,
+        None => return (walk, Err(crate::words::InstError::OversizedType)),
+    };
+    let left = match walk.segments.pop() {
+        Some(segment) => segment,
+        None => return (walk, Err(crate::words::InstError::OversizedType)),
+    };
+    let built = match node {
+        crate::shapes::Pattern::Pair(_, _) => super::segments::pair_segment(left, right, false),
+        crate::shapes::Pattern::Sum(_, _) => super::segments::pair_segment(left, right, true),
+        crate::shapes::Pattern::List(_) => match super::segments::single(left) {
+            Ok(inner) => Ok(alloc::vec![crate::types::Ty::List(alloc::boxed::Box::new(
+                inner
+            ))]),
+            Err(problem) => Err(problem),
+        },
+        crate::shapes::Pattern::Var(_)
+        | crate::shapes::Pattern::Program(_)
+        | crate::shapes::Pattern::Unit
+        | crate::shapes::Pattern::Bool
+        | crate::shapes::Pattern::I64
+        | crate::shapes::Pattern::Text
+        | crate::shapes::Pattern::Syntax
+        | crate::shapes::Pattern::Resource(_) => Err(crate::words::InstError::KindMismatch),
+    };
+    match built {
+        Ok(segment) => {
+            walk.segments.push(segment);
+            (walk, Ok(()))
+        }
+        Err(problem) => (walk, Err(problem)),
+    }
+}
+
+/// Expand one `program` pattern from the segments of its parts.
+fn expand_task<'a>(
+    scheme: &crate::words::Scheme,
+    signature: &'a crate::shapes::Signature,
+    inst: &crate::words::Inst,
+    mut walk: Walk<'a>,
+) -> StepState<'a> {
+    let wanted = signature.stack_in.len() + signature.stack_out.len();
+    let mut collected: alloc::vec::Vec<alloc::vec::Vec<crate::types::Ty>> =
+        alloc::vec::Vec::with_capacity(wanted.max(4));
+    let mut popped = 0;
+    let mut is_missing = false;
+    while popped < wanted {
+        match walk.segments.pop() {
+            Some(segment) => {
+                collected.push(segment);
+                popped += 1;
+            }
+            None => {
+                is_missing = true;
+                break;
+            }
+        }
+    }
+    if is_missing {
+        return (walk, Err(crate::words::InstError::OversizedType));
+    }
+    collected.reverse();
+    let mut parts = collected.into_iter();
+    let mut stack_in: alloc::vec::Vec<crate::types::Ty> =
+        alloc::vec::Vec::with_capacity(signature.stack_in.len().max(4));
+    let mut in_step = 0;
+    while in_step < signature.stack_in.len() {
+        if let Some(segment) = parts.next() {
+            stack_in.extend(segment);
+        }
+        in_step += 1;
+    }
+    let mut stack_out: alloc::vec::Vec<crate::types::Ty> =
+        alloc::vec::Vec::with_capacity(signature.stack_out.len().max(4));
+    let mut out_step = 0;
+    while out_step < signature.stack_out.len() {
+        if let Some(segment) = parts.next() {
+            stack_out.extend(segment);
+        }
+        out_step += 1;
+    }
+    let effects = match scheme.subst_effects(&signature.effects, inst) {
+        Ok(effects) => effects,
+        Err(problem) => return (walk, Err(problem)),
+    };
+    walk.segments.push(alloc::vec![crate::types::Ty::program(
+        stack_in, stack_out, effects
+    )]);
+    (walk, Ok(()))
+}
+
+/// Emit the segments of one non-composite pattern, queueing sub-patterns.
+fn part_task<'a>(
+    node: &'a crate::shapes::Pattern,
+    inst: &crate::words::Inst,
+    mut walk: Walk<'a>,
+) -> StepState<'a> {
+    match node {
+        crate::shapes::Pattern::Unit => walk.segments.push(alloc::vec![crate::types::Ty::Unit]),
+        crate::shapes::Pattern::Bool => walk.segments.push(alloc::vec![crate::types::Ty::Bool]),
+        crate::shapes::Pattern::I64 => walk.segments.push(alloc::vec![crate::types::Ty::I64]),
+        crate::shapes::Pattern::Text => walk.segments.push(alloc::vec![crate::types::Ty::Text]),
+        crate::shapes::Pattern::Syntax => walk.segments.push(alloc::vec![crate::types::Ty::Syntax]),
+        crate::shapes::Pattern::Resource(kind) => walk
+            .segments
+            .push(alloc::vec![crate::types::Ty::Resource(*kind)]),
+        crate::shapes::Pattern::Var(var) => {
+            let ty = match inst.value(*var) {
+                Some(ty) => ty.clone(),
+                None => return (walk, Err(crate::words::InstError::UnknownVariable)),
+            };
+            walk.segments.push(alloc::vec![ty]);
+        }
+        crate::shapes::Pattern::Pair(left, right) | crate::shapes::Pattern::Sum(left, right) => {
+            walk.work.push(Task::Finish(node));
+            walk.work.push(Task::Part(left));
+            walk.work.push(Task::Part(right));
+        }
+        crate::shapes::Pattern::List(item) => {
+            walk.work.push(Task::Finish(node));
+            walk.work.push(Task::Part(item));
+        }
+        crate::shapes::Pattern::Program(signature) => {
+            walk.work.push(Task::Expand(signature));
+            return queue_parts(signature, inst, walk);
+        }
+    }
+    (walk, Ok(()))
+}
+
+/// Queue the parts of one program pattern, result stack first.
+fn queue_parts<'a>(
+    signature: &'a crate::shapes::Signature,
+    inst: &crate::words::Inst,
+    mut walk: Walk<'a>,
+) -> StepState<'a> {
+    let out_len = signature.stack_out.len();
+    let in_len = signature.stack_in.len();
+    let mut part_index = 0;
+    let mut failure: Option<crate::words::InstError> = None;
+    while part_index < in_len + out_len {
+        let part = if part_index < out_len {
+            &signature.stack_out[out_len - 1 - part_index]
+        } else {
+            &signature.stack_in[in_len + out_len - 1 - part_index]
+        };
+        let step = match part {
+            crate::shapes::StackPart::Pattern(item) => {
+                walk.work.push(Task::Part(item));
+                Ok(())
+            }
+            crate::shapes::StackPart::Stack(var) => match inst.stack(*var) {
+                Some(segment) => {
+                    walk.work.push(Task::Emit(segment.to_vec()));
+                    Ok(())
+                }
+                None => Err(crate::words::InstError::UnknownVariable),
+            },
+        };
+        match step {
+            Ok(()) => part_index += 1,
+            Err(problem) => {
+                failure = Some(problem);
+                break;
+            }
+        }
+    }
+    match failure {
+        Some(problem) => (walk, Err(problem)),
+        None => (walk, Ok(())),
+    }
 }

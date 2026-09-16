@@ -75,19 +75,24 @@ pub(crate) fn limits_of(stack: &[crate::types::Ty], ctx: &Ctx) -> Result<(), sup
         ));
     }
     let mut index = 0;
+    let mut failure: Option<super::Fail> = None;
     while index < stack.len() {
         let ty = &stack[index];
         if ty
             .size()
             .is_none_or(|size| size > ctx.request.limits.type_size)
         {
-            return Err(super::Fail::Exhausted(
+            failure = Some(super::Fail::Exhausted(
                 crate::untrusted::LimitKind::TypeSize,
             ));
+            break;
         }
         index += 1;
     }
-    Ok(())
+    match failure {
+        Some(problem) => Err(problem),
+        None => Ok(()),
+    }
 }
 
 /// The failing definition of a node, when it is an invocation.
@@ -141,16 +146,18 @@ fn match_tail(
         return Some(crate::untrusted::Constraint::StackJoin);
     }
     let offset = stack.len() - expected.len();
+    let mut mismatch: Option<crate::untrusted::Constraint> = None;
     let mut index = 0;
     while index < expected.len() {
         let ty = &expected[index];
         if &stack[offset + index] != ty {
             let actual = tail_copy(stack, expected.len());
-            return Some(mismatch_constraint(expected, &actual));
+            mismatch = Some(mismatch_constraint(expected, &actual));
+            break;
         }
         index += 1;
     }
-    None
+    mismatch
 }
 
 /// Classify a mismatch as wrong order or wrong shape.
@@ -182,26 +189,36 @@ fn same_multiset(left: &[crate::types::Ty], right: &[crate::types::Ty]) -> bool 
         return false;
     }
     let mut used = alloc::vec![false; right.len()];
+    let mut is_matched = true;
     let mut item_index = 0;
-    while item_index < left.len() {
-        let item = &left[item_index];
-        let mut is_found = false;
-        let mut index = 0;
-        while index < right.len() {
-            let other = &right[index];
-            if !used[index] && other == item {
+    while is_matched && item_index < left.len() {
+        match find_unused(right, &used, &left[item_index]) {
+            Some(index) => {
                 used[index] = true;
-                is_found = true;
-                break;
+                item_index += 1;
             }
-            index += 1;
+            None => is_matched = false,
         }
-        if !is_found {
-            return false;
-        }
-        item_index += 1;
     }
-    true
+    is_matched
+}
+
+/// The first unused index in `right` holding `item`, when one exists.
+fn find_unused(
+    right: &[crate::types::Ty],
+    used: &[bool],
+    item: &crate::types::Ty,
+) -> Option<usize> {
+    let mut found = None;
+    let mut index = 0;
+    while index < right.len() {
+        if !used[index] && &right[index] == item {
+            found = Some(index);
+            break;
+        }
+        index += 1;
+    }
+    found
 }
 
 /// The first derived identity outside the allowed bound.

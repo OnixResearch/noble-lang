@@ -100,6 +100,93 @@ fn require_kind(
     }
 }
 
+/// Require every effect slot to match the effect kind.
+fn require_slots(kinds: &[crate::words::VariableKind], slots: &[EffectSlot]) -> Result<(), Defect> {
+    let mut index = 0;
+    let mut defect: Option<Defect> = None;
+    while index < slots.len() {
+        let step = match &slots[index] {
+            EffectSlot::Effect(_) => Ok(()),
+            EffectSlot::Var(var) => require_kind(kinds, *var, crate::words::VariableKind::Effect),
+        };
+        match step {
+            Ok(()) => index += 1,
+            Err(problem) => {
+                defect = Some(problem);
+                break;
+            }
+        }
+    }
+    match defect {
+        Some(problem) => Err(problem),
+        None => Ok(()),
+    }
+}
+
+/// Require every stack part to match its kind, queueing nested patterns.
+fn require_parts<'a>(
+    kinds: &[crate::words::VariableKind],
+    parts: &'a [StackPart],
+    mut work: alloc::vec::Vec<Step<'a>>,
+) -> Result<alloc::vec::Vec<Step<'a>>, Defect> {
+    let mut index = 0;
+    let mut defect: Option<Defect> = None;
+    while index < parts.len() {
+        let step = match &parts[index] {
+            StackPart::Stack(var) => require_kind(kinds, *var, crate::words::VariableKind::Stack),
+            StackPart::Pattern(pattern) => {
+                work.push(Step::Pattern(pattern));
+                Ok(())
+            }
+        };
+        match step {
+            Ok(()) => index += 1,
+            Err(problem) => {
+                defect = Some(problem);
+                break;
+            }
+        }
+    }
+    match defect {
+        Some(problem) => Err(problem),
+        None => Ok(work),
+    }
+}
+
+/// Require one pattern to match its kind, queueing its sub-patterns.
+fn require_pattern<'a>(
+    kinds: &[crate::words::VariableKind],
+    pattern: &'a Pattern,
+    mut work: alloc::vec::Vec<Step<'a>>,
+) -> Result<alloc::vec::Vec<Step<'a>>, Defect> {
+    match pattern {
+        Pattern::Var(var) => {
+            require_kind(kinds, *var, crate::words::VariableKind::Value).map(|()| work)
+        }
+        Pattern::Pair(left, right) | Pattern::Sum(left, right) => {
+            work.push(Step::Pattern(left));
+            work.push(Step::Pattern(right));
+            Ok(work)
+        }
+        Pattern::List(item) => {
+            work.push(Step::Pattern(item));
+            Ok(work)
+        }
+        Pattern::Program(signature) => {
+            work.push(Step::Parts(&signature.stack_in));
+            work.push(Step::Parts(&signature.stack_out));
+            work.push(Step::Slots(&signature.effects));
+            Ok(work)
+        }
+        Pattern::Unit
+        | Pattern::Bool
+        | Pattern::I64
+        | Pattern::Text
+        | Pattern::Syntax
+        | Pattern::Resource(_) => Ok(work),
+    }
+}
+
 /// Validate one signature's parts and effects against the declared kinds.
 pub fn validate(
     kinds: &[crate::words::VariableKind],
@@ -111,58 +198,30 @@ pub fn validate(
     work.push(Step::Parts(stack_in));
     work.push(Step::Parts(stack_out));
     work.push(Step::Slots(effects));
+    let mut defect: Option<Defect> = None;
     while let Some(step) = work.pop() {
         if work.len() >= WORK_CAP {
-            return Err(Defect::KindMismatch);
+            defect = Some(Defect::KindMismatch);
+            break;
         }
-        match step {
-            Step::Slots(slots) => {
-                let mut index = 0;
-                while index < slots.len() {
-                    if let EffectSlot::Var(var) = &slots[index] {
-                        attempt!(require_kind(
-                            kinds,
-                            *var,
-                            crate::words::VariableKind::Effect
-                        ));
-                    }
-                    index += 1;
-                }
-            }
-            Step::Parts(parts) => {
-                let mut index = 0;
-                while index < parts.len() {
-                    match &parts[index] {
-                        StackPart::Stack(var) => {
-                            attempt!(require_kind(kinds, *var, crate::words::VariableKind::Stack))
-                        }
-                        StackPart::Pattern(pattern) => work.push(Step::Pattern(pattern)),
-                    }
-                    index += 1;
-                }
-            }
-            Step::Pattern(pattern) => match pattern {
-                Pattern::Var(var) => {
-                    attempt!(require_kind(kinds, *var, crate::words::VariableKind::Value))
-                }
-                Pattern::Pair(left, right) | Pattern::Sum(left, right) => {
-                    work.push(Step::Pattern(left));
-                    work.push(Step::Pattern(right));
-                }
-                Pattern::List(item) => work.push(Step::Pattern(item)),
-                Pattern::Program(signature) => {
-                    work.push(Step::Parts(&signature.stack_in));
-                    work.push(Step::Parts(&signature.stack_out));
-                    work.push(Step::Slots(&signature.effects));
-                }
-                Pattern::Unit
-                | Pattern::Bool
-                | Pattern::I64
-                | Pattern::Text
-                | Pattern::Syntax
-                | Pattern::Resource(_) => {}
+        let outcome = match step {
+            Step::Slots(slots) => match require_slots(kinds, slots) {
+                Ok(()) => Ok(work),
+                Err(problem) => Err(problem),
             },
+            Step::Parts(parts) => require_parts(kinds, parts, work),
+            Step::Pattern(pattern) => require_pattern(kinds, pattern, work),
+        };
+        match outcome {
+            Ok(next) => work = next,
+            Err(problem) => {
+                defect = Some(problem);
+                break;
+            }
         }
     }
-    Ok(())
+    match defect {
+        Some(problem) => Err(problem),
+        None => Ok(()),
+    }
 }

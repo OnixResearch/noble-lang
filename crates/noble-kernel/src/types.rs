@@ -4,6 +4,8 @@
 //! operation recurses and no walk grows without a local bound. Stacks are
 //! ordered bottom-first, matching the specification's "top on the right".
 
+mod size;
+
 /// Local bound for one type walk; beyond it every predicate fails closed.
 const WORK_CAP: usize = 512;
 
@@ -143,12 +145,17 @@ impl Ty {
     pub fn is_data(&self) -> bool {
         let mut work: alloc::vec::Vec<&Ty> = alloc::vec::Vec::with_capacity(8);
         work.push(self);
+        let mut is_data = true;
         while let Some(node) = work.pop() {
             if work.len() >= WORK_CAP {
-                return false;
+                is_data = false;
+                break;
             }
             match node {
-                Ty::Resource(_) => return false,
+                Ty::Resource(_) => {
+                    is_data = false;
+                    break;
+                }
                 Ty::Pair(left, right) | Ty::Sum(left, right) => {
                     work.push(left);
                     work.push(right);
@@ -157,78 +164,29 @@ impl Ty {
                 Ty::Unit | Ty::Bool | Ty::I64 | Ty::Text | Ty::Syntax | Ty::Program(_) => {}
             }
         }
-        true
+        is_data
     }
 
     /// A size measure used by the declared type-size limit.
     pub fn size(&self) -> Option<u32> {
-        let mut todo: alloc::vec::Vec<(&Ty, bool)> = alloc::vec::Vec::with_capacity(8);
-        let mut sizes: alloc::vec::Vec<u32> = alloc::vec::Vec::with_capacity(8);
-        todo.push((self, false));
-        while let Some((node, expanded)) = todo.pop() {
-            if todo.len() >= WORK_CAP {
-                return None;
-            }
-            if expanded {
-                let mut total = 1u32;
-                match node {
-                    Ty::Pair(_, _) | Ty::Sum(_, _) => {
-                        let size = attempt_optional!(sizes.pop());
-                        total = total.saturating_add(size);
-                        let size = attempt_optional!(sizes.pop());
-                        total = total.saturating_add(size);
-                    }
-                    Ty::List(_) => {
-                        let size = attempt_optional!(sizes.pop());
-                        total = total.saturating_add(size);
-                    }
-                    Ty::Program(program) => {
-                        let count = program.stack_in.len() + program.stack_out.len();
-                        let mut step = 0;
-                        while step < count {
-                            let size = attempt_optional!(sizes.pop());
-                            total = total.saturating_add(size);
-                            step += 1;
-                        }
-                    }
-                    Ty::Unit | Ty::Bool | Ty::I64 | Ty::Text | Ty::Syntax | Ty::Resource(_) => {}
-                }
-                sizes.push(total);
-                continue;
-            }
-            match node {
-                Ty::Pair(left, right) | Ty::Sum(left, right) => {
-                    todo.push((node, true));
-                    todo.push((left, false));
-                    todo.push((right, false));
-                }
-                Ty::List(item) => {
-                    todo.push((node, true));
-                    todo.push((item, false));
-                }
-                Ty::Program(program) => {
-                    todo.push((node, true));
-                    let mut index = 0;
-                    while index < program.stack_in.len() {
-                        todo.push((&program.stack_in[index], false));
-                        index += 1;
-                    }
-                    index = 0;
-                    while index < program.stack_out.len() {
-                        todo.push((&program.stack_out[index], false));
-                        index += 1;
-                    }
-                }
-                Ty::Unit | Ty::Bool | Ty::I64 | Ty::Text | Ty::Syntax | Ty::Resource(_) => {
-                    sizes.push(1)
-                }
-            }
+        let mut walk = size::Walk {
+            todo: alloc::vec::Vec::with_capacity(8),
+            sizes: alloc::vec::Vec::with_capacity(8),
+        };
+        walk.todo.push((self, false));
+        let mut outcome = size::Step::Continue;
+        while matches!(outcome, size::Step::Continue) {
+            let (next, step) = size::walk_step(walk);
+            walk = next;
+            outcome = step;
         }
-        sizes.pop()
+        match outcome {
+            size::Step::Failed => None,
+            size::Step::Continue | size::Step::Done => walk.sizes.pop(),
+        }
     }
 }
 
-/// Whether every element of a stack is `Data`.
 pub fn stack_is_data(stack: &[Ty]) -> bool {
     stack.iter().all(Ty::is_data)
 }

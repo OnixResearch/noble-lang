@@ -110,10 +110,21 @@ pub fn environment() -> Result<Env, crate::shapes::Defect> {
     let mut defs: alloc::vec::Vec<crate::words::Scheme> = alloc::vec::Vec::with_capacity(32);
     let mut kinds: alloc::vec::Vec<Behavior> = alloc::vec::Vec::with_capacity(32);
     let mut index = 0;
+    let mut defect: Option<crate::shapes::Defect> = None;
     while index < table.len() {
-        attempt!(table[index].1.validate());
-        kinds.push(table[index].0);
-        index += 1;
+        match table[index].1.validate() {
+            Ok(()) => {
+                kinds.push(table[index].0);
+                index += 1;
+            }
+            Err(problem) => {
+                defect = Some(problem);
+                break;
+            }
+        }
+    }
+    if let Some(problem) = defect {
+        return Err(problem);
     }
     defs.extend(table.into_iter().map(|(_, scheme)| scheme));
     Ok(Env {

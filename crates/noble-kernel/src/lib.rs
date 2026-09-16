@@ -17,18 +17,6 @@ macro_rules! attempt {
     };
 }
 
-/// Evaluate one optional step, returning `None` from the enclosing function.
-///
-/// This stands in for `?` on `Option` for the same reason as [`attempt`].
-macro_rules! attempt_optional {
-    ($step:expr) => {
-        match $step {
-            Some(value) => value,
-            None => return None,
-        }
-    };
-}
-
 pub mod acceptance;
 pub mod contracts;
 pub mod shapes;

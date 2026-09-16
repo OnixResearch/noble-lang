@@ -5,7 +5,9 @@
 //! returned state. Every conclusion is derived from the candidate's premises.
 
 mod frames;
+mod nodes;
 mod parts;
+mod preflight;
 
 enum Fail {
     Invalid(crate::untrusted::Diagnostic),
@@ -31,6 +33,14 @@ struct State {
     derivations: alloc::vec::Vec<crate::untrusted::Derivation>,
 }
 
+/// The machine between steps: its meter and frame stack, and, once the run
+/// stops, its outcome.
+struct Machine {
+    state: State,
+    frames: alloc::vec::Vec<Frame>,
+    outcome: Option<Result<crate::untrusted::Interface, Fail>>,
+}
+
 /// Run the acceptance checker over one candidate and request.
 pub fn check(
     env: &crate::contracts::Env,
@@ -51,244 +61,156 @@ fn run(
     request: &crate::untrusted::Request,
     candidate: &crate::untrusted::Candidate,
 ) -> Result<crate::untrusted::Checked, Fail> {
-    attempt!(preflight(env, request, candidate));
+    attempt!(preflight::check_request(env, request, candidate));
     let context = parts::Ctx { request, env };
-    let mut state = State {
-        work: request.limits.work,
-        derivations: alloc::vec::Vec::with_capacity(
-            usize::try_from(request.limits.nodes.min(64)).unwrap_or(0),
+    let mut machine = Machine {
+        state: State {
+            work: request.limits.work,
+            derivations: alloc::vec::Vec::with_capacity(
+                usize::try_from(request.limits.nodes.min(64)).unwrap_or(0),
+            ),
+        },
+        frames: alloc::vec::Vec::with_capacity(
+            usize::try_from(request.limits.depth.min(64)).unwrap_or(0),
         ),
+        outcome: None,
     };
-    let mut frames =
-        alloc::vec::Vec::with_capacity(usize::try_from(request.limits.depth.min(64)).unwrap_or(0));
-    frames.push(frames::entry_frame(request, candidate));
-    loop {
-        let frame = match frames.pop() {
-            Some(frame) => frame,
-            None => return Err(Fail::Internal),
-        };
-        let node_id = match frame.body.get(frame.index) {
-            Some(id) => *id,
-            None => {
-                let parent = frames.pop();
-                match attempt!(frames::complete_frame(frame, parent, candidate, &context)) {
-                    frames::Completion::Entry(effects) => {
-                        return Ok(crate::untrusted::Checked {
-                            interface: crate::untrusted::Interface {
-                                stack_in: request.expected.stack_in.clone(),
-                                stack_out: request.expected.stack_out.clone(),
-                                effects,
-                            },
-                            derivations: state.derivations,
-                        })
-                    }
-                    frames::Completion::Step {
-                        cost,
-                        node,
-                        interface,
-                        joined,
-                    } => {
-                        state.work = attempt!(parts::charge(state.work, cost));
-                        state
-                            .derivations
-                            .push(crate::untrusted::Derivation { node, interface });
-                        frames.push(frames::advance(joined));
-                        continue;
-                    }
-                }
-            }
-        };
-        let node = attempt!(node_of(candidate, node_id, &context));
-        match node {
-            crate::untrusted::Node::Literal { .. } | crate::untrusted::Node::Invocation { .. } => {
-                let (cost, joined, interface) = attempt!(fold_node(frame, node_id, node, &context));
-                state.work = attempt!(parts::charge(state.work, cost));
-                state.derivations.push(crate::untrusted::Derivation {
-                    node: node_id,
-                    interface,
-                });
-                frames.push(frames::advance(joined));
-            }
-            crate::untrusted::Node::Quotation { .. } => {
-                let (cost, parent, child) =
-                    attempt!(open_quotation(frame, node_id, node, &context));
-                state.work = attempt!(parts::charge(state.work, cost));
-                frames.push(parent);
-                frames.push(child);
-            }
-        }
+    machine.frames.push(frames::entry_frame(request, candidate));
+    while machine.outcome.is_none() {
+        machine = step(machine, candidate, &context);
+    }
+    match machine.outcome {
+        Some(Ok(interface)) => Ok(crate::untrusted::Checked {
+            interface,
+            derivations: machine.state.derivations,
+        }),
+        Some(Err(problem)) => Err(problem),
+        None => Err(Fail::Internal),
     }
 }
 
-/// Fetch one node, rejecting a reference outside the finite arena.
-fn node_of<'a>(
-    candidate: &'a crate::untrusted::Candidate,
-    node_id: crate::untrusted::NodeId,
-    context: &parts::Ctx,
-) -> Result<&'a crate::untrusted::Node, Fail> {
-    match usize::try_from(node_id.0)
-        .ok()
-        .and_then(|index| candidate.nodes.get(index))
-    {
-        Some(node) => Ok(node),
-        None => Err(parts::invalid(
-            context,
-            parts::site(Some(node_id), None),
-            alloc::vec::Vec::new(),
-            alloc::vec::Vec::new(),
-            crate::untrusted::Constraint::MalformedReference(node_id),
-        )),
-    }
-}
-
-/// Fold one literal or invocation node into its frame.
-///
-/// Returns the work charged for the node's instantiation and join.
-fn fold_node(
-    frame: Frame,
-    node_id: crate::untrusted::NodeId,
-    node: &crate::untrusted::Node,
-    context: &parts::Ctx,
-) -> Result<(u32, Frame, crate::untrusted::Interface), Fail> {
-    match node {
-        crate::untrusted::Node::Literal { lit, inst } => {
-            let scheme = parts::instantiate::literal_scheme(*lit);
-            let at = parts::site(Some(node_id), None);
-            let cost = attempt!(parts::scheme_cost(&scheme));
-            let interface = attempt!(parts::instantiate::apply(&scheme, inst, None, at, context));
-            let cost = cost.saturating_add(attempt!(parts::join_cost(&interface)));
-            let joined = attempt!(parts::join(frame, &interface, at, context));
-            Ok((cost, joined, interface))
-        }
-        crate::untrusted::Node::Invocation { def, inst } => {
-            let scheme = match context.env.scheme(*def) {
-                Some(scheme) => scheme.clone(),
-                None => {
-                    return Err(parts::invalid(
-                        context,
-                        parts::site(Some(node_id), Some(*def)),
-                        alloc::vec::Vec::new(),
-                        alloc::vec::Vec::new(),
-                        crate::untrusted::Constraint::UnknownDefinition(*def),
-                    ))
-                }
-            };
-            let at = parts::site(Some(node_id), Some(*def));
-            let data_var = parts::instantiate::data_slot(context.env.kind(*def));
-            let cost = attempt!(parts::scheme_cost(&scheme));
-            let interface = attempt!(parts::instantiate::apply(
-                &scheme, inst, data_var, at, context
-            ));
-            let cost = cost.saturating_add(attempt!(parts::join_cost(&interface)));
-            let joined = attempt!(parts::join(frame, &interface, at, context));
-            Ok((cost, joined, interface))
-        }
-        crate::untrusted::Node::Quotation { .. } => Err(Fail::Internal),
-    }
-}
-
-/// Validate one quotation node and build its parent and child frames.
-///
-/// Returns the work charged for the node's instantiation.
-fn open_quotation(
-    frame: Frame,
-    node_id: crate::untrusted::NodeId,
-    node: &crate::untrusted::Node,
-    context: &parts::Ctx,
-) -> Result<(u32, Frame, Frame), Fail> {
-    let (body, inst) = match node {
-        crate::untrusted::Node::Quotation { body, inst } => (body, inst),
-        crate::untrusted::Node::Literal { .. } | crate::untrusted::Node::Invocation { .. } => {
-            return Err(Fail::Internal)
-        }
-    };
-    let scheme = parts::instantiate::quotation_scheme();
-    let cost = attempt!(parts::scheme_cost(&scheme));
-    attempt!(parts::instantiate::apply(
-        &scheme,
-        inst,
-        None,
-        parts::site(Some(node_id), None),
-        context,
-    ));
-    if frame.depth.saturating_add(1) > context.request.limits.depth {
-        return Err(Fail::Exhausted(crate::untrusted::LimitKind::Depth));
-    }
-    let start = match inst.stack(crate::words::Variable(1)) {
-        Some(segment) => segment.to_vec(),
-        None => return Err(Fail::Internal),
-    };
-    let claimed_out = match inst.stack(crate::words::Variable(2)) {
-        Some(segment) => segment.to_vec(),
-        None => return Err(Fail::Internal),
-    };
-    let claimed_effects = match inst.effects(crate::words::Variable(3)) {
-        Some(set) => set.clone(),
-        None => return Err(Fail::Internal),
-    };
-    let depth = frame.depth.saturating_add(1);
-    let child = Frame {
-        depth,
-        origin: Some(node_id),
-        body: body.clone(),
-        index: 0,
-        stack: start,
-        effects: crate::types::EffSet::empty(),
-        claimed_out,
-        claimed_effects,
-    };
-    Ok((cost, frame, child))
-}
-
-fn preflight(
-    env: &crate::contracts::Env,
-    request: &crate::untrusted::Request,
+/// Take one machine step: fold the current frame's next node.
+fn step(
+    mut machine: Machine,
     candidate: &crate::untrusted::Candidate,
-) -> Result<(), Fail> {
-    if candidate.format != crate::untrusted::CANDIDATE_FORMAT
-        || candidate.revision != crate::untrusted::SEMANTIC_REVISION
-    {
-        return Err(Fail::Unsupported(
-            crate::untrusted::UnsupportedKind::FormatRevision,
-        ));
-    }
-    if request.input_bytes > request.limits.bytes {
-        return Err(Fail::Exhausted(crate::untrusted::LimitKind::Bytes));
-    }
-    let node_count = match u64::try_from(candidate.nodes.len()) {
-        Ok(count) => count,
-        Err(_) => return Err(Fail::Exhausted(crate::untrusted::LimitKind::Nodes)),
+    context: &parts::Ctx,
+) -> Machine {
+    let frame = match machine.frames.pop() {
+        Some(frame) => frame,
+        None => return halted(machine, Err(Fail::Internal)),
     };
-    if node_count > u64::from(request.limits.nodes) {
-        return Err(Fail::Exhausted(crate::untrusted::LimitKind::Nodes));
-    }
-    let mut index = 0;
-    while index < env.defs.len() {
-        let scheme = &env.defs[index];
-        if scheme.validate().is_err() {
-            return Err(Fail::Unsupported(
-                crate::untrusted::UnsupportedKind::SchemeForm,
-            ));
+    let node_id = match frame.body.get(frame.index) {
+        Some(id) => *id,
+        None => return close_frame(machine, frame, candidate, context),
+    };
+    let node = match nodes::node_of(candidate, node_id, context) {
+        Ok(node) => node,
+        Err(problem) => return halted(machine, Err(problem)),
+    };
+    match node {
+        crate::untrusted::Node::Literal { .. } | crate::untrusted::Node::Invocation { .. } => {
+            fold_current(machine, frame, node_id, node, context)
         }
-        index += 1;
-    }
-    let context = parts::Ctx { request, env };
-    attempt!(parts::limits_of(&request.expected.stack_in, &context));
-    attempt!(parts::limits_of(&request.expected.stack_out, &context));
-    let allowed_effects = request.expected.allowed_effects.as_slice();
-    let mut index = 0;
-    while index < allowed_effects.len() {
-        let id = allowed_effects[index];
-        if !env.knows_effect(id) {
-            return Err(parts::invalid(
-                &context,
-                parts::site(None, None),
-                alloc::vec::Vec::new(),
-                alloc::vec::Vec::new(),
-                crate::untrusted::Constraint::UnknownEffect(id),
-            ));
+        crate::untrusted::Node::Quotation { .. } => {
+            open_current(machine, frame, node_id, node, context)
         }
-        index += 1;
     }
-    Ok(())
+}
+
+/// Stop the machine with this outcome.
+fn halted(mut machine: Machine, outcome: Result<crate::untrusted::Interface, Fail>) -> Machine {
+    machine.outcome = Some(outcome);
+    machine
+}
+
+/// Close one exhausted frame, then stop the machine or continue it.
+fn close_frame(
+    mut machine: Machine,
+    frame: Frame,
+    candidate: &crate::untrusted::Candidate,
+    context: &parts::Ctx,
+) -> Machine {
+    let parent = machine.frames.pop();
+    let completion = match frames::complete_frame(frame, parent, candidate, context) {
+        Ok(completion) => completion,
+        Err(problem) => return halted(machine, Err(problem)),
+    };
+    match completion {
+        frames::Completion::Entry(effects) => halted(
+            machine,
+            Ok(crate::untrusted::Interface {
+                stack_in: context.request.expected.stack_in.clone(),
+                stack_out: context.request.expected.stack_out.clone(),
+                effects,
+            }),
+        ),
+        frames::Completion::Step {
+            cost,
+            node,
+            interface,
+            joined,
+        } => {
+            let remaining = match parts::charge(machine.state.work, cost) {
+                Ok(remaining) => remaining,
+                Err(problem) => return halted(machine, Err(problem)),
+            };
+            machine.state.work = remaining;
+            machine
+                .state
+                .derivations
+                .push(crate::untrusted::Derivation { node, interface });
+            machine.frames.push(frames::advance(joined));
+            machine
+        }
+    }
+}
+
+/// Fold one literal or invocation node into the machine's counters.
+fn fold_current(
+    mut machine: Machine,
+    frame: Frame,
+    node_id: crate::untrusted::NodeId,
+    node: &crate::untrusted::Node,
+    context: &parts::Ctx,
+) -> Machine {
+    let (cost, joined, interface) = match nodes::fold_node(frame, node_id, node, context) {
+        Ok(folded) => folded,
+        Err(problem) => return halted(machine, Err(problem)),
+    };
+    let remaining = match parts::charge(machine.state.work, cost) {
+        Ok(remaining) => remaining,
+        Err(problem) => return halted(machine, Err(problem)),
+    };
+    machine.state.work = remaining;
+    machine
+        .state
+        .derivations
+        .push(crate::untrusted::Derivation {
+            node: node_id,
+            interface,
+        });
+    machine.frames.push(frames::advance(joined));
+    machine
+}
+
+/// Open one quotation node into its parent and child frames.
+fn open_current(
+    mut machine: Machine,
+    frame: Frame,
+    node_id: crate::untrusted::NodeId,
+    node: &crate::untrusted::Node,
+    context: &parts::Ctx,
+) -> Machine {
+    let (cost, parent, child) = match nodes::open_quotation(frame, node_id, node, context) {
+        Ok(opened) => opened,
+        Err(problem) => return halted(machine, Err(problem)),
+    };
+    let remaining = match parts::charge(machine.state.work, cost) {
+        Ok(remaining) => remaining,
+        Err(problem) => return halted(machine, Err(problem)),
+    };
+    machine.state.work = remaining;
+    machine.frames.push(parent);
+    machine.frames.push(child);
+    machine
 }

@@ -1,0 +1,5 @@
+name = "noble-m2-fragment"
+defaultTargets = ["NobleM2"]
+
+[[lean_lib]]
+name = "NobleM2"

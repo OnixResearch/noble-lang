@@ -7,6 +7,10 @@
 
 pub mod subst;
 
+mod segments;
+
+mod bounds;
+
 /// Index of a variable inside one scheme.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Variable(pub u32);
@@ -123,53 +127,27 @@ impl Scheme {
             return Err(InstError::ArityMismatch);
         }
         let mut binding_index = 0;
+        let mut failure: Option<InstError> = None;
         while binding_index < inst.bindings.len() && binding_index < self.var_kinds.len() {
-            let binding = &inst.bindings[binding_index];
-            let kind = &self.var_kinds[binding_index];
-            match (binding, kind) {
-                (Binding::Stack(segment), VariableKind::Stack) => {
-                    let height = match u64::try_from(segment.len()) {
-                        Ok(height) => height,
-                        Err(_) => return Err(InstError::OversizedStack),
-                    };
-                    if height > u64::from(max_stack) {
-                        return Err(InstError::OversizedStack);
-                    }
-                    let mut ty_index = 0;
-                    while ty_index < segment.len() {
-                        let size =
-                            attempt!(segment[ty_index].size().ok_or(InstError::OversizedType));
-                        if size > max_type {
-                            return Err(InstError::OversizedType);
-                        }
-                        ty_index += 1;
-                    }
+            let step = bounds::check_binding(
+                &inst.bindings[binding_index],
+                &self.var_kinds[binding_index],
+                max_stack,
+                max_type,
+                max_effects,
+            );
+            match step {
+                Ok(()) => binding_index += 1,
+                Err(problem) => {
+                    failure = Some(problem);
+                    break;
                 }
-                (Binding::Value(ty), VariableKind::Value) => {
-                    let size = attempt!(ty.size().ok_or(InstError::OversizedType));
-                    if size > max_type {
-                        return Err(InstError::OversizedType);
-                    }
-                }
-                (Binding::Effect(set), VariableKind::Effect) => {
-                    let count = match set.len() {
-                        Some(count) => count,
-                        None => return Err(InstError::OversizedEffects),
-                    };
-                    if count > max_effects {
-                        return Err(InstError::OversizedEffects);
-                    }
-                }
-                (Binding::Stack(_), VariableKind::Value)
-                | (Binding::Stack(_), VariableKind::Effect)
-                | (Binding::Value(_), VariableKind::Stack)
-                | (Binding::Value(_), VariableKind::Effect)
-                | (Binding::Effect(_), VariableKind::Stack)
-                | (Binding::Effect(_), VariableKind::Value) => return Err(InstError::KindMismatch),
             }
-            binding_index += 1;
         }
-        Ok(())
+        match failure {
+            Some(problem) => Err(problem),
+            None => Ok(()),
+        }
     }
 
     /// Substitute a stack pattern to a concrete stack.
@@ -181,20 +159,38 @@ impl Scheme {
         let mut out: alloc::vec::Vec<crate::types::Ty> =
             alloc::vec::Vec::with_capacity(parts.len().max(4));
         let mut part_index = 0;
+        let mut failure: Option<InstError> = None;
         while part_index < parts.len() {
-            let part = &parts[part_index];
-            match part {
+            let step = match &parts[part_index] {
                 crate::shapes::StackPart::Pattern(pattern) => {
-                    out.push(attempt!(self.subst_pattern(pattern, inst)))
+                    match self.subst_pattern(pattern, inst) {
+                        Ok(ty) => {
+                            out.push(ty);
+                            Ok(())
+                        }
+                        Err(problem) => Err(problem),
+                    }
                 }
-                crate::shapes::StackPart::Stack(var) => {
-                    let segment = attempt!(inst.stack(*var).ok_or(InstError::UnknownVariable));
-                    out.extend_from_slice(segment);
+                crate::shapes::StackPart::Stack(var) => match inst.stack(*var) {
+                    Some(segment) => {
+                        out.extend_from_slice(segment);
+                        Ok(())
+                    }
+                    None => Err(InstError::UnknownVariable),
+                },
+            };
+            match step {
+                Ok(()) => part_index += 1,
+                Err(problem) => {
+                    failure = Some(problem);
+                    break;
                 }
             }
-            part_index += 1;
         }
-        Ok(out)
+        match failure {
+            Some(problem) => Err(problem),
+            None => Ok(out),
+        }
     }
 
     /// Substitute an effect pattern to a concrete set.
@@ -206,17 +202,32 @@ impl Scheme {
         let bound = slots.len().saturating_mul(4).saturating_add(4);
         let mut ids: alloc::vec::Vec<crate::types::EffId> = alloc::vec::Vec::with_capacity(bound);
         let mut slot_index = 0;
+        let mut failure: Option<InstError> = None;
         while slot_index < slots.len() {
-            let slot = &slots[slot_index];
-            match slot {
-                crate::shapes::EffectSlot::Effect(id) => ids.push(*id),
-                crate::shapes::EffectSlot::Var(var) => {
-                    let set = attempt!(inst.effects(*var).ok_or(InstError::UnknownVariable));
-                    ids.extend_from_slice(set.as_slice());
+            let step = match &slots[slot_index] {
+                crate::shapes::EffectSlot::Effect(id) => {
+                    ids.push(*id);
+                    Ok(())
+                }
+                crate::shapes::EffectSlot::Var(var) => match inst.effects(*var) {
+                    Some(set) => {
+                        ids.extend_from_slice(set.as_slice());
+                        Ok(())
+                    }
+                    None => Err(InstError::UnknownVariable),
+                },
+            };
+            match step {
+                Ok(()) => slot_index += 1,
+                Err(problem) => {
+                    failure = Some(problem);
+                    break;
                 }
             }
-            slot_index += 1;
         }
-        Ok(crate::types::EffSet::from_ids(&ids))
+        match failure {
+            Some(problem) => Err(problem),
+            None => Ok(crate::types::EffSet::from_ids(&ids)),
+        }
     }
 }

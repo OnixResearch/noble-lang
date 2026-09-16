@@ -153,18 +153,23 @@ fn project(
     attempt!(super::limits_of(&stack_out, ctx));
     let effect_ids = effects.as_slice();
     let mut index = 0;
+    let mut unknown: Option<crate::types::EffId> = None;
     while index < effect_ids.len() {
         let id = effect_ids[index];
         if !ctx.env.knows_effect(id) {
-            return Err(super::invalid(
-                ctx,
-                at,
-                alloc::vec::Vec::new(),
-                alloc::vec::Vec::new(),
-                crate::untrusted::Constraint::UnknownEffect(id),
-            ));
+            unknown = Some(id);
+            break;
         }
         index += 1;
+    }
+    if let Some(id) = unknown {
+        return Err(super::invalid(
+            ctx,
+            at,
+            alloc::vec::Vec::new(),
+            alloc::vec::Vec::new(),
+            crate::untrusted::Constraint::UnknownEffect(id),
+        ));
     }
     if let Some(var) = data_var {
         match inst.value(var) {
