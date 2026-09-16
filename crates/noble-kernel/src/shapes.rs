@@ -83,7 +83,11 @@ fn kind_of(
     kinds: &[crate::words::VariableKind],
     var: crate::words::Variable,
 ) -> Result<crate::words::VariableKind, Defect> {
-    match kinds.get(usize::try_from(var.0).unwrap_or(usize::MAX)) {
+    let index = match usize::try_from(var.0) {
+        Ok(index) => index,
+        Err(_) => return Err(Defect::UnknownVariable),
+    };
+    match kinds.get(index) {
         Some(kind) => Ok(*kind),
         None => Err(Defect::UnknownVariable),
     }

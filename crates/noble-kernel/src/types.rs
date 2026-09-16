@@ -45,14 +45,14 @@ impl EffSet {
         let mut left = 0usize;
         let mut right = 0usize;
         while left < self.0.len() || right < other.0.len() {
-            let take_left =
+            let is_take_left =
                 right == other.0.len() || (left < self.0.len() && self.0[left] < other.0[right]);
-            let take_right =
+            let is_take_right =
                 left == self.0.len() || (right < other.0.len() && other.0[right] < self.0[left]);
-            if take_left {
+            if is_take_left {
                 out.push(self.0[left]);
                 left += 1;
-            } else if take_right {
+            } else if is_take_right {
                 out.push(other.0[right]);
                 right += 1;
             } else {

@@ -76,12 +76,12 @@ pub struct Env {
 impl Env {
     /// The scheme of a definition.
     pub fn scheme(&self, def: Definition) -> Option<&crate::words::Scheme> {
-        self.defs.get(index(def))
+        index(def).and_then(|index| self.defs.get(index))
     }
 
     /// The behavior of a definition.
     pub fn kind(&self, def: Definition) -> Option<Behavior> {
-        self.kinds.get(index(def)).copied()
+        index(def).and_then(|index| self.kinds.get(index)).copied()
     }
 
     /// Whether the environment provides this effect identity.
@@ -100,15 +100,15 @@ impl Env {
     }
 }
 
-fn index(def: Definition) -> usize {
-    usize::try_from(def.0).unwrap_or(usize::MAX)
+fn index(def: Definition) -> Option<usize> {
+    usize::try_from(def.0).ok()
 }
 
 /// Build the bootstrap environment with the fixed v0 contract table.
 pub fn environment() -> Result<Env, crate::shapes::Defect> {
     let mut defs: alloc::vec::Vec<crate::words::Scheme> = alloc::vec::Vec::with_capacity(32);
     let mut kinds: alloc::vec::Vec<Behavior> = alloc::vec::Vec::with_capacity(32);
-    for (kind, scheme) in bootstrap::table() {
+    for (kind, scheme) in bootstrap::data::table() {
         scheme.validate()?;
         defs.push(scheme);
         kinds.push(kind);

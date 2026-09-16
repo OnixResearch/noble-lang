@@ -1,8 +1,35 @@
-//! Pure helpers for the acceptance machine: instantiation, joins, charges,
-//! limits, and diagnostics. No helper recurses or mutates its inputs.
+//! Pure helpers for the acceptance machine: charges, limits, joins, and
+//! diagnostics. No helper recurses or mutates its inputs.
+
+pub(crate) mod instantiate;
+
+/// The request and environment a check runs against.
+pub(crate) struct Ctx<'a> {
+    /// The acceptance request.
+    pub(crate) request: &'a crate::untrusted::Request,
+    /// The checking environment.
+    pub(crate) env: &'a crate::contracts::Env,
+}
+
+/// The failing site: a node and, for invocations, its definition.
+#[derive(Clone, Copy)]
+pub(crate) struct Site {
+    /// The failing node, when a node is at fault.
+    pub(crate) node: Option<crate::untrusted::NodeId>,
+    /// The failing definition, when a word is at fault.
+    pub(crate) def: Option<crate::contracts::Definition>,
+}
+
+/// Build one site.
+pub(crate) fn site(
+    node: Option<crate::untrusted::NodeId>,
+    def: Option<crate::contracts::Definition>,
+) -> Site {
+    Site { node, def }
+}
 
 /// Charge work, failing closed before the declared limit is exceeded.
-pub(super) fn charge(work: u32, cost: u32) -> Result<u32, super::Fail> {
+pub(crate) fn charge(work: u32, cost: u32) -> Result<u32, super::Fail> {
     match work.checked_sub(cost) {
         Some(remaining) => Ok(remaining),
         None => Err(super::Fail::Exhausted(crate::untrusted::LimitKind::Work)),
@@ -10,7 +37,7 @@ pub(super) fn charge(work: u32, cost: u32) -> Result<u32, super::Fail> {
 }
 
 /// The work charged for one node's instantiation.
-pub(super) fn scheme_cost(scheme: &crate::words::Scheme) -> Result<u32, super::Fail> {
+pub(crate) fn scheme_cost(scheme: &crate::words::Scheme) -> Result<u32, super::Fail> {
     let count = match u32::try_from(scheme.stack_in.len().saturating_add(scheme.stack_out.len())) {
         Ok(count) => count,
         Err(_) => return Err(super::Fail::Exhausted(crate::untrusted::LimitKind::Work)),
@@ -19,7 +46,7 @@ pub(super) fn scheme_cost(scheme: &crate::words::Scheme) -> Result<u32, super::F
 }
 
 /// The work charged for one join.
-pub(super) fn join_cost(interface: &crate::untrusted::Interface) -> Result<u32, super::Fail> {
+pub(crate) fn join_cost(interface: &crate::untrusted::Interface) -> Result<u32, super::Fail> {
     let count = match u32::try_from(
         interface
             .stack_in
@@ -33,10 +60,7 @@ pub(super) fn join_cost(interface: &crate::untrusted::Interface) -> Result<u32, 
 }
 
 /// Validate one stack against the declared height and type-size limits.
-pub(super) fn limits_of(
-    stack: &[crate::types::Ty],
-    request: &crate::untrusted::Request,
-) -> Result<(), super::Fail> {
+pub(crate) fn limits_of(stack: &[crate::types::Ty], ctx: &Ctx) -> Result<(), super::Fail> {
     let height = match u64::try_from(stack.len()) {
         Ok(height) => height,
         Err(_) => {
@@ -45,13 +69,16 @@ pub(super) fn limits_of(
             ))
         }
     };
-    if height > u64::from(request.limits.stack_height) {
+    if height > u64::from(ctx.request.limits.stack_height) {
         return Err(super::Fail::Exhausted(
             crate::untrusted::LimitKind::StackHeight,
         ));
     }
     for ty in stack {
-        if ty.size().is_none_or(|size| size > request.limits.type_size) {
+        if ty
+            .size()
+            .is_none_or(|size| size > ctx.request.limits.type_size)
+        {
             return Err(super::Fail::Exhausted(
                 crate::untrusted::LimitKind::TypeSize,
             ));
@@ -61,11 +88,15 @@ pub(super) fn limits_of(
 }
 
 /// The failing definition of a node, when it is an invocation.
-pub(super) fn definition_of(
+pub(crate) fn definition_of(
     candidate: &crate::untrusted::Candidate,
     node: crate::untrusted::NodeId,
 ) -> Option<crate::contracts::Definition> {
-    match candidate.nodes.get(usize::try_from(node.0).unwrap_or(0)) {
+    let index = match usize::try_from(node.0) {
+        Ok(index) => index,
+        Err(_) => return None,
+    };
+    match candidate.nodes.get(index) {
         Some(crate::untrusted::Node::Invocation { def, .. }) => Some(*def),
         Some(crate::untrusted::Node::Literal { .. })
         | Some(crate::untrusted::Node::Quotation { .. })
@@ -73,221 +104,18 @@ pub(super) fn definition_of(
     }
 }
 
-/// The value slot that requires `Data`, for behaviors that constrain one.
-pub(super) fn data_slot(
-    behavior: Option<crate::contracts::Behavior>,
-) -> Option<crate::words::Variable> {
-    match behavior {
-        Some(crate::contracts::Behavior::Dup)
-        | Some(crate::contracts::Behavior::Drop)
-        | Some(crate::contracts::Behavior::Quote) => Some(crate::words::Variable(1)),
-        Some(crate::contracts::Behavior::Swap)
-        | Some(crate::contracts::Behavior::Dip)
-        | Some(crate::contracts::Behavior::Arith)
-        | Some(crate::contracts::Behavior::Compose)
-        | Some(crate::contracts::Behavior::Run)
-        | Some(crate::contracts::Behavior::Reflect)
-        | Some(crate::contracts::Behavior::Unit)
-        | Some(crate::contracts::Behavior::Pair)
-        | Some(crate::contracts::Behavior::Unpair)
-        | Some(crate::contracts::Behavior::Inl)
-        | Some(crate::contracts::Behavior::Inr)
-        | Some(crate::contracts::Behavior::Case)
-        | Some(crate::contracts::Behavior::If)
-        | Some(crate::contracts::Behavior::Nil)
-        | Some(crate::contracts::Behavior::Cons)
-        | Some(crate::contracts::Behavior::ListCase)
-        | Some(crate::contracts::Behavior::TestEmit)
-        | Some(crate::contracts::Behavior::Named)
-        | None => None,
-    }
-}
-
-/// The literal scheme: `S -- S <literal type>`.
-pub(super) fn literal_scheme(lit: crate::untrusted::Lit) -> crate::words::Scheme {
-    let pattern = match lit {
-        crate::untrusted::Lit::I64(_) => crate::shapes::Pattern::I64,
-        crate::untrusted::Lit::Bool(_) => crate::shapes::Pattern::Bool,
-        crate::untrusted::Lit::Text => crate::shapes::Pattern::Text,
-        crate::untrusted::Lit::Unit => crate::shapes::Pattern::Unit,
-    };
-    crate::words::Scheme {
-        var_kinds: alloc::vec![crate::words::VariableKind::Stack],
-        stack_in: alloc::vec![crate::shapes::StackPart::Stack(crate::words::Variable(0))],
-        stack_out: alloc::vec![
-            crate::shapes::StackPart::Stack(crate::words::Variable(0)),
-            crate::shapes::StackPart::Pattern(pattern),
-        ],
-        effects: alloc::vec![],
-    }
-}
-
-/// The quotation scheme: `R -- R Program<A, C, e>`.
-pub(super) fn quotation_scheme() -> crate::words::Scheme {
-    crate::words::Scheme {
-        var_kinds: alloc::vec![
-            crate::words::VariableKind::Stack,
-            crate::words::VariableKind::Stack,
-            crate::words::VariableKind::Stack,
-            crate::words::VariableKind::Effect
-        ],
-        stack_in: alloc::vec![crate::shapes::StackPart::Stack(crate::words::Variable(0))],
-        stack_out: alloc::vec![
-            crate::shapes::StackPart::Stack(crate::words::Variable(0)),
-            crate::shapes::StackPart::Pattern(crate::shapes::Pattern::Program(
-                alloc::boxed::Box::new(crate::shapes::Signature {
-                    stack_in: alloc::vec![crate::shapes::StackPart::Stack(crate::words::Variable(
-                        1
-                    ))],
-                    stack_out: alloc::vec![crate::shapes::StackPart::Stack(
-                        crate::words::Variable(2)
-                    )],
-                    effects: alloc::vec![crate::shapes::EffectSlot::Var(crate::words::Variable(3))],
-                },)
-            )),
-        ],
-        effects: alloc::vec![],
-    }
-}
-
-/// Instantiate one scheme into a concrete interface, validating the witness.
-pub(super) fn instantiate(
-    scheme: &crate::words::Scheme,
-    inst: &crate::words::Inst,
-    data_var: Option<crate::words::Variable>,
-    def: Option<crate::contracts::Definition>,
-    node: crate::untrusted::NodeId,
-    request: &crate::untrusted::Request,
-    env: &crate::contracts::Env,
-) -> Result<crate::untrusted::Interface, super::Fail> {
-    let max_effects = match env.len() {
-        Some(count) => count,
-        None => {
-            return Err(super::Fail::Unsupported(
-                crate::untrusted::UnsupportedKind::SchemeForm,
-            ))
-        }
-    };
-    match scheme.check_inst(
-        inst,
-        request.limits.stack_height,
-        request.limits.type_size,
-        max_effects,
-    ) {
-        Ok(()) => {}
-        Err(crate::words::InstError::KindMismatch)
-        | Err(crate::words::InstError::UnknownVariable) => {
-            return Err(invalid(
-                request,
-                Some(node),
-                def,
-                alloc::vec::Vec::new(),
-                alloc::vec::Vec::new(),
-                crate::untrusted::Constraint::InstantiationKind,
-            ))
-        }
-        Err(crate::words::InstError::ArityMismatch) => {
-            return Err(invalid(
-                request,
-                Some(node),
-                def,
-                alloc::vec::Vec::new(),
-                alloc::vec::Vec::new(),
-                crate::untrusted::Constraint::InstantiationArity,
-            ))
-        }
-        Err(crate::words::InstError::OversizedStack) => {
-            return Err(super::Fail::Exhausted(
-                crate::untrusted::LimitKind::StackHeight,
-            ))
-        }
-        Err(crate::words::InstError::OversizedType)
-        | Err(crate::words::InstError::OversizedEffects) => {
-            return Err(super::Fail::Exhausted(
-                crate::untrusted::LimitKind::TypeSize,
-            ))
-        }
-    }
-    let stack_in = match scheme.subst_stack(&scheme.stack_in, inst) {
-        Ok(stack) => stack,
-        Err(_) => return Err(instantiation_invalid(request, node, def)),
-    };
-    let stack_out = match scheme.subst_stack(&scheme.stack_out, inst) {
-        Ok(stack) => stack,
-        Err(_) => return Err(instantiation_invalid(request, node, def)),
-    };
-    let effects = match scheme.subst_effects(&scheme.effects, inst) {
-        Ok(effects) => effects,
-        Err(_) => return Err(instantiation_invalid(request, node, def)),
-    };
-    limits_of(&stack_in, request)?;
-    limits_of(&stack_out, request)?;
-    for id in effects.as_slice() {
-        if !env.knows_effect(*id) {
-            return Err(invalid(
-                request,
-                Some(node),
-                def,
-                alloc::vec::Vec::new(),
-                alloc::vec::Vec::new(),
-                crate::untrusted::Constraint::UnknownEffect(*id),
-            ));
-        }
-    }
-    if let Some(var) = data_var {
-        match inst.value(var) {
-            Some(ty) => {
-                if !ty.is_data() {
-                    let considered = ty.clone();
-                    return Err(invalid(
-                        request,
-                        Some(node),
-                        def,
-                        alloc::vec::Vec::new(),
-                        alloc::vec::Vec::new(),
-                        crate::untrusted::Constraint::Eligibility(considered),
-                    ));
-                }
-            }
-            None => return Err(instantiation_invalid(request, node, def)),
-        }
-    }
-    Ok(crate::untrusted::Interface {
-        stack_in,
-        stack_out,
-        effects,
-    })
-}
-
-fn instantiation_invalid(
-    request: &crate::untrusted::Request,
-    node: crate::untrusted::NodeId,
-    def: Option<crate::contracts::Definition>,
-) -> super::Fail {
-    invalid(
-        request,
-        Some(node),
-        def,
-        alloc::vec::Vec::new(),
-        alloc::vec::Vec::new(),
-        crate::untrusted::Constraint::InstantiationKind,
-    )
-}
-
-/// Join one interface into a frame's running stack.
-pub(super) fn join(
+/// Join one interface into a frame's running stack and effect bound.
+pub(crate) fn join(
     frame: super::Frame,
     interface: &crate::untrusted::Interface,
-    node: crate::untrusted::NodeId,
-    def: Option<crate::contracts::Definition>,
-    request: &crate::untrusted::Request,
+    at: Site,
+    ctx: &Ctx,
 ) -> Result<super::Frame, super::Fail> {
     let mut joined = frame;
     if let Some(constraint) = match_tail(&joined.stack, &interface.stack_in) {
         return Err(invalid(
-            request,
-            Some(node),
-            def,
+            ctx,
+            at,
             interface.stack_in.clone(),
             tail_copy(&joined.stack, interface.stack_in.len()),
             constraint,
@@ -297,7 +125,7 @@ pub(super) fn join(
     joined.stack.truncate(keep);
     joined.stack.extend_from_slice(&interface.stack_out);
     joined.effects = joined.effects.union(&interface.effects);
-    limits_of(&joined.stack, request)?;
+    limits_of(&joined.stack, ctx)?;
     Ok(joined)
 }
 
@@ -320,7 +148,7 @@ fn match_tail(
 }
 
 /// Classify a mismatch as wrong order or wrong shape.
-pub(super) fn mismatch_constraint(
+pub(crate) fn mismatch_constraint(
     expected: &[crate::types::Ty],
     actual: &[crate::types::Ty],
 ) -> crate::untrusted::Constraint {
@@ -332,7 +160,7 @@ pub(super) fn mismatch_constraint(
 }
 
 /// The top `needed` entries, or the whole stack when it is shorter.
-pub(super) fn tail_copy(
+pub(crate) fn tail_copy(
     stack: &[crate::types::Ty],
     needed: usize,
 ) -> alloc::vec::Vec<crate::types::Ty> {
@@ -365,7 +193,7 @@ fn same_multiset(left: &[crate::types::Ty], right: &[crate::types::Ty]) -> bool 
 }
 
 /// The first derived identity outside the allowed bound.
-pub(super) fn first_extra(
+pub(crate) fn first_extra(
     derived: &crate::types::EffSet,
     allowed: &crate::types::EffSet,
 ) -> Option<crate::types::EffId> {
@@ -377,15 +205,14 @@ pub(super) fn first_extra(
 }
 
 /// Build one diagnostic under the declared diagnostic budget.
-pub(super) fn invalid(
-    request: &crate::untrusted::Request,
-    node: Option<crate::untrusted::NodeId>,
-    def: Option<crate::contracts::Definition>,
+pub(crate) fn invalid(
+    ctx: &Ctx,
+    at: Site,
     expected: alloc::vec::Vec<crate::types::Ty>,
     actual: alloc::vec::Vec<crate::types::Ty>,
     constraint: crate::untrusted::Constraint,
 ) -> super::Fail {
-    let budget = usize::try_from(request.limits.diagnostics).unwrap_or(usize::MAX);
+    let budget = usize::try_from(ctx.request.limits.diagnostics).unwrap_or(0);
     let mut is_truncated = false;
     let mut expected = expected;
     let mut actual = actual;
@@ -399,8 +226,8 @@ pub(super) fn invalid(
         }
     }
     super::Fail::Invalid(crate::untrusted::Diagnostic {
-        node,
-        def,
+        node: at.node,
+        def: at.def,
         expected,
         actual,
         constraint,
