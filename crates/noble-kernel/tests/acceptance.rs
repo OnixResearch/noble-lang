@@ -361,7 +361,8 @@ fn word_naming_duplicate_and_resource_eligibility() -> Result<(), String> {
     let env = env()?;
     // `dup` requires Data; the fixture resource kind is not Data.
     let mut with_resource = env.clone();
-    let maker = noble_kernel::contracts::Definition(u32::try_from(env.len()).unwrap_or(u32::MAX));
+    assert_eq!(env.defs.len(), 22);
+    let maker = noble_kernel::contracts::Definition(22);
     with_resource.defs.push(noble_kernel::words::Scheme {
         var_kinds: vec![noble_kernel::words::VariableKind::Stack],
         stack_in: vec![noble_kernel::shapes::StackPart::Stack(

@@ -136,7 +136,7 @@ fn run(
                         Some(parent) => parent,
                         None => return Err(Fail::Internal),
                     };
-                    state.work = parts::charge(state.work, parts::join_cost(&taken.interface))?;
+                    state.work = parts::charge(state.work, parts::join_cost(&taken.interface)?)?;
                     let joined = parts::join(
                         parent,
                         &taken.interface,
@@ -170,10 +170,10 @@ fn run(
             Some(node) => match node {
                 crate::untrusted::Node::Literal { lit, inst } => {
                     let scheme = parts::literal_scheme(*lit);
-                    state.work = parts::charge(state.work, parts::scheme_cost(&scheme))?;
+                    state.work = parts::charge(state.work, parts::scheme_cost(&scheme)?)?;
                     let interface =
                         parts::instantiate(&scheme, inst, None, None, node_id, request, env)?;
-                    state.work = parts::charge(state.work, parts::join_cost(&interface))?;
+                    state.work = parts::charge(state.work, parts::join_cost(&interface)?)?;
                     let joined = parts::join(frame, &interface, node_id, None, request)?;
                     state.derivations.push(crate::untrusted::Derivation {
                         node: node_id,
@@ -195,7 +195,7 @@ fn run(
                             ))
                         }
                     };
-                    state.work = parts::charge(state.work, parts::scheme_cost(&scheme))?;
+                    state.work = parts::charge(state.work, parts::scheme_cost(&scheme)?)?;
                     let data_var = parts::data_slot(env.kind(*def));
                     let interface = parts::instantiate(
                         &scheme,
@@ -206,7 +206,7 @@ fn run(
                         request,
                         env,
                     )?;
-                    state.work = parts::charge(state.work, parts::join_cost(&interface))?;
+                    state.work = parts::charge(state.work, parts::join_cost(&interface)?)?;
                     let joined = parts::join(frame, &interface, node_id, Some(*def), request)?;
                     state.derivations.push(crate::untrusted::Derivation {
                         node: node_id,
@@ -216,7 +216,7 @@ fn run(
                 }
                 crate::untrusted::Node::Quotation { body, inst } => {
                     let scheme = parts::quotation_scheme();
-                    state.work = parts::charge(state.work, parts::scheme_cost(&scheme))?;
+                    state.work = parts::charge(state.work, parts::scheme_cost(&scheme)?)?;
                     parts::instantiate(&scheme, inst, None, None, node_id, request, env)?;
                     if frame.depth.saturating_add(1) > request.limits.depth {
                         return Err(Fail::Exhausted(crate::untrusted::LimitKind::Depth));

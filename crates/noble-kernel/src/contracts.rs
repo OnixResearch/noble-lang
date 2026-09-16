@@ -90,8 +90,8 @@ impl Env {
     }
 
     /// Number of definitions.
-    pub fn len(&self) -> u64 {
-        u64::try_from(self.defs.len()).unwrap_or(u64::MAX)
+    pub fn len(&self) -> Option<u64> {
+        u64::try_from(self.defs.len()).ok()
     }
 
     /// Whether the environment has no definitions.

@@ -2,7 +2,7 @@
 //! limits, and diagnostics. No helper recurses or mutates its inputs.
 
 /// Charge work, failing closed before the declared limit is exceeded.
-pub fn charge(work: u32, cost: u32) -> Result<u32, super::Fail> {
+pub(super) fn charge(work: u32, cost: u32) -> Result<u32, super::Fail> {
     match work.checked_sub(cost) {
         Some(remaining) => Ok(remaining),
         None => Err(super::Fail::Exhausted(crate::untrusted::LimitKind::Work)),
@@ -10,36 +10,48 @@ pub fn charge(work: u32, cost: u32) -> Result<u32, super::Fail> {
 }
 
 /// The work charged for one node's instantiation.
-pub fn scheme_cost(scheme: &crate::words::Scheme) -> u32 {
-    u32::try_from(scheme.stack_in.len().saturating_add(scheme.stack_out.len()))
-        .unwrap_or(u32::MAX)
-        .saturating_add(1)
+pub(super) fn scheme_cost(scheme: &crate::words::Scheme) -> Result<u32, super::Fail> {
+    let count = match u32::try_from(scheme.stack_in.len().saturating_add(scheme.stack_out.len())) {
+        Ok(count) => count,
+        Err(_) => return Err(super::Fail::Exhausted(crate::untrusted::LimitKind::Work)),
+    };
+    Ok(count.saturating_add(1))
 }
 
 /// The work charged for one join.
-pub fn join_cost(interface: &crate::untrusted::Interface) -> u32 {
-    u32::try_from(
+pub(super) fn join_cost(interface: &crate::untrusted::Interface) -> Result<u32, super::Fail> {
+    let count = match u32::try_from(
         interface
             .stack_in
             .len()
             .saturating_add(interface.stack_out.len()),
-    )
-    .unwrap_or(u32::MAX)
-    .saturating_add(1)
+    ) {
+        Ok(count) => count,
+        Err(_) => return Err(super::Fail::Exhausted(crate::untrusted::LimitKind::Work)),
+    };
+    Ok(count.saturating_add(1))
 }
 
 /// Validate one stack against the declared height and type-size limits.
-pub fn limits_of(
+pub(super) fn limits_of(
     stack: &[crate::types::Ty],
     request: &crate::untrusted::Request,
 ) -> Result<(), super::Fail> {
-    if u64::try_from(stack.len()).unwrap_or(u64::MAX) > u64::from(request.limits.stack_height) {
+    let height = match u64::try_from(stack.len()) {
+        Ok(height) => height,
+        Err(_) => {
+            return Err(super::Fail::Exhausted(
+                crate::untrusted::LimitKind::StackHeight,
+            ))
+        }
+    };
+    if height > u64::from(request.limits.stack_height) {
         return Err(super::Fail::Exhausted(
             crate::untrusted::LimitKind::StackHeight,
         ));
     }
     for ty in stack {
-        if ty.size() > request.limits.type_size {
+        if ty.size().is_none_or(|size| size > request.limits.type_size) {
             return Err(super::Fail::Exhausted(
                 crate::untrusted::LimitKind::TypeSize,
             ));
@@ -49,14 +61,11 @@ pub fn limits_of(
 }
 
 /// The failing definition of a node, when it is an invocation.
-pub fn definition_of(
+pub(super) fn definition_of(
     candidate: &crate::untrusted::Candidate,
     node: crate::untrusted::NodeId,
 ) -> Option<crate::contracts::Definition> {
-    match candidate
-        .nodes
-        .get(usize::try_from(node.0).unwrap_or(usize::MAX))
-    {
+    match candidate.nodes.get(usize::try_from(node.0).unwrap_or(0)) {
         Some(crate::untrusted::Node::Invocation { def, .. }) => Some(*def),
         Some(crate::untrusted::Node::Literal { .. })
         | Some(crate::untrusted::Node::Quotation { .. })
@@ -65,7 +74,9 @@ pub fn definition_of(
 }
 
 /// The value slot that requires `Data`, for behaviors that constrain one.
-pub fn data_slot(behavior: Option<crate::contracts::Behavior>) -> Option<crate::words::Variable> {
+pub(super) fn data_slot(
+    behavior: Option<crate::contracts::Behavior>,
+) -> Option<crate::words::Variable> {
     match behavior {
         Some(crate::contracts::Behavior::Dup)
         | Some(crate::contracts::Behavior::Drop)
@@ -93,7 +104,7 @@ pub fn data_slot(behavior: Option<crate::contracts::Behavior>) -> Option<crate::
 }
 
 /// The literal scheme: `S -- S <literal type>`.
-pub fn literal_scheme(lit: crate::untrusted::Lit) -> crate::words::Scheme {
+pub(super) fn literal_scheme(lit: crate::untrusted::Lit) -> crate::words::Scheme {
     let pattern = match lit {
         crate::untrusted::Lit::I64(_) => crate::shapes::Pattern::I64,
         crate::untrusted::Lit::Bool(_) => crate::shapes::Pattern::Bool,
@@ -112,7 +123,7 @@ pub fn literal_scheme(lit: crate::untrusted::Lit) -> crate::words::Scheme {
 }
 
 /// The quotation scheme: `R -- R Program<A, C, e>`.
-pub fn quotation_scheme() -> crate::words::Scheme {
+pub(super) fn quotation_scheme() -> crate::words::Scheme {
     crate::words::Scheme {
         var_kinds: alloc::vec![
             crate::words::VariableKind::Stack,
@@ -140,7 +151,7 @@ pub fn quotation_scheme() -> crate::words::Scheme {
 }
 
 /// Instantiate one scheme into a concrete interface, validating the witness.
-pub fn instantiate(
+pub(super) fn instantiate(
     scheme: &crate::words::Scheme,
     inst: &crate::words::Inst,
     data_var: Option<crate::words::Variable>,
@@ -149,7 +160,14 @@ pub fn instantiate(
     request: &crate::untrusted::Request,
     env: &crate::contracts::Env,
 ) -> Result<crate::untrusted::Interface, super::Fail> {
-    let max_effects = env.len();
+    let max_effects = match env.len() {
+        Some(count) => count,
+        None => {
+            return Err(super::Fail::Unsupported(
+                crate::untrusted::UnsupportedKind::SchemeForm,
+            ))
+        }
+    };
     match scheme.check_inst(
         inst,
         request.limits.stack_height,
@@ -257,7 +275,7 @@ fn instantiation_invalid(
 }
 
 /// Join one interface into a frame's running stack.
-pub fn join(
+pub(super) fn join(
     frame: super::Frame,
     interface: &crate::untrusted::Interface,
     node: crate::untrusted::NodeId,
@@ -302,7 +320,7 @@ fn match_tail(
 }
 
 /// Classify a mismatch as wrong order or wrong shape.
-pub fn mismatch_constraint(
+pub(super) fn mismatch_constraint(
     expected: &[crate::types::Ty],
     actual: &[crate::types::Ty],
 ) -> crate::untrusted::Constraint {
@@ -314,7 +332,10 @@ pub fn mismatch_constraint(
 }
 
 /// The top `needed` entries, or the whole stack when it is shorter.
-pub fn tail_copy(stack: &[crate::types::Ty], needed: usize) -> alloc::vec::Vec<crate::types::Ty> {
+pub(super) fn tail_copy(
+    stack: &[crate::types::Ty],
+    needed: usize,
+) -> alloc::vec::Vec<crate::types::Ty> {
     if stack.len() >= needed {
         stack[stack.len() - needed..].to_vec()
     } else {
@@ -328,15 +349,15 @@ fn same_multiset(left: &[crate::types::Ty], right: &[crate::types::Ty]) -> bool 
     }
     let mut used = alloc::vec![false; right.len()];
     for item in left {
-        let mut found = false;
+        let mut is_found = false;
         for (index, other) in right.iter().enumerate() {
             if !used[index] && other == item {
                 used[index] = true;
-                found = true;
+                is_found = true;
                 break;
             }
         }
-        if !found {
+        if !is_found {
             return false;
         }
     }
@@ -344,7 +365,7 @@ fn same_multiset(left: &[crate::types::Ty], right: &[crate::types::Ty]) -> bool 
 }
 
 /// The first derived identity outside the allowed bound.
-pub fn first_extra(
+pub(super) fn first_extra(
     derived: &crate::types::EffSet,
     allowed: &crate::types::EffSet,
 ) -> Option<crate::types::EffId> {
@@ -356,7 +377,7 @@ pub fn first_extra(
 }
 
 /// Build one diagnostic under the declared diagnostic budget.
-pub fn invalid(
+pub(super) fn invalid(
     request: &crate::untrusted::Request,
     node: Option<crate::untrusted::NodeId>,
     def: Option<crate::contracts::Definition>,
@@ -365,11 +386,11 @@ pub fn invalid(
     constraint: crate::untrusted::Constraint,
 ) -> super::Fail {
     let budget = usize::try_from(request.limits.diagnostics).unwrap_or(usize::MAX);
-    let mut truncated = false;
+    let mut is_truncated = false;
     let mut expected = expected;
     let mut actual = actual;
     if expected.len().saturating_add(actual.len()) > budget {
-        truncated = true;
+        is_truncated = true;
         let keep_expected = budget.saturating_sub(actual.len());
         expected.truncate(keep_expected);
         if expected.len().saturating_add(actual.len()) > budget {
@@ -384,6 +405,6 @@ pub fn invalid(
         actual,
         constraint,
         provenance_available: false,
-        truncated,
+        truncated: is_truncated,
     })
 }

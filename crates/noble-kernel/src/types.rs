@@ -74,9 +74,9 @@ impl EffSet {
         &self.0
     }
 
-    /// Number of identities.
-    pub fn len(&self) -> u64 {
-        u64::try_from(self.0.len()).unwrap_or(u64::MAX)
+    /// Number of identities, or `None` when the count is not representable.
+    pub fn len(&self) -> Option<u64> {
+        u64::try_from(self.0.len()).ok()
     }
 
     /// Whether the set is empty.
@@ -161,36 +161,28 @@ impl Ty {
     }
 
     /// A size measure used by the declared type-size limit.
-    pub fn size(&self) -> u32 {
+    pub fn size(&self) -> Option<u32> {
         let mut todo: alloc::vec::Vec<(&Ty, bool)> = alloc::vec::Vec::with_capacity(8);
         let mut sizes: alloc::vec::Vec<u32> = alloc::vec::Vec::with_capacity(8);
         todo.push((self, false));
         while let Some((node, expanded)) = todo.pop() {
             if todo.len() >= WORK_CAP {
-                return u32::MAX;
+                return None;
             }
             if expanded {
                 let mut total = 1u32;
                 match node {
                     Ty::Pair(_, _) | Ty::Sum(_, _) => {
-                        if let Some(right) = sizes.pop() {
-                            total = total.saturating_add(right);
-                        }
-                        if let Some(left) = sizes.pop() {
-                            total = total.saturating_add(left);
-                        }
+                        total = total.saturating_add(sizes.pop()?);
+                        total = total.saturating_add(sizes.pop()?);
                     }
                     Ty::List(_) => {
-                        if let Some(inner) = sizes.pop() {
-                            total = total.saturating_add(inner);
-                        }
+                        total = total.saturating_add(sizes.pop()?);
                     }
                     Ty::Program(program) => {
                         let count = program.stack_in.len() + program.stack_out.len();
                         for _ in 0..count {
-                            if let Some(inner) = sizes.pop() {
-                                total = total.saturating_add(inner);
-                            }
+                            total = total.saturating_add(sizes.pop()?);
                         }
                     }
                     Ty::Unit | Ty::Bool | Ty::I64 | Ty::Text | Ty::Syntax | Ty::Resource(_) => {}
@@ -219,7 +211,7 @@ impl Ty {
                 }
             }
         }
-        sizes.pop().unwrap_or(u32::MAX)
+        sizes.pop()
     }
 }
 

@@ -32,7 +32,7 @@ fn data_is_recursive_over_resource_payloads() {
             )))
         )
         .size(),
-        4
+        Some(4)
     );
 }
 
