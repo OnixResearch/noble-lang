@@ -2,4 +2,4 @@
 [[92mInfo[39m ] Generated: /home/brittonr/git/noble/.pi/m2-extraction/run1/lean/NobleKernel.lean
 [[92mInfo[39m ] Generated: /home/brittonr/git/noble/.pi/m2-extraction/run1/lean/translation.json
 [[93mWarn[39m ] The crate contains extracted external, unknown definitions: we advise using the option -split-files to allow manually providing these definitions in separate files.
-[[92mInfo[39m ] Total execution time: 3.906441 seconds
+[[92mInfo[39m ] Total execution time: 5.248778 seconds
