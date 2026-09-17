@@ -26,6 +26,7 @@ claim; the fragment label stays `M2 fragment v0`.
 | 3 | `toolrun-probe5.log` | ok | fail | `Detected groups of mixed mutually recursive definitions` (`types::{Ty, ProgramTy}`, `shapes::{Pattern, StackPart, Signature}` × `Clone`/`PartialEq`/`Debug`) |
 | 4 | `toolrun-probe6.log`, `run1/aeneas.log` | ok | fail | borrow interpretation: `InterpMatchCtxs` "Could not match the contexts" (`acceptance/parts/instantiate.rs:151-158`), `InterpBorrowsCore` "detected a loop in the chain of ids" (`types/size.rs:96-135`) |
 | 5 | `toolrun-probe7.log`, `run1/aeneas.log` | ok | fail | `InterpBorrowsCore` "Can't end abstraction 5 as it is set as non-endable" over the option-combinator getters (`acceptance/nodes.rs:14`, `contracts.rs:79/84`, `words.rs:100`, `words.rs:210-215`) |
+| 6 | `toolrun-probe8.log`, `run1/aeneas.log` | ok | fail | borrow interpreter internals across the remaining `&`-heavy helpers: `parts.rs:79-91` (`join`), `words.rs:174-179` and `219-224` (`subst_stack`/`subst_effects`), `words/subst.rs:92-99` and `262-270`, `instantiate.rs:160-167`, `preflight.rs:64-71` |
 
 Each refusal was answered by a source change, and every change kept the Octet
 catalog at zero findings, the 14 workspace tests green, and `-D warnings`
@@ -46,31 +47,50 @@ clippy clean:
    membership, inclusion, environment lookup, and the first-extra scan are
    explicit index loops again.
 
-## The remaining refusal (probe 5)
+## The remaining refusal (probe 6)
 
 ```text
-[Error] Can't end abstraction 5 as it is set as non-endable
-Source: 'crates/noble-kernel/src/acceptance/nodes.rs', lines 14:18-14:52
-Source: 'crates/noble-kernel/src/contracts.rs', lines 79:28-79:56
-Source: 'crates/noble-kernel/src/contracts.rs', lines 84:28-84:57
-Source: 'crates/noble-kernel/src/words.rs', lines 100:33-100:65
-Source: 'crates/noble-kernel/src/words.rs', lines 210:55-215:59
-Compiler source: interp/InterpBorrowsCore.ml, line 98
+[Error] Internal error, please file an issue
+Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 79:4-91:5
+Compiler source: interp/InterpMatchCtxs.ml, line 230
+[Error] Could not match the contexts
+Source: 'crates/noble-kernel/src/words.rs', lines 174:57-179:59
+Compiler source: interp/InterpJoin.ml, line 1542
+[Error] Internal error, please file an issue
+Source: 'crates/noble-kernel/src/words/subst.rs', lines 92:26-99:55
+Compiler source: interp/InterpReduceCollapse.ml, line 1137
+[Error] Internal error, please file an issue.
+Found an already registered mapping: abs@76 -> borrow@2
+Source: 'crates/noble-kernel/src/words/subst.rs', lines 262:4-270:5
+Compiler source: interp/InterpMatchCtxs.ml, line 68
+[Error] Internal error, please file an issue
+Source: 'crates/noble-kernel/src/acceptance/parts/instantiate.rs', lines 160:4-167:5
+Compiler source: interp/InterpMatchCtxs.ml, line 230
+[Error] Internal error, please file an issue
+Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 64:4-71:5
+Compiler source: interp/InterpMatchCtxs.ml, line 230
 ```
 
-Every remaining site is an option-combinator chain whose closure captures a
-borrow of the container (`candidate.nodes.get(index)`, `self.defs.get(index)`,
-`self.kinds.get(index)`, `self.bindings.get(index)`, the `inst.effects` read
-inside `subst_effects`). Probes 4 and 5 were answered by removing
-reference-carrying walks; the same rule applies here:
+Probes 4-6 answered every refusal that came from a *specific* construct:
+reference-carrying walks became owned walks, option-combinator closures became
+branches, and the remaining failures are now inside the borrow interpreter's
+own passes (`InterpMatchCtxs`, `InterpJoin`, `InterpReduceCollapse`) on
+functions whose signatures still thread shared borrows (`&Env`, `&Request`,
+`&Scheme`, `&Inst`, `&[Ty]`) while owned state is mutated and returned.
 
-- replace `.and_then(|index| container.get(index))` with an explicit
-  `usize::try_from` match followed by a second `match` on `container.get(...)`
-  (the shape `shapes::require_kind` already uses);
-- own the patterns carried by `words/subst.rs`'s tasks
-  (`Task::Part(Pattern)`, `Finish(Pattern)`, `Expand(Pattern)`) instead of
-  borrowing them from the scheme under substitution;
-- re-run probe 6 and keep its diagnostic either way.
+The M2 design already names the subset that avoids this: *owned data, simple
+control flow*. The next iteration therefore widens the redesign from the walk
+bodies to the kernel's signatures:
+
+- `Scheme::subst_stack`, `Scheme::subst_effects`, `Scheme::instantiate`, and
+  the `subst_pattern` walk take owned `Scheme`/`Inst` values and return owned
+  results;
+- `parts::join`, `parts::limits_of`, `parts::charge`, `parts::invalid`, and
+  the `Ctx` holder take owned inputs (or plain scalars) instead of `&Ctx`;
+- `instantiate::{apply, project}` and `preflight::check_request` take owned
+  schemes and instantiations;
+- the machine (`run`, `fold_current`, `open_current`, `close_frame`) then
+  threads owned frames, candidate nodes, and context values.
 
 Each change must keep the catalog at zero findings, the workspace tests green,
 and the probe rerun; the redesign is only accepted when Aeneas produces the

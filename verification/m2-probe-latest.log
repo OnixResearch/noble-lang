@@ -2,23 +2,22 @@
 proof root exit=0
 --- collect the compiler-derived inventory
 collect exit=0
-"production_subjects":493
+"production_subjects":487
 --- extraction probe over the fragment core
 extract exit=2
-copying path '/nix/store/p5wq4va5s2x76xdwm1ncybkhvkn5nnn8-source' from 'http://100.100.103.95:5000'...
-warning: file 'nar/1hv5m8xlnyvjxkwy8hp1c16yabv0s0cv0vfhr8bgs7cilbdhl6z7.nar?hash=p5wq4va5s2x76xdwm1ncybkhvkn5nnn8' does not exist in binary cache 'http://100.100.103.95:5000'
+this derivation will be built:
+  /nix/store/7djw98jx6szxgw1nmjd8n8q4sms265yy-extract-kernel.drv
+building '/nix/store/7djw98jx6szxgw1nmjd8n8q4sms265yy-extract-kernel.drv'...
 --- charon diagnostics
 --- aeneas diagnostics
 [[91mError[39m] Internal error, please file an issue
+[[91mError[39m] Could not match the contexts
+[[91mError[39m] Can't end abstraction 5 as it is set as non-endable
+[[91mError[39m] Internal error, please file an issue
+[[91mError[39m] Internal error, please file an issue.
+[[91mError[39m] Internal error, please file an issue
 [[91mError[39m] Internal error, please file an issue
 [[91mError[39m] Could not match the contexts
-[[91mError[39m] Internal error, please file an issue
-[[91mError[39m] Can't end abstraction 5 as it is set as non-endable
-[[91mError[39m] Can't end abstraction 5 as it is set as non-endable
-[[91mError[39m] Can't end abstraction 5 as it is set as non-endable
-[[91mError[39m] Internal error, please file an issue
-[[91mError[39m] Can't end abstraction 5 as it is set as non-endable
-[[91mError[39m] Can't end abstraction 5 as it is set as non-endable
-[[91mError[39m] Can't end abstraction 5 as it is set as non-endable
-[[91mError[39m] Can't end abstraction 5 as it is set as non-endable
+    "Internal error, please file an issue\
+Raised at Aeneas__Errors.craise_opt_span in file "Errors.ml", line 120, characters 4-23
 --- generated module
