@@ -237,7 +237,7 @@ mutual
           else
             match (inst.stack 1, inst.stack 2, inst.effects 3) with
             | (some start, some claimed, some bound) =>
-              match foldBody env cand limits (depth + 1) fuel body start bound
+              match foldBody env cand limits (depth + 1) fuel body start EffSet.empty
                   ⟨fold.work, fold.derivations⟩ with
               | .failed problem => .failed problem
               | .ok final finalBound inner =>

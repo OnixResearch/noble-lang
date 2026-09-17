@@ -9,7 +9,7 @@ pub mod subst;
 
 mod segments;
 
-mod bounds;
+pub(crate) mod bounds;
 
 /// Index of a variable inside one scheme.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -170,10 +170,10 @@ impl Scheme {
         let mut part_index = 0;
         let mut failure: Option<InstError> = None;
         while part_index < parts.len() {
-            let step = match &parts[part_index] {
+            let step = match parts[part_index].clone() {
                 crate::shapes::Pattern::StackVar(var) => {
                     let segment: Option<alloc::vec::Vec<crate::types::Ty>> =
-                        inst.stack(*var).map(|found| found.to_vec());
+                        inst.stack(var).map(|found| found.to_vec());
                     match segment {
                         Some(owned) => {
                             out.extend_from_slice(&owned);
@@ -182,7 +182,7 @@ impl Scheme {
                         None => Err(InstError::UnknownVariable),
                     }
                 }
-                pattern => match self.subst_pattern(pattern, inst) {
+                pattern => match self.subst_pattern(&pattern, inst) {
                     Ok(ty) => {
                         out.push(ty);
                         Ok(())
@@ -215,14 +215,14 @@ impl Scheme {
         let mut slot_index = 0;
         let mut failure: Option<InstError> = None;
         while slot_index < slots.len() {
-            let step = match &slots[slot_index] {
+            let step = match slots[slot_index].clone() {
                 crate::shapes::EffectSlot::Effect(id) => {
-                    ids.push(*id);
+                    ids.push(id);
                     Ok(())
                 }
                 crate::shapes::EffectSlot::Var(var) => {
                     let bound: Option<alloc::vec::Vec<crate::types::EffId>> =
-                        inst.effects(*var).map(|set| set.as_slice().to_vec());
+                        inst.effects(var).map(|set| set.as_slice().to_vec());
                     match bound {
                         Some(owned) => {
                             ids.extend_from_slice(&owned);

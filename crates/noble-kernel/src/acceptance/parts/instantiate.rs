@@ -155,16 +155,8 @@ fn project(
     attempt!(super::limits_of(&stack_in, ctx));
     attempt!(super::limits_of(&stack_out, ctx));
     let effect_ids: alloc::vec::Vec<crate::types::EffId> = effects.as_slice().to_vec();
-    let mut index = 0;
-    let mut unknown: Option<crate::types::EffId> = None;
-    while index < effect_ids.len() {
-        let id = effect_ids[index];
-        if !ctx.env.knows_effect(id) {
-            unknown = Some(id);
-            break;
-        }
-        index += 1;
-    }
+    let known: alloc::vec::Vec<crate::types::EffId> = ctx.env.effects.to_vec();
+    let unknown = super::first_unknown(&effect_ids, &known);
     if let Some(id) = unknown {
         return Err(super::invalid(
             ctx,

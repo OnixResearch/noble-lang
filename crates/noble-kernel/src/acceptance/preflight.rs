@@ -60,16 +60,8 @@ fn validate_schemes(env: &crate::contracts::Env) -> Result<(), super::Fail> {
 fn check_allowed_effects(context: &super::parts::Ctx) -> Result<(), super::Fail> {
     let allowed_effects: alloc::vec::Vec<crate::types::EffId> =
         context.request.expected.allowed_effects.as_slice().to_vec();
-    let mut index = 0;
-    let mut unknown: Option<crate::types::EffId> = None;
-    while index < allowed_effects.len() {
-        let id = allowed_effects[index];
-        if !context.env.knows_effect(id) {
-            unknown = Some(id);
-            break;
-        }
-        index += 1;
-    }
+    let known: alloc::vec::Vec<crate::types::EffId> = context.env.effects.to_vec();
+    let unknown = super::parts::first_unknown(&allowed_effects, &known);
     match unknown {
         Some(id) => Err(super::parts::invalid(
             context,

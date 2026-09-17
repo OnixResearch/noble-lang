@@ -74,10 +74,11 @@ pub(super) fn complete_frame(
                 Some(parent_frame) => parent_frame,
                 None => return Err(super::Fail::Internal),
             };
-            let inst = match usize::try_from(node_id.0)
-                .ok()
-                .and_then(|index| candidate.nodes.get(index))
-            {
+            let node_index = match usize::try_from(node_id.0) {
+                Ok(node_index) => node_index,
+                Err(_) => return Err(super::Fail::Internal),
+            };
+            let inst = match candidate.nodes.get(node_index) {
                 Some(crate::untrusted::Node::Quotation { inst, .. }) => inst.clone(),
                 Some(crate::untrusted::Node::Literal { .. })
                 | Some(crate::untrusted::Node::Invocation { .. })

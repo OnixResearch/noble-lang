@@ -9,17 +9,21 @@ const WORK_CAP: usize = 512;
 
 /// One substitution step: a pattern, a constructor completion, a nested
 /// program expansion, or a pre-built segment emission.
-enum Task<'a> {
-    Part(&'a crate::shapes::Pattern),
-    Finish(&'a crate::shapes::Pattern),
-    Expand(&'a crate::shapes::Pattern),
+///
+/// The tasks own their patterns: a reference into the scheme under
+/// substitution cannot be carried across the owned segment stack Aeneas
+/// interprets.
+enum Task {
+    Part(crate::shapes::Pattern),
+    Finish(crate::shapes::Pattern),
+    Expand(crate::shapes::Pattern),
     Emit(alloc::vec::Vec<crate::types::Ty>),
 }
 
 /// The state one substitution walk threads through.
-struct Walk<'a> {
+struct Walk {
     /// Pending tasks.
-    work: alloc::vec::Vec<Task<'a>>,
+    work: alloc::vec::Vec<Task>,
     /// Finished segments, oldest segment first.
     segments: alloc::vec::Vec<alloc::vec::Vec<crate::types::Ty>>,
 }
@@ -35,7 +39,7 @@ enum StepResult {
 }
 
 /// One step's returned state: the walk and the step outcome.
-type StepState<'a> = (Walk<'a>, Result<(), crate::words::InstError>);
+type StepState = (Walk, Result<(), crate::words::InstError>);
 
 impl crate::words::Scheme {
     /// Substitute one type pattern to a concrete type.
@@ -48,7 +52,7 @@ impl crate::words::Scheme {
             work: alloc::vec::Vec::with_capacity(8),
             segments: alloc::vec::Vec::with_capacity(8),
         };
-        walk.work.push(Task::Part(pattern));
+        walk.work.push(Task::Part(pattern.clone()));
         let mut outcome = StepResult::Continue;
         while matches!(outcome, StepResult::Continue) {
             let (next, step) = walk_step(self, inst, walk);
@@ -73,23 +77,47 @@ impl crate::words::Scheme {
 }
 
 /// Run one substitution step, returning the updated walk and its outcome.
-fn walk_step<'a>(
+///
+/// The state is moved along exactly one path, so the translation never has to
+/// join a branch that both moves and keeps the walk. The task is dispatched
+/// through `run_task` so the destructuring `let` below binds a call: a
+/// destructuring `let` whose right-hand side is itself a branch is the shape
+/// Aeneas' let simplification rejects.
+fn walk_step(
     scheme: &crate::words::Scheme,
     inst: &crate::words::Inst,
-    walk: Walk<'a>,
-) -> (Walk<'a>, StepResult) {
+    walk: Walk,
+) -> (Walk, StepResult) {
     let mut walk = walk;
-    let task = match walk.work.pop() {
-        Some(task) => task,
-        None => return (walk, StepResult::Done),
-    };
-    if walk.work.len() >= WORK_CAP {
-        return (
-            walk,
-            StepResult::Failed(crate::words::InstError::OversizedType),
-        );
+    let task = walk.work.pop();
+    let is_over_limit = walk.work.len() >= WORK_CAP;
+    match task {
+        None => (walk, StepResult::Done),
+        Some(task) => {
+            if is_over_limit {
+                (
+                    walk,
+                    StepResult::Failed(crate::words::InstError::OversizedType),
+                )
+            } else {
+                let (next, outcome) = run_task(scheme, inst, task, walk);
+                match outcome {
+                    Ok(()) => (next, StepResult::Continue),
+                    Err(problem) => (next, StepResult::Failed(problem)),
+                }
+            }
+        }
     }
-    let (next, outcome) = match task {
+}
+
+/// Run one queued task, returning the updated walk and its outcome.
+fn run_task(
+    scheme: &crate::words::Scheme,
+    inst: &crate::words::Inst,
+    task: Task,
+    mut walk: Walk,
+) -> StepState {
+    match task {
         Task::Emit(segment) => {
             walk.segments.push(segment);
             (walk, Ok(()))
@@ -97,15 +125,11 @@ fn walk_step<'a>(
         Task::Finish(node) => finish_task(node, walk),
         Task::Expand(node) => expand_task(scheme, node, inst, walk),
         Task::Part(node) => part_task(node, inst, walk),
-    };
-    match outcome {
-        Ok(()) => (next, StepResult::Continue),
-        Err(problem) => (next, StepResult::Failed(problem)),
     }
 }
 
 /// Complete one `pair`, `sum`, or `list` pattern from its finished segments.
-fn finish_task<'a>(node: &'a crate::shapes::Pattern, mut walk: Walk<'a>) -> StepState<'a> {
+fn finish_task(node: crate::shapes::Pattern, mut walk: Walk) -> StepState {
     let right = match walk.segments.pop() {
         Some(segment) => segment,
         None => return (walk, Err(crate::words::InstError::OversizedType)),
@@ -143,18 +167,19 @@ fn finish_task<'a>(node: &'a crate::shapes::Pattern, mut walk: Walk<'a>) -> Step
 }
 
 /// Expand one `program` pattern from the segments of its parts.
-fn expand_task<'a>(
+fn expand_task(
     scheme: &crate::words::Scheme,
-    node: &'a crate::shapes::Pattern,
+    node: crate::shapes::Pattern,
     inst: &crate::words::Inst,
-    mut walk: Walk<'a>,
-) -> StepState<'a> {
+    mut walk: Walk,
+) -> StepState {
     let (parts_in, parts_out, slots) = match node {
-        crate::shapes::Pattern::Program(stack_in, stack_out, effects) => (
-            stack_in.as_slice(),
-            stack_out.as_slice(),
-            effects.as_slice(),
-        ),
+        crate::shapes::Pattern::Program(stack_in, stack_out, effects) => {
+            let parts_in: alloc::vec::Vec<crate::shapes::Pattern> = *stack_in;
+            let parts_out: alloc::vec::Vec<crate::shapes::Pattern> = *stack_out;
+            let slots: alloc::vec::Vec<crate::shapes::EffectSlot> = *effects;
+            (parts_in, parts_out, slots)
+        }
         _ => return (walk, Err(crate::words::InstError::KindMismatch)),
     };
     let wanted = parts_in.len() + parts_out.len();
@@ -197,7 +222,7 @@ fn expand_task<'a>(
         }
         out_step += 1;
     }
-    let effects = match scheme.subst_effects(slots, inst) {
+    let effects = match scheme.subst_effects(&slots, inst) {
         Ok(effects) => effects,
         Err(problem) => return (walk, Err(problem)),
     };
@@ -208,11 +233,8 @@ fn expand_task<'a>(
 }
 
 /// Emit the segment of one pattern, queueing its sub-patterns.
-fn part_task<'a>(
-    node: &'a crate::shapes::Pattern,
-    inst: &crate::words::Inst,
-    mut walk: Walk<'a>,
-) -> StepState<'a> {
+fn part_task(node: crate::shapes::Pattern, inst: &crate::words::Inst, mut walk: Walk) -> StepState {
+    let marker = node.clone();
     match node {
         crate::shapes::Pattern::Unit => walk.segments.push(alloc::vec![crate::types::Ty::Unit]),
         crate::shapes::Pattern::Bool => walk.segments.push(alloc::vec![crate::types::Ty::Bool]),
@@ -221,41 +243,41 @@ fn part_task<'a>(
         crate::shapes::Pattern::Syntax => walk.segments.push(alloc::vec![crate::types::Ty::Syntax]),
         crate::shapes::Pattern::Resource(kind) => walk
             .segments
-            .push(alloc::vec![crate::types::Ty::Resource(*kind)]),
+            .push(alloc::vec![crate::types::Ty::Resource(kind)]),
         crate::shapes::Pattern::Var(var) => {
-            let ty = match inst.value(*var) {
+            let ty = match inst.value(var) {
                 Some(ty) => ty.clone(),
                 None => return (walk, Err(crate::words::InstError::UnknownVariable)),
             };
             walk.segments.push(alloc::vec![ty]);
         }
-        crate::shapes::Pattern::StackVar(var) => match inst.stack(*var) {
+        crate::shapes::Pattern::StackVar(var) => match inst.stack(var) {
             Some(segment) => walk.work.push(Task::Emit(segment.to_vec())),
             None => return (walk, Err(crate::words::InstError::UnknownVariable)),
         },
         crate::shapes::Pattern::Pair(left, right) | crate::shapes::Pattern::Sum(left, right) => {
-            walk.work.push(Task::Finish(node));
-            walk.work.push(Task::Part(left));
-            walk.work.push(Task::Part(right));
+            walk.work.push(Task::Finish(marker));
+            walk.work.push(Task::Part(*left));
+            walk.work.push(Task::Part(*right));
         }
         crate::shapes::Pattern::List(item) => {
-            walk.work.push(Task::Finish(node));
-            walk.work.push(Task::Part(item));
+            walk.work.push(Task::Finish(marker));
+            walk.work.push(Task::Part(*item));
         }
         crate::shapes::Pattern::Program(stack_in, stack_out, _) => {
-            walk.work.push(Task::Expand(node));
-            walk = queue_parts(stack_in.as_slice(), stack_out.as_slice(), walk);
+            walk.work.push(Task::Expand(marker));
+            walk = queue_parts(&stack_in, &stack_out, walk);
         }
     }
     (walk, Ok(()))
 }
 
 /// Queue the parts of one program pattern, result stack first.
-fn queue_parts<'a>(
-    stack_in: &'a [crate::shapes::Pattern],
-    stack_out: &'a [crate::shapes::Pattern],
-    mut walk: Walk<'a>,
-) -> Walk<'a> {
+fn queue_parts(
+    stack_in: &[crate::shapes::Pattern],
+    stack_out: &[crate::shapes::Pattern],
+    mut walk: Walk,
+) -> Walk {
     let out_len = stack_out.len();
     let in_len = stack_in.len();
     let mut part_index = 0;
@@ -265,7 +287,7 @@ fn queue_parts<'a>(
         } else {
             &stack_in[in_len + out_len - 1 - part_index]
         };
-        walk.work.push(Task::Part(part));
+        walk.work.push(Task::Part(part.clone()));
         part_index += 1;
     }
     walk

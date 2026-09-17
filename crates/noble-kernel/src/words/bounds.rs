@@ -48,7 +48,10 @@ fn check_segment(
 }
 
 /// Check every type size in one segment against the declared bound.
-fn check_sizes(segment: &[crate::types::Ty], max_type: u32) -> Result<(), crate::words::InstError> {
+pub(crate) fn check_sizes(
+    segment: &[crate::types::Ty],
+    max_type: u32,
+) -> Result<(), crate::words::InstError> {
     let mut index = 0;
     let mut failure: Option<crate::words::InstError> = None;
     while index < segment.len() {

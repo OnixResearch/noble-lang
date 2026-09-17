@@ -74,25 +74,11 @@ pub(crate) fn limits_of(stack: &[crate::types::Ty], ctx: &Ctx) -> Result<(), sup
             crate::untrusted::LimitKind::StackHeight,
         ));
     }
-    let mut index = 0;
-    let mut failure: Option<super::Fail> = None;
-    while index < stack.len() {
-        let ty = &stack[index];
-        let is_oversized = match ty.size() {
-            Some(size) => size > ctx.request.limits.type_size,
-            None => true,
-        };
-        if is_oversized {
-            failure = Some(super::Fail::Exhausted(
-                crate::untrusted::LimitKind::TypeSize,
-            ));
-            break;
-        }
-        index += 1;
-    }
-    match failure {
-        Some(problem) => Err(problem),
-        None => Ok(()),
+    match crate::words::bounds::check_sizes(stack, ctx.request.limits.type_size) {
+        Ok(()) => Ok(()),
+        Err(_) => Err(super::Fail::Exhausted(
+            crate::untrusted::LimitKind::TypeSize,
+        )),
     }
 }
 
@@ -270,4 +256,31 @@ pub(crate) fn invalid(
         provenance_available: false,
         truncated: is_truncated,
     })
+}
+
+/// The first needed identity the environment does not provide.
+pub(crate) fn first_unknown(
+    needed: &[crate::types::EffId],
+    known: &[crate::types::EffId],
+) -> Option<crate::types::EffId> {
+    let mut index = 0;
+    let mut found: Option<crate::types::EffId> = None;
+    while index < needed.len() {
+        let id = needed[index];
+        let mut is_known = false;
+        let mut known_index = 0;
+        while known_index < known.len() {
+            if known[known_index] == id {
+                is_known = true;
+                break;
+            }
+            known_index += 1;
+        }
+        if !is_known {
+            found = Some(id);
+            break;
+        }
+        index += 1;
+    }
+    found
 }
