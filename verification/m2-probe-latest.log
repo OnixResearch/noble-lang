@@ -2,22 +2,14 @@
 proof root exit=0
 --- collect the compiler-derived inventory
 collect exit=0
-"production_subjects":487
+"production_subjects":490
 --- extraction probe over the fragment core
-extract exit=2
+extract exit=1
 this derivation will be built:
   /nix/store/7djw98jx6szxgw1nmjd8n8q4sms265yy-extract-kernel.drv
 building '/nix/store/7djw98jx6szxgw1nmjd8n8q4sms265yy-extract-kernel.drv'...
 --- charon diagnostics
 --- aeneas diagnostics
-[[91mError[39m] Internal error, please file an issue
-[[91mError[39m] Could not match the contexts
-[[91mError[39m] Can't end abstraction 5 as it is set as non-endable
-[[91mError[39m] Internal error, please file an issue
-[[91mError[39m] Internal error, please file an issue.
-[[91mError[39m] Internal error, please file an issue
-[[91mError[39m] Internal error, please file an issue
-[[91mError[39m] Could not match the contexts
-    "Internal error, please file an issue\
-Raised at Aeneas__Errors.craise_opt_span in file "Errors.ml", line 120, characters 4-23
 --- generated module
+NobleKernel.lean
+translation.json

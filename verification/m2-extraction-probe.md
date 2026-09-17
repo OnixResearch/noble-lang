@@ -26,7 +26,8 @@ claim; the fragment label stays `M2 fragment v0`.
 | 3 | `toolrun-probe5.log` | ok | fail | `Detected groups of mixed mutually recursive definitions` (`types::{Ty, ProgramTy}`, `shapes::{Pattern, StackPart, Signature}` × `Clone`/`PartialEq`/`Debug`) |
 | 4 | `toolrun-probe6.log`, `run1/aeneas.log` | ok | fail | borrow interpretation: `InterpMatchCtxs` "Could not match the contexts" (`acceptance/parts/instantiate.rs:151-158`), `InterpBorrowsCore` "detected a loop in the chain of ids" (`types/size.rs:96-135`) |
 | 5 | `toolrun-probe7.log`, `run1/aeneas.log` | ok | fail | `InterpBorrowsCore` "Can't end abstraction 5 as it is set as non-endable" over the option-combinator getters (`acceptance/nodes.rs:14`, `contracts.rs:79/84`, `words.rs:100`, `words.rs:210-215`) |
-| 6 | `toolrun-probe8.log`, `run1/aeneas.log` | ok | fail | borrow interpreter internals across the remaining `&`-heavy helpers: `parts.rs:79-91` (`join`), `words.rs:174-179` and `219-224` (`subst_stack`/`subst_effects`), `words/subst.rs:92-99` and `262-270`, `instantiate.rs:160-167`, `preflight.rs:64-71` |
+| 6 | `toolrun-probe8.log`, `run1/aeneas.log` | ok | fail | borrow interpreter internals across the remaining ampersand-heavy helpers: `parts.rs:79-91`, `words.rs:174-179` and `219-224`, `words/subst.rs:92-99` and `262-270`, `instantiate.rs:160-167`, `preflight.rs:64-71` |
+| 7 | `toolrun-probe10.log`, `m2-aeneas-latest.log` | ok | **ok** | none: every kernel function translates under the pinned flags; the generated `NobleKernel.lean` (354 KB) is emitted. The remaining gap is that the generated module does not yet compile (`m2-lean-build-latest.log`: unknown `Ty` clone instance, `Bool`/`Unit` constructor collisions, `PartialOrd` model mismatch, `sorry` stubs) |
 
 Each refusal was answered by a source change, and every change kept the Octet
 catalog at zero findings, the 14 workspace tests green, and `-D warnings`
