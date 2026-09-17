@@ -76,12 +76,18 @@ pub struct Env {
 impl Env {
     /// The scheme of a definition.
     pub fn scheme(&self, def: Definition) -> Option<&crate::words::Scheme> {
-        index(def).and_then(|index| self.defs.get(index))
+        match index(def) {
+            Some(index) => self.defs.get(index),
+            None => None,
+        }
     }
 
     /// The behavior of a definition.
     pub fn kind(&self, def: Definition) -> Option<Behavior> {
-        index(def).and_then(|index| self.kinds.get(index)).copied()
+        match index(def) {
+            Some(index) => self.kinds.get(index).copied(),
+            None => None,
+        }
     }
 
     /// Whether the environment provides this effect identity.

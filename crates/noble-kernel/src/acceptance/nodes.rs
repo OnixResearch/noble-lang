@@ -9,10 +9,19 @@ pub(super) fn node_of(
     node_id: crate::untrusted::NodeId,
     context: &super::parts::Ctx,
 ) -> Result<crate::untrusted::Node, super::Fail> {
-    match usize::try_from(node_id.0)
-        .ok()
-        .and_then(|index| candidate.nodes.get(index))
-    {
+    let index = match usize::try_from(node_id.0) {
+        Ok(index) => index,
+        Err(_) => {
+            return Err(super::parts::invalid(
+                context,
+                super::parts::site(Some(node_id), None),
+                alloc::vec::Vec::new(),
+                alloc::vec::Vec::new(),
+                crate::untrusted::Constraint::MalformedReference(node_id),
+            ))
+        }
+    };
+    match candidate.nodes.get(index) {
         Some(node) => Ok(node.clone()),
         None => Err(super::parts::invalid(
             context,

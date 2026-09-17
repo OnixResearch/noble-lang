@@ -81,25 +81,34 @@ fn slot(var: Variable) -> Option<usize> {
 impl Inst {
     /// The stack bound to a stack variable, if the binding has that kind.
     pub fn stack(&self, var: Variable) -> Option<&[crate::types::Ty]> {
-        match slot(var).and_then(|index| self.bindings.get(index)) {
-            Some(Binding::Stack(segment)) => Some(segment.as_slice()),
-            Some(Binding::Value(_)) | Some(Binding::Effect(_)) | None => None,
+        match slot(var) {
+            Some(index) => match self.bindings.get(index) {
+                Some(Binding::Stack(segment)) => Some(segment.as_slice()),
+                Some(Binding::Value(_)) | Some(Binding::Effect(_)) | None => None,
+            },
+            None => None,
         }
     }
 
     /// The type bound to a value variable, if the binding has that kind.
     pub fn value(&self, var: Variable) -> Option<&crate::types::Ty> {
-        match slot(var).and_then(|index| self.bindings.get(index)) {
-            Some(Binding::Value(ty)) => Some(ty),
-            Some(Binding::Stack(_)) | Some(Binding::Effect(_)) | None => None,
+        match slot(var) {
+            Some(index) => match self.bindings.get(index) {
+                Some(Binding::Value(ty)) => Some(ty),
+                Some(Binding::Stack(_)) | Some(Binding::Effect(_)) | None => None,
+            },
+            None => None,
         }
     }
 
     /// The effect set bound to an effect variable, if the binding has that kind.
     pub fn effects(&self, var: Variable) -> Option<&crate::types::EffSet> {
-        match slot(var).and_then(|index| self.bindings.get(index)) {
-            Some(Binding::Effect(set)) => Some(set),
-            Some(Binding::Stack(_)) | Some(Binding::Value(_)) | None => None,
+        match slot(var) {
+            Some(index) => match self.bindings.get(index) {
+                Some(Binding::Effect(set)) => Some(set),
+                Some(Binding::Stack(_)) | Some(Binding::Value(_)) | None => None,
+            },
+            None => None,
         }
     }
 }
