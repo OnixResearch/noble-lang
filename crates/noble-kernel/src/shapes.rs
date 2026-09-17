@@ -4,6 +4,8 @@
 //! stack, or effect variables at their leaves. Validation is one bounded,
 //! iterative walk; no operation recurses.
 
+mod impls;
+
 /// Local bound for one pattern walk; beyond it validation fails closed.
 const WORK_CAP: usize = 512;
 
@@ -13,7 +15,17 @@ const WORK_CAP: usize = 512;
 /// The program case carries its stacks and effect pattern directly, so the
 /// family is self-recursive: mutually recursive pattern types would leave
 /// Aeneas' dependency analysis with mixed declaration groups it refuses.
-#[derive(Clone, Debug, PartialEq, Eq)]
+///
+/// The extracted constructors carry a `Pattern` suffix, for the same reason
+/// `Ty`'s carry `Type`: `Unit` and `Bool` would otherwise shadow Lean's own
+/// names inside every declaration named `shapes.Pattern.*`.
+///
+/// `Clone` and `Debug` are hand-written in `impls`, for the same reason `Ty`'s
+/// are: a derived body would hand this type's own instance to `Vec::clone`.
+#[charon::variants_suffix("Pattern")]
+/// Equality is hand-written in `impls`: a derived `PartialEq` would reference
+/// this type.s own instance, which the Lean backend renders before the
+/// instance itself.
 pub enum Pattern {
     /// The unit type.
     Unit,

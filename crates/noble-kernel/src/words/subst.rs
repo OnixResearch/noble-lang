@@ -184,7 +184,7 @@ fn expand_task(
     };
     let wanted = parts_in.len() + parts_out.len();
     let mut collected: alloc::vec::Vec<alloc::vec::Vec<crate::types::Ty>> =
-        alloc::vec::Vec::with_capacity(wanted.max(4));
+        alloc::vec::Vec::with_capacity(crate::capacity::at_least(wanted, 4));
     let mut popped = 0;
     let mut is_missing = false;
     while popped < wanted {
@@ -205,7 +205,7 @@ fn expand_task(
     collected.reverse();
     let mut parts = collected.into_iter();
     let mut stack_in: alloc::vec::Vec<crate::types::Ty> =
-        alloc::vec::Vec::with_capacity(parts_in.len().max(4));
+        alloc::vec::Vec::with_capacity(crate::capacity::at_least(parts_in.len(), 4));
     let mut in_step = 0;
     while in_step < parts_in.len() {
         if let Some(segment) = parts.next() {
@@ -214,7 +214,7 @@ fn expand_task(
         in_step += 1;
     }
     let mut stack_out: alloc::vec::Vec<crate::types::Ty> =
-        alloc::vec::Vec::with_capacity(parts_out.len().max(4));
+        alloc::vec::Vec::with_capacity(crate::capacity::at_least(parts_out.len(), 4));
     let mut out_step = 0;
     while out_step < parts_out.len() {
         if let Some(segment) = parts.next() {

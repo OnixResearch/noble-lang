@@ -1,7 +1,16 @@
 #![no_std]
 //! Deterministic internal transitions. This crate does not evaluate Noble programs.
 
+// The extraction model renames the constructors that would otherwise shadow
+// Lean's own `Bool` and `Unit` inside the namespaces the translated methods
+// live in. The attribute is inert for the Rust build and for the workspace
+// tests; only Charon reads it.
+#![feature(register_tool)]
+#![register_tool(charon)]
+
 extern crate alloc;
+
+mod capacity;
 
 /// Evaluate one fallible step, returning its failure from the enclosing function.
 ///

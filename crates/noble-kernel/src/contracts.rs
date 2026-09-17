@@ -16,6 +16,11 @@ pub const TEST_EMIT: crate::types::EffId = crate::types::EffId(0);
 pub const FIXTURE_RESOURCE: crate::types::ResourceKind = crate::types::ResourceKind(0);
 
 /// What a definition's contract constrains beyond its scheme.
+///
+/// The extracted constructors carry a `Behavior` suffix: `Unit` would
+/// otherwise shadow Lean's own `Unit` inside every declaration named
+/// `contracts.Behavior.*`, where this type's instances live.
+#[charon::variants_suffix("Behavior")]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Behavior {
     /// `dup`: requires `Data` on its value variable.

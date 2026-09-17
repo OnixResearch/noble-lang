@@ -13,6 +13,11 @@ pub const SEMANTIC_REVISION: u32 = 0;
 pub struct NodeId(pub u32);
 
 /// A literal's payload; text content is irrelevant to typing.
+///
+/// The extracted constructors carry a `Lit` suffix: `Bool` and `Unit` would
+/// otherwise shadow Lean's own names inside every declaration named
+/// `untrusted.Lit.*`, where this type's methods and instances live.
+#[charon::variants_suffix("Lit")]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Lit {
     /// An `I64` literal.
@@ -120,7 +125,8 @@ pub struct Request {
 }
 
 /// A derived node interface.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[cfg_attr(test, derive(PartialEq, Eq))]
+#[derive(Clone, Debug)]
 pub struct Interface {
     /// Required invocation stack, bottom-first.
     pub stack_in: alloc::vec::Vec<crate::types::Ty>,
@@ -179,7 +185,9 @@ pub enum UnsupportedKind {
 }
 
 /// The violated constraint recorded by a rejection.
-#[derive(Clone, Debug, PartialEq, Eq)]
+/// Equality needs no `Eq` marker in the kernel; the extraction renders the
+/// marker impl with an unresolvable default.
+#[derive(Clone, Debug, PartialEq)]
 pub enum Constraint {
     /// A join's shapes do not match.
     StackJoin,

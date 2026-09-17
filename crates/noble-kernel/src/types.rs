@@ -4,6 +4,7 @@
 //! operation recurses and no walk grows without a local bound. Stacks are
 //! ordered bottom-first, matching the specification's "top on the right".
 
+mod impls;
 mod size;
 
 /// Local bound for one type walk; beyond it every predicate fails closed.
@@ -14,7 +15,14 @@ const WORK_CAP: usize = 512;
 pub struct ResourceKind(pub u32);
 
 /// Stable identity of one host-operation effect.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+///
+/// The identity is ordered by its payload, compared explicitly at each use.
+/// A derived `PartialOrd`/`Ord` would have Aeneas emit a `PartialOrd` instance
+/// whose `lt` and `gt` fields are the trait's own default methods, and the
+/// Lean backend renders those defaults by handing them the whole instance
+/// where the model expects the comparison function. Comparing the payloads
+/// keeps ordering inside the scalar operations the backend already models.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct EffId(pub u32);
 
 /// A finite set of effect identities, kept sorted and deduplicated.
@@ -30,9 +38,11 @@ impl EffSet {
     /// Build from a list, sorting and deduplicating.
     ///
     /// The insertion walk is explicit: slice sort helpers draw core iterator
-    /// code into the extraction subject, which Aeneas cannot translate.
+    /// code into the extraction subject, which Aeneas cannot translate. Order
+    /// is compared on the payloads, so no `PartialOrd` instance is involved.
     pub fn from_ids(ids: &[EffId]) -> Self {
-        let mut sorted: alloc::vec::Vec<EffId> = alloc::vec::Vec::with_capacity(ids.len().max(4));
+        let mut sorted: alloc::vec::Vec<EffId> =
+            alloc::vec::Vec::with_capacity(crate::capacity::at_least(ids.len(), 4));
         let mut index = 0;
         while index < ids.len() {
             let id = ids[index];
@@ -41,7 +51,7 @@ impl EffSet {
             while position < sorted.len() && !is_placed {
                 if sorted[position] == id {
                     is_placed = true;
-                } else if sorted[position] > id {
+                } else if sorted[position].0 > id.0 {
                     sorted.insert(position, id);
                     is_placed = true;
                 } else {
@@ -76,10 +86,10 @@ impl EffSet {
         let mut left = 0usize;
         let mut right = 0usize;
         while left < self.0.len() || right < other.0.len() {
-            let is_take_left =
-                right == other.0.len() || (left < self.0.len() && self.0[left] < other.0[right]);
-            let is_take_right =
-                left == self.0.len() || (right < other.0.len() && other.0[right] < self.0[left]);
+            let is_take_left = right == other.0.len()
+                || (left < self.0.len() && self.0[left].0 < other.0[right].0);
+            let is_take_right = left == self.0.len()
+                || (right < other.0.len() && other.0[right].0 < self.0[left].0);
             if is_take_left {
                 out.push(self.0[left]);
                 left += 1;
@@ -130,7 +140,19 @@ impl EffSet {
 /// The program case carries its stacks and bound directly, so the type family
 /// is self-recursive: mutually recursive types would leave Aeneas' dependency
 /// analysis with mixed declaration groups it refuses to translate.
-#[derive(Clone, Debug, PartialEq, Eq)]
+///
+/// The extracted constructors carry a `Type` suffix: `Unit` and `Bool` would
+/// otherwise shadow Lean's own `Unit` and `Bool` inside every declaration
+/// named `types.Ty.*`, which is where this type's own methods and instances
+/// live. The Rust names are unchanged.
+///
+/// `Clone` and `Debug` are hand-written in `impls`: a derived body would hand
+/// this type's own instance to `Vec::clone`, and Aeneas emits that instance
+/// after the method it would appear in.
+#[charon::variants_suffix("Type")]
+/// Equality is hand-written in `impls`: a derived `PartialEq` would reference
+/// this type.s own instance, which the Lean backend renders before the
+/// instance itself.
 pub enum Ty {
     /// The unit type.
     Unit,

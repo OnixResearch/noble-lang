@@ -27,7 +27,8 @@ pub enum VariableKind {
 }
 
 /// A rank-1 scheme over the fixed variable kinds.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[cfg_attr(test, derive(PartialEq, Eq))]
+#[derive(Clone, Debug)]
 pub struct Scheme {
     /// Kinds of the scheme's variables, indexed by `Variable`.
     pub var_kinds: alloc::vec::Vec<VariableKind>,
@@ -40,7 +41,8 @@ pub struct Scheme {
 }
 
 /// One variable's concrete value.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[cfg_attr(test, derive(PartialEq, Eq))]
+#[derive(Clone, Debug)]
 pub enum Binding {
     /// A stack segment for a stack variable.
     Stack(alloc::vec::Vec<crate::types::Ty>),
@@ -51,7 +53,8 @@ pub enum Binding {
 }
 
 /// A concrete instantiation: one binding per declared variable, in order.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[cfg_attr(test, derive(PartialEq, Eq))]
+#[derive(Clone, Debug)]
 pub struct Inst {
     /// One binding per entry of `Scheme::var_kinds`.
     pub bindings: alloc::vec::Vec<Binding>,
@@ -166,7 +169,7 @@ impl Scheme {
         inst: &Inst,
     ) -> Result<alloc::vec::Vec<crate::types::Ty>, InstError> {
         let mut out: alloc::vec::Vec<crate::types::Ty> =
-            alloc::vec::Vec::with_capacity(parts.len().max(4));
+            alloc::vec::Vec::with_capacity(crate::capacity::at_least(parts.len(), 4));
         let mut part_index = 0;
         let mut failure: Option<InstError> = None;
         while part_index < parts.len() {
