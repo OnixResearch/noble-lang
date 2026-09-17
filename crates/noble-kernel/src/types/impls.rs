@@ -25,40 +25,6 @@ fn clone_stack(stack: &[crate::types::Ty]) -> alloc::vec::Vec<crate::types::Ty> 
     out
 }
 
-/// Render one type stack in the list form `[a, b]`.
-///
-/// The extraction treats this helper as an assumption: formatting is
-/// observability only, and Aeneas would functionalize its loop inside the
-/// debug instance.s mutual block, which the Lean backend cannot prove
-/// monotone.
-#[charon::opaque]
-fn debug_stack(stack: &[crate::types::Ty], f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-    attempt!(core::fmt::Formatter::write_str(f, "["));
-    let mut index = 0;
-    let mut failure: Option<core::fmt::Error> = None;
-    while index < stack.len() {
-        let step = if index == 0 {
-            core::fmt::Debug::fmt(&stack[index], f)
-        } else {
-            match core::fmt::Formatter::write_str(f, ", ") {
-                Ok(()) => core::fmt::Debug::fmt(&stack[index], f),
-                Err(problem) => Err(problem),
-            }
-        };
-        match step {
-            Ok(()) => index += 1,
-            Err(problem) => {
-                failure = Some(problem);
-                break;
-            }
-        }
-    }
-    match failure {
-        Some(problem) => Err(problem),
-        None => core::fmt::Formatter::write_str(f, "]"),
-    }
-}
-
 /// Deep-copy one type.
 impl Clone for crate::types::Ty {
     fn clone(&self) -> crate::types::Ty {
@@ -86,6 +52,131 @@ impl Clone for crate::types::Ty {
             ),
             crate::types::Ty::Resource(kind) => crate::types::Ty::Resource(*kind),
         }
+    }
+}
+
+/// Queue one `Program` pair's element checks; the flag fails closed.
+fn push_type_program(
+    mut work: alloc::vec::Vec<(crate::types::Ty, crate::types::Ty)>,
+    first_in: &[crate::types::Ty],
+    first_out: &[crate::types::Ty],
+    second_in: &[crate::types::Ty],
+    second_out: &[crate::types::Ty],
+) -> (alloc::vec::Vec<(crate::types::Ty, crate::types::Ty)>, bool) {
+    let is_comparable = first_in.len() == second_in.len()
+        && first_out.len() == second_out.len()
+        && work.len() < super::WORK_CAP;
+    let mut index = 0;
+    while index < first_in.len() && is_comparable {
+        work.push((first_in[index].clone(), second_in[index].clone()));
+        index += 1;
+    }
+    index = 0;
+    while index < first_out.len() && is_comparable {
+        work.push((first_out[index].clone(), second_out[index].clone()));
+        index += 1;
+    }
+    (work, is_comparable)
+}
+
+/// Structural equality of two types, decided by one explicit pairwise walk.
+/// The work stack holds cloned node pairs; the walk fails closed past the bound.
+fn ty_eq(left: &crate::types::Ty, right: &crate::types::Ty) -> bool {
+    let mut work: alloc::vec::Vec<(crate::types::Ty, crate::types::Ty)> =
+        alloc::vec::Vec::with_capacity(8);
+    work.push((left.clone(), right.clone()));
+    let mut is_mismatch = false;
+    while !work.is_empty() {
+        if work.len() >= super::WORK_CAP {
+            is_mismatch = true;
+            break;
+        }
+        let pair = work.pop();
+        let is_step_equal = match pair {
+            Some((first, second)) => match (first, second) {
+                (crate::types::Ty::Unit, crate::types::Ty::Unit) => true,
+                (crate::types::Ty::Bool, crate::types::Ty::Bool) => true,
+                (crate::types::Ty::I64, crate::types::Ty::I64) => true,
+                (crate::types::Ty::Text, crate::types::Ty::Text) => true,
+                (crate::types::Ty::Syntax, crate::types::Ty::Syntax) => true,
+                (
+                    crate::types::Ty::Resource(first_kind),
+                    crate::types::Ty::Resource(second_kind),
+                ) => first_kind == second_kind,
+                (
+                    crate::types::Ty::Pair(first_head, first_tail),
+                    crate::types::Ty::Pair(second_head, second_tail),
+                )
+                | (
+                    crate::types::Ty::Sum(first_head, first_tail),
+                    crate::types::Ty::Sum(second_head, second_tail),
+                ) => {
+                    work.push((*first_head, *second_head));
+                    work.push((*first_tail, *second_tail));
+                    true
+                }
+                (crate::types::Ty::List(first_item), crate::types::Ty::List(second_item)) => {
+                    work.push((*first_item, *second_item));
+                    true
+                }
+                (
+                    crate::types::Ty::Program(a_in, a_out, a_eff),
+                    crate::types::Ty::Program(b_in, b_out, b_eff),
+                ) => {
+                    let (next, is_program_equal) =
+                        push_type_program(work, &a_in, &a_out, &b_in, &b_out);
+                    work = next;
+                    is_program_equal && a_eff == b_eff
+                }
+                _ => false,
+            },
+            None => true,
+        };
+        if !is_step_equal {
+            is_mismatch = true;
+        }
+    }
+    !is_mismatch
+}
+
+/// Equality: the explicit pairwise walk above.
+impl PartialEq for crate::types::Ty {
+    fn eq(&self, other: &crate::types::Ty) -> bool {
+        ty_eq(self, other)
+    }
+}
+
+/// Render one type stack in the list form `[a, b]`.
+///
+/// The extraction treats this helper as an assumption: formatting is
+/// observability only, and Aeneas would functionalize its loop inside the
+/// debug instance's mutual block, which the Lean backend cannot prove
+/// monotone.
+#[charon::opaque]
+fn debug_stack(stack: &[crate::types::Ty], f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    attempt!(core::fmt::Formatter::write_str(f, "["));
+    let mut index = 0;
+    let mut failure: Option<core::fmt::Error> = None;
+    while index < stack.len() {
+        let step = if index == 0 {
+            core::fmt::Debug::fmt(&stack[index], f)
+        } else {
+            match core::fmt::Formatter::write_str(f, ", ") {
+                Ok(()) => core::fmt::Debug::fmt(&stack[index], f),
+                Err(problem) => Err(problem),
+            }
+        };
+        match step {
+            Ok(()) => index += 1,
+            Err(problem) => {
+                failure = Some(problem);
+                break;
+            }
+        }
+    }
+    match failure {
+        Some(problem) => Err(problem),
+        None => core::fmt::Formatter::write_str(f, "]"),
     }
 }
 
@@ -132,91 +223,6 @@ impl core::fmt::Debug for crate::types::Ty {
                 core::fmt::Formatter::write_str(f, ")")
             }
         }
-    }
-}
-
-/// Structural equality of two types, decided by one explicit pairwise walk.
-///
-/// The work stack holds references to the two trees' nodes, so no step
-/// recurses and no trait instance is called from inside the loop: the walk
-/// stays a plain, acyclic definition the Lean backend can translate.
-fn ty_eq(left: &crate::types::Ty, right: &crate::types::Ty) -> bool {
-    let mut work: alloc::vec::Vec<(&crate::types::Ty, &crate::types::Ty)> = alloc::vec::Vec::new();
-    work.push((left, right));
-    let mut outcome = true;
-    let mut mismatch = false;
-    while !work.is_empty() && !mismatch {
-        let pair = work.pop();
-        let is_equal = match pair {
-            Some((first, second)) => match (first, second) {
-                (crate::types::Ty::Unit, crate::types::Ty::Unit) => true,
-                (crate::types::Ty::Bool, crate::types::Ty::Bool) => true,
-                (crate::types::Ty::I64, crate::types::Ty::I64) => true,
-                (crate::types::Ty::Text, crate::types::Ty::Text) => true,
-                (crate::types::Ty::Syntax, crate::types::Ty::Syntax) => true,
-                (
-                    crate::types::Ty::Resource(first_kind),
-                    crate::types::Ty::Resource(second_kind),
-                ) => first_kind == second_kind,
-                (
-                    crate::types::Ty::Pair(first_head, first_tail),
-                    crate::types::Ty::Pair(second_head, second_tail),
-                )
-                | (
-                    crate::types::Ty::Sum(first_head, first_tail),
-                    crate::types::Ty::Sum(second_head, second_tail),
-                ) => {
-                    work.push((&**first_head, &**second_head));
-                    work.push((&**first_tail, &**second_tail));
-                    true
-                }
-                (crate::types::Ty::List(first_item), crate::types::Ty::List(second_item)) => {
-                    work.push((&**first_item, &**second_item));
-                    true
-                }
-                (
-                    crate::types::Ty::Program(first_in, first_out, first_effects),
-                    crate::types::Ty::Program(second_in, second_out, second_effects),
-                ) => {
-                    if first_in.len() != second_in.len()
-                        || first_out.len() != second_out.len()
-                        || first_effects.len() != second_effects.len()
-                    {
-                        false
-                    } else {
-                        let mut index = 0;
-                        while index < first_in.len() {
-                            work.push((&first_in[index], &second_in[index]));
-                            index += 1;
-                        }
-                        index = 0;
-                        while index < first_out.len() {
-                            work.push((&first_out[index], &second_out[index]));
-                            index += 1;
-                        }
-                        if first_effects != second_effects {
-                            mismatch = true;
-                            outcome = false;
-                        }
-                        true
-                    }
-                }
-                _ => false,
-            },
-            None => true,
-        };
-        if !is_equal {
-            mismatch = true;
-            outcome = false;
-        }
-    }
-    outcome
-}
-
-/// Equality: the explicit pairwise walk above.
-impl PartialEq for crate::types::Ty {
-    fn eq(&self, other: &crate::types::Ty) -> bool {
-        ty_eq(self, other)
     }
 }
 

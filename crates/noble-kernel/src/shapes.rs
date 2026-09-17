@@ -20,12 +20,9 @@ const WORK_CAP: usize = 512;
 /// `Ty`'s carry `Type`: `Unit` and `Bool` would otherwise shadow Lean's own
 /// names inside every declaration named `shapes.Pattern.*`.
 ///
-/// `Clone` and `Debug` are hand-written in `impls`, for the same reason `Ty`'s
-/// are: a derived body would hand this type's own instance to `Vec::clone`.
+/// `Clone`, `Debug`, and equality are hand-written in `impls`, for the same
+/// reason `Ty`.s are.
 #[charon::variants_suffix("Pattern")]
-/// Equality is hand-written in `impls`: a derived `PartialEq` would reference
-/// this type.s own instance, which the Lean backend renders before the
-/// instance itself.
 pub enum Pattern {
     /// The unit type.
     Unit,

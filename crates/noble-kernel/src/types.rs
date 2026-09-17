@@ -146,13 +146,10 @@ impl EffSet {
 /// named `types.Ty.*`, which is where this type's own methods and instances
 /// live. The Rust names are unchanged.
 ///
-/// `Clone` and `Debug` are hand-written in `impls`: a derived body would hand
-/// this type's own instance to `Vec::clone`, and Aeneas emits that instance
-/// after the method it would appear in.
+/// `Clone`, `Debug`, and equality are hand-written in `impls`: a derived body
+/// would reference this type.s own instance, which the Lean backend renders
+/// after the method that feeds it.
 #[charon::variants_suffix("Type")]
-/// Equality is hand-written in `impls`: a derived `PartialEq` would reference
-/// this type.s own instance, which the Lean backend renders before the
-/// instance itself.
 pub enum Ty {
     /// The unit type.
     Unit,
