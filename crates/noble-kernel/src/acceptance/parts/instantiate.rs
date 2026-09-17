@@ -154,7 +154,7 @@ fn project(
     };
     attempt!(super::limits_of(&stack_in, ctx));
     attempt!(super::limits_of(&stack_out, ctx));
-    let effect_ids = effects.as_slice();
+    let effect_ids: alloc::vec::Vec<crate::types::EffId> = effects.as_slice().to_vec();
     let mut index = 0;
     let mut unknown: Option<crate::types::EffId> = None;
     while index < effect_ids.len() {

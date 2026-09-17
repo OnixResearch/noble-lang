@@ -78,10 +78,11 @@ pub(crate) fn limits_of(stack: &[crate::types::Ty], ctx: &Ctx) -> Result<(), sup
     let mut failure: Option<super::Fail> = None;
     while index < stack.len() {
         let ty = &stack[index];
-        if ty
-            .size()
-            .is_none_or(|size| size > ctx.request.limits.type_size)
-        {
+        let is_oversized = match ty.size() {
+            Some(size) => size > ctx.request.limits.type_size,
+            None => true,
+        };
+        if is_oversized {
             failure = Some(super::Fail::Exhausted(
                 crate::untrusted::LimitKind::TypeSize,
             ));

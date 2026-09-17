@@ -171,13 +171,17 @@ impl Scheme {
         let mut failure: Option<InstError> = None;
         while part_index < parts.len() {
             let step = match &parts[part_index] {
-                crate::shapes::Pattern::StackVar(var) => match inst.stack(*var) {
-                    Some(segment) => {
-                        out.extend_from_slice(segment);
-                        Ok(())
+                crate::shapes::Pattern::StackVar(var) => {
+                    let segment: Option<alloc::vec::Vec<crate::types::Ty>> =
+                        inst.stack(*var).map(|found| found.to_vec());
+                    match segment {
+                        Some(owned) => {
+                            out.extend_from_slice(&owned);
+                            Ok(())
+                        }
+                        None => Err(InstError::UnknownVariable),
                     }
-                    None => Err(InstError::UnknownVariable),
-                },
+                }
                 pattern => match self.subst_pattern(pattern, inst) {
                     Ok(ty) => {
                         out.push(ty);
@@ -216,13 +220,17 @@ impl Scheme {
                     ids.push(*id);
                     Ok(())
                 }
-                crate::shapes::EffectSlot::Var(var) => match inst.effects(*var) {
-                    Some(set) => {
-                        ids.extend_from_slice(set.as_slice());
-                        Ok(())
+                crate::shapes::EffectSlot::Var(var) => {
+                    let bound: Option<alloc::vec::Vec<crate::types::EffId>> =
+                        inst.effects(*var).map(|set| set.as_slice().to_vec());
+                    match bound {
+                        Some(owned) => {
+                            ids.extend_from_slice(&owned);
+                            Ok(())
+                        }
+                        None => Err(InstError::UnknownVariable),
                     }
-                    None => Err(InstError::UnknownVariable),
-                },
+                }
             };
             match step {
                 Ok(()) => slot_index += 1,
