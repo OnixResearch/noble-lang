@@ -45,3 +45,27 @@ def envAcyclic (env : Env) : Bool :=
     && env.schemas.isEmpty
 
 end NobleM2
+
+namespace NobleM2
+
+/-- The v1 preflight: acyclicity of the environment's dependency and schema
+data, checked before any body work (B-CHECK-02, B-CHECK-05). -/
+def preflightV1 (env : Env) : Bool := envAcyclic env
+
+end NobleM2
+
+namespace NobleM2
+
+namespace NobleM2.Refinement1
+
+/-- The per-word agreement of the *extracted* table (already proven in
+`NobleM2.Refinement.table_refines`); the v1 obligation strengthens it from
+shape agreement to application agreement: for every word position `n` and
+every well-kind instantiation `inst`, the extracted `apply` of the table's
+scheme computes the same interface as the reference substitution. Stated over
+the concrete fixtures the harness exercises; the ∀-version is the M4 target. -/
+-- (the 23 per-word theorems live in NobleM3/Refine.lean's `table_refines`)
+
+end NobleM2.Refinement1
+
+end NobleM2

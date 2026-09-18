@@ -43,7 +43,7 @@ def extractedTable :
   | .div => []
 
 /-- Structural equality of two patterns via the derived `BEq` on the
-generated constructors (the module's own decidable equality). -/
+generated constructors. -/
 def partAgreesSimple (s t : noble_kernel.shapes.Pattern) : Bool :=
   s == t
 
