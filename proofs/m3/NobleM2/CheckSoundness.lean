@@ -149,7 +149,8 @@ theorem foldBody_derives {env : Env} {cand : Candidate} {limits : Limits} :
           simp only [hnode] at h
           cases hap : applyScheme env limits (litScheme lit) inst with
           | error problem => simp only [hap] at h; cases h
-          | ok iface =>
+          | ok pair =>
+            obtain ⟨iface, _⟩ := pair
             cases hj : joinInterface stack derivedIn iface limits with
             | error problem => simp only [hap, hj] at h; cases h
             | ok pair =>
@@ -164,7 +165,8 @@ theorem foldBody_derives {env : Env} {cand : Candidate} {limits : Limits} :
                   stepped final finalBound next h
                 refine ⟨iface.effects :: heads', iface.effects.union d', ?_, by simp only [List.foldr_cons, hdeq'], ?_⟩
                 · exact Derives.sequence hnode
-                    (NodeDerives.literal (applyScheme_ok hap)) hjoin.1 hjoin.2.1 hd'
+                    (NodeDerives.literal (applyScheme_ok_resolves hap)
+                      (applyScheme_ok hap)) hjoin.1 hjoin.2.1 hd'
                 · rw [hjoin.2.2] at hout'
                   exact hout'
         | invocation index inst =>
@@ -173,53 +175,57 @@ theorem foldBody_derives {env : Env} {cand : Candidate} {limits : Limits} :
           | none => simp only [hscheme] at h; cases h
           | some scheme =>
             simp only [hscheme] at h
-            split at h
-            · cases h
-            · rename_i hdata
-              have hdataok : DataOk env index inst :=
-                (dataOkAt_iff env index inst).1 (by simpa using hdata)
-              cases hap : applyScheme env limits scheme inst with
-              | error problem => simp only [hap] at h; cases h
-              | ok iface =>
+            cases hap : applyScheme env limits scheme inst with
+            | error problem => simp only [hap] at h; cases h
+            | ok pair =>
+              obtain ⟨iface, resolved⟩ := pair
+              simp only [hap] at h
+              split at h
+              · cases h
+              · rename_i hdata
+                have hdataeq : dataOkAt env index resolved = true := by simpa using hdata
+                have hdataok : DataOk env index resolved := (dataOkAt_iff env index resolved).1 hdataeq
                 cases hj : joinInterface stack derivedIn iface limits with
-                | error problem => simp only [hap, hj] at h; cases h
-                | ok pair =>
-                  obtain ⟨joined, bound⟩ := pair
-                  have hjoin := joinInterface_ok hj
-                  cases hst : stepFold fold (schemeCost scheme
-                      + joinCost iface) id iface with
-                  | error problem => simp only [hap, hj, hst] at h; cases h
-                  | ok stepped =>
-                    simp only [hap, hj, hst] at h
-                    obtain ⟨heads', d', hd', hdeq', hout'⟩ := ih depth rest joined
-                      bound stepped final finalBound next h
-                    refine ⟨iface.effects :: heads', iface.effects.union d', ?_, by simp only [List.foldr_cons, hdeq'], ?_⟩
-                    · exact Derives.sequence hnode
-                        (NodeDerives.word hscheme (applyScheme_ok hap) hdataok)
-                        hjoin.1 hjoin.2.1 hd'
-                    · rw [hjoin.2.2] at hout'
-                      exact hout'
+                  | error problem => simp only [hap, hj] at h; cases h
+                  | ok pair =>
+                    obtain ⟨joined, bound⟩ := pair
+                    have hjoin := joinInterface_ok hj
+                    cases hst : stepFold fold (schemeCost scheme
+                        + joinCost iface) id iface with
+                    | error problem => simp only [hap, hj, hst] at h; cases h
+                    | ok stepped =>
+                      simp only [hap, hj, hst] at h
+                      obtain ⟨heads', d', hd', hdeq', hout'⟩ := ih depth rest joined
+                        bound stepped final finalBound next h
+                      refine ⟨iface.effects :: heads', iface.effects.union d', ?_, by simp only [List.foldr_cons, hdeq'], ?_⟩
+                      · exact Derives.sequence hnode
+                          (NodeDerives.word hscheme (applyScheme_ok_resolves hap)
+                          (applyScheme_ok hap) hdataok)
+                          hjoin.1 hjoin.2.1 hd'
+                      · rw [hjoin.2.2] at hout'
+                        exact hout'
         | quotation qbody inst =>
           simp only [hnode] at h
           cases hap : applyScheme env limits quotationScheme inst with
           | error problem => simp only [hap] at h; cases h
-          | ok iface =>
+          | ok pair =>
+            obtain ⟨iface, resolved⟩ := pair
             simp only [hap] at h
             split at h
             · cases h
-            · cases hs0 : inst.stack 0 with
+            · cases hs0 : resolved.stack 0 with
               | none =>
                   have hi := applyScheme_ok hap
                   rw [quotationScheme_none hs0] at hi
                   exact absurd hi (by simp)
               | some r =>
-                cases hs1 : inst.stack 1 with
+                cases hs1 : resolved.stack 1 with
                 | none => simp only [hs1] at h; cases h
                 | some start =>
-                  cases hs2 : inst.stack 2 with
+                  cases hs2 : resolved.stack 2 with
                   | none => simp only [hs1, hs2] at h; cases h
                   | some claimed =>
-                    cases hs3 : inst.effects 3 with
+                    cases hs3 : resolved.effects 3 with
                     | none => simp only [hs1, hs2, hs3] at h; cases h
                     | some bound =>
                       simp only [hs1, hs2, hs3] at h
@@ -248,7 +254,7 @@ theorem foldBody_derives {env : Env} {cand : Candidate} {limits : Limits} :
                             have hfin : innerFinal = claimed := by simpa using hfc
                             have hsub2 : innerBound.Subset bound :=
                               subsetOf_subset (by simpa using hsub)
-                            have hq : QuotationDerives env cand qbody inst r
+                            have hq : QuotationDerives env cand qbody resolved r
                                 (r.append (TyList.singleton
                                   (.program start claimed bound))) EffSet.empty :=
                               QuotationDerives.mk hsome
@@ -268,8 +274,8 @@ theorem foldBody_derives {env : Env} {cand : Candidate} {limits : Limits} :
                                 refine ⟨iface.effects :: heads',
                                   iface.effects.union d', ?_,
                                   by simp only [List.foldr_cons, hdeq'], ?_⟩
-                                · refine Derives.quotationSequence hnode ?_ hjoin.1
-                                    hjoin.2.1 hd'
+                                · refine Derives.quotationSequence hnode (applyScheme_ok_resolves hap) ?_
+                                    hjoin.1 hjoin.2.1 hd'
                                   rw [← hi1, ← hi2, ← hi3]
                                   exact hq
                                 · rw [hjoin.2.2] at hout'
@@ -307,36 +313,48 @@ theorem check_soundness {env : Env} {request : Request} {cand : Candidate}
       · cases h
       · split at h
         · cases h
-        · split at h
+        · -- fragment v1: the dependency walk must validate (B-CHECK-02)
+          split at h
           · cases h
-          · cases hfind : request.expected.allowedEffects.ids.find?
-                (fun id => !effectKnown env id) with
-            | some id => simp only [hfind] at h; cases h
-            | none =>
-              simp only [hfind] at h
-              cases hf : foldBody env cand request.limits 0 request.limits.work
-                  cand.body request.expected.stackIn EffSet.empty
-                  ⟨request.limits.work, []⟩ with
-              | failed problem => cases problem <;> simp only [hf] at h <;> simp at h
-              | ok final derived fold =>
-                simp only [hf] at h
-                split at h
-                · cases h
-                · rename_i hfc
-                  split at h
-                  · cases h
-                  · rename_i hsub
-                    injection h with hchecked
-                    subst hchecked
-                    have hfin : final = request.expected.stackOut := by
-                      simpa using hfc
-                    have hsub2 : derived.subsetOf request.expected.allowedEffects
-                        = true := by simpa using hsub
-                    refine ⟨⟨rfl, by rw [hfin], subsetOf_subset hsub2,
-                      fun _ _ => Or.inr trivial⟩, ?_⟩
-                    have hentry := foldBody_entry_derives hf
-                    rw [hfin] at hentry
-                    exact hentry
+          · cases h
+          · cases h
+          · cases h
+          · -- and the schema scan must validate
+            split at h
+            · cases h
+            · cases h
+            · cases h
+            · cases h
+            · split at h
+              · cases h
+              · cases hfind : request.expected.allowedEffects.ids.find?
+                    (fun id => !effectKnown env id) with
+                | some id => simp only [hfind] at h; cases h
+                | none =>
+                  simp only [hfind] at h
+                  cases hf : foldBody env cand request.limits 0 request.limits.work
+                      cand.body request.expected.stackIn EffSet.empty
+                      ⟨request.limits.work, []⟩ with
+                  | failed problem => cases problem <;> simp only [hf] at h <;> simp at h
+                  | ok final derived fold =>
+                    simp only [hf] at h
+                    split at h
+                    · cases h
+                    · rename_i hfc
+                      split at h
+                      · cases h
+                      · rename_i hsub
+                        injection h with hchecked
+                        subst hchecked
+                        have hfin : final = request.expected.stackOut := by
+                          simpa using hfc
+                        have hsub2 : derived.subsetOf request.expected.allowedEffects
+                            = true := by simpa using hsub
+                        refine ⟨⟨rfl, by rw [hfin], subsetOf_subset hsub2,
+                          fun _ _ => Or.inr trivial⟩, ?_⟩
+                        have hentry := foldBody_entry_derives hf
+                        rw [hfin] at hentry
+                        exact hentry
 
 /-! ## Regression: the segment-extension gap is closed -/
 
@@ -369,7 +387,7 @@ theorem ce_derives : Derives bootstrapEnv ceCandidate ceCandidate.body
       = some (.nil, .cons .i64 .nil, EffSet.empty) := by native_decide
   have hseq : Derives bootstrapEnv ceCandidate [0] (.cons .bool .nil)
       (.cons .bool (.cons .i64 .nil)) (EffSet.empty.union EffSet.empty) :=
-    Derives.sequence rfl (NodeDerives.literal h0) rfl rfl
+    Derives.sequence rfl (NodeDerives.literal (resolvesTo_refl _ (by decide)) h0) rfl rfl
       (Derives.empty (.cons .bool (.cons .i64 .nil)))
   rw [union_empty_left] at hseq
   exact hseq

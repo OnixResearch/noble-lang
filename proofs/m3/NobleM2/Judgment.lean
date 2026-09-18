@@ -53,6 +53,77 @@ def DataOk (env : Env) (index : Nat) (inst : Inst) : Prop :=
   | some var => ∃ ty, inst.value var = some ty ∧ ty.isData = true
   | none => True
 
+/-! ## Witness resolution, declaratively (fragment v1, B-CHECK-05)
+
+A `ref` binding states a type equation: this variable's witness is another
+variable's. The judgment's node rules apply their schemes to the *resolved*
+witness; the relation below is the declarative form of that resolution. -/
+
+/-- One reference hop of a witness: the binding at `origin` points at
+`target`. -/
+def RefHop (witness : Inst) (origin target : Nat) : Prop :=
+  witness.bindings[origin]? = some (.ref target)
+
+/-- Finite reachability through a witness's reference bindings. -/
+inductive RefReaches (witness : Inst) : Nat → Nat → Prop where
+  /-- One hop. -/
+  | hop {origin target : Nat} : RefHop witness origin target →
+      RefReaches witness origin target
+  /-- Hops compose. -/
+  | step {origin mid target : Nat} :
+      RefHop witness origin mid → RefReaches witness mid target →
+        RefReaches witness origin target
+
+/-- The binding position `origin` carries a direct (non-reference) binding. -/
+def DirectAt (witness : Inst) (origin : Nat) : Prop :=
+  ∃ b, witness.bindings[origin]? = some b ∧ b.kindOf.isSome = true
+
+/-- The reference chain from `origin` ends at the direct binding `target`:
+either `origin` is itself direct, or a finite hop chain reaches `target`. -/
+inductive ChainEnds (witness : Inst) : Nat → Nat → Prop where
+  /-- The chain is empty: the position is direct. -/
+  | here {origin : Nat} : DirectAt witness origin → ChainEnds witness origin origin
+  /-- One more hop. -/
+  | hop {origin next target : Nat} :
+      RefHop witness origin next → ChainEnds witness next target →
+        ChainEnds witness origin target
+
+/-- The binding position `i` resolves to the direct binding `b`: either it
+carries `b` directly, or it is a reference whose chain ends at `b`. -/
+inductive PositionResolves (witness : Inst) : Nat → Binding → Prop where
+  /-- The position is direct. -/
+  | direct {i : Nat} {b : Binding} :
+      witness.bindings[i]? = some b → b.kindOf.isSome = true →
+        PositionResolves witness i b
+  /-- The position is a reference whose chain ends at a direct binding. -/
+  | chain {i target : Nat} {v : Nat} {b : Binding} :
+      witness.bindings[i]? = some (.ref v) →
+      ChainEnds witness v target → witness.bindings[target]? = some b →
+      b.kindOf.isSome = true → PositionResolves witness i b
+
+/-- The witness resolves, position by position, to `resolved`: same shape,
+and every position of `resolved` carries the binding the position's direct
+binding or reference chain ends at. -/
+def ResolvesTo (witness resolved : Inst) : Prop :=
+  witness.bindings.length = resolved.bindings.length ∧
+    ∀ i, i < witness.bindings.length →
+      ∃ b, resolved.bindings[i]? = some b ∧ PositionResolves witness i b
+
+/-- The reference bindings the checker's walk resolves never appear in its
+output; a witness with no reference bindings resolves to itself. -/
+theorem resolvesTo_refl (witness : Inst)
+    (h : witness.bindings.all (fun b => b.kindOf.isSome) = true) :
+    ResolvesTo witness witness := by
+  refine ⟨rfl, fun i hi_len => ?_⟩
+  have hne : witness.bindings[i]? ≠ none := fun heq =>
+    (Nat.not_le.mpr hi_len) (List.getElem?_eq_none_iff.mp heq)
+  obtain ⟨b, hb⟩ : ∃ b, witness.bindings[i]? = some b := by
+    cases hm : witness.bindings[i]? with
+    | some b => exact ⟨b, rfl⟩
+    | none => exact absurd hm hne
+  exact ⟨b, hb, PositionResolves.direct hb (by
+    rw [List.all_eq_true] at h; exact h b (List.mem_of_getElem? hb))⟩
+
 mutual
 
   /-- One body derives a stack transformation under the environment. -/
@@ -79,17 +150,19 @@ mutual
   /-- QUOTATION: the body is checked even when unused; the quotation node's
 interface joined onto the running stack ends the derivation. -/
   | quotationBody {id : Nat} {rest : List Nat} {stack a b out : TyList}
-      {head : EffSet} {body : List Nat} {inst : Inst} :
+      {head : EffSet} {body : List Nat} {inst resolved : Inst} :
     cand.nodes[id]? = some (Node.quotation body inst) →
-    QuotationDerives env cand body inst a b head →
+    ResolvesTo inst resolved →
+    QuotationDerives env cand body resolved a b head →
     tailEquals stack a = true →
     replaceTail stack a b = out →
     Derives env cand (id :: rest) stack out head
   /-- A quotation node also sequences like any other node. -/
   | quotationSequence {id : Nat} {rest : List Nat} {stack a b mid out : TyList}
-      {head tail : EffSet} {body : List Nat} {inst : Inst} :
+      {head tail : EffSet} {body : List Nat} {inst resolved : Inst} :
     cand.nodes[id]? = some (Node.quotation body inst) →
-    QuotationDerives env cand body inst a b head →
+    ResolvesTo inst resolved →
+    QuotationDerives env cand body resolved a b head →
     tailEquals stack a = true →
     replaceTail stack a b = mid →
     Derives env cand rest mid out tail →
@@ -98,16 +171,86 @@ interface joined onto the running stack ends the derivation. -/
 /-- One node's derivation from its instantiation witness. -/
 inductive NodeDerives (env : Env) (cand : Candidate) :
     Node → TyList → TyList → EffSet → Prop where
-  /-- LITERAL: the literal's scheme applied to its witness. -/
-  | literal {lit : Lit} {inst : Inst} {stack out : TyList} {effects : EffSet} :
-    (litScheme lit).instantiate inst = some (stack, out, effects) →
-    NodeDerives env cand (.literal lit inst) stack out effects
-  /-- WORD: the resolved definition's scheme applied to its witness. -/
-  | word {index : Nat} {inst : Inst} {scheme : Scheme} {stack out : TyList}
+  /-- LITERAL: the literal.s scheme applied to its witness. Fragment v1:
+  the node.s witness resolves its reference bindings first; the scheme
+  applies to the resolved witness (B-CHECK-05). -/
+  | literal {lit : Lit} {inst resolved : Inst} {stack out : TyList}
       {effects : EffSet} :
+    ResolvesTo inst resolved →
+    (litScheme lit).instantiate resolved = some (stack, out, effects) →
+    NodeDerives env cand (.literal lit inst) stack out effects
+  /-- WORD: the resolved definition.s scheme applied to its witness.
+  Fragment v1: as LITERAL, the witness resolves before the scheme applies,
+  and the eligibility side condition is decided on the resolved witness,
+  exactly where the checker reads it. -/
+  | word {index : Nat} {inst resolved : Inst} {scheme : Scheme}
+      {stack out : TyList} {effects : EffSet} :
     env.scheme index = some scheme →
-    scheme.instantiate inst = some (stack, out, effects) →
-    DataOk env index inst →
+    ResolvesTo inst resolved →
+    scheme.instantiate resolved = some (stack, out, effects) →
+    DataOk env index resolved →
+    NodeDerives env cand (.invocation index inst) stack out effects
+  /-- CASE (spec §7.2, fragment v1): the sum eliminator's application,
+  decomposed. The two branch programs instantiate from the one witness:
+  each consumes the scrutinee's own payload at its own type (`a` for the
+  left, `b` for the right — "the selected payload is moved to the chosen
+  branch"), both produce the common result stack `t` ("both branches have
+  the same output stack shape"), and the derived bound is exactly the union
+  of the two branch bounds — the conservative join of B-CHECK-06 and
+  K-EFFECT-01/02. -/
+  | caseRule {index : Nat} {inst resolved : Inst} {stack out : TyList}
+      {effects : EffSet} {s t : TyList} {a b : Ty} {e f : EffSet} :
+    env.kind index = some .case →
+    env.scheme index = some caseScheme →
+    ResolvesTo inst resolved →
+    caseScheme.instantiate resolved = some (stack, out, effects) →
+    DataOk env index resolved →
+    resolved.stack 0 = some s →
+    resolved.value 1 = some a →
+    resolved.value 2 = some b →
+    resolved.stack 3 = some t →
+    resolved.effects 4 = some e →
+    resolved.effects 5 = some f →
+    out = t →
+    effects = e.union f →
+    NodeDerives env cand (.invocation index inst) stack out effects
+  /-- IF (spec §7.3, fragment v1): the boolean eliminator, decomposed. The
+  scrutinee is the boolean value; both branch programs consume the same
+  stack `s` and produce the common result stack `t`; the derived bound is
+  the union of the two branch bounds. -/
+  | ifRule {index : Nat} {inst resolved : Inst} {stack out : TyList}
+      {effects : EffSet} {s t : TyList} {e f : EffSet} :
+    env.kind index = some .if →
+    env.scheme index = some ifScheme →
+    ResolvesTo inst resolved →
+    ifScheme.instantiate resolved = some (stack, out, effects) →
+    DataOk env index resolved →
+    resolved.stack 0 = some s →
+    resolved.stack 1 = some t →
+    resolved.effects 2 = some e →
+    resolved.effects 3 = some f →
+    out = t →
+    effects = e.union f →
+    NodeDerives env cand (.invocation index inst) stack out effects
+  /-- LISTCASE (spec §7.4, fragment v1): the list eliminator, decomposed.
+  The empty branch consumes the list's prefix stack `s`; the cons branch
+  consumes the head at the payload type `a` above the tail list; both
+  produce the common result stack `t`; the derived bound is the union of
+  the two branch bounds. -/
+  | listCaseRule {index : Nat} {inst resolved : Inst} {stack out : TyList}
+      {effects : EffSet} {s t : TyList} {a : Ty} {e f : EffSet} :
+    env.kind index = some .listCase →
+    env.scheme index = some listCaseScheme →
+    ResolvesTo inst resolved →
+    listCaseScheme.instantiate resolved = some (stack, out, effects) →
+    DataOk env index resolved →
+    resolved.stack 0 = some s →
+    resolved.value 1 = some a →
+    resolved.stack 2 = some t →
+    resolved.effects 3 = some e →
+    resolved.effects 4 = some f →
+    out = t →
+    effects = e.union f →
     NodeDerives env cand (.invocation index inst) stack out effects
 
 /-- One quotation node's derivation: the body checks from `a` to exactly `c`
@@ -125,6 +268,34 @@ inductive QuotationDerives (env : Env) (cand : Candidate) :
       (stack.append (TyList.singleton (.program a c e))) EffSet.empty
 
 end
+
+/-! ## The rejection judgments (fragment v1: B-CHECK-02, B-CHECK-05)
+
+The rules above state when a body derives; these state when the
+environment's external data or the witness itself is rejected. Each names
+the identity the rejection carries. -/
+
+/-- One declared dependency edge: `from` depends on `to`. -/
+def DepEdge (env : Env) (origin target : Nat) : Prop := target ∈ env.depsOf origin
+
+/-- Finite reachability through declared dependency edges. -/
+inductive DepReaches (env : Env) : Nat → Nat → Prop where
+  /-- Every definition reaches itself through zero edges. -/
+  | refl {d : Nat} : DepReaches env d d
+  /-- One edge extends a reachable chain. -/
+  | step {d e t : Nat} : DepEdge env d e → DepReaches env e t → DepReaches env d t
+
+/-- A recursive definition dependency: `d` depends, directly or through a
+chain, on itself (B-CHECK-02). -/
+def DepCycle (env : Env) (d : Nat) : Prop := ∃ e, DepEdge env d e ∧ DepReaches env e d
+
+/-- The environment declares a user-recursive schema (B-CHECK-02). -/
+def DeclaresRecursiveSchema (env : Env) : Prop :=
+  ∃ decl, decl ∈ env.schemas ∧ decl.recursive = true
+
+/-- A cyclic substitution witness: some binding position refers to itself,
+directly or through a chain (B-CHECK-05). -/
+def WitnessCycle (witness : Inst) : Prop := ∃ origin, RefReaches witness origin origin
 
 end NobleM2
 

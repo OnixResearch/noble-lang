@@ -77,6 +77,13 @@ def Env.knowsEffect (env : Env) (id : EffId) : Bool := env.effects.elem id
 /-- The number of definitions. -/
 def Env.length (env : Env) : Nat := env.defs.length
 
+/-- The declared dependency list of a definition; empty when the
+environment declares none (external environment data, fragment v1). -/
+def Env.depsOf (env : Env) (index : Nat) : List Nat :=
+  match env.deps[index]? with
+  | some ds => ds
+  | none => []
+
 /-- Build a stack pattern from a list. -/
 def PartList.ofList : List StackPart → PartList
   | [] => .nil
@@ -118,168 +125,248 @@ def schemeOf (varKinds : List Kind) (stackIn stackOut : PartList)
     (effects : SlotList) : Scheme :=
   ⟨varKinds, stackIn, stackOut, effects⟩
 
-/-- The bootstrap word contracts, in definition order. -/
-def bootstrapTable : List (Behavior × Scheme) :=
-  [ (Behavior.dup,
-      schemeOf [Kind.stack, Kind.value]
-        (PartList.ofList [stackVar 0, valueVar 1])
-        (PartList.ofList [stackVar 0, valueVar 1, valueVar 1])
-        SlotList.nil),
-    (Behavior.drop,
-      schemeOf [Kind.stack, Kind.value]
-        (PartList.ofList [stackVar 0, valueVar 1])
-        (PartList.ofList [stackVar 0])
-        SlotList.nil),
-    (Behavior.swap,
-      schemeOf [Kind.stack, Kind.value, Kind.value]
-        (PartList.ofList [stackVar 0, valueVar 1, valueVar 2])
-        (PartList.ofList [stackVar 0, valueVar 2, valueVar 1])
-        SlotList.nil),
-    (Behavior.dip,
-      schemeOf [Kind.stack, Kind.value, Kind.stack, Kind.effect]
-        (PartList.ofList
-          [stackVar 0, valueVar 1,
-            patternPart (programPattern (PartList.ofList [stackVar 0])
-              (PartList.ofList [stackVar 2]) (SlotList.ofList [effectVar 3]))])
-        (PartList.ofList [stackVar 2, valueVar 1])
-        (SlotList.ofList [effectVar 3])),
-    (Behavior.arith,
-      schemeOf [Kind.stack]
-        (PartList.ofList [stackVar 0, patternPart .i64, patternPart .i64])
-        (PartList.ofList [stackVar 0, patternPart .i64])
-        SlotList.nil),
-    (Behavior.arith,
-      schemeOf [Kind.stack]
-        (PartList.ofList [stackVar 0, patternPart .i64, patternPart .i64])
-        (PartList.ofList [stackVar 0, patternPart .i64])
-        SlotList.nil),
-        (Behavior.equals,
-      schemeOf [Kind.stack]
-        (PartList.ofList [stackVar 0, patternPart .i64, patternPart .i64])
-        (PartList.ofList [stackVar 0, patternPart .bool])
-        SlotList.nil),
-    (Behavior.arith,
-      schemeOf [Kind.stack]
-        (PartList.ofList [stackVar 0, patternPart .i64, patternPart .i64])
-        (PartList.ofList [stackVar 0, patternPart .i64])
-        SlotList.nil),
-    (Behavior.quote,
-      schemeOf [Kind.stack, Kind.value, Kind.stack]
-        (PartList.ofList [stackVar 0, valueVar 1])
-        (PartList.ofList
-          [stackVar 0,
-            patternPart (programPattern (PartList.ofList [stackVar 2])
-              (PartList.ofList [stackVar 2, valueVar 1]) SlotList.nil)])
-        SlotList.nil),
-    (Behavior.compose,
-      schemeOf
-        [Kind.stack, Kind.stack, Kind.stack, Kind.stack, Kind.effect, Kind.effect]
-        (PartList.ofList
-          [stackVar 0,
-            patternPart (programPattern (PartList.ofList [stackVar 1])
-              (PartList.ofList [stackVar 2]) (SlotList.ofList [effectVar 4])),
-            patternPart (programPattern (PartList.ofList [stackVar 2])
-              (PartList.ofList [stackVar 3]) (SlotList.ofList [effectVar 5]))])
-        (PartList.ofList
-          [stackVar 0,
-            patternPart (programPattern (PartList.ofList [stackVar 1])
-              (PartList.ofList [stackVar 3])
-              (SlotList.ofList [effectVar 4, effectVar 5]))])
-        SlotList.nil),
-    (Behavior.run,
-      schemeOf [Kind.stack, Kind.stack, Kind.effect]
-        (PartList.ofList
-          [stackVar 0,
-            patternPart (programPattern (PartList.ofList [stackVar 0])
-              (PartList.ofList [stackVar 1]) (SlotList.ofList [effectVar 2]))])
-        (PartList.ofList [stackVar 1])
-        (SlotList.ofList [effectVar 2])),
-    (Behavior.reflect,
-      schemeOf [Kind.stack, Kind.stack, Kind.stack, Kind.effect]
-        (PartList.ofList
-          [stackVar 0,
-            patternPart (programPattern (PartList.ofList [stackVar 1])
-              (PartList.ofList [stackVar 2]) (SlotList.ofList [effectVar 3]))])
-        (PartList.ofList [stackVar 0, patternPart .syn])
-        SlotList.nil),
-    (Behavior.unit,
-      schemeOf [Kind.stack]
-        (PartList.ofList [stackVar 0])
-        (PartList.ofList [stackVar 0, patternPart .unit])
-        SlotList.nil),
-    (Behavior.pair,
-      schemeOf [Kind.stack, Kind.value, Kind.value]
-        (PartList.ofList [stackVar 0, valueVar 1, valueVar 2])
-        (PartList.ofList
-          [stackVar 0, patternPart (.pair (.var 1) (.var 2))])
-        SlotList.nil),
-    (Behavior.unpair,
-      schemeOf [Kind.stack, Kind.value, Kind.value]
-        (PartList.ofList [stackVar 0, patternPart (.pair (.var 1) (.var 2))])
-        (PartList.ofList [stackVar 0, valueVar 1, valueVar 2])
-        SlotList.nil),
-    (Behavior.inl,
-      schemeOf [Kind.stack, Kind.value, Kind.value]
-        (PartList.ofList [stackVar 0, valueVar 1])
-        (PartList.ofList [stackVar 0, patternPart (.sum (.var 1) (.var 2))])
-        SlotList.nil),
-    (Behavior.inr,
-      schemeOf [Kind.stack, Kind.value, Kind.value]
-        (PartList.ofList [stackVar 0, valueVar 2])
-        (PartList.ofList [stackVar 0, patternPart (.sum (.var 1) (.var 2))])
-        SlotList.nil),
-    (Behavior.case,
-      schemeOf
-        [Kind.stack, Kind.value, Kind.value, Kind.stack, Kind.effect, Kind.effect]
-        (PartList.ofList
-          [stackVar 0,
-            patternPart (.sum (.var 1) (.var 2)),
-            patternPart (programPattern (PartList.ofList [stackVar 0, valueVar 1])
-              (PartList.ofList [stackVar 3]) (SlotList.ofList [effectVar 4])),
-            patternPart (programPattern (PartList.ofList [stackVar 0, valueVar 2])
-              (PartList.ofList [stackVar 3]) (SlotList.ofList [effectVar 5]))])
-        (PartList.ofList [stackVar 3])
-        (SlotList.ofList [effectVar 4, effectVar 5])),
-    (Behavior.if,
-      schemeOf [Kind.stack, Kind.stack, Kind.effect, Kind.effect]
-        (PartList.ofList
-          [stackVar 0,
-            patternPart .bool,
-            patternPart (programPattern (PartList.ofList [stackVar 0])
-              (PartList.ofList [stackVar 1]) (SlotList.ofList [effectVar 2])),
-            patternPart (programPattern (PartList.ofList [stackVar 0])
-              (PartList.ofList [stackVar 1]) (SlotList.ofList [effectVar 3]))])
-        (PartList.ofList [stackVar 1])
-        (SlotList.ofList [effectVar 2, effectVar 3])),
-    (Behavior.nil,
-      schemeOf [Kind.stack, Kind.value]
-        (PartList.ofList [stackVar 0])
-        (PartList.ofList [stackVar 0, patternPart (.list (.var 1))])
-        SlotList.nil),
-    (Behavior.cons,
-      schemeOf [Kind.stack, Kind.value]
-        (PartList.ofList [stackVar 0, valueVar 1, patternPart (.list (.var 1))])
-        (PartList.ofList [stackVar 0, patternPart (.list (.var 1))])
-        SlotList.nil),
-    (Behavior.listCase,
-      schemeOf [Kind.stack, Kind.value, Kind.stack, Kind.effect, Kind.effect]
-        (PartList.ofList
-          [stackVar 0,
-            patternPart (.list (.var 1)),
-            patternPart (programPattern (PartList.ofList [stackVar 0])
-              (PartList.ofList [stackVar 2]) (SlotList.ofList [effectVar 3])),
-            patternPart (programPattern
-              (PartList.ofList [stackVar 0, valueVar 1, patternPart (.list (.var 1))])
-              (PartList.ofList [stackVar 2]) (SlotList.ofList [effectVar 4]))])
-        (PartList.ofList [stackVar 2])
-        (SlotList.ofList [effectVar 3, effectVar 4])),
-    (Behavior.testEmit,
-      schemeOf [Kind.stack]
-        (PartList.ofList [stackVar 0, patternPart .text])
-        (PartList.ofList [stackVar 0, patternPart .unit])
-        (SlotList.ofList [.effect testEmitEffect])) ]
+/-- One word's contract: its scheme plus what it constrains beyond the scheme. -/
+structure Word where
+  scheme : Scheme
+  behavior : Behavior
 
-/-- The fixed v0 bootstrap environment. -/
+/-- `dup : S a -- S a a ! {}` (7.1). -/
+def dupScheme : Scheme :=
+  ⟨[Kind.stack, Kind.value],
+    PartList.ofList [StackPart.stack 0, StackPart.value (.var 1)],
+    PartList.ofList
+      [StackPart.stack 0, StackPart.value (.var 1), StackPart.value (.var 1)],
+    SlotList.nil⟩
+
+/-- `drop : S a -- S ! {}` (7.1). -/
+def dropScheme : Scheme :=
+  ⟨[Kind.stack, Kind.value],
+    PartList.ofList [StackPart.stack 0, StackPart.value (.var 1)],
+    PartList.ofList [StackPart.stack 0],
+    SlotList.nil⟩
+
+/-- `swap : S a b -- S b a ! {}` (7.1). -/
+def swapScheme : Scheme :=
+  ⟨[Kind.stack, Kind.value, Kind.value],
+    PartList.ofList
+      [StackPart.stack 0, StackPart.value (.var 1), StackPart.value (.var 2)],
+    PartList.ofList
+      [StackPart.stack 0, StackPart.value (.var 2), StackPart.value (.var 1)],
+    SlotList.nil⟩
+
+/-- `dip : S a -- S' a ! {}` over a body program (7.1). -/
+def dipScheme : Scheme :=
+  ⟨[Kind.stack, Kind.value, Kind.stack, Kind.effect],
+    PartList.ofList
+      [StackPart.stack 0, StackPart.value (.var 1),
+        StackPart.value
+          (.program ⟨PartList.ofList [StackPart.stack 0],
+            PartList.ofList [StackPart.stack 2], SlotList.ofList [EffectSlot.var 3]⟩)],
+    PartList.ofList [StackPart.stack 2, StackPart.value (.var 1)],
+    SlotList.ofList [EffectSlot.var 3]⟩
+
+/-- `+ - * : S I64 I64 -- S I64 ! {}` (K-NUM-01, one scheme each). -/
+def arithScheme : Scheme :=
+  ⟨[Kind.stack],
+    PartList.ofList
+      [StackPart.stack 0, StackPart.value .i64, StackPart.value .i64],
+    PartList.ofList
+      [StackPart.stack 0, StackPart.value .i64],
+    SlotList.nil⟩
+
+/-- `= : S I64 I64 -- S Bool ! {}` (K-NUM-01). -/
+def equalsScheme : Scheme :=
+  ⟨[Kind.stack],
+    PartList.ofList
+      [StackPart.stack 0, StackPart.value .i64, StackPart.value .i64],
+    PartList.ofList
+      [StackPart.stack 0, StackPart.value .bool],
+    SlotList.nil⟩
+
+/-- `quote : S a -- S Q<a> ! {}` where `Q<a> = {} a` (6.5). -/
+def quoteScheme : Scheme :=
+  ⟨[Kind.stack, Kind.value, Kind.stack],
+    PartList.ofList [StackPart.stack 0, StackPart.value (.var 1)],
+    PartList.ofList
+      [StackPart.stack 0,
+        StackPart.value
+          (.program ⟨PartList.ofList [StackPart.stack 2],
+            PartList.ofList [StackPart.stack 2, StackPart.value (.var 1)], SlotList.nil⟩)],
+    SlotList.nil⟩
+
+/-- `compose : (S -- S') (S' -- S'') -- (S -- S'') ! {}` (6.4). -/
+def composeScheme : Scheme :=
+  ⟨[Kind.stack, Kind.stack, Kind.stack, Kind.stack, Kind.effect, Kind.effect],
+    PartList.ofList
+      [StackPart.stack 0,
+        StackPart.value
+          (.program ⟨PartList.ofList [StackPart.stack 1],
+            PartList.ofList [StackPart.stack 2], SlotList.ofList [EffectSlot.var 4]⟩),
+        StackPart.value
+          (.program ⟨PartList.ofList [StackPart.stack 2],
+            PartList.ofList [StackPart.stack 3], SlotList.ofList [EffectSlot.var 5]⟩)],
+    PartList.ofList
+      [StackPart.stack 0,
+        StackPart.value
+          (.program ⟨PartList.ofList [StackPart.stack 1],
+            PartList.ofList [StackPart.stack 3],
+            SlotList.ofList [EffectSlot.var 4, EffectSlot.var 5]⟩)],
+    SlotList.nil⟩
+
+/-- `run : S Q -- S' ! {}` where `Q = {S -- S' ! e}` (6.3). -/
+def runScheme : Scheme :=
+  ⟨[Kind.stack, Kind.stack, Kind.effect],
+    PartList.ofList
+      [StackPart.stack 0,
+        StackPart.value
+          (.program ⟨PartList.ofList [StackPart.stack 0],
+            PartList.ofList [StackPart.stack 1], SlotList.ofList [EffectSlot.var 2]⟩)],
+    PartList.ofList [StackPart.stack 1],
+    SlotList.ofList [EffectSlot.var 2]⟩
+
+/-- `reflect : S Q -- S syntax ! {}` where `Q = {S -- S' ! e}` (11.3). -/
+def reflectScheme : Scheme :=
+  ⟨[Kind.stack, Kind.stack, Kind.stack, Kind.effect],
+    PartList.ofList
+      [StackPart.stack 0,
+        StackPart.value
+          (.program ⟨PartList.ofList [StackPart.stack 1],
+            PartList.ofList [StackPart.stack 2], SlotList.ofList [EffectSlot.var 3]⟩)],
+    PartList.ofList [StackPart.stack 0, StackPart.value .syn],
+    SlotList.nil⟩
+
+/-- `unit : S a -- S unit ! {}` (7.2). -/
+def unitScheme : Scheme :=
+  ⟨[Kind.stack],
+    PartList.ofList [StackPart.stack 0],
+    PartList.ofList
+      [StackPart.stack 0, StackPart.value .unit],
+    SlotList.nil⟩
+
+/-- `pair : S a b -- S pair<a,b> ! {}` (7.2). -/
+def pairScheme : Scheme :=
+  ⟨[Kind.stack, Kind.value, Kind.value],
+    PartList.ofList
+      [StackPart.stack 0, StackPart.value (.var 1), StackPart.value (.var 2)],
+    PartList.ofList
+      [StackPart.stack 0,
+        StackPart.value (.pair (.var 1) (.var 2))],
+    SlotList.nil⟩
+
+/-- `unpair : S pair<a,b> -- S a b ! {}` (7.2). -/
+def unpairScheme : Scheme :=
+  ⟨[Kind.stack, Kind.value, Kind.value],
+    PartList.ofList
+      [StackPart.stack 0,
+        StackPart.value (.pair (.var 1) (.var 2))],
+    PartList.ofList
+      [StackPart.stack 0, StackPart.value (.var 1), StackPart.value (.var 2)],
+    SlotList.nil⟩
+
+/-- `inl : S a -- S Sum<a,b> ! {}` (7.2). -/
+def inlScheme : Scheme :=
+  ⟨[Kind.stack, Kind.value, Kind.value],
+    PartList.ofList [StackPart.stack 0, StackPart.value (.var 1)],
+    PartList.ofList
+      [StackPart.stack 0, StackPart.value (.sum (.var 1) (.var 2))],
+    SlotList.nil⟩
+
+/-- `inr : S b -- S Sum<a,b> ! {}` (7.2). -/
+def inrScheme : Scheme :=
+  ⟨[Kind.stack, Kind.value, Kind.value],
+    PartList.ofList [StackPart.stack 0, StackPart.value (.var 2)],
+    PartList.ofList
+      [StackPart.stack 0, StackPart.value (.sum (.var 1) (.var 2))],
+    SlotList.nil⟩
+
+/-- `case : S Sum<a,b> -- S' ! {}` over two body programs (7.2). -/
+def caseScheme : Scheme :=
+  ⟨[Kind.stack, Kind.value, Kind.value, Kind.stack, Kind.effect, Kind.effect],
+    PartList.ofList
+      [StackPart.stack 0, StackPart.value (.sum (.var 1) (.var 2)),
+        StackPart.value
+          (.program ⟨PartList.ofList [StackPart.stack 0, StackPart.value (.var 1)],
+            PartList.ofList [StackPart.stack 3], SlotList.ofList [EffectSlot.var 4]⟩),
+        StackPart.value
+          (.program ⟨PartList.ofList [StackPart.stack 0, StackPart.value (.var 2)],
+            PartList.ofList [StackPart.stack 3], SlotList.ofList [EffectSlot.var 5]⟩)],
+    PartList.ofList [StackPart.stack 3],
+    SlotList.ofList [EffectSlot.var 4, EffectSlot.var 5]⟩
+/-- `if : S Bool -- S' S'' ! {body0 !e0, body1 !e1}` (7.3). -/
+def ifScheme : Scheme :=
+  ⟨[Kind.stack, Kind.stack, Kind.effect, Kind.effect],
+    PartList.ofList
+      [StackPart.stack 0, StackPart.value .bool,
+        StackPart.value
+          (.program ⟨PartList.ofList [StackPart.stack 0],
+            PartList.ofList [StackPart.stack 1], SlotList.ofList [EffectSlot.var 2]⟩),
+        StackPart.value
+          (.program ⟨PartList.ofList [StackPart.stack 0],
+            PartList.ofList [StackPart.stack 1], SlotList.ofList [EffectSlot.var 3]⟩)],
+    PartList.ofList [StackPart.stack 1],
+    SlotList.ofList [EffectSlot.var 2, EffectSlot.var 3]⟩
+
+/-- `nil : S -- S List<a> ! {}` (7.4). -/
+def nilScheme : Scheme :=
+  ⟨[Kind.stack, Kind.value],
+    PartList.ofList [StackPart.stack 0],
+    PartList.ofList
+      [StackPart.stack 0, StackPart.value (.list (.var 1))],
+    SlotList.nil⟩
+
+/-- `cons : S a List<a> -- S List<a> ! {}` (7.4). -/
+def consScheme : Scheme :=
+  ⟨[Kind.stack, Kind.value],
+    PartList.ofList
+      [StackPart.stack 0, StackPart.value (.var 1), StackPart.value (.list (.var 1))],
+    PartList.ofList
+      [StackPart.stack 0, StackPart.value (.list (.var 1))],
+    SlotList.nil⟩
+
+/-- `list.case : S List<a> -- S' S'' ! {body0 !e0, body1 !e1}` (7.4). -/
+def listCaseScheme : Scheme :=
+  ⟨[Kind.stack, Kind.value, Kind.stack, Kind.effect, Kind.effect],
+    PartList.ofList
+      [StackPart.stack 0, StackPart.value (.list (.var 1)),
+        StackPart.value
+          (.program ⟨PartList.ofList [StackPart.stack 0],
+            PartList.ofList [StackPart.stack 2], SlotList.ofList [EffectSlot.var 3]⟩),
+        StackPart.value
+          (.program ⟨PartList.ofList [StackPart.stack 0, StackPart.value (.var 1), StackPart.value (.list (.var 1))],
+            PartList.ofList [StackPart.stack 2], SlotList.ofList [EffectSlot.var 4]⟩)],
+    PartList.ofList [StackPart.stack 2],
+    SlotList.ofList [EffectSlot.var 3, EffectSlot.var 4]⟩
+
+/-- The host-emission fixture word `test.emit : S text -- S unit ! {test.emit}`. -/
+def emitScheme : Scheme :=
+  ⟨[Kind.stack],
+    PartList.ofList [StackPart.stack 0, StackPart.value .text],
+    PartList.ofList [StackPart.stack 0, StackPart.value .unit],
+    SlotList.ofList [EffectSlot.effect 0]⟩
+
+/-- The complete bootstrap word table, in kernel `Definition` order (23 entries).
+The identities are the kernel table positions; `test.emit` is the supplied
+host fixture. -/
+def wordTable : List Word :=
+  [⟨dupScheme, .dup⟩, ⟨dropScheme, .drop⟩, ⟨swapScheme, .swap⟩, ⟨dipScheme, .dip⟩,
+   ⟨arithScheme, .arith⟩, ⟨arithScheme, .arith⟩, ⟨arithScheme, .arith⟩, ⟨equalsScheme, .equals⟩,
+   ⟨quoteScheme, .quote⟩, ⟨composeScheme, .compose⟩, ⟨runScheme, .run⟩, ⟨reflectScheme, .reflect⟩,
+   ⟨unitScheme, .unit⟩, ⟨pairScheme, .pair⟩, ⟨unpairScheme, .unpair⟩, ⟨inlScheme, .inl⟩,
+   ⟨inrScheme, .inr⟩, ⟨caseScheme, .case⟩, ⟨ifScheme, .if⟩, ⟨nilScheme, .nil⟩,
+   ⟨consScheme, .cons⟩, ⟨listCaseScheme, .listCase⟩, ⟨emitScheme, .testEmit⟩]
+
+/-- The word table has exactly the kernel's 23 definition identities. -/
+theorem wordTable_length : wordTable.length = 23 := by
+  decide
+
+
+/-- The bootstrap word contracts, in kernel `Definition` order: the table
+positions are the exact environment identities the checker fixes. -/
+def bootstrapTable : List (Behavior × Scheme) :=
+  wordTable.map (fun word => (word.behavior, word.scheme))
+
+/-- The fixed bootstrap environment: the word table's contracts, the one
+provided effect identity, and no external environment data. -/
 def bootstrapEnv : Env :=
   { defs := bootstrapTable.map (fun entry => entry.2)
     kinds := bootstrapTable.map (fun entry => entry.1)
@@ -290,5 +377,49 @@ def bootstrapEnv : Env :=
 /-- The definition index of the first entry carrying a behavior, when present. -/
 def definitionOf (behavior : Behavior) : Option Nat :=
   bootstrapTable.findIdx? (fun entry => entry.1 == behavior)
+
+/-! ## The eliminators' definition identities (fragment v1)
+
+The three eliminator rules of the judgment (`NobleM2.Judgment`) are stated
+over these table positions: `case` at 17, `if` at 18, `list.case` at 21. -/
+
+/-- The kernel table position of `case`. -/
+def caseDef : Nat := 17
+
+/-- The kernel table position of `if`. -/
+def ifDef : Nat := 18
+
+/-- The kernel table position of `list.case`. -/
+def listCaseDef : Nat := 21
+
+theorem definitionOf_case : definitionOf .case = some caseDef := by decide
+theorem definitionOf_if : definitionOf .if = some ifDef := by decide
+theorem definitionOf_listCase : definitionOf .listCase = some listCaseDef := by
+  decide
+
+/-- The bootstrap environment carries exactly the word table's contracts. -/
+theorem bootstrapEnv_length : bootstrapEnv.length = 23 := by decide
+
+/-- The word table's schemes are the environment's definitions, in order. -/
+theorem bootstrapEnv_defs : bootstrapEnv.defs = wordTable.map (fun w => w.scheme) := by
+  decide
+
+/-- Looking a mapped field through a list commutes with position lookup. -/
+theorem map_scheme_lookup : ∀ (ws : List Word) (index : Nat),
+    ((ws.map (fun w => w.scheme))[index]?) = (ws[index]?).map (fun w => w.scheme)
+  | [], _ => rfl
+  | _ :: _, 0 => rfl
+  | _ :: rest, index + 1 => map_scheme_lookup rest index
+
+/-- The scheme at one table position, when the position is in range. -/
+theorem wordScheme_lookup (index : Nat) (h : index < 23) :
+    ∃ word, wordTable[index]? = some word ∧
+      bootstrapEnv.scheme index = some word.scheme := by
+  rw [Env.scheme, bootstrapEnv_defs, map_scheme_lookup]
+  cases hlook : wordTable[index]? with
+  | none =>
+      rw [List.getElem?_eq_none_iff, wordTable_length] at hlook
+      omega
+  | some word => exact ⟨word, rfl, by simpa using hlook⟩
 
 end NobleM2

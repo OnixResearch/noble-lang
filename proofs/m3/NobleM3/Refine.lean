@@ -8,7 +8,7 @@ position by position.
 -/
 
 import NobleKernel
-import NobleM3.Words
+
 import NobleM2.Embed
 
 namespace NobleM2.Refinement

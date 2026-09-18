@@ -136,4 +136,101 @@ def Scheme.instantiate (scheme : Scheme) (inst : Inst) : Option (TyList × TyLis
   | some stackIn, some stackOut, some effects => some (stackIn, stackOut, effects)
   | _, _, _ => none
 
+/-- The kind a direct binding carries; a reference binding carries none
+(fragment v1: its kind is checked at the terminal binding after
+resolution, exactly as the kernel's `check_binding` passes `Ref`). -/
+def Binding.kindOf : Binding → Option Kind
+  | .stack _ => some .stack
+  | .value _ => some .value
+  | .effect _ => some .effect
+  | .ref _ => none
+
+/-! ## Reference-binding resolution (fragment v1, B-CHECK-05)
+
+A `ref` binding states a type equation: this variable's witness is another
+variable's witness. Chains must be finite and well founded — a chain that
+returns to a variable already on its own path is cyclic and rejects. The
+walk below mirrors the kernel's `words::resolve`: charge before hop, and a
+hop count passing the witness length names a cycle without a visited set
+(pigeonhole). -/
+
+/-- Why a witness's reference bindings cannot be resolved. -/
+inductive ResolveErr where
+  /-- A chain that returns to a variable on its own path. -/
+  | cyclic : ResolveErr
+  /-- The walk would outrun its declared hop budget; fail closed. -/
+  | exhausted : ResolveErr
+  /-- A hop to a binding position the witness does not carry. -/
+  | unknown : ResolveErr
+  /-- The terminal binding's kind does not match the referrer's. -/
+  | kindMismatch : ResolveErr
+  deriving Repr, DecidableEq, Inhabited
+
+namespace Inst
+
+/-- Follow one reference chain to its terminal binding position: the hop
+count passing the witness length names a cycle (pigeonhole), every hop is
+charged before it is taken (`remaining` is the budget left), and a lookup
+outside the witness's positions is unknown. Returns the terminal position
+and the leftover budget. -/
+def followFrom (witness : Inst) (current : Nat) (remaining : Nat) (hops : Nat) :
+    Except ResolveErr (Nat × Nat) :=
+  if hops + 1 > witness.bindings.length then
+    .error .cyclic
+  else if remaining = 0 then
+    .error .exhausted
+  else
+    match witness.bindings[current]? with
+    | none => .error .unknown
+    | some (.ref next) => witness.followFrom next (remaining - 1) (hops + 1)
+    | some _ => .ok (current, remaining)
+termination_by remaining
+
+/-- Resolve one declared binding (at `index`, carrying `binding`) against
+the witness's reference graph: a direct binding is kept; a reference
+follows its chain and keeps the terminal binding when its kind matches the
+referrer's declared kind. Returns the resolved binding and leftover budget. -/
+def resolveOne (kinds : List Kind) (witness : Inst) (index : Nat)
+    (binding : Binding) (remaining : Nat) : Except ResolveErr (Binding × Nat) :=
+  match binding with
+  | .ref var =>
+    match witness.followFrom var remaining 0 with
+    | .error e => .error e
+    | .ok (terminal, left) =>
+      match kinds[index]? with
+      | none => .error .unknown
+      | some kind =>
+        match witness.bindings[terminal]? with
+        | none => .error .unknown
+        | some term =>
+          if term.kindOf == some kind then .ok (term, left)
+          else .error .kindMismatch
+  | direct => .ok (direct, remaining)
+
+/-- The resolution pass over the witness's bindings, in position order,
+threading the shared hop budget exactly as the kernel's walk state does:
+each position resolves (charging its hops), then the pass continues with
+what budget is left. -/
+def resolveList (kinds : List Kind) (witness : Inst) :
+    Nat → Nat → List Binding → Except ResolveErr (List Binding × Nat)
+  | _, remaining, [] => .ok ([], remaining)
+  | index, remaining, binding :: rest =>
+    match resolveOne kinds witness index binding remaining with
+    | .error e => .error e
+    | .ok (resolved, left) =>
+      match resolveList kinds witness (index + 1) left rest with
+      | .error e => .error e
+      | .ok (resolvedRest, left') => .ok (resolved :: resolvedRest, left')
+
+/-- Resolve every reference binding of one witness (B-CHECK-05): the result
+carries only direct bindings — every reference replaced by its terminal
+binding — together with the leftover hop budget. -/
+def resolve (kinds : List Kind) (witness : Inst) (fuel : Nat) :
+    Except ResolveErr (Inst × Nat) :=
+  match resolveList kinds witness 0 fuel witness.bindings with
+  | .error e => .error e
+  | .ok (bindings, left) => .ok (⟨bindings⟩, left)
+
+end Inst
+
 end NobleM2

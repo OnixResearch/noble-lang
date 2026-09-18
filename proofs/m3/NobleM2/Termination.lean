@@ -121,7 +121,8 @@ theorem foldBody_work_bounded {env : Env} {cand : Candidate} {limits : Limits} :
           simp only [hnode] at h
           cases hap : applyScheme env limits (litScheme lit) inst with
           | error problem => simp only [hap] at h; cases h
-          | ok iface =>
+          | ok pair =>
+            obtain ⟨iface, _⟩ := pair
             cases hj : joinInterface stack derived iface limits with
             | error problem => simp only [hap, hj] at h; cases h
             | ok pair =>
@@ -145,12 +146,14 @@ theorem foldBody_work_bounded {env : Env} {cand : Candidate} {limits : Limits} :
           | none => simp only [hscheme] at h; cases h
           | some scheme =>
             simp only [hscheme] at h
-            split at h
-            · cases h
-            · cases hap : applyScheme env limits scheme inst with
-              | error problem => simp only [hap] at h; cases h
-              | ok iface =>
-                cases hj : joinInterface stack derived iface limits with
+            cases hap : applyScheme env limits scheme inst with
+            | error problem => simp only [hap] at h; cases h
+            | ok pair =>
+              obtain ⟨iface, _⟩ := pair
+              simp only [hap] at h
+              split at h
+              · cases h
+              · cases hj : joinInterface stack derived iface limits with
                 | error problem => simp only [hap, hj] at h; cases h
                 | ok pair =>
                   obtain ⟨joined, bound⟩ := pair
@@ -171,17 +174,18 @@ theorem foldBody_work_bounded {env : Env} {cand : Candidate} {limits : Limits} :
           simp only [hnode] at h
           cases hap : applyScheme env limits quotationScheme inst with
           | error problem => simp only [hap] at h; cases h
-          | ok iface =>
+          | ok pair =>
+            obtain ⟨iface, resolved⟩ := pair
             simp only [hap] at h
             split at h
             · cases h
-            · cases hs1 : inst.stack 1 with
+            · cases hs1 : resolved.stack 1 with
               | none => simp only [hs1] at h; cases h
               | some start =>
-                cases hs2 : inst.stack 2 with
+                cases hs2 : resolved.stack 2 with
                 | none => simp only [hs1, hs2] at h; cases h
                 | some claimed =>
-                  cases hs3 : inst.effects 3 with
+                  cases hs3 : resolved.effects 3 with
                   | none => simp only [hs1, hs2, hs3] at h; cases h
                   | some bound =>
                     simp only [hs1, hs2, hs3] at h
@@ -290,14 +294,17 @@ theorem derives : Derives bootstrapEnv cand cand.body req.expected.stackIn
     req.expected.stackOut checked.interface.effects := by
   have h3 : Derives bootstrapEnv cand [2] (ty [.i64, .i64]) (ty [.i64])
       (EffSet.empty.union EffSet.empty) :=
-    Derives.sequence rfl (NodeDerives.word addLook addInst trivial) rfl rfl
+    Derives.sequence rfl
+      (NodeDerives.word addLook (resolvesTo_refl _ (by decide)) addInst trivial) rfl rfl
       (Derives.empty (ty [.i64]))
   have h2 : Derives bootstrapEnv cand [1, 2] (ty [.i64]) (ty [.i64])
       (EffSet.empty.union (EffSet.empty.union EffSet.empty)) :=
-    Derives.sequence rfl (NodeDerives.literal lit1) rfl rfl h3
+    Derives.sequence rfl (NodeDerives.literal (resolvesTo_refl _ (by decide)) lit1)
+      rfl rfl h3
   have h1 : Derives bootstrapEnv cand [0, 1, 2] (ty []) (ty [.i64])
       (EffSet.empty.union (EffSet.empty.union (EffSet.empty.union EffSet.empty))) :=
-    Derives.sequence rfl (NodeDerives.literal lit41) rfl rfl h2
+    Derives.sequence rfl (NodeDerives.literal (resolvesTo_refl _ (by decide)) lit41)
+      rfl rfl h2
   simp only [cand, req, checked] at h1 ⊢
   rw [union_empty_left, union_empty_left, union_empty_left] at h1
   exact h1
