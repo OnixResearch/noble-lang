@@ -12,18 +12,20 @@ The translations below are total:
 * `Int` literal payloads are embedded with `BitVec.ofInt 64`, i.e. two's
   complement on 64 bits, matching the generated `I64` representation.
 * Lists become vectors through `vecOf`. Lean lists carry no a-priori length
-  bound while the extracted `Vec` mirrors Rust's allocation-finite vectors, so
-  an input longer than `Usize.max` (unreachable for every fragment value: the
-  reference bounds all lengths by `u32` limits) falls back to the empty vector.
-  In range, `vecOf f l` is exactly `Vec.from (l.map f)`.
+  bound while the extracted `Vec` mirrors Rust's allocation-finite vectors,
+  so an input longer than `Usize.max` — unreachable for every fragment value —
+  falls back to the empty vector. In range, `vecOf f l` is `Vec.from (l.map f)`.
 
-The recursive embeddings are fuel-parameterized: a pure `Vec` build must go
+The recursive translations are fuel-parameterized: the pure `Vec` builders go
 through `vecOf`'s higher-order map, and Lean's termination checker cannot
-relate an unapplied mutual reference through it. Passing an explicit depth
-budget down (one decrement per data level, discharged by the pattern variable)
-makes every recursive call trivially decreasing. The public wrappers budget
-the input's size — always strictly greater than every nested level — so the
-fuel-exhausted fallback arms never fire on a well-formed call.
+relate an unapplied mutual reference through it. An explicit depth budget
+(one decrement per data level, discharged by the pattern variable) makes every
+recursive call trivially decreasing. The size measures bound the true depth of
+the value they measure — `partListSize` counts whole value-pattern subtrees,
+not just the list spine — and the public wrappers add a constant margin, so
+the fuel-exhausted fallback arms never fire on any well-formed input: for
+every reference value, embedding followed by projection is the identity on
+the fragment's identifiers and shapes.
 -/
 
 import NobleKernel
@@ -63,21 +65,21 @@ mutual
   def embedTyFuel (fuel : Nat) (t : Ty) : noble_kernel.types.Ty :=
     match fuel, t with
     | 0, _ => .UnitType
-    | fuel + 1, .unit => .UnitType
-    | fuel + 1, .bool => .BoolType
-    | fuel + 1, .i64 => .I64Type
-    | fuel + 1, .text => .TextType
-    | fuel + 1, .syn => .SyntaxType
+    | _ + 1, .unit => .UnitType
+    | _ + 1, .bool => .BoolType
+    | _ + 1, .i64 => .I64Type
+    | _ + 1, .text => .TextType
+    | _ + 1, .syn => .SyntaxType
     | fuel + 1, .pair a b => .PairType (embedTyFuel fuel a) (embedTyFuel fuel b)
     | fuel + 1, .sum a b => .SumType (embedTyFuel fuel a) (embedTyFuel fuel b)
     | fuel + 1, .list a => .ListType (embedTyFuel fuel a)
     | fuel + 1, .program i o e =>
       .ProgramType (embedTyListFuel fuel i) (embedTyListFuel fuel o)
         (vecOf embedU32 e.ids)
-    | fuel + 1, .resource k => .ResourceType (embedU32 k)
+    | _ + 1, .resource k => .ResourceType (embedU32 k)
     termination_by fuel
 
-  /-- Fuel-driven stack (list) embedding. -/
+  /-- Fuel-driven stack (list) embedding; the whole stack shares the budget. -/
   def embedTyListFuel (fuel : Nat) (l : TyList) :
       alloc.vec.Vec noble_kernel.types.Ty :=
     match fuel with
@@ -87,43 +89,49 @@ mutual
 
 end
 
-/-- Reference type → extracted type. -/
-def embedTy (t : Ty) : noble_kernel.types.Ty := embedTyFuel (Ty.size t) t
+/-- Reference type → extracted type. The budget exceeds the nesting depth of
+    any type of that size, so the fallback arm is unreachable here. -/
+def embedTy (t : Ty) : noble_kernel.types.Ty := embedTyFuel (2 * Ty.size t + 2) t
 
 /-- Reference stack (bottom first) → extracted vector of types. -/
 def embedTyList (l : TyList) : alloc.vec.Vec noble_kernel.types.Ty :=
-  embedTyListFuel (TyList.size l) l
+  embedTyListFuel (2 * TyList.size l + 2) l
 
 /-- Reference effect bound → extracted effect set. -/
 def embedEffSet (s : EffSet) : noble_kernel.types.EffSet := vecOf embedU32 s.ids
 
 /-! ## Patterns: embedding -/
 
-/-- A size measure for stack patterns (one point per constructor node). -/
-def partListSize : PartList → Nat
-  | .nil => 1
-  | .cons _ rest => 1 + partListSize rest
+mutual
 
-/-- A size measure for value patterns (one point per constructor node). -/
-def patternSize : Pattern → Nat
-  | .unit => 1
-  | .bool => 1
-  | .i64 => 1
-  | .text => 1
-  | .syn => 1
-  | .resource _ => 1
-  | .var _ => 1
-  | .pair a b => 1 + patternSize a + patternSize b
-  | .sum a b => 1 + patternSize a + patternSize b
-  | .list a => 1 + patternSize a
-  | .program sig =>
-    1 + partListSize sig.stackIn + partListSize sig.stackOut
-      + sig.effects.length
+  /-- Size of a stack pattern: one point per constructor node, counting the
+      value-pattern subtrees (a `value` entry's pattern is part of the size,
+      so the fuel budget dominates every nested pattern). -/
+  def partListSize : PartList → Nat
+    | .nil => 1
+    | .cons (.stack _) rest => 1 + partListSize rest
+    | .cons (.value p) rest => 1 + patternSize p + partListSize rest
+    termination_by l => sizeOf l
 
-/-- A size measure for stack entries (one point per constructor node). -/
-def stackPartSize : StackPart → Nat
-  | .stack _ => 1
-  | .value p => 1 + patternSize p
+  /-- Size of a value pattern: one point per constructor node; program
+      signatures count their full stack patterns and effect slots. -/
+  def patternSize : Pattern → Nat
+    | .unit => 1
+    | .bool => 1
+    | .i64 => 1
+    | .text => 1
+    | .syn => 1
+    | .resource _ => 1
+    | .var _ => 1
+    | .pair a b => 1 + patternSize a + patternSize b
+    | .sum a b => 1 + patternSize a + patternSize b
+    | .list a => 1 + patternSize a
+    | .program ⟨stackIn, stackOut, effects⟩ =>
+      1 + partListSize stackIn + partListSize stackOut + effects.length
+    termination_by p => sizeOf p
+    decreasing_by all_goals simp +arith
+
+end
 
 /-- Reference effect slot → extracted slot. -/
 def embedEffectSlot : EffectSlot → noble_kernel.shapes.EffectSlot
@@ -136,15 +144,17 @@ mutual
   def embedPatternFuel (fuel : Nat) (p : Pattern) : noble_kernel.shapes.Pattern :=
     match fuel, p with
     | 0, _ => .UnitPattern
-    | fuel + 1, .unit => .UnitPattern
-    | fuel + 1, .bool => .BoolPattern
-    | fuel + 1, .i64 => .I64Pattern
-    | fuel + 1, .text => .TextPattern
-    | fuel + 1, .syn => .SyntaxPattern
-    | fuel + 1, .resource k => .ResourcePattern (embedU32 k)
-    | fuel + 1, .var v => .VarPattern (embedU32 v)
-    | fuel + 1, .pair a b => .PairPattern (embedPatternFuel fuel a) (embedPatternFuel fuel b)
-    | fuel + 1, .sum a b => .SumPattern (embedPatternFuel fuel a) (embedPatternFuel fuel b)
+    | _ + 1, .unit => .UnitPattern
+    | _ + 1, .bool => .BoolPattern
+    | _ + 1, .i64 => .I64Pattern
+    | _ + 1, .text => .TextPattern
+    | _ + 1, .syn => .SyntaxPattern
+    | _ + 1, .resource k => .ResourcePattern (embedU32 k)
+    | _ + 1, .var v => .VarPattern (embedU32 v)
+    | fuel + 1, .pair a b =>
+      .PairPattern (embedPatternFuel fuel a) (embedPatternFuel fuel b)
+    | fuel + 1, .sum a b =>
+      .SumPattern (embedPatternFuel fuel a) (embedPatternFuel fuel b)
     | fuel + 1, .list a => .ListPattern (embedPatternFuel fuel a)
     | fuel + 1, .program sig =>
       .ProgramPattern (embedPartListFuel fuel sig.stackIn)
@@ -153,15 +163,16 @@ mutual
     termination_by fuel
 
   /-- Fuel-driven stack-entry embedding. -/
-  def embedStackPartFuel (fuel : Nat) (s : StackPart) : noble_kernel.shapes.Pattern :=
+  def embedStackPartFuel (fuel : Nat) (s : StackPart) :
+      noble_kernel.shapes.Pattern :=
     match fuel, s with
     | 0, .stack v => .StackVarPattern (embedU32 v)
     | 0, .value _ => .UnitPattern
-    | fuel + 1, .stack v => .StackVarPattern (embedU32 v)
+    | _ + 1, .stack v => .StackVarPattern (embedU32 v)
     | fuel + 1, .value p => embedPatternFuel fuel p
     termination_by fuel
 
-  /-- Fuel-driven stack-pattern embedding. -/
+  /-- Fuel-driven stack-pattern embedding; the whole list shares the budget. -/
   def embedPartListFuel (fuel : Nat) (l : PartList) :
       alloc.vec.Vec noble_kernel.shapes.Pattern :=
     match fuel with
@@ -171,17 +182,13 @@ mutual
 
 end
 
-/-- Reference value pattern → extracted pattern. -/
+/-- Reference value pattern → extracted pattern (budget dominates depth). -/
 def embedPattern (p : Pattern) : noble_kernel.shapes.Pattern :=
-  embedPatternFuel (patternSize p) p
-
-/-- One stack entry: a whole stack variable or one value pattern. -/
-def embedStackPart (s : StackPart) : noble_kernel.shapes.Pattern :=
-  embedStackPartFuel (stackPartSize s) s
+  embedPatternFuel (2 * patternSize p + 2) p
 
 /-- Reference stack pattern → extracted vector of patterns. -/
 def embedPartList (l : PartList) : alloc.vec.Vec noble_kernel.shapes.Pattern :=
-  embedPartListFuel (partListSize l) l
+  embedPartListFuel (2 * partListSize l + 2) l
 
 /-- Reference variable kind → extracted kind. -/
 def embedKind : Kind → noble_kernel.words.VariableKind
@@ -289,10 +296,11 @@ def embedEnv (env : Env) : noble_kernel.contracts.Env :=
 def projectEffSet (s : noble_kernel.types.EffSet) : EffSet :=
   EffSet.ofIds (s.val.map projectU32)
 
-/-- The element list of a `ProgramType` node is smaller than the node itself.
-    This is the one non-trivial sizeOf fact needed to terminate `genTySize`
-    below: `Vec`/`Slice`/`ListN` nest the elements behind three projections. -/
-theorem sizeOf_programType_lt (i o : alloc.vec.Vec noble_kernel.types.Ty)
+/-- The element list of a `ProgramType` node's first field vector is smaller
+    than the node itself. `Vec`/`Slice`/`ListN` nest the elements behind three
+    projections, which is the one non-trivial sizeOf fact needed to terminate
+    `genTySize` below. -/
+theorem sizeOf_vec1_lt_programType (i o : alloc.vec.Vec noble_kernel.types.Ty)
     (e : noble_kernel.types.EffSet) :
     sizeOf i.slice.list < sizeOf (noble_kernel.types.Ty.ProgramType i o e) := by
   have h3 : sizeOf (noble_kernel.types.Ty.ProgramType i o e)
@@ -303,14 +311,29 @@ theorem sizeOf_programType_lt (i o : alloc.vec.Vec noble_kernel.types.Ty)
   have hv := alloc.vec.Vec.mk.sizeOf_spec
     (Slice.mk (α := noble_kernel.types.Ty) leng list bound)
   have hs := Slice.mk.sizeOf_spec (α := noble_kernel.types.Ty) leng list bound
-  simp only [alloc.vec.Vec.slice, hv, hs, hN] at h3 ⊢
+  simp only [hv, hs, hN] at h3 ⊢
+  omega
+
+/-- The element list of a `ProgramType` node's second field vector is smaller
+    than the node itself; same argument as `sizeOf_vec1_lt_programType`. -/
+theorem sizeOf_vec2_lt_programType (i o : alloc.vec.Vec noble_kernel.types.Ty)
+    (e : noble_kernel.types.EffSet) :
+    sizeOf o.slice.list < sizeOf (noble_kernel.types.Ty.ProgramType i o e) := by
+  have h3 : sizeOf (noble_kernel.types.Ty.ProgramType i o e)
+      = 1 + sizeOf i + sizeOf o + sizeOf e := by
+    rw [noble_kernel.types.Ty.ProgramType.sizeOf_spec]
+  obtain ⟨⟨leng, list, bound⟩⟩ := o
+  have hN : sizeOf leng = leng := rfl
+  have hv := alloc.vec.Vec.mk.sizeOf_spec
+    (Slice.mk (α := noble_kernel.types.Ty) leng list bound)
+  have hs := Slice.mk.sizeOf_spec (α := noble_kernel.types.Ty) leng list bound
+  simp only [hv, hs, hN] at h3 ⊢
   omega
 
 /-! A size measure for extracted types: one point per constructor node. Its
     `ProgramType` arm recurses through the `Vec`/`Slice`/`ListN` field chain,
     discharged by `sizeOf_programType_lt`. The body never touches `sizeOf`, so
-    the (noncomputable) auto-generated size instances of the extracted module
-    are not needed at run time. -/
+    the size instances of the extracted module are not needed at run time. -/
 
 mutual
 
@@ -329,17 +352,13 @@ mutual
     | .ResourceType _ => 1
     termination_by t => sizeOf t
     decreasing_by
-      trace_state
       all_goals
         first
-          | exact decreasing_tactic
-          | exact sizeOf_programType_lt _ _ _
-          | exact sizeOf_vec_leng_lt_programType
+          | exact sizeOf_vec1_lt_programType _ _ _
+          | exact sizeOf_vec2_lt_programType _ _ _
           | (rw [noble_kernel.types.Ty.PairType.sizeOf_spec]; omega)
           | (rw [noble_kernel.types.Ty.SumType.sizeOf_spec]; omega)
           | (rw [noble_kernel.types.Ty.ListType.sizeOf_spec]; omega)
-          | (rw [Aeneas.Data.ListN.ListN.cons.sizeOf_spec]; omega)
-          | omega
 
   /-- A size measure over the extracted element list (length-indexed). -/
   def genTyListSizeN (n : Nat) (l : Aeneas.Data.ListN.ListN noble_kernel.types.Ty n) :
@@ -348,12 +367,6 @@ mutual
     | .nil => 1
     | .cons t ts => 1 + genTySize t + genTyListSizeN _ ts
     termination_by sizeOf l
-    decreasing_by
-      all_goals
-        first
-          | exact decreasing_tactic
-          | (rw [Aeneas.Data.ListN.ListN.cons.sizeOf_spec]; omega)
-          | omega
 
 end
 
@@ -362,41 +375,43 @@ def genTyListSize : List noble_kernel.types.Ty → Nat
   | [] => 1
   | t :: ts => 1 + genTySize t + genTyListSize ts
 
-  | 0, _ => .unit
-  | fuel + 1, .UnitType => .unit
-  | fuel + 1, .BoolType => .bool
-  | fuel + 1, .I64Type => .i64
-  | fuel + 1, .TextType => .text
-  | fuel + 1, .SyntaxType => .syn
-def projectTyFuel (fuel : Nat) (t : noble_kernel.types.Ty) : Ty :=
-  match fuel, t with
-  | fuel + 1, .BoolType => .bool
-  | fuel + 1, .I64Type => .i64
-  | fuel + 1, .TextType => .text
-  | fuel + 1, .SyntaxType => .syn
-  | fuel + 1, .PairType a b => .pair (projectTyFuel fuel a) (projectTyFuel fuel b)
-  | fuel + 1, .SumType a b => .sum (projectTyFuel fuel a) (projectTyFuel fuel b)
-  | fuel + 1, .ListType a => .list (projectTyFuel fuel a)
-  | fuel + 1, .ProgramType i o e =>
-    .program (projectTyListFuel fuel i.val) (projectTyListFuel fuel o.val)
-      (projectEffSet e)
-  | fuel + 1, .ResourceType k => .resource (projectU32 k)
-  termination_by fuel
+mutual
 
-/-- Fuel-driven stack projection over the extracted type list. -/
-def projectTyListFuel (fuel : Nat) (l : List noble_kernel.types.Ty) : TyList :=
-  match fuel, l with
-  | 0, _ => .nil
-  | fuel + 1, [] => .nil
-  | fuel + 1, t :: ts => .cons (projectTyFuel fuel t) (projectTyListFuel fuel ts)
-  termination_by fuel
+  /-- Fuel-driven type projection. -/
+  def projectTyFuel (fuel : Nat) (t : noble_kernel.types.Ty) : Ty :=
+    match fuel, t with
+    | 0, _ => .unit
+    | _ + 1, .UnitType => .unit
+    | _ + 1, .BoolType => .bool
+    | _ + 1, .I64Type => .i64
+    | _ + 1, .TextType => .text
+    | _ + 1, .SyntaxType => .syn
+    | fuel + 1, .PairType a b => .pair (projectTyFuel fuel a) (projectTyFuel fuel b)
+    | fuel + 1, .SumType a b => .sum (projectTyFuel fuel a) (projectTyFuel fuel b)
+    | fuel + 1, .ListType a => .list (projectTyFuel fuel a)
+    | fuel + 1, .ProgramType i o e =>
+      .program (projectTyListFuel fuel i.val) (projectTyListFuel fuel o.val)
+        (projectEffSet e)
+    | _ + 1, .ResourceType k => .resource (projectU32 k)
+    termination_by fuel
 
-/-- Extracted type → reference type. -/
-def projectTy (t : noble_kernel.types.Ty) : Ty := projectTyFuel (genTySize t) t
+  /-- Fuel-driven stack projection over the extracted type list. -/
+  def projectTyListFuel (fuel : Nat) (l : List noble_kernel.types.Ty) : TyList :=
+    match fuel, l with
+    | 0, _ => .nil
+    | _ + 1, [] => .nil
+    | fuel + 1, t :: ts => .cons (projectTyFuel fuel t) (projectTyListFuel fuel ts)
+    termination_by fuel
+
+end
+
+/-- Extracted type → reference type (budget dominates depth). -/
+def projectTy (t : noble_kernel.types.Ty) : Ty :=
+  projectTyFuel (2 * genTySize t + 2) t
 
 /-- Extracted vector of types → reference stack. -/
 def projectTyList (v : alloc.vec.Vec noble_kernel.types.Ty) : TyList :=
-  projectTyListFuel (genTyListSize v.val) v.val
+  projectTyListFuel (2 * genTyListSize v.val + 2) v.val
 
 /-- Extracted interface → reference interface. -/
 def projectInterface (i : noble_kernel.untrusted.Interface) : Interface :=
@@ -410,7 +425,7 @@ def projectDerivation (d : noble_kernel.untrusted.Derivation) : Derivation :=
     interface := projectInterface d.interface }
 
 /-- Extracted checked result → reference checked result. -/
-def projectChecked (c : noble_kernel.untrusted.Checked) : Checked :=
+def project_checked (c : noble_kernel.untrusted.Checked) : Checked :=
   { interface := projectInterface c.interface
     derivations := c.derivations.val.map projectDerivation }
 
@@ -453,19 +468,21 @@ def projectLimitKind : noble_kernel.untrusted.LimitKind → LimitKind
   | .Diagnostics => .diagnostics
 
 /-- Extracted outcome → reference outcome. -/
-def projectOutcome' : noble_kernel.untrusted.Outcome → Outcome
-  | .Accepted checked => .accepted (projectChecked checked)
+def project_outcome : noble_kernel.untrusted.Outcome → Outcome
+  | .Accepted checked => .accepted (project_checked checked)
   | .Invalid diag => .invalid (projectDiagnostic diag)
   | .Unsupported kind => .unsupported (projectUnsupportedKind kind)
   | .Exhausted kind => .exhausted (projectLimitKind kind)
   | .InternalFailure => .internalFailure
 
 /-- The extracted checker's `Result`-wrapped outcome, projected onto the
-    reference outcome domain. The checker only ever returns `ok` outcomes
-    (every rejection is an `Err`-carrying `ok`); a monadic `fail` or
-    divergence — not produced by any bounded run — projects to the reference's
-    reserved `.internalFailure` outcome. -/
-def project_outcome (r : Result noble_kernel.untrusted.Outcome) : Outcome :=
-  Result.cases r projectOutcome' (fun _ _ => .internalFailure) .internalFailure
+    reference outcome domain. A terminating successful run observes `ok` and
+    projects its outcome; a monadic `fail` or divergence — not produced by any
+    bounded run — projects to the reference's reserved `.internalFailure`. -/
+def project_result (r : Result noble_kernel.untrusted.Outcome) : Outcome :=
+  match r.match with
+  | .ok o => project_outcome o
+  | .vis _ _ => .internalFailure
+  | .div => .internalFailure
 
 end NobleM2
