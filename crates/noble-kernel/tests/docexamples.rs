@@ -84,12 +84,14 @@ fn collect_rust(dir: &Path, out: &mut Vec<PathBuf>) -> Result<(), String> {
 }
 
 /// Scan every documented source: the kernel crate's sources and the
-/// fragment definition.
+/// fragment definitions (v0 and v1) and the v1 executed examples.
 fn scan_all() -> Result<Vec<Block>, String> {
     let manifest = Path::new(env!("CARGO_MANIFEST_DIR"));
     let mut files: Vec<PathBuf> = Vec::new();
     collect_rust(&manifest.join("src"), &mut files)?;
     files.push(manifest.join("../../verification/m2-fragment.md"));
+    files.push(manifest.join("../../verification/m3-fragment.md"));
+    files.push(manifest.join("../../verification/m3-docexamples.md"));
     let mut blocks = Vec::new();
     for file in files {
         let text = std::fs::read_to_string(&file)
@@ -123,6 +125,55 @@ fn outcome_name(outcome: &Outcome) -> &'static str {
     }
 }
 
+/// The bootstrap word table in `Definition` order (23 entries), for
+/// coverage reporting.
+const WORDS: [&str; 23] = [
+    "dup",
+    "drop",
+    "swap",
+    "dip",
+    "+",
+    "-",
+    "*",
+    "=",
+    "quote",
+    "compose",
+    "run",
+    "reflect",
+    "unit",
+    "pair",
+    "unpair",
+    "inl",
+    "inr",
+    "case",
+    "if",
+    "nil",
+    "cons",
+    "list.case",
+    "test.emit",
+];
+
+/// Every word must keep at least one executed `noble-check` example: the
+/// examples are the documented evidence per word, so a word whose
+/// examples are deleted (or never written) must fail the suite, not
+/// silently shrink the executed surface (task 3.2 coverage assertion).
+fn require_word_coverage(covered: &[bool; WORDS.len()]) -> Result<(), String> {
+    let missing: Vec<&str> = WORDS
+        .iter()
+        .zip(covered.iter())
+        .filter(|(_, seen)| !**seen)
+        .map(|(word, _)| *word)
+        .collect();
+    if missing.is_empty() {
+        Ok(())
+    } else {
+        Err(format!(
+            "words without an executed noble-check example: {}",
+            missing.join(", ")
+        ))
+    }
+}
+
 // r[verify DX-DOC-01]
 // r[verify DX-DOC-02]
 // r[verify VT-M2-01]
@@ -131,6 +182,7 @@ fn documented_noble_check_examples_run_through_the_actual_checker() -> Result<()
     let blocks = scan_all()?;
     let mut executed = 0;
     let mut illustrative = 0;
+    let mut covered = [false; WORDS.len()];
     for block in &blocks {
         if block.info.split_whitespace().next() != Some("noble-check") {
             illustrative += 1;
@@ -158,14 +210,25 @@ fn documented_noble_check_examples_run_through_the_actual_checker() -> Result<()
             ));
         }
         executed += 1;
+        for node in &example.candidate.nodes {
+            if let noble_kernel::untrusted::Node::Invocation { def, .. } = node {
+                let index = def.0 as usize;
+                if index < covered.len() {
+                    covered[index] = true;
+                }
+            }
+        }
     }
     if executed < 6 {
         return Err(format!(
             "expected at least six executed examples, found {executed}"
         ));
     }
+    require_word_coverage(&covered)?;
     println!(
-        "docexamples: {executed} noble-check examples executed against the actual checker, {illustrative} illustrative fenced blocks ignored"
+        "docexamples: {executed} noble-check examples executed against the actual checker, {illustrative} illustrative fenced blocks ignored, word coverage {}/{}",
+        covered.iter().filter(|seen| **seen).count(),
+        WORDS.len()
     );
     Ok(())
 }

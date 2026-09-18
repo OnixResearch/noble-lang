@@ -108,5 +108,33 @@ What the M3 acceptance sequence claims, and what it does not:
 | `verification/m3-coverage-gate.sh` | open (task 6.1) |
 | `verification/m3-proof-gate-refusals.sh` | open (task 6.2) |
 | `verification/m3-coverage-refusals.sh` | open (task 6.2) |
-| per-word doc-example coverage assertion | open (task 3.2) |
+| per-word doc-example coverage assertion | done (task 3.2, evidence below) |
 | DX-01 rejection-family controls | open (task 3.3) |
+
+## Task 3.2 evidence: per-word doc examples and the coverage assertion
+
+`verification/m3-docexamples.md` adds 34 executed `noble-check`
+examples: one positive example per word (23) and one rejection per
+constrained word (dup/drop/quote eligibility, dip/compose/run/case/if/
+list.case latent effects and joins, test.emit effect inclusion, plus an
+`=` shape rejection). The harness (`tests/docexamples.rs`) now scans the
+v1 fragment and examples documents and asserts per-word coverage:
+
+```console
+$ cargo test --offline -p noble-kernel --test docexamples -- --nocapture
+docexamples: 42 noble-check examples executed against the actual checker,
+3 illustrative fenced blocks ignored, word coverage 23/23
+```
+
+The coverage assertion fails by mutation: deleting the `swap` examples
+from a scratch copy of `m3-docexamples.md` and re-running the suite
+gives
+
+```console
+test documented_noble_check_examples_run_through_the_actual_checker ... FAILED
+Error: "words without an executed noble-check example: swap"
+test result: FAILED. 1 passed; 1 failed; ... (exit 101)
+```
+
+and the restored file is green again (2 passed). The illustrative
+control still proves untagged blocks stay unexecuted.

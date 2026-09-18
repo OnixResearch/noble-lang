@@ -112,7 +112,8 @@ binding vector, asserted against the row's named constraint (column
 "v1 fixture control" above); property-pool entry = pool id equal to the
 table index (24 ids including the resource-maker fixture); oracle arm =
 `word_face(def, …)`; doc example = the per-word `noble-check` example
-added by task 3.2. The freeze is enforced mechanically by
+in [m3-docexamples.md](m3-docexamples.md) (task 3.2). The freeze is
+enforced mechanically by
 `every_word_has_a_positive_and_a_rejection_control` (23/23) and the
 doc-example coverage assertion.
 
