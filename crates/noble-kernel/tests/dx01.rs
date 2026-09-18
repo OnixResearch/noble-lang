@@ -18,6 +18,11 @@
 //! fragment: checking is static and rejection issues no candidate-body host
 //! request (B-RESULT-01); the checker makes no host calls of any kind.
 
+// The fragment-v1 rejection families (recursion, schema, cycle,
+// eliminator joins) extend the DX-01 controls in their own module.
+#[path = "dx01/v1.rs"]
+mod v1;
+
 use noble_kernel::contracts::Definition;
 use noble_kernel::types::Ty;
 use noble_kernel::untrusted::{Constraint, Limits, Lit, Node, NodeId, Request};

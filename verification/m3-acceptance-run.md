@@ -109,7 +109,41 @@ What the M3 acceptance sequence claims, and what it does not:
 | `verification/m3-proof-gate-refusals.sh` | open (task 6.2) |
 | `verification/m3-coverage-refusals.sh` | open (task 6.2) |
 | per-word doc-example coverage assertion | done (task 3.2, evidence below) |
-| DX-01 rejection-family controls | open (task 3.3) |
+| DX-01 rejection-family controls | done (task 3.3, evidence below) |
+
+## Task 3.3 evidence: DX-01 controls for the v1 rejection families
+
+`tests/dx01/v1.rs` (module `v1` of the `dx01` test target) extends the
+DX-01 diagnostic controls to the new rejection families; the extended
+case list:
+
+- `dx01_recursive_dependency_names_the_definition_identity` — a
+  recursive definition dependency rejects as `unsupported` before any
+  body check, naming the definition identity
+  (`UnsupportedKind::RecursiveDependency(Definition(23))`).
+- `dx01_recursive_schema_names_the_declaration` — a user-declared
+  recursive schema rejects as `unsupported`, naming the declaration
+  (`UnsupportedKind::RecursiveSchema(SchemaId(7))`).
+- `dx01_cyclic_witness_names_the_constraint_and_reports_unavailable_provenance`
+  — a self-referential witness rejects as `invalid` with
+  `constraint = CyclicWitness` at the failing node, provenance
+  unavailable.
+- `dx01_swap_witness_cycle_inside_a_body_names_the_node` — the cycle
+  inside a compound body names the swap node (`NodeId(1)`), not the body.
+- `dx01_case_join_names_the_word_and_both_branch_stacks` — the `case`
+  join diagnostic names the word and carries both branch programs in
+  `expected` (claimed equal join) and `actual`.
+- `dx01_list_case_join_names_the_word_and_both_branch_stacks` — the
+  same shape for `list.case`'s nil/cons branches.
+
+Wherever a `Diagnostic` exists, `provenance_available == false` is
+asserted (unavailable, never invented); the unsupported rejections
+carry their identity in the kind and issue no host request (B-RESULT-02).
+
+```console
+$ cargo test --offline -p noble-kernel --test dx01
+test result: ok. 9 passed; 0 failed; ... (3 M2 variants + 6 v1-family controls)
+```
 
 ## Task 3.2 evidence: per-word doc examples and the coverage assertion
 
