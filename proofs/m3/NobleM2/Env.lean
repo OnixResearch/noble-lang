@@ -50,6 +50,10 @@ structure Env where
   kinds : List Behavior
   /-- Effect identities this environment provides; `test.emit` is first. -/
   effects : List EffId
+  /-- Each definition.s dependency list (v1: external environment data). -/
+  deps : List (List Nat)
+  /-- Each definition.s user-declared schema id (v1: external data). -/
+  schemas : List Nat
   deriving Repr, DecidableEq, Inhabited
 
 /-- The scheme of a definition. -/
@@ -270,7 +274,9 @@ def bootstrapTable : List (Behavior × Scheme) :=
 def bootstrapEnv : Env :=
   { defs := bootstrapTable.map (fun entry => entry.2)
     kinds := bootstrapTable.map (fun entry => entry.1)
-    effects := [testEmitEffect] }
+    effects := [testEmitEffect],
+    deps := [],
+    schemas := [] }
 
 /-- The definition index of the first entry carrying a behavior, when present. -/
 def definitionOf (behavior : Behavior) : Option Nat :=
