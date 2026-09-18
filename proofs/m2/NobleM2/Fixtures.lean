@@ -17,9 +17,9 @@ namespace NobleM2.Fixtures
 /-- Definition indices the kernel tests use (`contracts::Definition(_)`). -/
 def dupDef : Nat := 0
 def addDef : Nat := 4
-def runDef : Nat := 9
-def emitDef : Nat := 21
-def makerDef : Nat := 22
+def runDef : Nat := 10
+def emitDef : Nat := 22
+def makerDef : Nat := 23
 
 def tyList : List Ty → TyList
   | [] => .nil

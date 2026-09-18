@@ -22,6 +22,7 @@ inductive Behavior where
   | swap : Behavior
   | dip : Behavior
   | arith : Behavior
+  | equals : Behavior
   | quote : Behavior
   | compose : Behavior
   | run : Behavior
@@ -138,6 +139,11 @@ def bootstrapTable : List (Behavior × Scheme) :=
       schemeOf [Kind.stack]
         (PartList.ofList [stackVar 0, patternPart .i64, patternPart .i64])
         (PartList.ofList [stackVar 0, patternPart .i64])
+        SlotList.nil),
+        (Behavior.equals,
+      schemeOf [Kind.stack]
+        (PartList.ofList [stackVar 0, patternPart .i64, patternPart .i64])
+        (PartList.ofList [stackVar 0, patternPart .bool])
         SlotList.nil),
     (Behavior.arith,
       schemeOf [Kind.stack]

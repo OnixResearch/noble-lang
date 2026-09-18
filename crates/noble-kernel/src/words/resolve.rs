@@ -58,12 +58,15 @@ pub fn resolve(
     };
     let mut failure: Option<crate::words::InstError> = None;
     let mut index: usize = 0;
-    while index < inst.bindings.len() && failure.is_none() {
+    while index < inst.bindings.len() {
         let (next, step) = resolve_binding(kinds, inst, index, walk, fuel);
         walk = next;
         match step {
             Ok(()) => index += 1,
-            Err(problem) => failure = Some(problem),
+            Err(problem) => {
+                failure = Some(problem);
+                break;
+            }
         }
     }
     match failure {
@@ -118,7 +121,7 @@ fn follow_chain(
     let mut current = from;
     let mut terminal: Option<usize> = None;
     let mut failure: Option<crate::words::InstError> = None;
-    while terminal.is_none() && failure.is_none() {
+    while terminal.is_none() {
         hops += 1;
         if hops > inst.bindings.len() {
             failure = Some(crate::words::InstError::CyclicWitness);
@@ -129,7 +132,14 @@ fn follow_chain(
             break;
         }
         walk.spent += 1;
-        match slot_of(current).and_then(|slot| inst.bindings.get(slot)) {
+        // The lookup is two explicit branches: a combinator closure over
+        // the borrowed arena is a shape the extraction's borrow pass
+        // cannot end.
+        let found = match slot_of(current) {
+            Some(slot) => inst.bindings.get(slot),
+            None => None,
+        };
+        match found {
             None => failure = Some(crate::words::InstError::UnknownVariable),
             Some(crate::words::Binding::Ref(next)) => current = *next,
             Some(crate::words::Binding::Stack(_)) => terminal = slot_of(current),

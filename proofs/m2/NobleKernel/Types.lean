@@ -57,7 +57,7 @@ inductive types.Ty where
 | ResourceType : types.ResourceKind → types.Ty
 
 /-- [noble_kernel::untrusted::Interface]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 130:0-137:1
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 135:0-142:1
     Visibility: public -/
 structure untrusted.Interface where
   stack_in : alloc.vec.Vec types.Ty
@@ -65,13 +65,13 @@ structure untrusted.Interface where
   effects : types.EffSet
 
 /-- [noble_kernel::untrusted::NodeId]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 13:0-13:27
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 18:0-18:27
     Visibility: public -/
 @[reducible]
 def untrusted.NodeId := Std.U32
 
 /-- [noble_kernel::acceptance::Frame]
-    Source: 'crates/noble-kernel/src/acceptance.rs', lines 20:0-29:1 -/
+    Source: 'crates/noble-kernel/src/acceptance.rs', lines 21:0-30:1 -/
 structure acceptance.Frame where
   depth : Std.U32
   origin : Option untrusted.NodeId
@@ -95,7 +95,7 @@ inductive acceptance.frames.Completion where
   acceptance.frames.Completion
 
 /-- [noble_kernel::untrusted::Limits]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 99:0-114:1
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 104:0-119:1
     Visibility: public -/
 structure untrusted.Limits where
   bytes : Std.U32
@@ -107,7 +107,7 @@ structure untrusted.Limits where
   diagnostics : Std.U32
 
 /-- [noble_kernel::untrusted::Expected]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 88:0-95:1
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 93:0-100:1
     Visibility: public -/
 structure untrusted.Expected where
   stack_in : alloc.vec.Vec types.Ty
@@ -115,30 +115,37 @@ structure untrusted.Expected where
   allowed_effects : types.EffSet
 
 /-- [noble_kernel::untrusted::Request]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 118:0-125:1
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 123:0-130:1
     Visibility: public -/
 structure untrusted.Request where
   input_bytes : Std.U32
   expected : untrusted.Expected
   limits : untrusted.Limits
 
+/-- [noble_kernel::words::Variable]
+    Source: 'crates/noble-kernel/src/words.rs', lines 18:0-18:29
+    Visibility: public -/
+@[reducible]
+def words.Variable := Std.U32
+
 /-- [noble_kernel::words::Binding]
-    Source: 'crates/noble-kernel/src/words.rs', lines 46:0-53:1
+    Source: 'crates/noble-kernel/src/words.rs', lines 48:0-59:1
     Visibility: public -/
 @[discriminant isize]
 inductive words.Binding where
 | Stack : alloc.vec.Vec types.Ty → words.Binding
 | Value : types.Ty → words.Binding
 | Effect : types.EffSet → words.Binding
+| Ref : words.Variable → words.Binding
 
 /-- [noble_kernel::words::Inst]
-    Source: 'crates/noble-kernel/src/words.rs', lines 58:0-61:1
+    Source: 'crates/noble-kernel/src/words.rs', lines 64:0-67:1
     Visibility: public -/
 structure words.Inst where
   bindings : alloc.vec.Vec words.Binding
 
 /-- [noble_kernel::untrusted::Lit]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 22:0-31:1
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 27:0-36:1
     Visibility: public -/
 @[discriminant isize]
 inductive untrusted.Lit where
@@ -148,13 +155,13 @@ inductive untrusted.Lit where
 | UnitLit : untrusted.Lit
 
 /-- [noble_kernel::contracts::Definition]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 10:0-10:31
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 11:0-11:31
     Visibility: public -/
 @[reducible]
 def contracts.Definition := Std.U32
 
 /-- [noble_kernel::untrusted::Node]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 48:0-71:1
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 53:0-76:1
     Visibility: public -/
 @[discriminant isize]
 inductive untrusted.Node where
@@ -163,7 +170,7 @@ inductive untrusted.Node where
 | Quotation : alloc.vec.Vec untrusted.NodeId → words.Inst → untrusted.Node
 
 /-- [noble_kernel::untrusted::Candidate]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 75:0-84:1
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 80:0-89:1
     Visibility: public -/
 structure untrusted.Candidate where
   format : Std.U32
@@ -172,19 +179,13 @@ structure untrusted.Candidate where
   body : alloc.vec.Vec untrusted.NodeId
 
 /-- [noble_kernel::words::VariableKind]
-    Source: 'crates/noble-kernel/src/words.rs', lines 20:0-27:1
+    Source: 'crates/noble-kernel/src/words.rs', lines 22:0-29:1
     Visibility: public -/
 @[discriminant isize]
 inductive words.VariableKind where
 | Stack : words.VariableKind
 | Value : words.VariableKind
 | Effect : words.VariableKind
-
-/-- [noble_kernel::words::Variable]
-    Source: 'crates/noble-kernel/src/words.rs', lines 16:0-16:29
-    Visibility: public -/
-@[reducible]
-def words.Variable := Std.U32
 
 /-- [noble_kernel::shapes::EffectSlot]
     Source: 'crates/noble-kernel/src/shapes.rs', lines 74:0-79:1
@@ -217,7 +218,7 @@ inductive shapes.Pattern where
 | StackVarPattern : words.Variable → shapes.Pattern
 
 /-- [noble_kernel::words::Scheme]
-    Source: 'crates/noble-kernel/src/words.rs', lines 32:0-41:1
+    Source: 'crates/noble-kernel/src/words.rs', lines 34:0-43:1
     Visibility: public -/
 structure words.Scheme where
   var_kinds : alloc.vec.Vec words.VariableKind
@@ -226,7 +227,7 @@ structure words.Scheme where
   effects : alloc.vec.Vec shapes.EffectSlot
 
 /-- [noble_kernel::untrusted::Constraint]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 191:0-210:1
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 202:0-224:1
     Visibility: public -/
 @[discriminant isize]
 inductive untrusted.Constraint where
@@ -239,9 +240,10 @@ inductive untrusted.Constraint where
 | InstantiationArity : untrusted.Constraint
 | MalformedReference : untrusted.NodeId → untrusted.Constraint
 | UnknownDefinition : contracts.Definition → untrusted.Constraint
+| CyclicWitness : untrusted.Constraint
 
 /-- [noble_kernel::untrusted::Diagnostic]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 214:0-229:1
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 228:0-243:1
     Visibility: public -/
 structure untrusted.Diagnostic where
   node : Option untrusted.NodeId
@@ -252,17 +254,25 @@ structure untrusted.Diagnostic where
   provenance_available : Bool
   truncated : Bool
 
+/-- [noble_kernel::contracts::SchemaId]
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 21:0-21:29
+    Visibility: public -/
+@[reducible]
+def contracts.SchemaId := Std.U32
+
 /-- [noble_kernel::untrusted::UnsupportedKind]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 178:0-185:1
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 183:0-196:1
     Visibility: public -/
 @[discriminant isize]
 inductive untrusted.UnsupportedKind where
 | FormatRevision : untrusted.UnsupportedKind
 | NodeForm : untrusted.UnsupportedKind
 | SchemeForm : untrusted.UnsupportedKind
+| RecursiveDependency : contracts.Definition → untrusted.UnsupportedKind
+| RecursiveSchema : contracts.SchemaId → untrusted.UnsupportedKind
 
 /-- [noble_kernel::untrusted::LimitKind]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 159:0-174:1
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 164:0-179:1
     Visibility: public -/
 @[discriminant isize]
 inductive untrusted.LimitKind where
@@ -275,7 +285,7 @@ inductive untrusted.LimitKind where
 | Diagnostics : untrusted.LimitKind
 
 /-- [noble_kernel::acceptance::Fail]
-    Source: 'crates/noble-kernel/src/acceptance.rs', lines 12:0-17:1 -/
+    Source: 'crates/noble-kernel/src/acceptance.rs', lines 13:0-18:1 -/
 @[discriminant isize]
 inductive acceptance.Fail where
 | Invalid : untrusted.Diagnostic → acceptance.Fail
@@ -289,8 +299,16 @@ structure acceptance.parts.Site where
   node : Option untrusted.NodeId
   «def» : Option contracts.Definition
 
+/-- [noble_kernel::contracts::SchemaDecl]
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 83:0-90:1
+    Visibility: public -/
+structure contracts.SchemaDecl where
+  id : contracts.SchemaId
+  scheme : words.Scheme
+  recursive : Bool
+
 /-- [noble_kernel::contracts::Behavior]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 25:0-68:1
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 30:0-75:1
     Visibility: public -/
 @[discriminant isize]
 inductive contracts.Behavior where
@@ -299,6 +317,7 @@ inductive contracts.Behavior where
 | SwapBehavior : contracts.Behavior
 | DipBehavior : contracts.Behavior
 | ArithBehavior : contracts.Behavior
+| EqualsBehavior : contracts.Behavior
 | QuoteBehavior : contracts.Behavior
 | ComposeBehavior : contracts.Behavior
 | RunBehavior : contracts.Behavior
@@ -317,11 +336,13 @@ inductive contracts.Behavior where
 | NamedBehavior : contracts.Behavior
 
 /-- [noble_kernel::contracts::Env]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 72:0-79:1
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 94:0-106:1
     Visibility: public -/
 structure contracts.Env where
   defs : alloc.vec.Vec words.Scheme
   kinds : alloc.vec.Vec contracts.Behavior
+  deps : alloc.vec.Vec (alloc.vec.Vec contracts.Definition)
+  schemas : alloc.vec.Vec contracts.SchemaDecl
   effects : alloc.vec.Vec types.EffId
 
 /-- [noble_kernel::acceptance::parts::Ctx]
@@ -331,7 +352,7 @@ structure acceptance.parts.Ctx where
   env : contracts.Env
 
 /-- [noble_kernel::words::InstError]
-    Source: 'crates/noble-kernel/src/words.rs', lines 65:0-78:1
+    Source: 'crates/noble-kernel/src/words.rs', lines 71:0-89:1
     Visibility: public -/
 @[discriminant isize]
 inductive words.InstError where
@@ -341,6 +362,8 @@ inductive words.InstError where
 | OversizedStack : words.InstError
 | OversizedType : words.InstError
 | OversizedEffects : words.InstError
+| CyclicWitness : words.InstError
+| WalkExhausted : words.InstError
 
 /-- [noble_kernel::types::size::Step]
     Source: 'crates/noble-kernel/src/types/size.rs', lines 18:0-25:1 -/
@@ -357,12 +380,12 @@ structure types.size.Walk where
   sizes : alloc.vec.Vec Std.U32
 
 /-- [noble_kernel::words::{noble_kernel::words::Scheme}::subst_effects::{closure}]
-    Source: 'crates/noble-kernel/src/words.rs', lines 228:46-228:75 -/
+    Source: 'crates/noble-kernel/src/words.rs', lines 248:46-248:75 -/
 @[reducible]
 def words.Scheme.subst_effects.closure := Unit
 
 /-- [noble_kernel::words::{noble_kernel::words::Scheme}::subst_stack::{closure}]
-    Source: 'crates/noble-kernel/src/words.rs', lines 179:44-179:66 -/
+    Source: 'crates/noble-kernel/src/words.rs', lines 199:44-199:66 -/
 @[reducible]
 def words.Scheme.subst_stack.closure := Unit
 
@@ -389,6 +412,12 @@ inductive words.subst.StepResult where
 | Done : words.subst.StepResult
 | Failed : words.InstError → words.subst.StepResult
 
+/-- [noble_kernel::words::resolve::Walk]
+    Source: 'crates/noble-kernel/src/words/resolve.rs', lines 12:0-17:1 -/
+structure words.resolve.Walk where
+  out : alloc.vec.Vec words.Binding
+  spent : Std.U32
+
 /-- [noble_kernel::shapes::Defect]
     Source: 'crates/noble-kernel/src/shapes.rs', lines 83:0-88:1
     Visibility: public -/
@@ -405,35 +434,42 @@ inductive shapes.Step where
 | Parts : alloc.vec.Vec shapes.Pattern → shapes.Step
 | Slots : alloc.vec.Vec shapes.EffectSlot → shapes.Step
 
+/-- [noble_kernel::acceptance::validate::DepWalk]
+    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 11:0-18:1 -/
+structure acceptance.validate.DepWalk where
+  colors : alloc.vec.Vec Std.U8
+  stack : alloc.vec.Vec contracts.Definition
+  spent : Std.U32
+
 /-- [noble_kernel::untrusted::Derivation]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 141:0-146:1
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 146:0-151:1
     Visibility: public -/
 structure untrusted.Derivation where
   node : untrusted.NodeId
   interface : untrusted.Interface
 
 /-- [noble_kernel::acceptance::State]
-    Source: 'crates/noble-kernel/src/acceptance.rs', lines 31:0-34:1 -/
+    Source: 'crates/noble-kernel/src/acceptance.rs', lines 32:0-35:1 -/
 structure acceptance.State where
   work : Std.U32
   derivations : alloc.vec.Vec untrusted.Derivation
 
 /-- [noble_kernel::acceptance::Machine]
-    Source: 'crates/noble-kernel/src/acceptance.rs', lines 38:0-42:1 -/
+    Source: 'crates/noble-kernel/src/acceptance.rs', lines 39:0-43:1 -/
 structure acceptance.Machine where
   state : acceptance.State
   frames : alloc.vec.Vec acceptance.Frame
   outcome : Option (core.result.Result untrusted.Interface acceptance.Fail)
 
 /-- [noble_kernel::untrusted::Checked]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 150:0-155:1
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 155:0-160:1
     Visibility: public -/
 structure untrusted.Checked where
   interface : untrusted.Interface
   derivations : alloc.vec.Vec untrusted.Derivation
 
 /-- [noble_kernel::untrusted::Outcome]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 233:0-244:1
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 247:0-258:1
     Visibility: public -/
 @[discriminant isize]
 inductive untrusted.Outcome where

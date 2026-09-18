@@ -301,4 +301,13 @@ def types.impls.debug_stack
     core.fmt.Error) × core.fmt.Formatter) :=
   fun _ f => ok (.Ok (), f)
 
+
+
+/-- [core::slice::{core::slice::Slice<@T>}::last]:
+    `None` when empty, else the last element; the slice is unchanged, so
+    the Aeneas `Slice` witness list answers directly. -/
+@[rust_fun "core::slice::{core::slice::Slice<@T>}::last"]
+def core.slice.Slice.last {T : Type} : Slice T → Result (Option T) :=
+  fun s => ok s.val.getLast?
+
 end noble_kernel

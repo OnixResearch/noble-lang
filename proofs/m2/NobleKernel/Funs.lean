@@ -29,14 +29,14 @@ def core.option.Option.Insts.CoreFmtDebug {T : Type} (fmtDebugInst :
 }
 
 /-- [noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::NodeId}::clone]:
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 12:9-12:14
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 17:9-17:14
     Visibility: public -/
 def untrusted.NodeId.Insts.CoreCloneClone.clone
   (self : untrusted.NodeId) : Result untrusted.NodeId := do
   ok self
 
 /-- Trait implementation: [noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::NodeId}]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 12:9-12:14 -/
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 17:9-17:14 -/
 @[reducible]
 def untrusted.NodeId.Insts.CoreCloneClone : core.clone.Clone untrusted.NodeId
   := {
@@ -147,8 +147,15 @@ def acceptance.frames.advance
   let i ← lift (core.num.Usize.saturating_add frame.index 1#usize)
   ok { frame with index := i }
 
+/-- [noble_kernel::words::{impl core::clone::Clone for noble_kernel::words::Variable}::clone]:
+    Source: 'crates/noble-kernel/src/words.rs', lines 17:9-17:14
+    Visibility: public -/
+def words.Variable.Insts.CoreCloneClone.clone
+  (self : words.Variable) : Result words.Variable := do
+  ok self
+
 /-- [noble_kernel::words::{impl core::clone::Clone for noble_kernel::words::Binding}::clone]:
-    Source: 'crates/noble-kernel/src/words.rs', lines 45:9-45:14
+    Source: 'crates/noble-kernel/src/words.rs', lines 47:9-47:14
     Visibility: public -/
 def words.Binding.Insts.CoreCloneClone.clone
   (self : words.Binding) : Result words.Binding := do
@@ -162,16 +169,19 @@ def words.Binding.Insts.CoreCloneClone.clone
   | words.Binding.Effect __self_0 =>
     let es ← types.EffSet.Insts.CoreCloneClone.clone __self_0
     ok (words.Binding.Effect es)
+  | words.Binding.Ref __self_0 =>
+    let v ← words.Variable.Insts.CoreCloneClone.clone __self_0
+    ok (words.Binding.Ref v)
 
 /-- Trait implementation: [noble_kernel::words::{impl core::clone::Clone for noble_kernel::words::Binding}]
-    Source: 'crates/noble-kernel/src/words.rs', lines 45:9-45:14 -/
+    Source: 'crates/noble-kernel/src/words.rs', lines 47:9-47:14 -/
 @[reducible]
 def words.Binding.Insts.CoreCloneClone : core.clone.Clone words.Binding := {
   clone := words.Binding.Insts.CoreCloneClone.clone
 }
 
 /-- [noble_kernel::words::{impl core::clone::Clone for noble_kernel::words::Inst}::clone]:
-    Source: 'crates/noble-kernel/src/words.rs', lines 57:9-57:14
+    Source: 'crates/noble-kernel/src/words.rs', lines 63:9-63:14
     Visibility: public -/
 def words.Inst.Insts.CoreCloneClone.clone
   (self : words.Inst) : Result words.Inst := do
@@ -1350,7 +1360,7 @@ def types.Ty.size (self : types.Ty) : Result (Option Std.U32) := do
   | types.size.Step.Failed => ok none
 
 /-- [noble_kernel::words::bounds::check_sizes]: loop body 0:
-    Source: 'crates/noble-kernel/src/words/bounds.rs', lines 57:4-75:5 -/
+    Source: 'crates/noble-kernel/src/words/bounds.rs', lines 61:4-79:5 -/
 @[rust_loop_body]
 def words.bounds.check_sizes_loop.body
   (segment : Slice types.Ty) (max_type : Std.U32) (index : Std.Usize) :
@@ -1376,7 +1386,7 @@ def words.bounds.check_sizes_loop.body
   else ok (done none)
 
 /-- [noble_kernel::words::bounds::check_sizes]: loop 0:
-    Source: 'crates/noble-kernel/src/words/bounds.rs', lines 57:4-75:5 -/
+    Source: 'crates/noble-kernel/src/words/bounds.rs', lines 61:4-79:5 -/
 @[rust_loop]
 def words.bounds.check_sizes_loop
   (segment : Slice types.Ty) (max_type : Std.U32) (index : Std.Usize) :
@@ -1387,7 +1397,7 @@ def words.bounds.check_sizes_loop
     index
 
 /-- [noble_kernel::words::bounds::check_sizes]:
-    Source: 'crates/noble-kernel/src/words/bounds.rs', lines 51:0-80:1 -/
+    Source: 'crates/noble-kernel/src/words/bounds.rs', lines 55:0-84:1 -/
 def words.bounds.check_sizes
   (segment : Slice types.Ty) (max_type : Std.U32) :
   Result (core.result.Result Unit words.InstError)
@@ -1508,7 +1518,7 @@ def acceptance.parts.site
   ok { node, «def» }
 
 /-- [noble_kernel::words::{noble_kernel::words::Scheme}::subst_effects::{impl core::ops::function::FnOnce<(&'_ noble_kernel::types::EffSet,), alloc::vec::Vec<noble_kernel::types::EffId>> for noble_kernel::words::{noble_kernel::words::Scheme}::subst_effects::{closure}}::call_once]:
-    Source: 'crates/noble-kernel/src/words.rs', lines 228:46-228:75 -/
+    Source: 'crates/noble-kernel/src/words.rs', lines 248:46-248:75 -/
 def
   words.Scheme.subst_effects.closure.Insts.CoreOpsFunctionFnOnceTupleSharedEffSetVecEffId.call_once
   (c : words.Scheme.subst_effects.closure) (tupled_args : types.EffSet) :
@@ -1518,7 +1528,7 @@ def
   alloc.slice.Slice.to_vec types.EffId.Insts.CoreCloneClone s
 
 /-- Trait implementation: [noble_kernel::words::{noble_kernel::words::Scheme}::subst_effects::{impl core::ops::function::FnOnce<(&'_ noble_kernel::types::EffSet,), alloc::vec::Vec<noble_kernel::types::EffId>> for noble_kernel::words::{noble_kernel::words::Scheme}::subst_effects::{closure}}]
-    Source: 'crates/noble-kernel/src/words.rs', lines 228:46-228:75 -/
+    Source: 'crates/noble-kernel/src/words.rs', lines 248:46-248:75 -/
 @[reducible]
 def
   words.Scheme.subst_effects.closure.Insts.CoreOpsFunctionFnOnceTupleSharedEffSetVecEffId
@@ -1529,13 +1539,13 @@ def
 }
 
 /-- [noble_kernel::words::slot]:
-    Source: 'crates/noble-kernel/src/words.rs', lines 80:0-82:1 -/
+    Source: 'crates/noble-kernel/src/words.rs', lines 91:0-93:1 -/
 def words.slot (var : words.Variable) : Result (Option Std.Usize) := do
   let r ← Usize.Insts.CoreConvertTryFromU32TryFromIntError.try_from var
   core.result.Result.ok r
 
 /-- [noble_kernel::words::{noble_kernel::words::Inst}::effects]:
-    Source: 'crates/noble-kernel/src/words.rs', lines 108:4-116:5
+    Source: 'crates/noble-kernel/src/words.rs', lines 125:4-136:5
     Visibility: public -/
 def words.Inst.effects
   (self : words.Inst) (var : words.Variable) :
@@ -1556,6 +1566,7 @@ def words.Inst.effects
       | words.Binding.Stack _ => ok none
       | words.Binding.Value _ => ok none
       | words.Binding.Effect set => ok (some set)
+      | words.Binding.Ref _ => ok none
 
 /-- [noble_kernel::capacity::at_least]:
     Source: 'crates/noble-kernel/src/capacity.rs', lines 9:0-15:1 -/
@@ -1659,13 +1670,6 @@ def types.EffSet.from_ids (ids : Slice types.EffId) : Result types.EffSet := do
   let sorted1 ← types.EffSet.from_ids_loop0 ids sorted 0#usize
   ok sorted1
 
-/-- [noble_kernel::words::{impl core::clone::Clone for noble_kernel::words::Variable}::clone]:
-    Source: 'crates/noble-kernel/src/words.rs', lines 15:9-15:14
-    Visibility: public -/
-def words.Variable.Insts.CoreCloneClone.clone
-  (self : words.Variable) : Result words.Variable := do
-  ok self
-
 /-- [noble_kernel::shapes::{impl core::clone::Clone for noble_kernel::shapes::EffectSlot}::clone]:
     Source: 'crates/noble-kernel/src/shapes.rs', lines 73:9-73:14
     Visibility: public -/
@@ -1680,7 +1684,7 @@ def shapes.EffectSlot.Insts.CoreCloneClone.clone
     ok (shapes.EffectSlot.Var v)
 
 /-- [noble_kernel::words::{noble_kernel::words::Scheme}::subst_effects]: loop body 0:
-    Source: 'crates/noble-kernel/src/words.rs', lines 220:8-245:9
+    Source: 'crates/noble-kernel/src/words.rs', lines 240:8-265:9
     Visibility: public -/
 @[rust_loop_body]
 def words.Scheme.subst_effects_loop.body
@@ -1724,7 +1728,7 @@ def words.Scheme.subst_effects_loop.body
   else ok (done (ids, none))
 
 /-- [noble_kernel::words::{noble_kernel::words::Scheme}::subst_effects]: loop 0:
-    Source: 'crates/noble-kernel/src/words.rs', lines 220:8-245:9
+    Source: 'crates/noble-kernel/src/words.rs', lines 240:8-265:9
     Visibility: public -/
 @[rust_loop]
 def words.Scheme.subst_effects_loop
@@ -1738,7 +1742,7 @@ def words.Scheme.subst_effects_loop
     (ids, slot_index)
 
 /-- [noble_kernel::words::{noble_kernel::words::Scheme}::subst_effects]:
-    Source: 'crates/noble-kernel/src/words.rs', lines 211:4-250:5
+    Source: 'crates/noble-kernel/src/words.rs', lines 231:4-270:5
     Visibility: public -/
 def words.Scheme.subst_effects
   (self : words.Scheme) (slots : Slice shapes.EffectSlot) (inst : words.Inst) :
@@ -1758,7 +1762,7 @@ def words.Scheme.subst_effects
   | some problem => ok (core.result.Result.Err problem)
 
 /-- [noble_kernel::words::{noble_kernel::words::Scheme}::subst_stack::{impl core::ops::function::FnOnce<(&'_ [noble_kernel::types::Ty],), alloc::vec::Vec<noble_kernel::types::Ty>> for noble_kernel::words::{noble_kernel::words::Scheme}::subst_stack::{closure}}::call_once]:
-    Source: 'crates/noble-kernel/src/words.rs', lines 179:44-179:66 -/
+    Source: 'crates/noble-kernel/src/words.rs', lines 199:44-199:66 -/
 def
   words.Scheme.subst_stack.closure.Insts.CoreOpsFunctionFnOnceTupleSharedSliceTyVecTy.call_once
   (c : words.Scheme.subst_stack.closure) (tupled_args : Slice types.Ty) :
@@ -1767,7 +1771,7 @@ def
   alloc.slice.Slice.to_vec types.Ty.Insts.CoreCloneClone tupled_args
 
 /-- Trait implementation: [noble_kernel::words::{noble_kernel::words::Scheme}::subst_stack::{impl core::ops::function::FnOnce<(&'_ [noble_kernel::types::Ty],), alloc::vec::Vec<noble_kernel::types::Ty>> for noble_kernel::words::{noble_kernel::words::Scheme}::subst_stack::{closure}}]
-    Source: 'crates/noble-kernel/src/words.rs', lines 179:44-179:66 -/
+    Source: 'crates/noble-kernel/src/words.rs', lines 199:44-199:66 -/
 @[reducible]
 def
   words.Scheme.subst_stack.closure.Insts.CoreOpsFunctionFnOnceTupleSharedSliceTyVecTy
@@ -1778,7 +1782,7 @@ def
 }
 
 /-- [noble_kernel::words::{noble_kernel::words::Inst}::stack]:
-    Source: 'crates/noble-kernel/src/words.rs', lines 86:4-94:5
+    Source: 'crates/noble-kernel/src/words.rs', lines 97:4-108:5
     Visibility: public -/
 def words.Inst.stack
   (self : words.Inst) (var : words.Variable) :
@@ -1801,9 +1805,10 @@ def words.Inst.stack
         ok (some s1)
       | words.Binding.Value _ => ok none
       | words.Binding.Effect _ => ok none
+      | words.Binding.Ref _ => ok none
 
 /-- [noble_kernel::words::{noble_kernel::words::Inst}::value]:
-    Source: 'crates/noble-kernel/src/words.rs', lines 97:4-105:5
+    Source: 'crates/noble-kernel/src/words.rs', lines 111:4-122:5
     Visibility: public -/
 def words.Inst.value
   (self : words.Inst) (var : words.Variable) : Result (Option types.Ty) := do
@@ -1822,6 +1827,7 @@ def words.Inst.value
       | words.Binding.Stack _ => ok none
       | words.Binding.Value ty => ok (some ty)
       | words.Binding.Effect _ => ok none
+      | words.Binding.Ref _ => ok none
 
 /-- [noble_kernel::shapes::impls::clone_slots]: loop body 0:
     Source: 'crates/noble-kernel/src/shapes/impls.rs', lines 70:4-73:5 -/
@@ -2626,7 +2632,7 @@ def words.subst.Scheme.subst_pattern
     ok (core.result.Result.Err problem)
 
 /-- [noble_kernel::words::{noble_kernel::words::Scheme}::subst_stack]: loop body 0:
-    Source: 'crates/noble-kernel/src/words.rs', lines 175:8-203:9
+    Source: 'crates/noble-kernel/src/words.rs', lines 195:8-223:9
     Visibility: public -/
 @[rust_loop_body]
 def words.Scheme.subst_stack_loop.body
@@ -2770,7 +2776,7 @@ def words.Scheme.subst_stack_loop.body
   else ok (done (out, none))
 
 /-- [noble_kernel::words::{noble_kernel::words::Scheme}::subst_stack]: loop 0:
-    Source: 'crates/noble-kernel/src/words.rs', lines 175:8-203:9
+    Source: 'crates/noble-kernel/src/words.rs', lines 195:8-223:9
     Visibility: public -/
 @[rust_loop]
 def words.Scheme.subst_stack_loop
@@ -2784,7 +2790,7 @@ def words.Scheme.subst_stack_loop
     (out, part_index)
 
 /-- [noble_kernel::words::{noble_kernel::words::Scheme}::subst_stack]:
-    Source: 'crates/noble-kernel/src/words.rs', lines 166:4-208:5
+    Source: 'crates/noble-kernel/src/words.rs', lines 186:4-228:5
     Visibility: public -/
 def words.Scheme.subst_stack
   (self : words.Scheme) (parts : Slice shapes.Pattern) (inst : words.Inst) :
@@ -2926,7 +2932,7 @@ def acceptance.parts.first_unknown
   acceptance.parts.first_unknown_loop0 needed known 0#usize
 
 /-- [noble_kernel::acceptance::parts::instantiate::instantiation_invalid]:
-    Source: 'crates/noble-kernel/src/acceptance/parts/instantiate.rs', lines 187:0-195:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts/instantiate.rs', lines 235:0-243:1 -/
 def acceptance.parts.instantiate.instantiation_invalid
   («at» : acceptance.parts.Site) (ctx : acceptance.parts.Ctx) :
   Result acceptance.Fail
@@ -2935,7 +2941,7 @@ def acceptance.parts.instantiate.instantiation_invalid
     (alloc.vec.Vec.new types.Ty) untrusted.Constraint.InstantiationKind
 
 /-- [noble_kernel::acceptance::parts::instantiate::project]:
-    Source: 'crates/noble-kernel/src/acceptance/parts/instantiate.rs', lines 127:0-185:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts/instantiate.rs', lines 175:0-233:1 -/
 def acceptance.parts.instantiate.project
   (scheme : words.Scheme) (inst : words.Inst)
   (data_var : Option words.Variable) («at» : acceptance.parts.Site)
@@ -3078,7 +3084,7 @@ def types.EffSet.len (self : types.EffSet) : Result (Option Std.U64) := do
   core.result.Result.ok r
 
 /-- [noble_kernel::words::bounds::check_effect_count]:
-    Source: 'crates/noble-kernel/src/words/bounds.rs', lines 97:0-111:1 -/
+    Source: 'crates/noble-kernel/src/words/bounds.rs', lines 101:0-115:1 -/
 def words.bounds.check_effect_count
   (set : types.EffSet) (max_effects : Std.U64) :
   Result (core.result.Result Unit words.InstError)
@@ -3092,7 +3098,7 @@ def words.bounds.check_effect_count
     else ok (core.result.Result.Ok ())
 
 /-- [noble_kernel::words::bounds::check_size]:
-    Source: 'crates/noble-kernel/src/words/bounds.rs', lines 83:0-94:1 -/
+    Source: 'crates/noble-kernel/src/words/bounds.rs', lines 87:0-98:1 -/
 def words.bounds.check_size
   (ty : types.Ty) (max_type : Std.U32) :
   Result (core.result.Result Unit words.InstError)
@@ -3106,7 +3112,7 @@ def words.bounds.check_size
     else ok (core.result.Result.Ok ())
 
 /-- [noble_kernel::words::bounds::check_segment]:
-    Source: 'crates/noble-kernel/src/words/bounds.rs', lines 35:0-48:1 -/
+    Source: 'crates/noble-kernel/src/words/bounds.rs', lines 39:0-52:1 -/
 def words.bounds.check_segment
   (segment : Slice types.Ty) (max_stack : Std.U32) (max_type : Std.U32) :
   Result (core.result.Result Unit words.InstError)
@@ -3123,7 +3129,7 @@ def words.bounds.check_segment
     ok (core.result.Result.Err words.InstError.OversizedStack)
 
 /-- [noble_kernel::words::bounds::check_binding]:
-    Source: 'crates/noble-kernel/src/words/bounds.rs', lines 6:0-32:1 -/
+    Source: 'crates/noble-kernel/src/words/bounds.rs', lines 6:0-36:1 -/
 def words.bounds.check_binding
   (binding : words.Binding) (kind : words.VariableKind) (max_stack : Std.U32)
   (max_type : Std.U32) (max_effects : Std.U64) :
@@ -3154,9 +3160,10 @@ def words.bounds.check_binding
       ok (core.result.Result.Err words.InstError.KindMismatch)
     | words.VariableKind.Effect =>
       words.bounds.check_effect_count set max_effects
+  | words.Binding.Ref _ => ok (core.result.Result.Ok ())
 
 /-- [noble_kernel::words::{noble_kernel::words::Scheme}::check_inst]: loop body 0:
-    Source: 'crates/noble-kernel/src/words.rs', lines 143:8-158:9
+    Source: 'crates/noble-kernel/src/words.rs', lines 163:8-178:9
     Visibility: public -/
 @[rust_loop_body]
 def words.Scheme.check_inst_loop.body
@@ -3188,7 +3195,7 @@ def words.Scheme.check_inst_loop.body
   else ok (done none)
 
 /-- [noble_kernel::words::{noble_kernel::words::Scheme}::check_inst]: loop 0:
-    Source: 'crates/noble-kernel/src/words.rs', lines 143:8-158:9
+    Source: 'crates/noble-kernel/src/words.rs', lines 163:8-178:9
     Visibility: public -/
 @[rust_loop]
 def words.Scheme.check_inst_loop
@@ -3203,7 +3210,7 @@ def words.Scheme.check_inst_loop
     binding_index
 
 /-- [noble_kernel::words::{noble_kernel::words::Scheme}::check_inst]:
-    Source: 'crates/noble-kernel/src/words.rs', lines 131:4-163:5
+    Source: 'crates/noble-kernel/src/words.rs', lines 151:4-183:5
     Visibility: public -/
 def words.Scheme.check_inst
   (self : words.Scheme) (inst : words.Inst) (max_stack : Std.U32)
@@ -3223,7 +3230,7 @@ def words.Scheme.check_inst
     | some problem => ok (core.result.Result.Err problem)
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::len]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 113:4-115:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 140:4-142:5
     Visibility: public -/
 def contracts.Env.len (self : contracts.Env) : Result (Option Std.U64) := do
   let i := alloc.vec.Vec.len self.defs
@@ -3231,7 +3238,7 @@ def contracts.Env.len (self : contracts.Env) : Result (Option Std.U64) := do
   core.result.Result.ok r
 
 /-- [noble_kernel::acceptance::parts::instantiate::check_bounds]:
-    Source: 'crates/noble-kernel/src/acceptance/parts/instantiate.rs', lines 87:0-125:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts/instantiate.rs', lines 133:0-173:1 -/
 def acceptance.parts.instantiate.check_bounds
   (scheme : words.Scheme) (inst : words.Inst) («at» : acceptance.parts.Site)
   (ctx : acceptance.parts.Ctx) :
@@ -3271,19 +3278,332 @@ def acceptance.parts.instantiate.check_bounds
       | words.InstError.OversizedEffects =>
         ok (core.result.Result.Err (acceptance.Fail.Exhausted
           untrusted.LimitKind.TypeSize))
+      | words.InstError.CyclicWitness =>
+        let f ← acceptance.parts.instantiate.instantiation_invalid «at» ctx
+        ok (core.result.Result.Err f)
+      | words.InstError.WalkExhausted =>
+        let f ← acceptance.parts.instantiate.instantiation_invalid «at» ctx
+        ok (core.result.Result.Err f)
+
+/-- [noble_kernel::words::resolve::carries_kind]:
+    Source: 'crates/noble-kernel/src/words/resolve.rs', lines 33:0-43:1 -/
+def words.resolve.carries_kind
+  (binding : words.Binding) (kind : words.VariableKind) : Result Bool := do
+  match binding with
+  | words.Binding.Stack _ =>
+    match kind with
+    | words.VariableKind.Stack => ok true
+    | words.VariableKind.Value => ok false
+    | words.VariableKind.Effect => ok false
+  | words.Binding.Value _ =>
+    match kind with
+    | words.VariableKind.Stack => ok false
+    | words.VariableKind.Value => ok true
+    | words.VariableKind.Effect => ok false
+  | words.Binding.Effect _ =>
+    match kind with
+    | words.VariableKind.Stack => ok false
+    | words.VariableKind.Value => ok false
+    | words.VariableKind.Effect => ok true
+  | words.Binding.Ref _ => ok false
+
+/-- [noble_kernel::words::resolve::finish_binding]:
+    Source: 'crates/noble-kernel/src/words/resolve.rs', lines 161:0-177:1 -/
+def words.resolve.finish_binding
+  (inst : words.Inst) (terminal : Std.Usize) (kind : words.VariableKind)
+  (walk : words.resolve.Walk) :
+  Result (words.resolve.Walk × (core.result.Result Unit words.InstError))
+  := do
+  let s := alloc.vec.Vec.deref inst.bindings
+  let o ←
+    core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice words.Binding)
+      s terminal
+  match o with
+  | none => ok (walk, core.result.Result.Err words.InstError.UnknownVariable)
+  | some binding =>
+    let b ← words.resolve.carries_kind binding kind
+    if b
+    then
+      let b1 ← words.Binding.Insts.CoreCloneClone.clone binding
+      let v ← alloc.vec.Vec.push walk.out b1
+      ok ({ walk with out := v }, core.result.Result.Ok ())
+    else ok (walk, core.result.Result.Err words.InstError.KindMismatch)
+
+/-- [noble_kernel::words::resolve::slot_of]:
+    Source: 'crates/noble-kernel/src/words/resolve.rs', lines 28:0-30:1 -/
+def words.resolve.slot_of
+  (var : words.Variable) : Result (Option Std.Usize) := do
+  let r ← Usize.Insts.CoreConvertTryFromU32TryFromIntError.try_from var
+  core.result.Result.ok r
+
+/-- [noble_kernel::words::resolve::follow_chain]: loop body 0:
+    Source: 'crates/noble-kernel/src/words/resolve.rs', lines 124:4-149:5 -/
+@[rust_loop_body]
+def words.resolve.follow_chain_loop.body
+  (inst : words.Inst) (fuel : Std.U32) (walk : words.resolve.Walk)
+  (hops : Std.Usize) (current : words.Variable) (terminal : Option Std.Usize)
+  (failure : Option words.InstError) :
+  Result (ControlFlow (words.resolve.Walk × Std.Usize × words.Variable ×
+    (Option Std.Usize) × (Option words.InstError)) (words.resolve.Walk ×
+    (Option Std.Usize) × (Option words.InstError)))
+  := do
+  let b := core.option.Option.is_none terminal
+  if b
+  then
+    let hops1 ← hops + 1#usize
+    let i := alloc.vec.Vec.len inst.bindings
+    if hops1 > i
+    then ok (done (walk, terminal, some words.InstError.CyclicWitness))
+    else
+      if walk.spent >= fuel
+      then ok (done (walk, terminal, some words.InstError.WalkExhausted))
+      else
+        let i1 ← walk.spent + 1#u32
+        let o ← words.resolve.slot_of current
+        let found ←
+          match o with
+          | none => ok none
+          | some slot =>
+            let s := alloc.vec.Vec.deref inst.bindings
+            core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice
+              words.Binding) s slot
+        match found with
+        | none =>
+          ok (cont ({ walk with spent := i1 }, hops1, current, terminal, some
+            words.InstError.UnknownVariable))
+        | some b1 =>
+          match b1 with
+          | words.Binding.Stack _ =>
+            ok (cont ({ walk with spent := i1 }, hops1, current, o, failure))
+          | words.Binding.Value _ =>
+            ok (cont ({ walk with spent := i1 }, hops1, current, o, failure))
+          | words.Binding.Effect _ =>
+            ok (cont ({ walk with spent := i1 }, hops1, current, o, failure))
+          | words.Binding.Ref next =>
+            ok (cont ({ walk with spent := i1 }, hops1, next, terminal,
+              failure))
+  else ok (done (walk, terminal, failure))
+
+/-- [noble_kernel::words::resolve::follow_chain]: loop 0:
+    Source: 'crates/noble-kernel/src/words/resolve.rs', lines 124:4-149:5 -/
+@[rust_loop]
+def words.resolve.follow_chain_loop
+  (inst : words.Inst) (walk : words.resolve.Walk) (fuel : Std.U32)
+  (hops : Std.Usize) (current : words.Variable) (terminal : Option Std.Usize)
+  (failure : Option words.InstError) :
+  Result (words.resolve.Walk × (Option Std.Usize) × (Option words.InstError))
+  := do
+  loop
+    (fun (walk1, hops1, current1, terminal1, failure1) =>
+      words.resolve.follow_chain_loop.body inst fuel walk1 hops1 current1
+      terminal1 failure1)
+    (walk, hops, current, terminal, failure)
+
+/-- [noble_kernel::words::resolve::follow_chain]:
+    Source: 'crates/noble-kernel/src/words/resolve.rs', lines 114:0-157:1 -/
+def words.resolve.follow_chain
+  (inst : words.Inst) («from» : words.Variable) (walk : words.resolve.Walk)
+  (fuel : Std.U32) :
+  Result (words.resolve.Walk × (core.result.Result Std.Usize words.InstError))
+  := do
+  let (walk1, terminal, failure) ←
+    words.resolve.follow_chain_loop inst walk fuel 0#usize «from» none none
+  match failure with
+  | none =>
+    match terminal with
+    | none => ok (walk1, core.result.Result.Err words.InstError.CyclicWitness)
+    | some slot => ok (walk1, core.result.Result.Ok slot)
+  | some problem => ok (walk1, core.result.Result.Err problem)
+
+/-- [noble_kernel::words::{impl core::clone::Clone for noble_kernel::words::VariableKind}::clone]:
+    Source: 'crates/noble-kernel/src/words.rs', lines 21:9-21:14
+    Visibility: public -/
+def words.VariableKind.Insts.CoreCloneClone.clone
+  (self : words.VariableKind) : Result words.VariableKind := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::words::{impl core::clone::Clone for noble_kernel::words::VariableKind}]
+    Source: 'crates/noble-kernel/src/words.rs', lines 21:9-21:14 -/
+@[reducible]
+def words.VariableKind.Insts.CoreCloneClone : core.clone.Clone
+  words.VariableKind := {
+  clone := words.VariableKind.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::words::{impl core::marker::Copy for noble_kernel::words::VariableKind}]
+    Source: 'crates/noble-kernel/src/words.rs', lines 21:16-21:20 -/
+@[reducible]
+def words.VariableKind.Insts.CoreMarkerCopy : core.marker.Copy
+  words.VariableKind := {
+  cloneInst := words.VariableKind.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::words::resolve::kind_at]:
+    Source: 'crates/noble-kernel/src/words/resolve.rs', lines 20:0-25:1 -/
+def words.resolve.kind_at
+  (kinds : Slice words.VariableKind) (index : Std.Usize) :
+  Result (Option words.VariableKind)
+  := do
+  let o ←
+    core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice
+      words.VariableKind) kinds index
+  core.option.OptionShared0T.copied words.VariableKind.Insts.CoreMarkerCopy o
+
+/-- [noble_kernel::words::resolve::resolve_binding]:
+    Source: 'crates/noble-kernel/src/words/resolve.rs', lines 83:0-108:1 -/
+def words.resolve.resolve_binding
+  (kinds : Slice words.VariableKind) (inst : words.Inst) (index : Std.Usize)
+  (walk : words.resolve.Walk) (fuel : Std.U32) :
+  Result (words.resolve.Walk × (core.result.Result Unit words.InstError))
+  := do
+  let declared ← words.resolve.kind_at kinds index
+  let b ←
+    alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice words.Binding)
+      inst.bindings index
+  match b with
+  | words.Binding.Stack _ =>
+    let b1 ← words.Binding.Insts.CoreCloneClone.clone b
+    let v ← alloc.vec.Vec.push walk.out b1
+    ok ({ walk with out := v }, core.result.Result.Ok ())
+  | words.Binding.Value _ =>
+    let b1 ← words.Binding.Insts.CoreCloneClone.clone b
+    let v ← alloc.vec.Vec.push walk.out b1
+    ok ({ walk with out := v }, core.result.Result.Ok ())
+  | words.Binding.Effect _ =>
+    let b1 ← words.Binding.Insts.CoreCloneClone.clone b
+    let v ← alloc.vec.Vec.push walk.out b1
+    ok ({ walk with out := v }, core.result.Result.Ok ())
+  | words.Binding.Ref var =>
+    let (next, found) ← words.resolve.follow_chain inst var walk fuel
+    match found with
+    | core.result.Result.Ok terminal =>
+      match declared with
+      | none =>
+        ok (next, core.result.Result.Err words.InstError.UnknownVariable)
+      | some kind => words.resolve.finish_binding inst terminal kind next
+    | core.result.Result.Err problem =>
+      ok (next, core.result.Result.Err problem)
+
+/-- [noble_kernel::words::resolve::resolve]: loop body 0:
+    Source: 'crates/noble-kernel/src/words/resolve.rs', lines 61:4-71:5
+    Visibility: public -/
+@[rust_loop_body]
+def words.resolve.resolve_loop.body
+  (kinds : Slice words.VariableKind) (v : alloc.vec.Vec words.Binding)
+  (fuel : Std.U32) (walk : words.resolve.Walk) (index : Std.Usize) :
+  Result (ControlFlow (words.resolve.Walk × Std.Usize) (words.resolve.Walk ×
+    (Option words.InstError)))
+  := do
+  let i := alloc.vec.Vec.len v
+  if index < i
+  then
+    let (next, step) ←
+      words.resolve.resolve_binding kinds { bindings := v } index walk fuel
+    match step with
+    | core.result.Result.Ok _ =>
+      let index1 ← index + 1#usize
+      ok (cont (next, index1))
+    | core.result.Result.Err problem => ok (done (next, some problem))
+  else ok (done (walk, none))
+
+/-- [noble_kernel::words::resolve::resolve]: loop 0:
+    Source: 'crates/noble-kernel/src/words/resolve.rs', lines 61:4-71:5
+    Visibility: public -/
+@[rust_loop]
+def words.resolve.resolve_loop
+  (kinds : Slice words.VariableKind) (v : alloc.vec.Vec words.Binding)
+  (fuel : Std.U32) (walk : words.resolve.Walk) (index : Std.Usize) :
+  Result (words.resolve.Walk × (Option words.InstError))
+  := do
+  loop
+    (fun (walk1, index1) => words.resolve.resolve_loop.body kinds v fuel walk1
+      index1)
+    (walk, index)
+
+/-- [noble_kernel::words::resolve::resolve]:
+    Source: 'crates/noble-kernel/src/words/resolve.rs', lines 50:0-76:1
+    Visibility: public -/
+def words.resolve.resolve
+  (kinds : Slice words.VariableKind) (inst : words.Inst) (fuel : Std.U32) :
+  Result (core.result.Result (words.Inst × Std.U32) words.InstError)
+  := do
+  let i := alloc.vec.Vec.len inst.bindings
+  let i1 ← capacity.at_least i 4#usize
+  let v := alloc.vec.Vec.with_capacity words.Binding i1
+  let (walk, failure) ←
+    words.resolve.resolve_loop kinds inst.bindings fuel
+      { out := v, spent := 0#u32 } 0#usize
+  match failure with
+  | none => ok (core.result.Result.Ok ({ bindings := walk.out }, walk.spent))
+  | some problem => ok (core.result.Result.Err problem)
+
+/-- [noble_kernel::acceptance::parts::instantiate::resolve_witness]:
+    Source: 'crates/noble-kernel/src/acceptance/parts/instantiate.rs', lines 96:0-131:1 -/
+def acceptance.parts.instantiate.resolve_witness
+  (scheme : words.Scheme) (inst : words.Inst) («at» : acceptance.parts.Site)
+  (ctx : acceptance.parts.Ctx) :
+  Result (core.result.Result words.Inst acceptance.Fail)
+  := do
+  let s := alloc.vec.Vec.deref scheme.var_kinds
+  let r ← words.resolve.resolve s inst ctx.request.limits.work
+  match r with
+  | core.result.Result.Ok p =>
+    let (resolved, _) := p
+    ok (core.result.Result.Ok resolved)
+  | core.result.Result.Err ie =>
+    match ie with
+    | words.InstError.KindMismatch =>
+      let f ← acceptance.parts.instantiate.instantiation_invalid «at» ctx
+      ok (core.result.Result.Err f)
+    | words.InstError.UnknownVariable =>
+      let f ← acceptance.parts.instantiate.instantiation_invalid «at» ctx
+      ok (core.result.Result.Err f)
+    | words.InstError.ArityMismatch =>
+      let f ←
+        acceptance.parts.invalid ctx «at» (alloc.vec.Vec.new types.Ty)
+          (alloc.vec.Vec.new types.Ty) untrusted.Constraint.InstantiationArity
+      ok (core.result.Result.Err f)
+    | words.InstError.OversizedStack =>
+      ok (core.result.Result.Err (acceptance.Fail.Exhausted
+        untrusted.LimitKind.StackHeight))
+    | words.InstError.OversizedType =>
+      ok (core.result.Result.Err (acceptance.Fail.Exhausted
+        untrusted.LimitKind.TypeSize))
+    | words.InstError.OversizedEffects =>
+      ok (core.result.Result.Err (acceptance.Fail.Exhausted
+        untrusted.LimitKind.TypeSize))
+    | words.InstError.CyclicWitness =>
+      let f ←
+        acceptance.parts.invalid ctx «at» (alloc.vec.Vec.new types.Ty)
+          (alloc.vec.Vec.new types.Ty) untrusted.Constraint.CyclicWitness
+      ok (core.result.Result.Err f)
+    | words.InstError.WalkExhausted =>
+      ok (core.result.Result.Err (acceptance.Fail.Exhausted
+        untrusted.LimitKind.Work))
 
 /-- [noble_kernel::acceptance::parts::instantiate::apply]:
-    Source: 'crates/noble-kernel/src/acceptance/parts/instantiate.rs', lines 76:0-85:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts/instantiate.rs', lines 82:0-93:1 -/
 def acceptance.parts.instantiate.apply
   (scheme : words.Scheme) (inst : words.Inst)
   (data_var : Option words.Variable) («at» : acceptance.parts.Site)
   (ctx : acceptance.parts.Ctx) :
-  Result (core.result.Result untrusted.Interface acceptance.Fail)
+  Result (core.result.Result (untrusted.Interface × words.Inst)
+    acceptance.Fail)
   := do
   let r ← acceptance.parts.instantiate.check_bounds scheme inst «at» ctx
   match r with
   | core.result.Result.Ok _ =>
-    acceptance.parts.instantiate.project scheme inst data_var «at» ctx
+    let r1 ←
+      acceptance.parts.instantiate.resolve_witness scheme inst «at» ctx
+    match r1 with
+    | core.result.Result.Ok value =>
+      let r2 ←
+        acceptance.parts.instantiate.project scheme value data_var «at» ctx
+      match r2 with
+      | core.result.Result.Ok value1 =>
+        ok (core.result.Result.Ok (value1, value))
+      | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+    | core.result.Result.Err failure => ok (core.result.Result.Err failure)
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_kernel::shapes::{noble_kernel::shapes::Pattern}::program]:
@@ -3399,17 +3719,19 @@ def acceptance.frames.complete_frame
                   acceptance.parts.instantiate.apply scheme inst1 none s1 ctx
                 match r1 with
                 | core.result.Result.Ok value =>
-                  let r2 ← acceptance.parts.join_cost value
+                  let (interface, _) := value
+                  let r2 ← acceptance.parts.join_cost interface
                   match r2 with
                   | core.result.Result.Ok value1 =>
                     let o1 ← acceptance.parts.definition_of candidate node_id
                     let s2 ← acceptance.parts.site (some node_id) o1
-                    let r3 ← acceptance.parts.join parent_frame value s2 ctx
+                    let r3 ←
+                      acceptance.parts.join parent_frame interface s2 ctx
                     match r3 with
                     | core.result.Result.Ok value2 =>
                       ok (core.result.Result.Ok
-                        (acceptance.frames.Completion.Step value1 node_id value
-                        value2))
+                        (acceptance.frames.Completion.Step value1 node_id
+                        interface value2))
                     | core.result.Result.Err failure =>
                       ok (core.result.Result.Err failure)
                   | core.result.Result.Err failure =>
@@ -3430,21 +3752,21 @@ def acceptance.frames.complete_frame
       ok (core.result.Result.Err f)
 
 /-- [noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::Lit}::clone]:
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 21:9-21:14
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 26:9-26:14
     Visibility: public -/
 def untrusted.Lit.Insts.CoreCloneClone.clone
   (self : untrusted.Lit) : Result untrusted.Lit := do
   ok self
 
 /-- [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::Definition}::clone]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 9:9-9:14
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 10:9-10:14
     Visibility: public -/
 def contracts.Definition.Insts.CoreCloneClone.clone
   (self : contracts.Definition) : Result contracts.Definition := do
   ok self
 
 /-- [noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::Node}::clone]:
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 47:9-47:14
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 52:9-52:14
     Visibility: public -/
 def untrusted.Node.Insts.CoreCloneClone.clone
   (self : untrusted.Node) : Result untrusted.Node := do
@@ -3496,21 +3818,6 @@ def acceptance.nodes.node_of
         node_id)
     ok (core.result.Result.Err f)
 
-/-- [noble_kernel::words::{impl core::clone::Clone for noble_kernel::words::VariableKind}::clone]:
-    Source: 'crates/noble-kernel/src/words.rs', lines 19:9-19:14
-    Visibility: public -/
-def words.VariableKind.Insts.CoreCloneClone.clone
-  (self : words.VariableKind) : Result words.VariableKind := do
-  ok self
-
-/-- Trait implementation: [noble_kernel::words::{impl core::clone::Clone for noble_kernel::words::VariableKind}]
-    Source: 'crates/noble-kernel/src/words.rs', lines 19:9-19:14 -/
-@[reducible]
-def words.VariableKind.Insts.CoreCloneClone : core.clone.Clone
-  words.VariableKind := {
-  clone := words.VariableKind.Insts.CoreCloneClone.clone
-}
-
 /-- Trait implementation: [noble_kernel::shapes::{impl core::clone::Clone for noble_kernel::shapes::EffectSlot}]
     Source: 'crates/noble-kernel/src/shapes.rs', lines 73:9-73:14 -/
 @[reducible]
@@ -3527,7 +3834,7 @@ def shapes.Pattern.Insts.CoreCloneClone : core.clone.Clone shapes.Pattern := {
 }
 
 /-- [noble_kernel::words::{impl core::clone::Clone for noble_kernel::words::Scheme}::clone]:
-    Source: 'crates/noble-kernel/src/words.rs', lines 31:9-31:14
+    Source: 'crates/noble-kernel/src/words.rs', lines 33:9-33:14
     Visibility: public -/
 def words.Scheme.Insts.CoreCloneClone.clone
   (self : words.Scheme) : Result words.Scheme := do
@@ -3544,21 +3851,21 @@ def words.Scheme.Insts.CoreCloneClone.clone
   ok { var_kinds := v, stack_in := v1, stack_out := v2, effects := v3 }
 
 /-- [noble_kernel::contracts::index]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 123:0-125:1 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 150:0-152:1 -/
 def contracts.index
   («def» : contracts.Definition) : Result (Option Std.Usize) := do
   let r ← Usize.Insts.CoreConvertTryFromU32TryFromIntError.try_from «def»
   core.result.Result.ok r
 
 /-- [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::Behavior}::clone]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 24:9-24:14
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 29:9-29:14
     Visibility: public -/
 def contracts.Behavior.Insts.CoreCloneClone.clone
   (self : contracts.Behavior) : Result contracts.Behavior := do
   ok self
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::Behavior}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 24:9-24:14 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 29:9-29:14 -/
 @[reducible]
 def contracts.Behavior.Insts.CoreCloneClone : core.clone.Clone
   contracts.Behavior := {
@@ -3566,7 +3873,7 @@ def contracts.Behavior.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::marker::Copy for noble_kernel::contracts::Behavior}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 24:16-24:20 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 29:16-29:20 -/
 @[reducible]
 def contracts.Behavior.Insts.CoreMarkerCopy : core.marker.Copy
   contracts.Behavior := {
@@ -3574,7 +3881,7 @@ def contracts.Behavior.Insts.CoreMarkerCopy : core.marker.Copy
 }
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::kind]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 91:4-96:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 118:4-123:5
     Visibility: public -/
 def contracts.Env.kind
   (self : contracts.Env) («def» : contracts.Definition) :
@@ -3592,7 +3899,7 @@ def contracts.Env.kind
       o1
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::scheme]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 83:4-88:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 110:4-115:5
     Visibility: public -/
 def contracts.Env.scheme
   (self : contracts.Env) («def» : contracts.Definition) :
@@ -3625,7 +3932,7 @@ def acceptance.parts.scheme_cost
       untrusted.LimitKind.Work))
 
 /-- [noble_kernel::acceptance::parts::instantiate::data_slot]:
-    Source: 'crates/noble-kernel/src/acceptance/parts/instantiate.rs', lines 46:0-73:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts/instantiate.rs', lines 46:0-74:1 -/
 def acceptance.parts.instantiate.data_slot
   (behavior : Option contracts.Behavior) : Result (Option words.Variable) := do
   match behavior with
@@ -3637,6 +3944,7 @@ def acceptance.parts.instantiate.data_slot
     | contracts.Behavior.SwapBehavior => ok none
     | contracts.Behavior.DipBehavior => ok none
     | contracts.Behavior.ArithBehavior => ok none
+    | contracts.Behavior.EqualsBehavior => ok none
     | contracts.Behavior.QuoteBehavior => ok (some 1#u32)
     | contracts.Behavior.ComposeBehavior => ok none
     | contracts.Behavior.RunBehavior => ok none
@@ -3705,14 +4013,15 @@ def acceptance.nodes.fold_node
         acceptance.parts.instantiate.apply scheme inst none «at» context
       match r1 with
       | core.result.Result.Ok value1 =>
-        let r2 ← acceptance.parts.join_cost value1
+        let (interface, _) := value1
+        let r2 ← acceptance.parts.join_cost interface
         match r2 with
         | core.result.Result.Ok value2 =>
           let cost ← lift (core.num.U32.saturating_add value value2)
-          let r3 ← acceptance.parts.join frame value1 «at» context
+          let r3 ← acceptance.parts.join frame interface «at» context
           match r3 with
           | core.result.Result.Ok value3 =>
-            ok (core.result.Result.Ok (cost, value3, value1))
+            ok (core.result.Result.Ok (cost, value3, interface))
           | core.result.Result.Err failure =>
             ok (core.result.Result.Err failure)
         | core.result.Result.Err failure => ok (core.result.Result.Err failure)
@@ -3741,14 +4050,15 @@ def acceptance.nodes.fold_node
             context
         match r1 with
         | core.result.Result.Ok value1 =>
-          let r2 ← acceptance.parts.join_cost value1
+          let (interface, _) := value1
+          let r2 ← acceptance.parts.join_cost interface
           match r2 with
           | core.result.Result.Ok value2 =>
             let cost ← lift (core.num.U32.saturating_add value value2)
-            let r3 ← acceptance.parts.join frame value1 «at» context
+            let r3 ← acceptance.parts.join frame interface «at» context
             match r3 with
             | core.result.Result.Ok value3 =>
-              ok (core.result.Result.Ok (cost, value3, value1))
+              ok (core.result.Result.Ok (cost, value3, interface))
             | core.result.Result.Err failure =>
               ok (core.result.Result.Err failure)
           | core.result.Result.Err failure =>
@@ -3861,40 +4171,17 @@ def acceptance.parts.charge
   | some remaining => ok (core.result.Result.Ok remaining)
 
 /-- [noble_kernel::untrusted::SEMANTIC_REVISION]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 9:0-9:37
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 14:0-14:37
     Visibility: public -/
 @[global_simps, irreducible] def untrusted.SEMANTIC_REVISION : Std.U32 := 0#u32
 
 /-- [noble_kernel::untrusted::CANDIDATE_FORMAT]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 7:0-7:36
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 12:0-12:36
     Visibility: public -/
-@[global_simps, irreducible] def untrusted.CANDIDATE_FORMAT : Std.U32 := 0#u32
-
-/-- [noble_kernel::acceptance::preflight::check_allowed_effects]:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 60:0-75:1 -/
-def acceptance.preflight.check_allowed_effects
-  (context : acceptance.parts.Ctx) :
-  Result (core.result.Result Unit acceptance.Fail)
-  := do
-  let s ← types.EffSet.as_slice context.request.expected.allowed_effects
-  let allowed_effects ←
-    alloc.slice.Slice.to_vec types.EffId.Insts.CoreCloneClone s
-  let s1 := alloc.vec.Vec.deref context.env.effects
-  let known ← alloc.slice.Slice.to_vec types.EffId.Insts.CoreCloneClone s1
-  let s2 := alloc.vec.Vec.deref allowed_effects
-  let s3 := alloc.vec.Vec.deref known
-  let unknown ← acceptance.parts.first_unknown s2 s3
-  match unknown with
-  | none => ok (core.result.Result.Ok ())
-  | some id =>
-    let s4 ← acceptance.parts.site none none
-    let f ←
-      acceptance.parts.invalid context s4 (alloc.vec.Vec.new types.Ty)
-        (alloc.vec.Vec.new types.Ty) (untrusted.Constraint.UnknownEffect id)
-    ok (core.result.Result.Err f)
+@[global_simps, irreducible] def untrusted.CANDIDATE_FORMAT : Std.U32 := 1#u32
 
 /-- [noble_kernel::words::{impl core::cmp::PartialEq<noble_kernel::words::VariableKind> for noble_kernel::words::VariableKind}::eq]:
-    Source: 'crates/noble-kernel/src/words.rs', lines 19:29-19:38
+    Source: 'crates/noble-kernel/src/words.rs', lines 21:29-21:38
     Visibility: public -/
 def words.VariableKind.Insts.CoreCmpPartialEqVariableKind.eq
   (self : words.VariableKind) (other : words.VariableKind) : Result Bool := do
@@ -4201,7 +4488,7 @@ def shapes.validate
   | some problem => ok (core.result.Result.Err problem)
 
 /-- [noble_kernel::words::{noble_kernel::words::Scheme}::validate]:
-    Source: 'crates/noble-kernel/src/words.rs', lines 121:4-128:5
+    Source: 'crates/noble-kernel/src/words.rs', lines 141:4-148:5
     Visibility: public -/
 def words.Scheme.validate
   (self : words.Scheme) : Result (core.result.Result Unit shapes.Defect) := do
@@ -4211,8 +4498,346 @@ def words.Scheme.validate
   let s3 := alloc.vec.Vec.deref self.effects
   shapes.validate s s1 s2 s3
 
+/-- [noble_kernel::acceptance::validate::schemas]: loop body 0:
+    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 179:4-199:5 -/
+@[rust_loop_body]
+def acceptance.validate.schemas_loop.body
+  (env : contracts.Env) (limits : untrusted.Limits) (spent : Std.U32)
+  (index : Std.Usize) :
+  Result (ControlFlow (Std.U32 × Std.Usize) (Option acceptance.Fail))
+  := do
+  let i := alloc.vec.Vec.len env.schemas
+  if index < i
+  then
+    if spent >= limits.work
+    then ok (done (some (acceptance.Fail.Exhausted untrusted.LimitKind.Work)))
+    else
+      let spent1 ← spent + 1#u32
+      let decl ←
+        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+          contracts.SchemaDecl) env.schemas index
+      if decl.recursive
+      then
+        ok (done (some (acceptance.Fail.Unsupported
+          (untrusted.UnsupportedKind.RecursiveSchema decl.id))))
+      else
+        let r ← words.Scheme.validate decl.scheme
+        let b ← core.result.Result.is_err r
+        if b
+        then
+          ok (done (some (acceptance.Fail.Unsupported
+            untrusted.UnsupportedKind.SchemeForm)))
+        else let index1 ← index + 1#usize
+             ok (cont (spent1, index1))
+  else ok (done none)
+
+/-- [noble_kernel::acceptance::validate::schemas]: loop 0:
+    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 179:4-199:5 -/
+@[rust_loop]
+def acceptance.validate.schemas_loop
+  (env : contracts.Env) (limits : untrusted.Limits) (spent : Std.U32)
+  (index : Std.Usize) :
+  Result (Option acceptance.Fail)
+  := do
+  loop
+    (fun (spent1, index1) => acceptance.validate.schemas_loop.body env limits
+      spent1 index1)
+    (spent, index)
+
+/-- [noble_kernel::acceptance::validate::schemas]:
+    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 172:0-204:1 -/
+def acceptance.validate.schemas
+  (env : contracts.Env) (limits : untrusted.Limits) :
+  Result (core.result.Result Unit acceptance.Fail)
+  := do
+  let failure ← acceptance.validate.schemas_loop env limits 0#u32 0#usize
+  match failure with
+  | none => ok (core.result.Result.Ok ())
+  | some problem => ok (core.result.Result.Err problem)
+
+/-- Trait implementation: [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::Definition}]
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 10:9-10:14 -/
+@[reducible]
+def contracts.Definition.Insts.CoreCloneClone : core.clone.Clone
+  contracts.Definition := {
+  clone := contracts.Definition.Insts.CoreCloneClone.clone
+}
+
+/-- [noble_kernel::acceptance::validate::deps_of]:
+    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 21:0-32:1 -/
+def acceptance.validate.deps_of
+  (env : contracts.Env) («def» : contracts.Definition) :
+  Result (alloc.vec.Vec contracts.Definition)
+  := do
+  let r ← Usize.Insts.CoreConvertTryFromU32TryFromIntError.try_from «def»
+  match r with
+  | core.result.Result.Ok index =>
+    let s := alloc.vec.Vec.deref env.deps
+    let o ←
+      core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice
+        (alloc.vec.Vec contracts.Definition)) s index
+    match o with
+    | none => ok (alloc.vec.Vec.new contracts.Definition)
+    | some list =>
+      alloc.vec.CloneVec.clone contracts.Definition.Insts.CoreCloneClone list
+  | core.result.Result.Err _ => ok (alloc.vec.Vec.new contracts.Definition)
+
+/-- [noble_kernel::acceptance::validate::dep_step]: loop body 0:
+    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 134:4-157:5 -/
+@[rust_loop_body]
+def acceptance.validate.dep_step_loop.body
+  (v : alloc.vec.Vec Std.U8) (limits : untrusted.Limits)
+  (deps : alloc.vec.Vec contracts.Definition)
+  (v1 : alloc.vec.Vec contracts.Definition) (i : Std.U32)
+  (dep_index : Std.Usize) :
+  Result (ControlFlow ((alloc.vec.Vec contracts.Definition) × Std.U32 ×
+    Std.Usize) ((alloc.vec.Vec contracts.Definition) × Std.U32 × (Option
+    acceptance.Fail)))
+  := do
+  let i1 := alloc.vec.Vec.len deps
+  if dep_index < i1
+  then
+    if i >= limits.work
+    then
+      ok (done (v1, i, some (acceptance.Fail.Exhausted
+        untrusted.LimitKind.Work)))
+    else
+      let i2 ← i + 1#u32
+      let dep ←
+        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+          contracts.Definition) deps dep_index
+      let r ← Usize.Insts.CoreConvertTryFromU32TryFromIntError.try_from dep
+      let position ← core.result.Result.unwrap_or r core.num.Usize.MAX
+      let s := alloc.vec.Vec.deref v
+      let o ←
+        core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice Std.U8) s
+          position
+      let o1 ← core.option.OptionShared0T.copied core.marker.CopyU8 o
+      let dep_color ← lift (core.option.Option.unwrap_or o1 2#u8)
+      let i3 := alloc.vec.Vec.len v
+      if position >= i3
+      then
+        let dep_index1 ← dep_index + 1#usize
+        ok (cont (v1, i2, dep_index1))
+      else
+        if dep_color = 1#u8
+        then
+          ok (done (v1, i2, some (acceptance.Fail.Unsupported
+            (untrusted.UnsupportedKind.RecursiveDependency dep))))
+        else
+          let v2 ←
+            if dep_color = 0#u8
+            then alloc.vec.Vec.push v1 dep
+            else ok v1
+          let dep_index1 ← dep_index + 1#usize
+          ok (cont (v2, i2, dep_index1))
+  else ok (done (v1, i, none))
+
+/-- [noble_kernel::acceptance::validate::dep_step]: loop 0:
+    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 134:4-157:5 -/
+@[rust_loop]
+def acceptance.validate.dep_step_loop
+  (v : alloc.vec.Vec Std.U8) (v1 : alloc.vec.Vec contracts.Definition)
+  (i : Std.U32) (limits : untrusted.Limits)
+  (deps : alloc.vec.Vec contracts.Definition) (dep_index : Std.Usize) :
+  Result ((alloc.vec.Vec contracts.Definition) × Std.U32 × (Option
+    acceptance.Fail))
+  := do
+  loop
+    (fun (v2, i1, dep_index1) => acceptance.validate.dep_step_loop.body v
+      limits deps v2 i1 dep_index1)
+    (v1, i, dep_index)
+
+/-- [noble_kernel::acceptance::validate::dep_step]:
+    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 107:0-163:1 -/
+def acceptance.validate.dep_step
+  (env : contracts.Env) (walk : acceptance.validate.DepWalk)
+  (limits : untrusted.Limits) :
+  Result (acceptance.validate.DepWalk × (core.result.Result Unit
+    acceptance.Fail))
+  := do
+  let s := alloc.vec.Vec.deref walk.stack
+  let o ← core.slice.Slice.last s
+  match o with
+  | none => ok (walk, core.result.Result.Ok ())
+  | some top =>
+    let r ← Usize.Insts.CoreConvertTryFromU32TryFromIntError.try_from top
+    let index ← core.result.Result.unwrap_or r core.num.Usize.MAX
+    let s1 := alloc.vec.Vec.deref walk.colors
+    let o1 ←
+      core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice Std.U8) s1
+        index
+    let o2 ← core.option.OptionShared0T.copied core.marker.CopyU8 o1
+    let color ← lift (core.option.Option.unwrap_or o2 2#u8)
+    if color = 1#u8
+    then
+      let (_, index_mut_back) ←
+        alloc.vec.Vec.index_mut (core.slice.index.SliceIndexUsizeSlice Std.U8)
+          walk.colors index
+      let (_, v) ← alloc.vec.Vec.pop Global walk.stack
+      let v1 := index_mut_back 2#u8
+      ok ({ walk with colors := v1, stack := v }, core.result.Result.Ok ())
+    else
+      if color = 2#u8
+      then
+        let (_, v) ← alloc.vec.Vec.pop Global walk.stack
+        ok ({ walk with stack := v }, core.result.Result.Ok ())
+      else
+        let (_, index_mut_back) ←
+          alloc.vec.Vec.index_mut (core.slice.index.SliceIndexUsizeSlice
+            Std.U8) walk.colors index
+        let deps ← acceptance.validate.deps_of env top
+        let v := index_mut_back 1#u8
+        let (v1, i, failure) ←
+          acceptance.validate.dep_step_loop v walk.stack walk.spent limits deps
+            0#usize
+        match failure with
+        | none =>
+          ok ({ colors := v, stack := v1, spent := i }, core.result.Result.Ok
+            ())
+        | some problem =>
+          ok ({ colors := v, stack := v1, spent := i }, core.result.Result.Err
+            problem)
+
+/-- [noble_kernel::acceptance::validate::dep_root]: loop body 0:
+    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 82:4-92:5 -/
+@[rust_loop_body]
+def acceptance.validate.dep_root_loop.body
+  (env : contracts.Env) (limits : untrusted.Limits)
+  (walk : acceptance.validate.DepWalk) :
+  Result (ControlFlow acceptance.validate.DepWalk (acceptance.validate.DepWalk
+    × (Option acceptance.Fail)))
+  := do
+  let b ← alloc.vec.Vec.is_empty Global walk.stack
+  if b
+  then ok (done (walk, none))
+  else
+    let (next, step) ← acceptance.validate.dep_step env walk limits
+    match step with
+    | core.result.Result.Ok _ => ok (cont next)
+    | core.result.Result.Err problem => ok (done (next, some problem))
+
+/-- [noble_kernel::acceptance::validate::dep_root]: loop 0:
+    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 82:4-92:5 -/
+@[rust_loop]
+def acceptance.validate.dep_root_loop
+  (env : contracts.Env) (limits : untrusted.Limits)
+  (walk : acceptance.validate.DepWalk) :
+  Result (acceptance.validate.DepWalk × (Option acceptance.Fail))
+  := do
+  loop
+    (fun walk1 => acceptance.validate.dep_root_loop.body env limits walk1)
+    walk
+
+/-- [noble_kernel::acceptance::validate::dep_root]:
+    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 73:0-97:1 -/
+def acceptance.validate.dep_root
+  (env : contracts.Env) (root : contracts.Definition)
+  (walk : acceptance.validate.DepWalk) (limits : untrusted.Limits) :
+  Result (acceptance.validate.DepWalk × (core.result.Result Unit
+    acceptance.Fail))
+  := do
+  let v ← alloc.vec.Vec.push walk.stack root
+  let (walk1, failure) ←
+    acceptance.validate.dep_root_loop env limits { walk with stack := v }
+  match failure with
+  | none => ok (walk1, core.result.Result.Ok ())
+  | some problem => ok (walk1, core.result.Result.Err problem)
+
+/-- [noble_kernel::acceptance::validate::dependencies]: loop body 0:
+    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 53:4-65:5 -/
+@[rust_loop_body]
+def acceptance.validate.dependencies_loop.body
+  (v : alloc.vec.Vec words.Scheme) (v1 : alloc.vec.Vec contracts.Behavior)
+  (v2 : alloc.vec.Vec (alloc.vec.Vec contracts.Definition))
+  (v3 : alloc.vec.Vec contracts.SchemaDecl) (v4 : alloc.vec.Vec types.EffId)
+  (limits : untrusted.Limits) (count : Std.Usize)
+  (walk : acceptance.validate.DepWalk) (failure : Option acceptance.Fail)
+  (root : Std.Usize) :
+  Result (ControlFlow (acceptance.validate.DepWalk × (Option acceptance.Fail)
+    × Std.Usize) (Option acceptance.Fail))
+  := do
+  if root < count
+  then
+    let i ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice Std.U8)
+        walk.colors root
+    if i = 0#u8
+    then
+      let i1 ← lift (UScalar.cast .U32 root)
+      let (next, step) ←
+        acceptance.validate.dep_root
+          { defs := v, kinds := v1, deps := v2, schemas := v3, effects := v4 }
+          i1 walk limits
+      match step with
+      | core.result.Result.Ok _ =>
+        let root1 ← root + 1#usize
+        ok (cont (next, failure, root1))
+      | core.result.Result.Err problem => ok (cont (next, some problem, root))
+    else let root1 ← root + 1#usize
+         ok (cont (walk, failure, root1))
+  else ok (done failure)
+
+/-- [noble_kernel::acceptance::validate::dependencies]: loop 0:
+    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 53:4-65:5 -/
+@[rust_loop]
+def acceptance.validate.dependencies_loop
+  (v : alloc.vec.Vec words.Scheme) (v1 : alloc.vec.Vec contracts.Behavior)
+  (v2 : alloc.vec.Vec (alloc.vec.Vec contracts.Definition))
+  (v3 : alloc.vec.Vec contracts.SchemaDecl) (v4 : alloc.vec.Vec types.EffId)
+  (limits : untrusted.Limits) (count : Std.Usize)
+  (walk : acceptance.validate.DepWalk) (failure : Option acceptance.Fail)
+  (root : Std.Usize) :
+  Result (Option acceptance.Fail)
+  := do
+  loop
+    (fun (walk1, failure1, root1) => acceptance.validate.dependencies_loop.body
+      v v1 v2 v3 v4 limits count walk1 failure1 root1)
+    (walk, failure, root)
+
+/-- [noble_kernel::acceptance::validate::dependencies]:
+    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 41:0-70:1 -/
+def acceptance.validate.dependencies
+  (env : contracts.Env) (limits : untrusted.Limits) :
+  Result (core.result.Result Unit acceptance.Fail)
+  := do
+  let count := alloc.vec.Vec.len env.defs
+  let v ← alloc.vec.from_elem core.clone.CloneU8 0#u8 count
+  let i ← capacity.at_least count 4#usize
+  let v1 := alloc.vec.Vec.with_capacity contracts.Definition i
+  let failure ←
+    acceptance.validate.dependencies_loop env.defs env.kinds env.deps
+      env.schemas env.effects limits count
+      { colors := v, stack := v1, spent := 0#u32 } none 0#usize
+  match failure with
+  | none => ok (core.result.Result.Ok ())
+  | some problem => ok (core.result.Result.Err problem)
+
+/-- [noble_kernel::acceptance::preflight::check_allowed_effects]:
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 63:0-78:1 -/
+def acceptance.preflight.check_allowed_effects
+  (context : acceptance.parts.Ctx) :
+  Result (core.result.Result Unit acceptance.Fail)
+  := do
+  let s ← types.EffSet.as_slice context.request.expected.allowed_effects
+  let allowed_effects ←
+    alloc.slice.Slice.to_vec types.EffId.Insts.CoreCloneClone s
+  let s1 := alloc.vec.Vec.deref context.env.effects
+  let known ← alloc.slice.Slice.to_vec types.EffId.Insts.CoreCloneClone s1
+  let s2 := alloc.vec.Vec.deref allowed_effects
+  let s3 := alloc.vec.Vec.deref known
+  let unknown ← acceptance.parts.first_unknown s2 s3
+  match unknown with
+  | none => ok (core.result.Result.Ok ())
+  | some id =>
+    let s4 ← acceptance.parts.site none none
+    let f ←
+      acceptance.parts.invalid context s4 (alloc.vec.Vec.new types.Ty)
+        (alloc.vec.Vec.new types.Ty) (untrusted.Constraint.UnknownEffect id)
+    ok (core.result.Result.Err f)
+
 /-- [noble_kernel::acceptance::preflight::validate_schemes]: loop body 0:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 43:4-52:5 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 46:4-55:5 -/
 @[rust_loop_body]
 def acceptance.preflight.validate_schemes_loop.body
   (env : contracts.Env) (index : Std.Usize) :
@@ -4235,7 +4860,7 @@ def acceptance.preflight.validate_schemes_loop.body
   else ok (done none)
 
 /-- [noble_kernel::acceptance::preflight::validate_schemes]: loop 0:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 43:4-52:5 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 46:4-55:5 -/
 @[rust_loop]
 def acceptance.preflight.validate_schemes_loop
   (env : contracts.Env) (index : Std.Usize) :
@@ -4246,7 +4871,7 @@ def acceptance.preflight.validate_schemes_loop
     index
 
 /-- [noble_kernel::acceptance::preflight::validate_schemes]:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 40:0-57:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 43:0-60:1 -/
 def acceptance.preflight.validate_schemes
   (env : contracts.Env) :
   Result (core.result.Result Unit acceptance.Fail)
@@ -4257,7 +4882,7 @@ def acceptance.preflight.validate_schemes
   | some problem => ok (core.result.Result.Err problem)
 
 /-- [noble_kernel::acceptance::preflight::check_request]:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 4:0-37:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 5:0-40:1 -/
 def acceptance.preflight.check_request
   (env : contracts.Env) (request : untrusted.Request)
   (candidate : untrusted.Candidate) :
@@ -4292,15 +4917,24 @@ def acceptance.preflight.check_request
             let r1 ← acceptance.preflight.validate_schemes env
             match r1 with
             | core.result.Result.Ok _ =>
-              let s := alloc.vec.Vec.deref request.expected.stack_in
-              let r2 ← acceptance.parts.limits_of s { request, env }
+              let r2 ← acceptance.validate.dependencies env request.limits
               match r2 with
               | core.result.Result.Ok _ =>
-                let s1 := alloc.vec.Vec.deref request.expected.stack_out
-                let r3 ← acceptance.parts.limits_of s1 { request, env }
+                let r3 ← acceptance.validate.schemas env request.limits
                 match r3 with
                 | core.result.Result.Ok _ =>
-                  acceptance.preflight.check_allowed_effects { request, env }
+                  let s := alloc.vec.Vec.deref request.expected.stack_in
+                  let r4 ← acceptance.parts.limits_of s { request, env }
+                  match r4 with
+                  | core.result.Result.Ok _ =>
+                    let s1 := alloc.vec.Vec.deref request.expected.stack_out
+                    let r5 ← acceptance.parts.limits_of s1 { request, env }
+                    match r5 with
+                    | core.result.Result.Ok _ =>
+                      acceptance.preflight.check_allowed_effects
+                        { request, env }
+                    | core.result.Result.Err _ => ok r5
+                  | core.result.Result.Err _ => ok r4
                 | core.result.Result.Err _ => ok r3
               | core.result.Result.Err _ => ok r2
             | core.result.Result.Err _ => ok r1
@@ -4309,7 +4943,7 @@ def acceptance.preflight.check_request
             untrusted.LimitKind.Nodes))
 
 /-- [noble_kernel::acceptance::halted]:
-    Source: 'crates/noble-kernel/src/acceptance.rs', lines 121:0-124:1 -/
+    Source: 'crates/noble-kernel/src/acceptance.rs', lines 122:0-125:1 -/
 def acceptance.halted
   (machine : acceptance.Machine)
   (outcome : core.result.Result untrusted.Interface acceptance.Fail) :
@@ -4318,7 +4952,7 @@ def acceptance.halted
   ok { machine with outcome := (some outcome) }
 
 /-- [noble_kernel::acceptance::open_current]:
-    Source: 'crates/noble-kernel/src/acceptance.rs', lines 197:0-216:1 -/
+    Source: 'crates/noble-kernel/src/acceptance.rs', lines 198:0-217:1 -/
 def acceptance.open_current
   (machine : acceptance.Machine) (frame : acceptance.Frame)
   (node_id : untrusted.NodeId) (node : untrusted.Node)
@@ -4346,7 +4980,7 @@ def acceptance.open_current
     acceptance.halted machine (core.result.Result.Err problem)
 
 /-- [noble_kernel::acceptance::fold_current]:
-    Source: 'crates/noble-kernel/src/acceptance.rs', lines 169:0-194:1 -/
+    Source: 'crates/noble-kernel/src/acceptance.rs', lines 170:0-195:1 -/
 def acceptance.fold_current
   (machine : acceptance.Machine) (frame : acceptance.Frame)
   (node_id : untrusted.NodeId) (node : untrusted.Node)
@@ -4377,7 +5011,7 @@ def acceptance.fold_current
     acceptance.halted machine (core.result.Result.Err problem)
 
 /-- [noble_kernel::acceptance::close_frame]:
-    Source: 'crates/noble-kernel/src/acceptance.rs', lines 127:0-166:1 -/
+    Source: 'crates/noble-kernel/src/acceptance.rs', lines 128:0-167:1 -/
 def acceptance.close_frame
   (machine : acceptance.Machine) (frame : acceptance.Frame)
   (candidate : untrusted.Candidate) (context : acceptance.parts.Ctx) :
@@ -4420,7 +5054,7 @@ def acceptance.close_frame
       problem)
 
 /-- [noble_kernel::acceptance::step]:
-    Source: 'crates/noble-kernel/src/acceptance.rs', lines 93:0-118:1 -/
+    Source: 'crates/noble-kernel/src/acceptance.rs', lines 94:0-119:1 -/
 def acceptance.step
   (machine : acceptance.Machine) (candidate : untrusted.Candidate)
   (context : acceptance.parts.Ctx) :
@@ -4459,7 +5093,7 @@ def acceptance.step
           problem)
 
 /-- [noble_kernel::acceptance::run]: loop body 0:
-    Source: 'crates/noble-kernel/src/acceptance.rs', lines 79:4-81:5 -/
+    Source: 'crates/noble-kernel/src/acceptance.rs', lines 80:4-82:5 -/
 @[rust_loop_body]
 def acceptance.run_loop.body
   (env : contracts.Env) (i : Std.U32) (e : untrusted.Expected) (i1 : Std.U32)
@@ -4496,7 +5130,7 @@ def acceptance.run_loop.body
   else ok (done (machine.state, machine.outcome))
 
 /-- [noble_kernel::acceptance::run]: loop 0:
-    Source: 'crates/noble-kernel/src/acceptance.rs', lines 79:4-81:5 -/
+    Source: 'crates/noble-kernel/src/acceptance.rs', lines 80:4-82:5 -/
 @[rust_loop]
 def acceptance.run_loop
   (env : contracts.Env) (i : Std.U32) (e : untrusted.Expected) (i1 : Std.U32)
@@ -4512,7 +5146,7 @@ def acceptance.run_loop
     machine
 
 /-- [noble_kernel::acceptance::run]:
-    Source: 'crates/noble-kernel/src/acceptance.rs', lines 59:0-90:1 -/
+    Source: 'crates/noble-kernel/src/acceptance.rs', lines 60:0-91:1 -/
 def acceptance.run
   (env : contracts.Env) (request : untrusted.Request)
   (candidate : untrusted.Candidate) :
@@ -4555,7 +5189,7 @@ def acceptance.run
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_kernel::acceptance::check]:
-    Source: 'crates/noble-kernel/src/acceptance.rs', lines 45:0-57:1
+    Source: 'crates/noble-kernel/src/acceptance.rs', lines 46:0-58:1
     Visibility: public -/
 def acceptance.check
   (env : contracts.Env) (request : untrusted.Request)
@@ -4597,7 +5231,7 @@ def contracts.bootstrap.stack_var
 def contracts.bootstrap.UNIT : shapes.Pattern := shapes.Pattern.UnitPattern
 
 /-- [noble_kernel::contracts::bootstrap::data::unit]:
-    Source: 'crates/noble-kernel/src/contracts/bootstrap/data.rs', lines 3:0-10:1 -/
+    Source: 'crates/noble-kernel/src/contracts/bootstrap/data.rs', lines 8:0-15:1 -/
 def contracts.bootstrap.data.unit : Result words.Scheme := do
   let y ←
     lift (Std.Array.to_slice (Array.make 1#usize [ words.VariableKind.Stack ] :
@@ -4631,7 +5265,7 @@ def contracts.bootstrap.value_var
   ok (shapes.Pattern.VarPattern index)
 
 /-- [noble_kernel::contracts::bootstrap::data::pair_word]:
-    Source: 'crates/noble-kernel/src/contracts/bootstrap/data.rs', lines 12:0-33:1 -/
+    Source: 'crates/noble-kernel/src/contracts/bootstrap/data.rs', lines 17:0-38:1 -/
 def contracts.bootstrap.data.pair_word : Result words.Scheme := do
   let y ←
     lift (Std.Array.to_slice
@@ -4658,7 +5292,7 @@ def contracts.bootstrap.data.pair_word : Result words.Scheme := do
     shapes.EffectSlot)
 
 /-- [noble_kernel::contracts::bootstrap::data::unpair]:
-    Source: 'crates/noble-kernel/src/contracts/bootstrap/data.rs', lines 35:0-56:1 -/
+    Source: 'crates/noble-kernel/src/contracts/bootstrap/data.rs', lines 40:0-61:1 -/
 def contracts.bootstrap.data.unpair : Result words.Scheme := do
   let y ←
     lift (Std.Array.to_slice
@@ -4693,7 +5327,7 @@ def contracts.bootstrap.sum
   ok (shapes.Pattern.SumPattern left right)
 
 /-- [noble_kernel::contracts::bootstrap::data::inl]:
-    Source: 'crates/noble-kernel/src/contracts/bootstrap/data.rs', lines 58:0-75:1 -/
+    Source: 'crates/noble-kernel/src/contracts/bootstrap/data.rs', lines 63:0-80:1 -/
 def contracts.bootstrap.data.inl : Result words.Scheme := do
   let y ←
     lift (Std.Array.to_slice
@@ -4719,7 +5353,7 @@ def contracts.bootstrap.data.inl : Result words.Scheme := do
     shapes.EffectSlot)
 
 /-- [noble_kernel::contracts::bootstrap::data::inr]:
-    Source: 'crates/noble-kernel/src/contracts/bootstrap/data.rs', lines 77:0-94:1 -/
+    Source: 'crates/noble-kernel/src/contracts/bootstrap/data.rs', lines 82:0-99:1 -/
 def contracts.bootstrap.data.inr : Result words.Scheme := do
   let y ←
     lift (Std.Array.to_slice
@@ -4761,7 +5395,7 @@ def contracts.bootstrap.effect_var
   ok (shapes.EffectSlot.Var index)
 
 /-- [noble_kernel::contracts::bootstrap::data::case]:
-    Source: 'crates/noble-kernel/src/contracts/bootstrap/data.rs', lines 96:0-126:1 -/
+    Source: 'crates/noble-kernel/src/contracts/bootstrap/data.rs', lines 101:0-131:1 -/
 def contracts.bootstrap.data.case : Result words.Scheme := do
   let y ←
     lift (Std.Array.to_slice
@@ -4826,7 +5460,7 @@ def contracts.bootstrap.data.case : Result words.Scheme := do
 def contracts.bootstrap.BOOL : shapes.Pattern := shapes.Pattern.BoolPattern
 
 /-- [noble_kernel::contracts::bootstrap::data::if_word]:
-    Source: 'crates/noble-kernel/src/contracts/bootstrap/data.rs', lines 128:0-153:1 -/
+    Source: 'crates/noble-kernel/src/contracts/bootstrap/data.rs', lines 133:0-158:1 -/
 def contracts.bootstrap.data.if_word : Result words.Scheme := do
   let y ←
     lift (Std.Array.to_slice
@@ -4887,7 +5521,7 @@ def contracts.bootstrap.list
   ok (shapes.Pattern.ListPattern item)
 
 /-- [noble_kernel::contracts::bootstrap::data::nil]:
-    Source: 'crates/noble-kernel/src/contracts/bootstrap/data.rs', lines 155:0-168:1 -/
+    Source: 'crates/noble-kernel/src/contracts/bootstrap/data.rs', lines 160:0-173:1 -/
 def contracts.bootstrap.data.nil : Result words.Scheme := do
   let y ←
     lift (Std.Array.to_slice
@@ -4909,7 +5543,7 @@ def contracts.bootstrap.data.nil : Result words.Scheme := do
     shapes.EffectSlot)
 
 /-- [noble_kernel::contracts::bootstrap::data::cons]:
-    Source: 'crates/noble-kernel/src/contracts/bootstrap/data.rs', lines 170:0-187:1 -/
+    Source: 'crates/noble-kernel/src/contracts/bootstrap/data.rs', lines 175:0-192:1 -/
 def contracts.bootstrap.data.cons : Result words.Scheme := do
   let y ←
     lift (Std.Array.to_slice
@@ -4932,7 +5566,7 @@ def contracts.bootstrap.data.cons : Result words.Scheme := do
     shapes.EffectSlot)
 
 /-- [noble_kernel::contracts::bootstrap::data::list_case]:
-    Source: 'crates/noble-kernel/src/contracts/bootstrap/data.rs', lines 189:0-219:1 -/
+    Source: 'crates/noble-kernel/src/contracts/bootstrap/data.rs', lines 194:0-224:1 -/
 def contracts.bootstrap.data.list_case : Result words.Scheme := do
   let y ←
     lift (Std.Array.to_slice
@@ -4989,7 +5623,7 @@ def contracts.bootstrap.data.list_case : Result words.Scheme := do
   contracts.bootstrap.scheme ret ret7 ret8 ret9
 
 /-- [noble_kernel::contracts::TEST_EMIT]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 13:0-13:66
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 14:0-14:66
     Visibility: public -/
 @[global_simps, irreducible] def contracts.TEST_EMIT : types.EffId := 0#u32
 
@@ -4999,7 +5633,7 @@ def contracts.bootstrap.data.list_case : Result words.Scheme := do
 def contracts.bootstrap.TEXT : shapes.Pattern := shapes.Pattern.TextPattern
 
 /-- [noble_kernel::contracts::bootstrap::data::test_emit]:
-    Source: 'crates/noble-kernel/src/contracts/bootstrap/data.rs', lines 221:0-230:1 -/
+    Source: 'crates/noble-kernel/src/contracts/bootstrap/data.rs', lines 226:0-235:1 -/
 def contracts.bootstrap.data.test_emit : Result words.Scheme := do
   let y ←
     lift (Std.Array.to_slice (Array.make 1#usize [ words.VariableKind.Stack ] :
@@ -5029,7 +5663,7 @@ def contracts.bootstrap.data.test_emit : Result words.Scheme := do
 def contracts.bootstrap.SYNTAX : shapes.Pattern := shapes.Pattern.SyntaxPattern
 
 /-- [noble_kernel::contracts::bootstrap::reflect]:
-    Source: 'crates/noble-kernel/src/contracts/bootstrap.rs', lines 201:0-220:1 -/
+    Source: 'crates/noble-kernel/src/contracts/bootstrap.rs', lines 213:0-232:1 -/
 def contracts.bootstrap.reflect : Result words.Scheme := do
   let y ←
     lift (Std.Array.to_slice
@@ -5068,7 +5702,7 @@ def contracts.bootstrap.reflect : Result words.Scheme := do
     shapes.EffectSlot)
 
 /-- [noble_kernel::contracts::bootstrap::run]:
-    Source: 'crates/noble-kernel/src/contracts/bootstrap.rs', lines 181:0-199:1 -/
+    Source: 'crates/noble-kernel/src/contracts/bootstrap.rs', lines 193:0-211:1 -/
 def contracts.bootstrap.run : Result words.Scheme := do
   let y ←
     lift (Std.Array.to_slice
@@ -5108,7 +5742,7 @@ def contracts.bootstrap.run : Result words.Scheme := do
   contracts.bootstrap.scheme ret ret4 ret5 ret6
 
 /-- [noble_kernel::contracts::bootstrap::compose]:
-    Source: 'crates/noble-kernel/src/contracts/bootstrap.rs', lines 146:0-179:1 -/
+    Source: 'crates/noble-kernel/src/contracts/bootstrap.rs', lines 158:0-191:1 -/
 def contracts.bootstrap.compose : Result words.Scheme := do
   let y ←
     lift (Std.Array.to_slice
@@ -5175,7 +5809,7 @@ def contracts.bootstrap.compose : Result words.Scheme := do
     shapes.EffectSlot)
 
 /-- [noble_kernel::contracts::bootstrap::quote]:
-    Source: 'crates/noble-kernel/src/contracts/bootstrap.rs', lines 126:0-144:1 -/
+    Source: 'crates/noble-kernel/src/contracts/bootstrap.rs', lines 138:0-156:1 -/
 def contracts.bootstrap.quote : Result words.Scheme := do
   let y ←
     lift (Std.Array.to_slice
@@ -5212,6 +5846,28 @@ def contracts.bootstrap.quote : Result words.Scheme := do
     Source: 'crates/noble-kernel/src/contracts/bootstrap.rs', lines 8:0-8:64 -/
 @[global_simps, irreducible]
 def contracts.bootstrap.I64 : shapes.Pattern := shapes.Pattern.I64Pattern
+
+/-- [noble_kernel::contracts::bootstrap::equals]:
+    Source: 'crates/noble-kernel/src/contracts/bootstrap.rs', lines 129:0-136:1 -/
+def contracts.bootstrap.equals : Result words.Scheme := do
+  let y ←
+    lift (Std.Array.to_slice (Array.make 1#usize [ words.VariableKind.Stack ] :
+      Array words.VariableKind 1#usize))
+  let ret := alloc.slice.Slice.into_vec y
+  let p ← contracts.bootstrap.stack_var 0#u32
+  let y1 ←
+    lift (Std.Array.to_slice
+      (Array.make 3#usize [
+         p, contracts.bootstrap.I64, contracts.bootstrap.I64
+         ] : Array shapes.Pattern 3#usize))
+  let ret1 := alloc.slice.Slice.into_vec y1
+  let y2 ←
+    lift (Std.Array.to_slice
+      (Array.make 2#usize [ p, contracts.bootstrap.BOOL ] : Array
+      shapes.Pattern 2#usize))
+  let ret2 := alloc.slice.Slice.into_vec y2
+  contracts.bootstrap.scheme ret ret1 ret2 (alloc.vec.Vec.new
+    shapes.EffectSlot)
 
 /-- [noble_kernel::contracts::bootstrap::arith]:
     Source: 'crates/noble-kernel/src/contracts/bootstrap.rs', lines 117:0-124:1 -/
@@ -5344,7 +6000,7 @@ def contracts.bootstrap.dup : Result words.Scheme := do
     shapes.EffectSlot)
 
 /-- [noble_kernel::contracts::bootstrap::data::table]:
-    Source: 'crates/noble-kernel/src/contracts/bootstrap/data.rs', lines 233:0-258:1
+    Source: 'crates/noble-kernel/src/contracts/bootstrap/data.rs', lines 238:0-264:1
     Visibility: public -/
 def contracts.bootstrap.data.table
   : Result (alloc.vec.Vec (contracts.Behavior × words.Scheme)) := do
@@ -5353,57 +6009,51 @@ def contracts.bootstrap.data.table
   let s2 ← contracts.bootstrap.swap
   let s3 ← contracts.bootstrap.dip
   let s4 ← contracts.bootstrap.arith
-  let s5 ← contracts.bootstrap.quote
-  let s6 ← contracts.bootstrap.compose
-  let s7 ← contracts.bootstrap.run
-  let s8 ← contracts.bootstrap.reflect
-  let s9 ← contracts.bootstrap.data.unit
-  let s10 ← contracts.bootstrap.data.pair_word
-  let s11 ← contracts.bootstrap.data.unpair
-  let s12 ← contracts.bootstrap.data.inl
-  let s13 ← contracts.bootstrap.data.inr
-  let s14 ← contracts.bootstrap.data.case
-  let s15 ← contracts.bootstrap.data.if_word
-  let s16 ← contracts.bootstrap.data.nil
-  let s17 ← contracts.bootstrap.data.cons
-  let s18 ← contracts.bootstrap.data.list_case
-  let s19 ← contracts.bootstrap.data.test_emit
+  let s5 ← contracts.bootstrap.equals
+  let s6 ← contracts.bootstrap.quote
+  let s7 ← contracts.bootstrap.compose
+  let s8 ← contracts.bootstrap.run
+  let s9 ← contracts.bootstrap.reflect
+  let s10 ← contracts.bootstrap.data.unit
+  let s11 ← contracts.bootstrap.data.pair_word
+  let s12 ← contracts.bootstrap.data.unpair
+  let s13 ← contracts.bootstrap.data.inl
+  let s14 ← contracts.bootstrap.data.inr
+  let s15 ← contracts.bootstrap.data.case
+  let s16 ← contracts.bootstrap.data.if_word
+  let s17 ← contracts.bootstrap.data.nil
+  let s18 ← contracts.bootstrap.data.cons
+  let s19 ← contracts.bootstrap.data.list_case
+  let s20 ← contracts.bootstrap.data.test_emit
   let y ←
     lift (Std.Array.to_slice
-      (Array.make 22#usize [
+      (Array.make 23#usize [
          (contracts.Behavior.DupBehavior, s), (contracts.Behavior.DropBehavior,
          s1), (contracts.Behavior.SwapBehavior, s2),
          (contracts.Behavior.DipBehavior, s3),
          (contracts.Behavior.ArithBehavior, s4),
          (contracts.Behavior.ArithBehavior, s4),
          (contracts.Behavior.ArithBehavior, s4),
-         (contracts.Behavior.QuoteBehavior, s5),
-         (contracts.Behavior.ComposeBehavior, s6),
-         (contracts.Behavior.RunBehavior, s7),
-         (contracts.Behavior.ReflectBehavior, s8),
-         (contracts.Behavior.UnitBehavior, s9),
-         (contracts.Behavior.PairBehavior, s10),
-         (contracts.Behavior.UnpairBehavior, s11),
-         (contracts.Behavior.InlBehavior, s12),
-         (contracts.Behavior.InrBehavior, s13),
-         (contracts.Behavior.CaseBehavior, s14),
-         (contracts.Behavior.IfBehavior, s15), (contracts.Behavior.NilBehavior,
-         s16), (contracts.Behavior.ConsBehavior, s17),
-         (contracts.Behavior.ListCaseBehavior, s18),
-         (contracts.Behavior.TestEmitBehavior, s19)
-         ] : Array (contracts.Behavior × words.Scheme) 22#usize))
+         (contracts.Behavior.EqualsBehavior, s5),
+         (contracts.Behavior.QuoteBehavior, s6),
+         (contracts.Behavior.ComposeBehavior, s7),
+         (contracts.Behavior.RunBehavior, s8),
+         (contracts.Behavior.ReflectBehavior, s9),
+         (contracts.Behavior.UnitBehavior, s10),
+         (contracts.Behavior.PairBehavior, s11),
+         (contracts.Behavior.UnpairBehavior, s12),
+         (contracts.Behavior.InlBehavior, s13),
+         (contracts.Behavior.InrBehavior, s14),
+         (contracts.Behavior.CaseBehavior, s15),
+         (contracts.Behavior.IfBehavior, s16), (contracts.Behavior.NilBehavior,
+         s17), (contracts.Behavior.ConsBehavior, s18),
+         (contracts.Behavior.ListCaseBehavior, s19),
+         (contracts.Behavior.TestEmitBehavior, s20)
+         ] : Array (contracts.Behavior × words.Scheme) 23#usize))
   ok (alloc.slice.Slice.into_vec y)
 
-/-- Trait implementation: [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::Definition}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 9:9-9:14 -/
-@[reducible]
-def contracts.Definition.Insts.CoreCloneClone : core.clone.Clone
-  contracts.Definition := {
-  clone := contracts.Definition.Insts.CoreCloneClone.clone
-}
-
 /-- Trait implementation: [noble_kernel::contracts::{impl core::marker::Copy for noble_kernel::contracts::Definition}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 9:16-9:20 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 10:16-10:20 -/
 @[reducible]
 def contracts.Definition.Insts.CoreMarkerCopy : core.marker.Copy
   contracts.Definition := {
@@ -5411,7 +6061,7 @@ def contracts.Definition.Insts.CoreMarkerCopy : core.marker.Copy
 }
 
 /-- [noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::Definition}::fmt]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 9:22-9:27
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 10:22-10:27
     Visibility: public -/
 def contracts.Definition.Insts.CoreFmtDebug.fmt
   (self : contracts.Definition) (f : core.fmt.Formatter) :
@@ -5421,7 +6071,7 @@ def contracts.Definition.Insts.CoreFmtDebug.fmt
   core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Definition") dyn
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::Definition}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 9:22-9:27 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 10:22-10:27 -/
 @[reducible]
 def contracts.Definition.Insts.CoreFmtDebug : core.fmt.Debug
   contracts.Definition := {
@@ -5429,14 +6079,14 @@ def contracts.Definition.Insts.CoreFmtDebug : core.fmt.Debug
 }
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::marker::StructuralPartialEq for noble_kernel::contracts::Definition}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 9:29-9:38 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 10:29-10:38 -/
 @[reducible]
 def contracts.Definition.Insts.CoreMarkerStructuralPartialEq :
   core.marker.StructuralPartialEq contracts.Definition := {
 }
 
 /-- [noble_kernel::contracts::{impl core::cmp::PartialEq<noble_kernel::contracts::Definition> for noble_kernel::contracts::Definition}::eq]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 9:29-9:38
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 10:29-10:38
     Visibility: public -/
 def contracts.Definition.Insts.CoreCmpPartialEqDefinition.eq
   (self : contracts.Definition) (other : contracts.Definition) :
@@ -5445,7 +6095,7 @@ def contracts.Definition.Insts.CoreCmpPartialEqDefinition.eq
   ok (self = other)
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::cmp::PartialEq<noble_kernel::contracts::Definition> for noble_kernel::contracts::Definition}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 9:29-9:38 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 10:29-10:38 -/
 @[reducible]
 impl_def contracts.Definition.Insts.CoreCmpPartialEqDefinition :
   core.cmp.PartialEq contracts.Definition contracts.Definition := {
@@ -5455,14 +6105,14 @@ impl_def contracts.Definition.Insts.CoreCmpPartialEqDefinition :
 }
 
 /-- [noble_kernel::contracts::{impl core::cmp::Eq for noble_kernel::contracts::Definition}::assert_fields_are_eq]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 9:40-9:42
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 10:40-10:42
     Visibility: public -/
 def contracts.Definition.Insts.CoreCmpEq.assert_fields_are_eq
   (self : contracts.Definition) : Result Unit := do
   ok ()
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::cmp::Eq for noble_kernel::contracts::Definition}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 9:40-9:42 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 10:40-10:42 -/
 @[reducible]
 def contracts.Definition.Insts.CoreCmpEq : core.cmp.Eq contracts.Definition
   := {
@@ -5472,31 +6122,112 @@ def contracts.Definition.Insts.CoreCmpEq : core.cmp.Eq contracts.Definition
 }
 
 /-- [noble_kernel::contracts::FIXTURE_RESOURCE]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 16:0-16:87
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 17:0-17:87
     Visibility: public -/
 @[global_simps, irreducible]
 def contracts.FIXTURE_RESOURCE : types.ResourceKind := 0#u32
 
+/-- [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::SchemaId}::clone]:
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 20:9-20:14
+    Visibility: public -/
+def contracts.SchemaId.Insts.CoreCloneClone.clone
+  (self : contracts.SchemaId) : Result contracts.SchemaId := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::SchemaId}]
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 20:9-20:14 -/
+@[reducible]
+def contracts.SchemaId.Insts.CoreCloneClone : core.clone.Clone
+  contracts.SchemaId := {
+  clone := contracts.SchemaId.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::contracts::{impl core::marker::Copy for noble_kernel::contracts::SchemaId}]
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 20:16-20:20 -/
+@[reducible]
+def contracts.SchemaId.Insts.CoreMarkerCopy : core.marker.Copy
+  contracts.SchemaId := {
+  cloneInst := contracts.SchemaId.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::SchemaId}::fmt]:
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 20:22-20:27
+    Visibility: public -/
+def contracts.SchemaId.Insts.CoreFmtDebug.fmt
+  (self : contracts.SchemaId) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU32) self
+  core.fmt.Formatter.debug_tuple_field1_finish f (toStr "SchemaId") dyn
+
+/-- Trait implementation: [noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::SchemaId}]
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 20:22-20:27 -/
+@[reducible]
+def contracts.SchemaId.Insts.CoreFmtDebug : core.fmt.Debug contracts.SchemaId
+  := {
+  fmt := contracts.SchemaId.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::contracts::{impl core::marker::StructuralPartialEq for noble_kernel::contracts::SchemaId}]
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 20:29-20:38 -/
+@[reducible]
+def contracts.SchemaId.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq contracts.SchemaId := {
+}
+
+/-- [noble_kernel::contracts::{impl core::cmp::PartialEq<noble_kernel::contracts::SchemaId> for noble_kernel::contracts::SchemaId}::eq]:
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 20:29-20:38
+    Visibility: public -/
+def contracts.SchemaId.Insts.CoreCmpPartialEqSchemaId.eq
+  (self : contracts.SchemaId) (other : contracts.SchemaId) : Result Bool := do
+  ok (self = other)
+
+/-- Trait implementation: [noble_kernel::contracts::{impl core::cmp::PartialEq<noble_kernel::contracts::SchemaId> for noble_kernel::contracts::SchemaId}]
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 20:29-20:38 -/
+@[reducible]
+impl_def contracts.SchemaId.Insts.CoreCmpPartialEqSchemaId : core.cmp.PartialEq
+  contracts.SchemaId contracts.SchemaId := {
+  eq := contracts.SchemaId.Insts.CoreCmpPartialEqSchemaId.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    contracts.SchemaId.Insts.CoreCmpPartialEqSchemaId
+}
+
+/-- [noble_kernel::contracts::{impl core::cmp::Eq for noble_kernel::contracts::SchemaId}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 20:40-20:42
+    Visibility: public -/
+def contracts.SchemaId.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : contracts.SchemaId) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::contracts::{impl core::cmp::Eq for noble_kernel::contracts::SchemaId}]
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 20:40-20:42 -/
+@[reducible]
+def contracts.SchemaId.Insts.CoreCmpEq : core.cmp.Eq contracts.SchemaId := {
+  partialEqInst := contracts.SchemaId.Insts.CoreCmpPartialEqSchemaId
+  assert_fields_are_eq :=
+    contracts.SchemaId.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
 /-- [noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::Behavior}::fmt::__OFFSET]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 24:22-24:27 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 29:22-29:27 -/
 @[global_simps, irreducible]
-def contracts.DebugBehavior.fmt.__OFFSET : Array Std.Usize 22#usize :=
-  Array.make 22#usize [
-    0#usize, 3#usize, 7#usize, 11#usize, 14#usize, 19#usize, 24#usize,
-    31#usize, 34#usize, 41#usize, 45#usize, 49#usize, 55#usize, 58#usize,
-    61#usize, 65#usize, 67#usize, 70#usize, 74#usize, 82#usize, 90#usize,
-    95#usize
+def contracts.DebugBehavior.fmt.__OFFSET : Array Std.Usize 23#usize :=
+  Array.make 23#usize [
+    0#usize, 3#usize, 7#usize, 11#usize, 14#usize, 19#usize, 25#usize,
+    30#usize, 37#usize, 40#usize, 47#usize, 51#usize, 55#usize, 61#usize,
+    64#usize, 67#usize, 71#usize, 73#usize, 76#usize, 80#usize, 88#usize,
+    96#usize, 101#usize
     ]
 
 /-- [noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::Behavior}::fmt::__NAMES]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 24:22-24:27 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 29:22-29:27 -/
 @[global_simps, irreducible]
 def contracts.DebugBehavior.fmt.__NAMES : Str :=
   toStr
-    "DupDropSwapDipArithQuoteComposeRunReflectUnitPairUnpairInlInrCaseIfNilConsListCaseTestEmitNamed"
+    "DupDropSwapDipArithEqualsQuoteComposeRunReflectUnitPairUnpairInlInrCaseIfNilConsListCaseTestEmitNamed"
 
 /-- [noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::Behavior}::fmt]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 24:22-24:27
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 29:22-29:27
     Visibility: public -/
 def contracts.Behavior.Insts.CoreFmtDebug.fmt
   (self : contracts.Behavior) (f : core.fmt.Formatter) :
@@ -5509,7 +6240,7 @@ def contracts.Behavior.Insts.CoreFmtDebug.fmt
     contracts.DebugBehavior.fmt.__NAMES s __d
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::Behavior}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 24:22-24:27 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 29:22-29:27 -/
 @[reducible]
 def contracts.Behavior.Insts.CoreFmtDebug : core.fmt.Debug contracts.Behavior
   := {
@@ -5517,14 +6248,14 @@ def contracts.Behavior.Insts.CoreFmtDebug : core.fmt.Debug contracts.Behavior
 }
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::marker::StructuralPartialEq for noble_kernel::contracts::Behavior}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 24:29-24:38 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 29:29-29:38 -/
 @[reducible]
 def contracts.Behavior.Insts.CoreMarkerStructuralPartialEq :
   core.marker.StructuralPartialEq contracts.Behavior := {
 }
 
 /-- [noble_kernel::contracts::{impl core::cmp::PartialEq<noble_kernel::contracts::Behavior> for noble_kernel::contracts::Behavior}::eq]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 24:29-24:38
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 29:29-29:38
     Visibility: public -/
 def contracts.Behavior.Insts.CoreCmpPartialEqBehavior.eq
   (self : contracts.Behavior) (other : contracts.Behavior) : Result Bool := do
@@ -5533,7 +6264,7 @@ def contracts.Behavior.Insts.CoreCmpPartialEqBehavior.eq
   ok (self1 = other1)
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::cmp::PartialEq<noble_kernel::contracts::Behavior> for noble_kernel::contracts::Behavior}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 24:29-24:38 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 29:29-29:38 -/
 @[reducible]
 impl_def contracts.Behavior.Insts.CoreCmpPartialEqBehavior : core.cmp.PartialEq
   contracts.Behavior contracts.Behavior := {
@@ -5543,14 +6274,14 @@ impl_def contracts.Behavior.Insts.CoreCmpPartialEqBehavior : core.cmp.PartialEq
 }
 
 /-- [noble_kernel::contracts::{impl core::cmp::Eq for noble_kernel::contracts::Behavior}::assert_fields_are_eq]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 24:40-24:42
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 29:40-29:42
     Visibility: public -/
 def contracts.Behavior.Insts.CoreCmpEq.assert_fields_are_eq
   (self : contracts.Behavior) : Result Unit := do
   ok ()
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::cmp::Eq for noble_kernel::contracts::Behavior}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 24:40-24:42 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 29:40-29:42 -/
 @[reducible]
 def contracts.Behavior.Insts.CoreCmpEq : core.cmp.Eq contracts.Behavior := {
   partialEqInst := contracts.Behavior.Insts.CoreCmpPartialEqBehavior
@@ -5558,35 +6289,26 @@ def contracts.Behavior.Insts.CoreCmpEq : core.cmp.Eq contracts.Behavior := {
     contracts.Behavior.Insts.CoreCmpEq.assert_fields_are_eq
 }
 
-/-- Trait implementation: [noble_kernel::words::{impl core::clone::Clone for noble_kernel::words::Scheme}]
-    Source: 'crates/noble-kernel/src/words.rs', lines 31:9-31:14 -/
-@[reducible]
-def words.Scheme.Insts.CoreCloneClone : core.clone.Clone words.Scheme := {
-  clone := words.Scheme.Insts.CoreCloneClone.clone
-}
-
-/-- [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::Env}::clone]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 71:9-71:14
+/-- [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::SchemaDecl}::clone]:
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 82:9-82:14
     Visibility: public -/
-def contracts.Env.Insts.CoreCloneClone.clone
-  (self : contracts.Env) : Result contracts.Env := do
-  let v ←
-    alloc.vec.CloneVec.clone words.Scheme.Insts.CoreCloneClone self.defs
-  let v1 ←
-    alloc.vec.CloneVec.clone contracts.Behavior.Insts.CoreCloneClone self.kinds
-  let v2 ←
-    alloc.vec.CloneVec.clone types.EffId.Insts.CoreCloneClone self.effects
-  ok { defs := v, kinds := v1, effects := v2 }
+def contracts.SchemaDecl.Insts.CoreCloneClone.clone
+  (self : contracts.SchemaDecl) : Result contracts.SchemaDecl := do
+  let si ← contracts.SchemaId.Insts.CoreCloneClone.clone self.id
+  let s ← words.Scheme.Insts.CoreCloneClone.clone self.scheme
+  let b ← lift (core.clone.impls.CloneBool.clone self.recursive)
+  ok { id := si, scheme := s, recursive := b }
 
-/-- Trait implementation: [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::Env}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 71:9-71:14 -/
+/-- Trait implementation: [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::SchemaDecl}]
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 82:9-82:14 -/
 @[reducible]
-def contracts.Env.Insts.CoreCloneClone : core.clone.Clone contracts.Env := {
-  clone := contracts.Env.Insts.CoreCloneClone.clone
+def contracts.SchemaDecl.Insts.CoreCloneClone : core.clone.Clone
+  contracts.SchemaDecl := {
+  clone := contracts.SchemaDecl.Insts.CoreCloneClone.clone
 }
 
 /-- [noble_kernel::words::{impl core::fmt::Debug for noble_kernel::words::VariableKind}::fmt]:
-    Source: 'crates/noble-kernel/src/words.rs', lines 19:22-19:27
+    Source: 'crates/noble-kernel/src/words.rs', lines 21:22-21:27
     Visibility: public -/
 def words.VariableKind.Insts.CoreFmtDebug.fmt
   (self : words.VariableKind) (f : core.fmt.Formatter) :
@@ -5599,7 +6321,7 @@ def words.VariableKind.Insts.CoreFmtDebug.fmt
     core.fmt.Formatter.write_str f (toStr "Effect")
 
 /-- Trait implementation: [noble_kernel::words::{impl core::fmt::Debug for noble_kernel::words::VariableKind}]
-    Source: 'crates/noble-kernel/src/words.rs', lines 19:22-19:27 -/
+    Source: 'crates/noble-kernel/src/words.rs', lines 21:22-21:27 -/
 @[reducible]
 def words.VariableKind.Insts.CoreFmtDebug : core.fmt.Debug words.VariableKind
   := {
@@ -5607,7 +6329,7 @@ def words.VariableKind.Insts.CoreFmtDebug : core.fmt.Debug words.VariableKind
 }
 
 /-- [noble_kernel::words::{impl core::fmt::Debug for noble_kernel::words::Variable}::fmt]:
-    Source: 'crates/noble-kernel/src/words.rs', lines 15:22-15:27
+    Source: 'crates/noble-kernel/src/words.rs', lines 17:22-17:27
     Visibility: public -/
 def words.Variable.Insts.CoreFmtDebug.fmt
   (self : words.Variable) (f : core.fmt.Formatter) :
@@ -5617,7 +6339,7 @@ def words.Variable.Insts.CoreFmtDebug.fmt
   core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Variable") dyn
 
 /-- Trait implementation: [noble_kernel::words::{impl core::fmt::Debug for noble_kernel::words::Variable}]
-    Source: 'crates/noble-kernel/src/words.rs', lines 15:22-15:27 -/
+    Source: 'crates/noble-kernel/src/words.rs', lines 17:22-17:27 -/
 @[reducible]
 def words.Variable.Insts.CoreFmtDebug : core.fmt.Debug words.Variable := {
   fmt := words.Variable.Insts.CoreFmtDebug.fmt
@@ -5801,7 +6523,7 @@ def shapes.Pattern.Insts.CoreFmtDebug : core.fmt.Debug shapes.Pattern := {
 }
 
 /-- [noble_kernel::words::{impl core::fmt::Debug for noble_kernel::words::Scheme}::fmt]:
-    Source: 'crates/noble-kernel/src/words.rs', lines 31:16-31:21
+    Source: 'crates/noble-kernel/src/words.rs', lines 33:16-33:21
     Visibility: public -/
 def words.Scheme.Insts.CoreFmtDebug.fmt
   (self : words.Scheme) (f : core.fmt.Formatter) :
@@ -5824,14 +6546,68 @@ def words.Scheme.Insts.CoreFmtDebug.fmt
     "effects") dyn3
 
 /-- Trait implementation: [noble_kernel::words::{impl core::fmt::Debug for noble_kernel::words::Scheme}]
-    Source: 'crates/noble-kernel/src/words.rs', lines 31:16-31:21 -/
+    Source: 'crates/noble-kernel/src/words.rs', lines 33:16-33:21 -/
 @[reducible]
 def words.Scheme.Insts.CoreFmtDebug : core.fmt.Debug words.Scheme := {
   fmt := words.Scheme.Insts.CoreFmtDebug.fmt
 }
 
+/-- [noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::SchemaDecl}::fmt]:
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 82:16-82:21
+    Visibility: public -/
+def contracts.SchemaDecl.Insts.CoreFmtDebug.fmt
+  (self : contracts.SchemaDecl) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ contracts.SchemaId.Insts.CoreFmtDebug self.id
+  let dyn1 := Dyn.mk _ words.Scheme.Insts.CoreFmtDebug self.scheme
+  let dyn2 := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugBool) self.recursive
+  core.fmt.Formatter.debug_struct_field3_finish f (toStr "SchemaDecl") (toStr
+    "id") dyn (toStr "scheme") dyn1 (toStr "recursive") dyn2
+
+/-- Trait implementation: [noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::SchemaDecl}]
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 82:16-82:21 -/
+@[reducible]
+def contracts.SchemaDecl.Insts.CoreFmtDebug : core.fmt.Debug
+  contracts.SchemaDecl := {
+  fmt := contracts.SchemaDecl.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::words::{impl core::clone::Clone for noble_kernel::words::Scheme}]
+    Source: 'crates/noble-kernel/src/words.rs', lines 33:9-33:14 -/
+@[reducible]
+def words.Scheme.Insts.CoreCloneClone : core.clone.Clone words.Scheme := {
+  clone := words.Scheme.Insts.CoreCloneClone.clone
+}
+
+/-- [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::Env}::clone]:
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 93:9-93:14
+    Visibility: public -/
+def contracts.Env.Insts.CoreCloneClone.clone
+  (self : contracts.Env) : Result contracts.Env := do
+  let v ←
+    alloc.vec.CloneVec.clone words.Scheme.Insts.CoreCloneClone self.defs
+  let v1 ←
+    alloc.vec.CloneVec.clone contracts.Behavior.Insts.CoreCloneClone self.kinds
+  let v2 ←
+    alloc.vec.CloneVec.clone (core.clone.CloneallocvecVec
+      contracts.Definition.Insts.CoreCloneClone) self.deps
+  let v3 ←
+    alloc.vec.CloneVec.clone contracts.SchemaDecl.Insts.CoreCloneClone
+      self.schemas
+  let v4 ←
+    alloc.vec.CloneVec.clone types.EffId.Insts.CoreCloneClone self.effects
+  ok { defs := v, kinds := v1, deps := v2, schemas := v3, effects := v4 }
+
+/-- Trait implementation: [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::Env}]
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 93:9-93:14 -/
+@[reducible]
+def contracts.Env.Insts.CoreCloneClone : core.clone.Clone contracts.Env := {
+  clone := contracts.Env.Insts.CoreCloneClone.clone
+}
+
 /-- [noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::Env}::fmt]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 71:16-71:21
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 93:16-93:21
     Visibility: public -/
 def contracts.Env.Insts.CoreFmtDebug.fmt
   (self : contracts.Env) (f : core.fmt.Formatter) :
@@ -5843,20 +6619,27 @@ def contracts.Env.Insts.CoreFmtDebug.fmt
     Dyn.mk _ (core.fmt.DebugVec contracts.Behavior.Insts.CoreFmtDebug)
       self.kinds
   let dyn2 :=
+    Dyn.mk _ (core.fmt.DebugVec (core.fmt.DebugVec
+      contracts.Definition.Insts.CoreFmtDebug)) self.deps
+  let dyn3 :=
+    Dyn.mk _ (core.fmt.DebugVec contracts.SchemaDecl.Insts.CoreFmtDebug)
+      self.schemas
+  let dyn4 :=
     Dyn.mk _ (core.fmt.DebugShared (core.fmt.DebugVec
       types.EffId.Insts.CoreFmtDebug)) self.effects
-  core.fmt.Formatter.debug_struct_field3_finish f (toStr "Env") (toStr "defs")
-    dyn (toStr "kinds") dyn1 (toStr "effects") dyn2
+  core.fmt.Formatter.debug_struct_field5_finish f (toStr "Env") (toStr "defs")
+    dyn (toStr "kinds") dyn1 (toStr "deps") dyn2 (toStr "schemas") dyn3 (toStr
+    "effects") dyn4
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::Env}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 71:16-71:21 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 93:16-93:21 -/
 @[reducible]
 def contracts.Env.Insts.CoreFmtDebug : core.fmt.Debug contracts.Env := {
   fmt := contracts.Env.Insts.CoreFmtDebug.fmt
 }
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::knows_effect]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 102:8-108:9
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 129:8-135:9
     Visibility: public -/
 @[rust_loop_body]
 def contracts.Env.knows_effect_loop.body
@@ -5877,7 +6660,7 @@ def contracts.Env.knows_effect_loop.body
   else ok (done false)
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::knows_effect]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 102:8-108:9
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 129:8-135:9
     Visibility: public -/
 @[rust_loop]
 def contracts.Env.knows_effect_loop
@@ -5889,7 +6672,7 @@ def contracts.Env.knows_effect_loop
     index
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::knows_effect]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 99:4-110:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 126:4-137:5
     Visibility: public -/
 @[reducible]
 def contracts.Env.knows_effect
@@ -5897,14 +6680,14 @@ def contracts.Env.knows_effect
   contracts.Env.knows_effect_loop self id 0#usize
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::is_empty]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 118:4-120:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 145:4-147:5
     Visibility: public -/
 def contracts.Env.is_empty (self : contracts.Env) : Result Bool := do
   let i := alloc.vec.Vec.len self.defs
   ok (i = 0#usize)
 
 /-- [noble_kernel::contracts::environment]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 134:4-145:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 162:4-173:5
     Visibility: public -/
 @[rust_loop_body]
 def contracts.environment_loop0.body
@@ -5929,7 +6712,7 @@ def contracts.environment_loop0.body
   else ok (done (kinds, none))
 
 /-- [noble_kernel::contracts::environment]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 134:4-145:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 162:4-173:5
     Visibility: public -/
 @[rust_loop]
 def contracts.environment_loop0
@@ -5943,14 +6726,17 @@ def contracts.environment_loop0
     (kinds, index)
 
 /-- [noble_kernel::contracts::environment]: loop body 1:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 150:4-153:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 178:4-182:5
     Visibility: public -/
 @[rust_loop_body]
 def contracts.environment_loop1.body
   (table : alloc.vec.Vec (contracts.Behavior × words.Scheme))
-  (defs : alloc.vec.Vec words.Scheme) (table_index : Std.Usize) :
-  Result (ControlFlow ((alloc.vec.Vec words.Scheme) × Std.Usize)
-    (alloc.vec.Vec words.Scheme))
+  (defs : alloc.vec.Vec words.Scheme)
+  (deps : alloc.vec.Vec (alloc.vec.Vec contracts.Definition))
+  (table_index : Std.Usize) :
+  Result (ControlFlow ((alloc.vec.Vec words.Scheme) × (alloc.vec.Vec
+    (alloc.vec.Vec contracts.Definition)) × Std.Usize) ((alloc.vec.Vec
+    words.Scheme) × (alloc.vec.Vec (alloc.vec.Vec contracts.Definition))))
   := do
   let i := alloc.vec.Vec.len table
   if table_index < i
@@ -5960,42 +6746,55 @@ def contracts.environment_loop1.body
         (contracts.Behavior × words.Scheme)) table table_index
     let s1 ← words.Scheme.Insts.CoreCloneClone.clone s
     let defs1 ← alloc.vec.Vec.push defs s1
+    let deps1 ←
+      alloc.vec.Vec.push deps (alloc.vec.Vec.new contracts.Definition)
     let table_index1 ← table_index + 1#usize
-    ok (cont (defs1, table_index1))
-  else ok (done defs)
+    ok (cont (defs1, deps1, table_index1))
+  else ok (done (defs, deps))
 
 /-- [noble_kernel::contracts::environment]: loop 1:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 150:4-153:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 178:4-182:5
     Visibility: public -/
 @[rust_loop]
 def contracts.environment_loop1
   (table : alloc.vec.Vec (contracts.Behavior × words.Scheme))
-  (defs : alloc.vec.Vec words.Scheme) (table_index : Std.Usize) :
-  Result (alloc.vec.Vec words.Scheme)
+  (defs : alloc.vec.Vec words.Scheme)
+  (deps : alloc.vec.Vec (alloc.vec.Vec contracts.Definition))
+  (table_index : Std.Usize) :
+  Result ((alloc.vec.Vec words.Scheme) × (alloc.vec.Vec (alloc.vec.Vec
+    contracts.Definition)))
   := do
   loop
-    (fun (defs1, table_index1) => contracts.environment_loop1.body table defs1
-      table_index1)
-    (defs, table_index)
+    (fun (defs1, deps1, table_index1) => contracts.environment_loop1.body table
+      defs1 deps1 table_index1)
+    (defs, deps, table_index)
 
 /-- [noble_kernel::contracts::environment]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 128:0-159:1
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 155:0-190:1
     Visibility: public -/
 def contracts.environment
   : Result (core.result.Result contracts.Env shapes.Defect) := do
   let table ← contracts.bootstrap.data.table
   let defs := alloc.vec.Vec.with_capacity words.Scheme 32#usize
   let kinds := alloc.vec.Vec.with_capacity contracts.Behavior 32#usize
+  let deps :=
+    alloc.vec.Vec.with_capacity (alloc.vec.Vec contracts.Definition) 32#usize
   let (kinds1, defect) ← contracts.environment_loop0 table kinds 0#usize
   match defect with
   | none =>
-    let defs1 ← contracts.environment_loop1 table defs 0#usize
+    let (defs1, deps1) ← contracts.environment_loop1 table defs deps 0#usize
     let y ←
       lift (Std.Array.to_slice (Array.make 1#usize [ contracts.TEST_EMIT ] :
         Array types.EffId 1#usize))
     let ret := alloc.slice.Slice.into_vec y
     ok (core.result.Result.Ok
-      { defs := defs1, kinds := kinds1, effects := ret })
+      {
+        defs := defs1,
+        kinds := kinds1,
+        deps := deps1,
+        schemas := (alloc.vec.Vec.new contracts.SchemaDecl),
+        effects := ret
+      })
   | some problem => ok (core.result.Result.Err problem)
 
 /-- [noble_kernel::consume_budget]:
@@ -6116,14 +6915,14 @@ def shapes.impls.push_pattern_program
     is_comparable1 0#usize
 
 /-- [noble_kernel::words::{impl core::cmp::PartialEq<noble_kernel::words::Variable> for noble_kernel::words::Variable}::eq]:
-    Source: 'crates/noble-kernel/src/words.rs', lines 15:29-15:38
+    Source: 'crates/noble-kernel/src/words.rs', lines 17:29-17:38
     Visibility: public -/
 def words.Variable.Insts.CoreCmpPartialEqVariable.eq
   (self : words.Variable) (other : words.Variable) : Result Bool := do
   ok (self = other)
 
 /-- Trait implementation: [noble_kernel::words::{impl core::cmp::PartialEq<noble_kernel::words::Variable> for noble_kernel::words::Variable}]
-    Source: 'crates/noble-kernel/src/words.rs', lines 15:29-15:38 -/
+    Source: 'crates/noble-kernel/src/words.rs', lines 17:29-17:38 -/
 @[reducible]
 impl_def words.Variable.Insts.CoreCmpPartialEqVariable : core.cmp.PartialEq
   words.Variable words.Variable := {
@@ -6862,7 +7661,7 @@ def types.stack_is_data (stack : Slice types.Ty) : Result Bool := do
   types.stack_is_data_loop stack 0#usize
 
 /-- Trait implementation: [noble_kernel::untrusted::{impl core::marker::Copy for noble_kernel::untrusted::NodeId}]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 12:16-12:20 -/
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 17:16-17:20 -/
 @[reducible]
 def untrusted.NodeId.Insts.CoreMarkerCopy : core.marker.Copy untrusted.NodeId
   := {
@@ -6870,7 +7669,7 @@ def untrusted.NodeId.Insts.CoreMarkerCopy : core.marker.Copy untrusted.NodeId
 }
 
 /-- [noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::NodeId}::fmt]:
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 12:22-12:27
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 17:22-17:27
     Visibility: public -/
 def untrusted.NodeId.Insts.CoreFmtDebug.fmt
   (self : untrusted.NodeId) (f : core.fmt.Formatter) :
@@ -6880,28 +7679,28 @@ def untrusted.NodeId.Insts.CoreFmtDebug.fmt
   core.fmt.Formatter.debug_tuple_field1_finish f (toStr "NodeId") dyn
 
 /-- Trait implementation: [noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::NodeId}]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 12:22-12:27 -/
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 17:22-17:27 -/
 @[reducible]
 def untrusted.NodeId.Insts.CoreFmtDebug : core.fmt.Debug untrusted.NodeId := {
   fmt := untrusted.NodeId.Insts.CoreFmtDebug.fmt
 }
 
 /-- Trait implementation: [noble_kernel::untrusted::{impl core::marker::StructuralPartialEq for noble_kernel::untrusted::NodeId}]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 12:29-12:38 -/
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 17:29-17:38 -/
 @[reducible]
 def untrusted.NodeId.Insts.CoreMarkerStructuralPartialEq :
   core.marker.StructuralPartialEq untrusted.NodeId := {
 }
 
 /-- [noble_kernel::untrusted::{impl core::cmp::PartialEq<noble_kernel::untrusted::NodeId> for noble_kernel::untrusted::NodeId}::eq]:
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 12:29-12:38
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 17:29-17:38
     Visibility: public -/
 def untrusted.NodeId.Insts.CoreCmpPartialEqNodeId.eq
   (self : untrusted.NodeId) (other : untrusted.NodeId) : Result Bool := do
   ok (self = other)
 
 /-- Trait implementation: [noble_kernel::untrusted::{impl core::cmp::PartialEq<noble_kernel::untrusted::NodeId> for noble_kernel::untrusted::NodeId}]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 12:29-12:38 -/
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 17:29-17:38 -/
 @[reducible]
 impl_def untrusted.NodeId.Insts.CoreCmpPartialEqNodeId : core.cmp.PartialEq
   untrusted.NodeId untrusted.NodeId := {
@@ -6911,14 +7710,14 @@ impl_def untrusted.NodeId.Insts.CoreCmpPartialEqNodeId : core.cmp.PartialEq
 }
 
 /-- [noble_kernel::untrusted::{impl core::cmp::Eq for noble_kernel::untrusted::NodeId}::assert_fields_are_eq]:
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 12:40-12:42
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 17:40-17:42
     Visibility: public -/
 def untrusted.NodeId.Insts.CoreCmpEq.assert_fields_are_eq
   (self : untrusted.NodeId) : Result Unit := do
   ok ()
 
 /-- Trait implementation: [noble_kernel::untrusted::{impl core::cmp::Eq for noble_kernel::untrusted::NodeId}]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 12:40-12:42 -/
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 17:40-17:42 -/
 @[reducible]
 def untrusted.NodeId.Insts.CoreCmpEq : core.cmp.Eq untrusted.NodeId := {
   partialEqInst := untrusted.NodeId.Insts.CoreCmpPartialEqNodeId
@@ -6926,21 +7725,21 @@ def untrusted.NodeId.Insts.CoreCmpEq : core.cmp.Eq untrusted.NodeId := {
 }
 
 /-- Trait implementation: [noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::Lit}]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 21:9-21:14 -/
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 26:9-26:14 -/
 @[reducible]
 def untrusted.Lit.Insts.CoreCloneClone : core.clone.Clone untrusted.Lit := {
   clone := untrusted.Lit.Insts.CoreCloneClone.clone
 }
 
 /-- Trait implementation: [noble_kernel::untrusted::{impl core::marker::Copy for noble_kernel::untrusted::Lit}]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 21:16-21:20 -/
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 26:16-26:20 -/
 @[reducible]
 def untrusted.Lit.Insts.CoreMarkerCopy : core.marker.Copy untrusted.Lit := {
   cloneInst := untrusted.Lit.Insts.CoreCloneClone
 }
 
 /-- [noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Lit}::fmt]:
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 21:22-21:27
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 26:22-26:27
     Visibility: public -/
 def untrusted.Lit.Insts.CoreFmtDebug.fmt
   (self : untrusted.Lit) (f : core.fmt.Formatter) :
@@ -6958,21 +7757,21 @@ def untrusted.Lit.Insts.CoreFmtDebug.fmt
   | untrusted.Lit.UnitLit => core.fmt.Formatter.write_str f (toStr "Unit")
 
 /-- Trait implementation: [noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Lit}]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 21:22-21:27 -/
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 26:22-26:27 -/
 @[reducible]
 def untrusted.Lit.Insts.CoreFmtDebug : core.fmt.Debug untrusted.Lit := {
   fmt := untrusted.Lit.Insts.CoreFmtDebug.fmt
 }
 
 /-- Trait implementation: [noble_kernel::untrusted::{impl core::marker::StructuralPartialEq for noble_kernel::untrusted::Lit}]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 21:29-21:38 -/
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 26:29-26:38 -/
 @[reducible]
 def untrusted.Lit.Insts.CoreMarkerStructuralPartialEq :
   core.marker.StructuralPartialEq untrusted.Lit := {
 }
 
 /-- [noble_kernel::untrusted::{impl core::cmp::PartialEq<noble_kernel::untrusted::Lit> for noble_kernel::untrusted::Lit}::eq]:
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 21:29-21:38
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 26:29-26:38
     Visibility: public -/
 def untrusted.Lit.Insts.CoreCmpPartialEqLit.eq
   (self : untrusted.Lit) (other : untrusted.Lit) : Result Bool := do
@@ -7000,7 +7799,7 @@ def untrusted.Lit.Insts.CoreCmpPartialEqLit.eq
   else ok false
 
 /-- Trait implementation: [noble_kernel::untrusted::{impl core::cmp::PartialEq<noble_kernel::untrusted::Lit> for noble_kernel::untrusted::Lit}]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 21:29-21:38 -/
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 26:29-26:38 -/
 @[reducible]
 impl_def untrusted.Lit.Insts.CoreCmpPartialEqLit : core.cmp.PartialEq
   untrusted.Lit untrusted.Lit := {
@@ -7010,14 +7809,14 @@ impl_def untrusted.Lit.Insts.CoreCmpPartialEqLit : core.cmp.PartialEq
 }
 
 /-- [noble_kernel::untrusted::{impl core::cmp::Eq for noble_kernel::untrusted::Lit}::assert_fields_are_eq]:
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 21:40-21:42
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 26:40-26:42
     Visibility: public -/
 def untrusted.Lit.Insts.CoreCmpEq.assert_fields_are_eq
   (self : untrusted.Lit) : Result Unit := do
   ok ()
 
 /-- Trait implementation: [noble_kernel::untrusted::{impl core::cmp::Eq for noble_kernel::untrusted::Lit}]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 21:40-21:42 -/
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 26:40-26:42 -/
 @[reducible]
 def untrusted.Lit.Insts.CoreCmpEq : core.cmp.Eq untrusted.Lit := {
   partialEqInst := untrusted.Lit.Insts.CoreCmpPartialEqLit
@@ -7025,7 +7824,7 @@ def untrusted.Lit.Insts.CoreCmpEq : core.cmp.Eq untrusted.Lit := {
 }
 
 /-- [noble_kernel::untrusted::{noble_kernel::untrusted::Lit}::ty]:
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 35:4-42:5
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 40:4-47:5
     Visibility: public -/
 def untrusted.Lit.ty (self : untrusted.Lit) : Result types.Ty := do
   match self with
@@ -7035,14 +7834,14 @@ def untrusted.Lit.ty (self : untrusted.Lit) : Result types.Ty := do
   | untrusted.Lit.UnitLit => ok types.Ty.UnitType
 
 /-- Trait implementation: [noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::Node}]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 47:9-47:14 -/
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 52:9-52:14 -/
 @[reducible]
 def untrusted.Node.Insts.CoreCloneClone : core.clone.Clone untrusted.Node := {
   clone := untrusted.Node.Insts.CoreCloneClone.clone
 }
 
 /-- [noble_kernel::words::{impl core::fmt::Debug for noble_kernel::words::Binding}::fmt]:
-    Source: 'crates/noble-kernel/src/words.rs', lines 45:16-45:21
+    Source: 'crates/noble-kernel/src/words.rs', lines 47:16-47:21
     Visibility: public -/
 def words.Binding.Insts.CoreFmtDebug.fmt
   (self : words.Binding) (f : core.fmt.Formatter) :
@@ -7062,16 +7861,21 @@ def words.Binding.Insts.CoreFmtDebug.fmt
     let __self_01 :=
       Dyn.mk _ (core.fmt.DebugShared types.EffSet.Insts.CoreFmtDebug) __self_0
     core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Effect") __self_01
+  | words.Binding.Ref __self_0 =>
+    let __self_01 :=
+      Dyn.mk _ (core.fmt.DebugShared words.Variable.Insts.CoreFmtDebug)
+        __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Ref") __self_01
 
 /-- Trait implementation: [noble_kernel::words::{impl core::fmt::Debug for noble_kernel::words::Binding}]
-    Source: 'crates/noble-kernel/src/words.rs', lines 45:16-45:21 -/
+    Source: 'crates/noble-kernel/src/words.rs', lines 47:16-47:21 -/
 @[reducible]
 def words.Binding.Insts.CoreFmtDebug : core.fmt.Debug words.Binding := {
   fmt := words.Binding.Insts.CoreFmtDebug.fmt
 }
 
 /-- [noble_kernel::words::{impl core::fmt::Debug for noble_kernel::words::Inst}::fmt]:
-    Source: 'crates/noble-kernel/src/words.rs', lines 57:16-57:21
+    Source: 'crates/noble-kernel/src/words.rs', lines 63:16-63:21
     Visibility: public -/
 def words.Inst.Insts.CoreFmtDebug.fmt
   (self : words.Inst) (f : core.fmt.Formatter) :
@@ -7084,14 +7888,14 @@ def words.Inst.Insts.CoreFmtDebug.fmt
     "bindings") dyn
 
 /-- Trait implementation: [noble_kernel::words::{impl core::fmt::Debug for noble_kernel::words::Inst}]
-    Source: 'crates/noble-kernel/src/words.rs', lines 57:16-57:21 -/
+    Source: 'crates/noble-kernel/src/words.rs', lines 63:16-63:21 -/
 @[reducible]
 def words.Inst.Insts.CoreFmtDebug : core.fmt.Debug words.Inst := {
   fmt := words.Inst.Insts.CoreFmtDebug.fmt
 }
 
 /-- [noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Node}::fmt]:
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 47:16-47:21
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 52:16-52:21
     Visibility: public -/
 def untrusted.Node.Insts.CoreFmtDebug.fmt
   (self : untrusted.Node) (f : core.fmt.Formatter) :
@@ -7119,14 +7923,14 @@ def untrusted.Node.Insts.CoreFmtDebug.fmt
       "body") __self_01 (toStr "inst") __self_11
 
 /-- Trait implementation: [noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Node}]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 47:16-47:21 -/
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 52:16-52:21 -/
 @[reducible]
 def untrusted.Node.Insts.CoreFmtDebug : core.fmt.Debug untrusted.Node := {
   fmt := untrusted.Node.Insts.CoreFmtDebug.fmt
 }
 
 /-- [noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::Candidate}::clone]:
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 74:9-74:14
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 79:9-79:14
     Visibility: public -/
 def untrusted.Candidate.Insts.CoreCloneClone.clone
   (self : untrusted.Candidate) : Result untrusted.Candidate := do
@@ -7139,7 +7943,7 @@ def untrusted.Candidate.Insts.CoreCloneClone.clone
   ok { format := i, revision := i1, nodes := v, body := v1 }
 
 /-- Trait implementation: [noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::Candidate}]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 74:9-74:14 -/
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 79:9-79:14 -/
 @[reducible]
 def untrusted.Candidate.Insts.CoreCloneClone : core.clone.Clone
   untrusted.Candidate := {
@@ -7147,7 +7951,7 @@ def untrusted.Candidate.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- [noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Candidate}::fmt]:
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 74:16-74:21
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 79:16-79:21
     Visibility: public -/
 def untrusted.Candidate.Insts.CoreFmtDebug.fmt
   (self : untrusted.Candidate) (f : core.fmt.Formatter) :
@@ -7165,7 +7969,7 @@ def untrusted.Candidate.Insts.CoreFmtDebug.fmt
     dyn3
 
 /-- Trait implementation: [noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Candidate}]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 74:16-74:21 -/
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 79:16-79:21 -/
 @[reducible]
 def untrusted.Candidate.Insts.CoreFmtDebug : core.fmt.Debug untrusted.Candidate
   := {
@@ -7173,7 +7977,7 @@ def untrusted.Candidate.Insts.CoreFmtDebug : core.fmt.Debug untrusted.Candidate
 }
 
 /-- [noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::Expected}::clone]:
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 87:9-87:14
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 92:9-92:14
     Visibility: public -/
 def untrusted.Expected.Insts.CoreCloneClone.clone
   (self : untrusted.Expected) : Result untrusted.Expected := do
@@ -7185,7 +7989,7 @@ def untrusted.Expected.Insts.CoreCloneClone.clone
   ok { stack_in := v, stack_out := v1, allowed_effects := es }
 
 /-- Trait implementation: [noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::Expected}]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 87:9-87:14 -/
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 92:9-92:14 -/
 @[reducible]
 def untrusted.Expected.Insts.CoreCloneClone : core.clone.Clone
   untrusted.Expected := {
@@ -7193,7 +7997,7 @@ def untrusted.Expected.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- [noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Expected}::fmt]:
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 87:16-87:21
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 92:16-92:21
     Visibility: public -/
 def untrusted.Expected.Insts.CoreFmtDebug.fmt
   (self : untrusted.Expected) (f : core.fmt.Formatter) :
@@ -7210,7 +8014,7 @@ def untrusted.Expected.Insts.CoreFmtDebug.fmt
     "stack_in") dyn (toStr "stack_out") dyn1 (toStr "allowed_effects") dyn2
 
 /-- Trait implementation: [noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Expected}]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 87:16-87:21 -/
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 92:16-92:21 -/
 @[reducible]
 def untrusted.Expected.Insts.CoreFmtDebug : core.fmt.Debug untrusted.Expected
   := {
@@ -7218,14 +8022,14 @@ def untrusted.Expected.Insts.CoreFmtDebug : core.fmt.Debug untrusted.Expected
 }
 
 /-- [noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::Limits}::clone]:
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 98:9-98:14
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 103:9-103:14
     Visibility: public -/
 def untrusted.Limits.Insts.CoreCloneClone.clone
   (self : untrusted.Limits) : Result untrusted.Limits := do
   ok self
 
 /-- Trait implementation: [noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::Limits}]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 98:9-98:14 -/
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 103:9-103:14 -/
 @[reducible]
 def untrusted.Limits.Insts.CoreCloneClone : core.clone.Clone untrusted.Limits
   := {
@@ -7233,7 +8037,7 @@ def untrusted.Limits.Insts.CoreCloneClone : core.clone.Clone untrusted.Limits
 }
 
 /-- Trait implementation: [noble_kernel::untrusted::{impl core::marker::Copy for noble_kernel::untrusted::Limits}]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 98:16-98:20 -/
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 103:16-103:20 -/
 @[reducible]
 def untrusted.Limits.Insts.CoreMarkerCopy : core.marker.Copy untrusted.Limits
   := {
@@ -7241,7 +8045,7 @@ def untrusted.Limits.Insts.CoreMarkerCopy : core.marker.Copy untrusted.Limits
 }
 
 /-- [noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Limits}::fmt]:
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 98:22-98:27
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 103:22-103:27
     Visibility: public -/
 def untrusted.Limits.Insts.CoreFmtDebug.fmt
   (self : untrusted.Limits) (f : core.fmt.Formatter) :
@@ -7267,21 +8071,21 @@ def untrusted.Limits.Insts.CoreFmtDebug.fmt
   core.fmt.Formatter.debug_struct_fields_finish f (toStr "Limits") s values
 
 /-- Trait implementation: [noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Limits}]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 98:22-98:27 -/
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 103:22-103:27 -/
 @[reducible]
 def untrusted.Limits.Insts.CoreFmtDebug : core.fmt.Debug untrusted.Limits := {
   fmt := untrusted.Limits.Insts.CoreFmtDebug.fmt
 }
 
 /-- Trait implementation: [noble_kernel::untrusted::{impl core::marker::StructuralPartialEq for noble_kernel::untrusted::Limits}]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 98:29-98:38 -/
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 103:29-103:38 -/
 @[reducible]
 def untrusted.Limits.Insts.CoreMarkerStructuralPartialEq :
   core.marker.StructuralPartialEq untrusted.Limits := {
 }
 
 /-- [noble_kernel::untrusted::{impl core::cmp::PartialEq<noble_kernel::untrusted::Limits> for noble_kernel::untrusted::Limits}::eq]:
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 98:29-98:38
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 103:29-103:38
     Visibility: public -/
 def untrusted.Limits.Insts.CoreCmpPartialEqLimits.eq
   (self : untrusted.Limits) (other : untrusted.Limits) : Result Bool := do
@@ -7305,7 +8109,7 @@ def untrusted.Limits.Insts.CoreCmpPartialEqLimits.eq
   else ok false
 
 /-- Trait implementation: [noble_kernel::untrusted::{impl core::cmp::PartialEq<noble_kernel::untrusted::Limits> for noble_kernel::untrusted::Limits}]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 98:29-98:38 -/
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 103:29-103:38 -/
 @[reducible]
 impl_def untrusted.Limits.Insts.CoreCmpPartialEqLimits : core.cmp.PartialEq
   untrusted.Limits untrusted.Limits := {
@@ -7315,14 +8119,14 @@ impl_def untrusted.Limits.Insts.CoreCmpPartialEqLimits : core.cmp.PartialEq
 }
 
 /-- [noble_kernel::untrusted::{impl core::cmp::Eq for noble_kernel::untrusted::Limits}::assert_fields_are_eq]:
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 98:40-98:42
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 103:40-103:42
     Visibility: public -/
 def untrusted.Limits.Insts.CoreCmpEq.assert_fields_are_eq
   (self : untrusted.Limits) : Result Unit := do
   ok ()
 
 /-- Trait implementation: [noble_kernel::untrusted::{impl core::cmp::Eq for noble_kernel::untrusted::Limits}]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 98:40-98:42 -/
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 103:40-103:42 -/
 @[reducible]
 def untrusted.Limits.Insts.CoreCmpEq : core.cmp.Eq untrusted.Limits := {
   partialEqInst := untrusted.Limits.Insts.CoreCmpPartialEqLimits
@@ -7330,7 +8134,7 @@ def untrusted.Limits.Insts.CoreCmpEq : core.cmp.Eq untrusted.Limits := {
 }
 
 /-- [noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::Request}::clone]:
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 117:9-117:14
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 122:9-122:14
     Visibility: public -/
 def untrusted.Request.Insts.CoreCloneClone.clone
   (self : untrusted.Request) : Result untrusted.Request := do
@@ -7340,7 +8144,7 @@ def untrusted.Request.Insts.CoreCloneClone.clone
   ok { input_bytes := i, expected := e, limits := l }
 
 /-- Trait implementation: [noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::Request}]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 117:9-117:14 -/
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 122:9-122:14 -/
 @[reducible]
 def untrusted.Request.Insts.CoreCloneClone : core.clone.Clone untrusted.Request
   := {
@@ -7348,7 +8152,7 @@ def untrusted.Request.Insts.CoreCloneClone : core.clone.Clone untrusted.Request
 }
 
 /-- [noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Request}::fmt]:
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 117:16-117:21
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 122:16-122:21
     Visibility: public -/
 def untrusted.Request.Insts.CoreFmtDebug.fmt
   (self : untrusted.Request) (f : core.fmt.Formatter) :
@@ -7363,7 +8167,7 @@ def untrusted.Request.Insts.CoreFmtDebug.fmt
     "input_bytes") dyn (toStr "expected") dyn1 (toStr "limits") dyn2
 
 /-- Trait implementation: [noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Request}]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 117:16-117:21 -/
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 122:16-122:21 -/
 @[reducible]
 def untrusted.Request.Insts.CoreFmtDebug : core.fmt.Debug untrusted.Request
   := {
@@ -7371,7 +8175,7 @@ def untrusted.Request.Insts.CoreFmtDebug : core.fmt.Debug untrusted.Request
 }
 
 /-- [noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::Interface}::clone]:
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 129:9-129:14
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 134:9-134:14
     Visibility: public -/
 def untrusted.Interface.Insts.CoreCloneClone.clone
   (self : untrusted.Interface) : Result untrusted.Interface := do
@@ -7383,7 +8187,7 @@ def untrusted.Interface.Insts.CoreCloneClone.clone
   ok { stack_in := v, stack_out := v1, effects := es }
 
 /-- Trait implementation: [noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::Interface}]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 129:9-129:14 -/
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 134:9-134:14 -/
 @[reducible]
 def untrusted.Interface.Insts.CoreCloneClone : core.clone.Clone
   untrusted.Interface := {
@@ -7391,7 +8195,7 @@ def untrusted.Interface.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- [noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Interface}::fmt]:
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 129:16-129:21
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 134:16-134:21
     Visibility: public -/
 def untrusted.Interface.Insts.CoreFmtDebug.fmt
   (self : untrusted.Interface) (f : core.fmt.Formatter) :
@@ -7408,7 +8212,7 @@ def untrusted.Interface.Insts.CoreFmtDebug.fmt
     "stack_in") dyn (toStr "stack_out") dyn1 (toStr "effects") dyn2
 
 /-- Trait implementation: [noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Interface}]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 129:16-129:21 -/
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 134:16-134:21 -/
 @[reducible]
 def untrusted.Interface.Insts.CoreFmtDebug : core.fmt.Debug untrusted.Interface
   := {
@@ -7416,7 +8220,7 @@ def untrusted.Interface.Insts.CoreFmtDebug : core.fmt.Debug untrusted.Interface
 }
 
 /-- [noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::Derivation}::clone]:
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 140:9-140:14
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 145:9-145:14
     Visibility: public -/
 def untrusted.Derivation.Insts.CoreCloneClone.clone
   (self : untrusted.Derivation) : Result untrusted.Derivation := do
@@ -7425,7 +8229,7 @@ def untrusted.Derivation.Insts.CoreCloneClone.clone
   ok { node := ni, interface := i }
 
 /-- Trait implementation: [noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::Derivation}]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 140:9-140:14 -/
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 145:9-145:14 -/
 @[reducible]
 def untrusted.Derivation.Insts.CoreCloneClone : core.clone.Clone
   untrusted.Derivation := {
@@ -7433,7 +8237,7 @@ def untrusted.Derivation.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- [noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Derivation}::fmt]:
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 140:16-140:21
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 145:16-145:21
     Visibility: public -/
 def untrusted.Derivation.Insts.CoreFmtDebug.fmt
   (self : untrusted.Derivation) (f : core.fmt.Formatter) :
@@ -7447,7 +8251,7 @@ def untrusted.Derivation.Insts.CoreFmtDebug.fmt
     "node") dyn (toStr "interface") dyn1
 
 /-- Trait implementation: [noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Derivation}]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 140:16-140:21 -/
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 145:16-145:21 -/
 @[reducible]
 def untrusted.Derivation.Insts.CoreFmtDebug : core.fmt.Debug
   untrusted.Derivation := {
@@ -7455,7 +8259,7 @@ def untrusted.Derivation.Insts.CoreFmtDebug : core.fmt.Debug
 }
 
 /-- [noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::Checked}::clone]:
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 149:9-149:14
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 154:9-154:14
     Visibility: public -/
 def untrusted.Checked.Insts.CoreCloneClone.clone
   (self : untrusted.Checked) : Result untrusted.Checked := do
@@ -7466,7 +8270,7 @@ def untrusted.Checked.Insts.CoreCloneClone.clone
   ok { interface := i, derivations := v }
 
 /-- Trait implementation: [noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::Checked}]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 149:9-149:14 -/
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 154:9-154:14 -/
 @[reducible]
 def untrusted.Checked.Insts.CoreCloneClone : core.clone.Clone untrusted.Checked
   := {
@@ -7474,7 +8278,7 @@ def untrusted.Checked.Insts.CoreCloneClone : core.clone.Clone untrusted.Checked
 }
 
 /-- [noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Checked}::fmt]:
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 149:16-149:21
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 154:16-154:21
     Visibility: public -/
 def untrusted.Checked.Insts.CoreFmtDebug.fmt
   (self : untrusted.Checked) (f : core.fmt.Formatter) :
@@ -7488,7 +8292,7 @@ def untrusted.Checked.Insts.CoreFmtDebug.fmt
     "interface") dyn (toStr "derivations") dyn1
 
 /-- Trait implementation: [noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Checked}]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 149:16-149:21 -/
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 154:16-154:21 -/
 @[reducible]
 def untrusted.Checked.Insts.CoreFmtDebug : core.fmt.Debug untrusted.Checked
   := {
@@ -7496,14 +8300,14 @@ def untrusted.Checked.Insts.CoreFmtDebug : core.fmt.Debug untrusted.Checked
 }
 
 /-- [noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::LimitKind}::clone]:
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 158:9-158:14
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 163:9-163:14
     Visibility: public -/
 def untrusted.LimitKind.Insts.CoreCloneClone.clone
   (self : untrusted.LimitKind) : Result untrusted.LimitKind := do
   ok self
 
 /-- Trait implementation: [noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::LimitKind}]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 158:9-158:14 -/
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 163:9-163:14 -/
 @[reducible]
 def untrusted.LimitKind.Insts.CoreCloneClone : core.clone.Clone
   untrusted.LimitKind := {
@@ -7511,7 +8315,7 @@ def untrusted.LimitKind.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [noble_kernel::untrusted::{impl core::marker::Copy for noble_kernel::untrusted::LimitKind}]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 158:16-158:20 -/
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 163:16-163:20 -/
 @[reducible]
 def untrusted.LimitKind.Insts.CoreMarkerCopy : core.marker.Copy
   untrusted.LimitKind := {
@@ -7519,7 +8323,7 @@ def untrusted.LimitKind.Insts.CoreMarkerCopy : core.marker.Copy
 }
 
 /-- [noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::LimitKind}::fmt]:
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 158:22-158:27
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 163:22-163:27
     Visibility: public -/
 def untrusted.LimitKind.Insts.CoreFmtDebug.fmt
   (self : untrusted.LimitKind) (f : core.fmt.Formatter) :
@@ -7538,7 +8342,7 @@ def untrusted.LimitKind.Insts.CoreFmtDebug.fmt
     core.fmt.Formatter.write_str f (toStr "Diagnostics")
 
 /-- Trait implementation: [noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::LimitKind}]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 158:22-158:27 -/
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 163:22-163:27 -/
 @[reducible]
 def untrusted.LimitKind.Insts.CoreFmtDebug : core.fmt.Debug untrusted.LimitKind
   := {
@@ -7546,14 +8350,14 @@ def untrusted.LimitKind.Insts.CoreFmtDebug : core.fmt.Debug untrusted.LimitKind
 }
 
 /-- Trait implementation: [noble_kernel::untrusted::{impl core::marker::StructuralPartialEq for noble_kernel::untrusted::LimitKind}]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 158:29-158:38 -/
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 163:29-163:38 -/
 @[reducible]
 def untrusted.LimitKind.Insts.CoreMarkerStructuralPartialEq :
   core.marker.StructuralPartialEq untrusted.LimitKind := {
 }
 
 /-- [noble_kernel::untrusted::{impl core::cmp::PartialEq<noble_kernel::untrusted::LimitKind> for noble_kernel::untrusted::LimitKind}::eq]:
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 158:29-158:38
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 163:29-163:38
     Visibility: public -/
 def untrusted.LimitKind.Insts.CoreCmpPartialEqLimitKind.eq
   (self : untrusted.LimitKind) (other : untrusted.LimitKind) :
@@ -7564,7 +8368,7 @@ def untrusted.LimitKind.Insts.CoreCmpPartialEqLimitKind.eq
   ok (self1 = other1)
 
 /-- Trait implementation: [noble_kernel::untrusted::{impl core::cmp::PartialEq<noble_kernel::untrusted::LimitKind> for noble_kernel::untrusted::LimitKind}]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 158:29-158:38 -/
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 163:29-163:38 -/
 @[reducible]
 impl_def untrusted.LimitKind.Insts.CoreCmpPartialEqLimitKind :
   core.cmp.PartialEq untrusted.LimitKind untrusted.LimitKind := {
@@ -7574,14 +8378,14 @@ impl_def untrusted.LimitKind.Insts.CoreCmpPartialEqLimitKind :
 }
 
 /-- [noble_kernel::untrusted::{impl core::cmp::Eq for noble_kernel::untrusted::LimitKind}::assert_fields_are_eq]:
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 158:40-158:42
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 163:40-163:42
     Visibility: public -/
 def untrusted.LimitKind.Insts.CoreCmpEq.assert_fields_are_eq
   (self : untrusted.LimitKind) : Result Unit := do
   ok ()
 
 /-- Trait implementation: [noble_kernel::untrusted::{impl core::cmp::Eq for noble_kernel::untrusted::LimitKind}]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 158:40-158:42 -/
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 163:40-163:42 -/
 @[reducible]
 def untrusted.LimitKind.Insts.CoreCmpEq : core.cmp.Eq untrusted.LimitKind := {
   partialEqInst := untrusted.LimitKind.Insts.CoreCmpPartialEqLimitKind
@@ -7590,14 +8394,14 @@ def untrusted.LimitKind.Insts.CoreCmpEq : core.cmp.Eq untrusted.LimitKind := {
 }
 
 /-- [noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::UnsupportedKind}::clone]:
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 177:9-177:14
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 182:9-182:14
     Visibility: public -/
 def untrusted.UnsupportedKind.Insts.CoreCloneClone.clone
   (self : untrusted.UnsupportedKind) : Result untrusted.UnsupportedKind := do
   ok self
 
 /-- Trait implementation: [noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::UnsupportedKind}]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 177:9-177:14 -/
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 182:9-182:14 -/
 @[reducible]
 def untrusted.UnsupportedKind.Insts.CoreCloneClone : core.clone.Clone
   untrusted.UnsupportedKind := {
@@ -7605,7 +8409,7 @@ def untrusted.UnsupportedKind.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [noble_kernel::untrusted::{impl core::marker::Copy for noble_kernel::untrusted::UnsupportedKind}]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 177:16-177:20 -/
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 182:16-182:20 -/
 @[reducible]
 def untrusted.UnsupportedKind.Insts.CoreMarkerCopy : core.marker.Copy
   untrusted.UnsupportedKind := {
@@ -7613,7 +8417,7 @@ def untrusted.UnsupportedKind.Insts.CoreMarkerCopy : core.marker.Copy
 }
 
 /-- [noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::UnsupportedKind}::fmt]:
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 177:22-177:27
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 182:22-182:27
     Visibility: public -/
 def untrusted.UnsupportedKind.Insts.CoreFmtDebug.fmt
   (self : untrusted.UnsupportedKind) (f : core.fmt.Formatter) :
@@ -7626,9 +8430,21 @@ def untrusted.UnsupportedKind.Insts.CoreFmtDebug.fmt
     core.fmt.Formatter.write_str f (toStr "NodeForm")
   | untrusted.UnsupportedKind.SchemeForm =>
     core.fmt.Formatter.write_str f (toStr "SchemeForm")
+  | untrusted.UnsupportedKind.RecursiveDependency __self_0 =>
+    let __self_01 :=
+      Dyn.mk _ (core.fmt.DebugShared contracts.Definition.Insts.CoreFmtDebug)
+        __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr
+      "RecursiveDependency") __self_01
+  | untrusted.UnsupportedKind.RecursiveSchema __self_0 =>
+    let __self_01 :=
+      Dyn.mk _ (core.fmt.DebugShared contracts.SchemaId.Insts.CoreFmtDebug)
+        __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "RecursiveSchema")
+      __self_01
 
 /-- Trait implementation: [noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::UnsupportedKind}]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 177:22-177:27 -/
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 182:22-182:27 -/
 @[reducible]
 def untrusted.UnsupportedKind.Insts.CoreFmtDebug : core.fmt.Debug
   untrusted.UnsupportedKind := {
@@ -7636,14 +8452,14 @@ def untrusted.UnsupportedKind.Insts.CoreFmtDebug : core.fmt.Debug
 }
 
 /-- Trait implementation: [noble_kernel::untrusted::{impl core::marker::StructuralPartialEq for noble_kernel::untrusted::UnsupportedKind}]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 177:29-177:38 -/
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 182:29-182:38 -/
 @[reducible]
 def untrusted.UnsupportedKind.Insts.CoreMarkerStructuralPartialEq :
   core.marker.StructuralPartialEq untrusted.UnsupportedKind := {
 }
 
 /-- [noble_kernel::untrusted::{impl core::cmp::PartialEq<noble_kernel::untrusted::UnsupportedKind> for noble_kernel::untrusted::UnsupportedKind}::eq]:
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 177:29-177:38
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 182:29-182:38
     Visibility: public -/
 def untrusted.UnsupportedKind.Insts.CoreCmpPartialEqUnsupportedKind.eq
   (self : untrusted.UnsupportedKind) (other : untrusted.UnsupportedKind) :
@@ -7651,10 +8467,33 @@ def untrusted.UnsupportedKind.Insts.CoreCmpPartialEqUnsupportedKind.eq
   := do
   let self1 := read_discriminant self
   let other1 := read_discriminant other
-  ok (self1 = other1)
+  if self1 = other1
+  then
+    match self with
+    | untrusted.UnsupportedKind.FormatRevision => ok true
+    | untrusted.UnsupportedKind.NodeForm => ok true
+    | untrusted.UnsupportedKind.SchemeForm => ok true
+    | untrusted.UnsupportedKind.RecursiveDependency __self_0 =>
+      match other with
+      | untrusted.UnsupportedKind.FormatRevision => ok true
+      | untrusted.UnsupportedKind.NodeForm => ok true
+      | untrusted.UnsupportedKind.SchemeForm => ok true
+      | untrusted.UnsupportedKind.RecursiveDependency __arg1_0 =>
+        contracts.Definition.Insts.CoreCmpPartialEqDefinition.eq __self_0
+          __arg1_0
+      | untrusted.UnsupportedKind.RecursiveSchema _ => ok true
+    | untrusted.UnsupportedKind.RecursiveSchema __self_0 =>
+      match other with
+      | untrusted.UnsupportedKind.FormatRevision => ok true
+      | untrusted.UnsupportedKind.NodeForm => ok true
+      | untrusted.UnsupportedKind.SchemeForm => ok true
+      | untrusted.UnsupportedKind.RecursiveDependency _ => ok true
+      | untrusted.UnsupportedKind.RecursiveSchema __arg1_0 =>
+        contracts.SchemaId.Insts.CoreCmpPartialEqSchemaId.eq __self_0 __arg1_0
+  else ok false
 
 /-- Trait implementation: [noble_kernel::untrusted::{impl core::cmp::PartialEq<noble_kernel::untrusted::UnsupportedKind> for noble_kernel::untrusted::UnsupportedKind}]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 177:29-177:38 -/
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 182:29-182:38 -/
 @[reducible]
 impl_def untrusted.UnsupportedKind.Insts.CoreCmpPartialEqUnsupportedKind :
   core.cmp.PartialEq untrusted.UnsupportedKind untrusted.UnsupportedKind := {
@@ -7664,14 +8503,14 @@ impl_def untrusted.UnsupportedKind.Insts.CoreCmpPartialEqUnsupportedKind :
 }
 
 /-- [noble_kernel::untrusted::{impl core::cmp::Eq for noble_kernel::untrusted::UnsupportedKind}::assert_fields_are_eq]:
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 177:40-177:42
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 182:40-182:42
     Visibility: public -/
 def untrusted.UnsupportedKind.Insts.CoreCmpEq.assert_fields_are_eq
   (self : untrusted.UnsupportedKind) : Result Unit := do
   ok ()
 
 /-- Trait implementation: [noble_kernel::untrusted::{impl core::cmp::Eq for noble_kernel::untrusted::UnsupportedKind}]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 177:40-177:42 -/
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 182:40-182:42 -/
 @[reducible]
 def untrusted.UnsupportedKind.Insts.CoreCmpEq : core.cmp.Eq
   untrusted.UnsupportedKind := {
@@ -7682,7 +8521,7 @@ def untrusted.UnsupportedKind.Insts.CoreCmpEq : core.cmp.Eq
 }
 
 /-- [noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::Constraint}::clone]:
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 190:9-190:14
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 201:9-201:14
     Visibility: public -/
 def untrusted.Constraint.Insts.CoreCloneClone.clone
   (self : untrusted.Constraint) : Result untrusted.Constraint := do
@@ -7708,9 +8547,10 @@ def untrusted.Constraint.Insts.CoreCloneClone.clone
   | untrusted.Constraint.UnknownDefinition __self_0 =>
     let d ← contracts.Definition.Insts.CoreCloneClone.clone __self_0
     ok (untrusted.Constraint.UnknownDefinition d)
+  | untrusted.Constraint.CyclicWitness => ok untrusted.Constraint.CyclicWitness
 
 /-- Trait implementation: [noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::Constraint}]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 190:9-190:14 -/
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 201:9-201:14 -/
 @[reducible]
 def untrusted.Constraint.Insts.CoreCloneClone : core.clone.Clone
   untrusted.Constraint := {
@@ -7718,7 +8558,7 @@ def untrusted.Constraint.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- [noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Constraint}::fmt]:
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 190:16-190:21
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 201:16-201:21
     Visibility: public -/
 def untrusted.Constraint.Insts.CoreFmtDebug.fmt
   (self : untrusted.Constraint) (f : core.fmt.Formatter) :
@@ -7760,9 +8600,11 @@ def untrusted.Constraint.Insts.CoreFmtDebug.fmt
         __self_0
     core.fmt.Formatter.debug_tuple_field1_finish f (toStr "UnknownDefinition")
       __self_01
+  | untrusted.Constraint.CyclicWitness =>
+    core.fmt.Formatter.write_str f (toStr "CyclicWitness")
 
 /-- Trait implementation: [noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Constraint}]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 190:16-190:21 -/
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 201:16-201:21 -/
 @[reducible]
 def untrusted.Constraint.Insts.CoreFmtDebug : core.fmt.Debug
   untrusted.Constraint := {
@@ -7770,14 +8612,14 @@ def untrusted.Constraint.Insts.CoreFmtDebug : core.fmt.Debug
 }
 
 /-- Trait implementation: [noble_kernel::untrusted::{impl core::marker::StructuralPartialEq for noble_kernel::untrusted::Constraint}]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 190:23-190:32 -/
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 201:23-201:32 -/
 @[reducible]
 def untrusted.Constraint.Insts.CoreMarkerStructuralPartialEq :
   core.marker.StructuralPartialEq untrusted.Constraint := {
 }
 
 /-- [noble_kernel::untrusted::{impl core::cmp::PartialEq<noble_kernel::untrusted::Constraint> for noble_kernel::untrusted::Constraint}::eq]:
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 190:23-190:32
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 201:23-201:32
     Visibility: public -/
 def untrusted.Constraint.Insts.CoreCmpPartialEqConstraint.eq
   (self : untrusted.Constraint) (other : untrusted.Constraint) :
@@ -7802,6 +8644,7 @@ def untrusted.Constraint.Insts.CoreCmpPartialEqConstraint.eq
       | untrusted.Constraint.InstantiationArity => ok true
       | untrusted.Constraint.MalformedReference _ => ok true
       | untrusted.Constraint.UnknownDefinition _ => ok true
+      | untrusted.Constraint.CyclicWitness => ok true
     | untrusted.Constraint.Eligibility __self_0 =>
       match other with
       | untrusted.Constraint.StackJoin => ok true
@@ -7814,6 +8657,7 @@ def untrusted.Constraint.Insts.CoreCmpPartialEqConstraint.eq
       | untrusted.Constraint.InstantiationArity => ok true
       | untrusted.Constraint.MalformedReference _ => ok true
       | untrusted.Constraint.UnknownDefinition _ => ok true
+      | untrusted.Constraint.CyclicWitness => ok true
     | untrusted.Constraint.UnknownEffect __self_0 =>
       match other with
       | untrusted.Constraint.StackJoin => ok true
@@ -7826,6 +8670,7 @@ def untrusted.Constraint.Insts.CoreCmpPartialEqConstraint.eq
       | untrusted.Constraint.InstantiationArity => ok true
       | untrusted.Constraint.MalformedReference _ => ok true
       | untrusted.Constraint.UnknownDefinition _ => ok true
+      | untrusted.Constraint.CyclicWitness => ok true
     | untrusted.Constraint.InstantiationKind => ok true
     | untrusted.Constraint.InstantiationArity => ok true
     | untrusted.Constraint.MalformedReference __self_0 =>
@@ -7840,6 +8685,7 @@ def untrusted.Constraint.Insts.CoreCmpPartialEqConstraint.eq
       | untrusted.Constraint.MalformedReference __arg1_0 =>
         untrusted.NodeId.Insts.CoreCmpPartialEqNodeId.eq __self_0 __arg1_0
       | untrusted.Constraint.UnknownDefinition _ => ok true
+      | untrusted.Constraint.CyclicWitness => ok true
     | untrusted.Constraint.UnknownDefinition __self_0 =>
       match other with
       | untrusted.Constraint.StackJoin => ok true
@@ -7853,10 +8699,12 @@ def untrusted.Constraint.Insts.CoreCmpPartialEqConstraint.eq
       | untrusted.Constraint.UnknownDefinition __arg1_0 =>
         contracts.Definition.Insts.CoreCmpPartialEqDefinition.eq __self_0
           __arg1_0
+      | untrusted.Constraint.CyclicWitness => ok true
+    | untrusted.Constraint.CyclicWitness => ok true
   else ok false
 
 /-- Trait implementation: [noble_kernel::untrusted::{impl core::cmp::PartialEq<noble_kernel::untrusted::Constraint> for noble_kernel::untrusted::Constraint}]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 190:23-190:32 -/
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 201:23-201:32 -/
 @[reducible]
 impl_def untrusted.Constraint.Insts.CoreCmpPartialEqConstraint :
   core.cmp.PartialEq untrusted.Constraint untrusted.Constraint := {
@@ -7866,7 +8714,7 @@ impl_def untrusted.Constraint.Insts.CoreCmpPartialEqConstraint :
 }
 
 /-- [noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::Diagnostic}::clone]:
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 213:9-213:14
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 227:9-227:14
     Visibility: public -/
 def untrusted.Diagnostic.Insts.CoreCloneClone.clone
   (self : untrusted.Diagnostic) : Result untrusted.Diagnostic := do
@@ -7894,7 +8742,7 @@ def untrusted.Diagnostic.Insts.CoreCloneClone.clone
     }
 
 /-- Trait implementation: [noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::Diagnostic}]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 213:9-213:14 -/
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 227:9-227:14 -/
 @[reducible]
 def untrusted.Diagnostic.Insts.CoreCloneClone : core.clone.Clone
   untrusted.Diagnostic := {
@@ -7902,7 +8750,7 @@ def untrusted.Diagnostic.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- [noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Diagnostic}::fmt]:
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 213:16-213:21
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 227:16-227:21
     Visibility: public -/
 def untrusted.Diagnostic.Insts.CoreFmtDebug.fmt
   (self : untrusted.Diagnostic) (f : core.fmt.Formatter) :
@@ -7933,7 +8781,7 @@ def untrusted.Diagnostic.Insts.CoreFmtDebug.fmt
   core.fmt.Formatter.debug_struct_fields_finish f (toStr "Diagnostic") s values
 
 /-- Trait implementation: [noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Diagnostic}]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 213:16-213:21 -/
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 227:16-227:21 -/
 @[reducible]
 def untrusted.Diagnostic.Insts.CoreFmtDebug : core.fmt.Debug
   untrusted.Diagnostic := {
@@ -7941,7 +8789,7 @@ def untrusted.Diagnostic.Insts.CoreFmtDebug : core.fmt.Debug
 }
 
 /-- [noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::Outcome}::clone]:
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 232:9-232:14
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 246:9-246:14
     Visibility: public -/
 def untrusted.Outcome.Insts.CoreCloneClone.clone
   (self : untrusted.Outcome) : Result untrusted.Outcome := do
@@ -7961,7 +8809,7 @@ def untrusted.Outcome.Insts.CoreCloneClone.clone
   | untrusted.Outcome.InternalFailure => ok untrusted.Outcome.InternalFailure
 
 /-- Trait implementation: [noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::Outcome}]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 232:9-232:14 -/
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 246:9-246:14 -/
 @[reducible]
 def untrusted.Outcome.Insts.CoreCloneClone : core.clone.Clone untrusted.Outcome
   := {
@@ -7969,7 +8817,7 @@ def untrusted.Outcome.Insts.CoreCloneClone : core.clone.Clone untrusted.Outcome
 }
 
 /-- [noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Outcome}::fmt]:
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 232:16-232:21
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 246:16-246:21
     Visibility: public -/
 def untrusted.Outcome.Insts.CoreFmtDebug.fmt
   (self : untrusted.Outcome) (f : core.fmt.Formatter) :
@@ -8002,7 +8850,7 @@ def untrusted.Outcome.Insts.CoreFmtDebug.fmt
     core.fmt.Formatter.write_str f (toStr "InternalFailure")
 
 /-- Trait implementation: [noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Outcome}]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 232:16-232:21 -/
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 246:16-246:21 -/
 @[reducible]
 def untrusted.Outcome.Insts.CoreFmtDebug : core.fmt.Debug untrusted.Outcome
   := {
@@ -8010,58 +8858,50 @@ def untrusted.Outcome.Insts.CoreFmtDebug : core.fmt.Debug untrusted.Outcome
 }
 
 /-- Trait implementation: [noble_kernel::words::{impl core::clone::Clone for noble_kernel::words::Variable}]
-    Source: 'crates/noble-kernel/src/words.rs', lines 15:9-15:14 -/
+    Source: 'crates/noble-kernel/src/words.rs', lines 17:9-17:14 -/
 @[reducible]
 def words.Variable.Insts.CoreCloneClone : core.clone.Clone words.Variable := {
   clone := words.Variable.Insts.CoreCloneClone.clone
 }
 
 /-- Trait implementation: [noble_kernel::words::{impl core::marker::Copy for noble_kernel::words::Variable}]
-    Source: 'crates/noble-kernel/src/words.rs', lines 15:16-15:20 -/
+    Source: 'crates/noble-kernel/src/words.rs', lines 17:16-17:20 -/
 @[reducible]
 def words.Variable.Insts.CoreMarkerCopy : core.marker.Copy words.Variable := {
   cloneInst := words.Variable.Insts.CoreCloneClone
 }
 
 /-- Trait implementation: [noble_kernel::words::{impl core::marker::StructuralPartialEq for noble_kernel::words::Variable}]
-    Source: 'crates/noble-kernel/src/words.rs', lines 15:29-15:38 -/
+    Source: 'crates/noble-kernel/src/words.rs', lines 17:29-17:38 -/
 @[reducible]
 def words.Variable.Insts.CoreMarkerStructuralPartialEq :
   core.marker.StructuralPartialEq words.Variable := {
 }
 
 /-- [noble_kernel::words::{impl core::cmp::Eq for noble_kernel::words::Variable}::assert_fields_are_eq]:
-    Source: 'crates/noble-kernel/src/words.rs', lines 15:40-15:42
+    Source: 'crates/noble-kernel/src/words.rs', lines 17:40-17:42
     Visibility: public -/
 def words.Variable.Insts.CoreCmpEq.assert_fields_are_eq
   (self : words.Variable) : Result Unit := do
   ok ()
 
 /-- Trait implementation: [noble_kernel::words::{impl core::cmp::Eq for noble_kernel::words::Variable}]
-    Source: 'crates/noble-kernel/src/words.rs', lines 15:40-15:42 -/
+    Source: 'crates/noble-kernel/src/words.rs', lines 17:40-17:42 -/
 @[reducible]
 def words.Variable.Insts.CoreCmpEq : core.cmp.Eq words.Variable := {
   partialEqInst := words.Variable.Insts.CoreCmpPartialEqVariable
   assert_fields_are_eq := words.Variable.Insts.CoreCmpEq.assert_fields_are_eq
 }
 
-/-- Trait implementation: [noble_kernel::words::{impl core::marker::Copy for noble_kernel::words::VariableKind}]
-    Source: 'crates/noble-kernel/src/words.rs', lines 19:16-19:20 -/
-@[reducible]
-def words.VariableKind.Insts.CoreMarkerCopy : core.marker.Copy
-  words.VariableKind := {
-  cloneInst := words.VariableKind.Insts.CoreCloneClone
-}
-
 /-- Trait implementation: [noble_kernel::words::{impl core::marker::StructuralPartialEq for noble_kernel::words::VariableKind}]
-    Source: 'crates/noble-kernel/src/words.rs', lines 19:29-19:38 -/
+    Source: 'crates/noble-kernel/src/words.rs', lines 21:29-21:38 -/
 @[reducible]
 def words.VariableKind.Insts.CoreMarkerStructuralPartialEq :
   core.marker.StructuralPartialEq words.VariableKind := {
 }
 
 /-- Trait implementation: [noble_kernel::words::{impl core::cmp::PartialEq<noble_kernel::words::VariableKind> for noble_kernel::words::VariableKind}]
-    Source: 'crates/noble-kernel/src/words.rs', lines 19:29-19:38 -/
+    Source: 'crates/noble-kernel/src/words.rs', lines 21:29-21:38 -/
 @[reducible]
 impl_def words.VariableKind.Insts.CoreCmpPartialEqVariableKind :
   core.cmp.PartialEq words.VariableKind words.VariableKind := {
@@ -8071,14 +8911,14 @@ impl_def words.VariableKind.Insts.CoreCmpPartialEqVariableKind :
 }
 
 /-- [noble_kernel::words::{impl core::cmp::Eq for noble_kernel::words::VariableKind}::assert_fields_are_eq]:
-    Source: 'crates/noble-kernel/src/words.rs', lines 19:40-19:42
+    Source: 'crates/noble-kernel/src/words.rs', lines 21:40-21:42
     Visibility: public -/
 def words.VariableKind.Insts.CoreCmpEq.assert_fields_are_eq
   (self : words.VariableKind) : Result Unit := do
   ok ()
 
 /-- Trait implementation: [noble_kernel::words::{impl core::cmp::Eq for noble_kernel::words::VariableKind}]
-    Source: 'crates/noble-kernel/src/words.rs', lines 19:40-19:42 -/
+    Source: 'crates/noble-kernel/src/words.rs', lines 21:40-21:42 -/
 @[reducible]
 def words.VariableKind.Insts.CoreCmpEq : core.cmp.Eq words.VariableKind := {
   partialEqInst := words.VariableKind.Insts.CoreCmpPartialEqVariableKind
@@ -8087,21 +8927,21 @@ def words.VariableKind.Insts.CoreCmpEq : core.cmp.Eq words.VariableKind := {
 }
 
 /-- Trait implementation: [noble_kernel::words::{impl core::clone::Clone for noble_kernel::words::Inst}]
-    Source: 'crates/noble-kernel/src/words.rs', lines 57:9-57:14 -/
+    Source: 'crates/noble-kernel/src/words.rs', lines 63:9-63:14 -/
 @[reducible]
 def words.Inst.Insts.CoreCloneClone : core.clone.Clone words.Inst := {
   clone := words.Inst.Insts.CoreCloneClone.clone
 }
 
 /-- [noble_kernel::words::{impl core::clone::Clone for noble_kernel::words::InstError}::clone]:
-    Source: 'crates/noble-kernel/src/words.rs', lines 64:9-64:14
+    Source: 'crates/noble-kernel/src/words.rs', lines 70:9-70:14
     Visibility: public -/
 def words.InstError.Insts.CoreCloneClone.clone
   (self : words.InstError) : Result words.InstError := do
   ok self
 
 /-- Trait implementation: [noble_kernel::words::{impl core::clone::Clone for noble_kernel::words::InstError}]
-    Source: 'crates/noble-kernel/src/words.rs', lines 64:9-64:14 -/
+    Source: 'crates/noble-kernel/src/words.rs', lines 70:9-70:14 -/
 @[reducible]
 def words.InstError.Insts.CoreCloneClone : core.clone.Clone words.InstError
   := {
@@ -8109,7 +8949,7 @@ def words.InstError.Insts.CoreCloneClone : core.clone.Clone words.InstError
 }
 
 /-- Trait implementation: [noble_kernel::words::{impl core::marker::Copy for noble_kernel::words::InstError}]
-    Source: 'crates/noble-kernel/src/words.rs', lines 64:16-64:20 -/
+    Source: 'crates/noble-kernel/src/words.rs', lines 70:16-70:20 -/
 @[reducible]
 def words.InstError.Insts.CoreMarkerCopy : core.marker.Copy words.InstError
   := {
@@ -8117,7 +8957,7 @@ def words.InstError.Insts.CoreMarkerCopy : core.marker.Copy words.InstError
 }
 
 /-- [noble_kernel::words::{impl core::fmt::Debug for noble_kernel::words::InstError}::fmt]:
-    Source: 'crates/noble-kernel/src/words.rs', lines 64:22-64:27
+    Source: 'crates/noble-kernel/src/words.rs', lines 70:22-70:27
     Visibility: public -/
 def words.InstError.Insts.CoreFmtDebug.fmt
   (self : words.InstError) (f : core.fmt.Formatter) :
@@ -8136,23 +8976,27 @@ def words.InstError.Insts.CoreFmtDebug.fmt
     core.fmt.Formatter.write_str f (toStr "OversizedType")
   | words.InstError.OversizedEffects =>
     core.fmt.Formatter.write_str f (toStr "OversizedEffects")
+  | words.InstError.CyclicWitness =>
+    core.fmt.Formatter.write_str f (toStr "CyclicWitness")
+  | words.InstError.WalkExhausted =>
+    core.fmt.Formatter.write_str f (toStr "WalkExhausted")
 
 /-- Trait implementation: [noble_kernel::words::{impl core::fmt::Debug for noble_kernel::words::InstError}]
-    Source: 'crates/noble-kernel/src/words.rs', lines 64:22-64:27 -/
+    Source: 'crates/noble-kernel/src/words.rs', lines 70:22-70:27 -/
 @[reducible]
 def words.InstError.Insts.CoreFmtDebug : core.fmt.Debug words.InstError := {
   fmt := words.InstError.Insts.CoreFmtDebug.fmt
 }
 
 /-- Trait implementation: [noble_kernel::words::{impl core::marker::StructuralPartialEq for noble_kernel::words::InstError}]
-    Source: 'crates/noble-kernel/src/words.rs', lines 64:29-64:38 -/
+    Source: 'crates/noble-kernel/src/words.rs', lines 70:29-70:38 -/
 @[reducible]
 def words.InstError.Insts.CoreMarkerStructuralPartialEq :
   core.marker.StructuralPartialEq words.InstError := {
 }
 
 /-- [noble_kernel::words::{impl core::cmp::PartialEq<noble_kernel::words::InstError> for noble_kernel::words::InstError}::eq]:
-    Source: 'crates/noble-kernel/src/words.rs', lines 64:29-64:38
+    Source: 'crates/noble-kernel/src/words.rs', lines 70:29-70:38
     Visibility: public -/
 def words.InstError.Insts.CoreCmpPartialEqInstError.eq
   (self : words.InstError) (other : words.InstError) : Result Bool := do
@@ -8161,7 +9005,7 @@ def words.InstError.Insts.CoreCmpPartialEqInstError.eq
   ok (self1 = other1)
 
 /-- Trait implementation: [noble_kernel::words::{impl core::cmp::PartialEq<noble_kernel::words::InstError> for noble_kernel::words::InstError}]
-    Source: 'crates/noble-kernel/src/words.rs', lines 64:29-64:38 -/
+    Source: 'crates/noble-kernel/src/words.rs', lines 70:29-70:38 -/
 @[reducible]
 impl_def words.InstError.Insts.CoreCmpPartialEqInstError : core.cmp.PartialEq
   words.InstError words.InstError := {
@@ -8171,14 +9015,14 @@ impl_def words.InstError.Insts.CoreCmpPartialEqInstError : core.cmp.PartialEq
 }
 
 /-- [noble_kernel::words::{impl core::cmp::Eq for noble_kernel::words::InstError}::assert_fields_are_eq]:
-    Source: 'crates/noble-kernel/src/words.rs', lines 64:40-64:42
+    Source: 'crates/noble-kernel/src/words.rs', lines 70:40-70:42
     Visibility: public -/
 def words.InstError.Insts.CoreCmpEq.assert_fields_are_eq
   (self : words.InstError) : Result Unit := do
   ok ()
 
 /-- Trait implementation: [noble_kernel::words::{impl core::cmp::Eq for noble_kernel::words::InstError}]
-    Source: 'crates/noble-kernel/src/words.rs', lines 64:40-64:42 -/
+    Source: 'crates/noble-kernel/src/words.rs', lines 70:40-70:42 -/
 @[reducible]
 def words.InstError.Insts.CoreCmpEq : core.cmp.Eq words.InstError := {
   partialEqInst := words.InstError.Insts.CoreCmpPartialEqInstError

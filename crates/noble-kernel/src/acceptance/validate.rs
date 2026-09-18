@@ -50,7 +50,7 @@ pub(super) fn dependencies(
     };
     let mut failure: Option<super::Fail> = None;
     let mut root: usize = 0;
-    while root < count && failure.is_none() {
+    while root < count {
         if walk.colors[root] == 0 {
             let (next, step) =
                 dep_root(env, crate::contracts::Definition(root as u32), walk, limits);
@@ -79,12 +79,15 @@ fn dep_root(
     let mut walk = walk;
     walk.stack.push(root);
     let mut failure: Option<super::Fail> = None;
-    while !walk.stack.is_empty() && failure.is_none() {
+    while !walk.stack.is_empty() {
         let (next, step) = dep_step(env, walk, limits);
         walk = next;
         match step {
             Ok(()) => {}
-            Err(problem) => failure = Some(problem),
+            Err(problem) => {
+                failure = Some(problem);
+                break;
+            }
         }
     }
     match failure {
@@ -128,7 +131,7 @@ fn dep_step(
     let deps = deps_of(env, top);
     let mut failure: Option<super::Fail> = None;
     let mut dep_index: usize = 0;
-    while dep_index < deps.len() && failure.is_none() {
+    while dep_index < deps.len() {
         if walk.spent >= limits.work {
             failure = Some(super::Fail::Exhausted(crate::untrusted::LimitKind::Work));
             break;
@@ -140,18 +143,17 @@ fn dep_step(
         if position >= walk.colors.len() {
             // An edge outside the arena names no definition; it is a sink.
             dep_index += 1;
-            continue;
-        }
-        if dep_color == 1 {
+        } else if dep_color == 1 {
             failure = Some(super::Fail::Unsupported(
                 crate::untrusted::UnsupportedKind::RecursiveDependency(dep),
             ));
             break;
+        } else {
+            if dep_color == 0 {
+                walk.stack.push(dep);
+            }
+            dep_index += 1;
         }
-        if dep_color == 0 {
-            walk.stack.push(dep);
-        }
-        dep_index += 1;
     }
     let outcome = match failure {
         Some(problem) => Err(problem),
@@ -174,7 +176,7 @@ pub(super) fn schemas(
     let mut spent: u32 = 0;
     let mut failure: Option<super::Fail> = None;
     let mut index: usize = 0;
-    while index < env.schemas.len() && failure.is_none() {
+    while index < env.schemas.len() {
         if spent >= limits.work {
             failure = Some(super::Fail::Exhausted(crate::untrusted::LimitKind::Work));
             break;
