@@ -104,12 +104,64 @@ What the M3 acceptance sequence claims, and what it does not:
 
 | Gate / matrix | Status |
 |---|---|
-| `verification/m3-proof-gate.sh` | open (task 6.1) |
-| `verification/m3-coverage-gate.sh` | open (task 6.1) |
+| `verification/m3-proof-gate.sh` | done (task 6.1, evidence below) |
+| `verification/m3-coverage-gate.sh` | done (task 6.1, evidence below) |
 | `verification/m3-proof-gate-refusals.sh` | open (task 6.2) |
 | `verification/m3-coverage-refusals.sh` | open (task 6.2) |
 | per-word doc-example coverage assertion | done (task 3.2, evidence below) |
 | DX-01 rejection-family controls | done (task 3.3, evidence below) |
+
+## Task 6.1 evidence: the m3 gates on the current tree (handoff tier)
+
+`verification/m3-proof-gate.sh` and `verification/m3-coverage-gate.sh`
+succeed the M2 gates (never weakening them). Each has two tiers: the
+strict tier runs the full battery against `proofs/m3` (the v1
+required-theorem list, the M2 axiom policy, semantic subject binding;
+the coverage battery over `verification/m3-coverage.json` with the
+`m3-coverage-join.mjs` join tool, whose citation split routes
+`NobleM3.Refine.*` to its own checker); the handoff tier engages while
+the m3 proof root does not build yet (tasks 5.1–5.4 in flight — the
+proof agent's restructure of `NobleM2/Judgment.lean` is the current
+probe failure) and enforces the v1 kernel binding (the m3 root's
+generated module is byte-identical to `proofs/m2`'s, the module the M2
+refinement theorems bind, and carries the v1 markers: the
+`words.resolve` walk, the `CyclicWitness` constraint, the
+`RecursiveDependency` kind) plus the M2-floor battery with the m3
+record. The strict tier auto-engages when the m3 root builds; the v1
+required-theorem names are the design's contract and get their final
+form from the proof agent's `m3-proof-evidence.md` inventory.
+
+Both gates pass on the current tree (pinned lean 4.31.0):
+
+```console
+$ verification/m3-proof-gate.sh
+[m3-gate] PASS TOOLCHAIN (lean 4.31.0)
+[m3-gate] HANDOFF: the proofs/m3 root does not build yet (tasks 5.1-5.4 in flight);
+[m3-gate] HANDOFF:   error: NobleM2/Judgment.lean:195:25: unexpected token 'from'
+[m3-gate] PASS M3-KERNEL-BINDING (generated module byte-identical to proofs/m2's; v1 markers present)
+[m3-gate] PASS M3-BINDING-THEOREMS (table_refines, apply_refines present in NobleM3/Refine.lean)
+[m3-gate] PASS M3-NO-SORRY (no 'sorry' outside .lake)
+[m2-gate] PASS BUILD … PASS REQUIRED-THEOREMS (inventory, axiom policy, subject binding)
+[m2-gate] PASS EXTERNAL-MODELS … [m2-gate] PASS (all checks)
+[m3-gate] PASS (handoff tier) — strict tier engages when proofs/m3 builds
+
+$ verification/m3-coverage-gate.sh
+[m3-coverage] PASS M3-KERNEL-BINDING (m3 root's generated module byte-identical to proofs/m2's — the record's subject)
+[m2-coverage] PASS COVERAGE-JOIN (total=515 classified=515 extracted=491
+  proved=1 modeled=18 excepted=5 open=0)
+[m2-coverage] PASS EXCEPTED-DISCLOSURE (5 excepted entries == #[charon::opaque] declarations)
+[m2-coverage] PASS OPEN-SUBJECT (0 open entries)
+info: m2-coverage: ENV-A-PASS 515 classified constants bound to their modules; 108 elaborator matchers tolerated
+info: m2-coverage: ENV-B-PASS 13 refinement citations verified
+[m3-coverage] PASS (handoff tier) — strict tier engages when proofs/m3 builds
+```
+
+`verification/m3-coverage.json` carries the reviewed 515-function
+classification over the regenerated module (extracted 491, proved 1,
+modeled 18, excepted 5, open 0); its subject note states the
+byte-identity with the reviewed `m2-coverage.json` classification and
+that task 4.3 re-derives and re-reviews the record when the m3
+extraction record lands.
 
 ## Task 3.3 evidence: DX-01 controls for the v1 rejection families
 
