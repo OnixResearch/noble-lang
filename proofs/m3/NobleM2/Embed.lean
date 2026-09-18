@@ -210,6 +210,9 @@ def embedBinding : Binding → noble_kernel.words.Binding
   | .stack segment => .Stack (embedTyList segment)
   | .value ty => .Value (embedTy ty)
   | .effect bound => .Effect (embedEffSet bound)
+  -- A reference binding embeds to the extracted `Ref` constructor; its
+  -- resolution is the extracted checker's walk (B-CHECK-05).
+  | .ref var => .Ref (embedU32 var)
 
 /-- Reference instantiation → extracted instantiation. -/
 def embedInst (inst : Inst) : noble_kernel.words.Inst :=
@@ -290,14 +293,20 @@ def embedBehavior : Behavior → noble_kernel.contracts.Behavior
   | .testEmit => .TestEmitBehavior
   | .named => .NamedBehavior
 
+/-- Reference schema declaration → extracted declaration. -/
+def embedSchemaDecl (decl : SchemaDecl) : noble_kernel.contracts.SchemaDecl :=
+  { id := embedU32 decl.id
+    scheme := embedScheme decl.scheme
+    recursive := decl.recursive }
+
 /-- Reference environment → extracted environment. -/
 def embedEnv (env : Env) : noble_kernel.contracts.Env :=
   { defs := vecOf embedScheme env.defs
     kinds := vecOf embedBehavior env.kinds
-    -- Fragment v0 reference environments carry no external environment
-    -- data: no dependencies and no user-declared schemas embed.
-    deps := alloc.vec.Vec.new _
-    schemas := alloc.vec.Vec.new _
+    -- Fragment v1: the environment's external data embeds with it — the
+    -- dependency lists and the user-declared schemas.
+    deps := vecOf (fun ds => vecOf embedU32 ds) env.deps
+    schemas := vecOf embedSchemaDecl env.schemas
     effects := vecOf embedU32 env.effects }
 
 /-! ## Projection: extracted values → reference model -/

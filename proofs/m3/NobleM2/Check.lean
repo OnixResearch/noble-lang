@@ -67,11 +67,14 @@ def schemeValid (scheme : Scheme) : Bool :=
 /-- Whether every environment scheme is well formed. -/
 def envValid (env : Env) : Bool := env.defs.all schemeValid
 
-/-- The kind one binding carries. -/
-def bindingKind : Binding → Kind
-  | .stack _ => .stack
-  | .value _ => .value
-  | .effect _ => .effect
+/-- The kind one direct binding carries; a reference binding carries none
+(fragment v1: its kind is checked at the terminal binding after resolution,
+exactly as the kernel's `check_binding` passes `Ref`). -/
+def bindingKind : Binding → Option Kind
+  | .stack _ => some .stack
+  | .value _ => some .value
+  | .effect _ => some .effect
+  | .ref _ => none
 
 /-- Whether one type's size fits the declared bound. -/
 def typeWithin (ty : Ty) (maxType : Nat) : Bool := ty.size ≤ maxType
@@ -86,12 +89,16 @@ def effectKnown (env : Env) (id : EffId) : Bool := env.effects.elem id
 /-- Whether one instantiation fits its scheme within the declared bounds. -/
 def instValid (scheme : Scheme) (inst : Inst) (maxHeight maxType : Nat) : Bool :=
   inst.bindings.length == scheme.varKinds.length
-    && (inst.bindings.zip scheme.varKinds).all (fun entry => bindingKind entry.1 == entry.2)
+    && (inst.bindings.zip scheme.varKinds).all (fun entry =>
+      match bindingKind entry.1 with
+      | none => true
+      | some kind => kind == entry.2)
     && inst.bindings.all (fun binding =>
       match binding with
       | .stack segment => stackWithin segment maxHeight maxType
       | .value ty => typeWithin ty maxType
-      | .effect _ => true)
+      | .effect _ => true
+      | .ref _ => true)
 
 /-- Whether two stack segments hold the same types in some order. -/
 def sameMultiset (left right : List Ty) : Bool := decide (left.Perm right)

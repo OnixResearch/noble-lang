@@ -242,7 +242,9 @@ def makerScheme : Scheme :=
 def eligibilityEnv : Env :=
   { defs := bootstrapTable.map (fun entry => entry.2) ++ [makerScheme],
     kinds := bootstrapTable.map (fun entry => entry.1) ++ [Behavior.named],
-    effects := [testEmitEffect] }
+    effects := [testEmitEffect],
+    deps := [],
+    schemas := [] }
 
 def eligibilityCandidate : Candidate := candidateOf
   [ invoke makerDef [seg []],

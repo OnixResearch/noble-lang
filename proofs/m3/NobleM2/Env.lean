@@ -9,6 +9,15 @@ import NobleM2.Words
 
 namespace NobleM2
 
+/-- One user-declared schema in external environment data (fragment v1):
+its declaration identity, its scheme, and whether it names itself — a
+self-referential declaration is unsupported (B-CHECK-02). -/
+structure SchemaDecl where
+  id : Nat
+  scheme : Scheme
+  recursive : Bool
+  deriving Repr, DecidableEq, Inhabited
+
 /-- The reserved identity of the resource-free `test.emit` effect. -/
 def testEmitEffect : EffId := 0
 
@@ -52,8 +61,8 @@ structure Env where
   effects : List EffId
   /-- Each definition.s dependency list (v1: external environment data). -/
   deps : List (List Nat)
-  /-- Each definition.s user-declared schema id (v1: external data). -/
-  schemas : List Nat
+  /-- The environment's user-declared schemas (v1: external data). -/
+  schemas : List SchemaDecl
   deriving Repr, DecidableEq, Inhabited
 
 /-- The scheme of a definition. -/

@@ -33,6 +33,10 @@ inductive Binding where
   | stack : TyList → Binding
   | value : Ty → Binding
   | effect : EffSet → Binding
+  /-- The witness of another variable of the same instantiation: a type
+  equation between two variables (fragment v1). A chain of references must
+  be finite and well founded; a cycle is rejected (B-CHECK-05). -/
+  | ref : Nat → Binding
   deriving Repr, DecidableEq, Inhabited
 
 /-- A concrete instantiation: one binding per declared variable, in order. -/
