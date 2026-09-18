@@ -3,8 +3,10 @@
 Task 3.1 requires the extraction subject to be regenerated and every failed
 probe retained with its exact diagnostic. This record keeps the four
 consecutive probe outcomes over the fragment core, the exact Aeneas refusals,
-and the redesign each one forces. None of these results is an acceptance
-claim; the fragment label stays `M2 fragment v0`.
+and the redesign each one forces, followed by the green strict probe and the
+split-file regeneration that made the generated module computable. None of
+these results is an acceptance claim; the fragment label stays
+`M2 fragment v0`.
 
 ## Route and configuration
 
@@ -29,6 +31,7 @@ claim; the fragment label stays `M2 fragment v0`.
 | 6 | `toolrun-probe8.log`, `run1/aeneas.log` | ok | fail | borrow interpreter internals across the remaining ampersand-heavy helpers: `parts.rs:79-91`, `words.rs:174-179` and `219-224`, `words/subst.rs:92-99` and `262-270`, `instantiate.rs:160-167`, `preflight.rs:64-71` |
 | 7 | `toolrun-probe10.log`, `m2-aeneas-latest.log` | ok | **ok** | none: every kernel function translates under the pinned flags; the generated `NobleKernel.lean` (354 KB) is emitted. The remaining gap is that the generated module does not yet compile (`m2-lean-build-latest.log`: unknown `Ty` clone instance, `Bool`/`Unit` constructor collisions, `PartialOrd` model mismatch, `sorry` stubs) |
 | 8 | `toolrun-probe11.log`, `m2-aeneas-latest.log` | ok | **ok** | none: the strict probe is green end-to-end (`extract exit=0`) — charon and aeneas pass with `-abort-on-error -warnings-as-errors`, every function translates, and the generated `NobleKernel.lean` compiles in the offline proof root with zero errors and zero `sorry` (constructor suffixes for `Bool`/`Unit`, payload ordering on `EffId`, hand-written acyclic `Clone`/equality with disclosed `charon::opaque` copy and format steps, test-gated container derives) |
+| 9 | `proofs/m2/NobleKernel.lean` header (regeneration loop), commit `592e86f` | ok | **ok** | none: the **split-file regeneration** — the same pinned charon/aeneas pair with `-split-files -gen-lib-entry -all-computable` — regenerates the module as `NobleKernel.lean` + `NobleKernel/Types.lean` + `NobleKernel/Funs.lean`, routes the external definitions to `FunsExternal_Template.lean`, and (with `-all-computable`) drops the `noncomputable section` guard once the externals are implemented. The checked-in `FunsExternal.lean`/`TypesExternal.lean` replace every template axiom with the disclosed implementations of [the proof evidence](m2-proof-evidence.md) §6, so the extracted `acceptance.check` call graph *computes* — the refinement family closes its equations against it by `native_decide`. Re-verified this session by the [proof gate](m2-proof-evidence.md) §1: the split modules build green (`lake build NobleM2 NobleM2.Refinement NobleKernel`), no template axiom remains, and `noble_kernel.acceptance.check` depends only on Lean's trifecta |
 
 Each refusal was answered by a source change, and every change kept the Octet
 catalog at zero findings, the 14 workspace tests green, and `-D warnings`
@@ -97,3 +100,17 @@ bodies to the kernel's signatures:
 Each change must keep the catalog at zero findings, the workspace tests green,
 and the probe rerun; the redesign is only accepted when Aeneas produces the
 generated Lean module and the module compiles.
+
+## The split-file regeneration (probe 9)
+
+The probe-8 monolith proved the extraction but left the generated module
+noncomputable: Aeneas's split-file mode is what routes the std/external
+surface to per-definition templates that can be implemented by hand. The
+regeneration loop retained in the generated header (`proofs/m2/NobleKernel.lean`,
+commit `592e86f`) is the same pinned toolchain with
+`-split-files -gen-lib-entry -all-computable`; the emitted
+`FunsExternal_Template.lean` axioms were replaced by the checked-in
+implementations, which the M2 proof gate now guards (a deleted
+implementation breaks the build; a reinstated template axiom fails the
+`EXTERNAL-MODELS` check). The computability result is what the refinement
+theorems consume: see [m2-proof-evidence.md](m2-proof-evidence.md).
