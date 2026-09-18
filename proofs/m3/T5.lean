@@ -313,29 +313,36 @@ end Coverage
 
 /-! ## The v1 work measure (PO-10, V-CHECK-05, fragment v1)
 
-The resolution walk charges before every hop and stays inside its hop
-budget (B-CHECK-05); the dependency walk and schema scan charge before they
-traverse and fail closed (B-CHECK-02); the fold bounds its charged steps as
-in v0; and every word's application charges at least one unit. The v0
-theorem names (`check_total`, `foldBody_work_bounded`) are restated over
-the extended checker by the v1 names below. -/
+The rejection walks charge before they traverse and stay inside their
+declared budgets: one reference-chain pass (B-CHECK-05), one binding's
+resolution, one resolution pass, the whole resolution, and the dependency
+walk's remaining budget. The fold bounds its charged steps as in v0
+(`foldBody_work_bounded_v1`), the decision function is total over fragment
+v1 (`check_total_v1`), and every word application charges at least one
+unit (`word_cost_positive`). -/
 
-/-- One chain walk spends at most the budget it is handed. -/
+/-- One reference-chain pass stays inside its budget: the leftover of a
+successful chain walk is at most the budget it started with. -/
 theorem followFrom_work_bounded (witness : Inst) :
-    ∀ (remaining current hops : Nat) (target left : Nat),
-      witness.followFrom current remaining hops = .ok (target, left) →
-      left ≤ remaining
-  | 0, _, _, _, _, h => by
-      rw [Inst.followFrom] at h
-      split at h
-      · exact absurd h (by simp)
-      · exact absurd h (by simp)
-  | remaining + 1, current, hops, target, left, h => by
+    ∀ (remaining current hops target left : Nat),
+      witness.followFrom current remaining hops = .ok (target, left) → left ≤ remaining := by
+  intro remaining
+  induction remaining with
+  | zero =>
+      intro current hops target left h
       rw [Inst.followFrom] at h
       split at h
       · exact absurd h (by simp)
       · split at h
-        · omega
+        · exact absurd h (by simp)
+        · exact absurd rfl (by assumption)
+  | succ n ih =>
+      intro current hops target left h
+      rw [Inst.followFrom] at h
+      split at h
+      · exact absurd h (by simp)
+      · split at h
+        · exact absurd h (by simp)
         · cases hbind : witness.bindings[current]? with
           | none => rw [hbind] at h; exact absurd h (by simp)
           | some binding =>
@@ -343,35 +350,35 @@ theorem followFrom_work_bounded (witness : Inst) :
               cases binding with
               | stack _ | value _ | effect _ =>
                   injection h with hp
-                  injection hp with htarget hleft
-                  subst htarget
-                  subst hleft
+                  injection hp with ht hl
+                  subst ht
+                  subst hl
                   exact Nat.le_refl _
               | ref next =>
-                  exact Nat.le_trans
-                    (followFrom_work_bounded witness remaining next (hops + 1) target left
-                      (by simpa using h))
-                    (by omega)
+                  have hle := ih next (hops + 1) target left (by simpa using h)
+                  omega
 
 /-- One binding's resolution spends at most the budget it is given. -/
 theorem resolveOne_work_bounded {kinds : List Kind} {witness : Inst} {index : Nat}
     {binding : Binding} {remaining : Nat} {b : Binding} {left : Nat}
     (h : Inst.resolveOne kinds witness index binding remaining = .ok (b, left)) :
     left ≤ remaining := by
-  simp only [Inst.resolveOne] at h
   cases binding with
   | stack _ | value _ | effect _ =>
+      simp only [Inst.resolveOne] at h
       injection h with pe
       injection pe with hb hl
-      omega
+      subst hb
+      subst hl
+      exact Nat.le_refl _
   | ref v =>
-      simp only [] at h
+      simp only [Inst.resolveOne] at h
       cases hf : witness.followFrom v remaining 0 with
       | error => simp only [hf] at h; exact absurd h (by simp)
       | ok pair =>
           obtain ⟨terminal, left1⟩ := pair
           simp only [hf] at h
-          have hb := followFrom_work_bounded witness remaining v 0 terminal left1 hf
+          have hle := followFrom_work_bounded witness remaining v 0 terminal left1 hf
           cases hk : kinds[index]? with
           | none => simp only [hk] at h; exact absurd h (by simp)
           | some kind =>
@@ -382,45 +389,47 @@ theorem resolveOne_work_bounded {kinds : List Kind} {witness : Inst} {index : Na
                   simp only [ht] at h
                   split at h
                   · injection h with pe
-                    injection pe with hb' hl'
-                    subst hb'
-                    subst hl'
-                    omega
+                    injection pe with hb hl
+                    subst hb
+                    subst hl
+                    exact hle
                   · exact absurd h (by simp)
 
-/-- One resolution pass over a witness's bindings stays inside the budget. -/
+/-- One resolution pass over the witness's bindings stays inside its
+budget. -/
 theorem resolveList_work_bounded (kinds : List Kind) (witness : Inst) :
     ∀ (bs : List Binding) (index remaining : Nat)
       (result : List Binding) (left : Nat),
       Inst.resolveList kinds witness index remaining bs = .ok (result, left) →
-      left ≤ remaining
-  | [], _, _, _, _, h => by
+      left ≤ remaining := by
+  intro bs
+  induction bs with
+  | nil =>
+      intro index remaining result left h
       simp only [Inst.resolveList] at h
       injection h with pe
-      injection pe with re hl
+      injection pe with re _
       subst re
-      subst hl
       exact Nat.le_refl _
-  | binding :: rest, index, remaining, _, _, h => by
+  | cons binding rest ih =>
+      intro index remaining result left h
       simp only [Inst.resolveList] at h
       cases hone : Inst.resolveOne kinds witness index binding remaining with
       | error => simp only [hone] at h; exact absurd h (by simp)
       | ok pair1 =>
           obtain ⟨b, left1⟩ := pair1
           simp only [hone] at h
-          have hb := resolveOne_work_bounded hone
+          have h1 := resolveOne_work_bounded hone
           cases hrec : Inst.resolveList kinds witness (index + 1) left1 rest with
           | error => simp only [hrec] at h; exact absurd h (by simp)
           | ok pair2 =>
               obtain ⟨bs', left2⟩ := pair2
               simp only [hrec] at h
               injection h with pe
-              injection pe with re hl
+              injection pe with re _
               subst re
-              subst hl
-              exact Nat.le_trans
-                (resolveList_work_bounded kinds witness rest (index + 1) left1 bs' left2 hrec)
-                hb
+              have h2 := ih (index + 1) left1 bs' left2 hrec
+              omega
 
 /-- The resolution walk stays inside its hop budget: a successful
 resolution returns no more leftover than the fuel it started with. -/
@@ -448,16 +457,9 @@ theorem check_total_v1 (env : Env) (request : Request) (cand : Candidate) :
       (∃ r2, validateSchemas env request.limits.work env.schemas = r2) :=
   ⟨check env request cand, rfl, ⟨_, rfl⟩, ⟨_, rfl⟩⟩
 
-/-- Per-word cost positivity: every one of the 23 table entries charges at
-least one work unit per application. -/
-theorem word_cost_positive (n : Nat) (h : n < 23) :
-    ∃ word, wordTable[n]? = some word ∧ 0 < schemeCost word.scheme := by
-  obtain ⟨word, hw, _⟩ := wordScheme_lookup n h
-  exact ⟨word, hw, schemeCost_pos word.scheme⟩
-
 /-- The v1 work bound of the fold, restated over the extended checker: the
-v0 statement, with each application's witness resolution bounded by
-`resolve_work_bounded` above. -/
+v0 theorem's statement, with the witness resolution inside each application
+bounded by `resolve_work_bounded` above. -/
 theorem foldBody_work_bounded_v1 {env : Env} {cand : Candidate} {limits : Limits} :
     ∀ (fuel : Nat) (depth : Nat) (body : List Nat) (stack : TyList)
       (derived : EffSet) (fold : Fold) (final : TyList) (finalBound : EffSet)
@@ -467,6 +469,12 @@ theorem foldBody_work_bounded_v1 {env : Env} {cand : Candidate} {limits : Limits
     next.work ≤ fold.work ∧ (body ≠ [] → next.work < fold.work) :=
   foldBody_work_bounded
 
+/-- Per-word cost positivity: every one of the 23 table entries charges at
+least one work unit per application. -/
+theorem word_cost_positive (n : Nat) (h : n < 23) :
+    ∃ word, wordTable[n]? = some word ∧ 0 < schemeCost word.scheme := by
+  obtain ⟨word, hw, _⟩ := wordScheme_lookup n h
+  exact ⟨word, hw, schemeCost_pos word.scheme⟩
 
 /-- Positive acceptance coverage (PO-10): a fragment input exists that the
 checker accepts and that carries a declarative derivation at its expected
