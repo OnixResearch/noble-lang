@@ -69,6 +69,11 @@ def card (s : EffSet) : Nat := s.ids.length
 
 end EffSet
 
+/-- The first identity of a derived bound that is absent from the allowed
+one, if any. -/
+def firstExtra (derived allowed : EffSet) : Option EffId :=
+  derived.ids.find? (fun id => !allowed.ids.elem id)
+
 mutual
 
   /-- A type in the fragment's finite universe. -/
@@ -161,6 +166,23 @@ def takeTail (stack : TyList) (count : Nat) : TyList :=
   else stack
 
 end TyList
+
+/-- The stack prefix of `count` entries. -/
+def prefixStack : Nat → TyList → TyList
+  | 0, _ => .nil
+  | _ + 1, .nil => .nil
+  | count + 1, .cons head rest => .cons head (prefixStack count rest)
+
+/-- The top `count` entries of a stack, or the whole stack when it is shorter. -/
+def tailOf (stack : TyList) (count : Nat) : TyList := stack.takeTail count
+
+/-- The stack with its top `expected` segment replaced by the result segment. -/
+def replaceTail (stack expected out : TyList) : TyList :=
+  (prefixStack (stack.length - expected.length) stack).append out
+
+/-- Whether the expected segment is the stack's top segment. -/
+def tailEquals (stack expected : TyList) : Bool :=
+  stack.length ≥ expected.length && tailOf stack expected.length == expected
 
 /-- Whether every element of a stack is `Data`. -/
 def StackIsData (stack : TyList) : Prop := stack.isData = true

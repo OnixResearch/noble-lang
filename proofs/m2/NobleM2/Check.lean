@@ -93,24 +93,6 @@ def instValid (scheme : Scheme) (inst : Inst) (maxHeight maxType : Nat) : Bool :
       | .value ty => typeWithin ty maxType
       | .effect _ => true)
 
-/-- The stack prefix of `count` entries. -/
-def prefixStack : Nat → TyList → TyList
-  | 0, _ => .nil
-  | _ + 1, .nil => .nil
-  | count + 1, .cons head rest => .cons head (prefixStack count rest)
-
-/-- The top `count` entries of a stack, or the whole stack when it is shorter. -/
-def tailOf (stack : TyList) (count : Nat) : TyList :=
-  prefixStack (stack.length - min count stack.length) stack
-
-/-- The stack with its top `expected` segment replaced by the result segment. -/
-def replaceTail (stack expected out : TyList) : TyList :=
-  (prefixStack (stack.length - expected.length) stack).append out
-
-/-- Whether the expected segment is the stack's top segment. -/
-def tailEquals (stack expected : TyList) : Bool :=
-  stack.length ≥ expected.length && tailOf stack expected.length == expected
-
 /-- Whether two stack segments hold the same types in some order. -/
 def sameMultiset (left right : List Ty) : Bool := decide (left.Perm right)
 
@@ -121,6 +103,15 @@ def mismatchConstraint (expected actual : List Ty) : Constraint :=
   else
     Constraint.stackJoin
 
+/-- Build one rejection diagnostic under the declared diagnostic budget,
+truncating the recorded stacks when they together exceed it. -/
+def diagnosticOf (limits : Limits) (expected actual : List Ty)
+    (constraint : Constraint) : Diagnostic :=
+  if expected.length + actual.length > limits.diagnostics then
+    let kept := expected.take (limits.diagnostics - actual.length)
+    ⟨none, none, kept, actual.take (limits.diagnostics - kept.length), constraint, false, true⟩
+  else ⟨none, none, expected, actual, constraint, false, false⟩
+
 /-- The reference state one body fold threads: work left, derivations so far. -/
 structure Fold where
   work : Nat
@@ -129,7 +120,7 @@ structure Fold where
 
 /-- A reference failure mapped to its outcome. -/
 inductive Failure where
-  | invalid : Constraint → Failure
+  | invalid : Constraint → List Ty → List Ty → Failure
   | exhausted : LimitKind → Failure
   | unsupported : UnsupportedKind → Failure
   deriving Repr, Inhabited
@@ -159,17 +150,17 @@ def dataOkAt (env : Env) (index : Nat) (inst : Inst) : Bool :=
 def applyScheme (env : Env) (limits : Limits) (scheme : Scheme) (inst : Inst) :
     Except Failure Interface :=
   if !instValid scheme inst limits.stackHeight limits.typeSize then
-    .error (.invalid .instantiationKind)
+    .error (.invalid .instantiationKind [] [])
   else
     match scheme.instantiate inst with
-    | none => .error (.invalid .instantiationKind)
+    | none => .error (.invalid .instantiationKind [] [])
     | some (stackIn, stackOut, effects) =>
       if !stackWithin stackIn limits.stackHeight limits.typeSize
         || !stackWithin stackOut limits.stackHeight limits.typeSize then
         .error (.exhausted .typeSize)
       else
         match effects.ids.find? (fun id => !effectKnown env id) with
-        | some id => .error (.invalid (.unknownEffect id))
+        | some id => .error (.invalid (.unknownEffect id) [] [])
         | none => .ok ⟨stackIn, stackOut, effects⟩
 
 /-- Join one interface into a running stack and bound. -/
@@ -177,7 +168,8 @@ def joinInterface (current : TyList) (derived : EffSet) (iface : Interface)
     (limits : Limits) : Except Failure (TyList × EffSet) :=
   if !tailEquals current iface.stackIn then
     .error (.invalid (mismatchConstraint iface.stackIn.toList
-      (tailOf current iface.stackIn.length).toList))
+      (tailOf current iface.stackIn.length).toList) iface.stackIn.toList
+      (tailOf current iface.stackIn.length).toList)
   else
     let joined := replaceTail current iface.stackIn iface.stackOut
     if !stackWithin joined limits.stackHeight limits.typeSize then
@@ -201,7 +193,7 @@ mutual
     | _, _ + 1, [], stack, derived, fold => .ok stack derived fold
     | depth, fuel + 1, id :: rest, stack, derived, fold =>
       match cand.nodes[id]? with
-      | none => .failed (.invalid (.malformedReference id))
+      | none => .failed (.invalid (.malformedReference id) [] [])
       | some (.literal lit inst) =>
         match applyScheme env limits (litScheme lit) inst with
         | .error problem => .failed problem
@@ -214,10 +206,14 @@ mutual
             | .ok next => foldBody env cand limits depth fuel rest joined bound next
       | some (.invocation index inst) =>
         match env.scheme index with
-        | none => .failed (.invalid (.unknownDefinition index))
+        | none => .failed (.invalid (.unknownDefinition index) [] [])
         | some scheme =>
           if !dataOkAt env index inst then
-            .failed (.invalid .instantiationKind)
+            .failed (match dataSlot ((env.kind index).getD .named) with
+              | some var =>
+                (inst.value var).elim (.invalid .instantiationKind [] [])
+                  (fun ty => .invalid (.eligibility ty) [] [])
+              | none => .invalid .instantiationKind [] [])
           else
             match applyScheme env limits scheme inst with
             | .error problem => .failed problem
@@ -242,9 +238,11 @@ mutual
               | .failed problem => .failed problem
               | .ok final finalBound inner =>
                 if final != claimed then
-                  .failed (.invalid (mismatchConstraint claimed.toList final.toList))
+                  .failed (.invalid (mismatchConstraint claimed.toList final.toList)
+                    claimed.toList final.toList)
                 else if !finalBound.subsetOf bound then
-                  .failed (.invalid (.effectInclusion 0))
+                  .failed (.invalid (.effectInclusion (firstExtra finalBound bound |>.getD 0))
+                    [] [])
                 else
                   match joinInterface stack derived iface limits with
                   | .error problem => .failed problem
@@ -253,7 +251,7 @@ mutual
                     | .error problem => .failed problem
                     | .ok next =>
                       foldBody env cand limits depth fuel rest joined outerBound next
-            | _ => .failed (.invalid .instantiationKind)
+            | _ => .failed (.invalid .instantiationKind [] [])
 
 end
 
@@ -274,21 +272,22 @@ def check (env : Env) (request : Request) (cand : Candidate) : Outcome :=
     .exhausted .typeSize
   else
     match request.expected.allowedEffects.ids.find? (fun id => !effectKnown env id) with
-    | some id => .invalid ⟨none, none, [], [], .unknownEffect id, false, false⟩
+    | some id => .invalid (diagnosticOf request.limits [] [] (.unknownEffect id))
     | none =>
       match foldBody env cand request.limits 0 request.limits.work cand.body
           request.expected.stackIn EffSet.empty ⟨request.limits.work, []⟩ with
       | .ok final derived fold =>
-        if fold.work != request.limits.work - (fold.work + 0) - 0 then
-          .internalFailure
+        if final != request.expected.stackOut then
+          .invalid (diagnosticOf request.limits request.expected.stackOut.toList
+            final.toList (mismatchConstraint request.expected.stackOut.toList final.toList))
         else if !derived.subsetOf request.expected.allowedEffects then
-          .invalid ⟨none, none, [], [], .effectInclusion 0, false, false⟩
-        else if final != request.expected.stackOut then
-          .invalid ⟨none, none, [], [], .stackJoin, false, false⟩
+          .invalid (diagnosticOf request.limits [] []
+            (.effectInclusion
+              (firstExtra derived request.expected.allowedEffects |>.getD 0)))
         else
           .accepted ⟨⟨request.expected.stackIn, final, derived⟩, fold.derivations⟩
-      | .failed (.invalid constraint) =>
-        .invalid ⟨none, none, [], [], constraint, false, false⟩
+      | .failed (.invalid constraint expected actual) =>
+        .invalid (diagnosticOf request.limits expected actual constraint)
       | .failed (.exhausted kind) => .exhausted kind
       | .failed (.unsupported kind) => .unsupported kind
 
