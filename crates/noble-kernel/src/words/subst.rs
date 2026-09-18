@@ -130,25 +130,29 @@ fn run_task(
 
 /// Complete one `pair`, `sum`, or `list` pattern from its finished segments.
 fn finish_task(node: crate::shapes::Pattern, mut walk: Walk) -> StepState {
-    let right = match walk.segments.pop() {
-        Some(segment) => segment,
-        None => return (walk, Err(crate::words::InstError::OversizedType)),
-    };
-    let left = match walk.segments.pop() {
-        Some(segment) => segment,
-        None => return (walk, Err(crate::words::InstError::OversizedType)),
+    // A list completes from its single segment; pair and sum from two.
+    if let crate::shapes::Pattern::List(_) = node {
+        return match walk.segments.pop().map(super::segments::list_segment) {
+            Some(Ok(segment)) => {
+                walk.segments.push(segment);
+                (walk, Ok(()))
+            }
+            Some(Err(problem)) => (walk, Err(problem)),
+            None => (walk, Err(crate::words::InstError::OversizedType)),
+        };
+    }
+    // The first pop is the top: the right child's finished segment.
+    let popped = (walk.segments.pop(), walk.segments.pop());
+    let (left, right) = match popped {
+        (Some(right), Some(left)) => (left, right),
+        _ => return (walk, Err(crate::words::InstError::OversizedType)),
     };
     let built = match node {
         crate::shapes::Pattern::Pair(_, _) => super::segments::pair_segment(left, right, false),
         crate::shapes::Pattern::Sum(_, _) => super::segments::pair_segment(left, right, true),
-        crate::shapes::Pattern::List(_) => match super::segments::single(left) {
-            Ok(inner) => Ok(alloc::vec![crate::types::Ty::List(alloc::boxed::Box::new(
-                inner
-            ))]),
-            Err(problem) => Err(problem),
-        },
         crate::shapes::Pattern::Var(_)
         | crate::shapes::Pattern::StackVar(_)
+        | crate::shapes::Pattern::List(_)
         | crate::shapes::Pattern::Program(_, _, _)
         | crate::shapes::Pattern::Unit
         | crate::shapes::Pattern::Bool
@@ -257,8 +261,10 @@ fn part_task(node: crate::shapes::Pattern, inst: &crate::words::Inst, mut walk: 
         },
         crate::shapes::Pattern::Pair(left, right) | crate::shapes::Pattern::Sum(left, right) => {
             walk.work.push(Task::Finish(marker));
-            walk.work.push(Task::Part(*left));
+            // Last-in-first-out: queue the right child first so the finish
+            // step pops left below right, in documented order.
             walk.work.push(Task::Part(*right));
+            walk.work.push(Task::Part(*left));
         }
         crate::shapes::Pattern::List(item) => {
             walk.work.push(Task::Finish(marker));

@@ -119,3 +119,67 @@ fn schemes_instantiate_and_reject_mismatches() -> Result<(), String> {
     env.defs.clear();
     Ok(())
 }
+
+// Regression control for the substitution walk's constructor completion,
+// found by the bounded property harness (DX-PROPERTY-01) at generated cases
+// 2 and 11: the work-stack walk queued pair and sum children so the finish
+// step popped them swapped (contradicting `inr : S b -- S Sum<a,b>` and the
+// reference model), and the completion step popped a phantom second segment
+// for list patterns, so every list-bearing witness rejected.
+// r[verify VT-M2-01]
+#[test]
+fn constructor_patterns_substitute_in_documented_order() -> Result<(), String> {
+    let env = match noble_kernel::contracts::environment() {
+        Ok(env) => env,
+        Err(defect) => return Err(format!("environment defect: {defect:?}")),
+    };
+    // `pair : S a b -- S Pair<a,b>` is definition 12; `inr : S b -- S Sum<a,b>`
+    // is definition 15; `nil : S -- S List<a>` is definition 18. Distinct
+    // types on each side make any swap observable.
+    for (def, bindings, expected) in [
+        (
+            noble_kernel::contracts::Definition(12),
+            vec![
+                noble_kernel::words::Binding::Stack(vec![]),
+                noble_kernel::words::Binding::Value(noble_kernel::types::Ty::Bool),
+                noble_kernel::words::Binding::Value(noble_kernel::types::Ty::Text),
+            ],
+            noble_kernel::types::Ty::Pair(
+                Box::new(noble_kernel::types::Ty::Bool),
+                Box::new(noble_kernel::types::Ty::Text),
+            ),
+        ),
+        (
+            noble_kernel::contracts::Definition(15),
+            vec![
+                noble_kernel::words::Binding::Stack(vec![]),
+                noble_kernel::words::Binding::Value(noble_kernel::types::Ty::Unit),
+                noble_kernel::words::Binding::Value(noble_kernel::types::Ty::Bool),
+            ],
+            noble_kernel::types::Ty::Sum(
+                Box::new(noble_kernel::types::Ty::Unit),
+                Box::new(noble_kernel::types::Ty::Bool),
+            ),
+        ),
+        (
+            noble_kernel::contracts::Definition(18),
+            vec![
+                noble_kernel::words::Binding::Stack(vec![]),
+                noble_kernel::words::Binding::Value(noble_kernel::types::Ty::Bool),
+            ],
+            noble_kernel::types::Ty::List(Box::new(noble_kernel::types::Ty::Bool)),
+        ),
+    ] {
+        let scheme = match env.scheme(def) {
+            Some(scheme) => scheme.clone(),
+            None => return Err("missing contract".to_string()),
+        };
+        let inst = noble_kernel::words::Inst { bindings };
+        let out = match scheme.subst_stack(&scheme.stack_out, &inst) {
+            Ok(out) => out,
+            Err(error) => return Err(format!("substitution failed: {error:?}")),
+        };
+        assert_eq!(out, vec![expected]);
+    }
+    Ok(())
+}

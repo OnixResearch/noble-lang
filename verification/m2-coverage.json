@@ -3,463 +3,6 @@
  "record_version": 1,
  "functions": [
   {
-   "lean": "noble_kernel.core.option.Option.Insts.CoreFmtDebug",
-   "kind": "def",
-   "rust": "core::option::{impl core::fmt::Debug for core::option::Option<T>}",
-   "trait_impl": true,
-   "source": "/rustc/library/core/src/option.rs 592:15-592:20",
-   "file": "Funs.lean",
-   "line": 26,
-   "status": "extracted"
-  },
-  {
-   "lean": "noble_kernel.untrusted.NodeId.Insts.CoreCloneClone.clone",
-   "kind": "def",
-   "rust": "noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::NodeId}::clone",
-   "source": "crates/noble-kernel/src/untrusted.rs 12:9-12:14",
-   "file": "Funs.lean",
-   "line": 34,
-   "status": "extracted"
-  },
-  {
-   "lean": "noble_kernel.untrusted.NodeId.Insts.CoreCloneClone",
-   "kind": "def",
-   "rust": "noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::NodeId}",
-   "trait_impl": true,
-   "source": "crates/noble-kernel/src/untrusted.rs 12:9-12:14",
-   "file": "Funs.lean",
-   "line": 41,
-   "status": "extracted"
-  },
-  {
-   "lean": "noble_kernel.types.EffSet.empty",
-   "kind": "def",
-   "rust": "noble_kernel::types::{noble_kernel::types::EffSet}::empty",
-   "source": "crates/noble-kernel/src/types.rs 34:4-36:5",
-   "file": "Funs.lean",
-   "line": 49,
-   "status": "extracted"
-  },
-  {
-   "lean": "noble_kernel.types.EffId.Insts.CoreCloneClone.clone",
-   "kind": "def",
-   "rust": "noble_kernel::types::{impl core::clone::Clone for noble_kernel::types::EffId}::clone",
-   "source": "crates/noble-kernel/src/types.rs 25:9-25:14",
-   "file": "Funs.lean",
-   "line": 55,
-   "status": "extracted"
-  },
-  {
-   "lean": "noble_kernel.types.EffId.Insts.CoreCloneClone",
-   "kind": "def",
-   "rust": "noble_kernel::types::{impl core::clone::Clone for noble_kernel::types::EffId}",
-   "trait_impl": true,
-   "source": "crates/noble-kernel/src/types.rs 25:9-25:14",
-   "file": "Funs.lean",
-   "line": 62,
-   "status": "extracted"
-  },
-  {
-   "lean": "noble_kernel.types.EffSet.Insts.CoreCloneClone.clone",
-   "kind": "def",
-   "rust": "noble_kernel::types::{impl core::clone::Clone for noble_kernel::types::EffSet}::clone",
-   "source": "crates/noble-kernel/src/types.rs 29:9-29:14",
-   "file": "Funs.lean",
-   "line": 69,
-   "status": "extracted"
-  },
-  {
-   "lean": "noble_kernel.types.Ty.Insts.CoreCloneClone.clone",
-   "kind": "def",
-   "rust": "noble_kernel::types::impls::{impl core::clone::Clone for noble_kernel::types::Ty}::clone",
-   "source": "crates/noble-kernel/src/types/impls.rs 30:4-55:5",
-   "file": "Funs.lean",
-   "line": 77,
-   "status": "extracted"
-  },
-  {
-   "lean": "noble_kernel.types.Ty.Insts.CoreCloneClone",
-   "kind": "def",
-   "rust": "noble_kernel::types::impls::{impl core::clone::Clone for noble_kernel::types::Ty}",
-   "trait_impl": true,
-   "source": "crates/noble-kernel/src/types/impls.rs 29:0-56:1",
-   "file": "Funs.lean",
-   "line": 109,
-   "status": "extracted"
-  },
-  {
-   "lean": "noble_kernel.acceptance.frames.entry_frame",
-   "kind": "def",
-   "rust": "noble_kernel::acceptance::frames::entry_frame",
-   "source": "crates/noble-kernel/src/acceptance/frames.rs 21:0-35:1",
-   "file": "Funs.lean",
-   "line": 115,
-   "status": "extracted"
-  },
-  {
-   "lean": "noble_kernel.acceptance.frames.advance",
-   "kind": "def",
-   "rust": "noble_kernel::acceptance::frames::advance",
-   "source": "crates/noble-kernel/src/acceptance/frames.rs 38:0-41:1",
-   "file": "Funs.lean",
-   "line": 145,
-   "status": "extracted"
-  },
-  {
-   "lean": "noble_kernel.words.Binding.Insts.CoreCloneClone.clone",
-   "kind": "def",
-   "rust": "noble_kernel::words::{impl core::clone::Clone for noble_kernel::words::Binding}::clone",
-   "source": "crates/noble-kernel/src/words.rs 45:9-45:14",
-   "file": "Funs.lean",
-   "line": 153,
-   "status": "extracted"
-  },
-  {
-   "lean": "noble_kernel.words.Binding.Insts.CoreCloneClone",
-   "kind": "def",
-   "rust": "noble_kernel::words::{impl core::clone::Clone for noble_kernel::words::Binding}",
-   "trait_impl": true,
-   "source": "crates/noble-kernel/src/words.rs 45:9-45:14",
-   "file": "Funs.lean",
-   "line": 169,
-   "status": "extracted"
-  },
-  {
-   "lean": "noble_kernel.words.Inst.Insts.CoreCloneClone.clone",
-   "kind": "def",
-   "rust": "noble_kernel::words::{impl core::clone::Clone for noble_kernel::words::Inst}::clone",
-   "source": "crates/noble-kernel/src/words.rs 57:9-57:14",
-   "file": "Funs.lean",
-   "line": 176,
-   "status": "extracted"
-  },
-  {
-   "lean": "noble_kernel.types.EffId.Insts.CoreCmpPartialEqEffId.eq",
-   "kind": "def",
-   "rust": "noble_kernel::types::{impl core::cmp::PartialEq<noble_kernel::types::EffId> for noble_kernel::types::EffId}::eq",
-   "source": "crates/noble-kernel/src/types.rs 25:29-25:38",
-   "file": "Funs.lean",
-   "line": 185,
-   "status": "extracted"
-  },
-  {
-   "lean": "noble_kernel.types.EffSet.contains_loop.body",
-   "kind": "def",
-   "rust": "noble_kernel::types::{noble_kernel::types::EffSet}::contains",
-   "loop_body": true,
-   "source": "crates/noble-kernel/src/types.rs 73:8-79:9",
-   "file": "Funs.lean",
-   "line": 193,
-   "status": "extracted"
-  },
-  {
-   "lean": "noble_kernel.types.EffSet.contains_loop",
-   "kind": "def",
-   "rust": "noble_kernel::types::{noble_kernel::types::EffSet}::contains",
-   "source": "crates/noble-kernel/src/types.rs 73:8-79:9",
-   "file": "Funs.lean",
-   "line": 214,
-   "status": "extracted"
-  },
-  {
-   "lean": "noble_kernel.types.EffSet.contains",
-   "kind": "def",
-   "rust": "noble_kernel::types::{noble_kernel::types::EffSet}::contains",
-   "source": "crates/noble-kernel/src/types.rs 70:4-81:5",
-   "file": "Funs.lean",
-   "line": 226,
-   "status": "extracted"
-  },
-  {
-   "lean": "noble_kernel.types.EffSet.is_subset_of_loop.body",
-   "kind": "def",
-   "rust": "noble_kernel::types::{noble_kernel::types::EffSet}::is_subset_of",
-   "loop_body": true,
-   "source": "crates/noble-kernel/src/types.rs 112:8-118:9",
-   "file": "Funs.lean",
-   "line": 234,
-   "status": "extracted"
-  },
-  {
-   "lean": "noble_kernel.types.EffSet.is_subset_of_loop",
-   "kind": "def",
-   "rust": "noble_kernel::types::{noble_kernel::types::EffSet}::is_subset_of",
-   "source": "crates/noble-kernel/src/types.rs 112:8-118:9",
-   "file": "Funs.lean",
-   "line": 255,
-   "status": "extracted"
-  },
-  {
-   "lean": "noble_kernel.types.EffSet.is_subset_of",
-   "kind": "def",
-   "rust": "noble_kernel::types::{noble_kernel::types::EffSet}::is_subset_of",
-   "source": "crates/noble-kernel/src/types.rs 109:4-120:5",
-   "file": "Funs.lean",
-   "line": 268,
-   "status": "extracted"
-  },
-  {
-   "lean": "noble_kernel.types.EffId.Insts.CoreCmpPartialEqEffId",
-   "kind": "impl_def",
-   "rust": "noble_kernel::types::{impl core::cmp::PartialEq<noble_kernel::types::EffId> for noble_kernel::types::EffId}",
-   "trait_impl": true,
-   "source": "crates/noble-kernel/src/types.rs 25:29-25:38",
-   "file": "Funs.lean",
-   "line": 275,
-   "status": "extracted"
-  },
-  {
-   "lean": "noble_kernel.types.EffSet.Insts.CoreCmpPartialEqEffSet.eq",
-   "kind": "def",
-   "rust": "noble_kernel::types::{impl core::cmp::PartialEq<noble_kernel::types::EffSet> for noble_kernel::types::EffSet}::eq",
-   "source": "crates/noble-kernel/src/types.rs 29:23-29:32",
-   "file": "Funs.lean",
-   "line": 285,
-   "status": "extracted"
-  },
-  {
-   "lean": "noble_kernel.types.ResourceKind.Insts.CoreCmpPartialEqResourceKind.eq",
-   "kind": "def",
-   "rust": "noble_kernel::types::{impl core::cmp::PartialEq<noble_kernel::types::ResourceKind> for noble_kernel::types::ResourceKind}::eq",
-   "source": "crates/noble-kernel/src/types.rs 14:29-14:38",
-   "file": "Funs.lean",
-   "line": 293,
-   "status": "extracted"
-  },
-  {
-   "lean": "noble_kernel.types.WORK_CAP",
-   "kind": "def",
-   "rust": "noble_kernel::types::WORK_CAP",
-   "source": "crates/noble-kernel/src/types.rs 11:0-11:28",
-   "file": "Funs.lean",
-   "line": 299,
-   "status": "extracted"
-  },
-  {
-   "lean": "noble_kernel.types.impls.push_type_program_loop0.body",
-   "kind": "def",
-   "rust": "noble_kernel::types::impls::push_type_program",
-   "loop_body": true,
-   "source": "crates/noble-kernel/src/types/impls.rs 70:4-73:5",
-   "file": "Funs.lean",
-   "line": 304,
-   "status": "extracted"
-  },
-  {
-   "lean": "noble_kernel.types.impls.push_type_program_loop0",
-   "kind": "def",
-   "rust": "noble_kernel::types::impls::push_type_program",
-   "source": "crates/noble-kernel/src/types/impls.rs 70:4-73:5",
-   "file": "Funs.lean",
-   "line": 329,
-   "status": "extracted"
-  },
-  {
-   "lean": "noble_kernel.types.impls.push_type_program_loop1.body",
-   "kind": "def",
-   "rust": "noble_kernel::types::impls::push_type_program",
-   "loop_body": true,
-   "source": "crates/noble-kernel/src/types/impls.rs 75:4-78:5",
-   "file": "Funs.lean",
-   "line": 343,
-   "status": "extracted"
-  },
-  {
-   "lean": "noble_kernel.types.impls.push_type_program_loop1",
-   "kind": "def",
-   "rust": "noble_kernel::types::impls::push_type_program",
-   "source": "crates/noble-kernel/src/types/impls.rs 75:4-78:5",
-   "file": "Funs.lean",
-   "line": 368,
-   "status": "extracted"
-  },
-  {
-   "lean": "noble_kernel.types.impls.push_type_program",
-   "kind": "def",
-   "rust": "noble_kernel::types::impls::push_type_program",
-   "source": "crates/noble-kernel/src/types/impls.rs 59:0-80:1",
-   "file": "Funs.lean",
-   "line": 381,
-   "status": "extracted"
-  },
-  {
-   "lean": "noble_kernel.types.impls.ty_eq_loop.body",
-   "kind": "def",
-   "rust": "noble_kernel::types::impls::ty_eq",
-   "loop_body": true,
-   "source": "crates/noble-kernel/src/types/impls.rs 89:4-138:5",
-   "file": "Funs.lean",
-   "line": 408,
-   "status": "extracted"
-  },
-  {
-   "lean": "noble_kernel.types.impls.ty_eq_loop",
-   "kind": "def",
-   "rust": "noble_kernel::types::impls::ty_eq",
-   "source": "crates/noble-kernel/src/types/impls.rs 89:4-138:5",
-   "file": "Funs.lean",
-   "line": 597,
-   "status": "extracted"
-  },
-  {
-   "lean": "noble_kernel.types.impls.ty_eq",
-   "kind": "def",
-   "rust": "noble_kernel::types::impls::ty_eq",
-   "source": "crates/noble-kernel/src/types/impls.rs 84:0-140:1",
-   "file": "Funs.lean",
-   "line": 608,
-   "status": "extracted"
-  },
-  {
-   "lean": "noble_kernel.types.Ty.Insts.CoreCmpPartialEqTy.eq",
-   "kind": "def",
-   "rust": "noble_kernel::types::impls::{impl core::cmp::PartialEq<noble_kernel::types::Ty> for noble_kernel::types::Ty}::eq",
-   "source": "crates/noble-kernel/src/types/impls.rs 144:4-146:5",
-   "file": "Funs.lean",
-   "line": 619,
-   "status": "extracted"
-  },
-  {
-   "lean": "noble_kernel.types.Ty.Insts.CoreCmpPartialEqTy",
-   "kind": "impl_def",
-   "rust": "noble_kernel::types::impls::{impl core::cmp::PartialEq<noble_kernel::types::Ty> for noble_kernel::types::Ty}",
-   "trait_impl": true,
-   "source": "crates/noble-kernel/src/types/impls.rs 143:0-147:1",
-   "file": "Funs.lean",
-   "line": 626,
-   "status": "extracted"
-  },
-  {
-   "lean": "noble_kernel.acceptance.parts.invalid",
-   "kind": "def",
-   "rust": "noble_kernel::acceptance::parts::invalid",
-   "source": "crates/noble-kernel/src/acceptance/parts.rs 230:0-259:1",
-   "file": "Funs.lean",
-   "line": 634,
-   "status": "extracted"
-  },
-  {
-   "lean": "noble_kernel.types.EffSet.as_slice",
-   "kind": "def",
-   "rust": "noble_kernel::types::{noble_kernel::types::EffSet}::as_slice",
-   "source": "crates/noble-kernel/src/types.rs 123:4-125:5",
-   "file": "Funs.lean",
-   "line": 696,
-   "status": "extracted"
-  },
-  {
-   "lean": "noble_kernel.acceptance.parts.first_extra_loop.body",
-   "kind": "def",
-   "rust": "noble_kernel::acceptance::parts::first_extra",
-   "loop_body": true,
-   "source": "crates/noble-kernel/src/acceptance/parts.rs 219:4-225:5",
-   "file": "Funs.lean",
-   "line": 703,
-   "status": "extracted"
-  },
-  {
-   "lean": "noble_kernel.acceptance.parts.first_extra_loop",
-   "kind": "def",
-   "rust": "noble_kernel::acceptance::parts::first_extra",
-   "source": "crates/noble-kernel/src/acceptance/parts.rs 219:4-225:5",
-   "file": "Funs.lean",
-   "line": 721,
-   "status": "extracted"
-  },
-  {
-   "lean": "noble_kernel.acceptance.parts.first_extra",
-   "kind": "def",
-   "rust": "noble_kernel::acceptance::parts::first_extra",
-   "source": "crates/noble-kernel/src/acceptance/parts.rs 212:0-227:1",
-   "file": "Funs.lean",
-   "line": 731,
-   "status": "extracted"
-  },
-  {
-   "lean": "noble_kernel.acceptance.parts.find_unused_loop.body",
-   "kind": "def",
-   "rust": "noble_kernel::acceptance::parts::find_unused",
-   "loop_body": true,
-   "source": "crates/noble-kernel/src/acceptance/parts.rs 201:4-207:5",
-   "file": "Funs.lean",
-   "line": 741,
-   "status": "extracted"
-  },
-  {
-   "lean": "noble_kernel.acceptance.parts.find_unused_loop",
-   "kind": "def",
-   "rust": "noble_kernel::acceptance::parts::find_unused",
-   "source": "crates/noble-kernel/src/acceptance/parts.rs 201:4-207:5",
-   "file": "Funs.lean",
-   "line": 765,
-   "status": "extracted"
-  },
-  {
-   "lean": "noble_kernel.acceptance.parts.find_unused",
-   "kind": "def",
-   "rust": "noble_kernel::acceptance::parts::find_unused",
-   "source": "crates/noble-kernel/src/acceptance/parts.rs 194:0-209:1",
-   "file": "Funs.lean",
-   "line": 778,
-   "status": "extracted"
-  },
-  {
-   "lean": "noble_kernel.acceptance.parts.same_multiset_loop.body",
-   "kind": "def",
-   "rust": "noble_kernel::acceptance::parts::same_multiset",
-   "loop_body": true,
-   "source": "crates/noble-kernel/src/acceptance/parts.rs 181:4-189:5",
-   "file": "Funs.lean",
-   "line": 787,
-   "status": "extracted"
-  },
-  {
-   "lean": "noble_kernel.acceptance.parts.same_multiset_loop",
-   "kind": "def",
-   "rust": "noble_kernel::acceptance::parts::same_multiset",
-   "source": "crates/noble-kernel/src/acceptance/parts.rs 181:4-189:5",
-   "file": "Funs.lean",
-   "line": 815,
-   "status": "extracted"
-  },
-  {
-   "lean": "noble_kernel.acceptance.parts.same_multiset",
-   "kind": "def",
-   "rust": "noble_kernel::acceptance::parts::same_multiset",
-   "source": "crates/noble-kernel/src/acceptance/parts.rs 174:0-191:1",
-   "file": "Funs.lean",
-   "line": 828,
-   "status": "extracted"
-  },
-  {
-   "lean": "noble_kernel.acceptance.parts.mismatch_constraint",
-   "kind": "def",
-   "rust": "noble_kernel::acceptance::parts::mismatch_constraint",
-   "source": "crates/noble-kernel/src/acceptance/parts.rs 151:0-160:1",
-   "file": "Funs.lean",
-   "line": 841,
-   "status": "extracted"
-  },
-  {
-   "lean": "noble_kernel.types.EffSet.union_loop.body",
-   "kind": "def",
-   "rust": "noble_kernel::types::{noble_kernel::types::EffSet}::union",
-   "loop_body": true,
-   "source": "crates/noble-kernel/src/types.rs 88:8-104:9",
-   "file": "Funs.lean",
-   "line": 859,
-   "status": "extracted"
-  },
-  {
-   "lean": "noble_kernel.types.EffSet.union_loop",
-   "kind": "def",
-   "rust": "noble_kernel::types::{noble_kernel::types::EffSet}::union",
-   "source": "crates/noble-kernel/src/types.rs 88:8-104:9",
-   "file": "Funs.lean",
-   "line": 996,
-   "status": "extracted"
-  },
-  {
    "lean": "noble_kernel.types.EffSet.union",
    "kind": "def",
    "rust": "noble_kernel::types::{noble_kernel::types::EffSet}::union",
@@ -506,6 +49,16 @@
    "status": "extracted"
   },
   {
+   "lean": "noble_kernel.types.Ty.Insts.CoreCloneClone",
+   "kind": "def",
+   "rust": "noble_kernel::types::impls::{impl core::clone::Clone for noble_kernel::types::Ty}",
+   "trait_impl": true,
+   "source": "crates/noble-kernel/src/types/impls.rs 29:0-56:1",
+   "file": "Funs.lean",
+   "line": 109,
+   "status": "extracted"
+  },
+  {
    "lean": "noble_kernel.types.size.queue_children_loop0.body",
    "kind": "def",
    "rust": "noble_kernel::types::size::queue_children",
@@ -532,6 +85,15 @@
    "source": "crates/noble-kernel/src/types/size.rs 128:12-131:13",
    "file": "Funs.lean",
    "line": 1129,
+   "status": "extracted"
+  },
+  {
+   "lean": "noble_kernel.acceptance.frames.entry_frame",
+   "kind": "def",
+   "rust": "noble_kernel::acceptance::frames::entry_frame",
+   "source": "crates/noble-kernel/src/acceptance/frames.rs 21:0-35:1",
+   "file": "Funs.lean",
+   "line": 115,
    "status": "extracted"
   },
   {
@@ -673,6 +235,15 @@
    "status": "extracted"
   },
   {
+   "lean": "noble_kernel.acceptance.frames.advance",
+   "kind": "def",
+   "rust": "noble_kernel::acceptance::frames::advance",
+   "source": "crates/noble-kernel/src/acceptance/frames.rs 38:0-41:1",
+   "file": "Funs.lean",
+   "line": 145,
+   "status": "extracted"
+  },
+  {
    "lean": "noble_kernel.acceptance.parts.definition_of",
    "kind": "def",
    "rust": "noble_kernel::acceptance::parts::definition_of",
@@ -716,6 +287,15 @@
    "source": "crates/noble-kernel/src/words.rs 228:46-228:75",
    "file": "Funs.lean",
    "line": 1524,
+   "status": "extracted"
+  },
+  {
+   "lean": "noble_kernel.words.Binding.Insts.CoreCloneClone.clone",
+   "kind": "def",
+   "rust": "noble_kernel::words::{impl core::clone::Clone for noble_kernel::words::Binding}::clone",
+   "source": "crates/noble-kernel/src/words.rs 45:9-45:14",
+   "file": "Funs.lean",
+   "line": 153,
    "status": "extracted"
   },
   {
@@ -821,6 +401,16 @@
    "status": "extracted"
   },
   {
+   "lean": "noble_kernel.words.Binding.Insts.CoreCloneClone",
+   "kind": "def",
+   "rust": "noble_kernel::words::{impl core::clone::Clone for noble_kernel::words::Binding}",
+   "trait_impl": true,
+   "source": "crates/noble-kernel/src/words.rs 45:9-45:14",
+   "file": "Funs.lean",
+   "line": 169,
+   "status": "extracted"
+  },
+  {
    "lean": "noble_kernel.words.Scheme.subst_effects_loop",
    "kind": "def",
    "rust": "noble_kernel::words::{noble_kernel::words::Scheme}::subst_effects",
@@ -836,6 +426,15 @@
    "source": "crates/noble-kernel/src/words.rs 211:4-250:5",
    "file": "Funs.lean",
    "line": 1743,
+   "status": "extracted"
+  },
+  {
+   "lean": "noble_kernel.words.Inst.Insts.CoreCloneClone.clone",
+   "kind": "def",
+   "rust": "noble_kernel::words::{impl core::clone::Clone for noble_kernel::words::Inst}::clone",
+   "source": "crates/noble-kernel/src/words.rs 57:9-57:14",
+   "file": "Funs.lean",
+   "line": 176,
    "status": "extracted"
   },
   {
@@ -895,6 +494,15 @@
    "status": "extracted"
   },
   {
+   "lean": "noble_kernel.types.EffId.Insts.CoreCmpPartialEqEffId.eq",
+   "kind": "def",
+   "rust": "noble_kernel::types::{impl core::cmp::PartialEq<noble_kernel::types::EffId> for noble_kernel::types::EffId}::eq",
+   "source": "crates/noble-kernel/src/types.rs 25:29-25:38",
+   "file": "Funs.lean",
+   "line": 185,
+   "status": "extracted"
+  },
+  {
    "lean": "noble_kernel.shapes.impls.clone_slots",
    "kind": "def",
    "rust": "noble_kernel::shapes::impls::clone_slots",
@@ -917,16 +525,26 @@
    "kind": "def",
    "rust": "noble_kernel::words::subst::queue_parts",
    "loop_body": true,
-   "source": "crates/noble-kernel/src/words/subst.rs 284:4-292:5",
+   "source": "crates/noble-kernel/src/words/subst.rs 290:4-298:5",
    "file": "Funs.lean",
    "line": 1906,
+   "status": "extracted"
+  },
+  {
+   "lean": "noble_kernel.types.EffSet.contains_loop.body",
+   "kind": "def",
+   "rust": "noble_kernel::types::{noble_kernel::types::EffSet}::contains",
+   "loop_body": true,
+   "source": "crates/noble-kernel/src/types.rs 73:8-79:9",
+   "file": "Funs.lean",
+   "line": 193,
    "status": "extracted"
   },
   {
    "lean": "noble_kernel.words.subst.queue_parts_loop",
    "kind": "def",
    "rust": "noble_kernel::words::subst::queue_parts",
-   "source": "crates/noble-kernel/src/words/subst.rs 284:4-292:5",
+   "source": "crates/noble-kernel/src/words/subst.rs 290:4-298:5",
    "file": "Funs.lean",
    "line": 1936,
    "status": "extracted"
@@ -935,7 +553,7 @@
    "lean": "noble_kernel.words.subst.queue_parts",
    "kind": "def",
    "rust": "noble_kernel::words::subst::queue_parts",
-   "source": "crates/noble-kernel/src/words/subst.rs 276:0-294:1",
+   "source": "crates/noble-kernel/src/words/subst.rs 282:0-300:1",
    "file": "Funs.lean",
    "line": 1949,
    "status": "extracted"
@@ -944,7 +562,7 @@
    "lean": "noble_kernel.words.subst.part_task",
    "kind": "def",
    "rust": "noble_kernel::words::subst::part_task",
-   "source": "crates/noble-kernel/src/words/subst.rs 236:0-273:1",
+   "source": "crates/noble-kernel/src/words/subst.rs 240:0-279:1",
    "file": "Funs.lean",
    "line": 1960,
    "status": "extracted"
@@ -963,7 +581,7 @@
    "kind": "def",
    "rust": "noble_kernel::words::subst::expand_task",
    "loop_body": true,
-   "source": "crates/noble-kernel/src/words/subst.rs 190:4-201:5",
+   "source": "crates/noble-kernel/src/words/subst.rs 194:4-205:5",
    "file": "Funs.lean",
    "line": 2063,
    "status": "extracted"
@@ -972,7 +590,7 @@
    "lean": "noble_kernel.words.subst.expand_task_loop0",
    "kind": "def",
    "rust": "noble_kernel::words::subst::expand_task",
-   "source": "crates/noble-kernel/src/words/subst.rs 190:4-201:5",
+   "source": "crates/noble-kernel/src/words/subst.rs 194:4-205:5",
    "file": "Funs.lean",
    "line": 2084,
    "status": "extracted"
@@ -982,7 +600,7 @@
    "kind": "def",
    "rust": "noble_kernel::words::subst::expand_task",
    "loop_body": true,
-   "source": "crates/noble-kernel/src/words/subst.rs 210:4-215:5",
+   "source": "crates/noble-kernel/src/words/subst.rs 214:4-219:5",
    "file": "Funs.lean",
    "line": 2097,
    "status": "extracted"
@@ -991,7 +609,7 @@
    "lean": "noble_kernel.words.subst.expand_task_loop1",
    "kind": "def",
    "rust": "noble_kernel::words::subst::expand_task",
-   "source": "crates/noble-kernel/src/words/subst.rs 210:4-215:5",
+   "source": "crates/noble-kernel/src/words/subst.rs 214:4-219:5",
    "file": "Funs.lean",
    "line": 2122,
    "status": "extracted"
@@ -1001,16 +619,25 @@
    "kind": "def",
    "rust": "noble_kernel::words::subst::expand_task",
    "loop_body": true,
-   "source": "crates/noble-kernel/src/words/subst.rs 219:4-224:5",
+   "source": "crates/noble-kernel/src/words/subst.rs 223:4-228:5",
    "file": "Funs.lean",
    "line": 2137,
+   "status": "extracted"
+  },
+  {
+   "lean": "noble_kernel.types.EffSet.contains_loop",
+   "kind": "def",
+   "rust": "noble_kernel::types::{noble_kernel::types::EffSet}::contains",
+   "source": "crates/noble-kernel/src/types.rs 73:8-79:9",
+   "file": "Funs.lean",
+   "line": 214,
    "status": "extracted"
   },
   {
    "lean": "noble_kernel.words.subst.expand_task_loop2",
    "kind": "def",
    "rust": "noble_kernel::words::subst::expand_task",
-   "source": "crates/noble-kernel/src/words/subst.rs 219:4-224:5",
+   "source": "crates/noble-kernel/src/words/subst.rs 223:4-228:5",
    "file": "Funs.lean",
    "line": 2161,
    "status": "extracted"
@@ -1019,7 +646,7 @@
    "lean": "noble_kernel.words.subst.expand_task",
    "kind": "def",
    "rust": "noble_kernel::words::subst::expand_task",
-   "source": "crates/noble-kernel/src/words/subst.rs 170:0-233:1",
+   "source": "crates/noble-kernel/src/words/subst.rs 174:0-237:1",
    "file": "Funs.lean",
    "line": 2174,
    "status": "extracted"
@@ -1037,18 +664,65 @@
    "lean": "noble_kernel.words.segments.pair_segment",
    "kind": "def",
    "rust": "noble_kernel::words::segments::pair_segment",
-   "source": "crates/noble-kernel/src/words/segments.rs 18:0-37:1",
+   "source": "crates/noble-kernel/src/words/segments.rs 28:0-47:1",
    "file": "Funs.lean",
    "line": 2258,
+   "status": "extracted"
+  },
+  {
+   "lean": "noble_kernel.types.EffSet.contains",
+   "kind": "def",
+   "rust": "noble_kernel::types::{noble_kernel::types::EffSet}::contains",
+   "source": "crates/noble-kernel/src/types.rs 70:4-81:5",
+   "file": "Funs.lean",
+   "line": 226,
    "status": "extracted"
   },
   {
    "lean": "noble_kernel.words.subst.finish_task",
    "kind": "def",
    "rust": "noble_kernel::words::subst::finish_task",
-   "source": "crates/noble-kernel/src/words/subst.rs 132:0-167:1",
+   "source": "crates/noble-kernel/src/words/subst.rs 132:0-171:1",
+   "file": "Funs.lean",
+   "line": 2319,
+   "status": "extracted"
+  },
+  {
+   "lean": "noble_kernel.words.segments.list_segment",
+   "kind": "def",
+   "rust": "noble_kernel::words::segments::list_segment",
+   "source": "crates/noble-kernel/src/words/segments.rs 19:0-26:1",
    "file": "Funs.lean",
    "line": 2283,
+   "status": "extracted"
+  },
+  {
+   "lean": "noble_kernel.P.Insts.CoreOpsFunctionFnOnceTupleVecTyResultVecTyInstError.call_once",
+   "kind": "def",
+   "rust": "noble_kernel::words::segments::{impl core::ops::function::FnOnce<(alloc::vec::Vec<noble_kernel::types::Ty>,), core::result::Result<alloc::vec::Vec<noble_kernel::types::Ty>, noble_kernel::words::InstError>> for noble_kernel::words::segments::list_segment}::call_once",
+   "source": "crates/noble-kernel/src/words/segments.rs 19:0-26:1",
+   "file": "Funs.lean",
+   "line": 2299,
+   "status": "extracted"
+  },
+  {
+   "lean": "noble_kernel.P.Insts.CoreOpsFunctionFnOnceTupleVecTyResultVecTyInstError",
+   "kind": "def",
+   "rust": "noble_kernel::words::segments::{impl core::ops::function::FnOnce<(alloc::vec::Vec<noble_kernel::types::Ty>,), core::result::Result<alloc::vec::Vec<noble_kernel::types::Ty>, noble_kernel::words::InstError>> for noble_kernel::words::segments::list_segment}",
+   "trait_impl": true,
+   "source": "crates/noble-kernel/src/words/segments.rs 19:0-26:1",
+   "file": "Funs.lean",
+   "line": 2309,
+   "status": "extracted"
+  },
+  {
+   "lean": "noble_kernel.types.EffSet.is_subset_of_loop.body",
+   "kind": "def",
+   "rust": "noble_kernel::types::{noble_kernel::types::EffSet}::is_subset_of",
+   "loop_body": true,
+   "source": "crates/noble-kernel/src/types.rs 112:8-118:9",
+   "file": "Funs.lean",
+   "line": 234,
    "status": "extracted"
   },
   {
@@ -1057,7 +731,7 @@
    "rust": "noble_kernel::words::subst::run_task",
    "source": "crates/noble-kernel/src/words/subst.rs 114:0-129:1",
    "file": "Funs.lean",
-   "line": 2352,
+   "line": 2519,
    "status": "extracted"
   },
   {
@@ -1066,7 +740,7 @@
    "rust": "noble_kernel::words::subst::WORK_CAP",
    "source": "crates/noble-kernel/src/words/subst.rs 8:0-8:28",
    "file": "Funs.lean",
-   "line": 2368,
+   "line": 2535,
    "status": "extracted"
   },
   {
@@ -1075,7 +749,7 @@
    "rust": "noble_kernel::words::subst::walk_step",
    "source": "crates/noble-kernel/src/words/subst.rs 86:0-111:1",
    "file": "Funs.lean",
-   "line": 2372,
+   "line": 2539,
    "status": "extracted"
   },
   {
@@ -1085,7 +759,7 @@
    "loop_body": true,
    "source": "/rustc/library/core/src/macros/mod.rs 434:8-437:9",
    "file": "Funs.lean",
-   "line": 2397,
+   "line": 2564,
    "status": "extracted"
   },
   {
@@ -1094,7 +768,7 @@
    "rust": "noble_kernel::words::subst::{noble_kernel::words::Scheme}::subst_pattern",
    "source": "/rustc/library/core/src/macros/mod.rs 434:8-437:9",
    "file": "Funs.lean",
-   "line": 2415,
+   "line": 2582,
    "status": "extracted"
   },
   {
@@ -1103,7 +777,7 @@
    "rust": "noble_kernel::words::subst::{noble_kernel::words::Scheme}::subst_pattern",
    "source": "crates/noble-kernel/src/words/subst.rs 46:4-76:5",
    "file": "Funs.lean",
-   "line": 2428,
+   "line": 2595,
    "status": "extracted"
   },
   {
@@ -1113,7 +787,26 @@
    "loop_body": true,
    "source": "crates/noble-kernel/src/words.rs 175:8-203:9",
    "file": "Funs.lean",
-   "line": 2465,
+   "line": 2632,
+   "status": "extracted"
+  },
+  {
+   "lean": "noble_kernel.types.EffSet.is_subset_of_loop",
+   "kind": "def",
+   "rust": "noble_kernel::types::{noble_kernel::types::EffSet}::is_subset_of",
+   "source": "crates/noble-kernel/src/types.rs 112:8-118:9",
+   "file": "Funs.lean",
+   "line": 255,
+   "status": "extracted"
+  },
+  {
+   "lean": "noble_kernel.core.option.Option.Insts.CoreFmtDebug",
+   "kind": "def",
+   "rust": "core::option::{impl core::fmt::Debug for core::option::Option<T>}",
+   "trait_impl": true,
+   "source": "/rustc/library/core/src/option.rs 592:15-592:20",
+   "file": "Funs.lean",
+   "line": 26,
    "status": "extracted"
   },
   {
@@ -1122,7 +815,7 @@
    "rust": "noble_kernel::words::{noble_kernel::words::Scheme}::subst_stack",
    "source": "crates/noble-kernel/src/words.rs 175:8-203:9",
    "file": "Funs.lean",
-   "line": 2609,
+   "line": 2776,
    "status": "extracted"
   },
   {
@@ -1131,7 +824,7 @@
    "rust": "noble_kernel::words::{noble_kernel::words::Scheme}::subst_stack",
    "source": "crates/noble-kernel/src/words.rs 166:4-208:5",
    "file": "Funs.lean",
-   "line": 2622,
+   "line": 2789,
    "status": "extracted"
   },
   {
@@ -1141,7 +834,7 @@
    "loop_body": true,
    "source": "crates/noble-kernel/src/types.rs 203:8-220:9",
    "file": "Funs.lean",
-   "line": 2639,
+   "line": 2806,
    "status": "extracted"
   },
   {
@@ -1150,7 +843,16 @@
    "rust": "noble_kernel::types::{noble_kernel::types::Ty}::is_data",
    "source": "crates/noble-kernel/src/types.rs 203:8-220:9",
    "file": "Funs.lean",
-   "line": 2675,
+   "line": 2842,
+   "status": "extracted"
+  },
+  {
+   "lean": "noble_kernel.types.EffSet.is_subset_of",
+   "kind": "def",
+   "rust": "noble_kernel::types::{noble_kernel::types::EffSet}::is_subset_of",
+   "source": "crates/noble-kernel/src/types.rs 109:4-120:5",
+   "file": "Funs.lean",
+   "line": 268,
    "status": "extracted"
   },
   {
@@ -1159,7 +861,7 @@
    "rust": "noble_kernel::types::{noble_kernel::types::Ty}::is_data",
    "source": "crates/noble-kernel/src/types.rs 199:4-222:5",
    "file": "Funs.lean",
-   "line": 2683,
+   "line": 2850,
    "status": "extracted"
   },
   {
@@ -1169,7 +871,7 @@
    "loop_body": true,
    "source": "crates/noble-kernel/src/acceptance/parts.rs 272:8-278:9",
    "file": "Funs.lean",
-   "line": 2692,
+   "line": 2859,
    "status": "extracted"
   },
   {
@@ -1178,7 +880,7 @@
    "rust": "noble_kernel::acceptance::parts::first_unknown",
    "source": "crates/noble-kernel/src/acceptance/parts.rs 272:8-278:9",
    "file": "Funs.lean",
-   "line": 2710,
+   "line": 2877,
    "status": "extracted"
   },
   {
@@ -1188,7 +890,7 @@
    "loop_body": true,
    "source": "crates/noble-kernel/src/acceptance/parts.rs 268:4-284:5",
    "file": "Funs.lean",
-   "line": 2722,
+   "line": 2889,
    "status": "extracted"
   },
   {
@@ -1197,7 +899,17 @@
    "rust": "noble_kernel::acceptance::parts::first_unknown",
    "source": "crates/noble-kernel/src/acceptance/parts.rs 268:4-284:5",
    "file": "Funs.lean",
-   "line": 2742,
+   "line": 2909,
+   "status": "extracted"
+  },
+  {
+   "lean": "noble_kernel.types.EffId.Insts.CoreCmpPartialEqEffId",
+   "kind": "impl_def",
+   "rust": "noble_kernel::types::{impl core::cmp::PartialEq<noble_kernel::types::EffId> for noble_kernel::types::EffId}",
+   "trait_impl": true,
+   "source": "crates/noble-kernel/src/types.rs 25:29-25:38",
+   "file": "Funs.lean",
+   "line": 275,
    "status": "extracted"
   },
   {
@@ -1206,7 +918,7 @@
    "rust": "noble_kernel::acceptance::parts::first_unknown",
    "source": "crates/noble-kernel/src/acceptance/parts.rs 262:0-286:1",
    "file": "Funs.lean",
-   "line": 2755,
+   "line": 2922,
    "status": "extracted"
   },
   {
@@ -1215,7 +927,7 @@
    "rust": "noble_kernel::acceptance::parts::instantiate::instantiation_invalid",
    "source": "crates/noble-kernel/src/acceptance/parts/instantiate.rs 187:0-195:1",
    "file": "Funs.lean",
-   "line": 2763,
+   "line": 2930,
    "status": "extracted"
   },
   {
@@ -1224,7 +936,16 @@
    "rust": "noble_kernel::acceptance::parts::instantiate::project",
    "source": "crates/noble-kernel/src/acceptance/parts/instantiate.rs 127:0-185:1",
    "file": "Funs.lean",
-   "line": 2772,
+   "line": 2939,
+   "status": "extracted"
+  },
+  {
+   "lean": "noble_kernel.types.EffSet.Insts.CoreCmpPartialEqEffSet.eq",
+   "kind": "def",
+   "rust": "noble_kernel::types::{impl core::cmp::PartialEq<noble_kernel::types::EffSet> for noble_kernel::types::EffSet}::eq",
+   "source": "crates/noble-kernel/src/types.rs 29:23-29:32",
+   "file": "Funs.lean",
+   "line": 285,
    "status": "extracted"
   },
   {
@@ -1233,7 +954,7 @@
    "rust": "noble_kernel::types::{noble_kernel::types::EffSet}::len",
    "source": "crates/noble-kernel/src/types.rs 128:4-130:5",
    "file": "Funs.lean",
-   "line": 2908,
+   "line": 3075,
    "status": "extracted"
   },
   {
@@ -1242,7 +963,7 @@
    "rust": "noble_kernel::words::bounds::check_effect_count",
    "source": "crates/noble-kernel/src/words/bounds.rs 97:0-111:1",
    "file": "Funs.lean",
-   "line": 2915,
+   "line": 3082,
    "status": "extracted"
   },
   {
@@ -1251,7 +972,16 @@
    "rust": "noble_kernel::words::bounds::check_size",
    "source": "crates/noble-kernel/src/words/bounds.rs 83:0-94:1",
    "file": "Funs.lean",
-   "line": 2929,
+   "line": 3096,
+   "status": "extracted"
+  },
+  {
+   "lean": "noble_kernel.types.ResourceKind.Insts.CoreCmpPartialEqResourceKind.eq",
+   "kind": "def",
+   "rust": "noble_kernel::types::{impl core::cmp::PartialEq<noble_kernel::types::ResourceKind> for noble_kernel::types::ResourceKind}::eq",
+   "source": "crates/noble-kernel/src/types.rs 14:29-14:38",
+   "file": "Funs.lean",
+   "line": 293,
    "status": "extracted"
   },
   {
@@ -1260,7 +990,7 @@
    "rust": "noble_kernel::words::bounds::check_segment",
    "source": "crates/noble-kernel/src/words/bounds.rs 35:0-48:1",
    "file": "Funs.lean",
-   "line": 2943,
+   "line": 3110,
    "status": "extracted"
   },
   {
@@ -1269,7 +999,16 @@
    "rust": "noble_kernel::words::bounds::check_binding",
    "source": "crates/noble-kernel/src/words/bounds.rs 6:0-32:1",
    "file": "Funs.lean",
-   "line": 2960,
+   "line": 3127,
+   "status": "extracted"
+  },
+  {
+   "lean": "noble_kernel.types.WORK_CAP",
+   "kind": "def",
+   "rust": "noble_kernel::types::WORK_CAP",
+   "source": "crates/noble-kernel/src/types.rs 11:0-11:28",
+   "file": "Funs.lean",
+   "line": 299,
    "status": "extracted"
   },
   {
@@ -1279,7 +1018,7 @@
    "loop_body": true,
    "source": "crates/noble-kernel/src/words.rs 143:8-158:9",
    "file": "Funs.lean",
-   "line": 2995,
+   "line": 3162,
    "status": "extracted"
   },
   {
@@ -1288,7 +1027,17 @@
    "rust": "noble_kernel::words::{noble_kernel::words::Scheme}::check_inst",
    "source": "crates/noble-kernel/src/words.rs 143:8-158:9",
    "file": "Funs.lean",
-   "line": 3027,
+   "line": 3194,
+   "status": "extracted"
+  },
+  {
+   "lean": "noble_kernel.types.impls.push_type_program_loop0.body",
+   "kind": "def",
+   "rust": "noble_kernel::types::impls::push_type_program",
+   "loop_body": true,
+   "source": "crates/noble-kernel/src/types/impls.rs 70:4-73:5",
+   "file": "Funs.lean",
+   "line": 304,
    "status": "extracted"
   },
   {
@@ -1297,7 +1046,7 @@
    "rust": "noble_kernel::words::{noble_kernel::words::Scheme}::check_inst",
    "source": "crates/noble-kernel/src/words.rs 131:4-163:5",
    "file": "Funs.lean",
-   "line": 3041,
+   "line": 3208,
    "status": "extracted"
   },
   {
@@ -1306,7 +1055,7 @@
    "rust": "noble_kernel::contracts::{noble_kernel::contracts::Env}::len",
    "source": "crates/noble-kernel/src/contracts.rs 113:4-115:5",
    "file": "Funs.lean",
-   "line": 3061,
+   "line": 3228,
    "status": "extracted"
   },
   {
@@ -1315,7 +1064,7 @@
    "rust": "noble_kernel::acceptance::parts::instantiate::check_bounds",
    "source": "crates/noble-kernel/src/acceptance/parts/instantiate.rs 87:0-125:1",
    "file": "Funs.lean",
-   "line": 3068,
+   "line": 3235,
    "status": "extracted"
   },
   {
@@ -1324,7 +1073,7 @@
    "rust": "noble_kernel::acceptance::parts::instantiate::apply",
    "source": "crates/noble-kernel/src/acceptance/parts/instantiate.rs 76:0-85:1",
    "file": "Funs.lean",
-   "line": 3110,
+   "line": 3277,
    "status": "extracted"
   },
   {
@@ -1333,7 +1082,7 @@
    "rust": "noble_kernel::shapes::{noble_kernel::shapes::Pattern}::program",
    "source": "crates/noble-kernel/src/shapes.rs 59:4-69:5",
    "file": "Funs.lean",
-   "line": 3125,
+   "line": 3292,
    "status": "extracted"
   },
   {
@@ -1342,7 +1091,7 @@
    "rust": "noble_kernel::acceptance::parts::instantiate::quotation_scheme",
    "source": "crates/noble-kernel/src/acceptance/parts/instantiate.rs 24:0-43:1",
    "file": "Funs.lean",
-   "line": 3135,
+   "line": 3302,
    "status": "extracted"
   },
   {
@@ -1351,7 +1100,7 @@
    "rust": "noble_kernel::acceptance::frames::complete_frame",
    "source": "crates/noble-kernel/src/acceptance/frames.rs 44:0-113:1",
    "file": "Funs.lean",
-   "line": 3179,
+   "line": 3346,
    "status": "extracted"
   },
   {
@@ -1360,7 +1109,7 @@
    "rust": "noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::Lit}::clone",
    "source": "crates/noble-kernel/src/untrusted.rs 21:9-21:14",
    "file": "Funs.lean",
-   "line": 3268,
+   "line": 3435,
    "status": "extracted"
   },
   {
@@ -1369,7 +1118,7 @@
    "rust": "noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::Definition}::clone",
    "source": "crates/noble-kernel/src/contracts.rs 9:9-9:14",
    "file": "Funs.lean",
-   "line": 3275,
+   "line": 3442,
    "status": "extracted"
   },
   {
@@ -1378,7 +1127,16 @@
    "rust": "noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::Node}::clone",
    "source": "crates/noble-kernel/src/untrusted.rs 47:9-47:14",
    "file": "Funs.lean",
-   "line": 3282,
+   "line": 3449,
+   "status": "extracted"
+  },
+  {
+   "lean": "noble_kernel.types.impls.push_type_program_loop0",
+   "kind": "def",
+   "rust": "noble_kernel::types::impls::push_type_program",
+   "source": "crates/noble-kernel/src/types/impls.rs 70:4-73:5",
+   "file": "Funs.lean",
+   "line": 329,
    "status": "extracted"
   },
   {
@@ -1387,7 +1145,7 @@
    "rust": "noble_kernel::acceptance::nodes::node_of",
    "source": "crates/noble-kernel/src/acceptance/nodes.rs 7:0-34:1",
    "file": "Funs.lean",
-   "line": 3301,
+   "line": 3468,
    "status": "extracted"
   },
   {
@@ -1396,7 +1154,7 @@
    "rust": "noble_kernel::words::{impl core::clone::Clone for noble_kernel::words::VariableKind}::clone",
    "source": "crates/noble-kernel/src/words.rs 19:9-19:14",
    "file": "Funs.lean",
-   "line": 3335,
+   "line": 3502,
    "status": "extracted"
   },
   {
@@ -1406,7 +1164,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/words.rs 19:9-19:14",
    "file": "Funs.lean",
-   "line": 3342,
+   "line": 3509,
    "status": "extracted"
   },
   {
@@ -1416,7 +1174,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/shapes.rs 73:9-73:14",
    "file": "Funs.lean",
-   "line": 3350,
+   "line": 3517,
    "status": "extracted"
   },
   {
@@ -1426,7 +1184,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/shapes/impls.rs 30:0-63:1",
    "file": "Funs.lean",
-   "line": 3358,
+   "line": 3525,
    "status": "extracted"
   },
   {
@@ -1435,7 +1193,7 @@
    "rust": "noble_kernel::words::{impl core::clone::Clone for noble_kernel::words::Scheme}::clone",
    "source": "crates/noble-kernel/src/words.rs 31:9-31:14",
    "file": "Funs.lean",
-   "line": 3365,
+   "line": 3532,
    "status": "extracted"
   },
   {
@@ -1444,7 +1202,7 @@
    "rust": "noble_kernel::contracts::index",
    "source": "crates/noble-kernel/src/contracts.rs 123:0-125:1",
    "file": "Funs.lean",
-   "line": 3381,
+   "line": 3548,
    "status": "extracted"
   },
   {
@@ -1453,7 +1211,7 @@
    "rust": "noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::Behavior}::clone",
    "source": "crates/noble-kernel/src/contracts.rs 24:9-24:14",
    "file": "Funs.lean",
-   "line": 3389,
+   "line": 3556,
    "status": "extracted"
   },
   {
@@ -1463,7 +1221,16 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/contracts.rs 24:9-24:14",
    "file": "Funs.lean",
-   "line": 3396,
+   "line": 3563,
+   "status": "extracted"
+  },
+  {
+   "lean": "noble_kernel.untrusted.NodeId.Insts.CoreCloneClone.clone",
+   "kind": "def",
+   "rust": "noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::NodeId}::clone",
+   "source": "crates/noble-kernel/src/untrusted.rs 12:9-12:14",
+   "file": "Funs.lean",
+   "line": 34,
    "status": "extracted"
   },
   {
@@ -1473,7 +1240,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/contracts.rs 24:16-24:20",
    "file": "Funs.lean",
-   "line": 3404,
+   "line": 3571,
    "status": "extracted"
   },
   {
@@ -1482,7 +1249,17 @@
    "rust": "noble_kernel::contracts::{noble_kernel::contracts::Env}::kind",
    "source": "crates/noble-kernel/src/contracts.rs 91:4-96:5",
    "file": "Funs.lean",
-   "line": 3412,
+   "line": 3579,
+   "status": "extracted"
+  },
+  {
+   "lean": "noble_kernel.types.impls.push_type_program_loop1.body",
+   "kind": "def",
+   "rust": "noble_kernel::types::impls::push_type_program",
+   "loop_body": true,
+   "source": "crates/noble-kernel/src/types/impls.rs 75:4-78:5",
+   "file": "Funs.lean",
+   "line": 343,
    "status": "extracted"
   },
   {
@@ -1491,7 +1268,7 @@
    "rust": "noble_kernel::contracts::{noble_kernel::contracts::Env}::scheme",
    "source": "crates/noble-kernel/src/contracts.rs 83:4-88:5",
    "file": "Funs.lean",
-   "line": 3430,
+   "line": 3597,
    "status": "extracted"
   },
   {
@@ -1500,7 +1277,7 @@
    "rust": "noble_kernel::acceptance::parts::scheme_cost",
    "source": "crates/noble-kernel/src/acceptance/parts.rs 40:0-46:1",
    "file": "Funs.lean",
-   "line": 3444,
+   "line": 3611,
    "status": "extracted"
   },
   {
@@ -1509,7 +1286,7 @@
    "rust": "noble_kernel::acceptance::parts::instantiate::data_slot",
    "source": "crates/noble-kernel/src/acceptance/parts/instantiate.rs 46:0-73:1",
    "file": "Funs.lean",
-   "line": 3462,
+   "line": 3629,
    "status": "extracted"
   },
   {
@@ -1518,7 +1295,7 @@
    "rust": "noble_kernel::acceptance::parts::instantiate::literal_scheme",
    "source": "crates/noble-kernel/src/acceptance/parts/instantiate.rs 5:0-21:1",
    "file": "Funs.lean",
-   "line": 3492,
+   "line": 3659,
    "status": "extracted"
   },
   {
@@ -1527,7 +1304,7 @@
    "rust": "noble_kernel::acceptance::nodes::fold_node",
    "source": "crates/noble-kernel/src/acceptance/nodes.rs 39:0-82:1",
    "file": "Funs.lean",
-   "line": 3524,
+   "line": 3691,
    "status": "extracted"
   },
   {
@@ -1536,7 +1313,7 @@
    "rust": "noble_kernel::acceptance::nodes::open_quotation",
    "source": "crates/noble-kernel/src/acceptance/nodes.rs 87:0-135:1",
    "file": "Funs.lean",
-   "line": 3596,
+   "line": 3763,
    "status": "extracted"
   },
   {
@@ -1545,7 +1322,7 @@
    "rust": "noble_kernel::acceptance::parts::{impl core::clone::Clone for noble_kernel::acceptance::parts::Site}::clone",
    "source": "crates/noble-kernel/src/acceptance/parts.rs 15:9-15:14",
    "file": "Funs.lean",
-   "line": 3663,
+   "line": 3830,
    "status": "extracted"
   },
   {
@@ -1555,7 +1332,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/acceptance/parts.rs 15:9-15:14",
    "file": "Funs.lean",
-   "line": 3670,
+   "line": 3837,
    "status": "extracted"
   },
   {
@@ -1565,7 +1342,16 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/acceptance/parts.rs 15:16-15:20",
    "file": "Funs.lean",
-   "line": 3678,
+   "line": 3845,
+   "status": "extracted"
+  },
+  {
+   "lean": "noble_kernel.types.impls.push_type_program_loop1",
+   "kind": "def",
+   "rust": "noble_kernel::types::impls::push_type_program",
+   "source": "crates/noble-kernel/src/types/impls.rs 75:4-78:5",
+   "file": "Funs.lean",
+   "line": 368,
    "status": "extracted"
   },
   {
@@ -1574,7 +1360,7 @@
    "rust": "noble_kernel::acceptance::parts::charge",
    "source": "crates/noble-kernel/src/acceptance/parts.rs 32:0-37:1",
    "file": "Funs.lean",
-   "line": 3685,
+   "line": 3852,
    "status": "extracted"
   },
   {
@@ -1583,7 +1369,7 @@
    "rust": "noble_kernel::untrusted::SEMANTIC_REVISION",
    "source": "crates/noble-kernel/src/untrusted.rs 9:0-9:37",
    "file": "Funs.lean",
-   "line": 3699,
+   "line": 3866,
    "status": "extracted"
   },
   {
@@ -1592,7 +1378,7 @@
    "rust": "noble_kernel::untrusted::CANDIDATE_FORMAT",
    "source": "crates/noble-kernel/src/untrusted.rs 7:0-7:36",
    "file": "Funs.lean",
-   "line": 3704,
+   "line": 3871,
    "status": "extracted"
   },
   {
@@ -1601,7 +1387,7 @@
    "rust": "noble_kernel::acceptance::preflight::check_allowed_effects",
    "source": "crates/noble-kernel/src/acceptance/preflight.rs 60:0-75:1",
    "file": "Funs.lean",
-   "line": 3708,
+   "line": 3875,
    "status": "extracted"
   },
   {
@@ -1610,7 +1396,7 @@
    "rust": "noble_kernel::words::{impl core::cmp::PartialEq<noble_kernel::words::VariableKind> for noble_kernel::words::VariableKind}::eq",
    "source": "crates/noble-kernel/src/words.rs 19:29-19:38",
    "file": "Funs.lean",
-   "line": 3732,
+   "line": 3899,
    "status": "extracted"
   },
   {
@@ -1619,7 +1405,7 @@
    "rust": "noble_kernel::shapes::require_kind",
    "source": "crates/noble-kernel/src/shapes.rs 101:0-119:1",
    "file": "Funs.lean",
-   "line": 3740,
+   "line": 3907,
    "status": "extracted"
   },
   {
@@ -1628,7 +1414,7 @@
    "rust": "noble_kernel::shapes::require_pattern",
    "source": "crates/noble-kernel/src/shapes.rs 175:0-213:1",
    "file": "Funs.lean",
-   "line": 3764,
+   "line": 3931,
    "status": "extracted"
   },
   {
@@ -1638,7 +1424,16 @@
    "loop_body": true,
    "source": "crates/noble-kernel/src/shapes.rs 152:4-167:5",
    "file": "Funs.lean",
-   "line": 3806,
+   "line": 3973,
+   "status": "extracted"
+  },
+  {
+   "lean": "noble_kernel.types.impls.push_type_program",
+   "kind": "def",
+   "rust": "noble_kernel::types::impls::push_type_program",
+   "source": "crates/noble-kernel/src/types/impls.rs 59:0-80:1",
+   "file": "Funs.lean",
+   "line": 381,
    "status": "extracted"
   },
   {
@@ -1647,7 +1442,7 @@
    "rust": "noble_kernel::shapes::require_parts",
    "source": "crates/noble-kernel/src/shapes.rs 152:4-167:5",
    "file": "Funs.lean",
-   "line": 3895,
+   "line": 4062,
    "status": "extracted"
   },
   {
@@ -1656,7 +1451,7 @@
    "rust": "noble_kernel::shapes::require_parts",
    "source": "crates/noble-kernel/src/shapes.rs 145:0-172:1",
    "file": "Funs.lean",
-   "line": 3907,
+   "line": 4074,
    "status": "extracted"
   },
   {
@@ -1666,7 +1461,7 @@
    "loop_body": true,
    "source": "crates/noble-kernel/src/shapes.rs 125:4-137:5",
    "file": "Funs.lean",
-   "line": 3920,
+   "line": 4087,
    "status": "extracted"
   },
   {
@@ -1675,7 +1470,7 @@
    "rust": "noble_kernel::shapes::require_slots",
    "source": "crates/noble-kernel/src/shapes.rs 125:4-137:5",
    "file": "Funs.lean",
-   "line": 3944,
+   "line": 4111,
    "status": "extracted"
   },
   {
@@ -1684,7 +1479,7 @@
    "rust": "noble_kernel::shapes::require_slots",
    "source": "crates/noble-kernel/src/shapes.rs 122:0-142:1",
    "file": "Funs.lean",
-   "line": 3955,
+   "line": 4122,
    "status": "extracted"
   },
   {
@@ -1693,7 +1488,7 @@
    "rust": "noble_kernel::shapes::WORK_CAP",
    "source": "crates/noble-kernel/src/shapes.rs 10:0-10:28",
    "file": "Funs.lean",
-   "line": 3966,
+   "line": 4133,
    "status": "extracted"
   },
   {
@@ -1703,7 +1498,7 @@
    "loop_body": true,
    "source": "crates/noble-kernel/src/shapes.rs 227:4-247:5",
    "file": "Funs.lean",
-   "line": 3972,
+   "line": 4139,
    "status": "extracted"
   },
   {
@@ -1712,7 +1507,7 @@
    "rust": "noble_kernel::shapes::validate",
    "source": "crates/noble-kernel/src/shapes.rs 227:4-247:5",
    "file": "Funs.lean",
-   "line": 4005,
+   "line": 4172,
    "status": "extracted"
   },
   {
@@ -1721,7 +1516,7 @@
    "rust": "noble_kernel::shapes::validate",
    "source": "crates/noble-kernel/src/shapes.rs 216:0-252:1",
    "file": "Funs.lean",
-   "line": 4016,
+   "line": 4183,
    "status": "extracted"
   },
   {
@@ -1730,7 +1525,7 @@
    "rust": "noble_kernel::words::{noble_kernel::words::Scheme}::validate",
    "source": "crates/noble-kernel/src/words.rs 121:4-128:5",
    "file": "Funs.lean",
-   "line": 4039,
+   "line": 4206,
    "status": "extracted"
   },
   {
@@ -1740,7 +1535,7 @@
    "loop_body": true,
    "source": "crates/noble-kernel/src/acceptance/preflight.rs 43:4-52:5",
    "file": "Funs.lean",
-   "line": 4050,
+   "line": 4217,
    "status": "extracted"
   },
   {
@@ -1749,7 +1544,17 @@
    "rust": "noble_kernel::acceptance::preflight::validate_schemes",
    "source": "crates/noble-kernel/src/acceptance/preflight.rs 43:4-52:5",
    "file": "Funs.lean",
-   "line": 4073,
+   "line": 4240,
+   "status": "extracted"
+  },
+  {
+   "lean": "noble_kernel.types.impls.ty_eq_loop.body",
+   "kind": "def",
+   "rust": "noble_kernel::types::impls::ty_eq",
+   "loop_body": true,
+   "source": "crates/noble-kernel/src/types/impls.rs 89:4-138:5",
+   "file": "Funs.lean",
+   "line": 408,
    "status": "extracted"
   },
   {
@@ -1758,7 +1563,7 @@
    "rust": "noble_kernel::acceptance::preflight::validate_schemes",
    "source": "crates/noble-kernel/src/acceptance/preflight.rs 40:0-57:1",
    "file": "Funs.lean",
-   "line": 4083,
+   "line": 4250,
    "status": "extracted"
   },
   {
@@ -1767,7 +1572,17 @@
    "rust": "noble_kernel::acceptance::preflight::check_request",
    "source": "crates/noble-kernel/src/acceptance/preflight.rs 4:0-37:1",
    "file": "Funs.lean",
-   "line": 4094,
+   "line": 4261,
+   "status": "extracted"
+  },
+  {
+   "lean": "noble_kernel.untrusted.NodeId.Insts.CoreCloneClone",
+   "kind": "def",
+   "rust": "noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::NodeId}",
+   "trait_impl": true,
+   "source": "crates/noble-kernel/src/untrusted.rs 12:9-12:14",
+   "file": "Funs.lean",
+   "line": 41,
    "status": "extracted"
   },
   {
@@ -1776,7 +1591,7 @@
    "rust": "noble_kernel::acceptance::halted",
    "source": "crates/noble-kernel/src/acceptance.rs 121:0-124:1",
    "file": "Funs.lean",
-   "line": 4146,
+   "line": 4313,
    "status": "extracted"
   },
   {
@@ -1785,7 +1600,7 @@
    "rust": "noble_kernel::acceptance::open_current",
    "source": "crates/noble-kernel/src/acceptance.rs 197:0-216:1",
    "file": "Funs.lean",
-   "line": 4155,
+   "line": 4322,
    "status": "extracted"
   },
   {
@@ -1794,7 +1609,7 @@
    "rust": "noble_kernel::acceptance::fold_current",
    "source": "crates/noble-kernel/src/acceptance.rs 169:0-194:1",
    "file": "Funs.lean",
-   "line": 4183,
+   "line": 4350,
    "status": "extracted"
   },
   {
@@ -1803,7 +1618,7 @@
    "rust": "noble_kernel::acceptance::close_frame",
    "source": "crates/noble-kernel/src/acceptance.rs 127:0-166:1",
    "file": "Funs.lean",
-   "line": 4214,
+   "line": 4381,
    "status": "extracted"
   },
   {
@@ -1812,7 +1627,7 @@
    "rust": "noble_kernel::acceptance::step",
    "source": "crates/noble-kernel/src/acceptance.rs 93:0-118:1",
    "file": "Funs.lean",
-   "line": 4257,
+   "line": 4424,
    "status": "extracted"
   },
   {
@@ -1822,7 +1637,7 @@
    "loop_body": true,
    "source": "crates/noble-kernel/src/acceptance.rs 79:4-81:5",
    "file": "Funs.lean",
-   "line": 4297,
+   "line": 4464,
    "status": "extracted"
   },
   {
@@ -1831,7 +1646,7 @@
    "rust": "noble_kernel::acceptance::run",
    "source": "crates/noble-kernel/src/acceptance.rs 79:4-81:5",
    "file": "Funs.lean",
-   "line": 4334,
+   "line": 4501,
    "status": "extracted"
   },
   {
@@ -1840,7 +1655,7 @@
    "rust": "noble_kernel::acceptance::run",
    "source": "crates/noble-kernel/src/acceptance.rs 59:0-90:1",
    "file": "Funs.lean",
-   "line": 4349,
+   "line": 4516,
    "status": "extracted"
   },
   {
@@ -1849,7 +1664,7 @@
    "rust": "noble_kernel::acceptance::check",
    "source": "crates/noble-kernel/src/acceptance.rs 45:0-57:1",
    "file": "Funs.lean",
-   "line": 4393,
+   "line": 4560,
    "status": "proved",
    "citations": [
     "NobleM2.Refinement.refinement_sequence_and_literals_accept_arithmetic",
@@ -1874,7 +1689,7 @@
    "rust": "noble_kernel::contracts::bootstrap::scheme",
    "source": "crates/noble-kernel/src/contracts/bootstrap.rs 44:0-56:1",
    "file": "Funs.lean",
-   "line": 4412,
+   "line": 4579,
    "status": "extracted"
   },
   {
@@ -1883,7 +1698,7 @@
    "rust": "noble_kernel::contracts::bootstrap::stack_var",
    "source": "crates/noble-kernel/src/contracts/bootstrap.rs 12:0-14:1",
    "file": "Funs.lean",
-   "line": 4423,
+   "line": 4590,
    "status": "extracted"
   },
   {
@@ -1892,7 +1707,7 @@
    "rust": "noble_kernel::contracts::bootstrap::UNIT",
    "source": "crates/noble-kernel/src/contracts/bootstrap.rs 6:0-6:66",
    "file": "Funs.lean",
-   "line": 4430,
+   "line": 4597,
    "status": "extracted"
   },
   {
@@ -1901,7 +1716,7 @@
    "rust": "noble_kernel::contracts::bootstrap::data::unit",
    "source": "crates/noble-kernel/src/contracts/bootstrap/data.rs 3:0-10:1",
    "file": "Funs.lean",
-   "line": 4434,
+   "line": 4601,
    "status": "extracted"
   },
   {
@@ -1910,7 +1725,7 @@
    "rust": "noble_kernel::contracts::bootstrap::pair",
    "source": "crates/noble-kernel/src/contracts/bootstrap.rs 24:0-26:1",
    "file": "Funs.lean",
-   "line": 4454,
+   "line": 4621,
    "status": "extracted"
   },
   {
@@ -1919,7 +1734,7 @@
    "rust": "noble_kernel::contracts::bootstrap::value_var",
    "source": "crates/noble-kernel/src/contracts/bootstrap.rs 16:0-18:1",
    "file": "Funs.lean",
-   "line": 4462,
+   "line": 4629,
    "status": "extracted"
   },
   {
@@ -1928,7 +1743,7 @@
    "rust": "noble_kernel::contracts::bootstrap::data::pair_word",
    "source": "crates/noble-kernel/src/contracts/bootstrap/data.rs 12:0-33:1",
    "file": "Funs.lean",
-   "line": 4468,
+   "line": 4635,
    "status": "extracted"
   },
   {
@@ -1937,7 +1752,7 @@
    "rust": "noble_kernel::contracts::bootstrap::data::unpair",
    "source": "crates/noble-kernel/src/contracts/bootstrap/data.rs 35:0-56:1",
    "file": "Funs.lean",
-   "line": 4495,
+   "line": 4662,
    "status": "extracted"
   },
   {
@@ -1946,7 +1761,7 @@
    "rust": "noble_kernel::contracts::bootstrap::sum",
    "source": "crates/noble-kernel/src/contracts/bootstrap.rs 28:0-30:1",
    "file": "Funs.lean",
-   "line": 4522,
+   "line": 4689,
    "status": "extracted"
   },
   {
@@ -1955,7 +1770,7 @@
    "rust": "noble_kernel::contracts::bootstrap::data::inl",
    "source": "crates/noble-kernel/src/contracts/bootstrap/data.rs 58:0-75:1",
    "file": "Funs.lean",
-   "line": 4530,
+   "line": 4697,
    "status": "extracted"
   },
   {
@@ -1964,7 +1779,7 @@
    "rust": "noble_kernel::contracts::bootstrap::data::inr",
    "source": "crates/noble-kernel/src/contracts/bootstrap/data.rs 77:0-94:1",
    "file": "Funs.lean",
-   "line": 4556,
+   "line": 4723,
    "status": "extracted"
   },
   {
@@ -1973,7 +1788,7 @@
    "rust": "noble_kernel::contracts::bootstrap::program",
    "source": "crates/noble-kernel/src/contracts/bootstrap.rs 36:0-42:1",
    "file": "Funs.lean",
-   "line": 4582,
+   "line": 4749,
    "status": "extracted"
   },
   {
@@ -1982,7 +1797,7 @@
    "rust": "noble_kernel::contracts::bootstrap::effect_var",
    "source": "crates/noble-kernel/src/contracts/bootstrap.rs 20:0-22:1",
    "file": "Funs.lean",
-   "line": 4592,
+   "line": 4759,
    "status": "extracted"
   },
   {
@@ -1991,7 +1806,7 @@
    "rust": "noble_kernel::contracts::bootstrap::data::case",
    "source": "crates/noble-kernel/src/contracts/bootstrap/data.rs 96:0-126:1",
    "file": "Funs.lean",
-   "line": 4598,
+   "line": 4765,
    "status": "extracted"
   },
   {
@@ -2000,7 +1815,7 @@
    "rust": "noble_kernel::contracts::bootstrap::BOOL",
    "source": "crates/noble-kernel/src/contracts/bootstrap.rs 7:0-7:66",
    "file": "Funs.lean",
-   "line": 4659,
+   "line": 4826,
    "status": "extracted"
   },
   {
@@ -2009,7 +1824,7 @@
    "rust": "noble_kernel::contracts::bootstrap::data::if_word",
    "source": "crates/noble-kernel/src/contracts/bootstrap/data.rs 128:0-153:1",
    "file": "Funs.lean",
-   "line": 4663,
+   "line": 4830,
    "status": "extracted"
   },
   {
@@ -2018,7 +1833,7 @@
    "rust": "noble_kernel::contracts::bootstrap::list",
    "source": "crates/noble-kernel/src/contracts/bootstrap.rs 32:0-34:1",
    "file": "Funs.lean",
-   "line": 4718,
+   "line": 4885,
    "status": "extracted"
   },
   {
@@ -2027,7 +1842,7 @@
    "rust": "noble_kernel::contracts::bootstrap::data::nil",
    "source": "crates/noble-kernel/src/contracts/bootstrap/data.rs 155:0-168:1",
    "file": "Funs.lean",
-   "line": 4724,
+   "line": 4891,
    "status": "extracted"
   },
   {
@@ -2036,7 +1851,7 @@
    "rust": "noble_kernel::contracts::bootstrap::data::cons",
    "source": "crates/noble-kernel/src/contracts/bootstrap/data.rs 170:0-187:1",
    "file": "Funs.lean",
-   "line": 4746,
+   "line": 4913,
    "status": "extracted"
   },
   {
@@ -2045,7 +1860,7 @@
    "rust": "noble_kernel::contracts::bootstrap::data::list_case",
    "source": "crates/noble-kernel/src/contracts/bootstrap/data.rs 189:0-219:1",
    "file": "Funs.lean",
-   "line": 4769,
+   "line": 4936,
    "status": "extracted"
   },
   {
@@ -2054,7 +1869,7 @@
    "rust": "noble_kernel::contracts::TEST_EMIT",
    "source": "crates/noble-kernel/src/contracts.rs 13:0-13:66",
    "file": "Funs.lean",
-   "line": 4827,
+   "line": 4994,
    "status": "extracted"
   },
   {
@@ -2063,7 +1878,7 @@
    "rust": "noble_kernel::contracts::bootstrap::TEXT",
    "source": "crates/noble-kernel/src/contracts/bootstrap.rs 9:0-9:66",
    "file": "Funs.lean",
-   "line": 4832,
+   "line": 4999,
    "status": "extracted"
   },
   {
@@ -2072,7 +1887,7 @@
    "rust": "noble_kernel::contracts::bootstrap::data::test_emit",
    "source": "crates/noble-kernel/src/contracts/bootstrap/data.rs 221:0-230:1",
    "file": "Funs.lean",
-   "line": 4836,
+   "line": 5003,
    "status": "extracted"
   },
   {
@@ -2081,7 +1896,7 @@
    "rust": "noble_kernel::contracts::bootstrap::SYNTAX",
    "source": "crates/noble-kernel/src/contracts/bootstrap.rs 10:0-10:70",
    "file": "Funs.lean",
-   "line": 4862,
+   "line": 5029,
    "status": "extracted"
   },
   {
@@ -2090,7 +1905,16 @@
    "rust": "noble_kernel::contracts::bootstrap::reflect",
    "source": "crates/noble-kernel/src/contracts/bootstrap.rs 201:0-220:1",
    "file": "Funs.lean",
-   "line": 4866,
+   "line": 5033,
+   "status": "extracted"
+  },
+  {
+   "lean": "noble_kernel.types.EffSet.empty",
+   "kind": "def",
+   "rust": "noble_kernel::types::{noble_kernel::types::EffSet}::empty",
+   "source": "crates/noble-kernel/src/types.rs 34:4-36:5",
+   "file": "Funs.lean",
+   "line": 49,
    "status": "extracted"
   },
   {
@@ -2099,7 +1923,7 @@
    "rust": "noble_kernel::contracts::bootstrap::run",
    "source": "crates/noble-kernel/src/contracts/bootstrap.rs 181:0-199:1",
    "file": "Funs.lean",
-   "line": 4905,
+   "line": 5072,
    "status": "extracted"
   },
   {
@@ -2108,7 +1932,7 @@
    "rust": "noble_kernel::contracts::bootstrap::compose",
    "source": "crates/noble-kernel/src/contracts/bootstrap.rs 146:0-179:1",
    "file": "Funs.lean",
-   "line": 4945,
+   "line": 5112,
    "status": "extracted"
   },
   {
@@ -2117,7 +1941,7 @@
    "rust": "noble_kernel::contracts::bootstrap::quote",
    "source": "crates/noble-kernel/src/contracts/bootstrap.rs 126:0-144:1",
    "file": "Funs.lean",
-   "line": 5012,
+   "line": 5179,
    "status": "extracted"
   },
   {
@@ -2126,7 +1950,7 @@
    "rust": "noble_kernel::contracts::bootstrap::I64",
    "source": "crates/noble-kernel/src/contracts/bootstrap.rs 8:0-8:64",
    "file": "Funs.lean",
-   "line": 5047,
+   "line": 5214,
    "status": "extracted"
   },
   {
@@ -2135,7 +1959,7 @@
    "rust": "noble_kernel::contracts::bootstrap::arith",
    "source": "crates/noble-kernel/src/contracts/bootstrap.rs 117:0-124:1",
    "file": "Funs.lean",
-   "line": 5051,
+   "line": 5218,
    "status": "extracted"
   },
   {
@@ -2144,7 +1968,7 @@
    "rust": "noble_kernel::contracts::bootstrap::dip",
    "source": "crates/noble-kernel/src/contracts/bootstrap.rs 95:0-115:1",
    "file": "Funs.lean",
-   "line": 5072,
+   "line": 5239,
    "status": "extracted"
   },
   {
@@ -2153,7 +1977,7 @@
    "rust": "noble_kernel::contracts::bootstrap::swap",
    "source": "crates/noble-kernel/src/contracts/bootstrap.rs 82:0-93:1",
    "file": "Funs.lean",
-   "line": 5113,
+   "line": 5280,
    "status": "extracted"
   },
   {
@@ -2162,7 +1986,7 @@
    "rust": "noble_kernel::contracts::bootstrap::drop",
    "source": "crates/noble-kernel/src/contracts/bootstrap.rs 70:0-80:1",
    "file": "Funs.lean",
-   "line": 5137,
+   "line": 5304,
    "status": "extracted"
   },
   {
@@ -2171,7 +1995,7 @@
    "rust": "noble_kernel::contracts::bootstrap::dup",
    "source": "crates/noble-kernel/src/contracts/bootstrap.rs 58:0-68:1",
    "file": "Funs.lean",
-   "line": 5159,
+   "line": 5326,
    "status": "extracted"
   },
   {
@@ -2180,7 +2004,7 @@
    "rust": "noble_kernel::contracts::bootstrap::data::table",
    "source": "crates/noble-kernel/src/contracts/bootstrap/data.rs 233:0-258:1",
    "file": "Funs.lean",
-   "line": 5182,
+   "line": 5349,
    "status": "extracted"
   },
   {
@@ -2190,7 +2014,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/contracts.rs 9:9-9:14",
    "file": "Funs.lean",
-   "line": 5233,
+   "line": 5400,
    "status": "extracted"
   },
   {
@@ -2200,7 +2024,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/contracts.rs 9:16-9:20",
    "file": "Funs.lean",
-   "line": 5241,
+   "line": 5408,
    "status": "extracted"
   },
   {
@@ -2209,7 +2033,7 @@
    "rust": "noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::Definition}::fmt",
    "source": "crates/noble-kernel/src/contracts.rs 9:22-9:27",
    "file": "Funs.lean",
-   "line": 5249,
+   "line": 5416,
    "status": "extracted"
   },
   {
@@ -2219,7 +2043,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/contracts.rs 9:22-9:27",
    "file": "Funs.lean",
-   "line": 5259,
+   "line": 5426,
    "status": "extracted"
   },
   {
@@ -2229,7 +2053,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/contracts.rs 9:29-9:38",
    "file": "Funs.lean",
-   "line": 5267,
+   "line": 5434,
    "status": "extracted"
   },
   {
@@ -2238,7 +2062,7 @@
    "rust": "noble_kernel::contracts::{impl core::cmp::PartialEq<noble_kernel::contracts::Definition> for noble_kernel::contracts::Definition}::eq",
    "source": "crates/noble-kernel/src/contracts.rs 9:29-9:38",
    "file": "Funs.lean",
-   "line": 5274,
+   "line": 5441,
    "status": "extracted"
   },
   {
@@ -2248,7 +2072,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/contracts.rs 9:29-9:38",
    "file": "Funs.lean",
-   "line": 5283,
+   "line": 5450,
    "status": "extracted"
   },
   {
@@ -2257,7 +2081,7 @@
    "rust": "noble_kernel::contracts::{impl core::cmp::Eq for noble_kernel::contracts::Definition}::assert_fields_are_eq",
    "source": "crates/noble-kernel/src/contracts.rs 9:40-9:42",
    "file": "Funs.lean",
-   "line": 5293,
+   "line": 5460,
    "status": "extracted"
   },
   {
@@ -2267,7 +2091,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/contracts.rs 9:40-9:42",
    "file": "Funs.lean",
-   "line": 5300,
+   "line": 5467,
    "status": "extracted"
   },
   {
@@ -2276,7 +2100,7 @@
    "rust": "noble_kernel::contracts::FIXTURE_RESOURCE",
    "source": "crates/noble-kernel/src/contracts.rs 16:0-16:87",
    "file": "Funs.lean",
-   "line": 5311,
+   "line": 5478,
    "status": "extracted"
   },
   {
@@ -2285,7 +2109,7 @@
    "rust": "noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::Behavior}::fmt::__OFFSET",
    "source": "crates/noble-kernel/src/contracts.rs 24:22-24:27",
    "file": "Funs.lean",
-   "line": 5316,
+   "line": 5483,
    "status": "extracted"
   },
   {
@@ -2294,7 +2118,7 @@
    "rust": "noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::Behavior}::fmt::__NAMES",
    "source": "crates/noble-kernel/src/contracts.rs 24:22-24:27",
    "file": "Funs.lean",
-   "line": 5327,
+   "line": 5494,
    "status": "extracted"
   },
   {
@@ -2303,7 +2127,7 @@
    "rust": "noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::Behavior}::fmt",
    "source": "crates/noble-kernel/src/contracts.rs 24:22-24:27",
    "file": "Funs.lean",
-   "line": 5334,
+   "line": 5501,
    "status": "extracted"
   },
   {
@@ -2313,7 +2137,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/contracts.rs 24:22-24:27",
    "file": "Funs.lean",
-   "line": 5347,
+   "line": 5514,
    "status": "extracted"
   },
   {
@@ -2323,7 +2147,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/contracts.rs 24:29-24:38",
    "file": "Funs.lean",
-   "line": 5355,
+   "line": 5522,
    "status": "extracted"
   },
   {
@@ -2332,7 +2156,7 @@
    "rust": "noble_kernel::contracts::{impl core::cmp::PartialEq<noble_kernel::contracts::Behavior> for noble_kernel::contracts::Behavior}::eq",
    "source": "crates/noble-kernel/src/contracts.rs 24:29-24:38",
    "file": "Funs.lean",
-   "line": 5362,
+   "line": 5529,
    "status": "extracted"
   },
   {
@@ -2342,7 +2166,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/contracts.rs 24:29-24:38",
    "file": "Funs.lean",
-   "line": 5371,
+   "line": 5538,
    "status": "extracted"
   },
   {
@@ -2351,7 +2175,7 @@
    "rust": "noble_kernel::contracts::{impl core::cmp::Eq for noble_kernel::contracts::Behavior}::assert_fields_are_eq",
    "source": "crates/noble-kernel/src/contracts.rs 24:40-24:42",
    "file": "Funs.lean",
-   "line": 5381,
+   "line": 5548,
    "status": "extracted"
   },
   {
@@ -2361,7 +2185,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/contracts.rs 24:40-24:42",
    "file": "Funs.lean",
-   "line": 5388,
+   "line": 5555,
    "status": "extracted"
   },
   {
@@ -2371,7 +2195,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/words.rs 31:9-31:14",
    "file": "Funs.lean",
-   "line": 5397,
+   "line": 5564,
    "status": "extracted"
   },
   {
@@ -2380,7 +2204,7 @@
    "rust": "noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::Env}::clone",
    "source": "crates/noble-kernel/src/contracts.rs 71:9-71:14",
    "file": "Funs.lean",
-   "line": 5404,
+   "line": 5571,
    "status": "extracted"
   },
   {
@@ -2390,7 +2214,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/contracts.rs 71:9-71:14",
    "file": "Funs.lean",
-   "line": 5417,
+   "line": 5584,
    "status": "extracted"
   },
   {
@@ -2399,7 +2223,7 @@
    "rust": "noble_kernel::words::{impl core::fmt::Debug for noble_kernel::words::VariableKind}::fmt",
    "source": "crates/noble-kernel/src/words.rs 19:22-19:27",
    "file": "Funs.lean",
-   "line": 5424,
+   "line": 5591,
    "status": "extracted"
   },
   {
@@ -2409,7 +2233,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/words.rs 19:22-19:27",
    "file": "Funs.lean",
-   "line": 5437,
+   "line": 5604,
    "status": "extracted"
   },
   {
@@ -2418,7 +2242,7 @@
    "rust": "noble_kernel::words::{impl core::fmt::Debug for noble_kernel::words::Variable}::fmt",
    "source": "crates/noble-kernel/src/words.rs 15:22-15:27",
    "file": "Funs.lean",
-   "line": 5445,
+   "line": 5612,
    "status": "extracted"
   },
   {
@@ -2428,7 +2252,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/words.rs 15:22-15:27",
    "file": "Funs.lean",
-   "line": 5455,
+   "line": 5622,
    "status": "extracted"
   },
   {
@@ -2437,7 +2261,7 @@
    "rust": "noble_kernel::types::{impl core::fmt::Debug for noble_kernel::types::EffId}::fmt",
    "source": "crates/noble-kernel/src/types.rs 25:22-25:27",
    "file": "Funs.lean",
-   "line": 5462,
+   "line": 5629,
    "status": "extracted"
   },
   {
@@ -2447,7 +2271,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/types.rs 25:22-25:27",
    "file": "Funs.lean",
-   "line": 5472,
+   "line": 5639,
    "status": "extracted"
   },
   {
@@ -2456,7 +2280,7 @@
    "rust": "noble_kernel::shapes::{impl core::fmt::Debug for noble_kernel::shapes::EffectSlot}::fmt",
    "source": "crates/noble-kernel/src/shapes.rs 73:16-73:21",
    "file": "Funs.lean",
-   "line": 5479,
+   "line": 5646,
    "status": "extracted"
   },
   {
@@ -2466,7 +2290,16 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/shapes.rs 73:16-73:21",
    "file": "Funs.lean",
-   "line": 5497,
+   "line": 5664,
+   "status": "extracted"
+  },
+  {
+   "lean": "noble_kernel.types.EffId.Insts.CoreCloneClone.clone",
+   "kind": "def",
+   "rust": "noble_kernel::types::{impl core::clone::Clone for noble_kernel::types::EffId}::clone",
+   "source": "crates/noble-kernel/src/types.rs 25:9-25:14",
+   "file": "Funs.lean",
+   "line": 55,
    "status": "extracted"
   },
   {
@@ -2475,7 +2308,7 @@
    "rust": "noble_kernel::types::{impl core::fmt::Debug for noble_kernel::types::ResourceKind}::fmt",
    "source": "crates/noble-kernel/src/types.rs 14:22-14:27",
    "file": "Funs.lean",
-   "line": 5505,
+   "line": 5672,
    "status": "extracted"
   },
   {
@@ -2484,7 +2317,7 @@
    "rust": "noble_kernel::shapes::impls::{impl core::fmt::Debug for noble_kernel::shapes::Pattern}::fmt",
    "source": "crates/noble-kernel/src/shapes/impls.rs 242:4-293:5",
    "file": "Funs.lean",
-   "line": 5515,
+   "line": 5682,
    "status": "extracted"
   },
   {
@@ -2494,7 +2327,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/shapes/impls.rs 241:0-294:1",
    "file": "Funs.lean",
-   "line": 5632,
+   "line": 5799,
    "status": "extracted"
   },
   {
@@ -2503,7 +2336,7 @@
    "rust": "noble_kernel::words::{impl core::fmt::Debug for noble_kernel::words::Scheme}::fmt",
    "source": "crates/noble-kernel/src/words.rs 31:16-31:21",
    "file": "Funs.lean",
-   "line": 5639,
+   "line": 5806,
    "status": "extracted"
   },
   {
@@ -2513,7 +2346,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/words.rs 31:16-31:21",
    "file": "Funs.lean",
-   "line": 5662,
+   "line": 5829,
    "status": "extracted"
   },
   {
@@ -2522,7 +2355,7 @@
    "rust": "noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::Env}::fmt",
    "source": "crates/noble-kernel/src/contracts.rs 71:16-71:21",
    "file": "Funs.lean",
-   "line": 5669,
+   "line": 5836,
    "status": "extracted"
   },
   {
@@ -2532,7 +2365,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/contracts.rs 71:16-71:21",
    "file": "Funs.lean",
-   "line": 5687,
+   "line": 5854,
    "status": "extracted"
   },
   {
@@ -2542,7 +2375,7 @@
    "loop_body": true,
    "source": "crates/noble-kernel/src/contracts.rs 102:8-108:9",
    "file": "Funs.lean",
-   "line": 5695,
+   "line": 5862,
    "status": "extracted"
   },
   {
@@ -2551,7 +2384,7 @@
    "rust": "noble_kernel::contracts::{noble_kernel::contracts::Env}::knows_effect",
    "source": "crates/noble-kernel/src/contracts.rs 102:8-108:9",
    "file": "Funs.lean",
-   "line": 5716,
+   "line": 5883,
    "status": "extracted"
   },
   {
@@ -2560,7 +2393,7 @@
    "rust": "noble_kernel::contracts::{noble_kernel::contracts::Env}::knows_effect",
    "source": "crates/noble-kernel/src/contracts.rs 99:4-110:5",
    "file": "Funs.lean",
-   "line": 5728,
+   "line": 5895,
    "status": "extracted"
   },
   {
@@ -2569,7 +2402,7 @@
    "rust": "noble_kernel::contracts::{noble_kernel::contracts::Env}::is_empty",
    "source": "crates/noble-kernel/src/contracts.rs 118:4-120:5",
    "file": "Funs.lean",
-   "line": 5735,
+   "line": 5902,
    "status": "extracted"
   },
   {
@@ -2579,7 +2412,7 @@
    "loop_body": true,
    "source": "crates/noble-kernel/src/contracts.rs 134:4-145:5",
    "file": "Funs.lean",
-   "line": 5743,
+   "line": 5910,
    "status": "extracted"
   },
   {
@@ -2588,7 +2421,7 @@
    "rust": "noble_kernel::contracts::environment",
    "source": "crates/noble-kernel/src/contracts.rs 134:4-145:5",
    "file": "Funs.lean",
-   "line": 5768,
+   "line": 5935,
    "status": "extracted"
   },
   {
@@ -2598,7 +2431,7 @@
    "loop_body": true,
    "source": "crates/noble-kernel/src/contracts.rs 150:4-153:5",
    "file": "Funs.lean",
-   "line": 5782,
+   "line": 5949,
    "status": "extracted"
   },
   {
@@ -2607,7 +2440,7 @@
    "rust": "noble_kernel::contracts::environment",
    "source": "crates/noble-kernel/src/contracts.rs 150:4-153:5",
    "file": "Funs.lean",
-   "line": 5804,
+   "line": 5971,
    "status": "extracted"
   },
   {
@@ -2616,7 +2449,7 @@
    "rust": "noble_kernel::contracts::environment",
    "source": "crates/noble-kernel/src/contracts.rs 128:0-159:1",
    "file": "Funs.lean",
-   "line": 5817,
+   "line": 5984,
    "status": "extracted"
   },
   {
@@ -2625,7 +2458,7 @@
    "rust": "noble_kernel::consume_budget",
    "source": "crates/noble-kernel/src/lib.rs 44:0-49:1",
    "file": "Funs.lean",
-   "line": 5837,
+   "line": 6004,
    "status": "extracted"
   },
   {
@@ -2635,7 +2468,7 @@
    "loop_body": true,
    "source": "crates/noble-kernel/src/shapes/impls.rs 92:4-95:5",
    "file": "Funs.lean",
-   "line": 5846,
+   "line": 6013,
    "status": "extracted"
   },
   {
@@ -2644,7 +2477,7 @@
    "rust": "noble_kernel::shapes::impls::push_pattern_program",
    "source": "crates/noble-kernel/src/shapes/impls.rs 92:4-95:5",
    "file": "Funs.lean",
-   "line": 5872,
+   "line": 6039,
    "status": "extracted"
   },
   {
@@ -2654,7 +2487,7 @@
    "loop_body": true,
    "source": "crates/noble-kernel/src/shapes/impls.rs 97:4-100:5",
    "file": "Funs.lean",
-   "line": 5887,
+   "line": 6054,
    "status": "extracted"
   },
   {
@@ -2663,7 +2496,7 @@
    "rust": "noble_kernel::shapes::impls::push_pattern_program",
    "source": "crates/noble-kernel/src/shapes/impls.rs 97:4-100:5",
    "file": "Funs.lean",
-   "line": 5913,
+   "line": 6080,
    "status": "extracted"
   },
   {
@@ -2672,7 +2505,7 @@
    "rust": "noble_kernel::shapes::impls::push_pattern_program",
    "source": "crates/noble-kernel/src/shapes/impls.rs 78:0-102:1",
    "file": "Funs.lean",
-   "line": 5927,
+   "line": 6094,
    "status": "extracted"
   },
   {
@@ -2681,7 +2514,7 @@
    "rust": "noble_kernel::words::{impl core::cmp::PartialEq<noble_kernel::words::Variable> for noble_kernel::words::Variable}::eq",
    "source": "crates/noble-kernel/src/words.rs 15:29-15:38",
    "file": "Funs.lean",
-   "line": 5954,
+   "line": 6121,
    "status": "extracted"
   },
   {
@@ -2691,7 +2524,16 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/words.rs 15:29-15:38",
    "file": "Funs.lean",
-   "line": 5961,
+   "line": 6128,
+   "status": "extracted"
+  },
+  {
+   "lean": "noble_kernel.types.impls.ty_eq_loop",
+   "kind": "def",
+   "rust": "noble_kernel::types::impls::ty_eq",
+   "source": "crates/noble-kernel/src/types/impls.rs 89:4-138:5",
+   "file": "Funs.lean",
+   "line": 597,
    "status": "extracted"
   },
   {
@@ -2700,7 +2542,7 @@
    "rust": "noble_kernel::shapes::{impl core::cmp::PartialEq<noble_kernel::shapes::EffectSlot> for noble_kernel::shapes::EffectSlot}::eq",
    "source": "crates/noble-kernel/src/shapes.rs 73:23-73:32",
    "file": "Funs.lean",
-   "line": 5971,
+   "line": 6138,
    "status": "extracted"
   },
   {
@@ -2710,7 +2552,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/shapes.rs 73:23-73:32",
    "file": "Funs.lean",
-   "line": 5993,
+   "line": 6160,
    "status": "extracted"
   },
   {
@@ -2720,7 +2562,35 @@
    "loop_body": true,
    "source": "crates/noble-kernel/src/shapes/impls.rs 111:4-171:5",
    "file": "Funs.lean",
-   "line": 6003,
+   "line": 6170,
+   "status": "extracted"
+  },
+  {
+   "lean": "noble_kernel.types.impls.ty_eq",
+   "kind": "def",
+   "rust": "noble_kernel::types::impls::ty_eq",
+   "source": "crates/noble-kernel/src/types/impls.rs 84:0-140:1",
+   "file": "Funs.lean",
+   "line": 608,
+   "status": "extracted"
+  },
+  {
+   "lean": "noble_kernel.types.Ty.Insts.CoreCmpPartialEqTy.eq",
+   "kind": "def",
+   "rust": "noble_kernel::types::impls::{impl core::cmp::PartialEq<noble_kernel::types::Ty> for noble_kernel::types::Ty}::eq",
+   "source": "crates/noble-kernel/src/types/impls.rs 144:4-146:5",
+   "file": "Funs.lean",
+   "line": 619,
+   "status": "extracted"
+  },
+  {
+   "lean": "noble_kernel.types.EffId.Insts.CoreCloneClone",
+   "kind": "def",
+   "rust": "noble_kernel::types::{impl core::clone::Clone for noble_kernel::types::EffId}",
+   "trait_impl": true,
+   "source": "crates/noble-kernel/src/types.rs 25:9-25:14",
+   "file": "Funs.lean",
+   "line": 62,
    "status": "extracted"
   },
   {
@@ -2729,7 +2599,17 @@
    "rust": "noble_kernel::shapes::impls::pattern_eq",
    "source": "crates/noble-kernel/src/shapes/impls.rs 111:4-171:5",
    "file": "Funs.lean",
-   "line": 6255,
+   "line": 6422,
+   "status": "extracted"
+  },
+  {
+   "lean": "noble_kernel.types.Ty.Insts.CoreCmpPartialEqTy",
+   "kind": "impl_def",
+   "rust": "noble_kernel::types::impls::{impl core::cmp::PartialEq<noble_kernel::types::Ty> for noble_kernel::types::Ty}",
+   "trait_impl": true,
+   "source": "crates/noble-kernel/src/types/impls.rs 143:0-147:1",
+   "file": "Funs.lean",
+   "line": 626,
    "status": "extracted"
   },
   {
@@ -2738,7 +2618,7 @@
    "rust": "noble_kernel::shapes::impls::pattern_eq",
    "source": "crates/noble-kernel/src/shapes/impls.rs 106:0-173:1",
    "file": "Funs.lean",
-   "line": 6267,
+   "line": 6434,
    "status": "extracted"
   },
   {
@@ -2747,7 +2627,7 @@
    "rust": "noble_kernel::shapes::impls::{impl core::cmp::PartialEq<noble_kernel::shapes::Pattern> for noble_kernel::shapes::Pattern}::eq",
    "source": "crates/noble-kernel/src/shapes/impls.rs 177:4-179:5",
    "file": "Funs.lean",
-   "line": 6280,
+   "line": 6447,
    "status": "extracted"
   },
   {
@@ -2757,7 +2637,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/shapes/impls.rs 176:0-180:1",
    "file": "Funs.lean",
-   "line": 6287,
+   "line": 6454,
    "status": "extracted"
   },
   {
@@ -2767,7 +2647,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/shapes.rs 73:23-73:32",
    "file": "Funs.lean",
-   "line": 6297,
+   "line": 6464,
    "status": "extracted"
   },
   {
@@ -2776,7 +2656,7 @@
    "rust": "noble_kernel::shapes::{impl core::cmp::Eq for noble_kernel::shapes::EffectSlot}::assert_fields_are_eq",
    "source": "crates/noble-kernel/src/shapes.rs 73:34-73:36",
    "file": "Funs.lean",
-   "line": 6304,
+   "line": 6471,
    "status": "extracted"
   },
   {
@@ -2786,7 +2666,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/shapes.rs 73:34-73:36",
    "file": "Funs.lean",
-   "line": 6311,
+   "line": 6478,
    "status": "extracted"
   },
   {
@@ -2795,7 +2675,7 @@
    "rust": "noble_kernel::shapes::{impl core::clone::Clone for noble_kernel::shapes::Defect}::clone",
    "source": "crates/noble-kernel/src/shapes.rs 82:9-82:14",
    "file": "Funs.lean",
-   "line": 6320,
+   "line": 6487,
    "status": "extracted"
   },
   {
@@ -2805,7 +2685,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/shapes.rs 82:9-82:14",
    "file": "Funs.lean",
-   "line": 6327,
+   "line": 6494,
    "status": "extracted"
   },
   {
@@ -2815,7 +2695,16 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/shapes.rs 82:16-82:20",
    "file": "Funs.lean",
-   "line": 6334,
+   "line": 6501,
+   "status": "extracted"
+  },
+  {
+   "lean": "noble_kernel.acceptance.parts.invalid",
+   "kind": "def",
+   "rust": "noble_kernel::acceptance::parts::invalid",
+   "source": "crates/noble-kernel/src/acceptance/parts.rs 230:0-259:1",
+   "file": "Funs.lean",
+   "line": 634,
    "status": "extracted"
   },
   {
@@ -2824,7 +2713,7 @@
    "rust": "noble_kernel::shapes::{impl core::fmt::Debug for noble_kernel::shapes::Defect}::fmt",
    "source": "crates/noble-kernel/src/shapes.rs 82:22-82:27",
    "file": "Funs.lean",
-   "line": 6341,
+   "line": 6508,
    "status": "extracted"
   },
   {
@@ -2834,7 +2723,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/shapes.rs 82:22-82:27",
    "file": "Funs.lean",
-   "line": 6354,
+   "line": 6521,
    "status": "extracted"
   },
   {
@@ -2844,7 +2733,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/shapes.rs 82:29-82:38",
    "file": "Funs.lean",
-   "line": 6361,
+   "line": 6528,
    "status": "extracted"
   },
   {
@@ -2853,7 +2742,7 @@
    "rust": "noble_kernel::shapes::{impl core::cmp::PartialEq<noble_kernel::shapes::Defect> for noble_kernel::shapes::Defect}::eq",
    "source": "crates/noble-kernel/src/shapes.rs 82:29-82:38",
    "file": "Funs.lean",
-   "line": 6368,
+   "line": 6535,
    "status": "extracted"
   },
   {
@@ -2863,7 +2752,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/shapes.rs 82:29-82:38",
    "file": "Funs.lean",
-   "line": 6377,
+   "line": 6544,
    "status": "extracted"
   },
   {
@@ -2872,7 +2761,7 @@
    "rust": "noble_kernel::shapes::{impl core::cmp::Eq for noble_kernel::shapes::Defect}::assert_fields_are_eq",
    "source": "crates/noble-kernel/src/shapes.rs 82:40-82:42",
    "file": "Funs.lean",
-   "line": 6387,
+   "line": 6554,
    "status": "extracted"
   },
   {
@@ -2882,7 +2771,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/shapes.rs 82:40-82:42",
    "file": "Funs.lean",
-   "line": 6394,
+   "line": 6561,
    "status": "extracted"
   },
   {
@@ -2891,7 +2780,7 @@
    "rust": "noble_kernel::types::{impl core::fmt::Debug for noble_kernel::types::EffSet}::fmt",
    "source": "crates/noble-kernel/src/types.rs 29:16-29:21",
    "file": "Funs.lean",
-   "line": 6402,
+   "line": 6569,
    "status": "extracted"
   },
   {
@@ -2900,7 +2789,7 @@
    "rust": "noble_kernel::types::impls::{impl core::fmt::Debug for noble_kernel::types::Ty}::fmt",
    "source": "crates/noble-kernel/src/types/impls.rs 185:4-226:5",
    "file": "Funs.lean",
-   "line": 6414,
+   "line": 6581,
    "status": "extracted"
   },
   {
@@ -2910,7 +2799,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/types/impls.rs 184:0-227:1",
    "file": "Funs.lean",
-   "line": 6511,
+   "line": 6678,
    "status": "extracted"
   },
   {
@@ -2919,7 +2808,7 @@
    "rust": "noble_kernel::types::{impl core::clone::Clone for noble_kernel::types::ResourceKind}::clone",
    "source": "crates/noble-kernel/src/types.rs 14:9-14:14",
    "file": "Funs.lean",
-   "line": 6518,
+   "line": 6685,
    "status": "extracted"
   },
   {
@@ -2929,7 +2818,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/types.rs 14:9-14:14",
    "file": "Funs.lean",
-   "line": 6525,
+   "line": 6692,
    "status": "extracted"
   },
   {
@@ -2939,7 +2828,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/types.rs 14:16-14:20",
    "file": "Funs.lean",
-   "line": 6533,
+   "line": 6700,
    "status": "extracted"
   },
   {
@@ -2949,7 +2838,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/types.rs 14:22-14:27",
    "file": "Funs.lean",
-   "line": 6541,
+   "line": 6708,
    "status": "extracted"
   },
   {
@@ -2959,7 +2848,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/types.rs 14:29-14:38",
    "file": "Funs.lean",
-   "line": 6549,
+   "line": 6716,
    "status": "extracted"
   },
   {
@@ -2969,7 +2858,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/types.rs 14:29-14:38",
    "file": "Funs.lean",
-   "line": 6556,
+   "line": 6723,
    "status": "extracted"
   },
   {
@@ -2978,7 +2867,7 @@
    "rust": "noble_kernel::types::{impl core::cmp::Eq for noble_kernel::types::ResourceKind}::assert_fields_are_eq",
    "source": "crates/noble-kernel/src/types.rs 14:40-14:42",
    "file": "Funs.lean",
-   "line": 6566,
+   "line": 6733,
    "status": "extracted"
   },
   {
@@ -2988,7 +2877,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/types.rs 14:40-14:42",
    "file": "Funs.lean",
-   "line": 6573,
+   "line": 6740,
    "status": "extracted"
   },
   {
@@ -2998,7 +2887,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/types.rs 25:16-25:20",
    "file": "Funs.lean",
-   "line": 6582,
+   "line": 6749,
    "status": "extracted"
   },
   {
@@ -3008,7 +2897,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/types.rs 25:29-25:38",
    "file": "Funs.lean",
-   "line": 6589,
+   "line": 6756,
    "status": "extracted"
   },
   {
@@ -3017,7 +2906,7 @@
    "rust": "noble_kernel::types::{impl core::cmp::Eq for noble_kernel::types::EffId}::assert_fields_are_eq",
    "source": "crates/noble-kernel/src/types.rs 25:40-25:42",
    "file": "Funs.lean",
-   "line": 6596,
+   "line": 6763,
    "status": "extracted"
   },
   {
@@ -3027,7 +2916,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/types.rs 25:40-25:42",
    "file": "Funs.lean",
-   "line": 6603,
+   "line": 6770,
    "status": "extracted"
   },
   {
@@ -3037,7 +2926,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/types.rs 29:9-29:14",
    "file": "Funs.lean",
-   "line": 6611,
+   "line": 6778,
    "status": "extracted"
   },
   {
@@ -3047,7 +2936,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/types.rs 29:16-29:21",
    "file": "Funs.lean",
-   "line": 6618,
+   "line": 6785,
    "status": "extracted"
   },
   {
@@ -3057,7 +2946,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/types.rs 29:23-29:32",
    "file": "Funs.lean",
-   "line": 6625,
+   "line": 6792,
    "status": "extracted"
   },
   {
@@ -3067,7 +2956,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/types.rs 29:23-29:32",
    "file": "Funs.lean",
-   "line": 6632,
+   "line": 6799,
    "status": "extracted"
   },
   {
@@ -3076,7 +2965,7 @@
    "rust": "noble_kernel::types::{impl core::cmp::Eq for noble_kernel::types::EffSet}::assert_fields_are_eq",
    "source": "crates/noble-kernel/src/types.rs 29:34-29:36",
    "file": "Funs.lean",
-   "line": 6642,
+   "line": 6809,
    "status": "extracted"
   },
   {
@@ -3086,7 +2975,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/types.rs 29:34-29:36",
    "file": "Funs.lean",
-   "line": 6649,
+   "line": 6816,
    "status": "extracted"
   },
   {
@@ -3095,7 +2984,7 @@
    "rust": "noble_kernel::types::{noble_kernel::types::EffSet}::is_empty",
    "source": "crates/noble-kernel/src/types.rs 133:4-135:5",
    "file": "Funs.lean",
-   "line": 6657,
+   "line": 6824,
    "status": "extracted"
   },
   {
@@ -3105,7 +2994,7 @@
    "loop_body": true,
    "source": "crates/noble-kernel/src/types.rs 247:4-253:5",
    "file": "Funs.lean",
-   "line": 6665,
+   "line": 6832,
    "status": "extracted"
   },
   {
@@ -3114,7 +3003,7 @@
    "rust": "noble_kernel::types::stack_is_data",
    "source": "crates/noble-kernel/src/types.rs 247:4-253:5",
    "file": "Funs.lean",
-   "line": 6684,
+   "line": 6851,
    "status": "extracted"
   },
   {
@@ -3123,7 +3012,7 @@
    "rust": "noble_kernel::types::stack_is_data",
    "source": "crates/noble-kernel/src/types.rs 244:0-255:1",
    "file": "Funs.lean",
-   "line": 6694,
+   "line": 6861,
    "status": "extracted"
   },
   {
@@ -3133,7 +3022,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/untrusted.rs 12:16-12:20",
    "file": "Funs.lean",
-   "line": 6700,
+   "line": 6867,
    "status": "extracted"
   },
   {
@@ -3142,7 +3031,7 @@
    "rust": "noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::NodeId}::fmt",
    "source": "crates/noble-kernel/src/untrusted.rs 12:22-12:27",
    "file": "Funs.lean",
-   "line": 6708,
+   "line": 6875,
    "status": "extracted"
   },
   {
@@ -3152,7 +3041,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/untrusted.rs 12:22-12:27",
    "file": "Funs.lean",
-   "line": 6718,
+   "line": 6885,
    "status": "extracted"
   },
   {
@@ -3162,7 +3051,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/untrusted.rs 12:29-12:38",
    "file": "Funs.lean",
-   "line": 6725,
+   "line": 6892,
    "status": "extracted"
   },
   {
@@ -3171,7 +3060,7 @@
    "rust": "noble_kernel::untrusted::{impl core::cmp::PartialEq<noble_kernel::untrusted::NodeId> for noble_kernel::untrusted::NodeId}::eq",
    "source": "crates/noble-kernel/src/untrusted.rs 12:29-12:38",
    "file": "Funs.lean",
-   "line": 6732,
+   "line": 6899,
    "status": "extracted"
   },
   {
@@ -3181,7 +3070,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/untrusted.rs 12:29-12:38",
    "file": "Funs.lean",
-   "line": 6739,
+   "line": 6906,
    "status": "extracted"
   },
   {
@@ -3190,7 +3079,7 @@
    "rust": "noble_kernel::untrusted::{impl core::cmp::Eq for noble_kernel::untrusted::NodeId}::assert_fields_are_eq",
    "source": "crates/noble-kernel/src/untrusted.rs 12:40-12:42",
    "file": "Funs.lean",
-   "line": 6749,
+   "line": 6916,
    "status": "extracted"
   },
   {
@@ -3200,7 +3089,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/untrusted.rs 12:40-12:42",
    "file": "Funs.lean",
-   "line": 6756,
+   "line": 6923,
    "status": "extracted"
   },
   {
@@ -3210,7 +3099,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/untrusted.rs 21:9-21:14",
    "file": "Funs.lean",
-   "line": 6764,
+   "line": 6931,
    "status": "extracted"
   },
   {
@@ -3220,7 +3109,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/untrusted.rs 21:16-21:20",
    "file": "Funs.lean",
-   "line": 6771,
+   "line": 6938,
    "status": "extracted"
   },
   {
@@ -3229,7 +3118,7 @@
    "rust": "noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Lit}::fmt",
    "source": "crates/noble-kernel/src/untrusted.rs 21:22-21:27",
    "file": "Funs.lean",
-   "line": 6778,
+   "line": 6945,
    "status": "extracted"
   },
   {
@@ -3239,7 +3128,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/untrusted.rs 21:22-21:27",
    "file": "Funs.lean",
-   "line": 6796,
+   "line": 6963,
    "status": "extracted"
   },
   {
@@ -3249,7 +3138,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/untrusted.rs 21:29-21:38",
    "file": "Funs.lean",
-   "line": 6803,
+   "line": 6970,
    "status": "extracted"
   },
   {
@@ -3258,7 +3147,7 @@
    "rust": "noble_kernel::untrusted::{impl core::cmp::PartialEq<noble_kernel::untrusted::Lit> for noble_kernel::untrusted::Lit}::eq",
    "source": "crates/noble-kernel/src/untrusted.rs 21:29-21:38",
    "file": "Funs.lean",
-   "line": 6810,
+   "line": 6977,
    "status": "extracted"
   },
   {
@@ -3268,7 +3157,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/untrusted.rs 21:29-21:38",
    "file": "Funs.lean",
-   "line": 6838,
+   "line": 7005,
    "status": "extracted"
   },
   {
@@ -3277,7 +3166,7 @@
    "rust": "noble_kernel::untrusted::{impl core::cmp::Eq for noble_kernel::untrusted::Lit}::assert_fields_are_eq",
    "source": "crates/noble-kernel/src/untrusted.rs 21:40-21:42",
    "file": "Funs.lean",
-   "line": 6848,
+   "line": 7015,
    "status": "extracted"
   },
   {
@@ -3287,7 +3176,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/untrusted.rs 21:40-21:42",
    "file": "Funs.lean",
-   "line": 6855,
+   "line": 7022,
    "status": "extracted"
   },
   {
@@ -3296,7 +3185,7 @@
    "rust": "noble_kernel::untrusted::{noble_kernel::untrusted::Lit}::ty",
    "source": "crates/noble-kernel/src/untrusted.rs 35:4-42:5",
    "file": "Funs.lean",
-   "line": 6863,
+   "line": 7030,
    "status": "extracted"
   },
   {
@@ -3306,7 +3195,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/untrusted.rs 47:9-47:14",
    "file": "Funs.lean",
-   "line": 6873,
+   "line": 7040,
    "status": "extracted"
   },
   {
@@ -3315,7 +3204,16 @@
    "rust": "noble_kernel::words::{impl core::fmt::Debug for noble_kernel::words::Binding}::fmt",
    "source": "crates/noble-kernel/src/words.rs 45:16-45:21",
    "file": "Funs.lean",
-   "line": 6880,
+   "line": 7047,
+   "status": "extracted"
+  },
+  {
+   "lean": "noble_kernel.types.EffSet.Insts.CoreCloneClone.clone",
+   "kind": "def",
+   "rust": "noble_kernel::types::{impl core::clone::Clone for noble_kernel::types::EffSet}::clone",
+   "source": "crates/noble-kernel/src/types.rs 29:9-29:14",
+   "file": "Funs.lean",
+   "line": 69,
    "status": "extracted"
   },
   {
@@ -3325,7 +3223,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/words.rs 45:16-45:21",
    "file": "Funs.lean",
-   "line": 6902,
+   "line": 7069,
    "status": "extracted"
   },
   {
@@ -3334,7 +3232,7 @@
    "rust": "noble_kernel::words::{impl core::fmt::Debug for noble_kernel::words::Inst}::fmt",
    "source": "crates/noble-kernel/src/words.rs 57:16-57:21",
    "file": "Funs.lean",
-   "line": 6909,
+   "line": 7076,
    "status": "extracted"
   },
   {
@@ -3344,7 +3242,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/words.rs 57:16-57:21",
    "file": "Funs.lean",
-   "line": 6922,
+   "line": 7089,
    "status": "extracted"
   },
   {
@@ -3353,7 +3251,7 @@
    "rust": "noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Node}::fmt",
    "source": "crates/noble-kernel/src/untrusted.rs 47:16-47:21",
    "file": "Funs.lean",
-   "line": 6929,
+   "line": 7096,
    "status": "extracted"
   },
   {
@@ -3363,7 +3261,16 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/untrusted.rs 47:16-47:21",
    "file": "Funs.lean",
-   "line": 6957,
+   "line": 7124,
+   "status": "extracted"
+  },
+  {
+   "lean": "noble_kernel.types.EffSet.as_slice",
+   "kind": "def",
+   "rust": "noble_kernel::types::{noble_kernel::types::EffSet}::as_slice",
+   "source": "crates/noble-kernel/src/types.rs 123:4-125:5",
+   "file": "Funs.lean",
+   "line": 696,
    "status": "extracted"
   },
   {
@@ -3372,7 +3279,7 @@
    "rust": "noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::Candidate}::clone",
    "source": "crates/noble-kernel/src/untrusted.rs 74:9-74:14",
    "file": "Funs.lean",
-   "line": 6964,
+   "line": 7131,
    "status": "extracted"
   },
   {
@@ -3382,7 +3289,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/untrusted.rs 74:9-74:14",
    "file": "Funs.lean",
-   "line": 6977,
+   "line": 7144,
    "status": "extracted"
   },
   {
@@ -3391,7 +3298,7 @@
    "rust": "noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Candidate}::fmt",
    "source": "crates/noble-kernel/src/untrusted.rs 74:16-74:21",
    "file": "Funs.lean",
-   "line": 6985,
+   "line": 7152,
    "status": "extracted"
   },
   {
@@ -3401,7 +3308,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/untrusted.rs 74:16-74:21",
    "file": "Funs.lean",
-   "line": 7003,
+   "line": 7170,
    "status": "extracted"
   },
   {
@@ -3410,7 +3317,7 @@
    "rust": "noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::Expected}::clone",
    "source": "crates/noble-kernel/src/untrusted.rs 87:9-87:14",
    "file": "Funs.lean",
-   "line": 7011,
+   "line": 7178,
    "status": "extracted"
   },
   {
@@ -3420,7 +3327,17 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/untrusted.rs 87:9-87:14",
    "file": "Funs.lean",
-   "line": 7023,
+   "line": 7190,
+   "status": "extracted"
+  },
+  {
+   "lean": "noble_kernel.acceptance.parts.first_extra_loop.body",
+   "kind": "def",
+   "rust": "noble_kernel::acceptance::parts::first_extra",
+   "loop_body": true,
+   "source": "crates/noble-kernel/src/acceptance/parts.rs 219:4-225:5",
+   "file": "Funs.lean",
+   "line": 703,
    "status": "extracted"
   },
   {
@@ -3429,7 +3346,7 @@
    "rust": "noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Expected}::fmt",
    "source": "crates/noble-kernel/src/untrusted.rs 87:16-87:21",
    "file": "Funs.lean",
-   "line": 7031,
+   "line": 7198,
    "status": "extracted"
   },
   {
@@ -3439,7 +3356,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/untrusted.rs 87:16-87:21",
    "file": "Funs.lean",
-   "line": 7048,
+   "line": 7215,
    "status": "extracted"
   },
   {
@@ -3448,7 +3365,7 @@
    "rust": "noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::Limits}::clone",
    "source": "crates/noble-kernel/src/untrusted.rs 98:9-98:14",
    "file": "Funs.lean",
-   "line": 7056,
+   "line": 7223,
    "status": "extracted"
   },
   {
@@ -3458,7 +3375,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/untrusted.rs 98:9-98:14",
    "file": "Funs.lean",
-   "line": 7063,
+   "line": 7230,
    "status": "extracted"
   },
   {
@@ -3468,7 +3385,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/untrusted.rs 98:16-98:20",
    "file": "Funs.lean",
-   "line": 7071,
+   "line": 7238,
    "status": "extracted"
   },
   {
@@ -3477,7 +3394,7 @@
    "rust": "noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Limits}::fmt",
    "source": "crates/noble-kernel/src/untrusted.rs 98:22-98:27",
    "file": "Funs.lean",
-   "line": 7079,
+   "line": 7246,
    "status": "extracted"
   },
   {
@@ -3487,7 +3404,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/untrusted.rs 98:22-98:27",
    "file": "Funs.lean",
-   "line": 7105,
+   "line": 7272,
    "status": "extracted"
   },
   {
@@ -3497,7 +3414,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/untrusted.rs 98:29-98:38",
    "file": "Funs.lean",
-   "line": 7112,
+   "line": 7279,
    "status": "extracted"
   },
   {
@@ -3506,7 +3423,7 @@
    "rust": "noble_kernel::untrusted::{impl core::cmp::PartialEq<noble_kernel::untrusted::Limits> for noble_kernel::untrusted::Limits}::eq",
    "source": "crates/noble-kernel/src/untrusted.rs 98:29-98:38",
    "file": "Funs.lean",
-   "line": 7119,
+   "line": 7286,
    "status": "extracted"
   },
   {
@@ -3516,7 +3433,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/untrusted.rs 98:29-98:38",
    "file": "Funs.lean",
-   "line": 7143,
+   "line": 7310,
    "status": "extracted"
   },
   {
@@ -3525,7 +3442,7 @@
    "rust": "noble_kernel::untrusted::{impl core::cmp::Eq for noble_kernel::untrusted::Limits}::assert_fields_are_eq",
    "source": "crates/noble-kernel/src/untrusted.rs 98:40-98:42",
    "file": "Funs.lean",
-   "line": 7153,
+   "line": 7320,
    "status": "extracted"
   },
   {
@@ -3535,7 +3452,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/untrusted.rs 98:40-98:42",
    "file": "Funs.lean",
-   "line": 7160,
+   "line": 7327,
    "status": "extracted"
   },
   {
@@ -3544,7 +3461,7 @@
    "rust": "noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::Request}::clone",
    "source": "crates/noble-kernel/src/untrusted.rs 117:9-117:14",
    "file": "Funs.lean",
-   "line": 7168,
+   "line": 7335,
    "status": "extracted"
   },
   {
@@ -3554,7 +3471,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/untrusted.rs 117:9-117:14",
    "file": "Funs.lean",
-   "line": 7178,
+   "line": 7345,
    "status": "extracted"
   },
   {
@@ -3563,7 +3480,7 @@
    "rust": "noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Request}::fmt",
    "source": "crates/noble-kernel/src/untrusted.rs 117:16-117:21",
    "file": "Funs.lean",
-   "line": 7186,
+   "line": 7353,
    "status": "extracted"
   },
   {
@@ -3573,7 +3490,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/untrusted.rs 117:16-117:21",
    "file": "Funs.lean",
-   "line": 7201,
+   "line": 7368,
    "status": "extracted"
   },
   {
@@ -3582,7 +3499,16 @@
    "rust": "noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::Interface}::clone",
    "source": "crates/noble-kernel/src/untrusted.rs 129:9-129:14",
    "file": "Funs.lean",
-   "line": 7209,
+   "line": 7376,
+   "status": "extracted"
+  },
+  {
+   "lean": "noble_kernel.acceptance.parts.first_extra_loop",
+   "kind": "def",
+   "rust": "noble_kernel::acceptance::parts::first_extra",
+   "source": "crates/noble-kernel/src/acceptance/parts.rs 219:4-225:5",
+   "file": "Funs.lean",
+   "line": 721,
    "status": "extracted"
   },
   {
@@ -3592,7 +3518,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/untrusted.rs 129:9-129:14",
    "file": "Funs.lean",
-   "line": 7221,
+   "line": 7388,
    "status": "extracted"
   },
   {
@@ -3601,7 +3527,7 @@
    "rust": "noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Interface}::fmt",
    "source": "crates/noble-kernel/src/untrusted.rs 129:16-129:21",
    "file": "Funs.lean",
-   "line": 7229,
+   "line": 7396,
    "status": "extracted"
   },
   {
@@ -3611,7 +3537,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/untrusted.rs 129:16-129:21",
    "file": "Funs.lean",
-   "line": 7246,
+   "line": 7413,
    "status": "extracted"
   },
   {
@@ -3620,7 +3546,7 @@
    "rust": "noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::Derivation}::clone",
    "source": "crates/noble-kernel/src/untrusted.rs 140:9-140:14",
    "file": "Funs.lean",
-   "line": 7254,
+   "line": 7421,
    "status": "extracted"
   },
   {
@@ -3630,7 +3556,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/untrusted.rs 140:9-140:14",
    "file": "Funs.lean",
-   "line": 7263,
+   "line": 7430,
    "status": "extracted"
   },
   {
@@ -3639,7 +3565,7 @@
    "rust": "noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Derivation}::fmt",
    "source": "crates/noble-kernel/src/untrusted.rs 140:16-140:21",
    "file": "Funs.lean",
-   "line": 7271,
+   "line": 7438,
    "status": "extracted"
   },
   {
@@ -3649,7 +3575,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/untrusted.rs 140:16-140:21",
    "file": "Funs.lean",
-   "line": 7285,
+   "line": 7452,
    "status": "extracted"
   },
   {
@@ -3658,7 +3584,7 @@
    "rust": "noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::Checked}::clone",
    "source": "crates/noble-kernel/src/untrusted.rs 149:9-149:14",
    "file": "Funs.lean",
-   "line": 7293,
+   "line": 7460,
    "status": "extracted"
   },
   {
@@ -3668,7 +3594,16 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/untrusted.rs 149:9-149:14",
    "file": "Funs.lean",
-   "line": 7304,
+   "line": 7471,
+   "status": "extracted"
+  },
+  {
+   "lean": "noble_kernel.acceptance.parts.first_extra",
+   "kind": "def",
+   "rust": "noble_kernel::acceptance::parts::first_extra",
+   "source": "crates/noble-kernel/src/acceptance/parts.rs 212:0-227:1",
+   "file": "Funs.lean",
+   "line": 731,
    "status": "extracted"
   },
   {
@@ -3677,7 +3612,7 @@
    "rust": "noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Checked}::fmt",
    "source": "crates/noble-kernel/src/untrusted.rs 149:16-149:21",
    "file": "Funs.lean",
-   "line": 7312,
+   "line": 7479,
    "status": "extracted"
   },
   {
@@ -3687,7 +3622,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/untrusted.rs 149:16-149:21",
    "file": "Funs.lean",
-   "line": 7326,
+   "line": 7493,
    "status": "extracted"
   },
   {
@@ -3696,7 +3631,7 @@
    "rust": "noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::LimitKind}::clone",
    "source": "crates/noble-kernel/src/untrusted.rs 158:9-158:14",
    "file": "Funs.lean",
-   "line": 7334,
+   "line": 7501,
    "status": "extracted"
   },
   {
@@ -3706,7 +3641,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/untrusted.rs 158:9-158:14",
    "file": "Funs.lean",
-   "line": 7341,
+   "line": 7508,
    "status": "extracted"
   },
   {
@@ -3716,7 +3651,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/untrusted.rs 158:16-158:20",
    "file": "Funs.lean",
-   "line": 7349,
+   "line": 7516,
    "status": "extracted"
   },
   {
@@ -3725,7 +3660,7 @@
    "rust": "noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::LimitKind}::fmt",
    "source": "crates/noble-kernel/src/untrusted.rs 158:22-158:27",
    "file": "Funs.lean",
-   "line": 7357,
+   "line": 7524,
    "status": "extracted"
   },
   {
@@ -3735,7 +3670,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/untrusted.rs 158:22-158:27",
    "file": "Funs.lean",
-   "line": 7376,
+   "line": 7543,
    "status": "extracted"
   },
   {
@@ -3745,7 +3680,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/untrusted.rs 158:29-158:38",
    "file": "Funs.lean",
-   "line": 7384,
+   "line": 7551,
    "status": "extracted"
   },
   {
@@ -3754,7 +3689,7 @@
    "rust": "noble_kernel::untrusted::{impl core::cmp::PartialEq<noble_kernel::untrusted::LimitKind> for noble_kernel::untrusted::LimitKind}::eq",
    "source": "crates/noble-kernel/src/untrusted.rs 158:29-158:38",
    "file": "Funs.lean",
-   "line": 7391,
+   "line": 7558,
    "status": "extracted"
   },
   {
@@ -3764,7 +3699,17 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/untrusted.rs 158:29-158:38",
    "file": "Funs.lean",
-   "line": 7402,
+   "line": 7569,
+   "status": "extracted"
+  },
+  {
+   "lean": "noble_kernel.acceptance.parts.find_unused_loop.body",
+   "kind": "def",
+   "rust": "noble_kernel::acceptance::parts::find_unused",
+   "loop_body": true,
+   "source": "crates/noble-kernel/src/acceptance/parts.rs 201:4-207:5",
+   "file": "Funs.lean",
+   "line": 741,
    "status": "extracted"
   },
   {
@@ -3773,7 +3718,7 @@
    "rust": "noble_kernel::untrusted::{impl core::cmp::Eq for noble_kernel::untrusted::LimitKind}::assert_fields_are_eq",
    "source": "crates/noble-kernel/src/untrusted.rs 158:40-158:42",
    "file": "Funs.lean",
-   "line": 7412,
+   "line": 7579,
    "status": "extracted"
   },
   {
@@ -3783,7 +3728,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/untrusted.rs 158:40-158:42",
    "file": "Funs.lean",
-   "line": 7419,
+   "line": 7586,
    "status": "extracted"
   },
   {
@@ -3792,7 +3737,7 @@
    "rust": "noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::UnsupportedKind}::clone",
    "source": "crates/noble-kernel/src/untrusted.rs 177:9-177:14",
    "file": "Funs.lean",
-   "line": 7428,
+   "line": 7595,
    "status": "extracted"
   },
   {
@@ -3802,7 +3747,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/untrusted.rs 177:9-177:14",
    "file": "Funs.lean",
-   "line": 7435,
+   "line": 7602,
    "status": "extracted"
   },
   {
@@ -3812,7 +3757,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/untrusted.rs 177:16-177:20",
    "file": "Funs.lean",
-   "line": 7443,
+   "line": 7610,
    "status": "extracted"
   },
   {
@@ -3821,7 +3766,7 @@
    "rust": "noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::UnsupportedKind}::fmt",
    "source": "crates/noble-kernel/src/untrusted.rs 177:22-177:27",
    "file": "Funs.lean",
-   "line": 7451,
+   "line": 7618,
    "status": "extracted"
   },
   {
@@ -3831,7 +3776,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/untrusted.rs 177:22-177:27",
    "file": "Funs.lean",
-   "line": 7466,
+   "line": 7633,
    "status": "extracted"
   },
   {
@@ -3841,7 +3786,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/untrusted.rs 177:29-177:38",
    "file": "Funs.lean",
-   "line": 7474,
+   "line": 7641,
    "status": "extracted"
   },
   {
@@ -3850,7 +3795,7 @@
    "rust": "noble_kernel::untrusted::{impl core::cmp::PartialEq<noble_kernel::untrusted::UnsupportedKind> for noble_kernel::untrusted::UnsupportedKind}::eq",
    "source": "crates/noble-kernel/src/untrusted.rs 177:29-177:38",
    "file": "Funs.lean",
-   "line": 7481,
+   "line": 7648,
    "status": "extracted"
   },
   {
@@ -3860,7 +3805,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/untrusted.rs 177:29-177:38",
    "file": "Funs.lean",
-   "line": 7492,
+   "line": 7659,
    "status": "extracted"
   },
   {
@@ -3869,7 +3814,7 @@
    "rust": "noble_kernel::untrusted::{impl core::cmp::Eq for noble_kernel::untrusted::UnsupportedKind}::assert_fields_are_eq",
    "source": "crates/noble-kernel/src/untrusted.rs 177:40-177:42",
    "file": "Funs.lean",
-   "line": 7502,
+   "line": 7669,
    "status": "extracted"
   },
   {
@@ -3879,7 +3824,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/untrusted.rs 177:40-177:42",
    "file": "Funs.lean",
-   "line": 7509,
+   "line": 7676,
    "status": "extracted"
   },
   {
@@ -3888,7 +3833,7 @@
    "rust": "noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::Constraint}::clone",
    "source": "crates/noble-kernel/src/untrusted.rs 190:9-190:14",
    "file": "Funs.lean",
-   "line": 7520,
+   "line": 7687,
    "status": "extracted"
   },
   {
@@ -3898,7 +3843,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/untrusted.rs 190:9-190:14",
    "file": "Funs.lean",
-   "line": 7548,
+   "line": 7715,
    "status": "extracted"
   },
   {
@@ -3907,7 +3852,7 @@
    "rust": "noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Constraint}::fmt",
    "source": "crates/noble-kernel/src/untrusted.rs 190:16-190:21",
    "file": "Funs.lean",
-   "line": 7556,
+   "line": 7723,
    "status": "extracted"
   },
   {
@@ -3917,7 +3862,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/untrusted.rs 190:16-190:21",
    "file": "Funs.lean",
-   "line": 7600,
+   "line": 7767,
    "status": "extracted"
   },
   {
@@ -3927,7 +3872,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/untrusted.rs 190:23-190:32",
    "file": "Funs.lean",
-   "line": 7608,
+   "line": 7775,
    "status": "extracted"
   },
   {
@@ -3936,7 +3881,16 @@
    "rust": "noble_kernel::untrusted::{impl core::cmp::PartialEq<noble_kernel::untrusted::Constraint> for noble_kernel::untrusted::Constraint}::eq",
    "source": "crates/noble-kernel/src/untrusted.rs 190:23-190:32",
    "file": "Funs.lean",
-   "line": 7615,
+   "line": 7782,
+   "status": "extracted"
+  },
+  {
+   "lean": "noble_kernel.acceptance.parts.find_unused_loop",
+   "kind": "def",
+   "rust": "noble_kernel::acceptance::parts::find_unused",
+   "source": "crates/noble-kernel/src/acceptance/parts.rs 201:4-207:5",
+   "file": "Funs.lean",
+   "line": 765,
    "status": "extracted"
   },
   {
@@ -3946,7 +3900,16 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/untrusted.rs 190:23-190:32",
    "file": "Funs.lean",
-   "line": 7694,
+   "line": 7861,
+   "status": "extracted"
+  },
+  {
+   "lean": "noble_kernel.types.Ty.Insts.CoreCloneClone.clone",
+   "kind": "def",
+   "rust": "noble_kernel::types::impls::{impl core::clone::Clone for noble_kernel::types::Ty}::clone",
+   "source": "crates/noble-kernel/src/types/impls.rs 30:4-55:5",
+   "file": "Funs.lean",
+   "line": 77,
    "status": "extracted"
   },
   {
@@ -3955,7 +3918,7 @@
    "rust": "noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::Diagnostic}::clone",
    "source": "crates/noble-kernel/src/untrusted.rs 213:9-213:14",
    "file": "Funs.lean",
-   "line": 7704,
+   "line": 7871,
    "status": "extracted"
   },
   {
@@ -3965,7 +3928,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/untrusted.rs 213:9-213:14",
    "file": "Funs.lean",
-   "line": 7732,
+   "line": 7899,
    "status": "extracted"
   },
   {
@@ -3974,7 +3937,7 @@
    "rust": "noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Diagnostic}::fmt",
    "source": "crates/noble-kernel/src/untrusted.rs 213:16-213:21",
    "file": "Funs.lean",
-   "line": 7740,
+   "line": 7907,
    "status": "extracted"
   },
   {
@@ -3984,7 +3947,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/untrusted.rs 213:16-213:21",
    "file": "Funs.lean",
-   "line": 7771,
+   "line": 7938,
    "status": "extracted"
   },
   {
@@ -3993,7 +3956,16 @@
    "rust": "noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::Outcome}::clone",
    "source": "crates/noble-kernel/src/untrusted.rs 232:9-232:14",
    "file": "Funs.lean",
-   "line": 7779,
+   "line": 7946,
+   "status": "extracted"
+  },
+  {
+   "lean": "noble_kernel.acceptance.parts.find_unused",
+   "kind": "def",
+   "rust": "noble_kernel::acceptance::parts::find_unused",
+   "source": "crates/noble-kernel/src/acceptance/parts.rs 194:0-209:1",
+   "file": "Funs.lean",
+   "line": 778,
    "status": "extracted"
   },
   {
@@ -4003,7 +3975,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/untrusted.rs 232:9-232:14",
    "file": "Funs.lean",
-   "line": 7799,
+   "line": 7966,
    "status": "extracted"
   },
   {
@@ -4012,7 +3984,7 @@
    "rust": "noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Outcome}::fmt",
    "source": "crates/noble-kernel/src/untrusted.rs 232:16-232:21",
    "file": "Funs.lean",
-   "line": 7807,
+   "line": 7974,
    "status": "extracted"
   },
   {
@@ -4022,7 +3994,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/untrusted.rs 232:16-232:21",
    "file": "Funs.lean",
-   "line": 7840,
+   "line": 8007,
    "status": "extracted"
   },
   {
@@ -4032,7 +4004,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/words.rs 15:9-15:14",
    "file": "Funs.lean",
-   "line": 7848,
+   "line": 8015,
    "status": "extracted"
   },
   {
@@ -4042,7 +4014,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/words.rs 15:16-15:20",
    "file": "Funs.lean",
-   "line": 7855,
+   "line": 8022,
    "status": "extracted"
   },
   {
@@ -4052,7 +4024,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/words.rs 15:29-15:38",
    "file": "Funs.lean",
-   "line": 7862,
+   "line": 8029,
    "status": "extracted"
   },
   {
@@ -4061,7 +4033,17 @@
    "rust": "noble_kernel::words::{impl core::cmp::Eq for noble_kernel::words::Variable}::assert_fields_are_eq",
    "source": "crates/noble-kernel/src/words.rs 15:40-15:42",
    "file": "Funs.lean",
-   "line": 7869,
+   "line": 8036,
+   "status": "extracted"
+  },
+  {
+   "lean": "noble_kernel.acceptance.parts.same_multiset_loop.body",
+   "kind": "def",
+   "rust": "noble_kernel::acceptance::parts::same_multiset",
+   "loop_body": true,
+   "source": "crates/noble-kernel/src/acceptance/parts.rs 181:4-189:5",
+   "file": "Funs.lean",
+   "line": 787,
    "status": "extracted"
   },
   {
@@ -4071,7 +4053,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/words.rs 15:40-15:42",
    "file": "Funs.lean",
-   "line": 7876,
+   "line": 8043,
    "status": "extracted"
   },
   {
@@ -4081,7 +4063,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/words.rs 19:16-19:20",
    "file": "Funs.lean",
-   "line": 7884,
+   "line": 8051,
    "status": "extracted"
   },
   {
@@ -4091,7 +4073,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/words.rs 19:29-19:38",
    "file": "Funs.lean",
-   "line": 7892,
+   "line": 8059,
    "status": "extracted"
   },
   {
@@ -4101,7 +4083,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/words.rs 19:29-19:38",
    "file": "Funs.lean",
-   "line": 7899,
+   "line": 8066,
    "status": "extracted"
   },
   {
@@ -4110,7 +4092,7 @@
    "rust": "noble_kernel::words::{impl core::cmp::Eq for noble_kernel::words::VariableKind}::assert_fields_are_eq",
    "source": "crates/noble-kernel/src/words.rs 19:40-19:42",
    "file": "Funs.lean",
-   "line": 7909,
+   "line": 8076,
    "status": "extracted"
   },
   {
@@ -4120,7 +4102,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/words.rs 19:40-19:42",
    "file": "Funs.lean",
-   "line": 7916,
+   "line": 8083,
    "status": "extracted"
   },
   {
@@ -4130,7 +4112,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/words.rs 57:9-57:14",
    "file": "Funs.lean",
-   "line": 7925,
+   "line": 8092,
    "status": "extracted"
   },
   {
@@ -4139,7 +4121,7 @@
    "rust": "noble_kernel::words::{impl core::clone::Clone for noble_kernel::words::InstError}::clone",
    "source": "crates/noble-kernel/src/words.rs 64:9-64:14",
    "file": "Funs.lean",
-   "line": 7932,
+   "line": 8099,
    "status": "extracted"
   },
   {
@@ -4149,7 +4131,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/words.rs 64:9-64:14",
    "file": "Funs.lean",
-   "line": 7939,
+   "line": 8106,
    "status": "extracted"
   },
   {
@@ -4159,7 +4141,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/words.rs 64:16-64:20",
    "file": "Funs.lean",
-   "line": 7947,
+   "line": 8114,
    "status": "extracted"
   },
   {
@@ -4168,7 +4150,7 @@
    "rust": "noble_kernel::words::{impl core::fmt::Debug for noble_kernel::words::InstError}::fmt",
    "source": "crates/noble-kernel/src/words.rs 64:22-64:27",
    "file": "Funs.lean",
-   "line": 7955,
+   "line": 8122,
    "status": "extracted"
   },
   {
@@ -4178,7 +4160,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/words.rs 64:22-64:27",
    "file": "Funs.lean",
-   "line": 7976,
+   "line": 8143,
    "status": "extracted"
   },
   {
@@ -4188,7 +4170,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/words.rs 64:29-64:38",
    "file": "Funs.lean",
-   "line": 7983,
+   "line": 8150,
    "status": "extracted"
   },
   {
@@ -4197,7 +4179,7 @@
    "rust": "noble_kernel::words::{impl core::cmp::PartialEq<noble_kernel::words::InstError> for noble_kernel::words::InstError}::eq",
    "source": "crates/noble-kernel/src/words.rs 64:29-64:38",
    "file": "Funs.lean",
-   "line": 7990,
+   "line": 8157,
    "status": "extracted"
   },
   {
@@ -4207,7 +4189,7 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/words.rs 64:29-64:38",
    "file": "Funs.lean",
-   "line": 7999,
+   "line": 8166,
    "status": "extracted"
   },
   {
@@ -4216,7 +4198,7 @@
    "rust": "noble_kernel::words::{impl core::cmp::Eq for noble_kernel::words::InstError}::assert_fields_are_eq",
    "source": "crates/noble-kernel/src/words.rs 64:40-64:42",
    "file": "Funs.lean",
-   "line": 8009,
+   "line": 8176,
    "status": "extracted"
   },
   {
@@ -4226,48 +4208,54 @@
    "trait_impl": true,
    "source": "crates/noble-kernel/src/words.rs 64:40-64:42",
    "file": "Funs.lean",
-   "line": 8016,
+   "line": 8183,
    "status": "extracted"
   },
   {
-   "lean": "noble_kernel.Bool.Insts.CoreCmpPartialEqBool.ne",
+   "lean": "noble_kernel.acceptance.parts.same_multiset_loop",
    "kind": "def",
-   "rust": "core::cmp::impls::{core::cmp::PartialEq<bool, bool>}::ne",
-   "file": "FunsExternal.lean",
-   "line": 51,
-   "status": "modeled"
+   "rust": "noble_kernel::acceptance::parts::same_multiset",
+   "source": "crates/noble-kernel/src/acceptance/parts.rs 181:4-189:5",
+   "file": "Funs.lean",
+   "line": 815,
+   "status": "extracted"
   },
   {
-   "lean": "noble_kernel.Usize.Insts.CoreConvertTryFromU32TryFromIntError.try_from",
+   "lean": "noble_kernel.acceptance.parts.same_multiset",
    "kind": "def",
-   "rust": "core::convert::num::ptr_try_from_impls::{core::convert::TryFrom<usize, u32, core::num::error::TryFromIntError>}::try_from",
-   "file": "FunsExternal.lean",
-   "line": 64,
-   "status": "modeled"
+   "rust": "noble_kernel::acceptance::parts::same_multiset",
+   "source": "crates/noble-kernel/src/acceptance/parts.rs 174:0-191:1",
+   "file": "Funs.lean",
+   "line": 828,
+   "status": "extracted"
   },
   {
-   "lean": "noble_kernel.U64.Insts.CoreConvertTryFromUsizeTryFromIntError.try_from",
+   "lean": "noble_kernel.acceptance.parts.mismatch_constraint",
    "kind": "def",
-   "rust": "core::convert::num::ptr_try_from_impls::{core::convert::TryFrom<u64, usize, core::num::error::TryFromIntError>}::try_from",
-   "file": "FunsExternal.lean",
-   "line": 73,
-   "status": "modeled"
+   "rust": "noble_kernel::acceptance::parts::mismatch_constraint",
+   "source": "crates/noble-kernel/src/acceptance/parts.rs 151:0-160:1",
+   "file": "Funs.lean",
+   "line": 841,
+   "status": "extracted"
   },
   {
-   "lean": "noble_kernel.core.fmt.Formatter.debug_c_like_enum_write_str",
+   "lean": "noble_kernel.types.EffSet.union_loop.body",
    "kind": "def",
-   "rust": "core::fmt::{core::fmt::Formatter<'a>}::debug_c_like_enum_write_str",
-   "file": "FunsExternal.lean",
-   "line": 83,
-   "status": "modeled"
+   "rust": "noble_kernel::types::{noble_kernel::types::EffSet}::union",
+   "loop_body": true,
+   "source": "crates/noble-kernel/src/types.rs 88:8-104:9",
+   "file": "Funs.lean",
+   "line": 859,
+   "status": "extracted"
   },
   {
-   "lean": "noble_kernel.core.option.Option.Insts.CoreFmtDebug.fmt",
+   "lean": "noble_kernel.types.EffSet.union_loop",
    "kind": "def",
-   "rust": "core::option::{core::fmt::Debug<core::option::Option<@T>>}::fmt",
-   "file": "FunsExternal.lean",
-   "line": 94,
-   "status": "modeled"
+   "rust": "noble_kernel::types::{noble_kernel::types::EffSet}::union",
+   "source": "crates/noble-kernel/src/types.rs 88:8-104:9",
+   "file": "Funs.lean",
+   "line": 996,
+   "status": "extracted"
   },
   {
    "lean": "noble_kernel.core.num.Usize.saturating_mul",
@@ -4409,6 +4397,46 @@
    "line": 298,
    "status": "excepted",
    "note": "Crate function declared #[charon::opaque] in the Rust source (disclosed extraction exception: Aeneas cannot functionalize the loop inside the trait-instance mutual block); a faithful total model is implemented in FunsExternal.lean. Carries no checker decision (copying/formatting step)."
+  },
+  {
+   "lean": "noble_kernel.Bool.Insts.CoreCmpPartialEqBool.ne",
+   "kind": "def",
+   "rust": "core::cmp::impls::{core::cmp::PartialEq<bool, bool>}::ne",
+   "file": "FunsExternal.lean",
+   "line": 51,
+   "status": "modeled"
+  },
+  {
+   "lean": "noble_kernel.Usize.Insts.CoreConvertTryFromU32TryFromIntError.try_from",
+   "kind": "def",
+   "rust": "core::convert::num::ptr_try_from_impls::{core::convert::TryFrom<usize, u32, core::num::error::TryFromIntError>}::try_from",
+   "file": "FunsExternal.lean",
+   "line": 64,
+   "status": "modeled"
+  },
+  {
+   "lean": "noble_kernel.U64.Insts.CoreConvertTryFromUsizeTryFromIntError.try_from",
+   "kind": "def",
+   "rust": "core::convert::num::ptr_try_from_impls::{core::convert::TryFrom<u64, usize, core::num::error::TryFromIntError>}::try_from",
+   "file": "FunsExternal.lean",
+   "line": 73,
+   "status": "modeled"
+  },
+  {
+   "lean": "noble_kernel.core.fmt.Formatter.debug_c_like_enum_write_str",
+   "kind": "def",
+   "rust": "core::fmt::{core::fmt::Formatter<'a>}::debug_c_like_enum_write_str",
+   "file": "FunsExternal.lean",
+   "line": 83,
+   "status": "modeled"
+  },
+  {
+   "lean": "noble_kernel.core.option.Option.Insts.CoreFmtDebug.fmt",
+   "kind": "def",
+   "rust": "core::option::{core::fmt::Debug<core::option::Option<@T>>}::fmt",
+   "file": "FunsExternal.lean",
+   "line": 94,
+   "status": "modeled"
   }
  ]
 }

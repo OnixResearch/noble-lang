@@ -1901,7 +1901,7 @@ def shapes.Pattern.Insts.CoreCloneClone.clone
 partial_fixpoint
 
 /-- [noble_kernel::words::subst::queue_parts]: loop body 0:
-    Source: 'crates/noble-kernel/src/words/subst.rs', lines 284:4-292:5 -/
+    Source: 'crates/noble-kernel/src/words/subst.rs', lines 290:4-298:5 -/
 @[rust_loop_body]
 def words.subst.queue_parts_loop.body
   (stack_in : Slice shapes.Pattern) (stack_out : Slice shapes.Pattern)
@@ -1931,7 +1931,7 @@ def words.subst.queue_parts_loop.body
   else ok (done walk)
 
 /-- [noble_kernel::words::subst::queue_parts]: loop 0:
-    Source: 'crates/noble-kernel/src/words/subst.rs', lines 284:4-292:5 -/
+    Source: 'crates/noble-kernel/src/words/subst.rs', lines 290:4-298:5 -/
 @[rust_loop]
 def words.subst.queue_parts_loop
   (stack_in : Slice shapes.Pattern) (stack_out : Slice shapes.Pattern)
@@ -1945,7 +1945,7 @@ def words.subst.queue_parts_loop
     (walk, part_index)
 
 /-- [noble_kernel::words::subst::queue_parts]:
-    Source: 'crates/noble-kernel/src/words/subst.rs', lines 276:0-294:1 -/
+    Source: 'crates/noble-kernel/src/words/subst.rs', lines 282:0-300:1 -/
 def words.subst.queue_parts
   (stack_in : Slice shapes.Pattern) (stack_out : Slice shapes.Pattern)
   (walk : words.subst.Walk) :
@@ -1956,7 +1956,7 @@ def words.subst.queue_parts
   words.subst.queue_parts_loop stack_in stack_out walk out_len in_len 0#usize
 
 /-- [noble_kernel::words::subst::part_task]:
-    Source: 'crates/noble-kernel/src/words/subst.rs', lines 236:0-273:1 -/
+    Source: 'crates/noble-kernel/src/words/subst.rs', lines 240:0-279:1 -/
 def words.subst.part_task
   (node : shapes.Pattern) (inst : words.Inst) (walk : words.subst.Walk) :
   Result (words.subst.Walk × (core.result.Result Unit words.InstError))
@@ -2000,13 +2000,13 @@ def words.subst.part_task
     ok ({ walk with segments := v }, core.result.Result.Ok ())
   | shapes.Pattern.PairPattern left right =>
     let v ← alloc.vec.Vec.push walk.work (words.subst.Task.Finish marker)
-    let v1 ← alloc.vec.Vec.push v (words.subst.Task.Part left)
-    let v2 ← alloc.vec.Vec.push v1 (words.subst.Task.Part right)
+    let v1 ← alloc.vec.Vec.push v (words.subst.Task.Part right)
+    let v2 ← alloc.vec.Vec.push v1 (words.subst.Task.Part left)
     ok ({ walk with work := v2 }, core.result.Result.Ok ())
   | shapes.Pattern.SumPattern left right =>
     let v ← alloc.vec.Vec.push walk.work (words.subst.Task.Finish marker)
-    let v1 ← alloc.vec.Vec.push v (words.subst.Task.Part left)
-    let v2 ← alloc.vec.Vec.push v1 (words.subst.Task.Part right)
+    let v1 ← alloc.vec.Vec.push v (words.subst.Task.Part right)
+    let v2 ← alloc.vec.Vec.push v1 (words.subst.Task.Part left)
     ok ({ walk with work := v2 }, core.result.Result.Ok ())
   | shapes.Pattern.ListPattern item =>
     let v ← alloc.vec.Vec.push walk.work (words.subst.Task.Finish marker)
@@ -2058,7 +2058,7 @@ def types.Ty.program
   ok (types.Ty.ProgramType stack_in stack_out effects)
 
 /-- [noble_kernel::words::subst::expand_task]: loop body 0:
-    Source: 'crates/noble-kernel/src/words/subst.rs', lines 190:4-201:5 -/
+    Source: 'crates/noble-kernel/src/words/subst.rs', lines 194:4-205:5 -/
 @[rust_loop_body]
 def words.subst.expand_task_loop0.body
   (wanted : Std.Usize) (walk : words.subst.Walk)
@@ -2079,7 +2079,7 @@ def words.subst.expand_task_loop0.body
   else ok (done (walk, collected, false))
 
 /-- [noble_kernel::words::subst::expand_task]: loop 0:
-    Source: 'crates/noble-kernel/src/words/subst.rs', lines 190:4-201:5 -/
+    Source: 'crates/noble-kernel/src/words/subst.rs', lines 194:4-205:5 -/
 @[rust_loop]
 def words.subst.expand_task_loop0
   (walk : words.subst.Walk) (wanted : Std.Usize)
@@ -2092,7 +2092,7 @@ def words.subst.expand_task_loop0
     (walk, collected, popped)
 
 /-- [noble_kernel::words::subst::expand_task]: loop body 1:
-    Source: 'crates/noble-kernel/src/words/subst.rs', lines 210:4-215:5 -/
+    Source: 'crates/noble-kernel/src/words/subst.rs', lines 214:4-219:5 -/
 @[rust_loop_body]
 def words.subst.expand_task_loop1.body
   (parts_in : alloc.vec.Vec shapes.Pattern)
@@ -2117,7 +2117,7 @@ def words.subst.expand_task_loop1.body
   else ok (done (parts, stack_in))
 
 /-- [noble_kernel::words::subst::expand_task]: loop 1:
-    Source: 'crates/noble-kernel/src/words/subst.rs', lines 210:4-215:5 -/
+    Source: 'crates/noble-kernel/src/words/subst.rs', lines 214:4-219:5 -/
 @[rust_loop]
 def words.subst.expand_task_loop1
   (parts_in : alloc.vec.Vec shapes.Pattern)
@@ -2132,7 +2132,7 @@ def words.subst.expand_task_loop1
     (parts, stack_in, in_step)
 
 /-- [noble_kernel::words::subst::expand_task]: loop body 2:
-    Source: 'crates/noble-kernel/src/words/subst.rs', lines 219:4-224:5 -/
+    Source: 'crates/noble-kernel/src/words/subst.rs', lines 223:4-228:5 -/
 @[rust_loop_body]
 def words.subst.expand_task_loop2.body
   (parts_out : alloc.vec.Vec shapes.Pattern)
@@ -2156,7 +2156,7 @@ def words.subst.expand_task_loop2.body
   else ok (done stack_out)
 
 /-- [noble_kernel::words::subst::expand_task]: loop 2:
-    Source: 'crates/noble-kernel/src/words/subst.rs', lines 219:4-224:5 -/
+    Source: 'crates/noble-kernel/src/words/subst.rs', lines 223:4-228:5 -/
 @[rust_loop]
 def words.subst.expand_task_loop2
   (parts_out : alloc.vec.Vec shapes.Pattern)
@@ -2170,7 +2170,7 @@ def words.subst.expand_task_loop2
     (parts, stack_out, out_step)
 
 /-- [noble_kernel::words::subst::expand_task]:
-    Source: 'crates/noble-kernel/src/words/subst.rs', lines 170:0-233:1 -/
+    Source: 'crates/noble-kernel/src/words/subst.rs', lines 174:0-237:1 -/
 def words.subst.expand_task
   (scheme : words.Scheme) (node : shapes.Pattern) (inst : words.Inst)
   (walk : words.subst.Walk) :
@@ -2254,7 +2254,7 @@ def words.segments.single
   else ok (core.result.Result.Err words.InstError.OversizedType)
 
 /-- [noble_kernel::words::segments::pair_segment]:
-    Source: 'crates/noble-kernel/src/words/segments.rs', lines 18:0-37:1 -/
+    Source: 'crates/noble-kernel/src/words/segments.rs', lines 28:0-47:1 -/
 def words.segments.pair_segment
   (left : alloc.vec.Vec types.Ty) (right : alloc.vec.Vec types.Ty)
   (is_sum : Bool) :
@@ -2278,74 +2278,241 @@ def words.segments.pair_segment
     | core.result.Result.Err failure => ok (core.result.Result.Err failure)
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
+/-- [noble_kernel::words::segments::list_segment]:
+    Source: 'crates/noble-kernel/src/words/segments.rs', lines 19:0-26:1 -/
+def words.segments.list_segment
+  («only» : alloc.vec.Vec types.Ty) :
+  Result (core.result.Result (alloc.vec.Vec types.Ty) words.InstError)
+  := do
+  let r ← words.segments.single «only»
+  match r with
+  | core.result.Result.Ok value =>
+    let y ←
+      lift (Std.Array.to_slice (Array.make 1#usize [ types.Ty.ListType value ]
+        : Array types.Ty 1#usize))
+    let ret := alloc.slice.Slice.into_vec y
+    ok (core.result.Result.Ok ret)
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_kernel::words::segments::{impl core::ops::function::FnOnce<(alloc::vec::Vec<noble_kernel::types::Ty>,), core::result::Result<alloc::vec::Vec<noble_kernel::types::Ty>, noble_kernel::words::InstError>> for noble_kernel::words::segments::list_segment}::call_once]:
+    Source: 'crates/noble-kernel/src/words/segments.rs', lines 19:0-26:1 -/
+def P.Insts.CoreOpsFunctionFnOnceTupleVecTyResultVecTyInstError.call_once
+  (state : alloc.vec.Vec types.Ty → Result (core.result.Result (alloc.vec.Vec
+  types.Ty) words.InstError)) (args : alloc.vec.Vec types.Ty) :
+  Result (core.result.Result (alloc.vec.Vec types.Ty) words.InstError)
+  := do
+  words.segments.list_segment args
+
+/-- Trait implementation: [noble_kernel::words::segments::{impl core::ops::function::FnOnce<(alloc::vec::Vec<noble_kernel::types::Ty>,), core::result::Result<alloc::vec::Vec<noble_kernel::types::Ty>, noble_kernel::words::InstError>> for noble_kernel::words::segments::list_segment}]
+    Source: 'crates/noble-kernel/src/words/segments.rs', lines 19:0-26:1 -/
+@[reducible]
+def P.Insts.CoreOpsFunctionFnOnceTupleVecTyResultVecTyInstError :
+  core.ops.function.FnOnce (alloc.vec.Vec types.Ty → Result
+  (core.result.Result (alloc.vec.Vec types.Ty) words.InstError)) (alloc.vec.Vec
+  types.Ty) (core.result.Result (alloc.vec.Vec types.Ty) words.InstError) := {
+  call_once :=
+    P.Insts.CoreOpsFunctionFnOnceTupleVecTyResultVecTyInstError.call_once
+}
+
 /-- [noble_kernel::words::subst::finish_task]:
-    Source: 'crates/noble-kernel/src/words/subst.rs', lines 132:0-167:1 -/
+    Source: 'crates/noble-kernel/src/words/subst.rs', lines 132:0-171:1 -/
 def words.subst.finish_task
   (node : shapes.Pattern) (walk : words.subst.Walk) :
   Result (words.subst.Walk × (core.result.Result Unit words.InstError))
   := do
-  let (o, v) ← alloc.vec.Vec.pop Global walk.segments
-  match o with
-  | none =>
-    ok ({ walk with segments := v }, core.result.Result.Err
-      words.InstError.OversizedType)
-  | some segment =>
+  match node with
+  | shapes.Pattern.UnitPattern =>
+    let (o, v) ← alloc.vec.Vec.pop Global walk.segments
     let (o1, v1) ← alloc.vec.Vec.pop Global v
-    match o1 with
+    match o with
     | none =>
       ok ({ walk with segments := v1 }, core.result.Result.Err
         words.InstError.OversizedType)
-    | some segment1 =>
-      let (v2, built) ←
-        match node with
-        | shapes.Pattern.UnitPattern =>
-          ok (v1, core.result.Result.Err words.InstError.KindMismatch)
-        | shapes.Pattern.BoolPattern =>
-          ok (v1, core.result.Result.Err words.InstError.KindMismatch)
-        | shapes.Pattern.I64Pattern =>
-          ok (v1, core.result.Result.Err words.InstError.KindMismatch)
-        | shapes.Pattern.TextPattern =>
-          ok (v1, core.result.Result.Err words.InstError.KindMismatch)
-        | shapes.Pattern.SyntaxPattern =>
-          ok (v1, core.result.Result.Err words.InstError.KindMismatch)
-        | shapes.Pattern.PairPattern _ _ =>
-          do
-          let built1 ← words.segments.pair_segment segment1 segment false
-          ok (v1, built1)
-        | shapes.Pattern.SumPattern _ _ =>
-          do
-          let built1 ← words.segments.pair_segment segment1 segment true
-          ok (v1, built1)
-        | shapes.Pattern.ListPattern _ =>
-          do
-          let r ← words.segments.single segment1
-          let r1 ←
-            match r with
-            | core.result.Result.Ok inner =>
-              do
-              let y ←
-                lift (Std.Array.to_slice
-                  (Array.make 1#usize [ types.Ty.ListType inner ] : Array
-                  types.Ty 1#usize))
-              let ret := alloc.slice.Slice.into_vec y
-              ok (core.result.Result.Ok ret)
-            | core.result.Result.Err problem =>
-              ok (core.result.Result.Err problem)
-          ok (v1, r1)
-        | shapes.Pattern.ProgramPattern _ _ _ =>
-          ok (v1, core.result.Result.Err words.InstError.KindMismatch)
-        | shapes.Pattern.ResourcePattern _ =>
-          ok (v1, core.result.Result.Err words.InstError.KindMismatch)
-        | shapes.Pattern.VarPattern _ =>
-          ok (v1, core.result.Result.Err words.InstError.KindMismatch)
-        | shapes.Pattern.StackVarPattern _ =>
-          ok (v1, core.result.Result.Err words.InstError.KindMismatch)
-      match built with
-      | core.result.Result.Ok segment2 =>
-        let v3 ← alloc.vec.Vec.push v2 segment2
-        ok ({ walk with segments := v3 }, core.result.Result.Ok ())
+    | some _ =>
+      match o1 with
+      | none =>
+        ok ({ walk with segments := v1 }, core.result.Result.Err
+          words.InstError.OversizedType)
+      | some _ =>
+        ok ({ walk with segments := v1 }, core.result.Result.Err
+          words.InstError.KindMismatch)
+  | shapes.Pattern.BoolPattern =>
+    let (o, v) ← alloc.vec.Vec.pop Global walk.segments
+    let (o1, v1) ← alloc.vec.Vec.pop Global v
+    match o with
+    | none =>
+      ok ({ walk with segments := v1 }, core.result.Result.Err
+        words.InstError.OversizedType)
+    | some _ =>
+      match o1 with
+      | none =>
+        ok ({ walk with segments := v1 }, core.result.Result.Err
+          words.InstError.OversizedType)
+      | some _ =>
+        ok ({ walk with segments := v1 }, core.result.Result.Err
+          words.InstError.KindMismatch)
+  | shapes.Pattern.I64Pattern =>
+    let (o, v) ← alloc.vec.Vec.pop Global walk.segments
+    let (o1, v1) ← alloc.vec.Vec.pop Global v
+    match o with
+    | none =>
+      ok ({ walk with segments := v1 }, core.result.Result.Err
+        words.InstError.OversizedType)
+    | some _ =>
+      match o1 with
+      | none =>
+        ok ({ walk with segments := v1 }, core.result.Result.Err
+          words.InstError.OversizedType)
+      | some _ =>
+        ok ({ walk with segments := v1 }, core.result.Result.Err
+          words.InstError.KindMismatch)
+  | shapes.Pattern.TextPattern =>
+    let (o, v) ← alloc.vec.Vec.pop Global walk.segments
+    let (o1, v1) ← alloc.vec.Vec.pop Global v
+    match o with
+    | none =>
+      ok ({ walk with segments := v1 }, core.result.Result.Err
+        words.InstError.OversizedType)
+    | some _ =>
+      match o1 with
+      | none =>
+        ok ({ walk with segments := v1 }, core.result.Result.Err
+          words.InstError.OversizedType)
+      | some _ =>
+        ok ({ walk with segments := v1 }, core.result.Result.Err
+          words.InstError.KindMismatch)
+  | shapes.Pattern.SyntaxPattern =>
+    let (o, v) ← alloc.vec.Vec.pop Global walk.segments
+    let (o1, v1) ← alloc.vec.Vec.pop Global v
+    match o with
+    | none =>
+      ok ({ walk with segments := v1 }, core.result.Result.Err
+        words.InstError.OversizedType)
+    | some _ =>
+      match o1 with
+      | none =>
+        ok ({ walk with segments := v1 }, core.result.Result.Err
+          words.InstError.OversizedType)
+      | some _ =>
+        ok ({ walk with segments := v1 }, core.result.Result.Err
+          words.InstError.KindMismatch)
+  | shapes.Pattern.PairPattern _ _ =>
+    let (o, v) ← alloc.vec.Vec.pop Global walk.segments
+    let (o1, v1) ← alloc.vec.Vec.pop Global v
+    match o with
+    | none =>
+      ok ({ walk with segments := v1 }, core.result.Result.Err
+        words.InstError.OversizedType)
+    | some right =>
+      match o1 with
+      | none =>
+        ok ({ walk with segments := v1 }, core.result.Result.Err
+          words.InstError.OversizedType)
+      | some left =>
+        let built ← words.segments.pair_segment left right false
+        match built with
+        | core.result.Result.Ok segment =>
+          let v2 ← alloc.vec.Vec.push v1 segment
+          ok ({ walk with segments := v2 }, core.result.Result.Ok ())
+        | core.result.Result.Err problem =>
+          ok ({ walk with segments := v1 }, core.result.Result.Err problem)
+  | shapes.Pattern.SumPattern _ _ =>
+    let (o, v) ← alloc.vec.Vec.pop Global walk.segments
+    let (o1, v1) ← alloc.vec.Vec.pop Global v
+    match o with
+    | none =>
+      ok ({ walk with segments := v1 }, core.result.Result.Err
+        words.InstError.OversizedType)
+    | some right =>
+      match o1 with
+      | none =>
+        ok ({ walk with segments := v1 }, core.result.Result.Err
+          words.InstError.OversizedType)
+      | some left =>
+        let built ← words.segments.pair_segment left right true
+        match built with
+        | core.result.Result.Ok segment =>
+          let v2 ← alloc.vec.Vec.push v1 segment
+          ok ({ walk with segments := v2 }, core.result.Result.Ok ())
+        | core.result.Result.Err problem =>
+          ok ({ walk with segments := v1 }, core.result.Result.Err problem)
+  | shapes.Pattern.ListPattern _ =>
+    let (o, v) ← alloc.vec.Vec.pop Global walk.segments
+    let o1 ←
+      core.option.Option.map
+        P.Insts.CoreOpsFunctionFnOnceTupleVecTyResultVecTyInstError o
+        (words.segments.list_segment)
+    match o1 with
+    | none =>
+      ok ({ walk with segments := v }, core.result.Result.Err
+        words.InstError.OversizedType)
+    | some r =>
+      match r with
+      | core.result.Result.Ok segment =>
+        let v1 ← alloc.vec.Vec.push v segment
+        ok ({ walk with segments := v1 }, core.result.Result.Ok ())
       | core.result.Result.Err problem =>
-        ok ({ walk with segments := v2 }, core.result.Result.Err problem)
+        ok ({ walk with segments := v }, core.result.Result.Err problem)
+  | shapes.Pattern.ProgramPattern _ _ _ =>
+    let (o, v) ← alloc.vec.Vec.pop Global walk.segments
+    let (o1, v1) ← alloc.vec.Vec.pop Global v
+    match o with
+    | none =>
+      ok ({ walk with segments := v1 }, core.result.Result.Err
+        words.InstError.OversizedType)
+    | some _ =>
+      match o1 with
+      | none =>
+        ok ({ walk with segments := v1 }, core.result.Result.Err
+          words.InstError.OversizedType)
+      | some _ =>
+        ok ({ walk with segments := v1 }, core.result.Result.Err
+          words.InstError.KindMismatch)
+  | shapes.Pattern.ResourcePattern _ =>
+    let (o, v) ← alloc.vec.Vec.pop Global walk.segments
+    let (o1, v1) ← alloc.vec.Vec.pop Global v
+    match o with
+    | none =>
+      ok ({ walk with segments := v1 }, core.result.Result.Err
+        words.InstError.OversizedType)
+    | some _ =>
+      match o1 with
+      | none =>
+        ok ({ walk with segments := v1 }, core.result.Result.Err
+          words.InstError.OversizedType)
+      | some _ =>
+        ok ({ walk with segments := v1 }, core.result.Result.Err
+          words.InstError.KindMismatch)
+  | shapes.Pattern.VarPattern _ =>
+    let (o, v) ← alloc.vec.Vec.pop Global walk.segments
+    let (o1, v1) ← alloc.vec.Vec.pop Global v
+    match o with
+    | none =>
+      ok ({ walk with segments := v1 }, core.result.Result.Err
+        words.InstError.OversizedType)
+    | some _ =>
+      match o1 with
+      | none =>
+        ok ({ walk with segments := v1 }, core.result.Result.Err
+          words.InstError.OversizedType)
+      | some _ =>
+        ok ({ walk with segments := v1 }, core.result.Result.Err
+          words.InstError.KindMismatch)
+  | shapes.Pattern.StackVarPattern _ =>
+    let (o, v) ← alloc.vec.Vec.pop Global walk.segments
+    let (o1, v1) ← alloc.vec.Vec.pop Global v
+    match o with
+    | none =>
+      ok ({ walk with segments := v1 }, core.result.Result.Err
+        words.InstError.OversizedType)
+    | some _ =>
+      match o1 with
+      | none =>
+        ok ({ walk with segments := v1 }, core.result.Result.Err
+          words.InstError.OversizedType)
+      | some _ =>
+        ok ({ walk with segments := v1 }, core.result.Result.Err
+          words.InstError.KindMismatch)
 
 /-- [noble_kernel::words::subst::run_task]:
     Source: 'crates/noble-kernel/src/words/subst.rs', lines 114:0-129:1 -/

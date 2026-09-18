@@ -1,7 +1,8 @@
-# M2 scope review — feasibility milestone (updated 2026-09-18)
+# M2 scope review — feasibility milestone (updated 2026-09-18, second pass)
 
-Supersedes the 2026-09-17 review: the proof milestone (tasks 4.3–4.5) and
-the evidence records are now in scope. Everything below keeps the fragment
+Supersedes the earlier 2026-09-18 review: the proof milestone (4.3–4.5),
+the coverage classification gate (3.3), and the developer-experience
+controls (5.1–5.3) are now in scope. Everything below keeps the fragment
 label **M2 fragment v0**; the omissions enumerated in the design's
 V-MODEL-01 list remain omissions.
 
@@ -61,17 +62,42 @@ V-MODEL-01 list remain omissions.
    evaluation-closed theorems) and rejects any template axiom left in the
    external files (`EXTERNAL-MODELS`). Command and outputs:
    [the proof evidence](m2-proof-evidence.md) §1–2.
+7. **Per-function coverage classification (task 3.3).**
+   `verification/m2-coverage-gate.sh` passes on the current tree: every
+   generated function of the extraction subject is classified exactly once
+   with the reviewed vocabulary (474 functions: 451 extracted, 1 proved,
+   17 modeled, 5 excepted, 0 open), the excepted entries are exactly the
+   crate's five `#[charon::opaque]` disclosures, and every classified
+   constant binds in the elaborated environment with the refinement
+   citations verified. Command and output: [the acceptance
+   run](m2-acceptance-run.md) "Extraction regeneration".
+8. **Developer-experience controls (tasks 5.1–5.3).** The bounded property
+   harness (`crates/noble-kernel/tests/property.rs`) agrees with a
+   separately written acceptance oracle on 1000 seeded candidates
+   (0 disagreements, bounded shrinking in place) and bounds 200 malformed
+   candidates (0 accepted, 0 panics, debug/overflow-checks build); the
+   static documentation checks (`tests/docexamples.rs`) execute 8 tagged
+   `noble-check` examples through the actual checker with an illustrative
+   control; the three DX-01 negative diagnostic cases are named controls
+   (`tests/dx01.rs`). Evidence: [the acceptance
+   run](m2-acceptance-run.md) "Developer-experience controls".
+9. **Kernel substitution fix with re-extraction.** The 5.1 agreement lane
+   found two real checker bugs — pair/sum pattern children substituted
+   swapped, and list patterns never substituting (masked as
+   `InstantiationKind` rejections) — both in `words/subst.rs`'s iterative
+   walk, contradicting the documented contracts and the reference model.
+   Both are fixed minimally with a regression control, the extraction was
+   regenerated under the pinned toolchain (charon and aeneas exit 0), and
+   the coverage record re-synced; both verification gates and the full
+   kernel gate matrix pass on the fixed, regenerated tree. Failing cases
+   and evidence: [the acceptance run](m2-acceptance-run.md) "Kernel bug
+   found by the property harness".
 
 ## Explicitly not claimed
 
-- The bounded property harness and DX controls (5.1–5.3) remain open.
 - The lifecycle: spec sync, archive, push, integration (6.3) remain open;
   the obligation-ledger entries for PO-09/PO-10/PO-11 move with the parent
   acceptance sequence.
-- The per-function coverage classification gate (3.3 — separate
-  extracted/proved/modeled/excepted/open statuses in the reviewed source
-  inventory) remains open; the proof gate's theorem inventory is a
-  proof-level control, not that classification.
 - **Diagnostic provenance in the reference model.** For the
   `hidden_emit` and `resource_eligibility` fixtures the extracted checker
   locates the failing `node`/`def` site and the reference records `none`;
@@ -84,8 +110,11 @@ V-MODEL-01 list remain omissions.
   they carry no checker decisions.
 - Octet lint-phase residue: 10 formatter-inherent findings (hand-written
   `Debug` impls; a derived `Debug` breaks the translation) plus the 2
-  pre-existing `module_file_count` notes. The architecture catalog phase is
-  clean (0 findings).
+  pre-existing `module_file_count` notes — all in production sources. The
+  new DX test files add style warnings in the lint phase only (function
+  length, imports, recursion in the oracle's `Data` predicate); the design
+  keeps the harness/oracle/tests outside the kernel catalog scope, and the
+  architecture catalog phase stays clean (0 findings).
 - Lean proof files over the 300-line style cap (`Judgment` 358,
   `Termination` 317, `CheckSoundness` 379, `Embed` 488) are an accepted
   deviation (irreducible proof case-trees / one symmetric translation
@@ -100,6 +129,8 @@ V-MODEL-01 list remain omissions.
 - Extraction probe ladder: [m2-extraction-probe.md](m2-extraction-probe.md)
 - Latest strict probe log: [m2-probe-latest.log](m2-probe-latest.log)
 - Fragment definition: [m2-fragment.md](m2-fragment.md)
+- DX controls, property-harness output, gate matrix, the substitution fix
+  and the re-extraction: [m2-acceptance-run.md](m2-acceptance-run.md)
 - Kernel commits: `7a33a3f` (substitution walk translates), `17a4adb`
   (generated module compiles), `94c5ff3` (bounded equality walks),
   `33a3372` (green probe recorded), `3384989` (control run recorded).

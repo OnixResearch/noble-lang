@@ -84,6 +84,100 @@ A request binds the expected interface, the environment, the supported subset, a
 Node references are exact indices; quotation bodies are finite node lists (indices into the candidate); nesting is bounded by `depth`.
 An invocation's `inst` maps every scheme variable to a concrete stack, type, or effect set; a missing, extra, or oversized mapping rejects, and applying it to the scheme must equal the node's derived interface exactly.
 
+## Executed documentation examples
+
+Fenced code blocks tagged `noble-check` in this document and in the kernel
+crate's doc comments are **executed evidence**, not illustration: the
+`docexamples` test suite extracts them, decodes them against the bootstrap
+environment, runs them through the actual kernel checker, and asserts the
+outcome stated in the fence header. Any other fenced block — including this
+document's rule tables and the schema sketch above — is illustrative text
+and is never executed; the suite carries a control proving the schema block
+stays unexecuted.
+
+Format: the fence header is `noble-check expect=<outcome>` with `<outcome>`
+one of `accepted`, `invalid`, `unsupported`, `exhausted`, `internal-failure`.
+The body is one JSON object with `request` and `candidate` fields:
+
+- `request.expected` holds `in`/`out` stacks and `allowed_effects` as above;
+  `request.limits` is optional (defaults: bytes 65536, nodes 256, depth 32,
+  type_size 64, stack_height 16, work 100000, diagnostics 64).
+- The environment is the fixed bootstrap table; `def` names a word from the
+  contract table above. `test.counter` names the fixture resource kind.
+- A node's witness is an object with one key per scheme variable in order —
+  `v0`, `v1`, … — where a stack variable takes an array of types, a value
+  variable one type, and an effect variable an array of effect names.
+- `format` `"noble-candidate/v0"` decodes to the supported revision; any
+  other format string decodes to a foreign revision and must reject as
+  `unsupported`.
+
+```noble-check expect=accepted
+{"request":{"expected":{"in":[],"out":[{"i64":{}}],"allowed_effects":[]}},
+ "candidate":{"format":"noble-candidate/v0","nodes":[
+   {"kind":"literal","lit":{"i64":41},"inst":{"v0":[]}},
+   {"kind":"literal","lit":{"i64":1},"inst":{"v0":[{"i64":{}}]}},
+   {"kind":"invocation","def":"+","inst":{"v0":[]}}],
+  "body":[0,1,2]}}
+```
+
+```noble-check expect=accepted
+{"request":{"expected":{"in":[],"out":[{"i64":{}}],"allowed_effects":[]}},
+ "candidate":{"format":"noble-candidate/v0","nodes":[
+   {"kind":"literal","lit":{"i64":41},"inst":{"v0":[]}},
+   {"kind":"quotation","body":[2,3],"inst":{"v0":[{"i64":{}}],"v1":[{"i64":{}}],"v2":[{"i64":{}}],"v3":[]}},
+   {"kind":"literal","lit":{"i64":1},"inst":{"v0":[{"i64":{}}]}},
+   {"kind":"invocation","def":"+","inst":{"v0":[]}},
+   {"kind":"invocation","def":"run","inst":{"v0":[{"i64":{}}],"v1":[{"i64":{}}],"v2":[]}}],
+  "body":[0,1,4]}}
+```
+
+```noble-check expect=accepted
+{"request":{"expected":{"in":[],"out":[{"unit":{}}],"allowed_effects":["test.emit"]}},
+ "candidate":{"format":"noble-candidate/v0","nodes":[
+   {"kind":"literal","lit":{"text":"x"},"inst":{"v0":[]}},
+   {"kind":"invocation","def":"test.emit","inst":{"v0":[]}}],
+  "body":[0,1]}}
+```
+
+```noble-check expect=invalid
+{"request":{"expected":{"in":[],"out":[{"i64":{}}],"allowed_effects":[]}},
+ "candidate":{"format":"noble-candidate/v0","nodes":[
+   {"kind":"literal","lit":{"i64":1},"inst":{"v0":[]}},
+   {"kind":"literal","lit":{"bool":true},"inst":{"v0":[{"i64":{}}]}},
+   {"kind":"invocation","def":"+","inst":{"v0":[]}}],
+  "body":[0,1,2]}}
+```
+
+```noble-check expect=invalid
+{"request":{"expected":{"in":[],"out":[{"program":{"in":[],"out":[{"unit":{}}],"effects":[]}}],"allowed_effects":[]}},
+ "candidate":{"format":"noble-candidate/v0","nodes":[
+   {"kind":"invocation","def":"test.emit","inst":{"v0":[]}},
+   {"kind":"quotation","body":[0],"inst":{"v0":[],"v1":[],"v2":[{"unit":{}}],"v3":[]}}],
+  "body":[1]}}
+```
+
+```noble-check expect=invalid
+{"request":{"expected":{"in":[{"resource":"test.counter"}],"out":[{"resource":"test.counter"},{"resource":"test.counter"}],"allowed_effects":[]}},
+ "candidate":{"format":"noble-candidate/v0","nodes":[
+   {"kind":"invocation","def":"dup","inst":{"v0":[],"v1":{"resource":"test.counter"}}}],
+  "body":[0]}}
+```
+
+```noble-check expect=exhausted
+{"request":{"expected":{"in":[],"out":[{"unit":{}}],"allowed_effects":[]},"limits":{"nodes":1}},
+ "candidate":{"format":"noble-candidate/v0","nodes":[
+   {"kind":"literal","lit":{"unit":{}},"inst":{"v0":[]}},
+   {"kind":"literal","lit":{"unit":{}},"inst":{"v0":[{"unit":{}}]}}],
+  "body":[0,1]}}
+```
+
+```noble-check expect=unsupported
+{"request":{"expected":{"in":[],"out":[{"unit":{}}],"allowed_effects":[]}},
+ "candidate":{"format":"noble-candidate/v99","nodes":[
+   {"kind":"literal","lit":{"unit":{}},"inst":{"v0":[]}}],
+  "body":[0]}}
+```
+
 ## Rules
 
 ```text

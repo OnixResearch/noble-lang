@@ -15,6 +15,16 @@ pub(super) fn single(
     }
 }
 
+/// Complete one `list` pattern's payload from its single finished segment.
+pub(super) fn list_segment(
+    only: alloc::vec::Vec<crate::types::Ty>,
+) -> Result<alloc::vec::Vec<crate::types::Ty>, crate::words::InstError> {
+    let inner = attempt!(single(only));
+    Ok(alloc::vec![crate::types::Ty::List(alloc::boxed::Box::new(
+        inner,
+    ))])
+}
+
 pub(super) fn pair_segment(
     left: alloc::vec::Vec<crate::types::Ty>,
     right: alloc::vec::Vec<crate::types::Ty>,
