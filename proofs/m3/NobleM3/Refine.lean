@@ -114,3 +114,39 @@ def applyAgrees (n : Nat) (inst : NobleM2.Inst) : Bool :=
   | none => false
 
 end NobleM2.Refinement
+
+namespace NobleM2.Refinement
+
+/-! ## The canonical witness per word
+
+One witness per word that instantiates every declared variable with a
+canonical concrete binding, so the extracted and reference substitutions run
+on the same finite input. -/
+
+/-- The canonical type for a value variable. -/
+def canonTy : NobleM2.Ty := .i64
+
+/-- The canonical effect set for an effect variable. -/
+def canonSet : NobleM2.EffSet := EffSet.empty
+
+/-- A canonical instantiation for the word at position `n`: one binding per
+declared variable kind (stack = one `canonTy`, value = `canonTy`, effect =
+`canonSet`). -/
+def canonInst (n : Nat) : NobleM2.Inst :=
+  match NobleM2.wordTable[n]? with
+  | some word => ⟨word.scheme.varKinds.map (fun k =>
+      match k with
+      | .stack => .stack (.cons canonTy .nil)
+      | .value => .value canonTy
+      | .effect => .effect canonSet)⟩
+  | none => ⟨[]⟩
+
+/-- The application-agreement rows, one per word. -/
+def applyRows : List Bool :=
+  (List.range 23).map (fun n => applyAgrees n (canonInst n))
+
+/-- The application-level family: every word's substitution agrees. -/
+theorem apply_refines : applyRows = List.replicate 23 true := by
+  native_decide
+
+end NobleM2.Refinement
