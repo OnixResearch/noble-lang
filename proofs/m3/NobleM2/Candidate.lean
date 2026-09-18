@@ -17,7 +17,7 @@ inductive Lit where
   | bool : Bool → Lit
   | text : Lit
   | unit : Lit
-  deriving Repr, Inhabited
+  deriving Repr, DecidableEq, Inhabited
 
 /-- The three fragment node forms; every node carries its instantiation witness. -/
 inductive Node where
@@ -27,7 +27,7 @@ inductive Node where
   | invocation : Nat → Inst → Node
   /-- A quotation literal over a finite body of node references. -/
   | quotation : List Nat → Inst → Node
-  deriving Repr, Inhabited
+  deriving Repr, DecidableEq, Inhabited
 
 /-- The untrusted candidate: a finite node arena plus the entry body. -/
 structure Candidate where
