@@ -42,6 +42,10 @@ def extractedTable :
   | .vis _ _ => []
   | .div => []
 
+/-- The extracted builders, one per position. -/
+def extractedBuilders : List noble_kernel.words.Scheme :=
+  List.map Prod.snd extractedTable
+
 /-- Structural equality of two patterns via the derived `BEq` on the
 generated constructors. -/
 def partAgreesSimple (s t : noble_kernel.shapes.Pattern) : Bool :=
