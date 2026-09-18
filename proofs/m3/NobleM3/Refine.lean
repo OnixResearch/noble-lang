@@ -76,4 +76,41 @@ theorem table_refines :
     (List.range 23).all (fun n => positionAgrees n) = true := by
   native_decide
 
+/-- The extraction's empty scheme (the builder list is total, so this is
+unreachable). -/
+def defaultSchemeE : noble_kernel.words.Scheme :=
+  { var_kinds := alloc.vec.Vec.new _, stack_in := alloc.vec.Vec.new _,
+    stack_out := alloc.vec.Vec.new _, effects := alloc.vec.Vec.new _ }
+
+/-- Extracted substitution: both stacks through the generated walk. -/
+def extractedStacks (scheme : noble_kernel.words.Scheme) (inst : noble_kernel.words.Inst) :
+    Option (Bool × List noble_kernel.types.Ty × List noble_kernel.types.Ty) :=
+  let ra := noble_kernel.words.Scheme.subst_stack scheme scheme.stack_in.deref inst
+  let rb := noble_kernel.words.Scheme.subst_stack scheme scheme.stack_out.deref inst
+  match ra.match, rb.match with
+  | (.ok raI), (.ok rbI) =>
+    match raI, rbI with
+    | (.Ok va), (.Ok vb) => some (true, va.val, vb.val)
+    | _, _ => some (false, [], [])
+  | _, _ => some (false, [], [])
+
+/-- Reference substitution through the model's `instantiate`. -/
+def referenceStacks (word : NobleM2.Word) (inst : NobleM2.Inst) :
+    Option (List noble_kernel.types.Ty × List noble_kernel.types.Ty) :=
+  match NobleM2.Scheme.instantiate word.scheme inst with
+  | some (a, b, _) => some (List.map embedTy a.toList, List.map embedTy b.toList)
+  | none => none
+
+/-- One word's application agreement at an instantiation: the extracted
+substitution's stacks equal the reference substitution's embedded stacks. -/
+def embedInstE (inst : NobleM2.Inst) : noble_kernel.words.Inst := embedInst inst
+def applyAgrees (n : Nat) (inst : NobleM2.Inst) : Bool :=
+  match NobleM2.wordTable[n]? with
+  | some word =>
+    match extractedStacks (List.getD extractedBuilders n defaultSchemeE) (embedInstE inst),
+          referenceStacks word inst with
+    | some (okA, a, b), some (c, d) => okA && a == c && b == d
+    | _, _ => false
+  | none => false
+
 end NobleM2.Refinement
