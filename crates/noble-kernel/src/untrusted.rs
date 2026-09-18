@@ -4,7 +4,12 @@
 //! `Outcome::Accepted` carries a checked result.
 
 /// Format revision every candidate must carry.
-pub const CANDIDATE_FORMAT: u32 = 0;
+///
+/// Revision 1 adds reference bindings to instantiation witnesses, so a
+/// witness can state a type equation between two variables; revision 0
+/// candidates — the pre-equation schema — are rejected as unsupported with
+/// both revisions controlled.
+pub const CANDIDATE_FORMAT: u32 = 1;
 /// Semantic revision the fragment targets (`0.1.0-draft.5`).
 pub const SEMANTIC_REVISION: u32 = 0;
 
@@ -182,6 +187,12 @@ pub enum UnsupportedKind {
     NodeForm,
     /// A malformed environment scheme.
     SchemeForm,
+    /// A recursive definition dependency in external environment data;
+    /// names the definition the cycle closes on (B-CHECK-02).
+    RecursiveDependency(crate::contracts::Definition),
+    /// A user-declared recursive schema in external environment data;
+    /// names the declaration (B-CHECK-02).
+    RecursiveSchema(crate::contracts::SchemaId),
 }
 
 /// The violated constraint recorded by a rejection.
@@ -207,6 +218,9 @@ pub enum Constraint {
     MalformedReference(NodeId),
     /// A definition identity is not in the environment.
     UnknownDefinition(crate::contracts::Definition),
+    /// An instantiation witness refers to itself, directly or through a
+    /// chain of reference bindings (B-CHECK-05).
+    CyclicWitness,
 }
 
 /// One rejection's diagnostic.

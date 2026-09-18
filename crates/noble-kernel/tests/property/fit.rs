@@ -106,7 +106,7 @@ pub fn fit_word(rng: &mut Rng, now: &[Ty], def: u32) -> Option<(Vec<Binding>, Ve
                 ids,
             ))
         }
-        4 => {
+        4..=6 => {
             let (a, b) = top_two(now)?;
             if !matches!((a, b), (Ty::I64, Ty::I64)) {
                 return None;
@@ -118,6 +118,17 @@ pub fn fit_word(rng: &mut Rng, now: &[Ty], def: u32) -> Option<(Vec<Binding>, Ve
             ))
         }
         7 => {
+            let (a, b) = top_two(now)?;
+            if !matches!((a, b), (Ty::I64, Ty::I64)) {
+                return None;
+            }
+            Some((
+                vec![stack(under_two(now).to_vec())],
+                push(under_two(now), Ty::Bool),
+                vec![],
+            ))
+        }
+        8 => {
             let a = top(now)?;
             let inner = small_stack(rng);
             let mut body_out = inner.clone();
@@ -129,7 +140,7 @@ pub fn fit_word(rng: &mut Rng, now: &[Ty], def: u32) -> Option<(Vec<Binding>, Ve
                 vec![],
             ))
         }
-        8 => {
+        9 => {
             let (deeper, upper) = top_two(now)?;
             let (a_input, mid, e_set) = as_program(&deeper)?;
             let (mid2, c_out, f_set) = as_program(&upper)?;
@@ -151,7 +162,7 @@ pub fn fit_word(rng: &mut Rng, now: &[Ty], def: u32) -> Option<(Vec<Binding>, Ve
                 vec![],
             ))
         }
-        9 => {
+        10 => {
             let program = top(now)?;
             let (input, output, set) = as_program(&program)?;
             if input != under_one(now) {
@@ -164,7 +175,7 @@ pub fn fit_word(rng: &mut Rng, now: &[Ty], def: u32) -> Option<(Vec<Binding>, Ve
                 ids,
             ))
         }
-        10 => {
+        11 => {
             let program = top(now)?;
             let (input, output, set) = as_program(&program)?;
             Some((
@@ -178,8 +189,8 @@ pub fn fit_word(rng: &mut Rng, now: &[Ty], def: u32) -> Option<(Vec<Binding>, Ve
                 vec![],
             ))
         }
-        11 => Some((vec![stack(now.to_vec())], push(now, Ty::Unit), vec![])),
-        12 => {
+        12 => Some((vec![stack(now.to_vec())], push(now, Ty::Unit), vec![])),
+        13 => {
             let (a, b) = top_two(now)?;
             let joined = Ty::Pair(Box::new(a.clone()), Box::new(b.clone()));
             Some((
@@ -188,7 +199,7 @@ pub fn fit_word(rng: &mut Rng, now: &[Ty], def: u32) -> Option<(Vec<Binding>, Ve
                 vec![],
             ))
         }
-        13 => {
+        14 => {
             let joined = top(now)?;
             let (a, b) = match joined {
                 Ty::Pair(left, right) => ((*left).clone(), (*right).clone()),
@@ -201,10 +212,10 @@ pub fn fit_word(rng: &mut Rng, now: &[Ty], def: u32) -> Option<(Vec<Binding>, Ve
                 vec![],
             ))
         }
-        14 | 15 => {
+        15 | 16 => {
             let upper = top(now)?;
             let other = ty(rng, 0);
-            let (a, b) = if def == 14 {
+            let (a, b) = if def == 15 {
                 (upper, other)
             } else {
                 (other, upper)
@@ -217,6 +228,45 @@ pub fn fit_word(rng: &mut Rng, now: &[Ty], def: u32) -> Option<(Vec<Binding>, Ve
             ))
         }
         17 => {
+            if now.len() < 3 {
+                return None;
+            }
+            let (a, b) = match &now[now.len() - 3] {
+                Ty::Sum(left, right) => ((**left).clone(), (**right).clone()),
+                _ => return None,
+            };
+            let (p1_in, p1_out, e_set) = as_program(&now[now.len() - 2])?;
+            let (p2_in, p2_out, f_set) = as_program(&top(now)?)?;
+            let under = &now[..now.len() - 3];
+            let mut want1 = under.to_vec();
+            want1.push(a.clone());
+            if p1_in != want1 {
+                return None;
+            }
+            let mut want2 = under.to_vec();
+            want2.push(b.clone());
+            if p2_in != want2 {
+                return None;
+            }
+            if p1_out != p2_out {
+                return None;
+            }
+            let union = e_set.union(&f_set);
+            let next = [under, p1_out.as_slice()].concat();
+            Some((
+                vec![
+                    stack(under.to_vec()),
+                    value(a),
+                    value(b),
+                    stack(p1_out.clone()),
+                    effects(&ids_of(&e_set)),
+                    effects(&ids_of(&f_set)),
+                ],
+                next,
+                ids_of(&union),
+            ))
+        }
+        18 => {
             if now.len() < 3 {
                 return None;
             }
@@ -241,7 +291,7 @@ pub fn fit_word(rng: &mut Rng, now: &[Ty], def: u32) -> Option<(Vec<Binding>, Ve
                 ids_of(&union),
             ))
         }
-        18 => {
+        19 => {
             let item = ty(rng, 0);
             let joined = Ty::List(Box::new(item.clone()));
             Some((
@@ -250,7 +300,7 @@ pub fn fit_word(rng: &mut Rng, now: &[Ty], def: u32) -> Option<(Vec<Binding>, Ve
                 vec![],
             ))
         }
-        19 => {
+        20 => {
             let (item, listed) = top_two(now)?;
             let inner = match listed {
                 Ty::List(element) => (*element).clone(),
@@ -267,6 +317,43 @@ pub fn fit_word(rng: &mut Rng, now: &[Ty], def: u32) -> Option<(Vec<Binding>, Ve
             ))
         }
         21 => {
+            if now.len() < 3 {
+                return None;
+            }
+            let a = match &now[now.len() - 3] {
+                Ty::List(item) => (**item).clone(),
+                _ => return None,
+            };
+            let (p1_in, p1_out, e_set) = as_program(&now[now.len() - 2])?;
+            let (p2_in, p2_out, f_set) = as_program(&top(now)?)?;
+            let under = &now[..now.len() - 3];
+            if p1_in != under {
+                return None;
+            }
+            let mut want2 = under.to_vec();
+            want2.push(a.clone());
+            want2.push(Ty::List(Box::new(a.clone())));
+            if p2_in != want2 {
+                return None;
+            }
+            if p1_out != p2_out {
+                return None;
+            }
+            let union = e_set.union(&f_set);
+            let next = [under, p1_out.as_slice()].concat();
+            Some((
+                vec![
+                    stack(under.to_vec()),
+                    value(a),
+                    stack(p1_out.clone()),
+                    effects(&ids_of(&e_set)),
+                    effects(&ids_of(&f_set)),
+                ],
+                next,
+                ids_of(&union),
+            ))
+        }
+        22 => {
             if !matches!(top(now)?, Ty::Text) {
                 return None;
             }
@@ -276,7 +363,7 @@ pub fn fit_word(rng: &mut Rng, now: &[Ty], def: u32) -> Option<(Vec<Binding>, Ve
                 vec![0],
             ))
         }
-        22 => {
+        23 => {
             let resource = Ty::Resource(noble_kernel::contracts::FIXTURE_RESOURCE);
             Some((vec![stack(now.to_vec())], push(now, resource), vec![]))
         }

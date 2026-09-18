@@ -1,5 +1,6 @@
 //! Request preflight: format, limits, environment schemes, and effect
-//! identities. Every check completes before the machine starts.
+//! identities, plus the external-environment-data validation walks
+//! (B-CHECK-02). Every check completes before the machine starts.
 
 pub(super) fn check_request(
     env: &crate::contracts::Env,
@@ -24,6 +25,8 @@ pub(super) fn check_request(
         return Err(super::Fail::Exhausted(crate::untrusted::LimitKind::Nodes));
     }
     attempt!(validate_schemes(env));
+    attempt!(super::validate::dependencies(env, &request.limits));
+    attempt!(super::validate::schemas(env, &request.limits));
     let context = super::parts::Ctx { request, env };
     attempt!(super::parts::limits_of(
         &request.expected.stack_in,

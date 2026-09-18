@@ -25,7 +25,7 @@ use noble_kernel::words::{Binding, Inst};
 
 const DUP: Definition = Definition(0);
 const ADD: Definition = Definition(4);
-const IF: Definition = Definition(17);
+const IF: Definition = Definition(18);
 
 fn stack(segment: Vec<Ty>) -> Binding {
     Binding::Stack(segment)
@@ -103,7 +103,7 @@ fn reject(
 #[test]
 fn dx01_word_input_type_names_word_and_both_stacks() -> Result<(), String> {
     let candidate = noble_kernel::untrusted::Candidate {
-        format: 0,
+        format: noble_kernel::untrusted::CANDIDATE_FORMAT,
         revision: 0,
         nodes: vec![
             lit_node(Lit::I64(1), vec![]),
@@ -149,7 +149,7 @@ fn dx01_branch_output_type_names_the_unequal_join() -> Result<(), String> {
     let empty = Ty::program(vec![], vec![], noble_kernel::types::EffSet::empty());
     let after_left = vec![Ty::Bool, left.clone()];
     let candidate = noble_kernel::untrusted::Candidate {
-        format: 0,
+        format: noble_kernel::untrusted::CANDIDATE_FORMAT,
         revision: 0,
         nodes: vec![
             lit_node(Lit::Bool(true), vec![]),
@@ -208,7 +208,7 @@ fn dx01_branch_output_type_names_the_unequal_join() -> Result<(), String> {
 fn dx01_resource_duplication_reports_unavailable_provenance() -> Result<(), String> {
     let resource = Ty::Resource(noble_kernel::contracts::FIXTURE_RESOURCE);
     let candidate = noble_kernel::untrusted::Candidate {
-        format: 0,
+        format: noble_kernel::untrusted::CANDIDATE_FORMAT,
         revision: 0,
         nodes: vec![invocation(
             DUP,

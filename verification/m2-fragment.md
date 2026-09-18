@@ -107,13 +107,18 @@ The body is one JSON object with `request` and `candidate` fields:
 - A node's witness is an object with one key per scheme variable in order —
   `v0`, `v1`, … — where a stack variable takes an array of types, a value
   variable one type, and an effect variable an array of effect names.
-- `format` `"noble-candidate/v0"` decodes to the supported revision; any
+- `format` `"noble-candidate/v1"` decodes to the supported revision; any
   other format string decodes to a foreign revision and must reject as
-  `unsupported`.
+  `unsupported`. (Re-stamped at M3: the candidate schema gained reference
+  bindings for the B-CHECK-05 cyclic-witness rejections, which bumped the
+  supported format revision from `v0` to `v1` with both revisions
+  controlled — the executed examples below carry the current revision, and
+  the M3 kernel doc comments add a `v0` example asserting the old revision
+  now rejects as `unsupported`.)
 
 ```noble-check expect=accepted
 {"request":{"expected":{"in":[],"out":[{"i64":{}}],"allowed_effects":[]}},
- "candidate":{"format":"noble-candidate/v0","nodes":[
+ "candidate":{"format":"noble-candidate/v1","nodes":[
    {"kind":"literal","lit":{"i64":41},"inst":{"v0":[]}},
    {"kind":"literal","lit":{"i64":1},"inst":{"v0":[{"i64":{}}]}},
    {"kind":"invocation","def":"+","inst":{"v0":[]}}],
@@ -122,7 +127,7 @@ The body is one JSON object with `request` and `candidate` fields:
 
 ```noble-check expect=accepted
 {"request":{"expected":{"in":[],"out":[{"i64":{}}],"allowed_effects":[]}},
- "candidate":{"format":"noble-candidate/v0","nodes":[
+ "candidate":{"format":"noble-candidate/v1","nodes":[
    {"kind":"literal","lit":{"i64":41},"inst":{"v0":[]}},
    {"kind":"quotation","body":[2,3],"inst":{"v0":[{"i64":{}}],"v1":[{"i64":{}}],"v2":[{"i64":{}}],"v3":[]}},
    {"kind":"literal","lit":{"i64":1},"inst":{"v0":[{"i64":{}}]}},
@@ -133,7 +138,7 @@ The body is one JSON object with `request` and `candidate` fields:
 
 ```noble-check expect=accepted
 {"request":{"expected":{"in":[],"out":[{"unit":{}}],"allowed_effects":["test.emit"]}},
- "candidate":{"format":"noble-candidate/v0","nodes":[
+ "candidate":{"format":"noble-candidate/v1","nodes":[
    {"kind":"literal","lit":{"text":"x"},"inst":{"v0":[]}},
    {"kind":"invocation","def":"test.emit","inst":{"v0":[]}}],
   "body":[0,1]}}
@@ -141,7 +146,7 @@ The body is one JSON object with `request` and `candidate` fields:
 
 ```noble-check expect=invalid
 {"request":{"expected":{"in":[],"out":[{"i64":{}}],"allowed_effects":[]}},
- "candidate":{"format":"noble-candidate/v0","nodes":[
+ "candidate":{"format":"noble-candidate/v1","nodes":[
    {"kind":"literal","lit":{"i64":1},"inst":{"v0":[]}},
    {"kind":"literal","lit":{"bool":true},"inst":{"v0":[{"i64":{}}]}},
    {"kind":"invocation","def":"+","inst":{"v0":[]}}],
@@ -150,7 +155,7 @@ The body is one JSON object with `request` and `candidate` fields:
 
 ```noble-check expect=invalid
 {"request":{"expected":{"in":[],"out":[{"program":{"in":[],"out":[{"unit":{}}],"effects":[]}}],"allowed_effects":[]}},
- "candidate":{"format":"noble-candidate/v0","nodes":[
+ "candidate":{"format":"noble-candidate/v1","nodes":[
    {"kind":"invocation","def":"test.emit","inst":{"v0":[]}},
    {"kind":"quotation","body":[0],"inst":{"v0":[],"v1":[],"v2":[{"unit":{}}],"v3":[]}}],
   "body":[1]}}
@@ -158,14 +163,14 @@ The body is one JSON object with `request` and `candidate` fields:
 
 ```noble-check expect=invalid
 {"request":{"expected":{"in":[{"resource":"test.counter"}],"out":[{"resource":"test.counter"},{"resource":"test.counter"}],"allowed_effects":[]}},
- "candidate":{"format":"noble-candidate/v0","nodes":[
+ "candidate":{"format":"noble-candidate/v1","nodes":[
    {"kind":"invocation","def":"dup","inst":{"v0":[],"v1":{"resource":"test.counter"}}}],
   "body":[0]}}
 ```
 
 ```noble-check expect=exhausted
 {"request":{"expected":{"in":[],"out":[{"unit":{}}],"allowed_effects":[]},"limits":{"nodes":1}},
- "candidate":{"format":"noble-candidate/v0","nodes":[
+ "candidate":{"format":"noble-candidate/v1","nodes":[
    {"kind":"literal","lit":{"unit":{}},"inst":{"v0":[]}},
    {"kind":"literal","lit":{"unit":{}},"inst":{"v0":[{"unit":{}}]}}],
   "body":[0,1]}}

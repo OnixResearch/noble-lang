@@ -7,9 +7,10 @@ use noble_kernel::contracts::{Behavior, Definition, Env};
 use noble_kernel::shapes::Pattern;
 use noble_kernel::types::{EffId, EffSet, Ty};
 use noble_kernel::untrusted::{Candidate, Limits, Lit, Node, NodeId, Request};
-use noble_kernel::words::{Inst, Scheme, Variable, VariableKind};
+use noble_kernel::words::{Binding, Inst, Scheme, Variable, VariableKind};
+use std::sync::atomic::{AtomicU64, Ordering};
 
-use super::fit::{effects, fit_word, stack, WORDS};
+use super::fit::{effects, fit_word, stack, value, WORDS};
 use super::rng::Rng;
 
 /// One generated acceptance case.
@@ -18,7 +19,12 @@ pub struct Case {
     pub candidate: Candidate,
 }
 
-/// The bootstrap environment plus one named fixture definition (id 22) that
+/// How many eliminator patterns the generator emitted so far, per word
+/// (`case`, `if`, `list.case`); printed by the agreement lane as firing
+/// evidence for the full-pool duty.
+pub static ELIMINATORS: [AtomicU64; 3] = [AtomicU64::new(0), AtomicU64::new(0), AtomicU64::new(0)];
+
+/// The bootstrap environment plus one named fixture definition (id 23) that
 /// produces the opaque resource from any stack, so eligibility negatives are
 /// reachable.
 pub fn environment() -> Result<Env, String> {
@@ -33,6 +39,7 @@ pub fn environment() -> Result<Env, String> {
         effects: vec![],
     });
     env.kinds.push(Behavior::Named);
+    env.deps.push(Vec::new());
     Ok(env)
 }
 
@@ -78,8 +85,194 @@ fn lit_of(rng: &mut Rng) -> Lit {
     }
 }
 
+/// One literal-able base type.
+fn base_ty(rng: &mut Rng) -> Ty {
+    match rng.below(4) {
+        0 => Ty::Unit,
+        1 => Ty::Bool,
+        2 => Ty::I64,
+        _ => Ty::Text,
+    }
+}
+
+/// Push one literal node over `under` and return its id.
+fn push_lit(arena: &mut Vec<Node>, lit: Lit, under: &[Ty]) -> NodeId {
+    arena.push(Node::Literal {
+        lit,
+        inst: Inst {
+            bindings: vec![stack(under.to_vec())],
+        },
+    });
+    NodeId(index_of_last(arena))
+}
+
+/// Push one invocation node and return its id.
+fn push_word(arena: &mut Vec<Node>, def: u32, bindings: Vec<Binding>) -> NodeId {
+    arena.push(Node::Invocation {
+        def: Definition(def),
+        inst: Inst { bindings },
+    });
+    NodeId(index_of_last(arena))
+}
+
+/// Emit one complete eliminator exercise: the discriminator value, two
+/// branch quotations claiming the same interface (one branch carrying
+/// `test.emit` so the union bound is nontrivial), and the eliminator
+/// invocation. The pattern exercises the two consumed program values and,
+/// for `case` and `list.case`, the payload exposure of the eliminated
+/// structure. `which` selects `case` (0), `if` (1), or `list.case` (2).
+///
+/// Every binding below follows the documented contract table; the emitted
+/// candidate is well formed by construction, so both the kernel and the
+/// oracle must accept it (or reject it identically once a knob narrows the
+/// allowed bound over the emitting branch).
+fn build_eliminator(
+    rng: &mut Rng,
+    arena: &mut Vec<Node>,
+    now: Vec<Ty>,
+    which: u64,
+) -> (Vec<NodeId>, Vec<Ty>, Vec<u32>) {
+    ELIMINATORS[which as usize].fetch_add(1, Ordering::Relaxed);
+    let under = now;
+    let a = base_ty(rng);
+    let b = base_ty(rng);
+    let mut final_stack = under.clone();
+    final_stack.push(Ty::Unit);
+    // The discriminator, per eliminator, and the two branch start stacks.
+    let (disc, start1, start2) = match which {
+        0 => {
+            // `case` over `Sum<a, b>` built by `inl : S a b -- S Sum<a,b>`.
+            let disc = push_word(
+                arena,
+                15,
+                vec![stack(under.clone()), value(a.clone()), value(b.clone())],
+            );
+            let mut left = under.clone();
+            left.push(a.clone());
+            let mut right = under.clone();
+            right.push(b.clone());
+            (disc, left, right)
+        }
+        1 => {
+            // `if` over a `Bool` literal.
+            let disc = push_lit(arena, Lit::Bool(rng.bit()), &under);
+            (disc, under.clone(), under.clone())
+        }
+        _ => {
+            // `list.case` over `List<a>` built by `nil : S -- S List<a>`.
+            let disc = push_word(arena, 19, vec![stack(under.clone()), value(a.clone())]);
+            let mut right = under.clone();
+            right.push(a.clone());
+            right.push(Ty::List(Box::new(a.clone())));
+            (disc, under.clone(), right)
+        }
+    };
+    let mut around = under.clone();
+    around.push(match which {
+        0 => Ty::Sum(Box::new(a.clone()), Box::new(b.clone())),
+        1 => Ty::Bool,
+        _ => Ty::List(Box::new(a.clone())),
+    });
+    // Branch one (emitting): drop the payload when the branch consumes it,
+    // push a `Text`, and `test.emit` it — latent `{test.emit}`, output
+    // `under ++ [Unit]`.
+    let mut body1: Vec<NodeId> = Vec::new();
+    let mut cursor = start1.clone();
+    if which == 0 {
+        let top = cursor.pop().expect("case branch start holds the payload");
+        body1.push(push_word(arena, 1, vec![stack(cursor.clone()), value(top)]));
+    }
+    body1.push(push_lit(arena, Lit::Text, &cursor));
+    cursor.push(Ty::Text);
+    body1.push(push_word(arena, 22, vec![stack(cursor.clone())]));
+    let claimed1 = vec![0u32];
+    // Branch two (quiet): drop what the branch consumes, then a unit
+    // literal — latent `{}`, the same output.
+    let mut body2: Vec<NodeId> = Vec::new();
+    let mut cursor2 = start2.clone();
+    let mut drops = match which {
+        0 => 1,
+        1 => 0,
+        _ => 2,
+    };
+    while drops > 0 {
+        let top = cursor2.pop().expect("branch start holds the payload");
+        body2.push(push_word(
+            arena,
+            1,
+            vec![stack(cursor2.clone()), value(top)],
+        ));
+        drops -= 1;
+    }
+    body2.push(push_lit(arena, Lit::Unit, &cursor2));
+    let claimed2: Vec<u32> = Vec::new();
+    // The two quotations, each claiming exactly its branch interface.
+    arena.push(Node::Quotation {
+        body: body1,
+        inst: Inst {
+            bindings: vec![
+                stack(around.clone()),
+                stack(start1.clone()),
+                stack(final_stack.clone()),
+                effects(&claimed1),
+            ],
+        },
+    });
+    let quote1 = NodeId(index_of_last(arena));
+    arena.push(Node::Quotation {
+        body: body2,
+        inst: Inst {
+            bindings: vec![
+                stack(around.clone()),
+                stack(start2.clone()),
+                stack(final_stack.clone()),
+                effects(&claimed2),
+            ],
+        },
+    });
+    let quote2 = NodeId(index_of_last(arena));
+    // The eliminator invocation, from the documented contract.
+    let (word, bindings, latent) = match which {
+        0 => (
+            17,
+            vec![
+                stack(under.clone()),
+                value(a.clone()),
+                value(b.clone()),
+                stack(final_stack.clone()),
+                effects(&claimed1),
+                effects(&claimed2),
+            ],
+            vec![0u32],
+        ),
+        1 => (
+            18,
+            vec![
+                stack(under.clone()),
+                stack(final_stack.clone()),
+                effects(&claimed1),
+                effects(&claimed2),
+            ],
+            vec![0u32],
+        ),
+        _ => (
+            21,
+            vec![
+                stack(under.clone()),
+                value(a.clone()),
+                stack(final_stack.clone()),
+                effects(&claimed1),
+                effects(&claimed2),
+            ],
+            vec![0u32],
+        ),
+    };
+    let invocation = push_word(arena, word, bindings);
+    (vec![disc, quote1, quote2, invocation], final_stack, latent)
+}
+
 /// Build one body: append nodes to the arena and fold the simulated stack.
-/// Returns the body's node ids, the final stack, and its latent identities.
+/// Returns the body's node ids, the resulting stack, and its latent identities.
 fn build_body(
     rng: &mut Rng,
     arena: &mut Vec<Node>,
@@ -92,7 +285,15 @@ fn build_body(
     let mut body: Vec<NodeId> = Vec::new();
     let mut step = 0;
     while step < steps {
-        if depth > 0 && rng.below(5) == 0 {
+        if depth > 0 && rng.below(11) == 0 {
+            // One complete eliminator exercise: discriminator, two
+            // branches with a shared claimed interface, and the word.
+            let which = rng.below(3);
+            let (ids, next, add) = build_eliminator(rng, arena, now.clone(), which);
+            body.extend(ids);
+            now = next;
+            latent.extend(add);
+        } else if depth > 0 && rng.below(5) == 0 {
             let around = now.clone();
             let inner_start = small_stack(rng);
             let inner_steps = rng.below(4);
@@ -186,8 +387,8 @@ pub fn case(rng: &mut Rng) -> Case {
         limits: limits(),
     };
     let mut candidate = Candidate {
-        format: 0,
-        revision: 0,
+        format: noble_kernel::untrusted::CANDIDATE_FORMAT,
+        revision: noble_kernel::untrusted::SEMANTIC_REVISION,
         nodes: arena,
         body,
     };

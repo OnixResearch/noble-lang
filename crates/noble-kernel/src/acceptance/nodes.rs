@@ -47,7 +47,7 @@ pub(super) fn fold_node(
             let scheme = super::parts::instantiate::literal_scheme(*lit);
             let at = super::parts::site(Some(node_id), None);
             let cost = attempt!(super::parts::scheme_cost(&scheme));
-            let interface = attempt!(super::parts::instantiate::apply(
+            let (interface, _resolved) = attempt!(super::parts::instantiate::apply(
                 &scheme, inst, None, at, context
             ));
             let cost = cost.saturating_add(attempt!(super::parts::join_cost(&interface)));
@@ -70,7 +70,7 @@ pub(super) fn fold_node(
             let at = super::parts::site(Some(node_id), Some(*def));
             let data_var = super::parts::instantiate::data_slot(context.env.kind(*def));
             let cost = attempt!(super::parts::scheme_cost(&scheme));
-            let interface = attempt!(super::parts::instantiate::apply(
+            let (interface, _resolved) = attempt!(super::parts::instantiate::apply(
                 &scheme, inst, data_var, at, context
             ));
             let cost = cost.saturating_add(attempt!(super::parts::join_cost(&interface)));

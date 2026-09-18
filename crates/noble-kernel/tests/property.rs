@@ -79,6 +79,12 @@ fn generated_candidates_agree_with_independent_oracle() -> Result<(), String> {
     println!(
         "property/agreement: {GENERATED} generated candidates, {both_accepted} accepted by both sides, {both_rejected} rejected by both sides, 0 disagreements"
     );
+    println!(
+        "property/agreement: eliminator patterns emitted: case={} if={} list.case={}",
+        gen::ELIMINATORS[0].load(std::sync::atomic::Ordering::Relaxed),
+        gen::ELIMINATORS[1].load(std::sync::atomic::Ordering::Relaxed),
+        gen::ELIMINATORS[2].load(std::sync::atomic::Ordering::Relaxed)
+    );
     Ok(())
 }
 

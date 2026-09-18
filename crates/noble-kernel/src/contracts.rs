@@ -1,5 +1,6 @@
 //! The checking environment: one scheme per definition, its behavior kind,
-//! and the supplied effect-identity table.
+//! its external dependency data, the user-declared schemas, and the
+//! supplied effect-identity table.
 //!
 //! Contracts are rank-1 schemes; the bootstrap table lives in `bootstrap`.
 
@@ -14,6 +15,10 @@ pub const TEST_EMIT: crate::types::EffId = crate::types::EffId(0);
 
 /// The reserved resource kind used by negative eligibility fixtures.
 pub const FIXTURE_RESOURCE: crate::types::ResourceKind = crate::types::ResourceKind(0);
+
+/// Identity of one user-declared schema in external environment data.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct SchemaId(pub u32);
 
 /// What a definition's contract constrains beyond its scheme.
 ///
@@ -33,6 +38,8 @@ pub enum Behavior {
     Dip,
     /// `+`, `-`, or `*`; wrapping `I64`.
     Arith,
+    /// `=`: `I64` equality yielding `Bool`.
+    Equals,
     /// `quote`: requires `Data` on its captured variable.
     Quote,
     /// `compose`.
@@ -67,6 +74,21 @@ pub enum Behavior {
     Named,
 }
 
+/// One user-declared schema in external environment data.
+///
+/// A declaration that names itself — a recursive schema — is unsupported
+/// (B-CHECK-02) and rejected during preflight; a non-recursive declaration
+/// is still validated as a scheme before any candidate body is checked.
+#[derive(Clone, Debug)]
+pub struct SchemaDecl {
+    /// The declared schema's identity.
+    pub id: SchemaId,
+    /// The declared contract.
+    pub scheme: crate::words::Scheme,
+    /// Whether the declaration names itself.
+    pub recursive: bool,
+}
+
 /// The checking environment.
 #[derive(Clone, Debug)]
 pub struct Env {
@@ -74,6 +96,11 @@ pub struct Env {
     pub defs: alloc::vec::Vec<crate::words::Scheme>,
     /// Behavior kinds indexed by `Definition`.
     pub kinds: alloc::vec::Vec<Behavior>,
+    /// Per-definition dependency lists from external environment data; the
+    /// bootstrap table declares none, and a missing entry means none.
+    pub deps: alloc::vec::Vec<alloc::vec::Vec<Definition>>,
+    /// User-declared schemas from external environment data.
+    pub schemas: alloc::vec::Vec<SchemaDecl>,
     /// Effect identities this environment provides; `TEST_EMIT` is first.
     pub effects: alloc::vec::Vec<crate::types::EffId>,
 }
@@ -124,11 +151,12 @@ fn index(def: Definition) -> Option<usize> {
     usize::try_from(def.0).ok()
 }
 
-/// Build the bootstrap environment with the fixed v0 contract table.
+/// Build the bootstrap environment with the fixed v1 contract table.
 pub fn environment() -> Result<Env, crate::shapes::Defect> {
     let table = bootstrap::data::table();
     let mut defs: alloc::vec::Vec<crate::words::Scheme> = alloc::vec::Vec::with_capacity(32);
     let mut kinds: alloc::vec::Vec<Behavior> = alloc::vec::Vec::with_capacity(32);
+    let mut deps: alloc::vec::Vec<alloc::vec::Vec<Definition>> = alloc::vec::Vec::with_capacity(32);
     let mut index = 0;
     let mut defect: Option<crate::shapes::Defect> = None;
     while index < table.len() {
@@ -149,11 +177,14 @@ pub fn environment() -> Result<Env, crate::shapes::Defect> {
     let mut table_index = 0;
     while table_index < table.len() {
         defs.push(table[table_index].1.clone());
+        deps.push(alloc::vec::Vec::new());
         table_index += 1;
     }
     Ok(Env {
         defs,
         kinds,
+        deps,
+        schemas: alloc::vec::Vec::new(),
         effects: alloc::vec![TEST_EMIT],
     })
 }

@@ -109,7 +109,7 @@ pub fn candidate(
     body: Vec<u32>,
 ) -> noble_kernel::untrusted::Candidate {
     noble_kernel::untrusted::Candidate {
-        format: 0,
+        format: noble_kernel::untrusted::CANDIDATE_FORMAT,
         revision: 0,
         nodes,
         body: body

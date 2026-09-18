@@ -25,18 +25,22 @@ pub fn label(choice: u64) -> &'static str {
         8 => "oversized-stack-binding",
         9 => "depth-chain",
         10 => "truncated-arena",
+        12 => "cyclic-witness",
         _ => "raw-identifier-bits",
     }
 }
 
-pub const KINDS: u64 = 12;
+pub const KINDS: u64 = 13;
 
 /// Corrupt one freshly generated case in exactly one structural way.
 pub fn corrupt(rng: &mut Rng, mut case: Case) -> (Case, &'static str) {
     let choice = rng.below(KINDS);
     let label = label(choice);
     match choice {
-        0 => case.candidate.format = 1 + rng.below(1000) as u32,
+        0 => {
+            case.candidate.format =
+                noble_kernel::untrusted::CANDIDATE_FORMAT + 1 + rng.below(1000) as u32
+        }
         1 => case.candidate.revision = 1 + rng.below(1000) as u32,
         2 => {
             let last = case.candidate.body.len() - 1;
@@ -145,11 +149,28 @@ pub fn corrupt(rng: &mut Rng, mut case: Case) -> (Case, &'static str) {
             case.candidate.body = vec![NodeId(0)];
         }
         10 => {
-            // A truncated arena whose body still references dropped nodes.
+            // A truncated arena whose body still references dropped nodes:
+            // the body points one past the truncated arena, so it is
+            // always out of range — never a leftover valid node.
             let keep = case.candidate.nodes.len() / 2;
-            let dangling = NodeId(case.candidate.nodes.len() as u32 - 1);
             case.candidate.nodes.truncate(keep.max(1));
+            let dangling = NodeId(case.candidate.nodes.len() as u32);
             case.candidate.body = vec![dangling];
+        }
+        12 => {
+            // A self-referential witness: one binding becomes a reference
+            // to its own variable, so the resolution walk must reject it as
+            // a cyclic type equation (B-CHECK-05), never accept it.
+            if let Some(node) = first_with_bindings(&mut case.candidate) {
+                let inst = inst_of(node);
+                if !inst.bindings.is_empty() {
+                    let count = inst.bindings.len() as u64;
+                    let target = rng.below(count) as u32;
+                    if let Some(binding) = inst.bindings.get_mut(target as usize) {
+                        *binding = Binding::Ref(noble_kernel::words::Variable(target));
+                    }
+                }
+            }
         }
         _ => {
             // Random identifier bits splatted across every identifier field.

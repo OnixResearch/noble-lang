@@ -1,4 +1,9 @@
 //! Data and control word contracts in `Definition` order, plus the table.
+//!
+//! `Definition` order: `dup`, `drop`, `swap`, `dip`, `+`, `-`, `*`, `=`,
+//! `quote`, `compose`, `run`, `reflect`, `unit`, `pair`, `unpair`, `inl`,
+//! `inr`, `case`, `if`, `nil`, `cons`, `list.case`, `test.emit` — the
+//! complete 23-entry bootstrap table.
 
 fn unit() -> crate::words::Scheme {
     super::scheme(
@@ -239,6 +244,7 @@ pub fn table() -> alloc::vec::Vec<(crate::contracts::Behavior, crate::words::Sch
         (crate::contracts::Behavior::Arith, super::arith()),
         (crate::contracts::Behavior::Arith, super::arith()),
         (crate::contracts::Behavior::Arith, super::arith()),
+        (crate::contracts::Behavior::Equals, super::equals()),
         (crate::contracts::Behavior::Quote, super::quote()),
         (crate::contracts::Behavior::Compose, super::compose()),
         (crate::contracts::Behavior::Run, super::run()),

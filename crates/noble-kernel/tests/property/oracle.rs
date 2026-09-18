@@ -75,7 +75,9 @@ struct OFrame {
 
 /// Decide one candidate against one request under the oracle's rules.
 pub fn decide(request: &Request, candidate: &Candidate) -> Decision {
-    if candidate.format != 0 || candidate.revision != 0 {
+    if candidate.format != noble_kernel::untrusted::CANDIDATE_FORMAT
+        || candidate.revision != noble_kernel::untrusted::SEMANTIC_REVISION
+    {
         return Decision::Reject;
     }
     if candidate.nodes.len() > request.limits.nodes as usize {

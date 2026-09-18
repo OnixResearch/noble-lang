@@ -38,6 +38,8 @@ fn def_of(name: &str) -> Result<(u32, &'static [VariableKind]), String> {
     const COMPOSE: &[VariableKind] = &[Stack, Stack, Stack, Stack, Effect, Effect];
     const RUN: &[VariableKind] = &[Stack, Stack, Effect];
     const BRANCH: &[VariableKind] = &[Stack, Stack, Effect, Effect];
+    const CASE: &[VariableKind] = &[Stack, Value, Value, Stack, Effect, Effect];
+    const LIST_CASE: &[VariableKind] = &[Stack, Value, Stack, Effect, Effect];
     Ok(match name {
         "dup" => (0, STACK_VALUE),
         "drop" => (1, STACK_VALUE),
@@ -46,21 +48,22 @@ fn def_of(name: &str) -> Result<(u32, &'static [VariableKind]), String> {
         "+" => (4, STACK),
         "-" => (5, STACK),
         "*" => (6, STACK),
-        "quote" => (7, QUOTE),
-        "compose" => (8, COMPOSE),
-        "run" => (9, RUN),
-        "reflect" => (10, quotation_kinds()),
-        "unit" => (11, STACK),
-        "pair" => (12, STACK_TWO_VALUES),
-        "unpair" => (13, STACK_TWO_VALUES),
-        "inl" => (14, STACK_TWO_VALUES),
-        "inr" => (15, STACK_TWO_VALUES),
-        "case" => (16, &[]),
-        "if" => (17, BRANCH),
-        "nil" => (18, STACK_VALUE),
-        "cons" => (19, STACK_VALUE),
-        "list.case" => (20, &[]),
-        "test.emit" => (21, STACK),
+        "=" => (7, STACK),
+        "quote" => (8, QUOTE),
+        "compose" => (9, COMPOSE),
+        "run" => (10, RUN),
+        "reflect" => (11, quotation_kinds()),
+        "unit" => (12, STACK),
+        "pair" => (13, STACK_TWO_VALUES),
+        "unpair" => (14, STACK_TWO_VALUES),
+        "inl" => (15, STACK_TWO_VALUES),
+        "inr" => (16, STACK_TWO_VALUES),
+        "case" => (17, CASE),
+        "if" => (18, BRANCH),
+        "nil" => (19, STACK_VALUE),
+        "cons" => (20, STACK_VALUE),
+        "list.case" => (21, LIST_CASE),
+        "test.emit" => (22, STACK),
         _ => {
             return Err(format!(
                 "unknown word `{name}` for the bootstrap environment"
@@ -281,8 +284,8 @@ pub fn decode(value: &Json) -> Result<Example, String> {
     };
     let candidate_value = value.field("candidate")?;
     let format = match candidate_value.field("format")?.as_str()? {
-        "noble-candidate/v0" => 0,
-        _ => 1,
+        "noble-candidate/v1" => noble_kernel::untrusted::CANDIDATE_FORMAT,
+        _ => 0,
     };
     let nodes: Vec<Node> = candidate_value
         .field("nodes")?
