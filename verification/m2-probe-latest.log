@@ -1,0 +1,16 @@
+--- build the offline proof root
+proof root exit=0
+--- collect the compiler-derived inventory
+collect exit=0
+"production_subjects":494
+--- extraction probe over the fragment core
+extract exit=0
+  /nix/store/7djw98jx6szxgw1nmjd8n8q4sms265yy-extract-kernel.drv
+building '/nix/store/7djw98jx6szxgw1nmjd8n8q4sms265yy-extract-kernel.drv'...
+extract-kernel: extraction passed (not M1 acceptance)
+--- charon diagnostics
+--- aeneas diagnostics
+--- generated module
+NobleKernel.lean
+NobleKernel.olean
+translation.json
