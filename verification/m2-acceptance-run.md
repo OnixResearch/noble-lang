@@ -29,9 +29,7 @@ compiled the generated `NobleKernel.lean` inside the proof root
 - Generated module: zero Lean errors, zero `sorry`.
 - Disclosed `charon::opaque` assumptions (Aeneas functionalizes their loops
   inside the trait-instance mutual block, which the pinned Lean 4.31 cannot
-  prove monotone): `types/impls.rs` `clone_stack`, `debug_stack`;
-  `shapes/impls.rs` `clone_parts`, `clone_slots`, `debug_parts`,
-  `debug_slots`. All are copying or formatting steps, not checker decisions.
+  prove monotone): `types/impls.rs` `clone_stack`, `debug_stack`; `shapes/impls.rs` `clone_parts`, `debug_parts`, `debug_slots`. All are copying or formatting steps, not checker decisions.
 - Probe ladder (refusals answered by source changes):
   `verification/m2-extraction-probe.md`.
 
