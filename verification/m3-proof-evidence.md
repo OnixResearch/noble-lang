@@ -1,153 +1,267 @@
-# M3 proof evidence: gate floor, theorem inventory, axiom policy (2026-09-18)
+# M3 proof evidence: fragment-v1 theorem inventory (2026-09-18)
 
 Scope: tasks 5.1–5.4 of the `m3-checker-coverage` change — the fragment-v1
-reference model and theorem set in `proofs/m3` — over the proof commits
-`9d00d8d`..`f72876b`. Fragment label: **bootstrap fragment v1**. The proof
-gate itself (`verification/m3-proof-gate.sh`) and its refusal matrix are
-owned by the gates agent (phase 6); this record is the proof-side evidence:
-the building root, the theorem inventory with axiom sets, and the v1
-modeling decisions. Every command below ran this session against the
-worktree exactly as committed at `f72876b`.
+reference model and theorem set in `proofs/m3`, over the commits `e108519`
+(v1 reference model + judgment), `3390267` (per-word coverage), `ff00084`
+(per-rule family + correspondences), `5a0de31`/`f72876b` (refinement matrix
++ termination), `8fa4c80` (tree hygiene). Fragment label: **bootstrap
+fragment v1**. Every output below was produced this session against the
+worktree's proof tree exactly as committed; the axiom inventory was
+enumerated with the gate's own mechanism (`Lean.collectAxioms` over the
+built environment, both import roots).
 
-## 1. The building proof root
+## 1. The proof root and its build
 
 ```console
 $ PATH=/nix/store/hbxwgcbpkyqllqzq7cidhnvhgb60jb9q-noble-lean-release-4.31.0/bin:$PATH \
-    (cd proofs/m3 && lake build NobleM2 NobleM2.Refinement NobleM3 NobleKernel)
+    (cd proofs/m3 && lake build NobleM3 NobleM2 NobleM2.Refinement NobleKernel)
 Build completed successfully (1699 jobs).
+
+$ grep -rnw --include='*.lean' --exclude-dir=.lake sorry proofs/m3
+(no output — zero proof holes)
 ```
 
-- Toolchain: pinned Lean `4.31.0` (`lean-toolchain`, checked by the m2 gate
-  floor and to be checked by the m3 gate's `TOOLCHAIN` step).
-- Targets: `NobleM2` (the fragment-v1 reference model — v0 modules extended
-  in place), `NobleM2.Refinement` (the twelve v0 fixture refinements, all
-  still proving over the v1 checker), `NobleM3` (the v1 theorem modules),
-  `NobleKernel` (the generated module, computable under `native_decide`).
-- No `sorry`: `grep -rnw --include='*.lean' --exclude-dir=.lake sorry
-  proofs/m3/{NobleM2,NobleM3}` → 0 hits.
+`NobleM3` is the v1 root: `Words` (table refinements), `Inv` (the three
+eliminator shape inversions), `Coverage`/`CoverageWords` (per-word positive
+coverage and the eliminator exercise), `Rules` (the per-rule family and the
+reference correspondences), `RefinementWords` (per-word instantiation
+refinements), `Refinement` (the checker-level matrix). `NobleM2` is the v0
+floor extended in place to fragment v1 — the environment's external data
+(`deps`, `SchemaDecl`), `Binding.ref` with the charge-before-hop resolution
+walk, the resolving scheme application, the B-CHECK-02 preflight walks, and
+the judgment's three eliminator rules plus rejection judgments — with the
+m2-floor theorem *statements* unchanged and re-proven over the extended
+checker (`check_soundness`, `check_total`, `foldBody_work_bounded`,
+`coverage_positive`, the twelve fixture refinements in `NobleM2.Refinement`).
 
-## 2. What fragment v1 added to the reference model (task 5.1)
+## 2. Axiom policy
 
-The v0 modules were extended in place (`proofs/m3/NobleM2/`), so the v0
-theorem names keep proving over the v1 checker — no forked model:
+Reference-model theorems carry only Lean's trifecta
+`{propext, Classical.choice, Quot.sound}` (most carry strictly less).
+Evaluation-closed theorems additionally carry the per-declaration
+`native_decide` axioms Lean 4.31 emits, name family
+`<theorem>._native.native_decide.ax_<n>_<n>` — one per distinct
+`native_decide` occurrence in that proof (M2 saw only `ax_1_1`; the v1
+multi-use theorems continue the family through `ax_1_10`). `sorryAx` and
+anything else reject. **Gate note (M3DxGates):** the m2 predicate matches
+the literal suffix `ax_1_1`; the v1 policy must match the family
+(`._native.native_decide.ax_` prefix), or twelve sound theorems below will
+be refused by accident.
 
-- `Words.lean`: `Binding.ref` (a type equation between two variables) and
-  the resolution walk `Inst.followFrom`/`resolveOne`/`resolveList`/`resolve`
-  — charge-before-hop, pigeonhole cycle detection, kind check at the
-  terminal binding, mirroring `words::resolve`.
-- `Env.lean`: the kernel-ordered 23-entry word table (`wordTable`, `equals`
-  at position 7, derived `bootstrapTable`/`bootstrapEnv` so the table and
-  the named schemes cannot drift), `Env.deps`, `SchemaDecl {id, scheme,
-  recursive}`, and the eliminators' table identities (`caseDef = 17`,
-  `ifDef = 18`, `listCaseDef = 21`, each pinned by `definitionOf_*`).
-- `Judgment.lean`: the three eliminator rules (`caseRule`/`ifRule`/
-  `listCaseRule` — scrutinee, branch programs, common result stack,
-  conservative union bound), the node rules restated over the *resolved*
-  witness with the declarative `ResolvesTo` relation (`RefHop`, `RefReaches`,
-  `ChainEnds`, `PositionResolves`), and the rejection judgments `DepCycle`,
-  `DeclaresRecursiveSchema`, `WitnessCycle`.
-- `Check.lean`: `Binding.kindOf` (a reference binding carries no direct
-  kind), the B-CHECK-02 validation walks (`depWalk` — the three-color DFS
-  with per-edge charging; `validateSchemas` — the recursive-schema scan),
-  `applyScheme` resolving the witness first and returning it beside the
-  interface, the fold's eligibility on the resolved witness, and the v1
-  preflight order (request, schemes, dependencies, schemas, bounds,
-  effects) matching `preflight.rs`.
-- `Embed.lean`: the v1 embedding — reference bindings, dependency lists,
-  and schema declarations all embed (`embedBinding`/`embedEnv`/
-  `embedSchemaDecl`).
+## 3. Theorem inventory with axiom sets (V-CHECK-03/04/05, PO-09/10/11)
 
-## 3. The theorem inventory with axiom sets (tasks 5.2–5.4)
+Enumerated with `Lean.collectAxioms`; "n.d." = the theorem's own
+per-declaration native_decide axioms besides the listed base set.
 
-Axiom sets were enumerated this session with the m2 gate's own mechanism
-(`Lean.collectAxioms` over the built environment). Policy: the strict
-theorems ⊆ Lean's trifecta `{propext, Classical.choice, Quot.sound}`; the
-evaluation-closed theorems may additionally use the per-declaration
-`native_decide` axioms Lean 4.31 emits (`._native.native_decide.ax_1_N` —
-multi-premise declarations emit a numbered family, all native_decide
-schemes; `sorryAx` and anything else reject). Zero violations.
-
-**Resolution bridge (5.1/5.2)** — `NobleM2/Soundness.lean`:
-
-| Theorem | Statement | Axioms |
-|---|---|---|
-| `applyScheme_ok` | an accepted application exposes the resolved witness's instantiation | propext, Quot.sound |
-| `applyScheme_ok_resolves` | …and the resolved witness satisfies `ResolvesTo` | propext, Quot.sound |
-| `followFrom_chain`, `resolveOne_position`, `resolveList_positions`, `resolve_resolvesTo` | the walk decides the declarative resolution, position by position | ⊆ trifecta |
-
-**Per-rule soundness family (5.2)** — `NobleM3/Rules.lean` (V-CHECK-03):
+### 3.1 The v1 model layer: judgment, resolution, rejection (task 5.1)
 
 | Theorem | Axioms |
 |---|---|
-| `rule_empty_sound` | trifecta |
-| `rule_literal_sound` | trifecta |
-| `rule_sequence_sound` | trifecta |
-| `rule_quotation_sound` | trifecta |
-| `rule_word_sound` | trifecta |
-| `rule_case_sound` / `rule_if_sound` / `rule_listcase_sound` | trifecta + own `native_decide` family (the table lookups) |
-| `derives_cons_inv`, `invocation_word`, `quotationDerives_bound` | ⊆ trifecta |
-| `caseScheme_inv` / `ifScheme_inv` / `listCaseScheme_inv` (`NobleM3/Inv.lean`) | ⊆ trifecta |
+| `NobleM2.applyScheme_ok` | propext, Quot.sound |
+| `NobleM2.applyScheme_ok_resolves` | propext, Quot.sound |
+| `NobleM2.resolve_resolvesTo` | propext, Quot.sound |
+| `NobleM2.followFrom_chain` | propext, Quot.sound |
+| `NobleM2.resolveOne_position` | propext, Quot.sound |
+| `NobleM2.resolveList_positions` | propext, Quot.sound |
+| `NobleM2.check_soundness` | trifecta |
+| `NobleM2.foldBody_derives` | trifecta |
+| `NobleM2.foldBody_entry_derives` | trifecta |
+| `NobleM2.check_total` | trifecta |
+| `NobleM2.check_total_v1` | trifecta |
+| `NobleM2.foldBody_work_bounded` | trifecta |
+| `NobleM2.foldBody_work_bounded_v1` | trifecta |
+| `NobleM2.resolve_work_bounded` | propext, Quot.sound |
+| `NobleM2.word_cost_positive` | propext, Quot.sound |
+| `NobleM2.quotationDerives_bound` | propext, Quot.sound |
+| `NobleM2.derives_cons_inv` | propext, Quot.sound |
+| `NobleM2.invocation_word` | propext, Quot.sound |
+| `NobleM2.rule_empty_sound` | trifecta |
+| `NobleM2.rule_literal_sound` | trifecta |
+| `NobleM2.rule_sequence_sound` | trifecta |
+| `NobleM2.rule_quotation_sound` | trifecta |
+| `NobleM2.rule_word_sound` | trifecta |
+| `NobleM2.caseScheme_inv` | propext, Quot.sound |
+| `NobleM2.ifScheme_inv` | propext, Quot.sound |
 
-**Decision-path correspondences (5.2)** — `Rules.lean`, `NobleM3/Refinement.lean`:
+### 3.2 Soundness, the per-rule family, and the correspondences (task 5.2)
 
 | Theorem | Axioms |
 |---|---|
-| `eligibility_iff` (reference side, from `dataOkAt_iff`) | ⊆ trifecta |
-| `eligibility_dup` / `eligibility_drop` / `eligibility_quote` (extracted rows) | own `native_decide` |
-| `inclusion_iff` (= `subsetOf_iff`, symbolic) | propext, Quot.sound |
-| `inclusion_extracted` (the six boundary pairs) | own `native_decide` |
-| `duplication_shares_one_interface` | trifecta |
-| `fresh_instantiation` | trifecta + own `native_decide` family |
+| `NobleM2.listCaseScheme_inv` | propext, Quot.sound |
+| `NobleM2.dataOkAt_iff` | propext, Quot.sound |
+| `NobleM2.subsetOf_subset` | propext, Quot.sound |
+| `NobleM2.subsetOf_iff` | propext, Quot.sound |
+| `NobleM2.duplication_shares_one_interface` | trifecta |
+| `NobleM2.resolvesTo_refl` | propext, Quot.sound |
+| `NobleM2.WordCoverage.ee_accepted` | propext,+own n.d. axioms (0) |
+| `NobleM2.coverage_positive` | propext,+own n.d. axioms (0) |
+| `NobleM2.Coverage.accepted` | propext,+own n.d. axioms (0) |
+| `NobleM2.Coverage.derives` | propext,+own n.d. axioms (0) |
+| `NobleM2.Regression.ce_accepted` | propext,+own n.d. axioms (0) |
+| `NobleM2.Regression.ce_derives` | propext,+own n.d. axioms (0) |
+| `NobleM2.WordRefinement.word_refinements` | propext,+own n.d. axioms (0) |
+| `NobleM2.WordRefinement.word_refinement_dup` | propext,+own n.d. axioms (0) |
+| `NobleM2.WordRefinement.word_refinement_equals` | propext,+own n.d. axioms (0) |
+| `NobleM2.WordRefinement.word_refinement_case` | propext,+own n.d. axioms (0) |
+| `NobleM2.WordRefinement.word_refinement_test_emit` | propext,+own n.d. axioms (0) |
+| `NobleM3.Refine.refinement_words` | propext,+own n.d. axioms (0) |
+| `NobleM3.Refine.refinement_rule_empty` | propext,+own n.d. axioms (0) |
+| `NobleM3.Refine.refinement_rule_literal` | propext,+own n.d. axioms (0) |
+| `NobleM3.Refine.refinement_rule_word` | propext,+own n.d. axioms (0) |
+| `NobleM3.Refine.refinement_rule_sequence` | propext,+own n.d. axioms (0) |
+| `NobleM3.Refine.refinement_rule_quotation` | propext,+own n.d. axioms (0) |
+| `NobleM3.Refine.refinement_rule_case` | propext,+own n.d. axioms (0) |
+| `NobleM3.Refine.refinement_rule_if` | propext,+own n.d. axioms (0) |
+| `NobleM3.Refine.refinement_rule_listcase` | propext,+own n.d. axioms (0) |
+| `NobleM3.Refine.refinement_recursive_dependency_self` | propext,+own n.d. axioms (0) |
+| `NobleM3.Refine.refinement_recursive_dependency_mutual` | propext,+own n.d. axioms (0) |
+| `NobleM3.Refine.refinement_dependency_boundary` | propext,+own n.d. axioms (0) |
+| `NobleM3.Refine.refinement_dependency_exhausted` | propext,+own n.d. axioms (0) |
 
-**Termination and coverage (5.3)** — `NobleM2/Termination.lean`, `NobleM3/Coverage*.lean`:
+### 3.3 The per-word instantiation refinements (task 5.2, design item 1)
 
-| Theorem | Statement | Axioms |
-|---|---|---|
-| `followFrom_work_bounded` / `resolveOne_work_bounded` / `resolveList_work_bounded` / `resolve_work_bounded` | the resolution walk stays inside its hop budget (charge-before-hop) | ⊆ trifecta |
-| `check_total_v1` | totality over v1 incl. both validation walks' termination | trifecta |
-| `word_cost_positive` | every table entry's application charges ≥ 1 unit | propext, Quot.sound |
-| `foldBody_work_bounded_v1` | the fold's work bound restated over the extended checker | trifecta |
-| `coverage_dup` … `coverage_test_emit` (23) | per word: accepted and derivable at its table position | trifecta + own `native_decide` |
-| `coverage_positive_word` | all 23 positions aggregated | trifecta + the family's `native_decide` axioms |
-| `coverage_eliminator_exercise` | quote-produced program values feed the `case` join (B-CHECK-06) | trifecta + own `native_decide` family |
+`NobleM2.WordRefinement.word_refinement_<word>` for all 23 entries
+(`dup drop swap dip add sub mul equals quote compose run reflect unit pair
+unpair inl inr case if nil cons list_case test_emit`), each binding the
+extracted instantiation path `acceptance.parts.instantiate.apply` (bounds,
+reference-witness resolution, substitution, eligibility) to the reference
+instantiation's interface on the canonical witness, plus the aggregate
+`word_refinements` over all 23 positions. All are evaluation-closed:
+trifecta + own n.d. axioms.
 
-**Per-word scheme refinements (5.2)** — `NobleM3/RefinementWords.lean`:
-`word_refinement_dup` … `word_refinement_test_emit` (23, each binding the
-extracted instantiation path `acceptance.parts.instantiate.apply` to the
-reference `applyScheme` on the word's scheme and canonical witness) and the
-aggregate `word_refinements` — own `native_decide` axioms, subject the
-generated constant (the call is through `acceptance.parts.instantiate.apply`
-of `NobleKernel.Funs`).
+### 3.4 Termination and coverage v1 (task 5.3)
 
-**Refinement matrix (5.4)** — `NobleM3/Refinement.lean`, subject the
-generated `noble_kernel.acceptance.check`:
+| Theorem | Axioms |
+|---|---|
+| `NobleM3.Refine.refinement_dependency_before_body` | propext,+own n.d. axioms (0) |
+| `NobleM3.Refine.refinement_recursive_schema` | propext,+own n.d. axioms (0) |
+| `NobleM3.Refine.refinement_schema_boundary` | propext,+own n.d. axioms (0) |
+| `NobleM3.Refine.refinement_schema_exhausted` | propext,+own n.d. axioms (0) |
+| `NobleM3.Refine.refinement_cyclic_witness_self` | propext,+own n.d. axioms (0) |
+| `NobleM3.Refine.refinement_cyclic_witness_mutual` | propext,+own n.d. axioms (0) |
+| `NobleM3.Refine.refinement_resolvable_chain` | propext,+own n.d. axioms (0) |
+| `NobleM3.Refine.refinement_kind_crossed_reference` | propext,+own n.d. axioms (0) |
+| `NobleM3.Refine.refinement_duplication_negative` | propext,+own n.d. axioms (0) |
+| `NobleM3.Refine.refinement_implicit_union_negative` | propext,+own n.d. axioms (0) |
+| `NobleM3.Refine.inclusion_extracted` | propext,+own n.d. axioms (0) |
+| `NobleM3.Refine.outcomes_via_refinement_v1` | trifecta |
+| `NobleM3.Refine.accepted_via_refinement_v1` | trifecta |
+| `noble_kernel.acceptance.check` | trifecta |
 
-| Family | Theorems | Axioms |
-|---|---|---|
-| per-word checker agreements | `refinement_word_dup` … `refinement_word_test_emit` (23) + `refinement_words` | own `native_decide` |
-| per-rule representatives | `refinement_rule_empty/literal/word/sequence/quotation/case/if/listcase` (8) | own `native_decide` |
-| dependency rejections | `refinement_recursive_dependency_self/mutual`, `refinement_dependency_boundary/exhausted/before_body` | own `native_decide` |
-| schema rejections | `refinement_recursive_schema`, `refinement_schema_boundary/exhausted` | own `native_decide` |
-| witness rejections | `refinement_cyclic_witness_self/mutual`, `refinement_resolvable_chain`, `refinement_kind_crossed_reference` | own `native_decide` (the three provenance-carrying rows after `eraseProvenance`) |
-| B-CHECK-06 negatives | `refinement_duplication_negative`, `refinement_implicit_union_negative` | own `native_decide` (after `eraseProvenance`) |
-| outcome correspondence | `outcomes_via_refinement_v1` (five-way), `accepted_via_refinement_v1` | **trifecta** |
+The per-word coverage family `NobleM2.WordCoverage.coverage_<word>` (23
+entries, same names as §3.3) and `coverage_positive_word` (every table
+position has an accepted, derivable exercising fixture) are
+evaluation-closed per word (trifecta + own n.d.); the eliminator exercise
+`coverage_eliminator_exercise` (eight-node composite: two literals, `inl`,
+two literal-then-`quote` pairs producing the branch programs, `case`
+consuming them) carries `ee_accepted`/`ee_derives` with own n.d. axioms.
 
-The twelve v0 fixture refinements (`NobleM2.Refinement`) still prove over
-the v1 checker unchanged (task 6.1's floor); the m2 agreement harness
-(`NobleM2.Fixtures` `#eval`) prints 12/12 `true` at build time.
+### 3.5 The refinement matrix (task 5.4)
 
-## 4. Disclosures (honest scope)
+All in `NobleM3.Refine` (namespace prefix omitted), every subject binding
+the generated `noble_kernel.acceptance.check` (gate-verifiable by the
+semantic subject check; the extracted checker itself is trifecta):
 
-- The dep-walk *completeness* (a `DepCycle` judgment always being found by
-  the bounded walk) and the symbolic `WitnessCycle → cyclic rejection`
-  direction are stated as judgments + evaluated rejection agreements, not
-  proven symbolically end-to-end; the walk's *decisions* on the control
-  matrix are proved equal to the extracted checker's (the rejection rows
-  above). The ∀-versions remain M4 targets, consistent with the M2 note on
-  `applyScheme`'s ∀-refinement.
-- The kernel's payload-exposure and advertised-refinement controls are
-  kernel-level (task 2.3, `m3-kernel-gates.md`); the proof matrix covers the
-  duplication and implicit-union negatives for B-CHECK-06.
-- Files over 300 lines: `NobleM2/Env.lean` (the 23 named schemes), the
-  `Judgment.lean` rules, `Rules.lean` (case-trees), and the two refinement
-  modules — the M2 precedent for evaluation-closed families applies.
+- **Per-word checker agreements** `refinement_word_<word>` (23, §3.3 names)
+  + aggregate `refinement_words` — evaluation-closed.
+- **Per-rule representatives** `refinement_rule_{empty,literal,word,
+  sequence,quotation,case,if,listcase}` (8) — evaluation-closed.
+- **B-CHECK-02 rejection agreements**: `refinement_recursive_dependency_self`
+  and `_mutual` (naming definition 23), `refinement_dependency_boundary`
+  (accepted at one unit of declared work), `_exhausted` (fail-closed one
+  below), `refinement_dependency_before_body` (external data validated
+  before the body's dangling reference would reject),
+  `refinement_recursive_schema` (naming declaration 7),
+  `refinement_schema_boundary`, `_exhausted`.
+- **B-CHECK-05 rejection agreements**: `refinement_cyclic_witness_self`,
+  `_mutual` (invalid, cyclic-witness constraint), `refinement_resolvable_chain`
+  (accepted), `refinement_kind_crossed_reference` (instantiation-kind).
+  The four provenance-carrying rows compare after `eraseProvenance`
+  (the extracted diagnostic locates the failing site; §6).
+- **B-CHECK-06 negatives**: `refinement_duplication_negative` (a duplicated
+  program value's second run cannot claim an independent instantiation —
+  stack-join rejection) and `refinement_implicit_union_negative` (an `if`
+  whose left branch carries the latent `test.emit` bound rejects against
+  the empty allowance — no implicit join to the quiet branch).
+- **Decision-path rows**: `eligibility_dup`, `eligibility_drop`,
+  `eligibility_quote` (the extracted path rejects a resource witness with
+  the eligibility constraint exactly where the reference guard declines
+  `DataOk`; the reference-side iff is `NobleM2.dataOkAt_iff`, aliased as
+  `NobleM3.Refine.eligibility_iff`), `inclusion_extracted` (the extracted
+  `is_subset_of` decides the reference `subsetOf` over the pair matrix;
+  the iff is `NobleM2.subsetOf_iff`, aliased `NobleM3.Refine.inclusion_iff`).
+- **The generalized composition**: `outcomes_via_refinement_v1` (trifecta —
+  one agreement equation yields the full five-way outcome correspondence)
+  and `accepted_via_refinement_v1` (trifecta — the v0 statement over the
+  v1 checker, derived from the five-way).
+
+## 4. The kernel-level controls that stay kernel-level
+
+Three task-2.3 controls remain exercised by the Rust suite only, not by the
+Lean matrix: the `Sum<Resource,I64>` payload-exposure positive, the
+advertised-refinement negative, and the doc-example lanes. Their decisions
+are single fixtures of the same shape as the rows above; lifting them is
+follow-up work with no proof obligation open in the tasks.
+
+## 5. Disclosed proof debts
+
+- **Dependency-walk remaining-budget invariant.** The schema scan's
+  remaining-budget bound is proven (`validateSchemas_ok_bounded`); the
+  dependency walk's analogous `w ≤ work` invariant is *not*: the walk's
+  four-mode case tree is proven total (fuel-bounded, carried by
+  `check_total_v1`) and mirrors the kernel's per-edge charging, but the
+  remaining-budget lemma is left open with this disclosure. The
+  load-bearing work measures (resolution chain, binding, pass, whole
+  resolution; the fold; the schema scan) are proven.
+- **eraseProvenance.** The v1 matrix keeps the M2 disclosure unchanged for
+  the four provenance-carrying rejection rows; the acceptance rows are all
+  exact.
+
+## 6. File map (added or rewritten under `proofs/m3`)
+
+- `NobleM2/`: `Env` (kernel-ordered 23-entry named-scheme table, `deps`,
+  `SchemaDecl`), `Words` (`Binding.ref` + the resolution walk), `Judgment`
+  (eliminator + rejection rules, `ResolvesTo`), `Check` (resolving
+  application, B-CHECK-02 walks, v1 preflight), `Soundness` (resolution
+  bridge lemmas), `CheckSoundness` (v1 ports), `Termination` (v1 work
+  measure), `Candidate` (DecidableEq for fixtures), plus the carried v0
+  modules.
+- `NobleM3/`: `Refine` (table + application refinements), `Inv`, `Coverage`,
+  `CoverageWords`, `Rules`, `RefinementWords`, `Refinement`.
+
+The required-theorem name list for the gate (the contract with M3DxGates):
+
+- strict (trifecta only): `NobleM2.{applyScheme_ok, applyScheme_ok_resolves,
+  resolve_resolvesTo, followFrom_chain, resolveOne_position,
+  resolveList_positions, check_soundness, foldBody_derives,
+  foldBody_entry_derives, check_total, check_total_v1,
+  foldBody_work_bounded, foldBody_work_bounded_v1, resolve_work_bounded,
+  followFrom_work_bounded, resolveOne_work_bounded,
+  resolveList_work_bounded, validateSchemas_ok_bounded,
+  word_cost_positive, quotationDerives_bound, derives_cons_inv,
+  invocation_word, rule_empty_sound, rule_literal_sound,
+  rule_sequence_sound, rule_quotation_sound, rule_word_sound,
+  rule_case_sound, rule_if_sound, rule_listcase_sound, caseScheme_inv,
+  ifScheme_inv, listCaseScheme_inv, dataOkAt_iff, subsetOf_subset,
+  subsetOf_iff, duplication_shares_one_interface, fresh_instantiation,
+  resolvesTo_refl, outcomes_via_refinement_v1, accepted_via_refinement_v1}`
+  and `noble_kernel.acceptance.check`.
+- evaluation-closed (trifecta + own n.d. family): `NobleM2.{coverage_positive,
+  Coverage.accepted, Coverage.derives, Regression.ce_accepted,
+  Regression.ce_derives, WordCoverage.coverage_<word> (23),
+  WordCoverage.coverage_positive_word,
+  WordCoverage.coverage_eliminator_exercise, WordCoverage.ee_accepted,
+  WordCoverage.ee_derives}`, `NobleM2.WordRefinement.{word_refinement_<word>
+  (23), word_refinements}`, `NobleM3.Refine.{refinement_word_<word> (23),
+  refinement_words, refinement_rule_empty, refinement_rule_literal,
+  refinement_rule_word, refinement_rule_sequence,
+  refinement_rule_quotation, refinement_rule_case, refinement_rule_if,
+  refinement_rule_listcase, refinement_recursive_dependency_self,
+  refinement_recursive_dependency_mutual, refinement_dependency_boundary,
+  refinement_dependency_exhausted, refinement_dependency_before_body,
+  refinement_recursive_schema, refinement_schema_boundary,
+  refinement_schema_exhausted, refinement_cyclic_witness_self,
+  refinement_cyclic_witness_mutual, refinement_resolvable_chain,
+  refinement_kind_crossed_reference, refinement_duplication_negative,
+  refinement_implicit_union_negative, eligibility_dup, eligibility_drop,
+  eligibility_quote, inclusion_extracted}`.
