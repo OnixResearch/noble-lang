@@ -85,7 +85,7 @@ pub(super) fn complete_frame(
                 | None => return Err(super::Fail::Internal),
             };
             let scheme = super::parts::instantiate::quotation_scheme();
-            let interface = attempt!(super::parts::instantiate::apply(
+            let (interface, _resolved) = attempt!(super::parts::instantiate::apply(
                 &scheme,
                 &inst,
                 None,

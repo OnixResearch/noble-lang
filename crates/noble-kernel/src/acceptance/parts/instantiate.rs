@@ -53,6 +53,7 @@ pub(crate) fn data_slot(
         Some(crate::contracts::Behavior::Swap)
         | Some(crate::contracts::Behavior::Dip)
         | Some(crate::contracts::Behavior::Arith)
+        | Some(crate::contracts::Behavior::Equals)
         | Some(crate::contracts::Behavior::Compose)
         | Some(crate::contracts::Behavior::Run)
         | Some(crate::contracts::Behavior::Reflect)
@@ -73,15 +74,60 @@ pub(crate) fn data_slot(
 }
 
 /// Instantiate one scheme into a concrete interface, validating the witness.
+///
+/// The witness's reference bindings are resolved first (B-CHECK-05): a
+/// cyclic chain rejects as invalid, a chain that would outrun the declared
+/// work limit rejects fail-closed, and the resolved witness returns with
+/// the interface so callers can read its segments directly.
 pub(crate) fn apply(
     scheme: &crate::words::Scheme,
     inst: &crate::words::Inst,
     data_var: Option<crate::words::Variable>,
     at: super::Site,
     ctx: &super::Ctx,
-) -> Result<crate::untrusted::Interface, super::super::Fail> {
+) -> Result<(crate::untrusted::Interface, crate::words::Inst), super::super::Fail> {
     attempt!(check_bounds(scheme, inst, at, ctx));
-    project(scheme, inst, data_var, at, ctx)
+    let resolved = attempt!(resolve_witness(scheme, inst, at, ctx));
+    let interface = attempt!(project(scheme, &resolved, data_var, at, ctx));
+    Ok((interface, resolved))
+}
+
+/// Resolve one witness's reference bindings under the declared work limit.
+fn resolve_witness(
+    scheme: &crate::words::Scheme,
+    inst: &crate::words::Inst,
+    at: super::Site,
+    ctx: &super::Ctx,
+) -> Result<crate::words::Inst, super::super::Fail> {
+    match crate::words::resolve::resolve(&scheme.var_kinds, inst, ctx.request.limits.work) {
+        Ok((resolved, _spent)) => Ok(resolved),
+        Err(crate::words::InstError::CyclicWitness) => Err(super::invalid(
+            ctx,
+            at,
+            alloc::vec::Vec::new(),
+            alloc::vec::Vec::new(),
+            crate::untrusted::Constraint::CyclicWitness,
+        )),
+        Err(crate::words::InstError::WalkExhausted) => Err(super::super::Fail::Exhausted(
+            crate::untrusted::LimitKind::Work,
+        )),
+        Err(crate::words::InstError::ArityMismatch) => Err(super::invalid(
+            ctx,
+            at,
+            alloc::vec::Vec::new(),
+            alloc::vec::Vec::new(),
+            crate::untrusted::Constraint::InstantiationArity,
+        )),
+        Err(crate::words::InstError::OversizedStack) => Err(super::super::Fail::Exhausted(
+            crate::untrusted::LimitKind::StackHeight,
+        )),
+        Err(crate::words::InstError::OversizedType)
+        | Err(crate::words::InstError::OversizedEffects) => Err(super::super::Fail::Exhausted(
+            crate::untrusted::LimitKind::TypeSize,
+        )),
+        Err(crate::words::InstError::KindMismatch)
+        | Err(crate::words::InstError::UnknownVariable) => Err(instantiation_invalid(at, ctx)),
+    }
 }
 
 fn check_bounds(
@@ -106,7 +152,9 @@ fn check_bounds(
     ) {
         Ok(()) => Ok(()),
         Err(crate::words::InstError::KindMismatch)
-        | Err(crate::words::InstError::UnknownVariable) => Err(instantiation_invalid(at, ctx)),
+        | Err(crate::words::InstError::UnknownVariable)
+        | Err(crate::words::InstError::CyclicWitness)
+        | Err(crate::words::InstError::WalkExhausted) => Err(instantiation_invalid(at, ctx)),
         Err(crate::words::InstError::ArityMismatch) => Err(super::invalid(
             ctx,
             at,

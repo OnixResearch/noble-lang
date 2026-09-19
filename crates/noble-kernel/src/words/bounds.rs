@@ -20,6 +20,10 @@ pub(super) fn check_binding(
         (crate::words::Binding::Effect(set), crate::words::VariableKind::Effect) => {
             check_effect_count(set, max_effects)
         }
+        // A reference binding's own shape carries no bound; its terminal
+        // binding was bounds-checked at its own position, and the
+        // resolution walk checks the kinds match before substituting.
+        (crate::words::Binding::Ref(_), _) => Ok(()),
         (crate::words::Binding::Stack(_), crate::words::VariableKind::Value)
         | (crate::words::Binding::Stack(_), crate::words::VariableKind::Effect)
         | (crate::words::Binding::Value(_), crate::words::VariableKind::Stack)

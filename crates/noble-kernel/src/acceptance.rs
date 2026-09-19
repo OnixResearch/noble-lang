@@ -8,6 +8,7 @@ mod frames;
 mod nodes;
 mod parts;
 mod preflight;
+mod validate;
 
 enum Fail {
     Invalid(crate::untrusted::Diagnostic),

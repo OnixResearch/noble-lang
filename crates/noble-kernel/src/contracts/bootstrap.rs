@@ -1,4 +1,4 @@
-//! The fixed v0 word-contract table, in `Definition` order.
+//! The fixed v1 word-contract table, in `Definition` order.
 //!
 //! Each helper builds one scheme; `table` assembles them so the environment
 //! builder stays one short loop.
@@ -119,6 +119,18 @@ fn arith() -> crate::words::Scheme {
         alloc::vec![crate::words::VariableKind::Stack],
         alloc::vec![stack_var(0), I64, I64],
         alloc::vec![stack_var(0), I64],
+        alloc::vec![],
+    )
+}
+
+/// `=`: `S I64 I64 -- S Bool ! {}`. The bootstrap numeric vocabulary's
+/// equality compares two `I64` values and returns `Bool`; it is not an
+/// implicit generic equality operator for every type (K-NUM-01).
+fn equals() -> crate::words::Scheme {
+    scheme(
+        alloc::vec![crate::words::VariableKind::Stack],
+        alloc::vec![stack_var(0), I64, I64],
+        alloc::vec![stack_var(0), BOOL],
         alloc::vec![],
     )
 }

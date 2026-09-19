@@ -49,7 +49,7 @@ pub fn append(mut stack: Vec<OTy>, tail: &[OTy]) -> Vec<OTy> {
 
 /// Whether the word places a `Data` side condition on its value variable.
 pub fn requires_data(def: u32) -> bool {
-    def == 0 || def == 1 || def == 7
+    def == 0 || def == 1 || def == 8
 }
 
 /// Whether the witness carries exactly the wanted number of bindings.
@@ -68,11 +68,12 @@ pub fn word_face(def: u32, inst: &Inst) -> Option<OFace> {
     exact_arity(
         inst,
         match def {
-            0 | 1 | 18 | 19 => 2,
-            2 | 7 | 9 | 12 | 13 | 14 | 15 => 3,
-            3 | 10 | 17 => 4,
-            4..=6 | 11 | 21 | 22 => 1,
-            8 => 6,
+            0 | 1 | 19 | 20 => 2,
+            2 | 8 | 10 | 13 | 14 | 15 | 16 => 3,
+            3 | 11 | 18 => 4,
+            4..=7 | 12 | 22 | 23 => 1,
+            9 | 17 => 6,
+            21 => 5,
             _ => return None,
         },
     )?;
@@ -127,6 +128,14 @@ pub fn word_face(def: u32, inst: &Inst) -> Option<OFace> {
             })
         }
         7 => {
+            let s = stack_at(inst, 0)?;
+            Some(OFace {
+                input: append(s.clone(), &[OTy::I64, OTy::I64]),
+                output: append(s, &[OTy::Bool]),
+                latent: vec![],
+            })
+        }
+        8 => {
             let (r, a, s) = (stack_at(inst, 0)?, value_at(inst, 1)?, stack_at(inst, 2)?);
             let p = OTy::Program(
                 s.clone(),
@@ -139,7 +148,7 @@ pub fn word_face(def: u32, inst: &Inst) -> Option<OFace> {
                 latent: vec![],
             })
         }
-        8 => {
+        9 => {
             let (r, a, b, c, e, f) = (
                 stack_at(inst, 0)?,
                 stack_at(inst, 1)?,
@@ -157,7 +166,7 @@ pub fn word_face(def: u32, inst: &Inst) -> Option<OFace> {
                 latent: vec![],
             })
         }
-        9 => {
+        10 => {
             let (s, t, e) = (stack_at(inst, 0)?, stack_at(inst, 1)?, effects_at(inst, 2)?);
             let p = OTy::Program(s.clone(), t.clone(), e.clone());
             Some(OFace {
@@ -166,7 +175,7 @@ pub fn word_face(def: u32, inst: &Inst) -> Option<OFace> {
                 latent: e,
             })
         }
-        10 => {
+        11 => {
             let (r, a, b, e) = (
                 stack_at(inst, 0)?,
                 stack_at(inst, 1)?,
@@ -180,7 +189,7 @@ pub fn word_face(def: u32, inst: &Inst) -> Option<OFace> {
                 latent: vec![],
             })
         }
-        11 => {
+        12 => {
             let s = stack_at(inst, 0)?;
             Some(OFace {
                 input: s.clone(),
@@ -188,7 +197,7 @@ pub fn word_face(def: u32, inst: &Inst) -> Option<OFace> {
                 latent: vec![],
             })
         }
-        12 => {
+        13 => {
             let (s, a, b) = (stack_at(inst, 0)?, value_at(inst, 1)?, value_at(inst, 2)?);
             Some(OFace {
                 input: append(s.clone(), &[a, b.clone()]),
@@ -196,7 +205,7 @@ pub fn word_face(def: u32, inst: &Inst) -> Option<OFace> {
                 latent: vec![],
             })
         }
-        13 => {
+        14 => {
             let (s, a, b) = (stack_at(inst, 0)?, value_at(inst, 1)?, value_at(inst, 2)?);
             let joined = pair(a.clone(), b.clone());
             Some(OFace {
@@ -205,7 +214,7 @@ pub fn word_face(def: u32, inst: &Inst) -> Option<OFace> {
                 latent: vec![],
             })
         }
-        14 => {
+        15 => {
             let (s, a, b) = (stack_at(inst, 0)?, value_at(inst, 1)?, value_at(inst, 2)?);
             Some(OFace {
                 input: append(s.clone(), &[a]),
@@ -213,7 +222,7 @@ pub fn word_face(def: u32, inst: &Inst) -> Option<OFace> {
                 latent: vec![],
             })
         }
-        15 => {
+        16 => {
             let (s, a, b) = (stack_at(inst, 0)?, value_at(inst, 1)?, value_at(inst, 2)?);
             Some(OFace {
                 input: append(s.clone(), std::slice::from_ref(&b)),
@@ -222,6 +231,31 @@ pub fn word_face(def: u32, inst: &Inst) -> Option<OFace> {
             })
         }
         17 => {
+            let (s, a, b, t, e, f) = (
+                stack_at(inst, 0)?,
+                value_at(inst, 1)?,
+                value_at(inst, 2)?,
+                stack_at(inst, 3)?,
+                effects_at(inst, 4)?,
+                effects_at(inst, 5)?,
+            );
+            let left = OTy::Program(
+                append(s.clone(), std::slice::from_ref(&a)),
+                t.clone(),
+                e.clone(),
+            );
+            let right = OTy::Program(
+                append(s.clone(), std::slice::from_ref(&b)),
+                t.clone(),
+                f.clone(),
+            );
+            Some(OFace {
+                input: append(s, &[sum(a, b), left, right]),
+                output: t,
+                latent: union(&e, &f),
+            })
+        }
+        18 => {
             let (s, t, e, f) = (
                 stack_at(inst, 0)?,
                 stack_at(inst, 1)?,
@@ -236,7 +270,7 @@ pub fn word_face(def: u32, inst: &Inst) -> Option<OFace> {
                 latent: union(&e, &f),
             })
         }
-        18 => {
+        19 => {
             let (s, a) = (stack_at(inst, 0)?, value_at(inst, 1)?);
             Some(OFace {
                 input: s.clone(),
@@ -244,7 +278,7 @@ pub fn word_face(def: u32, inst: &Inst) -> Option<OFace> {
                 latent: vec![],
             })
         }
-        19 => {
+        20 => {
             let (s, a) = (stack_at(inst, 0)?, value_at(inst, 1)?);
             Some(OFace {
                 input: append(s.clone(), &[a.clone(), list(value_at(inst, 1)?)]),
@@ -253,6 +287,26 @@ pub fn word_face(def: u32, inst: &Inst) -> Option<OFace> {
             })
         }
         21 => {
+            let (s, a, t, e, f) = (
+                stack_at(inst, 0)?,
+                value_at(inst, 1)?,
+                stack_at(inst, 2)?,
+                effects_at(inst, 3)?,
+                effects_at(inst, 4)?,
+            );
+            let empty_branch = OTy::Program(s.clone(), t.clone(), e.clone());
+            let cons_branch = OTy::Program(
+                append(s.clone(), &[a.clone(), list(a.clone())]),
+                t.clone(),
+                f.clone(),
+            );
+            Some(OFace {
+                input: append(s, &[list(value_at(inst, 1)?), empty_branch, cons_branch]),
+                output: t,
+                latent: union(&e, &f),
+            })
+        }
+        22 => {
             let s = stack_at(inst, 0)?;
             Some(OFace {
                 input: append(s.clone(), &[OTy::Text]),
@@ -260,7 +314,7 @@ pub fn word_face(def: u32, inst: &Inst) -> Option<OFace> {
                 latent: vec![0],
             })
         }
-        22 => {
+        23 => {
             let s = stack_at(inst, 0)?;
             Some(OFace {
                 input: s.clone(),

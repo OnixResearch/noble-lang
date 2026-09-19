@@ -230,9 +230,15 @@ def embedNode : Node → noble_kernel.untrusted.Node
 
 /-! ## Candidate, request, environment: embedding -/
 
-/-- Reference candidate → extracted candidate. -/
+/-- Reference candidate → extracted candidate. The reference model format
+    marker `0` names the supported revision; the extracted crate supported
+    revision advanced to `1` when reference bindings entered the candidate
+    schema (fragment v1), so the supported marker shifts with it and every
+    foreign revision stays foreign: the reference rejects any nonzero
+    format, and every nonzero reference format embeds to a nonzero — and,
+    for every fragment value, mod-2^32-unrepresentable — extracted format. -/
 def embedCandidate (cand : Candidate) : noble_kernel.untrusted.Candidate :=
-  { format := embedU32 cand.format
+  { format := embedU32 (cand.format + 1)
     revision := embedU32 cand.revision
     nodes := vecOf embedNode cand.nodes
     body := vecOf embedU32 cand.body }
@@ -266,6 +272,7 @@ def embedBehavior : Behavior → noble_kernel.contracts.Behavior
   | .swap => .SwapBehavior
   | .dip => .DipBehavior
   | .arith => .ArithBehavior
+  | .equals => .EqualsBehavior
   | .quote => .QuoteBehavior
   | .compose => .ComposeBehavior
   | .run => .RunBehavior
@@ -287,6 +294,10 @@ def embedBehavior : Behavior → noble_kernel.contracts.Behavior
 def embedEnv (env : Env) : noble_kernel.contracts.Env :=
   { defs := vecOf embedScheme env.defs
     kinds := vecOf embedBehavior env.kinds
+    -- Fragment v0 reference environments carry no external environment
+    -- data: no dependencies and no user-declared schemas embed.
+    deps := alloc.vec.Vec.new _
+    schemas := alloc.vec.Vec.new _
     effects := vecOf embedU32 env.effects }
 
 /-! ## Projection: extracted values → reference model -/
@@ -440,6 +451,7 @@ def projectConstraint : noble_kernel.untrusted.Constraint → Constraint
   | .InstantiationArity => .instantiationArity
   | .MalformedReference n => .malformedReference (projectU32 n)
   | .UnknownDefinition d => .unknownDefinition (projectU32 d)
+  | .CyclicWitness => .cyclicWitness
 
 /-- Extracted diagnostic → reference diagnostic. -/
 def projectDiagnostic (d : noble_kernel.untrusted.Diagnostic) : Diagnostic :=
@@ -456,6 +468,8 @@ def projectUnsupportedKind : noble_kernel.untrusted.UnsupportedKind → Unsuppor
   | .FormatRevision => .formatRevision
   | .NodeForm => .nodeForm
   | .SchemeForm => .schemeForm
+  | .RecursiveDependency d => .recursiveDependency (projectU32 d)
+  | .RecursiveSchema id => .recursiveSchema (projectU32 id)
 
 /-- Extracted limit kind → reference limit kind. -/
 def projectLimitKind : noble_kernel.untrusted.LimitKind → LimitKind

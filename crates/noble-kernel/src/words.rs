@@ -5,6 +5,8 @@
 //! interface exactly. Substitution lives in `subst` and is one bounded,
 //! iterative post-order walk.
 
+pub mod resolve;
+
 pub mod subst;
 
 mod segments;
@@ -50,6 +52,10 @@ pub enum Binding {
     Value(crate::types::Ty),
     /// An effect set for an effect variable.
     Effect(crate::types::EffSet),
+    /// The witness of another variable of the same instantiation: a type
+    /// equation between two variables. A chain of references must be finite
+    /// and well founded; a cycle is rejected (B-CHECK-05).
+    Ref(Variable),
 }
 
 /// A concrete instantiation: one binding per declared variable, in order.
@@ -75,6 +81,11 @@ pub enum InstError {
     OversizedType,
     /// A bound effect set exceeds the environment's effect-identity count.
     OversizedEffects,
+    /// A reference chain is cyclic: it returns to a variable already on
+    /// the chain.
+    CyclicWitness,
+    /// A reference-resolution walk exceeded its declared work limit.
+    WalkExhausted,
 }
 
 fn slot(var: Variable) -> Option<usize> {
@@ -87,7 +98,10 @@ impl Inst {
         match slot(var) {
             Some(index) => match self.bindings.get(index) {
                 Some(Binding::Stack(segment)) => Some(segment.as_slice()),
-                Some(Binding::Value(_)) | Some(Binding::Effect(_)) | None => None,
+                Some(Binding::Value(_))
+                | Some(Binding::Effect(_))
+                | Some(Binding::Ref(_))
+                | None => None,
             },
             None => None,
         }
@@ -98,7 +112,10 @@ impl Inst {
         match slot(var) {
             Some(index) => match self.bindings.get(index) {
                 Some(Binding::Value(ty)) => Some(ty),
-                Some(Binding::Stack(_)) | Some(Binding::Effect(_)) | None => None,
+                Some(Binding::Stack(_))
+                | Some(Binding::Effect(_))
+                | Some(Binding::Ref(_))
+                | None => None,
             },
             None => None,
         }
@@ -109,7 +126,10 @@ impl Inst {
         match slot(var) {
             Some(index) => match self.bindings.get(index) {
                 Some(Binding::Effect(set)) => Some(set),
-                Some(Binding::Stack(_)) | Some(Binding::Value(_)) | None => None,
+                Some(Binding::Stack(_))
+                | Some(Binding::Value(_))
+                | Some(Binding::Ref(_))
+                | None => None,
             },
             None => None,
         }

@@ -97,6 +97,8 @@ inductive UnsupportedKind where
   | formatRevision : UnsupportedKind
   | nodeForm : UnsupportedKind
   | schemeForm : UnsupportedKind
+  | recursiveDependency : Nat → UnsupportedKind
+  | recursiveSchema : Nat → UnsupportedKind
   deriving Repr, Inhabited
 
 /-- The violated constraint recorded by a rejection. -/
@@ -110,6 +112,7 @@ inductive Constraint where
   | instantiationArity : Constraint
   | malformedReference : Nat → Constraint
   | unknownDefinition : Nat → Constraint
+  | cyclicWitness : Constraint
   deriving Repr, Inhabited
 
 /-- One rejection's diagnostic. -/

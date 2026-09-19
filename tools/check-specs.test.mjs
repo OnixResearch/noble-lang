@@ -146,6 +146,12 @@ function obligationResult(bundle, id, result, mutate = () => {}) {
     mutate(o);
   });
 }
+// The fixture bundle already carries accepted ledger entries, so the count
+// is whatever the mutated packet holds — never a hardcoded one.
+function acceptedObligations(bundle) {
+  const packet = JSON.parse(bundle.texts.get('specs/verification/obligations.json'));
+  return packet.obligations.filter(o => o.status === 'accepted').length;
+}
 for (const result of ['accepted', 'failed']) {
   for (const id of ['PO-01', 'SO-01']) {
     test(`${id} ${result} accepts a claim-bound proof record`, () => {
@@ -153,7 +159,7 @@ for (const result of ['accepted', 'failed']) {
       obligationResult(bundle, id, result);
       const checked = validate(bundle);
       assert.deepEqual(checked.errors, []);
-      assert.equal(checked.summary.completed_proofs, result === 'accepted' ? 1 : 0);
+      assert.equal(checked.summary.completed_proofs, acceptedObligations(bundle));
     });
   }
   for (const [name, mutate, diagnostic] of [

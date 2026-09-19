@@ -7,7 +7,7 @@
   "canonical_family_exists": true,
   "compiler_exists": false,
   "runtime_exists": false,
-  "proof_implementation_exists": false,
+  "proof_implementation_exists": true,
   "verification_policy": {
     "implementation_language": "Rust",
     "reference_logic": "Lean 4",
@@ -27,7 +27,15 @@
     "concrete_grammar": "open",
     "companion_representation": "open",
     "portable_encoding": "open",
-    "claim_outcomes": ["proved", "disproved", "unknown", "timeout", "unsupported", "error", "not-run"]
+    "claim_outcomes": [
+      "proved",
+      "disproved",
+      "unknown",
+      "timeout",
+      "unsupported",
+      "error",
+      "not-run"
+    ]
   },
   "developer_experience": {
     "contract": "DEVELOPER-EXPERIENCE.md",
@@ -95,17 +103,79 @@
     "execution": "not-run",
     "proof": "open"
   },
-  "selected_surface": {"execute_word": "run", "reflection_word": "reflect", "comment_prefix": "#", "legacy_aliases": false},
+  "selected_surface": {
+    "execute_word": "run",
+    "reflection_word": "reflect",
+    "comment_prefix": "#",
+    "legacy_aliases": false
+  },
   "components": [
-    {"id": "program-contracts", "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed", "evidence": []},
-    {"id": "exact-calculator", "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed", "evidence": []},
-    {"id": "core-checker", "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed", "evidence": []},
-    {"id": "wasm-runtime", "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed", "evidence": []},
-    {"id": "component-adapters", "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed", "evidence": []},
-    {"id": "syndicate-profile", "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed", "evidence": []}
+    {
+      "id": "program-contracts",
+      "implementation": "absent",
+      "execution": "not-run",
+      "proof": "open",
+      "trust": "unassessed",
+      "evidence": []
+    },
+    {
+      "id": "exact-calculator",
+      "implementation": "absent",
+      "execution": "not-run",
+      "proof": "open",
+      "trust": "unassessed",
+      "evidence": []
+    },
+    {
+      "id": "core-checker",
+      "implementation": "absent",
+      "execution": "not-run",
+      "proof": "open",
+      "trust": "unassessed",
+      "evidence": []
+    },
+    {
+      "id": "wasm-runtime",
+      "implementation": "absent",
+      "execution": "not-run",
+      "proof": "open",
+      "trust": "unassessed",
+      "evidence": []
+    },
+    {
+      "id": "component-adapters",
+      "implementation": "absent",
+      "execution": "not-run",
+      "proof": "open",
+      "trust": "unassessed",
+      "evidence": []
+    },
+    {
+      "id": "syndicate-profile",
+      "implementation": "absent",
+      "execution": "not-run",
+      "proof": "open",
+      "trust": "unassessed",
+      "evidence": []
+    }
   ],
-  "profile_status": {"contracts": "selected-contract-draft", "core": "draft", "synchronous_components": "bounded-contract-draft", "full_async": "contract-open", "syndicate": "selected-direction-only", "choreography": "deferred", "durability": "optional-deferred"},
+  "profile_status": {
+    "contracts": "selected-contract-draft",
+    "core": "draft",
+    "synchronous_components": "bounded-contract-draft",
+    "full_async": "contract-open",
+    "syndicate": "selected-direction-only",
+    "choreography": "deferred",
+    "durability": "optional-deferred"
+  },
   "next_milestone": "M1",
   "historical_snapshot": "../noble-project-handoff-2026-09-12/",
-  "non_claims": ["No Noble tests executed", "No completed formal proofs", "No stable language or component conformance", "No tested compatible toolchain pin set", "No backend representation selected or measured", "No zerocopy dependency selected"]
+  "non_claims": [
+    "No Noble tests executed",
+    "No completed formal proofs",
+    "No stable language or component conformance",
+    "No tested compatible toolchain pin set",
+    "No backend representation selected or measured",
+    "No zerocopy dependency selected"
+  ]
 }
