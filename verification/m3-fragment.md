@@ -6,7 +6,7 @@ fragment that the M3 change implements; it supersedes
 v1 carries over unchanged. It does not claim the whole language,
 inference, recursion support, live resources, evaluation, or Wasm
 (V-MODEL-01, V-GATE-05). The audit and word-table decisions are
-[design.md](../.cairn/changes/m3-checker-coverage/design.md) "Extend the named
+[design.md](../.cairn/archive/2026-09-19-m3-checker-coverage/design.md) "Extend the named
 fragment by audit" and "Complete the word table".
 
 ## B-CHECK-01..07 audit (M2 evidence versus v1 scope)
