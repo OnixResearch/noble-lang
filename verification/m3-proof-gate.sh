@@ -5,28 +5,18 @@
 # is never weakened). The gate has two tiers:
 #
 # STRICT TIER — when the proofs/m3 root builds, every check runs against
-# it and the required-theorem list is the full fragment-v1 set:
-#
-#   FLOOR (the M2 set, over the m3 root's NobleM2 copy):
-#     applyScheme_ok, check_soundness, check_total, foldBody_work_bounded,
-#     coverage_positive, Coverage.accepted, Coverage.derives,
-#     Regression.ce_accepted, Regression.ce_derived, and the twelve
-#     Refinement theorems with their semantic subject binding
-#     (noble_kernel.acceptance.check).
-#   V1 SET (design.md "Per-rule and per-word proof depth", items 1-7):
-#     the m3 kernel-binding theorems committed so far
-#       NobleM3.Refine.table_refines        the 23-entry word table
-#       NobleM3.Refine.apply_refines        per-word application refinement
-#     and the theorem names the v1 theorem set must land under (tasks
-#     5.2-5.4; the list is the design's contract — when the proof root
-#     builds, a missing name fails the gate):
-#       NobleM3.check_total_v1, NobleM3.foldBody_work_bounded_v1,
-#       NobleM3.eligibility_iff, NobleM3.inclusion_iff,
-#       NobleM3.coverage_positive_word, NobleM3.duplication_shares_interface,
-#       NobleM3.accepted_via_refinement_v1
-#     plus per-rule soundness (EMPTY LITERAL WORD SEQUENCE QUOTATION CASE
-#     IF LISTCASE) and the per-word/per-rule refinement matrix theorems
-#     recorded in verification/m3-proof-evidence.md.
+# it and the required-theorem list is the full fragment-v1 set: the
+# inventory of verification/m3-proof-evidence.md §6, enumerated there
+# and in this gate's checker A (the strict names: soundness, totality and
+# the work-measure bounds, the per-rule soundness family, the
+# correspondences, the composed refinement theorems, and the generated
+# `noble_kernel.acceptance.check` itself; then the evaluation-closed
+# names: the coverage families, the per-word/per-rule refinement matrix
+# and the decision-path rows, each carrying the M2 per-declaration
+# native_decide axioms). A deleted or renamed name anywhere in the set
+# fails the gate, as does any axiom outside the name's permitted set.
+# The M2 floor gate (verification/m2-proof-gate.sh) stays runnable and
+# unweakened over proofs/m2.
 #   The axiom policy is the M2 one: {propext, Classical.choice,
 #   Quot.sound} strictly, plus per-declaration native_decide axioms for
 #   the evaluation-closed theorems; sorryAx and anything else reject.
@@ -144,12 +134,12 @@ pass "GENERATED-KERNEL (Aeneas entry point, Funs.lean, acceptance.check)"
 
 # STRICT: the m3 refinement and embedding import the generated module
 # itself, so the theorems cannot silently bind a same-named substitute.
-for mod in NobleM3/Refine.lean NobleM3/Embed.lean; do
+for mod in NobleM3/Refine.lean NobleM2/Embed.lean; do
   [ -f "$PROOF_ROOT/$mod" ] || fail REFINEMENT-SUBJECT "$mod is missing"
   grep -qx 'import NobleKernel' "$PROOF_ROOT/$mod" \
     || fail REFINEMENT-SUBJECT "$mod does not import the generated NobleKernel module (substituted subject)"
 done
-pass "REFINEMENT-SUBJECT (Refine.lean and Embed.lean import NobleKernel)"
+pass "REFINEMENT-SUBJECT (NobleM3/Refine.lean and NobleM2/Embed.lean import NobleKernel)"
 
 # STRICT REQUIRED-THEOREMS: the floor and the v1 set, with the M2 axiom
 # policy; the refinement family is stated about the generated checker.
@@ -161,35 +151,86 @@ trap cleanup EXIT
 cat > "$GATE_A" <<'LEAN_A'
 import Lean.Elab.Command
 import NobleM2
-import NobleM3.Refine
+import NobleM3
 
 open Lean in
 run_cmd do
   let strict : List Name := [``propext, ``Classical.choice, ``Quot.sound]
   let evalOk (n : Name) : Bool :=
-    strict.contains n || n.toString.endsWith "._native.native_decide.ax_1_1"
+    strict.contains n || n.toString.contains "_native.native_decide.ax_1_"
   let okAxiom (isStrict : Bool) (a : Name) : Bool :=
     if isStrict then strict.contains a else evalOk a
-  let floorStrict : List Name :=
-    [``NobleM2.applyScheme_ok, ``NobleM2.check_soundness, ``NobleM2.check_total,
-     ``NobleM2.foldBody_work_bounded]
-  -- The evaluation-closed theorems may carry per-declaration
-  -- native_decide axioms (the M2 policy); the v1 evaluation-closed names
-  -- are expected to be tightened against m3-proof-evidence.md at 5.4.
-  let floorEval : List Name :=
+  -- The v1 theorem contract, exactly the inventory of
+  -- verification/m3-proof-evidence.md §6: every listed name must resolve
+  -- in the elaborated environment and carry only its permitted axioms.
+  -- A deleted or renamed theorem anywhere in the set is a gate failure.
+  let words : List String :=
+    ["dup", "drop", "swap", "dip", "add", "sub", "mul", "equals", "quote",
+     "compose", "run", "reflect", "unit", "pair", "unpair", "inl", "inr",
+     "case", "if", "nil", "cons", "list_case", "test_emit"]
+  let strictAll : List Name :=
+    [``NobleM2.applyScheme_ok, ``NobleM2.applyScheme_ok_resolves,
+     ``NobleM2.resolve_resolvesTo, ``NobleM2.followFrom_chain,
+     ``NobleM2.resolveOne_position, ``NobleM2.resolveList_positions,
+     ``NobleM2.check_soundness, ``NobleM2.foldBody_derives,
+     ``NobleM2.foldBody_entry_derives, ``NobleM2.check_total,
+     ``NobleM2.check_total_v1, ``NobleM2.foldBody_work_bounded,
+     ``NobleM2.foldBody_work_bounded_v1, ``NobleM2.resolve_work_bounded,
+     ``NobleM2.followFrom_work_bounded, ``NobleM2.resolveOne_work_bounded,
+     ``NobleM2.resolveList_work_bounded, ``NobleM2.validateSchemas_ok_bounded,
+     ``NobleM2.word_cost_positive, ``NobleM2.quotationDerives_bound,
+     ``NobleM2.derives_cons_inv, ``NobleM2.invocation_word,
+     ``NobleM2.rule_empty_sound, ``NobleM2.rule_literal_sound,
+     ``NobleM2.rule_sequence_sound, ``NobleM2.rule_quotation_sound,
+     ``NobleM2.rule_word_sound,
+     ``NobleM2.caseScheme_inv, ``NobleM2.ifScheme_inv,
+     ``NobleM2.listCaseScheme_inv, ``NobleM2.dataOkAt_iff,
+     ``NobleM2.subsetOf_subset, ``NobleM2.subsetOf_iff,
+     ``NobleM2.duplication_shares_one_interface, ``NobleM2.resolvesTo_refl,
+     ``NobleM3.Refine.outcomes_via_refinement_v1,
+     ``NobleM3.Refine.accepted_via_refinement_v1,
+     ``noble_kernel.acceptance.check]
+  -- The evaluation-closed theorems may additionally carry the
+  -- per-declaration native_decide axiom family (the M2 policy).
+  let evalClosed : List Name :=
     [``NobleM2.coverage_positive,
      ``NobleM2.Coverage.accepted, ``NobleM2.Coverage.derives,
-     ``NobleM2.Regression.ce_accepted, ``NobleM2.Regression.ce_derives]
-  let v1 : List Name :=
-    [``NobleM3.Refine.table_refines, ``NobleM3.Refine.apply_refines,
-     ``NobleM3.check_total_v1, ``NobleM3.foldBody_work_bounded_v1,
-     ``NobleM3.eligibility_iff, ``NobleM3.inclusion_iff,
-     ``NobleM3.coverage_positive_word,
-     ``NobleM3.duplication_shares_interface,
-     ``NobleM3.accepted_via_refinement_v1]
+     ``NobleM2.Regression.ce_accepted, ``NobleM2.Regression.ce_derives,
+     ``NobleM2.WordCoverage.coverage_positive_word,
+     ``NobleM2.WordCoverage.coverage_eliminator_exercise,
+     ``NobleM2.WordCoverage.ee_accepted, ``NobleM2.WordCoverage.ee_derives,
+     ``NobleM2.rule_case_sound, ``NobleM2.rule_if_sound,
+     ``NobleM2.rule_listcase_sound, ``NobleM2.fresh_instantiation,
+     ``NobleM2.Refinement.table_refines, ``NobleM2.Refinement.apply_refines,
+     ``NobleM2.WordRefinement.word_refinements,
+     ``NobleM3.Refine.refinement_words,
+     ``NobleM3.Refine.refinement_rule_empty, ``NobleM3.Refine.refinement_rule_literal,
+     ``NobleM3.Refine.refinement_rule_word, ``NobleM3.Refine.refinement_rule_sequence,
+     ``NobleM3.Refine.refinement_rule_quotation, ``NobleM3.Refine.refinement_rule_case,
+     ``NobleM3.Refine.refinement_rule_if, ``NobleM3.Refine.refinement_rule_listcase,
+     ``NobleM3.Refine.refinement_recursive_dependency_self,
+     ``NobleM3.Refine.refinement_recursive_dependency_mutual,
+     ``NobleM3.Refine.refinement_dependency_boundary,
+     ``NobleM3.Refine.refinement_dependency_exhausted,
+     ``NobleM3.Refine.refinement_dependency_before_body,
+     ``NobleM3.Refine.refinement_recursive_schema,
+     ``NobleM3.Refine.refinement_schema_boundary,
+     ``NobleM3.Refine.refinement_schema_exhausted,
+     ``NobleM3.Refine.refinement_cyclic_witness_self,
+     ``NobleM3.Refine.refinement_cyclic_witness_mutual,
+     ``NobleM3.Refine.refinement_resolvable_chain,
+     ``NobleM3.Refine.refinement_kind_crossed_reference,
+     ``NobleM3.Refine.refinement_duplication_negative,
+     ``NobleM3.Refine.refinement_implicit_union_negative,
+     ``NobleM3.Refine.eligibility_dup, ``NobleM3.Refine.eligibility_drop,
+     ``NobleM3.Refine.eligibility_quote, ``NobleM3.Refine.inclusion_extracted,
+     ``NobleM3.Refine.eligibility_iff, ``NobleM3.Refine.inclusion_iff]
+    ++ words.map (fun w => (`NobleM2.WordCoverage).mkStr s!"coverage_{w}")
+    ++ words.map (fun w => (`NobleM2.WordRefinement).mkStr s!"word_refinement_{w}")
+    ++ words.map (fun w => (`NobleM3.Refine).mkStr s!"refinement_word_{w}")
   for (n, isStrict) in
-    (floorStrict.map (fun n => (n, true))
-      ++ (floorEval ++ v1).map (fun n => (n, false))) do
+    (strictAll.map (fun n => (n, true))
+      ++ evalClosed.map (fun n => (n, false))) do
     match (← getEnv).find? n with
     | none => logError m!"m3-gate: required theorem missing: {n}"
     | some _ =>
@@ -208,13 +249,14 @@ run_cmd do
   let gen := ``noble_kernel.acceptance.check
   let strict : List Name := [``propext, ``Classical.choice, ``Quot.sound]
   let evalOk (n : Name) : Bool :=
-    strict.contains n || n.toString.endsWith "._native.native_decide.ax_1_1"
+    strict.contains n || n.toString.contains "_native.native_decide.ax_1_"
   let okAxiom (isStrict : Bool) (a : Name) : Bool :=
     if isStrict then strict.contains a else evalOk a
-  let refinement : List Name :=
+  let refinementStrict : List Name :=
     [``noble_kernel.acceptance.check,
-     ``NobleM2.Refinement.accepted_via_refinement,
-     ``NobleM2.Refinement.refinement_sequence_and_literals_accept_arithmetic,
+     ``NobleM2.Refinement.accepted_via_refinement]
+  let refinementEval : List Name :=
+    [``NobleM2.Refinement.refinement_sequence_and_literals_accept_arithmetic,
      ``NobleM2.Refinement.refinement_quotation_construction_checks_body_and_runs,
      ``NobleM2.Refinement.refinement_limits_nodes_exact,
      ``NobleM2.Refinement.refinement_limits_nodes_over,
@@ -226,7 +268,8 @@ run_cmd do
      ``NobleM2.Refinement.refinement_diagnostics_report_order,
      ``NobleM2.Refinement.refinement_diagnostics_truncation,
      ``NobleM2.Refinement.refinement_resource_eligibility_rejects_duplication]
-  for (n, isStrict) in refinement.map (fun n => (n, true)) do
+  for (n, isStrict) in (refinementStrict.map (fun n => (n, true))
+      ++ refinementEval.map (fun n => (n, false))) do
     match (← getEnv).find? n with
     | none => logError m!"m3-gate: required theorem missing: {n}"
     | some ci =>
@@ -255,7 +298,7 @@ if [ "$subject_rc" -ne 0 ]; then
   fail REQUIRED-THEOREMS "refinement theorem inventory / subject binding exited $subject_rc"
 fi
 printf '%s\n' "$subject_log"
-pass "REQUIRED-THEOREMS (floor + v1 inventory, axiom policy, subject binding)"
+pass "REQUIRED-THEOREMS (the v1 theorem inventory of m3-proof-evidence.md §6, axiom policy, subject binding)"
 
 # STRICT: no unexplained external model (template axioms reject).
 axiom_hits="$(grep -nE '^[[:space:]]*axiom[[:space:]]' \

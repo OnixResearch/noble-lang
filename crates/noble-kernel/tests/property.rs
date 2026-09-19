@@ -40,6 +40,56 @@ const GENERATED: u64 = 1000;
 /// Structurally corrupted candidates in the malformed lane.
 const MALFORMED: u64 = 200;
 
+/// The oracle's contract table must carry an arm for every pool word: a
+/// missing arm makes the differential harness silently reject that word's
+/// candidates instead of comparing them, so the agreement lane loses all
+/// power over it. This control fails the suite the moment an arm goes
+/// missing (it is the refusing check behind the removed-eliminator-oracle-
+/// arm refusal in `verification/m3-proof-gate-refusals.sh`).
+// r[verify DX-PROPERTY-01]
+#[test]
+fn oracle_table_covers_every_pool_word() -> Result<(), String> {
+    let env = gen::environment()?;
+    for word in fit::WORDS.iter().copied() {
+        let kinds: Vec<noble_kernel::words::VariableKind> = if (word as usize) < env.defs.len() {
+            env.defs[word as usize].var_kinds.clone()
+        } else {
+            // The resource-maker fixture is not an environment definition;
+            // its documented contract is one stack variable.
+            vec![noble_kernel::words::VariableKind::Stack]
+        };
+        let inst = noble_kernel::words::Inst {
+            bindings: kinds
+                .iter()
+                .map(|kind| match kind {
+                    noble_kernel::words::VariableKind::Stack => {
+                        noble_kernel::words::Binding::Stack(vec![
+                            noble_kernel::types::Ty::I64,
+                            noble_kernel::types::Ty::Bool,
+                        ])
+                    }
+                    noble_kernel::words::VariableKind::Value => {
+                        noble_kernel::words::Binding::Value(noble_kernel::types::Ty::I64)
+                    }
+                    noble_kernel::words::VariableKind::Effect => {
+                        noble_kernel::words::Binding::Effect(noble_kernel::types::EffSet::empty())
+                    }
+                })
+                .collect(),
+        };
+        if table::word_face(word, &inst).is_none() {
+            return Err(format!(
+                "the oracle's contract table has no arm for pool word {word}"
+            ));
+        }
+    }
+    println!(
+        "property/oracle-coverage: the contract table decides every pool word ({} arms)",
+        fit::WORDS.len()
+    );
+    Ok(())
+}
+
 // r[verify DX-PROPERTY-01]
 // r[verify VT-M2-01]
 #[test]

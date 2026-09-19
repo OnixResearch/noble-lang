@@ -93,6 +93,10 @@ per-declaration native_decide axioms besides the listed base set.
 | `NobleM2.subsetOf_iff` | propext, Quot.sound |
 | `NobleM2.duplication_shares_one_interface` | trifecta |
 | `NobleM2.resolvesTo_refl` | propext, Quot.sound |
+| `NobleM2.rule_case_sound` | trifecta, +own n.d. axioms (0) |
+| `NobleM2.rule_if_sound` | trifecta, +own n.d. axioms (0) |
+| `NobleM2.rule_listcase_sound` | trifecta, +own n.d. axioms (0) |
+| `NobleM2.fresh_instantiation` | trifecta, +own n.d. axioms (0) |
 | `NobleM2.WordCoverage.ee_accepted` | propext,+own n.d. axioms (0) |
 | `NobleM2.coverage_positive` | propext,+own n.d. axioms (0) |
 | `NobleM2.Coverage.accepted` | propext,+own n.d. axioms (0) |
@@ -146,6 +150,7 @@ trifecta + own n.d. axioms.
 | `NobleM3.Refine.inclusion_extracted` | propext,+own n.d. axioms (0) |
 | `NobleM3.Refine.outcomes_via_refinement_v1` | trifecta |
 | `NobleM3.Refine.accepted_via_refinement_v1` | trifecta |
+| `NobleM2.validateSchemas_ok_bounded` | propext, Quot.sound |
 | `noble_kernel.acceptance.check` | trifecta |
 
 The per-word coverage family `NobleM2.WordCoverage.coverage_<word>` (23
@@ -206,13 +211,16 @@ follow-up work with no proof obligation open in the tasks.
 ## 5. Disclosed proof debts
 
 - **Dependency-walk remaining-budget invariant.** The schema scan's
-  remaining-budget bound is proven (`validateSchemas_ok_bounded`); the
-  dependency walk's analogous `w ≤ work` invariant is *not*: the walk's
-  four-mode case tree is proven total (fuel-bounded, carried by
-  `check_total_v1`) and mirrors the kernel's per-edge charging, but the
-  remaining-budget lemma is left open with this disclosure. The
-  load-bearing work measures (resolution chain, binding, pass, whole
-  resolution; the fold; the schema scan) are proven.
+  remaining-budget bound is proven as `NobleM2.validateSchemas_ok_bounded`
+  (task 4.1/6.1 follow-up, 2026-09-19: the gate's inventory named it, the
+  name was absent, and the lemma is now stated and proved — a successful
+  scan returns at most the budget it started with, with the `.exhausted`
+  outcome taken exactly at zero). The dependency walk's analogous
+  `w ≤ work` invariant is *not*: the walk's four-mode case tree is proven
+  total (fuel-bounded, carried by `check_total_v1`) and mirrors the
+  kernel's per-edge charging, but its remaining-budget lemma is left open
+  with this disclosure. The load-bearing work measures (resolution chain,
+  binding, pass, whole resolution; the fold; the schema scan) are proven.
 - **eraseProvenance.** The v1 matrix keeps the M2 disclosure unchanged for
   the four provenance-carrying rejection rows; the acceptance rows are all
   exact.
@@ -229,7 +237,10 @@ follow-up work with no proof obligation open in the tasks.
 - `NobleM3/`: `Refine` (table + application refinements), `Inv`, `Coverage`,
   `CoverageWords`, `Rules`, `RefinementWords`, `Refinement`.
 
-The required-theorem name list for the gate (the contract with M3DxGates):
+The required-theorem name list for the gate (the contract with M3DxGates).
+The gate enumerates exactly this list; the split below is the axiom policy
+each name is held to, and it was verified name by name
+(`verification/m3-proof-gate.sh` strict tier, 2026-09-19):
 
 - strict (trifecta only): `NobleM2.{applyScheme_ok, applyScheme_ok_resolves,
   resolve_resolvesTo, followFrom_chain, resolveOne_position,
@@ -241,9 +252,9 @@ The required-theorem name list for the gate (the contract with M3DxGates):
   word_cost_positive, quotationDerives_bound, derives_cons_inv,
   invocation_word, rule_empty_sound, rule_literal_sound,
   rule_sequence_sound, rule_quotation_sound, rule_word_sound,
-  rule_case_sound, rule_if_sound, rule_listcase_sound, caseScheme_inv,
+  caseScheme_inv,
   ifScheme_inv, listCaseScheme_inv, dataOkAt_iff, subsetOf_subset,
-  subsetOf_iff, duplication_shares_one_interface, fresh_instantiation,
+  subsetOf_iff, duplication_shares_one_interface,
   resolvesTo_refl, outcomes_via_refinement_v1, accepted_via_refinement_v1}`
   and `noble_kernel.acceptance.check`.
 - evaluation-closed (trifecta + own n.d. family): `NobleM2.{coverage_positive,
@@ -251,7 +262,11 @@ The required-theorem name list for the gate (the contract with M3DxGates):
   Regression.ce_derives, WordCoverage.coverage_<word> (23),
   WordCoverage.coverage_positive_word,
   WordCoverage.coverage_eliminator_exercise, WordCoverage.ee_accepted,
-  WordCoverage.ee_derives}`, `NobleM2.WordRefinement.{word_refinement_<word>
+  WordCoverage.ee_derives, rule_case_sound, rule_if_sound,
+  rule_listcase_sound, fresh_instantiation}`,
+  `NobleM2.Refinement.{table_refines, apply_refines}` (the two
+  kernel-binding theorems of design item 1, both `native_decide`-closed),
+  `NobleM2.WordRefinement.{word_refinement_<word>
   (23), word_refinements}`, `NobleM3.Refine.{refinement_word_<word> (23),
   refinement_words, refinement_rule_empty, refinement_rule_literal,
   refinement_rule_word, refinement_rule_sequence,

@@ -286,20 +286,29 @@ if (import.meta.main) {
         status: e.status,
         citations: e.citations ?? [],
       }));
-    const isRefinement = (c) =>
-      c.startsWith('NobleM2.Refinement.') || c.startsWith('NobleM3.Refine.');
-    const isM3 = (c) => c.startsWith('NobleM3.Refine.');
-    const payloadA = payloadAll.map(e => ({ ...e, citations: e.citations.filter(c => !isRefinement(c)) }));
+    // Each payload is imported into a checker whose import surface can see
+    // exactly one group of citation namespaces (checker A: NobleKernel +
+    // NobleM2 root; checker B: NobleM2.Refinement; checker C: the NobleM3
+    // root, which reaches NobleM3.Refine and NobleM2.WordRefinement). The
+    // citation sets must partition, not the entries: an entry that cites
+    // both an M2-floor theorem and an M3 theorem is routed into A, B and C
+    // with only the citations each checker can see, so every citation is
+    // verified exactly once and none is silently dropped.
+    const isB = (c) => c.startsWith('NobleM2.Refinement.');
+    const isC = (c) => c.startsWith('NobleM3.Refine.') || c.startsWith('NobleM2.WordRefinement.');
+    const isRefinement = (c) => isB(c) || isC(c);
+    const withCits = (e, keep) => ({ ...e, citations: e.citations.filter(keep) });
+    const payloadA = payloadAll.map(e => withCits(e, c => !isRefinement(c)));
     const payloadB = payloadAll
-      .filter(e => e.citations.some(isRefinement) && !e.citations.some(isM3))
-      .map(e => ({ ...e, citations: e.citations.filter(isRefinement) }));
+      .filter(e => e.citations.some(isB))
+      .map(e => withCits(e, isB));
     const payloadC = payloadAll
-      .filter(e => e.citations.some(isM3))
-      .map(e => ({ ...e, citations: e.citations.filter(isM3) }));
+      .filter(e => e.citations.some(isC))
+      .map(e => withCits(e, isC));
     await Bun.write(c, JSON.stringify(payloadA, null, 1) + "\n");
     await Bun.write(d ?? "/dev/null", JSON.stringify(payloadB, null, 1) + "\n");
-    if (process.argv[6]) {
-      await Bun.write(process.argv[6], JSON.stringify(payloadC, null, 1) + "\n");
+    if (process.argv[7]) {
+      await Bun.write(process.argv[7], JSON.stringify(payloadC, null, 1) + "\n");
     }
   } else {
     console.error('usage: m3-coverage-join.mjs derive|emit|check|leanpayload PROOF_ROOT [RECORD] [OUT-A] [OUT-B] [OUT-C]');

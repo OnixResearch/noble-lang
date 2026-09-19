@@ -10,7 +10,7 @@ use super::rng::Rng;
 
 /// The word pool the generator emits, as definition ids.
 pub const WORDS: &[u32] = &[
-    0, 1, 2, 3, 4, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17, 18, 19, 21, 22,
+    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
 ];
 
 pub fn stack(segment: Vec<Ty>) -> Binding {

@@ -439,6 +439,32 @@ theorem resolve_work_bounded {kinds : List Kind} {witness resolved : Inst}
       subst left_eq
       exact resolveList_work_bounded kinds witness witness.bindings 0 fuel bs left' hres
 
+/-- The schema scan stays inside its charged budget: a successful scan
+returns no more leftover than the work it started with — every inspected
+declaration charges one unit before it is looked at, and the `.exhausted`
+outcome is taken exactly when the budget runs out. -/
+theorem validateSchemas_ok_bounded (env : Env) :
+    ∀ (work : Nat) (decls : List SchemaDecl) {left : Nat},
+      validateSchemas env work decls = .ok left → left ≤ work := by
+  intro work decls
+  induction decls generalizing work with
+  | nil =>
+      intro left h
+      simp only [validateSchemas] at h
+      injection h with hl
+      subst hl
+      exact Nat.zero_le work
+  | cons decl rest ih =>
+      intro left h
+      simp only [validateSchemas] at h
+      split at h
+      · exact absurd h (by simp)
+      · split at h
+        · exact absurd h (by simp)
+        · split at h
+          · exact absurd h (by simp)
+          · exact Nat.le_trans (ih (work - 1) h) (Nat.pred_le work)
+
 /-- Totality over fragment v1: every request on every candidate reaches one
 of the five outcomes, and both external-data validation walks terminate
 (structurally bounded by their fuel). -/

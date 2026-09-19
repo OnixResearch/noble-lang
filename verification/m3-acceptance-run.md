@@ -1,12 +1,15 @@
-# M3 acceptance control run (run-so-far, 2026-09-18)
+# M3 acceptance control run (final, 2026-09-19)
 
 Scope: the `m3-checker-coverage` change — bootstrap fragment v1 (the
 23-entry word table, the B-CHECK-02 recursion/schema rejections, the
 B-CHECK-05 cyclic-substitution rejections, and the extended controls).
-This file records the baseline and gate matrix run so far; task 7.1
-extends it to the full end-to-end control matrix. Baseline tree at first
-recording: `c668dac` (kernel v1 `53f2fcf`, re-extraction `be7d986`,
-package `50807a9`, proof-root commits through `c668dac`).
+This file records the **full end-to-end control matrix** (task 7.1):
+every family, control, gate, and refusal, with the command and its
+outcome. Baseline tree at first recording: `c668dac` (kernel v1
+`53f2fcf`, re-extraction `be7d986`, package `50807a9`, proof-root
+commits through `c668dac`); the matrix below was re-run on the final
+tree with the v1 proof root building (strict tier) and the v1 refusal
+matrices in place.
 Kernel-gate evidence for tasks 2.1–2.4 lives in
 [m3-kernel-gates.md](m3-kernel-gates.md); every row below marked
 "re-run" was executed again on this tree while writing this document.
@@ -44,9 +47,9 @@ Environment: `PATH=/nix/store/1yvh3d6y3fj3xk2dgwczrp1dj5svd92c-rust-default-1.96
 `CARGO_HOME=/tmp/cargo-home`, `CARGO_TARGET_DIR=<repo>/target`;
 octet at `/nix/store/vj0sg5rn291z78im7gd2cqzqzd0bq3zy-cargo-octet-0.1.0/bin`.
 
-| Gate | Command | Result (re-run 2026-09-18) |
+| Gate | Command | Result (re-run 2026-09-18; kernel test counts updated 2026-09-19) |
 |---|---|---|
-| Tests | `cargo test --offline -p noble-kernel` | 9 suites all ok: acceptance 11, budget 2, docexamples 2, dx01 3, fragment 6, property 2, recursion-schema-cycle 11 (+ lib/doctests 0) |
+| Tests | `cargo test --offline -p noble-kernel` | 9 suites all ok: acceptance 11, budget 2, docexamples 2, dx01 9, fragment 6, property 3, recursion-schema-cycle 11 (+ lib/doctests 0) |
 | Clippy | `cargo clippy --offline --workspace --all-targets --all-features -- -D warnings` | exit 0, 0 errors, 0 warnings |
 | rustfmt | `cargo fmt --check` | clean |
 | Octet architecture | `rm -rf .octet/compiler-architecture/shards && cargo-octet check --workspace -- --all-targets --all-features` | **Architecture findings: 0** (receipt `b38205ce2178ef089acd6a1125be5387d612173d4c50d8e28c6a681b042de11a`); lint phase warning-only (pre-existing production findings and DX test-file style warnings only) |
@@ -95,10 +98,12 @@ What the M3 acceptance sequence claims, and what it does not:
   subset label (V-MODEL-01, V-GATE-05); the enumerated omissions are in
   [m3-fragment.md](m3-fragment.md) "Omissions".
 - **Proof depth:** fragment v1's theorem set is owned by the `proofs/m3`
-  root (tasks 5.1–5.4). Until those theorems land and
-  `verification/m3-proof-evidence.md` records them, the acceptance
-  claims stand on the M2 floor above plus the v1 kernel controls; the
-  v1 gates record the handoff explicitly.
+  root (tasks 5.1–5.4) and recorded in
+  [m3-proof-evidence.md](m3-proof-evidence.md). The claims below stand
+  on that theorem set, on the v1 gates and refusal matrices, and on the
+  M2 floor, which stays green. The `proofs/m3` root builds with no
+  `sorry`, its theorem inventory is the gate's required-theorem list,
+  and each name's axiom set is checked against its class.
 
 ## Gate-extension status (updated as tasks complete)
 
@@ -106,62 +111,162 @@ What the M3 acceptance sequence claims, and what it does not:
 |---|---|
 | `verification/m3-proof-gate.sh` | done (task 6.1, evidence below) |
 | `verification/m3-coverage-gate.sh` | done (task 6.1, evidence below) |
-| `verification/m3-proof-gate-refusals.sh` | open (task 6.2) |
-| `verification/m3-coverage-refusals.sh` | open (task 6.2) |
+| `verification/m3-proof-gate-refusals.sh` | done, all six mutations refused (task 6.2, evidence below) |
+| `verification/m3-coverage-refusals.sh` | done, all six mutations refused (task 6.2, evidence below) |
 | per-word doc-example coverage assertion | done (task 3.2, evidence below) |
 | DX-01 rejection-family controls | done (task 3.3, evidence below) |
 
-## Task 6.1 evidence: the m3 gates on the current tree (handoff tier)
+## Task 6.1 evidence: the m3 gates on the final tree (strict tier)
 
 `verification/m3-proof-gate.sh` and `verification/m3-coverage-gate.sh`
 succeed the M2 gates (never weakening them). Each has two tiers: the
 strict tier runs the full battery against `proofs/m3` (the v1
-required-theorem list, the M2 axiom policy, semantic subject binding;
+required-theorem inventory — the theorem contract of
+[m3-proof-evidence.md](m3-proof-evidence.md) §6, enumerated in the gate
+itself — the per-name axiom policy, semantic subject binding;
 the coverage battery over `verification/m3-coverage.json` with the
-`m3-coverage-join.mjs` join tool, whose citation split routes
-`NobleM3.Refine.*` to its own checker); the handoff tier engages while
-the m3 proof root does not build yet (tasks 5.1–5.4 in flight — the
-proof agent's restructure of `NobleM2/Judgment.lean` is the current
-probe failure) and enforces the v1 kernel binding (the m3 root's
-generated module is byte-identical to `proofs/m2`'s, the module the M2
-refinement theorems bind, and carries the v1 markers: the
-`words.resolve` walk, the `CyclicWitness` constraint, the
-`RecursiveDependency` kind) plus the M2-floor battery with the m3
-record. The strict tier auto-engages when the m3 root builds; the v1
-required-theorem names are the design's contract and get their final
-form from the proof agent's `m3-proof-evidence.md` inventory.
+`m3-coverage-join.mjs` join tool, whose citation partition routes each
+citation namespace to the checker whose import surface can see it); the
+handoff tier remains as the M2-floor mode for a root that does not
+build, and is not engaged on this tree.
 
-Both gates pass on the current tree (pinned lean 4.31.0):
+Both gates pass in the strict tier on the final tree (pinned lean
+4.31.0), each with the whole battery green:
 
 ```console
 $ verification/m3-proof-gate.sh
 [m3-gate] PASS TOOLCHAIN (lean 4.31.0)
-[m3-gate] HANDOFF: the proofs/m3 root does not build yet (tasks 5.1-5.4 in flight);
-[m3-gate] HANDOFF:   error: NobleM2/Judgment.lean:195:25: unexpected token 'from'
-[m3-gate] PASS M3-KERNEL-BINDING (generated module byte-identical to proofs/m2's; v1 markers present)
-[m3-gate] PASS M3-BINDING-THEOREMS (table_refines, apply_refines present in NobleM3/Refine.lean)
-[m3-gate] PASS M3-NO-SORRY (no 'sorry' outside .lake)
-[m2-gate] PASS BUILD … PASS REQUIRED-THEOREMS (inventory, axiom policy, subject binding)
-[m2-gate] PASS EXTERNAL-MODELS … [m2-gate] PASS (all checks)
-[m3-gate] PASS (handoff tier) — strict tier engages when proofs/m3 builds
+[m3-gate] PASS BUILD (lake build NobleM3 NobleM2 NobleM2.Refinement NobleKernel)
+[m3-gate] PASS NO-SORRY (no 'sorry' outside .lake)
+[m3-gate] PASS GENERATED-KERNEL (Aeneas entry point, Funs.lean, acceptance.check)
+[m3-gate] PASS REFINEMENT-SUBJECT (NobleM3/Refine.lean and NobleM2/Embed.lean import NobleKernel)
+[m3-gate] PASS REQUIRED-THEOREMS (the v1 theorem inventory of m3-proof-evidence.md §6, axiom policy, subject binding)
+[m3-gate] PASS EXTERNAL-MODELS (no template axioms in FunsExternal/TypesExternal)
+[m3-gate] PASS (strict tier, all checks) — proof root: …/proofs/m3
 
 $ verification/m3-coverage-gate.sh
-[m3-coverage] PASS M3-KERNEL-BINDING (m3 root's generated module byte-identical to proofs/m2's — the record's subject)
-[m2-coverage] PASS COVERAGE-JOIN (total=515 classified=515 extracted=491
+[m3-coverage] PASS SETUP (bun + lean 4.31.0)
+[m3-coverage] PASS BUILD (lake build NobleM3 NobleM2 NobleM2.Refinement NobleKernel)
+[m3-coverage] PASS COVERAGE-DERIVE (Funs.lean + FunsExternal.lean defs with rust names and source spans; keyword parity holds)
+[m3-coverage] PASS COVERAGE-JOIN (total=515 classified=515 extracted=491
   proved=1 modeled=18 excepted=5 open=0)
-[m2-coverage] PASS EXCEPTED-DISCLOSURE (5 excepted entries == #[charon::opaque] declarations)
-[m2-coverage] PASS OPEN-SUBJECT (0 open entries)
-info: m2-coverage: ENV-A-PASS 515 classified constants bound to their modules; 108 elaborator matchers tolerated
-info: m2-coverage: ENV-B-PASS 13 refinement citations verified
-[m3-coverage] PASS (handoff tier) — strict tier engages when proofs/m3 builds
+[m3-coverage] PASS EXCEPTED-DISCLOSURE (5 excepted entries == #[charon::opaque] declarations in the crate)
+[m3-coverage] PASS OPEN-SUBJECT (0 open entries; every generated function is classified)
+[m3-coverage] PASS ENV-BINDING (constants bound in the elaborated environment; citations are theorems mentioning their constants)
+  info: ENV-A-PASS 515 classified constants bound to their modules; 108 elaborator matchers tolerated
+  info: ENV-B-PASS 13 citations verified; ENV-C-PASS 16 citations verified
+[m3-coverage] SUMMARY total=515 classified=515 extracted=491 proved=1 modeled=18 excepted=5 open=0
+[m3-coverage] PASS (all checks) — subject: …/proofs/m3
 ```
 
 `verification/m3-coverage.json` carries the reviewed 515-function
 classification over the regenerated module (extracted 491, proved 1,
-modeled 18, excepted 5, open 0); its subject note states the
-byte-identity with the reviewed `m2-coverage.json` classification and
-that task 4.3 re-derives and re-reviews the record when the m3
-extraction record lands.
+modeled 18, excepted 5, open 0). The `acceptance.check` entry's
+citations are the twelve M2 fixture refinements plus the sixteen v1
+theorems whose statements bind the extracted constant
+(`outcomes_via_refinement_v1`, `accepted_via_refinement_v1`, the
+B-CHECK-02/05 rejection agreements, and the two decision-path rows);
+checker A binds all 515 classified constants to their generated
+modules, and every citation is verified exactly once across the three
+checkers. The M2 floor gate and the M2 coverage battery stay green on
+`proofs/m2` with the same record counts.
+
+Two gate defects were found and fixed while running this matrix; both
+were *under-refusals*, i.e. the positive baseline was green while a
+mutation passed:
+
+1. The coverage join's citation routing partitioned *entries* rather
+   than citations, so a site citing both an M2-floor theorem and an M3
+   theorem was routed to one checker and its other citation was never
+   verified (the `dangling-citation` mutation exposed it). The routing
+   now partitions the citation sets, and the mutation is refused.
+2. The gate's required-theorem list was a ten-name excerpt of the
+   contract; it now enumerates the full inventory of
+   [m3-proof-evidence.md](m3-proof-evidence.md) §6 (the
+   `missing-per-word-theorem` mutation then exposed two further
+   defects: `NobleM2.validateSchemas_ok_bounded` was named by the
+   contract but never stated — now stated and proved — and four names
+   were held to the wrong axiom class — now reclassified).
+
+## Task 6.2 evidence: the v1 refusal matrices
+
+Each matrix runs the positive baseline and then mutated scratch copies
+(proof-root and crate copies share the lake package cache through hard
+links; the repository tree is never touched). Every mutation must be
+refused at its named check; the six proof-gate mutations and the six
+coverage-gate mutations are all refused, and the baselines stay green.
+
+```console
+$ verification/m3-proof-gate-refusals.sh      # exit 0
+== positive baseline ==
+== mutation: proof-hole (expected refusal: NO-SORRY) ==
+refused: gate exit 1 at NO-SORRY
+== mutation: missing-per-word-theorem (expected refusal: REQUIRED-THEOREMS) ==
+refused: gate exit 1 at REQUIRED-THEOREMS
+== mutation: substituted-subject (expected refusal: GENERATED-KERNEL) ==
+refused: gate exit 1 at GENERATED-KERNEL
+== mutation: unexplained-external (expected refusal: EXTERNAL-MODELS) ==
+refused: gate exit 1 at EXTERNAL-MODELS
+== mutation: removed-eliminator-oracle-arm (expected refusal: HARNESS) ==
+refused: harness exit 1
+== mutation: schema-revision-regression (expected refusal: HARNESS) ==
+refused: harness exit 1
+== all refusals demonstrated ==
+
+$ verification/m3-coverage-refusals.sh          # exit 0
+== positive baseline ==
+== mutation: missing-per-word-coverage-case (expected refusal: UNCLASSIFIED) ==
+refused at UNCLASSIFIED (gate exit 1)
+== mutation: unclassified-def (expected refusal: UNCLASSIFIED) ==
+refused at UNCLASSIFIED (gate exit 1)
+== mutation: dangling-citation (expected refusal: CITATION) ==
+refused at CITATION (gate exit 1)
+== mutation: misbound-citation (expected refusal: CITATION-BINDING) ==
+refused at CITATION-BINDING (gate exit 1)
+== mutation: stale-entry (expected refusal: STALE-ENTRY) ==
+refused at STALE-ENTRY (gate exit 1)
+== mutation: bad-status (expected refusal: STATUS) ==
+refused at STATUS (gate exit 1)
+== all refusals demonstrated ==
+```
+
+The M2 refusal matrices stay green as the floor (four proof-gate
+mutations and five coverage-gate mutations, each refused at its named
+check), so the v1 matrices extend rather than replace them.
+
+## Task 7.1 evidence: the full control matrix on the final tree
+
+All commands run from the implementation-worktree root on the final tree
+with the pinned toolchain
+(`/nix/store/1yvh3d6y3fj3xk2dgwczrp1dj5svd92c-rust-default-1.96.0-nightly-2026-03-21`,
+`CARGO_HOME=/tmp/cargo-home`; octet
+`/nix/store/vj0sg5rn291z78im7gd2cqzqzd0bq3zy-cargo-octet-0.1.0/bin`;
+lean 4.31.0 on PATH for the proof gates). Sequence and outcomes:
+
+| Step | Command | Outcome |
+|---|---|---|
+| Build | `cargo build --offline --workspace --all-targets` | exit 0 |
+| Kernel tests | `cargo test --offline -p noble-kernel` | 9 suites all ok (0/11/2/2/9/6/3/11/0) |
+| Workspace tests | `cargo test --offline --workspace` | all suites ok |
+| Clippy | `cargo clippy --offline --workspace --all-targets --all-features -- -D warnings` | exit 0, 0 warnings |
+| rustfmt | `cargo fmt --check` | clean (after the harness's array-formatting fix) |
+| Octet architecture | `rm -rf .octet/compiler-architecture/shards && cargo-octet check --workspace -- --all-targets --all-features` | 0 errors, **Architecture findings: 0**, receipt `c16e2583efea75d8012fa35a769ab04acd7bbe73f840a40a44b39345c6b5e753` |
+| Cairn validation | `bun tools/cairn.mjs validate --root .` | exit 0 |
+| Cairn gates | `bun tools/cairn.mjs gate {proposal,design,tasks} m3-checker-coverage --root .` | exit 0 each |
+| M2 floor | `verification/m2-proof-gate.sh` | PASS (all checks) |
+| M2 floor | `verification/m2-coverage-gate.sh` | PASS (all checks), total=515 open=0 |
+| M2 floor | `verification/m2-proof-gate-refusals.sh` | baseline passes, four mutations refused |
+| M2 floor | `verification/m2-coverage-refusals.sh` | five mutations refused |
+| v1 gate | `verification/m3-proof-gate.sh` | PASS (strict tier, all checks) |
+| v1 gate | `verification/m3-coverage-gate.sh` | PASS (all checks), total=515 open=0 |
+| v1 refusals | `verification/m3-proof-gate-refusals.sh` | six mutations refused |
+| v1 refusals | `verification/m3-coverage-refusals.sh` | six mutations refused |
+| Extraction | the regeneration loop from `proofs/m2/NobleKernel.lean`'s header | charon exit 0, aeneas exit 0, emitted `Types.lean`/`Funs.lean` byte-identical to the checked-in root ([m3-extraction-probe.md](m3-extraction-probe.md)) |
+
+The M1 reference evidence (the fifteen-phase acceptance run retained
+under `.pi/m1-acceptance/`, tree `4420049e`) is unchanged by this change
+and is not re-executed here; the M2 gates above are the M2 reference
+checks on this tree, and both stay green.
 
 ## Task 3.3 evidence: DX-01 controls for the v1 rejection families
 

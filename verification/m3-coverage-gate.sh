@@ -68,11 +68,14 @@ lean --version 2>/dev/null | grep -q 'version 4\.31\.0' \
   || fail TOOLCHAIN "lean on PATH is not the pinned 4.31.0 release: $(lean --version 2>&1)"
 pass "SETUP (bun + lean 4.31.0)"
 
-# Tier probe: the strict tier needs the m3 root's four targets to build.
+# Tier probe: the strict tier needs the m3 root's four targets to build
+# AND the v1 theorem set's anchor (`check_total_v1`, task 5.3) to be
+# present — until then the handoff tier applies (see m3-proof-gate.sh).
 probe_log="$(cd "$PROOF_ROOT" && lake build NobleM3 NobleM2 NobleM2.Refinement NobleKernel 2>&1)"
 probe_rc=$?
+probe_grep="$(grep -rl check_total_v1 "$PROOF_ROOT/NobleM2" "$PROOF_ROOT/NobleM3" 2>/dev/null || true)"
 
-if [ "$probe_rc" -ne 0 ]; then
+if [ "$probe_rc" -ne 0 ] || [ -z "$probe_grep" ]; then
   echo "[m3-coverage] HANDOFF: the proofs/m3 root does not build yet (tasks 5.1-5.4 in flight);"
   echo "[m3-coverage] HANDOFF: strict tier not engaged; enforcing the M3 kernel binding and the M2 floor."
   cmp -s "$PROOF_ROOT/NobleKernel.lean" "$M2_ROOT/NobleKernel.lean" \
@@ -275,22 +278,22 @@ CHECKER_CIT_BODY='  let mut errs := 0
     logInfo m!"m3-coverage: TAG-PASS {ncits} citations verified (theorem exists, statement mentions the constant)"'
 
 make_checker() { # DATAFILE IMPORTS BODY TAG
-  sed -e "s/DATAFILE/$1/" <<< "$CHECKER_HEAD"
   echo "import $2"
+  sed -e "s|DATAFILE|$1|" <<< "$CHECKER_HEAD"
   echo
-  if [ "$5" = "ENV-A" ]; then
+  if [ "$4" = "ENV-A" ]; then
     # Checker A binds every classified constant to its generated module
     # and verifies its own (non-refinement) citations inline.
     printf '%s\n' "$CHECKER_A_BODY"
   else
-    sed -e "s/TAG-PASS/$5-PASS/" <<< "$CHECKER_CIT_BODY"
+    sed -e "s|TAG-PASS|$4-PASS|" <<< "$CHECKER_CIT_BODY"
   fi
 }
 
 make_checker "$DATA_A" "NobleKernel" "" "ENV-A" > "$GATE_A"
 sed -i "1a import NobleM2" "$GATE_A"  # A checks the floor theorems' modules too
 make_checker "$DATA_B" "NobleM2.Refinement" "" "ENV-B" > "$GATE_B"
-make_checker "$DATA_C" "NobleM3.Refine" "" "ENV-C" > "$GATE_C"
+make_checker "$DATA_C" "NobleM3" "" "ENV-C" > "$GATE_C"
 
 env_log=""
 env_rc=0
