@@ -118,3 +118,12 @@ their evidence bound to the artifacts above
 probe, the coverage record). Every other obligation keeps its `open`
 status and its spec-wide claim: fragment v1 moves three entries from
 unscoped to fragment-v1-scoped, and claims nothing about the rest.
+
+`specs/STATUS.json` moves with the ledger, as the design requires:
+`proof_implementation_exists` is now `true`, which is exactly the claim
+that a proof implementation exists for the labelled fragment. The flag
+is what lets the three entries be `accepted`; the validator's
+greenfield controls were pinned to their own fixture state in the same
+commit so they keep testing the greenfield rule rather than the
+bundle's current flags. `compiler_exists` and `runtime_exists` stay
+`false` — the Rust compiler and runtime are not this change's claim.

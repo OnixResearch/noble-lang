@@ -3,35 +3,290 @@
   "revision": "0.1.0-draft.5",
   "origin": "preserved-obligations-with-Aeneas-first-routes-and-draft5-contract-obligations",
   "obligations": [
-    {"id":"PO-01","claim":"Well-formed syntax, references, types, substitutions, and eligibility","route":"lean-kernel","status":"open","evidence":[]},
-    {"id":"PO-02","claim":"Preservation of stack and value typing","route":"lean-kernel","status":"open","evidence":[]},
-    {"id":"PO-03","claim":"Progress relative to host contracts and no forbidden stuck states","route":"lean-kernel","status":"open","evidence":[]},
-    {"id":"PO-04","claim":"Effect soundness for every finite execution prefix","route":"lean-kernel","status":"open","evidence":[]},
-    {"id":"PO-05","claim":"Whole-configuration ownership preservation on normal transitions","route":"lean-kernel","status":"open","evidence":[]},
-    {"id":"PO-06","claim":"Recursive eligibility and resource-free program environments","route":"lean-kernel","status":"open","evidence":[]},
-    {"id":"PO-07","claim":"Builder/execution laws and construction-effect separation","route":"lean-kernel","status":"open","evidence":[]},
-    {"id":"PO-08","claim":"Recipe normalization, quotation boundaries, and reflection consistency","route":"lean-kernel","status":"open","evidence":[]},
-    {"id":"PO-09","claim":"Acceptance checker soundness against declarative judgments","route":"lean-kernel","status":"open","evidence":[]},
-    {"id":"PO-10","claim":"Finite checker termination and supported-fragment acceptance coverage","route":"lean-kernel-and-tests","status":"open","evidence":[]},
-    {"id":"PO-11","claim":"Actual Rust acceptance checker refines the Lean contract","route":"aeneas-lean","status":"open","evidence":[]},
-    {"id":"PO-12","claim":"Rust arithmetic and recipe representations refine their models","route":"aeneas-lean","status":"open","evidence":[]},
-    {"id":"PO-13","claim":"Handle table access and retirement preserve the deterministic state contract","route":"aeneas-lean","status":"open","evidence":[]},
-    {"id":"PO-14","claim":"Host adapters, wrappers, and cross-boundary contracts correspond","route":"aeneas-and-boundary-evidence","status":"open","evidence":[]},
-    {"id":"PO-15","claim":"Behavioral sequencing and builder-family rules are sound","route":"lean-kernel","status":"open","evidence":[]},
-    {"id":"PO-16","claim":"Evidence admission binds subject, claim, and assumptions","route":"lean-and-rust-refinement","status":"open","evidence":[]},
-    {"id":"PO-17","claim":"Backend lowering preserves execution and recipe observations","route":"aeneas-and-backend-proof-or-translation-validation","status":"open","evidence":[]},
-    {"id":"PO-18","claim":"Loading binds executed Wasm to checked code and recipe","route":"aeneas-and-loader-correspondence","status":"open","evidence":[]},
-    {"id":"PO-19","claim":"Contract export and obligation generation preserve the intended Noble subject and proposition","route":"lean-and-aeneas-contract-export","status":"open","evidence":[]},
-    {"id":"PO-20","claim":"Companion construction, finite rule replay, and proof erasure preserve certified claims and ordinary observations","route":"lean-and-aeneas-companion-rules","status":"open","evidence":[]},
-    {"id":"PO-21","claim":"Applicability checks establish the exact precondition before certified invocation","route":"lean-and-aeneas-guard-correspondence","status":"open","evidence":[]},
-    {"id":"SO-01","claim":"Accepted core executions have no forbidden stuck state or language UB","route":"lean-kernel","status":"open","evidence":[]},
-    {"id":"SO-02","claim":"Representation and eligibility prevent authority forgery through ordinary data","route":"lean-kernel","status":"open","evidence":[]},
-    {"id":"SO-03","claim":"Effect soundness includes denied and failed requests in every finite prefix","route":"lean-kernel","status":"open","evidence":[]},
-    {"id":"SO-04","claim":"Whole-configuration ownership is preserved modulo declared transitions","route":"lean-kernel","status":"open","evidence":[]},
-    {"id":"SO-05","claim":"Syntax and untrusted metadata cannot become callable without validation","route":"lean-and-checker-refinement","status":"open","evidence":[]},
-    {"id":"SO-06","claim":"Hostile-input wrappers establish internal verified preconditions","route":"aeneas-and-wrapper-evidence","status":"open","evidence":[]},
-    {"id":"SO-07","claim":"Wasm lowering preserves safety-relevant behavior and failure","route":"aeneas-and-backend-proof-or-translation-validation","status":"open","evidence":[]},
-    {"id":"SO-08","claim":"Concurrency semantics preserve isolation, scopes, protocols, and capability checks","route":"lean-after-profile-freeze","status":"open","evidence":[]},
-    {"id":"SO-09","claim":"Concrete concurrency machinery refines SO-08 under synchronization assumptions","route":"aeneas-transitions-and-synchronization-evidence","status":"open","evidence":[]}
+    {
+      "id": "PO-01",
+      "claim": "Well-formed syntax, references, types, substitutions, and eligibility",
+      "route": "lean-kernel",
+      "status": "open",
+      "evidence": []
+    },
+    {
+      "id": "PO-02",
+      "claim": "Preservation of stack and value typing",
+      "route": "lean-kernel",
+      "status": "open",
+      "evidence": []
+    },
+    {
+      "id": "PO-03",
+      "claim": "Progress relative to host contracts and no forbidden stuck states",
+      "route": "lean-kernel",
+      "status": "open",
+      "evidence": []
+    },
+    {
+      "id": "PO-04",
+      "claim": "Effect soundness for every finite execution prefix",
+      "route": "lean-kernel",
+      "status": "open",
+      "evidence": []
+    },
+    {
+      "id": "PO-05",
+      "claim": "Whole-configuration ownership preservation on normal transitions",
+      "route": "lean-kernel",
+      "status": "open",
+      "evidence": []
+    },
+    {
+      "id": "PO-06",
+      "claim": "Recursive eligibility and resource-free program environments",
+      "route": "lean-kernel",
+      "status": "open",
+      "evidence": []
+    },
+    {
+      "id": "PO-07",
+      "claim": "Builder/execution laws and construction-effect separation",
+      "route": "lean-kernel",
+      "status": "open",
+      "evidence": []
+    },
+    {
+      "id": "PO-08",
+      "claim": "Recipe normalization, quotation boundaries, and reflection consistency",
+      "route": "lean-kernel",
+      "status": "open",
+      "evidence": []
+    },
+    {
+      "id": "PO-09",
+      "claim": "Acceptance checker soundness against declarative judgments (bootstrap fragment v1)",
+      "route": "lean-kernel",
+      "status": "accepted",
+      "evidence": [
+        {
+          "claim": "NobleM2.check_soundness gives every accepted candidate of the fragment-v1 checker a declarative TypingDerivation, with the judgment rules and rejection judgments proved in proofs/m3 and the root building with no sorry (verification/m3-proof-evidence.md §3.1-3.2)",
+          "subject": "PO-09",
+          "revision": "0.1.0-draft.5",
+          "kind": "lean-kernel",
+          "result": "accepted",
+          "source_revision": "89e2d2a",
+          "configuration": {
+            "fragment": "bootstrap fragment v1",
+            "subject": "proofs/m3",
+            "toolchain": "lean 4.31.0 (pinned release), rust 1.100.0-nightly-2026-08-18, charon b104e24f, aeneas 505b6ca3",
+            "gate": "verification/m3-proof-gate.sh"
+          },
+          "assumptions": [
+            "fragment label bootstrap fragment v1 only (V-MODEL-01 / V-GATE-05)",
+            "six charon::opaque copy/format helpers disclosed in m3-proof-evidence.md §6",
+            "four provenance-carrying rejection rows compared after eraseProvenance"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "PO-10",
+      "claim": "Finite checker termination and supported-fragment acceptance coverage (bootstrap fragment v1)",
+      "route": "lean-kernel-and-tests",
+      "status": "accepted",
+      "evidence": [
+        {
+          "claim": "NobleM2.check_total_v1 reaches one of the five outcomes on every request and both validation walks terminate; foldBody_work_bounded_v1, resolve_work_bounded, resolveList_work_bounded, resolveOne_work_bounded, followFrom_work_bounded, validateSchemas_ok_bounded and word_cost_positive bound the charged measures; coverage_positive_word exercises every table position and coverage_eliminator_exercise the eliminator composite (verification/m3-proof-evidence.md §3.4)",
+          "subject": "PO-10",
+          "revision": "0.1.0-draft.5",
+          "kind": "lean-kernel",
+          "result": "accepted",
+          "source_revision": "89e2d2a",
+          "configuration": {
+            "fragment": "bootstrap fragment v1",
+            "subject": "proofs/m3",
+            "toolchain": "lean 4.31.0 (pinned release), rust 1.100.0-nightly-2026-08-18, charon b104e24f, aeneas 505b6ca3",
+            "gate": "verification/m3-proof-gate.sh"
+          },
+          "assumptions": [
+            "fragment label bootstrap fragment v1 only (V-MODEL-01 / V-GATE-05)",
+            "six charon::opaque copy/format helpers disclosed in m3-proof-evidence.md §6",
+            "four provenance-carrying rejection rows compared after eraseProvenance"
+          ]
+        },
+        {
+          "claim": "The executed fragment-v1 fixture suites pass on the same tree",
+          "subject": "PO-10",
+          "revision": "0.1.0-draft.5",
+          "kind": "test",
+          "result": "passed",
+          "source_revision": "89e2d2a",
+          "configuration": {
+            "command": "cargo test --offline -p noble-kernel",
+            "suites": "acceptance 11, budget 2, docexamples 2, dx01 9, fragment 6, property 3, recursion-schema-cycle 11"
+          },
+          "assumptions": [
+            "fragment label bootstrap fragment v1 only"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "PO-11",
+      "claim": "Actual Rust acceptance checker refines the Lean checker contract (bootstrap fragment v1)",
+      "route": "aeneas-lean",
+      "status": "accepted",
+      "evidence": [
+        {
+          "claim": "The refinement matrix binds the extracted noble_kernel.acceptance.check to the reference checker on every table word (refinement_word_* x23), every rule representative, the B-CHECK-02/05 rejection families, the decision-path rows, and the composed outcomes_via_refinement_v1/accepted_via_refinement_v1; the extraction regenerates under the pinned Charon/Aeneas pair with emitted Types.lean/Funs.lean byte-identical to the checked-in root (verification/m3-proof-evidence.md §3.5, verification/m3-extraction-probe.md)",
+          "subject": "PO-11",
+          "revision": "0.1.0-draft.5",
+          "kind": "aeneas-lean",
+          "result": "accepted",
+          "source_revision": "89e2d2a",
+          "configuration": {
+            "fragment": "bootstrap fragment v1",
+            "subject": "proofs/m3",
+            "toolchain": "lean 4.31.0 (pinned release), rust 1.100.0-nightly-2026-08-18, charon b104e24f, aeneas 505b6ca3",
+            "gate": "verification/m3-proof-gate.sh"
+          },
+          "assumptions": [
+            "fragment label bootstrap fragment v1 only (V-MODEL-01 / V-GATE-05)",
+            "six charon::opaque copy/format helpers disclosed in m3-proof-evidence.md §6",
+            "four provenance-carrying rejection rows compared after eraseProvenance"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "PO-12",
+      "claim": "Rust arithmetic and recipe representations refine their models",
+      "route": "aeneas-lean",
+      "status": "open",
+      "evidence": []
+    },
+    {
+      "id": "PO-13",
+      "claim": "Handle table access and retirement preserve the deterministic state contract",
+      "route": "aeneas-lean",
+      "status": "open",
+      "evidence": []
+    },
+    {
+      "id": "PO-14",
+      "claim": "Host adapters, wrappers, and cross-boundary contracts correspond",
+      "route": "aeneas-and-boundary-evidence",
+      "status": "open",
+      "evidence": []
+    },
+    {
+      "id": "PO-15",
+      "claim": "Behavioral sequencing and builder-family rules are sound",
+      "route": "lean-kernel",
+      "status": "open",
+      "evidence": []
+    },
+    {
+      "id": "PO-16",
+      "claim": "Evidence admission binds subject, claim, and assumptions",
+      "route": "lean-and-rust-refinement",
+      "status": "open",
+      "evidence": []
+    },
+    {
+      "id": "PO-17",
+      "claim": "Backend lowering preserves execution and recipe observations",
+      "route": "aeneas-and-backend-proof-or-translation-validation",
+      "status": "open",
+      "evidence": []
+    },
+    {
+      "id": "PO-18",
+      "claim": "Loading binds executed Wasm to checked code and recipe",
+      "route": "aeneas-and-loader-correspondence",
+      "status": "open",
+      "evidence": []
+    },
+    {
+      "id": "PO-19",
+      "claim": "Contract export and obligation generation preserve the intended Noble subject and proposition",
+      "route": "lean-and-aeneas-contract-export",
+      "status": "open",
+      "evidence": []
+    },
+    {
+      "id": "PO-20",
+      "claim": "Companion construction, finite rule replay, and proof erasure preserve certified claims and ordinary observations",
+      "route": "lean-and-aeneas-companion-rules",
+      "status": "open",
+      "evidence": []
+    },
+    {
+      "id": "PO-21",
+      "claim": "Applicability checks establish the exact precondition before certified invocation",
+      "route": "lean-and-aeneas-guard-correspondence",
+      "status": "open",
+      "evidence": []
+    },
+    {
+      "id": "SO-01",
+      "claim": "Accepted core executions have no forbidden stuck state or language UB",
+      "route": "lean-kernel",
+      "status": "open",
+      "evidence": []
+    },
+    {
+      "id": "SO-02",
+      "claim": "Representation and eligibility prevent authority forgery through ordinary data",
+      "route": "lean-kernel",
+      "status": "open",
+      "evidence": []
+    },
+    {
+      "id": "SO-03",
+      "claim": "Effect soundness includes denied and failed requests in every finite prefix",
+      "route": "lean-kernel",
+      "status": "open",
+      "evidence": []
+    },
+    {
+      "id": "SO-04",
+      "claim": "Whole-configuration ownership is preserved modulo declared transitions",
+      "route": "lean-kernel",
+      "status": "open",
+      "evidence": []
+    },
+    {
+      "id": "SO-05",
+      "claim": "Syntax and untrusted metadata cannot become callable without validation",
+      "route": "lean-and-checker-refinement",
+      "status": "open",
+      "evidence": []
+    },
+    {
+      "id": "SO-06",
+      "claim": "Hostile-input wrappers establish internal verified preconditions",
+      "route": "aeneas-and-wrapper-evidence",
+      "status": "open",
+      "evidence": []
+    },
+    {
+      "id": "SO-07",
+      "claim": "Wasm lowering preserves safety-relevant behavior and failure",
+      "route": "aeneas-and-backend-proof-or-translation-validation",
+      "status": "open",
+      "evidence": []
+    },
+    {
+      "id": "SO-08",
+      "claim": "Concurrency semantics preserve isolation, scopes, protocols, and capability checks",
+      "route": "lean-after-profile-freeze",
+      "status": "open",
+      "evidence": []
+    },
+    {
+      "id": "SO-09",
+      "claim": "Concrete concurrency machinery refines SO-08 under synchronization assumptions",
+      "route": "aeneas-transitions-and-synchronization-evidence",
+      "status": "open",
+      "evidence": []
+    }
   ]
 }

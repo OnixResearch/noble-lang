@@ -1136,7 +1136,13 @@ function selfTest(base) {
   run('identity-version-regression', b => changeJson(b, 'specs/conformance/identity-cases.json', p => p.cases.find(c => c.id === 'ID-03').expected.definition = 'same'), 'identity oracle');
   run('legacy-list-example', b => b.texts.set(CORE_SPEC, b.texts.get(CORE_SPEC).replace('[ drop run ]', '[ drop call ]')), 'surface: legacy');
   run('greenfield-false-pass', b => changeJson(b, 'specs/conformance/cases.json', p => p.cases[0].state.execution = 'passed'), 'greenfield execution');
-  run('accepted-proof-without-source', b => changeJson(b, 'specs/verification/obligations.json', p => p.obligations[0].status = 'accepted'), 'greenfield obligation');
+  // The fixture pins the greenfield state itself (flag false + accepted
+  // obligation) instead of depending on the bundle's current STATUS flags,
+  // so the control keeps its meaning once the proof implementation exists.
+  run('accepted-proof-without-source', b => {
+    changeJson(b, 'specs/STATUS.json', p => p.proof_implementation_exists = false);
+    changeJson(b, 'specs/verification/obligations.json', p => p.obligations[0].status = 'accepted');
+  }, 'greenfield obligation');
   run('roadmap-cycle', b => changeJson(b, 'specs/roadmap.json', p => p.milestones[0].depends_on.push('M8')), 'roadmap cycle');
   run('missing-milestone', b => changeJson(b, 'specs/roadmap.json', p => p.milestones[1].depends_on.push('M99')), 'roadmap missing dependency');
   run('missing-ledger-row', b => changeJson(b, 'specs/requirements.json', p => p.requirements.pop()), 'requirement ledger');
@@ -1180,6 +1186,7 @@ function selfTest(base) {
     c.execution = 'passed'; c.evidence = [componentEvidence(c.id, 'test', 'passed')];
   }), 'greenfield execution claim: core-checker');
   run('component-proof-without-proof-implementation', b => changeJson(b, 'specs/STATUS.json', p => {
+    p.proof_implementation_exists = false;  // pinned by the fixture, not by the bundle
     const c = p.components.find(c => c.id === 'core-checker');
     c.proof = 'accepted'; c.evidence = [componentEvidence(c.id, 'lean-kernel', 'accepted')];
   }), 'greenfield proof claim: core-checker');
