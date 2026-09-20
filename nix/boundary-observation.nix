@@ -42,7 +42,7 @@ let
     f:
     f.lint == case.deny_lint
     && f.severity == "error"
-    && f.file == policy.kernel_source
+    && f.file == (if case.deny_source == "" then policy.kernel_source else case.deny_source)
     && f.crate_name == "noble_kernel";
   denyValid =
     if positive then
@@ -56,7 +56,7 @@ let
       && ds.cargo_process_exit.code == 0
       && ds.phases.architecture.status == "blocked"
       && ds.phases.lint.status == "clean"
-    else if policyBlocked then
+    else if policyBlocked && case.deny_lint == "" then
       observed.deny_exit == 1
       && ds.cargo_process_exit.code == 0
       && ds.phases.architecture.status == "blocked"

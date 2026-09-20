@@ -31,7 +31,7 @@ let
   units = builtins.genList (i: unit i (builtins.elemAt policy.units i)) (
     builtins.length policy.units
   );
-  kernels = filter (u: u.role == "domain-core") units;
+  kernels = filter (u: u.package_name == "noble-kernel" && u.role == "domain-core") units;
   item = {
     kind = "item";
     fact_id = "body";
@@ -164,14 +164,15 @@ let
     ) denied.deny_findings;
   };
   policyInput = {
-    deny_exit = 1;
-    deny_status = clean.deny_status // {
-      phases = {
-        architecture.status = "blocked";
-        lint.status = "clean";
-      };
-    };
-    deny_findings = [ ];
+    inherit (denied) deny_exit deny_status;
+    deny_findings = map (
+      f:
+      f
+      // {
+        lint = cases.no-std-test-witness.deny_lint;
+        file = cases.no-std-test-witness.deny_source;
+      }
+    ) denied.deny_findings;
     observation_exit = 1;
     observation_status = {
       cargo_process_exit.code = 0;
@@ -206,7 +207,9 @@ let
       status_published = false;
     };
   };
-  extraUnits = builtins.genList (i: unit (i + 6) (builtins.elemAt policy.acyclic_extra_units i)) 2;
+  extraUnits = builtins.genList (
+    i: unit (i + builtins.length units) (builtins.elemAt policy.acyclic_extra_units i)
+  ) (builtins.length policy.acyclic_extra_units);
   reverseInput = clean // {
     deny_exit = 1;
     deny_status = clean.deny_status // {

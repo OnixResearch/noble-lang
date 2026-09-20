@@ -61,6 +61,8 @@ let
   );
   toolCases = builtins.concatLists (
     map (name: [
+      (badObservation "missing selected tool:${name}" "tool-build-set" [ "tool_paths" ]
+        (builtins.removeAttrs observation.tool_paths [ name ]))
       (badObservation "changed tool recipe:${name}" "tool-build-mismatch:${name}" [
         "tool_paths"
         name
@@ -73,6 +75,13 @@ let
       ] "/ambient/tool")
     ]) (builtins.attrNames policy.tool_paths)
   );
+  verificationToolCases = map (
+    name:
+    badObservation "changed verification tool version:${name}" "verification-tool-version-mismatch:${name}" [
+      "verification_tool_versions"
+      name
+    ] "unreviewed"
+  ) (builtins.attrNames policy.verification_tools);
   fileCases = map (
     name:
     badObservation "stale file:${name}" "file-binding-mismatch:${name}" [
@@ -87,6 +96,23 @@ let
   orderPass = gate policy (set observation [ "lake_manifest" "packages" ] reversed);
   negativeCases = [
     (badObservation "missing selected tool builds" "tool-build-set" [ "tool_paths" ] { })
+    (badPolicy "unselected Wasmtime build" "tool-build-set" [ "tool_paths" ]
+      (policy.tool_paths // { wasmtime = policy.tool_paths.node; }))
+    (badObservation "missing verification tool versions" "verification-tool-set"
+      [ "verification_tool_versions" ] { })
+    (badPolicy "verification host promoted to production" "verification-tool-scope:node"
+      [ "verification_tools" "node" "role" ] "production-runtime")
+    (badPolicy "verification assembler from unselected source" "verification-tool-scope:wasm_tools"
+      [ "verification_tools" "wasm_tools" "source" ] "ambient")
+    (badPolicy "verification optimizer attribute replaced" "verification-tool-scope:binaryen"
+      [ "verification_tools" "binaryen" "attribute" ] "other-optimizer")
+    (badPolicy "owned WAT asset scope missing" "owned-wasm-runtime-boundary"
+      [ "owned_wasm_runtime" "assets" ] [ ])
+    (badPolicy "owned WAT semantics promoted to proof" "owned-wasm-runtime-boundary"
+      [ "owned_wasm_runtime" "assurance" ] "proved-runtime")
+    (badPolicy "owned WAT claim limits removed" "owned-wasm-runtime-boundary"
+      [ "owned_wasm_runtime" "non_claims" ] [ ])
+    (badPolicy "unselected tool scope removed" "unselected-tool-set" [ "future_unselected" ] [ ])
     (badPolicy "unknown policy schema" "selection-schema" [ "schema_version" ] "legacy")
     (badPolicy "missing reviewed source set" "source-pin-set" [ "sources" ] { })
     (badObservation "missing observed source set" "source-pin-set" [ "sources" ] { })
@@ -188,6 +214,7 @@ let
   ]
   ++ sourceCases
   ++ toolCases
+  ++ verificationToolCases
   ++ fileCases
   ++ negativeCases;
 in

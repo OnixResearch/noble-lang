@@ -19,7 +19,9 @@ let
   };
   rust = fromTOML (readFile (root + "/rust-toolchain.toml"));
   cargo = fromTOML (readFile (root + "/Cargo.toml"));
-  kernel = fromTOML (readFile (root + "/crates/noble-kernel/Cargo.toml"));
+  manifests = map (
+    member: fromTOML (readFile (root + "/${member}/Cargo.toml"))
+  ) cargo.workspace.members;
   fileNames = import ./tool-selection-files.nix;
 in
 {
@@ -51,5 +53,7 @@ in
   lake_manifest = fromJSON (readFile (root + "/proofs/m1/lake-manifest.json"));
   upstream_lake_manifest = fromJSON (readFile (inputs.aeneas + "/backends/lean/lake-manifest.json"));
   profiles = cargo.profile;
-  features = builtins.attrNames (kernel.features or { });
+  features = builtins.attrNames (
+    builtins.foldl' (features: manifest: features // (manifest.features or { })) { } manifests
+  );
 }

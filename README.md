@@ -98,6 +98,39 @@ source-equation cases separately from the 43 strict application/rule theorems.
 Native computation also discharges generated string-bound obligations; its exact
 axiom inventory is retained only in the implementation lane.
 
+## Bounded Wasm experiment
+
+M3 executes both WasmGC and managed-linear-memory representations, with optimization
+off and on. Each configuration covers 25 declared workload variants and 27 boundary
+controls: post-compilation captures, program-list selection, returned/reflection-only
+programs, exact recipes, ordered interfaces, and bounded composition/cleanup.
+
+```sh
+# Uses the Nix-built Noble CLI and pinned Node/V8, wasm-tools, and Binaryen.
+# The output directory must not exist; complete raw samples and artifacts are kept.
+nix run .#m3-wasm -- --out /tmp/noble-wasm-comparison
+
+# Separate actual-Rust extraction and compiled dependency/axiom audit.
+bun verification/m3-wasm/implementation.mjs /tmp/noble-wasm-extraction
+```
+
+`noble wasm-experiment wasm-gc` and
+`noble wasm-experiment managed-linear-memory` emit the checked experimental
+vocabulary as WAT. They are not general source-compilation commands.
+
+[M3 evidence](verification/m3-wasm/evidence.json) selects **managed linear memory
+for M4** because its bounded arena is observable and does not require WasmGC,
+not because it wins a speed or physical-memory comparison. Both candidates pass;
+the selected layout retains one extra 64-KiB linear-memory page. Physical GC
+allocation/reclamation and isolated engine peaks remain unknown.
+
+The pure emitter's actual extraction has 112 local functions and no local opaque
+bodies. Its 13 explicit external models and strict kernel bridge are audited
+separately from runtime execution. Owned WAT, assembler, optimizer, engine and
+loader remain trust boundaries; PO-17/18 and SO-07 are open. General end-to-end
+core, runtime proof companions, resources and component interoperability remain
+M4, MC2 and M5 work.
+
 ## Current work
 
 1. Read [SPEC-0001](.cairn/specs/language/spec.md) and [the bootstrap scope](.cairn/specs/core-bootstrap/spec.md).
@@ -125,4 +158,4 @@ These checks do not run Noble or prove its safety.
 | `noble-project-handoff-2026-09-12/` and the ZIP | Preserved historical snapshot, not current instructions |
 
 The status ledger, not a successful example or document check, determines milestone acceptance. MC1 is a frontend/rules milestone, not a completed language runtime.
-Earlier records retain their original scopes: the [budget extraction probe](proofs/m1/README.md), [component review](verification/component-review.md), [tool-selection boundary](verification/tool-selection.md), [M1 runbook](verification/m1-runbook.md), [control matrix](verification/m1-controls.md), and [boundary controls](verification/boundary-controls.md) document implementation experiments, observed controls, and historical open work. They do not substitute for current MC1 evidence.
+Earlier records retain their original scopes: the [budget extraction probe](proofs/m1/README.md), [component review](verification/component-review.md), [tool-selection boundary](verification/tool-selection.md), [M1 runbook](verification/m1-runbook.md), [control matrix](verification/m1-controls.md), and [boundary controls](verification/boundary-controls.md) document implementation experiments, observed controls, and historical open work. They do not substitute for current MC1 or M3 evidence.

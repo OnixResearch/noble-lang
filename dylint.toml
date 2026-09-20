@@ -1,2 +1,2 @@
 [octet]
-core_source_scopes = ["crates/noble-kernel/src"]
+core_source_scopes = ["crates/noble-kernel/src", "crates/noble-wasm/src"]

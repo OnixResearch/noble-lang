@@ -4,8 +4,8 @@ let contracts = import "./architecture.contracts.ncl" in
   project_id = "noble",
   mode = "gate",
   production = {
-    packages = ["noble-kernel", "noble-contracts", "noble-cli"],
-    source_scopes = ["crates/noble-kernel/src", "crates/noble-contracts/src", "crates/noble-cli/src"],
+    packages = ["noble-kernel", "noble-contracts", "noble-wasm", "noble-cli"],
+    source_scopes = ["crates/noble-kernel/src", "crates/noble-contracts/src", "crates/noble-wasm/src", "crates/noble-cli/src"],
     targets = [{
       triple = "x86_64-unknown-linux-gnu",
       features = [],
@@ -15,12 +15,15 @@ let contracts = import "./architecture.contracts.ncl" in
   roles = [
     { scope_kind = "package", scope = "noble-kernel", role = "domain-core" },
     { scope_kind = "package", scope = "noble-contracts", role = "domain-core" },
+    { scope_kind = "package", scope = "noble-wasm", role = "domain-core" },
     { scope_kind = "package", scope = "noble-cli", role = "composition-root" },
     { scope_kind = "source", scope = "crates/noble-kernel/src", role = "domain-core" },
     { scope_kind = "source", scope = "crates/noble-contracts/src", role = "domain-core" },
+    { scope_kind = "source", scope = "crates/noble-wasm/src", role = "domain-core" },
     { scope_kind = "source", scope = "crates/noble-cli/src", role = "composition-root" },
     { scope_kind = "source", scope = "crates/noble-kernel/tests", role = "test" },
     { scope_kind = "source", scope = "crates/noble-contracts/tests", role = "test" },
+    { scope_kind = "source", scope = "crates/noble-wasm/tests", role = "test" },
     { scope_kind = "source", scope = "crates/noble-cli/tests", role = "test" },
   ],
   dependency_rules = [
@@ -36,7 +39,9 @@ let contracts = import "./architecture.contracts.ncl" in
     },
   ],
   # The workspace has no third-party Cargo providers or application-owned ports.
-  # The CLI owns consumer I/O; neither domain-core crate executes host effects.
+  # The CLI owns consumer I/O; no domain-core crate executes host effects.
+  # Owned WAT fragments are byte-bound by tool selection, not Rust compiler
+  # subjects or proved runtime semantics.
   provider_classifications = [],
   ports = [],
   capability_classifications = [
@@ -167,12 +172,13 @@ let contracts = import "./architecture.contracts.ncl" in
       rationale = "Consumer-facing reports, help and smoke diagnostics write only to the CLI output streams. Output is not an authorization witness, an external-success receipt, or permission to execute a protected domain effect.",
     },
   ],
-  core_no_std = [{ scope = "noble-kernel" }, { scope = "noble-contracts" }],
+  core_no_std = [{ scope = "noble-kernel" }, { scope = "noble-contracts" }, { scope = "noble-wasm" }],
   admission = null,
   waivers = [],
   collection_limits = {
-    max_units = 16,
-    max_shards = 16,
+    # Four crates retain workspace/all-target/all-feature collection.
+    max_units = 24,
+    max_shards = 24,
     max_modules = 1024,
     max_items = 4096,
     max_types = 4096,

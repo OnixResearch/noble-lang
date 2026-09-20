@@ -8,6 +8,7 @@ version = "0.0.0"
 dependencies = [
  "noble-contracts",
  "noble-kernel",
+ "noble-wasm",
 ]
 
 [[package]]
@@ -20,3 +21,10 @@ dependencies = [
 [[package]]
 name = "noble-kernel"
 version = "0.0.0"
+
+[[package]]
+name = "noble-wasm"
+version = "0.0.0"
+dependencies = [
+ "noble-kernel",
+]

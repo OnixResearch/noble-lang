@@ -12,6 +12,7 @@ path = "src/main.rs"
 [dependencies]
 noble-kernel = { path = "../noble-kernel" }
 noble-contracts = { path = "../noble-contracts" }
+noble-wasm = { path = "../noble-wasm" }
 
 [lints]
 workspace = true

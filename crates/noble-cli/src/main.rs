@@ -14,6 +14,7 @@ macro_rules! attempt {
     };
 }
 
+mod backend;
 mod sandbox;
 mod workflow;
 
@@ -33,6 +34,12 @@ fn main() -> std::process::ExitCode {
     let arguments: std::vec::Vec<std::ffi::OsString> = read_arguments().skip(1).collect();
     if arguments
         .first()
+        .is_some_and(|argument| argument == "wasm-experiment")
+    {
+        return backend::run(&arguments);
+    }
+    if arguments
+        .first()
         .is_some_and(|argument| argument == "verify" || argument == "explain-proof")
     {
         return workflow::run(&arguments);
@@ -41,7 +48,7 @@ fn main() -> std::process::ExitCode {
         .first()
         .is_some_and(|argument| argument == "--help")
     {
-        println!("{}", workflow::USAGE);
+        println!("{}\n\n{}", workflow::USAGE, backend::USAGE);
         return std::process::ExitCode::SUCCESS;
     }
     match parse_budget(arguments.into_iter()) {

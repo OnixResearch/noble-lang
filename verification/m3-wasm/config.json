@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "scope": "m3-resource-free-program-representation-comparison",
+  "target": "wasm32-core-on-node-v8",
+  "representations": ["wasm-gc", "managed-linear-memory"],
+  "optimizations": ["off", "on"],
+  "tools": {
+    "node": {
+      "path": "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node",
+      "version": "24.13.0",
+      "v8": "13.6.233.17-node.37"
+    },
+    "wasm_tools": {
+      "path": "/nix/store/2n9b5yzj7n8jlnglp60gd5nmfjnf4xhf-wasm-tools-1.245.1/bin/wasm-tools",
+      "version": "1.245.1"
+    },
+    "wasm_opt": {
+      "path": "/nix/store/9jkpw0sws1134333z8690i1plw5xzbyb-binaryen-125/bin/wasm-opt",
+      "version": "125"
+    }
+  },
+  "nixpkgs": {
+    "lock_node": "nixpkgs_17",
+    "revision": "9cf7092bdd603554bd8b63c216e8943cf9b12512",
+    "nar_hash": "sha256-9tpvMGFteZnd3gRQZFlRCohVpqooygFuy9yjuyRL2C0="
+  },
+  "node_flags": ["--no-liftoff", "--no-wasm-lazy-compilation", "--no-wasm-tier-up", "--stack-size=1024", "--max-old-space-size=256"],
+  "optimizer_flags": ["--enable-gc", "--enable-reference-types", "--enable-bulk-memory", "-O2", "--strip-debug"],
+  "timing": {
+    "warmups": 3,
+    "samples": 7,
+    "aggregation": "median-min-max-nearest-rank-p95",
+    "clock": "process.hrtime.bigint",
+    "case_instance_policy": "same-instance-with-accounted-region-cleanup-before-every-trial",
+    "compilation_cache_policy": "first-compile-separate; repeated-identical-bytes-may-use-v8-process-cache",
+    "worker_timeout_ms": 180000,
+    "command_timeout_ms": 120000
+  },
+  "limits": {
+    "allocation_bytes": 65536,
+    "recipe_program_leaves": 256,
+    "composition_depth": 256,
+    "operand_bytes": 2048,
+    "continuation_bytes": 4096,
+    "dispatch_steps": 100000
+  },
+  "maximum_limits": [196608, 256, 256, 2048, 4096, 100000],
+  "logical_cell_bytes": 48,
+  "cell_capacity": 4096,
+  "canonical_cases": {
+    "specs/conformance/cases.json": ["CORE-03", "CORE-05", "CORE-09"],
+    "specs/conformance/adaptation-cases.json": ["ADAPT-08", "ADAPT-09", "ADAPT-10", "ADAPT-12"]
+  },
+  "source_trees": [
+    "crates/noble-kernel/src",
+    "crates/noble-contracts/src",
+    "crates/noble-wasm/src",
+    "crates/noble-cli/src"
+  ],
+  "source_files": [
+    "Cargo.toml", "Cargo.lock", "flake.lock", "flake.nix", "nix/m3-wasm-app.nix",
+    "crates/noble-kernel/Cargo.toml", "crates/noble-contracts/Cargo.toml",
+    "crates/noble-wasm/Cargo.toml", "crates/noble-cli/Cargo.toml",
+    "crates/noble-cli/src/backend/vocabulary.noble",
+    "tools/m3-wasm.mjs", "tools/m3-wasm-worker.mjs", "tools/m3-wasm-policy.mjs",
+    "verification/m3-wasm/config.json"
+  ],
+  "runtime_assets": [
+    "crates/noble-wasm/runtime/common.wat",
+    "crates/noble-wasm/runtime/gc-storage.wat",
+    "crates/noble-wasm/runtime/linear-storage.wat",
+    "crates/noble-wasm/runtime/stack.wat",
+    "crates/noble-wasm/runtime/programs.wat",
+    "crates/noble-wasm/runtime/operations.wat",
+    "crates/noble-wasm/runtime/reflection.wat",
+    "crates/noble-wasm/runtime/experiment.wat"
+  ],
+  "feature_policy": {
+    "gc": "required-for-wasm-gc; probed-separately-for-every-worker",
+    "function_references": "probed; compiled-dispatch-uses-fixed-funcref-table",
+    "multi_value": "probed; host-interface-uses-observed-operand-slots",
+    "tail_call": "probed; not-required-or-used-by-workload",
+    "component": "probed-as-core-API-input; no-component-ABI-claim"
+  },
+  "unselected_tools": ["wasmtime"],
+  "proof_status": "open"
+}

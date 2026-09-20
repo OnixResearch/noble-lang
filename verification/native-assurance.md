@@ -33,6 +33,8 @@ nix run .#native-assurance -- check --root "$ROOT" --selection "$ROOT/policy/too
 
 The observed named M1 scope is 6 units, 46 production items, **0** function-safety facts, **0** unsafe sites, **0** foreign items, **0** production dependencies, and 6 fixture-lock packages (1 direct, 5 transitive).
 
+The current M3 inventory is retained under `verification/m3-wasm/assurance.tar.gz:octet`: 17 units, 2109 item facts across production and test units, zero function-safety/unsafe/foreign facts, and no external production dependencies. Its fixture lock contains eight packages: four current workspace packages and the four pinned registry packages. The older M1 counts above describe their original run, not current workspace coverage.
+
 ## Empty owned-unsafe scope
 
 The empty scope is recorded only with positive accounting:

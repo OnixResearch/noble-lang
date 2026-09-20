@@ -17,8 +17,6 @@ let
       })
       [
         policy.kernel_source
-        "crates/noble-cli/src/main.rs"
-        "crates/noble-cli/Cargo.toml"
         "crates/noble-kernel/Cargo.toml"
       ]
   );
@@ -76,7 +74,11 @@ let
       compilerOnly = case.observation == "compiler_only";
       policyBlocked = case.observation == "policy";
       precollection = case.observation == "precollection";
-      auxiliary = !positive && !compilerOnly && !policyBlocked && case.observation != "role_edge";
+      auxiliary =
+        !positive
+        && !compilerOnly
+        && (!policyBlocked || case.deny_lint != "")
+        && case.observation != "role_edge";
       usesRandomnessDependency = builtins.elem case.mutation [
         "randomness"
         "randomness_dependency"

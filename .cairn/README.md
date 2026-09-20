@@ -4,7 +4,7 @@
 
 Revision: `0.1.0-draft.5`
 
-This directory owns the twelve normative draft specifications and their 475 requirement IDs.
+This directory owns the twelve normative draft specifications and their requirement IDs.
 Accepted specifications describe selected contracts. They do not establish completed code, executed scenarios, or accepted proofs.
 
 ## Core and execution
@@ -41,12 +41,11 @@ The normative Markdown files under `specs/` at the project root are generated co
 They preserve old links but do not provide separate authority.
 
 [The roadmap](../specs/ROADMAP.md), [status](../specs/STATUS.json), and [decisions](../specs/DECISIONS.md) remain supporting records.
-The [scenario designs](../specs/conformance) and [proof ledger](../specs/verification/obligations.json) retain their original status.
+The [scenario designs](../specs/conformance) and [proof ledger](../specs/verification/obligations.json) carry independently recorded execution, proof, and evidence status.
 The worker and Octet maps remain supporting documents, not additional normative specs.
 
-`changes/` and `archive/` are empty after conversion.
-The conversion does not fabricate implementation tasks, completed changes, or archive evidence.
-Future changes belong in `changes/<slug>/`, with explicit requirement deltas.
+Conversion began with empty `changes/` and `archive/` directories; it did not fabricate implementation tasks, completed changes, or archive evidence.
+Subsequent implementation changes have their own lifecycle records. Active changes belong in `changes/<slug>/`, with explicit requirement deltas.
 
 ## Inspect and validate
 

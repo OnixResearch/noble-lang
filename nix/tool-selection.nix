@@ -45,6 +45,7 @@ let
   fileNames = import ./tool-selection-files.nix;
   toolNames = [
     "aeneas"
+    "binaryen"
     "charon"
     "lean"
     "quality_rust"
@@ -52,9 +53,46 @@ let
     "octet"
     "octet_standards"
     "nickel"
+    "node"
     "cairn"
     "upstream_pin_check"
+    "wasm_tools"
   ];
+  verificationTools = {
+    node = {
+      source = "nixpkgs";
+      attribute = "nodejs_24";
+      role = "verification-only-wasm-host";
+    };
+    wasm_tools = {
+      source = "nixpkgs";
+      attribute = "wasm-tools";
+      role = "verification-only-wasm-assembler";
+    };
+    binaryen = {
+      source = "nixpkgs";
+      attribute = "binaryen";
+      role = "verification-only-wasm-optimizer";
+    };
+  };
+  verificationChecks = concatLists (
+    map (
+      name:
+      let
+        expected = at policy [ "verification_tools" name ];
+        version = get expected "version";
+      in
+      require (
+        equalKeys expected [ "source" "attribute" "role" "version" ]
+        && builtins.removeAttrs expected [ "version" ] == verificationTools.${name}
+      ) "verification-tool-scope:${name}"
+      ++ require (
+        isString version && version != ""
+        && version == at observation [ "verification_tool_versions" name ]
+      ) "verification-tool-version-mismatch:${name}"
+    ) (attrNames verificationTools)
+  );
+  wasmAssets = filter (name: match "crates/noble-wasm/runtime/[^/]+\\.wat" name != null) fileNames;
   toolChecks = concatLists (
     map (
       name:
@@ -251,6 +289,26 @@ let
       equalKeys (get policy "tool_paths") toolNames && equalKeys (get observation "tool_paths") toolNames
     ) "tool-build-set")
     toolChecks
+    (require (
+      equalKeys (get policy "verification_tools") (attrNames verificationTools)
+      && equalKeys (get observation "verification_tool_versions") (attrNames verificationTools)
+    ) "verification-tool-set")
+    verificationChecks
+    (require (
+      equalKeys (get policy "owned_wasm_runtime") [ "assets" "assurance" "non_claims" ]
+      && at policy [ "owned_wasm_runtime" "assets" ] == wasmAssets
+      && at policy [ "owned_wasm_runtime" "assurance" ] == "byte-bound-runtime-semantics-unproved"
+      && at policy [ "owned_wasm_runtime" "non_claims" ] == [
+        "rust-compiler-inventory-coverage"
+        "rust-refinement"
+        "wasm-lowering-correspondence"
+        "loader-binding-proof"
+        "component-support"
+      ]
+    ) "owned-wasm-runtime-boundary")
+    (require (
+      get policy "future_unselected" == [ "Wasmtime" "WIT" "Verus" "byte-view dependency" ]
+    ) "unselected-tool-set")
     (require (
       equalKeys (get policy "file_sha256") fileNames
       && equalKeys (get observation "file_sha256") fileNames

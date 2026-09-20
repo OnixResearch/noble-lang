@@ -1,5 +1,5 @@
 {
-  description = "Noble M1 workspace tools and incremental quality gates";
+  description = "Noble workspace tools, bounded Wasm experiments and incremental quality gates";
 
   inputs = {
     octet.url = "git+ssh://git@github.com/OnixResearch/octet?rev=235255bc4972ced9128fd5b4d1ec66ff7508ded4";
@@ -27,6 +27,21 @@
       rust = pkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml;
       nickel = octet.packages.${system}.nickel-1-17-0;
       standards = octet.packages.${system}.octet-standards;
+      selectedAeneas = aeneas.packages.${system}.aeneas.overrideAttrs (old: {
+        # Isolate this input from the flake's containing store path: tool pins
+        # must not change recursively whenever the reviewed policy is renewed.
+        patches = (old.patches or [ ]) ++ [
+          (builtins.path {
+            path = ./nix/aeneas-string-escaping.patch;
+            name = "aeneas-string-escaping.patch";
+          })
+        ];
+      });
+      wasmVerificationTools = {
+        node = pkgs.nodejs_24;
+        wasm_tools = pkgs.wasm-tools;
+        binaryen = pkgs.binaryen;
+      };
       selectionPolicy = builtins.fromJSON (builtins.readFile ./policy/tool-selection.json);
       selectionObservation =
         (import ./nix/tool-selection-observation.nix {
@@ -34,14 +49,15 @@
           root = ./.;
         })
         // {
+          verification_tool_versions = builtins.mapAttrs (_: tool: tool.version) wasmVerificationTools;
           tool_paths =
             builtins.mapAttrs
               (_: tool: {
                 derivation = tool.drvPath;
                 output = toString tool;
               })
-              {
-                aeneas = aeneas.packages.${system}.aeneas;
+              ({
+                aeneas = selectedAeneas;
                 charon = aeneas.packages.${system}.charon;
                 inherit lean nickel;
                 quality_rust = rust;
@@ -50,7 +66,7 @@
                 octet_standards = standards;
                 cairn = cairn.packages.${system}.cairn;
                 upstream_pin_check = aeneas.checks.${system}.check-charon-pin;
-              };
+              } // wasmVerificationTools);
         };
       selection = import ./nix/tool-selection.nix {
         policy = selectionPolicy;
@@ -74,8 +90,11 @@
           ;
         policy = selectionPolicy;
         charon = aeneas.packages.${system}.charon;
-        aeneas = aeneas.packages.${system}.aeneas;
+        aeneas = selectedAeneas;
         upstreamPinCheck = aeneas.checks.${system}.check-charon-pin;
+        node = wasmVerificationTools.node;
+        wasmTools = wasmVerificationTools.wasm_tools;
+        binaryen = wasmVerificationTools.binaryen;
       };
       leanDependenciesCheck = import ./nix/lean-dependency-check.nix {
         inherit pkgs;
@@ -97,6 +116,24 @@
             "NobleKernel.lean"
             "translation.json"
           ]);
+      };
+      noble = (pkgs.makeRustPlatform {
+        cargo = rust;
+        rustc = rust;
+      }).buildRustPackage {
+        pname = "noble";
+        version = (builtins.fromTOML (builtins.readFile ./Cargo.toml)).workspace.package.version;
+        inherit src;
+        cargoLock.lockFile = ./Cargo.lock;
+        cargoBuildFlags = [ "--package" "noble-cli" "--bin" "noble" "--all-features" ];
+        cargoTestFlags = [ "--workspace" "--all-targets" "--all-features" ];
+        strictDeps = true;
+      };
+      m3Wasm = import ./nix/m3-wasm-app.nix {
+        inherit pkgs src noble;
+        node = wasmVerificationTools.node;
+        wasmTools = wasmVerificationTools.wasm_tools;
+        binaryen = wasmVerificationTools.binaryen;
       };
       boundaryControls = import ./nix/boundary-controls.nix {
         inherit
@@ -175,7 +212,7 @@
       };
       extractKernel = import ./nix/extract-kernel-app.nix {
         inherit pkgs;
-        aeneas = aeneas.packages.${system}.aeneas;
+        aeneas = selectedAeneas;
         leanTool = lean;
         extractionRust = extractionRust;
         leanDependenciesCheck = leanDependenciesCheck;
@@ -223,23 +260,32 @@
     assert selection.enforce;
     {
       packages.${system} = {
-        aeneas = aeneas.packages.${system}.aeneas;
+        aeneas = selectedAeneas;
         charon = aeneas.packages.${system}.charon;
         extraction-rust = extractionRust;
         miri = extractionRust;
         toolchain-check = toolchainCheck;
         lean-dependencies-check = leanDependenciesCheck;
-        inherit rust nickel lean;
+        inherit rust nickel lean noble;
+        node = wasmVerificationTools.node;
+        wasm-tools = wasmVerificationTools.wasm_tools;
+        binaryen = wasmVerificationTools.binaryen;
         octet = octet.packages.${system}.cargo-octet;
         octet-standards = standards;
         octet-gate = octetGate;
         source-inventory = sourceInventory;
         extract-kernel = extractKernel;
         native-assurance = nativeAssurance;
+        m3-wasm = m3Wasm;
         elan = pkgs.elan;
       };
 
       apps.${system} = {
+        m3-wasm = {
+          type = "app";
+          program = "${m3Wasm}/bin/m3-wasm";
+          meta.description = "Run both bounded Wasm representations with pinned tools and the built Noble CLI; not refinement";
+        };
         lean-dependencies-check = {
           type = "app";
           program = "${leanDependenciesCheck}/bin/noble-lean-dependencies-check";
@@ -307,7 +353,8 @@
           for name in CHARON_EXE AENEAS_EXE LEAN_PATH LEAN_SRC_PATH LEAN_SYSROOT \
             LAKE_HOME RUSTC RUSTC_WRAPPER RUSTC_WORKSPACE_WRAPPER RUSTFLAGS \
             CARGO_ENCODED_RUSTFLAGS RUSTUP_TOOLCHAIN CHARON_IS_SYMLINK \
-            MIRI MIRI_SYSROOT MIRIFLAGS; do
+            MIRI MIRI_SYSROOT MIRIFLAGS NOBLE_M3_CLI NOBLE_M3_NODE \
+            NOBLE_M3_WASM_TOOLS NOBLE_M3_WASM_OPT NODE_OPTIONS; do
             set +e
             env "$name=/not-a-reviewed-tool" noble-toolchain-check > "$out/$name.log" 2>&1
             status=$?
@@ -327,7 +374,7 @@
           ${leanDependenciesCheck}/bin/noble-lean-dependencies-check "$PWD/backend-fixture" > "$out/backend-symlink.log" 2>&1 || status=$?
           test "$status" -eq 2
           grep -Fx 'lean-dependencies: source directory symlink rejected' "$out/backend-symlink.log"
-          echo '16 environment overrides, one manual override argument, and one backend directory symlink rejected' > "$out/controls.txt"
+          echo '21 environment overrides, one manual override argument, and one backend directory symlink rejected' > "$out/controls.txt"
         '';
         format = mkCheck "noble-format" [ ] ''
           cargo fmt --all -- --check

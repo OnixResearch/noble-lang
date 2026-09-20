@@ -8,6 +8,7 @@
     {
       "base": "workspace",
       "deny_lint": "",
+      "deny_source": "",
       "edge_message": "",
       "expected": "",
       "expected_message": "",
@@ -22,6 +23,7 @@
     {
       "base": "workspace",
       "deny_lint": "",
+      "deny_source": "",
       "edge_message": "package `noble-kernel` with role `DomainCore` has forbidden normal dependency on unclassified external provider `getrandom`",
       "expected": "forbidden-role-edge",
       "expected_message": "",
@@ -36,6 +38,7 @@
     {
       "base": "acyclic_shell",
       "deny_lint": "",
+      "deny_source": "",
       "edge_message": "",
       "expected": "",
       "expected_message": "",
@@ -50,6 +53,7 @@
     {
       "base": "workspace",
       "deny_lint": "impure_call_in_core",
+      "deny_source": "",
       "edge_message": "",
       "expected": "filesystem",
       "expected_message": "",
@@ -64,6 +68,7 @@
     {
       "base": "workspace",
       "deny_lint": "impure_call_in_core",
+      "deny_source": "",
       "edge_message": "",
       "expected": "network",
       "expected_message": "",
@@ -78,6 +83,7 @@
     {
       "base": "workspace",
       "deny_lint": "impure_call_in_core",
+      "deny_source": "",
       "edge_message": "",
       "expected": "process",
       "expected_message": "",
@@ -92,6 +98,7 @@
     {
       "base": "workspace",
       "deny_lint": "ambient_env",
+      "deny_source": "",
       "edge_message": "",
       "expected": "environment",
       "expected_message": "",
@@ -106,6 +113,7 @@
     {
       "base": "workspace",
       "deny_lint": "ambient_clock",
+      "deny_source": "",
       "edge_message": "",
       "expected": "time",
       "expected_message": "",
@@ -120,6 +128,7 @@
     {
       "base": "workspace",
       "deny_lint": "ambient_random",
+      "deny_source": "",
       "edge_message": "",
       "expected": "randomness",
       "expected_message": "",
@@ -134,6 +143,7 @@
     {
       "base": "workspace",
       "deny_lint": "global_state_in_core",
+      "deny_source": "",
       "edge_message": "",
       "expected": "core::sync::atomic::Atomic::<u32>::fetch_add",
       "expected_message": "",
@@ -148,6 +158,7 @@
     {
       "base": "workspace",
       "deny_lint": "interior_mutability_in_core",
+      "deny_source": "",
       "edge_message": "",
       "expected": "core::cell::Cell::<T>::set",
       "expected_message": "",
@@ -162,6 +173,7 @@
     {
       "base": "workspace",
       "deny_lint": "unsafe_code",
+      "deny_source": "",
       "edge_message": "",
       "expected": "",
       "expected_message": "",
@@ -176,6 +188,7 @@
     {
       "base": "workspace",
       "deny_lint": "unsafe_code",
+      "deny_source": "",
       "edge_message": "",
       "expected": "",
       "expected_message": "",
@@ -190,6 +203,7 @@
     {
       "base": "workspace",
       "deny_lint": "unsafe_code",
+      "deny_source": "",
       "edge_message": "",
       "expected": "",
       "expected_message": "",
@@ -204,6 +218,7 @@
     {
       "base": "workspace",
       "deny_lint": "resource_return_from_core",
+      "deny_source": "",
       "edge_message": "",
       "expected": "std::fs::File",
       "expected_message": "",
@@ -218,6 +233,7 @@
     {
       "base": "workspace",
       "deny_lint": "",
+      "deny_source": "",
       "edge_message": "",
       "expected": "invalid Cargo diagnostic path",
       "expected_message": "",
@@ -231,7 +247,8 @@
     },
     {
       "base": "workspace",
-      "deny_lint": "",
+      "deny_lint": "fallible_int_fallback",
+      "deny_source": "crates/noble-kernel/src/acceptance/mod.rs",
       "edge_message": "",
       "expected": "no-std-obligation",
       "expected_message": "lacks compiler-confirmed crate:no-std",
@@ -246,6 +263,7 @@
     {
       "base": "acyclic_shell",
       "deny_lint": "",
+      "deny_source": "",
       "edge_message": "",
       "expected": "forbidden-role-edge",
       "expected_message": "",
@@ -287,6 +305,17 @@
     "noble-kernel:test+test:crates/noble-kernel/tests/budget.rs:test",
     "noble-cli:bin:crates/noble-cli/src/main.rs:composition-root",
     "noble-cli:bin+test:crates/noble-cli/src/main.rs:composition-root",
-    "noble-cli:test+test:crates/noble-cli/tests/smoke.rs:test"
+    "noble-cli:test+test:crates/noble-cli/tests/smoke.rs:test",
+    "noble-contracts:lib:crates/noble-contracts/src/lib.rs:domain-core",
+    "noble-contracts:lib+test:crates/noble-contracts/src/lib.rs:domain-core",
+    "noble-contracts:test+test:crates/noble-contracts/tests/contracts.rs:test",
+    "noble-kernel:test+test:crates/noble-kernel/tests/acceptance.rs:test",
+    "noble-kernel:test+test:crates/noble-kernel/tests/docexamples.rs:test",
+    "noble-kernel:test+test:crates/noble-kernel/tests/dx01.rs:test",
+    "noble-kernel:test+test:crates/noble-kernel/tests/fragment.rs:test",
+    "noble-kernel:test+test:crates/noble-kernel/tests/property.rs:test",
+    "noble-kernel:test+test:crates/noble-kernel/tests/recursion-schema-cycle.rs:test",
+    "noble-wasm:lib:crates/noble-wasm/src/lib.rs:domain-core",
+    "noble-wasm:lib+test:crates/noble-wasm/src/lib.rs:domain-core"
   ]
 }

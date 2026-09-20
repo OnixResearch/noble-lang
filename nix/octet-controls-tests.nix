@@ -9,11 +9,13 @@ let
       packages = [
         "noble-kernel"
         "noble-contracts"
+        "noble-wasm"
         "noble-cli"
       ];
       source_scopes = [
         "crates/noble-kernel/src"
         "crates/noble-contracts/src"
+        "crates/noble-wasm/src"
         "crates/noble-cli/src"
       ];
       targets = [
@@ -37,6 +39,11 @@ let
       }
       {
         scope_kind = "package";
+        scope = "noble-wasm";
+        role = "domain-core";
+      }
+      {
+        scope_kind = "package";
         scope = "noble-cli";
         role = "composition-root";
       }
@@ -48,6 +55,11 @@ let
       {
         scope_kind = "source";
         scope = "crates/noble-contracts/src";
+        role = "domain-core";
+      }
+      {
+        scope_kind = "source";
+        scope = "crates/noble-wasm/src";
         role = "domain-core";
       }
       {
@@ -86,6 +98,7 @@ let
     core_no_std = [
       { scope = "noble-kernel"; }
       { scope = "noble-contracts"; }
+      { scope = "noble-wasm"; }
     ];
     ports = [ ];
     provider_classifications = [ ];
@@ -275,10 +288,26 @@ let
         production = policyBase.production // { packages = [ "noble-kernel" ]; };
       };
     } "policy-package-missing")
+    (reject "Wasm emitter package omitted" {
+      architecturePolicyJson = withArchitecture {
+        production = policyBase.production // {
+          packages = builtins.filter (package: package != "noble-wasm") policyBase.production.packages;
+        };
+      };
+    } "policy-package-missing")
     (reject "policy source scope missing" {
       architecturePolicyJson = withArchitecture {
         production = policyBase.production // {
           source_scopes = [ "crates/noble-kernel/src" ];
+        };
+      };
+    } "policy-source-scope-missing")
+    (reject "Wasm emitter source scope omitted" {
+      architecturePolicyJson = withArchitecture {
+        production = policyBase.production // {
+          source_scopes = builtins.filter (
+            scope: scope != "crates/noble-wasm/src"
+          ) policyBase.production.source_scopes;
         };
       };
     } "policy-source-scope-missing")
@@ -359,7 +388,12 @@ let
     } "policy-core-no-std-missing")
     (reject "contract frontend no-std missing" {
       architecturePolicyJson = withArchitecture {
-        core_no_std = [ { scope = "noble-kernel"; } ];
+        core_no_std = builtins.filter (entry: entry.scope != "noble-contracts") policyBase.core_no_std;
+      };
+    } "policy-core-no-std-missing")
+    (reject "Wasm emitter no-std missing" {
+      architecturePolicyJson = withArchitecture {
+        core_no_std = builtins.filter (entry: entry.scope != "noble-wasm") policyBase.core_no_std;
       };
     } "policy-core-no-std-missing")
     (reject "policy core no-std mismatch" {

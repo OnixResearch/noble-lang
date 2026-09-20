@@ -4,8 +4,8 @@
   schema_version | String = "noble-native-assurance-policy/v1",
   owner | String = "noble-maintainers",
   scope_note | String =
-    "Named M1 workspace scope: noble-kernel and noble-cli on x86_64-unknown-linux-gnu. This records native and dependency scope, not whole-program soundness.",
-  required_packages | Array String = [ "noble-kernel", "noble-cli" ],
+    "Four-crate workspace scope: noble-kernel, noble-contracts, noble-wasm and noble-cli on x86_64-unknown-linux-gnu. This records native Rust and dependency scope, not whole-program soundness or Wasm runtime correspondence. Owned WAT assets and verification-only Node/wasm-tools/Binaryen processes are separately byte-bound by tool selection; their semantics are unproved and are not Rust inventory subjects or native linked dependencies.",
+  required_packages | Array String = [ "noble-kernel", "noble-contracts", "noble-wasm", "noble-cli" ],
   required_targets | Array { triple | String, features | Array String, default_features | Bool } = [
     { triple = "x86_64-unknown-linux-gnu", features = [], default_features = true },
   ],
@@ -54,6 +54,14 @@
       argument = "Safe sequential Rust with explicit owned inputs. The workspace forbids unsafe_code, and no compiler function-safety or foreign-item fact exists for this crate.",
     },
     {
+      scope = "noble-contracts",
+      argument = "Safe no_std frontend with explicit owned source bytes and an inward dependency on noble-kernel. The workspace forbids unsafe_code; native accounting must confirm the absence of unsafe and foreign-item facts.",
+    },
+    {
+      scope = "noble-wasm",
+      argument = "Safe no_std emitter with explicit owned checked-kernel inputs and allocation limits, depending inward on noble-kernel. The workspace forbids unsafe_code; native accounting must confirm the absence of unsafe and foreign-item facts. Emitting or byte-binding owned WAT does not prove those fragments, backend lowering, loader binding or Wasm execution semantics. The selected Miri subject remains the kernel budget test and does not establish emitter execution coverage.",
+    },
+    {
       scope = "noble-cli",
       argument = "Shell-only orchestration and unprotected console output. The workspace forbids unsafe_code in this crate too.",
     },
@@ -66,6 +74,7 @@
         "64-bit little-endian target",
         "strict provenance is the required Miri model",
         "no target-specific native library is linked",
+        "WasmGC and managed-linear-memory execution are separate verification experiments, not additional claimed native targets",
       ],
     },
   ],

@@ -1175,7 +1175,7 @@ function selfTest(base) {
     source_revision: 'synthetic-self-test-only', configuration: { toolchain: 'synthetic' }, result, assumptions: [] });
   for (const execution of EXECUTED) {
     run(`component-runtime-${execution}-without-runtime`, b => changeJson(b, 'specs/STATUS.json', p => {
-      p.compiler_exists = true;
+      p.compiler_exists = true; p.runtime_exists = false;
       const c = p.components.find(c => c.id === 'wasm-runtime');
       c.implementation = 'implemented'; c.execution = execution;
       c.evidence = [componentEvidence(c.id, 'test', execution)];
@@ -1201,12 +1201,24 @@ function selfTest(base) {
     c.implementation = 'implemented'; c.execution = 'failed';
     c.evidence = [componentEvidence(c.id, 'test', 'failed')];
   }), null);
-  run('component-checker-test-without-runtime-is-valid', b => changeJson(b, 'specs/STATUS.json', p => {
-    p.compiler_exists = true;
-    const c = p.components.find(c => c.id === 'core-checker');
-    c.implementation = 'implemented'; c.execution = 'passed';
-    c.evidence = [componentEvidence(c.id, 'test', 'passed')];
-  }), null);
+  run('component-checker-test-without-runtime-is-valid', b => {
+    changeJson(b, 'specs/STATUS.json', p => {
+      p.compiler_exists = true; p.runtime_exists = false;
+      for (const component of p.components) component.execution = 'not-run';
+      const c = p.components.find(c => c.id === 'core-checker');
+      c.implementation = 'implemented'; c.execution = 'passed';
+      c.evidence = [componentEvidence(c.id, 'test', 'passed')];
+    });
+    for (const file of parse(b, 'specs/spec-family.json').scenario_files) {
+      changeJson(b, `specs/${file}`, p => {
+        for (const c of p.cases) if (c.kind === 'runtime') c.state.execution = 'not-run';
+      });
+    }
+    changeJson(b, 'specs/roadmap.json', p => {
+      const m = p.milestones.find(m => m.id === 'M3');
+      m.status = 'not-started'; m.comparison.selected_backend = null; m.comparison.evidence = [];
+    });
+  }, null);
   run('component-proof-with-implementation-is-valid', b => changeJson(b, 'specs/STATUS.json', p => {
     p.proof_implementation_exists = true;
     const c = p.components.find(c => c.id === 'core-checker');
@@ -1227,13 +1239,16 @@ function selfTest(base) {
     const m = p.milestones.find(m => m.id === 'M1'); m.required_requirements = m.required_requirements.filter(r => r !== 'VT-NATIVE-03');
   }), 'native workspace gate missing');
   run('missing-backend-candidate', b => changeJson(b, 'specs/roadmap.json', p => p.milestones.find(m => m.id === 'M3').comparison.candidates.pop()), 'backend comparison candidates');
-  run('premature-backend-selection', b => changeJson(b, 'specs/roadmap.json', p => p.milestones.find(m => m.id === 'M3').comparison.selected_backend = 'wasm-gc'), 'backend selection before execution');
+  run('premature-backend-selection', b => changeJson(b, 'specs/roadmap.json', p => {
+    const m = p.milestones.find(m => m.id === 'M3');
+    m.status = 'not-started'; m.comparison.selected_backend = 'wasm-gc';
+  }), 'backend selection before execution');
   run('review-only-backend-selection', b => {
     changeJson(b, 'specs/STATUS.json', p => { p.compiler_exists = true; p.runtime_exists = true; });
     changeJson(b, 'specs/roadmap.json', p => {
       const m = p.milestones.find(m => m.id === 'M3'); m.status = 'completed'; m.comparison.selected_backend = 'wasm-gc';
-      m.comparison.evidence.push({ kind: 'review', subject: 'M3-backend-comparison', claim: 'M3 comparison gates', revision: REVISION,
-        source_revision: 'synthetic-self-test-only', configuration: { toolchain: 'synthetic' }, result: 'passed', assumptions: [] });
+      m.comparison.evidence = [{ kind: 'review', subject: 'M3-backend-comparison', claim: 'M3 comparison gates', revision: REVISION,
+        source_revision: 'synthetic-self-test-only', configuration: { toolchain: 'synthetic' }, result: 'passed', assumptions: [] }];
     });
   }, 'backend selection requires an executed comparison');
   run('implicit-union-join', b => adaptation(b, 'ADAPT-01', c => c.expected.implicit_union_join = true), 'branch join oracle');
@@ -1300,7 +1315,9 @@ function selfTest(base) {
   const calculator = (b, id, change) => changeJson(b, 'specs/conformance/calculator-cases.json', p => change(p.cases.find(c => c.id === id)));
   run('calculator-document-removed', b => changeJson(b, 'specs/spec-family.json', p => p.normative_documents = p.normative_documents.filter(d => d.id !== 'SPEC-CALC001')), 'required document missing');
   run('calculator-truncating-policy', b => changeJson(b, 'specs/STATUS.json', p => p.calculator.division = 'integer-truncation'), 'calculator policy: division');
-  run('calculator-false-benchmark-pass', b => changeJson(b, 'specs/STATUS.json', p => p.calculator.benchmark_execution = 'passed'), 'calculator policy: false greenfield');
+  run('calculator-false-benchmark-pass', b => changeJson(b, 'specs/STATUS.json', p => {
+    p.runtime_exists = false; p.calculator.benchmark_execution = 'passed';
+  }), 'calculator policy: false greenfield');
   run('calculator-truncated-division', b => calculator(b, 'CALC-01', c => c.input.vectors[0].numerator = '0'), 'calculator oracle: exact arithmetic');
   run('calculator-rounded-decimal', b => calculator(b, 'CALC-01', c => { c.input.vectors[1].numerator = '30000000000000004'; c.input.vectors[1].denominator = '100000000000000000'; }), 'calculator oracle: exact arithmetic');
   run('calculator-lossy-JSON-number', b => calculator(b, 'CALC-01', c => c.input.vectors[3].numerator = Number(c.input.vectors[3].numerator)), 'calculator oracle: exact arithmetic');
@@ -1336,7 +1353,9 @@ function selfTest(base) {
     changeJson(b, 'specs/spec-family.json', p => p.scenario_files = p.scenario_files.filter(f => f !== 'conformance/worker-cases.json'));
     refreshed(b);
   }, 'worker oracle: required case');
-  run('worker-false-runtime-claim', b => changeJson(b, 'specs/STATUS.json', p => p.worker_contracts.execution = 'passed'), 'worker policy: false greenfield');
+  run('worker-false-runtime-claim', b => changeJson(b, 'specs/STATUS.json', p => {
+    p.runtime_exists = false; p.worker_contracts.execution = 'passed';
+  }), 'worker policy: false greenfield');
   run('worker-new-kernel-syntax', b => changeJson(b, 'specs/STATUS.json', p => p.worker_contracts.new_kernel_syntax = true), 'worker policy: new_kernel_syntax');
   run('worker-missing-package-gate', b => changeJson(b, 'specs/roadmap.json', p => p.milestones.find(m => m.id === 'MW1').entry_gates.pop()), 'worker milestone entry gates');
   run('worker-missing-async-dependency', b => changeJson(b, 'specs/roadmap.json', p => p.milestones.find(m => m.id === 'MW2').depends_on = ['MW1']), 'worker milestone dependencies');
@@ -1408,7 +1427,9 @@ function selfTest(base) {
     changeJson(b, 'specs/spec-family.json', p => p.scenario_files = p.scenario_files.filter(f => f !== 'conformance/octet-adoption-cases.json'));
     refreshed(b);
   }, 'Octet adoption oracle: required case');
-  run('octet-adoption-runtime-overclaim', b => changeJson(b, 'specs/STATUS.json', p => p.octet_adoption.execution = 'passed'), 'Octet adoption policy: false greenfield');
+  run('octet-adoption-runtime-overclaim', b => changeJson(b, 'specs/STATUS.json', p => {
+    p.runtime_exists = false; p.octet_adoption.execution = 'passed';
+  }), 'Octet adoption policy: false greenfield');
   run('octet-adoption-Aeneas-replaced', b => changeJson(b, 'specs/STATUS.json', p => p.octet_adoption.Aeneas_route_replaced = true), 'Octet adoption policy: Aeneas_route_replaced');
   run('octet-adoption-lints-replace-architecture', b => changeJson(b, 'specs/STATUS.json', p => p.octet_adoption.architecture_policy = 'lint-only'), 'Octet adoption policy: architecture_policy');
   for (const [milestone, ref] of [['M1', 'VT-OCTET-01'], ['M5', 'H-AUTH-03'], ['M6', 'DX-PROTOCOL-03'], ['MW1', 'DX-TYPE-04'], ['MW2', 'H-RECEIPT-02']]) {

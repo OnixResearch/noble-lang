@@ -16,33 +16,32 @@ let
   shell = "crates/noble-cli/src/main.rs";
   shellManifest = "crates/noble-cli/Cargo.toml";
   kernelManifest = "crates/noble-kernel/Cargo.toml";
-  shellOutput = ''
-    fn write_outcome(outcome: noble_kernel::BudgetOutcome) {
-        match outcome {
-            noble_kernel::BudgetOutcome::Remaining(next) => println!("remaining:{next}"),
-            noble_kernel::BudgetOutcome::Exhausted => println!("exhausted"),
-        }
-    }
-  '';
   acyclic =
     if case.base == "acyclic_shell" then
       {
-        ${shellManifest} = replaceOnce ''
-          [dependencies]
-          noble-kernel = { path = "../noble-kernel" }
+        # Isolate the reverse-edge control from every real CLI dependency.
+        # Otherwise contracts or Wasm lowering retain an indirect kernel cycle.
+        ${shellManifest} = ''
+          [package]
+          name = "noble-cli"
+          version.workspace = true
+          edition.workspace = true
+          publish.workspace = true
+          default-run = "noble"
 
-        '' "" files.${shellManifest};
-        ${shell} =
-          replaceOnce shellOutput
-            ''
-              fn write_outcome(outcome: u32) {
-                  println!("fixture:{outcome}");
-              }
-            ''
-            (
-              replaceOnce "write_outcome(noble_kernel::consume_budget(budget));" "write_outcome(budget);"
-                files.${shell}
-            );
+          [[bin]]
+          name = "noble"
+          path = "src/main.rs"
+
+          [lints]
+          workspace = true
+        '';
+        ${shell} = ''
+          //! Standalone acyclic shell fixture; compiled, never executed.
+          fn main() {
+              println!("acyclic-shell-fixture");
+          }
+        '';
         "crates/noble-cli/src/lib.rs" =
           "//! Empty shell library: acyclic dependency-control fixture only.\n";
       }

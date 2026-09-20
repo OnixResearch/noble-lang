@@ -1,0 +1,3244 @@
+{
+  "schema": "noble-m3-wasm-evidence/v1",
+  "milestone": "M3",
+  "date": "2026-09-20",
+  "result": "passed",
+  "scope": "Resource-free bounded compiled-program representation experiment; not a general source compiler, stable ABI, M4/M5 delivery, or verified backend.",
+  "selection": {
+    "representation": "managed-linear-memory",
+    "eligible_representations": [
+      "wasm-gc",
+      "managed-linear-memory"
+    ],
+    "rationale": [
+      "Both representations satisfy every declared execution and selection-policy gate.",
+      "Select the explicitly bounded, observable arena layout for M4 and avoid requiring WasmGC.",
+      "This choice favors observable storage accounting and fewer engine features, not measured speed or physical-memory superiority."
+    ],
+    "tradeoffs": [
+      "Managed linear memory retains 131072 bytes versus 65536 bytes of GC-candidate linear scratch after cleanup.",
+      "Optimized modules are 6984 bytes for managed linear memory and 6879 bytes for GC.",
+      "The selected layout requires manual record/tag/bounds invariants; GC physical object/root sizes, heap peaks and reclamation remain unknown.",
+      "Both candidates remain experimental comparison artifacts; this does not require two production backends."
+    ],
+    "performance_claim": false,
+    "proof_status": "open"
+  },
+  "runtime": {
+    "archive": "runtime.tar.gz",
+    "archive_sha256": "c51f0be64b4943124ed7c1297106338289df25d7764066b0d06ceca2b1fafaa5",
+    "report": "runtime.tar.gz:report.json",
+    "report_sha256": "003eb61d73f2ed5a1c783e6f9232f3e547741b2aa72c04626c406451c766ce60",
+    "artifact_count": 247,
+    "command": "nix run .#m3-wasm -- --out NEW_DIRECTORY",
+    "observed_application": "/nix/store/ypkz4s8812a6hjyxyvx4lcsna6whq9ah-m3-wasm/bin/m3-wasm",
+    "noble": {
+      "requested_path": "/nix/store/vfgvjgcs6m0w69nymgg307csxfkyrf39-noble-0.0.0/bin/noble",
+      "realpath": "/nix/store/vfgvjgcs6m0w69nymgg307csxfkyrf39-noble-0.0.0/bin/noble",
+      "sha256": "d8e1f94a551a7355801702df4917f3723b708860fc82a559ceea64707afa49e8",
+      "source_correspondence": "not-established-by-this-harness"
+    },
+    "source_revision": "sha256:291a87c00f9f9bd8960c83bf6201342ee4de49fbb647a6f37d3d2bcfe4f2c446",
+    "workload_revision": "sha256:5a5a75c990ce2b441bd1b467f9be69b8c294fc0fb9c3c2370b22df5368db6968",
+    "canonical_cases": [
+      "CORE-03",
+      "CORE-05",
+      "CORE-09",
+      "ADAPT-08",
+      "ADAPT-09",
+      "ADAPT-10",
+      "ADAPT-12"
+    ],
+    "policy": {
+      "valid": true,
+      "outcome": "eligible-for-selection",
+      "eligible_for_selection": true,
+      "eligible_representations": [
+        "wasm-gc",
+        "managed-linear-memory"
+      ],
+      "m3_execution_gates": "passed",
+      "errors": [],
+      "execution_failures": []
+    },
+    "timing": {
+      "warmups": 3,
+      "samples": 7,
+      "aggregation": "median-min-max-nearest-rank-p95",
+      "clock": "process.hrtime.bigint",
+      "case_instance_policy": "same-instance-with-accounted-region-cleanup-before-every-trial",
+      "compilation_cache_policy": "first-compile-separate; repeated-identical-bytes-may-use-v8-process-cache",
+      "worker_timeout_ms": 180000,
+      "command_timeout_ms": 120000
+    },
+    "limits": {
+      "allocation_bytes": 65536,
+      "recipe_program_leaves": 256,
+      "composition_depth": 256,
+      "operand_bytes": 2048,
+      "continuation_bytes": 4096,
+      "dispatch_steps": 100000
+    },
+    "configurations": [
+      {
+        "id": "wasm-gc/off",
+        "outcome": "executed",
+        "measured_success": true,
+        "scenarios": 52,
+        "module": {
+          "path": "wasm-gc/sample-0-off.wasm",
+          "bytes": 11039,
+          "sha256": "56826a76f8dac5fbdc60208fb8131bdce5f83b30cbcf36d16eb8e8f85123d4ac",
+          "sections": {
+            "header_bytes": 8,
+            "framing_bytes": 26,
+            "payload_bytes": 11005,
+            "total_bytes": 11039,
+            "entries": [
+              {
+                "id": 1,
+                "name": "type",
+                "custom_name": null,
+                "file_offset": 8,
+                "payload_bytes": 159,
+                "framing_bytes": 3,
+                "total_bytes": 162,
+                "payload_sha256": "6907197458e7c4d946433c54e7e496b94ef2cc82e5445ec4579bf5d96faed5f6"
+              },
+              {
+                "id": 3,
+                "name": "function",
+                "custom_name": null,
+                "file_offset": 170,
+                "payload_bytes": 141,
+                "framing_bytes": 3,
+                "total_bytes": 144,
+                "payload_sha256": "8291f734e334eadc83f1a26f1176cf938429ed863768f8361150ef88cd7fd320"
+              },
+              {
+                "id": 4,
+                "name": "table",
+                "custom_name": null,
+                "file_offset": 314,
+                "payload_bytes": 5,
+                "framing_bytes": 2,
+                "total_bytes": 7,
+                "payload_sha256": "8945eeae725aafda39a0e52aba608cf844862230467ec52fffb0785d74180b09"
+              },
+              {
+                "id": 5,
+                "name": "memory",
+                "custom_name": null,
+                "file_offset": 321,
+                "payload_bytes": 4,
+                "framing_bytes": 2,
+                "total_bytes": 6,
+                "payload_sha256": "3088351651f3c2e96675774953f0d2949a8d088a0064fe7938ad535ee7df299c"
+              },
+              {
+                "id": 6,
+                "name": "global",
+                "custom_name": null,
+                "file_offset": 327,
+                "payload_bytes": 240,
+                "framing_bytes": 3,
+                "total_bytes": 243,
+                "payload_sha256": "ffdc614752baa4e021a83afe245febd1a4c9da5f63a1eee7bd7ca1604963d4d1"
+              },
+              {
+                "id": 7,
+                "name": "export",
+                "custom_name": null,
+                "file_offset": 570,
+                "payload_bytes": 227,
+                "framing_bytes": 3,
+                "total_bytes": 230,
+                "payload_sha256": "ff332ece6f340b3d9533cffd0602a87f416febc89cb8ab7f3f41501b34d8bb84"
+              },
+              {
+                "id": 8,
+                "name": "start",
+                "custom_name": null,
+                "file_offset": 800,
+                "payload_bytes": 1,
+                "framing_bytes": 2,
+                "total_bytes": 3,
+                "payload_sha256": "2b4c342f5433ebe591a1da77e013d1b72475562d48578dca8b84bac6651c3cb9"
+              },
+              {
+                "id": 9,
+                "name": "element",
+                "custom_name": null,
+                "file_offset": 803,
+                "payload_bytes": 68,
+                "framing_bytes": 2,
+                "total_bytes": 70,
+                "payload_sha256": "38e317c50f9c6d45309b4e6695e6b41ad439a217fa81d6fcc6e8036eeba9002a"
+              },
+              {
+                "id": 10,
+                "name": "code",
+                "custom_name": null,
+                "file_offset": 873,
+                "payload_bytes": 6826,
+                "framing_bytes": 3,
+                "total_bytes": 6829,
+                "payload_sha256": "2b7b31828565761475cd383beb129aeccbb4a24faa6e8d470a2a357529008924"
+              },
+              {
+                "id": 0,
+                "name": "custom",
+                "custom_name": "name",
+                "file_offset": 7702,
+                "payload_bytes": 3334,
+                "framing_bytes": 3,
+                "total_bytes": 3337,
+                "payload_sha256": "05980b9f66099657fcf4da88bf3e99b4ff02bb2494d59735e7e89cae218d8273"
+              }
+            ],
+            "type_section_sha256": "6907197458e7c4d946433c54e7e496b94ef2cc82e5445ec4579bf5d96faed5f6"
+          },
+          "type_section_sha256": "6907197458e7c4d946433c54e7e496b94ef2cc82e5445ec4579bf5d96faed5f6",
+          "debug_metadata_stripped": false,
+          "semantic_recipe_storage": "retained-runtime-data-not-debug-metadata"
+        },
+        "preparation_ns": {
+          "cli": {
+            "count": 7,
+            "min": 6140076,
+            "max": 8587497,
+            "median": 7412623,
+            "p95": 8587497
+          },
+          "assembly": {
+            "count": 7,
+            "min": 6384653,
+            "max": 11915932,
+            "median": 7283561,
+            "p95": 11915932
+          },
+          "optimization": {
+            "count": 7,
+            "min": 27759027,
+            "max": 30925571,
+            "median": 28919354,
+            "p95": 30925571
+          }
+        },
+        "compilation": {
+          "first_ns": 6639999,
+          "samples": [
+            {
+              "role": "warmup",
+              "index": 0,
+              "ns": 50023
+            },
+            {
+              "role": "warmup",
+              "index": 1,
+              "ns": 28212
+            },
+            {
+              "role": "warmup",
+              "index": 2,
+              "ns": 24105
+            },
+            {
+              "role": "sample",
+              "index": 0,
+              "ns": 16070
+            },
+            {
+              "role": "sample",
+              "index": 1,
+              "ns": 21720
+            },
+            {
+              "role": "sample",
+              "index": 2,
+              "ns": 13916
+            },
+            {
+              "role": "sample",
+              "index": 3,
+              "ns": 12082
+            },
+            {
+              "role": "sample",
+              "index": 4,
+              "ns": 12203
+            },
+            {
+              "role": "sample",
+              "index": 5,
+              "ns": 12533
+            },
+            {
+              "role": "sample",
+              "index": 6,
+              "ns": 11591
+            }
+          ],
+          "scope": "synchronous-WebAssembly.Module; repeated-identical-bytes-may-use-v8-process-cache",
+          "aggregate_ns": {
+            "count": 7,
+            "min": 11591,
+            "max": 21720,
+            "median": 12533,
+            "p95": 21720
+          }
+        },
+        "instantiation": {
+          "first_ns": 149449,
+          "samples": [
+            {
+              "role": "warmup",
+              "index": 0,
+              "ns": 80280
+            },
+            {
+              "role": "warmup",
+              "index": 1,
+              "ns": 665643
+            },
+            {
+              "role": "warmup",
+              "index": 2,
+              "ns": 68548
+            },
+            {
+              "role": "sample",
+              "index": 0,
+              "ns": 59270
+            },
+            {
+              "role": "sample",
+              "index": 1,
+              "ns": 71624
+            },
+            {
+              "role": "sample",
+              "index": 2,
+              "ns": 51365
+            },
+            {
+              "role": "sample",
+              "index": 3,
+              "ns": 55504
+            },
+            {
+              "role": "sample",
+              "index": 4,
+              "ns": 58489
+            },
+            {
+              "role": "sample",
+              "index": 5,
+              "ns": 49943
+            },
+            {
+              "role": "sample",
+              "index": 6,
+              "ns": 53530
+            }
+          ],
+          "scope": "synchronous-WebAssembly.Instance-including-module-start-and-permanent-vocabulary",
+          "aggregate_ns": {
+            "count": 7,
+            "min": 49943,
+            "max": 71624,
+            "median": 55504,
+            "p95": 71624
+          }
+        },
+        "representative_cases": [
+          {
+            "id": "CORE-03/capture-0",
+            "aggregate_ns": {
+              "begin": {
+                "count": 7,
+                "min": 3126,
+                "max": 4469,
+                "median": 3466,
+                "p95": 4469
+              },
+              "construction": {
+                "count": 7,
+                "min": 721,
+                "max": 1242,
+                "median": 1002,
+                "p95": 1242
+              },
+              "invocation": {
+                "count": 7,
+                "min": 601,
+                "max": 902,
+                "median": 722,
+                "p95": 902
+              },
+              "reflection": {
+                "count": 7,
+                "min": 251,
+                "max": 791,
+                "median": 310,
+                "p95": 791
+              },
+              "cleanup": {
+                "count": 7,
+                "min": 2905,
+                "max": 3607,
+                "median": 2936,
+                "p95": 3607
+              },
+              "recovery": null
+            }
+          },
+          {
+            "id": "ADAPT-09/left-256",
+            "aggregate_ns": {
+              "begin": {
+                "count": 7,
+                "min": 3156,
+                "max": 30747,
+                "median": 3436,
+                "p95": 30747
+              },
+              "construction": {
+                "count": 7,
+                "min": 12885,
+                "max": 25177,
+                "median": 14978,
+                "p95": 25177
+              },
+              "invocation": {
+                "count": 7,
+                "min": 12423,
+                "max": 17493,
+                "median": 12734,
+                "p95": 17493
+              },
+              "reflection": {
+                "count": 7,
+                "min": 4138,
+                "max": 8135,
+                "median": 4539,
+                "p95": 8135
+              },
+              "cleanup": {
+                "count": 7,
+                "min": 3516,
+                "max": 4238,
+                "median": 3557,
+                "p95": 4238
+              },
+              "recovery": null
+            }
+          },
+          {
+            "id": "ADAPT-09/right-256",
+            "aggregate_ns": {
+              "begin": {
+                "count": 7,
+                "min": 2965,
+                "max": 3116,
+                "median": 3016,
+                "p95": 3116
+              },
+              "construction": {
+                "count": 7,
+                "min": 10149,
+                "max": 13406,
+                "median": 10269,
+                "p95": 13406
+              },
+              "invocation": {
+                "count": 7,
+                "min": 12273,
+                "max": 12644,
+                "median": 12333,
+                "p95": 12644
+              },
+              "reflection": {
+                "count": 7,
+                "min": 3817,
+                "max": 4359,
+                "median": 3957,
+                "p95": 4359
+              },
+              "cleanup": {
+                "count": 7,
+                "min": 3456,
+                "max": 3587,
+                "median": 3487,
+                "p95": 3587
+              },
+              "recovery": null
+            }
+          },
+          {
+            "id": "ADAPT-09/balanced-256",
+            "aggregate_ns": {
+              "begin": {
+                "count": 7,
+                "min": 3015,
+                "max": 5059,
+                "median": 3176,
+                "p95": 5059
+              },
+              "construction": {
+                "count": 7,
+                "min": 13074,
+                "max": 21159,
+                "median": 14537,
+                "p95": 21159
+              },
+              "invocation": {
+                "count": 7,
+                "min": 14627,
+                "max": 16832,
+                "median": 14748,
+                "p95": 16832
+              },
+              "reflection": {
+                "count": 7,
+                "min": 4348,
+                "max": 5400,
+                "median": 4449,
+                "p95": 5400
+              },
+              "cleanup": {
+                "count": 7,
+                "min": 3477,
+                "max": 3777,
+                "median": 3527,
+                "p95": 3777
+              },
+              "recovery": null
+            }
+          },
+          {
+            "id": "ADAPT-10/reflection-only-0",
+            "aggregate_ns": {
+              "begin": {
+                "count": 7,
+                "min": 2936,
+                "max": 3307,
+                "median": 2966,
+                "p95": 3307
+              },
+              "construction": {
+                "count": 7,
+                "min": 341,
+                "max": 561,
+                "median": 411,
+                "p95": 561
+              },
+              "invocation": null,
+              "reflection": {
+                "count": 7,
+                "min": 120,
+                "max": 220,
+                "median": 130,
+                "p95": 220
+              },
+              "cleanup": {
+                "count": 7,
+                "min": 2735,
+                "max": 2855,
+                "median": 2745,
+                "p95": 2855
+              },
+              "recovery": null
+            }
+          }
+        ],
+        "measurements": {
+          "engine_heap_peak_bytes": {
+            "status": "unknown",
+            "value": null,
+            "reason": "No scoped V8 GC/object-layout/engine-only per-case instrumentation is selected; logical accounting is not a substitute."
+          },
+          "per_case_engine_heap_bytes": {
+            "status": "unknown",
+            "value": null,
+            "reason": "No scoped V8 GC/object-layout/engine-only per-case instrumentation is selected; logical accounting is not a substitute."
+          },
+          "compiled_native_code_bytes": {
+            "status": "unknown",
+            "value": null,
+            "reason": "No scoped V8 GC/object-layout/engine-only per-case instrumentation is selected; logical accounting is not a substitute."
+          },
+          "gc_physical_cell_bytes": {
+            "status": "unknown",
+            "value": null,
+            "reason": "No scoped V8 GC/object-layout/engine-only per-case instrumentation is selected; logical accounting is not a substitute."
+          },
+          "gc_root_array_physical_bytes": {
+            "status": "unknown",
+            "value": null,
+            "reason": "No scoped V8 GC/object-layout/engine-only per-case instrumentation is selected; logical accounting is not a substitute."
+          },
+          "gc_collection_time_ns": {
+            "status": "unknown",
+            "value": null,
+            "reason": "No scoped V8 GC/object-layout/engine-only per-case instrumentation is selected; logical accounting is not a substitute."
+          },
+          "gc_reclaimed_bytes": {
+            "status": "unknown",
+            "value": null,
+            "reason": "No scoped V8 GC/object-layout/engine-only per-case instrumentation is selected; logical accounting is not a substitute."
+          },
+          "host_memory": [
+            {
+              "label": "before-feature-probes-and-main-module-compilation",
+              "scope": "entire-fresh-node-worker-including-v8-js-host-module-inputs-and-retained-observations",
+              "process_memory_usage_bytes": {
+                "rss": 48431104,
+                "heapTotal": 6619136,
+                "heapUsed": 5239152,
+                "external": 2007425,
+                "arrayBuffers": 68905
+              },
+              "linux_proc_self_vmhwm_bytes": {
+                "status": "observed",
+                "value": 49778688,
+                "unit": "bytes"
+              },
+              "attribution_to_guest_or_engine_only": false
+            },
+            {
+              "label": "ready-before-runtime-inputs",
+              "scope": "entire-fresh-node-worker-including-v8-js-host-module-inputs-and-retained-observations",
+              "process_memory_usage_bytes": {
+                "rss": 58073088,
+                "heapTotal": 7667712,
+                "heapUsed": 5468200,
+                "external": 2689266,
+                "arrayBuffers": 29810
+              },
+              "linux_proc_self_vmhwm_bytes": {
+                "status": "observed",
+                "value": 59871232,
+                "unit": "bytes"
+              },
+              "attribution_to_guest_or_engine_only": false
+            },
+            {
+              "label": "after-all-cases-and-accounted-cleanup",
+              "scope": "entire-fresh-node-worker-including-v8-js-host-module-inputs-and-retained-observations",
+              "process_memory_usage_bytes": {
+                "rss": 81035264,
+                "heapTotal": 27602944,
+                "heapUsed": 17345176,
+                "external": 2790982,
+                "arrayBuffers": 572060
+              },
+              "linux_proc_self_vmhwm_bytes": {
+                "status": "observed",
+                "value": 84324352,
+                "unit": "bytes"
+              },
+              "attribution_to_guest_or_engine_only": false
+            }
+          ],
+          "resource_usage_max_rss": {
+            "status": "unknown",
+            "value": null,
+            "reason": "Not used: inherited pre-exec parent high-water can contaminate resourceUsage().maxRSS."
+          },
+          "logical_charge_bytes_per_cell": {
+            "status": "policy-charge",
+            "value": 48,
+            "meaning": "Not an observed GC object size. Managed records use this width, separately from scratch, retained pages, and vocabulary."
+          },
+          "permanent_vocabulary": {
+            "logical_bytes": 4752,
+            "logical_cells": 99,
+            "excluded_from_transient_metrics": true
+          },
+          "gc_root_table": {
+            "entries": 4096,
+            "storage": "per-instance-GC-array",
+            "physical_bytes": {
+              "status": "unknown",
+              "value": null,
+              "reason": "No physical root-array/object-layout measurement is available."
+            }
+          },
+          "retained_linear_memory": {
+            "status": "observed",
+            "value": 65536,
+            "unit": "bytes",
+            "after_logical_cleanup": true,
+            "memory_shrink_claim": false
+          }
+        },
+        "reclamation": {
+          "logical_region": "accounted-by-cleanup",
+          "gc_collection": "deferred-and-unmeasured",
+          "reference_counting": false,
+          "immediate_physical_reclamation_claim": false
+        },
+        "protocol": {
+          "ready_observed": true,
+          "inputs_sent_after_ready": true,
+          "module_sha256_before_inputs": "56826a76f8dac5fbdc60208fb8131bdce5f83b30cbcf36d16eb8e8f85123d4ac",
+          "ready_after_spawn_ns": 64585578,
+          "input_sent_after_spawn_ns": 64726762,
+          "input_sha256": "ffb1f26880b23ef6ce642fa21f4fbf8a22493547cb5277dbaa65c36f84c142e4"
+        }
+      },
+      {
+        "id": "wasm-gc/on",
+        "outcome": "executed",
+        "measured_success": true,
+        "scenarios": 52,
+        "module": {
+          "path": "wasm-gc/sample-0-on.wasm",
+          "bytes": 6879,
+          "sha256": "37116557389ee421656a8db0d9fdebb095037e20605ee8874aaaf723eae532c7",
+          "sections": {
+            "header_bytes": 8,
+            "framing_bytes": 22,
+            "payload_bytes": 6849,
+            "total_bytes": 6879,
+            "entries": [
+              {
+                "id": 1,
+                "name": "type",
+                "custom_name": null,
+                "file_offset": 8,
+                "payload_bytes": 157,
+                "framing_bytes": 3,
+                "total_bytes": 160,
+                "payload_sha256": "05ff4af1a43f5f39248b3b8e355ae9d5ca1354a35d2cde24ddd4eaefaa3b43a2"
+              },
+              {
+                "id": 3,
+                "name": "function",
+                "custom_name": null,
+                "file_offset": 168,
+                "payload_bytes": 117,
+                "framing_bytes": 2,
+                "total_bytes": 119,
+                "payload_sha256": "812d8b824f56f327aaefd78c3530aa53a079e51f1179d4a0c15f1f0671c87ae0"
+              },
+              {
+                "id": 4,
+                "name": "table",
+                "custom_name": null,
+                "file_offset": 287,
+                "payload_bytes": 5,
+                "framing_bytes": 2,
+                "total_bytes": 7,
+                "payload_sha256": "8945eeae725aafda39a0e52aba608cf844862230467ec52fffb0785d74180b09"
+              },
+              {
+                "id": 5,
+                "name": "memory",
+                "custom_name": null,
+                "file_offset": 294,
+                "payload_bytes": 4,
+                "framing_bytes": 2,
+                "total_bytes": 6,
+                "payload_sha256": "3088351651f3c2e96675774953f0d2949a8d088a0064fe7938ad535ee7df299c"
+              },
+              {
+                "id": 6,
+                "name": "global",
+                "custom_name": null,
+                "file_offset": 300,
+                "payload_bytes": 220,
+                "framing_bytes": 3,
+                "total_bytes": 223,
+                "payload_sha256": "baa8ef830f46289d715db711b67830944e0bbfa708df6f2412abc16e7f739b02"
+              },
+              {
+                "id": 7,
+                "name": "export",
+                "custom_name": null,
+                "file_offset": 523,
+                "payload_bytes": 227,
+                "framing_bytes": 3,
+                "total_bytes": 230,
+                "payload_sha256": "96f0d95d2f41d95df4fb61c44a470b7e74cd3e0567793b2b272ed60d2f576dac"
+              },
+              {
+                "id": 8,
+                "name": "start",
+                "custom_name": null,
+                "file_offset": 753,
+                "payload_bytes": 1,
+                "framing_bytes": 2,
+                "total_bytes": 3,
+                "payload_sha256": "ca358758f6d27e6cf45272937977a748fd88391db679ceda7dc7bf1f005ee879"
+              },
+              {
+                "id": 9,
+                "name": "element",
+                "custom_name": null,
+                "file_offset": 756,
+                "payload_bytes": 58,
+                "framing_bytes": 2,
+                "total_bytes": 60,
+                "payload_sha256": "79fb184c884b1c0ab47dcf335586a7a2f393d8e01d45de1d4e251ac5fb337f6d"
+              },
+              {
+                "id": 10,
+                "name": "code",
+                "custom_name": null,
+                "file_offset": 816,
+                "payload_bytes": 6060,
+                "framing_bytes": 3,
+                "total_bytes": 6063,
+                "payload_sha256": "52b7f17d4a789e76affec4c631d43a1a337f3479e06566534247fdcc4b94a1e2"
+              }
+            ],
+            "type_section_sha256": "05ff4af1a43f5f39248b3b8e355ae9d5ca1354a35d2cde24ddd4eaefaa3b43a2"
+          },
+          "type_section_sha256": "05ff4af1a43f5f39248b3b8e355ae9d5ca1354a35d2cde24ddd4eaefaa3b43a2",
+          "debug_metadata_stripped": true,
+          "semantic_recipe_storage": "retained-runtime-data-not-debug-metadata"
+        },
+        "preparation_ns": {
+          "cli": {
+            "count": 7,
+            "min": 6140076,
+            "max": 8587497,
+            "median": 7412623,
+            "p95": 8587497
+          },
+          "assembly": {
+            "count": 7,
+            "min": 6384653,
+            "max": 11915932,
+            "median": 7283561,
+            "p95": 11915932
+          },
+          "optimization": {
+            "count": 7,
+            "min": 27759027,
+            "max": 30925571,
+            "median": 28919354,
+            "p95": 30925571
+          }
+        },
+        "compilation": {
+          "first_ns": 9249703,
+          "samples": [
+            {
+              "role": "warmup",
+              "index": 0,
+              "ns": 67947
+            },
+            {
+              "role": "warmup",
+              "index": 1,
+              "ns": 28684
+            },
+            {
+              "role": "warmup",
+              "index": 2,
+              "ns": 33252
+            },
+            {
+              "role": "sample",
+              "index": 0,
+              "ns": 16511
+            },
+            {
+              "role": "sample",
+              "index": 1,
+              "ns": 17422
+            },
+            {
+              "role": "sample",
+              "index": 2,
+              "ns": 13845
+            },
+            {
+              "role": "sample",
+              "index": 3,
+              "ns": 13476
+            },
+            {
+              "role": "sample",
+              "index": 4,
+              "ns": 10780
+            },
+            {
+              "role": "sample",
+              "index": 5,
+              "ns": 12132
+            },
+            {
+              "role": "sample",
+              "index": 6,
+              "ns": 11341
+            }
+          ],
+          "scope": "synchronous-WebAssembly.Module; repeated-identical-bytes-may-use-v8-process-cache",
+          "aggregate_ns": {
+            "count": 7,
+            "min": 10780,
+            "max": 17422,
+            "median": 13476,
+            "p95": 17422
+          }
+        },
+        "instantiation": {
+          "first_ns": 174426,
+          "samples": [
+            {
+              "role": "warmup",
+              "index": 0,
+              "ns": 79889
+            },
+            {
+              "role": "warmup",
+              "index": 1,
+              "ns": 742176
+            },
+            {
+              "role": "warmup",
+              "index": 2,
+              "ns": 76694
+            },
+            {
+              "role": "sample",
+              "index": 0,
+              "ns": 58429
+            },
+            {
+              "role": "sample",
+              "index": 1,
+              "ns": 57968
+            },
+            {
+              "role": "sample",
+              "index": 2,
+              "ns": 52628
+            },
+            {
+              "role": "sample",
+              "index": 3,
+              "ns": 56767
+            },
+            {
+              "role": "sample",
+              "index": 4,
+              "ns": 47989
+            },
+            {
+              "role": "sample",
+              "index": 5,
+              "ns": 52088
+            },
+            {
+              "role": "sample",
+              "index": 6,
+              "ns": 51115
+            }
+          ],
+          "scope": "synchronous-WebAssembly.Instance-including-module-start-and-permanent-vocabulary",
+          "aggregate_ns": {
+            "count": 7,
+            "min": 47989,
+            "max": 58429,
+            "median": 52628,
+            "p95": 58429
+          }
+        },
+        "representative_cases": [
+          {
+            "id": "CORE-03/capture-0",
+            "aggregate_ns": {
+              "begin": {
+                "count": 7,
+                "min": 3146,
+                "max": 5650,
+                "median": 3958,
+                "p95": 5650
+              },
+              "construction": {
+                "count": 7,
+                "min": 691,
+                "max": 1372,
+                "median": 852,
+                "p95": 1372
+              },
+              "invocation": {
+                "count": 7,
+                "min": 561,
+                "max": 871,
+                "median": 682,
+                "p95": 871
+              },
+              "reflection": {
+                "count": 7,
+                "min": 240,
+                "max": 821,
+                "median": 311,
+                "p95": 821
+              },
+              "cleanup": {
+                "count": 7,
+                "min": 2865,
+                "max": 3667,
+                "median": 2945,
+                "p95": 3667
+              },
+              "recovery": null
+            }
+          },
+          {
+            "id": "ADAPT-09/left-256",
+            "aggregate_ns": {
+              "begin": {
+                "count": 7,
+                "min": 3146,
+                "max": 32600,
+                "median": 3697,
+                "p95": 32600
+              },
+              "construction": {
+                "count": 7,
+                "min": 11382,
+                "max": 26650,
+                "median": 14036,
+                "p95": 26650
+              },
+              "invocation": {
+                "count": 7,
+                "min": 11732,
+                "max": 19567,
+                "median": 12173,
+                "p95": 19567
+              },
+              "reflection": {
+                "count": 7,
+                "min": 4268,
+                "max": 5641,
+                "median": 4529,
+                "p95": 5641
+              },
+              "cleanup": {
+                "count": 7,
+                "min": 3567,
+                "max": 4027,
+                "median": 3637,
+                "p95": 4027
+              },
+              "recovery": null
+            }
+          },
+          {
+            "id": "ADAPT-09/right-256",
+            "aggregate_ns": {
+              "begin": {
+                "count": 7,
+                "min": 2976,
+                "max": 3296,
+                "median": 3066,
+                "p95": 3296
+              },
+              "construction": {
+                "count": 7,
+                "min": 9147,
+                "max": 10189,
+                "median": 9427,
+                "p95": 10189
+              },
+              "invocation": {
+                "count": 7,
+                "min": 11642,
+                "max": 12473,
+                "median": 11772,
+                "p95": 12473
+              },
+              "reflection": {
+                "count": 7,
+                "min": 3797,
+                "max": 3977,
+                "median": 3887,
+                "p95": 3977
+              },
+              "cleanup": {
+                "count": 7,
+                "min": 3476,
+                "max": 4238,
+                "median": 3516,
+                "p95": 4238
+              },
+              "recovery": null
+            }
+          },
+          {
+            "id": "ADAPT-09/balanced-256",
+            "aggregate_ns": {
+              "begin": {
+                "count": 7,
+                "min": 2966,
+                "max": 3246,
+                "median": 3095,
+                "p95": 3246
+              },
+              "construction": {
+                "count": 7,
+                "min": 11371,
+                "max": 22703,
+                "median": 12323,
+                "p95": 22703
+              },
+              "invocation": {
+                "count": 7,
+                "min": 13686,
+                "max": 16461,
+                "median": 13835,
+                "p95": 16461
+              },
+              "reflection": {
+                "count": 7,
+                "min": 4258,
+                "max": 4578,
+                "median": 4348,
+                "p95": 4578
+              },
+              "cleanup": {
+                "count": 7,
+                "min": 3506,
+                "max": 3677,
+                "median": 3557,
+                "p95": 3677
+              },
+              "recovery": null
+            }
+          },
+          {
+            "id": "ADAPT-10/reflection-only-0",
+            "aggregate_ns": {
+              "begin": {
+                "count": 7,
+                "min": 2946,
+                "max": 3066,
+                "median": 2976,
+                "p95": 3066
+              },
+              "construction": {
+                "count": 7,
+                "min": 340,
+                "max": 441,
+                "median": 350,
+                "p95": 441
+              },
+              "invocation": null,
+              "reflection": {
+                "count": 7,
+                "min": 120,
+                "max": 130,
+                "median": 120,
+                "p95": 130
+              },
+              "cleanup": {
+                "count": 7,
+                "min": 2745,
+                "max": 6612,
+                "median": 2755,
+                "p95": 6612
+              },
+              "recovery": null
+            }
+          }
+        ],
+        "measurements": {
+          "engine_heap_peak_bytes": {
+            "status": "unknown",
+            "value": null,
+            "reason": "No scoped V8 GC/object-layout/engine-only per-case instrumentation is selected; logical accounting is not a substitute."
+          },
+          "per_case_engine_heap_bytes": {
+            "status": "unknown",
+            "value": null,
+            "reason": "No scoped V8 GC/object-layout/engine-only per-case instrumentation is selected; logical accounting is not a substitute."
+          },
+          "compiled_native_code_bytes": {
+            "status": "unknown",
+            "value": null,
+            "reason": "No scoped V8 GC/object-layout/engine-only per-case instrumentation is selected; logical accounting is not a substitute."
+          },
+          "gc_physical_cell_bytes": {
+            "status": "unknown",
+            "value": null,
+            "reason": "No scoped V8 GC/object-layout/engine-only per-case instrumentation is selected; logical accounting is not a substitute."
+          },
+          "gc_root_array_physical_bytes": {
+            "status": "unknown",
+            "value": null,
+            "reason": "No scoped V8 GC/object-layout/engine-only per-case instrumentation is selected; logical accounting is not a substitute."
+          },
+          "gc_collection_time_ns": {
+            "status": "unknown",
+            "value": null,
+            "reason": "No scoped V8 GC/object-layout/engine-only per-case instrumentation is selected; logical accounting is not a substitute."
+          },
+          "gc_reclaimed_bytes": {
+            "status": "unknown",
+            "value": null,
+            "reason": "No scoped V8 GC/object-layout/engine-only per-case instrumentation is selected; logical accounting is not a substitute."
+          },
+          "host_memory": [
+            {
+              "label": "before-feature-probes-and-main-module-compilation",
+              "scope": "entire-fresh-node-worker-including-v8-js-host-module-inputs-and-retained-observations",
+              "process_memory_usage_bytes": {
+                "rss": 48570368,
+                "heapTotal": 6619136,
+                "heapUsed": 5238576,
+                "external": 2007425,
+                "arrayBuffers": 68905
+              },
+              "linux_proc_self_vmhwm_bytes": {
+                "status": "observed",
+                "value": 49819648,
+                "unit": "bytes"
+              },
+              "attribution_to_guest_or_engine_only": false
+            },
+            {
+              "label": "ready-before-runtime-inputs",
+              "scope": "entire-fresh-node-worker-including-v8-js-host-module-inputs-and-retained-observations",
+              "process_memory_usage_bytes": {
+                "rss": 58888192,
+                "heapTotal": 7667712,
+                "heapUsed": 5511344,
+                "external": 2684930,
+                "arrayBuffers": 25474
+              },
+              "linux_proc_self_vmhwm_bytes": {
+                "status": "observed",
+                "value": 60497920,
+                "unit": "bytes"
+              },
+              "attribution_to_guest_or_engine_only": false
+            },
+            {
+              "label": "after-all-cases-and-accounted-cleanup",
+              "scope": "entire-fresh-node-worker-including-v8-js-host-module-inputs-and-retained-observations",
+              "process_memory_usage_bytes": {
+                "rss": 80990208,
+                "heapTotal": 27602944,
+                "heapUsed": 17246760,
+                "external": 2786646,
+                "arrayBuffers": 502188
+              },
+              "linux_proc_self_vmhwm_bytes": {
+                "status": "observed",
+                "value": 83959808,
+                "unit": "bytes"
+              },
+              "attribution_to_guest_or_engine_only": false
+            }
+          ],
+          "resource_usage_max_rss": {
+            "status": "unknown",
+            "value": null,
+            "reason": "Not used: inherited pre-exec parent high-water can contaminate resourceUsage().maxRSS."
+          },
+          "logical_charge_bytes_per_cell": {
+            "status": "policy-charge",
+            "value": 48,
+            "meaning": "Not an observed GC object size. Managed records use this width, separately from scratch, retained pages, and vocabulary."
+          },
+          "permanent_vocabulary": {
+            "logical_bytes": 4752,
+            "logical_cells": 99,
+            "excluded_from_transient_metrics": true
+          },
+          "gc_root_table": {
+            "entries": 4096,
+            "storage": "per-instance-GC-array",
+            "physical_bytes": {
+              "status": "unknown",
+              "value": null,
+              "reason": "No physical root-array/object-layout measurement is available."
+            }
+          },
+          "retained_linear_memory": {
+            "status": "observed",
+            "value": 65536,
+            "unit": "bytes",
+            "after_logical_cleanup": true,
+            "memory_shrink_claim": false
+          }
+        },
+        "reclamation": {
+          "logical_region": "accounted-by-cleanup",
+          "gc_collection": "deferred-and-unmeasured",
+          "reference_counting": false,
+          "immediate_physical_reclamation_claim": false
+        },
+        "protocol": {
+          "ready_observed": true,
+          "inputs_sent_after_ready": true,
+          "module_sha256_before_inputs": "37116557389ee421656a8db0d9fdebb095037e20605ee8874aaaf723eae532c7",
+          "ready_after_spawn_ns": 64597591,
+          "input_sent_after_spawn_ns": 64754644,
+          "input_sha256": "ffb1f26880b23ef6ce642fa21f4fbf8a22493547cb5277dbaa65c36f84c142e4"
+        }
+      },
+      {
+        "id": "managed-linear-memory/off",
+        "outcome": "executed",
+        "measured_success": true,
+        "scenarios": 52,
+        "module": {
+          "path": "managed-linear-memory/sample-0-off.wasm",
+          "bytes": 11162,
+          "sha256": "d7430efa4a2d044f296d41359d3b881dcd3e05180cad1a9c3d856b5e04cafad2",
+          "sections": {
+            "header_bytes": 8,
+            "framing_bytes": 25,
+            "payload_bytes": 11129,
+            "total_bytes": 11162,
+            "entries": [
+              {
+                "id": 1,
+                "name": "type",
+                "custom_name": null,
+                "file_offset": 8,
+                "payload_bytes": 108,
+                "framing_bytes": 2,
+                "total_bytes": 110,
+                "payload_sha256": "94d6184467132816c481be906d01800b21c0980592dd636fe0801e647252fc0a"
+              },
+              {
+                "id": 3,
+                "name": "function",
+                "custom_name": null,
+                "file_offset": 118,
+                "payload_bytes": 141,
+                "framing_bytes": 3,
+                "total_bytes": 144,
+                "payload_sha256": "f0042b073977de1b34856c65a36327016603ed59dc351cafaca81e8b9b52eb1b"
+              },
+              {
+                "id": 4,
+                "name": "table",
+                "custom_name": null,
+                "file_offset": 262,
+                "payload_bytes": 5,
+                "framing_bytes": 2,
+                "total_bytes": 7,
+                "payload_sha256": "8945eeae725aafda39a0e52aba608cf844862230467ec52fffb0785d74180b09"
+              },
+              {
+                "id": 5,
+                "name": "memory",
+                "custom_name": null,
+                "file_offset": 269,
+                "payload_bytes": 4,
+                "framing_bytes": 2,
+                "total_bytes": 6,
+                "payload_sha256": "3088351651f3c2e96675774953f0d2949a8d088a0064fe7938ad535ee7df299c"
+              },
+              {
+                "id": 6,
+                "name": "global",
+                "custom_name": null,
+                "file_offset": 275,
+                "payload_bytes": 234,
+                "framing_bytes": 3,
+                "total_bytes": 237,
+                "payload_sha256": "08a1ba8b1df105544d7f50d58bc35a688df6676dd73b4e1772952eab2a790e77"
+              },
+              {
+                "id": 7,
+                "name": "export",
+                "custom_name": null,
+                "file_offset": 512,
+                "payload_bytes": 227,
+                "framing_bytes": 3,
+                "total_bytes": 230,
+                "payload_sha256": "ff332ece6f340b3d9533cffd0602a87f416febc89cb8ab7f3f41501b34d8bb84"
+              },
+              {
+                "id": 8,
+                "name": "start",
+                "custom_name": null,
+                "file_offset": 742,
+                "payload_bytes": 1,
+                "framing_bytes": 2,
+                "total_bytes": 3,
+                "payload_sha256": "2b4c342f5433ebe591a1da77e013d1b72475562d48578dca8b84bac6651c3cb9"
+              },
+              {
+                "id": 9,
+                "name": "element",
+                "custom_name": null,
+                "file_offset": 745,
+                "payload_bytes": 68,
+                "framing_bytes": 2,
+                "total_bytes": 70,
+                "payload_sha256": "38e317c50f9c6d45309b4e6695e6b41ad439a217fa81d6fcc6e8036eeba9002a"
+              },
+              {
+                "id": 10,
+                "name": "code",
+                "custom_name": null,
+                "file_offset": 815,
+                "payload_bytes": 6994,
+                "framing_bytes": 3,
+                "total_bytes": 6997,
+                "payload_sha256": "27e9827f1eb5f085b32daafbddd221e5249e891abe3bf290871b0314480ffe3c"
+              },
+              {
+                "id": 0,
+                "name": "custom",
+                "custom_name": "name",
+                "file_offset": 7812,
+                "payload_bytes": 3347,
+                "framing_bytes": 3,
+                "total_bytes": 3350,
+                "payload_sha256": "8ddc966dd6a2e606a42906d03ce22cb49739badfb03553affc444e3472e21ee9"
+              }
+            ],
+            "type_section_sha256": "94d6184467132816c481be906d01800b21c0980592dd636fe0801e647252fc0a"
+          },
+          "type_section_sha256": "94d6184467132816c481be906d01800b21c0980592dd636fe0801e647252fc0a",
+          "debug_metadata_stripped": false,
+          "semantic_recipe_storage": "retained-runtime-data-not-debug-metadata"
+        },
+        "preparation_ns": {
+          "cli": {
+            "count": 7,
+            "min": 6291479,
+            "max": 8183261,
+            "median": 6785942,
+            "p95": 8183261
+          },
+          "assembly": {
+            "count": 7,
+            "min": 6073301,
+            "max": 8087824,
+            "median": 6910475,
+            "p95": 8087824
+          },
+          "optimization": {
+            "count": 7,
+            "min": 27039814,
+            "max": 31289361,
+            "median": 29415040,
+            "p95": 31289361
+          }
+        },
+        "compilation": {
+          "first_ns": 5407378,
+          "samples": [
+            {
+              "role": "warmup",
+              "index": 0,
+              "ns": 41417
+            },
+            {
+              "role": "warmup",
+              "index": 1,
+              "ns": 23033
+            },
+            {
+              "role": "warmup",
+              "index": 2,
+              "ns": 12894
+            },
+            {
+              "role": "sample",
+              "index": 0,
+              "ns": 12784
+            },
+            {
+              "role": "sample",
+              "index": 1,
+              "ns": 15650
+            },
+            {
+              "role": "sample",
+              "index": 2,
+              "ns": 13104
+            },
+            {
+              "role": "sample",
+              "index": 3,
+              "ns": 10880
+            },
+            {
+              "role": "sample",
+              "index": 4,
+              "ns": 10530
+            },
+            {
+              "role": "sample",
+              "index": 5,
+              "ns": 10901
+            },
+            {
+              "role": "sample",
+              "index": 6,
+              "ns": 10920
+            }
+          ],
+          "scope": "synchronous-WebAssembly.Module; repeated-identical-bytes-may-use-v8-process-cache",
+          "aggregate_ns": {
+            "count": 7,
+            "min": 10530,
+            "max": 15650,
+            "median": 10920,
+            "p95": 15650
+          }
+        },
+        "instantiation": {
+          "first_ns": 126696,
+          "samples": [
+            {
+              "role": "warmup",
+              "index": 0,
+              "ns": 69399
+            },
+            {
+              "role": "warmup",
+              "index": 1,
+              "ns": 46276
+            },
+            {
+              "role": "warmup",
+              "index": 2,
+              "ns": 45785
+            },
+            {
+              "role": "sample",
+              "index": 0,
+              "ns": 53661
+            },
+            {
+              "role": "sample",
+              "index": 1,
+              "ns": 46387
+            },
+            {
+              "role": "sample",
+              "index": 2,
+              "ns": 48761
+            },
+            {
+              "role": "sample",
+              "index": 3,
+              "ns": 39755
+            },
+            {
+              "role": "sample",
+              "index": 4,
+              "ns": 40536
+            },
+            {
+              "role": "sample",
+              "index": 5,
+              "ns": 41217
+            },
+            {
+              "role": "sample",
+              "index": 6,
+              "ns": 58559
+            }
+          ],
+          "scope": "synchronous-WebAssembly.Instance-including-module-start-and-permanent-vocabulary",
+          "aggregate_ns": {
+            "count": 7,
+            "min": 39755,
+            "max": 58559,
+            "median": 46387,
+            "p95": 58559
+          }
+        },
+        "representative_cases": [
+          {
+            "id": "CORE-03/capture-0",
+            "aggregate_ns": {
+              "begin": {
+                "count": 7,
+                "min": 3296,
+                "max": 4889,
+                "median": 3797,
+                "p95": 4889
+              },
+              "construction": {
+                "count": 7,
+                "min": 741,
+                "max": 1283,
+                "median": 992,
+                "p95": 1283
+              },
+              "invocation": {
+                "count": 7,
+                "min": 651,
+                "max": 3196,
+                "median": 751,
+                "p95": 3196
+              },
+              "reflection": {
+                "count": 7,
+                "min": 240,
+                "max": 742,
+                "median": 321,
+                "p95": 742
+              },
+              "cleanup": {
+                "count": 7,
+                "min": 2895,
+                "max": 3577,
+                "median": 2955,
+                "p95": 3577
+              },
+              "recovery": null
+            }
+          },
+          {
+            "id": "ADAPT-09/left-256",
+            "aggregate_ns": {
+              "begin": {
+                "count": 7,
+                "min": 3156,
+                "max": 13536,
+                "median": 3246,
+                "p95": 13536
+              },
+              "construction": {
+                "count": 7,
+                "min": 25338,
+                "max": 26029,
+                "median": 25588,
+                "p95": 26029
+              },
+              "invocation": {
+                "count": 7,
+                "min": 15959,
+                "max": 16631,
+                "median": 16080,
+                "p95": 16631
+              },
+              "reflection": {
+                "count": 7,
+                "min": 8296,
+                "max": 8416,
+                "median": 8346,
+                "p95": 8416
+              },
+              "cleanup": {
+                "count": 7,
+                "min": 3346,
+                "max": 3437,
+                "median": 3367,
+                "p95": 3437
+              },
+              "recovery": null
+            }
+          },
+          {
+            "id": "ADAPT-09/right-256",
+            "aggregate_ns": {
+              "begin": {
+                "count": 7,
+                "min": 3076,
+                "max": 6072,
+                "median": 3206,
+                "p95": 6072
+              },
+              "construction": {
+                "count": 7,
+                "min": 19196,
+                "max": 21911,
+                "median": 19436,
+                "p95": 21911
+              },
+              "invocation": {
+                "count": 7,
+                "min": 16000,
+                "max": 19036,
+                "median": 16290,
+                "p95": 19036
+              },
+              "reflection": {
+                "count": 7,
+                "min": 8486,
+                "max": 11140,
+                "median": 9137,
+                "p95": 11140
+              },
+              "cleanup": {
+                "count": 7,
+                "min": 3316,
+                "max": 3807,
+                "median": 3347,
+                "p95": 3807
+              },
+              "recovery": null
+            }
+          },
+          {
+            "id": "ADAPT-09/balanced-256",
+            "aggregate_ns": {
+              "begin": {
+                "count": 7,
+                "min": 2976,
+                "max": 3687,
+                "median": 3146,
+                "p95": 3687
+              },
+              "construction": {
+                "count": 7,
+                "min": 21921,
+                "max": 23093,
+                "median": 22302,
+                "p95": 23093
+              },
+              "invocation": {
+                "count": 7,
+                "min": 18895,
+                "max": 23403,
+                "median": 19787,
+                "p95": 23403
+              },
+              "reflection": {
+                "count": 7,
+                "min": 9117,
+                "max": 9668,
+                "median": 9228,
+                "p95": 9668
+              },
+              "cleanup": {
+                "count": 7,
+                "min": 3306,
+                "max": 5460,
+                "median": 3336,
+                "p95": 5460
+              },
+              "recovery": null
+            }
+          },
+          {
+            "id": "ADAPT-10/reflection-only-0",
+            "aggregate_ns": {
+              "begin": {
+                "count": 7,
+                "min": 2945,
+                "max": 3065,
+                "median": 2956,
+                "p95": 3065
+              },
+              "construction": {
+                "count": 7,
+                "min": 341,
+                "max": 371,
+                "median": 351,
+                "p95": 371
+              },
+              "invocation": null,
+              "reflection": {
+                "count": 7,
+                "min": 130,
+                "max": 160,
+                "median": 140,
+                "p95": 160
+              },
+              "cleanup": {
+                "count": 7,
+                "min": 2725,
+                "max": 2745,
+                "median": 2735,
+                "p95": 2745
+              },
+              "recovery": null
+            }
+          }
+        ],
+        "measurements": {
+          "engine_heap_peak_bytes": {
+            "status": "unknown",
+            "value": null,
+            "reason": "No scoped V8 GC/object-layout/engine-only per-case instrumentation is selected; logical accounting is not a substitute."
+          },
+          "per_case_engine_heap_bytes": {
+            "status": "unknown",
+            "value": null,
+            "reason": "No scoped V8 GC/object-layout/engine-only per-case instrumentation is selected; logical accounting is not a substitute."
+          },
+          "compiled_native_code_bytes": {
+            "status": "unknown",
+            "value": null,
+            "reason": "No scoped V8 GC/object-layout/engine-only per-case instrumentation is selected; logical accounting is not a substitute."
+          },
+          "gc_physical_cell_bytes": {
+            "status": "unknown",
+            "value": null,
+            "reason": "No scoped V8 GC/object-layout/engine-only per-case instrumentation is selected; logical accounting is not a substitute."
+          },
+          "gc_root_array_physical_bytes": {
+            "status": "unknown",
+            "value": null,
+            "reason": "No scoped V8 GC/object-layout/engine-only per-case instrumentation is selected; logical accounting is not a substitute."
+          },
+          "gc_collection_time_ns": {
+            "status": "unknown",
+            "value": null,
+            "reason": "No scoped V8 GC/object-layout/engine-only per-case instrumentation is selected; logical accounting is not a substitute."
+          },
+          "gc_reclaimed_bytes": {
+            "status": "unknown",
+            "value": null,
+            "reason": "No scoped V8 GC/object-layout/engine-only per-case instrumentation is selected; logical accounting is not a substitute."
+          },
+          "host_memory": [
+            {
+              "label": "before-feature-probes-and-main-module-compilation",
+              "scope": "entire-fresh-node-worker-including-v8-js-host-module-inputs-and-retained-observations",
+              "process_memory_usage_bytes": {
+                "rss": 48816128,
+                "heapTotal": 6619136,
+                "heapUsed": 5239160,
+                "external": 2007425,
+                "arrayBuffers": 68905
+              },
+              "linux_proc_self_vmhwm_bytes": {
+                "status": "observed",
+                "value": 49704960,
+                "unit": "bytes"
+              },
+              "attribution_to_guest_or_engine_only": false
+            },
+            {
+              "label": "ready-before-runtime-inputs",
+              "scope": "entire-fresh-node-worker-including-v8-js-host-module-inputs-and-retained-observations",
+              "process_memory_usage_bytes": {
+                "rss": 57221120,
+                "heapTotal": 6619136,
+                "heapUsed": 5485200,
+                "external": 3462531,
+                "arrayBuffers": 82179
+              },
+              "linux_proc_self_vmhwm_bytes": {
+                "status": "observed",
+                "value": 58560512,
+                "unit": "bytes"
+              },
+              "attribution_to_guest_or_engine_only": false
+            },
+            {
+              "label": "after-all-cases-and-accounted-cleanup",
+              "scope": "entire-fresh-node-worker-including-v8-js-host-module-inputs-and-retained-observations",
+              "process_memory_usage_bytes": {
+                "rss": 78712832,
+                "heapTotal": 27340800,
+                "heapUsed": 16985592,
+                "external": 3512001,
+                "arrayBuffers": 506794
+              },
+              "linux_proc_self_vmhwm_bytes": {
+                "status": "observed",
+                "value": 82268160,
+                "unit": "bytes"
+              },
+              "attribution_to_guest_or_engine_only": false
+            }
+          ],
+          "resource_usage_max_rss": {
+            "status": "unknown",
+            "value": null,
+            "reason": "Not used: inherited pre-exec parent high-water can contaminate resourceUsage().maxRSS."
+          },
+          "logical_charge_bytes_per_cell": {
+            "status": "policy-charge",
+            "value": 48,
+            "meaning": "Not an observed GC object size. Managed records use this width, separately from scratch, retained pages, and vocabulary."
+          },
+          "permanent_vocabulary": {
+            "logical_bytes": 4752,
+            "logical_cells": 99,
+            "excluded_from_transient_metrics": true
+          },
+          "gc_root_table": {
+            "entries": null,
+            "storage": "not-used",
+            "physical_bytes": {
+              "status": "unknown",
+              "value": null,
+              "reason": "No physical root-array/object-layout measurement is available."
+            }
+          },
+          "retained_linear_memory": {
+            "status": "observed",
+            "value": 131072,
+            "unit": "bytes",
+            "after_logical_cleanup": true,
+            "memory_shrink_claim": false
+          }
+        },
+        "reclamation": {
+          "logical_region": "accounted-by-cleanup",
+          "gc_collection": "deferred-and-unmeasured",
+          "reference_counting": false,
+          "immediate_physical_reclamation_claim": false
+        },
+        "protocol": {
+          "ready_observed": true,
+          "inputs_sent_after_ready": true,
+          "module_sha256_before_inputs": "d7430efa4a2d044f296d41359d3b881dcd3e05180cad1a9c3d856b5e04cafad2",
+          "ready_after_spawn_ns": 58003477,
+          "input_sent_after_spawn_ns": 58184976,
+          "input_sha256": "ffb1f26880b23ef6ce642fa21f4fbf8a22493547cb5277dbaa65c36f84c142e4"
+        }
+      },
+      {
+        "id": "managed-linear-memory/on",
+        "outcome": "executed",
+        "measured_success": true,
+        "scenarios": 52,
+        "module": {
+          "path": "managed-linear-memory/sample-0-on.wasm",
+          "bytes": 6984,
+          "sha256": "939337060e5f1736603b74cdd60f9a0f8feaa2147a7eeb83573e76efd4f12626",
+          "sections": {
+            "header_bytes": 8,
+            "framing_bytes": 21,
+            "payload_bytes": 6955,
+            "total_bytes": 6984,
+            "entries": [
+              {
+                "id": 1,
+                "name": "type",
+                "custom_name": null,
+                "file_offset": 8,
+                "payload_bytes": 108,
+                "framing_bytes": 2,
+                "total_bytes": 110,
+                "payload_sha256": "b8587ec906d68aa3f1c74f8ba9365a3d387f5776515087fd6d4fc7123bf2498f"
+              },
+              {
+                "id": 3,
+                "name": "function",
+                "custom_name": null,
+                "file_offset": 118,
+                "payload_bytes": 117,
+                "framing_bytes": 2,
+                "total_bytes": 119,
+                "payload_sha256": "a5c6b0555ff24e68e4bf3f3ede86e4f19f2128a993686eabbc74e4e60d246601"
+              },
+              {
+                "id": 4,
+                "name": "table",
+                "custom_name": null,
+                "file_offset": 237,
+                "payload_bytes": 5,
+                "framing_bytes": 2,
+                "total_bytes": 7,
+                "payload_sha256": "8945eeae725aafda39a0e52aba608cf844862230467ec52fffb0785d74180b09"
+              },
+              {
+                "id": 5,
+                "name": "memory",
+                "custom_name": null,
+                "file_offset": 244,
+                "payload_bytes": 4,
+                "framing_bytes": 2,
+                "total_bytes": 6,
+                "payload_sha256": "3088351651f3c2e96675774953f0d2949a8d088a0064fe7938ad535ee7df299c"
+              },
+              {
+                "id": 6,
+                "name": "global",
+                "custom_name": null,
+                "file_offset": 250,
+                "payload_bytes": 214,
+                "framing_bytes": 3,
+                "total_bytes": 217,
+                "payload_sha256": "f004d8c67e720758f495b6cd705a26d52c0b4d73ec891b5238bca91843471d39"
+              },
+              {
+                "id": 7,
+                "name": "export",
+                "custom_name": null,
+                "file_offset": 467,
+                "payload_bytes": 227,
+                "framing_bytes": 3,
+                "total_bytes": 230,
+                "payload_sha256": "96f0d95d2f41d95df4fb61c44a470b7e74cd3e0567793b2b272ed60d2f576dac"
+              },
+              {
+                "id": 8,
+                "name": "start",
+                "custom_name": null,
+                "file_offset": 697,
+                "payload_bytes": 1,
+                "framing_bytes": 2,
+                "total_bytes": 3,
+                "payload_sha256": "ca358758f6d27e6cf45272937977a748fd88391db679ceda7dc7bf1f005ee879"
+              },
+              {
+                "id": 9,
+                "name": "element",
+                "custom_name": null,
+                "file_offset": 700,
+                "payload_bytes": 58,
+                "framing_bytes": 2,
+                "total_bytes": 60,
+                "payload_sha256": "79fb184c884b1c0ab47dcf335586a7a2f393d8e01d45de1d4e251ac5fb337f6d"
+              },
+              {
+                "id": 10,
+                "name": "code",
+                "custom_name": null,
+                "file_offset": 760,
+                "payload_bytes": 6221,
+                "framing_bytes": 3,
+                "total_bytes": 6224,
+                "payload_sha256": "94f0d4be297bb1be91461eb866e003558b43da3a817ef4b59cefc6ca0a7008d0"
+              }
+            ],
+            "type_section_sha256": "b8587ec906d68aa3f1c74f8ba9365a3d387f5776515087fd6d4fc7123bf2498f"
+          },
+          "type_section_sha256": "b8587ec906d68aa3f1c74f8ba9365a3d387f5776515087fd6d4fc7123bf2498f",
+          "debug_metadata_stripped": true,
+          "semantic_recipe_storage": "retained-runtime-data-not-debug-metadata"
+        },
+        "preparation_ns": {
+          "cli": {
+            "count": 7,
+            "min": 6291479,
+            "max": 8183261,
+            "median": 6785942,
+            "p95": 8183261
+          },
+          "assembly": {
+            "count": 7,
+            "min": 6073301,
+            "max": 8087824,
+            "median": 6910475,
+            "p95": 8087824
+          },
+          "optimization": {
+            "count": 7,
+            "min": 27039814,
+            "max": 31289361,
+            "median": 29415040,
+            "p95": 31289361
+          }
+        },
+        "compilation": {
+          "first_ns": 5354469,
+          "samples": [
+            {
+              "role": "warmup",
+              "index": 0,
+              "ns": 41448
+            },
+            {
+              "role": "warmup",
+              "index": 1,
+              "ns": 22291
+            },
+            {
+              "role": "warmup",
+              "index": 2,
+              "ns": 12413
+            },
+            {
+              "role": "sample",
+              "index": 0,
+              "ns": 11611
+            },
+            {
+              "role": "sample",
+              "index": 1,
+              "ns": 14296
+            },
+            {
+              "role": "sample",
+              "index": 2,
+              "ns": 13275
+            },
+            {
+              "role": "sample",
+              "index": 3,
+              "ns": 9368
+            },
+            {
+              "role": "sample",
+              "index": 4,
+              "ns": 9337
+            },
+            {
+              "role": "sample",
+              "index": 5,
+              "ns": 10189
+            },
+            {
+              "role": "sample",
+              "index": 6,
+              "ns": 9278
+            }
+          ],
+          "scope": "synchronous-WebAssembly.Module; repeated-identical-bytes-may-use-v8-process-cache",
+          "aggregate_ns": {
+            "count": 7,
+            "min": 9278,
+            "max": 14296,
+            "median": 10189,
+            "p95": 14296
+          }
+        },
+        "instantiation": {
+          "first_ns": 149188,
+          "samples": [
+            {
+              "role": "warmup",
+              "index": 0,
+              "ns": 75340
+            },
+            {
+              "role": "warmup",
+              "index": 1,
+              "ns": 49783
+            },
+            {
+              "role": "warmup",
+              "index": 2,
+              "ns": 52207
+            },
+            {
+              "role": "sample",
+              "index": 0,
+              "ns": 52668
+            },
+            {
+              "role": "sample",
+              "index": 1,
+              "ns": 53209
+            },
+            {
+              "role": "sample",
+              "index": 2,
+              "ns": 45405
+            },
+            {
+              "role": "sample",
+              "index": 3,
+              "ns": 43471
+            },
+            {
+              "role": "sample",
+              "index": 4,
+              "ns": 45145
+            },
+            {
+              "role": "sample",
+              "index": 5,
+              "ns": 44182
+            },
+            {
+              "role": "sample",
+              "index": 6,
+              "ns": 43741
+            }
+          ],
+          "scope": "synchronous-WebAssembly.Instance-including-module-start-and-permanent-vocabulary",
+          "aggregate_ns": {
+            "count": 7,
+            "min": 43471,
+            "max": 53209,
+            "median": 45145,
+            "p95": 53209
+          }
+        },
+        "representative_cases": [
+          {
+            "id": "CORE-03/capture-0",
+            "aggregate_ns": {
+              "begin": {
+                "count": 7,
+                "min": 3166,
+                "max": 6141,
+                "median": 3467,
+                "p95": 6141
+              },
+              "construction": {
+                "count": 7,
+                "min": 691,
+                "max": 1343,
+                "median": 892,
+                "p95": 1343
+              },
+              "invocation": {
+                "count": 7,
+                "min": 611,
+                "max": 922,
+                "median": 761,
+                "p95": 922
+              },
+              "reflection": {
+                "count": 7,
+                "min": 250,
+                "max": 731,
+                "median": 361,
+                "p95": 731
+              },
+              "cleanup": {
+                "count": 7,
+                "min": 2876,
+                "max": 3577,
+                "median": 2935,
+                "p95": 3577
+              },
+              "recovery": null
+            }
+          },
+          {
+            "id": "ADAPT-09/left-256",
+            "aggregate_ns": {
+              "begin": {
+                "count": 7,
+                "min": 3357,
+                "max": 25578,
+                "median": 4058,
+                "p95": 25578
+              },
+              "construction": {
+                "count": 7,
+                "min": 20979,
+                "max": 23544,
+                "median": 21160,
+                "p95": 23544
+              },
+              "invocation": {
+                "count": 7,
+                "min": 16010,
+                "max": 19036,
+                "median": 16581,
+                "p95": 19036
+              },
+              "reflection": {
+                "count": 7,
+                "min": 7795,
+                "max": 8516,
+                "median": 8145,
+                "p95": 8516
+              },
+              "cleanup": {
+                "count": 7,
+                "min": 3347,
+                "max": 3737,
+                "median": 3476,
+                "p95": 3737
+              },
+              "recovery": null
+            }
+          },
+          {
+            "id": "ADAPT-09/right-256",
+            "aggregate_ns": {
+              "begin": {
+                "count": 7,
+                "min": 3156,
+                "max": 3437,
+                "median": 3276,
+                "p95": 3437
+              },
+              "construction": {
+                "count": 7,
+                "min": 13576,
+                "max": 15469,
+                "median": 13996,
+                "p95": 15469
+              },
+              "invocation": {
+                "count": 7,
+                "min": 15379,
+                "max": 17463,
+                "median": 15859,
+                "p95": 17463
+              },
+              "reflection": {
+                "count": 7,
+                "min": 8025,
+                "max": 8676,
+                "median": 8236,
+                "p95": 8676
+              },
+              "cleanup": {
+                "count": 7,
+                "min": 3296,
+                "max": 3366,
+                "median": 3336,
+                "p95": 3366
+              },
+              "recovery": null
+            }
+          },
+          {
+            "id": "ADAPT-09/balanced-256",
+            "aggregate_ns": {
+              "begin": {
+                "count": 7,
+                "min": 3126,
+                "max": 3968,
+                "median": 3256,
+                "p95": 3968
+              },
+              "construction": {
+                "count": 7,
+                "min": 16681,
+                "max": 23454,
+                "median": 16981,
+                "p95": 23454
+              },
+              "invocation": {
+                "count": 7,
+                "min": 18665,
+                "max": 23414,
+                "median": 19236,
+                "p95": 23414
+              },
+              "reflection": {
+                "count": 7,
+                "min": 8386,
+                "max": 8797,
+                "median": 8576,
+                "p95": 8797
+              },
+              "cleanup": {
+                "count": 7,
+                "min": 3306,
+                "max": 3417,
+                "median": 3326,
+                "p95": 3417
+              },
+              "recovery": null
+            }
+          },
+          {
+            "id": "ADAPT-10/reflection-only-0",
+            "aggregate_ns": {
+              "begin": {
+                "count": 7,
+                "min": 2935,
+                "max": 2966,
+                "median": 2935,
+                "p95": 2966
+              },
+              "construction": {
+                "count": 7,
+                "min": 331,
+                "max": 351,
+                "median": 341,
+                "p95": 351
+              },
+              "invocation": null,
+              "reflection": {
+                "count": 7,
+                "min": 130,
+                "max": 140,
+                "median": 131,
+                "p95": 140
+              },
+              "cleanup": {
+                "count": 7,
+                "min": 2715,
+                "max": 2745,
+                "median": 2726,
+                "p95": 2745
+              },
+              "recovery": null
+            }
+          }
+        ],
+        "measurements": {
+          "engine_heap_peak_bytes": {
+            "status": "unknown",
+            "value": null,
+            "reason": "No scoped V8 GC/object-layout/engine-only per-case instrumentation is selected; logical accounting is not a substitute."
+          },
+          "per_case_engine_heap_bytes": {
+            "status": "unknown",
+            "value": null,
+            "reason": "No scoped V8 GC/object-layout/engine-only per-case instrumentation is selected; logical accounting is not a substitute."
+          },
+          "compiled_native_code_bytes": {
+            "status": "unknown",
+            "value": null,
+            "reason": "No scoped V8 GC/object-layout/engine-only per-case instrumentation is selected; logical accounting is not a substitute."
+          },
+          "gc_physical_cell_bytes": {
+            "status": "unknown",
+            "value": null,
+            "reason": "No scoped V8 GC/object-layout/engine-only per-case instrumentation is selected; logical accounting is not a substitute."
+          },
+          "gc_root_array_physical_bytes": {
+            "status": "unknown",
+            "value": null,
+            "reason": "No scoped V8 GC/object-layout/engine-only per-case instrumentation is selected; logical accounting is not a substitute."
+          },
+          "gc_collection_time_ns": {
+            "status": "unknown",
+            "value": null,
+            "reason": "No scoped V8 GC/object-layout/engine-only per-case instrumentation is selected; logical accounting is not a substitute."
+          },
+          "gc_reclaimed_bytes": {
+            "status": "unknown",
+            "value": null,
+            "reason": "No scoped V8 GC/object-layout/engine-only per-case instrumentation is selected; logical accounting is not a substitute."
+          },
+          "host_memory": [
+            {
+              "label": "before-feature-probes-and-main-module-compilation",
+              "scope": "entire-fresh-node-worker-including-v8-js-host-module-inputs-and-retained-observations",
+              "process_memory_usage_bytes": {
+                "rss": 48435200,
+                "heapTotal": 6619136,
+                "heapUsed": 5238656,
+                "external": 2007425,
+                "arrayBuffers": 68905
+              },
+              "linux_proc_self_vmhwm_bytes": {
+                "status": "observed",
+                "value": 49778688,
+                "unit": "bytes"
+              },
+              "attribution_to_guest_or_engine_only": false
+            },
+            {
+              "label": "ready-before-runtime-inputs",
+              "scope": "entire-fresh-node-worker-including-v8-js-host-module-inputs-and-retained-observations",
+              "process_memory_usage_bytes": {
+                "rss": 57114624,
+                "heapTotal": 6619136,
+                "heapUsed": 5480384,
+                "external": 3458177,
+                "arrayBuffers": 77825
+              },
+              "linux_proc_self_vmhwm_bytes": {
+                "status": "observed",
+                "value": 59539456,
+                "unit": "bytes"
+              },
+              "attribution_to_guest_or_engine_only": false
+            },
+            {
+              "label": "after-all-cases-and-accounted-cleanup",
+              "scope": "entire-fresh-node-worker-including-v8-js-host-module-inputs-and-retained-observations",
+              "process_memory_usage_bytes": {
+                "rss": 81416192,
+                "heapTotal": 27340800,
+                "heapUsed": 17183928,
+                "external": 3507647,
+                "arrayBuffers": 502452
+              },
+              "linux_proc_self_vmhwm_bytes": {
+                "status": "observed",
+                "value": 86007808,
+                "unit": "bytes"
+              },
+              "attribution_to_guest_or_engine_only": false
+            }
+          ],
+          "resource_usage_max_rss": {
+            "status": "unknown",
+            "value": null,
+            "reason": "Not used: inherited pre-exec parent high-water can contaminate resourceUsage().maxRSS."
+          },
+          "logical_charge_bytes_per_cell": {
+            "status": "policy-charge",
+            "value": 48,
+            "meaning": "Not an observed GC object size. Managed records use this width, separately from scratch, retained pages, and vocabulary."
+          },
+          "permanent_vocabulary": {
+            "logical_bytes": 4752,
+            "logical_cells": 99,
+            "excluded_from_transient_metrics": true
+          },
+          "gc_root_table": {
+            "entries": null,
+            "storage": "not-used",
+            "physical_bytes": {
+              "status": "unknown",
+              "value": null,
+              "reason": "No physical root-array/object-layout measurement is available."
+            }
+          },
+          "retained_linear_memory": {
+            "status": "observed",
+            "value": 131072,
+            "unit": "bytes",
+            "after_logical_cleanup": true,
+            "memory_shrink_claim": false
+          }
+        },
+        "reclamation": {
+          "logical_region": "accounted-by-cleanup",
+          "gc_collection": "deferred-and-unmeasured",
+          "reference_counting": false,
+          "immediate_physical_reclamation_claim": false
+        },
+        "protocol": {
+          "ready_observed": true,
+          "inputs_sent_after_ready": true,
+          "module_sha256_before_inputs": "939337060e5f1736603b74cdd60f9a0f8feaa2147a7eeb83573e76efd4f12626",
+          "ready_after_spawn_ns": 57912187,
+          "input_sent_after_spawn_ns": 58035587,
+          "input_sha256": "ffb1f26880b23ef6ce642fa21f4fbf8a22493547cb5277dbaa65c36f84c142e4"
+        }
+      }
+    ],
+    "adapt08": {
+      "correctness": "passed",
+      "observed": {
+        "stage": "backend-interface-check",
+        "outcome": "reject",
+        "artifact_emitted": false,
+        "guest_requests": 0,
+        "protected_operations": 0
+      },
+      "exit": 0,
+      "stdout_sha256": "945061e64ac3c58ac96b550ffdf11c7d1d7c770b608b91ef595c78c3a58f9c41",
+      "representations": [
+        "wasm-gc",
+        "managed-linear-memory"
+      ],
+      "command": {
+        "label": "adapt08-reject-owner-slot",
+        "binary": "/nix/store/vfgvjgcs6m0w69nymgg307csxfkyrf39-noble-0.0.0/bin/noble",
+        "args": [
+          "wasm-experiment",
+          "reject-owner-slot"
+        ],
+        "elapsed_ns": 4347329,
+        "exit": 0,
+        "signal": null,
+        "error": null,
+        "stdout": {
+          "path": "logs/003-adapt08-reject-owner-slot.stdout",
+          "bytes": 124,
+          "sha256": "945061e64ac3c58ac96b550ffdf11c7d1d7c770b608b91ef595c78c3a58f9c41"
+        },
+        "stderr": {
+          "path": "logs/003-adapt08-reject-owner-slot.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      }
+    },
+    "adapt12": {
+      "correctness": "passed",
+      "synthetic_only": true,
+      "backend_selected_by_fixture": false,
+      "same_validator_as_actual_results": true,
+      "seed_report_sha256": "87b9535e9bb69d4860be14d132a72d1f661ffbbb0e830f5f750241c709a0589d",
+      "controls": [
+        {
+          "id": "ADAPT-12/0",
+          "synthetic": true,
+          "transformation": "one-passing-candidate-and-evidenced-blocker",
+          "canonical_variant": {
+            "working_candidates": 1,
+            "m3_execution_gates": "passed",
+            "other_candidate": "evidenced-blocker",
+            "metrics": "scoped-or-explicitly-unknown",
+            "pins": "recorded",
+            "outcome": "eligible-for-selection"
+          },
+          "fixture_sha256": "11dea03c98b8e6c332b5c30a3fd3cf6efead084cf43f71e192a469d44419ae75",
+          "expected": "eligible-for-selection",
+          "fixture_artifact": {
+            "path": "policy-controls/adapt12-0.json",
+            "bytes": 12575134,
+            "sha256": "f666ff9ed9d90aec2831f37b9da7aba511e3b38f29bdc1791638392673f212be"
+          },
+          "actual": "eligible-for-selection",
+          "decision": {
+            "valid": true,
+            "outcome": "eligible-for-selection",
+            "eligible_for_selection": true,
+            "eligible_representations": [
+              "wasm-gc"
+            ],
+            "m3_execution_gates": "passed",
+            "errors": [],
+            "execution_failures": []
+          }
+        },
+        {
+          "id": "ADAPT-12/1",
+          "synthetic": true,
+          "transformation": "no-executed-working-candidate",
+          "canonical_variant": {
+            "working_candidates": 0,
+            "m3_execution_gates": "not-run",
+            "other_candidate": "evidenced-blocker",
+            "metrics": "unknown",
+            "pins": "recorded",
+            "outcome": "cannot-close-M3"
+          },
+          "fixture_sha256": "a5444f7de6ba02d554b4ba8f2b85b6b9d3c96375c341af0aad8d49f06d2cc701",
+          "expected": "cannot-close-M3",
+          "fixture_artifact": {
+            "path": "policy-controls/adapt12-1.json",
+            "bytes": 109012,
+            "sha256": "0a68a8d728508650de7a5a3e51d33f4ca80f8828fccb843fe937db7d6c3c74bc"
+          },
+          "actual": "cannot-close-M3",
+          "decision": {
+            "valid": true,
+            "outcome": "cannot-close-M3",
+            "eligible_for_selection": false,
+            "eligible_representations": [],
+            "m3_execution_gates": "not-run",
+            "errors": [],
+            "execution_failures": []
+          }
+        },
+        {
+          "id": "ADAPT-12/2",
+          "synthetic": true,
+          "transformation": "unsupported-as-fastest-with-fabricated-memory-zero",
+          "canonical_variant": {
+            "working_candidates": 1,
+            "m3_execution_gates": "passed",
+            "other_candidate": "unsupported-recorded-as-fastest",
+            "metrics": "fabricated-zero",
+            "pins": "recorded",
+            "outcome": "reject-report"
+          },
+          "fixture_sha256": "41263d54a513deb2b068c06fcde35e54dc2770454f8e167b3ae4351e2bc65938",
+          "expected": "reject-report",
+          "fixture_artifact": {
+            "path": "policy-controls/adapt12-2.json",
+            "bytes": 12575070,
+            "sha256": "a4daf27ee50e6c432ff1edce7fcb745461b57ef315f6ff12419571a791d2ff50"
+          },
+          "actual": "reject-report",
+          "decision": {
+            "valid": false,
+            "outcome": "reject-report",
+            "eligible_for_selection": false,
+            "eligible_representations": [],
+            "m3_execution_gates": "passed",
+            "errors": [
+              "wasm-gc/off: unsupported engine_heap_peak_bytes instrumentation must be explicitly unknown",
+              "managed-linear-memory/off: unaccounted/unsupported outcome"
+            ],
+            "execution_failures": []
+          }
+        },
+        {
+          "id": "ADAPT-12/3",
+          "synthetic": true,
+          "transformation": "missing-immutable-pin",
+          "canonical_variant": {
+            "working_candidates": 1,
+            "m3_execution_gates": "passed",
+            "other_candidate": "evidenced-blocker",
+            "metrics": "present",
+            "pins": "missing",
+            "outcome": "reject-report"
+          },
+          "fixture_sha256": "fdbabbc48b861e021681495467d814c3757e2b1191c9ea9ec8fe6db2b2686949",
+          "expected": "reject-report",
+          "fixture_artifact": {
+            "path": "policy-controls/adapt12-3.json",
+            "bytes": 12573871,
+            "sha256": "e97143d703af6d48c9dd2a5997c40d5080f8eca9c585f4c7ad34649df1c55218"
+          },
+          "actual": "reject-report",
+          "decision": {
+            "valid": false,
+            "outcome": "reject-report",
+            "eligible_for_selection": false,
+            "eligible_representations": [],
+            "m3_execution_gates": "passed",
+            "errors": [
+              "missing/mismatched tool pin: node",
+              "missing V8/CLI byte identity"
+            ],
+            "execution_failures": []
+          }
+        },
+        {
+          "id": "ADAPT-12/4",
+          "synthetic": true,
+          "transformation": "retained-fast-but-incorrect-executions",
+          "canonical_variant": {
+            "working_candidates": 1,
+            "m3_execution_gates": "failed",
+            "other_candidate": "evidenced-blocker",
+            "metrics": "fast",
+            "pins": "recorded",
+            "outcome": "cannot-close-M3"
+          },
+          "fixture_sha256": "c8ce9cbe1ee438a9633da34fe48fe82f36fc1736e77b71f67aff1613859537d8",
+          "expected": "cannot-close-M3",
+          "fixture_artifact": {
+            "path": "policy-controls/adapt12-4.json",
+            "bytes": 12575298,
+            "sha256": "9b21cf3fe5a7b702952d069ec60fbe6075902b146987fc7643630ada1f702ce9"
+          },
+          "actual": "cannot-close-M3",
+          "decision": {
+            "valid": true,
+            "outcome": "cannot-close-M3",
+            "eligible_for_selection": false,
+            "eligible_representations": [],
+            "m3_execution_gates": "failed",
+            "errors": [],
+            "execution_failures": [
+              "wasm-gc/off: CORE-03/capture-0/sample-0: complete ordered output differs from oracle",
+              "wasm-gc/on: CORE-03/capture-0/sample-0: complete ordered output differs from oracle"
+            ]
+          }
+        }
+      ]
+    },
+    "trust_boundaries": [
+      "Rust CLI preparation, checked lowering, and owned WAT runtime source are byte-bound; this harness proves no compiler/backend correspondence theorem.",
+      "Owned WAT fragments are executable runtime source outside Rust extraction, with proof status open, not compiler-inventoried Rust definitions.",
+      "Pinned wasm-tools, Binaryen, Node/V8, the OS, hardware, and this JavaScript oracle/measurement harness are explicit trusted tools.",
+      "The supplied native CLI executable is byte-bound; correspondence between that executable and source is not established by this runner.",
+      "Empty Wasm imports prevent guest host requests/compiler callbacks; process isolation is an experimental execution boundary, not a security sandbox proof.",
+      "Logical 48-byte cell charges and cleared roots do not establish physical GC size, prompt reclamation, engine-only peak memory, resource ownership, ABI, or component conformance.",
+      "Only a fixed checked pure vocabulary/interface set is compiled; this is not a general M4 source compiler, production JavaScript shell, or M5 resource/ABI completion."
+    ]
+  },
+  "implementation": {
+    "receipt": "implementation.json",
+    "receipt_sha256": "44ce343c1ee94c7ae0ee9b2e890a8ba7fdb86d3038eda7f8aae21e0122a0b12c",
+    "source_revision": "sha256:7ac848d718dfe2aa830fae6f10c67ff224a6a2604746964fd70e168e21aca05f",
+    "result": "passed",
+    "local_functions": 112,
+    "local_opaque_functions": 0,
+    "external_function_models": [
+      "noble_wasm.I64.Insts.CoreConvertFromU32.from",
+      "noble_wasm.Usize.Insts.CoreConvertTryFromU32TryFromIntError.try_from",
+      "noble_wasm.U64.Insts.CoreConvertTryFromUsizeTryFromIntError.try_from",
+      "noble_wasm.U8.Insts.CoreConvertTryFromU64TryFromIntError.try_from",
+      "noble_wasm.core.num.I64.unsigned_abs",
+      "noble_wasm.core.slice.Slice.last",
+      "noble_wasm.core.str.Str.as_bytes",
+      "noble_wasm.alloc.vec.Vec.pop",
+      "noble_wasm.alloc.vec.Vec.is_empty",
+      "noble_wasm.noble_kernel.acceptance.check",
+      "noble_wasm.noble_kernel.contracts.environment",
+      "noble_wasm.noble_kernel.types.Ty.Insts.CoreCloneClone.clone",
+      "noble_wasm.noble_kernel.types.EffSet.is_empty"
+    ],
+    "required_strict_bridge_theorems": [
+      "noble_wasm.KernelBridge.fromTy_toTy",
+      "noble_wasm.KernelBridge.toTy_fromTy",
+      "noble_wasm.KernelBridge.fromCandidate_toCandidate",
+      "noble_wasm.KernelBridge.toCandidate_fromCandidate",
+      "noble_wasm.KernelBridge.fromRequest_toRequest",
+      "noble_wasm.KernelBridge.toRequest_fromRequest",
+      "noble_wasm.KernelBridge.fromEnv_toEnv",
+      "noble_wasm.KernelBridge.toEnv_fromEnv",
+      "noble_wasm.KernelBridge.fromOutcome_toOutcome",
+      "noble_wasm.KernelBridge.toOutcome_fromOutcome",
+      "noble_wasm.KernelBridge.check_from_inputs"
+    ],
+    "strict_axioms": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "native_literal_bounds": 176,
+    "abstract_standard_types": [
+      {
+        "classification": "pinned abstract formatting-state type; no formatting fidelity or strict proof claim",
+        "declaration": "Aeneas.Std.core.fmt.Formatter",
+        "module": "Aeneas.Std.Core.Fmt",
+        "reachable_from_compile": false,
+        "type": "Type"
+      }
+    ],
+    "assumptions": [
+      "Pinned Charon/Aeneas translation and Lean kernel/tool binaries are trusted.",
+      "The separately extracted actual kernel is connected by a transparent total representation bridge.",
+      "Handwritten external models and the pinned Aeneas library remain explicit semantic trust boundaries.",
+      "Inherited kernel copy/format boundaries are enumerated, not claimed to be extracted Rust bodies.",
+      "Allocation identity, spare capacity, allocation failure and formatting layout are abstracted by the inherited models.",
+      "The pinned abstract Formatter type is audited separately and forbidden from compile dependencies and strict bridge theorems.",
+      "Dependency package build caches are reused only with clean sources at the exact locked revisions; Noble project build products are fresh.",
+      "Native evaluation, when reported, is restricted to generated/inherited literal UTF-8 byte-array size bounds and is not a strict proof equation."
+    ],
+    "non_claims": [
+      "No universal Rust-to-Lean or checked-lowering refinement theorem.",
+      "No generated WAT/Wasm, optimizer, engine, loader or runtime correctness theorem.",
+      "No runtime experiment result, backend selection, safety certification or component/WIT ABI claim."
+    ]
+  },
+  "assurance": {
+    "strict_rust_rules": 73,
+    "compiler_units": 17,
+    "production_paths": 1304,
+    "open_source_body_obligations": 549,
+    "quality_receipt": "9c39078041b6866b7c02ce60ef0ccb63f44c11ef10e72b7155a44cdacf945a23",
+    "source_inventory": {
+      "counts": {
+        "bodies": 549,
+        "compiler_production_items": 1337,
+        "configurations": 1,
+        "dependencies": 5,
+        "excepted": 0,
+        "extracted": 0,
+        "future_components": 4,
+        "generated": 512,
+        "macro_origins": 24,
+        "modeled": 0,
+        "open": 549,
+        "open_refinement": 549,
+        "proved": 0,
+        "reviewed_subjects": 1304,
+        "structural": 243,
+        "test_subjects": 666,
+        "tools": 13,
+        "units": 17
+      },
+      "diagnostics": [],
+      "non_claims": [
+        "inventory-classification-is-not-refinement",
+        "open-work-is-not-verified",
+        "extraction-status-is-not-a-proof",
+        "structural-and-generated-subjects-are-accounting-not-noble-bodies",
+        "not-whole-project-verification"
+      ],
+      "valid": true
+    },
+    "native_inventory": {
+      "counts": {
+        "compiler_tools": 5,
+        "fixture_packages": 8,
+        "foreign_items": 0,
+        "foreign_libraries": 0,
+        "function_safety_facts": 0,
+        "production_dependencies": 0,
+        "production_items": 2109,
+        "required_miri_tests": 1,
+        "reviewed_unsafe_sites": 0,
+        "safety_arguments": 4,
+        "target_assumptions": 1,
+        "units": 17,
+        "unsafe_sites": 0
+      },
+      "diagnostics": [],
+      "non_claims": [
+        "native-assurance-inventory-is-not-soundness",
+        "dependency-records-are-not-dependency-safety",
+        "miri-results-are-not-refinement",
+        "empty-owned-unsafe-scope-requires-accounting",
+        "not-m1-acceptance"
+      ],
+      "valid": true
+    },
+    "nix_runtime_build": {
+      "schema": "noble-m3-runtime-build/v1",
+      "result": "passed",
+      "command": [
+        "nix",
+        "build",
+        "--no-link",
+        "--print-out-paths",
+        "--builders",
+        "",
+        "--max-jobs",
+        "1",
+        "--cores",
+        "1",
+        "path:/tmp/noble-m3-final-source-EhZsqz#packages.x86_64-linux.m3-wasm"
+      ],
+      "snapshot": "/tmp/noble-m3-final-source-EhZsqz",
+      "elapsed_ms": 75790,
+      "app": "/nix/store/ypkz4s8812a6hjyxyvx4lcsna6whq9ah-m3-wasm/bin/m3-wasm",
+      "app_derivation": "/nix/store/7bmwrmi0qyvpddznivhfvxdw50gvix91-m3-wasm.drv",
+      "noble": "/nix/store/vfgvjgcs6m0w69nymgg307csxfkyrf39-noble-0.0.0/bin/noble",
+      "noble_derivation": "/nix/store/lh5cycyman4v4bnbxg6ax1hys40vrlwk-noble-0.0.0.drv",
+      "noble_sha256": "d8e1f94a551a7355801702df4917f3723b708860fc82a559ceea64707afa49e8",
+      "note": "Filtered path copy includes untracked task files; Rust source and configuration binding is checked separately against the runtime and extraction receipts."
+    },
+    "nix_checks": {
+      "schema": "noble-m3-flake-check/v1",
+      "snapshot": "/tmp/noble-m3-check-source-SYnMdd",
+      "command": [
+        "nix",
+        "flake",
+        "check",
+        "-L",
+        "path:/tmp/noble-m3-check-source-SYnMdd",
+        "--no-write-lock-file",
+        "--builders",
+        "",
+        "--max-jobs",
+        "1",
+        "--cores",
+        "1"
+      ],
+      "exit": 0,
+      "elapsed_ms": 373411,
+      "result": "passed",
+      "scope": "All flake checks on the final implementation and synchronized specifications before lifecycle archive and evidence finalization.",
+      "excluded_copy_components": [
+        ".git",
+        ".pi",
+        ".lake",
+        ".octet",
+        "target",
+        "node_modules",
+        "result"
+      ],
+      "checks": {
+        "boundary-controls": {
+          "derivation": "/nix/store/4ngbzqbv8a2jx5a27hfx0pbv9qdrqmlr-noble-boundary-controls.drv",
+          "output": "/nix/store/3r507p3l6f21bz8pcpgq46qsh5v17l4r-noble-boundary-controls"
+        },
+        "cairn": {
+          "derivation": "/nix/store/3dh1bzdl7vmjbn808v444bvpz6ih0mnn-noble-cairn.drv",
+          "output": "/nix/store/kl7iaknjdfgnvk8hsbyn5kpp9pa68iz7-noble-cairn"
+        },
+        "clippy": {
+          "derivation": "/nix/store/ypwyf4gdwcyq9kskmcfhchpkr4lm0b6b-noble-clippy.drv",
+          "output": "/nix/store/alw2d0vq0drrlrbqjc12wbz1df31s6da-noble-clippy"
+        },
+        "documents": {
+          "derivation": "/nix/store/yh6jxp458v5i44z43psd6cxa88wl5s8n-noble-documents.drv",
+          "output": "/nix/store/dw9fqciqdk2g7iym7xzzk6gzyqdwv6v1-noble-documents"
+        },
+        "format": {
+          "derivation": "/nix/store/n1zd12igh67g2bhcrm78ijffxv12jjqc-noble-format.drv",
+          "output": "/nix/store/zbkbb1csz70gw6l1inyqn6zdg645jmqg-noble-format"
+        },
+        "native-assurance": {
+          "derivation": "/nix/store/gn4avwqhnb9xq7jpc3rih12rqjai8gyp-noble-native-assurance.drv",
+          "output": "/nix/store/fy9pn7gh6y6xd4jbw83vwk1xmz1ajak7-noble-native-assurance"
+        },
+        "octet": {
+          "derivation": "/nix/store/dd8rzgc70h71rqdha08m0b80mrhvi1k9-noble-octet-deny-all.drv",
+          "output": "/nix/store/fcfrlw4a15fswsnd2k16x2414k6jw2wm-noble-octet-deny-all"
+        },
+        "policy": {
+          "derivation": "/nix/store/y80xpy1p2v7ipmbiywnwvisy38rra88q-noble-policy-freshness.drv",
+          "output": "/nix/store/1rnscbi4kbzyv46hjydmhbqqh4a8vbl2-noble-policy-freshness"
+        },
+        "rust-tests": {
+          "derivation": "/nix/store/m9h40qmvwfm8krx8w087jx89cm7b378v-noble-rust-tests.drv",
+          "output": "/nix/store/hnwwrmxqk6nqabj0zr2m0hb6i8b1sd6f-noble-rust-tests"
+        },
+        "source-coverage": {
+          "derivation": "/nix/store/fwq0ncrchrkczgf07fjczqw5j1x7lgwb-noble-source-coverage.drv",
+          "output": "/nix/store/2v0ablhzq864fgpk8minw7xs09vwkwg7-noble-source-coverage"
+        },
+        "tool-overrides": {
+          "derivation": "/nix/store/kz5lzg8l7zpw962bs9dklblm5mxvw0mc-noble-tool-overrides.drv",
+          "output": "/nix/store/f3w6bp8y1qgw9hqicx2cm117yf212kzj-noble-tool-overrides"
+        },
+        "tool-selection": {
+          "derivation": "/nix/store/z6pivrl223dym58y729m82m6p54sng0k-noble-tool-selection.drv",
+          "output": "/nix/store/rqyjnghbnfrsqhq13ygckz1djgkb28cv-noble-tool-selection"
+        },
+        "tool-versions": {
+          "derivation": "/nix/store/fxhv78c37nydg74p119qlk4aprcb7qh4-noble-tool-versions.drv",
+          "output": "/nix/store/rhra2djw8867m2dz0kq5n6fh4pjgykd9-noble-tool-versions"
+        }
+      },
+      "logs": {
+        "nix-check.stdout": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "nix-check.stderr": {
+          "bytes": 44145,
+          "sha256": "93df8eb82cf48057baca4d59dfcf2496c0b6638f54d9526fc6c6e0752f30a2be"
+        }
+      }
+    },
+    "boundary_controls": {
+      "result": "passed",
+      "positive_baselines": 2,
+      "negative_controls": 16,
+      "observed_cases": [
+        {
+          "id": "acyclic-shell",
+          "result": "\"boundary control acyclic-shell: passed (not M1 acceptance)\"",
+          "deny_exit": 0
+        },
+        {
+          "id": "clock",
+          "result": "\"boundary control clock: passed (not M1 acceptance)\"",
+          "deny_exit": 2
+        },
+        {
+          "id": "environment",
+          "result": "\"boundary control environment: passed (not M1 acceptance)\"",
+          "deny_exit": 2
+        },
+        {
+          "id": "filesystem",
+          "result": "\"boundary control filesystem: passed (not M1 acceptance)\"",
+          "deny_exit": 2
+        },
+        {
+          "id": "global-state",
+          "result": "\"boundary control global-state: passed (not M1 acceptance)\"",
+          "deny_exit": 2
+        },
+        {
+          "id": "host-return",
+          "result": "\"boundary control host-return: passed (not M1 acceptance)\"",
+          "deny_exit": 2
+        },
+        {
+          "id": "interior-state",
+          "result": "\"boundary control interior-state: passed (not M1 acceptance)\"",
+          "deny_exit": 2
+        },
+        {
+          "id": "network",
+          "result": "\"boundary control network: passed (not M1 acceptance)\"",
+          "deny_exit": 2
+        },
+        {
+          "id": "no-std-test-witness",
+          "result": "\"boundary control no-std-test-witness: passed (not M1 acceptance)\"",
+          "deny_exit": 2
+        },
+        {
+          "id": "process",
+          "result": "\"boundary control process: passed (not M1 acceptance)\"",
+          "deny_exit": 2
+        },
+        {
+          "id": "randomness",
+          "result": "\"boundary control randomness: passed (not M1 acceptance)\"",
+          "deny_exit": 2
+        },
+        {
+          "id": "randomness-dependency",
+          "result": "\"boundary control randomness-dependency: passed (not M1 acceptance)\"",
+          "deny_exit": 1
+        },
+        {
+          "id": "reverse-dependency",
+          "result": "\"boundary control reverse-dependency: passed (not M1 acceptance)\"",
+          "deny_exit": 1
+        },
+        {
+          "id": "test-source-import",
+          "result": "\"boundary control test-source-import: passed (not M1 acceptance)\"",
+          "deny_exit": 2
+        },
+        {
+          "id": "unsafe-block",
+          "result": "\"boundary control unsafe-block: passed (not M1 acceptance)\"",
+          "deny_exit": 2
+        },
+        {
+          "id": "unsafe-foreign-declaration",
+          "result": "\"boundary control unsafe-foreign-declaration: passed (not M1 acceptance)\"",
+          "deny_exit": 2
+        },
+        {
+          "id": "unsafe-function",
+          "result": "\"boundary control unsafe-function: passed (not M1 acceptance)\"",
+          "deny_exit": 2
+        },
+        {
+          "id": "workspace",
+          "result": "\"boundary control workspace: passed (not M1 acceptance)\"",
+          "deny_exit": 0
+        }
+      ],
+      "scope": "Current 17-unit workspace and isolated controls; fixture side effects are never executed."
+    },
+    "runtime_build_source_binding": {
+      "result": "passed",
+      "receipt": "assurance.tar.gz:regression/nix-source-binding.json",
+      "source_files": 116,
+      "source_store_path": "/nix/store/mlvh3w616amqwr7gqcdp54783f8dw98m-source",
+      "noble_derivation": "/nix/store/lh5cycyman4v4bnbxg6ax1hys40vrlwk-noble-0.0.0.drv",
+      "scope": "Observed immutable Nix build inputs and resulting binary identity; not compiler/backend correctness or independent build attestation."
+    },
+    "mc1_cli_regression": {
+      "result": "passed",
+      "cases": 36,
+      "outcomes": [
+        "disproved",
+        "error",
+        "not-run",
+        "proved",
+        "timeout",
+        "unknown",
+        "unsupported"
+      ],
+      "receipt": "assurance.tar.gz:regression/mc1-acceptance-5.json",
+      "binary_sha256": "d8e1f94a551a7355801702df4917f3723b708860fc82a559ceea64707afa49e8",
+      "gate_sha256": "feef4f4de1256b0eb02b254c4b1ae0468920356046a08f6e86d277f76f830fa5",
+      "consumer_sha256": "62c2d30b2d2e6e906509cc65aca1e5dffa4f6224ad843bb7d98d98528c36d9dc",
+      "configuration": "Functional proof controls explicitly select 600000 ms; the 1 ms deadline and 45000 ms descendant controls retain their own budgets. Production CLI defaults are unchanged."
+    },
+    "mc1_implementation_regression": {
+      "result": "passed",
+      "source_revision": "sha256:880af1b8055f64e0f383bd7fc717d0f96e9f2ab8a34b1a0f37a3af59e44c89c2",
+      "receipt": "assurance.tar.gz:mc1-implementation/implementation.json"
+    },
+    "inherited_checker_and_miri": {
+      "schema": "noble-m3-observed-regressions/v1",
+      "evidence_kind": "summary-of-observed-command-results",
+      "raw_output_location": "Execution transcript; these three runs did not write separate raw log files. This record is not a tool-generated attestation.",
+      "checks": [
+        {
+          "id": "inherited-checker-proof-refusals",
+          "command": "verification/m3-proof-gate-refusals.sh",
+          "result": "passed",
+          "positive_baselines": 1,
+          "negative_controls": 6,
+          "observed_refusals": [
+            "proof hole",
+            "missing per-word theorem",
+            "substituted subject",
+            "unexplained external",
+            "removed eliminator oracle arm",
+            "schema revision regression"
+          ],
+          "scope": "Inherited proofs/m3 checker target, not universal M3 Wasm/backend correspondence.",
+          "build_targets": [
+            "NobleM3",
+            "NobleM2",
+            "NobleM2.Refinement",
+            "NobleKernel"
+          ],
+          "elapsed_seconds_observed": 773,
+          "setup_note": "The combined shell invocation subsequently reached the coverage script without Bun on PATH. That coverage setup failure is not a failure of this completed proof-refusal matrix. Coverage was then run with the pinned Bun and Lean binaries."
+        },
+        {
+          "id": "inherited-checker-coverage-refusals",
+          "command": "verification/m3-coverage-refusals.sh",
+          "result": "passed",
+          "positive_baselines": 1,
+          "negative_controls": 6,
+          "observed_refusals": [
+            {
+              "case": "missing-per-word-coverage-case",
+              "reason": "UNCLASSIFIED"
+            },
+            {
+              "case": "unclassified-def",
+              "reason": "UNCLASSIFIED"
+            },
+            {
+              "case": "dangling-citation",
+              "reason": "CITATION"
+            },
+            {
+              "case": "misbound-citation",
+              "reason": "CITATION-BINDING"
+            },
+            {
+              "case": "stale-entry",
+              "reason": "STALE-ENTRY"
+            },
+            {
+              "case": "bad-status",
+              "reason": "STATUS"
+            }
+          ],
+          "baseline_classification": {
+            "total": 518,
+            "classified": 518,
+            "extracted": 494,
+            "proved": 1,
+            "modeled": 18,
+            "excepted": 5,
+            "open": 0
+          },
+          "scope": "Inherited proofs/m3 generated checker functions, not the complete production source inventory or backend proof coverage.",
+          "elapsed_seconds_observed": 70.66
+        },
+        {
+          "id": "miri-budget-scope",
+          "result": "passed",
+          "package": "noble-kernel",
+          "test_target": "budget",
+          "passed_tests": 2,
+          "target": "x86_64-unknown-linux-gnu",
+          "toolchain": "nightly-2026-08-18",
+          "toolchain_directory": "/nix/store/wq92i79ivn1w1nrdhmzl1mqx0wcyrawi-rust-default-1.100.0-nightly-2026-08-18",
+          "MIRIFLAGS": "-Zmiri-strict-provenance",
+          "elapsed_seconds_observed": 19.25,
+          "scope": "Required native budget target only; not the Wasm storage model or a soundness proof.",
+          "setup_note": "Initial sysroot setup lacked cc on PATH. The completed run added the existing user-profile compiler path. Miri warned that an empty RUSTC_WRAPPER was ignored."
+        }
+      ]
+    },
+    "archive": {
+      "schema": "noble-m3-retained-assurance/v1",
+      "result": "passed",
+      "archive": "assurance.tar.gz",
+      "sha256": "13124678ba29fb46773c0b1bd73e18788e7dbd554eed8306f6b71479f4327179",
+      "bytes": 16396404,
+      "members": 645,
+      "manifest_sha256": "96465dcf24282a969fd987bb1f0f4318938947b7405ef08fc2f230c998b17e25",
+      "scope": "Full current Octet compiler inventory, fresh emitter extraction and compiled Lean audit, MC1 implementation regression, CLI and Nix execution logs/receipts, failed-attempt disclosures and final lifecycle checks."
+    }
+  },
+  "non_claims": [
+    "PO-17, PO-18 and SO-07 remain open; extraction does not prove emitted Wasm or loader correspondence.",
+    "M4 general end-to-end core remains not started.",
+    "ADAPT-11 component ABI conversions, resources and independent peers remain M5 work.",
+    "No physical GC reclamation, per-case engine heap, native-code-size or speed-ranking claim.",
+    "The remaining canonical scenarios are not executed by this scoped matrix."
+  ],
+  "lifecycle": {
+    "result": "archived",
+    "change": ".cairn/archive/2026-09-20-m3-wasm-feasibility",
+    "gates": [
+      {
+        "gate": "proposal",
+        "receipt_hash": "cbb4251413f33c2cd3ce128dfcfa2589e09803318ac905ace7288a0ded7cd394",
+        "result": "PASS"
+      },
+      {
+        "gate": "design",
+        "receipt_hash": "7112d434affa0b01524e1fc95ac3f3b00ea0ae0990e9dc9a1fea331fe7934139",
+        "result": "PASS"
+      },
+      {
+        "gate": "tasks",
+        "receipt_hash": "73f9f6d3d41188682d3c9dc4bc76b08483d8d0ad71c65130c984596dd11a8368",
+        "result": "PASS"
+      }
+    ],
+    "archive_receipt_hash": "a9ddcf441d0cb533950272d756e33457ce2bb971ef2e5c1539b463c33a33dd5a",
+    "archive_receipt": "assurance.tar.gz:regression/lifecycle/archive-execute.json",
+    "post_archive_validation": {
+      "result": "passed",
+      "receipt": "assurance.tar.gz:regression/lifecycle/post-archive.json",
+      "checks": [
+        {
+          "label": "cairn",
+          "result": "passed"
+        },
+        {
+          "label": "conversion",
+          "result": "passed"
+        },
+        {
+          "label": "document-tests",
+          "result": "passed"
+        },
+        {
+          "label": "specification",
+          "result": "passed"
+        }
+      ]
+    }
+  }
+}

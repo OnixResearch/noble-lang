@@ -17,8 +17,9 @@ const fixtures = join(root, 'verification/mc1');
 const hash = text => createHash('sha256').update(text).digest('hex');
 const constant = name => ['const', name.split('.'), []];
 const selectedRoot = ['MC1Proof', 'proof'];
+const proofTimeoutMs = 600000;
 
-function command(executable, args, env = environment, timeout = 190000) {
+function command(executable, args, env = environment, timeout = proofTimeoutMs + 60000) {
   return new Promise((accept, reject) => {
     const child = spawn(executable, args, { cwd: root, env, stdio: ['ignore', 'pipe', 'pipe'] });
     const stdout = [], stderr = [];
@@ -47,6 +48,12 @@ async function source(name, content) {
 }
 
 async function check(name, args, expected, options = {}) {
+  // Functional proof controls select a budget; they do not assert that a
+  // particular host finishes inside the CLI's incidental default duration.
+  // Explicit deadline and descendant-cleanup controls keep their own bounds.
+  if ((args.includes('--proof') || args.includes('--refutation')) && !args.includes('--timeout-ms')) {
+    args = [...args, '--timeout-ms', String(proofTimeoutMs)];
+  }
   const started = Date.now();
   const row = { name, expected, args, passed: false };
   evidence.cases.push(row);

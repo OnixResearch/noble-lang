@@ -17,7 +17,7 @@ let
     if
       case.observation == "clean"
       || case.observation == "role_edge"
-      || case.observation == "policy"
+      || (case.observation == "policy" && case.deny_lint == "")
     then
       "deny"
     else

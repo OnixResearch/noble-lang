@@ -6,7 +6,9 @@ let
     scope = {
       packages = [
         "noble-cli"
+        "noble-contracts"
         "noble-kernel"
+        "noble-wasm"
       ];
       target_triple = "x86_64-unknown-linux-gnu";
       features = [ ];
@@ -32,7 +34,9 @@ let
     dependencies = {
       selected_packages = [
         "noble-cli"
+        "noble-contracts"
         "noble-kernel"
+        "noble-wasm"
       ];
       production_edges = [ ];
       external_edges = [ ];
@@ -65,6 +69,8 @@ let
     schema_version = "noble-native-assurance-policy/v1";
     required_packages = [
       "noble-kernel"
+      "noble-contracts"
+      "noble-wasm"
       "noble-cli"
     ];
     required_targets = [
@@ -132,6 +138,14 @@ let
         argument = "safe sequential Rust";
       }
       {
+        scope = "noble-contracts";
+        argument = "safe no_std frontend";
+      }
+      {
+        scope = "noble-wasm";
+        argument = "safe no_std emitter; owned WAT semantics remain unproved";
+      }
+      {
         scope = "noble-cli";
         argument = "shell only";
       }
@@ -175,6 +189,11 @@ let
     )
     (reject "missing scope package" (withInventory {
       scope = inventory.scope // { packages = [ "noble-kernel" ]; };
+    }) policy "scope-package-missing")
+    (reject "Wasm emitter missing from native scope" (withInventory {
+      scope = inventory.scope // {
+        packages = builtins.filter (package: package != "noble-wasm") inventory.scope.packages;
+      };
     }) policy "scope-package-missing")
     (reject "missing required target" (withInventory {
       scope = inventory.scope // { target_triple = "aarch64-unknown-linux-gnu"; };
@@ -251,6 +270,9 @@ let
     }) "safety-argument-missing")
     (reject "missing target assumptions" inventory (withPolicy { target_assumptions = [ ]; })
       "target-assumption-missing")
+    (reject "Wasm emitter missing safety argument" inventory (withPolicy {
+      safety_arguments = builtins.filter (entry: entry.scope != "noble-wasm") policy.safety_arguments;
+    }) "safety-argument-missing")
     (reject "miri not required" inventory (withPolicy { miri = policy.miri // { required = false; }; })
       "miri-not-required")
     (reject "unsupported required miri configuration" inventory (withPolicy {
@@ -264,16 +286,9 @@ let
       miri = policy.miri // { toolchain = "stable"; };
     }) "miri-configuration-mismatch")
     (reject "empty safety argument" inventory (withPolicy {
-      safety_arguments = [
-        {
-          scope = "noble-kernel";
-          argument = "";
-        }
-        {
-          scope = "noble-cli";
-          argument = "shell only";
-        }
-      ];
+      safety_arguments = map (
+        entry: entry // { argument = if entry.scope == "noble-kernel" then "" else entry.argument; }
+      ) policy.safety_arguments;
     }) "safety-argument-empty")
   ];
 in

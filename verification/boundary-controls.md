@@ -1,6 +1,6 @@
 # Kernel and shell boundary controls
 
-**Task 2.2 boundary controls pass.** The expanded `boundary-controls` check matches two positive baselines and sixteen rejected fixtures with published Octet `235255bc4972ced9128fd5b4d1ec66ff7508ded4`.
+**The current M3 boundary controls pass.** The expanded `boundary-controls` check matches two positive baselines and sixteen rejected fixtures across the current seventeen-unit workspace with published Octet `235255bc4972ced9128fd5b4d1ec66ff7508ded4`. Gate output and immutable Nix result identities are retained in `verification/m3-wasm/assurance.tar.gz`.
 The earlier missing-effect rejection under `e3e705a7c04a30b814000b251d245cf083894e4a` is retained as historical evidence, not rewritten.
 
 ## Run the check
@@ -34,7 +34,9 @@ Both kernel production units must observe the relevant facts. Integration tests 
 
 The comparator requires the exact unit roster, source roots, roles, target, features, toolchain, gate mode, and operation-specific evidence.
 The production architecture policy stays unchanged. No target or production obligation is removed.
-Seventy synthetic harness self-tests cover the comparator and the source-mutation layer. They are not compiler evidence.
+
+M3 expands the declared roster from six to all seventeen current compiler units, including contracts, Wasm lowering and every kernel integration target. The acyclic control replaces only the fixture shell's manifest and entrypoint with an independent shell, preventing indirect shell → contracts/Wasm → kernel cycles. The actual workspace baseline remains unmodified.
+
 
 ## Rejection mechanisms
 
@@ -43,7 +45,9 @@ Their kernel ownership is established by the unchanged source tree and by the tw
 That is an explicit limit of this harness, not a hidden exemption.
 
 The `no-std-test-witness` case declares `no_std` only outside the `test` configuration. The auxiliary run then reports `no-std-obligation` for the `noble-kernel` scope: a test-configured witness cannot discharge the production obligation.
-The case requires the finding to be open, to name the declared scope, and to carry the exact compiler-confirmation message.
+
+With the full checker present, that mutation also makes the deny-all run reject `fallible_int_fallback` in `acceptance/mod.rs` before architecture collection. The fixture requires that exact lint/source refusal plus a separate, replayed auxiliary `no-std-obligation` observation. Neither an unrelated compiler failure nor the lint refusal alone satisfies the control; no production lint or architecture policy is disabled.
+
 
 The `test-source-import` case appends a `#[path]` import to the kernel root that resolves through `..` into a test-labelled directory.
 The collector rejects the escaping diagnostic path before collection, so no status, receipt, or artifact bundle exists.
@@ -63,7 +67,7 @@ Each row is one case on `x86_64-unknown-linux-gnu`, with the selected quality Ru
 | `process` | `impure_call_in_core`, compiler process effect in both kernel units | Matched |
 | `environment` | `ambient_env`, compiler environment effect in both kernel units | Matched |
 | `clock` | `ambient_clock`, compiler time effect in both kernel units | Matched |
-| `randomness` | `ambient_random`, compiler randomness effect in both kernel units | Missing provider effect |
+| `randomness` | `ambient_random`, compiler randomness effect in both kernel units | Matched |
 | `global-state` | `global_state_in_core`, resolved atomic update in both kernel units | Matched |
 | `interior-state` | `interior_mutability_in_core`, resolved thread-local cell update in both kernel units | Matched |
 | `unsafe-block` | Compiler `unsafe_code` error at the kernel source | Matched |
@@ -75,7 +79,7 @@ Each row is one case on `x86_64-unknown-linux-gnu`, with the selected quality Ru
 | `reverse-dependency` | `forbidden-role-edge`, successful compilation, blocked architecture gate and valid replay | Matched |
 
 The reverse-edge case starts from the acyclic shell baseline, not a Cargo dependency cycle.
-That baseline removes the shell-to-kernel edge and adds an empty shell library. All existing targets remain present.
+That baseline removes all direct and indirect shell-to-kernel edges and adds an empty shell library. All existing targets remain present.
 Only its negative adds the kernel-to-shell edge. The workspace baseline still checks the actual product without these changes.
 
 An earlier interior-state fixture only constructed a local cell. It did not demonstrate hidden state and is historical harness evidence only.
@@ -94,11 +98,10 @@ These are fixture dependencies, not a production native inventory or a dependenc
 Adding the dependency without a call already violates the kernel's dependency policy.
 The first positive-baseline hypothesis therefore failed. The unchanged policy requires this mutation to remain a separate negative control.
 The random-call fixture must additionally produce its intended deny-all diagnostic and both production randomness effects.
-The current bundle contains `getrandom::fill`, but the published collector emits no randomness effect for that call.
-Auxiliary compilation and full replay pass. Neither result substitutes for the missing effect.
-Provider repair and publication must precede adoption. A local same-named stub cannot satisfy this control.
+An earlier M1 bundle contained `getrandom::fill`, but its collector emitted no randomness effect for that call. Auxiliary compilation and full replay did not substitute for the missing effect.
+The current M3 rerun with the selected published collector retains both production effects and passes the control. The earlier failed bundle remains historical evidence. A local same-named stub cannot satisfy this control.
 
-## Shell tests
+## Historical M1 shell tests
 
 The CLI tests cover five successful budget inputs, ten invalid argument cases, and a Unix non-UTF-8 argument.
 They require exact output and exit status. Five workspace Rust tests pass, including the two kernel tests.
@@ -129,6 +132,6 @@ The first comparator used the wrong call field and unresolved API aliases. Curre
 
 The earlier expanded run passed ten checks and failed the eleventh. Body-owner adoption then passed all eleven checks.
 Those results remain under `.pi/m1-inline-adoption/` and `.pi/m1-inline-owner/`.
-The new randomness check fails. Its retained bundles and failures are under `.pi/m1-boundary-random/`.
+The earlier randomness check failed. Its retained bundles and failures are under `.pi/m1-boundary-random/`.
 Artifact replay establishes stored-input consistency, not independently authenticated compiler execution.
 These controls do not establish complete source coverage, native assurance, extraction coverage, refinement, or M1 acceptance.

@@ -5,7 +5,7 @@
 
 This accepted specification records Noble draft contracts, not completed implementation.
 Original requirement IDs, explanatory prose, examples, and open decisions remain authoritative.
-Scenario clauses refer to unexecuted designs in the conformance ledger.
+Scenario clauses declare designs; the conformance ledger records execution and evidence.
 
 ## Requirements
 

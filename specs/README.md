@@ -6,7 +6,7 @@ Revision: 0.1.0-draft.5
 
 The twelve normative documents now live under `.cairn/specs/`. Their old paths contain generated compatibility views, not separate authority. This directory retains the scenario designs, proof ledger, roadmap, status, and supporting documents.
 
-The user confirmed that no prior implementation exists. Historical references to repository recovery and prior implementation work no longer describe current project state.
+The repository now contains the bounded checker, experimental MC1 contract frontend, and M3 compiled-program representation experiment. [Status](STATUS.json) and the [roadmap](roadmap.json) distinguish delivered scopes from open language and proof obligations. Amendment sections below record design adoption, not current completion.
 
 ## Core and safety
 
@@ -14,7 +14,7 @@ The user confirmed that no prior implementation exists. Historical references to
 |---|---|---|
 | [Language](SPEC-0001.md) | SPEC-0001 | Integrated language, safety, verification, and component commitments |
 | [Bootstrap scope](CORE-BOOTSTRAP.md) | SPEC-B001 | First finite checker and Wasm acceptance target |
-| [Backend experiments](BACKEND-EXPERIMENTS.md) | SPEC-BE001 | Required M3 comparison; no representation selected |
+| [Backend experiments](BACKEND-EXPERIMENTS.md) | SPEC-BE001 | M3 comparison; managed linear memory selected for the M4 direction |
 | [Safety](SAFETY.md) | SPEC-S001 | Mandatory safety invariants and claim boundaries |
 | [WIT/WASI](WIT-WASI.md) | SPEC-W001 | Full target component profile |
 | [Resource adapters](RESOURCE-ADAPTERS.md) | SPEC-R001 | First bounded synchronous resource adapter contract |
@@ -29,7 +29,7 @@ The user confirmed that no prior implementation exists. Historical references to
 | [Toolchain](VERIFICATION-TOOLCHAIN.md) | IMPL-V001 | Whole-project Aeneas-first Rust, mandatory kernel refinement, and explicit external boundaries |
 | [Program contracts](PROGRAM-CONTRACTS.md) | SPEC-V002 | Typed declarations, first-class evidence companions, composition, and verification tooling |
 | [Evidence](EVIDENCE.md) | SPEC-EV001 | Fixture schema, independent status, and coverage rules |
-| [Obligations](verification/obligations.json) | PO/SO ledger | Newly transcribed, all open |
+| [Obligations](verification/obligations.json) | PO/SO ledger | Per-obligation acceptance, open scope, and evidence |
 
 ## Decisions and work
 
@@ -37,7 +37,7 @@ The user confirmed that no prior implementation exists. Historical references to
 2. [Roadmap](ROADMAP.md) gives an acyclic implementation order.
 3. [Source map](SOURCES.md) records ancestry and missing historical material.
 4. [Review resolution](REVIEW-RESOLUTION.md) links each finding to its disposition.
-5. [Status](STATUS.json) records absence of implementation separately from spec and evidence status.
+5. [Status](STATUS.json) records implementation, execution, proof, and trust status separately.
 
 ## Developer-experience amendment to draft.5
 
@@ -68,7 +68,7 @@ Tighten runtime-selected interfaces, explicit effect widening, recipe round trip
 1. Select `Contracts-Draft`: typed contracts and first-class evidence companions without changing ordinary `Program<S,T,e>` execution.
 2. Define checked composition, runtime family instantiation, and applicability guards. No runtime proof search is required.
 3. Specify verification, explanation, and proof-required build operations with distinct claim outcomes and independent admission policy.
-4. Add MC1/MC2, PO-19 through PO-21, and [contract scenarios](conformance/contract-cases.json). All implementation and proof work remains open.
+4. Add MC1/MC2, PO-19 through PO-21, and [contract scenarios](conformance/contract-cases.json). MC1 now has a bounded experimental implementation; MC2 and universal contract correctness remain open.
 5. Keep concrete contract grammar, companion representation, and portable encoding as explicit implementation-entry gates.
 
 ## Changes in draft.4
@@ -77,14 +77,14 @@ Tighten runtime-selected interfaces, explicit effect widening, recipe round trip
 2. Move resource-table decisions to the same route. Keep physical effects and synchronization behind explicit boundary contracts.
 3. Replace the mandatory Verus lane with reviewed non-kernel exceptions. No exception is currently selected.
 4. Require complete source inventories, extraction/proof coverage, and CI rejection of missing or unsupported required functions.
-5. Keep implementation, pins, and proofs open. This revision does not establish Aeneas compatibility or a verified Noble kernel.
+5. Keep implementation, pins, and proofs separate from specification adoption. This revision alone does not establish Aeneas compatibility or a verified Noble kernel.
 
 ## Changes in draft.3
 
 1. Require a WasmGC/managed-linear-memory comparison without selecting either backend.
 2. Add native-boundary review, scoped Miri checks, and explicit decoding stages. Zerocopy remains optional.
 3. Clarify branch joins, Rust domain types, resource cleanup, contract snapshots, and mandatory admission checks.
-4. Add [adaptation scenarios](conformance/adaptation-cases.json), all unexecuted. [Source provenance](SOURCES.md) records the study and adoption boundary.
+4. Add [adaptation scenario designs](conformance/adaptation-cases.json). Their ledger now records the scoped M3 execution of ADAPT-08/09/10/12; the remaining designs are unexecuted. [Source provenance](SOURCES.md) records the study and adoption boundary.
 
 ## Authority rule
 

@@ -2,7 +2,9 @@
 
 Revision: 0.1.0-draft.5
 
-**Next: create the Rust/Nix workspace with the required quality gates.** Noble starts from scratch. No old repository or test run is assumed.
+**Next: M4 — connect the checked core to end-to-end Wasm execution.** M1, M2,
+MC1 and the bounded M3 representation experiment are implemented. Their
+separately scoped evidence does not establish a general or verified backend.
 
 [roadmap.json](roadmap.json) records dependency edges. Milestone status is separate from test and proof results.
 
@@ -116,6 +118,15 @@ The first theorem establishes a proof pattern, not whole-kernel verification. M2
 M3 can begin from the declared bootstrap interfaces while M2 proceeds. Its experimental checker and backend remain explicitly unverified until their evidence connects at M4. Pure lowering, optimization, and emission code target Aeneas from the start. Wasm execution/reflection correspondence remains a separate theorem family even after Rust extraction succeeds.
 
 [BACKEND-EXPERIMENTS.md](BACKEND-EXPERIMENTS.md) compares WasmGC with managed linear memory. Both need a recorded trial disposition, not two production implementations. A blocked candidate cannot supply invented performance measurements. At least one candidate must pass the M3 execution gates.
+
+The [M3 comparison record](../verification/m3-wasm/evidence.json) covers both
+candidates under optimization off/on, with 52 scenarios per configuration.
+Managed linear memory is selected for M4's resource-free implementation because
+its bounded arena is observable and requires no WasmGC feature. This is not a
+speed or physical-memory victory: the selected layout retains an extra 64-KiB
+page, and GC physical allocation/reclamation remains unknown. Actual pure-Rust
+emitter extraction and strict bridge equations are separate from the executed
+Wasm observations. PO-17/18 and SO-07 remain open.
 
 The component probe is nonblocking for resource-free M3. M5 owns complete boundary conversions and independent-peer evidence. M6 retains the async ownership gate.
 

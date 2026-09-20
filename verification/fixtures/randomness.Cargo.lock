@@ -29,6 +29,15 @@ checksum = "3eaf3ede3fee6db1a4c2ee091bf8a8b4dccdc6d17f656fb07896ee72867612f2"
 name = "noble-cli"
 version = "0.0.0"
 dependencies = [
+ "noble-contracts",
+ "noble-kernel",
+ "noble-wasm",
+]
+
+[[package]]
+name = "noble-contracts"
+version = "0.0.0"
+dependencies = [
  "noble-kernel",
 ]
 
@@ -37,6 +46,13 @@ name = "noble-kernel"
 version = "0.0.0"
 dependencies = [
  "getrandom",
+]
+
+[[package]]
+name = "noble-wasm"
+version = "0.0.0"
+dependencies = [
+ "noble-kernel",
 ]
 
 [[package]]

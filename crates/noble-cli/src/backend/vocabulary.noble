@@ -1,0 +1,37 @@
+(contract 1 m3-vocabulary
+  (input)
+  (output
+    (increment (Program (I64) (I64)))
+    (double (Program (I64) (I64)))
+    (add (Program (I64 I64) (I64)))
+    (adder-builder (Program (I64) ((Program (I64) (I64)))))
+    (quote-builder (Program (I64) ((Program () (I64)))))
+    (list-dispatch (Program (I64 (Program (I64) (I64))) (I64)))
+    (quote-list (Program (I64) ((List (Program () (I64))))))
+    (quote-pair (Program (I64) ((Pair (Program () (I64)) Unit))))
+    (adder-pair (Program (I64) ((Pair (Program (I64) (I64)) Unit))))
+    (two-slots (Program (I64 I64) (I64 I64)))
+    (run-then-add (Program (I64 (Program (I64) (I64))) (I64)))
+    (reflection (Program ((Program (I64) (I64))) (Syntax))))
+  (program [
+    (block (I64) (I64) [ 1 + ])
+    (block (I64) (I64) [ 2 * ])
+    (block (I64 I64) (I64) [ + ])
+    (block (I64) ((Program (I64) (I64))) [
+      quote (block (I64 I64) (I64) [ + ]) compose ])
+    (block (I64) ((Program () (I64))) [ quote ])
+    (block (I64 (Program (I64) (I64))) (I64) [
+      nil cons
+      (block (I64) (I64) [])
+      (block (I64 (Program (I64) (I64)) (List (Program (I64) (I64)))) (I64) [ drop run ])
+      list.case ])
+    (block (I64) ((List (Program () (I64)))) [ quote nil cons ])
+    (block (I64) ((Pair (Program () (I64)) Unit)) [ quote unit pair ])
+    (block (I64) ((Pair (Program (I64) (I64)) Unit)) [
+      quote (block (I64 I64) (I64) [ + ]) compose unit pair ])
+    (block (I64 I64) (I64 I64) [ swap 1 + swap ])
+    (block (I64 (Program (I64) (I64))) (I64) [ run 1 + ])
+    (block ((Program (I64) (I64))) (Syntax) [ reflect ])
+  ])
+  (requires true)
+  (ensures true))

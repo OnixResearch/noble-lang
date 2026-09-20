@@ -49,13 +49,26 @@
   },
   "file_sha256": {
     ".pre-commit-config.yaml": "100d0fac74955fbdcda81f6fa5068f6a0ef15d6d2ca31642735da238516300da",
-    "Cargo.lock": "9c816e4b29fffc278368494cb71e4fe331fd1a2238ad3bcd4a371ba8d7977b74",
-    "Cargo.toml": "a54f4b3d39629db86b0cce863476ef7f624cc500b97e2e5f782deeb56bc56e74",
-    "crates/noble-cli/Cargo.toml": "4b31fc3b8aaa3e75ba61caa12ad5b461489697d602c16d6024b9d4cddc1f19d9",
+    "Cargo.lock": "9999409e82fd5e8b70a9528d5c359d7bce5f4c4eee8b6db01c51a9ebe96e49b5",
+    "Cargo.toml": "dd37f1f76eb5df975417aa9ac78cd263444617ecb3df28aa7f1a6f7d11481c59",
+    "crates/noble-cli/Cargo.toml": "ea3baec673ab8f43fbb44dcfbcfeb6415b12c2b8b05246024bcb100075ff6b73",
+    "crates/noble-cli/src/backend/vocabulary.noble": "f8d7a7e587cf85bcc36fe21c75506dd0c58a4c7e18baa8ddb1e11fde8aeb23e3",
     "crates/noble-contracts/Cargo.toml": "757e1546739b76fb93fadffee7ceb32bc537c030e945adcd2ca6905f79d43bd8",
     "crates/noble-kernel/Cargo.toml": "19e6c70441ef5d51b9caf828ecb4a7432c8bd7efc40bfdafa158d4d95efc949b",
+    "crates/noble-wasm/Cargo.toml": "7330e9e17f7a2cf95b6a2689baf8cc090919438671a175e9e0f3d0848d98a904",
+    "crates/noble-wasm/runtime/common.wat": "374c958c6c40607712563f0faee91c800b9ad2cbd93dfbd1cc08eac7e01a601e",
+    "crates/noble-wasm/runtime/experiment.wat": "8fb13ca3686e356dd392cab41ebfd7bb4ff930093c8bbcc54d019e4fe94ed0c3",
+    "crates/noble-wasm/runtime/gc-storage.wat": "10f03f88ef8f250d69e88a0f8297f8a0bfc9a6d54b7b94a6bce2621060cc5c17",
+    "crates/noble-wasm/runtime/linear-storage.wat": "860a9e018573c88573a96e052fc5d2f7cedfbef60a932754dcbccb4f731c20a3",
+    "crates/noble-wasm/runtime/operations.wat": "ed8b474eaf8209030a7fa53f249c5743da6edb67887d94a32dfaef08f7c2897d",
+    "crates/noble-wasm/runtime/programs.wat": "66ad9ef8a70f98a1a11bc937af15a780f0b46a5256f5aa9ca65f070842acff2f",
+    "crates/noble-wasm/runtime/reflection.wat": "88cedd80995354fd53ef8dd9d5b146d86b4453308b7c2b337c1970586c1f6180",
+    "crates/noble-wasm/runtime/stack.wat": "a2a5c09da56c6c78656d1a74115f15cbcf991b13ffb4fb8cd2149545c6fca282",
+    "dylint.toml": "817453bc419e8285f32af46a8602273aa028c8040c313fd72f593efc7150ed5d",
     "flake.lock": "3c0558d476937ec8d50f2e2185847ea33ea9d394e5f228f6f103b9fa5ffc3d2d",
-    "flake.nix": "475aaad09ff95c4f5472a9a160c81fea5962895ecc0d5bc7630446f14c68f918",
+    "flake.nix": "0177fe3db2bf48aa3c9e2fffb9e4af7264157b9c840b6cf58d0b08d0e5681e5c",
+    "nix/aeneas-string-escaping.patch": "3d2a88e02e55b491aa7d53573cd0256c58ffb4e549a8ff9a0134c2eaef07cc70",
+    "nix/m3-wasm-app.nix": "a83a2ea157787803e0fabdf089a7549ffd5737f42a657bf1df383d1908676ad5",
     "nix/offline-inputs.nix": "9d35078501b7e138659434fe98baff1b9e0128973d454500c344161e193d69c7",
     "proofs/m1/lake-manifest.json": "2b876b213022b444fbe1b1118283dcec613f2cb5fa1d6aed08339f356775dd8f",
     "proofs/m1/lakefile.toml": "99c002cbb3acacde1c2ee1e8c9c02a0ca7a18a0938a7bcdefde6621888855c5d",
@@ -63,13 +76,20 @@
     "proofs/m2/lake-manifest.json": "2b876b213022b444fbe1b1118283dcec613f2cb5fa1d6aed08339f356775dd8f",
     "proofs/m2/lakefile.toml": "c6a9c6eafb6aaef5e0748783dd8b64c539b1f976a32026e7685888cafd64be22",
     "proofs/m2/lean-toolchain": "efac0b94923b2d8b6840cd35be9177ad0fc5ab2332f4f4311c98712cee92fdee",
+    "proofs/m3-wasm/lake-manifest.json": "86afbae076f1283afa6fbec8c949b13e9342d7da0003258e551198c00db2efdb",
+    "proofs/m3-wasm/lakefile.toml": "04c0db177c199d5cde71a1ed7fd486c9550e22aa35d720576914273ccb71aa5f",
+    "proofs/m3-wasm/lean-toolchain": "efac0b94923b2d8b6840cd35be9177ad0fc5ab2332f4f4311c98712cee92fdee",
     "proofs/m3/lake-manifest.json": "2b876b213022b444fbe1b1118283dcec613f2cb5fa1d6aed08339f356775dd8f",
     "proofs/m3/lakefile.toml": "40c7b26ec1bb700fc58a0e42f7e7dbcdd9d20ac620b3d999089f4509c02eceb4",
     "proofs/m3/lean-toolchain": "efac0b94923b2d8b6840cd35be9177ad0fc5ab2332f4f4311c98712cee92fdee",
     "proofs/mc1/lake-manifest.json": "2b876b213022b444fbe1b1118283dcec613f2cb5fa1d6aed08339f356775dd8f",
     "proofs/mc1/lakefile.toml": "c92fedff771e74dca8dcc5c2ec96cf07080920f1b3a19303812bc70f55fbdf8f",
     "proofs/mc1/lean-toolchain": "efac0b94923b2d8b6840cd35be9177ad0fc5ab2332f4f4311c98712cee92fdee",
-    "rust-toolchain.toml": "7bfd3ca943dcce5b34de4c5f57414eae7496a698034208cf026690ada5130271"
+    "rust-toolchain.toml": "7bfd3ca943dcce5b34de4c5f57414eae7496a698034208cf026690ada5130271",
+    "tools/m3-wasm-policy.mjs": "1f4cffaabaec7915b991b6d0c26b5ef87837b7cfca1b4df1f792f8b795ab15bd",
+    "tools/m3-wasm-worker.mjs": "8bdbde4fd444dc8a74ff8e020c2d10c613b7a517809d6927c8e5e5cf2dff7035",
+    "tools/m3-wasm.mjs": "389956f537e4eefd3e425e61bf2c66ca7b2c98fbd488d348381de60e0d0c9705",
+    "verification/m3-wasm/config.json": "d770d70243669d044c5b53a2ff0baf22b8ec87c68e7f07f0b3c1f590ea452f62"
   },
   "future_unselected": [
     "Wasmtime",
@@ -85,6 +105,26 @@
     "rev": "68218e876d2a38b1985b8590fff244a83c321783",
     "toolchain": "leanprover/lean4:v4.31.0",
     "version": "4.31.0"
+  },
+  "owned_wasm_runtime": {
+    "assets": [
+      "crates/noble-wasm/runtime/common.wat",
+      "crates/noble-wasm/runtime/experiment.wat",
+      "crates/noble-wasm/runtime/gc-storage.wat",
+      "crates/noble-wasm/runtime/linear-storage.wat",
+      "crates/noble-wasm/runtime/operations.wat",
+      "crates/noble-wasm/runtime/programs.wat",
+      "crates/noble-wasm/runtime/reflection.wat",
+      "crates/noble-wasm/runtime/stack.wat"
+    ],
+    "assurance": "byte-bound-runtime-semantics-unproved",
+    "non_claims": [
+      "rust-compiler-inventory-coverage",
+      "rust-refinement",
+      "wasm-lowering-correspondence",
+      "loader-binding-proof",
+      "component-support"
+    ]
   },
   "schema_version": "noble-tool-selection-policy/v1",
   "sources": {
@@ -123,8 +163,12 @@
   },
   "tool_paths": {
     "aeneas": {
-      "derivation": "/nix/store/1x90ighanbdkhaxyc33dd2kv7j8pgpxh-ocaml5.2.1-aeneas-0.1.0.drv",
-      "output": "/nix/store/4a6mwly7yrbpr675xq9r399nf75d7d71-ocaml5.2.1-aeneas-0.1.0"
+      "derivation": "/nix/store/9lpscsmmksg98pnjn854w6s9qifldy5a-ocaml5.2.1-aeneas-0.1.0.drv",
+      "output": "/nix/store/q3hsccq1s53aa85vh3mmc3b0k31pnyl2-ocaml5.2.1-aeneas-0.1.0"
+    },
+    "binaryen": {
+      "derivation": "/nix/store/nah9yvc3mdzhvfj5sldnqnivy659f6k3-binaryen-125.drv",
+      "output": "/nix/store/9jkpw0sws1134333z8690i1plw5xzbyb-binaryen-125"
     },
     "cairn": {
       "derivation": "/nix/store/c34azbr57788nd8d7yi83rxxnb143pdb-cairn-0.1.0.drv",
@@ -146,6 +190,10 @@
       "derivation": "/nix/store/fnvv96qkzwb6rfxh7mxkxgx9akcjgqyv-nickel-lang-rev-fixup-1.17.0.drv",
       "output": "/nix/store/ck3a4k9az87z5rjwgy8nmpcs34xp9cc5-nickel-lang-rev-fixup-1.17.0"
     },
+    "node": {
+      "derivation": "/nix/store/gr41mppcarfhwk10hv2g6rdmgr2yq3hz-nodejs-24.13.0.drv",
+      "output": "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0"
+    },
     "octet": {
       "derivation": "/nix/store/7iqww35i0mvd8bkv0gckq826q6b2kf21-cargo-octet-0.1.0.drv",
       "output": "/nix/store/vj0sg5rn291z78im7gd2cqzqzd0bq3zy-cargo-octet-0.1.0"
@@ -161,6 +209,30 @@
     "upstream_pin_check": {
       "derivation": "/nix/store/abf9q3r42bql84jmywvw8q0r9q7ya84n-aeneas-check-charon-pin.drv",
       "output": "/nix/store/b34wcdj3gbjf03dzi5y8ghv23bsc3aya-aeneas-check-charon-pin"
+    },
+    "wasm_tools": {
+      "derivation": "/nix/store/z5rgcxgccxssz1gmrm7m2f4cz9mqy8ql-wasm-tools-1.245.1.drv",
+      "output": "/nix/store/2n9b5yzj7n8jlnglp60gd5nmfjnf4xhf-wasm-tools-1.245.1"
+    }
+  },
+  "verification_tools": {
+    "binaryen": {
+      "attribute": "binaryen",
+      "role": "verification-only-wasm-optimizer",
+      "source": "nixpkgs",
+      "version": "125"
+    },
+    "node": {
+      "attribute": "nodejs_24",
+      "role": "verification-only-wasm-host",
+      "source": "nixpkgs",
+      "version": "24.13.0"
+    },
+    "wasm_tools": {
+      "attribute": "wasm-tools",
+      "role": "verification-only-wasm-assembler",
+      "source": "nixpkgs",
+      "version": "1.245.1"
     }
   }
 }
