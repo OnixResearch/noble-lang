@@ -6,43 +6,70 @@
 //! bounds. `None` rejects — the kernel's instantiation-kind, arity, and
 //! unknown-word paths.
 
-use noble_kernel::words::{Binding, Inst};
-
-use super::otypes::{union, OTy};
+#[path = "table/branches.rs"]
+mod branches;
+#[path = "table/data.rs"]
+mod data;
+#[path = "table/primitives.rs"]
+mod primitives;
+#[path = "table/programs.rs"]
+mod programs;
 
 /// One node's derived interface under the oracle's rules.
-pub struct OFace {
-    pub input: Vec<OTy>,
-    pub output: Vec<OTy>,
-    pub latent: Vec<u32>,
+pub struct Interface {
+    pub input: std::vec::Vec<super::otypes::Type>,
+    pub output: std::vec::Vec<super::otypes::Type>,
+    pub latent: std::vec::Vec<u32>,
 }
 
 /// The stack bound to one stack variable, if the binding has that kind.
-pub fn stack_at(inst: &Inst, index: usize) -> Option<Vec<OTy>> {
+pub fn stack_at(
+    inst: &noble_kernel::words::Inst,
+    index: u32,
+) -> Option<std::vec::Vec<super::otypes::Type>> {
+    let index = usize::try_from(index).ok()?;
     match inst.bindings.get(index) {
-        Some(Binding::Stack(segment)) => Some(super::otypes::oty_stack(segment)),
-        _ => None,
+        Some(noble_kernel::words::Binding::Stack(segment)) => {
+            Some(super::otypes::oty_stack(segment))
+        }
+        Some(noble_kernel::words::Binding::Value(_))
+        | Some(noble_kernel::words::Binding::Effect(_))
+        | Some(noble_kernel::words::Binding::Ref(_))
+        | None => None,
     }
 }
 
 /// The type bound to one value variable, if the binding has that kind.
-pub fn value_at(inst: &Inst, index: usize) -> Option<OTy> {
+pub fn value_at(inst: &noble_kernel::words::Inst, index: u32) -> Option<super::otypes::Type> {
+    let index = usize::try_from(index).ok()?;
     match inst.bindings.get(index) {
-        Some(Binding::Value(ty)) => Some(super::otypes::oty(ty)),
-        _ => None,
+        Some(noble_kernel::words::Binding::Value(ty)) => Some(super::otypes::oty(ty)),
+        Some(noble_kernel::words::Binding::Stack(_))
+        | Some(noble_kernel::words::Binding::Effect(_))
+        | Some(noble_kernel::words::Binding::Ref(_))
+        | None => None,
     }
 }
 
 /// The identities bound to one effect variable, if the binding has that kind.
-pub fn effects_at(inst: &Inst, index: usize) -> Option<Vec<u32>> {
+pub fn effects_at(inst: &noble_kernel::words::Inst, index: u32) -> Option<std::vec::Vec<u32>> {
+    let index = usize::try_from(index).ok()?;
     match inst.bindings.get(index) {
-        Some(Binding::Effect(set)) => Some(set.as_slice().iter().map(|id| id.0).collect()),
-        _ => None,
+        Some(noble_kernel::words::Binding::Effect(set)) => {
+            Some(set.as_slice().iter().map(|id| id.0).collect())
+        }
+        Some(noble_kernel::words::Binding::Stack(_))
+        | Some(noble_kernel::words::Binding::Value(_))
+        | Some(noble_kernel::words::Binding::Ref(_))
+        | None => None,
     }
 }
 
 /// Append one tail to a copied stack.
-pub fn append(mut stack: Vec<OTy>, tail: &[OTy]) -> Vec<OTy> {
+pub fn append(
+    mut stack: std::vec::Vec<super::otypes::Type>,
+    tail: &[super::otypes::Type],
+) -> std::vec::Vec<super::otypes::Type> {
     stack.extend_from_slice(tail);
     stack
 }
@@ -53,7 +80,8 @@ pub fn requires_data(def: u32) -> bool {
 }
 
 /// Whether the witness carries exactly the wanted number of bindings.
-pub fn exact_arity(inst: &Inst, wanted: usize) -> Option<()> {
+pub fn exact_arity(inst: &noble_kernel::words::Inst, wanted: u32) -> Option<()> {
+    let wanted = usize::try_from(wanted).ok()?;
     if inst.bindings.len() == wanted {
         Some(())
     } else {
@@ -62,7 +90,11 @@ pub fn exact_arity(inst: &Inst, wanted: usize) -> Option<()> {
 }
 
 /// The documented contract table, one arm per word; `None` rejects.
-pub fn word_face(def: u32, inst: &Inst) -> Option<OFace> {
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; word_face rejects unknown definitions and wrong witness arities through Option before independent per-word decoding; the dedicated pool-coverage control detects missing arms."
+)]
+pub fn word_face(def: u32, inst: &noble_kernel::words::Inst) -> Option<Interface> {
     // The documented table fixes each word's variable count; a witness with
     // missing or extra bindings cannot instantiate it.
     exact_arity(
@@ -77,251 +109,29 @@ pub fn word_face(def: u32, inst: &Inst) -> Option<OFace> {
             _ => return None,
         },
     )?;
-    let pair = |a: OTy, b: OTy| OTy::Pair(Box::new(a), Box::new(b));
-    let sum = |a: OTy, b: OTy| OTy::Sum(Box::new(a), Box::new(b));
-    let list = |a: OTy| OTy::List(Box::new(a));
     match def {
-        0 => {
-            let (s, a) = (stack_at(inst, 0)?, value_at(inst, 1)?);
-            Some(OFace {
-                input: append(s.clone(), std::slice::from_ref(&a)),
-                output: append(s, &[a.clone(), a]),
-                latent: vec![],
-            })
-        }
-        1 => {
-            let (s, a) = (stack_at(inst, 0)?, value_at(inst, 1)?);
-            Some(OFace {
-                input: append(s.clone(), &[a]),
-                output: s,
-                latent: vec![],
-            })
-        }
-        2 => {
-            let (s, a, b) = (stack_at(inst, 0)?, value_at(inst, 1)?, value_at(inst, 2)?);
-            Some(OFace {
-                input: append(s.clone(), &[a, b.clone()]),
-                output: append(s, &[b, value_at(inst, 1)?]),
-                latent: vec![],
-            })
-        }
-        3 => {
-            let (s, a, t, e) = (
-                stack_at(inst, 0)?,
-                value_at(inst, 1)?,
-                stack_at(inst, 2)?,
-                effects_at(inst, 3)?,
-            );
-            let p = OTy::Program(s.clone(), t.clone(), e.clone());
-            Some(OFace {
-                input: append(s, &[a.clone(), p]),
-                output: append(t, &[a]),
-                latent: e,
-            })
-        }
-        4..=6 => {
-            let s = stack_at(inst, 0)?;
-            Some(OFace {
-                input: append(s.clone(), &[OTy::I64, OTy::I64]),
-                output: append(s, &[OTy::I64]),
-                latent: vec![],
-            })
-        }
-        7 => {
-            let s = stack_at(inst, 0)?;
-            Some(OFace {
-                input: append(s.clone(), &[OTy::I64, OTy::I64]),
-                output: append(s, &[OTy::Bool]),
-                latent: vec![],
-            })
-        }
-        8 => {
-            let (r, a, s) = (stack_at(inst, 0)?, value_at(inst, 1)?, stack_at(inst, 2)?);
-            let p = OTy::Program(
-                s.clone(),
-                append(s.clone(), std::slice::from_ref(&a)),
-                vec![],
-            );
-            Some(OFace {
-                input: append(r.clone(), &[a]),
-                output: append(r, &[p]),
-                latent: vec![],
-            })
-        }
-        9 => {
-            let (r, a, b, c, e, f) = (
-                stack_at(inst, 0)?,
-                stack_at(inst, 1)?,
-                stack_at(inst, 2)?,
-                stack_at(inst, 3)?,
-                effects_at(inst, 4)?,
-                effects_at(inst, 5)?,
-            );
-            let p1 = OTy::Program(a.clone(), b.clone(), e.clone());
-            let p2 = OTy::Program(b, c.clone(), f.clone());
-            let p = OTy::Program(a, c, union(&e, &f));
-            Some(OFace {
-                input: append(r, &[p1, p2]),
-                output: append(stack_at(inst, 0)?, &[p]),
-                latent: vec![],
-            })
-        }
-        10 => {
-            let (s, t, e) = (stack_at(inst, 0)?, stack_at(inst, 1)?, effects_at(inst, 2)?);
-            let p = OTy::Program(s.clone(), t.clone(), e.clone());
-            Some(OFace {
-                input: append(s, &[p]),
-                output: t,
-                latent: e,
-            })
-        }
-        11 => {
-            let (r, a, b, e) = (
-                stack_at(inst, 0)?,
-                stack_at(inst, 1)?,
-                stack_at(inst, 2)?,
-                effects_at(inst, 3)?,
-            );
-            let p = OTy::Program(a, b, e);
-            Some(OFace {
-                input: append(r.clone(), &[p]),
-                output: append(r, &[OTy::Syntax]),
-                latent: vec![],
-            })
-        }
-        12 => {
-            let s = stack_at(inst, 0)?;
-            Some(OFace {
-                input: s.clone(),
-                output: append(s, &[OTy::Unit]),
-                latent: vec![],
-            })
-        }
-        13 => {
-            let (s, a, b) = (stack_at(inst, 0)?, value_at(inst, 1)?, value_at(inst, 2)?);
-            Some(OFace {
-                input: append(s.clone(), &[a, b.clone()]),
-                output: append(s, &[pair(value_at(inst, 1)?, b)]),
-                latent: vec![],
-            })
-        }
-        14 => {
-            let (s, a, b) = (stack_at(inst, 0)?, value_at(inst, 1)?, value_at(inst, 2)?);
-            let joined = pair(a.clone(), b.clone());
-            Some(OFace {
-                input: append(s.clone(), &[joined]),
-                output: append(s, &[a, b]),
-                latent: vec![],
-            })
-        }
-        15 => {
-            let (s, a, b) = (stack_at(inst, 0)?, value_at(inst, 1)?, value_at(inst, 2)?);
-            Some(OFace {
-                input: append(s.clone(), &[a]),
-                output: append(s, &[sum(value_at(inst, 1)?, b)]),
-                latent: vec![],
-            })
-        }
-        16 => {
-            let (s, a, b) = (stack_at(inst, 0)?, value_at(inst, 1)?, value_at(inst, 2)?);
-            Some(OFace {
-                input: append(s.clone(), std::slice::from_ref(&b)),
-                output: append(s, &[sum(a, b)]),
-                latent: vec![],
-            })
-        }
-        17 => {
-            let (s, a, b, t, e, f) = (
-                stack_at(inst, 0)?,
-                value_at(inst, 1)?,
-                value_at(inst, 2)?,
-                stack_at(inst, 3)?,
-                effects_at(inst, 4)?,
-                effects_at(inst, 5)?,
-            );
-            let left = OTy::Program(
-                append(s.clone(), std::slice::from_ref(&a)),
-                t.clone(),
-                e.clone(),
-            );
-            let right = OTy::Program(
-                append(s.clone(), std::slice::from_ref(&b)),
-                t.clone(),
-                f.clone(),
-            );
-            Some(OFace {
-                input: append(s, &[sum(a, b), left, right]),
-                output: t,
-                latent: union(&e, &f),
-            })
-        }
-        18 => {
-            let (s, t, e, f) = (
-                stack_at(inst, 0)?,
-                stack_at(inst, 1)?,
-                effects_at(inst, 2)?,
-                effects_at(inst, 3)?,
-            );
-            let p1 = OTy::Program(s.clone(), t.clone(), e.clone());
-            let p2 = OTy::Program(s.clone(), t.clone(), f.clone());
-            Some(OFace {
-                input: append(s, &[OTy::Bool, p1, p2]),
-                output: t,
-                latent: union(&e, &f),
-            })
-        }
-        19 => {
-            let (s, a) = (stack_at(inst, 0)?, value_at(inst, 1)?);
-            Some(OFace {
-                input: s.clone(),
-                output: append(s, &[list(a)]),
-                latent: vec![],
-            })
-        }
-        20 => {
-            let (s, a) = (stack_at(inst, 0)?, value_at(inst, 1)?);
-            Some(OFace {
-                input: append(s.clone(), &[a.clone(), list(value_at(inst, 1)?)]),
-                output: append(s, &[list(a)]),
-                latent: vec![],
-            })
-        }
-        21 => {
-            let (s, a, t, e, f) = (
-                stack_at(inst, 0)?,
-                value_at(inst, 1)?,
-                stack_at(inst, 2)?,
-                effects_at(inst, 3)?,
-                effects_at(inst, 4)?,
-            );
-            let empty_branch = OTy::Program(s.clone(), t.clone(), e.clone());
-            let cons_branch = OTy::Program(
-                append(s.clone(), &[a.clone(), list(a.clone())]),
-                t.clone(),
-                f.clone(),
-            );
-            Some(OFace {
-                input: append(s, &[list(value_at(inst, 1)?), empty_branch, cons_branch]),
-                output: t,
-                latent: union(&e, &f),
-            })
-        }
-        22 => {
-            let s = stack_at(inst, 0)?;
-            Some(OFace {
-                input: append(s.clone(), &[OTy::Text]),
-                output: append(s, &[OTy::Unit]),
-                latent: vec![0],
-            })
-        }
-        23 => {
-            let s = stack_at(inst, 0)?;
-            Some(OFace {
-                input: s.clone(),
-                output: append(s, &[OTy::Resource]),
-                latent: vec![],
-            })
-        }
+        0 => primitives::duplicate(inst),
+        1 => primitives::discard(inst),
+        2 => primitives::swap(inst),
+        3 => programs::dip(inst),
+        4..=6 => primitives::integer_result(inst, super::otypes::Type::I64),
+        7 => primitives::integer_result(inst, super::otypes::Type::Bool),
+        8 => programs::quote(inst),
+        9 => programs::compose(inst),
+        10 => programs::apply(inst),
+        11 => programs::reflect(inst),
+        12 => primitives::unit(inst),
+        13 => data::pair(inst),
+        14 => data::unpair(inst),
+        15 => data::left(inst),
+        16 => data::right(inst),
+        17 => branches::sum_cases(inst),
+        18 => branches::select(inst),
+        19 => data::empty_list(inst),
+        20 => data::prepend(inst),
+        21 => branches::list_cases(inst),
+        22 => primitives::print(inst),
+        23 => primitives::resource(inst),
         _ => None,
     }
 }

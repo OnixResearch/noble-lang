@@ -81,6 +81,10 @@ fn push_type_program(
 
 /// Structural equality of two types, decided by one explicit pairwise walk.
 /// The work stack holds cloned node pairs; the walk fails closed past the bound.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; ty_eq returns false for constructor, stack-length, effect or local-work mismatches; unequal types and exhausted comparisons must remain boolean results rather than panic paths."
+)]
 fn ty_eq(left: &crate::types::Ty, right: &crate::types::Ty) -> bool {
     let mut work: alloc::vec::Vec<(crate::types::Ty, crate::types::Ty)> =
         alloc::vec::Vec::with_capacity(8);
@@ -153,6 +157,14 @@ impl PartialEq for crate::types::Ty {
 /// debug instance's mutual block, which the Lean backend cannot prove
 /// monotone.
 #[charon::opaque]
+#[allow(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-maintainers. Formatting writes only the explicit caller-owned Formatter required by core::fmt; text layout is outside the semantic refinement boundary."
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; debug_stack uses length-bounded indexing and propagates the caller's first fmt::Error; arbitrary type stacks and formatter failures must not trigger assertions."
+)]
 fn debug_stack(stack: &[crate::types::Ty], f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
     attempt!(core::fmt::Formatter::write_str(f, "["));
     let mut index = 0;
@@ -182,6 +194,14 @@ fn debug_stack(stack: &[crate::types::Ty], f: &mut core::fmt::Formatter<'_>) -> 
 
 /// Render one type in its constructor form.
 impl core::fmt::Debug for crate::types::Ty {
+    #[allow(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-maintainers. The standard Debug trait requires a mutable caller-owned Formatter; this performs no ambient observation or semantic state mutation."
+    )]
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-maintainers; this implements the non-const Debug::fmt trait method and calls runtime Formatter writes; reassess only if core::fmt gains a stable const trait contract."
+    )]
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             crate::types::Ty::Unit => core::fmt::Formatter::write_str(f, "Unit"),

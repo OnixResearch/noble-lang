@@ -1,6 +1,11 @@
+#![feature(register_tool)]
+#![register_tool(tigerstyle)]
 //! Fragment type, effect-set, and scheme primitive controls.
 // Names the fragment contract this crate implements.
 // r[impl VT-M2-01]
+
+#[path = "fragment/witnesses.rs"]
+mod witnesses;
 
 #[test]
 fn data_is_recursive_over_resource_payloads() {
@@ -128,6 +133,10 @@ fn schemes_instantiate_and_reject_mismatches() -> Result<(), String> {
 // for list patterns, so every list-bearing witness rejected.
 // r[verify VT-M2-01]
 #[test]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; the loop's equality assertion checks each pair, sum and list substitution against its distinct expected type, while Result failures reject missing schemes or failed substitution."
+)]
 fn constructor_patterns_substitute_in_documented_order() -> Result<(), String> {
     let env = match noble_kernel::contracts::environment() {
         Ok(env) => env,
@@ -237,72 +246,4 @@ fn equals_substitutes_i64_i64_to_bool() -> Result<(), String> {
     };
     assert!(effects.is_empty());
     Ok(())
-}
-
-/// Reference bindings resolve to their terminal witness: acyclic chains
-/// substitute exactly as their resolved bindings would, and cycles reject
-/// (B-CHECK-05).
-// r[verify VT-M3-01]
-#[test]
-fn witness_references_resolve_and_cycles_reject() {
-    use noble_kernel::words::{Binding, Inst, InstError};
-    let kinds = [
-        noble_kernel::words::VariableKind::Stack,
-        noble_kernel::words::VariableKind::Value,
-        noble_kernel::words::VariableKind::Value,
-        noble_kernel::words::VariableKind::Value,
-    ];
-    // `v1 -> v2 -> v3 -> Bool` resolves with two charged hops.
-    let chained = Inst {
-        bindings: vec![
-            Binding::Stack(vec![noble_kernel::types::Ty::I64]),
-            Binding::Ref(noble_kernel::words::Variable(2)),
-            Binding::Ref(noble_kernel::words::Variable(3)),
-            Binding::Value(noble_kernel::types::Ty::Bool),
-        ],
-    };
-    let (resolved, spent) = match noble_kernel::words::resolve::resolve(&kinds, &chained, 8) {
-        Ok(found) => found,
-        Err(problem) => panic!("chain must resolve: {problem:?}"),
-    };
-    // Three charged hops: `v1` walks two references to its terminal, and
-    // `v2`'s own reference walks one more.
-    assert_eq!(spent, 3);
-    assert_eq!(
-        resolved.value(noble_kernel::words::Variable(1)),
-        Some(&noble_kernel::types::Ty::Bool)
-    );
-    assert_eq!(
-        resolved.stack(noble_kernel::words::Variable(0)),
-        Some(&[noble_kernel::types::Ty::I64][..])
-    );
-    // A mutual cycle rejects.
-    let cyclic = Inst {
-        bindings: vec![
-            Binding::Stack(vec![]),
-            Binding::Ref(noble_kernel::words::Variable(2)),
-            Binding::Ref(noble_kernel::words::Variable(1)),
-            Binding::Value(noble_kernel::types::Ty::Bool),
-        ],
-    };
-    assert!(matches!(
-        noble_kernel::words::resolve::resolve(&kinds, &cyclic, 8),
-        Err(InstError::CyclicWitness)
-    ));
-    // A self-cycle rejects.
-    let self_ref = Inst {
-        bindings: vec![
-            Binding::Stack(vec![]),
-            Binding::Ref(noble_kernel::words::Variable(1)),
-            Binding::Value(noble_kernel::types::Ty::Bool),
-        ],
-    };
-    assert!(matches!(
-        noble_kernel::words::resolve::resolve(&kinds, &self_ref, 8),
-        Err(InstError::CyclicWitness)
-    ));
-    assert!(matches!(
-        noble_kernel::words::resolve::resolve(&kinds, &chained, 1),
-        Err(InstError::WalkExhausted)
-    ));
 }

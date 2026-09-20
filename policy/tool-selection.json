@@ -49,8 +49,10 @@
   },
   "file_sha256": {
     ".pre-commit-config.yaml": "100d0fac74955fbdcda81f6fa5068f6a0ef15d6d2ca31642735da238516300da",
-    "Cargo.lock": "fba0a000d46eff8d0aefdda76e234c4a11494be63a436d42afcb7386bf9cc679",
-    "Cargo.toml": "5f1e06e7c582d0a84b7557598cc204186ac5255501150d9e725784b6dce1fbf8",
+    "Cargo.lock": "9c816e4b29fffc278368494cb71e4fe331fd1a2238ad3bcd4a371ba8d7977b74",
+    "Cargo.toml": "a54f4b3d39629db86b0cce863476ef7f624cc500b97e2e5f782deeb56bc56e74",
+    "crates/noble-cli/Cargo.toml": "4b31fc3b8aaa3e75ba61caa12ad5b461489697d602c16d6024b9d4cddc1f19d9",
+    "crates/noble-contracts/Cargo.toml": "757e1546739b76fb93fadffee7ceb32bc537c030e945adcd2ca6905f79d43bd8",
     "crates/noble-kernel/Cargo.toml": "19e6c70441ef5d51b9caf828ecb4a7432c8bd7efc40bfdafa158d4d95efc949b",
     "flake.lock": "3c0558d476937ec8d50f2e2185847ea33ea9d394e5f228f6f103b9fa5ffc3d2d",
     "flake.nix": "475aaad09ff95c4f5472a9a160c81fea5962895ecc0d5bc7630446f14c68f918",
@@ -58,6 +60,15 @@
     "proofs/m1/lake-manifest.json": "2b876b213022b444fbe1b1118283dcec613f2cb5fa1d6aed08339f356775dd8f",
     "proofs/m1/lakefile.toml": "99c002cbb3acacde1c2ee1e8c9c02a0ca7a18a0938a7bcdefde6621888855c5d",
     "proofs/m1/lean-toolchain": "efac0b94923b2d8b6840cd35be9177ad0fc5ab2332f4f4311c98712cee92fdee",
+    "proofs/m2/lake-manifest.json": "2b876b213022b444fbe1b1118283dcec613f2cb5fa1d6aed08339f356775dd8f",
+    "proofs/m2/lakefile.toml": "c6a9c6eafb6aaef5e0748783dd8b64c539b1f976a32026e7685888cafd64be22",
+    "proofs/m2/lean-toolchain": "efac0b94923b2d8b6840cd35be9177ad0fc5ab2332f4f4311c98712cee92fdee",
+    "proofs/m3/lake-manifest.json": "2b876b213022b444fbe1b1118283dcec613f2cb5fa1d6aed08339f356775dd8f",
+    "proofs/m3/lakefile.toml": "40c7b26ec1bb700fc58a0e42f7e7dbcdd9d20ac620b3d999089f4509c02eceb4",
+    "proofs/m3/lean-toolchain": "efac0b94923b2d8b6840cd35be9177ad0fc5ab2332f4f4311c98712cee92fdee",
+    "proofs/mc1/lake-manifest.json": "2b876b213022b444fbe1b1118283dcec613f2cb5fa1d6aed08339f356775dd8f",
+    "proofs/mc1/lakefile.toml": "c92fedff771e74dca8dcc5c2ec96cf07080920f1b3a19303812bc70f55fbdf8f",
+    "proofs/mc1/lean-toolchain": "efac0b94923b2d8b6840cd35be9177ad0fc5ab2332f4f4311c98712cee92fdee",
     "rust-toolchain.toml": "7bfd3ca943dcce5b34de4c5f57414eae7496a698034208cf026690ada5130271"
   },
   "future_unselected": [

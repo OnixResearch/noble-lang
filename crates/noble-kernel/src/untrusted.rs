@@ -109,6 +109,10 @@ pub struct Limits {
     /// Quotation nesting depth.
     pub depth: u32,
     /// One type's size.
+    #[expect(
+        tigerstyle::numeric_units,
+        reason = "Owner: noble-maintainers; the public Limits::type_size field counts structural type nodes measured by Ty::size, not bytes or time; reassess if the acceptance protocol changes this unit."
+    )]
     pub type_size: u32,
     /// One stack's height.
     pub stack_height: u32,

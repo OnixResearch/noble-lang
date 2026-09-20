@@ -2,6 +2,10 @@
 //! eligibility and effect-identity checks the fragment requires.
 
 /// The literal scheme: `S -- S <literal type>`.
+#[expect(
+    tigerstyle::fragile_exhaustive_enum_match,
+    reason = "Owner: noble-maintainers; every Lit constructor requires its own result type in the literal scheme; new literals must fail compilation until that semantic mapping is supplied."
+)]
 pub(crate) fn literal_scheme(lit: crate::untrusted::Lit) -> crate::words::Scheme {
     let pattern = match lit {
         crate::untrusted::Lit::I64(_) => crate::shapes::Pattern::I64,
@@ -43,7 +47,7 @@ pub(crate) fn quotation_scheme() -> crate::words::Scheme {
 }
 
 /// The value slot that requires `Data`, for behaviors that constrain one.
-pub(crate) fn data_slot(
+pub(crate) const fn data_slot(
     behavior: Option<crate::contracts::Behavior>,
 ) -> Option<crate::words::Variable> {
     match behavior {
@@ -99,7 +103,7 @@ fn resolve_witness(
     at: super::Site,
     ctx: &super::Ctx,
 ) -> Result<crate::words::Inst, super::super::Fail> {
-    match crate::words::resolve::resolve(&scheme.var_kinds, inst, ctx.request.limits.work) {
+    match crate::words::resolve::bindings(&scheme.var_kinds, inst, ctx.request.limits.work) {
         Ok((resolved, _spent)) => Ok(resolved),
         Err(crate::words::InstError::CyclicWitness) => Err(super::invalid(
             ctx,
@@ -130,6 +134,10 @@ fn resolve_witness(
     }
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; check_bounds maps witness kind, arity and resource-limit failures to the acceptance protocol's typed outcomes; malformed external witnesses must never be asserted valid."
+)]
 fn check_bounds(
     scheme: &crate::words::Scheme,
     inst: &crate::words::Inst,
@@ -172,6 +180,10 @@ fn check_bounds(
     }
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; project validates substitutions, stack limits, effect identities and Data eligibility in that order and rejects through typed diagnostics rather than panics."
+)]
 fn project(
     scheme: &crate::words::Scheme,
     inst: &crate::words::Inst,

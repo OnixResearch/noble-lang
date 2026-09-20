@@ -1,12 +1,14 @@
 # Compiler-derived source inventory
 
-**Tasks 2.3 and 2.4 are complete.** The `source-coverage` check collects the compiler-derived inventory and compares it with a reviewed classification.
+Tasks 2.3 and 2.4 established the inventory mechanism. The `source-coverage` check collects the compiler-derived inventory and compares it with a reviewed classification.
 
-This is a named-scope accounting control, not M1 acceptance and not a refinement proof.
+The checked-in classification is the **MC1 source renewal dated 2026-09-20**, based on `.pi/mc1/octet/deny-complete-4`. That run passed the published 73-rule deny-all hook and the architecture gate with zero findings. The fresh compiler inventory also passed the independent source-coverage comparator. These are separate observations; classification itself is not a quality or proof receipt.
+
+This is a named-scope accounting control, not milestone acceptance, an architecture-clean receipt, or a refinement proof.
 
 ## Commands
 
-Reserved interface, now implemented:
+The existing collection and comparison interfaces are:
 
 ```sh
 source-inventory collect --root DIR --selection FILE --artifact-dir DIR
@@ -33,6 +35,9 @@ Octet owns the compiler facts, coverage report, and Cargo graph.
 
 The inventory comes from `cargo-octet check` on the real workspace with all targets and features.
 Nothing in the inventory is hand-written: units, subjects, macro origins, dependency edges, and the compiler coverage report are compiler-derived.
+The reviewed classifications are project-owned policy, not compiler certifications.
+
+The policy is not an isolated historical M1 fixture. `flake.nix` still compares it with the current workspace compiler inventory and current architecture scope. Its authoritative scope therefore includes `noble-kernel`, `noble-contracts`, and `noble-cli`; the CLI executable's compiler namespace is `noble`.
 
 ## Classification
 
@@ -40,19 +45,44 @@ Each compiler-derived production subject is reviewed as one of three categories.
 
 | Category | Meaning | Disposition |
 |---|---|---|
-| `body` | A Noble-authored production body | `extracted`, `modeled`, `excepted`, or `open` |
-| `generated` | A harness or closure item with no independent Noble obligation | `generated` |
-| `structural` | A type declaration or import marker | `structural` |
+| `body` | A Noble-authored function or named constant initializer observed in a production-role unit | `extracted`, `modeled`, `excepted`, or `open` |
+| `generated` | A compiler-generated derive, harness, or nested closure item with no independent Noble body obligation | `generated` |
+| `structural` | A declaration, implementation block, module, macro, type, or import marker; associated bodies are accounted separately | `structural` |
 
 Bodies additionally carry a refinement status: `proved` or `open`.
 Only bodies enter the extraction, modeling, exception, proof, and open counts.
 
-The current named M1 scope is 6 bodies, 4 generated items, and 6 structural subjects across 16 reviewed paths and 17 compiler items.
-All six bodies are `open`: the kernel transition has a compatibility probe but no source-bound integrated extraction gate, and the shell is not an M1 extraction subject.
-Zero bodies are extracted, modeled, excepted, or proved.
+The reviewed observation contains 470 bodies, 478 generated paths, and 221 structural paths: 1,169 unique production paths covering 1,199 compiler item facts. A path shared by an authored body and generated items retains the body obligation. The difference between item and path counts also includes compiler observations of different item kinds under one qualified path.
+
+All 470 body dispositions and refinements remain `open` in this inventory. It does not import or discharge the separately bound kernel/MC1 extraction and proof evidence. Zero bodies here are classified as extracted, modeled, excepted, or proved; that accounting limit is not a claim that the separate proof lanes have no evidence.
 
 Tests, macro origins, dependencies, tools, and future components are classified separately.
 Test-labelled subjects keep the test role and cannot discharge a production obligation.
+Only observations exclusively owned by test-role units enter the separate test set. The collector retains production roles for library and binary test configurations; a test body in such a unit cannot obtain an exemption merely through its name. Generated closure accounting likewise does not exclude its effects or required unknowns from architecture evaluation.
+
+The dated 2026-09-15 M1 review at tree `3abd178bda9543155c545fdacf6b07f3fd5bbc49` contained 6 bodies, 4 generated paths, and 6 structural paths across 17 compiler items. Those historical counts do not describe the current expected subject set.
+
+## Compiler review observation
+
+The review uses `.pi/mc1/octet/deny-complete-4` from 2026-09-20. These identifiers bind the observed source set and unchanged architecture policy, not a later source tree:
+
+| Binding | BLAKE3 identity |
+|---|---|
+| Compiler IR | `d7721092551d3fcc05fb2dcda1aa4aa7837e682403cf08953cb431308a9aa306` |
+| Compiler coverage | `03ab28221ba7eb9001fdb7bc48fcaff14645418fec56ea29d50adfcf552852f6` |
+| Collector policy | `d7b50aa20f0b3f844179ffc7fa775e78fbca900ca29eaa77c08fb5521f145f4f` |
+| Cargo graph | `11cc1756eb8511e0e202e8a255e2ea4e21e0dcfe2b99abf4e2560379dbf1949c` |
+| `noble-cli` source | `6d6a09bb47ecd571390be1ee1390edab8f9438f6c8f1484e619f5f4f53178a08` |
+| `noble-contracts` source | `3211e4161f66d171cbe6b46de3b1f31d93e98e039b8be1b6475bca028ff162b5` |
+| `noble-kernel` source | `1b7efd02dd9345d8d0a428ba1d2659f3b3a7c20dcc7a7e5410d0e51f55f94960` |
+
+Coverage reports all 15 expected units for one target/feature configuration. There are 666 unique exclusively test-role paths across 772 test item facts, 24 macro origins, three production dependency edges, no external Cargo edges, and ten selected tools. The two domain-core crates retain their `no_std` policy obligations.
+
+Complete collection alone is not a passing architecture gate. The earlier interim run's required production desugaring unknowns were not waived; this observation was collected after those source corrections. Listing `<builtin>` in the macro-origin set does not waive any required unknown, and the full compiler IR can retain test-only unknown facts without granting them production authority. Gate mode, core capability prohibitions, and empty waiver/exception sets remain unchanged.
+
+The default catalog was insufficient for acceptance. The published deny-all hook enables 73 rules, including off-by-default rules. The accepted source resolves their findings through legal const helpers, closed-enum declarations, bounded module separation, explicit units, and narrowly scoped explanations where heuristic requirements conflict with fallible validation or guarded arithmetic bounds. No assertion padding, new opaque extraction boundary, policy waiver, or catalog weakening was introduced.
+
+The architecture policy names the exact observed CLI effect owners, including compiler-qualified closure identities and filesystem observations through `std::path`. Its manifest was generated with the selected Nickel and `octet-standards` tools before this collector run. The inherited source comparison, policy/tool-selection freshness checks, and strict Octet gate remain separate acceptance controls; this document is not their execution receipt. Closure identities include source byte offsets, so even comment or help-text edits can require renewal. The current 15-unit observation is below the unchanged 16-unit collection limit, not permission to ignore additional selected units.
 
 ## Rejection controls
 
@@ -76,5 +106,5 @@ They are harness self-tests, not compiler evidence.
 The reviewed policy is a static expectation. The build never refreshes it.
 Renewal is an explicit reviewed action bound to the compiler-derived set at review time.
 The inventory covers the selected target and feature configuration only.
-Structural and generated categories are accounting, not Noble-authored bodies.
+Structural and generated categories are accounting, not independent verified bodies.
 No entry establishes refinement, native safety, dependency safety, or whole-project verification.

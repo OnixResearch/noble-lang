@@ -1,0 +1,11 @@
+[package]
+name = "noble-contracts"
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+
+[dependencies]
+noble-kernel = { path = "../noble-kernel" }
+
+[lints]
+workspace = true

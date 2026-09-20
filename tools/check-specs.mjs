@@ -1135,7 +1135,10 @@ function selfTest(base) {
   }), 'WIT effect oracle');
   run('identity-version-regression', b => changeJson(b, 'specs/conformance/identity-cases.json', p => p.cases.find(c => c.id === 'ID-03').expected.definition = 'same'), 'identity oracle');
   run('legacy-list-example', b => b.texts.set(CORE_SPEC, b.texts.get(CORE_SPEC).replace('[ drop run ]', '[ drop call ]')), 'surface: legacy');
-  run('greenfield-false-pass', b => changeJson(b, 'specs/conformance/cases.json', p => p.cases[0].state.execution = 'passed'), 'greenfield execution');
+  run('greenfield-false-pass', b => {
+    changeJson(b, 'specs/STATUS.json', p => p.compiler_exists = false);
+    changeJson(b, 'specs/conformance/cases.json', p => p.cases[0].state.execution = 'passed');
+  }, `greenfield execution claim: ${parse(base, 'specs/conformance/cases.json').cases[0].id}`);
   // The fixture pins the greenfield state itself (flag false + accepted
   // obligation) instead of depending on the bundle's current STATUS flags,
   // so the control keeps its meaning once the proof implementation exists.
@@ -1179,9 +1182,11 @@ function selfTest(base) {
     }), 'absent runtime execution claim: wasm-runtime');
   }
   run('component-implemented-without-compiler', b => changeJson(b, 'specs/STATUS.json', p => {
+    p.compiler_exists = false;
     p.components.find(c => c.id === 'core-checker').implementation = 'implemented';
   }), 'greenfield implementation claim: core-checker');
   run('component-executed-without-compiler', b => changeJson(b, 'specs/STATUS.json', p => {
+    p.compiler_exists = false;
     const c = p.components.find(c => c.id === 'core-checker');
     c.execution = 'passed'; c.evidence = [componentEvidence(c.id, 'test', 'passed')];
   }), 'greenfield execution claim: core-checker');
@@ -1205,6 +1210,7 @@ function selfTest(base) {
   run('component-proof-with-implementation-is-valid', b => changeJson(b, 'specs/STATUS.json', p => {
     p.proof_implementation_exists = true;
     const c = p.components.find(c => c.id === 'core-checker');
+    c.execution = 'not-run';
     c.proof = 'accepted'; c.evidence = [componentEvidence(c.id, 'lean-kernel', 'accepted')];
   }), null);
   run('local-binding-undefined-division', b => changeJson(b, 'specs/conformance/language-workflow-cases.json', p => {
@@ -1246,7 +1252,11 @@ function selfTest(base) {
   run('Aeneas-policy-missing', b => changeJson(b, 'specs/STATUS.json', p => delete p.verification_policy), 'Aeneas policy');
   run('Aeneas-checker-only-regression', b => changeJson(b, 'specs/STATUS.json', p => p.verification_policy.scope = 'checker-only'), 'Aeneas policy: scope');
   run('Aeneas-kernel-optional-regression', b => changeJson(b, 'specs/STATUS.json', p => p.verification_policy.kernel_route = 'preferred'), 'Aeneas policy: kernel_route');
-  run('Aeneas-false-coverage-inventory', b => changeJson(b, 'specs/STATUS.json', p => p.verification_policy.coverage_inventory = 'complete'), 'Aeneas policy: false greenfield');
+  run('Aeneas-false-coverage-inventory', b => changeJson(b, 'specs/STATUS.json', p => {
+    p.compiler_exists = false;
+    p.runtime_exists = false;
+    p.verification_policy.coverage_inventory = 'complete';
+  }), 'Aeneas policy: false greenfield');
   run('Aeneas-mandatory-Verus-regression', b => changeJson(b, 'specs/verification/toolchain-lock.template.json', p => p.proof.verus = null), 'Aeneas template');
   run('Aeneas-resource-route-regression', b => changeJson(b, 'specs/verification/obligations.json', p => p.obligations.find(o => o.id === 'PO-13').route = 'verus'), 'Aeneas obligation route');
   run('Aeneas-missing-extraction-gate', b => changeJson(b, 'specs/roadmap.json', p => {

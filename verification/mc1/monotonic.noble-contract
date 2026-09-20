@@ -1,0 +1,6 @@
+(contract 1 invalid-unconditional-monotonicity
+  (input (x I64))
+  (output (y I64))
+  (program [ 1 + ])
+  (requires true)
+  (ensures (lt (in x) (out y))))

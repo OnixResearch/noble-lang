@@ -3,10 +3,12 @@
 
 Document: IMPL-V001  
 Revision: 0.1.0-draft.5  
-Status: Canonical working tool policy; no compatible pin set or executed proof is claimed  
+Status: Canonical tool policy with implemented MC1 consumer workflow; executed scopes and assumptions recorded separately  
 Depends on: [SPEC-V001](VERIFICATION.md) at 0.1.0-draft.5
 
 [SOURCES.md](SOURCES.md) marks inherited external citation labels as historical, not fresh compatibility evidence.
+
+MC1 has a concrete isolated application-proof workflow and a separate actual-source correspondence lane; neither establishes whole-project verification.
 
 ## 1. Selected roles
 
@@ -22,7 +24,7 @@ Aeneas is a Rust verification toolchain, not the language in which Noble source 
 | Resource-table decisions, admission, loading decisions, caches, and runtime state transitions | Same Rust-to-Lean route | Deterministic transitions with explicit state and typed effect plans |
 | CLI, storage, native allocation, FFI, Wasmtime, callbacks, and synchronization | Extractable Rust logic plus narrow external adapters | Concrete effect and synchronization contracts; reviewed exceptions for unsupported bodies |
 
-The [Aeneas projects page](https://aeneasverif.github.io/projects/) recommends the Lean backend. The [upstream README](https://github.com/AeneasVerif/aeneas#targeted-subset-and-current-limitations) identifies unsafe code and concurrency as current limitations. These live sources establish the tool's stated scope, not compatibility with an unselected Noble implementation.
+The [Aeneas projects page](https://aeneasverif.github.io/projects/) recommends the Lean backend. The [upstream README](https://github.com/AeneasVerif/aeneas#targeted-subset-and-current-limitations) identifies unsafe code and concurrency as current limitations. These sources establish the tool's stated scope, not compatibility or refinement for every Noble function. Exact selected pins and executed source/configuration scopes require the project records below.
 
 ### 1.1 Whole-project scope and kernel priority
 
@@ -38,7 +40,7 @@ Local mutation of explicit owned state is permitted within the supported subset.
 
 **VT-SCOPE-05.** Each release inventory MUST map the complete production source set to extracted functions, external models, reviewed exceptions, or explicit open work. It MUST include dependency closure, macro/generated bodies, feature/target configurations, linked contracts, theorem identifiers, and independent extraction/proof statuses. Required verification gates MUST reject omissions, stale mappings, unapproved exceptions, and unresolved obligations in their claimed scope. Reports MUST show total, extracted, proved, modeled, excepted, and open counts with named scopes. Successful extraction alone MUST NOT count as a refinement proof.
 
-The first experiment covers a narrow subset. It does not satisfy whole-kernel or whole-project verification. Draft code can retain open proofs, but no stable verified subset can include unresolved required claims.
+Each extraction/refinement experiment covers only its recorded source and claim scope. MC1's actual-source extraction does not establish universal frontend correctness, whole-kernel correctness, or whole-project verification. Draft code can retain open proofs, but no stable verified subset can include unresolved required claims.
 
 **VT-ROLE-02.** Each component MUST have one declared primary verification route. Dual verification MAY be used for selected boundaries, but MUST NOT be required by default. No tool result may silently substitute for a result in another logic.
 
@@ -148,9 +150,46 @@ Host behavior, well-formed environments, and external state laws SHOULD be expli
 
 **VT-SANDBOX-02.** Acceptance MUST compare the proved statement and referenced definitions against a trusted, independently selected claim. It MUST validate the evidence representation and recheck the proof outside the influence of the producer's build process. Untrusted compiled proof objects MUST NOT simply be deserialized into a privileged verifier process.
 
-This is the security goal; a concrete export format and hardened checker pipeline are open deliverables. Lean's validation guidance describes stronger challenge/solution comparison and external-checker workflows for this threat model. This draft does not claim such a workflow has been integrated. [R4]
+MC1 implements this boundary for application proofs through [`noble verify`](../crates/noble-cli/src/workflow.rs). The consumer independently prepares the accepted subject and expected claim, snapshots the selected rule-library sources, and rebuilds them without producer caches. Untrusted proof source is elaborated in isolation. A separate untrusted exporter may read its compiled artifacts, but only bounded inert `noble-mc1-proof/v1` JSON declarations cross into the [fresh consumer](../crates/noble-cli/src/consumer). The trusted consumer never imports or deserializes a producer `.olean`.
+
+The consumer validates the wire shape and bounds, rejects duplicate/trusted-name replacement, missing or cyclic dependencies, and declarations outside the selected theorem's dependency closure, reconstructs safe Lean declarations, and kernel-checks them in a fresh environment. It compares the theorem type with the exact consumer-selected `MC1Obligation.claim` or its negation and inventories transitive axioms from raw declaration types/bodies. A producer's status text, weakened statement, or renamed expected definition cannot substitute for those checks. This is the MC1 implementation of the independent-checking boundary, not a claim that the CLI, OS isolation, decoder, Lean implementation, or every dependency has itself been universally verified. Lean's validation guidance motivates challenge/solution comparison and independent checking for this threat model. [R4]
 
 **VT-SANDBOX-03.** Proof-generation changes to source, preconditions, postconditions, definitions, trusted boundaries, or proof-checker settings MUST be independently reviewed. A stronger precondition, weaker conclusion, or circular assumption can make a valid proof useless for the requested claim.
+
+### 5.2 MC1 consumer configuration and limits
+
+The concrete commands and seven outcomes are specified in [SPEC-V002 section 12](PROGRAM-CONTRACTS.md#12-verification-tooling); the [README](../README.md#using-mc1-contracts) gives build and invocation examples. The binary is `noble`, built by package `noble-cli`. `explain-proof` and verification without evidence prepare/export statements but launch no proof tools. Actual proof/refutation checking requires Linux and the following consumer-selected configuration:
+
+| Setting | Required meaning |
+|---|---|
+| `NOBLE_LEAN` | Absolute path to the real release installation's `bin/lean`, with `lib/lean/Init.olean` available; not an elan shim |
+| `NOBLE_CONTRACT_LIBRARY` | Absolute source directory containing `lean-toolchain`, `NobleContracts.lean`, and its `NobleContracts/` modules; default is the build-time repository's `proofs/mc1` |
+| `NOBLE_BWRAP` | Absolute bubblewrap executable supporting the required namespace/mount isolation |
+| `NOBLE_PRLIMIT` | Absolute `prlimit` executable for file, descriptor, core, and CPU limits |
+| `NOBLE_SYSTEMD_RUN` | Absolute `systemd-run` executable; the worker runs in a user scope |
+| `XDG_RUNTIME_DIR` | Active user runtime directory with a usable `bus` and user systemd manager capable of applying the scope limits |
+| `NOBLE_NIX_STORE` | Absolute `nix-store` executable when Lean resides in `/nix/store`, used to select only its runtime closure |
+
+Executable overrides can be omitted when the tools are present in the implementation's conventional system locations. Bubblewrap, `prlimit`, and `systemd-run` are discovered under `/run/current-system/sw/bin`, `/usr/bin`, or `/bin`; Lean is discovered under `/run/current-system/sw/bin`, `/usr/local/bin`, or `/usr/bin`. Nix-store discovery also considers `/nix/var/nix/profiles/default/bin`. Selecting executable/library paths is a consumer trust decision, not permission for the proof producer to choose its acceptance policy. Library source symlinks are rejected.
+
+The library pin must be `leanprover/lean4:v4.31.0`. Before any proof source runs, a sandboxed version probe must report Lean 4.31.0, commit `68218e876d2a38b1985b8590fff244a83c321783`. Missing tools, wrong pins, invalid layouts, unavailable user scopes, or failed isolation probes fail closed with `unsupported`; there is no unsandboxed fallback. The repository development shell does not itself create a working user systemd session or enable namespace support.
+
+Each proof worker uses bubblewrap with all namespaces unshared, no network, cleared environment, no ambient credentials, read-only source/library/claim inputs, and no writable host directories. Only preselected artifact files are writable; temporary storage is private. Nix installations expose the selected toolchain closure rather than the whole store or project. The user systemd scope applies aggregate worker/descendant memory and task limits; `prlimit` adds per-process limits. These are host-enforced checking budgets, not guest runtime or termination proofs.
+
+| Budget | MC1 limit |
+|---|---|
+| Frontend source | 65,536 bytes; other preparation limits in [SPEC-V002 section 8.1](PROGRAM-CONTRACTS.md#81-delivered-mc1-source-and-ir) |
+| Submitted proof source | 524,288 bytes, UTF-8 |
+| Selected rule library | 4,194,304 source bytes and 128 Lean modules, with bounded tree traversal |
+| Proof JSON | 8,388,608 bytes; 1–4096 declarations |
+| Wire expressions/universes | 262,144 nodes; nesting depth 512; bounded uint32 indices |
+| Transitive declaration audit | 200,000 declarations |
+| Total proof wall-clock budget | Default 120000 ms; `--timeout-ms` accepts 1–600000 ms, including library rebuild and independent recheck |
+| Worker scope | 2 GiB aggregate memory, no swap, 64 tasks |
+| Process output/artifacts | 128 KiB per stdout/stderr stream; 32 MiB per artifact file; 128 file descriptors; no core dumps |
+| Private temporary filesystems | 64 MiB `/tmp`, 1 MiB `/dev/shm` |
+
+CPU limits derive from the remaining wall-clock budget. Time exhaustion reports `timeout`; other budget/recheck failures report their diagnostic `error` or `unsupported`, never proof success. Proof elaboration failure is not disproof. Only a fresh accepted `MC1Proof.refutation : Not MC1Obligation.claim` produces `disproved`. The report retains the selected tool identities, library source snapshot, expected statement, accepted assumptions, and separate implementation/backend status. See [CLI acceptance records](../verification/mc1/acceptance.json) for executed controls; the existence of this configuration does not itself prove that a host run passed them.
 
 ## 6. Toolchain pinning and reproducibility
 
@@ -162,7 +201,7 @@ The required pin set covers Lean/Lake, proof libraries, Charon, extraction rustc
 
 **VT-PIN-03.** The tracked configuration MUST include target triple, word size, Cargo features, dependency lock, relevant `cfg` flags, panic strategy, overflow semantics, generation options, solver options, and timeout/resource limits. Configuration changes invalidate affected evidence applicability until rerun.
 
-[verification/toolchain-lock.template.json](verification/toolchain-lock.template.json) is a newly authored, deliberately unselected template. Its null revisions are not usable pins. No compatible set is claimed.
+[verification/toolchain-lock.template.json](verification/toolchain-lock.template.json) remains a deliberately unselected template; its null revisions are not usable pins. Actual selection is recorded in [flake.lock](../flake.lock), [policy/tool-selection.json](../policy/tool-selection.json), and the proof-library toolchain/manifest files. Configuration identities are not compatibility or refinement evidence by themselves. Executed evidence must bind them to the claimed source and theorem scope, including the separate [MC1 record](../verification/mc1/evidence.json).
 
 The workspace milestone in [ROADMAP.md](ROADMAP.md) must select immutable Nix and Octet inputs. Nix creates `flake.lock`; hand-edited lock files are not accepted. Rust tests, Clippy, and the full pinned Octet catalog run as errors across the declared workspace scope.
 
@@ -204,13 +243,35 @@ Noble-owned runtime receipt DTOs remain Rust-owned. Their generated contracts mu
 
 **VT-CONTRACT-02.** Proof-required builds MUST invalidate affected application evidence when subjects, captures, logical definitions, policies, or semantic dependencies change. CI MUST exercise proof failure, unsupported claims, forged companions, stale applicability, and unrelated-artifact rejection. Pinned Lean libraries and sound finite replay rules support runtime companions without a production Lean or SMT process.
 
+### 7.2 MC1 evidence boundaries
+
+MC1 has three distinct subjects of assurance:
+
+| Lane | Delivered scope | Not established |
+|---|---|---|
+| Contract frontend/CLI | Version-1 source and typed IR; immutable accepted `Prepared`; exact statement generation; isolated checking with seven outcomes | Universal correctness of the Rust frontend or shell; runtime proof admission |
+| Strict application/rule library | Reviewed pure normal-return semantics and Lean rules for primitives, sequencing, structural cases, quotation/invocation, increment/composition, and universally quantified runtime-capture behavior | Rust implementation refinement, termination/host/resource guarantees, or Wasm/backend correspondence |
+| Actual-source implementation correspondence | Whole `noble-contracts` extraction; universal node/body projection preservation; full preparation/export equations for six named source cases | Universal parser/inference/exporter correctness or strict acceptance of native-evaluated correspondence equations |
+
+The strict application library is [`NobleContracts`](../proofs/mc1/NobleContracts.lean). Its imported definitions/rules and accepted application dependencies are checked against the standard allowed foundation set `propext`, `Classical.choice`, and `Quot.sound`; missing proofs, `sorryAx`, unsafe dependencies, and native-evaluation assumptions cannot satisfy that lane. Its `Exec` relation models all normal returns and its `Maps` relation does not assert existence of a result. Quotas, allocation failure, abnormal outcomes, host responses, and real runtime execution lie outside those application statements.
+
+The implementation lane is [`NobleContractImpl`](../proofs/mc1/NobleContractImpl.lean). [Projection theorems](../proofs/mc1/NobleContractImpl/Projection.lean) quantify over actual extracted node/body operations and preserve literal bits, word identities, quotation references, and order. The [source-bound statement equations](../proofs/mc1/NobleContractImpl/Statement.lean) evaluate the extracted full `prepare`/`export_lean` path, including inherited acceptance, for increment, composed increments, the universal capture-family source, structural data, reflected syntax, and signed wrap.
+
+Those six equations use native evaluation. Their extra native compiler/evaluator trust must be recorded separately from standard logical foundations under VT-LEAN-02; they do not become strict proofs by sharing a repository with strict application theorems. `NobleContractImpl` is not imported by the application rule library. The runtime-capture **application theorem** quantifies over runtime captures and logical inputs; the corresponding **source-export equation** concerns one exact contract source describing that family. Neither should be confused with universal frontend preservation.
+
+Charon/Aeneas extraction, generated Lean compilation, external-model fidelity, theorem checking, and concrete source/configuration correspondence retain distinct statuses. Actual-source extraction is not a proof by itself, and successful CLI proof acceptance explicitly reports implementation refinement as `not-checked-by-this-command` and backend correspondence as `not-claimed`. These statuses are not changed by producer metadata or application success.
+
+Durable [MC1 evidence](../verification/mc1/evidence.json) and [CLI acceptance](../verification/mc1/acceptance.json) records must identify exact tools, sources, theorem inventories, assumptions, generated artifacts, controls, and exclusions. The [source/proof fixtures](../verification/mc1) are inputs, not execution evidence. The [obligation ledger](verification/obligations.json) and [milestone status](STATUS.json) determine scoped acceptance; this policy does not close all of PO-15/16/19/20/21 or full `Contracts-Draft` conformance.
+
+MC1 implements the future companion interface/design selection, not guest companion values, finite runtime replay, applicability checks, proof-required builds, or certified admission. MC2/Wasm and any backend/load correspondence remain outside this milestone, as do general termination, host/resource protocols, and whole-language compiler correctness.
+
 ## 8. Implementation entry point
 
 The first vertical slice SHALL implement the pure explicit acceptance checker, wrapping integer operations, and runtime-independent recipe builders in ordinary Rust; extract them with a pinned Charon/Aeneas pair; and prove one concrete checker/representation refinement against the Lean model. In parallel, the Wasm experiment SHALL exercise nonconstant `quote` and `compose` without claiming backend proof.
 
 After that slice establishes a usable proof pattern, extend extraction and refinement across the kernel and the remaining compiler/runtime logic. Resource-table transitions follow the same Aeneas route. External effects remain behind checked adapters with explicit correspondence obligations.
 
-M1 must establish the source inventory and extraction CI entry point. M2 must demonstrate actual extraction, one nontrivial refinement, and rejection of incomplete verification coverage. MC1 adds typed application contracts and proof rules after M2. MC2 adds the first-class Wasm demonstration after MC1 and M4. Neither requires host resource protocols. The current package contains document checks only. Noble implementation, compatible pins, proof sources, and verifier execution remain future work.
+M1 establishes the source inventory and extraction CI entry point. M2 requires actual extraction, a nontrivial refinement, and rejection of incomplete verification coverage. MC1 adds the implemented typed contract frontend, source/IR revision 1, strict application rules, CLI consumer, and separately scoped implementation correspondence described above. MC2 still requires the first-class Wasm demonstration after MC1 and M4. Neither contract milestone supplies host resource protocols. The repository now contains production Rust, pinned tools, generated extraction, and proof sources; their existence does not establish full-kernel, whole-project, runtime, or backend completion. Current milestone acceptance is recorded in the status/evidence ledgers, not inferred from the historical entry-point requirements below.
 
 **VT-M1-01.**
 

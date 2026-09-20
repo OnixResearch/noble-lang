@@ -1,0 +1,1 @@
+(contract 1 reflected-syntax (input (p (Program (I64) (I64)))) (output (s Syntax)) (program [ reflect ]) (requires true) (ensures true))

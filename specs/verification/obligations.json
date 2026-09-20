@@ -181,7 +181,29 @@
       "claim": "Behavioral sequencing and builder-family rules are sound",
       "route": "lean-kernel",
       "status": "open",
-      "evidence": []
+      "evidence": [
+        {
+          "claim": "The MC1-v1 normal-return fragment has 43 strict primitive, sequencing, quotation, invocation, structural/branch, composition, and universally quantified family theorems",
+          "subject": "PO-15",
+          "revision": "0.1.0-draft.5",
+          "kind": "lean-kernel",
+          "result": "accepted",
+          "source_revision": "sha256:c3aa250ea34c1cfb6b0cd0c34546b9d76027a9245021d4322439a64f3e3fd31d",
+          "configuration": {
+            "fragment": "mc1-v1-pure-normal-return",
+            "subject": "proofs/mc1/NobleContracts",
+            "gate": "proofs/mc1/ContractGate.lean",
+            "receipt": "../../verification/mc1/implementation.json",
+            "lean": "4.31.0"
+          },
+          "assumptions": [
+            "Only propext, Classical.choice, and Quot.sound; no sorry, producer axiom, or native-evaluation axiom.",
+            "Composition requires the intermediate implication and exact interface/context compatibility.",
+            "Quantified capture families range over all admissible captured values and later operands.",
+            "Partial correctness on normal returns only; not termination, runtime execution, first-class companions, or the entire PO-15 scope."
+          ]
+        }
+      ]
     },
     {
       "id": "PO-16",
@@ -209,7 +231,31 @@
       "claim": "Contract export and obligation generation preserve the intended Noble subject and proposition",
       "route": "lean-and-aeneas-contract-export",
       "status": "open",
-      "evidence": []
+      "evidence": [
+        {
+          "claim": "The actual MC1 Rust frontend/exporter is freshly extracted and byte-matched; 61 strict bridge/projection theorems and six closed prepare/export equations bind the named source-export fragment",
+          "subject": "PO-19",
+          "revision": "0.1.0-draft.5",
+          "kind": "aeneas-lean",
+          "result": "accepted",
+          "source_revision": "sha256:c3aa250ea34c1cfb6b0cd0c34546b9d76027a9245021d4322439a64f3e3fd31d",
+          "configuration": {
+            "fragment": "mc1-statement-export-v1",
+            "subject": "proofs/mc1/NobleContractImpl",
+            "gate": "verification/mc1/implementation.mjs",
+            "receipt": "../../verification/mc1/implementation.json",
+            "lean": "4.31.0",
+            "charon": "b104e24fea7d721b71e6c39fd70f26ff20bc0980",
+            "aeneas": "505b6ca35217e7be5c96c3e2f8045edfbdf47291"
+          },
+          "assumptions": [
+            "The 61 universal bridge/projection theorems use only propext, Classical.choice, and Quot.sound.",
+            "The six closed source equations cover increment, wrapping, composition, capture family, structural values, and syntax; they additionally trust the exact native-evaluation axiom inventory in the receipt.",
+            "Pinned extraction/translation, handwritten standard-library models, and exactly five inherited opaque kernel copy/format helpers are disclosed boundaries; the contract crate has no local opaque functions.",
+            "The source equations are closed examples, not a universal parser, frontend, or string-renderer correctness proof; broad PO-19 remains open."
+          ]
+        }
+      ]
     },
     {
       "id": "PO-20",

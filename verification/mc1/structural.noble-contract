@@ -1,0 +1,8 @@
+(contract 1 structural-roundtrip
+  (input (xs (List I64)) (a I64))
+  (output (p (Pair (List I64) I64)))
+  (define identity Bool true)
+  (program [ pair ])
+  (requires (def identity))
+  (ensures (and (eq (first (out p)) (in xs))
+                (eq (second (out p)) (in a)))))

@@ -31,6 +31,18 @@ fn deps_of(
     }
 }
 
+/// Resolve a color only for a representable definition inside the arena.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; colored_slot uses TryFrom and Option::map for checked arena lookup, neither available here without experimental const traits; reassess when those operations become stable const."
+)]
+fn colored_slot(colors: &[u8], definition: crate::contracts::Definition) -> Option<(usize, u8)> {
+    match usize::try_from(definition.0) {
+        Ok(index) => colors.get(index).map(|color| (index, *color)),
+        Err(_) => None,
+    }
+}
+
 /// Validate the environment's definition dependencies (B-CHECK-02).
 ///
 /// A definition that transitively depends on itself — directly or through
@@ -38,6 +50,10 @@ fn deps_of(
 /// closes on. Every followed edge charges the declared work limit before
 /// it is taken; a walk that would exceed it fails closed as exhausted. The
 /// bootstrap table declares no dependencies, so its walk charges nothing.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; dependencies bounds root access by the color arena and propagates the DFS cycle/work outcomes; externally supplied dependency graphs must reject without assertion panics."
+)]
 pub(super) fn dependencies(
     env: &crate::contracts::Env,
     limits: &crate::untrusted::Limits,
@@ -70,6 +86,10 @@ pub(super) fn dependencies(
 }
 
 /// Run one depth-first walk from an unvisited root to completion.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; dep_root threads the DFS state until its stack empties or dep_step returns a typed failure; stack exhaustion and malformed graphs are handled as outcomes."
+)]
 fn dep_root(
     env: &crate::contracts::Env,
     root: crate::contracts::Definition,
@@ -104,6 +124,10 @@ fn dep_root(
 /// finished its successors and turns done. Every arena position passes
 /// through on-path at most once, so the walk itself terminates; the work
 /// limit is its fail-closed bound, charged per followed edge.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; dep_step checks definition/color membership, charges each edge before following it and returns RecursiveDependency or Work exhaustion; missing definitions remain sinks rather than panic conditions."
+)]
 fn dep_step(
     env: &crate::contracts::Env,
     mut walk: DepWalk,
@@ -113,8 +137,13 @@ fn dep_step(
         Some(top) => *top,
         None => return (walk, Ok(())),
     };
-    let index = usize::try_from(top.0).unwrap_or(usize::MAX);
-    let color = walk.colors.get(index).copied().unwrap_or(2);
+    let (index, color) = match colored_slot(&walk.colors, top) {
+        Some(found) => found,
+        None => {
+            walk.stack.pop();
+            return (walk, Ok(()));
+        }
+    };
     if color == 1 {
         // Resurfaced: every successor enqueued below has finished.
         // The color read above returned `Some`, so the position is inside.
@@ -138,22 +167,18 @@ fn dep_step(
         }
         walk.spent += 1;
         let dep = deps[dep_index];
-        let position = usize::try_from(dep.0).unwrap_or(usize::MAX);
-        let dep_color = walk.colors.get(position).copied().unwrap_or(2);
-        if position >= walk.colors.len() {
-            // An edge outside the arena names no definition; it is a sink.
-            dep_index += 1;
-        } else if dep_color == 1 {
-            failure = Some(super::Fail::Unsupported(
-                crate::untrusted::UnsupportedKind::RecursiveDependency(dep),
-            ));
-            break;
-        } else {
-            if dep_color == 0 {
-                walk.stack.push(dep);
+        match colored_slot(&walk.colors, dep) {
+            Some((_, 1)) => {
+                failure = Some(super::Fail::Unsupported(
+                    crate::untrusted::UnsupportedKind::RecursiveDependency(dep),
+                ));
+                break;
             }
-            dep_index += 1;
+            Some((_, 0)) => walk.stack.push(dep),
+            // Missing definitions are sinks; completed definitions need no work.
+            Some(_) | None => {}
         }
+        dep_index += 1;
     }
     let outcome = match failure {
         Some(problem) => Err(problem),
@@ -169,6 +194,10 @@ fn dep_step(
 /// declaration still has to be a well-formed scheme. Each entry charges
 /// the declared work limit before it is inspected; the bootstrap
 /// environment declares none, so its scan charges nothing.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; schemas charges work before each declaration, then returns RecursiveSchema or SchemeForm in order; invalid external schemas must not trigger assertions."
+)]
 pub(super) fn schemas(
     env: &crate::contracts::Env,
     limits: &crate::untrusted::Limits,

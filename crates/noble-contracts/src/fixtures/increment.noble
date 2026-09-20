@@ -1,0 +1,7 @@
+(contract 1 increment
+  (input (x I64))
+  (output (y I64))
+  (define one I64 1)
+  (program [ 1 + ])
+  (requires true)
+  (ensures (eq (out y) (add (in x) (def one)))))

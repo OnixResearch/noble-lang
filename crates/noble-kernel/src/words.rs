@@ -148,6 +148,10 @@ impl Scheme {
     }
 
     /// Check that an instantiation fits this scheme within the given bounds.
+    #[expect(
+        tigerstyle::ambiguous_params,
+        reason = "Owner: noble-maintainers; the public witness check takes named u32 entry-count and type-node limits, returning distinct OversizedStack/OversizedType errors; retaining these scalar bounds preserves the existing API."
+    )]
     pub fn check_inst(
         &self,
         inst: &Inst,
@@ -228,6 +232,10 @@ impl Scheme {
     }
 
     /// Substitute an effect pattern to a concrete set.
+    #[expect(
+        tigerstyle::fragile_exhaustive_enum_match,
+        reason = "Owner: noble-maintainers; each EffectSlot constructor must explicitly contribute a concrete identity or a resolved effect binding; a new slot form must require an implemented substitution rule."
+    )]
     pub fn subst_effects(
         &self,
         slots: &[crate::shapes::EffectSlot],

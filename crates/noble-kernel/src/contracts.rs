@@ -152,6 +152,10 @@ fn index(def: Definition) -> Option<usize> {
 }
 
 /// Build the bootstrap environment with the fixed v1 contract table.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; environment validates every bootstrap scheme before constructing its parallel definition/kind/dependency tables and returns the first Defect; assertions would change this fallible construction contract."
+)]
 pub fn environment() -> Result<Env, crate::shapes::Defect> {
     let table = bootstrap::data::table();
     let mut defs: alloc::vec::Vec<crate::words::Scheme> = alloc::vec::Vec::with_capacity(32);
@@ -177,6 +181,10 @@ pub fn environment() -> Result<Env, crate::shapes::Defect> {
     let mut table_index = 0;
     while table_index < table.len() {
         defs.push(table[table_index].1.clone());
+        #[expect(
+            tigerstyle::allocation_in_loop,
+            reason = "Owner: noble-maintainers; Vec::new allocates no storage and records the bootstrap definition's empty dependency list; reassess if this changes to a nonzero-capacity constructor."
+        )]
         deps.push(alloc::vec::Vec::new());
         table_index += 1;
     }

@@ -98,6 +98,10 @@ enum Step {
 }
 
 /// Require one variable to carry exactly the declared kind.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; require_kind uses checked TryFrom indexing and derived VariableKind equality, whose trait calls are not stable const; reassess when those traits support const evaluation."
+)]
 fn require_kind(
     kinds: &[crate::words::VariableKind],
     var: crate::words::Variable,
@@ -119,6 +123,10 @@ fn require_kind(
 }
 
 /// Require every effect slot to match the effect kind.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; require_slots checks every variable's declared effect kind through typed Defect results and bounds indexing by slots.len(); invalid schemes must reject rather than panic."
+)]
 fn require_slots(kinds: &[crate::words::VariableKind], slots: &[EffectSlot]) -> Result<(), Defect> {
     let mut index = 0;
     let mut defect: Option<Defect> = None;
@@ -142,6 +150,10 @@ fn require_slots(kinds: &[crate::words::VariableKind], slots: &[EffectSlot]) -> 
 }
 
 /// Require every stack part to match its kind, queueing nested patterns.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; require_parts validates stack variables and queues other patterns using length-bounded indexing, returning the first Defect instead of asserting that external schemes are well formed."
+)]
 fn require_parts(
     kinds: &[crate::words::VariableKind],
     parts: alloc::vec::Vec<Pattern>,
@@ -172,6 +184,14 @@ fn require_parts(
 }
 
 /// Require one pattern to match its kind, queueing its sub-patterns.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; require_pattern consumes boxed patterns and grows the owned Vec work queue; these allocation/drop operations are runtime-only."
+)]
+#[expect(
+    tigerstyle::fragile_exhaustive_enum_match,
+    reason = "Owner: noble-maintainers; every Pattern constructor must specify its variable-kind checks and queued children; new constructors must require an explicit validation rule."
+)]
 fn require_pattern(
     kinds: &[crate::words::VariableKind],
     pattern: Pattern,
@@ -213,6 +233,14 @@ fn require_pattern(
 }
 
 /// Validate one signature's parts and effects against the declared kinds.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; validate bounds its pending walk and returns Defect for invalid kinds or exhausted local capacity; assertions would add panic paths for external signatures."
+)]
+#[expect(
+    tigerstyle::fragile_exhaustive_enum_match,
+    reason = "Owner: noble-maintainers; each Step state selects a distinct parts, slots or pattern validation rule; adding a walk state must force this dispatcher to be updated."
+)]
 pub fn validate(
     kinds: &[crate::words::VariableKind],
     stack_in: &[Pattern],

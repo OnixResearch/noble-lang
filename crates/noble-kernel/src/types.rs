@@ -82,6 +82,10 @@ impl EffSet {
 
     /// Least upper bound.
     pub fn union(&self, other: &EffSet) -> EffSet {
+        #[expect(
+            tigerstyle::raw_arithmetic_overflow,
+            reason = "Owner: noble-maintainers; each Vec<EffId> is bounded by isize::MAX bytes and EffId is nonzero-sized, so the sum of two lengths is at most 2 * isize::MAX < usize::MAX; reassess if storage becomes zero-sized."
+        )]
         let mut out = alloc::vec::Vec::with_capacity(self.0.len() + other.0.len());
         let mut left = 0usize;
         let mut right = 0usize;
@@ -196,6 +200,10 @@ impl Ty {
     /// A resource anywhere inside a payload makes the whole value ineligible,
     /// including through `Pair`, `Sum`, and `List` alternatives. A walk that
     /// exceeds the local bound fails closed.
+    #[expect(
+        tigerstyle::fragile_exhaustive_enum_match,
+        reason = "Owner: noble-maintainers; each Ty constructor must explicitly declare whether Data eligibility inspects children, accepts directly or rejects resources; new types must not inherit a fallback eligibility rule."
+    )]
     pub fn is_data(&self) -> bool {
         let mut work: alloc::vec::Vec<Ty> = alloc::vec::Vec::with_capacity(8);
         work.push(self.clone());
@@ -222,6 +230,10 @@ impl Ty {
     }
 
     /// A size measure used by the declared type-size limit.
+    #[expect(
+        tigerstyle::fragile_exhaustive_enum_match,
+        reason = "Owner: noble-maintainers; every size-walk Step must map explicitly to failure or a computed size; a new state must require review of the fail-closed size contract."
+    )]
     pub fn size(&self) -> Option<u32> {
         let mut walk = size::Walk {
             todo: alloc::vec::Vec::with_capacity(8),

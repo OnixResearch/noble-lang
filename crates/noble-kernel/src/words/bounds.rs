@@ -3,6 +3,10 @@
 //! from inside a loop.
 
 /// Check one binding against its declared kind and the declared bounds.
+#[expect(
+    tigerstyle::ambiguous_params,
+    reason = "Owner: noble-maintainers; check_binding carries Scheme::check_inst's named stack-entry and type-node limits unchanged into the corresponding kind-specific checks; reassess if these bounds escape that checking chain."
+)]
 pub(super) fn check_binding(
     binding: &crate::words::Binding,
     kind: &crate::words::VariableKind,
@@ -36,6 +40,14 @@ pub(super) fn check_binding(
 }
 
 /// Check one segment's height and every entry's type size.
+#[expect(
+    tigerstyle::ambiguous_params,
+    reason = "Owner: noble-maintainers; check_segment checks max_stack against the segment length before passing max_type to the node-size check, preserving the distinct stack/type exhaustion order."
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; check_segment uses checked integer-conversion traits and invokes the runtime allocating type-size walk through check_sizes; reassess if that walk becomes const-capable."
+)]
 fn check_segment(
     segment: &[crate::types::Ty],
     max_stack: u32,
@@ -52,6 +64,10 @@ fn check_segment(
 }
 
 /// Check every type size in one segment against the declared bound.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; check_sizes bounds indexing by segment length and returns OversizedType for an excessive or unavailable size; hostile type trees must reject rather than trigger assertions."
+)]
 pub(crate) fn check_sizes(
     segment: &[crate::types::Ty],
     max_type: u32,
@@ -84,6 +100,10 @@ pub(crate) fn check_sizes(
 }
 
 /// Check one value binding's type size against the declared bound.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; check_size invokes Ty::size's owned Vec traversal, which allocates and cannot be const; reassess only if the size representation and walk change."
+)]
 fn check_size(ty: &crate::types::Ty, max_type: u32) -> Result<(), crate::words::InstError> {
     match ty.size() {
         Some(size) => {
@@ -98,6 +118,10 @@ fn check_size(ty: &crate::types::Ty, max_type: u32) -> Result<(), crate::words::
 }
 
 /// Check one effect binding's identity count against the declared bound.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; check_effect_count calls EffSet::len, whose checked TryFrom conversion is not stable const; reassess when that conversion becomes const without changing the public API."
+)]
 fn check_effect_count(
     set: &crate::types::EffSet,
     max_effects: u64,

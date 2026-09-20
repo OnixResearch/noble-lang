@@ -1,3 +1,5 @@
+#![feature(register_tool)]
+#![register_tool(tigerstyle)]
 //! Static documentation-example checks (DX-DOC-01/02).
 //!
 //! Every fenced code block tagged `noble-check` in the kernel crate's
@@ -10,96 +12,12 @@
 
 #[path = "docexamples/decode.rs"]
 mod decode;
+#[path = "docexamples/fences.rs"]
+mod fences;
 #[path = "docexamples/json.rs"]
 mod json;
-
-use json::Json;
-use noble_kernel::untrusted::Outcome;
-use std::path::{Path, PathBuf};
-
-/// One fenced block found by the scan.
-struct Block {
-    file: PathBuf,
-    line: usize,
-    info: String,
-    body: String,
-}
-
-/// Strip one Rust doc-comment marker so fences inside doc comments scan the
-/// same way as fences in Markdown.
-fn strip_doc(line: &str) -> &str {
-    let trimmed = line.trim_start();
-    if let Some(rest) = trimmed.strip_prefix("///") {
-        rest
-    } else if let Some(rest) = trimmed.strip_prefix("//!") {
-        rest
-    } else {
-        trimmed
-    }
-}
-
-/// Scan one file's text for fenced blocks.
-fn scan_text(file: PathBuf, text: &str, blocks: &mut Vec<Block>) {
-    let mut open: Option<Block> = None;
-    for (index, line) in text.lines().enumerate() {
-        let stripped = strip_doc(line);
-        if let Some(info) = stripped.strip_prefix("```") {
-            match open.take() {
-                Some(block) => blocks.push(block),
-                None => {
-                    open = Some(Block {
-                        file: file.clone(),
-                        line: index + 2,
-                        info: info.trim().to_string(),
-                        body: String::new(),
-                    });
-                }
-            }
-        } else if let Some(block) = open.as_mut() {
-            block.body.push_str(strip_doc(line));
-            block.body.push('\n');
-        }
-    }
-}
-
-/// Walk one directory recursively, collecting `.rs` files in sorted order.
-fn collect_rust(dir: &Path, out: &mut Vec<PathBuf>) -> Result<(), String> {
-    let entries = std::fs::read_dir(dir).map_err(|problem| format!("{dir:?}: {problem}"))?;
-    let mut sorted: Vec<PathBuf> = entries
-        .filter_map(|entry| entry.ok())
-        .map(|entry| entry.path())
-        .collect();
-    sorted.sort();
-    let mut index = 0;
-    while index < sorted.len() {
-        let path = sorted[index].clone();
-        if path.is_dir() {
-            collect_rust(&path, out)?;
-        } else if path.extension().is_some_and(|ext| ext == "rs") {
-            out.push(path);
-        }
-        index += 1;
-    }
-    Ok(())
-}
-
-/// Scan every documented source: the kernel crate's sources and the
-/// fragment definitions (v0 and v1) and the v1 executed examples.
-fn scan_all() -> Result<Vec<Block>, String> {
-    let manifest = Path::new(env!("CARGO_MANIFEST_DIR"));
-    let mut files: Vec<PathBuf> = Vec::new();
-    collect_rust(&manifest.join("src"), &mut files)?;
-    files.push(manifest.join("../../verification/m2-fragment.md"));
-    files.push(manifest.join("../../verification/m3-fragment.md"));
-    files.push(manifest.join("../../verification/m3-docexamples.md"));
-    let mut blocks = Vec::new();
-    for file in files {
-        let text = std::fs::read_to_string(&file)
-            .map_err(|problem| format!("cannot read {}: {problem}", file.display()))?;
-        scan_text(file, &text, &mut blocks);
-    }
-    Ok(blocks)
-}
+#[path = "docexamples/value.rs"]
+mod value;
 
 /// The outcome an example states, from its `expect=` attribute.
 fn stated(info: &str) -> Result<&str, String> {
@@ -115,13 +33,13 @@ fn stated(info: &str) -> Result<&str, String> {
     }
 }
 
-fn outcome_name(outcome: &Outcome) -> &'static str {
+const fn outcome_name(outcome: &noble_kernel::untrusted::Outcome) -> &'static str {
     match outcome {
-        Outcome::Accepted(_) => "accepted",
-        Outcome::Invalid(_) => "invalid",
-        Outcome::Unsupported(_) => "unsupported",
-        Outcome::Exhausted(_) => "exhausted",
-        Outcome::InternalFailure => "internal-failure",
+        noble_kernel::untrusted::Outcome::Accepted(_) => "accepted",
+        noble_kernel::untrusted::Outcome::Invalid(_) => "invalid",
+        noble_kernel::untrusted::Outcome::Unsupported(_) => "unsupported",
+        noble_kernel::untrusted::Outcome::Exhausted(_) => "exhausted",
+        noble_kernel::untrusted::Outcome::InternalFailure => "internal-failure",
     }
 }
 
@@ -178,8 +96,12 @@ fn require_word_coverage(covered: &[bool; WORDS.len()]) -> Result<(), String> {
 // r[verify DX-DOC-02]
 // r[verify VT-M2-01]
 #[test]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; every stated outcome, minimum example count and per-word coverage is checked through descriptive Result failures; duplicating them as assertions would discard file/line diagnostics."
+)]
 fn documented_noble_check_examples_run_through_the_actual_checker() -> Result<(), String> {
-    let blocks = scan_all()?;
+    let blocks = fences::scan_all()?;
     let mut executed = 0;
     let mut illustrative = 0;
     let mut covered = [false; WORDS.len()];
@@ -189,14 +111,14 @@ fn documented_noble_check_examples_run_through_the_actual_checker() -> Result<()
             continue;
         }
         let expected = stated(&block.info)?;
-        let parsed: Json = json::parse(&block.body).map_err(|problem| {
+        let parsed = json::parse(&block.body).map_err(|problem| {
             format!(
                 "{}:{}: JSON parse: {problem}",
                 block.file.display(),
                 block.line
             )
         })?;
-        let example = decode::decode(&parsed).map_err(|problem| {
+        let example = decode::example(&parsed).map_err(|problem| {
             format!("{}:{}: decode: {problem}", block.file.display(), block.line)
         })?;
         let env = noble_kernel::contracts::environment().map_err(|defect| format!("{defect:?}"))?;
@@ -212,7 +134,9 @@ fn documented_noble_check_examples_run_through_the_actual_checker() -> Result<()
         executed += 1;
         for node in &example.candidate.nodes {
             if let noble_kernel::untrusted::Node::Invocation { def, .. } = node {
-                let index = def.0 as usize;
+                let index = usize::try_from(def.0).map_err(|problem| {
+                    format!("definition {} cannot index word coverage: {problem}", def.0)
+                })?;
                 if index < covered.len() {
                     covered[index] = true;
                 }
@@ -239,8 +163,12 @@ fn documented_noble_check_examples_run_through_the_actual_checker() -> Result<()
 /// fail — it is skipped only because it is not tagged `noble-check`.
 // r[verify DX-DOC-02]
 #[test]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; this control checks the missing execution tag, successful JSON parse, failed schema decode and illustrative coverage through Result failures rather than duplicate assertions."
+)]
 fn illustrative_text_blocks_are_not_executed() -> Result<(), String> {
-    let blocks = scan_all()?;
+    let blocks = fences::scan_all()?;
     let schema = blocks
         .iter()
         .find(|block| block.body.contains("\"def\": \"add\""))
@@ -251,7 +179,7 @@ fn illustrative_text_blocks_are_not_executed() -> Result<(), String> {
     let parsed = json::parse(&schema.body).map_err(|problem| {
         format!("control premise: schema block must parse as JSON: {problem}")
     })?;
-    let decoded = decode::decode(&parsed);
+    let decoded = decode::example(&parsed);
     if decoded.is_ok() {
         return Err(
             "control premise: the schema block names `add`, which the bootstrap environment does not provide; decoding it should fail"

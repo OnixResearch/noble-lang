@@ -82,7 +82,7 @@ if [ "$probe_rc" -ne 0 ]; then
     || fail M3-KERNEL-BINDING "the m3 root's generated entry point differs from proofs/m2's"
   diff -rq "$PROOF_ROOT/NobleKernel" "$M2_ROOT/NobleKernel" >/dev/null \
     || fail M3-KERNEL-BINDING "the m3 root's generated modules differ from proofs/m2's"
-  grep -q '^def words.resolve.resolve' "$PROOF_ROOT/NobleKernel/Funs.lean" \
+  grep -q '^def words.resolve.bindings' "$PROOF_ROOT/NobleKernel/Funs.lean" \
     || fail M3-KERNEL-BINDING "generated module lacks the B-CHECK-05 words.resolve walk"
   grep -q 'CyclicWitness : untrusted.Constraint' "$PROOF_ROOT/NobleKernel/Types.lean" \
     || fail M3-KERNEL-BINDING "generated module lacks the CyclicWitness constraint"

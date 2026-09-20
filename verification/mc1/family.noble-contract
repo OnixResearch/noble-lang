@@ -1,0 +1,7 @@
+(contract 1 addition-builder-family
+  (input (n I64))
+  (output (p (Program (I64) (I64))))
+  (params (x I64))
+  (program [ quote (block (I64 I64) (I64) [ + ]) compose ])
+  (requires true)
+  (ensures (maps (out p) (param x) (add (param x) (in n)))))

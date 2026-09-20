@@ -2,6 +2,10 @@
 //! identities, plus the external-environment-data validation walks
 //! (B-CHECK-02). Every check completes before the machine starts.
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; check_request preserves format, byte/node, scheme, dependency, schema, stack and effect rejection order; invalid requests are typed outcomes, not assertion failures."
+)]
 pub(super) fn check_request(
     env: &crate::contracts::Env,
     request: &crate::untrusted::Request,

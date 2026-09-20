@@ -1,19 +1,7 @@
-//! Hand-written structural impls for the self-recursive pattern tree.
-//!
-//! `Pattern` recurses through `alloc` containers, so a derived `Clone` or
-//! `Debug` body hands this type's own trait instance to `Vec::clone` and to
-//! the formatting machinery. Aeneas emits a trait instance after the method
-//! that feeds it, so such a body forward-references a declaration Lean has not
-//! seen yet. These bodies call the concrete methods instead: an element clone
-//! goes through the local `Clone` impl and nested formatting goes through the
-//! local `Debug` impl, so the translated module stays acyclic.
+//! Structural trait implementations avoid Aeneas's derived-method forward references.
 
-/// Deep-copy one pattern stack, one element at a time.
-///
-/// The extraction treats this helper as an assumption: Aeneas would
-/// functionalize its loop inside the clone instance.s mutual block, and the
-/// Lean backend cannot prove that shape monotone. Cloning stays an explicit,
-/// disclosed copy step.
+/// Copy one pattern stack explicitly. Extraction assumes this helper: Aeneas
+/// cannot prove monotonicity of its loop inside Clone's mutual instance block.
 #[charon::opaque]
 fn clone_parts(stack: &[crate::shapes::Pattern]) -> alloc::vec::Vec<crate::shapes::Pattern> {
     let mut out: alloc::vec::Vec<crate::shapes::Pattern> =
@@ -26,7 +14,6 @@ fn clone_parts(stack: &[crate::shapes::Pattern]) -> alloc::vec::Vec<crate::shape
     out
 }
 
-/// Deep-copy one pattern.
 impl Clone for crate::shapes::Pattern {
     fn clone(&self) -> crate::shapes::Pattern {
         match self {
@@ -62,7 +49,6 @@ impl Clone for crate::shapes::Pattern {
     }
 }
 
-/// Deep-copy one effect-slot stack, one element at a time.
 fn clone_slots(stack: &[crate::shapes::EffectSlot]) -> alloc::vec::Vec<crate::shapes::EffectSlot> {
     let mut out: alloc::vec::Vec<crate::shapes::EffectSlot> =
         alloc::vec::Vec::with_capacity(stack.len());
@@ -103,6 +89,10 @@ fn push_pattern_program(
 
 /// Structural equality of two patterns, decided by one explicit pairwise walk.
 /// The work stack holds cloned node pairs; the walk fails closed past the bound.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; pattern_eq is a total comparison predicate that returns false for mismatched constructors, lengths or work bounds; asserting comparability would break equality on ordinary unequal inputs."
+)]
 fn pattern_eq(left: &crate::shapes::Pattern, right: &crate::shapes::Pattern) -> bool {
     let mut work: alloc::vec::Vec<(crate::shapes::Pattern, crate::shapes::Pattern)> =
         alloc::vec::Vec::with_capacity(8);
@@ -172,20 +162,23 @@ fn pattern_eq(left: &crate::shapes::Pattern, right: &crate::shapes::Pattern) -> 
     !is_mismatch
 }
 
-/// Equality: the explicit pairwise walk above.
 impl PartialEq for crate::shapes::Pattern {
     fn eq(&self, other: &crate::shapes::Pattern) -> bool {
         pattern_eq(self, other)
     }
 }
 
-/// Render one pattern stack in the list form `[a, b]`.
-///
-/// The extraction treats this helper as an assumption: formatting is
-/// observability only, and Aeneas would functionalize its loop inside the
-/// debug instance's mutual block, which the Lean backend cannot prove
-/// monotone.
+/// Render `[a, b]`. Extraction assumes this observation-only helper: Aeneas
+/// cannot prove monotonicity of its loop inside Debug's mutual instance block.
 #[charon::opaque]
+#[allow(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-maintainers. Formatting writes only the explicit caller-owned Formatter required by core::fmt; text layout is outside the semantic refinement boundary."
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; debug_parts uses length-bounded indexing and propagates the caller's first fmt::Error; formatting arbitrary patterns must not introduce assertion panics."
+)]
 fn debug_parts(
     stack: &[crate::shapes::Pattern],
     f: &mut core::fmt::Formatter<'_>,
@@ -216,11 +209,13 @@ fn debug_parts(
     }
 }
 
-/// Render one effect-slot stack in the list form `[a, b]`.
-///
-/// The extraction treats this helper as an assumption, for the same reason
-/// `debug_parts` is one.
+/// Render `[a, b]`. Opaque for the same mutual Debug-loop monotonicity
+/// limitation as debug_parts; its body remains an extraction assumption.
 #[charon::opaque]
+#[allow(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-maintainers. Formatting writes only the explicit caller-owned Formatter required by core::fmt; text layout is outside the semantic refinement boundary."
+)]
 fn debug_slots(
     stack: &[crate::shapes::EffectSlot],
     f: &mut core::fmt::Formatter<'_>,
@@ -239,6 +234,14 @@ fn debug_slots(
 
 /// Render one pattern in its constructor form.
 impl core::fmt::Debug for crate::shapes::Pattern {
+    #[allow(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-maintainers. The standard Debug trait requires a mutable caller-owned Formatter; this performs no ambient observation or semantic state mutation."
+    )]
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-maintainers; this implements the non-const Debug::fmt trait method and calls runtime Formatter writes; reassess only if core::fmt gains a stable const trait contract."
+    )]
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             crate::shapes::Pattern::Unit => core::fmt::Formatter::write_str(f, "Unit"),

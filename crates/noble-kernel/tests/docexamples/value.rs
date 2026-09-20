@@ -18,22 +18,21 @@ impl Json {
     /// The value of one object field.
     pub fn field(&self, name: &str) -> Result<&Json, String> {
         match self {
-            Json::Obj(entries) => {
+            Self::Obj(entries) => {
                 let mut found: Option<&Json> = None;
-                let mut seen = 0;
                 for (key, value) in entries {
-                    if key == name {
-                        seen += 1;
-                        found = Some(value);
+                    if key == name && found.replace(value).is_some() {
+                        return Err(format!("duplicate field `{name}`"));
                     }
                 }
-                match (seen, found) {
-                    (1, Some(value)) => Ok(value),
-                    (0, _) => Err(format!("missing field `{name}`")),
-                    _ => Err(format!("duplicate field `{name}`")),
-                }
+                found.ok_or_else(|| format!("missing field `{name}`"))
             }
-            _ => Err(format!("expected an object for field `{name}`")),
+            Self::Null
+            | Self::Bool(_)
+            | Self::Int(_)
+            | Self::Float(_)
+            | Self::Str(_)
+            | Self::Arr(_) => Err(format!("expected an object for field `{name}`")),
         }
     }
 
@@ -49,24 +48,39 @@ impl Json {
     /// The string content of a string value.
     pub fn as_str(&self) -> Result<&str, String> {
         match self {
-            Json::Str(text) => Ok(text),
-            _ => Err("expected a string".to_string()),
+            Self::Str(text) => Ok(text),
+            Self::Null
+            | Self::Bool(_)
+            | Self::Int(_)
+            | Self::Float(_)
+            | Self::Arr(_)
+            | Self::Obj(_) => Err("expected a string".to_string()),
         }
     }
 
     /// The entries of an array value.
     pub fn as_arr(&self) -> Result<&[Json], String> {
         match self {
-            Json::Arr(items) => Ok(items),
-            _ => Err("expected an array".to_string()),
+            Self::Arr(items) => Ok(items),
+            Self::Null
+            | Self::Bool(_)
+            | Self::Int(_)
+            | Self::Float(_)
+            | Self::Str(_)
+            | Self::Obj(_) => Err("expected an array".to_string()),
         }
     }
 
     /// The integer of an integer value.
     pub fn as_int(&self) -> Result<i64, String> {
         match self {
-            Json::Int(value) => Ok(*value),
-            _ => Err("expected an integer".to_string()),
+            Self::Int(value) => Ok(*value),
+            Self::Null
+            | Self::Bool(_)
+            | Self::Float(_)
+            | Self::Str(_)
+            | Self::Arr(_)
+            | Self::Obj(_) => Err("expected an integer".to_string()),
         }
     }
 }

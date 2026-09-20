@@ -41,6 +41,10 @@ pub(super) fn advance(mut frame: super::Frame) -> super::Frame {
 }
 
 /// Complete one frame: check its joins, then return its completion upward.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; complete_frame checks the claimed stack, effect inclusion, quotation reference and parent in order, returning typed failures rather than panicking on untrusted claims."
+)]
 pub(super) fn complete_frame(
     frame: super::Frame,
     parent: Option<super::Frame>,

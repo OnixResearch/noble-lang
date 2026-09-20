@@ -1,7 +1,21 @@
 #![feature(register_tool)]
 #![register_tool(tigerstyle)]
 #![register_tool(octet)]
-//! Internal extraction smoke route, not a Noble language evaluator.
+//! Consumer-owned contract verification and the internal extraction smoke route.
+
+// Match Result explicitly: the pinned collector cannot resolve `?` desugaring.
+// From preserves the conversion performed by the ordinary Result operator.
+macro_rules! attempt {
+    ($step:expr) => {
+        match $step {
+            Ok(value) => value,
+            Err(error) => return Err(::core::convert::From::from(error)),
+        }
+    };
+}
+
+mod sandbox;
+mod workflow;
 
 // This private parser error is closed. New cases require an explicit diagnostic.
 #[octet::sealed_enum]
@@ -11,8 +25,26 @@ enum InputError {
 }
 
 // r[impl VT-M1-02]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; CLI routing accepts arbitrary OS argument bytes and reports usage or budget failures as exit statuses. Assertions would turn malformed user input into panics."
+)]
 fn main() -> std::process::ExitCode {
-    match parse_budget(read_arguments().skip(1)) {
+    let arguments: std::vec::Vec<std::ffi::OsString> = read_arguments().skip(1).collect();
+    if arguments
+        .first()
+        .is_some_and(|argument| argument == "verify" || argument == "explain-proof")
+    {
+        return workflow::run(&arguments);
+    }
+    if arguments
+        .first()
+        .is_some_and(|argument| argument == "--help")
+    {
+        println!("{}", workflow::USAGE);
+        return std::process::ExitCode::SUCCESS;
+    }
+    match parse_budget(arguments.into_iter()) {
         Ok(budget) => {
             write_outcome(noble_kernel::consume_budget(budget));
             std::process::ExitCode::SUCCESS
@@ -61,7 +93,7 @@ fn write_outcome(outcome: noble_kernel::BudgetOutcome) {
 
 const fn input_error_message(error: InputError) -> &'static str {
     match error {
-        InputError::Usage => "usage: noble-cli --internal-budget-smoke <u32>",
+        InputError::Usage => "usage: noble --internal-budget-smoke <u32>",
         InputError::Budget => "budget must be an unsigned 32-bit integer",
     }
 }

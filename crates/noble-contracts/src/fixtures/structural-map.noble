@@ -1,0 +1,7 @@
+(contract 1 structural-program
+  (input)
+  (output (p (Program ((Pair I64 Bool)) ((Pair Bool I64)))))
+  (params (x (Pair I64 Bool)))
+  (program [ (block ((Pair I64 Bool)) ((Pair Bool I64)) [ unpair swap pair ]) ])
+  (requires true)
+  (ensures (maps (out p) (param x) (pair (second (param x)) (first (param x))))))

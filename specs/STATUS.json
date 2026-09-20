@@ -5,7 +5,8 @@
   "origin": "greenfield-user-confirmed",
   "canonical_spec": "README.md",
   "canonical_family_exists": true,
-  "compiler_exists": false,
+  "compiler_exists": true,
+  "compiler_scope": "bootstrap-fragment-v1 checker and experimental MC1-v1 contract frontend; no executable backend",
   "runtime_exists": false,
   "proof_implementation_exists": true,
   "verification_policy": {
@@ -15,7 +16,14 @@
     "scope": "all-noble-owned-production-rust",
     "kernel_route": "mandatory-no-exceptions",
     "verus": "reviewed-non-kernel-exceptions-only",
-    "coverage_inventory": "absent",
+    "coverage_inventory": "reviewed-with-open-refinement",
+    "coverage_record": "../policy/source-inventory.json",
+    "body_obligations": 470,
+    "open_refinement_obligations": 470,
+    "independent_proof_records": [
+      "../verification/m3-coverage.json",
+      "../verification/mc1/implementation.json"
+    ],
     "approved_exceptions": []
   },
   "program_contracts": {
@@ -24,9 +32,10 @@
     "companions": "first-class-checked-companions",
     "ordinary_programs_require_proofs": false,
     "ordinary_execution_runs_proof_search": false,
-    "concrete_grammar": "open",
-    "companion_representation": "open",
+    "concrete_grammar": "experimental-mc1-v1-s-expression",
+    "companion_representation": "MC1-erased-typed-IR; first-class-runtime-representation-open",
     "portable_encoding": "open",
+    "implementation_scope": "optional pure source contracts, exact Lean obligations, reusable rules, verification/explanation CLI; MC2 excluded",
     "claim_outcomes": [
       "proved",
       "disproved",
@@ -40,18 +49,19 @@
   "developer_experience": {
     "contract": "DEVELOPER-EXPERIENCE.md",
     "status": "selected-draft-contracts",
-    "diagnostics": "M2-required",
+    "diagnostics": "bootstrap-fragment-v1-and-MC1-static-implemented",
     "editor_hole_grammar": "open",
     "guest_declaration_and_library_interfaces": "open-post-M4",
     "portable_cache_encoding": "open",
     "test_host_interfaces": "open",
     "local_binding_syntax_and_lowering": "open-post-M4",
     "capability_module_interfaces": "open-post-M4",
-    "property_testing": "required-M2-static-M4-runtime-not-implemented",
+    "property_testing": "bootstrap-fragment-v1-static-executed; M4-runtime-open",
     "resource_protocol_types": "open-after-M5-and-declaration-interfaces",
-    "executable_documentation": "required-M2-static-M4-runtime-not-implemented",
-    "implementation": "absent",
-    "execution": "not-run"
+    "executable_documentation": "bootstrap-fragment-v1-static-executed; M4-runtime-open",
+    "implementation": "partial",
+    "execution": "passed",
+    "execution_scope": "static checker diagnostics, bounded property harness, and marked documentation examples; no runtime execution"
   },
   "calculator": {
     "contract": "CALCULATOR.md",
@@ -112,11 +122,67 @@
   "components": [
     {
       "id": "program-contracts",
-      "implementation": "absent",
-      "execution": "not-run",
+      "implementation": "partial",
+      "execution": "passed",
       "proof": "open",
-      "trust": "unassessed",
-      "evidence": []
+      "trust": "explicit",
+      "evidence": [
+        {
+          "claim": "Eleven MC1 frontend regression tests pass, including optional-contract isolation, capture rows, cyclic witnesses, malformed predicates, and source boundaries",
+          "subject": "program-contracts",
+          "revision": "0.1.0-draft.5",
+          "kind": "test",
+          "result": "passed",
+          "source_revision": "blake3:3211e4161f66d171cbe6b46de3b1f31d93e98e039b8be1b6475bca028ff162b5",
+          "configuration": {
+            "target": "x86_64-unknown-linux-gnu",
+            "rust": "nightly-2026-03-21",
+            "command": "cargo test --workspace --all-targets --all-features --locked --offline",
+            "scope": "crates/noble-contracts/tests/contracts.rs"
+          },
+          "assumptions": [
+            "Tests are not Rust refinement proofs or full Contracts-Draft conformance."
+          ]
+        },
+        {
+          "claim": "All 36 actual MC1 CLI controls pass: seven outcomes, exact statement binding, hostile proof transport, strict assumptions, isolation, and descendant timeout cleanup",
+          "subject": "program-contracts",
+          "revision": "0.1.0-draft.5",
+          "kind": "test",
+          "result": "passed",
+          "source_revision": "binary-sha256:1b243f7b1436432c4745849c7d453cce15b8712cf661663f8a1bcd70d2c92873",
+          "configuration": {
+            "target": "x86_64-unknown-linux-gnu",
+            "receipt": "../verification/mc1/acceptance.json",
+            "gate": "verification/mc1/gate.mjs",
+            "lean": "4.31.0",
+            "isolation": "bubblewrap namespaces and bounded user systemd scopes"
+          },
+          "assumptions": [
+            "The independently selected Lean kernel, source rule library, host isolation tools, and operating system are trusted.",
+            "Application proof admission is separate from Rust implementation refinement, backend correspondence, and MC2."
+          ]
+        },
+        {
+          "claim": "MC1-v1 has 43 strict application/rule theorems, 61 strict bridge/projection theorems, and six separately trusted closed actual-source equations",
+          "subject": "program-contracts",
+          "revision": "0.1.0-draft.5",
+          "kind": "aeneas-lean",
+          "result": "accepted",
+          "source_revision": "sha256:c3aa250ea34c1cfb6b0cd0c34546b9d76027a9245021d4322439a64f3e3fd31d",
+          "configuration": {
+            "fragment": "mc1-statement-export-v1",
+            "receipt": "../verification/mc1/implementation.json",
+            "lean": "4.31.0"
+          },
+          "assumptions": [
+            "Strict theorem lanes admit only propext, Classical.choice, and Quot.sound.",
+            "The six closed source equations additionally trust the explicitly inventoried native-evaluation axioms.",
+            "Pinned Charon/Aeneas translation, handwritten standard-library models, and five inherited opaque kernel helpers remain explicit boundaries.",
+            "Not universal frontend/exporter correctness, MC2, or runtime execution."
+          ]
+        }
+      ]
     },
     {
       "id": "exact-calculator",
@@ -128,11 +194,30 @@
     },
     {
       "id": "core-checker",
-      "implementation": "absent",
-      "execution": "not-run",
+      "implementation": "partial",
+      "execution": "passed",
       "proof": "open",
-      "trust": "unassessed",
-      "evidence": []
+      "trust": "explicit",
+      "evidence": [
+        {
+          "claim": "The bootstrap-fragment-v1 checker passes 44 kernel regression tests, including acceptance, limits, diagnostics, properties, and static documentation",
+          "subject": "core-checker",
+          "revision": "0.1.0-draft.5",
+          "kind": "test",
+          "result": "passed",
+          "source_revision": "blake3:1b7efd02dd9345d8d0a428ba1d2659f3b3a7c20dcc7a7e5410d0e51f55f94960",
+          "configuration": {
+            "target": "x86_64-unknown-linux-gnu",
+            "rust": "nightly-2026-03-21",
+            "command": "cargo test --workspace --all-targets --all-features --locked --offline",
+            "scope": "crates/noble-kernel/tests"
+          },
+          "assumptions": [
+            "Bootstrap fragment only; no full-language, runtime, or universal Rust refinement claim.",
+            "Current M3 proof/coverage gates and both six-case refusal harnesses pass; the generated inventory classifies 518 functions separately from source-inventory refinement obligations."
+          ]
+        }
+      ]
     },
     {
       "id": "wasm-runtime",
@@ -168,14 +253,15 @@
     "choreography": "deferred",
     "durability": "optional-deferred"
   },
-  "next_milestone": "M1",
+  "next_milestone": "M3",
   "historical_snapshot": "../noble-project-handoff-2026-09-12/",
   "non_claims": [
-    "No Noble tests executed",
-    "No completed formal proofs",
+    "The full draft conformance-case ledger is not marked executed by the narrower Rust and MC1 acceptance suites",
+    "No universal proof of the complete Rust checker, contract frontend, exporter, or CLI",
     "No stable language or component conformance",
-    "No tested compatible toolchain pin set",
+    "No whole-project verification claim; all 470 source-inventory refinement obligations remain open",
     "No backend representation selected or measured",
+    "No Wasm execution, first-class runtime certified programs, or MC2 delivery",
     "No zerocopy dependency selected"
   ]
 }

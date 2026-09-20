@@ -5,23 +5,18 @@ pub(crate) mod instantiate;
 
 /// The request and environment a check runs against.
 pub(crate) struct Ctx<'a> {
-    /// The acceptance request.
     pub(crate) request: &'a crate::untrusted::Request,
-    /// The checking environment.
     pub(crate) env: &'a crate::contracts::Env,
 }
 
 /// The failing site: a node and, for invocations, its definition.
 #[derive(Clone, Copy)]
 pub(crate) struct Site {
-    /// The failing node, when a node is at fault.
     pub(crate) node: Option<crate::untrusted::NodeId>,
-    /// The failing definition, when a word is at fault.
     pub(crate) def: Option<crate::contracts::Definition>,
 }
 
-/// Build one site.
-pub(crate) fn site(
+pub(crate) const fn site(
     node: Option<crate::untrusted::NodeId>,
     def: Option<crate::contracts::Definition>,
 ) -> Site {
@@ -29,14 +24,17 @@ pub(crate) fn site(
 }
 
 /// Charge work, failing closed before the declared limit is exceeded.
-pub(crate) fn charge(work: u32, cost: u32) -> Result<u32, super::Fail> {
+#[expect(
+    tigerstyle::ambiguous_params,
+    reason = "Owner: noble-maintainers; work and cost intentionally use the same work-unit domain, with checked subtraction defining remaining budget and Work exhaustion; wrappers would only restate this scalar contract."
+)]
+pub(crate) const fn charge(work: u32, cost: u32) -> Result<u32, super::Fail> {
     match work.checked_sub(cost) {
         Some(remaining) => Ok(remaining),
         None => Err(super::Fail::Exhausted(crate::untrusted::LimitKind::Work)),
     }
 }
 
-/// The work charged for one node's instantiation.
 pub(crate) fn scheme_cost(scheme: &crate::words::Scheme) -> Result<u32, super::Fail> {
     let count = match u32::try_from(scheme.stack_in.len().saturating_add(scheme.stack_out.len())) {
         Ok(count) => count,
@@ -45,7 +43,6 @@ pub(crate) fn scheme_cost(scheme: &crate::words::Scheme) -> Result<u32, super::F
     Ok(count.saturating_add(1))
 }
 
-/// The work charged for one join.
 pub(crate) fn join_cost(interface: &crate::untrusted::Interface) -> Result<u32, super::Fail> {
     let count = match u32::try_from(
         interface
@@ -60,6 +57,10 @@ pub(crate) fn join_cost(interface: &crate::untrusted::Interface) -> Result<u32, 
 }
 
 /// Validate one stack against the declared height and type-size limits.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; limits_of rejects unrepresentable or excessive stack height before checking each type size, preserving typed StackHeight/TypeSize exhaustion instead of assertions."
+)]
 pub(crate) fn limits_of(stack: &[crate::types::Ty], ctx: &Ctx) -> Result<(), super::Fail> {
     let height = match u64::try_from(stack.len()) {
         Ok(height) => height,
@@ -125,6 +126,10 @@ pub(crate) fn join(
 }
 
 /// Whether the stack's top matches the expected segment.
+#[expect(
+    tigerstyle::raw_arithmetic_overflow,
+    reason = "Owner: noble-maintainers; the length guard proves stack.len() >= expected.len(), and index < expected.len() proves tail_start + index < stack.len(); reassess if either guard changes."
+)]
 fn match_tail(
     stack: &[crate::types::Ty],
     expected: &[crate::types::Ty],
@@ -132,12 +137,12 @@ fn match_tail(
     if stack.len() < expected.len() {
         return Some(crate::untrusted::Constraint::StackJoin);
     }
-    let offset = stack.len() - expected.len();
+    let tail_start = stack.len() - expected.len();
     let mut mismatch: Option<crate::untrusted::Constraint> = None;
     let mut index = 0;
     while index < expected.len() {
         let ty = &expected[index];
-        if &stack[offset + index] != ty {
+        if &stack[tail_start + index] != ty {
             let actual = tail_copy(stack, expected.len());
             mismatch = Some(mismatch_constraint(expected, &actual));
             break;
@@ -159,7 +164,10 @@ pub(crate) fn mismatch_constraint(
     }
 }
 
-/// The top `needed` entries, or the whole stack when it is shorter.
+#[expect(
+    tigerstyle::raw_arithmetic_overflow,
+    reason = "Owner: noble-maintainers; tail_copy subtracts needed only in the branch proving stack.len() >= needed; the other branch copies the entire shorter stack."
+)]
 pub(crate) fn tail_copy(
     stack: &[crate::types::Ty],
     needed: usize,
@@ -226,7 +234,10 @@ pub(crate) fn first_extra(
     extra
 }
 
-/// Build one diagnostic under the declared diagnostic budget.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; invalid truncates expected then actual entries to the caller's diagnostic budget, including zero, and returns that diagnostic; assertions would turn reporting into another failure path."
+)]
 pub(crate) fn invalid(
     ctx: &Ctx,
     at: Site,
@@ -258,7 +269,10 @@ pub(crate) fn invalid(
     })
 }
 
-/// The first needed identity the environment does not provide.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; first_unknown bounds both scans by their slice lengths and returns the first missing identity or None; absence is an ordinary diagnostic result, not an assertion failure."
+)]
 pub(crate) fn first_unknown(
     needed: &[crate::types::EffId],
     known: &[crate::types::EffId],

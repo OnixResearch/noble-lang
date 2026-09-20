@@ -1,0 +1,6 @@
+(contract 1 swap-pair
+  (input (p (Pair I64 Bool)))
+  (output (q (Pair Bool I64)))
+  (program [ unpair swap pair ])
+  (requires true)
+  (ensures (eq (out q) (pair (second (in p)) (first (in p))))))

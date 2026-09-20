@@ -162,8 +162,8 @@ STUB
     # The `case` arm deleted from the oracle's contract table: the oracle
     # then rejects every `case` candidate the kernel accepts, and the
     # agreement lane must fail.
-    sed -i 's/^        17 => {$/        999 => {/' "$copy/crates/noble-kernel/tests/property/table.rs"
-    grep -q '^        999 => {' "$copy/crates/noble-kernel/tests/property/table.rs" \
+    sed -E -i 's/^([[:space:]]*)17[[:space:]]*=>/\1999 =>/' "$copy/crates/noble-kernel/tests/property/table.rs"
+    grep -q '^[[:space:]]*999[[:space:]]*=>' "$copy/crates/noble-kernel/tests/property/table.rs" \
       || { echo "APPLY FAILED (the case arm pattern moved — update the mutation)"; return 1; }
     rc=0
     (cd "$copy" && CARGO_TARGET_DIR="$copy/target" "$RUST_BIN/cargo" test \

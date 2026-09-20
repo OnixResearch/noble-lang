@@ -6,32 +6,34 @@
 //! `MAX_STEPS` adopted mutations or when no single removal simplifies
 //! further.
 
-use noble_kernel::types::Ty;
-use noble_kernel::untrusted::{Candidate, Node, Request};
-use noble_kernel::words::Binding;
-
 /// The shrink bound.
 pub const MAX_STEPS: u32 = 64;
 
 /// Shrink one failing case. Returns the minimized request and candidate and
 /// the number of adopted mutations.
-pub fn shrink<F>(request: &Request, candidate: &Candidate, holds: &F) -> (Request, Candidate, u32)
+pub fn minimize<F>(
+    request: &noble_kernel::untrusted::Request,
+    candidate: &noble_kernel::untrusted::Candidate,
+    holds: &F,
+) -> (
+    noble_kernel::untrusted::Request,
+    noble_kernel::untrusted::Candidate,
+    u32,
+)
 where
-    F: Fn(&Request, &Candidate) -> bool,
+    F: Fn(&noble_kernel::untrusted::Request, &noble_kernel::untrusted::Candidate) -> bool,
 {
     let mut current_request = request.clone();
     let mut current = candidate.clone();
     let mut steps = 0;
     while steps < MAX_STEPS {
-        let mut progress = false;
-        if let Some((next_request, next)) = try_simplify(&current_request, &current, holds) {
-            current_request = next_request;
-            current = next;
-            steps += 1;
-            progress = true;
-        }
-        if !progress {
-            break;
+        match try_simplify(&current_request, &current, holds) {
+            Some((next_request, next)) => {
+                current_request = next_request;
+                current = next;
+                steps += 1;
+            }
+            None => break,
         }
     }
     (current_request, current, steps)
@@ -40,27 +42,33 @@ where
 /// Try every single-step simplification in priority order; return the first
 /// that keeps the failure predicate true.
 fn try_simplify<F>(
-    request: &Request,
-    candidate: &Candidate,
+    request: &noble_kernel::untrusted::Request,
+    candidate: &noble_kernel::untrusted::Candidate,
     holds: &F,
-) -> Option<(Request, Candidate)>
+) -> Option<(
+    noble_kernel::untrusted::Request,
+    noble_kernel::untrusted::Candidate,
+)>
 where
-    F: Fn(&Request, &Candidate) -> bool,
+    F: Fn(&noble_kernel::untrusted::Request, &noble_kernel::untrusted::Candidate) -> bool,
 {
     drop_body_entry(request, candidate, holds)
         .or_else(|| drop_quote_entry(request, candidate, holds))
-        .or_else(|| shrink_stack_binding(request, candidate, holds))
+        .or_else(|| drop_stack_entry(request, candidate, holds))
         .or_else(|| flatten_binding_type(request, candidate, holds))
         .or_else(|| drop_expected_out(request, candidate, holds))
 }
 
 fn drop_body_entry<F>(
-    request: &Request,
-    candidate: &Candidate,
+    request: &noble_kernel::untrusted::Request,
+    candidate: &noble_kernel::untrusted::Candidate,
     holds: &F,
-) -> Option<(Request, Candidate)>
+) -> Option<(
+    noble_kernel::untrusted::Request,
+    noble_kernel::untrusted::Candidate,
+)>
 where
-    F: Fn(&Request, &Candidate) -> bool,
+    F: Fn(&noble_kernel::untrusted::Request, &noble_kernel::untrusted::Candidate) -> bool,
 {
     let mut position = 0;
     while position < candidate.body.len() {
@@ -74,21 +82,31 @@ where
     None
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; drop_quote_entry checks holds on each candidate clone and returns only the first predicate-preserving quotation removal; failed probes are normal shrinking decisions, not assertion failures."
+)]
 fn drop_quote_entry<F>(
-    request: &Request,
-    candidate: &Candidate,
+    request: &noble_kernel::untrusted::Request,
+    candidate: &noble_kernel::untrusted::Candidate,
     holds: &F,
-) -> Option<(Request, Candidate)>
+) -> Option<(
+    noble_kernel::untrusted::Request,
+    noble_kernel::untrusted::Candidate,
+)>
 where
-    F: Fn(&Request, &Candidate) -> bool,
+    F: Fn(&noble_kernel::untrusted::Request, &noble_kernel::untrusted::Candidate) -> bool,
 {
     let mut node_index = 0;
     while node_index < candidate.nodes.len() {
-        if let Node::Quotation { body, .. } = &candidate.nodes[node_index] {
+        if let noble_kernel::untrusted::Node::Quotation { body, .. } = &candidate.nodes[node_index]
+        {
             let mut position = 0;
             while position < body.len() {
                 let mut next = candidate.clone();
-                if let Node::Quotation { body, .. } = &mut next.nodes[node_index] {
+                if let noble_kernel::untrusted::Node::Quotation { body, .. } =
+                    &mut next.nodes[node_index]
+                {
                     body.remove(position);
                 }
                 if holds(request, &next) {
@@ -102,7 +120,7 @@ where
     None
 }
 
-fn each_stack_binding<F>(candidate: &Candidate, mut visit: F) -> bool
+fn each_stack_binding<F>(candidate: &noble_kernel::untrusted::Candidate, mut visit: F) -> bool
 where
     F: FnMut(usize, usize) -> bool,
 {
@@ -111,11 +129,10 @@ where
         let inst = inst_of(&candidate.nodes[node_index]);
         let mut slot = 0;
         while slot < inst.bindings.len() {
-            if let Binding::Stack(segment) = &inst.bindings[slot] {
-                let _ = segment;
-                if visit(node_index, slot) {
-                    return true;
-                }
+            if matches!(&inst.bindings[slot], noble_kernel::words::Binding::Stack(_))
+                && visit(node_index, slot)
+            {
+                return true;
             }
             slot += 1;
         }
@@ -124,22 +141,29 @@ where
     false
 }
 
-fn shrink_stack_binding<F>(
-    request: &Request,
-    candidate: &Candidate,
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; drop_stack_entry preserves traversal priority and adopts a single removal only when holds succeeds; assertions would duplicate the caller-supplied disagreement predicate."
+)]
+fn drop_stack_entry<F>(
+    request: &noble_kernel::untrusted::Request,
+    candidate: &noble_kernel::untrusted::Candidate,
     holds: &F,
-) -> Option<(Request, Candidate)>
+) -> Option<(
+    noble_kernel::untrusted::Request,
+    noble_kernel::untrusted::Candidate,
+)>
 where
-    F: Fn(&Request, &Candidate) -> bool,
+    F: Fn(&noble_kernel::untrusted::Request, &noble_kernel::untrusted::Candidate) -> bool,
 {
-    let mut result: Option<(Request, Candidate)> = None;
+    let mut result = None;
     each_stack_binding(candidate, |node_index, slot| {
         let inst = inst_of(&candidate.nodes[node_index]);
-        if let Binding::Stack(segment) = &inst.bindings[slot] {
+        if let noble_kernel::words::Binding::Stack(segment) = &inst.bindings[slot] {
             let mut position = 0;
             while result.is_none() && position < segment.len() {
                 let mut next = candidate.clone();
-                if let Binding::Stack(truncated) =
+                if let noble_kernel::words::Binding::Stack(truncated) =
                     &mut inst_of_mut(&mut next.nodes[node_index]).bindings[slot]
                 {
                     truncated.remove(position);
@@ -155,26 +179,33 @@ where
     result
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; flatten_binding_type changes one non-I64 stack entry and adopts it only if holds remains true, preserving first-match order and the outer shrink bound without assertion padding."
+)]
 fn flatten_binding_type<F>(
-    request: &Request,
-    candidate: &Candidate,
+    request: &noble_kernel::untrusted::Request,
+    candidate: &noble_kernel::untrusted::Candidate,
     holds: &F,
-) -> Option<(Request, Candidate)>
+) -> Option<(
+    noble_kernel::untrusted::Request,
+    noble_kernel::untrusted::Candidate,
+)>
 where
-    F: Fn(&Request, &Candidate) -> bool,
+    F: Fn(&noble_kernel::untrusted::Request, &noble_kernel::untrusted::Candidate) -> bool,
 {
-    let mut result: Option<(Request, Candidate)> = None;
+    let mut result = None;
     each_stack_binding(candidate, |node_index, slot| {
         let inst = inst_of(&candidate.nodes[node_index]);
-        if let Binding::Stack(segment) = &inst.bindings[slot] {
+        if let noble_kernel::words::Binding::Stack(segment) = &inst.bindings[slot] {
             let mut position = 0;
             while result.is_none() && position < segment.len() {
-                if !matches!(segment[position], Ty::I64) {
+                if !matches!(segment[position], noble_kernel::types::Ty::I64) {
                     let mut next = candidate.clone();
-                    if let Binding::Stack(changed) =
+                    if let noble_kernel::words::Binding::Stack(changed) =
                         &mut inst_of_mut(&mut next.nodes[node_index]).bindings[slot]
                     {
-                        changed[position] = Ty::I64;
+                        changed[position] = noble_kernel::types::Ty::I64;
                     }
                     if holds(request, &next) {
                         result = Some((request.clone(), next));
@@ -189,12 +220,15 @@ where
 }
 
 fn drop_expected_out<F>(
-    request: &Request,
-    candidate: &Candidate,
+    request: &noble_kernel::untrusted::Request,
+    candidate: &noble_kernel::untrusted::Candidate,
     holds: &F,
-) -> Option<(Request, Candidate)>
+) -> Option<(
+    noble_kernel::untrusted::Request,
+    noble_kernel::untrusted::Candidate,
+)>
 where
-    F: Fn(&Request, &Candidate) -> bool,
+    F: Fn(&noble_kernel::untrusted::Request, &noble_kernel::untrusted::Candidate) -> bool,
 {
     if request.expected.stack_out.is_empty() {
         return None;
@@ -207,18 +241,18 @@ where
     None
 }
 
-fn inst_of(node: &Node) -> &noble_kernel::words::Inst {
+const fn inst_of(node: &noble_kernel::untrusted::Node) -> &noble_kernel::words::Inst {
     match node {
-        Node::Literal { inst, .. }
-        | Node::Invocation { inst, .. }
-        | Node::Quotation { inst, .. } => inst,
+        noble_kernel::untrusted::Node::Literal { inst, .. }
+        | noble_kernel::untrusted::Node::Invocation { inst, .. }
+        | noble_kernel::untrusted::Node::Quotation { inst, .. } => inst,
     }
 }
 
-fn inst_of_mut(node: &mut Node) -> &mut noble_kernel::words::Inst {
+const fn inst_of_mut(node: &mut noble_kernel::untrusted::Node) -> &mut noble_kernel::words::Inst {
     match node {
-        Node::Literal { inst, .. }
-        | Node::Invocation { inst, .. }
-        | Node::Quotation { inst, .. } => inst,
+        noble_kernel::untrusted::Node::Literal { inst, .. }
+        | noble_kernel::untrusted::Node::Invocation { inst, .. }
+        | noble_kernel::untrusted::Node::Quotation { inst, .. } => inst,
     }
 }

@@ -6,6 +6,14 @@ version = 4
 name = "noble-cli"
 version = "0.0.0"
 dependencies = [
+ "noble-contracts",
+ "noble-kernel",
+]
+
+[[package]]
+name = "noble-contracts"
+version = "0.0.0"
+dependencies = [
  "noble-kernel",
 ]
 

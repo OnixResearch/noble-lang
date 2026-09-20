@@ -3,9 +3,15 @@ name = "noble-cli"
 version.workspace = true
 edition.workspace = true
 publish.workspace = true
+default-run = "noble"
+
+[[bin]]
+name = "noble"
+path = "src/main.rs"
 
 [dependencies]
 noble-kernel = { path = "../noble-kernel" }
+noble-contracts = { path = "../noble-contracts" }
 
 [lints]
 workspace = true

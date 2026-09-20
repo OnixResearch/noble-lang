@@ -8,10 +8,12 @@ let
     production = {
       packages = [
         "noble-kernel"
+        "noble-contracts"
         "noble-cli"
       ];
       source_scopes = [
         "crates/noble-kernel/src"
+        "crates/noble-contracts/src"
         "crates/noble-cli/src"
       ];
       targets = [
@@ -30,12 +32,22 @@ let
       }
       {
         scope_kind = "package";
+        scope = "noble-contracts";
+        role = "domain-core";
+      }
+      {
+        scope_kind = "package";
         scope = "noble-cli";
         role = "composition-root";
       }
       {
         scope_kind = "source";
         scope = "crates/noble-kernel/src";
+        role = "domain-core";
+      }
+      {
+        scope_kind = "source";
+        scope = "crates/noble-contracts/src";
         role = "domain-core";
       }
       {
@@ -71,7 +83,10 @@ let
         authority = "unprotected";
       }
     ];
-    core_no_std = [ { scope = "noble-kernel"; } ];
+    core_no_std = [
+      { scope = "noble-kernel"; }
+      { scope = "noble-contracts"; }
+    ];
     ports = [ ];
     provider_classifications = [ ];
   };
@@ -341,6 +356,11 @@ let
     } "policy-outbound-authority-missing")
     (reject "policy core no-std missing" {
       architecturePolicyJson = withArchitecture { core_no_std = [ ]; };
+    } "policy-core-no-std-missing")
+    (reject "contract frontend no-std missing" {
+      architecturePolicyJson = withArchitecture {
+        core_no_std = [ { scope = "noble-kernel"; } ];
+      };
     } "policy-core-no-std-missing")
     (reject "policy core no-std mismatch" {
       architecturePolicyJson = withArchitecture {

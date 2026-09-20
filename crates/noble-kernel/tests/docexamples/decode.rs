@@ -1,234 +1,148 @@
 //! Decoder for the executed documentation examples (DX-DOC-01).
 //!
-//! Decodes one fenced `noble-check` example, in the JSON shape documented in
-//! [verification/m2-fragment.md] "Executed documentation examples", into the
-//! kernel's request and candidate structures against the bootstrap
-//! environment. Binding kinds are taken from each word's documented
-//! variables, so a wrong-shaped witness is an error, not a guess.
+//! Decodes one fenced `noble-check` example, in the documented JSON shape,
+//! into the kernel's request and candidate structures against the bootstrap
+//! environment. Binding kinds come from each word's documented variables,
+//! so a wrong-shaped witness is an error, not a guess.
 
-use super::json::Json;
-use noble_kernel::contracts::Definition;
-use noble_kernel::types::{EffId, EffSet, Ty};
-use noble_kernel::untrusted::{Candidate, Limits, Lit, Node, NodeId, Request};
-use noble_kernel::words::{Binding, Inst, VariableKind};
-
-/// The literal's documented variables: one stack.
-const LITERAL: &[VariableKind] = &[VariableKind::Stack];
-
-/// The quotation's documented variables: `R A C e` (also `reflect`'s).
-fn quotation_kinds() -> &'static [VariableKind] {
-    use VariableKind::{Effect, Stack};
-    &[Stack, Stack, Stack, Effect]
-}
+#[path = "shapes.rs"]
+mod shapes;
+#[path = "vocab.rs"]
+mod vocab;
 
 /// One decoded example, ready for the actual checker.
-pub struct Example {
-    pub request: Request,
-    pub candidate: Candidate,
+pub(super) struct Example {
+    pub(super) request: noble_kernel::untrusted::Request,
+    pub(super) candidate: noble_kernel::untrusted::Candidate,
 }
 
-/// The documented variable kinds of one word, in binding order.
-fn def_of(name: &str) -> Result<(u32, &'static [VariableKind]), String> {
-    use VariableKind::{Effect, Stack, Value};
-    const STACK: &[VariableKind] = &[Stack];
-    const STACK_VALUE: &[VariableKind] = &[Stack, Value];
-    const STACK_TWO_VALUES: &[VariableKind] = &[Stack, Value, Value];
-    const DIP: &[VariableKind] = &[Stack, Value, Stack, Effect];
-    const QUOTE: &[VariableKind] = &[Stack, Value, Stack];
-    const COMPOSE: &[VariableKind] = &[Stack, Stack, Stack, Stack, Effect, Effect];
-    const RUN: &[VariableKind] = &[Stack, Stack, Effect];
-    const BRANCH: &[VariableKind] = &[Stack, Stack, Effect, Effect];
-    const CASE: &[VariableKind] = &[Stack, Value, Value, Stack, Effect, Effect];
-    const LIST_CASE: &[VariableKind] = &[Stack, Value, Stack, Effect, Effect];
-    Ok(match name {
-        "dup" => (0, STACK_VALUE),
-        "drop" => (1, STACK_VALUE),
-        "swap" => (2, STACK_TWO_VALUES),
-        "dip" => (3, DIP),
-        "+" => (4, STACK),
-        "-" => (5, STACK),
-        "*" => (6, STACK),
-        "=" => (7, STACK),
-        "quote" => (8, QUOTE),
-        "compose" => (9, COMPOSE),
-        "run" => (10, RUN),
-        "reflect" => (11, quotation_kinds()),
-        "unit" => (12, STACK),
-        "pair" => (13, STACK_TWO_VALUES),
-        "unpair" => (14, STACK_TWO_VALUES),
-        "inl" => (15, STACK_TWO_VALUES),
-        "inr" => (16, STACK_TWO_VALUES),
-        "case" => (17, CASE),
-        "if" => (18, BRANCH),
-        "nil" => (19, STACK_VALUE),
-        "cons" => (20, STACK_VALUE),
-        "list.case" => (21, LIST_CASE),
-        "test.emit" => (22, STACK),
-        _ => {
-            return Err(format!(
-                "unknown word `{name}` for the bootstrap environment"
-            ))
-        }
-    })
-}
-
-fn single_key(value: &Json) -> Result<(&str, &Json), String> {
-    match value {
-        Json::Obj(entries) if entries.len() == 1 => Ok((&entries[0].0, &entries[0].1)),
-        _ => Err("expected a one-field type object".to_string()),
-    }
-}
-
-fn ty(value: &Json) -> Result<Ty, String> {
-    let (key, payload) = single_key(value)?;
-    match key {
-        "unit" => Ok(Ty::Unit),
-        "bool" => Ok(Ty::Bool),
-        "i64" => Ok(Ty::I64),
-        "text" => Ok(Ty::Text),
-        "syntax" => Ok(Ty::Syntax),
-        "pair" | "sum" => {
-            let sides = payload.as_arr()?;
-            if sides.len() != 2 {
-                return Err(format!("`{key}` needs exactly two payloads"));
-            }
-            let (left, right) = (ty(&sides[0])?, ty(&sides[1])?);
-            if key == "pair" {
-                Ok(Ty::Pair(Box::new(left), Box::new(right)))
-            } else {
-                Ok(Ty::Sum(Box::new(left), Box::new(right)))
-            }
-        }
-        "list" => Ok(Ty::List(Box::new(ty(payload)?))),
-        "program" => {
-            let input = stack(payload.field("in")?)?;
-            let output = stack(payload.field("out")?)?;
-            Ok(Ty::program(
-                input,
-                output,
-                effect_set(payload.field("effects")?)?,
-            ))
-        }
-        "resource" => match payload.as_str()? {
-            "test.counter" => Ok(Ty::Resource(noble_kernel::contracts::FIXTURE_RESOURCE)),
-            other => Err(format!("unknown resource kind `{other}`")),
-        },
-        _ => Err(format!("unknown type key `{key}`")),
-    }
-}
-
-fn stack(value: &Json) -> Result<Vec<Ty>, String> {
-    value.as_arr()?.iter().map(ty).collect()
-}
-
-fn effect_id(value: &Json) -> Result<EffId, String> {
-    match value {
-        Json::Str(name) if name == "test.emit" => Ok(noble_kernel::contracts::TEST_EMIT),
-        Json::Int(id) if *id >= 0 && *id <= u32::MAX as i64 => Ok(EffId(*id as u32)),
-        _ => Err("effects are `test.emit` or small integers".to_string()),
-    }
-}
-
-fn effect_set(value: &Json) -> Result<EffSet, String> {
-    let ids: Vec<EffId> = value
-        .as_arr()?
-        .iter()
-        .map(effect_id)
-        .collect::<Result<_, _>>()?;
-    Ok(EffSet::from_ids(&ids))
-}
-
-fn binding(value: &Json, kind: &VariableKind) -> Result<Binding, String> {
+fn binding(
+    value: &crate::value::Json,
+    kind: &noble_kernel::words::VariableKind,
+) -> Result<noble_kernel::words::Binding, String> {
     match kind {
-        VariableKind::Stack => Ok(Binding::Stack(stack(value)?)),
-        VariableKind::Value => Ok(Binding::Value(ty(value)?)),
-        VariableKind::Effect => Ok(Binding::Effect(effect_set(value)?)),
+        noble_kernel::words::VariableKind::Stack => {
+            Ok(noble_kernel::words::Binding::Stack(shapes::stack(value)?))
+        }
+        noble_kernel::words::VariableKind::Value => {
+            Ok(noble_kernel::words::Binding::Value(shapes::ty(value)?))
+        }
+        noble_kernel::words::VariableKind::Effect => Ok(noble_kernel::words::Binding::Effect(
+            shapes::effect_set(value)?,
+        )),
     }
 }
 
-fn inst(value: &Json, kinds: &[VariableKind]) -> Result<Inst, String> {
-    let mut bindings: Vec<Binding> = Vec::with_capacity(kinds.len());
-    let mut index = 0;
-    while index < kinds.len() {
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; inst validates every declared binding and rejects missing, unknown or wrongly shaped witness entries with Result errors, not parser panics."
+)]
+fn inst(
+    value: &crate::value::Json,
+    kinds: &[noble_kernel::words::VariableKind],
+) -> Result<noble_kernel::words::Inst, String> {
+    let mut bindings = Vec::with_capacity(kinds.len());
+    for (index, kind) in kinds.iter().enumerate() {
         let key = format!("v{index}");
         match value.optional(&key)? {
-            Some(found) => bindings.push(binding(found, &kinds[index])?),
+            Some(found) => bindings.push(binding(found, kind)?),
             None => return Err(format!("witness misses binding `{key}`")),
         }
-        index += 1;
     }
     let entries = match value {
-        Json::Obj(entries) => entries,
-        _ => return Err("a witness must be an object".to_string()),
+        crate::value::Json::Obj(entries) => entries,
+        crate::value::Json::Null
+        | crate::value::Json::Bool(_)
+        | crate::value::Json::Int(_)
+        | crate::value::Json::Float(_)
+        | crate::value::Json::Str(_)
+        | crate::value::Json::Arr(_) => return Err("a witness must be an object".to_string()),
     };
     for (key, _) in entries {
-        let known = key
+        let is_known = key
             .strip_prefix('v')
             .and_then(|rest| rest.parse::<usize>().ok())
             .is_some_and(|position| position < kinds.len());
-        if !known {
+        if !is_known {
             return Err(format!("witness carries unknown binding `{key}`"));
         }
     }
-    Ok(Inst { bindings })
+    Ok(noble_kernel::words::Inst { bindings })
 }
 
-fn lit(value: &Json) -> Result<Lit, String> {
-    let (key, payload) = single_key(value)?;
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; lit returns errors for unknown literal tags and malformed payloads; asserting those input conditions would change the decoder's failure contract."
+)]
+fn lit(value: &crate::value::Json) -> Result<noble_kernel::untrusted::Lit, String> {
+    let (key, payload) = shapes::single_key(value)?;
     match key {
-        "i64" => Ok(Lit::I64(payload.as_int()?)),
+        "i64" => Ok(noble_kernel::untrusted::Lit::I64(payload.as_int()?)),
         "bool" => match payload {
-            Json::Bool(flag) => Ok(Lit::Bool(*flag)),
-            _ => Err("`bool` literal needs a JSON boolean".to_string()),
+            crate::value::Json::Bool(flag) => Ok(noble_kernel::untrusted::Lit::Bool(*flag)),
+            crate::value::Json::Null
+            | crate::value::Json::Int(_)
+            | crate::value::Json::Float(_)
+            | crate::value::Json::Str(_)
+            | crate::value::Json::Arr(_)
+            | crate::value::Json::Obj(_) => Err("`bool` literal needs a JSON boolean".to_string()),
         },
         "text" => {
             payload.as_str()?;
-            Ok(Lit::Text)
+            Ok(noble_kernel::untrusted::Lit::Text)
         }
-        "unit" => Ok(Lit::Unit),
+        "unit" => Ok(noble_kernel::untrusted::Lit::Unit),
         _ => Err(format!("unknown literal key `{key}`")),
     }
 }
 
-fn node(value: &Json) -> Result<Node, String> {
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; node validates tagged documentation input with fallible field, vocabulary and witness decoders; malformed nodes must return errors rather than panic."
+)]
+fn node(value: &crate::value::Json) -> Result<noble_kernel::untrusted::Node, String> {
     let kind = value.field("kind")?.as_str()?;
     match kind {
-        "literal" => Ok(Node::Literal {
+        "literal" => Ok(noble_kernel::untrusted::Node::Literal {
             lit: lit(value.field("lit")?)?,
-            inst: inst(value.field("inst")?, LITERAL)?,
+            inst: inst(value.field("inst")?, vocab::LITERAL)?,
         }),
         "invocation" => {
-            let (def, kinds) = def_of(value.field("def")?.as_str()?)?;
-            Ok(Node::Invocation {
-                def: Definition(def),
+            let (def, kinds) = vocab::def_of(value.field("def")?.as_str()?)?;
+            Ok(noble_kernel::untrusted::Node::Invocation {
+                def: noble_kernel::contracts::Definition(def),
                 inst: inst(value.field("inst")?, kinds)?,
             })
         }
-        "quotation" => Ok(Node::Quotation {
+        "quotation" => Ok(noble_kernel::untrusted::Node::Quotation {
             body: body_ids(value.field("body")?)?,
-            inst: inst(value.field("inst")?, quotation_kinds())?,
+            inst: inst(value.field("inst")?, vocab::QUOTATION)?,
         }),
         _ => Err(format!("unknown node kind `{kind}`")),
     }
 }
 
-fn body_ids(value: &Json) -> Result<Vec<NodeId>, String> {
+fn body_ids(value: &crate::value::Json) -> Result<Vec<noble_kernel::untrusted::NodeId>, String> {
     value
         .as_arr()?
         .iter()
         .map(|entry| {
             let id = entry.as_int()?;
-            if id >= 0 && id <= u32::MAX as i64 {
-                Ok(NodeId(id as u32))
-            } else {
-                Err("node references are small integers".to_string())
-            }
+            u32::try_from(id)
+                .map(noble_kernel::untrusted::NodeId)
+                .map_err(|problem| format!("node reference {id} is out of range: {problem}"))
         })
         .collect()
 }
 
-fn limits_from(value: Option<&Json>) -> Result<Limits, String> {
-    let mut limits = Limits {
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; limits_from accepts omitted limits and reports malformed or out-of-u32 values through Result; extra assertions would alter the documentation-input contract."
+)]
+fn limits_from(
+    value: Option<&crate::value::Json>,
+) -> Result<noble_kernel::untrusted::Limits, String> {
+    let mut limits = noble_kernel::untrusted::Limits {
         bytes: 1 << 16,
         nodes: 256,
         depth: 32,
@@ -240,45 +154,39 @@ fn limits_from(value: Option<&Json>) -> Result<Limits, String> {
     let Some(found) = value else {
         return Ok(limits);
     };
-    for key in [
-        "bytes",
-        "nodes",
-        "depth",
-        "type_size",
-        "stack_height",
-        "work",
-        "diagnostics",
+    for (key, target) in [
+        ("bytes", &mut limits.bytes),
+        ("nodes", &mut limits.nodes),
+        ("depth", &mut limits.depth),
+        ("type_size", &mut limits.type_size),
+        ("stack_height", &mut limits.stack_height),
+        ("work", &mut limits.work),
+        ("diagnostics", &mut limits.diagnostics),
     ] {
         if let Some(given) = found.optional(key)? {
-            let value = given.as_int()?;
-            if value < 0 || value > u32::MAX as i64 {
-                return Err(format!("limit `{key}` is out of range"));
-            }
-            let small = value as u32;
-            match key {
-                "bytes" => limits.bytes = small,
-                "nodes" => limits.nodes = small,
-                "depth" => limits.depth = small,
-                "type_size" => limits.type_size = small,
-                "stack_height" => limits.stack_height = small,
-                "work" => limits.work = small,
-                _ => limits.diagnostics = small,
-            }
+            let number = given.as_int()?;
+            *target = u32::try_from(number).map_err(|problem| {
+                format!("limit `{key}` value {number} is out of range: {problem}")
+            })?;
         }
     }
     Ok(limits)
 }
 
 /// Decode one whole example: request plus candidate.
-pub fn decode(value: &Json) -> Result<Example, String> {
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; example composes fallible request and candidate decoders and preserves unknown formats for checker rejection; it must not assert that documentation input is valid."
+)]
+pub(super) fn example(value: &crate::value::Json) -> Result<Example, String> {
     let request_value = value.field("request")?;
     let expected = request_value.field("expected")?;
-    let request = Request {
+    let request = noble_kernel::untrusted::Request {
         input_bytes: 64,
         expected: noble_kernel::untrusted::Expected {
-            stack_in: stack(expected.field("in")?)?,
-            stack_out: stack(expected.field("out")?)?,
-            allowed_effects: effect_set(expected.field("allowed_effects")?)?,
+            stack_in: shapes::stack(expected.field("in")?)?,
+            stack_out: shapes::stack(expected.field("out")?)?,
+            allowed_effects: shapes::effect_set(expected.field("allowed_effects")?)?,
         },
         limits: limits_from(request_value.optional("limits")?)?,
     };
@@ -287,13 +195,13 @@ pub fn decode(value: &Json) -> Result<Example, String> {
         "noble-candidate/v1" => noble_kernel::untrusted::CANDIDATE_FORMAT,
         _ => 0,
     };
-    let nodes: Vec<Node> = candidate_value
+    let nodes = candidate_value
         .field("nodes")?
         .as_arr()?
         .iter()
         .map(node)
         .collect::<Result<_, _>>()?;
-    let candidate = Candidate {
+    let candidate = noble_kernel::untrusted::Candidate {
         format,
         revision: 0,
         nodes,

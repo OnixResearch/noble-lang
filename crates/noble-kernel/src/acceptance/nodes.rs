@@ -4,6 +4,10 @@
 ///
 /// The node returns owned: a reference into the candidate arena cannot be
 /// carried across the machine state the extraction interpreter tracks.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; node_of checks index representability and arena membership and reports MalformedReference for either failure; hostile references must not trigger assertions."
+)]
 pub(super) fn node_of(
     candidate: &crate::untrusted::Candidate,
     node_id: crate::untrusted::NodeId,
@@ -84,6 +88,10 @@ pub(super) fn fold_node(
 /// Validate one quotation node and build its parent and child frames.
 ///
 /// Returns the work charged for the node's instantiation.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; open_quotation validates the witness and depth before reading its three required bindings, with typed rejection or Internal failure instead of panic paths."
+)]
 pub(super) fn open_quotation(
     frame: super::Frame,
     node_id: crate::untrusted::NodeId,

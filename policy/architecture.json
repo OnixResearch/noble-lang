@@ -4,14 +4,38 @@
     {
       "core_handling": "forbidden",
       "executor_role": "composition-root",
+      "family": "filesystem",
+      "rationale": "Only the CLI reads bounded contract, proof, rule-library and toolchain inputs, creates fresh artifacts, and removes its private temporary workspace."
+    },
+    {
+      "core_handling": "forbidden",
+      "executor_role": "composition-root",
+      "family": "process",
+      "rationale": "Only the CLI resolves the local Lean runtime closure, launches bounded proof workers through Linux bubblewrap and a user-systemd scope, captures their status, and terminates failed or expired workers. Missing isolation fails closed."
+    },
+    {
+      "core_handling": "forbidden",
+      "executor_role": "composition-root",
       "family": "environment",
-      "rationale": "Only the CLI reads process arguments."
+      "rationale": "Only the CLI captures process arguments, consumer-selected absolute tool and rule-library paths, the user runtime directory, and the temporary-directory root. Child environments are cleared and explicitly populated."
+    },
+    {
+      "core_handling": "forbidden",
+      "executor_role": "composition-root",
+      "family": "time",
+      "rationale": "Only the CLI observes clocks for bounded proof-worker deadlines and private temporary-directory naming; clock values never enter contract meaning."
+    },
+    {
+      "core_handling": "forbidden",
+      "executor_role": "composition-root",
+      "family": "concurrency",
+      "rationale": "Only the CLI starts and joins bounded stdout/stderr readers and sleeps while supervising proof workers. Domain-core evaluation remains synchronous and effect-free."
     },
     {
       "core_handling": "forbidden",
       "executor_role": "composition-root",
       "family": "observability",
-      "rationale": "Only the CLI writes smoke outcomes and diagnostics."
+      "rationale": "Only the CLI emits verification reports, help, internal smoke outcomes and diagnostics. Explanation and statement generation do not launch proof tools."
     },
     {
       "core_handling": "forbidden",
@@ -49,6 +73,9 @@
   "core_no_std": [
     {
       "scope": "noble-kernel"
+    },
+    {
+      "scope": "noble-contracts"
     }
   ],
   "dependency_rules": [
@@ -85,23 +112,106 @@
     {
       "authority": "unprotected",
       "executor_methods": [
-        "noble_cli::main",
-        "noble_cli::write_outcome"
+        "noble-cli::closure@crates/noble-cli/src/sandbox/runtime.rs:193:204",
+        "noble-cli::closure@crates/noble-cli/src/sandbox/runtime.rs:2561:2569",
+        "noble-cli::closure@crates/noble-cli/src/sandbox/runtime.rs:3956:3962",
+        "noble-cli::closure@crates/noble-cli/src/workflow/artifacts.rs:4242:4248",
+        "noble-cli::closure@crates/noble-cli/src/workflow/rules.rs:5281:5288",
+        "noble::<workflow::artifacts::Temporary as std::ops::Drop>::drop",
+        "noble::sandbox::Environment::discover",
+        "noble::sandbox::runtime::executable",
+        "noble::sandbox::runtime::installation",
+        "noble::workflow::artifacts::Temporary::create",
+        "noble::workflow::artifacts::create_directory",
+        "noble::workflow::artifacts::emit",
+        "noble::workflow::artifacts::read_bounded",
+        "noble::workflow::artifacts::write_source",
+        "noble::workflow::rules::enqueue_directory",
+        "noble::workflow::rules::read_library",
+        "noble::workflow::rules::selected_root"
+      ],
+      "executor_scope": "crates/noble-cli/src",
+      "family": "filesystem",
+      "protected": null,
+      "rationale": "Local consumer I/O reads selected regular files and rule-library sources, creates only fresh output files/directories, and deletes only owned temporary artifacts. Path metadata observations are included even where the bounded collector does not classify std::path calls. No protected domain operation or artifact authenticity follows from this classification."
+    },
+    {
+      "authority": "unprotected",
+      "executor_methods": [
+        "noble-cli::closure@crates/noble-cli/src/sandbox/launch.rs:3118:3124",
+        "noble-cli::closure@crates/noble-cli/src/sandbox/launch.rs:3228:3235",
+        "noble::sandbox::launch::<impl sandbox::Environment>::run",
+        "noble::sandbox::launch::<impl sandbox::Environment>::scoped_command",
+        "noble::sandbox::process::capture",
+        "noble::sandbox::process::monitor",
+        "noble::sandbox::process::stop",
+        "noble::sandbox::runtime::nix_roots",
+        "noble::workflow::artifacts::Temporary::create",
+        "noble::workflow::verification::probe_toolchain",
+        "noble::workflow::verification::require_success"
+      ],
+      "executor_scope": "crates/noble-cli/src",
+      "family": "process",
+      "protected": null,
+      "rationale": "The shell queries the selected local Nix runtime closure, executes proof workers through the required user-systemd/bubblewrap boundary, supervises bounded output and deadlines, observes exit status, and reads its PID for private temporary naming. These local proof-tool operations grant no protected domain capability; missing isolation never authorizes an unsandboxed fallback."
+    },
+    {
+      "authority": "unprotected",
+      "executor_methods": [
+        "noble::read_arguments",
+        "noble::sandbox::configured_path",
+        "noble::workflow::artifacts::Temporary::create"
+      ],
+      "executor_scope": "crates/noble-cli/src",
+      "family": "environment",
+      "protected": null,
+      "rationale": "Arguments, explicit consumer tool/library selections, the user runtime directory and temporary root are boundary configuration, not domain authority. The no_std core receives explicit source bytes and limits instead of ambient environment access."
+    },
+    {
+      "authority": "unprotected",
+      "executor_methods": [
+        "noble::sandbox::now",
+        "noble::workflow::artifacts::Temporary::create"
+      ],
+      "executor_scope": "crates/noble-cli/src",
+      "family": "time",
+      "protected": null,
+      "rationale": "Clock observations enforce the total proof-worker deadline and name fresh private temporary directories. They neither determine contract semantics nor authorize protected operations."
+    },
+    {
+      "authority": "unprotected",
+      "executor_methods": [
+        "noble::sandbox::process::capture",
+        "noble::sandbox::process::monitor"
+      ],
+      "executor_scope": "crates/noble-cli/src",
+      "family": "concurrency",
+      "protected": null,
+      "rationale": "The shell starts and joins two bounded subprocess-output readers and sleeps while polling worker status. These local supervision threads grant no protected domain capability."
+    },
+    {
+      "authority": "unprotected",
+      "executor_methods": [
+        "noble::main",
+        "noble::write_outcome",
+        "noble::workflow::print_report"
       ],
       "executor_scope": "crates/noble-cli/src",
       "family": "observability",
       "protected": null,
-      "rationale": "The internal smoke route writes only its outcome or a usage error. It grants no protected capability."
+      "rationale": "Consumer-facing reports, help and smoke diagnostics write only to the CLI output streams. Output is not an authorization witness, an external-success receipt, or permission to execute a protected domain effect."
     }
   ],
   "ports": [],
   "production": {
     "packages": [
       "noble-kernel",
+      "noble-contracts",
       "noble-cli"
     ],
     "source_scopes": [
       "crates/noble-kernel/src",
+      "crates/noble-contracts/src",
       "crates/noble-cli/src"
     ],
     "targets": [
@@ -121,6 +231,11 @@
       "scope_kind": "package"
     },
     {
+      "role": "domain-core",
+      "scope": "noble-contracts",
+      "scope_kind": "package"
+    },
+    {
       "role": "composition-root",
       "scope": "noble-cli",
       "scope_kind": "package"
@@ -131,6 +246,11 @@
       "scope_kind": "source"
     },
     {
+      "role": "domain-core",
+      "scope": "crates/noble-contracts/src",
+      "scope_kind": "source"
+    },
+    {
       "role": "composition-root",
       "scope": "crates/noble-cli/src",
       "scope_kind": "source"
@@ -138,6 +258,11 @@
     {
       "role": "test",
       "scope": "crates/noble-kernel/tests",
+      "scope_kind": "source"
+    },
+    {
+      "role": "test",
+      "scope": "crates/noble-contracts/tests",
       "scope_kind": "source"
     },
     {

@@ -30,7 +30,7 @@ fn slot_of(var: crate::words::Variable) -> Option<usize> {
 }
 
 /// Whether one binding carries exactly this declared kind.
-fn carries_kind(binding: &crate::words::Binding, kind: crate::words::VariableKind) -> bool {
+const fn carries_kind(binding: &crate::words::Binding, kind: crate::words::VariableKind) -> bool {
     match (binding, kind) {
         (crate::words::Binding::Stack(_), crate::words::VariableKind::Stack)
         | (crate::words::Binding::Value(_), crate::words::VariableKind::Value)
@@ -47,7 +47,11 @@ fn carries_kind(binding: &crate::words::Binding, kind: crate::words::VariableKin
 /// Returns the witness with every reference replaced by its terminal
 /// binding and the work spent following chains. A cyclic chain rejects;
 /// a chain that would exceed `fuel` hops rejects fail-closed.
-pub fn resolve(
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; bindings preserves input order and threads step_binding's typed reference, kind, cycle and fuel failures; invalid witnesses must remain rejection outcomes rather than assertion panics."
+)]
+pub fn bindings(
     kinds: &[crate::words::VariableKind],
     inst: &crate::words::Inst,
     fuel: u32,
@@ -59,7 +63,7 @@ pub fn resolve(
     let mut failure: Option<crate::words::InstError> = None;
     let mut index: usize = 0;
     while index < inst.bindings.len() {
-        let (next, step) = resolve_binding(kinds, inst, index, walk, fuel);
+        let (next, step) = step_binding(kinds, inst, index, walk, fuel);
         walk = next;
         match step {
             Ok(()) => index += 1,
@@ -80,7 +84,15 @@ pub fn resolve(
 ///
 /// A chain longer than the witness itself must revisit a binding position
 /// (pigeonhole), so the walk reports a cycle without extra state.
-fn resolve_binding(
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; bindings calls step_binding only with index < inst.bindings.len(), and reference resolution validates terminal membership/kind through typed failures; no additional assertion is needed."
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; step_binding clones direct bindings into its Vec or invokes the runtime reference walk; these owned allocation/drop operations cannot be const."
+)]
+fn step_binding(
     kinds: &[crate::words::VariableKind],
     inst: &crate::words::Inst,
     index: usize,
@@ -111,6 +123,10 @@ fn resolve_binding(
 ///
 /// Each hop is charged before it is taken; the hop count passing the
 /// witness length names a cycle without a visited set.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; follow_chain checks the witness-length cycle bound and fuel before checked slot lookup, returning InstError for invalid references; asserting well-founded input would defeat this validator."
+)]
 fn follow_chain(
     inst: &crate::words::Inst,
     from: crate::words::Variable,
@@ -158,6 +174,10 @@ fn follow_chain(
 
 /// Keep one resolved terminal binding when its kind matches the referring
 /// variable's declared kind.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; finish_binding clones the checked terminal binding into the owned Vec output; reassess only if binding copies and output storage become const-capable."
+)]
 fn finish_binding(
     inst: &crate::words::Inst,
     terminal: usize,

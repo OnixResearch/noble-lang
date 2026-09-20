@@ -10,7 +10,9 @@ The configuration selects production Rust separately from extraction Rust.
 Miri uses Charon's extraction toolchain, which includes the Miri component.
 The required target is `x86_64-unknown-linux-gnu`, with 64-bit words and all current features.
 The Cargo profiles use unwind and explicit overflow checks.
-The configuration also names translation arguments and resource limits.
+The inherited M1 extraction configuration also names its kernel subject, translation arguments, and resource limits.
+The file bindings additionally cover the current three-package workspace and the M2, M3, and MC1 proof configurations.
+Those bindings do not substitute for actual-source extraction or consumer proof-checking evidence.
 Future Wasmtime, WIT, Verus, and byte-view components remain unselected.
 
 ## Ownership
@@ -21,8 +23,10 @@ It performs no process execution and emits no execution receipt.
 Every flake output forces its rejection decision before exposing a package or check.
 
 The checker requires eight immutable source revisions with NAR hashes.
-It also compares ten file digests, including the flake declarations, Nix lock, Cargo configuration, hook, and Lake files.
-The expected digests remain in reviewed Nickel source. A check does not refresh its own expected values.
+It also compares 22 file digests: the flake declarations and lock, offline-input mapping, pre-commit hook configuration, Rust toolchain, workspace Cargo manifest and lock, all three package manifests, and the Lake configuration, dependency manifest, and Lean toolchain for each of M1, M2, M3, and MC1.
+In particular, the `noble-cli` package manifest binds the `noble` executable name, and the `noble-contracts` manifest binds the frontend's kernel dependency.
+`nix/tool-selection-files.nix` owns the observed file set; `policy/tool-selection-files.ncl` owns the corresponding reviewed hashes imported by the selection policy.
+The JSON export and observed file set must agree exactly. A check does not refresh its own expected values.
 Nix SHA-256 interfaces own these interoperability hashes. Execution evidence uses BLAKE3 separately.
 
 Ten selected tool recipes and their coerced output paths also match reviewed Nix identities.
@@ -31,10 +35,11 @@ A matching top-level Git revision alone cannot hide a changed selected tool reci
 These Nix identities assume store integrity and do not independently authenticate builds or caches.
 
 The selected Aeneas source supplies its required Charon revision and Lean toolchain.
-The checker compares the resolved Lake dependencies with that source's backend manifest.
+The inherited M1 checker compares that proof project's resolved Lake dependencies with the source's backend manifest.
 The comparison preserves the complete dependency set but ignores package ordering and inherited placement metadata.
 It rejects duplicate packages, floating resolved revisions, missing dependencies, path overrides, and noncanonical package directories.
 A resolved Git revision remains mandatory even when an upstream `inputRev` names a branch or release tag.
+The additional M2, M3, and MC1 Lake files are exact byte bindings, not a claim that this M1 comparison or a build has independently checked every later proof project.
 
 Noble reuses Nix, the pinned Octet components, and the upstream Aeneas pin check.
 No provider implementation enters a Noble production crate.

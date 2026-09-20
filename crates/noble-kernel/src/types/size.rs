@@ -53,11 +53,17 @@ pub(super) fn walk_step(mut walk: Walk) -> (Walk, Step) {
 }
 
 /// Number of recorded child sizes an expanded node consumes.
-fn count_children(node: &crate::types::Ty) -> usize {
+#[expect(
+    tigerstyle::raw_arithmetic_overflow,
+    reason = "Owner: noble-maintainers; each nonzero-sized Ty vector length is at most isize::MAX, so their sum fits usize; reassess if Program storage or the Ty representation changes."
+)]
+const fn count_children(node: &crate::types::Ty) -> usize {
     match node {
         crate::types::Ty::Pair(_, _) | crate::types::Ty::Sum(_, _) => 2,
         crate::types::Ty::List(_) => 1,
-        crate::types::Ty::Program(stack_in, stack_out, _) => stack_in.len() + stack_out.len(),
+        crate::types::Ty::Program(stack_in, stack_out, _) => {
+            (**stack_in).len() + (**stack_out).len()
+        }
         crate::types::Ty::Unit
         | crate::types::Ty::Bool
         | crate::types::Ty::I64
@@ -70,6 +76,10 @@ fn count_children(node: &crate::types::Ty) -> usize {
 /// Add `count` recorded child sizes to the node's own unit, saturating; the
 /// total is `None` when fewer sizes were recorded. The size stack returns so
 /// the caller keeps its state whichever way the step went.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; take_sizes preserves the declared saturating size measure and returns None for missing child sizes without discarding the remaining stack; missing entries are a fail-closed outcome, not a panic."
+)]
 fn take_sizes(
     mut sizes: alloc::vec::Vec<u32>,
     count: usize,
@@ -99,6 +109,10 @@ fn take_sizes(
 ///
 /// The queue holds owned nodes: a reference into the tree under walk cannot be
 /// carried across the owned size stack Aeneas interprets.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; queue_children records one for leaves and queues the exact constructor children with length-bounded indexing; walk_step handles the work bound and missing-size failures without assertions."
+)]
 fn queue_children(
     node: &crate::types::Ty,
     mut todo: alloc::vec::Vec<(crate::types::Ty, bool)>,

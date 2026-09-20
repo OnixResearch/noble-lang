@@ -57,6 +57,10 @@ pub fn check(
     }
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; run rejects hostile requests through preflight and typed machine outcomes, and commits derivations only after successful work charging; assertion padding would add panic paths."
+)]
 fn run(
     env: &crate::contracts::Env,
     request: &crate::untrusted::Request,
@@ -91,6 +95,18 @@ fn run(
 }
 
 /// Take one machine step: fold the current frame's next node.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; step checks frame and node lookup before dispatch and preserves typed Invalid/Internal outcomes rather than asserting on candidate-controlled state."
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; step pops owned Vec frames and invokes runtime node cloning and folding; reassess if the machine becomes allocation-free."
+)]
+#[expect(
+    tigerstyle::fragile_exhaustive_enum_match,
+    reason = "Owner: noble-maintainers; each Node constructor must explicitly select folding or quotation entry, so a new constructor must fail compilation until its acceptance semantics are implemented."
+)]
 fn step(
     mut machine: Machine,
     candidate: &crate::untrusted::Candidate,
@@ -125,6 +141,18 @@ fn halted(mut machine: Machine, outcome: Result<crate::untrusted::Interface, Fai
 }
 
 /// Close one exhausted frame, then stop the machine or continue it.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; close_frame propagates completion failures and charges join work before committing the derivation and advanced parent; failures are outcomes, not panic conditions."
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; close_frame pops and pushes Vec frames and clones the completed interface; these owned runtime transitions cannot be const."
+)]
+#[expect(
+    tigerstyle::fragile_exhaustive_enum_match,
+    reason = "Owner: noble-maintainers; Completion distinguishes entry termination from a charged parent join; new completion states must require an explicit acceptance transition."
+)]
 fn close_frame(
     mut machine: Machine,
     frame: Frame,
@@ -167,6 +195,14 @@ fn close_frame(
 }
 
 /// Fold one literal or invocation node into the machine's counters.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; fold_current returns node or work exhaustion failures before committing work, derivation and frame advancement; assertions would change the rejection contract."
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; fold_current performs runtime substitution and Vec derivation/frame pushes; reassess only if those owned transitions become const-capable."
+)]
 fn fold_current(
     mut machine: Machine,
     frame: Frame,
@@ -195,6 +231,10 @@ fn fold_current(
 }
 
 /// Open one quotation node into its parent and child frames.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; open_current builds owned quotation frames and pushes them into a Vec after runtime validation and charging."
+)]
 fn open_current(
     mut machine: Machine,
     frame: Frame,

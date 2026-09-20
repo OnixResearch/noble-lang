@@ -1,0 +1,471 @@
+{
+  "schema": "noble-mc1-evidence/v1",
+  "milestone": "MC1",
+  "date": "2026-09-20",
+  "result": "passed",
+  "scope": "Experimental MC1-v1 pure contract frontend, strict application rules, exact-statement CLI evidence admission, and named actual-source statement-export fragment; no MC2 or Wasm delivery.",
+  "implementation": {
+    "receipt": "implementation.json",
+    "receipt_sha256": "55fa9abfa91b81c97c50f05f845ad94561b9f4cfb3ae5e3662fb5d8bce91f387",
+    "source_revision": "sha256:c3aa250ea34c1cfb6b0cd0c34546b9d76027a9245021d4322439a64f3e3fd31d",
+    "scope": "mc1-statement-export-v1",
+    "application_rule_theorems": 43,
+    "strict_bridge_projection_theorems": 61,
+    "closed_source_equations": 6,
+    "strict_axioms": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "native_evaluation_axioms": 197,
+    "opaque_kernel_helpers": 5,
+    "opaque_contract_helpers": 0,
+    "assumptions": [
+      "Pinned Charon/Aeneas translation and handwritten standard-library models are explicit trust boundaries.",
+      "Inherited local opaque copy/format helpers are exactly the five enumerated kernel boundaries.",
+      "Allocation identity, spare capacity, allocator failure, and formatting layout are abstracted by the inherited models.",
+      "Generated string-bound proofs and six closed source equations use the separately listed native-evaluation axioms.",
+      "The 61 universal bridge/projection theorems and 43 application/rule theorems use strict standard axioms only.",
+      "This is a named source-export fragment, not universal frontend/exporter or runtime correctness."
+    ]
+  },
+  "cli": {
+    "receipt": "acceptance.json",
+    "receipt_sha256": "2241decc33341c7229e863c6f99032dcbad042776be25e54cf9b73d4c555af11",
+    "command": "bun verification/mc1/gate.mjs /tmp/noble-main-target/debug/noble verification/mc1/acceptance.json",
+    "passed": 36,
+    "total": 36,
+    "binary_sha256": "1b243f7b1436432c4745849c7d453cce15b8712cf661663f8a1bcd70d2c92873",
+    "consumer_sha256": "62c2d30b2d2e6e906509cc65aca1e5dffa4f6224ad843bb7d98d98528c36d9dc",
+    "consumer_source_files": {
+      "crates/noble-cli/src/consumer/decoding.lean": "d59bd674dd89d8d1f9de69420081d6d75dfd23ce75406eee213f3e6cd5234fb4",
+      "crates/noble-cli/src/consumer/replay.lean": "5d226925c51c5a8e4973e035b6c66a8f4bd01a2ed4e1cf732787fa1a8baca26c"
+    },
+    "gate_sha256": "594c38a50fb2e4dead7ca93ee5ba3f8ba3cb41fe8cc5582f8548e311b5ea526a",
+    "outcomes": [
+      "disproved",
+      "error",
+      "not-run",
+      "proved",
+      "timeout",
+      "unknown",
+      "unsupported"
+    ],
+    "case_results": [
+      {
+        "name": "increment",
+        "passed": true,
+        "outcome": "proved",
+        "exit": 0
+      },
+      {
+        "name": "composed",
+        "passed": true,
+        "outcome": "proved",
+        "exit": 0
+      },
+      {
+        "name": "family",
+        "passed": true,
+        "outcome": "proved",
+        "exit": 0
+      },
+      {
+        "name": "structural",
+        "passed": true,
+        "outcome": "proved",
+        "exit": 0
+      },
+      {
+        "name": "syntax",
+        "passed": true,
+        "outcome": "proved",
+        "exit": 0
+      },
+      {
+        "name": "wrap",
+        "passed": true,
+        "outcome": "proved",
+        "exit": 0
+      },
+      {
+        "name": "signed-overflow-refutation",
+        "passed": true,
+        "outcome": "disproved",
+        "exit": 1
+      },
+      {
+        "name": "unknown-without-evidence",
+        "passed": true,
+        "outcome": "unknown",
+        "exit": 3
+      },
+      {
+        "name": "explanation-does-not-run-tools",
+        "passed": true,
+        "outcome": "not-run",
+        "exit": 0
+      },
+      {
+        "name": "malformed-source",
+        "passed": true,
+        "outcome": "error",
+        "exit": 2
+      },
+      {
+        "name": "typed-predicate-error-retains-acceptance",
+        "passed": true,
+        "outcome": "error",
+        "exit": 2
+      },
+      {
+        "name": "unsupported-predicate-retains-acceptance",
+        "passed": true,
+        "outcome": "unsupported",
+        "exit": 4
+      },
+      {
+        "name": "deadline-outcome",
+        "passed": true,
+        "outcome": "timeout",
+        "exit": 124
+      },
+      {
+        "name": "missing-sandbox-fails-closed",
+        "passed": true,
+        "outcome": "unsupported",
+        "exit": 4
+      },
+      {
+        "name": "untrusted-exporter-valid-wire",
+        "passed": true,
+        "outcome": "proved",
+        "exit": 0
+      },
+      {
+        "name": "changed-body",
+        "passed": true,
+        "outcome": "error",
+        "exit": 2
+      },
+      {
+        "name": "changed-postcondition",
+        "passed": true,
+        "outcome": "error",
+        "exit": 2
+      },
+      {
+        "name": "changed-precondition",
+        "passed": true,
+        "outcome": "error",
+        "exit": 2
+      },
+      {
+        "name": "changed-arithmetic",
+        "passed": true,
+        "outcome": "error",
+        "exit": 2
+      },
+      {
+        "name": "malformed-proof-json",
+        "passed": true,
+        "outcome": "error",
+        "exit": 2
+      },
+      {
+        "name": "reordered-proof-dependencies",
+        "passed": true,
+        "outcome": "proved",
+        "exit": 0
+      },
+      {
+        "name": "duplicate-envelope-field",
+        "passed": true,
+        "outcome": "error",
+        "exit": 2
+      },
+      {
+        "name": "duplicate-declaration",
+        "passed": true,
+        "outcome": "error",
+        "exit": 2
+      },
+      {
+        "name": "missing-dependency",
+        "passed": true,
+        "outcome": "error",
+        "exit": 2
+      },
+      {
+        "name": "cyclic-dependency",
+        "passed": true,
+        "outcome": "error",
+        "exit": 2
+      },
+      {
+        "name": "unreachable-extra-declaration",
+        "passed": true,
+        "outcome": "error",
+        "exit": 2
+      },
+      {
+        "name": "forbidden-axiom-declaration",
+        "passed": true,
+        "outcome": "error",
+        "exit": 2
+      },
+      {
+        "name": "free-variable-expression",
+        "passed": true,
+        "outcome": "error",
+        "exit": 2
+      },
+      {
+        "name": "wrong-theorem-type",
+        "passed": true,
+        "outcome": "error",
+        "exit": 2
+      },
+      {
+        "name": "trusted-name-override",
+        "passed": true,
+        "outcome": "error",
+        "exit": 2
+      },
+      {
+        "name": "erased-forbidden-axiom",
+        "passed": true,
+        "outcome": "error",
+        "exit": 2
+      },
+      {
+        "name": "forged-producer-status",
+        "passed": true,
+        "outcome": "error",
+        "exit": 2
+      },
+      {
+        "name": "admitted-proof",
+        "passed": true,
+        "outcome": "error",
+        "exit": 2
+      },
+      {
+        "name": "host-files-obligation-and-network-isolated",
+        "passed": true,
+        "outcome": "proved",
+        "exit": 0
+      },
+      {
+        "name": "untrusted-worker-timeout",
+        "passed": true,
+        "outcome": "timeout",
+        "exit": 124
+      },
+      {
+        "name": "timeout-kills-observed-descendant",
+        "passed": true,
+        "outcome": null,
+        "exit": null
+      }
+    ],
+    "rule_library_revision": {
+      "root": "/home/brittonr/git/noble/proofs/mc1",
+      "toolchain": "leanprover/lean4:v4.31.0",
+      "identity": "exact-source-snapshot; rebuilt without producer caches",
+      "source_sha256": {
+        "NobleContracts": "f975ac8220689ea0e9937480d60ad2c252d1cce2b151874c18ee618930981fc2",
+        "NobleContracts.Composition": "baae47050f6d445dc7b85ebff72a6bfe40a1f96de92c310ad6ae507bcb0b1d89",
+        "NobleContracts.Examples": "280088bedaac3432addc18cb03ec97659c71dca7507fd112623844a09f4ae549",
+        "NobleContracts.Expression": "4638c9b146da69b5d0a545734fd5bdc690288f86d1c3a2a40a235007a70561db",
+        "NobleContracts.Model": "613d95e843285720935024e18fb12193bc84174ff42a19f8b16981ae6bcd075f",
+        "NobleContracts.Obligation": "13dddb8d47346ba648eb2dd372031ccd2f2e090f3312f1797a1ca567ab9cd616",
+        "NobleContracts.Rules": "1d5802ddec13fcfcbba70e6c75f46ab051ea569e6f30fe92d61e3b5dec8d877b"
+      }
+    },
+    "assumptions": {
+      "allowed_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "accepted_transitive_axioms": [
+        "Classical.choice",
+        "propext",
+        "Quot.sound"
+      ],
+      "semantic_premises": [
+        "universally quantified typed input stack and ghost parameters",
+        "the exact exported requires predicate",
+        "normal-return Exec of the exact accepted program"
+      ],
+      "scope": "Pure normal-return partial correctness with allocation/quota abstraction; no termination, abnormal-outcome safety, runtime applicability, host-state, or Wasm claim."
+    },
+    "independent_from_implementation_refinement": true
+  },
+  "rust": {
+    "target": "x86_64-unknown-linux-gnu",
+    "version": "rustc 1.96.0-nightly (ac7f9ec7d 2026-03-20)\nbinary: rustc\ncommit-hash: ac7f9ec7da74d37fd28667c86bf117a39ba5b02a\ncommit-date: 2026-03-20\nhost: x86_64-unknown-linux-gnu\nrelease: 1.96.0-nightly\nLLVM version: 22.1.0",
+    "tests": {
+      "passed": 58,
+      "failed": 0,
+      "kernel": 44,
+      "contracts": 11,
+      "cli": 3,
+      "command": "cargo test --workspace --all-targets --all-features --locked --offline"
+    },
+    "format": {
+      "result": "passed",
+      "command": "cargo fmt --all -- --check"
+    },
+    "clippy": {
+      "result": "passed",
+      "command": "cargo clippy --workspace --all-targets --all-features --locked --offline -- -D warnings"
+    }
+  },
+  "quality": {
+    "result": "passed",
+    "command": "sh /nix/store/wm49yf2qh20wrbb88ppw07v9jwm51r0m-source/hooks/octet-deny-all.sh --workspace --output-format json --artifact-dir .pi/mc1/octet/deny-complete-4 -- --all-targets --all-features",
+    "selected_rules": 73,
+    "lint_findings": 0,
+    "architecture_findings": 0,
+    "architecture_receipt": "a75aafbc33b897a2b02c8b8168dbbddf7ca830db0a447e99553bce203c1cd977",
+    "compiler_collection_receipt": "0bda593c2b425a08f14dcf41bf91d4e9f92dc54b165b08efa0cde889058d86c2",
+    "compiler_ir_blake3": "d7721092551d3fcc05fb2dcda1aa4aa7837e682403cf08953cb431308a9aa306",
+    "compiler_coverage_blake3": "03ab28221ba7eb9001fdb7bc48fcaff14645418fec56ea29d50adfcf552852f6",
+    "policy_blake3": "d7b50aa20f0b3f844179ffc7fa775e78fbca900ca29eaa77c08fb5521f145f4f",
+    "source_blake3": {
+      "noble-contracts": "3211e4161f66d171cbe6b46de3b1f31d93e98e039b8be1b6475bca028ff162b5",
+      "noble-kernel": "1b7efd02dd9345d8d0a428ba1d2659f3b3a7c20dcc7a7e5410d0e51f55f94960",
+      "noble-cli": "6d6a09bb47ecd571390be1ee1390edab8f9438f6c8f1484e619f5f4f53178a08"
+    },
+    "policy_waivers": 0,
+    "catalog_reductions": 0,
+    "configuration_controls": 32
+  },
+  "source_inventory": {
+    "policy": "../../policy/source-inventory.json",
+    "policy_sha256": "c558dd5934bf54aba959ef8f3d2917802899c17f98d22111cdfcd76a40b50c4f",
+    "result": "passed",
+    "counts": {
+      "bodies": 470,
+      "compiler_production_items": 1199,
+      "configurations": 1,
+      "dependencies": 3,
+      "excepted": 0,
+      "extracted": 0,
+      "future_components": 4,
+      "generated": 478,
+      "macro_origins": 24,
+      "modeled": 0,
+      "open": 470,
+      "open_refinement": 470,
+      "proved": 0,
+      "reviewed_subjects": 1169,
+      "structural": 221,
+      "test_subjects": 666,
+      "tools": 10,
+      "units": 15
+    },
+    "self_tests": 29,
+    "non_claims": [
+      "inventory-classification-is-not-refinement",
+      "open-work-is-not-verified",
+      "extraction-status-is-not-a-proof",
+      "structural-and-generated-subjects-are-accounting-not-noble-bodies",
+      "not-whole-project-verification"
+    ]
+  },
+  "configuration": {
+    "fresh_exports": [
+      "architecture",
+      "source-inventory",
+      "native-assurance",
+      "tool-selection"
+    ],
+    "architecture_manifest": "fresh",
+    "nickel_registry_typecheck": "passed",
+    "tool_selection_controls": 108,
+    "tool_selection_output": "/nix/store/mchxgw7iiz0pn3lgm5v2amjawibxwsi5-noble-tool-selection",
+    "policy_output": "/nix/store/1dbh295jwcdwckiccx4b2b5m3d08vajq-noble-policy-freshness",
+    "invocation": "nix build --impure --no-link --json --expr let current = builtins.getFlake \"path:/home/brittonr/git/noble/.pi/mc1/selection-root\"; in [ current.checks.x86_64-linux.tool-selection current.checks.x86_64-linux.policy ]",
+    "source_note": "A temporary lock-preserving flake delegates outputs to the actual working-tree flake so untracked MC1 files are included; no input, policy, or checker override.",
+    "policy_guard_sha256": {
+      "nix/octet-controls.nix": "105a3df8156bfb1eda576b2951f03960d0acb66bf253f02317f62fff004a4ffd",
+      "nix/octet-controls-tests.nix": "e37d7aee00100ab76df9a81595ac2a90002b225f7d35196a279599f8ca53e1e6"
+    },
+    "reproduction": "nix build .#checks.x86_64-linux.tool-selection .#checks.x86_64-linux.policy",
+    "temporary_wrapper_removed": true
+  },
+  "inherited_checker": {
+    "fragment": "bootstrap-fragment-v1",
+    "proof_gate": "passed",
+    "coverage_gate": "passed",
+    "coverage_record": "../m3-coverage.json",
+    "coverage_sha256": "c03d56d55b4bb13cf77a72b75cb003b1bfefa45f7df5079f371968ab007f3475",
+    "functions": 518,
+    "classification": {
+      "extracted": 494,
+      "proved": 1,
+      "modeled": 18,
+      "excepted": 5,
+      "open": 0
+    },
+    "proof_refusal_controls": 6,
+    "coverage_refusal_controls": 6,
+    "commands": [
+      "bash verification/m3-proof-gate.sh",
+      "bash verification/m3-coverage-gate.sh",
+      "bash verification/m3-coverage-refusals.sh",
+      "bash verification/m3-proof-gate-refusals.sh"
+    ],
+    "non_claim": "The one proved classification is a scoped refinement, not universal whole-checker correctness; classification is not source-inventory discharge."
+  },
+  "non_claims": [
+    "No universal frontend, parser, string-renderer, Rust checker, CLI, or whole-project correctness proof.",
+    "Closed source equations use disclosed native evaluation; strict application and universal bridge/projection theorem lanes do not.",
+    "No Noble Wasm runtime, total correctness, abnormal-outcome guarantee, runtime applicability check, or first-class MC2 certified Program.",
+    "No full-draft conformance result; the complete draft scenario ledger remains separate.",
+    "No verification promotion of the 470 open source-inventory body/refinement obligations."
+  ],
+  "documents": {
+    "result": "passed",
+    "documents": 12,
+    "requirements": 482,
+    "designed_scenarios": 149,
+    "scenarios_marked_executed": 0,
+    "specification_self_tests": 226,
+    "conversion_self_tests": 26,
+    "document_regression_tests": 100,
+    "cairn_wrapper_self_tests": 5,
+    "checker_sha256": "acf0bc9747f15cf0c99684cee4892b4b541f17b7bc565f843a1ec61bba236b61",
+    "commands": [
+      "bun tools/cairn-specs.mjs --write-views",
+      "bun tools/check-specs.mjs --refresh-ledger --self-test",
+      "bun tools/cairn-specs.mjs --self-test",
+      "bun test tools/cairn-specs.test.mjs tools/check-specs.test.mjs",
+      "bun tools/cairn.mjs --self-test"
+    ],
+    "non_claim": "Document validation is separate from the executed 36-case CLI matrix and 58 Rust tests."
+  },
+  "lifecycle": {
+    "result": "archived",
+    "archive": "../../.cairn/archive/2026-09-20-mc1-contract-frontend",
+    "completed_tasks": 14,
+    "package_gates": [
+      "proposal:PASS",
+      "design:PASS",
+      "tasks:PASS"
+    ],
+    "cairn_revision": "15f00875562025e7ea7e0d1f4af24d1a2e2ac06f",
+    "policy_hash": "8280151b7a53822eed460149ecb600bf11418d7463c935e0742009b334f4e7dd",
+    "sync_receipt": "db6d14ae6fee1bf468f6959835768c035f608449eae7dd23550c9e624497e26e",
+    "archive_receipt": "5baa72a9be42ef34d7bf04b01e5d731dde4f7459e00157c102d832dd7386595b",
+    "archive_environment": {
+      "CAIRN_ARCHIVE_DATE": "2026-09-20"
+    },
+    "archive_command": "bun tools/cairn.mjs archive mc1-contract-frontend --root . --execute",
+    "committed": false,
+    "pushed": false
+  }
+}

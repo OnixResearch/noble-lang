@@ -7,6 +7,7 @@
 // tests; only Charon reads it.
 #![feature(register_tool)]
 #![register_tool(charon)]
+#![register_tool(tigerstyle)]
 
 extern crate alloc;
 

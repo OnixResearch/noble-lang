@@ -1,0 +1,1 @@
+(contract 1 signed-wrap (input) (output (y I64)) (program [ 9223372036854775807 1 + ]) (requires true) (ensures (eq (out y) -9223372036854775808)))

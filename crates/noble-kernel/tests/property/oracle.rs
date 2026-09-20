@@ -12,47 +12,39 @@
 //! and one resource kind, so the oracle collapses resource kinds to one
 //! constructor; no kernel decision distinguishes resource kinds.
 
-use noble_kernel::untrusted::{Candidate, Node, NodeId, Request};
-use noble_kernel::words::Inst;
-
-use super::otypes::{is_data, is_subset, oty_stack, union, Decision, OTy};
-use super::table::{
-    append, effects_at, exact_arity, requires_data, stack_at, value_at, word_face, OFace,
-};
-use noble_kernel::untrusted::Lit;
-
-/// The interface of one node under the oracle's rules: literals push their
-/// type, quotations expose their claimed program, and invocations go through
-/// the word table in `table`.
-fn face(node: &Node) -> Option<OFace> {
+/// Literals push their type, quotations expose their claimed program, and
+/// invocations go through the independent word table.
+fn face(node: &noble_kernel::untrusted::Node) -> Option<super::table::Interface> {
     match node {
-        Node::Literal { lit, inst } => {
-            exact_arity(inst, 1)?;
-            let under = stack_at(inst, 0)?;
+        noble_kernel::untrusted::Node::Literal { lit, inst } => {
+            super::table::exact_arity(inst, 1)?;
+            let under = super::table::stack_at(inst, 0)?;
             let lit_ty = match lit {
-                Lit::I64(_) => OTy::I64,
-                Lit::Bool(_) => OTy::Bool,
-                Lit::Text => OTy::Text,
-                Lit::Unit => OTy::Unit,
+                noble_kernel::untrusted::Lit::I64(_) => super::otypes::Type::I64,
+                noble_kernel::untrusted::Lit::Bool(_) => super::otypes::Type::Bool,
+                noble_kernel::untrusted::Lit::Text => super::otypes::Type::Text,
+                noble_kernel::untrusted::Lit::Unit => super::otypes::Type::Unit,
             };
-            Some(OFace {
+            Some(super::table::Interface {
                 input: under.clone(),
-                output: append(under, &[lit_ty]),
+                output: super::table::append(under, &[lit_ty]),
                 latent: vec![],
             })
         }
-        Node::Invocation { def, inst } => word_face(def.0, inst),
-        Node::Quotation { inst, .. } => {
-            exact_arity(inst, 4)?;
+        noble_kernel::untrusted::Node::Invocation { def, inst } => {
+            super::table::word_face(def.0, inst)
+        }
+        noble_kernel::untrusted::Node::Quotation { inst, .. } => {
+            super::table::exact_arity(inst, 4)?;
             let (around, start, end, claimed) = (
-                stack_at(inst, 0)?,
-                stack_at(inst, 1)?,
-                stack_at(inst, 2)?,
-                effects_at(inst, 3)?,
+                super::table::stack_at(inst, 0)?,
+                super::table::stack_at(inst, 1)?,
+                super::table::stack_at(inst, 2)?,
+                super::table::effects_at(inst, 3)?,
             );
             let mut output = around.clone();
-            output.push(OTy::Program(start, end, claimed));
-            Some(OFace {
+            output.push(super::otypes::Type::Program(start, end, claimed));
+            Some(super::table::Interface {
                 input: around,
                 output,
                 latent: vec![],
@@ -61,164 +53,208 @@ fn face(node: &Node) -> Option<OFace> {
     }
 }
 
-/// One in-progress body fold. `origin` names the quotation node a child
-/// frame was opened for; the entry frame has none.
-struct OFrame {
-    body: Vec<NodeId>,
+/// One in-progress body fold. `origin` names the quotation whose body this
+/// frame checks; the entry frame has none. Bodies borrow the fixed arena.
+struct Frame<'a> {
+    body: &'a [noble_kernel::untrusted::NodeId],
     index: usize,
-    stack: Vec<super::otypes::OTy>,
+    stack: Vec<super::otypes::Type>,
     effects: Vec<u32>,
-    claimed_out: Vec<super::otypes::OTy>,
+    claimed_out: Vec<super::otypes::Type>,
     claimed_effects: Vec<u32>,
-    origin: Option<NodeId>,
+    origin: Option<noble_kernel::untrusted::NodeId>,
+}
+
+impl<'a> Frame<'a> {
+    fn quotation(
+        body: &'a [noble_kernel::untrusted::NodeId],
+        inst: &noble_kernel::words::Inst,
+        origin: noble_kernel::untrusted::NodeId,
+    ) -> Option<Self> {
+        Some(Self {
+            body,
+            index: 0,
+            stack: super::table::stack_at(inst, 1)?,
+            effects: vec![],
+            claimed_out: super::table::stack_at(inst, 2)?,
+            claimed_effects: super::table::effects_at(inst, 3)?,
+            origin: Some(origin),
+        })
+    }
+
+    fn consume(mut self, interface: super::table::Interface) -> Option<Self> {
+        // The harness environment provides only latent identity 0.
+        if interface.latent.iter().any(|id| *id != 0) {
+            return None;
+        }
+        let prefix = self.stack.len().checked_sub(interface.input.len())?;
+        if self.stack[prefix..] != interface.input[..] {
+            return None;
+        }
+        self.stack.truncate(prefix);
+        self.stack.extend(interface.output);
+        self.effects = super::otypes::union(&self.effects, &interface.latent);
+        self.index += 1;
+        Some(self)
+    }
+}
+
+struct Machine<'a> {
+    candidate: &'a noble_kernel::untrusted::Candidate,
+    frames: Vec<Frame<'a>>,
+}
+
+impl<'a> Machine<'a> {
+    fn run(mut self) -> super::otypes::Decision {
+        while let Some(frame) = self.frames.pop() {
+            if let Some(decision) = self.advance(frame) {
+                return decision;
+            }
+        }
+        super::otypes::Decision::Reject
+    }
+
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-maintainers; advance reserves and mutates the owned frame vector and invokes allocating interface decoders/consumption; those operations and frame destruction are not const."
+    )]
+    fn advance(&mut self, frame: Frame<'a>) -> Option<super::otypes::Decision> {
+        let node_id = match frame.body.get(frame.index) {
+            Some(id) => *id,
+            None => return self.close(frame),
+        };
+        let index = match usize::try_from(node_id.0) {
+            Ok(index) => index,
+            Err(_) => return Some(super::otypes::Decision::Reject),
+        };
+        let node = match self.candidate.nodes.get(index) {
+            Some(node) => node,
+            None => return Some(super::otypes::Decision::Reject),
+        };
+        match node {
+            noble_kernel::untrusted::Node::Quotation { body, inst } => {
+                let child = match Frame::quotation(body, inst, node_id) {
+                    Some(child) => child,
+                    None => return Some(super::otypes::Decision::Reject),
+                };
+                self.frames.reserve(2);
+                self.frames.push(frame);
+                self.frames.push(child);
+            }
+            noble_kernel::untrusted::Node::Literal { .. }
+            | noble_kernel::untrusted::Node::Invocation { .. } => {
+                if !has_eligible_value(node) {
+                    return Some(super::otypes::Decision::Reject);
+                }
+                let next = match face(node).and_then(|interface| frame.consume(interface)) {
+                    Some(next) => next,
+                    None => return Some(super::otypes::Decision::Reject),
+                };
+                self.frames.push(next);
+            }
+        }
+        None
+    }
+
+    /// Check a completed body's joins, then resume its parent or finish.
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-maintainers; close compares owned type vectors and pops/resumes frames through allocating interface operations and closures; reassess if those runtime frame operations become const."
+    )]
+    fn close(&mut self, frame: Frame<'a>) -> Option<super::otypes::Decision> {
+        if frame.stack != frame.claimed_out
+            || !super::otypes::is_subset(&frame.effects, &frame.claimed_effects)
+        {
+            return Some(super::otypes::Decision::Reject);
+        }
+        let origin = match frame.origin {
+            Some(origin) => origin,
+            None => return Some(super::otypes::Decision::Accept),
+        };
+        let parent = match self.frames.pop() {
+            Some(parent) => parent,
+            None => return Some(super::otypes::Decision::Reject),
+        };
+        let index = match usize::try_from(origin.0) {
+            Ok(index) => index,
+            Err(_) => return Some(super::otypes::Decision::Reject),
+        };
+        let next = self
+            .candidate
+            .nodes
+            .get(index)
+            .and_then(face)
+            .and_then(|interface| parent.consume(interface));
+        match next {
+            Some(parent) => {
+                self.frames.push(parent);
+                None
+            }
+            None => Some(super::otypes::Decision::Reject),
+        }
+    }
+}
+
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; has_eligible_value mirrors the witness into an owned oracle Type and walks its Data predicate through non-const allocation/Option operations; it is not a const tag-only projection."
+)]
+fn has_eligible_value(node: &noble_kernel::untrusted::Node) -> bool {
+    match node {
+        noble_kernel::untrusted::Node::Invocation { def, inst }
+            if super::table::requires_data(def.0) =>
+        {
+            super::table::value_at(inst, 1).is_some_and(|ty| super::otypes::is_data(&ty))
+        }
+        noble_kernel::untrusted::Node::Literal { .. }
+        | noble_kernel::untrusted::Node::Quotation { .. }
+        | noble_kernel::untrusted::Node::Invocation { .. } => true,
+    }
 }
 
 /// Decide one candidate against one request under the oracle's rules.
-pub fn decide(request: &Request, candidate: &Candidate) -> Decision {
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; decide independently rejects unsupported revisions, oversized arenas, unknown effects and failed frame joins; input validity must produce Reject rather than assertion panics."
+)]
+pub fn decide(
+    request: &noble_kernel::untrusted::Request,
+    candidate: &noble_kernel::untrusted::Candidate,
+) -> super::otypes::Decision {
     if candidate.format != noble_kernel::untrusted::CANDIDATE_FORMAT
         || candidate.revision != noble_kernel::untrusted::SEMANTIC_REVISION
     {
-        return Decision::Reject;
+        return super::otypes::Decision::Reject;
     }
-    if candidate.nodes.len() > request.limits.nodes as usize {
-        return Decision::Reject;
-    }
-    if request
-        .expected
-        .allowed_effects
-        .as_slice()
-        .iter()
-        .any(|id| id.0 != 0)
-    {
-        return Decision::Reject;
-    }
-    let mut frames = vec![OFrame {
-        body: candidate.body.clone(),
-        index: 0,
-        stack: oty_stack(&request.expected.stack_in),
-        effects: vec![],
-        claimed_out: oty_stack(&request.expected.stack_out),
-        claimed_effects: request
+    let is_within_node_limit = u64::try_from(candidate.nodes.len())
+        .is_ok_and(|count| count <= u64::from(request.limits.nodes));
+    if !is_within_node_limit
+        || request
             .expected
             .allowed_effects
             .as_slice()
             .iter()
-            .map(|id| id.0)
-            .collect(),
-        origin: None,
-    }];
-    while let Some(frame) = frames.pop() {
-        let node_id = match frame.body.get(frame.index) {
-            Some(id) => *id,
-            None => match close(frame, &mut frames, candidate) {
-                Some(decision) => return decision,
-                None => continue,
-            },
-        };
-        let index = usize::try_from(node_id.0).unwrap_or(usize::MAX);
-        let node = match candidate.nodes.get(index) {
-            Some(node) => node,
-            None => return Decision::Reject,
-        };
-        let quotation = match node {
-            Node::Quotation { body, inst } => Some((body.clone(), inst.clone())),
-            _ => None,
-        };
-        match quotation {
-            Some((body, inst)) => {
-                let opened = match (stack_at(&inst, 1), stack_at(&inst, 2), effects_at(&inst, 3)) {
-                    (Some(a), Some(c), Some(e)) => (a, c, e),
-                    _ => return Decision::Reject,
-                };
-                let child = OFrame {
-                    body,
-                    index: 0,
-                    stack: opened.0,
-                    effects: vec![],
-                    claimed_out: opened.1,
-                    claimed_effects: opened.2,
-                    origin: Some(node_id),
-                };
-                frames.push(frame);
-                frames.push(child);
-            }
-            None => {
-                let interface = match face(node) {
-                    Some(found) => found,
-                    None => return Decision::Reject,
-                };
-                if let Node::Invocation { def, .. } = node {
-                    if requires_data(def.0) {
-                        match value_at(inst_of(node), 1) {
-                            Some(ty) if !is_data(&ty) => return Decision::Reject,
-                            None => return Decision::Reject,
-                            Some(_) => {}
-                        }
-                    }
-                }
-                // Every latent identity must be one the environment
-                // provides; the harness environment provides id 0 only.
-                if interface.latent.iter().any(|id| *id != 0) {
-                    return Decision::Reject;
-                }
-                let mut next = frame;
-                let input = interface.input;
-                if next.stack.len() < input.len()
-                    || next.stack[next.stack.len() - input.len()..] != input[..]
-                {
-                    return Decision::Reject;
-                }
-                next.stack.truncate(next.stack.len() - input.len());
-                next.stack.extend(interface.output);
-                next.effects = union(&next.effects, &interface.latent);
-                next.index += 1;
-                frames.push(next);
-            }
-        }
-    }
-    Decision::Reject
-}
-
-fn inst_of(node: &Node) -> &Inst {
-    match node {
-        Node::Literal { inst, .. }
-        | Node::Invocation { inst, .. }
-        | Node::Quotation { inst, .. } => inst,
-    }
-}
-
-/// Complete one frame: check its joins, then return its completion upward.
-/// `Some(decision)` ends the run; `None` resumes the parent frame.
-fn close(frame: OFrame, frames: &mut Vec<OFrame>, candidate: &Candidate) -> Option<Decision> {
-    if frame.stack != frame.claimed_out || !is_subset(&frame.effects, &frame.claimed_effects) {
-        return Some(Decision::Reject);
-    }
-    let origin = match frame.origin {
-        Some(origin) => origin,
-        None => return Some(Decision::Accept),
-    };
-    let mut parent = match frames.pop() {
-        Some(parent) => parent,
-        None => return Some(Decision::Reject),
-    };
-    let index = usize::try_from(origin.0).unwrap_or(usize::MAX);
-    let interface = match candidate.nodes.get(index) {
-        None => return Some(Decision::Reject),
-        Some(node) => match face(node) {
-            Some(found) => found,
-            None => return Some(Decision::Reject),
-        },
-    };
-    let input = interface.input;
-    if parent.stack.len() < input.len()
-        || parent.stack[parent.stack.len() - input.len()..] != input[..]
+            .any(|id| id.0 != 0)
     {
-        return Some(Decision::Reject);
+        return super::otypes::Decision::Reject;
     }
-    parent.stack.truncate(parent.stack.len() - input.len());
-    parent.stack.extend(interface.output);
-    parent.effects = union(&parent.effects, &interface.latent);
-    parent.index += 1;
-    frames.push(parent);
-    None
+    Machine {
+        candidate,
+        frames: vec![Frame {
+            body: &candidate.body,
+            index: 0,
+            stack: super::otypes::oty_stack(&request.expected.stack_in),
+            effects: vec![],
+            claimed_out: super::otypes::oty_stack(&request.expected.stack_out),
+            claimed_effects: request
+                .expected
+                .allowed_effects
+                .as_slice()
+                .iter()
+                .map(|id| id.0)
+                .collect(),
+            origin: None,
+        }],
+    }
+    .run()
 }

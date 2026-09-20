@@ -4,6 +4,8 @@
 //! through explicit segments, and no step recurses. Each step threads its
 //! stacks in and returns them, so no loop body returns early.
 
+mod finish;
+
 /// Local bound for one substitution walk; beyond it substitution rejects.
 const WORK_CAP: usize = 512;
 
@@ -43,6 +45,10 @@ type StepState = (Walk, Result<(), crate::words::InstError>);
 
 impl crate::words::Scheme {
     /// Substitute one type pattern to a concrete type.
+    #[expect(
+        tigerstyle::fragile_exhaustive_enum_match,
+        reason = "Owner: noble-maintainers; every StepResult must explicitly map to its InstError or checked final segment; new substitution outcomes must force review rather than inherit a success fallback."
+    )]
     pub fn subst_pattern(
         &self,
         pattern: &crate::shapes::Pattern,
@@ -83,6 +89,11 @@ impl crate::words::Scheme {
 /// through `run_task` so the destructuring `let` below binds a call: a
 /// destructuring `let` whose right-hand side is itself a branch is the shape
 /// Aeneas' let simplification rejects.
+#[expect(
+    tigerstyle::assertion_density,
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; walk_step checks the work bound and returns terminal or typed failure outcomes rather than panicking. Owned task Vec operations, allocation and drop make this transition non-const."
+)]
 fn walk_step(
     scheme: &crate::words::Scheme,
     inst: &crate::words::Inst,
@@ -111,6 +122,11 @@ fn walk_step(
 }
 
 /// Run one queued task, returning the updated walk and its outcome.
+#[expect(
+    tigerstyle::missing_const_fn,
+    tigerstyle::fragile_exhaustive_enum_match,
+    reason = "Owner: noble-maintainers; each Task requires its distinct post-order handler, so new variants must force semantic review. These handlers grow owned segment Vecs and cannot be const."
+)]
 fn run_task(
     scheme: &crate::words::Scheme,
     inst: &crate::words::Inst,
@@ -122,55 +138,17 @@ fn run_task(
             walk.segments.push(segment);
             (walk, Ok(()))
         }
-        Task::Finish(node) => finish_task(node, walk),
+        Task::Finish(node) => finish::apply(node, walk),
         Task::Expand(node) => expand_task(scheme, node, inst, walk),
         Task::Part(node) => part_task(node, inst, walk),
     }
 }
 
-/// Complete one `pair`, `sum`, or `list` pattern from its finished segments.
-fn finish_task(node: crate::shapes::Pattern, mut walk: Walk) -> StepState {
-    // A list completes from its single segment; pair and sum from two.
-    if let crate::shapes::Pattern::List(_) = node {
-        return match walk.segments.pop().map(super::segments::list_segment) {
-            Some(Ok(segment)) => {
-                walk.segments.push(segment);
-                (walk, Ok(()))
-            }
-            Some(Err(problem)) => (walk, Err(problem)),
-            None => (walk, Err(crate::words::InstError::OversizedType)),
-        };
-    }
-    // The first pop is the top: the right child's finished segment.
-    let popped = (walk.segments.pop(), walk.segments.pop());
-    let (left, right) = match popped {
-        (Some(right), Some(left)) => (left, right),
-        _ => return (walk, Err(crate::words::InstError::OversizedType)),
-    };
-    let built = match node {
-        crate::shapes::Pattern::Pair(_, _) => super::segments::pair_segment(left, right, false),
-        crate::shapes::Pattern::Sum(_, _) => super::segments::pair_segment(left, right, true),
-        crate::shapes::Pattern::Var(_)
-        | crate::shapes::Pattern::StackVar(_)
-        | crate::shapes::Pattern::List(_)
-        | crate::shapes::Pattern::Program(_, _, _)
-        | crate::shapes::Pattern::Unit
-        | crate::shapes::Pattern::Bool
-        | crate::shapes::Pattern::I64
-        | crate::shapes::Pattern::Text
-        | crate::shapes::Pattern::Syntax
-        | crate::shapes::Pattern::Resource(_) => Err(crate::words::InstError::KindMismatch),
-    };
-    match built {
-        Ok(segment) => {
-            walk.segments.push(segment);
-            (walk, Ok(()))
-        }
-        Err(problem) => (walk, Err(problem)),
-    }
-}
-
 /// Expand one `program` pattern from the segments of its parts.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; expand_task checks the Program marker, required segment count and effect substitution before constructing ordered input/output stacks; malformed state returns InstError rather than assertion panics."
+)]
 fn expand_task(
     scheme: &crate::words::Scheme,
     node: crate::shapes::Pattern,
@@ -186,6 +164,10 @@ fn expand_task(
         }
         _ => return (walk, Err(crate::words::InstError::KindMismatch)),
     };
+    #[expect(
+        tigerstyle::raw_arithmetic_overflow,
+        reason = "Owner: noble-maintainers; each Vec<Pattern> has nonzero-sized elements and at most isize::MAX entries, so the sum of its two program-part lengths fits usize; reassess if the representation changes."
+    )]
     let wanted = parts_in.len() + parts_out.len();
     let mut collected: alloc::vec::Vec<alloc::vec::Vec<crate::types::Ty>> =
         alloc::vec::Vec::with_capacity(crate::capacity::at_least(wanted, 4));
@@ -237,6 +219,18 @@ fn expand_task(
 }
 
 /// Emit the segment of one pattern, queueing its sub-patterns.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; part_task reports missing value/stack bindings as UnknownVariable and otherwise emits or queues the constructor's exact segment rule; arbitrary input patterns must not be asserted valid."
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; part_task clones owned patterns and allocates emitted type segments and queued tasks, requiring runtime Vec and Box operations."
+)]
+#[expect(
+    tigerstyle::fragile_exhaustive_enum_match,
+    reason = "Owner: noble-maintainers; each Pattern constructor defines an explicit emitted segment or post-order child schedule; new constructors must fail compilation until substitution semantics are supplied."
+)]
 fn part_task(node: crate::shapes::Pattern, inst: &crate::words::Inst, mut walk: Walk) -> StepState {
     let marker = node.clone();
     match node {
@@ -279,6 +273,10 @@ fn part_task(node: crate::shapes::Pattern, inst: &crate::words::Inst, mut walk: 
 }
 
 /// Queue the parts of one program pattern, result stack first.
+#[expect(
+    tigerstyle::raw_arithmetic_overflow,
+    reason = "Owner: noble-maintainers; nonzero-sized Pattern slices each have at most isize::MAX entries, so their sum fits usize; the loop and branch guards prove each reverse index stays within its input or output slice."
+)]
 fn queue_parts(
     stack_in: &[crate::shapes::Pattern],
     stack_out: &[crate::shapes::Pattern],

@@ -14,10 +14,12 @@ Scenario clauses refer to unexecuted designs in the conformance ledger.
 
 Document: SPEC-V002  
 Revision: 0.1.0-draft.5  
-Status: First-class contract profile selected; implementation, concrete syntax, and wire format remain open  
+Status: MC1 frontend/rules and verification CLI implemented; first-class companion interfaces selected, runtime implementation open  
 Depends on: [SPEC-V001](../verification/spec.md), [IMPL-V001](../verification-toolchain/spec.md) at 0.1.0-draft.5
 
 [SOURCES.md](../../../specs/SOURCES.md) records inherited baseline citations.
+
+MC1 delivers the frontend, source/IR revision 1, and proof-rule/CLI fragment described below; first-class runtime companions remain a later deliverable.
 
 ## 1. Scope
 
@@ -62,7 +64,7 @@ r[VC-SCOPE-03]
 
 **VC-SCOPE-03.** A `Contracts-Draft` implementation MUST expose contracts and evidence companions as program inputs, outputs, and inspectable values, not only compiler metadata. Eligible companions MUST support aggregate storage and runtime-selected composition. Host-only proof reports do not satisfy this first-class requirement.
 
-Sections 9–13 select the compiler and companion API contracts. Concrete declaration grammar, library word spellings, representation, and portable encoding remain implementation-entry gates. Examples in this document are mathematical or harness notation, not frozen Noble syntax. The profile is a required project deliverable but optional for application use.
+Sections 9–13 select the compiler and companion API contracts. MC1 implements the versioned declaration grammar and typed IR in section 8.1 and the verification/explanation commands in section 12. Its proof-declaration JSON is an experimental host-verification format, not a portable guest companion encoding. First-class companion operations, representation, runtime replay, and proof-required admission remain future implementation work; MC1 implements only their interface/design selection, not VC-SCOPE-03's first-class runtime requirement. Unless explicitly labeled MC1 source, examples in this specification remain mathematical or harness notation. The profile is a required project deliverable but optional for application use.
 
 The selected proof logic is Lean 4 over the reviewed Noble model. Aeneas connects Rust implementation functions to Lean contracts. Verus is optional for reviewed non-kernel exceptions, not an automatically available prover for arbitrary Noble source.
 
@@ -641,7 +643,7 @@ r[VC-BOOT-01]
 
 The logic is not claimed to be decidable, complete, or fully automated. Proof search failure does not establish falsity. General refinement inference, compressed certificates, proof markets, and a general in-guest proof-term kernel remain outside this revision. The finite rule-replay checker in section 11 is a separate, bounded facility.
 
-PO-15, PO-16, and PO-19 through PO-21 govern this profile. All remain open in [verification/obligations.json](../../../specs/verification/obligations.json). [Contract scenarios](../../../specs/conformance/contract-cases.json) are newly authored expectations, not executed evidence.
+PO-15, PO-16, and PO-19 through PO-21 govern this profile. Their scoped statuses remain in [verification/obligations.json](../../../specs/verification/obligations.json); MC1 evidence does not close their later runtime, host, or whole-language portions. [Contract scenarios](../../../specs/conformance/contract-cases.json) retain independent design/execution states. Durable MC1 records belong in [evidence.json](../../../verification/mc1/evidence.json) and [acceptance.json](../../../verification/mc1/acceptance.json), with source/tool identities and trust boundaries; neither this specification nor a fixture alone is an acceptance result.
 
 
 <!-- cairn:scenario-links:start -->
@@ -654,6 +656,71 @@ PO-15, PO-16, and PO-19 through PO-21 govern this profile. All remain open in [v
 This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
 
 <!-- cairn:scenario-links:end -->
+
+### 8.1 Delivered MC1 source and IR
+
+The production [`noble-contracts`](../../../crates/noble-contracts/src/lib.rs) crate is `no_std` with explicit allocation and finite preparation budgets. It implements a pure, optional contract frontend, not a general Noble source compiler or guest evaluator. One source file contains one `(contract 1 name ...)` container. Version 1 fields are:
+
+| Field | MC1 meaning |
+|---|---|
+| `(input (name Type) ...)` | Required ordered input bindings; empty is permitted |
+| `(output (name Type) ...)` | Required ordered normal-return output bindings |
+| `(program [ instruction ... ])` | Required executable subject |
+| `(requires expression)` | Required Boolean precondition; cannot refer to final outputs, directly or through definitions |
+| `(ensures expression)` | Required Boolean normal-return postcondition |
+| `(params (name Type) ...)` | Optional universally quantified ghost parameters; not runtime stack entries |
+| `(define name Type expression)` | Zero or more typed, total logical definitions, resolved in declaration order |
+| `(kind partial-correctness)` | Optional explicit spelling of the only supported claim kind |
+
+Fields need not follow the table's order. Each field except `define` occurs at most once; names cannot be rebound within the same namespace. References use `(in name)`, `(out name)`, `(param name)`, or `(def name)` explicitly. Initial inputs and final outputs are distinct namespaces even when their display names coincide. Forward/cyclic logical definitions, unknown names, and type mismatches are rejected.
+
+The grammar uses parenthesized forms, bracketed program bodies, ASCII identifiers, decimal `I64` literals, `true`, `false`, `unit`, and `;` line comments. Supported types are `Unit`, `Bool`, `I64`, `Text`, `Syntax`, `(Pair A B)`, `(Sum A B)`, `(List A)`, and pure `(Program (InputTypes ...) (OutputTypes ...))`. Stack lists are bottom-first; the last entry is the top. `Text` bindings are supported, but text literals are not.
+
+Program instructions are integer/Boolean literals, the pure bootstrap words `dup`, `drop`, `swap`, `dip`, `+`, `-`, `*`, `=`, `quote`, `compose`, `run`, `reflect`, `unit`, `pair`, `unpair`, `inl`, `inr`, `case`, `if`, `nil`, `cons`, and `list.case`, and typed quotations:
+
+```text
+(block (InputTypes ...) (OutputTypes ...) [ instruction ... ])
+```
+
+Nested bare `[ ... ]` quotations are rejected: their interfaces must be explicit. An explicit word instantiation can use `(word ID witness ...)`, with witnesses `(stack Type ...)`, `(value Type)`, `(effect)`, or `(ref ID)` in the builtin's binding order. IDs and witnesses refer to the fixed bootstrap environment, not producer-selected definitions. Inference supplies ordinary typing witnesses where possible; the inherited `noble-kernel` acceptance checker remains authoritative.
+
+Logical expressions include Boolean `not`, `and`, `or`, `implies`; structural `eq`; signed `lt`/`le`; wrapping `add`/`sub`/`mul`; and pair/sum/list construction and observation. Constructors with a needed type annotation are `(inl OtherType expression)`, `(inr OtherType expression)`, and `(nil ItemType)`. Structural observations include `first`, `second`, `is-left`, `left`, `right`, `is-nil`, `head`, `tail`, and `length`. `cons` takes an item and a list.
+
+`(maps program input expected)` states that **every normal result** of the pure program on the single input value equals the single expected output value. The `Program` must have exactly one input and one output of the corresponding scalar/structural types. This is the logical `Maps`/normal-return relation, not execution of the program during preparation, a decidable runtime guard, or a promise that any normal result exists. For example, the actual [capture-family fixture](../../../verification/mc1/family.noble-contract) is:
+
+```text
+(contract 1 addition-builder-family
+  (input (n I64))
+  (output (p (Program (I64) (I64))))
+  (params (x I64))
+  (program [ quote (block (I64 I64) (I64) [ + ]) compose ])
+  (requires true)
+  (ensures (maps (out p) (param x) (add (param x) (in n)))))
+```
+
+Here `n` is an actual runtime input captured by `quote`; `x` is a universally quantified logical argument to the returned program. A ghost reference cannot appear in the executable body to manufacture a capture. Logical terms do not run arbitrary program bodies, host calls, or tactics. Snapshot/ghost data does not duplicate resource ownership.
+
+The logical evaluator distinguishes undefined terms from false Boolean values. `head`/`tail` of an empty list and `left`/`right` of the wrong sum alternative are undefined. Boolean operators propagate undefined operands; they are not short-circuit guards, and `not` of an undefined expression is not true. A predicate establishes an assertion only when it evaluates to true. Such partial projections are permitted in predicates, but not in total `define` bodies; MC1 does not infer path-sensitive totality.
+
+All `I64` arithmetic uses two's-complement 64-bit wrapping, including logical `add`, `sub`, and `mul`; `lt`/`le` compare signed interpretations. Source literals must fit `I64`. List `length` returns an `I64` modulo \(2^{64}\), not an unbounded natural. The [signed-wrap fixture](../../../verification/mc1/wrap.noble-contract) covers the maximum signed value plus one; the [monotonicity refutation](../../../verification/mc1/monotonic-refutation.lean) refutes unconditional signed increase.
+
+Unsupported corners are explicit: text literals; `eq` on `Program`, `Syntax`, or structures containing them; `maps` inputs/results containing those types; resources, host/effectful instructions and nonempty effects; invariants, effect/trace or ownership clauses; producer-supplied assumption clauses; prefix-safety and total-correctness claims. Unsupported features are not silently dropped or reinterpreted as partial correctness. Logical elaboration follows ordinary kernel acceptance, and a later logical diagnostic retains that ordinary acceptance result instead of declaring the subject ill-typed.
+
+Successful preparation returns an immutable `Prepared`: private construction and read-only access retain the exact accepted candidate, acceptance request/result, typed binding namespaces, indexed logical definitions, expression types/spans, and pre/postcondition roots. `export_lean` accepts only this prepared object, not arbitrary unaccepted source or producer proposition text. The exported `MC1Obligation` declares `irRevision = 1`; the inherited candidate format is 1 and its semantic revision is 0 for `0.1.0-draft.5`. These revision identities are separate. Names and comments are not propositions, and this experimental representation is not a stable cross-version encoding.
+
+The generated claim universally quantifies an unchanged bottom-stack prefix, typed declared inputs, and typed ghost parameters. If the precondition holds, every modeled normal return must preserve that prefix, have exactly the declared output types, and satisfy the postcondition with distinct initial and final observations. The ideal pure model abstracts from allocation/quota failures. It proves neither termination nor safety of abnormal outcomes, invocation applicability, host/resource behavior, or backend/runtime correspondence.
+
+The CLI uses the frontend defaults: 65,536 source bytes, 16,384 metered nodes, nesting depth 64, and 2,000,000 work units divided between frontend work and inherited acceptance. Type size and stack height are bounded at 256. These are rejection limits, not promises that every smaller source succeeds; inference and kernel checks have their own bounded work within that budget. Preparation exhaustion reports `error`, not `proved`, `disproved`, or divergence.
+
+The [MC1 source/proof fixtures](../../../verification/mc1) cover increment, composed increments, the universal capture family, structural data, reflected syntax, signed wrap, and a refuted arithmetic claim. Additional [frontend fixtures](../../../crates/noble-contracts/src/fixtures) demonstrate source forms. Fixture existence is distinct from the executed records linked above.
+
+### 8.2 Source, model, and rule boundaries
+
+The [application library](../../../proofs/mc1/NobleContracts.lean) provides the reviewed pure `Exec`, typed stack/claim definitions, wrapping arithmetic, structural rules, sequencing with explicit intermediate implications, quotation/invocation, branch rules, and the builder-family proofs. Application proofs and refutations are strict Lean-kernel results under the allowed logical foundations; this library imports no native-evaluated implementation-correspondence modules.
+
+The separate [implementation library](../../../proofs/mc1/NobleContractImpl.lean) concerns actual production Rust extracted by Charon/Aeneas, not a handwritten substitute. Universal node/body projection theorems preserve literal bits, primitive identity, quotation edges, and order for their stated inputs. The full `prepare`/`export_lean` equations are source-bound to the increment, composed, capture-family, structural, syntax, and signed-wrap matrix and include the inherited checker linkage. These equations use native evaluation and require its separately inventoried expanded-trust assumption. They are not strict application proofs or universal correctness of parsing, inference, acceptance, all logical expressions, or the whole frontend.
+
+Successful extraction/Lean compilation alone is not a refinement theorem; successful application checking does not establish Rust implementation correctness. Neither lane claims runtime admission, first-class guest evidence construction/replay, MC2/Wasm, whole-language preservation, general termination, host effects, or resource protocols. [IMPL-V001](../verification-toolchain/spec.md#72-mc1-evidence-boundaries) specifies the separation and evidence accounting.
 
 ## 9. Typed contract inputs
 
@@ -774,6 +841,8 @@ This is a scenario design, not an execution result. The case's `state` and `evid
 <!-- cairn:scenario-links:end -->
 
 ## 10. First-class companions
+
+This section remains the selected first-class API contract. MC1 delivers its interface/design selection only: its host report and proof JSON are not guest `Contract`, `Evidence`, or `CertifiedProgram` values. Passing, returning, inspecting, capturing, storing, composing, and invoking such companions at runtime remain separate implementation and conformance obligations.
 
 | Conceptual entity | Meaning | What possession does not establish |
 |---|---|---|
@@ -933,6 +1002,8 @@ This is a scenario design, not an execution result. The case's `state` and `evid
 
 ## 11. Compositional proof library
 
+MC1 implements the pure Lean rule library and explicit semantic composition premises. A Lean `TypedPC` theorem is mathematical evidence, not a constructed runtime companion. The finite guest replay checker, family-instantiation API, certified-status invariant, and applicability/admission operations below remain future runtime work.
+
 ### Requirement: VC-LIB-01
 r[VC-LIB-01]
 
@@ -1032,9 +1103,22 @@ This is a scenario design, not an execution result. The case's `state` and `evid
 ### Requirement: VC-TOOL-01
 r[VC-TOOL-01]
 
-**VC-TOOL-01.** The toolchain MUST provide verification, proof explanation, and proof-required build operations. The selected CLI command families are `noble verify`, `noble explain-proof`, and `noble build --require-proof`. Exact argument grammar remains open. Reports MUST name source spans, the expected claim, assumptions, dependencies, scope, outstanding obligations, and artifact correspondence.
+**VC-TOOL-01.** The toolchain MUST provide verification, proof explanation, and proof-required build operations. The selected CLI command families are `noble verify`, `noble explain-proof`, and `noble build --require-proof`. MC1 implements the first two with the argument grammar below; proof-required builds remain a future command. Reports MUST name source spans, the expected claim, assumptions, dependencies, scope, outstanding obligations, and artifact correspondence.
 
-These commands are specification targets. No Noble executable exists in this repository.
+The `noble-cli` package builds the binary named `noble`:
+
+```text
+noble verify CONTRACT [--emit DIR] [--proof FILE | --refutation FILE] [--timeout-ms N]
+noble explain-proof CONTRACT
+```
+
+The contract path precedes options. Each option occurs at most once; `--proof` and `--refutation` are mutually exclusive. `explain-proof` accepts no options. A valid explanation prepares the subject and emits the exact statement without launching proof tools. `verify` without evidence likewise performs no proof search and returns `unknown`; it can still emit the statement. `--timeout-ms` accepts 1–600000, default 120000, for the whole proof workflow including rule-library compilation.
+
+Both commands print a `noble-mc1-report/v1` JSON report. It separates ordinary acceptance, the exact source and generated claim, typed IR, logical assumptions, selected library sources, application outcome, implementation refinement, and backend correspondence. Supplied UTF-8 proof source must declare `MC1Proof.proof : MC1Obligation.claim` or `MC1Proof.refutation : Not MC1Obligation.claim`; the usual import is `MC1Obligation`. Producer status text does not establish acceptance.
+
+`--emit DIR` creates a new directory without overwriting an existing destination. It retains `report.json` plus available `contract.noble`, `MC1Obligation.lean`, submitted `MC1Proof.lean`, and accepted `MC1Proof.json` declaration data. These files are host verification artifacts, not proof-carrying guest values or portable runtime certificates.
+
+See the [README invocation examples](../../../README.md#using-mc1-contracts) and [sandbox/tool prerequisites](../verification-toolchain/spec.md#52-mc1-consumer-configuration-and-limits). Explanation and statement generation do not require executable Lean/sandbox tools; they report the selected source-library availability without executing it. Actual evidence checking requires the pinned tools and Linux isolation, and fails closed when those prerequisites are unavailable.
 
 
 <!-- cairn:scenario-links:start -->
@@ -1062,6 +1146,20 @@ r[VC-TOOL-02]
 **VC-TOOL-02.** Claim outcomes MUST distinguish `proved`, `disproved`, `unknown`, `timeout`, `unsupported`, `error`, and `not-run`. The `proved` outcome requires accepted evidence for the exact claim. The `disproved` outcome requires an accepted refutation or a checked counterexample that refutes that claim under Noble semantics. Failed proof checking is not disproof. Exhausted execution fuel is not proof of divergence.
 
 These claim outcomes do not replace SPEC-EV001's independent implementation, execution, proof, and trust fields. A failed proof attempt can accompany a true proposition. A successful test is not a universal proof.
+
+MC1 maps the seven outcomes to process exits:
+
+| Outcome | Exit | MC1 condition |
+|---|---:|---|
+| `proved` | 0 | Fresh independent consumer accepts the exact application theorem |
+| `disproved` | 1 | Fresh independent consumer accepts its refutation |
+| `unknown` | 3 | Valid prepared claim, no supplied proof/refutation |
+| `timeout` | 124 | Total proof deadline or recognized CPU-time limit exhausted |
+| `unsupported` | 4 | Unsupported source/profile or missing/incompatible required checking configuration |
+| `error` | 2 | Invalid source/options, preparation exhaustion, rejected proof, I/O or other checking failure |
+| `not-run` | 0 | Successful explanation with no evidence checking |
+
+Malformed or rejected proof material is `error`, not a refutation. Resource-limit failures other than recognized time exhaustion can also report `error`; no resource failure establishes a semantic claim.
 
 
 <!-- cairn:scenario-links:start -->
@@ -1148,7 +1246,17 @@ This is a scenario design, not an execution result. The case's `state` and `evid
 ### Requirement: VC-GATE-01
 r[VC-GATE-01]
 
-**VC-GATE-01.** Before profile implementation acceptance, the project MUST select a versioned contract IR, declaration grammar, companion representation, rule encoding, and API interfaces. The design MUST specify eligibility, concrete construction boundaries, failures, budgets, and evidence decoding. Experimental encodings MUST retain their scope labels and MUST NOT claim portable cross-version interoperability.
+**VC-GATE-01.**
+
+Before profile implementation acceptance, the project MUST select a versioned contract IR, declaration grammar, companion representation, rule encoding, and API interfaces. The design MUST specify eligibility, concrete construction boundaries, failures, budgets, and evidence decoding. Experimental encodings MUST retain their scope labels and MUST NOT claim portable cross-version interoperability.
+
+MC1 selects experimental `contracts-draft/v1`: a bounded s-expression declaration `(contract 1 name (input ...) (output ...) (params ...) (define ...) (program [ ... ]) (requires ...) (ensures ...))`. Parameters and pure nonrecursive logical definitions are optional. Binding references MUST explicitly distinguish initial input, final output, quantified parameter and logical-definition indices; scalar and structural expression operands MUST be typed. The ordered typed expression graph and the actual kernel-accepted candidate MUST be retained as the obligation subject. Program quotation interfaces MUST be explicit when not inferable. Ghost values MUST NOT synthesize executable literals or resources. Unsupported predicates and invalid bindings MUST remain separate diagnostic outcomes.
+
+The selected MC1 semantic model is resource-free, pure normal-return partial correctness with wrapping `I64` arithmetic. It includes scalar/structural predicates, Boolean connectives, preserved stack tails, and universally quantified addition-builder rules. Every partial logical projection MUST have a defined failure interpretation, and undefined assertions MUST NOT become accepted truths. Totality and host protocols are not inferred.
+
+Companion records are immutable descriptions: contract IR/context, inert offered evidence, and an abstract accepted program/evidence pairing whose construction is restricted to independent acceptance or checked derivation. Experimental rule records MUST name a version, exact subjects/claims, prior premise indices, context and assumptions. Construction and import MUST NOT accept supplied certified flags; replay MUST be finite, bounded and acyclic. Composition MUST retain premises and require its intermediate implication. These interfaces specify MC2 implementation obligations; MC1 host proof reports MUST NOT claim Wasm companion, runtime guard or portable-encoding conformance.
+
+MC1 CLI operations are `noble verify CONTRACT [--emit DIR] [--proof FILE | --refutation FILE] [--timeout-ms N]` and `noble explain-proof CONTRACT`. Verification MUST regenerate the independently selected expected claim, isolate proof source execution, independently recheck the exact declaration and transitive assumptions, and retain the seven claim outcomes. Explanation MUST NOT invoke proof code. Accepted application evidence MUST remain separate from implementation refinement and backend correspondence.
 
 
 <!-- cairn:scenario-links:start -->
@@ -1169,6 +1277,24 @@ This is a scenario design, not an execution result. The case's `state` and `evid
 This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
 
 <!-- cairn:scenario-links:end -->
+
+#### Scenario: Versioned typed increment export
+
+- GIVEN a version 1 declaration for the actual accepted `[ 1 + ]` program and the unconditional wrapping postcondition with distinct initial/final references
+- WHEN the contract frontend and Lean export execute
+- THEN the typed IR and exact proposition are retained and an independently checked theorem is required before reporting proved
+
+#### Scenario: Invalid and unsupported declarations remain distinct
+
+- GIVEN an ordinarily valid increment subject with an unbound variable, a predicate type mismatch or an unsupported host predicate
+- WHEN optional contract elaboration runs
+- THEN the contract is rejected with the corresponding invalid or unsupported diagnostic without weakening its claim or reclassifying the ordinary subject as ill-typed
+
+#### Scenario: No evidence by compiler success
+
+- GIVEN an accepted program and an emitted contract proposition but absent or invalid application proof material
+- WHEN verify or explain-proof reports the result
+- THEN no application proved result, termination guarantee, Wasm correspondence or certified runtime admission is reported
 
 ### Requirement: VC-GATE-02
 r[VC-GATE-02]

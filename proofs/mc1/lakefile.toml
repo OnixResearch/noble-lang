@@ -1,0 +1,17 @@
+name = "noble-mc1-contracts"
+defaultTargets = ["NobleContracts"]
+
+[[require]]
+name = "aeneas"
+git = { url = "https://github.com/AeneasVerif/aeneas", subDir = "backends/lean" }
+rev = "505b6ca35217e7be5c96c3e2f8045edfbdf47291"
+
+[[lean_lib]]
+name = "NobleContracts"
+
+[[lean_lib]]
+name = "NobleContractImpl"
+
+[[lean_lib]]
+name = "NobleKernel"
+srcDir = "../m3"

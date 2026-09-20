@@ -54,11 +54,17 @@ let
   # providers, dependencies, ports and adapters, targets, and features.
   requiredPackages = [
     "noble-cli"
+    "noble-contracts"
     "noble-kernel"
   ];
   requiredScopes = [
     "crates/noble-cli/src"
+    "crates/noble-contracts/src"
     "crates/noble-kernel/src"
+  ];
+  requiredCorePackages = [
+    "noble-contracts"
+    "noble-kernel"
   ];
   production = policy.production or { };
   declaredPackages = production.packages or [ ];
@@ -126,8 +132,9 @@ let
     ++ require (all (effect: effect ? authority && effect.authority != "") outbound) "policy-outbound-authority-missing"
     ++ require (all (effect: effect ? executor_scope && effect.executor_scope != "") outbound)
       "policy-outbound-executor-missing"
-    ++ require (all (entry: entry.scope == "noble-kernel") coreNoStd) "policy-core-no-std-mismatch"
-    ++ require (coreNoStd != [ ]) "policy-core-no-std-missing"
+    ++ require (all (entry: elem entry.scope requiredCorePackages) coreNoStd) "policy-core-no-std-mismatch"
+    ++ require (all (scope: any (entry: entry.scope == scope) coreNoStd) requiredCorePackages)
+      "policy-core-no-std-missing"
     ++ require (policy ? ports && policy.ports == [ ]) "policy-ports-not-declared-empty"
     ++ require (
       policy ? provider_classifications && policy.provider_classifications == [ ]
