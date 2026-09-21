@@ -6,6 +6,7 @@ const WORK_LIMIT: usize = 4096;
 enum Step {
     Type(noble_kernel::types::Ty),
     Stack(alloc::vec::Vec<noble_kernel::types::Ty>),
+    Effects(noble_kernel::types::EffSet),
     Byte(u8),
 }
 
@@ -13,6 +14,7 @@ struct State {
     work: alloc::vec::Vec<Step>,
     out: crate::output::Buffer,
     fuel: usize,
+    extended: bool,
 }
 
 #[expect(
@@ -21,6 +23,7 @@ struct State {
 )]
 pub(super) fn encode(
     stack: &[noble_kernel::types::Ty],
+    extended: bool,
 ) -> Result<alloc::vec::Vec<u8>, crate::Diagnostic> {
     if stack.len() > WORK_LIMIT / 2 {
         return Err(crate::Diagnostic::Exhausted);
@@ -29,6 +32,7 @@ pub(super) fn encode(
         work: alloc::vec::Vec::with_capacity(16),
         out: crate::output::Buffer::new(64),
         fuel: WORK_LIMIT,
+        extended,
     };
     walk.work.push(Step::Stack(copy_roots(stack)));
     let mut failure = None;
@@ -56,18 +60,19 @@ fn copy_roots(stack: &[noble_kernel::types::Ty]) -> alloc::vec::Vec<noble_kernel
 #[expect(
     tigerstyle::missing_const_fn,
     tigerstyle::raw_arithmetic_overflow,
-    reason = "Owner: noble-maintainers; traversal consumes allocating Ty values and writes a Vec-backed sink. WORK_LIMIT is 4096, so its fixed five-slot reserve cannot underflow; zero fuel is rejected before decrement."
+    reason = "Owner: noble-maintainers; traversal consumes allocating Ty values and writes a Vec-backed sink. WORK_LIMIT is 4096, so its fixed six-slot reserve cannot underflow; zero fuel is rejected before decrement."
 )]
 fn advance(mut walk: State) -> (State, Option<crate::Diagnostic>) {
-    if walk.fuel == 0 || walk.work.len() > WORK_LIMIT - 5 {
+    if walk.fuel == 0 || walk.work.len() > WORK_LIMIT - 6 {
         return (walk, Some(crate::Diagnostic::Exhausted));
     }
     walk.fuel -= 1;
     let result = match walk.work.pop() {
         None => Ok(()),
         Some(Step::Byte(byte)) => walk.out.append(&[byte]),
+        Some(Step::Effects(effects)) => emit_effects(&effects, &mut walk.out),
         Some(Step::Stack(entries)) => push_stack(entries, &mut walk.work, &mut walk.out),
-        Some(Step::Type(ty)) => push_type(ty, &mut walk.work, &mut walk.out),
+        Some(Step::Type(ty)) => push_type(ty, &mut walk.work, &mut walk.out, walk.extended),
     };
     match result {
         Ok(()) => (walk, None),
@@ -115,15 +120,26 @@ fn push_type(
     ty: noble_kernel::types::Ty,
     work: &mut alloc::vec::Vec<Step>,
     out: &mut crate::output::Buffer,
+    extended: bool,
 ) -> Result<(), crate::Diagnostic> {
+    if !extended {
+        match &ty {
+            noble_kernel::types::Ty::Text | noble_kernel::types::Ty::Sum(_, _) => {
+                return Err(crate::Diagnostic::Unsupported);
+            }
+            noble_kernel::types::Ty::Program(_, _, effects) if !effects.is_empty() => {
+                return Err(crate::Diagnostic::Unsupported);
+            }
+            _ => {}
+        }
+    }
     match ty {
         noble_kernel::types::Ty::Unit => attempt!(out.append(b"Unit")),
         noble_kernel::types::Ty::Bool => attempt!(out.append(b"Bool")),
         noble_kernel::types::Ty::I64 => attempt!(out.append(b"I64")),
+        noble_kernel::types::Ty::Text => attempt!(out.append(b"Text")),
         noble_kernel::types::Ty::Syntax => attempt!(out.append(b"Syntax")),
-        noble_kernel::types::Ty::Text
-        | noble_kernel::types::Ty::Sum(_, _)
-        | noble_kernel::types::Ty::Resource(_) => return Err(crate::Diagnostic::Unsupported),
+        noble_kernel::types::Ty::Resource(_) => return Err(crate::Diagnostic::Unsupported),
         noble_kernel::types::Ty::Pair(left, right) => {
             attempt!(out.append(b"Pair("));
             work.push(Step::Byte(b')'));
@@ -136,12 +152,19 @@ fn push_type(
             work.push(Step::Byte(b')'));
             work.push(Step::Type(*item));
         }
+        noble_kernel::types::Ty::Sum(left, right) => {
+            attempt!(out.append(b"Sum("));
+            work.push(Step::Byte(b')'));
+            work.push(Step::Type(*right));
+            work.push(Step::Byte(b','));
+            work.push(Step::Type(*left));
+        }
         noble_kernel::types::Ty::Program(input_stack, output_stack, effects) => {
-            if !effects.is_empty() {
-                return Err(crate::Diagnostic::Unsupported);
-            }
             attempt!(out.append(b"Program("));
             work.push(Step::Byte(b')'));
+            if !effects.is_empty() {
+                work.push(Step::Effects(effects));
+            }
             work.push(Step::Stack(*output_stack));
             work.push(Step::Byte(b'>'));
             work.push(Step::Byte(b'-'));
@@ -149,4 +172,28 @@ fn push_type(
         }
     }
     Ok(())
+}
+
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-maintainers; effect serialization writes only the walk's fresh owned emission sink, leaving caller-owned effects unchanged."
+)]
+fn emit_effects(
+    effects: &noble_kernel::types::EffSet,
+    out: &mut crate::output::Buffer,
+) -> Result<(), crate::Diagnostic> {
+    // Empty effects retain the experimental signature spelling.
+    if effects.is_empty() {
+        return Ok(());
+    }
+    attempt!(out.append(b"!{"));
+    let mut index = 0usize;
+    while index < effects.as_slice().len() {
+        if index != 0 {
+            attempt!(out.append(b","));
+        }
+        attempt!(out.number(u64::from(effects.as_slice()[index].0)));
+        index += 1;
+    }
+    out.append(b"}")
 }

@@ -132,6 +132,15 @@ impl super::Arena {
         }
         let a = attempt!(self.get(left, span));
         let b = attempt!(self.get(right, span));
+        if self.effectful
+            && matches!(a, super::Term::Program(_, _))
+            && matches!(b, super::Term::Program(_, _))
+        {
+            let a_effect = attempt!(self.program_effect(left, span, meter));
+            let b_effect = attempt!(self.program_effect(right, span, meter));
+            attempt!(meter.node(span));
+            self.effect_equations.push((a_effect, b_effect));
+        }
         if super::sort(a) != super::sort(b) {
             return Err(crate::invalid(
                 span,

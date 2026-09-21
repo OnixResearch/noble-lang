@@ -59,7 +59,7 @@ export function validateConfig(config) {
   }
   requireCondition(config.tools.node.v8 && config.nixpkgs?.revision && config.nixpkgs?.nar_hash,
     'missing engine or nixpkgs revision');
-  requireCondition(config.runtime_assets?.length === 8 && new Set(config.runtime_assets).size === 8
+  requireCondition(config.runtime_assets?.length === 11 && new Set(config.runtime_assets).size === 11
     && config.runtime_assets.every(file => /^crates\/noble-wasm\/runtime\/[a-z-]+\.wat$/.test(file)),
   'runtime assets must be declared explicitly');
   requireCondition(config.proof_status === 'open', 'the harness cannot claim a backend proof');
@@ -313,7 +313,7 @@ export function evaluateReport(report, { requirePolicyControls = true } = {}) {
   check(report.source?.classification === 'byte-manifest-not-compiler-inventory'
     && report.source?.compiler_inventory_claim === false, 'host source manifest is not a compiler inventory');
   check(report.configuration_sha256 === digest(config), 'configuration semantic binding differs');
-  check(report.source?.files?.['verification/m3-wasm/config.json']?.sha256 === report.configuration_bytes_sha256,
+  check(report.source?.files?.['crates/noble-cli/src/core/runtime/config.json']?.sha256 === report.configuration_bytes_sha256,
     'configuration byte binding differs');
   for (const file of config.runtime_assets) {
     const asset = report.source?.runtime_assets?.find(row => row.path === file);

@@ -21,12 +21,25 @@ Lean's `String.fromUTF8?` checks `ByteArray.IsValidUTF8`; its successful
 branch uses `String.fromUTF8`, whose byte array is definitionally the input.
 The separate Rust validator retains Rust's precise invalid-prefix diagnostics.
 
-As in Aeneas's `Vec` model, allocation identity, spare capacity, and allocator
-exhaustion are not observable. String allocation requests nevertheless retain
-Rust's `isize::MAX` capacity-overflow panic. Checked scalar construction also
-rejects mathematical Lean strings too large for `usize`, rather than wrapping
-their lengths. Invalid `Str` bytes cannot arise from safe Rust; decoding them
-returns Aeneas's `undef`, not a replacement-character or empty-string fallback.
+As in Aeneas's `Vec` model, allocation identity, spare capacity, allocator
+exhaustion, destructors, and type-layout-dependent allocation limits are not
+observable. Reserve retains the capacity-overflow panic when the requested
+element count exceeds `usize::MAX`. The erased allocator has no value on which
+to invoke `split_off`'s `Clone A`; the generated calls all use the inherited
+`CloneGlobal`, whose clone is a pure identity. Thus `split_off` models these
+`Global` instantiations, not arbitrary effectful allocator implementations.
+String allocation requests
+retain Rust's `isize::MAX` capacity-overflow panic. Checked scalar construction
+also rejects mathematical Lean strings too large for `usize`, rather than
+wrapping their lengths. Invalid `Str` bytes cannot arise from safe Rust;
+decoding them returns Aeneas's `undef`, not a replacement-character or
+empty-string fallback. Owned UTF-8 failures retain both the original byte
+vector and the precise Rust diagnostic.
+
+Shared references are values in Aeneas. Mutable string borrows preserve their
+byte length and UTF-8 validity in safe Rust, just as mutable slice borrows
+preserve their length. `encode_utf8` uses that same boundary: its backward
+function replaces only the borrowed prefix, retaining the untouched suffix.
 
 Aeneas's formatter writes return success and the unchanged formatter, erasing
 text, escaping, and layout flags. We retain this abstraction, but invoke every
@@ -53,6 +66,11 @@ def Slice.Insts.CoreCmpPartialEqArray.ne
 def Char.Insts.CoreConvertFromU8.from (value : U8) : Result Char :=
   ok (_root_.Char.ofUInt8 (UInt8.ofBitVec value.bv))
 
+@[rust_fun "core::char::methods::{char}::from_u32"]
+def core.char.methods.Char.from_u32 (value : U32) : Result (Option Char) :=
+  let scalar := UInt32.ofBitVec value.bv
+  if h : _root_.isValidChar scalar then ok (some ⟨scalar, h⟩) else ok none
+
 @[rust_fun "core::convert::num::{core::convert::From<i64, u8>}::from"]
 def I64.Insts.CoreConvertFromU8.from (value : U8) : Result I64 :=
   ok (UScalar.hcast .I64 value)
@@ -62,6 +80,12 @@ def I64.Insts.CoreConvertFromU8.from (value : U8) : Result I64 :=
 def Usize.Insts.CoreConvertTryFromU32TryFromIntError.try_from
     (value : U32) : Result (core.result.Result Usize core.num.error.TryFromIntError) :=
   _root_.noble_kernel.Usize.Insts.CoreConvertTryFromU32TryFromIntError.try_from value
+
+@[rust_fun
+  "core::convert::num::ptr_try_from_impls::{core::convert::TryFrom<u64, usize, core::num::error::TryFromIntError>}::try_from"]
+def U64.Insts.CoreConvertTryFromUsizeTryFromIntError.try_from
+    (value : Usize) : Result (core.result.Result U64 core.num.error.TryFromIntError) :=
+  _root_.noble_kernel.U64.Insts.CoreConvertTryFromUsizeTryFromIntError.try_from value
 
 @[rust_fun
   "core::convert::num::{core::convert::TryFrom<u32, i64, core::num::error::TryFromIntError>}::try_from"]
@@ -129,12 +153,49 @@ def core.option.Option.Insts.CoreFmtDebug.fmt
     Result (core.result.Result Unit core.fmt.Error × core.fmt.Formatter) :=
   _root_.noble_kernel.core.option.Option.Insts.CoreFmtDebug.fmt inst value formatter
 
+@[rust_fun "core::option::{core::option::Option<@T>}::as_ref"]
+def core.option.Option.as_ref {T : Type} (value : Option T) : Result (Option T) :=
+  ok value
+
+@[rust_fun "core::option::{core::option::Option<@T>}::map"]
+def core.option.Option.map {T U F : Type} (inst : core.ops.function.FnOnce F T U)
+    (value : Option T) (function : F) : Result (Option U) :=
+  _root_.noble_kernel.core.option.Option.map inst value function
+
 @[rust_fun "core::option::{core::option::Option<@T>}::as_deref"]
 def core.option.Option.as_deref {T U : Type} (inst : core.ops.deref.Deref T U)
     (value : Option T) : Result (Option U) := do
   match value with
   | none => ok none
   | some value => return some (← inst.deref value)
+
+@[rust_fun "core::option::{core::option::Option<@T>}::and_then"]
+def core.option.Option.and_then {T U F : Type}
+    (inst : core.ops.function.FnOnce F T (Option U))
+    (value : Option T) (function : F) : Result (Option U) :=
+  match value with
+  | none => ok none
+  | some value => inst.call_once function value
+
+@[rust_fun "core::option::{core::option::Option<@T>}::or"]
+def core.option.Option.or {T : Type} (value fallback : Option T) : Result (Option T) :=
+  match value with
+  | none => ok fallback
+  | some _ => ok value
+
+@[rust_fun "core::option::{core::option::Option<&'0 @T>}::copied"]
+def core.option.OptionShared0T.copied {T : Type} (inst : core.marker.Copy T)
+    (value : Option T) : Result (Option T) :=
+  _root_.noble_kernel.core.option.OptionShared0T.copied inst value
+
+@[rust_fun
+  "core::option::{core::cmp::PartialEq<core::option::Option<@T>, core::option::Option<@T>>}::eq"]
+def core.option.Option.Insts.CoreCmpPartialEqOption.eq {T : Type}
+    (inst : core.cmp.PartialEq T T) (left right : Option T) : Result Bool :=
+  match left, right with
+  | none, none => ok true
+  | some left, some right => inst.eq left right
+  | _, _ => ok false
 
 @[rust_fun "alloc::boxed::{core::fmt::Debug<Box<@T>>}::fmt"]
 def Box.Insts.CoreFmtDebug.fmt {T : Type} (_ : Type)
@@ -151,6 +212,19 @@ def core.option.Option.Insts.CoreCloneClone.clone
 def core.result.Result.is_err
     {T E : Type} (value : core.result.Result T E) : Result Bool :=
   _root_.noble_kernel.core.result.Result.is_err value
+
+@[rust_fun "core::result::{core::result::Result<@T, @E>}::ok"]
+def core.result.Result.ok
+    {T E : Type} (value : core.result.Result T E) : Result (Option T) :=
+  _root_.noble_kernel.core.result.Result.ok value
+
+/-- Evaluate `Default` before replacing the destination, preserving failure,
+divergence, and any effects of the supplied implementation. -/
+@[rust_fun "core::mem::take"]
+def core.mem.take {T : Type} (inst : core.default.Default T) (value : T) :
+    Result (T × T) := do
+  let replacement ← inst.default
+  ok (value, replacement)
 
 /-! ## Slice and vector endpoints -/
 
@@ -169,10 +243,41 @@ def core.slice.Slice.last_mut {T : Type} (slice : Slice T) :
     | none => slice
     | some value => slice.setAtNat (slice.val.length - 1) value)
 
+@[rust_fun "alloc::vec::{core::default::Default<alloc::vec::Vec<@T>>}::default"]
+def alloc.vec.Vec.Insts.CoreDefaultDefault.default (T : Type) : Result (alloc.vec.Vec T) :=
+  ok (_root_.Aeneas.Std.alloc.vec.Vec.new T)
+
+/-- Match the inherited layout-free vector model without wrapping the exact
+requested element count. No elements or element order change. -/
+@[rust_fun "alloc::vec::{alloc::vec::Vec<@T>}::reserve"]
+def alloc.vec.Vec.reserve {T : Type} (_A : Type) (vector : alloc.vec.Vec T)
+    (additional : Usize) : Result (alloc.vec.Vec T) :=
+  if vector.val.length + additional.val ≤ Usize.max then ok vector else fail .panic
+
+@[rust_fun "alloc::vec::{alloc::vec::Vec<@T>}::truncate"]
+def alloc.vec.Vec.truncate {T : Type} (A : Type) (vector : alloc.vec.Vec T)
+    (length : Usize) : Result (alloc.vec.Vec T) :=
+  _root_.noble_kernel.alloc.vec.Vec.truncate A vector length
+
+@[rust_fun "alloc::vec::{alloc::vec::Vec<@T>}::as_slice"]
+def alloc.vec.Vec.as_slice {T : Type} (A : Type) (vector : alloc.vec.Vec T) :
+    Result (Slice T) :=
+  _root_.noble_kernel.alloc.vec.Vec.as_slice A vector
+
 @[rust_fun "alloc::vec::{alloc::vec::Vec<@T>}::pop"]
 def alloc.vec.Vec.pop {T : Type} (A : Type) (vector : alloc.vec.Vec T) :
     Result (Option T × alloc.vec.Vec T) :=
   _root_.noble_kernel.alloc.vec.Vec.pop A vector
+
+/-- Rust returns the suffix and leaves the prefix in `self`; Aeneas puts the
+returned value before the updated receiver. `split_at` checks the index before
+constructing either part, including the valid empty boundary splits. -/
+@[rust_fun "alloc::vec::{alloc::vec::Vec<@T>}::split_off"]
+def alloc.vec.Vec.split_off {T A : Type} (_inst : core.clone.Clone A)
+    (vector : alloc.vec.Vec T) (index : Usize) :
+    Result (alloc.vec.Vec T × alloc.vec.Vec T) := do
+  let (retained, suffix) ← core.slice.Slice.split_at vector.slice index
+  ok (⟨suffix⟩, ⟨retained⟩)
 
 /-! ## Rust UTF-8 diagnostics -/
 
@@ -274,6 +379,10 @@ def core.str.error.Utf8Error.error_len (error : core.str.error.Utf8Error) :
 def core.str.Str.len (value : Str) : Result Usize :=
   ok (Slice.len value)
 
+@[rust_fun "core::str::{str}::as_bytes"]
+def core.str.Str.as_bytes (value : Str) : Result (Slice U8) :=
+  ok value
+
 @[rust_fun "core::str::traits::{core::cmp::PartialEq<str, str>}::eq"]
 def Str.Insts.CoreCmpPartialEqStr.eq (left right : Str) : Result Bool :=
   ok (left.val == right.val)
@@ -285,6 +394,18 @@ private def decodeStr (value : Str) : Result String :=
       (value.val.map (fun byte => UInt8.ofBitVec byte.bv)).toByteArray with
   | some string => ok string
   | none => fail .undef
+
+@[rust_fun "alloc::string::{alloc::string::String}::new"]
+def alloc.string.String.new : Result String :=
+  ok ""
+
+@[rust_fun "alloc::string::{alloc::string::String}::from_utf8"]
+def alloc.string.String.from_utf8 (bytes : alloc.vec.Vec U8) :
+    Result (core.result.Result String alloc.string.FromUtf8Error) := do
+  let validated ← core.str.converts.from_utf8 bytes.slice
+  match validated with
+  | .Ok string => return .Ok (← decodeStr string)
+  | .Err error => ok (.Err { bytes := bytes, error := error })
 
 @[rust_fun
   "alloc::string::{core::cmp::PartialEq<alloc::string::String, alloc::string::String>}::eq"]
@@ -318,6 +439,23 @@ def alloc.string.String.as_bytes (value : String) : Result (Slice U8) :=
     ok (.from bytes h)
   else
     fail .integerOverflow
+
+/-- Encode exactly one Unicode scalar into the borrowed prefix. A short buffer
+panics before yielding a borrow. The backward function starts with the encoded
+buffer, then copies back only the borrowed number of bytes; even an unreachable
+overlong replacement cannot overwrite the original suffix. As in Aeneas's
+slice backward functions, safe callers return a borrow of the original length
+(and, for `str`, valid UTF-8). -/
+@[rust_fun "core::char::methods::{char}::encode_utf8"]
+def core.char.methods.Char.encode_utf8 (value : Char) (buffer : Slice U8) :
+    Result (Str × (Str → Slice U8)) := do
+  let encoded ← alloc.string.String.as_bytes (_root_.String.singleton value)
+  if encoded.val.length ≤ buffer.val.length then
+    let updated := buffer.setSlice! 0 encoded.val
+    ok (encoded, fun replacement =>
+      updated.setSlice! 0 (replacement.val.take encoded.val.length))
+  else
+    fail .panic
 
 @[rust_fun "alloc::string::{alloc::string::String}::as_str"]
 def alloc.string.String.as_str (value : String) : Result Str :=

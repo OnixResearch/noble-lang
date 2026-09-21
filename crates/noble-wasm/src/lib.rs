@@ -23,6 +23,7 @@ mod lowering;
 mod operations;
 mod output;
 mod signatures;
+pub mod source;
 
 const NODE_LIMIT: usize = 256;
 const BODY_LIMIT: usize = 128;

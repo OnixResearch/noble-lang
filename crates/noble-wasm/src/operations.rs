@@ -9,15 +9,15 @@ pub(crate) const fn supported(definition: u32) -> bool {
     matches!(definition, 0..=2 | 4..=7 | 9..=14 | 18..=21)
 }
 
-#[expect(
-    tigerstyle::missing_const_fn,
-    reason = "Owner: noble-maintainers; the selected fixed symbol is appended to an allocating Vec-backed sink through its bounded non-const append method."
-)]
-fn word(out: &mut crate::output::Buffer, definition: u32) -> Result<(), crate::Diagnostic> {
+pub(crate) fn word(
+    out: &mut crate::output::Buffer,
+    definition: u32,
+) -> Result<(), crate::Diagnostic> {
     match definition {
         0 => out.append(b"$op_dup"),
         1 => out.append(b"$op_drop"),
         2 => out.append(b"$op_swap"),
+        3 => out.append(b"$op_dip"),
         4 => out.append(b"$op_add"),
         5 => out.append(b"$op_sub"),
         6 => out.append(b"$op_mul"),
@@ -28,10 +28,15 @@ fn word(out: &mut crate::output::Buffer, definition: u32) -> Result<(), crate::D
         12 => out.append(b"$push_unit"),
         13 => out.append(b"$op_pair"),
         14 => out.append(b"$op_unpair"),
+        15 => out.append(b"$op_inl"),
+        16 => out.append(b"$op_inr"),
+        17 => out.append(b"$op_case"),
         18 => out.append(b"$op_if"),
         19 => out.append(b"$op_nil"),
         20 => out.append(b"$op_cons"),
         21 => out.append(b"$op_list_case"),
+        22 => out.append(b"$op_emit"),
+        23 => out.append(b"$op_abort"),
         _ => Err(crate::Diagnostic::Unsupported),
     }
 }

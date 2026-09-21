@@ -62,17 +62,17 @@ let
     node = {
       source = "nixpkgs";
       attribute = "nodejs_24";
-      role = "verification-only-wasm-host";
+      role = "core-bootstrap-and-verification-wasm-host";
     };
     wasm_tools = {
       source = "nixpkgs";
       attribute = "wasm-tools";
-      role = "verification-only-wasm-assembler";
+      role = "core-bootstrap-and-verification-wasm-assembler";
     };
     binaryen = {
       source = "nixpkgs";
       attribute = "binaryen";
-      role = "verification-only-wasm-optimizer";
+      role = "core-bootstrap-and-verification-wasm-optimizer";
     };
   };
   verificationChecks = concatLists (

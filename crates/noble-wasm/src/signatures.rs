@@ -1,10 +1,14 @@
 mod walk;
 
+pub(crate) const SOURCE_KEY_LIMIT: usize = 4096;
+
 /// IDs intern complete ordered structural stacks, never just stack heights.
 /// The canonical grammar is injective and contains no caller-provided text.
+#[derive(Clone)]
 pub(crate) struct Pool {
-    keys: alloc::vec::Vec<alloc::vec::Vec<u8>>,
+    pub(crate) keys: alloc::vec::Vec<alloc::vec::Vec<u8>>,
     bytes: usize,
+    extended: bool,
 }
 
 #[derive(Clone, Copy)]
@@ -22,6 +26,15 @@ impl Pool {
         Self {
             keys: alloc::vec::Vec::with_capacity(16),
             bytes: 0,
+            extended: false,
+        }
+    }
+
+    pub(crate) fn source() -> Self {
+        Self {
+            keys: alloc::vec::Vec::with_capacity(16),
+            bytes: 0,
+            extended: true,
         }
     }
 
@@ -29,13 +42,16 @@ impl Pool {
         &mut self,
         stack: &[noble_kernel::types::Ty],
     ) -> Result<u32, crate::Diagnostic> {
-        let key = attempt!(walk::encode(stack));
+        let key = attempt!(walk::encode(stack, self.extended));
         let mut index = 0usize;
         while index < self.keys.len() && self.keys[index] != key {
             index += 1;
         }
         if index < self.keys.len() {
             return number(index);
+        }
+        if self.extended && self.keys.len() >= SOURCE_KEY_LIMIT {
+            return Err(crate::Diagnostic::Exhausted);
         }
         let bytes = match self.bytes.checked_add(key.len()) {
             Some(bytes) => bytes,

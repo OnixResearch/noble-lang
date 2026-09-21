@@ -7,12 +7,18 @@ open Aeneas Aeneas.Std Result
 namespace noble_wasm
 
 /-!
-The nine standard-library boundaries of the emitter extraction. Scalars use
-Aeneas's fixed-width mathematical values, with the pinned extraction targeting
-x86_64. Fallible casts retain Rust's success/error distinction. Slice and vector
-endpoints retain every element and its order; no pointer or allocation identity
-is used. As in the inherited Aeneas vector model, allocator exhaustion and spare
-capacity are not observable.
+Standard-library boundaries of the expanded managed-memory compiler extraction.
+Scalars use Aeneas's fixed-width mathematical values, with the pinned extraction
+targeting x86_64. Fallible casts retain Rust's success/error distinction;
+saturating multiplication clamps the exact mathematical product. Clone and
+comparison boundaries invoke the supplied trait implementations, preserving
+their failures and Rust's left-to-right short-circuiting.
+
+Slice and vector endpoints retain every element and its order; no pointer or
+allocation identity is used. As in the inherited Aeneas vector model, allocator
+exhaustion, spare capacity, and type-layout-dependent allocation limits are not
+observable. Reserve nevertheless retains the capacity-overflow panic when the
+requested element count exceeds `usize::MAX`, rather than wrapping that count.
 
 These definitions add no native-evaluation proofs. The generated emitter's
 byte-array construction may transitively use native evaluation through the
@@ -41,19 +47,75 @@ def U8.Insts.CoreConvertTryFromU64TryFromIntError.try_from
     (value : U64) : Result (core.result.Result U8 core.num.error.TryFromIntError) :=
   core.num.tryFromUScalar .U8 value
 
+@[rust_fun
+  "core::convert::num::{core::convert::TryFrom<u32, u64, core::num::error::TryFromIntError>}::try_from"]
+def U32.Insts.CoreConvertTryFromU64TryFromIntError.try_from
+    (value : U64) : Result (core.result.Result U32 core.num.error.TryFromIntError) :=
+  core.num.tryFromUScalar .U32 value
+
 /-- Taking the magnitude in `Int` handles `i64::MIN` without signed overflow. -/
 @[rust_fun "core::num::{i64}::unsigned_abs"]
 def core.num.I64.unsigned_abs (value : I64) : Result U64 :=
   UScalar.tryMk .U64 value.val.natAbs
 
+/-- The pinned signed builtin incorrectly takes `I8` bytes. Decode unsigned
+bytes with its exact `U64` counterpart, then reinterpret the same 64 bits as
+two's complement: values at least `2^63` become `value - 2^64`. -/
+@[rust_fun "core::num::{i64}::from_le_bytes" -canFail]
+def core.num.I64.from_le_bytes (bytes : Array U8 8#usize) : I64 :=
+  UScalar.hcast .I64 (_root_.Aeneas.Std.core.num.U64.from_le_bytes bytes)
+
+@[rust_fun "core::num::{u64}::saturating_mul"]
+def core.num.U64.saturating_mul (left right : U64) : Result U64 :=
+  UScalar.tryMk .U64 (min U64.max (left.val * right.val))
+
+@[rust_fun "core::num::{usize}::saturating_mul"]
+def core.num.Usize.saturating_mul (left right : Usize) : Result Usize :=
+  _root_.noble_kernel.core.num.Usize.saturating_mul left right
+
+@[rust_fun "core::option::{core::clone::Clone<core::option::Option<@T>>}::clone"]
+def core.option.Option.Insts.CoreCloneClone.clone
+    {T : Type} (inst : core.clone.Clone T) (value : Option T) : Result (Option T) :=
+  _root_.noble_kernel.core.option.Option.Insts.CoreCloneClone.clone inst value
+
+@[rust_fun "core::result::{core::result::Result<@T, @E>}::unwrap_or"]
+def core.result.Result.unwrap_or
+    {T E : Type} (value : core.result.Result T E) (fallback : T) : Result T :=
+  _root_.noble_kernel.core.result.Result.unwrap_or value fallback
+
 @[rust_fun "core::slice::{[@T]}::last"]
 def core.slice.Slice.last {T : Type} (slice : Slice T) : Result (Option T) :=
   ok slice.val.getLast?
+
+@[rust_fun "core::slice::raw::from_ref"]
+def core.slice.raw.from_ref {T : Type} (value : T) : Result (Slice T) :=
+  ok (.from [value] (by scalar_tac))
 
 /-- `Str` is the inherited exact UTF-8 byte slice; Rust's view does not copy it. -/
 @[rust_fun "core::str::{str}::as_bytes"]
 def core.str.Str.as_bytes (text : Str) : Result (Slice U8) :=
   ok text
+
+/-- Rust's tuple equality does not evaluate the second comparison when the
+first is false; failures or divergence in either invoked comparison propagate. -/
+@[rust_fun "core::tuple::{core::cmp::PartialEq<(@U, @T), (@U, @T)>}::eq"]
+def Pair.Insts.CoreCmpPartialEqPair.eq
+    {U T : Type} (first : core.cmp.PartialEq U U) (second : core.cmp.PartialEq T T)
+    (left right : U × T) : Result Bool := do
+  let equal ← first.eq left.1 right.1
+  if equal then second.eq left.2 right.2 else ok false
+
+/-- Reservation changes capacity, not elements. The inherited layout-free Vec
+model erases allocation, but an overflowing element count still panics. -/
+@[rust_fun "alloc::vec::{alloc::vec::Vec<@T>}::reserve"]
+def alloc.vec.Vec.reserve {T : Type} (_A : Type) (vector : alloc.vec.Vec T)
+    (additional : Usize) : Result (alloc.vec.Vec T) :=
+  if vector.val.length + additional.val ≤ Usize.max then ok vector else fail .panic
+
+@[rust_fun "alloc::vec::{alloc::vec::Vec<@T>}::as_slice"]
+def alloc.vec.Vec.as_slice {T : Type} (A : Type) (vector : alloc.vec.Vec T) :
+    Result (Slice T) :=
+  _root_.noble_kernel.alloc.vec.Vec.as_slice A vector
 
 @[rust_fun "alloc::vec::{alloc::vec::Vec<@T>}::pop"]
 def alloc.vec.Vec.pop {T : Type} (A : Type) (vector : alloc.vec.Vec T) :

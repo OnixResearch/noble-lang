@@ -1072,11 +1072,40 @@ def fromDefect : _root_.noble_kernel.shapes.Defect → noble_kernel.shapes.Defec
     toDefect (fromDefect x) = x := by
   cases x <;> simp [toDefect, fromDefect]
 
+def toInstError : noble_kernel.words.InstError → _root_.noble_kernel.words.InstError
+  | .KindMismatch => .KindMismatch
+  | .UnknownVariable => .UnknownVariable
+  | .ArityMismatch => .ArityMismatch
+  | .OversizedStack => .OversizedStack
+  | .OversizedType => .OversizedType
+  | .OversizedEffects => .OversizedEffects
+  | .CyclicWitness => .CyclicWitness
+  | .WalkExhausted => .WalkExhausted
+
+def fromInstError : _root_.noble_kernel.words.InstError → noble_kernel.words.InstError
+  | .KindMismatch => .KindMismatch
+  | .UnknownVariable => .UnknownVariable
+  | .ArityMismatch => .ArityMismatch
+  | .OversizedStack => .OversizedStack
+  | .OversizedType => .OversizedType
+  | .OversizedEffects => .OversizedEffects
+  | .CyclicWitness => .CyclicWitness
+  | .WalkExhausted => .WalkExhausted
+
+@[simp] theorem fromInstError_toInstError (x : noble_kernel.words.InstError) :
+    fromInstError (toInstError x) = x := by
+  cases x <;> simp [fromInstError, toInstError]
+
+@[simp] theorem toInstError_fromInstError (x : _root_.noble_kernel.words.InstError) :
+    toInstError (fromInstError x) = x := by
+  cases x <;> simp [toInstError, fromInstError]
+
 end KernelBridge
 
 /-! Each kernel boundary calls the inherited extraction. The outer Result bind
 preserves failure and divergence; only successful values change representation.
-The clone bridge transports mathematical values, never allocation addresses. -/
+The clone bridges transport mathematical values, never allocation addresses.
+Constants retain the values from that same extraction. -/
 open KernelBridge
 
 @[rust_fun "noble_kernel::acceptance::check"]
@@ -1087,6 +1116,24 @@ def noble_kernel.acceptance.check (env : noble_kernel.contracts.Env)
     (toEnv env) (toRequest request) (toCandidate candidate)
   ok (fromOutcome outcome)
 
+@[rust_fun "noble_kernel::contracts::{core::cmp::PartialEq<noble_kernel::contracts::Definition, noble_kernel::contracts::Definition>}::eq"]
+def noble_kernel.contracts.Definition.Insts.CoreCmpPartialEqDefinition.eq
+    (left right : noble_kernel.contracts.Definition) : Result Bool :=
+  _root_.noble_kernel.contracts.Definition.Insts.CoreCmpPartialEqDefinition.eq left right
+
+@[rust_fun "noble_kernel::contracts::{core::cmp::PartialEq<noble_kernel::contracts::Behavior, noble_kernel::contracts::Behavior>}::eq"]
+def noble_kernel.contracts.Behavior.Insts.CoreCmpPartialEqBehavior.eq
+    (left right : noble_kernel.contracts.Behavior) : Result Bool :=
+  _root_.noble_kernel.contracts.Behavior.Insts.CoreCmpPartialEqBehavior.eq
+    (toBehavior left) (toBehavior right)
+
+@[rust_fun "noble_kernel::contracts::{noble_kernel::contracts::Env}::scheme"]
+def noble_kernel.contracts.Env.scheme (env : noble_kernel.contracts.Env)
+    (definition : noble_kernel.contracts.Definition) :
+    Result (Option noble_kernel.words.Scheme) := do
+  let scheme ← _root_.noble_kernel.contracts.Env.scheme (toEnv env) definition
+  ok (scheme.map fromScheme)
+
 @[rust_fun "noble_kernel::contracts::environment"]
 def noble_kernel.contracts.environment :
     Result (core.result.Result noble_kernel.contracts.Env noble_kernel.shapes.Defect) := do
@@ -1095,15 +1142,99 @@ def noble_kernel.contracts.environment :
   | .Ok env => ok (.Ok (fromEnv env))
   | .Err error => ok (.Err (fromDefect error))
 
+@[rust_fun "noble_kernel::shapes::impls::{core::cmp::PartialEq<noble_kernel::shapes::Pattern, noble_kernel::shapes::Pattern>}::eq"]
+def noble_kernel.shapes.Pattern.Insts.CoreCmpPartialEqPattern.eq
+    (left right : noble_kernel.shapes.Pattern) : Result Bool :=
+  _root_.noble_kernel.shapes.Pattern.Insts.CoreCmpPartialEqPattern.eq
+    (toPattern left) (toPattern right)
+
+@[rust_fun "noble_kernel::shapes::{core::cmp::PartialEq<noble_kernel::shapes::EffectSlot, noble_kernel::shapes::EffectSlot>}::eq"]
+def noble_kernel.shapes.EffectSlot.Insts.CoreCmpPartialEqEffectSlot.eq
+    (left right : noble_kernel.shapes.EffectSlot) : Result Bool :=
+  _root_.noble_kernel.shapes.EffectSlot.Insts.CoreCmpPartialEqEffectSlot.eq
+    (toEffectSlot left) (toEffectSlot right)
+
 @[rust_fun "noble_kernel::types::impls::{core::clone::Clone<noble_kernel::types::Ty>}::clone"]
 def noble_kernel.types.Ty.Insts.CoreCloneClone.clone (ty : noble_kernel.types.Ty) :
     Result noble_kernel.types.Ty := do
   let cloned ← _root_.noble_kernel.types.Ty.Insts.CoreCloneClone.clone (toTy ty)
   ok (fromTy cloned)
 
+@[rust_fun "noble_kernel::types::impls::{core::cmp::PartialEq<noble_kernel::types::Ty, noble_kernel::types::Ty>}::eq"]
+def noble_kernel.types.Ty.Insts.CoreCmpPartialEqTy.eq
+    (left right : noble_kernel.types.Ty) : Result Bool :=
+  _root_.noble_kernel.types.Ty.Insts.CoreCmpPartialEqTy.eq (toTy left) (toTy right)
+
+@[rust_fun "noble_kernel::types::{core::cmp::PartialEq<noble_kernel::types::EffId, noble_kernel::types::EffId>}::eq"]
+def noble_kernel.types.EffId.Insts.CoreCmpPartialEqEffId.eq
+    (left right : noble_kernel.types.EffId) : Result Bool :=
+  _root_.noble_kernel.types.EffId.Insts.CoreCmpPartialEqEffId.eq left right
+
+@[rust_fun "noble_kernel::types::{core::cmp::PartialEq<noble_kernel::types::EffSet, noble_kernel::types::EffSet>}::eq"]
+def noble_kernel.types.EffSet.Insts.CoreCmpPartialEqEffSet.eq
+    (left right : noble_kernel.types.EffSet) : Result Bool :=
+  _root_.noble_kernel.types.EffSet.Insts.CoreCmpPartialEqEffSet.eq left right
+
+@[rust_fun "noble_kernel::types::{noble_kernel::types::EffSet}::as_slice"]
+def noble_kernel.types.EffSet.as_slice (effects : noble_kernel.types.EffSet) :
+    Result (Slice noble_kernel.types.EffId) :=
+  _root_.noble_kernel.types.EffSet.as_slice effects
+
 @[rust_fun "noble_kernel::types::{noble_kernel::types::EffSet}::is_empty"]
 def noble_kernel.types.EffSet.is_empty (effects : noble_kernel.types.EffSet) : Result Bool :=
   _root_.noble_kernel.types.EffSet.is_empty effects
+
+@[rust_fun "noble_kernel::types::{noble_kernel::types::Ty}::size"]
+def noble_kernel.types.Ty.size (ty : noble_kernel.types.Ty) : Result (Option U32) :=
+  _root_.noble_kernel.types.Ty.size (toTy ty)
+
+@[rust_const "noble_kernel::untrusted::CANDIDATE_FORMAT"]
+def noble_kernel.untrusted.CANDIDATE_FORMAT : Result U32 :=
+  ok _root_.noble_kernel.untrusted.CANDIDATE_FORMAT
+
+@[rust_const "noble_kernel::untrusted::SEMANTIC_REVISION"]
+def noble_kernel.untrusted.SEMANTIC_REVISION : Result U32 :=
+  ok _root_.noble_kernel.untrusted.SEMANTIC_REVISION
+
+@[rust_fun "noble_kernel::untrusted::{core::cmp::PartialEq<noble_kernel::untrusted::NodeId, noble_kernel::untrusted::NodeId>}::eq"]
+def noble_kernel.untrusted.NodeId.Insts.CoreCmpPartialEqNodeId.eq
+    (left right : noble_kernel.untrusted.NodeId) : Result Bool :=
+  _root_.noble_kernel.untrusted.NodeId.Insts.CoreCmpPartialEqNodeId.eq left right
+
+@[rust_fun "noble_kernel::untrusted::{core::clone::Clone<noble_kernel::untrusted::Expected>}::clone"]
+def noble_kernel.untrusted.Expected.Insts.CoreCloneClone.clone
+    (expected : noble_kernel.untrusted.Expected) : Result noble_kernel.untrusted.Expected := do
+  let cloned ← _root_.noble_kernel.untrusted.Expected.Insts.CoreCloneClone.clone
+    (toExpected expected)
+  ok (fromExpected cloned)
+
+@[rust_fun "noble_kernel::words::{core::cmp::PartialEq<noble_kernel::words::VariableKind, noble_kernel::words::VariableKind>}::eq"]
+def noble_kernel.words.VariableKind.Insts.CoreCmpPartialEqVariableKind.eq
+    (left right : noble_kernel.words.VariableKind) : Result Bool :=
+  _root_.noble_kernel.words.VariableKind.Insts.CoreCmpPartialEqVariableKind.eq
+    (toVariableKind left) (toVariableKind right)
+
+/-- Stack and value bindings, including nested program patterns, are substituted
+by the inherited kernel; neither successful stacks nor errors are approximated. -/
+@[rust_fun "noble_kernel::words::{noble_kernel::words::Scheme}::subst_stack"]
+def noble_kernel.words.Scheme.subst_stack (scheme : noble_kernel.words.Scheme)
+    (parts : Slice noble_kernel.shapes.Pattern) (inst : noble_kernel.words.Inst) :
+    Result (core.result.Result (alloc.vec.Vec noble_kernel.types.Ty) noble_kernel.words.InstError) := do
+  let result ← _root_.noble_kernel.words.Scheme.subst_stack
+    (toScheme scheme) (toPatternSlice parts) (toInst inst)
+  match result with
+  | .Ok stack => ok (.Ok (fromTyVec stack))
+  | .Err error => ok (.Err (fromInstError error))
+
+@[rust_fun "noble_kernel::words::{noble_kernel::words::Scheme}::subst_effects"]
+def noble_kernel.words.Scheme.subst_effects (scheme : noble_kernel.words.Scheme)
+    (slots : Slice noble_kernel.shapes.EffectSlot) (inst : noble_kernel.words.Inst) :
+    Result (core.result.Result noble_kernel.types.EffSet noble_kernel.words.InstError) := do
+  let result ← _root_.noble_kernel.words.Scheme.subst_effects
+    (toScheme scheme) (mapSlice toEffectSlot slots) (toInst inst)
+  match result with
+  | .Ok effects => ok (.Ok effects)
+  | .Err error => ok (.Err (fromInstError error))
 
 namespace KernelBridge
 

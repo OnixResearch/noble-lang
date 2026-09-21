@@ -1155,7 +1155,11 @@ function selfTest(base) {
     p.cases[0].state.implementation = 'unsupported'; p.cases[0].state.execution = 'unsupported';
   }), null);
   run('added-unexecuted-scenario', b => {
-    changeJson(b, 'specs/conformance/cases.json', p => p.cases.push({ ...p.cases[0], id: 'CORE-EXTRA' })); refreshed(b);
+    changeJson(b, 'specs/conformance/cases.json', p => p.cases.push({
+      ...p.cases[0], id: 'CORE-EXTRA',
+      state: { implementation: 'absent', execution: 'not-run', proof: 'open', trust: 'unassessed' },
+      evidence: [],
+    })); refreshed(b);
   }, null);
   run('implemented-failed-open-is-valid', b => {
     changeJson(b, 'specs/STATUS.json', p => { p.compiler_exists = true; p.runtime_exists = true; });
@@ -1168,7 +1172,7 @@ function selfTest(base) {
     changeJson(b, 'specs/STATUS.json', p => { p.compiler_exists = true; p.runtime_exists = true; });
     changeJson(b, 'specs/conformance/cases.json', p => {
       const c = p.cases[0]; c.state.implementation = 'implemented'; c.state.execution = 'passed';
-      c.evidence.push({ kind: 'test', subject: c.id, claim: `Declared checks for ${c.id}`, revision: REVISION, source_revision: 'synthetic', configuration: { toolchain: 'synthetic' }, result: 'failed', assumptions: [] });
+      c.evidence = [{ kind: 'test', subject: c.id, claim: `Declared checks for ${c.id}`, revision: REVISION, source_revision: 'synthetic', configuration: { toolchain: 'synthetic' }, result: 'failed', assumptions: [] }];
     });
   }, 'execution evidence mismatch');
   const componentEvidence = (id, kind, result) => ({ kind, subject: id, claim: `Declared checks for ${id}`, revision: REVISION,

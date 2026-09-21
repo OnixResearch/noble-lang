@@ -2,9 +2,12 @@
 
 Revision: 0.1.0-draft.5
 
-**Next: M4 — connect the checked core to end-to-end Wasm execution.** M1, M2,
-MC1 and the bounded M3 representation experiment are implemented. Their
-separately scoped evidence does not establish a general or verified backend.
+**Current: M4 — completed; next primary milestone: M5 — synchronous components.**
+M1, M2, MC1 and the bounded M3 representation experiment are implemented. M4
+connects accepted source to compiled managed-linear-memory Wasm and persistent
+sessions, with retained CORE/DX execution, extraction, regression and quality
+evidence. MC2 remains a separate required successor. Neither bounded execution
+nor successful extraction establishes a general or verified backend.
 
 [roadmap.json](roadmap.json) records dependency edges. Milestone status is separate from test and proof results.
 
@@ -132,6 +135,51 @@ The component probe is nonblocking for resource-free M3. M5 owns complete bounda
 
 A negative result is useful: unsupported extraction, an unsuitable ABI, or broken dynamic composition must remain visible. A negative result alone cannot close a milestone.
 
+## M4 implementation and retained acceptance
+
+M4 implements the selected resource-free Core-Bootstrap path, not a second M3
+backend or a component runtime. Parsing/resolution and inference produce finite
+untrusted candidates; independent kernel acceptance and backend rechecking
+precede compiled Wasm execution. Supported values include wrapping `I64`,
+Bool/Text/Unit, Pair/Sum/List, Programs and inert Syntax. Quote/compose/run,
+reflection, stack controls and checked branches preserve ordered interfaces,
+captures, exact recipes, resolved identities and conservative latent effects.
+Persistent sessions retain actual compiled values and definitions. Preparation
+refusals leave prior stack/namespace unchanged with no candidate-body host
+requests; runtime traps and quota exhaustion terminate the session and retain
+already observed request prefixes.
+
+The retained `verification/m4/acceptance.json` passed all 18 CORE cases,
+11 controls and the integrated DX-10/DX-12 workflows described below.
+Final runtime acceptance used a read-only binary snapshot after Cargo tests,
+avoiding races with mutable build targets. Developer-workflow execution remains
+a mandatory M4 acceptance obligation, satisfied by this scoped runtime receipt,
+not deferred to M5 or replaced by static document checks.
+The MC1 36-case regression and the M3 four-configuration regression have passed
+separately and do not substitute for M4 evidence.
+
+Closeout passed fresh actual kernel/frontend/compiler extraction, both compiled
+dependency/axiom audits, 27 refusal controls, independent checking against the
+reviewed extraction lock, full deny-all/architecture and source-coverage gates,
+and all 13 Nix checks, alongside integrated runtime execution. The
+durable receipt authorities are `verification/m4/evidence.json`,
+`verification/m4/acceptance.json`, `verification/m4/implementation.json` and
+`verification/m4/extraction-lock.json`; raw runtime/workflow and assurance
+artifacts belong in `verification/m4/runtime.tar.gz` and
+`verification/m4/assurance.tar.gz`. Discovery alone is not a passing extraction
+gate: independent check mode must re-extract and compare source/generated
+identities, inventories, dependencies and axioms against the reviewed lock.
+The reviewed receipt/inventory, not a fixed function/model count in prose,
+defines coverage. The [acceptance evidence](../README.md#m4-acceptance-evidence)
+distinguishes these completed observations from open refinement obligations.
+
+All 887 authored production bodies remain open refinement obligations in the
+complete 19-unit [source inventory](../verification/source-inventory.md).
+M4 does not claim universal frontend/kernel/compiler/backend refinement,
+PO-17/18 or SO-07 closure, MC2 companions, resources/components, physical GC
+reclamation or isolated engine peaks. Final milestone promotion and Cairn
+sync/archive follow the retained gates, not implementation alone.
+
 ## Developer-experience delivery
 
 [SPEC-DX001](DEVELOPER-EXPERIENCE.md) defines the scoped acceptance gates. M2 requires DX-DIAG-01 and the three DX-01 negative diagnostic cases. Resource-shaped checker inputs do not require live resources.
@@ -140,7 +188,26 @@ Editor holes follow M2 and require a separate editor syntax contract. Guest doma
 
 Identity tools require resolved recipes. Portable cache keys additionally require canonical encoding; proof reuse follows SPEC-V002 evidence admission. Resource-free test hosts can use the M2 environment; live-resource substitution waits for M5.
 
-M2 also requires bounded property-runner controls and compiler-backed static documentation checks under DX-PROPERTY-01/02 and DX-DOC-01/02. M4 extends these to Wasm composition, recipe, and execution observations. The DX-10 and DX-12 designs define required positive and negative harness controls; document checks do not execute them.
+M2 also requires bounded property-runner controls and compiler-backed static
+documentation checks under DX-PROPERTY-01/02 and DX-DOC-01/02. M4 extends these
+to Wasm composition, recipe, and execution observations. These remain **M4
+acceptance obligations**, not deferred M5 work.
+
+The retained [DX-10 harness](../verification/m4/property.mjs) run passed 100
+seeded arithmetic/interface/exact-recipe/effect trials, 100 replay trials,
+all eight hostile controls and 50-step bounded shrinking. Its 200 malformed
+kernel cases are a separate checker observation, not Wasm property coverage.
+The retained [DX-12 harness](../verification/m4/documentation.mjs) run passed
+the two exact declared examples and all six hostile controls with explicit
+resource-free test hosts. Coverage records unsupported, failed, timed-out and
+unrun outcomes; a whole-command timeout does not establish guest entry.
+
+The integrated [runtime gate](../verification/m4/gate.mjs) emits
+`property-workflow.json` and `documentation-workflow.json` beside
+`acceptance.json`, retained under `verification/m4/runtime.tar.gz`.
+Document checks do not run these workflows, bounded
+trials do not prove universal properties, and the two examples do not establish
+that all documentation executes.
 
 After M4, local bindings require a stack-only comparison plus lexical-scope, lowering, and capture-identity contracts. Capability-aware modules require explicit linking, operation contracts, and dependency identity rules. Neither changes bootstrap grammar.
 
@@ -164,4 +231,7 @@ These obligations preserve the existing milestone dependencies and the mandatory
 
 Initial budgets for one engineer are 1–2 days for M1 and 3–5 days each for the M2/M3 feasibility experiments. These are investigation budgets, not completion promises.
 
-Re-estimate M4 after the experiments. Full checker metatheory, backend correspondence, and the platform profiles do not have credible completion dates yet. Estimate MC1 and MC2 after M2 establishes the Lean model and extraction costs.
+M4 implementation is present; completion depends on its retained gates rather
+than the initial feasibility estimates. Full checker metatheory, backend
+correspondence, MC2 and the platform profiles do not have credible completion
+dates yet.

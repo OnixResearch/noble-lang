@@ -63,16 +63,19 @@
     "crates/noble-wasm/Cargo.toml", "crates/noble-cli/Cargo.toml",
     "crates/noble-cli/src/backend/vocabulary.noble",
     "tools/m3-wasm.mjs", "tools/m3-wasm-worker.mjs", "tools/m3-wasm-policy.mjs",
-    "verification/m3-wasm/config.json"
+    "crates/noble-cli/src/core/runtime/config.json"
   ],
   "runtime_assets": [
+    "crates/noble-wasm/runtime/accounting.wat",
     "crates/noble-wasm/runtime/common.wat",
+    "crates/noble-wasm/runtime/data.wat",
     "crates/noble-wasm/runtime/gc-storage.wat",
     "crates/noble-wasm/runtime/linear-storage.wat",
     "crates/noble-wasm/runtime/stack.wat",
     "crates/noble-wasm/runtime/programs.wat",
     "crates/noble-wasm/runtime/operations.wat",
     "crates/noble-wasm/runtime/reflection.wat",
+    "crates/noble-wasm/runtime/source.wat",
     "crates/noble-wasm/runtime/experiment.wat"
   ],
   "feature_policy": {

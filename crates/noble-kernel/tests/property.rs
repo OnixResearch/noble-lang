@@ -216,7 +216,8 @@ fn malformed_candidates_never_panic_or_accept() -> Result<(), String> {
     let mut rng = rng::Stream::new(0x0B1E_5EED_0000_0002);
     let mut rejected = 0;
     let mut bounded = 0;
-    let mut foreign = 0;
+    let mut unavailable = 0;
+    let mut internal_failure_count = 0;
     let kinds =
         usize::try_from(malform::KINDS).map_err(|error| format!("corruption kinds: {error}"))?;
     let mut labels: Vec<(&str, u32)> = Vec::with_capacity(kinds);
@@ -234,8 +235,8 @@ fn malformed_candidates_never_panic_or_accept() -> Result<(), String> {
             }
             noble_kernel::untrusted::Outcome::Invalid(_) => rejected += 1,
             noble_kernel::untrusted::Outcome::Exhausted(_) => bounded += 1,
-            noble_kernel::untrusted::Outcome::Unsupported(_)
-            | noble_kernel::untrusted::Outcome::InternalFailure => foreign += 1,
+            noble_kernel::untrusted::Outcome::Unsupported(_) => unavailable += 1,
+            noble_kernel::untrusted::Outcome::InternalFailure => internal_failure_count += 1,
         }
         match labels.iter_mut().find(|entry| entry.0 == label) {
             Some(entry) => entry.1 += 1,
@@ -249,7 +250,7 @@ fn malformed_candidates_never_panic_or_accept() -> Result<(), String> {
         .collect::<Vec<_>>()
         .join(" ");
     println!(
-        "property/malformed: {MALFORMED} corrupted candidates, 0 accepted, 0 panics; outcomes: invalid={rejected} exhausted={bounded} unsupported-or-failure={foreign}; kinds: {breakdown}"
+        "property/malformed: {MALFORMED} corrupted candidates, 0 accepted, 0 panics; outcomes: invalid={rejected} exhausted={bounded} unsupported={unavailable} internal-failure={internal_failure_count}; kinds: {breakdown}"
     );
     Ok(())
 }

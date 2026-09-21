@@ -19,23 +19,10 @@ let
   acyclic =
     if case.base == "acyclic_shell" then
       {
-        # Isolate the reverse-edge control from every real CLI dependency.
-        # Otherwise contracts or Wasm lowering retain an indirect kernel cycle.
-        ${shellManifest} = ''
-          [package]
-          name = "noble-cli"
-          version.workspace = true
-          edition.workspace = true
-          publish.workspace = true
-          default-run = "noble"
-
-          [[bin]]
-          name = "noble"
-          path = "src/main.rs"
-
-          [lints]
-          workspace = true
-        '';
+        # Isolate normal dependencies without disabling real integration targets.
+        # Test-only edges permit their imports without a production kernel cycle.
+        ${shellManifest} =
+          replaceOnce "[dependencies]" "[dev-dependencies]" files.${shellManifest};
         ${shell} = ''
           //! Standalone acyclic shell fixture; compiled, never executed.
           fn main() {

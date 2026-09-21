@@ -9,6 +9,7 @@ mod initialization;
 // instead of elaborating tens of thousands of individual scalar array entries.
 // as_bytes borrows exactly those static bytes without copying or allocating.
 const COMMON: &str = include_str!("../runtime/common.wat");
+const ACCOUNTING: &str = include_str!("../runtime/accounting.wat");
 const GC_STORAGE: &str = include_str!("../runtime/gc-storage.wat");
 const LINEAR_STORAGE: &str = include_str!("../runtime/linear-storage.wat");
 const STACK: &str = include_str!("../runtime/stack.wat");
@@ -30,6 +31,7 @@ pub(crate) fn module(
     let mut out = crate::output::Buffer::new(4096);
     attempt!(out.append(b"(module\n"));
     attempt!(fragment(&mut out, COMMON));
+    attempt!(fragment(&mut out, ACCOUNTING));
     match representation {
         crate::Representation::WasmGc => attempt!(fragment(&mut out, GC_STORAGE)),
         crate::Representation::ManagedLinearMemory => attempt!(fragment(&mut out, LINEAR_STORAGE)),

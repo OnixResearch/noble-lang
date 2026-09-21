@@ -1,7 +1,7 @@
 //! Deterministic JSON encoding for the fixed report schema.
 
 #[derive(Clone)]
-pub(super) enum Json {
+pub(crate) enum Json {
     Null,
     Bool(bool),
     Number(u64),
@@ -10,22 +10,22 @@ pub(super) enum Json {
     Object(std::vec::Vec<(&'static str, Json)>),
 }
 
-pub(super) fn object<const N: usize>(entries: [(&'static str, Json); N]) -> Json {
+pub(crate) fn object<const N: usize>(entries: [(&'static str, Json); N]) -> Json {
     Json::Object(std::vec::Vec::from(entries))
 }
 
-pub(super) fn string(value: impl AsRef<str>) -> Json {
+pub(crate) fn string(value: impl AsRef<str>) -> Json {
     Json::String(value.as_ref().into())
 }
 
-pub(super) fn optional_string(value: Option<&str>) -> Json {
+pub(crate) fn optional_string(value: Option<&str>) -> Json {
     match value {
         Some(value) => string(value),
         None => Json::Null,
     }
 }
 
-pub(super) fn strings(values: &[&str]) -> Json {
+pub(crate) fn strings(values: &[&str]) -> Json {
     Json::Array(values.iter().map(string).collect())
 }
 
@@ -38,7 +38,7 @@ enum Frame<'a> {
 }
 
 impl Json {
-    pub(super) fn encode(&self) -> std::string::String {
+    pub(crate) fn encode(&self) -> std::string::String {
         let mut output = std::string::String::with_capacity(4096);
         // The report schema has fixed nesting; collection lengths do not add
         // stack frames. The traversal retains only one tail per open container.
@@ -129,7 +129,7 @@ fn quote_json(value: &str, output: &mut std::string::String) {
     output.push('"');
 }
 
-pub(super) fn hex(bytes: &[u8]) -> std::string::String {
+pub(crate) fn hex(bytes: &[u8]) -> std::string::String {
     const DIGITS: &[u8; 16] = b"0123456789abcdef";
     let mut result = std::string::String::with_capacity(bytes.len().saturating_mul(2));
     bytes.iter().for_each(|byte| {

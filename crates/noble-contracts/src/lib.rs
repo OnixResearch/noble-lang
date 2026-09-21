@@ -15,9 +15,11 @@ macro_rules! attempt {
 
 mod frontend;
 mod inference;
+mod metering;
 mod predicate;
 mod program;
 mod rendering;
+pub mod source;
 mod syntax;
 pub mod wire;
 pub use rendering::export_lean;
@@ -214,55 +216,6 @@ pub(crate) struct Meter {
     pub limits: Limits,
     work: u32,
     nodes: u32,
-}
-
-impl Meter {
-    pub fn new(limits: Limits) -> Self {
-        Self {
-            limits,
-            work: limits.work,
-            nodes: 0,
-        }
-    }
-
-    pub fn charge(&mut self, amount: u32, span: Span) -> Result<(), Diagnostic> {
-        match self.work.checked_sub(amount) {
-            Some(remaining) => {
-                self.work = remaining;
-                Ok(())
-            }
-            None => Err(Diagnostic::new(
-                DiagnosticKind::Exhausted,
-                span,
-                "frontend work limit exceeded",
-            )),
-        }
-    }
-
-    pub fn node(&mut self, span: Span) -> Result<(), Diagnostic> {
-        attempt!(self.charge(1, span));
-        if self.nodes >= self.limits.nodes {
-            return Err(Diagnostic::new(
-                DiagnosticKind::Exhausted,
-                span,
-                "frontend node limit exceeded",
-            ));
-        }
-        self.nodes += 1;
-        Ok(())
-    }
-
-    pub fn depth(&mut self, depth: u32, span: Span) -> Result<(), Diagnostic> {
-        attempt!(self.charge(1, span));
-        if depth > self.limits.depth {
-            return Err(Diagnostic::new(
-                DiagnosticKind::Exhausted,
-                span,
-                "frontend depth limit exceeded",
-            ));
-        }
-        Ok(())
-    }
 }
 
 pub(crate) fn invalid(span: Span, message: &str) -> Diagnostic {

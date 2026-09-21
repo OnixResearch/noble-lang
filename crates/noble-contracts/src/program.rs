@@ -4,6 +4,21 @@ mod traversal;
 mod witness;
 mod words;
 
+pub(crate) fn bootstrap_word(word: &[u8]) -> Option<noble_kernel::contracts::Definition> {
+    words::bootstrap(word)
+}
+
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-maintainers; spelling appends directly to the caller-owned diagnostic String, requiring growable capacity rather than a borrowed str and avoiding an intermediate allocation."
+)]
+pub(crate) fn append_bootstrap_spelling(
+    definition: noble_kernel::contracts::Definition,
+    output: &mut alloc::string::String,
+) {
+    words::append_spelling(definition, output);
+}
+
 #[derive(Clone, Copy)]
 pub(crate) struct Context<'a> {
     pub source: &'a [u8],
@@ -229,7 +244,12 @@ pub(crate) fn check(
                     "kernel rejected the ordinary typing witness"
                 }
             };
-            Err(crate::invalid(at, message))
+            let mut problem = crate::invalid(at, message);
+            if let Ok(shapes) = rejection_shapes(&diagnostic, request, at) {
+                problem.message.push_str("; ");
+                problem.message.push_str(&shapes);
+            }
+            Err(problem)
         }
         noble_kernel::untrusted::Outcome::Unsupported(_) => Err(crate::Diagnostic::new(
             crate::DiagnosticKind::Unsupported,
@@ -243,4 +263,21 @@ pub(crate) fn check(
         )),
         noble_kernel::untrusted::Outcome::InternalFailure => Err(crate::internal(span)),
     }
+}
+
+fn rejection_shapes(
+    diagnostic: &noble_kernel::untrusted::Diagnostic,
+    request: &noble_kernel::untrusted::Request,
+    span: crate::Span,
+) -> Result<alloc::string::String, crate::Diagnostic> {
+    let mut meter = crate::Meter::new(crate::Limits {
+        bytes: 1024,
+        nodes: request.limits.nodes.min(1024),
+        depth: request.limits.depth,
+        work: request.limits.work.min(4096),
+    });
+    let mut arena = crate::inference::Arena::source(true);
+    let expected = attempt!(arena.stack(&diagnostic.expected, span, &mut meter));
+    let actual = attempt!(arena.stack(&diagnostic.actual, span, &mut meter));
+    arena.join_message(expected, actual, span, &mut meter)
 }

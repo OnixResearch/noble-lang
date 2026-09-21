@@ -52,14 +52,38 @@ pub(super) fn apply(
     ))
 }
 
-#[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-maintainers; this total token classifier explicitly rejects unknown and effectful words; arbitrary input has no panic precondition."
-)]
 pub(super) fn identity(
     word: &[u8],
     span: crate::Span,
 ) -> Result<noble_kernel::contracts::Definition, crate::Diagnostic> {
+    match bootstrap(word) {
+        Some(definition) if definition.0 < 22 => Ok(definition),
+        Some(_) => Err(host_error(span)),
+        None => {
+            let is_host = word == b"host";
+            let is_call = word == b"call";
+            if is_host || is_call {
+                Err(host_error(span))
+            } else {
+                Err(crate::invalid(span, "unknown program word"))
+            }
+        }
+    }
+}
+
+fn host_error(span: crate::Span) -> crate::Diagnostic {
+    crate::Diagnostic::new(
+        crate::DiagnosticKind::Unsupported,
+        span,
+        "host and effectful words are outside the pure contract fragment",
+    )
+}
+
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; the finite exact spelling table returns None for unknown words; it has no producer invariant to assert and performs no unchecked indexing."
+)]
+pub(super) fn bootstrap(word: &[u8]) -> Option<noble_kernel::contracts::Definition> {
     let id = match word {
         _ if word == b"dup" => 0,
         _ if word == b"drop" => 1,
@@ -83,14 +107,48 @@ pub(super) fn identity(
         _ if word == b"nil" => 19,
         _ if word == b"cons" => 20,
         _ if word == b"list.case" => 21,
-        _ if word == b"test.emit" || word == b"host" || word == b"call" => {
-            return Err(crate::Diagnostic::new(
-                crate::DiagnosticKind::Unsupported,
-                span,
-                "host and effectful words are outside the pure contract fragment",
-            ))
-        }
-        _ => return Err(crate::invalid(span, "unknown program word")),
+        _ if word == b"test.emit" => 22,
+        _ if word == b"test.abort" => 23,
+        _ => return None,
     };
-    Ok(noble_kernel::contracts::Definition(id))
+    Some(noble_kernel::contracts::Definition(id))
+}
+
+#[expect(
+    tigerstyle::assertion_density,
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-maintainers; the finite spelling table appends directly to an owned diagnostic String without indexing or a temporary allocation; unknown diagnostic IDs retain their explicit unknown label."
+)]
+pub(super) fn append_spelling(
+    definition: noble_kernel::contracts::Definition,
+    output: &mut alloc::string::String,
+) {
+    let spelling = match definition.0 {
+        0 => "dup",
+        1 => "drop",
+        2 => "swap",
+        3 => "dip",
+        4 => "+",
+        5 => "-",
+        6 => "*",
+        7 => "=",
+        8 => "quote",
+        9 => "compose",
+        10 => "run",
+        11 => "reflect",
+        12 => "unit",
+        13 => "pair",
+        14 => "unpair",
+        15 => "inl",
+        16 => "inr",
+        17 => "case",
+        18 => "if",
+        19 => "nil",
+        20 => "cons",
+        21 => "list.case",
+        22 => "test.emit",
+        23 => "test.abort",
+        _ => "unknown",
+    };
+    output.push_str(spelling);
 }

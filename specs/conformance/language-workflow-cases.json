@@ -44,7 +44,33 @@
         {"control": "malformed-candidate-fuzzing", "outcome": "separate-lane"}
       ]},
       "expected": {"stage": "property-harness", "outcome": "each-control-matches", "independent_acceptance_required": true, "universal_proof_claimed": false, "replay_fields": ["subject", "property", "generator_revision", "shrinker_revision", "seed", "bounds", "environment", "outcomes"]},
-      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [{
+        "kind": "test", "subject": "DX-10",
+        "claim": "100 seeded independently accepted Core-Bootstrap trials and 100 same-seed replays pass result, composition-interface, retained-recipe and ordered-effect comparisons against independent wrapping-I64/result/recipe/effect oracles; all eight declared harness controls match. Counterexample shrinking is bounded by 50 steps and preserves the input domain and failure predicate. The 200 malformed kernel candidates remain a separate nonacceptance/panic lane, not well-typed Wasm or backend-control coverage.",
+        "revision": "0.1.0-draft.5", "source_revision": "sha256:141a385489070ef0ab681d7f78bfe8e2260fcfe8963454fd3d25b1ed1e2881a2", "result": "passed",
+        "configuration": {
+          "receipt": "../../verification/m4/acceptance.json",
+          "raw_report": "../../verification/m4/runtime.tar.gz:property-workflow.json",
+          "raw_acceptance": "../../verification/m4/runtime.tar.gz:acceptance.json",
+          "workload_snapshot": "../../verification/m4/runtime.tar.gz:workflow-input.json",
+          "binary_sha256": "8a29f24cb1a0fa8563676fa18bbb80a87a308c5053593fe8f0ad6a31d6a6fd95",
+          "workload_sha256": "b29258796241fc27fe1f3e888dd51e3f3384640632a26ab1d00900ac3e47ed94",
+          "conformance_workload_sha256": "4ff2ce8307f5600f79624446024ad6b26c8babece7e236eb3e8f96625c98e952",
+          "scope": "m4-DX-10-bounded-seeded-property-workflow", "backend": "managed-linear-memory",
+          "environment_receipt": "../../verification/m4/runtime.tar.gz:property-workflow.json#environment",
+          "seed": "0x0B1E5EED00000004", "generator_revision": "m4-composed-i64-splitmix64/v1", "shrinker_revision": "m4-domain-and-predicate-preserving/v1", "oracle_revision": "m4-wrap64-lit-def-test-emit/v1",
+          "generated_trials_sha256": "a1a2b5cf159e61a19b9fae910453af52881dad04b9e75c6658539bf7ce3ff430",
+          "well_typed_trials": 100, "replay_trials": 100, "pure_trials": 75, "effectful_trials": 25, "max_shrink_steps": 50, "declared_controls_passed": 8,
+          "malformed_lane": {"trials": 200, "included_in_well_typed_trials": false, "included_in_backend_controls": false, "accepted": 0, "panics": 0, "invalid": 121, "exhausted": 34, "unsupported": 45, "internal_failure": 0, "raw_stdout": "../../verification/m4/runtime.tar.gz:684-DX-10-malformed-lane.stdout", "raw_stderr": "../../verification/m4/runtime.tar.gz:684-DX-10-malformed-lane.stderr"}
+        },
+        "assumptions": [
+          "The compiler, kernel, Wasm engine, host observation decoder and harness remain trusted; shared bugs may invalidate the independent arithmetic, recipe and effect oracles.",
+          "The retained environment binds the exact compiler binary, runtime source snapshot, tool selection, ABI, resource-free host mappings and limits; it is not a universal compilation provenance proof.",
+          "Only independently accepted, executed, in-domain agreeing trials count as passed; generator failure, counterexample, invalid shrink and exhausted budgets remain separately classified controls.",
+          "No universal property proof, other workflow/profile coverage, live resources, MC2, M5, PO-17, PO-18 or SO-07 discharge is claimed."
+        ]
+      }]
     },
     {
       "id": "DX-11", "profile": "Protocol-Type-Design", "kind": "review",
@@ -75,7 +101,34 @@
         {"case": "effectful-example-without-explicit-test-host", "outcome": "reject-run-no-ambient-credentials"}
       ]},
       "expected": {"stage": "documentation-harness", "outcome": "each-variant-matches-when-implemented", "actual_compiler_required": true, "runtime_backend_required_for_runtime_claim": true, "rendered_text_match_sufficient": false, "example_pass_is_proof": false},
-      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [{
+        "kind": "test", "subject": "DX-12",
+        "claim": "The two exact source-bearing examples pass using the actual compiler: the runtime example executes on managed-linear-memory Wasm and returns I64 42, and the static example rejects with the declared diagnostic and zero guest requests. All six hostile harness controls match their distinct coverage classifications; they are not counted as six passing documentation examples. Explicit resource-free test hosts are required, with no ambient credentials. The timeout covers the whole run command and does not establish guest-body entry.",
+        "revision": "0.1.0-draft.5", "source_revision": "sha256:141a385489070ef0ab681d7f78bfe8e2260fcfe8963454fd3d25b1ed1e2881a2", "result": "passed",
+        "configuration": {
+          "receipt": "../../verification/m4/acceptance.json",
+          "raw_report": "../../verification/m4/runtime.tar.gz:documentation-workflow.json",
+          "raw_acceptance": "../../verification/m4/runtime.tar.gz:acceptance.json",
+          "workload_snapshot": "../../verification/m4/runtime.tar.gz:workflow-input.json",
+          "binary_sha256": "8a29f24cb1a0fa8563676fa18bbb80a87a308c5053593fe8f0ad6a31d6a6fd95",
+          "workload_sha256": "b29258796241fc27fe1f3e888dd51e3f3384640632a26ab1d00900ac3e47ed94",
+          "conformance_workload_sha256": "4ff2ce8307f5600f79624446024ad6b26c8babece7e236eb3e8f96625c98e952",
+          "scope": "m4-DX-12-two-examples-and-six-hostile-controls", "backend": "managed-linear-memory", "optimization": "off",
+          "fixture_sha256": "b8e59a1c1c19b4b4f229b132deaf45bed50e4105a3bb93d62a613eb36ca06d57",
+          "configuration_sha256": "affa1bd850607ae794a8dd9f4e63a7416133d5e2a227f9fdaa4079596d60f8a2",
+          "environment_receipt": "../../verification/m4/runtime.tar.gz:documentation-workflow.json#configuration",
+          "test_hosts": {"test.emit": "Text -- ! {test.emit}", "test.abort": "-- ! {test.abort}", "resource_free": true, "ambient_credentials": false},
+          "source_examples_passed": 2, "hostile_controls_passed": 6,
+          "control_classifications": ["not-run", "runtime-not-run", "unsupported-visible-in-coverage", "failed-visible-in-coverage", "timeout-visible-in-coverage", "reject-run-no-ambient-credentials"],
+          "timeout": {"milliseconds": 1, "scope": "whole-run-command-including-preparation", "guest_body_entry": "not-established"}
+        },
+        "assumptions": [
+          "The Rust compiler, selected assembler/optimizer/Node/V8, loader, host shell and resource-free host observation oracles are trusted execution tooling.",
+          "Only the two exact source-bearing DX-12 examples and six separately labelled controls are covered. Other documentation was not scanned or claimed executed; rendered-text matching is not execution evidence.",
+          "Passing examples and controls are not proofs; no universal refinement, live-resource or ambient-credential-host claim, MC2/M5 completion, or PO-17, PO-18 or SO-07 discharge."
+        ]
+      }]
     }
   ]
 }

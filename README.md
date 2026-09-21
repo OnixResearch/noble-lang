@@ -25,6 +25,138 @@ This is the actual [increment fixture](verification/mc1/increment.noble-contract
 
 **Octet adoption:** [the boundary-contract map](specs/OCTET-ADOPTION.md) adds typed authorization/receipt rules and explicit Rust architecture gates. Octet evidence stays separate from Noble semantic proofs.
 
+## Running Core-Bootstrap source
+
+`noble run` resolves and infers actual source, constructs an untrusted candidate,
+independently checks it, and executes compiled Wasm using **managed linear memory**.
+It does not interpret source or reflected recipes. Build with `nix develop` and
+`cargo build -p noble-cli --bin noble`; use Cargo's configured target directory
+when locating the binary. The runtime requires the immutable Node/V8, wasm-tools
+and Binaryen selections in [the runtime configuration](crates/noble-cli/src/core/runtime/config.json).
+Ambient replacements are not accepted.
+
+```sh
+printf '40 2 quote [ + ] compose run\n' > capture.noble
+noble run capture.noble --opt off --emit capture-artifacts
+noble run capture.noble --opt on --emit capture-optimized
+
+# Every line is one submission. The compiled old definition stays bound.
+printf 'def n [ 1 ]\n[ n ]\ndef n [ 2 ]\nrun n\n' | noble session
+```
+
+The first program returns `42`. The session returns `1 2`, not `2 2`: definitions
+are nonrecursive rank-1 words, and existing first-class Programs retain their
+resolved bindings. Program values themselves are monomorphic and carry complete
+ordered input/output interfaces and latent effects. Sessions retain real compiled
+Programs, captured values, stack and namespace; they do not replay previous source.
+
+`run SOURCE`, `session`, and `compile SOURCE` accept `--opt off|on` and
+`--emit NEW_DIR`. `--emit` never overwrites an existing destination and retains
+source, reports, emitted WAT, assembled/optimized Wasm and tool observations when
+those stages run. `compile` emits independently accepted WAT without running it;
+repeated `--input-type I64|Bool|Text|Unit` flags declare its ordered initial stack.
+The execution harness must supply matching live values through the runtime ABI.
+`--opt` selects execution optimization, not a different source typing rule.
+
+For multiline or non-UTF-8 submissions, use `session --framed`: each request is
+an ASCII decimal **byte count**, newline, then exactly that many source bytes.
+There is no separator after the payload. Invalid source is reported without
+changing prior stack or namespace. A runtime trap or exhaustion terminates the
+session; already observed host requests are retained, not rolled back.
+
+Preparation budgets can be reduced with `--source-bytes`, `--source-nodes`,
+`--source-depth`, and `--source-work`. Their inclusive ranges are respectively
+0–65536, 0–16384, 0–64, and 0–2000000. Exceeding a configured budget is an explicit
+`exhausted` result. Runtime memory, cells, stack, continuation, recipe, depth and
+step ceilings are recorded in [the ABI](crates/noble-cli/src/core/runtime/abi.json).
+The bounded persistent arena does not reclaim individual cells; it eventually
+reports exhaustion. There is no unbounded-memory or GC-reclamation claim.
+
+The CLI writes `noble-core-report/v1` JSON lines. Stack order is bottom-to-top;
+`I64` values use decimal strings. Program and Syntax observations include exact
+normalized recipes and complete structural witnesses.
+
+| Outcome | Exit | Meaning |
+|---|---:|---|
+| `normal`, `defined`, `ready` | 0 | Executed normally, installed a definition without executing its body, or emitted accepted WAT |
+| `trap` | 1 | Runtime trap; request prefix retained and session terminated |
+| `reject`, `type-reject`, `unbound-word`, `invalid-input`, `internal-failure` | 2 | Invalid preparation/input or internal failure; never successful execution |
+| `unsupported` | 4 | Outside the declared profile or required configuration |
+| `exhausted`, `runtime-exhausted` | 5 | Preparation budget or runtime quota exhausted |
+
+The profile includes wrapping `I64` arithmetic, Bool/Text/Unit, Pair/Sum/List,
+quotation, composition, execution, and inert reflection. `dup`, `drop`, `swap`
+and `dip` manipulate the typed stack; `if`, `case` and `list.case` check both
+branches and execute only the selected branch. Pair/Sum/List values, Programs
+and Syntax can be captured by `quote`; `compose` preserves ordered interfaces,
+captures, resolved identities and conservative latent effects. `reflect` returns
+an exact normalized recipe, not executable source or a runtime interpreter.
+Its only host words are resource-free `test.emit` (`Text --`) and `test.abort`.
+Resources, imports, recursive definitions, advanced inference, runtime proof
+companions and proof-required admission are not implemented by this runtime.
+The pure MC1 proof interface below remains separate: running a program is not
+application proof acceptance.
+
+Preparation is fail-closed: parsing, resolution, inference, independent kernel
+acceptance and backend rechecking precede candidate-body execution. A rejected
+candidate, forged witness, unsupported profile or exhausted preparation budget
+cannot fall back to interpretation or unchecked Wasm. Static refusal issues no
+candidate-body host requests and preserves the prior session stack and namespace.
+Runtime requests instead retain their observed prefix if a later operation traps.
+
+### M4 acceptance evidence
+
+M4's source frontend, compiler, persistent runtime and acceptance harnesses are
+implemented for this selected **resource-free Core-Bootstrap** scope. The retained
+[runtime receipt](verification/m4/acceptance.json) passed all 18 CORE cases,
+11 controls and both integrated developer workflows, DX-10 and DX-12. Final
+runtime acceptance used a read-only binary snapshot after Cargo tests, rather
+than a mutable Cargo target that another build could replace during execution.
+The receipt binds source revision
+`sha256:141a385489070ef0ab681d7f78bfe8e2260fcfe8963454fd3d25b1ed1e2881a2`
+and binary SHA256
+`8a29f24cb1a0fa8563676fa18bbb80a87a308c5053593fe8f0ad6a31d6a6fd95`.
+
+- [DX-10's property harness](verification/m4/property.mjs) passed 100 seeded
+  arithmetic/interface/exact-recipe/effect trials, 100 replay trials, all eight
+  hostile controls and bounded 50-step shrinking. Its separate malformed-kernel
+  input check covers 200 cases, not an additional Wasm property trial set.
+- [DX-12's executable-documentation harness](verification/m4/documentation.mjs)
+  passed the two exact declared examples and all six hostile controls with
+  explicit resource-free test hosts. Unsupported, failed, timed-out and unrun
+  examples remain visible in coverage. A whole-command timeout alone does not
+  establish guest entry, and these examples do not mean every document executes.
+
+The [runtime gate](verification/m4/gate.mjs) writes `acceptance.json`,
+`property-workflow.json` and `documentation-workflow.json` into its new artifact
+directory. The durable summary is `verification/m4/evidence.json`, and the
+retained runtime receipt is `verification/m4/acceptance.json`; raw runtime and
+scoped workflow receipts are retained in `verification/m4/runtime.tar.gz`.
+The summary records each evidence
+lane separately; runtime acceptance is not extraction or refinement acceptance.
+
+The separate [implementation gate](verification/m4/implementation.mjs) extracts
+the actual whole kernel, frontend and compiler crates. Independent frontend and
+compiler Lean environments avoid collisions in the pinned Aeneas discriminants.
+Discovery produces a review candidate, not acceptance; check mode independently
+re-extracts and compares sources, generated code, inventories, dependencies and
+axioms with the reviewed lock. The durable authorities are
+`verification/m4/extraction-lock.json`, `verification/m4/implementation.json`
+and `verification/m4/assurance.tar.gz`, not fixed function/model counts in prose.
+Fresh discovery and independent check both pass against the reviewed lock:
+no stale generated files, both compiled audits accepted, and all 27 refusal
+controls refused. The full 73-rule deny-all and architecture gate pass, the
+source-coverage comparison is valid, and all 13 Nix checks pass.
+The [M4 completion record](verification/m4/evidence.json) binds these observations
+to retained runtime and assurance archives, including the final MC1 regression.
+
+MC1's 36-case regression and M3's four-configuration regression have passed in
+their own scopes. They do not replace those M4 gates. All 887 authored production
+body obligations remain open in the [reviewed inventory](verification/source-inventory.md).
+Neither extraction nor executed examples establish universal frontend, kernel,
+compiler or backend refinement; PO-17/18 and SO-07 remain open. M5's synchronous
+resource/component boundary is the next primary milestone.
+
 ## Using MC1 contracts
 
 From the repository root, build the `noble` binary with the pinned Rust environment:
@@ -93,10 +225,12 @@ bun verification/mc1/implementation.mjs .pi/mc1/implementation-run
 bun verification/mc1/gate.mjs target/debug/noble verification/mc1/acceptance.json
 ```
 
-The implementation gate audits 61 strict bridge/projection theorems and six
-source-equation cases separately from the 43 strict application/rule theorems.
-Native computation also discharges generated string-bound obligations; its exact
-axiom inventory is retained only in the implementation lane.
+The implementation gate audits strict bridge/projection theorems and
+source-equation cases separately from strict application/rule theorems. Consult
+its source-bound receipt and reviewed inventory for the exact set, rather than
+treating a fixed prose count as current coverage. Native computation also
+discharges generated string-bound obligations; its exact axiom inventory is
+retained only in the implementation lane.
 
 ## Bounded Wasm experiment
 
@@ -124,12 +258,14 @@ not because it wins a speed or physical-memory comparison. Both candidates pass;
 the selected layout retains one extra 64-KiB linear-memory page. Physical GC
 allocation/reclamation and isolated engine peaks remain unknown.
 
-The pure emitter's actual extraction has 112 local functions and no local opaque
-bodies. Its 13 explicit external models and strict kernel bridge are audited
-separately from runtime execution. Owned WAT, assembler, optimizer, engine and
-loader remain trust boundaries; PO-17/18 and SO-07 are open. General end-to-end
-core, runtime proof companions, resources and component interoperability remain
-M4, MC2 and M5 work.
+The pure emitter's actual extraction, explicit external models and strict kernel
+bridge are audited separately from runtime execution. The source-bound M3
+implementation receipt owns that historical inventory; M4's reviewed extraction
+lock and implementation receipt own the extended source/compiler inventory.
+Owned WAT, assembler, optimizer, engine and loader remain trust boundaries;
+PO-17/18 and SO-07 are open. End-to-end Core-Bootstrap is now implemented as
+described above, with final M4 acceptance pending. Runtime proof companions,
+resources and component interoperability remain MC2 and M5 work.
 
 ## Current work
 
@@ -158,4 +294,4 @@ These checks do not run Noble or prove its safety.
 | `noble-project-handoff-2026-09-12/` and the ZIP | Preserved historical snapshot, not current instructions |
 
 The status ledger, not a successful example or document check, determines milestone acceptance. MC1 is a frontend/rules milestone, not a completed language runtime.
-Earlier records retain their original scopes: the [budget extraction probe](proofs/m1/README.md), [component review](verification/component-review.md), [tool-selection boundary](verification/tool-selection.md), [M1 runbook](verification/m1-runbook.md), [control matrix](verification/m1-controls.md), and [boundary controls](verification/boundary-controls.md) document implementation experiments, observed controls, and historical open work. They do not substitute for current MC1 or M3 evidence.
+Earlier records retain their original scopes: the [budget extraction probe](proofs/m1/README.md), [component review](verification/component-review.md), [tool-selection boundary](verification/tool-selection.md), [M1 runbook](verification/m1-runbook.md), [control matrix](verification/m1-controls.md), and [boundary controls](verification/boundary-controls.md) document implementation experiments, observed controls, and historical open work. They do not substitute for current MC1, M3 or M4 evidence.

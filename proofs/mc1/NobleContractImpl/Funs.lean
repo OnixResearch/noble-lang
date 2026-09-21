@@ -39,6 +39,19 @@ def core.option.Option.Insts.CoreFmtDebug {T : Type} (fmtDebugInst :
   fmt := core.option.Option.Insts.CoreFmtDebug.fmt fmtDebugInst
 }
 
+/-- Trait implementation: [core::option::{impl core::cmp::PartialEq<core::option::Option<T>> for core::option::Option<T>}]
+    Source: '/rustc/library/core/src/option.rs', lines 2434:0-2434:56
+    Name pattern: [core::cmp::PartialEq<core::option::Option<@T>, core::option::Option<@T>>] -/
+@[reducible, rust_trait_impl
+  "core::cmp::PartialEq<core::option::Option<@T>, core::option::Option<@T>>"]
+impl_def core.option.Option.Insts.CoreCmpPartialEqOption {T : Type}
+  (cmpPartialEqInst : core.cmp.PartialEq T T) : core.cmp.PartialEq (Option T)
+  (Option T) := {
+  eq := core.option.Option.Insts.CoreCmpPartialEqOption.eq cmpPartialEqInst
+  ne := core.cmp.PartialEq.ne.trait_default
+    (core.option.Option.Insts.CoreCmpPartialEqOption cmpPartialEqInst)
+}
+
 /-- Trait implementation: [core::slice::cmp::{impl core::cmp::PartialEq<[U]> for [T]}]
     Source: '/rustc/library/core/src/slice/cmp.rs', lines 14:0-16:28
     Name pattern: [core::cmp::PartialEq<[@T], [@U]>] -/
@@ -77,6 +90,64 @@ def alloc.string.String.Insts.CoreFmtDebug : core.fmt.Debug String := {
   fmt := alloc.string.String.Insts.CoreFmtDebug.fmt
 }
 
+/-- Trait implementation: [alloc::string::{impl core::ops::deref::Deref<str> for alloc::string::String}]
+    Source: '/rustc/library/alloc/src/string.rs', lines 2855:0-2855:26
+    Name pattern: [core::ops::deref::Deref<alloc::string::String, str>] -/
+@[reducible, rust_trait_impl
+  "core::ops::deref::Deref<alloc::string::String, str>"]
+def alloc.string.String.Insts.CoreOpsDerefDerefStr : core.ops.deref.Deref
+  String Str := {
+  deref := alloc.string.String.Insts.CoreOpsDerefDerefStr.deref
+}
+
+/-- Trait implementation: [alloc::vec::{impl core::default::Default for alloc::vec::Vec<T>}]
+    Source: '/rustc/library/alloc/src/vec/mod.rs', lines 4369:0-4369:32
+    Name pattern: [core::default::Default<alloc::vec::Vec<@T>>] -/
+@[reducible, rust_trait_impl "core::default::Default<alloc::vec::Vec<@T>>"]
+def alloc.vec.Vec.Insts.CoreDefaultDefault (T : Type) : core.default.Default
+  (alloc.vec.Vec T) := {
+  default := alloc.vec.Vec.Insts.CoreDefaultDefault.default T
+}
+
+/-- Trait implementation: [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::Definition}]
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 10:9-10:14
+    Name pattern: [core::clone::Clone<noble_kernel::contracts::Definition>] -/
+@[reducible, rust_trait_impl
+  "core::clone::Clone<noble_kernel::contracts::Definition>"]
+def noble_kernel.contracts.Definition.Insts.CoreCloneClone : core.clone.Clone
+  noble_kernel.contracts.Definition := {
+  clone := noble_kernel.contracts.Definition.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::contracts::{impl core::marker::Copy for noble_kernel::contracts::Definition}]
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 10:16-10:20
+    Name pattern: [core::marker::Copy<noble_kernel::contracts::Definition>] -/
+@[reducible, rust_trait_impl
+  "core::marker::Copy<noble_kernel::contracts::Definition>"]
+def noble_kernel.contracts.Definition.Insts.CoreMarkerCopy : core.marker.Copy
+  noble_kernel.contracts.Definition := {
+  cloneInst := noble_kernel.contracts.Definition.Insts.CoreCloneClone
+}
+
+/-- Trait implementation: [noble_kernel::execution::{impl core::fmt::Debug for noble_kernel::execution::Submission}]
+    Source: 'crates/noble-kernel/src/execution/mod.rs', lines 36:16-36:21
+    Name pattern: [core::fmt::Debug<noble_kernel::execution::Submission>] -/
+@[reducible, rust_trait_impl
+  "core::fmt::Debug<noble_kernel::execution::Submission>"]
+def noble_kernel.execution.Submission.Insts.CoreFmtDebug : core.fmt.Debug
+  noble_kernel.execution.Submission := {
+  fmt := noble_kernel.execution.Submission.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::types::impls::{impl core::clone::Clone for noble_kernel::types::Ty}]
+    Source: 'crates/noble-kernel/src/types/impls.rs', lines 29:0-29:31
+    Name pattern: [core::clone::Clone<noble_kernel::types::Ty>] -/
+@[reducible, rust_trait_impl "core::clone::Clone<noble_kernel::types::Ty>"]
+def noble_kernel.types.Ty.Insts.CoreCloneClone : core.clone.Clone
+  noble_kernel.types.Ty := {
+  clone := noble_kernel.types.Ty.Insts.CoreCloneClone.clone
+}
+
 /-- Trait implementation: [noble_kernel::types::impls::{impl core::cmp::PartialEq<noble_kernel::types::Ty> for noble_kernel::types::Ty}]
     Source: 'crates/noble-kernel/src/types/impls.rs', lines 147:0-147:35
     Name pattern: [core::cmp::PartialEq<noble_kernel::types::Ty, noble_kernel::types::Ty>] -/
@@ -96,6 +167,45 @@ impl_def noble_kernel.types.Ty.Insts.CoreCmpPartialEqTy : core.cmp.PartialEq
 def noble_kernel.types.Ty.Insts.CoreFmtDebug : core.fmt.Debug
   noble_kernel.types.Ty := {
   fmt := noble_kernel.types.Ty.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::types::{impl core::clone::Clone for noble_kernel::types::EffId}]
+    Source: 'crates/noble-kernel/src/types.rs', lines 25:9-25:14
+    Name pattern: [core::clone::Clone<noble_kernel::types::EffId>] -/
+@[reducible, rust_trait_impl "core::clone::Clone<noble_kernel::types::EffId>"]
+def noble_kernel.types.EffId.Insts.CoreCloneClone : core.clone.Clone
+  noble_kernel.types.EffId := {
+  clone := noble_kernel.types.EffId.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::types::{impl core::marker::Copy for noble_kernel::types::EffId}]
+    Source: 'crates/noble-kernel/src/types.rs', lines 25:16-25:20
+    Name pattern: [core::marker::Copy<noble_kernel::types::EffId>] -/
+@[reducible, rust_trait_impl "core::marker::Copy<noble_kernel::types::EffId>"]
+def noble_kernel.types.EffId.Insts.CoreMarkerCopy : core.marker.Copy
+  noble_kernel.types.EffId := {
+  cloneInst := noble_kernel.types.EffId.Insts.CoreCloneClone
+}
+
+/-- Trait implementation: [noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Lit}]
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 26:22-26:27
+    Name pattern: [core::fmt::Debug<noble_kernel::untrusted::Lit>] -/
+@[reducible, rust_trait_impl "core::fmt::Debug<noble_kernel::untrusted::Lit>"]
+def noble_kernel.untrusted.Lit.Insts.CoreFmtDebug : core.fmt.Debug
+  noble_kernel.untrusted.Lit := {
+  fmt := noble_kernel.untrusted.Lit.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::untrusted::{impl core::cmp::PartialEq<noble_kernel::untrusted::Lit> for noble_kernel::untrusted::Lit}]
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 26:29-26:38
+    Name pattern: [core::cmp::PartialEq<noble_kernel::untrusted::Lit, noble_kernel::untrusted::Lit>] -/
+@[reducible, rust_trait_impl
+  "core::cmp::PartialEq<noble_kernel::untrusted::Lit, noble_kernel::untrusted::Lit>"]
+impl_def noble_kernel.untrusted.Lit.Insts.CoreCmpPartialEqLit :
+  core.cmp.PartialEq noble_kernel.untrusted.Lit noble_kernel.untrusted.Lit := {
+  eq := noble_kernel.untrusted.Lit.Insts.CoreCmpPartialEqLit.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    noble_kernel.untrusted.Lit.Insts.CoreCmpPartialEqLit
 }
 
 /-- Trait implementation: [noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Candidate}]
@@ -139,7 +249,7 @@ def noble_kernel.untrusted.Checked.Insts.CoreFmtDebug : core.fmt.Debug
 }
 
 /-- [noble_contracts::{noble_contracts::Diagnostic}::new]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 71:4-78:5 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 73:4-80:5 -/
 def Diagnostic.new
   (kind : DiagnosticKind) (span : Span) (message : Str) :
   Result Diagnostic
@@ -147,16 +257,10 @@ def Diagnostic.new
   let s ← alloc.string.String.Insts.CoreConvertFromShared0Str.from message
   ok { kind, span, message := s, ordinary_typing := none }
 
-/-- [noble_contracts::internal]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 272:0-278:1 -/
-def internal (span : Span) : Result Diagnostic := do
-  Diagnostic.new DiagnosticKind.Internal span (toStr
-    "inconsistent frontend arena")
-
-/-- [noble_contracts::{noble_contracts::Meter}::charge]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 228:4-240:5
+/-- [noble_contracts::metering::{noble_contracts::Meter}::charge]:
+    Source: 'crates/noble-contracts/src/metering.rs', lines 10:4-22:5
     Visibility: public -/
-def Meter.charge
+def metering.Meter.charge
   (self : Meter) (amount : Std.U32) (span : Span) :
   Result ((core.result.Result Unit Diagnostic) × Meter)
   := do
@@ -170,6 +274,12 @@ def Meter.charge
   | some remaining =>
     ok (core.result.Result.Ok (), { self with work := remaining })
 
+/-- [noble_contracts::internal]:
+    Source: 'crates/noble-contracts/src/lib.rs', lines 225:0-231:1 -/
+def internal (span : Span) : Result Diagnostic := do
+  Diagnostic.new DiagnosticKind.Internal span (toStr
+    "inconsistent frontend arena")
+
 /-- [noble_contracts::syntax::typing::{noble_contracts::syntax::typing::State}::take_type]:
     Source: 'crates/noble-contracts/src/syntax/typing.rs', lines 41:4-51:5 -/
 def syntax.typing.State.take_type
@@ -177,7 +287,7 @@ def syntax.typing.State.take_type
   Result ((core.result.Result noble_kernel.types.Ty Diagnostic) ×
     syntax.typing.State × Meter)
   := do
-  let (r, meter1) ← Meter.charge meter 1#u32 span
+  let (r, meter1) ← metering.Meter.charge meter 1#u32 span
   match r with
   | core.result.Result.Ok _ =>
     let (o, v) ← alloc.vec.Vec.pop Global self.values
@@ -191,7 +301,7 @@ def syntax.typing.State.take_type
     ok (core.result.Result.Err failure, self, meter1)
 
 /-- [noble_contracts::index]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 280:0-289:1 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 233:0-242:1 -/
 def index
   (value : Std.Usize) (span : Span) :
   Result (core.result.Result Std.U32 Diagnostic)
@@ -258,7 +368,7 @@ def syntax.typing.take_types
     let r ← index i span
     match r with
     | core.result.Result.Ok value =>
-      let (r1, meter2) ← Meter.charge meter1 value span
+      let (r1, meter2) ← metering.Meter.charge meter1 value span
       match r1 with
       | core.result.Result.Ok _ =>
         let (s, deref_mut_back) ← lift (alloc.vec.Vec.deref_mut result1)
@@ -272,7 +382,7 @@ def syntax.typing.take_types
   | some error => ok (core.result.Result.Err error, meter1)
 
 /-- [noble_contracts::invalid]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 268:0-270:1 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 221:0-223:1 -/
 def invalid (span : Span) (message : Str) : Result Diagnostic := do
   Diagnostic.new DiagnosticKind.Invalid span message
 
@@ -330,7 +440,7 @@ def syntax.typing.atom_type
               ok (core.result.Result.Err d)
 
 /-- [noble_contracts::offset]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 291:0-300:1 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 244:0-253:1 -/
 def offset
   (value : Std.U32) (span : Span) :
   Result (core.result.Result Std.Usize Diagnostic)
@@ -446,7 +556,7 @@ def syntax.constructors.queued_type
   :
   Result ((core.result.Result syntax.typing.Step Diagnostic) × Meter)
   := do
-  let (r, meter1) ← Meter.charge meter 1#u32 span
+  let (r, meter1) ← metering.Meter.charge meter 1#u32 span
   match r with
   | core.result.Result.Ok _ =>
     let r1 ← syntax.child children «at» span
@@ -778,7 +888,7 @@ def syntax.typing.step
   (state : syntax.typing.State) (meter : Meter) :
   Result ((core.result.Result syntax.typing.State Diagnostic) × Meter)
   := do
-  let (r, meter1) ← Meter.charge meter 1#u32 span
+  let (r, meter1) ← metering.Meter.charge meter 1#u32 span
   match r with
   | core.result.Result.Ok _ =>
     match step with
@@ -958,7 +1068,7 @@ def syntax.identifiers.byte
   (bytes : Slice Std.U8) («at» : Std.Usize) (span : Span) (meter : Meter) :
   Result ((core.result.Result Unit Diagnostic) × Meter)
   := do
-  let (r, meter1) ← Meter.charge meter 1#u32 span
+  let (r, meter1) ← metering.Meter.charge meter 1#u32 span
   match r with
   | core.result.Result.Ok _ =>
     let o ←
@@ -1063,7 +1173,7 @@ def frontend.bindings.fresh
   match r with
   | core.result.Result.Ok value =>
     let i1 ← lift (core.num.U32.saturating_add value 1#u32)
-    let (r1, meter1) ← Meter.charge meter i1 span
+    let (r1, meter1) ← metering.Meter.charge meter i1 span
     match r1 with
     | core.result.Result.Ok _ =>
       let o ←
@@ -1126,7 +1236,7 @@ def frontend.bindings.binding
   (names : Slice NamedType) (meter : Meter) :
   Result ((core.result.Result NamedType Diagnostic) × Meter)
   := do
-  let (r, meter1) ← Meter.charge meter 1#u32 container.span
+  let (r, meter1) ← metering.Meter.charge meter 1#u32 container.span
   match r with
   | core.result.Result.Ok _ =>
     let r1 ← syntax.child container.children «at» container.span
@@ -1239,7 +1349,7 @@ def frontend.bindings.named
   | some error => ok (core.result.Result.Err error, meter1)
 
 /-- [noble_contracts::inference::STACK_CAP]
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 187:0-187:38 -/
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 218:0-218:38 -/
 @[global_simps, irreducible] def inference.STACK_CAP : Std.U32 := 256#u32
 
 /-- [noble_contracts::frontend::bindings::cloned_type]:
@@ -1249,7 +1359,7 @@ def frontend.bindings.cloned_type
   (meter : Meter) :
   Result ((core.result.Result noble_kernel.types.Ty Diagnostic) × Meter)
   := do
-  let (r, meter1) ← Meter.charge meter syntax.TYPE_CAP span
+  let (r, meter1) ← metering.Meter.charge meter syntax.TYPE_CAP span
   match r with
   | core.result.Result.Ok _ =>
     let o ←
@@ -1538,7 +1648,7 @@ def frontend.fields.part
   (parts : frontend.fields.Parts) (meter : Meter) :
   Result ((core.result.Result frontend.fields.Parts Diagnostic) × Meter)
   := do
-  let (r, meter1) ← Meter.charge meter 1#u32 container.span
+  let (r, meter1) ← metering.Meter.charge meter 1#u32 container.span
   match r with
   | core.result.Result.Ok _ =>
     let r1 ← syntax.child container.children «at» container.span
@@ -1716,7 +1826,7 @@ def predicate.same
   Result ((core.result.Result Unit Diagnostic) × Meter)
   := do
   let i ← core.num.U32.saturating_mul syntax.TYPE_CAP 2#u32
-  let (r, meter1) ← Meter.charge meter i span
+  let (r, meter1) ← metering.Meter.charge meter i span
   match r with
   | core.result.Result.Ok _ =>
     let b ←
@@ -1770,14 +1880,14 @@ def predicate.arity (op : predicate.Op) : Result Std.Usize := do
   | predicate.Op.Length => ok 1#usize
   | predicate.Op.Maps => ok 3#usize
 
-/-- [noble_contracts::{noble_contracts::Meter}::node]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 242:4-253:5
+/-- [noble_contracts::metering::{noble_contracts::Meter}::node]:
+    Source: 'crates/noble-contracts/src/metering.rs', lines 24:4-35:5
     Visibility: public -/
-def Meter.node
+def metering.Meter.node
   (self : Meter) (span : Span) :
   Result ((core.result.Result Unit Diagnostic) × Meter)
   := do
-  let (r, self1) ← Meter.charge self 1#u32 span
+  let (r, self1) ← metering.Meter.charge self 1#u32 span
   match r with
   | core.result.Result.Ok _ =>
     if self1.nodes >= self1.limits.nodes
@@ -1797,7 +1907,7 @@ def predicate.Arena.push
   (self : predicate.Arena) (expr : Expr) (meter : Meter) :
   Result ((core.result.Result Std.U32 Diagnostic) × predicate.Arena × Meter)
   := do
-  let (r, meter1) ← Meter.node meter expr.span
+  let (r, meter1) ← metering.Meter.node meter expr.span
   match r with
   | core.result.Result.Ok _ =>
     let o ← noble_kernel.types.Ty.size expr.ty
@@ -1815,7 +1925,8 @@ def predicate.Arena.push
             "logical expression type exceeds 256 constructors")
         ok (core.result.Result.Err d, self, meter1)
       else
-        let (r1, meter2) ← Meter.charge meter1 syntax.TYPE_CAP expr.span
+        let (r1, meter2) ←
+          metering.Meter.charge meter1 syntax.TYPE_CAP expr.span
         match r1 with
         | core.result.Result.Ok _ =>
           let i := alloc.vec.Vec.len self.expressions
@@ -2154,7 +2265,7 @@ def predicate.resolving.queued_child
   (round : predicate.resolving.Round) («at» : Std.Usize) (meter : Meter) :
   Result ((core.result.Result predicate.resolving.Step Diagnostic) × Meter)
   := do
-  let (r, meter1) ← Meter.charge meter 1#u32 round.span
+  let (r, meter1) ← metering.Meter.charge meter 1#u32 round.span
   match r with
   | core.result.Result.Ok _ =>
     let r1 ← syntax.child round.children «at» round.span
@@ -2308,7 +2419,7 @@ def predicate.references.binding
   match r with
   | core.result.Result.Ok value =>
     let i1 ← lift (core.num.U32.saturating_add value 1#u32)
-    let (r1, meter1) ← Meter.charge meter i1 search.span
+    let (r1, meter1) ← metering.Meter.charge meter i1 search.span
     match r1 with
     | core.result.Result.Ok _ =>
       let o ←
@@ -2446,7 +2557,7 @@ def predicate.references.definition
   match r with
   | core.result.Result.Ok value =>
     let i1 ← lift (core.num.U32.saturating_add value 1#u32)
-    let (r1, meter1) ← Meter.charge meter i1 search.span
+    let (r1, meter1) ← metering.Meter.charge meter i1 search.span
     match r1 with
     | core.result.Result.Ok _ =>
       let o ←
@@ -2805,7 +2916,7 @@ def syntax.integer.Accumulator.digit
   Result ((core.result.Result Unit Diagnostic) × syntax.integer.Accumulator ×
     Meter)
   := do
-  let (r, meter1) ← Meter.charge meter 1#u32 span
+  let (r, meter1) ← metering.Meter.charge meter 1#u32 span
   match r with
   | core.result.Result.Ok _ =>
     let o ←
@@ -3597,7 +3708,7 @@ def predicate.structural.step
   Result ((core.result.Result Unit Diagnostic) ×
     predicate.structural.Traversal × Meter)
   := do
-  let (r, meter1) ← Meter.charge meter 1#u32 span
+  let (r, meter1) ← metering.Meter.charge meter 1#u32 span
   match r with
   | core.result.Result.Ok _ =>
     match ty with
@@ -4477,7 +4588,7 @@ def predicate.resolving.step
   Result ((core.result.Result Unit Diagnostic) × predicate.resolving.State ×
     predicate.Arena × Meter)
   := do
-  let (r, meter1) ← Meter.charge meter 1#u32 state.span
+  let (r, meter1) ← metering.Meter.charge meter 1#u32 state.span
   match r with
   | core.result.Result.Ok _ =>
     match step with
@@ -4849,7 +4960,7 @@ def predicate.Arena.new : Result predicate.Arena := do
   ok { expressions := (alloc.vec.Vec.new Expr) }
 
 /-- [noble_contracts::{noble_contracts::Expr}::is_total]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 110:4-112:5
+    Source: 'crates/noble-contracts/src/lib.rs', lines 112:4-114:5
     Visibility: public -/
 def Expr.is_total (self : Expr) : Result Bool := do
   ok self.total
@@ -4866,7 +4977,7 @@ def frontend.logic.fresh
   match r with
   | core.result.Result.Ok value =>
     let i1 ← lift (core.num.U32.saturating_add value 1#u32)
-    let (r1, meter1) ← Meter.charge meter i1 span
+    let (r1, meter1) ← metering.Meter.charge meter i1 span
     match r1 with
     | core.result.Result.Ok _ =>
       let o ←
@@ -4927,7 +5038,7 @@ def frontend.logic.definition
   («at» : Std.Usize) (arena : predicate.Arena) (meter : Meter) :
   Result ((core.result.Result LogicDef Diagnostic) × predicate.Arena × Meter)
   := do
-  let (r, meter1) ← Meter.charge meter 1#u32 declarations.span
+  let (r, meter1) ← metering.Meter.charge meter 1#u32 declarations.span
   match r with
   | core.result.Result.Ok _ =>
     let r1 ← syntax.child declarations.ids «at» declarations.span
@@ -5136,7 +5247,7 @@ def frontend.logic.kind
     | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_contracts::{noble_contracts::Expr}::uses_output]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 114:4-116:5
+    Source: 'crates/noble-contracts/src/lib.rs', lines 116:4-118:5
     Visibility: public -/
 def Expr.impl.uses_output (self : Expr) : Result Bool := do
   ok self.uses_output
@@ -5437,7 +5548,7 @@ def syntax.parsing.atom_byte
           | core.result.Result.Err failure =>
             ok (core.result.Result.Err failure, meter)
         else
-          let (r, meter1) ← Meter.charge meter 1#u32 «at»
+          let (r, meter1) ← metering.Meter.charge meter 1#u32 «at»
           match r with
           | core.result.Result.Ok _ => ok (core.result.Result.Ok true, meter1)
           | core.result.Result.Err failure =>
@@ -5515,7 +5626,7 @@ def syntax.parsing.comment_byte
   (meter : Meter) :
   Result ((core.result.Result Bool Diagnostic) × Meter)
   := do
-  let (r, meter1) ← Meter.charge meter 1#u32 «at»
+  let (r, meter1) ← metering.Meter.charge meter 1#u32 «at»
   match r with
   | core.result.Result.Ok _ =>
     let o ←
@@ -5615,14 +5726,14 @@ def syntax.parsing.close
         ok (core.result.Result.Err failure,
           { state with frames := v, position := i })
 
-/-- [noble_contracts::{noble_contracts::Meter}::depth]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 255:4-265:5
+/-- [noble_contracts::metering::{noble_contracts::Meter}::depth]:
+    Source: 'crates/noble-contracts/src/metering.rs', lines 37:4-47:5
     Visibility: public -/
-def Meter.depth
+def metering.Meter.depth
   (self : Meter) (depth : Std.U32) (span : Span) :
   Result ((core.result.Result Unit Diagnostic) × Meter)
   := do
-  let (r, self1) ← Meter.charge self 1#u32 span
+  let (r, self1) ← metering.Meter.charge self 1#u32 span
   match r with
   | core.result.Result.Ok _ =>
     if depth > self1.limits.depth
@@ -5647,7 +5758,7 @@ def syntax.parsing.step
   | core.result.Result.Ok value =>
     let i ← lift (core.num.U32.saturating_add value 1#u32)
     let (r1, meter1) ←
-      Meter.charge meter 1#u32 { start := value, «end» := i }
+      metering.Meter.charge meter 1#u32 { start := value, «end» := i }
     match r1 with
     | core.result.Result.Ok _ =>
       let o ←
@@ -5691,11 +5802,12 @@ def syntax.parsing.step
               | core.result.Result.Ok value1 =>
                 let depth ← lift (core.num.U32.saturating_add value1 1#u32)
                 let (r3, meter2) ←
-                  Meter.depth meter1 depth { start := value, «end» := i }
+                  metering.Meter.depth meter1 depth
+                    { start := value, «end» := i }
                 match r3 with
                 | core.result.Result.Ok _ =>
                   let (r4, meter3) ←
-                    Meter.node meter2 { start := value, «end» := i }
+                    metering.Meter.node meter2 { start := value, «end» := i }
                   match r4 with
                   | core.result.Result.Ok _ =>
                     let v ←
@@ -5721,11 +5833,13 @@ def syntax.parsing.step
                 | core.result.Result.Ok value1 =>
                   let depth ← lift (core.num.U32.saturating_add value1 1#u32)
                   let (r3, meter2) ←
-                    Meter.depth meter1 depth { start := value, «end» := i }
+                    metering.Meter.depth meter1 depth
+                      { start := value, «end» := i }
                   match r3 with
                   | core.result.Result.Ok _ =>
                     let (r4, meter3) ←
-                      Meter.node meter2 { start := value, «end» := i }
+                      metering.Meter.node meter2
+                        { start := value, «end» := i }
                     match r4 with
                     | core.result.Result.Ok _ =>
                       let v ←
@@ -5878,7 +5992,8 @@ def syntax.parsing.step
                         match r2 with
                         | core.result.Result.Ok value1 =>
                           let (r3, meter3) ←
-                            Meter.node meter2 { start := value, «end» := i }
+                            metering.Meter.node meter2
+                              { start := value, «end» := i }
                           match r3 with
                           | core.result.Result.Ok _ =>
                             let r4 ←
@@ -5971,7 +6086,7 @@ def syntax.source_encoding
   (source : Slice Std.U8) (full : Span) (meter : Meter) :
   Result ((core.result.Result Unit Diagnostic) × Meter)
   := do
-  let (r, meter1) ← Meter.charge meter full.end full
+  let (r, meter1) ← metering.Meter.charge meter full.end full
   match r with
   | core.result.Result.Ok _ =>
     let r1 ← core.str.converts.from_utf8 source
@@ -6073,136 +6188,46 @@ def syntax.parse
   | core.result.Result.Err failure =>
     ok (core.result.Result.Err failure, meter)
 
-/-- [noble_contracts::{noble_contracts::Meter}::new]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 220:4-226:5
+/-- [noble_contracts::metering::{noble_contracts::Meter}::new]:
+    Source: 'crates/noble-contracts/src/metering.rs', lines 2:4-8:5
     Visibility: public -/
-def Meter.new (limits : Limits) : Result Meter := do
+def metering.Meter.new (limits : Limits) : Result Meter := do
   ok { limits, work := limits.work, nodes := 0#u32 }
 
 /-- [noble_contracts::{noble_contracts::Diagnostic}::with_typing]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 80:4-83:5 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 82:4-85:5 -/
 def Diagnostic.with_typing
   (self : Diagnostic) (checked : noble_kernel.untrusted.Checked) :
   Result Diagnostic
   := do
   ok { self with ordinary_typing := (some checked) }
 
-/-- [noble_contracts::program::check]:
-    Source: 'crates/noble-contracts/src/program.rs', lines 192:0-246:1 -/
-def program.check
-  (env : noble_kernel.contracts.Env)
-  (candidate : noble_kernel.untrusted.Candidate)
-  (request : noble_kernel.untrusted.Request) (spans : Slice Span) (span : Span)
-  :
-  Result (core.result.Result noble_kernel.untrusted.Checked Diagnostic)
-  := do
-  let o ← noble_kernel.acceptance.check env request candidate
-  match o with
-  | noble_kernel.untrusted.Outcome.Accepted checked =>
-    ok (core.result.Result.Ok checked)
-  | noble_kernel.untrusted.Outcome.Invalid diagnostic =>
-    match diagnostic.node with
-    | none =>
-      let message ←
-        match diagnostic.constraint with
-        | noble_kernel.untrusted.Constraint.StackJoin =>
-          ok (toStr "kernel rejected a program stack join or output interface")
-        | noble_kernel.untrusted.Constraint.StackOrder =>
-          ok (toStr "kernel rejected a program stack join or output interface")
-        | noble_kernel.untrusted.Constraint.EffectInclusion _ =>
-          ok (toStr "kernel rejected the ordinary typing witness")
-        | noble_kernel.untrusted.Constraint.Eligibility _ =>
-          ok (toStr "kernel rejected a non-capturable value")
-        | noble_kernel.untrusted.Constraint.UnknownEffect _ =>
-          ok (toStr "kernel rejected the ordinary typing witness")
-        | noble_kernel.untrusted.Constraint.InstantiationKind =>
-          ok (toStr "kernel rejected the ordinary typing witness")
-        | noble_kernel.untrusted.Constraint.InstantiationArity =>
-          ok (toStr "kernel rejected the ordinary typing witness")
-        | noble_kernel.untrusted.Constraint.MalformedReference _ =>
-          ok (toStr "kernel rejected the ordinary typing witness")
-        | noble_kernel.untrusted.Constraint.UnknownDefinition _ =>
-          ok (toStr "kernel rejected the ordinary typing witness")
-        | noble_kernel.untrusted.Constraint.CyclicWitness =>
-          ok (toStr "kernel rejected a cyclic witness")
-      let d ← invalid span message
-      ok (core.result.Result.Err d)
-    | some node =>
-      let r ← offset node span
-      match r with
-      | core.result.Result.Ok value =>
-        let o1 ←
-          core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice Span)
-            spans value
-        let span1 ←
-          match o1 with
-          | none => ok span
-          | some «at» => ok «at»
-        let message ←
-          match diagnostic.constraint with
-          | noble_kernel.untrusted.Constraint.StackJoin =>
-            ok (toStr
-              "kernel rejected a program stack join or output interface")
-          | noble_kernel.untrusted.Constraint.StackOrder =>
-            ok (toStr
-              "kernel rejected a program stack join or output interface")
-          | noble_kernel.untrusted.Constraint.EffectInclusion _ =>
-            ok (toStr "kernel rejected the ordinary typing witness")
-          | noble_kernel.untrusted.Constraint.Eligibility _ =>
-            ok (toStr "kernel rejected a non-capturable value")
-          | noble_kernel.untrusted.Constraint.UnknownEffect _ =>
-            ok (toStr "kernel rejected the ordinary typing witness")
-          | noble_kernel.untrusted.Constraint.InstantiationKind =>
-            ok (toStr "kernel rejected the ordinary typing witness")
-          | noble_kernel.untrusted.Constraint.InstantiationArity =>
-            ok (toStr "kernel rejected the ordinary typing witness")
-          | noble_kernel.untrusted.Constraint.MalformedReference _ =>
-            ok (toStr "kernel rejected the ordinary typing witness")
-          | noble_kernel.untrusted.Constraint.UnknownDefinition _ =>
-            ok (toStr "kernel rejected the ordinary typing witness")
-          | noble_kernel.untrusted.Constraint.CyclicWitness =>
-            ok (toStr "kernel rejected a cyclic witness")
-        let d ← invalid span1 message
-        ok (core.result.Result.Err d)
-      | core.result.Result.Err failure => ok (core.result.Result.Err failure)
-  | noble_kernel.untrusted.Outcome.Unsupported _ =>
-    let d ←
-      Diagnostic.new DiagnosticKind.Unsupported span (toStr
-        "ordinary typing is outside the kernel fragment")
-    ok (core.result.Result.Err d)
-  | noble_kernel.untrusted.Outcome.Exhausted _ =>
-    let d ←
-      Diagnostic.new DiagnosticKind.Exhausted span (toStr
-        "ordinary typing exhausted a declared kernel limit")
-    ok (core.result.Result.Err d)
-  | noble_kernel.untrusted.Outcome.InternalFailure =>
-    let d ← internal span
-    ok (core.result.Result.Err d)
-
-/-- [noble_contracts::syntax::{noble_contracts::syntax::Tree}::square]:
-    Source: 'crates/noble-contracts/src/syntax/mod.rs', lines 40:4-49:5
+/-- [noble_contracts::inference::{noble_contracts::inference::Arena}::new]:
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 58:4-68:5
     Visibility: public -/
-def syntax.Tree.square
-  (self : syntax.Tree) (id : Std.U32) :
-  Result (core.result.Result (Slice Std.U32) Diagnostic)
-  := do
-  let r ← syntax.Tree.node self id
-  match r with
-  | core.result.Result.Ok value =>
-    match value.form with
-    | syntax.Form.Atom =>
-      let d ← invalid value.span (toStr "expected a bracketed program body")
-      ok (core.result.Result.Err d)
-    | syntax.Form.Round _ =>
-      let d ← invalid value.span (toStr "expected a bracketed program body")
-      ok (core.result.Result.Err d)
-    | syntax.Form.Square children =>
-      let s := alloc.vec.Vec.deref children
-      ok (core.result.Result.Ok s)
-  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+def inference.Arena.new : Result inference.Arena := do
+  ok
+    {
+      terms := (alloc.vec.Vec.new inference.Term),
+      effectful := false,
+      effect_universe := 0#u8,
+      effects := (alloc.vec.Vec.new inference.effects.Effect),
+      effect_bounds := (alloc.vec.Vec.new Std.U8),
+      effect_equations := (alloc.vec.Vec.new (Std.U32 × Std.U32)),
+      program_effects := (alloc.vec.Vec.new (Std.U32 × Std.U32))
+    }
+
+/-- [noble_contracts::inference::{noble_contracts::inference::Arena}::source]:
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 70:4-75:5
+    Visibility: public -/
+def inference.Arena.source (test_hosts : Bool) : Result inference.Arena := do
+  let arena ← inference.Arena.new
+  if test_hosts
+  then ok { arena with effectful := true, effect_universe := 3#u8 }
+  else ok { arena with effectful := true, effect_universe := 0#u8 }
 
 /-- [noble_contracts::inference::{noble_contracts::inference::Arena}::get]:
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 66:4-71:5 -/
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 89:4-94:5 -/
 def inference.Arena.get
   (self : inference.Arena) (id : Std.U32) (span : Span) :
   Result (core.result.Result inference.Term Diagnostic)
@@ -6221,12 +6246,12 @@ def inference.Arena.get
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_contracts::inference::{noble_contracts::inference::Arena}::root_step]:
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 112:4-134:5 -/
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 135:4-157:5 -/
 def inference.Arena.root_step
   (self : inference.Arena) (id : Std.U32) (span : Span) (meter : Meter) :
   Result ((core.result.Result (Option Std.U32) Diagnostic) × Meter)
   := do
-  let (r, meter1) ← Meter.charge meter 1#u32 span
+  let (r, meter1) ← metering.Meter.charge meter 1#u32 span
   match r with
   | core.result.Result.Ok _ =>
     let r1 ← inference.Arena.get self id span
@@ -6254,17 +6279,30 @@ def inference.Arena.root_step
     ok (core.result.Result.Err failure, meter1)
 
 /-- [noble_contracts::inference::{noble_contracts::inference::Arena}::root]: loop body 0:
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 82:8-95:9 -/
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 105:8-118:9 -/
 @[rust_loop_body]
 def inference.Arena.root_loop.body
-  (v : alloc.vec.Vec inference.Term) (span : Span) (id : Std.U32)
+  (v : alloc.vec.Vec inference.Term) (b : Bool) (i : Std.U8)
+  (v1 : alloc.vec.Vec inference.effects.Effect) (v2 : alloc.vec.Vec Std.U8)
+  (v3 : alloc.vec.Vec (Std.U32 × Std.U32))
+  (v4 : alloc.vec.Vec (Std.U32 × Std.U32)) (span : Span) (id : Std.U32)
   (meter : Meter) (remaining : Std.Usize) :
   Result (ControlFlow (Std.U32 × Meter × Std.Usize) (Std.U32 × Meter × Bool
     × (Option Diagnostic)))
   := do
   if remaining > 0#usize
   then
-    let (r, meter1) ← inference.Arena.root_step { terms := v } id span meter
+    let (r, meter1) ←
+      inference.Arena.root_step
+        {
+          terms := v,
+          effectful := b,
+          effect_universe := i,
+          effects := v1,
+          effect_bounds := v2,
+          effect_equations := v3,
+          program_effects := v4
+        } id span meter
     match r with
     | core.result.Result.Ok o =>
       match o with
@@ -6277,20 +6315,23 @@ def inference.Arena.root_loop.body
   else ok (done (id, meter, false, none))
 
 /-- [noble_contracts::inference::{noble_contracts::inference::Arena}::root]: loop 0:
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 82:8-95:9 -/
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 105:8-118:9 -/
 @[rust_loop]
 def inference.Arena.root_loop
-  (v : alloc.vec.Vec inference.Term) (id : Std.U32) (span : Span)
+  (v : alloc.vec.Vec inference.Term) (b : Bool) (i : Std.U8)
+  (v1 : alloc.vec.Vec inference.effects.Effect) (v2 : alloc.vec.Vec Std.U8)
+  (v3 : alloc.vec.Vec (Std.U32 × Std.U32))
+  (v4 : alloc.vec.Vec (Std.U32 × Std.U32)) (id : Std.U32) (span : Span)
   (meter : Meter) (remaining : Std.Usize) :
   Result (Std.U32 × Meter × Bool × (Option Diagnostic))
   := do
   loop
-    (fun (id1, meter1, remaining1) => inference.Arena.root_loop.body v span id1
-      meter1 remaining1)
+    (fun (id1, meter1, remaining1) => inference.Arena.root_loop.body v b i v1
+      v2 v3 v4 span id1 meter1 remaining1)
     (id, meter, remaining)
 
 /-- [noble_contracts::inference::{noble_contracts::inference::Arena}::root]:
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 73:4-106:5 -/
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 96:4-129:5 -/
 def inference.Arena.root
   (self : inference.Arena) (id : Std.U32) (span : Span) (meter : Meter) :
   Result ((core.result.Result Std.U32 Diagnostic) × Meter)
@@ -6298,7 +6339,9 @@ def inference.Arena.root
   let i := alloc.vec.Vec.len self.terms
   let remaining ← lift (core.num.Usize.saturating_add i 1#usize)
   let (id1, meter1, is_found, failure) ←
-    inference.Arena.root_loop self.terms id span meter remaining
+    inference.Arena.root_loop self.terms self.effectful self.effect_universe
+      self.effects self.effect_bounds self.effect_equations
+      self.program_effects id span meter remaining
   match failure with
   | none =>
     if is_found
@@ -6307,2026 +6350,301 @@ def inference.Arena.root
          ok (core.result.Result.Err d, meter1)
   | some problem => ok (core.result.Result.Err problem, meter1)
 
-/-- [noble_contracts::inference::materialize::{noble_contracts::inference::Arena}::visit]:
-    Source: 'crates/noble-contracts/src/inference/materialize.rs', lines 132:4-172:5 -/
-def inference.materialize.Arena.visit
-  (self : inference.Arena) (id : Std.U32) (state : inference.materialize.State)
-  (span : Span) (meter : Meter) :
-  Result ((core.result.Result inference.materialize.State Diagnostic) × Meter)
+/-- [noble_contracts::inference::materialize::rendering::{noble_contracts::inference::materialize::rendering::Traversal}::term]:
+    Source: 'crates/noble-contracts/src/inference/materialize/rendering.rs', lines 78:4-129:5 -/
+def inference.materialize.rendering.Traversal.term
+  (self : inference.materialize.rendering.Traversal) (id : Std.U32)
+  (arena : inference.Arena) (span : Span) (meter : Meter) :
+  Result ((core.result.Result Unit Diagnostic) ×
+    inference.materialize.rendering.Traversal × Meter)
   := do
-  let (r, meter1) ← inference.Arena.root self id span meter
+  let (r, meter1) ← inference.Arena.root arena id span meter
   match r with
   | core.result.Result.Ok value =>
-    let r1 ← inference.Arena.get self value span
+    let r1 ← inference.Arena.get arena value span
     match r1 with
     | core.result.Result.Ok value1 =>
       match value1 with
-      | inference.Term.HoleTerm _ =>
-        let d ←
-          invalid span (toStr
-            "ambiguous witness; add an explicit typed block or word binding")
-        ok (core.result.Result.Err d, meter1)
+      | inference.Term.HoleTerm s =>
+        let text ←
+          match s with
+          | inference.Sort.Value => ok (toStr "?value")
+          | inference.Sort.Stack => ok (toStr "?stack")
+        let s1 ← alloc.string.String.push_str self.text text
+        ok (core.result.Result.Ok (), { self with text := s1 }, meter1)
       | inference.Term.LinkTerm _ =>
         let d ← internal span
-        ok (core.result.Result.Err d, meter1)
+        ok (core.result.Result.Err d, self, meter1)
       | inference.Term.UnitTerm =>
-        let v ←
-          alloc.vec.Vec.push state.values (inference.materialize.Material.Value
-            noble_kernel.types.Ty.UnitType 1#u32)
-        ok (core.result.Result.Ok { state with values := v }, meter1)
+        let s ← alloc.string.String.push_str self.text (toStr "Unit")
+        ok (core.result.Result.Ok (), { self with text := s }, meter1)
       | inference.Term.BoolTerm =>
-        let v ←
-          alloc.vec.Vec.push state.values (inference.materialize.Material.Value
-            noble_kernel.types.Ty.BoolType 1#u32)
-        ok (core.result.Result.Ok { state with values := v }, meter1)
+        let s ← alloc.string.String.push_str self.text (toStr "Bool")
+        ok (core.result.Result.Ok (), { self with text := s }, meter1)
       | inference.Term.I64Term =>
-        let v ←
-          alloc.vec.Vec.push state.values (inference.materialize.Material.Value
-            noble_kernel.types.Ty.I64Type 1#u32)
-        ok (core.result.Result.Ok { state with values := v }, meter1)
+        let s ← alloc.string.String.push_str self.text (toStr "I64")
+        ok (core.result.Result.Ok (), { self with text := s }, meter1)
       | inference.Term.TextTerm =>
-        let v ←
-          alloc.vec.Vec.push state.values (inference.materialize.Material.Value
-            noble_kernel.types.Ty.TextType 1#u32)
-        ok (core.result.Result.Ok { state with values := v }, meter1)
+        let s ← alloc.string.String.push_str self.text (toStr "Text")
+        ok (core.result.Result.Ok (), { self with text := s }, meter1)
       | inference.Term.SyntaxTerm =>
-        let v ←
-          alloc.vec.Vec.push state.values (inference.materialize.Material.Value
-            noble_kernel.types.Ty.SyntaxType 1#u32)
-        ok (core.result.Result.Ok { state with values := v }, meter1)
+        let s ← alloc.string.String.push_str self.text (toStr "Syntax")
+        ok (core.result.Result.Ok (), { self with text := s }, meter1)
       | inference.Term.PairTerm a b =>
         let v ←
-          alloc.vec.Vec.push state.steps (inference.materialize.Step.Finish
-            value1)
-        let v1 ← alloc.vec.Vec.push v (inference.materialize.Step.Visit b)
-        let v2 ← alloc.vec.Vec.push v1 (inference.materialize.Step.Visit a)
-        ok (core.result.Result.Ok { state with steps := v2 }, meter1)
+          alloc.vec.Vec.push self.pending
+            inference.materialize.rendering.Part.Close
+        let v1 ←
+          alloc.vec.Vec.push v (inference.materialize.rendering.Part.Term b)
+        let v2 ←
+          alloc.vec.Vec.push v1 inference.materialize.rendering.Part.Comma
+        let v3 ←
+          alloc.vec.Vec.push v2 (inference.materialize.rendering.Part.Term a)
+        let s ← alloc.string.String.push_str self.text (toStr "Pair<")
+        ok (core.result.Result.Ok (), { pending := v3, text := s }, meter1)
       | inference.Term.SumTerm a b =>
         let v ←
-          alloc.vec.Vec.push state.steps (inference.materialize.Step.Finish
-            value1)
-        let v1 ← alloc.vec.Vec.push v (inference.materialize.Step.Visit b)
-        let v2 ← alloc.vec.Vec.push v1 (inference.materialize.Step.Visit a)
-        ok (core.result.Result.Ok { state with steps := v2 }, meter1)
+          alloc.vec.Vec.push self.pending
+            inference.materialize.rendering.Part.Close
+        let v1 ←
+          alloc.vec.Vec.push v (inference.materialize.rendering.Part.Term b)
+        let v2 ←
+          alloc.vec.Vec.push v1 inference.materialize.rendering.Part.Comma
+        let v3 ←
+          alloc.vec.Vec.push v2 (inference.materialize.rendering.Part.Term a)
+        let s ← alloc.string.String.push_str self.text (toStr "Sum<")
+        ok (core.result.Result.Ok (), { pending := v3, text := s }, meter1)
       | inference.Term.ListTerm item =>
         let v ←
-          alloc.vec.Vec.push state.steps (inference.materialize.Step.Finish
-            value1)
-        let v1 ← alloc.vec.Vec.push v (inference.materialize.Step.Visit item)
-        ok (core.result.Result.Ok { state with steps := v1 }, meter1)
+          alloc.vec.Vec.push self.pending
+            inference.materialize.rendering.Part.Close
+        let v1 ←
+          alloc.vec.Vec.push v (inference.materialize.rendering.Part.Term item)
+        let s ← alloc.string.String.push_str self.text (toStr "List<")
+        ok (core.result.Result.Ok (), { pending := v1, text := s }, meter1)
       | inference.Term.ProgramTerm a b =>
         let v ←
-          alloc.vec.Vec.push state.steps (inference.materialize.Step.Finish
-            value1)
-        let v1 ← alloc.vec.Vec.push v (inference.materialize.Step.Visit b)
-        let v2 ← alloc.vec.Vec.push v1 (inference.materialize.Step.Visit a)
-        ok (core.result.Result.Ok { state with steps := v2 }, meter1)
+          alloc.vec.Vec.push self.pending
+            inference.materialize.rendering.Part.Close
+        let v1 ←
+          alloc.vec.Vec.push v (inference.materialize.rendering.Part.Term b)
+        let v2 ←
+          alloc.vec.Vec.push v1 inference.materialize.rendering.Part.Arrow
+        let v3 ←
+          alloc.vec.Vec.push v2 (inference.materialize.rendering.Part.Term a)
+        let s ← alloc.string.String.push_str self.text (toStr "Program<")
+        ok (core.result.Result.Ok (), { pending := v3, text := s }, meter1)
       | inference.Term.EmptyTerm =>
+        let s ← alloc.string.String.push_str self.text (toStr "[]")
+        ok (core.result.Result.Ok (), { self with text := s }, meter1)
+      | inference.Term.PushTerm stack value2 =>
         let v ←
-          alloc.vec.Vec.push state.values (inference.materialize.Material.Stack
-            (alloc.vec.Vec.new noble_kernel.types.Ty) 0#u32)
-        ok (core.result.Result.Ok { state with values := v }, meter1)
-      | inference.Term.PushTerm a b =>
-        let v ←
-          alloc.vec.Vec.push state.steps (inference.materialize.Step.Finish
-            value1)
-        let v1 ← alloc.vec.Vec.push v (inference.materialize.Step.Visit b)
-        let v2 ← alloc.vec.Vec.push v1 (inference.materialize.Step.Visit a)
-        ok (core.result.Result.Ok { state with steps := v2 }, meter1)
-    | core.result.Result.Err failure =>
-      ok (core.result.Result.Err failure, meter1)
-  | core.result.Result.Err failure =>
-    ok (core.result.Result.Err failure, meter1)
-
-/-- [noble_contracts::inference::materialize::{noble_contracts::inference::materialize::State}::pop]:
-    Source: 'crates/noble-contracts/src/inference/materialize.rs', lines 19:4-24:5 -/
-def inference.materialize.State.pop
-  (self : inference.materialize.State) (span : Span) :
-  Result ((core.result.Result inference.materialize.Material Diagnostic) ×
-    inference.materialize.State)
-  := do
-  let (o, v) ← alloc.vec.Vec.pop Global self.values
-  match o with
-  | none =>
-    let d ← internal span
-    ok (core.result.Result.Err d, { self with values := v })
-  | some value => ok (core.result.Result.Ok value, { self with values := v })
-
-/-- [noble_contracts::inference::finish::push]:
-    Source: 'crates/noble-contracts/src/inference/finish.rs', lines 103:0-131:1 -/
-def inference.finish.push
-  (stack : inference.materialize.Material)
-  (value : inference.materialize.Material) (span : Span) :
-  Result (core.result.Result inference.materialize.Material Diagnostic)
-  := do
-  match stack with
-  | inference.materialize.Material.Value _ _ =>
-    let d ← internal span
-    ok (core.result.Result.Err d)
-  | inference.materialize.Material.Stack stack1 sa =>
-    match value with
-    | inference.materialize.Material.Value ty sb =>
-      let i := alloc.vec.Vec.len stack1
-      let r ← offset inference.STACK_CAP span
-      match r with
-      | core.result.Result.Ok value1 =>
-        if i >= value1
-        then
-          let d ←
-            Diagnostic.new DiagnosticKind.Exhausted span (toStr
-              "stack height limit (256 values) exceeded")
-          ok (core.result.Result.Err d)
-        else
-          let stack2 ← alloc.vec.Vec.push stack1 ty
-          let i1 ← lift (core.num.U32.saturating_add sa sb)
-          ok (core.result.Result.Ok (inference.materialize.Material.Stack
-            stack2 i1))
-      | core.result.Result.Err failure => ok (core.result.Result.Err failure)
-    | inference.materialize.Material.Stack _ _ =>
-      let d ← internal span
-      ok (core.result.Result.Err d)
-
-/-- [noble_contracts::inference::finish::type_size]:
-    Source: 'crates/noble-contracts/src/inference/finish.rs', lines 137:0-147:1 -/
-def inference.finish.type_size
-  (constructors : Std.U32) (span : Span) :
-  Result (core.result.Result Std.U32 Diagnostic)
-  := do
-  if constructors > syntax.TYPE_CAP
-  then
-    let d ←
-      Diagnostic.new DiagnosticKind.Exhausted span (toStr
-        "inferred type exceeds the 256-constructor limit")
-    ok (core.result.Result.Err d)
-  else ok (core.result.Result.Ok constructors)
-
-/-- [noble_contracts::inference::finish::program]:
-    Source: 'crates/noble-contracts/src/inference/finish.rs', lines 79:0-97:1 -/
-def inference.finish.program
-  (inputs : inference.materialize.Material)
-  (outputs : inference.materialize.Material) (span : Span) :
-  Result (core.result.Result inference.materialize.Material Diagnostic)
-  := do
-  match inputs with
-  | inference.materialize.Material.Value _ _ =>
-    let d ← internal span
-    ok (core.result.Result.Err d)
-  | inference.materialize.Material.Stack a sa =>
-    match outputs with
-    | inference.materialize.Material.Value _ _ =>
-      let d ← internal span
-      ok (core.result.Result.Err d)
-    | inference.materialize.Material.Stack b sb =>
-      let es ← noble_kernel.types.EffSet.empty
-      let t ← noble_kernel.types.Ty.program a b es
-      let i ← lift (core.num.U32.saturating_add sa sb)
-      let i1 ← lift (core.num.U32.saturating_add i 1#u32)
-      let r ← inference.finish.type_size i1 span
-      match r with
-      | core.result.Result.Ok value =>
-        ok (core.result.Result.Ok (inference.materialize.Material.Value t
-          value))
-      | core.result.Result.Err failure => ok (core.result.Result.Err failure)
-
-/-- [noble_contracts::inference::finish::pair]:
-    Source: 'crates/noble-contracts/src/inference/finish.rs', lines 49:0-73:1 -/
-def inference.finish.pair
-  (is_pair : Bool) (a : inference.materialize.Material)
-  (b : inference.materialize.Material) (span : Span) :
-  Result (core.result.Result inference.materialize.Material Diagnostic)
-  := do
-  match a with
-  | inference.materialize.Material.Value a1 sa =>
-    match b with
-    | inference.materialize.Material.Value b1 sb =>
-      let i ← lift (core.num.U32.saturating_add sa sb)
-      let i1 ← lift (core.num.U32.saturating_add i 1#u32)
-      let r ← inference.finish.type_size i1 span
-      match r with
-      | core.result.Result.Ok value =>
-        if is_pair
-        then
-          ok (core.result.Result.Ok (inference.materialize.Material.Value
-            (noble_kernel.types.Ty.PairType a1 b1) value))
-        else
-          ok (core.result.Result.Ok (inference.materialize.Material.Value
-            (noble_kernel.types.Ty.SumType a1 b1) value))
-      | core.result.Result.Err failure => ok (core.result.Result.Err failure)
-    | inference.materialize.Material.Stack _ _ =>
-      let d ← internal span
-      ok (core.result.Result.Err d)
-  | inference.materialize.Material.Stack _ _ =>
-    let d ← internal span
-    ok (core.result.Result.Err d)
-
-/-- [noble_contracts::inference::finish::list]:
-    Source: 'crates/noble-contracts/src/inference/finish.rs', lines 36:0-47:1 -/
-def inference.finish.list
-  (item : inference.materialize.Material) (span : Span) :
-  Result (core.result.Result inference.materialize.Material Diagnostic)
-  := do
-  match item with
-  | inference.materialize.Material.Value ty size =>
-    let i ← lift (core.num.U32.saturating_add size 1#u32)
-    let r ← inference.finish.type_size i span
-    match r with
-    | core.result.Result.Ok value =>
-      ok (core.result.Result.Ok (inference.materialize.Material.Value
-        (noble_kernel.types.Ty.ListType ty) value))
-    | core.result.Result.Err failure => ok (core.result.Result.Err failure)
-  | inference.materialize.Material.Stack _ _ =>
-    let d ← internal span
-    ok (core.result.Result.Err d)
-
-/-- [noble_contracts::inference::finish::{noble_contracts::inference::materialize::State}::finish]:
-    Source: 'crates/noble-contracts/src/inference/finish.rs', lines 2:4-33:5 -/
-def inference.finish.State.finish
-  (self : inference.materialize.State) (term : inference.Term) (span : Span) :
-  Result (core.result.Result inference.materialize.State Diagnostic)
-  := do
-  let (r, self1) ← inference.materialize.State.pop self span
-  match r with
-  | core.result.Result.Ok value =>
-    match term with
-    | inference.Term.HoleTerm _ =>
-      let failure ← internal span
-      ok (core.result.Result.Err failure)
-    | inference.Term.LinkTerm _ =>
-      let failure ← internal span
-      ok (core.result.Result.Err failure)
-    | inference.Term.UnitTerm =>
-      let failure ← internal span
-      ok (core.result.Result.Err failure)
-    | inference.Term.BoolTerm =>
-      let failure ← internal span
-      ok (core.result.Result.Err failure)
-    | inference.Term.I64Term =>
-      let failure ← internal span
-      ok (core.result.Result.Err failure)
-    | inference.Term.TextTerm =>
-      let failure ← internal span
-      ok (core.result.Result.Err failure)
-    | inference.Term.SyntaxTerm =>
-      let failure ← internal span
-      ok (core.result.Result.Err failure)
-    | inference.Term.PairTerm _ _ =>
-      let (r1, self2) ← inference.materialize.State.pop self1 span
-      match r1 with
-      | core.result.Result.Ok value1 =>
-        let material ← inference.finish.pair true value1 value span
-        match material with
-        | core.result.Result.Ok value2 =>
-          let v ← alloc.vec.Vec.push self2.values value2
-          ok (core.result.Result.Ok { self2 with values := v })
-        | core.result.Result.Err failure => ok (core.result.Result.Err failure)
-      | core.result.Result.Err failure => ok (core.result.Result.Err failure)
-    | inference.Term.SumTerm _ _ =>
-      let (r1, self2) ← inference.materialize.State.pop self1 span
-      match r1 with
-      | core.result.Result.Ok value1 =>
-        let material ← inference.finish.pair false value1 value span
-        match material with
-        | core.result.Result.Ok value2 =>
-          let v ← alloc.vec.Vec.push self2.values value2
-          ok (core.result.Result.Ok { self2 with values := v })
-        | core.result.Result.Err failure => ok (core.result.Result.Err failure)
-      | core.result.Result.Err failure => ok (core.result.Result.Err failure)
-    | inference.Term.ListTerm _ =>
-      let material ← inference.finish.list value span
-      match material with
-      | core.result.Result.Ok value1 =>
-        let v ← alloc.vec.Vec.push self1.values value1
-        ok (core.result.Result.Ok { self1 with values := v })
-      | core.result.Result.Err failure => ok (core.result.Result.Err failure)
-    | inference.Term.ProgramTerm _ _ =>
-      let (r1, self2) ← inference.materialize.State.pop self1 span
-      match r1 with
-      | core.result.Result.Ok value1 =>
-        let material ← inference.finish.program value1 value span
-        match material with
-        | core.result.Result.Ok value2 =>
-          let v ← alloc.vec.Vec.push self2.values value2
-          ok (core.result.Result.Ok { self2 with values := v })
-        | core.result.Result.Err failure => ok (core.result.Result.Err failure)
-      | core.result.Result.Err failure => ok (core.result.Result.Err failure)
-    | inference.Term.EmptyTerm =>
-      let failure ← internal span
-      ok (core.result.Result.Err failure)
-    | inference.Term.PushTerm _ _ =>
-      let (r1, self2) ← inference.materialize.State.pop self1 span
-      match r1 with
-      | core.result.Result.Ok value1 =>
-        let material ← inference.finish.push value1 value span
-        match material with
-        | core.result.Result.Ok value2 =>
-          let v ← alloc.vec.Vec.push self2.values value2
-          ok (core.result.Result.Ok { self2 with values := v })
-        | core.result.Result.Err failure => ok (core.result.Result.Err failure)
-      | core.result.Result.Err failure => ok (core.result.Result.Err failure)
-  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
-
-/-- [noble_contracts::inference::materialize::{noble_contracts::inference::Arena}::read_step]:
-    Source: 'crates/noble-contracts/src/inference/materialize.rs', lines 118:4-130:5 -/
-def inference.materialize.Arena.read_step
-  (self : inference.Arena) (step : inference.materialize.Step)
-  (state : inference.materialize.State) (span : Span) (meter : Meter) :
-  Result ((core.result.Result inference.materialize.State Diagnostic) × Meter)
-  := do
-  let (r, meter1) ← Meter.charge meter 1#u32 span
-  match r with
-  | core.result.Result.Ok _ =>
-    match step with
-    | inference.materialize.Step.Visit id =>
-      inference.materialize.Arena.visit self id state span meter1
-    | inference.materialize.Step.Finish term =>
-      let r1 ← inference.finish.State.finish state term span
-      ok (r1, meter1)
-  | core.result.Result.Err failure =>
-    ok (core.result.Result.Err failure, meter1)
-
-/-- [noble_contracts::inference::materialize::{noble_contracts::inference::Arena}::materialize]: loop body 0:
-    Source: 'crates/noble-contracts/src/inference/materialize.rs', lines 98:8-106:9 -/
-@[rust_loop_body]
-def inference.materialize.Arena.materialize_loop.body
-  (self : inference.Arena) (span : Span)
-  (outcome : core.result.Result inference.materialize.State Diagnostic)
-  (meter : Meter) :
-  Result (ControlFlow ((core.result.Result inference.materialize.State
-    Diagnostic) × Meter) (Meter × (core.result.Result
-    inference.materialize.State Diagnostic)))
-  := do
-  match outcome with
-  | core.result.Result.Ok state =>
-    let (o, v) ← alloc.vec.Vec.pop Global state.steps
-    match o with
-    | none =>
-      ok (done (meter, core.result.Result.Ok { state with steps := v }))
-    | some step =>
-      let (outcome1, meter1) ←
-        inference.materialize.Arena.read_step self step
-          { state with steps := v } span meter
-      ok (cont (outcome1, meter1))
-  | core.result.Result.Err _ => ok (done (meter, outcome))
-
-/-- [noble_contracts::inference::materialize::{noble_contracts::inference::Arena}::materialize]: loop 0:
-    Source: 'crates/noble-contracts/src/inference/materialize.rs', lines 98:8-106:9 -/
-@[rust_loop]
-def inference.materialize.Arena.materialize_loop
-  (outcome : core.result.Result inference.materialize.State Diagnostic)
-  (self : inference.Arena) (span : Span) (meter : Meter) :
-  Result (Meter × (core.result.Result inference.materialize.State Diagnostic))
-  := do
-  loop
-    (fun (outcome1, meter1) =>
-      inference.materialize.Arena.materialize_loop.body self span outcome1
-      meter1)
-    (outcome, meter)
-
-/-- [noble_contracts::inference::materialize::{noble_contracts::inference::Arena}::materialize]:
-    Source: 'crates/noble-contracts/src/inference/materialize.rs', lines 86:4-112:5 -/
-def inference.materialize.Arena.materialize
-  (self : inference.Arena) (root : Std.U32) (span : Span) (meter : Meter) :
-  Result ((core.result.Result inference.materialize.Material Diagnostic) ×
-    Meter)
-  := do
-  let v := alloc.vec.Vec.with_capacity inference.materialize.Step 1#usize
-  let v1 ← alloc.vec.Vec.push v (inference.materialize.Step.Visit root)
-  let (meter1, outcome) ←
-    inference.materialize.Arena.materialize_loop (core.result.Result.Ok
-      {
-        steps := v1,
-        values := (alloc.vec.Vec.new inference.materialize.Material)
-      }) self span meter
-  match outcome with
-  | core.result.Result.Ok value =>
-    let i := alloc.vec.Vec.len value.values
-    if i != 1#usize
-    then let d ← internal span
-         ok (core.result.Result.Err d, meter1)
-    else
-      let (r, _) ← inference.materialize.State.pop value span
-      ok (r, meter1)
-  | core.result.Result.Err failure =>
-    ok (core.result.Result.Err failure, meter1)
-
-/-- [noble_contracts::inference::materialize::{noble_contracts::inference::Arena}::binding]:
-    Source: 'crates/noble-contracts/src/inference/materialize.rs', lines 59:4-84:5 -/
-def inference.materialize.Arena.binding
-  (self : inference.Arena) («variable» : Option inference.Variable)
-  (span : Span) (meter : Meter) :
-  Result ((core.result.Result noble_kernel.words.Binding Diagnostic) × Meter)
-  := do
-  let (r, meter1) ← Meter.charge meter 1#u32 span
-  match r with
-  | core.result.Result.Ok _ =>
-    match «variable» with
-    | none => let d ← internal span
-              ok (core.result.Result.Err d, meter1)
-    | some v =>
-      match v with
-      | inference.Variable.Value id =>
-        let (r1, meter2) ←
-          inference.materialize.Arena.materialize self id span meter1
-        match r1 with
-        | core.result.Result.Ok value =>
-          match value with
-          | inference.materialize.Material.Value ty _ =>
-            ok (core.result.Result.Ok (noble_kernel.words.Binding.Value ty),
-              meter2)
-          | inference.materialize.Material.Stack _ _ =>
-            let d ← internal span
-            ok (core.result.Result.Err d, meter2)
-        | core.result.Result.Err failure =>
-          ok (core.result.Result.Err failure, meter2)
-      | inference.Variable.Stack id =>
-        let (r1, meter2) ←
-          inference.materialize.Arena.materialize self id span meter1
-        match r1 with
-        | core.result.Result.Ok value =>
-          match value with
-          | inference.materialize.Material.Value _ _ =>
-            let d ← internal span
-            ok (core.result.Result.Err d, meter2)
-          | inference.materialize.Material.Stack stack _ =>
-            ok (core.result.Result.Ok (noble_kernel.words.Binding.Stack stack),
-              meter2)
-        | core.result.Result.Err failure =>
-          ok (core.result.Result.Err failure, meter2)
-      | inference.Variable.Effect =>
-        let es ← noble_kernel.types.EffSet.empty
-        ok (core.result.Result.Ok (noble_kernel.words.Binding.Effect es),
-          meter1)
-  | core.result.Result.Err failure =>
-    ok (core.result.Result.Err failure, meter1)
-
-/-- [noble_contracts::inference::materialize::{noble_contracts::inference::Arena}::instantiation]: loop body 0:
-    Source: 'crates/noble-contracts/src/inference/materialize.rs', lines 37:8-48:9
-    Visibility: public -/
-@[rust_loop_body]
-def inference.materialize.Arena.instantiation_loop.body
-  (self : inference.Arena) («variables» : Slice inference.Variable)
-  (span : Span) (meter : Meter)
-  (bindings : alloc.vec.Vec noble_kernel.words.Binding) («at» : Std.Usize) :
-  Result (ControlFlow (Meter × (alloc.vec.Vec noble_kernel.words.Binding) ×
-    Std.Usize) (Meter × (alloc.vec.Vec noble_kernel.words.Binding) × (Option
-    Diagnostic)))
-  := do
-  let i := Slice.len «variables»
-  if «at» < i
-  then
-    let o ←
-      core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice
-        inference.Variable) «variables» «at»
-    let (r, meter1) ← inference.materialize.Arena.binding self o span meter
-    match r with
-    | core.result.Result.Ok binding =>
-      let bindings1 ← alloc.vec.Vec.push bindings binding
-      let at1 ← «at» + 1#usize
-      ok (cont (meter1, bindings1, at1))
-    | core.result.Result.Err problem =>
-      ok (done (meter1, bindings, some problem))
-  else ok (done (meter, bindings, none))
-
-/-- [noble_contracts::inference::materialize::{noble_contracts::inference::Arena}::instantiation]: loop 0:
-    Source: 'crates/noble-contracts/src/inference/materialize.rs', lines 37:8-48:9
-    Visibility: public -/
-@[rust_loop]
-def inference.materialize.Arena.instantiation_loop
-  (self : inference.Arena) («variables» : Slice inference.Variable)
-  (span : Span) (meter : Meter)
-  (bindings : alloc.vec.Vec noble_kernel.words.Binding) («at» : Std.Usize) :
-  Result (Meter × (alloc.vec.Vec noble_kernel.words.Binding) × (Option
-    Diagnostic))
-  := do
-  loop
-    (fun (meter1, bindings1, at1) =>
-      inference.materialize.Arena.instantiation_loop.body self «variables»
-      span meter1 bindings1 at1)
-    (meter, bindings, «at»)
-
-/-- [noble_contracts::inference::materialize::{noble_contracts::inference::Arena}::instantiation]:
-    Source: 'crates/noble-contracts/src/inference/materialize.rs', lines 28:4-53:5
-    Visibility: public -/
-def inference.materialize.Arena.instantiation
-  (self : inference.Arena) («variables» : Slice inference.Variable)
-  (span : Span) (meter : Meter) :
-  Result ((core.result.Result noble_kernel.words.Inst Diagnostic) × Meter)
-  := do
-  let i := Slice.len «variables»
-  let bindings := alloc.vec.Vec.with_capacity noble_kernel.words.Binding i
-  let (meter1, bindings1, failure) ←
-    inference.materialize.Arena.instantiation_loop self «variables» span
-      meter bindings 0#usize
-  match failure with
-  | none => ok (core.result.Result.Ok { bindings := bindings1 }, meter1)
-  | some problem => ok (core.result.Result.Err problem, meter1)
-
-/-- [noble_contracts::program::finish_draft]:
-    Source: 'crates/noble-contracts/src/program.rs', lines 164:0-190:1 -/
-def program.finish_draft
-  (drafts : Slice (Option program.Draft)) («at» : Std.Usize)
-  (arena : inference.Arena) (span : Span) (meter : Meter) :
-  Result ((core.result.Result (noble_kernel.untrusted.Node × Span) Diagnostic)
-    × (Slice (Option program.Draft)) × Meter)
-  := do
-  let (r, meter1) ← Meter.charge meter 1#u32 span
-  match r with
-  | core.result.Result.Ok _ =>
-    let (o, get_mut_back) ←
-      core.slice.Slice.get_mut (core.slice.index.SliceIndexUsizeSlice (Option
-        program.Draft)) drafts «at»
-    match o with
-    | none =>
-      let d ← internal span
-      let drafts1 := get_mut_back none
-      ok (core.result.Result.Err d, drafts1, meter1)
-    | some slot =>
-      let (o1, slot1) := core.option.Option.take slot
-      match o1 with
-      | none =>
-        let d ← internal span
-        let drafts1 := get_mut_back (some slot1)
-        ok (core.result.Result.Err d, drafts1, meter1)
-      | some draft =>
-        match draft.explicit with
-        | none =>
-          let s := alloc.vec.Vec.deref draft.variables
-          let (r1, meter2) ←
-            inference.materialize.Arena.instantiation arena s draft.span meter1
-          match r1 with
-          | core.result.Result.Ok value =>
-            match draft.kind with
-            | program.DraftKind.Literal lit =>
-              let drafts1 := get_mut_back (some slot1)
-              ok (core.result.Result.Ok (noble_kernel.untrusted.Node.Literal
-                lit value, draft.span), drafts1, meter2)
-            | program.DraftKind.Invocation «def» =>
-              let drafts1 := get_mut_back (some slot1)
-              ok (core.result.Result.Ok (noble_kernel.untrusted.Node.Invocation
-                «def» value, draft.span), drafts1, meter2)
-            | program.DraftKind.Quotation body =>
-              let drafts1 := get_mut_back (some slot1)
-              ok (core.result.Result.Ok (noble_kernel.untrusted.Node.Quotation
-                body value, draft.span), drafts1, meter2)
-          | core.result.Result.Err failure =>
-            let drafts1 := get_mut_back (some slot1)
-            ok (core.result.Result.Err failure, drafts1, meter2)
-        | some inst =>
-          match draft.kind with
-          | program.DraftKind.Literal lit =>
-            let drafts1 := get_mut_back (some slot1)
-            ok (core.result.Result.Ok (noble_kernel.untrusted.Node.Literal lit
-              inst, draft.span), drafts1, meter1)
-          | program.DraftKind.Invocation «def» =>
-            let drafts1 := get_mut_back (some slot1)
-            ok (core.result.Result.Ok (noble_kernel.untrusted.Node.Invocation
-              «def» inst, draft.span), drafts1, meter1)
-          | program.DraftKind.Quotation body =>
-            let drafts1 := get_mut_back (some slot1)
-            ok (core.result.Result.Ok (noble_kernel.untrusted.Node.Quotation
-              body inst, draft.span), drafts1, meter1)
-  | core.result.Result.Err failure =>
-    ok (core.result.Result.Err failure, drafts, meter1)
-
-/-- [noble_contracts::program::finish]: loop body 0:
-    Source: 'crates/noble-contracts/src/program.rs', lines 132:4-144:5 -/
-@[rust_loop_body]
-def program.finish_loop.body
-  (s : Span) (a : inference.Arena) (v : alloc.vec.Vec (Option program.Draft))
-  (meter : Meter) (nodes : alloc.vec.Vec noble_kernel.untrusted.Node)
-  (spans : alloc.vec.Vec Span) («at» : Std.Usize) :
-  Result (ControlFlow ((alloc.vec.Vec (Option program.Draft)) × Meter ×
-    (alloc.vec.Vec noble_kernel.untrusted.Node) × (alloc.vec.Vec Span) ×
-    Std.Usize) (Meter × (alloc.vec.Vec noble_kernel.untrusted.Node) ×
-    (alloc.vec.Vec Span) × (Option Diagnostic)))
-  := do
-  let i := alloc.vec.Vec.len v
-  if «at» < i
-  then
-    let (s1, deref_mut_back) ← lift (alloc.vec.Vec.deref_mut v)
-    let (r, s2, meter1) ← program.finish_draft s1 «at» a s meter
-    match r with
-    | core.result.Result.Ok p =>
-      let (node, at_span) := p
-      let nodes1 ← alloc.vec.Vec.push nodes node
-      let spans1 ← alloc.vec.Vec.push spans at_span
-      let at1 ← «at» + 1#usize
-      let v1 := deref_mut_back s2
-      ok (cont (v1, meter1, nodes1, spans1, at1))
-    | core.result.Result.Err problem =>
-      ok (done (meter1, nodes, spans, some problem))
-  else ok (done (meter, nodes, spans, none))
-
-/-- [noble_contracts::program::finish]: loop 0:
-    Source: 'crates/noble-contracts/src/program.rs', lines 132:4-144:5 -/
-@[rust_loop]
-def program.finish_loop
-  (s : Span) (a : inference.Arena) (v : alloc.vec.Vec (Option program.Draft))
-  (meter : Meter) (nodes : alloc.vec.Vec noble_kernel.untrusted.Node)
-  (spans : alloc.vec.Vec Span) («at» : Std.Usize) :
-  Result (Meter × (alloc.vec.Vec noble_kernel.untrusted.Node) ×
-    (alloc.vec.Vec Span) × (Option Diagnostic))
-  := do
-  loop
-    (fun (v1, meter1, nodes1, spans1, at1) => program.finish_loop.body s a v1
-      meter1 nodes1 spans1 at1)
-    (v, meter, nodes, spans, «at»)
-
-/-- [noble_contracts::program::finish]:
-    Source: 'crates/noble-contracts/src/program.rs', lines 118:0-157:1 -/
-def program.finish
-  (state : program.Resolution) (meter : Meter) :
-  Result ((core.result.Result (noble_kernel.untrusted.Candidate ×
-    (alloc.vec.Vec Span)) Diagnostic) × Meter)
-  := do
-  let i := alloc.vec.Vec.len state.drafts
-  let nodes := alloc.vec.Vec.with_capacity noble_kernel.untrusted.Node i
-  let i1 := alloc.vec.Vec.len state.drafts
-  let spans := alloc.vec.Vec.with_capacity Span i1
-  let (meter1, nodes1, spans1, failure) ←
-    program.finish_loop state.span state.arena state.drafts meter nodes spans
-      0#usize
-  match failure with
-  | none =>
-    let i2 ← noble_kernel.untrusted.CANDIDATE_FORMAT
-    let i3 ← noble_kernel.untrusted.SEMANTIC_REVISION
-    ok (core.result.Result.Ok
-      ({ format := i2, revision := i3, nodes := nodes1, body := state.body },
-      spans1), meter1)
-  | some problem => ok (core.result.Result.Err problem, meter1)
-
-/-- [noble_contracts::program::{noble_contracts::program::Resolution}::add]:
-    Source: 'crates/noble-contracts/src/program.rs', lines 52:4-61:5 -/
-def program.Resolution.add
-  (self : program.Resolution) (draft : program.Draft) (meter : Meter) :
-  Result ((core.result.Result noble_kernel.untrusted.NodeId Diagnostic) ×
-    program.Resolution × Meter)
-  := do
-  let (r, meter1) ← Meter.node meter draft.span
-  match r with
-  | core.result.Result.Ok _ =>
-    let i := alloc.vec.Vec.len self.drafts
-    let r1 ← index i draft.span
-    match r1 with
-    | core.result.Result.Ok value =>
-      let v ← alloc.vec.Vec.push self.drafts (some draft)
-      ok (core.result.Result.Ok value, { self with drafts := v }, meter1)
+          alloc.vec.Vec.push self.pending
+            (inference.materialize.rendering.Part.Term value2)
+        let v1 ←
+          alloc.vec.Vec.push v inference.materialize.rendering.Part.Space
+        let v2 ←
+          alloc.vec.Vec.push v1 (inference.materialize.rendering.Part.Term
+            stack)
+        ok (core.result.Result.Ok (), { self with pending := v2 }, meter1)
     | core.result.Result.Err failure =>
       ok (core.result.Result.Err failure, self, meter1)
   | core.result.Result.Err failure =>
     ok (core.result.Result.Err failure, self, meter1)
 
-/-- [noble_contracts::program::words::identity]:
-    Source: 'crates/noble-contracts/src/program/words.rs', lines 59:0-96:1 -/
-def program.words.identity
-  (word : Slice Std.U8) (span : Span) :
-  Result (core.result.Result noble_kernel.contracts.Definition Diagnostic)
+/-- [noble_contracts::inference::materialize::rendering::{noble_contracts::inference::materialize::rendering::Traversal}::step]:
+    Source: 'crates/noble-contracts/src/inference/materialize/rendering.rs', lines 52:4-76:5 -/
+def inference.materialize.rendering.Traversal.step
+  (self : inference.materialize.rendering.Traversal)
+  (part : inference.materialize.rendering.Part) (arena : inference.Arena)
+  (span : Span) (meter : Meter) :
+  Result ((core.result.Result Bool Diagnostic) ×
+    inference.materialize.rendering.Traversal × Meter)
   := do
-  let b ←
-    Slice.Insts.CoreCmpPartialEqArray.eq core.cmp.PartialEqU8 word
-      (Array.make 3#usize [ 100#u8, 117#u8, 112#u8 ])
-  if b
-  then ok (core.result.Result.Ok 0#u32)
-  else
-    let b1 ←
-      Slice.Insts.CoreCmpPartialEqArray.eq core.cmp.PartialEqU8 word
-        (Array.make 4#usize [ 100#u8, 114#u8, 111#u8, 112#u8 ])
-    if b1
-    then ok (core.result.Result.Ok 1#u32)
-    else
-      let b2 ←
-        Slice.Insts.CoreCmpPartialEqArray.eq core.cmp.PartialEqU8 word
-          (Array.make 4#usize [ 115#u8, 119#u8, 97#u8, 112#u8 ])
-      if b2
-      then ok (core.result.Result.Ok 2#u32)
-      else
-        let b3 ←
-          Slice.Insts.CoreCmpPartialEqArray.eq core.cmp.PartialEqU8 word
-            (Array.make 3#usize [ 100#u8, 105#u8, 112#u8 ])
-        if b3
-        then ok (core.result.Result.Ok 3#u32)
-        else
-          let b4 ←
-            Slice.Insts.CoreCmpPartialEqArray.eq core.cmp.PartialEqU8 word
-              (Array.make 1#usize [ 43#u8 ])
-          if b4
-          then ok (core.result.Result.Ok 4#u32)
-          else
-            let b5 ←
-              Slice.Insts.CoreCmpPartialEqArray.eq core.cmp.PartialEqU8 word
-                (Array.make 1#usize [ 45#u8 ])
-            if b5
-            then ok (core.result.Result.Ok 5#u32)
-            else
-              let b6 ←
-                Slice.Insts.CoreCmpPartialEqArray.eq core.cmp.PartialEqU8 word
-                  (Array.make 1#usize [ 42#u8 ])
-              if b6
-              then ok (core.result.Result.Ok 6#u32)
-              else
-                let b7 ←
-                  Slice.Insts.CoreCmpPartialEqArray.eq core.cmp.PartialEqU8
-                    word (Array.make 1#usize [ 61#u8 ])
-                if b7
-                then ok (core.result.Result.Ok 7#u32)
-                else
-                  let b8 ←
-                    Slice.Insts.CoreCmpPartialEqArray.eq core.cmp.PartialEqU8
-                      word
-                      (Array.make 5#usize [
-                        113#u8, 117#u8, 111#u8, 116#u8, 101#u8
-                        ])
-                  if b8
-                  then ok (core.result.Result.Ok 8#u32)
-                  else
-                    let b9 ←
-                      Slice.Insts.CoreCmpPartialEqArray.eq core.cmp.PartialEqU8
-                        word
-                        (Array.make 7#usize [
-                          99#u8, 111#u8, 109#u8, 112#u8, 111#u8, 115#u8, 101#u8
-                          ])
-                    if b9
-                    then ok (core.result.Result.Ok 9#u32)
-                    else
-                      let b10 ←
-                        Slice.Insts.CoreCmpPartialEqArray.eq
-                          core.cmp.PartialEqU8 word
-                          (Array.make 3#usize [ 114#u8, 117#u8, 110#u8 ])
-                      if b10
-                      then ok (core.result.Result.Ok 10#u32)
-                      else
-                        let b11 ←
-                          Slice.Insts.CoreCmpPartialEqArray.eq
-                            core.cmp.PartialEqU8 word
-                            (Array.make 7#usize [
-                              114#u8, 101#u8, 102#u8, 108#u8, 101#u8, 99#u8,
-                              116#u8
-                              ])
-                        if b11
-                        then ok (core.result.Result.Ok 11#u32)
-                        else
-                          let b12 ←
-                            Slice.Insts.CoreCmpPartialEqArray.eq
-                              core.cmp.PartialEqU8 word
-                              (Array.make 4#usize [
-                                117#u8, 110#u8, 105#u8, 116#u8
-                                ])
-                          if b12
-                          then ok (core.result.Result.Ok 12#u32)
-                          else
-                            let b13 ←
-                              Slice.Insts.CoreCmpPartialEqArray.eq
-                                core.cmp.PartialEqU8 word
-                                (Array.make 4#usize [
-                                  112#u8, 97#u8, 105#u8, 114#u8
-                                  ])
-                            if b13
-                            then ok (core.result.Result.Ok 13#u32)
-                            else
-                              let b14 ←
-                                Slice.Insts.CoreCmpPartialEqArray.eq
-                                  core.cmp.PartialEqU8 word
-                                  (Array.make 6#usize [
-                                    117#u8, 110#u8, 112#u8, 97#u8, 105#u8,
-                                    114#u8
-                                    ])
-                              if b14
-                              then ok (core.result.Result.Ok 14#u32)
-                              else
-                                let b15 ←
-                                  Slice.Insts.CoreCmpPartialEqArray.eq
-                                    core.cmp.PartialEqU8 word
-                                    (Array.make 3#usize [
-                                      105#u8, 110#u8, 108#u8
-                                      ])
-                                if b15
-                                then ok (core.result.Result.Ok 15#u32)
-                                else
-                                  let b16 ←
-                                    Slice.Insts.CoreCmpPartialEqArray.eq
-                                      core.cmp.PartialEqU8 word
-                                      (Array.make 3#usize [
-                                        105#u8, 110#u8, 114#u8
-                                        ])
-                                  if b16
-                                  then ok (core.result.Result.Ok 16#u32)
-                                  else
-                                    let b17 ←
-                                      Slice.Insts.CoreCmpPartialEqArray.eq
-                                        core.cmp.PartialEqU8 word
-                                        (Array.make 4#usize [
-                                          99#u8, 97#u8, 115#u8, 101#u8
-                                          ])
-                                    if b17
-                                    then ok (core.result.Result.Ok 17#u32)
-                                    else
-                                      let b18 ←
-                                        Slice.Insts.CoreCmpPartialEqArray.eq
-                                          core.cmp.PartialEqU8 word
-                                          (Array.make 2#usize [
-                                            105#u8, 102#u8
-                                            ])
-                                      if b18
-                                      then ok (core.result.Result.Ok 18#u32)
-                                      else
-                                        let b19 ←
-                                          Slice.Insts.CoreCmpPartialEqArray.eq
-                                            core.cmp.PartialEqU8 word
-                                            (Array.make 3#usize [
-                                              110#u8, 105#u8, 108#u8
-                                              ])
-                                        if b19
-                                        then ok (core.result.Result.Ok 19#u32)
-                                        else
-                                          let b20 ←
-                                            Slice.Insts.CoreCmpPartialEqArray.eq
-                                              core.cmp.PartialEqU8 word
-                                              (Array.make 4#usize [
-                                                99#u8, 111#u8, 110#u8, 115#u8
-                                                ])
-                                          if b20
-                                          then
-                                            ok (core.result.Result.Ok 20#u32)
-                                          else
-                                            let b21 ←
-                                              Slice.Insts.CoreCmpPartialEqArray.eq
-                                                core.cmp.PartialEqU8 word
-                                                (Array.make 9#usize [
-                                                  108#u8, 105#u8, 115#u8,
-                                                  116#u8, 46#u8, 99#u8, 97#u8,
-                                                  115#u8, 101#u8
-                                                  ])
-                                            if b21
-                                            then
-                                              ok (core.result.Result.Ok 21#u32)
-                                            else
-                                              let b22 ←
-                                                Slice.Insts.CoreCmpPartialEqArray.eq
-                                                  core.cmp.PartialEqU8 word
-                                                  (Array.make 9#usize [
-                                                    116#u8, 101#u8, 115#u8,
-                                                    116#u8, 46#u8, 101#u8,
-                                                    109#u8, 105#u8, 116#u8
-                                                    ])
-                                              if b22
-                                              then
-                                                let d ←
-                                                  Diagnostic.new
-                                                    DiagnosticKind.Unsupported
-                                                    span (toStr
-                                                    "host and effectful words are outside the pure contract fragment")
-                                                ok (core.result.Result.Err d)
-                                              else
-                                                let b23 ←
-                                                  Slice.Insts.CoreCmpPartialEqArray.eq
-                                                    core.cmp.PartialEqU8 word
-                                                    (Array.make 4#usize [
-                                                      104#u8, 111#u8, 115#u8,
-                                                      116#u8
-                                                      ])
-                                                if b23
-                                                then
-                                                  let d ←
-                                                    Diagnostic.new
-                                                      DiagnosticKind.Unsupported
-                                                      span (toStr
-                                                      "host and effectful words are outside the pure contract fragment")
-                                                  ok (core.result.Result.Err d)
-                                                else
-                                                  let b24 ←
-                                                    Slice.Insts.CoreCmpPartialEqArray.eq
-                                                      core.cmp.PartialEqU8 word
-                                                      (Array.make 4#usize [
-                                                        99#u8, 97#u8, 108#u8,
-                                                        108#u8
-                                                        ])
-                                                  if b24
-                                                  then
-                                                    let d ←
-                                                      Diagnostic.new
-                                                        DiagnosticKind.Unsupported
-                                                        span (toStr
-                                                        "host and effectful words are outside the pure contract fragment")
-                                                    ok (core.result.Result.Err
-                                                      d)
-                                                  else
-                                                    let d ←
-                                                      invalid span (toStr
-                                                        "unknown program word")
-                                                    ok (core.result.Result.Err
-                                                      d)
-
-/-- [noble_contracts::inference::unify::{noble_contracts::inference::Arena}::occurs_step]:
-    Source: 'crates/noble-contracts/src/inference/unify.rs', lines 44:4-79:5 -/
-def inference.unify.Arena.occurs_step
-  (self : inference.Arena) («variable» : Std.U32) (id : Std.U32)
-  (pending : alloc.vec.Vec Std.U32) (span : Span) (meter : Meter) :
-  Result ((core.result.Result (alloc.vec.Vec Std.U32) Diagnostic) × Meter)
-  := do
-  let (r, meter1) ← Meter.charge meter 1#u32 span
+  let (r, meter1) ← metering.Meter.charge meter 1#u32 span
   match r with
   | core.result.Result.Ok _ =>
-    let (r1, meter2) ← inference.Arena.root self id span meter1
-    match r1 with
-    | core.result.Result.Ok value =>
-      if value = «variable»
+    let i ← alloc.string.String.len self.text
+    if i >= 384#usize
+    then
+      let s ← alloc.string.String.push_str self.text (toStr "...")
+      ok (core.result.Result.Ok true, { self with text := s }, meter1)
+    else
+      let i1 := alloc.vec.Vec.len self.pending
+      if i1 >= 256#usize
       then
-        let d ←
-          invalid span (toStr
-            "recursive type or stack equation is not supported")
-        ok (core.result.Result.Err d, meter2)
+        let s ← alloc.string.String.push_str self.text (toStr "...")
+        ok (core.result.Result.Ok true, { self with text := s }, meter1)
       else
-        let r2 ← inference.Arena.get self value span
-        match r2 with
-        | core.result.Result.Ok value1 =>
-          match value1 with
-          | inference.Term.HoleTerm _ =>
-            ok (core.result.Result.Ok pending, meter2)
-          | inference.Term.LinkTerm _ =>
-            ok (core.result.Result.Ok pending, meter2)
-          | inference.Term.UnitTerm =>
-            ok (core.result.Result.Ok pending, meter2)
-          | inference.Term.BoolTerm =>
-            ok (core.result.Result.Ok pending, meter2)
-          | inference.Term.I64Term =>
-            ok (core.result.Result.Ok pending, meter2)
-          | inference.Term.TextTerm =>
-            ok (core.result.Result.Ok pending, meter2)
-          | inference.Term.SyntaxTerm =>
-            ok (core.result.Result.Ok pending, meter2)
-          | inference.Term.PairTerm a b =>
-            let pending1 ← alloc.vec.Vec.push pending a
-            let pending2 ← alloc.vec.Vec.push pending1 b
-            ok (core.result.Result.Ok pending2, meter2)
-          | inference.Term.SumTerm a b =>
-            let pending1 ← alloc.vec.Vec.push pending a
-            let pending2 ← alloc.vec.Vec.push pending1 b
-            ok (core.result.Result.Ok pending2, meter2)
-          | inference.Term.ListTerm item =>
-            let pending1 ← alloc.vec.Vec.push pending item
-            ok (core.result.Result.Ok pending1, meter2)
-          | inference.Term.ProgramTerm a b =>
-            let pending1 ← alloc.vec.Vec.push pending a
-            let pending2 ← alloc.vec.Vec.push pending1 b
-            ok (core.result.Result.Ok pending2, meter2)
-          | inference.Term.EmptyTerm =>
-            ok (core.result.Result.Ok pending, meter2)
-          | inference.Term.PushTerm a b =>
-            let pending1 ← alloc.vec.Vec.push pending a
-            let pending2 ← alloc.vec.Vec.push pending1 b
-            ok (core.result.Result.Ok pending2, meter2)
-        | core.result.Result.Err failure =>
-          ok (core.result.Result.Err failure, meter2)
-    | core.result.Result.Err failure =>
-      ok (core.result.Result.Err failure, meter2)
+        match part with
+        | inference.materialize.rendering.Part.Term id =>
+          let (r1, self1, meter2) ←
+            inference.materialize.rendering.Traversal.term self id arena span
+              meter1
+          match r1 with
+          | core.result.Result.Ok _ =>
+            ok (core.result.Result.Ok false, self1, meter2)
+          | core.result.Result.Err failure =>
+            ok (core.result.Result.Err failure, self1, meter2)
+        | inference.materialize.rendering.Part.Space =>
+          let s ← alloc.string.String.push self.text ' '
+          ok (core.result.Result.Ok false, { self with text := s }, meter1)
+        | inference.materialize.rendering.Part.Close =>
+          let s ← alloc.string.String.push self.text '>'
+          ok (core.result.Result.Ok false, { self with text := s }, meter1)
+        | inference.materialize.rendering.Part.Comma =>
+          let s ← alloc.string.String.push self.text ','
+          ok (core.result.Result.Ok false, { self with text := s }, meter1)
+        | inference.materialize.rendering.Part.Arrow =>
+          let s ← alloc.string.String.push_str self.text (toStr " -- ")
+          ok (core.result.Result.Ok false, { self with text := s }, meter1)
   | core.result.Result.Err failure =>
-    ok (core.result.Result.Err failure, meter1)
+    ok (core.result.Result.Err failure, self, meter1)
 
-/-- [noble_contracts::inference::unify::{noble_contracts::inference::Arena}::bind]: loop body 0:
-    Source: 'crates/noble-contracts/src/inference/unify.rs', lines 20:8-28:9 -/
+/-- [noble_contracts::inference::materialize::rendering::describe]: loop body 0:
+    Source: 'crates/noble-contracts/src/inference/materialize/rendering.rs', lines 31:4-40:5 -/
 @[rust_loop_body]
-def inference.unify.Arena.bind_loop.body
-  (self : inference.Arena) («variable» : Std.U32) (span : Span)
-  (outcome : core.result.Result (alloc.vec.Vec Std.U32) Diagnostic)
-  (meter : Meter) :
-  Result (ControlFlow ((core.result.Result (alloc.vec.Vec Std.U32) Diagnostic)
-    × Meter) (Meter × (core.result.Result (alloc.vec.Vec Std.U32)
+def inference.materialize.rendering.describe_loop.body
+  (arena : inference.Arena) (span : Span) (meter : Meter)
+  (rendering : inference.materialize.rendering.Traversal) :
+  Result (ControlFlow (Meter × inference.materialize.rendering.Traversal)
+    (Meter × inference.materialize.rendering.Traversal × (Option
     Diagnostic)))
   := do
-  match outcome with
-  | core.result.Result.Ok pending =>
-    let (o, pending1) ← alloc.vec.Vec.pop Global pending
-    match o with
-    | none => ok (done (meter, core.result.Result.Ok pending1))
-    | some id =>
-      let (outcome1, meter1) ←
-        inference.unify.Arena.occurs_step self «variable» id pending1 span
-          meter
-      ok (cont (outcome1, meter1))
-  | core.result.Result.Err _ => ok (done (meter, outcome))
+  let (o, v) ← alloc.vec.Vec.pop Global rendering.pending
+  match o with
+  | none => ok (done (meter, { rendering with pending := v }, none))
+  | some part =>
+    let (r, rendering1, meter1) ←
+      inference.materialize.rendering.Traversal.step
+        { rendering with pending := v } part arena span meter
+    match r with
+    | core.result.Result.Ok b =>
+      if b
+      then ok (done (meter1, rendering1, none))
+      else ok (cont (meter1, rendering1))
+    | core.result.Result.Err problem =>
+      ok (done (meter1, rendering1, some problem))
 
-/-- [noble_contracts::inference::unify::{noble_contracts::inference::Arena}::bind]: loop 0:
-    Source: 'crates/noble-contracts/src/inference/unify.rs', lines 20:8-28:9 -/
+/-- [noble_contracts::inference::materialize::rendering::describe]: loop 0:
+    Source: 'crates/noble-contracts/src/inference/materialize/rendering.rs', lines 31:4-40:5 -/
 @[rust_loop]
-def inference.unify.Arena.bind_loop
-  (outcome : core.result.Result (alloc.vec.Vec Std.U32) Diagnostic)
-  (self : inference.Arena) («variable» : Std.U32) (span : Span)
-  (meter : Meter) :
-  Result (Meter × (core.result.Result (alloc.vec.Vec Std.U32) Diagnostic))
+def inference.materialize.rendering.describe_loop
+  (arena : inference.Arena) (span : Span) (meter : Meter)
+  (rendering : inference.materialize.rendering.Traversal) :
+  Result (Meter × inference.materialize.rendering.Traversal × (Option
+    Diagnostic))
   := do
   loop
-    (fun (outcome1, meter1) => inference.unify.Arena.bind_loop.body self
-      «variable» span outcome1 meter1)
-    (outcome, meter)
+    (fun (meter1, rendering1) =>
+      inference.materialize.rendering.describe_loop.body arena span meter1
+      rendering1)
+    (meter, rendering)
 
-/-- [noble_contracts::inference::unify::{noble_contracts::inference::Arena}::bind]:
-    Source: 'crates/noble-contracts/src/inference/unify.rs', lines 10:4-37:5 -/
-def inference.unify.Arena.bind
-  (self : inference.Arena) («variable» : Std.U32) (target : Std.U32)
-  (span : Span) (meter : Meter) :
-  Result ((core.result.Result Unit Diagnostic) × inference.Arena × Meter)
+/-- [noble_contracts::inference::materialize::rendering::describe]:
+    Source: 'crates/noble-contracts/src/inference/materialize/rendering.rs', lines 18:0-45:1 -/
+def inference.materialize.rendering.describe
+  (arena : inference.Arena) (root : Std.U32) (span : Span) (meter : Meter) :
+  Result ((core.result.Result String Diagnostic) × Meter)
   := do
-  let initial := alloc.vec.Vec.with_capacity Std.U32 1#usize
-  let initial1 ← alloc.vec.Vec.push initial target
-  let (meter1, outcome) ←
-    inference.unify.Arena.bind_loop (core.result.Result.Ok initial1) self
-      «variable» span meter
-  match outcome with
-  | core.result.Result.Ok _ =>
-    let (s, deref_mut_back) ← lift (alloc.vec.Vec.deref_mut self.terms)
-    let r ← offset «variable» span
-    match r with
-    | core.result.Result.Ok value =>
-      let (o, get_mut_back) ←
-        core.slice.Slice.get_mut (core.slice.index.SliceIndexUsizeSlice
-          inference.Term) s value
-      match o with
-      | none =>
-        let d ← internal span
-        let s1 := get_mut_back none
-        let v := deref_mut_back s1
-        ok (core.result.Result.Err d, { terms := v }, meter1)
-      | some _ =>
-        let s1 := get_mut_back (some (inference.Term.LinkTerm target))
-        let v := deref_mut_back s1
-        ok (core.result.Result.Ok (), { terms := v }, meter1)
-    | core.result.Result.Err failure =>
-      let v := deref_mut_back s
-      ok (core.result.Result.Err failure, { terms := v }, meter1)
-  | core.result.Result.Err failure =>
-    ok (core.result.Result.Err failure, self, meter1)
+  let v :=
+    alloc.vec.Vec.with_capacity inference.materialize.rendering.Part 259#usize
+  let s ← alloc.string.String.new
+  let v1 ←
+    alloc.vec.Vec.push v (inference.materialize.rendering.Part.Term root)
+  let (meter1, rendering, failure) ←
+    inference.materialize.rendering.describe_loop arena span meter
+      { pending := v1, text := s }
+  match failure with
+  | none => ok (core.result.Result.Ok rendering.text, meter1)
+  | some problem => ok (core.result.Result.Err problem, meter1)
 
-/-- [noble_contracts::inference::sort]:
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 189:0-204:1 -/
-def inference.sort (term : inference.Term) : Result inference.Sort := do
-  match term with
-  | inference.Term.HoleTerm sort => ok sort
-  | inference.Term.LinkTerm _ => ok inference.Sort.Value
-  | inference.Term.UnitTerm => ok inference.Sort.Value
-  | inference.Term.BoolTerm => ok inference.Sort.Value
-  | inference.Term.I64Term => ok inference.Sort.Value
-  | inference.Term.TextTerm => ok inference.Sort.Value
-  | inference.Term.SyntaxTerm => ok inference.Sort.Value
-  | inference.Term.PairTerm _ _ => ok inference.Sort.Value
-  | inference.Term.SumTerm _ _ => ok inference.Sort.Value
-  | inference.Term.ListTerm _ => ok inference.Sort.Value
-  | inference.Term.ProgramTerm _ _ => ok inference.Sort.Value
-  | inference.Term.EmptyTerm => ok inference.Sort.Stack
-  | inference.Term.PushTerm _ _ => ok inference.Sort.Stack
-
-/-- [noble_contracts::inference::{impl core::cmp::PartialEq<noble_contracts::inference::Sort> for noble_contracts::inference::Sort}::eq]:
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 7:22-7:31
+/-- [noble_contracts::inference::materialize::{noble_contracts::inference::Arena}::join_message]:
+    Source: 'crates/noble-contracts/src/inference/materialize.rs', lines 205:4-219:5
     Visibility: public -/
-def inference.Sort.Insts.CoreCmpPartialEqSort.eq
-  (self : inference.Sort) (other : inference.Sort) : Result Bool := do
-  let self1 := read_discriminant self
-  let other1 := read_discriminant other
-  ok (self1 = other1)
-
-/-- Trait implementation: [noble_contracts::inference::{impl core::cmp::PartialEq<noble_contracts::inference::Sort> for noble_contracts::inference::Sort}]
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 7:22-7:31 -/
-@[reducible]
-impl_def inference.Sort.Insts.CoreCmpPartialEqSort : core.cmp.PartialEq
-  inference.Sort inference.Sort := {
-  eq := inference.Sort.Insts.CoreCmpPartialEqSort.eq
-  ne := core.cmp.PartialEq.ne.trait_default
-    inference.Sort.Insts.CoreCmpPartialEqSort
-}
-
-/-- [noble_contracts::inference::unify::{noble_contracts::inference::Arena}::unify_step]:
-    Source: 'crates/noble-contracts/src/inference/unify.rs', lines 119:4-180:5 -/
-def inference.unify.Arena.unify_step
-  (self : inference.Arena) (left : Std.U32) (right : Std.U32)
-  (pending : alloc.vec.Vec (Std.U32 × Std.U32)) (span : Span) (meter : Meter)
-  :
-  Result ((core.result.Result (alloc.vec.Vec (Std.U32 × Std.U32)) Diagnostic)
-    × inference.Arena × Meter)
+def inference.materialize.Arena.join_message
+  (self : inference.Arena) (expected : Std.U32) (actual : Std.U32)
+  (span : Span) (meter : Meter) :
+  Result ((core.result.Result String Diagnostic) × Meter)
   := do
-  let (r, meter1) ← Meter.charge meter 1#u32 span
+  let (r, meter1) ←
+    inference.materialize.rendering.describe self expected span meter
+  match r with
+  | core.result.Result.Ok value =>
+    let (r1, meter2) ←
+      inference.materialize.rendering.describe self actual span meter1
+    match r1 with
+    | core.result.Result.Ok value1 =>
+      let message ←
+        alloc.string.String.Insts.CoreConvertFromShared0Str.from (toStr
+          "stack/program join: expected ")
+      let s ← alloc.string.String.Insts.CoreOpsDerefDerefStr.deref value
+      let message1 ← alloc.string.String.push_str message s
+      let message2 ←
+        alloc.string.String.push_str message1 (toStr "; actual ")
+      let s1 ← alloc.string.String.Insts.CoreOpsDerefDerefStr.deref value1
+      let message3 ← alloc.string.String.push_str message2 s1
+      ok (core.result.Result.Ok message3, meter2)
+    | core.result.Result.Err _ => ok (r1, meter2)
+  | core.result.Result.Err _ => ok (r, meter1)
+
+/-- [noble_contracts::inference::build::require_id]:
+    Source: 'crates/noble-contracts/src/inference/build.rs', lines 245:0-250:1 -/
+def inference.build.require_id
+  (value : Option Std.U32) (span : Span) :
+  Result (core.result.Result Std.U32 Diagnostic)
+  := do
+  match value with
+  | none => let d ← internal span
+            ok (core.result.Result.Err d)
+  | some value1 => ok (core.result.Result.Ok value1)
+
+/-- [noble_contracts::inference::{noble_contracts::inference::Arena}::add]:
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 77:4-87:5
+    Visibility: public -/
+def inference.Arena.add
+  (self : inference.Arena) (term : inference.Term) (span : Span)
+  (meter : Meter) :
+  Result ((core.result.Result Std.U32 Diagnostic) × inference.Arena × Meter)
+  := do
+  let (r, meter1) ← metering.Meter.node meter span
   match r with
   | core.result.Result.Ok _ =>
-    let (r1, meter2) ← inference.Arena.root self left span meter1
+    let i := alloc.vec.Vec.len self.terms
+    let r1 ← index i span
     match r1 with
-    | core.result.Result.Ok value =>
-      let (r2, meter3) ← inference.Arena.root self right span meter2
-      match r2 with
-      | core.result.Result.Ok value1 =>
-        if value = value1
-        then ok (core.result.Result.Ok pending, self, meter3)
-        else
-          let r3 ← inference.Arena.get self value span
-          match r3 with
-          | core.result.Result.Ok value2 =>
-            let r4 ← inference.Arena.get self value1 span
-            match r4 with
-            | core.result.Result.Ok value3 =>
-              let s ← inference.sort value2
-              let s1 ← inference.sort value3
-              let b ←
-                core.cmp.PartialEq.ne.trait_default
-                  inference.Sort.Insts.CoreCmpPartialEqSort s s1
-              if b
-              then
-                let d ←
-                  invalid span (toStr
-                    "value and stack witness kinds do not match")
-                ok (core.result.Result.Err d, self, meter3)
-              else
-                match value2 with
-                | inference.Term.HoleTerm _ =>
-                  let (r5, self1, meter4) ←
-                    inference.unify.Arena.bind self value value1 span meter3
-                  match r5 with
-                  | core.result.Result.Ok _ =>
-                    ok (core.result.Result.Ok pending, self1, meter4)
-                  | core.result.Result.Err failure =>
-                    ok (core.result.Result.Err failure, self1, meter4)
-                | inference.Term.LinkTerm _ =>
-                  match value3 with
-                  | inference.Term.HoleTerm _ =>
-                    let (r5, self1, meter4) ←
-                      inference.unify.Arena.bind self value1 value span meter3
-                    match r5 with
-                    | core.result.Result.Ok _ =>
-                      ok (core.result.Result.Ok pending, self1, meter4)
-                    | core.result.Result.Err failure =>
-                      ok (core.result.Result.Err failure, self1, meter4)
-                  | inference.Term.LinkTerm _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.UnitTerm =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.BoolTerm =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.I64Term =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.TextTerm =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.SyntaxTerm =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.PairTerm _ _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.SumTerm _ _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.ListTerm _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.ProgramTerm _ _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.EmptyTerm =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.PushTerm _ _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                | inference.Term.UnitTerm =>
-                  match value3 with
-                  | inference.Term.HoleTerm _ =>
-                    let (r5, self1, meter4) ←
-                      inference.unify.Arena.bind self value1 value span meter3
-                    match r5 with
-                    | core.result.Result.Ok _ =>
-                      ok (core.result.Result.Ok pending, self1, meter4)
-                    | core.result.Result.Err failure =>
-                      ok (core.result.Result.Err failure, self1, meter4)
-                  | inference.Term.LinkTerm _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.UnitTerm =>
-                    ok (core.result.Result.Ok pending, self, meter3)
-                  | inference.Term.BoolTerm =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.I64Term =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.TextTerm =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.SyntaxTerm =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.PairTerm _ _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.SumTerm _ _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.ListTerm _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.ProgramTerm _ _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.EmptyTerm =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.PushTerm _ _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                | inference.Term.BoolTerm =>
-                  match value3 with
-                  | inference.Term.HoleTerm _ =>
-                    let (r5, self1, meter4) ←
-                      inference.unify.Arena.bind self value1 value span meter3
-                    match r5 with
-                    | core.result.Result.Ok _ =>
-                      ok (core.result.Result.Ok pending, self1, meter4)
-                    | core.result.Result.Err failure =>
-                      ok (core.result.Result.Err failure, self1, meter4)
-                  | inference.Term.LinkTerm _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.UnitTerm =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.BoolTerm =>
-                    ok (core.result.Result.Ok pending, self, meter3)
-                  | inference.Term.I64Term =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.TextTerm =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.SyntaxTerm =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.PairTerm _ _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.SumTerm _ _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.ListTerm _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.ProgramTerm _ _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.EmptyTerm =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.PushTerm _ _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                | inference.Term.I64Term =>
-                  match value3 with
-                  | inference.Term.HoleTerm _ =>
-                    let (r5, self1, meter4) ←
-                      inference.unify.Arena.bind self value1 value span meter3
-                    match r5 with
-                    | core.result.Result.Ok _ =>
-                      ok (core.result.Result.Ok pending, self1, meter4)
-                    | core.result.Result.Err failure =>
-                      ok (core.result.Result.Err failure, self1, meter4)
-                  | inference.Term.LinkTerm _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.UnitTerm =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.BoolTerm =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.I64Term =>
-                    ok (core.result.Result.Ok pending, self, meter3)
-                  | inference.Term.TextTerm =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.SyntaxTerm =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.PairTerm _ _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.SumTerm _ _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.ListTerm _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.ProgramTerm _ _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.EmptyTerm =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.PushTerm _ _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                | inference.Term.TextTerm =>
-                  match value3 with
-                  | inference.Term.HoleTerm _ =>
-                    let (r5, self1, meter4) ←
-                      inference.unify.Arena.bind self value1 value span meter3
-                    match r5 with
-                    | core.result.Result.Ok _ =>
-                      ok (core.result.Result.Ok pending, self1, meter4)
-                    | core.result.Result.Err failure =>
-                      ok (core.result.Result.Err failure, self1, meter4)
-                  | inference.Term.LinkTerm _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.UnitTerm =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.BoolTerm =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.I64Term =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.TextTerm =>
-                    ok (core.result.Result.Ok pending, self, meter3)
-                  | inference.Term.SyntaxTerm =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.PairTerm _ _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.SumTerm _ _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.ListTerm _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.ProgramTerm _ _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.EmptyTerm =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.PushTerm _ _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                | inference.Term.SyntaxTerm =>
-                  match value3 with
-                  | inference.Term.HoleTerm _ =>
-                    let (r5, self1, meter4) ←
-                      inference.unify.Arena.bind self value1 value span meter3
-                    match r5 with
-                    | core.result.Result.Ok _ =>
-                      ok (core.result.Result.Ok pending, self1, meter4)
-                    | core.result.Result.Err failure =>
-                      ok (core.result.Result.Err failure, self1, meter4)
-                  | inference.Term.LinkTerm _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.UnitTerm =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.BoolTerm =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.I64Term =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.TextTerm =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.SyntaxTerm =>
-                    ok (core.result.Result.Ok pending, self, meter3)
-                  | inference.Term.PairTerm _ _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.SumTerm _ _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.ListTerm _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.ProgramTerm _ _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.EmptyTerm =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.PushTerm _ _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                | inference.Term.PairTerm a b1 =>
-                  match value3 with
-                  | inference.Term.HoleTerm _ =>
-                    let (r5, self1, meter4) ←
-                      inference.unify.Arena.bind self value1 value span meter3
-                    match r5 with
-                    | core.result.Result.Ok _ =>
-                      ok (core.result.Result.Ok pending, self1, meter4)
-                    | core.result.Result.Err failure =>
-                      ok (core.result.Result.Err failure, self1, meter4)
-                  | inference.Term.LinkTerm _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.UnitTerm =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.BoolTerm =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.I64Term =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.TextTerm =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.SyntaxTerm =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.PairTerm c d =>
-                    let pending1 ← alloc.vec.Vec.push pending (a, c)
-                    let pending2 ← alloc.vec.Vec.push pending1 (b1, d)
-                    ok (core.result.Result.Ok pending2, self, meter3)
-                  | inference.Term.SumTerm _ _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.ListTerm _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.ProgramTerm _ _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.EmptyTerm =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.PushTerm _ _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                | inference.Term.SumTerm a b1 =>
-                  match value3 with
-                  | inference.Term.HoleTerm _ =>
-                    let (r5, self1, meter4) ←
-                      inference.unify.Arena.bind self value1 value span meter3
-                    match r5 with
-                    | core.result.Result.Ok _ =>
-                      ok (core.result.Result.Ok pending, self1, meter4)
-                    | core.result.Result.Err failure =>
-                      ok (core.result.Result.Err failure, self1, meter4)
-                  | inference.Term.LinkTerm _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.UnitTerm =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.BoolTerm =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.I64Term =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.TextTerm =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.SyntaxTerm =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.PairTerm _ _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.SumTerm c d =>
-                    let pending1 ← alloc.vec.Vec.push pending (a, c)
-                    let pending2 ← alloc.vec.Vec.push pending1 (b1, d)
-                    ok (core.result.Result.Ok pending2, self, meter3)
-                  | inference.Term.ListTerm _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.ProgramTerm _ _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.EmptyTerm =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.PushTerm _ _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                | inference.Term.ListTerm a =>
-                  match value3 with
-                  | inference.Term.HoleTerm _ =>
-                    let (r5, self1, meter4) ←
-                      inference.unify.Arena.bind self value1 value span meter3
-                    match r5 with
-                    | core.result.Result.Ok _ =>
-                      ok (core.result.Result.Ok pending, self1, meter4)
-                    | core.result.Result.Err failure =>
-                      ok (core.result.Result.Err failure, self1, meter4)
-                  | inference.Term.LinkTerm _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.UnitTerm =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.BoolTerm =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.I64Term =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.TextTerm =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.SyntaxTerm =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.PairTerm _ _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.SumTerm _ _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.ListTerm b1 =>
-                    let pending1 ← alloc.vec.Vec.push pending (a, b1)
-                    ok (core.result.Result.Ok pending1, self, meter3)
-                  | inference.Term.ProgramTerm _ _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.EmptyTerm =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.PushTerm _ _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                | inference.Term.ProgramTerm a b1 =>
-                  match value3 with
-                  | inference.Term.HoleTerm _ =>
-                    let (r5, self1, meter4) ←
-                      inference.unify.Arena.bind self value1 value span meter3
-                    match r5 with
-                    | core.result.Result.Ok _ =>
-                      ok (core.result.Result.Ok pending, self1, meter4)
-                    | core.result.Result.Err failure =>
-                      ok (core.result.Result.Err failure, self1, meter4)
-                  | inference.Term.LinkTerm _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.UnitTerm =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.BoolTerm =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.I64Term =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.TextTerm =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.SyntaxTerm =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.PairTerm _ _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.SumTerm _ _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.ListTerm _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.ProgramTerm c d =>
-                    let pending1 ← alloc.vec.Vec.push pending (a, c)
-                    let pending2 ← alloc.vec.Vec.push pending1 (b1, d)
-                    ok (core.result.Result.Ok pending2, self, meter3)
-                  | inference.Term.EmptyTerm =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.PushTerm _ _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                | inference.Term.EmptyTerm =>
-                  match value3 with
-                  | inference.Term.HoleTerm _ =>
-                    let (r5, self1, meter4) ←
-                      inference.unify.Arena.bind self value1 value span meter3
-                    match r5 with
-                    | core.result.Result.Ok _ =>
-                      ok (core.result.Result.Ok pending, self1, meter4)
-                    | core.result.Result.Err failure =>
-                      ok (core.result.Result.Err failure, self1, meter4)
-                  | inference.Term.LinkTerm _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.UnitTerm =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.BoolTerm =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.I64Term =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.TextTerm =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.SyntaxTerm =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.PairTerm _ _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.SumTerm _ _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.ListTerm _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.ProgramTerm _ _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.EmptyTerm =>
-                    ok (core.result.Result.Ok pending, self, meter3)
-                  | inference.Term.PushTerm _ _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                | inference.Term.PushTerm a b1 =>
-                  match value3 with
-                  | inference.Term.HoleTerm _ =>
-                    let (r5, self1, meter4) ←
-                      inference.unify.Arena.bind self value1 value span meter3
-                    match r5 with
-                    | core.result.Result.Ok _ =>
-                      ok (core.result.Result.Ok pending, self1, meter4)
-                    | core.result.Result.Err failure =>
-                      ok (core.result.Result.Err failure, self1, meter4)
-                  | inference.Term.LinkTerm _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.UnitTerm =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.BoolTerm =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.I64Term =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.TextTerm =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.SyntaxTerm =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.PairTerm _ _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.SumTerm _ _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.ListTerm _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.ProgramTerm _ _ =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.EmptyTerm =>
-                    let d ←
-                      invalid span (toStr
-                        "program type or stack witness cannot be resolved")
-                    ok (core.result.Result.Err d, self, meter3)
-                  | inference.Term.PushTerm c d =>
-                    let pending1 ← alloc.vec.Vec.push pending (a, c)
-                    let pending2 ← alloc.vec.Vec.push pending1 (b1, d)
-                    ok (core.result.Result.Ok pending2, self, meter3)
-            | core.result.Result.Err failure =>
-              ok (core.result.Result.Err failure, self, meter3)
-          | core.result.Result.Err failure =>
-            ok (core.result.Result.Err failure, self, meter3)
-      | core.result.Result.Err failure =>
-        ok (core.result.Result.Err failure, self, meter3)
-    | core.result.Result.Err failure =>
-      ok (core.result.Result.Err failure, self, meter2)
+    | core.result.Result.Ok _ =>
+      let v ← alloc.vec.Vec.push self.terms term
+      ok (r1, { self with terms := v }, meter1)
+    | core.result.Result.Err _ => ok (r1, self, meter1)
   | core.result.Result.Err failure =>
     ok (core.result.Result.Err failure, self, meter1)
 
-/-- [noble_contracts::inference::unify::{noble_contracts::inference::Arena}::unify]: loop body 0:
-    Source: 'crates/noble-contracts/src/inference/unify.rs', lines 99:8-109:9
+/-- [noble_contracts::inference::effects::{noble_contracts::inference::Arena}::program]:
+    Source: 'crates/noble-contracts/src/inference/effects.rs', lines 171:4-185:5
     Visibility: public -/
-@[rust_loop_body]
-def inference.unify.Arena.unify_loop.body
-  (span : Span)
-  (outcome : core.result.Result (alloc.vec.Vec (Std.U32 × Std.U32))
-  Diagnostic) (self : inference.Arena) (meter : Meter) :
-  Result (ControlFlow ((core.result.Result (alloc.vec.Vec (Std.U32 × Std.U32))
-    Diagnostic) × inference.Arena × Meter) (inference.Arena × Meter ×
-    (core.result.Result (alloc.vec.Vec (Std.U32 × Std.U32)) Diagnostic)))
-  := do
-  match outcome with
-  | core.result.Result.Ok pending =>
-    let (o, pending1) ← alloc.vec.Vec.pop Global pending
-    match o with
-    | none => ok (done (self, meter, core.result.Result.Ok pending1))
-    | some p =>
-      let (left, right) := p
-      let (outcome1, self1, meter1) ←
-        inference.unify.Arena.unify_step self left right pending1 span meter
-      ok (cont (outcome1, self1, meter1))
-  | core.result.Result.Err _ => ok (done (self, meter, outcome))
-
-/-- [noble_contracts::inference::unify::{noble_contracts::inference::Arena}::unify]: loop 0:
-    Source: 'crates/noble-contracts/src/inference/unify.rs', lines 99:8-109:9
-    Visibility: public -/
-@[rust_loop]
-def inference.unify.Arena.unify_loop
-  (outcome : core.result.Result (alloc.vec.Vec (Std.U32 × Std.U32))
-  Diagnostic) (self : inference.Arena) (span : Span) (meter : Meter) :
-  Result (inference.Arena × Meter × (core.result.Result (alloc.vec.Vec
-    (Std.U32 × Std.U32)) Diagnostic))
-  := do
-  loop
-    (fun (outcome1, self1, meter1) => inference.unify.Arena.unify_loop.body
-      span outcome1 self1 meter1)
-    (outcome, self, meter)
-
-/-- [noble_contracts::inference::unify::{noble_contracts::inference::Arena}::unify]:
-    Source: 'crates/noble-contracts/src/inference/unify.rs', lines 89:4-112:5
-    Visibility: public -/
-def inference.unify.Arena.unify
-  (self : inference.Arena) (left : Std.U32) (right : Std.U32) (span : Span)
+def inference.effects.Arena.program
+  (self : inference.Arena) (interface : inference.Program) (span : Span)
   (meter : Meter) :
-  Result ((core.result.Result Unit Diagnostic) × inference.Arena × Meter)
+  Result ((core.result.Result Std.U32 Diagnostic) × inference.Arena × Meter)
   := do
-  let initial := alloc.vec.Vec.with_capacity (Std.U32 × Std.U32) 1#usize
-  let initial1 ← alloc.vec.Vec.push initial (left, right)
-  let (self1, meter1, outcome) ←
-    inference.unify.Arena.unify_loop (core.result.Result.Ok initial1) self span
-      meter
-  match outcome with
-  | core.result.Result.Ok _ => ok (core.result.Result.Ok (), self1, meter1)
+  let (r, meter1) ← metering.Meter.node meter span
+  match r with
+  | core.result.Result.Ok _ =>
+    let (r1, self1, meter2) ←
+      inference.Arena.add self (inference.Term.ProgramTerm interface.input
+        interface.output) span meter1
+    match r1 with
+    | core.result.Result.Ok value =>
+      let v ←
+        alloc.vec.Vec.push self1.program_effects (value, interface.effect)
+      ok (r1, { self1 with program_effects := v }, meter2)
+    | core.result.Result.Err _ => ok (r1, self1, meter2)
   | core.result.Result.Err failure =>
-    ok (core.result.Result.Err failure, self1, meter1)
+    ok (core.result.Result.Err failure, self, meter1)
 
 /-- [noble_contracts::inference::variable_at]:
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 206:0-215:1 -/
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 237:0-246:1 -/
 def inference.variable_at
   («variables» : Slice inference.Variable) (id : Std.U32) (span : Span) :
   Result (core.result.Result inference.Variable Diagnostic)
@@ -8344,46 +6662,14 @@ def inference.variable_at
     | some «variable» => ok (core.result.Result.Ok «variable»)
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
-/-- [noble_contracts::inference::build::require_id]:
-    Source: 'crates/noble-contracts/src/inference/build.rs', lines 231:0-236:1 -/
-def inference.build.require_id
-  (value : Option Std.U32) (span : Span) :
-  Result (core.result.Result Std.U32 Diagnostic)
-  := do
-  match value with
-  | none => let d ← internal span
-            ok (core.result.Result.Err d)
-  | some value1 => ok (core.result.Result.Ok value1)
-
-/-- [noble_contracts::inference::{noble_contracts::inference::Arena}::add]:
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 50:4-60:5
-    Visibility: public -/
-def inference.Arena.add
-  (self : inference.Arena) (term : inference.Term) (span : Span)
-  (meter : Meter) :
-  Result ((core.result.Result Std.U32 Diagnostic) × inference.Arena × Meter)
-  := do
-  let (r, meter1) ← Meter.node meter span
-  match r with
-  | core.result.Result.Ok _ =>
-    let i := alloc.vec.Vec.len self.terms
-    let r1 ← index i span
-    match r1 with
-    | core.result.Result.Ok _ =>
-      let v ← alloc.vec.Vec.push self.terms term
-      ok (r1, { terms := v }, meter1)
-    | core.result.Result.Err _ => ok (r1, self, meter1)
-  | core.result.Result.Err failure =>
-    ok (core.result.Result.Err failure, self, meter1)
-
 /-- [noble_contracts::inference::pure_effect]:
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 244:0-265:1 -/
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 275:0-298:1 -/
 def inference.pure_effect
   (effect : Option noble_kernel.shapes.EffectSlot)
   («variables» : Slice inference.Variable) (span : Span) (meter : Meter) :
   Result ((core.result.Result Unit Diagnostic) × Meter)
   := do
-  let (r, meter1) ← Meter.charge meter 1#u32 span
+  let (r, meter1) ← metering.Meter.charge meter 1#u32 span
   match r with
   | core.result.Result.Ok _ =>
     match effect with
@@ -8408,12 +6694,15 @@ def inference.pure_effect
             let d ← internal span
             ok (core.result.Result.Err d, meter1)
           | inference.Variable.Effect => ok (core.result.Result.Ok (), meter1)
+          | inference.Variable.EffectValue _ =>
+            let d ← internal span
+            ok (core.result.Result.Err d, meter1)
         | core.result.Result.Err failure =>
           ok (core.result.Result.Err failure, meter1)
   | core.result.Result.Err _ => ok (r, meter1)
 
 /-- [noble_contracts::inference::pure_effects]: loop body 0:
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 225:4-233:5 -/
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 256:4-264:5 -/
 @[rust_loop_body]
 def inference.pure_effects_loop.body
   (effects : Slice noble_kernel.shapes.EffectSlot)
@@ -8436,7 +6725,7 @@ def inference.pure_effects_loop.body
   else ok (done (meter, none))
 
 /-- [noble_contracts::inference::pure_effects]: loop 0:
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 225:4-233:5 -/
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 256:4-264:5 -/
 @[rust_loop]
 def inference.pure_effects_loop
   (effects : Slice noble_kernel.shapes.EffectSlot)
@@ -8450,7 +6739,7 @@ def inference.pure_effects_loop
     (meter, «at»)
 
 /-- [noble_contracts::inference::pure_effects]:
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 217:0-238:1 -/
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 248:0-269:1 -/
 def inference.pure_effects
   (effects : Slice noble_kernel.shapes.EffectSlot)
   («variables» : Slice inference.Variable) (span : Span) (meter : Meter) :
@@ -8462,203 +6751,488 @@ def inference.pure_effects
   | none => ok (core.result.Result.Ok (), meter1)
   | some problem => ok (core.result.Result.Err problem, meter1)
 
-/-- [noble_contracts::inference::construct::{noble_contracts::inference::Arena}::build_pattern]:
-    Source: 'crates/noble-contracts/src/inference/construct.rs', lines 57:4-110:5 -/
-def inference.construct.Arena.build_pattern
-  (self : inference.Arena) (pattern : noble_kernel.shapes.Pattern)
-  (state : inference.build.State) («variables» : Slice inference.Variable)
-  (span : Span) (meter : Meter) :
+/-- [noble_contracts::inference::effects::effect_bit]:
+    Source: 'crates/noble-contracts/src/inference/effects.rs', lines 277:0-283:1 -/
+def inference.effects.effect_bit
+  (effect : noble_kernel.types.EffId) : Result (Option Std.U8) := do
+  match effect with
+  | 0#uscalar => ok (some 1#u8)
+  | 1#uscalar => ok (some 2#u8)
+  | _ => ok none
+
+/-- [noble_contracts::inference::effects::{noble_contracts::inference::Arena}::add_effect]:
+    Source: 'crates/noble-contracts/src/inference/effects.rs', lines 19:4-39:5 -/
+def inference.effects.Arena.add_effect
+  (self : inference.Arena) (effect : inference.effects.Effect) (span : Span)
+  (meter : Meter) :
+  Result ((core.result.Result Std.U32 Diagnostic) × inference.Arena × Meter)
+  := do
+  let (r, meter1) ← metering.Meter.node meter span
+  match r with
+  | core.result.Result.Ok _ =>
+    let i := alloc.vec.Vec.len self.effects
+    let r1 ← index i span
+    match r1 with
+    | core.result.Result.Ok _ =>
+      let bound ←
+        match effect with
+        | inference.effects.Effect.Hole => ok self.effect_universe
+        | inference.effects.Effect.Constant bits => ok bits
+        | inference.effects.Effect.Union _ _ => ok 3#u8
+      let v ← alloc.vec.Vec.push self.effects effect
+      let v1 ← alloc.vec.Vec.push self.effect_bounds bound
+      ok (r1, { self with effects := v, effect_bounds := v1 }, meter1)
+    | core.result.Result.Err _ => ok (r1, self, meter1)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, self, meter1)
+
+/-- [noble_contracts::inference::effects::{noble_contracts::inference::Arena}::effect_slot]:
+    Source: 'crates/noble-contracts/src/inference/effects.rs', lines 143:4-169:5 -/
+def inference.effects.Arena.effect_slot
+  (self : inference.Arena) (slot : Option noble_kernel.shapes.EffectSlot)
+  («variables» : Slice inference.Variable) (span : Span) (meter : Meter) :
+  Result ((core.result.Result Std.U32 Diagnostic) × inference.Arena × Meter)
+  := do
+  let (r, meter1) ← metering.Meter.charge meter 1#u32 span
+  match r with
+  | core.result.Result.Ok _ =>
+    match slot with
+    | none =>
+      let d ← internal span
+      ok (core.result.Result.Err d, self, meter1)
+    | some es =>
+      match es with
+      | noble_kernel.shapes.EffectSlot.Effect id =>
+        let o ← inference.effects.effect_bit id
+        match o with
+        | none =>
+          let d ← invalid span (toStr "unknown source host effect")
+          ok (core.result.Result.Err d, self, meter1)
+        | some bit =>
+          inference.effects.Arena.add_effect self
+            (inference.effects.Effect.Constant bit) span meter1
+      | noble_kernel.shapes.EffectSlot.Var id =>
+        let r1 ← inference.variable_at «variables» id span
+        match r1 with
+        | core.result.Result.Ok value =>
+          match value with
+          | inference.Variable.Value _ =>
+            let d ← internal span
+            ok (core.result.Result.Err d, self, meter1)
+          | inference.Variable.Stack _ =>
+            let d ← internal span
+            ok (core.result.Result.Err d, self, meter1)
+          | inference.Variable.Effect =>
+            let d ← internal span
+            ok (core.result.Result.Err d, self, meter1)
+          | inference.Variable.EffectValue id1 =>
+            ok (core.result.Result.Ok id1, self, meter1)
+        | core.result.Result.Err failure =>
+          ok (core.result.Result.Err failure, self, meter1)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, self, meter1)
+
+/-- [noble_contracts::inference::effects::{noble_contracts::inference::Arena}::effect_union]:
+    Source: 'crates/noble-contracts/src/inference/effects.rs', lines 95:4-107:5
+    Visibility: public -/
+def inference.effects.Arena.effect_union
+  (self : inference.Arena) (left : Std.U32) (right : Std.U32) (span : Span)
+  (meter : Meter) :
+  Result ((core.result.Result Std.U32 Diagnostic) × inference.Arena × Meter)
+  := do
+  if left = right
+  then ok (core.result.Result.Ok left, self, meter)
+  else
+    inference.effects.Arena.add_effect self (inference.effects.Effect.Union
+      left right) span meter
+
+/-- [noble_contracts::inference::effects::{noble_contracts::inference::Arena}::effect_empty]:
+    Source: 'crates/noble-contracts/src/inference/effects.rs', lines 49:4-55:5
+    Visibility: public -/
+def inference.effects.Arena.effect_empty
+  (self : inference.Arena) (span : Span) (meter : Meter) :
+  Result ((core.result.Result Std.U32 Diagnostic) × inference.Arena × Meter)
+  := do
+  inference.effects.Arena.add_effect self (inference.effects.Effect.Constant
+    0#u8) span meter
+
+/-- [noble_contracts::inference::effects::{noble_contracts::inference::Arena}::effect_pattern]: loop body 0:
+    Source: 'crates/noble-contracts/src/inference/effects.rs', lines 119:8-132:9
+    Visibility: public -/
+@[rust_loop_body]
+def inference.effects.Arena.effect_pattern_loop.body
+  (slots : Slice noble_kernel.shapes.EffectSlot)
+  («variables» : Slice inference.Variable) (span : Span)
+  (self : inference.Arena) (meter : Meter) (effect : Std.U32)
+  («at» : Std.Usize) :
+  Result (ControlFlow (inference.Arena × Meter × Std.U32 × Std.Usize)
+    (inference.Arena × Meter × Std.U32 × (Option Diagnostic)))
+  := do
+  let i := Slice.len slots
+  if «at» < i
+  then
+    let o ←
+      core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice
+        noble_kernel.shapes.EffectSlot) slots «at»
+    let (r, self1, meter1) ←
+      inference.effects.Arena.effect_slot self o «variables» span meter
+    let (self2, meter2, result) ←
+      match r with
+      | core.result.Result.Ok next =>
+        do
+        let (result1, self3, meter3) ←
+          inference.effects.Arena.effect_union self1 effect next span meter1
+        ok (self3, meter3, result1)
+      | core.result.Result.Err _ => ok (self1, meter1, r)
+    match result with
+    | core.result.Result.Ok next =>
+      let at1 ← «at» + 1#usize
+      ok (cont (self2, meter2, next, at1))
+    | core.result.Result.Err problem =>
+      ok (done (self2, meter2, effect, some problem))
+  else ok (done (self, meter, effect, none))
+
+/-- [noble_contracts::inference::effects::{noble_contracts::inference::Arena}::effect_pattern]: loop 0:
+    Source: 'crates/noble-contracts/src/inference/effects.rs', lines 119:8-132:9
+    Visibility: public -/
+@[rust_loop]
+def inference.effects.Arena.effect_pattern_loop
+  (self : inference.Arena) (slots : Slice noble_kernel.shapes.EffectSlot)
+  («variables» : Slice inference.Variable) (span : Span) (meter : Meter)
+  (effect : Std.U32) («at» : Std.Usize) :
+  Result (inference.Arena × Meter × Std.U32 × (Option Diagnostic))
+  := do
+  loop
+    (fun (self1, meter1, effect1, at1) =>
+      inference.effects.Arena.effect_pattern_loop.body slots «variables» span
+      self1 meter1 effect1 at1)
+    (self, meter, effect, «at»)
+
+/-- [noble_contracts::inference::effects::{noble_contracts::inference::Arena}::effect_pattern]:
+    Source: 'crates/noble-contracts/src/inference/effects.rs', lines 109:4-137:5
+    Visibility: public -/
+def inference.effects.Arena.effect_pattern
+  (self : inference.Arena) (slots : Slice noble_kernel.shapes.EffectSlot)
+  («variables» : Slice inference.Variable) (span : Span) (meter : Meter) :
+  Result ((core.result.Result Std.U32 Diagnostic) × inference.Arena × Meter)
+  := do
+  let (r, self1, meter1) ←
+    inference.effects.Arena.effect_empty self span meter
+  match r with
+  | core.result.Result.Ok value =>
+    let (self2, meter2, effect, failure) ←
+      inference.effects.Arena.effect_pattern_loop self1 slots «variables»
+        span meter1 value 0#usize
+    match failure with
+    | none => ok (core.result.Result.Ok effect, self2, meter2)
+    | some problem => ok (core.result.Result.Err problem, self2, meter2)
+  | core.result.Result.Err _ => ok (r, self1, meter1)
+
+/-- [noble_contracts::inference::construct::{noble_contracts::inference::build::State<'a>}::build_pattern]:
+    Source: 'crates/noble-contracts/src/inference/construct.rs', lines 61:4-126:5 -/
+def inference.construct.State.build_pattern
+  (self : inference.build.State) (arena : inference.Arena)
+  (pattern : noble_kernel.shapes.Pattern)
+  («variables» : Slice inference.Variable) (span : Span) (meter : Meter) :
   Result ((core.result.Result inference.build.State Diagnostic) ×
     inference.Arena × Meter)
   := do
   match pattern with
   | noble_kernel.shapes.Pattern.UnitPattern =>
-    let (r, self1, meter1) ←
-      inference.Arena.add self inference.Term.UnitTerm span meter
+    let (r, arena1, meter1) ←
+      inference.Arena.add arena inference.Term.UnitTerm span meter
     match r with
     | core.result.Result.Ok value =>
-      let v ← alloc.vec.Vec.push state.values value
-      ok (core.result.Result.Ok { state with values := v }, self1, meter1)
+      let v ← alloc.vec.Vec.push self.values value
+      ok (core.result.Result.Ok { self with values := v }, arena1, meter1)
     | core.result.Result.Err failure =>
-      ok (core.result.Result.Err failure, self1, meter1)
+      ok (core.result.Result.Err failure, arena1, meter1)
   | noble_kernel.shapes.Pattern.BoolPattern =>
-    let (r, self1, meter1) ←
-      inference.Arena.add self inference.Term.BoolTerm span meter
+    let (r, arena1, meter1) ←
+      inference.Arena.add arena inference.Term.BoolTerm span meter
     match r with
     | core.result.Result.Ok value =>
-      let v ← alloc.vec.Vec.push state.values value
-      ok (core.result.Result.Ok { state with values := v }, self1, meter1)
+      let v ← alloc.vec.Vec.push self.values value
+      ok (core.result.Result.Ok { self with values := v }, arena1, meter1)
     | core.result.Result.Err failure =>
-      ok (core.result.Result.Err failure, self1, meter1)
+      ok (core.result.Result.Err failure, arena1, meter1)
   | noble_kernel.shapes.Pattern.I64Pattern =>
-    let (r, self1, meter1) ←
-      inference.Arena.add self inference.Term.I64Term span meter
+    let (r, arena1, meter1) ←
+      inference.Arena.add arena inference.Term.I64Term span meter
     match r with
     | core.result.Result.Ok value =>
-      let v ← alloc.vec.Vec.push state.values value
-      ok (core.result.Result.Ok { state with values := v }, self1, meter1)
+      let v ← alloc.vec.Vec.push self.values value
+      ok (core.result.Result.Ok { self with values := v }, arena1, meter1)
     | core.result.Result.Err failure =>
-      ok (core.result.Result.Err failure, self1, meter1)
+      ok (core.result.Result.Err failure, arena1, meter1)
   | noble_kernel.shapes.Pattern.TextPattern =>
-    let (r, self1, meter1) ←
-      inference.Arena.add self inference.Term.TextTerm span meter
+    let (r, arena1, meter1) ←
+      inference.Arena.add arena inference.Term.TextTerm span meter
     match r with
     | core.result.Result.Ok value =>
-      let v ← alloc.vec.Vec.push state.values value
-      ok (core.result.Result.Ok { state with values := v }, self1, meter1)
+      let v ← alloc.vec.Vec.push self.values value
+      ok (core.result.Result.Ok { self with values := v }, arena1, meter1)
     | core.result.Result.Err failure =>
-      ok (core.result.Result.Err failure, self1, meter1)
+      ok (core.result.Result.Err failure, arena1, meter1)
   | noble_kernel.shapes.Pattern.SyntaxPattern =>
-    let (r, self1, meter1) ←
-      inference.Arena.add self inference.Term.SyntaxTerm span meter
+    let (r, arena1, meter1) ←
+      inference.Arena.add arena inference.Term.SyntaxTerm span meter
     match r with
     | core.result.Result.Ok value =>
-      let v ← alloc.vec.Vec.push state.values value
-      ok (core.result.Result.Ok { state with values := v }, self1, meter1)
+      let v ← alloc.vec.Vec.push self.values value
+      ok (core.result.Result.Ok { self with values := v }, arena1, meter1)
     | core.result.Result.Err failure =>
-      ok (core.result.Result.Err failure, self1, meter1)
+      ok (core.result.Result.Err failure, arena1, meter1)
   | noble_kernel.shapes.Pattern.PairPattern a b =>
-    let v ← alloc.vec.Vec.push state.steps inference.build.Step.Pair
+    let v ← alloc.vec.Vec.push self.steps inference.build.Step.Pair
     let v1 ← alloc.vec.Vec.push v (inference.build.Step.Pattern b)
     let v2 ← alloc.vec.Vec.push v1 (inference.build.Step.Pattern a)
-    ok (core.result.Result.Ok { state with steps := v2 }, self, meter)
+    ok (core.result.Result.Ok { self with steps := v2 }, arena, meter)
   | noble_kernel.shapes.Pattern.SumPattern a b =>
-    let v ← alloc.vec.Vec.push state.steps inference.build.Step.Sum
+    let v ← alloc.vec.Vec.push self.steps inference.build.Step.Sum
     let v1 ← alloc.vec.Vec.push v (inference.build.Step.Pattern b)
     let v2 ← alloc.vec.Vec.push v1 (inference.build.Step.Pattern a)
-    ok (core.result.Result.Ok { state with steps := v2 }, self, meter)
+    ok (core.result.Result.Ok { self with steps := v2 }, arena, meter)
   | noble_kernel.shapes.Pattern.ListPattern item =>
-    let v ← alloc.vec.Vec.push state.steps inference.build.Step.List
+    let v ← alloc.vec.Vec.push self.steps inference.build.Step.List
     let v1 ← alloc.vec.Vec.push v (inference.build.Step.Pattern item)
-    ok (core.result.Result.Ok { state with steps := v1 }, self, meter)
+    ok (core.result.Result.Ok { self with steps := v1 }, arena, meter)
   | noble_kernel.shapes.Pattern.ProgramPattern inputs outputs effects =>
-    let s := alloc.vec.Vec.deref effects
-    let (r, meter1) ← inference.pure_effects s «variables» span meter
-    match r with
-    | core.result.Result.Ok _ =>
-      let v ← alloc.vec.Vec.push state.steps inference.build.Step.Program
-      let s1 := alloc.vec.Vec.deref outputs
-      let v1 ← alloc.vec.Vec.push v (inference.build.Step.StackPattern s1)
-      let s2 := alloc.vec.Vec.deref inputs
-      let v2 ← alloc.vec.Vec.push v1 (inference.build.Step.StackPattern s2)
-      ok (core.result.Result.Ok { state with steps := v2 }, self, meter1)
-    | core.result.Result.Err failure =>
-      ok (core.result.Result.Err failure, self, meter1)
+    if arena.effectful
+    then
+      let s := alloc.vec.Vec.deref effects
+      let (r, arena1, meter1) ←
+        inference.effects.Arena.effect_pattern arena s «variables» span meter
+      match r with
+      | core.result.Result.Ok value =>
+        let v ←
+          alloc.vec.Vec.push self.steps (inference.build.Step.Program (some
+            value))
+        let s1 := alloc.vec.Vec.deref outputs
+        let v1 ← alloc.vec.Vec.push v (inference.build.Step.StackPattern s1)
+        let s2 := alloc.vec.Vec.deref inputs
+        let v2 ← alloc.vec.Vec.push v1 (inference.build.Step.StackPattern s2)
+        ok (core.result.Result.Ok { self with steps := v2 }, arena1, meter1)
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, arena1, meter1)
+    else
+      let s := alloc.vec.Vec.deref effects
+      let (r, meter1) ← inference.pure_effects s «variables» span meter
+      match r with
+      | core.result.Result.Ok _ =>
+        let v ←
+          alloc.vec.Vec.push self.steps (inference.build.Step.Program none)
+        let s1 := alloc.vec.Vec.deref outputs
+        let v1 ← alloc.vec.Vec.push v (inference.build.Step.StackPattern s1)
+        let s2 := alloc.vec.Vec.deref inputs
+        let v2 ← alloc.vec.Vec.push v1 (inference.build.Step.StackPattern s2)
+        ok (core.result.Result.Ok { self with steps := v2 }, arena, meter1)
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, arena, meter1)
   | noble_kernel.shapes.Pattern.ResourcePattern _ =>
     let d ← internal span
-    ok (core.result.Result.Err d, self, meter)
+    ok (core.result.Result.Err d, arena, meter)
   | noble_kernel.shapes.Pattern.VarPattern «variable» =>
     let r ← inference.variable_at «variables» «variable» span
     match r with
     | core.result.Result.Ok v =>
       match v with
       | inference.Variable.Value id =>
-        let v1 ← alloc.vec.Vec.push state.values id
-        ok (core.result.Result.Ok { state with values := v1 }, self, meter)
+        let v1 ← alloc.vec.Vec.push self.values id
+        ok (core.result.Result.Ok { self with values := v1 }, arena, meter)
       | inference.Variable.Stack _ =>
         let d ← internal span
-        ok (core.result.Result.Err d, self, meter)
+        ok (core.result.Result.Err d, arena, meter)
       | inference.Variable.Effect =>
         let d ← internal span
-        ok (core.result.Result.Err d, self, meter)
+        ok (core.result.Result.Err d, arena, meter)
+      | inference.Variable.EffectValue _ =>
+        let d ← internal span
+        ok (core.result.Result.Err d, arena, meter)
     | core.result.Result.Err _ =>
       let d ← internal span
-      ok (core.result.Result.Err d, self, meter)
+      ok (core.result.Result.Err d, arena, meter)
   | noble_kernel.shapes.Pattern.StackVarPattern _ =>
     let d ← internal span
-    ok (core.result.Result.Err d, self, meter)
+    ok (core.result.Result.Err d, arena, meter)
 
-/-- [noble_contracts::inference::construct::{noble_contracts::inference::Arena}::build_ty]:
-    Source: 'crates/noble-contracts/src/inference/construct.rs', lines 2:4-55:5 -/
-def inference.construct.Arena.build_ty
-  (self : inference.Arena) (ty : noble_kernel.types.Ty)
-  (state : inference.build.State) (span : Span) (meter : Meter) :
+/-- [noble_contracts::inference::effects::{noble_contracts::inference::Arena}::effect_constant]: loop body 0:
+    Source: 'crates/noble-contracts/src/inference/effects.rs', lines 67:8-84:9
+    Visibility: public -/
+@[rust_loop_body]
+def inference.effects.Arena.effect_constant_loop.body
+  (span : Span) (effects : Slice noble_kernel.types.EffId) (meter : Meter)
+  (bits : Std.U8) («at» : Std.Usize) :
+  Result (ControlFlow (Meter × Std.U8 × Std.Usize) (Meter × Std.U8 ×
+    (Option Diagnostic)))
+  := do
+  let o ←
+    core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice
+      noble_kernel.types.EffId) effects «at»
+  let o1 ←
+    core.option.OptionShared0T.copied
+      noble_kernel.types.EffId.Insts.CoreMarkerCopy o
+  match o1 with
+  | none => ok (done (meter, bits, none))
+  | some effect =>
+    let (r, meter1) ← metering.Meter.charge meter 1#u32 span
+    match r with
+    | core.result.Result.Ok _ =>
+      let o2 ← inference.effects.effect_bit effect
+      match o2 with
+      | none =>
+        let d ←
+          Diagnostic.new DiagnosticKind.Unsupported span (toStr
+            "unknown source host effect")
+        ok (done (meter1, bits, some d))
+      | some bit =>
+        let bits1 ← lift (bits ||| bit)
+        let at1 ← «at» + 1#usize
+        ok (cont (meter1, bits1, at1))
+    | core.result.Result.Err problem => ok (done (meter1, bits, some problem))
+
+/-- [noble_contracts::inference::effects::{noble_contracts::inference::Arena}::effect_constant]: loop 0:
+    Source: 'crates/noble-contracts/src/inference/effects.rs', lines 67:8-84:9
+    Visibility: public -/
+@[rust_loop]
+def inference.effects.Arena.effect_constant_loop
+  (span : Span) (meter : Meter) (bits : Std.U8)
+  (effects : Slice noble_kernel.types.EffId) («at» : Std.Usize) :
+  Result (Meter × Std.U8 × (Option Diagnostic))
+  := do
+  loop
+    (fun (meter1, bits1, at1) =>
+      inference.effects.Arena.effect_constant_loop.body span effects meter1
+      bits1 at1)
+    (meter, bits, «at»)
+
+/-- [noble_contracts::inference::effects::{noble_contracts::inference::Arena}::effect_constant]:
+    Source: 'crates/noble-contracts/src/inference/effects.rs', lines 57:4-89:5
+    Visibility: public -/
+def inference.effects.Arena.effect_constant
+  (self : inference.Arena) (effects : noble_kernel.types.EffSet) (span : Span)
+  (meter : Meter) :
+  Result ((core.result.Result Std.U32 Diagnostic) × inference.Arena × Meter)
+  := do
+  let effects1 ← noble_kernel.types.EffSet.as_slice effects
+  let (meter1, bits, failure) ←
+    inference.effects.Arena.effect_constant_loop span meter 0#u8 effects1
+      0#usize
+  match failure with
+  | none =>
+    inference.effects.Arena.add_effect self (inference.effects.Effect.Constant
+      bits) span meter1
+  | some problem => ok (core.result.Result.Err problem, self, meter1)
+
+/-- [noble_contracts::inference::construct::{noble_contracts::inference::build::State<'a>}::build_ty]:
+    Source: 'crates/noble-contracts/src/inference/construct.rs', lines 2:4-59:5 -/
+def inference.construct.State.build_ty
+  (self : inference.build.State) (arena : inference.Arena)
+  (ty : noble_kernel.types.Ty) (span : Span) (meter : Meter) :
   Result ((core.result.Result inference.build.State Diagnostic) ×
     inference.Arena × Meter)
   := do
   match ty with
   | noble_kernel.types.Ty.UnitType =>
-    let (r, self1, meter1) ←
-      inference.Arena.add self inference.Term.UnitTerm span meter
+    let (r, arena1, meter1) ←
+      inference.Arena.add arena inference.Term.UnitTerm span meter
     match r with
     | core.result.Result.Ok value =>
-      let v ← alloc.vec.Vec.push state.values value
-      ok (core.result.Result.Ok { state with values := v }, self1, meter1)
+      let v ← alloc.vec.Vec.push self.values value
+      ok (core.result.Result.Ok { self with values := v }, arena1, meter1)
     | core.result.Result.Err failure =>
-      ok (core.result.Result.Err failure, self1, meter1)
+      ok (core.result.Result.Err failure, arena1, meter1)
   | noble_kernel.types.Ty.BoolType =>
-    let (r, self1, meter1) ←
-      inference.Arena.add self inference.Term.BoolTerm span meter
+    let (r, arena1, meter1) ←
+      inference.Arena.add arena inference.Term.BoolTerm span meter
     match r with
     | core.result.Result.Ok value =>
-      let v ← alloc.vec.Vec.push state.values value
-      ok (core.result.Result.Ok { state with values := v }, self1, meter1)
+      let v ← alloc.vec.Vec.push self.values value
+      ok (core.result.Result.Ok { self with values := v }, arena1, meter1)
     | core.result.Result.Err failure =>
-      ok (core.result.Result.Err failure, self1, meter1)
+      ok (core.result.Result.Err failure, arena1, meter1)
   | noble_kernel.types.Ty.I64Type =>
-    let (r, self1, meter1) ←
-      inference.Arena.add self inference.Term.I64Term span meter
+    let (r, arena1, meter1) ←
+      inference.Arena.add arena inference.Term.I64Term span meter
     match r with
     | core.result.Result.Ok value =>
-      let v ← alloc.vec.Vec.push state.values value
-      ok (core.result.Result.Ok { state with values := v }, self1, meter1)
+      let v ← alloc.vec.Vec.push self.values value
+      ok (core.result.Result.Ok { self with values := v }, arena1, meter1)
     | core.result.Result.Err failure =>
-      ok (core.result.Result.Err failure, self1, meter1)
+      ok (core.result.Result.Err failure, arena1, meter1)
   | noble_kernel.types.Ty.TextType =>
-    let (r, self1, meter1) ←
-      inference.Arena.add self inference.Term.TextTerm span meter
+    let (r, arena1, meter1) ←
+      inference.Arena.add arena inference.Term.TextTerm span meter
     match r with
     | core.result.Result.Ok value =>
-      let v ← alloc.vec.Vec.push state.values value
-      ok (core.result.Result.Ok { state with values := v }, self1, meter1)
+      let v ← alloc.vec.Vec.push self.values value
+      ok (core.result.Result.Ok { self with values := v }, arena1, meter1)
     | core.result.Result.Err failure =>
-      ok (core.result.Result.Err failure, self1, meter1)
+      ok (core.result.Result.Err failure, arena1, meter1)
   | noble_kernel.types.Ty.SyntaxType =>
-    let (r, self1, meter1) ←
-      inference.Arena.add self inference.Term.SyntaxTerm span meter
+    let (r, arena1, meter1) ←
+      inference.Arena.add arena inference.Term.SyntaxTerm span meter
     match r with
     | core.result.Result.Ok value =>
-      let v ← alloc.vec.Vec.push state.values value
-      ok (core.result.Result.Ok { state with values := v }, self1, meter1)
+      let v ← alloc.vec.Vec.push self.values value
+      ok (core.result.Result.Ok { self with values := v }, arena1, meter1)
     | core.result.Result.Err failure =>
-      ok (core.result.Result.Err failure, self1, meter1)
+      ok (core.result.Result.Err failure, arena1, meter1)
   | noble_kernel.types.Ty.PairType a b =>
-    let v ← alloc.vec.Vec.push state.steps inference.build.Step.Pair
+    let v ← alloc.vec.Vec.push self.steps inference.build.Step.Pair
     let v1 ← alloc.vec.Vec.push v (inference.build.Step.Ty b)
     let v2 ← alloc.vec.Vec.push v1 (inference.build.Step.Ty a)
-    ok (core.result.Result.Ok { state with steps := v2 }, self, meter)
+    ok (core.result.Result.Ok { self with steps := v2 }, arena, meter)
   | noble_kernel.types.Ty.SumType a b =>
-    let v ← alloc.vec.Vec.push state.steps inference.build.Step.Sum
+    let v ← alloc.vec.Vec.push self.steps inference.build.Step.Sum
     let v1 ← alloc.vec.Vec.push v (inference.build.Step.Ty b)
     let v2 ← alloc.vec.Vec.push v1 (inference.build.Step.Ty a)
-    ok (core.result.Result.Ok { state with steps := v2 }, self, meter)
+    ok (core.result.Result.Ok { self with steps := v2 }, arena, meter)
   | noble_kernel.types.Ty.ListType item =>
-    let v ← alloc.vec.Vec.push state.steps inference.build.Step.List
+    let v ← alloc.vec.Vec.push self.steps inference.build.Step.List
     let v1 ← alloc.vec.Vec.push v (inference.build.Step.Ty item)
-    ok (core.result.Result.Ok { state with steps := v1 }, self, meter)
+    ok (core.result.Result.Ok { self with steps := v1 }, arena, meter)
   | noble_kernel.types.Ty.ProgramType inputs outputs effects =>
-    let b ← noble_kernel.types.EffSet.is_empty effects
-    if b
+    if arena.effectful
     then
-      let v ← alloc.vec.Vec.push state.steps inference.build.Step.Program
-      let s := alloc.vec.Vec.deref outputs
-      let v1 ← alloc.vec.Vec.push v (inference.build.Step.StackTy s)
-      let s1 := alloc.vec.Vec.deref inputs
-      let v2 ← alloc.vec.Vec.push v1 (inference.build.Step.StackTy s1)
-      ok (core.result.Result.Ok { state with steps := v2 }, self, meter)
+      let (r, arena1, meter1) ←
+        inference.effects.Arena.effect_constant arena effects span meter
+      match r with
+      | core.result.Result.Ok value =>
+        let v ←
+          alloc.vec.Vec.push self.steps (inference.build.Step.Program (some
+            value))
+        let s := alloc.vec.Vec.deref outputs
+        let v1 ← alloc.vec.Vec.push v (inference.build.Step.StackTy s)
+        let s1 := alloc.vec.Vec.deref inputs
+        let v2 ← alloc.vec.Vec.push v1 (inference.build.Step.StackTy s1)
+        ok (core.result.Result.Ok { self with steps := v2 }, arena1, meter1)
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, arena1, meter1)
     else
-      let d ←
-        Diagnostic.new DiagnosticKind.Unsupported span (toStr
-          "effectful Program is outside the pure fragment")
-      ok (core.result.Result.Err d, self, meter)
+      let b ← noble_kernel.types.EffSet.is_empty effects
+      if b
+      then
+        let v ←
+          alloc.vec.Vec.push self.steps (inference.build.Step.Program none)
+        let s := alloc.vec.Vec.deref outputs
+        let v1 ← alloc.vec.Vec.push v (inference.build.Step.StackTy s)
+        let s1 := alloc.vec.Vec.deref inputs
+        let v2 ← alloc.vec.Vec.push v1 (inference.build.Step.StackTy s1)
+        ok (core.result.Result.Ok { self with steps := v2 }, arena, meter)
+      else
+        let d ←
+          Diagnostic.new DiagnosticKind.Unsupported span (toStr
+            "effectful Program is outside the pure fragment")
+        ok (core.result.Result.Err d, arena, meter)
   | noble_kernel.types.Ty.ResourceType _ =>
     let d ←
       Diagnostic.new DiagnosticKind.Unsupported span (toStr
         "host resources are outside the pure fragment")
-    ok (core.result.Result.Err d, self, meter)
+    ok (core.result.Result.Err d, arena, meter)
 
 /-- [noble_contracts::inference::build::stack_pattern_step]:
-    Source: 'crates/noble-contracts/src/inference/build.rs', lines 244:0-263:1 -/
+    Source: 'crates/noble-contracts/src/inference/build.rs', lines 258:0-277:1 -/
 def inference.build.stack_pattern_step
   (stack : Slice noble_kernel.shapes.Pattern) (start : Std.Usize)
   («at» : Std.Usize) (state : inference.build.State) (span : Span) :
@@ -8683,7 +7257,7 @@ def inference.build.stack_pattern_step
     else ok (core.result.Result.Ok { state with steps := v1 })
 
 /-- [noble_contracts::inference::build::stack_ty_step]:
-    Source: 'crates/noble-contracts/src/inference/build.rs', lines 207:0-225:1 -/
+    Source: 'crates/noble-contracts/src/inference/build.rs', lines 221:0-239:1 -/
 def inference.build.stack_ty_step
   (stack : Slice noble_kernel.types.Ty) («at» : Std.Usize)
   (state : inference.build.State) (span : Span) :
@@ -8707,7 +7281,7 @@ def inference.build.stack_ty_step
     else ok (core.result.Result.Ok { state with steps := v1 })
 
 /-- [noble_contracts::inference::build::{noble_contracts::inference::Arena}::build_stack_pattern]:
-    Source: 'crates/noble-contracts/src/inference/build.rs', lines 158:4-199:5 -/
+    Source: 'crates/noble-contracts/src/inference/build.rs', lines 170:4-213:5 -/
 def inference.build.Arena.build_stack_pattern
   (self : inference.Arena) (stack : Slice noble_kernel.shapes.Pattern)
   (state : inference.build.State) («variables» : Slice inference.Variable)
@@ -8982,11 +7556,14 @@ def inference.build.Arena.build_stack_pattern
         | inference.Variable.Effect =>
           let d ← internal span
           ok (core.result.Result.Err d, self, meter)
+        | inference.Variable.EffectValue _ =>
+          let d ← internal span
+          ok (core.result.Result.Err d, self, meter)
       | core.result.Result.Err failure =>
         ok (core.result.Result.Err failure, self, meter)
 
 /-- [noble_contracts::inference::build::{noble_contracts::inference::Arena}::build_stack_ty]:
-    Source: 'crates/noble-contracts/src/inference/build.rs', lines 137:4-151:5 -/
+    Source: 'crates/noble-contracts/src/inference/build.rs', lines 149:4-163:5 -/
 def inference.build.Arena.build_stack_ty
   (self : inference.Arena) (stack : Slice noble_kernel.types.Ty)
   (state : inference.build.State) (span : Span) (meter : Meter) :
@@ -9012,7 +7589,7 @@ def inference.build.Arena.build_stack_ty
     ok (core.result.Result.Err failure, self1, meter1)
 
 /-- [noble_contracts::inference::build::{noble_contracts::inference::Arena}::build_step]:
-    Source: 'crates/noble-contracts/src/inference/build.rs', lines 83:4-130:5 -/
+    Source: 'crates/noble-contracts/src/inference/build.rs', lines 83:4-142:5 -/
 def inference.build.Arena.build_step
   (self : inference.Arena) (step : inference.build.Step)
   (state : inference.build.State) («variables» : Slice inference.Variable)
@@ -9020,14 +7597,14 @@ def inference.build.Arena.build_step
   Result ((core.result.Result inference.build.State Diagnostic) ×
     inference.Arena × Meter)
   := do
-  let (r, meter1) ← Meter.charge meter 1#u32 span
+  let (r, meter1) ← metering.Meter.charge meter 1#u32 span
   match r with
   | core.result.Result.Ok _ =>
     match step with
     | inference.build.Step.Ty ty =>
-      inference.construct.Arena.build_ty self ty state span meter1
+      inference.construct.State.build_ty state self ty span meter1
     | inference.build.Step.Pattern pattern =>
-      inference.construct.Arena.build_pattern self pattern state «variables»
+      inference.construct.State.build_pattern state self pattern «variables»
         span meter1
     | inference.build.Step.StackTy stack =>
       inference.build.Arena.build_stack_ty self stack state span meter1
@@ -9102,25 +7679,38 @@ def inference.build.Arena.build_step
           ok (core.result.Result.Err failure, self1, meter2)
       | core.result.Result.Err failure =>
         ok (core.result.Result.Err failure, self, meter1)
-    | inference.build.Step.Program =>
-      let (o, v) ← alloc.vec.Vec.pop Global state.values
-      let r1 ← inference.build.require_id o span
+    | inference.build.Step.Program o =>
+      let (o1, v) ← alloc.vec.Vec.pop Global state.values
+      let r1 ← inference.build.require_id o1 span
       match r1 with
       | core.result.Result.Ok value =>
-        let (o1, v1) ← alloc.vec.Vec.pop Global v
-        let r2 ← inference.build.require_id o1 span
+        let (o2, v1) ← alloc.vec.Vec.pop Global v
+        let r2 ← inference.build.require_id o2 span
         match r2 with
         | core.result.Result.Ok value1 =>
-          let (r3, self1, meter2) ←
-            inference.Arena.add self (inference.Term.ProgramTerm value1 value)
-              span meter1
-          match r3 with
-          | core.result.Result.Ok value2 =>
-            let v2 ← alloc.vec.Vec.push v1 value2
-            ok (core.result.Result.Ok { state with values := v2 }, self1,
-              meter2)
-          | core.result.Result.Err failure =>
-            ok (core.result.Result.Err failure, self1, meter2)
+          match o with
+          | none =>
+            let (r3, self1, meter2) ←
+              inference.Arena.add self (inference.Term.ProgramTerm value1
+                value) span meter1
+            match r3 with
+            | core.result.Result.Ok value2 =>
+              let v2 ← alloc.vec.Vec.push v1 value2
+              ok (core.result.Result.Ok { state with values := v2 }, self1,
+                meter2)
+            | core.result.Result.Err failure =>
+              ok (core.result.Result.Err failure, self1, meter2)
+          | some effect =>
+            let (r3, self1, meter2) ←
+              inference.effects.Arena.program self
+                { input := value1, output := value, effect } span meter1
+            match r3 with
+            | core.result.Result.Ok value2 =>
+              let v2 ← alloc.vec.Vec.push v1 value2
+              ok (core.result.Result.Ok { state with values := v2 }, self1,
+                meter2)
+            | core.result.Result.Err failure =>
+              ok (core.result.Result.Err failure, self1, meter2)
         | core.result.Result.Err failure =>
           ok (core.result.Result.Err failure, self, meter1)
       | core.result.Result.Err failure =>
@@ -9216,17 +7806,6 @@ def inference.build.Arena.build
   | core.result.Result.Err failure =>
     ok (core.result.Result.Err failure, self1, meter1)
 
-/-- [noble_contracts::inference::build::{noble_contracts::inference::Arena}::ty]:
-    Source: 'crates/noble-contracts/src/inference/build.rs', lines 31:4-38:5
-    Visibility: public -/
-def inference.build.Arena.ty
-  (self : inference.Arena) (ty : noble_kernel.types.Ty) (span : Span)
-  (meter : Meter) :
-  Result ((core.result.Result Std.U32 Diagnostic) × inference.Arena × Meter)
-  := do
-  let s ← lift (Array.to_slice (Std.Array.empty inference.Variable))
-  inference.build.Arena.build self (inference.build.Step.Ty ty) s span meter
-
 /-- [noble_contracts::inference::build::{noble_contracts::inference::Arena}::stack]:
     Source: 'crates/noble-contracts/src/inference/build.rs', lines 22:4-29:5
     Visibility: public -/
@@ -9239,6 +7818,5219 @@ def inference.build.Arena.stack
   inference.build.Arena.build self (inference.build.Step.StackTy stack) s span
     meter
 
+/-- [noble_contracts::program::rejection_shapes]:
+    Source: 'crates/noble-contracts/src/program.rs', lines 268:0-283:1 -/
+def program.rejection_shapes
+  (diagnostic : noble_kernel.untrusted.Diagnostic)
+  (request : noble_kernel.untrusted.Request) (span : Span) :
+  Result (core.result.Result String Diagnostic)
+  := do
+  let i ←
+    core.cmp.Ord.min.trait_default core.cmp.OrdU32 request.limits.nodes
+      1024#u32
+  let i1 ←
+    core.cmp.Ord.min.trait_default core.cmp.OrdU32 request.limits.work 4096#u32
+  let meter ←
+    metering.Meter.new
+      {
+        bytes := 1024#u32,
+        nodes := i,
+        depth := request.limits.depth,
+        work := i1
+      }
+  let arena ← inference.Arena.source true
+  let s := alloc.vec.Vec.deref diagnostic.expected
+  let (r, arena1, meter1) ← inference.build.Arena.stack arena s span meter
+  match r with
+  | core.result.Result.Ok value =>
+    let s1 := alloc.vec.Vec.deref diagnostic.actual
+    let (r1, arena2, meter2) ←
+      inference.build.Arena.stack arena1 s1 span meter1
+    match r1 with
+    | core.result.Result.Ok value1 =>
+      let (r2, _) ←
+        inference.materialize.Arena.join_message arena2 value value1 span
+          meter2
+      ok r2
+    | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::program::check]:
+    Source: 'crates/noble-contracts/src/program.rs', lines 207:0-266:1 -/
+def program.check
+  (env : noble_kernel.contracts.Env)
+  (candidate : noble_kernel.untrusted.Candidate)
+  (request : noble_kernel.untrusted.Request) (spans : Slice Span) (span : Span)
+  :
+  Result (core.result.Result noble_kernel.untrusted.Checked Diagnostic)
+  := do
+  let o ← noble_kernel.acceptance.check env request candidate
+  match o with
+  | noble_kernel.untrusted.Outcome.Accepted checked =>
+    ok (core.result.Result.Ok checked)
+  | noble_kernel.untrusted.Outcome.Invalid diagnostic =>
+    match diagnostic.node with
+    | none =>
+      let (c, message) ←
+        match diagnostic.constraint with
+        | noble_kernel.untrusted.Constraint.StackJoin =>
+          ok (noble_kernel.untrusted.Constraint.StackJoin, toStr
+            "kernel rejected a program stack join or output interface")
+        | noble_kernel.untrusted.Constraint.StackOrder =>
+          ok (noble_kernel.untrusted.Constraint.StackOrder, toStr
+            "kernel rejected a program stack join or output interface")
+        | noble_kernel.untrusted.Constraint.EffectInclusion _ =>
+          ok (diagnostic.constraint, toStr
+            "kernel rejected the ordinary typing witness")
+        | noble_kernel.untrusted.Constraint.Eligibility _ =>
+          ok (diagnostic.constraint, toStr
+            "kernel rejected a non-capturable value")
+        | noble_kernel.untrusted.Constraint.UnknownEffect _ =>
+          ok (diagnostic.constraint, toStr
+            "kernel rejected the ordinary typing witness")
+        | noble_kernel.untrusted.Constraint.InstantiationKind =>
+          ok (noble_kernel.untrusted.Constraint.InstantiationKind, toStr
+            "kernel rejected the ordinary typing witness")
+        | noble_kernel.untrusted.Constraint.InstantiationArity =>
+          ok (noble_kernel.untrusted.Constraint.InstantiationArity, toStr
+            "kernel rejected the ordinary typing witness")
+        | noble_kernel.untrusted.Constraint.MalformedReference _ =>
+          ok (diagnostic.constraint, toStr
+            "kernel rejected the ordinary typing witness")
+        | noble_kernel.untrusted.Constraint.UnknownDefinition _ =>
+          ok (diagnostic.constraint, toStr
+            "kernel rejected the ordinary typing witness")
+        | noble_kernel.untrusted.Constraint.CyclicWitness =>
+          ok (noble_kernel.untrusted.Constraint.CyclicWitness, toStr
+            "kernel rejected a cyclic witness")
+      let problem ← invalid span message
+      let r ←
+        program.rejection_shapes { diagnostic with constraint := c } request
+          span
+      match r with
+      | core.result.Result.Ok shapes =>
+        let s ← alloc.string.String.push_str problem.message (toStr "; ")
+        let s1 ← alloc.string.String.Insts.CoreOpsDerefDerefStr.deref shapes
+        let s2 ← alloc.string.String.push_str s s1
+        ok (core.result.Result.Err { problem with message := s2 })
+      | core.result.Result.Err _ => ok (core.result.Result.Err problem)
+    | some node =>
+      let r ← offset node span
+      match r with
+      | core.result.Result.Ok value =>
+        let o1 ←
+          core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice Span)
+            spans value
+        let span1 ←
+          match o1 with
+          | none => ok span
+          | some «at» => ok «at»
+        let (c, message) ←
+          match diagnostic.constraint with
+          | noble_kernel.untrusted.Constraint.StackJoin =>
+            ok (noble_kernel.untrusted.Constraint.StackJoin, toStr
+              "kernel rejected a program stack join or output interface")
+          | noble_kernel.untrusted.Constraint.StackOrder =>
+            ok (noble_kernel.untrusted.Constraint.StackOrder, toStr
+              "kernel rejected a program stack join or output interface")
+          | noble_kernel.untrusted.Constraint.EffectInclusion _ =>
+            ok (diagnostic.constraint, toStr
+              "kernel rejected the ordinary typing witness")
+          | noble_kernel.untrusted.Constraint.Eligibility _ =>
+            ok (diagnostic.constraint, toStr
+              "kernel rejected a non-capturable value")
+          | noble_kernel.untrusted.Constraint.UnknownEffect _ =>
+            ok (diagnostic.constraint, toStr
+              "kernel rejected the ordinary typing witness")
+          | noble_kernel.untrusted.Constraint.InstantiationKind =>
+            ok (noble_kernel.untrusted.Constraint.InstantiationKind, toStr
+              "kernel rejected the ordinary typing witness")
+          | noble_kernel.untrusted.Constraint.InstantiationArity =>
+            ok (noble_kernel.untrusted.Constraint.InstantiationArity, toStr
+              "kernel rejected the ordinary typing witness")
+          | noble_kernel.untrusted.Constraint.MalformedReference _ =>
+            ok (diagnostic.constraint, toStr
+              "kernel rejected the ordinary typing witness")
+          | noble_kernel.untrusted.Constraint.UnknownDefinition _ =>
+            ok (diagnostic.constraint, toStr
+              "kernel rejected the ordinary typing witness")
+          | noble_kernel.untrusted.Constraint.CyclicWitness =>
+            ok (noble_kernel.untrusted.Constraint.CyclicWitness, toStr
+              "kernel rejected a cyclic witness")
+        let problem ← invalid span1 message
+        let r1 ←
+          program.rejection_shapes
+            { diagnostic with node := (some node), constraint := c } request
+            span1
+        match r1 with
+        | core.result.Result.Ok shapes =>
+          let s ← alloc.string.String.push_str problem.message (toStr "; ")
+          let s1 ←
+            alloc.string.String.Insts.CoreOpsDerefDerefStr.deref shapes
+          let s2 ← alloc.string.String.push_str s s1
+          ok (core.result.Result.Err { problem with message := s2 })
+        | core.result.Result.Err _ => ok (core.result.Result.Err problem)
+      | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+  | noble_kernel.untrusted.Outcome.Unsupported _ =>
+    let d ←
+      Diagnostic.new DiagnosticKind.Unsupported span (toStr
+        "ordinary typing is outside the kernel fragment")
+    ok (core.result.Result.Err d)
+  | noble_kernel.untrusted.Outcome.Exhausted _ =>
+    let d ←
+      Diagnostic.new DiagnosticKind.Exhausted span (toStr
+        "ordinary typing exhausted a declared kernel limit")
+    ok (core.result.Result.Err d)
+  | noble_kernel.untrusted.Outcome.InternalFailure =>
+    let d ← internal span
+    ok (core.result.Result.Err d)
+
+/-- [noble_contracts::syntax::{noble_contracts::syntax::Tree}::square]:
+    Source: 'crates/noble-contracts/src/syntax/mod.rs', lines 40:4-49:5
+    Visibility: public -/
+def syntax.Tree.square
+  (self : syntax.Tree) (id : Std.U32) :
+  Result (core.result.Result (Slice Std.U32) Diagnostic)
+  := do
+  let r ← syntax.Tree.node self id
+  match r with
+  | core.result.Result.Ok value =>
+    match value.form with
+    | syntax.Form.Atom =>
+      let d ← invalid value.span (toStr "expected a bracketed program body")
+      ok (core.result.Result.Err d)
+    | syntax.Form.Round _ =>
+      let d ← invalid value.span (toStr "expected a bracketed program body")
+      ok (core.result.Result.Err d)
+    | syntax.Form.Square children =>
+      let s := alloc.vec.Vec.deref children
+      ok (core.result.Result.Ok s)
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::inference::effects::{noble_contracts::inference::Arena}::effect_bound]:
+    Source: 'crates/noble-contracts/src/inference/effects.rs', lines 220:4-225:5 -/
+def inference.effects.Arena.effect_bound
+  (self : inference.Arena) (id : Std.U32) (span : Span) :
+  Result (core.result.Result Std.U8 Diagnostic)
+  := do
+  let s := alloc.vec.Vec.deref self.effect_bounds
+  let r ← offset id span
+  match r with
+  | core.result.Result.Ok value =>
+    let o ←
+      core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice Std.U8) s
+        value
+    match o with
+    | none => let d ← internal span
+              ok (core.result.Result.Err d)
+    | some bits => ok (core.result.Result.Ok bits)
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::inference::effects::solve::value]:
+    Source: 'crates/noble-contracts/src/inference/effects/solve.rs', lines 158:0-172:1 -/
+def inference.effects.solve.value
+  (arena : inference.Arena) (id : Std.U32) (span : Span) :
+  Result (core.result.Result noble_kernel.types.EffSet Diagnostic)
+  := do
+  let r ← inference.effects.Arena.effect_bound arena id span
+  match r with
+  | core.result.Result.Ok value =>
+    let i ← lift (value &&& 1#u8)
+    let ids ←
+      if i != 0#u8
+      then
+        alloc.vec.Vec.push (alloc.vec.Vec.new noble_kernel.types.EffId) 0#u32
+      else ok (alloc.vec.Vec.new noble_kernel.types.EffId)
+    let i1 ← lift (value &&& 2#u8)
+    let ids1 ← if i1 != 0#u8
+                 then alloc.vec.Vec.push ids 1#u32
+                 else ok ids
+    let s := alloc.vec.Vec.deref ids1
+    let es ← noble_kernel.types.EffSet.from_ids s
+    ok (core.result.Result.Ok es)
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::inference::effects::{noble_contracts::inference::Arena}::effect_value]:
+    Source: 'crates/noble-contracts/src/inference/effects.rs', lines 259:4-265:5
+    Visibility: public -/
+def inference.effects.Arena.effect_value
+  (self : inference.Arena) (id : Std.U32) (span : Span) :
+  Result (core.result.Result noble_kernel.types.EffSet Diagnostic)
+  := do
+  inference.effects.solve.value self id span
+
+/-- [noble_contracts::inference::effects::{noble_contracts::inference::Arena}::program_effect]: loop body 0:
+    Source: 'crates/noble-contracts/src/inference/effects.rs', lines 196:8-206:9 -/
+@[rust_loop_body]
+def inference.effects.Arena.program_effect_loop.body
+  (self : inference.Arena) (program : Std.U32) (span : Span) (meter : Meter)
+  («at» : Std.Usize) :
+  Result (ControlFlow (Meter × Std.Usize) (Meter × (Option Std.U32) ×
+    (Option Diagnostic)))
+  := do
+  let s := alloc.vec.Vec.deref self.program_effects
+  let o ←
+    core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice (Std.U32 ×
+      Std.U32)) s «at»
+  let o1 ←
+    core.option.OptionShared0T.copied (BuiltinCopy (Std.U32 × Std.U32)) o
+  match o1 with
+  | none => ok (done (meter, none, none))
+  | some p =>
+    let (id, effect) := p
+    let (r, meter1) ← metering.Meter.charge meter 1#u32 span
+    match r with
+    | core.result.Result.Ok _ =>
+      if id = program
+      then ok (done (meter1, some effect, none))
+      else let at1 ← «at» + 1#usize
+           ok (cont (meter1, at1))
+    | core.result.Result.Err problem => ok (done (meter1, none, some problem))
+
+/-- [noble_contracts::inference::effects::{noble_contracts::inference::Arena}::program_effect]: loop 0:
+    Source: 'crates/noble-contracts/src/inference/effects.rs', lines 196:8-206:9 -/
+@[rust_loop]
+def inference.effects.Arena.program_effect_loop
+  (self : inference.Arena) (program : Std.U32) (span : Span) (meter : Meter)
+  («at» : Std.Usize) :
+  Result (Meter × (Option Std.U32) × (Option Diagnostic))
+  := do
+  loop
+    (fun (meter1, at1) => inference.effects.Arena.program_effect_loop.body self
+      program span meter1 at1)
+    (meter, «at»)
+
+/-- [noble_contracts::inference::effects::{noble_contracts::inference::Arena}::program_effect]:
+    Source: 'crates/noble-contracts/src/inference/effects.rs', lines 187:4-214:5 -/
+def inference.effects.Arena.program_effect
+  (self : inference.Arena) (program : Std.U32) (span : Span) (meter : Meter) :
+  Result ((core.result.Result Std.U32 Diagnostic) × Meter)
+  := do
+  let (meter1, found, failure) ←
+    inference.effects.Arena.program_effect_loop self program span meter 0#usize
+  match failure with
+  | none =>
+    match found with
+    | none => let d ← internal span
+              ok (core.result.Result.Err d, meter1)
+    | some effect => ok (core.result.Result.Ok effect, meter1)
+  | some problem => ok (core.result.Result.Err problem, meter1)
+
+/-- [noble_contracts::inference::materialize::{noble_contracts::inference::Arena}::visit]:
+    Source: 'crates/noble-contracts/src/inference/materialize.rs', lines 149:4-197:5 -/
+def inference.materialize.Arena.visit
+  (self : inference.Arena) (id : Std.U32) (state : inference.materialize.State)
+  (span : Span) (meter : Meter) :
+  Result ((core.result.Result inference.materialize.State Diagnostic) × Meter)
+  := do
+  let (r, meter1) ← inference.Arena.root self id span meter
+  match r with
+  | core.result.Result.Ok value =>
+    let r1 ← inference.Arena.get self value span
+    match r1 with
+    | core.result.Result.Ok value1 =>
+      match value1 with
+      | inference.Term.HoleTerm _ =>
+        let d ←
+          invalid span (toStr
+            "ambiguous witness; add an explicit typed block or word binding")
+        ok (core.result.Result.Err d, meter1)
+      | inference.Term.LinkTerm _ =>
+        let d ← internal span
+        ok (core.result.Result.Err d, meter1)
+      | inference.Term.UnitTerm =>
+        let v ←
+          alloc.vec.Vec.push state.values (inference.materialize.Material.Value
+            noble_kernel.types.Ty.UnitType 1#u32)
+        ok (core.result.Result.Ok { state with values := v }, meter1)
+      | inference.Term.BoolTerm =>
+        let v ←
+          alloc.vec.Vec.push state.values (inference.materialize.Material.Value
+            noble_kernel.types.Ty.BoolType 1#u32)
+        ok (core.result.Result.Ok { state with values := v }, meter1)
+      | inference.Term.I64Term =>
+        let v ←
+          alloc.vec.Vec.push state.values (inference.materialize.Material.Value
+            noble_kernel.types.Ty.I64Type 1#u32)
+        ok (core.result.Result.Ok { state with values := v }, meter1)
+      | inference.Term.TextTerm =>
+        let v ←
+          alloc.vec.Vec.push state.values (inference.materialize.Material.Value
+            noble_kernel.types.Ty.TextType 1#u32)
+        ok (core.result.Result.Ok { state with values := v }, meter1)
+      | inference.Term.SyntaxTerm =>
+        let v ←
+          alloc.vec.Vec.push state.values (inference.materialize.Material.Value
+            noble_kernel.types.Ty.SyntaxType 1#u32)
+        ok (core.result.Result.Ok { state with values := v }, meter1)
+      | inference.Term.PairTerm a b =>
+        if self.effectful
+        then
+          let effects ← noble_kernel.types.EffSet.empty
+          let v ←
+            alloc.vec.Vec.push state.steps (inference.materialize.Step.Finish
+              value1 effects)
+          let v1 ← alloc.vec.Vec.push v (inference.materialize.Step.Visit b)
+          let v2 ← alloc.vec.Vec.push v1 (inference.materialize.Step.Visit a)
+          ok (core.result.Result.Ok { state with steps := v2 }, meter1)
+        else
+          let effects ← noble_kernel.types.EffSet.empty
+          let v ←
+            alloc.vec.Vec.push state.steps (inference.materialize.Step.Finish
+              value1 effects)
+          let v1 ← alloc.vec.Vec.push v (inference.materialize.Step.Visit b)
+          let v2 ← alloc.vec.Vec.push v1 (inference.materialize.Step.Visit a)
+          ok (core.result.Result.Ok { state with steps := v2 }, meter1)
+      | inference.Term.SumTerm a b =>
+        if self.effectful
+        then
+          let effects ← noble_kernel.types.EffSet.empty
+          let v ←
+            alloc.vec.Vec.push state.steps (inference.materialize.Step.Finish
+              value1 effects)
+          let v1 ← alloc.vec.Vec.push v (inference.materialize.Step.Visit b)
+          let v2 ← alloc.vec.Vec.push v1 (inference.materialize.Step.Visit a)
+          ok (core.result.Result.Ok { state with steps := v2 }, meter1)
+        else
+          let effects ← noble_kernel.types.EffSet.empty
+          let v ←
+            alloc.vec.Vec.push state.steps (inference.materialize.Step.Finish
+              value1 effects)
+          let v1 ← alloc.vec.Vec.push v (inference.materialize.Step.Visit b)
+          let v2 ← alloc.vec.Vec.push v1 (inference.materialize.Step.Visit a)
+          ok (core.result.Result.Ok { state with steps := v2 }, meter1)
+      | inference.Term.ListTerm item =>
+        let es ← noble_kernel.types.EffSet.empty
+        let v ←
+          alloc.vec.Vec.push state.steps (inference.materialize.Step.Finish
+            value1 es)
+        let v1 ← alloc.vec.Vec.push v (inference.materialize.Step.Visit item)
+        ok (core.result.Result.Ok { state with steps := v1 }, meter1)
+      | inference.Term.ProgramTerm a b =>
+        if self.effectful
+        then
+          let (r2, meter2) ←
+            inference.effects.Arena.program_effect self value span meter1
+          match r2 with
+          | core.result.Result.Ok value2 =>
+            let r3 ← inference.effects.Arena.effect_value self value2 span
+            match r3 with
+            | core.result.Result.Ok value3 =>
+              let v ←
+                alloc.vec.Vec.push state.steps
+                  (inference.materialize.Step.Finish value1 value3)
+              let v1 ←
+                alloc.vec.Vec.push v (inference.materialize.Step.Visit b)
+              let v2 ←
+                alloc.vec.Vec.push v1 (inference.materialize.Step.Visit a)
+              ok (core.result.Result.Ok { state with steps := v2 }, meter2)
+            | core.result.Result.Err failure =>
+              ok (core.result.Result.Err failure, meter2)
+          | core.result.Result.Err failure =>
+            ok (core.result.Result.Err failure, meter2)
+        else
+          let effects ← noble_kernel.types.EffSet.empty
+          let v ←
+            alloc.vec.Vec.push state.steps (inference.materialize.Step.Finish
+              value1 effects)
+          let v1 ← alloc.vec.Vec.push v (inference.materialize.Step.Visit b)
+          let v2 ← alloc.vec.Vec.push v1 (inference.materialize.Step.Visit a)
+          ok (core.result.Result.Ok { state with steps := v2 }, meter1)
+      | inference.Term.EmptyTerm =>
+        let v ←
+          alloc.vec.Vec.push state.values (inference.materialize.Material.Stack
+            (alloc.vec.Vec.new noble_kernel.types.Ty) 0#u32)
+        ok (core.result.Result.Ok { state with values := v }, meter1)
+      | inference.Term.PushTerm a b =>
+        if self.effectful
+        then
+          let effects ← noble_kernel.types.EffSet.empty
+          let v ←
+            alloc.vec.Vec.push state.steps (inference.materialize.Step.Finish
+              value1 effects)
+          let v1 ← alloc.vec.Vec.push v (inference.materialize.Step.Visit b)
+          let v2 ← alloc.vec.Vec.push v1 (inference.materialize.Step.Visit a)
+          ok (core.result.Result.Ok { state with steps := v2 }, meter1)
+        else
+          let effects ← noble_kernel.types.EffSet.empty
+          let v ←
+            alloc.vec.Vec.push state.steps (inference.materialize.Step.Finish
+              value1 effects)
+          let v1 ← alloc.vec.Vec.push v (inference.materialize.Step.Visit b)
+          let v2 ← alloc.vec.Vec.push v1 (inference.materialize.Step.Visit a)
+          ok (core.result.Result.Ok { state with steps := v2 }, meter1)
+    | core.result.Result.Err failure =>
+      ok (core.result.Result.Err failure, meter1)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, meter1)
+
+/-- [noble_contracts::inference::materialize::{noble_contracts::inference::materialize::State}::pop]:
+    Source: 'crates/noble-contracts/src/inference/materialize.rs', lines 21:4-26:5 -/
+def inference.materialize.State.pop
+  (self : inference.materialize.State) (span : Span) :
+  Result ((core.result.Result inference.materialize.Material Diagnostic) ×
+    inference.materialize.State)
+  := do
+  let (o, v) ← alloc.vec.Vec.pop Global self.values
+  match o with
+  | none =>
+    let d ← internal span
+    ok (core.result.Result.Err d, { self with values := v })
+  | some value => ok (core.result.Result.Ok value, { self with values := v })
+
+/-- [noble_contracts::inference::finish::push]:
+    Source: 'crates/noble-contracts/src/inference/finish.rs', lines 105:0-133:1 -/
+def inference.finish.push
+  (stack : inference.materialize.Material)
+  (value : inference.materialize.Material) (span : Span) :
+  Result (core.result.Result inference.materialize.Material Diagnostic)
+  := do
+  match stack with
+  | inference.materialize.Material.Value _ _ =>
+    let d ← internal span
+    ok (core.result.Result.Err d)
+  | inference.materialize.Material.Stack stack1 sa =>
+    match value with
+    | inference.materialize.Material.Value ty sb =>
+      let i := alloc.vec.Vec.len stack1
+      let r ← offset inference.STACK_CAP span
+      match r with
+      | core.result.Result.Ok value1 =>
+        if i >= value1
+        then
+          let d ←
+            Diagnostic.new DiagnosticKind.Exhausted span (toStr
+              "stack height limit (256 values) exceeded")
+          ok (core.result.Result.Err d)
+        else
+          let stack2 ← alloc.vec.Vec.push stack1 ty
+          let i1 ← lift (core.num.U32.saturating_add sa sb)
+          ok (core.result.Result.Ok (inference.materialize.Material.Stack
+            stack2 i1))
+      | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+    | inference.materialize.Material.Stack _ _ =>
+      let d ← internal span
+      ok (core.result.Result.Err d)
+
+/-- [noble_contracts::inference::finish::type_size]:
+    Source: 'crates/noble-contracts/src/inference/finish.rs', lines 139:0-149:1 -/
+def inference.finish.type_size
+  (constructors : Std.U32) (span : Span) :
+  Result (core.result.Result Std.U32 Diagnostic)
+  := do
+  if constructors > syntax.TYPE_CAP
+  then
+    let d ←
+      Diagnostic.new DiagnosticKind.Exhausted span (toStr
+        "inferred type exceeds the 256-constructor limit")
+    ok (core.result.Result.Err d)
+  else ok (core.result.Result.Ok constructors)
+
+/-- [noble_contracts::inference::finish::program]:
+    Source: 'crates/noble-contracts/src/inference/finish.rs', lines 80:0-99:1 -/
+def inference.finish.program
+  (inputs : inference.materialize.Material)
+  (outputs : inference.materialize.Material)
+  (effects : noble_kernel.types.EffSet) (span : Span) :
+  Result (core.result.Result inference.materialize.Material Diagnostic)
+  := do
+  match inputs with
+  | inference.materialize.Material.Value _ _ =>
+    let d ← internal span
+    ok (core.result.Result.Err d)
+  | inference.materialize.Material.Stack a sa =>
+    match outputs with
+    | inference.materialize.Material.Value _ _ =>
+      let d ← internal span
+      ok (core.result.Result.Err d)
+    | inference.materialize.Material.Stack b sb =>
+      let t ← noble_kernel.types.Ty.program a b effects
+      let i ← lift (core.num.U32.saturating_add sa sb)
+      let i1 ← lift (core.num.U32.saturating_add i 1#u32)
+      let r ← inference.finish.type_size i1 span
+      match r with
+      | core.result.Result.Ok value =>
+        ok (core.result.Result.Ok (inference.materialize.Material.Value t
+          value))
+      | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::inference::finish::pair]:
+    Source: 'crates/noble-contracts/src/inference/finish.rs', lines 50:0-74:1 -/
+def inference.finish.pair
+  (is_pair : Bool) (a : inference.materialize.Material)
+  (b : inference.materialize.Material) (span : Span) :
+  Result (core.result.Result inference.materialize.Material Diagnostic)
+  := do
+  match a with
+  | inference.materialize.Material.Value a1 sa =>
+    match b with
+    | inference.materialize.Material.Value b1 sb =>
+      let i ← lift (core.num.U32.saturating_add sa sb)
+      let i1 ← lift (core.num.U32.saturating_add i 1#u32)
+      let r ← inference.finish.type_size i1 span
+      match r with
+      | core.result.Result.Ok value =>
+        if is_pair
+        then
+          ok (core.result.Result.Ok (inference.materialize.Material.Value
+            (noble_kernel.types.Ty.PairType a1 b1) value))
+        else
+          ok (core.result.Result.Ok (inference.materialize.Material.Value
+            (noble_kernel.types.Ty.SumType a1 b1) value))
+      | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+    | inference.materialize.Material.Stack _ _ =>
+      let d ← internal span
+      ok (core.result.Result.Err d)
+  | inference.materialize.Material.Stack _ _ =>
+    let d ← internal span
+    ok (core.result.Result.Err d)
+
+/-- [noble_contracts::inference::finish::list]:
+    Source: 'crates/noble-contracts/src/inference/finish.rs', lines 37:0-48:1 -/
+def inference.finish.list
+  (item : inference.materialize.Material) (span : Span) :
+  Result (core.result.Result inference.materialize.Material Diagnostic)
+  := do
+  match item with
+  | inference.materialize.Material.Value ty size =>
+    let i ← lift (core.num.U32.saturating_add size 1#u32)
+    let r ← inference.finish.type_size i span
+    match r with
+    | core.result.Result.Ok value =>
+      ok (core.result.Result.Ok (inference.materialize.Material.Value
+        (noble_kernel.types.Ty.ListType ty) value))
+    | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+  | inference.materialize.Material.Stack _ _ =>
+    let d ← internal span
+    ok (core.result.Result.Err d)
+
+/-- [noble_contracts::inference::finish::{noble_contracts::inference::materialize::State}::finish]:
+    Source: 'crates/noble-contracts/src/inference/finish.rs', lines 2:4-34:5 -/
+def inference.finish.State.finish
+  (self : inference.materialize.State) (term : inference.Term)
+  (effects : noble_kernel.types.EffSet) (span : Span) :
+  Result (core.result.Result inference.materialize.State Diagnostic)
+  := do
+  let (r, self1) ← inference.materialize.State.pop self span
+  match r with
+  | core.result.Result.Ok value =>
+    match term with
+    | inference.Term.HoleTerm _ =>
+      let failure ← internal span
+      ok (core.result.Result.Err failure)
+    | inference.Term.LinkTerm _ =>
+      let failure ← internal span
+      ok (core.result.Result.Err failure)
+    | inference.Term.UnitTerm =>
+      let failure ← internal span
+      ok (core.result.Result.Err failure)
+    | inference.Term.BoolTerm =>
+      let failure ← internal span
+      ok (core.result.Result.Err failure)
+    | inference.Term.I64Term =>
+      let failure ← internal span
+      ok (core.result.Result.Err failure)
+    | inference.Term.TextTerm =>
+      let failure ← internal span
+      ok (core.result.Result.Err failure)
+    | inference.Term.SyntaxTerm =>
+      let failure ← internal span
+      ok (core.result.Result.Err failure)
+    | inference.Term.PairTerm _ _ =>
+      let (r1, self2) ← inference.materialize.State.pop self1 span
+      match r1 with
+      | core.result.Result.Ok value1 =>
+        let material ← inference.finish.pair true value1 value span
+        match material with
+        | core.result.Result.Ok value2 =>
+          let v ← alloc.vec.Vec.push self2.values value2
+          ok (core.result.Result.Ok { self2 with values := v })
+        | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+      | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+    | inference.Term.SumTerm _ _ =>
+      let (r1, self2) ← inference.materialize.State.pop self1 span
+      match r1 with
+      | core.result.Result.Ok value1 =>
+        let material ← inference.finish.pair false value1 value span
+        match material with
+        | core.result.Result.Ok value2 =>
+          let v ← alloc.vec.Vec.push self2.values value2
+          ok (core.result.Result.Ok { self2 with values := v })
+        | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+      | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+    | inference.Term.ListTerm _ =>
+      let material ← inference.finish.list value span
+      match material with
+      | core.result.Result.Ok value1 =>
+        let v ← alloc.vec.Vec.push self1.values value1
+        ok (core.result.Result.Ok { self1 with values := v })
+      | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+    | inference.Term.ProgramTerm _ _ =>
+      let (r1, self2) ← inference.materialize.State.pop self1 span
+      match r1 with
+      | core.result.Result.Ok value1 =>
+        let material ← inference.finish.program value1 value effects span
+        match material with
+        | core.result.Result.Ok value2 =>
+          let v ← alloc.vec.Vec.push self2.values value2
+          ok (core.result.Result.Ok { self2 with values := v })
+        | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+      | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+    | inference.Term.EmptyTerm =>
+      let failure ← internal span
+      ok (core.result.Result.Err failure)
+    | inference.Term.PushTerm _ _ =>
+      let (r1, self2) ← inference.materialize.State.pop self1 span
+      match r1 with
+      | core.result.Result.Ok value1 =>
+        let material ← inference.finish.push value1 value span
+        match material with
+        | core.result.Result.Ok value2 =>
+          let v ← alloc.vec.Vec.push self2.values value2
+          ok (core.result.Result.Ok { self2 with values := v })
+        | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+      | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::inference::materialize::{noble_contracts::inference::Arena}::read_step]:
+    Source: 'crates/noble-contracts/src/inference/materialize.rs', lines 135:4-147:5 -/
+def inference.materialize.Arena.read_step
+  (self : inference.Arena) (step : inference.materialize.Step)
+  (state : inference.materialize.State) (span : Span) (meter : Meter) :
+  Result ((core.result.Result inference.materialize.State Diagnostic) × Meter)
+  := do
+  let (r, meter1) ← metering.Meter.charge meter 1#u32 span
+  match r with
+  | core.result.Result.Ok _ =>
+    match step with
+    | inference.materialize.Step.Visit id =>
+      inference.materialize.Arena.visit self id state span meter1
+    | inference.materialize.Step.Finish term effects =>
+      let r1 ← inference.finish.State.finish state term effects span
+      ok (r1, meter1)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, meter1)
+
+/-- [noble_contracts::inference::materialize::{noble_contracts::inference::Arena}::materialize]: loop body 0:
+    Source: 'crates/noble-contracts/src/inference/materialize.rs', lines 115:8-123:9 -/
+@[rust_loop_body]
+def inference.materialize.Arena.materialize_loop.body
+  (self : inference.Arena) (span : Span)
+  (outcome : core.result.Result inference.materialize.State Diagnostic)
+  (meter : Meter) :
+  Result (ControlFlow ((core.result.Result inference.materialize.State
+    Diagnostic) × Meter) (Meter × (core.result.Result
+    inference.materialize.State Diagnostic)))
+  := do
+  match outcome with
+  | core.result.Result.Ok state =>
+    let (o, v) ← alloc.vec.Vec.pop Global state.steps
+    match o with
+    | none =>
+      ok (done (meter, core.result.Result.Ok { state with steps := v }))
+    | some step =>
+      let (outcome1, meter1) ←
+        inference.materialize.Arena.read_step self step
+          { state with steps := v } span meter
+      ok (cont (outcome1, meter1))
+  | core.result.Result.Err _ => ok (done (meter, outcome))
+
+/-- [noble_contracts::inference::materialize::{noble_contracts::inference::Arena}::materialize]: loop 0:
+    Source: 'crates/noble-contracts/src/inference/materialize.rs', lines 115:8-123:9 -/
+@[rust_loop]
+def inference.materialize.Arena.materialize_loop
+  (outcome : core.result.Result inference.materialize.State Diagnostic)
+  (self : inference.Arena) (span : Span) (meter : Meter) :
+  Result (Meter × (core.result.Result inference.materialize.State Diagnostic))
+  := do
+  loop
+    (fun (outcome1, meter1) =>
+      inference.materialize.Arena.materialize_loop.body self span outcome1
+      meter1)
+    (outcome, meter)
+
+/-- [noble_contracts::inference::materialize::{noble_contracts::inference::Arena}::materialize]:
+    Source: 'crates/noble-contracts/src/inference/materialize.rs', lines 103:4-129:5 -/
+def inference.materialize.Arena.materialize
+  (self : inference.Arena) (root : Std.U32) (span : Span) (meter : Meter) :
+  Result ((core.result.Result inference.materialize.Material Diagnostic) ×
+    Meter)
+  := do
+  let v := alloc.vec.Vec.with_capacity inference.materialize.Step 1#usize
+  let v1 ← alloc.vec.Vec.push v (inference.materialize.Step.Visit root)
+  let (meter1, outcome) ←
+    inference.materialize.Arena.materialize_loop (core.result.Result.Ok
+      {
+        steps := v1,
+        values := (alloc.vec.Vec.new inference.materialize.Material)
+      }) self span meter
+  match outcome with
+  | core.result.Result.Ok value =>
+    let i := alloc.vec.Vec.len value.values
+    if i != 1#usize
+    then let d ← internal span
+         ok (core.result.Result.Err d, meter1)
+    else
+      let (r, _) ← inference.materialize.State.pop value span
+      ok (r, meter1)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, meter1)
+
+/-- [noble_contracts::inference::materialize::{noble_contracts::inference::Arena}::binding]:
+    Source: 'crates/noble-contracts/src/inference/materialize.rs', lines 73:4-101:5 -/
+def inference.materialize.Arena.binding
+  (self : inference.Arena) («variable» : Option inference.Variable)
+  (span : Span) (meter : Meter) :
+  Result ((core.result.Result noble_kernel.words.Binding Diagnostic) × Meter)
+  := do
+  let (r, meter1) ← metering.Meter.charge meter 1#u32 span
+  match r with
+  | core.result.Result.Ok _ =>
+    match «variable» with
+    | none => let d ← internal span
+              ok (core.result.Result.Err d, meter1)
+    | some v =>
+      match v with
+      | inference.Variable.Value id =>
+        let (r1, meter2) ←
+          inference.materialize.Arena.materialize self id span meter1
+        match r1 with
+        | core.result.Result.Ok value =>
+          match value with
+          | inference.materialize.Material.Value ty _ =>
+            ok (core.result.Result.Ok (noble_kernel.words.Binding.Value ty),
+              meter2)
+          | inference.materialize.Material.Stack _ _ =>
+            let d ← internal span
+            ok (core.result.Result.Err d, meter2)
+        | core.result.Result.Err failure =>
+          ok (core.result.Result.Err failure, meter2)
+      | inference.Variable.Stack id =>
+        let (r1, meter2) ←
+          inference.materialize.Arena.materialize self id span meter1
+        match r1 with
+        | core.result.Result.Ok value =>
+          match value with
+          | inference.materialize.Material.Value _ _ =>
+            let d ← internal span
+            ok (core.result.Result.Err d, meter2)
+          | inference.materialize.Material.Stack stack _ =>
+            ok (core.result.Result.Ok (noble_kernel.words.Binding.Stack stack),
+              meter2)
+        | core.result.Result.Err failure =>
+          ok (core.result.Result.Err failure, meter2)
+      | inference.Variable.Effect =>
+        let es ← noble_kernel.types.EffSet.empty
+        ok (core.result.Result.Ok (noble_kernel.words.Binding.Effect es),
+          meter1)
+      | inference.Variable.EffectValue id =>
+        let r1 ← inference.effects.Arena.effect_value self id span
+        match r1 with
+        | core.result.Result.Ok value =>
+          ok (core.result.Result.Ok (noble_kernel.words.Binding.Effect value),
+            meter1)
+        | core.result.Result.Err failure =>
+          ok (core.result.Result.Err failure, meter1)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, meter1)
+
+/-- [noble_contracts::inference::materialize::{noble_contracts::inference::Arena}::instantiation]: loop body 0:
+    Source: 'crates/noble-contracts/src/inference/materialize.rs', lines 51:8-62:9
+    Visibility: public -/
+@[rust_loop_body]
+def inference.materialize.Arena.instantiation_loop.body
+  (self : inference.Arena) («variables» : Slice inference.Variable)
+  (span : Span) (meter : Meter)
+  (bindings : alloc.vec.Vec noble_kernel.words.Binding) («at» : Std.Usize) :
+  Result (ControlFlow (Meter × (alloc.vec.Vec noble_kernel.words.Binding) ×
+    Std.Usize) (Meter × (alloc.vec.Vec noble_kernel.words.Binding) × (Option
+    Diagnostic)))
+  := do
+  let i := Slice.len «variables»
+  if «at» < i
+  then
+    let o ←
+      core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice
+        inference.Variable) «variables» «at»
+    let (r, meter1) ← inference.materialize.Arena.binding self o span meter
+    match r with
+    | core.result.Result.Ok binding =>
+      let bindings1 ← alloc.vec.Vec.push bindings binding
+      let at1 ← «at» + 1#usize
+      ok (cont (meter1, bindings1, at1))
+    | core.result.Result.Err problem =>
+      ok (done (meter1, bindings, some problem))
+  else ok (done (meter, bindings, none))
+
+/-- [noble_contracts::inference::materialize::{noble_contracts::inference::Arena}::instantiation]: loop 0:
+    Source: 'crates/noble-contracts/src/inference/materialize.rs', lines 51:8-62:9
+    Visibility: public -/
+@[rust_loop]
+def inference.materialize.Arena.instantiation_loop
+  (self : inference.Arena) («variables» : Slice inference.Variable)
+  (span : Span) (meter : Meter)
+  (bindings : alloc.vec.Vec noble_kernel.words.Binding) («at» : Std.Usize) :
+  Result (Meter × (alloc.vec.Vec noble_kernel.words.Binding) × (Option
+    Diagnostic))
+  := do
+  loop
+    (fun (meter1, bindings1, at1) =>
+      inference.materialize.Arena.instantiation_loop.body self «variables»
+      span meter1 bindings1 at1)
+    (meter, bindings, «at»)
+
+/-- [noble_contracts::inference::materialize::{noble_contracts::inference::Arena}::instantiation]:
+    Source: 'crates/noble-contracts/src/inference/materialize.rs', lines 42:4-67:5
+    Visibility: public -/
+def inference.materialize.Arena.instantiation
+  (self : inference.Arena) («variables» : Slice inference.Variable)
+  (span : Span) (meter : Meter) :
+  Result ((core.result.Result noble_kernel.words.Inst Diagnostic) × Meter)
+  := do
+  let i := Slice.len «variables»
+  let bindings := alloc.vec.Vec.with_capacity noble_kernel.words.Binding i
+  let (meter1, bindings1, failure) ←
+    inference.materialize.Arena.instantiation_loop self «variables» span
+      meter bindings 0#usize
+  match failure with
+  | none => ok (core.result.Result.Ok { bindings := bindings1 }, meter1)
+  | some problem => ok (core.result.Result.Err problem, meter1)
+
+/-- [noble_contracts::program::finish_draft]:
+    Source: 'crates/noble-contracts/src/program.rs', lines 179:0-205:1 -/
+def program.finish_draft
+  (drafts : Slice (Option program.Draft)) («at» : Std.Usize)
+  (arena : inference.Arena) (span : Span) (meter : Meter) :
+  Result ((core.result.Result (noble_kernel.untrusted.Node × Span) Diagnostic)
+    × (Slice (Option program.Draft)) × Meter)
+  := do
+  let (r, meter1) ← metering.Meter.charge meter 1#u32 span
+  match r with
+  | core.result.Result.Ok _ =>
+    let (o, get_mut_back) ←
+      core.slice.Slice.get_mut (core.slice.index.SliceIndexUsizeSlice (Option
+        program.Draft)) drafts «at»
+    match o with
+    | none =>
+      let d ← internal span
+      let drafts1 := get_mut_back none
+      ok (core.result.Result.Err d, drafts1, meter1)
+    | some slot =>
+      let (o1, slot1) := core.option.Option.take slot
+      match o1 with
+      | none =>
+        let d ← internal span
+        let drafts1 := get_mut_back (some slot1)
+        ok (core.result.Result.Err d, drafts1, meter1)
+      | some draft =>
+        match draft.explicit with
+        | none =>
+          let s := alloc.vec.Vec.deref draft.variables
+          let (r1, meter2) ←
+            inference.materialize.Arena.instantiation arena s draft.span meter1
+          match r1 with
+          | core.result.Result.Ok value =>
+            match draft.kind with
+            | program.DraftKind.Literal lit =>
+              let drafts1 := get_mut_back (some slot1)
+              ok (core.result.Result.Ok (noble_kernel.untrusted.Node.Literal
+                lit value, draft.span), drafts1, meter2)
+            | program.DraftKind.Invocation «def» =>
+              let drafts1 := get_mut_back (some slot1)
+              ok (core.result.Result.Ok (noble_kernel.untrusted.Node.Invocation
+                «def» value, draft.span), drafts1, meter2)
+            | program.DraftKind.Quotation body =>
+              let drafts1 := get_mut_back (some slot1)
+              ok (core.result.Result.Ok (noble_kernel.untrusted.Node.Quotation
+                body value, draft.span), drafts1, meter2)
+          | core.result.Result.Err failure =>
+            let drafts1 := get_mut_back (some slot1)
+            ok (core.result.Result.Err failure, drafts1, meter2)
+        | some inst =>
+          match draft.kind with
+          | program.DraftKind.Literal lit =>
+            let drafts1 := get_mut_back (some slot1)
+            ok (core.result.Result.Ok (noble_kernel.untrusted.Node.Literal lit
+              inst, draft.span), drafts1, meter1)
+          | program.DraftKind.Invocation «def» =>
+            let drafts1 := get_mut_back (some slot1)
+            ok (core.result.Result.Ok (noble_kernel.untrusted.Node.Invocation
+              «def» inst, draft.span), drafts1, meter1)
+          | program.DraftKind.Quotation body =>
+            let drafts1 := get_mut_back (some slot1)
+            ok (core.result.Result.Ok (noble_kernel.untrusted.Node.Quotation
+              body inst, draft.span), drafts1, meter1)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, drafts, meter1)
+
+/-- [noble_contracts::program::finish]: loop body 0:
+    Source: 'crates/noble-contracts/src/program.rs', lines 147:4-159:5 -/
+@[rust_loop_body]
+def program.finish_loop.body
+  (s : Span) (a : inference.Arena) (v : alloc.vec.Vec (Option program.Draft))
+  (meter : Meter) (nodes : alloc.vec.Vec noble_kernel.untrusted.Node)
+  (spans : alloc.vec.Vec Span) («at» : Std.Usize) :
+  Result (ControlFlow ((alloc.vec.Vec (Option program.Draft)) × Meter ×
+    (alloc.vec.Vec noble_kernel.untrusted.Node) × (alloc.vec.Vec Span) ×
+    Std.Usize) (Meter × (alloc.vec.Vec noble_kernel.untrusted.Node) ×
+    (alloc.vec.Vec Span) × (Option Diagnostic)))
+  := do
+  let i := alloc.vec.Vec.len v
+  if «at» < i
+  then
+    let (s1, deref_mut_back) ← lift (alloc.vec.Vec.deref_mut v)
+    let (r, s2, meter1) ← program.finish_draft s1 «at» a s meter
+    match r with
+    | core.result.Result.Ok p =>
+      let (node, at_span) := p
+      let nodes1 ← alloc.vec.Vec.push nodes node
+      let spans1 ← alloc.vec.Vec.push spans at_span
+      let at1 ← «at» + 1#usize
+      let v1 := deref_mut_back s2
+      ok (cont (v1, meter1, nodes1, spans1, at1))
+    | core.result.Result.Err problem =>
+      ok (done (meter1, nodes, spans, some problem))
+  else ok (done (meter, nodes, spans, none))
+
+/-- [noble_contracts::program::finish]: loop 0:
+    Source: 'crates/noble-contracts/src/program.rs', lines 147:4-159:5 -/
+@[rust_loop]
+def program.finish_loop
+  (s : Span) (a : inference.Arena) (v : alloc.vec.Vec (Option program.Draft))
+  (meter : Meter) (nodes : alloc.vec.Vec noble_kernel.untrusted.Node)
+  (spans : alloc.vec.Vec Span) («at» : Std.Usize) :
+  Result (Meter × (alloc.vec.Vec noble_kernel.untrusted.Node) ×
+    (alloc.vec.Vec Span) × (Option Diagnostic))
+  := do
+  loop
+    (fun (v1, meter1, nodes1, spans1, at1) => program.finish_loop.body s a v1
+      meter1 nodes1 spans1 at1)
+    (v, meter, nodes, spans, «at»)
+
+/-- [noble_contracts::program::finish]:
+    Source: 'crates/noble-contracts/src/program.rs', lines 133:0-172:1 -/
+def program.finish
+  (state : program.Resolution) (meter : Meter) :
+  Result ((core.result.Result (noble_kernel.untrusted.Candidate ×
+    (alloc.vec.Vec Span)) Diagnostic) × Meter)
+  := do
+  let i := alloc.vec.Vec.len state.drafts
+  let nodes := alloc.vec.Vec.with_capacity noble_kernel.untrusted.Node i
+  let i1 := alloc.vec.Vec.len state.drafts
+  let spans := alloc.vec.Vec.with_capacity Span i1
+  let (meter1, nodes1, spans1, failure) ←
+    program.finish_loop state.span state.arena state.drafts meter nodes spans
+      0#usize
+  match failure with
+  | none =>
+    let i2 ← noble_kernel.untrusted.CANDIDATE_FORMAT
+    let i3 ← noble_kernel.untrusted.SEMANTIC_REVISION
+    ok (core.result.Result.Ok
+      ({ format := i2, revision := i3, nodes := nodes1, body := state.body },
+      spans1), meter1)
+  | some problem => ok (core.result.Result.Err problem, meter1)
+
+/-- [noble_contracts::program::{noble_contracts::program::Resolution}::add]:
+    Source: 'crates/noble-contracts/src/program.rs', lines 67:4-76:5 -/
+def program.Resolution.add
+  (self : program.Resolution) (draft : program.Draft) (meter : Meter) :
+  Result ((core.result.Result noble_kernel.untrusted.NodeId Diagnostic) ×
+    program.Resolution × Meter)
+  := do
+  let (r, meter1) ← metering.Meter.node meter draft.span
+  match r with
+  | core.result.Result.Ok _ =>
+    let i := alloc.vec.Vec.len self.drafts
+    let r1 ← index i draft.span
+    match r1 with
+    | core.result.Result.Ok value =>
+      let v ← alloc.vec.Vec.push self.drafts (some draft)
+      ok (core.result.Result.Ok value, { self with drafts := v }, meter1)
+    | core.result.Result.Err failure =>
+      ok (core.result.Result.Err failure, self, meter1)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, self, meter1)
+
+/-- [noble_contracts::program::words::bootstrap]:
+    Source: 'crates/noble-contracts/src/program/words.rs', lines 86:0-115:1 -/
+def program.words.bootstrap
+  (word : Slice Std.U8) :
+  Result (Option noble_kernel.contracts.Definition)
+  := do
+  let b ←
+    Slice.Insts.CoreCmpPartialEqArray.eq core.cmp.PartialEqU8 word
+      (Array.make 3#usize [ 100#u8, 117#u8, 112#u8 ])
+  if b
+  then ok (some 0#u32)
+  else
+    let b1 ←
+      Slice.Insts.CoreCmpPartialEqArray.eq core.cmp.PartialEqU8 word
+        (Array.make 4#usize [ 100#u8, 114#u8, 111#u8, 112#u8 ])
+    if b1
+    then ok (some 1#u32)
+    else
+      let b2 ←
+        Slice.Insts.CoreCmpPartialEqArray.eq core.cmp.PartialEqU8 word
+          (Array.make 4#usize [ 115#u8, 119#u8, 97#u8, 112#u8 ])
+      if b2
+      then ok (some 2#u32)
+      else
+        let b3 ←
+          Slice.Insts.CoreCmpPartialEqArray.eq core.cmp.PartialEqU8 word
+            (Array.make 3#usize [ 100#u8, 105#u8, 112#u8 ])
+        if b3
+        then ok (some 3#u32)
+        else
+          let b4 ←
+            Slice.Insts.CoreCmpPartialEqArray.eq core.cmp.PartialEqU8 word
+              (Array.make 1#usize [ 43#u8 ])
+          if b4
+          then ok (some 4#u32)
+          else
+            let b5 ←
+              Slice.Insts.CoreCmpPartialEqArray.eq core.cmp.PartialEqU8 word
+                (Array.make 1#usize [ 45#u8 ])
+            if b5
+            then ok (some 5#u32)
+            else
+              let b6 ←
+                Slice.Insts.CoreCmpPartialEqArray.eq core.cmp.PartialEqU8 word
+                  (Array.make 1#usize [ 42#u8 ])
+              if b6
+              then ok (some 6#u32)
+              else
+                let b7 ←
+                  Slice.Insts.CoreCmpPartialEqArray.eq core.cmp.PartialEqU8
+                    word (Array.make 1#usize [ 61#u8 ])
+                if b7
+                then ok (some 7#u32)
+                else
+                  let b8 ←
+                    Slice.Insts.CoreCmpPartialEqArray.eq core.cmp.PartialEqU8
+                      word
+                      (Array.make 5#usize [
+                        113#u8, 117#u8, 111#u8, 116#u8, 101#u8
+                        ])
+                  if b8
+                  then ok (some 8#u32)
+                  else
+                    let b9 ←
+                      Slice.Insts.CoreCmpPartialEqArray.eq core.cmp.PartialEqU8
+                        word
+                        (Array.make 7#usize [
+                          99#u8, 111#u8, 109#u8, 112#u8, 111#u8, 115#u8, 101#u8
+                          ])
+                    if b9
+                    then ok (some 9#u32)
+                    else
+                      let b10 ←
+                        Slice.Insts.CoreCmpPartialEqArray.eq
+                          core.cmp.PartialEqU8 word
+                          (Array.make 3#usize [ 114#u8, 117#u8, 110#u8 ])
+                      if b10
+                      then ok (some 10#u32)
+                      else
+                        let b11 ←
+                          Slice.Insts.CoreCmpPartialEqArray.eq
+                            core.cmp.PartialEqU8 word
+                            (Array.make 7#usize [
+                              114#u8, 101#u8, 102#u8, 108#u8, 101#u8, 99#u8,
+                              116#u8
+                              ])
+                        if b11
+                        then ok (some 11#u32)
+                        else
+                          let b12 ←
+                            Slice.Insts.CoreCmpPartialEqArray.eq
+                              core.cmp.PartialEqU8 word
+                              (Array.make 4#usize [
+                                117#u8, 110#u8, 105#u8, 116#u8
+                                ])
+                          if b12
+                          then ok (some 12#u32)
+                          else
+                            let b13 ←
+                              Slice.Insts.CoreCmpPartialEqArray.eq
+                                core.cmp.PartialEqU8 word
+                                (Array.make 4#usize [
+                                  112#u8, 97#u8, 105#u8, 114#u8
+                                  ])
+                            if b13
+                            then ok (some 13#u32)
+                            else
+                              let b14 ←
+                                Slice.Insts.CoreCmpPartialEqArray.eq
+                                  core.cmp.PartialEqU8 word
+                                  (Array.make 6#usize [
+                                    117#u8, 110#u8, 112#u8, 97#u8, 105#u8,
+                                    114#u8
+                                    ])
+                              if b14
+                              then ok (some 14#u32)
+                              else
+                                let b15 ←
+                                  Slice.Insts.CoreCmpPartialEqArray.eq
+                                    core.cmp.PartialEqU8 word
+                                    (Array.make 3#usize [
+                                      105#u8, 110#u8, 108#u8
+                                      ])
+                                if b15
+                                then ok (some 15#u32)
+                                else
+                                  let b16 ←
+                                    Slice.Insts.CoreCmpPartialEqArray.eq
+                                      core.cmp.PartialEqU8 word
+                                      (Array.make 3#usize [
+                                        105#u8, 110#u8, 114#u8
+                                        ])
+                                  if b16
+                                  then ok (some 16#u32)
+                                  else
+                                    let b17 ←
+                                      Slice.Insts.CoreCmpPartialEqArray.eq
+                                        core.cmp.PartialEqU8 word
+                                        (Array.make 4#usize [
+                                          99#u8, 97#u8, 115#u8, 101#u8
+                                          ])
+                                    if b17
+                                    then ok (some 17#u32)
+                                    else
+                                      let b18 ←
+                                        Slice.Insts.CoreCmpPartialEqArray.eq
+                                          core.cmp.PartialEqU8 word
+                                          (Array.make 2#usize [
+                                            105#u8, 102#u8
+                                            ])
+                                      if b18
+                                      then ok (some 18#u32)
+                                      else
+                                        let b19 ←
+                                          Slice.Insts.CoreCmpPartialEqArray.eq
+                                            core.cmp.PartialEqU8 word
+                                            (Array.make 3#usize [
+                                              110#u8, 105#u8, 108#u8
+                                              ])
+                                        if b19
+                                        then ok (some 19#u32)
+                                        else
+                                          let b20 ←
+                                            Slice.Insts.CoreCmpPartialEqArray.eq
+                                              core.cmp.PartialEqU8 word
+                                              (Array.make 4#usize [
+                                                99#u8, 111#u8, 110#u8, 115#u8
+                                                ])
+                                          if b20
+                                          then ok (some 20#u32)
+                                          else
+                                            let b21 ←
+                                              Slice.Insts.CoreCmpPartialEqArray.eq
+                                                core.cmp.PartialEqU8 word
+                                                (Array.make 9#usize [
+                                                  108#u8, 105#u8, 115#u8,
+                                                  116#u8, 46#u8, 99#u8, 97#u8,
+                                                  115#u8, 101#u8
+                                                  ])
+                                            if b21
+                                            then ok (some 21#u32)
+                                            else
+                                              let b22 ←
+                                                Slice.Insts.CoreCmpPartialEqArray.eq
+                                                  core.cmp.PartialEqU8 word
+                                                  (Array.make 9#usize [
+                                                    116#u8, 101#u8, 115#u8,
+                                                    116#u8, 46#u8, 101#u8,
+                                                    109#u8, 105#u8, 116#u8
+                                                    ])
+                                              if b22
+                                              then ok (some 22#u32)
+                                              else
+                                                let b23 ←
+                                                  Slice.Insts.CoreCmpPartialEqArray.eq
+                                                    core.cmp.PartialEqU8 word
+                                                    (Array.make 10#usize [
+                                                      116#u8, 101#u8, 115#u8,
+                                                      116#u8, 46#u8, 97#u8,
+                                                      98#u8, 111#u8, 114#u8,
+                                                      116#u8
+                                                      ])
+                                                if b23
+                                                then ok (some 23#u32)
+                                                else ok none
+
+/-- [noble_contracts::program::words::host_error]:
+    Source: 'crates/noble-contracts/src/program/words.rs', lines 74:0-80:1 -/
+def program.words.host_error (span : Span) : Result Diagnostic := do
+  Diagnostic.new DiagnosticKind.Unsupported span (toStr
+    "host and effectful words are outside the pure contract fragment")
+
+/-- [noble_contracts::program::words::identity]:
+    Source: 'crates/noble-contracts/src/program/words.rs', lines 55:0-72:1 -/
+def program.words.identity
+  (word : Slice Std.U8) (span : Span) :
+  Result (core.result.Result noble_kernel.contracts.Definition Diagnostic)
+  := do
+  let o ← program.words.bootstrap word
+  match o with
+  | none =>
+    let is_host ←
+      Slice.Insts.CoreCmpPartialEqArray.eq core.cmp.PartialEqU8 word
+        (Array.make 4#usize [ 104#u8, 111#u8, 115#u8, 116#u8 ])
+    let is_call ←
+      Slice.Insts.CoreCmpPartialEqArray.eq core.cmp.PartialEqU8 word
+        (Array.make 4#usize [ 99#u8, 97#u8, 108#u8, 108#u8 ])
+    if is_host
+    then let d ← program.words.host_error span
+         ok (core.result.Result.Err d)
+    else
+      if is_call
+      then
+        let d ← program.words.host_error span
+        ok (core.result.Result.Err d)
+      else
+        let d ← invalid span (toStr "unknown program word")
+        ok (core.result.Result.Err d)
+  | some definition =>
+    if definition < 22#u32
+    then ok (core.result.Result.Ok definition)
+    else let d ← program.words.host_error span
+         ok (core.result.Result.Err d)
+
+/-- [noble_contracts::inference::unify::{noble_contracts::inference::Arena}::occurs_step]:
+    Source: 'crates/noble-contracts/src/inference/unify.rs', lines 44:4-79:5 -/
+def inference.unify.Arena.occurs_step
+  (self : inference.Arena) («variable» : Std.U32) (id : Std.U32)
+  (pending : alloc.vec.Vec Std.U32) (span : Span) (meter : Meter) :
+  Result ((core.result.Result (alloc.vec.Vec Std.U32) Diagnostic) × Meter)
+  := do
+  let (r, meter1) ← metering.Meter.charge meter 1#u32 span
+  match r with
+  | core.result.Result.Ok _ =>
+    let (r1, meter2) ← inference.Arena.root self id span meter1
+    match r1 with
+    | core.result.Result.Ok value =>
+      if value = «variable»
+      then
+        let d ←
+          invalid span (toStr
+            "recursive type or stack equation is not supported")
+        ok (core.result.Result.Err d, meter2)
+      else
+        let r2 ← inference.Arena.get self value span
+        match r2 with
+        | core.result.Result.Ok value1 =>
+          match value1 with
+          | inference.Term.HoleTerm _ =>
+            ok (core.result.Result.Ok pending, meter2)
+          | inference.Term.LinkTerm _ =>
+            ok (core.result.Result.Ok pending, meter2)
+          | inference.Term.UnitTerm =>
+            ok (core.result.Result.Ok pending, meter2)
+          | inference.Term.BoolTerm =>
+            ok (core.result.Result.Ok pending, meter2)
+          | inference.Term.I64Term =>
+            ok (core.result.Result.Ok pending, meter2)
+          | inference.Term.TextTerm =>
+            ok (core.result.Result.Ok pending, meter2)
+          | inference.Term.SyntaxTerm =>
+            ok (core.result.Result.Ok pending, meter2)
+          | inference.Term.PairTerm a b =>
+            let pending1 ← alloc.vec.Vec.push pending a
+            let pending2 ← alloc.vec.Vec.push pending1 b
+            ok (core.result.Result.Ok pending2, meter2)
+          | inference.Term.SumTerm a b =>
+            let pending1 ← alloc.vec.Vec.push pending a
+            let pending2 ← alloc.vec.Vec.push pending1 b
+            ok (core.result.Result.Ok pending2, meter2)
+          | inference.Term.ListTerm item =>
+            let pending1 ← alloc.vec.Vec.push pending item
+            ok (core.result.Result.Ok pending1, meter2)
+          | inference.Term.ProgramTerm a b =>
+            let pending1 ← alloc.vec.Vec.push pending a
+            let pending2 ← alloc.vec.Vec.push pending1 b
+            ok (core.result.Result.Ok pending2, meter2)
+          | inference.Term.EmptyTerm =>
+            ok (core.result.Result.Ok pending, meter2)
+          | inference.Term.PushTerm a b =>
+            let pending1 ← alloc.vec.Vec.push pending a
+            let pending2 ← alloc.vec.Vec.push pending1 b
+            ok (core.result.Result.Ok pending2, meter2)
+        | core.result.Result.Err failure =>
+          ok (core.result.Result.Err failure, meter2)
+    | core.result.Result.Err failure =>
+      ok (core.result.Result.Err failure, meter2)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, meter1)
+
+/-- [noble_contracts::inference::unify::{noble_contracts::inference::Arena}::bind]: loop body 0:
+    Source: 'crates/noble-contracts/src/inference/unify.rs', lines 20:8-28:9 -/
+@[rust_loop_body]
+def inference.unify.Arena.bind_loop.body
+  (self : inference.Arena) («variable» : Std.U32) (span : Span)
+  (outcome : core.result.Result (alloc.vec.Vec Std.U32) Diagnostic)
+  (meter : Meter) :
+  Result (ControlFlow ((core.result.Result (alloc.vec.Vec Std.U32) Diagnostic)
+    × Meter) (Meter × (core.result.Result (alloc.vec.Vec Std.U32)
+    Diagnostic)))
+  := do
+  match outcome with
+  | core.result.Result.Ok pending =>
+    let (o, pending1) ← alloc.vec.Vec.pop Global pending
+    match o with
+    | none => ok (done (meter, core.result.Result.Ok pending1))
+    | some id =>
+      let (outcome1, meter1) ←
+        inference.unify.Arena.occurs_step self «variable» id pending1 span
+          meter
+      ok (cont (outcome1, meter1))
+  | core.result.Result.Err _ => ok (done (meter, outcome))
+
+/-- [noble_contracts::inference::unify::{noble_contracts::inference::Arena}::bind]: loop 0:
+    Source: 'crates/noble-contracts/src/inference/unify.rs', lines 20:8-28:9 -/
+@[rust_loop]
+def inference.unify.Arena.bind_loop
+  (outcome : core.result.Result (alloc.vec.Vec Std.U32) Diagnostic)
+  (self : inference.Arena) («variable» : Std.U32) (span : Span)
+  (meter : Meter) :
+  Result (Meter × (core.result.Result (alloc.vec.Vec Std.U32) Diagnostic))
+  := do
+  loop
+    (fun (outcome1, meter1) => inference.unify.Arena.bind_loop.body self
+      «variable» span outcome1 meter1)
+    (outcome, meter)
+
+/-- [noble_contracts::inference::unify::{noble_contracts::inference::Arena}::bind]:
+    Source: 'crates/noble-contracts/src/inference/unify.rs', lines 10:4-37:5 -/
+def inference.unify.Arena.bind
+  (self : inference.Arena) («variable» : Std.U32) (target : Std.U32)
+  (span : Span) (meter : Meter) :
+  Result ((core.result.Result Unit Diagnostic) × inference.Arena × Meter)
+  := do
+  let initial := alloc.vec.Vec.with_capacity Std.U32 1#usize
+  let initial1 ← alloc.vec.Vec.push initial target
+  let (meter1, outcome) ←
+    inference.unify.Arena.bind_loop (core.result.Result.Ok initial1) self
+      «variable» span meter
+  match outcome with
+  | core.result.Result.Ok _ =>
+    let (s, deref_mut_back) ← lift (alloc.vec.Vec.deref_mut self.terms)
+    let r ← offset «variable» span
+    match r with
+    | core.result.Result.Ok value =>
+      let (o, get_mut_back) ←
+        core.slice.Slice.get_mut (core.slice.index.SliceIndexUsizeSlice
+          inference.Term) s value
+      match o with
+      | none =>
+        let d ← internal span
+        let s1 := get_mut_back none
+        let v := deref_mut_back s1
+        ok (core.result.Result.Err d, { self with terms := v }, meter1)
+      | some _ =>
+        let s1 := get_mut_back (some (inference.Term.LinkTerm target))
+        let v := deref_mut_back s1
+        ok (core.result.Result.Ok (), { self with terms := v }, meter1)
+    | core.result.Result.Err failure =>
+      let v := deref_mut_back s
+      ok (core.result.Result.Err failure, { self with terms := v }, meter1)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, self, meter1)
+
+/-- [noble_contracts::inference::sort]:
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 220:0-235:1 -/
+def inference.sort (term : inference.Term) : Result inference.Sort := do
+  match term with
+  | inference.Term.HoleTerm sort => ok sort
+  | inference.Term.LinkTerm _ => ok inference.Sort.Value
+  | inference.Term.UnitTerm => ok inference.Sort.Value
+  | inference.Term.BoolTerm => ok inference.Sort.Value
+  | inference.Term.I64Term => ok inference.Sort.Value
+  | inference.Term.TextTerm => ok inference.Sort.Value
+  | inference.Term.SyntaxTerm => ok inference.Sort.Value
+  | inference.Term.PairTerm _ _ => ok inference.Sort.Value
+  | inference.Term.SumTerm _ _ => ok inference.Sort.Value
+  | inference.Term.ListTerm _ => ok inference.Sort.Value
+  | inference.Term.ProgramTerm _ _ => ok inference.Sort.Value
+  | inference.Term.EmptyTerm => ok inference.Sort.Stack
+  | inference.Term.PushTerm _ _ => ok inference.Sort.Stack
+
+/-- [noble_contracts::inference::{impl core::cmp::PartialEq<noble_contracts::inference::Sort> for noble_contracts::inference::Sort}::eq]:
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 8:22-8:31
+    Visibility: public -/
+def inference.Sort.Insts.CoreCmpPartialEqSort.eq
+  (self : inference.Sort) (other : inference.Sort) : Result Bool := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  ok (self1 = other1)
+
+/-- Trait implementation: [noble_contracts::inference::{impl core::cmp::PartialEq<noble_contracts::inference::Sort> for noble_contracts::inference::Sort}]
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 8:22-8:31 -/
+@[reducible]
+impl_def inference.Sort.Insts.CoreCmpPartialEqSort : core.cmp.PartialEq
+  inference.Sort inference.Sort := {
+  eq := inference.Sort.Insts.CoreCmpPartialEqSort.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    inference.Sort.Insts.CoreCmpPartialEqSort
+}
+
+/-- [noble_contracts::inference::unify::{noble_contracts::inference::Arena}::unify_step]:
+    Source: 'crates/noble-contracts/src/inference/unify.rs', lines 119:4-189:5 -/
+def inference.unify.Arena.unify_step
+  (self : inference.Arena) (left : Std.U32) (right : Std.U32)
+  (pending : alloc.vec.Vec (Std.U32 × Std.U32)) (span : Span) (meter : Meter)
+  :
+  Result ((core.result.Result (alloc.vec.Vec (Std.U32 × Std.U32)) Diagnostic)
+    × inference.Arena × Meter)
+  := do
+  let (r, meter1) ← metering.Meter.charge meter 1#u32 span
+  match r with
+  | core.result.Result.Ok _ =>
+    let (r1, meter2) ← inference.Arena.root self left span meter1
+    match r1 with
+    | core.result.Result.Ok value =>
+      let (r2, meter3) ← inference.Arena.root self right span meter2
+      match r2 with
+      | core.result.Result.Ok value1 =>
+        if value = value1
+        then ok (core.result.Result.Ok pending, self, meter3)
+        else
+          let r3 ← inference.Arena.get self value span
+          match r3 with
+          | core.result.Result.Ok value2 =>
+            let r4 ← inference.Arena.get self value1 span
+            match r4 with
+            | core.result.Result.Ok value3 =>
+              if self.effectful
+              then
+                let b ←
+                  match value2 with
+                  | inference.Term.HoleTerm _ => ok false
+                  | inference.Term.LinkTerm _ => ok false
+                  | inference.Term.UnitTerm => ok false
+                  | inference.Term.BoolTerm => ok false
+                  | inference.Term.I64Term => ok false
+                  | inference.Term.TextTerm => ok false
+                  | inference.Term.SyntaxTerm => ok false
+                  | inference.Term.PairTerm _ _ => ok false
+                  | inference.Term.SumTerm _ _ => ok false
+                  | inference.Term.ListTerm _ => ok false
+                  | inference.Term.ProgramTerm _ _ => ok true
+                  | inference.Term.EmptyTerm => ok false
+                  | inference.Term.PushTerm _ _ => ok false
+                if b
+                then
+                  let b1 ←
+                    match value3 with
+                    | inference.Term.HoleTerm _ => ok false
+                    | inference.Term.LinkTerm _ => ok false
+                    | inference.Term.UnitTerm => ok false
+                    | inference.Term.BoolTerm => ok false
+                    | inference.Term.I64Term => ok false
+                    | inference.Term.TextTerm => ok false
+                    | inference.Term.SyntaxTerm => ok false
+                    | inference.Term.PairTerm _ _ => ok false
+                    | inference.Term.SumTerm _ _ => ok false
+                    | inference.Term.ListTerm _ => ok false
+                    | inference.Term.ProgramTerm _ _ => ok true
+                    | inference.Term.EmptyTerm => ok false
+                    | inference.Term.PushTerm _ _ => ok false
+                  if b1
+                  then
+                    let (r5, meter4) ←
+                      inference.effects.Arena.program_effect self value span
+                        meter3
+                    match r5 with
+                    | core.result.Result.Ok value4 =>
+                      let (r6, meter5) ←
+                        inference.effects.Arena.program_effect self value1 span
+                          meter4
+                      match r6 with
+                      | core.result.Result.Ok value5 =>
+                        let (r7, meter6) ← metering.Meter.node meter5 span
+                        match r7 with
+                        | core.result.Result.Ok _ =>
+                          let v ←
+                            alloc.vec.Vec.push self.effect_equations (value4,
+                              value5)
+                          let s ← inference.sort value2
+                          let s1 ← inference.sort value3
+                          let b2 ←
+                            core.cmp.PartialEq.ne.trait_default
+                              inference.Sort.Insts.CoreCmpPartialEqSort s s1
+                          if b2
+                          then
+                            let d ←
+                              invalid span (toStr
+                                "value and stack witness kinds do not match")
+                            ok (core.result.Result.Err d,
+                              { self with effect_equations := v }, meter6)
+                          else
+                            match value2 with
+                            | inference.Term.HoleTerm _ =>
+                              let (r8, self1, meter7) ←
+                                inference.unify.Arena.bind
+                                  { self with effect_equations := v } value
+                                  value1 span meter6
+                              match r8 with
+                              | core.result.Result.Ok _ =>
+                                ok (core.result.Result.Ok pending, self1,
+                                  meter7)
+                              | core.result.Result.Err failure =>
+                                ok (core.result.Result.Err failure, self1,
+                                  meter7)
+                            | inference.Term.LinkTerm _ =>
+                              match value3 with
+                              | inference.Term.HoleTerm _ =>
+                                let (r8, self1, meter7) ←
+                                  inference.unify.Arena.bind
+                                    { self with effect_equations := v } value1
+                                    value span meter6
+                                match r8 with
+                                | core.result.Result.Ok _ =>
+                                  ok (core.result.Result.Ok pending, self1,
+                                    meter7)
+                                | core.result.Result.Err failure =>
+                                  ok (core.result.Result.Err failure, self1,
+                                    meter7)
+                              | inference.Term.LinkTerm _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.UnitTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.BoolTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.I64Term =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.TextTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.SyntaxTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.PairTerm _ _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.SumTerm _ _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.ListTerm _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.ProgramTerm _ _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.EmptyTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.PushTerm _ _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                            | inference.Term.UnitTerm =>
+                              match value3 with
+                              | inference.Term.HoleTerm _ =>
+                                let (r8, self1, meter7) ←
+                                  inference.unify.Arena.bind
+                                    { self with effect_equations := v } value1
+                                    value span meter6
+                                match r8 with
+                                | core.result.Result.Ok _ =>
+                                  ok (core.result.Result.Ok pending, self1,
+                                    meter7)
+                                | core.result.Result.Err failure =>
+                                  ok (core.result.Result.Err failure, self1,
+                                    meter7)
+                              | inference.Term.LinkTerm _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.UnitTerm =>
+                                ok (core.result.Result.Ok pending,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.BoolTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.I64Term =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.TextTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.SyntaxTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.PairTerm _ _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.SumTerm _ _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.ListTerm _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.ProgramTerm _ _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.EmptyTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.PushTerm _ _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                            | inference.Term.BoolTerm =>
+                              match value3 with
+                              | inference.Term.HoleTerm _ =>
+                                let (r8, self1, meter7) ←
+                                  inference.unify.Arena.bind
+                                    { self with effect_equations := v } value1
+                                    value span meter6
+                                match r8 with
+                                | core.result.Result.Ok _ =>
+                                  ok (core.result.Result.Ok pending, self1,
+                                    meter7)
+                                | core.result.Result.Err failure =>
+                                  ok (core.result.Result.Err failure, self1,
+                                    meter7)
+                              | inference.Term.LinkTerm _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.UnitTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.BoolTerm =>
+                                ok (core.result.Result.Ok pending,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.I64Term =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.TextTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.SyntaxTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.PairTerm _ _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.SumTerm _ _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.ListTerm _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.ProgramTerm _ _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.EmptyTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.PushTerm _ _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                            | inference.Term.I64Term =>
+                              match value3 with
+                              | inference.Term.HoleTerm _ =>
+                                let (r8, self1, meter7) ←
+                                  inference.unify.Arena.bind
+                                    { self with effect_equations := v } value1
+                                    value span meter6
+                                match r8 with
+                                | core.result.Result.Ok _ =>
+                                  ok (core.result.Result.Ok pending, self1,
+                                    meter7)
+                                | core.result.Result.Err failure =>
+                                  ok (core.result.Result.Err failure, self1,
+                                    meter7)
+                              | inference.Term.LinkTerm _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.UnitTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.BoolTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.I64Term =>
+                                ok (core.result.Result.Ok pending,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.TextTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.SyntaxTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.PairTerm _ _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.SumTerm _ _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.ListTerm _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.ProgramTerm _ _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.EmptyTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.PushTerm _ _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                            | inference.Term.TextTerm =>
+                              match value3 with
+                              | inference.Term.HoleTerm _ =>
+                                let (r8, self1, meter7) ←
+                                  inference.unify.Arena.bind
+                                    { self with effect_equations := v } value1
+                                    value span meter6
+                                match r8 with
+                                | core.result.Result.Ok _ =>
+                                  ok (core.result.Result.Ok pending, self1,
+                                    meter7)
+                                | core.result.Result.Err failure =>
+                                  ok (core.result.Result.Err failure, self1,
+                                    meter7)
+                              | inference.Term.LinkTerm _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.UnitTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.BoolTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.I64Term =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.TextTerm =>
+                                ok (core.result.Result.Ok pending,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.SyntaxTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.PairTerm _ _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.SumTerm _ _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.ListTerm _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.ProgramTerm _ _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.EmptyTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.PushTerm _ _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                            | inference.Term.SyntaxTerm =>
+                              match value3 with
+                              | inference.Term.HoleTerm _ =>
+                                let (r8, self1, meter7) ←
+                                  inference.unify.Arena.bind
+                                    { self with effect_equations := v } value1
+                                    value span meter6
+                                match r8 with
+                                | core.result.Result.Ok _ =>
+                                  ok (core.result.Result.Ok pending, self1,
+                                    meter7)
+                                | core.result.Result.Err failure =>
+                                  ok (core.result.Result.Err failure, self1,
+                                    meter7)
+                              | inference.Term.LinkTerm _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.UnitTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.BoolTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.I64Term =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.TextTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.SyntaxTerm =>
+                                ok (core.result.Result.Ok pending,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.PairTerm _ _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.SumTerm _ _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.ListTerm _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.ProgramTerm _ _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.EmptyTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.PushTerm _ _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                            | inference.Term.PairTerm a b3 =>
+                              match value3 with
+                              | inference.Term.HoleTerm _ =>
+                                let (r8, self1, meter7) ←
+                                  inference.unify.Arena.bind
+                                    { self with effect_equations := v } value1
+                                    value span meter6
+                                match r8 with
+                                | core.result.Result.Ok _ =>
+                                  ok (core.result.Result.Ok pending, self1,
+                                    meter7)
+                                | core.result.Result.Err failure =>
+                                  ok (core.result.Result.Err failure, self1,
+                                    meter7)
+                              | inference.Term.LinkTerm _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.UnitTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.BoolTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.I64Term =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.TextTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.SyntaxTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.PairTerm c d =>
+                                let pending1 ←
+                                  alloc.vec.Vec.push pending (a, c)
+                                let pending2 ←
+                                  alloc.vec.Vec.push pending1 (b3, d)
+                                ok (core.result.Result.Ok pending2,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.SumTerm _ _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.ListTerm _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.ProgramTerm _ _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.EmptyTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.PushTerm _ _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                            | inference.Term.SumTerm a b3 =>
+                              match value3 with
+                              | inference.Term.HoleTerm _ =>
+                                let (r8, self1, meter7) ←
+                                  inference.unify.Arena.bind
+                                    { self with effect_equations := v } value1
+                                    value span meter6
+                                match r8 with
+                                | core.result.Result.Ok _ =>
+                                  ok (core.result.Result.Ok pending, self1,
+                                    meter7)
+                                | core.result.Result.Err failure =>
+                                  ok (core.result.Result.Err failure, self1,
+                                    meter7)
+                              | inference.Term.LinkTerm _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.UnitTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.BoolTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.I64Term =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.TextTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.SyntaxTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.PairTerm _ _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.SumTerm c d =>
+                                let pending1 ←
+                                  alloc.vec.Vec.push pending (a, c)
+                                let pending2 ←
+                                  alloc.vec.Vec.push pending1 (b3, d)
+                                ok (core.result.Result.Ok pending2,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.ListTerm _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.ProgramTerm _ _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.EmptyTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.PushTerm _ _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                            | inference.Term.ListTerm a =>
+                              match value3 with
+                              | inference.Term.HoleTerm _ =>
+                                let (r8, self1, meter7) ←
+                                  inference.unify.Arena.bind
+                                    { self with effect_equations := v } value1
+                                    value span meter6
+                                match r8 with
+                                | core.result.Result.Ok _ =>
+                                  ok (core.result.Result.Ok pending, self1,
+                                    meter7)
+                                | core.result.Result.Err failure =>
+                                  ok (core.result.Result.Err failure, self1,
+                                    meter7)
+                              | inference.Term.LinkTerm _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.UnitTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.BoolTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.I64Term =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.TextTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.SyntaxTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.PairTerm _ _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.SumTerm _ _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.ListTerm b3 =>
+                                let pending1 ←
+                                  alloc.vec.Vec.push pending (a, b3)
+                                ok (core.result.Result.Ok pending1,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.ProgramTerm _ _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.EmptyTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.PushTerm _ _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                            | inference.Term.ProgramTerm a b3 =>
+                              match value3 with
+                              | inference.Term.HoleTerm _ =>
+                                let (r8, self1, meter7) ←
+                                  inference.unify.Arena.bind
+                                    { self with effect_equations := v } value1
+                                    value span meter6
+                                match r8 with
+                                | core.result.Result.Ok _ =>
+                                  ok (core.result.Result.Ok pending, self1,
+                                    meter7)
+                                | core.result.Result.Err failure =>
+                                  ok (core.result.Result.Err failure, self1,
+                                    meter7)
+                              | inference.Term.LinkTerm _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.UnitTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.BoolTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.I64Term =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.TextTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.SyntaxTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.PairTerm _ _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.SumTerm _ _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.ListTerm _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.ProgramTerm c d =>
+                                let pending1 ←
+                                  alloc.vec.Vec.push pending (a, c)
+                                let pending2 ←
+                                  alloc.vec.Vec.push pending1 (b3, d)
+                                ok (core.result.Result.Ok pending2,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.EmptyTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.PushTerm _ _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                            | inference.Term.EmptyTerm =>
+                              match value3 with
+                              | inference.Term.HoleTerm _ =>
+                                let (r8, self1, meter7) ←
+                                  inference.unify.Arena.bind
+                                    { self with effect_equations := v } value1
+                                    value span meter6
+                                match r8 with
+                                | core.result.Result.Ok _ =>
+                                  ok (core.result.Result.Ok pending, self1,
+                                    meter7)
+                                | core.result.Result.Err failure =>
+                                  ok (core.result.Result.Err failure, self1,
+                                    meter7)
+                              | inference.Term.LinkTerm _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.UnitTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.BoolTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.I64Term =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.TextTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.SyntaxTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.PairTerm _ _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.SumTerm _ _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.ListTerm _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.ProgramTerm _ _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.EmptyTerm =>
+                                ok (core.result.Result.Ok pending,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.PushTerm _ _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                            | inference.Term.PushTerm a b3 =>
+                              match value3 with
+                              | inference.Term.HoleTerm _ =>
+                                let (r8, self1, meter7) ←
+                                  inference.unify.Arena.bind
+                                    { self with effect_equations := v } value1
+                                    value span meter6
+                                match r8 with
+                                | core.result.Result.Ok _ =>
+                                  ok (core.result.Result.Ok pending, self1,
+                                    meter7)
+                                | core.result.Result.Err failure =>
+                                  ok (core.result.Result.Err failure, self1,
+                                    meter7)
+                              | inference.Term.LinkTerm _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.UnitTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.BoolTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.I64Term =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.TextTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.SyntaxTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.PairTerm _ _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.SumTerm _ _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.ListTerm _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.ProgramTerm _ _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.EmptyTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.PushTerm c d =>
+                                let pending1 ←
+                                  alloc.vec.Vec.push pending (a, c)
+                                let pending2 ←
+                                  alloc.vec.Vec.push pending1 (b3, d)
+                                ok (core.result.Result.Ok pending2,
+                                  { self with effect_equations := v }, meter6)
+                        | core.result.Result.Err failure =>
+                          ok (core.result.Result.Err failure, self, meter6)
+                      | core.result.Result.Err failure =>
+                        ok (core.result.Result.Err failure, self, meter5)
+                    | core.result.Result.Err failure =>
+                      ok (core.result.Result.Err failure, self, meter4)
+                  else
+                    let s ← inference.sort value2
+                    let s1 ← inference.sort value3
+                    let b2 ←
+                      core.cmp.PartialEq.ne.trait_default
+                        inference.Sort.Insts.CoreCmpPartialEqSort s s1
+                    if b2
+                    then
+                      let d ←
+                        invalid span (toStr
+                          "value and stack witness kinds do not match")
+                      ok (core.result.Result.Err d, self, meter3)
+                    else
+                      match value2 with
+                      | inference.Term.HoleTerm _ =>
+                        let (r5, self1, meter4) ←
+                          inference.unify.Arena.bind self value value1 span
+                            meter3
+                        match r5 with
+                        | core.result.Result.Ok _ =>
+                          ok (core.result.Result.Ok pending, self1, meter4)
+                        | core.result.Result.Err failure =>
+                          ok (core.result.Result.Err failure, self1, meter4)
+                      | inference.Term.LinkTerm _ =>
+                        match value3 with
+                        | inference.Term.HoleTerm _ =>
+                          let (r5, self1, meter4) ←
+                            inference.unify.Arena.bind self value1 value span
+                              meter3
+                          match r5 with
+                          | core.result.Result.Ok _ =>
+                            ok (core.result.Result.Ok pending, self1, meter4)
+                          | core.result.Result.Err failure =>
+                            ok (core.result.Result.Err failure, self1, meter4)
+                        | inference.Term.LinkTerm _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.UnitTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.BoolTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.I64Term =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.TextTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.SyntaxTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.PairTerm _ _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.SumTerm _ _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.ListTerm _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.ProgramTerm _ _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.EmptyTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.PushTerm _ _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.UnitTerm =>
+                        match value3 with
+                        | inference.Term.HoleTerm _ =>
+                          let (r5, self1, meter4) ←
+                            inference.unify.Arena.bind self value1 value span
+                              meter3
+                          match r5 with
+                          | core.result.Result.Ok _ =>
+                            ok (core.result.Result.Ok pending, self1, meter4)
+                          | core.result.Result.Err failure =>
+                            ok (core.result.Result.Err failure, self1, meter4)
+                        | inference.Term.LinkTerm _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.UnitTerm =>
+                          ok (core.result.Result.Ok pending, self, meter3)
+                        | inference.Term.BoolTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.I64Term =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.TextTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.SyntaxTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.PairTerm _ _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.SumTerm _ _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.ListTerm _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.ProgramTerm _ _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.EmptyTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.PushTerm _ _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.BoolTerm =>
+                        match value3 with
+                        | inference.Term.HoleTerm _ =>
+                          let (r5, self1, meter4) ←
+                            inference.unify.Arena.bind self value1 value span
+                              meter3
+                          match r5 with
+                          | core.result.Result.Ok _ =>
+                            ok (core.result.Result.Ok pending, self1, meter4)
+                          | core.result.Result.Err failure =>
+                            ok (core.result.Result.Err failure, self1, meter4)
+                        | inference.Term.LinkTerm _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.UnitTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.BoolTerm =>
+                          ok (core.result.Result.Ok pending, self, meter3)
+                        | inference.Term.I64Term =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.TextTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.SyntaxTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.PairTerm _ _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.SumTerm _ _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.ListTerm _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.ProgramTerm _ _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.EmptyTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.PushTerm _ _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.I64Term =>
+                        match value3 with
+                        | inference.Term.HoleTerm _ =>
+                          let (r5, self1, meter4) ←
+                            inference.unify.Arena.bind self value1 value span
+                              meter3
+                          match r5 with
+                          | core.result.Result.Ok _ =>
+                            ok (core.result.Result.Ok pending, self1, meter4)
+                          | core.result.Result.Err failure =>
+                            ok (core.result.Result.Err failure, self1, meter4)
+                        | inference.Term.LinkTerm _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.UnitTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.BoolTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.I64Term =>
+                          ok (core.result.Result.Ok pending, self, meter3)
+                        | inference.Term.TextTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.SyntaxTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.PairTerm _ _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.SumTerm _ _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.ListTerm _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.ProgramTerm _ _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.EmptyTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.PushTerm _ _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.TextTerm =>
+                        match value3 with
+                        | inference.Term.HoleTerm _ =>
+                          let (r5, self1, meter4) ←
+                            inference.unify.Arena.bind self value1 value span
+                              meter3
+                          match r5 with
+                          | core.result.Result.Ok _ =>
+                            ok (core.result.Result.Ok pending, self1, meter4)
+                          | core.result.Result.Err failure =>
+                            ok (core.result.Result.Err failure, self1, meter4)
+                        | inference.Term.LinkTerm _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.UnitTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.BoolTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.I64Term =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.TextTerm =>
+                          ok (core.result.Result.Ok pending, self, meter3)
+                        | inference.Term.SyntaxTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.PairTerm _ _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.SumTerm _ _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.ListTerm _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.ProgramTerm _ _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.EmptyTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.PushTerm _ _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.SyntaxTerm =>
+                        match value3 with
+                        | inference.Term.HoleTerm _ =>
+                          let (r5, self1, meter4) ←
+                            inference.unify.Arena.bind self value1 value span
+                              meter3
+                          match r5 with
+                          | core.result.Result.Ok _ =>
+                            ok (core.result.Result.Ok pending, self1, meter4)
+                          | core.result.Result.Err failure =>
+                            ok (core.result.Result.Err failure, self1, meter4)
+                        | inference.Term.LinkTerm _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.UnitTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.BoolTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.I64Term =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.TextTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.SyntaxTerm =>
+                          ok (core.result.Result.Ok pending, self, meter3)
+                        | inference.Term.PairTerm _ _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.SumTerm _ _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.ListTerm _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.ProgramTerm _ _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.EmptyTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.PushTerm _ _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.PairTerm a b3 =>
+                        match value3 with
+                        | inference.Term.HoleTerm _ =>
+                          let (r5, self1, meter4) ←
+                            inference.unify.Arena.bind self value1 value span
+                              meter3
+                          match r5 with
+                          | core.result.Result.Ok _ =>
+                            ok (core.result.Result.Ok pending, self1, meter4)
+                          | core.result.Result.Err failure =>
+                            ok (core.result.Result.Err failure, self1, meter4)
+                        | inference.Term.LinkTerm _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.UnitTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.BoolTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.I64Term =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.TextTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.SyntaxTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.PairTerm c d =>
+                          let pending1 ← alloc.vec.Vec.push pending (a, c)
+                          let pending2 ← alloc.vec.Vec.push pending1 (b3, d)
+                          ok (core.result.Result.Ok pending2, self, meter3)
+                        | inference.Term.SumTerm _ _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.ListTerm _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.ProgramTerm _ _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.EmptyTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.PushTerm _ _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.SumTerm a b3 =>
+                        match value3 with
+                        | inference.Term.HoleTerm _ =>
+                          let (r5, self1, meter4) ←
+                            inference.unify.Arena.bind self value1 value span
+                              meter3
+                          match r5 with
+                          | core.result.Result.Ok _ =>
+                            ok (core.result.Result.Ok pending, self1, meter4)
+                          | core.result.Result.Err failure =>
+                            ok (core.result.Result.Err failure, self1, meter4)
+                        | inference.Term.LinkTerm _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.UnitTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.BoolTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.I64Term =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.TextTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.SyntaxTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.PairTerm _ _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.SumTerm c d =>
+                          let pending1 ← alloc.vec.Vec.push pending (a, c)
+                          let pending2 ← alloc.vec.Vec.push pending1 (b3, d)
+                          ok (core.result.Result.Ok pending2, self, meter3)
+                        | inference.Term.ListTerm _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.ProgramTerm _ _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.EmptyTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.PushTerm _ _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.ListTerm a =>
+                        match value3 with
+                        | inference.Term.HoleTerm _ =>
+                          let (r5, self1, meter4) ←
+                            inference.unify.Arena.bind self value1 value span
+                              meter3
+                          match r5 with
+                          | core.result.Result.Ok _ =>
+                            ok (core.result.Result.Ok pending, self1, meter4)
+                          | core.result.Result.Err failure =>
+                            ok (core.result.Result.Err failure, self1, meter4)
+                        | inference.Term.LinkTerm _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.UnitTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.BoolTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.I64Term =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.TextTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.SyntaxTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.PairTerm _ _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.SumTerm _ _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.ListTerm b3 =>
+                          let pending1 ← alloc.vec.Vec.push pending (a, b3)
+                          ok (core.result.Result.Ok pending1, self, meter3)
+                        | inference.Term.ProgramTerm _ _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.EmptyTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.PushTerm _ _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.ProgramTerm a b3 =>
+                        match value3 with
+                        | inference.Term.HoleTerm _ =>
+                          let (r5, self1, meter4) ←
+                            inference.unify.Arena.bind self value1 value span
+                              meter3
+                          match r5 with
+                          | core.result.Result.Ok _ =>
+                            ok (core.result.Result.Ok pending, self1, meter4)
+                          | core.result.Result.Err failure =>
+                            ok (core.result.Result.Err failure, self1, meter4)
+                        | inference.Term.LinkTerm _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.UnitTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.BoolTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.I64Term =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.TextTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.SyntaxTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.PairTerm _ _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.SumTerm _ _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.ListTerm _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.ProgramTerm c d =>
+                          let pending1 ← alloc.vec.Vec.push pending (a, c)
+                          let pending2 ← alloc.vec.Vec.push pending1 (b3, d)
+                          ok (core.result.Result.Ok pending2, self, meter3)
+                        | inference.Term.EmptyTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.PushTerm _ _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.EmptyTerm =>
+                        match value3 with
+                        | inference.Term.HoleTerm _ =>
+                          let (r5, self1, meter4) ←
+                            inference.unify.Arena.bind self value1 value span
+                              meter3
+                          match r5 with
+                          | core.result.Result.Ok _ =>
+                            ok (core.result.Result.Ok pending, self1, meter4)
+                          | core.result.Result.Err failure =>
+                            ok (core.result.Result.Err failure, self1, meter4)
+                        | inference.Term.LinkTerm _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.UnitTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.BoolTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.I64Term =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.TextTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.SyntaxTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.PairTerm _ _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.SumTerm _ _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.ListTerm _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.ProgramTerm _ _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.EmptyTerm =>
+                          ok (core.result.Result.Ok pending, self, meter3)
+                        | inference.Term.PushTerm _ _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.PushTerm a b3 =>
+                        match value3 with
+                        | inference.Term.HoleTerm _ =>
+                          let (r5, self1, meter4) ←
+                            inference.unify.Arena.bind self value1 value span
+                              meter3
+                          match r5 with
+                          | core.result.Result.Ok _ =>
+                            ok (core.result.Result.Ok pending, self1, meter4)
+                          | core.result.Result.Err failure =>
+                            ok (core.result.Result.Err failure, self1, meter4)
+                        | inference.Term.LinkTerm _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.UnitTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.BoolTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.I64Term =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.TextTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.SyntaxTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.PairTerm _ _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.SumTerm _ _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.ListTerm _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.ProgramTerm _ _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.EmptyTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.PushTerm c d =>
+                          let pending1 ← alloc.vec.Vec.push pending (a, c)
+                          let pending2 ← alloc.vec.Vec.push pending1 (b3, d)
+                          ok (core.result.Result.Ok pending2, self, meter3)
+                else
+                  let s ← inference.sort value2
+                  let s1 ← inference.sort value3
+                  let b1 ←
+                    core.cmp.PartialEq.ne.trait_default
+                      inference.Sort.Insts.CoreCmpPartialEqSort s s1
+                  if b1
+                  then
+                    let d ←
+                      invalid span (toStr
+                        "value and stack witness kinds do not match")
+                    ok (core.result.Result.Err d, self, meter3)
+                  else
+                    match value2 with
+                    | inference.Term.HoleTerm _ =>
+                      let (r5, self1, meter4) ←
+                        inference.unify.Arena.bind self value value1 span
+                          meter3
+                      match r5 with
+                      | core.result.Result.Ok _ =>
+                        ok (core.result.Result.Ok pending, self1, meter4)
+                      | core.result.Result.Err failure =>
+                        ok (core.result.Result.Err failure, self1, meter4)
+                    | inference.Term.LinkTerm _ =>
+                      match value3 with
+                      | inference.Term.HoleTerm _ =>
+                        let (r5, self1, meter4) ←
+                          inference.unify.Arena.bind self value1 value span
+                            meter3
+                        match r5 with
+                        | core.result.Result.Ok _ =>
+                          ok (core.result.Result.Ok pending, self1, meter4)
+                        | core.result.Result.Err failure =>
+                          ok (core.result.Result.Err failure, self1, meter4)
+                      | inference.Term.LinkTerm _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.UnitTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.BoolTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.I64Term =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.TextTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.SyntaxTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.PairTerm _ _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.SumTerm _ _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.ListTerm _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.ProgramTerm _ _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.EmptyTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.PushTerm _ _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.UnitTerm =>
+                      match value3 with
+                      | inference.Term.HoleTerm _ =>
+                        let (r5, self1, meter4) ←
+                          inference.unify.Arena.bind self value1 value span
+                            meter3
+                        match r5 with
+                        | core.result.Result.Ok _ =>
+                          ok (core.result.Result.Ok pending, self1, meter4)
+                        | core.result.Result.Err failure =>
+                          ok (core.result.Result.Err failure, self1, meter4)
+                      | inference.Term.LinkTerm _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.UnitTerm =>
+                        ok (core.result.Result.Ok pending, self, meter3)
+                      | inference.Term.BoolTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.I64Term =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.TextTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.SyntaxTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.PairTerm _ _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.SumTerm _ _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.ListTerm _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.ProgramTerm _ _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.EmptyTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.PushTerm _ _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.BoolTerm =>
+                      match value3 with
+                      | inference.Term.HoleTerm _ =>
+                        let (r5, self1, meter4) ←
+                          inference.unify.Arena.bind self value1 value span
+                            meter3
+                        match r5 with
+                        | core.result.Result.Ok _ =>
+                          ok (core.result.Result.Ok pending, self1, meter4)
+                        | core.result.Result.Err failure =>
+                          ok (core.result.Result.Err failure, self1, meter4)
+                      | inference.Term.LinkTerm _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.UnitTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.BoolTerm =>
+                        ok (core.result.Result.Ok pending, self, meter3)
+                      | inference.Term.I64Term =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.TextTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.SyntaxTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.PairTerm _ _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.SumTerm _ _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.ListTerm _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.ProgramTerm _ _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.EmptyTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.PushTerm _ _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.I64Term =>
+                      match value3 with
+                      | inference.Term.HoleTerm _ =>
+                        let (r5, self1, meter4) ←
+                          inference.unify.Arena.bind self value1 value span
+                            meter3
+                        match r5 with
+                        | core.result.Result.Ok _ =>
+                          ok (core.result.Result.Ok pending, self1, meter4)
+                        | core.result.Result.Err failure =>
+                          ok (core.result.Result.Err failure, self1, meter4)
+                      | inference.Term.LinkTerm _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.UnitTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.BoolTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.I64Term =>
+                        ok (core.result.Result.Ok pending, self, meter3)
+                      | inference.Term.TextTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.SyntaxTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.PairTerm _ _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.SumTerm _ _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.ListTerm _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.ProgramTerm _ _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.EmptyTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.PushTerm _ _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.TextTerm =>
+                      match value3 with
+                      | inference.Term.HoleTerm _ =>
+                        let (r5, self1, meter4) ←
+                          inference.unify.Arena.bind self value1 value span
+                            meter3
+                        match r5 with
+                        | core.result.Result.Ok _ =>
+                          ok (core.result.Result.Ok pending, self1, meter4)
+                        | core.result.Result.Err failure =>
+                          ok (core.result.Result.Err failure, self1, meter4)
+                      | inference.Term.LinkTerm _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.UnitTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.BoolTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.I64Term =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.TextTerm =>
+                        ok (core.result.Result.Ok pending, self, meter3)
+                      | inference.Term.SyntaxTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.PairTerm _ _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.SumTerm _ _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.ListTerm _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.ProgramTerm _ _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.EmptyTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.PushTerm _ _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.SyntaxTerm =>
+                      match value3 with
+                      | inference.Term.HoleTerm _ =>
+                        let (r5, self1, meter4) ←
+                          inference.unify.Arena.bind self value1 value span
+                            meter3
+                        match r5 with
+                        | core.result.Result.Ok _ =>
+                          ok (core.result.Result.Ok pending, self1, meter4)
+                        | core.result.Result.Err failure =>
+                          ok (core.result.Result.Err failure, self1, meter4)
+                      | inference.Term.LinkTerm _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.UnitTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.BoolTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.I64Term =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.TextTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.SyntaxTerm =>
+                        ok (core.result.Result.Ok pending, self, meter3)
+                      | inference.Term.PairTerm _ _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.SumTerm _ _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.ListTerm _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.ProgramTerm _ _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.EmptyTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.PushTerm _ _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.PairTerm a b2 =>
+                      match value3 with
+                      | inference.Term.HoleTerm _ =>
+                        let (r5, self1, meter4) ←
+                          inference.unify.Arena.bind self value1 value span
+                            meter3
+                        match r5 with
+                        | core.result.Result.Ok _ =>
+                          ok (core.result.Result.Ok pending, self1, meter4)
+                        | core.result.Result.Err failure =>
+                          ok (core.result.Result.Err failure, self1, meter4)
+                      | inference.Term.LinkTerm _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.UnitTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.BoolTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.I64Term =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.TextTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.SyntaxTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.PairTerm c d =>
+                        let pending1 ← alloc.vec.Vec.push pending (a, c)
+                        let pending2 ← alloc.vec.Vec.push pending1 (b2, d)
+                        ok (core.result.Result.Ok pending2, self, meter3)
+                      | inference.Term.SumTerm _ _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.ListTerm _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.ProgramTerm _ _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.EmptyTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.PushTerm _ _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.SumTerm a b2 =>
+                      match value3 with
+                      | inference.Term.HoleTerm _ =>
+                        let (r5, self1, meter4) ←
+                          inference.unify.Arena.bind self value1 value span
+                            meter3
+                        match r5 with
+                        | core.result.Result.Ok _ =>
+                          ok (core.result.Result.Ok pending, self1, meter4)
+                        | core.result.Result.Err failure =>
+                          ok (core.result.Result.Err failure, self1, meter4)
+                      | inference.Term.LinkTerm _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.UnitTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.BoolTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.I64Term =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.TextTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.SyntaxTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.PairTerm _ _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.SumTerm c d =>
+                        let pending1 ← alloc.vec.Vec.push pending (a, c)
+                        let pending2 ← alloc.vec.Vec.push pending1 (b2, d)
+                        ok (core.result.Result.Ok pending2, self, meter3)
+                      | inference.Term.ListTerm _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.ProgramTerm _ _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.EmptyTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.PushTerm _ _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.ListTerm a =>
+                      match value3 with
+                      | inference.Term.HoleTerm _ =>
+                        let (r5, self1, meter4) ←
+                          inference.unify.Arena.bind self value1 value span
+                            meter3
+                        match r5 with
+                        | core.result.Result.Ok _ =>
+                          ok (core.result.Result.Ok pending, self1, meter4)
+                        | core.result.Result.Err failure =>
+                          ok (core.result.Result.Err failure, self1, meter4)
+                      | inference.Term.LinkTerm _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.UnitTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.BoolTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.I64Term =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.TextTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.SyntaxTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.PairTerm _ _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.SumTerm _ _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.ListTerm b2 =>
+                        let pending1 ← alloc.vec.Vec.push pending (a, b2)
+                        ok (core.result.Result.Ok pending1, self, meter3)
+                      | inference.Term.ProgramTerm _ _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.EmptyTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.PushTerm _ _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.ProgramTerm a b2 =>
+                      match value3 with
+                      | inference.Term.HoleTerm _ =>
+                        let (r5, self1, meter4) ←
+                          inference.unify.Arena.bind self value1 value span
+                            meter3
+                        match r5 with
+                        | core.result.Result.Ok _ =>
+                          ok (core.result.Result.Ok pending, self1, meter4)
+                        | core.result.Result.Err failure =>
+                          ok (core.result.Result.Err failure, self1, meter4)
+                      | inference.Term.LinkTerm _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.UnitTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.BoolTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.I64Term =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.TextTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.SyntaxTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.PairTerm _ _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.SumTerm _ _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.ListTerm _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.ProgramTerm c d =>
+                        let pending1 ← alloc.vec.Vec.push pending (a, c)
+                        let pending2 ← alloc.vec.Vec.push pending1 (b2, d)
+                        ok (core.result.Result.Ok pending2, self, meter3)
+                      | inference.Term.EmptyTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.PushTerm _ _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.EmptyTerm =>
+                      match value3 with
+                      | inference.Term.HoleTerm _ =>
+                        let (r5, self1, meter4) ←
+                          inference.unify.Arena.bind self value1 value span
+                            meter3
+                        match r5 with
+                        | core.result.Result.Ok _ =>
+                          ok (core.result.Result.Ok pending, self1, meter4)
+                        | core.result.Result.Err failure =>
+                          ok (core.result.Result.Err failure, self1, meter4)
+                      | inference.Term.LinkTerm _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.UnitTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.BoolTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.I64Term =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.TextTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.SyntaxTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.PairTerm _ _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.SumTerm _ _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.ListTerm _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.ProgramTerm _ _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.EmptyTerm =>
+                        ok (core.result.Result.Ok pending, self, meter3)
+                      | inference.Term.PushTerm _ _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.PushTerm a b2 =>
+                      match value3 with
+                      | inference.Term.HoleTerm _ =>
+                        let (r5, self1, meter4) ←
+                          inference.unify.Arena.bind self value1 value span
+                            meter3
+                        match r5 with
+                        | core.result.Result.Ok _ =>
+                          ok (core.result.Result.Ok pending, self1, meter4)
+                        | core.result.Result.Err failure =>
+                          ok (core.result.Result.Err failure, self1, meter4)
+                      | inference.Term.LinkTerm _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.UnitTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.BoolTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.I64Term =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.TextTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.SyntaxTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.PairTerm _ _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.SumTerm _ _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.ListTerm _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.ProgramTerm _ _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.EmptyTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.PushTerm c d =>
+                        let pending1 ← alloc.vec.Vec.push pending (a, c)
+                        let pending2 ← alloc.vec.Vec.push pending1 (b2, d)
+                        ok (core.result.Result.Ok pending2, self, meter3)
+              else
+                let s ← inference.sort value2
+                let s1 ← inference.sort value3
+                let b ←
+                  core.cmp.PartialEq.ne.trait_default
+                    inference.Sort.Insts.CoreCmpPartialEqSort s s1
+                if b
+                then
+                  let d ←
+                    invalid span (toStr
+                      "value and stack witness kinds do not match")
+                  ok (core.result.Result.Err d, self, meter3)
+                else
+                  match value2 with
+                  | inference.Term.HoleTerm _ =>
+                    let (r5, self1, meter4) ←
+                      inference.unify.Arena.bind self value value1 span meter3
+                    match r5 with
+                    | core.result.Result.Ok _ =>
+                      ok (core.result.Result.Ok pending, self1, meter4)
+                    | core.result.Result.Err failure =>
+                      ok (core.result.Result.Err failure, self1, meter4)
+                  | inference.Term.LinkTerm _ =>
+                    match value3 with
+                    | inference.Term.HoleTerm _ =>
+                      let (r5, self1, meter4) ←
+                        inference.unify.Arena.bind self value1 value span
+                          meter3
+                      match r5 with
+                      | core.result.Result.Ok _ =>
+                        ok (core.result.Result.Ok pending, self1, meter4)
+                      | core.result.Result.Err failure =>
+                        ok (core.result.Result.Err failure, self1, meter4)
+                    | inference.Term.LinkTerm _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.UnitTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.BoolTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.I64Term =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.TextTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.SyntaxTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.PairTerm _ _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.SumTerm _ _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.ListTerm _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.ProgramTerm _ _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.EmptyTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.PushTerm _ _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                  | inference.Term.UnitTerm =>
+                    match value3 with
+                    | inference.Term.HoleTerm _ =>
+                      let (r5, self1, meter4) ←
+                        inference.unify.Arena.bind self value1 value span
+                          meter3
+                      match r5 with
+                      | core.result.Result.Ok _ =>
+                        ok (core.result.Result.Ok pending, self1, meter4)
+                      | core.result.Result.Err failure =>
+                        ok (core.result.Result.Err failure, self1, meter4)
+                    | inference.Term.LinkTerm _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.UnitTerm =>
+                      ok (core.result.Result.Ok pending, self, meter3)
+                    | inference.Term.BoolTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.I64Term =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.TextTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.SyntaxTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.PairTerm _ _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.SumTerm _ _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.ListTerm _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.ProgramTerm _ _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.EmptyTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.PushTerm _ _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                  | inference.Term.BoolTerm =>
+                    match value3 with
+                    | inference.Term.HoleTerm _ =>
+                      let (r5, self1, meter4) ←
+                        inference.unify.Arena.bind self value1 value span
+                          meter3
+                      match r5 with
+                      | core.result.Result.Ok _ =>
+                        ok (core.result.Result.Ok pending, self1, meter4)
+                      | core.result.Result.Err failure =>
+                        ok (core.result.Result.Err failure, self1, meter4)
+                    | inference.Term.LinkTerm _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.UnitTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.BoolTerm =>
+                      ok (core.result.Result.Ok pending, self, meter3)
+                    | inference.Term.I64Term =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.TextTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.SyntaxTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.PairTerm _ _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.SumTerm _ _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.ListTerm _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.ProgramTerm _ _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.EmptyTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.PushTerm _ _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                  | inference.Term.I64Term =>
+                    match value3 with
+                    | inference.Term.HoleTerm _ =>
+                      let (r5, self1, meter4) ←
+                        inference.unify.Arena.bind self value1 value span
+                          meter3
+                      match r5 with
+                      | core.result.Result.Ok _ =>
+                        ok (core.result.Result.Ok pending, self1, meter4)
+                      | core.result.Result.Err failure =>
+                        ok (core.result.Result.Err failure, self1, meter4)
+                    | inference.Term.LinkTerm _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.UnitTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.BoolTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.I64Term =>
+                      ok (core.result.Result.Ok pending, self, meter3)
+                    | inference.Term.TextTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.SyntaxTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.PairTerm _ _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.SumTerm _ _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.ListTerm _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.ProgramTerm _ _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.EmptyTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.PushTerm _ _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                  | inference.Term.TextTerm =>
+                    match value3 with
+                    | inference.Term.HoleTerm _ =>
+                      let (r5, self1, meter4) ←
+                        inference.unify.Arena.bind self value1 value span
+                          meter3
+                      match r5 with
+                      | core.result.Result.Ok _ =>
+                        ok (core.result.Result.Ok pending, self1, meter4)
+                      | core.result.Result.Err failure =>
+                        ok (core.result.Result.Err failure, self1, meter4)
+                    | inference.Term.LinkTerm _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.UnitTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.BoolTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.I64Term =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.TextTerm =>
+                      ok (core.result.Result.Ok pending, self, meter3)
+                    | inference.Term.SyntaxTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.PairTerm _ _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.SumTerm _ _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.ListTerm _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.ProgramTerm _ _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.EmptyTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.PushTerm _ _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                  | inference.Term.SyntaxTerm =>
+                    match value3 with
+                    | inference.Term.HoleTerm _ =>
+                      let (r5, self1, meter4) ←
+                        inference.unify.Arena.bind self value1 value span
+                          meter3
+                      match r5 with
+                      | core.result.Result.Ok _ =>
+                        ok (core.result.Result.Ok pending, self1, meter4)
+                      | core.result.Result.Err failure =>
+                        ok (core.result.Result.Err failure, self1, meter4)
+                    | inference.Term.LinkTerm _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.UnitTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.BoolTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.I64Term =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.TextTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.SyntaxTerm =>
+                      ok (core.result.Result.Ok pending, self, meter3)
+                    | inference.Term.PairTerm _ _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.SumTerm _ _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.ListTerm _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.ProgramTerm _ _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.EmptyTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.PushTerm _ _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                  | inference.Term.PairTerm a b1 =>
+                    match value3 with
+                    | inference.Term.HoleTerm _ =>
+                      let (r5, self1, meter4) ←
+                        inference.unify.Arena.bind self value1 value span
+                          meter3
+                      match r5 with
+                      | core.result.Result.Ok _ =>
+                        ok (core.result.Result.Ok pending, self1, meter4)
+                      | core.result.Result.Err failure =>
+                        ok (core.result.Result.Err failure, self1, meter4)
+                    | inference.Term.LinkTerm _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.UnitTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.BoolTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.I64Term =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.TextTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.SyntaxTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.PairTerm c d =>
+                      let pending1 ← alloc.vec.Vec.push pending (a, c)
+                      let pending2 ← alloc.vec.Vec.push pending1 (b1, d)
+                      ok (core.result.Result.Ok pending2, self, meter3)
+                    | inference.Term.SumTerm _ _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.ListTerm _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.ProgramTerm _ _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.EmptyTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.PushTerm _ _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                  | inference.Term.SumTerm a b1 =>
+                    match value3 with
+                    | inference.Term.HoleTerm _ =>
+                      let (r5, self1, meter4) ←
+                        inference.unify.Arena.bind self value1 value span
+                          meter3
+                      match r5 with
+                      | core.result.Result.Ok _ =>
+                        ok (core.result.Result.Ok pending, self1, meter4)
+                      | core.result.Result.Err failure =>
+                        ok (core.result.Result.Err failure, self1, meter4)
+                    | inference.Term.LinkTerm _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.UnitTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.BoolTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.I64Term =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.TextTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.SyntaxTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.PairTerm _ _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.SumTerm c d =>
+                      let pending1 ← alloc.vec.Vec.push pending (a, c)
+                      let pending2 ← alloc.vec.Vec.push pending1 (b1, d)
+                      ok (core.result.Result.Ok pending2, self, meter3)
+                    | inference.Term.ListTerm _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.ProgramTerm _ _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.EmptyTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.PushTerm _ _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                  | inference.Term.ListTerm a =>
+                    match value3 with
+                    | inference.Term.HoleTerm _ =>
+                      let (r5, self1, meter4) ←
+                        inference.unify.Arena.bind self value1 value span
+                          meter3
+                      match r5 with
+                      | core.result.Result.Ok _ =>
+                        ok (core.result.Result.Ok pending, self1, meter4)
+                      | core.result.Result.Err failure =>
+                        ok (core.result.Result.Err failure, self1, meter4)
+                    | inference.Term.LinkTerm _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.UnitTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.BoolTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.I64Term =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.TextTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.SyntaxTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.PairTerm _ _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.SumTerm _ _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.ListTerm b1 =>
+                      let pending1 ← alloc.vec.Vec.push pending (a, b1)
+                      ok (core.result.Result.Ok pending1, self, meter3)
+                    | inference.Term.ProgramTerm _ _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.EmptyTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.PushTerm _ _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                  | inference.Term.ProgramTerm a b1 =>
+                    match value3 with
+                    | inference.Term.HoleTerm _ =>
+                      let (r5, self1, meter4) ←
+                        inference.unify.Arena.bind self value1 value span
+                          meter3
+                      match r5 with
+                      | core.result.Result.Ok _ =>
+                        ok (core.result.Result.Ok pending, self1, meter4)
+                      | core.result.Result.Err failure =>
+                        ok (core.result.Result.Err failure, self1, meter4)
+                    | inference.Term.LinkTerm _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.UnitTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.BoolTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.I64Term =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.TextTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.SyntaxTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.PairTerm _ _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.SumTerm _ _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.ListTerm _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.ProgramTerm c d =>
+                      let pending1 ← alloc.vec.Vec.push pending (a, c)
+                      let pending2 ← alloc.vec.Vec.push pending1 (b1, d)
+                      ok (core.result.Result.Ok pending2, self, meter3)
+                    | inference.Term.EmptyTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.PushTerm _ _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                  | inference.Term.EmptyTerm =>
+                    match value3 with
+                    | inference.Term.HoleTerm _ =>
+                      let (r5, self1, meter4) ←
+                        inference.unify.Arena.bind self value1 value span
+                          meter3
+                      match r5 with
+                      | core.result.Result.Ok _ =>
+                        ok (core.result.Result.Ok pending, self1, meter4)
+                      | core.result.Result.Err failure =>
+                        ok (core.result.Result.Err failure, self1, meter4)
+                    | inference.Term.LinkTerm _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.UnitTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.BoolTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.I64Term =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.TextTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.SyntaxTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.PairTerm _ _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.SumTerm _ _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.ListTerm _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.ProgramTerm _ _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.EmptyTerm =>
+                      ok (core.result.Result.Ok pending, self, meter3)
+                    | inference.Term.PushTerm _ _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                  | inference.Term.PushTerm a b1 =>
+                    match value3 with
+                    | inference.Term.HoleTerm _ =>
+                      let (r5, self1, meter4) ←
+                        inference.unify.Arena.bind self value1 value span
+                          meter3
+                      match r5 with
+                      | core.result.Result.Ok _ =>
+                        ok (core.result.Result.Ok pending, self1, meter4)
+                      | core.result.Result.Err failure =>
+                        ok (core.result.Result.Err failure, self1, meter4)
+                    | inference.Term.LinkTerm _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.UnitTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.BoolTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.I64Term =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.TextTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.SyntaxTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.PairTerm _ _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.SumTerm _ _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.ListTerm _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.ProgramTerm _ _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.EmptyTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.PushTerm c d =>
+                      let pending1 ← alloc.vec.Vec.push pending (a, c)
+                      let pending2 ← alloc.vec.Vec.push pending1 (b1, d)
+                      ok (core.result.Result.Ok pending2, self, meter3)
+            | core.result.Result.Err failure =>
+              ok (core.result.Result.Err failure, self, meter3)
+          | core.result.Result.Err failure =>
+            ok (core.result.Result.Err failure, self, meter3)
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, self, meter3)
+    | core.result.Result.Err failure =>
+      ok (core.result.Result.Err failure, self, meter2)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, self, meter1)
+
+/-- [noble_contracts::inference::unify::{noble_contracts::inference::Arena}::unify]: loop body 0:
+    Source: 'crates/noble-contracts/src/inference/unify.rs', lines 99:8-109:9
+    Visibility: public -/
+@[rust_loop_body]
+def inference.unify.Arena.unify_loop.body
+  (span : Span)
+  (outcome : core.result.Result (alloc.vec.Vec (Std.U32 × Std.U32))
+  Diagnostic) (self : inference.Arena) (meter : Meter) :
+  Result (ControlFlow ((core.result.Result (alloc.vec.Vec (Std.U32 × Std.U32))
+    Diagnostic) × inference.Arena × Meter) (inference.Arena × Meter ×
+    (core.result.Result (alloc.vec.Vec (Std.U32 × Std.U32)) Diagnostic)))
+  := do
+  match outcome with
+  | core.result.Result.Ok pending =>
+    let (o, pending1) ← alloc.vec.Vec.pop Global pending
+    match o with
+    | none => ok (done (self, meter, core.result.Result.Ok pending1))
+    | some p =>
+      let (left, right) := p
+      let (outcome1, self1, meter1) ←
+        inference.unify.Arena.unify_step self left right pending1 span meter
+      ok (cont (outcome1, self1, meter1))
+  | core.result.Result.Err _ => ok (done (self, meter, outcome))
+
+/-- [noble_contracts::inference::unify::{noble_contracts::inference::Arena}::unify]: loop 0:
+    Source: 'crates/noble-contracts/src/inference/unify.rs', lines 99:8-109:9
+    Visibility: public -/
+@[rust_loop]
+def inference.unify.Arena.unify_loop
+  (outcome : core.result.Result (alloc.vec.Vec (Std.U32 × Std.U32))
+  Diagnostic) (self : inference.Arena) (span : Span) (meter : Meter) :
+  Result (inference.Arena × Meter × (core.result.Result (alloc.vec.Vec
+    (Std.U32 × Std.U32)) Diagnostic))
+  := do
+  loop
+    (fun (outcome1, self1, meter1) => inference.unify.Arena.unify_loop.body
+      span outcome1 self1 meter1)
+    (outcome, self, meter)
+
+/-- [noble_contracts::inference::unify::{noble_contracts::inference::Arena}::unify]:
+    Source: 'crates/noble-contracts/src/inference/unify.rs', lines 89:4-112:5
+    Visibility: public -/
+def inference.unify.Arena.unify
+  (self : inference.Arena) (left : Std.U32) (right : Std.U32) (span : Span)
+  (meter : Meter) :
+  Result ((core.result.Result Unit Diagnostic) × inference.Arena × Meter)
+  := do
+  let initial := alloc.vec.Vec.with_capacity (Std.U32 × Std.U32) 1#usize
+  let initial1 ← alloc.vec.Vec.push initial (left, right)
+  let (self1, meter1, outcome) ←
+    inference.unify.Arena.unify_loop (core.result.Result.Ok initial1) self span
+      meter
+  match outcome with
+  | core.result.Result.Ok _ => ok (core.result.Result.Ok (), self1, meter1)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, self1, meter1)
+
+/-- [noble_contracts::inference::build::{noble_contracts::inference::Arena}::ty]:
+    Source: 'crates/noble-contracts/src/inference/build.rs', lines 31:4-38:5
+    Visibility: public -/
+def inference.build.Arena.ty
+  (self : inference.Arena) (ty : noble_kernel.types.Ty) (span : Span)
+  (meter : Meter) :
+  Result ((core.result.Result Std.U32 Diagnostic) × inference.Arena × Meter)
+  := do
+  let s ← lift (Array.to_slice (Std.Array.empty inference.Variable))
+  inference.build.Arena.build self (inference.build.Step.Ty ty) s span meter
+
 /-- [noble_contracts::program::witness::apply_binding]:
     Source: 'crates/noble-contracts/src/program/witness.rs', lines 77:0-123:1 -/
 def program.witness.apply_binding
@@ -9246,7 +13038,7 @@ def program.witness.apply_binding
   (arena : inference.Arena) (meter : Meter) :
   Result ((core.result.Result Unit Diagnostic) × inference.Arena × Meter)
   := do
-  let (r, meter1) ← Meter.charge meter 1#u32 bindings.span
+  let (r, meter1) ← metering.Meter.charge meter 1#u32 bindings.span
   match r with
   | core.result.Result.Ok _ =>
     let r1 ← index «at» bindings.span
@@ -9360,6 +13152,11 @@ def program.witness.apply_binding
                 invalid bindings.span (toStr
                   "explicit word witness has the wrong binding kind")
               ok (core.result.Result.Err d, arena, meter1)
+        | inference.Variable.EffectValue _ =>
+          let d ←
+            invalid bindings.span (toStr
+              "explicit word witness has the wrong binding kind")
+          ok (core.result.Result.Err d, arena, meter1)
       | core.result.Result.Err failure =>
         ok (core.result.Result.Err failure, arena, meter1)
     | core.result.Result.Err failure =>
@@ -9426,7 +13223,7 @@ def program.witness.apply
     match r with
     | core.result.Result.Ok p =>
       let (resolved, spent) := p
-      let (r1, meter1) ← Meter.charge meter spent explicit.span
+      let (r1, meter1) ← metering.Meter.charge meter spent explicit.span
       match r1 with
       | core.result.Result.Ok _ =>
         let s := alloc.vec.Vec.deref resolved.bindings
@@ -9480,15 +13277,25 @@ def program.witness.apply
             "explicit witness resolution exhausted its work limit")
         ok (core.result.Result.Err d, arena, meter)
 
+/-- [noble_contracts::inference::effects::{noble_contracts::inference::Arena}::effect_hole]:
+    Source: 'crates/noble-contracts/src/inference/effects.rs', lines 41:4-47:5
+    Visibility: public -/
+def inference.effects.Arena.effect_hole
+  (self : inference.Arena) (span : Span) (meter : Meter) :
+  Result ((core.result.Result Std.U32 Diagnostic) × inference.Arena × Meter)
+  := do
+  inference.effects.Arena.add_effect self inference.effects.Effect.Hole span
+    meter
+
 /-- [noble_contracts::inference::{noble_contracts::inference::Arena}::variable]:
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 167:4-184:5 -/
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 190:4-215:5 -/
 def inference.Arena.variable
   (self : inference.Arena) (kind : Option noble_kernel.words.VariableKind)
   (span : Span) (meter : Meter) :
   Result ((core.result.Result inference.Variable Diagnostic) × inference.Arena
     × Meter)
   := do
-  let (r, meter1) ← Meter.charge meter 1#u32 span
+  let (r, meter1) ← metering.Meter.charge meter 1#u32 span
   match r with
   | core.result.Result.Ok _ =>
     match kind with
@@ -9518,12 +13325,22 @@ def inference.Arena.variable
         | core.result.Result.Err failure =>
           ok (core.result.Result.Err failure, self1, meter2)
       | noble_kernel.words.VariableKind.Effect =>
-        ok (core.result.Result.Ok inference.Variable.Effect, self, meter1)
+        if self.effectful
+        then
+          let (r1, self1, meter2) ←
+            inference.effects.Arena.effect_hole self span meter1
+          match r1 with
+          | core.result.Result.Ok value =>
+            ok (core.result.Result.Ok (inference.Variable.EffectValue value),
+              self1, meter2)
+          | core.result.Result.Err failure =>
+            ok (core.result.Result.Err failure, self1, meter2)
+        else ok (core.result.Result.Ok inference.Variable.Effect, self, meter1)
   | core.result.Result.Err failure =>
     ok (core.result.Result.Err failure, self, meter1)
 
 /-- [noble_contracts::inference::{noble_contracts::inference::Arena}::variables]: loop body 0:
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 145:8-156:9
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 168:8-179:9
     Visibility: public -/
 @[rust_loop_body]
 def inference.Arena.variables_loop.body
@@ -9551,7 +13368,7 @@ def inference.Arena.variables_loop.body
   else ok (done (self, meter, «variables», none))
 
 /-- [noble_contracts::inference::{noble_contracts::inference::Arena}::variables]: loop 0:
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 145:8-156:9
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 168:8-179:9
     Visibility: public -/
 @[rust_loop]
 def inference.Arena.variables_loop
@@ -9568,7 +13385,7 @@ def inference.Arena.variables_loop
     (self, meter, «variables», «at»)
 
 /-- [noble_contracts::inference::{noble_contracts::inference::Arena}::variables]:
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 136:4-161:5
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 159:4-184:5
     Visibility: public -/
 def inference.Arena.variables
   (self : inference.Arena) (kinds : Slice noble_kernel.words.VariableKind)
@@ -9864,7 +13681,7 @@ def syntax.typing.item
   («at» : Std.Usize) (span : Span) (meter : Meter) :
   Result ((core.result.Result noble_kernel.types.Ty Diagnostic) × Meter)
   := do
-  let (r, meter1) ← Meter.charge meter 1#u32 span
+  let (r, meter1) ← metering.Meter.charge meter 1#u32 span
   match r with
   | core.result.Result.Ok _ =>
     let r1 ← syntax.child children «at» span
@@ -10001,7 +13818,8 @@ def program.forms.block
                         | core.result.Result.Ok value9 =>
                           let i2 ←
                             lift (core.num.U32.saturating_add value9 1#u32)
-                          let (r11, meter7) ← Meter.depth meter6 i2 form.span
+                          let (r11, meter7) ←
+                            metering.Meter.depth meter6 i2 form.span
                           match r11 with
                           | core.result.Result.Ok _ =>
                             let v ←
@@ -10063,7 +13881,7 @@ def program.bindings.stack_type
   (meter : Meter) :
   Result ((core.result.Result noble_kernel.types.Ty Diagnostic) × Meter)
   := do
-  let (r, meter1) ← Meter.charge meter 1#u32 form.span
+  let (r, meter1) ← metering.Meter.charge meter 1#u32 form.span
   match r with
   | core.result.Result.Ok _ =>
     let r1 ← syntax.child form.children «at» form.span
@@ -10175,7 +13993,7 @@ def program.bindings.binding
   (meter : Meter) :
   Result ((core.result.Result noble_kernel.words.Binding Diagnostic) × Meter)
   := do
-  let (r, meter1) ← Meter.charge meter 1#u32 form.span
+  let (r, meter1) ← metering.Meter.charge meter 1#u32 form.span
   match r with
   | core.result.Result.Ok _ =>
     let r1 ← syntax.child form.children «at» form.span
@@ -10503,7 +14321,7 @@ def program.traversal.step
   (state : program.Resolution) (meter : Meter) :
   Result ((core.result.Result Unit Diagnostic) × program.Resolution × Meter)
   := do
-  let (r, meter1) ← Meter.charge meter 1#u32 state.span
+  let (r, meter1) ← metering.Meter.charge meter 1#u32 state.span
   match r with
   | core.result.Result.Ok _ =>
     let r1 ← syntax.Tree.square context.tree frame.syntax
@@ -10560,14 +14378,8 @@ def program.traversal.step
       ok (core.result.Result.Err failure, state, meter1)
   | core.result.Result.Err _ => ok (r, state, meter1)
 
-/-- [noble_contracts::inference::{noble_contracts::inference::Arena}::new]:
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 44:4-48:5
-    Visibility: public -/
-def inference.Arena.new : Result inference.Arena := do
-  ok { terms := (alloc.vec.Vec.new inference.Term) }
-
 /-- [noble_contracts::program::resolve]: loop body 0:
-    Source: 'crates/noble-contracts/src/program.rs', lines 102:4-107:5 -/
+    Source: 'crates/noble-contracts/src/program.rs', lines 117:4-122:5 -/
 @[rust_loop_body]
 def program.resolve_loop.body
   (s : Slice Std.U8) (t : syntax.Tree) (e : noble_kernel.contracts.Env)
@@ -10588,7 +14400,7 @@ def program.resolve_loop.body
       ok (done (meter1, state1, some problem))
 
 /-- [noble_contracts::program::resolve]: loop 0:
-    Source: 'crates/noble-contracts/src/program.rs', lines 102:4-107:5 -/
+    Source: 'crates/noble-contracts/src/program.rs', lines 117:4-122:5 -/
 @[rust_loop]
 def program.resolve_loop
   (s : Slice Std.U8) (t : syntax.Tree) (e : noble_kernel.contracts.Env)
@@ -10600,7 +14412,7 @@ def program.resolve_loop
     (meter, state)
 
 /-- [noble_contracts::program::resolve]:
-    Source: 'crates/noble-contracts/src/program.rs', lines 68:0-112:1 -/
+    Source: 'crates/noble-contracts/src/program.rs', lines 83:0-127:1 -/
 def program.resolve
   (context : program.Context) (root : Std.U32)
   (inputs : Slice noble_kernel.types.Ty)
@@ -10820,7 +14632,7 @@ def frontend.prepare
   (source : Slice Std.U8) (limits : Limits) :
   Result (core.result.Result Prepared Diagnostic)
   := do
-  let meter ← Meter.new limits
+  let meter ← metering.Meter.new limits
   let kernel_work ← limits.work / 2#u32
   let i ← limits.work - kernel_work
   let (r, meter1) ← syntax.parse source { meter with work := i }
@@ -10945,43 +14757,627 @@ def frontend.prepare
     | core.result.Result.Err failure => ok (core.result.Result.Err failure)
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
+/-- [noble_contracts::inference::effects::solve::constant]:
+    Source: 'crates/noble-contracts/src/inference/effects/solve.rs', lines 138:0-156:1 -/
+def inference.effects.solve.constant
+  (arena : inference.Arena) («at» : Std.Usize) (span : Span) (meter : Meter)
+  :
+  Result ((core.result.Result Unit Diagnostic) × Meter)
+  := do
+  let (r, meter1) ← metering.Meter.charge meter 1#u32 span
+  match r with
+  | core.result.Result.Ok _ =>
+    let s := alloc.vec.Vec.deref arena.effects
+    let o ←
+      core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice
+        inference.effects.Effect) s «at»
+    match o with
+    | none => ok (core.result.Result.Ok (), meter1)
+    | some e =>
+      match e with
+      | inference.effects.Effect.Hole => ok (core.result.Result.Ok (), meter1)
+      | inference.effects.Effect.Constant bits =>
+        let r1 ← index «at» span
+        match r1 with
+        | core.result.Result.Ok value =>
+          let r2 ← inference.effects.Arena.effect_bound arena value span
+          match r2 with
+          | core.result.Result.Ok value1 =>
+            if bits != value1
+            then
+              let d ←
+                invalid span (toStr
+                  "program join has incompatible latent effect bounds")
+              ok (core.result.Result.Err d, meter1)
+            else ok (core.result.Result.Ok (), meter1)
+          | core.result.Result.Err failure =>
+            ok (core.result.Result.Err failure, meter1)
+        | core.result.Result.Err failure =>
+          ok (core.result.Result.Err failure, meter1)
+      | inference.effects.Effect.Union _ _ =>
+        ok (core.result.Result.Ok (), meter1)
+  | core.result.Result.Err _ => ok (r, meter1)
+
+/-- [noble_contracts::inference::effects::{noble_contracts::inference::Arena}::narrow_effect]:
+    Source: 'crates/noble-contracts/src/inference/effects.rs', lines 231:4-249:5 -/
+def inference.effects.Arena.narrow_effect
+  (self : inference.Arena) (id : Std.U32) (bits : Std.U8) (span : Span) :
+  Result ((core.result.Result Bool Diagnostic) × inference.Arena)
+  := do
+  let (s, deref_mut_back) ← lift (alloc.vec.Vec.deref_mut self.effect_bounds)
+  let r ← offset id span
+  match r with
+  | core.result.Result.Ok value =>
+    let (o, get_mut_back) ←
+      core.slice.Slice.get_mut (core.slice.index.SliceIndexUsizeSlice Std.U8) s
+        value
+    match o with
+    | none =>
+      let d ← internal span
+      let s1 := get_mut_back none
+      let v := deref_mut_back s1
+      ok (core.result.Result.Err d, { self with effect_bounds := v })
+    | some old =>
+      let new ← lift (old &&& bits)
+      let s1 := get_mut_back (some new)
+      let v := deref_mut_back s1
+      ok (core.result.Result.Ok (new != old), { self with effect_bounds := v })
+  | core.result.Result.Err failure =>
+    let v := deref_mut_back s
+    ok (core.result.Result.Err failure, { self with effect_bounds := v })
+
+/-- [noble_contracts::inference::effects::solve::equation]:
+    Source: 'crates/noble-contracts/src/inference/effects/solve.rs', lines 117:0-132:1 -/
+def inference.effects.solve.equation
+  (arena : inference.Arena) («at» : Std.Usize) (span : Span) (meter : Meter)
+  :
+  Result ((core.result.Result Bool Diagnostic) × inference.Arena × Meter)
+  := do
+  let (r, meter1) ← metering.Meter.charge meter 1#u32 span
+  match r with
+  | core.result.Result.Ok _ =>
+    let s := alloc.vec.Vec.deref arena.effect_equations
+    let o ←
+      core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice (Std.U32 ×
+        Std.U32)) s «at»
+    match o with
+    | none =>
+      let d ← internal span
+      ok (core.result.Result.Err d, arena, meter1)
+    | some pair =>
+      let (a, b) := pair
+      let r1 ← inference.effects.Arena.effect_bound arena a span
+      match r1 with
+      | core.result.Result.Ok value =>
+        let r2 ← inference.effects.Arena.effect_bound arena b span
+        match r2 with
+        | core.result.Result.Ok value1 =>
+          let upper ← lift (value &&& value1)
+          let (r3, arena1) ←
+            inference.effects.Arena.narrow_effect arena a upper span
+          match r3 with
+          | core.result.Result.Ok value2 =>
+            let (r4, arena2) ←
+              inference.effects.Arena.narrow_effect arena1 b upper span
+            match r4 with
+            | core.result.Result.Ok value3 =>
+              ok (core.result.Result.Ok (value2 || value3), arena2, meter1)
+            | core.result.Result.Err _ => ok (r4, arena2, meter1)
+          | core.result.Result.Err _ => ok (r3, arena1, meter1)
+        | core.result.Result.Err failure =>
+          ok (core.result.Result.Err failure, arena, meter1)
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, arena, meter1)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, arena, meter1)
+
+/-- [noble_contracts::inference::effects::solve::union]:
+    Source: 'crates/noble-contracts/src/inference/effects/solve.rs', lines 90:0-111:1 -/
+def inference.effects.solve.union
+  (arena : inference.Arena) («at» : Std.Usize) (span : Span) (meter : Meter)
+  :
+  Result ((core.result.Result Bool Diagnostic) × inference.Arena × Meter)
+  := do
+  let (r, meter1) ← metering.Meter.charge meter 1#u32 span
+  match r with
+  | core.result.Result.Ok _ =>
+    let r1 ← index «at» span
+    match r1 with
+    | core.result.Result.Ok value =>
+      let s := alloc.vec.Vec.deref arena.effects
+      let o ←
+        core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice
+          inference.effects.Effect) s «at»
+      match o with
+      | none =>
+        let d ← internal span
+        ok (core.result.Result.Err d, arena, meter1)
+      | some effect =>
+        match effect with
+        | inference.effects.Effect.Hole =>
+          ok (core.result.Result.Ok false, arena, meter1)
+        | inference.effects.Effect.Constant _ =>
+          ok (core.result.Result.Ok false, arena, meter1)
+        | inference.effects.Effect.Union a b =>
+          let r2 ← inference.effects.Arena.effect_bound arena a span
+          match r2 with
+          | core.result.Result.Ok value1 =>
+            let r3 ← inference.effects.Arena.effect_bound arena b span
+            match r3 with
+            | core.result.Result.Ok value2 =>
+              let upper ← lift (value1 ||| value2)
+              let (r4, arena1) ←
+                inference.effects.Arena.narrow_effect arena value upper span
+              match r4 with
+              | core.result.Result.Ok value3 =>
+                let r5 ←
+                  inference.effects.Arena.effect_bound arena1 value span
+                match r5 with
+                | core.result.Result.Ok value4 =>
+                  let (r6, arena2) ←
+                    inference.effects.Arena.narrow_effect arena1 a value4 span
+                  match r6 with
+                  | core.result.Result.Ok value5 =>
+                    let (r7, arena3) ←
+                      inference.effects.Arena.narrow_effect arena2 b value4
+                        span
+                    match r7 with
+                    | core.result.Result.Ok value6 =>
+                      ok (core.result.Result.Ok (((false || value3) || value5)
+                        || value6), arena3, meter1)
+                    | core.result.Result.Err _ => ok (r7, arena3, meter1)
+                  | core.result.Result.Err _ => ok (r6, arena2, meter1)
+                | core.result.Result.Err failure =>
+                  ok (core.result.Result.Err failure, arena1, meter1)
+              | core.result.Result.Err _ => ok (r4, arena1, meter1)
+            | core.result.Result.Err failure =>
+              ok (core.result.Result.Err failure, arena, meter1)
+          | core.result.Result.Err failure =>
+            ok (core.result.Result.Err failure, arena, meter1)
+    | core.result.Result.Err failure =>
+      ok (core.result.Result.Err failure, arena, meter1)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, arena, meter1)
+
+/-- [noble_contracts::inference::effects::solve::pass]: loop body 0:
+    Source: 'crates/noble-contracts/src/inference/effects/solve.rs', lines 55:4-64:5 -/
+@[rust_loop_body]
+def inference.effects.solve.pass_loop0.body
+  (span : Span) (arena : inference.Arena) (meter : Meter) (has_changed : Bool)
+  («at» : Std.Usize) :
+  Result (ControlFlow (inference.Arena × Meter × Bool × Std.Usize)
+    (inference.Arena × Meter × Bool × (Option Diagnostic)))
+  := do
+  let i := alloc.vec.Vec.len arena.effects
+  if «at» < i
+  then
+    let (r, arena1, meter1) ←
+      inference.effects.solve.union arena «at» span meter
+    match r with
+    | core.result.Result.Ok is_changed =>
+      let at1 ← «at» + 1#usize
+      ok (cont (arena1, meter1, has_changed || is_changed, at1))
+    | core.result.Result.Err problem =>
+      ok (done (arena1, meter1, has_changed, some problem))
+  else ok (done (arena, meter, has_changed, none))
+
+/-- [noble_contracts::inference::effects::solve::pass]: loop 0:
+    Source: 'crates/noble-contracts/src/inference/effects/solve.rs', lines 55:4-64:5 -/
+@[rust_loop]
+def inference.effects.solve.pass_loop0
+  (arena : inference.Arena) (span : Span) (meter : Meter) (has_changed : Bool)
+  («at» : Std.Usize) :
+  Result (inference.Arena × Meter × Bool × (Option Diagnostic))
+  := do
+  loop
+    (fun (arena1, meter1, has_changed1, at1) =>
+      inference.effects.solve.pass_loop0.body span arena1 meter1 has_changed1
+      at1)
+    (arena, meter, has_changed, «at»)
+
+/-- [noble_contracts::inference::effects::solve::pass]: loop body 1:
+    Source: 'crates/noble-contracts/src/inference/effects/solve.rs', lines 70:4-79:5 -/
+@[rust_loop_body]
+def inference.effects.solve.pass_loop1.body
+  (span : Span) (arena : inference.Arena) (meter : Meter) (has_changed : Bool)
+  («at» : Std.Usize) :
+  Result (ControlFlow (inference.Arena × Meter × Bool × Std.Usize)
+    (inference.Arena × Meter × Bool × (Option Diagnostic)))
+  := do
+  let i := alloc.vec.Vec.len arena.effect_equations
+  if «at» < i
+  then
+    let (r, arena1, meter1) ←
+      inference.effects.solve.equation arena «at» span meter
+    match r with
+    | core.result.Result.Ok is_changed =>
+      let at1 ← «at» + 1#usize
+      ok (cont (arena1, meter1, has_changed || is_changed, at1))
+    | core.result.Result.Err problem =>
+      ok (done (arena1, meter1, has_changed, some problem))
+  else ok (done (arena, meter, has_changed, none))
+
+/-- [noble_contracts::inference::effects::solve::pass]: loop 1:
+    Source: 'crates/noble-contracts/src/inference/effects/solve.rs', lines 70:4-79:5 -/
+@[rust_loop]
+def inference.effects.solve.pass_loop1
+  (arena : inference.Arena) (span : Span) (meter : Meter) (has_changed : Bool)
+  («at» : Std.Usize) :
+  Result (inference.Arena × Meter × Bool × (Option Diagnostic))
+  := do
+  loop
+    (fun (arena1, meter1, has_changed1, at1) =>
+      inference.effects.solve.pass_loop1.body span arena1 meter1 has_changed1
+      at1)
+    (arena, meter, has_changed, «at»)
+
+/-- [noble_contracts::inference::effects::solve::pass]:
+    Source: 'crates/noble-contracts/src/inference/effects/solve.rs', lines 47:0-84:1 -/
+def inference.effects.solve.pass
+  (arena : inference.Arena) (span : Span) (meter : Meter) :
+  Result ((core.result.Result Bool Diagnostic) × inference.Arena × Meter)
+  := do
+  let (arena1, meter1, has_changed, failure) ←
+    inference.effects.solve.pass_loop0 arena span meter false 0#usize
+  match failure with
+  | none =>
+    let (arena2, meter2, has_changed1, failure1) ←
+      inference.effects.solve.pass_loop1 arena1 span meter1 has_changed 0#usize
+    match failure1 with
+    | none => ok (core.result.Result.Ok has_changed1, arena2, meter2)
+    | some problem => ok (core.result.Result.Err problem, arena2, meter2)
+  | some problem => ok (core.result.Result.Err problem, arena1, meter1)
+
+/-- [noble_contracts::inference::effects::solve::run]: loop body 0:
+    Source: 'crates/noble-contracts/src/inference/effects/solve.rs', lines 12:4-24:5 -/
+@[rust_loop_body]
+def inference.effects.solve.run_loop0.body
+  (span : Span) (arena : inference.Arena) (meter : Meter) (has_changed : Bool)
+  :
+  Result (ControlFlow (inference.Arena × Meter × Bool) (inference.Arena ×
+    Meter × (Option Diagnostic)))
+  := do
+  if has_changed
+  then
+    let (r, meter1) ← metering.Meter.charge meter 1#u32 span
+    let (arena1, meter2, result) ←
+      match r with
+      | core.result.Result.Ok _ =>
+        do
+        let (result1, arena2, meter3) ←
+          inference.effects.solve.pass arena span meter1
+        ok (arena2, meter3, result1)
+      | core.result.Result.Err problem =>
+        ok (arena, meter1, core.result.Result.Err problem)
+    match result with
+    | core.result.Result.Ok is_changed =>
+      ok (cont (arena1, meter2, is_changed))
+    | core.result.Result.Err problem =>
+      ok (done (arena1, meter2, some problem))
+  else ok (done (arena, meter, none))
+
+/-- [noble_contracts::inference::effects::solve::run]: loop 0:
+    Source: 'crates/noble-contracts/src/inference/effects/solve.rs', lines 12:4-24:5 -/
+@[rust_loop]
+def inference.effects.solve.run_loop0
+  (arena : inference.Arena) (span : Span) (meter : Meter) (has_changed : Bool)
+  :
+  Result (inference.Arena × Meter × (Option Diagnostic))
+  := do
+  loop
+    (fun (arena1, meter1, has_changed1) =>
+      inference.effects.solve.run_loop0.body span arena1 meter1 has_changed1)
+    (arena, meter, has_changed)
+
+/-- [noble_contracts::inference::effects::solve::run]: loop body 1:
+    Source: 'crates/noble-contracts/src/inference/effects/solve.rs', lines 30:4-36:5 -/
+@[rust_loop_body]
+def inference.effects.solve.run_loop1.body
+  (arena : inference.Arena) (span : Span) (meter : Meter) («at» : Std.Usize)
+  :
+  Result (ControlFlow (Meter × Std.Usize) ((alloc.vec.Vec inference.Term) ×
+    Bool × Std.U8 × (alloc.vec.Vec inference.effects.Effect) ×
+    (alloc.vec.Vec Std.U8) × (alloc.vec.Vec (Std.U32 × Std.U32)) ×
+    (alloc.vec.Vec (Std.U32 × Std.U32)) × Meter × (Option Diagnostic)))
+  := do
+  let i := alloc.vec.Vec.len arena.effects
+  if «at» < i
+  then
+    let (r, meter1) ←
+      inference.effects.solve.constant arena «at» span meter
+    match r with
+    | core.result.Result.Ok _ =>
+      let at1 ← «at» + 1#usize
+      ok (cont (meter1, at1))
+    | core.result.Result.Err problem =>
+      ok (done (arena.terms, arena.effectful, arena.effect_universe,
+        arena.effects, arena.effect_bounds, arena.effect_equations,
+        arena.program_effects, meter1, some problem))
+  else
+    ok (done (arena.terms, arena.effectful, arena.effect_universe,
+      arena.effects, arena.effect_bounds, arena.effect_equations,
+      arena.program_effects, meter, none))
+
+/-- [noble_contracts::inference::effects::solve::run]: loop 1:
+    Source: 'crates/noble-contracts/src/inference/effects/solve.rs', lines 30:4-36:5 -/
+@[rust_loop]
+def inference.effects.solve.run_loop1
+  (arena : inference.Arena) (span : Span) (meter : Meter) («at» : Std.Usize)
+  :
+  Result ((alloc.vec.Vec inference.Term) × Bool × Std.U8 × (alloc.vec.Vec
+    inference.effects.Effect) × (alloc.vec.Vec Std.U8) × (alloc.vec.Vec
+    (Std.U32 × Std.U32)) × (alloc.vec.Vec (Std.U32 × Std.U32)) × Meter ×
+    (Option Diagnostic))
+  := do
+  loop
+    (fun (meter1, at1) => inference.effects.solve.run_loop1.body arena span
+      meter1 at1)
+    (meter, «at»)
+
+/-- [noble_contracts::inference::effects::solve::run]:
+    Source: 'crates/noble-contracts/src/inference/effects/solve.rs', lines 5:0-41:1 -/
+def inference.effects.solve.run
+  (arena : inference.Arena) (span : Span) (meter : Meter) :
+  Result ((core.result.Result Unit Diagnostic) × inference.Arena × Meter)
+  := do
+  let (arena1, meter1, failure) ←
+    inference.effects.solve.run_loop0 arena span meter true
+  match failure with
+  | none =>
+    let (v, b, i, v1, v2, v3, v4, meter2, failure1) ←
+      inference.effects.solve.run_loop1 arena1 span meter1 0#usize
+    match failure1 with
+    | none =>
+      ok (core.result.Result.Ok (),
+        {
+          terms := v,
+          effectful := b,
+          effect_universe := i,
+          effects := v1,
+          effect_bounds := v2,
+          effect_equations := v3,
+          program_effects := v4
+        }, meter2)
+    | some problem =>
+      ok (core.result.Result.Err problem,
+        {
+          terms := v,
+          effectful := b,
+          effect_universe := i,
+          effects := v1,
+          effect_bounds := v2,
+          effect_equations := v3,
+          program_effects := v4
+        }, meter2)
+  | some problem => ok (core.result.Result.Err problem, arena1, meter1)
+
+/-- [noble_contracts::inference::effects::solve::close_term]:
+    Source: 'crates/noble-contracts/src/inference/effects/solve.rs', lines 198:0-218:1 -/
+def inference.effects.solve.close_term
+  (term : Option inference.Term) (span : Span) (meter : Meter) :
+  Result ((core.result.Result Unit Diagnostic) × (Option inference.Term) ×
+    Meter)
+  := do
+  let (r, meter1) ← metering.Meter.charge meter 1#u32 span
+  match r with
+  | core.result.Result.Ok _ =>
+    match term with
+    | none =>
+      let d ← internal span
+      ok (core.result.Result.Err d, none, meter1)
+    | some term1 =>
+      match term1 with
+      | inference.Term.HoleTerm s =>
+        match s with
+        | inference.Sort.Value =>
+          ok (core.result.Result.Ok (), some inference.Term.UnitTerm, meter1)
+        | inference.Sort.Stack =>
+          ok (core.result.Result.Ok (), some inference.Term.EmptyTerm, meter1)
+      | inference.Term.LinkTerm _ =>
+        ok (core.result.Result.Ok (), term, meter1)
+      | inference.Term.UnitTerm => ok (core.result.Result.Ok (), term, meter1)
+      | inference.Term.BoolTerm => ok (core.result.Result.Ok (), term, meter1)
+      | inference.Term.I64Term => ok (core.result.Result.Ok (), term, meter1)
+      | inference.Term.TextTerm => ok (core.result.Result.Ok (), term, meter1)
+      | inference.Term.SyntaxTerm =>
+        ok (core.result.Result.Ok (), term, meter1)
+      | inference.Term.PairTerm _ _ =>
+        ok (core.result.Result.Ok (), term, meter1)
+      | inference.Term.SumTerm _ _ =>
+        ok (core.result.Result.Ok (), term, meter1)
+      | inference.Term.ListTerm _ =>
+        ok (core.result.Result.Ok (), term, meter1)
+      | inference.Term.ProgramTerm _ _ =>
+        ok (core.result.Result.Ok (), term, meter1)
+      | inference.Term.EmptyTerm => ok (core.result.Result.Ok (), term, meter1)
+      | inference.Term.PushTerm _ _ =>
+        ok (core.result.Result.Ok (), term, meter1)
+  | core.result.Result.Err _ => ok (r, term, meter1)
+
+/-- [noble_contracts::inference::effects::solve::close]: loop body 0:
+    Source: 'crates/noble-contracts/src/inference/effects/solve.rs', lines 181:4-187:5 -/
+@[rust_loop_body]
+def inference.effects.solve.close_loop.body
+  (span : Span) (arena : inference.Arena) (meter : Meter) («at» : Std.Usize)
+  :
+  Result (ControlFlow (inference.Arena × Meter × Std.Usize) ((alloc.vec.Vec
+    inference.Term) × Bool × Std.U8 × (alloc.vec.Vec
+    inference.effects.Effect) × (alloc.vec.Vec Std.U8) × (alloc.vec.Vec
+    (Std.U32 × Std.U32)) × (alloc.vec.Vec (Std.U32 × Std.U32)) × Meter ×
+    (Option Diagnostic)))
+  := do
+  let i := alloc.vec.Vec.len arena.terms
+  if «at» < i
+  then
+    let (s, deref_mut_back) ← lift (alloc.vec.Vec.deref_mut arena.terms)
+    let (o, get_mut_back) ←
+      core.slice.Slice.get_mut (core.slice.index.SliceIndexUsizeSlice
+        inference.Term) s «at»
+    let (r, o1, meter1) ← inference.effects.solve.close_term o span meter
+    match r with
+    | core.result.Result.Ok _ =>
+      let at1 ← «at» + 1#usize
+      let s1 := get_mut_back o1
+      let v := deref_mut_back s1
+      ok (cont ({ arena with terms := v }, meter1, at1))
+    | core.result.Result.Err problem =>
+      let s1 := get_mut_back o1
+      let v := deref_mut_back s1
+      ok (done (v, arena.effectful, arena.effect_universe, arena.effects,
+        arena.effect_bounds, arena.effect_equations, arena.program_effects,
+        meter1, some problem))
+  else
+    ok (done (arena.terms, arena.effectful, arena.effect_universe,
+      arena.effects, arena.effect_bounds, arena.effect_equations,
+      arena.program_effects, meter, none))
+
+/-- [noble_contracts::inference::effects::solve::close]: loop 0:
+    Source: 'crates/noble-contracts/src/inference/effects/solve.rs', lines 181:4-187:5 -/
+@[rust_loop]
+def inference.effects.solve.close_loop
+  (arena : inference.Arena) (span : Span) (meter : Meter) («at» : Std.Usize)
+  :
+  Result ((alloc.vec.Vec inference.Term) × Bool × Std.U8 × (alloc.vec.Vec
+    inference.effects.Effect) × (alloc.vec.Vec Std.U8) × (alloc.vec.Vec
+    (Std.U32 × Std.U32)) × (alloc.vec.Vec (Std.U32 × Std.U32)) × Meter ×
+    (Option Diagnostic))
+  := do
+  loop
+    (fun (arena1, meter1, at1) => inference.effects.solve.close_loop.body span
+      arena1 meter1 at1)
+    (arena, meter, «at»)
+
+/-- [noble_contracts::inference::effects::solve::close]:
+    Source: 'crates/noble-contracts/src/inference/effects/solve.rs', lines 174:0-192:1 -/
+def inference.effects.solve.close
+  (arena : inference.Arena) (span : Span) (meter : Meter) :
+  Result ((core.result.Result Unit Diagnostic) × inference.Arena × Meter)
+  := do
+  let (v, b, i, v1, v2, v3, v4, meter1, failure) ←
+    inference.effects.solve.close_loop arena span meter 0#usize
+  match failure with
+  | none =>
+    ok (core.result.Result.Ok (),
+      {
+        terms := v,
+        effectful := b,
+        effect_universe := i,
+        effects := v1,
+        effect_bounds := v2,
+        effect_equations := v3,
+        program_effects := v4
+      }, meter1)
+  | some problem =>
+    ok (core.result.Result.Err problem,
+      {
+        terms := v,
+        effectful := b,
+        effect_universe := i,
+        effects := v1,
+        effect_bounds := v2,
+        effect_equations := v3,
+        program_effects := v4
+      }, meter1)
+
+/-- [noble_contracts::inference::effects::{impl core::clone::Clone for noble_contracts::inference::effects::Effect}::clone]:
+    Source: 'crates/noble-contracts/src/inference/effects.rs', lines 7:9-7:14
+    Visibility: public -/
+def inference.effects.Effect.Insts.CoreCloneClone.clone
+  (self : inference.effects.Effect) : Result inference.effects.Effect := do
+  ok self
+
+/-- Trait implementation: [noble_contracts::inference::effects::{impl core::clone::Clone for noble_contracts::inference::effects::Effect}]
+    Source: 'crates/noble-contracts/src/inference/effects.rs', lines 7:9-7:14 -/
+@[reducible]
+def inference.effects.Effect.Insts.CoreCloneClone : core.clone.Clone
+  inference.effects.Effect := {
+  clone := inference.effects.Effect.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_contracts::inference::effects::{impl core::marker::Copy for noble_contracts::inference::effects::Effect}]
+    Source: 'crates/noble-contracts/src/inference/effects.rs', lines 7:16-7:20 -/
+@[reducible]
+def inference.effects.Effect.Insts.CoreMarkerCopy : core.marker.Copy
+  inference.effects.Effect := {
+  cloneInst := inference.effects.Effect.Insts.CoreCloneClone
+}
+
+/-- [noble_contracts::inference::effects::{noble_contracts::inference::Arena}::solve_effects]:
+    Source: 'crates/noble-contracts/src/inference/effects.rs', lines 251:4-257:5
+    Visibility: public -/
+def inference.effects.Arena.solve_effects
+  (self : inference.Arena) (span : Span) (meter : Meter) :
+  Result ((core.result.Result Unit Diagnostic) × inference.Arena × Meter)
+  := do
+  inference.effects.solve.run self span meter
+
+/-- [noble_contracts::inference::effects::{noble_contracts::inference::Arena}::close]:
+    Source: 'crates/noble-contracts/src/inference/effects.rs', lines 268:4-274:5
+    Visibility: public -/
+def inference.effects.Arena.close
+  (self : inference.Arena) (span : Span) (meter : Meter) :
+  Result ((core.result.Result Unit Diagnostic) × inference.Arena × Meter)
+  := do
+  inference.effects.solve.close self span meter
+
+/-- [noble_contracts::inference::materialize::{noble_contracts::inference::Arena}::stack_value]:
+    Source: 'crates/noble-contracts/src/inference/materialize.rs', lines 30:4-40:5
+    Visibility: public -/
+def inference.materialize.Arena.stack_value
+  (self : inference.Arena) (id : Std.U32) (span : Span) (meter : Meter) :
+  Result ((core.result.Result (alloc.vec.Vec noble_kernel.types.Ty) Diagnostic)
+    × Meter)
+  := do
+  let (r, meter1) ←
+    inference.materialize.Arena.materialize self id span meter
+  match r with
+  | core.result.Result.Ok value =>
+    match value with
+    | inference.materialize.Material.Value _ _ =>
+      let d ← internal span
+      ok (core.result.Result.Err d, meter1)
+    | inference.materialize.Material.Stack stack _ =>
+      ok (core.result.Result.Ok stack, meter1)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, meter1)
+
 /-- [noble_contracts::inference::{impl core::clone::Clone for noble_contracts::inference::Sort}::clone]:
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 7:9-7:14
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 8:9-8:14
     Visibility: public -/
 def inference.Sort.Insts.CoreCloneClone.clone
   (self : inference.Sort) : Result inference.Sort := do
   ok self
 
 /-- Trait implementation: [noble_contracts::inference::{impl core::clone::Clone for noble_contracts::inference::Sort}]
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 7:9-7:14 -/
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 8:9-8:14 -/
 @[reducible]
 def inference.Sort.Insts.CoreCloneClone : core.clone.Clone inference.Sort := {
   clone := inference.Sort.Insts.CoreCloneClone.clone
 }
 
 /-- Trait implementation: [noble_contracts::inference::{impl core::marker::Copy for noble_contracts::inference::Sort}]
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 7:16-7:20 -/
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 8:16-8:20 -/
 @[reducible]
 def inference.Sort.Insts.CoreMarkerCopy : core.marker.Copy inference.Sort := {
   cloneInst := inference.Sort.Insts.CoreCloneClone
 }
 
 /-- Trait implementation: [noble_contracts::inference::{impl core::marker::StructuralPartialEq for noble_contracts::inference::Sort}]
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 7:22-7:31 -/
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 8:22-8:31 -/
 @[reducible]
 def inference.Sort.Insts.CoreMarkerStructuralPartialEq :
   core.marker.StructuralPartialEq inference.Sort := {
 }
 
 /-- [noble_contracts::inference::{impl core::cmp::Eq for noble_contracts::inference::Sort}::assert_fields_are_eq]:
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 7:33-7:35
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 8:33-8:35
     Visibility: public -/
 def inference.Sort.Insts.CoreCmpEq.assert_fields_are_eq
   (self : inference.Sort) : Result Unit := do
   ok ()
 
 /-- Trait implementation: [noble_contracts::inference::{impl core::cmp::Eq for noble_contracts::inference::Sort}]
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 7:33-7:35 -/
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 8:33-8:35 -/
 @[reducible]
 def inference.Sort.Insts.CoreCmpEq : core.cmp.Eq inference.Sort := {
   partialEqInst := inference.Sort.Insts.CoreCmpPartialEqSort
@@ -10989,35 +15385,35 @@ def inference.Sort.Insts.CoreCmpEq : core.cmp.Eq inference.Sort := {
 }
 
 /-- [noble_contracts::inference::{impl core::clone::Clone for noble_contracts::inference::Term}::clone]:
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 13:9-13:14
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 14:9-14:14
     Visibility: public -/
 def inference.Term.Insts.CoreCloneClone.clone
   (self : inference.Term) : Result inference.Term := do
   ok self
 
 /-- Trait implementation: [noble_contracts::inference::{impl core::clone::Clone for noble_contracts::inference::Term}]
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 13:9-13:14 -/
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 14:9-14:14 -/
 @[reducible]
 def inference.Term.Insts.CoreCloneClone : core.clone.Clone inference.Term := {
   clone := inference.Term.Insts.CoreCloneClone.clone
 }
 
 /-- Trait implementation: [noble_contracts::inference::{impl core::marker::Copy for noble_contracts::inference::Term}]
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 13:16-13:20 -/
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 14:16-14:20 -/
 @[reducible]
 def inference.Term.Insts.CoreMarkerCopy : core.marker.Copy inference.Term := {
   cloneInst := inference.Term.Insts.CoreCloneClone
 }
 
 /-- [noble_contracts::inference::{impl core::clone::Clone for noble_contracts::inference::Variable}::clone]:
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 32:9-32:14
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 33:9-33:14
     Visibility: public -/
 def inference.Variable.Insts.CoreCloneClone.clone
   (self : inference.Variable) : Result inference.Variable := do
   ok self
 
 /-- Trait implementation: [noble_contracts::inference::{impl core::clone::Clone for noble_contracts::inference::Variable}]
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 32:9-32:14 -/
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 33:9-33:14 -/
 @[reducible]
 def inference.Variable.Insts.CoreCloneClone : core.clone.Clone
   inference.Variable := {
@@ -11025,7 +15421,7 @@ def inference.Variable.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [noble_contracts::inference::{impl core::marker::Copy for noble_contracts::inference::Variable}]
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 32:16-32:20 -/
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 33:16-33:20 -/
 @[reducible]
 def inference.Variable.Insts.CoreMarkerCopy : core.marker.Copy
   inference.Variable := {
@@ -11033,27 +15429,27 @@ def inference.Variable.Insts.CoreMarkerCopy : core.marker.Copy
 }
 
 /-- [noble_contracts::{impl core::clone::Clone for noble_contracts::Limits}::clone]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 25:9-25:14
+    Source: 'crates/noble-contracts/src/lib.rs', lines 27:9-27:14
     Visibility: public -/
 def Limits.Insts.CoreCloneClone.clone (self : Limits) : Result Limits := do
   ok self
 
 /-- Trait implementation: [noble_contracts::{impl core::clone::Clone for noble_contracts::Limits}]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 25:9-25:14 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 27:9-27:14 -/
 @[reducible]
 def Limits.Insts.CoreCloneClone : core.clone.Clone Limits := {
   clone := Limits.Insts.CoreCloneClone.clone
 }
 
 /-- Trait implementation: [noble_contracts::{impl core::marker::Copy for noble_contracts::Limits}]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 25:16-25:20 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 27:16-27:20 -/
 @[reducible]
 def Limits.Insts.CoreMarkerCopy : core.marker.Copy Limits := {
   cloneInst := Limits.Insts.CoreCloneClone
 }
 
 /-- [noble_contracts::{impl core::fmt::Debug for noble_contracts::Limits}::fmt]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 25:22-25:27
+    Source: 'crates/noble-contracts/src/lib.rs', lines 27:22-27:27
     Visibility: public -/
 def Limits.Insts.CoreFmtDebug.fmt
   (self : Limits) (f : core.fmt.Formatter) :
@@ -11067,21 +15463,21 @@ def Limits.Insts.CoreFmtDebug.fmt
     "bytes") dyn (toStr "nodes") dyn1 (toStr "depth") dyn2 (toStr "work") dyn3
 
 /-- Trait implementation: [noble_contracts::{impl core::fmt::Debug for noble_contracts::Limits}]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 25:22-25:27 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 27:22-27:27 -/
 @[reducible]
 def Limits.Insts.CoreFmtDebug : core.fmt.Debug Limits := {
   fmt := Limits.Insts.CoreFmtDebug.fmt
 }
 
 /-- Trait implementation: [noble_contracts::{impl core::marker::StructuralPartialEq for noble_contracts::Limits}]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 25:29-25:38 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 27:29-27:38 -/
 @[reducible]
 def Limits.Insts.CoreMarkerStructuralPartialEq :
   core.marker.StructuralPartialEq Limits := {
 }
 
 /-- [noble_contracts::{impl core::cmp::PartialEq<noble_contracts::Limits> for noble_contracts::Limits}::eq]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 25:29-25:38
+    Source: 'crates/noble-contracts/src/lib.rs', lines 27:29-27:38
     Visibility: public -/
 def Limits.Insts.CoreCmpPartialEqLimits.eq
   (self : Limits) (other : Limits) : Result Bool := do
@@ -11096,7 +15492,7 @@ def Limits.Insts.CoreCmpPartialEqLimits.eq
   else ok false
 
 /-- Trait implementation: [noble_contracts::{impl core::cmp::PartialEq<noble_contracts::Limits> for noble_contracts::Limits}]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 25:29-25:38 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 27:29-27:38 -/
 @[reducible]
 impl_def Limits.Insts.CoreCmpPartialEqLimits : core.cmp.PartialEq Limits Limits
   := {
@@ -11105,14 +15501,14 @@ impl_def Limits.Insts.CoreCmpPartialEqLimits : core.cmp.PartialEq Limits Limits
 }
 
 /-- [noble_contracts::{impl core::cmp::Eq for noble_contracts::Limits}::assert_fields_are_eq]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 25:40-25:42
+    Source: 'crates/noble-contracts/src/lib.rs', lines 27:40-27:42
     Visibility: public -/
 def Limits.Insts.CoreCmpEq.assert_fields_are_eq
   (self : Limits) : Result Unit := do
   ok ()
 
 /-- Trait implementation: [noble_contracts::{impl core::cmp::Eq for noble_contracts::Limits}]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 25:40-25:42 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 27:40-27:42 -/
 @[reducible]
 def Limits.Insts.CoreCmpEq : core.cmp.Eq Limits := {
   partialEqInst := Limits.Insts.CoreCmpPartialEqLimits
@@ -11120,7 +15516,7 @@ def Limits.Insts.CoreCmpEq : core.cmp.Eq Limits := {
 }
 
 /-- [noble_contracts::{impl core::default::Default for noble_contracts::Limits}::default]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 34:4-41:5
+    Source: 'crates/noble-contracts/src/lib.rs', lines 36:4-43:5
     Visibility: public -/
 def Limits.Insts.CoreDefaultDefault.default : Result Limits := do
   ok
@@ -11132,34 +15528,34 @@ def Limits.Insts.CoreDefaultDefault.default : Result Limits := do
     }
 
 /-- Trait implementation: [noble_contracts::{impl core::default::Default for noble_contracts::Limits}]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 33:0-42:1 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 35:0-44:1 -/
 @[reducible]
 def Limits.Insts.CoreDefaultDefault : core.default.Default Limits := {
   default := Limits.Insts.CoreDefaultDefault.default
 }
 
 /-- [noble_contracts::{impl core::clone::Clone for noble_contracts::Span}::clone]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 44:9-44:14
+    Source: 'crates/noble-contracts/src/lib.rs', lines 46:9-46:14
     Visibility: public -/
 def Span.Insts.CoreCloneClone.clone (self : Span) : Result Span := do
   ok self
 
 /-- Trait implementation: [noble_contracts::{impl core::clone::Clone for noble_contracts::Span}]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 44:9-44:14 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 46:9-46:14 -/
 @[reducible]
 def Span.Insts.CoreCloneClone : core.clone.Clone Span := {
   clone := Span.Insts.CoreCloneClone.clone
 }
 
 /-- Trait implementation: [noble_contracts::{impl core::marker::Copy for noble_contracts::Span}]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 44:16-44:20 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 46:16-46:20 -/
 @[reducible]
 def Span.Insts.CoreMarkerCopy : core.marker.Copy Span := {
   cloneInst := Span.Insts.CoreCloneClone
 }
 
 /-- [noble_contracts::{impl core::fmt::Debug for noble_contracts::Span}::fmt]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 44:22-44:27
+    Source: 'crates/noble-contracts/src/lib.rs', lines 46:22-46:27
     Visibility: public -/
 def Span.Insts.CoreFmtDebug.fmt
   (self : Span) (f : core.fmt.Formatter) :
@@ -11171,21 +15567,21 @@ def Span.Insts.CoreFmtDebug.fmt
     "start") dyn (toStr "end") dyn1
 
 /-- Trait implementation: [noble_contracts::{impl core::fmt::Debug for noble_contracts::Span}]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 44:22-44:27 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 46:22-46:27 -/
 @[reducible]
 def Span.Insts.CoreFmtDebug : core.fmt.Debug Span := {
   fmt := Span.Insts.CoreFmtDebug.fmt
 }
 
 /-- Trait implementation: [noble_contracts::{impl core::marker::StructuralPartialEq for noble_contracts::Span}]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 44:29-44:38 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 46:29-46:38 -/
 @[reducible]
 def Span.Insts.CoreMarkerStructuralPartialEq : core.marker.StructuralPartialEq
   Span := {
 }
 
 /-- [noble_contracts::{impl core::cmp::PartialEq<noble_contracts::Span> for noble_contracts::Span}::eq]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 44:29-44:38
+    Source: 'crates/noble-contracts/src/lib.rs', lines 46:29-46:38
     Visibility: public -/
 def Span.Insts.CoreCmpPartialEqSpan.eq
   (self : Span) (other : Span) : Result Bool := do
@@ -11194,7 +15590,7 @@ def Span.Insts.CoreCmpPartialEqSpan.eq
   else ok false
 
 /-- Trait implementation: [noble_contracts::{impl core::cmp::PartialEq<noble_contracts::Span> for noble_contracts::Span}]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 44:29-44:38 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 46:29-46:38 -/
 @[reducible]
 impl_def Span.Insts.CoreCmpPartialEqSpan : core.cmp.PartialEq Span Span := {
   eq := Span.Insts.CoreCmpPartialEqSpan.eq
@@ -11202,13 +15598,13 @@ impl_def Span.Insts.CoreCmpPartialEqSpan : core.cmp.PartialEq Span Span := {
 }
 
 /-- [noble_contracts::{impl core::cmp::Eq for noble_contracts::Span}::assert_fields_are_eq]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 44:40-44:42
+    Source: 'crates/noble-contracts/src/lib.rs', lines 46:40-46:42
     Visibility: public -/
 def Span.Insts.CoreCmpEq.assert_fields_are_eq (self : Span) : Result Unit := do
   ok ()
 
 /-- Trait implementation: [noble_contracts::{impl core::cmp::Eq for noble_contracts::Span}]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 44:40-44:42 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 46:40-46:42 -/
 @[reducible]
 def Span.Insts.CoreCmpEq : core.cmp.Eq Span := {
   partialEqInst := Span.Insts.CoreCmpPartialEqSpan
@@ -11216,28 +15612,28 @@ def Span.Insts.CoreCmpEq : core.cmp.Eq Span := {
 }
 
 /-- [noble_contracts::{impl core::clone::Clone for noble_contracts::DiagnosticKind}::clone]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 50:9-50:14
+    Source: 'crates/noble-contracts/src/lib.rs', lines 52:9-52:14
     Visibility: public -/
 def DiagnosticKind.Insts.CoreCloneClone.clone
   (self : DiagnosticKind) : Result DiagnosticKind := do
   ok self
 
 /-- Trait implementation: [noble_contracts::{impl core::clone::Clone for noble_contracts::DiagnosticKind}]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 50:9-50:14 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 52:9-52:14 -/
 @[reducible]
 def DiagnosticKind.Insts.CoreCloneClone : core.clone.Clone DiagnosticKind := {
   clone := DiagnosticKind.Insts.CoreCloneClone.clone
 }
 
 /-- Trait implementation: [noble_contracts::{impl core::marker::Copy for noble_contracts::DiagnosticKind}]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 50:16-50:20 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 52:16-52:20 -/
 @[reducible]
 def DiagnosticKind.Insts.CoreMarkerCopy : core.marker.Copy DiagnosticKind := {
   cloneInst := DiagnosticKind.Insts.CoreCloneClone
 }
 
 /-- [noble_contracts::{impl core::fmt::Debug for noble_contracts::DiagnosticKind}::fmt]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 50:22-50:27
+    Source: 'crates/noble-contracts/src/lib.rs', lines 52:22-52:27
     Visibility: public -/
 def DiagnosticKind.Insts.CoreFmtDebug.fmt
   (self : DiagnosticKind) (f : core.fmt.Formatter) :
@@ -11253,21 +15649,21 @@ def DiagnosticKind.Insts.CoreFmtDebug.fmt
     core.fmt.Formatter.write_str f (toStr "Internal")
 
 /-- Trait implementation: [noble_contracts::{impl core::fmt::Debug for noble_contracts::DiagnosticKind}]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 50:22-50:27 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 52:22-52:27 -/
 @[reducible]
 def DiagnosticKind.Insts.CoreFmtDebug : core.fmt.Debug DiagnosticKind := {
   fmt := DiagnosticKind.Insts.CoreFmtDebug.fmt
 }
 
 /-- Trait implementation: [noble_contracts::{impl core::marker::StructuralPartialEq for noble_contracts::DiagnosticKind}]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 50:29-50:38 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 52:29-52:38 -/
 @[reducible]
 def DiagnosticKind.Insts.CoreMarkerStructuralPartialEq :
   core.marker.StructuralPartialEq DiagnosticKind := {
 }
 
 /-- [noble_contracts::{impl core::cmp::PartialEq<noble_contracts::DiagnosticKind> for noble_contracts::DiagnosticKind}::eq]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 50:29-50:38
+    Source: 'crates/noble-contracts/src/lib.rs', lines 52:29-52:38
     Visibility: public -/
 def DiagnosticKind.Insts.CoreCmpPartialEqDiagnosticKind.eq
   (self : DiagnosticKind) (other : DiagnosticKind) : Result Bool := do
@@ -11276,7 +15672,7 @@ def DiagnosticKind.Insts.CoreCmpPartialEqDiagnosticKind.eq
   ok (self1 = other1)
 
 /-- Trait implementation: [noble_contracts::{impl core::cmp::PartialEq<noble_contracts::DiagnosticKind> for noble_contracts::DiagnosticKind}]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 50:29-50:38 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 52:29-52:38 -/
 @[reducible]
 impl_def DiagnosticKind.Insts.CoreCmpPartialEqDiagnosticKind :
   core.cmp.PartialEq DiagnosticKind DiagnosticKind := {
@@ -11286,14 +15682,14 @@ impl_def DiagnosticKind.Insts.CoreCmpPartialEqDiagnosticKind :
 }
 
 /-- [noble_contracts::{impl core::cmp::Eq for noble_contracts::DiagnosticKind}::assert_fields_are_eq]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 50:40-50:42
+    Source: 'crates/noble-contracts/src/lib.rs', lines 52:40-52:42
     Visibility: public -/
 def DiagnosticKind.Insts.CoreCmpEq.assert_fields_are_eq
   (self : DiagnosticKind) : Result Unit := do
   ok ()
 
 /-- Trait implementation: [noble_contracts::{impl core::cmp::Eq for noble_contracts::DiagnosticKind}]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 50:40-50:42 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 52:40-52:42 -/
 @[reducible]
 def DiagnosticKind.Insts.CoreCmpEq : core.cmp.Eq DiagnosticKind := {
   partialEqInst := DiagnosticKind.Insts.CoreCmpPartialEqDiagnosticKind
@@ -11301,7 +15697,7 @@ def DiagnosticKind.Insts.CoreCmpEq : core.cmp.Eq DiagnosticKind := {
 }
 
 /-- [noble_contracts::{impl core::clone::Clone for noble_contracts::Diagnostic}::clone]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 58:9-58:14
+    Source: 'crates/noble-contracts/src/lib.rs', lines 60:9-60:14
     Visibility: public -/
 def Diagnostic.Insts.CoreCloneClone.clone
   (self : Diagnostic) : Result Diagnostic := do
@@ -11314,14 +15710,14 @@ def Diagnostic.Insts.CoreCloneClone.clone
   ok { kind := dk, span := s, message := s1, ordinary_typing := o }
 
 /-- Trait implementation: [noble_contracts::{impl core::clone::Clone for noble_contracts::Diagnostic}]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 58:9-58:14 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 60:9-60:14 -/
 @[reducible]
 def Diagnostic.Insts.CoreCloneClone : core.clone.Clone Diagnostic := {
   clone := Diagnostic.Insts.CoreCloneClone.clone
 }
 
 /-- [noble_contracts::{impl core::fmt::Debug for noble_contracts::Diagnostic}::fmt]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 58:16-58:21
+    Source: 'crates/noble-contracts/src/lib.rs', lines 60:16-60:21
     Visibility: public -/
 def Diagnostic.Insts.CoreFmtDebug.fmt
   (self : Diagnostic) (f : core.fmt.Formatter) :
@@ -11339,14 +15735,14 @@ def Diagnostic.Insts.CoreFmtDebug.fmt
     "ordinary_typing") dyn3
 
 /-- Trait implementation: [noble_contracts::{impl core::fmt::Debug for noble_contracts::Diagnostic}]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 58:16-58:21 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 60:16-60:21 -/
 @[reducible]
 def Diagnostic.Insts.CoreFmtDebug : core.fmt.Debug Diagnostic := {
   fmt := Diagnostic.Insts.CoreFmtDebug.fmt
 }
 
 /-- [noble_contracts::{noble_contracts::Diagnostic}::ordinary_typing]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 67:4-69:5
+    Source: 'crates/noble-contracts/src/lib.rs', lines 69:4-71:5
     Visibility: public -/
 def Diagnostic.impl.ordinary_typing
   (self : Diagnostic) : Result (Option noble_kernel.untrusted.Checked) := do
@@ -11354,7 +15750,7 @@ def Diagnostic.impl.ordinary_typing
     noble_kernel.untrusted.Checked) self.ordinary_typing
 
 /-- [noble_contracts::{impl core::clone::Clone for noble_contracts::NamedType}::clone]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 86:9-86:14
+    Source: 'crates/noble-contracts/src/lib.rs', lines 88:9-88:14
     Visibility: public -/
 def NamedType.Insts.CoreCloneClone.clone
   (self : NamedType) : Result NamedType := do
@@ -11363,14 +15759,14 @@ def NamedType.Insts.CoreCloneClone.clone
   ok { «name» := s, ty := t }
 
 /-- Trait implementation: [noble_contracts::{impl core::clone::Clone for noble_contracts::NamedType}]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 86:9-86:14 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 88:9-88:14 -/
 @[reducible]
 def NamedType.Insts.CoreCloneClone : core.clone.Clone NamedType := {
   clone := NamedType.Insts.CoreCloneClone.clone
 }
 
 /-- [noble_contracts::{impl core::fmt::Debug for noble_contracts::NamedType}::fmt]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 86:16-86:21
+    Source: 'crates/noble-contracts/src/lib.rs', lines 88:16-88:21
     Visibility: public -/
 def NamedType.Insts.CoreFmtDebug.fmt
   (self : NamedType) (f : core.fmt.Formatter) :
@@ -11384,14 +15780,14 @@ def NamedType.Insts.CoreFmtDebug.fmt
     "name") dyn (toStr "ty") dyn1
 
 /-- Trait implementation: [noble_contracts::{impl core::fmt::Debug for noble_contracts::NamedType}]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 86:16-86:21 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 88:16-88:21 -/
 @[reducible]
 def NamedType.Insts.CoreFmtDebug : core.fmt.Debug NamedType := {
   fmt := NamedType.Insts.CoreFmtDebug.fmt
 }
 
 /-- [noble_contracts::{impl core::clone::Clone for noble_contracts::LogicDef}::clone]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 92:9-92:14
+    Source: 'crates/noble-contracts/src/lib.rs', lines 94:9-94:14
     Visibility: public -/
 def LogicDef.Insts.CoreCloneClone.clone
   (self : LogicDef) : Result LogicDef := do
@@ -11401,14 +15797,14 @@ def LogicDef.Insts.CoreCloneClone.clone
   ok { «name» := s, ty := t, body := i }
 
 /-- Trait implementation: [noble_contracts::{impl core::clone::Clone for noble_contracts::LogicDef}]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 92:9-92:14 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 94:9-94:14 -/
 @[reducible]
 def LogicDef.Insts.CoreCloneClone : core.clone.Clone LogicDef := {
   clone := LogicDef.Insts.CoreCloneClone.clone
 }
 
 /-- [noble_contracts::{impl core::fmt::Debug for noble_contracts::LogicDef}::fmt]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 92:16-92:21
+    Source: 'crates/noble-contracts/src/lib.rs', lines 94:16-94:21
     Visibility: public -/
 def LogicDef.Insts.CoreFmtDebug.fmt
   (self : LogicDef) (f : core.fmt.Formatter) :
@@ -11421,14 +15817,14 @@ def LogicDef.Insts.CoreFmtDebug.fmt
     "name") dyn (toStr "ty") dyn1 (toStr "body") dyn2
 
 /-- Trait implementation: [noble_contracts::{impl core::fmt::Debug for noble_contracts::LogicDef}]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 92:16-92:21 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 94:16-94:21 -/
 @[reducible]
 def LogicDef.Insts.CoreFmtDebug : core.fmt.Debug LogicDef := {
   fmt := LogicDef.Insts.CoreFmtDebug.fmt
 }
 
 /-- [noble_contracts::{impl core::clone::Clone for noble_contracts::ExprKind}::clone]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 119:9-119:14
+    Source: 'crates/noble-contracts/src/lib.rs', lines 121:9-121:14
     Visibility: public -/
 def ExprKind.Insts.CoreCloneClone.clone
   (self : ExprKind) : Result ExprKind := do
@@ -11540,7 +15936,7 @@ def ExprKind.Insts.CoreCloneClone.clone
     ok (ExprKind.MapsExpr i i1 i2)
 
 /-- [noble_contracts::{impl core::clone::Clone for noble_contracts::Expr}::clone]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 99:9-99:14
+    Source: 'crates/noble-contracts/src/lib.rs', lines 101:9-101:14
     Visibility: public -/
 def Expr.Insts.CoreCloneClone.clone (self : Expr) : Result Expr := do
   let ek ← ExprKind.Insts.CoreCloneClone.clone self.kind
@@ -11551,14 +15947,14 @@ def Expr.Insts.CoreCloneClone.clone (self : Expr) : Result Expr := do
   ok { kind := ek, ty := t, span := s, total := b, uses_output := b1 }
 
 /-- Trait implementation: [noble_contracts::{impl core::clone::Clone for noble_contracts::Expr}]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 99:9-99:14 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 101:9-101:14 -/
 @[reducible]
 def Expr.Insts.CoreCloneClone : core.clone.Clone Expr := {
   clone := Expr.Insts.CoreCloneClone.clone
 }
 
 /-- [noble_contracts::{impl core::fmt::Debug for noble_contracts::ExprKind}::fmt]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 119:16-119:21
+    Source: 'crates/noble-contracts/src/lib.rs', lines 121:16-121:21
     Visibility: public -/
 def ExprKind.Insts.CoreFmtDebug.fmt
   (self : ExprKind) (f : core.fmt.Formatter) :
@@ -11686,14 +16082,14 @@ def ExprKind.Insts.CoreFmtDebug.fmt
       __self_11 __self_21
 
 /-- Trait implementation: [noble_contracts::{impl core::fmt::Debug for noble_contracts::ExprKind}]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 119:16-119:21 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 121:16-121:21 -/
 @[reducible]
 def ExprKind.Insts.CoreFmtDebug : core.fmt.Debug ExprKind := {
   fmt := ExprKind.Insts.CoreFmtDebug.fmt
 }
 
 /-- [noble_contracts::{impl core::fmt::Debug for noble_contracts::Expr}::fmt]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 99:16-99:21
+    Source: 'crates/noble-contracts/src/lib.rs', lines 101:16-101:21
     Visibility: public -/
 def Expr.Insts.CoreFmtDebug.fmt
   (self : Expr) (f : core.fmt.Formatter) :
@@ -11710,21 +16106,21 @@ def Expr.Insts.CoreFmtDebug.fmt
     "uses_output") dyn4
 
 /-- Trait implementation: [noble_contracts::{impl core::fmt::Debug for noble_contracts::Expr}]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 99:16-99:21 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 101:16-101:21 -/
 @[reducible]
 def Expr.Insts.CoreFmtDebug : core.fmt.Debug Expr := {
   fmt := Expr.Insts.CoreFmtDebug.fmt
 }
 
 /-- Trait implementation: [noble_contracts::{impl core::clone::Clone for noble_contracts::ExprKind}]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 119:9-119:14 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 121:9-121:14 -/
 @[reducible]
 def ExprKind.Insts.CoreCloneClone : core.clone.Clone ExprKind := {
   clone := ExprKind.Insts.CoreCloneClone.clone
 }
 
 /-- [noble_contracts::{impl core::clone::Clone for noble_contracts::Prepared}::clone]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 158:9-158:14
+    Source: 'crates/noble-contracts/src/lib.rs', lines 160:9-160:14
     Visibility: public -/
 def Prepared.Insts.CoreCloneClone.clone
   (self : Prepared) : Result Prepared := do
@@ -11762,14 +16158,14 @@ def Prepared.Insts.CoreCloneClone.clone
     }
 
 /-- Trait implementation: [noble_contracts::{impl core::clone::Clone for noble_contracts::Prepared}]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 158:9-158:14 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 160:9-160:14 -/
 @[reducible]
 def Prepared.Insts.CoreCloneClone : core.clone.Clone Prepared := {
   clone := Prepared.Insts.CoreCloneClone.clone
 }
 
 /-- [noble_contracts::{impl core::fmt::Debug for noble_contracts::Prepared}::fmt]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 158:16-158:21
+    Source: 'crates/noble-contracts/src/lib.rs', lines 160:16-160:21
     Visibility: public -/
 def Prepared.Insts.CoreFmtDebug.fmt
   (self : Prepared) (f : core.fmt.Formatter) :
@@ -11810,83 +16206,83 @@ def Prepared.Insts.CoreFmtDebug.fmt
   core.fmt.Formatter.debug_struct_fields_finish f (toStr "Prepared") s values
 
 /-- Trait implementation: [noble_contracts::{impl core::fmt::Debug for noble_contracts::Prepared}]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 158:16-158:21 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 160:16-160:21 -/
 @[reducible]
 def Prepared.Insts.CoreFmtDebug : core.fmt.Debug Prepared := {
   fmt := Prepared.Insts.CoreFmtDebug.fmt
 }
 
 /-- [noble_contracts::{noble_contracts::Prepared}::name]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 174:4-176:5
+    Source: 'crates/noble-contracts/src/lib.rs', lines 176:4-178:5
     Visibility: public -/
 def Prepared.impl.name (self : Prepared) : Result Str := do
   alloc.string.String.Insts.CoreOpsDerefDerefStr.deref self.name
 
 /-- [noble_contracts::{noble_contracts::Prepared}::inputs]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 177:4-179:5
+    Source: 'crates/noble-contracts/src/lib.rs', lines 179:4-181:5
     Visibility: public -/
 def Prepared.impl.inputs (self : Prepared) : Result (Slice NamedType) := do
   ok (alloc.vec.Vec.deref self.inputs)
 
 /-- [noble_contracts::{noble_contracts::Prepared}::outputs]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 180:4-182:5
+    Source: 'crates/noble-contracts/src/lib.rs', lines 182:4-184:5
     Visibility: public -/
 def Prepared.impl.outputs (self : Prepared) : Result (Slice NamedType) := do
   ok (alloc.vec.Vec.deref self.outputs)
 
 /-- [noble_contracts::{noble_contracts::Prepared}::params]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 183:4-185:5
+    Source: 'crates/noble-contracts/src/lib.rs', lines 185:4-187:5
     Visibility: public -/
 def Prepared.impl.params (self : Prepared) : Result (Slice NamedType) := do
   ok (alloc.vec.Vec.deref self.params)
 
 /-- [noble_contracts::{noble_contracts::Prepared}::definitions]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 186:4-188:5
+    Source: 'crates/noble-contracts/src/lib.rs', lines 188:4-190:5
     Visibility: public -/
 def Prepared.impl.definitions (self : Prepared) : Result (Slice LogicDef) := do
   ok (alloc.vec.Vec.deref self.definitions)
 
 /-- [noble_contracts::{noble_contracts::Prepared}::expressions]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 189:4-191:5
+    Source: 'crates/noble-contracts/src/lib.rs', lines 191:4-193:5
     Visibility: public -/
 def Prepared.impl.expressions (self : Prepared) : Result (Slice Expr) := do
   ok (alloc.vec.Vec.deref self.expressions)
 
 /-- [noble_contracts::{noble_contracts::Prepared}::requires]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 192:4-194:5
+    Source: 'crates/noble-contracts/src/lib.rs', lines 194:4-196:5
     Visibility: public -/
 def Prepared.impl.requires (self : Prepared) : Result Std.U32 := do
   ok self.requires
 
 /-- [noble_contracts::{noble_contracts::Prepared}::ensures]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 195:4-197:5
+    Source: 'crates/noble-contracts/src/lib.rs', lines 197:4-199:5
     Visibility: public -/
 def Prepared.impl.ensures (self : Prepared) : Result Std.U32 := do
   ok self.ensures
 
 /-- [noble_contracts::{noble_contracts::Prepared}::candidate]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 198:4-200:5
+    Source: 'crates/noble-contracts/src/lib.rs', lines 200:4-202:5
     Visibility: public -/
 def Prepared.impl.candidate
   (self : Prepared) : Result noble_kernel.untrusted.Candidate := do
   ok self.candidate
 
 /-- [noble_contracts::{noble_contracts::Prepared}::request]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 201:4-203:5
+    Source: 'crates/noble-contracts/src/lib.rs', lines 203:4-205:5
     Visibility: public -/
 def Prepared.impl.request
   (self : Prepared) : Result noble_kernel.untrusted.Request := do
   ok self.request
 
 /-- [noble_contracts::{noble_contracts::Prepared}::checked]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 204:4-206:5
+    Source: 'crates/noble-contracts/src/lib.rs', lines 206:4-208:5
     Visibility: public -/
 def Prepared.impl.checked
   (self : Prepared) : Result noble_kernel.untrusted.Checked := do
   ok self.checked
 
 /-- [noble_contracts::prepare]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 209:0-211:1
+    Source: 'crates/noble-contracts/src/lib.rs', lines 211:0-213:1
     Visibility: public -/
 def prepare
   (source : Slice Std.U8) (limits : Limits) :
@@ -12059,15 +16455,66 @@ def program.witness.Bindings.Insts.CoreMarkerCopy : core.marker.Copy
   cloneInst := program.witness.Bindings.Insts.CoreCloneClone
 }
 
+/-- [noble_contracts::program::words::append_spelling]:
+    Source: 'crates/noble-contracts/src/program/words.rs', lines 122:0-154:1 -/
+def program.words.append_spelling
+  (definition : noble_kernel.contracts.Definition) (output : String) :
+  Result String
+  := do
+  let spelling ←
+    match definition with
+    | 0#uscalar => ok (toStr "dup")
+    | 1#uscalar => ok (toStr "drop")
+    | 2#uscalar => ok (toStr "swap")
+    | 3#uscalar => ok (toStr "dip")
+    | 4#uscalar => ok (toStr "+")
+    | 5#uscalar => ok (toStr "-")
+    | 6#uscalar => ok (toStr "*")
+    | 7#uscalar => ok (toStr "=")
+    | 8#uscalar => ok (toStr "quote")
+    | 9#uscalar => ok (toStr "compose")
+    | 10#uscalar => ok (toStr "run")
+    | 11#uscalar => ok (toStr "reflect")
+    | 12#uscalar => ok (toStr "unit")
+    | 13#uscalar => ok (toStr "pair")
+    | 14#uscalar => ok (toStr "unpair")
+    | 15#uscalar => ok (toStr "inl")
+    | 16#uscalar => ok (toStr "inr")
+    | 17#uscalar => ok (toStr "case")
+    | 18#uscalar => ok (toStr "if")
+    | 19#uscalar => ok (toStr "nil")
+    | 20#uscalar => ok (toStr "cons")
+    | 21#uscalar => ok (toStr "list.case")
+    | 22#uscalar => ok (toStr "test.emit")
+    | 23#uscalar => ok (toStr "test.abort")
+    | _ => ok (toStr "unknown")
+  alloc.string.String.push_str output spelling
+
+/-- [noble_contracts::program::bootstrap_word]:
+    Source: 'crates/noble-contracts/src/program.rs', lines 7:0-9:1 -/
+def program.bootstrap_word
+  (word : Slice Std.U8) :
+  Result (Option noble_kernel.contracts.Definition)
+  := do
+  program.words.bootstrap word
+
+/-- [noble_contracts::program::append_bootstrap_spelling]:
+    Source: 'crates/noble-contracts/src/program.rs', lines 15:0-20:1 -/
+def program.append_bootstrap_spelling
+  (definition : noble_kernel.contracts.Definition) (output : String) :
+  Result String
+  := do
+  program.words.append_spelling definition output
+
 /-- [noble_contracts::program::{impl core::clone::Clone for noble_contracts::program::Context<'a>}::clone]:
-    Source: 'crates/noble-contracts/src/program.rs', lines 7:9-7:14
+    Source: 'crates/noble-contracts/src/program.rs', lines 22:9-22:14
     Visibility: public -/
 def program.Context.Insts.CoreCloneClone.clone
   (self : program.Context) : Result program.Context := do
   ok self
 
 /-- Trait implementation: [noble_contracts::program::{impl core::clone::Clone for noble_contracts::program::Context<'a>}]
-    Source: 'crates/noble-contracts/src/program.rs', lines 7:9-7:14 -/
+    Source: 'crates/noble-contracts/src/program.rs', lines 22:9-22:14 -/
 @[reducible]
 def program.Context.Insts.CoreCloneClone : core.clone.Clone program.Context
   := {
@@ -12075,7 +16522,7 @@ def program.Context.Insts.CoreCloneClone : core.clone.Clone program.Context
 }
 
 /-- Trait implementation: [noble_contracts::program::{impl core::marker::Copy for noble_contracts::program::Context<'a>}]
-    Source: 'crates/noble-contracts/src/program.rs', lines 7:16-7:20 -/
+    Source: 'crates/noble-contracts/src/program.rs', lines 22:16-22:20 -/
 @[reducible]
 def program.Context.Insts.CoreMarkerCopy : core.marker.Copy program.Context
   := {
@@ -12083,21 +16530,21 @@ def program.Context.Insts.CoreMarkerCopy : core.marker.Copy program.Context
 }
 
 /-- [noble_contracts::program::{impl core::clone::Clone for noble_contracts::program::Form<'a>}::clone]:
-    Source: 'crates/noble-contracts/src/program.rs', lines 14:9-14:14
+    Source: 'crates/noble-contracts/src/program.rs', lines 29:9-29:14
     Visibility: public -/
 def program.Form.Insts.CoreCloneClone.clone
   (self : program.Form) : Result program.Form := do
   ok self
 
 /-- Trait implementation: [noble_contracts::program::{impl core::clone::Clone for noble_contracts::program::Form<'a>}]
-    Source: 'crates/noble-contracts/src/program.rs', lines 14:9-14:14 -/
+    Source: 'crates/noble-contracts/src/program.rs', lines 29:9-29:14 -/
 @[reducible]
 def program.Form.Insts.CoreCloneClone : core.clone.Clone program.Form := {
   clone := program.Form.Insts.CoreCloneClone.clone
 }
 
 /-- Trait implementation: [noble_contracts::program::{impl core::marker::Copy for noble_contracts::program::Form<'a>}]
-    Source: 'crates/noble-contracts/src/program.rs', lines 14:16-14:20 -/
+    Source: 'crates/noble-contracts/src/program.rs', lines 29:16-29:20 -/
 @[reducible]
 def program.Form.Insts.CoreMarkerCopy : core.marker.Copy program.Form := {
   cloneInst := program.Form.Insts.CoreCloneClone
@@ -12733,6 +17180,6531 @@ def rendering.export_lean (prepared : Prepared) : Result String := do
       "\ndef claim : Prop := exportedClaim program inputTypes outputTypes paramTypes\n")
   alloc.string.String.push_str out15 (toStr
     "  (Holds precondition) (Holds postcondition)\n\nend MC1Obligation\n")
+
+/-- [noble_contracts::source::emission::contracts::patterns::{noble_contracts::source::emission::contracts::patterns::Traversal}::take]:
+    Source: 'crates/noble-contracts/src/source/emission/contracts/patterns.rs', lines 228:4-236:5 -/
+def source.emission.contracts.patterns.Traversal.take
+  (self : source.emission.contracts.patterns.Traversal) (span : Span) :
+  Result ((core.result.Result noble_kernel.shapes.Pattern Diagnostic) ×
+    source.emission.contracts.patterns.Traversal)
+  := do
+  let (o, v) ← alloc.vec.Vec.pop Global self.values
+  match o with
+  | none =>
+    let d ← internal span
+    ok (core.result.Result.Err d, { self with values := v })
+  | some value => ok (core.result.Result.Ok value, { self with values := v })
+
+/-- [noble_contracts::source::preflight::paths::child]:
+    Source: 'crates/noble-contracts/src/source/preflight/paths.rs', lines 35:0-65:1 -/
+def source.preflight.paths.child
+  (ty : noble_kernel.types.Ty) (step : source.preflight.PathStep) (span : Span)
+  :
+  Result (core.result.Result noble_kernel.types.Ty Diagnostic)
+  := do
+  match step with
+  | source.preflight.PathStep.Root => ok (core.result.Result.Ok ty)
+  | source.preflight.PathStep.Left =>
+    match ty with
+    | noble_kernel.types.Ty.UnitType =>
+      let d ← internal span
+      ok (core.result.Result.Err d)
+    | noble_kernel.types.Ty.BoolType =>
+      let d ← internal span
+      ok (core.result.Result.Err d)
+    | noble_kernel.types.Ty.I64Type =>
+      let d ← internal span
+      ok (core.result.Result.Err d)
+    | noble_kernel.types.Ty.TextType =>
+      let d ← internal span
+      ok (core.result.Result.Err d)
+    | noble_kernel.types.Ty.SyntaxType =>
+      let d ← internal span
+      ok (core.result.Result.Err d)
+    | noble_kernel.types.Ty.PairType left _ => ok (core.result.Result.Ok left)
+    | noble_kernel.types.Ty.SumType left _ => ok (core.result.Result.Ok left)
+    | noble_kernel.types.Ty.ListType _ =>
+      let d ← internal span
+      ok (core.result.Result.Err d)
+    | noble_kernel.types.Ty.ProgramType _ _ _ =>
+      let d ← internal span
+      ok (core.result.Result.Err d)
+    | noble_kernel.types.Ty.ResourceType _ =>
+      let d ← internal span
+      ok (core.result.Result.Err d)
+  | source.preflight.PathStep.Right =>
+    match ty with
+    | noble_kernel.types.Ty.UnitType =>
+      let d ← internal span
+      ok (core.result.Result.Err d)
+    | noble_kernel.types.Ty.BoolType =>
+      let d ← internal span
+      ok (core.result.Result.Err d)
+    | noble_kernel.types.Ty.I64Type =>
+      let d ← internal span
+      ok (core.result.Result.Err d)
+    | noble_kernel.types.Ty.TextType =>
+      let d ← internal span
+      ok (core.result.Result.Err d)
+    | noble_kernel.types.Ty.SyntaxType =>
+      let d ← internal span
+      ok (core.result.Result.Err d)
+    | noble_kernel.types.Ty.PairType _ right =>
+      ok (core.result.Result.Ok right)
+    | noble_kernel.types.Ty.SumType _ right => ok (core.result.Result.Ok right)
+    | noble_kernel.types.Ty.ListType _ =>
+      let d ← internal span
+      ok (core.result.Result.Err d)
+    | noble_kernel.types.Ty.ProgramType _ _ _ =>
+      let d ← internal span
+      ok (core.result.Result.Err d)
+    | noble_kernel.types.Ty.ResourceType _ =>
+      let d ← internal span
+      ok (core.result.Result.Err d)
+  | source.preflight.PathStep.Item =>
+    match ty with
+    | noble_kernel.types.Ty.UnitType =>
+      let d ← internal span
+      ok (core.result.Result.Err d)
+    | noble_kernel.types.Ty.BoolType =>
+      let d ← internal span
+      ok (core.result.Result.Err d)
+    | noble_kernel.types.Ty.I64Type =>
+      let d ← internal span
+      ok (core.result.Result.Err d)
+    | noble_kernel.types.Ty.TextType =>
+      let d ← internal span
+      ok (core.result.Result.Err d)
+    | noble_kernel.types.Ty.SyntaxType =>
+      let d ← internal span
+      ok (core.result.Result.Err d)
+    | noble_kernel.types.Ty.PairType _ _ =>
+      let d ← internal span
+      ok (core.result.Result.Err d)
+    | noble_kernel.types.Ty.SumType _ _ =>
+      let d ← internal span
+      ok (core.result.Result.Err d)
+    | noble_kernel.types.Ty.ListType item => ok (core.result.Result.Ok item)
+    | noble_kernel.types.Ty.ProgramType _ _ _ =>
+      let d ← internal span
+      ok (core.result.Result.Err d)
+    | noble_kernel.types.Ty.ResourceType _ =>
+      let d ← internal span
+      ok (core.result.Result.Err d)
+  | source.preflight.PathStep.Input index1 =>
+    match ty with
+    | noble_kernel.types.Ty.UnitType =>
+      let d ← internal span
+      ok (core.result.Result.Err d)
+    | noble_kernel.types.Ty.BoolType =>
+      let d ← internal span
+      ok (core.result.Result.Err d)
+    | noble_kernel.types.Ty.I64Type =>
+      let d ← internal span
+      ok (core.result.Result.Err d)
+    | noble_kernel.types.Ty.TextType =>
+      let d ← internal span
+      ok (core.result.Result.Err d)
+    | noble_kernel.types.Ty.SyntaxType =>
+      let d ← internal span
+      ok (core.result.Result.Err d)
+    | noble_kernel.types.Ty.PairType _ _ =>
+      let d ← internal span
+      ok (core.result.Result.Err d)
+    | noble_kernel.types.Ty.SumType _ _ =>
+      let d ← internal span
+      ok (core.result.Result.Err d)
+    | noble_kernel.types.Ty.ListType _ =>
+      let d ← internal span
+      ok (core.result.Result.Err d)
+    | noble_kernel.types.Ty.ProgramType input _ _ =>
+      let s := alloc.vec.Vec.deref input
+      let o ←
+        core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice
+          noble_kernel.types.Ty) s index1
+      match o with
+      | none => let d ← internal span
+                ok (core.result.Result.Err d)
+      | some child => ok (core.result.Result.Ok child)
+    | noble_kernel.types.Ty.ResourceType _ =>
+      let d ← internal span
+      ok (core.result.Result.Err d)
+  | source.preflight.PathStep.Output index1 =>
+    match ty with
+    | noble_kernel.types.Ty.UnitType =>
+      let d ← internal span
+      ok (core.result.Result.Err d)
+    | noble_kernel.types.Ty.BoolType =>
+      let d ← internal span
+      ok (core.result.Result.Err d)
+    | noble_kernel.types.Ty.I64Type =>
+      let d ← internal span
+      ok (core.result.Result.Err d)
+    | noble_kernel.types.Ty.TextType =>
+      let d ← internal span
+      ok (core.result.Result.Err d)
+    | noble_kernel.types.Ty.SyntaxType =>
+      let d ← internal span
+      ok (core.result.Result.Err d)
+    | noble_kernel.types.Ty.PairType _ _ =>
+      let d ← internal span
+      ok (core.result.Result.Err d)
+    | noble_kernel.types.Ty.SumType _ _ =>
+      let d ← internal span
+      ok (core.result.Result.Err d)
+    | noble_kernel.types.Ty.ListType _ =>
+      let d ← internal span
+      ok (core.result.Result.Err d)
+    | noble_kernel.types.Ty.ProgramType _ output _ =>
+      let s := alloc.vec.Vec.deref output
+      let o ←
+        core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice
+          noble_kernel.types.Ty) s index1
+      match o with
+      | none => let d ← internal span
+                ok (core.result.Result.Err d)
+      | some child => ok (core.result.Result.Ok child)
+    | noble_kernel.types.Ty.ResourceType _ =>
+      let d ← internal span
+      ok (core.result.Result.Err d)
+
+/-- [noble_contracts::source::preflight::paths::locate]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/preflight/paths.rs', lines 13:4-24:5 -/
+@[rust_loop_body]
+def source.preflight.paths.locate_loop.body
+  (path : Slice source.preflight.PathStep) (span : Span)
+  (ty : noble_kernel.types.Ty) («at» : Std.Usize) :
+  Result (ControlFlow (noble_kernel.types.Ty × Std.Usize)
+    (noble_kernel.types.Ty × (Option Diagnostic)))
+  := do
+  let i := Slice.len path
+  if «at» < i
+  then
+    let ps ← Slice.index_usize path «at»
+    let r ← source.preflight.paths.child ty ps span
+    match r with
+    | core.result.Result.Ok next =>
+      let at1 ← lift (core.num.Usize.saturating_add «at» 1#usize)
+      ok (cont (next, at1))
+    | core.result.Result.Err problem => ok (done (ty, some problem))
+  else ok (done (ty, none))
+
+/-- [noble_contracts::source::preflight::paths::locate]: loop 0:
+    Source: 'crates/noble-contracts/src/source/preflight/paths.rs', lines 13:4-24:5 -/
+@[rust_loop]
+def source.preflight.paths.locate_loop
+  (path : Slice source.preflight.PathStep) (span : Span)
+  (ty : noble_kernel.types.Ty) («at» : Std.Usize) :
+  Result (noble_kernel.types.Ty × (Option Diagnostic))
+  := do
+  loop
+    (fun (ty1, at1) => source.preflight.paths.locate_loop.body path span ty1
+      at1)
+    (ty, «at»)
+
+/-- [noble_contracts::source::preflight::paths::locate]:
+    Source: 'crates/noble-contracts/src/source/preflight/paths.rs', lines 5:0-29:1 -/
+def source.preflight.paths.locate
+  (root : noble_kernel.types.Ty) (path : Slice source.preflight.PathStep)
+  (span : Span) :
+  Result (core.result.Result noble_kernel.types.Ty Diagnostic)
+  := do
+  let (ty, failure) ←
+    source.preflight.paths.locate_loop path span root 0#usize
+  match failure with
+  | none => ok (core.result.Result.Ok ty)
+  | some problem => ok (core.result.Result.Err problem)
+
+/-- [noble_contracts::source::emission::contracts::effect_slots]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/emission/contracts.rs', lines 52:4-59:5 -/
+@[rust_loop_body]
+def source.emission.contracts.effect_slots_loop.body
+  (span : Span) (effects : Slice noble_kernel.types.EffId) (meter : Meter)
+  (slots : alloc.vec.Vec noble_kernel.shapes.EffectSlot) («at» : Std.Usize) :
+  Result (ControlFlow (Meter × (alloc.vec.Vec noble_kernel.shapes.EffectSlot)
+    × Std.Usize) (Meter × (alloc.vec.Vec noble_kernel.shapes.EffectSlot) ×
+    (Option Diagnostic)))
+  := do
+  let o ←
+    core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice
+      noble_kernel.types.EffId) effects «at»
+  let o1 ←
+    core.option.OptionShared0T.copied
+      noble_kernel.types.EffId.Insts.CoreMarkerCopy o
+  match o1 with
+  | none => ok (done (meter, slots, none))
+  | some effect =>
+    let (r, meter1) ← metering.Meter.node meter span
+    match r with
+    | core.result.Result.Ok _ =>
+      let slots1 ←
+        alloc.vec.Vec.push slots (noble_kernel.shapes.EffectSlot.Effect effect)
+      let at1 ← «at» + 1#usize
+      ok (cont (meter1, slots1, at1))
+    | core.result.Result.Err problem => ok (done (meter1, slots, some problem))
+
+/-- [noble_contracts::source::emission::contracts::effect_slots]: loop 0:
+    Source: 'crates/noble-contracts/src/source/emission/contracts.rs', lines 52:4-59:5 -/
+@[rust_loop]
+def source.emission.contracts.effect_slots_loop
+  (span : Span) (meter : Meter) (effects : Slice noble_kernel.types.EffId)
+  (slots : alloc.vec.Vec noble_kernel.shapes.EffectSlot) («at» : Std.Usize) :
+  Result (Meter × (alloc.vec.Vec noble_kernel.shapes.EffectSlot) × (Option
+    Diagnostic))
+  := do
+  loop
+    (fun (meter1, slots1, at1) =>
+      source.emission.contracts.effect_slots_loop.body span effects meter1
+      slots1 at1)
+    (meter, slots, «at»)
+
+/-- [noble_contracts::source::emission::contracts::effect_slots]:
+    Source: 'crates/noble-contracts/src/source/emission/contracts.rs', lines 43:0-64:1 -/
+def source.emission.contracts.effect_slots
+  (effects : noble_kernel.types.EffSet) (span : Span) (meter : Meter) :
+  Result ((core.result.Result (alloc.vec.Vec noble_kernel.shapes.EffectSlot)
+    Diagnostic) × Meter)
+  := do
+  let effects1 ← noble_kernel.types.EffSet.as_slice effects
+  let i := Slice.len effects1
+  let slots := alloc.vec.Vec.with_capacity noble_kernel.shapes.EffectSlot i
+  let (meter1, slots1, failure) ←
+    source.emission.contracts.effect_slots_loop span meter effects1 slots
+      0#usize
+  match failure with
+  | none => ok (core.result.Result.Ok slots1, meter1)
+  | some problem => ok (core.result.Result.Err problem, meter1)
+
+/-- [noble_contracts::source::emission::contracts::patterns::{noble_contracts::source::emission::contracts::patterns::Traversal}::program]:
+    Source: 'crates/noble-contracts/src/source/emission/contracts/patterns.rs', lines 194:4-222:5 -/
+def source.emission.contracts.patterns.Traversal.program
+  (self : source.emission.contracts.patterns.Traversal)
+  (root : noble_kernel.types.Ty) (depth : Std.Usize) (span : Span)
+  (meter : Meter) :
+  Result ((core.result.Result noble_kernel.shapes.Pattern Diagnostic) ×
+    source.emission.contracts.patterns.Traversal × Meter)
+  := do
+  let i ← lift (core.num.Usize.saturating_add depth 1#usize)
+  let v ← alloc.vec.Vec.truncate Global self.path i
+  let s := alloc.vec.Vec.deref v
+  let r ← source.preflight.paths.locate root s span
+  match r with
+  | core.result.Result.Ok value =>
+    match value with
+    | noble_kernel.types.Ty.UnitType =>
+      let d ← internal span
+      ok (core.result.Result.Err d, { self with path := v }, meter)
+    | noble_kernel.types.Ty.BoolType =>
+      let d ← internal span
+      ok (core.result.Result.Err d, { self with path := v }, meter)
+    | noble_kernel.types.Ty.I64Type =>
+      let d ← internal span
+      ok (core.result.Result.Err d, { self with path := v }, meter)
+    | noble_kernel.types.Ty.TextType =>
+      let d ← internal span
+      ok (core.result.Result.Err d, { self with path := v }, meter)
+    | noble_kernel.types.Ty.SyntaxType =>
+      let d ← internal span
+      ok (core.result.Result.Err d, { self with path := v }, meter)
+    | noble_kernel.types.Ty.PairType _ _ =>
+      let d ← internal span
+      ok (core.result.Result.Err d, { self with path := v }, meter)
+    | noble_kernel.types.Ty.SumType _ _ =>
+      let d ← internal span
+      ok (core.result.Result.Err d, { self with path := v }, meter)
+    | noble_kernel.types.Ty.ListType _ =>
+      let d ← internal span
+      ok (core.result.Result.Err d, { self with path := v }, meter)
+    | noble_kernel.types.Ty.ProgramType input output effects =>
+      let i1 := alloc.vec.Vec.len self.values
+      let i2 := alloc.vec.Vec.len input
+      let i3 := alloc.vec.Vec.len output
+      let i4 ← lift (core.num.Usize.saturating_add i2 i3)
+      if i1 < i4
+      then
+        let d ← internal span
+        ok (core.result.Result.Err d, { self with path := v }, meter)
+      else
+        let i5 := alloc.vec.Vec.len self.values
+        let i6 := alloc.vec.Vec.len output
+        let i7 ← lift (core.num.Usize.saturating_sub i5 i6)
+        let (outputs, v1) ←
+          alloc.vec.Vec.split_off core.core.clone.CloneGlobal self.values i7
+        let i8 := alloc.vec.Vec.len v1
+        let i9 := alloc.vec.Vec.len input
+        let i10 ← lift (core.num.Usize.saturating_sub i8 i9)
+        let (inputs, v2) ←
+          alloc.vec.Vec.split_off core.core.clone.CloneGlobal v1 i10
+        let (r1, meter1) ←
+          source.emission.contracts.effect_slots effects span meter
+        match r1 with
+        | core.result.Result.Ok value1 =>
+          let p ← noble_kernel.shapes.Pattern.program inputs outputs value1
+          ok (core.result.Result.Ok p, { self with path := v, values := v2 },
+            meter1)
+        | core.result.Result.Err failure =>
+          ok (core.result.Result.Err failure,
+            { self with path := v, values := v2 }, meter1)
+    | noble_kernel.types.Ty.ResourceType _ =>
+      let d ← internal span
+      ok (core.result.Result.Err d, { self with path := v }, meter)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, { self with path := v }, meter)
+
+/-- [noble_contracts::source::emission::contracts::patterns::{noble_contracts::source::emission::contracts::patterns::Traversal}::finish]:
+    Source: 'crates/noble-contracts/src/source/emission/contracts/patterns.rs', lines 155:4-188:5 -/
+def source.emission.contracts.patterns.Traversal.finish
+  (self : source.emission.contracts.patterns.Traversal)
+  (step : source.emission.contracts.patterns.Step)
+  (root : noble_kernel.types.Ty) (span : Span) (meter : Meter) :
+  Result ((core.result.Result noble_kernel.shapes.Pattern Diagnostic) ×
+    source.emission.contracts.patterns.Traversal × Meter)
+  := do
+  match step with
+  | source.emission.contracts.patterns.Step.Visit _ _ =>
+    let d ← internal span
+    ok (core.result.Result.Err d, self, meter)
+  | source.emission.contracts.patterns.Step.Pair =>
+    let (r, self1) ←
+      source.emission.contracts.patterns.Traversal.take self span
+    match r with
+    | core.result.Result.Ok value =>
+      let (r1, self2) ←
+        source.emission.contracts.patterns.Traversal.take self1 span
+      match r1 with
+      | core.result.Result.Ok value1 =>
+        ok (core.result.Result.Ok (noble_kernel.shapes.Pattern.PairPattern
+          value1 value), self2, meter)
+      | core.result.Result.Err _ => ok (r1, self2, meter)
+    | core.result.Result.Err _ => ok (r, self1, meter)
+  | source.emission.contracts.patterns.Step.Sum =>
+    let (r, self1) ←
+      source.emission.contracts.patterns.Traversal.take self span
+    match r with
+    | core.result.Result.Ok value =>
+      let (r1, self2) ←
+        source.emission.contracts.patterns.Traversal.take self1 span
+      match r1 with
+      | core.result.Result.Ok value1 =>
+        ok (core.result.Result.Ok (noble_kernel.shapes.Pattern.SumPattern
+          value1 value), self2, meter)
+      | core.result.Result.Err _ => ok (r1, self2, meter)
+    | core.result.Result.Err _ => ok (r, self1, meter)
+  | source.emission.contracts.patterns.Step.List =>
+    let (r, self1) ←
+      source.emission.contracts.patterns.Traversal.take self span
+    match r with
+    | core.result.Result.Ok value =>
+      ok (core.result.Result.Ok (noble_kernel.shapes.Pattern.ListPattern
+        value), self1, meter)
+    | core.result.Result.Err _ => ok (r, self1, meter)
+  | source.emission.contracts.patterns.Step.Program depth =>
+    source.emission.contracts.patterns.Traversal.program self root depth span
+      meter
+
+/-- [noble_contracts::source::emission::contracts::patterns::{noble_contracts::source::emission::contracts::patterns::Traversal}::schedule]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/emission/contracts/patterns.rs', lines 144:8-152:9 -/
+@[rust_loop_body]
+def source.emission.contracts.patterns.Traversal.schedule_loop.body
+  (is_output : Bool) (depth : Std.Usize)
+  (v : alloc.vec.Vec source.emission.contracts.patterns.Step)
+  («at» : Std.Usize) :
+  Result (ControlFlow ((alloc.vec.Vec source.emission.contracts.patterns.Step)
+    × Std.Usize) (alloc.vec.Vec source.emission.contracts.patterns.Step))
+  := do
+  if «at» > 0#usize
+  then
+    let at1 ← «at» - 1#usize
+    let selector ←
+      if is_output
+      then ok (source.preflight.PathStep.Output at1)
+      else ok (source.preflight.PathStep.Input at1)
+    let v1 ←
+      alloc.vec.Vec.push v (source.emission.contracts.patterns.Step.Visit
+        selector depth)
+    ok (cont (v1, at1))
+  else ok (done v)
+
+/-- [noble_contracts::source::emission::contracts::patterns::{noble_contracts::source::emission::contracts::patterns::Traversal}::schedule]: loop 0:
+    Source: 'crates/noble-contracts/src/source/emission/contracts/patterns.rs', lines 144:8-152:9 -/
+@[rust_loop]
+def source.emission.contracts.patterns.Traversal.schedule_loop
+  (v : alloc.vec.Vec source.emission.contracts.patterns.Step)
+  (is_output : Bool) (depth : Std.Usize) («at» : Std.Usize) :
+  Result (alloc.vec.Vec source.emission.contracts.patterns.Step)
+  := do
+  loop
+    (fun (v1, at1) =>
+      source.emission.contracts.patterns.Traversal.schedule_loop.body is_output
+      depth v1 at1)
+    (v, «at»)
+
+/-- [noble_contracts::source::emission::contracts::patterns::{noble_contracts::source::emission::contracts::patterns::Traversal}::schedule]:
+    Source: 'crates/noble-contracts/src/source/emission/contracts/patterns.rs', lines 140:4-153:5 -/
+def source.emission.contracts.patterns.Traversal.schedule
+  (self : source.emission.contracts.patterns.Traversal) (count : Std.Usize)
+  (is_output : Bool) :
+  Result source.emission.contracts.patterns.Traversal
+  := do
+  let depth := alloc.vec.Vec.len self.path
+  let v ← alloc.vec.Vec.reserve Global self.pending count
+  let v1 ←
+    source.emission.contracts.patterns.Traversal.schedule_loop v is_output
+      depth count
+  ok { self with pending := v1 }
+
+/-- [noble_contracts::source::emission::contracts::patterns::{noble_contracts::source::emission::contracts::patterns::Traversal}::visit]:
+    Source: 'crates/noble-contracts/src/source/emission/contracts/patterns.rs', lines 83:4-138:5 -/
+def source.emission.contracts.patterns.Traversal.visit
+  (self : source.emission.contracts.patterns.Traversal)
+  (ty : noble_kernel.types.Ty) (depth : Std.Usize) (span : Span) :
+  Result ((core.result.Result (Option noble_kernel.shapes.Pattern) Diagnostic)
+    × source.emission.contracts.patterns.Traversal)
+  := do
+  let next_depth ← lift (core.num.Usize.saturating_add depth 1#usize)
+  match ty with
+  | noble_kernel.types.Ty.UnitType =>
+    ok (core.result.Result.Ok (some noble_kernel.shapes.Pattern.UnitPattern),
+      self)
+  | noble_kernel.types.Ty.BoolType =>
+    ok (core.result.Result.Ok (some noble_kernel.shapes.Pattern.BoolPattern),
+      self)
+  | noble_kernel.types.Ty.I64Type =>
+    ok (core.result.Result.Ok (some noble_kernel.shapes.Pattern.I64Pattern),
+      self)
+  | noble_kernel.types.Ty.TextType =>
+    ok (core.result.Result.Ok (some noble_kernel.shapes.Pattern.TextPattern),
+      self)
+  | noble_kernel.types.Ty.SyntaxType =>
+    ok (core.result.Result.Ok (some noble_kernel.shapes.Pattern.SyntaxPattern),
+      self)
+  | noble_kernel.types.Ty.PairType _ _ =>
+    let v ← alloc.vec.Vec.reserve Global self.pending 3#usize
+    let v1 ←
+      alloc.vec.Vec.push v source.emission.contracts.patterns.Step.Pair
+    let v2 ←
+      alloc.vec.Vec.push v1 (source.emission.contracts.patterns.Step.Visit
+        source.preflight.PathStep.Right next_depth)
+    let v3 ←
+      alloc.vec.Vec.push v2 (source.emission.contracts.patterns.Step.Visit
+        source.preflight.PathStep.Left next_depth)
+    ok (core.result.Result.Ok none, { self with pending := v3 })
+  | noble_kernel.types.Ty.SumType _ _ =>
+    let v ← alloc.vec.Vec.reserve Global self.pending 3#usize
+    let v1 ← alloc.vec.Vec.push v source.emission.contracts.patterns.Step.Sum
+    let v2 ←
+      alloc.vec.Vec.push v1 (source.emission.contracts.patterns.Step.Visit
+        source.preflight.PathStep.Right next_depth)
+    let v3 ←
+      alloc.vec.Vec.push v2 (source.emission.contracts.patterns.Step.Visit
+        source.preflight.PathStep.Left next_depth)
+    ok (core.result.Result.Ok none, { self with pending := v3 })
+  | noble_kernel.types.Ty.ListType _ =>
+    let v ← alloc.vec.Vec.reserve Global self.pending 2#usize
+    let v1 ←
+      alloc.vec.Vec.push v source.emission.contracts.patterns.Step.List
+    let v2 ←
+      alloc.vec.Vec.push v1 (source.emission.contracts.patterns.Step.Visit
+        source.preflight.PathStep.Item next_depth)
+    ok (core.result.Result.Ok none, { self with pending := v2 })
+  | noble_kernel.types.Ty.ProgramType input output _ =>
+    let v ← alloc.vec.Vec.reserve Global self.pending 1#usize
+    let v1 ←
+      alloc.vec.Vec.push v (source.emission.contracts.patterns.Step.Program
+        depth)
+    let i := alloc.vec.Vec.len output
+    let self1 ←
+      source.emission.contracts.patterns.Traversal.schedule
+        { self with pending := v1 } i true
+    let i1 := alloc.vec.Vec.len input
+    let self2 ←
+      source.emission.contracts.patterns.Traversal.schedule self1 i1 false
+    ok (core.result.Result.Ok none, self2)
+  | noble_kernel.types.Ty.ResourceType _ =>
+    let d ← invalid span (toStr "resource type in source specialization")
+    ok (core.result.Result.Err d, self)
+
+/-- [noble_contracts::source::emission::contracts::patterns::{noble_contracts::source::emission::contracts::patterns::Traversal}::step]:
+    Source: 'crates/noble-contracts/src/source/emission/contracts/patterns.rs', lines 52:4-77:5 -/
+def source.emission.contracts.patterns.Traversal.step
+  (self : source.emission.contracts.patterns.Traversal)
+  (step : source.emission.contracts.patterns.Step)
+  (root : noble_kernel.types.Ty) (span : Span) (meter : Meter) :
+  Result ((core.result.Result Unit Diagnostic) ×
+    source.emission.contracts.patterns.Traversal × Meter)
+  := do
+  let (r, meter1) ← metering.Meter.node meter span
+  match r with
+  | core.result.Result.Ok _ =>
+    match step with
+    | source.emission.contracts.patterns.Step.Visit selector depth =>
+      let v ← alloc.vec.Vec.truncate Global self.path depth
+      let v1 ← alloc.vec.Vec.push v selector
+      let s := alloc.vec.Vec.deref v1
+      let r1 ← source.preflight.paths.locate root s span
+      match r1 with
+      | core.result.Result.Ok value =>
+        let (r2, self1) ←
+          source.emission.contracts.patterns.Traversal.visit
+            { self with path := v1 } value depth span
+        match r2 with
+        | core.result.Result.Ok value1 =>
+          match value1 with
+          | none => ok (core.result.Result.Ok (), self1, meter1)
+          | some value2 =>
+            let v2 ← alloc.vec.Vec.reserve Global self1.values 1#usize
+            let v3 ← alloc.vec.Vec.push v2 value2
+            ok (core.result.Result.Ok (), { self1 with values := v3 }, meter1)
+        | core.result.Result.Err failure =>
+          ok (core.result.Result.Err failure, self1, meter1)
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, { self with path := v1 }, meter1)
+    | source.emission.contracts.patterns.Step.Pair =>
+      let (r1, self1, meter2) ←
+        source.emission.contracts.patterns.Traversal.finish self
+          source.emission.contracts.patterns.Step.Pair root span meter1
+      match r1 with
+      | core.result.Result.Ok value =>
+        let v ← alloc.vec.Vec.reserve Global self1.values 1#usize
+        let v1 ← alloc.vec.Vec.push v value
+        ok (core.result.Result.Ok (), { self1 with values := v1 }, meter2)
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, self1, meter2)
+    | source.emission.contracts.patterns.Step.Sum =>
+      let (r1, self1, meter2) ←
+        source.emission.contracts.patterns.Traversal.finish self
+          source.emission.contracts.patterns.Step.Sum root span meter1
+      match r1 with
+      | core.result.Result.Ok value =>
+        let v ← alloc.vec.Vec.reserve Global self1.values 1#usize
+        let v1 ← alloc.vec.Vec.push v value
+        ok (core.result.Result.Ok (), { self1 with values := v1 }, meter2)
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, self1, meter2)
+    | source.emission.contracts.patterns.Step.List =>
+      let (r1, self1, meter2) ←
+        source.emission.contracts.patterns.Traversal.finish self
+          source.emission.contracts.patterns.Step.List root span meter1
+      match r1 with
+      | core.result.Result.Ok value =>
+        let v ← alloc.vec.Vec.reserve Global self1.values 1#usize
+        let v1 ← alloc.vec.Vec.push v value
+        ok (core.result.Result.Ok (), { self1 with values := v1 }, meter2)
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, self1, meter2)
+    | source.emission.contracts.patterns.Step.Program _ =>
+      let (r1, self1, meter2) ←
+        source.emission.contracts.patterns.Traversal.finish self step root span
+          meter1
+      match r1 with
+      | core.result.Result.Ok value =>
+        let v ← alloc.vec.Vec.reserve Global self1.values 1#usize
+        let v1 ← alloc.vec.Vec.push v value
+        ok (core.result.Result.Ok (), { self1 with values := v1 }, meter2)
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, self1, meter2)
+  | core.result.Result.Err _ => ok (r, self, meter1)
+
+/-- [noble_contracts::source::emission::contracts::patterns::convert]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/emission/contracts/patterns.rs', lines 32:4-37:5 -/
+@[rust_loop_body]
+def source.emission.contracts.patterns.convert_loop.body
+  (root : noble_kernel.types.Ty) (span : Span) (meter : Meter)
+  (walk : source.emission.contracts.patterns.Traversal) :
+  Result (ControlFlow (Meter × source.emission.contracts.patterns.Traversal)
+    (Meter × source.emission.contracts.patterns.Traversal × (Option
+    Diagnostic)))
+  := do
+  let (o, v) ← alloc.vec.Vec.pop Global walk.pending
+  match o with
+  | none => ok (done (meter, { walk with pending := v }, none))
+  | some step =>
+    let (r, walk1, meter1) ←
+      source.emission.contracts.patterns.Traversal.step
+        { walk with pending := v } step root span meter
+    match r with
+    | core.result.Result.Ok _ => ok (cont (meter1, walk1))
+    | core.result.Result.Err problem => ok (done (meter1, walk1, some problem))
+
+/-- [noble_contracts::source::emission::contracts::patterns::convert]: loop 0:
+    Source: 'crates/noble-contracts/src/source/emission/contracts/patterns.rs', lines 32:4-37:5 -/
+@[rust_loop]
+def source.emission.contracts.patterns.convert_loop
+  (root : noble_kernel.types.Ty) (span : Span) (meter : Meter)
+  (walk : source.emission.contracts.patterns.Traversal) :
+  Result (Meter × source.emission.contracts.patterns.Traversal × (Option
+    Diagnostic))
+  := do
+  loop
+    (fun (meter1, walk1) =>
+      source.emission.contracts.patterns.convert_loop.body root span meter1
+      walk1)
+    (meter, walk)
+
+/-- [noble_contracts::source::emission::contracts::patterns::convert]:
+    Source: 'crates/noble-contracts/src/source/emission/contracts/patterns.rs', lines 19:0-45:1 -/
+def source.emission.contracts.patterns.convert
+  (root : noble_kernel.types.Ty) (span : Span) (meter : Meter) :
+  Result ((core.result.Result noble_kernel.shapes.Pattern Diagnostic) × Meter)
+  := do
+  let v :=
+    alloc.vec.Vec.with_capacity source.emission.contracts.patterns.Step 1#usize
+  let v1 ←
+    alloc.vec.Vec.push v (source.emission.contracts.patterns.Step.Visit
+      source.preflight.PathStep.Root 0#usize)
+  let (meter1, walk, failure) ←
+    source.emission.contracts.patterns.convert_loop root span meter
+      {
+        pending := v1,
+        path := (alloc.vec.Vec.new source.preflight.PathStep),
+        values := (alloc.vec.Vec.new noble_kernel.shapes.Pattern)
+      }
+  match failure with
+  | none =>
+    let i := alloc.vec.Vec.len walk.values
+    if i != 1#usize
+    then let d ← internal span
+         ok (core.result.Result.Err d, meter1)
+    else
+      let (r, _) ←
+        source.emission.contracts.patterns.Traversal.take walk span
+      ok (r, meter1)
+  | some problem => ok (core.result.Result.Err problem, meter1)
+
+/-- [noble_contracts::source::emission::contracts::stack]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/emission/contracts.rs', lines 27:4-36:5 -/
+@[rust_loop_body]
+def source.emission.contracts.stack_loop.body
+  (types : Slice noble_kernel.types.Ty) (span : Span) (meter : Meter)
+  (patterns : alloc.vec.Vec noble_kernel.shapes.Pattern) («at» : Std.Usize) :
+  Result (ControlFlow (Meter × (alloc.vec.Vec noble_kernel.shapes.Pattern) ×
+    Std.Usize) (Meter × (alloc.vec.Vec noble_kernel.shapes.Pattern) × (Option
+    Diagnostic)))
+  := do
+  let i := Slice.len types
+  if «at» < i
+  then
+    let t ← Slice.index_usize types «at»
+    let (r, meter1) ← source.emission.contracts.patterns.convert t span meter
+    match r with
+    | core.result.Result.Ok pattern =>
+      let patterns1 ← alloc.vec.Vec.push patterns pattern
+      let at1 ← «at» + 1#usize
+      ok (cont (meter1, patterns1, at1))
+    | core.result.Result.Err problem =>
+      ok (done (meter1, patterns, some problem))
+  else ok (done (meter, patterns, none))
+
+/-- [noble_contracts::source::emission::contracts::stack]: loop 0:
+    Source: 'crates/noble-contracts/src/source/emission/contracts.rs', lines 27:4-36:5 -/
+@[rust_loop]
+def source.emission.contracts.stack_loop
+  (types : Slice noble_kernel.types.Ty) (span : Span) (meter : Meter)
+  (patterns : alloc.vec.Vec noble_kernel.shapes.Pattern) («at» : Std.Usize) :
+  Result (Meter × (alloc.vec.Vec noble_kernel.shapes.Pattern) × (Option
+    Diagnostic))
+  := do
+  loop
+    (fun (meter1, patterns1, at1) => source.emission.contracts.stack_loop.body
+      types span meter1 patterns1 at1)
+    (meter, patterns, «at»)
+
+/-- [noble_contracts::source::emission::contracts::stack]:
+    Source: 'crates/noble-contracts/src/source/emission/contracts.rs', lines 19:0-41:1 -/
+def source.emission.contracts.stack
+  (types : Slice noble_kernel.types.Ty) (span : Span) (meter : Meter) :
+  Result ((core.result.Result (alloc.vec.Vec noble_kernel.shapes.Pattern)
+    Diagnostic) × Meter)
+  := do
+  let i := Slice.len types
+  let patterns := alloc.vec.Vec.with_capacity noble_kernel.shapes.Pattern i
+  let (meter1, patterns1, failure) ←
+    source.emission.contracts.stack_loop types span meter patterns 0#usize
+  match failure with
+  | none => ok (core.result.Result.Ok patterns1, meter1)
+  | some problem => ok (core.result.Result.Err problem, meter1)
+
+/-- [noble_contracts::source::emission::contracts::scheme]:
+    Source: 'crates/noble-contracts/src/source/emission/contracts.rs', lines 3:0-17:1 -/
+def source.emission.contracts.scheme
+  (expected : noble_kernel.untrusted.Expected) (span : Span) (meter : Meter) :
+  Result ((core.result.Result noble_kernel.words.Scheme Diagnostic) × Meter)
+  := do
+  let s := alloc.vec.Vec.deref expected.stack_in
+  let (r, meter1) ← source.emission.contracts.stack s span meter
+  match r with
+  | core.result.Result.Ok value =>
+    let s1 := alloc.vec.Vec.deref expected.stack_out
+    let (r1, meter2) ← source.emission.contracts.stack s1 span meter1
+    match r1 with
+    | core.result.Result.Ok value1 =>
+      let (r2, meter3) ←
+        source.emission.contracts.effect_slots expected.allowed_effects span
+          meter2
+      match r2 with
+      | core.result.Result.Ok value2 =>
+        ok (core.result.Result.Ok
+          {
+            var_kinds := (alloc.vec.Vec.new noble_kernel.words.VariableKind),
+            stack_in := value,
+            stack_out := value1,
+            effects := value2
+          }, meter3)
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, meter3)
+    | core.result.Result.Err failure =>
+      ok (core.result.Result.Err failure, meter2)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, meter1)
+
+/-- [noble_contracts::source::emission::materialization::interface]:
+    Source: 'crates/noble-contracts/src/source/emission/materialization.rs', lines 1:0-12:1 -/
+def source.emission.materialization.interface
+  (arena : inference.Arena) (body : source.inference.Body) (meter : Meter) :
+  Result ((core.result.Result noble_kernel.untrusted.Expected Diagnostic) ×
+    Meter)
+  := do
+  let (r, meter1) ← metering.Meter.node meter body.span
+  match r with
+  | core.result.Result.Ok _ =>
+    let (r1, meter2) ←
+      inference.materialize.Arena.stack_value arena body.input body.span meter1
+    match r1 with
+    | core.result.Result.Ok value =>
+      let (r2, meter3) ←
+        inference.materialize.Arena.stack_value arena body.output body.span
+          meter2
+      match r2 with
+      | core.result.Result.Ok value1 =>
+        let r3 ←
+          inference.effects.Arena.effect_value arena body.effect body.span
+        match r3 with
+        | core.result.Result.Ok value2 =>
+          ok (core.result.Result.Ok
+            { stack_in := value, stack_out := value1, allowed_effects := value2
+            }, meter3)
+        | core.result.Result.Err failure =>
+          ok (core.result.Result.Err failure, meter3)
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, meter3)
+    | core.result.Result.Err failure =>
+      ok (core.result.Result.Err failure, meter2)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, meter1)
+
+/-- [noble_contracts::source::emission::materialization::dependency]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/emission/materialization.rs', lines 49:8-56:9 -/
+@[rust_loop_body]
+def source.emission.materialization.dependency_loop.body
+  (definition : noble_kernel.contracts.Definition) (s : Span)
+  (dependencies : alloc.vec.Vec noble_kernel.contracts.Definition)
+  (meter : Meter) (is_present : Bool) («at» : Std.Usize) :
+  Result (ControlFlow (Meter × Bool × Std.Usize) (Meter × Bool × (Option
+    Diagnostic)))
+  := do
+  let s1 := alloc.vec.Vec.deref dependencies
+  let o ←
+    core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice
+      noble_kernel.contracts.Definition) s1 «at»
+  let o1 ←
+    core.option.OptionShared0T.copied
+      noble_kernel.contracts.Definition.Insts.CoreMarkerCopy o
+  match o1 with
+  | none => ok (done (meter, is_present, none))
+  | some prior =>
+    let (r, meter1) ← metering.Meter.charge meter 1#u32 s
+    match r with
+    | core.result.Result.Ok _ =>
+      let b ←
+        noble_kernel.contracts.Definition.Insts.CoreCmpPartialEqDefinition.eq
+          prior definition
+      let at1 ← «at» + 1#usize
+      ok (cont (meter1, is_present || b, at1))
+    | core.result.Result.Err problem =>
+      ok (done (meter1, is_present, some problem))
+
+/-- [noble_contracts::source::emission::materialization::dependency]: loop 0:
+    Source: 'crates/noble-contracts/src/source/emission/materialization.rs', lines 49:8-56:9 -/
+@[rust_loop]
+def source.emission.materialization.dependency_loop
+  (definition : noble_kernel.contracts.Definition) (s : Span)
+  (dependencies : alloc.vec.Vec noble_kernel.contracts.Definition)
+  (meter : Meter) (is_present : Bool) («at» : Std.Usize) :
+  Result (Meter × Bool × (Option Diagnostic))
+  := do
+  loop
+    (fun (meter1, is_present1, at1) =>
+      source.emission.materialization.dependency_loop.body definition s
+      dependencies meter1 is_present1 at1)
+    (meter, is_present, «at»)
+
+/-- [noble_contracts::source::emission::materialization::dependency]:
+    Source: 'crates/noble-contracts/src/source/emission/materialization.rs', lines 39:0-67:1 -/
+def source.emission.materialization.dependency
+  (node : source.inference.Draft)
+  (dependencies : alloc.vec.Vec noble_kernel.contracts.Definition)
+  (meter : Meter) :
+  Result ((core.result.Result Unit Diagnostic) × (alloc.vec.Vec
+    noble_kernel.contracts.Definition) × Meter)
+  := do
+  let (r, meter1) ← metering.Meter.charge meter 1#u32 node.span
+  match r with
+  | core.result.Result.Ok _ =>
+    match node.kind with
+    | source.inference.DraftKind.Literal _ =>
+      ok (core.result.Result.Ok (), dependencies, meter1)
+    | source.inference.DraftKind.Invocation definition =>
+      let (meter2, is_present, failure) ←
+        source.emission.materialization.dependency_loop definition node.span
+          dependencies meter1 false 0#usize
+      match failure with
+      | none =>
+        if is_present
+        then ok (core.result.Result.Ok (), dependencies, meter2)
+        else
+          let (r1, meter3) ← metering.Meter.node meter2 node.span
+          match r1 with
+          | core.result.Result.Ok _ =>
+            let dependencies1 ←
+              alloc.vec.Vec.reserve Global dependencies 1#usize
+            let dependencies2 ← alloc.vec.Vec.push dependencies1 definition
+            ok (core.result.Result.Ok (), dependencies2, meter3)
+          | core.result.Result.Err _ => ok (r1, dependencies, meter3)
+      | some problem =>
+        ok (core.result.Result.Err problem, dependencies, meter2)
+    | source.inference.DraftKind.Quotation _ =>
+      ok (core.result.Result.Ok (), dependencies, meter1)
+  | core.result.Result.Err _ => ok (r, dependencies, meter1)
+
+/-- [noble_contracts::source::emission::materialization::dependencies]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/emission/materialization.rs', lines 21:4-27:5 -/
+@[rust_loop_body]
+def source.emission.materialization.dependencies_loop.body
+  (body : source.inference.Body) (meter : Meter)
+  (dependencies : alloc.vec.Vec noble_kernel.contracts.Definition)
+  («at» : Std.Usize) :
+  Result (ControlFlow (Meter × (alloc.vec.Vec
+    noble_kernel.contracts.Definition) × Std.Usize) (Meter × (alloc.vec.Vec
+    noble_kernel.contracts.Definition) × (Option Diagnostic)))
+  := do
+  let i := alloc.vec.Vec.len body.nodes
+  if «at» < i
+  then
+    let d ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        source.inference.Draft) body.nodes «at»
+    let (r, dependencies1, meter1) ←
+      source.emission.materialization.dependency d dependencies meter
+    match r with
+    | core.result.Result.Ok _ =>
+      let at1 ← «at» + 1#usize
+      ok (cont (meter1, dependencies1, at1))
+    | core.result.Result.Err problem =>
+      ok (done (meter1, dependencies1, some problem))
+  else ok (done (meter, dependencies, none))
+
+/-- [noble_contracts::source::emission::materialization::dependencies]: loop 0:
+    Source: 'crates/noble-contracts/src/source/emission/materialization.rs', lines 21:4-27:5 -/
+@[rust_loop]
+def source.emission.materialization.dependencies_loop
+  (body : source.inference.Body) (meter : Meter)
+  (dependencies : alloc.vec.Vec noble_kernel.contracts.Definition)
+  («at» : Std.Usize) :
+  Result (Meter × (alloc.vec.Vec noble_kernel.contracts.Definition) × (Option
+    Diagnostic))
+  := do
+  loop
+    (fun (meter1, dependencies1, at1) =>
+      source.emission.materialization.dependencies_loop.body body meter1
+      dependencies1 at1)
+    (meter, dependencies, «at»)
+
+/-- [noble_contracts::source::emission::materialization::dependencies]:
+    Source: 'crates/noble-contracts/src/source/emission/materialization.rs', lines 14:0-32:1 -/
+def source.emission.materialization.dependencies
+  (body : source.inference.Body) (meter : Meter) :
+  Result ((core.result.Result (alloc.vec.Vec noble_kernel.contracts.Definition)
+    Diagnostic) × Meter)
+  := do
+  let (meter1, dependencies, failure) ←
+    source.emission.materialization.dependencies_loop body meter
+      (alloc.vec.Vec.new noble_kernel.contracts.Definition) 0#usize
+  match failure with
+  | none => ok (core.result.Result.Ok dependencies, meter1)
+  | some problem => ok (core.result.Result.Err problem, meter1)
+
+/-- [noble_contracts::source::emission::materialization::{noble_contracts::source::emission::materialization::Nodes}::push]:
+    Source: 'crates/noble-contracts/src/source/emission/materialization.rs', lines 124:4-159:5 -/
+def source.emission.materialization.Nodes.push
+  (self : source.emission.materialization.Nodes)
+  (draft : source.inference.Draft) (arena : inference.Arena) (meter : Meter) :
+  Result ((core.result.Result Unit Diagnostic) ×
+    source.emission.materialization.Nodes × source.inference.Draft × Meter)
+  := do
+  let (r, meter1) ← metering.Meter.node meter draft.span
+  match r with
+  | core.result.Result.Ok _ =>
+    let i := alloc.vec.Vec.len self.nodes
+    let r1 ← index i draft.span
+    match r1 with
+    | core.result.Result.Ok value =>
+      let («variables», v) ←
+        core.mem.take (alloc.vec.Vec.Insts.CoreDefaultDefault
+          inference.Variable) draft.variables
+      let s := alloc.vec.Vec.deref «variables»
+      let (r2, meter2) ←
+        inference.materialize.Arena.instantiation arena s draft.span meter1
+      match r2 with
+      | core.result.Result.Ok value1 =>
+        let (node, dk) ←
+          match draft.kind with
+          | source.inference.DraftKind.Literal lit =>
+            ok (noble_kernel.untrusted.Node.Literal lit value1, draft.kind)
+          | source.inference.DraftKind.Invocation «def» =>
+            ok (noble_kernel.untrusted.Node.Invocation «def» value1,
+              draft.kind)
+          | source.inference.DraftKind.Quotation body =>
+            do
+            let (v1, body1) ←
+              core.mem.take (alloc.vec.Vec.Insts.CoreDefaultDefault
+                noble_kernel.untrusted.NodeId) body
+            ok (noble_kernel.untrusted.Node.Quotation v1 value1,
+              source.inference.DraftKind.Quotation body1)
+        let (o, o1) := core.option.Option.take draft.text
+        let v1 ←
+          match o with
+          | none => ok self.texts
+          | some bytes =>
+            do
+            let v2 ← alloc.vec.Vec.reserve Global self.texts 1#usize
+            alloc.vec.Vec.push v2 ({ node := value, bytes } :
+              noble_kernel.execution.TextLiteral)
+        let v2 ← alloc.vec.Vec.push self.nodes node
+        let v3 ← alloc.vec.Vec.push self.spans draft.span
+        ok (core.result.Result.Ok (),
+          { nodes := v2, texts := v1, spans := v3 },
+          { draft with kind := dk, «variables» := v, text := o1 }, meter2)
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, self,
+          { draft with «variables» := v }, meter2)
+    | core.result.Result.Err failure =>
+      ok (core.result.Result.Err failure, self, draft, meter1)
+  | core.result.Result.Err _ => ok (r, self, draft, meter1)
+
+/-- [noble_contracts::source::emission::materialization::body]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/emission/materialization.rs', lines 91:4-101:5 -/
+@[rust_loop_body]
+def source.emission.materialization.body_loop.body
+  (s : Span) (arena : inference.Arena)
+  (v : alloc.vec.Vec source.inference.Draft) (meter : Meter)
+  (output : source.emission.materialization.Nodes) («at» : Std.Usize) :
+  Result (ControlFlow ((alloc.vec.Vec source.inference.Draft) × Meter ×
+    source.emission.materialization.Nodes × Std.Usize) (Meter ×
+    source.emission.materialization.Nodes × (Option Diagnostic)))
+  := do
+  let i := alloc.vec.Vec.len v
+  if «at» < i
+  then
+    let (s1, deref_mut_back) ← lift (alloc.vec.Vec.deref_mut v)
+    let (o, get_mut_back) ←
+      core.slice.Slice.get_mut (core.slice.index.SliceIndexUsizeSlice
+        source.inference.Draft) s1 «at»
+    let (meter1, output1, result, s2) ←
+      match o with
+      | none =>
+        do
+        let d ← internal s
+        let s3 := get_mut_back none
+        ok (meter, output, core.result.Result.Err d, s3)
+      | some node =>
+        do
+        let (result1, output2, node1, meter2) ←
+          source.emission.materialization.Nodes.push output node arena meter
+        let s3 := get_mut_back (some node1)
+        ok (meter2, output2, result1, s3)
+    match result with
+    | core.result.Result.Ok _ =>
+      let at1 ← «at» + 1#usize
+      let v1 := deref_mut_back s2
+      ok (cont (v1, meter1, output1, at1))
+    | core.result.Result.Err problem =>
+      ok (done (meter1, output1, some problem))
+  else ok (done (meter, output, none))
+
+/-- [noble_contracts::source::emission::materialization::body]: loop 0:
+    Source: 'crates/noble-contracts/src/source/emission/materialization.rs', lines 91:4-101:5 -/
+@[rust_loop]
+def source.emission.materialization.body_loop
+  (v : alloc.vec.Vec source.inference.Draft) (s : Span)
+  (arena : inference.Arena) (meter : Meter)
+  (output : source.emission.materialization.Nodes) («at» : Std.Usize) :
+  Result (Meter × source.emission.materialization.Nodes × (Option
+    Diagnostic))
+  := do
+  loop
+    (fun (v1, meter1, output1, at1) =>
+      source.emission.materialization.body_loop.body s arena v1 meter1 output1
+      at1)
+    (v, meter, output, «at»)
+
+/-- [noble_contracts::source::emission::materialization::body]:
+    Source: 'crates/noble-contracts/src/source/emission/materialization.rs', lines 79:0-117:1 -/
+def source.emission.materialization.body
+  (draft : source.inference.Body) (arena : inference.Arena) (meter : Meter) :
+  Result ((core.result.Result (noble_kernel.execution.Body × (alloc.vec.Vec
+    Span)) Diagnostic) × Meter)
+  := do
+  let i := alloc.vec.Vec.len draft.nodes
+  let v := alloc.vec.Vec.with_capacity noble_kernel.untrusted.Node i
+  let i1 := alloc.vec.Vec.len draft.nodes
+  let v1 := alloc.vec.Vec.with_capacity Span i1
+  let (meter1, output, failure) ←
+    source.emission.materialization.body_loop draft.nodes draft.span arena
+      meter
+      {
+        nodes := v,
+        texts := (alloc.vec.Vec.new noble_kernel.execution.TextLiteral),
+        spans := v1
+      } 0#usize
+  match failure with
+  | none =>
+    let i2 ← noble_kernel.untrusted.CANDIDATE_FORMAT
+    let i3 ← noble_kernel.untrusted.SEMANTIC_REVISION
+    ok (core.result.Result.Ok
+      ({
+         candidate :=
+           {
+             format := i2,
+             revision := i3,
+             nodes := output.nodes,
+             body := draft.root
+           },
+         texts := output.texts
+       }, output.spans), meter1)
+  | some problem => ok (core.result.Result.Err problem, meter1)
+
+/-- [noble_contracts::source::emission::{impl core::clone::Clone for noble_contracts::source::emission::Admission<'a>}::clone]:
+    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 4:9-4:14
+    Visibility: public -/
+def source.emission.Admission.Insts.CoreCloneClone.clone
+  (self : source.emission.Admission) : Result source.emission.Admission := do
+  ok self
+
+/-- Trait implementation: [noble_contracts::source::emission::{impl core::clone::Clone for noble_contracts::source::emission::Admission<'a>}]
+    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 4:9-4:14 -/
+@[reducible]
+def source.emission.Admission.Insts.CoreCloneClone : core.clone.Clone
+  source.emission.Admission := {
+  clone := source.emission.Admission.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_contracts::source::emission::{impl core::marker::Copy for noble_contracts::source::emission::Admission<'a>}]
+    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 4:16-4:20 -/
+@[reducible]
+def source.emission.Admission.Insts.CoreMarkerCopy : core.marker.Copy
+  source.emission.Admission := {
+  cloneInst := source.emission.Admission.Insts.CoreCloneClone
+}
+
+/-- [noble_contracts::source::{noble_contracts::source::Error}::at]:
+    Source: 'crates/noble-contracts/src/source.rs', lines 37:4-39:5 -/
+def source.Error.at
+  (stage : source.Stage) (diagnostic : Diagnostic) : Result source.Error := do
+  ok { stage, diagnostic }
+
+/-- [noble_contracts::source::emission::{noble_contracts::source::emission::Assembly}::install]:
+    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 31:4-58:5 -/
+def source.emission.Assembly.install
+  (self : source.emission.Assembly) (checked : source.emission.CheckedBody)
+  (position : Std.Usize) (downstream_work : Std.U32) :
+  Result ((core.result.Result Unit source.Error) × source.emission.Assembly)
+  := do
+  match checked.identity with
+  | none =>
+    ok (core.result.Result.Ok (),
+      {
+        self
+          with
+          root :=
+            (some
+              (checked.body,
+              {
+                checked.request
+                  with
+                  limits :=
+                    { checked.request.limits with work := downstream_work }
+              }))
+      })
+  | some identity =>
+    let i ← lift (core.num.Usize.saturating_add position 23#usize)
+    let r ← index i checked.span
+    match r with
+    | core.result.Result.Ok id =>
+      let v ←
+        alloc.vec.Vec.push self.definitions
+          ({
+             definition := id,
+             identity,
+             body := checked.body,
+             expected := checked.request.expected
+           } : noble_kernel.execution.Definition)
+      ok (core.result.Result.Ok (), { self with definitions := v })
+    | core.result.Result.Err error =>
+      let e ← source.Error.at source.Stage.Check error
+      ok (core.result.Result.Err e, self)
+
+/-- [noble_contracts::source::emission::checked]:
+    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 237:0-284:1 -/
+def source.emission.checked
+  (draft : source.inference.Body)
+  (expected : Option noble_kernel.untrusted.Expected) (arena : inference.Arena)
+  (admission : source.emission.Admission) (meter : Meter) :
+  Result ((core.result.Result source.emission.CheckedBody source.Error) ×
+    Meter)
+  := do
+  match expected with
+  | none =>
+    let d ← internal draft.span
+    let e ← source.Error.at source.Stage.Check d
+    ok (core.result.Result.Err e, meter)
+  | some expected1 =>
+    let (r, meter1) ← source.emission.materialization.body draft arena meter
+    match r with
+    | core.result.Result.Ok body =>
+      let (body1, spans) := body
+      let i ← core.num.U32.saturating_mul admission.limits.work 2#u32
+      let (r1, meter2) ← metering.Meter.charge meter1 i draft.span
+      match r1 with
+      | core.result.Result.Ok _ =>
+        let s := alloc.vec.Vec.deref spans
+        let r2 ←
+          program.check admission.environment body1.candidate
+            {
+              input_bytes := admission.input_bytes,
+              expected := expected1,
+              limits := admission.limits
+            } s draft.span
+        match r2 with
+        | core.result.Result.Ok _ =>
+          ok (core.result.Result.Ok
+            {
+              body := body1,
+              request :=
+                {
+                  input_bytes := admission.input_bytes,
+                  expected := expected1,
+                  limits := admission.limits
+                },
+              identity := draft.identity,
+              span := draft.span
+            }, meter2)
+        | core.result.Result.Err error =>
+          let e ← source.Error.at source.Stage.Acceptance error
+          ok (core.result.Result.Err e, meter2)
+      | core.result.Result.Err error =>
+        let e ← source.Error.at source.Stage.Acceptance error
+        ok (core.result.Result.Err e, meter2)
+    | core.result.Result.Err error =>
+      let e ← source.Error.at source.Stage.Check error
+      ok (core.result.Result.Err e, meter1)
+
+/-- [noble_contracts::source::emission::allowance::{impl core::ops::function::FnOnce<(u32,), core::option::Option<u32>> for noble_contracts::source::emission::allowance::{closure}<'_0>}::call_once]:
+    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 217:18-217:55 -/
+def
+  source.emission.allowance.closure.Insts.CoreOpsFunctionFnOnceTupleU32OptionU32.call_once
+  (c : source.emission.allowance.closure) (tupled_args : Std.U32) :
+  Result (Option Std.U32)
+  := do
+  ok (U32.checked_div c.work tupled_args)
+
+/-- Trait implementation: [noble_contracts::source::emission::allowance::{impl core::ops::function::FnOnce<(u32,), core::option::Option<u32>> for noble_contracts::source::emission::allowance::{closure}<'_0>}]
+    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 217:18-217:55 -/
+@[reducible]
+def
+  source.emission.allowance.closure.Insts.CoreOpsFunctionFnOnceTupleU32OptionU32
+  : core.ops.function.FnOnce source.emission.allowance.closure Std.U32 (Option
+  Std.U32) := {
+  call_once :=
+    source.emission.allowance.closure.Insts.CoreOpsFunctionFnOnceTupleU32OptionU32.call_once
+}
+
+/-- [noble_contracts::source::emission::allowance]:
+    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 207:0-231:1 -/
+def source.emission.allowance
+  (body_count : Std.Usize) (span : Span) (meter : Meter) :
+  Result (core.result.Result noble_kernel.untrusted.Limits Diagnostic)
+  := do
+  let r ← index body_count span
+  match r with
+  | core.result.Result.Ok value =>
+    let o ← lift (U32.checked_mul value 4#u32)
+    let o1 ←
+      core.option.Option.and_then
+        source.emission.allowance.closure.Insts.CoreOpsFunctionFnOnceTupleU32OptionU32
+        o meter
+    match o1 with
+    | none => let d ← internal span
+              ok (core.result.Result.Err d)
+    | some allowance =>
+      ok (core.result.Result.Ok
+        {
+          bytes := meter.limits.bytes,
+          nodes := meter.limits.nodes,
+          depth := meter.limits.depth,
+          type_size := syntax.TYPE_CAP,
+          stack_height := inference.STACK_CAP,
+          work := allowance,
+          diagnostics := 8#u32
+        })
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::source::emission::assemble]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 190:4-200:5 -/
+@[rust_loop_body]
+def source.emission.assemble_loop.body
+  (environment : noble_kernel.contracts.Env) (input_bytes : Std.U32)
+  (limits : noble_kernel.untrusted.Limits) (arena : inference.Arena)
+  (drafts : alloc.vec.into_iter.IntoIter source.inference.Body) (meter : Meter)
+  (assembly : source.emission.Assembly)
+  (expected : alloc.vec.into_iter.IntoIter noble_kernel.untrusted.Expected)
+  (position : Std.Usize) :
+  Result (ControlFlow ((alloc.vec.into_iter.IntoIter source.inference.Body) ×
+    Meter × source.emission.Assembly × (alloc.vec.into_iter.IntoIter
+    noble_kernel.untrusted.Expected) × Std.Usize) (Meter ×
+    source.emission.Assembly × (Option source.Error)))
+  := do
+  let (o, drafts1) ← alloc.vec.into_iter.IteratorIntoIter.next drafts
+  match o with
+  | none => ok (done (meter, assembly, none))
+  | some draft =>
+    let (o1, expected1) ← alloc.vec.into_iter.IteratorIntoIter.next expected
+    let (r, meter1) ←
+      source.emission.checked draft o1 arena
+        { input_bytes, limits, environment } meter
+    let (meter2, assembly1, result) ←
+      match r with
+      | core.result.Result.Ok body =>
+        do
+        let (result1, assembly2) ←
+          source.emission.Assembly.install assembly body position
+            meter1.limits.work
+        ok (meter1, assembly2, result1)
+      | core.result.Result.Err problem =>
+        ok (meter1, assembly, core.result.Result.Err problem)
+    match result with
+    | core.result.Result.Ok _ =>
+      let position1 ← lift (core.num.Usize.saturating_add position 1#usize)
+      ok (cont (drafts1, meter2, assembly1, expected1, position1))
+    | core.result.Result.Err problem =>
+      ok (done (meter2, assembly1, some problem))
+
+/-- [noble_contracts::source::emission::assemble]: loop 0:
+    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 190:4-200:5 -/
+@[rust_loop]
+def source.emission.assemble_loop
+  (drafts : alloc.vec.into_iter.IntoIter source.inference.Body)
+  (environment : noble_kernel.contracts.Env) (input_bytes : Std.U32)
+  (meter : Meter) (limits : noble_kernel.untrusted.Limits)
+  (assembly : source.emission.Assembly)
+  (expected : alloc.vec.into_iter.IntoIter noble_kernel.untrusted.Expected)
+  (arena : inference.Arena) (position : Std.Usize) :
+  Result (Meter × source.emission.Assembly × (Option source.Error))
+  := do
+  loop
+    (fun (drafts1, meter1, assembly1, expected1, position1) =>
+      source.emission.assemble_loop.body environment input_bytes limits arena
+      drafts1 meter1 assembly1 expected1 position1)
+    (drafts, meter, assembly, expected, position)
+
+/-- [noble_contracts::source::emission::assemble]:
+    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 165:0-205:1 -/
+def source.emission.assemble
+  (state : source.inference.State)
+  (expected : alloc.vec.Vec noble_kernel.untrusted.Expected)
+  (environment : noble_kernel.contracts.Env) (input_bytes : Std.U32)
+  (meter : Meter) :
+  Result ((core.result.Result source.emission.Assembly source.Error) × Meter)
+  := do
+  let i := alloc.vec.Vec.len state.bodies
+  let r ← source.emission.allowance i state.span meter
+  match r with
+  | core.result.Result.Ok limits =>
+    let i1 := alloc.vec.Vec.len state.bodies
+    let i2 ← lift (core.num.Usize.saturating_sub i1 1#usize)
+    let v := alloc.vec.Vec.with_capacity noble_kernel.execution.Definition i2
+    let expected1 ← alloc.vec.IntoIteratorVec.into_iter expected
+    let drafts ← alloc.vec.IntoIteratorVec.into_iter state.bodies
+    let (meter1, assembly, failure) ←
+      source.emission.assemble_loop drafts environment input_bytes meter limits
+        { definitions := v, root := none } expected1 state.arena 0#usize
+    match failure with
+    | none => ok (core.result.Result.Ok assembly, meter1)
+    | some problem => ok (core.result.Result.Err problem, meter1)
+  | core.result.Result.Err error =>
+    let e ← source.Error.at source.Stage.Check error
+    ok (core.result.Result.Err e, meter)
+
+/-- [noble_contracts::source::emission::install_interface]:
+    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 135:0-155:1 -/
+def source.emission.install_interface
+  (body : source.inference.Body) (arena : inference.Arena)
+  (environment : noble_kernel.contracts.Env) (meter : Meter) :
+  Result ((core.result.Result noble_kernel.untrusted.Expected Diagnostic) ×
+    noble_kernel.contracts.Env × Meter)
+  := do
+  let (r, meter1) ←
+    source.emission.materialization.interface arena body meter
+  match r with
+  | core.result.Result.Ok value =>
+    let b := core.option.Option.is_some body.identity
+    if b
+    then
+      let (r1, meter2) ←
+        source.emission.contracts.scheme value body.span meter1
+      match r1 with
+      | core.result.Result.Ok value1 =>
+        let (r2, meter3) ←
+          source.emission.materialization.dependencies body meter2
+        match r2 with
+        | core.result.Result.Ok value2 =>
+          let v ← alloc.vec.Vec.reserve Global environment.defs 1#usize
+          let v1 ← alloc.vec.Vec.reserve Global environment.kinds 1#usize
+          let v2 ← alloc.vec.Vec.reserve Global environment.deps 1#usize
+          let v3 ← alloc.vec.Vec.push v value1
+          let v4 ←
+            alloc.vec.Vec.push v1 noble_kernel.contracts.Behavior.NamedBehavior
+          let v5 ← alloc.vec.Vec.push v2 value2
+          ok (r, { environment with defs := v3, kinds := v4, deps := v5 },
+            meter3)
+        | core.result.Result.Err failure =>
+          ok (core.result.Result.Err failure, environment, meter3)
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, environment, meter2)
+    else ok (r, environment, meter1)
+  | core.result.Result.Err _ => ok (r, environment, meter1)
+
+/-- [noble_contracts::source::emission::interfaces]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 119:4-128:5 -/
+@[rust_loop_body]
+def source.emission.interfaces_loop.body
+  (a : inference.Arena) (v : alloc.vec.Vec source.inference.Body)
+  (environment : noble_kernel.contracts.Env) (meter : Meter)
+  (expected : alloc.vec.Vec noble_kernel.untrusted.Expected)
+  («at» : Std.Usize) :
+  Result (ControlFlow (noble_kernel.contracts.Env × Meter × (alloc.vec.Vec
+    noble_kernel.untrusted.Expected) × Std.Usize) (noble_kernel.contracts.Env
+    × Meter × (alloc.vec.Vec noble_kernel.untrusted.Expected) × (Option
+    Diagnostic)))
+  := do
+  let i := alloc.vec.Vec.len v
+  if «at» < i
+  then
+    let b ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        source.inference.Body) v «at»
+    let (r, environment1, meter1) ←
+      source.emission.install_interface b a environment meter
+    match r with
+    | core.result.Result.Ok interface =>
+      let expected1 ← alloc.vec.Vec.push expected interface
+      let at1 ← «at» + 1#usize
+      ok (cont (environment1, meter1, expected1, at1))
+    | core.result.Result.Err problem =>
+      ok (done (environment1, meter1, expected, some problem))
+  else ok (done (environment, meter, expected, none))
+
+/-- [noble_contracts::source::emission::interfaces]: loop 0:
+    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 119:4-128:5 -/
+@[rust_loop]
+def source.emission.interfaces_loop
+  (a : inference.Arena) (v : alloc.vec.Vec source.inference.Body)
+  (environment : noble_kernel.contracts.Env) (meter : Meter)
+  (expected : alloc.vec.Vec noble_kernel.untrusted.Expected)
+  («at» : Std.Usize) :
+  Result (noble_kernel.contracts.Env × Meter × (alloc.vec.Vec
+    noble_kernel.untrusted.Expected) × (Option Diagnostic))
+  := do
+  loop
+    (fun (environment1, meter1, expected1, at1) =>
+      source.emission.interfaces_loop.body a v environment1 meter1 expected1
+      at1)
+    (environment, meter, expected, «at»)
+
+/-- [noble_contracts::source::emission::interfaces]:
+    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 111:0-133:1 -/
+def source.emission.interfaces
+  (state : source.inference.State) (environment : noble_kernel.contracts.Env)
+  (meter : Meter) :
+  Result ((core.result.Result (alloc.vec.Vec noble_kernel.untrusted.Expected)
+    Diagnostic) × noble_kernel.contracts.Env × Meter)
+  := do
+  let i := alloc.vec.Vec.len state.bodies
+  let expected := alloc.vec.Vec.with_capacity noble_kernel.untrusted.Expected i
+  let (environment1, meter1, expected1, failure) ←
+    source.emission.interfaces_loop state.arena state.bodies environment meter
+      expected 0#usize
+  match failure with
+  | none => ok (core.result.Result.Ok expected1, environment1, meter1)
+  | some problem => ok (core.result.Result.Err problem, environment1, meter1)
+
+/-- [noble_contracts::source::emission::emit]:
+    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 65:0-109:1 -/
+def source.emission.emit
+  (state : source.inference.State) (environment : noble_kernel.contracts.Env)
+  (input_bytes : Std.Usize) (meter : Meter) :
+  Result ((core.result.Result (noble_kernel.execution.Submission ×
+    (alloc.vec.Vec noble_kernel.types.Ty)) source.Error) × Meter)
+  := do
+  let (r, a, meter1) ←
+    inference.effects.Arena.close state.arena state.span meter
+  match r with
+  | core.result.Result.Ok _ =>
+    let r1 ← index input_bytes state.span
+    match r1 with
+    | core.result.Result.Ok bytes =>
+      let (r2, environment1, meter2) ←
+        source.emission.interfaces { state with arena := a } environment meter1
+      match r2 with
+      | core.result.Result.Ok expected =>
+        let (r3, meter3) ←
+          source.emission.assemble { state with arena := a } expected
+            environment1 bytes meter2
+        match r3 with
+        | core.result.Result.Ok value =>
+          match value.root with
+          | none =>
+            let d ← internal state.span
+            let e ← source.Error.at source.Stage.Check d
+            ok (core.result.Result.Err e, meter3)
+          | some root =>
+            let (body, request) := root
+            let output ←
+              alloc.vec.CloneVec.clone
+                noble_kernel.types.Ty.Insts.CoreCloneClone
+                request.expected.stack_out
+            ok (core.result.Result.Ok
+              ({
+                 environment := environment1,
+                 definitions := value.definitions,
+                 body,
+                 request
+               }, output), meter3)
+        | core.result.Result.Err failure =>
+          ok (core.result.Result.Err failure, meter3)
+      | core.result.Result.Err error =>
+        let e ← source.Error.at source.Stage.Check error
+        ok (core.result.Result.Err e, meter2)
+    | core.result.Result.Err error =>
+      let e ← source.Error.at source.Stage.Check error
+      ok (core.result.Result.Err e, meter1)
+  | core.result.Result.Err error =>
+    let e ← source.Error.at source.Stage.Check error
+    ok (core.result.Result.Err e, meter1)
+
+/-- [noble_contracts::source::inference::add]:
+    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 223:0-237:1 -/
+def source.inference.add
+  (body : Std.Usize) (draft : source.inference.Draft)
+  (state : source.inference.State) (meter : Meter) :
+  Result ((core.result.Result noble_kernel.untrusted.NodeId Diagnostic) ×
+    source.inference.State × Meter)
+  := do
+  let (r, meter1) ← metering.Meter.node meter draft.span
+  match r with
+  | core.result.Result.Ok _ =>
+    let (s, deref_mut_back) ← lift (alloc.vec.Vec.deref_mut state.bodies)
+    let (o, get_mut_back) ←
+      core.slice.Slice.get_mut (core.slice.index.SliceIndexUsizeSlice
+        source.inference.Body) s body
+    match o with
+    | none =>
+      let d ← internal draft.span
+      let s1 := get_mut_back none
+      let v := deref_mut_back s1
+      ok (core.result.Result.Err d, { state with bodies := v }, meter1)
+    | some body1 =>
+      let i := alloc.vec.Vec.len body1.nodes
+      let r1 ← index i draft.span
+      match r1 with
+      | core.result.Result.Ok value =>
+        let v ← alloc.vec.Vec.push body1.nodes draft
+        let s1 := get_mut_back (some { body1 with nodes := v })
+        let v1 := deref_mut_back s1
+        ok (core.result.Result.Ok value, { state with bodies := v1 }, meter1)
+      | core.result.Result.Err failure =>
+        let s1 := get_mut_back o
+        let v := deref_mut_back s1
+        ok (core.result.Result.Err failure, { state with bodies := v }, meter1)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, state, meter1)
+
+/-- [noble_contracts::source::inference::completion::named]:
+    Source: 'crates/noble-contracts/src/source/inference/completion.rs', lines 96:0-133:1 -/
+def source.inference.completion.named
+  (frame : source.inference.Frame) (parents : Slice source.inference.Frame)
+  (state : source.inference.State) (meter : Meter) :
+  Result ((core.result.Result Unit Diagnostic) × (Slice
+    source.inference.Frame) × source.inference.State × Meter)
+  := do
+  let (s, deref_mut_back) ← lift (alloc.vec.Vec.deref_mut state.bodies)
+  let (o, get_mut_back) ←
+    core.slice.Slice.get_mut (core.slice.index.SliceIndexUsizeSlice
+      source.inference.Body) s frame.body
+  match o with
+  | none =>
+    let d ← internal frame.span
+    let s1 := get_mut_back none
+    let v := deref_mut_back s1
+    ok (core.result.Result.Err d, parents, { state with bodies := v }, meter)
+  | some body =>
+    let i ← lift (core.num.Usize.saturating_add frame.body 23#usize)
+    let r ← index i frame.span
+    match r with
+    | core.result.Result.Ok value =>
+      let (o1, last_mut_back) ← core.slice.Slice.last_mut parents
+      match o1 with
+      | none =>
+        let d ← internal frame.span
+        let parents1 := last_mut_back none
+        let s1 := get_mut_back (some { body with root := frame.sequence })
+        let v := deref_mut_back s1
+        ok (core.result.Result.Err d, parents1, { state with bodies := v },
+          meter)
+      | some parent =>
+        let s1 := get_mut_back (some { body with root := frame.sequence })
+        let v := deref_mut_back s1
+        let (r1, state1, meter1) ←
+          source.inference.add parent.body
+            {
+              kind := (source.inference.DraftKind.Invocation value),
+              «variables» := (alloc.vec.Vec.new inference.Variable),
+              text := none,
+              span := frame.span
+            } { state with bodies := v } meter
+        match r1 with
+        | core.result.Result.Ok value1 =>
+          let (r2, a, meter2) ←
+            inference.effects.Arena.effect_union state1.arena parent.effect
+              frame.effect frame.span meter1
+          match r2 with
+          | core.result.Result.Ok value2 =>
+            let v1 ← alloc.vec.Vec.push parent.sequence value1
+            let parents1 :=
+              last_mut_back (some
+                {
+                  parent
+                    with
+                    stack := frame.stack, effect := value2, sequence := v1
+                })
+            ok (core.result.Result.Ok (), parents1, { state1 with arena := a },
+              meter2)
+          | core.result.Result.Err failure =>
+            let parents1 :=
+              last_mut_back (some { parent with stack := frame.stack })
+            ok (core.result.Result.Err failure, parents1,
+              { state1 with arena := a }, meter2)
+        | core.result.Result.Err failure =>
+          let parents1 := last_mut_back o1
+          ok (core.result.Result.Err failure, parents1, state1, meter1)
+    | core.result.Result.Err failure =>
+      let s1 := get_mut_back (some { body with root := frame.sequence })
+      let v := deref_mut_back s1
+      ok (core.result.Result.Err failure, parents, { state with bodies := v },
+        meter)
+
+/-- [noble_contracts::source::inference::completion::quotation]:
+    Source: 'crates/noble-contracts/src/source/inference/completion.rs', lines 45:0-90:1 -/
+def source.inference.completion.quotation
+  (frame : source.inference.Frame) (surrounding : Std.U32)
+  (parents : Slice source.inference.Frame) (state : source.inference.State)
+  (meter : Meter) :
+  Result ((core.result.Result Unit Diagnostic) × (Slice
+    source.inference.Frame) × source.inference.State × Meter)
+  := do
+  let (r, a, meter1) ←
+    inference.effects.Arena.program state.arena
+      { input := frame.input, output := frame.stack, effect := frame.effect }
+      frame.span meter
+  match r with
+  | core.result.Result.Ok value =>
+    let (r1, a1, meter2) ←
+      inference.Arena.add a (inference.Term.PushTerm surrounding value)
+        frame.span meter1
+    match r1 with
+    | core.result.Result.Ok value1 =>
+      let y ←
+        lift (Std.Array.to_slice
+          (Array.make 4#usize [
+             inference.Variable.Stack surrounding, inference.Variable.Stack
+             frame.input, inference.Variable.Stack frame.stack,
+             inference.Variable.EffectValue frame.effect
+             ] : Array inference.Variable 4#usize))
+      let ret := alloc.slice.Slice.into_vec y
+      let (r2, state1, meter3) ←
+        source.inference.add frame.body
+          {
+            kind := (source.inference.DraftKind.Quotation frame.sequence),
+            «variables» := ret,
+            text := none,
+            span := frame.span
+          } { state with arena := a1 } meter2
+      match r2 with
+      | core.result.Result.Ok value2 =>
+        let (o, last_mut_back) ← core.slice.Slice.last_mut parents
+        match o with
+        | none =>
+          let d ← internal frame.span
+          let parents1 := last_mut_back none
+          ok (core.result.Result.Err d, parents1, state1, meter3)
+        | some parent =>
+          let v ← alloc.vec.Vec.push parent.sequence value2
+          let parents1 :=
+            last_mut_back (some { parent with stack := value1, sequence := v })
+          ok (core.result.Result.Ok (), parents1, state1, meter3)
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, parents, state1, meter3)
+    | core.result.Result.Err failure =>
+      ok (core.result.Result.Err failure, parents, { state with arena := a1 },
+        meter2)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, parents, { state with arena := a },
+      meter1)
+
+/-- [noble_contracts::source::inference::completion::complete]:
+    Source: 'crates/noble-contracts/src/source/inference/completion.rs', lines 5:0-38:1 -/
+def source.inference.completion.complete
+  (frame : source.inference.Frame) (parents : Slice source.inference.Frame)
+  (state : source.inference.State) (meter : Meter) :
+  Result ((core.result.Result Unit Diagnostic) × (Slice
+    source.inference.Frame) × source.inference.State × Meter)
+  := do
+  let (o, b) ←
+    match frame.origin with
+    | source.inference.Origin.Root => ok (source.inference.Origin.Root, false)
+    | source.inference.Origin.Quotation _ => ok (frame.origin, true)
+    | source.inference.Origin.Named =>
+      ok (source.inference.Origin.Named, false)
+  if b
+  then
+    match o with
+    | source.inference.Origin.Root =>
+      let (s, deref_mut_back) ← lift (alloc.vec.Vec.deref_mut state.bodies)
+      let (o1, get_mut_back) ←
+        core.slice.Slice.get_mut (core.slice.index.SliceIndexUsizeSlice
+          source.inference.Body) s frame.body
+      match o1 with
+      | none =>
+        let d ← internal frame.span
+        let s1 := get_mut_back none
+        let v := deref_mut_back s1
+        ok (core.result.Result.Err d, parents, { state with bodies := v },
+          meter)
+      | some body =>
+        let s1 := get_mut_back (some { body with root := frame.sequence })
+        let v := deref_mut_back s1
+        ok (core.result.Result.Ok (), parents, { state with bodies := v },
+          meter)
+    | source.inference.Origin.Quotation surrounding =>
+      source.inference.completion.quotation { frame with origin := o }
+        surrounding parents state meter
+    | source.inference.Origin.Named =>
+      source.inference.completion.named
+        { frame with origin := source.inference.Origin.Named } parents state
+        meter
+  else
+    let (s, deref_mut_back) ← lift (alloc.vec.Vec.deref_mut state.bodies)
+    let (o1, get_mut_back) ←
+      core.slice.Slice.get_mut (core.slice.index.SliceIndexUsizeSlice
+        source.inference.Body) s frame.body
+    match o1 with
+    | none =>
+      let d ← internal frame.span
+      let s1 := get_mut_back none
+      let v := deref_mut_back s1
+      ok (core.result.Result.Err d, parents, { state with bodies := v }, meter)
+    | some body =>
+      match o with
+      | source.inference.Origin.Root =>
+        let s1 :=
+          get_mut_back (some
+            {
+              body
+                with
+                input := frame.input,
+                output := frame.stack,
+                effect := frame.effect
+            })
+        let v := deref_mut_back s1
+        let (s2, deref_mut_back1) ← lift (alloc.vec.Vec.deref_mut v)
+        let (o2, get_mut_back1) ←
+          core.slice.Slice.get_mut (core.slice.index.SliceIndexUsizeSlice
+            source.inference.Body) s2 frame.body
+        match o2 with
+        | none =>
+          let d ← internal frame.span
+          let s3 := get_mut_back1 none
+          let v1 := deref_mut_back1 s3
+          ok (core.result.Result.Err d, parents, { state with bodies := v1 },
+            meter)
+        | some body1 =>
+          let s3 := get_mut_back1 (some { body1 with root := frame.sequence })
+          let v1 := deref_mut_back1 s3
+          ok (core.result.Result.Ok (), parents, { state with bodies := v1 },
+            meter)
+      | source.inference.Origin.Quotation surrounding =>
+        let s1 :=
+          get_mut_back (some
+            {
+              body
+                with
+                input := frame.input,
+                output := frame.stack,
+                effect := frame.effect
+            })
+        let v := deref_mut_back s1
+        source.inference.completion.quotation { frame with origin := o }
+          surrounding parents { state with bodies := v } meter
+      | source.inference.Origin.Named =>
+        let s1 :=
+          get_mut_back (some
+            {
+              body
+                with
+                input := frame.input,
+                output := frame.stack,
+                effect := frame.effect
+            })
+        let v := deref_mut_back s1
+        source.inference.completion.named
+          { frame with origin := source.inference.Origin.Named } parents
+          { state with bodies := v } meter
+
+/-- [noble_contracts::source::inference::{impl core::clone::Clone for noble_contracts::source::inference::Origin}::clone]:
+    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 36:9-36:14
+    Visibility: public -/
+def source.inference.Origin.Insts.CoreCloneClone.clone
+  (self : source.inference.Origin) : Result source.inference.Origin := do
+  ok self
+
+/-- Trait implementation: [noble_contracts::source::inference::{impl core::clone::Clone for noble_contracts::source::inference::Origin}]
+    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 36:9-36:14 -/
+@[reducible]
+def source.inference.Origin.Insts.CoreCloneClone : core.clone.Clone
+  source.inference.Origin := {
+  clone := source.inference.Origin.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_contracts::source::inference::{impl core::marker::Copy for noble_contracts::source::inference::Origin}]
+    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 36:16-36:20 -/
+@[reducible]
+def source.inference.Origin.Insts.CoreMarkerCopy : core.marker.Copy
+  source.inference.Origin := {
+  cloneInst := source.inference.Origin.Insts.CoreCloneClone
+}
+
+/-- [noble_contracts::source::inference::{impl core::clone::Clone for noble_contracts::source::inference::TreeKey}::clone]:
+    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 43:9-43:14
+    Visibility: public -/
+def source.inference.TreeKey.Insts.CoreCloneClone.clone
+  (self : source.inference.TreeKey) : Result source.inference.TreeKey := do
+  ok self
+
+/-- Trait implementation: [noble_contracts::source::inference::{impl core::clone::Clone for noble_contracts::source::inference::TreeKey}]
+    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 43:9-43:14 -/
+@[reducible]
+def source.inference.TreeKey.Insts.CoreCloneClone : core.clone.Clone
+  source.inference.TreeKey := {
+  clone := source.inference.TreeKey.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_contracts::source::inference::{impl core::marker::Copy for noble_contracts::source::inference::TreeKey}]
+    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 43:16-43:20 -/
+@[reducible]
+def source.inference.TreeKey.Insts.CoreMarkerCopy : core.marker.Copy
+  source.inference.TreeKey := {
+  cloneInst := source.inference.TreeKey.Insts.CoreCloneClone
+}
+
+/-- [noble_contracts::source::inference::{impl core::clone::Clone for noble_contracts::source::inference::BodyKey}::clone]:
+    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 49:9-49:14
+    Visibility: public -/
+def source.inference.BodyKey.Insts.CoreCloneClone.clone
+  (self : source.inference.BodyKey) : Result source.inference.BodyKey := do
+  ok self
+
+/-- Trait implementation: [noble_contracts::source::inference::{impl core::clone::Clone for noble_contracts::source::inference::BodyKey}]
+    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 49:9-49:14 -/
+@[reducible]
+def source.inference.BodyKey.Insts.CoreCloneClone : core.clone.Clone
+  source.inference.BodyKey := {
+  clone := source.inference.BodyKey.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_contracts::source::inference::{impl core::marker::Copy for noble_contracts::source::inference::BodyKey}]
+    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 49:16-49:20 -/
+@[reducible]
+def source.inference.BodyKey.Insts.CoreMarkerCopy : core.marker.Copy
+  source.inference.BodyKey := {
+  cloneInst := source.inference.BodyKey.Insts.CoreCloneClone
+}
+
+/-- [noble_contracts::source::inference::{noble_contracts::source::inference::Scope<'_0>}::tree]:
+    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 86:4-104:5 -/
+def source.inference.Scope.tree
+  (self : source.inference.Scope) (tree_key : source.inference.TreeKey)
+  (span : Span) :
+  Result (core.result.Result source.Tree Diagnostic)
+  := do
+  match tree_key with
+  | source.inference.TreeKey.Root => ok (core.result.Result.Ok self.root)
+  | source.inference.TreeKey.Named id =>
+    let s := alloc.vec.Vec.deref self.session.definitions
+    let r ← offset id span
+    match r with
+    | core.result.Result.Ok value =>
+      let o ←
+        core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice
+          source.Named) s value
+      match o with
+      | none => let d ← internal span
+                ok (core.result.Result.Err d)
+      | some definition => ok (core.result.Result.Ok definition.tree)
+    | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::source::{noble_contracts::source::Tree}::node]:
+    Source: 'crates/noble-contracts/src/source.rs', lines 75:4-80:5 -/
+def source.Tree.node
+  (self : source.Tree) (id : Std.U32) :
+  Result (core.result.Result source.Node Diagnostic)
+  := do
+  let s := alloc.vec.Vec.deref self.nodes
+  let r ← offset id self.span
+  match r with
+  | core.result.Result.Ok value =>
+    let o ←
+      core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice source.Node)
+        s value
+    match o with
+    | none => let d ← internal self.span
+              ok (core.result.Result.Err d)
+    | some node => ok (core.result.Result.Ok node)
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::source::inference::items]:
+    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 112:0-123:1 -/
+def source.inference.items
+  (tree : source.Tree) (body_key : source.inference.BodyKey) :
+  Result (core.result.Result (Slice Std.U32) Diagnostic)
+  := do
+  match body_key with
+  | source.inference.BodyKey.Root =>
+    let s := alloc.vec.Vec.deref tree.body
+    ok (core.result.Result.Ok s)
+  | source.inference.BodyKey.Quotation id =>
+    let r ← source.Tree.node tree id
+    match r with
+    | core.result.Result.Ok value =>
+      match value.kind with
+      | source.Kind.Literal _ =>
+        let d ← internal value.span
+        ok (core.result.Result.Err d)
+      | source.Kind.Text _ =>
+        let d ← internal value.span
+        ok (core.result.Result.Err d)
+      | source.Kind.Word _ =>
+        let d ← internal value.span
+        ok (core.result.Result.Err d)
+      | source.Kind.Call _ =>
+        let d ← internal value.span
+        ok (core.result.Result.Err d)
+      | source.Kind.Quotation items =>
+        let s := alloc.vec.Vec.deref items
+        ok (core.result.Result.Ok s)
+    | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::source::exhausted]:
+    Source: 'crates/noble-contracts/src/source.rs', lines 184:0-186:1 -/
+def source.exhausted (span : Span) (message : Str) : Result Diagnostic := do
+  Diagnostic.new DiagnosticKind.Exhausted span message
+
+/-- [noble_contracts::source::inference::validation::{noble_contracts::source::inference::validation::Traversal}::value_group]:
+    Source: 'crates/noble-contracts/src/source/inference/validation.rs', lines 215:4-253:5 -/
+def source.inference.validation.Traversal.value_group
+  (self : source.inference.validation.Traversal) (term : inference.Term)
+  (group : Option Std.Usize) (span : Span) (meter : Meter) :
+  Result ((core.result.Result (Option Std.Usize) Diagnostic) ×
+    source.inference.validation.Traversal × Meter)
+  := do
+  let b ←
+    match term with
+    | inference.Term.HoleTerm s =>
+      match s with
+      | inference.Sort.Value => ok false
+      | inference.Sort.Stack => ok true
+    | inference.Term.LinkTerm _ => ok false
+    | inference.Term.UnitTerm => ok false
+    | inference.Term.BoolTerm => ok false
+    | inference.Term.I64Term => ok false
+    | inference.Term.TextTerm => ok false
+    | inference.Term.SyntaxTerm => ok false
+    | inference.Term.PairTerm _ _ => ok false
+    | inference.Term.SumTerm _ _ => ok false
+    | inference.Term.ListTerm _ => ok false
+    | inference.Term.ProgramTerm _ _ => ok false
+    | inference.Term.EmptyTerm => ok true
+    | inference.Term.PushTerm _ _ => ok true
+  if b
+  then ok (core.result.Result.Ok group, self, meter)
+  else
+    match group with
+    | none =>
+      let (r, meter1) ← metering.Meter.node meter span
+      match r with
+      | core.result.Result.Ok _ =>
+        let group1 := alloc.vec.Vec.len self.sizes
+        let v ← alloc.vec.Vec.reserve Global self.sizes 1#usize
+        let v1 ← alloc.vec.Vec.push v 0#u32
+        let (s, deref_mut_back) ← lift (alloc.vec.Vec.deref_mut v1)
+        let (o, get_mut_back) ←
+          core.slice.Slice.get_mut (core.slice.index.SliceIndexUsizeSlice
+            Std.U32) s group1
+        match o with
+        | none =>
+          let d ← internal span
+          let s1 := get_mut_back none
+          let v2 := deref_mut_back s1
+          ok (core.result.Result.Err d, { self with sizes := v2 }, meter1)
+        | some size =>
+          let size1 ← lift (core.num.U32.saturating_add size 1#u32)
+          if size1 > syntax.TYPE_CAP
+          then
+            let d ←
+              source.exhausted span (toStr
+                "open value type exceeds the 256-constructor limit")
+            let s1 := get_mut_back (some size1)
+            let v2 := deref_mut_back s1
+            ok (core.result.Result.Err d, { self with sizes := v2 }, meter1)
+          else
+            let s1 := get_mut_back (some size1)
+            let v2 := deref_mut_back s1
+            ok (core.result.Result.Ok (some group1), { self with sizes := v2 },
+              meter1)
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, self, meter1)
+    | some group1 =>
+      let (s, deref_mut_back) ← lift (alloc.vec.Vec.deref_mut self.sizes)
+      let (o, get_mut_back) ←
+        core.slice.Slice.get_mut (core.slice.index.SliceIndexUsizeSlice
+          Std.U32) s group1
+      match o with
+      | none =>
+        let d ← internal span
+        let s1 := get_mut_back none
+        let v := deref_mut_back s1
+        ok (core.result.Result.Err d, { self with sizes := v }, meter)
+      | some size =>
+        let size1 ← lift (core.num.U32.saturating_add size 1#u32)
+        if size1 > syntax.TYPE_CAP
+        then
+          let d ←
+            source.exhausted span (toStr
+              "open value type exceeds the 256-constructor limit")
+          let s1 := get_mut_back (some size1)
+          let v := deref_mut_back s1
+          ok (core.result.Result.Err d, { self with sizes := v }, meter)
+        else
+          let s1 := get_mut_back (some size1)
+          let v := deref_mut_back s1
+          ok (core.result.Result.Ok group, { self with sizes := v }, meter)
+
+/-- [noble_contracts::source::inference::validation::{noble_contracts::source::inference::validation::Traversal}::visit]:
+    Source: 'crates/noble-contracts/src/source/inference/validation.rs', lines 138:4-209:5 -/
+def source.inference.validation.Traversal.visit
+  (self : source.inference.validation.Traversal) (arena : inference.Arena)
+  (visit : source.inference.validation.Visit) (span : Span) (meter : Meter) :
+  Result ((core.result.Result Unit Diagnostic) ×
+    source.inference.validation.Traversal × Meter)
+  := do
+  let (r, meter1) ← metering.Meter.charge meter 1#u32 span
+  match r with
+  | core.result.Result.Ok _ =>
+    let (r1, meter2) ← metering.Meter.depth meter1 visit.depth span
+    match r1 with
+    | core.result.Result.Ok _ =>
+      let (r2, meter3) ← inference.Arena.root arena visit.id span meter2
+      match r2 with
+      | core.result.Result.Ok value =>
+        let r3 ← inference.Arena.get arena value span
+        match r3 with
+        | core.result.Result.Ok value1 =>
+          let (r4, self1, meter4) ←
+            source.inference.validation.Traversal.value_group self value1
+              visit.group span meter3
+          match r4 with
+          | core.result.Result.Ok value2 =>
+            match value1 with
+            | inference.Term.HoleTerm _ =>
+              ok (core.result.Result.Ok (), self1, meter4)
+            | inference.Term.LinkTerm _ =>
+              let d ← internal span
+              ok (core.result.Result.Err d, self1, meter4)
+            | inference.Term.UnitTerm =>
+              ok (core.result.Result.Ok (), self1, meter4)
+            | inference.Term.BoolTerm =>
+              ok (core.result.Result.Ok (), self1, meter4)
+            | inference.Term.I64Term =>
+              ok (core.result.Result.Ok (), self1, meter4)
+            | inference.Term.TextTerm =>
+              ok (core.result.Result.Ok (), self1, meter4)
+            | inference.Term.SyntaxTerm =>
+              ok (core.result.Result.Ok (), self1, meter4)
+            | inference.Term.PairTerm a b =>
+              let v ← alloc.vec.Vec.reserve Global self1.pending 2#usize
+              let i ← lift (core.num.U32.saturating_add visit.depth 1#u32)
+              let v1 ←
+                alloc.vec.Vec.push v
+                  ({ id := a, depth := i, height := 0#u32, group := value2 } :
+                  source.inference.validation.Visit)
+              let i1 ← lift (core.num.U32.saturating_add visit.depth 1#u32)
+              let v2 ←
+                alloc.vec.Vec.push v1
+                  ({ id := b, depth := i1, height := 0#u32, group := value2 } :
+                  source.inference.validation.Visit)
+              ok (core.result.Result.Ok (), { self1 with pending := v2 },
+                meter4)
+            | inference.Term.SumTerm a b =>
+              let v ← alloc.vec.Vec.reserve Global self1.pending 2#usize
+              let i ← lift (core.num.U32.saturating_add visit.depth 1#u32)
+              let v1 ←
+                alloc.vec.Vec.push v
+                  ({ id := a, depth := i, height := 0#u32, group := value2 } :
+                  source.inference.validation.Visit)
+              let i1 ← lift (core.num.U32.saturating_add visit.depth 1#u32)
+              let v2 ←
+                alloc.vec.Vec.push v1
+                  ({ id := b, depth := i1, height := 0#u32, group := value2 } :
+                  source.inference.validation.Visit)
+              ok (core.result.Result.Ok (), { self1 with pending := v2 },
+                meter4)
+            | inference.Term.ListTerm item =>
+              let v ← alloc.vec.Vec.reserve Global self1.pending 1#usize
+              let i ← lift (core.num.U32.saturating_add visit.depth 1#u32)
+              let v1 ←
+                alloc.vec.Vec.push v
+                  ({ id := item, depth := i, height := 0#u32, group := value2 }
+                  : source.inference.validation.Visit)
+              ok (core.result.Result.Ok (), { self1 with pending := v1 },
+                meter4)
+            | inference.Term.ProgramTerm a b =>
+              let v ← alloc.vec.Vec.reserve Global self1.pending 2#usize
+              let i ← lift (core.num.U32.saturating_add visit.depth 1#u32)
+              let v1 ←
+                alloc.vec.Vec.push v
+                  ({ id := a, depth := i, height := 0#u32, group := value2 } :
+                  source.inference.validation.Visit)
+              let i1 ← lift (core.num.U32.saturating_add visit.depth 1#u32)
+              let v2 ←
+                alloc.vec.Vec.push v1
+                  ({ id := b, depth := i1, height := 0#u32, group := value2 } :
+                  source.inference.validation.Visit)
+              ok (core.result.Result.Ok (), { self1 with pending := v2 },
+                meter4)
+            | inference.Term.EmptyTerm =>
+              ok (core.result.Result.Ok (), self1, meter4)
+            | inference.Term.PushTerm stack value3 =>
+              if visit.height >= inference.STACK_CAP
+              then
+                let d ←
+                  source.exhausted span (toStr
+                    "open stack height limit exceeded")
+                ok (core.result.Result.Err d, self1, meter4)
+              else
+                let v ← alloc.vec.Vec.reserve Global self1.pending 2#usize
+                let i ← lift (core.num.U32.saturating_add visit.height 1#u32)
+                let v1 ←
+                  alloc.vec.Vec.push v
+                    { visit with id := stack, height := i, group := value2 }
+                let v2 ←
+                  alloc.vec.Vec.push v1
+                    { visit with id := value3, height := 0#u32, group := value2
+                    }
+                ok (core.result.Result.Ok (), { self1 with pending := v2 },
+                  meter4)
+          | core.result.Result.Err failure =>
+            ok (core.result.Result.Err failure, self1, meter4)
+        | core.result.Result.Err failure =>
+          ok (core.result.Result.Err failure, self, meter3)
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, self, meter3)
+    | core.result.Result.Err _ => ok (r1, self, meter2)
+  | core.result.Result.Err _ => ok (r, self, meter1)
+
+/-- [noble_contracts::source::inference::validation::term]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/inference/validation.rs', lines 121:4-126:5 -/
+@[rust_loop_body]
+def source.inference.validation.term_loop.body
+  (arena : inference.Arena) (span : Span) (meter : Meter)
+  (walk : source.inference.validation.Traversal) :
+  Result (ControlFlow (Meter × source.inference.validation.Traversal) (Meter
+    × (Option Diagnostic)))
+  := do
+  let (o, v) ← alloc.vec.Vec.pop Global walk.pending
+  match o with
+  | none => ok (done (meter, none))
+  | some visit =>
+    let (r, walk1, meter1) ←
+      source.inference.validation.Traversal.visit { walk with pending := v }
+        arena visit span meter
+    match r with
+    | core.result.Result.Ok _ => ok (cont (meter1, walk1))
+    | core.result.Result.Err problem => ok (done (meter1, some problem))
+
+/-- [noble_contracts::source::inference::validation::term]: loop 0:
+    Source: 'crates/noble-contracts/src/source/inference/validation.rs', lines 121:4-126:5 -/
+@[rust_loop]
+def source.inference.validation.term_loop
+  (arena : inference.Arena) (span : Span) (meter : Meter)
+  (walk : source.inference.validation.Traversal) :
+  Result (Meter × (Option Diagnostic))
+  := do
+  loop
+    (fun (meter1, walk1) => source.inference.validation.term_loop.body arena
+      span meter1 walk1)
+    (meter, walk)
+
+/-- [noble_contracts::source::inference::validation::term]:
+    Source: 'crates/noble-contracts/src/source/inference/validation.rs', lines 104:0-131:1 -/
+def source.inference.validation.term
+  (arena : inference.Arena) (root : Std.U32) (span : Span) (meter : Meter) :
+  Result ((core.result.Result Unit Diagnostic) × Meter)
+  := do
+  let v :=
+    alloc.vec.Vec.with_capacity source.inference.validation.Visit 1#usize
+  let v1 ←
+    alloc.vec.Vec.push v
+      ({ id := root, depth := 0#u32, height := 0#u32, group := none } :
+      source.inference.validation.Visit)
+  let (meter1, failure) ←
+    source.inference.validation.term_loop arena span meter
+      { pending := v1, sizes := (alloc.vec.Vec.new Std.U32) }
+  match failure with
+  | none => ok (core.result.Result.Ok (), meter1)
+  | some problem => ok (core.result.Result.Err problem, meter1)
+
+/-- [noble_contracts::source::inference::validation::variable_term]:
+    Source: 'crates/noble-contracts/src/source/inference/validation.rs', lines 69:0-86:1 -/
+def source.inference.validation.variable_term
+  (arena : inference.Arena) («variable» : inference.Variable) (span : Span)
+  (meter : Meter) :
+  Result ((core.result.Result Unit Diagnostic) × Meter)
+  := do
+  let (r, meter1) ← metering.Meter.charge meter 1#u32 span
+  match r with
+  | core.result.Result.Ok _ =>
+    match «variable» with
+    | inference.Variable.Value id =>
+      source.inference.validation.term arena id span meter1
+    | inference.Variable.Stack id =>
+      source.inference.validation.term arena id span meter1
+    | inference.Variable.Effect => ok (core.result.Result.Ok (), meter1)
+    | inference.Variable.EffectValue _ => ok (core.result.Result.Ok (), meter1)
+  | core.result.Result.Err _ => ok (r, meter1)
+
+/-- [noble_contracts::source::inference::validation::variables]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/inference/validation.rs', lines 52:4-58:5 -/
+@[rust_loop_body]
+def source.inference.validation.variables_loop.body
+  (arena : inference.Arena) (draft : source.inference.Draft) (meter : Meter)
+  («at» : Std.Usize) :
+  Result (ControlFlow (Meter × Std.Usize) (Meter × (Option Diagnostic)))
+  := do
+  let i := alloc.vec.Vec.len draft.variables
+  if «at» < i
+  then
+    let v ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        inference.Variable) draft.variables «at»
+    let (r, meter1) ←
+      source.inference.validation.variable_term arena v draft.span meter
+    match r with
+    | core.result.Result.Ok _ =>
+      let at1 ← lift (core.num.Usize.saturating_add «at» 1#usize)
+      ok (cont (meter1, at1))
+    | core.result.Result.Err problem => ok (done (meter1, some problem))
+  else ok (done (meter, none))
+
+/-- [noble_contracts::source::inference::validation::variables]: loop 0:
+    Source: 'crates/noble-contracts/src/source/inference/validation.rs', lines 52:4-58:5 -/
+@[rust_loop]
+def source.inference.validation.variables_loop
+  (arena : inference.Arena) (draft : source.inference.Draft) (meter : Meter)
+  («at» : Std.Usize) :
+  Result (Meter × (Option Diagnostic))
+  := do
+  loop
+    (fun (meter1, at1) => source.inference.validation.variables_loop.body arena
+      draft meter1 at1)
+    (meter, «at»)
+
+/-- [noble_contracts::source::inference::validation::variables]:
+    Source: 'crates/noble-contracts/src/source/inference/validation.rs', lines 45:0-63:1 -/
+def source.inference.validation.variables
+  (arena : inference.Arena) (draft : source.inference.Draft) (meter : Meter) :
+  Result ((core.result.Result Unit Diagnostic) × Meter)
+  := do
+  let (meter1, failure) ←
+    source.inference.validation.variables_loop arena draft meter 0#usize
+  match failure with
+  | none => ok (core.result.Result.Ok (), meter1)
+  | some problem => ok (core.result.Result.Err problem, meter1)
+
+/-- [noble_contracts::source::inference::validation::body_terms]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/inference/validation.rs', lines 32:4-38:5 -/
+@[rust_loop_body]
+def source.inference.validation.body_terms_loop.body
+  (arena : inference.Arena) (v : alloc.vec.Vec source.inference.Draft)
+  (meter : Meter) («at» : Std.Usize) :
+  Result (ControlFlow (Meter × Std.Usize) (Meter × (Option Diagnostic)))
+  := do
+  let i := alloc.vec.Vec.len v
+  if «at» < i
+  then
+    let d ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        source.inference.Draft) v «at»
+    let (r, meter1) ← source.inference.validation.variables arena d meter
+    match r with
+    | core.result.Result.Ok _ =>
+      let at1 ← lift (core.num.Usize.saturating_add «at» 1#usize)
+      ok (cont (meter1, at1))
+    | core.result.Result.Err problem => ok (done (meter1, some problem))
+  else ok (done (meter, none))
+
+/-- [noble_contracts::source::inference::validation::body_terms]: loop 0:
+    Source: 'crates/noble-contracts/src/source/inference/validation.rs', lines 32:4-38:5 -/
+@[rust_loop]
+def source.inference.validation.body_terms_loop
+  (arena : inference.Arena) (v : alloc.vec.Vec source.inference.Draft)
+  (meter : Meter) («at» : Std.Usize) :
+  Result (Meter × (Option Diagnostic))
+  := do
+  loop
+    (fun (meter1, at1) => source.inference.validation.body_terms_loop.body
+      arena v meter1 at1)
+    (meter, «at»)
+
+/-- [noble_contracts::source::inference::validation::body_terms]:
+    Source: 'crates/noble-contracts/src/source/inference/validation.rs', lines 23:0-43:1 -/
+def source.inference.validation.body_terms
+  (arena : inference.Arena) (body : source.inference.Body) (meter : Meter) :
+  Result ((core.result.Result Unit Diagnostic) × Meter)
+  := do
+  let (r, meter1) ←
+    source.inference.validation.term arena body.input body.span meter
+  match r with
+  | core.result.Result.Ok _ =>
+    let (r1, meter2) ←
+      source.inference.validation.term arena body.output body.span meter1
+    match r1 with
+    | core.result.Result.Ok _ =>
+      let (meter3, failure) ←
+        source.inference.validation.body_terms_loop arena body.nodes meter2
+          0#usize
+      match failure with
+      | none => ok (core.result.Result.Ok (), meter3)
+      | some problem => ok (core.result.Result.Err problem, meter3)
+    | core.result.Result.Err _ => ok (r1, meter2)
+  | core.result.Result.Err _ => ok (r, meter1)
+
+/-- [noble_contracts::source::inference::validation::open]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/inference/validation.rs', lines 10:4-16:5 -/
+@[rust_loop_body]
+def source.inference.validation.open_loop.body
+  (state : source.inference.State) (meter : Meter) («at» : Std.Usize) :
+  Result (ControlFlow (Meter × Std.Usize) (Meter × (Option Diagnostic)))
+  := do
+  let i := alloc.vec.Vec.len state.bodies
+  if «at» < i
+  then
+    let b ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        source.inference.Body) state.bodies «at»
+    let (r, meter1) ←
+      source.inference.validation.body_terms state.arena b meter
+    match r with
+    | core.result.Result.Ok _ =>
+      let at1 ← lift (core.num.Usize.saturating_add «at» 1#usize)
+      ok (cont (meter1, at1))
+    | core.result.Result.Err problem => ok (done (meter1, some problem))
+  else ok (done (meter, none))
+
+/-- [noble_contracts::source::inference::validation::open]: loop 0:
+    Source: 'crates/noble-contracts/src/source/inference/validation.rs', lines 10:4-16:5 -/
+@[rust_loop]
+def source.inference.validation.open_loop
+  (state : source.inference.State) (meter : Meter) («at» : Std.Usize) :
+  Result (Meter × (Option Diagnostic))
+  := do
+  loop
+    (fun (meter1, at1) => source.inference.validation.open_loop.body state
+      meter1 at1)
+    (meter, «at»)
+
+/-- [noble_contracts::source::inference::validation::open]:
+    Source: 'crates/noble-contracts/src/source/inference/validation.rs', lines 4:0-21:1 -/
+def source.inference.validation.open
+  (state : source.inference.State) (meter : Meter) :
+  Result ((core.result.Result Unit Diagnostic) × Meter)
+  := do
+  let (meter1, failure) ←
+    source.inference.validation.open_loop state meter 0#usize
+  match failure with
+  | none => ok (core.result.Result.Ok (), meter1)
+  | some problem => ok (core.result.Result.Err problem, meter1)
+
+/-- [noble_contracts::source::inference::traversal::quotation]:
+    Source: 'crates/noble-contracts/src/source/inference/traversal.rs', lines 142:0-168:1 -/
+def source.inference.traversal.quotation
+  (node : Std.U32) (frame : source.inference.Frame)
+  (state : source.inference.State) (span : Span) (meter : Meter) :
+  Result ((core.result.Result source.inference.Frame Diagnostic) ×
+    source.inference.State × Meter)
+  := do
+  let (r, a, meter1) ←
+    inference.Arena.add state.arena (inference.Term.HoleTerm
+      inference.Sort.Stack) span meter
+  match r with
+  | core.result.Result.Ok value =>
+    let (r1, a1, meter2) ← inference.effects.Arena.effect_empty a span meter1
+    match r1 with
+    | core.result.Result.Ok value1 =>
+      ok (core.result.Result.Ok
+        {
+          frame
+            with
+            items := (source.inference.BodyKey.Quotation node),
+            «at» := 0#usize,
+            input := value,
+            stack := value,
+            effect := value1,
+            sequence := (alloc.vec.Vec.new noble_kernel.untrusted.NodeId),
+            origin := (source.inference.Origin.Quotation frame.stack),
+            span
+        }, { state with arena := a1 }, meter2)
+    | core.result.Result.Err failure =>
+      ok (core.result.Result.Err failure, { state with arena := a1 }, meter2)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, { state with arena := a }, meter1)
+
+/-- [noble_contracts::source::inference::traversal::named]:
+    Source: 'crates/noble-contracts/src/source/inference/traversal.rs', lines 100:0-136:1 -/
+def source.inference.traversal.named
+  (call : source.inference.operations.Call) (identity : Std.U64)
+  (frame : source.inference.Frame) (state : source.inference.State)
+  (meter : Meter) :
+  Result ((core.result.Result source.inference.Frame Diagnostic) ×
+    source.inference.State × Meter)
+  := do
+  let (r, a, meter1) ←
+    inference.effects.Arena.effect_empty state.arena call.span meter
+  match r with
+  | core.result.Result.Ok value =>
+    let (r1, meter2) ← metering.Meter.node meter1 call.span
+    match r1 with
+    | core.result.Result.Ok _ =>
+      let body := alloc.vec.Vec.len state.bodies
+      let v ←
+        alloc.vec.Vec.push state.bodies
+          ({
+             nodes := (alloc.vec.Vec.new source.inference.Draft),
+             root := (alloc.vec.Vec.new noble_kernel.untrusted.NodeId),
+             input := frame.stack,
+             output := frame.stack,
+             effect := value,
+             identity := (some identity),
+             span := call.span
+           } : source.inference.Body)
+      let o ← core.option.Option.or frame.caller (some call.span)
+      ok (core.result.Result.Ok
+        {
+          frame
+            with
+            tree := (source.inference.TreeKey.Named call.id),
+            items := source.inference.BodyKey.Root,
+            «at» := 0#usize,
+            input := frame.stack,
+            effect := value,
+            body,
+            sequence := (alloc.vec.Vec.new noble_kernel.untrusted.NodeId),
+            origin := source.inference.Origin.Named,
+            span := call.span,
+            caller := o
+        }, { state with arena := a, bodies := v }, meter2)
+    | core.result.Result.Err failure =>
+      ok (core.result.Result.Err failure, { state with arena := a }, meter2)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, { state with arena := a }, meter1)
+
+/-- [noble_contracts::source::inference::traversal::child]:
+    Source: 'crates/noble-contracts/src/source/inference/traversal.rs', lines 62:0-94:1 -/
+def source.inference.traversal.child
+  (location : (Std.U32 × source.Node)) (frame : source.inference.Frame)
+  (state : source.inference.State) (scope : source.inference.Scope)
+  (meter : Meter) :
+  Result ((core.result.Result source.inference.Frame Diagnostic) ×
+    source.inference.State × Meter)
+  := do
+  let (node_id, node) := location
+  match node.kind with
+  | source.Kind.Literal _ =>
+    let d ← internal node.span
+    ok (core.result.Result.Err d, state, meter)
+  | source.Kind.Text _ =>
+    let d ← internal node.span
+    ok (core.result.Result.Err d, state, meter)
+  | source.Kind.Word _ =>
+    let d ← internal node.span
+    ok (core.result.Result.Err d, state, meter)
+  | source.Kind.Call t =>
+    match t with
+    | source.Target.Builtin _ =>
+      let d ← internal node.span
+      ok (core.result.Result.Err d, state, meter)
+    | source.Target.Named id =>
+      let s := alloc.vec.Vec.deref scope.session.definitions
+      let r ← offset id node.span
+      match r with
+      | core.result.Result.Ok value =>
+        let o ←
+          core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice
+            source.Named) s value
+        match o with
+        | none =>
+          let d ← internal node.span
+          ok (core.result.Result.Err d, state, meter)
+        | some definition =>
+          source.inference.traversal.named { id, span := node.span }
+            definition.identity frame state meter
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, state, meter)
+  | source.Kind.Quotation _ =>
+    source.inference.traversal.quotation node_id frame state node.span meter
+
+/-- [noble_contracts::source::inference::operations::contextualize]:
+    Source: 'crates/noble-contracts/src/source/inference/operations.rs', lines 114:0-134:1 -/
+def source.inference.operations.contextualize
+  (error : Diagnostic) (definition : noble_kernel.contracts.Definition)
+  (caller : Option Span) (message : Option String) :
+  Result Diagnostic
+  := do
+  match message with
+  | none => ok error
+  | some message1 =>
+    let message2 ← alloc.string.String.push_str message1 (toStr "; word ")
+    let message3 ← program.append_bootstrap_spelling definition message2
+    let message4 ← alloc.string.String.push_str message3 (toStr "; ")
+    let s ←
+      alloc.string.String.Insts.CoreOpsDerefDerefStr.deref error.message
+    let message5 ← alloc.string.String.push_str message4 s
+    match caller with
+    | none => ok { error with message := message5 }
+    | some caller1 =>
+      let message6 ←
+        alloc.string.String.push_str message5 (toStr
+          "; while specializing a resolved definition")
+      ok { error with span := caller1, message := message6 }
+
+/-- [noble_contracts::source::inference::operations::builtin]:
+    Source: 'crates/noble-contracts/src/source/inference/operations.rs', lines 61:0-112:1 -/
+def source.inference.operations.builtin
+  (call : source.inference.operations.Call) (frame : source.inference.Frame)
+  (state : source.inference.State) (environment : noble_kernel.contracts.Env)
+  (meter : Meter) :
+  Result ((core.result.Result Unit Diagnostic) × source.inference.Frame ×
+    source.inference.State × Meter)
+  := do
+  let o ← noble_kernel.contracts.Env.scheme environment call.id
+  match o with
+  | none =>
+    let d ← internal call.span
+    ok (core.result.Result.Err d, frame, state, meter)
+  | some scheme =>
+    let s := alloc.vec.Vec.deref scheme.var_kinds
+    let (r, a, meter1) ←
+      inference.Arena.variables state.arena s call.span meter
+    match r with
+    | core.result.Result.Ok value =>
+      let s1 := alloc.vec.Vec.deref scheme.stack_in
+      let s2 := alloc.vec.Vec.deref value
+      let (r1, a1, meter2) ←
+        inference.build.Arena.pattern_stack a s1 s2 call.span meter1
+      match r1 with
+      | core.result.Result.Ok value1 =>
+        let s3 := alloc.vec.Vec.deref scheme.stack_out
+        let s4 := alloc.vec.Vec.deref value
+        let (r2, a2, meter3) ←
+          inference.build.Arena.pattern_stack a1 s3 s4 call.span meter2
+        match r2 with
+        | core.result.Result.Ok value2 =>
+          let s5 := alloc.vec.Vec.deref scheme.effects
+          let s6 := alloc.vec.Vec.deref value
+          let (r3, a3, meter4) ←
+            inference.effects.Arena.effect_pattern a2 s5 s6 call.span meter3
+          match r3 with
+          | core.result.Result.Ok value3 =>
+            let (r4, a4, meter5) ←
+              inference.unify.Arena.unify a3 frame.stack value1 call.span
+                meter4
+            match r4 with
+            | core.result.Result.Ok _ =>
+              let (r5, a5, meter6) ←
+                inference.effects.Arena.effect_union a4 frame.effect value3
+                  call.span meter5
+              match r5 with
+              | core.result.Result.Ok value4 =>
+                let (r6, state1, meter7) ←
+                  source.inference.add frame.body
+                    {
+                      kind := (source.inference.DraftKind.Invocation call.id),
+                      «variables» := value,
+                      text := none,
+                      span := call.span
+                    } { state with arena := a5 } meter6
+                match r6 with
+                | core.result.Result.Ok value5 =>
+                  let v ← alloc.vec.Vec.push frame.sequence value5
+                  ok (core.result.Result.Ok (),
+                    {
+                      frame
+                        with
+                        stack := value2, effect := value4, sequence := v
+                    }, state1, meter7)
+                | core.result.Result.Err failure =>
+                  ok (core.result.Result.Err failure,
+                    { frame with effect := value4 }, state1, meter7)
+              | core.result.Result.Err failure =>
+                ok (core.result.Result.Err failure, frame,
+                  { state with arena := a5 }, meter6)
+            | core.result.Result.Err error =>
+              let b ←
+                core.cmp.PartialEq.ne.trait_default
+                  DiagnosticKind.Insts.CoreCmpPartialEqDiagnosticKind
+                  error.kind DiagnosticKind.Invalid
+              if b
+              then ok (r4, frame, { state with arena := a4 }, meter5)
+              else
+                let (r5, meter6) ←
+                  inference.materialize.Arena.join_message a4 value1
+                    frame.stack call.span meter5
+                let message ← core.result.Result.ok r5
+                let d ←
+                  source.inference.operations.contextualize error call.id
+                    frame.caller message
+                ok (core.result.Result.Err d, frame,
+                  { state with arena := a4 }, meter6)
+          | core.result.Result.Err failure =>
+            ok (core.result.Result.Err failure, frame,
+              { state with arena := a3 }, meter4)
+        | core.result.Result.Err failure =>
+          ok (core.result.Result.Err failure, frame,
+            { state with arena := a2 }, meter3)
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, frame, { state with arena := a1 },
+          meter2)
+    | core.result.Result.Err failure =>
+      ok (core.result.Result.Err failure, frame, { state with arena := a },
+        meter1)
+
+/-- [noble_contracts::source::inference::operations::literal]:
+    Source: 'crates/noble-contracts/src/source/inference/operations.rs', lines 10:0-55:1 -/
+def source.inference.operations.literal
+  (node : source.Node) (frame : source.inference.Frame)
+  (state : source.inference.State) (meter : Meter) :
+  Result ((core.result.Result Unit Diagnostic) × source.inference.Frame ×
+    source.inference.State × Meter)
+  := do
+  match node.kind with
+  | source.Kind.Literal lit =>
+    let t ← noble_kernel.untrusted.Lit.ty lit
+    let (r, a, meter1) ←
+      inference.build.Arena.ty state.arena t node.span meter
+    match r with
+    | core.result.Result.Ok value =>
+      let (r1, a1, meter2) ←
+        inference.Arena.add a (inference.Term.PushTerm frame.stack value)
+          node.span meter1
+      match r1 with
+      | core.result.Result.Ok value1 =>
+        let y ←
+          lift (Std.Array.to_slice
+            (Array.make 1#usize [ inference.Variable.Stack frame.stack ] :
+            Array inference.Variable 1#usize))
+        let ret := alloc.slice.Slice.into_vec y
+        let (r2, state1, meter3) ←
+          source.inference.add frame.body
+            {
+              kind := (source.inference.DraftKind.Literal lit),
+              «variables» := ret,
+              text := none,
+              span := node.span
+            } { state with arena := a1 } meter2
+        match r2 with
+        | core.result.Result.Ok value2 =>
+          let v ← alloc.vec.Vec.push frame.sequence value2
+          ok (core.result.Result.Ok (),
+            { frame with stack := value1, sequence := v }, state1, meter3)
+        | core.result.Result.Err failure =>
+          ok (core.result.Result.Err failure, frame, state1, meter3)
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, frame, { state with arena := a1 },
+          meter2)
+    | core.result.Result.Err failure =>
+      ok (core.result.Result.Err failure, frame, { state with arena := a },
+        meter1)
+  | source.Kind.Text bytes =>
+    let i := alloc.vec.Vec.len bytes
+    let r ← index i node.span
+    match r with
+    | core.result.Result.Ok value =>
+      let o ← lift (U32.checked_add state.text_bytes value)
+      match o with
+      | none =>
+        let d ←
+          source.exhausted node.span (toStr
+            "specialized text payload byte limit exceeded")
+        ok (core.result.Result.Err d, frame, state, meter)
+      | some total =>
+        if total <= meter.limits.bytes
+        then
+          let (r1, meter1) ← metering.Meter.charge meter value node.span
+          match r1 with
+          | core.result.Result.Ok _ =>
+            let v ← alloc.vec.CloneVec.clone core.clone.CloneU8 bytes
+            let t ←
+              noble_kernel.untrusted.Lit.ty noble_kernel.untrusted.Lit.TextLit
+            let (r2, a, meter2) ←
+              inference.build.Arena.ty state.arena t node.span meter1
+            match r2 with
+            | core.result.Result.Ok value1 =>
+              let (r3, a1, meter3) ←
+                inference.Arena.add a (inference.Term.PushTerm frame.stack
+                  value1) node.span meter2
+              match r3 with
+              | core.result.Result.Ok value2 =>
+                let y ←
+                  lift (Std.Array.to_slice
+                    (Array.make 1#usize [
+                       inference.Variable.Stack frame.stack
+                       ] : Array inference.Variable 1#usize))
+                let ret := alloc.slice.Slice.into_vec y
+                let (r4, state1, meter4) ←
+                  source.inference.add frame.body
+                    {
+                      kind :=
+                        (source.inference.DraftKind.Literal
+                          noble_kernel.untrusted.Lit.TextLit),
+                      «variables» := ret,
+                      text := (some v),
+                      span := node.span
+                    } { state with arena := a1, text_bytes := total } meter3
+                match r4 with
+                | core.result.Result.Ok value3 =>
+                  let v1 ← alloc.vec.Vec.push frame.sequence value3
+                  ok (core.result.Result.Ok (),
+                    { frame with stack := value2, sequence := v1 }, state1,
+                    meter4)
+                | core.result.Result.Err failure =>
+                  ok (core.result.Result.Err failure, frame, state1, meter4)
+              | core.result.Result.Err failure =>
+                ok (core.result.Result.Err failure, frame,
+                  { state with arena := a1, text_bytes := total }, meter3)
+            | core.result.Result.Err failure =>
+              ok (core.result.Result.Err failure, frame,
+                { state with arena := a, text_bytes := total }, meter2)
+          | core.result.Result.Err _ =>
+            ok (r1, frame, { state with text_bytes := total }, meter1)
+        else
+          let d ←
+            source.exhausted node.span (toStr
+              "specialized text payload byte limit exceeded")
+          ok (core.result.Result.Err d, frame, state, meter)
+    | core.result.Result.Err failure =>
+      ok (core.result.Result.Err failure, frame, state, meter)
+  | source.Kind.Word _ =>
+    let d ← internal node.span
+    ok (core.result.Result.Err d, frame, state, meter)
+  | source.Kind.Call _ =>
+    let d ← internal node.span
+    ok (core.result.Result.Err d, frame, state, meter)
+  | source.Kind.Quotation _ =>
+    let d ← internal node.span
+    ok (core.result.Result.Err d, frame, state, meter)
+
+/-- [noble_contracts::source::inference::traversal::visit]:
+    Source: 'crates/noble-contracts/src/source/inference/traversal.rs', lines 6:0-55:1 -/
+def source.inference.traversal.visit
+  (frame : source.inference.Frame)
+  (parents : alloc.vec.Vec source.inference.Frame)
+  (state : source.inference.State) (scope : source.inference.Scope)
+  (meter : Meter) :
+  Result ((core.result.Result Unit Diagnostic) × (alloc.vec.Vec
+    source.inference.Frame) × source.inference.State × Meter)
+  := do
+  let (r, meter1) ← metering.Meter.charge meter 1#u32 frame.span
+  match r with
+  | core.result.Result.Ok _ =>
+    let r1 ← source.inference.Scope.tree scope frame.tree frame.span
+    match r1 with
+    | core.result.Result.Ok value =>
+      let r2 ← source.inference.items value frame.items
+      match r2 with
+      | core.result.Result.Ok value1 =>
+        let o ←
+          core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice Std.U32)
+            value1 frame.at
+        match o with
+        | none =>
+          let (s, deref_mut_back) ← lift (alloc.vec.Vec.deref_mut parents)
+          let (r3, s1, state1, meter2) ←
+            source.inference.completion.complete frame s state meter1
+          let parents1 := deref_mut_back s1
+          ok (r3, parents1, state1, meter2)
+        | some id =>
+          let r3 ← source.Tree.node value id
+          match r3 with
+          | core.result.Result.Ok value2 =>
+            let i ← lift (core.num.Usize.saturating_add frame.at 1#usize)
+            match value2.kind with
+            | source.Kind.Literal _ =>
+              let (r4, frame1, state1, meter2) ←
+                source.inference.operations.literal value2
+                  { frame with «at» := i } state meter1
+              match r4 with
+              | core.result.Result.Ok _ =>
+                let parents1 ← alloc.vec.Vec.push parents frame1
+                ok (core.result.Result.Ok (), parents1, state1, meter2)
+              | core.result.Result.Err _ => ok (r4, parents, state1, meter2)
+            | source.Kind.Text _ =>
+              let (r4, frame1, state1, meter2) ←
+                source.inference.operations.literal value2
+                  { frame with «at» := i } state meter1
+              match r4 with
+              | core.result.Result.Ok _ =>
+                let parents1 ← alloc.vec.Vec.push parents frame1
+                ok (core.result.Result.Ok (), parents1, state1, meter2)
+              | core.result.Result.Err _ => ok (r4, parents, state1, meter2)
+            | source.Kind.Word _ =>
+              let d ← internal value2.span
+              ok (core.result.Result.Err d, parents, state, meter1)
+            | source.Kind.Call t =>
+              match t with
+              | source.Target.Builtin id1 =>
+                let (r4, frame1, state1, meter2) ←
+                  source.inference.operations.builtin
+                    { id := id1, span := value2.span }
+                    { frame with «at» := i } state scope.environment meter1
+                match r4 with
+                | core.result.Result.Ok _ =>
+                  let parents1 ← alloc.vec.Vec.push parents frame1
+                  ok (core.result.Result.Ok (), parents1, state1, meter2)
+                | core.result.Result.Err _ => ok (r4, parents, state1, meter2)
+              | source.Target.Named _ =>
+                let i1 := alloc.vec.Vec.len parents
+                let i2 ← lift (core.num.Usize.saturating_add i1 1#usize)
+                let r4 ← index i2 value2.span
+                match r4 with
+                | core.result.Result.Ok value3 =>
+                  let (r5, meter2) ←
+                    metering.Meter.depth meter1 value3 value2.span
+                  match r5 with
+                  | core.result.Result.Ok _ =>
+                    let (r6, state1, meter3) ←
+                      source.inference.traversal.child (id, value2)
+                        { frame with «at» := i } state scope meter2
+                    match r6 with
+                    | core.result.Result.Ok value4 =>
+                      let (r7, meter4) ←
+                        metering.Meter.node meter3 value2.span
+                      match r7 with
+                      | core.result.Result.Ok _ =>
+                        let parents1 ←
+                          alloc.vec.Vec.reserve Global parents 2#usize
+                        let parents2 ←
+                          alloc.vec.Vec.push parents1
+                            { frame with «at» := i }
+                        let parents3 ← alloc.vec.Vec.push parents2 value4
+                        ok (core.result.Result.Ok (), parents3, state1, meter4)
+                      | core.result.Result.Err _ =>
+                        ok (r7, parents, state1, meter4)
+                    | core.result.Result.Err failure =>
+                      ok (core.result.Result.Err failure, parents, state1,
+                        meter3)
+                  | core.result.Result.Err _ => ok (r5, parents, state, meter2)
+                | core.result.Result.Err failure =>
+                  ok (core.result.Result.Err failure, parents, state, meter1)
+            | source.Kind.Quotation _ =>
+              let i1 := alloc.vec.Vec.len parents
+              let i2 ← lift (core.num.Usize.saturating_add i1 1#usize)
+              let r4 ← index i2 value2.span
+              match r4 with
+              | core.result.Result.Ok value3 =>
+                let (r5, meter2) ←
+                  metering.Meter.depth meter1 value3 value2.span
+                match r5 with
+                | core.result.Result.Ok _ =>
+                  let (r6, state1, meter3) ←
+                    source.inference.traversal.child (id, value2)
+                      { frame with «at» := i } state scope meter2
+                  match r6 with
+                  | core.result.Result.Ok value4 =>
+                    let (r7, meter4) ← metering.Meter.node meter3 value2.span
+                    match r7 with
+                    | core.result.Result.Ok _ =>
+                      let parents1 ←
+                        alloc.vec.Vec.reserve Global parents 2#usize
+                      let parents2 ←
+                        alloc.vec.Vec.push parents1 { frame with «at» := i }
+                      let parents3 ← alloc.vec.Vec.push parents2 value4
+                      ok (core.result.Result.Ok (), parents3, state1, meter4)
+                    | core.result.Result.Err _ =>
+                      ok (r7, parents, state1, meter4)
+                  | core.result.Result.Err failure =>
+                    ok (core.result.Result.Err failure, parents, state1,
+                      meter3)
+                | core.result.Result.Err _ => ok (r5, parents, state, meter2)
+              | core.result.Result.Err failure =>
+                ok (core.result.Result.Err failure, parents, state, meter1)
+          | core.result.Result.Err failure =>
+            ok (core.result.Result.Err failure, parents, state, meter1)
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, parents, state, meter1)
+    | core.result.Result.Err failure =>
+      ok (core.result.Result.Err failure, parents, state, meter1)
+  | core.result.Result.Err _ => ok (r, parents, state, meter1)
+
+/-- [noble_contracts::source::inference::initial]:
+    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 179:0-217:1 -/
+def source.inference.initial
+  (tree : source.Tree) (has_test_hosts : Bool) (mode : source.inference.Mode)
+  (inputs : Slice noble_kernel.types.Ty) (meter : Meter) :
+  Result ((core.result.Result source.inference.State Diagnostic) × Meter)
+  := do
+  let arena ← inference.Arena.source has_test_hosts
+  match mode with
+  | source.inference.Mode.Declaration =>
+    let (r, arena1, meter1) ←
+      inference.Arena.add arena (inference.Term.HoleTerm inference.Sort.Stack)
+        tree.span meter
+    match r with
+    | core.result.Result.Ok value =>
+      let (r1, arena2, meter2) ←
+        inference.effects.Arena.effect_empty arena1 tree.span meter1
+      match r1 with
+      | core.result.Result.Ok value1 =>
+        let (r2, meter3) ← metering.Meter.node meter2 tree.span
+        match r2 with
+        | core.result.Result.Ok _ =>
+          let bodies :=
+            alloc.vec.Vec.with_capacity source.inference.Body 1#usize
+          let bodies1 ←
+            alloc.vec.Vec.push bodies
+              ({
+                 nodes := (alloc.vec.Vec.new source.inference.Draft),
+                 root := (alloc.vec.Vec.new noble_kernel.untrusted.NodeId),
+                 input := value,
+                 output := value,
+                 effect := value1,
+                 identity := none,
+                 span := tree.span
+               } : source.inference.Body)
+          ok (core.result.Result.Ok
+            {
+              arena := arena2,
+              bodies := bodies1,
+              span := tree.span,
+              text_bytes := 0#u32
+            }, meter3)
+        | core.result.Result.Err failure =>
+          ok (core.result.Result.Err failure, meter3)
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, meter2)
+    | core.result.Result.Err failure =>
+      ok (core.result.Result.Err failure, meter1)
+  | source.inference.Mode.Submission =>
+    let (r, arena1, meter1) ←
+      inference.build.Arena.stack arena inputs tree.span meter
+    match r with
+    | core.result.Result.Ok value =>
+      let (r1, arena2, meter2) ←
+        inference.effects.Arena.effect_empty arena1 tree.span meter1
+      match r1 with
+      | core.result.Result.Ok value1 =>
+        let (r2, meter3) ← metering.Meter.node meter2 tree.span
+        match r2 with
+        | core.result.Result.Ok _ =>
+          let bodies :=
+            alloc.vec.Vec.with_capacity source.inference.Body 1#usize
+          let bodies1 ←
+            alloc.vec.Vec.push bodies
+              ({
+                 nodes := (alloc.vec.Vec.new source.inference.Draft),
+                 root := (alloc.vec.Vec.new noble_kernel.untrusted.NodeId),
+                 input := value,
+                 output := value,
+                 effect := value1,
+                 identity := none,
+                 span := tree.span
+               } : source.inference.Body)
+          ok (core.result.Result.Ok
+            {
+              arena := arena2,
+              bodies := bodies1,
+              span := tree.span,
+              text_bytes := 0#u32
+            }, meter3)
+        | core.result.Result.Err failure =>
+          ok (core.result.Result.Err failure, meter3)
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, meter2)
+    | core.result.Result.Err failure =>
+      ok (core.result.Result.Err failure, meter1)
+
+/-- [noble_contracts::source::inference::infer]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 157:4-162:5 -/
+@[rust_loop_body]
+def source.inference.infer_loop.body
+  (tree : source.Tree) (v : alloc.vec.Vec source.Named)
+  (v1 : alloc.vec.Vec Std.U8) (i : Std.U64) (b : Bool)
+  (e : noble_kernel.contracts.Env)
+  (frames : alloc.vec.Vec source.inference.Frame) (meter : Meter)
+  (state : source.inference.State) :
+  Result (ControlFlow ((alloc.vec.Vec source.inference.Frame) × Meter ×
+    source.inference.State) (Meter × source.inference.State × (Option
+    Diagnostic)))
+  := do
+  let (o, frames1) ← alloc.vec.Vec.pop Global frames
+  match o with
+  | none => ok (done (meter, state, none))
+  | some frame =>
+    let (r, frames2, state1, meter1) ←
+      source.inference.traversal.visit frame frames1 state
+        {
+          root := tree,
+          session :=
+            { definitions := v, history := v1, generation := i, hosts := b },
+          environment := e
+        } meter
+    match r with
+    | core.result.Result.Ok _ => ok (cont (frames2, meter1, state1))
+    | core.result.Result.Err problem =>
+      ok (done (meter1, state1, some problem))
+
+/-- [noble_contracts::source::inference::infer]: loop 0:
+    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 157:4-162:5 -/
+@[rust_loop]
+def source.inference.infer_loop
+  (frames : alloc.vec.Vec source.inference.Frame) (tree : source.Tree)
+  (v : alloc.vec.Vec source.Named) (v1 : alloc.vec.Vec Std.U8) (i : Std.U64)
+  (b : Bool) (e : noble_kernel.contracts.Env) (meter : Meter)
+  (state : source.inference.State) :
+  Result (Meter × source.inference.State × (Option Diagnostic))
+  := do
+  loop
+    (fun (frames1, meter1, state1) => source.inference.infer_loop.body tree v
+      v1 i b e frames1 meter1 state1)
+    (frames, meter, state)
+
+/-- [noble_contracts::source::inference::infer]:
+    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 129:0-169:1 -/
+def source.inference.infer
+  (scope : source.inference.Scope) (mode : source.inference.Mode)
+  (inputs : Slice noble_kernel.types.Ty) (meter : Meter) :
+  Result ((core.result.Result source.inference.State Diagnostic) × Meter)
+  := do
+  let (r, meter1) ←
+    source.inference.initial scope.root scope.session.hosts mode inputs meter
+  match r with
+  | core.result.Result.Ok value =>
+    let (r1, meter2) ← metering.Meter.node meter1 scope.root.span
+    match r1 with
+    | core.result.Result.Ok _ =>
+      let frames := alloc.vec.Vec.with_capacity source.inference.Frame 1#usize
+      let s := alloc.vec.Vec.deref value.bodies
+      let o ← core.slice.Slice.first s
+      match o with
+      | none =>
+        let d ← internal scope.root.span
+        ok (core.result.Result.Err d, meter2)
+      | some body =>
+        let frames1 ←
+          alloc.vec.Vec.push frames
+            ({
+               tree := source.inference.TreeKey.Root,
+               items := source.inference.BodyKey.Root,
+               «at» := 0#usize,
+               input := body.input,
+               stack := body.input,
+               effect := body.effect,
+               body := 0#usize,
+               sequence := (alloc.vec.Vec.new noble_kernel.untrusted.NodeId),
+               origin := source.inference.Origin.Root,
+               span := scope.root.span,
+               caller := none
+             } : source.inference.Frame)
+        let (meter3, state, failure) ←
+          source.inference.infer_loop frames1 scope.root
+            scope.session.definitions scope.session.history
+            scope.session.generation scope.session.hosts scope.environment
+            meter2 value
+        match failure with
+        | none =>
+          let (r2, a, meter4) ←
+            inference.effects.Arena.solve_effects state.arena scope.root.span
+              meter3
+          match r2 with
+          | core.result.Result.Ok _ =>
+            let (r3, meter5) ←
+              source.inference.validation.open { state with arena := a } meter4
+            match r3 with
+            | core.result.Result.Ok _ =>
+              ok (core.result.Result.Ok { state with arena := a }, meter5)
+            | core.result.Result.Err failure1 =>
+              ok (core.result.Result.Err failure1, meter5)
+          | core.result.Result.Err failure1 =>
+            ok (core.result.Result.Err failure1, meter4)
+        | some problem => ok (core.result.Result.Err problem, meter3)
+    | core.result.Result.Err failure =>
+      ok (core.result.Result.Err failure, meter2)
+  | core.result.Result.Err _ => ok (r, meter1)
+
+/-- [noble_contracts::source::lexer::{noble_contracts::source::lexer::Scanner<'a>}::byte]:
+    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 164:4-176:5 -/
+def source.lexer.Scanner.byte
+  (self : source.lexer.Scanner) (meter : Meter) :
+  Result ((core.result.Result Std.U8 Diagnostic) × source.lexer.Scanner ×
+    Meter)
+  := do
+  let (r, meter1) ← metering.Meter.charge meter 1#u32 self.full
+  match r with
+  | core.result.Result.Ok _ =>
+    let o ←
+      core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice Std.U8)
+        self.source self.at
+    let o1 ← core.option.OptionShared0T.copied core.marker.CopyU8 o
+    match o1 with
+    | none =>
+      let d ← invalid self.full (toStr "unterminated text literal or escape")
+      ok (core.result.Result.Err d, self, meter1)
+    | some byte =>
+      let i ← self.at + 1#usize
+      ok (core.result.Result.Ok byte, { self with «at» := i }, meter1)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, self, meter1)
+
+/-- [noble_contracts::source::lexer::{noble_contracts::source::lexer::Scanner<'a>}::span]:
+    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 153:4-158:5 -/
+def source.lexer.Scanner.span
+  (self : source.lexer.Scanner) (start : Std.Usize) :
+  Result (core.result.Result Span Diagnostic)
+  := do
+  let r ← index start self.full
+  match r with
+  | core.result.Result.Ok value =>
+    let r1 ← index self.at self.full
+    match r1 with
+    | core.result.Result.Ok value1 =>
+      ok (core.result.Result.Ok { start := value, «end» := value1 })
+    | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::source::lexer::text::hexadecimal]:
+    Source: 'crates/noble-contracts/src/source/lexer/text.rs', lines 183:0-190:1 -/
+def source.lexer.text.hexadecimal
+  (byte : Std.U8) : Result (Option Std.U8) := do
+  if 48#u8 <= byte
+  then
+    if byte <= 57#u8
+    then let i ← lift (core.num.U8.saturating_sub byte 48#u8)
+         ok (some i)
+    else
+      if 97#u8 <= byte
+      then
+        if byte <= 102#u8
+        then
+          let i ← lift (core.num.U8.saturating_sub byte 97#u8)
+          let i1 ← lift (core.num.U8.saturating_add i 10#u8)
+          ok (some i1)
+        else
+          if 65#u8 <= byte
+          then
+            if byte <= 70#u8
+            then
+              let i ← lift (core.num.U8.saturating_sub byte 65#u8)
+              let i1 ← lift (core.num.U8.saturating_add i 10#u8)
+              ok (some i1)
+            else ok none
+          else ok none
+      else
+        if 65#u8 <= byte
+        then
+          if byte <= 70#u8
+          then
+            let i ← lift (core.num.U8.saturating_sub byte 65#u8)
+            let i1 ← lift (core.num.U8.saturating_add i 10#u8)
+            ok (some i1)
+          else ok none
+        else ok none
+  else
+    if 97#u8 <= byte
+    then
+      if byte <= 102#u8
+      then
+        let i ← lift (core.num.U8.saturating_sub byte 97#u8)
+        let i1 ← lift (core.num.U8.saturating_add i 10#u8)
+        ok (some i1)
+      else
+        if 65#u8 <= byte
+        then
+          if byte <= 70#u8
+          then
+            let i ← lift (core.num.U8.saturating_sub byte 65#u8)
+            let i1 ← lift (core.num.U8.saturating_add i 10#u8)
+            ok (some i1)
+          else ok none
+        else ok none
+    else
+      if 65#u8 <= byte
+      then
+        if byte <= 70#u8
+        then
+          let i ← lift (core.num.U8.saturating_sub byte 65#u8)
+          let i1 ← lift (core.num.U8.saturating_add i 10#u8)
+          ok (some i1)
+        else ok none
+      else ok none
+
+/-- [noble_contracts::source::lexer::text::{noble_contracts::source::lexer::Scanner<'_0>}::digit]:
+    Source: 'crates/noble-contracts/src/source/lexer/text.rs', lines 157:4-180:5 -/
+def source.lexer.text.Scanner.digit
+  (self : source.lexer.Scanner) (start : Std.Usize) (digits : Std.U32)
+  (meter : Meter) :
+  Result ((core.result.Result (Option Std.U8) Diagnostic) ×
+    source.lexer.Scanner × Meter)
+  := do
+  let (r, self1, meter1) ← source.lexer.Scanner.byte self meter
+  match r with
+  | core.result.Result.Ok value =>
+    if value = 125#u8
+    then ok (core.result.Result.Ok none, self1, meter1)
+    else
+      if digits >= 6#u32
+      then
+        let r1 ← source.lexer.Scanner.span self1 start
+        match r1 with
+        | core.result.Result.Ok value1 =>
+          let d ←
+            invalid value1 (toStr "Unicode escape has more than six digits")
+          ok (core.result.Result.Err d, self1, meter1)
+        | core.result.Result.Err failure =>
+          ok (core.result.Result.Err failure, self1, meter1)
+      else
+        let o ← source.lexer.text.hexadecimal value
+        match o with
+        | none =>
+          let r1 ← source.lexer.Scanner.span self1 start
+          match r1 with
+          | core.result.Result.Ok value1 =>
+            let d ← invalid value1 (toStr "nonhexadecimal Unicode escape")
+            ok (core.result.Result.Err d, self1, meter1)
+          | core.result.Result.Err failure =>
+            ok (core.result.Result.Err failure, self1, meter1)
+        | some _ => ok (core.result.Result.Ok o, self1, meter1)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, self1, meter1)
+
+/-- [noble_contracts::source::lexer::text::{noble_contracts::source::lexer::Scanner<'_0>}::unicode]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/lexer/text.rs', lines 122:8-134:9 -/
+@[rust_loop_body]
+def source.lexer.text.Scanner.unicode_loop.body
+  (start : Std.Usize) (self : source.lexer.Scanner) (meter : Meter)
+  (scalar : Std.U32) (digits : Std.U32) :
+  Result (ControlFlow (source.lexer.Scanner × Meter × Std.U32 × Std.U32)
+    (source.lexer.Scanner × Meter × Std.U32 × Std.U32 × (Option
+    Diagnostic)))
+  := do
+  if digits <= 6#u32
+  then
+    let (r, self1, meter1) ←
+      source.lexer.text.Scanner.digit self start digits meter
+    match r with
+    | core.result.Result.Ok o =>
+      match o with
+      | none => ok (done (self1, meter1, scalar, digits, none))
+      | some digit =>
+        let i ← core.num.U32.saturating_mul scalar 16#u32
+        let i1 ← lift (core.convert.num.FromU32U8.from digit)
+        let scalar1 ← lift (core.num.U32.saturating_add i i1)
+        let digits1 ← digits + 1#u32
+        ok (cont (self1, meter1, scalar1, digits1))
+    | core.result.Result.Err problem =>
+      ok (done (self1, meter1, scalar, digits, some problem))
+  else ok (done (self, meter, scalar, digits, none))
+
+/-- [noble_contracts::source::lexer::text::{noble_contracts::source::lexer::Scanner<'_0>}::unicode]: loop 0:
+    Source: 'crates/noble-contracts/src/source/lexer/text.rs', lines 122:8-134:9 -/
+@[rust_loop]
+def source.lexer.text.Scanner.unicode_loop
+  (self : source.lexer.Scanner) (start : Std.Usize) (meter : Meter)
+  (scalar : Std.U32) (digits : Std.U32) :
+  Result (source.lexer.Scanner × Meter × Std.U32 × Std.U32 × (Option
+    Diagnostic))
+  := do
+  loop
+    (fun (self1, meter1, scalar1, digits1) =>
+      source.lexer.text.Scanner.unicode_loop.body start self1 meter1 scalar1
+      digits1)
+    (self, meter, scalar, digits)
+
+/-- [noble_contracts::source::lexer::text::{noble_contracts::source::lexer::Scanner<'_0>}::unicode]:
+    Source: 'crates/noble-contracts/src/source/lexer/text.rs', lines 108:4-151:5 -/
+def source.lexer.text.Scanner.unicode
+  (self : source.lexer.Scanner) (start : Std.Usize) (meter : Meter) :
+  Result ((core.result.Result Char Diagnostic) × source.lexer.Scanner ×
+    Meter)
+  := do
+  let (r, self1, meter1) ← source.lexer.Scanner.byte self meter
+  match r with
+  | core.result.Result.Ok value =>
+    if value != 123#u8
+    then
+      let r1 ← source.lexer.Scanner.span self1 start
+      match r1 with
+      | core.result.Result.Ok value1 =>
+        let d ← invalid value1 (toStr "Unicode escape requires braces")
+        ok (core.result.Result.Err d, self1, meter1)
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, self1, meter1)
+    else
+      let (self2, meter2, scalar, digits, failure) ←
+        source.lexer.text.Scanner.unicode_loop self1 start meter1 0#u32 0#u32
+      match failure with
+      | none =>
+        if digits = 0#u32
+        then
+          let r1 ← source.lexer.Scanner.span self2 start
+          match r1 with
+          | core.result.Result.Ok value1 =>
+            let d ← invalid value1 (toStr "empty Unicode escape")
+            ok (core.result.Result.Err d, self2, meter2)
+          | core.result.Result.Err failure1 =>
+            ok (core.result.Result.Err failure1, self2, meter2)
+        else
+          let o ← core.char.methods.Char.from_u32 scalar
+          match o with
+          | none =>
+            let r1 ← source.lexer.Scanner.span self2 start
+            match r1 with
+            | core.result.Result.Ok value1 =>
+              let d ←
+                invalid value1 (toStr "Unicode escape is not a scalar value")
+              ok (core.result.Result.Err d, self2, meter2)
+            | core.result.Result.Err failure1 =>
+              ok (core.result.Result.Err failure1, self2, meter2)
+          | some scalar1 => ok (core.result.Result.Ok scalar1, self2, meter2)
+      | some problem => ok (core.result.Result.Err problem, self2, meter2)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, self1, meter1)
+
+/-- [noble_contracts::source::lexer::text::{noble_contracts::source::lexer::Scanner<'_0>}::escape]:
+    Source: 'crates/noble-contracts/src/source/lexer/text.rs', lines 80:4-106:5 -/
+def source.lexer.text.Scanner.escape
+  (self : source.lexer.Scanner) (bytes : alloc.vec.Vec Std.U8)
+  (start : Std.Usize) (meter : Meter) :
+  Result ((core.result.Result Unit Diagnostic) × source.lexer.Scanner ×
+    (alloc.vec.Vec Std.U8) × Meter)
+  := do
+  let (r, self1, meter1) ← source.lexer.Scanner.byte self meter
+  match r with
+  | core.result.Result.Ok value =>
+    match value with
+    | 34#uscalar =>
+      let bytes1 ← alloc.vec.Vec.push bytes 34#u8
+      ok (core.result.Result.Ok (), self1, bytes1, meter1)
+    | 92#uscalar =>
+      let bytes1 ← alloc.vec.Vec.push bytes 92#u8
+      ok (core.result.Result.Ok (), self1, bytes1, meter1)
+    | 110#uscalar =>
+      let bytes1 ← alloc.vec.Vec.push bytes 10#u8
+      ok (core.result.Result.Ok (), self1, bytes1, meter1)
+    | 114#uscalar =>
+      let bytes1 ← alloc.vec.Vec.push bytes 13#u8
+      ok (core.result.Result.Ok (), self1, bytes1, meter1)
+    | 116#uscalar =>
+      let bytes1 ← alloc.vec.Vec.push bytes 9#u8
+      ok (core.result.Result.Ok (), self1, bytes1, meter1)
+    | 117#uscalar =>
+      let (r1, self2, meter2) ←
+        source.lexer.text.Scanner.unicode self1 start meter1
+      match r1 with
+      | core.result.Result.Ok value1 =>
+        let encoded := Array.repeat 4#usize 0#u8
+        let bytes1 ← alloc.vec.Vec.reserve Global bytes 4#usize
+        let (s, _) ← lift (Array.to_slice_mut encoded)
+        let (s1, _) ← core.char.methods.Char.encode_utf8 value1 s
+        let s2 ← core.str.Str.as_bytes s1
+        let bytes2 ←
+          alloc.vec.Vec.extend_from_slice core.clone.CloneU8 bytes1 s2
+        ok (core.result.Result.Ok (), self2, bytes2, meter2)
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, self2, bytes, meter2)
+    | _ =>
+      let r1 ← source.lexer.Scanner.span self1 start
+      match r1 with
+      | core.result.Result.Ok value1 =>
+        let d ← invalid value1 (toStr "unsupported text escape")
+        ok (core.result.Result.Err d, self1, bytes, meter1)
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, self1, bytes, meter1)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, self1, bytes, meter1)
+
+/-- [noble_contracts::source::lexer::text::{noble_contracts::source::lexer::Scanner<'_0>}::text_step]:
+    Source: 'crates/noble-contracts/src/source/lexer/text.rs', lines 36:4-73:5 -/
+def source.lexer.text.Scanner.text_step
+  (self : source.lexer.Scanner) (bytes : alloc.vec.Vec Std.U8)
+  (start : Std.Usize) (meter : Meter) :
+  Result ((core.result.Result Bool Diagnostic) × source.lexer.Scanner ×
+    (alloc.vec.Vec Std.U8) × Meter)
+  := do
+  let (r, self1, meter1) ← source.lexer.Scanner.byte self meter
+  match r with
+  | core.result.Result.Ok value =>
+    if value = 34#u8
+    then ok (core.result.Result.Ok true, self1, bytes, meter1)
+    else
+      let bytes1 ← alloc.vec.Vec.reserve Global bytes 1#usize
+      match value with
+      | 13#uscalar =>
+        let r1 ← source.lexer.Scanner.span self1 start
+        match r1 with
+        | core.result.Result.Ok value1 =>
+          let d ←
+            invalid value1 (toStr "raw line terminator in text literal")
+          ok (core.result.Result.Err d, self1, bytes1, meter1)
+        | core.result.Result.Err failure =>
+          ok (core.result.Result.Err failure, self1, bytes1, meter1)
+      | 10#uscalar =>
+        let r1 ← source.lexer.Scanner.span self1 start
+        match r1 with
+        | core.result.Result.Ok value1 =>
+          let d ←
+            invalid value1 (toStr "raw line terminator in text literal")
+          ok (core.result.Result.Err d, self1, bytes1, meter1)
+        | core.result.Result.Err failure =>
+          ok (core.result.Result.Err failure, self1, bytes1, meter1)
+      | 92#uscalar =>
+        let (r1, self2, bytes2, meter2) ←
+          source.lexer.text.Scanner.escape self1 bytes1 start meter1
+        match r1 with
+        | core.result.Result.Ok _ =>
+          ok (core.result.Result.Ok false, self2, bytes2, meter2)
+        | core.result.Result.Err failure =>
+          ok (core.result.Result.Err failure, self2, bytes2, meter2)
+      | _ =>
+        let previous ← lift (core.num.Usize.saturating_sub self1.at 1#usize)
+        let i ← lift (core.num.Usize.saturating_add previous 2#usize)
+        let o ←
+          core.slice.Slice.get (core.slice.index.SliceIndexRangeUsizeSlice
+            Std.U8) self1.source { start := previous, «end» := i }
+        let s ← lift (Array.to_slice (Array.make 2#usize [ 194#u8, 133#u8 ]))
+        let b ←
+          core.option.Option.Insts.CoreCmpPartialEqOption.eq
+            (core.cmp.PartialEqShared (Slice.Insts.CoreCmpPartialEqSlice
+            core.cmp.PartialEqU8)) o (some s)
+        if b
+        then
+          let r1 ← source.lexer.Scanner.span self1 start
+          match r1 with
+          | core.result.Result.Ok value1 =>
+            let d ←
+              invalid value1 (toStr
+                "raw Unicode line terminator in text literal")
+            ok (core.result.Result.Err d, self1, bytes1, meter1)
+          | core.result.Result.Err failure =>
+            ok (core.result.Result.Err failure, self1, bytes1, meter1)
+        else
+          let i1 ← lift (core.num.Usize.saturating_add previous 3#usize)
+          let o1 ←
+            core.slice.Slice.get (core.slice.index.SliceIndexRangeUsizeSlice
+              Std.U8) self1.source { start := previous, «end» := i1 }
+          let s1 ←
+            lift (Array.to_slice
+              (Array.make 3#usize [ 226#u8, 128#u8, 168#u8 ]))
+          let b1 ←
+            core.option.Option.Insts.CoreCmpPartialEqOption.eq
+              (core.cmp.PartialEqShared (Slice.Insts.CoreCmpPartialEqSlice
+              core.cmp.PartialEqU8)) o1 (some s1)
+          if b1
+          then
+            let r1 ← source.lexer.Scanner.span self1 start
+            match r1 with
+            | core.result.Result.Ok value1 =>
+              let d ←
+                invalid value1 (toStr
+                  "raw Unicode line terminator in text literal")
+              ok (core.result.Result.Err d, self1, bytes1, meter1)
+            | core.result.Result.Err failure =>
+              ok (core.result.Result.Err failure, self1, bytes1, meter1)
+          else
+            let i2 ← lift (core.num.Usize.saturating_add previous 3#usize)
+            let o2 ←
+              core.slice.Slice.get (core.slice.index.SliceIndexRangeUsizeSlice
+                Std.U8) self1.source { start := previous, «end» := i2 }
+            let s2 ←
+              lift (Array.to_slice
+                (Array.make 3#usize [ 226#u8, 128#u8, 169#u8 ]))
+            let b2 ←
+              core.option.Option.Insts.CoreCmpPartialEqOption.eq
+                (core.cmp.PartialEqShared (Slice.Insts.CoreCmpPartialEqSlice
+                core.cmp.PartialEqU8)) o2 (some s2)
+            if b2
+            then
+              let r1 ← source.lexer.Scanner.span self1 start
+              match r1 with
+              | core.result.Result.Ok value1 =>
+                let d ←
+                  invalid value1 (toStr
+                    "raw Unicode line terminator in text literal")
+                ok (core.result.Result.Err d, self1, bytes1, meter1)
+              | core.result.Result.Err failure =>
+                ok (core.result.Result.Err failure, self1, bytes1, meter1)
+            else
+              let bytes2 ← alloc.vec.Vec.push bytes1 value
+              ok (core.result.Result.Ok false, self1, bytes2, meter1)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, self1, bytes, meter1)
+
+/-- [noble_contracts::source::lexer::text::{noble_contracts::source::lexer::Scanner<'_0>}::text]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/lexer/text.rs', lines 11:8-23:9 -/
+@[rust_loop_body]
+def source.lexer.text.Scanner.text_loop.body
+  (start : Std.Usize) (self : source.lexer.Scanner) (meter : Meter)
+  (bytes : alloc.vec.Vec Std.U8) :
+  Result (ControlFlow (source.lexer.Scanner × Meter × (alloc.vec.Vec Std.U8))
+    (source.lexer.Scanner × Meter × (alloc.vec.Vec Std.U8) × (Option
+    Diagnostic) × Bool))
+  := do
+  let i := Slice.len self.source
+  if self.at <= i
+  then
+    let (r, self1, bytes1, meter1) ←
+      source.lexer.text.Scanner.text_step self bytes start meter
+    match r with
+    | core.result.Result.Ok b =>
+      if b
+      then ok (done (self1, meter1, bytes1, none, true))
+      else ok (cont (self1, meter1, bytes1))
+    | core.result.Result.Err problem =>
+      ok (done (self1, meter1, bytes1, some problem, false))
+  else ok (done (self, meter, bytes, none, false))
+
+/-- [noble_contracts::source::lexer::text::{noble_contracts::source::lexer::Scanner<'_0>}::text]: loop 0:
+    Source: 'crates/noble-contracts/src/source/lexer/text.rs', lines 11:8-23:9 -/
+@[rust_loop]
+def source.lexer.text.Scanner.text_loop
+  (self : source.lexer.Scanner) (meter : Meter) (start : Std.Usize)
+  (bytes : alloc.vec.Vec Std.U8) :
+  Result (source.lexer.Scanner × Meter × (alloc.vec.Vec Std.U8) × (Option
+    Diagnostic) × Bool)
+  := do
+  loop
+    (fun (self1, meter1, bytes1) => source.lexer.text.Scanner.text_loop.body
+      start self1 meter1 bytes1)
+    (self, meter, bytes)
+
+/-- [noble_contracts::source::lexer::text::{noble_contracts::source::lexer::Scanner<'_0>}::text]:
+    Source: 'crates/noble-contracts/src/source/lexer/text.rs', lines 2:4-29:5 -/
+def source.lexer.text.Scanner.text
+  (self : source.lexer.Scanner) (meter : Meter) :
+  Result ((core.result.Result (alloc.vec.Vec Std.U8) Diagnostic) ×
+    source.lexer.Scanner × Meter)
+  := do
+  let i ← self.at + 1#usize
+  let (self1, meter1, bytes, failure, is_closed) ←
+    source.lexer.text.Scanner.text_loop { self with «at» := i } meter 
+      self.at (alloc.vec.Vec.new Std.U8)
+  match failure with
+  | none =>
+    if is_closed
+    then ok (core.result.Result.Ok bytes, self1, meter1)
+    else
+      let d ← internal self1.full
+      ok (core.result.Result.Err d, self1, meter1)
+  | some problem => ok (core.result.Result.Err problem, self1, meter1)
+
+/-- [noble_contracts::source::lexer::tokens::initial]:
+    Source: 'crates/noble-contracts/src/source/lexer/tokens.rs', lines 1:0-7:1 -/
+def source.lexer.tokens.initial (byte : Std.U8) : Result Bool := do
+  let b ← core.num.U8.is_ascii_alphabetic byte
+  if b
+  then ok true
+  else
+    match byte with
+    | 95#uscalar => ok true
+    | 43#uscalar => ok true
+    | 45#uscalar => ok true
+    | 42#uscalar => ok true
+    | 47#uscalar => ok true
+    | 61#uscalar => ok true
+    | 60#uscalar => ok true
+    | 62#uscalar => ok true
+    | 63#uscalar => ok true
+    | 33#uscalar => ok true
+    | _ => ok false
+
+/-- [noble_contracts::source::lexer::tokens::{impl core::ops::function::FnOnce<(u8,), bool> for noble_contracts::source::lexer::tokens::initial}::call_once]:
+    Source: 'crates/noble-contracts/src/source/lexer/tokens.rs', lines 1:0-7:1 -/
+def P.Insts.CoreOpsFunctionFnOnceTupleU8Bool.call_once
+  (state : Std.U8 → Result Bool) (args : Std.U8) : Result Bool := do
+  source.lexer.tokens.initial args
+
+/-- Trait implementation: [noble_contracts::source::lexer::tokens::{impl core::ops::function::FnOnce<(u8,), bool> for noble_contracts::source::lexer::tokens::initial}]
+    Source: 'crates/noble-contracts/src/source/lexer/tokens.rs', lines 1:0-7:1 -/
+@[reducible]
+def P.Insts.CoreOpsFunctionFnOnceTupleU8Bool : core.ops.function.FnOnce (Std.U8
+  → Result Bool) Std.U8 Bool := {
+  call_once := P.Insts.CoreOpsFunctionFnOnceTupleU8Bool.call_once
+}
+
+/-- [noble_contracts::source::lexer::tokens::word]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/lexer/tokens.rs', lines 79:4-92:5 -/
+@[rust_loop_body]
+def source.lexer.tokens.word_loop.body
+  (bytes : Slice Std.U8) (span : Span) (meter : Meter) («at» : Std.Usize) :
+  Result (ControlFlow (Meter × Std.Usize) (Meter × (Option Diagnostic)))
+  := do
+  let o ←
+    core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice Std.U8) bytes
+      «at»
+  let o1 ← core.option.OptionShared0T.copied core.marker.CopyU8 o
+  match o1 with
+  | none => ok (done (meter, none))
+  | some byte =>
+    let (r, meter1) ← metering.Meter.charge meter 1#u32 span
+    match r with
+    | core.result.Result.Ok _ =>
+      let b ← source.lexer.tokens.initial byte
+      if b
+      then let at1 ← «at» + 1#usize
+           ok (cont (meter1, at1))
+      else
+        let b1 ← core.num.U8.is_ascii_digit byte
+        if b1
+        then let at1 ← «at» + 1#usize
+             ok (cont (meter1, at1))
+        else
+          if byte != 46#u8
+          then
+            let d ←
+              invalid span (toStr
+                "word contains a character outside the ASCII token grammar")
+            ok (done (meter1, some d))
+          else let at1 ← «at» + 1#usize
+               ok (cont (meter1, at1))
+    | core.result.Result.Err problem => ok (done (meter1, some problem))
+
+/-- [noble_contracts::source::lexer::tokens::word]: loop 0:
+    Source: 'crates/noble-contracts/src/source/lexer/tokens.rs', lines 79:4-92:5 -/
+@[rust_loop]
+def source.lexer.tokens.word_loop
+  (bytes : Slice Std.U8) (span : Span) (meter : Meter) («at» : Std.Usize) :
+  Result (Meter × (Option Diagnostic))
+  := do
+  loop
+    (fun (meter1, at1) => source.lexer.tokens.word_loop.body bytes span meter1
+      at1)
+    (meter, «at»)
+
+/-- [noble_contracts::source::lexer::tokens::word]:
+    Source: 'crates/noble-contracts/src/source/lexer/tokens.rs', lines 72:0-97:1 -/
+def source.lexer.tokens.word
+  (bytes : Slice Std.U8) (span : Span) (meter : Meter) :
+  Result ((core.result.Result Unit Diagnostic) × Meter)
+  := do
+  let (meter1, failure) ←
+    source.lexer.tokens.word_loop bytes span meter 0#usize
+  match failure with
+  | none => ok (core.result.Result.Ok (), meter1)
+  | some problem => ok (core.result.Result.Err problem, meter1)
+
+/-- [noble_contracts::source::lexer::tokens::classify]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/lexer/tokens.rs', lines 39:4-46:5 -/
+@[rust_loop_body]
+def source.lexer.tokens.classify_loop.body
+  (span : Span) (digits : Slice Std.U8) (meter : Meter) (is_decimal : Bool)
+  («at» : Std.Usize) :
+  Result (ControlFlow (Meter × Bool × Std.Usize) (Meter × Bool × (Option
+    Diagnostic)))
+  := do
+  let o ←
+    core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice Std.U8) digits
+      «at»
+  let o1 ← core.option.OptionShared0T.copied core.marker.CopyU8 o
+  match o1 with
+  | none => ok (done (meter, is_decimal, none))
+  | some byte =>
+    let (r, meter1) ← metering.Meter.charge meter 1#u32 span
+    match r with
+    | core.result.Result.Ok _ =>
+      let b ← core.num.U8.is_ascii_digit byte
+      let at1 ← «at» + 1#usize
+      ok (cont (meter1, is_decimal && b, at1))
+    | core.result.Result.Err problem =>
+      ok (done (meter1, is_decimal, some problem))
+
+/-- [noble_contracts::source::lexer::tokens::classify]: loop 0:
+    Source: 'crates/noble-contracts/src/source/lexer/tokens.rs', lines 39:4-46:5 -/
+@[rust_loop]
+def source.lexer.tokens.classify_loop
+  (span : Span) (meter : Meter) (digits : Slice Std.U8) (is_decimal : Bool)
+  («at» : Std.Usize) :
+  Result (Meter × Bool × (Option Diagnostic))
+  := do
+  loop
+    (fun (meter1, is_decimal1, at1) => source.lexer.tokens.classify_loop.body
+      span digits meter1 is_decimal1 at1)
+    (meter, is_decimal, «at»)
+
+/-- [noble_contracts::source::lexer::tokens::classify]:
+    Source: 'crates/noble-contracts/src/source/lexer/tokens.rs', lines 13:0-66:1 -/
+def source.lexer.tokens.classify
+  (bytes : Slice Std.U8) (span : Span) (meter : Meter) :
+  Result ((core.result.Result source.lexer.TokenKind Diagnostic) × Meter)
+  := do
+  let b ←
+    Slice.Insts.CoreCmpPartialEqArray.eq core.cmp.PartialEqU8 bytes
+      (Array.make 3#usize [ 100#u8, 101#u8, 102#u8 ])
+  if b
+  then ok (core.result.Result.Ok source.lexer.TokenKind.Def, meter)
+  else
+    let b1 ←
+      Slice.Insts.CoreCmpPartialEqArray.eq core.cmp.PartialEqU8 bytes
+        (Array.make 4#usize [ 116#u8, 114#u8, 117#u8, 101#u8 ])
+    if b1
+    then
+      ok (core.result.Result.Ok (source.lexer.TokenKind.Literal
+        (noble_kernel.untrusted.Lit.BoolLit true)), meter)
+    else
+      let b2 ←
+        Slice.Insts.CoreCmpPartialEqArray.eq core.cmp.PartialEqU8 bytes
+          (Array.make 5#usize [ 102#u8, 97#u8, 108#u8, 115#u8, 101#u8 ])
+      if b2
+      then
+        ok (core.result.Result.Ok (source.lexer.TokenKind.Literal
+          (noble_kernel.untrusted.Lit.BoolLit false)), meter)
+      else
+        let o ← core.slice.Slice.first bytes
+        let b3 ←
+          core.option.Option.Insts.CoreCmpPartialEqOption.eq
+            (core.cmp.PartialEqShared core.cmp.PartialEqU8) o (some 45#u8)
+        let digits ←
+          if b3
+          then
+            core.slice.index.Slice.index
+              (core.slice.index.SliceIndexRangeFromUsizeSlice Std.U8) bytes
+              { start := 1#usize }
+          else ok bytes
+        let b4 ← core.slice.Slice.is_empty digits
+        let (meter1, is_decimal, failure) ←
+          source.lexer.tokens.classify_loop span meter digits (¬ b4) 0#usize
+        match failure with
+        | none =>
+          if is_decimal
+          then
+            let i := Slice.len digits
+            if i = 1#usize
+            then
+              let (r, meter2) ← syntax.integer bytes span meter1
+              match r with
+              | core.result.Result.Ok value =>
+                match value with
+                | none =>
+                  let d ← internal span
+                  ok (core.result.Result.Err d, meter2)
+                | some value1 =>
+                  ok (core.result.Result.Ok (source.lexer.TokenKind.Literal
+                    (noble_kernel.untrusted.Lit.I64Lit value1)), meter2)
+              | core.result.Result.Err failure1 =>
+                ok (core.result.Result.Err failure1, meter2)
+            else
+              let o1 ← core.slice.Slice.first digits
+              let b5 ←
+                core.cmp.PartialEq.ne.trait_default
+                  (core.option.Option.Insts.CoreCmpPartialEqOption
+                  (core.cmp.PartialEqShared core.cmp.PartialEqU8)) o1 (some
+                  48#u8)
+              if b5
+              then
+                let (r, meter2) ← syntax.integer bytes span meter1
+                match r with
+                | core.result.Result.Ok value =>
+                  match value with
+                  | none =>
+                    let d ← internal span
+                    ok (core.result.Result.Err d, meter2)
+                  | some value1 =>
+                    ok (core.result.Result.Ok (source.lexer.TokenKind.Literal
+                      (noble_kernel.untrusted.Lit.I64Lit value1)), meter2)
+                | core.result.Result.Err failure1 =>
+                  ok (core.result.Result.Err failure1, meter2)
+              else
+                let o2 ← core.slice.Slice.first bytes
+                let o3 ←
+                  core.option.OptionShared0T.copied core.marker.CopyU8 o2
+                let o4 ←
+                  core.option.Option.map
+                    P.Insts.CoreOpsFunctionFnOnceTupleU8Bool o3
+                    (source.lexer.tokens.initial)
+                let b6 ← lift (core.option.Option.unwrap_or o4 false)
+                if b6
+                then
+                  let (r, meter2) ←
+                    source.lexer.tokens.word bytes span meter1
+                  match r with
+                  | core.result.Result.Ok _ =>
+                    let v ← alloc.slice.Slice.to_vec core.clone.CloneU8 bytes
+                    ok (core.result.Result.Ok (source.lexer.TokenKind.Word v),
+                      meter2)
+                  | core.result.Result.Err failure1 =>
+                    ok (core.result.Result.Err failure1, meter2)
+                else
+                  let d ←
+                    invalid span (toStr
+                      "token is neither a complete I64 literal nor an ASCII word")
+                  ok (core.result.Result.Err d, meter1)
+          else
+            let o1 ← core.slice.Slice.first bytes
+            let o2 ← core.option.OptionShared0T.copied core.marker.CopyU8 o1
+            let o3 ←
+              core.option.Option.map P.Insts.CoreOpsFunctionFnOnceTupleU8Bool
+                o2 (source.lexer.tokens.initial)
+            let b5 ← lift (core.option.Option.unwrap_or o3 false)
+            if b5
+            then
+              let (r, meter2) ← source.lexer.tokens.word bytes span meter1
+              match r with
+              | core.result.Result.Ok _ =>
+                let v ← alloc.slice.Slice.to_vec core.clone.CloneU8 bytes
+                ok (core.result.Result.Ok (source.lexer.TokenKind.Word v),
+                  meter2)
+              | core.result.Result.Err failure1 =>
+                ok (core.result.Result.Err failure1, meter2)
+            else
+              let d ←
+                invalid span (toStr
+                  "token is neither a complete I64 literal nor an ASCII word")
+              ok (core.result.Result.Err d, meter1)
+        | some problem => ok (core.result.Result.Err problem, meter1)
+
+/-- [noble_contracts::source::lexer::{noble_contracts::source::lexer::Scanner<'a>}::new]:
+    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 25:4-48:5
+    Visibility: public -/
+def source.lexer.Scanner.new
+  (source_bytes : Slice Std.U8) (meter : Meter) :
+  Result ((core.result.Result source.lexer.Scanner Diagnostic) × Meter)
+  := do
+  let i := Slice.len source_bytes
+  let r ← index i { start := 0#u32, «end» := 0#u32 }
+  match r with
+  | core.result.Result.Ok value =>
+    if value > meter.limits.bytes
+    then
+      let d ←
+        source.exhausted { start := 0#u32, «end» := value } (toStr
+          "source byte limit exceeded")
+      ok (core.result.Result.Err d, meter)
+    else
+      let (r1, meter1) ←
+        metering.Meter.charge meter value { start := 0#u32, «end» := value }
+      match r1 with
+      | core.result.Result.Ok _ =>
+        let r2 ← core.str.converts.from_utf8 source_bytes
+        let b ← core.result.Result.is_err r2
+        if b
+        then
+          let d ←
+            invalid { start := 0#u32, «end» := value } (toStr
+              "invalid UTF-8 source encoding")
+          ok (core.result.Result.Err d, meter1)
+        else
+          ok (core.result.Result.Ok
+            {
+              source := source_bytes,
+              «at» := 0#usize,
+              full := { start := 0#u32, «end» := value }
+            }, meter1)
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, meter1)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, meter)
+
+/-- [noble_contracts::source::lexer::whitespace]:
+    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 179:0-181:1 -/
+def source.lexer.whitespace (byte : Std.U8) : Result Bool := do
+  match byte with
+  | 32#uscalar => ok true
+  | 9#uscalar => ok true
+  | 13#uscalar => ok true
+  | 10#uscalar => ok true
+  | _ => ok false
+
+/-- [noble_contracts::source::lexer::{noble_contracts::source::lexer::Scanner<'a>}::word]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 132:18-141:9 -/
+@[rust_loop_body]
+def source.lexer.Scanner.word_loop.body
+  (s : Slice Std.U8) (s1 : Span) (start : Std.Usize) (meter : Meter) :
+  Result (ControlFlow (Std.Usize × Meter) (Std.Usize × Meter × (Option
+    Diagnostic)))
+  := do
+  let o ←
+    core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice Std.U8) s start
+  let o1 ← core.option.OptionShared0T.copied core.marker.CopyU8 o
+  match o1 with
+  | none => ok (done (start, meter, none))
+  | some byte =>
+    let (r, meter1) ← metering.Meter.charge meter 1#u32 s1
+    match r with
+    | core.result.Result.Ok _ =>
+      let b ← source.lexer.whitespace byte
+      if b
+      then ok (done (start, meter1, none))
+      else
+        let b1 ←
+          match byte with
+          | 35#uscalar => ok true
+          | 91#uscalar => ok true
+          | 93#uscalar => ok true
+          | 34#uscalar => ok true
+          | _ => ok false
+        if b1
+        then ok (done (start, meter1, none))
+        else let i ← start + 1#usize
+             ok (cont (i, meter1))
+    | core.result.Result.Err problem => ok (done (start, meter1, some problem))
+
+/-- [noble_contracts::source::lexer::{noble_contracts::source::lexer::Scanner<'a>}::word]: loop 0:
+    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 132:18-141:9 -/
+@[rust_loop]
+def source.lexer.Scanner.word_loop
+  (s : Slice Std.U8) (start : Std.Usize) (s1 : Span) (meter : Meter) :
+  Result (Std.Usize × Meter × (Option Diagnostic))
+  := do
+  loop
+    (fun (start1, meter1) => source.lexer.Scanner.word_loop.body s s1 start1
+      meter1)
+    (start, meter)
+
+/-- [noble_contracts::source::lexer::{noble_contracts::source::lexer::Scanner<'a>}::word]:
+    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 129:4-151:5 -/
+def source.lexer.Scanner.word
+  (self : source.lexer.Scanner) (meter : Meter) :
+  Result ((core.result.Result source.lexer.TokenKind Diagnostic) ×
+    source.lexer.Scanner × Meter)
+  := do
+  let (i, meter1, failure) ←
+    source.lexer.Scanner.word_loop self.source self.at self.full meter
+  match failure with
+  | none =>
+    let r ← source.lexer.Scanner.span { self with «at» := i } self.at
+    match r with
+    | core.result.Result.Ok value =>
+      let o ←
+        core.slice.Slice.get (core.slice.index.SliceIndexRangeUsizeSlice
+          Std.U8) self.source { start := self.at, «end» := i }
+      match o with
+      | none =>
+        let d ← internal value
+        ok (core.result.Result.Err d, { self with «at» := i }, meter1)
+      | some bytes =>
+        let (r1, meter2) ← source.lexer.tokens.classify bytes value meter1
+        ok (r1, { self with «at» := i }, meter2)
+    | core.result.Result.Err failure1 =>
+      ok (core.result.Result.Err failure1, { self with «at» := i }, meter1)
+  | some problem =>
+    ok (core.result.Result.Err problem, { self with «at» := i }, meter1)
+
+/-- [noble_contracts::source::lexer::{noble_contracts::source::lexer::Scanner<'a>}::comment]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 113:8-122:9 -/
+@[rust_loop_body]
+def source.lexer.Scanner.comment_loop.body
+  (s : Slice Std.U8) (s1 : Span) (i : Std.Usize) (meter : Meter) :
+  Result (ControlFlow (Std.Usize × Meter) (Std.Usize × Meter × (Option
+    Diagnostic)))
+  := do
+  let o ←
+    core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice Std.U8) s i
+  let o1 ← core.option.OptionShared0T.copied core.marker.CopyU8 o
+  match o1 with
+  | none => ok (done (i, meter, none))
+  | some byte =>
+    let (r, meter1) ← metering.Meter.charge meter 1#u32 s1
+    match r with
+    | core.result.Result.Ok _ =>
+      if byte = 13#u8
+      then ok (done (i, meter1, none))
+      else
+        if byte = 10#u8
+        then ok (done (i, meter1, none))
+        else let i1 ← i + 1#usize
+             ok (cont (i1, meter1))
+    | core.result.Result.Err problem => ok (done (i, meter1, some problem))
+
+/-- [noble_contracts::source::lexer::{noble_contracts::source::lexer::Scanner<'a>}::comment]: loop 0:
+    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 113:8-122:9 -/
+@[rust_loop]
+def source.lexer.Scanner.comment_loop
+  (s : Slice Std.U8) (i : Std.Usize) (s1 : Span) (meter : Meter) :
+  Result (Std.Usize × Meter × (Option Diagnostic))
+  := do
+  loop
+    (fun (i1, meter1) => source.lexer.Scanner.comment_loop.body s s1 i1 meter1)
+    (i, meter)
+
+/-- [noble_contracts::source::lexer::{noble_contracts::source::lexer::Scanner<'a>}::comment]:
+    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 111:4-127:5 -/
+def source.lexer.Scanner.comment
+  (self : source.lexer.Scanner) (meter : Meter) :
+  Result ((core.result.Result Unit Diagnostic) × source.lexer.Scanner ×
+    Meter)
+  := do
+  let (i, meter1, failure) ←
+    source.lexer.Scanner.comment_loop self.source self.at self.full meter
+  match failure with
+  | none => ok (core.result.Result.Ok (), { self with «at» := i }, meter1)
+  | some problem =>
+    ok (core.result.Result.Err problem, { self with «at» := i }, meter1)
+
+/-- [noble_contracts::source::lexer::{noble_contracts::source::lexer::Scanner<'a>}::skip_step]:
+    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 98:4-109:5 -/
+def source.lexer.Scanner.skip_step
+  (self : source.lexer.Scanner) (byte : Std.U8) (meter : Meter) :
+  Result ((core.result.Result Bool Diagnostic) × source.lexer.Scanner ×
+    Meter)
+  := do
+  let (r, meter1) ← metering.Meter.charge meter 1#u32 self.full
+  match r with
+  | core.result.Result.Ok _ =>
+    let b ← source.lexer.whitespace byte
+    if b
+    then
+      let i ← self.at + 1#usize
+      ok (core.result.Result.Ok true, { self with «at» := i }, meter1)
+    else
+      if byte = 35#u8
+      then
+        let (r1, self1, meter2) ← source.lexer.Scanner.comment self meter1
+        match r1 with
+        | core.result.Result.Ok _ =>
+          ok (core.result.Result.Ok true, self1, meter2)
+        | core.result.Result.Err failure =>
+          ok (core.result.Result.Err failure, self1, meter2)
+      else ok (core.result.Result.Ok false, self, meter1)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, self, meter1)
+
+/-- [noble_contracts::source::lexer::{noble_contracts::source::lexer::Scanner<'a>}::skip]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 78:8-87:9 -/
+@[rust_loop_body]
+def source.lexer.Scanner.skip_loop.body
+  (self : source.lexer.Scanner) (meter : Meter) :
+  Result (ControlFlow (source.lexer.Scanner × Meter) (source.lexer.Scanner ×
+    Meter × (Option Diagnostic)))
+  := do
+  let o ←
+    core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice Std.U8)
+      self.source self.at
+  let o1 ← core.option.OptionShared0T.copied core.marker.CopyU8 o
+  match o1 with
+  | none => ok (done (self, meter, none))
+  | some byte =>
+    let (r, self1, meter1) ← source.lexer.Scanner.skip_step self byte meter
+    match r with
+    | core.result.Result.Ok b =>
+      if b
+      then ok (cont (self1, meter1))
+      else ok (done (self1, meter1, none))
+    | core.result.Result.Err problem => ok (done (self1, meter1, some problem))
+
+/-- [noble_contracts::source::lexer::{noble_contracts::source::lexer::Scanner<'a>}::skip]: loop 0:
+    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 78:8-87:9 -/
+@[rust_loop]
+def source.lexer.Scanner.skip_loop
+  (self : source.lexer.Scanner) (meter : Meter) :
+  Result (source.lexer.Scanner × Meter × (Option Diagnostic))
+  := do
+  loop
+    (fun (self1, meter1) => source.lexer.Scanner.skip_loop.body self1 meter1)
+    (self, meter)
+
+/-- [noble_contracts::source::lexer::{noble_contracts::source::lexer::Scanner<'a>}::skip]:
+    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 76:4-92:5 -/
+def source.lexer.Scanner.skip
+  (self : source.lexer.Scanner) (meter : Meter) :
+  Result ((core.result.Result Unit Diagnostic) × source.lexer.Scanner ×
+    Meter)
+  := do
+  let (self1, meter1, failure) ← source.lexer.Scanner.skip_loop self meter
+  match failure with
+  | none => ok (core.result.Result.Ok (), self1, meter1)
+  | some problem => ok (core.result.Result.Err problem, self1, meter1)
+
+/-- [noble_contracts::source::lexer::{noble_contracts::source::lexer::Scanner<'a>}::next]:
+    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 50:4-74:5
+    Visibility: public -/
+def source.lexer.Scanner.next
+  (self : source.lexer.Scanner) (meter : Meter) :
+  Result ((core.result.Result (Option source.lexer.Token) Diagnostic) ×
+    source.lexer.Scanner × Meter)
+  := do
+  let (r, self1, meter1) ← source.lexer.Scanner.skip self meter
+  match r with
+  | core.result.Result.Ok _ =>
+    let o ←
+      core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice Std.U8)
+        self1.source self1.at
+    let o1 ← core.option.OptionShared0T.copied core.marker.CopyU8 o
+    match o1 with
+    | none => ok (core.result.Result.Ok none, self1, meter1)
+    | some byte =>
+      let (r1, meter2) ← metering.Meter.node meter1 self1.full
+      match r1 with
+      | core.result.Result.Ok _ =>
+        match byte with
+        | 91#uscalar =>
+          let i ← self1.at + 1#usize
+          let r2 ←
+            source.lexer.Scanner.span { self1 with «at» := i } self1.at
+          match r2 with
+          | core.result.Result.Ok value =>
+            ok (core.result.Result.Ok (some
+              { kind := source.lexer.TokenKind.Open, span := value }),
+              { self1 with «at» := i }, meter2)
+          | core.result.Result.Err failure =>
+            ok (core.result.Result.Err failure, { self1 with «at» := i },
+              meter2)
+        | 93#uscalar =>
+          let i ← self1.at + 1#usize
+          let r2 ←
+            source.lexer.Scanner.span { self1 with «at» := i } self1.at
+          match r2 with
+          | core.result.Result.Ok value =>
+            ok (core.result.Result.Ok (some
+              { kind := source.lexer.TokenKind.Close, span := value }),
+              { self1 with «at» := i }, meter2)
+          | core.result.Result.Err failure =>
+            ok (core.result.Result.Err failure, { self1 with «at» := i },
+              meter2)
+        | 34#uscalar =>
+          let (r2, self2, meter3) ←
+            source.lexer.text.Scanner.text self1 meter2
+          match r2 with
+          | core.result.Result.Ok value =>
+            let r3 ← source.lexer.Scanner.span self2 self1.at
+            match r3 with
+            | core.result.Result.Ok value1 =>
+              ok (core.result.Result.Ok (some
+                { kind := (source.lexer.TokenKind.Text value), span := value1 }),
+                self2, meter3)
+            | core.result.Result.Err failure =>
+              ok (core.result.Result.Err failure, self2, meter3)
+          | core.result.Result.Err failure =>
+            ok (core.result.Result.Err failure, self2, meter3)
+        | _ =>
+          let (r2, self2, meter3) ← source.lexer.Scanner.word self1 meter2
+          match r2 with
+          | core.result.Result.Ok value =>
+            let r3 ← source.lexer.Scanner.span self2 self1.at
+            match r3 with
+            | core.result.Result.Ok value1 =>
+              ok (core.result.Result.Ok (some
+                { kind := value, span := value1 }), self2, meter3)
+            | core.result.Result.Err failure =>
+              ok (core.result.Result.Err failure, self2, meter3)
+          | core.result.Result.Err failure =>
+            ok (core.result.Result.Err failure, self2, meter3)
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, self1, meter2)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, self1, meter1)
+
+/-- [noble_contracts::source::parsing::declaration_body]:
+    Source: 'crates/noble-contracts/src/source/parsing.rs', lines 140:0-170:1 -/
+def source.parsing.declaration_body
+  (frame : source.parsing.Frame) (nodes : Slice source.Node) (span : Span) :
+  Result ((core.result.Result (alloc.vec.Vec Std.U32) Diagnostic) × (Slice
+    source.Node))
+  := do
+  let i := alloc.vec.Vec.len frame.body
+  if i != 1#usize
+  then
+    let d ←
+      invalid span (toStr
+        "definition submission contains trailing expressions")
+    ok (core.result.Result.Err d, nodes)
+  else
+    let s := alloc.vec.Vec.deref frame.body
+    let o ← core.slice.Slice.first s
+    match o with
+    | none => let d ← internal span
+              ok (core.result.Result.Err d, nodes)
+    | some id =>
+      let r ← offset id span
+      match r with
+      | core.result.Result.Ok value =>
+        let (o1, get_mut_back) ←
+          core.slice.Slice.get_mut (core.slice.index.SliceIndexUsizeSlice
+            source.Node) nodes value
+        match o1 with
+        | none =>
+          let d ← internal span
+          let nodes1 := get_mut_back none
+          ok (core.result.Result.Err d, nodes1)
+        | some n =>
+          match n.kind with
+          | source.Kind.Literal _ =>
+            let d ← internal span
+            let nodes1 := get_mut_back o1
+            ok (core.result.Result.Err d, nodes1)
+          | source.Kind.Text _ =>
+            let d ← internal span
+            let nodes1 := get_mut_back o1
+            ok (core.result.Result.Err d, nodes1)
+          | source.Kind.Word _ =>
+            let d ← internal span
+            let nodes1 := get_mut_back o1
+            ok (core.result.Result.Err d, nodes1)
+          | source.Kind.Call _ =>
+            let d ← internal span
+            let nodes1 := get_mut_back o1
+            ok (core.result.Result.Err d, nodes1)
+          | source.Kind.Quotation body =>
+            let (v, body1) ←
+              core.mem.take (alloc.vec.Vec.Insts.CoreDefaultDefault Std.U32)
+                body
+            let nodes1 :=
+              get_mut_back (some
+                { n with kind := (source.Kind.Quotation body1) })
+            ok (core.result.Result.Ok v, nodes1)
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, nodes)
+
+/-- [noble_contracts::source::parsing::opening]:
+    Source: 'crates/noble-contracts/src/source/parsing.rs', lines 87:0-133:1 -/
+def source.parsing.opening
+  (lexer : source.lexer.Scanner) (span : Span) (meter : Meter) :
+  Result ((core.result.Result ((Option String) × (Option source.lexer.Token))
+    Diagnostic) × source.lexer.Scanner × Meter)
+  := do
+  let (r, lexer1, meter1) ← source.lexer.Scanner.next lexer meter
+  match r with
+  | core.result.Result.Ok value =>
+    let (lexer2, meter2, first, b) ←
+      match value with
+      | none => ok (lexer1, meter1, none, false)
+      | some t =>
+        do
+        let (tk, b1) ←
+          match t.kind with
+          | source.lexer.TokenKind.Open =>
+            ok (source.lexer.TokenKind.Open, false)
+          | source.lexer.TokenKind.Close =>
+            ok (source.lexer.TokenKind.Close, false)
+          | source.lexer.TokenKind.Def => ok (source.lexer.TokenKind.Def, true)
+          | source.lexer.TokenKind.Literal _ => ok (t.kind, false)
+          | source.lexer.TokenKind.Text _ => ok (t.kind, false)
+          | source.lexer.TokenKind.Word _ => ok (t.kind, false)
+        ok (lexer1, meter1, some { t with kind := tk }, b1)
+    if b
+    then
+      let (r1, lexer3, meter3) ← source.lexer.Scanner.next lexer2 meter2
+      match r1 with
+      | core.result.Result.Ok value1 =>
+        match value1 with
+        | none =>
+          let d ←
+            invalid span (toStr "definition requires a nonreserved word name")
+          ok (core.result.Result.Err d, lexer3, meter3)
+        | some t =>
+          match t.kind with
+          | source.lexer.TokenKind.Open =>
+            let d ←
+              invalid span (toStr
+                "definition requires a nonreserved word name")
+            ok (core.result.Result.Err d, lexer3, meter3)
+          | source.lexer.TokenKind.Close =>
+            let d ←
+              invalid span (toStr
+                "definition requires a nonreserved word name")
+            ok (core.result.Result.Err d, lexer3, meter3)
+          | source.lexer.TokenKind.Def =>
+            let d ←
+              invalid span (toStr
+                "definition requires a nonreserved word name")
+            ok (core.result.Result.Err d, lexer3, meter3)
+          | source.lexer.TokenKind.Literal _ =>
+            let d ←
+              invalid span (toStr
+                "definition requires a nonreserved word name")
+            ok (core.result.Result.Err d, lexer3, meter3)
+          | source.lexer.TokenKind.Text _ =>
+            let d ←
+              invalid span (toStr
+                "definition requires a nonreserved word name")
+            ok (core.result.Result.Err d, lexer3, meter3)
+          | source.lexer.TokenKind.Word word =>
+            let r2 ← alloc.string.String.from_utf8 word
+            match r2 with
+            | core.result.Result.Ok «name» =>
+              let (r3, lexer4, meter4) ←
+                source.lexer.Scanner.next lexer3 meter3
+              match r3 with
+              | core.result.Result.Ok value2 =>
+                match value2 with
+                | none =>
+                  let d ←
+                    invalid span (toStr
+                      "definition body must be one quotation")
+                  ok (core.result.Result.Err d, lexer4, meter4)
+                | some t1 =>
+                  match t1.kind with
+                  | source.lexer.TokenKind.Open =>
+                    ok (core.result.Result.Ok (some «name», value2), lexer4,
+                      meter4)
+                  | source.lexer.TokenKind.Close =>
+                    let d ←
+                      invalid span (toStr
+                        "definition body must be one quotation")
+                    ok (core.result.Result.Err d, lexer4, meter4)
+                  | source.lexer.TokenKind.Def =>
+                    let d ←
+                      invalid span (toStr
+                        "definition body must be one quotation")
+                    ok (core.result.Result.Err d, lexer4, meter4)
+                  | source.lexer.TokenKind.Literal _ =>
+                    let d ←
+                      invalid span (toStr
+                        "definition body must be one quotation")
+                    ok (core.result.Result.Err d, lexer4, meter4)
+                  | source.lexer.TokenKind.Text _ =>
+                    let d ←
+                      invalid span (toStr
+                        "definition body must be one quotation")
+                    ok (core.result.Result.Err d, lexer4, meter4)
+                  | source.lexer.TokenKind.Word _ =>
+                    let d ←
+                      invalid span (toStr
+                        "definition body must be one quotation")
+                    ok (core.result.Result.Err d, lexer4, meter4)
+              | core.result.Result.Err failure =>
+                ok (core.result.Result.Err failure, lexer4, meter4)
+            | core.result.Result.Err _ =>
+              let d ← internal span
+              ok (core.result.Result.Err d, lexer3, meter3)
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, lexer3, meter3)
+    else ok (core.result.Result.Ok (none, first), lexer2, meter2)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, lexer1, meter1)
+
+/-- [noble_contracts::source::parsing::append]:
+    Source: 'crates/noble-contracts/src/source/parsing.rs', lines 246:0-260:1 -/
+def source.parsing.append
+  (node : source.Node) (state : source.parsing.State) (meter : Meter) :
+  Result ((core.result.Result Unit Diagnostic) × source.parsing.State ×
+    Meter)
+  := do
+  let (r, meter1) ← metering.Meter.node meter node.span
+  match r with
+  | core.result.Result.Ok _ =>
+    let i := alloc.vec.Vec.len state.nodes
+    let r1 ← index i node.span
+    match r1 with
+    | core.result.Result.Ok value =>
+      let (s, deref_mut_back) ← lift (alloc.vec.Vec.deref_mut state.frames)
+      let (o, last_mut_back) ← core.slice.Slice.last_mut s
+      match o with
+      | none =>
+        let d ← internal node.span
+        let s1 := last_mut_back none
+        let v := deref_mut_back s1
+        ok (core.result.Result.Err d, { state with frames := v }, meter1)
+      | some frame =>
+        let v ← alloc.vec.Vec.push frame.body value
+        let v1 ← alloc.vec.Vec.push state.nodes node
+        let s1 := last_mut_back (some { frame with body := v })
+        let v2 := deref_mut_back s1
+        ok (core.result.Result.Ok (), { frames := v2, nodes := v1 }, meter1)
+    | core.result.Result.Err failure =>
+      ok (core.result.Result.Err failure, state, meter1)
+  | core.result.Result.Err _ => ok (r, state, meter1)
+
+/-- [noble_contracts::source::parsing::step]:
+    Source: 'crates/noble-contracts/src/source/parsing.rs', lines 176:0-240:1 -/
+def source.parsing.step
+  (token : source.lexer.Token) (state : source.parsing.State) (meter : Meter) :
+  Result ((core.result.Result Unit Diagnostic) × source.parsing.State ×
+    Meter)
+  := do
+  let (r, meter1) ← metering.Meter.charge meter 1#u32 token.span
+  match r with
+  | core.result.Result.Ok _ =>
+    match token.kind with
+    | source.lexer.TokenKind.Open =>
+      let i := alloc.vec.Vec.len state.frames
+      let r1 ← index i token.span
+      match r1 with
+      | core.result.Result.Ok value =>
+        let (r2, meter2) ← metering.Meter.depth meter1 value token.span
+        match r2 with
+        | core.result.Result.Ok _ =>
+          let (r3, meter3) ← metering.Meter.node meter2 token.span
+          match r3 with
+          | core.result.Result.Ok _ =>
+            let v ←
+              alloc.vec.Vec.push state.frames
+                ({
+                   body := (alloc.vec.Vec.new Std.U32),
+                   start := token.span.start
+                 } : source.parsing.Frame)
+            ok (core.result.Result.Ok (), { state with frames := v }, meter3)
+          | core.result.Result.Err _ => ok (r3, state, meter3)
+        | core.result.Result.Err _ => ok (r2, state, meter2)
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, state, meter1)
+    | source.lexer.TokenKind.Close =>
+      let i := alloc.vec.Vec.len state.frames
+      if i <= 1#usize
+      then
+        let d ←
+          invalid token.span (toStr "unmatched quotation closing bracket")
+        ok (core.result.Result.Err d, state, meter1)
+      else
+        let (o, v) ← alloc.vec.Vec.pop Global state.frames
+        match o with
+        | none =>
+          let d ← internal token.span
+          ok (core.result.Result.Err d, { state with frames := v }, meter1)
+        | some frame =>
+          source.parsing.append
+            {
+              kind := (source.Kind.Quotation frame.body),
+              span := { token.span with start := frame.start }
+            } { state with frames := v } meter1
+    | source.lexer.TokenKind.Def =>
+      let d ←
+        invalid token.span (toStr "def is a declaration, not an expression")
+      ok (core.result.Result.Err d, state, meter1)
+    | source.lexer.TokenKind.Literal lit =>
+      source.parsing.append
+        { kind := (source.Kind.Literal lit), span := token.span } state meter1
+    | source.lexer.TokenKind.Text bytes =>
+      source.parsing.append
+        { kind := (source.Kind.Text bytes), span := token.span } state meter1
+    | source.lexer.TokenKind.Word word =>
+      source.parsing.append
+        { kind := (source.Kind.Word word), span := token.span } state meter1
+  | core.result.Result.Err _ => ok (r, state, meter1)
+
+/-- [noble_contracts::source::parsing::advance]:
+    Source: 'crates/noble-contracts/src/source/parsing.rs', lines 73:0-81:1 -/
+def source.parsing.advance
+  (token : source.lexer.Token) (state : source.parsing.State)
+  (lexer : source.lexer.Scanner) (meter : Meter) :
+  Result ((core.result.Result (Option source.lexer.Token) Diagnostic) ×
+    source.parsing.State × source.lexer.Scanner × Meter)
+  := do
+  let (r, state1, meter1) ← source.parsing.step token state meter
+  match r with
+  | core.result.Result.Ok _ =>
+    let (r1, lexer1, meter2) ← source.lexer.Scanner.next lexer meter1
+    ok (r1, state1, lexer1, meter2)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, state1, lexer, meter1)
+
+/-- [noble_contracts::source::parsing::parse]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/parsing.rs', lines 39:4-47:5 -/
+@[rust_loop_body]
+def source.parsing.parse_loop.body
+  (next : Option source.lexer.Token) (meter : Meter)
+  (lexer : source.lexer.Scanner) (state : source.parsing.State) :
+  Result (ControlFlow ((Option source.lexer.Token) × Meter ×
+    source.lexer.Scanner × source.parsing.State) (Meter ×
+    source.parsing.State × (Option Diagnostic)))
+  := do
+  match next with
+  | none => ok (done (meter, state, none))
+  | some token =>
+    let (r, state1, lexer1, meter1) ←
+      source.parsing.advance token state lexer meter
+    match r with
+    | core.result.Result.Ok token1 =>
+      ok (cont (token1, meter1, lexer1, state1))
+    | core.result.Result.Err problem =>
+      ok (done (meter1, state1, some problem))
+
+/-- [noble_contracts::source::parsing::parse]: loop 0:
+    Source: 'crates/noble-contracts/src/source/parsing.rs', lines 39:4-47:5 -/
+@[rust_loop]
+def source.parsing.parse_loop
+  (next : Option source.lexer.Token) (meter : Meter)
+  (lexer : source.lexer.Scanner) (state : source.parsing.State) :
+  Result (Meter × source.parsing.State × (Option Diagnostic))
+  := do
+  loop
+    (fun (next1, meter1, lexer1, state1) => source.parsing.parse_loop.body
+      next1 meter1 lexer1 state1)
+    (next, meter, lexer, state)
+
+/-- [noble_contracts::source::parsing::parse]:
+    Source: 'crates/noble-contracts/src/source/parsing.rs', lines 15:0-71:1 -/
+def source.parsing.parse
+  (source_bytes : Slice Std.U8) (meter : Meter) :
+  Result ((core.result.Result (source.Tree × (Option String)) Diagnostic) ×
+    Meter)
+  := do
+  let (r, meter1) ← source.lexer.Scanner.new source_bytes meter
+  match r with
+  | core.result.Result.Ok s =>
+    let i := Slice.len source_bytes
+    let r1 ← index i { start := 0#u32, «end» := 0#u32 }
+    match r1 with
+    | core.result.Result.Ok value =>
+      let (r2, lexer, meter2) ←
+        source.parsing.opening s { start := 0#u32, «end» := value } meter1
+      match r2 with
+      | core.result.Result.Ok value1 =>
+        let («name», first) := value1
+        let (r3, meter3) ←
+          metering.Meter.node meter2 { start := 0#u32, «end» := value }
+        match r3 with
+        | core.result.Result.Ok _ =>
+          let v := alloc.vec.Vec.with_capacity source.parsing.Frame 1#usize
+          let v1 ←
+            alloc.vec.Vec.push v
+              ({ body := (alloc.vec.Vec.new Std.U32), start := 0#u32 } :
+              source.parsing.Frame)
+          let (meter4, state, failure) ←
+            source.parsing.parse_loop first meter3 lexer
+              { frames := v1, nodes := (alloc.vec.Vec.new source.Node) }
+          match failure with
+          | none =>
+            let i1 := alloc.vec.Vec.len state.frames
+            if i1 != 1#usize
+            then
+              let d ←
+                invalid { start := 0#u32, «end» := value } (toStr
+                  "unclosed quotation")
+              ok (core.result.Result.Err d, meter4)
+            else
+              let (o, _) ← alloc.vec.Vec.pop Global state.frames
+              match o with
+              | none =>
+                let d ← internal { start := 0#u32, «end» := value }
+                ok (core.result.Result.Err d, meter4)
+              | some frame =>
+                let b := core.option.Option.is_some «name»
+                if b
+                then
+                  let (s1, deref_mut_back) ←
+                    lift (alloc.vec.Vec.deref_mut state.nodes)
+                  let (r4, s2) ←
+                    source.parsing.declaration_body frame s1
+                      { start := 0#u32, «end» := value }
+                  match r4 with
+                  | core.result.Result.Ok value2 =>
+                    let v2 := deref_mut_back s2
+                    ok (core.result.Result.Ok
+                      ({
+                         nodes := v2,
+                         body := value2,
+                         span := { start := 0#u32, «end» := value }
+                       }, «name»), meter4)
+                  | core.result.Result.Err failure1 =>
+                    ok (core.result.Result.Err failure1, meter4)
+                else
+                  ok (core.result.Result.Ok
+                    ({
+                       nodes := state.nodes,
+                       body := frame.body,
+                       span := { start := 0#u32, «end» := value }
+                     }, «name»), meter4)
+          | some problem => ok (core.result.Result.Err problem, meter4)
+        | core.result.Result.Err failure =>
+          ok (core.result.Result.Err failure, meter3)
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, meter2)
+    | core.result.Result.Err failure =>
+      ok (core.result.Result.Err failure, meter1)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, meter1)
+
+/-- [noble_contracts::source::preflight::host_effects]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 225:4-240:5 -/
+@[rust_loop_body]
+def source.preflight.host_effects_loop.body
+  (span : Span) (effects : Slice noble_kernel.types.EffId)
+  (has_test_hosts : Bool) (meter : Meter) («at» : Std.Usize) :
+  Result (ControlFlow (Bool × Meter × Std.Usize) (Meter × (Option
+    Diagnostic)))
+  := do
+  let i := Slice.len effects
+  if «at» < i
+  then
+    let effect ← Slice.index_usize effects «at»
+    let (r, meter1) ← metering.Meter.charge meter 1#u32 span
+    match r with
+    | core.result.Result.Ok _ =>
+      if effect > 1#u32
+      then
+        let d ←
+          Diagnostic.new DiagnosticKind.Unsupported span (toStr
+            "unknown input program host effect")
+        ok (done (meter1, some d))
+      else
+        if has_test_hosts
+        then
+          let at1 ← lift (core.num.Usize.saturating_add «at» 1#usize)
+          ok (cont (true, meter1, at1))
+        else
+          let d ←
+            Diagnostic.new DiagnosticKind.Unsupported span (toStr
+              "unknown input program host effect")
+          ok (done (meter1, some d))
+    | core.result.Result.Err problem => ok (done (meter1, some problem))
+  else ok (done (meter, none))
+
+/-- [noble_contracts::source::preflight::host_effects]: loop 0:
+    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 225:4-240:5 -/
+@[rust_loop]
+def source.preflight.host_effects_loop
+  (has_test_hosts : Bool) (span : Span) (meter : Meter)
+  (effects : Slice noble_kernel.types.EffId) («at» : Std.Usize) :
+  Result (Meter × (Option Diagnostic))
+  := do
+  loop
+    (fun (has_test_hosts1, meter1, at1) =>
+      source.preflight.host_effects_loop.body span effects has_test_hosts1
+      meter1 at1)
+    (has_test_hosts, meter, «at»)
+
+/-- [noble_contracts::source::preflight::host_effects]:
+    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 216:0-245:1 -/
+def source.preflight.host_effects
+  (effects : noble_kernel.types.EffSet) (has_test_hosts : Bool) (span : Span)
+  (meter : Meter) :
+  Result ((core.result.Result Unit Diagnostic) × Meter)
+  := do
+  let effects1 ← noble_kernel.types.EffSet.as_slice effects
+  let (meter1, failure) ←
+    source.preflight.host_effects_loop has_test_hosts span meter effects1
+      0#usize
+  match failure with
+  | none => ok (core.result.Result.Ok (), meter1)
+  | some problem => ok (core.result.Result.Err problem, meter1)
+
+/-- [noble_contracts::source::preflight::{noble_contracts::source::preflight::Traversal}::schedule]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 192:8-204:9 -/
+@[rust_loop_body]
+def source.preflight.Traversal.schedule_loop.body
+  (count : Std.Usize) (output : Bool) (depth : Std.U32) (span : Span)
+  (v : alloc.vec.Vec source.preflight.Visit) (meter : Meter)
+  («at» : Std.Usize) :
+  Result (ControlFlow ((alloc.vec.Vec source.preflight.Visit) × Meter ×
+    Std.Usize) ((alloc.vec.Vec source.preflight.Visit) × Meter × (Option
+    Diagnostic)))
+  := do
+  if «at» < count
+  then
+    let (r, meter1) ← metering.Meter.node meter span
+    match r with
+    | core.result.Result.Ok _ =>
+      let step ←
+        if output
+        then ok (source.preflight.PathStep.Output «at»)
+        else ok (source.preflight.PathStep.Input «at»)
+      let v1 ←
+        alloc.vec.Vec.push v ({ step, depth } : source.preflight.Visit)
+      let at1 ← lift (core.num.Usize.saturating_add «at» 1#usize)
+      ok (cont (v1, meter1, at1))
+    | core.result.Result.Err problem => ok (done (v, meter1, some problem))
+  else ok (done (v, meter, none))
+
+/-- [noble_contracts::source::preflight::{noble_contracts::source::preflight::Traversal}::schedule]: loop 0:
+    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 192:8-204:9 -/
+@[rust_loop]
+def source.preflight.Traversal.schedule_loop
+  (v : alloc.vec.Vec source.preflight.Visit) (count : Std.Usize)
+  (output : Bool) (depth : Std.U32) (span : Span) (meter : Meter)
+  («at» : Std.Usize) :
+  Result ((alloc.vec.Vec source.preflight.Visit) × Meter × (Option
+    Diagnostic))
+  := do
+  loop
+    (fun (v1, meter1, at1) => source.preflight.Traversal.schedule_loop.body
+      count output depth span v1 meter1 at1)
+    (v, meter, «at»)
+
+/-- [noble_contracts::source::preflight::{noble_contracts::source::preflight::Traversal}::schedule]:
+    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 181:4-209:5 -/
+def source.preflight.Traversal.schedule
+  (self : source.preflight.Traversal) (count : Std.Usize) (output : Bool)
+  (depth : Std.U32) (span : Span) (meter : Meter) :
+  Result ((core.result.Result Unit Diagnostic) × source.preflight.Traversal ×
+    Meter)
+  := do
+  let v ← alloc.vec.Vec.reserve Global self.pending count
+  let (v1, meter1, failure) ←
+    source.preflight.Traversal.schedule_loop v count output depth span meter
+      0#usize
+  match failure with
+  | none => ok (core.result.Result.Ok (), { self with pending := v1 }, meter1)
+  | some problem =>
+    ok (core.result.Result.Err problem, { self with pending := v1 }, meter1)
+
+/-- [noble_contracts::source::preflight::{noble_contracts::source::preflight::Traversal}::expand]:
+    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 126:4-179:5 -/
+def source.preflight.Traversal.expand
+  (self : source.preflight.Traversal) (ty : noble_kernel.types.Ty)
+  (depth : Std.U32) (has_test_hosts : Bool) (span : Span) (meter : Meter) :
+  Result ((core.result.Result Unit Diagnostic) × source.preflight.Traversal ×
+    Meter)
+  := do
+  let next_depth ← lift (core.num.U32.saturating_add depth 1#u32)
+  match ty with
+  | noble_kernel.types.Ty.UnitType =>
+    ok (core.result.Result.Ok (), self, meter)
+  | noble_kernel.types.Ty.BoolType =>
+    ok (core.result.Result.Ok (), self, meter)
+  | noble_kernel.types.Ty.I64Type => ok (core.result.Result.Ok (), self, meter)
+  | noble_kernel.types.Ty.TextType =>
+    ok (core.result.Result.Ok (), self, meter)
+  | noble_kernel.types.Ty.SyntaxType =>
+    ok (core.result.Result.Ok (), self, meter)
+  | noble_kernel.types.Ty.PairType _ _ =>
+    let (r, meter1) ← metering.Meter.node meter span
+    match r with
+    | core.result.Result.Ok _ =>
+      let (r1, meter2) ← metering.Meter.node meter1 span
+      match r1 with
+      | core.result.Result.Ok _ =>
+        let v ←
+          alloc.vec.Vec.push self.pending
+            ({ step := source.preflight.PathStep.Left, depth := next_depth } :
+            source.preflight.Visit)
+        let v1 ←
+          alloc.vec.Vec.push v
+            ({ step := source.preflight.PathStep.Right, depth := next_depth } :
+            source.preflight.Visit)
+        ok (core.result.Result.Ok (), { self with pending := v1 }, meter2)
+      | core.result.Result.Err _ => ok (r1, self, meter2)
+    | core.result.Result.Err _ => ok (r, self, meter1)
+  | noble_kernel.types.Ty.SumType _ _ =>
+    let (r, meter1) ← metering.Meter.node meter span
+    match r with
+    | core.result.Result.Ok _ =>
+      let (r1, meter2) ← metering.Meter.node meter1 span
+      match r1 with
+      | core.result.Result.Ok _ =>
+        let v ←
+          alloc.vec.Vec.push self.pending
+            ({ step := source.preflight.PathStep.Left, depth := next_depth } :
+            source.preflight.Visit)
+        let v1 ←
+          alloc.vec.Vec.push v
+            ({ step := source.preflight.PathStep.Right, depth := next_depth } :
+            source.preflight.Visit)
+        ok (core.result.Result.Ok (), { self with pending := v1 }, meter2)
+      | core.result.Result.Err _ => ok (r1, self, meter2)
+    | core.result.Result.Err _ => ok (r, self, meter1)
+  | noble_kernel.types.Ty.ListType _ =>
+    let (r, meter1) ← metering.Meter.node meter span
+    match r with
+    | core.result.Result.Ok _ =>
+      let v ←
+        alloc.vec.Vec.push self.pending
+          ({ step := source.preflight.PathStep.Item, depth := next_depth } :
+          source.preflight.Visit)
+      ok (core.result.Result.Ok (), { self with pending := v }, meter1)
+    | core.result.Result.Err _ => ok (r, self, meter1)
+  | noble_kernel.types.Ty.ProgramType input output effects =>
+    let r ← offset inference.STACK_CAP span
+    match r with
+    | core.result.Result.Ok value =>
+      let i := alloc.vec.Vec.len input
+      if i > value
+      then
+        let d ←
+          source.exhausted span (toStr
+            "source program interface stack limit exceeded")
+        ok (core.result.Result.Err d, self, meter)
+      else
+        let i1 := alloc.vec.Vec.len output
+        if i1 > value
+        then
+          let d ←
+            source.exhausted span (toStr
+              "source program interface stack limit exceeded")
+          ok (core.result.Result.Err d, self, meter)
+        else
+          let (r1, meter1) ←
+            source.preflight.host_effects effects has_test_hosts span meter
+          match r1 with
+          | core.result.Result.Ok _ =>
+            let i2 := alloc.vec.Vec.len input
+            let (r2, self1, meter2) ←
+              source.preflight.Traversal.schedule self i2 false next_depth span
+                meter1
+            match r2 with
+            | core.result.Result.Ok _ =>
+              let i3 := alloc.vec.Vec.len output
+              source.preflight.Traversal.schedule self1 i3 true next_depth span
+                meter2
+            | core.result.Result.Err _ => ok (r2, self1, meter2)
+          | core.result.Result.Err _ => ok (r1, self, meter1)
+    | core.result.Result.Err failure =>
+      ok (core.result.Result.Err failure, self, meter)
+  | noble_kernel.types.Ty.ResourceType _ =>
+    let d ←
+      invalid span (toStr
+        "resource-bearing input is not eligible for Core-Bootstrap data or capture")
+    ok (core.result.Result.Err d, self, meter)
+
+/-- [noble_contracts::source::preflight::{noble_contracts::source::preflight::Traversal}::visit]:
+    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 86:4-124:5 -/
+def source.preflight.Traversal.visit
+  (self : source.preflight.Traversal) (entry : source.preflight.Visit)
+  (root : noble_kernel.types.Ty) (has_test_hosts : Bool) (span : Span)
+  (meter : Meter) :
+  Result ((core.result.Result Unit Diagnostic) × source.preflight.Traversal ×
+    Meter)
+  := do
+  let (r, meter1) ← metering.Meter.charge meter 1#u32 span
+  match r with
+  | core.result.Result.Ok _ =>
+    let (r1, meter2) ← metering.Meter.depth meter1 entry.depth span
+    match r1 with
+    | core.result.Result.Ok _ =>
+      let r2 ← offset entry.depth span
+      match r2 with
+      | core.result.Result.Ok value =>
+        let v ← alloc.vec.Vec.truncate Global self.path value
+        let v1 ← alloc.vec.Vec.push v entry.step
+        let s := alloc.vec.Vec.deref v1
+        let r3 ← source.preflight.paths.locate root s span
+        match r3 with
+        | core.result.Result.Ok value1 =>
+          let children ←
+            match value1 with
+            | noble_kernel.types.Ty.UnitType => ok 0#usize
+            | noble_kernel.types.Ty.BoolType => ok 0#usize
+            | noble_kernel.types.Ty.I64Type => ok 0#usize
+            | noble_kernel.types.Ty.TextType => ok 0#usize
+            | noble_kernel.types.Ty.SyntaxType => ok 0#usize
+            | noble_kernel.types.Ty.PairType _ _ => ok 2#usize
+            | noble_kernel.types.Ty.SumType _ _ => ok 2#usize
+            | noble_kernel.types.Ty.ListType _ => ok 1#usize
+            | noble_kernel.types.Ty.ProgramType input output _ =>
+              let i := alloc.vec.Vec.len input
+              let i1 := alloc.vec.Vec.len output
+              ok (core.num.Usize.saturating_add i i1)
+            | noble_kernel.types.Ty.ResourceType _ => ok 0#usize
+          let i ←
+            lift (core.num.Usize.saturating_add self.type_nodes children)
+          let r4 ← offset syntax.TYPE_CAP span
+          match r4 with
+          | core.result.Result.Ok value2 =>
+            if i > value2
+            then
+              let d ←
+                source.exhausted span (toStr
+                  "source input exceeds the 256-constructor type limit")
+              ok (core.result.Result.Err d,
+                { self with path := v1, type_nodes := i }, meter2)
+            else
+              let v2 ← alloc.vec.Vec.reserve Global self.pending children
+              source.preflight.Traversal.expand
+                { pending := v2, path := v1, type_nodes := i } value1
+                entry.depth has_test_hosts span meter2
+          | core.result.Result.Err failure =>
+            ok (core.result.Result.Err failure,
+              { self with path := v1, type_nodes := i }, meter2)
+        | core.result.Result.Err failure =>
+          ok (core.result.Result.Err failure, { self with path := v1 }, meter2)
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, self, meter2)
+    | core.result.Result.Err _ => ok (r1, self, meter2)
+  | core.result.Result.Err _ => ok (r, self, meter1)
+
+/-- [noble_contracts::source::preflight::value]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 69:4-74:5 -/
+@[rust_loop_body]
+def source.preflight.value_loop.body
+  (input : noble_kernel.types.Ty) (has_test_hosts : Bool) (span : Span)
+  (meter : Meter) (walk : source.preflight.Traversal) :
+  Result (ControlFlow (Meter × source.preflight.Traversal) (Meter × (Option
+    Diagnostic)))
+  := do
+  let (o, v) ← alloc.vec.Vec.pop Global walk.pending
+  match o with
+  | none => ok (done (meter, none))
+  | some entry =>
+    let (r, walk1, meter1) ←
+      source.preflight.Traversal.visit { walk with pending := v } entry input
+        has_test_hosts span meter
+    match r with
+    | core.result.Result.Ok _ => ok (cont (meter1, walk1))
+    | core.result.Result.Err problem => ok (done (meter1, some problem))
+
+/-- [noble_contracts::source::preflight::value]: loop 0:
+    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 69:4-74:5 -/
+@[rust_loop]
+def source.preflight.value_loop
+  (input : noble_kernel.types.Ty) (has_test_hosts : Bool) (span : Span)
+  (meter : Meter) (walk : source.preflight.Traversal) :
+  Result (Meter × (Option Diagnostic))
+  := do
+  loop
+    (fun (meter1, walk1) => source.preflight.value_loop.body input
+      has_test_hosts span meter1 walk1)
+    (meter, walk)
+
+/-- [noble_contracts::source::preflight::value]:
+    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 52:0-79:1 -/
+def source.preflight.value
+  (input : noble_kernel.types.Ty) (has_test_hosts : Bool) (span : Span)
+  (meter : Meter) :
+  Result ((core.result.Result Unit Diagnostic) × Meter)
+  := do
+  let v := alloc.vec.Vec.with_capacity source.preflight.Visit 1#usize
+  let (r, meter1) ← metering.Meter.node meter span
+  match r with
+  | core.result.Result.Ok _ =>
+    let v1 ←
+      alloc.vec.Vec.push v
+        ({ step := source.preflight.PathStep.Root, depth := 0#u32 } :
+        source.preflight.Visit)
+    let (meter2, failure) ←
+      source.preflight.value_loop input has_test_hosts span meter1
+        {
+          pending := v1,
+          path := (alloc.vec.Vec.new source.preflight.PathStep),
+          type_nodes := 1#usize
+        }
+    match failure with
+    | none => ok (core.result.Result.Ok (), meter2)
+    | some problem => ok (core.result.Result.Err problem, meter2)
+  | core.result.Result.Err _ => ok (r, meter1)
+
+/-- [noble_contracts::source::preflight::check]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 14:4-20:5 -/
+@[rust_loop_body]
+def source.preflight.check_loop.body
+  (inputs : Slice noble_kernel.types.Ty) (has_test_hosts : Bool) (span : Span)
+  (meter : Meter) («at» : Std.Usize) :
+  Result (ControlFlow (Meter × Std.Usize) (Meter × (Option Diagnostic)))
+  := do
+  let i := Slice.len inputs
+  if «at» < i
+  then
+    let t ← Slice.index_usize inputs «at»
+    let (r, meter1) ← source.preflight.value t has_test_hosts span meter
+    match r with
+    | core.result.Result.Ok _ =>
+      let at1 ← lift (core.num.Usize.saturating_add «at» 1#usize)
+      ok (cont (meter1, at1))
+    | core.result.Result.Err problem => ok (done (meter1, some problem))
+  else ok (done (meter, none))
+
+/-- [noble_contracts::source::preflight::check]: loop 0:
+    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 14:4-20:5 -/
+@[rust_loop]
+def source.preflight.check_loop
+  (inputs : Slice noble_kernel.types.Ty) (has_test_hosts : Bool) (span : Span)
+  (meter : Meter) («at» : Std.Usize) :
+  Result (Meter × (Option Diagnostic))
+  := do
+  loop
+    (fun (meter1, at1) => source.preflight.check_loop.body inputs
+      has_test_hosts span meter1 at1)
+    (meter, «at»)
+
+/-- [noble_contracts::source::preflight::check]:
+    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 3:0-25:1 -/
+def source.preflight.check
+  (inputs : Slice noble_kernel.types.Ty) (has_test_hosts : Bool) (span : Span)
+  (meter : Meter) :
+  Result ((core.result.Result Unit Diagnostic) × Meter)
+  := do
+  let i := Slice.len inputs
+  let r ← offset inference.STACK_CAP span
+  match r with
+  | core.result.Result.Ok value =>
+    if i > value
+    then
+      let d ←
+        source.exhausted span (toStr "source input stack limit exceeded")
+      ok (core.result.Result.Err d, meter)
+    else
+      let (meter1, failure) ←
+        source.preflight.check_loop inputs has_test_hosts span meter 0#usize
+      match failure with
+      | none => ok (core.result.Result.Ok (), meter1)
+      | some problem => ok (core.result.Result.Err problem, meter1)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, meter)
+
+/-- [noble_contracts::source::preflight::{impl core::clone::Clone for noble_contracts::source::preflight::PathStep}::clone]:
+    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 27:9-27:14
+    Visibility: public -/
+def source.preflight.PathStep.Insts.CoreCloneClone.clone
+  (self : source.preflight.PathStep) : Result source.preflight.PathStep := do
+  ok self
+
+/-- Trait implementation: [noble_contracts::source::preflight::{impl core::clone::Clone for noble_contracts::source::preflight::PathStep}]
+    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 27:9-27:14 -/
+@[reducible]
+def source.preflight.PathStep.Insts.CoreCloneClone : core.clone.Clone
+  source.preflight.PathStep := {
+  clone := source.preflight.PathStep.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_contracts::source::preflight::{impl core::marker::Copy for noble_contracts::source::preflight::PathStep}]
+    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 27:16-27:20 -/
+@[reducible]
+def source.preflight.PathStep.Insts.CoreMarkerCopy : core.marker.Copy
+  source.preflight.PathStep := {
+  cloneInst := source.preflight.PathStep.Insts.CoreCloneClone
+}
+
+/-- [noble_contracts::source::environment]:
+    Source: 'crates/noble-contracts/src/source.rs', lines 194:0-217:1 -/
+def source.environment
+  : Result (core.result.Result noble_kernel.contracts.Env Diagnostic) := do
+  let r ← noble_kernel.contracts.environment
+  match r with
+  | core.result.Result.Ok env =>
+    let (s, deref_mut_back) ← lift (alloc.vec.Vec.deref_mut env.defs)
+    let (o, get_mut_back) ←
+      core.slice.Slice.get_mut (core.slice.index.SliceIndexUsizeSlice
+        noble_kernel.words.Scheme) s 22#usize
+    match o with
+    | none =>
+      let d ← internal { start := 0#u32, «end» := 0#u32 }
+      ok (core.result.Result.Err d)
+    | some emit =>
+      let p ←
+        noble_kernel.shapes.Pattern.Insts.CoreCloneClone.clone
+          (noble_kernel.shapes.Pattern.StackVarPattern 0#u32)
+      let y ←
+        lift (Std.Array.to_slice (Array.make 1#usize [ p ] : Array
+          noble_kernel.shapes.Pattern 1#usize))
+      let ret := alloc.slice.Slice.into_vec y
+      let s1 := get_mut_back (some { emit with stack_out := ret })
+      let v := deref_mut_back s1
+      let y1 ←
+        lift (Std.Array.to_slice
+          (Array.make 1#usize [ noble_kernel.words.VariableKind.Stack ] : Array
+          noble_kernel.words.VariableKind 1#usize))
+      let ret1 := alloc.slice.Slice.into_vec y1
+      let y2 ←
+        lift (Std.Array.to_slice (Array.make 1#usize [ p ] : Array
+          noble_kernel.shapes.Pattern 1#usize))
+      let ret2 := alloc.slice.Slice.into_vec y2
+      let y3 ←
+        lift (Std.Array.to_slice
+          (Array.make 1#usize [
+             noble_kernel.shapes.Pattern.StackVarPattern 0#u32
+             ] : Array noble_kernel.shapes.Pattern 1#usize))
+      let ret3 := alloc.slice.Slice.into_vec y3
+      let y4 ←
+        lift (Std.Array.to_slice
+          (Array.make 1#usize [ noble_kernel.shapes.EffectSlot.Effect 1#u32 ] :
+          Array noble_kernel.shapes.EffectSlot 1#usize))
+      let ret4 := alloc.slice.Slice.into_vec y4
+      let v1 ←
+        alloc.vec.Vec.push v
+          ({
+             var_kinds := ret1,
+             stack_in := ret2,
+             stack_out := ret3,
+             effects := ret4
+           } : noble_kernel.words.Scheme)
+      let v2 ←
+        alloc.vec.Vec.push env.kinds
+          noble_kernel.contracts.Behavior.NamedBehavior
+      let v3 ←
+        alloc.vec.Vec.push env.deps (alloc.vec.Vec.new
+          noble_kernel.contracts.Definition)
+      let v4 ← alloc.vec.Vec.push env.effects 1#u32
+      ok (core.result.Result.Ok
+        { env with defs := v1, kinds := v2, deps := v3, effects := v4 })
+  | core.result.Result.Err _ =>
+    let d ← internal { start := 0#u32, «end» := 0#u32 }
+    ok (core.result.Result.Err d)
+
+/-- [noble_contracts::source::resolution::named_at]:
+    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 109:0-133:1 -/
+def source.resolution.named_at
+  (word : Slice Std.U8) (session : source.Session) («at» : Std.Usize)
+  (span : Span) (meter : Meter) :
+  Result ((core.result.Result (Option source.Target) Diagnostic) × Meter)
+  := do
+  let (r, meter1) ← metering.Meter.charge meter 1#u32 span
+  match r with
+  | core.result.Result.Ok _ =>
+    let s := alloc.vec.Vec.deref session.definitions
+    let o ←
+      core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice source.Named)
+        s «at»
+    match o with
+    | none => let d ← internal span
+              ok (core.result.Result.Err d, meter1)
+    | some definition =>
+      let i := Slice.len word
+      let i1 ← alloc.string.String.len definition.name
+      let i2 ← lift (core.num.Usize.saturating_add i i1)
+      let r1 ← index i2 span
+      match r1 with
+      | core.result.Result.Ok value =>
+        let (r2, meter2) ← metering.Meter.charge meter1 value span
+        match r2 with
+        | core.result.Result.Ok _ =>
+          let s1 ← alloc.string.String.as_bytes definition.name
+          let b ←
+            core.slice.cmp.PartialEqSlice.eq core.cmp.PartialEqU8 s1 word
+          if b
+          then
+            let r3 ← index «at» span
+            match r3 with
+            | core.result.Result.Ok value1 =>
+              ok (core.result.Result.Ok (some (source.Target.Named value1)),
+                meter2)
+            | core.result.Result.Err failure =>
+              ok (core.result.Result.Err failure, meter2)
+          else ok (core.result.Result.Ok none, meter2)
+        | core.result.Result.Err failure =>
+          ok (core.result.Result.Err failure, meter2)
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, meter1)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, meter1)
+
+/-- [noble_contracts::source::resolution::lookup]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 56:4-69:5 -/
+@[rust_loop_body]
+def source.resolution.lookup_loop.body
+  (word : Slice Std.U8) (v : alloc.vec.Vec source.Named)
+  (v1 : alloc.vec.Vec Std.U8) (i : Std.U64) (b : Bool) (span : Span)
+  (meter : Meter) («at» : Std.Usize) :
+  Result (ControlFlow (Meter × Std.Usize) (Meter × (Option source.Target) ×
+    (Option Diagnostic)))
+  := do
+  if «at» > 0#usize
+  then
+    let at1 ← «at» - 1#usize
+    let (r, meter1) ←
+      source.resolution.named_at word
+        { definitions := v, history := v1, generation := i, hosts := b } at1
+        span meter
+    match r with
+    | core.result.Result.Ok o =>
+      match o with
+      | none => ok (cont (meter1, at1))
+      | some _ => ok (done (meter1, o, none))
+    | core.result.Result.Err problem => ok (done (meter1, none, some problem))
+  else ok (done (meter, none, none))
+
+/-- [noble_contracts::source::resolution::lookup]: loop 0:
+    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 56:4-69:5 -/
+@[rust_loop]
+def source.resolution.lookup_loop
+  (word : Slice Std.U8) (v : alloc.vec.Vec source.Named)
+  (v1 : alloc.vec.Vec Std.U8) (i : Std.U64) (b : Bool) (span : Span)
+  (meter : Meter) («at» : Std.Usize) :
+  Result (Meter × (Option source.Target) × (Option Diagnostic))
+  := do
+  loop
+    (fun (meter1, at1) => source.resolution.lookup_loop.body word v v1 i b span
+      meter1 at1)
+    (meter, «at»)
+
+/-- [noble_contracts::source::resolution::lookup]:
+    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 46:0-103:1 -/
+def source.resolution.lookup
+  (word : Slice Std.U8) (declaration : Option Str) (session : source.Session)
+  (span : Span) (meter : Meter) :
+  Result ((core.result.Result source.Target Diagnostic) × Meter)
+  := do
+  let «at» := alloc.vec.Vec.len session.definitions
+  let (meter1, found, failure) ←
+    source.resolution.lookup_loop word session.definitions session.history
+      session.generation session.hosts span meter «at»
+  match failure with
+  | none =>
+    match found with
+    | none =>
+      let o ← program.bootstrap_word word
+      match o with
+      | none =>
+        let is_recursive ←
+          match declaration with
+          | none => ok false
+          | some «name» =>
+            do
+            let s ← core.str.Str.as_bytes «name»
+            core.slice.cmp.PartialEqSlice.eq core.cmp.PartialEqU8 s word
+        if is_recursive
+        then
+          let d ←
+            Diagnostic.new DiagnosticKind.Unsupported span (toStr
+              "recursive definitions require a signature and are outside Core-Bootstrap")
+          ok (core.result.Result.Err d, meter1)
+        else
+          let b ←
+            Slice.Insts.CoreCmpPartialEqArray.eq core.cmp.PartialEqU8 word
+              (Array.make 6#usize [
+                105#u8, 109#u8, 112#u8, 111#u8, 114#u8, 116#u8
+                ])
+          if b
+          then
+            let d ←
+              Diagnostic.new DiagnosticKind.Unsupported span (toStr
+                "module imports are outside Core-Bootstrap")
+            ok (core.result.Result.Err d, meter1)
+          else
+            let d ←
+              invalid span (toStr
+                "unbound word in immutable namespace snapshot")
+            ok (core.result.Result.Err d, meter1)
+      | some definition =>
+        if definition < 22#u32
+        then
+          ok (core.result.Result.Ok (source.Target.Builtin definition), meter1)
+        else
+          if session.hosts
+          then
+            ok (core.result.Result.Ok (source.Target.Builtin definition),
+              meter1)
+          else
+            let is_recursive ←
+              match declaration with
+              | none => ok false
+              | some «name» =>
+                do
+                let s ← core.str.Str.as_bytes «name»
+                core.slice.cmp.PartialEqSlice.eq core.cmp.PartialEqU8 s word
+            if is_recursive
+            then
+              let d ←
+                Diagnostic.new DiagnosticKind.Unsupported span (toStr
+                  "recursive definitions require a signature and are outside Core-Bootstrap")
+              ok (core.result.Result.Err d, meter1)
+            else
+              let b ←
+                Slice.Insts.CoreCmpPartialEqArray.eq core.cmp.PartialEqU8 word
+                  (Array.make 6#usize [
+                    105#u8, 109#u8, 112#u8, 111#u8, 114#u8, 116#u8
+                    ])
+              if b
+              then
+                let d ←
+                  Diagnostic.new DiagnosticKind.Unsupported span (toStr
+                    "module imports are outside Core-Bootstrap")
+                ok (core.result.Result.Err d, meter1)
+              else
+                let d ←
+                  invalid span (toStr
+                    "unbound word in immutable namespace snapshot")
+                ok (core.result.Result.Err d, meter1)
+    | some target => ok (core.result.Result.Ok target, meter1)
+  | some problem => ok (core.result.Result.Err problem, meter1)
+
+/-- [noble_contracts::source::resolution::resolve_node]:
+    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 28:0-40:1 -/
+def source.resolution.resolve_node
+  (node : source.Node) (declaration : Option Str) (session : source.Session)
+  (meter : Meter) :
+  Result ((core.result.Result Unit Diagnostic) × source.Node × Meter)
+  := do
+  let (r, meter1) ← metering.Meter.charge meter 1#u32 node.span
+  match r with
+  | core.result.Result.Ok _ =>
+    match node.kind with
+    | source.Kind.Literal _ => ok (core.result.Result.Ok (), node, meter1)
+    | source.Kind.Text _ => ok (core.result.Result.Ok (), node, meter1)
+    | source.Kind.Word word =>
+      let s := alloc.vec.Vec.deref word
+      let (r1, meter2) ←
+        source.resolution.lookup s declaration session node.span meter1
+      match r1 with
+      | core.result.Result.Ok value =>
+        ok (core.result.Result.Ok (),
+          { node with kind := (source.Kind.Call value) }, meter2)
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, node, meter2)
+    | source.Kind.Call _ => ok (core.result.Result.Ok (), node, meter1)
+    | source.Kind.Quotation _ => ok (core.result.Result.Ok (), node, meter1)
+  | core.result.Result.Err _ => ok (r, node, meter1)
+
+/-- [noble_contracts::source::resolution::resolve]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 11:4-21:5 -/
+@[rust_loop_body]
+def source.resolution.resolve_loop.body
+  (declaration : Option Str) (session : source.Session) (tree : source.Tree)
+  (meter : Meter) («at» : Std.Usize) :
+  Result (ControlFlow (source.Tree × Meter × Std.Usize) ((alloc.vec.Vec
+    source.Node) × (alloc.vec.Vec Std.U32) × Span × Meter × (Option
+    Diagnostic)))
+  := do
+  let i := alloc.vec.Vec.len tree.nodes
+  if «at» < i
+  then
+    let (s, deref_mut_back) ← lift (alloc.vec.Vec.deref_mut tree.nodes)
+    let (o, get_mut_back) ←
+      core.slice.Slice.get_mut (core.slice.index.SliceIndexUsizeSlice
+        source.Node) s «at»
+    let (meter1, result, s1) ←
+      match o with
+      | none =>
+        do
+        let d ← internal tree.span
+        let s2 := get_mut_back none
+        ok (meter, core.result.Result.Err d, s2)
+      | some node =>
+        do
+        let (result1, node1, meter2) ←
+          source.resolution.resolve_node node declaration session meter
+        let s2 := get_mut_back (some node1)
+        ok (meter2, result1, s2)
+    match result with
+    | core.result.Result.Ok _ =>
+      let at1 ← «at» + 1#usize
+      let v := deref_mut_back s1
+      ok (cont ({ tree with nodes := v }, meter1, at1))
+    | core.result.Result.Err problem =>
+      let v := deref_mut_back s1
+      ok (done (v, tree.body, tree.span, meter1, some problem))
+  else ok (done (tree.nodes, tree.body, tree.span, meter, none))
+
+/-- [noble_contracts::source::resolution::resolve]: loop 0:
+    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 11:4-21:5 -/
+@[rust_loop]
+def source.resolution.resolve_loop
+  (tree : source.Tree) (declaration : Option Str) (session : source.Session)
+  (meter : Meter) («at» : Std.Usize) :
+  Result ((alloc.vec.Vec source.Node) × (alloc.vec.Vec Std.U32) × Span ×
+    Meter × (Option Diagnostic))
+  := do
+  loop
+    (fun (tree1, meter1, at1) => source.resolution.resolve_loop.body
+      declaration session tree1 meter1 at1)
+    (tree, meter, «at»)
+
+/-- [noble_contracts::source::resolution::resolve]:
+    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 3:0-26:1 -/
+def source.resolution.resolve
+  (tree : source.Tree) (declaration : Option Str) (session : source.Session)
+  (meter : Meter) :
+  Result ((core.result.Result Unit Diagnostic) × source.Tree × Meter)
+  := do
+  let (v, v1, s, meter1, failure) ←
+    source.resolution.resolve_loop tree declaration session meter 0#usize
+  match failure with
+  | none =>
+    ok (core.result.Result.Ok (), { nodes := v, body := v1, span := s },
+      meter1)
+  | some problem =>
+    ok (core.result.Result.Err problem, { nodes := v, body := v1, span := s },
+      meter1)
+
+/-- [noble_contracts::source::resolution::comparison::same_target]:
+    Source: 'crates/noble-contracts/src/source/resolution/comparison.rs', lines 156:0-178:1 -/
+def source.resolution.comparison.same_target
+  (left : source.Target) (right : source.Target) (session : source.Session)
+  (span : Span) :
+  Result (core.result.Result Bool Diagnostic)
+  := do
+  match left with
+  | source.Target.Builtin a =>
+    match right with
+    | source.Target.Builtin b => ok (core.result.Result.Ok (a = b))
+    | source.Target.Named _ => ok (core.result.Result.Ok false)
+  | source.Target.Named a =>
+    match right with
+    | source.Target.Builtin _ => ok (core.result.Result.Ok false)
+    | source.Target.Named b =>
+      let s := alloc.vec.Vec.deref session.definitions
+      let r ← offset a span
+      match r with
+      | core.result.Result.Ok value =>
+        let o ←
+          core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice
+            source.Named) s value
+        match o with
+        | none => let d ← internal span
+                  ok (core.result.Result.Err d)
+        | some a1 =>
+          let s1 := alloc.vec.Vec.deref session.definitions
+          let r1 ← offset b span
+          match r1 with
+          | core.result.Result.Ok value1 =>
+            let o1 ←
+              core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice
+                source.Named) s1 value1
+            match o1 with
+            | none => let d ← internal span
+                      ok (core.result.Result.Err d)
+            | some b1 => ok (core.result.Result.Ok (a1.identity = b1.identity))
+          | core.result.Result.Err failure =>
+            ok (core.result.Result.Err failure)
+      | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::source::resolution::comparison::body]:
+    Source: 'crates/noble-contracts/src/source/resolution/comparison.rs', lines 142:0-150:1 -/
+def source.resolution.comparison.body
+  (tree : source.Tree) (body : source.resolution.comparison.Body) :
+  Result (core.result.Result (Slice Std.U32) Diagnostic)
+  := do
+  match body with
+  | source.resolution.comparison.Body.Root =>
+    let s ← alloc.vec.Vec.as_slice Global tree.body
+    ok (core.result.Result.Ok s)
+  | source.resolution.comparison.Body.Quotation id =>
+    let r ← source.Tree.node tree id
+    match r with
+    | core.result.Result.Ok value =>
+      match value.kind with
+      | source.Kind.Literal _ =>
+        let d ← internal tree.span
+        ok (core.result.Result.Err d)
+      | source.Kind.Text _ =>
+        let d ← internal tree.span
+        ok (core.result.Result.Err d)
+      | source.Kind.Word _ =>
+        let d ← internal tree.span
+        ok (core.result.Result.Err d)
+      | source.Kind.Call _ =>
+        let d ← internal tree.span
+        ok (core.result.Result.Err d)
+      | source.Kind.Quotation body1 =>
+        let s ← alloc.vec.Vec.as_slice Global body1
+        ok (core.result.Result.Ok s)
+    | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::source::resolution::comparison::{noble_contracts::source::resolution::comparison::Context<'_0>}::step]:
+    Source: 'crates/noble-contracts/src/source/resolution/comparison.rs', lines 69:4-134:5 -/
+def source.resolution.comparison.Context.step
+  (self : source.resolution.comparison.Context)
+  (entry : source.resolution.comparison.Entry)
+  (pending : alloc.vec.Vec source.resolution.comparison.Entry) (meter : Meter)
+  :
+  Result ((core.result.Result Bool Diagnostic) × (alloc.vec.Vec
+    source.resolution.comparison.Entry) × Meter)
+  := do
+  let (r, meter1) ← metering.Meter.charge meter 1#u32 self.left.span
+  match r with
+  | core.result.Result.Ok _ =>
+    let r1 ← source.resolution.comparison.body self.left entry.left
+    match r1 with
+    | core.result.Result.Ok value =>
+      let r2 ← source.resolution.comparison.body self.right entry.right
+      match r2 with
+      | core.result.Result.Ok value1 =>
+        let i := Slice.len value
+        let i1 := Slice.len value1
+        if i != i1
+        then ok (core.result.Result.Ok false, pending, meter1)
+        else
+          let i2 := Slice.len value
+          if entry.at >= i2
+          then ok (core.result.Result.Ok true, pending, meter1)
+          else
+            let o ←
+              core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice
+                Std.U32) value entry.at
+            match o with
+            | none =>
+              let d ← internal self.left.span
+              ok (core.result.Result.Err d, pending, meter1)
+            | some id =>
+              let o1 ←
+                core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice
+                  Std.U32) value1 entry.at
+              match o1 with
+              | none =>
+                let d ← internal self.left.span
+                ok (core.result.Result.Err d, pending, meter1)
+              | some id1 =>
+                let pending1 ← alloc.vec.Vec.reserve Global pending 1#usize
+                let i3 ←
+                  lift (core.num.Usize.saturating_add entry.at 1#usize)
+                let pending2 ←
+                  alloc.vec.Vec.push pending1 { entry with «at» := i3 }
+                let r3 ← source.Tree.node self.left id
+                match r3 with
+                | core.result.Result.Ok value2 =>
+                  let r4 ← source.Tree.node self.right id1
+                  match r4 with
+                  | core.result.Result.Ok value3 =>
+                    match value2.kind with
+                    | source.Kind.Literal a =>
+                      match value3.kind with
+                      | source.Kind.Literal b =>
+                        let b1 ←
+                          noble_kernel.untrusted.Lit.Insts.CoreCmpPartialEqLit.eq
+                            a b
+                        if b1
+                        then ok (core.result.Result.Ok true, pending2, meter1)
+                        else ok (core.result.Result.Ok false, pending2, meter1)
+                      | source.Kind.Text _ =>
+                        ok (core.result.Result.Ok false, pending2, meter1)
+                      | source.Kind.Word _ =>
+                        ok (core.result.Result.Ok false, pending2, meter1)
+                      | source.Kind.Call _ =>
+                        ok (core.result.Result.Ok false, pending2, meter1)
+                      | source.Kind.Quotation _ =>
+                        ok (core.result.Result.Ok false, pending2, meter1)
+                    | source.Kind.Text a =>
+                      match value3.kind with
+                      | source.Kind.Literal _ =>
+                        ok (core.result.Result.Ok false, pending2, meter1)
+                      | source.Kind.Text b =>
+                        let i4 := alloc.vec.Vec.len a
+                        let i5 := alloc.vec.Vec.len b
+                        let i6 ← lift (core.num.Usize.saturating_add i4 i5)
+                        let r5 ← index i6 self.left.span
+                        match r5 with
+                        | core.result.Result.Ok value4 =>
+                          let (r6, meter2) ←
+                            metering.Meter.charge meter1 value4 self.left.span
+                          match r6 with
+                          | core.result.Result.Ok _ =>
+                            let b1 ←
+                              alloc.vec.partial_eq.PartialEqVec.eq
+                                core.cmp.PartialEqU8 a b
+                            ok (core.result.Result.Ok b1, pending2, meter2)
+                          | core.result.Result.Err failure =>
+                            ok (core.result.Result.Err failure, pending2,
+                              meter2)
+                        | core.result.Result.Err failure =>
+                          ok (core.result.Result.Err failure, pending2, meter1)
+                      | source.Kind.Word _ =>
+                        ok (core.result.Result.Ok false, pending2, meter1)
+                      | source.Kind.Call _ =>
+                        ok (core.result.Result.Ok false, pending2, meter1)
+                      | source.Kind.Quotation _ =>
+                        ok (core.result.Result.Ok false, pending2, meter1)
+                    | source.Kind.Word _ =>
+                      ok (core.result.Result.Ok false, pending2, meter1)
+                    | source.Kind.Call a =>
+                      match value3.kind with
+                      | source.Kind.Literal _ =>
+                        ok (core.result.Result.Ok false, pending2, meter1)
+                      | source.Kind.Text _ =>
+                        ok (core.result.Result.Ok false, pending2, meter1)
+                      | source.Kind.Word _ =>
+                        ok (core.result.Result.Ok false, pending2, meter1)
+                      | source.Kind.Call b =>
+                        let r5 ←
+                          source.resolution.comparison.same_target a b
+                            self.session self.left.span
+                        ok (r5, pending2, meter1)
+                      | source.Kind.Quotation _ =>
+                        ok (core.result.Result.Ok false, pending2, meter1)
+                    | source.Kind.Quotation _ =>
+                      match value3.kind with
+                      | source.Kind.Literal _ =>
+                        ok (core.result.Result.Ok false, pending2, meter1)
+                      | source.Kind.Text _ =>
+                        ok (core.result.Result.Ok false, pending2, meter1)
+                      | source.Kind.Word _ =>
+                        ok (core.result.Result.Ok false, pending2, meter1)
+                      | source.Kind.Call _ =>
+                        ok (core.result.Result.Ok false, pending2, meter1)
+                      | source.Kind.Quotation _ =>
+                        let depth ←
+                          lift (core.num.Usize.saturating_add entry.depth
+                            1#usize)
+                        let r5 ← index depth self.left.span
+                        match r5 with
+                        | core.result.Result.Ok value4 =>
+                          let (r6, meter2) ←
+                            metering.Meter.depth meter1 value4 self.left.span
+                          match r6 with
+                          | core.result.Result.Ok _ =>
+                            let pending3 ←
+                              alloc.vec.Vec.reserve Global pending2 1#usize
+                            let pending4 ←
+                              alloc.vec.Vec.push pending3
+                                ({
+                                   left :=
+                                     (source.resolution.comparison.Body.Quotation
+                                       id),
+                                   right :=
+                                     (source.resolution.comparison.Body.Quotation
+                                       id1),
+                                   «at» := 0#usize,
+                                   depth
+                                 } : source.resolution.comparison.Entry)
+                            ok (core.result.Result.Ok true, pending4, meter2)
+                          | core.result.Result.Err failure =>
+                            ok (core.result.Result.Err failure, pending2,
+                              meter2)
+                        | core.result.Result.Err failure =>
+                          ok (core.result.Result.Err failure, pending2, meter1)
+                  | core.result.Result.Err failure =>
+                    ok (core.result.Result.Err failure, pending2, meter1)
+                | core.result.Result.Err failure =>
+                  ok (core.result.Result.Err failure, pending2, meter1)
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, pending, meter1)
+    | core.result.Result.Err failure =>
+      ok (core.result.Result.Err failure, pending, meter1)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, pending, meter1)
+
+/-- [noble_contracts::source::resolution::comparison::same_body]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/resolution/comparison.rs', lines 45:4-57:5 -/
+@[rust_loop_body]
+def source.resolution.comparison.same_body_loop.body
+  (left : source.Tree) (right : source.Tree) (session : source.Session)
+  (pending : alloc.vec.Vec source.resolution.comparison.Entry) (meter : Meter)
+  :
+  Result (ControlFlow ((alloc.vec.Vec source.resolution.comparison.Entry) ×
+    Meter) (Meter × Bool × (Option Diagnostic)))
+  := do
+  let (o, pending1) ← alloc.vec.Vec.pop Global pending
+  match o with
+  | none => ok (done (meter, true, none))
+  | some entry =>
+    let (r, pending2, meter1) ←
+      source.resolution.comparison.Context.step { left, right, session } entry
+        pending1 meter
+    match r with
+    | core.result.Result.Ok b =>
+      if b
+      then ok (cont (pending2, meter1))
+      else ok (done (meter1, false, none))
+    | core.result.Result.Err problem => ok (done (meter1, true, some problem))
+
+/-- [noble_contracts::source::resolution::comparison::same_body]: loop 0:
+    Source: 'crates/noble-contracts/src/source/resolution/comparison.rs', lines 45:4-57:5 -/
+@[rust_loop]
+def source.resolution.comparison.same_body_loop
+  (pending : alloc.vec.Vec source.resolution.comparison.Entry) (meter : Meter)
+  (left : source.Tree) (right : source.Tree) (session : source.Session) :
+  Result (Meter × Bool × (Option Diagnostic))
+  := do
+  loop
+    (fun (pending1, meter1) => source.resolution.comparison.same_body_loop.body
+      left right session pending1 meter1)
+    (pending, meter)
+
+/-- [noble_contracts::source::resolution::comparison::same_body]:
+    Source: 'crates/noble-contracts/src/source/resolution/comparison.rs', lines 25:0-62:1 -/
+def source.resolution.comparison.same_body
+  (left : source.Tree) (right : source.Tree) (session : source.Session)
+  (meter : Meter) :
+  Result ((core.result.Result Bool Diagnostic) × Meter)
+  := do
+  let pending :=
+    alloc.vec.Vec.with_capacity source.resolution.comparison.Entry 1#usize
+  let pending1 ←
+    alloc.vec.Vec.push pending
+      ({
+         left := source.resolution.comparison.Body.Root,
+         right := source.resolution.comparison.Body.Root,
+         «at» := 0#usize,
+         depth := 0#usize
+       } : source.resolution.comparison.Entry)
+  let (meter1, is_same, failure) ←
+    source.resolution.comparison.same_body_loop pending1 meter left right
+      session
+  match failure with
+  | none => ok (core.result.Result.Ok is_same, meter1)
+  | some problem => ok (core.result.Result.Err problem, meter1)
+
+/-- [noble_contracts::source::resolution::same_definition]:
+    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 185:0-207:1 -/
+def source.resolution.same_definition
+  (tree : source.Tree) («at» : Std.Usize) (session : source.Session)
+  (meter : Meter) :
+  Result ((core.result.Result (Option Std.U64) Diagnostic) × Meter)
+  := do
+  let (r, meter1) ← metering.Meter.charge meter 1#u32 tree.span
+  match r with
+  | core.result.Result.Ok _ =>
+    let s := alloc.vec.Vec.deref session.definitions
+    let o ←
+      core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice source.Named)
+        s «at»
+    match o with
+    | none =>
+      let d ← internal tree.span
+      ok (core.result.Result.Err d, meter1)
+    | some definition =>
+      let (r1, meter2) ←
+        source.resolution.comparison.same_body tree definition.tree session
+          meter1
+      match r1 with
+      | core.result.Result.Ok value =>
+        if value
+        then ok (core.result.Result.Ok (some definition.identity), meter2)
+        else ok (core.result.Result.Ok none, meter2)
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, meter2)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, meter1)
+
+/-- [noble_contracts::source::resolution::identity::{impl core::ops::function::FnOnce<(u64,), core::option::Option<u64>> for noble_contracts::source::resolution::identity::{closure}}::call_once]:
+    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 171:18-171:40 -/
+def
+  source.resolution.identity.closure.Insts.CoreOpsFunctionFnOnceTupleU64OptionU64.call_once
+  (c : source.resolution.identity.closure) (tupled_args : Std.U64) :
+  Result (Option Std.U64)
+  := do
+  ok (U64.checked_add tupled_args 1#u64)
+
+/-- Trait implementation: [noble_contracts::source::resolution::identity::{impl core::ops::function::FnOnce<(u64,), core::option::Option<u64>> for noble_contracts::source::resolution::identity::{closure}}]
+    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 171:18-171:40 -/
+@[reducible]
+def
+  source.resolution.identity.closure.Insts.CoreOpsFunctionFnOnceTupleU64OptionU64
+  : core.ops.function.FnOnce source.resolution.identity.closure Std.U64 (Option
+  Std.U64) := {
+  call_once :=
+    source.resolution.identity.closure.Insts.CoreOpsFunctionFnOnceTupleU64OptionU64.call_once
+}
+
+/-- [noble_contracts::source::resolution::identity]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 149:4-162:5 -/
+@[rust_loop_body]
+def source.resolution.identity_loop.body
+  (tree : source.Tree) (session : source.Session) (meter : Meter)
+  («at» : Std.Usize) :
+  Result (ControlFlow (Meter × Std.Usize) ((alloc.vec.Vec source.Named) ×
+    Meter × (Option Std.U64) × (Option Diagnostic)))
+  := do
+  let i := alloc.vec.Vec.len session.definitions
+  if «at» < i
+  then
+    let (r, meter1) ←
+      source.resolution.same_definition tree «at» session meter
+    match r with
+    | core.result.Result.Ok o =>
+      match o with
+      | none => let at1 ← «at» + 1#usize
+                ok (cont (meter1, at1))
+      | some _ => ok (done (session.definitions, meter1, o, none))
+    | core.result.Result.Err problem =>
+      ok (done (session.definitions, meter1, none, some problem))
+  else ok (done (session.definitions, meter, none, none))
+
+/-- [noble_contracts::source::resolution::identity]: loop 0:
+    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 149:4-162:5 -/
+@[rust_loop]
+def source.resolution.identity_loop
+  (tree : source.Tree) (session : source.Session) (meter : Meter)
+  («at» : Std.Usize) :
+  Result ((alloc.vec.Vec source.Named) × Meter × (Option Std.U64) × (Option
+    Diagnostic))
+  := do
+  loop
+    (fun (meter1, at1) => source.resolution.identity_loop.body tree session
+      meter1 at1)
+    (meter, «at»)
+
+/-- [noble_contracts::source::resolution::identity]:
+    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 141:0-179:1 -/
+def source.resolution.identity
+  (tree : source.Tree) (session : source.Session) (meter : Meter) :
+  Result ((core.result.Result Std.U64 Diagnostic) × Meter)
+  := do
+  let (v, meter1, found, failure) ←
+    source.resolution.identity_loop tree session meter 0#usize
+  match failure with
+  | none =>
+    match found with
+    | none =>
+      let i := alloc.vec.Vec.len v
+      let r ← U64.Insts.CoreConvertTryFromUsizeTryFromIntError.try_from i
+      let o ← core.result.Result.ok r
+      let o1 ←
+        core.option.Option.and_then
+          source.resolution.identity.closure.Insts.CoreOpsFunctionFnOnceTupleU64OptionU64
+          o ()
+      match o1 with
+      | none =>
+        let d ←
+          source.exhausted tree.span (toStr
+            "definition identity limit exceeded")
+        ok (core.result.Result.Err d, meter1)
+      | some identity => ok (core.result.Result.Ok identity, meter1)
+    | some identity => ok (core.result.Result.Ok identity, meter1)
+  | some problem => ok (core.result.Result.Err problem, meter1)
+
+/-- [noble_contracts::source::preparation::declaration]:
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 101:0-124:1 -/
+def source.preparation.declaration
+  (tree : source.Tree) («name» : String) (source_bytes : Slice Std.U8)
+  (session : source.Session) (meter : Meter) :
+  Result ((core.result.Result (source.Named × (alloc.vec.Vec Std.U8))
+    Diagnostic) × Meter)
+  := do
+  let (r, meter1) ← source.resolution.identity tree session meter
+  match r with
+  | core.result.Result.Ok value =>
+    let i := Slice.len source_bytes
+    let r1 ← index i tree.span
+    match r1 with
+    | core.result.Result.Ok value1 =>
+      let i1 ← lift (core.num.U32.saturating_add value1 4#u32)
+      let (r2, meter2) ← metering.Meter.charge meter1 i1 tree.span
+      match r2 with
+      | core.result.Result.Ok _ =>
+        let i2 := Slice.len source_bytes
+        let i3 ← lift (core.num.Usize.saturating_add i2 4#usize)
+        let addition := alloc.vec.Vec.with_capacity Std.U8 i3
+        let a ← lift (core.num.U32.to_le_bytes value1)
+        let s ← lift (Array.to_slice a)
+        let addition1 ←
+          alloc.vec.Vec.extend_from_slice core.clone.CloneU8 addition s
+        let addition2 ←
+          alloc.vec.Vec.extend_from_slice core.clone.CloneU8 addition1
+            source_bytes
+        ok (core.result.Result.Ok ({ «name», identity := value, tree },
+          addition2), meter2)
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, meter2)
+    | core.result.Result.Err failure =>
+      ok (core.result.Result.Err failure, meter1)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, meter1)
+
+/-- [noble_contracts::source::preparation::{noble_contracts::source::Session}::retained]:
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 83:4-98:5 -/
+def source.preparation.Session.retained
+  (self : source.Session) (extra : Std.Usize) (span : Span) (meter : Meter) :
+  Result ((core.result.Result Unit Diagnostic) × Meter)
+  := do
+  let i := alloc.vec.Vec.len self.history
+  let r ← index i span
+  match r with
+  | core.result.Result.Ok value =>
+    let r1 ← offset meter.limits.bytes span
+    match r1 with
+    | core.result.Result.Ok value1 =>
+      let i1 := alloc.vec.Vec.len self.history
+      let i2 ← lift (core.num.Usize.saturating_add i1 extra)
+      if i2 > value1
+      then
+        let d ←
+          source.exhausted span (toStr
+            "retained namespace byte limit exceeded")
+        ok (core.result.Result.Err d, meter)
+      else metering.Meter.charge meter value span
+    | core.result.Result.Err failure =>
+      ok (core.result.Result.Err failure, meter)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, meter)
+
+/-- [noble_contracts::source::preparation::{noble_contracts::source::Session}::prepare]:
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 2:4-77:5
+    Visibility: public -/
+def source.preparation.Session.prepare
+  (self : source.Session) (source_bytes : Slice Std.U8)
+  (inputs : Slice noble_kernel.types.Ty) (limits : Limits) :
+  Result (core.result.Result source.Prepared source.Error)
+  := do
+  let meter ← metering.Meter.new limits
+  let (r, meter1) ← source.parsing.parse source_bytes meter
+  match r with
+  | core.result.Result.Ok parsed =>
+    let (tree, «name») := parsed
+    let o ←
+      core.option.Option.as_deref
+        alloc.string.String.Insts.CoreOpsDerefDerefStr «name»
+    let (r1, tree1, meter2) ← source.resolution.resolve tree o self meter1
+    match r1 with
+    | core.result.Result.Ok _ =>
+      let (r2, meter3) ←
+        source.preflight.check inputs self.hosts tree1.span meter2
+      match r2 with
+      | core.result.Result.Ok _ =>
+        let b := core.option.Option.is_some «name»
+        let extra ←
+          if b
+          then
+            let i := Slice.len source_bytes
+            ok (core.num.Usize.saturating_add i 4#usize)
+          else ok 0#usize
+        let (r3, meter4) ←
+          source.preparation.Session.retained self extra tree1.span meter3
+        match r3 with
+        | core.result.Result.Ok _ =>
+          let r4 ← source.environment
+          match r4 with
+          | core.result.Result.Ok environment =>
+            let b1 := core.option.Option.is_some «name»
+            let mode ←
+              if b1
+              then ok source.inference.Mode.Declaration
+              else ok source.inference.Mode.Submission
+            let (r5, meter5) ←
+              source.inference.infer
+                { root := tree1, session := self, environment } mode inputs
+                meter4
+            match r5 with
+            | core.result.Result.Ok state =>
+              match «name» with
+              | none =>
+                let i := Slice.len source_bytes
+                let (r6, _) ← source.emission.emit state environment i meter5
+                match r6 with
+                | core.result.Result.Ok value =>
+                  let (submission, output) := value
+                  let v ←
+                    alloc.vec.CloneVec.clone core.clone.CloneU8 self.history
+                  ok (core.result.Result.Ok
+                    {
+                      generation := self.generation,
+                      history := v,
+                      hosts := self.hosts,
+                      definition := none,
+                      addition := (alloc.vec.Vec.new Std.U8),
+                      submission := (some submission),
+                      output
+                    })
+                | core.result.Result.Err failure =>
+                  ok (core.result.Result.Err failure)
+              | some name1 =>
+                let (r6, _) ←
+                  source.preparation.declaration tree1 name1 source_bytes self
+                    meter5
+                match r6 with
+                | core.result.Result.Ok p =>
+                  let (definition, bytes) := p
+                  let output ←
+                    alloc.slice.Slice.to_vec
+                      noble_kernel.types.Ty.Insts.CoreCloneClone inputs
+                  let v ←
+                    alloc.vec.CloneVec.clone core.clone.CloneU8 self.history
+                  ok (core.result.Result.Ok
+                    {
+                      generation := self.generation,
+                      history := v,
+                      hosts := self.hosts,
+                      definition := (some definition),
+                      addition := bytes,
+                      submission := none,
+                      output
+                    })
+                | core.result.Result.Err error =>
+                  let e ← source.Error.at source.Stage.Check error
+                  ok (core.result.Result.Err e)
+            | core.result.Result.Err error =>
+              let e ← source.Error.at source.Stage.Check error
+              ok (core.result.Result.Err e)
+          | core.result.Result.Err error =>
+            let e ← source.Error.at source.Stage.Check error
+            ok (core.result.Result.Err e)
+        | core.result.Result.Err error =>
+          let e ← source.Error.at source.Stage.Check error
+          ok (core.result.Result.Err e)
+      | core.result.Result.Err error =>
+        let e ← source.Error.at source.Stage.Check error
+        ok (core.result.Result.Err e)
+    | core.result.Result.Err error =>
+      let e ← source.Error.at source.Stage.Resolve error
+      ok (core.result.Result.Err e)
+  | core.result.Result.Err error =>
+    let e ← source.Error.at source.Stage.Parse error
+    ok (core.result.Result.Err e)
+
+/-- [noble_contracts::source::resolution::comparison::{impl core::clone::Clone for noble_contracts::source::resolution::comparison::Body}::clone]:
+    Source: 'crates/noble-contracts/src/source/resolution/comparison.rs', lines 1:9-1:14
+    Visibility: public -/
+def source.resolution.comparison.Body.Insts.CoreCloneClone.clone
+  (self : source.resolution.comparison.Body) :
+  Result source.resolution.comparison.Body
+  := do
+  ok self
+
+/-- Trait implementation: [noble_contracts::source::resolution::comparison::{impl core::clone::Clone for noble_contracts::source::resolution::comparison::Body}]
+    Source: 'crates/noble-contracts/src/source/resolution/comparison.rs', lines 1:9-1:14 -/
+@[reducible]
+def source.resolution.comparison.Body.Insts.CoreCloneClone : core.clone.Clone
+  source.resolution.comparison.Body := {
+  clone := source.resolution.comparison.Body.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_contracts::source::resolution::comparison::{impl core::marker::Copy for noble_contracts::source::resolution::comparison::Body}]
+    Source: 'crates/noble-contracts/src/source/resolution/comparison.rs', lines 1:16-1:20 -/
+@[reducible]
+def source.resolution.comparison.Body.Insts.CoreMarkerCopy : core.marker.Copy
+  source.resolution.comparison.Body := {
+  cloneInst := source.resolution.comparison.Body.Insts.CoreCloneClone
+}
+
+/-- [noble_contracts::source::resolution::comparison::{impl core::clone::Clone for noble_contracts::source::resolution::comparison::Entry}::clone]:
+    Source: 'crates/noble-contracts/src/source/resolution/comparison.rs', lines 7:9-7:14
+    Visibility: public -/
+def source.resolution.comparison.Entry.Insts.CoreCloneClone.clone
+  (self : source.resolution.comparison.Entry) :
+  Result source.resolution.comparison.Entry
+  := do
+  ok self
+
+/-- Trait implementation: [noble_contracts::source::resolution::comparison::{impl core::clone::Clone for noble_contracts::source::resolution::comparison::Entry}]
+    Source: 'crates/noble-contracts/src/source/resolution/comparison.rs', lines 7:9-7:14 -/
+@[reducible]
+def source.resolution.comparison.Entry.Insts.CoreCloneClone : core.clone.Clone
+  source.resolution.comparison.Entry := {
+  clone := source.resolution.comparison.Entry.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_contracts::source::resolution::comparison::{impl core::marker::Copy for noble_contracts::source::resolution::comparison::Entry}]
+    Source: 'crates/noble-contracts/src/source/resolution/comparison.rs', lines 7:16-7:20 -/
+@[reducible]
+def source.resolution.comparison.Entry.Insts.CoreMarkerCopy : core.marker.Copy
+  source.resolution.comparison.Entry := {
+  cloneInst := source.resolution.comparison.Entry.Insts.CoreCloneClone
+}
+
+/-- [noble_contracts::source::{impl core::clone::Clone for noble_contracts::source::Stage}::clone]:
+    Source: 'crates/noble-contracts/src/source.rs', lines 16:9-16:14
+    Visibility: public -/
+def source.Stage.Insts.CoreCloneClone.clone
+  (self : source.Stage) : Result source.Stage := do
+  ok self
+
+/-- Trait implementation: [noble_contracts::source::{impl core::clone::Clone for noble_contracts::source::Stage}]
+    Source: 'crates/noble-contracts/src/source.rs', lines 16:9-16:14 -/
+@[reducible]
+def source.Stage.Insts.CoreCloneClone : core.clone.Clone source.Stage := {
+  clone := source.Stage.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_contracts::source::{impl core::marker::Copy for noble_contracts::source::Stage}]
+    Source: 'crates/noble-contracts/src/source.rs', lines 16:16-16:20 -/
+@[reducible]
+def source.Stage.Insts.CoreMarkerCopy : core.marker.Copy source.Stage := {
+  cloneInst := source.Stage.Insts.CoreCloneClone
+}
+
+/-- [noble_contracts::source::{impl core::fmt::Debug for noble_contracts::source::Stage}::fmt]:
+    Source: 'crates/noble-contracts/src/source.rs', lines 16:22-16:27
+    Visibility: public -/
+def source.Stage.Insts.CoreFmtDebug.fmt
+  (self : source.Stage) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | source.Stage.Parse => core.fmt.Formatter.write_str f (toStr "Parse")
+  | source.Stage.Resolve => core.fmt.Formatter.write_str f (toStr "Resolve")
+  | source.Stage.Check => core.fmt.Formatter.write_str f (toStr "Check")
+  | source.Stage.Acceptance =>
+    core.fmt.Formatter.write_str f (toStr "Acceptance")
+
+/-- Trait implementation: [noble_contracts::source::{impl core::fmt::Debug for noble_contracts::source::Stage}]
+    Source: 'crates/noble-contracts/src/source.rs', lines 16:22-16:27 -/
+@[reducible]
+def source.Stage.Insts.CoreFmtDebug : core.fmt.Debug source.Stage := {
+  fmt := source.Stage.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_contracts::source::{impl core::marker::StructuralPartialEq for noble_contracts::source::Stage}]
+    Source: 'crates/noble-contracts/src/source.rs', lines 16:29-16:38 -/
+@[reducible]
+def source.Stage.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq source.Stage := {
+}
+
+/-- [noble_contracts::source::{impl core::cmp::PartialEq<noble_contracts::source::Stage> for noble_contracts::source::Stage}::eq]:
+    Source: 'crates/noble-contracts/src/source.rs', lines 16:29-16:38
+    Visibility: public -/
+def source.Stage.Insts.CoreCmpPartialEqStage.eq
+  (self : source.Stage) (other : source.Stage) : Result Bool := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  ok (self1 = other1)
+
+/-- Trait implementation: [noble_contracts::source::{impl core::cmp::PartialEq<noble_contracts::source::Stage> for noble_contracts::source::Stage}]
+    Source: 'crates/noble-contracts/src/source.rs', lines 16:29-16:38 -/
+@[reducible]
+impl_def source.Stage.Insts.CoreCmpPartialEqStage : core.cmp.PartialEq
+  source.Stage source.Stage := {
+  eq := source.Stage.Insts.CoreCmpPartialEqStage.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    source.Stage.Insts.CoreCmpPartialEqStage
+}
+
+/-- [noble_contracts::source::{impl core::cmp::Eq for noble_contracts::source::Stage}::assert_fields_are_eq]:
+    Source: 'crates/noble-contracts/src/source.rs', lines 16:40-16:42
+    Visibility: public -/
+def source.Stage.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : source.Stage) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_contracts::source::{impl core::cmp::Eq for noble_contracts::source::Stage}]
+    Source: 'crates/noble-contracts/src/source.rs', lines 16:40-16:42 -/
+@[reducible]
+def source.Stage.Insts.CoreCmpEq : core.cmp.Eq source.Stage := {
+  partialEqInst := source.Stage.Insts.CoreCmpPartialEqStage
+  assert_fields_are_eq := source.Stage.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_contracts::source::{impl core::clone::Clone for noble_contracts::source::Error}::clone]:
+    Source: 'crates/noble-contracts/src/source.rs', lines 24:9-24:14
+    Visibility: public -/
+def source.Error.Insts.CoreCloneClone.clone
+  (self : source.Error) : Result source.Error := do
+  let s ← source.Stage.Insts.CoreCloneClone.clone self.stage
+  let d ← Diagnostic.Insts.CoreCloneClone.clone self.diagnostic
+  ok { stage := s, diagnostic := d }
+
+/-- Trait implementation: [noble_contracts::source::{impl core::clone::Clone for noble_contracts::source::Error}]
+    Source: 'crates/noble-contracts/src/source.rs', lines 24:9-24:14 -/
+@[reducible]
+def source.Error.Insts.CoreCloneClone : core.clone.Clone source.Error := {
+  clone := source.Error.Insts.CoreCloneClone.clone
+}
+
+/-- [noble_contracts::source::{impl core::fmt::Debug for noble_contracts::source::Error}::fmt]:
+    Source: 'crates/noble-contracts/src/source.rs', lines 24:16-24:21
+    Visibility: public -/
+def source.Error.Insts.CoreFmtDebug.fmt
+  (self : source.Error) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ source.Stage.Insts.CoreFmtDebug self.stage
+  let dyn1 :=
+    Dyn.mk _ (core.fmt.DebugShared Diagnostic.Insts.CoreFmtDebug)
+      self.diagnostic
+  core.fmt.Formatter.debug_struct_field2_finish f (toStr "Error") (toStr
+    "stage") dyn (toStr "diagnostic") dyn1
+
+/-- Trait implementation: [noble_contracts::source::{impl core::fmt::Debug for noble_contracts::source::Error}]
+    Source: 'crates/noble-contracts/src/source.rs', lines 24:16-24:21 -/
+@[reducible]
+def source.Error.Insts.CoreFmtDebug : core.fmt.Debug source.Error := {
+  fmt := source.Error.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_contracts::source::{noble_contracts::source::Error}::stage]:
+    Source: 'crates/noble-contracts/src/source.rs', lines 31:4-33:5
+    Visibility: public -/
+def source.Error.impl.stage (self : source.Error) : Result source.Stage := do
+  ok self.stage
+
+/-- [noble_contracts::source::{noble_contracts::source::Error}::diagnostic]:
+    Source: 'crates/noble-contracts/src/source.rs', lines 34:4-36:5
+    Visibility: public -/
+def source.Error.impl.diagnostic
+  (self : source.Error) : Result Diagnostic := do
+  ok self.diagnostic
+
+/-- [noble_contracts::source::{impl core::clone::Clone for noble_contracts::source::Target}::clone]:
+    Source: 'crates/noble-contracts/src/source.rs', lines 42:9-42:14
+    Visibility: public -/
+def source.Target.Insts.CoreCloneClone.clone
+  (self : source.Target) : Result source.Target := do
+  ok self
+
+/-- Trait implementation: [noble_contracts::source::{impl core::clone::Clone for noble_contracts::source::Target}]
+    Source: 'crates/noble-contracts/src/source.rs', lines 42:9-42:14 -/
+@[reducible]
+def source.Target.Insts.CoreCloneClone : core.clone.Clone source.Target := {
+  clone := source.Target.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_contracts::source::{impl core::marker::Copy for noble_contracts::source::Target}]
+    Source: 'crates/noble-contracts/src/source.rs', lines 42:16-42:20 -/
+@[reducible]
+def source.Target.Insts.CoreMarkerCopy : core.marker.Copy source.Target := {
+  cloneInst := source.Target.Insts.CoreCloneClone
+}
+
+/-- [noble_contracts::source::{impl core::fmt::Debug for noble_contracts::source::Target}::fmt]:
+    Source: 'crates/noble-contracts/src/source.rs', lines 42:22-42:27
+    Visibility: public -/
+def source.Target.Insts.CoreFmtDebug.fmt
+  (self : source.Target) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | source.Target.Builtin __self_0 =>
+    let __self_01 := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU32) __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Builtin") __self_01
+  | source.Target.Named __self_0 =>
+    let __self_01 := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU32) __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Named") __self_01
+
+/-- Trait implementation: [noble_contracts::source::{impl core::fmt::Debug for noble_contracts::source::Target}]
+    Source: 'crates/noble-contracts/src/source.rs', lines 42:22-42:27 -/
+@[reducible]
+def source.Target.Insts.CoreFmtDebug : core.fmt.Debug source.Target := {
+  fmt := source.Target.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_contracts::source::{impl core::clone::Clone for noble_contracts::source::Kind}::clone]:
+    Source: 'crates/noble-contracts/src/source.rs', lines 48:9-48:14
+    Visibility: public -/
+def source.Kind.Insts.CoreCloneClone.clone
+  (self : source.Kind) : Result source.Kind := do
+  match self with
+  | source.Kind.Literal __self_0 =>
+    let l ← noble_kernel.untrusted.Lit.Insts.CoreCloneClone.clone __self_0
+    ok (source.Kind.Literal l)
+  | source.Kind.Text __self_0 =>
+    let v ← alloc.vec.CloneVec.clone core.clone.CloneU8 __self_0
+    ok (source.Kind.Text v)
+  | source.Kind.Word __self_0 =>
+    let v ← alloc.vec.CloneVec.clone core.clone.CloneU8 __self_0
+    ok (source.Kind.Word v)
+  | source.Kind.Call __self_0 =>
+    let t ← source.Target.Insts.CoreCloneClone.clone __self_0
+    ok (source.Kind.Call t)
+  | source.Kind.Quotation __self_0 =>
+    let v ← alloc.vec.CloneVec.clone core.clone.CloneU32 __self_0
+    ok (source.Kind.Quotation v)
+
+/-- Trait implementation: [noble_contracts::source::{impl core::clone::Clone for noble_contracts::source::Kind}]
+    Source: 'crates/noble-contracts/src/source.rs', lines 48:9-48:14 -/
+@[reducible]
+def source.Kind.Insts.CoreCloneClone : core.clone.Clone source.Kind := {
+  clone := source.Kind.Insts.CoreCloneClone.clone
+}
+
+/-- [noble_contracts::source::{impl core::fmt::Debug for noble_contracts::source::Kind}::fmt]:
+    Source: 'crates/noble-contracts/src/source.rs', lines 48:16-48:21
+    Visibility: public -/
+def source.Kind.Insts.CoreFmtDebug.fmt
+  (self : source.Kind) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | source.Kind.Literal __self_0 =>
+    let __self_01 :=
+      Dyn.mk _ (core.fmt.DebugShared
+        noble_kernel.untrusted.Lit.Insts.CoreFmtDebug) __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Literal") __self_01
+  | source.Kind.Text __self_0 =>
+    let __self_01 :=
+      Dyn.mk _ (core.fmt.DebugShared (core.fmt.DebugVec core.fmt.DebugU8))
+        __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Text") __self_01
+  | source.Kind.Word __self_0 =>
+    let __self_01 :=
+      Dyn.mk _ (core.fmt.DebugShared (core.fmt.DebugVec core.fmt.DebugU8))
+        __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Word") __self_01
+  | source.Kind.Call __self_0 =>
+    let __self_01 :=
+      Dyn.mk _ (core.fmt.DebugShared source.Target.Insts.CoreFmtDebug) __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Call") __self_01
+  | source.Kind.Quotation __self_0 =>
+    let __self_01 :=
+      Dyn.mk _ (core.fmt.DebugShared (core.fmt.DebugVec core.fmt.DebugU32))
+        __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Quotation")
+      __self_01
+
+/-- Trait implementation: [noble_contracts::source::{impl core::fmt::Debug for noble_contracts::source::Kind}]
+    Source: 'crates/noble-contracts/src/source.rs', lines 48:16-48:21 -/
+@[reducible]
+def source.Kind.Insts.CoreFmtDebug : core.fmt.Debug source.Kind := {
+  fmt := source.Kind.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_contracts::source::{impl core::clone::Clone for noble_contracts::source::Node}::clone]:
+    Source: 'crates/noble-contracts/src/source.rs', lines 57:9-57:14
+    Visibility: public -/
+def source.Node.Insts.CoreCloneClone.clone
+  (self : source.Node) : Result source.Node := do
+  let k ← source.Kind.Insts.CoreCloneClone.clone self.kind
+  let s ← Span.Insts.CoreCloneClone.clone self.span
+  ok { kind := k, span := s }
+
+/-- Trait implementation: [noble_contracts::source::{impl core::clone::Clone for noble_contracts::source::Node}]
+    Source: 'crates/noble-contracts/src/source.rs', lines 57:9-57:14 -/
+@[reducible]
+def source.Node.Insts.CoreCloneClone : core.clone.Clone source.Node := {
+  clone := source.Node.Insts.CoreCloneClone.clone
+}
+
+/-- [noble_contracts::source::{impl core::fmt::Debug for noble_contracts::source::Node}::fmt]:
+    Source: 'crates/noble-contracts/src/source.rs', lines 57:16-57:21
+    Visibility: public -/
+def source.Node.Insts.CoreFmtDebug.fmt
+  (self : source.Node) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ source.Kind.Insts.CoreFmtDebug self.kind
+  let dyn1 := Dyn.mk _ (core.fmt.DebugShared Span.Insts.CoreFmtDebug) self.span
+  core.fmt.Formatter.debug_struct_field2_finish f (toStr "Node") (toStr "kind")
+    dyn (toStr "span") dyn1
+
+/-- Trait implementation: [noble_contracts::source::{impl core::fmt::Debug for noble_contracts::source::Node}]
+    Source: 'crates/noble-contracts/src/source.rs', lines 57:16-57:21 -/
+@[reducible]
+def source.Node.Insts.CoreFmtDebug : core.fmt.Debug source.Node := {
+  fmt := source.Node.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_contracts::source::{impl core::clone::Clone for noble_contracts::source::Tree}::clone]:
+    Source: 'crates/noble-contracts/src/source.rs', lines 63:9-63:14
+    Visibility: public -/
+def source.Tree.Insts.CoreCloneClone.clone
+  (self : source.Tree) : Result source.Tree := do
+  let v ←
+    alloc.vec.CloneVec.clone source.Node.Insts.CoreCloneClone self.nodes
+  let v1 ← alloc.vec.CloneVec.clone core.clone.CloneU32 self.body
+  let s ← Span.Insts.CoreCloneClone.clone self.span
+  ok { nodes := v, body := v1, span := s }
+
+/-- Trait implementation: [noble_contracts::source::{impl core::clone::Clone for noble_contracts::source::Tree}]
+    Source: 'crates/noble-contracts/src/source.rs', lines 63:9-63:14 -/
+@[reducible]
+def source.Tree.Insts.CoreCloneClone : core.clone.Clone source.Tree := {
+  clone := source.Tree.Insts.CoreCloneClone.clone
+}
+
+/-- [noble_contracts::source::{impl core::fmt::Debug for noble_contracts::source::Tree}::fmt]:
+    Source: 'crates/noble-contracts/src/source.rs', lines 63:16-63:21
+    Visibility: public -/
+def source.Tree.Insts.CoreFmtDebug.fmt
+  (self : source.Tree) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn :=
+    Dyn.mk _ (core.fmt.DebugVec source.Node.Insts.CoreFmtDebug) self.nodes
+  let dyn1 := Dyn.mk _ (core.fmt.DebugVec core.fmt.DebugU32) self.body
+  let dyn2 := Dyn.mk _ (core.fmt.DebugShared Span.Insts.CoreFmtDebug) self.span
+  core.fmt.Formatter.debug_struct_field3_finish f (toStr "Tree") (toStr
+    "nodes") dyn (toStr "body") dyn1 (toStr "span") dyn2
+
+/-- Trait implementation: [noble_contracts::source::{impl core::fmt::Debug for noble_contracts::source::Tree}]
+    Source: 'crates/noble-contracts/src/source.rs', lines 63:16-63:21 -/
+@[reducible]
+def source.Tree.Insts.CoreFmtDebug : core.fmt.Debug source.Tree := {
+  fmt := source.Tree.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_contracts::source::{impl core::fmt::Debug for noble_contracts::source::Named}::fmt]:
+    Source: 'crates/noble-contracts/src/source.rs', lines 83:9-83:14
+    Visibility: public -/
+def source.Named.Insts.CoreFmtDebug.fmt
+  (self : source.Named) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ alloc.string.String.Insts.CoreFmtDebug self.name
+  let dyn1 := Dyn.mk _ core.fmt.DebugU64 self.identity
+  let dyn2 :=
+    Dyn.mk _ (core.fmt.DebugShared source.Tree.Insts.CoreFmtDebug) self.tree
+  core.fmt.Formatter.debug_struct_field3_finish f (toStr "Named") (toStr
+    "name") dyn (toStr "identity") dyn1 (toStr "tree") dyn2
+
+/-- Trait implementation: [noble_contracts::source::{impl core::fmt::Debug for noble_contracts::source::Named}]
+    Source: 'crates/noble-contracts/src/source.rs', lines 83:9-83:14 -/
+@[reducible]
+def source.Named.Insts.CoreFmtDebug : core.fmt.Debug source.Named := {
+  fmt := source.Named.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_contracts::source::{impl core::fmt::Debug for noble_contracts::source::Prepared}::fmt]:
+    Source: 'crates/noble-contracts/src/source.rs', lines 91:9-91:14
+    Visibility: public -/
+def source.Prepared.Insts.CoreFmtDebug.fmt
+  (self : source.Prepared) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ core.fmt.DebugU64 self.generation
+  let dyn1 := Dyn.mk _ (core.fmt.DebugVec core.fmt.DebugU8) self.history
+  let dyn2 := Dyn.mk _ core.fmt.DebugBool self.hosts
+  let dyn3 :=
+    Dyn.mk _ (core.option.Option.Insts.CoreFmtDebug
+      source.Named.Insts.CoreFmtDebug) self.definition
+  let dyn4 := Dyn.mk _ (core.fmt.DebugVec core.fmt.DebugU8) self.addition
+  let dyn5 :=
+    Dyn.mk _ (core.option.Option.Insts.CoreFmtDebug
+      noble_kernel.execution.Submission.Insts.CoreFmtDebug) self.submission
+  let dyn6 :=
+    Dyn.mk _ (core.fmt.DebugShared (core.fmt.DebugVec
+      noble_kernel.types.Ty.Insts.CoreFmtDebug)) self.output
+  let values :=
+    Array.to_slice
+      (Array.make 7#usize [ dyn, dyn1, dyn2, dyn3, dyn4, dyn5, dyn6 ])
+  let s ←
+    lift (Array.to_slice
+      (Array.make 7#usize [
+        toStr "generation", toStr "history", toStr "hosts", toStr "definition",
+        toStr "addition", toStr "submission", toStr "output"
+        ]))
+  core.fmt.Formatter.debug_struct_fields_finish f (toStr "Prepared") s values
+
+/-- Trait implementation: [noble_contracts::source::{impl core::fmt::Debug for noble_contracts::source::Prepared}]
+    Source: 'crates/noble-contracts/src/source.rs', lines 91:9-91:14 -/
+@[reducible]
+def source.Prepared.Insts.CoreFmtDebug : core.fmt.Debug source.Prepared := {
+  fmt := source.Prepared.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_contracts::source::{noble_contracts::source::Prepared}::submission]:
+    Source: 'crates/noble-contracts/src/source.rs', lines 103:4-105:5
+    Visibility: public -/
+def source.Prepared.impl.submission
+  (self : source.Prepared) :
+  Result (Option noble_kernel.execution.Submission)
+  := do
+  core.option.Option.as_ref self.submission
+
+/-- [noble_contracts::source::{noble_contracts::source::Prepared}::output]:
+    Source: 'crates/noble-contracts/src/source.rs', lines 106:4-108:5
+    Visibility: public -/
+def source.Prepared.impl.output
+  (self : source.Prepared) : Result (Slice noble_kernel.types.Ty) := do
+  alloc.vec.Vec.as_slice Global self.output
+
+/-- [noble_contracts::source::{noble_contracts::source::Prepared}::is_definition]:
+    Source: 'crates/noble-contracts/src/source.rs', lines 109:4-111:5
+    Visibility: public -/
+def source.Prepared.is_definition (self : source.Prepared) : Result Bool := do
+  ok (core.option.Option.is_some self.definition)
+
+/-- [noble_contracts::source::{impl core::fmt::Debug for noble_contracts::source::Session}::fmt]:
+    Source: 'crates/noble-contracts/src/source.rs', lines 117:9-117:14
+    Visibility: public -/
+def source.Session.Insts.CoreFmtDebug.fmt
+  (self : source.Session) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn :=
+    Dyn.mk _ (core.fmt.DebugVec source.Named.Insts.CoreFmtDebug)
+      self.definitions
+  let dyn1 := Dyn.mk _ (core.fmt.DebugVec core.fmt.DebugU8) self.history
+  let dyn2 := Dyn.mk _ core.fmt.DebugU64 self.generation
+  let dyn3 := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugBool) self.hosts
+  core.fmt.Formatter.debug_struct_field4_finish f (toStr "Session") (toStr
+    "definitions") dyn (toStr "history") dyn1 (toStr "generation") dyn2 (toStr
+    "hosts") dyn3
+
+/-- Trait implementation: [noble_contracts::source::{impl core::fmt::Debug for noble_contracts::source::Session}]
+    Source: 'crates/noble-contracts/src/source.rs', lines 117:9-117:14 -/
+@[reducible]
+def source.Session.Insts.CoreFmtDebug : core.fmt.Debug source.Session := {
+  fmt := source.Session.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_contracts::source::{noble_contracts::source::Session}::new]:
+    Source: 'crates/noble-contracts/src/source.rs', lines 132:4-139:5
+    Visibility: public -/
+def source.Session.new : Result source.Session := do
+  ok
+    {
+      definitions := (alloc.vec.Vec.new source.Named),
+      history := (alloc.vec.Vec.new Std.U8),
+      generation := 0#u64,
+      hosts := true
+    }
+
+/-- [noble_contracts::source::{impl core::default::Default for noble_contracts::source::Session}::default]:
+    Source: 'crates/noble-contracts/src/source.rs', lines 126:4-128:5
+    Visibility: public -/
+def source.Session.Insts.CoreDefaultDefault.default
+  : Result source.Session := do
+  source.Session.new
+
+/-- Trait implementation: [noble_contracts::source::{impl core::default::Default for noble_contracts::source::Session}]
+    Source: 'crates/noble-contracts/src/source.rs', lines 125:0-129:1 -/
+@[reducible]
+def source.Session.Insts.CoreDefaultDefault : core.default.Default
+  source.Session := {
+  default := source.Session.Insts.CoreDefaultDefault.default
+}
+
+/-- [noble_contracts::source::{noble_contracts::source::Session}::without_test_hosts]:
+    Source: 'crates/noble-contracts/src/source.rs', lines 140:4-147:5
+    Visibility: public -/
+def source.Session.without_test_hosts : Result source.Session := do
+  ok
+    {
+      definitions := (alloc.vec.Vec.new source.Named),
+      history := (alloc.vec.Vec.new Std.U8),
+      generation := 0#u64,
+      hosts := false
+    }
+
+/-- [noble_contracts::source::{noble_contracts::source::Session}::generation]:
+    Source: 'crates/noble-contracts/src/source.rs', lines 148:4-150:5
+    Visibility: public -/
+def source.Session.impl.generation
+  (self : source.Session) : Result Std.U64 := do
+  ok self.generation
+
+/-- [noble_contracts::source::{noble_contracts::source::Session}::commit]:
+    Source: 'crates/noble-contracts/src/source.rs', lines 152:4-181:5
+    Visibility: public -/
+def source.Session.commit
+  (self : source.Session) (prepared : source.Prepared) :
+  Result ((core.result.Result Unit source.Error) × source.Session)
+  := do
+  if prepared.generation != self.generation
+  then
+    let d ←
+      invalid { start := 0#u32, «end» := 0#u32 } (toStr
+        "stale preparation belongs to a different namespace snapshot")
+    let e ← source.Error.at source.Stage.Acceptance d
+    ok (core.result.Result.Err e, self)
+  else
+    if prepared.hosts != self.hosts
+    then
+      let d ←
+        invalid { start := 0#u32, «end» := 0#u32 } (toStr
+          "stale preparation belongs to a different namespace snapshot")
+      let e ← source.Error.at source.Stage.Acceptance d
+      ok (core.result.Result.Err e, self)
+    else
+      let b ←
+        alloc.vec.partial_eq.PartialEqVec.ne core.cmp.PartialEqU8
+          prepared.history self.history
+      if b
+      then
+        let d ←
+          invalid { start := 0#u32, «end» := 0#u32 } (toStr
+            "stale preparation belongs to a different namespace snapshot")
+        let e ← source.Error.at source.Stage.Acceptance d
+        ok (core.result.Result.Err e, self)
+      else
+        let o ← lift (U64.checked_add self.generation 1#u64)
+        match o with
+        | none =>
+          let d ←
+            source.exhausted { start := 0#u32, «end» := 0#u32 } (toStr
+              "session generation limit exceeded")
+          let e ← source.Error.at source.Stage.Acceptance d
+          ok (core.result.Result.Err e, self)
+        | some next =>
+          match prepared.definition with
+          | none =>
+            ok (core.result.Result.Ok (), { self with generation := next })
+          | some definition =>
+            let v ← alloc.vec.Vec.push self.definitions definition
+            let s := alloc.vec.Vec.deref prepared.addition
+            let v1 ←
+              alloc.vec.Vec.extend_from_slice core.clone.CloneU8 self.history s
+            ok (core.result.Result.Ok (),
+              { self with definitions := v, history := v1, generation := next })
 
 /-- [noble_contracts::syntax::typing::{impl core::clone::Clone for noble_contracts::syntax::typing::Context<'a>}::clone]:
     Source: 'crates/noble-contracts/src/syntax/typing.rs', lines 1:9-1:14

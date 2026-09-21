@@ -9,7 +9,7 @@ pub(super) enum Step<'a> {
     Pair,
     Sum,
     List,
-    Program,
+    Program(Option<u32>),
     Push,
 }
 
@@ -90,8 +90,8 @@ impl super::Arena {
     ) -> Result<State<'a>, crate::Diagnostic> {
         attempt!(meter.charge(1, span));
         match step {
-            Step::Ty(ty) => self.build_ty(ty, state, span, meter),
-            Step::Pattern(pattern) => self.build_pattern(pattern, state, variables, span, meter),
+            Step::Ty(ty) => state.build_ty(self, ty, span, meter),
+            Step::Pattern(pattern) => state.build_pattern(self, pattern, variables, span, meter),
             Step::StackTy(stack) => self.build_stack_ty(stack, state, span, meter),
             Step::StackPattern(stack) => {
                 self.build_stack_pattern(stack, state, variables, span, meter)
@@ -100,13 +100,25 @@ impl super::Arena {
             Step::StackPatternParts(stack, start, at) => {
                 stack_pattern_step(stack, start, at, state, span)
             }
-            Step::Pair | Step::Sum | Step::Program | Step::Push => {
+            Step::Pair | Step::Sum | Step::Program(_) | Step::Push => {
                 let b = attempt!(require_id(state.values.pop(), span));
                 let a = attempt!(require_id(state.values.pop(), span));
+                if let Step::Program(Some(effect)) = step {
+                    state.values.push(attempt!(self.program(
+                        super::Program {
+                            input: a,
+                            output: b,
+                            effect,
+                        },
+                        span,
+                        meter
+                    )));
+                    return Ok(state);
+                }
                 let term = match step {
                     Step::Pair => super::Term::Pair(a, b),
                     Step::Sum => super::Term::Sum(a, b),
-                    Step::Program => super::Term::Program(a, b),
+                    Step::Program(_) => super::Term::Program(a, b),
                     Step::Push => super::Term::Push(a, b),
                     Step::Ty(_)
                     | Step::Pattern(_)
@@ -169,7 +181,9 @@ impl super::Arena {
                 start = 1;
                 match attempt!(super::variable_at(variables, variable.0, span)) {
                     super::Variable::Stack(id) => id,
-                    super::Variable::Value(_) | super::Variable::Effect => {
+                    super::Variable::Value(_)
+                    | super::Variable::Effect
+                    | super::Variable::EffectValue(_) => {
                         return Err(crate::internal(span));
                     }
                 }

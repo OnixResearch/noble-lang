@@ -2,6 +2,7 @@ impl super::materialize::State {
     pub(super) fn finish(
         mut self,
         term: super::Term,
+        effects: noble_kernel::types::EffSet,
         span: crate::Span,
     ) -> Result<Self, crate::Diagnostic> {
         let b = attempt!(self.pop(span));
@@ -13,7 +14,7 @@ impl super::materialize::State {
             }
             super::Term::Program(_, _) => {
                 let a = attempt!(self.pop(span));
-                program(a, b, span)
+                program(a, b, effects, span)
             }
             super::Term::Push(_, _) => {
                 let a = attempt!(self.pop(span));
@@ -79,6 +80,7 @@ fn pair(
 fn program(
     inputs: super::materialize::Material,
     outputs: super::materialize::Material,
+    effects: noble_kernel::types::EffSet,
     span: crate::Span,
 ) -> Result<super::materialize::Material, crate::Diagnostic> {
     match (inputs, outputs) {
@@ -86,7 +88,7 @@ fn program(
             super::materialize::Material::Stack(a, sa),
             super::materialize::Material::Stack(b, sb),
         ) => Ok(super::materialize::Material::Value(
-            noble_kernel::types::Ty::program(a, b, noble_kernel::types::EffSet::empty()),
+            noble_kernel::types::Ty::program(a, b, effects),
             attempt!(type_size(sa.saturating_add(sb).saturating_add(1), span)),
         )),
         (super::materialize::Material::Value(_, _), _)

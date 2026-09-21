@@ -29,6 +29,7 @@ macro_rules! attempt {
 
 pub mod acceptance;
 pub mod contracts;
+pub mod execution;
 pub mod shapes;
 pub mod types;
 pub mod untrusted;

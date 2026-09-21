@@ -484,8 +484,40 @@ structure acceptance.validate.DepWalk where
   stack : alloc.vec.Vec contracts.Definition
   spent : Std.U32
 
+/-- [noble_kernel::execution::TextLiteral]
+    Source: 'crates/noble-kernel/src/execution/mod.rs', lines 9:0-12:1
+    Visibility: public -/
+structure execution.TextLiteral where
+  node : untrusted.NodeId
+  bytes : alloc.vec.Vec Std.U8
+
+/-- [noble_kernel::execution::Body]
+    Source: 'crates/noble-kernel/src/execution/mod.rs', lines 16:0-19:1
+    Visibility: public -/
+structure execution.Body where
+  candidate : untrusted.Candidate
+  texts : alloc.vec.Vec execution.TextLiteral
+
+/-- [noble_kernel::execution::Definition]
+    Source: 'crates/noble-kernel/src/execution/mod.rs', lines 23:0-30:1
+    Visibility: public -/
+structure execution.Definition where
+  definition : contracts.Definition
+  identity : Std.U64
+  body : execution.Body
+  expected : untrusted.Expected
+
+/-- [noble_kernel::execution::Submission]
+    Source: 'crates/noble-kernel/src/execution/mod.rs', lines 37:0-42:1
+    Visibility: public -/
+structure execution.Submission where
+  environment : contracts.Env
+  definitions : alloc.vec.Vec execution.Definition
+  body : execution.Body
+  request : untrusted.Request
+
 /-- [noble_kernel::BudgetOutcome]
-    Source: 'crates/noble-kernel/src/lib.rs', lines 38:0-41:1
+    Source: 'crates/noble-kernel/src/lib.rs', lines 39:0-42:1
     Visibility: public -/
 @[discriminant isize]
 inductive BudgetOutcome where

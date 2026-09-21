@@ -1,0 +1,692 @@
+{
+  "schema": "m4-inherited-boundaries/v1",
+  "scope": "Historical declaration preservation only; never current extraction or refinement evidence.",
+  "provenance": {
+    "kernel": {
+      "artifact": "/tmp/noble-m3-implementation-5/kernel/generated/translation.json",
+      "sha256": "7649c60181779d95a8bd341b6852be6c5b069dd580ef72e049c12e6a966dc583"
+    },
+    "contracts": {
+      "artifact": ".pi/mc1/source-correspondence-final/contracts/generated/translation.json",
+      "sha256": "d19cf2d431dbd6fc00527625709d369c7b6961871d3c00e98250590ecaeeb0e7"
+    },
+    "wasm": {
+      "artifact": "/tmp/noble-m3-implementation-5/wasm/generated/translation.json",
+      "sha256": "570536f0852682a817e3f657bdf81eae2d510778cd604485bde8c02c678844e0"
+    }
+  },
+  "models": [
+    {
+      "name": "noble_contracts.alloc.string.String.as_bytes",
+      "lane": "contracts",
+      "kind": "functions",
+      "rust": "alloc::string::{alloc::string::String}::as_bytes",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_contracts.alloc.string.String.as_str",
+      "lane": "contracts",
+      "kind": "functions",
+      "rust": "alloc::string::{alloc::string::String}::as_str",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_contracts.alloc.string.String.Insts.CoreCloneClone.clone",
+      "lane": "contracts",
+      "kind": "functions",
+      "rust": "alloc::string::{impl core::clone::Clone for alloc::string::String}::clone",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_contracts.alloc.string.String.Insts.CoreConvertFromShared0Str.from",
+      "lane": "contracts",
+      "kind": "functions",
+      "rust": "alloc::string::{impl core::convert::From<&'_0 str> for alloc::string::String}::from",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_contracts.alloc.string.String.Insts.CoreFmtDebug.fmt",
+      "lane": "contracts",
+      "kind": "functions",
+      "rust": "alloc::string::{impl core::fmt::Debug for alloc::string::String}::fmt",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_contracts.alloc.string.String.Insts.CoreOpsDerefDerefStr.deref",
+      "lane": "contracts",
+      "kind": "functions",
+      "rust": "alloc::string::{impl core::ops::deref::Deref<str> for alloc::string::String}::deref",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_contracts.alloc.string.String.push",
+      "lane": "contracts",
+      "kind": "functions",
+      "rust": "alloc::string::{alloc::string::String}::push",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_contracts.alloc.string.String.push_str",
+      "lane": "contracts",
+      "kind": "functions",
+      "rust": "alloc::string::{alloc::string::String}::push_str",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_contracts.alloc.string.String.with_capacity",
+      "lane": "contracts",
+      "kind": "functions",
+      "rust": "alloc::string::{alloc::string::String}::with_capacity",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_contracts.alloc.vec.Vec.pop",
+      "lane": "contracts",
+      "kind": "functions",
+      "rust": "alloc::vec::{alloc::vec::Vec<T>}::pop",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_contracts.Box.Insts.CoreFmtDebug.fmt",
+      "lane": "contracts",
+      "kind": "functions",
+      "rust": "alloc::boxed::{impl core::fmt::Debug for alloc::boxed::Box<T>}::fmt",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_contracts.Char.Insts.CoreConvertFromU8.from",
+      "lane": "contracts",
+      "kind": "functions",
+      "rust": "core::char::convert::{impl core::convert::From<u8> for char}::from",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_contracts.core.fmt.Formatter.debug_tuple_field2_finish",
+      "lane": "contracts",
+      "kind": "functions",
+      "rust": "core::fmt::{core::fmt::Formatter<'a>}::debug_tuple_field2_finish",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_contracts.core.fmt.Formatter.debug_tuple_field3_finish",
+      "lane": "contracts",
+      "kind": "functions",
+      "rust": "core::fmt::{core::fmt::Formatter<'a>}::debug_tuple_field3_finish",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_contracts.core.mem.maybe_uninit.MaybeUninit",
+      "lane": "contracts",
+      "kind": "types",
+      "rust": "core::mem::maybe_uninit::MaybeUninit",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_contracts.core.num.I64.unsigned_abs",
+      "lane": "contracts",
+      "kind": "functions",
+      "rust": "core::num::{i64}::unsigned_abs",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_contracts.core.num.U32.saturating_mul",
+      "lane": "contracts",
+      "kind": "functions",
+      "rust": "core::num::{u32}::saturating_mul",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_contracts.core.num.U8.is_ascii_alphabetic",
+      "lane": "contracts",
+      "kind": "functions",
+      "rust": "core::num::{u8}::is_ascii_alphabetic",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_contracts.core.num.U8.is_ascii_digit",
+      "lane": "contracts",
+      "kind": "functions",
+      "rust": "core::num::{u8}::is_ascii_digit",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_contracts.core.num.U8.is_ascii_graphic",
+      "lane": "contracts",
+      "kind": "functions",
+      "rust": "core::num::{u8}::is_ascii_graphic",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_contracts.core.option.Option.as_deref",
+      "lane": "contracts",
+      "kind": "functions",
+      "rust": "core::option::{core::option::Option<T>}::as_deref",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_contracts.core.option.Option.Insts.CoreCloneClone.clone",
+      "lane": "contracts",
+      "kind": "functions",
+      "rust": "core::option::{impl core::clone::Clone for core::option::Option<T>}::clone",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_contracts.core.option.Option.Insts.CoreFmtDebug.fmt",
+      "lane": "contracts",
+      "kind": "functions",
+      "rust": "core::option::{impl core::fmt::Debug for core::option::Option<T>}::fmt",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_contracts.core.result.Result.is_err",
+      "lane": "contracts",
+      "kind": "functions",
+      "rust": "core::result::{core::result::Result<T, E>}::is_err",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_contracts.core.slice.Slice.first",
+      "lane": "contracts",
+      "kind": "functions",
+      "rust": "core::slice::{[T]}::first",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_contracts.core.slice.Slice.last_mut",
+      "lane": "contracts",
+      "kind": "functions",
+      "rust": "core::slice::{[T]}::last_mut",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_contracts.core.str.converts.from_utf8",
+      "lane": "contracts",
+      "kind": "functions",
+      "rust": "core::str::converts::from_utf8",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_contracts.core.str.error.Utf8Error",
+      "lane": "contracts",
+      "kind": "types",
+      "rust": "core::str::error::Utf8Error",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_contracts.core.str.error.Utf8Error.error_len",
+      "lane": "contracts",
+      "kind": "functions",
+      "rust": "core::str::error::{core::str::error::Utf8Error}::error_len",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_contracts.core.str.error.Utf8Error.valid_up_to",
+      "lane": "contracts",
+      "kind": "functions",
+      "rust": "core::str::error::{core::str::error::Utf8Error}::valid_up_to",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_contracts.core.str.Str.len",
+      "lane": "contracts",
+      "kind": "functions",
+      "rust": "core::str::{str}::len",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_contracts.I64.Insts.CoreConvertFromU8.from",
+      "lane": "contracts",
+      "kind": "functions",
+      "rust": "core::convert::num::{impl core::convert::From<u8> for i64}::from",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_contracts.noble_kernel.acceptance.check",
+      "lane": "contracts",
+      "kind": "functions",
+      "rust": "noble_kernel::acceptance::check",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_contracts.noble_kernel.contracts.Env.scheme",
+      "lane": "contracts",
+      "kind": "functions",
+      "rust": "noble_kernel::contracts::{noble_kernel::contracts::Env}::scheme",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_contracts.noble_kernel.contracts.environment",
+      "lane": "contracts",
+      "kind": "functions",
+      "rust": "noble_kernel::contracts::environment",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_contracts.noble_kernel.types.EffSet",
+      "lane": "contracts",
+      "kind": "types",
+      "rust": "noble_kernel::types::EffSet",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_contracts.noble_kernel.types.EffSet.empty",
+      "lane": "contracts",
+      "kind": "functions",
+      "rust": "noble_kernel::types::{noble_kernel::types::EffSet}::empty",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_contracts.noble_kernel.types.EffSet.is_empty",
+      "lane": "contracts",
+      "kind": "functions",
+      "rust": "noble_kernel::types::{noble_kernel::types::EffSet}::is_empty",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_contracts.noble_kernel.types.Ty.Insts.CoreCloneClone.clone",
+      "lane": "contracts",
+      "kind": "functions",
+      "rust": "noble_kernel::types::impls::{impl core::clone::Clone for noble_kernel::types::Ty}::clone",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_contracts.noble_kernel.types.Ty.Insts.CoreCmpPartialEqTy.eq",
+      "lane": "contracts",
+      "kind": "functions",
+      "rust": "noble_kernel::types::impls::{impl core::cmp::PartialEq<noble_kernel::types::Ty> for noble_kernel::types::Ty}::eq",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_contracts.noble_kernel.types.Ty.Insts.CoreFmtDebug.fmt",
+      "lane": "contracts",
+      "kind": "functions",
+      "rust": "noble_kernel::types::impls::{impl core::fmt::Debug for noble_kernel::types::Ty}::fmt",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_contracts.noble_kernel.types.Ty.program",
+      "lane": "contracts",
+      "kind": "functions",
+      "rust": "noble_kernel::types::{noble_kernel::types::Ty}::program",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_contracts.noble_kernel.types.Ty.size",
+      "lane": "contracts",
+      "kind": "functions",
+      "rust": "noble_kernel::types::{noble_kernel::types::Ty}::size",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_contracts.noble_kernel.untrusted.CANDIDATE_FORMAT",
+      "lane": "contracts",
+      "kind": "globals",
+      "rust": "noble_kernel::untrusted::CANDIDATE_FORMAT",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_contracts.noble_kernel.untrusted.Candidate.Insts.CoreCloneClone.clone",
+      "lane": "contracts",
+      "kind": "functions",
+      "rust": "noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::Candidate}::clone",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_contracts.noble_kernel.untrusted.Candidate.Insts.CoreFmtDebug.fmt",
+      "lane": "contracts",
+      "kind": "functions",
+      "rust": "noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Candidate}::fmt",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_contracts.noble_kernel.untrusted.Checked.Insts.CoreCloneClone.clone",
+      "lane": "contracts",
+      "kind": "functions",
+      "rust": "noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::Checked}::clone",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_contracts.noble_kernel.untrusted.Checked.Insts.CoreFmtDebug.fmt",
+      "lane": "contracts",
+      "kind": "functions",
+      "rust": "noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Checked}::fmt",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_contracts.noble_kernel.untrusted.Lit.ty",
+      "lane": "contracts",
+      "kind": "functions",
+      "rust": "noble_kernel::untrusted::{noble_kernel::untrusted::Lit}::ty",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_contracts.noble_kernel.untrusted.Request.Insts.CoreCloneClone.clone",
+      "lane": "contracts",
+      "kind": "functions",
+      "rust": "noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::Request}::clone",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_contracts.noble_kernel.untrusted.Request.Insts.CoreFmtDebug.fmt",
+      "lane": "contracts",
+      "kind": "functions",
+      "rust": "noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Request}::fmt",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_contracts.noble_kernel.untrusted.SEMANTIC_REVISION",
+      "lane": "contracts",
+      "kind": "globals",
+      "rust": "noble_kernel::untrusted::SEMANTIC_REVISION",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_contracts.noble_kernel.words.resolve.bindings",
+      "lane": "contracts",
+      "kind": "functions",
+      "rust": "noble_kernel::words::resolve::bindings",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_contracts.Slice.Insts.CoreCmpPartialEqArray.eq",
+      "lane": "contracts",
+      "kind": "functions",
+      "rust": "core::array::equality::{impl core::cmp::PartialEq<[U; N]> for [T]}::eq",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_contracts.Slice.Insts.CoreCmpPartialEqArray.ne",
+      "lane": "contracts",
+      "kind": "functions",
+      "rust": "core::array::equality::{impl core::cmp::PartialEq<[U; N]> for [T]}::ne",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_contracts.Str.Insts.CoreCmpPartialEqStr.eq",
+      "lane": "contracts",
+      "kind": "functions",
+      "rust": "core::str::traits::{impl core::cmp::PartialEq<str> for str}::eq",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_contracts.U32.Insts.CoreConvertTryFromI64TryFromIntError.try_from",
+      "lane": "contracts",
+      "kind": "functions",
+      "rust": "core::convert::num::{impl core::convert::TryFrom<i64, core::num::error::TryFromIntError> for u32}::try_from",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_contracts.Usize.Insts.CoreConvertTryFromU32TryFromIntError.try_from",
+      "lane": "contracts",
+      "kind": "functions",
+      "rust": "core::convert::num::ptr_try_from_impls::{impl core::convert::TryFrom<u32, core::num::error::TryFromIntError> for usize}::try_from",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_kernel.alloc.vec.Vec.as_slice",
+      "lane": "kernel",
+      "kind": "functions",
+      "rust": "alloc::vec::{alloc::vec::Vec<T>}::as_slice",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_kernel.alloc.vec.Vec.Insts.CoreIterTraitsCollectExtend.extend",
+      "lane": "kernel",
+      "kind": "functions",
+      "rust": "alloc::vec::{impl core::iter::traits::collect::Extend<T> for alloc::vec::Vec<T>}::extend",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_kernel.alloc.vec.Vec.is_empty",
+      "lane": "kernel",
+      "kind": "functions",
+      "rust": "alloc::vec::{alloc::vec::Vec<T>}::is_empty",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_kernel.alloc.vec.Vec.pop",
+      "lane": "kernel",
+      "kind": "functions",
+      "rust": "alloc::vec::{alloc::vec::Vec<T>}::pop",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_kernel.alloc.vec.Vec.truncate",
+      "lane": "kernel",
+      "kind": "functions",
+      "rust": "alloc::vec::{alloc::vec::Vec<T>}::truncate",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_kernel.Bool.Insts.CoreCmpPartialEqBool.ne",
+      "lane": "kernel",
+      "kind": "functions",
+      "rust": "core::cmp::impls::{impl core::cmp::PartialEq<bool> for bool}::ne",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_kernel.core.fmt.Formatter.debug_c_like_enum_write_str",
+      "lane": "kernel",
+      "kind": "functions",
+      "rust": "core::fmt::{core::fmt::Formatter<'a>}::debug_c_like_enum_write_str",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_kernel.core.mem.maybe_uninit.MaybeUninit",
+      "lane": "kernel",
+      "kind": "types",
+      "rust": "core::mem::maybe_uninit::MaybeUninit",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_kernel.core.num.Usize.saturating_mul",
+      "lane": "kernel",
+      "kind": "functions",
+      "rust": "core::num::{usize}::saturating_mul",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_kernel.core.option.Option.Insts.CoreCloneClone.clone",
+      "lane": "kernel",
+      "kind": "functions",
+      "rust": "core::option::{impl core::clone::Clone for core::option::Option<T>}::clone",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_kernel.core.option.Option.Insts.CoreFmtDebug.fmt",
+      "lane": "kernel",
+      "kind": "functions",
+      "rust": "core::option::{impl core::fmt::Debug for core::option::Option<T>}::fmt",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_kernel.core.option.Option.map",
+      "lane": "kernel",
+      "kind": "functions",
+      "rust": "core::option::{core::option::Option<T>}::map",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_kernel.core.option.OptionShared0T.copied",
+      "lane": "kernel",
+      "kind": "functions",
+      "rust": "core::option::{core::option::Option<&'_0 T>}::copied",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_kernel.core.result.Result.is_err",
+      "lane": "kernel",
+      "kind": "functions",
+      "rust": "core::result::{core::result::Result<T, E>}::is_err",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_kernel.core.result.Result.ok",
+      "lane": "kernel",
+      "kind": "functions",
+      "rust": "core::result::{core::result::Result<T, E>}::ok",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_kernel.core.result.Result.unwrap_or",
+      "lane": "kernel",
+      "kind": "functions",
+      "rust": "core::result::{core::result::Result<T, E>}::unwrap_or",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_kernel.core.slice.Slice.last",
+      "lane": "kernel",
+      "kind": "functions",
+      "rust": "core::slice::{[T]}::last",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_kernel.shapes.impls.clone_parts",
+      "lane": "kernel",
+      "kind": "functions",
+      "rust": "noble_kernel::shapes::impls::clone_parts",
+      "inherited_opaque": true
+    },
+    {
+      "name": "noble_kernel.shapes.impls.debug_parts",
+      "lane": "kernel",
+      "kind": "functions",
+      "rust": "noble_kernel::shapes::impls::debug_parts",
+      "inherited_opaque": true
+    },
+    {
+      "name": "noble_kernel.shapes.impls.debug_slots",
+      "lane": "kernel",
+      "kind": "functions",
+      "rust": "noble_kernel::shapes::impls::debug_slots",
+      "inherited_opaque": true
+    },
+    {
+      "name": "noble_kernel.types.impls.clone_stack",
+      "lane": "kernel",
+      "kind": "functions",
+      "rust": "noble_kernel::types::impls::clone_stack",
+      "inherited_opaque": true
+    },
+    {
+      "name": "noble_kernel.types.impls.debug_stack",
+      "lane": "kernel",
+      "kind": "functions",
+      "rust": "noble_kernel::types::impls::debug_stack",
+      "inherited_opaque": true
+    },
+    {
+      "name": "noble_kernel.U64.Insts.CoreConvertTryFromUsizeTryFromIntError.try_from",
+      "lane": "kernel",
+      "kind": "functions",
+      "rust": "core::convert::num::ptr_try_from_impls::{impl core::convert::TryFrom<usize, core::num::error::TryFromIntError> for u64}::try_from",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_kernel.Usize.Insts.CoreConvertTryFromU32TryFromIntError.try_from",
+      "lane": "kernel",
+      "kind": "functions",
+      "rust": "core::convert::num::ptr_try_from_impls::{impl core::convert::TryFrom<u32, core::num::error::TryFromIntError> for usize}::try_from",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_wasm.alloc.vec.Vec.is_empty",
+      "lane": "wasm",
+      "kind": "functions",
+      "rust": "alloc::vec::{alloc::vec::Vec<T>}::is_empty",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_wasm.alloc.vec.Vec.pop",
+      "lane": "wasm",
+      "kind": "functions",
+      "rust": "alloc::vec::{alloc::vec::Vec<T>}::pop",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_wasm.core.num.I64.unsigned_abs",
+      "lane": "wasm",
+      "kind": "functions",
+      "rust": "core::num::{i64}::unsigned_abs",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_wasm.core.slice.Slice.last",
+      "lane": "wasm",
+      "kind": "functions",
+      "rust": "core::slice::{[T]}::last",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_wasm.core.str.Str.as_bytes",
+      "lane": "wasm",
+      "kind": "functions",
+      "rust": "core::str::{str}::as_bytes",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_wasm.I64.Insts.CoreConvertFromU32.from",
+      "lane": "wasm",
+      "kind": "functions",
+      "rust": "core::convert::num::{impl core::convert::From<u32> for i64}::from",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_wasm.noble_kernel.acceptance.check",
+      "lane": "wasm",
+      "kind": "functions",
+      "rust": "noble_kernel::acceptance::check",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_wasm.noble_kernel.contracts.environment",
+      "lane": "wasm",
+      "kind": "functions",
+      "rust": "noble_kernel::contracts::environment",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_wasm.noble_kernel.types.EffSet",
+      "lane": "wasm",
+      "kind": "types",
+      "rust": "noble_kernel::types::EffSet",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_wasm.noble_kernel.types.EffSet.is_empty",
+      "lane": "wasm",
+      "kind": "functions",
+      "rust": "noble_kernel::types::{noble_kernel::types::EffSet}::is_empty",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_wasm.noble_kernel.types.Ty.Insts.CoreCloneClone.clone",
+      "lane": "wasm",
+      "kind": "functions",
+      "rust": "noble_kernel::types::impls::{impl core::clone::Clone for noble_kernel::types::Ty}::clone",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_wasm.U64.Insts.CoreConvertTryFromUsizeTryFromIntError.try_from",
+      "lane": "wasm",
+      "kind": "functions",
+      "rust": "core::convert::num::ptr_try_from_impls::{impl core::convert::TryFrom<usize, core::num::error::TryFromIntError> for u64}::try_from",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_wasm.U8.Insts.CoreConvertTryFromU64TryFromIntError.try_from",
+      "lane": "wasm",
+      "kind": "functions",
+      "rust": "core::convert::num::{impl core::convert::TryFrom<u64, core::num::error::TryFromIntError> for u8}::try_from",
+      "inherited_opaque": false
+    },
+    {
+      "name": "noble_wasm.Usize.Insts.CoreConvertTryFromU32TryFromIntError.try_from",
+      "lane": "wasm",
+      "kind": "functions",
+      "rust": "core::convert::num::ptr_try_from_impls::{impl core::convert::TryFrom<u32, core::num::error::TryFromIntError> for usize}::try_from",
+      "inherited_opaque": false
+    }
+  ]
+}

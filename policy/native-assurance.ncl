@@ -4,7 +4,7 @@
   schema_version | String = "noble-native-assurance-policy/v1",
   owner | String = "noble-maintainers",
   scope_note | String =
-    "Four-crate workspace scope: noble-kernel, noble-contracts, noble-wasm and noble-cli on x86_64-unknown-linux-gnu. This records native Rust and dependency scope, not whole-program soundness or Wasm runtime correspondence. Owned WAT assets and verification-only Node/wasm-tools/Binaryen processes are separately byte-bound by tool selection; their semantics are unproved and are not Rust inventory subjects or native linked dependencies.",
+    "Four-crate workspace scope: noble-kernel, noble-contracts, noble-wasm and noble-cli on x86_64-unknown-linux-gnu. This records native Rust and dependency scope, not whole-program soundness or Wasm runtime correspondence. Owned WAT assets and Node/wasm-tools/Binaryen subprocesses used by the experimental Core-Bootstrap CLI and verification harnesses are separately byte-bound by tool selection; their semantics are unproved and are not Rust inventory subjects or native linked dependencies.",
   required_packages | Array String = [ "noble-kernel", "noble-contracts", "noble-wasm", "noble-cli" ],
   required_targets | Array { triple | String, features | Array String, default_features | Bool } = [
     { triple = "x86_64-unknown-linux-gnu", features = [], default_features = true },
@@ -74,7 +74,7 @@
         "64-bit little-endian target",
         "strict provenance is the required Miri model",
         "no target-specific native library is linked",
-        "WasmGC and managed-linear-memory execution are separate verification experiments, not additional claimed native targets",
+        "Core-Bootstrap managed-linear-memory execution and the two M3 Wasm experiments are separately scoped guest execution, not additional claimed native Rust targets",
       ],
     },
   ],

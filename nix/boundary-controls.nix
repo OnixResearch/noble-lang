@@ -18,6 +18,7 @@ let
       [
         policy.kernel_source
         "crates/noble-kernel/Cargo.toml"
+        "crates/noble-cli/Cargo.toml"
       ]
   );
   selfTests =

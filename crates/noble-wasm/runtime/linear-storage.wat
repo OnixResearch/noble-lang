@@ -17,7 +17,7 @@
     (then unreachable))
   (if (i32.gt_u
         (i32.sub (i32.load (local.get $p)) (i32.const 1))
-        (i32.const 9))
+        (i32.const 12))
     (then unreachable))
   (local.get $p))
 
@@ -74,7 +74,7 @@
   (if (i32.eqz (local.get $h))
     (then (return (i32.const 0))))
   (local.set $p (call $linear_address (local.get $h)))
-  (if (i32.gt_u (i32.sub (local.get $kind) (i32.const 1)) (i32.const 9))
+  (if (i32.gt_u (i32.sub (local.get $kind) (i32.const 1)) (i32.const 12))
     (then unreachable))
   (local.set $a (call $linear_child (local.get $a) (local.get $h)))
   (local.set $b (call $linear_child (local.get $b) (local.get $h)))

@@ -6829,8 +6829,588 @@ def contracts.environment
       })
   | some problem => ok (core.result.Result.Err problem)
 
+/-- [noble_kernel::execution::{impl core::clone::Clone for noble_kernel::execution::TextLiteral}::clone]:
+    Source: 'crates/noble-kernel/src/execution/mod.rs', lines 8:9-8:14
+    Visibility: public -/
+def execution.TextLiteral.Insts.CoreCloneClone.clone
+  (self : execution.TextLiteral) : Result execution.TextLiteral := do
+  let ni ← untrusted.NodeId.Insts.CoreCloneClone.clone self.node
+  let v ← alloc.vec.CloneVec.clone core.clone.CloneU8 self.bytes
+  ok { node := ni, bytes := v }
+
+/-- Trait implementation: [noble_kernel::execution::{impl core::clone::Clone for noble_kernel::execution::TextLiteral}]
+    Source: 'crates/noble-kernel/src/execution/mod.rs', lines 8:9-8:14 -/
+@[reducible]
+def execution.TextLiteral.Insts.CoreCloneClone : core.clone.Clone
+  execution.TextLiteral := {
+  clone := execution.TextLiteral.Insts.CoreCloneClone.clone
+}
+
+/-- [noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::NodeId}::fmt]:
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 17:22-17:27
+    Visibility: public -/
+def untrusted.NodeId.Insts.CoreFmtDebug.fmt
+  (self : untrusted.NodeId) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU32) self
+  core.fmt.Formatter.debug_tuple_field1_finish f (toStr "NodeId") dyn
+
+/-- Trait implementation: [noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::NodeId}]
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 17:22-17:27 -/
+@[reducible]
+def untrusted.NodeId.Insts.CoreFmtDebug : core.fmt.Debug untrusted.NodeId := {
+  fmt := untrusted.NodeId.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_kernel::execution::{impl core::fmt::Debug for noble_kernel::execution::TextLiteral}::fmt]:
+    Source: 'crates/noble-kernel/src/execution/mod.rs', lines 8:16-8:21
+    Visibility: public -/
+def execution.TextLiteral.Insts.CoreFmtDebug.fmt
+  (self : execution.TextLiteral) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ untrusted.NodeId.Insts.CoreFmtDebug self.node
+  let dyn1 :=
+    Dyn.mk _ (core.fmt.DebugShared (core.fmt.DebugVec core.fmt.DebugU8))
+      self.bytes
+  core.fmt.Formatter.debug_struct_field2_finish f (toStr "TextLiteral") (toStr
+    "node") dyn (toStr "bytes") dyn1
+
+/-- Trait implementation: [noble_kernel::execution::{impl core::fmt::Debug for noble_kernel::execution::TextLiteral}]
+    Source: 'crates/noble-kernel/src/execution/mod.rs', lines 8:16-8:21 -/
+@[reducible]
+def execution.TextLiteral.Insts.CoreFmtDebug : core.fmt.Debug
+  execution.TextLiteral := {
+  fmt := execution.TextLiteral.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::Node}]
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 52:9-52:14 -/
+@[reducible]
+def untrusted.Node.Insts.CoreCloneClone : core.clone.Clone untrusted.Node := {
+  clone := untrusted.Node.Insts.CoreCloneClone.clone
+}
+
+/-- [noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::Candidate}::clone]:
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 79:9-79:14
+    Visibility: public -/
+def untrusted.Candidate.Insts.CoreCloneClone.clone
+  (self : untrusted.Candidate) : Result untrusted.Candidate := do
+  let i ← lift (core.clone.impls.CloneU32.clone self.format)
+  let i1 ← lift (core.clone.impls.CloneU32.clone self.revision)
+  let v ←
+    alloc.vec.CloneVec.clone untrusted.Node.Insts.CoreCloneClone self.nodes
+  let v1 ←
+    alloc.vec.CloneVec.clone untrusted.NodeId.Insts.CoreCloneClone self.body
+  ok { format := i, revision := i1, nodes := v, body := v1 }
+
+/-- [noble_kernel::execution::{impl core::clone::Clone for noble_kernel::execution::Body}::clone]:
+    Source: 'crates/noble-kernel/src/execution/mod.rs', lines 15:9-15:14
+    Visibility: public -/
+def execution.Body.Insts.CoreCloneClone.clone
+  (self : execution.Body) : Result execution.Body := do
+  let c ← untrusted.Candidate.Insts.CoreCloneClone.clone self.candidate
+  let v ←
+    alloc.vec.CloneVec.clone execution.TextLiteral.Insts.CoreCloneClone
+      self.texts
+  ok { candidate := c, texts := v }
+
+/-- Trait implementation: [noble_kernel::execution::{impl core::clone::Clone for noble_kernel::execution::Body}]
+    Source: 'crates/noble-kernel/src/execution/mod.rs', lines 15:9-15:14 -/
+@[reducible]
+def execution.Body.Insts.CoreCloneClone : core.clone.Clone execution.Body := {
+  clone := execution.Body.Insts.CoreCloneClone.clone
+}
+
+/-- [noble_kernel::types::{impl core::fmt::Debug for noble_kernel::types::EffSet}::fmt]:
+    Source: 'crates/noble-kernel/src/types.rs', lines 29:16-29:21
+    Visibility: public -/
+def types.EffSet.Insts.CoreFmtDebug.fmt
+  (self : types.EffSet) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn :=
+    Dyn.mk _ (core.fmt.DebugShared (core.fmt.DebugVec
+      types.EffId.Insts.CoreFmtDebug)) self
+  core.fmt.Formatter.debug_tuple_field1_finish f (toStr "EffSet") dyn
+
+/-- Trait implementation: [noble_kernel::types::{impl core::fmt::Debug for noble_kernel::types::EffSet}]
+    Source: 'crates/noble-kernel/src/types.rs', lines 29:16-29:21 -/
+@[reducible]
+def types.EffSet.Insts.CoreFmtDebug : core.fmt.Debug types.EffSet := {
+  fmt := types.EffSet.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_kernel::types::impls::{impl core::fmt::Debug for noble_kernel::types::Ty}::fmt]:
+    Source: 'crates/noble-kernel/src/types/impls.rs', lines 205:4-246:5
+    Visibility: public -/
+def types.Ty.Insts.CoreFmtDebug.fmt
+  (self : types.Ty) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | types.Ty.UnitType => core.fmt.Formatter.write_str f (toStr "Unit")
+  | types.Ty.BoolType => core.fmt.Formatter.write_str f (toStr "Bool")
+  | types.Ty.I64Type => core.fmt.Formatter.write_str f (toStr "I64")
+  | types.Ty.TextType => core.fmt.Formatter.write_str f (toStr "Text")
+  | types.Ty.SyntaxType => core.fmt.Formatter.write_str f (toStr "Syntax")
+  | types.Ty.PairType left right =>
+    let (r, f1) ← core.fmt.Formatter.write_str f (toStr "Pair(")
+    match r with
+    | core.result.Result.Ok _ =>
+      let (r1, f2) ← types.Ty.Insts.CoreFmtDebug.fmt left f1
+      match r1 with
+      | core.result.Result.Ok _ =>
+        let (r2, f3) ← core.fmt.Formatter.write_str f2 (toStr ", ")
+        match r2 with
+        | core.result.Result.Ok _ =>
+          let (r3, f4) ← types.Ty.Insts.CoreFmtDebug.fmt right f3
+          match r3 with
+          | core.result.Result.Ok _ =>
+            core.fmt.Formatter.write_str f4 (toStr ")")
+          | core.result.Result.Err _ => ok (r3, f4)
+        | core.result.Result.Err _ => ok (r2, f3)
+      | core.result.Result.Err _ => ok (r1, f2)
+    | core.result.Result.Err _ => ok (r, f1)
+  | types.Ty.SumType left right =>
+    let (r, f1) ← core.fmt.Formatter.write_str f (toStr "Sum(")
+    match r with
+    | core.result.Result.Ok _ =>
+      let (r1, f2) ← types.Ty.Insts.CoreFmtDebug.fmt left f1
+      match r1 with
+      | core.result.Result.Ok _ =>
+        let (r2, f3) ← core.fmt.Formatter.write_str f2 (toStr ", ")
+        match r2 with
+        | core.result.Result.Ok _ =>
+          let (r3, f4) ← types.Ty.Insts.CoreFmtDebug.fmt right f3
+          match r3 with
+          | core.result.Result.Ok _ =>
+            core.fmt.Formatter.write_str f4 (toStr ")")
+          | core.result.Result.Err _ => ok (r3, f4)
+        | core.result.Result.Err _ => ok (r2, f3)
+      | core.result.Result.Err _ => ok (r1, f2)
+    | core.result.Result.Err _ => ok (r, f1)
+  | types.Ty.ListType item =>
+    let (r, f1) ← core.fmt.Formatter.write_str f (toStr "List(")
+    match r with
+    | core.result.Result.Ok _ =>
+      let (r1, f2) ← types.Ty.Insts.CoreFmtDebug.fmt item f1
+      match r1 with
+      | core.result.Result.Ok _ => core.fmt.Formatter.write_str f2 (toStr ")")
+      | core.result.Result.Err _ => ok (r1, f2)
+    | core.result.Result.Err _ => ok (r, f1)
+  | types.Ty.ProgramType stack_in stack_out effects =>
+    let (r, f1) ← core.fmt.Formatter.write_str f (toStr "Program(")
+    match r with
+    | core.result.Result.Ok _ =>
+      let s ← alloc.vec.Vec.as_slice Global stack_in
+      let (r1, f2) ← types.impls.debug_stack s f1
+      match r1 with
+      | core.result.Result.Ok _ =>
+        let (r2, f3) ← core.fmt.Formatter.write_str f2 (toStr ", ")
+        match r2 with
+        | core.result.Result.Ok _ =>
+          let s1 ← alloc.vec.Vec.as_slice Global stack_out
+          let (r3, f4) ← types.impls.debug_stack s1 f3
+          match r3 with
+          | core.result.Result.Ok _ =>
+            let (r4, f5) ← core.fmt.Formatter.write_str f4 (toStr ", ")
+            match r4 with
+            | core.result.Result.Ok _ =>
+              let (r5, f6) ← types.EffSet.Insts.CoreFmtDebug.fmt effects f5
+              match r5 with
+              | core.result.Result.Ok _ =>
+                core.fmt.Formatter.write_str f6 (toStr ")")
+              | core.result.Result.Err _ => ok (r5, f6)
+            | core.result.Result.Err _ => ok (r4, f5)
+          | core.result.Result.Err _ => ok (r3, f4)
+        | core.result.Result.Err _ => ok (r2, f3)
+      | core.result.Result.Err _ => ok (r1, f2)
+    | core.result.Result.Err _ => ok (r, f1)
+  | types.Ty.ResourceType kind =>
+    let (r, f1) ← core.fmt.Formatter.write_str f (toStr "Resource(")
+    match r with
+    | core.result.Result.Ok _ =>
+      let (r1, f2) ← types.ResourceKind.Insts.CoreFmtDebug.fmt kind f1
+      match r1 with
+      | core.result.Result.Ok _ => core.fmt.Formatter.write_str f2 (toStr ")")
+      | core.result.Result.Err _ => ok (r1, f2)
+    | core.result.Result.Err _ => ok (r, f1)
+partial_fixpoint
+
+/-- Trait implementation: [noble_kernel::types::impls::{impl core::fmt::Debug for noble_kernel::types::Ty}]
+    Source: 'crates/noble-kernel/src/types/impls.rs', lines 196:0-247:1 -/
+@[reducible]
+def types.Ty.Insts.CoreFmtDebug : core.fmt.Debug types.Ty := {
+  fmt := types.Ty.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_kernel::words::{impl core::fmt::Debug for noble_kernel::words::Binding}::fmt]:
+    Source: 'crates/noble-kernel/src/words.rs', lines 47:16-47:21
+    Visibility: public -/
+def words.Binding.Insts.CoreFmtDebug.fmt
+  (self : words.Binding) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | words.Binding.Stack __self_0 =>
+    let __self_01 :=
+      Dyn.mk _ (core.fmt.DebugShared (core.fmt.DebugVec
+        types.Ty.Insts.CoreFmtDebug)) __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Stack") __self_01
+  | words.Binding.Value __self_0 =>
+    let __self_01 :=
+      Dyn.mk _ (core.fmt.DebugShared types.Ty.Insts.CoreFmtDebug) __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Value") __self_01
+  | words.Binding.Effect __self_0 =>
+    let __self_01 :=
+      Dyn.mk _ (core.fmt.DebugShared types.EffSet.Insts.CoreFmtDebug) __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Effect") __self_01
+  | words.Binding.Ref __self_0 =>
+    let __self_01 :=
+      Dyn.mk _ (core.fmt.DebugShared words.Variable.Insts.CoreFmtDebug)
+        __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Ref") __self_01
+
+/-- Trait implementation: [noble_kernel::words::{impl core::fmt::Debug for noble_kernel::words::Binding}]
+    Source: 'crates/noble-kernel/src/words.rs', lines 47:16-47:21 -/
+@[reducible]
+def words.Binding.Insts.CoreFmtDebug : core.fmt.Debug words.Binding := {
+  fmt := words.Binding.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_kernel::words::{impl core::fmt::Debug for noble_kernel::words::Inst}::fmt]:
+    Source: 'crates/noble-kernel/src/words.rs', lines 63:16-63:21
+    Visibility: public -/
+def words.Inst.Insts.CoreFmtDebug.fmt
+  (self : words.Inst) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn :=
+    Dyn.mk _ (core.fmt.DebugShared (core.fmt.DebugVec
+      words.Binding.Insts.CoreFmtDebug)) self.bindings
+  core.fmt.Formatter.debug_struct_field1_finish f (toStr "Inst") (toStr
+    "bindings") dyn
+
+/-- Trait implementation: [noble_kernel::words::{impl core::fmt::Debug for noble_kernel::words::Inst}]
+    Source: 'crates/noble-kernel/src/words.rs', lines 63:16-63:21 -/
+@[reducible]
+def words.Inst.Insts.CoreFmtDebug : core.fmt.Debug words.Inst := {
+  fmt := words.Inst.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Lit}::fmt]:
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 26:22-26:27
+    Visibility: public -/
+def untrusted.Lit.Insts.CoreFmtDebug.fmt
+  (self : untrusted.Lit) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | untrusted.Lit.I64Lit __self_0 =>
+    let __self_01 := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugI64) __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "I64") __self_01
+  | untrusted.Lit.BoolLit __self_0 =>
+    let __self_01 :=
+      Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugBool) __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Bool") __self_01
+  | untrusted.Lit.TextLit => core.fmt.Formatter.write_str f (toStr "Text")
+  | untrusted.Lit.UnitLit => core.fmt.Formatter.write_str f (toStr "Unit")
+
+/-- Trait implementation: [noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Lit}]
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 26:22-26:27 -/
+@[reducible]
+def untrusted.Lit.Insts.CoreFmtDebug : core.fmt.Debug untrusted.Lit := {
+  fmt := untrusted.Lit.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Node}::fmt]:
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 52:16-52:21
+    Visibility: public -/
+def untrusted.Node.Insts.CoreFmtDebug.fmt
+  (self : untrusted.Node) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | untrusted.Node.Literal __self_0 __self_1 =>
+    let __self_01 := Dyn.mk _ untrusted.Lit.Insts.CoreFmtDebug __self_0
+    let __self_11 :=
+      Dyn.mk _ (core.fmt.DebugShared words.Inst.Insts.CoreFmtDebug) __self_1
+    core.fmt.Formatter.debug_struct_field2_finish f (toStr "Literal") (toStr
+      "lit") __self_01 (toStr "inst") __self_11
+  | untrusted.Node.Invocation __self_0 __self_1 =>
+    let __self_01 := Dyn.mk _ contracts.Definition.Insts.CoreFmtDebug __self_0
+    let __self_11 :=
+      Dyn.mk _ (core.fmt.DebugShared words.Inst.Insts.CoreFmtDebug) __self_1
+    core.fmt.Formatter.debug_struct_field2_finish f (toStr "Invocation") (toStr
+      "def") __self_01 (toStr "inst") __self_11
+  | untrusted.Node.Quotation __self_0 __self_1 =>
+    let __self_01 :=
+      Dyn.mk _ (core.fmt.DebugVec untrusted.NodeId.Insts.CoreFmtDebug) __self_0
+    let __self_11 :=
+      Dyn.mk _ (core.fmt.DebugShared words.Inst.Insts.CoreFmtDebug) __self_1
+    core.fmt.Formatter.debug_struct_field2_finish f (toStr "Quotation") (toStr
+      "body") __self_01 (toStr "inst") __self_11
+
+/-- Trait implementation: [noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Node}]
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 52:16-52:21 -/
+@[reducible]
+def untrusted.Node.Insts.CoreFmtDebug : core.fmt.Debug untrusted.Node := {
+  fmt := untrusted.Node.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Candidate}::fmt]:
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 79:16-79:21
+    Visibility: public -/
+def untrusted.Candidate.Insts.CoreFmtDebug.fmt
+  (self : untrusted.Candidate) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ core.fmt.DebugU32 self.format
+  let dyn1 := Dyn.mk _ core.fmt.DebugU32 self.revision
+  let dyn2 :=
+    Dyn.mk _ (core.fmt.DebugVec untrusted.Node.Insts.CoreFmtDebug) self.nodes
+  let dyn3 :=
+    Dyn.mk _ (core.fmt.DebugShared (core.fmt.DebugVec
+      untrusted.NodeId.Insts.CoreFmtDebug)) self.body
+  core.fmt.Formatter.debug_struct_field4_finish f (toStr "Candidate") (toStr
+    "format") dyn (toStr "revision") dyn1 (toStr "nodes") dyn2 (toStr "body")
+    dyn3
+
+/-- Trait implementation: [noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Candidate}]
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 79:16-79:21 -/
+@[reducible]
+def untrusted.Candidate.Insts.CoreFmtDebug : core.fmt.Debug untrusted.Candidate
+  := {
+  fmt := untrusted.Candidate.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_kernel::execution::{impl core::fmt::Debug for noble_kernel::execution::Body}::fmt]:
+    Source: 'crates/noble-kernel/src/execution/mod.rs', lines 15:16-15:21
+    Visibility: public -/
+def execution.Body.Insts.CoreFmtDebug.fmt
+  (self : execution.Body) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ untrusted.Candidate.Insts.CoreFmtDebug self.candidate
+  let dyn1 :=
+    Dyn.mk _ (core.fmt.DebugShared (core.fmt.DebugVec
+      execution.TextLiteral.Insts.CoreFmtDebug)) self.texts
+  core.fmt.Formatter.debug_struct_field2_finish f (toStr "Body") (toStr
+    "candidate") dyn (toStr "texts") dyn1
+
+/-- Trait implementation: [noble_kernel::execution::{impl core::fmt::Debug for noble_kernel::execution::Body}]
+    Source: 'crates/noble-kernel/src/execution/mod.rs', lines 15:16-15:21 -/
+@[reducible]
+def execution.Body.Insts.CoreFmtDebug : core.fmt.Debug execution.Body := {
+  fmt := execution.Body.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::Expected}::clone]:
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 92:9-92:14
+    Visibility: public -/
+def untrusted.Expected.Insts.CoreCloneClone.clone
+  (self : untrusted.Expected) : Result untrusted.Expected := do
+  let v ←
+    alloc.vec.CloneVec.clone types.Ty.Insts.CoreCloneClone self.stack_in
+  let v1 ←
+    alloc.vec.CloneVec.clone types.Ty.Insts.CoreCloneClone self.stack_out
+  let es ← types.EffSet.Insts.CoreCloneClone.clone self.allowed_effects
+  ok { stack_in := v, stack_out := v1, allowed_effects := es }
+
+/-- [noble_kernel::execution::{impl core::clone::Clone for noble_kernel::execution::Definition}::clone]:
+    Source: 'crates/noble-kernel/src/execution/mod.rs', lines 22:9-22:14
+    Visibility: public -/
+def execution.Definition.Insts.CoreCloneClone.clone
+  (self : execution.Definition) : Result execution.Definition := do
+  let d ← contracts.Definition.Insts.CoreCloneClone.clone self.definition
+  let i ← lift (core.clone.impls.CloneU64.clone self.identity)
+  let b ← execution.Body.Insts.CoreCloneClone.clone self.body
+  let e ← untrusted.Expected.Insts.CoreCloneClone.clone self.expected
+  ok { definition := d, identity := i, body := b, expected := e }
+
+/-- Trait implementation: [noble_kernel::execution::{impl core::clone::Clone for noble_kernel::execution::Definition}]
+    Source: 'crates/noble-kernel/src/execution/mod.rs', lines 22:9-22:14 -/
+@[reducible]
+def execution.Definition.Insts.CoreCloneClone : core.clone.Clone
+  execution.Definition := {
+  clone := execution.Definition.Insts.CoreCloneClone.clone
+}
+
+/-- [noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Expected}::fmt]:
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 92:16-92:21
+    Visibility: public -/
+def untrusted.Expected.Insts.CoreFmtDebug.fmt
+  (self : untrusted.Expected) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn :=
+    Dyn.mk _ (core.fmt.DebugVec types.Ty.Insts.CoreFmtDebug) self.stack_in
+  let dyn1 :=
+    Dyn.mk _ (core.fmt.DebugVec types.Ty.Insts.CoreFmtDebug) self.stack_out
+  let dyn2 :=
+    Dyn.mk _ (core.fmt.DebugShared types.EffSet.Insts.CoreFmtDebug)
+      self.allowed_effects
+  core.fmt.Formatter.debug_struct_field3_finish f (toStr "Expected") (toStr
+    "stack_in") dyn (toStr "stack_out") dyn1 (toStr "allowed_effects") dyn2
+
+/-- Trait implementation: [noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Expected}]
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 92:16-92:21 -/
+@[reducible]
+def untrusted.Expected.Insts.CoreFmtDebug : core.fmt.Debug untrusted.Expected
+  := {
+  fmt := untrusted.Expected.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_kernel::execution::{impl core::fmt::Debug for noble_kernel::execution::Definition}::fmt]:
+    Source: 'crates/noble-kernel/src/execution/mod.rs', lines 22:16-22:21
+    Visibility: public -/
+def execution.Definition.Insts.CoreFmtDebug.fmt
+  (self : execution.Definition) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ contracts.Definition.Insts.CoreFmtDebug self.definition
+  let dyn1 := Dyn.mk _ core.fmt.DebugU64 self.identity
+  let dyn2 := Dyn.mk _ execution.Body.Insts.CoreFmtDebug self.body
+  let dyn3 :=
+    Dyn.mk _ (core.fmt.DebugShared untrusted.Expected.Insts.CoreFmtDebug)
+      self.expected
+  core.fmt.Formatter.debug_struct_field4_finish f (toStr "Definition") (toStr
+    "definition") dyn (toStr "identity") dyn1 (toStr "body") dyn2 (toStr
+    "expected") dyn3
+
+/-- Trait implementation: [noble_kernel::execution::{impl core::fmt::Debug for noble_kernel::execution::Definition}]
+    Source: 'crates/noble-kernel/src/execution/mod.rs', lines 22:16-22:21 -/
+@[reducible]
+def execution.Definition.Insts.CoreFmtDebug : core.fmt.Debug
+  execution.Definition := {
+  fmt := execution.Definition.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::Limits}::clone]:
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 103:9-103:14
+    Visibility: public -/
+def untrusted.Limits.Insts.CoreCloneClone.clone
+  (self : untrusted.Limits) : Result untrusted.Limits := do
+  ok self
+
+/-- [noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::Request}::clone]:
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 126:9-126:14
+    Visibility: public -/
+def untrusted.Request.Insts.CoreCloneClone.clone
+  (self : untrusted.Request) : Result untrusted.Request := do
+  let i ← lift (core.clone.impls.CloneU32.clone self.input_bytes)
+  let e ← untrusted.Expected.Insts.CoreCloneClone.clone self.expected
+  let l ← untrusted.Limits.Insts.CoreCloneClone.clone self.limits
+  ok { input_bytes := i, expected := e, limits := l }
+
+/-- [noble_kernel::execution::{impl core::clone::Clone for noble_kernel::execution::Submission}::clone]:
+    Source: 'crates/noble-kernel/src/execution/mod.rs', lines 36:9-36:14
+    Visibility: public -/
+def execution.Submission.Insts.CoreCloneClone.clone
+  (self : execution.Submission) : Result execution.Submission := do
+  let e ← contracts.Env.Insts.CoreCloneClone.clone self.environment
+  let v ←
+    alloc.vec.CloneVec.clone execution.Definition.Insts.CoreCloneClone
+      self.definitions
+  let b ← execution.Body.Insts.CoreCloneClone.clone self.body
+  let r ← untrusted.Request.Insts.CoreCloneClone.clone self.request
+  ok { environment := e, definitions := v, body := b, request := r }
+
+/-- Trait implementation: [noble_kernel::execution::{impl core::clone::Clone for noble_kernel::execution::Submission}]
+    Source: 'crates/noble-kernel/src/execution/mod.rs', lines 36:9-36:14 -/
+@[reducible]
+def execution.Submission.Insts.CoreCloneClone : core.clone.Clone
+  execution.Submission := {
+  clone := execution.Submission.Insts.CoreCloneClone.clone
+}
+
+/-- [noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Limits}::fmt]:
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 103:22-103:27
+    Visibility: public -/
+def untrusted.Limits.Insts.CoreFmtDebug.fmt
+  (self : untrusted.Limits) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ core.fmt.DebugU32 self.bytes
+  let dyn1 := Dyn.mk _ core.fmt.DebugU32 self.nodes
+  let dyn2 := Dyn.mk _ core.fmt.DebugU32 self.depth
+  let dyn3 := Dyn.mk _ core.fmt.DebugU32 self.type_size
+  let dyn4 := Dyn.mk _ core.fmt.DebugU32 self.stack_height
+  let dyn5 := Dyn.mk _ core.fmt.DebugU32 self.work
+  let dyn6 :=
+    Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU32) self.diagnostics
+  let values :=
+    Array.to_slice
+      (Array.make 7#usize [ dyn, dyn1, dyn2, dyn3, dyn4, dyn5, dyn6 ])
+  let s ←
+    lift (Array.to_slice
+      (Array.make 7#usize [
+        toStr "bytes", toStr "nodes", toStr "depth", toStr "type_size", toStr
+        "stack_height", toStr "work", toStr "diagnostics"
+        ]))
+  core.fmt.Formatter.debug_struct_fields_finish f (toStr "Limits") s values
+
+/-- Trait implementation: [noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Limits}]
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 103:22-103:27 -/
+@[reducible]
+def untrusted.Limits.Insts.CoreFmtDebug : core.fmt.Debug untrusted.Limits := {
+  fmt := untrusted.Limits.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Request}::fmt]:
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 126:16-126:21
+    Visibility: public -/
+def untrusted.Request.Insts.CoreFmtDebug.fmt
+  (self : untrusted.Request) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ core.fmt.DebugU32 self.input_bytes
+  let dyn1 := Dyn.mk _ untrusted.Expected.Insts.CoreFmtDebug self.expected
+  let dyn2 :=
+    Dyn.mk _ (core.fmt.DebugShared untrusted.Limits.Insts.CoreFmtDebug)
+      self.limits
+  core.fmt.Formatter.debug_struct_field3_finish f (toStr "Request") (toStr
+    "input_bytes") dyn (toStr "expected") dyn1 (toStr "limits") dyn2
+
+/-- Trait implementation: [noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Request}]
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 126:16-126:21 -/
+@[reducible]
+def untrusted.Request.Insts.CoreFmtDebug : core.fmt.Debug untrusted.Request
+  := {
+  fmt := untrusted.Request.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_kernel::execution::{impl core::fmt::Debug for noble_kernel::execution::Submission}::fmt]:
+    Source: 'crates/noble-kernel/src/execution/mod.rs', lines 36:16-36:21
+    Visibility: public -/
+def execution.Submission.Insts.CoreFmtDebug.fmt
+  (self : execution.Submission) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ contracts.Env.Insts.CoreFmtDebug self.environment
+  let dyn1 :=
+    Dyn.mk _ (core.fmt.DebugVec execution.Definition.Insts.CoreFmtDebug)
+      self.definitions
+  let dyn2 := Dyn.mk _ execution.Body.Insts.CoreFmtDebug self.body
+  let dyn3 :=
+    Dyn.mk _ (core.fmt.DebugShared untrusted.Request.Insts.CoreFmtDebug)
+      self.request
+  core.fmt.Formatter.debug_struct_field4_finish f (toStr "Submission") (toStr
+    "environment") dyn (toStr "definitions") dyn1 (toStr "body") dyn2 (toStr
+    "request") dyn3
+
+/-- Trait implementation: [noble_kernel::execution::{impl core::fmt::Debug for noble_kernel::execution::Submission}]
+    Source: 'crates/noble-kernel/src/execution/mod.rs', lines 36:16-36:21 -/
+@[reducible]
+def execution.Submission.Insts.CoreFmtDebug : core.fmt.Debug
+  execution.Submission := {
+  fmt := execution.Submission.Insts.CoreFmtDebug.fmt
+}
+
 /-- [noble_kernel::consume_budget]:
-    Source: 'crates/noble-kernel/src/lib.rs', lines 45:0-50:1
+    Source: 'crates/noble-kernel/src/lib.rs', lines 46:0-51:1
     Visibility: public -/
 def consume_budget (remaining : Std.U32) : Result BudgetOutcome := do
   let o ← lift (U32.checked_sub remaining 1#u32)
@@ -7394,122 +7974,6 @@ def shapes.Defect.Insts.CoreCmpEq : core.cmp.Eq shapes.Defect := {
   assert_fields_are_eq := shapes.Defect.Insts.CoreCmpEq.assert_fields_are_eq
 }
 
-/-- [noble_kernel::types::{impl core::fmt::Debug for noble_kernel::types::EffSet}::fmt]:
-    Source: 'crates/noble-kernel/src/types.rs', lines 29:16-29:21
-    Visibility: public -/
-def types.EffSet.Insts.CoreFmtDebug.fmt
-  (self : types.EffSet) (f : core.fmt.Formatter) :
-  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
-  := do
-  let dyn :=
-    Dyn.mk _ (core.fmt.DebugShared (core.fmt.DebugVec
-      types.EffId.Insts.CoreFmtDebug)) self
-  core.fmt.Formatter.debug_tuple_field1_finish f (toStr "EffSet") dyn
-
-/-- [noble_kernel::types::impls::{impl core::fmt::Debug for noble_kernel::types::Ty}::fmt]:
-    Source: 'crates/noble-kernel/src/types/impls.rs', lines 205:4-246:5
-    Visibility: public -/
-def types.Ty.Insts.CoreFmtDebug.fmt
-  (self : types.Ty) (f : core.fmt.Formatter) :
-  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
-  := do
-  match self with
-  | types.Ty.UnitType => core.fmt.Formatter.write_str f (toStr "Unit")
-  | types.Ty.BoolType => core.fmt.Formatter.write_str f (toStr "Bool")
-  | types.Ty.I64Type => core.fmt.Formatter.write_str f (toStr "I64")
-  | types.Ty.TextType => core.fmt.Formatter.write_str f (toStr "Text")
-  | types.Ty.SyntaxType => core.fmt.Formatter.write_str f (toStr "Syntax")
-  | types.Ty.PairType left right =>
-    let (r, f1) ← core.fmt.Formatter.write_str f (toStr "Pair(")
-    match r with
-    | core.result.Result.Ok _ =>
-      let (r1, f2) ← types.Ty.Insts.CoreFmtDebug.fmt left f1
-      match r1 with
-      | core.result.Result.Ok _ =>
-        let (r2, f3) ← core.fmt.Formatter.write_str f2 (toStr ", ")
-        match r2 with
-        | core.result.Result.Ok _ =>
-          let (r3, f4) ← types.Ty.Insts.CoreFmtDebug.fmt right f3
-          match r3 with
-          | core.result.Result.Ok _ =>
-            core.fmt.Formatter.write_str f4 (toStr ")")
-          | core.result.Result.Err _ => ok (r3, f4)
-        | core.result.Result.Err _ => ok (r2, f3)
-      | core.result.Result.Err _ => ok (r1, f2)
-    | core.result.Result.Err _ => ok (r, f1)
-  | types.Ty.SumType left right =>
-    let (r, f1) ← core.fmt.Formatter.write_str f (toStr "Sum(")
-    match r with
-    | core.result.Result.Ok _ =>
-      let (r1, f2) ← types.Ty.Insts.CoreFmtDebug.fmt left f1
-      match r1 with
-      | core.result.Result.Ok _ =>
-        let (r2, f3) ← core.fmt.Formatter.write_str f2 (toStr ", ")
-        match r2 with
-        | core.result.Result.Ok _ =>
-          let (r3, f4) ← types.Ty.Insts.CoreFmtDebug.fmt right f3
-          match r3 with
-          | core.result.Result.Ok _ =>
-            core.fmt.Formatter.write_str f4 (toStr ")")
-          | core.result.Result.Err _ => ok (r3, f4)
-        | core.result.Result.Err _ => ok (r2, f3)
-      | core.result.Result.Err _ => ok (r1, f2)
-    | core.result.Result.Err _ => ok (r, f1)
-  | types.Ty.ListType item =>
-    let (r, f1) ← core.fmt.Formatter.write_str f (toStr "List(")
-    match r with
-    | core.result.Result.Ok _ =>
-      let (r1, f2) ← types.Ty.Insts.CoreFmtDebug.fmt item f1
-      match r1 with
-      | core.result.Result.Ok _ => core.fmt.Formatter.write_str f2 (toStr ")")
-      | core.result.Result.Err _ => ok (r1, f2)
-    | core.result.Result.Err _ => ok (r, f1)
-  | types.Ty.ProgramType stack_in stack_out effects =>
-    let (r, f1) ← core.fmt.Formatter.write_str f (toStr "Program(")
-    match r with
-    | core.result.Result.Ok _ =>
-      let s ← alloc.vec.Vec.as_slice Global stack_in
-      let (r1, f2) ← types.impls.debug_stack s f1
-      match r1 with
-      | core.result.Result.Ok _ =>
-        let (r2, f3) ← core.fmt.Formatter.write_str f2 (toStr ", ")
-        match r2 with
-        | core.result.Result.Ok _ =>
-          let s1 ← alloc.vec.Vec.as_slice Global stack_out
-          let (r3, f4) ← types.impls.debug_stack s1 f3
-          match r3 with
-          | core.result.Result.Ok _ =>
-            let (r4, f5) ← core.fmt.Formatter.write_str f4 (toStr ", ")
-            match r4 with
-            | core.result.Result.Ok _ =>
-              let (r5, f6) ← types.EffSet.Insts.CoreFmtDebug.fmt effects f5
-              match r5 with
-              | core.result.Result.Ok _ =>
-                core.fmt.Formatter.write_str f6 (toStr ")")
-              | core.result.Result.Err _ => ok (r5, f6)
-            | core.result.Result.Err _ => ok (r4, f5)
-          | core.result.Result.Err _ => ok (r3, f4)
-        | core.result.Result.Err _ => ok (r2, f3)
-      | core.result.Result.Err _ => ok (r1, f2)
-    | core.result.Result.Err _ => ok (r, f1)
-  | types.Ty.ResourceType kind =>
-    let (r, f1) ← core.fmt.Formatter.write_str f (toStr "Resource(")
-    match r with
-    | core.result.Result.Ok _ =>
-      let (r1, f2) ← types.ResourceKind.Insts.CoreFmtDebug.fmt kind f1
-      match r1 with
-      | core.result.Result.Ok _ => core.fmt.Formatter.write_str f2 (toStr ")")
-      | core.result.Result.Err _ => ok (r1, f2)
-    | core.result.Result.Err _ => ok (r, f1)
-partial_fixpoint
-
-/-- Trait implementation: [noble_kernel::types::impls::{impl core::fmt::Debug for noble_kernel::types::Ty}]
-    Source: 'crates/noble-kernel/src/types/impls.rs', lines 196:0-247:1 -/
-@[reducible]
-def types.Ty.Insts.CoreFmtDebug : core.fmt.Debug types.Ty := {
-  fmt := types.Ty.Insts.CoreFmtDebug.fmt
-}
-
 /-- [noble_kernel::types::{impl core::clone::Clone for noble_kernel::types::ResourceKind}::clone]:
     Source: 'crates/noble-kernel/src/types.rs', lines 14:9-14:14
     Visibility: public -/
@@ -7610,13 +8074,6 @@ def types.EffSet.Insts.CoreCloneClone : core.clone.Clone types.EffSet := {
   clone := types.EffSet.Insts.CoreCloneClone.clone
 }
 
-/-- Trait implementation: [noble_kernel::types::{impl core::fmt::Debug for noble_kernel::types::EffSet}]
-    Source: 'crates/noble-kernel/src/types.rs', lines 29:16-29:21 -/
-@[reducible]
-def types.EffSet.Insts.CoreFmtDebug : core.fmt.Debug types.EffSet := {
-  fmt := types.EffSet.Insts.CoreFmtDebug.fmt
-}
-
 /-- Trait implementation: [noble_kernel::types::{impl core::marker::StructuralPartialEq for noble_kernel::types::EffSet}]
     Source: 'crates/noble-kernel/src/types.rs', lines 29:23-29:32 -/
 @[reducible]
@@ -7700,23 +8157,6 @@ def untrusted.NodeId.Insts.CoreMarkerCopy : core.marker.Copy untrusted.NodeId
   cloneInst := untrusted.NodeId.Insts.CoreCloneClone
 }
 
-/-- [noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::NodeId}::fmt]:
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 17:22-17:27
-    Visibility: public -/
-def untrusted.NodeId.Insts.CoreFmtDebug.fmt
-  (self : untrusted.NodeId) (f : core.fmt.Formatter) :
-  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
-  := do
-  let dyn := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU32) self
-  core.fmt.Formatter.debug_tuple_field1_finish f (toStr "NodeId") dyn
-
-/-- Trait implementation: [noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::NodeId}]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 17:22-17:27 -/
-@[reducible]
-def untrusted.NodeId.Insts.CoreFmtDebug : core.fmt.Debug untrusted.NodeId := {
-  fmt := untrusted.NodeId.Insts.CoreFmtDebug.fmt
-}
-
 /-- Trait implementation: [noble_kernel::untrusted::{impl core::marker::StructuralPartialEq for noble_kernel::untrusted::NodeId}]
     Source: 'crates/noble-kernel/src/untrusted.rs', lines 17:29-17:38 -/
 @[reducible]
@@ -7768,31 +8208,6 @@ def untrusted.Lit.Insts.CoreCloneClone : core.clone.Clone untrusted.Lit := {
 @[reducible]
 def untrusted.Lit.Insts.CoreMarkerCopy : core.marker.Copy untrusted.Lit := {
   cloneInst := untrusted.Lit.Insts.CoreCloneClone
-}
-
-/-- [noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Lit}::fmt]:
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 26:22-26:27
-    Visibility: public -/
-def untrusted.Lit.Insts.CoreFmtDebug.fmt
-  (self : untrusted.Lit) (f : core.fmt.Formatter) :
-  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
-  := do
-  match self with
-  | untrusted.Lit.I64Lit __self_0 =>
-    let __self_01 := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugI64) __self_0
-    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "I64") __self_01
-  | untrusted.Lit.BoolLit __self_0 =>
-    let __self_01 :=
-      Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugBool) __self_0
-    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Bool") __self_01
-  | untrusted.Lit.TextLit => core.fmt.Formatter.write_str f (toStr "Text")
-  | untrusted.Lit.UnitLit => core.fmt.Formatter.write_str f (toStr "Unit")
-
-/-- Trait implementation: [noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Lit}]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 26:22-26:27 -/
-@[reducible]
-def untrusted.Lit.Insts.CoreFmtDebug : core.fmt.Debug untrusted.Lit := {
-  fmt := untrusted.Lit.Insts.CoreFmtDebug.fmt
 }
 
 /-- Trait implementation: [noble_kernel::untrusted::{impl core::marker::StructuralPartialEq for noble_kernel::untrusted::Lit}]
@@ -7865,115 +8280,6 @@ def untrusted.Lit.ty (self : untrusted.Lit) : Result types.Ty := do
   | untrusted.Lit.TextLit => ok types.Ty.TextType
   | untrusted.Lit.UnitLit => ok types.Ty.UnitType
 
-/-- Trait implementation: [noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::Node}]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 52:9-52:14 -/
-@[reducible]
-def untrusted.Node.Insts.CoreCloneClone : core.clone.Clone untrusted.Node := {
-  clone := untrusted.Node.Insts.CoreCloneClone.clone
-}
-
-/-- [noble_kernel::words::{impl core::fmt::Debug for noble_kernel::words::Binding}::fmt]:
-    Source: 'crates/noble-kernel/src/words.rs', lines 47:16-47:21
-    Visibility: public -/
-def words.Binding.Insts.CoreFmtDebug.fmt
-  (self : words.Binding) (f : core.fmt.Formatter) :
-  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
-  := do
-  match self with
-  | words.Binding.Stack __self_0 =>
-    let __self_01 :=
-      Dyn.mk _ (core.fmt.DebugShared (core.fmt.DebugVec
-        types.Ty.Insts.CoreFmtDebug)) __self_0
-    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Stack") __self_01
-  | words.Binding.Value __self_0 =>
-    let __self_01 :=
-      Dyn.mk _ (core.fmt.DebugShared types.Ty.Insts.CoreFmtDebug) __self_0
-    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Value") __self_01
-  | words.Binding.Effect __self_0 =>
-    let __self_01 :=
-      Dyn.mk _ (core.fmt.DebugShared types.EffSet.Insts.CoreFmtDebug) __self_0
-    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Effect") __self_01
-  | words.Binding.Ref __self_0 =>
-    let __self_01 :=
-      Dyn.mk _ (core.fmt.DebugShared words.Variable.Insts.CoreFmtDebug)
-        __self_0
-    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Ref") __self_01
-
-/-- Trait implementation: [noble_kernel::words::{impl core::fmt::Debug for noble_kernel::words::Binding}]
-    Source: 'crates/noble-kernel/src/words.rs', lines 47:16-47:21 -/
-@[reducible]
-def words.Binding.Insts.CoreFmtDebug : core.fmt.Debug words.Binding := {
-  fmt := words.Binding.Insts.CoreFmtDebug.fmt
-}
-
-/-- [noble_kernel::words::{impl core::fmt::Debug for noble_kernel::words::Inst}::fmt]:
-    Source: 'crates/noble-kernel/src/words.rs', lines 63:16-63:21
-    Visibility: public -/
-def words.Inst.Insts.CoreFmtDebug.fmt
-  (self : words.Inst) (f : core.fmt.Formatter) :
-  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
-  := do
-  let dyn :=
-    Dyn.mk _ (core.fmt.DebugShared (core.fmt.DebugVec
-      words.Binding.Insts.CoreFmtDebug)) self.bindings
-  core.fmt.Formatter.debug_struct_field1_finish f (toStr "Inst") (toStr
-    "bindings") dyn
-
-/-- Trait implementation: [noble_kernel::words::{impl core::fmt::Debug for noble_kernel::words::Inst}]
-    Source: 'crates/noble-kernel/src/words.rs', lines 63:16-63:21 -/
-@[reducible]
-def words.Inst.Insts.CoreFmtDebug : core.fmt.Debug words.Inst := {
-  fmt := words.Inst.Insts.CoreFmtDebug.fmt
-}
-
-/-- [noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Node}::fmt]:
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 52:16-52:21
-    Visibility: public -/
-def untrusted.Node.Insts.CoreFmtDebug.fmt
-  (self : untrusted.Node) (f : core.fmt.Formatter) :
-  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
-  := do
-  match self with
-  | untrusted.Node.Literal __self_0 __self_1 =>
-    let __self_01 := Dyn.mk _ untrusted.Lit.Insts.CoreFmtDebug __self_0
-    let __self_11 :=
-      Dyn.mk _ (core.fmt.DebugShared words.Inst.Insts.CoreFmtDebug) __self_1
-    core.fmt.Formatter.debug_struct_field2_finish f (toStr "Literal") (toStr
-      "lit") __self_01 (toStr "inst") __self_11
-  | untrusted.Node.Invocation __self_0 __self_1 =>
-    let __self_01 := Dyn.mk _ contracts.Definition.Insts.CoreFmtDebug __self_0
-    let __self_11 :=
-      Dyn.mk _ (core.fmt.DebugShared words.Inst.Insts.CoreFmtDebug) __self_1
-    core.fmt.Formatter.debug_struct_field2_finish f (toStr "Invocation") (toStr
-      "def") __self_01 (toStr "inst") __self_11
-  | untrusted.Node.Quotation __self_0 __self_1 =>
-    let __self_01 :=
-      Dyn.mk _ (core.fmt.DebugVec untrusted.NodeId.Insts.CoreFmtDebug) __self_0
-    let __self_11 :=
-      Dyn.mk _ (core.fmt.DebugShared words.Inst.Insts.CoreFmtDebug) __self_1
-    core.fmt.Formatter.debug_struct_field2_finish f (toStr "Quotation") (toStr
-      "body") __self_01 (toStr "inst") __self_11
-
-/-- Trait implementation: [noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Node}]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 52:16-52:21 -/
-@[reducible]
-def untrusted.Node.Insts.CoreFmtDebug : core.fmt.Debug untrusted.Node := {
-  fmt := untrusted.Node.Insts.CoreFmtDebug.fmt
-}
-
-/-- [noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::Candidate}::clone]:
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 79:9-79:14
-    Visibility: public -/
-def untrusted.Candidate.Insts.CoreCloneClone.clone
-  (self : untrusted.Candidate) : Result untrusted.Candidate := do
-  let i ← lift (core.clone.impls.CloneU32.clone self.format)
-  let i1 ← lift (core.clone.impls.CloneU32.clone self.revision)
-  let v ←
-    alloc.vec.CloneVec.clone untrusted.Node.Insts.CoreCloneClone self.nodes
-  let v1 ←
-    alloc.vec.CloneVec.clone untrusted.NodeId.Insts.CoreCloneClone self.body
-  ok { format := i, revision := i1, nodes := v, body := v1 }
-
 /-- Trait implementation: [noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::Candidate}]
     Source: 'crates/noble-kernel/src/untrusted.rs', lines 79:9-79:14 -/
 @[reducible]
@@ -7982,44 +8288,6 @@ def untrusted.Candidate.Insts.CoreCloneClone : core.clone.Clone
   clone := untrusted.Candidate.Insts.CoreCloneClone.clone
 }
 
-/-- [noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Candidate}::fmt]:
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 79:16-79:21
-    Visibility: public -/
-def untrusted.Candidate.Insts.CoreFmtDebug.fmt
-  (self : untrusted.Candidate) (f : core.fmt.Formatter) :
-  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
-  := do
-  let dyn := Dyn.mk _ core.fmt.DebugU32 self.format
-  let dyn1 := Dyn.mk _ core.fmt.DebugU32 self.revision
-  let dyn2 :=
-    Dyn.mk _ (core.fmt.DebugVec untrusted.Node.Insts.CoreFmtDebug) self.nodes
-  let dyn3 :=
-    Dyn.mk _ (core.fmt.DebugShared (core.fmt.DebugVec
-      untrusted.NodeId.Insts.CoreFmtDebug)) self.body
-  core.fmt.Formatter.debug_struct_field4_finish f (toStr "Candidate") (toStr
-    "format") dyn (toStr "revision") dyn1 (toStr "nodes") dyn2 (toStr "body")
-    dyn3
-
-/-- Trait implementation: [noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Candidate}]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 79:16-79:21 -/
-@[reducible]
-def untrusted.Candidate.Insts.CoreFmtDebug : core.fmt.Debug untrusted.Candidate
-  := {
-  fmt := untrusted.Candidate.Insts.CoreFmtDebug.fmt
-}
-
-/-- [noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::Expected}::clone]:
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 92:9-92:14
-    Visibility: public -/
-def untrusted.Expected.Insts.CoreCloneClone.clone
-  (self : untrusted.Expected) : Result untrusted.Expected := do
-  let v ←
-    alloc.vec.CloneVec.clone types.Ty.Insts.CoreCloneClone self.stack_in
-  let v1 ←
-    alloc.vec.CloneVec.clone types.Ty.Insts.CoreCloneClone self.stack_out
-  let es ← types.EffSet.Insts.CoreCloneClone.clone self.allowed_effects
-  ok { stack_in := v, stack_out := v1, allowed_effects := es }
-
 /-- Trait implementation: [noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::Expected}]
     Source: 'crates/noble-kernel/src/untrusted.rs', lines 92:9-92:14 -/
 @[reducible]
@@ -8027,38 +8295,6 @@ def untrusted.Expected.Insts.CoreCloneClone : core.clone.Clone
   untrusted.Expected := {
   clone := untrusted.Expected.Insts.CoreCloneClone.clone
 }
-
-/-- [noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Expected}::fmt]:
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 92:16-92:21
-    Visibility: public -/
-def untrusted.Expected.Insts.CoreFmtDebug.fmt
-  (self : untrusted.Expected) (f : core.fmt.Formatter) :
-  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
-  := do
-  let dyn :=
-    Dyn.mk _ (core.fmt.DebugVec types.Ty.Insts.CoreFmtDebug) self.stack_in
-  let dyn1 :=
-    Dyn.mk _ (core.fmt.DebugVec types.Ty.Insts.CoreFmtDebug) self.stack_out
-  let dyn2 :=
-    Dyn.mk _ (core.fmt.DebugShared types.EffSet.Insts.CoreFmtDebug)
-      self.allowed_effects
-  core.fmt.Formatter.debug_struct_field3_finish f (toStr "Expected") (toStr
-    "stack_in") dyn (toStr "stack_out") dyn1 (toStr "allowed_effects") dyn2
-
-/-- Trait implementation: [noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Expected}]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 92:16-92:21 -/
-@[reducible]
-def untrusted.Expected.Insts.CoreFmtDebug : core.fmt.Debug untrusted.Expected
-  := {
-  fmt := untrusted.Expected.Insts.CoreFmtDebug.fmt
-}
-
-/-- [noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::Limits}::clone]:
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 103:9-103:14
-    Visibility: public -/
-def untrusted.Limits.Insts.CoreCloneClone.clone
-  (self : untrusted.Limits) : Result untrusted.Limits := do
-  ok self
 
 /-- Trait implementation: [noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::Limits}]
     Source: 'crates/noble-kernel/src/untrusted.rs', lines 103:9-103:14 -/
@@ -8074,39 +8310,6 @@ def untrusted.Limits.Insts.CoreCloneClone : core.clone.Clone untrusted.Limits
 def untrusted.Limits.Insts.CoreMarkerCopy : core.marker.Copy untrusted.Limits
   := {
   cloneInst := untrusted.Limits.Insts.CoreCloneClone
-}
-
-/-- [noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Limits}::fmt]:
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 103:22-103:27
-    Visibility: public -/
-def untrusted.Limits.Insts.CoreFmtDebug.fmt
-  (self : untrusted.Limits) (f : core.fmt.Formatter) :
-  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
-  := do
-  let dyn := Dyn.mk _ core.fmt.DebugU32 self.bytes
-  let dyn1 := Dyn.mk _ core.fmt.DebugU32 self.nodes
-  let dyn2 := Dyn.mk _ core.fmt.DebugU32 self.depth
-  let dyn3 := Dyn.mk _ core.fmt.DebugU32 self.type_size
-  let dyn4 := Dyn.mk _ core.fmt.DebugU32 self.stack_height
-  let dyn5 := Dyn.mk _ core.fmt.DebugU32 self.work
-  let dyn6 :=
-    Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU32) self.diagnostics
-  let values :=
-    Array.to_slice
-      (Array.make 7#usize [ dyn, dyn1, dyn2, dyn3, dyn4, dyn5, dyn6 ])
-  let s ←
-    lift (Array.to_slice
-      (Array.make 7#usize [
-        toStr "bytes", toStr "nodes", toStr "depth", toStr "type_size", toStr
-        "stack_height", toStr "work", toStr "diagnostics"
-        ]))
-  core.fmt.Formatter.debug_struct_fields_finish f (toStr "Limits") s values
-
-/-- Trait implementation: [noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Limits}]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 103:22-103:27 -/
-@[reducible]
-def untrusted.Limits.Insts.CoreFmtDebug : core.fmt.Debug untrusted.Limits := {
-  fmt := untrusted.Limits.Insts.CoreFmtDebug.fmt
 }
 
 /-- Trait implementation: [noble_kernel::untrusted::{impl core::marker::StructuralPartialEq for noble_kernel::untrusted::Limits}]
@@ -8165,45 +8368,12 @@ def untrusted.Limits.Insts.CoreCmpEq : core.cmp.Eq untrusted.Limits := {
   assert_fields_are_eq := untrusted.Limits.Insts.CoreCmpEq.assert_fields_are_eq
 }
 
-/-- [noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::Request}::clone]:
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 126:9-126:14
-    Visibility: public -/
-def untrusted.Request.Insts.CoreCloneClone.clone
-  (self : untrusted.Request) : Result untrusted.Request := do
-  let i ← lift (core.clone.impls.CloneU32.clone self.input_bytes)
-  let e ← untrusted.Expected.Insts.CoreCloneClone.clone self.expected
-  let l ← untrusted.Limits.Insts.CoreCloneClone.clone self.limits
-  ok { input_bytes := i, expected := e, limits := l }
-
 /-- Trait implementation: [noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::Request}]
     Source: 'crates/noble-kernel/src/untrusted.rs', lines 126:9-126:14 -/
 @[reducible]
 def untrusted.Request.Insts.CoreCloneClone : core.clone.Clone untrusted.Request
   := {
   clone := untrusted.Request.Insts.CoreCloneClone.clone
-}
-
-/-- [noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Request}::fmt]:
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 126:16-126:21
-    Visibility: public -/
-def untrusted.Request.Insts.CoreFmtDebug.fmt
-  (self : untrusted.Request) (f : core.fmt.Formatter) :
-  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
-  := do
-  let dyn := Dyn.mk _ core.fmt.DebugU32 self.input_bytes
-  let dyn1 := Dyn.mk _ untrusted.Expected.Insts.CoreFmtDebug self.expected
-  let dyn2 :=
-    Dyn.mk _ (core.fmt.DebugShared untrusted.Limits.Insts.CoreFmtDebug)
-      self.limits
-  core.fmt.Formatter.debug_struct_field3_finish f (toStr "Request") (toStr
-    "input_bytes") dyn (toStr "expected") dyn1 (toStr "limits") dyn2
-
-/-- Trait implementation: [noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Request}]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 126:16-126:21 -/
-@[reducible]
-def untrusted.Request.Insts.CoreFmtDebug : core.fmt.Debug untrusted.Request
-  := {
-  fmt := untrusted.Request.Insts.CoreFmtDebug.fmt
 }
 
 /-- [noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::Interface}::clone]:

@@ -1,0 +1,91 @@
+{
+  "schema": "noble-m4-nix-checks/v1",
+  "result": "passed",
+  "scope": "All13 checks on the completed archived M4 tree.",
+  "source": "/nix/store/r5ch0rnfklyxbav9sf4fsw5fk223zh83-noble-m4-source",
+  "source_projection": {
+    "excluded_generated_receipt": "verification/m4/nix-checks.json",
+    "excluded_cache_components": [
+      ".git",
+      ".pi",
+      ".lake",
+      ".lake-packages",
+      ".octet",
+      "target",
+      "node_modules"
+    ],
+    "reason": "This generated result cannot recursively bind itself. Source, documentation, reviewed policies, canonical ledger and retained evidence are otherwise included."
+  },
+  "command": [
+    "nix",
+    "build",
+    "--builders",
+    "",
+    "--option",
+    "substituters",
+    "https://cache.nixos.org",
+    "--impure",
+    "--no-link",
+    "--print-out-paths",
+    "--expr",
+    "let root = /home/brittonr/git/noble; source = builtins.path { path = root; name = \"noble-m4-source\"; filter = path: type: !(builtins.elem (baseNameOf path) [\".git\" \".pi\" \".lake\" \".lake-packages\" \".octet\" \"target\" \"node_modules\"]) && toString path != toString root + \"/verification/m4/nix-checks.json\"; }; flake = builtins.getFlake (builtins.unsafeDiscardStringContext (\"path:\" + toString source)); in builtins.attrValues flake.checks.x86_64-linux"
+  ],
+  "exit": 0,
+  "checks": {
+    "boundary-controls": {
+      "derivation": "/nix/store/gg96d32ss81fgajwxcygpfacgdm7v607-noble-boundary-controls.drv",
+      "output": "/nix/store/3y64c02zp0sa33q1x8lr4v7j2hbx0p2n-noble-boundary-controls"
+    },
+    "cairn": {
+      "derivation": "/nix/store/6ji3jxqif0z7bwk5liy9k1zqqbxgkx44-noble-cairn.drv",
+      "output": "/nix/store/mbbwsx9k5z6n0vcg3xq27k3jh1yg2a0k-noble-cairn"
+    },
+    "clippy": {
+      "derivation": "/nix/store/4426v4mfyb2hqrwspscd8k6hjjav2raf-noble-clippy.drv",
+      "output": "/nix/store/anl2mb58w4b8h4zv22j927hdd1rplwvq-noble-clippy"
+    },
+    "documents": {
+      "derivation": "/nix/store/rcxqbc00giq9wdvy6bpx5fsjsw6jx567-noble-documents.drv",
+      "output": "/nix/store/gq1pz2nw9gcqn5maph6pgczimk2bvi3r-noble-documents"
+    },
+    "format": {
+      "derivation": "/nix/store/5flw4sd1b0n0rm7dcc93r67h99svdlim-noble-format.drv",
+      "output": "/nix/store/zmp2vv37r4qahs4f7cq0b3mgxs3c2wwm-noble-format"
+    },
+    "native-assurance": {
+      "derivation": "/nix/store/l0j7q47nq9chm0mqqgqs75bh7f6mk590-noble-native-assurance.drv",
+      "output": "/nix/store/vg223ypgr1ph2544yvlqs05jkygr4wrp-noble-native-assurance"
+    },
+    "octet": {
+      "derivation": "/nix/store/dh2r92dqah9b3b35m4n9lp55fal0wbb0-noble-octet-deny-all.drv",
+      "output": "/nix/store/77kjklbj64vcilhv29jadf2vbry4ibfl-noble-octet-deny-all"
+    },
+    "policy": {
+      "derivation": "/nix/store/4jqvdks37xf7yfjprb3rpspbjgrrlhbk-noble-policy-freshness.drv",
+      "output": "/nix/store/wmj9ssb4fn6dzbajhznd201ifnp8cg4v-noble-policy-freshness"
+    },
+    "rust-tests": {
+      "derivation": "/nix/store/6ng0gv92sja0f9acjamqkm40hylxb1iq-noble-rust-tests.drv",
+      "output": "/nix/store/81af50k2qhm3vgv68ddk9s43mncsrx5d-noble-rust-tests"
+    },
+    "source-coverage": {
+      "derivation": "/nix/store/3bfl88w0rpf9p1rlailaqixiqvbfjx2h-noble-source-coverage.drv",
+      "output": "/nix/store/81p6s2411q8975z4m3qhhq82bqk2smya-noble-source-coverage"
+    },
+    "tool-overrides": {
+      "derivation": "/nix/store/siw5sl84m391pr3ipxlm1a8zpiz31i3y-noble-tool-overrides.drv",
+      "output": "/nix/store/6nq231p4gbwz0jn045ynfwbj842q3v78-noble-tool-overrides"
+    },
+    "tool-selection": {
+      "derivation": "/nix/store/541gmx8b584y0451q137yysppl9gb3b7-noble-tool-selection.drv",
+      "output": "/nix/store/rz0f97pl8bj1krk3rgksffimznzqnq76-noble-tool-selection"
+    },
+    "tool-versions": {
+      "derivation": "/nix/store/8n7x4c47gvp51szvm10qvn2zz3k2h72q-noble-tool-versions.drv",
+      "output": "/nix/store/l2j847p5xph09kjw4cm3rdvnvq1xhgp9-noble-tool-versions"
+    }
+  },
+  "stdout": "/nix/store/81p6s2411q8975z4m3qhhq82bqk2smya-noble-source-coverage\n/nix/store/anl2mb58w4b8h4zv22j927hdd1rplwvq-noble-clippy\n/nix/store/wmj9ssb4fn6dzbajhznd201ifnp8cg4v-noble-policy-freshness\n/nix/store/rz0f97pl8bj1krk3rgksffimznzqnq76-noble-tool-selection\n/nix/store/zmp2vv37r4qahs4f7cq0b3mgxs3c2wwm-noble-format\n/nix/store/mbbwsx9k5z6n0vcg3xq27k3jh1yg2a0k-noble-cairn\n/nix/store/81af50k2qhm3vgv68ddk9s43mncsrx5d-noble-rust-tests\n/nix/store/l2j847p5xph09kjw4cm3rdvnvq1xhgp9-noble-tool-versions\n/nix/store/77kjklbj64vcilhv29jadf2vbry4ibfl-noble-octet-deny-all\n/nix/store/3y64c02zp0sa33q1x8lr4v7j2hbx0p2n-noble-boundary-controls\n/nix/store/vg223ypgr1ph2544yvlqs05jkygr4wrp-noble-native-assurance\n/nix/store/gq1pz2nw9gcqn5maph6pgczimk2bvi3r-noble-documents\n/nix/store/6nq231p4gbwz0jn045ynfwbj842q3v78-noble-tool-overrides\n",
+  "stderr": "building '/nix/store/4y54a99i1b24r0rs538ar9pxxzqy4jzb-noble-inventory-artifacts.drv'...\nthese 32 derivations will be built:\n  /nix/store/si8jrrxxjgj3awn1psy1xfyqpk4yncxs-noble-boundary-workspace.drv\n  /nix/store/04764q6ciavpd5cz1dsvblhn1qf3gzy8-noble-boundary-global-state.drv\n  /nix/store/08274vc0vs4v9h68vfn3g5p2mka3c97k-noble-boundary-interior-state.drv\n  /nix/store/3jwqdbvhxb5mrk2bgvciyafcswx9x156-cargo-vendor-dir.drv\n  /nix/store/azm3s8lqplrvn7xps6v5mf4rpas5i7h8-boundary-randomness-cargo-config.drv\n  /nix/store/1nky4n42nj4450ldaa2azzd52qn225yf-noble-boundary-randomness.drv\n  /nix/store/3bfl88w0rpf9p1rlailaqixiqvbfjx2h-noble-source-coverage.drv\n  /nix/store/4426v4mfyb2hqrwspscd8k6hjjav2raf-noble-clippy.drv\n  /nix/store/4jqvdks37xf7yfjprb3rpspbjgrrlhbk-noble-policy-freshness.drv\n  /nix/store/541gmx8b584y0451q137yysppl9gb3b7-noble-tool-selection.drv\n  /nix/store/5flw4sd1b0n0rm7dcc93r67h99svdlim-noble-format.drv\n  /nix/store/6ji3jxqif0z7bwk5liy9k1zqqbxgkx44-noble-cairn.drv\n  /nix/store/6ng0gv92sja0f9acjamqkm40hylxb1iq-noble-rust-tests.drv\n  /nix/store/8n7x4c47gvp51szvm10qvn2zz3k2h72q-noble-tool-versions.drv\n  /nix/store/8sw7rh3qjlj910yw168qrgrvddpkyy74-noble-boundary-test-source-import.drv\n  /nix/store/9wvrrx5d5b6rn7mcqxsp137r6spzmgh6-noble-boundary-unsafe-foreign-declaration.drv\n  /nix/store/aycilhz0ip7sgdimy4sw7zpiaahazgjd-noble-boundary-unsafe-block.drv\n  /nix/store/bcv2q1iqlvs9q64i76nnr677cp9629mz-noble-boundary-no-std-test-witness.drv\n  /nix/store/dh2r92dqah9b3b35m4n9lp55fal0wbb0-noble-octet-deny-all.drv\n  /nix/store/gdd8pzrrfxvl7mh43bcladvi9ypq0fxa-noble-boundary-clock.drv\n  /nix/store/gpmwg2wjkx03ssnwnffhgpnip3j2g8bw-noble-boundary-filesystem.drv\n  /nix/store/i9x93sv8cnzgrbl359lqy0viqhzywjjh-noble-boundary-randomness-dependency.drv\n  /nix/store/m3mb3w25s41lg7r6cxfmryxmiljbslyf-noble-boundary-unsafe-function.drv\n  /nix/store/naj3ag6alhzybm1bk81fvyg59cvwd7rk-noble-boundary-host-return.drv\n  /nix/store/p9zgg96m98k1lp3d4fdk1wbh5nd8ydrv-noble-boundary-environment.drv\n  /nix/store/rb0y15g8viln44hya7x5k4zwlrk0apsz-noble-boundary-network.drv\n  /nix/store/wzmlqymxrbgk0ijhsn0p2ynwci3im1z6-noble-boundary-acyclic-shell.drv\n  /nix/store/y86fjffkqaxcmxj5j6w3khbvrcym2njw-noble-boundary-reverse-dependency.drv\n  /nix/store/zvsiz7q4j18k82ldgl6bsfy4dxzssqb5-noble-boundary-process.drv\n  /nix/store/gg96d32ss81fgajwxcygpfacgdm7v607-noble-boundary-controls.drv\n  /nix/store/rcxqbc00giq9wdvy6bpx5fsjsw6jx567-noble-documents.drv\n  /nix/store/siw5sl84m391pr3ipxlm1a8zpiz31i3y-noble-tool-overrides.drv\nbuilding '/nix/store/6ji3jxqif0z7bwk5liy9k1zqqbxgkx44-noble-cairn.drv'...\nbuilding '/nix/store/4426v4mfyb2hqrwspscd8k6hjjav2raf-noble-clippy.drv'...\nbuilding '/nix/store/rcxqbc00giq9wdvy6bpx5fsjsw6jx567-noble-documents.drv'...\nbuilding '/nix/store/5flw4sd1b0n0rm7dcc93r67h99svdlim-noble-format.drv'...\nbuilding '/nix/store/dh2r92dqah9b3b35m4n9lp55fal0wbb0-noble-octet-deny-all.drv'...\nbuilding '/nix/store/4jqvdks37xf7yfjprb3rpspbjgrrlhbk-noble-policy-freshness.drv'...\nbuilding '/nix/store/6ng0gv92sja0f9acjamqkm40hylxb1iq-noble-rust-tests.drv'...\nbuilding '/nix/store/3bfl88w0rpf9p1rlailaqixiqvbfjx2h-noble-source-coverage.drv'...\nbuilding '/nix/store/siw5sl84m391pr3ipxlm1a8zpiz31i3y-noble-tool-overrides.drv'...\nbuilding '/nix/store/541gmx8b584y0451q137yysppl9gb3b7-noble-tool-selection.drv'...\nbuilding '/nix/store/8n7x4c47gvp51szvm10qvn2zz3k2h72q-noble-tool-versions.drv'...\nbuilding '/nix/store/wzmlqymxrbgk0ijhsn0p2ynwci3im1z6-noble-boundary-acyclic-shell.drv'...\nbuilding '/nix/store/si8jrrxxjgj3awn1psy1xfyqpk4yncxs-noble-boundary-workspace.drv'...\nbuilding '/nix/store/3jwqdbvhxb5mrk2bgvciyafcswx9x156-cargo-vendor-dir.drv'...\nbuilding '/nix/store/azm3s8lqplrvn7xps6v5mf4rpas5i7h8-boundary-randomness-cargo-config.drv'...\nbuilding '/nix/store/y86fjffkqaxcmxj5j6w3khbvrcym2njw-noble-boundary-reverse-dependency.drv'...\nbuilding '/nix/store/gdd8pzrrfxvl7mh43bcladvi9ypq0fxa-noble-boundary-clock.drv'...\nbuilding '/nix/store/p9zgg96m98k1lp3d4fdk1wbh5nd8ydrv-noble-boundary-environment.drv'...\nbuilding '/nix/store/gpmwg2wjkx03ssnwnffhgpnip3j2g8bw-noble-boundary-filesystem.drv'...\nbuilding '/nix/store/04764q6ciavpd5cz1dsvblhn1qf3gzy8-noble-boundary-global-state.drv'...\nbuilding '/nix/store/naj3ag6alhzybm1bk81fvyg59cvwd7rk-noble-boundary-host-return.drv'...\nbuilding '/nix/store/08274vc0vs4v9h68vfn3g5p2mka3c97k-noble-boundary-interior-state.drv'...\nbuilding '/nix/store/rb0y15g8viln44hya7x5k4zwlrk0apsz-noble-boundary-network.drv'...\nbuilding '/nix/store/bcv2q1iqlvs9q64i76nnr677cp9629mz-noble-boundary-no-std-test-witness.drv'...\nbuilding '/nix/store/zvsiz7q4j18k82ldgl6bsfy4dxzssqb5-noble-boundary-process.drv'...\nbuilding '/nix/store/i9x93sv8cnzgrbl359lqy0viqhzywjjh-noble-boundary-randomness-dependency.drv'...\nbuilding '/nix/store/1nky4n42nj4450ldaa2azzd52qn225yf-noble-boundary-randomness.drv'...\nbuilding '/nix/store/8sw7rh3qjlj910yw168qrgrvddpkyy74-noble-boundary-test-source-import.drv'...\nbuilding '/nix/store/aycilhz0ip7sgdimy4sw7zpiaahazgjd-noble-boundary-unsafe-block.drv'...\nbuilding '/nix/store/9wvrrx5d5b6rn7mcqxsp137r6spzmgh6-noble-boundary-unsafe-foreign-declaration.drv'...\nbuilding '/nix/store/m3mb3w25s41lg7r6cxfmryxmiljbslyf-noble-boundary-unsafe-function.drv'...\nbuilding '/nix/store/gg96d32ss81fgajwxcygpfacgdm7v607-noble-boundary-controls.drv'...\n",
+  "source_binding_query": "{\"checks\":{\"boundary-controls\":{\"derivation\":\"/nix/store/gg96d32ss81fgajwxcygpfacgdm7v607-noble-boundary-controls.drv\",\"output\":\"/nix/store/3y64c02zp0sa33q1x8lr4v7j2hbx0p2n-noble-boundary-controls\"},\"cairn\":{\"derivation\":\"/nix/store/6ji3jxqif0z7bwk5liy9k1zqqbxgkx44-noble-cairn.drv\",\"output\":\"/nix/store/mbbwsx9k5z6n0vcg3xq27k3jh1yg2a0k-noble-cairn\"},\"clippy\":{\"derivation\":\"/nix/store/4426v4mfyb2hqrwspscd8k6hjjav2raf-noble-clippy.drv\",\"output\":\"/nix/store/anl2mb58w4b8h4zv22j927hdd1rplwvq-noble-clippy\"},\"documents\":{\"derivation\":\"/nix/store/rcxqbc00giq9wdvy6bpx5fsjsw6jx567-noble-documents.drv\",\"output\":\"/nix/store/gq1pz2nw9gcqn5maph6pgczimk2bvi3r-noble-documents\"},\"format\":{\"derivation\":\"/nix/store/5flw4sd1b0n0rm7dcc93r67h99svdlim-noble-format.drv\",\"output\":\"/nix/store/zmp2vv37r4qahs4f7cq0b3mgxs3c2wwm-noble-format\"},\"native-assurance\":{\"derivation\":\"/nix/store/l0j7q47nq9chm0mqqgqs75bh7f6mk590-noble-native-assurance.drv\",\"output\":\"/nix/store/vg223ypgr1ph2544yvlqs05jkygr4wrp-noble-native-assurance\"},\"octet\":{\"derivation\":\"/nix/store/dh2r92dqah9b3b35m4n9lp55fal0wbb0-noble-octet-deny-all.drv\",\"output\":\"/nix/store/77kjklbj64vcilhv29jadf2vbry4ibfl-noble-octet-deny-all\"},\"policy\":{\"derivation\":\"/nix/store/4jqvdks37xf7yfjprb3rpspbjgrrlhbk-noble-policy-freshness.drv\",\"output\":\"/nix/store/wmj9ssb4fn6dzbajhznd201ifnp8cg4v-noble-policy-freshness\"},\"rust-tests\":{\"derivation\":\"/nix/store/6ng0gv92sja0f9acjamqkm40hylxb1iq-noble-rust-tests.drv\",\"output\":\"/nix/store/81af50k2qhm3vgv68ddk9s43mncsrx5d-noble-rust-tests\"},\"source-coverage\":{\"derivation\":\"/nix/store/3bfl88w0rpf9p1rlailaqixiqvbfjx2h-noble-source-coverage.drv\",\"output\":\"/nix/store/81p6s2411q8975z4m3qhhq82bqk2smya-noble-source-coverage\"},\"tool-overrides\":{\"derivation\":\"/nix/store/siw5sl84m391pr3ipxlm1a8zpiz31i3y-noble-tool-overrides.drv\",\"output\":\"/nix/store/6nq231p4gbwz0jn045ynfwbj842q3v78-noble-tool-overrides\"},\"tool-selection\":{\"derivation\":\"/nix/store/541gmx8b584y0451q137yysppl9gb3b7-noble-tool-selection.drv\",\"output\":\"/nix/store/rz0f97pl8bj1krk3rgksffimznzqnq76-noble-tool-selection\"},\"tool-versions\":{\"derivation\":\"/nix/store/8n7x4c47gvp51szvm10qvn2zz3k2h72q-noble-tool-versions.drv\",\"output\":\"/nix/store/l2j847p5xph09kjw4cm3rdvnvq1xhgp9-noble-tool-versions\"}},\"source\":\"/nix/store/r5ch0rnfklyxbav9sf4fsw5fk223zh83-noble-m4-source\"}\n"
+}

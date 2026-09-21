@@ -10,7 +10,7 @@ import { REPRESENTATIONS, OPTIMIZATIONS, CANONICAL_IDS, sha256, digest, equal, u
   validateConfig, canonicalProjection, runtimeCases, aggregate, evaluateReport, runPolicyControls } from './m3-wasm-policy.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const CONFIG = 'verification/m3-wasm/config.json';
+const CONFIG = 'crates/noble-cli/src/core/runtime/config.json';
 const WORKER = path.join(ROOT, 'tools/m3-wasm-worker.mjs');
 const fileHash = file => sha256(fs.readFileSync(file));
 const writeJson = (file, value) => fs.writeFileSync(file, `${JSON.stringify(value, null, 2)}\n`, { flag: 'wx' });

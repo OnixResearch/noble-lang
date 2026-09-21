@@ -6,7 +6,7 @@
   "canonical_spec": "README.md",
   "canonical_family_exists": true,
   "compiler_exists": true,
-  "compiler_scope": "bootstrap-fragment-v1 checker, experimental MC1-v1 frontend, and bounded M3 monomorphic Wasm emitter; no general M4 source compiler",
+  "compiler_scope": "Core-Bootstrap source parsing, immutable resolution and rank-1 named inference produce finite untrusted candidates; independent kernel acceptance precedes selected managed-linear-memory Wasm emission. Experimental MC1-v1 and the bounded M3 comparison remain separate scopes.",
   "runtime_exists": true,
   "proof_implementation_exists": true,
   "verification_policy": {
@@ -18,12 +18,16 @@
     "verus": "reviewed-non-kernel-exceptions-only",
     "coverage_inventory": "reviewed-with-open-refinement",
     "coverage_record": "../policy/source-inventory.json",
-    "body_obligations": 549,
-    "open_refinement_obligations": 549,
+    "body_obligations": 887,
+    "open_refinement_obligations": 887,
+    "coverage_scope": "Complete all-target source classification; all 887 authored production bodies remain open refinement obligations. Generated and structural items are accounted separately, not treated as proved bodies.",
+    "extraction_scope": "Whole kernel, frontend and compiler actual-Rust Charon/Aeneas/Lean extraction and dependency/axiom accounting; independent frontend and compiler environments avoid pinned Aeneas discriminant collisions. Successful extraction and compiled audits are not universal refinement.",
+    "m4_extraction_acceptance": "passed-independent-whole-crate-check-and-27-refusal-controls",
     "independent_proof_records": [
       "../verification/m3-coverage.json",
       "../verification/mc1/implementation.json",
-      "../verification/m3-wasm/implementation.json"
+      "../verification/m3-wasm/implementation.json",
+      "../verification/m4/implementation.json"
     ],
     "approved_exceptions": []
   },
@@ -50,19 +54,27 @@
   "developer_experience": {
     "contract": "DEVELOPER-EXPERIENCE.md",
     "status": "selected-draft-contracts",
-    "diagnostics": "bootstrap-fragment-v1-and-MC1-static-implemented",
+    "diagnostics": "bootstrap-fragment-v1-and-MC1-static-implemented; Core-Bootstrap-source-and-session-implemented",
     "editor_hole_grammar": "open",
     "guest_declaration_and_library_interfaces": "open-post-M4",
     "portable_cache_encoding": "open",
     "test_host_interfaces": "open",
     "local_binding_syntax_and_lowering": "open-post-M4",
     "capability_module_interfaces": "open-post-M4",
-    "property_testing": "bootstrap-fragment-v1-static-executed; M4-runtime-open",
+    "property_testing": "bootstrap-fragment-v1-static-executed; scoped M4 DX-10 Wasm property workflow and all hostile controls executed",
     "resource_protocol_types": "open-after-M5-and-declaration-interfaces",
-    "executable_documentation": "bootstrap-fragment-v1-static-executed; M4-runtime-open",
+    "executable_documentation": "bootstrap-fragment-v1-static-executed; scoped M4 DX-12 actual runtime/static examples and all hostile controls executed",
     "implementation": "partial",
     "execution": "passed",
-    "execution_scope": "static checker diagnostics, bounded property harness, and marked documentation examples; no runtime execution"
+    "execution_scope": "Prior static checker diagnostics plus M4 DX-10: 100 seeded trials and 100 replay trials with eight controls; DX-12: two actual examples and six controls. Malformed-candidate testing is a separate 200-case lane, and unmarked documentation is not executed coverage.",
+    "runtime_workflows": {
+      "implementation": "implemented",
+      "execution": "passed",
+      "acceptance": "passed-final-integrated-runtime-receipts",
+      "property": "DX-10 implements 100 seeded arithmetic/interface/exact-recipe/effect trials, 100 replay trials, all eight hostile controls and bounded 50-step shrinking; 200 malformed-kernel cases are a separate lane.",
+      "documentation": "DX-12 implements the two exact examples and all six hostile controls with explicit resource-free hosts. A whole-command timeout does not establish guest entry.",
+      "receipt": "../verification/m4/acceptance.json"
+    }
   },
   "calculator": {
     "contract": "CALCULATOR.md",
@@ -182,6 +194,26 @@
             "Pinned Charon/Aeneas translation, handwritten standard-library models, and five inherited opaque kernel helpers remain explicit boundaries.",
             "Not universal frontend/exporter correctness, MC2, or runtime execution."
           ]
+        },
+        {
+          "kind": "test",
+          "subject": "program-contracts",
+          "claim": "All 36 MC1 CLI controls pass again on the frozen M4 acceptance binary, including all seven outcomes, exact statement binding, strict hostile-proof admission, isolation and descendant timeout cleanup.",
+          "revision": "0.1.0-draft.5",
+          "source_revision": "binary-sha256:8a29f24cb1a0fa8563676fa18bbb80a87a308c5053593fe8f0ad6a31d6a6fd95",
+          "result": "passed",
+          "configuration": {
+            "receipt": "../verification/m4/evidence.json",
+            "raw_report": "../verification/m4/assurance.tar.gz:regressions/mc1-acceptance.json",
+            "binary_sha256": "8a29f24cb1a0fa8563676fa18bbb80a87a308c5053593fe8f0ad6a31d6a6fd95",
+            "consumer_sha256": "62c2d30b2d2e6e906509cc65aca1e5dffa4f6224ad843bb7d98d98528c36d9dc",
+            "gate_sha256": "feef4f4de1256b0eb02b254c4b1ae0468920356046a08f6e86d277f76f830fa5",
+            "scope": "experimental-MC1-v1-regression"
+          },
+          "assumptions": [
+            "Pinned Lean, the source rule library, operating system and selected namespace/process-isolation tools remain trusted.",
+            "Not MC2 delivery, universal implementation refinement or backend correspondence."
+          ]
         }
       ]
     },
@@ -196,7 +228,9 @@
     {
       "id": "core-checker",
       "implementation": "partial",
+      "implementation_scope": "Core-Bootstrap source frontend, nonrecursive rank-1 named definitions, monomorphic first-class programs, complete ordered interfaces/effects and independent kernel candidate/environment/specialization acceptance; no full-language or universal refinement claim.",
       "execution": "passed",
+      "execution_scope": "All 18 CORE fixtures and11 controls execute through the real bounded source frontend, independent kernel acceptance and selected compiled Wasm path; static refusals and transactional preparation rejection are observed.",
       "proof": "open",
       "trust": "explicit",
       "evidence": [
@@ -217,13 +251,38 @@
             "Bootstrap fragment only; no full-language, runtime, or universal Rust refinement claim.",
             "Current M3 proof/coverage gates and both six-case refusal harnesses pass; the generated inventory classifies 518 functions separately from source-inventory refinement obligations."
           ]
+        },
+        {
+          "kind": "test",
+          "subject": "core-checker",
+          "claim": "The complete 18-case Core-Bootstrap matrix and 11 controls pass, including independent hostile-candidate refusal, rank-1 named uses, first-class monomorphism, exact interfaces and state-preserving rejection.",
+          "revision": "0.1.0-draft.5",
+          "source_revision": "sha256:141a385489070ef0ab681d7f78bfe8e2260fcfe8963454fd3d25b1ed1e2881a2",
+          "result": "passed",
+          "configuration": {
+            "receipt": "../verification/m4/evidence.json",
+            "raw_report": "../verification/m4/runtime.tar.gz:acceptance.json",
+            "acceptance": "../verification/m4/acceptance.json",
+            "binary_sha256": "8a29f24cb1a0fa8563676fa18bbb80a87a308c5053593fe8f0ad6a31d6a6fd95",
+            "workload_sha256": "4ff2ce8307f5600f79624446024ad6b26c8babece7e236eb3e8f96625c98e952",
+            "workflow_workload_sha256": "b29258796241fc27fe1f3e888dd51e3f3384640632a26ab1d00900ac3e47ed94",
+            "representation": "managed-linear-memory",
+            "scope": "resource-free-Core-Bootstrap-and-scoped-DX-runtime-workflows"
+          },
+          "assumptions": [
+            "Pinned Rust/tool builds, owned WAT, assembler, optimizer, Node/V8, loader/ABI and independent host oracles remain trusted.",
+            "Exact declared cases, controls, source snapshot and configured bounds only; tests do not discharge universal refinement, PO-17, PO-18 or SO-07.",
+            "MC2 companions, M5 resources/components, physical GC reclamation and isolated engine peaks remain outside this evidence."
+          ]
         }
       ]
     },
     {
       "id": "wasm-runtime",
       "implementation": "partial",
+      "implementation_scope": "Selected managed-linear-memory Core-Bootstrap Wasm executes independently accepted source bodies, bootstrap data/control/wrapping arithmetic, runtime captures, compiled quote/compose/run, inert exact reflection and explicit resource-free host effects. Persistent sessions retain compiled values and immutable namespace snapshots; preparation rejection preserves prior stack/namespace, while runtime traps retain already-issued host requests.",
       "execution": "passed",
+      "execution_scope": "All 18 CORE cases, 11 runtime controls, DX-10 and DX-12 pass against a frozen read-only binary after Cargo tests; runtime captures, optimized reflection, persistent compiled state and ordered resource-free host traps are observed.",
       "proof": "open",
       "trust": "explicit",
       "evidence": [
@@ -253,12 +312,36 @@
             "Exact declared variants and quota/cleanup controls only; not a general M4 compiler or whole-language conformance.",
             "Tests do not discharge PO-17, PO-18 or SO-07; physical GC and isolated engine memory remain unknown."
           ]
+        },
+        {
+          "kind": "test",
+          "subject": "wasm-runtime",
+          "claim": "Selected managed-linear-memory execution passes the complete Core-Bootstrap matrix and mandatory scoped developer workflows; no runtime fallback or universal backend-proof claim.",
+          "revision": "0.1.0-draft.5",
+          "source_revision": "sha256:141a385489070ef0ab681d7f78bfe8e2260fcfe8963454fd3d25b1ed1e2881a2",
+          "result": "passed",
+          "configuration": {
+            "receipt": "../verification/m4/evidence.json",
+            "raw_report": "../verification/m4/runtime.tar.gz:acceptance.json",
+            "acceptance": "../verification/m4/acceptance.json",
+            "binary_sha256": "8a29f24cb1a0fa8563676fa18bbb80a87a308c5053593fe8f0ad6a31d6a6fd95",
+            "workload_sha256": "4ff2ce8307f5600f79624446024ad6b26c8babece7e236eb3e8f96625c98e952",
+            "workflow_workload_sha256": "b29258796241fc27fe1f3e888dd51e3f3384640632a26ab1d00900ac3e47ed94",
+            "representation": "managed-linear-memory",
+            "scope": "resource-free-Core-Bootstrap-and-scoped-DX-runtime-workflows"
+          },
+          "assumptions": [
+            "Pinned Rust/tool builds, owned WAT, assembler, optimizer, Node/V8, loader/ABI and independent host oracles remain trusted.",
+            "Exact declared cases, controls, source snapshot and configured bounds only; tests do not discharge universal refinement, PO-17, PO-18 or SO-07.",
+            "MC2 companions, M5 resources/components, physical GC reclamation and isolated engine peaks remain outside this evidence."
+          ]
         }
       ]
     },
     {
       "id": "component-adapters",
       "implementation": "absent",
+      "implementation_scope": "M4 resource-free test hosts are not live-resource or Component Model adapters; synchronous component delivery remains M5.",
       "execution": "not-run",
       "proof": "open",
       "trust": "unassessed",
@@ -282,16 +365,19 @@
     "choreography": "deferred",
     "durability": "optional-deferred"
   },
-  "next_milestone": "M4",
+  "next_milestone": "M5",
   "historical_snapshot": "../noble-project-handoff-2026-09-12/",
   "non_claims": [
-    "The full draft conformance-case ledger is not marked executed by the narrower Rust and MC1 acceptance suites",
+    "Only CORE-01 through CORE-18 and scoped DX-10/DX-12 are promoted by M4; other draft profiles retain their independently scoped evidence states",
     "No universal proof of the complete Rust checker, contract frontend, exporter, or CLI",
     "No stable language or component conformance",
-    "No whole-project verification claim; all 549 source-inventory refinement obligations remain open",
-    "Managed linear memory is selected only for the M4 resource-free direction; no universal backend or physical-memory superiority claim",
-    "No general M4 end-to-end core, first-class runtime certified programs, or MC2 delivery",
+    "No whole-project verification claim; all 887 authored-production-body source-inventory refinement obligations remain open",
+    "Managed linear memory implements the selected M4 resource-free Core-Bootstrap scope; no universal backend or physical-memory superiority claim",
+    "M4 completion is scoped to resource-free Core-Bootstrap and its mandatory runtime workflows, not the full language or later milestones",
+    "No first-class runtime certified programs or MC2 delivery, live resources/components or M5 delivery",
+    "PO-17, PO-18 and SO-07 remain open; extraction, bounded tests and accounting do not establish universal frontend/kernel/compiler/backend refinement",
+    "Physical GC allocation/reclamation and isolated engine memory peaks remain unknown",
     "No zerocopy dependency selected"
   ],
-  "runtime_scope": "M3 resource-free compiled-program comparison; CORE-03/05/09 and ADAPT-08/09/10/12 only"
+  "runtime_scope": "Selected managed-linear-memory Core-Bootstrap source-to-kernel-to-Wasm execution and persistent compiled sessions, with explicit resource-free hosts, preparation limits and runtime quotas. All 18 CORE cases, 11 runtime controls and scoped DX-10/DX-12 runtime workflows pass; the two-representation M3 experiment remains separate regression evidence."
 }

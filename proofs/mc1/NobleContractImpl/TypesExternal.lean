@@ -15,6 +15,13 @@ structure core.str.error.Utf8Error where
   offset : Usize
   error_length : Option Usize
 
+/-- Failed owned UTF-8 conversion retains the original bytes and the same
+diagnostic as `str::from_utf8`; no replacement decoding takes place. -/
+@[rust_type "alloc::string::FromUtf8Error"]
+structure alloc.string.FromUtf8Error where
+  bytes : alloc.vec.Vec U8
+  error : core.str.error.Utf8Error
+
 /-- The inherited checker owns effects; no second effect representation. -/
 @[rust_type "noble_kernel::types::EffSet"]
 abbrev noble_kernel.types.EffSet := _root_.noble_kernel.types.EffSet

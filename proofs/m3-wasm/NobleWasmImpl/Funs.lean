@@ -19,20 +19,143 @@ set_option maxRecDepth 2048
 
 namespace noble_wasm
 
+/-- Trait implementation: [core::option::{impl core::clone::Clone for core::option::Option<T>}]
+    Source: '/rustc/library/core/src/option.rs', lines 2266:0-2270:40
+    Name pattern: [core::clone::Clone<core::option::Option<@T>>] -/
+@[reducible, rust_trait_impl "core::clone::Clone<core::option::Option<@T>>"]
+def core.option.Option.Insts.CoreCloneClone {T : Type} (cloneCloneInst :
+  core.clone.Clone T) : core.clone.Clone (Option T) := {
+  clone := core.option.Option.Insts.CoreCloneClone.clone cloneCloneInst
+}
+
+/-- Trait implementation: [noble_kernel::contracts::{impl core::cmp::PartialEq<noble_kernel::contracts::Definition> for noble_kernel::contracts::Definition}]
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 10:29-10:38
+    Name pattern: [core::cmp::PartialEq<noble_kernel::contracts::Definition, noble_kernel::contracts::Definition>] -/
+@[reducible, rust_trait_impl
+  "core::cmp::PartialEq<noble_kernel::contracts::Definition, noble_kernel::contracts::Definition>"]
+impl_def noble_kernel.contracts.Definition.Insts.CoreCmpPartialEqDefinition :
+  core.cmp.PartialEq noble_kernel.contracts.Definition
+  noble_kernel.contracts.Definition := {
+  eq := noble_kernel.contracts.Definition.Insts.CoreCmpPartialEqDefinition.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    noble_kernel.contracts.Definition.Insts.CoreCmpPartialEqDefinition
+}
+
+/-- Trait implementation: [noble_kernel::contracts::{impl core::cmp::PartialEq<noble_kernel::contracts::Behavior> for noble_kernel::contracts::Behavior}]
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 29:29-29:38
+    Name pattern: [core::cmp::PartialEq<noble_kernel::contracts::Behavior, noble_kernel::contracts::Behavior>] -/
+@[reducible, rust_trait_impl
+  "core::cmp::PartialEq<noble_kernel::contracts::Behavior, noble_kernel::contracts::Behavior>"]
+impl_def noble_kernel.contracts.Behavior.Insts.CoreCmpPartialEqBehavior :
+  core.cmp.PartialEq noble_kernel.contracts.Behavior
+  noble_kernel.contracts.Behavior := {
+  eq := noble_kernel.contracts.Behavior.Insts.CoreCmpPartialEqBehavior.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    noble_kernel.contracts.Behavior.Insts.CoreCmpPartialEqBehavior
+}
+
+/-- Trait implementation: [noble_kernel::shapes::impls::{impl core::cmp::PartialEq<noble_kernel::shapes::Pattern> for noble_kernel::shapes::Pattern}]
+    Source: 'crates/noble-kernel/src/shapes/impls.rs', lines 165:0-165:41
+    Name pattern: [core::cmp::PartialEq<noble_kernel::shapes::Pattern, noble_kernel::shapes::Pattern>] -/
+@[reducible, rust_trait_impl
+  "core::cmp::PartialEq<noble_kernel::shapes::Pattern, noble_kernel::shapes::Pattern>"]
+impl_def noble_kernel.shapes.Pattern.Insts.CoreCmpPartialEqPattern :
+  core.cmp.PartialEq noble_kernel.shapes.Pattern noble_kernel.shapes.Pattern
+  := {
+  eq := noble_kernel.shapes.Pattern.Insts.CoreCmpPartialEqPattern.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    noble_kernel.shapes.Pattern.Insts.CoreCmpPartialEqPattern
+}
+
+/-- Trait implementation: [noble_kernel::shapes::{impl core::cmp::PartialEq<noble_kernel::shapes::EffectSlot> for noble_kernel::shapes::EffectSlot}]
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 73:23-73:32
+    Name pattern: [core::cmp::PartialEq<noble_kernel::shapes::EffectSlot, noble_kernel::shapes::EffectSlot>] -/
+@[reducible, rust_trait_impl
+  "core::cmp::PartialEq<noble_kernel::shapes::EffectSlot, noble_kernel::shapes::EffectSlot>"]
+impl_def noble_kernel.shapes.EffectSlot.Insts.CoreCmpPartialEqEffectSlot :
+  core.cmp.PartialEq noble_kernel.shapes.EffectSlot
+  noble_kernel.shapes.EffectSlot := {
+  eq := noble_kernel.shapes.EffectSlot.Insts.CoreCmpPartialEqEffectSlot.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    noble_kernel.shapes.EffectSlot.Insts.CoreCmpPartialEqEffectSlot
+}
+
+/-- Trait implementation: [noble_kernel::types::impls::{impl core::cmp::PartialEq<noble_kernel::types::Ty> for noble_kernel::types::Ty}]
+    Source: 'crates/noble-kernel/src/types/impls.rs', lines 147:0-147:35
+    Name pattern: [core::cmp::PartialEq<noble_kernel::types::Ty, noble_kernel::types::Ty>] -/
+@[reducible, rust_trait_impl
+  "core::cmp::PartialEq<noble_kernel::types::Ty, noble_kernel::types::Ty>"]
+impl_def noble_kernel.types.Ty.Insts.CoreCmpPartialEqTy : core.cmp.PartialEq
+  noble_kernel.types.Ty noble_kernel.types.Ty := {
+  eq := noble_kernel.types.Ty.Insts.CoreCmpPartialEqTy.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    noble_kernel.types.Ty.Insts.CoreCmpPartialEqTy
+}
+
+/-- Trait implementation: [noble_kernel::types::{impl core::cmp::PartialEq<noble_kernel::types::EffId> for noble_kernel::types::EffId}]
+    Source: 'crates/noble-kernel/src/types.rs', lines 25:29-25:38
+    Name pattern: [core::cmp::PartialEq<noble_kernel::types::EffId, noble_kernel::types::EffId>] -/
+@[reducible, rust_trait_impl
+  "core::cmp::PartialEq<noble_kernel::types::EffId, noble_kernel::types::EffId>"]
+impl_def noble_kernel.types.EffId.Insts.CoreCmpPartialEqEffId :
+  core.cmp.PartialEq noble_kernel.types.EffId noble_kernel.types.EffId := {
+  eq := noble_kernel.types.EffId.Insts.CoreCmpPartialEqEffId.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    noble_kernel.types.EffId.Insts.CoreCmpPartialEqEffId
+}
+
+/-- Trait implementation: [noble_kernel::types::{impl core::cmp::PartialEq<noble_kernel::types::EffSet> for noble_kernel::types::EffSet}]
+    Source: 'crates/noble-kernel/src/types.rs', lines 29:23-29:32
+    Name pattern: [core::cmp::PartialEq<noble_kernel::types::EffSet, noble_kernel::types::EffSet>] -/
+@[reducible, rust_trait_impl
+  "core::cmp::PartialEq<noble_kernel::types::EffSet, noble_kernel::types::EffSet>"]
+impl_def noble_kernel.types.EffSet.Insts.CoreCmpPartialEqEffSet :
+  core.cmp.PartialEq noble_kernel.types.EffSet noble_kernel.types.EffSet := {
+  eq := noble_kernel.types.EffSet.Insts.CoreCmpPartialEqEffSet.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    noble_kernel.types.EffSet.Insts.CoreCmpPartialEqEffSet
+}
+
+/-- Trait implementation: [noble_kernel::untrusted::{impl core::cmp::PartialEq<noble_kernel::untrusted::NodeId> for noble_kernel::untrusted::NodeId}]
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 17:29-17:38
+    Name pattern: [core::cmp::PartialEq<noble_kernel::untrusted::NodeId, noble_kernel::untrusted::NodeId>] -/
+@[reducible, rust_trait_impl
+  "core::cmp::PartialEq<noble_kernel::untrusted::NodeId, noble_kernel::untrusted::NodeId>"]
+impl_def noble_kernel.untrusted.NodeId.Insts.CoreCmpPartialEqNodeId :
+  core.cmp.PartialEq noble_kernel.untrusted.NodeId
+  noble_kernel.untrusted.NodeId := {
+  eq := noble_kernel.untrusted.NodeId.Insts.CoreCmpPartialEqNodeId.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    noble_kernel.untrusted.NodeId.Insts.CoreCmpPartialEqNodeId
+}
+
+/-- Trait implementation: [noble_kernel::words::{impl core::cmp::PartialEq<noble_kernel::words::VariableKind> for noble_kernel::words::VariableKind}]
+    Source: 'crates/noble-kernel/src/words.rs', lines 21:29-21:38
+    Name pattern: [core::cmp::PartialEq<noble_kernel::words::VariableKind, noble_kernel::words::VariableKind>] -/
+@[reducible, rust_trait_impl
+  "core::cmp::PartialEq<noble_kernel::words::VariableKind, noble_kernel::words::VariableKind>"]
+impl_def noble_kernel.words.VariableKind.Insts.CoreCmpPartialEqVariableKind :
+  core.cmp.PartialEq noble_kernel.words.VariableKind
+  noble_kernel.words.VariableKind := {
+  eq := noble_kernel.words.VariableKind.Insts.CoreCmpPartialEqVariableKind.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    noble_kernel.words.VariableKind.Insts.CoreCmpPartialEqVariableKind
+}
+
 /-- [noble_wasm::EXPORT_LIMIT]
-    Source: 'crates/noble-wasm/src/lib.rs', lines 30:0-30:31 -/
+    Source: 'crates/noble-wasm/src/lib.rs', lines 31:0-31:31 -/
 @[global_simps, irreducible] def EXPORT_LIMIT : Std.Usize := 32#usize
 
 /-- [noble_wasm::BODY_OPERATION_LIMIT]
-    Source: 'crates/noble-wasm/src/lib.rs', lines 29:0-29:40 -/
+    Source: 'crates/noble-wasm/src/lib.rs', lines 30:0-30:40 -/
 @[global_simps, irreducible] def BODY_OPERATION_LIMIT : Std.Usize := 128#usize
 
 /-- [noble_wasm::BODY_LIMIT]
-    Source: 'crates/noble-wasm/src/lib.rs', lines 28:0-28:30 -/
+    Source: 'crates/noble-wasm/src/lib.rs', lines 29:0-29:30 -/
 @[global_simps, irreducible] def BODY_LIMIT : Std.Usize := 128#usize
 
 /-- [noble_wasm::NODE_LIMIT]
-    Source: 'crates/noble-wasm/src/lib.rs', lines 27:0-27:30 -/
+    Source: 'crates/noble-wasm/src/lib.rs', lines 28:0-28:30 -/
 @[global_simps, irreducible] def NODE_LIMIT : Std.Usize := 256#usize
 
 /-- [noble_wasm::admission::bounds]: loop body 0:
@@ -294,7 +417,7 @@ def admission.check
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_wasm::OUTPUT_BYTE_LIMIT]
-    Source: 'crates/noble-wasm/src/lib.rs', lines 32:0-32:43 -/
+    Source: 'crates/noble-wasm/src/lib.rs', lines 33:0-33:43 -/
 @[global_simps, irreducible] def OUTPUT_BYTE_LIMIT : Std.Usize := 1048576#usize
 
 /-- [noble_wasm::output::{noble_wasm::output::Buffer}::append]:
@@ -873,52 +996,59 @@ def emit.initialization.write
 @[global_simps, irreducible]
 def emit.COMMON : Str :=
   toStr
-    ";; M3 runtime: no imports, resource-free values, bounded instance-owned region.\n(type $entry (func (param i32)))\n(memory (export \"memory\") 1 4)\n(global $failure (mut i32) (i32.const 0))\n(global $quota_reason (mut i32) (i32.const 0))\n(global $phase (mut i32) (i32.const 0))\n(global $heap_cursor (mut i32) (i32.const 0))\n(global $heap_baseline (mut i32) (i32.const 0))\n(global $allocation_limit (mut i32) (i32.const 65536))\n(global $recipe_limit (mut i32) (i32.const 256))\n(global $depth_limit (mut i32) (i32.const 256))\n(global $operand_limit (mut i32) (i32.const 2048))\n(global $continuation_limit (mut i32) (i32.const 4096))\n(global $step_limit (mut i32) (i32.const 100000))\n(global $allocated_total (mut i64) (i64.const 0))\n(global $released_total (mut i64) (i64.const 0))\n(global $allocation_peak (mut i32) (i32.const 0))\n(global $operand_peak (mut i32) (i32.const 0))\n(global $continuation_peak (mut i32) (i32.const 0))\n(global $steps (mut i32) (i32.const 0))\n(global $quote_invocations (mut i32) (i32.const 0))\n(global $sp (mut i32) (i32.const 0))\n(global $cp (mut i32) (i32.const 0))\n(global $observed_program (mut i32) (i32.const 0))\n(global $recipe_count (mut i32) (i32.const 0))\n(global $reflection_steps (mut i32) (i32.const 0))\n\n(func $fail (param $code i32)\n (if (i32.eqz (global.get $failure)) (then (global.set $failure (local.get $code)))))\n(func $quota (param $reason i32)\n (if (i32.eqz (global.get $failure)) (then\n  (global.set $quota_reason (local.get $reason))\n  (global.set $failure (i32.add (i32.const 1) (global.get $phase))))))\n(func $live_bytes (result i32)\n (i32.mul (i32.sub (global.get $heap_cursor) (global.get $heap_baseline)) (i32.const 48)))\n(func $reserve (result i32) (local $next i32) (local $bytes i32)\n (if (global.get $failure) (then (return (i32.const 0))))\n (local.set $next (i32.add (global.get $heap_cursor) (i32.const 1)))\n (local.set $bytes (i32.mul (i32.sub (local.get $next) (global.get $heap_baseline)) (i32.const 48)))\n (if (i32.or (i32.gt_u (local.get $next) (i32.const 4096))\n             (i32.gt_u (local.get $bytes) (global.get $allocation_limit)))\n  (then (call $quota (i32.const 1)) (return (i32.const 0))))\n (if (i32.eqz (call $storage_ensure (local.get $next)))\n  (then (call $quota (i32.const 1)) (return (i32.const 0))))\n (global.set $heap_cursor (local.get $next))\n (global.set $allocated_total (i64.add (global.get $allocated_total) (i64.const 48)))\n (if (i32.gt_u (local.get $bytes) (global.get $allocation_peak))\n  (then (global.set $allocation_peak (local.get $bytes))))\n (local.get $next))\n(func $rollback (param $mark i32)\n (block $done (loop $next\n  (br_if $done (i32.le_u (global.get $heap_cursor) (local.get $mark)))\n  (call $storage_discard (global.get $heap_cursor))\n  (global.set $heap_cursor (i32.sub (global.get $heap_cursor) (i32.const 1)))\n  (global.set $released_total (i64.add (global.get $released_total) (i64.const 48)))\n  (br $next))))\n(func $cleanup_internal (local $at i32)\n (global.set $sp (i32.const 0)) (global.set $cp (i32.const 0))\n (global.set $observed_program (i32.const 0)) (global.set $recipe_count (i32.const 0))\n ;; Registry starts at 61440 and contains permanent vocabulary handles only.\n (loop $clear\n  (i64.store (local.get $at) (i64.const 0))\n  (local.set $at (i32.add (local.get $at) (i32.const 8)))\n  (br_if $clear (i32.lt_u (local.get $at) (i32.const 61440))))\n (call $rollback (global.get $heap_baseline)))\n(func (export \"cleanup\") (result i32)\n (call $cleanup_internal) (call $live_bytes))\n(func (export \"begin\")\n (param $allocation i32) (param $recipes i32) (param $depth i32)\n (param $operands i32) (param $continuations i32) (param $step_count i32) (result i32)\n (call $cleanup_internal)\n (global.set $failure (i32.const 0)) (global.set $quota_reason (i32.const 0))\n (global.set $phase (i32.const 0))\n (global.set $allocated_total (i64.const 0)) (global.set $released_total (i64.const 0))\n (global.set $allocation_peak (i32.const 0))\n (global.set $operand_peak (i32.const 0)) (global.set $continuation_peak (i32.const 0))\n (global.set $steps (i32.const 0)) (global.set $quote_invocations (i32.const 0))\n (global.set $reflection_steps (i32.const 0))\n (if (i32.or (i32.or (i32.gt_u (local.get $allocation) (i32.const 196608))\n                     (i32.gt_u (local.get $recipes) (i32.const 256)))\n              (i32.or (i32.gt_u (local.get $depth) (i32.const 256))\n               (i32.or (i32.gt_u (local.get $operands) (i32.const 2048))\n                (i32.or (i32.gt_u (local.get $continuations) (i32.const 4096))\n                         (i32.gt_u (local.get $step_count) (i32.const 100000))))))\n  (then (call $fail (i32.const 4)) (return (global.get $failure))))\n (global.set $allocation_limit (local.get $allocation))\n (global.set $recipe_limit (local.get $recipes)) (global.set $depth_limit (local.get $depth))\n (global.set $operand_limit (local.get $operands))\n (global.set $continuation_limit (local.get $continuations))\n (global.set $step_limit (local.get $step_count))\n (i32.const 0))\n(func $vocab (param $index i32) (result i32)\n (if (i32.ge_u (local.get $index) (global.get $registry_count))\n  (then (call $fail (i32.const 4)) (return (i32.const 0))))\n (i32.load (i32.add (i32.const 61440) (i32.mul (local.get $index) (i32.const 4)))))\n(func $module_init (local $at i32)\n (call $storage_init)\n (call $init_programs)\n (call $enqueue_program (global.get $p_root))\n (call $dispatch)\n (if (i32.or (global.get $failure) (i32.ne (global.get $sp) (global.get $registry_count)))\n  (then unreachable))\n (block $done (loop $copy\n  (br_if $done (i32.ge_u (local.get $at) (global.get $registry_count)))\n  (if (i32.ne (call $slot_kind (local.get $at)) (i32.const 4)) (then unreachable))\n  (i32.store (i32.add (i32.const 61440) (i32.mul (local.get $at) (i32.const 4)))\n   (i32.wrap_i64 (call $slot_value (local.get $at))))\n  (local.set $at (i32.add (local.get $at) (i32.const 1)))\n  (br $copy)))\n (global.set $heap_baseline (global.get $heap_cursor))\n (call $cleanup_internal)\n (global.set $allocated_total (i64.const 0)) (global.set $released_total (i64.const 0))\n (global.set $allocation_peak (i32.const 0)))\n(start $module_init)\n\n;; Stable metric keys are part of the experimental driver protocol, not a public ABI.\n(func (export \"metric\") (param $key i32) (result i64)\n (if (i32.eq (local.get $key) (i32.const 0)) (then (return (i64.extend_i32_u (global.get $failure)))))\n (if (i32.eq (local.get $key) (i32.const 1)) (then (return (i64.extend_i32_u (global.get $quota_reason)))))\n (if (i32.eq (local.get $key) (i32.const 2)) (then (return (global.get $allocated_total))))\n (if (i32.eq (local.get $key) (i32.const 3)) (then (return (global.get $released_total))))\n (if (i32.eq (local.get $key) (i32.const 4)) (then (return (i64.extend_i32_u (call $live_bytes)))))\n (if (i32.eq (local.get $key) (i32.const 5)) (then (return (i64.extend_i32_u (global.get $allocation_peak)))))\n (if (i32.eq (local.get $key) (i32.const 6)) (then (return (i64.extend_i32_u (global.get $operand_peak)))))\n (if (i32.eq (local.get $key) (i32.const 7)) (then (return (i64.extend_i32_u (global.get $continuation_peak)))))\n (if (i32.eq (local.get $key) (i32.const 8)) (then (return (i64.extend_i32_u (global.get $steps)))))\n (if (i32.eq (local.get $key) (i32.const 9)) (then (return (i64.extend_i32_u (global.get $quote_invocations)))))\n (if (i32.eq (local.get $key) (i32.const 10)) (then (return (i64.extend_i32_u (i32.mul (memory.size) (i32.const 65536))))))\n (if (i32.eq (local.get $key) (i32.const 11)) (then (return (i64.extend_i32_u (i32.mul (global.get $heap_baseline) (i32.const 48))))))\n (if (i32.eq (local.get $key) (i32.const 12)) (then (return (i64.extend_i32_u (global.get $sp)))))\n (if (i32.eq (local.get $key) (i32.const 13)) (then (return (i64.extend_i32_u (global.get $reflection_steps)))))\n (i64.const -1))\n"
+    ";; M3 instance-local declarations and experimental lifetime; language operations are shared.\n(type $entry (func (param i32)))\n(memory (export \"memory\") 1 4)\n(global $source_reflection i32 (i32.const 0))\n(global $failure (mut i32) (i32.const 0))\n(global $quota_reason (mut i32) (i32.const 0))\n(global $phase (mut i32) (i32.const 0))\n(global $heap_cursor (mut i32) (i32.const 0))\n(global $heap_baseline (mut i32) (i32.const 0))\n(global $allocation_limit (mut i32) (i32.const 65536))\n(global $recipe_limit (mut i32) (i32.const 256))\n(global $depth_limit (mut i32) (i32.const 256))\n(global $operand_limit (mut i32) (i32.const 2048))\n(global $continuation_limit (mut i32) (i32.const 4096))\n(global $step_limit (mut i32) (i32.const 100000))\n(global $allocated_total (mut i64) (i64.const 0))\n(global $released_total (mut i64) (i64.const 0))\n(global $allocation_peak (mut i32) (i32.const 0))\n(global $operand_peak (mut i32) (i32.const 0))\n(global $continuation_peak (mut i32) (i32.const 0))\n(global $steps (mut i32) (i32.const 0))\n(global $quote_invocations (mut i32) (i32.const 0))\n(global $sp (mut i32) (i32.const 0))\n(global $cp (mut i32) (i32.const 0))\n(global $observed_program (mut i32) (i32.const 0))\n(global $recipe_count (mut i32) (i32.const 0))\n(global $reflection_steps (mut i32) (i32.const 0))\n(global $rp (mut i32) (i32.const 0))\n(func $cleanup_internal (local $at i32)\n (global.set $sp (i32.const 0)) (global.set $cp (i32.const 0))\n (global.set $observed_program (i32.const 0)) (global.set $recipe_count (i32.const 0))\n (loop $clear\n  (i64.store (local.get $at) (i64.const 0))\n  (local.set $at (i32.add (local.get $at) (i32.const 8)))\n  (br_if $clear (i32.lt_u (local.get $at) (i32.const 61440))))\n (call $rollback (global.get $heap_baseline)))\n(func (export \"cleanup\") (result i32)\n (call $cleanup_internal) (call $live_bytes))\n(func (export \"begin\")\n (param $allocation i32) (param $recipes i32) (param $depth i32)\n (param $operands i32) (param $continuations i32) (param $step_count i32) (result i32)\n (call $cleanup_internal)\n (global.set $failure (i32.const 0)) (global.set $quota_reason (i32.const 0))\n (global.set $phase (i32.const 0))\n (global.set $allocated_total (i64.const 0)) (global.set $released_total (i64.const 0))\n (global.set $allocation_peak (i32.const 0))\n (global.set $operand_peak (i32.const 0)) (global.set $continuation_peak (i32.const 0))\n (global.set $steps (i32.const 0)) (global.set $quote_invocations (i32.const 0))\n (global.set $reflection_steps (i32.const 0))\n (if (i32.or (i32.or (i32.gt_u (local.get $allocation) (i32.const 196608))\n                     (i32.gt_u (local.get $recipes) (i32.const 256)))\n              (i32.or (i32.gt_u (local.get $depth) (i32.const 256))\n               (i32.or (i32.gt_u (local.get $operands) (i32.const 2048))\n                (i32.or (i32.gt_u (local.get $continuations) (i32.const 4096))\n                         (i32.gt_u (local.get $step_count) (i32.const 100000))))))\n  (then (call $fail (i32.const 4)) (return (global.get $failure))))\n (global.set $allocation_limit (local.get $allocation))\n (global.set $recipe_limit (local.get $recipes)) (global.set $depth_limit (local.get $depth))\n (global.set $operand_limit (local.get $operands))\n (global.set $continuation_limit (local.get $continuations))\n (global.set $step_limit (local.get $step_count))\n (i32.const 0))\n(func $vocab (param $index i32) (result i32)\n (if (i32.ge_u (local.get $index) (global.get $registry_count))\n  (then (call $fail (i32.const 4)) (return (i32.const 0))))\n (i32.load (i32.add (i32.const 61440) (i32.mul (local.get $index) (i32.const 4)))))\n(func $module_init (local $at i32)\n (call $storage_init)\n (call $init_programs)\n (call $enqueue_program (global.get $p_root))\n (call $dispatch)\n (if (i32.or (global.get $failure) (i32.ne (global.get $sp) (global.get $registry_count)))\n  (then unreachable))\n (block $done (loop $copy\n  (br_if $done (i32.ge_u (local.get $at) (global.get $registry_count)))\n  (if (i32.ne (call $slot_kind (local.get $at)) (i32.const 4)) (then unreachable))\n  (i32.store (i32.add (i32.const 61440) (i32.mul (local.get $at) (i32.const 4)))\n   (i32.wrap_i64 (call $slot_value (local.get $at))))\n  (local.set $at (i32.add (local.get $at) (i32.const 1)))\n  (br $copy)))\n (global.set $heap_baseline (global.get $heap_cursor))\n (call $cleanup_internal)\n (global.set $allocated_total (i64.const 0)) (global.set $released_total (i64.const 0))\n (global.set $allocation_peak (i32.const 0)))\n(start $module_init)\n"
+
+/-- [noble_wasm::emit::ACCOUNTING]
+    Source: 'crates/noble-wasm/src/emit.rs', lines 12:0-12:67 -/
+@[global_simps, irreducible]
+def emit.ACCOUNTING : Str :=
+  toStr
+    ";; Shared allocation, quota and metric semantics for both experimental and source ABIs.\n(func $fail (param $code i32)\n (if (i32.eqz (global.get $failure)) (then (global.set $failure (local.get $code)))))\n(func $quota (param $reason i32)\n (if (i32.eqz (global.get $failure)) (then\n  (global.set $quota_reason (local.get $reason))\n  (global.set $failure (i32.add (i32.const 1) (global.get $phase))))))\n(func $live_bytes (result i32)\n (i32.mul (i32.sub (global.get $heap_cursor) (global.get $heap_baseline)) (i32.const 48)))\n(func $runtime_tick (result i32)\n (if (global.get $failure) (then (return (i32.const 0))))\n (if (i32.ge_u (global.get $steps) (global.get $step_limit))\n  (then (call $quota (i32.const 6)) (return (i32.const 0))))\n (global.set $steps (i32.add (global.get $steps) (i32.const 1)))\n (i32.const 1))\n(func $reserve (result i32) (local $next i32) (local $bytes i32)\n (if (global.get $failure) (then (return (i32.const 0))))\n (local.set $next (i32.add (global.get $heap_cursor) (i32.const 1)))\n (local.set $bytes (i32.mul (i32.sub (local.get $next) (global.get $heap_baseline)) (i32.const 48)))\n (if (i32.or (i32.gt_u (local.get $next) (i32.const 4096))\n             (i32.gt_u (local.get $bytes) (global.get $allocation_limit)))\n  (then (call $quota (i32.const 1)) (return (i32.const 0))))\n (if (i32.eqz (call $storage_ensure (local.get $next)))\n  (then (call $quota (i32.const 1)) (return (i32.const 0))))\n (global.set $heap_cursor (local.get $next))\n (global.set $allocated_total (i64.add (global.get $allocated_total) (i64.const 48)))\n (if (i32.gt_u (local.get $bytes) (global.get $allocation_peak))\n  (then (global.set $allocation_peak (local.get $bytes))))\n (local.get $next))\n(func $rollback (param $mark i32)\n (block $done (loop $next\n  (br_if $done (i32.le_u (global.get $heap_cursor) (local.get $mark)))\n  (call $storage_discard (global.get $heap_cursor))\n  (global.set $heap_cursor (i32.sub (global.get $heap_cursor) (i32.const 1)))\n  (global.set $released_total (i64.add (global.get $released_total) (i64.const 48)))\n  (br $next))))\n(func (export \"metric\") (param $key i32) (result i64)\n (if (i32.eq (local.get $key) (i32.const 0)) (then (return (i64.extend_i32_u (global.get $failure)))))\n (if (i32.eq (local.get $key) (i32.const 1)) (then (return (i64.extend_i32_u (global.get $quota_reason)))))\n (if (i32.eq (local.get $key) (i32.const 2)) (then (return (global.get $allocated_total))))\n (if (i32.eq (local.get $key) (i32.const 3)) (then (return (global.get $released_total))))\n (if (i32.eq (local.get $key) (i32.const 4)) (then (return (i64.extend_i32_u (call $live_bytes)))))\n (if (i32.eq (local.get $key) (i32.const 5)) (then (return (i64.extend_i32_u (global.get $allocation_peak)))))\n (if (i32.eq (local.get $key) (i32.const 6)) (then (return (i64.extend_i32_u (global.get $operand_peak)))))\n (if (i32.eq (local.get $key) (i32.const 7)) (then (return (i64.extend_i32_u (global.get $continuation_peak)))))\n (if (i32.eq (local.get $key) (i32.const 8)) (then (return (i64.extend_i32_u (global.get $steps)))))\n (if (i32.eq (local.get $key) (i32.const 9)) (then (return (i64.extend_i32_u (global.get $quote_invocations)))))\n (if (i32.eq (local.get $key) (i32.const 10)) (then (return (i64.extend_i32_u (i32.mul (memory.size) (i32.const 65536))))))\n (if (i32.eq (local.get $key) (i32.const 11)) (then (return (i64.extend_i32_u (i32.mul (global.get $heap_baseline) (i32.const 48))))))\n (if (i32.eq (local.get $key) (i32.const 12)) (then (return (i64.extend_i32_u (global.get $sp)))))\n (if (i32.eq (local.get $key) (i32.const 13)) (then (return (i64.extend_i32_u (global.get $reflection_steps)))))\n (i64.const -1))\n"
 
 /-- [noble_wasm::emit::GC_STORAGE]
-    Source: 'crates/noble-wasm/src/emit.rs', lines 12:0-12:67 -/
+    Source: 'crates/noble-wasm/src/emit.rs', lines 13:0-13:67 -/
 @[global_simps, irreducible]
 def emit.GC_STORAGE : Str :=
   toStr
     ";; Fields are immutable; child references preserve the actual GC object graph.\n(rec\n  (type $gc_cell (struct\n    (field $kind i32)\n    (field $id i32)\n    (field $payload i64)\n    (field $a (ref null $gc_cell))\n    (field $b (ref null $gc_cell))\n    (field $c (ref null $gc_cell))\n    (field $x i32)\n    (field $y i32)\n    (field $z i32)\n    (field $w i32)\n    (field $n i32))))\n(type $gc_roots (array (mut (ref null $gc_cell))))\n(global $gc_root_table (mut (ref null $gc_roots)) (ref.null $gc_roots))\n\n;; Handle h occupies slot h-1; zero is a nullable child, never a root handle.\n(func $gc_cell_at (param $h i32) (result (ref $gc_cell))\n  (ref.as_non_null\n    (array.get $gc_roots\n      (ref.as_non_null (global.get $gc_root_table))\n      (i32.sub (local.get $h) (i32.const 1)))))\n\n(func $gc_child_at (param $h i32) (result (ref null $gc_cell))\n  (if (result (ref null $gc_cell)) (i32.eqz (local.get $h))\n    (then (ref.null $gc_cell))\n    (else (call $gc_cell_at (local.get $h)))))\n\n(func $gc_handle (param $cell (ref null $gc_cell)) (result i32)\n  (if (result i32) (ref.is_null (local.get $cell))\n    (then (i32.const 0))\n    (else (struct.get $gc_cell $id (ref.as_non_null (local.get $cell))))))\n\n(func $storage_init\n  (if (i32.eqz (ref.is_null (global.get $gc_root_table)))\n    (then unreachable))\n  (global.set $gc_root_table\n    (array.new $gc_roots (ref.null $gc_cell) (i32.const 4096))))\n\n(func $storage_ensure (param $h i32) (result i32)\n  (i32.lt_u\n    (i32.sub (local.get $h) (i32.const 1))\n    (array.len (ref.as_non_null (global.get $gc_root_table)))))\n\n;; Dropping a root does not promise immediate collection or physical reclamation.\n(func $storage_discard (param $h i32)\n  (drop (call $gc_cell_at (local.get $h)))\n  (array.set $gc_roots\n    (ref.as_non_null (global.get $gc_root_table))\n    (i32.sub (local.get $h) (i32.const 1))\n    (ref.null $gc_cell)))\n\n;; Common reserve charges logical 48-byte cells, not engine-defined GC bytes.\n;; Root-array/struct allocation can fail at the engine level; ensure is not an OOM probe.\n(func $new\n  (param $kind i32) (param $payload i64)\n  (param $a i32) (param $b i32) (param $c i32)\n  (param $x i32) (param $y i32) (param $z i32)\n  (param $w i32) (param $n i32)\n  (result i32)\n  (local $h i32)\n  (local.set $h (call $reserve))\n  ;; A failed reservation must not dereference even a malformed child handle.\n  (if (i32.eqz (local.get $h)) (then (return (i32.const 0))))\n  (array.set $gc_roots\n    (ref.as_non_null (global.get $gc_root_table))\n    (i32.sub (local.get $h) (i32.const 1))\n    (struct.new $gc_cell\n      (local.get $kind)\n      (local.get $h)\n      (local.get $payload)\n      (call $gc_child_at (local.get $a))\n      (call $gc_child_at (local.get $b))\n      (call $gc_child_at (local.get $c))\n      (local.get $x)\n      (local.get $y)\n      (local.get $z)\n      (local.get $w)\n      (local.get $n)))\n  (local.get $h))\n\n;; Bounds checks and ref.as_non_null trap on absent or discarded private cells.\n(func $kind (param $h i32) (result i32)\n  (struct.get $gc_cell $kind (call $gc_cell_at (local.get $h))))\n\n(func $payload (param $h i32) (result i64)\n  (struct.get $gc_cell $payload (call $gc_cell_at (local.get $h))))\n\n(func $a (param $h i32) (result i32)\n  (call $gc_handle (struct.get $gc_cell $a (call $gc_cell_at (local.get $h)))))\n\n(func $b (param $h i32) (result i32)\n  (call $gc_handle (struct.get $gc_cell $b (call $gc_cell_at (local.get $h)))))\n\n(func $c (param $h i32) (result i32)\n  (call $gc_handle (struct.get $gc_cell $c (call $gc_cell_at (local.get $h)))))\n\n(func $x (param $h i32) (result i32)\n  (struct.get $gc_cell $x (call $gc_cell_at (local.get $h))))\n\n(func $y (param $h i32) (result i32)\n  (struct.get $gc_cell $y (call $gc_cell_at (local.get $h))))\n\n(func $z (param $h i32) (result i32)\n  (struct.get $gc_cell $z (call $gc_cell_at (local.get $h))))\n\n(func $w (param $h i32) (result i32)\n  (struct.get $gc_cell $w (call $gc_cell_at (local.get $h))))\n\n(func $n (param $h i32) (result i32)\n  (struct.get $gc_cell $n (call $gc_cell_at (local.get $h))))\n"
 
 /-- [noble_wasm::emit::LINEAR_STORAGE]
-    Source: 'crates/noble-wasm/src/emit.rs', lines 13:0-13:75 -/
+    Source: 'crates/noble-wasm/src/emit.rs', lines 14:0-14:75 -/
 @[global_simps, irreducible]
 def emit.LINEAR_STORAGE : Str :=
   toStr
-    ";; Cells occupy [65536, 262144): 4096 immutable records of exactly 48 bytes.\n;; Check the unsigned handle range before subtraction/multiplication can address memory.\n(func $linear_address (param $h i32) (result i32)\n  (if (i32.gt_u (i32.sub (local.get $h) (i32.const 1)) (i32.const 4095))\n    (then unreachable))\n  (i32.add\n    (i32.const 65536)\n    (i32.mul (i32.sub (local.get $h) (i32.const 1)) (i32.const 48))))\n\n;; A current cell has both its expected id and a live kind, never a zero object.\n(func $linear_live_address (param $h i32) (result i32)\n  (local $p i32)\n  (if (i32.gt_u (local.get $h) (global.get $heap_cursor))\n    (then unreachable))\n  (local.set $p (call $linear_address (local.get $h)))\n  (if (i32.ne (i32.load offset=4 (local.get $p)) (local.get $h))\n    (then unreachable))\n  (if (i32.gt_u\n        (i32.sub (i32.load (local.get $p)) (i32.const 1))\n        (i32.const 9))\n    (then unreachable))\n  (local.get $p))\n\n;; Nullable edges point only backward to existing cells, preserving acyclicity.\n(func $linear_child (param $child i32) (param $parent i32) (result i32)\n  (if (i32.eqz (local.get $child))\n    (then (return (i32.const 0))))\n  (if (i32.ge_u (local.get $child) (local.get $parent))\n    (then unreachable))\n  (drop (call $linear_live_address (local.get $child)))\n  (local.get $child))\n\n(func $storage_init\n  ;; Leave scratch and common accounting untouched; initially this range is empty.\n  (memory.fill\n    (i32.const 65536)\n    (i32.const 0)\n    (i32.shl (i32.sub (memory.size) (i32.const 1)) (i32.const 16))))\n\n(func $storage_ensure (param $h i32) (result i32)\n  (local $needed i32)\n  (local $current i32)\n  (if (i32.gt_u (i32.sub (local.get $h) (i32.const 1)) (i32.const 4095))\n    (then (return (i32.const 0))))\n  ;; ceil((65536 + h * 48) / 65536) is at most four, without i32 overflow.\n  (local.set $needed\n    (i32.add\n      (i32.const 1)\n      (i32.shr_u\n        (i32.add (i32.mul (local.get $h) (i32.const 48)) (i32.const 65535))\n        (i32.const 16))))\n  (local.set $current (memory.size))\n  (if (i32.ge_u (local.get $current) (local.get $needed))\n    (then (return (i32.const 1))))\n  ;; reserve charges only after this succeeds; failed growth publishes no cell.\n  (i32.ne\n    (memory.grow (i32.sub (local.get $needed) (local.get $current)))\n    (i32.const -1)))\n\n(func $storage_discard (param $h i32)\n  ;; Clear kind and id together. Pages remain allocated; handles are region-private.\n  (i64.store (call $linear_live_address (local.get $h)) (i64.const 0)))\n\n(func $new\n  (param $kind i32) (param $payload i64)\n  (param $a i32) (param $b i32) (param $c i32)\n  (param $x i32) (param $y i32) (param $z i32)\n  (param $w i32) (param $n i32)\n  (result i32)\n  (local $h i32)\n  (local $p i32)\n  (local.set $h (call $reserve))\n  ;; In particular, failed reservations must not inspect child handles.\n  (if (i32.eqz (local.get $h))\n    (then (return (i32.const 0))))\n  (local.set $p (call $linear_address (local.get $h)))\n  (if (i32.gt_u (i32.sub (local.get $kind) (i32.const 1)) (i32.const 9))\n    (then unreachable))\n  (local.set $a (call $linear_child (local.get $a) (local.get $h)))\n  (local.set $b (call $linear_child (local.get $b) (local.get $h)))\n  (local.set $c (call $linear_child (local.get $c) (local.get $h)))\n  (i64.store offset=8 (local.get $p) (local.get $payload))\n  (i32.store offset=16 (local.get $p) (local.get $a))\n  (i32.store offset=20 (local.get $p) (local.get $b))\n  (i32.store offset=24 (local.get $p) (local.get $c))\n  (i32.store offset=28 (local.get $p) (local.get $x))\n  (i32.store offset=32 (local.get $p) (local.get $y))\n  (i32.store offset=36 (local.get $p) (local.get $z))\n  (i32.store offset=40 (local.get $p) (local.get $w))\n  (i32.store offset=44 (local.get $p) (local.get $n))\n  ;; Publish the live header only after every immutable field is initialized.\n  (i32.store offset=4 (local.get $p) (local.get $h))\n  (i32.store (local.get $p) (local.get $kind))\n  (local.get $h))\n\n(func $kind (param $h i32) (result i32)\n  (i32.load (call $linear_live_address (local.get $h))))\n\n(func $payload (param $h i32) (result i64)\n  (i64.load offset=8 (call $linear_live_address (local.get $h))))\n\n(func $a (param $h i32) (result i32)\n  (call $linear_child\n    (i32.load offset=16 (call $linear_live_address (local.get $h)))\n    (local.get $h)))\n\n(func $b (param $h i32) (result i32)\n  (call $linear_child\n    (i32.load offset=20 (call $linear_live_address (local.get $h)))\n    (local.get $h)))\n\n(func $c (param $h i32) (result i32)\n  (call $linear_child\n    (i32.load offset=24 (call $linear_live_address (local.get $h)))\n    (local.get $h)))\n\n(func $x (param $h i32) (result i32)\n  (i32.load offset=28 (call $linear_live_address (local.get $h))))\n\n(func $y (param $h i32) (result i32)\n  (i32.load offset=32 (call $linear_live_address (local.get $h))))\n\n(func $z (param $h i32) (result i32)\n  (i32.load offset=36 (call $linear_live_address (local.get $h))))\n\n(func $w (param $h i32) (result i32)\n  (i32.load offset=40 (call $linear_live_address (local.get $h))))\n\n(func $n (param $h i32) (result i32)\n  (i32.load offset=44 (call $linear_live_address (local.get $h))))\n"
+    ";; Cells occupy [65536, 262144): 4096 immutable records of exactly 48 bytes.\n;; Check the unsigned handle range before subtraction/multiplication can address memory.\n(func $linear_address (param $h i32) (result i32)\n  (if (i32.gt_u (i32.sub (local.get $h) (i32.const 1)) (i32.const 4095))\n    (then unreachable))\n  (i32.add\n    (i32.const 65536)\n    (i32.mul (i32.sub (local.get $h) (i32.const 1)) (i32.const 48))))\n\n;; A current cell has both its expected id and a live kind, never a zero object.\n(func $linear_live_address (param $h i32) (result i32)\n  (local $p i32)\n  (if (i32.gt_u (local.get $h) (global.get $heap_cursor))\n    (then unreachable))\n  (local.set $p (call $linear_address (local.get $h)))\n  (if (i32.ne (i32.load offset=4 (local.get $p)) (local.get $h))\n    (then unreachable))\n  (if (i32.gt_u\n        (i32.sub (i32.load (local.get $p)) (i32.const 1))\n        (i32.const 12))\n    (then unreachable))\n  (local.get $p))\n\n;; Nullable edges point only backward to existing cells, preserving acyclicity.\n(func $linear_child (param $child i32) (param $parent i32) (result i32)\n  (if (i32.eqz (local.get $child))\n    (then (return (i32.const 0))))\n  (if (i32.ge_u (local.get $child) (local.get $parent))\n    (then unreachable))\n  (drop (call $linear_live_address (local.get $child)))\n  (local.get $child))\n\n(func $storage_init\n  ;; Leave scratch and common accounting untouched; initially this range is empty.\n  (memory.fill\n    (i32.const 65536)\n    (i32.const 0)\n    (i32.shl (i32.sub (memory.size) (i32.const 1)) (i32.const 16))))\n\n(func $storage_ensure (param $h i32) (result i32)\n  (local $needed i32)\n  (local $current i32)\n  (if (i32.gt_u (i32.sub (local.get $h) (i32.const 1)) (i32.const 4095))\n    (then (return (i32.const 0))))\n  ;; ceil((65536 + h * 48) / 65536) is at most four, without i32 overflow.\n  (local.set $needed\n    (i32.add\n      (i32.const 1)\n      (i32.shr_u\n        (i32.add (i32.mul (local.get $h) (i32.const 48)) (i32.const 65535))\n        (i32.const 16))))\n  (local.set $current (memory.size))\n  (if (i32.ge_u (local.get $current) (local.get $needed))\n    (then (return (i32.const 1))))\n  ;; reserve charges only after this succeeds; failed growth publishes no cell.\n  (i32.ne\n    (memory.grow (i32.sub (local.get $needed) (local.get $current)))\n    (i32.const -1)))\n\n(func $storage_discard (param $h i32)\n  ;; Clear kind and id together. Pages remain allocated; handles are region-private.\n  (i64.store (call $linear_live_address (local.get $h)) (i64.const 0)))\n\n(func $new\n  (param $kind i32) (param $payload i64)\n  (param $a i32) (param $b i32) (param $c i32)\n  (param $x i32) (param $y i32) (param $z i32)\n  (param $w i32) (param $n i32)\n  (result i32)\n  (local $h i32)\n  (local $p i32)\n  (local.set $h (call $reserve))\n  ;; In particular, failed reservations must not inspect child handles.\n  (if (i32.eqz (local.get $h))\n    (then (return (i32.const 0))))\n  (local.set $p (call $linear_address (local.get $h)))\n  (if (i32.gt_u (i32.sub (local.get $kind) (i32.const 1)) (i32.const 12))\n    (then unreachable))\n  (local.set $a (call $linear_child (local.get $a) (local.get $h)))\n  (local.set $b (call $linear_child (local.get $b) (local.get $h)))\n  (local.set $c (call $linear_child (local.get $c) (local.get $h)))\n  (i64.store offset=8 (local.get $p) (local.get $payload))\n  (i32.store offset=16 (local.get $p) (local.get $a))\n  (i32.store offset=20 (local.get $p) (local.get $b))\n  (i32.store offset=24 (local.get $p) (local.get $c))\n  (i32.store offset=28 (local.get $p) (local.get $x))\n  (i32.store offset=32 (local.get $p) (local.get $y))\n  (i32.store offset=36 (local.get $p) (local.get $z))\n  (i32.store offset=40 (local.get $p) (local.get $w))\n  (i32.store offset=44 (local.get $p) (local.get $n))\n  ;; Publish the live header only after every immutable field is initialized.\n  (i32.store offset=4 (local.get $p) (local.get $h))\n  (i32.store (local.get $p) (local.get $kind))\n  (local.get $h))\n\n(func $kind (param $h i32) (result i32)\n  (i32.load (call $linear_live_address (local.get $h))))\n\n(func $payload (param $h i32) (result i64)\n  (i64.load offset=8 (call $linear_live_address (local.get $h))))\n\n(func $a (param $h i32) (result i32)\n  (call $linear_child\n    (i32.load offset=16 (call $linear_live_address (local.get $h)))\n    (local.get $h)))\n\n(func $b (param $h i32) (result i32)\n  (call $linear_child\n    (i32.load offset=20 (call $linear_live_address (local.get $h)))\n    (local.get $h)))\n\n(func $c (param $h i32) (result i32)\n  (call $linear_child\n    (i32.load offset=24 (call $linear_live_address (local.get $h)))\n    (local.get $h)))\n\n(func $x (param $h i32) (result i32)\n  (i32.load offset=28 (call $linear_live_address (local.get $h))))\n\n(func $y (param $h i32) (result i32)\n  (i32.load offset=32 (call $linear_live_address (local.get $h))))\n\n(func $z (param $h i32) (result i32)\n  (i32.load offset=36 (call $linear_live_address (local.get $h))))\n\n(func $w (param $h i32) (result i32)\n  (i32.load offset=40 (call $linear_live_address (local.get $h))))\n\n(func $n (param $h i32) (result i32)\n  (i32.load offset=44 (call $linear_live_address (local.get $h))))\n"
 
 /-- [noble_wasm::emit::STACK]
-    Source: 'crates/noble-wasm/src/emit.rs', lines 14:0-14:57 -/
+    Source: 'crates/noble-wasm/src/emit.rs', lines 15:0-15:57 -/
 @[global_simps, irreducible]
 def emit.STACK : Str :=
   toStr
-    ";; Operand slots: tag:i32, padding:i32, payload:i64; no heap allocation for arithmetic.\n(func $need (param $count i32) (result i32)\n (if (global.get $failure) (then (return (i32.const 0))))\n (if (i32.lt_u (global.get $sp) (local.get $count))\n  (then (call $fail (i32.const 4)) (return (i32.const 0))))\n (i32.const 1))\n(func $slot_kind (param $index i32) (result i32)\n (if (i32.ge_u (local.get $index) (global.get $sp))\n  (then (call $fail (i32.const 4)) (return (i32.const 0))))\n (i32.load (i32.mul (local.get $index) (i32.const 16))))\n(func $slot_value (param $index i32) (result i64)\n (if (i32.ge_u (local.get $index) (global.get $sp))\n  (then (call $fail (i32.const 4)) (return (i64.const 0))))\n (i64.load offset=8 (i32.mul (local.get $index) (i32.const 16))))\n(func $push_tag (param $kind i32) (param $value i64) (local $bytes i32) (local $address i32)\n (if (global.get $failure) (then (return)))\n (local.set $bytes (i32.mul (i32.add (global.get $sp) (i32.const 1)) (i32.const 16)))\n (if (i32.gt_u (local.get $bytes) (global.get $operand_limit))\n  (then (call $quota (i32.const 4)) (return)))\n (local.set $address (i32.mul (global.get $sp) (i32.const 16)))\n (i32.store (local.get $address) (local.get $kind))\n (i64.store offset=8 (local.get $address) (local.get $value))\n (global.set $sp (i32.add (global.get $sp) (i32.const 1)))\n (if (i32.gt_u (local.get $bytes) (global.get $operand_peak))\n  (then (global.set $operand_peak (local.get $bytes)))))\n(func $push_i64 (param $value i64) (call $push_tag (i32.const 1) (local.get $value)))\n(func $push_bool (param $value i32)\n (call $push_tag (i32.const 2) (i64.extend_i32_u (local.get $value))))\n(func $push_unit (call $push_tag (i32.const 3) (i64.const 0)))\n(func $push_ref (param $handle i32)\n (if (global.get $failure) (then (return)))\n (call $push_tag (call $kind (local.get $handle)) (i64.extend_i32_u (local.get $handle))))\n(func $take (result i64) (local $address i32) (local $value i64)\n (if (i32.eqz (call $need (i32.const 1))) (then (return (i64.const 0))))\n (global.set $sp (i32.sub (global.get $sp) (i32.const 1)))\n (local.set $address (i32.mul (global.get $sp) (i32.const 16)))\n (local.set $value (i64.load offset=8 (local.get $address)))\n (i64.store (local.get $address) (i64.const 0))\n (i64.store offset=8 (local.get $address) (i64.const 0))\n (local.get $value))\n(func $pop_kind (param $expected i32) (result i64)\n (if (i32.eqz (call $need (i32.const 1))) (then (return (i64.const 0))))\n (if (i32.ne (call $slot_kind (i32.sub (global.get $sp) (i32.const 1))) (local.get $expected))\n  (then (call $fail (i32.const 4)) (return (i64.const 0))))\n (call $take))\n(func $pop_box (result i32) (local $tag i32) (local $value i64)\n (if (i32.eqz (call $need (i32.const 1))) (then (return (i32.const 0))))\n (local.set $tag (call $slot_kind (i32.sub (global.get $sp) (i32.const 1))))\n (local.set $value (call $take))\n (if (i32.ge_u (local.get $tag) (i32.const 4)) (then (return (i32.wrap_i64 (local.get $value)))))\n (call $new (local.get $tag) (local.get $value)\n  (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0)\n  (i32.const 0) (i32.const 0) (i32.const 0)))\n(func $unbox (param $handle i32) (local $tag i32)\n (if (global.get $failure) (then (return)))\n (local.set $tag (call $kind (local.get $handle)))\n (if (i32.lt_u (local.get $tag) (i32.const 4))\n  (then (call $push_tag (local.get $tag) (call $payload (local.get $handle))))\n  (else (call $push_ref (local.get $handle)))))\n\n;; Continuation slots occupy [4096,8192): index:i32, environment:i32.\n(func $enqueue (param $index i32) (param $environment i32) (local $bytes i32) (local $address i32)\n (if (global.get $failure) (then (return)))\n (local.set $bytes (i32.mul (i32.add (global.get $cp) (i32.const 1)) (i32.const 8)))\n (if (i32.gt_u (local.get $bytes) (global.get $continuation_limit))\n  (then (call $quota (i32.const 5)) (return)))\n (local.set $address (i32.add (i32.const 4096) (i32.mul (global.get $cp) (i32.const 8))))\n (i32.store (local.get $address) (local.get $index))\n (i32.store offset=4 (local.get $address) (local.get $environment))\n (global.set $cp (i32.add (global.get $cp) (i32.const 1)))\n (if (i32.gt_u (local.get $bytes) (global.get $continuation_peak))\n  (then (global.set $continuation_peak (local.get $bytes)))))\n(func $enqueue_program (param $program i32)\n (if (global.get $failure) (then (return)))\n (if (i32.ne (call $kind (local.get $program)) (i32.const 4))\n  (then (call $fail (i32.const 4)) (return)))\n (call $enqueue (call $x (local.get $program)) (local.get $program)))\n(func $dispatch (local $index i32) (local $environment i32) (local $address i32)\n (block $done (loop $next\n  (br_if $done (i32.or (global.get $failure) (i32.eqz (global.get $cp))))\n  (if (i32.ge_u (global.get $steps) (global.get $step_limit))\n   (then (call $quota (i32.const 6)) (br $done)))\n  (global.set $cp (i32.sub (global.get $cp) (i32.const 1)))\n  (local.set $address (i32.add (i32.const 4096) (i32.mul (global.get $cp) (i32.const 8))))\n  (local.set $index (i32.load (local.get $address)))\n  (local.set $environment (i32.load offset=4 (local.get $address)))\n  (i64.store (local.get $address) (i64.const 0))\n  (global.set $steps (i32.add (global.get $steps) (i32.const 1)))\n  (call_indirect (type $entry) (local.get $environment) (local.get $index))\n  (br $next))))\n"
+    ";; Operand slots: tag:i32, padding:i32, payload:i64; no heap allocation for arithmetic.\n(func $need (param $count i32) (result i32)\n (if (global.get $failure) (then (return (i32.const 0))))\n (if (i32.lt_u (global.get $sp) (local.get $count))\n  (then (call $fail (i32.const 4)) (return (i32.const 0))))\n (i32.const 1))\n(func $slot_kind (param $index i32) (result i32)\n (if (i32.ge_u (local.get $index) (global.get $sp))\n  (then (call $fail (i32.const 4)) (return (i32.const 0))))\n (i32.load (i32.mul (local.get $index) (i32.const 16))))\n(func $slot_value (param $index i32) (result i64)\n (if (i32.ge_u (local.get $index) (global.get $sp))\n  (then (call $fail (i32.const 4)) (return (i64.const 0))))\n (i64.load offset=8 (i32.mul (local.get $index) (i32.const 16))))\n(func $push_tag (param $kind i32) (param $value i64) (local $bytes i32) (local $address i32)\n (if (global.get $failure) (then (return)))\n (local.set $bytes (i32.mul (i32.add (global.get $sp) (i32.const 1)) (i32.const 16)))\n (if (i32.gt_u (local.get $bytes) (global.get $operand_limit))\n  (then (call $quota (i32.const 4)) (return)))\n (local.set $address (i32.mul (global.get $sp) (i32.const 16)))\n (i32.store (local.get $address) (local.get $kind))\n (i64.store offset=8 (local.get $address) (local.get $value))\n (global.set $sp (i32.add (global.get $sp) (i32.const 1)))\n (if (i32.gt_u (local.get $bytes) (global.get $operand_peak))\n  (then (global.set $operand_peak (local.get $bytes)))))\n(func $push_i64 (param $value i64) (call $push_tag (i32.const 1) (local.get $value)))\n(func $push_bool (param $value i32)\n (call $push_tag (i32.const 2) (i64.extend_i32_u (local.get $value))))\n(func $push_unit (call $push_tag (i32.const 3) (i64.const 0)))\n(func $push_ref (param $handle i32)\n (if (global.get $failure) (then (return)))\n (call $push_tag (call $kind (local.get $handle)) (i64.extend_i32_u (local.get $handle))))\n(func $take (result i64) (local $address i32) (local $value i64)\n (if (i32.eqz (call $need (i32.const 1))) (then (return (i64.const 0))))\n (global.set $sp (i32.sub (global.get $sp) (i32.const 1)))\n (local.set $address (i32.mul (global.get $sp) (i32.const 16)))\n (local.set $value (i64.load offset=8 (local.get $address)))\n (i64.store (local.get $address) (i64.const 0))\n (i64.store offset=8 (local.get $address) (i64.const 0))\n (local.get $value))\n(func $pop_kind (param $expected i32) (result i64)\n (if (i32.eqz (call $need (i32.const 1))) (then (return (i64.const 0))))\n (if (i32.ne (call $slot_kind (i32.sub (global.get $sp) (i32.const 1))) (local.get $expected))\n  (then (call $fail (i32.const 4)) (return (i64.const 0))))\n (call $take))\n(func $pop_box (result i32) (local $tag i32) (local $value i64)\n (if (i32.eqz (call $need (i32.const 1))) (then (return (i32.const 0))))\n (local.set $tag (call $slot_kind (i32.sub (global.get $sp) (i32.const 1))))\n (local.set $value (call $take))\n (if (i32.ge_u (local.get $tag) (i32.const 4)) (then (return (i32.wrap_i64 (local.get $value)))))\n (call $new (local.get $tag) (local.get $value)\n  (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0)\n  (i32.const 0) (i32.const 0) (i32.const 0)))\n(func $unbox (param $handle i32) (local $tag i32)\n (if (global.get $failure) (then (return)))\n (local.set $tag (call $kind (local.get $handle)))\n (if (i32.lt_u (local.get $tag) (i32.const 4))\n  (then (call $push_tag (local.get $tag) (call $payload (local.get $handle))))\n  (else (call $push_ref (local.get $handle)))))\n\n;; Continuation slots occupy [4096,8192): index:i32, environment:i32.\n(func $enqueue (param $index i32) (param $environment i32) (local $bytes i32) (local $address i32)\n (if (global.get $failure) (then (return)))\n (local.set $bytes (i32.mul (i32.add (global.get $cp) (i32.const 1)) (i32.const 8)))\n (if (i32.gt_u (local.get $bytes) (global.get $continuation_limit))\n  (then (call $quota (i32.const 5)) (return)))\n (local.set $address (i32.add (i32.const 4096) (i32.mul (global.get $cp) (i32.const 8))))\n (i32.store (local.get $address) (local.get $index))\n (i32.store offset=4 (local.get $address) (local.get $environment))\n (global.set $cp (i32.add (global.get $cp) (i32.const 1)))\n (if (i32.gt_u (local.get $bytes) (global.get $continuation_peak))\n  (then (global.set $continuation_peak (local.get $bytes)))))\n(func $enqueue_program (param $program i32)\n (if (global.get $failure) (then (return)))\n (if (i32.ne (call $kind (local.get $program)) (i32.const 4))\n  (then (call $fail (i32.const 4)) (return)))\n (call $enqueue (call $x (local.get $program)) (local.get $program)))\n(func $dispatch (local $index i32) (local $environment i32) (local $address i32)\n (block $done (loop $next\n  (br_if $done (i32.or (global.get $failure) (i32.eqz (global.get $cp))))\n  (if (i32.eqz (call $runtime_tick)) (then (br $done)))\n  (global.set $cp (i32.sub (global.get $cp) (i32.const 1)))\n  (local.set $address (i32.add (i32.const 4096) (i32.mul (global.get $cp) (i32.const 8))))\n  (local.set $index (i32.load (local.get $address)))\n  (local.set $environment (i32.load offset=4 (local.get $address)))\n  (i64.store (local.get $address) (i64.const 0))\n  (call_indirect (type $entry) (local.get $environment) (local.get $index))\n  (br $next))))\n"
 
 /-- [noble_wasm::emit::PROGRAMS]
-    Source: 'crates/noble-wasm/src/emit.rs', lines 15:0-15:63 -/
+    Source: 'crates/noble-wasm/src/emit.rs', lines 16:0-16:63 -/
 @[global_simps, irreducible]
 def emit.PROGRAMS : Str :=
   toStr
-    "(func $atom (param $kind i32) (param $value i64) (param $child i32) (result i32)\n (call $new (i32.const 8) (local.get $value) (local.get $child)\n  (i32.const 0) (i32.const 0) (local.get $kind) (i32.const 0)\n  (i32.const 0) (i32.const 0) (i32.const 0)))\n(func $concat_recipe (param $left i32) (param $right i32) (result i32)\n (if (global.get $failure) (then (return (i32.const 0))))\n (if (i32.eqz (local.get $left)) (then (return (local.get $right))))\n (if (i32.eqz (local.get $right)) (then (return (local.get $left))))\n (call $new (i32.const 9) (i64.const 0) (local.get $left) (local.get $right)\n  (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0)))\n(func $program (param $entry_index i32) (param $input i32) (param $output i32)\n (param $recipe i32) (param $capture i64) (param $left i32) (param $right i32)\n (param $depth i32) (param $leaves i32) (result i32)\n (if (global.get $failure) (then (return (i32.const 0))))\n (if (i32.gt_u (local.get $leaves) (global.get $recipe_limit))\n  (then (call $quota (i32.const 2)) (return (i32.const 0))))\n (if (i32.gt_u (local.get $depth) (global.get $depth_limit))\n  (then (call $quota (i32.const 3)) (return (i32.const 0))))\n (call $new (i32.const 4) (local.get $capture) (local.get $left) (local.get $right)\n  (local.get $recipe) (local.get $entry_index) (local.get $input) (local.get $output)\n  (local.get $depth) (local.get $leaves)))\n(func $compose (param $left i32) (param $right i32) (result i32)\n (local $depth i32) (local $leaves i32) (local $recipe i32)\n (if (global.get $failure) (then (return (i32.const 0))))\n (if (i32.or (i32.ne (call $kind (local.get $left)) (i32.const 4))\n             (i32.ne (call $kind (local.get $right)) (i32.const 4)))\n  (then (call $fail (i32.const 4)) (return (i32.const 0))))\n ;; Complete ordered signature IDs, not argument counts or suffix matches.\n (if (i32.ne (call $z (local.get $left)) (call $y (local.get $right)))\n  (then (call $fail (i32.const 3)) (return (i32.const 0))))\n (local.set $leaves (i32.add (call $n (local.get $left)) (call $n (local.get $right))))\n (local.set $depth (call $w (local.get $left)))\n (if (i32.gt_u (call $w (local.get $right)) (local.get $depth))\n  (then (local.set $depth (call $w (local.get $right)))))\n (local.set $depth (i32.add (local.get $depth) (i32.const 1)))\n ;; Check both bounds before allocating recipe metadata or the program cell.\n (if (i32.gt_u (local.get $leaves) (global.get $recipe_limit))\n  (then (call $quota (i32.const 2)) (return (i32.const 0))))\n (if (i32.gt_u (local.get $depth) (global.get $depth_limit))\n  (then (call $quota (i32.const 3)) (return (i32.const 0))))\n (local.set $recipe (call $concat_recipe (call $c (local.get $left)) (call $c (local.get $right))))\n (call $program (i32.const 2) (call $y (local.get $left)) (call $z (local.get $right))\n  (local.get $recipe) (i64.const 0) (local.get $left) (local.get $right)\n  (local.get $depth) (local.get $leaves)))\n(func $empty_entry (type $entry) (param $environment i32))\n(func $quote_entry (type $entry) (param $environment i32)\n (global.set $quote_invocations (i32.add (global.get $quote_invocations) (i32.const 1)))\n (call $push_i64 (call $payload (local.get $environment))))\n(func $compose_entry (type $entry) (param $environment i32)\n ;; LIFO scheduling: left runs first; right is the pending continuation.\n (call $enqueue_program (call $b (local.get $environment)))\n (call $enqueue_program (call $a (local.get $environment))))\n(func $op_quote (param $input i32) (param $output i32)\n (local $value i64) (local $recipe i32) (local $handle i32)\n (local.set $value (call $pop_kind (i32.const 1)))\n (if (global.get $failure) (then (return)))\n (local.set $recipe (call $atom (i32.const 1) (local.get $value) (i32.const 0)))\n (local.set $handle (call $program (i32.const 1) (local.get $input) (local.get $output)\n  (local.get $recipe) (local.get $value) (i32.const 0) (i32.const 0) (i32.const 1) (i32.const 1)))\n (call $push_ref (local.get $handle)))\n(func $op_compose (local $right i32) (local $left i32)\n (local.set $right (i32.wrap_i64 (call $pop_kind (i32.const 4))))\n (local.set $left (i32.wrap_i64 (call $pop_kind (i32.const 4))))\n (if (global.get $failure) (then (return)))\n (call $push_ref (call $compose (local.get $left) (local.get $right))))\n(func $op_run (local $program i32)\n (local.set $program (i32.wrap_i64 (call $pop_kind (i32.const 4))))\n (if (global.get $failure) (then (return)))\n (call $enqueue_program (local.get $program)))\n(func $op_reflect (local $program i32) (local $recipe i32)\n (local.set $program (i32.wrap_i64 (call $pop_kind (i32.const 4))))\n (if (global.get $failure) (then (return)))\n (local.set $recipe (call $c (local.get $program)))\n ;; Box Syntax independently of its possibly empty recipe, so aggregates retain it.\n (call $push_ref (call $new (i32.const 10) (i64.const 0) (local.get $recipe)\n  (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0)\n  (i32.const 0) (i32.const 0) (i32.const 0))))\n"
+    "(func $atom (param $kind i32) (param $value i64) (param $child i32) (result i32)\n (call $new (i32.const 8) (local.get $value) (local.get $child)\n  (i32.const 0) (i32.const 0) (local.get $kind) (i32.const 0)\n  (i32.const 0) (i32.const 0) (i32.const 0)))\n(func $concat_recipe (param $left i32) (param $right i32) (result i32)\n (if (global.get $failure) (then (return (i32.const 0))))\n (if (i32.eqz (local.get $left)) (then (return (local.get $right))))\n (if (i32.eqz (local.get $right)) (then (return (local.get $left))))\n (call $new (i32.const 9) (i64.const 0) (local.get $left) (local.get $right)\n  (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0)))\n(func $program (param $entry_index i32) (param $input i32) (param $output i32)\n (param $recipe i32) (param $capture i64) (param $left i32) (param $right i32)\n (param $depth i32) (param $leaves i32) (result i32)\n (if (global.get $failure) (then (return (i32.const 0))))\n (if (i32.gt_u (local.get $leaves) (global.get $recipe_limit))\n  (then (call $quota (i32.const 2)) (return (i32.const 0))))\n (if (i32.gt_u (local.get $depth) (global.get $depth_limit))\n  (then (call $quota (i32.const 3)) (return (i32.const 0))))\n (call $new (i32.const 4) (local.get $capture) (local.get $left) (local.get $right)\n  (local.get $recipe) (local.get $entry_index) (local.get $input) (local.get $output)\n  (local.get $depth) (local.get $leaves)))\n(func $compose (param $left i32) (param $right i32) (result i32)\n (local $depth i32) (local $leaves i32) (local $recipe i32)\n (if (global.get $failure) (then (return (i32.const 0))))\n (if (i32.or (i32.ne (call $kind (local.get $left)) (i32.const 4))\n             (i32.ne (call $kind (local.get $right)) (i32.const 4)))\n  (then (call $fail (i32.const 4)) (return (i32.const 0))))\n ;; Complete ordered signature IDs, not argument counts or suffix matches.\n (if (i32.ne (call $z (local.get $left)) (call $y (local.get $right)))\n  (then (call $fail (i32.const 3)) (return (i32.const 0))))\n (local.set $leaves (i32.add (call $n (local.get $left)) (call $n (local.get $right))))\n (local.set $depth (call $w (local.get $left)))\n (if (i32.gt_u (call $w (local.get $right)) (local.get $depth))\n  (then (local.set $depth (call $w (local.get $right)))))\n (local.set $depth (i32.add (local.get $depth) (i32.const 1)))\n ;; Check both bounds before allocating recipe metadata or the program cell.\n (if (i32.gt_u (local.get $leaves) (global.get $recipe_limit))\n  (then (call $quota (i32.const 2)) (return (i32.const 0))))\n (if (i32.gt_u (local.get $depth) (global.get $depth_limit))\n  (then (call $quota (i32.const 3)) (return (i32.const 0))))\n (local.set $recipe (call $concat_recipe (call $c (local.get $left)) (call $c (local.get $right))))\n (call $program (i32.const 2) (call $y (local.get $left)) (call $z (local.get $right))\n  (local.get $recipe)\n  (if (result i64) (global.get $source_reflection)\n   (then (i64.or (call $payload (local.get $left)) (call $payload (local.get $right))))\n   (else (i64.const 0)))\n  (local.get $left) (local.get $right)\n  (local.get $depth) (local.get $leaves)))\n(func $empty_entry (type $entry) (param $environment i32))\n(func $quote_entry (type $entry) (param $environment i32)\n (global.set $quote_invocations (i32.add (global.get $quote_invocations) (i32.const 1)))\n (if (call $a (local.get $environment))\n  (then (call $unbox (call $a (local.get $environment))))\n  (else (call $push_i64 (call $payload (local.get $environment))))))\n(func $compose_entry (type $entry) (param $environment i32)\n ;; LIFO scheduling: left runs first; right is the pending continuation.\n (call $enqueue_program (call $b (local.get $environment)))\n (call $enqueue_program (call $a (local.get $environment))))\n(func $op_quote (param $input i32) (param $output i32)\n (local $value i64) (local $recipe i32) (local $handle i32)\n (local.set $value (call $pop_kind (i32.const 1)))\n (if (global.get $failure) (then (return)))\n (local.set $recipe (call $atom (i32.const 1) (local.get $value) (i32.const 0)))\n (local.set $handle (call $program (i32.const 1) (local.get $input) (local.get $output)\n  (local.get $recipe) (local.get $value) (i32.const 0) (i32.const 0) (i32.const 1) (i32.const 1)))\n (call $push_ref (local.get $handle)))\n(func $op_compose (local $right i32) (local $left i32)\n (local.set $right (i32.wrap_i64 (call $pop_kind (i32.const 4))))\n (local.set $left (i32.wrap_i64 (call $pop_kind (i32.const 4))))\n (if (global.get $failure) (then (return)))\n (call $push_ref (call $compose (local.get $left) (local.get $right))))\n(func $op_run (local $program i32)\n (local.set $program (i32.wrap_i64 (call $pop_kind (i32.const 4))))\n (if (global.get $failure) (then (return)))\n (call $enqueue_program (local.get $program)))\n(func $op_reflect (local $program i32) (local $recipe i32)\n (local.set $program (i32.wrap_i64 (call $pop_kind (i32.const 4))))\n (if (global.get $failure) (then (return)))\n (local.set $recipe (call $c (local.get $program)))\n ;; Box Syntax independently of its possibly empty recipe, so aggregates retain it.\n (call $push_ref (call $new (i32.const 10) (i64.const 0) (local.get $recipe)\n  (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0)\n  (i32.const 0) (call $w (local.get $program)) (call $n (local.get $program)))))\n"
 
 /-- [noble_wasm::emit::OPERATIONS]
-    Source: 'crates/noble-wasm/src/emit.rs', lines 16:0-16:67 -/
+    Source: 'crates/noble-wasm/src/emit.rs', lines 17:0-17:67 -/
 @[global_simps, irreducible]
 def emit.OPERATIONS : Str :=
   toStr
     "(func $op_dup (local $index i32)\n (if (i32.eqz (call $need (i32.const 1))) (then (return)))\n (local.set $index (i32.sub (global.get $sp) (i32.const 1)))\n (call $push_tag (call $slot_kind (local.get $index)) (call $slot_value (local.get $index))))\n(func $op_drop (drop (call $take)))\n(func $op_swap (local $left_kind i32) (local $right_kind i32) (local $left i64) (local $right i64)\n (if (i32.eqz (call $need (i32.const 2))) (then (return)))\n (local.set $right_kind (call $slot_kind (i32.sub (global.get $sp) (i32.const 1))))\n (local.set $right (call $take))\n (local.set $left_kind (call $slot_kind (i32.sub (global.get $sp) (i32.const 1))))\n (local.set $left (call $take))\n (call $push_tag (local.get $right_kind) (local.get $right))\n (call $push_tag (local.get $left_kind) (local.get $left)))\n(func $op_add (local $right i64) (local $left i64)\n (local.set $right (call $pop_kind (i32.const 1)))\n (local.set $left (call $pop_kind (i32.const 1)))\n (call $push_i64 (i64.add (local.get $left) (local.get $right))))\n(func $op_sub (local $right i64) (local $left i64)\n (local.set $right (call $pop_kind (i32.const 1)))\n (local.set $left (call $pop_kind (i32.const 1)))\n (call $push_i64 (i64.sub (local.get $left) (local.get $right))))\n(func $op_mul (local $right i64) (local $left i64)\n (local.set $right (call $pop_kind (i32.const 1)))\n (local.set $left (call $pop_kind (i32.const 1)))\n (call $push_i64 (i64.mul (local.get $left) (local.get $right))))\n(func $op_equals (local $kind i32) (local $right i64) (local $left i64)\n (if (i32.eqz (call $need (i32.const 2))) (then (return)))\n (local.set $kind (call $slot_kind (i32.sub (global.get $sp) (i32.const 1))))\n (if (i32.or (i32.gt_u (local.get $kind) (i32.const 3))\n              (i32.ne (local.get $kind) (call $slot_kind (i32.sub (global.get $sp) (i32.const 2)))))\n  (then (call $fail (i32.const 4)) (return)))\n (local.set $right (call $take)) (local.set $left (call $take))\n (call $push_bool (i64.eq (local.get $left) (local.get $right))))\n(func $op_pair (local $right i32) (local $left i32)\n (local.set $right (call $pop_box)) (local.set $left (call $pop_box))\n (call $push_ref (call $new (i32.const 5) (i64.const 0) (local.get $left) (local.get $right)\n  (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0))))\n(func $op_unpair (local $pair i32)\n (local.set $pair (i32.wrap_i64 (call $pop_kind (i32.const 5))))\n (if (global.get $failure) (then (return)))\n (call $unbox (call $a (local.get $pair))) (call $unbox (call $b (local.get $pair))))\n(func $op_nil\n (call $push_ref (call $new (i32.const 7) (i64.const 0)\n  (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0)\n  (i32.const 0) (i32.const 0) (i32.const 0))))\n(func $op_cons (local $tail i32) (local $head i32) (local $tag i32)\n (if (i32.eqz (call $need (i32.const 2))) (then (return)))\n (local.set $tag (call $slot_kind (i32.sub (global.get $sp) (i32.const 1))))\n (if (i32.and (i32.ne (local.get $tag) (i32.const 6)) (i32.ne (local.get $tag) (i32.const 7)))\n  (then (call $fail (i32.const 4)) (return)))\n (local.set $tail (i32.wrap_i64 (call $take)))\n (local.set $head (call $pop_box))\n (call $push_ref (call $new (i32.const 6) (i64.const 0) (local.get $head) (local.get $tail)\n  (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0))))\n(func $op_list_case (local $cons_branch i32) (local $nil_branch i32) (local $list i32) (local $tag i32)\n (local.set $cons_branch (i32.wrap_i64 (call $pop_kind (i32.const 4))))\n (local.set $nil_branch (i32.wrap_i64 (call $pop_kind (i32.const 4))))\n (if (i32.eqz (call $need (i32.const 1))) (then (return)))\n (local.set $tag (call $slot_kind (i32.sub (global.get $sp) (i32.const 1))))\n (local.set $list (i32.wrap_i64 (call $take)))\n (if (i32.eq (local.get $tag) (i32.const 7))\n  (then (call $enqueue_program (local.get $nil_branch)) (return)))\n (if (i32.ne (local.get $tag) (i32.const 6))\n  (then (call $fail (i32.const 4)) (return)))\n (call $unbox (call $a (local.get $list)))\n (call $push_ref (call $b (local.get $list)))\n (call $enqueue_program (local.get $cons_branch)))\n(func $op_if (local $otherwise i32) (local $then i32) (local $condition i32)\n (local.set $otherwise (i32.wrap_i64 (call $pop_kind (i32.const 4))))\n (local.set $then (i32.wrap_i64 (call $pop_kind (i32.const 4))))\n (local.set $condition (i32.wrap_i64 (call $pop_kind (i32.const 2))))\n (if (global.get $failure) (then (return)))\n (if (local.get $condition)\n  (then (call $enqueue_program (local.get $then)))\n  (else (call $enqueue_program (local.get $otherwise)))))\n"
 
 /-- [noble_wasm::emit::REFLECTION]
-    Source: 'crates/noble-wasm/src/emit.rs', lines 17:0-17:67 -/
+    Source: 'crates/noble-wasm/src/emit.rs', lines 18:0-18:67 -/
 @[global_simps, irreducible]
 def emit.REFLECTION : Str :=
   toStr
-    ";; Observation walks immutable recipe data only. It never dispatches executable code.\n(global $rp (mut i32) (i32.const 0))\n(func $walk_push (param $recipe i32)\n (if (i32.or (global.get $failure) (i32.eqz (local.get $recipe))) (then (return)))\n (if (i32.ge_u (global.get $rp) (i32.const 2048))\n  (then (call $quota (i32.const 7)) (return)))\n (i32.store (i32.add (i32.const 12288) (i32.mul (global.get $rp) (i32.const 4))) (local.get $recipe))\n (global.set $rp (i32.add (global.get $rp) (i32.const 1))))\n(func $observe_atom (param $tag i32) (param $value i64) (local $address i32)\n (if (global.get $failure) (then (return)))\n (if (i32.ge_u (global.get $recipe_count) (i32.const 2048))\n  (then (call $quota (i32.const 7)) (return)))\n (local.set $address (i32.add (i32.const 24576) (i32.mul (global.get $recipe_count) (i32.const 16))))\n (i32.store (local.get $address) (local.get $tag))\n (i64.store offset=8 (local.get $address) (local.get $value))\n (global.set $recipe_count (i32.add (global.get $recipe_count) (i32.const 1))))\n(func (export \"reflect\") (result i32) (local $recipe i32) (local $tag i32) (local $address i32)\n (global.set $phase (i32.const 1))\n (global.set $recipe_count (i32.const 0)) (global.set $rp (i32.const 0))\n (global.set $reflection_steps (i32.const 0))\n (if (global.get $failure) (then (return (global.get $failure))))\n (if (i32.eqz (global.get $observed_program))\n  (then (call $fail (i32.const 4)) (return (global.get $failure))))\n (call $walk_push (call $c (global.get $observed_program)))\n (block $done (loop $next\n  (br_if $done (i32.or (global.get $failure) (i32.eqz (global.get $rp))))\n  (if (i32.ge_u (global.get $reflection_steps) (global.get $step_limit))\n   (then (call $quota (i32.const 7)) (br $done)))\n  (global.set $reflection_steps (i32.add (global.get $reflection_steps) (i32.const 1)))\n  (global.set $rp (i32.sub (global.get $rp) (i32.const 1)))\n  (local.set $address (i32.add (i32.const 12288) (i32.mul (global.get $rp) (i32.const 4))))\n  (local.set $recipe (i32.load (local.get $address)))\n  (i32.store (local.get $address) (i32.const 0))\n  (if (i32.eq (local.get $recipe) (i32.const -1))\n   (then (call $observe_atom (i32.const 6) (i64.const 0)))\n   (else\n    (local.set $tag (call $kind (local.get $recipe)))\n    (if (i32.eq (local.get $tag) (i32.const 9))\n     (then\n      (call $walk_push (call $b (local.get $recipe)))\n      (call $walk_push (call $a (local.get $recipe))))\n     (else\n      (if (i32.ne (local.get $tag) (i32.const 8))\n       (then (call $fail (i32.const 4)) (br $done)))\n      (local.set $tag (call $x (local.get $recipe)))\n      (if (i32.eq (local.get $tag) (i32.const 3))\n       (then\n        ;; Delimit nested Program literals by value; never expose a cell address.\n        (call $observe_atom (i32.const 3) (i64.const 0))\n        (call $walk_push (i32.const -1))\n        (call $walk_push (call $c (call $a (local.get $recipe)))))\n       (else (call $observe_atom (local.get $tag) (call $payload (local.get $recipe)))))))))\n  (br $next)))\n (if (global.get $failure) (then (call $cleanup_internal)))\n (global.get $failure))\n(func (export \"recipe_length\") (result i32) (global.get $recipe_count))\n(func $recipe_address (param $index i32) (result i32)\n (if (i32.ge_u (local.get $index) (global.get $recipe_count))\n  (then (call $fail (i32.const 4)) (return (i32.const 0))))\n (i32.add (i32.const 24576) (i32.mul (local.get $index) (i32.const 16))))\n(func (export \"recipe_kind\") (param $index i32) (result i32) (local $address i32)\n (local.set $address (call $recipe_address (local.get $index)))\n (if (global.get $failure) (then (return (i32.const 0))))\n (i32.load (local.get $address)))\n(func (export \"recipe_value\") (param $index i32) (result i64) (local $address i32)\n (local.set $address (call $recipe_address (local.get $index)))\n (if (global.get $failure) (then (return (i64.const 0))))\n (i64.load offset=8 (local.get $address)))\n"
+    ";; Observation walks immutable data only. It never invokes executable entries.\n;; Positive work items are recipe nodes, negative items boxed data, MIN_INT ends a group.\n(func $walk_push (param $recipe i32)\n (if (i32.or (global.get $failure) (i32.eqz (local.get $recipe))) (then (return)))\n (if (i32.ge_u (global.get $rp) (i32.const 2048))\n  (then (call $quota (i32.const 7)) (return)))\n (i32.store (i32.add (i32.const 12288) (i32.mul (global.get $rp) (i32.const 4))) (local.get $recipe))\n (global.set $rp (i32.add (global.get $rp) (i32.const 1))))\n(func $observation_tick (result i32)\n (if (global.get $failure) (then (return (i32.const 0))))\n (if (i32.ge_u (global.get $reflection_steps) (global.get $step_limit))\n  (then (call $quota (i32.const 7)) (return (i32.const 0))))\n (global.set $reflection_steps (i32.add (global.get $reflection_steps) (i32.const 1)))\n (i32.const 1))\n(func $observe_atom (param $tag i32) (param $value i64) (local $address i32)\n (if (global.get $failure) (then (return)))\n (if (i32.ge_u (global.get $recipe_count) (i32.const 2048))\n  (then (call $quota (i32.const 7)) (return)))\n (local.set $address (i32.add (i32.const 24576) (i32.mul (global.get $recipe_count) (i32.const 16))))\n (i32.store (local.get $address) (local.get $tag))\n (i64.store offset=8 (local.get $address) (local.get $value))\n (global.set $recipe_count (i32.add (global.get $recipe_count) (i32.const 1))))\n(func $observe_interface (param $program i32)\n (if (global.get $source_reflection) (then\n  (call $observe_atom (i32.const 17) (i64.extend_i32_u (call $y (local.get $program))))\n  (call $observe_atom (i32.const 18) (i64.extend_i32_u (call $z (local.get $program))))\n  (call $observe_atom (i32.const 19) (call $payload (local.get $program))))))\n(func $observe_data (param $value i32) (local $tag i32) (local $at i32) (local $length i32)\n (local.set $tag (call $kind (local.get $value)))\n (if (i32.eq (local.get $tag) (i32.const 1))\n  (then (call $observe_atom (i32.const 1) (call $payload (local.get $value))) (return)))\n (if (i32.eq (local.get $tag) (i32.const 2))\n  (then (call $observe_atom (i32.const 4) (call $payload (local.get $value))) (return)))\n (if (i32.eq (local.get $tag) (i32.const 3))\n  (then (call $observe_atom (i32.const 5) (i64.const 0)) (return)))\n (call $walk_push (i32.const -2147483648))\n (if (i32.eq (local.get $tag) (i32.const 4)) (then\n  (call $observe_atom (i32.const 14) (i64.const 0)) (call $observe_interface (local.get $value))\n  (call $walk_push (call $c (local.get $value))) (return)))\n (if (i32.eq (local.get $tag) (i32.const 5)) (then\n  (call $observe_atom (i32.const 9) (i64.const 0))\n  (call $walk_push (i32.sub (i32.const 0) (call $b (local.get $value))))\n  (call $walk_push (i32.sub (i32.const 0) (call $a (local.get $value)))) (return)))\n (if (i32.or (i32.eq (local.get $tag) (i32.const 6)) (i32.eq (local.get $tag) (i32.const 7))) (then\n  (call $observe_atom (i32.const 10) (i64.const 0))\n  (if (i32.eq (local.get $tag) (i32.const 6)) (then\n   (call $walk_push (i32.sub (i32.const 0) (call $b (local.get $value))))\n   (call $walk_push (i32.sub (i32.const 0) (call $a (local.get $value)))))) (return)))\n (if (i32.eq (local.get $tag) (i32.const 10)) (then\n  (call $observe_atom (i32.const 13) (i64.const 0))\n  (call $walk_push (call $a (local.get $value))) (return)))\n (if (i32.eq (local.get $tag) (i32.const 11)) (then\n  (call $observe_atom (i32.const 8) (i64.const 0))\n  (local.set $length (call $y (local.get $value)))\n  (block $done (loop $byte\n   (br_if $done (i32.or (global.get $failure) (i32.ge_u (local.get $at) (local.get $length))))\n   (if (i32.eqz (call $observation_tick)) (then (br $done)))\n   (call $observe_atom (i32.const 7) (i64.extend_i32_u (i32.load8_u (i32.add (call $x (local.get $value)) (local.get $at)))))\n   (local.set $at (i32.add (local.get $at) (i32.const 1))) (br $byte))) (return)))\n (if (i32.or (i32.eq (local.get $tag) (i32.const 12)) (i32.eq (local.get $tag) (i32.const 13))) (then\n  (call $observe_atom (i32.sub (local.get $tag) (i32.const 1)) (i64.const 0))\n  (call $walk_push (i32.sub (i32.const 0) (call $a (local.get $value)))) (return)))\n (call $fail (i32.const 4)))\n(func $observe_recipe (param $recipe i32) (local $tag i32)\n (local.set $tag (call $kind (local.get $recipe)))\n (if (i32.eq (local.get $tag) (i32.const 9)) (then\n  (call $walk_push (call $b (local.get $recipe)))\n  (call $walk_push (call $a (local.get $recipe))) (return)))\n (if (i32.ne (local.get $tag) (i32.const 8))\n  (then (call $fail (i32.const 4)) (return)))\n (local.set $tag (call $x (local.get $recipe)))\n (if (i32.eq (local.get $tag) (i32.const 3)) (then\n  (call $observe_atom (i32.const 3) (i64.const 0))\n  (call $observe_interface (call $a (local.get $recipe)))\n  (call $walk_push (i32.const -2147483648))\n  (call $walk_push (call $c (call $a (local.get $recipe)))) (return)))\n (if (i32.eq (local.get $tag) (i32.const 8)) (then\n  (if (i32.ne (call $kind (call $a (local.get $recipe))) (i32.const 11))\n   (then (call $observe_atom (i32.const 16) (i64.extend_i32_u (call $y (local.get $recipe))))))\n  (call $walk_push (i32.sub (i32.const 0) (call $a (local.get $recipe)))) (return)))\n (call $observe_atom (local.get $tag) (call $payload (local.get $recipe)))\n (if (i32.and (global.get $source_reflection)\n       (i32.or (i32.eq (local.get $tag) (i32.const 2)) (i32.eq (local.get $tag) (i32.const 15)))) (then\n  (call $observe_atom (i32.const 20) (i64.extend_i32_u (call $y (local.get $recipe))))\n  (call $observe_atom (i32.const 21) (i64.extend_i32_u (call $z (local.get $recipe))))\n  (call $observe_atom (i32.const 22) (i64.extend_i32_u (call $w (local.get $recipe)))))))\n(func $reflect_internal (export \"reflect\") (result i32) (local $recipe i32) (local $address i32)\n (global.set $phase (i32.const 1))\n (global.set $recipe_count (i32.const 0)) (global.set $rp (i32.const 0))\n (global.set $reflection_steps (i32.const 0))\n (if (global.get $failure) (then (return (global.get $failure))))\n (if (i32.eqz (global.get $observed_program))\n  (then (call $fail (i32.const 4)) (return (global.get $failure))))\n (if (i32.eq (call $kind (global.get $observed_program)) (i32.const 10))\n  (then (call $walk_push (call $a (global.get $observed_program))))\n  (else (call $walk_push (call $c (global.get $observed_program)))))\n (block $done (loop $next\n  (br_if $done (i32.or (global.get $failure) (i32.eqz (global.get $rp))))\n  (if (i32.eqz (call $observation_tick)) (then (br $done)))\n  (global.set $rp (i32.sub (global.get $rp) (i32.const 1)))\n  (local.set $address (i32.add (i32.const 12288) (i32.mul (global.get $rp) (i32.const 4))))\n  (local.set $recipe (i32.load (local.get $address)))\n  (i32.store (local.get $address) (i32.const 0))\n  (if (i32.eq (local.get $recipe) (i32.const -2147483648))\n   (then (call $observe_atom (i32.const 6) (i64.const 0)))\n   (else (if (i32.lt_s (local.get $recipe) (i32.const 0))\n    (then (call $observe_data (i32.sub (i32.const 0) (local.get $recipe))))\n    (else (call $observe_recipe (local.get $recipe))))))\n  (br $next)))\n (if (global.get $failure) (then (call $cleanup_internal)))\n (global.get $failure))\n(func (export \"recipe_length\") (result i32) (global.get $recipe_count))\n(func $recipe_address (param $index i32) (result i32)\n (if (i32.ge_u (local.get $index) (global.get $recipe_count))\n  (then (call $fail (i32.const 4)) (return (i32.const 0))))\n (i32.add (i32.const 24576) (i32.mul (local.get $index) (i32.const 16))))\n(func (export \"recipe_kind\") (param $index i32) (result i32) (local $address i32)\n (local.set $address (call $recipe_address (local.get $index)))\n (if (global.get $failure) (then (return (i32.const 0))))\n (i32.load (local.get $address)))\n(func (export \"recipe_value\") (param $index i32) (result i64) (local $address i32)\n (local.set $address (call $recipe_address (local.get $index)))\n (if (global.get $failure) (then (return (i64.const 0))))\n (i64.load offset=8 (local.get $address)))\n"
 
 /-- [noble_wasm::emit::EXPERIMENT]
-    Source: 'crates/noble-wasm/src/emit.rs', lines 18:0-18:67 -/
+    Source: 'crates/noble-wasm/src/emit.rs', lines 19:0-19:67 -/
 @[global_simps, irreducible]
 def emit.EXPERIMENT : Str :=
   toStr
@@ -937,7 +1067,7 @@ def output.Buffer.index
     ok (core.result.Result.Err Diagnostic.Exhausted, self)
 
 /-- [noble_wasm::signatures::{noble_wasm::signatures::Pool}::emit]: loop body 0:
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 84:8-93:5 -/
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 100:8-109:5 -/
 @[rust_loop_body]
 def signatures.Pool.emit_loop.body
   (self : signatures.Pool) (out : output.Buffer) (index : Std.Usize) :
@@ -985,7 +1115,7 @@ def signatures.Pool.emit_loop.body
   else ok (done (core.result.Result.Ok (), out))
 
 /-- [noble_wasm::signatures::{noble_wasm::signatures::Pool}::emit]: loop 0:
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 84:8-93:5 -/
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 100:8-109:5 -/
 @[rust_loop]
 def signatures.Pool.emit_loop
   (self : signatures.Pool) (out : output.Buffer) (index : Std.Usize) :
@@ -996,7 +1126,7 @@ def signatures.Pool.emit_loop
     (out, index)
 
 /-- [noble_wasm::signatures::{noble_wasm::signatures::Pool}::emit]:
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 82:4-93:5 -/
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 98:4-109:5 -/
 @[reducible]
 def signatures.Pool.emit
   (self : signatures.Pool) (out : output.Buffer) :
@@ -1017,7 +1147,7 @@ def output.Buffer.new (capacity_bytes : Std.Usize) : Result output.Buffer := do
   ok { bytes := v }
 
 /-- [noble_wasm::operations::word]:
-    Source: 'crates/noble-wasm/src/operations.rs', lines 16:0-37:1 -/
+    Source: 'crates/noble-wasm/src/operations.rs', lines 12:0-42:1 -/
 def operations.word
   (out : output.Buffer) (definition : Std.U32) :
   Result ((core.result.Result Unit Diagnostic) × output.Buffer)
@@ -1042,6 +1172,13 @@ def operations.word
       lift (Array.to_slice
         (Array.make 8#usize [
           36#u8, 111#u8, 112#u8, 95#u8, 115#u8, 119#u8, 97#u8, 112#u8
+          ]))
+    output.Buffer.append out s
+  | 3#uscalar =>
+    let s ←
+      lift (Array.to_slice
+        (Array.make 7#usize [
+          36#u8, 111#u8, 112#u8, 95#u8, 100#u8, 105#u8, 112#u8
           ]))
     output.Buffer.append out s
   | 4#uscalar =>
@@ -1119,6 +1256,27 @@ def operations.word
           114#u8
           ]))
     output.Buffer.append out s
+  | 15#uscalar =>
+    let s ←
+      lift (Array.to_slice
+        (Array.make 7#usize [
+          36#u8, 111#u8, 112#u8, 95#u8, 105#u8, 110#u8, 108#u8
+          ]))
+    output.Buffer.append out s
+  | 16#uscalar =>
+    let s ←
+      lift (Array.to_slice
+        (Array.make 7#usize [
+          36#u8, 111#u8, 112#u8, 95#u8, 105#u8, 110#u8, 114#u8
+          ]))
+    output.Buffer.append out s
+  | 17#uscalar =>
+    let s ←
+      lift (Array.to_slice
+        (Array.make 8#usize [
+          36#u8, 111#u8, 112#u8, 95#u8, 99#u8, 97#u8, 115#u8, 101#u8
+          ]))
+    output.Buffer.append out s
   | 18#uscalar =>
     let s ←
       lift (Array.to_slice
@@ -1146,10 +1304,24 @@ def operations.word
           99#u8, 97#u8, 115#u8, 101#u8
           ]))
     output.Buffer.append out s
+  | 22#uscalar =>
+    let s ←
+      lift (Array.to_slice
+        (Array.make 8#usize [
+          36#u8, 111#u8, 112#u8, 95#u8, 101#u8, 109#u8, 105#u8, 116#u8
+          ]))
+    output.Buffer.append out s
+  | 23#uscalar =>
+    let s ←
+      lift (Array.to_slice
+        (Array.make 9#usize [
+          36#u8, 111#u8, 112#u8, 95#u8, 97#u8, 98#u8, 111#u8, 114#u8, 116#u8
+          ]))
+    output.Buffer.append out s
   | _ => ok (core.result.Result.Err Diagnostic.Unsupported, out)
 
 /-- [noble_wasm::operations::instruction]:
-    Source: 'crates/noble-wasm/src/operations.rs', lines 44:0-76:1 -/
+    Source: 'crates/noble-wasm/src/operations.rs', lines 49:0-81:1 -/
 def operations.instruction
   (out : output.Buffer) (operation : lowering.Operation)
   (node : noble_kernel.untrusted.NodeId) :
@@ -1282,7 +1454,7 @@ def operations.instruction
     | core.result.Result.Err _ => ok (r, out1)
 
 /-- [noble_wasm::operations::continuation]:
-    Source: 'crates/noble-wasm/src/operations.rs', lines 80:0-99:1 -/
+    Source: 'crates/noble-wasm/src/operations.rs', lines 85:0-104:1 -/
 def operations.continuation
   (out : output.Buffer) (function : Std.U32) (next : Option Std.U32)
   (operation : lowering.Operation) (node : noble_kernel.untrusted.NodeId) :
@@ -1405,7 +1577,7 @@ def operations.continuation
   | core.result.Result.Err _ => ok (r, out1)
 
 /-- [noble_wasm::emit::body_function]:
-    Source: 'crates/noble-wasm/src/emit.rs', lines 156:0-165:1 -/
+    Source: 'crates/noble-wasm/src/emit.rs', lines 158:0-167:1 -/
 def emit.body_function
   (out : output.Buffer) (plan : lowering.Plan)
   (node : noble_kernel.untrusted.NodeId) (function : Std.U32)
@@ -1419,7 +1591,7 @@ def emit.body_function
   | core.result.Result.Err failure => ok (core.result.Result.Err failure, out)
 
 /-- [noble_wasm::emit::body_functions]: loop body 0:
-    Source: 'crates/noble-wasm/src/emit.rs', lines 136:4-149:5 -/
+    Source: 'crates/noble-wasm/src/emit.rs', lines 138:4-151:5 -/
 @[rust_loop_body]
 def emit.body_functions_loop.body
   (plan : lowering.Plan) (body : Slice noble_kernel.untrusted.NodeId)
@@ -1451,7 +1623,7 @@ def emit.body_functions_loop.body
   else ok (done (out, failure))
 
 /-- [noble_wasm::emit::body_functions]: loop 0:
-    Source: 'crates/noble-wasm/src/emit.rs', lines 136:4-149:5 -/
+    Source: 'crates/noble-wasm/src/emit.rs', lines 138:4-151:5 -/
 @[rust_loop]
 def emit.body_functions_loop
   (out : output.Buffer) (plan : lowering.Plan)
@@ -1466,7 +1638,7 @@ def emit.body_functions_loop
     (out, position, function, failure)
 
 /-- [noble_wasm::emit::body_functions]:
-    Source: 'crates/noble-wasm/src/emit.rs', lines 126:0-154:1 -/
+    Source: 'crates/noble-wasm/src/emit.rs', lines 128:0-156:1 -/
 def emit.body_functions
   (out : output.Buffer) (candidate : noble_kernel.untrusted.Candidate)
   (plan : lowering.Plan) (program : lowering.Program) :
@@ -1483,7 +1655,7 @@ def emit.body_functions
   | core.result.Result.Err failure => ok (core.result.Result.Err failure, out)
 
 /-- [noble_wasm::emit::functions]: loop body 0:
-    Source: 'crates/noble-wasm/src/emit.rs', lines 114:10-115:76 -/
+    Source: 'crates/noble-wasm/src/emit.rs', lines 116:10-117:76 -/
 @[rust_loop_body]
 def emit.functions_loop.body
   (candidate : noble_kernel.untrusted.Candidate) (plan : lowering.Plan)
@@ -1506,7 +1678,7 @@ def emit.functions_loop.body
   else ok (done (core.result.Result.Ok (), out))
 
 /-- [noble_wasm::emit::functions]: loop 0:
-    Source: 'crates/noble-wasm/src/emit.rs', lines 114:10-115:76 -/
+    Source: 'crates/noble-wasm/src/emit.rs', lines 116:10-117:76 -/
 @[rust_loop]
 def emit.functions_loop
   (out : output.Buffer) (candidate : noble_kernel.untrusted.Candidate)
@@ -1518,7 +1690,7 @@ def emit.functions_loop
     (out, index)
 
 /-- [noble_wasm::emit::functions]:
-    Source: 'crates/noble-wasm/src/emit.rs', lines 108:0-119:1 -/
+    Source: 'crates/noble-wasm/src/emit.rs', lines 110:0-121:1 -/
 @[reducible]
 def emit.functions
   (out : output.Buffer) (candidate : noble_kernel.untrusted.Candidate)
@@ -1528,7 +1700,7 @@ def emit.functions
   emit.functions_loop out candidate plan 0#usize
 
 /-- [noble_wasm::emit::table_entries]: loop body 0:
-    Source: 'crates/noble-wasm/src/emit.rs', lines 100:4-106:1 -/
+    Source: 'crates/noble-wasm/src/emit.rs', lines 102:4-108:1 -/
 @[rust_loop_body]
 def emit.table_entries_loop.body
   (count : Std.U32) (out : output.Buffer) (function : Std.U32) :
@@ -1556,7 +1728,7 @@ def emit.table_entries_loop.body
     ok (done (r, out1))
 
 /-- [noble_wasm::emit::table_entries]: loop 0:
-    Source: 'crates/noble-wasm/src/emit.rs', lines 100:4-106:1 -/
+    Source: 'crates/noble-wasm/src/emit.rs', lines 102:4-108:1 -/
 @[rust_loop]
 def emit.table_entries_loop
   (out : output.Buffer) (count : Std.U32) (function : Std.U32) :
@@ -1568,7 +1740,7 @@ def emit.table_entries_loop
     (out, function)
 
 /-- [noble_wasm::emit::table_entries]:
-    Source: 'crates/noble-wasm/src/emit.rs', lines 98:0-106:1 -/
+    Source: 'crates/noble-wasm/src/emit.rs', lines 100:0-108:1 -/
 @[reducible]
 def emit.table_entries
   (out : output.Buffer) (count : Std.U32) :
@@ -1577,7 +1749,7 @@ def emit.table_entries
   emit.table_entries_loop out count 3#u32
 
 /-- [noble_wasm::emit::program_globals]: loop body 0:
-    Source: 'crates/noble-wasm/src/emit.rs', lines 89:4-96:1 -/
+    Source: 'crates/noble-wasm/src/emit.rs', lines 91:4-98:1 -/
 @[rust_loop_body]
 def emit.program_globals_loop.body
   (plan : lowering.Plan) (out : output.Buffer) (index : Std.Usize) :
@@ -1619,7 +1791,7 @@ def emit.program_globals_loop.body
   else ok (done (core.result.Result.Ok (), out))
 
 /-- [noble_wasm::emit::program_globals]: loop 0:
-    Source: 'crates/noble-wasm/src/emit.rs', lines 89:4-96:1 -/
+    Source: 'crates/noble-wasm/src/emit.rs', lines 91:4-98:1 -/
 @[rust_loop]
 def emit.program_globals_loop
   (out : output.Buffer) (plan : lowering.Plan) (index : Std.Usize) :
@@ -1630,7 +1802,7 @@ def emit.program_globals_loop
     (out, index)
 
 /-- [noble_wasm::emit::program_globals]:
-    Source: 'crates/noble-wasm/src/emit.rs', lines 84:0-96:1 -/
+    Source: 'crates/noble-wasm/src/emit.rs', lines 86:0-98:1 -/
 @[reducible]
 def emit.program_globals
   (out : output.Buffer) (plan : lowering.Plan) :
@@ -1639,7 +1811,7 @@ def emit.program_globals
   emit.program_globals_loop out plan 0#usize
 
 /-- [noble_wasm::emit::constant]:
-    Source: 'crates/noble-wasm/src/emit.rs', lines 55:0-65:1 -/
+    Source: 'crates/noble-wasm/src/emit.rs', lines 57:0-67:1 -/
 def emit.constant
   (out : output.Buffer) («name» : Slice Std.U8) (value : Std.U32) :
   Result ((core.result.Result Unit Diagnostic) × output.Buffer)
@@ -1673,7 +1845,7 @@ def emit.constant
   | core.result.Result.Err _ => ok (r, out1)
 
 /-- [noble_wasm::emit::declarations]:
-    Source: 'crates/noble-wasm/src/emit.rs', lines 67:0-82:1 -/
+    Source: 'crates/noble-wasm/src/emit.rs', lines 69:0-84:1 -/
 def emit.declarations
   (out : output.Buffer) (plan : lowering.Plan) :
   Result ((core.result.Result Unit Diagnostic) × output.Buffer)
@@ -1771,7 +1943,7 @@ def emit.declarations
   | core.result.Result.Err _ => ok (r, out1)
 
 /-- [noble_wasm::emit::fragment]:
-    Source: 'crates/noble-wasm/src/emit.rs', lines 50:0-53:1 -/
+    Source: 'crates/noble-wasm/src/emit.rs', lines 52:0-55:1 -/
 def emit.fragment
   (out : output.Buffer) (source : Str) :
   Result ((core.result.Result Unit Diagnostic) × output.Buffer)
@@ -1785,7 +1957,7 @@ def emit.fragment
   | core.result.Result.Err _ => ok (r, out1)
 
 /-- [noble_wasm::emit::module]:
-    Source: 'crates/noble-wasm/src/emit.rs', lines 25:0-48:1 -/
+    Source: 'crates/noble-wasm/src/emit.rs', lines 26:0-50:1 -/
 def emit.module
   (representation : Representation)
   (candidate : noble_kernel.untrusted.Candidate) (plan : lowering.Plan) :
@@ -1803,49 +1975,55 @@ def emit.module
     let (r1, out2) ← emit.fragment out1 emit.COMMON
     match r1 with
     | core.result.Result.Ok _ =>
-      match representation with
-      | Representation.WasmGc =>
-        let (r2, out3) ← emit.fragment out2 emit.GC_STORAGE
-        match r2 with
-        | core.result.Result.Ok _ =>
-          let (r3, out4) ← emit.fragment out3 emit.STACK
+      let (r2, out3) ← emit.fragment out2 emit.ACCOUNTING
+      match r2 with
+      | core.result.Result.Ok _ =>
+        match representation with
+        | Representation.WasmGc =>
+          let (r3, out4) ← emit.fragment out3 emit.GC_STORAGE
           match r3 with
           | core.result.Result.Ok _ =>
-            let (r4, out5) ← emit.fragment out4 emit.PROGRAMS
+            let (r4, out5) ← emit.fragment out4 emit.STACK
             match r4 with
             | core.result.Result.Ok _ =>
-              let (r5, out6) ← emit.fragment out5 emit.OPERATIONS
+              let (r5, out6) ← emit.fragment out5 emit.PROGRAMS
               match r5 with
               | core.result.Result.Ok _ =>
-                let (r6, out7) ← emit.fragment out6 emit.REFLECTION
+                let (r6, out7) ← emit.fragment out6 emit.OPERATIONS
                 match r6 with
                 | core.result.Result.Ok _ =>
-                  let (r7, out8) ← emit.fragment out7 emit.EXPERIMENT
+                  let (r7, out8) ← emit.fragment out7 emit.REFLECTION
                   match r7 with
                   | core.result.Result.Ok _ =>
-                    let (r8, out9) ←
-                      signatures.Pool.emit plan.signatures out8
+                    let (r8, out9) ← emit.fragment out8 emit.EXPERIMENT
                     match r8 with
                     | core.result.Result.Ok _ =>
-                      let (r9, out10) ← emit.declarations out9 plan
+                      let (r9, out10) ←
+                        signatures.Pool.emit plan.signatures out9
                       match r9 with
                       | core.result.Result.Ok _ =>
-                        let (r10, out11) ←
-                          emit.functions out10 candidate plan
+                        let (r10, out11) ← emit.declarations out10 plan
                         match r10 with
                         | core.result.Result.Ok _ =>
                           let (r11, out12) ←
-                            emit.initialization.write out11 candidate plan
+                            emit.functions out11 candidate plan
                           match r11 with
                           | core.result.Result.Ok _ =>
-                            let s1 ←
-                              lift (Array.to_slice
-                                (Array.make 2#usize [ 41#u8, 10#u8 ]))
-                            let (r12, out13) ← output.Buffer.append out12 s1
+                            let (r12, out13) ←
+                              emit.initialization.write out12 candidate plan
                             match r12 with
                             | core.result.Result.Ok _ =>
-                              let v ← output.Buffer.finish out13
-                              ok (core.result.Result.Ok v)
+                              let s1 ←
+                                lift (Array.to_slice
+                                  (Array.make 2#usize [ 41#u8, 10#u8 ]))
+                              let (r13, out14) ←
+                                output.Buffer.append out13 s1
+                              match r13 with
+                              | core.result.Result.Ok _ =>
+                                let v ← output.Buffer.finish out14
+                                ok (core.result.Result.Ok v)
+                              | core.result.Result.Err failure =>
+                                ok (core.result.Result.Err failure)
                             | core.result.Result.Err failure =>
                               ok (core.result.Result.Err failure)
                           | core.result.Result.Err failure =>
@@ -1866,49 +2044,51 @@ def emit.module
               ok (core.result.Result.Err failure)
           | core.result.Result.Err failure =>
             ok (core.result.Result.Err failure)
-        | core.result.Result.Err failure => ok (core.result.Result.Err failure)
-      | Representation.ManagedLinearMemory =>
-        let (r2, out3) ← emit.fragment out2 emit.LINEAR_STORAGE
-        match r2 with
-        | core.result.Result.Ok _ =>
-          let (r3, out4) ← emit.fragment out3 emit.STACK
+        | Representation.ManagedLinearMemory =>
+          let (r3, out4) ← emit.fragment out3 emit.LINEAR_STORAGE
           match r3 with
           | core.result.Result.Ok _ =>
-            let (r4, out5) ← emit.fragment out4 emit.PROGRAMS
+            let (r4, out5) ← emit.fragment out4 emit.STACK
             match r4 with
             | core.result.Result.Ok _ =>
-              let (r5, out6) ← emit.fragment out5 emit.OPERATIONS
+              let (r5, out6) ← emit.fragment out5 emit.PROGRAMS
               match r5 with
               | core.result.Result.Ok _ =>
-                let (r6, out7) ← emit.fragment out6 emit.REFLECTION
+                let (r6, out7) ← emit.fragment out6 emit.OPERATIONS
                 match r6 with
                 | core.result.Result.Ok _ =>
-                  let (r7, out8) ← emit.fragment out7 emit.EXPERIMENT
+                  let (r7, out8) ← emit.fragment out7 emit.REFLECTION
                   match r7 with
                   | core.result.Result.Ok _ =>
-                    let (r8, out9) ←
-                      signatures.Pool.emit plan.signatures out8
+                    let (r8, out9) ← emit.fragment out8 emit.EXPERIMENT
                     match r8 with
                     | core.result.Result.Ok _ =>
-                      let (r9, out10) ← emit.declarations out9 plan
+                      let (r9, out10) ←
+                        signatures.Pool.emit plan.signatures out9
                       match r9 with
                       | core.result.Result.Ok _ =>
-                        let (r10, out11) ←
-                          emit.functions out10 candidate plan
+                        let (r10, out11) ← emit.declarations out10 plan
                         match r10 with
                         | core.result.Result.Ok _ =>
                           let (r11, out12) ←
-                            emit.initialization.write out11 candidate plan
+                            emit.functions out11 candidate plan
                           match r11 with
                           | core.result.Result.Ok _ =>
-                            let s1 ←
-                              lift (Array.to_slice
-                                (Array.make 2#usize [ 41#u8, 10#u8 ]))
-                            let (r12, out13) ← output.Buffer.append out12 s1
+                            let (r12, out13) ←
+                              emit.initialization.write out12 candidate plan
                             match r12 with
                             | core.result.Result.Ok _ =>
-                              let v ← output.Buffer.finish out13
-                              ok (core.result.Result.Ok v)
+                              let s1 ←
+                                lift (Array.to_slice
+                                  (Array.make 2#usize [ 41#u8, 10#u8 ]))
+                              let (r13, out14) ←
+                                output.Buffer.append out13 s1
+                              match r13 with
+                              | core.result.Result.Ok _ =>
+                                let v ← output.Buffer.finish out14
+                                ok (core.result.Result.Ok v)
+                              | core.result.Result.Err failure =>
+                                ok (core.result.Result.Err failure)
                             | core.result.Result.Err failure =>
                               ok (core.result.Result.Err failure)
                           | core.result.Result.Err failure =>
@@ -1929,44 +2109,44 @@ def emit.module
               ok (core.result.Result.Err failure)
           | core.result.Result.Err failure =>
             ok (core.result.Result.Err failure)
-        | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+      | core.result.Result.Err failure => ok (core.result.Result.Err failure)
     | core.result.Result.Err failure => ok (core.result.Result.Err failure)
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_wasm::FUNCTION_LIMIT]
-    Source: 'crates/noble-wasm/src/lib.rs', lines 31:0-31:33 -/
+    Source: 'crates/noble-wasm/src/lib.rs', lines 32:0-32:33 -/
 @[global_simps, irreducible] def FUNCTION_LIMIT : Std.U32 := 1024#u32
 
 /-- [noble_wasm::{impl core::clone::Clone for noble_wasm::Representation}::clone]:
-    Source: 'crates/noble-wasm/src/lib.rs', lines 35:9-35:14
+    Source: 'crates/noble-wasm/src/lib.rs', lines 36:9-36:14
     Visibility: public -/
 def Representation.Insts.CoreCloneClone.clone
   (self : Representation) : Result Representation := do
   ok self
 
 /-- Trait implementation: [noble_wasm::{impl core::clone::Clone for noble_wasm::Representation}]
-    Source: 'crates/noble-wasm/src/lib.rs', lines 35:9-35:14 -/
+    Source: 'crates/noble-wasm/src/lib.rs', lines 36:9-36:14 -/
 @[reducible]
 def Representation.Insts.CoreCloneClone : core.clone.Clone Representation := {
   clone := Representation.Insts.CoreCloneClone.clone
 }
 
 /-- Trait implementation: [noble_wasm::{impl core::marker::Copy for noble_wasm::Representation}]
-    Source: 'crates/noble-wasm/src/lib.rs', lines 35:16-35:20 -/
+    Source: 'crates/noble-wasm/src/lib.rs', lines 36:16-36:20 -/
 @[reducible]
 def Representation.Insts.CoreMarkerCopy : core.marker.Copy Representation := {
   cloneInst := Representation.Insts.CoreCloneClone
 }
 
 /-- Trait implementation: [noble_wasm::{impl core::marker::StructuralPartialEq for noble_wasm::Representation}]
-    Source: 'crates/noble-wasm/src/lib.rs', lines 35:22-35:31 -/
+    Source: 'crates/noble-wasm/src/lib.rs', lines 36:22-36:31 -/
 @[reducible]
 def Representation.Insts.CoreMarkerStructuralPartialEq :
   core.marker.StructuralPartialEq Representation := {
 }
 
 /-- [noble_wasm::{impl core::cmp::PartialEq<noble_wasm::Representation> for noble_wasm::Representation}::eq]:
-    Source: 'crates/noble-wasm/src/lib.rs', lines 35:22-35:31
+    Source: 'crates/noble-wasm/src/lib.rs', lines 36:22-36:31
     Visibility: public -/
 def Representation.Insts.CoreCmpPartialEqRepresentation.eq
   (self : Representation) (other : Representation) : Result Bool := do
@@ -1975,7 +2155,7 @@ def Representation.Insts.CoreCmpPartialEqRepresentation.eq
   ok (self1 = other1)
 
 /-- Trait implementation: [noble_wasm::{impl core::cmp::PartialEq<noble_wasm::Representation> for noble_wasm::Representation}]
-    Source: 'crates/noble-wasm/src/lib.rs', lines 35:22-35:31 -/
+    Source: 'crates/noble-wasm/src/lib.rs', lines 36:22-36:31 -/
 @[reducible]
 impl_def Representation.Insts.CoreCmpPartialEqRepresentation :
   core.cmp.PartialEq Representation Representation := {
@@ -1985,14 +2165,14 @@ impl_def Representation.Insts.CoreCmpPartialEqRepresentation :
 }
 
 /-- [noble_wasm::{impl core::cmp::Eq for noble_wasm::Representation}::assert_fields_are_eq]:
-    Source: 'crates/noble-wasm/src/lib.rs', lines 35:33-35:35
+    Source: 'crates/noble-wasm/src/lib.rs', lines 36:33-36:35
     Visibility: public -/
 def Representation.Insts.CoreCmpEq.assert_fields_are_eq
   (self : Representation) : Result Unit := do
   ok ()
 
 /-- Trait implementation: [noble_wasm::{impl core::cmp::Eq for noble_wasm::Representation}]
-    Source: 'crates/noble-wasm/src/lib.rs', lines 35:33-35:35 -/
+    Source: 'crates/noble-wasm/src/lib.rs', lines 36:33-36:35 -/
 @[reducible]
 def Representation.Insts.CoreCmpEq : core.cmp.Eq Representation := {
   partialEqInst := Representation.Insts.CoreCmpPartialEqRepresentation
@@ -2000,35 +2180,35 @@ def Representation.Insts.CoreCmpEq : core.cmp.Eq Representation := {
 }
 
 /-- [noble_wasm::{impl core::clone::Clone for noble_wasm::Diagnostic}::clone]:
-    Source: 'crates/noble-wasm/src/lib.rs', lines 42:9-42:14
+    Source: 'crates/noble-wasm/src/lib.rs', lines 43:9-43:14
     Visibility: public -/
 def Diagnostic.Insts.CoreCloneClone.clone
   (self : Diagnostic) : Result Diagnostic := do
   ok self
 
 /-- Trait implementation: [noble_wasm::{impl core::clone::Clone for noble_wasm::Diagnostic}]
-    Source: 'crates/noble-wasm/src/lib.rs', lines 42:9-42:14 -/
+    Source: 'crates/noble-wasm/src/lib.rs', lines 43:9-43:14 -/
 @[reducible]
 def Diagnostic.Insts.CoreCloneClone : core.clone.Clone Diagnostic := {
   clone := Diagnostic.Insts.CoreCloneClone.clone
 }
 
 /-- Trait implementation: [noble_wasm::{impl core::marker::Copy for noble_wasm::Diagnostic}]
-    Source: 'crates/noble-wasm/src/lib.rs', lines 42:16-42:20 -/
+    Source: 'crates/noble-wasm/src/lib.rs', lines 43:16-43:20 -/
 @[reducible]
 def Diagnostic.Insts.CoreMarkerCopy : core.marker.Copy Diagnostic := {
   cloneInst := Diagnostic.Insts.CoreCloneClone
 }
 
 /-- Trait implementation: [noble_wasm::{impl core::marker::StructuralPartialEq for noble_wasm::Diagnostic}]
-    Source: 'crates/noble-wasm/src/lib.rs', lines 42:22-42:31 -/
+    Source: 'crates/noble-wasm/src/lib.rs', lines 43:22-43:31 -/
 @[reducible]
 def Diagnostic.Insts.CoreMarkerStructuralPartialEq :
   core.marker.StructuralPartialEq Diagnostic := {
 }
 
 /-- [noble_wasm::{impl core::cmp::PartialEq<noble_wasm::Diagnostic> for noble_wasm::Diagnostic}::eq]:
-    Source: 'crates/noble-wasm/src/lib.rs', lines 42:22-42:31
+    Source: 'crates/noble-wasm/src/lib.rs', lines 43:22-43:31
     Visibility: public -/
 def Diagnostic.Insts.CoreCmpPartialEqDiagnostic.eq
   (self : Diagnostic) (other : Diagnostic) : Result Bool := do
@@ -2037,7 +2217,7 @@ def Diagnostic.Insts.CoreCmpPartialEqDiagnostic.eq
   ok (self1 = other1)
 
 /-- Trait implementation: [noble_wasm::{impl core::cmp::PartialEq<noble_wasm::Diagnostic> for noble_wasm::Diagnostic}]
-    Source: 'crates/noble-wasm/src/lib.rs', lines 42:22-42:31 -/
+    Source: 'crates/noble-wasm/src/lib.rs', lines 43:22-43:31 -/
 @[reducible]
 impl_def Diagnostic.Insts.CoreCmpPartialEqDiagnostic : core.cmp.PartialEq
   Diagnostic Diagnostic := {
@@ -2047,14 +2227,14 @@ impl_def Diagnostic.Insts.CoreCmpPartialEqDiagnostic : core.cmp.PartialEq
 }
 
 /-- [noble_wasm::{impl core::cmp::Eq for noble_wasm::Diagnostic}::assert_fields_are_eq]:
-    Source: 'crates/noble-wasm/src/lib.rs', lines 42:33-42:35
+    Source: 'crates/noble-wasm/src/lib.rs', lines 43:33-43:35
     Visibility: public -/
 def Diagnostic.Insts.CoreCmpEq.assert_fields_are_eq
   (self : Diagnostic) : Result Unit := do
   ok ()
 
 /-- Trait implementation: [noble_wasm::{impl core::cmp::Eq for noble_wasm::Diagnostic}]
-    Source: 'crates/noble-wasm/src/lib.rs', lines 42:33-42:35 -/
+    Source: 'crates/noble-wasm/src/lib.rs', lines 43:33-43:35 -/
 @[reducible]
 def Diagnostic.Insts.CoreCmpEq : core.cmp.Eq Diagnostic := {
   partialEqInst := Diagnostic.Insts.CoreCmpPartialEqDiagnostic
@@ -2062,7 +2242,7 @@ def Diagnostic.Insts.CoreCmpEq : core.cmp.Eq Diagnostic := {
 }
 
 /-- [noble_wasm::signatures::number]:
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 100:0-105:1 -/
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 116:0-121:1 -/
 def signatures.number
   (index : Std.Usize) : Result (core.result.Result Std.U32 Diagnostic) := do
   let r ← core.convert.num.ptr_try_from_impls.TryFromU32Usize.try_from index
@@ -2071,78 +2251,175 @@ def signatures.number
   | core.result.Result.Err _ =>
     ok (core.result.Result.Err Diagnostic.Exhausted)
 
+/-- [noble_wasm::signatures::SOURCE_KEY_LIMIT]
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 3:0-3:48 -/
+@[global_simps, irreducible]
+def signatures.SOURCE_KEY_LIMIT : Std.Usize := 4096#usize
+
+/-- [noble_wasm::signatures::walk::emit_effects]: loop body 0:
+    Source: 'crates/noble-wasm/src/signatures/walk.rs', lines 191:4-199:1 -/
+@[rust_loop_body]
+def signatures.walk.emit_effects_loop.body
+  (effects : noble_kernel.types.EffSet) (out : output.Buffer)
+  (index : Std.Usize) :
+  Result (ControlFlow (output.Buffer × Std.Usize) ((core.result.Result Unit
+    Diagnostic) × output.Buffer))
+  := do
+  let s ← noble_kernel.types.EffSet.as_slice effects
+  let i := Slice.len s
+  if index < i
+  then
+    if index != 0#usize
+    then
+      let s1 ← lift (Array.to_slice (Array.make 1#usize [ 44#u8 ]))
+      let (r, out1) ← output.Buffer.append out s1
+      match r with
+      | core.result.Result.Ok _ =>
+        let ei ← Slice.index_usize s index
+        let i1 ← lift (core.convert.num.FromU64U32.from ei)
+        let (r1, out2) ← output.Buffer.number out1 i1
+        match r1 with
+        | core.result.Result.Ok _ =>
+          let index1 ← index + 1#usize
+          ok (cont (out2, index1))
+        | core.result.Result.Err _ => ok (done (r1, out2))
+      | core.result.Result.Err _ => ok (done (r, out1))
+    else
+      let ei ← Slice.index_usize s index
+      let i1 ← lift (core.convert.num.FromU64U32.from ei)
+      let (r, out1) ← output.Buffer.number out i1
+      match r with
+      | core.result.Result.Ok _ =>
+        let index1 ← index + 1#usize
+        ok (cont (out1, index1))
+      | core.result.Result.Err _ => ok (done (r, out1))
+  else
+    let s1 ← lift (Array.to_slice (Array.make 1#usize [ 125#u8 ]))
+    let (r, out1) ← output.Buffer.append out s1
+    ok (done (r, out1))
+
+/-- [noble_wasm::signatures::walk::emit_effects]: loop 0:
+    Source: 'crates/noble-wasm/src/signatures/walk.rs', lines 191:4-199:1 -/
+@[rust_loop]
+def signatures.walk.emit_effects_loop
+  (effects : noble_kernel.types.EffSet) (out : output.Buffer)
+  (index : Std.Usize) :
+  Result ((core.result.Result Unit Diagnostic) × output.Buffer)
+  := do
+  loop
+    (fun (out1, index1) => signatures.walk.emit_effects_loop.body effects out1
+      index1)
+    (out, index)
+
+/-- [noble_wasm::signatures::walk::emit_effects]:
+    Source: 'crates/noble-wasm/src/signatures/walk.rs', lines 181:0-199:1 -/
+def signatures.walk.emit_effects
+  (effects : noble_kernel.types.EffSet) (out : output.Buffer) :
+  Result ((core.result.Result Unit Diagnostic) × output.Buffer)
+  := do
+  let b ← noble_kernel.types.EffSet.is_empty effects
+  if b
+  then ok (core.result.Result.Ok (), out)
+  else
+    let s ← lift (Array.to_slice (Array.make 2#usize [ 33#u8, 123#u8 ]))
+    let (r, out1) ← output.Buffer.append out s
+    match r with
+    | core.result.Result.Ok _ =>
+      signatures.walk.emit_effects_loop effects out1 0#usize
+    | core.result.Result.Err _ => ok (r, out1)
+
 /-- [noble_wasm::signatures::walk::push_type]:
-    Source: 'crates/noble-wasm/src/signatures/walk.rs', lines 114:0-152:1 -/
+    Source: 'crates/noble-wasm/src/signatures/walk.rs', lines 119:0-175:1 -/
 def signatures.walk.push_type
   (ty : noble_kernel.types.Ty) (work : alloc.vec.Vec signatures.walk.Step)
-  (out : output.Buffer) :
+  (out : output.Buffer) (extended : Bool) :
   Result ((core.result.Result Unit Diagnostic) × (alloc.vec.Vec
     signatures.walk.Step) × output.Buffer)
   := do
-  match ty with
-  | noble_kernel.types.Ty.UnitType =>
-    let s ←
-      lift (Array.to_slice
-        (Array.make 4#usize [ 85#u8, 110#u8, 105#u8, 116#u8 ]))
-    let (r, out1) ← output.Buffer.append out s
-    match r with
-    | core.result.Result.Ok _ => ok (core.result.Result.Ok (), work, out1)
-    | core.result.Result.Err _ => ok (r, work, out1)
-  | noble_kernel.types.Ty.BoolType =>
-    let s ←
-      lift (Array.to_slice
-        (Array.make 4#usize [ 66#u8, 111#u8, 111#u8, 108#u8 ]))
-    let (r, out1) ← output.Buffer.append out s
-    match r with
-    | core.result.Result.Ok _ => ok (core.result.Result.Ok (), work, out1)
-    | core.result.Result.Err _ => ok (r, work, out1)
-  | noble_kernel.types.Ty.I64Type =>
-    let s ←
-      lift (Array.to_slice (Array.make 3#usize [ 73#u8, 54#u8, 52#u8 ]))
-    let (r, out1) ← output.Buffer.append out s
-    match r with
-    | core.result.Result.Ok _ => ok (core.result.Result.Ok (), work, out1)
-    | core.result.Result.Err _ => ok (r, work, out1)
-  | noble_kernel.types.Ty.TextType =>
-    ok (core.result.Result.Err Diagnostic.Unsupported, work, out)
-  | noble_kernel.types.Ty.SyntaxType =>
-    let s ←
-      lift (Array.to_slice
-        (Array.make 6#usize [ 83#u8, 121#u8, 110#u8, 116#u8, 97#u8, 120#u8 ]))
-    let (r, out1) ← output.Buffer.append out s
-    match r with
-    | core.result.Result.Ok _ => ok (core.result.Result.Ok (), work, out1)
-    | core.result.Result.Err _ => ok (r, work, out1)
-  | noble_kernel.types.Ty.PairType left right =>
-    let s ←
-      lift (Array.to_slice
-        (Array.make 5#usize [ 80#u8, 97#u8, 105#u8, 114#u8, 40#u8 ]))
-    let (r, out1) ← output.Buffer.append out s
-    match r with
-    | core.result.Result.Ok _ =>
-      let work1 ← alloc.vec.Vec.push work (signatures.walk.Step.Byte 41#u8)
-      let work2 ← alloc.vec.Vec.push work1 (signatures.walk.Step.Type right)
-      let work3 ← alloc.vec.Vec.push work2 (signatures.walk.Step.Byte 44#u8)
-      let work4 ← alloc.vec.Vec.push work3 (signatures.walk.Step.Type left)
-      ok (core.result.Result.Ok (), work4, out1)
-    | core.result.Result.Err _ => ok (r, work, out1)
-  | noble_kernel.types.Ty.SumType _ _ =>
-    ok (core.result.Result.Err Diagnostic.Unsupported, work, out)
-  | noble_kernel.types.Ty.ListType item =>
-    let s ←
-      lift (Array.to_slice
-        (Array.make 5#usize [ 76#u8, 105#u8, 115#u8, 116#u8, 40#u8 ]))
-    let (r, out1) ← output.Buffer.append out s
-    match r with
-    | core.result.Result.Ok _ =>
-      let work1 ← alloc.vec.Vec.push work (signatures.walk.Step.Byte 41#u8)
-      let work2 ← alloc.vec.Vec.push work1 (signatures.walk.Step.Type item)
-      ok (core.result.Result.Ok (), work2, out1)
-    | core.result.Result.Err _ => ok (r, work, out1)
-  | noble_kernel.types.Ty.ProgramType input_stack output_stack effects =>
-    let b ← noble_kernel.types.EffSet.is_empty effects
-    if b
-    then
+  if extended
+  then
+    match ty with
+    | noble_kernel.types.Ty.UnitType =>
+      let s ←
+        lift (Array.to_slice
+          (Array.make 4#usize [ 85#u8, 110#u8, 105#u8, 116#u8 ]))
+      let (r, out1) ← output.Buffer.append out s
+      match r with
+      | core.result.Result.Ok _ => ok (core.result.Result.Ok (), work, out1)
+      | core.result.Result.Err _ => ok (r, work, out1)
+    | noble_kernel.types.Ty.BoolType =>
+      let s ←
+        lift (Array.to_slice
+          (Array.make 4#usize [ 66#u8, 111#u8, 111#u8, 108#u8 ]))
+      let (r, out1) ← output.Buffer.append out s
+      match r with
+      | core.result.Result.Ok _ => ok (core.result.Result.Ok (), work, out1)
+      | core.result.Result.Err _ => ok (r, work, out1)
+    | noble_kernel.types.Ty.I64Type =>
+      let s ←
+        lift (Array.to_slice (Array.make 3#usize [ 73#u8, 54#u8, 52#u8 ]))
+      let (r, out1) ← output.Buffer.append out s
+      match r with
+      | core.result.Result.Ok _ => ok (core.result.Result.Ok (), work, out1)
+      | core.result.Result.Err _ => ok (r, work, out1)
+    | noble_kernel.types.Ty.TextType =>
+      let s ←
+        lift (Array.to_slice
+          (Array.make 4#usize [ 84#u8, 101#u8, 120#u8, 116#u8 ]))
+      let (r, out1) ← output.Buffer.append out s
+      match r with
+      | core.result.Result.Ok _ => ok (core.result.Result.Ok (), work, out1)
+      | core.result.Result.Err _ => ok (r, work, out1)
+    | noble_kernel.types.Ty.SyntaxType =>
+      let s ←
+        lift (Array.to_slice
+          (Array.make 6#usize [ 83#u8, 121#u8, 110#u8, 116#u8, 97#u8, 120#u8 ]))
+      let (r, out1) ← output.Buffer.append out s
+      match r with
+      | core.result.Result.Ok _ => ok (core.result.Result.Ok (), work, out1)
+      | core.result.Result.Err _ => ok (r, work, out1)
+    | noble_kernel.types.Ty.PairType left right =>
+      let s ←
+        lift (Array.to_slice
+          (Array.make 5#usize [ 80#u8, 97#u8, 105#u8, 114#u8, 40#u8 ]))
+      let (r, out1) ← output.Buffer.append out s
+      match r with
+      | core.result.Result.Ok _ =>
+        let work1 ← alloc.vec.Vec.push work (signatures.walk.Step.Byte 41#u8)
+        let work2 ←
+          alloc.vec.Vec.push work1 (signatures.walk.Step.Type right)
+        let work3 ←
+          alloc.vec.Vec.push work2 (signatures.walk.Step.Byte 44#u8)
+        let work4 ← alloc.vec.Vec.push work3 (signatures.walk.Step.Type left)
+        ok (core.result.Result.Ok (), work4, out1)
+      | core.result.Result.Err _ => ok (r, work, out1)
+    | noble_kernel.types.Ty.SumType left right =>
+      let s ←
+        lift (Array.to_slice
+          (Array.make 4#usize [ 83#u8, 117#u8, 109#u8, 40#u8 ]))
+      let (r, out1) ← output.Buffer.append out s
+      match r with
+      | core.result.Result.Ok _ =>
+        let work1 ← alloc.vec.Vec.push work (signatures.walk.Step.Byte 41#u8)
+        let work2 ←
+          alloc.vec.Vec.push work1 (signatures.walk.Step.Type right)
+        let work3 ←
+          alloc.vec.Vec.push work2 (signatures.walk.Step.Byte 44#u8)
+        let work4 ← alloc.vec.Vec.push work3 (signatures.walk.Step.Type left)
+        ok (core.result.Result.Ok (), work4, out1)
+      | core.result.Result.Err _ => ok (r, work, out1)
+    | noble_kernel.types.Ty.ListType item =>
+      let s ←
+        lift (Array.to_slice
+          (Array.make 5#usize [ 76#u8, 105#u8, 115#u8, 116#u8, 40#u8 ]))
+      let (r, out1) ← output.Buffer.append out s
+      match r with
+      | core.result.Result.Ok _ =>
+        let work1 ← alloc.vec.Vec.push work (signatures.walk.Step.Byte 41#u8)
+        let work2 ← alloc.vec.Vec.push work1 (signatures.walk.Step.Type item)
+        ok (core.result.Result.Ok (), work2, out1)
+      | core.result.Result.Err _ => ok (r, work, out1)
+    | noble_kernel.types.Ty.ProgramType input_stack output_stack effects =>
       let s ←
         lift (Array.to_slice
           (Array.make 8#usize [
@@ -2152,19 +2429,118 @@ def signatures.walk.push_type
       match r with
       | core.result.Result.Ok _ =>
         let work1 ← alloc.vec.Vec.push work (signatures.walk.Step.Byte 41#u8)
+        let b ← noble_kernel.types.EffSet.is_empty effects
         let work2 ←
-          alloc.vec.Vec.push work1 (signatures.walk.Step.Stack output_stack)
+          if b
+          then ok work1
+          else alloc.vec.Vec.push work1 (signatures.walk.Step.Effects effects)
         let work3 ←
-          alloc.vec.Vec.push work2 (signatures.walk.Step.Byte 62#u8)
+          alloc.vec.Vec.push work2 (signatures.walk.Step.Stack output_stack)
         let work4 ←
-          alloc.vec.Vec.push work3 (signatures.walk.Step.Byte 45#u8)
+          alloc.vec.Vec.push work3 (signatures.walk.Step.Byte 62#u8)
         let work5 ←
-          alloc.vec.Vec.push work4 (signatures.walk.Step.Stack input_stack)
-        ok (core.result.Result.Ok (), work5, out1)
+          alloc.vec.Vec.push work4 (signatures.walk.Step.Byte 45#u8)
+        let work6 ←
+          alloc.vec.Vec.push work5 (signatures.walk.Step.Stack input_stack)
+        ok (core.result.Result.Ok (), work6, out1)
       | core.result.Result.Err _ => ok (r, work, out1)
-    else ok (core.result.Result.Err Diagnostic.Unsupported, work, out)
-  | noble_kernel.types.Ty.ResourceType _ =>
-    ok (core.result.Result.Err Diagnostic.Unsupported, work, out)
+    | noble_kernel.types.Ty.ResourceType _ =>
+      ok (core.result.Result.Err Diagnostic.Unsupported, work, out)
+  else
+    match ty with
+    | noble_kernel.types.Ty.UnitType =>
+      let s ←
+        lift (Array.to_slice
+          (Array.make 4#usize [ 85#u8, 110#u8, 105#u8, 116#u8 ]))
+      let (r, out1) ← output.Buffer.append out s
+      match r with
+      | core.result.Result.Ok _ => ok (core.result.Result.Ok (), work, out1)
+      | core.result.Result.Err _ => ok (r, work, out1)
+    | noble_kernel.types.Ty.BoolType =>
+      let s ←
+        lift (Array.to_slice
+          (Array.make 4#usize [ 66#u8, 111#u8, 111#u8, 108#u8 ]))
+      let (r, out1) ← output.Buffer.append out s
+      match r with
+      | core.result.Result.Ok _ => ok (core.result.Result.Ok (), work, out1)
+      | core.result.Result.Err _ => ok (r, work, out1)
+    | noble_kernel.types.Ty.I64Type =>
+      let s ←
+        lift (Array.to_slice (Array.make 3#usize [ 73#u8, 54#u8, 52#u8 ]))
+      let (r, out1) ← output.Buffer.append out s
+      match r with
+      | core.result.Result.Ok _ => ok (core.result.Result.Ok (), work, out1)
+      | core.result.Result.Err _ => ok (r, work, out1)
+    | noble_kernel.types.Ty.TextType =>
+      ok (core.result.Result.Err Diagnostic.Unsupported, work, out)
+    | noble_kernel.types.Ty.SyntaxType =>
+      let s ←
+        lift (Array.to_slice
+          (Array.make 6#usize [ 83#u8, 121#u8, 110#u8, 116#u8, 97#u8, 120#u8 ]))
+      let (r, out1) ← output.Buffer.append out s
+      match r with
+      | core.result.Result.Ok _ => ok (core.result.Result.Ok (), work, out1)
+      | core.result.Result.Err _ => ok (r, work, out1)
+    | noble_kernel.types.Ty.PairType left right =>
+      let s ←
+        lift (Array.to_slice
+          (Array.make 5#usize [ 80#u8, 97#u8, 105#u8, 114#u8, 40#u8 ]))
+      let (r, out1) ← output.Buffer.append out s
+      match r with
+      | core.result.Result.Ok _ =>
+        let work1 ← alloc.vec.Vec.push work (signatures.walk.Step.Byte 41#u8)
+        let work2 ←
+          alloc.vec.Vec.push work1 (signatures.walk.Step.Type right)
+        let work3 ←
+          alloc.vec.Vec.push work2 (signatures.walk.Step.Byte 44#u8)
+        let work4 ← alloc.vec.Vec.push work3 (signatures.walk.Step.Type left)
+        ok (core.result.Result.Ok (), work4, out1)
+      | core.result.Result.Err _ => ok (r, work, out1)
+    | noble_kernel.types.Ty.SumType _ _ =>
+      ok (core.result.Result.Err Diagnostic.Unsupported, work, out)
+    | noble_kernel.types.Ty.ListType item =>
+      let s ←
+        lift (Array.to_slice
+          (Array.make 5#usize [ 76#u8, 105#u8, 115#u8, 116#u8, 40#u8 ]))
+      let (r, out1) ← output.Buffer.append out s
+      match r with
+      | core.result.Result.Ok _ =>
+        let work1 ← alloc.vec.Vec.push work (signatures.walk.Step.Byte 41#u8)
+        let work2 ← alloc.vec.Vec.push work1 (signatures.walk.Step.Type item)
+        ok (core.result.Result.Ok (), work2, out1)
+      | core.result.Result.Err _ => ok (r, work, out1)
+    | noble_kernel.types.Ty.ProgramType input_stack output_stack effects =>
+      let b ← noble_kernel.types.EffSet.is_empty effects
+      if b
+      then
+        let s ←
+          lift (Array.to_slice
+            (Array.make 8#usize [
+              80#u8, 114#u8, 111#u8, 103#u8, 114#u8, 97#u8, 109#u8, 40#u8
+              ]))
+        let (r, out1) ← output.Buffer.append out s
+        match r with
+        | core.result.Result.Ok _ =>
+          let work1 ←
+            alloc.vec.Vec.push work (signatures.walk.Step.Byte 41#u8)
+          let work2 ←
+            if b
+            then ok work1
+            else
+              alloc.vec.Vec.push work1 (signatures.walk.Step.Effects effects)
+          let work3 ←
+            alloc.vec.Vec.push work2 (signatures.walk.Step.Stack output_stack)
+          let work4 ←
+            alloc.vec.Vec.push work3 (signatures.walk.Step.Byte 62#u8)
+          let work5 ←
+            alloc.vec.Vec.push work4 (signatures.walk.Step.Byte 45#u8)
+          let work6 ←
+            alloc.vec.Vec.push work5 (signatures.walk.Step.Stack input_stack)
+          ok (core.result.Result.Ok (), work6, out1)
+        | core.result.Result.Err _ => ok (r, work, out1)
+      else ok (core.result.Result.Err Diagnostic.Unsupported, work, out)
+    | noble_kernel.types.Ty.ResourceType _ =>
+      ok (core.result.Result.Err Diagnostic.Unsupported, work, out)
 
 /-- [noble_wasm::signatures::walk::WORK_LIMIT]
     Source: 'crates/noble-wasm/src/signatures/walk.rs', lines 1:0-1:31 -/
@@ -2172,7 +2548,7 @@ def signatures.walk.push_type
 def signatures.walk.WORK_LIMIT : Std.Usize := 4096#usize
 
 /-- [noble_wasm::signatures::walk::push_stack]: loop body 0:
-    Source: 'crates/noble-wasm/src/signatures/walk.rs', lines 98:4-103:5 -/
+    Source: 'crates/noble-wasm/src/signatures/walk.rs', lines 103:4-108:5 -/
 @[rust_loop_body]
 def signatures.walk.push_stack_loop.body
   (entries : alloc.vec.Vec noble_kernel.types.Ty)
@@ -2193,7 +2569,7 @@ def signatures.walk.push_stack_loop.body
       ok (cont (entries1, work2))
 
 /-- [noble_wasm::signatures::walk::push_stack]: loop 0:
-    Source: 'crates/noble-wasm/src/signatures/walk.rs', lines 98:4-103:5 -/
+    Source: 'crates/noble-wasm/src/signatures/walk.rs', lines 103:4-108:5 -/
 @[rust_loop]
 def signatures.walk.push_stack_loop
   (entries : alloc.vec.Vec noble_kernel.types.Ty)
@@ -2206,7 +2582,7 @@ def signatures.walk.push_stack_loop
     (entries, work)
 
 /-- [noble_wasm::signatures::walk::push_stack]:
-    Source: 'crates/noble-wasm/src/signatures/walk.rs', lines 84:0-105:1 -/
+    Source: 'crates/noble-wasm/src/signatures/walk.rs', lines 89:0-110:1 -/
 def signatures.walk.push_stack
   (entries : alloc.vec.Vec noble_kernel.types.Ty)
   (work : alloc.vec.Vec signatures.walk.Step) (out : output.Buffer) :
@@ -2240,7 +2616,7 @@ def signatures.walk.push_stack
         | core.result.Result.Err _ => ok (r, work, out1)
 
 /-- [noble_wasm::signatures::walk::advance]:
-    Source: 'crates/noble-wasm/src/signatures/walk.rs', lines 61:0-76:1 -/
+    Source: 'crates/noble-wasm/src/signatures/walk.rs', lines 65:0-81:1 -/
 def signatures.walk.advance
   (walk : signatures.walk.State) :
   Result (signatures.walk.State × (Option Diagnostic))
@@ -2249,7 +2625,7 @@ def signatures.walk.advance
   then ok (walk, some Diagnostic.Exhausted)
   else
     let i := alloc.vec.Vec.len walk.work
-    let i1 ← signatures.walk.WORK_LIMIT - 5#usize
+    let i1 ← signatures.walk.WORK_LIMIT - 6#usize
     if i > i1
     then ok (walk, some Diagnostic.Exhausted)
     else
@@ -2262,13 +2638,18 @@ def signatures.walk.advance
           match s with
           | signatures.walk.Step.Type ty =>
             do
-            let (result1, v2, b1) ← signatures.walk.push_type ty v walk.out
+            let (result1, v2, b1) ←
+              signatures.walk.push_type ty v walk.out walk.extended
             ok (v2, b1, result1)
           | signatures.walk.Step.Stack entries =>
             do
             let (result1, v2, b1) ←
               signatures.walk.push_stack entries v walk.out
             ok (v2, b1, result1)
+          | signatures.walk.Step.Effects effects =>
+            do
+            let (result1, b1) ← signatures.walk.emit_effects effects walk.out
+            ok (v, b1, result1)
           | signatures.walk.Step.Byte byte =>
             do
             let s1 ← lift (Array.to_slice (Array.make 1#usize [ byte ]))
@@ -2276,12 +2657,12 @@ def signatures.walk.advance
             ok (v, b1, result1)
       match result with
       | core.result.Result.Ok _ =>
-        ok ({ work := v1, out := b, fuel := i2 }, none)
+        ok ({ walk with work := v1, out := b, fuel := i2 }, none)
       | core.result.Result.Err error =>
-        ok ({ work := v1, out := b, fuel := i2 }, some error)
+        ok ({ walk with work := v1, out := b, fuel := i2 }, some error)
 
 /-- [noble_wasm::signatures::walk::copy_roots]: loop body 0:
-    Source: 'crates/noble-wasm/src/signatures/walk.rs', lines 49:4-52:5 -/
+    Source: 'crates/noble-wasm/src/signatures/walk.rs', lines 53:4-56:5 -/
 @[rust_loop_body]
 def signatures.walk.copy_roots_loop.body
   (stack : Slice noble_kernel.types.Ty)
@@ -2300,7 +2681,7 @@ def signatures.walk.copy_roots_loop.body
   else ok (done roots)
 
 /-- [noble_wasm::signatures::walk::copy_roots]: loop 0:
-    Source: 'crates/noble-wasm/src/signatures/walk.rs', lines 49:4-52:5 -/
+    Source: 'crates/noble-wasm/src/signatures/walk.rs', lines 53:4-56:5 -/
 @[rust_loop]
 def signatures.walk.copy_roots_loop
   (stack : Slice noble_kernel.types.Ty)
@@ -2313,7 +2694,7 @@ def signatures.walk.copy_roots_loop
     (roots, index)
 
 /-- [noble_wasm::signatures::walk::copy_roots]:
-    Source: 'crates/noble-wasm/src/signatures/walk.rs', lines 46:0-54:1 -/
+    Source: 'crates/noble-wasm/src/signatures/walk.rs', lines 50:0-58:1 -/
 def signatures.walk.copy_roots
   (stack : Slice noble_kernel.types.Ty) :
   Result (alloc.vec.Vec noble_kernel.types.Ty)
@@ -2323,7 +2704,7 @@ def signatures.walk.copy_roots
   signatures.walk.copy_roots_loop stack roots 0#usize
 
 /-- [noble_wasm::signatures::walk::encode]: loop body 0:
-    Source: 'crates/noble-wasm/src/signatures/walk.rs', lines 35:4-39:5 -/
+    Source: 'crates/noble-wasm/src/signatures/walk.rs', lines 39:4-43:5 -/
 @[rust_loop_body]
 def signatures.walk.encode_loop.body
   (walk : signatures.walk.State) (failure : Option Diagnostic) :
@@ -2342,7 +2723,7 @@ def signatures.walk.encode_loop.body
     else ok (done (walk.out, failure))
 
 /-- [noble_wasm::signatures::walk::encode]: loop 0:
-    Source: 'crates/noble-wasm/src/signatures/walk.rs', lines 35:4-39:5 -/
+    Source: 'crates/noble-wasm/src/signatures/walk.rs', lines 39:4-43:5 -/
 @[rust_loop]
 def signatures.walk.encode_loop
   (walk : signatures.walk.State) (failure : Option Diagnostic) :
@@ -2353,9 +2734,9 @@ def signatures.walk.encode_loop
     (walk, failure)
 
 /-- [noble_wasm::signatures::walk::encode]:
-    Source: 'crates/noble-wasm/src/signatures/walk.rs', lines 22:0-44:1 -/
+    Source: 'crates/noble-wasm/src/signatures/walk.rs', lines 24:0-48:1 -/
 def signatures.walk.encode
-  (stack : Slice noble_kernel.types.Ty) :
+  (stack : Slice noble_kernel.types.Ty) (extended : Bool) :
   Result (core.result.Result (alloc.vec.Vec Std.U8) Diagnostic)
   := do
   let i := Slice.len stack
@@ -2369,82 +2750,102 @@ def signatures.walk.encode
     let v2 ← alloc.vec.Vec.push v (signatures.walk.Step.Stack v1)
     let (b1, failure) ←
       signatures.walk.encode_loop
-        { work := v2, out := b, fuel := signatures.walk.WORK_LIMIT } none
+        { work := v2, out := b, fuel := signatures.walk.WORK_LIMIT, extended }
+        none
     match failure with
     | none => let v3 ← output.Buffer.finish b1
               ok (core.result.Result.Ok v3)
     | some error => ok (core.result.Result.Err error)
 
 /-- [noble_wasm::signatures::{noble_wasm::signatures::Pool}::intern]: loop body 0:
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 34:8-36:9 -/
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 47:8-49:9 -/
 @[rust_loop_body]
 def signatures.Pool.intern_loop.body
-  (self : signatures.Pool) (key : alloc.vec.Vec Std.U8) (index : Std.Usize) :
-  Result (ControlFlow Std.Usize ((alloc.vec.Vec (alloc.vec.Vec Std.U8)) ×
-    Std.Usize × Std.Usize))
+  (v : alloc.vec.Vec (alloc.vec.Vec Std.U8)) (key : alloc.vec.Vec Std.U8)
+  (index : Std.Usize) :
+  Result (ControlFlow Std.Usize Std.Usize)
   := do
-  let i := alloc.vec.Vec.len self.keys
+  let i := alloc.vec.Vec.len v
   if index < i
   then
-    let v ←
+    let v1 ←
       alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice (alloc.vec.Vec
-        Std.U8)) self.keys index
-    let b ← alloc.vec.partial_eq.PartialEqVec.ne core.cmp.PartialEqU8 v key
+        Std.U8)) v index
+    let b ← alloc.vec.partial_eq.PartialEqVec.ne core.cmp.PartialEqU8 v1 key
     if b
     then let index1 ← index + 1#usize
          ok (cont index1)
-    else ok (done (self.keys, self.bytes, index))
-  else ok (done (self.keys, self.bytes, index))
+    else ok (done index)
+  else ok (done index)
 
 /-- [noble_wasm::signatures::{noble_wasm::signatures::Pool}::intern]: loop 0:
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 34:8-36:9 -/
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 47:8-49:9 -/
 @[rust_loop]
 def signatures.Pool.intern_loop
-  (self : signatures.Pool) (key : alloc.vec.Vec Std.U8) (index : Std.Usize) :
-  Result ((alloc.vec.Vec (alloc.vec.Vec Std.U8)) × Std.Usize × Std.Usize)
+  (v : alloc.vec.Vec (alloc.vec.Vec Std.U8)) (key : alloc.vec.Vec Std.U8)
+  (index : Std.Usize) :
+  Result Std.Usize
   := do
   loop
-    (fun index1 => signatures.Pool.intern_loop.body self key index1)
+    (fun index1 => signatures.Pool.intern_loop.body v key index1)
     index
 
 /-- [noble_wasm::signatures::{noble_wasm::signatures::Pool}::intern]:
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 28:4-51:5 -/
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 41:4-67:5 -/
 def signatures.Pool.intern
   (self : signatures.Pool) (stack : Slice noble_kernel.types.Ty) :
   Result ((core.result.Result Std.U32 Diagnostic) × signatures.Pool)
   := do
-  let r ← signatures.walk.encode stack
+  let r ← signatures.walk.encode stack self.extended
   match r with
   | core.result.Result.Ok value =>
-    let (v, i, index) ← signatures.Pool.intern_loop self value 0#usize
-    let i1 := alloc.vec.Vec.len v
-    if index < i1
+    let index ← signatures.Pool.intern_loop self.keys value 0#usize
+    let i := alloc.vec.Vec.len self.keys
+    if index < i
     then let r1 ← signatures.number index
-         ok (r1, { keys := v, bytes := i })
+         ok (r1, self)
     else
-      let i2 := alloc.vec.Vec.len value
-      let o ← lift (Usize.checked_add i i2)
-      match o with
-      | none =>
-        ok (core.result.Result.Err Diagnostic.Exhausted,
-          { keys := v, bytes := i })
-      | some bytes =>
-        if bytes > OUTPUT_BYTE_LIMIT
-        then
-          ok (core.result.Result.Err Diagnostic.Exhausted,
-            { keys := v, bytes := i })
+      if self.extended
+      then
+        let i1 := alloc.vec.Vec.len self.keys
+        if i1 >= signatures.SOURCE_KEY_LIMIT
+        then ok (core.result.Result.Err Diagnostic.Exhausted, self)
         else
-          let i3 := alloc.vec.Vec.len v
-          let r1 ← signatures.number i3
-          match r1 with
-          | core.result.Result.Ok _ =>
-            let v1 ← alloc.vec.Vec.push v value
-            ok (r1, { keys := v1, bytes })
-          | core.result.Result.Err _ => ok (r1, { keys := v, bytes := i })
+          let i2 := alloc.vec.Vec.len value
+          let o ← lift (Usize.checked_add self.bytes i2)
+          match o with
+          | none => ok (core.result.Result.Err Diagnostic.Exhausted, self)
+          | some bytes =>
+            if bytes > OUTPUT_BYTE_LIMIT
+            then ok (core.result.Result.Err Diagnostic.Exhausted, self)
+            else
+              let i3 := alloc.vec.Vec.len self.keys
+              let r1 ← signatures.number i3
+              match r1 with
+              | core.result.Result.Ok _ =>
+                let v ← alloc.vec.Vec.push self.keys value
+                ok (r1, { keys := v, bytes, extended := true })
+              | core.result.Result.Err _ => ok (r1, self)
+      else
+        let i1 := alloc.vec.Vec.len value
+        let o ← lift (Usize.checked_add self.bytes i1)
+        match o with
+        | none => ok (core.result.Result.Err Diagnostic.Exhausted, self)
+        | some bytes =>
+          if bytes > OUTPUT_BYTE_LIMIT
+          then ok (core.result.Result.Err Diagnostic.Exhausted, self)
+          else
+            let i2 := alloc.vec.Vec.len self.keys
+            let r1 ← signatures.number i2
+            match r1 with
+            | core.result.Result.Ok _ =>
+              let v ← alloc.vec.Vec.push self.keys value
+              ok (r1, { keys := v, bytes, extended := false })
+            | core.result.Result.Err _ => ok (r1, self)
   | core.result.Result.Err failure => ok (core.result.Result.Err failure, self)
 
 /-- [noble_wasm::signatures::{noble_wasm::signatures::Pool}::interface]:
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 53:4-63:5 -/
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 69:4-79:5 -/
 def signatures.Pool.interface
   (self : signatures.Pool) (interface : noble_kernel.untrusted.Interface) :
   Result ((core.result.Result signatures.Interface Diagnostic) ×
@@ -2469,13 +2870,13 @@ def signatures.Pool.interface
   else ok (core.result.Result.Err Diagnostic.Unsupported, self)
 
 /-- [noble_wasm::signatures::{noble_wasm::signatures::Pool}::new]:
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 21:4-26:5 -/
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 25:4-31:5 -/
 def signatures.Pool.new : Result signatures.Pool := do
   let v := alloc.vec.Vec.with_capacity (alloc.vec.Vec Std.U8) 16#usize
-  ok { keys := v, bytes := 0#usize }
+  ok { keys := v, bytes := 0#usize, extended := false }
 
 /-- [noble_wasm::signatures::{noble_wasm::signatures::Pool}::produced_program]:
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 65:4-80:5 -/
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 81:4-96:5 -/
 def signatures.Pool.produced_program
   (self : signatures.Pool) (interface : noble_kernel.untrusted.Interface) :
   Result ((core.result.Result signatures.Interface Diagnostic) ×
@@ -3290,7 +3691,7 @@ def lowering.lower
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_wasm::compile]:
-    Source: 'crates/noble-wasm/src/lib.rs', lines 55:0-63:1
+    Source: 'crates/noble-wasm/src/lib.rs', lines 56:0-64:1
     Visibility: public -/
 def compile
   (representation : Representation) (request : noble_kernel.untrusted.Request)
@@ -3353,15 +3754,35 @@ def lowering.Program.Insts.CoreMarkerCopy : core.marker.Copy lowering.Program
   cloneInst := lowering.Program.Insts.CoreCloneClone
 }
 
+/-- [noble_wasm::signatures::{impl core::clone::Clone for noble_wasm::signatures::Pool}::clone]:
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 7:9-7:14
+    Visibility: public -/
+def signatures.Pool.Insts.CoreCloneClone.clone
+  (self : signatures.Pool) : Result signatures.Pool := do
+  let v ←
+    alloc.vec.CloneVec.clone (core.clone.CloneallocvecVec core.clone.CloneU8)
+      self.keys
+  let i ← lift (core.clone.impls.CloneUsize.clone self.bytes)
+  let b ← lift (core.clone.impls.CloneBool.clone self.extended)
+  ok { keys := v, bytes := i, extended := b }
+
+/-- Trait implementation: [noble_wasm::signatures::{impl core::clone::Clone for noble_wasm::signatures::Pool}]
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 7:9-7:14 -/
+@[reducible]
+def signatures.Pool.Insts.CoreCloneClone : core.clone.Clone signatures.Pool
+  := {
+  clone := signatures.Pool.Insts.CoreCloneClone.clone
+}
+
 /-- [noble_wasm::signatures::{impl core::clone::Clone for noble_wasm::signatures::Interface}::clone]:
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 10:9-10:14
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 14:9-14:14
     Visibility: public -/
 def signatures.Interface.Insts.CoreCloneClone.clone
   (self : signatures.Interface) : Result signatures.Interface := do
   ok self
 
 /-- Trait implementation: [noble_wasm::signatures::{impl core::clone::Clone for noble_wasm::signatures::Interface}]
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 10:9-10:14 -/
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 14:9-14:14 -/
 @[reducible]
 def signatures.Interface.Insts.CoreCloneClone : core.clone.Clone
   signatures.Interface := {
@@ -3369,11 +3790,12955 @@ def signatures.Interface.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [noble_wasm::signatures::{impl core::marker::Copy for noble_wasm::signatures::Interface}]
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 10:16-10:20 -/
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 14:16-14:20 -/
 @[reducible]
 def signatures.Interface.Insts.CoreMarkerCopy : core.marker.Copy
   signatures.Interface := {
   cloneInst := signatures.Interface.Insts.CoreCloneClone
+}
+
+/-- [noble_wasm::signatures::{noble_wasm::signatures::Pool}::source]:
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 33:4-39:5 -/
+def signatures.Pool.source : Result signatures.Pool := do
+  let v := alloc.vec.Vec.with_capacity (alloc.vec.Vec Std.U8) 16#usize
+  ok { keys := v, bytes := 0#usize, extended := true }
+
+/-- [noble_wasm::source::{noble_wasm::source::Work}::charge]:
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 31:4-37:5 -/
+def source.Work.charge
+  (self : source.Work) (amount : Std.U64) :
+  Result ((core.result.Result Unit Diagnostic) × source.Work)
+  := do
+  let o ← lift (U64.checked_sub self.remaining amount)
+  match o with
+  | none => ok (core.result.Result.Err Diagnostic.Exhausted, self)
+  | some value => ok (core.result.Result.Ok (), { remaining := value })
+
+/-- [noble_wasm::source::{noble_wasm::source::Work}::entries]:
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 43:4-48:5 -/
+def source.Work.entries
+  (self : source.Work) (count : Std.Usize) :
+  Result ((core.result.Result Unit Diagnostic) × source.Work)
+  := do
+  let r ← U64.Insts.CoreConvertTryFromUsizeTryFromIntError.try_from count
+  match r with
+  | core.result.Result.Ok count1 => source.Work.charge self count1
+  | core.result.Result.Err _ =>
+    ok (core.result.Result.Err Diagnostic.Exhausted, self)
+
+/-- [noble_wasm::source::admission::dependencies::seen_edge]:
+    Source: 'crates/noble-wasm/src/source/admission/dependencies.rs', lines 222:0-233:1 -/
+def source.admission.dependencies.seen_edge
+  (listed : Slice noble_kernel.contracts.Definition)
+  (definition : noble_kernel.contracts.Definition) (work : source.Work) :
+  Result ((core.result.Result Unit Diagnostic) × source.Work)
+  := do
+  let i := Slice.len listed
+  let i1 ← lift (core.num.Usize.saturating_add i 1#usize)
+  let (r, work1) ← source.Work.entries work i1
+  match r with
+  | core.result.Result.Ok _ =>
+    if definition >= 24#u32
+    then
+      let b ←
+        core.slice.Slice.contains
+          noble_kernel.contracts.Definition.Insts.CoreCmpPartialEqDefinition
+          listed definition
+      if b
+      then ok (core.result.Result.Ok (), work1)
+      else ok (core.result.Result.Err Diagnostic.Invalid, work1)
+    else ok (core.result.Result.Ok (), work1)
+  | core.result.Result.Err _ => ok (r, work1)
+
+/-- [noble_wasm::source::admission::dependencies::listed_edge]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/admission/dependencies.rs', lines 212:4-214:5 -/
+@[rust_loop_body]
+def source.admission.dependencies.listed_edge_loop.body
+  (listed : Slice noble_kernel.contracts.Definition) (edge : Std.Usize)
+  (previous : Std.Usize) :
+  Result (ControlFlow Std.Usize Std.Usize)
+  := do
+  if previous < edge
+  then
+    let d ← Slice.index_usize listed edge
+    let d1 ← Slice.index_usize listed previous
+    let b ←
+      core.cmp.PartialEq.ne.trait_default
+        noble_kernel.contracts.Definition.Insts.CoreCmpPartialEqDefinition d d1
+    if b
+    then let previous1 ← previous + 1#usize
+         ok (cont previous1)
+    else ok (done previous)
+  else ok (done previous)
+
+/-- [noble_wasm::source::admission::dependencies::listed_edge]: loop 0:
+    Source: 'crates/noble-wasm/src/source/admission/dependencies.rs', lines 212:4-214:5 -/
+@[rust_loop]
+def source.admission.dependencies.listed_edge_loop
+  (listed : Slice noble_kernel.contracts.Definition) (edge : Std.Usize)
+  (previous : Std.Usize) :
+  Result Std.Usize
+  := do
+  loop
+    (fun previous1 => source.admission.dependencies.listed_edge_loop.body
+      listed edge previous1)
+    previous
+
+/-- [noble_wasm::source::admission::dependencies::listed_edge]:
+    Source: 'crates/noble-wasm/src/source/admission/dependencies.rs', lines 201:0-220:1 -/
+def source.admission.dependencies.listed_edge
+  (listed : Slice noble_kernel.contracts.Definition)
+  (seen : Slice noble_kernel.contracts.Definition) (edge : Std.Usize)
+  (work : source.Work) :
+  Result ((core.result.Result Unit Diagnostic) × source.Work)
+  := do
+  let i := Slice.len seen
+  let i1 ← lift (core.num.Usize.saturating_add i edge)
+  let i2 ← lift (core.num.Usize.saturating_add i1 1#usize)
+  let (r, work1) ← source.Work.entries work i2
+  match r with
+  | core.result.Result.Ok _ =>
+    let d ← Slice.index_usize listed edge
+    let b ←
+      core.slice.Slice.contains
+        noble_kernel.contracts.Definition.Insts.CoreCmpPartialEqDefinition seen
+        d
+    if b
+    then
+      let previous ←
+        source.admission.dependencies.listed_edge_loop listed edge 0#usize
+      if previous != edge
+      then ok (core.result.Result.Err Diagnostic.Invalid, work1)
+      else ok (core.result.Result.Ok (), work1)
+    else ok (core.result.Result.Err Diagnostic.Invalid, work1)
+  | core.result.Result.Err _ => ok (r, work1)
+
+/-- [noble_wasm::source::admission::dependencies::edges]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/admission/dependencies.rs', lines 173:4-181:5 -/
+@[rust_loop_body]
+def source.admission.dependencies.edges_loop0.body
+  (listed : Slice noble_kernel.contracts.Definition)
+  (seen : Slice noble_kernel.contracts.Definition) (work : source.Work)
+  (edge : Std.Usize) :
+  Result (ControlFlow (source.Work × Std.Usize) (source.Work × (Option
+    Diagnostic)))
+  := do
+  let i := Slice.len listed
+  if edge < i
+  then
+    let (r, work1) ←
+      source.admission.dependencies.listed_edge listed seen edge work
+    match r with
+    | core.result.Result.Ok _ =>
+      let edge1 ← edge + 1#usize
+      ok (cont (work1, edge1))
+    | core.result.Result.Err problem => ok (done (work1, some problem))
+  else ok (done (work, none))
+
+/-- [noble_wasm::source::admission::dependencies::edges]: loop 0:
+    Source: 'crates/noble-wasm/src/source/admission/dependencies.rs', lines 173:4-181:5 -/
+@[rust_loop]
+def source.admission.dependencies.edges_loop0
+  (listed : Slice noble_kernel.contracts.Definition)
+  (seen : Slice noble_kernel.contracts.Definition) (work : source.Work)
+  (edge : Std.Usize) :
+  Result (source.Work × (Option Diagnostic))
+  := do
+  loop
+    (fun (work1, edge1) => source.admission.dependencies.edges_loop0.body
+      listed seen work1 edge1)
+    (work, edge)
+
+/-- [noble_wasm::source::admission::dependencies::edges]: loop body 1:
+    Source: 'crates/noble-wasm/src/source/admission/dependencies.rs', lines 186:4-194:5 -/
+@[rust_loop_body]
+def source.admission.dependencies.edges_loop1.body
+  (listed : Slice noble_kernel.contracts.Definition)
+  (seen : Slice noble_kernel.contracts.Definition) (work : source.Work)
+  (edge : Std.Usize) :
+  Result (ControlFlow (source.Work × Std.Usize) (source.Work × (Option
+    Diagnostic)))
+  := do
+  let i := Slice.len seen
+  if edge < i
+  then
+    let d ← Slice.index_usize seen edge
+    let (r, work1) ← source.admission.dependencies.seen_edge listed d work
+    match r with
+    | core.result.Result.Ok _ =>
+      let edge1 ← edge + 1#usize
+      ok (cont (work1, edge1))
+    | core.result.Result.Err problem => ok (done (work1, some problem))
+  else ok (done (work, none))
+
+/-- [noble_wasm::source::admission::dependencies::edges]: loop 1:
+    Source: 'crates/noble-wasm/src/source/admission/dependencies.rs', lines 186:4-194:5 -/
+@[rust_loop]
+def source.admission.dependencies.edges_loop1
+  (listed : Slice noble_kernel.contracts.Definition)
+  (seen : Slice noble_kernel.contracts.Definition) (work : source.Work)
+  (edge : Std.Usize) :
+  Result (source.Work × (Option Diagnostic))
+  := do
+  loop
+    (fun (work1, edge1) => source.admission.dependencies.edges_loop1.body
+      listed seen work1 edge1)
+    (work, edge)
+
+/-- [noble_wasm::source::admission::dependencies::edges]:
+    Source: 'crates/noble-wasm/src/source/admission/dependencies.rs', lines 165:0-199:1 -/
+def source.admission.dependencies.edges
+  (listed : Slice noble_kernel.contracts.Definition)
+  (seen : Slice noble_kernel.contracts.Definition) (work : source.Work) :
+  Result ((core.result.Result Unit Diagnostic) × source.Work)
+  := do
+  let (work1, failure) ←
+    source.admission.dependencies.edges_loop0 listed seen work 0#usize
+  match failure with
+  | none =>
+    let (work2, failure1) ←
+      source.admission.dependencies.edges_loop1 listed seen work1 0#usize
+    match failure1 with
+    | none => ok (core.result.Result.Ok (), work2)
+    | some problem => ok (core.result.Result.Err problem, work2)
+  | some problem => ok (core.result.Result.Err problem, work1)
+
+/-- [noble_wasm::source::admission::definition_index]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/admission.rs', lines 91:4-97:5 -/
+@[rust_loop_body]
+def source.admission.definition_index_loop.body
+  (submission : noble_kernel.execution.Submission)
+  (definition : noble_kernel.contracts.Definition) (index : Std.Usize) :
+  Result (ControlFlow Std.Usize (Option Std.Usize))
+  := do
+  let i := alloc.vec.Vec.len submission.definitions
+  if index < i
+  then
+    let d ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        noble_kernel.execution.Definition) submission.definitions index
+    let b ←
+      noble_kernel.contracts.Definition.Insts.CoreCmpPartialEqDefinition.eq
+        d.definition definition
+    if b
+    then ok (done (some index))
+    else let index1 ← index + 1#usize
+         ok (cont index1)
+  else ok (done none)
+
+/-- [noble_wasm::source::admission::definition_index]: loop 0:
+    Source: 'crates/noble-wasm/src/source/admission.rs', lines 91:4-97:5 -/
+@[rust_loop]
+def source.admission.definition_index_loop
+  (submission : noble_kernel.execution.Submission)
+  (definition : noble_kernel.contracts.Definition) (index : Std.Usize) :
+  Result (Option Std.Usize)
+  := do
+  loop
+    (fun index1 => source.admission.definition_index_loop.body submission
+      definition index1)
+    index
+
+/-- [noble_wasm::source::admission::definition_index]:
+    Source: 'crates/noble-wasm/src/source/admission.rs', lines 85:0-102:1 -/
+def source.admission.definition_index
+  (submission : noble_kernel.execution.Submission)
+  (definition : noble_kernel.contracts.Definition) :
+  Result (core.result.Result Std.Usize Diagnostic)
+  := do
+  let found ←
+    source.admission.definition_index_loop submission definition 0#usize
+  match found with
+  | none => ok (core.result.Result.Err Diagnostic.Invalid)
+  | some index => ok (core.result.Result.Ok index)
+
+/-- [noble_wasm::source::admission::dependencies::inspect_node]:
+    Source: 'crates/noble-wasm/src/source/admission/dependencies.rs', lines 133:0-159:1 -/
+def source.admission.dependencies.inspect_node
+  (submission : noble_kernel.execution.Submission)
+  (node : noble_kernel.untrusted.Node) (done1 : Slice Bool)
+  (seen : alloc.vec.Vec noble_kernel.contracts.Definition) (work : source.Work)
+  :
+  Result ((core.result.Result Bool Diagnostic) × (alloc.vec.Vec
+    noble_kernel.contracts.Definition) × source.Work)
+  := do
+  let i := alloc.vec.Vec.len seen
+  let i1 := alloc.vec.Vec.len submission.definitions
+  let i2 ← lift (core.num.Usize.saturating_add i i1)
+  let i3 ← lift (core.num.Usize.saturating_add i2 1#usize)
+  let (r, work1) ← source.Work.entries work i3
+  match r with
+  | core.result.Result.Ok _ =>
+    match node with
+    | noble_kernel.untrusted.Node.Literal _ _ =>
+      ok (core.result.Result.Ok true, seen, work1)
+    | noble_kernel.untrusted.Node.Invocation «def» _ =>
+      let s := alloc.vec.Vec.deref seen
+      let b ←
+        core.slice.Slice.contains
+          noble_kernel.contracts.Definition.Insts.CoreCmpPartialEqDefinition s
+          «def»
+      let seen1 ← if b
+                    then ok seen
+                    else alloc.vec.Vec.push seen «def»
+      if «def» >= 24#u32
+      then
+        let r1 ← source.admission.definition_index submission «def»
+        match r1 with
+        | core.result.Result.Ok value =>
+          let b1 ← Slice.index_usize done1 value
+          ok (core.result.Result.Ok b1, seen1, work1)
+        | core.result.Result.Err failure =>
+          ok (core.result.Result.Err failure, seen1, work1)
+      else ok (core.result.Result.Ok true, seen1, work1)
+    | noble_kernel.untrusted.Node.Quotation _ _ =>
+      ok (core.result.Result.Ok true, seen, work1)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, seen, work1)
+
+/-- [noble_wasm::source::admission::dependencies::is_ready]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/admission/dependencies.rs', lines 102:4-119:5 -/
+@[rust_loop_body]
+def source.admission.dependencies.is_ready_loop.body
+  (v : alloc.vec.Vec noble_kernel.words.Scheme)
+  (v1 : alloc.vec.Vec noble_kernel.contracts.Behavior)
+  (v2 : alloc.vec.Vec (alloc.vec.Vec noble_kernel.contracts.Definition))
+  (v3 : alloc.vec.Vec noble_kernel.contracts.SchemaDecl)
+  (v4 : alloc.vec.Vec noble_kernel.types.EffId)
+  (v5 : alloc.vec.Vec noble_kernel.execution.Definition)
+  (b : noble_kernel.execution.Body) (r : noble_kernel.untrusted.Request)
+  (done1 : Slice Bool) (v6 : alloc.vec.Vec noble_kernel.untrusted.Node)
+  (work : source.Work) (seen : alloc.vec.Vec noble_kernel.contracts.Definition)
+  (is_ready : Bool) (node : Std.Usize) :
+  Result (ControlFlow (source.Work × (alloc.vec.Vec
+    noble_kernel.contracts.Definition) × Bool × Std.Usize) (source.Work ×
+    (alloc.vec.Vec noble_kernel.contracts.Definition) × Bool × (Option
+    Diagnostic)))
+  := do
+  let i := alloc.vec.Vec.len v6
+  if node < i
+  then
+    let n ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        noble_kernel.untrusted.Node) v6 node
+    let (r1, seen1, work1) ←
+      source.admission.dependencies.inspect_node
+        {
+          environment :=
+            { defs := v, kinds := v1, deps := v2, schemas := v3, effects := v4
+            },
+          definitions := v5,
+          body := b,
+          request := r
+        } n done1 seen work
+    match r1 with
+    | core.result.Result.Ok ready =>
+      let node1 ← node + 1#usize
+      ok (cont (work1, seen1, is_ready && ready, node1))
+    | core.result.Result.Err problem =>
+      ok (done (work1, seen1, is_ready, some problem))
+  else ok (done (work, seen, is_ready, none))
+
+/-- [noble_wasm::source::admission::dependencies::is_ready]: loop 0:
+    Source: 'crates/noble-wasm/src/source/admission/dependencies.rs', lines 102:4-119:5 -/
+@[rust_loop]
+def source.admission.dependencies.is_ready_loop
+  (v : alloc.vec.Vec noble_kernel.words.Scheme)
+  (v1 : alloc.vec.Vec noble_kernel.contracts.Behavior)
+  (v2 : alloc.vec.Vec (alloc.vec.Vec noble_kernel.contracts.Definition))
+  (v3 : alloc.vec.Vec noble_kernel.contracts.SchemaDecl)
+  (v4 : alloc.vec.Vec noble_kernel.types.EffId)
+  (v5 : alloc.vec.Vec noble_kernel.execution.Definition)
+  (b : noble_kernel.execution.Body) (r : noble_kernel.untrusted.Request)
+  (done1 : Slice Bool) (work : source.Work)
+  (v6 : alloc.vec.Vec noble_kernel.untrusted.Node)
+  (seen : alloc.vec.Vec noble_kernel.contracts.Definition) (is_ready : Bool)
+  (node : Std.Usize) :
+  Result (source.Work × (alloc.vec.Vec noble_kernel.contracts.Definition) ×
+    Bool × (Option Diagnostic))
+  := do
+  loop
+    (fun (work1, seen1, is_ready1, node1) =>
+      source.admission.dependencies.is_ready_loop.body v v1 v2 v3 v4 v5 b r
+      done1 v6 work1 seen1 is_ready1 node1)
+    (work, seen, is_ready, node)
+
+/-- [noble_wasm::source::admission::dependencies::is_ready]:
+    Source: 'crates/noble-wasm/src/source/admission/dependencies.rs', lines 87:0-125:1 -/
+def source.admission.dependencies.is_ready
+  (submission : noble_kernel.execution.Submission) (index : Std.Usize)
+  (done1 : Slice Bool) (work : source.Work) :
+  Result ((core.result.Result Bool Diagnostic) × source.Work)
+  := do
+  let definition ←
+    alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+      noble_kernel.execution.Definition) submission.definitions index
+  let i := definition.definition
+  let r ← admission.index i
+  match r with
+  | core.result.Result.Ok value =>
+    let listed ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice (alloc.vec.Vec
+        noble_kernel.contracts.Definition)) submission.environment.deps value
+    let i1 := alloc.vec.Vec.len definition.body.candidate.nodes
+    let seen :=
+      alloc.vec.Vec.with_capacity noble_kernel.contracts.Definition i1
+    let (work1, seen1, is_ready, failure) ←
+      source.admission.dependencies.is_ready_loop submission.environment.defs
+        submission.environment.kinds submission.environment.deps
+        submission.environment.schemas submission.environment.effects
+        submission.definitions submission.body submission.request done1 work
+        definition.body.candidate.nodes seen true 0#usize
+    match failure with
+    | none =>
+      let s := alloc.vec.Vec.deref listed
+      let s1 := alloc.vec.Vec.deref seen1
+      let (r1, work2) ← source.admission.dependencies.edges s s1 work1
+      match r1 with
+      | core.result.Result.Ok _ => ok (core.result.Result.Ok is_ready, work2)
+      | core.result.Result.Err failure1 =>
+        ok (core.result.Result.Err failure1, work2)
+    | some problem => ok (core.result.Result.Err problem, work1)
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure, work)
+
+/-- [noble_wasm::source::admission::dependencies::schedule_definition]:
+    Source: 'crates/noble-wasm/src/source/admission/dependencies.rs', lines 69:0-81:1 -/
+def source.admission.dependencies.schedule_definition
+  (submission : noble_kernel.execution.Submission) (index : Std.Usize)
+  (done1 : Slice Bool) (work : source.Work) :
+  Result ((core.result.Result Bool Diagnostic) × source.Work)
+  := do
+  let (r, work1) ← source.Work.charge work 1#u64
+  match r with
+  | core.result.Result.Ok _ =>
+    let b ← Slice.index_usize done1 index
+    if b
+    then ok (core.result.Result.Ok false, work1)
+    else source.admission.dependencies.is_ready submission index done1 work1
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, work1)
+
+/-- [noble_wasm::source::admission::dependencies::schedule_round]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/admission/dependencies.rs', lines 49:4-62:5 -/
+@[rust_loop_body]
+def source.admission.dependencies.schedule_round_loop.body
+  (submission : noble_kernel.execution.Submission) (done1 : Slice Bool)
+  (remaining : Std.Usize) (work : source.Work) (index : Std.Usize) :
+  Result (ControlFlow ((Slice Bool) × Std.Usize × source.Work × Std.Usize)
+    ((Slice Bool) × Std.Usize × source.Work × (Option Diagnostic)))
+  := do
+  let i := Slice.len done1
+  if index < i
+  then
+    let (r, work1) ←
+      source.admission.dependencies.schedule_definition submission index done1
+        work
+    match r with
+    | core.result.Result.Ok b =>
+      let (done2, remaining1) ←
+        if b
+        then
+          do
+          let s ← Slice.update done1 index true
+          let remaining2 ←
+            lift (core.num.Usize.saturating_sub remaining 1#usize)
+          ok (s, remaining2)
+        else ok (done1, remaining)
+      let index1 ← index + 1#usize
+      ok (cont (done2, remaining1, work1, index1))
+    | core.result.Result.Err problem =>
+      ok (done (done1, remaining, work1, some problem))
+  else ok (done (done1, remaining, work, none))
+
+/-- [noble_wasm::source::admission::dependencies::schedule_round]: loop 0:
+    Source: 'crates/noble-wasm/src/source/admission/dependencies.rs', lines 49:4-62:5 -/
+@[rust_loop]
+def source.admission.dependencies.schedule_round_loop
+  (submission : noble_kernel.execution.Submission) (done1 : Slice Bool)
+  (remaining : Std.Usize) (work : source.Work) (index : Std.Usize) :
+  Result ((Slice Bool) × Std.Usize × source.Work × (Option Diagnostic))
+  := do
+  loop
+    (fun (done2, remaining1, work1, index1) =>
+      source.admission.dependencies.schedule_round_loop.body submission done2
+      remaining1 work1 index1)
+    (done1, remaining, work, index)
+
+/-- [noble_wasm::source::admission::dependencies::schedule_round]:
+    Source: 'crates/noble-wasm/src/source/admission/dependencies.rs', lines 41:0-67:1 -/
+def source.admission.dependencies.schedule_round
+  (submission : noble_kernel.execution.Submission) (done1 : Slice Bool)
+  (remaining : Std.Usize) (work : source.Work) :
+  Result ((core.result.Result Std.Usize Diagnostic) × (Slice Bool) ×
+    source.Work)
+  := do
+  let (done2, remaining1, work1, failure) ←
+    source.admission.dependencies.schedule_round_loop submission done1
+      remaining work 0#usize
+  match failure with
+  | none => ok (core.result.Result.Ok remaining1, done2, work1)
+  | some problem => ok (core.result.Result.Err problem, done2, work1)
+
+/-- [noble_wasm::source::admission::dependencies::check]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/admission/dependencies.rs', lines 17:4-30:5 -/
+@[rust_loop_body]
+def source.admission.dependencies.check_loop.body
+  (e : noble_kernel.contracts.Env)
+  (v : alloc.vec.Vec noble_kernel.execution.Definition)
+  (b : noble_kernel.execution.Body) (r : noble_kernel.untrusted.Request)
+  (work : source.Work) (done1 : alloc.vec.Vec Bool) (remaining : Std.Usize) :
+  Result (ControlFlow (source.Work × (alloc.vec.Vec Bool) × Std.Usize)
+    (source.Work × (Option Diagnostic)))
+  := do
+  if remaining != 0#usize
+  then
+    let (s, deref_mut_back) ← lift (alloc.vec.Vec.deref_mut done1)
+    let (r1, s1, work1) ←
+      source.admission.dependencies.schedule_round
+        { environment := e, definitions := v, body := b, request := r } s
+        remaining work
+    match r1 with
+    | core.result.Result.Ok count =>
+      if count = remaining
+      then ok (done (work1, some Diagnostic.Unsupported))
+      else let done2 := deref_mut_back s1
+           ok (cont (work1, done2, count))
+    | core.result.Result.Err problem => ok (done (work1, some problem))
+  else ok (done (work, none))
+
+/-- [noble_wasm::source::admission::dependencies::check]: loop 0:
+    Source: 'crates/noble-wasm/src/source/admission/dependencies.rs', lines 17:4-30:5 -/
+@[rust_loop]
+def source.admission.dependencies.check_loop
+  (e : noble_kernel.contracts.Env)
+  (v : alloc.vec.Vec noble_kernel.execution.Definition)
+  (b : noble_kernel.execution.Body) (r : noble_kernel.untrusted.Request)
+  (work : source.Work) (done1 : alloc.vec.Vec Bool) (remaining : Std.Usize) :
+  Result (source.Work × (Option Diagnostic))
+  := do
+  loop
+    (fun (work1, done2, remaining1) =>
+      source.admission.dependencies.check_loop.body e v b r work1 done2
+      remaining1)
+    (work, done1, remaining)
+
+/-- [noble_wasm::source::admission::dependencies::check]:
+    Source: 'crates/noble-wasm/src/source/admission/dependencies.rs', lines 10:0-35:1 -/
+def source.admission.dependencies.check
+  (submission : noble_kernel.execution.Submission) (work : source.Work) :
+  Result ((core.result.Result Unit Diagnostic) × source.Work)
+  := do
+  let i := alloc.vec.Vec.len submission.definitions
+  let done1 ← alloc.vec.from_elem core.clone.CloneBool false i
+  let remaining := alloc.vec.Vec.len done1
+  let (work1, failure) ←
+    source.admission.dependencies.check_loop submission.environment
+      submission.definitions submission.body submission.request work done1
+      remaining
+  match failure with
+  | none => ok (core.result.Result.Ok (), work1)
+  | some problem => ok (core.result.Result.Err problem, work1)
+
+/-- [noble_wasm::source::admission::environment::same_scheme]:
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 5:0-10:1 -/
+def source.admission.environment.same_scheme
+  (left : noble_kernel.words.Scheme) (right : noble_kernel.words.Scheme) :
+  Result Bool
+  := do
+  let b ←
+    alloc.vec.partial_eq.PartialEqVec.eq
+      noble_kernel.words.VariableKind.Insts.CoreCmpPartialEqVariableKind
+      left.var_kinds right.var_kinds
+  if b
+  then
+    let b1 ←
+      alloc.vec.partial_eq.PartialEqVec.eq
+        noble_kernel.shapes.Pattern.Insts.CoreCmpPartialEqPattern left.stack_in
+        right.stack_in
+    if b1
+    then
+      let b2 ←
+        alloc.vec.partial_eq.PartialEqVec.eq
+          noble_kernel.shapes.Pattern.Insts.CoreCmpPartialEqPattern
+          left.stack_out right.stack_out
+      if b2
+      then
+        alloc.vec.partial_eq.PartialEqVec.eq
+          noble_kernel.shapes.EffectSlot.Insts.CoreCmpPartialEqEffectSlot
+          left.effects right.effects
+      else ok false
+    else ok false
+  else ok false
+
+/-- [noble_wasm::source::admission::environment::abort_scheme]:
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 12:0-25:1 -/
+def source.admission.environment.abort_scheme
+  : Result noble_kernel.words.Scheme := do
+  let y ←
+    lift (Std.Array.to_slice
+      (Array.make 1#usize [ noble_kernel.words.VariableKind.Stack ] : Array
+      noble_kernel.words.VariableKind 1#usize))
+  let ret := alloc.slice.Slice.into_vec y
+  let y1 ←
+    lift (Std.Array.to_slice
+      (Array.make 1#usize [ noble_kernel.shapes.Pattern.StackVarPattern 0#u32 ]
+      : Array noble_kernel.shapes.Pattern 1#usize))
+  let ret1 := alloc.slice.Slice.into_vec y1
+  let y2 ←
+    lift (Std.Array.to_slice
+      (Array.make 1#usize [ noble_kernel.shapes.Pattern.StackVarPattern 0#u32 ]
+      : Array noble_kernel.shapes.Pattern 1#usize))
+  let ret2 := alloc.slice.Slice.into_vec y2
+  let y3 ←
+    lift (Std.Array.to_slice
+      (Array.make 1#usize [ noble_kernel.shapes.EffectSlot.Effect 1#u32 ] :
+      Array noble_kernel.shapes.EffectSlot 1#usize))
+  let ret3 := alloc.slice.Slice.into_vec y3
+  ok { var_kinds := ret, stack_in := ret1, stack_out := ret2, effects := ret3 }
+
+/-- [noble_wasm::source::DEFINITION_LIMIT]
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 20:0-20:36 -/
+@[global_simps, irreducible]
+def source.DEFINITION_LIMIT : Std.Usize := 256#usize
+
+/-- [noble_wasm::source::admission::environment::check]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 56:4-65:5 -/
+@[rust_loop_body]
+def source.admission.environment.check_loop0.body
+  (v : alloc.vec.Vec noble_kernel.words.Scheme)
+  (v1 : alloc.vec.Vec noble_kernel.contracts.Behavior)
+  (v2 : alloc.vec.Vec (alloc.vec.Vec noble_kernel.contracts.Definition))
+  (v3 : alloc.vec.Vec noble_kernel.words.Scheme)
+  (v4 : alloc.vec.Vec noble_kernel.contracts.Behavior) (index : Std.Usize) :
+  Result (ControlFlow Std.Usize (Std.Usize × Bool))
+  := do
+  if index < 23#usize
+  then
+    let s ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        noble_kernel.words.Scheme) v index
+    let s1 ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        noble_kernel.words.Scheme) v3 index
+    let b ← source.admission.environment.same_scheme s s1
+    if b
+    then
+      let b1 ←
+        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+          noble_kernel.contracts.Behavior) v1 index
+      let b2 ←
+        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+          noble_kernel.contracts.Behavior) v4 index
+      let b3 ←
+        core.cmp.PartialEq.ne.trait_default
+          noble_kernel.contracts.Behavior.Insts.CoreCmpPartialEqBehavior b1 b2
+      if b3
+      then ok (done (index, false))
+      else
+        let v5 ←
+          alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+            (alloc.vec.Vec noble_kernel.contracts.Definition)) v2 index
+        let b4 ← alloc.vec.Vec.is_empty Global v5
+        if b4
+        then let index1 ← index + 1#usize
+             ok (cont index1)
+        else ok (done (index, false))
+    else ok (done (index, false))
+  else ok (done (index, true))
+
+/-- [noble_wasm::source::admission::environment::check]: loop 0:
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 56:4-65:5 -/
+@[rust_loop]
+def source.admission.environment.check_loop0
+  (v : alloc.vec.Vec noble_kernel.words.Scheme)
+  (v1 : alloc.vec.Vec noble_kernel.contracts.Behavior)
+  (v2 : alloc.vec.Vec (alloc.vec.Vec noble_kernel.contracts.Definition))
+  (v3 : alloc.vec.Vec noble_kernel.words.Scheme)
+  (v4 : alloc.vec.Vec noble_kernel.contracts.Behavior) (index : Std.Usize) :
+  Result (Std.Usize × Bool)
+  := do
+  loop
+    (fun index1 => source.admission.environment.check_loop0.body v v1 v2 v3 v4
+      index1)
+    index
+
+/-- [noble_wasm::source::admission::environment::check]: loop body 1:
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 87:4-93:5 -/
+@[rust_loop_body]
+def source.admission.environment.check_loop1.body
+  (v : alloc.vec.Vec noble_kernel.words.Scheme)
+  (v1 : alloc.vec.Vec noble_kernel.contracts.Behavior) (count : Std.Usize)
+  (index : Std.Usize) :
+  Result (ControlFlow Std.Usize Bool)
+  := do
+  let i := alloc.vec.Vec.len v
+  if index < i
+  then
+    if index >= count
+    then
+      let b ←
+        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+          noble_kernel.contracts.Behavior) v1 index
+      let b1 ←
+        core.cmp.PartialEq.ne.trait_default
+          noble_kernel.contracts.Behavior.Insts.CoreCmpPartialEqBehavior b
+          noble_kernel.contracts.Behavior.NamedBehavior
+      if b1
+      then ok (done false)
+      else let index1 ← index + 1#usize
+           ok (cont index1)
+    else let index1 ← index + 1#usize
+         ok (cont index1)
+  else ok (done true)
+
+/-- [noble_wasm::source::admission::environment::check]: loop 1:
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 87:4-93:5 -/
+@[rust_loop]
+def source.admission.environment.check_loop1
+  (v : alloc.vec.Vec noble_kernel.words.Scheme)
+  (v1 : alloc.vec.Vec noble_kernel.contracts.Behavior) (index : Std.Usize)
+  (count : Std.Usize) :
+  Result Bool
+  := do
+  loop
+    (fun index1 => source.admission.environment.check_loop1.body v v1 count
+      index1)
+    index
+
+/-- [noble_wasm::source::admission::environment::check]: loop body 2:
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 87:4-93:5 -/
+@[rust_loop_body]
+def source.admission.environment.check_loop2.body
+  (v : alloc.vec.Vec noble_kernel.words.Scheme)
+  (v1 : alloc.vec.Vec noble_kernel.contracts.Behavior) (count : Std.Usize)
+  (index : Std.Usize) :
+  Result (ControlFlow Std.Usize Bool)
+  := do
+  let i := alloc.vec.Vec.len v
+  if index < i
+  then
+    if index >= count
+    then
+      let b ←
+        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+          noble_kernel.contracts.Behavior) v1 index
+      let b1 ←
+        core.cmp.PartialEq.ne.trait_default
+          noble_kernel.contracts.Behavior.Insts.CoreCmpPartialEqBehavior b
+          noble_kernel.contracts.Behavior.NamedBehavior
+      if b1
+      then ok (done false)
+      else let index1 ← index + 1#usize
+           ok (cont index1)
+    else let index1 ← index + 1#usize
+         ok (cont index1)
+  else ok (done true)
+
+/-- [noble_wasm::source::admission::environment::check]: loop 2:
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 87:4-93:5 -/
+@[rust_loop]
+def source.admission.environment.check_loop2
+  (v : alloc.vec.Vec noble_kernel.words.Scheme)
+  (v1 : alloc.vec.Vec noble_kernel.contracts.Behavior) (index : Std.Usize)
+  (count : Std.Usize) :
+  Result Bool
+  := do
+  loop
+    (fun index1 => source.admission.environment.check_loop2.body v v1 count
+      index1)
+    index
+
+/-- [noble_wasm::source::admission::environment::check]:
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 31:0-99:1 -/
+def source.admission.environment.check
+  (submission : noble_kernel.execution.Submission) :
+  Result (core.result.Result Unit Diagnostic)
+  := do
+  let i := alloc.vec.Vec.len submission.environment.defs
+  let i1 ←
+    lift (core.num.Usize.saturating_add source.DEFINITION_LIMIT 24#usize)
+  if i > i1
+  then ok (core.result.Result.Err Diagnostic.Exhausted)
+  else
+    let i2 := alloc.vec.Vec.len submission.definitions
+    if i2 > source.DEFINITION_LIMIT
+    then ok (core.result.Result.Err Diagnostic.Exhausted)
+    else
+      let i3 := alloc.vec.Vec.len submission.environment.defs
+      if i3 < 23#usize
+      then ok (core.result.Result.Err Diagnostic.Invalid)
+      else
+        let i4 := alloc.vec.Vec.len submission.environment.kinds
+        let i5 := alloc.vec.Vec.len submission.environment.defs
+        if i4 != i5
+        then ok (core.result.Result.Err Diagnostic.Invalid)
+        else
+          let i6 := alloc.vec.Vec.len submission.environment.deps
+          let i7 := alloc.vec.Vec.len submission.environment.defs
+          if i6 != i7
+          then ok (core.result.Result.Err Diagnostic.Invalid)
+          else
+            let b ←
+              alloc.vec.Vec.is_empty Global submission.environment.schemas
+            if b
+            then
+              let r ← noble_kernel.contracts.environment
+              match r with
+              | core.result.Result.Ok value =>
+                let y ←
+                  lift (Std.Array.to_slice
+                    (Array.make 1#usize [
+                       noble_kernel.shapes.Pattern.StackVarPattern 0#u32
+                       ] : Array noble_kernel.shapes.Pattern 1#usize))
+                let ret := alloc.slice.Slice.into_vec y
+                let (s, index_mut_back) ←
+                  alloc.vec.Vec.index_mut
+                    (core.slice.index.SliceIndexUsizeSlice
+                    noble_kernel.words.Scheme) value.defs 22#usize
+                let v := index_mut_back { s with stack_out := ret }
+                let (index, is_matching) ←
+                  source.admission.environment.check_loop0
+                    submission.environment.defs submission.environment.kinds
+                    submission.environment.deps v value.kinds 0#usize
+                if is_matching
+                then
+                  let i8 := alloc.vec.Vec.len submission.environment.defs
+                  let count ←
+                    if i8 = 23#usize
+                    then ok 23#usize
+                    else ok 24#usize
+                  if count = 24#usize
+                  then
+                    let s1 ←
+                      alloc.vec.Vec.index
+                        (core.slice.index.SliceIndexUsizeSlice
+                        noble_kernel.words.Scheme) submission.environment.defs
+                        23#usize
+                    let s2 ← source.admission.environment.abort_scheme
+                    let b1 ← source.admission.environment.same_scheme s1 s2
+                    if b1
+                    then
+                      let b2 ←
+                        alloc.vec.Vec.index
+                          (core.slice.index.SliceIndexUsizeSlice
+                          noble_kernel.contracts.Behavior)
+                          submission.environment.kinds 23#usize
+                      let b3 ←
+                        core.cmp.PartialEq.ne.trait_default
+                          noble_kernel.contracts.Behavior.Insts.CoreCmpPartialEqBehavior
+                          b2 noble_kernel.contracts.Behavior.NamedBehavior
+                      if b3
+                      then ok (core.result.Result.Err Diagnostic.Invalid)
+                      else
+                        let v1 ←
+                          alloc.vec.Vec.index
+                            (core.slice.index.SliceIndexUsizeSlice
+                            (alloc.vec.Vec noble_kernel.contracts.Definition))
+                            submission.environment.deps 23#usize
+                        let b4 ← alloc.vec.Vec.is_empty Global v1
+                        if b4
+                        then
+                          let effects ←
+                            if count = 23#usize
+                            then
+                              do
+                              let y1 ←
+                                lift (Std.Array.to_slice
+                                  (Array.make 1#usize [ 0#u32 ] : Array
+                                  noble_kernel.types.EffId 1#usize))
+                              ok (alloc.slice.Slice.into_vec y1)
+                            else
+                              do
+                              let y1 ←
+                                lift (Std.Array.to_slice
+                                  (Array.make 2#usize [ 0#u32, 1#u32 ] : Array
+                                  noble_kernel.types.EffId 2#usize))
+                              ok (alloc.slice.Slice.into_vec y1)
+                          let b5 ←
+                            alloc.vec.partial_eq.PartialEqVec.ne
+                              noble_kernel.types.EffId.Insts.CoreCmpPartialEqEffId
+                              submission.environment.effects effects
+                          if b5
+                          then ok (core.result.Result.Err Diagnostic.Invalid)
+                          else
+                            let i9 := alloc.vec.Vec.len submission.definitions
+                            let i10 :=
+                              alloc.vec.Vec.len submission.environment.defs
+                            let i11 ←
+                              lift (core.num.Usize.saturating_sub i10 count)
+                            if i9 != i11
+                            then ok (core.result.Result.Err Diagnostic.Invalid)
+                            else
+                              let is_matching1 ←
+                                source.admission.environment.check_loop1
+                                  submission.environment.defs
+                                  submission.environment.kinds index count
+                              if is_matching1
+                              then ok (core.result.Result.Ok ())
+                              else
+                                ok (core.result.Result.Err Diagnostic.Invalid)
+                        else ok (core.result.Result.Err Diagnostic.Invalid)
+                    else ok (core.result.Result.Err Diagnostic.Invalid)
+                  else
+                    let effects ←
+                      if count = 23#usize
+                      then
+                        do
+                        let y1 ←
+                          lift (Std.Array.to_slice
+                            (Array.make 1#usize [ 0#u32 ] : Array
+                            noble_kernel.types.EffId 1#usize))
+                        ok (alloc.slice.Slice.into_vec y1)
+                      else
+                        do
+                        let y1 ←
+                          lift (Std.Array.to_slice
+                            (Array.make 2#usize [ 0#u32, 1#u32 ] : Array
+                            noble_kernel.types.EffId 2#usize))
+                        ok (alloc.slice.Slice.into_vec y1)
+                    let b1 ←
+                      alloc.vec.partial_eq.PartialEqVec.ne
+                        noble_kernel.types.EffId.Insts.CoreCmpPartialEqEffId
+                        submission.environment.effects effects
+                    if b1
+                    then ok (core.result.Result.Err Diagnostic.Invalid)
+                    else
+                      let i9 := alloc.vec.Vec.len submission.definitions
+                      let i10 := alloc.vec.Vec.len submission.environment.defs
+                      let i11 ←
+                        lift (core.num.Usize.saturating_sub i10 count)
+                      if i9 != i11
+                      then ok (core.result.Result.Err Diagnostic.Invalid)
+                      else
+                        let is_matching1 ←
+                          source.admission.environment.check_loop2
+                            submission.environment.defs
+                            submission.environment.kinds index count
+                        if is_matching1
+                        then ok (core.result.Result.Ok ())
+                        else ok (core.result.Result.Err Diagnostic.Invalid)
+                else ok (core.result.Result.Err Diagnostic.Invalid)
+              | core.result.Result.Err _ =>
+                ok (core.result.Result.Err Diagnostic.Defective)
+            else ok (core.result.Result.Err Diagnostic.Invalid)
+
+/-- [noble_wasm::source::admission::environment::exact_contract]:
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 105:0-139:1 -/
+def source.admission.environment.exact_contract
+  (env : noble_kernel.contracts.Env)
+  («def» : noble_kernel.contracts.Definition)
+  (expected : noble_kernel.untrusted.Expected) :
+  Result (core.result.Result Unit Diagnostic)
+  := do
+  let o ← noble_kernel.contracts.Env.scheme env «def»
+  match o with
+  | none => ok (core.result.Result.Err Diagnostic.Invalid)
+  | some value =>
+    let b ← alloc.vec.Vec.is_empty Global value.var_kinds
+    if b
+    then
+      let s := alloc.vec.Vec.deref value.stack_in
+      let r ←
+        noble_kernel.words.Scheme.subst_stack value s
+          { bindings := (alloc.vec.Vec.new noble_kernel.words.Binding) }
+      match r with
+      | core.result.Result.Ok value1 =>
+        let s1 := alloc.vec.Vec.deref value.stack_out
+        let r1 ←
+          noble_kernel.words.Scheme.subst_stack value s1
+            { bindings := (alloc.vec.Vec.new noble_kernel.words.Binding) }
+        match r1 with
+        | core.result.Result.Ok value2 =>
+          let s2 := alloc.vec.Vec.deref value.effects
+          let r2 ←
+            noble_kernel.words.Scheme.subst_effects value s2
+              { bindings := (alloc.vec.Vec.new noble_kernel.words.Binding) }
+          match r2 with
+          | core.result.Result.Ok value3 =>
+            let b1 ←
+              alloc.vec.partial_eq.PartialEqVec.ne
+                noble_kernel.types.Ty.Insts.CoreCmpPartialEqTy value1
+                expected.stack_in
+            if b1
+            then ok (core.result.Result.Err Diagnostic.Invalid)
+            else
+              let b2 ←
+                alloc.vec.partial_eq.PartialEqVec.ne
+                  noble_kernel.types.Ty.Insts.CoreCmpPartialEqTy value2
+                  expected.stack_out
+              if b2
+              then ok (core.result.Result.Err Diagnostic.Invalid)
+              else
+                let b3 ←
+                  core.cmp.PartialEq.ne.trait_default
+                    noble_kernel.types.EffSet.Insts.CoreCmpPartialEqEffSet
+                    value3 expected.allowed_effects
+                if b3
+                then ok (core.result.Result.Err Diagnostic.Invalid)
+                else ok (core.result.Result.Ok ())
+          | core.result.Result.Err _ =>
+            ok (core.result.Result.Err Diagnostic.Invalid)
+        | core.result.Result.Err _ =>
+          ok (core.result.Result.Err Diagnostic.Invalid)
+      | core.result.Result.Err _ =>
+        ok (core.result.Result.Err Diagnostic.Invalid)
+    else ok (core.result.Result.Err Diagnostic.Invalid)
+
+/-- [noble_wasm::source::NODE_LIMIT]
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 19:0-19:31 -/
+@[global_simps, irreducible] def source.NODE_LIMIT : Std.Usize := 4096#usize
+
+/-- [noble_wasm::source::admission::environment::scheme_work]:
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 188:0-211:1 -/
+def source.admission.environment.scheme_work
+  (scheme : noble_kernel.words.Scheme) :
+  Result (core.result.Result Std.U64 Diagnostic)
+  := do
+  let i := alloc.vec.Vec.len scheme.stack_in
+  if i > source.NODE_LIMIT
+  then ok (core.result.Result.Err Diagnostic.Exhausted)
+  else
+    let i1 := alloc.vec.Vec.len scheme.stack_out
+    if i1 > source.NODE_LIMIT
+    then ok (core.result.Result.Err Diagnostic.Exhausted)
+    else
+      let i2 := alloc.vec.Vec.len scheme.var_kinds
+      if i2 > source.NODE_LIMIT
+      then ok (core.result.Result.Err Diagnostic.Exhausted)
+      else
+        let i3 := alloc.vec.Vec.len scheme.effects
+        if i3 > source.NODE_LIMIT
+        then ok (core.result.Result.Err Diagnostic.Exhausted)
+        else
+          let i4 := alloc.vec.Vec.len scheme.stack_in
+          let i5 := alloc.vec.Vec.len scheme.stack_out
+          let i6 ← lift (core.num.Usize.saturating_add i4 i5)
+          let i7 := alloc.vec.Vec.len scheme.var_kinds
+          let i8 ← lift (core.num.Usize.saturating_add i6 i7)
+          let i9 := alloc.vec.Vec.len scheme.effects
+          let i10 ← lift (core.num.Usize.saturating_add i8 i9)
+          let parts ← lift (core.num.Usize.saturating_add i10 1#usize)
+          let r ←
+            U64.Insts.CoreConvertTryFromUsizeTryFromIntError.try_from parts
+          match r with
+          | core.result.Result.Ok value =>
+            let i11 ← core.num.U64.saturating_mul value 512#u64
+            ok (core.result.Result.Ok i11)
+          | core.result.Result.Err _ =>
+            ok (core.result.Result.Err Diagnostic.Exhausted)
+
+/-- [noble_wasm::source::admission::environment::work]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 154:4-165:5 -/
+@[rust_loop_body]
+def source.admission.environment.work_loop0.body
+  (v : alloc.vec.Vec noble_kernel.words.Scheme) (cost : Std.U64)
+  (index : Std.Usize) :
+  Result (ControlFlow (Std.U64 × Std.Usize) (Std.U64 × (Option Diagnostic)))
+  := do
+  let i := alloc.vec.Vec.len v
+  if index < i
+  then
+    let s ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        noble_kernel.words.Scheme) v index
+    let r ← source.admission.environment.scheme_work s
+    match r with
+    | core.result.Result.Ok amount =>
+      let cost1 ← lift (core.num.U64.saturating_add cost amount)
+      let index1 ← index + 1#usize
+      ok (cont (cost1, index1))
+    | core.result.Result.Err problem => ok (done (cost, some problem))
+  else ok (done (cost, none))
+
+/-- [noble_wasm::source::admission::environment::work]: loop 0:
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 154:4-165:5 -/
+@[rust_loop]
+def source.admission.environment.work_loop0
+  (v : alloc.vec.Vec noble_kernel.words.Scheme) (cost : Std.U64)
+  (index : Std.Usize) :
+  Result (Std.U64 × (Option Diagnostic))
+  := do
+  loop
+    (fun (cost1, index1) => source.admission.environment.work_loop0.body v
+      cost1 index1)
+    (cost, index)
+
+/-- [noble_wasm::source::admission::environment::work]: loop body 1:
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 170:4-176:5 -/
+@[rust_loop_body]
+def source.admission.environment.work_loop1.body
+  (v : alloc.vec.Vec noble_kernel.words.Scheme)
+  (v1 : alloc.vec.Vec (alloc.vec.Vec noble_kernel.contracts.Definition))
+  (index : Std.Usize) :
+  Result (ControlFlow Std.Usize (Option Diagnostic))
+  := do
+  let i := alloc.vec.Vec.len v1
+  if index < i
+  then
+    let v2 ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice (alloc.vec.Vec
+        noble_kernel.contracts.Definition)) v1 index
+    let i1 := alloc.vec.Vec.len v2
+    let i2 := alloc.vec.Vec.len v
+    if i1 > i2
+    then ok (done (some Diagnostic.Exhausted))
+    else let index1 ← index + 1#usize
+         ok (cont index1)
+  else ok (done none)
+
+/-- [noble_wasm::source::admission::environment::work]: loop 1:
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 170:4-176:5 -/
+@[rust_loop]
+def source.admission.environment.work_loop1
+  (v : alloc.vec.Vec noble_kernel.words.Scheme)
+  (v1 : alloc.vec.Vec (alloc.vec.Vec noble_kernel.contracts.Definition))
+  (index : Std.Usize) :
+  Result (Option Diagnostic)
+  := do
+  loop
+    (fun index1 => source.admission.environment.work_loop1.body v v1 index1)
+    index
+
+/-- [noble_wasm::source::admission::environment::work]:
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 145:0-181:1 -/
+def source.admission.environment.work
+  (environment : noble_kernel.contracts.Env) :
+  Result (core.result.Result Std.U64 Diagnostic)
+  := do
+  let i := alloc.vec.Vec.len environment.defs
+  let i1 ←
+    lift (core.num.Usize.saturating_add source.DEFINITION_LIMIT 24#usize)
+  if i > i1
+  then ok (core.result.Result.Err Diagnostic.Exhausted)
+  else
+    let i2 := alloc.vec.Vec.len environment.deps
+    let i3 ←
+      lift (core.num.Usize.saturating_add source.DEFINITION_LIMIT 24#usize)
+    if i2 > i3
+    then ok (core.result.Result.Err Diagnostic.Exhausted)
+    else
+      let (cost, failure) ←
+        source.admission.environment.work_loop0 environment.defs 1#u64 0#usize
+      match failure with
+      | none =>
+        let failure1 ←
+          source.admission.environment.work_loop1 environment.defs
+            environment.deps 0#usize
+        match failure1 with
+        | none => ok (core.result.Result.Ok cost)
+        | some problem => ok (core.result.Result.Err problem)
+      | some problem => ok (core.result.Result.Err problem)
+
+/-- [noble_wasm::source::admission::node]:
+    Source: 'crates/noble-wasm/src/source/admission.rs', lines 282:0-290:1 -/
+def source.admission.node
+  (candidate : noble_kernel.untrusted.Candidate)
+  (id : noble_kernel.untrusted.NodeId) :
+  Result (core.result.Result noble_kernel.untrusted.Node Diagnostic)
+  := do
+  let s := alloc.vec.Vec.deref candidate.nodes
+  let r ← admission.index id
+  match r with
+  | core.result.Result.Ok value =>
+    let o ←
+      core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice
+        noble_kernel.untrusted.Node) s value
+    match o with
+    | none => ok (core.result.Result.Err Diagnostic.Invalid)
+    | some node => ok (core.result.Result.Ok node)
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_wasm::source::admission::text]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/admission.rs', lines 269:4-275:5 -/
+@[rust_loop_body]
+def source.admission.text_loop.body
+  (body : noble_kernel.execution.Body) (node : noble_kernel.untrusted.NodeId)
+  (index : Std.Usize) :
+  Result (ControlFlow Std.Usize (Option (Slice Std.U8)))
+  := do
+  let i := alloc.vec.Vec.len body.texts
+  if index < i
+  then
+    let tl ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        noble_kernel.execution.TextLiteral) body.texts index
+    let b ←
+      noble_kernel.untrusted.NodeId.Insts.CoreCmpPartialEqNodeId.eq tl.node
+        node
+    if b
+    then let s ← alloc.vec.Vec.as_slice Global tl.bytes
+         ok (done (some s))
+    else let index1 ← index + 1#usize
+         ok (cont index1)
+  else ok (done none)
+
+/-- [noble_wasm::source::admission::text]: loop 0:
+    Source: 'crates/noble-wasm/src/source/admission.rs', lines 269:4-275:5 -/
+@[rust_loop]
+def source.admission.text_loop
+  (body : noble_kernel.execution.Body) (node : noble_kernel.untrusted.NodeId)
+  (index : Std.Usize) :
+  Result (Option (Slice Std.U8))
+  := do
+  loop
+    (fun index1 => source.admission.text_loop.body body node index1)
+    index
+
+/-- [noble_wasm::source::admission::text]:
+    Source: 'crates/noble-wasm/src/source/admission.rs', lines 263:0-280:1 -/
+def source.admission.text
+  (body : noble_kernel.execution.Body) (node : noble_kernel.untrusted.NodeId) :
+  Result (core.result.Result (Slice Std.U8) Diagnostic)
+  := do
+  let found ← source.admission.text_loop body node 0#usize
+  match found with
+  | none => ok (core.result.Result.Err Diagnostic.Invalid)
+  | some bytes => ok (core.result.Result.Ok bytes)
+
+/-- [noble_wasm::source::admission::identity::literal]:
+    Source: 'crates/noble-wasm/src/source/admission/identity.rs', lines 98:0-119:1 -/
+def source.admission.identity.literal
+  (out : output.Buffer) (lit : noble_kernel.untrusted.Lit)
+  (body : noble_kernel.execution.Body) (node : noble_kernel.untrusted.NodeId) :
+  Result ((core.result.Result Unit Diagnostic) × output.Buffer)
+  := do
+  match lit with
+  | noble_kernel.untrusted.Lit.I64Lit value =>
+    let s ← lift (Array.to_slice (Array.make 1#usize [ 105#u8 ]))
+    let (r, out1) ← output.Buffer.append out s
+    match r with
+    | core.result.Result.Ok _ => output.Buffer.i64 out1 value
+    | core.result.Result.Err _ => ok (r, out1)
+  | noble_kernel.untrusted.Lit.BoolLit value =>
+    if value
+    then
+      let s ← lift (Array.to_slice (Array.make 1#usize [ 116#u8 ]))
+      output.Buffer.append out s
+    else
+      let s ← lift (Array.to_slice (Array.make 1#usize [ 102#u8 ]))
+      output.Buffer.append out s
+  | noble_kernel.untrusted.Lit.TextLit =>
+    let r ← source.admission.text body node
+    match r with
+    | core.result.Result.Ok value =>
+      let s ← lift (Array.to_slice (Array.make 1#usize [ 115#u8 ]))
+      let (r1, out1) ← output.Buffer.append out s
+      match r1 with
+      | core.result.Result.Ok _ =>
+        let i := Slice.len value
+        let (r2, out2) ← output.Buffer.index out1 i
+        match r2 with
+        | core.result.Result.Ok _ =>
+          let s1 ← lift (Array.to_slice (Array.make 1#usize [ 58#u8 ]))
+          let (r3, out3) ← output.Buffer.append out2 s1
+          match r3 with
+          | core.result.Result.Ok _ => output.Buffer.append out3 value
+          | core.result.Result.Err _ => ok (r3, out3)
+        | core.result.Result.Err _ => ok (r2, out2)
+      | core.result.Result.Err _ => ok (r1, out1)
+    | core.result.Result.Err failure =>
+      ok (core.result.Result.Err failure, out)
+  | noble_kernel.untrusted.Lit.UnitLit =>
+    let s ← lift (Array.to_slice (Array.make 1#usize [ 117#u8 ]))
+    output.Buffer.append out s
+
+/-- [noble_wasm::source::admission::identity::{noble_wasm::source::admission::identity::Encoding}::step]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/admission/identity.rs', lines 84:16-87:17 -/
+@[rust_loop_body]
+def source.admission.identity.Encoding.step_loop.body
+  (body : alloc.vec.Vec noble_kernel.untrusted.NodeId)
+  (v : alloc.vec.Vec (Option noble_kernel.untrusted.NodeId))
+  (index : Std.Usize) :
+  Result (ControlFlow ((alloc.vec.Vec (Option noble_kernel.untrusted.NodeId))
+    × Std.Usize) (alloc.vec.Vec (Option noble_kernel.untrusted.NodeId)))
+  := do
+  if index != 0#usize
+  then
+    let index1 ← index - 1#usize
+    let ni ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        noble_kernel.untrusted.NodeId) body index1
+    let v1 ← alloc.vec.Vec.push v (some ni)
+    ok (cont (v1, index1))
+  else ok (done v)
+
+/-- [noble_wasm::source::admission::identity::{noble_wasm::source::admission::identity::Encoding}::step]: loop 0:
+    Source: 'crates/noble-wasm/src/source/admission/identity.rs', lines 84:16-87:17 -/
+@[rust_loop]
+def source.admission.identity.Encoding.step_loop
+  (v : alloc.vec.Vec (Option noble_kernel.untrusted.NodeId))
+  (body : alloc.vec.Vec noble_kernel.untrusted.NodeId) (index : Std.Usize) :
+  Result (alloc.vec.Vec (Option noble_kernel.untrusted.NodeId))
+  := do
+  loop
+    (fun (v1, index1) => source.admission.identity.Encoding.step_loop.body body
+      v1 index1)
+    (v, index)
+
+/-- [noble_wasm::source::admission::identity::{noble_wasm::source::admission::identity::Encoding}::step]:
+    Source: 'crates/noble-wasm/src/source/admission/identity.rs', lines 48:4-91:5 -/
+def source.admission.identity.Encoding.step
+  (self : source.admission.identity.Encoding)
+  (submission : noble_kernel.execution.Submission)
+  (body : noble_kernel.execution.Body)
+  (step : Option noble_kernel.untrusted.NodeId) (work : source.Work) :
+  Result ((core.result.Result Unit Diagnostic) ×
+    source.admission.identity.Encoding × source.Work)
+  := do
+  let i := alloc.vec.Vec.len submission.definitions
+  let i1 ← lift (core.num.Usize.saturating_add i 1#usize)
+  let (r, work1) ← source.Work.entries work i1
+  match r with
+  | core.result.Result.Ok _ =>
+    if self.fuel = 0#usize
+    then ok (core.result.Result.Err Diagnostic.Exhausted, self, work1)
+    else
+      let i2 := alloc.vec.Vec.len self.todo
+      if i2 > source.NODE_LIMIT
+      then ok (core.result.Result.Err Diagnostic.Exhausted, self, work1)
+      else
+        let i3 ← lift (core.num.Usize.saturating_sub self.fuel 1#usize)
+        match step with
+        | none =>
+          let s ← lift (Array.to_slice (Array.make 1#usize [ 93#u8 ]))
+          let (r1, b) ← output.Buffer.append self.out s
+          ok (r1, { self with out := b, fuel := i3 }, work1)
+        | some node =>
+          let r1 ← source.admission.node body.candidate node
+          match r1 with
+          | core.result.Result.Ok value =>
+            match value with
+            | noble_kernel.untrusted.Node.Literal lit _ =>
+              let (r2, b) ←
+                source.admission.identity.literal self.out lit body node
+              ok (r2, { self with out := b, fuel := i3 }, work1)
+            | noble_kernel.untrusted.Node.Invocation «def» _ =>
+              if «def» < 24#u32
+              then
+                let s ← lift (Array.to_slice (Array.make 1#usize [ 98#u8 ]))
+                let (r2, b) ← output.Buffer.append self.out s
+                match r2 with
+                | core.result.Result.Ok _ =>
+                  let i4 ← lift (core.convert.num.FromU64U32.from «def»)
+                  let (r3, b1) ← output.Buffer.number b i4
+                  match r3 with
+                  | core.result.Result.Ok _ =>
+                    let s1 ←
+                      lift (Array.to_slice (Array.make 1#usize [ 59#u8 ]))
+                    let (r4, b2) ← output.Buffer.append b1 s1
+                    ok (r4, { self with out := b2, fuel := i3 }, work1)
+                  | core.result.Result.Err _ =>
+                    ok (r3, { self with out := b1, fuel := i3 }, work1)
+                | core.result.Result.Err _ =>
+                  ok (r2, { self with out := b, fuel := i3 }, work1)
+              else
+                let s ← lift (Array.to_slice (Array.make 1#usize [ 100#u8 ]))
+                let (r2, b) ← output.Buffer.append self.out s
+                match r2 with
+                | core.result.Result.Ok _ =>
+                  let r3 ←
+                    source.admission.definition_index submission «def»
+                  match r3 with
+                  | core.result.Result.Ok value1 =>
+                    let d ←
+                      alloc.vec.Vec.index
+                        (core.slice.index.SliceIndexUsizeSlice
+                        noble_kernel.execution.Definition)
+                        submission.definitions value1
+                    let (r4, b1) ← output.Buffer.number b d.identity
+                    match r4 with
+                    | core.result.Result.Ok _ =>
+                      let s1 ←
+                        lift (Array.to_slice (Array.make 1#usize [ 59#u8 ]))
+                      let (r5, b2) ← output.Buffer.append b1 s1
+                      ok (r5, { self with out := b2, fuel := i3 }, work1)
+                    | core.result.Result.Err _ =>
+                      ok (r4, { self with out := b1, fuel := i3 }, work1)
+                  | core.result.Result.Err failure =>
+                    ok (core.result.Result.Err failure,
+                      { self with out := b, fuel := i3 }, work1)
+                | core.result.Result.Err _ =>
+                  ok (r2, { self with out := b, fuel := i3 }, work1)
+            | noble_kernel.untrusted.Node.Quotation body1 _ =>
+              let s ← lift (Array.to_slice (Array.make 1#usize [ 91#u8 ]))
+              let (r2, b) ← output.Buffer.append self.out s
+              match r2 with
+              | core.result.Result.Ok _ =>
+                let i4 := alloc.vec.Vec.len body1
+                let i5 ← lift (core.num.Usize.saturating_add i4 1#usize)
+                let v ← alloc.vec.Vec.reserve Global self.todo i5
+                let v1 ← alloc.vec.Vec.push v none
+                let index := alloc.vec.Vec.len body1
+                let v2 ←
+                  source.admission.identity.Encoding.step_loop v1 body1 index
+                ok (core.result.Result.Ok (),
+                  { out := b, todo := v2, fuel := i3 }, work1)
+              | core.result.Result.Err _ =>
+                ok (r2, { self with out := b, fuel := i3 }, work1)
+          | core.result.Result.Err failure =>
+            ok (core.result.Result.Err failure, { self with fuel := i3 },
+              work1)
+  | core.result.Result.Err _ => ok (r, self, work1)
+
+/-- [noble_wasm::source::admission::identity::encode]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/admission/identity.rs', lines 27:4-30:5 -/
+@[rust_loop_body]
+def source.admission.identity.encode_loop0.body
+  (v : alloc.vec.Vec noble_kernel.untrusted.NodeId)
+  (v1 : alloc.vec.Vec (Option noble_kernel.untrusted.NodeId))
+  (index : Std.Usize) :
+  Result (ControlFlow ((alloc.vec.Vec (Option noble_kernel.untrusted.NodeId))
+    × Std.Usize) (alloc.vec.Vec (Option noble_kernel.untrusted.NodeId)))
+  := do
+  if index != 0#usize
+  then
+    let index1 ← index - 1#usize
+    let ni ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        noble_kernel.untrusted.NodeId) v index1
+    let v2 ← alloc.vec.Vec.push v1 (some ni)
+    ok (cont (v2, index1))
+  else ok (done v1)
+
+/-- [noble_wasm::source::admission::identity::encode]: loop 0:
+    Source: 'crates/noble-wasm/src/source/admission/identity.rs', lines 27:4-30:5 -/
+@[rust_loop]
+def source.admission.identity.encode_loop0
+  (v : alloc.vec.Vec noble_kernel.untrusted.NodeId)
+  (v1 : alloc.vec.Vec (Option noble_kernel.untrusted.NodeId))
+  (index : Std.Usize) :
+  Result (alloc.vec.Vec (Option noble_kernel.untrusted.NodeId))
+  := do
+  loop
+    (fun (v2, index1) => source.admission.identity.encode_loop0.body v v2
+      index1)
+    (v1, index)
+
+/-- [noble_wasm::source::admission::identity::encode]: loop body 1:
+    Source: 'crates/noble-wasm/src/source/admission/identity.rs', lines 32:4-40:5 -/
+@[rust_loop_body]
+def source.admission.identity.encode_loop1.body
+  (submission : noble_kernel.execution.Submission) (i : Std.U32) (i1 : Std.U32)
+  (v : alloc.vec.Vec noble_kernel.untrusted.Node)
+  (v1 : alloc.vec.Vec noble_kernel.untrusted.NodeId)
+  (v2 : alloc.vec.Vec noble_kernel.execution.TextLiteral) (work : source.Work)
+  (encoding : source.admission.identity.Encoding) :
+  Result (ControlFlow (source.Work × source.admission.identity.Encoding)
+    (source.Work × source.admission.identity.Encoding × (Option Diagnostic)))
+  := do
+  let (o, v3) ← alloc.vec.Vec.pop Global encoding.todo
+  match o with
+  | none => ok (done (work, { encoding with todo := v3 }, none))
+  | some step =>
+    let (r, encoding1, work1) ←
+      source.admission.identity.Encoding.step { encoding with todo := v3 }
+        submission
+        {
+          candidate := { format := i, revision := i1, nodes := v, body := v1 },
+          texts := v2
+        } step work
+    match r with
+    | core.result.Result.Ok _ => ok (cont (work1, encoding1))
+    | core.result.Result.Err problem =>
+      ok (done (work1, encoding1, some problem))
+
+/-- [noble_wasm::source::admission::identity::encode]: loop 1:
+    Source: 'crates/noble-wasm/src/source/admission/identity.rs', lines 32:4-40:5 -/
+@[rust_loop]
+def source.admission.identity.encode_loop1
+  (submission : noble_kernel.execution.Submission) (i : Std.U32) (i1 : Std.U32)
+  (v : alloc.vec.Vec noble_kernel.untrusted.Node)
+  (v1 : alloc.vec.Vec noble_kernel.untrusted.NodeId)
+  (v2 : alloc.vec.Vec noble_kernel.execution.TextLiteral) (work : source.Work)
+  (encoding : source.admission.identity.Encoding) :
+  Result (source.Work × source.admission.identity.Encoding × (Option
+    Diagnostic))
+  := do
+  loop
+    (fun (work1, encoding1) => source.admission.identity.encode_loop1.body
+      submission i i1 v v1 v2 work1 encoding1)
+    (work, encoding)
+
+/-- [noble_wasm::source::admission::identity::encode]:
+    Source: 'crates/noble-wasm/src/source/admission/identity.rs', lines 16:0-45:1 -/
+def source.admission.identity.encode
+  (submission : noble_kernel.execution.Submission)
+  (body : noble_kernel.execution.Body) (work : source.Work) :
+  Result ((core.result.Result (alloc.vec.Vec Std.U8) Diagnostic) ×
+    source.Work)
+  := do
+  let b ← output.Buffer.new 128#usize
+  let i := alloc.vec.Vec.len body.candidate.body
+  let v := alloc.vec.Vec.with_capacity (Option noble_kernel.untrusted.NodeId) i
+  let i1 ← core.num.Usize.saturating_mul source.NODE_LIMIT 4#usize
+  let index := alloc.vec.Vec.len body.candidate.body
+  let v1 ← source.admission.identity.encode_loop0 body.candidate.body v index
+  let (work1, encoding, failure) ←
+    source.admission.identity.encode_loop1 submission body.candidate.format
+      body.candidate.revision body.candidate.nodes body.candidate.body
+      body.texts work { out := b, todo := v1, fuel := i1 }
+  match failure with
+  | none =>
+    let v2 ← output.Buffer.finish encoding.out
+    ok (core.result.Result.Ok v2, work1)
+  | some problem => ok (core.result.Result.Err problem, work1)
+
+/-- [noble_wasm::source::admission::identity::admit]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/admission/identity.rs', lines 162:4-164:5 -/
+@[rust_loop_body]
+def source.admission.identity.admit_loop.body
+  (identities : alloc.vec.Vec source.Identity) (i : Std.U64)
+  (found : Std.Usize) :
+  Result (ControlFlow Std.Usize Std.Usize)
+  := do
+  let i1 := alloc.vec.Vec.len identities
+  if found < i1
+  then
+    let i2 ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        source.Identity) identities found
+    if i2.id != i
+    then let found1 ← found + 1#usize
+         ok (cont found1)
+    else ok (done found)
+  else ok (done found)
+
+/-- [noble_wasm::source::admission::identity::admit]: loop 0:
+    Source: 'crates/noble-wasm/src/source/admission/identity.rs', lines 162:4-164:5 -/
+@[rust_loop]
+def source.admission.identity.admit_loop
+  (identities : alloc.vec.Vec source.Identity) (i : Std.U64)
+  (found : Std.Usize) :
+  Result Std.Usize
+  := do
+  loop
+    (fun found1 => source.admission.identity.admit_loop.body identities i
+      found1)
+    found
+
+/-- [noble_wasm::source::admission::identity::admit]:
+    Source: 'crates/noble-wasm/src/source/admission/identity.rs', lines 152:0-180:1 -/
+def source.admission.identity.admit
+  (submission : noble_kernel.execution.Submission) (index : Std.Usize)
+  (identities : alloc.vec.Vec source.Identity) (work : source.Work) :
+  Result ((core.result.Result Unit Diagnostic) × (alloc.vec.Vec
+    source.Identity) × source.Work)
+  := do
+  let definition ←
+    alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+      noble_kernel.execution.Definition) submission.definitions index
+  let (r, work1) ←
+    source.admission.identity.encode submission definition.body work
+  match r with
+  | core.result.Result.Ok value =>
+    let i := alloc.vec.Vec.len identities
+    let (r1, work2) ← source.Work.entries work1 i
+    match r1 with
+    | core.result.Result.Ok _ =>
+      let found ←
+        source.admission.identity.admit_loop identities definition.identity
+          0#usize
+      let i1 := alloc.vec.Vec.len identities
+      if found < i1
+      then
+        let i2 := alloc.vec.Vec.len value
+        let (r2, work3) ← source.Work.entries work2 i2
+        match r2 with
+        | core.result.Result.Ok _ =>
+          let i3 ←
+            alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+              source.Identity) identities found
+          let b ←
+            alloc.vec.partial_eq.PartialEqVec.ne core.cmp.PartialEqU8 
+              i3.recipe value
+          if b
+          then
+            ok (core.result.Result.Err Diagnostic.Invalid, identities, work3)
+          else ok (core.result.Result.Ok (), identities, work3)
+        | core.result.Result.Err _ => ok (r2, identities, work3)
+      else
+        let i2 := alloc.vec.Vec.len identities
+        if i2 >= source.DEFINITION_LIMIT
+        then
+          ok (core.result.Result.Err Diagnostic.Exhausted, identities, work2)
+        else
+          let identities1 ←
+            alloc.vec.Vec.push identities
+              ({ id := definition.identity, recipe := value } :
+              source.Identity)
+          ok (core.result.Result.Ok (), identities1, work2)
+    | core.result.Result.Err _ => ok (r1, identities, work2)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, identities, work1)
+
+/-- [noble_wasm::source::admission::identity::check]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/admission/identity.rs', lines 132:4-140:5 -/
+@[rust_loop_body]
+def source.admission.identity.check_loop.body
+  (submission : noble_kernel.execution.Submission)
+  (identities : alloc.vec.Vec source.Identity) (work : source.Work)
+  (index : Std.Usize) :
+  Result (ControlFlow ((alloc.vec.Vec source.Identity) × source.Work ×
+    Std.Usize) ((alloc.vec.Vec source.Identity) × source.Work × (Option
+    Diagnostic)))
+  := do
+  let i := alloc.vec.Vec.len submission.definitions
+  if index < i
+  then
+    let (r, identities1, work1) ←
+      source.admission.identity.admit submission index identities work
+    match r with
+    | core.result.Result.Ok _ =>
+      let index1 ← index + 1#usize
+      ok (cont (identities1, work1, index1))
+    | core.result.Result.Err problem =>
+      ok (done (identities1, work1, some problem))
+  else ok (done (identities, work, none))
+
+/-- [noble_wasm::source::admission::identity::check]: loop 0:
+    Source: 'crates/noble-wasm/src/source/admission/identity.rs', lines 132:4-140:5 -/
+@[rust_loop]
+def source.admission.identity.check_loop
+  (submission : noble_kernel.execution.Submission)
+  (identities : alloc.vec.Vec source.Identity) (work : source.Work)
+  (index : Std.Usize) :
+  Result ((alloc.vec.Vec source.Identity) × source.Work × (Option
+    Diagnostic))
+  := do
+  loop
+    (fun (identities1, work1, index1) =>
+      source.admission.identity.check_loop.body submission identities1 work1
+      index1)
+    (identities, work, index)
+
+/-- [noble_wasm::source::admission::identity::check]:
+    Source: 'crates/noble-wasm/src/source/admission/identity.rs', lines 125:0-145:1 -/
+def source.admission.identity.check
+  (submission : noble_kernel.execution.Submission)
+  (identities : alloc.vec.Vec source.Identity) (work : source.Work) :
+  Result ((core.result.Result Unit Diagnostic) × (alloc.vec.Vec
+    source.Identity) × source.Work)
+  := do
+  let (identities1, work1, failure) ←
+    source.admission.identity.check_loop submission identities work 0#usize
+  match failure with
+  | none => ok (core.result.Result.Ok (), identities1, work1)
+  | some problem => ok (core.result.Result.Err problem, identities1, work1)
+
+/-- [noble_wasm::source::admission::metadata::valid_leading_pair]:
+    Source: 'crates/noble-wasm/src/source/admission/metadata.rs', lines 226:0-234:1 -/
+def source.admission.metadata.valid_leading_pair
+  (bytes : Array Std.U8 2#usize) : Result Bool := do
+  let i ← Array.index_usize bytes 0#usize
+  match i with
+  | 224#uscalar => let i1 ← Array.index_usize bytes 1#usize
+                   ok (i1 >= 160#u8)
+  | 237#uscalar => let i1 ← Array.index_usize bytes 1#usize
+                   ok (i1 <= 159#u8)
+  | 240#uscalar => let i1 ← Array.index_usize bytes 1#usize
+                   ok (i1 >= 144#u8)
+  | 244#uscalar => let i1 ← Array.index_usize bytes 1#usize
+                   ok (i1 <= 143#u8)
+  | _ => ok true
+
+/-- [noble_wasm::source::admission::metadata::sequence]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/admission/metadata.rs', lines 207:4-218:5 -/
+@[rust_loop_body]
+def source.admission.metadata.sequence_loop0.body
+  (first : Std.U8) (remaining : Slice Std.U8) (offset_bytes : Std.Usize) :
+  Result (ControlFlow Std.Usize Bool)
+  := do
+  if offset_bytes < 1#usize
+  then
+    let byte ← Slice.index_usize remaining offset_bytes
+    let i ← lift (byte &&& 192#u8)
+    if i != 128#u8
+    then ok (done false)
+    else
+      if offset_bytes = 1#usize
+      then
+        let b ←
+          source.admission.metadata.valid_leading_pair
+            (Array.make 2#usize [ first, byte ])
+        if b
+        then
+          let offset_bytes1 ← offset_bytes + 1#usize
+          ok (cont offset_bytes1)
+        else ok (done false)
+      else let offset_bytes1 ← offset_bytes + 1#usize
+           ok (cont offset_bytes1)
+  else ok (done true)
+
+/-- [noble_wasm::source::admission::metadata::sequence]: loop 0:
+    Source: 'crates/noble-wasm/src/source/admission/metadata.rs', lines 207:4-218:5 -/
+@[rust_loop]
+def source.admission.metadata.sequence_loop0
+  (first : Std.U8) (remaining : Slice Std.U8) (offset_bytes : Std.Usize) :
+  Result Bool
+  := do
+  loop
+    (fun offset_bytes1 => source.admission.metadata.sequence_loop0.body first
+      remaining offset_bytes1)
+    offset_bytes
+
+/-- [noble_wasm::source::admission::metadata::sequence]: loop body 1:
+    Source: 'crates/noble-wasm/src/source/admission/metadata.rs', lines 207:4-218:5 -/
+@[rust_loop_body]
+def source.admission.metadata.sequence_loop1.body
+  (first : Std.U8) (remaining : Slice Std.U8) (offset_bytes : Std.Usize) :
+  Result (ControlFlow Std.Usize Bool)
+  := do
+  if offset_bytes < 2#usize
+  then
+    let byte ← Slice.index_usize remaining offset_bytes
+    let i ← lift (byte &&& 192#u8)
+    if i != 128#u8
+    then ok (done false)
+    else
+      if offset_bytes = 1#usize
+      then
+        let b ←
+          source.admission.metadata.valid_leading_pair
+            (Array.make 2#usize [ first, byte ])
+        if b
+        then
+          let offset_bytes1 ← offset_bytes + 1#usize
+          ok (cont offset_bytes1)
+        else ok (done false)
+      else let offset_bytes1 ← offset_bytes + 1#usize
+           ok (cont offset_bytes1)
+  else ok (done true)
+
+/-- [noble_wasm::source::admission::metadata::sequence]: loop 1:
+    Source: 'crates/noble-wasm/src/source/admission/metadata.rs', lines 207:4-218:5 -/
+@[rust_loop]
+def source.admission.metadata.sequence_loop1
+  (first : Std.U8) (remaining : Slice Std.U8) (offset_bytes : Std.Usize) :
+  Result Bool
+  := do
+  loop
+    (fun offset_bytes1 => source.admission.metadata.sequence_loop1.body first
+      remaining offset_bytes1)
+    offset_bytes
+
+/-- [noble_wasm::source::admission::metadata::sequence]: loop body 2:
+    Source: 'crates/noble-wasm/src/source/admission/metadata.rs', lines 207:4-218:5 -/
+@[rust_loop_body]
+def source.admission.metadata.sequence_loop2.body
+  (first : Std.U8) (remaining : Slice Std.U8) (offset_bytes : Std.Usize) :
+  Result (ControlFlow Std.Usize Bool)
+  := do
+  if offset_bytes < 3#usize
+  then
+    let byte ← Slice.index_usize remaining offset_bytes
+    let i ← lift (byte &&& 192#u8)
+    if i != 128#u8
+    then ok (done false)
+    else
+      if offset_bytes = 1#usize
+      then
+        let b ←
+          source.admission.metadata.valid_leading_pair
+            (Array.make 2#usize [ first, byte ])
+        if b
+        then
+          let offset_bytes1 ← offset_bytes + 1#usize
+          ok (cont offset_bytes1)
+        else ok (done false)
+      else let offset_bytes1 ← offset_bytes + 1#usize
+           ok (cont offset_bytes1)
+  else ok (done true)
+
+/-- [noble_wasm::source::admission::metadata::sequence]: loop 2:
+    Source: 'crates/noble-wasm/src/source/admission/metadata.rs', lines 207:4-218:5 -/
+@[rust_loop]
+def source.admission.metadata.sequence_loop2
+  (first : Std.U8) (remaining : Slice Std.U8) (offset_bytes : Std.Usize) :
+  Result Bool
+  := do
+  loop
+    (fun offset_bytes1 => source.admission.metadata.sequence_loop2.body first
+      remaining offset_bytes1)
+    offset_bytes
+
+/-- [noble_wasm::source::admission::metadata::sequence]: loop body 3:
+    Source: 'crates/noble-wasm/src/source/admission/metadata.rs', lines 207:4-218:5 -/
+@[rust_loop_body]
+def source.admission.metadata.sequence_loop3.body
+  (first : Std.U8) (remaining : Slice Std.U8) (offset_bytes : Std.Usize) :
+  Result (ControlFlow Std.Usize Bool)
+  := do
+  if offset_bytes < 4#usize
+  then
+    let byte ← Slice.index_usize remaining offset_bytes
+    let i ← lift (byte &&& 192#u8)
+    if i != 128#u8
+    then ok (done false)
+    else
+      if offset_bytes = 1#usize
+      then
+        let b ←
+          source.admission.metadata.valid_leading_pair
+            (Array.make 2#usize [ first, byte ])
+        if b
+        then
+          let offset_bytes1 ← offset_bytes + 1#usize
+          ok (cont offset_bytes1)
+        else ok (done false)
+      else let offset_bytes1 ← offset_bytes + 1#usize
+           ok (cont offset_bytes1)
+  else ok (done true)
+
+/-- [noble_wasm::source::admission::metadata::sequence]: loop 3:
+    Source: 'crates/noble-wasm/src/source/admission/metadata.rs', lines 207:4-218:5 -/
+@[rust_loop]
+def source.admission.metadata.sequence_loop3
+  (first : Std.U8) (remaining : Slice Std.U8) (offset_bytes : Std.Usize) :
+  Result Bool
+  := do
+  loop
+    (fun offset_bytes1 => source.admission.metadata.sequence_loop3.body first
+      remaining offset_bytes1)
+    offset_bytes
+
+/-- [noble_wasm::source::admission::metadata::sequence]: loop body 4:
+    Source: 'crates/noble-wasm/src/source/admission/metadata.rs', lines 207:4-218:5 -/
+@[rust_loop_body]
+def source.admission.metadata.sequence_loop4.body
+  (first : Std.U8) (remaining : Slice Std.U8) (offset_bytes : Std.Usize) :
+  Result (ControlFlow Std.Usize Bool)
+  := do
+  if offset_bytes < 4#usize
+  then
+    let byte ← Slice.index_usize remaining offset_bytes
+    let i ← lift (byte &&& 192#u8)
+    if i != 128#u8
+    then ok (done false)
+    else
+      if offset_bytes = 1#usize
+      then
+        let b ←
+          source.admission.metadata.valid_leading_pair
+            (Array.make 2#usize [ first, byte ])
+        if b
+        then
+          let offset_bytes1 ← offset_bytes + 1#usize
+          ok (cont offset_bytes1)
+        else ok (done false)
+      else let offset_bytes1 ← offset_bytes + 1#usize
+           ok (cont offset_bytes1)
+  else ok (done true)
+
+/-- [noble_wasm::source::admission::metadata::sequence]: loop 4:
+    Source: 'crates/noble-wasm/src/source/admission/metadata.rs', lines 207:4-218:5 -/
+@[rust_loop]
+def source.admission.metadata.sequence_loop4
+  (first : Std.U8) (remaining : Slice Std.U8) (offset_bytes : Std.Usize) :
+  Result Bool
+  := do
+  loop
+    (fun offset_bytes1 => source.admission.metadata.sequence_loop4.body first
+      remaining offset_bytes1)
+    offset_bytes
+
+/-- [noble_wasm::source::admission::metadata::sequence]: loop body 5:
+    Source: 'crates/noble-wasm/src/source/admission/metadata.rs', lines 207:4-218:5 -/
+@[rust_loop_body]
+def source.admission.metadata.sequence_loop5.body
+  (first : Std.U8) (remaining : Slice Std.U8) (offset_bytes : Std.Usize) :
+  Result (ControlFlow Std.Usize Bool)
+  := do
+  if offset_bytes < 3#usize
+  then
+    let byte ← Slice.index_usize remaining offset_bytes
+    let i ← lift (byte &&& 192#u8)
+    if i != 128#u8
+    then ok (done false)
+    else
+      if offset_bytes = 1#usize
+      then
+        let b ←
+          source.admission.metadata.valid_leading_pair
+            (Array.make 2#usize [ first, byte ])
+        if b
+        then
+          let offset_bytes1 ← offset_bytes + 1#usize
+          ok (cont offset_bytes1)
+        else ok (done false)
+      else let offset_bytes1 ← offset_bytes + 1#usize
+           ok (cont offset_bytes1)
+  else ok (done true)
+
+/-- [noble_wasm::source::admission::metadata::sequence]: loop 5:
+    Source: 'crates/noble-wasm/src/source/admission/metadata.rs', lines 207:4-218:5 -/
+@[rust_loop]
+def source.admission.metadata.sequence_loop5
+  (first : Std.U8) (remaining : Slice Std.U8) (offset_bytes : Std.Usize) :
+  Result Bool
+  := do
+  loop
+    (fun offset_bytes1 => source.admission.metadata.sequence_loop5.body first
+      remaining offset_bytes1)
+    offset_bytes
+
+/-- [noble_wasm::source::admission::metadata::sequence]: loop body 6:
+    Source: 'crates/noble-wasm/src/source/admission/metadata.rs', lines 207:4-218:5 -/
+@[rust_loop_body]
+def source.admission.metadata.sequence_loop6.body
+  (first : Std.U8) (remaining : Slice Std.U8) (offset_bytes : Std.Usize) :
+  Result (ControlFlow Std.Usize Bool)
+  := do
+  if offset_bytes < 4#usize
+  then
+    let byte ← Slice.index_usize remaining offset_bytes
+    let i ← lift (byte &&& 192#u8)
+    if i != 128#u8
+    then ok (done false)
+    else
+      if offset_bytes = 1#usize
+      then
+        let b ←
+          source.admission.metadata.valid_leading_pair
+            (Array.make 2#usize [ first, byte ])
+        if b
+        then
+          let offset_bytes1 ← offset_bytes + 1#usize
+          ok (cont offset_bytes1)
+        else ok (done false)
+      else let offset_bytes1 ← offset_bytes + 1#usize
+           ok (cont offset_bytes1)
+  else ok (done true)
+
+/-- [noble_wasm::source::admission::metadata::sequence]: loop 6:
+    Source: 'crates/noble-wasm/src/source/admission/metadata.rs', lines 207:4-218:5 -/
+@[rust_loop]
+def source.admission.metadata.sequence_loop6
+  (first : Std.U8) (remaining : Slice Std.U8) (offset_bytes : Std.Usize) :
+  Result Bool
+  := do
+  loop
+    (fun offset_bytes1 => source.admission.metadata.sequence_loop6.body first
+      remaining offset_bytes1)
+    offset_bytes
+
+/-- [noble_wasm::source::admission::metadata::sequence]: loop body 7:
+    Source: 'crates/noble-wasm/src/source/admission/metadata.rs', lines 207:4-218:5 -/
+@[rust_loop_body]
+def source.admission.metadata.sequence_loop7.body
+  (first : Std.U8) (remaining : Slice Std.U8) (offset_bytes : Std.Usize) :
+  Result (ControlFlow Std.Usize Bool)
+  := do
+  if offset_bytes < 4#usize
+  then
+    let byte ← Slice.index_usize remaining offset_bytes
+    let i ← lift (byte &&& 192#u8)
+    if i != 128#u8
+    then ok (done false)
+    else
+      if offset_bytes = 1#usize
+      then
+        let b ←
+          source.admission.metadata.valid_leading_pair
+            (Array.make 2#usize [ first, byte ])
+        if b
+        then
+          let offset_bytes1 ← offset_bytes + 1#usize
+          ok (cont offset_bytes1)
+        else ok (done false)
+      else let offset_bytes1 ← offset_bytes + 1#usize
+           ok (cont offset_bytes1)
+  else ok (done true)
+
+/-- [noble_wasm::source::admission::metadata::sequence]: loop 7:
+    Source: 'crates/noble-wasm/src/source/admission/metadata.rs', lines 207:4-218:5 -/
+@[rust_loop]
+def source.admission.metadata.sequence_loop7
+  (first : Std.U8) (remaining : Slice Std.U8) (offset_bytes : Std.Usize) :
+  Result Bool
+  := do
+  loop
+    (fun offset_bytes1 => source.admission.metadata.sequence_loop7.body first
+      remaining offset_bytes1)
+    offset_bytes
+
+/-- [noble_wasm::source::admission::metadata::sequence]: loop body 8:
+    Source: 'crates/noble-wasm/src/source/admission/metadata.rs', lines 207:4-218:5 -/
+@[rust_loop_body]
+def source.admission.metadata.sequence_loop8.body
+  (first : Std.U8) (remaining : Slice Std.U8) (offset_bytes : Std.Usize) :
+  Result (ControlFlow Std.Usize Bool)
+  := do
+  if offset_bytes < 2#usize
+  then
+    let byte ← Slice.index_usize remaining offset_bytes
+    let i ← lift (byte &&& 192#u8)
+    if i != 128#u8
+    then ok (done false)
+    else
+      if offset_bytes = 1#usize
+      then
+        let b ←
+          source.admission.metadata.valid_leading_pair
+            (Array.make 2#usize [ first, byte ])
+        if b
+        then
+          let offset_bytes1 ← offset_bytes + 1#usize
+          ok (cont offset_bytes1)
+        else ok (done false)
+      else let offset_bytes1 ← offset_bytes + 1#usize
+           ok (cont offset_bytes1)
+  else ok (done true)
+
+/-- [noble_wasm::source::admission::metadata::sequence]: loop 8:
+    Source: 'crates/noble-wasm/src/source/admission/metadata.rs', lines 207:4-218:5 -/
+@[rust_loop]
+def source.admission.metadata.sequence_loop8
+  (first : Std.U8) (remaining : Slice Std.U8) (offset_bytes : Std.Usize) :
+  Result Bool
+  := do
+  loop
+    (fun offset_bytes1 => source.admission.metadata.sequence_loop8.body first
+      remaining offset_bytes1)
+    offset_bytes
+
+/-- [noble_wasm::source::admission::metadata::sequence]: loop body 9:
+    Source: 'crates/noble-wasm/src/source/admission/metadata.rs', lines 207:4-218:5 -/
+@[rust_loop_body]
+def source.admission.metadata.sequence_loop9.body
+  (first : Std.U8) (remaining : Slice Std.U8) (offset_bytes : Std.Usize) :
+  Result (ControlFlow Std.Usize Bool)
+  := do
+  if offset_bytes < 3#usize
+  then
+    let byte ← Slice.index_usize remaining offset_bytes
+    let i ← lift (byte &&& 192#u8)
+    if i != 128#u8
+    then ok (done false)
+    else
+      if offset_bytes = 1#usize
+      then
+        let b ←
+          source.admission.metadata.valid_leading_pair
+            (Array.make 2#usize [ first, byte ])
+        if b
+        then
+          let offset_bytes1 ← offset_bytes + 1#usize
+          ok (cont offset_bytes1)
+        else ok (done false)
+      else let offset_bytes1 ← offset_bytes + 1#usize
+           ok (cont offset_bytes1)
+  else ok (done true)
+
+/-- [noble_wasm::source::admission::metadata::sequence]: loop 9:
+    Source: 'crates/noble-wasm/src/source/admission/metadata.rs', lines 207:4-218:5 -/
+@[rust_loop]
+def source.admission.metadata.sequence_loop9
+  (first : Std.U8) (remaining : Slice Std.U8) (offset_bytes : Std.Usize) :
+  Result Bool
+  := do
+  loop
+    (fun offset_bytes1 => source.admission.metadata.sequence_loop9.body first
+      remaining offset_bytes1)
+    offset_bytes
+
+/-- [noble_wasm::source::admission::metadata::sequence]: loop body 10:
+    Source: 'crates/noble-wasm/src/source/admission/metadata.rs', lines 207:4-218:5 -/
+@[rust_loop_body]
+def source.admission.metadata.sequence_loop10.body
+  (first : Std.U8) (remaining : Slice Std.U8) (offset_bytes : Std.Usize) :
+  Result (ControlFlow Std.Usize Bool)
+  := do
+  if offset_bytes < 4#usize
+  then
+    let byte ← Slice.index_usize remaining offset_bytes
+    let i ← lift (byte &&& 192#u8)
+    if i != 128#u8
+    then ok (done false)
+    else
+      if offset_bytes = 1#usize
+      then
+        let b ←
+          source.admission.metadata.valid_leading_pair
+            (Array.make 2#usize [ first, byte ])
+        if b
+        then
+          let offset_bytes1 ← offset_bytes + 1#usize
+          ok (cont offset_bytes1)
+        else ok (done false)
+      else let offset_bytes1 ← offset_bytes + 1#usize
+           ok (cont offset_bytes1)
+  else ok (done true)
+
+/-- [noble_wasm::source::admission::metadata::sequence]: loop 10:
+    Source: 'crates/noble-wasm/src/source/admission/metadata.rs', lines 207:4-218:5 -/
+@[rust_loop]
+def source.admission.metadata.sequence_loop10
+  (first : Std.U8) (remaining : Slice Std.U8) (offset_bytes : Std.Usize) :
+  Result Bool
+  := do
+  loop
+    (fun offset_bytes1 => source.admission.metadata.sequence_loop10.body first
+      remaining offset_bytes1)
+    offset_bytes
+
+/-- [noble_wasm::source::admission::metadata::sequence]: loop body 11:
+    Source: 'crates/noble-wasm/src/source/admission/metadata.rs', lines 207:4-218:5 -/
+@[rust_loop_body]
+def source.admission.metadata.sequence_loop11.body
+  (first : Std.U8) (remaining : Slice Std.U8) (offset_bytes : Std.Usize) :
+  Result (ControlFlow Std.Usize Bool)
+  := do
+  if offset_bytes < 4#usize
+  then
+    let byte ← Slice.index_usize remaining offset_bytes
+    let i ← lift (byte &&& 192#u8)
+    if i != 128#u8
+    then ok (done false)
+    else
+      if offset_bytes = 1#usize
+      then
+        let b ←
+          source.admission.metadata.valid_leading_pair
+            (Array.make 2#usize [ first, byte ])
+        if b
+        then
+          let offset_bytes1 ← offset_bytes + 1#usize
+          ok (cont offset_bytes1)
+        else ok (done false)
+      else let offset_bytes1 ← offset_bytes + 1#usize
+           ok (cont offset_bytes1)
+  else ok (done true)
+
+/-- [noble_wasm::source::admission::metadata::sequence]: loop 11:
+    Source: 'crates/noble-wasm/src/source/admission/metadata.rs', lines 207:4-218:5 -/
+@[rust_loop]
+def source.admission.metadata.sequence_loop11
+  (first : Std.U8) (remaining : Slice Std.U8) (offset_bytes : Std.Usize) :
+  Result Bool
+  := do
+  loop
+    (fun offset_bytes1 => source.admission.metadata.sequence_loop11.body first
+      remaining offset_bytes1)
+    offset_bytes
+
+/-- [noble_wasm::source::admission::metadata::sequence]: loop body 12:
+    Source: 'crates/noble-wasm/src/source/admission/metadata.rs', lines 207:4-218:5 -/
+@[rust_loop_body]
+def source.admission.metadata.sequence_loop12.body
+  (first : Std.U8) (remaining : Slice Std.U8) (offset_bytes : Std.Usize) :
+  Result (ControlFlow Std.Usize Bool)
+  := do
+  if offset_bytes < 3#usize
+  then
+    let byte ← Slice.index_usize remaining offset_bytes
+    let i ← lift (byte &&& 192#u8)
+    if i != 128#u8
+    then ok (done false)
+    else
+      if offset_bytes = 1#usize
+      then
+        let b ←
+          source.admission.metadata.valid_leading_pair
+            (Array.make 2#usize [ first, byte ])
+        if b
+        then
+          let offset_bytes1 ← offset_bytes + 1#usize
+          ok (cont offset_bytes1)
+        else ok (done false)
+      else let offset_bytes1 ← offset_bytes + 1#usize
+           ok (cont offset_bytes1)
+  else ok (done true)
+
+/-- [noble_wasm::source::admission::metadata::sequence]: loop 12:
+    Source: 'crates/noble-wasm/src/source/admission/metadata.rs', lines 207:4-218:5 -/
+@[rust_loop]
+def source.admission.metadata.sequence_loop12
+  (first : Std.U8) (remaining : Slice Std.U8) (offset_bytes : Std.Usize) :
+  Result Bool
+  := do
+  loop
+    (fun offset_bytes1 => source.admission.metadata.sequence_loop12.body first
+      remaining offset_bytes1)
+    offset_bytes
+
+/-- [noble_wasm::source::admission::metadata::sequence]: loop body 13:
+    Source: 'crates/noble-wasm/src/source/admission/metadata.rs', lines 207:4-218:5 -/
+@[rust_loop_body]
+def source.admission.metadata.sequence_loop13.body
+  (first : Std.U8) (remaining : Slice Std.U8) (offset_bytes : Std.Usize) :
+  Result (ControlFlow Std.Usize Bool)
+  := do
+  if offset_bytes < 4#usize
+  then
+    let byte ← Slice.index_usize remaining offset_bytes
+    let i ← lift (byte &&& 192#u8)
+    if i != 128#u8
+    then ok (done false)
+    else
+      if offset_bytes = 1#usize
+      then
+        let b ←
+          source.admission.metadata.valid_leading_pair
+            (Array.make 2#usize [ first, byte ])
+        if b
+        then
+          let offset_bytes1 ← offset_bytes + 1#usize
+          ok (cont offset_bytes1)
+        else ok (done false)
+      else let offset_bytes1 ← offset_bytes + 1#usize
+           ok (cont offset_bytes1)
+  else ok (done true)
+
+/-- [noble_wasm::source::admission::metadata::sequence]: loop 13:
+    Source: 'crates/noble-wasm/src/source/admission/metadata.rs', lines 207:4-218:5 -/
+@[rust_loop]
+def source.admission.metadata.sequence_loop13
+  (first : Std.U8) (remaining : Slice Std.U8) (offset_bytes : Std.Usize) :
+  Result Bool
+  := do
+  loop
+    (fun offset_bytes1 => source.admission.metadata.sequence_loop13.body first
+      remaining offset_bytes1)
+    offset_bytes
+
+/-- [noble_wasm::source::admission::metadata::sequence]: loop body 14:
+    Source: 'crates/noble-wasm/src/source/admission/metadata.rs', lines 207:4-218:5 -/
+@[rust_loop_body]
+def source.admission.metadata.sequence_loop14.body
+  (first : Std.U8) (remaining : Slice Std.U8) (offset_bytes : Std.Usize) :
+  Result (ControlFlow Std.Usize Bool)
+  := do
+  if offset_bytes < 4#usize
+  then
+    let byte ← Slice.index_usize remaining offset_bytes
+    let i ← lift (byte &&& 192#u8)
+    if i != 128#u8
+    then ok (done false)
+    else
+      if offset_bytes = 1#usize
+      then
+        let b ←
+          source.admission.metadata.valid_leading_pair
+            (Array.make 2#usize [ first, byte ])
+        if b
+        then
+          let offset_bytes1 ← offset_bytes + 1#usize
+          ok (cont offset_bytes1)
+        else ok (done false)
+      else let offset_bytes1 ← offset_bytes + 1#usize
+           ok (cont offset_bytes1)
+  else ok (done true)
+
+/-- [noble_wasm::source::admission::metadata::sequence]: loop 14:
+    Source: 'crates/noble-wasm/src/source/admission/metadata.rs', lines 207:4-218:5 -/
+@[rust_loop]
+def source.admission.metadata.sequence_loop14
+  (first : Std.U8) (remaining : Slice Std.U8) (offset_bytes : Std.Usize) :
+  Result Bool
+  := do
+  loop
+    (fun offset_bytes1 => source.admission.metadata.sequence_loop14.body first
+      remaining offset_bytes1)
+    offset_bytes
+
+/-- [noble_wasm::source::admission::metadata::sequence]:
+    Source: 'crates/noble-wasm/src/source/admission/metadata.rs', lines 192:0-224:1 -/
+def source.admission.metadata.sequence
+  (bytes : Slice Std.U8) (index : Std.Usize) :
+  Result (core.result.Result Std.Usize Diagnostic)
+  := do
+  let first ← Slice.index_usize bytes index
+  if 0#u8 <= first
+  then
+    if first <= 127#u8
+    then
+      let remaining ←
+        core.slice.index.Slice.index
+          (core.slice.index.SliceIndexRangeFromUsizeSlice Std.U8) bytes
+          { start := index }
+      let i := Slice.len remaining
+      if i < 1#usize
+      then ok (core.result.Result.Err Diagnostic.Invalid)
+      else
+        let is_valid ←
+          source.admission.metadata.sequence_loop0 first remaining 1#usize
+        if is_valid
+        then ok (core.result.Result.Ok 1#usize)
+        else ok (core.result.Result.Err Diagnostic.Invalid)
+    else
+      if 194#u8 <= first
+      then
+        if first <= 223#u8
+        then
+          let remaining ←
+            core.slice.index.Slice.index
+              (core.slice.index.SliceIndexRangeFromUsizeSlice Std.U8) bytes
+              { start := index }
+          let i := Slice.len remaining
+          if i < 2#usize
+          then ok (core.result.Result.Err Diagnostic.Invalid)
+          else
+            let is_valid ←
+              source.admission.metadata.sequence_loop1 first remaining 1#usize
+            if is_valid
+            then ok (core.result.Result.Ok 2#usize)
+            else ok (core.result.Result.Err Diagnostic.Invalid)
+        else
+          if 224#u8 <= first
+          then
+            if first <= 239#u8
+            then
+              let remaining ←
+                core.slice.index.Slice.index
+                  (core.slice.index.SliceIndexRangeFromUsizeSlice Std.U8) bytes
+                  { start := index }
+              let i := Slice.len remaining
+              if i < 3#usize
+              then ok (core.result.Result.Err Diagnostic.Invalid)
+              else
+                let is_valid ←
+                  source.admission.metadata.sequence_loop2 first remaining
+                    1#usize
+                if is_valid
+                then ok (core.result.Result.Ok 3#usize)
+                else ok (core.result.Result.Err Diagnostic.Invalid)
+            else
+              if 240#u8 <= first
+              then
+                if first <= 244#u8
+                then
+                  let remaining ←
+                    core.slice.index.Slice.index
+                      (core.slice.index.SliceIndexRangeFromUsizeSlice Std.U8)
+                      bytes { start := index }
+                  let i := Slice.len remaining
+                  if i < 4#usize
+                  then ok (core.result.Result.Err Diagnostic.Invalid)
+                  else
+                    let is_valid ←
+                      source.admission.metadata.sequence_loop3 first remaining
+                        1#usize
+                    if is_valid
+                    then ok (core.result.Result.Ok 4#usize)
+                    else ok (core.result.Result.Err Diagnostic.Invalid)
+                else ok (core.result.Result.Err Diagnostic.Invalid)
+              else ok (core.result.Result.Err Diagnostic.Invalid)
+          else
+            if 240#u8 <= first
+            then
+              if first <= 244#u8
+              then
+                let remaining ←
+                  core.slice.index.Slice.index
+                    (core.slice.index.SliceIndexRangeFromUsizeSlice Std.U8)
+                    bytes { start := index }
+                let i := Slice.len remaining
+                if i < 4#usize
+                then ok (core.result.Result.Err Diagnostic.Invalid)
+                else
+                  let is_valid ←
+                    source.admission.metadata.sequence_loop4 first remaining
+                      1#usize
+                  if is_valid
+                  then ok (core.result.Result.Ok 4#usize)
+                  else ok (core.result.Result.Err Diagnostic.Invalid)
+              else ok (core.result.Result.Err Diagnostic.Invalid)
+            else ok (core.result.Result.Err Diagnostic.Invalid)
+      else
+        if 224#u8 <= first
+        then
+          if first <= 239#u8
+          then
+            let remaining ←
+              core.slice.index.Slice.index
+                (core.slice.index.SliceIndexRangeFromUsizeSlice Std.U8) bytes
+                { start := index }
+            let i := Slice.len remaining
+            if i < 3#usize
+            then ok (core.result.Result.Err Diagnostic.Invalid)
+            else
+              let is_valid ←
+                source.admission.metadata.sequence_loop5 first remaining
+                  1#usize
+              if is_valid
+              then ok (core.result.Result.Ok 3#usize)
+              else ok (core.result.Result.Err Diagnostic.Invalid)
+          else
+            if 240#u8 <= first
+            then
+              if first <= 244#u8
+              then
+                let remaining ←
+                  core.slice.index.Slice.index
+                    (core.slice.index.SliceIndexRangeFromUsizeSlice Std.U8)
+                    bytes { start := index }
+                let i := Slice.len remaining
+                if i < 4#usize
+                then ok (core.result.Result.Err Diagnostic.Invalid)
+                else
+                  let is_valid ←
+                    source.admission.metadata.sequence_loop6 first remaining
+                      1#usize
+                  if is_valid
+                  then ok (core.result.Result.Ok 4#usize)
+                  else ok (core.result.Result.Err Diagnostic.Invalid)
+              else ok (core.result.Result.Err Diagnostic.Invalid)
+            else ok (core.result.Result.Err Diagnostic.Invalid)
+        else
+          if 240#u8 <= first
+          then
+            if first <= 244#u8
+            then
+              let remaining ←
+                core.slice.index.Slice.index
+                  (core.slice.index.SliceIndexRangeFromUsizeSlice Std.U8) bytes
+                  { start := index }
+              let i := Slice.len remaining
+              if i < 4#usize
+              then ok (core.result.Result.Err Diagnostic.Invalid)
+              else
+                let is_valid ←
+                  source.admission.metadata.sequence_loop7 first remaining
+                    1#usize
+                if is_valid
+                then ok (core.result.Result.Ok 4#usize)
+                else ok (core.result.Result.Err Diagnostic.Invalid)
+            else ok (core.result.Result.Err Diagnostic.Invalid)
+          else ok (core.result.Result.Err Diagnostic.Invalid)
+  else
+    if 194#u8 <= first
+    then
+      if first <= 223#u8
+      then
+        let remaining ←
+          core.slice.index.Slice.index
+            (core.slice.index.SliceIndexRangeFromUsizeSlice Std.U8) bytes
+            { start := index }
+        let i := Slice.len remaining
+        if i < 2#usize
+        then ok (core.result.Result.Err Diagnostic.Invalid)
+        else
+          let is_valid ←
+            source.admission.metadata.sequence_loop8 first remaining 1#usize
+          if is_valid
+          then ok (core.result.Result.Ok 2#usize)
+          else ok (core.result.Result.Err Diagnostic.Invalid)
+      else
+        if 224#u8 <= first
+        then
+          if first <= 239#u8
+          then
+            let remaining ←
+              core.slice.index.Slice.index
+                (core.slice.index.SliceIndexRangeFromUsizeSlice Std.U8) bytes
+                { start := index }
+            let i := Slice.len remaining
+            if i < 3#usize
+            then ok (core.result.Result.Err Diagnostic.Invalid)
+            else
+              let is_valid ←
+                source.admission.metadata.sequence_loop9 first remaining
+                  1#usize
+              if is_valid
+              then ok (core.result.Result.Ok 3#usize)
+              else ok (core.result.Result.Err Diagnostic.Invalid)
+          else
+            if 240#u8 <= first
+            then
+              if first <= 244#u8
+              then
+                let remaining ←
+                  core.slice.index.Slice.index
+                    (core.slice.index.SliceIndexRangeFromUsizeSlice Std.U8)
+                    bytes { start := index }
+                let i := Slice.len remaining
+                if i < 4#usize
+                then ok (core.result.Result.Err Diagnostic.Invalid)
+                else
+                  let is_valid ←
+                    source.admission.metadata.sequence_loop10 first remaining
+                      1#usize
+                  if is_valid
+                  then ok (core.result.Result.Ok 4#usize)
+                  else ok (core.result.Result.Err Diagnostic.Invalid)
+              else ok (core.result.Result.Err Diagnostic.Invalid)
+            else ok (core.result.Result.Err Diagnostic.Invalid)
+        else
+          if 240#u8 <= first
+          then
+            if first <= 244#u8
+            then
+              let remaining ←
+                core.slice.index.Slice.index
+                  (core.slice.index.SliceIndexRangeFromUsizeSlice Std.U8) bytes
+                  { start := index }
+              let i := Slice.len remaining
+              if i < 4#usize
+              then ok (core.result.Result.Err Diagnostic.Invalid)
+              else
+                let is_valid ←
+                  source.admission.metadata.sequence_loop11 first remaining
+                    1#usize
+                if is_valid
+                then ok (core.result.Result.Ok 4#usize)
+                else ok (core.result.Result.Err Diagnostic.Invalid)
+            else ok (core.result.Result.Err Diagnostic.Invalid)
+          else ok (core.result.Result.Err Diagnostic.Invalid)
+    else
+      if 224#u8 <= first
+      then
+        if first <= 239#u8
+        then
+          let remaining ←
+            core.slice.index.Slice.index
+              (core.slice.index.SliceIndexRangeFromUsizeSlice Std.U8) bytes
+              { start := index }
+          let i := Slice.len remaining
+          if i < 3#usize
+          then ok (core.result.Result.Err Diagnostic.Invalid)
+          else
+            let is_valid ←
+              source.admission.metadata.sequence_loop12 first remaining 1#usize
+            if is_valid
+            then ok (core.result.Result.Ok 3#usize)
+            else ok (core.result.Result.Err Diagnostic.Invalid)
+        else
+          if 240#u8 <= first
+          then
+            if first <= 244#u8
+            then
+              let remaining ←
+                core.slice.index.Slice.index
+                  (core.slice.index.SliceIndexRangeFromUsizeSlice Std.U8) bytes
+                  { start := index }
+              let i := Slice.len remaining
+              if i < 4#usize
+              then ok (core.result.Result.Err Diagnostic.Invalid)
+              else
+                let is_valid ←
+                  source.admission.metadata.sequence_loop13 first remaining
+                    1#usize
+                if is_valid
+                then ok (core.result.Result.Ok 4#usize)
+                else ok (core.result.Result.Err Diagnostic.Invalid)
+            else ok (core.result.Result.Err Diagnostic.Invalid)
+          else ok (core.result.Result.Err Diagnostic.Invalid)
+      else
+        if 240#u8 <= first
+        then
+          if first <= 244#u8
+          then
+            let remaining ←
+              core.slice.index.Slice.index
+                (core.slice.index.SliceIndexRangeFromUsizeSlice Std.U8) bytes
+                { start := index }
+            let i := Slice.len remaining
+            if i < 4#usize
+            then ok (core.result.Result.Err Diagnostic.Invalid)
+            else
+              let is_valid ←
+                source.admission.metadata.sequence_loop14 first remaining
+                  1#usize
+              if is_valid
+              then ok (core.result.Result.Ok 4#usize)
+              else ok (core.result.Result.Err Diagnostic.Invalid)
+          else ok (core.result.Result.Err Diagnostic.Invalid)
+        else ok (core.result.Result.Err Diagnostic.Invalid)
+
+/-- [noble_wasm::source::admission::metadata::utf8]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/admission/metadata.rs', lines 173:4-181:5 -/
+@[rust_loop_body]
+def source.admission.metadata.utf8_loop.body
+  (bytes : Slice Std.U8) (index : Std.Usize) :
+  Result (ControlFlow Std.Usize (Option Diagnostic))
+  := do
+  let i := Slice.len bytes
+  if index < i
+  then
+    let r ← source.admission.metadata.sequence bytes index
+    match r with
+    | core.result.Result.Ok width =>
+      let index1 ← index + width
+      ok (cont index1)
+    | core.result.Result.Err problem => ok (done (some problem))
+  else ok (done none)
+
+/-- [noble_wasm::source::admission::metadata::utf8]: loop 0:
+    Source: 'crates/noble-wasm/src/source/admission/metadata.rs', lines 173:4-181:5 -/
+@[rust_loop]
+def source.admission.metadata.utf8_loop
+  (bytes : Slice Std.U8) (index : Std.Usize) : Result (Option Diagnostic) := do
+  loop
+    (fun index1 => source.admission.metadata.utf8_loop.body bytes index1)
+    index
+
+/-- [noble_wasm::source::admission::metadata::utf8]:
+    Source: 'crates/noble-wasm/src/source/admission/metadata.rs', lines 170:0-186:1 -/
+def source.admission.metadata.utf8
+  (bytes : Slice Std.U8) : Result (core.result.Result Unit Diagnostic) := do
+  let failure ← source.admission.metadata.utf8_loop bytes 0#usize
+  match failure with
+  | none => ok (core.result.Result.Ok ())
+  | some problem => ok (core.result.Result.Err problem)
+
+/-- [noble_wasm::source::admission::metadata::check_text]:
+    Source: 'crates/noble-wasm/src/source/admission/metadata.rs', lines 145:0-168:1 -/
+def source.admission.metadata.check_text
+  (body : noble_kernel.execution.Body) («at» : Std.Usize)
+  (totals : source.admission.metadata.Totals) (work : source.Work) :
+  Result ((core.result.Result Unit Diagnostic) ×
+    source.admission.metadata.Totals × source.Work)
+  := do
+  let text ←
+    alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+      noble_kernel.execution.TextLiteral) body.texts «at»
+  let r ← source.admission.node body.candidate text.node
+  match r with
+  | core.result.Result.Ok value =>
+    match value with
+    | noble_kernel.untrusted.Node.Literal l _ =>
+      match l with
+      | noble_kernel.untrusted.Lit.I64Lit _ =>
+        ok (core.result.Result.Err Diagnostic.Invalid, totals, work)
+      | noble_kernel.untrusted.Lit.BoolLit _ =>
+        ok (core.result.Result.Err Diagnostic.Invalid, totals, work)
+      | noble_kernel.untrusted.Lit.TextLit =>
+        let i := alloc.vec.Vec.len text.bytes
+        let o ← lift (Usize.checked_add totals.bytes i)
+        match o with
+        | none =>
+          ok (core.result.Result.Err Diagnostic.Exhausted, totals, work)
+        | some value1 =>
+          if value1 > 786432#usize
+          then
+            ok (core.result.Result.Err Diagnostic.Exhausted,
+              { totals with bytes := value1 }, work)
+          else
+            let i1 := alloc.vec.Vec.len text.bytes
+            let (r1, work1) ← source.Work.entries work i1
+            match r1 with
+            | core.result.Result.Ok _ =>
+              let s := alloc.vec.Vec.deref text.bytes
+              let r2 ← source.admission.metadata.utf8 s
+              ok (r2, { totals with bytes := value1 }, work1)
+            | core.result.Result.Err _ =>
+              ok (r1, { totals with bytes := value1 }, work1)
+      | noble_kernel.untrusted.Lit.UnitLit =>
+        ok (core.result.Result.Err Diagnostic.Invalid, totals, work)
+    | noble_kernel.untrusted.Node.Invocation _ _ =>
+      ok (core.result.Result.Err Diagnostic.Invalid, totals, work)
+    | noble_kernel.untrusted.Node.Quotation _ _ =>
+      ok (core.result.Result.Err Diagnostic.Invalid, totals, work)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, totals, work)
+
+/-- [noble_wasm::source::admission::metadata::text_matches]:
+    Source: 'crates/noble-wasm/src/source/admission/metadata.rs', lines 132:0-139:1 -/
+def source.admission.metadata.text_matches
+  (node : noble_kernel.untrusted.NodeId) («at» : Std.Usize)
+  (work : source.Work) :
+  Result ((core.result.Result Bool Diagnostic) × source.Work)
+  := do
+  let (r, work1) ← source.Work.charge work 1#u64
+  match r with
+  | core.result.Result.Ok _ =>
+    let r1 ← admission.index node
+    match r1 with
+    | core.result.Result.Ok value =>
+      ok (core.result.Result.Ok (value = «at»), work1)
+    | core.result.Result.Err failure =>
+      ok (core.result.Result.Err failure, work1)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, work1)
+
+/-- [noble_wasm::source::admission::metadata::text_count]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/admission/metadata.rs', lines 108:4-121:5 -/
+@[rust_loop_body]
+def source.admission.metadata.text_count_loop.body
+  (body : noble_kernel.execution.Body) («at» : Std.Usize)
+  (work : source.Work) (found : Std.Usize) (text : Std.Usize) :
+  Result (ControlFlow (source.Work × Std.Usize × Std.Usize) (source.Work ×
+    Std.Usize × (Option Diagnostic)))
+  := do
+  let i := alloc.vec.Vec.len body.texts
+  if text < i
+  then
+    let tl ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        noble_kernel.execution.TextLiteral) body.texts text
+    let (r, work1) ←
+      source.admission.metadata.text_matches tl.node «at» work
+    match r with
+    | core.result.Result.Ok «matches» =>
+      let found1 ← if «matches»
+                     then found + 1#usize
+                     else ok found
+      let text1 ← text + 1#usize
+      ok (cont (work1, found1, text1))
+    | core.result.Result.Err problem => ok (done (work1, found, some problem))
+  else ok (done (work, found, none))
+
+/-- [noble_wasm::source::admission::metadata::text_count]: loop 0:
+    Source: 'crates/noble-wasm/src/source/admission/metadata.rs', lines 108:4-121:5 -/
+@[rust_loop]
+def source.admission.metadata.text_count_loop
+  (body : noble_kernel.execution.Body) («at» : Std.Usize)
+  (work : source.Work) (found : Std.Usize) (text : Std.Usize) :
+  Result (source.Work × Std.Usize × (Option Diagnostic))
+  := do
+  loop
+    (fun (work1, found1, text1) =>
+      source.admission.metadata.text_count_loop.body body «at» work1 found1
+      text1)
+    (work, found, text)
+
+/-- [noble_wasm::source::admission::metadata::text_count]:
+    Source: 'crates/noble-wasm/src/source/admission/metadata.rs', lines 100:0-126:1 -/
+def source.admission.metadata.text_count
+  (body : noble_kernel.execution.Body) («at» : Std.Usize)
+  (work : source.Work) :
+  Result ((core.result.Result Std.Usize Diagnostic) × source.Work)
+  := do
+  let (work1, found, failure) ←
+    source.admission.metadata.text_count_loop body «at» work 0#usize 0#usize
+  match failure with
+  | none => ok (core.result.Result.Ok found, work1)
+  | some problem => ok (core.result.Result.Err problem, work1)
+
+/-- [noble_wasm::source::admission::metadata::check_node]:
+    Source: 'crates/noble-wasm/src/source/admission/metadata.rs', lines 70:0-94:1 -/
+def source.admission.metadata.check_node
+  (body : noble_kernel.execution.Body) («at» : Std.Usize)
+  (work : source.Work) :
+  Result ((core.result.Result Unit Diagnostic) × source.Work)
+  := do
+  let (r, work1) ← source.Work.charge work 1#u64
+  match r with
+  | core.result.Result.Ok _ =>
+    let n ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        noble_kernel.untrusted.Node) body.candidate.nodes «at»
+    match n with
+    | noble_kernel.untrusted.Node.Literal l _ =>
+      match l with
+      | noble_kernel.untrusted.Lit.I64Lit _ =>
+        ok (core.result.Result.Ok (), work1)
+      | noble_kernel.untrusted.Lit.BoolLit _ =>
+        ok (core.result.Result.Ok (), work1)
+      | noble_kernel.untrusted.Lit.TextLit =>
+        let (r1, work2) ←
+          source.admission.metadata.text_count body «at» work1
+        match r1 with
+        | core.result.Result.Ok value =>
+          if value != 1#usize
+          then ok (core.result.Result.Err Diagnostic.Invalid, work2)
+          else ok (core.result.Result.Ok (), work2)
+        | core.result.Result.Err failure =>
+          ok (core.result.Result.Err failure, work2)
+      | noble_kernel.untrusted.Lit.UnitLit =>
+        ok (core.result.Result.Ok (), work1)
+    | noble_kernel.untrusted.Node.Invocation _ _ =>
+      ok (core.result.Result.Ok (), work1)
+    | noble_kernel.untrusted.Node.Quotation body1 _ =>
+      let i := alloc.vec.Vec.len body1
+      if i > source.NODE_LIMIT
+      then ok (core.result.Result.Err Diagnostic.Exhausted, work1)
+      else ok (core.result.Result.Ok (), work1)
+  | core.result.Result.Err _ => ok (r, work1)
+
+/-- [noble_wasm::source::admission::metadata::check]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/admission/metadata.rs', lines 37:4-45:5 -/
+@[rust_loop_body]
+def source.admission.metadata.check_loop0.body
+  (i : Std.U32) (i1 : Std.U32) (v : alloc.vec.Vec noble_kernel.untrusted.Node)
+  (v1 : alloc.vec.Vec noble_kernel.untrusted.NodeId)
+  (v2 : alloc.vec.Vec noble_kernel.execution.TextLiteral) (work : source.Work)
+  («at» : Std.Usize) :
+  Result (ControlFlow (source.Work × Std.Usize) (source.Work × (Option
+    Diagnostic)))
+  := do
+  let i2 := alloc.vec.Vec.len v
+  if «at» < i2
+  then
+    let (r, work1) ←
+      source.admission.metadata.check_node
+        {
+          candidate := { format := i, revision := i1, nodes := v, body := v1 },
+          texts := v2
+        } «at» work
+    match r with
+    | core.result.Result.Ok _ =>
+      let at1 ← «at» + 1#usize
+      ok (cont (work1, at1))
+    | core.result.Result.Err problem => ok (done (work1, some problem))
+  else ok (done (work, none))
+
+/-- [noble_wasm::source::admission::metadata::check]: loop 0:
+    Source: 'crates/noble-wasm/src/source/admission/metadata.rs', lines 37:4-45:5 -/
+@[rust_loop]
+def source.admission.metadata.check_loop0
+  (i : Std.U32) (i1 : Std.U32) (v : alloc.vec.Vec noble_kernel.untrusted.Node)
+  (v1 : alloc.vec.Vec noble_kernel.untrusted.NodeId)
+  (v2 : alloc.vec.Vec noble_kernel.execution.TextLiteral) (work : source.Work)
+  («at» : Std.Usize) :
+  Result (source.Work × (Option Diagnostic))
+  := do
+  loop
+    (fun (work1, at1) => source.admission.metadata.check_loop0.body i i1 v v1
+      v2 work1 at1)
+    (work, «at»)
+
+/-- [noble_wasm::source::admission::metadata::check]: loop body 1:
+    Source: 'crates/noble-wasm/src/source/admission/metadata.rs', lines 50:4-58:5 -/
+@[rust_loop_body]
+def source.admission.metadata.check_loop1.body
+  (i : Std.U32) (i1 : Std.U32) (v : alloc.vec.Vec noble_kernel.untrusted.Node)
+  (v1 : alloc.vec.Vec noble_kernel.untrusted.NodeId)
+  (v2 : alloc.vec.Vec noble_kernel.execution.TextLiteral)
+  (totals : source.admission.metadata.Totals) (work : source.Work)
+  («at» : Std.Usize) :
+  Result (ControlFlow (source.admission.metadata.Totals × source.Work ×
+    Std.Usize) (source.admission.metadata.Totals × source.Work × (Option
+    Diagnostic)))
+  := do
+  let i2 := alloc.vec.Vec.len v2
+  if «at» < i2
+  then
+    let (r, totals1, work1) ←
+      source.admission.metadata.check_text
+        {
+          candidate := { format := i, revision := i1, nodes := v, body := v1 },
+          texts := v2
+        } «at» totals work
+    match r with
+    | core.result.Result.Ok _ =>
+      let at1 ← «at» + 1#usize
+      ok (cont (totals1, work1, at1))
+    | core.result.Result.Err problem =>
+      ok (done (totals1, work1, some problem))
+  else ok (done (totals, work, none))
+
+/-- [noble_wasm::source::admission::metadata::check]: loop 1:
+    Source: 'crates/noble-wasm/src/source/admission/metadata.rs', lines 50:4-58:5 -/
+@[rust_loop]
+def source.admission.metadata.check_loop1
+  (i : Std.U32) (i1 : Std.U32) (v : alloc.vec.Vec noble_kernel.untrusted.Node)
+  (v1 : alloc.vec.Vec noble_kernel.untrusted.NodeId)
+  (v2 : alloc.vec.Vec noble_kernel.execution.TextLiteral)
+  (totals : source.admission.metadata.Totals) (work : source.Work)
+  («at» : Std.Usize) :
+  Result (source.admission.metadata.Totals × source.Work × (Option
+    Diagnostic))
+  := do
+  loop
+    (fun (totals1, work1, at1) => source.admission.metadata.check_loop1.body i
+      i1 v v1 v2 totals1 work1 at1)
+    (totals, work, «at»)
+
+/-- [noble_wasm::source::admission::metadata::check]:
+    Source: 'crates/noble-wasm/src/source/admission/metadata.rs', lines 15:0-63:1 -/
+def source.admission.metadata.check
+  (body : noble_kernel.execution.Body)
+  (totals : source.admission.metadata.Totals) (work : source.Work) :
+  Result ((core.result.Result Unit Diagnostic) ×
+    source.admission.metadata.Totals × source.Work)
+  := do
+  let i ← noble_kernel.untrusted.CANDIDATE_FORMAT
+  if body.candidate.format != i
+  then ok (core.result.Result.Err Diagnostic.Unsupported, totals, work)
+  else
+    let i1 ← noble_kernel.untrusted.SEMANTIC_REVISION
+    if body.candidate.revision != i1
+    then ok (core.result.Result.Err Diagnostic.Unsupported, totals, work)
+    else
+      let i2 := alloc.vec.Vec.len body.candidate.nodes
+      let o ← lift (Usize.checked_add totals.nodes i2)
+      match o with
+      | none => ok (core.result.Result.Err Diagnostic.Exhausted, totals, work)
+      | some value =>
+        if value > source.NODE_LIMIT
+        then
+          ok (core.result.Result.Err Diagnostic.Exhausted,
+            { totals with nodes := value }, work)
+        else
+          let i3 := alloc.vec.Vec.len body.candidate.body
+          if i3 > source.NODE_LIMIT
+          then
+            ok (core.result.Result.Err Diagnostic.Exhausted,
+              { totals with nodes := value }, work)
+          else
+            let i4 := alloc.vec.Vec.len body.texts
+            let i5 := alloc.vec.Vec.len body.candidate.nodes
+            if i4 > i5
+            then
+              ok (core.result.Result.Err Diagnostic.Exhausted,
+                { totals with nodes := value }, work)
+            else
+              let (work1, failure) ←
+                source.admission.metadata.check_loop0 body.candidate.format
+                  body.candidate.revision body.candidate.nodes
+                  body.candidate.body body.texts work 0#usize
+              match failure with
+              | none =>
+                let (totals1, work2, failure1) ←
+                  source.admission.metadata.check_loop1 body.candidate.format
+                    body.candidate.revision body.candidate.nodes
+                    body.candidate.body body.texts
+                    { totals with nodes := value } work1 0#usize
+                match failure1 with
+                | none => ok (core.result.Result.Ok (), totals1, work2)
+                | some problem =>
+                  ok (core.result.Result.Err problem, totals1, work2)
+              | some problem =>
+                ok (core.result.Result.Err problem,
+                  { totals with nodes := value }, work1)
+
+/-- [noble_wasm::source::admission::meter::type_bytes]:
+    Source: 'crates/noble-wasm/src/source/admission/meter.rs', lines 40:0-55:1 -/
+def source.admission.meter.type_bytes
+  (ty : noble_kernel.types.Ty) (work : source.Work) :
+  Result ((core.result.Result Std.U64 Diagnostic) × source.Work)
+  := do
+  let (r, work1) ← source.Work.charge work 2048#u64
+  match r with
+  | core.result.Result.Ok _ =>
+    let o ← noble_kernel.types.Ty.size ty
+    match o with
+    | none => ok (core.result.Result.Err Diagnostic.Exhausted, work1)
+    | some node_count =>
+      if node_count <= 512#u32
+      then
+        let node_count1 ← lift (core.convert.num.FromU64U32.from node_count)
+        let i ← core.num.U64.saturating_mul node_count1 4#u64
+        let i1 ← lift (core.num.U64.saturating_sub 2048#u64 i)
+        let i2 ← lift (core.num.U64.saturating_add work1.remaining i1)
+        let i3 ← core.num.U64.saturating_mul node_count1 32#u64
+        let i4 ← lift (core.num.U64.saturating_add i3 1#u64)
+        ok (core.result.Result.Ok i4, { remaining := i2 })
+      else ok (core.result.Result.Err Diagnostic.Exhausted, work1)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, work1)
+
+/-- [noble_wasm::source::admission::meter::stack]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/admission/meter.rs', lines 18:4-29:5 -/
+@[rust_loop_body]
+def source.admission.meter.stack_loop.body
+  (stack : Slice noble_kernel.types.Ty) (work : source.Work) (bytes : Std.U64)
+  (index : Std.Usize) :
+  Result (ControlFlow (source.Work × Std.U64 × Std.Usize) (source.Work ×
+    Std.U64 × (Option Diagnostic)))
+  := do
+  let i := Slice.len stack
+  if index < i
+  then
+    let t ← Slice.index_usize stack index
+    let (r, work1) ← source.admission.meter.type_bytes t work
+    match r with
+    | core.result.Result.Ok amount =>
+      let bytes1 ← lift (core.num.U64.saturating_add bytes amount)
+      let index1 ← index + 1#usize
+      ok (cont (work1, bytes1, index1))
+    | core.result.Result.Err problem => ok (done (work1, bytes, some problem))
+  else ok (done (work, bytes, none))
+
+/-- [noble_wasm::source::admission::meter::stack]: loop 0:
+    Source: 'crates/noble-wasm/src/source/admission/meter.rs', lines 18:4-29:5 -/
+@[rust_loop]
+def source.admission.meter.stack_loop
+  (stack : Slice noble_kernel.types.Ty) (work : source.Work) (bytes : Std.U64)
+  (index : Std.Usize) :
+  Result (source.Work × Std.U64 × (Option Diagnostic))
+  := do
+  loop
+    (fun (work1, bytes1, index1) => source.admission.meter.stack_loop.body
+      stack work1 bytes1 index1)
+    (work, bytes, index)
+
+/-- [noble_wasm::source::admission::meter::stack]:
+    Source: 'crates/noble-wasm/src/source/admission/meter.rs', lines 10:0-34:1 -/
+def source.admission.meter.stack
+  (stack : Slice noble_kernel.types.Ty) (work : source.Work) :
+  Result ((core.result.Result Std.U64 Diagnostic) × source.Work)
+  := do
+  let i := Slice.len stack
+  let (r, work1) ← source.Work.entries work i
+  match r with
+  | core.result.Result.Ok _ =>
+    let (work2, bytes, failure) ←
+      source.admission.meter.stack_loop stack work1 2#u64 0#usize
+    match failure with
+    | none => ok (core.result.Result.Ok bytes, work2)
+    | some problem => ok (core.result.Result.Err problem, work2)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, work1)
+
+/-- [noble_wasm::source::admission::meter::interface_work]:
+    Source: 'crates/noble-wasm/src/source/admission/meter.rs', lines 90:0-97:1 -/
+def source.admission.meter.interface_work
+  (interface : noble_kernel.untrusted.Interface) (work : source.Work) :
+  Result ((core.result.Result Unit Diagnostic) × source.Work)
+  := do
+  let s := alloc.vec.Vec.deref interface.stack_in
+  let (r, work1) ← source.admission.meter.stack s work
+  match r with
+  | core.result.Result.Ok _ =>
+    let s1 := alloc.vec.Vec.deref interface.stack_out
+    let (r1, work2) ← source.admission.meter.stack s1 work1
+    match r1 with
+    | core.result.Result.Ok _ => ok (core.result.Result.Ok (), work2)
+    | core.result.Result.Err failure =>
+      ok (core.result.Result.Err failure, work2)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, work1)
+
+/-- [noble_wasm::source::admission::meter::checked_work]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/admission/meter.rs', lines 75:4-83:5 -/
+@[rust_loop_body]
+def source.admission.meter.checked_work_loop.body
+  (v : alloc.vec.Vec noble_kernel.untrusted.Derivation) (work : source.Work)
+  (index : Std.Usize) :
+  Result (ControlFlow (source.Work × Std.Usize) (source.Work × (Option
+    Diagnostic)))
+  := do
+  let i := alloc.vec.Vec.len v
+  if index < i
+  then
+    let d ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        noble_kernel.untrusted.Derivation) v index
+    let (r, work1) ← source.admission.meter.interface_work d.interface work
+    match r with
+    | core.result.Result.Ok _ =>
+      let index1 ← index + 1#usize
+      ok (cont (work1, index1))
+    | core.result.Result.Err problem => ok (done (work1, some problem))
+  else ok (done (work, none))
+
+/-- [noble_wasm::source::admission::meter::checked_work]: loop 0:
+    Source: 'crates/noble-wasm/src/source/admission/meter.rs', lines 75:4-83:5 -/
+@[rust_loop]
+def source.admission.meter.checked_work_loop
+  (v : alloc.vec.Vec noble_kernel.untrusted.Derivation) (work : source.Work)
+  (index : Std.Usize) :
+  Result (source.Work × (Option Diagnostic))
+  := do
+  loop
+    (fun (work1, index1) => source.admission.meter.checked_work_loop.body v
+      work1 index1)
+    (work, index)
+
+/-- [noble_wasm::source::admission::meter::checked_work]:
+    Source: 'crates/noble-wasm/src/source/admission/meter.rs', lines 61:0-88:1 -/
+def source.admission.meter.checked_work
+  (checked : noble_kernel.untrusted.Checked) (work : source.Work) :
+  Result ((core.result.Result Unit Diagnostic) × source.Work)
+  := do
+  let i := alloc.vec.Vec.len checked.derivations
+  let r ← U64.Insts.CoreConvertTryFromUsizeTryFromIntError.try_from i
+  match r with
+  | core.result.Result.Ok value =>
+    let i1 ← core.num.U64.saturating_mul value value
+    let i2 ← core.num.U64.saturating_mul i1 8#u64
+    let (r1, work1) ← source.Work.charge work i2
+    match r1 with
+    | core.result.Result.Ok _ =>
+      let (r2, work2) ←
+        source.admission.meter.interface_work checked.interface work1
+      match r2 with
+      | core.result.Result.Ok _ =>
+        let (work3, failure) ←
+          source.admission.meter.checked_work_loop checked.derivations work2
+            0#usize
+        match failure with
+        | none => ok (core.result.Result.Ok (), work3)
+        | some problem => ok (core.result.Result.Err problem, work3)
+      | core.result.Result.Err _ => ok (r2, work2)
+    | core.result.Result.Err _ => ok (r1, work1)
+  | core.result.Result.Err _ =>
+    ok (core.result.Result.Err Diagnostic.Exhausted, work)
+
+/-- [noble_wasm::source::admission::meter::compilation]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/admission/meter.rs', lines 110:4-118:5 -/
+@[rust_loop_body]
+def source.admission.meter.compilation_loop0.body
+  (pool : signatures.Pool) (work : source.Work) (index : Std.Usize) :
+  Result (ControlFlow (source.Work × Std.Usize) (source.Work × (Option
+    Diagnostic)))
+  := do
+  let i := alloc.vec.Vec.len pool.keys
+  if index < i
+  then
+    let v ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice (alloc.vec.Vec
+        Std.U8)) pool.keys index
+    let i1 := alloc.vec.Vec.len v
+    let (r, work1) ← source.Work.entries work i1
+    match r with
+    | core.result.Result.Ok _ =>
+      let index1 ← index + 1#usize
+      ok (cont (work1, index1))
+    | core.result.Result.Err problem => ok (done (work1, some problem))
+  else ok (done (work, none))
+
+/-- [noble_wasm::source::admission::meter::compilation]: loop 0:
+    Source: 'crates/noble-wasm/src/source/admission/meter.rs', lines 110:4-118:5 -/
+@[rust_loop]
+def source.admission.meter.compilation_loop0
+  (pool : signatures.Pool) (work : source.Work) (index : Std.Usize) :
+  Result (source.Work × (Option Diagnostic))
+  := do
+  loop
+    (fun (work1, index1) => source.admission.meter.compilation_loop0.body pool
+      work1 index1)
+    (work, index)
+
+/-- [noble_wasm::source::admission::meter::compilation]: loop body 1:
+    Source: 'crates/noble-wasm/src/source/admission/meter.rs', lines 123:4-131:5 -/
+@[rust_loop_body]
+def source.admission.meter.compilation_loop1.body
+  (checked : source.admission.Accepted) (work : source.Work)
+  (index : Std.Usize) :
+  Result (ControlFlow (source.Work × Std.Usize)
+    (noble_kernel.untrusted.Checked × source.Work × (Option Diagnostic)))
+  := do
+  let i := alloc.vec.Vec.len checked.definitions
+  if index < i
+  then
+    let c ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        noble_kernel.untrusted.Checked) checked.definitions index
+    let (r, work1) ← source.admission.meter.checked_work c work
+    match r with
+    | core.result.Result.Ok _ =>
+      let index1 ← index + 1#usize
+      ok (cont (work1, index1))
+    | core.result.Result.Err problem =>
+      ok (done (checked.root, work1, some problem))
+  else ok (done (checked.root, work, none))
+
+/-- [noble_wasm::source::admission::meter::compilation]: loop 1:
+    Source: 'crates/noble-wasm/src/source/admission/meter.rs', lines 123:4-131:5 -/
+@[rust_loop]
+def source.admission.meter.compilation_loop1
+  (checked : source.admission.Accepted) (work : source.Work)
+  (index : Std.Usize) :
+  Result (noble_kernel.untrusted.Checked × source.Work × (Option Diagnostic))
+  := do
+  loop
+    (fun (work1, index1) => source.admission.meter.compilation_loop1.body
+      checked work1 index1)
+    (work, index)
+
+/-- [noble_wasm::source::admission::meter::compilation]:
+    Source: 'crates/noble-wasm/src/source/admission/meter.rs', lines 103:0-136:1 -/
+def source.admission.meter.compilation
+  (checked : source.admission.Accepted) (pool : signatures.Pool)
+  (work : source.Work) :
+  Result ((core.result.Result Unit Diagnostic) × source.Work)
+  := do
+  let (work1, failure) ←
+    source.admission.meter.compilation_loop0 pool work 0#usize
+  match failure with
+  | none =>
+    let (c, work2, failure1) ←
+      source.admission.meter.compilation_loop1 checked work1 0#usize
+    match failure1 with
+    | none => source.admission.meter.checked_work c work2
+    | some problem => ok (core.result.Result.Err problem, work2)
+  | some problem => ok (core.result.Result.Err problem, work1)
+
+/-- [noble_wasm::source::admission::mark_visited]:
+    Source: 'crates/noble-wasm/src/source/admission.rs', lines 71:0-83:1 -/
+def source.admission.mark_visited
+  (visited : Slice Bool) (node : noble_kernel.untrusted.NodeId) :
+  Result ((core.result.Result Unit Diagnostic) × (Slice Bool))
+  := do
+  let r ← admission.index node
+  match r with
+  | core.result.Result.Ok value =>
+    let (o, get_mut_back) ←
+      core.slice.Slice.get_mut (core.slice.index.SliceIndexUsizeSlice Bool)
+        visited value
+    match o with
+    | none =>
+      let visited1 := get_mut_back none
+      ok (core.result.Result.Err Diagnostic.Invalid, visited1)
+    | some _ =>
+      let visited1 := get_mut_back (some true)
+      ok (core.result.Result.Ok (), visited1)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, visited)
+
+/-- [noble_wasm::source::admission::accept]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/admission.rs', lines 41:4-49:5 -/
+@[rust_loop_body]
+def source.admission.accept_loop0.body
+  (checked : noble_kernel.untrusted.Checked) (visited : alloc.vec.Vec Bool)
+  («at» : Std.Usize) :
+  Result (ControlFlow ((alloc.vec.Vec Bool) × Std.Usize)
+    (noble_kernel.untrusted.Interface × (alloc.vec.Vec
+    noble_kernel.untrusted.Derivation) × (alloc.vec.Vec Bool) × (Option
+    Diagnostic)))
+  := do
+  let i := alloc.vec.Vec.len checked.derivations
+  if «at» < i
+  then
+    let (s, deref_mut_back) ← lift (alloc.vec.Vec.deref_mut visited)
+    let d ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        noble_kernel.untrusted.Derivation) checked.derivations «at»
+    let (r, s1) ← source.admission.mark_visited s d.node
+    match r with
+    | core.result.Result.Ok _ =>
+      let at1 ← «at» + 1#usize
+      let visited1 := deref_mut_back s1
+      ok (cont (visited1, at1))
+    | core.result.Result.Err problem =>
+      let visited1 := deref_mut_back s1
+      ok (done (checked.interface, checked.derivations, visited1, some
+        problem))
+  else ok (done (checked.interface, checked.derivations, visited, none))
+
+/-- [noble_wasm::source::admission::accept]: loop 0:
+    Source: 'crates/noble-wasm/src/source/admission.rs', lines 41:4-49:5 -/
+@[rust_loop]
+def source.admission.accept_loop0
+  (checked : noble_kernel.untrusted.Checked) (visited : alloc.vec.Vec Bool)
+  («at» : Std.Usize) :
+  Result (noble_kernel.untrusted.Interface × (alloc.vec.Vec
+    noble_kernel.untrusted.Derivation) × (alloc.vec.Vec Bool) × (Option
+    Diagnostic))
+  := do
+  loop
+    (fun (visited1, at1) => source.admission.accept_loop0.body checked visited1
+      at1)
+    (visited, «at»)
+
+/-- [noble_wasm::source::admission::accept]: loop body 1:
+    Source: 'crates/noble-wasm/src/source/admission.rs', lines 54:4-60:5 -/
+@[rust_loop_body]
+def source.admission.accept_loop1.body
+  (visited : alloc.vec.Vec Bool) («at» : Std.Usize) :
+  Result (ControlFlow Std.Usize (Option Diagnostic))
+  := do
+  let i := alloc.vec.Vec.len visited
+  if «at» < i
+  then
+    let b ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice Bool) visited
+        «at»
+    if b
+    then let at1 ← «at» + 1#usize
+         ok (cont at1)
+    else ok (done (some Diagnostic.Invalid))
+  else ok (done none)
+
+/-- [noble_wasm::source::admission::accept]: loop 1:
+    Source: 'crates/noble-wasm/src/source/admission.rs', lines 54:4-60:5 -/
+@[rust_loop]
+def source.admission.accept_loop1
+  (visited : alloc.vec.Vec Bool) («at» : Std.Usize) :
+  Result (Option Diagnostic)
+  := do
+  loop
+    (fun at1 => source.admission.accept_loop1.body visited at1)
+    «at»
+
+/-- [noble_wasm::source::admission::accept]:
+    Source: 'crates/noble-wasm/src/source/admission.rs', lines 21:0-65:1 -/
+def source.admission.accept
+  (env : noble_kernel.contracts.Env) (request : noble_kernel.untrusted.Request)
+  (body : noble_kernel.execution.Body) :
+  Result (core.result.Result noble_kernel.untrusted.Checked Diagnostic)
+  := do
+  let o ← noble_kernel.acceptance.check env request body.candidate
+  match o with
+  | noble_kernel.untrusted.Outcome.Accepted checked =>
+    let i := alloc.vec.Vec.len body.candidate.nodes
+    let visited ← alloc.vec.from_elem core.clone.CloneBool false i
+    let (i1, v, visited1, failure) ←
+      source.admission.accept_loop0 checked visited 0#usize
+    match failure with
+    | none =>
+      let failure1 ← source.admission.accept_loop1 visited1 0#usize
+      match failure1 with
+      | none =>
+        ok (core.result.Result.Ok { interface := i1, derivations := v })
+      | some problem => ok (core.result.Result.Err problem)
+    | some problem => ok (core.result.Result.Err problem)
+  | noble_kernel.untrusted.Outcome.Invalid _ =>
+    ok (core.result.Result.Err Diagnostic.Invalid)
+  | noble_kernel.untrusted.Outcome.Unsupported _ =>
+    ok (core.result.Result.Err Diagnostic.Unsupported)
+  | noble_kernel.untrusted.Outcome.Exhausted _ =>
+    ok (core.result.Result.Err Diagnostic.Exhausted)
+  | noble_kernel.untrusted.Outcome.InternalFailure =>
+    ok (core.result.Result.Err Diagnostic.Defective)
+
+/-- [noble_wasm::source::admission::definition_bounds]:
+    Source: 'crates/noble-wasm/src/source/admission.rs', lines 141:0-163:1 -/
+def source.admission.definition_bounds
+  (submission : noble_kernel.execution.Submission) (index : Std.Usize)
+  (environment_work : Std.U64) (totals : source.admission.metadata.Totals)
+  (work : source.Work) :
+  Result ((core.result.Result Unit Diagnostic) ×
+    source.admission.metadata.Totals × source.Work)
+  := do
+  let definition ←
+    alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+      noble_kernel.execution.Definition) submission.definitions index
+  let i := definition.definition
+  if i < 24#u32
+  then ok (core.result.Result.Err Diagnostic.Invalid, totals, work)
+  else
+    let i1 := alloc.vec.Vec.len submission.definitions
+    let (r, work1) ← source.Work.entries work i1
+    match r with
+    | core.result.Result.Ok _ =>
+      let r1 ←
+        source.admission.definition_index submission definition.definition
+      match r1 with
+      | core.result.Result.Ok value =>
+        if value != index
+        then ok (core.result.Result.Err Diagnostic.Invalid, totals, work1)
+        else
+          let (r2, work2) ← source.Work.charge work1 environment_work
+          match r2 with
+          | core.result.Result.Ok _ =>
+            let r3 ←
+              source.admission.environment.exact_contract
+                submission.environment definition.definition
+                definition.expected
+            match r3 with
+            | core.result.Result.Ok _ =>
+              source.admission.metadata.check definition.body totals work2
+            | core.result.Result.Err _ => ok (r3, totals, work2)
+          | core.result.Result.Err _ => ok (r2, totals, work2)
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, totals, work1)
+    | core.result.Result.Err _ => ok (r, totals, work1)
+
+/-- [noble_wasm::source::admission::bounds]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/admission.rs', lines 117:4-125:5 -/
+@[rust_loop_body]
+def source.admission.bounds_loop.body
+  (e : noble_kernel.contracts.Env)
+  (v : alloc.vec.Vec noble_kernel.execution.Definition)
+  (b : noble_kernel.execution.Body) (r : noble_kernel.untrusted.Request)
+  (environment_work : Std.U64) (work : source.Work)
+  (totals : source.admission.metadata.Totals) (index : Std.Usize) :
+  Result (ControlFlow (source.Work × source.admission.metadata.Totals ×
+    Std.Usize) (source.Work × source.admission.metadata.Totals × (Option
+    Diagnostic)))
+  := do
+  let i := alloc.vec.Vec.len v
+  if index < i
+  then
+    let (r1, totals1, work1) ←
+      source.admission.definition_bounds
+        { environment := e, definitions := v, body := b, request := r } index
+        environment_work totals work
+    match r1 with
+    | core.result.Result.Ok _ =>
+      let index1 ← index + 1#usize
+      ok (cont (work1, totals1, index1))
+    | core.result.Result.Err problem =>
+      ok (done (work1, totals1, some problem))
+  else ok (done (work, totals, none))
+
+/-- [noble_wasm::source::admission::bounds]: loop 0:
+    Source: 'crates/noble-wasm/src/source/admission.rs', lines 117:4-125:5 -/
+@[rust_loop]
+def source.admission.bounds_loop
+  (e : noble_kernel.contracts.Env)
+  (v : alloc.vec.Vec noble_kernel.execution.Definition)
+  (b : noble_kernel.execution.Body) (r : noble_kernel.untrusted.Request)
+  (environment_work : Std.U64) (work : source.Work)
+  (totals : source.admission.metadata.Totals) (index : Std.Usize) :
+  Result (source.Work × source.admission.metadata.Totals × (Option
+    Diagnostic))
+  := do
+  loop
+    (fun (work1, totals1, index1) => source.admission.bounds_loop.body e v b r
+      environment_work work1 totals1 index1)
+    (work, totals, index)
+
+/-- [noble_wasm::source::admission::bounds]:
+    Source: 'crates/noble-wasm/src/source/admission.rs', lines 108:0-135:1 -/
+def source.admission.bounds
+  (submission : noble_kernel.execution.Submission) (environment_work : Std.U64)
+  (work : source.Work) :
+  Result ((core.result.Result Unit Diagnostic) × source.Work)
+  := do
+  let (r, totals, work1) ←
+    source.admission.metadata.check submission.body
+      { nodes := 0#usize, bytes := 0#usize } work
+  match r with
+  | core.result.Result.Ok _ =>
+    let (work2, totals1, failure) ←
+      source.admission.bounds_loop submission.environment
+        submission.definitions submission.body submission.request
+        environment_work work1 totals 0#usize
+    match failure with
+    | none =>
+      let r1 ←
+        Usize.Insts.CoreConvertTryFromU32TryFromIntError.try_from
+          submission.request.limits.nodes
+      let i ← core.result.Result.unwrap_or r1 0#usize
+      if totals1.nodes > i
+      then ok (core.result.Result.Err Diagnostic.Exhausted, work2)
+      else
+        let r2 ←
+          Usize.Insts.CoreConvertTryFromU32TryFromIntError.try_from
+            submission.request.limits.bytes
+        let i1 ← core.result.Result.unwrap_or r2 0#usize
+        if totals1.bytes > i1
+        then ok (core.result.Result.Err Diagnostic.Exhausted, work2)
+        else source.admission.dependencies.check submission work2
+    | some problem => ok (core.result.Result.Err problem, work2)
+  | core.result.Result.Err _ => ok (r, work1)
+
+/-- [noble_wasm::source::admission::kernel_limits]:
+    Source: 'crates/noble-wasm/src/source/admission.rs', lines 169:0-191:1 -/
+def source.admission.kernel_limits
+  (submission : noble_kernel.execution.Submission) (environment_work : Std.U64)
+  (work : source.Work) :
+  Result ((core.result.Result noble_kernel.untrusted.Limits Diagnostic) ×
+    source.Work)
+  := do
+  let i := alloc.vec.Vec.len submission.definitions
+  let i1 ← lift (core.num.Usize.saturating_add i 1#usize)
+  let r ← U64.Insts.CoreConvertTryFromUsizeTryFromIntError.try_from i1
+  match r with
+  | core.result.Result.Ok value =>
+    let i2 ← core.num.U64.saturating_mul environment_work value
+    let (r1, work1) ← source.Work.charge work i2
+    match r1 with
+    | core.result.Result.Ok _ =>
+      let o ← lift (U64.checked_div work1.remaining value)
+      match o with
+      | none => ok (core.result.Result.Err Diagnostic.Exhausted, work1)
+      | some value1 =>
+        let i3 ← value1 / 4#u64
+        let r2 ← U32.Insts.CoreConvertTryFromU64TryFromIntError.try_from i3
+        match r2 with
+        | core.result.Result.Ok value2 =>
+          ok (core.result.Result.Ok
+            { submission.request.limits with work := value2 }, work1)
+        | core.result.Result.Err _ =>
+          ok (core.result.Result.Err Diagnostic.Exhausted, work1)
+    | core.result.Result.Err failure =>
+      ok (core.result.Result.Err failure, work1)
+  | core.result.Result.Err _ =>
+    ok (core.result.Result.Err Diagnostic.Exhausted, work)
+
+/-- [noble_wasm::source::admission::accept_definition]:
+    Source: 'crates/noble-wasm/src/source/admission.rs', lines 243:0-261:1 -/
+def source.admission.accept_definition
+  (submission : noble_kernel.execution.Submission) (index : Std.Usize)
+  (limits : noble_kernel.untrusted.Limits) (work : source.Work) :
+  Result ((core.result.Result noble_kernel.untrusted.Checked Diagnostic) ×
+    source.Work)
+  := do
+  let definition ←
+    alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+      noble_kernel.execution.Definition) submission.definitions index
+  let i ← lift (core.convert.num.FromU64U32.from limits.work)
+  let i1 ← core.num.U64.saturating_mul i 2#u64
+  let (r, work1) ← source.Work.charge work i1
+  match r with
+  | core.result.Result.Ok _ =>
+    let e ←
+      noble_kernel.untrusted.Expected.Insts.CoreCloneClone.clone
+        definition.expected
+    let r1 ←
+      source.admission.accept submission.environment
+        { submission.request with expected := e, limits } definition.body
+    match r1 with
+    | core.result.Result.Ok value =>
+      let b ←
+        core.cmp.PartialEq.ne.trait_default
+          noble_kernel.types.EffSet.Insts.CoreCmpPartialEqEffSet
+          value.interface.effects definition.expected.allowed_effects
+      if b
+      then ok (core.result.Result.Err Diagnostic.Invalid, work1)
+      else ok (r1, work1)
+    | core.result.Result.Err _ => ok (r1, work1)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, work1)
+
+/-- [noble_wasm::source::admission::check]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/admission.rs', lines 210:4-221:5 -/
+@[rust_loop_body]
+def source.admission.check_loop.body
+  (e : noble_kernel.contracts.Env)
+  (v : alloc.vec.Vec noble_kernel.execution.Definition)
+  (b : noble_kernel.execution.Body) (r : noble_kernel.untrusted.Request)
+  (limits : noble_kernel.untrusted.Limits) (work : source.Work)
+  (definitions : alloc.vec.Vec noble_kernel.untrusted.Checked)
+  (index : Std.Usize) :
+  Result (ControlFlow (source.Work × (alloc.vec.Vec
+    noble_kernel.untrusted.Checked) × Std.Usize) (source.Work ×
+    (alloc.vec.Vec noble_kernel.untrusted.Checked) × (Option Diagnostic)))
+  := do
+  let i := alloc.vec.Vec.len v
+  if index < i
+  then
+    let (r1, work1) ←
+      source.admission.accept_definition
+        { environment := e, definitions := v, body := b, request := r } index
+        limits work
+    match r1 with
+    | core.result.Result.Ok checked =>
+      let definitions1 ← alloc.vec.Vec.push definitions checked
+      let index1 ← index + 1#usize
+      ok (cont (work1, definitions1, index1))
+    | core.result.Result.Err problem =>
+      ok (done (work1, definitions, some problem))
+  else ok (done (work, definitions, none))
+
+/-- [noble_wasm::source::admission::check]: loop 0:
+    Source: 'crates/noble-wasm/src/source/admission.rs', lines 210:4-221:5 -/
+@[rust_loop]
+def source.admission.check_loop
+  (e : noble_kernel.contracts.Env)
+  (v : alloc.vec.Vec noble_kernel.execution.Definition)
+  (b : noble_kernel.execution.Body) (r : noble_kernel.untrusted.Request)
+  (work : source.Work) (limits : noble_kernel.untrusted.Limits)
+  (definitions : alloc.vec.Vec noble_kernel.untrusted.Checked)
+  (index : Std.Usize) :
+  Result (source.Work × (alloc.vec.Vec noble_kernel.untrusted.Checked) ×
+    (Option Diagnostic))
+  := do
+  loop
+    (fun (work1, definitions1, index1) => source.admission.check_loop.body e v
+      b r limits work1 definitions1 index1)
+    (work, definitions, index)
+
+/-- [noble_wasm::source::admission::check]:
+    Source: 'crates/noble-wasm/src/source/admission.rs', lines 197:0-237:1 -/
+def source.admission.check
+  (submission : noble_kernel.execution.Submission) (work : source.Work) :
+  Result ((core.result.Result source.admission.Accepted Diagnostic) ×
+    source.Work)
+  := do
+  let (r, work1) ← source.Work.charge work 1#u64
+  match r with
+  | core.result.Result.Ok _ =>
+    let r1 ← source.admission.environment.work submission.environment
+    match r1 with
+    | core.result.Result.Ok value =>
+      let (r2, work2) ← source.Work.charge work1 value
+      match r2 with
+      | core.result.Result.Ok _ =>
+        let r3 ← source.admission.environment.check submission
+        match r3 with
+        | core.result.Result.Ok _ =>
+          let (r4, work3) ← source.admission.bounds submission value work2
+          match r4 with
+          | core.result.Result.Ok _ =>
+            let (r5, work4) ←
+              source.admission.kernel_limits submission value work3
+            match r5 with
+            | core.result.Result.Ok value1 =>
+              let i := alloc.vec.Vec.len submission.definitions
+              let definitions :=
+                alloc.vec.Vec.with_capacity noble_kernel.untrusted.Checked i
+              let (work5, definitions1, failure) ←
+                source.admission.check_loop submission.environment
+                  submission.definitions submission.body submission.request
+                  work4 value1 definitions 0#usize
+              match failure with
+              | none =>
+                let i1 ← lift (core.convert.num.FromU64U32.from value1.work)
+                let i2 ← core.num.U64.saturating_mul i1 2#u64
+                let (r6, work6) ← source.Work.charge work5 i2
+                match r6 with
+                | core.result.Result.Ok _ =>
+                  let e ←
+                    noble_kernel.untrusted.Expected.Insts.CoreCloneClone.clone
+                      submission.request.expected
+                  let r7 ←
+                    source.admission.accept submission.environment
+                      { submission.request with expected := e, limits := value1
+                      } submission.body
+                  match r7 with
+                  | core.result.Result.Ok value2 =>
+                    ok (core.result.Result.Ok
+                      { definitions := definitions1, root := value2 }, work6)
+                  | core.result.Result.Err failure1 =>
+                    ok (core.result.Result.Err failure1, work6)
+                | core.result.Result.Err failure1 =>
+                  ok (core.result.Result.Err failure1, work6)
+              | some problem => ok (core.result.Result.Err problem, work5)
+            | core.result.Result.Err failure =>
+              ok (core.result.Result.Err failure, work4)
+          | core.result.Result.Err failure =>
+            ok (core.result.Result.Err failure, work3)
+        | core.result.Result.Err failure =>
+          ok (core.result.Result.Err failure, work2)
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, work2)
+    | core.result.Result.Err failure =>
+      ok (core.result.Result.Err failure, work1)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, work1)
+
+/-- [noble_wasm::source::plan::number]:
+    Source: 'crates/noble-wasm/src/source/plan.rs', lines 192:0-197:1 -/
+def source.plan.number
+  (value : Std.Usize) : Result (core.result.Result Std.U32 Diagnostic) := do
+  let r ← core.convert.num.ptr_try_from_impls.TryFromU32Usize.try_from value
+  match r with
+  | core.result.Result.Ok value1 => ok (core.result.Result.Ok value1)
+  | core.result.Result.Err _ =>
+    ok (core.result.Result.Err Diagnostic.Exhausted)
+
+/-- [noble_wasm::source::emit::global]:
+    Source: 'crates/noble-wasm/src/source/emit.rs', lines 11:0-14:1 -/
+def source.emit.global
+  (out : output.Buffer) (id : Std.Usize) :
+  Result ((core.result.Result Unit Diagnostic) × output.Buffer)
+  := do
+  let s ← lift (Array.to_slice (Array.make 2#usize [ 36#u8, 115#u8 ]))
+  let (r, out1) ← output.Buffer.append out s
+  match r with
+  | core.result.Result.Ok _ => output.Buffer.index out1 id
+  | core.result.Result.Err _ => ok (r, out1)
+
+/-- [noble_wasm::source::emit::get_global]:
+    Source: 'crates/noble-wasm/src/source/emit.rs', lines 16:0-20:1 -/
+def source.emit.get_global
+  (out : output.Buffer) (id : Std.Usize) :
+  Result ((core.result.Result Unit Diagnostic) × output.Buffer)
+  := do
+  let s ←
+    lift (Array.to_slice
+      (Array.make 12#usize [
+        40#u8, 103#u8, 108#u8, 111#u8, 98#u8, 97#u8, 108#u8, 46#u8, 103#u8,
+        101#u8, 116#u8, 32#u8
+        ]))
+  let (r, out1) ← output.Buffer.append out s
+  match r with
+  | core.result.Result.Ok _ =>
+    let (r1, out2) ← source.emit.global out1 id
+    match r1 with
+    | core.result.Result.Ok _ =>
+      let s1 ← lift (Array.to_slice (Array.make 1#usize [ 41#u8 ]))
+      output.Buffer.append out2 s1
+    | core.result.Result.Err _ => ok (r1, out2)
+  | core.result.Result.Err _ => ok (r, out1)
+
+/-- [noble_wasm::source::emit::functions::instruction]:
+    Source: 'crates/noble-wasm/src/source/emit/functions.rs', lines 68:0-111:1 -/
+def source.emit.functions.instruction
+  (out : output.Buffer) (action : source.plan.Action) :
+  Result ((core.result.Result Unit Diagnostic) × output.Buffer)
+  := do
+  match action with
+  | source.plan.Action.I64 value =>
+    let s ←
+      lift (Array.to_slice
+        (Array.make 16#usize [
+          40#u8, 99#u8, 97#u8, 108#u8, 108#u8, 32#u8, 36#u8, 112#u8, 117#u8,
+          115#u8, 104#u8, 95#u8, 105#u8, 54#u8, 52#u8, 32#u8
+          ]))
+    let (r, out1) ← output.Buffer.append out s
+    match r with
+    | core.result.Result.Ok _ =>
+      let (r1, out2) ← output.Buffer.i64 out1 value
+      match r1 with
+      | core.result.Result.Ok _ =>
+        let s1 ← lift (Array.to_slice (Array.make 2#usize [ 41#u8, 10#u8 ]))
+        output.Buffer.append out2 s1
+      | core.result.Result.Err _ => ok (r1, out2)
+    | core.result.Result.Err _ => ok (r, out1)
+  | source.plan.Action.Bool value =>
+    let s ←
+      lift (Array.to_slice
+        (Array.make 17#usize [
+          40#u8, 99#u8, 97#u8, 108#u8, 108#u8, 32#u8, 36#u8, 112#u8, 117#u8,
+          115#u8, 104#u8, 95#u8, 98#u8, 111#u8, 111#u8, 108#u8, 32#u8
+          ]))
+    let (r, out1) ← output.Buffer.append out s
+    match r with
+    | core.result.Result.Ok _ =>
+      if value
+      then
+        let (r1, out2) ← output.Buffer.i32 out1 1#u32
+        match r1 with
+        | core.result.Result.Ok _ =>
+          let s1 ←
+            lift (Array.to_slice (Array.make 2#usize [ 41#u8, 10#u8 ]))
+          output.Buffer.append out2 s1
+        | core.result.Result.Err _ => ok (r1, out2)
+      else
+        let (r1, out2) ← output.Buffer.i32 out1 0#u32
+        match r1 with
+        | core.result.Result.Ok _ =>
+          let s1 ←
+            lift (Array.to_slice (Array.make 2#usize [ 41#u8, 10#u8 ]))
+          output.Buffer.append out2 s1
+        | core.result.Result.Err _ => ok (r1, out2)
+    | core.result.Result.Err _ => ok (r, out1)
+  | source.plan.Action.Unit =>
+    let s ←
+      lift (Array.to_slice
+        (Array.make 16#usize [
+          40#u8, 99#u8, 97#u8, 108#u8, 108#u8, 32#u8, 36#u8, 112#u8, 117#u8,
+          115#u8, 104#u8, 95#u8, 117#u8, 110#u8, 105#u8, 116#u8
+          ]))
+    let (r, out1) ← output.Buffer.append out s
+    match r with
+    | core.result.Result.Ok _ =>
+      let s1 ← lift (Array.to_slice (Array.make 2#usize [ 41#u8, 10#u8 ]))
+      output.Buffer.append out1 s1
+    | core.result.Result.Err _ => ok (r, out1)
+  | source.plan.Action.Text address length =>
+    let s ←
+      lift (Array.to_slice
+        (Array.make 28#usize [
+          40#u8, 99#u8, 97#u8, 108#u8, 108#u8, 32#u8, 36#u8, 112#u8, 117#u8,
+          115#u8, 104#u8, 95#u8, 114#u8, 101#u8, 102#u8, 32#u8, 40#u8, 99#u8,
+          97#u8, 108#u8, 108#u8, 32#u8, 36#u8, 116#u8, 101#u8, 120#u8, 116#u8,
+          32#u8
+          ]))
+    let (r, out1) ← output.Buffer.append out s
+    match r with
+    | core.result.Result.Ok _ =>
+      let (r1, out2) ← output.Buffer.i32 out1 address
+      match r1 with
+      | core.result.Result.Ok _ =>
+        let s1 ← lift (Array.to_slice (Array.make 1#usize [ 32#u8 ]))
+        let (r2, out3) ← output.Buffer.append out2 s1
+        match r2 with
+        | core.result.Result.Ok _ =>
+          let (r3, out4) ← output.Buffer.i32 out3 length
+          match r3 with
+          | core.result.Result.Ok _ =>
+            let s2 ← lift (Array.to_slice (Array.make 1#usize [ 41#u8 ]))
+            let (r4, out5) ← output.Buffer.append out4 s2
+            match r4 with
+            | core.result.Result.Ok _ =>
+              let s3 ←
+                lift (Array.to_slice (Array.make 2#usize [ 41#u8, 10#u8 ]))
+              output.Buffer.append out5 s3
+            | core.result.Result.Err _ => ok (r4, out5)
+          | core.result.Result.Err _ => ok (r3, out4)
+        | core.result.Result.Err _ => ok (r2, out3)
+      | core.result.Result.Err _ => ok (r1, out2)
+    | core.result.Result.Err _ => ok (r, out1)
+  | source.plan.Action.Program program =>
+    let s ←
+      lift (Array.to_slice
+        (Array.make 16#usize [
+          40#u8, 99#u8, 97#u8, 108#u8, 108#u8, 32#u8, 36#u8, 112#u8, 117#u8,
+          115#u8, 104#u8, 95#u8, 114#u8, 101#u8, 102#u8, 32#u8
+          ]))
+    let (r, out1) ← output.Buffer.append out s
+    match r with
+    | core.result.Result.Ok _ =>
+      let (r1, out2) ← source.emit.get_global out1 program
+      match r1 with
+      | core.result.Result.Ok _ =>
+        let s1 ← lift (Array.to_slice (Array.make 2#usize [ 41#u8, 10#u8 ]))
+        output.Buffer.append out2 s1
+      | core.result.Result.Err _ => ok (r1, out2)
+    | core.result.Result.Err _ => ok (r, out1)
+  | source.plan.Action.Word definition =>
+    let s ←
+      lift (Array.to_slice
+        (Array.make 6#usize [ 40#u8, 99#u8, 97#u8, 108#u8, 108#u8, 32#u8 ]))
+    let (r, out1) ← output.Buffer.append out s
+    match r with
+    | core.result.Result.Ok _ =>
+      let (r1, out2) ← operations.word out1 definition
+      match r1 with
+      | core.result.Result.Ok _ =>
+        let s1 ← lift (Array.to_slice (Array.make 2#usize [ 41#u8, 10#u8 ]))
+        output.Buffer.append out2 s1
+      | core.result.Result.Err _ => ok (r1, out2)
+    | core.result.Result.Err _ => ok (r, out1)
+  | source.plan.Action.Quote input output_signature witness =>
+    let s ←
+      lift (Array.to_slice
+        (Array.make 22#usize [
+          40#u8, 99#u8, 97#u8, 108#u8, 108#u8, 32#u8, 36#u8, 111#u8, 112#u8,
+          95#u8, 113#u8, 117#u8, 111#u8, 116#u8, 101#u8, 95#u8, 116#u8, 121#u8,
+          112#u8, 101#u8, 100#u8, 32#u8
+          ]))
+    let (r, out1) ← output.Buffer.append out s
+    match r with
+    | core.result.Result.Ok _ =>
+      let (r1, out2) ← output.Buffer.i32 out1 input
+      match r1 with
+      | core.result.Result.Ok _ =>
+        let s1 ← lift (Array.to_slice (Array.make 1#usize [ 32#u8 ]))
+        let (r2, out3) ← output.Buffer.append out2 s1
+        match r2 with
+        | core.result.Result.Ok _ =>
+          let (r3, out4) ← output.Buffer.i32 out3 output_signature
+          match r3 with
+          | core.result.Result.Ok _ =>
+            let s2 ← lift (Array.to_slice (Array.make 1#usize [ 32#u8 ]))
+            let (r4, out5) ← output.Buffer.append out4 s2
+            match r4 with
+            | core.result.Result.Ok _ =>
+              let (r5, out6) ← output.Buffer.i32 out5 witness
+              match r5 with
+              | core.result.Result.Ok _ =>
+                let s3 ←
+                  lift (Array.to_slice (Array.make 2#usize [ 41#u8, 10#u8 ]))
+                output.Buffer.append out6 s3
+              | core.result.Result.Err _ => ok (r5, out6)
+            | core.result.Result.Err _ => ok (r4, out5)
+          | core.result.Result.Err _ => ok (r3, out4)
+        | core.result.Result.Err _ => ok (r2, out3)
+      | core.result.Result.Err _ => ok (r1, out2)
+    | core.result.Result.Err _ => ok (r, out1)
+  | source.plan.Action.Call program _ =>
+    let s ←
+      lift (Array.to_slice
+        (Array.make 23#usize [
+          40#u8, 99#u8, 97#u8, 108#u8, 108#u8, 32#u8, 36#u8, 101#u8, 110#u8,
+          113#u8, 117#u8, 101#u8, 117#u8, 101#u8, 95#u8, 112#u8, 114#u8,
+          111#u8, 103#u8, 114#u8, 97#u8, 109#u8, 32#u8
+          ]))
+    let (r, out1) ← output.Buffer.append out s
+    match r with
+    | core.result.Result.Ok _ =>
+      let (r1, out2) ← source.emit.get_global out1 program
+      match r1 with
+      | core.result.Result.Ok _ =>
+        let s1 ← lift (Array.to_slice (Array.make 2#usize [ 41#u8, 10#u8 ]))
+        output.Buffer.append out2 s1
+      | core.result.Result.Err _ => ok (r1, out2)
+    | core.result.Result.Err _ => ok (r, out1)
+
+/-- [noble_wasm::source::emit::functions::function]:
+    Source: 'crates/noble-wasm/src/source/emit/functions.rs', lines 32:0-60:1 -/
+def source.emit.functions.function
+  (out : output.Buffer) (program : source.plan.Program) (index : Std.Usize) :
+  Result ((core.result.Result Unit Diagnostic) × output.Buffer)
+  := do
+  let r ← source.plan.number index
+  match r with
+  | core.result.Result.Ok value =>
+    let o ← lift (U32.checked_add program.entry value)
+    match o with
+    | none => ok (core.result.Result.Err Diagnostic.Exhausted, out)
+    | some value1 =>
+      let s ←
+        lift (Array.to_slice
+          (Array.make 8#usize [
+            40#u8, 102#u8, 117#u8, 110#u8, 99#u8, 32#u8, 36#u8, 102#u8
+            ]))
+      let (r1, out1) ← output.Buffer.append out s
+      match r1 with
+      | core.result.Result.Ok _ =>
+        let i ← lift (core.convert.num.FromU64U32.from value1)
+        let (r2, out2) ← output.Buffer.number out1 i
+        match r2 with
+        | core.result.Result.Ok _ =>
+          let s1 ←
+            lift (Array.to_slice
+              (Array.make 75#usize [
+                32#u8, 40#u8, 116#u8, 121#u8, 112#u8, 101#u8, 32#u8, 36#u8,
+                101#u8, 110#u8, 116#u8, 114#u8, 121#u8, 41#u8, 32#u8, 40#u8,
+                112#u8, 97#u8, 114#u8, 97#u8, 109#u8, 32#u8, 36#u8, 101#u8,
+                110#u8, 118#u8, 32#u8, 105#u8, 51#u8, 50#u8, 41#u8, 10#u8,
+                40#u8, 105#u8, 102#u8, 32#u8, 40#u8, 103#u8, 108#u8, 111#u8,
+                98#u8, 97#u8, 108#u8, 46#u8, 103#u8, 101#u8, 116#u8, 32#u8,
+                36#u8, 102#u8, 97#u8, 105#u8, 108#u8, 117#u8, 114#u8, 101#u8,
+                41#u8, 32#u8, 40#u8, 116#u8, 104#u8, 101#u8, 110#u8, 32#u8,
+                40#u8, 114#u8, 101#u8, 116#u8, 117#u8, 114#u8, 110#u8, 41#u8,
+                41#u8, 41#u8, 10#u8
+                ]))
+          let (r3, out3) ← output.Buffer.append out2 s1
+          match r3 with
+          | core.result.Result.Ok _ =>
+            let i1 ← lift (core.num.Usize.saturating_add index 1#usize)
+            let i2 := alloc.vec.Vec.len program.operations
+            if i1 < i2
+            then
+              let s2 ←
+                lift (Array.to_slice
+                  (Array.make 15#usize [
+                    40#u8, 99#u8, 97#u8, 108#u8, 108#u8, 32#u8, 36#u8, 101#u8,
+                    110#u8, 113#u8, 117#u8, 101#u8, 117#u8, 101#u8, 32#u8
+                    ]))
+              let (r4, out4) ← output.Buffer.append out3 s2
+              match r4 with
+              | core.result.Result.Ok _ =>
+                let o1 ← lift (U32.checked_add value1 1#u32)
+                match o1 with
+                | none =>
+                  ok (core.result.Result.Err Diagnostic.Exhausted, out4)
+                | some value2 =>
+                  let (r5, out5) ← output.Buffer.i32 out4 value2
+                  match r5 with
+                  | core.result.Result.Ok _ =>
+                    let s3 ←
+                      lift (Array.to_slice
+                        (Array.make 19#usize [
+                          32#u8, 40#u8, 108#u8, 111#u8, 99#u8, 97#u8, 108#u8,
+                          46#u8, 103#u8, 101#u8, 116#u8, 32#u8, 36#u8, 101#u8,
+                          110#u8, 118#u8, 41#u8, 41#u8, 10#u8
+                          ]))
+                    let (r6, out6) ← output.Buffer.append out5 s3
+                    match r6 with
+                    | core.result.Result.Ok _ =>
+                      let s4 ←
+                        lift (Array.to_slice
+                          (Array.make 42#usize [
+                            40#u8, 105#u8, 102#u8, 32#u8, 40#u8, 105#u8, 51#u8,
+                            50#u8, 46#u8, 101#u8, 113#u8, 122#u8, 32#u8, 40#u8,
+                            103#u8, 108#u8, 111#u8, 98#u8, 97#u8, 108#u8,
+                            46#u8, 103#u8, 101#u8, 116#u8, 32#u8, 36#u8,
+                            102#u8, 97#u8, 105#u8, 108#u8, 117#u8, 114#u8,
+                            101#u8, 41#u8, 41#u8, 32#u8, 40#u8, 116#u8, 104#u8,
+                            101#u8, 110#u8, 10#u8
+                            ]))
+                      let (r7, out7) ← output.Buffer.append out6 s4
+                      match r7 with
+                      | core.result.Result.Ok _ =>
+                        let o2 ←
+                          alloc.vec.Vec.index
+                            (core.slice.index.SliceIndexUsizeSlice
+                            source.plan.Operation) program.operations index
+                        let (r8, out8) ←
+                          source.emit.functions.instruction out7 o2.action
+                        match r8 with
+                        | core.result.Result.Ok _ =>
+                          let s5 ←
+                            lift (Array.to_slice
+                              (Array.make 5#usize [
+                                41#u8, 41#u8, 10#u8, 41#u8, 10#u8
+                                ]))
+                          output.Buffer.append out8 s5
+                        | core.result.Result.Err _ => ok (r8, out8)
+                      | core.result.Result.Err _ => ok (r7, out7)
+                    | core.result.Result.Err _ => ok (r6, out6)
+                  | core.result.Result.Err _ => ok (r5, out5)
+              | core.result.Result.Err _ => ok (r4, out4)
+            else
+              let s2 ←
+                lift (Array.to_slice
+                  (Array.make 42#usize [
+                    40#u8, 105#u8, 102#u8, 32#u8, 40#u8, 105#u8, 51#u8, 50#u8,
+                    46#u8, 101#u8, 113#u8, 122#u8, 32#u8, 40#u8, 103#u8,
+                    108#u8, 111#u8, 98#u8, 97#u8, 108#u8, 46#u8, 103#u8,
+                    101#u8, 116#u8, 32#u8, 36#u8, 102#u8, 97#u8, 105#u8,
+                    108#u8, 117#u8, 114#u8, 101#u8, 41#u8, 41#u8, 32#u8, 40#u8,
+                    116#u8, 104#u8, 101#u8, 110#u8, 10#u8
+                    ]))
+              let (r4, out4) ← output.Buffer.append out3 s2
+              match r4 with
+              | core.result.Result.Ok _ =>
+                let o1 ←
+                  alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+                    source.plan.Operation) program.operations index
+                let (r5, out5) ←
+                  source.emit.functions.instruction out4 o1.action
+                match r5 with
+                | core.result.Result.Ok _ =>
+                  let s3 ←
+                    lift (Array.to_slice
+                      (Array.make 5#usize [
+                        41#u8, 41#u8, 10#u8, 41#u8, 10#u8
+                        ]))
+                  output.Buffer.append out5 s3
+                | core.result.Result.Err _ => ok (r5, out5)
+              | core.result.Result.Err _ => ok (r4, out4)
+          | core.result.Result.Err _ => ok (r3, out3)
+        | core.result.Result.Err _ => ok (r2, out2)
+      | core.result.Result.Err _ => ok (r1, out1)
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure, out)
+
+/-- [noble_wasm::source::emit::functions::write]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/emit/functions.rs', lines 12:4-20:5 -/
+@[rust_loop_body]
+def source.emit.functions.write_loop.body
+  (program : source.plan.Program) (out : output.Buffer) (index : Std.Usize) :
+  Result (ControlFlow (output.Buffer × Std.Usize) (output.Buffer × (Option
+    Diagnostic)))
+  := do
+  let i := alloc.vec.Vec.len program.operations
+  if index < i
+  then
+    let (r, out1) ← source.emit.functions.function out program index
+    match r with
+    | core.result.Result.Ok _ =>
+      let index1 ← index + 1#usize
+      ok (cont (out1, index1))
+    | core.result.Result.Err problem => ok (done (out1, some problem))
+  else ok (done (out, none))
+
+/-- [noble_wasm::source::emit::functions::write]: loop 0:
+    Source: 'crates/noble-wasm/src/source/emit/functions.rs', lines 12:4-20:5 -/
+@[rust_loop]
+def source.emit.functions.write_loop
+  (out : output.Buffer) (program : source.plan.Program) (index : Std.Usize) :
+  Result (output.Buffer × (Option Diagnostic))
+  := do
+  loop
+    (fun (out1, index1) => source.emit.functions.write_loop.body program out1
+      index1)
+    (out, index)
+
+/-- [noble_wasm::source::emit::functions::write]:
+    Source: 'crates/noble-wasm/src/source/emit/functions.rs', lines 6:0-25:1 -/
+def source.emit.functions.write
+  (out : output.Buffer) (program : source.plan.Program) :
+  Result ((core.result.Result Unit Diagnostic) × output.Buffer)
+  := do
+  let (out1, failure) ← source.emit.functions.write_loop out program 0#usize
+  match failure with
+  | none => ok (core.result.Result.Ok (), out1)
+  | some problem => ok (core.result.Result.Err problem, out1)
+
+/-- [noble_wasm::source::emit::imports::global_import]:
+    Source: 'crates/noble-wasm/src/source/emit/imports.rs', lines 44:0-56:1 -/
+def source.emit.imports.global_import
+  (out : output.Buffer) («name» : Slice Std.U8) (ty : Slice Std.U8) :
+  Result ((core.result.Result Unit Diagnostic) × output.Buffer)
+  := do
+  let s ←
+    lift (Array.to_slice
+      (Array.make 17#usize [
+        40#u8, 105#u8, 109#u8, 112#u8, 111#u8, 114#u8, 116#u8, 32#u8, 34#u8,
+        110#u8, 111#u8, 98#u8, 108#u8, 101#u8, 34#u8, 32#u8, 34#u8
+        ]))
+  let (r, out1) ← output.Buffer.append out s
+  match r with
+  | core.result.Result.Ok _ =>
+    let (r1, out2) ← output.Buffer.append out1 «name»
+    match r1 with
+    | core.result.Result.Ok _ =>
+      let s1 ←
+        lift (Array.to_slice
+          (Array.make 11#usize [
+            34#u8, 32#u8, 40#u8, 103#u8, 108#u8, 111#u8, 98#u8, 97#u8, 108#u8,
+            32#u8, 36#u8
+            ]))
+      let (r2, out3) ← output.Buffer.append out2 s1
+      match r2 with
+      | core.result.Result.Ok _ =>
+        let (r3, out4) ← output.Buffer.append out3 «name»
+        match r3 with
+        | core.result.Result.Ok _ =>
+          let s2 ←
+            lift (Array.to_slice
+              (Array.make 6#usize [
+                32#u8, 40#u8, 109#u8, 117#u8, 116#u8, 32#u8
+                ]))
+          let (r4, out5) ← output.Buffer.append out4 s2
+          match r4 with
+          | core.result.Result.Ok _ =>
+            let (r5, out6) ← output.Buffer.append out5 ty
+            match r5 with
+            | core.result.Result.Ok _ =>
+              let s3 ←
+                lift (Array.to_slice
+                  (Array.make 4#usize [ 41#u8, 41#u8, 41#u8, 10#u8 ]))
+              output.Buffer.append out6 s3
+            | core.result.Result.Err _ => ok (r5, out6)
+          | core.result.Result.Err _ => ok (r4, out5)
+        | core.result.Result.Err _ => ok (r3, out4)
+      | core.result.Result.Err _ => ok (r2, out3)
+    | core.result.Result.Err _ => ok (r1, out2)
+  | core.result.Result.Err _ => ok (r, out1)
+
+/-- [noble_wasm::source::emit::imports::globals]:
+    Source: 'crates/noble-wasm/src/source/emit/imports.rs', lines 18:0-42:1 -/
+def source.emit.imports.globals
+  (out : output.Buffer) :
+  Result ((core.result.Result Unit Diagnostic) × output.Buffer)
+  := do
+  let s ←
+    lift (Array.to_slice
+      (Array.make 7#usize [
+        102#u8, 97#u8, 105#u8, 108#u8, 117#u8, 114#u8, 101#u8
+        ]))
+  let s1 ←
+    lift (Array.to_slice (Array.make 3#usize [ 105#u8, 51#u8, 50#u8 ]))
+  let (r, out1) ← source.emit.imports.global_import out s s1
+  match r with
+  | core.result.Result.Ok _ =>
+    let s2 ←
+      lift (Array.to_slice
+        (Array.make 12#usize [
+          113#u8, 117#u8, 111#u8, 116#u8, 97#u8, 95#u8, 114#u8, 101#u8, 97#u8,
+          115#u8, 111#u8, 110#u8
+          ]))
+    let s3 ←
+      lift (Array.to_slice (Array.make 3#usize [ 105#u8, 51#u8, 50#u8 ]))
+    let (r1, out2) ← source.emit.imports.global_import out1 s2 s3
+    match r1 with
+    | core.result.Result.Ok _ =>
+      let s4 ←
+        lift (Array.to_slice
+          (Array.make 5#usize [ 112#u8, 104#u8, 97#u8, 115#u8, 101#u8 ]))
+      let s5 ←
+        lift (Array.to_slice (Array.make 3#usize [ 105#u8, 51#u8, 50#u8 ]))
+      let (r2, out3) ← source.emit.imports.global_import out2 s4 s5
+      match r2 with
+      | core.result.Result.Ok _ =>
+        let s6 ←
+          lift (Array.to_slice
+            (Array.make 11#usize [
+              104#u8, 101#u8, 97#u8, 112#u8, 95#u8, 99#u8, 117#u8, 114#u8,
+              115#u8, 111#u8, 114#u8
+              ]))
+        let s7 ←
+          lift (Array.to_slice (Array.make 3#usize [ 105#u8, 51#u8, 50#u8 ]))
+        let (r3, out4) ← source.emit.imports.global_import out3 s6 s7
+        match r3 with
+        | core.result.Result.Ok _ =>
+          let s8 ←
+            lift (Array.to_slice
+              (Array.make 13#usize [
+                104#u8, 101#u8, 97#u8, 112#u8, 95#u8, 98#u8, 97#u8, 115#u8,
+                101#u8, 108#u8, 105#u8, 110#u8, 101#u8
+                ]))
+          let s9 ←
+            lift (Array.to_slice (Array.make 3#usize [ 105#u8, 51#u8, 50#u8 ]))
+          let (r4, out5) ← source.emit.imports.global_import out4 s8 s9
+          match r4 with
+          | core.result.Result.Ok _ =>
+            let s10 ←
+              lift (Array.to_slice
+                (Array.make 16#usize [
+                  97#u8, 108#u8, 108#u8, 111#u8, 99#u8, 97#u8, 116#u8, 105#u8,
+                  111#u8, 110#u8, 95#u8, 108#u8, 105#u8, 109#u8, 105#u8, 116#u8
+                  ]))
+            let s11 ←
+              lift (Array.to_slice
+                (Array.make 3#usize [ 105#u8, 51#u8, 50#u8 ]))
+            let (r5, out6) ← source.emit.imports.global_import out5 s10 s11
+            match r5 with
+            | core.result.Result.Ok _ =>
+              let s12 ←
+                lift (Array.to_slice
+                  (Array.make 12#usize [
+                    114#u8, 101#u8, 99#u8, 105#u8, 112#u8, 101#u8, 95#u8,
+                    108#u8, 105#u8, 109#u8, 105#u8, 116#u8
+                    ]))
+              let s13 ←
+                lift (Array.to_slice
+                  (Array.make 3#usize [ 105#u8, 51#u8, 50#u8 ]))
+              let (r6, out7) ← source.emit.imports.global_import out6 s12 s13
+              match r6 with
+              | core.result.Result.Ok _ =>
+                let s14 ←
+                  lift (Array.to_slice
+                    (Array.make 11#usize [
+                      100#u8, 101#u8, 112#u8, 116#u8, 104#u8, 95#u8, 108#u8,
+                      105#u8, 109#u8, 105#u8, 116#u8
+                      ]))
+                let s15 ←
+                  lift (Array.to_slice
+                    (Array.make 3#usize [ 105#u8, 51#u8, 50#u8 ]))
+                let (r7, out8) ←
+                  source.emit.imports.global_import out7 s14 s15
+                match r7 with
+                | core.result.Result.Ok _ =>
+                  let s16 ←
+                    lift (Array.to_slice
+                      (Array.make 13#usize [
+                        111#u8, 112#u8, 101#u8, 114#u8, 97#u8, 110#u8, 100#u8,
+                        95#u8, 108#u8, 105#u8, 109#u8, 105#u8, 116#u8
+                        ]))
+                  let s17 ←
+                    lift (Array.to_slice
+                      (Array.make 3#usize [ 105#u8, 51#u8, 50#u8 ]))
+                  let (r8, out9) ←
+                    source.emit.imports.global_import out8 s16 s17
+                  match r8 with
+                  | core.result.Result.Ok _ =>
+                    let s18 ←
+                      lift (Array.to_slice
+                        (Array.make 18#usize [
+                          99#u8, 111#u8, 110#u8, 116#u8, 105#u8, 110#u8,
+                          117#u8, 97#u8, 116#u8, 105#u8, 111#u8, 110#u8, 95#u8,
+                          108#u8, 105#u8, 109#u8, 105#u8, 116#u8
+                          ]))
+                    let s19 ←
+                      lift (Array.to_slice
+                        (Array.make 3#usize [ 105#u8, 51#u8, 50#u8 ]))
+                    let (r9, out10) ←
+                      source.emit.imports.global_import out9 s18 s19
+                    match r9 with
+                    | core.result.Result.Ok _ =>
+                      let s20 ←
+                        lift (Array.to_slice
+                          (Array.make 10#usize [
+                            115#u8, 116#u8, 101#u8, 112#u8, 95#u8, 108#u8,
+                            105#u8, 109#u8, 105#u8, 116#u8
+                            ]))
+                      let s21 ←
+                        lift (Array.to_slice
+                          (Array.make 3#usize [ 105#u8, 51#u8, 50#u8 ]))
+                      let (r10, out11) ←
+                        source.emit.imports.global_import out10 s20 s21
+                      match r10 with
+                      | core.result.Result.Ok _ =>
+                        let s22 ←
+                          lift (Array.to_slice
+                            (Array.make 15#usize [
+                              97#u8, 108#u8, 108#u8, 111#u8, 99#u8, 97#u8,
+                              116#u8, 105#u8, 111#u8, 110#u8, 95#u8, 112#u8,
+                              101#u8, 97#u8, 107#u8
+                              ]))
+                        let s23 ←
+                          lift (Array.to_slice
+                            (Array.make 3#usize [ 105#u8, 51#u8, 50#u8 ]))
+                        let (r11, out12) ←
+                          source.emit.imports.global_import out11 s22 s23
+                        match r11 with
+                        | core.result.Result.Ok _ =>
+                          let s24 ←
+                            lift (Array.to_slice
+                              (Array.make 12#usize [
+                                111#u8, 112#u8, 101#u8, 114#u8, 97#u8, 110#u8,
+                                100#u8, 95#u8, 112#u8, 101#u8, 97#u8, 107#u8
+                                ]))
+                          let s25 ←
+                            lift (Array.to_slice
+                              (Array.make 3#usize [ 105#u8, 51#u8, 50#u8 ]))
+                          let (r12, out13) ←
+                            source.emit.imports.global_import out12 s24 s25
+                          match r12 with
+                          | core.result.Result.Ok _ =>
+                            let s26 ←
+                              lift (Array.to_slice
+                                (Array.make 17#usize [
+                                  99#u8, 111#u8, 110#u8, 116#u8, 105#u8,
+                                  110#u8, 117#u8, 97#u8, 116#u8, 105#u8,
+                                  111#u8, 110#u8, 95#u8, 112#u8, 101#u8, 97#u8,
+                                  107#u8
+                                  ]))
+                            let s27 ←
+                              lift (Array.to_slice
+                                (Array.make 3#usize [ 105#u8, 51#u8, 50#u8 ]))
+                            let (r13, out14) ←
+                              source.emit.imports.global_import out13 s26 s27
+                            match r13 with
+                            | core.result.Result.Ok _ =>
+                              let s28 ←
+                                lift (Array.to_slice
+                                  (Array.make 5#usize [
+                                    115#u8, 116#u8, 101#u8, 112#u8, 115#u8
+                                    ]))
+                              let s29 ←
+                                lift (Array.to_slice
+                                  (Array.make 3#usize [ 105#u8, 51#u8, 50#u8 ]))
+                              let (r14, out15) ←
+                                source.emit.imports.global_import out14 s28 s29
+                              match r14 with
+                              | core.result.Result.Ok _ =>
+                                let s30 ←
+                                  lift (Array.to_slice
+                                    (Array.make 17#usize [
+                                      113#u8, 117#u8, 111#u8, 116#u8, 101#u8,
+                                      95#u8, 105#u8, 110#u8, 118#u8, 111#u8,
+                                      99#u8, 97#u8, 116#u8, 105#u8, 111#u8,
+                                      110#u8, 115#u8
+                                      ]))
+                                let s31 ←
+                                  lift (Array.to_slice
+                                    (Array.make 3#usize [
+                                      105#u8, 51#u8, 50#u8
+                                      ]))
+                                let (r15, out16) ←
+                                  source.emit.imports.global_import out15 s30
+                                    s31
+                                match r15 with
+                                | core.result.Result.Ok _ =>
+                                  let s32 ←
+                                    lift (Array.to_slice
+                                      (Array.make 2#usize [ 115#u8, 112#u8 ]))
+                                  let s33 ←
+                                    lift (Array.to_slice
+                                      (Array.make 3#usize [
+                                        105#u8, 51#u8, 50#u8
+                                        ]))
+                                  let (r16, out17) ←
+                                    source.emit.imports.global_import out16 s32
+                                      s33
+                                  match r16 with
+                                  | core.result.Result.Ok _ =>
+                                    let s34 ←
+                                      lift (Array.to_slice
+                                        (Array.make 2#usize [ 99#u8, 112#u8 ]))
+                                    let s35 ←
+                                      lift (Array.to_slice
+                                        (Array.make 3#usize [
+                                          105#u8, 51#u8, 50#u8
+                                          ]))
+                                    let (r17, out18) ←
+                                      source.emit.imports.global_import out17
+                                        s34 s35
+                                    match r17 with
+                                    | core.result.Result.Ok _ =>
+                                      let s36 ←
+                                        lift (Array.to_slice
+                                          (Array.make 16#usize [
+                                            111#u8, 98#u8, 115#u8, 101#u8,
+                                            114#u8, 118#u8, 101#u8, 100#u8,
+                                            95#u8, 112#u8, 114#u8, 111#u8,
+                                            103#u8, 114#u8, 97#u8, 109#u8
+                                            ]))
+                                      let s37 ←
+                                        lift (Array.to_slice
+                                          (Array.make 3#usize [
+                                            105#u8, 51#u8, 50#u8
+                                            ]))
+                                      let (r18, out19) ←
+                                        source.emit.imports.global_import out18
+                                          s36 s37
+                                      match r18 with
+                                      | core.result.Result.Ok _ =>
+                                        let s38 ←
+                                          lift (Array.to_slice
+                                            (Array.make 12#usize [
+                                              114#u8, 101#u8, 99#u8, 105#u8,
+                                              112#u8, 101#u8, 95#u8, 99#u8,
+                                              111#u8, 117#u8, 110#u8, 116#u8
+                                              ]))
+                                        let s39 ←
+                                          lift (Array.to_slice
+                                            (Array.make 3#usize [
+                                              105#u8, 51#u8, 50#u8
+                                              ]))
+                                        let (r19, out20) ←
+                                          source.emit.imports.global_import
+                                            out19 s38 s39
+                                        match r19 with
+                                        | core.result.Result.Ok _ =>
+                                          let s40 ←
+                                            lift (Array.to_slice
+                                              (Array.make 16#usize [
+                                                114#u8, 101#u8, 102#u8, 108#u8,
+                                                101#u8, 99#u8, 116#u8, 105#u8,
+                                                111#u8, 110#u8, 95#u8, 115#u8,
+                                                116#u8, 101#u8, 112#u8, 115#u8
+                                                ]))
+                                          let s41 ←
+                                            lift (Array.to_slice
+                                              (Array.make 3#usize [
+                                                105#u8, 51#u8, 50#u8
+                                                ]))
+                                          let (r20, out21) ←
+                                            source.emit.imports.global_import
+                                              out20 s40 s41
+                                          match r20 with
+                                          | core.result.Result.Ok _ =>
+                                            let s42 ←
+                                              lift (Array.to_slice
+                                                (Array.make 2#usize [
+                                                  114#u8, 112#u8
+                                                  ]))
+                                            let s43 ←
+                                              lift (Array.to_slice
+                                                (Array.make 3#usize [
+                                                  105#u8, 51#u8, 50#u8
+                                                  ]))
+                                            let (r21, out22) ←
+                                              source.emit.imports.global_import
+                                                out21 s42 s43
+                                            match r21 with
+                                            | core.result.Result.Ok _ =>
+                                              let s44 ←
+                                                lift (Array.to_slice
+                                                  (Array.make 10#usize [
+                                                    103#u8, 101#u8, 110#u8,
+                                                    101#u8, 114#u8, 97#u8,
+                                                    116#u8, 105#u8, 111#u8,
+                                                    110#u8
+                                                    ]))
+                                              let s45 ←
+                                                lift (Array.to_slice
+                                                  (Array.make 3#usize [
+                                                    105#u8, 51#u8, 50#u8
+                                                    ]))
+                                              source.emit.imports.global_import
+                                                out22 s44 s45
+                                            | core.result.Result.Err _ =>
+                                              ok (r21, out22)
+                                          | core.result.Result.Err _ =>
+                                            ok (r20, out21)
+                                        | core.result.Result.Err _ =>
+                                          ok (r19, out20)
+                                      | core.result.Result.Err _ =>
+                                        ok (r18, out19)
+                                    | core.result.Result.Err _ =>
+                                      ok (r17, out18)
+                                  | core.result.Result.Err _ => ok (r16, out17)
+                                | core.result.Result.Err _ => ok (r15, out16)
+                              | core.result.Result.Err _ => ok (r14, out15)
+                            | core.result.Result.Err _ => ok (r13, out14)
+                          | core.result.Result.Err _ => ok (r12, out13)
+                        | core.result.Result.Err _ => ok (r11, out12)
+                      | core.result.Result.Err _ => ok (r10, out11)
+                    | core.result.Result.Err _ => ok (r9, out10)
+                  | core.result.Result.Err _ => ok (r8, out9)
+                | core.result.Result.Err _ => ok (r7, out8)
+              | core.result.Result.Err _ => ok (r6, out7)
+            | core.result.Result.Err _ => ok (r5, out6)
+          | core.result.Result.Err _ => ok (r4, out5)
+        | core.result.Result.Err _ => ok (r3, out4)
+      | core.result.Result.Err _ => ok (r2, out3)
+    | core.result.Result.Err _ => ok (r1, out2)
+  | core.result.Result.Err _ => ok (r, out1)
+
+/-- [noble_wasm::source::emit::imports::write]:
+    Source: 'crates/noble-wasm/src/source/emit/imports.rs', lines 6:0-12:1 -/
+def source.emit.imports.write
+  (out : output.Buffer) :
+  Result ((core.result.Result Unit Diagnostic) × output.Buffer)
+  := do
+  let s ←
+    lift (Array.to_slice
+      (Array.make 273#usize [
+        40#u8, 109#u8, 111#u8, 100#u8, 117#u8, 108#u8, 101#u8, 10#u8, 40#u8,
+        116#u8, 121#u8, 112#u8, 101#u8, 32#u8, 36#u8, 101#u8, 110#u8, 116#u8,
+        114#u8, 121#u8, 32#u8, 40#u8, 102#u8, 117#u8, 110#u8, 99#u8, 32#u8,
+        40#u8, 112#u8, 97#u8, 114#u8, 97#u8, 109#u8, 32#u8, 105#u8, 51#u8,
+        50#u8, 41#u8, 41#u8, 41#u8, 10#u8, 40#u8, 105#u8, 109#u8, 112#u8,
+        111#u8, 114#u8, 116#u8, 32#u8, 34#u8, 110#u8, 111#u8, 98#u8, 108#u8,
+        101#u8, 34#u8, 32#u8, 34#u8, 109#u8, 101#u8, 109#u8, 111#u8, 114#u8,
+        121#u8, 34#u8, 32#u8, 40#u8, 109#u8, 101#u8, 109#u8, 111#u8, 114#u8,
+        121#u8, 32#u8, 49#u8, 54#u8, 32#u8, 49#u8, 54#u8, 41#u8, 41#u8, 10#u8,
+        40#u8, 105#u8, 109#u8, 112#u8, 111#u8, 114#u8, 116#u8, 32#u8, 34#u8,
+        110#u8, 111#u8, 98#u8, 108#u8, 101#u8, 34#u8, 32#u8, 34#u8, 116#u8,
+        97#u8, 98#u8, 108#u8, 101#u8, 34#u8, 32#u8, 40#u8, 116#u8, 97#u8,
+        98#u8, 108#u8, 101#u8, 32#u8, 49#u8, 54#u8, 51#u8, 56#u8, 52#u8, 32#u8,
+        49#u8, 54#u8, 51#u8, 56#u8, 52#u8, 32#u8, 102#u8, 117#u8, 110#u8,
+        99#u8, 114#u8, 101#u8, 102#u8, 41#u8, 41#u8, 10#u8, 40#u8, 105#u8,
+        109#u8, 112#u8, 111#u8, 114#u8, 116#u8, 32#u8, 34#u8, 110#u8, 111#u8,
+        98#u8, 108#u8, 101#u8, 34#u8, 32#u8, 34#u8, 116#u8, 101#u8, 115#u8,
+        116#u8, 95#u8, 101#u8, 109#u8, 105#u8, 116#u8, 34#u8, 32#u8, 40#u8,
+        102#u8, 117#u8, 110#u8, 99#u8, 32#u8, 36#u8, 104#u8, 111#u8, 115#u8,
+        116#u8, 95#u8, 101#u8, 109#u8, 105#u8, 116#u8, 32#u8, 40#u8, 112#u8,
+        97#u8, 114#u8, 97#u8, 109#u8, 32#u8, 105#u8, 51#u8, 50#u8, 32#u8,
+        105#u8, 51#u8, 50#u8, 41#u8, 32#u8, 40#u8, 114#u8, 101#u8, 115#u8,
+        117#u8, 108#u8, 116#u8, 32#u8, 105#u8, 51#u8, 50#u8, 41#u8, 41#u8,
+        41#u8, 10#u8, 40#u8, 105#u8, 109#u8, 112#u8, 111#u8, 114#u8, 116#u8,
+        32#u8, 34#u8, 110#u8, 111#u8, 98#u8, 108#u8, 101#u8, 34#u8, 32#u8,
+        34#u8, 116#u8, 101#u8, 115#u8, 116#u8, 95#u8, 97#u8, 98#u8, 111#u8,
+        114#u8, 116#u8, 34#u8, 32#u8, 40#u8, 102#u8, 117#u8, 110#u8, 99#u8,
+        32#u8, 36#u8, 104#u8, 111#u8, 115#u8, 116#u8, 95#u8, 97#u8, 98#u8,
+        111#u8, 114#u8, 116#u8, 32#u8, 40#u8, 114#u8, 101#u8, 115#u8, 117#u8,
+        108#u8, 116#u8, 32#u8, 105#u8, 51#u8, 50#u8, 41#u8, 41#u8, 41#u8, 10#u8
+        ]))
+  let (r, out1) ← output.Buffer.append out s
+  match r with
+  | core.result.Result.Ok _ =>
+    let (r1, out2) ← source.emit.imports.globals out1
+    match r1 with
+    | core.result.Result.Ok _ =>
+      let s1 ←
+        lift (Array.to_slice
+          (Array.make 15#usize [
+            97#u8, 108#u8, 108#u8, 111#u8, 99#u8, 97#u8, 116#u8, 101#u8,
+            100#u8, 95#u8, 116#u8, 111#u8, 116#u8, 97#u8, 108#u8
+            ]))
+      let s2 ←
+        lift (Array.to_slice (Array.make 3#usize [ 105#u8, 54#u8, 52#u8 ]))
+      let (r2, out3) ← source.emit.imports.global_import out2 s1 s2
+      match r2 with
+      | core.result.Result.Ok _ =>
+        let s3 ←
+          lift (Array.to_slice
+            (Array.make 14#usize [
+              114#u8, 101#u8, 108#u8, 101#u8, 97#u8, 115#u8, 101#u8, 100#u8,
+              95#u8, 116#u8, 111#u8, 116#u8, 97#u8, 108#u8
+              ]))
+        let s4 ←
+          lift (Array.to_slice (Array.make 3#usize [ 105#u8, 54#u8, 52#u8 ]))
+        let (r3, out4) ← source.emit.imports.global_import out3 s3 s4
+        match r3 with
+        | core.result.Result.Ok _ =>
+          let s5 ←
+            lift (Array.to_slice
+              (Array.make 75#usize [
+                40#u8, 101#u8, 120#u8, 112#u8, 111#u8, 114#u8, 116#u8, 32#u8,
+                34#u8, 109#u8, 101#u8, 109#u8, 111#u8, 114#u8, 121#u8, 34#u8,
+                32#u8, 40#u8, 109#u8, 101#u8, 109#u8, 111#u8, 114#u8, 121#u8,
+                32#u8, 48#u8, 41#u8, 41#u8, 10#u8, 40#u8, 103#u8, 108#u8,
+                111#u8, 98#u8, 97#u8, 108#u8, 32#u8, 36#u8, 115#u8, 111#u8,
+                117#u8, 114#u8, 99#u8, 101#u8, 95#u8, 114#u8, 101#u8, 102#u8,
+                108#u8, 101#u8, 99#u8, 116#u8, 105#u8, 111#u8, 110#u8, 32#u8,
+                105#u8, 51#u8, 50#u8, 32#u8, 40#u8, 105#u8, 51#u8, 50#u8,
+                46#u8, 99#u8, 111#u8, 110#u8, 115#u8, 116#u8, 32#u8, 49#u8,
+                41#u8, 41#u8, 10#u8
+                ]))
+          output.Buffer.append out4 s5
+        | core.result.Result.Err _ => ok (r3, out4)
+      | core.result.Result.Err _ => ok (r2, out3)
+    | core.result.Result.Err _ => ok (r1, out2)
+  | core.result.Result.Err _ => ok (r, out1)
+
+/-- [noble_wasm::source::emit::imports::fragment]:
+    Source: 'crates/noble-wasm/src/source/emit/imports.rs', lines 58:0-61:1 -/
+def source.emit.imports.fragment
+  (out : output.Buffer) (text : Str) :
+  Result ((core.result.Result Unit Diagnostic) × output.Buffer)
+  := do
+  let s ← core.str.Str.as_bytes text
+  let (r, out1) ← output.Buffer.append out s
+  match r with
+  | core.result.Result.Ok _ =>
+    let s1 ← lift (Array.to_slice (Array.make 1#usize [ 10#u8 ]))
+    output.Buffer.append out1 s1
+  | core.result.Result.Err _ => ok (r, out1)
+
+/-- [noble_wasm::source::emit::imports::runtime]:
+    Source: 'crates/noble-wasm/src/source/emit/imports.rs', lines 67:0-113:1 -/
+def source.emit.imports.runtime
+  (out : output.Buffer) :
+  Result ((core.result.Result Unit Diagnostic) × output.Buffer)
+  := do
+  let (r, out1) ←
+    source.emit.imports.fragment out (toStr
+      ";; Shared allocation, quota and metric semantics for both experimental and source ABIs.\n(func $fail (param $code i32)\n (if (i32.eqz (global.get $failure)) (then (global.set $failure (local.get $code)))))\n(func $quota (param $reason i32)\n (if (i32.eqz (global.get $failure)) (then\n  (global.set $quota_reason (local.get $reason))\n  (global.set $failure (i32.add (i32.const 1) (global.get $phase))))))\n(func $live_bytes (result i32)\n (i32.mul (i32.sub (global.get $heap_cursor) (global.get $heap_baseline)) (i32.const 48)))\n(func $runtime_tick (result i32)\n (if (global.get $failure) (then (return (i32.const 0))))\n (if (i32.ge_u (global.get $steps) (global.get $step_limit))\n  (then (call $quota (i32.const 6)) (return (i32.const 0))))\n (global.set $steps (i32.add (global.get $steps) (i32.const 1)))\n (i32.const 1))\n(func $reserve (result i32) (local $next i32) (local $bytes i32)\n (if (global.get $failure) (then (return (i32.const 0))))\n (local.set $next (i32.add (global.get $heap_cursor) (i32.const 1)))\n (local.set $bytes (i32.mul (i32.sub (local.get $next) (global.get $heap_baseline)) (i32.const 48)))\n (if (i32.or (i32.gt_u (local.get $next) (i32.const 4096))\n             (i32.gt_u (local.get $bytes) (global.get $allocation_limit)))\n  (then (call $quota (i32.const 1)) (return (i32.const 0))))\n (if (i32.eqz (call $storage_ensure (local.get $next)))\n  (then (call $quota (i32.const 1)) (return (i32.const 0))))\n (global.set $heap_cursor (local.get $next))\n (global.set $allocated_total (i64.add (global.get $allocated_total) (i64.const 48)))\n (if (i32.gt_u (local.get $bytes) (global.get $allocation_peak))\n  (then (global.set $allocation_peak (local.get $bytes))))\n (local.get $next))\n(func $rollback (param $mark i32)\n (block $done (loop $next\n  (br_if $done (i32.le_u (global.get $heap_cursor) (local.get $mark)))\n  (call $storage_discard (global.get $heap_cursor))\n  (global.set $heap_cursor (i32.sub (global.get $heap_cursor) (i32.const 1)))\n  (global.set $released_total (i64.add (global.get $released_total) (i64.const 48)))\n  (br $next))))\n(func (export \"metric\") (param $key i32) (result i64)\n (if (i32.eq (local.get $key) (i32.const 0)) (then (return (i64.extend_i32_u (global.get $failure)))))\n (if (i32.eq (local.get $key) (i32.const 1)) (then (return (i64.extend_i32_u (global.get $quota_reason)))))\n (if (i32.eq (local.get $key) (i32.const 2)) (then (return (global.get $allocated_total))))\n (if (i32.eq (local.get $key) (i32.const 3)) (then (return (global.get $released_total))))\n (if (i32.eq (local.get $key) (i32.const 4)) (then (return (i64.extend_i32_u (call $live_bytes)))))\n (if (i32.eq (local.get $key) (i32.const 5)) (then (return (i64.extend_i32_u (global.get $allocation_peak)))))\n (if (i32.eq (local.get $key) (i32.const 6)) (then (return (i64.extend_i32_u (global.get $operand_peak)))))\n (if (i32.eq (local.get $key) (i32.const 7)) (then (return (i64.extend_i32_u (global.get $continuation_peak)))))\n (if (i32.eq (local.get $key) (i32.const 8)) (then (return (i64.extend_i32_u (global.get $steps)))))\n (if (i32.eq (local.get $key) (i32.const 9)) (then (return (i64.extend_i32_u (global.get $quote_invocations)))))\n (if (i32.eq (local.get $key) (i32.const 10)) (then (return (i64.extend_i32_u (i32.mul (memory.size) (i32.const 65536))))))\n (if (i32.eq (local.get $key) (i32.const 11)) (then (return (i64.extend_i32_u (i32.mul (global.get $heap_baseline) (i32.const 48))))))\n (if (i32.eq (local.get $key) (i32.const 12)) (then (return (i64.extend_i32_u (global.get $sp)))))\n (if (i32.eq (local.get $key) (i32.const 13)) (then (return (i64.extend_i32_u (global.get $reflection_steps)))))\n (i64.const -1))\n")
+  match r with
+  | core.result.Result.Ok _ =>
+    let (r1, out2) ←
+      source.emit.imports.fragment out1 (toStr
+        ";; Cells occupy [65536, 262144): 4096 immutable records of exactly 48 bytes.\n;; Check the unsigned handle range before subtraction/multiplication can address memory.\n(func $linear_address (param $h i32) (result i32)\n  (if (i32.gt_u (i32.sub (local.get $h) (i32.const 1)) (i32.const 4095))\n    (then unreachable))\n  (i32.add\n    (i32.const 65536)\n    (i32.mul (i32.sub (local.get $h) (i32.const 1)) (i32.const 48))))\n\n;; A current cell has both its expected id and a live kind, never a zero object.\n(func $linear_live_address (param $h i32) (result i32)\n  (local $p i32)\n  (if (i32.gt_u (local.get $h) (global.get $heap_cursor))\n    (then unreachable))\n  (local.set $p (call $linear_address (local.get $h)))\n  (if (i32.ne (i32.load offset=4 (local.get $p)) (local.get $h))\n    (then unreachable))\n  (if (i32.gt_u\n        (i32.sub (i32.load (local.get $p)) (i32.const 1))\n        (i32.const 12))\n    (then unreachable))\n  (local.get $p))\n\n;; Nullable edges point only backward to existing cells, preserving acyclicity.\n(func $linear_child (param $child i32) (param $parent i32) (result i32)\n  (if (i32.eqz (local.get $child))\n    (then (return (i32.const 0))))\n  (if (i32.ge_u (local.get $child) (local.get $parent))\n    (then unreachable))\n  (drop (call $linear_live_address (local.get $child)))\n  (local.get $child))\n\n(func $storage_init\n  ;; Leave scratch and common accounting untouched; initially this range is empty.\n  (memory.fill\n    (i32.const 65536)\n    (i32.const 0)\n    (i32.shl (i32.sub (memory.size) (i32.const 1)) (i32.const 16))))\n\n(func $storage_ensure (param $h i32) (result i32)\n  (local $needed i32)\n  (local $current i32)\n  (if (i32.gt_u (i32.sub (local.get $h) (i32.const 1)) (i32.const 4095))\n    (then (return (i32.const 0))))\n  ;; ceil((65536 + h * 48) / 65536) is at most four, without i32 overflow.\n  (local.set $needed\n    (i32.add\n      (i32.const 1)\n      (i32.shr_u\n        (i32.add (i32.mul (local.get $h) (i32.const 48)) (i32.const 65535))\n        (i32.const 16))))\n  (local.set $current (memory.size))\n  (if (i32.ge_u (local.get $current) (local.get $needed))\n    (then (return (i32.const 1))))\n  ;; reserve charges only after this succeeds; failed growth publishes no cell.\n  (i32.ne\n    (memory.grow (i32.sub (local.get $needed) (local.get $current)))\n    (i32.const -1)))\n\n(func $storage_discard (param $h i32)\n  ;; Clear kind and id together. Pages remain allocated; handles are region-private.\n  (i64.store (call $linear_live_address (local.get $h)) (i64.const 0)))\n\n(func $new\n  (param $kind i32) (param $payload i64)\n  (param $a i32) (param $b i32) (param $c i32)\n  (param $x i32) (param $y i32) (param $z i32)\n  (param $w i32) (param $n i32)\n  (result i32)\n  (local $h i32)\n  (local $p i32)\n  (local.set $h (call $reserve))\n  ;; In particular, failed reservations must not inspect child handles.\n  (if (i32.eqz (local.get $h))\n    (then (return (i32.const 0))))\n  (local.set $p (call $linear_address (local.get $h)))\n  (if (i32.gt_u (i32.sub (local.get $kind) (i32.const 1)) (i32.const 12))\n    (then unreachable))\n  (local.set $a (call $linear_child (local.get $a) (local.get $h)))\n  (local.set $b (call $linear_child (local.get $b) (local.get $h)))\n  (local.set $c (call $linear_child (local.get $c) (local.get $h)))\n  (i64.store offset=8 (local.get $p) (local.get $payload))\n  (i32.store offset=16 (local.get $p) (local.get $a))\n  (i32.store offset=20 (local.get $p) (local.get $b))\n  (i32.store offset=24 (local.get $p) (local.get $c))\n  (i32.store offset=28 (local.get $p) (local.get $x))\n  (i32.store offset=32 (local.get $p) (local.get $y))\n  (i32.store offset=36 (local.get $p) (local.get $z))\n  (i32.store offset=40 (local.get $p) (local.get $w))\n  (i32.store offset=44 (local.get $p) (local.get $n))\n  ;; Publish the live header only after every immutable field is initialized.\n  (i32.store offset=4 (local.get $p) (local.get $h))\n  (i32.store (local.get $p) (local.get $kind))\n  (local.get $h))\n\n(func $kind (param $h i32) (result i32)\n  (i32.load (call $linear_live_address (local.get $h))))\n\n(func $payload (param $h i32) (result i64)\n  (i64.load offset=8 (call $linear_live_address (local.get $h))))\n\n(func $a (param $h i32) (result i32)\n  (call $linear_child\n    (i32.load offset=16 (call $linear_live_address (local.get $h)))\n    (local.get $h)))\n\n(func $b (param $h i32) (result i32)\n  (call $linear_child\n    (i32.load offset=20 (call $linear_live_address (local.get $h)))\n    (local.get $h)))\n\n(func $c (param $h i32) (result i32)\n  (call $linear_child\n    (i32.load offset=24 (call $linear_live_address (local.get $h)))\n    (local.get $h)))\n\n(func $x (param $h i32) (result i32)\n  (i32.load offset=28 (call $linear_live_address (local.get $h))))\n\n(func $y (param $h i32) (result i32)\n  (i32.load offset=32 (call $linear_live_address (local.get $h))))\n\n(func $z (param $h i32) (result i32)\n  (i32.load offset=36 (call $linear_live_address (local.get $h))))\n\n(func $w (param $h i32) (result i32)\n  (i32.load offset=40 (call $linear_live_address (local.get $h))))\n\n(func $n (param $h i32) (result i32)\n  (i32.load offset=44 (call $linear_live_address (local.get $h))))\n")
+    match r1 with
+    | core.result.Result.Ok _ =>
+      let (r2, out3) ←
+        source.emit.imports.fragment out2 (toStr
+          ";; Operand slots: tag:i32, padding:i32, payload:i64; no heap allocation for arithmetic.\n(func $need (param $count i32) (result i32)\n (if (global.get $failure) (then (return (i32.const 0))))\n (if (i32.lt_u (global.get $sp) (local.get $count))\n  (then (call $fail (i32.const 4)) (return (i32.const 0))))\n (i32.const 1))\n(func $slot_kind (param $index i32) (result i32)\n (if (i32.ge_u (local.get $index) (global.get $sp))\n  (then (call $fail (i32.const 4)) (return (i32.const 0))))\n (i32.load (i32.mul (local.get $index) (i32.const 16))))\n(func $slot_value (param $index i32) (result i64)\n (if (i32.ge_u (local.get $index) (global.get $sp))\n  (then (call $fail (i32.const 4)) (return (i64.const 0))))\n (i64.load offset=8 (i32.mul (local.get $index) (i32.const 16))))\n(func $push_tag (param $kind i32) (param $value i64) (local $bytes i32) (local $address i32)\n (if (global.get $failure) (then (return)))\n (local.set $bytes (i32.mul (i32.add (global.get $sp) (i32.const 1)) (i32.const 16)))\n (if (i32.gt_u (local.get $bytes) (global.get $operand_limit))\n  (then (call $quota (i32.const 4)) (return)))\n (local.set $address (i32.mul (global.get $sp) (i32.const 16)))\n (i32.store (local.get $address) (local.get $kind))\n (i64.store offset=8 (local.get $address) (local.get $value))\n (global.set $sp (i32.add (global.get $sp) (i32.const 1)))\n (if (i32.gt_u (local.get $bytes) (global.get $operand_peak))\n  (then (global.set $operand_peak (local.get $bytes)))))\n(func $push_i64 (param $value i64) (call $push_tag (i32.const 1) (local.get $value)))\n(func $push_bool (param $value i32)\n (call $push_tag (i32.const 2) (i64.extend_i32_u (local.get $value))))\n(func $push_unit (call $push_tag (i32.const 3) (i64.const 0)))\n(func $push_ref (param $handle i32)\n (if (global.get $failure) (then (return)))\n (call $push_tag (call $kind (local.get $handle)) (i64.extend_i32_u (local.get $handle))))\n(func $take (result i64) (local $address i32) (local $value i64)\n (if (i32.eqz (call $need (i32.const 1))) (then (return (i64.const 0))))\n (global.set $sp (i32.sub (global.get $sp) (i32.const 1)))\n (local.set $address (i32.mul (global.get $sp) (i32.const 16)))\n (local.set $value (i64.load offset=8 (local.get $address)))\n (i64.store (local.get $address) (i64.const 0))\n (i64.store offset=8 (local.get $address) (i64.const 0))\n (local.get $value))\n(func $pop_kind (param $expected i32) (result i64)\n (if (i32.eqz (call $need (i32.const 1))) (then (return (i64.const 0))))\n (if (i32.ne (call $slot_kind (i32.sub (global.get $sp) (i32.const 1))) (local.get $expected))\n  (then (call $fail (i32.const 4)) (return (i64.const 0))))\n (call $take))\n(func $pop_box (result i32) (local $tag i32) (local $value i64)\n (if (i32.eqz (call $need (i32.const 1))) (then (return (i32.const 0))))\n (local.set $tag (call $slot_kind (i32.sub (global.get $sp) (i32.const 1))))\n (local.set $value (call $take))\n (if (i32.ge_u (local.get $tag) (i32.const 4)) (then (return (i32.wrap_i64 (local.get $value)))))\n (call $new (local.get $tag) (local.get $value)\n  (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0)\n  (i32.const 0) (i32.const 0) (i32.const 0)))\n(func $unbox (param $handle i32) (local $tag i32)\n (if (global.get $failure) (then (return)))\n (local.set $tag (call $kind (local.get $handle)))\n (if (i32.lt_u (local.get $tag) (i32.const 4))\n  (then (call $push_tag (local.get $tag) (call $payload (local.get $handle))))\n  (else (call $push_ref (local.get $handle)))))\n\n;; Continuation slots occupy [4096,8192): index:i32, environment:i32.\n(func $enqueue (param $index i32) (param $environment i32) (local $bytes i32) (local $address i32)\n (if (global.get $failure) (then (return)))\n (local.set $bytes (i32.mul (i32.add (global.get $cp) (i32.const 1)) (i32.const 8)))\n (if (i32.gt_u (local.get $bytes) (global.get $continuation_limit))\n  (then (call $quota (i32.const 5)) (return)))\n (local.set $address (i32.add (i32.const 4096) (i32.mul (global.get $cp) (i32.const 8))))\n (i32.store (local.get $address) (local.get $index))\n (i32.store offset=4 (local.get $address) (local.get $environment))\n (global.set $cp (i32.add (global.get $cp) (i32.const 1)))\n (if (i32.gt_u (local.get $bytes) (global.get $continuation_peak))\n  (then (global.set $continuation_peak (local.get $bytes)))))\n(func $enqueue_program (param $program i32)\n (if (global.get $failure) (then (return)))\n (if (i32.ne (call $kind (local.get $program)) (i32.const 4))\n  (then (call $fail (i32.const 4)) (return)))\n (call $enqueue (call $x (local.get $program)) (local.get $program)))\n(func $dispatch (local $index i32) (local $environment i32) (local $address i32)\n (block $done (loop $next\n  (br_if $done (i32.or (global.get $failure) (i32.eqz (global.get $cp))))\n  (if (i32.eqz (call $runtime_tick)) (then (br $done)))\n  (global.set $cp (i32.sub (global.get $cp) (i32.const 1)))\n  (local.set $address (i32.add (i32.const 4096) (i32.mul (global.get $cp) (i32.const 8))))\n  (local.set $index (i32.load (local.get $address)))\n  (local.set $environment (i32.load offset=4 (local.get $address)))\n  (i64.store (local.get $address) (i64.const 0))\n  (call_indirect (type $entry) (local.get $environment) (local.get $index))\n  (br $next))))\n")
+      match r2 with
+      | core.result.Result.Ok _ =>
+        let (r3, out4) ←
+          source.emit.imports.fragment out3 (toStr
+            "(func $atom (param $kind i32) (param $value i64) (param $child i32) (result i32)\n (call $new (i32.const 8) (local.get $value) (local.get $child)\n  (i32.const 0) (i32.const 0) (local.get $kind) (i32.const 0)\n  (i32.const 0) (i32.const 0) (i32.const 0)))\n(func $concat_recipe (param $left i32) (param $right i32) (result i32)\n (if (global.get $failure) (then (return (i32.const 0))))\n (if (i32.eqz (local.get $left)) (then (return (local.get $right))))\n (if (i32.eqz (local.get $right)) (then (return (local.get $left))))\n (call $new (i32.const 9) (i64.const 0) (local.get $left) (local.get $right)\n  (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0)))\n(func $program (param $entry_index i32) (param $input i32) (param $output i32)\n (param $recipe i32) (param $capture i64) (param $left i32) (param $right i32)\n (param $depth i32) (param $leaves i32) (result i32)\n (if (global.get $failure) (then (return (i32.const 0))))\n (if (i32.gt_u (local.get $leaves) (global.get $recipe_limit))\n  (then (call $quota (i32.const 2)) (return (i32.const 0))))\n (if (i32.gt_u (local.get $depth) (global.get $depth_limit))\n  (then (call $quota (i32.const 3)) (return (i32.const 0))))\n (call $new (i32.const 4) (local.get $capture) (local.get $left) (local.get $right)\n  (local.get $recipe) (local.get $entry_index) (local.get $input) (local.get $output)\n  (local.get $depth) (local.get $leaves)))\n(func $compose (param $left i32) (param $right i32) (result i32)\n (local $depth i32) (local $leaves i32) (local $recipe i32)\n (if (global.get $failure) (then (return (i32.const 0))))\n (if (i32.or (i32.ne (call $kind (local.get $left)) (i32.const 4))\n             (i32.ne (call $kind (local.get $right)) (i32.const 4)))\n  (then (call $fail (i32.const 4)) (return (i32.const 0))))\n ;; Complete ordered signature IDs, not argument counts or suffix matches.\n (if (i32.ne (call $z (local.get $left)) (call $y (local.get $right)))\n  (then (call $fail (i32.const 3)) (return (i32.const 0))))\n (local.set $leaves (i32.add (call $n (local.get $left)) (call $n (local.get $right))))\n (local.set $depth (call $w (local.get $left)))\n (if (i32.gt_u (call $w (local.get $right)) (local.get $depth))\n  (then (local.set $depth (call $w (local.get $right)))))\n (local.set $depth (i32.add (local.get $depth) (i32.const 1)))\n ;; Check both bounds before allocating recipe metadata or the program cell.\n (if (i32.gt_u (local.get $leaves) (global.get $recipe_limit))\n  (then (call $quota (i32.const 2)) (return (i32.const 0))))\n (if (i32.gt_u (local.get $depth) (global.get $depth_limit))\n  (then (call $quota (i32.const 3)) (return (i32.const 0))))\n (local.set $recipe (call $concat_recipe (call $c (local.get $left)) (call $c (local.get $right))))\n (call $program (i32.const 2) (call $y (local.get $left)) (call $z (local.get $right))\n  (local.get $recipe)\n  (if (result i64) (global.get $source_reflection)\n   (then (i64.or (call $payload (local.get $left)) (call $payload (local.get $right))))\n   (else (i64.const 0)))\n  (local.get $left) (local.get $right)\n  (local.get $depth) (local.get $leaves)))\n(func $empty_entry (type $entry) (param $environment i32))\n(func $quote_entry (type $entry) (param $environment i32)\n (global.set $quote_invocations (i32.add (global.get $quote_invocations) (i32.const 1)))\n (if (call $a (local.get $environment))\n  (then (call $unbox (call $a (local.get $environment))))\n  (else (call $push_i64 (call $payload (local.get $environment))))))\n(func $compose_entry (type $entry) (param $environment i32)\n ;; LIFO scheduling: left runs first; right is the pending continuation.\n (call $enqueue_program (call $b (local.get $environment)))\n (call $enqueue_program (call $a (local.get $environment))))\n(func $op_quote (param $input i32) (param $output i32)\n (local $value i64) (local $recipe i32) (local $handle i32)\n (local.set $value (call $pop_kind (i32.const 1)))\n (if (global.get $failure) (then (return)))\n (local.set $recipe (call $atom (i32.const 1) (local.get $value) (i32.const 0)))\n (local.set $handle (call $program (i32.const 1) (local.get $input) (local.get $output)\n  (local.get $recipe) (local.get $value) (i32.const 0) (i32.const 0) (i32.const 1) (i32.const 1)))\n (call $push_ref (local.get $handle)))\n(func $op_compose (local $right i32) (local $left i32)\n (local.set $right (i32.wrap_i64 (call $pop_kind (i32.const 4))))\n (local.set $left (i32.wrap_i64 (call $pop_kind (i32.const 4))))\n (if (global.get $failure) (then (return)))\n (call $push_ref (call $compose (local.get $left) (local.get $right))))\n(func $op_run (local $program i32)\n (local.set $program (i32.wrap_i64 (call $pop_kind (i32.const 4))))\n (if (global.get $failure) (then (return)))\n (call $enqueue_program (local.get $program)))\n(func $op_reflect (local $program i32) (local $recipe i32)\n (local.set $program (i32.wrap_i64 (call $pop_kind (i32.const 4))))\n (if (global.get $failure) (then (return)))\n (local.set $recipe (call $c (local.get $program)))\n ;; Box Syntax independently of its possibly empty recipe, so aggregates retain it.\n (call $push_ref (call $new (i32.const 10) (i64.const 0) (local.get $recipe)\n  (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0)\n  (i32.const 0) (call $w (local.get $program)) (call $n (local.get $program)))))\n")
+        match r3 with
+        | core.result.Result.Ok _ =>
+          let (r4, out5) ←
+            source.emit.imports.fragment out4 (toStr
+              "(func $op_dup (local $index i32)\n (if (i32.eqz (call $need (i32.const 1))) (then (return)))\n (local.set $index (i32.sub (global.get $sp) (i32.const 1)))\n (call $push_tag (call $slot_kind (local.get $index)) (call $slot_value (local.get $index))))\n(func $op_drop (drop (call $take)))\n(func $op_swap (local $left_kind i32) (local $right_kind i32) (local $left i64) (local $right i64)\n (if (i32.eqz (call $need (i32.const 2))) (then (return)))\n (local.set $right_kind (call $slot_kind (i32.sub (global.get $sp) (i32.const 1))))\n (local.set $right (call $take))\n (local.set $left_kind (call $slot_kind (i32.sub (global.get $sp) (i32.const 1))))\n (local.set $left (call $take))\n (call $push_tag (local.get $right_kind) (local.get $right))\n (call $push_tag (local.get $left_kind) (local.get $left)))\n(func $op_add (local $right i64) (local $left i64)\n (local.set $right (call $pop_kind (i32.const 1)))\n (local.set $left (call $pop_kind (i32.const 1)))\n (call $push_i64 (i64.add (local.get $left) (local.get $right))))\n(func $op_sub (local $right i64) (local $left i64)\n (local.set $right (call $pop_kind (i32.const 1)))\n (local.set $left (call $pop_kind (i32.const 1)))\n (call $push_i64 (i64.sub (local.get $left) (local.get $right))))\n(func $op_mul (local $right i64) (local $left i64)\n (local.set $right (call $pop_kind (i32.const 1)))\n (local.set $left (call $pop_kind (i32.const 1)))\n (call $push_i64 (i64.mul (local.get $left) (local.get $right))))\n(func $op_equals (local $kind i32) (local $right i64) (local $left i64)\n (if (i32.eqz (call $need (i32.const 2))) (then (return)))\n (local.set $kind (call $slot_kind (i32.sub (global.get $sp) (i32.const 1))))\n (if (i32.or (i32.gt_u (local.get $kind) (i32.const 3))\n              (i32.ne (local.get $kind) (call $slot_kind (i32.sub (global.get $sp) (i32.const 2)))))\n  (then (call $fail (i32.const 4)) (return)))\n (local.set $right (call $take)) (local.set $left (call $take))\n (call $push_bool (i64.eq (local.get $left) (local.get $right))))\n(func $op_pair (local $right i32) (local $left i32)\n (local.set $right (call $pop_box)) (local.set $left (call $pop_box))\n (call $push_ref (call $new (i32.const 5) (i64.const 0) (local.get $left) (local.get $right)\n  (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0))))\n(func $op_unpair (local $pair i32)\n (local.set $pair (i32.wrap_i64 (call $pop_kind (i32.const 5))))\n (if (global.get $failure) (then (return)))\n (call $unbox (call $a (local.get $pair))) (call $unbox (call $b (local.get $pair))))\n(func $op_nil\n (call $push_ref (call $new (i32.const 7) (i64.const 0)\n  (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0)\n  (i32.const 0) (i32.const 0) (i32.const 0))))\n(func $op_cons (local $tail i32) (local $head i32) (local $tag i32)\n (if (i32.eqz (call $need (i32.const 2))) (then (return)))\n (local.set $tag (call $slot_kind (i32.sub (global.get $sp) (i32.const 1))))\n (if (i32.and (i32.ne (local.get $tag) (i32.const 6)) (i32.ne (local.get $tag) (i32.const 7)))\n  (then (call $fail (i32.const 4)) (return)))\n (local.set $tail (i32.wrap_i64 (call $take)))\n (local.set $head (call $pop_box))\n (call $push_ref (call $new (i32.const 6) (i64.const 0) (local.get $head) (local.get $tail)\n  (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0))))\n(func $op_list_case (local $cons_branch i32) (local $nil_branch i32) (local $list i32) (local $tag i32)\n (local.set $cons_branch (i32.wrap_i64 (call $pop_kind (i32.const 4))))\n (local.set $nil_branch (i32.wrap_i64 (call $pop_kind (i32.const 4))))\n (if (i32.eqz (call $need (i32.const 1))) (then (return)))\n (local.set $tag (call $slot_kind (i32.sub (global.get $sp) (i32.const 1))))\n (local.set $list (i32.wrap_i64 (call $take)))\n (if (i32.eq (local.get $tag) (i32.const 7))\n  (then (call $enqueue_program (local.get $nil_branch)) (return)))\n (if (i32.ne (local.get $tag) (i32.const 6))\n  (then (call $fail (i32.const 4)) (return)))\n (call $unbox (call $a (local.get $list)))\n (call $push_ref (call $b (local.get $list)))\n (call $enqueue_program (local.get $cons_branch)))\n(func $op_if (local $otherwise i32) (local $then i32) (local $condition i32)\n (local.set $otherwise (i32.wrap_i64 (call $pop_kind (i32.const 4))))\n (local.set $then (i32.wrap_i64 (call $pop_kind (i32.const 4))))\n (local.set $condition (i32.wrap_i64 (call $pop_kind (i32.const 2))))\n (if (global.get $failure) (then (return)))\n (if (local.get $condition)\n  (then (call $enqueue_program (local.get $then)))\n  (else (call $enqueue_program (local.get $otherwise)))))\n")
+          match r4 with
+          | core.result.Result.Ok _ =>
+            let (r5, out6) ←
+              source.emit.imports.fragment out5 (toStr
+                ";; Additional bootstrap data/control operations share the tagged stack and immutable cells.\n(func $text (param $address i32) (param $length i32) (result i32)\n (call $new (i32.const 11) (i64.const 0) (i32.const 0) (i32.const 0) (i32.const 0)\n  (local.get $address) (local.get $length) (i32.const 0) (i32.const 0) (i32.const 0)))\n(func $op_inl (local $value i32)\n (local.set $value (call $pop_box))\n (call $push_ref (call $new (i32.const 12) (i64.const 0) (local.get $value)\n  (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0))))\n(func $op_inr (local $value i32)\n (local.set $value (call $pop_box))\n (call $push_ref (call $new (i32.const 13) (i64.const 0) (local.get $value)\n  (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0))))\n(func $op_case (local $right i32) (local $left i32) (local $sum i32) (local $tag i32)\n (local.set $right (i32.wrap_i64 (call $pop_kind (i32.const 4))))\n (local.set $left (i32.wrap_i64 (call $pop_kind (i32.const 4))))\n (if (i32.eqz (call $need (i32.const 1))) (then (return)))\n (local.set $tag (call $slot_kind (i32.sub (global.get $sp) (i32.const 1))))\n (if (i32.and (i32.ne (local.get $tag) (i32.const 12)) (i32.ne (local.get $tag) (i32.const 13)))\n  (then (call $fail (i32.const 4)) (return)))\n (local.set $sum (i32.wrap_i64 (call $take)))\n (call $unbox (call $a (local.get $sum)))\n (if (i32.eq (local.get $tag) (i32.const 12))\n  (then (call $enqueue_program (local.get $left)))\n  (else (call $enqueue_program (local.get $right)))))\n(func $restore_entry (type $entry) (param $value i32) (call $unbox (local.get $value)))\n(func $op_dip (local $program i32) (local $value i32)\n (local.set $program (i32.wrap_i64 (call $pop_kind (i32.const 4))))\n (local.set $value (call $pop_box))\n (if (global.get $failure) (then (return)))\n (call $enqueue (i32.const 3) (local.get $value))\n (call $enqueue_program (local.get $program)))\n\n;; Iterative size/depth accounting for an exact captured datum, before its recipe\n;; or closure is allocated. Shared subgraphs count at each semantic occurrence.\n(func $measure_data (param $value i32) (result i64)\n (local $todo i32) (local $h i32) (local $depth i32) (local $max_depth i32)\n (local $leaves i32) (local $tag i32) (local $address i32) (local $a i32) (local $b i32)\n (i32.store (i32.const 8192) (local.get $value)) (i32.store (i32.const 8196) (i32.const 1))\n (local.set $todo (i32.const 1))\n (block $done (loop $next\n  (br_if $done (i32.or (global.get $failure) (i32.eqz (local.get $todo))))\n  (if (i32.eqz (call $runtime_tick)) (then (br $done)))\n  (local.set $todo (i32.sub (local.get $todo) (i32.const 1)))\n  (local.set $address (i32.add (i32.const 8192) (i32.mul (local.get $todo) (i32.const 8))))\n  (local.set $h (i32.load (local.get $address))) (local.set $depth (i32.load offset=4 (local.get $address)))\n  (local.set $tag (call $kind (local.get $h)))\n  (local.set $leaves (i32.add (local.get $leaves) (i32.const 1)))\n  (if (i32.or (i32.eq (local.get $tag) (i32.const 4)) (i32.eq (local.get $tag) (i32.const 10))) (then\n   (local.set $leaves (i32.add (local.get $leaves) (call $n (local.get $h))))\n   (local.set $depth (i32.add (local.get $depth) (call $w (local.get $h))))))\n  (if (i32.gt_u (local.get $depth) (local.get $max_depth)) (then (local.set $max_depth (local.get $depth))))\n  (if (i32.gt_u (local.get $leaves) (global.get $recipe_limit)) (then (call $quota (i32.const 2)) (br $done)))\n  (if (i32.gt_u (local.get $max_depth) (global.get $depth_limit)) (then (call $quota (i32.const 3)) (br $done)))\n  (local.set $a (i32.const 0)) (local.set $b (i32.const 0))\n  (if (i32.or (i32.eq (local.get $tag) (i32.const 5)) (i32.eq (local.get $tag) (i32.const 6)))\n   (then (local.set $a (call $a (local.get $h))) (local.set $b (call $b (local.get $h)))))\n  (if (i32.or (i32.eq (local.get $tag) (i32.const 12)) (i32.eq (local.get $tag) (i32.const 13)))\n   (then (local.set $a (call $a (local.get $h)))))\n  (if (i32.gt_u (local.get $todo) (i32.const 510)) (then (call $quota (i32.const 3)) (br $done)))\n  (if (local.get $b) (then\n   (local.set $address (i32.add (i32.const 8192) (i32.mul (local.get $todo) (i32.const 8))))\n   (i32.store (local.get $address) (local.get $b))\n   (i32.store offset=4 (local.get $address) (i32.add (local.get $depth) (i32.const 1)))\n   (local.set $todo (i32.add (local.get $todo) (i32.const 1)))))\n  (if (local.get $a) (then\n   (local.set $address (i32.add (i32.const 8192) (i32.mul (local.get $todo) (i32.const 8))))\n   (i32.store (local.get $address) (local.get $a))\n   (i32.store offset=4 (local.get $address) (i32.add (local.get $depth) (i32.const 1)))\n   (local.set $todo (i32.add (local.get $todo) (i32.const 1)))))\n  (br $next)))\n (i64.or (i64.extend_i32_u (local.get $leaves)) (i64.shl (i64.extend_i32_u (local.get $max_depth)) (i64.const 32))))\n\n(func $capture_recipe (param $value i32) (param $witness i32) (result i32) (local $tag i32)\n (local.set $tag (call $kind (local.get $value)))\n (if (i32.eq (local.get $tag) (i32.const 1))\n  (then (return (call $atom (i32.const 1) (call $payload (local.get $value)) (i32.const 0)))))\n (if (i32.eq (local.get $tag) (i32.const 2))\n  (then (return (call $atom (i32.const 4) (call $payload (local.get $value)) (i32.const 0)))))\n (if (i32.eq (local.get $tag) (i32.const 3))\n  (then (return (call $atom (i32.const 5) (i64.const 0) (i32.const 0)))))\n (if (i32.eq (local.get $tag) (i32.const 4))\n  (then (return (call $atom (i32.const 3) (i64.const 0) (local.get $value)))))\n ;; Complete type witness: both sum alternatives and nested Program interfaces.\n (call $new (i32.const 8) (i64.const 0) (local.get $value)\n  (i32.const 0) (i32.const 0) (i32.const 8) (local.get $witness)\n  (i32.const 0) (i32.const 0) (i32.const 0)))\n(func $op_quote_typed (param $input i32) (param $output i32) (param $witness i32)\n (local $value i32) (local $recipe i32) (local $measure i64)\n (if (i32.eqz (global.get $recipe_limit)) (then (call $quota (i32.const 2)) (return)))\n (if (i32.eqz (global.get $depth_limit)) (then (call $quota (i32.const 3)) (return)))\n (local.set $value (call $pop_box))\n (if (global.get $failure) (then (return)))\n (local.set $measure (call $measure_data (local.get $value)))\n (if (global.get $failure) (then (return)))\n (local.set $recipe (call $capture_recipe (local.get $value) (local.get $witness)))\n (call $push_ref (call $program (i32.const 1) (local.get $input) (local.get $output)\n  (local.get $recipe) (i64.const 0) (local.get $value) (i32.const 0)\n  (i32.wrap_i64 (i64.shr_u (local.get $measure) (i64.const 32))) (i32.wrap_i64 (local.get $measure)))))\n")
+            match r5 with
+            | core.result.Result.Ok _ =>
+              let (r6, out7) ←
+                source.emit.imports.fragment out6 (toStr
+                  ";; Observation walks immutable data only. It never invokes executable entries.\n;; Positive work items are recipe nodes, negative items boxed data, MIN_INT ends a group.\n(func $walk_push (param $recipe i32)\n (if (i32.or (global.get $failure) (i32.eqz (local.get $recipe))) (then (return)))\n (if (i32.ge_u (global.get $rp) (i32.const 2048))\n  (then (call $quota (i32.const 7)) (return)))\n (i32.store (i32.add (i32.const 12288) (i32.mul (global.get $rp) (i32.const 4))) (local.get $recipe))\n (global.set $rp (i32.add (global.get $rp) (i32.const 1))))\n(func $observation_tick (result i32)\n (if (global.get $failure) (then (return (i32.const 0))))\n (if (i32.ge_u (global.get $reflection_steps) (global.get $step_limit))\n  (then (call $quota (i32.const 7)) (return (i32.const 0))))\n (global.set $reflection_steps (i32.add (global.get $reflection_steps) (i32.const 1)))\n (i32.const 1))\n(func $observe_atom (param $tag i32) (param $value i64) (local $address i32)\n (if (global.get $failure) (then (return)))\n (if (i32.ge_u (global.get $recipe_count) (i32.const 2048))\n  (then (call $quota (i32.const 7)) (return)))\n (local.set $address (i32.add (i32.const 24576) (i32.mul (global.get $recipe_count) (i32.const 16))))\n (i32.store (local.get $address) (local.get $tag))\n (i64.store offset=8 (local.get $address) (local.get $value))\n (global.set $recipe_count (i32.add (global.get $recipe_count) (i32.const 1))))\n(func $observe_interface (param $program i32)\n (if (global.get $source_reflection) (then\n  (call $observe_atom (i32.const 17) (i64.extend_i32_u (call $y (local.get $program))))\n  (call $observe_atom (i32.const 18) (i64.extend_i32_u (call $z (local.get $program))))\n  (call $observe_atom (i32.const 19) (call $payload (local.get $program))))))\n(func $observe_data (param $value i32) (local $tag i32) (local $at i32) (local $length i32)\n (local.set $tag (call $kind (local.get $value)))\n (if (i32.eq (local.get $tag) (i32.const 1))\n  (then (call $observe_atom (i32.const 1) (call $payload (local.get $value))) (return)))\n (if (i32.eq (local.get $tag) (i32.const 2))\n  (then (call $observe_atom (i32.const 4) (call $payload (local.get $value))) (return)))\n (if (i32.eq (local.get $tag) (i32.const 3))\n  (then (call $observe_atom (i32.const 5) (i64.const 0)) (return)))\n (call $walk_push (i32.const -2147483648))\n (if (i32.eq (local.get $tag) (i32.const 4)) (then\n  (call $observe_atom (i32.const 14) (i64.const 0)) (call $observe_interface (local.get $value))\n  (call $walk_push (call $c (local.get $value))) (return)))\n (if (i32.eq (local.get $tag) (i32.const 5)) (then\n  (call $observe_atom (i32.const 9) (i64.const 0))\n  (call $walk_push (i32.sub (i32.const 0) (call $b (local.get $value))))\n  (call $walk_push (i32.sub (i32.const 0) (call $a (local.get $value)))) (return)))\n (if (i32.or (i32.eq (local.get $tag) (i32.const 6)) (i32.eq (local.get $tag) (i32.const 7))) (then\n  (call $observe_atom (i32.const 10) (i64.const 0))\n  (if (i32.eq (local.get $tag) (i32.const 6)) (then\n   (call $walk_push (i32.sub (i32.const 0) (call $b (local.get $value))))\n   (call $walk_push (i32.sub (i32.const 0) (call $a (local.get $value)))))) (return)))\n (if (i32.eq (local.get $tag) (i32.const 10)) (then\n  (call $observe_atom (i32.const 13) (i64.const 0))\n  (call $walk_push (call $a (local.get $value))) (return)))\n (if (i32.eq (local.get $tag) (i32.const 11)) (then\n  (call $observe_atom (i32.const 8) (i64.const 0))\n  (local.set $length (call $y (local.get $value)))\n  (block $done (loop $byte\n   (br_if $done (i32.or (global.get $failure) (i32.ge_u (local.get $at) (local.get $length))))\n   (if (i32.eqz (call $observation_tick)) (then (br $done)))\n   (call $observe_atom (i32.const 7) (i64.extend_i32_u (i32.load8_u (i32.add (call $x (local.get $value)) (local.get $at)))))\n   (local.set $at (i32.add (local.get $at) (i32.const 1))) (br $byte))) (return)))\n (if (i32.or (i32.eq (local.get $tag) (i32.const 12)) (i32.eq (local.get $tag) (i32.const 13))) (then\n  (call $observe_atom (i32.sub (local.get $tag) (i32.const 1)) (i64.const 0))\n  (call $walk_push (i32.sub (i32.const 0) (call $a (local.get $value)))) (return)))\n (call $fail (i32.const 4)))\n(func $observe_recipe (param $recipe i32) (local $tag i32)\n (local.set $tag (call $kind (local.get $recipe)))\n (if (i32.eq (local.get $tag) (i32.const 9)) (then\n  (call $walk_push (call $b (local.get $recipe)))\n  (call $walk_push (call $a (local.get $recipe))) (return)))\n (if (i32.ne (local.get $tag) (i32.const 8))\n  (then (call $fail (i32.const 4)) (return)))\n (local.set $tag (call $x (local.get $recipe)))\n (if (i32.eq (local.get $tag) (i32.const 3)) (then\n  (call $observe_atom (i32.const 3) (i64.const 0))\n  (call $observe_interface (call $a (local.get $recipe)))\n  (call $walk_push (i32.const -2147483648))\n  (call $walk_push (call $c (call $a (local.get $recipe)))) (return)))\n (if (i32.eq (local.get $tag) (i32.const 8)) (then\n  (if (i32.ne (call $kind (call $a (local.get $recipe))) (i32.const 11))\n   (then (call $observe_atom (i32.const 16) (i64.extend_i32_u (call $y (local.get $recipe))))))\n  (call $walk_push (i32.sub (i32.const 0) (call $a (local.get $recipe)))) (return)))\n (call $observe_atom (local.get $tag) (call $payload (local.get $recipe)))\n (if (i32.and (global.get $source_reflection)\n       (i32.or (i32.eq (local.get $tag) (i32.const 2)) (i32.eq (local.get $tag) (i32.const 15)))) (then\n  (call $observe_atom (i32.const 20) (i64.extend_i32_u (call $y (local.get $recipe))))\n  (call $observe_atom (i32.const 21) (i64.extend_i32_u (call $z (local.get $recipe))))\n  (call $observe_atom (i32.const 22) (i64.extend_i32_u (call $w (local.get $recipe)))))))\n(func $reflect_internal (export \"reflect\") (result i32) (local $recipe i32) (local $address i32)\n (global.set $phase (i32.const 1))\n (global.set $recipe_count (i32.const 0)) (global.set $rp (i32.const 0))\n (global.set $reflection_steps (i32.const 0))\n (if (global.get $failure) (then (return (global.get $failure))))\n (if (i32.eqz (global.get $observed_program))\n  (then (call $fail (i32.const 4)) (return (global.get $failure))))\n (if (i32.eq (call $kind (global.get $observed_program)) (i32.const 10))\n  (then (call $walk_push (call $a (global.get $observed_program))))\n  (else (call $walk_push (call $c (global.get $observed_program)))))\n (block $done (loop $next\n  (br_if $done (i32.or (global.get $failure) (i32.eqz (global.get $rp))))\n  (if (i32.eqz (call $observation_tick)) (then (br $done)))\n  (global.set $rp (i32.sub (global.get $rp) (i32.const 1)))\n  (local.set $address (i32.add (i32.const 12288) (i32.mul (global.get $rp) (i32.const 4))))\n  (local.set $recipe (i32.load (local.get $address)))\n  (i32.store (local.get $address) (i32.const 0))\n  (if (i32.eq (local.get $recipe) (i32.const -2147483648))\n   (then (call $observe_atom (i32.const 6) (i64.const 0)))\n   (else (if (i32.lt_s (local.get $recipe) (i32.const 0))\n    (then (call $observe_data (i32.sub (i32.const 0) (local.get $recipe))))\n    (else (call $observe_recipe (local.get $recipe))))))\n  (br $next)))\n (if (global.get $failure) (then (call $cleanup_internal)))\n (global.get $failure))\n(func (export \"recipe_length\") (result i32) (global.get $recipe_count))\n(func $recipe_address (param $index i32) (result i32)\n (if (i32.ge_u (local.get $index) (global.get $recipe_count))\n  (then (call $fail (i32.const 4)) (return (i32.const 0))))\n (i32.add (i32.const 24576) (i32.mul (local.get $index) (i32.const 16))))\n(func (export \"recipe_kind\") (param $index i32) (result i32) (local $address i32)\n (local.set $address (call $recipe_address (local.get $index)))\n (if (global.get $failure) (then (return (i32.const 0))))\n (i32.load (local.get $address)))\n(func (export \"recipe_value\") (param $index i32) (result i64) (local $address i32)\n (local.set $address (call $recipe_address (local.get $index)))\n (if (global.get $failure) (then (return (i64.const 0))))\n (i64.load offset=8 (local.get $address)))\n")
+              match r6 with
+              | core.result.Result.Ok _ =>
+                let (r7, out8) ←
+                  source.emit.imports.fragment out7 (toStr
+                    ";; Source ABI is distinct from the experiment's begin/build/invoke lifecycle.\n;; Heap, operand stack and continuations are shared imported objects. Failure is\n;; terminal: begin cannot clear it, old host requests are never rolled back.\n(func $cleanup_internal (global.set $cp (i32.const 0)))\n(func $is_live (param $handle i32) (result i32) (local $address i32)\n (if (i32.or (i32.eqz (local.get $handle)) (i32.gt_u (local.get $handle) (global.get $heap_cursor)))\n  (then (return (i32.const 0))))\n (local.set $address (call $linear_address (local.get $handle)))\n (i32.and (i32.eq (i32.load offset=4 (local.get $address)) (local.get $handle))\n  (i32.le_u (i32.sub (i32.load (local.get $address)) (i32.const 1)) (i32.const 12))))\n(func $boxed_value (param $handle i32) (result i64)\n (if (result i64) (i32.lt_u (call $kind (local.get $handle)) (i32.const 4))\n  (then (call $payload (local.get $handle)))\n  (else (i64.extend_i32_u (local.get $handle)))))\n(func (export \"begin\")\n (param $allocation i32) (param $recipes i32) (param $depth i32)\n (param $operands i32) (param $continuations i32) (param $step_count i32) (result i32)\n (if (global.get $failure) (then (return (global.get $failure))))\n (if (global.get $cp) (then (call $fail (i32.const 4)) (return (global.get $failure))))\n (if (i32.or (i32.or (i32.gt_u (local.get $allocation) (i32.const 196608))\n                     (i32.gt_u (local.get $recipes) (i32.const 256)))\n              (i32.or (i32.gt_u (local.get $depth) (i32.const 256))\n               (i32.or (i32.gt_u (local.get $operands) (i32.const 2048))\n                (i32.or (i32.gt_u (local.get $continuations) (i32.const 4096))\n                         (i32.gt_u (local.get $step_count) (i32.const 100000))))))\n  (then (call $fail (i32.const 4)) (return (global.get $failure))))\n (global.set $heap_baseline (global.get $heap_cursor))\n (global.set $quota_reason (i32.const 0)) (global.set $phase (i32.const 0))\n (global.set $allocated_total (i64.const 0)) (global.set $released_total (i64.const 0))\n (global.set $allocation_peak (i32.const 0))\n (global.set $operand_peak (i32.const 0)) (global.set $continuation_peak (i32.const 0))\n (global.set $steps (i32.const 0)) (global.set $quote_invocations (i32.const 0))\n (global.set $reflection_steps (i32.const 0))\n (global.set $allocation_limit (local.get $allocation))\n (global.set $recipe_limit (local.get $recipes)) (global.set $depth_limit (local.get $depth))\n (global.set $operand_limit (local.get $operands))\n (global.set $continuation_limit (local.get $continuations))\n (global.set $step_limit (local.get $step_count))\n (if (i32.gt_u (i32.mul (global.get $sp) (i32.const 16)) (local.get $operands))\n  (then (call $quota (i32.const 4))))\n (global.get $failure))\n(func $op_emit (local $text i32)\n (local.set $text (i32.wrap_i64 (call $pop_kind (i32.const 11))))\n (if (global.get $failure) (then (return)))\n ;; A native host throw also leaves the session poisoned. Successful return is\n ;; the only place this provisional host-call failure may be cleared.\n (global.set $failure (i32.const 5))\n (if (i32.eqz (call $host_emit (call $x (local.get $text)) (call $y (local.get $text))))\n  (then (global.set $failure (i32.const 0)))))\n(func $op_abort\n (if (global.get $failure) (then (return)))\n (call $fail (i32.const 6))\n (drop (call $host_abort)))\n(func (export \"push_i64\") (param $value i64) (result i32)\n (call $push_i64 (local.get $value)) (global.get $failure))\n(func (export \"push_bool\") (param $value i32) (result i32)\n (if (i32.gt_u (local.get $value) (i32.const 1)) (then (call $fail (i32.const 4))))\n (call $push_bool (local.get $value)) (global.get $failure))\n(func (export \"push_unit\") (result i32)\n (call $push_unit) (global.get $failure))\n(func (export \"push_program\") (param $handle i32) (result i32)\n (if (global.get $failure) (then (return (global.get $failure))))\n (if (i32.eqz (call $is_live (local.get $handle)))\n  (then (call $fail (i32.const 4)) (return (global.get $failure))))\n (if (i32.ne (call $kind (local.get $handle)) (i32.const 4))\n  (then (call $fail (i32.const 4)) (return (global.get $failure))))\n (call $push_ref (local.get $handle)) (global.get $failure))\n(func (export \"stack_length\") (result i32) (global.get $sp))\n(func (export \"stack_kind\") (param $index i32) (result i32) (call $slot_kind (local.get $index)))\n(func (export \"stack_value\") (param $index i32) (result i64) (call $slot_value (local.get $index)))\n(func (export \"cell_kind\") (param $h i32) (result i32) (call $kind (local.get $h)))\n(func (export \"cell_payload\") (param $h i32) (result i64) (call $payload (local.get $h)))\n(func (export \"cell_a\") (param $h i32) (result i32) (call $a (local.get $h)))\n(func (export \"cell_b\") (param $h i32) (result i32) (call $b (local.get $h)))\n(func (export \"cell_c\") (param $h i32) (result i32) (call $c (local.get $h)))\n(func (export \"cell_x\") (param $h i32) (result i32) (call $x (local.get $h)))\n(func (export \"cell_y\") (param $h i32) (result i32) (call $y (local.get $h)))\n(func (export \"cell_z\") (param $h i32) (result i32) (call $z (local.get $h)))\n(func (export \"cell_w\") (param $h i32) (result i32) (call $w (local.get $h)))\n(func (export \"cell_n\") (param $h i32) (result i32) (call $n (local.get $h)))\n(func (export \"observe\") (param $index i32) (result i32) (local $tag i32)\n (if (global.get $failure) (then (return (global.get $failure))))\n (local.set $tag (call $slot_kind (local.get $index)))\n (if (i32.and (i32.ne (local.get $tag) (i32.const 4)) (i32.ne (local.get $tag) (i32.const 10)))\n  (then (call $fail (i32.const 4)) (return (global.get $failure))))\n (global.set $observed_program (i32.wrap_i64 (call $slot_value (local.get $index))))\n (call $reflect_internal))\n")
+                match r7 with
+                | core.result.Result.Ok _ =>
+                  ok (core.result.Result.Ok (), out8)
+                | core.result.Result.Err _ => ok (r7, out8)
+              | core.result.Result.Err _ => ok (r6, out7)
+            | core.result.Result.Err _ => ok (r5, out6)
+          | core.result.Result.Err _ => ok (r4, out5)
+        | core.result.Result.Err _ => ok (r3, out4)
+      | core.result.Result.Err _ => ok (r2, out3)
+    | core.result.Result.Err _ => ok (r1, out2)
+  | core.result.Result.Err _ => ok (r, out1)
+
+/-- [noble_wasm::source::emit::initialize::text_atom]:
+    Source: 'crates/noble-wasm/src/source/emit/initialize.rs', lines 183:0-196:1 -/
+def source.emit.initialize.text_atom
+  (out : output.Buffer) (text : (Std.U32 × Std.U32)) (witness : Std.U32) :
+  Result ((core.result.Result Unit Diagnostic) × output.Buffer)
+  := do
+  let (address_bytes, length_bytes) := text
+  let s ←
+    lift (Array.to_slice
+      (Array.make 68#usize [
+        40#u8, 108#u8, 111#u8, 99#u8, 97#u8, 108#u8, 46#u8, 115#u8, 101#u8,
+        116#u8, 32#u8, 36#u8, 97#u8, 116#u8, 111#u8, 109#u8, 32#u8, 40#u8,
+        99#u8, 97#u8, 108#u8, 108#u8, 32#u8, 36#u8, 110#u8, 101#u8, 119#u8,
+        32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8, 111#u8, 110#u8,
+        115#u8, 116#u8, 32#u8, 56#u8, 41#u8, 32#u8, 40#u8, 105#u8, 54#u8,
+        52#u8, 46#u8, 99#u8, 111#u8, 110#u8, 115#u8, 116#u8, 32#u8, 48#u8,
+        41#u8, 32#u8, 40#u8, 99#u8, 97#u8, 108#u8, 108#u8, 32#u8, 36#u8,
+        116#u8, 101#u8, 120#u8, 116#u8, 32#u8
+        ]))
+  let (r, out1) ← output.Buffer.append out s
+  match r with
+  | core.result.Result.Ok _ =>
+    let (r1, out2) ← output.Buffer.i32 out1 address_bytes
+    match r1 with
+    | core.result.Result.Ok _ =>
+      let s1 ← lift (Array.to_slice (Array.make 1#usize [ 32#u8 ]))
+      let (r2, out3) ← output.Buffer.append out2 s1
+      match r2 with
+      | core.result.Result.Ok _ =>
+        let (r3, out4) ← output.Buffer.i32 out3 length_bytes
+        match r3 with
+        | core.result.Result.Ok _ =>
+          let s2 ←
+            lift (Array.to_slice
+              (Array.make 44#usize [
+                41#u8, 32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8,
+                111#u8, 110#u8, 115#u8, 116#u8, 32#u8, 48#u8, 41#u8, 32#u8,
+                40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8, 111#u8, 110#u8,
+                115#u8, 116#u8, 32#u8, 48#u8, 41#u8, 32#u8, 40#u8, 105#u8,
+                51#u8, 50#u8, 46#u8, 99#u8, 111#u8, 110#u8, 115#u8, 116#u8,
+                32#u8, 56#u8, 41#u8, 32#u8
+                ]))
+          let (r4, out5) ← output.Buffer.append out4 s2
+          match r4 with
+          | core.result.Result.Ok _ =>
+            let (r5, out6) ← output.Buffer.i32 out5 witness
+            match r5 with
+            | core.result.Result.Ok _ =>
+              let s3 ←
+                lift (Array.to_slice
+                  (Array.make 45#usize [
+                    32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8, 111#u8,
+                    110#u8, 115#u8, 116#u8, 32#u8, 48#u8, 41#u8, 32#u8, 40#u8,
+                    105#u8, 51#u8, 50#u8, 46#u8, 99#u8, 111#u8, 110#u8, 115#u8,
+                    116#u8, 32#u8, 48#u8, 41#u8, 32#u8, 40#u8, 105#u8, 51#u8,
+                    50#u8, 46#u8, 99#u8, 111#u8, 110#u8, 115#u8, 116#u8, 32#u8,
+                    48#u8, 41#u8, 41#u8, 41#u8, 10#u8
+                    ]))
+              output.Buffer.append out6 s3
+            | core.result.Result.Err _ => ok (r5, out6)
+          | core.result.Result.Err _ => ok (r4, out5)
+        | core.result.Result.Err _ => ok (r3, out4)
+      | core.result.Result.Err _ => ok (r2, out3)
+    | core.result.Result.Err _ => ok (r1, out2)
+  | core.result.Result.Err _ => ok (r, out1)
+
+/-- [noble_wasm::source::emit::initialize::atom]:
+    Source: 'crates/noble-wasm/src/source/emit/initialize.rs', lines 12:0-53:1 -/
+def source.emit.initialize.atom
+  (out : output.Buffer) (operation : source.plan.Operation) (witness : Std.U32)
+  :
+  Result ((core.result.Result Unit Diagnostic) × output.Buffer)
+  := do
+  match operation.action with
+  | source.plan.Action.I64 value =>
+    let s ←
+      lift (Array.to_slice
+        (Array.make 42#usize [
+          40#u8, 108#u8, 111#u8, 99#u8, 97#u8, 108#u8, 46#u8, 115#u8, 101#u8,
+          116#u8, 32#u8, 36#u8, 97#u8, 116#u8, 111#u8, 109#u8, 32#u8, 40#u8,
+          99#u8, 97#u8, 108#u8, 108#u8, 32#u8, 36#u8, 110#u8, 101#u8, 119#u8,
+          32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8, 111#u8, 110#u8,
+          115#u8, 116#u8, 32#u8, 56#u8, 41#u8, 32#u8
+          ]))
+    let (r, out1) ← output.Buffer.append out s
+    match r with
+    | core.result.Result.Ok _ =>
+      let (r1, out2) ← output.Buffer.i64 out1 value
+      match r1 with
+      | core.result.Result.Ok _ =>
+        let s1 ← lift (Array.to_slice (Array.make 1#usize [ 32#u8 ]))
+        let (r2, out3) ← output.Buffer.append out2 s1
+        match r2 with
+        | core.result.Result.Ok _ =>
+          let (r3, out4) ← output.Buffer.i32 out3 0#u32
+          match r3 with
+          | core.result.Result.Ok _ =>
+            let s2 ←
+              lift (Array.to_slice
+                (Array.make 29#usize [
+                  32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8, 111#u8,
+                  110#u8, 115#u8, 116#u8, 32#u8, 48#u8, 41#u8, 32#u8, 40#u8,
+                  105#u8, 51#u8, 50#u8, 46#u8, 99#u8, 111#u8, 110#u8, 115#u8,
+                  116#u8, 32#u8, 48#u8, 41#u8, 32#u8
+                  ]))
+            let (r4, out5) ← output.Buffer.append out4 s2
+            match r4 with
+            | core.result.Result.Ok _ =>
+              let (r5, out6) ← output.Buffer.i32 out5 1#u32
+              match r5 with
+              | core.result.Result.Ok _ =>
+                if 1#u32 = 2#u32
+                then
+                  let s3 ←
+                    lift (Array.to_slice (Array.make 1#usize [ 32#u8 ]))
+                  let (r6, out7) ← output.Buffer.append out6 s3
+                  match r6 with
+                  | core.result.Result.Ok _ =>
+                    let (r7, out8) ← output.Buffer.i32 out7 operation.input
+                    match r7 with
+                    | core.result.Result.Ok _ =>
+                      let s4 ←
+                        lift (Array.to_slice (Array.make 1#usize [ 32#u8 ]))
+                      let (r8, out9) ← output.Buffer.append out8 s4
+                      match r8 with
+                      | core.result.Result.Ok _ =>
+                        let (r9, out10) ←
+                          output.Buffer.i32 out9 operation.output
+                        match r9 with
+                        | core.result.Result.Ok _ =>
+                          let s5 ←
+                            lift (Array.to_slice
+                              (Array.make 1#usize [ 32#u8 ]))
+                          let (r10, out11) ← output.Buffer.append out10 s5
+                          match r10 with
+                          | core.result.Result.Ok _ =>
+                            let (r11, out12) ←
+                              output.Buffer.i32 out11 operation.effects
+                            match r11 with
+                            | core.result.Result.Ok _ =>
+                              let s6 ←
+                                lift (Array.to_slice
+                                  (Array.make 14#usize [
+                                    32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8,
+                                    99#u8, 111#u8, 110#u8, 115#u8, 116#u8,
+                                    32#u8, 48#u8, 41#u8
+                                    ]))
+                              let (r12, out13) ←
+                                output.Buffer.append out12 s6
+                              match r12 with
+                              | core.result.Result.Ok _ =>
+                                let s7 ←
+                                  lift (Array.to_slice
+                                    (Array.make 3#usize [
+                                      41#u8, 41#u8, 10#u8
+                                      ]))
+                                output.Buffer.append out13 s7
+                              | core.result.Result.Err _ => ok (r12, out13)
+                            | core.result.Result.Err _ => ok (r11, out12)
+                          | core.result.Result.Err _ => ok (r10, out11)
+                        | core.result.Result.Err _ => ok (r9, out10)
+                      | core.result.Result.Err _ => ok (r8, out9)
+                    | core.result.Result.Err _ => ok (r7, out8)
+                  | core.result.Result.Err _ => ok (r6, out7)
+                else
+                  if 1#u32 = 15#u32
+                  then
+                    let s3 ←
+                      lift (Array.to_slice (Array.make 1#usize [ 32#u8 ]))
+                    let (r6, out7) ← output.Buffer.append out6 s3
+                    match r6 with
+                    | core.result.Result.Ok _ =>
+                      let (r7, out8) ← output.Buffer.i32 out7 operation.input
+                      match r7 with
+                      | core.result.Result.Ok _ =>
+                        let s4 ←
+                          lift (Array.to_slice (Array.make 1#usize [ 32#u8 ]))
+                        let (r8, out9) ← output.Buffer.append out8 s4
+                        match r8 with
+                        | core.result.Result.Ok _ =>
+                          let (r9, out10) ←
+                            output.Buffer.i32 out9 operation.output
+                          match r9 with
+                          | core.result.Result.Ok _ =>
+                            let s5 ←
+                              lift (Array.to_slice
+                                (Array.make 1#usize [ 32#u8 ]))
+                            let (r10, out11) ← output.Buffer.append out10 s5
+                            match r10 with
+                            | core.result.Result.Ok _ =>
+                              let (r11, out12) ←
+                                output.Buffer.i32 out11 operation.effects
+                              match r11 with
+                              | core.result.Result.Ok _ =>
+                                let s6 ←
+                                  lift (Array.to_slice
+                                    (Array.make 14#usize [
+                                      32#u8, 40#u8, 105#u8, 51#u8, 50#u8,
+                                      46#u8, 99#u8, 111#u8, 110#u8, 115#u8,
+                                      116#u8, 32#u8, 48#u8, 41#u8
+                                      ]))
+                                let (r12, out13) ←
+                                  output.Buffer.append out12 s6
+                                match r12 with
+                                | core.result.Result.Ok _ =>
+                                  let s7 ←
+                                    lift (Array.to_slice
+                                      (Array.make 3#usize [
+                                        41#u8, 41#u8, 10#u8
+                                        ]))
+                                  output.Buffer.append out13 s7
+                                | core.result.Result.Err _ => ok (r12, out13)
+                              | core.result.Result.Err _ => ok (r11, out12)
+                            | core.result.Result.Err _ => ok (r10, out11)
+                          | core.result.Result.Err _ => ok (r9, out10)
+                        | core.result.Result.Err _ => ok (r8, out9)
+                      | core.result.Result.Err _ => ok (r7, out8)
+                    | core.result.Result.Err _ => ok (r6, out7)
+                  else
+                    let s3 ←
+                      lift (Array.to_slice
+                        (Array.make 42#usize [
+                          32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8,
+                          111#u8, 110#u8, 115#u8, 116#u8, 32#u8, 48#u8, 41#u8,
+                          32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8,
+                          111#u8, 110#u8, 115#u8, 116#u8, 32#u8, 48#u8, 41#u8,
+                          32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8,
+                          111#u8, 110#u8, 115#u8, 116#u8, 32#u8, 48#u8, 41#u8
+                          ]))
+                    let (r6, out7) ← output.Buffer.append out6 s3
+                    match r6 with
+                    | core.result.Result.Ok _ =>
+                      let s4 ←
+                        lift (Array.to_slice
+                          (Array.make 14#usize [
+                            32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8,
+                            111#u8, 110#u8, 115#u8, 116#u8, 32#u8, 48#u8, 41#u8
+                            ]))
+                      let (r7, out8) ← output.Buffer.append out7 s4
+                      match r7 with
+                      | core.result.Result.Ok _ =>
+                        let s5 ←
+                          lift (Array.to_slice
+                            (Array.make 3#usize [ 41#u8, 41#u8, 10#u8 ]))
+                        output.Buffer.append out8 s5
+                      | core.result.Result.Err _ => ok (r7, out8)
+                    | core.result.Result.Err _ => ok (r6, out7)
+              | core.result.Result.Err _ => ok (r5, out6)
+            | core.result.Result.Err _ => ok (r4, out5)
+          | core.result.Result.Err _ => ok (r3, out4)
+        | core.result.Result.Err _ => ok (r2, out3)
+      | core.result.Result.Err _ => ok (r1, out2)
+    | core.result.Result.Err _ => ok (r, out1)
+  | source.plan.Action.Bool value =>
+    let value1 ← lift (core.convert.num.FromI64Bool.from value)
+    let s ←
+      lift (Array.to_slice
+        (Array.make 42#usize [
+          40#u8, 108#u8, 111#u8, 99#u8, 97#u8, 108#u8, 46#u8, 115#u8, 101#u8,
+          116#u8, 32#u8, 36#u8, 97#u8, 116#u8, 111#u8, 109#u8, 32#u8, 40#u8,
+          99#u8, 97#u8, 108#u8, 108#u8, 32#u8, 36#u8, 110#u8, 101#u8, 119#u8,
+          32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8, 111#u8, 110#u8,
+          115#u8, 116#u8, 32#u8, 56#u8, 41#u8, 32#u8
+          ]))
+    let (r, out1) ← output.Buffer.append out s
+    match r with
+    | core.result.Result.Ok _ =>
+      let (r1, out2) ← output.Buffer.i64 out1 value1
+      match r1 with
+      | core.result.Result.Ok _ =>
+        let s1 ← lift (Array.to_slice (Array.make 1#usize [ 32#u8 ]))
+        let (r2, out3) ← output.Buffer.append out2 s1
+        match r2 with
+        | core.result.Result.Ok _ =>
+          let (r3, out4) ← output.Buffer.i32 out3 0#u32
+          match r3 with
+          | core.result.Result.Ok _ =>
+            let s2 ←
+              lift (Array.to_slice
+                (Array.make 29#usize [
+                  32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8, 111#u8,
+                  110#u8, 115#u8, 116#u8, 32#u8, 48#u8, 41#u8, 32#u8, 40#u8,
+                  105#u8, 51#u8, 50#u8, 46#u8, 99#u8, 111#u8, 110#u8, 115#u8,
+                  116#u8, 32#u8, 48#u8, 41#u8, 32#u8
+                  ]))
+            let (r4, out5) ← output.Buffer.append out4 s2
+            match r4 with
+            | core.result.Result.Ok _ =>
+              let (r5, out6) ← output.Buffer.i32 out5 4#u32
+              match r5 with
+              | core.result.Result.Ok _ =>
+                if 4#u32 = 2#u32
+                then
+                  let s3 ←
+                    lift (Array.to_slice (Array.make 1#usize [ 32#u8 ]))
+                  let (r6, out7) ← output.Buffer.append out6 s3
+                  match r6 with
+                  | core.result.Result.Ok _ =>
+                    let (r7, out8) ← output.Buffer.i32 out7 operation.input
+                    match r7 with
+                    | core.result.Result.Ok _ =>
+                      let s4 ←
+                        lift (Array.to_slice (Array.make 1#usize [ 32#u8 ]))
+                      let (r8, out9) ← output.Buffer.append out8 s4
+                      match r8 with
+                      | core.result.Result.Ok _ =>
+                        let (r9, out10) ←
+                          output.Buffer.i32 out9 operation.output
+                        match r9 with
+                        | core.result.Result.Ok _ =>
+                          let s5 ←
+                            lift (Array.to_slice
+                              (Array.make 1#usize [ 32#u8 ]))
+                          let (r10, out11) ← output.Buffer.append out10 s5
+                          match r10 with
+                          | core.result.Result.Ok _ =>
+                            let (r11, out12) ←
+                              output.Buffer.i32 out11 operation.effects
+                            match r11 with
+                            | core.result.Result.Ok _ =>
+                              let s6 ←
+                                lift (Array.to_slice
+                                  (Array.make 14#usize [
+                                    32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8,
+                                    99#u8, 111#u8, 110#u8, 115#u8, 116#u8,
+                                    32#u8, 48#u8, 41#u8
+                                    ]))
+                              let (r12, out13) ←
+                                output.Buffer.append out12 s6
+                              match r12 with
+                              | core.result.Result.Ok _ =>
+                                let s7 ←
+                                  lift (Array.to_slice
+                                    (Array.make 3#usize [
+                                      41#u8, 41#u8, 10#u8
+                                      ]))
+                                output.Buffer.append out13 s7
+                              | core.result.Result.Err _ => ok (r12, out13)
+                            | core.result.Result.Err _ => ok (r11, out12)
+                          | core.result.Result.Err _ => ok (r10, out11)
+                        | core.result.Result.Err _ => ok (r9, out10)
+                      | core.result.Result.Err _ => ok (r8, out9)
+                    | core.result.Result.Err _ => ok (r7, out8)
+                  | core.result.Result.Err _ => ok (r6, out7)
+                else
+                  if 4#u32 = 15#u32
+                  then
+                    let s3 ←
+                      lift (Array.to_slice (Array.make 1#usize [ 32#u8 ]))
+                    let (r6, out7) ← output.Buffer.append out6 s3
+                    match r6 with
+                    | core.result.Result.Ok _ =>
+                      let (r7, out8) ← output.Buffer.i32 out7 operation.input
+                      match r7 with
+                      | core.result.Result.Ok _ =>
+                        let s4 ←
+                          lift (Array.to_slice (Array.make 1#usize [ 32#u8 ]))
+                        let (r8, out9) ← output.Buffer.append out8 s4
+                        match r8 with
+                        | core.result.Result.Ok _ =>
+                          let (r9, out10) ←
+                            output.Buffer.i32 out9 operation.output
+                          match r9 with
+                          | core.result.Result.Ok _ =>
+                            let s5 ←
+                              lift (Array.to_slice
+                                (Array.make 1#usize [ 32#u8 ]))
+                            let (r10, out11) ← output.Buffer.append out10 s5
+                            match r10 with
+                            | core.result.Result.Ok _ =>
+                              let (r11, out12) ←
+                                output.Buffer.i32 out11 operation.effects
+                              match r11 with
+                              | core.result.Result.Ok _ =>
+                                let s6 ←
+                                  lift (Array.to_slice
+                                    (Array.make 14#usize [
+                                      32#u8, 40#u8, 105#u8, 51#u8, 50#u8,
+                                      46#u8, 99#u8, 111#u8, 110#u8, 115#u8,
+                                      116#u8, 32#u8, 48#u8, 41#u8
+                                      ]))
+                                let (r12, out13) ←
+                                  output.Buffer.append out12 s6
+                                match r12 with
+                                | core.result.Result.Ok _ =>
+                                  let s7 ←
+                                    lift (Array.to_slice
+                                      (Array.make 3#usize [
+                                        41#u8, 41#u8, 10#u8
+                                        ]))
+                                  output.Buffer.append out13 s7
+                                | core.result.Result.Err _ => ok (r12, out13)
+                              | core.result.Result.Err _ => ok (r11, out12)
+                            | core.result.Result.Err _ => ok (r10, out11)
+                          | core.result.Result.Err _ => ok (r9, out10)
+                        | core.result.Result.Err _ => ok (r8, out9)
+                      | core.result.Result.Err _ => ok (r7, out8)
+                    | core.result.Result.Err _ => ok (r6, out7)
+                  else
+                    let s3 ←
+                      lift (Array.to_slice
+                        (Array.make 42#usize [
+                          32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8,
+                          111#u8, 110#u8, 115#u8, 116#u8, 32#u8, 48#u8, 41#u8,
+                          32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8,
+                          111#u8, 110#u8, 115#u8, 116#u8, 32#u8, 48#u8, 41#u8,
+                          32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8,
+                          111#u8, 110#u8, 115#u8, 116#u8, 32#u8, 48#u8, 41#u8
+                          ]))
+                    let (r6, out7) ← output.Buffer.append out6 s3
+                    match r6 with
+                    | core.result.Result.Ok _ =>
+                      let s4 ←
+                        lift (Array.to_slice
+                          (Array.make 14#usize [
+                            32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8,
+                            111#u8, 110#u8, 115#u8, 116#u8, 32#u8, 48#u8, 41#u8
+                            ]))
+                      let (r7, out8) ← output.Buffer.append out7 s4
+                      match r7 with
+                      | core.result.Result.Ok _ =>
+                        let s5 ←
+                          lift (Array.to_slice
+                            (Array.make 3#usize [ 41#u8, 41#u8, 10#u8 ]))
+                        output.Buffer.append out8 s5
+                      | core.result.Result.Err _ => ok (r7, out8)
+                    | core.result.Result.Err _ => ok (r6, out7)
+              | core.result.Result.Err _ => ok (r5, out6)
+            | core.result.Result.Err _ => ok (r4, out5)
+          | core.result.Result.Err _ => ok (r3, out4)
+        | core.result.Result.Err _ => ok (r2, out3)
+      | core.result.Result.Err _ => ok (r1, out2)
+    | core.result.Result.Err _ => ok (r, out1)
+  | source.plan.Action.Unit =>
+    let s ←
+      lift (Array.to_slice
+        (Array.make 42#usize [
+          40#u8, 108#u8, 111#u8, 99#u8, 97#u8, 108#u8, 46#u8, 115#u8, 101#u8,
+          116#u8, 32#u8, 36#u8, 97#u8, 116#u8, 111#u8, 109#u8, 32#u8, 40#u8,
+          99#u8, 97#u8, 108#u8, 108#u8, 32#u8, 36#u8, 110#u8, 101#u8, 119#u8,
+          32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8, 111#u8, 110#u8,
+          115#u8, 116#u8, 32#u8, 56#u8, 41#u8, 32#u8
+          ]))
+    let (r, out1) ← output.Buffer.append out s
+    match r with
+    | core.result.Result.Ok _ =>
+      let (r1, out2) ← output.Buffer.i64 out1 0#i64
+      match r1 with
+      | core.result.Result.Ok _ =>
+        let s1 ← lift (Array.to_slice (Array.make 1#usize [ 32#u8 ]))
+        let (r2, out3) ← output.Buffer.append out2 s1
+        match r2 with
+        | core.result.Result.Ok _ =>
+          let (r3, out4) ← output.Buffer.i32 out3 0#u32
+          match r3 with
+          | core.result.Result.Ok _ =>
+            let s2 ←
+              lift (Array.to_slice
+                (Array.make 29#usize [
+                  32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8, 111#u8,
+                  110#u8, 115#u8, 116#u8, 32#u8, 48#u8, 41#u8, 32#u8, 40#u8,
+                  105#u8, 51#u8, 50#u8, 46#u8, 99#u8, 111#u8, 110#u8, 115#u8,
+                  116#u8, 32#u8, 48#u8, 41#u8, 32#u8
+                  ]))
+            let (r4, out5) ← output.Buffer.append out4 s2
+            match r4 with
+            | core.result.Result.Ok _ =>
+              let (r5, out6) ← output.Buffer.i32 out5 5#u32
+              match r5 with
+              | core.result.Result.Ok _ =>
+                if 5#u32 = 2#u32
+                then
+                  let s3 ←
+                    lift (Array.to_slice (Array.make 1#usize [ 32#u8 ]))
+                  let (r6, out7) ← output.Buffer.append out6 s3
+                  match r6 with
+                  | core.result.Result.Ok _ =>
+                    let (r7, out8) ← output.Buffer.i32 out7 operation.input
+                    match r7 with
+                    | core.result.Result.Ok _ =>
+                      let s4 ←
+                        lift (Array.to_slice (Array.make 1#usize [ 32#u8 ]))
+                      let (r8, out9) ← output.Buffer.append out8 s4
+                      match r8 with
+                      | core.result.Result.Ok _ =>
+                        let (r9, out10) ←
+                          output.Buffer.i32 out9 operation.output
+                        match r9 with
+                        | core.result.Result.Ok _ =>
+                          let s5 ←
+                            lift (Array.to_slice
+                              (Array.make 1#usize [ 32#u8 ]))
+                          let (r10, out11) ← output.Buffer.append out10 s5
+                          match r10 with
+                          | core.result.Result.Ok _ =>
+                            let (r11, out12) ←
+                              output.Buffer.i32 out11 operation.effects
+                            match r11 with
+                            | core.result.Result.Ok _ =>
+                              let s6 ←
+                                lift (Array.to_slice
+                                  (Array.make 14#usize [
+                                    32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8,
+                                    99#u8, 111#u8, 110#u8, 115#u8, 116#u8,
+                                    32#u8, 48#u8, 41#u8
+                                    ]))
+                              let (r12, out13) ←
+                                output.Buffer.append out12 s6
+                              match r12 with
+                              | core.result.Result.Ok _ =>
+                                let s7 ←
+                                  lift (Array.to_slice
+                                    (Array.make 3#usize [
+                                      41#u8, 41#u8, 10#u8
+                                      ]))
+                                output.Buffer.append out13 s7
+                              | core.result.Result.Err _ => ok (r12, out13)
+                            | core.result.Result.Err _ => ok (r11, out12)
+                          | core.result.Result.Err _ => ok (r10, out11)
+                        | core.result.Result.Err _ => ok (r9, out10)
+                      | core.result.Result.Err _ => ok (r8, out9)
+                    | core.result.Result.Err _ => ok (r7, out8)
+                  | core.result.Result.Err _ => ok (r6, out7)
+                else
+                  if 5#u32 = 15#u32
+                  then
+                    let s3 ←
+                      lift (Array.to_slice (Array.make 1#usize [ 32#u8 ]))
+                    let (r6, out7) ← output.Buffer.append out6 s3
+                    match r6 with
+                    | core.result.Result.Ok _ =>
+                      let (r7, out8) ← output.Buffer.i32 out7 operation.input
+                      match r7 with
+                      | core.result.Result.Ok _ =>
+                        let s4 ←
+                          lift (Array.to_slice (Array.make 1#usize [ 32#u8 ]))
+                        let (r8, out9) ← output.Buffer.append out8 s4
+                        match r8 with
+                        | core.result.Result.Ok _ =>
+                          let (r9, out10) ←
+                            output.Buffer.i32 out9 operation.output
+                          match r9 with
+                          | core.result.Result.Ok _ =>
+                            let s5 ←
+                              lift (Array.to_slice
+                                (Array.make 1#usize [ 32#u8 ]))
+                            let (r10, out11) ← output.Buffer.append out10 s5
+                            match r10 with
+                            | core.result.Result.Ok _ =>
+                              let (r11, out12) ←
+                                output.Buffer.i32 out11 operation.effects
+                              match r11 with
+                              | core.result.Result.Ok _ =>
+                                let s6 ←
+                                  lift (Array.to_slice
+                                    (Array.make 14#usize [
+                                      32#u8, 40#u8, 105#u8, 51#u8, 50#u8,
+                                      46#u8, 99#u8, 111#u8, 110#u8, 115#u8,
+                                      116#u8, 32#u8, 48#u8, 41#u8
+                                      ]))
+                                let (r12, out13) ←
+                                  output.Buffer.append out12 s6
+                                match r12 with
+                                | core.result.Result.Ok _ =>
+                                  let s7 ←
+                                    lift (Array.to_slice
+                                      (Array.make 3#usize [
+                                        41#u8, 41#u8, 10#u8
+                                        ]))
+                                  output.Buffer.append out13 s7
+                                | core.result.Result.Err _ => ok (r12, out13)
+                              | core.result.Result.Err _ => ok (r11, out12)
+                            | core.result.Result.Err _ => ok (r10, out11)
+                          | core.result.Result.Err _ => ok (r9, out10)
+                        | core.result.Result.Err _ => ok (r8, out9)
+                      | core.result.Result.Err _ => ok (r7, out8)
+                    | core.result.Result.Err _ => ok (r6, out7)
+                  else
+                    let s3 ←
+                      lift (Array.to_slice
+                        (Array.make 42#usize [
+                          32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8,
+                          111#u8, 110#u8, 115#u8, 116#u8, 32#u8, 48#u8, 41#u8,
+                          32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8,
+                          111#u8, 110#u8, 115#u8, 116#u8, 32#u8, 48#u8, 41#u8,
+                          32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8,
+                          111#u8, 110#u8, 115#u8, 116#u8, 32#u8, 48#u8, 41#u8
+                          ]))
+                    let (r6, out7) ← output.Buffer.append out6 s3
+                    match r6 with
+                    | core.result.Result.Ok _ =>
+                      let s4 ←
+                        lift (Array.to_slice
+                          (Array.make 14#usize [
+                            32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8,
+                            111#u8, 110#u8, 115#u8, 116#u8, 32#u8, 48#u8, 41#u8
+                            ]))
+                      let (r7, out8) ← output.Buffer.append out7 s4
+                      match r7 with
+                      | core.result.Result.Ok _ =>
+                        let s5 ←
+                          lift (Array.to_slice
+                            (Array.make 3#usize [ 41#u8, 41#u8, 10#u8 ]))
+                        output.Buffer.append out8 s5
+                      | core.result.Result.Err _ => ok (r7, out8)
+                    | core.result.Result.Err _ => ok (r6, out7)
+              | core.result.Result.Err _ => ok (r5, out6)
+            | core.result.Result.Err _ => ok (r4, out5)
+          | core.result.Result.Err _ => ok (r3, out4)
+        | core.result.Result.Err _ => ok (r2, out3)
+      | core.result.Result.Err _ => ok (r1, out2)
+    | core.result.Result.Err _ => ok (r, out1)
+  | source.plan.Action.Text address length =>
+    source.emit.initialize.text_atom out (address, length) witness
+  | source.plan.Action.Program child =>
+    let s ←
+      lift (Array.to_slice
+        (Array.make 42#usize [
+          40#u8, 108#u8, 111#u8, 99#u8, 97#u8, 108#u8, 46#u8, 115#u8, 101#u8,
+          116#u8, 32#u8, 36#u8, 97#u8, 116#u8, 111#u8, 109#u8, 32#u8, 40#u8,
+          99#u8, 97#u8, 108#u8, 108#u8, 32#u8, 36#u8, 110#u8, 101#u8, 119#u8,
+          32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8, 111#u8, 110#u8,
+          115#u8, 116#u8, 32#u8, 56#u8, 41#u8, 32#u8
+          ]))
+    let (r, out1) ← output.Buffer.append out s
+    match r with
+    | core.result.Result.Ok _ =>
+      let (r1, out2) ← output.Buffer.i64 out1 0#i64
+      match r1 with
+      | core.result.Result.Ok _ =>
+        let s1 ← lift (Array.to_slice (Array.make 1#usize [ 32#u8 ]))
+        let (r2, out3) ← output.Buffer.append out2 s1
+        match r2 with
+        | core.result.Result.Ok _ =>
+          let (r3, out4) ← source.emit.get_global out3 child
+          match r3 with
+          | core.result.Result.Ok _ =>
+            let s2 ←
+              lift (Array.to_slice
+                (Array.make 29#usize [
+                  32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8, 111#u8,
+                  110#u8, 115#u8, 116#u8, 32#u8, 48#u8, 41#u8, 32#u8, 40#u8,
+                  105#u8, 51#u8, 50#u8, 46#u8, 99#u8, 111#u8, 110#u8, 115#u8,
+                  116#u8, 32#u8, 48#u8, 41#u8, 32#u8
+                  ]))
+            let (r4, out5) ← output.Buffer.append out4 s2
+            match r4 with
+            | core.result.Result.Ok _ =>
+              let (r5, out6) ← output.Buffer.i32 out5 3#u32
+              match r5 with
+              | core.result.Result.Ok _ =>
+                if 3#u32 = 2#u32
+                then
+                  let s3 ←
+                    lift (Array.to_slice (Array.make 1#usize [ 32#u8 ]))
+                  let (r6, out7) ← output.Buffer.append out6 s3
+                  match r6 with
+                  | core.result.Result.Ok _ =>
+                    let (r7, out8) ← output.Buffer.i32 out7 operation.input
+                    match r7 with
+                    | core.result.Result.Ok _ =>
+                      let s4 ←
+                        lift (Array.to_slice (Array.make 1#usize [ 32#u8 ]))
+                      let (r8, out9) ← output.Buffer.append out8 s4
+                      match r8 with
+                      | core.result.Result.Ok _ =>
+                        let (r9, out10) ←
+                          output.Buffer.i32 out9 operation.output
+                        match r9 with
+                        | core.result.Result.Ok _ =>
+                          let s5 ←
+                            lift (Array.to_slice
+                              (Array.make 1#usize [ 32#u8 ]))
+                          let (r10, out11) ← output.Buffer.append out10 s5
+                          match r10 with
+                          | core.result.Result.Ok _ =>
+                            let (r11, out12) ←
+                              output.Buffer.i32 out11 operation.effects
+                            match r11 with
+                            | core.result.Result.Ok _ =>
+                              let s6 ←
+                                lift (Array.to_slice
+                                  (Array.make 14#usize [
+                                    32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8,
+                                    99#u8, 111#u8, 110#u8, 115#u8, 116#u8,
+                                    32#u8, 48#u8, 41#u8
+                                    ]))
+                              let (r12, out13) ←
+                                output.Buffer.append out12 s6
+                              match r12 with
+                              | core.result.Result.Ok _ =>
+                                let s7 ←
+                                  lift (Array.to_slice
+                                    (Array.make 3#usize [
+                                      41#u8, 41#u8, 10#u8
+                                      ]))
+                                output.Buffer.append out13 s7
+                              | core.result.Result.Err _ => ok (r12, out13)
+                            | core.result.Result.Err _ => ok (r11, out12)
+                          | core.result.Result.Err _ => ok (r10, out11)
+                        | core.result.Result.Err _ => ok (r9, out10)
+                      | core.result.Result.Err _ => ok (r8, out9)
+                    | core.result.Result.Err _ => ok (r7, out8)
+                  | core.result.Result.Err _ => ok (r6, out7)
+                else
+                  if 3#u32 = 15#u32
+                  then
+                    let s3 ←
+                      lift (Array.to_slice (Array.make 1#usize [ 32#u8 ]))
+                    let (r6, out7) ← output.Buffer.append out6 s3
+                    match r6 with
+                    | core.result.Result.Ok _ =>
+                      let (r7, out8) ← output.Buffer.i32 out7 operation.input
+                      match r7 with
+                      | core.result.Result.Ok _ =>
+                        let s4 ←
+                          lift (Array.to_slice (Array.make 1#usize [ 32#u8 ]))
+                        let (r8, out9) ← output.Buffer.append out8 s4
+                        match r8 with
+                        | core.result.Result.Ok _ =>
+                          let (r9, out10) ←
+                            output.Buffer.i32 out9 operation.output
+                          match r9 with
+                          | core.result.Result.Ok _ =>
+                            let s5 ←
+                              lift (Array.to_slice
+                                (Array.make 1#usize [ 32#u8 ]))
+                            let (r10, out11) ← output.Buffer.append out10 s5
+                            match r10 with
+                            | core.result.Result.Ok _ =>
+                              let (r11, out12) ←
+                                output.Buffer.i32 out11 operation.effects
+                              match r11 with
+                              | core.result.Result.Ok _ =>
+                                let s6 ←
+                                  lift (Array.to_slice
+                                    (Array.make 14#usize [
+                                      32#u8, 40#u8, 105#u8, 51#u8, 50#u8,
+                                      46#u8, 99#u8, 111#u8, 110#u8, 115#u8,
+                                      116#u8, 32#u8, 48#u8, 41#u8
+                                      ]))
+                                let (r12, out13) ←
+                                  output.Buffer.append out12 s6
+                                match r12 with
+                                | core.result.Result.Ok _ =>
+                                  let s7 ←
+                                    lift (Array.to_slice
+                                      (Array.make 3#usize [
+                                        41#u8, 41#u8, 10#u8
+                                        ]))
+                                  output.Buffer.append out13 s7
+                                | core.result.Result.Err _ => ok (r12, out13)
+                              | core.result.Result.Err _ => ok (r11, out12)
+                            | core.result.Result.Err _ => ok (r10, out11)
+                          | core.result.Result.Err _ => ok (r9, out10)
+                        | core.result.Result.Err _ => ok (r8, out9)
+                      | core.result.Result.Err _ => ok (r7, out8)
+                    | core.result.Result.Err _ => ok (r6, out7)
+                  else
+                    let s3 ←
+                      lift (Array.to_slice
+                        (Array.make 42#usize [
+                          32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8,
+                          111#u8, 110#u8, 115#u8, 116#u8, 32#u8, 48#u8, 41#u8,
+                          32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8,
+                          111#u8, 110#u8, 115#u8, 116#u8, 32#u8, 48#u8, 41#u8,
+                          32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8,
+                          111#u8, 110#u8, 115#u8, 116#u8, 32#u8, 48#u8, 41#u8
+                          ]))
+                    let (r6, out7) ← output.Buffer.append out6 s3
+                    match r6 with
+                    | core.result.Result.Ok _ =>
+                      let s4 ←
+                        lift (Array.to_slice
+                          (Array.make 14#usize [
+                            32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8,
+                            111#u8, 110#u8, 115#u8, 116#u8, 32#u8, 48#u8, 41#u8
+                            ]))
+                      let (r7, out8) ← output.Buffer.append out7 s4
+                      match r7 with
+                      | core.result.Result.Ok _ =>
+                        let s5 ←
+                          lift (Array.to_slice
+                            (Array.make 3#usize [ 41#u8, 41#u8, 10#u8 ]))
+                        output.Buffer.append out8 s5
+                      | core.result.Result.Err _ => ok (r7, out8)
+                    | core.result.Result.Err _ => ok (r6, out7)
+              | core.result.Result.Err _ => ok (r5, out6)
+            | core.result.Result.Err _ => ok (r4, out5)
+          | core.result.Result.Err _ => ok (r3, out4)
+        | core.result.Result.Err _ => ok (r2, out3)
+      | core.result.Result.Err _ => ok (r1, out2)
+    | core.result.Result.Err _ => ok (r, out1)
+  | source.plan.Action.Word definition =>
+    let value ← I64.Insts.CoreConvertFromU32.from definition
+    let s ←
+      lift (Array.to_slice
+        (Array.make 42#usize [
+          40#u8, 108#u8, 111#u8, 99#u8, 97#u8, 108#u8, 46#u8, 115#u8, 101#u8,
+          116#u8, 32#u8, 36#u8, 97#u8, 116#u8, 111#u8, 109#u8, 32#u8, 40#u8,
+          99#u8, 97#u8, 108#u8, 108#u8, 32#u8, 36#u8, 110#u8, 101#u8, 119#u8,
+          32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8, 111#u8, 110#u8,
+          115#u8, 116#u8, 32#u8, 56#u8, 41#u8, 32#u8
+          ]))
+    let (r, out1) ← output.Buffer.append out s
+    match r with
+    | core.result.Result.Ok _ =>
+      let (r1, out2) ← output.Buffer.i64 out1 value
+      match r1 with
+      | core.result.Result.Ok _ =>
+        let s1 ← lift (Array.to_slice (Array.make 1#usize [ 32#u8 ]))
+        let (r2, out3) ← output.Buffer.append out2 s1
+        match r2 with
+        | core.result.Result.Ok _ =>
+          let (r3, out4) ← output.Buffer.i32 out3 0#u32
+          match r3 with
+          | core.result.Result.Ok _ =>
+            let s2 ←
+              lift (Array.to_slice
+                (Array.make 29#usize [
+                  32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8, 111#u8,
+                  110#u8, 115#u8, 116#u8, 32#u8, 48#u8, 41#u8, 32#u8, 40#u8,
+                  105#u8, 51#u8, 50#u8, 46#u8, 99#u8, 111#u8, 110#u8, 115#u8,
+                  116#u8, 32#u8, 48#u8, 41#u8, 32#u8
+                  ]))
+            let (r4, out5) ← output.Buffer.append out4 s2
+            match r4 with
+            | core.result.Result.Ok _ =>
+              let (r5, out6) ← output.Buffer.i32 out5 2#u32
+              match r5 with
+              | core.result.Result.Ok _ =>
+                if 2#u32 = 2#u32
+                then
+                  let s3 ←
+                    lift (Array.to_slice (Array.make 1#usize [ 32#u8 ]))
+                  let (r6, out7) ← output.Buffer.append out6 s3
+                  match r6 with
+                  | core.result.Result.Ok _ =>
+                    let (r7, out8) ← output.Buffer.i32 out7 operation.input
+                    match r7 with
+                    | core.result.Result.Ok _ =>
+                      let s4 ←
+                        lift (Array.to_slice (Array.make 1#usize [ 32#u8 ]))
+                      let (r8, out9) ← output.Buffer.append out8 s4
+                      match r8 with
+                      | core.result.Result.Ok _ =>
+                        let (r9, out10) ←
+                          output.Buffer.i32 out9 operation.output
+                        match r9 with
+                        | core.result.Result.Ok _ =>
+                          let s5 ←
+                            lift (Array.to_slice
+                              (Array.make 1#usize [ 32#u8 ]))
+                          let (r10, out11) ← output.Buffer.append out10 s5
+                          match r10 with
+                          | core.result.Result.Ok _ =>
+                            let (r11, out12) ←
+                              output.Buffer.i32 out11 operation.effects
+                            match r11 with
+                            | core.result.Result.Ok _ =>
+                              let s6 ←
+                                lift (Array.to_slice
+                                  (Array.make 14#usize [
+                                    32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8,
+                                    99#u8, 111#u8, 110#u8, 115#u8, 116#u8,
+                                    32#u8, 48#u8, 41#u8
+                                    ]))
+                              let (r12, out13) ←
+                                output.Buffer.append out12 s6
+                              match r12 with
+                              | core.result.Result.Ok _ =>
+                                let s7 ←
+                                  lift (Array.to_slice
+                                    (Array.make 3#usize [
+                                      41#u8, 41#u8, 10#u8
+                                      ]))
+                                output.Buffer.append out13 s7
+                              | core.result.Result.Err _ => ok (r12, out13)
+                            | core.result.Result.Err _ => ok (r11, out12)
+                          | core.result.Result.Err _ => ok (r10, out11)
+                        | core.result.Result.Err _ => ok (r9, out10)
+                      | core.result.Result.Err _ => ok (r8, out9)
+                    | core.result.Result.Err _ => ok (r7, out8)
+                  | core.result.Result.Err _ => ok (r6, out7)
+                else
+                  if 2#u32 = 15#u32
+                  then
+                    let s3 ←
+                      lift (Array.to_slice (Array.make 1#usize [ 32#u8 ]))
+                    let (r6, out7) ← output.Buffer.append out6 s3
+                    match r6 with
+                    | core.result.Result.Ok _ =>
+                      let (r7, out8) ← output.Buffer.i32 out7 operation.input
+                      match r7 with
+                      | core.result.Result.Ok _ =>
+                        let s4 ←
+                          lift (Array.to_slice (Array.make 1#usize [ 32#u8 ]))
+                        let (r8, out9) ← output.Buffer.append out8 s4
+                        match r8 with
+                        | core.result.Result.Ok _ =>
+                          let (r9, out10) ←
+                            output.Buffer.i32 out9 operation.output
+                          match r9 with
+                          | core.result.Result.Ok _ =>
+                            let s5 ←
+                              lift (Array.to_slice
+                                (Array.make 1#usize [ 32#u8 ]))
+                            let (r10, out11) ← output.Buffer.append out10 s5
+                            match r10 with
+                            | core.result.Result.Ok _ =>
+                              let (r11, out12) ←
+                                output.Buffer.i32 out11 operation.effects
+                              match r11 with
+                              | core.result.Result.Ok _ =>
+                                let s6 ←
+                                  lift (Array.to_slice
+                                    (Array.make 14#usize [
+                                      32#u8, 40#u8, 105#u8, 51#u8, 50#u8,
+                                      46#u8, 99#u8, 111#u8, 110#u8, 115#u8,
+                                      116#u8, 32#u8, 48#u8, 41#u8
+                                      ]))
+                                let (r12, out13) ←
+                                  output.Buffer.append out12 s6
+                                match r12 with
+                                | core.result.Result.Ok _ =>
+                                  let s7 ←
+                                    lift (Array.to_slice
+                                      (Array.make 3#usize [
+                                        41#u8, 41#u8, 10#u8
+                                        ]))
+                                  output.Buffer.append out13 s7
+                                | core.result.Result.Err _ => ok (r12, out13)
+                              | core.result.Result.Err _ => ok (r11, out12)
+                            | core.result.Result.Err _ => ok (r10, out11)
+                          | core.result.Result.Err _ => ok (r9, out10)
+                        | core.result.Result.Err _ => ok (r8, out9)
+                      | core.result.Result.Err _ => ok (r7, out8)
+                    | core.result.Result.Err _ => ok (r6, out7)
+                  else
+                    let s3 ←
+                      lift (Array.to_slice
+                        (Array.make 42#usize [
+                          32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8,
+                          111#u8, 110#u8, 115#u8, 116#u8, 32#u8, 48#u8, 41#u8,
+                          32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8,
+                          111#u8, 110#u8, 115#u8, 116#u8, 32#u8, 48#u8, 41#u8,
+                          32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8,
+                          111#u8, 110#u8, 115#u8, 116#u8, 32#u8, 48#u8, 41#u8
+                          ]))
+                    let (r6, out7) ← output.Buffer.append out6 s3
+                    match r6 with
+                    | core.result.Result.Ok _ =>
+                      let s4 ←
+                        lift (Array.to_slice
+                          (Array.make 14#usize [
+                            32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8,
+                            111#u8, 110#u8, 115#u8, 116#u8, 32#u8, 48#u8, 41#u8
+                            ]))
+                      let (r7, out8) ← output.Buffer.append out7 s4
+                      match r7 with
+                      | core.result.Result.Ok _ =>
+                        let s5 ←
+                          lift (Array.to_slice
+                            (Array.make 3#usize [ 41#u8, 41#u8, 10#u8 ]))
+                        output.Buffer.append out8 s5
+                      | core.result.Result.Err _ => ok (r7, out8)
+                    | core.result.Result.Err _ => ok (r6, out7)
+              | core.result.Result.Err _ => ok (r5, out6)
+            | core.result.Result.Err _ => ok (r4, out5)
+          | core.result.Result.Err _ => ok (r3, out4)
+        | core.result.Result.Err _ => ok (r2, out3)
+      | core.result.Result.Err _ => ok (r1, out2)
+    | core.result.Result.Err _ => ok (r, out1)
+  | source.plan.Action.Quote _ _ _ =>
+    let s ←
+      lift (Array.to_slice
+        (Array.make 42#usize [
+          40#u8, 108#u8, 111#u8, 99#u8, 97#u8, 108#u8, 46#u8, 115#u8, 101#u8,
+          116#u8, 32#u8, 36#u8, 97#u8, 116#u8, 111#u8, 109#u8, 32#u8, 40#u8,
+          99#u8, 97#u8, 108#u8, 108#u8, 32#u8, 36#u8, 110#u8, 101#u8, 119#u8,
+          32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8, 111#u8, 110#u8,
+          115#u8, 116#u8, 32#u8, 56#u8, 41#u8, 32#u8
+          ]))
+    let (r, out1) ← output.Buffer.append out s
+    match r with
+    | core.result.Result.Ok _ =>
+      let (r1, out2) ← output.Buffer.i64 out1 8#i64
+      match r1 with
+      | core.result.Result.Ok _ =>
+        let s1 ← lift (Array.to_slice (Array.make 1#usize [ 32#u8 ]))
+        let (r2, out3) ← output.Buffer.append out2 s1
+        match r2 with
+        | core.result.Result.Ok _ =>
+          let (r3, out4) ← output.Buffer.i32 out3 0#u32
+          match r3 with
+          | core.result.Result.Ok _ =>
+            let s2 ←
+              lift (Array.to_slice
+                (Array.make 29#usize [
+                  32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8, 111#u8,
+                  110#u8, 115#u8, 116#u8, 32#u8, 48#u8, 41#u8, 32#u8, 40#u8,
+                  105#u8, 51#u8, 50#u8, 46#u8, 99#u8, 111#u8, 110#u8, 115#u8,
+                  116#u8, 32#u8, 48#u8, 41#u8, 32#u8
+                  ]))
+            let (r4, out5) ← output.Buffer.append out4 s2
+            match r4 with
+            | core.result.Result.Ok _ =>
+              let (r5, out6) ← output.Buffer.i32 out5 2#u32
+              match r5 with
+              | core.result.Result.Ok _ =>
+                if 2#u32 = 2#u32
+                then
+                  let s3 ←
+                    lift (Array.to_slice (Array.make 1#usize [ 32#u8 ]))
+                  let (r6, out7) ← output.Buffer.append out6 s3
+                  match r6 with
+                  | core.result.Result.Ok _ =>
+                    let (r7, out8) ← output.Buffer.i32 out7 operation.input
+                    match r7 with
+                    | core.result.Result.Ok _ =>
+                      let s4 ←
+                        lift (Array.to_slice (Array.make 1#usize [ 32#u8 ]))
+                      let (r8, out9) ← output.Buffer.append out8 s4
+                      match r8 with
+                      | core.result.Result.Ok _ =>
+                        let (r9, out10) ←
+                          output.Buffer.i32 out9 operation.output
+                        match r9 with
+                        | core.result.Result.Ok _ =>
+                          let s5 ←
+                            lift (Array.to_slice
+                              (Array.make 1#usize [ 32#u8 ]))
+                          let (r10, out11) ← output.Buffer.append out10 s5
+                          match r10 with
+                          | core.result.Result.Ok _ =>
+                            let (r11, out12) ←
+                              output.Buffer.i32 out11 operation.effects
+                            match r11 with
+                            | core.result.Result.Ok _ =>
+                              let s6 ←
+                                lift (Array.to_slice
+                                  (Array.make 14#usize [
+                                    32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8,
+                                    99#u8, 111#u8, 110#u8, 115#u8, 116#u8,
+                                    32#u8, 48#u8, 41#u8
+                                    ]))
+                              let (r12, out13) ←
+                                output.Buffer.append out12 s6
+                              match r12 with
+                              | core.result.Result.Ok _ =>
+                                let s7 ←
+                                  lift (Array.to_slice
+                                    (Array.make 3#usize [
+                                      41#u8, 41#u8, 10#u8
+                                      ]))
+                                output.Buffer.append out13 s7
+                              | core.result.Result.Err _ => ok (r12, out13)
+                            | core.result.Result.Err _ => ok (r11, out12)
+                          | core.result.Result.Err _ => ok (r10, out11)
+                        | core.result.Result.Err _ => ok (r9, out10)
+                      | core.result.Result.Err _ => ok (r8, out9)
+                    | core.result.Result.Err _ => ok (r7, out8)
+                  | core.result.Result.Err _ => ok (r6, out7)
+                else
+                  if 2#u32 = 15#u32
+                  then
+                    let s3 ←
+                      lift (Array.to_slice (Array.make 1#usize [ 32#u8 ]))
+                    let (r6, out7) ← output.Buffer.append out6 s3
+                    match r6 with
+                    | core.result.Result.Ok _ =>
+                      let (r7, out8) ← output.Buffer.i32 out7 operation.input
+                      match r7 with
+                      | core.result.Result.Ok _ =>
+                        let s4 ←
+                          lift (Array.to_slice (Array.make 1#usize [ 32#u8 ]))
+                        let (r8, out9) ← output.Buffer.append out8 s4
+                        match r8 with
+                        | core.result.Result.Ok _ =>
+                          let (r9, out10) ←
+                            output.Buffer.i32 out9 operation.output
+                          match r9 with
+                          | core.result.Result.Ok _ =>
+                            let s5 ←
+                              lift (Array.to_slice
+                                (Array.make 1#usize [ 32#u8 ]))
+                            let (r10, out11) ← output.Buffer.append out10 s5
+                            match r10 with
+                            | core.result.Result.Ok _ =>
+                              let (r11, out12) ←
+                                output.Buffer.i32 out11 operation.effects
+                              match r11 with
+                              | core.result.Result.Ok _ =>
+                                let s6 ←
+                                  lift (Array.to_slice
+                                    (Array.make 14#usize [
+                                      32#u8, 40#u8, 105#u8, 51#u8, 50#u8,
+                                      46#u8, 99#u8, 111#u8, 110#u8, 115#u8,
+                                      116#u8, 32#u8, 48#u8, 41#u8
+                                      ]))
+                                let (r12, out13) ←
+                                  output.Buffer.append out12 s6
+                                match r12 with
+                                | core.result.Result.Ok _ =>
+                                  let s7 ←
+                                    lift (Array.to_slice
+                                      (Array.make 3#usize [
+                                        41#u8, 41#u8, 10#u8
+                                        ]))
+                                  output.Buffer.append out13 s7
+                                | core.result.Result.Err _ => ok (r12, out13)
+                              | core.result.Result.Err _ => ok (r11, out12)
+                            | core.result.Result.Err _ => ok (r10, out11)
+                          | core.result.Result.Err _ => ok (r9, out10)
+                        | core.result.Result.Err _ => ok (r8, out9)
+                      | core.result.Result.Err _ => ok (r7, out8)
+                    | core.result.Result.Err _ => ok (r6, out7)
+                  else
+                    let s3 ←
+                      lift (Array.to_slice
+                        (Array.make 42#usize [
+                          32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8,
+                          111#u8, 110#u8, 115#u8, 116#u8, 32#u8, 48#u8, 41#u8,
+                          32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8,
+                          111#u8, 110#u8, 115#u8, 116#u8, 32#u8, 48#u8, 41#u8,
+                          32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8,
+                          111#u8, 110#u8, 115#u8, 116#u8, 32#u8, 48#u8, 41#u8
+                          ]))
+                    let (r6, out7) ← output.Buffer.append out6 s3
+                    match r6 with
+                    | core.result.Result.Ok _ =>
+                      let s4 ←
+                        lift (Array.to_slice
+                          (Array.make 14#usize [
+                            32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8,
+                            111#u8, 110#u8, 115#u8, 116#u8, 32#u8, 48#u8, 41#u8
+                            ]))
+                      let (r7, out8) ← output.Buffer.append out7 s4
+                      match r7 with
+                      | core.result.Result.Ok _ =>
+                        let s5 ←
+                          lift (Array.to_slice
+                            (Array.make 3#usize [ 41#u8, 41#u8, 10#u8 ]))
+                        output.Buffer.append out8 s5
+                      | core.result.Result.Err _ => ok (r7, out8)
+                    | core.result.Result.Err _ => ok (r6, out7)
+              | core.result.Result.Err _ => ok (r5, out6)
+            | core.result.Result.Err _ => ok (r4, out5)
+          | core.result.Result.Err _ => ok (r3, out4)
+        | core.result.Result.Err _ => ok (r2, out3)
+      | core.result.Result.Err _ => ok (r1, out2)
+    | core.result.Result.Err _ => ok (r, out1)
+  | source.plan.Action.Call _ identity =>
+    let a ← lift (core.num.U64.to_le_bytes identity)
+    let value ← lift (core.num.I64.from_le_bytes a)
+    let s ←
+      lift (Array.to_slice
+        (Array.make 42#usize [
+          40#u8, 108#u8, 111#u8, 99#u8, 97#u8, 108#u8, 46#u8, 115#u8, 101#u8,
+          116#u8, 32#u8, 36#u8, 97#u8, 116#u8, 111#u8, 109#u8, 32#u8, 40#u8,
+          99#u8, 97#u8, 108#u8, 108#u8, 32#u8, 36#u8, 110#u8, 101#u8, 119#u8,
+          32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8, 111#u8, 110#u8,
+          115#u8, 116#u8, 32#u8, 56#u8, 41#u8, 32#u8
+          ]))
+    let (r, out1) ← output.Buffer.append out s
+    match r with
+    | core.result.Result.Ok _ =>
+      let (r1, out2) ← output.Buffer.i64 out1 value
+      match r1 with
+      | core.result.Result.Ok _ =>
+        let s1 ← lift (Array.to_slice (Array.make 1#usize [ 32#u8 ]))
+        let (r2, out3) ← output.Buffer.append out2 s1
+        match r2 with
+        | core.result.Result.Ok _ =>
+          let (r3, out4) ← output.Buffer.i32 out3 0#u32
+          match r3 with
+          | core.result.Result.Ok _ =>
+            let s2 ←
+              lift (Array.to_slice
+                (Array.make 29#usize [
+                  32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8, 111#u8,
+                  110#u8, 115#u8, 116#u8, 32#u8, 48#u8, 41#u8, 32#u8, 40#u8,
+                  105#u8, 51#u8, 50#u8, 46#u8, 99#u8, 111#u8, 110#u8, 115#u8,
+                  116#u8, 32#u8, 48#u8, 41#u8, 32#u8
+                  ]))
+            let (r4, out5) ← output.Buffer.append out4 s2
+            match r4 with
+            | core.result.Result.Ok _ =>
+              let (r5, out6) ← output.Buffer.i32 out5 15#u32
+              match r5 with
+              | core.result.Result.Ok _ =>
+                if 15#u32 = 2#u32
+                then
+                  let s3 ←
+                    lift (Array.to_slice (Array.make 1#usize [ 32#u8 ]))
+                  let (r6, out7) ← output.Buffer.append out6 s3
+                  match r6 with
+                  | core.result.Result.Ok _ =>
+                    let (r7, out8) ← output.Buffer.i32 out7 operation.input
+                    match r7 with
+                    | core.result.Result.Ok _ =>
+                      let s4 ←
+                        lift (Array.to_slice (Array.make 1#usize [ 32#u8 ]))
+                      let (r8, out9) ← output.Buffer.append out8 s4
+                      match r8 with
+                      | core.result.Result.Ok _ =>
+                        let (r9, out10) ←
+                          output.Buffer.i32 out9 operation.output
+                        match r9 with
+                        | core.result.Result.Ok _ =>
+                          let s5 ←
+                            lift (Array.to_slice
+                              (Array.make 1#usize [ 32#u8 ]))
+                          let (r10, out11) ← output.Buffer.append out10 s5
+                          match r10 with
+                          | core.result.Result.Ok _ =>
+                            let (r11, out12) ←
+                              output.Buffer.i32 out11 operation.effects
+                            match r11 with
+                            | core.result.Result.Ok _ =>
+                              let s6 ←
+                                lift (Array.to_slice
+                                  (Array.make 14#usize [
+                                    32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8,
+                                    99#u8, 111#u8, 110#u8, 115#u8, 116#u8,
+                                    32#u8, 48#u8, 41#u8
+                                    ]))
+                              let (r12, out13) ←
+                                output.Buffer.append out12 s6
+                              match r12 with
+                              | core.result.Result.Ok _ =>
+                                let s7 ←
+                                  lift (Array.to_slice
+                                    (Array.make 3#usize [
+                                      41#u8, 41#u8, 10#u8
+                                      ]))
+                                output.Buffer.append out13 s7
+                              | core.result.Result.Err _ => ok (r12, out13)
+                            | core.result.Result.Err _ => ok (r11, out12)
+                          | core.result.Result.Err _ => ok (r10, out11)
+                        | core.result.Result.Err _ => ok (r9, out10)
+                      | core.result.Result.Err _ => ok (r8, out9)
+                    | core.result.Result.Err _ => ok (r7, out8)
+                  | core.result.Result.Err _ => ok (r6, out7)
+                else
+                  if 15#u32 = 15#u32
+                  then
+                    let s3 ←
+                      lift (Array.to_slice (Array.make 1#usize [ 32#u8 ]))
+                    let (r6, out7) ← output.Buffer.append out6 s3
+                    match r6 with
+                    | core.result.Result.Ok _ =>
+                      let (r7, out8) ← output.Buffer.i32 out7 operation.input
+                      match r7 with
+                      | core.result.Result.Ok _ =>
+                        let s4 ←
+                          lift (Array.to_slice (Array.make 1#usize [ 32#u8 ]))
+                        let (r8, out9) ← output.Buffer.append out8 s4
+                        match r8 with
+                        | core.result.Result.Ok _ =>
+                          let (r9, out10) ←
+                            output.Buffer.i32 out9 operation.output
+                          match r9 with
+                          | core.result.Result.Ok _ =>
+                            let s5 ←
+                              lift (Array.to_slice
+                                (Array.make 1#usize [ 32#u8 ]))
+                            let (r10, out11) ← output.Buffer.append out10 s5
+                            match r10 with
+                            | core.result.Result.Ok _ =>
+                              let (r11, out12) ←
+                                output.Buffer.i32 out11 operation.effects
+                              match r11 with
+                              | core.result.Result.Ok _ =>
+                                let s6 ←
+                                  lift (Array.to_slice
+                                    (Array.make 14#usize [
+                                      32#u8, 40#u8, 105#u8, 51#u8, 50#u8,
+                                      46#u8, 99#u8, 111#u8, 110#u8, 115#u8,
+                                      116#u8, 32#u8, 48#u8, 41#u8
+                                      ]))
+                                let (r12, out13) ←
+                                  output.Buffer.append out12 s6
+                                match r12 with
+                                | core.result.Result.Ok _ =>
+                                  let s7 ←
+                                    lift (Array.to_slice
+                                      (Array.make 3#usize [
+                                        41#u8, 41#u8, 10#u8
+                                        ]))
+                                  output.Buffer.append out13 s7
+                                | core.result.Result.Err _ => ok (r12, out13)
+                              | core.result.Result.Err _ => ok (r11, out12)
+                            | core.result.Result.Err _ => ok (r10, out11)
+                          | core.result.Result.Err _ => ok (r9, out10)
+                        | core.result.Result.Err _ => ok (r8, out9)
+                      | core.result.Result.Err _ => ok (r7, out8)
+                    | core.result.Result.Err _ => ok (r6, out7)
+                  else
+                    let s3 ←
+                      lift (Array.to_slice
+                        (Array.make 42#usize [
+                          32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8,
+                          111#u8, 110#u8, 115#u8, 116#u8, 32#u8, 48#u8, 41#u8,
+                          32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8,
+                          111#u8, 110#u8, 115#u8, 116#u8, 32#u8, 48#u8, 41#u8,
+                          32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8,
+                          111#u8, 110#u8, 115#u8, 116#u8, 32#u8, 48#u8, 41#u8
+                          ]))
+                    let (r6, out7) ← output.Buffer.append out6 s3
+                    match r6 with
+                    | core.result.Result.Ok _ =>
+                      let s4 ←
+                        lift (Array.to_slice
+                          (Array.make 14#usize [
+                            32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8,
+                            111#u8, 110#u8, 115#u8, 116#u8, 32#u8, 48#u8, 41#u8
+                            ]))
+                      let (r7, out8) ← output.Buffer.append out7 s4
+                      match r7 with
+                      | core.result.Result.Ok _ =>
+                        let s5 ←
+                          lift (Array.to_slice
+                            (Array.make 3#usize [ 41#u8, 41#u8, 10#u8 ]))
+                        output.Buffer.append out8 s5
+                      | core.result.Result.Err _ => ok (r7, out8)
+                    | core.result.Result.Err _ => ok (r6, out7)
+              | core.result.Result.Err _ => ok (r5, out6)
+            | core.result.Result.Err _ => ok (r4, out5)
+          | core.result.Result.Err _ => ok (r3, out4)
+        | core.result.Result.Err _ => ok (r2, out3)
+      | core.result.Result.Err _ => ok (r1, out2)
+    | core.result.Result.Err _ => ok (r, out1)
+
+/-- [noble_wasm::source::emit::initialize::operation]:
+    Source: 'crates/noble-wasm/src/source/emit/initialize.rs', lines 173:0-181:1 -/
+def source.emit.initialize.operation
+  (out : output.Buffer) (operation : source.plan.Operation) (witness : Std.U32)
+  :
+  Result ((core.result.Result Unit Diagnostic) × output.Buffer)
+  := do
+  let s ←
+    lift (Array.to_slice
+      (Array.make 52#usize [
+        40#u8, 105#u8, 102#u8, 32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8,
+        101#u8, 113#u8, 122#u8, 32#u8, 40#u8, 99#u8, 97#u8, 108#u8, 108#u8,
+        32#u8, 36#u8, 114#u8, 117#u8, 110#u8, 116#u8, 105#u8, 109#u8, 101#u8,
+        95#u8, 116#u8, 105#u8, 99#u8, 107#u8, 41#u8, 41#u8, 32#u8, 40#u8,
+        116#u8, 104#u8, 101#u8, 110#u8, 32#u8, 40#u8, 114#u8, 101#u8, 116#u8,
+        117#u8, 114#u8, 110#u8, 41#u8, 41#u8, 41#u8, 10#u8
+        ]))
+  let (r, out1) ← output.Buffer.append out s
+  match r with
+  | core.result.Result.Ok _ =>
+    let (r1, out2) ← source.emit.initialize.atom out1 operation witness
+    match r1 with
+    | core.result.Result.Ok _ =>
+      let s1 ←
+        lift (Array.to_slice
+          (Array.make 166#usize [
+            40#u8, 105#u8, 102#u8, 32#u8, 40#u8, 103#u8, 108#u8, 111#u8, 98#u8,
+            97#u8, 108#u8, 46#u8, 103#u8, 101#u8, 116#u8, 32#u8, 36#u8, 102#u8,
+            97#u8, 105#u8, 108#u8, 117#u8, 114#u8, 101#u8, 41#u8, 32#u8, 40#u8,
+            116#u8, 104#u8, 101#u8, 110#u8, 32#u8, 40#u8, 114#u8, 101#u8,
+            116#u8, 117#u8, 114#u8, 110#u8, 41#u8, 41#u8, 41#u8, 10#u8, 40#u8,
+            108#u8, 111#u8, 99#u8, 97#u8, 108#u8, 46#u8, 115#u8, 101#u8,
+            116#u8, 32#u8, 36#u8, 114#u8, 101#u8, 99#u8, 105#u8, 112#u8,
+            101#u8, 32#u8, 40#u8, 99#u8, 97#u8, 108#u8, 108#u8, 32#u8, 36#u8,
+            99#u8, 111#u8, 110#u8, 99#u8, 97#u8, 116#u8, 95#u8, 114#u8, 101#u8,
+            99#u8, 105#u8, 112#u8, 101#u8, 32#u8, 40#u8, 108#u8, 111#u8, 99#u8,
+            97#u8, 108#u8, 46#u8, 103#u8, 101#u8, 116#u8, 32#u8, 36#u8, 114#u8,
+            101#u8, 99#u8, 105#u8, 112#u8, 101#u8, 41#u8, 32#u8, 40#u8, 108#u8,
+            111#u8, 99#u8, 97#u8, 108#u8, 46#u8, 103#u8, 101#u8, 116#u8, 32#u8,
+            36#u8, 97#u8, 116#u8, 111#u8, 109#u8, 41#u8, 41#u8, 41#u8, 10#u8,
+            40#u8, 105#u8, 102#u8, 32#u8, 40#u8, 103#u8, 108#u8, 111#u8, 98#u8,
+            97#u8, 108#u8, 46#u8, 103#u8, 101#u8, 116#u8, 32#u8, 36#u8, 102#u8,
+            97#u8, 105#u8, 108#u8, 117#u8, 114#u8, 101#u8, 41#u8, 32#u8, 40#u8,
+            116#u8, 104#u8, 101#u8, 110#u8, 32#u8, 40#u8, 114#u8, 101#u8,
+            116#u8, 117#u8, 114#u8, 110#u8, 41#u8, 41#u8, 41#u8, 10#u8
+            ]))
+      output.Buffer.append out2 s1
+    | core.result.Result.Err _ => ok (r1, out2)
+  | core.result.Result.Err _ => ok (r, out1)
+
+/-- [noble_wasm::source::emit::initialize::program]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/emit/initialize.rs', lines 144:4-152:5 -/
+@[rust_loop_body]
+def source.emit.initialize.program_loop.body
+  (i : Std.U32) (v : alloc.vec.Vec source.plan.Operation) (out : output.Buffer)
+  (index : Std.Usize) :
+  Result (ControlFlow (output.Buffer × Std.Usize) (output.Buffer × (Option
+    Diagnostic)))
+  := do
+  let i1 := alloc.vec.Vec.len v
+  if index < i1
+  then
+    let o ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        source.plan.Operation) v index
+    let (r, out1) ← source.emit.initialize.operation out o i
+    match r with
+    | core.result.Result.Ok _ =>
+      let index1 ← index + 1#usize
+      ok (cont (out1, index1))
+    | core.result.Result.Err problem => ok (done (out1, some problem))
+  else ok (done (out, none))
+
+/-- [noble_wasm::source::emit::initialize::program]: loop 0:
+    Source: 'crates/noble-wasm/src/source/emit/initialize.rs', lines 144:4-152:5 -/
+@[rust_loop]
+def source.emit.initialize.program_loop
+  (out : output.Buffer) (i : Std.U32) (v : alloc.vec.Vec source.plan.Operation)
+  (index : Std.Usize) :
+  Result (output.Buffer × (Option Diagnostic))
+  := do
+  loop
+    (fun (out1, index1) => source.emit.initialize.program_loop.body i v out1
+      index1)
+    (out, index)
+
+/-- [noble_wasm::source::emit::initialize::program]:
+    Source: 'crates/noble-wasm/src/source/emit/initialize.rs', lines 126:0-171:1 -/
+def source.emit.initialize.program
+  (out : output.Buffer) (plan : source.plan.Layout) (id : Std.Usize) :
+  Result ((core.result.Result Unit Diagnostic) × output.Buffer)
+  := do
+  let program ←
+    alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+      source.plan.Program) plan.programs id
+  let s ←
+    lift (Array.to_slice
+      (Array.make 52#usize [
+        40#u8, 105#u8, 102#u8, 32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8,
+        101#u8, 113#u8, 122#u8, 32#u8, 40#u8, 99#u8, 97#u8, 108#u8, 108#u8,
+        32#u8, 36#u8, 114#u8, 117#u8, 110#u8, 116#u8, 105#u8, 109#u8, 101#u8,
+        95#u8, 116#u8, 105#u8, 99#u8, 107#u8, 41#u8, 41#u8, 32#u8, 40#u8,
+        116#u8, 104#u8, 101#u8, 110#u8, 32#u8, 40#u8, 114#u8, 101#u8, 116#u8,
+        117#u8, 114#u8, 110#u8, 41#u8, 41#u8, 41#u8, 10#u8
+        ]))
+  let (r, out1) ← output.Buffer.append out s
+  match r with
+  | core.result.Result.Ok _ =>
+    let s1 ←
+      lift (Array.to_slice
+        (Array.make 14#usize [
+          40#u8, 105#u8, 102#u8, 32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8,
+          103#u8, 116#u8, 95#u8, 117#u8, 32#u8
+          ]))
+    let (r1, out2) ← output.Buffer.append out1 s1
+    match r1 with
+    | core.result.Result.Ok _ =>
+      let (r2, out3) ← output.Buffer.i32 out2 program.leaves
+      match r2 with
+      | core.result.Result.Ok _ =>
+        let s2 ←
+          lift (Array.to_slice
+            (Array.make 74#usize [
+              32#u8, 40#u8, 103#u8, 108#u8, 111#u8, 98#u8, 97#u8, 108#u8,
+              46#u8, 103#u8, 101#u8, 116#u8, 32#u8, 36#u8, 114#u8, 101#u8,
+              99#u8, 105#u8, 112#u8, 101#u8, 95#u8, 108#u8, 105#u8, 109#u8,
+              105#u8, 116#u8, 41#u8, 41#u8, 32#u8, 40#u8, 116#u8, 104#u8,
+              101#u8, 110#u8, 32#u8, 40#u8, 99#u8, 97#u8, 108#u8, 108#u8,
+              32#u8, 36#u8, 113#u8, 117#u8, 111#u8, 116#u8, 97#u8, 32#u8,
+              40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8, 111#u8, 110#u8,
+              115#u8, 116#u8, 32#u8, 50#u8, 41#u8, 41#u8, 32#u8, 40#u8, 114#u8,
+              101#u8, 116#u8, 117#u8, 114#u8, 110#u8, 41#u8, 41#u8, 41#u8,
+              10#u8
+              ]))
+        let (r3, out4) ← output.Buffer.append out3 s2
+        match r3 with
+        | core.result.Result.Ok _ =>
+          let s3 ←
+            lift (Array.to_slice
+              (Array.make 14#usize [
+                40#u8, 105#u8, 102#u8, 32#u8, 40#u8, 105#u8, 51#u8, 50#u8,
+                46#u8, 103#u8, 116#u8, 95#u8, 117#u8, 32#u8
+                ]))
+          let (r4, out5) ← output.Buffer.append out4 s3
+          match r4 with
+          | core.result.Result.Ok _ =>
+            let (r5, out6) ← output.Buffer.i32 out5 program.depth
+            match r5 with
+            | core.result.Result.Ok _ =>
+              let s4 ←
+                lift (Array.to_slice
+                  (Array.make 107#usize [
+                    32#u8, 40#u8, 103#u8, 108#u8, 111#u8, 98#u8, 97#u8, 108#u8,
+                    46#u8, 103#u8, 101#u8, 116#u8, 32#u8, 36#u8, 100#u8,
+                    101#u8, 112#u8, 116#u8, 104#u8, 95#u8, 108#u8, 105#u8,
+                    109#u8, 105#u8, 116#u8, 41#u8, 41#u8, 32#u8, 40#u8, 116#u8,
+                    104#u8, 101#u8, 110#u8, 32#u8, 40#u8, 99#u8, 97#u8, 108#u8,
+                    108#u8, 32#u8, 36#u8, 113#u8, 117#u8, 111#u8, 116#u8,
+                    97#u8, 32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8,
+                    111#u8, 110#u8, 115#u8, 116#u8, 32#u8, 51#u8, 41#u8, 41#u8,
+                    32#u8, 40#u8, 114#u8, 101#u8, 116#u8, 117#u8, 114#u8,
+                    110#u8, 41#u8, 41#u8, 41#u8, 10#u8, 40#u8, 108#u8, 111#u8,
+                    99#u8, 97#u8, 108#u8, 46#u8, 115#u8, 101#u8, 116#u8, 32#u8,
+                    36#u8, 114#u8, 101#u8, 99#u8, 105#u8, 112#u8, 101#u8,
+                    32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8, 111#u8,
+                    110#u8, 115#u8, 116#u8, 32#u8, 48#u8, 41#u8, 41#u8, 10#u8
+                    ]))
+              let (r6, out7) ← output.Buffer.append out6 s4
+              match r6 with
+              | core.result.Result.Ok _ =>
+                let (out8, failure) ←
+                  source.emit.initialize.program_loop out7 plan.text_witness
+                    program.operations 0#usize
+                match failure with
+                | none =>
+                  let s5 ←
+                    lift (Array.to_slice
+                      (Array.make 12#usize [
+                        40#u8, 103#u8, 108#u8, 111#u8, 98#u8, 97#u8, 108#u8,
+                        46#u8, 115#u8, 101#u8, 116#u8, 32#u8
+                        ]))
+                  let (r7, out9) ← output.Buffer.append out8 s5
+                  match r7 with
+                  | core.result.Result.Ok _ =>
+                    let (r8, out10) ← source.emit.global out9 id
+                    match r8 with
+                    | core.result.Result.Ok _ =>
+                      let s6 ←
+                        lift (Array.to_slice
+                          (Array.make 16#usize [
+                            32#u8, 40#u8, 99#u8, 97#u8, 108#u8, 108#u8, 32#u8,
+                            36#u8, 112#u8, 114#u8, 111#u8, 103#u8, 114#u8,
+                            97#u8, 109#u8, 32#u8
+                            ]))
+                      let (r9, out11) ← output.Buffer.append out10 s6
+                      match r9 with
+                      | core.result.Result.Ok _ =>
+                        let (r10, out12) ←
+                          output.Buffer.i32 out11 program.entry
+                        match r10 with
+                        | core.result.Result.Ok _ =>
+                          let s7 ←
+                            lift (Array.to_slice
+                              (Array.make 1#usize [ 32#u8 ]))
+                          let (r11, out13) ← output.Buffer.append out12 s7
+                          match r11 with
+                          | core.result.Result.Ok _ =>
+                            let (r12, out14) ←
+                              output.Buffer.i32 out13 program.input
+                            match r12 with
+                            | core.result.Result.Ok _ =>
+                              let s8 ←
+                                lift (Array.to_slice
+                                  (Array.make 1#usize [ 32#u8 ]))
+                              let (r13, out15) ←
+                                output.Buffer.append out14 s8
+                              match r13 with
+                              | core.result.Result.Ok _ =>
+                                let (r14, out16) ←
+                                  output.Buffer.i32 out15 program.output
+                                match r14 with
+                                | core.result.Result.Ok _ =>
+                                  let s9 ←
+                                    lift (Array.to_slice
+                                      (Array.make 21#usize [
+                                        32#u8, 40#u8, 108#u8, 111#u8, 99#u8,
+                                        97#u8, 108#u8, 46#u8, 103#u8, 101#u8,
+                                        116#u8, 32#u8, 36#u8, 114#u8, 101#u8,
+                                        99#u8, 105#u8, 112#u8, 101#u8, 41#u8,
+                                        32#u8
+                                        ]))
+                                  let (r15, out17) ←
+                                    output.Buffer.append out16 s9
+                                  match r15 with
+                                  | core.result.Result.Ok _ =>
+                                    let i ←
+                                      I64.Insts.CoreConvertFromU32.from
+                                        program.effects
+                                    let (r16, out18) ←
+                                      output.Buffer.i64 out17 i
+                                    match r16 with
+                                    | core.result.Result.Ok _ =>
+                                      let s10 ←
+                                        lift (Array.to_slice
+                                          (Array.make 29#usize [
+                                            32#u8, 40#u8, 105#u8, 51#u8, 50#u8,
+                                            46#u8, 99#u8, 111#u8, 110#u8,
+                                            115#u8, 116#u8, 32#u8, 48#u8,
+                                            41#u8, 32#u8, 40#u8, 105#u8, 51#u8,
+                                            50#u8, 46#u8, 99#u8, 111#u8,
+                                            110#u8, 115#u8, 116#u8, 32#u8,
+                                            48#u8, 41#u8, 32#u8
+                                            ]))
+                                      let (r17, out19) ←
+                                        output.Buffer.append out18 s10
+                                      match r17 with
+                                      | core.result.Result.Ok _ =>
+                                        let (r18, out20) ←
+                                          output.Buffer.i32 out19 program.depth
+                                        match r18 with
+                                        | core.result.Result.Ok _ =>
+                                          let s11 ←
+                                            lift (Array.to_slice
+                                              (Array.make 1#usize [ 32#u8 ]))
+                                          let (r19, out21) ←
+                                            output.Buffer.append out20 s11
+                                          match r19 with
+                                          | core.result.Result.Ok _ =>
+                                            let (r20, out22) ←
+                                              output.Buffer.i32 out21
+                                                program.leaves
+                                            match r20 with
+                                            | core.result.Result.Ok _ =>
+                                              let s12 ←
+                                                lift (Array.to_slice
+                                                  (Array.make 46#usize [
+                                                    41#u8, 41#u8, 10#u8, 40#u8,
+                                                    105#u8, 102#u8, 32#u8,
+                                                    40#u8, 103#u8, 108#u8,
+                                                    111#u8, 98#u8, 97#u8,
+                                                    108#u8, 46#u8, 103#u8,
+                                                    101#u8, 116#u8, 32#u8,
+                                                    36#u8, 102#u8, 97#u8,
+                                                    105#u8, 108#u8, 117#u8,
+                                                    114#u8, 101#u8, 41#u8,
+                                                    32#u8, 40#u8, 116#u8,
+                                                    104#u8, 101#u8, 110#u8,
+                                                    32#u8, 40#u8, 114#u8,
+                                                    101#u8, 116#u8, 117#u8,
+                                                    114#u8, 110#u8, 41#u8,
+                                                    41#u8, 41#u8, 10#u8
+                                                    ]))
+                                              output.Buffer.append out22 s12
+                                            | core.result.Result.Err _ =>
+                                              ok (r20, out22)
+                                          | core.result.Result.Err _ =>
+                                            ok (r19, out21)
+                                        | core.result.Result.Err _ =>
+                                          ok (r18, out20)
+                                      | core.result.Result.Err _ =>
+                                        ok (r17, out19)
+                                    | core.result.Result.Err _ =>
+                                      ok (r16, out18)
+                                  | core.result.Result.Err _ => ok (r15, out17)
+                                | core.result.Result.Err _ => ok (r14, out16)
+                              | core.result.Result.Err _ => ok (r13, out15)
+                            | core.result.Result.Err _ => ok (r12, out14)
+                          | core.result.Result.Err _ => ok (r11, out13)
+                        | core.result.Result.Err _ => ok (r10, out12)
+                      | core.result.Result.Err _ => ok (r9, out11)
+                    | core.result.Result.Err _ => ok (r8, out10)
+                  | core.result.Result.Err _ => ok (r7, out9)
+                | some problem => ok (core.result.Result.Err problem, out8)
+              | core.result.Result.Err _ => ok (r6, out7)
+            | core.result.Result.Err _ => ok (r5, out6)
+          | core.result.Result.Err _ => ok (r4, out5)
+        | core.result.Result.Err _ => ok (r3, out4)
+      | core.result.Result.Err _ => ok (r2, out3)
+    | core.result.Result.Err _ => ok (r1, out2)
+  | core.result.Result.Err _ => ok (r, out1)
+
+/-- [noble_wasm::source::emit::initialize::memory_segment]:
+    Source: 'crates/noble-wasm/src/source/emit/initialize.rs', lines 106:0-120:1 -/
+def source.emit.initialize.memory_segment
+  (out : output.Buffer) (plan : source.plan.Layout) (segment : Std.Usize) :
+  Result ((core.result.Result Unit Diagnostic) × output.Buffer)
+  := do
+  let s ←
+    lift (Array.to_slice
+      (Array.make 67#usize [
+        40#u8, 105#u8, 102#u8, 32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8,
+        101#u8, 113#u8, 122#u8, 32#u8, 40#u8, 99#u8, 97#u8, 108#u8, 108#u8,
+        32#u8, 36#u8, 114#u8, 117#u8, 110#u8, 116#u8, 105#u8, 109#u8, 101#u8,
+        95#u8, 116#u8, 105#u8, 99#u8, 107#u8, 41#u8, 41#u8, 32#u8, 40#u8,
+        116#u8, 104#u8, 101#u8, 110#u8, 32#u8, 40#u8, 114#u8, 101#u8, 116#u8,
+        117#u8, 114#u8, 110#u8, 41#u8, 41#u8, 41#u8, 10#u8, 40#u8, 109#u8,
+        101#u8, 109#u8, 111#u8, 114#u8, 121#u8, 46#u8, 105#u8, 110#u8, 105#u8,
+        116#u8, 32#u8, 36#u8, 100#u8
+        ]))
+  let (r, out1) ← output.Buffer.append out s
+  match r with
+  | core.result.Result.Ok _ =>
+    let (r1, out2) ← output.Buffer.index out1 segment
+    match r1 with
+    | core.result.Result.Ok _ =>
+      let s1 ← lift (Array.to_slice (Array.make 1#usize [ 32#u8 ]))
+      let (r2, out3) ← output.Buffer.append out2 s1
+      match r2 with
+      | core.result.Result.Ok _ =>
+        let (i, v) ←
+          alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice (Std.U32
+            × (alloc.vec.Vec Std.U8))) plan.data segment
+        let (r3, out4) ← output.Buffer.i32 out3 i
+        match r3 with
+        | core.result.Result.Ok _ =>
+          let s2 ←
+            lift (Array.to_slice
+              (Array.make 15#usize [
+                32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8, 111#u8,
+                110#u8, 115#u8, 116#u8, 32#u8, 48#u8, 41#u8, 32#u8
+                ]))
+          let (r4, out5) ← output.Buffer.append out4 s2
+          match r4 with
+          | core.result.Result.Ok _ =>
+            let i1 := alloc.vec.Vec.len v
+            let r5 ← source.plan.number i1
+            match r5 with
+            | core.result.Result.Ok value =>
+              let (r6, out6) ← output.Buffer.i32 out5 value
+              match r6 with
+              | core.result.Result.Ok _ =>
+                let s3 ←
+                  lift (Array.to_slice (Array.make 2#usize [ 41#u8, 10#u8 ]))
+                output.Buffer.append out6 s3
+              | core.result.Result.Err _ => ok (r6, out6)
+            | core.result.Result.Err failure =>
+              ok (core.result.Result.Err failure, out5)
+          | core.result.Result.Err _ => ok (r4, out5)
+        | core.result.Result.Err _ => ok (r3, out4)
+      | core.result.Result.Err _ => ok (r2, out3)
+    | core.result.Result.Err _ => ok (r1, out2)
+  | core.result.Result.Err _ => ok (r, out1)
+
+/-- [noble_wasm::source::emit::initialize::write]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/emit/initialize.rs', lines 77:4-85:5 -/
+@[rust_loop_body]
+def source.emit.initialize.write_loop0.body
+  (v : alloc.vec.Vec source.plan.Program) (v1 : alloc.vec.Vec Std.Usize)
+  (i : Std.U32) (i1 : Std.U32) (i2 : Std.Usize)
+  (v2 : alloc.vec.Vec (Std.U32 × (alloc.vec.Vec Std.U8)))
+  (v3 : alloc.vec.Vec (Std.U32 × Std.U32)) (r : source.types.Registry)
+  (v4 : alloc.vec.Vec Std.U32) (v5 : alloc.vec.Vec Std.U32) (i3 : Std.U32)
+  (out : output.Buffer) (segment : Std.Usize) :
+  Result (ControlFlow (output.Buffer × Std.Usize) (output.Buffer × (Option
+    Diagnostic)))
+  := do
+  let i4 := alloc.vec.Vec.len v2
+  if segment < i4
+  then
+    let (r1, out1) ←
+      source.emit.initialize.memory_segment out
+        {
+          programs := v,
+          order := v1,
+          first_function := i,
+          functions := i1,
+          root := i2,
+          data := v2,
+          descriptors := v3,
+          types := r,
+          input_types := v4,
+          output_types := v5,
+          text_witness := i3
+        } segment
+    match r1 with
+    | core.result.Result.Ok _ =>
+      let segment1 ← segment + 1#usize
+      ok (cont (out1, segment1))
+    | core.result.Result.Err problem => ok (done (out1, some problem))
+  else ok (done (out, none))
+
+/-- [noble_wasm::source::emit::initialize::write]: loop 0:
+    Source: 'crates/noble-wasm/src/source/emit/initialize.rs', lines 77:4-85:5 -/
+@[rust_loop]
+def source.emit.initialize.write_loop0
+  (out : output.Buffer) (v : alloc.vec.Vec source.plan.Program)
+  (v1 : alloc.vec.Vec Std.Usize) (i : Std.U32) (i1 : Std.U32) (i2 : Std.Usize)
+  (v2 : alloc.vec.Vec (Std.U32 × (alloc.vec.Vec Std.U8)))
+  (v3 : alloc.vec.Vec (Std.U32 × Std.U32)) (r : source.types.Registry)
+  (v4 : alloc.vec.Vec Std.U32) (v5 : alloc.vec.Vec Std.U32) (i3 : Std.U32)
+  (segment : Std.Usize) :
+  Result (output.Buffer × (Option Diagnostic))
+  := do
+  loop
+    (fun (out1, segment1) => source.emit.initialize.write_loop0.body v v1 i i1
+      i2 v2 v3 r v4 v5 i3 out1 segment1)
+    (out, segment)
+
+/-- [noble_wasm::source::emit::initialize::write]: loop body 1:
+    Source: 'crates/noble-wasm/src/source/emit/initialize.rs', lines 91:4-99:5 -/
+@[rust_loop_body]
+def source.emit.initialize.write_loop1.body
+  (v : alloc.vec.Vec source.plan.Program) (v1 : alloc.vec.Vec Std.Usize)
+  (i : Std.U32) (i1 : Std.U32) (i2 : Std.Usize)
+  (v2 : alloc.vec.Vec (Std.U32 × (alloc.vec.Vec Std.U8)))
+  (v3 : alloc.vec.Vec (Std.U32 × Std.U32)) (r : source.types.Registry)
+  (v4 : alloc.vec.Vec Std.U32) (v5 : alloc.vec.Vec Std.U32) (i3 : Std.U32)
+  (out : output.Buffer) («at» : Std.Usize) :
+  Result (ControlFlow (output.Buffer × Std.Usize) (output.Buffer × (Option
+    Diagnostic)))
+  := do
+  let i4 := alloc.vec.Vec.len v1
+  if «at» < i4
+  then
+    let i5 ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice Std.Usize) v1
+        «at»
+    let (r1, out1) ←
+      source.emit.initialize.program out
+        {
+          programs := v,
+          order := v1,
+          first_function := i,
+          functions := i1,
+          root := i2,
+          data := v2,
+          descriptors := v3,
+          types := r,
+          input_types := v4,
+          output_types := v5,
+          text_witness := i3
+        } i5
+    match r1 with
+    | core.result.Result.Ok _ =>
+      let at1 ← «at» + 1#usize
+      ok (cont (out1, at1))
+    | core.result.Result.Err problem => ok (done (out1, some problem))
+  else ok (done (out, none))
+
+/-- [noble_wasm::source::emit::initialize::write]: loop 1:
+    Source: 'crates/noble-wasm/src/source/emit/initialize.rs', lines 91:4-99:5 -/
+@[rust_loop]
+def source.emit.initialize.write_loop1
+  (out : output.Buffer) (v : alloc.vec.Vec source.plan.Program)
+  (v1 : alloc.vec.Vec Std.Usize) (i : Std.U32) (i1 : Std.U32) (i2 : Std.Usize)
+  (v2 : alloc.vec.Vec (Std.U32 × (alloc.vec.Vec Std.U8)))
+  (v3 : alloc.vec.Vec (Std.U32 × Std.U32)) (r : source.types.Registry)
+  (v4 : alloc.vec.Vec Std.U32) (v5 : alloc.vec.Vec Std.U32) (i3 : Std.U32)
+  («at» : Std.Usize) :
+  Result (output.Buffer × (Option Diagnostic))
+  := do
+  loop
+    (fun (out1, at1) => source.emit.initialize.write_loop1.body v v1 i i1 i2 v2
+      v3 r v4 v5 i3 out1 at1)
+    (out, «at»)
+
+/-- [noble_wasm::source::emit::initialize::write]: loop body 2:
+    Source: 'crates/noble-wasm/src/source/emit/initialize.rs', lines 77:4-85:5 -/
+@[rust_loop_body]
+def source.emit.initialize.write_loop2.body
+  (v : alloc.vec.Vec source.plan.Program) (v1 : alloc.vec.Vec Std.Usize)
+  (i : Std.U32) (i1 : Std.U32) (i2 : Std.Usize)
+  (v2 : alloc.vec.Vec (Std.U32 × (alloc.vec.Vec Std.U8)))
+  (v3 : alloc.vec.Vec (Std.U32 × Std.U32)) (r : source.types.Registry)
+  (v4 : alloc.vec.Vec Std.U32) (v5 : alloc.vec.Vec Std.U32) (i3 : Std.U32)
+  (out : output.Buffer) (segment : Std.Usize) :
+  Result (ControlFlow (output.Buffer × Std.Usize) (output.Buffer × (Option
+    Diagnostic)))
+  := do
+  let i4 := alloc.vec.Vec.len v2
+  if segment < i4
+  then
+    let (r1, out1) ←
+      source.emit.initialize.memory_segment out
+        {
+          programs := v,
+          order := v1,
+          first_function := i,
+          functions := i1,
+          root := i2,
+          data := v2,
+          descriptors := v3,
+          types := r,
+          input_types := v4,
+          output_types := v5,
+          text_witness := i3
+        } segment
+    match r1 with
+    | core.result.Result.Ok _ =>
+      let segment1 ← segment + 1#usize
+      ok (cont (out1, segment1))
+    | core.result.Result.Err problem => ok (done (out1, some problem))
+  else ok (done (out, none))
+
+/-- [noble_wasm::source::emit::initialize::write]: loop 2:
+    Source: 'crates/noble-wasm/src/source/emit/initialize.rs', lines 77:4-85:5 -/
+@[rust_loop]
+def source.emit.initialize.write_loop2
+  (out : output.Buffer) (v : alloc.vec.Vec source.plan.Program)
+  (v1 : alloc.vec.Vec Std.Usize) (i : Std.U32) (i1 : Std.U32) (i2 : Std.Usize)
+  (v2 : alloc.vec.Vec (Std.U32 × (alloc.vec.Vec Std.U8)))
+  (v3 : alloc.vec.Vec (Std.U32 × Std.U32)) (r : source.types.Registry)
+  (v4 : alloc.vec.Vec Std.U32) (v5 : alloc.vec.Vec Std.U32) (i3 : Std.U32)
+  (segment : Std.Usize) :
+  Result (output.Buffer × (Option Diagnostic))
+  := do
+  loop
+    (fun (out1, segment1) => source.emit.initialize.write_loop2.body v v1 i i1
+      i2 v2 v3 r v4 v5 i3 out1 segment1)
+    (out, segment)
+
+/-- [noble_wasm::source::emit::initialize::write]: loop body 3:
+    Source: 'crates/noble-wasm/src/source/emit/initialize.rs', lines 91:4-99:5 -/
+@[rust_loop_body]
+def source.emit.initialize.write_loop3.body
+  (v : alloc.vec.Vec source.plan.Program) (v1 : alloc.vec.Vec Std.Usize)
+  (i : Std.U32) (i1 : Std.U32) (i2 : Std.Usize)
+  (v2 : alloc.vec.Vec (Std.U32 × (alloc.vec.Vec Std.U8)))
+  (v3 : alloc.vec.Vec (Std.U32 × Std.U32)) (r : source.types.Registry)
+  (v4 : alloc.vec.Vec Std.U32) (v5 : alloc.vec.Vec Std.U32) (i3 : Std.U32)
+  (out : output.Buffer) («at» : Std.Usize) :
+  Result (ControlFlow (output.Buffer × Std.Usize) (output.Buffer × (Option
+    Diagnostic)))
+  := do
+  let i4 := alloc.vec.Vec.len v1
+  if «at» < i4
+  then
+    let i5 ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice Std.Usize) v1
+        «at»
+    let (r1, out1) ←
+      source.emit.initialize.program out
+        {
+          programs := v,
+          order := v1,
+          first_function := i,
+          functions := i1,
+          root := i2,
+          data := v2,
+          descriptors := v3,
+          types := r,
+          input_types := v4,
+          output_types := v5,
+          text_witness := i3
+        } i5
+    match r1 with
+    | core.result.Result.Ok _ =>
+      let at1 ← «at» + 1#usize
+      ok (cont (out1, at1))
+    | core.result.Result.Err problem => ok (done (out1, some problem))
+  else ok (done (out, none))
+
+/-- [noble_wasm::source::emit::initialize::write]: loop 3:
+    Source: 'crates/noble-wasm/src/source/emit/initialize.rs', lines 91:4-99:5 -/
+@[rust_loop]
+def source.emit.initialize.write_loop3
+  (out : output.Buffer) (v : alloc.vec.Vec source.plan.Program)
+  (v1 : alloc.vec.Vec Std.Usize) (i : Std.U32) (i1 : Std.U32) (i2 : Std.Usize)
+  (v2 : alloc.vec.Vec (Std.U32 × (alloc.vec.Vec Std.U8)))
+  (v3 : alloc.vec.Vec (Std.U32 × Std.U32)) (r : source.types.Registry)
+  (v4 : alloc.vec.Vec Std.U32) (v5 : alloc.vec.Vec Std.U32) (i3 : Std.U32)
+  («at» : Std.Usize) :
+  Result (output.Buffer × (Option Diagnostic))
+  := do
+  loop
+    (fun (out1, at1) => source.emit.initialize.write_loop3.body v v1 i i1 i2 v2
+      v3 r v4 v5 i3 out1 at1)
+    (out, «at»)
+
+/-- [noble_wasm::source::emit::initialize::write]: loop body 4:
+    Source: 'crates/noble-wasm/src/source/emit/initialize.rs', lines 77:4-85:5 -/
+@[rust_loop_body]
+def source.emit.initialize.write_loop4.body
+  (v : alloc.vec.Vec source.plan.Program) (v1 : alloc.vec.Vec Std.Usize)
+  (i : Std.U32) (i1 : Std.U32) (i2 : Std.Usize)
+  (v2 : alloc.vec.Vec (Std.U32 × (alloc.vec.Vec Std.U8)))
+  (v3 : alloc.vec.Vec (Std.U32 × Std.U32)) (r : source.types.Registry)
+  (v4 : alloc.vec.Vec Std.U32) (v5 : alloc.vec.Vec Std.U32) (i3 : Std.U32)
+  (out : output.Buffer) (segment : Std.Usize) :
+  Result (ControlFlow (output.Buffer × Std.Usize) (output.Buffer × (Option
+    Diagnostic)))
+  := do
+  let i4 := alloc.vec.Vec.len v2
+  if segment < i4
+  then
+    let (r1, out1) ←
+      source.emit.initialize.memory_segment out
+        {
+          programs := v,
+          order := v1,
+          first_function := i,
+          functions := i1,
+          root := i2,
+          data := v2,
+          descriptors := v3,
+          types := r,
+          input_types := v4,
+          output_types := v5,
+          text_witness := i3
+        } segment
+    match r1 with
+    | core.result.Result.Ok _ =>
+      let segment1 ← segment + 1#usize
+      ok (cont (out1, segment1))
+    | core.result.Result.Err problem => ok (done (out1, some problem))
+  else ok (done (out, none))
+
+/-- [noble_wasm::source::emit::initialize::write]: loop 4:
+    Source: 'crates/noble-wasm/src/source/emit/initialize.rs', lines 77:4-85:5 -/
+@[rust_loop]
+def source.emit.initialize.write_loop4
+  (out : output.Buffer) (v : alloc.vec.Vec source.plan.Program)
+  (v1 : alloc.vec.Vec Std.Usize) (i : Std.U32) (i1 : Std.U32) (i2 : Std.Usize)
+  (v2 : alloc.vec.Vec (Std.U32 × (alloc.vec.Vec Std.U8)))
+  (v3 : alloc.vec.Vec (Std.U32 × Std.U32)) (r : source.types.Registry)
+  (v4 : alloc.vec.Vec Std.U32) (v5 : alloc.vec.Vec Std.U32) (i3 : Std.U32)
+  (segment : Std.Usize) :
+  Result (output.Buffer × (Option Diagnostic))
+  := do
+  loop
+    (fun (out1, segment1) => source.emit.initialize.write_loop4.body v v1 i i1
+      i2 v2 v3 r v4 v5 i3 out1 segment1)
+    (out, segment)
+
+/-- [noble_wasm::source::emit::initialize::write]: loop body 5:
+    Source: 'crates/noble-wasm/src/source/emit/initialize.rs', lines 91:4-99:5 -/
+@[rust_loop_body]
+def source.emit.initialize.write_loop5.body
+  (v : alloc.vec.Vec source.plan.Program) (v1 : alloc.vec.Vec Std.Usize)
+  (i : Std.U32) (i1 : Std.U32) (i2 : Std.Usize)
+  (v2 : alloc.vec.Vec (Std.U32 × (alloc.vec.Vec Std.U8)))
+  (v3 : alloc.vec.Vec (Std.U32 × Std.U32)) (r : source.types.Registry)
+  (v4 : alloc.vec.Vec Std.U32) (v5 : alloc.vec.Vec Std.U32) (i3 : Std.U32)
+  (out : output.Buffer) («at» : Std.Usize) :
+  Result (ControlFlow (output.Buffer × Std.Usize) (output.Buffer × (Option
+    Diagnostic)))
+  := do
+  let i4 := alloc.vec.Vec.len v1
+  if «at» < i4
+  then
+    let i5 ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice Std.Usize) v1
+        «at»
+    let (r1, out1) ←
+      source.emit.initialize.program out
+        {
+          programs := v,
+          order := v1,
+          first_function := i,
+          functions := i1,
+          root := i2,
+          data := v2,
+          descriptors := v3,
+          types := r,
+          input_types := v4,
+          output_types := v5,
+          text_witness := i3
+        } i5
+    match r1 with
+    | core.result.Result.Ok _ =>
+      let at1 ← «at» + 1#usize
+      ok (cont (out1, at1))
+    | core.result.Result.Err problem => ok (done (out1, some problem))
+  else ok (done (out, none))
+
+/-- [noble_wasm::source::emit::initialize::write]: loop 5:
+    Source: 'crates/noble-wasm/src/source/emit/initialize.rs', lines 91:4-99:5 -/
+@[rust_loop]
+def source.emit.initialize.write_loop5
+  (out : output.Buffer) (v : alloc.vec.Vec source.plan.Program)
+  (v1 : alloc.vec.Vec Std.Usize) (i : Std.U32) (i1 : Std.U32) (i2 : Std.Usize)
+  (v2 : alloc.vec.Vec (Std.U32 × (alloc.vec.Vec Std.U8)))
+  (v3 : alloc.vec.Vec (Std.U32 × Std.U32)) (r : source.types.Registry)
+  (v4 : alloc.vec.Vec Std.U32) (v5 : alloc.vec.Vec Std.U32) (i3 : Std.U32)
+  («at» : Std.Usize) :
+  Result (output.Buffer × (Option Diagnostic))
+  := do
+  loop
+    (fun (out1, at1) => source.emit.initialize.write_loop5.body v v1 i i1 i2 v2
+      v3 r v4 v5 i3 out1 at1)
+    (out, «at»)
+
+/-- [noble_wasm::source::emit::initialize::write]: loop body 6:
+    Source: 'crates/noble-wasm/src/source/emit/initialize.rs', lines 77:4-85:5 -/
+@[rust_loop_body]
+def source.emit.initialize.write_loop6.body
+  (v : alloc.vec.Vec source.plan.Program) (v1 : alloc.vec.Vec Std.Usize)
+  (i : Std.U32) (i1 : Std.U32) (i2 : Std.Usize)
+  (v2 : alloc.vec.Vec (Std.U32 × (alloc.vec.Vec Std.U8)))
+  (v3 : alloc.vec.Vec (Std.U32 × Std.U32)) (r : source.types.Registry)
+  (v4 : alloc.vec.Vec Std.U32) (v5 : alloc.vec.Vec Std.U32) (i3 : Std.U32)
+  (out : output.Buffer) (segment : Std.Usize) :
+  Result (ControlFlow (output.Buffer × Std.Usize) (output.Buffer × (Option
+    Diagnostic)))
+  := do
+  let i4 := alloc.vec.Vec.len v2
+  if segment < i4
+  then
+    let (r1, out1) ←
+      source.emit.initialize.memory_segment out
+        {
+          programs := v,
+          order := v1,
+          first_function := i,
+          functions := i1,
+          root := i2,
+          data := v2,
+          descriptors := v3,
+          types := r,
+          input_types := v4,
+          output_types := v5,
+          text_witness := i3
+        } segment
+    match r1 with
+    | core.result.Result.Ok _ =>
+      let segment1 ← segment + 1#usize
+      ok (cont (out1, segment1))
+    | core.result.Result.Err problem => ok (done (out1, some problem))
+  else ok (done (out, none))
+
+/-- [noble_wasm::source::emit::initialize::write]: loop 6:
+    Source: 'crates/noble-wasm/src/source/emit/initialize.rs', lines 77:4-85:5 -/
+@[rust_loop]
+def source.emit.initialize.write_loop6
+  (out : output.Buffer) (v : alloc.vec.Vec source.plan.Program)
+  (v1 : alloc.vec.Vec Std.Usize) (i : Std.U32) (i1 : Std.U32) (i2 : Std.Usize)
+  (v2 : alloc.vec.Vec (Std.U32 × (alloc.vec.Vec Std.U8)))
+  (v3 : alloc.vec.Vec (Std.U32 × Std.U32)) (r : source.types.Registry)
+  (v4 : alloc.vec.Vec Std.U32) (v5 : alloc.vec.Vec Std.U32) (i3 : Std.U32)
+  (segment : Std.Usize) :
+  Result (output.Buffer × (Option Diagnostic))
+  := do
+  loop
+    (fun (out1, segment1) => source.emit.initialize.write_loop6.body v v1 i i1
+      i2 v2 v3 r v4 v5 i3 out1 segment1)
+    (out, segment)
+
+/-- [noble_wasm::source::emit::initialize::write]: loop body 7:
+    Source: 'crates/noble-wasm/src/source/emit/initialize.rs', lines 91:4-99:5 -/
+@[rust_loop_body]
+def source.emit.initialize.write_loop7.body
+  (v : alloc.vec.Vec source.plan.Program) (v1 : alloc.vec.Vec Std.Usize)
+  (i : Std.U32) (i1 : Std.U32) (i2 : Std.Usize)
+  (v2 : alloc.vec.Vec (Std.U32 × (alloc.vec.Vec Std.U8)))
+  (v3 : alloc.vec.Vec (Std.U32 × Std.U32)) (r : source.types.Registry)
+  (v4 : alloc.vec.Vec Std.U32) (v5 : alloc.vec.Vec Std.U32) (i3 : Std.U32)
+  (out : output.Buffer) («at» : Std.Usize) :
+  Result (ControlFlow (output.Buffer × Std.Usize) (output.Buffer × (Option
+    Diagnostic)))
+  := do
+  let i4 := alloc.vec.Vec.len v1
+  if «at» < i4
+  then
+    let i5 ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice Std.Usize) v1
+        «at»
+    let (r1, out1) ←
+      source.emit.initialize.program out
+        {
+          programs := v,
+          order := v1,
+          first_function := i,
+          functions := i1,
+          root := i2,
+          data := v2,
+          descriptors := v3,
+          types := r,
+          input_types := v4,
+          output_types := v5,
+          text_witness := i3
+        } i5
+    match r1 with
+    | core.result.Result.Ok _ =>
+      let at1 ← «at» + 1#usize
+      ok (cont (out1, at1))
+    | core.result.Result.Err problem => ok (done (out1, some problem))
+  else ok (done (out, none))
+
+/-- [noble_wasm::source::emit::initialize::write]: loop 7:
+    Source: 'crates/noble-wasm/src/source/emit/initialize.rs', lines 91:4-99:5 -/
+@[rust_loop]
+def source.emit.initialize.write_loop7
+  (out : output.Buffer) (v : alloc.vec.Vec source.plan.Program)
+  (v1 : alloc.vec.Vec Std.Usize) (i : Std.U32) (i1 : Std.U32) (i2 : Std.Usize)
+  (v2 : alloc.vec.Vec (Std.U32 × (alloc.vec.Vec Std.U8)))
+  (v3 : alloc.vec.Vec (Std.U32 × Std.U32)) (r : source.types.Registry)
+  (v4 : alloc.vec.Vec Std.U32) (v5 : alloc.vec.Vec Std.U32) (i3 : Std.U32)
+  («at» : Std.Usize) :
+  Result (output.Buffer × (Option Diagnostic))
+  := do
+  loop
+    (fun (out1, at1) => source.emit.initialize.write_loop7.body v v1 i i1 i2 v2
+      v3 r v4 v5 i3 out1 at1)
+    (out, «at»)
+
+/-- [noble_wasm::source::emit::initialize::write]:
+    Source: 'crates/noble-wasm/src/source/emit/initialize.rs', lines 59:0-104:1 -/
+def source.emit.initialize.write
+  (out : output.Buffer) (plan : source.plan.Layout) (generation : Std.U32) :
+  Result ((core.result.Result Unit Diagnostic) × output.Buffer)
+  := do
+  let s ←
+    lift (Array.to_slice
+      (Array.make 56#usize [
+        40#u8, 102#u8, 117#u8, 110#u8, 99#u8, 32#u8, 36#u8, 105#u8, 110#u8,
+        105#u8, 116#u8, 105#u8, 97#u8, 108#u8, 105#u8, 122#u8, 101#u8, 32#u8,
+        40#u8, 108#u8, 111#u8, 99#u8, 97#u8, 108#u8, 32#u8, 36#u8, 114#u8,
+        101#u8, 99#u8, 105#u8, 112#u8, 101#u8, 32#u8, 105#u8, 51#u8, 50#u8,
+        41#u8, 32#u8, 40#u8, 108#u8, 111#u8, 99#u8, 97#u8, 108#u8, 32#u8,
+        36#u8, 97#u8, 116#u8, 111#u8, 109#u8, 32#u8, 105#u8, 51#u8, 50#u8,
+        41#u8, 10#u8
+        ]))
+  let (r, out1) ← output.Buffer.append out s
+  match r with
+  | core.result.Result.Ok _ =>
+    if generation = 0#u32
+    then
+      let s1 ←
+        lift (Array.to_slice
+          (Array.make 61#usize [
+            40#u8, 116#u8, 97#u8, 98#u8, 108#u8, 101#u8, 46#u8, 105#u8, 110#u8,
+            105#u8, 116#u8, 32#u8, 36#u8, 99#u8, 111#u8, 114#u8, 101#u8, 32#u8,
+            40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8, 111#u8, 110#u8, 115#u8,
+            116#u8, 32#u8, 48#u8, 41#u8, 32#u8, 40#u8, 105#u8, 51#u8, 50#u8,
+            46#u8, 99#u8, 111#u8, 110#u8, 115#u8, 116#u8, 32#u8, 48#u8, 41#u8,
+            32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8, 111#u8, 110#u8,
+            115#u8, 116#u8, 32#u8, 52#u8, 41#u8, 41#u8, 10#u8
+            ]))
+      let (r1, out2) ← output.Buffer.append out1 s1
+      match r1 with
+      | core.result.Result.Ok _ =>
+        if plan.functions > plan.first_function
+        then
+          let s2 ←
+            lift (Array.to_slice
+              (Array.make 18#usize [
+                40#u8, 116#u8, 97#u8, 98#u8, 108#u8, 101#u8, 46#u8, 105#u8,
+                110#u8, 105#u8, 116#u8, 32#u8, 36#u8, 99#u8, 111#u8, 100#u8,
+                101#u8, 32#u8
+                ]))
+          let (r2, out3) ← output.Buffer.append out2 s2
+          match r2 with
+          | core.result.Result.Ok _ =>
+            let (r3, out4) ← output.Buffer.i32 out3 plan.first_function
+            match r3 with
+            | core.result.Result.Ok _ =>
+              let s3 ←
+                lift (Array.to_slice
+                  (Array.make 15#usize [
+                    32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8, 111#u8,
+                    110#u8, 115#u8, 116#u8, 32#u8, 48#u8, 41#u8, 32#u8
+                    ]))
+              let (r4, out5) ← output.Buffer.append out4 s3
+              match r4 with
+              | core.result.Result.Ok _ =>
+                let i ←
+                  lift (core.num.U32.saturating_sub plan.functions
+                    plan.first_function)
+                let (r5, out6) ← output.Buffer.i32 out5 i
+                match r5 with
+                | core.result.Result.Ok _ =>
+                  let s4 ←
+                    lift (Array.to_slice (Array.make 2#usize [ 41#u8, 10#u8 ]))
+                  let (r6, out7) ← output.Buffer.append out6 s4
+                  match r6 with
+                  | core.result.Result.Ok _ =>
+                    let (out8, failure) ←
+                      source.emit.initialize.write_loop0 out7 plan.programs
+                        plan.order plan.first_function plan.functions 
+                        plan.root plan.data plan.descriptors plan.types
+                        plan.input_types plan.output_types plan.text_witness
+                        0#usize
+                    match failure with
+                    | none =>
+                      let (out9, failure1) ←
+                        source.emit.initialize.write_loop1 out8 plan.programs
+                          plan.order plan.first_function plan.functions
+                          plan.root plan.data plan.descriptors plan.types
+                          plan.input_types plan.output_types plan.text_witness
+                          0#usize
+                      match failure1 with
+                      | none =>
+                        let s5 ←
+                          lift (Array.to_slice
+                            (Array.make 2#usize [ 41#u8, 10#u8 ]))
+                        output.Buffer.append out9 s5
+                      | some problem =>
+                        ok (core.result.Result.Err problem, out9)
+                    | some problem => ok (core.result.Result.Err problem, out8)
+                  | core.result.Result.Err _ => ok (r6, out7)
+                | core.result.Result.Err _ => ok (r5, out6)
+              | core.result.Result.Err _ => ok (r4, out5)
+            | core.result.Result.Err _ => ok (r3, out4)
+          | core.result.Result.Err _ => ok (r2, out3)
+        else
+          let (out3, failure) ←
+            source.emit.initialize.write_loop2 out2 plan.programs plan.order
+              plan.first_function plan.functions plan.root plan.data
+              plan.descriptors plan.types plan.input_types plan.output_types
+              plan.text_witness 0#usize
+          match failure with
+          | none =>
+            let (out4, failure1) ←
+              source.emit.initialize.write_loop3 out3 plan.programs plan.order
+                plan.first_function plan.functions plan.root plan.data
+                plan.descriptors plan.types plan.input_types plan.output_types
+                plan.text_witness 0#usize
+            match failure1 with
+            | none =>
+              let s2 ←
+                lift (Array.to_slice (Array.make 2#usize [ 41#u8, 10#u8 ]))
+              output.Buffer.append out4 s2
+            | some problem => ok (core.result.Result.Err problem, out4)
+          | some problem => ok (core.result.Result.Err problem, out3)
+      | core.result.Result.Err _ => ok (r1, out2)
+    else
+      if plan.functions > plan.first_function
+      then
+        let s1 ←
+          lift (Array.to_slice
+            (Array.make 18#usize [
+              40#u8, 116#u8, 97#u8, 98#u8, 108#u8, 101#u8, 46#u8, 105#u8,
+              110#u8, 105#u8, 116#u8, 32#u8, 36#u8, 99#u8, 111#u8, 100#u8,
+              101#u8, 32#u8
+              ]))
+        let (r1, out2) ← output.Buffer.append out1 s1
+        match r1 with
+        | core.result.Result.Ok _ =>
+          let (r2, out3) ← output.Buffer.i32 out2 plan.first_function
+          match r2 with
+          | core.result.Result.Ok _ =>
+            let s2 ←
+              lift (Array.to_slice
+                (Array.make 15#usize [
+                  32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8, 111#u8,
+                  110#u8, 115#u8, 116#u8, 32#u8, 48#u8, 41#u8, 32#u8
+                  ]))
+            let (r3, out4) ← output.Buffer.append out3 s2
+            match r3 with
+            | core.result.Result.Ok _ =>
+              let i ←
+                lift (core.num.U32.saturating_sub plan.functions
+                  plan.first_function)
+              let (r4, out5) ← output.Buffer.i32 out4 i
+              match r4 with
+              | core.result.Result.Ok _ =>
+                let s3 ←
+                  lift (Array.to_slice (Array.make 2#usize [ 41#u8, 10#u8 ]))
+                let (r5, out6) ← output.Buffer.append out5 s3
+                match r5 with
+                | core.result.Result.Ok _ =>
+                  let (out7, failure) ←
+                    source.emit.initialize.write_loop4 out6 plan.programs
+                      plan.order plan.first_function plan.functions plan.root
+                      plan.data plan.descriptors plan.types plan.input_types
+                      plan.output_types plan.text_witness 0#usize
+                  match failure with
+                  | none =>
+                    let (out8, failure1) ←
+                      source.emit.initialize.write_loop5 out7 plan.programs
+                        plan.order plan.first_function plan.functions 
+                        plan.root plan.data plan.descriptors plan.types
+                        plan.input_types plan.output_types plan.text_witness
+                        0#usize
+                    match failure1 with
+                    | none =>
+                      let s4 ←
+                        lift (Array.to_slice
+                          (Array.make 2#usize [ 41#u8, 10#u8 ]))
+                      output.Buffer.append out8 s4
+                    | some problem => ok (core.result.Result.Err problem, out8)
+                  | some problem => ok (core.result.Result.Err problem, out7)
+                | core.result.Result.Err _ => ok (r5, out6)
+              | core.result.Result.Err _ => ok (r4, out5)
+            | core.result.Result.Err _ => ok (r3, out4)
+          | core.result.Result.Err _ => ok (r2, out3)
+        | core.result.Result.Err _ => ok (r1, out2)
+      else
+        let (out2, failure) ←
+          source.emit.initialize.write_loop6 out1 plan.programs plan.order
+            plan.first_function plan.functions plan.root plan.data
+            plan.descriptors plan.types plan.input_types plan.output_types
+            plan.text_witness 0#usize
+        match failure with
+        | none =>
+          let (out3, failure1) ←
+            source.emit.initialize.write_loop7 out2 plan.programs plan.order
+              plan.first_function plan.functions plan.root plan.data
+              plan.descriptors plan.types plan.input_types plan.output_types
+              plan.text_witness 0#usize
+          match failure1 with
+          | none =>
+            let s1 ←
+              lift (Array.to_slice (Array.make 2#usize [ 41#u8, 10#u8 ]))
+            output.Buffer.append out3 s1
+          | some problem => ok (core.result.Result.Err problem, out3)
+        | some problem => ok (core.result.Result.Err problem, out2)
+  | core.result.Result.Err _ => ok (r, out1)
+
+/-- [noble_wasm::source::emit::metadata::stack_slot]:
+    Source: 'crates/noble-wasm/src/source/emit/metadata.rs', lines 37:0-49:1 -/
+def source.emit.metadata.stack_slot
+  (out : output.Buffer) (ty : Std.U32) (index : Std.Usize) :
+  Result ((core.result.Result Unit Diagnostic) × output.Buffer)
+  := do
+  let s ←
+    lift (Array.to_slice
+      (Array.make 21#usize [
+        40#u8, 105#u8, 102#u8, 32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8,
+        101#u8, 113#u8, 122#u8, 32#u8, 40#u8, 99#u8, 97#u8, 108#u8, 108#u8,
+        32#u8, 36#u8, 116#u8
+        ]))
+  let (r, out1) ← output.Buffer.append out s
+  match r with
+  | core.result.Result.Ok _ =>
+    let i ← lift (core.convert.num.FromU64U32.from ty)
+    let (r1, out2) ← output.Buffer.number out1 i
+    match r1 with
+    | core.result.Result.Ok _ =>
+      let s1 ←
+        lift (Array.to_slice
+          (Array.make 18#usize [
+            32#u8, 40#u8, 99#u8, 97#u8, 108#u8, 108#u8, 32#u8, 36#u8, 115#u8,
+            108#u8, 111#u8, 116#u8, 95#u8, 107#u8, 105#u8, 110#u8, 100#u8,
+            32#u8
+            ]))
+      let (r2, out3) ← output.Buffer.append out2 s1
+      match r2 with
+      | core.result.Result.Ok _ =>
+        let r3 ← source.plan.number index
+        match r3 with
+        | core.result.Result.Ok value =>
+          let (r4, out4) ← output.Buffer.i32 out3 value
+          match r4 with
+          | core.result.Result.Ok _ =>
+            let s2 ←
+              lift (Array.to_slice
+                (Array.make 20#usize [
+                  41#u8, 32#u8, 40#u8, 99#u8, 97#u8, 108#u8, 108#u8, 32#u8,
+                  36#u8, 115#u8, 108#u8, 111#u8, 116#u8, 95#u8, 118#u8, 97#u8,
+                  108#u8, 117#u8, 101#u8, 32#u8
+                  ]))
+            let (r5, out5) ← output.Buffer.append out4 s2
+            match r5 with
+            | core.result.Result.Ok _ =>
+              match r3 with
+              | core.result.Result.Ok value1 =>
+                let (r6, out6) ← output.Buffer.i32 out5 value1
+                match r6 with
+                | core.result.Result.Ok _ =>
+                  let s3 ←
+                    lift (Array.to_slice
+                      (Array.make 48#usize [
+                        41#u8, 41#u8, 41#u8, 32#u8, 40#u8, 116#u8, 104#u8,
+                        101#u8, 110#u8, 32#u8, 40#u8, 99#u8, 97#u8, 108#u8,
+                        108#u8, 32#u8, 36#u8, 102#u8, 97#u8, 105#u8, 108#u8,
+                        32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8,
+                        111#u8, 110#u8, 115#u8, 116#u8, 32#u8, 51#u8, 41#u8,
+                        41#u8, 32#u8, 40#u8, 114#u8, 101#u8, 116#u8, 117#u8,
+                        114#u8, 110#u8, 41#u8, 41#u8, 41#u8, 10#u8
+                        ]))
+                  output.Buffer.append out6 s3
+                | core.result.Result.Err _ => ok (r6, out6)
+              | core.result.Result.Err failure =>
+                ok (core.result.Result.Err failure, out5)
+            | core.result.Result.Err _ => ok (r5, out5)
+          | core.result.Result.Err _ => ok (r4, out4)
+        | core.result.Result.Err failure =>
+          ok (core.result.Result.Err failure, out3)
+      | core.result.Result.Err _ => ok (r2, out3)
+    | core.result.Result.Err _ => ok (r1, out2)
+  | core.result.Result.Err _ => ok (r, out1)
+
+/-- [noble_wasm::source::emit::metadata::stack_check]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/emit/metadata.rs', lines 22:4-30:5 -/
+@[rust_loop_body]
+def source.emit.metadata.stack_check_loop.body
+  (types : Slice Std.U32) (out : output.Buffer) (index : Std.Usize) :
+  Result (ControlFlow (output.Buffer × Std.Usize) (output.Buffer × (Option
+    Diagnostic)))
+  := do
+  let i := Slice.len types
+  if index < i
+  then
+    let i1 ← Slice.index_usize types index
+    let (r, out1) ← source.emit.metadata.stack_slot out i1 index
+    match r with
+    | core.result.Result.Ok _ =>
+      let index1 ← index + 1#usize
+      ok (cont (out1, index1))
+    | core.result.Result.Err problem => ok (done (out1, some problem))
+  else ok (done (out, none))
+
+/-- [noble_wasm::source::emit::metadata::stack_check]: loop 0:
+    Source: 'crates/noble-wasm/src/source/emit/metadata.rs', lines 22:4-30:5 -/
+@[rust_loop]
+def source.emit.metadata.stack_check_loop
+  (out : output.Buffer) (types : Slice Std.U32) (index : Std.Usize) :
+  Result (output.Buffer × (Option Diagnostic))
+  := do
+  loop
+    (fun (out1, index1) => source.emit.metadata.stack_check_loop.body types
+      out1 index1)
+    (out, index)
+
+/-- [noble_wasm::source::emit::metadata::stack_check]:
+    Source: 'crates/noble-wasm/src/source/emit/metadata.rs', lines 10:0-35:1 -/
+def source.emit.metadata.stack_check
+  (out : output.Buffer) («name» : Slice Std.U8) (types : Slice Std.U32) :
+  Result ((core.result.Result Unit Diagnostic) × output.Buffer)
+  := do
+  let s ←
+    lift (Array.to_slice
+      (Array.make 6#usize [ 40#u8, 102#u8, 117#u8, 110#u8, 99#u8, 32#u8 ]))
+  let (r, out1) ← output.Buffer.append out s
+  match r with
+  | core.result.Result.Ok _ =>
+    let (r1, out2) ← output.Buffer.append out1 «name»
+    match r1 with
+    | core.result.Result.Ok _ =>
+      let s1 ←
+        lift (Array.to_slice
+          (Array.make 30#usize [
+            10#u8, 40#u8, 105#u8, 102#u8, 32#u8, 40#u8, 105#u8, 51#u8, 50#u8,
+            46#u8, 110#u8, 101#u8, 32#u8, 40#u8, 103#u8, 108#u8, 111#u8, 98#u8,
+            97#u8, 108#u8, 46#u8, 103#u8, 101#u8, 116#u8, 32#u8, 36#u8, 115#u8,
+            112#u8, 41#u8, 32#u8
+            ]))
+      let (r2, out3) ← output.Buffer.append out2 s1
+      match r2 with
+      | core.result.Result.Ok _ =>
+        let i := Slice.len types
+        let r3 ← source.plan.number i
+        match r3 with
+        | core.result.Result.Ok value =>
+          let (r4, out4) ← output.Buffer.i32 out3 value
+          match r4 with
+          | core.result.Result.Ok _ =>
+            let s2 ←
+              lift (Array.to_slice
+                (Array.make 46#usize [
+                  41#u8, 32#u8, 40#u8, 116#u8, 104#u8, 101#u8, 110#u8, 32#u8,
+                  40#u8, 99#u8, 97#u8, 108#u8, 108#u8, 32#u8, 36#u8, 102#u8,
+                  97#u8, 105#u8, 108#u8, 32#u8, 40#u8, 105#u8, 51#u8, 50#u8,
+                  46#u8, 99#u8, 111#u8, 110#u8, 115#u8, 116#u8, 32#u8, 51#u8,
+                  41#u8, 41#u8, 32#u8, 40#u8, 114#u8, 101#u8, 116#u8, 117#u8,
+                  114#u8, 110#u8, 41#u8, 41#u8, 41#u8, 10#u8
+                  ]))
+            let (r5, out5) ← output.Buffer.append out4 s2
+            match r5 with
+            | core.result.Result.Ok _ =>
+              let (out6, failure) ←
+                source.emit.metadata.stack_check_loop out5 types 0#usize
+              match failure with
+              | none =>
+                let s3 ←
+                  lift (Array.to_slice (Array.make 2#usize [ 41#u8, 10#u8 ]))
+                output.Buffer.append out6 s3
+              | some problem => ok (core.result.Result.Err problem, out6)
+            | core.result.Result.Err _ => ok (r5, out5)
+          | core.result.Result.Err _ => ok (r4, out4)
+        | core.result.Result.Err failure =>
+          ok (core.result.Result.Err failure, out3)
+      | core.result.Result.Err _ => ok (r2, out3)
+    | core.result.Result.Err _ => ok (r1, out2)
+  | core.result.Result.Err _ => ok (r, out1)
+
+/-- [noble_wasm::source::emit::metadata::escaped_byte::HEX]
+    Source: 'crates/noble-wasm/src/source/emit/metadata.rs', lines 81:4-81:43 -/
+@[global_simps, irreducible]
+def source.emit.metadata.escaped_byte.HEX : Slice Std.U8 :=
+  Array.to_slice
+    (Array.make 16#usize [
+      48#u8, 49#u8, 50#u8, 51#u8, 52#u8, 53#u8, 54#u8, 55#u8, 56#u8, 57#u8,
+      97#u8, 98#u8, 99#u8, 100#u8, 101#u8, 102#u8
+      ])
+
+/-- [noble_wasm::source::emit::metadata::escaped_byte]:
+    Source: 'crates/noble-wasm/src/source/emit/metadata.rs', lines 80:0-88:1 -/
+def source.emit.metadata.escaped_byte
+  (out : output.Buffer) (byte : Std.U8) :
+  Result ((core.result.Result Unit Diagnostic) × output.Buffer)
+  := do
+  let i ← byte >>> 4#i32
+  let i1 ← lift (core.convert.num.FromUsizeU8.from i)
+  let i2 ← Slice.index_usize source.emit.metadata.escaped_byte.HEX i1
+  let i3 ← lift (byte &&& 15#u8)
+  let i4 ← lift (core.convert.num.FromUsizeU8.from i3)
+  let i5 ← Slice.index_usize source.emit.metadata.escaped_byte.HEX i4
+  let s ← lift (Array.to_slice (Array.make 3#usize [ 92#u8, i2, i5 ]))
+  output.Buffer.append out s
+
+/-- [noble_wasm::source::emit::metadata::data_segment]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/emit/metadata.rs', lines 65:4-73:5 -/
+@[rust_loop_body]
+def source.emit.metadata.data_segment_loop.body
+  (bytes : Slice Std.U8) (out : output.Buffer) (index : Std.Usize) :
+  Result (ControlFlow (output.Buffer × Std.Usize) (output.Buffer × (Option
+    Diagnostic)))
+  := do
+  let i := Slice.len bytes
+  if index < i
+  then
+    let i1 ← Slice.index_usize bytes index
+    let (r, out1) ← source.emit.metadata.escaped_byte out i1
+    match r with
+    | core.result.Result.Ok _ =>
+      let index1 ← index + 1#usize
+      ok (cont (out1, index1))
+    | core.result.Result.Err problem => ok (done (out1, some problem))
+  else ok (done (out, none))
+
+/-- [noble_wasm::source::emit::metadata::data_segment]: loop 0:
+    Source: 'crates/noble-wasm/src/source/emit/metadata.rs', lines 65:4-73:5 -/
+@[rust_loop]
+def source.emit.metadata.data_segment_loop
+  (out : output.Buffer) (bytes : Slice Std.U8) (index : Std.Usize) :
+  Result (output.Buffer × (Option Diagnostic))
+  := do
+  loop
+    (fun (out1, index1) => source.emit.metadata.data_segment_loop.body bytes
+      out1 index1)
+    (out, index)
+
+/-- [noble_wasm::source::emit::metadata::data_segment]:
+    Source: 'crates/noble-wasm/src/source/emit/metadata.rs', lines 55:0-78:1 -/
+def source.emit.metadata.data_segment
+  (out : output.Buffer) (segment : Std.Usize) (bytes : Slice Std.U8) :
+  Result ((core.result.Result Unit Diagnostic) × output.Buffer)
+  := do
+  let s ←
+    lift (Array.to_slice
+      (Array.make 8#usize [
+        40#u8, 100#u8, 97#u8, 116#u8, 97#u8, 32#u8, 36#u8, 100#u8
+        ]))
+  let (r, out1) ← output.Buffer.append out s
+  match r with
+  | core.result.Result.Ok _ =>
+    let (r1, out2) ← output.Buffer.index out1 segment
+    match r1 with
+    | core.result.Result.Ok _ =>
+      let s1 ← lift (Array.to_slice (Array.make 2#usize [ 32#u8, 34#u8 ]))
+      let (r2, out3) ← output.Buffer.append out2 s1
+      match r2 with
+      | core.result.Result.Ok _ =>
+        let (out4, failure) ←
+          source.emit.metadata.data_segment_loop out3 bytes 0#usize
+        match failure with
+        | none =>
+          let s2 ←
+            lift (Array.to_slice (Array.make 3#usize [ 34#u8, 41#u8, 10#u8 ]))
+          output.Buffer.append out4 s2
+        | some problem => ok (core.result.Result.Err problem, out4)
+      | core.result.Result.Err _ => ok (r2, out3)
+    | core.result.Result.Err _ => ok (r1, out2)
+  | core.result.Result.Err _ => ok (r, out1)
+
+/-- [noble_wasm::source::emit::metadata::descriptor_entry]:
+    Source: 'crates/noble-wasm/src/source/emit/metadata.rs', lines 133:0-148:1 -/
+def source.emit.metadata.descriptor_entry
+  (out : output.Buffer) (index : Std.Usize) (descriptor : (Std.U32 × Std.U32))
+  (is_length : Bool) :
+  Result ((core.result.Result Unit Diagnostic) × output.Buffer)
+  := do
+  let s ←
+    lift (Array.to_slice
+      (Array.make 28#usize [
+        40#u8, 105#u8, 102#u8, 32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8,
+        101#u8, 113#u8, 32#u8, 40#u8, 108#u8, 111#u8, 99#u8, 97#u8, 108#u8,
+        46#u8, 103#u8, 101#u8, 116#u8, 32#u8, 36#u8, 105#u8, 100#u8, 41#u8,
+        32#u8
+        ]))
+  let (r, out1) ← output.Buffer.append out s
+  match r with
+  | core.result.Result.Ok _ =>
+    let r1 ← source.plan.number index
+    match r1 with
+    | core.result.Result.Ok value =>
+      let (r2, out2) ← output.Buffer.i32 out1 value
+      match r2 with
+      | core.result.Result.Ok _ =>
+        let s1 ←
+          lift (Array.to_slice
+            (Array.make 16#usize [
+              41#u8, 32#u8, 40#u8, 116#u8, 104#u8, 101#u8, 110#u8, 32#u8,
+              40#u8, 114#u8, 101#u8, 116#u8, 117#u8, 114#u8, 110#u8, 32#u8
+              ]))
+        let (r3, out3) ← output.Buffer.append out2 s1
+        match r3 with
+        | core.result.Result.Ok _ =>
+          if is_length
+          then
+            let (_, i) := descriptor
+            let (r4, out4) ← output.Buffer.i32 out3 i
+            match r4 with
+            | core.result.Result.Ok _ =>
+              let s2 ←
+                lift (Array.to_slice
+                  (Array.make 4#usize [ 41#u8, 41#u8, 41#u8, 10#u8 ]))
+              output.Buffer.append out4 s2
+            | core.result.Result.Err _ => ok (r4, out4)
+          else
+            let (i, _) := descriptor
+            let (r4, out4) ← output.Buffer.i32 out3 i
+            match r4 with
+            | core.result.Result.Ok _ =>
+              let s2 ←
+                lift (Array.to_slice
+                  (Array.make 4#usize [ 41#u8, 41#u8, 41#u8, 10#u8 ]))
+              output.Buffer.append out4 s2
+            | core.result.Result.Err _ => ok (r4, out4)
+        | core.result.Result.Err _ => ok (r3, out3)
+      | core.result.Result.Err _ => ok (r2, out2)
+    | core.result.Result.Err failure =>
+      ok (core.result.Result.Err failure, out1)
+  | core.result.Result.Err _ => ok (r, out1)
+
+/-- [noble_wasm::source::emit::metadata::descriptor_function]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/emit/metadata.rs', lines 118:4-126:5 -/
+@[rust_loop_body]
+def source.emit.metadata.descriptor_function_loop.body
+  (descriptors : Slice (Std.U32 × Std.U32)) (is_length : Bool)
+  (out : output.Buffer) (index : Std.Usize) :
+  Result (ControlFlow (output.Buffer × Std.Usize) (output.Buffer × (Option
+    Diagnostic)))
+  := do
+  let i := Slice.len descriptors
+  if index < i
+  then
+    let p ← Slice.index_usize descriptors index
+    let (r, out1) ←
+      source.emit.metadata.descriptor_entry out index p is_length
+    match r with
+    | core.result.Result.Ok _ =>
+      let index1 ← index + 1#usize
+      ok (cont (out1, index1))
+    | core.result.Result.Err problem => ok (done (out1, some problem))
+  else ok (done (out, none))
+
+/-- [noble_wasm::source::emit::metadata::descriptor_function]: loop 0:
+    Source: 'crates/noble-wasm/src/source/emit/metadata.rs', lines 118:4-126:5 -/
+@[rust_loop]
+def source.emit.metadata.descriptor_function_loop
+  (out : output.Buffer) (descriptors : Slice (Std.U32 × Std.U32))
+  (is_length : Bool) (index : Std.Usize) :
+  Result (output.Buffer × (Option Diagnostic))
+  := do
+  loop
+    (fun (out1, index1) => source.emit.metadata.descriptor_function_loop.body
+      descriptors is_length out1 index1)
+    (out, index)
+
+/-- [noble_wasm::source::emit::metadata::descriptor_function]:
+    Source: 'crates/noble-wasm/src/source/emit/metadata.rs', lines 107:0-131:1 -/
+def source.emit.metadata.descriptor_function
+  (out : output.Buffer) («name» : Slice Std.U8)
+  (descriptors : Slice (Std.U32 × Std.U32)) (is_length : Bool) :
+  Result ((core.result.Result Unit Diagnostic) × output.Buffer)
+  := do
+  let s ←
+    lift (Array.to_slice
+      (Array.make 15#usize [
+        40#u8, 102#u8, 117#u8, 110#u8, 99#u8, 32#u8, 40#u8, 101#u8, 120#u8,
+        112#u8, 111#u8, 114#u8, 116#u8, 32#u8, 34#u8
+        ]))
+  let (r, out1) ← output.Buffer.append out s
+  match r with
+  | core.result.Result.Ok _ =>
+    let (r1, out2) ← output.Buffer.append out1 «name»
+    match r1 with
+    | core.result.Result.Ok _ =>
+      let s1 ←
+        lift (Array.to_slice
+          (Array.make 32#usize [
+            34#u8, 41#u8, 32#u8, 40#u8, 112#u8, 97#u8, 114#u8, 97#u8, 109#u8,
+            32#u8, 36#u8, 105#u8, 100#u8, 32#u8, 105#u8, 51#u8, 50#u8, 41#u8,
+            32#u8, 40#u8, 114#u8, 101#u8, 115#u8, 117#u8, 108#u8, 116#u8,
+            32#u8, 105#u8, 51#u8, 50#u8, 41#u8, 10#u8
+            ]))
+      let (r2, out3) ← output.Buffer.append out2 s1
+      match r2 with
+      | core.result.Result.Ok _ =>
+        let (out4, failure) ←
+          source.emit.metadata.descriptor_function_loop out3 descriptors
+            is_length 0#usize
+        match failure with
+        | none =>
+          let s2 ←
+            lift (Array.to_slice
+              (Array.make 42#usize [
+                40#u8, 99#u8, 97#u8, 108#u8, 108#u8, 32#u8, 36#u8, 102#u8,
+                97#u8, 105#u8, 108#u8, 32#u8, 40#u8, 105#u8, 51#u8, 50#u8,
+                46#u8, 99#u8, 111#u8, 110#u8, 115#u8, 116#u8, 32#u8, 52#u8,
+                41#u8, 41#u8, 10#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8,
+                111#u8, 110#u8, 115#u8, 116#u8, 32#u8, 48#u8, 41#u8, 41#u8,
+                10#u8
+                ]))
+          output.Buffer.append out4 s2
+        | some problem => ok (core.result.Result.Err problem, out4)
+      | core.result.Result.Err _ => ok (r2, out3)
+    | core.result.Result.Err _ => ok (r1, out2)
+  | core.result.Result.Err _ => ok (r, out1)
+
+/-- [noble_wasm::source::emit::metadata::descriptors]:
+    Source: 'crates/noble-wasm/src/source/emit/metadata.rs', lines 90:0-101:1 -/
+def source.emit.metadata.descriptors
+  (out : output.Buffer) (descriptors : Slice (Std.U32 × Std.U32)) :
+  Result ((core.result.Result Unit Diagnostic) × output.Buffer)
+  := do
+  let s ←
+    lift (Array.to_slice
+      (Array.make 17#usize [
+        115#u8, 105#u8, 103#u8, 110#u8, 97#u8, 116#u8, 117#u8, 114#u8, 101#u8,
+        95#u8, 97#u8, 100#u8, 100#u8, 114#u8, 101#u8, 115#u8, 115#u8
+        ]))
+  let (r, out1) ←
+    source.emit.metadata.descriptor_function out s descriptors false
+  match r with
+  | core.result.Result.Ok _ =>
+    let s1 ←
+      lift (Array.to_slice
+        (Array.make 16#usize [
+          115#u8, 105#u8, 103#u8, 110#u8, 97#u8, 116#u8, 117#u8, 114#u8,
+          101#u8, 95#u8, 108#u8, 101#u8, 110#u8, 103#u8, 116#u8, 104#u8
+          ]))
+    source.emit.metadata.descriptor_function out1 s1 descriptors true
+  | core.result.Result.Err _ => ok (r, out1)
+
+/-- [noble_wasm::source::emit::program]:
+    Source: 'crates/noble-wasm/src/source/emit.rs', lines 43:0-52:1 -/
+def source.emit.program
+  (out : output.Buffer) (index : Std.Usize) (program : source.plan.Program) :
+  Result ((core.result.Result Unit Diagnostic) × output.Buffer)
+  := do
+  let s ←
+    lift (Array.to_slice
+      (Array.make 8#usize [
+        40#u8, 103#u8, 108#u8, 111#u8, 98#u8, 97#u8, 108#u8, 32#u8
+        ]))
+  let (r, out1) ← output.Buffer.append out s
+  match r with
+  | core.result.Result.Ok _ =>
+    let (r1, out2) ← source.emit.global out1 index
+    match r1 with
+    | core.result.Result.Ok _ =>
+      let s1 ←
+        lift (Array.to_slice
+          (Array.make 26#usize [
+            32#u8, 40#u8, 109#u8, 117#u8, 116#u8, 32#u8, 105#u8, 51#u8, 50#u8,
+            41#u8, 32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8, 111#u8,
+            110#u8, 115#u8, 116#u8, 32#u8, 48#u8, 41#u8, 41#u8, 10#u8
+            ]))
+      let (r2, out3) ← output.Buffer.append out2 s1
+      match r2 with
+      | core.result.Result.Ok _ => source.emit.functions.write out3 program
+      | core.result.Result.Err _ => ok (r2, out3)
+    | core.result.Result.Err _ => ok (r1, out2)
+  | core.result.Result.Err _ => ok (r, out1)
+
+/-- [noble_wasm::source::emit::programs]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/emit.rs', lines 28:4-36:5 -/
+@[rust_loop_body]
+def source.emit.programs_loop.body
+  (programs : Slice source.plan.Program) (out : output.Buffer)
+  (index : Std.Usize) :
+  Result (ControlFlow (output.Buffer × Std.Usize) (output.Buffer × (Option
+    Diagnostic)))
+  := do
+  let i := Slice.len programs
+  if index < i
+  then
+    let p ← Slice.index_usize programs index
+    let (r, out1) ← source.emit.program out index p
+    match r with
+    | core.result.Result.Ok _ =>
+      let index1 ← index + 1#usize
+      ok (cont (out1, index1))
+    | core.result.Result.Err problem => ok (done (out1, some problem))
+  else ok (done (out, none))
+
+/-- [noble_wasm::source::emit::programs]: loop 0:
+    Source: 'crates/noble-wasm/src/source/emit.rs', lines 28:4-36:5 -/
+@[rust_loop]
+def source.emit.programs_loop
+  (out : output.Buffer) (programs : Slice source.plan.Program)
+  (index : Std.Usize) :
+  Result (output.Buffer × (Option Diagnostic))
+  := do
+  loop
+    (fun (out1, index1) => source.emit.programs_loop.body programs out1 index1)
+    (out, index)
+
+/-- [noble_wasm::source::emit::programs]:
+    Source: 'crates/noble-wasm/src/source/emit.rs', lines 22:0-41:1 -/
+def source.emit.programs
+  (out : output.Buffer) (programs : Slice source.plan.Program) :
+  Result ((core.result.Result Unit Diagnostic) × output.Buffer)
+  := do
+  let (out1, failure) ← source.emit.programs_loop out programs 0#usize
+  match failure with
+  | none => ok (core.result.Result.Ok (), out1)
+  | some problem => ok (core.result.Result.Err problem, out1)
+
+/-- [noble_wasm::source::emit::function_element]:
+    Source: 'crates/noble-wasm/src/source/emit.rs', lines 76:0-82:1 -/
+def source.emit.function_element
+  (out : output.Buffer) (function : Std.U32) :
+  Result ((core.result.Result Unit Diagnostic) × output.Buffer)
+  := do
+  let s ← lift (Array.to_slice (Array.make 3#usize [ 32#u8, 36#u8, 102#u8 ]))
+  let (r, out1) ← output.Buffer.append out s
+  match r with
+  | core.result.Result.Ok _ =>
+    let i ← lift (core.convert.num.FromU64U32.from function)
+    output.Buffer.number out1 i
+  | core.result.Result.Err _ => ok (r, out1)
+
+/-- [noble_wasm::source::emit::code_elements]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/emit.rs', lines 61:4-69:5 -/
+@[rust_loop_body]
+def source.emit.code_elements_loop.body
+  (i : Std.U32) (out : output.Buffer) (function : Std.U32) :
+  Result (ControlFlow (output.Buffer × Std.U32) (output.Buffer × (Option
+    Diagnostic)))
+  := do
+  if function < i
+  then
+    let (r, out1) ← source.emit.function_element out function
+    match r with
+    | core.result.Result.Ok _ =>
+      let function1 ← function + 1#u32
+      ok (cont (out1, function1))
+    | core.result.Result.Err problem => ok (done (out1, some problem))
+  else ok (done (out, none))
+
+/-- [noble_wasm::source::emit::code_elements]: loop 0:
+    Source: 'crates/noble-wasm/src/source/emit.rs', lines 61:4-69:5 -/
+@[rust_loop]
+def source.emit.code_elements_loop
+  (out : output.Buffer) (i : Std.U32) (function : Std.U32) :
+  Result (output.Buffer × (Option Diagnostic))
+  := do
+  loop
+    (fun (out1, function1) => source.emit.code_elements_loop.body i out1
+      function1)
+    (out, function)
+
+/-- [noble_wasm::source::emit::code_elements]:
+    Source: 'crates/noble-wasm/src/source/emit.rs', lines 54:0-74:1 -/
+def source.emit.code_elements
+  (out : output.Buffer) (plan : source.plan.Layout) :
+  Result ((core.result.Result Unit Diagnostic) × output.Buffer)
+  := do
+  let s ←
+    lift (Array.to_slice
+      (Array.make 16#usize [
+        40#u8, 101#u8, 108#u8, 101#u8, 109#u8, 32#u8, 36#u8, 99#u8, 111#u8,
+        100#u8, 101#u8, 32#u8, 102#u8, 117#u8, 110#u8, 99#u8
+        ]))
+  let (r, out1) ← output.Buffer.append out s
+  match r with
+  | core.result.Result.Ok _ =>
+    let (out2, failure) ←
+      source.emit.code_elements_loop out1 plan.functions plan.first_function
+    match failure with
+    | none =>
+      let s1 ← lift (Array.to_slice (Array.make 2#usize [ 41#u8, 10#u8 ]))
+      output.Buffer.append out2 s1
+    | some problem => ok (core.result.Result.Err problem, out2)
+  | core.result.Result.Err _ => ok (r, out1)
+
+/-- [noble_wasm::source::types::child]:
+    Source: 'crates/noble-wasm/src/source/types.rs', lines 269:0-277:1 -/
+def source.types.child
+  (out : output.Buffer) (id : Std.U32) (edge : Slice Std.U8) :
+  Result ((core.result.Result Unit Diagnostic) × output.Buffer)
+  := do
+  let s ←
+    lift (Array.to_slice
+      (Array.make 8#usize [
+        40#u8, 99#u8, 97#u8, 108#u8, 108#u8, 32#u8, 36#u8, 116#u8
+        ]))
+  let (r, out1) ← output.Buffer.append out s
+  match r with
+  | core.result.Result.Ok _ =>
+    let i ← lift (core.convert.num.FromU64U32.from id)
+    let (r1, out2) ← output.Buffer.number out1 i
+    match r1 with
+    | core.result.Result.Ok _ =>
+      let s1 ←
+        lift (Array.to_slice
+          (Array.make 20#usize [
+            32#u8, 40#u8, 99#u8, 97#u8, 108#u8, 108#u8, 32#u8, 36#u8, 107#u8,
+            105#u8, 110#u8, 100#u8, 32#u8, 40#u8, 99#u8, 97#u8, 108#u8, 108#u8,
+            32#u8, 36#u8
+            ]))
+      let (r2, out3) ← output.Buffer.append out2 s1
+      match r2 with
+      | core.result.Result.Ok _ =>
+        let (r3, out4) ← output.Buffer.append out3 edge
+        match r3 with
+        | core.result.Result.Ok _ =>
+          let s2 ←
+            lift (Array.to_slice
+              (Array.make 44#usize [
+                32#u8, 40#u8, 108#u8, 111#u8, 99#u8, 97#u8, 108#u8, 46#u8,
+                103#u8, 101#u8, 116#u8, 32#u8, 36#u8, 104#u8, 41#u8, 41#u8,
+                41#u8, 32#u8, 40#u8, 99#u8, 97#u8, 108#u8, 108#u8, 32#u8,
+                36#u8, 98#u8, 111#u8, 120#u8, 101#u8, 100#u8, 95#u8, 118#u8,
+                97#u8, 108#u8, 117#u8, 101#u8, 32#u8, 40#u8, 99#u8, 97#u8,
+                108#u8, 108#u8, 32#u8, 36#u8
+                ]))
+          let (r4, out5) ← output.Buffer.append out4 s2
+          match r4 with
+          | core.result.Result.Ok _ =>
+            let (r5, out6) ← output.Buffer.append out5 edge
+            match r5 with
+            | core.result.Result.Ok _ =>
+              let s3 ←
+                lift (Array.to_slice
+                  (Array.make 18#usize [
+                    32#u8, 40#u8, 108#u8, 111#u8, 99#u8, 97#u8, 108#u8, 46#u8,
+                    103#u8, 101#u8, 116#u8, 32#u8, 36#u8, 104#u8, 41#u8, 41#u8,
+                    41#u8, 41#u8
+                    ]))
+              output.Buffer.append out6 s3
+            | core.result.Result.Err _ => ok (r5, out6)
+          | core.result.Result.Err _ => ok (r4, out5)
+        | core.result.Result.Err _ => ok (r3, out4)
+      | core.result.Result.Err _ => ok (r2, out3)
+    | core.result.Result.Err _ => ok (r1, out2)
+  | core.result.Result.Err _ => ok (r, out1)
+
+/-- [noble_wasm::source::types::live]:
+    Source: 'crates/noble-wasm/src/source/types.rs', lines 258:0-260:1 -/
+def source.types.live
+  (out : output.Buffer) :
+  Result ((core.result.Result Unit Diagnostic) × output.Buffer)
+  := do
+  let s ←
+    lift (Array.to_slice
+      (Array.make 302#usize [
+        40#u8, 105#u8, 102#u8, 32#u8, 40#u8, 105#u8, 54#u8, 52#u8, 46#u8,
+        103#u8, 116#u8, 95#u8, 117#u8, 32#u8, 40#u8, 108#u8, 111#u8, 99#u8,
+        97#u8, 108#u8, 46#u8, 103#u8, 101#u8, 116#u8, 32#u8, 36#u8, 118#u8,
+        97#u8, 108#u8, 117#u8, 101#u8, 41#u8, 32#u8, 40#u8, 105#u8, 54#u8,
+        52#u8, 46#u8, 99#u8, 111#u8, 110#u8, 115#u8, 116#u8, 32#u8, 52#u8,
+        50#u8, 57#u8, 52#u8, 57#u8, 54#u8, 55#u8, 50#u8, 57#u8, 53#u8, 41#u8,
+        41#u8, 32#u8, 40#u8, 116#u8, 104#u8, 101#u8, 110#u8, 32#u8, 40#u8,
+        114#u8, 101#u8, 116#u8, 117#u8, 114#u8, 110#u8, 32#u8, 40#u8, 105#u8,
+        51#u8, 50#u8, 46#u8, 99#u8, 111#u8, 110#u8, 115#u8, 116#u8, 32#u8,
+        48#u8, 41#u8, 41#u8, 41#u8, 41#u8, 10#u8, 40#u8, 108#u8, 111#u8, 99#u8,
+        97#u8, 108#u8, 46#u8, 115#u8, 101#u8, 116#u8, 32#u8, 36#u8, 104#u8,
+        32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 119#u8, 114#u8, 97#u8,
+        112#u8, 95#u8, 105#u8, 54#u8, 52#u8, 32#u8, 40#u8, 108#u8, 111#u8,
+        99#u8, 97#u8, 108#u8, 46#u8, 103#u8, 101#u8, 116#u8, 32#u8, 36#u8,
+        118#u8, 97#u8, 108#u8, 117#u8, 101#u8, 41#u8, 41#u8, 41#u8, 10#u8,
+        40#u8, 105#u8, 102#u8, 32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8,
+        101#u8, 113#u8, 122#u8, 32#u8, 40#u8, 99#u8, 97#u8, 108#u8, 108#u8,
+        32#u8, 36#u8, 105#u8, 115#u8, 95#u8, 108#u8, 105#u8, 118#u8, 101#u8,
+        32#u8, 40#u8, 108#u8, 111#u8, 99#u8, 97#u8, 108#u8, 46#u8, 103#u8,
+        101#u8, 116#u8, 32#u8, 36#u8, 104#u8, 41#u8, 41#u8, 41#u8, 32#u8,
+        40#u8, 116#u8, 104#u8, 101#u8, 110#u8, 32#u8, 40#u8, 114#u8, 101#u8,
+        116#u8, 117#u8, 114#u8, 110#u8, 32#u8, 40#u8, 105#u8, 51#u8, 50#u8,
+        46#u8, 99#u8, 111#u8, 110#u8, 115#u8, 116#u8, 32#u8, 48#u8, 41#u8,
+        41#u8, 41#u8, 41#u8, 10#u8, 40#u8, 105#u8, 102#u8, 32#u8, 40#u8,
+        105#u8, 51#u8, 50#u8, 46#u8, 110#u8, 101#u8, 32#u8, 40#u8, 99#u8,
+        97#u8, 108#u8, 108#u8, 32#u8, 36#u8, 107#u8, 105#u8, 110#u8, 100#u8,
+        32#u8, 40#u8, 108#u8, 111#u8, 99#u8, 97#u8, 108#u8, 46#u8, 103#u8,
+        101#u8, 116#u8, 32#u8, 36#u8, 104#u8, 41#u8, 41#u8, 32#u8, 40#u8,
+        108#u8, 111#u8, 99#u8, 97#u8, 108#u8, 46#u8, 103#u8, 101#u8, 116#u8,
+        32#u8, 36#u8, 116#u8, 97#u8, 103#u8, 41#u8, 41#u8, 32#u8, 40#u8,
+        116#u8, 104#u8, 101#u8, 110#u8, 32#u8, 40#u8, 114#u8, 101#u8, 116#u8,
+        117#u8, 114#u8, 110#u8, 32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8,
+        99#u8, 111#u8, 110#u8, 115#u8, 116#u8, 32#u8, 48#u8, 41#u8, 41#u8,
+        41#u8, 41#u8, 10#u8
+        ]))
+  output.Buffer.append out s
+
+/-- [noble_wasm::source::types::reference]:
+    Source: 'crates/noble-wasm/src/source/types.rs', lines 262:0-267:1 -/
+def source.types.reference
+  (out : output.Buffer) (tag : Std.U32) :
+  Result ((core.result.Result Unit Diagnostic) × output.Buffer)
+  := do
+  let s ←
+    lift (Array.to_slice
+      (Array.make 29#usize [
+        40#u8, 105#u8, 102#u8, 32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8,
+        110#u8, 101#u8, 32#u8, 40#u8, 108#u8, 111#u8, 99#u8, 97#u8, 108#u8,
+        46#u8, 103#u8, 101#u8, 116#u8, 32#u8, 36#u8, 116#u8, 97#u8, 103#u8,
+        41#u8, 32#u8
+        ]))
+  let (r, out1) ← output.Buffer.append out s
+  match r with
+  | core.result.Result.Ok _ =>
+    let (r1, out2) ← output.Buffer.i32 out1 tag
+    match r1 with
+    | core.result.Result.Ok _ =>
+      let s1 ←
+        lift (Array.to_slice
+          (Array.make 33#usize [
+            41#u8, 32#u8, 40#u8, 116#u8, 104#u8, 101#u8, 110#u8, 32#u8, 40#u8,
+            114#u8, 101#u8, 116#u8, 117#u8, 114#u8, 110#u8, 32#u8, 40#u8,
+            105#u8, 51#u8, 50#u8, 46#u8, 99#u8, 111#u8, 110#u8, 115#u8, 116#u8,
+            32#u8, 48#u8, 41#u8, 41#u8, 41#u8, 41#u8, 10#u8
+            ]))
+      let (r2, out3) ← output.Buffer.append out2 s1
+      match r2 with
+      | core.result.Result.Ok _ => source.types.live out3
+      | core.result.Result.Err _ => ok (r2, out3)
+    | core.result.Result.Err _ => ok (r1, out2)
+  | core.result.Result.Err _ => ok (r, out1)
+
+/-- [noble_wasm::source::types::emit_shape]:
+    Source: 'crates/noble-wasm/src/source/types.rs', lines 191:0-256:1 -/
+def source.types.emit_shape
+  (out : output.Buffer) (index : Std.Usize) (shape : source.types.Shape) :
+  Result ((core.result.Result Unit Diagnostic) × output.Buffer)
+  := do
+  let s ←
+    lift (Array.to_slice
+      (Array.make 8#usize [
+        40#u8, 102#u8, 117#u8, 110#u8, 99#u8, 32#u8, 36#u8, 116#u8
+        ]))
+  let (r, out1) ← output.Buffer.append out s
+  match r with
+  | core.result.Result.Ok _ =>
+    let (r1, out2) ← output.Buffer.index out1 index
+    match r1 with
+    | core.result.Result.Ok _ =>
+      let s1 ←
+        lift (Array.to_slice
+          (Array.make 135#usize [
+            32#u8, 40#u8, 112#u8, 97#u8, 114#u8, 97#u8, 109#u8, 32#u8, 36#u8,
+            116#u8, 97#u8, 103#u8, 32#u8, 105#u8, 51#u8, 50#u8, 41#u8, 32#u8,
+            40#u8, 112#u8, 97#u8, 114#u8, 97#u8, 109#u8, 32#u8, 36#u8, 118#u8,
+            97#u8, 108#u8, 117#u8, 101#u8, 32#u8, 105#u8, 54#u8, 52#u8, 41#u8,
+            32#u8, 40#u8, 114#u8, 101#u8, 115#u8, 117#u8, 108#u8, 116#u8,
+            32#u8, 105#u8, 51#u8, 50#u8, 41#u8, 32#u8, 40#u8, 108#u8, 111#u8,
+            99#u8, 97#u8, 108#u8, 32#u8, 36#u8, 104#u8, 32#u8, 105#u8, 51#u8,
+            50#u8, 41#u8, 10#u8, 40#u8, 105#u8, 102#u8, 32#u8, 40#u8, 105#u8,
+            51#u8, 50#u8, 46#u8, 101#u8, 113#u8, 122#u8, 32#u8, 40#u8, 99#u8,
+            97#u8, 108#u8, 108#u8, 32#u8, 36#u8, 111#u8, 98#u8, 115#u8, 101#u8,
+            114#u8, 118#u8, 97#u8, 116#u8, 105#u8, 111#u8, 110#u8, 95#u8,
+            116#u8, 105#u8, 99#u8, 107#u8, 41#u8, 41#u8, 32#u8, 40#u8, 116#u8,
+            104#u8, 101#u8, 110#u8, 32#u8, 40#u8, 114#u8, 101#u8, 116#u8,
+            117#u8, 114#u8, 110#u8, 32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8,
+            99#u8, 111#u8, 110#u8, 115#u8, 116#u8, 32#u8, 48#u8, 41#u8, 41#u8,
+            41#u8, 41#u8, 10#u8
+            ]))
+      let (r2, out3) ← output.Buffer.append out2 s1
+      match r2 with
+      | core.result.Result.Ok _ =>
+        match shape with
+        | source.types.Shape.Scalar tag =>
+          let s2 ←
+            lift (Array.to_slice
+              (Array.make 29#usize [
+                40#u8, 105#u8, 102#u8, 32#u8, 40#u8, 105#u8, 51#u8, 50#u8,
+                46#u8, 110#u8, 101#u8, 32#u8, 40#u8, 108#u8, 111#u8, 99#u8,
+                97#u8, 108#u8, 46#u8, 103#u8, 101#u8, 116#u8, 32#u8, 36#u8,
+                116#u8, 97#u8, 103#u8, 41#u8, 32#u8
+                ]))
+          let (r3, out4) ← output.Buffer.append out3 s2
+          match r3 with
+          | core.result.Result.Ok _ =>
+            let (r4, out5) ← output.Buffer.i32 out4 tag
+            match r4 with
+            | core.result.Result.Ok _ =>
+              let s3 ←
+                lift (Array.to_slice
+                  (Array.make 33#usize [
+                    41#u8, 32#u8, 40#u8, 116#u8, 104#u8, 101#u8, 110#u8, 32#u8,
+                    40#u8, 114#u8, 101#u8, 116#u8, 117#u8, 114#u8, 110#u8,
+                    32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8, 111#u8,
+                    110#u8, 115#u8, 116#u8, 32#u8, 48#u8, 41#u8, 41#u8, 41#u8,
+                    41#u8, 10#u8
+                    ]))
+              let (r5, out6) ← output.Buffer.append out5 s3
+              match r5 with
+              | core.result.Result.Ok _ =>
+                match tag with
+                | 2#uscalar =>
+                  let s4 ←
+                    lift (Array.to_slice
+                      (Array.make 44#usize [
+                        40#u8, 105#u8, 54#u8, 52#u8, 46#u8, 108#u8, 101#u8,
+                        95#u8, 117#u8, 32#u8, 40#u8, 108#u8, 111#u8, 99#u8,
+                        97#u8, 108#u8, 46#u8, 103#u8, 101#u8, 116#u8, 32#u8,
+                        36#u8, 118#u8, 97#u8, 108#u8, 117#u8, 101#u8, 41#u8,
+                        32#u8, 40#u8, 105#u8, 54#u8, 52#u8, 46#u8, 99#u8,
+                        111#u8, 110#u8, 115#u8, 116#u8, 32#u8, 49#u8, 41#u8,
+                        41#u8, 10#u8
+                        ]))
+                  let (r6, out7) ← output.Buffer.append out6 s4
+                  match r6 with
+                  | core.result.Result.Ok _ =>
+                    let s5 ←
+                      lift (Array.to_slice
+                        (Array.make 2#usize [ 41#u8, 10#u8 ]))
+                    output.Buffer.append out7 s5
+                  | core.result.Result.Err _ => ok (r6, out7)
+                | 3#uscalar =>
+                  let s4 ←
+                    lift (Array.to_slice
+                      (Array.make 29#usize [
+                        40#u8, 105#u8, 54#u8, 52#u8, 46#u8, 101#u8, 113#u8,
+                        122#u8, 32#u8, 40#u8, 108#u8, 111#u8, 99#u8, 97#u8,
+                        108#u8, 46#u8, 103#u8, 101#u8, 116#u8, 32#u8, 36#u8,
+                        118#u8, 97#u8, 108#u8, 117#u8, 101#u8, 41#u8, 41#u8,
+                        10#u8
+                        ]))
+                  let (r6, out7) ← output.Buffer.append out6 s4
+                  match r6 with
+                  | core.result.Result.Ok _ =>
+                    let s5 ←
+                      lift (Array.to_slice
+                        (Array.make 2#usize [ 41#u8, 10#u8 ]))
+                    output.Buffer.append out7 s5
+                  | core.result.Result.Err _ => ok (r6, out7)
+                | _ =>
+                  let s4 ←
+                    lift (Array.to_slice
+                      (Array.make 14#usize [
+                        40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8, 111#u8,
+                        110#u8, 115#u8, 116#u8, 32#u8, 49#u8, 41#u8, 10#u8
+                        ]))
+                  let (r6, out7) ← output.Buffer.append out6 s4
+                  match r6 with
+                  | core.result.Result.Ok _ =>
+                    let s5 ←
+                      lift (Array.to_slice
+                        (Array.make 2#usize [ 41#u8, 10#u8 ]))
+                    output.Buffer.append out7 s5
+                  | core.result.Result.Err _ => ok (r6, out7)
+              | core.result.Result.Err _ => ok (r5, out6)
+            | core.result.Result.Err _ => ok (r4, out5)
+          | core.result.Result.Err _ => ok (r3, out4)
+        | source.types.Shape.Pair left right =>
+          let (r3, out4) ← source.types.reference out3 5#u32
+          match r3 with
+          | core.result.Result.Ok _ =>
+            let s2 ←
+              lift (Array.to_slice
+                (Array.make 13#usize [
+                  40#u8, 105#u8, 102#u8, 32#u8, 40#u8, 105#u8, 51#u8, 50#u8,
+                  46#u8, 101#u8, 113#u8, 122#u8, 32#u8
+                  ]))
+            let (r4, out5) ← output.Buffer.append out4 s2
+            match r4 with
+            | core.result.Result.Ok _ =>
+              let s3 ← lift (Array.to_slice (Array.make 1#usize [ 97#u8 ]))
+              let (r5, out6) ← source.types.child out5 left s3
+              match r5 with
+              | core.result.Result.Ok _ =>
+                let s4 ←
+                  lift (Array.to_slice
+                    (Array.make 33#usize [
+                      41#u8, 32#u8, 40#u8, 116#u8, 104#u8, 101#u8, 110#u8,
+                      32#u8, 40#u8, 114#u8, 101#u8, 116#u8, 117#u8, 114#u8,
+                      110#u8, 32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8,
+                      111#u8, 110#u8, 115#u8, 116#u8, 32#u8, 48#u8, 41#u8,
+                      41#u8, 41#u8, 41#u8, 10#u8
+                      ]))
+                let (r6, out7) ← output.Buffer.append out6 s4
+                match r6 with
+                | core.result.Result.Ok _ =>
+                  let s5 ←
+                    lift (Array.to_slice (Array.make 1#usize [ 98#u8 ]))
+                  let (r7, out8) ← source.types.child out7 right s5
+                  match r7 with
+                  | core.result.Result.Ok _ =>
+                    let s6 ←
+                      lift (Array.to_slice (Array.make 1#usize [ 10#u8 ]))
+                    let (r8, out9) ← output.Buffer.append out8 s6
+                    match r8 with
+                    | core.result.Result.Ok _ =>
+                      let s7 ←
+                        lift (Array.to_slice
+                          (Array.make 2#usize [ 41#u8, 10#u8 ]))
+                      output.Buffer.append out9 s7
+                    | core.result.Result.Err _ => ok (r8, out9)
+                  | core.result.Result.Err _ => ok (r7, out8)
+                | core.result.Result.Err _ => ok (r6, out7)
+              | core.result.Result.Err _ => ok (r5, out6)
+            | core.result.Result.Err _ => ok (r4, out5)
+          | core.result.Result.Err _ => ok (r3, out4)
+        | source.types.Shape.Sum left right =>
+          let s2 ←
+            lift (Array.to_slice
+              (Array.make 127#usize [
+                40#u8, 105#u8, 102#u8, 32#u8, 40#u8, 105#u8, 51#u8, 50#u8,
+                46#u8, 97#u8, 110#u8, 100#u8, 32#u8, 40#u8, 105#u8, 51#u8,
+                50#u8, 46#u8, 110#u8, 101#u8, 32#u8, 40#u8, 108#u8, 111#u8,
+                99#u8, 97#u8, 108#u8, 46#u8, 103#u8, 101#u8, 116#u8, 32#u8,
+                36#u8, 116#u8, 97#u8, 103#u8, 41#u8, 32#u8, 40#u8, 105#u8,
+                51#u8, 50#u8, 46#u8, 99#u8, 111#u8, 110#u8, 115#u8, 116#u8,
+                32#u8, 49#u8, 50#u8, 41#u8, 41#u8, 32#u8, 40#u8, 105#u8, 51#u8,
+                50#u8, 46#u8, 110#u8, 101#u8, 32#u8, 40#u8, 108#u8, 111#u8,
+                99#u8, 97#u8, 108#u8, 46#u8, 103#u8, 101#u8, 116#u8, 32#u8,
+                36#u8, 116#u8, 97#u8, 103#u8, 41#u8, 32#u8, 40#u8, 105#u8,
+                51#u8, 50#u8, 46#u8, 99#u8, 111#u8, 110#u8, 115#u8, 116#u8,
+                32#u8, 49#u8, 51#u8, 41#u8, 41#u8, 41#u8, 32#u8, 40#u8, 116#u8,
+                104#u8, 101#u8, 110#u8, 32#u8, 40#u8, 114#u8, 101#u8, 116#u8,
+                117#u8, 114#u8, 110#u8, 32#u8, 40#u8, 105#u8, 51#u8, 50#u8,
+                46#u8, 99#u8, 111#u8, 110#u8, 115#u8, 116#u8, 32#u8, 48#u8,
+                41#u8, 41#u8, 41#u8, 41#u8, 10#u8
+                ]))
+          let (r3, out4) ← output.Buffer.append out3 s2
+          match r3 with
+          | core.result.Result.Ok _ =>
+            let (r4, out5) ← source.types.live out4
+            match r4 with
+            | core.result.Result.Ok _ =>
+              let s3 ←
+                lift (Array.to_slice
+                  (Array.make 64#usize [
+                    40#u8, 105#u8, 102#u8, 32#u8, 40#u8, 114#u8, 101#u8,
+                    115#u8, 117#u8, 108#u8, 116#u8, 32#u8, 105#u8, 51#u8,
+                    50#u8, 41#u8, 32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8,
+                    101#u8, 113#u8, 32#u8, 40#u8, 108#u8, 111#u8, 99#u8, 97#u8,
+                    108#u8, 46#u8, 103#u8, 101#u8, 116#u8, 32#u8, 36#u8,
+                    116#u8, 97#u8, 103#u8, 41#u8, 32#u8, 40#u8, 105#u8, 51#u8,
+                    50#u8, 46#u8, 99#u8, 111#u8, 110#u8, 115#u8, 116#u8, 32#u8,
+                    49#u8, 50#u8, 41#u8, 41#u8, 32#u8, 40#u8, 116#u8, 104#u8,
+                    101#u8, 110#u8, 32#u8
+                    ]))
+              let (r5, out6) ← output.Buffer.append out5 s3
+              match r5 with
+              | core.result.Result.Ok _ =>
+                let s4 ← lift (Array.to_slice (Array.make 1#usize [ 97#u8 ]))
+                let (r6, out7) ← source.types.child out6 left s4
+                match r6 with
+                | core.result.Result.Ok _ =>
+                  let s5 ←
+                    lift (Array.to_slice
+                      (Array.make 8#usize [
+                        41#u8, 32#u8, 40#u8, 101#u8, 108#u8, 115#u8, 101#u8,
+                        32#u8
+                        ]))
+                  let (r7, out8) ← output.Buffer.append out7 s5
+                  match r7 with
+                  | core.result.Result.Ok _ =>
+                    let s6 ←
+                      lift (Array.to_slice (Array.make 1#usize [ 97#u8 ]))
+                    let (r8, out9) ← source.types.child out8 right s6
+                    match r8 with
+                    | core.result.Result.Ok _ =>
+                      let s7 ←
+                        lift (Array.to_slice
+                          (Array.make 3#usize [ 41#u8, 41#u8, 10#u8 ]))
+                      let (r9, out10) ← output.Buffer.append out9 s7
+                      match r9 with
+                      | core.result.Result.Ok _ =>
+                        let s8 ←
+                          lift (Array.to_slice
+                            (Array.make 2#usize [ 41#u8, 10#u8 ]))
+                        output.Buffer.append out10 s8
+                      | core.result.Result.Err _ => ok (r9, out10)
+                    | core.result.Result.Err _ => ok (r8, out9)
+                  | core.result.Result.Err _ => ok (r7, out8)
+                | core.result.Result.Err _ => ok (r6, out7)
+              | core.result.Result.Err _ => ok (r5, out6)
+            | core.result.Result.Err _ => ok (r4, out5)
+          | core.result.Result.Err _ => ok (r3, out4)
+        | source.types.Shape.List item =>
+          let s2 ←
+            lift (Array.to_slice
+              (Array.make 125#usize [
+                40#u8, 105#u8, 102#u8, 32#u8, 40#u8, 105#u8, 51#u8, 50#u8,
+                46#u8, 97#u8, 110#u8, 100#u8, 32#u8, 40#u8, 105#u8, 51#u8,
+                50#u8, 46#u8, 110#u8, 101#u8, 32#u8, 40#u8, 108#u8, 111#u8,
+                99#u8, 97#u8, 108#u8, 46#u8, 103#u8, 101#u8, 116#u8, 32#u8,
+                36#u8, 116#u8, 97#u8, 103#u8, 41#u8, 32#u8, 40#u8, 105#u8,
+                51#u8, 50#u8, 46#u8, 99#u8, 111#u8, 110#u8, 115#u8, 116#u8,
+                32#u8, 54#u8, 41#u8, 41#u8, 32#u8, 40#u8, 105#u8, 51#u8, 50#u8,
+                46#u8, 110#u8, 101#u8, 32#u8, 40#u8, 108#u8, 111#u8, 99#u8,
+                97#u8, 108#u8, 46#u8, 103#u8, 101#u8, 116#u8, 32#u8, 36#u8,
+                116#u8, 97#u8, 103#u8, 41#u8, 32#u8, 40#u8, 105#u8, 51#u8,
+                50#u8, 46#u8, 99#u8, 111#u8, 110#u8, 115#u8, 116#u8, 32#u8,
+                55#u8, 41#u8, 41#u8, 41#u8, 32#u8, 40#u8, 116#u8, 104#u8,
+                101#u8, 110#u8, 32#u8, 40#u8, 114#u8, 101#u8, 116#u8, 117#u8,
+                114#u8, 110#u8, 32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8,
+                99#u8, 111#u8, 110#u8, 115#u8, 116#u8, 32#u8, 48#u8, 41#u8,
+                41#u8, 41#u8, 41#u8, 10#u8
+                ]))
+          let (r3, out4) ← output.Buffer.append out3 s2
+          match r3 with
+          | core.result.Result.Ok _ =>
+            let (r4, out5) ← source.types.live out4
+            match r4 with
+            | core.result.Result.Ok _ =>
+              let s3 ←
+                lift (Array.to_slice
+                  (Array.make 267#usize [
+                    40#u8, 108#u8, 111#u8, 111#u8, 112#u8, 32#u8, 36#u8,
+                    108#u8, 105#u8, 115#u8, 116#u8, 10#u8, 40#u8, 105#u8,
+                    102#u8, 32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 101#u8,
+                    113#u8, 122#u8, 32#u8, 40#u8, 99#u8, 97#u8, 108#u8, 108#u8,
+                    32#u8, 36#u8, 111#u8, 98#u8, 115#u8, 101#u8, 114#u8,
+                    118#u8, 97#u8, 116#u8, 105#u8, 111#u8, 110#u8, 95#u8,
+                    116#u8, 105#u8, 99#u8, 107#u8, 41#u8, 41#u8, 32#u8, 40#u8,
+                    116#u8, 104#u8, 101#u8, 110#u8, 32#u8, 40#u8, 114#u8,
+                    101#u8, 116#u8, 117#u8, 114#u8, 110#u8, 32#u8, 40#u8,
+                    105#u8, 51#u8, 50#u8, 46#u8, 99#u8, 111#u8, 110#u8, 115#u8,
+                    116#u8, 32#u8, 48#u8, 41#u8, 41#u8, 41#u8, 41#u8, 10#u8,
+                    40#u8, 105#u8, 102#u8, 32#u8, 40#u8, 105#u8, 51#u8, 50#u8,
+                    46#u8, 101#u8, 113#u8, 32#u8, 40#u8, 99#u8, 97#u8, 108#u8,
+                    108#u8, 32#u8, 36#u8, 107#u8, 105#u8, 110#u8, 100#u8,
+                    32#u8, 40#u8, 108#u8, 111#u8, 99#u8, 97#u8, 108#u8, 46#u8,
+                    103#u8, 101#u8, 116#u8, 32#u8, 36#u8, 104#u8, 41#u8, 41#u8,
+                    32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8, 111#u8,
+                    110#u8, 115#u8, 116#u8, 32#u8, 55#u8, 41#u8, 41#u8, 32#u8,
+                    40#u8, 116#u8, 104#u8, 101#u8, 110#u8, 32#u8, 40#u8,
+                    114#u8, 101#u8, 116#u8, 117#u8, 114#u8, 110#u8, 32#u8,
+                    40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8, 111#u8, 110#u8,
+                    115#u8, 116#u8, 32#u8, 49#u8, 41#u8, 41#u8, 41#u8, 41#u8,
+                    10#u8, 40#u8, 105#u8, 102#u8, 32#u8, 40#u8, 105#u8, 51#u8,
+                    50#u8, 46#u8, 110#u8, 101#u8, 32#u8, 40#u8, 99#u8, 97#u8,
+                    108#u8, 108#u8, 32#u8, 36#u8, 107#u8, 105#u8, 110#u8,
+                    100#u8, 32#u8, 40#u8, 108#u8, 111#u8, 99#u8, 97#u8, 108#u8,
+                    46#u8, 103#u8, 101#u8, 116#u8, 32#u8, 36#u8, 104#u8, 41#u8,
+                    41#u8, 32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8,
+                    111#u8, 110#u8, 115#u8, 116#u8, 32#u8, 54#u8, 41#u8, 41#u8,
+                    32#u8, 40#u8, 116#u8, 104#u8, 101#u8, 110#u8, 32#u8, 40#u8,
+                    114#u8, 101#u8, 116#u8, 117#u8, 114#u8, 110#u8, 32#u8,
+                    40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8, 111#u8, 110#u8,
+                    115#u8, 116#u8, 32#u8, 48#u8, 41#u8, 41#u8, 41#u8, 41#u8,
+                    10#u8, 40#u8, 105#u8, 102#u8, 32#u8, 40#u8, 105#u8, 51#u8,
+                    50#u8, 46#u8, 101#u8, 113#u8, 122#u8, 32#u8
+                    ]))
+              let (r5, out6) ← output.Buffer.append out5 s3
+              match r5 with
+              | core.result.Result.Ok _ =>
+                let s4 ← lift (Array.to_slice (Array.make 1#usize [ 97#u8 ]))
+                let (r6, out7) ← source.types.child out6 item s4
+                match r6 with
+                | core.result.Result.Ok _ =>
+                  let s5 ←
+                    lift (Array.to_slice
+                      (Array.make 99#usize [
+                        41#u8, 32#u8, 40#u8, 116#u8, 104#u8, 101#u8, 110#u8,
+                        32#u8, 40#u8, 114#u8, 101#u8, 116#u8, 117#u8, 114#u8,
+                        110#u8, 32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8,
+                        99#u8, 111#u8, 110#u8, 115#u8, 116#u8, 32#u8, 48#u8,
+                        41#u8, 41#u8, 41#u8, 41#u8, 10#u8, 40#u8, 108#u8,
+                        111#u8, 99#u8, 97#u8, 108#u8, 46#u8, 115#u8, 101#u8,
+                        116#u8, 32#u8, 36#u8, 104#u8, 32#u8, 40#u8, 99#u8,
+                        97#u8, 108#u8, 108#u8, 32#u8, 36#u8, 98#u8, 32#u8,
+                        40#u8, 108#u8, 111#u8, 99#u8, 97#u8, 108#u8, 46#u8,
+                        103#u8, 101#u8, 116#u8, 32#u8, 36#u8, 104#u8, 41#u8,
+                        41#u8, 41#u8, 10#u8, 40#u8, 98#u8, 114#u8, 32#u8,
+                        36#u8, 108#u8, 105#u8, 115#u8, 116#u8, 41#u8, 41#u8,
+                        10#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8,
+                        111#u8, 110#u8, 115#u8, 116#u8, 32#u8, 48#u8, 41#u8,
+                        10#u8
+                        ]))
+                  let (r7, out8) ← output.Buffer.append out7 s5
+                  match r7 with
+                  | core.result.Result.Ok _ =>
+                    let s6 ←
+                      lift (Array.to_slice
+                        (Array.make 2#usize [ 41#u8, 10#u8 ]))
+                    output.Buffer.append out8 s6
+                  | core.result.Result.Err _ => ok (r7, out8)
+                | core.result.Result.Err _ => ok (r6, out7)
+              | core.result.Result.Err _ => ok (r5, out6)
+            | core.result.Result.Err _ => ok (r4, out5)
+          | core.result.Result.Err _ => ok (r3, out4)
+        | source.types.Shape.Program input output_signature effects =>
+          let (r3, out4) ← source.types.reference out3 4#u32
+          match r3 with
+          | core.result.Result.Ok _ =>
+            let s2 ←
+              lift (Array.to_slice
+                (Array.make 42#usize [
+                  40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 97#u8, 110#u8, 100#u8,
+                  32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 101#u8, 113#u8,
+                  32#u8, 40#u8, 99#u8, 97#u8, 108#u8, 108#u8, 32#u8, 36#u8,
+                  121#u8, 32#u8, 40#u8, 108#u8, 111#u8, 99#u8, 97#u8, 108#u8,
+                  46#u8, 103#u8, 101#u8, 116#u8, 32#u8, 36#u8, 104#u8, 41#u8,
+                  41#u8, 32#u8
+                  ]))
+            let (r4, out5) ← output.Buffer.append out4 s2
+            match r4 with
+            | core.result.Result.Ok _ =>
+              let (r5, out6) ← output.Buffer.i32 out5 input
+              match r5 with
+              | core.result.Result.Ok _ =>
+                let s3 ←
+                  lift (Array.to_slice
+                    (Array.make 44#usize [
+                      41#u8, 32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 97#u8,
+                      110#u8, 100#u8, 32#u8, 40#u8, 105#u8, 51#u8, 50#u8,
+                      46#u8, 101#u8, 113#u8, 32#u8, 40#u8, 99#u8, 97#u8,
+                      108#u8, 108#u8, 32#u8, 36#u8, 122#u8, 32#u8, 40#u8,
+                      108#u8, 111#u8, 99#u8, 97#u8, 108#u8, 46#u8, 103#u8,
+                      101#u8, 116#u8, 32#u8, 36#u8, 104#u8, 41#u8, 41#u8, 32#u8
+                      ]))
+                let (r6, out7) ← output.Buffer.append out6 s3
+                match r6 with
+                | core.result.Result.Ok _ =>
+                  let (r7, out8) ← output.Buffer.i32 out7 output_signature
+                  match r7 with
+                  | core.result.Result.Ok _ =>
+                    let s4 ←
+                      lift (Array.to_slice
+                        (Array.make 41#usize [
+                          41#u8, 32#u8, 40#u8, 105#u8, 54#u8, 52#u8, 46#u8,
+                          101#u8, 113#u8, 32#u8, 40#u8, 99#u8, 97#u8, 108#u8,
+                          108#u8, 32#u8, 36#u8, 112#u8, 97#u8, 121#u8, 108#u8,
+                          111#u8, 97#u8, 100#u8, 32#u8, 40#u8, 108#u8, 111#u8,
+                          99#u8, 97#u8, 108#u8, 46#u8, 103#u8, 101#u8, 116#u8,
+                          32#u8, 36#u8, 104#u8, 41#u8, 41#u8, 32#u8
+                          ]))
+                    let (r8, out9) ← output.Buffer.append out8 s4
+                    match r8 with
+                    | core.result.Result.Ok _ =>
+                      let i ← I64.Insts.CoreConvertFromU32.from effects
+                      let (r9, out10) ← output.Buffer.i64 out9 i
+                      match r9 with
+                      | core.result.Result.Ok _ =>
+                        let s5 ←
+                          lift (Array.to_slice
+                            (Array.make 4#usize [ 41#u8, 41#u8, 41#u8, 10#u8 ]))
+                        let (r10, out11) ← output.Buffer.append out10 s5
+                        match r10 with
+                        | core.result.Result.Ok _ =>
+                          let s6 ←
+                            lift (Array.to_slice
+                              (Array.make 2#usize [ 41#u8, 10#u8 ]))
+                          output.Buffer.append out11 s6
+                        | core.result.Result.Err _ => ok (r10, out11)
+                      | core.result.Result.Err _ => ok (r9, out10)
+                    | core.result.Result.Err _ => ok (r8, out9)
+                  | core.result.Result.Err _ => ok (r7, out8)
+                | core.result.Result.Err _ => ok (r6, out7)
+              | core.result.Result.Err _ => ok (r5, out6)
+            | core.result.Result.Err _ => ok (r4, out5)
+          | core.result.Result.Err _ => ok (r3, out4)
+        | source.types.Shape.Syntax =>
+          let (r3, out4) ← source.types.reference out3 10#u32
+          match r3 with
+          | core.result.Result.Ok _ =>
+            let s2 ←
+              lift (Array.to_slice
+                (Array.make 14#usize [
+                  40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8, 111#u8, 110#u8,
+                  115#u8, 116#u8, 32#u8, 49#u8, 41#u8, 10#u8
+                  ]))
+            let (r4, out5) ← output.Buffer.append out4 s2
+            match r4 with
+            | core.result.Result.Ok _ =>
+              let s3 ←
+                lift (Array.to_slice (Array.make 2#usize [ 41#u8, 10#u8 ]))
+              output.Buffer.append out5 s3
+            | core.result.Result.Err _ => ok (r4, out5)
+          | core.result.Result.Err _ => ok (r3, out4)
+        | source.types.Shape.Text =>
+          let (r3, out4) ← source.types.reference out3 11#u32
+          match r3 with
+          | core.result.Result.Ok _ =>
+            let s2 ←
+              lift (Array.to_slice
+                (Array.make 14#usize [
+                  40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8, 111#u8, 110#u8,
+                  115#u8, 116#u8, 32#u8, 49#u8, 41#u8, 10#u8
+                  ]))
+            let (r4, out5) ← output.Buffer.append out4 s2
+            match r4 with
+            | core.result.Result.Ok _ =>
+              let s3 ←
+                lift (Array.to_slice (Array.make 2#usize [ 41#u8, 10#u8 ]))
+              output.Buffer.append out5 s3
+            | core.result.Result.Err _ => ok (r4, out5)
+          | core.result.Result.Err _ => ok (r3, out4)
+      | core.result.Result.Err _ => ok (r2, out3)
+    | core.result.Result.Err _ => ok (r1, out2)
+  | core.result.Result.Err _ => ok (r, out1)
+
+/-- [noble_wasm::source::types::{noble_wasm::source::types::Registry}::emit]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/types.rs', lines 169:8-177:9 -/
+@[rust_loop_body]
+def source.types.Registry.emit_loop.body
+  (self : source.types.Registry) (out : output.Buffer) (index : Std.Usize) :
+  Result (ControlFlow (output.Buffer × Std.Usize) (output.Buffer × (Option
+    Diagnostic)))
+  := do
+  let i := alloc.vec.Vec.len self.shapes
+  if index < i
+  then
+    let s ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        source.types.Shape) self.shapes index
+    let (r, out1) ← source.types.emit_shape out index s
+    match r with
+    | core.result.Result.Ok _ =>
+      let index1 ← index + 1#usize
+      ok (cont (out1, index1))
+    | core.result.Result.Err problem => ok (done (out1, some problem))
+  else ok (done (out, none))
+
+/-- [noble_wasm::source::types::{noble_wasm::source::types::Registry}::emit]: loop 0:
+    Source: 'crates/noble-wasm/src/source/types.rs', lines 169:8-177:9 -/
+@[rust_loop]
+def source.types.Registry.emit_loop
+  (self : source.types.Registry) (out : output.Buffer) (index : Std.Usize) :
+  Result (output.Buffer × (Option Diagnostic))
+  := do
+  loop
+    (fun (out1, index1) => source.types.Registry.emit_loop.body self out1
+      index1)
+    (out, index)
+
+/-- [noble_wasm::source::types::{noble_wasm::source::types::Registry}::emit]:
+    Source: 'crates/noble-wasm/src/source/types.rs', lines 166:4-182:5 -/
+def source.types.Registry.emit
+  (self : source.types.Registry) (out : output.Buffer) :
+  Result ((core.result.Result Unit Diagnostic) × output.Buffer)
+  := do
+  let (out1, failure) ← source.types.Registry.emit_loop self out 0#usize
+  match failure with
+  | none => ok (core.result.Result.Ok (), out1)
+  | some problem => ok (core.result.Result.Err problem, out1)
+
+/-- [noble_wasm::source::emit::module]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/emit.rs', lines 107:4-115:5 -/
+@[rust_loop_body]
+def source.emit.module_loop0.body
+  (v : alloc.vec.Vec (Std.U32 × (alloc.vec.Vec Std.U8))) (out : output.Buffer)
+  (index : Std.Usize) :
+  Result (ControlFlow (output.Buffer × Std.Usize) (output.Buffer × (Option
+    Diagnostic)))
+  := do
+  let i := alloc.vec.Vec.len v
+  if index < i
+  then
+    let (_, v1) ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice (Std.U32 ×
+        (alloc.vec.Vec Std.U8))) v index
+    let s := alloc.vec.Vec.deref v1
+    let (r, out1) ← source.emit.metadata.data_segment out index s
+    match r with
+    | core.result.Result.Ok _ =>
+      let index1 ← index + 1#usize
+      ok (cont (out1, index1))
+    | core.result.Result.Err problem => ok (done (out1, some problem))
+  else ok (done (out, none))
+
+/-- [noble_wasm::source::emit::module]: loop 0:
+    Source: 'crates/noble-wasm/src/source/emit.rs', lines 107:4-115:5 -/
+@[rust_loop]
+def source.emit.module_loop0
+  (v : alloc.vec.Vec (Std.U32 × (alloc.vec.Vec Std.U8))) (out : output.Buffer)
+  (index : Std.Usize) :
+  Result (output.Buffer × (Option Diagnostic))
+  := do
+  loop
+    (fun (out1, index1) => source.emit.module_loop0.body v out1 index1)
+    (out, index)
+
+/-- [noble_wasm::source::emit::module]: loop body 1:
+    Source: 'crates/noble-wasm/src/source/emit.rs', lines 107:4-115:5 -/
+@[rust_loop_body]
+def source.emit.module_loop1.body
+  (v : alloc.vec.Vec (Std.U32 × (alloc.vec.Vec Std.U8))) (out : output.Buffer)
+  (index : Std.Usize) :
+  Result (ControlFlow (output.Buffer × Std.Usize) (output.Buffer × (Option
+    Diagnostic)))
+  := do
+  let i := alloc.vec.Vec.len v
+  if index < i
+  then
+    let (_, v1) ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice (Std.U32 ×
+        (alloc.vec.Vec Std.U8))) v index
+    let s := alloc.vec.Vec.deref v1
+    let (r, out1) ← source.emit.metadata.data_segment out index s
+    match r with
+    | core.result.Result.Ok _ =>
+      let index1 ← index + 1#usize
+      ok (cont (out1, index1))
+    | core.result.Result.Err problem => ok (done (out1, some problem))
+  else ok (done (out, none))
+
+/-- [noble_wasm::source::emit::module]: loop 1:
+    Source: 'crates/noble-wasm/src/source/emit.rs', lines 107:4-115:5 -/
+@[rust_loop]
+def source.emit.module_loop1
+  (v : alloc.vec.Vec (Std.U32 × (alloc.vec.Vec Std.U8))) (out : output.Buffer)
+  (index : Std.Usize) :
+  Result (output.Buffer × (Option Diagnostic))
+  := do
+  loop
+    (fun (out1, index1) => source.emit.module_loop1.body v out1 index1)
+    (out, index)
+
+/-- [noble_wasm::source::emit::module]: loop body 2:
+    Source: 'crates/noble-wasm/src/source/emit.rs', lines 107:4-115:5 -/
+@[rust_loop_body]
+def source.emit.module_loop2.body
+  (v : alloc.vec.Vec (Std.U32 × (alloc.vec.Vec Std.U8))) (out : output.Buffer)
+  (index : Std.Usize) :
+  Result (ControlFlow (output.Buffer × Std.Usize) (output.Buffer × (Option
+    Diagnostic)))
+  := do
+  let i := alloc.vec.Vec.len v
+  if index < i
+  then
+    let (_, v1) ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice (Std.U32 ×
+        (alloc.vec.Vec Std.U8))) v index
+    let s := alloc.vec.Vec.deref v1
+    let (r, out1) ← source.emit.metadata.data_segment out index s
+    match r with
+    | core.result.Result.Ok _ =>
+      let index1 ← index + 1#usize
+      ok (cont (out1, index1))
+    | core.result.Result.Err problem => ok (done (out1, some problem))
+  else ok (done (out, none))
+
+/-- [noble_wasm::source::emit::module]: loop 2:
+    Source: 'crates/noble-wasm/src/source/emit.rs', lines 107:4-115:5 -/
+@[rust_loop]
+def source.emit.module_loop2
+  (v : alloc.vec.Vec (Std.U32 × (alloc.vec.Vec Std.U8))) (out : output.Buffer)
+  (index : Std.Usize) :
+  Result (output.Buffer × (Option Diagnostic))
+  := do
+  loop
+    (fun (out1, index1) => source.emit.module_loop2.body v out1 index1)
+    (out, index)
+
+/-- [noble_wasm::source::emit::module]: loop body 3:
+    Source: 'crates/noble-wasm/src/source/emit.rs', lines 107:4-115:5 -/
+@[rust_loop_body]
+def source.emit.module_loop3.body
+  (v : alloc.vec.Vec (Std.U32 × (alloc.vec.Vec Std.U8))) (out : output.Buffer)
+  (index : Std.Usize) :
+  Result (ControlFlow (output.Buffer × Std.Usize) (output.Buffer × (Option
+    Diagnostic)))
+  := do
+  let i := alloc.vec.Vec.len v
+  if index < i
+  then
+    let (_, v1) ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice (Std.U32 ×
+        (alloc.vec.Vec Std.U8))) v index
+    let s := alloc.vec.Vec.deref v1
+    let (r, out1) ← source.emit.metadata.data_segment out index s
+    match r with
+    | core.result.Result.Ok _ =>
+      let index1 ← index + 1#usize
+      ok (cont (out1, index1))
+    | core.result.Result.Err problem => ok (done (out1, some problem))
+  else ok (done (out, none))
+
+/-- [noble_wasm::source::emit::module]: loop 3:
+    Source: 'crates/noble-wasm/src/source/emit.rs', lines 107:4-115:5 -/
+@[rust_loop]
+def source.emit.module_loop3
+  (v : alloc.vec.Vec (Std.U32 × (alloc.vec.Vec Std.U8))) (out : output.Buffer)
+  (index : Std.Usize) :
+  Result (output.Buffer × (Option Diagnostic))
+  := do
+  loop
+    (fun (out1, index1) => source.emit.module_loop3.body v out1 index1)
+    (out, index)
+
+/-- [noble_wasm::source::emit::module]:
+    Source: 'crates/noble-wasm/src/source/emit.rs', lines 88:0-137:1 -/
+def source.emit.module
+  (plan : source.plan.Layout) (generation : Std.U32) :
+  Result (core.result.Result (alloc.vec.Vec Std.U8) Diagnostic)
+  := do
+  let out ← output.Buffer.new 32768#usize
+  let (r, out1) ← source.emit.imports.write out
+  match r with
+  | core.result.Result.Ok _ =>
+    let (r1, out2) ← source.emit.imports.runtime out1
+    match r1 with
+    | core.result.Result.Ok _ =>
+      let (r2, out3) ← source.types.Registry.emit plan.types out2
+      match r2 with
+      | core.result.Result.Ok _ =>
+        let s := alloc.vec.Vec.deref plan.programs
+        let (r3, out4) ← source.emit.programs out3 s
+        match r3 with
+        | core.result.Result.Ok _ =>
+          if generation = 0#u32
+          then
+            let s1 ←
+              lift (Array.to_slice
+                (Array.make 74#usize [
+                  40#u8, 101#u8, 108#u8, 101#u8, 109#u8, 32#u8, 36#u8, 99#u8,
+                  111#u8, 114#u8, 101#u8, 32#u8, 102#u8, 117#u8, 110#u8, 99#u8,
+                  32#u8, 36#u8, 101#u8, 109#u8, 112#u8, 116#u8, 121#u8, 95#u8,
+                  101#u8, 110#u8, 116#u8, 114#u8, 121#u8, 32#u8, 36#u8, 113#u8,
+                  117#u8, 111#u8, 116#u8, 101#u8, 95#u8, 101#u8, 110#u8,
+                  116#u8, 114#u8, 121#u8, 32#u8, 36#u8, 99#u8, 111#u8, 109#u8,
+                  112#u8, 111#u8, 115#u8, 101#u8, 95#u8, 101#u8, 110#u8,
+                  116#u8, 114#u8, 121#u8, 32#u8, 36#u8, 114#u8, 101#u8, 115#u8,
+                  116#u8, 111#u8, 114#u8, 101#u8, 95#u8, 101#u8, 110#u8,
+                  116#u8, 114#u8, 121#u8, 41#u8, 10#u8
+                  ]))
+            let (r4, out5) ← output.Buffer.append out4 s1
+            match r4 with
+            | core.result.Result.Ok _ =>
+              if plan.functions > plan.first_function
+              then
+                let (r5, out6) ← source.emit.code_elements out5 plan
+                match r5 with
+                | core.result.Result.Ok _ =>
+                  let (out7, failure) ←
+                    source.emit.module_loop0 plan.data out6 0#usize
+                  match failure with
+                  | none =>
+                    let s2 := alloc.vec.Vec.deref plan.descriptors
+                    let (r6, out8) ← source.emit.metadata.descriptors out7 s2
+                    match r6 with
+                    | core.result.Result.Ok _ =>
+                      let (r7, out9) ←
+                        source.emit.initialize.write out8 plan generation
+                      match r7 with
+                      | core.result.Result.Ok _ =>
+                        let s3 ←
+                          lift (Array.to_slice
+                            (Array.make 12#usize [
+                              36#u8, 99#u8, 104#u8, 101#u8, 99#u8, 107#u8,
+                              95#u8, 105#u8, 110#u8, 112#u8, 117#u8, 116#u8
+                              ]))
+                        let s4 := alloc.vec.Vec.deref plan.input_types
+                        let (r8, out10) ←
+                          source.emit.metadata.stack_check out9 s3 s4
+                        match r8 with
+                        | core.result.Result.Ok _ =>
+                          let s5 ←
+                            lift (Array.to_slice
+                              (Array.make 13#usize [
+                                36#u8, 99#u8, 104#u8, 101#u8, 99#u8, 107#u8,
+                                95#u8, 111#u8, 117#u8, 116#u8, 112#u8, 117#u8,
+                                116#u8
+                                ]))
+                          let s6 := alloc.vec.Vec.deref plan.output_types
+                          let (r9, out11) ←
+                            source.emit.metadata.stack_check out10 s5 s6
+                          match r9 with
+                          | core.result.Result.Ok _ =>
+                            let s7 ←
+                              lift (Array.to_slice
+                                (Array.make 164#usize [
+                                  40#u8, 102#u8, 117#u8, 110#u8, 99#u8, 32#u8,
+                                  40#u8, 101#u8, 120#u8, 112#u8, 111#u8,
+                                  114#u8, 116#u8, 32#u8, 34#u8, 115#u8, 117#u8,
+                                  98#u8, 109#u8, 105#u8, 116#u8, 34#u8, 41#u8,
+                                  32#u8, 40#u8, 114#u8, 101#u8, 115#u8, 117#u8,
+                                  108#u8, 116#u8, 32#u8, 105#u8, 51#u8, 50#u8,
+                                  41#u8, 10#u8, 40#u8, 105#u8, 102#u8, 32#u8,
+                                  40#u8, 103#u8, 108#u8, 111#u8, 98#u8, 97#u8,
+                                  108#u8, 46#u8, 103#u8, 101#u8, 116#u8, 32#u8,
+                                  36#u8, 102#u8, 97#u8, 105#u8, 108#u8, 117#u8,
+                                  114#u8, 101#u8, 41#u8, 32#u8, 40#u8, 116#u8,
+                                  104#u8, 101#u8, 110#u8, 32#u8, 40#u8, 114#u8,
+                                  101#u8, 116#u8, 117#u8, 114#u8, 110#u8,
+                                  32#u8, 40#u8, 103#u8, 108#u8, 111#u8, 98#u8,
+                                  97#u8, 108#u8, 46#u8, 103#u8, 101#u8, 116#u8,
+                                  32#u8, 36#u8, 102#u8, 97#u8, 105#u8, 108#u8,
+                                  117#u8, 114#u8, 101#u8, 41#u8, 41#u8, 41#u8,
+                                  41#u8, 10#u8, 40#u8, 105#u8, 102#u8, 32#u8,
+                                  40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 111#u8,
+                                  114#u8, 32#u8, 40#u8, 103#u8, 108#u8, 111#u8,
+                                  98#u8, 97#u8, 108#u8, 46#u8, 103#u8, 101#u8,
+                                  116#u8, 32#u8, 36#u8, 99#u8, 112#u8, 41#u8,
+                                  32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8,
+                                  110#u8, 101#u8, 32#u8, 40#u8, 103#u8, 108#u8,
+                                  111#u8, 98#u8, 97#u8, 108#u8, 46#u8, 103#u8,
+                                  101#u8, 116#u8, 32#u8, 36#u8, 103#u8, 101#u8,
+                                  110#u8, 101#u8, 114#u8, 97#u8, 116#u8,
+                                  105#u8, 111#u8, 110#u8, 41#u8, 32#u8
+                                  ]))
+                            let (r10, out12) ← output.Buffer.append out11 s7
+                            match r10 with
+                            | core.result.Result.Ok _ =>
+                              let (r11, out13) ←
+                                output.Buffer.i32 out12 generation
+                              match r11 with
+                              | core.result.Result.Ok _ =>
+                                let s8 ←
+                                  lift (Array.to_slice
+                                    (Array.make 329#usize [
+                                      41#u8, 41#u8, 32#u8, 40#u8, 116#u8,
+                                      104#u8, 101#u8, 110#u8, 32#u8, 40#u8,
+                                      99#u8, 97#u8, 108#u8, 108#u8, 32#u8,
+                                      36#u8, 102#u8, 97#u8, 105#u8, 108#u8,
+                                      32#u8, 40#u8, 105#u8, 51#u8, 50#u8,
+                                      46#u8, 99#u8, 111#u8, 110#u8, 115#u8,
+                                      116#u8, 32#u8, 52#u8, 41#u8, 41#u8,
+                                      32#u8, 40#u8, 114#u8, 101#u8, 116#u8,
+                                      117#u8, 114#u8, 110#u8, 32#u8, 40#u8,
+                                      103#u8, 108#u8, 111#u8, 98#u8, 97#u8,
+                                      108#u8, 46#u8, 103#u8, 101#u8, 116#u8,
+                                      32#u8, 36#u8, 102#u8, 97#u8, 105#u8,
+                                      108#u8, 117#u8, 114#u8, 101#u8, 41#u8,
+                                      41#u8, 41#u8, 41#u8, 10#u8, 40#u8, 99#u8,
+                                      97#u8, 108#u8, 108#u8, 32#u8, 36#u8,
+                                      99#u8, 104#u8, 101#u8, 99#u8, 107#u8,
+                                      95#u8, 105#u8, 110#u8, 112#u8, 117#u8,
+                                      116#u8, 41#u8, 10#u8, 40#u8, 105#u8,
+                                      102#u8, 32#u8, 40#u8, 103#u8, 108#u8,
+                                      111#u8, 98#u8, 97#u8, 108#u8, 46#u8,
+                                      103#u8, 101#u8, 116#u8, 32#u8, 36#u8,
+                                      102#u8, 97#u8, 105#u8, 108#u8, 117#u8,
+                                      114#u8, 101#u8, 41#u8, 32#u8, 40#u8,
+                                      116#u8, 104#u8, 101#u8, 110#u8, 32#u8,
+                                      40#u8, 114#u8, 101#u8, 116#u8, 117#u8,
+                                      114#u8, 110#u8, 32#u8, 40#u8, 103#u8,
+                                      108#u8, 111#u8, 98#u8, 97#u8, 108#u8,
+                                      46#u8, 103#u8, 101#u8, 116#u8, 32#u8,
+                                      36#u8, 102#u8, 97#u8, 105#u8, 108#u8,
+                                      117#u8, 114#u8, 101#u8, 41#u8, 41#u8,
+                                      41#u8, 41#u8, 10#u8, 40#u8, 103#u8,
+                                      108#u8, 111#u8, 98#u8, 97#u8, 108#u8,
+                                      46#u8, 115#u8, 101#u8, 116#u8, 32#u8,
+                                      36#u8, 112#u8, 104#u8, 97#u8, 115#u8,
+                                      101#u8, 32#u8, 40#u8, 105#u8, 51#u8,
+                                      50#u8, 46#u8, 99#u8, 111#u8, 110#u8,
+                                      115#u8, 116#u8, 32#u8, 48#u8, 41#u8,
+                                      41#u8, 10#u8, 40#u8, 99#u8, 97#u8,
+                                      108#u8, 108#u8, 32#u8, 36#u8, 105#u8,
+                                      110#u8, 105#u8, 116#u8, 105#u8, 97#u8,
+                                      108#u8, 105#u8, 122#u8, 101#u8, 41#u8,
+                                      10#u8, 40#u8, 105#u8, 102#u8, 32#u8,
+                                      40#u8, 103#u8, 108#u8, 111#u8, 98#u8,
+                                      97#u8, 108#u8, 46#u8, 103#u8, 101#u8,
+                                      116#u8, 32#u8, 36#u8, 102#u8, 97#u8,
+                                      105#u8, 108#u8, 117#u8, 114#u8, 101#u8,
+                                      41#u8, 32#u8, 40#u8, 116#u8, 104#u8,
+                                      101#u8, 110#u8, 32#u8, 40#u8, 114#u8,
+                                      101#u8, 116#u8, 117#u8, 114#u8, 110#u8,
+                                      32#u8, 40#u8, 103#u8, 108#u8, 111#u8,
+                                      98#u8, 97#u8, 108#u8, 46#u8, 103#u8,
+                                      101#u8, 116#u8, 32#u8, 36#u8, 102#u8,
+                                      97#u8, 105#u8, 108#u8, 117#u8, 114#u8,
+                                      101#u8, 41#u8, 41#u8, 41#u8, 41#u8,
+                                      10#u8, 40#u8, 103#u8, 108#u8, 111#u8,
+                                      98#u8, 97#u8, 108#u8, 46#u8, 115#u8,
+                                      101#u8, 116#u8, 32#u8, 36#u8, 112#u8,
+                                      104#u8, 97#u8, 115#u8, 101#u8, 32#u8,
+                                      40#u8, 105#u8, 51#u8, 50#u8, 46#u8,
+                                      99#u8, 111#u8, 110#u8, 115#u8, 116#u8,
+                                      32#u8, 49#u8, 41#u8, 41#u8, 10#u8, 40#u8,
+                                      99#u8, 97#u8, 108#u8, 108#u8, 32#u8,
+                                      36#u8, 101#u8, 110#u8, 113#u8, 117#u8,
+                                      101#u8, 117#u8, 101#u8, 95#u8, 112#u8,
+                                      114#u8, 111#u8, 103#u8, 114#u8, 97#u8,
+                                      109#u8, 32#u8
+                                      ]))
+                                let (r12, out14) ←
+                                  output.Buffer.append out13 s8
+                                match r12 with
+                                | core.result.Result.Ok _ =>
+                                  let (r13, out15) ←
+                                    source.emit.get_global out14 plan.root
+                                  match r13 with
+                                  | core.result.Result.Ok _ =>
+                                    let s9 ←
+                                      lift (Array.to_slice
+                                        (Array.make 227#usize [
+                                          41#u8, 10#u8, 40#u8, 99#u8, 97#u8,
+                                          108#u8, 108#u8, 32#u8, 36#u8, 100#u8,
+                                          105#u8, 115#u8, 112#u8, 97#u8,
+                                          116#u8, 99#u8, 104#u8, 41#u8, 10#u8,
+                                          40#u8, 105#u8, 102#u8, 32#u8, 40#u8,
+                                          105#u8, 51#u8, 50#u8, 46#u8, 101#u8,
+                                          113#u8, 122#u8, 32#u8, 40#u8, 103#u8,
+                                          108#u8, 111#u8, 98#u8, 97#u8, 108#u8,
+                                          46#u8, 103#u8, 101#u8, 116#u8, 32#u8,
+                                          36#u8, 102#u8, 97#u8, 105#u8, 108#u8,
+                                          117#u8, 114#u8, 101#u8, 41#u8, 41#u8,
+                                          32#u8, 40#u8, 116#u8, 104#u8, 101#u8,
+                                          110#u8, 32#u8, 40#u8, 99#u8, 97#u8,
+                                          108#u8, 108#u8, 32#u8, 36#u8, 99#u8,
+                                          104#u8, 101#u8, 99#u8, 107#u8, 95#u8,
+                                          111#u8, 117#u8, 116#u8, 112#u8,
+                                          117#u8, 116#u8, 41#u8, 41#u8, 41#u8,
+                                          10#u8, 40#u8, 105#u8, 102#u8, 32#u8,
+                                          40#u8, 105#u8, 51#u8, 50#u8, 46#u8,
+                                          101#u8, 113#u8, 122#u8, 32#u8, 40#u8,
+                                          103#u8, 108#u8, 111#u8, 98#u8, 97#u8,
+                                          108#u8, 46#u8, 103#u8, 101#u8,
+                                          116#u8, 32#u8, 36#u8, 102#u8, 97#u8,
+                                          105#u8, 108#u8, 117#u8, 114#u8,
+                                          101#u8, 41#u8, 41#u8, 32#u8, 40#u8,
+                                          116#u8, 104#u8, 101#u8, 110#u8,
+                                          32#u8, 40#u8, 103#u8, 108#u8, 111#u8,
+                                          98#u8, 97#u8, 108#u8, 46#u8, 115#u8,
+                                          101#u8, 116#u8, 32#u8, 36#u8, 103#u8,
+                                          101#u8, 110#u8, 101#u8, 114#u8,
+                                          97#u8, 116#u8, 105#u8, 111#u8,
+                                          110#u8, 32#u8, 40#u8, 105#u8, 51#u8,
+                                          50#u8, 46#u8, 97#u8, 100#u8, 100#u8,
+                                          32#u8, 40#u8, 103#u8, 108#u8, 111#u8,
+                                          98#u8, 97#u8, 108#u8, 46#u8, 103#u8,
+                                          101#u8, 116#u8, 32#u8, 36#u8, 103#u8,
+                                          101#u8, 110#u8, 101#u8, 114#u8,
+                                          97#u8, 116#u8, 105#u8, 111#u8,
+                                          110#u8, 41#u8, 32#u8, 40#u8, 105#u8,
+                                          51#u8, 50#u8, 46#u8, 99#u8, 111#u8,
+                                          110#u8, 115#u8, 116#u8, 32#u8, 49#u8,
+                                          41#u8, 41#u8, 41#u8, 41#u8, 41#u8,
+                                          10#u8, 40#u8, 103#u8, 108#u8, 111#u8,
+                                          98#u8, 97#u8, 108#u8, 46#u8, 103#u8,
+                                          101#u8, 116#u8, 32#u8, 36#u8, 102#u8,
+                                          97#u8, 105#u8, 108#u8, 117#u8,
+                                          114#u8, 101#u8, 41#u8, 41#u8, 10#u8,
+                                          41#u8, 10#u8
+                                          ]))
+                                    let (r14, out16) ←
+                                      output.Buffer.append out15 s9
+                                    match r14 with
+                                    | core.result.Result.Ok _ =>
+                                      let v ← output.Buffer.finish out16
+                                      ok (core.result.Result.Ok v)
+                                    | core.result.Result.Err failure1 =>
+                                      ok (core.result.Result.Err failure1)
+                                  | core.result.Result.Err failure1 =>
+                                    ok (core.result.Result.Err failure1)
+                                | core.result.Result.Err failure1 =>
+                                  ok (core.result.Result.Err failure1)
+                              | core.result.Result.Err failure1 =>
+                                ok (core.result.Result.Err failure1)
+                            | core.result.Result.Err failure1 =>
+                              ok (core.result.Result.Err failure1)
+                          | core.result.Result.Err failure1 =>
+                            ok (core.result.Result.Err failure1)
+                        | core.result.Result.Err failure1 =>
+                          ok (core.result.Result.Err failure1)
+                      | core.result.Result.Err failure1 =>
+                        ok (core.result.Result.Err failure1)
+                    | core.result.Result.Err failure1 =>
+                      ok (core.result.Result.Err failure1)
+                  | some problem => ok (core.result.Result.Err problem)
+                | core.result.Result.Err failure =>
+                  ok (core.result.Result.Err failure)
+              else
+                let (out6, failure) ←
+                  source.emit.module_loop1 plan.data out5 0#usize
+                match failure with
+                | none =>
+                  let s2 := alloc.vec.Vec.deref plan.descriptors
+                  let (r5, out7) ← source.emit.metadata.descriptors out6 s2
+                  match r5 with
+                  | core.result.Result.Ok _ =>
+                    let (r6, out8) ←
+                      source.emit.initialize.write out7 plan generation
+                    match r6 with
+                    | core.result.Result.Ok _ =>
+                      let s3 ←
+                        lift (Array.to_slice
+                          (Array.make 12#usize [
+                            36#u8, 99#u8, 104#u8, 101#u8, 99#u8, 107#u8, 95#u8,
+                            105#u8, 110#u8, 112#u8, 117#u8, 116#u8
+                            ]))
+                      let s4 := alloc.vec.Vec.deref plan.input_types
+                      let (r7, out9) ←
+                        source.emit.metadata.stack_check out8 s3 s4
+                      match r7 with
+                      | core.result.Result.Ok _ =>
+                        let s5 ←
+                          lift (Array.to_slice
+                            (Array.make 13#usize [
+                              36#u8, 99#u8, 104#u8, 101#u8, 99#u8, 107#u8,
+                              95#u8, 111#u8, 117#u8, 116#u8, 112#u8, 117#u8,
+                              116#u8
+                              ]))
+                        let s6 := alloc.vec.Vec.deref plan.output_types
+                        let (r8, out10) ←
+                          source.emit.metadata.stack_check out9 s5 s6
+                        match r8 with
+                        | core.result.Result.Ok _ =>
+                          let s7 ←
+                            lift (Array.to_slice
+                              (Array.make 164#usize [
+                                40#u8, 102#u8, 117#u8, 110#u8, 99#u8, 32#u8,
+                                40#u8, 101#u8, 120#u8, 112#u8, 111#u8, 114#u8,
+                                116#u8, 32#u8, 34#u8, 115#u8, 117#u8, 98#u8,
+                                109#u8, 105#u8, 116#u8, 34#u8, 41#u8, 32#u8,
+                                40#u8, 114#u8, 101#u8, 115#u8, 117#u8, 108#u8,
+                                116#u8, 32#u8, 105#u8, 51#u8, 50#u8, 41#u8,
+                                10#u8, 40#u8, 105#u8, 102#u8, 32#u8, 40#u8,
+                                103#u8, 108#u8, 111#u8, 98#u8, 97#u8, 108#u8,
+                                46#u8, 103#u8, 101#u8, 116#u8, 32#u8, 36#u8,
+                                102#u8, 97#u8, 105#u8, 108#u8, 117#u8, 114#u8,
+                                101#u8, 41#u8, 32#u8, 40#u8, 116#u8, 104#u8,
+                                101#u8, 110#u8, 32#u8, 40#u8, 114#u8, 101#u8,
+                                116#u8, 117#u8, 114#u8, 110#u8, 32#u8, 40#u8,
+                                103#u8, 108#u8, 111#u8, 98#u8, 97#u8, 108#u8,
+                                46#u8, 103#u8, 101#u8, 116#u8, 32#u8, 36#u8,
+                                102#u8, 97#u8, 105#u8, 108#u8, 117#u8, 114#u8,
+                                101#u8, 41#u8, 41#u8, 41#u8, 41#u8, 10#u8,
+                                40#u8, 105#u8, 102#u8, 32#u8, 40#u8, 105#u8,
+                                51#u8, 50#u8, 46#u8, 111#u8, 114#u8, 32#u8,
+                                40#u8, 103#u8, 108#u8, 111#u8, 98#u8, 97#u8,
+                                108#u8, 46#u8, 103#u8, 101#u8, 116#u8, 32#u8,
+                                36#u8, 99#u8, 112#u8, 41#u8, 32#u8, 40#u8,
+                                105#u8, 51#u8, 50#u8, 46#u8, 110#u8, 101#u8,
+                                32#u8, 40#u8, 103#u8, 108#u8, 111#u8, 98#u8,
+                                97#u8, 108#u8, 46#u8, 103#u8, 101#u8, 116#u8,
+                                32#u8, 36#u8, 103#u8, 101#u8, 110#u8, 101#u8,
+                                114#u8, 97#u8, 116#u8, 105#u8, 111#u8, 110#u8,
+                                41#u8, 32#u8
+                                ]))
+                          let (r9, out11) ← output.Buffer.append out10 s7
+                          match r9 with
+                          | core.result.Result.Ok _ =>
+                            let (r10, out12) ←
+                              output.Buffer.i32 out11 generation
+                            match r10 with
+                            | core.result.Result.Ok _ =>
+                              let s8 ←
+                                lift (Array.to_slice
+                                  (Array.make 329#usize [
+                                    41#u8, 41#u8, 32#u8, 40#u8, 116#u8, 104#u8,
+                                    101#u8, 110#u8, 32#u8, 40#u8, 99#u8, 97#u8,
+                                    108#u8, 108#u8, 32#u8, 36#u8, 102#u8,
+                                    97#u8, 105#u8, 108#u8, 32#u8, 40#u8,
+                                    105#u8, 51#u8, 50#u8, 46#u8, 99#u8, 111#u8,
+                                    110#u8, 115#u8, 116#u8, 32#u8, 52#u8,
+                                    41#u8, 41#u8, 32#u8, 40#u8, 114#u8, 101#u8,
+                                    116#u8, 117#u8, 114#u8, 110#u8, 32#u8,
+                                    40#u8, 103#u8, 108#u8, 111#u8, 98#u8,
+                                    97#u8, 108#u8, 46#u8, 103#u8, 101#u8,
+                                    116#u8, 32#u8, 36#u8, 102#u8, 97#u8,
+                                    105#u8, 108#u8, 117#u8, 114#u8, 101#u8,
+                                    41#u8, 41#u8, 41#u8, 41#u8, 10#u8, 40#u8,
+                                    99#u8, 97#u8, 108#u8, 108#u8, 32#u8, 36#u8,
+                                    99#u8, 104#u8, 101#u8, 99#u8, 107#u8,
+                                    95#u8, 105#u8, 110#u8, 112#u8, 117#u8,
+                                    116#u8, 41#u8, 10#u8, 40#u8, 105#u8,
+                                    102#u8, 32#u8, 40#u8, 103#u8, 108#u8,
+                                    111#u8, 98#u8, 97#u8, 108#u8, 46#u8,
+                                    103#u8, 101#u8, 116#u8, 32#u8, 36#u8,
+                                    102#u8, 97#u8, 105#u8, 108#u8, 117#u8,
+                                    114#u8, 101#u8, 41#u8, 32#u8, 40#u8,
+                                    116#u8, 104#u8, 101#u8, 110#u8, 32#u8,
+                                    40#u8, 114#u8, 101#u8, 116#u8, 117#u8,
+                                    114#u8, 110#u8, 32#u8, 40#u8, 103#u8,
+                                    108#u8, 111#u8, 98#u8, 97#u8, 108#u8,
+                                    46#u8, 103#u8, 101#u8, 116#u8, 32#u8,
+                                    36#u8, 102#u8, 97#u8, 105#u8, 108#u8,
+                                    117#u8, 114#u8, 101#u8, 41#u8, 41#u8,
+                                    41#u8, 41#u8, 10#u8, 40#u8, 103#u8, 108#u8,
+                                    111#u8, 98#u8, 97#u8, 108#u8, 46#u8,
+                                    115#u8, 101#u8, 116#u8, 32#u8, 36#u8,
+                                    112#u8, 104#u8, 97#u8, 115#u8, 101#u8,
+                                    32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8,
+                                    99#u8, 111#u8, 110#u8, 115#u8, 116#u8,
+                                    32#u8, 48#u8, 41#u8, 41#u8, 10#u8, 40#u8,
+                                    99#u8, 97#u8, 108#u8, 108#u8, 32#u8, 36#u8,
+                                    105#u8, 110#u8, 105#u8, 116#u8, 105#u8,
+                                    97#u8, 108#u8, 105#u8, 122#u8, 101#u8,
+                                    41#u8, 10#u8, 40#u8, 105#u8, 102#u8, 32#u8,
+                                    40#u8, 103#u8, 108#u8, 111#u8, 98#u8,
+                                    97#u8, 108#u8, 46#u8, 103#u8, 101#u8,
+                                    116#u8, 32#u8, 36#u8, 102#u8, 97#u8,
+                                    105#u8, 108#u8, 117#u8, 114#u8, 101#u8,
+                                    41#u8, 32#u8, 40#u8, 116#u8, 104#u8,
+                                    101#u8, 110#u8, 32#u8, 40#u8, 114#u8,
+                                    101#u8, 116#u8, 117#u8, 114#u8, 110#u8,
+                                    32#u8, 40#u8, 103#u8, 108#u8, 111#u8,
+                                    98#u8, 97#u8, 108#u8, 46#u8, 103#u8,
+                                    101#u8, 116#u8, 32#u8, 36#u8, 102#u8,
+                                    97#u8, 105#u8, 108#u8, 117#u8, 114#u8,
+                                    101#u8, 41#u8, 41#u8, 41#u8, 41#u8, 10#u8,
+                                    40#u8, 103#u8, 108#u8, 111#u8, 98#u8,
+                                    97#u8, 108#u8, 46#u8, 115#u8, 101#u8,
+                                    116#u8, 32#u8, 36#u8, 112#u8, 104#u8,
+                                    97#u8, 115#u8, 101#u8, 32#u8, 40#u8,
+                                    105#u8, 51#u8, 50#u8, 46#u8, 99#u8, 111#u8,
+                                    110#u8, 115#u8, 116#u8, 32#u8, 49#u8,
+                                    41#u8, 41#u8, 10#u8, 40#u8, 99#u8, 97#u8,
+                                    108#u8, 108#u8, 32#u8, 36#u8, 101#u8,
+                                    110#u8, 113#u8, 117#u8, 101#u8, 117#u8,
+                                    101#u8, 95#u8, 112#u8, 114#u8, 111#u8,
+                                    103#u8, 114#u8, 97#u8, 109#u8, 32#u8
+                                    ]))
+                              let (r11, out13) ←
+                                output.Buffer.append out12 s8
+                              match r11 with
+                              | core.result.Result.Ok _ =>
+                                let (r12, out14) ←
+                                  source.emit.get_global out13 plan.root
+                                match r12 with
+                                | core.result.Result.Ok _ =>
+                                  let s9 ←
+                                    lift (Array.to_slice
+                                      (Array.make 227#usize [
+                                        41#u8, 10#u8, 40#u8, 99#u8, 97#u8,
+                                        108#u8, 108#u8, 32#u8, 36#u8, 100#u8,
+                                        105#u8, 115#u8, 112#u8, 97#u8, 116#u8,
+                                        99#u8, 104#u8, 41#u8, 10#u8, 40#u8,
+                                        105#u8, 102#u8, 32#u8, 40#u8, 105#u8,
+                                        51#u8, 50#u8, 46#u8, 101#u8, 113#u8,
+                                        122#u8, 32#u8, 40#u8, 103#u8, 108#u8,
+                                        111#u8, 98#u8, 97#u8, 108#u8, 46#u8,
+                                        103#u8, 101#u8, 116#u8, 32#u8, 36#u8,
+                                        102#u8, 97#u8, 105#u8, 108#u8, 117#u8,
+                                        114#u8, 101#u8, 41#u8, 41#u8, 32#u8,
+                                        40#u8, 116#u8, 104#u8, 101#u8, 110#u8,
+                                        32#u8, 40#u8, 99#u8, 97#u8, 108#u8,
+                                        108#u8, 32#u8, 36#u8, 99#u8, 104#u8,
+                                        101#u8, 99#u8, 107#u8, 95#u8, 111#u8,
+                                        117#u8, 116#u8, 112#u8, 117#u8, 116#u8,
+                                        41#u8, 41#u8, 41#u8, 10#u8, 40#u8,
+                                        105#u8, 102#u8, 32#u8, 40#u8, 105#u8,
+                                        51#u8, 50#u8, 46#u8, 101#u8, 113#u8,
+                                        122#u8, 32#u8, 40#u8, 103#u8, 108#u8,
+                                        111#u8, 98#u8, 97#u8, 108#u8, 46#u8,
+                                        103#u8, 101#u8, 116#u8, 32#u8, 36#u8,
+                                        102#u8, 97#u8, 105#u8, 108#u8, 117#u8,
+                                        114#u8, 101#u8, 41#u8, 41#u8, 32#u8,
+                                        40#u8, 116#u8, 104#u8, 101#u8, 110#u8,
+                                        32#u8, 40#u8, 103#u8, 108#u8, 111#u8,
+                                        98#u8, 97#u8, 108#u8, 46#u8, 115#u8,
+                                        101#u8, 116#u8, 32#u8, 36#u8, 103#u8,
+                                        101#u8, 110#u8, 101#u8, 114#u8, 97#u8,
+                                        116#u8, 105#u8, 111#u8, 110#u8, 32#u8,
+                                        40#u8, 105#u8, 51#u8, 50#u8, 46#u8,
+                                        97#u8, 100#u8, 100#u8, 32#u8, 40#u8,
+                                        103#u8, 108#u8, 111#u8, 98#u8, 97#u8,
+                                        108#u8, 46#u8, 103#u8, 101#u8, 116#u8,
+                                        32#u8, 36#u8, 103#u8, 101#u8, 110#u8,
+                                        101#u8, 114#u8, 97#u8, 116#u8, 105#u8,
+                                        111#u8, 110#u8, 41#u8, 32#u8, 40#u8,
+                                        105#u8, 51#u8, 50#u8, 46#u8, 99#u8,
+                                        111#u8, 110#u8, 115#u8, 116#u8, 32#u8,
+                                        49#u8, 41#u8, 41#u8, 41#u8, 41#u8,
+                                        41#u8, 10#u8, 40#u8, 103#u8, 108#u8,
+                                        111#u8, 98#u8, 97#u8, 108#u8, 46#u8,
+                                        103#u8, 101#u8, 116#u8, 32#u8, 36#u8,
+                                        102#u8, 97#u8, 105#u8, 108#u8, 117#u8,
+                                        114#u8, 101#u8, 41#u8, 41#u8, 10#u8,
+                                        41#u8, 10#u8
+                                        ]))
+                                  let (r13, out15) ←
+                                    output.Buffer.append out14 s9
+                                  match r13 with
+                                  | core.result.Result.Ok _ =>
+                                    let v ← output.Buffer.finish out15
+                                    ok (core.result.Result.Ok v)
+                                  | core.result.Result.Err failure1 =>
+                                    ok (core.result.Result.Err failure1)
+                                | core.result.Result.Err failure1 =>
+                                  ok (core.result.Result.Err failure1)
+                              | core.result.Result.Err failure1 =>
+                                ok (core.result.Result.Err failure1)
+                            | core.result.Result.Err failure1 =>
+                              ok (core.result.Result.Err failure1)
+                          | core.result.Result.Err failure1 =>
+                            ok (core.result.Result.Err failure1)
+                        | core.result.Result.Err failure1 =>
+                          ok (core.result.Result.Err failure1)
+                      | core.result.Result.Err failure1 =>
+                        ok (core.result.Result.Err failure1)
+                    | core.result.Result.Err failure1 =>
+                      ok (core.result.Result.Err failure1)
+                  | core.result.Result.Err failure1 =>
+                    ok (core.result.Result.Err failure1)
+                | some problem => ok (core.result.Result.Err problem)
+            | core.result.Result.Err failure =>
+              ok (core.result.Result.Err failure)
+          else
+            if plan.functions > plan.first_function
+            then
+              let (r4, out5) ← source.emit.code_elements out4 plan
+              match r4 with
+              | core.result.Result.Ok _ =>
+                let (out6, failure) ←
+                  source.emit.module_loop2 plan.data out5 0#usize
+                match failure with
+                | none =>
+                  let s1 := alloc.vec.Vec.deref plan.descriptors
+                  let (r5, out7) ← source.emit.metadata.descriptors out6 s1
+                  match r5 with
+                  | core.result.Result.Ok _ =>
+                    let (r6, out8) ←
+                      source.emit.initialize.write out7 plan generation
+                    match r6 with
+                    | core.result.Result.Ok _ =>
+                      let s2 ←
+                        lift (Array.to_slice
+                          (Array.make 12#usize [
+                            36#u8, 99#u8, 104#u8, 101#u8, 99#u8, 107#u8, 95#u8,
+                            105#u8, 110#u8, 112#u8, 117#u8, 116#u8
+                            ]))
+                      let s3 := alloc.vec.Vec.deref plan.input_types
+                      let (r7, out9) ←
+                        source.emit.metadata.stack_check out8 s2 s3
+                      match r7 with
+                      | core.result.Result.Ok _ =>
+                        let s4 ←
+                          lift (Array.to_slice
+                            (Array.make 13#usize [
+                              36#u8, 99#u8, 104#u8, 101#u8, 99#u8, 107#u8,
+                              95#u8, 111#u8, 117#u8, 116#u8, 112#u8, 117#u8,
+                              116#u8
+                              ]))
+                        let s5 := alloc.vec.Vec.deref plan.output_types
+                        let (r8, out10) ←
+                          source.emit.metadata.stack_check out9 s4 s5
+                        match r8 with
+                        | core.result.Result.Ok _ =>
+                          let s6 ←
+                            lift (Array.to_slice
+                              (Array.make 164#usize [
+                                40#u8, 102#u8, 117#u8, 110#u8, 99#u8, 32#u8,
+                                40#u8, 101#u8, 120#u8, 112#u8, 111#u8, 114#u8,
+                                116#u8, 32#u8, 34#u8, 115#u8, 117#u8, 98#u8,
+                                109#u8, 105#u8, 116#u8, 34#u8, 41#u8, 32#u8,
+                                40#u8, 114#u8, 101#u8, 115#u8, 117#u8, 108#u8,
+                                116#u8, 32#u8, 105#u8, 51#u8, 50#u8, 41#u8,
+                                10#u8, 40#u8, 105#u8, 102#u8, 32#u8, 40#u8,
+                                103#u8, 108#u8, 111#u8, 98#u8, 97#u8, 108#u8,
+                                46#u8, 103#u8, 101#u8, 116#u8, 32#u8, 36#u8,
+                                102#u8, 97#u8, 105#u8, 108#u8, 117#u8, 114#u8,
+                                101#u8, 41#u8, 32#u8, 40#u8, 116#u8, 104#u8,
+                                101#u8, 110#u8, 32#u8, 40#u8, 114#u8, 101#u8,
+                                116#u8, 117#u8, 114#u8, 110#u8, 32#u8, 40#u8,
+                                103#u8, 108#u8, 111#u8, 98#u8, 97#u8, 108#u8,
+                                46#u8, 103#u8, 101#u8, 116#u8, 32#u8, 36#u8,
+                                102#u8, 97#u8, 105#u8, 108#u8, 117#u8, 114#u8,
+                                101#u8, 41#u8, 41#u8, 41#u8, 41#u8, 10#u8,
+                                40#u8, 105#u8, 102#u8, 32#u8, 40#u8, 105#u8,
+                                51#u8, 50#u8, 46#u8, 111#u8, 114#u8, 32#u8,
+                                40#u8, 103#u8, 108#u8, 111#u8, 98#u8, 97#u8,
+                                108#u8, 46#u8, 103#u8, 101#u8, 116#u8, 32#u8,
+                                36#u8, 99#u8, 112#u8, 41#u8, 32#u8, 40#u8,
+                                105#u8, 51#u8, 50#u8, 46#u8, 110#u8, 101#u8,
+                                32#u8, 40#u8, 103#u8, 108#u8, 111#u8, 98#u8,
+                                97#u8, 108#u8, 46#u8, 103#u8, 101#u8, 116#u8,
+                                32#u8, 36#u8, 103#u8, 101#u8, 110#u8, 101#u8,
+                                114#u8, 97#u8, 116#u8, 105#u8, 111#u8, 110#u8,
+                                41#u8, 32#u8
+                                ]))
+                          let (r9, out11) ← output.Buffer.append out10 s6
+                          match r9 with
+                          | core.result.Result.Ok _ =>
+                            let (r10, out12) ←
+                              output.Buffer.i32 out11 generation
+                            match r10 with
+                            | core.result.Result.Ok _ =>
+                              let s7 ←
+                                lift (Array.to_slice
+                                  (Array.make 329#usize [
+                                    41#u8, 41#u8, 32#u8, 40#u8, 116#u8, 104#u8,
+                                    101#u8, 110#u8, 32#u8, 40#u8, 99#u8, 97#u8,
+                                    108#u8, 108#u8, 32#u8, 36#u8, 102#u8,
+                                    97#u8, 105#u8, 108#u8, 32#u8, 40#u8,
+                                    105#u8, 51#u8, 50#u8, 46#u8, 99#u8, 111#u8,
+                                    110#u8, 115#u8, 116#u8, 32#u8, 52#u8,
+                                    41#u8, 41#u8, 32#u8, 40#u8, 114#u8, 101#u8,
+                                    116#u8, 117#u8, 114#u8, 110#u8, 32#u8,
+                                    40#u8, 103#u8, 108#u8, 111#u8, 98#u8,
+                                    97#u8, 108#u8, 46#u8, 103#u8, 101#u8,
+                                    116#u8, 32#u8, 36#u8, 102#u8, 97#u8,
+                                    105#u8, 108#u8, 117#u8, 114#u8, 101#u8,
+                                    41#u8, 41#u8, 41#u8, 41#u8, 10#u8, 40#u8,
+                                    99#u8, 97#u8, 108#u8, 108#u8, 32#u8, 36#u8,
+                                    99#u8, 104#u8, 101#u8, 99#u8, 107#u8,
+                                    95#u8, 105#u8, 110#u8, 112#u8, 117#u8,
+                                    116#u8, 41#u8, 10#u8, 40#u8, 105#u8,
+                                    102#u8, 32#u8, 40#u8, 103#u8, 108#u8,
+                                    111#u8, 98#u8, 97#u8, 108#u8, 46#u8,
+                                    103#u8, 101#u8, 116#u8, 32#u8, 36#u8,
+                                    102#u8, 97#u8, 105#u8, 108#u8, 117#u8,
+                                    114#u8, 101#u8, 41#u8, 32#u8, 40#u8,
+                                    116#u8, 104#u8, 101#u8, 110#u8, 32#u8,
+                                    40#u8, 114#u8, 101#u8, 116#u8, 117#u8,
+                                    114#u8, 110#u8, 32#u8, 40#u8, 103#u8,
+                                    108#u8, 111#u8, 98#u8, 97#u8, 108#u8,
+                                    46#u8, 103#u8, 101#u8, 116#u8, 32#u8,
+                                    36#u8, 102#u8, 97#u8, 105#u8, 108#u8,
+                                    117#u8, 114#u8, 101#u8, 41#u8, 41#u8,
+                                    41#u8, 41#u8, 10#u8, 40#u8, 103#u8, 108#u8,
+                                    111#u8, 98#u8, 97#u8, 108#u8, 46#u8,
+                                    115#u8, 101#u8, 116#u8, 32#u8, 36#u8,
+                                    112#u8, 104#u8, 97#u8, 115#u8, 101#u8,
+                                    32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8,
+                                    99#u8, 111#u8, 110#u8, 115#u8, 116#u8,
+                                    32#u8, 48#u8, 41#u8, 41#u8, 10#u8, 40#u8,
+                                    99#u8, 97#u8, 108#u8, 108#u8, 32#u8, 36#u8,
+                                    105#u8, 110#u8, 105#u8, 116#u8, 105#u8,
+                                    97#u8, 108#u8, 105#u8, 122#u8, 101#u8,
+                                    41#u8, 10#u8, 40#u8, 105#u8, 102#u8, 32#u8,
+                                    40#u8, 103#u8, 108#u8, 111#u8, 98#u8,
+                                    97#u8, 108#u8, 46#u8, 103#u8, 101#u8,
+                                    116#u8, 32#u8, 36#u8, 102#u8, 97#u8,
+                                    105#u8, 108#u8, 117#u8, 114#u8, 101#u8,
+                                    41#u8, 32#u8, 40#u8, 116#u8, 104#u8,
+                                    101#u8, 110#u8, 32#u8, 40#u8, 114#u8,
+                                    101#u8, 116#u8, 117#u8, 114#u8, 110#u8,
+                                    32#u8, 40#u8, 103#u8, 108#u8, 111#u8,
+                                    98#u8, 97#u8, 108#u8, 46#u8, 103#u8,
+                                    101#u8, 116#u8, 32#u8, 36#u8, 102#u8,
+                                    97#u8, 105#u8, 108#u8, 117#u8, 114#u8,
+                                    101#u8, 41#u8, 41#u8, 41#u8, 41#u8, 10#u8,
+                                    40#u8, 103#u8, 108#u8, 111#u8, 98#u8,
+                                    97#u8, 108#u8, 46#u8, 115#u8, 101#u8,
+                                    116#u8, 32#u8, 36#u8, 112#u8, 104#u8,
+                                    97#u8, 115#u8, 101#u8, 32#u8, 40#u8,
+                                    105#u8, 51#u8, 50#u8, 46#u8, 99#u8, 111#u8,
+                                    110#u8, 115#u8, 116#u8, 32#u8, 49#u8,
+                                    41#u8, 41#u8, 10#u8, 40#u8, 99#u8, 97#u8,
+                                    108#u8, 108#u8, 32#u8, 36#u8, 101#u8,
+                                    110#u8, 113#u8, 117#u8, 101#u8, 117#u8,
+                                    101#u8, 95#u8, 112#u8, 114#u8, 111#u8,
+                                    103#u8, 114#u8, 97#u8, 109#u8, 32#u8
+                                    ]))
+                              let (r11, out13) ←
+                                output.Buffer.append out12 s7
+                              match r11 with
+                              | core.result.Result.Ok _ =>
+                                let (r12, out14) ←
+                                  source.emit.get_global out13 plan.root
+                                match r12 with
+                                | core.result.Result.Ok _ =>
+                                  let s8 ←
+                                    lift (Array.to_slice
+                                      (Array.make 227#usize [
+                                        41#u8, 10#u8, 40#u8, 99#u8, 97#u8,
+                                        108#u8, 108#u8, 32#u8, 36#u8, 100#u8,
+                                        105#u8, 115#u8, 112#u8, 97#u8, 116#u8,
+                                        99#u8, 104#u8, 41#u8, 10#u8, 40#u8,
+                                        105#u8, 102#u8, 32#u8, 40#u8, 105#u8,
+                                        51#u8, 50#u8, 46#u8, 101#u8, 113#u8,
+                                        122#u8, 32#u8, 40#u8, 103#u8, 108#u8,
+                                        111#u8, 98#u8, 97#u8, 108#u8, 46#u8,
+                                        103#u8, 101#u8, 116#u8, 32#u8, 36#u8,
+                                        102#u8, 97#u8, 105#u8, 108#u8, 117#u8,
+                                        114#u8, 101#u8, 41#u8, 41#u8, 32#u8,
+                                        40#u8, 116#u8, 104#u8, 101#u8, 110#u8,
+                                        32#u8, 40#u8, 99#u8, 97#u8, 108#u8,
+                                        108#u8, 32#u8, 36#u8, 99#u8, 104#u8,
+                                        101#u8, 99#u8, 107#u8, 95#u8, 111#u8,
+                                        117#u8, 116#u8, 112#u8, 117#u8, 116#u8,
+                                        41#u8, 41#u8, 41#u8, 10#u8, 40#u8,
+                                        105#u8, 102#u8, 32#u8, 40#u8, 105#u8,
+                                        51#u8, 50#u8, 46#u8, 101#u8, 113#u8,
+                                        122#u8, 32#u8, 40#u8, 103#u8, 108#u8,
+                                        111#u8, 98#u8, 97#u8, 108#u8, 46#u8,
+                                        103#u8, 101#u8, 116#u8, 32#u8, 36#u8,
+                                        102#u8, 97#u8, 105#u8, 108#u8, 117#u8,
+                                        114#u8, 101#u8, 41#u8, 41#u8, 32#u8,
+                                        40#u8, 116#u8, 104#u8, 101#u8, 110#u8,
+                                        32#u8, 40#u8, 103#u8, 108#u8, 111#u8,
+                                        98#u8, 97#u8, 108#u8, 46#u8, 115#u8,
+                                        101#u8, 116#u8, 32#u8, 36#u8, 103#u8,
+                                        101#u8, 110#u8, 101#u8, 114#u8, 97#u8,
+                                        116#u8, 105#u8, 111#u8, 110#u8, 32#u8,
+                                        40#u8, 105#u8, 51#u8, 50#u8, 46#u8,
+                                        97#u8, 100#u8, 100#u8, 32#u8, 40#u8,
+                                        103#u8, 108#u8, 111#u8, 98#u8, 97#u8,
+                                        108#u8, 46#u8, 103#u8, 101#u8, 116#u8,
+                                        32#u8, 36#u8, 103#u8, 101#u8, 110#u8,
+                                        101#u8, 114#u8, 97#u8, 116#u8, 105#u8,
+                                        111#u8, 110#u8, 41#u8, 32#u8, 40#u8,
+                                        105#u8, 51#u8, 50#u8, 46#u8, 99#u8,
+                                        111#u8, 110#u8, 115#u8, 116#u8, 32#u8,
+                                        49#u8, 41#u8, 41#u8, 41#u8, 41#u8,
+                                        41#u8, 10#u8, 40#u8, 103#u8, 108#u8,
+                                        111#u8, 98#u8, 97#u8, 108#u8, 46#u8,
+                                        103#u8, 101#u8, 116#u8, 32#u8, 36#u8,
+                                        102#u8, 97#u8, 105#u8, 108#u8, 117#u8,
+                                        114#u8, 101#u8, 41#u8, 41#u8, 10#u8,
+                                        41#u8, 10#u8
+                                        ]))
+                                  let (r13, out15) ←
+                                    output.Buffer.append out14 s8
+                                  match r13 with
+                                  | core.result.Result.Ok _ =>
+                                    let v ← output.Buffer.finish out15
+                                    ok (core.result.Result.Ok v)
+                                  | core.result.Result.Err failure1 =>
+                                    ok (core.result.Result.Err failure1)
+                                | core.result.Result.Err failure1 =>
+                                  ok (core.result.Result.Err failure1)
+                              | core.result.Result.Err failure1 =>
+                                ok (core.result.Result.Err failure1)
+                            | core.result.Result.Err failure1 =>
+                              ok (core.result.Result.Err failure1)
+                          | core.result.Result.Err failure1 =>
+                            ok (core.result.Result.Err failure1)
+                        | core.result.Result.Err failure1 =>
+                          ok (core.result.Result.Err failure1)
+                      | core.result.Result.Err failure1 =>
+                        ok (core.result.Result.Err failure1)
+                    | core.result.Result.Err failure1 =>
+                      ok (core.result.Result.Err failure1)
+                  | core.result.Result.Err failure1 =>
+                    ok (core.result.Result.Err failure1)
+                | some problem => ok (core.result.Result.Err problem)
+              | core.result.Result.Err failure =>
+                ok (core.result.Result.Err failure)
+            else
+              let (out5, failure) ←
+                source.emit.module_loop3 plan.data out4 0#usize
+              match failure with
+              | none =>
+                let s1 := alloc.vec.Vec.deref plan.descriptors
+                let (r4, out6) ← source.emit.metadata.descriptors out5 s1
+                match r4 with
+                | core.result.Result.Ok _ =>
+                  let (r5, out7) ←
+                    source.emit.initialize.write out6 plan generation
+                  match r5 with
+                  | core.result.Result.Ok _ =>
+                    let s2 ←
+                      lift (Array.to_slice
+                        (Array.make 12#usize [
+                          36#u8, 99#u8, 104#u8, 101#u8, 99#u8, 107#u8, 95#u8,
+                          105#u8, 110#u8, 112#u8, 117#u8, 116#u8
+                          ]))
+                    let s3 := alloc.vec.Vec.deref plan.input_types
+                    let (r6, out8) ←
+                      source.emit.metadata.stack_check out7 s2 s3
+                    match r6 with
+                    | core.result.Result.Ok _ =>
+                      let s4 ←
+                        lift (Array.to_slice
+                          (Array.make 13#usize [
+                            36#u8, 99#u8, 104#u8, 101#u8, 99#u8, 107#u8, 95#u8,
+                            111#u8, 117#u8, 116#u8, 112#u8, 117#u8, 116#u8
+                            ]))
+                      let s5 := alloc.vec.Vec.deref plan.output_types
+                      let (r7, out9) ←
+                        source.emit.metadata.stack_check out8 s4 s5
+                      match r7 with
+                      | core.result.Result.Ok _ =>
+                        let s6 ←
+                          lift (Array.to_slice
+                            (Array.make 164#usize [
+                              40#u8, 102#u8, 117#u8, 110#u8, 99#u8, 32#u8,
+                              40#u8, 101#u8, 120#u8, 112#u8, 111#u8, 114#u8,
+                              116#u8, 32#u8, 34#u8, 115#u8, 117#u8, 98#u8,
+                              109#u8, 105#u8, 116#u8, 34#u8, 41#u8, 32#u8,
+                              40#u8, 114#u8, 101#u8, 115#u8, 117#u8, 108#u8,
+                              116#u8, 32#u8, 105#u8, 51#u8, 50#u8, 41#u8,
+                              10#u8, 40#u8, 105#u8, 102#u8, 32#u8, 40#u8,
+                              103#u8, 108#u8, 111#u8, 98#u8, 97#u8, 108#u8,
+                              46#u8, 103#u8, 101#u8, 116#u8, 32#u8, 36#u8,
+                              102#u8, 97#u8, 105#u8, 108#u8, 117#u8, 114#u8,
+                              101#u8, 41#u8, 32#u8, 40#u8, 116#u8, 104#u8,
+                              101#u8, 110#u8, 32#u8, 40#u8, 114#u8, 101#u8,
+                              116#u8, 117#u8, 114#u8, 110#u8, 32#u8, 40#u8,
+                              103#u8, 108#u8, 111#u8, 98#u8, 97#u8, 108#u8,
+                              46#u8, 103#u8, 101#u8, 116#u8, 32#u8, 36#u8,
+                              102#u8, 97#u8, 105#u8, 108#u8, 117#u8, 114#u8,
+                              101#u8, 41#u8, 41#u8, 41#u8, 41#u8, 10#u8, 40#u8,
+                              105#u8, 102#u8, 32#u8, 40#u8, 105#u8, 51#u8,
+                              50#u8, 46#u8, 111#u8, 114#u8, 32#u8, 40#u8,
+                              103#u8, 108#u8, 111#u8, 98#u8, 97#u8, 108#u8,
+                              46#u8, 103#u8, 101#u8, 116#u8, 32#u8, 36#u8,
+                              99#u8, 112#u8, 41#u8, 32#u8, 40#u8, 105#u8,
+                              51#u8, 50#u8, 46#u8, 110#u8, 101#u8, 32#u8,
+                              40#u8, 103#u8, 108#u8, 111#u8, 98#u8, 97#u8,
+                              108#u8, 46#u8, 103#u8, 101#u8, 116#u8, 32#u8,
+                              36#u8, 103#u8, 101#u8, 110#u8, 101#u8, 114#u8,
+                              97#u8, 116#u8, 105#u8, 111#u8, 110#u8, 41#u8,
+                              32#u8
+                              ]))
+                        let (r8, out10) ← output.Buffer.append out9 s6
+                        match r8 with
+                        | core.result.Result.Ok _ =>
+                          let (r9, out11) ←
+                            output.Buffer.i32 out10 generation
+                          match r9 with
+                          | core.result.Result.Ok _ =>
+                            let s7 ←
+                              lift (Array.to_slice
+                                (Array.make 329#usize [
+                                  41#u8, 41#u8, 32#u8, 40#u8, 116#u8, 104#u8,
+                                  101#u8, 110#u8, 32#u8, 40#u8, 99#u8, 97#u8,
+                                  108#u8, 108#u8, 32#u8, 36#u8, 102#u8, 97#u8,
+                                  105#u8, 108#u8, 32#u8, 40#u8, 105#u8, 51#u8,
+                                  50#u8, 46#u8, 99#u8, 111#u8, 110#u8, 115#u8,
+                                  116#u8, 32#u8, 52#u8, 41#u8, 41#u8, 32#u8,
+                                  40#u8, 114#u8, 101#u8, 116#u8, 117#u8,
+                                  114#u8, 110#u8, 32#u8, 40#u8, 103#u8, 108#u8,
+                                  111#u8, 98#u8, 97#u8, 108#u8, 46#u8, 103#u8,
+                                  101#u8, 116#u8, 32#u8, 36#u8, 102#u8, 97#u8,
+                                  105#u8, 108#u8, 117#u8, 114#u8, 101#u8,
+                                  41#u8, 41#u8, 41#u8, 41#u8, 10#u8, 40#u8,
+                                  99#u8, 97#u8, 108#u8, 108#u8, 32#u8, 36#u8,
+                                  99#u8, 104#u8, 101#u8, 99#u8, 107#u8, 95#u8,
+                                  105#u8, 110#u8, 112#u8, 117#u8, 116#u8,
+                                  41#u8, 10#u8, 40#u8, 105#u8, 102#u8, 32#u8,
+                                  40#u8, 103#u8, 108#u8, 111#u8, 98#u8, 97#u8,
+                                  108#u8, 46#u8, 103#u8, 101#u8, 116#u8, 32#u8,
+                                  36#u8, 102#u8, 97#u8, 105#u8, 108#u8, 117#u8,
+                                  114#u8, 101#u8, 41#u8, 32#u8, 40#u8, 116#u8,
+                                  104#u8, 101#u8, 110#u8, 32#u8, 40#u8, 114#u8,
+                                  101#u8, 116#u8, 117#u8, 114#u8, 110#u8,
+                                  32#u8, 40#u8, 103#u8, 108#u8, 111#u8, 98#u8,
+                                  97#u8, 108#u8, 46#u8, 103#u8, 101#u8, 116#u8,
+                                  32#u8, 36#u8, 102#u8, 97#u8, 105#u8, 108#u8,
+                                  117#u8, 114#u8, 101#u8, 41#u8, 41#u8, 41#u8,
+                                  41#u8, 10#u8, 40#u8, 103#u8, 108#u8, 111#u8,
+                                  98#u8, 97#u8, 108#u8, 46#u8, 115#u8, 101#u8,
+                                  116#u8, 32#u8, 36#u8, 112#u8, 104#u8, 97#u8,
+                                  115#u8, 101#u8, 32#u8, 40#u8, 105#u8, 51#u8,
+                                  50#u8, 46#u8, 99#u8, 111#u8, 110#u8, 115#u8,
+                                  116#u8, 32#u8, 48#u8, 41#u8, 41#u8, 10#u8,
+                                  40#u8, 99#u8, 97#u8, 108#u8, 108#u8, 32#u8,
+                                  36#u8, 105#u8, 110#u8, 105#u8, 116#u8,
+                                  105#u8, 97#u8, 108#u8, 105#u8, 122#u8,
+                                  101#u8, 41#u8, 10#u8, 40#u8, 105#u8, 102#u8,
+                                  32#u8, 40#u8, 103#u8, 108#u8, 111#u8, 98#u8,
+                                  97#u8, 108#u8, 46#u8, 103#u8, 101#u8, 116#u8,
+                                  32#u8, 36#u8, 102#u8, 97#u8, 105#u8, 108#u8,
+                                  117#u8, 114#u8, 101#u8, 41#u8, 32#u8, 40#u8,
+                                  116#u8, 104#u8, 101#u8, 110#u8, 32#u8, 40#u8,
+                                  114#u8, 101#u8, 116#u8, 117#u8, 114#u8,
+                                  110#u8, 32#u8, 40#u8, 103#u8, 108#u8, 111#u8,
+                                  98#u8, 97#u8, 108#u8, 46#u8, 103#u8, 101#u8,
+                                  116#u8, 32#u8, 36#u8, 102#u8, 97#u8, 105#u8,
+                                  108#u8, 117#u8, 114#u8, 101#u8, 41#u8, 41#u8,
+                                  41#u8, 41#u8, 10#u8, 40#u8, 103#u8, 108#u8,
+                                  111#u8, 98#u8, 97#u8, 108#u8, 46#u8, 115#u8,
+                                  101#u8, 116#u8, 32#u8, 36#u8, 112#u8, 104#u8,
+                                  97#u8, 115#u8, 101#u8, 32#u8, 40#u8, 105#u8,
+                                  51#u8, 50#u8, 46#u8, 99#u8, 111#u8, 110#u8,
+                                  115#u8, 116#u8, 32#u8, 49#u8, 41#u8, 41#u8,
+                                  10#u8, 40#u8, 99#u8, 97#u8, 108#u8, 108#u8,
+                                  32#u8, 36#u8, 101#u8, 110#u8, 113#u8, 117#u8,
+                                  101#u8, 117#u8, 101#u8, 95#u8, 112#u8,
+                                  114#u8, 111#u8, 103#u8, 114#u8, 97#u8,
+                                  109#u8, 32#u8
+                                  ]))
+                            let (r10, out12) ← output.Buffer.append out11 s7
+                            match r10 with
+                            | core.result.Result.Ok _ =>
+                              let (r11, out13) ←
+                                source.emit.get_global out12 plan.root
+                              match r11 with
+                              | core.result.Result.Ok _ =>
+                                let s8 ←
+                                  lift (Array.to_slice
+                                    (Array.make 227#usize [
+                                      41#u8, 10#u8, 40#u8, 99#u8, 97#u8,
+                                      108#u8, 108#u8, 32#u8, 36#u8, 100#u8,
+                                      105#u8, 115#u8, 112#u8, 97#u8, 116#u8,
+                                      99#u8, 104#u8, 41#u8, 10#u8, 40#u8,
+                                      105#u8, 102#u8, 32#u8, 40#u8, 105#u8,
+                                      51#u8, 50#u8, 46#u8, 101#u8, 113#u8,
+                                      122#u8, 32#u8, 40#u8, 103#u8, 108#u8,
+                                      111#u8, 98#u8, 97#u8, 108#u8, 46#u8,
+                                      103#u8, 101#u8, 116#u8, 32#u8, 36#u8,
+                                      102#u8, 97#u8, 105#u8, 108#u8, 117#u8,
+                                      114#u8, 101#u8, 41#u8, 41#u8, 32#u8,
+                                      40#u8, 116#u8, 104#u8, 101#u8, 110#u8,
+                                      32#u8, 40#u8, 99#u8, 97#u8, 108#u8,
+                                      108#u8, 32#u8, 36#u8, 99#u8, 104#u8,
+                                      101#u8, 99#u8, 107#u8, 95#u8, 111#u8,
+                                      117#u8, 116#u8, 112#u8, 117#u8, 116#u8,
+                                      41#u8, 41#u8, 41#u8, 10#u8, 40#u8,
+                                      105#u8, 102#u8, 32#u8, 40#u8, 105#u8,
+                                      51#u8, 50#u8, 46#u8, 101#u8, 113#u8,
+                                      122#u8, 32#u8, 40#u8, 103#u8, 108#u8,
+                                      111#u8, 98#u8, 97#u8, 108#u8, 46#u8,
+                                      103#u8, 101#u8, 116#u8, 32#u8, 36#u8,
+                                      102#u8, 97#u8, 105#u8, 108#u8, 117#u8,
+                                      114#u8, 101#u8, 41#u8, 41#u8, 32#u8,
+                                      40#u8, 116#u8, 104#u8, 101#u8, 110#u8,
+                                      32#u8, 40#u8, 103#u8, 108#u8, 111#u8,
+                                      98#u8, 97#u8, 108#u8, 46#u8, 115#u8,
+                                      101#u8, 116#u8, 32#u8, 36#u8, 103#u8,
+                                      101#u8, 110#u8, 101#u8, 114#u8, 97#u8,
+                                      116#u8, 105#u8, 111#u8, 110#u8, 32#u8,
+                                      40#u8, 105#u8, 51#u8, 50#u8, 46#u8,
+                                      97#u8, 100#u8, 100#u8, 32#u8, 40#u8,
+                                      103#u8, 108#u8, 111#u8, 98#u8, 97#u8,
+                                      108#u8, 46#u8, 103#u8, 101#u8, 116#u8,
+                                      32#u8, 36#u8, 103#u8, 101#u8, 110#u8,
+                                      101#u8, 114#u8, 97#u8, 116#u8, 105#u8,
+                                      111#u8, 110#u8, 41#u8, 32#u8, 40#u8,
+                                      105#u8, 51#u8, 50#u8, 46#u8, 99#u8,
+                                      111#u8, 110#u8, 115#u8, 116#u8, 32#u8,
+                                      49#u8, 41#u8, 41#u8, 41#u8, 41#u8, 41#u8,
+                                      10#u8, 40#u8, 103#u8, 108#u8, 111#u8,
+                                      98#u8, 97#u8, 108#u8, 46#u8, 103#u8,
+                                      101#u8, 116#u8, 32#u8, 36#u8, 102#u8,
+                                      97#u8, 105#u8, 108#u8, 117#u8, 114#u8,
+                                      101#u8, 41#u8, 41#u8, 10#u8, 41#u8, 10#u8
+                                      ]))
+                                let (r12, out14) ←
+                                  output.Buffer.append out13 s8
+                                match r12 with
+                                | core.result.Result.Ok _ =>
+                                  let v ← output.Buffer.finish out14
+                                  ok (core.result.Result.Ok v)
+                                | core.result.Result.Err failure1 =>
+                                  ok (core.result.Result.Err failure1)
+                              | core.result.Result.Err failure1 =>
+                                ok (core.result.Result.Err failure1)
+                            | core.result.Result.Err failure1 =>
+                              ok (core.result.Result.Err failure1)
+                          | core.result.Result.Err failure1 =>
+                            ok (core.result.Result.Err failure1)
+                        | core.result.Result.Err failure1 =>
+                          ok (core.result.Result.Err failure1)
+                      | core.result.Result.Err failure1 =>
+                        ok (core.result.Result.Err failure1)
+                    | core.result.Result.Err failure1 =>
+                      ok (core.result.Result.Err failure1)
+                  | core.result.Result.Err failure1 =>
+                    ok (core.result.Result.Err failure1)
+                | core.result.Result.Err failure1 =>
+                  ok (core.result.Result.Err failure1)
+              | some problem => ok (core.result.Result.Err problem)
+        | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+      | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+    | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_wasm::source::TABLE_LIMIT]
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 16:0-16:32 -/
+@[global_simps, irreducible] def source.TABLE_LIMIT : Std.U32 := 16384#u32
+
+/-- [noble_wasm::source::TEXT_START]
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 17:0-17:32 -/
+@[global_simps, irreducible] def source.TEXT_START : Std.U32 := 262144#u32
+
+/-- [noble_wasm::source::MEMORY_BYTES]
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 18:0-18:36 -/
+@[global_simps, irreducible] def source.MEMORY_BYTES : Std.U32 := 1048576#u32
+
+/-- [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::Identity}::clone]:
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 61:9-61:14
+    Visibility: public -/
+def source.Identity.Insts.CoreCloneClone.clone
+  (self : source.Identity) : Result source.Identity := do
+  let i ← lift (core.clone.impls.CloneU64.clone self.id)
+  let v ← alloc.vec.CloneVec.clone core.clone.CloneU8 self.recipe
+  ok { id := i, recipe := v }
+
+/-- Trait implementation: [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::Identity}]
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 61:9-61:14 -/
+@[reducible]
+def source.Identity.Insts.CoreCloneClone : core.clone.Clone source.Identity
+  := {
+  clone := source.Identity.Insts.CoreCloneClone.clone
+}
+
+/-- [noble_wasm::source::{noble_wasm::source::Prepared}::wat]:
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 76:4-78:5
+    Visibility: public -/
+def source.Prepared.impl.wat
+  (self : source.Prepared) : Result (Slice Std.U8) := do
+  ok (alloc.vec.Vec.deref self.wat)
+
+/-- [noble_wasm::source::{noble_wasm::source::Compiler}::signature]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 95:8-103:9 -/
+@[rust_loop_body]
+def source.Compiler.signature_loop.body
+  (self : source.Compiler) (work : source.Work) (index : Std.Usize) :
+  Result (ControlFlow (source.Work × Std.Usize) (Std.U32 × Std.U32 × Std.U32
+    × (alloc.vec.Vec (alloc.vec.Vec Std.U8)) × Std.Usize × Bool ×
+    (alloc.vec.Vec (Std.U32 × Std.U32)) × (alloc.vec.Vec source.Identity) ×
+    source.Work × (Option Diagnostic)))
+  := do
+  let i := alloc.vec.Vec.len self.signatures.keys
+  if index < i
+  then
+    let v ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice (alloc.vec.Vec
+        Std.U8)) self.signatures.keys index
+    let i1 := alloc.vec.Vec.len v
+    let i2 ← lift (core.num.Usize.saturating_add i1 1#usize)
+    let (r, work1) ← source.Work.entries work i2
+    match r with
+    | core.result.Result.Ok _ =>
+      let index1 ← index + 1#usize
+      ok (cont (work1, index1))
+    | core.result.Result.Err problem =>
+      ok (done (self.generation, self.functions, self.text_end,
+        self.signatures.keys, self.signatures.bytes, self.signatures.extended,
+        self.descriptors, self.identities, work1, some problem))
+  else
+    ok (done (self.generation, self.functions, self.text_end,
+      self.signatures.keys, self.signatures.bytes, self.signatures.extended,
+      self.descriptors, self.identities, work, none))
+
+/-- [noble_wasm::source::{noble_wasm::source::Compiler}::signature]: loop 0:
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 95:8-103:9 -/
+@[rust_loop]
+def source.Compiler.signature_loop
+  (self : source.Compiler) (work : source.Work) (index : Std.Usize) :
+  Result (Std.U32 × Std.U32 × Std.U32 × (alloc.vec.Vec (alloc.vec.Vec
+    Std.U8)) × Std.Usize × Bool × (alloc.vec.Vec (Std.U32 × Std.U32)) ×
+    (alloc.vec.Vec source.Identity) × source.Work × (Option Diagnostic))
+  := do
+  loop
+    (fun (work1, index1) => source.Compiler.signature_loop.body self work1
+      index1)
+    (work, index)
+
+/-- [noble_wasm::source::{noble_wasm::source::Compiler}::signature]:
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 86:4-108:5 -/
+def source.Compiler.signature
+  (self : source.Compiler) (stack : Slice noble_kernel.types.Ty)
+  (work : source.Work) :
+  Result ((core.result.Result Std.U32 Diagnostic) × source.Compiler ×
+    source.Work)
+  := do
+  let (r, work1) ← source.admission.meter.stack stack work
+  match r with
+  | core.result.Result.Ok value =>
+    let (r1, work2) ← source.Work.charge work1 value
+    match r1 with
+    | core.result.Result.Ok _ =>
+      let (i, i1, i2, v, i3, b, v1, v2, work3, failure) ←
+        source.Compiler.signature_loop self work2 0#usize
+      match failure with
+      | none =>
+        let (r2, p) ←
+          signatures.Pool.intern { keys := v, bytes := i3, extended := b }
+            stack
+        ok (r2,
+          {
+            generation := i,
+            functions := i1,
+            text_end := i2,
+            signatures := p,
+            descriptors := v1,
+            identities := v2
+          }, work3)
+      | some problem =>
+        ok (core.result.Result.Err problem,
+          {
+            generation := i,
+            functions := i1,
+            text_end := i2,
+            signatures := { keys := v, bytes := i3, extended := b },
+            descriptors := v1,
+            identities := v2
+          }, work3)
+    | core.result.Result.Err failure =>
+      ok (core.result.Result.Err failure, self, work2)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, self, work1)
+
+/-- [noble_wasm::source::{noble_wasm::source::Compiler}::new]:
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 111:4-120:5
+    Visibility: public -/
+def source.Compiler.new : Result source.Compiler := do
+  let p ← signatures.Pool.source
+  ok
+    {
+      generation := 0#u32,
+      functions := 4#u32,
+      text_end := source.TEXT_START,
+      signatures := p,
+      descriptors := (alloc.vec.Vec.new (Std.U32 × Std.U32)),
+      identities := (alloc.vec.Vec.new source.Identity)
+    }
+
+/-- [noble_wasm::source::transaction::{noble_wasm::source::transaction::Base}::capture]:
+    Source: 'crates/noble-wasm/src/source/transaction.rs', lines 14:4-23:5 -/
+def source.transaction.Base.capture
+  (compiler : source.Compiler) : Result source.transaction.Base := do
+  let i := alloc.vec.Vec.len compiler.signatures.keys
+  let i1 := alloc.vec.Vec.len compiler.descriptors
+  let i2 := alloc.vec.Vec.len compiler.identities
+  ok
+    {
+      generation := compiler.generation,
+      functions := compiler.functions,
+      text_end_bytes := compiler.text_end,
+      signature_count := i,
+      descriptor_count := i1,
+      identity_count := i2
+    }
+
+/-- [noble_wasm::source::preflight::STACK_LIMIT]
+    Source: 'crates/noble-wasm/src/source/preflight.rs', lines 9:0-9:31 -/
+@[global_simps, irreducible]
+def source.preflight.STACK_LIMIT : Std.Usize := 128#usize
+
+/-- [noble_wasm::source::preflight::PATH_LIMIT]
+    Source: 'crates/noble-wasm/src/source/preflight.rs', lines 11:0-11:29 -/
+@[global_simps, irreducible]
+def source.preflight.PATH_LIMIT : Std.Usize := 64#usize
+
+/-- [noble_wasm::source::preflight::TYPE_LIMIT]
+    Source: 'crates/noble-wasm/src/source/preflight.rs', lines 10:0-10:28 -/
+@[global_simps, irreducible]
+def source.preflight.TYPE_LIMIT : Std.U32 := 512#u32
+
+/-- [noble_wasm::source::preflight::concrete::type_child]:
+    Source: 'crates/noble-wasm/src/source/preflight/concrete.rs', lines 36:0-62:1 -/
+def source.preflight.concrete.type_child
+  (ty : noble_kernel.types.Ty) (child : Std.Usize) :
+  Result (core.result.Result noble_kernel.types.Ty Diagnostic)
+  := do
+  match ty with
+  | noble_kernel.types.Ty.UnitType =>
+    ok (core.result.Result.Err Diagnostic.Invalid)
+  | noble_kernel.types.Ty.BoolType =>
+    ok (core.result.Result.Err Diagnostic.Invalid)
+  | noble_kernel.types.Ty.I64Type =>
+    ok (core.result.Result.Err Diagnostic.Invalid)
+  | noble_kernel.types.Ty.TextType =>
+    ok (core.result.Result.Err Diagnostic.Invalid)
+  | noble_kernel.types.Ty.SyntaxType =>
+    ok (core.result.Result.Err Diagnostic.Invalid)
+  | noble_kernel.types.Ty.PairType left right =>
+    if child = 0#usize
+    then ok (core.result.Result.Ok left)
+    else ok (core.result.Result.Ok right)
+  | noble_kernel.types.Ty.SumType left right =>
+    if child = 0#usize
+    then ok (core.result.Result.Ok left)
+    else ok (core.result.Result.Ok right)
+  | noble_kernel.types.Ty.ListType item => ok (core.result.Result.Ok item)
+  | noble_kernel.types.Ty.ProgramType input output _ =>
+    let i := alloc.vec.Vec.len input
+    let selected ←
+      if child < i
+      then
+        let s := alloc.vec.Vec.deref input
+        core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice
+          noble_kernel.types.Ty) s child
+      else
+        do
+        let s := alloc.vec.Vec.deref output
+        let i1 := alloc.vec.Vec.len input
+        let i2 ← lift (core.num.Usize.saturating_sub child i1)
+        core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice
+          noble_kernel.types.Ty) s i2
+    match selected with
+    | none => ok (core.result.Result.Err Diagnostic.Invalid)
+    | some ty1 => ok (core.result.Result.Ok ty1)
+  | noble_kernel.types.Ty.ResourceType _ =>
+    ok (core.result.Result.Err Diagnostic.Invalid)
+
+/-- [noble_wasm::source::preflight::concrete::type_at]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/preflight/concrete.rs', lines 75:4-86:5 -/
+@[rust_loop_body]
+def source.preflight.concrete.type_at_loop.body
+  (path : Slice Std.Usize) (ty : noble_kernel.types.Ty) (index : Std.Usize) :
+  Result (ControlFlow (noble_kernel.types.Ty × Std.Usize)
+    (noble_kernel.types.Ty × (Option Diagnostic)))
+  := do
+  let i := Slice.len path
+  if index < i
+  then
+    let i1 ← Slice.index_usize path index
+    let r ← source.preflight.concrete.type_child ty i1
+    match r with
+    | core.result.Result.Ok child =>
+      let index1 ← index + 1#usize
+      ok (cont (child, index1))
+    | core.result.Result.Err problem => ok (done (ty, some problem))
+  else ok (done (ty, none))
+
+/-- [noble_wasm::source::preflight::concrete::type_at]: loop 0:
+    Source: 'crates/noble-wasm/src/source/preflight/concrete.rs', lines 75:4-86:5 -/
+@[rust_loop]
+def source.preflight.concrete.type_at_loop
+  (path : Slice Std.Usize) (ty : noble_kernel.types.Ty) (index : Std.Usize) :
+  Result (noble_kernel.types.Ty × (Option Diagnostic))
+  := do
+  loop
+    (fun (ty1, index1) => source.preflight.concrete.type_at_loop.body path ty1
+      index1)
+    (ty, index)
+
+/-- [noble_wasm::source::preflight::concrete::type_at]:
+    Source: 'crates/noble-wasm/src/source/preflight/concrete.rs', lines 68:0-91:1 -/
+def source.preflight.concrete.type_at
+  (root : noble_kernel.types.Ty) (path : Slice Std.Usize) :
+  Result (core.result.Result noble_kernel.types.Ty Diagnostic)
+  := do
+  let (ty, failure) ←
+    source.preflight.concrete.type_at_loop path root 0#usize
+  match failure with
+  | none => ok (core.result.Result.Ok ty)
+  | some problem => ok (core.result.Result.Err problem)
+
+/-- [noble_wasm::source::preflight::concrete::type_children]:
+    Source: 'crates/noble-wasm/src/source/preflight/concrete.rs', lines 10:0-30:1 -/
+def source.preflight.concrete.type_children
+  (ty : noble_kernel.types.Ty) :
+  Result (core.result.Result Std.Usize Diagnostic)
+  := do
+  match ty with
+  | noble_kernel.types.Ty.UnitType => ok (core.result.Result.Ok 0#usize)
+  | noble_kernel.types.Ty.BoolType => ok (core.result.Result.Ok 0#usize)
+  | noble_kernel.types.Ty.I64Type => ok (core.result.Result.Ok 0#usize)
+  | noble_kernel.types.Ty.TextType => ok (core.result.Result.Ok 0#usize)
+  | noble_kernel.types.Ty.SyntaxType => ok (core.result.Result.Ok 0#usize)
+  | noble_kernel.types.Ty.PairType _ _ => ok (core.result.Result.Ok 2#usize)
+  | noble_kernel.types.Ty.SumType _ _ => ok (core.result.Result.Ok 2#usize)
+  | noble_kernel.types.Ty.ListType _ => ok (core.result.Result.Ok 1#usize)
+  | noble_kernel.types.Ty.ProgramType input output effects =>
+    let i := alloc.vec.Vec.len input
+    if i > source.preflight.STACK_LIMIT
+    then ok (core.result.Result.Err Diagnostic.Exhausted)
+    else
+      let i1 := alloc.vec.Vec.len output
+      if i1 > source.preflight.STACK_LIMIT
+      then ok (core.result.Result.Err Diagnostic.Exhausted)
+      else
+        let s ← noble_kernel.types.EffSet.as_slice effects
+        let i2 := Slice.len s
+        if i2 > 2#usize
+        then ok (core.result.Result.Err Diagnostic.Exhausted)
+        else
+          let i3 := alloc.vec.Vec.len input
+          let i4 := alloc.vec.Vec.len output
+          let i5 ← lift (core.num.Usize.saturating_add i3 i4)
+          ok (core.result.Result.Ok i5)
+  | noble_kernel.types.Ty.ResourceType _ => ok (core.result.Result.Ok 0#usize)
+
+/-- [noble_wasm::source::preflight::concrete::type_child_count]:
+    Source: 'crates/noble-wasm/src/source/preflight/concrete.rs', lines 93:0-100:1 -/
+def source.preflight.concrete.type_child_count
+  (root : noble_kernel.types.Ty) (path : Slice Std.Usize) (work : source.Work)
+  :
+  Result ((core.result.Result Std.Usize Diagnostic) × source.Work)
+  := do
+  let i := Slice.len path
+  let i1 ← lift (core.num.Usize.saturating_add i 1#usize)
+  let (r, work1) ← source.Work.entries work i1
+  match r with
+  | core.result.Result.Ok _ =>
+    let r1 ← source.preflight.concrete.type_at root path
+    match r1 with
+    | core.result.Result.Ok value =>
+      let r2 ← source.preflight.concrete.type_children value
+      ok (r2, work1)
+    | core.result.Result.Err failure =>
+      ok (core.result.Result.Err failure, work1)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, work1)
+
+/-- [noble_wasm::source::preflight::concrete::type_step]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/preflight/concrete.rs', lines 122:4-136:5 -/
+@[rust_loop_body]
+def source.preflight.concrete.type_step_loop.body
+  (root : noble_kernel.types.Ty) (path : alloc.vec.Vec Std.Usize)
+  (work : source.Work) :
+  Result (ControlFlow ((alloc.vec.Vec Std.Usize) × source.Work)
+    ((alloc.vec.Vec Std.Usize) × source.Work × (Option Std.Usize) × (Option
+    Diagnostic)))
+  := do
+  let (o, path1) ← alloc.vec.Vec.pop Global path
+  match o with
+  | none => ok (done (path1, work, none, none))
+  | some child =>
+    let s := alloc.vec.Vec.deref path1
+    let (r, work1) ← source.preflight.concrete.type_child_count root s work
+    match r with
+    | core.result.Result.Ok count =>
+      let next_child ← lift (core.num.Usize.saturating_add child 1#usize)
+      if next_child < count
+      then ok (done (path1, work1, some next_child, none))
+      else ok (cont (path1, work1))
+    | core.result.Result.Err problem =>
+      ok (done (path1, work1, none, some problem))
+
+/-- [noble_wasm::source::preflight::concrete::type_step]: loop 0:
+    Source: 'crates/noble-wasm/src/source/preflight/concrete.rs', lines 122:4-136:5 -/
+@[rust_loop]
+def source.preflight.concrete.type_step_loop
+  (path : alloc.vec.Vec Std.Usize) (root : noble_kernel.types.Ty)
+  (work : source.Work) :
+  Result ((alloc.vec.Vec Std.Usize) × source.Work × (Option Std.Usize) ×
+    (Option Diagnostic))
+  := do
+  loop
+    (fun (path1, work1) => source.preflight.concrete.type_step_loop.body root
+      path1 work1)
+    (path, work)
+
+/-- [noble_wasm::source::preflight::concrete::type_step]:
+    Source: 'crates/noble-wasm/src/source/preflight/concrete.rs', lines 107:0-147:1 -/
+def source.preflight.concrete.type_step
+  (root : noble_kernel.types.Ty) (path : alloc.vec.Vec Std.Usize)
+  (work : source.Work) :
+  Result ((core.result.Result Bool Diagnostic) × (alloc.vec.Vec Std.Usize) ×
+    source.Work)
+  := do
+  let s := alloc.vec.Vec.deref path
+  let (r, work1) ← source.preflight.concrete.type_child_count root s work
+  match r with
+  | core.result.Result.Ok value =>
+    if value != 0#usize
+    then
+      let i := alloc.vec.Vec.len path
+      if i >= source.preflight.PATH_LIMIT
+      then ok (core.result.Result.Err Diagnostic.Exhausted, path, work1)
+      else
+        let path1 ← alloc.vec.Vec.push path 0#usize
+        ok (core.result.Result.Ok true, path1, work1)
+    else
+      let (path1, work2, sibling, failure) ←
+        source.preflight.concrete.type_step_loop path root work1
+      match failure with
+      | none =>
+        match sibling with
+        | none => ok (core.result.Result.Ok false, path1, work2)
+        | some child =>
+          let path2 ← alloc.vec.Vec.push path1 child
+          ok (core.result.Result.Ok true, path2, work2)
+      | some problem => ok (core.result.Result.Err problem, path1, work2)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, path, work1)
+
+/-- [noble_wasm::source::preflight::concrete::ty]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/preflight/concrete.rs', lines 162:4-176:5 -/
+@[rust_loop_body]
+def source.preflight.concrete.ty_loop.body
+  (root : noble_kernel.types.Ty) (max_node_count : Std.U32)
+  (work : source.Work) (path : alloc.vec.Vec Std.Usize) (nodes : Std.U32) :
+  Result (ControlFlow (source.Work × (alloc.vec.Vec Std.Usize) × Std.U32)
+    (source.Work × (Option Diagnostic)))
+  := do
+  let i ←
+    core.cmp.Ord.min.trait_default core.cmp.OrdU32 max_node_count
+      source.preflight.TYPE_LIMIT
+  if nodes >= i
+  then ok (done (work, some Diagnostic.Exhausted))
+  else
+    let nodes1 ← nodes + 1#u32
+    let (r, path1, work1) ←
+      source.preflight.concrete.type_step root path work
+    match r with
+    | core.result.Result.Ok b =>
+      if b
+      then ok (cont (work1, path1, nodes1))
+      else ok (done (work1, none))
+    | core.result.Result.Err problem => ok (done (work1, some problem))
+
+/-- [noble_wasm::source::preflight::concrete::ty]: loop 0:
+    Source: 'crates/noble-wasm/src/source/preflight/concrete.rs', lines 162:4-176:5 -/
+@[rust_loop]
+def source.preflight.concrete.ty_loop
+  (root : noble_kernel.types.Ty) (max_node_count : Std.U32)
+  (work : source.Work) (path : alloc.vec.Vec Std.Usize) (nodes : Std.U32) :
+  Result (source.Work × (Option Diagnostic))
+  := do
+  loop
+    (fun (work1, path1, nodes1) => source.preflight.concrete.ty_loop.body root
+      max_node_count work1 path1 nodes1)
+    (work, path, nodes)
+
+/-- [noble_wasm::source::preflight::concrete::ty]:
+    Source: 'crates/noble-wasm/src/source/preflight/concrete.rs', lines 153:0-181:1 -/
+def source.preflight.concrete.ty
+  (root : noble_kernel.types.Ty) (max_node_count : Std.U32)
+  (work : source.Work) :
+  Result ((core.result.Result Unit Diagnostic) × source.Work)
+  := do
+  let (r, work1) ← source.Work.charge work 1#u64
+  match r with
+  | core.result.Result.Ok _ =>
+    let path :=
+      alloc.vec.Vec.with_capacity Std.Usize source.preflight.PATH_LIMIT
+    let (work2, failure) ←
+      source.preflight.concrete.ty_loop root max_node_count work1 path 0#u32
+    match failure with
+    | none => ok (core.result.Result.Ok (), work2)
+    | some problem => ok (core.result.Result.Err problem, work2)
+  | core.result.Result.Err _ => ok (r, work1)
+
+/-- [noble_wasm::source::preflight::concrete::stack]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/preflight/concrete.rs', lines 201:4-209:5 -/
+@[rust_loop_body]
+def source.preflight.concrete.stack_loop.body
+  (stack : Slice noble_kernel.types.Ty) (i : Std.U32) (work : source.Work)
+  (index : Std.Usize) :
+  Result (ControlFlow (source.Work × Std.Usize) (source.Work × (Option
+    Diagnostic)))
+  := do
+  let i1 := Slice.len stack
+  if index < i1
+  then
+    let t ← Slice.index_usize stack index
+    let (r, work1) ← source.preflight.concrete.ty t i work
+    match r with
+    | core.result.Result.Ok _ =>
+      let index1 ← index + 1#usize
+      ok (cont (work1, index1))
+    | core.result.Result.Err problem => ok (done (work1, some problem))
+  else ok (done (work, none))
+
+/-- [noble_wasm::source::preflight::concrete::stack]: loop 0:
+    Source: 'crates/noble-wasm/src/source/preflight/concrete.rs', lines 201:4-209:5 -/
+@[rust_loop]
+def source.preflight.concrete.stack_loop
+  (stack : Slice noble_kernel.types.Ty) (i : Std.U32) (work : source.Work)
+  (index : Std.Usize) :
+  Result (source.Work × (Option Diagnostic))
+  := do
+  loop
+    (fun (work1, index1) => source.preflight.concrete.stack_loop.body stack i
+      work1 index1)
+    (work, index)
+
+/-- [noble_wasm::source::preflight::concrete::stack]:
+    Source: 'crates/noble-wasm/src/source/preflight/concrete.rs', lines 187:0-214:1 -/
+def source.preflight.concrete.stack
+  (stack : Slice noble_kernel.types.Ty)
+  (limits : noble_kernel.untrusted.Limits) (work : source.Work) :
+  Result ((core.result.Result Unit Diagnostic) × source.Work)
+  := do
+  let r ←
+    Usize.Insts.CoreConvertTryFromU32TryFromIntError.try_from
+      limits.stack_height
+  match r with
+  | core.result.Result.Ok value =>
+    let i := Slice.len stack
+    let i1 ←
+      core.cmp.Ord.min.trait_default core.cmp.OrdUsize value
+        source.preflight.STACK_LIMIT
+    if i > i1
+    then ok (core.result.Result.Err Diagnostic.Exhausted, work)
+    else
+      let (work1, failure) ←
+        source.preflight.concrete.stack_loop stack limits.type_size work
+          0#usize
+      match failure with
+      | none => ok (core.result.Result.Ok (), work1)
+      | some problem => ok (core.result.Result.Err problem, work1)
+  | core.result.Result.Err _ =>
+    ok (core.result.Result.Err Diagnostic.Exhausted, work)
+
+/-- [noble_wasm::source::preflight::expected]:
+    Source: 'crates/noble-wasm/src/source/preflight.rs', lines 116:0-126:1 -/
+def source.preflight.expected
+  (expected : noble_kernel.untrusted.Expected)
+  (limits : noble_kernel.untrusted.Limits) (work : source.Work) :
+  Result ((core.result.Result Unit Diagnostic) × source.Work)
+  := do
+  let s ← noble_kernel.types.EffSet.as_slice expected.allowed_effects
+  let i := Slice.len s
+  if i > 2#usize
+  then ok (core.result.Result.Err Diagnostic.Exhausted, work)
+  else
+    let s1 := alloc.vec.Vec.deref expected.stack_in
+    let (r, work1) ← source.preflight.concrete.stack s1 limits work
+    match r with
+    | core.result.Result.Ok _ =>
+      let s2 := alloc.vec.Vec.deref expected.stack_out
+      source.preflight.concrete.stack s2 limits work1
+    | core.result.Result.Err _ => ok (r, work1)
+
+/-- [noble_wasm::source::preflight::binding]:
+    Source: 'crates/noble-wasm/src/source/preflight.rs', lines 93:0-110:1 -/
+def source.preflight.binding
+  (binding : noble_kernel.words.Binding)
+  (limits : noble_kernel.untrusted.Limits) (work : source.Work) :
+  Result ((core.result.Result Unit Diagnostic) × source.Work)
+  := do
+  match binding with
+  | noble_kernel.words.Binding.Stack value =>
+    let s := alloc.vec.Vec.deref value
+    source.preflight.concrete.stack s limits work
+  | noble_kernel.words.Binding.Value value =>
+    source.preflight.concrete.ty value limits.type_size work
+  | noble_kernel.words.Binding.Effect value =>
+    let s ← noble_kernel.types.EffSet.as_slice value
+    let i := Slice.len s
+    if i > 2#usize
+    then ok (core.result.Result.Err Diagnostic.Exhausted, work)
+    else ok (core.result.Result.Ok (), work)
+  | noble_kernel.words.Binding.Ref _ => ok (core.result.Result.Ok (), work)
+
+/-- [noble_wasm::source::preflight::node]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/preflight.rs', lines 74:4-82:5 -/
+@[rust_loop_body]
+def source.preflight.node_loop0.body
+  (limits : noble_kernel.untrusted.Limits)
+  (v : alloc.vec.Vec noble_kernel.words.Binding) (work : source.Work)
+  (index : Std.Usize) :
+  Result (ControlFlow (source.Work × Std.Usize) (source.Work × (Option
+    Diagnostic)))
+  := do
+  let i := alloc.vec.Vec.len v
+  if index < i
+  then
+    let b ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        noble_kernel.words.Binding) v index
+    let (r, work1) ← source.preflight.binding b limits work
+    match r with
+    | core.result.Result.Ok _ =>
+      let index1 ← index + 1#usize
+      ok (cont (work1, index1))
+    | core.result.Result.Err problem => ok (done (work1, some problem))
+  else ok (done (work, none))
+
+/-- [noble_wasm::source::preflight::node]: loop 0:
+    Source: 'crates/noble-wasm/src/source/preflight.rs', lines 74:4-82:5 -/
+@[rust_loop]
+def source.preflight.node_loop0
+  (limits : noble_kernel.untrusted.Limits) (work : source.Work)
+  (v : alloc.vec.Vec noble_kernel.words.Binding) (index : Std.Usize) :
+  Result (source.Work × (Option Diagnostic))
+  := do
+  loop
+    (fun (work1, index1) => source.preflight.node_loop0.body limits v work1
+      index1)
+    (work, index)
+
+/-- [noble_wasm::source::preflight::node]: loop body 1:
+    Source: 'crates/noble-wasm/src/source/preflight.rs', lines 74:4-82:5 -/
+@[rust_loop_body]
+def source.preflight.node_loop1.body
+  (limits : noble_kernel.untrusted.Limits)
+  (v : alloc.vec.Vec noble_kernel.words.Binding) (work : source.Work)
+  (index : Std.Usize) :
+  Result (ControlFlow (source.Work × Std.Usize) (source.Work × (Option
+    Diagnostic)))
+  := do
+  let i := alloc.vec.Vec.len v
+  if index < i
+  then
+    let b ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        noble_kernel.words.Binding) v index
+    let (r, work1) ← source.preflight.binding b limits work
+    match r with
+    | core.result.Result.Ok _ =>
+      let index1 ← index + 1#usize
+      ok (cont (work1, index1))
+    | core.result.Result.Err problem => ok (done (work1, some problem))
+  else ok (done (work, none))
+
+/-- [noble_wasm::source::preflight::node]: loop 1:
+    Source: 'crates/noble-wasm/src/source/preflight.rs', lines 74:4-82:5 -/
+@[rust_loop]
+def source.preflight.node_loop1
+  (limits : noble_kernel.untrusted.Limits) (work : source.Work)
+  (v : alloc.vec.Vec noble_kernel.words.Binding) (index : Std.Usize) :
+  Result (source.Work × (Option Diagnostic))
+  := do
+  loop
+    (fun (work1, index1) => source.preflight.node_loop1.body limits v work1
+      index1)
+    (work, index)
+
+/-- [noble_wasm::source::preflight::node]: loop body 2:
+    Source: 'crates/noble-wasm/src/source/preflight.rs', lines 74:4-82:5 -/
+@[rust_loop_body]
+def source.preflight.node_loop2.body
+  (limits : noble_kernel.untrusted.Limits)
+  (v : alloc.vec.Vec noble_kernel.words.Binding) (work : source.Work)
+  (index : Std.Usize) :
+  Result (ControlFlow (source.Work × Std.Usize) (source.Work × (Option
+    Diagnostic)))
+  := do
+  let i := alloc.vec.Vec.len v
+  if index < i
+  then
+    let b ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        noble_kernel.words.Binding) v index
+    let (r, work1) ← source.preflight.binding b limits work
+    match r with
+    | core.result.Result.Ok _ =>
+      let index1 ← index + 1#usize
+      ok (cont (work1, index1))
+    | core.result.Result.Err problem => ok (done (work1, some problem))
+  else ok (done (work, none))
+
+/-- [noble_wasm::source::preflight::node]: loop 2:
+    Source: 'crates/noble-wasm/src/source/preflight.rs', lines 74:4-82:5 -/
+@[rust_loop]
+def source.preflight.node_loop2
+  (limits : noble_kernel.untrusted.Limits) (work : source.Work)
+  (v : alloc.vec.Vec noble_kernel.words.Binding) (index : Std.Usize) :
+  Result (source.Work × (Option Diagnostic))
+  := do
+  loop
+    (fun (work1, index1) => source.preflight.node_loop2.body limits v work1
+      index1)
+    (work, index)
+
+/-- [noble_wasm::source::preflight::node]:
+    Source: 'crates/noble-wasm/src/source/preflight.rs', lines 52:0-87:1 -/
+def source.preflight.node
+  (node : noble_kernel.untrusted.Node) (limits : noble_kernel.untrusted.Limits)
+  (work : source.Work) :
+  Result ((core.result.Result Unit Diagnostic) × source.Work)
+  := do
+  match node with
+  | noble_kernel.untrusted.Node.Literal _ inst =>
+    let i := alloc.vec.Vec.len inst.bindings
+    if i > 8#usize
+    then ok (core.result.Result.Err Diagnostic.Exhausted, work)
+    else
+      let i1 := alloc.vec.Vec.len inst.bindings
+      let i2 ← lift (core.num.Usize.saturating_add i1 1#usize)
+      let (r, work1) ← source.Work.entries work i2
+      match r with
+      | core.result.Result.Ok _ =>
+        let (work2, failure) ←
+          source.preflight.node_loop0 limits work1 inst.bindings 0#usize
+        match failure with
+        | none => ok (core.result.Result.Ok (), work2)
+        | some problem => ok (core.result.Result.Err problem, work2)
+      | core.result.Result.Err _ => ok (r, work1)
+  | noble_kernel.untrusted.Node.Invocation _ inst =>
+    let i := alloc.vec.Vec.len inst.bindings
+    if i > 8#usize
+    then ok (core.result.Result.Err Diagnostic.Exhausted, work)
+    else
+      let i1 := alloc.vec.Vec.len inst.bindings
+      let i2 ← lift (core.num.Usize.saturating_add i1 1#usize)
+      let (r, work1) ← source.Work.entries work i2
+      match r with
+      | core.result.Result.Ok _ =>
+        let (work2, failure) ←
+          source.preflight.node_loop1 limits work1 inst.bindings 0#usize
+        match failure with
+        | none => ok (core.result.Result.Ok (), work2)
+        | some problem => ok (core.result.Result.Err problem, work2)
+      | core.result.Result.Err _ => ok (r, work1)
+  | noble_kernel.untrusted.Node.Quotation body inst =>
+    let i := alloc.vec.Vec.len body
+    if i > source.NODE_LIMIT
+    then ok (core.result.Result.Err Diagnostic.Exhausted, work)
+    else
+      let i1 := alloc.vec.Vec.len body
+      let (r, work1) ← source.Work.entries work i1
+      match r with
+      | core.result.Result.Ok _ =>
+        let i2 := alloc.vec.Vec.len inst.bindings
+        if i2 > 8#usize
+        then ok (core.result.Result.Err Diagnostic.Exhausted, work1)
+        else
+          let i3 := alloc.vec.Vec.len inst.bindings
+          let i4 ← lift (core.num.Usize.saturating_add i3 1#usize)
+          let (r1, work2) ← source.Work.entries work1 i4
+          match r1 with
+          | core.result.Result.Ok _ =>
+            let (work3, failure) ←
+              source.preflight.node_loop2 limits work2 inst.bindings 0#usize
+            match failure with
+            | none => ok (core.result.Result.Ok (), work3)
+            | some problem => ok (core.result.Result.Err problem, work3)
+          | core.result.Result.Err _ => ok (r1, work2)
+      | core.result.Result.Err _ => ok (r, work1)
+
+/-- [noble_wasm::source::preflight::body]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/preflight.rs', lines 33:4-41:5 -/
+@[rust_loop_body]
+def source.preflight.body_loop.body
+  (v : alloc.vec.Vec noble_kernel.untrusted.Node)
+  (limits : noble_kernel.untrusted.Limits) (work : source.Work)
+  (index : Std.Usize) :
+  Result (ControlFlow (source.Work × Std.Usize) (source.Work × (Option
+    Diagnostic)))
+  := do
+  let i := alloc.vec.Vec.len v
+  if index < i
+  then
+    let n ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        noble_kernel.untrusted.Node) v index
+    let (r, work1) ← source.preflight.node n limits work
+    match r with
+    | core.result.Result.Ok _ =>
+      let index1 ← index + 1#usize
+      ok (cont (work1, index1))
+    | core.result.Result.Err problem => ok (done (work1, some problem))
+  else ok (done (work, none))
+
+/-- [noble_wasm::source::preflight::body]: loop 0:
+    Source: 'crates/noble-wasm/src/source/preflight.rs', lines 33:4-41:5 -/
+@[rust_loop]
+def source.preflight.body_loop
+  (v : alloc.vec.Vec noble_kernel.untrusted.Node)
+  (limits : noble_kernel.untrusted.Limits) (work : source.Work)
+  (index : Std.Usize) :
+  Result (source.Work × (Option Diagnostic))
+  := do
+  loop
+    (fun (work1, index1) => source.preflight.body_loop.body v limits work1
+      index1)
+    (work, index)
+
+/-- [noble_wasm::source::preflight::body]:
+    Source: 'crates/noble-wasm/src/source/preflight.rs', lines 20:0-46:1 -/
+def source.preflight.body
+  (body : noble_kernel.execution.Body) (limits : noble_kernel.untrusted.Limits)
+  (work : source.Work) :
+  Result ((core.result.Result Unit Diagnostic) × source.Work)
+  := do
+  let i := alloc.vec.Vec.len body.candidate.nodes
+  if i > source.NODE_LIMIT
+  then ok (core.result.Result.Err Diagnostic.Exhausted, work)
+  else
+    let i1 := alloc.vec.Vec.len body.candidate.body
+    if i1 > source.NODE_LIMIT
+    then ok (core.result.Result.Err Diagnostic.Exhausted, work)
+    else
+      let i2 := alloc.vec.Vec.len body.candidate.body
+      let (r, work1) ← source.Work.entries work i2
+      match r with
+      | core.result.Result.Ok _ =>
+        let (work2, failure) ←
+          source.preflight.body_loop body.candidate.nodes limits work1 0#usize
+        match failure with
+        | none => ok (core.result.Result.Ok (), work2)
+        | some problem => ok (core.result.Result.Err problem, work2)
+      | core.result.Result.Err _ => ok (r, work1)
+
+/-- [noble_wasm::source::preflight::definition]:
+    Source: 'crates/noble-wasm/src/source/preflight.rs', lines 128:0-135:1 -/
+def source.preflight.definition
+  (definition : noble_kernel.execution.Definition)
+  (limits : noble_kernel.untrusted.Limits) (work : source.Work) :
+  Result ((core.result.Result Unit Diagnostic) × source.Work)
+  := do
+  let (r, work1) ← source.preflight.expected definition.expected limits work
+  match r with
+  | core.result.Result.Ok _ =>
+    source.preflight.body definition.body limits work1
+  | core.result.Result.Err _ => ok (r, work1)
+
+/-- [noble_wasm::source::preflight::schemes::pattern_child]:
+    Source: 'crates/noble-wasm/src/source/preflight/schemes.rs', lines 38:0-65:1 -/
+def source.preflight.schemes.pattern_child
+  (pattern : noble_kernel.shapes.Pattern) (child : Std.Usize) :
+  Result (core.result.Result noble_kernel.shapes.Pattern Diagnostic)
+  := do
+  match pattern with
+  | noble_kernel.shapes.Pattern.UnitPattern =>
+    ok (core.result.Result.Err Diagnostic.Invalid)
+  | noble_kernel.shapes.Pattern.BoolPattern =>
+    ok (core.result.Result.Err Diagnostic.Invalid)
+  | noble_kernel.shapes.Pattern.I64Pattern =>
+    ok (core.result.Result.Err Diagnostic.Invalid)
+  | noble_kernel.shapes.Pattern.TextPattern =>
+    ok (core.result.Result.Err Diagnostic.Invalid)
+  | noble_kernel.shapes.Pattern.SyntaxPattern =>
+    ok (core.result.Result.Err Diagnostic.Invalid)
+  | noble_kernel.shapes.Pattern.PairPattern left right =>
+    if child = 0#usize
+    then ok (core.result.Result.Ok left)
+    else ok (core.result.Result.Ok right)
+  | noble_kernel.shapes.Pattern.SumPattern left right =>
+    if child = 0#usize
+    then ok (core.result.Result.Ok left)
+    else ok (core.result.Result.Ok right)
+  | noble_kernel.shapes.Pattern.ListPattern item =>
+    ok (core.result.Result.Ok item)
+  | noble_kernel.shapes.Pattern.ProgramPattern input output _ =>
+    let i := alloc.vec.Vec.len input
+    let selected ←
+      if child < i
+      then
+        let s := alloc.vec.Vec.deref input
+        core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice
+          noble_kernel.shapes.Pattern) s child
+      else
+        do
+        let s := alloc.vec.Vec.deref output
+        let i1 := alloc.vec.Vec.len input
+        let i2 ← lift (core.num.Usize.saturating_sub child i1)
+        core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice
+          noble_kernel.shapes.Pattern) s i2
+    match selected with
+    | none => ok (core.result.Result.Err Diagnostic.Invalid)
+    | some pattern1 => ok (core.result.Result.Ok pattern1)
+  | noble_kernel.shapes.Pattern.ResourcePattern _ =>
+    ok (core.result.Result.Err Diagnostic.Invalid)
+  | noble_kernel.shapes.Pattern.VarPattern _ =>
+    ok (core.result.Result.Err Diagnostic.Invalid)
+  | noble_kernel.shapes.Pattern.StackVarPattern _ =>
+    ok (core.result.Result.Err Diagnostic.Invalid)
+
+/-- [noble_wasm::source::preflight::schemes::pattern_at]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/preflight/schemes.rs', lines 78:4-89:5 -/
+@[rust_loop_body]
+def source.preflight.schemes.pattern_at_loop.body
+  (path : Slice Std.Usize) (pattern : noble_kernel.shapes.Pattern)
+  (index : Std.Usize) :
+  Result (ControlFlow (noble_kernel.shapes.Pattern × Std.Usize)
+    (noble_kernel.shapes.Pattern × (Option Diagnostic)))
+  := do
+  let i := Slice.len path
+  if index < i
+  then
+    let i1 ← Slice.index_usize path index
+    let r ← source.preflight.schemes.pattern_child pattern i1
+    match r with
+    | core.result.Result.Ok child =>
+      let index1 ← index + 1#usize
+      ok (cont (child, index1))
+    | core.result.Result.Err problem => ok (done (pattern, some problem))
+  else ok (done (pattern, none))
+
+/-- [noble_wasm::source::preflight::schemes::pattern_at]: loop 0:
+    Source: 'crates/noble-wasm/src/source/preflight/schemes.rs', lines 78:4-89:5 -/
+@[rust_loop]
+def source.preflight.schemes.pattern_at_loop
+  (path : Slice Std.Usize) (pattern : noble_kernel.shapes.Pattern)
+  (index : Std.Usize) :
+  Result (noble_kernel.shapes.Pattern × (Option Diagnostic))
+  := do
+  loop
+    (fun (pattern1, index1) => source.preflight.schemes.pattern_at_loop.body
+      path pattern1 index1)
+    (pattern, index)
+
+/-- [noble_wasm::source::preflight::schemes::pattern_at]:
+    Source: 'crates/noble-wasm/src/source/preflight/schemes.rs', lines 71:0-94:1 -/
+def source.preflight.schemes.pattern_at
+  (root : noble_kernel.shapes.Pattern) (path : Slice Std.Usize) :
+  Result (core.result.Result noble_kernel.shapes.Pattern Diagnostic)
+  := do
+  let (pattern, failure) ←
+    source.preflight.schemes.pattern_at_loop path root 0#usize
+  match failure with
+  | none => ok (core.result.Result.Ok pattern)
+  | some problem => ok (core.result.Result.Err problem)
+
+/-- [noble_wasm::source::preflight::schemes::pattern_children]:
+    Source: 'crates/noble-wasm/src/source/preflight/schemes.rs', lines 6:0-32:1 -/
+def source.preflight.schemes.pattern_children
+  (pattern : noble_kernel.shapes.Pattern) :
+  Result (core.result.Result Std.Usize Diagnostic)
+  := do
+  match pattern with
+  | noble_kernel.shapes.Pattern.UnitPattern =>
+    ok (core.result.Result.Ok 0#usize)
+  | noble_kernel.shapes.Pattern.BoolPattern =>
+    ok (core.result.Result.Ok 0#usize)
+  | noble_kernel.shapes.Pattern.I64Pattern =>
+    ok (core.result.Result.Ok 0#usize)
+  | noble_kernel.shapes.Pattern.TextPattern =>
+    ok (core.result.Result.Ok 0#usize)
+  | noble_kernel.shapes.Pattern.SyntaxPattern =>
+    ok (core.result.Result.Ok 0#usize)
+  | noble_kernel.shapes.Pattern.PairPattern _ _ =>
+    ok (core.result.Result.Ok 2#usize)
+  | noble_kernel.shapes.Pattern.SumPattern _ _ =>
+    ok (core.result.Result.Ok 2#usize)
+  | noble_kernel.shapes.Pattern.ListPattern _ =>
+    ok (core.result.Result.Ok 1#usize)
+  | noble_kernel.shapes.Pattern.ProgramPattern input output effects =>
+    let i := alloc.vec.Vec.len input
+    if i > source.preflight.STACK_LIMIT
+    then ok (core.result.Result.Err Diagnostic.Exhausted)
+    else
+      let i1 := alloc.vec.Vec.len output
+      if i1 > source.preflight.STACK_LIMIT
+      then ok (core.result.Result.Err Diagnostic.Exhausted)
+      else
+        let i2 := alloc.vec.Vec.len effects
+        if i2 > 8#usize
+        then ok (core.result.Result.Err Diagnostic.Exhausted)
+        else
+          let i3 := alloc.vec.Vec.len input
+          let i4 := alloc.vec.Vec.len output
+          let i5 ← lift (core.num.Usize.saturating_add i3 i4)
+          ok (core.result.Result.Ok i5)
+  | noble_kernel.shapes.Pattern.ResourcePattern _ =>
+    ok (core.result.Result.Ok 0#usize)
+  | noble_kernel.shapes.Pattern.VarPattern _ =>
+    ok (core.result.Result.Ok 0#usize)
+  | noble_kernel.shapes.Pattern.StackVarPattern _ =>
+    ok (core.result.Result.Ok 0#usize)
+
+/-- [noble_wasm::source::preflight::schemes::pattern_child_count]:
+    Source: 'crates/noble-wasm/src/source/preflight/schemes.rs', lines 96:0-103:1 -/
+def source.preflight.schemes.pattern_child_count
+  (root : noble_kernel.shapes.Pattern) (path : Slice Std.Usize)
+  (work : source.Work) :
+  Result ((core.result.Result Std.Usize Diagnostic) × source.Work)
+  := do
+  let i := Slice.len path
+  let i1 ← lift (core.num.Usize.saturating_add i 1#usize)
+  let (r, work1) ← source.Work.entries work i1
+  match r with
+  | core.result.Result.Ok _ =>
+    let r1 ← source.preflight.schemes.pattern_at root path
+    match r1 with
+    | core.result.Result.Ok value =>
+      let r2 ← source.preflight.schemes.pattern_children value
+      ok (r2, work1)
+    | core.result.Result.Err failure =>
+      ok (core.result.Result.Err failure, work1)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, work1)
+
+/-- [noble_wasm::source::preflight::schemes::pattern_step]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/preflight/schemes.rs', lines 125:4-139:5 -/
+@[rust_loop_body]
+def source.preflight.schemes.pattern_step_loop.body
+  (root : noble_kernel.shapes.Pattern) (path : alloc.vec.Vec Std.Usize)
+  (work : source.Work) :
+  Result (ControlFlow ((alloc.vec.Vec Std.Usize) × source.Work)
+    ((alloc.vec.Vec Std.Usize) × source.Work × (Option Std.Usize) × (Option
+    Diagnostic)))
+  := do
+  let (o, path1) ← alloc.vec.Vec.pop Global path
+  match o with
+  | none => ok (done (path1, work, none, none))
+  | some child =>
+    let s := alloc.vec.Vec.deref path1
+    let (r, work1) ← source.preflight.schemes.pattern_child_count root s work
+    match r with
+    | core.result.Result.Ok count =>
+      let next_child ← lift (core.num.Usize.saturating_add child 1#usize)
+      if next_child < count
+      then ok (done (path1, work1, some next_child, none))
+      else ok (cont (path1, work1))
+    | core.result.Result.Err problem =>
+      ok (done (path1, work1, none, some problem))
+
+/-- [noble_wasm::source::preflight::schemes::pattern_step]: loop 0:
+    Source: 'crates/noble-wasm/src/source/preflight/schemes.rs', lines 125:4-139:5 -/
+@[rust_loop]
+def source.preflight.schemes.pattern_step_loop
+  (path : alloc.vec.Vec Std.Usize) (root : noble_kernel.shapes.Pattern)
+  (work : source.Work) :
+  Result ((alloc.vec.Vec Std.Usize) × source.Work × (Option Std.Usize) ×
+    (Option Diagnostic))
+  := do
+  loop
+    (fun (path1, work1) => source.preflight.schemes.pattern_step_loop.body root
+      path1 work1)
+    (path, work)
+
+/-- [noble_wasm::source::preflight::schemes::pattern_step]:
+    Source: 'crates/noble-wasm/src/source/preflight/schemes.rs', lines 110:0-150:1 -/
+def source.preflight.schemes.pattern_step
+  (root : noble_kernel.shapes.Pattern) (path : alloc.vec.Vec Std.Usize)
+  (work : source.Work) :
+  Result ((core.result.Result Bool Diagnostic) × (alloc.vec.Vec Std.Usize) ×
+    source.Work)
+  := do
+  let s := alloc.vec.Vec.deref path
+  let (r, work1) ← source.preflight.schemes.pattern_child_count root s work
+  match r with
+  | core.result.Result.Ok value =>
+    if value != 0#usize
+    then
+      let i := alloc.vec.Vec.len path
+      if i >= source.preflight.PATH_LIMIT
+      then ok (core.result.Result.Err Diagnostic.Exhausted, path, work1)
+      else
+        let path1 ← alloc.vec.Vec.push path 0#usize
+        ok (core.result.Result.Ok true, path1, work1)
+    else
+      let (path1, work2, sibling, failure) ←
+        source.preflight.schemes.pattern_step_loop path root work1
+      match failure with
+      | none =>
+        match sibling with
+        | none => ok (core.result.Result.Ok false, path1, work2)
+        | some child =>
+          let path2 ← alloc.vec.Vec.push path1 child
+          ok (core.result.Result.Ok true, path2, work2)
+      | some problem => ok (core.result.Result.Err problem, path1, work2)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, path, work1)
+
+/-- [noble_wasm::source::preflight::schemes::pattern]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/preflight/schemes.rs', lines 164:4-178:5 -/
+@[rust_loop_body]
+def source.preflight.schemes.pattern_loop.body
+  (root : noble_kernel.shapes.Pattern) (work : source.Work)
+  (path : alloc.vec.Vec Std.Usize) (nodes : Std.U32) :
+  Result (ControlFlow (source.Work × (alloc.vec.Vec Std.Usize) × Std.U32)
+    (source.Work × (Option Diagnostic)))
+  := do
+  if nodes >= source.preflight.TYPE_LIMIT
+  then ok (done (work, some Diagnostic.Exhausted))
+  else
+    let nodes1 ← nodes + 1#u32
+    let (r, path1, work1) ←
+      source.preflight.schemes.pattern_step root path work
+    match r with
+    | core.result.Result.Ok b =>
+      if b
+      then ok (cont (work1, path1, nodes1))
+      else ok (done (work1, none))
+    | core.result.Result.Err problem => ok (done (work1, some problem))
+
+/-- [noble_wasm::source::preflight::schemes::pattern]: loop 0:
+    Source: 'crates/noble-wasm/src/source/preflight/schemes.rs', lines 164:4-178:5 -/
+@[rust_loop]
+def source.preflight.schemes.pattern_loop
+  (root : noble_kernel.shapes.Pattern) (work : source.Work)
+  (path : alloc.vec.Vec Std.Usize) (nodes : Std.U32) :
+  Result (source.Work × (Option Diagnostic))
+  := do
+  loop
+    (fun (work1, path1, nodes1) => source.preflight.schemes.pattern_loop.body
+      root work1 path1 nodes1)
+    (work, path, nodes)
+
+/-- [noble_wasm::source::preflight::schemes::pattern]:
+    Source: 'crates/noble-wasm/src/source/preflight/schemes.rs', lines 156:0-183:1 -/
+def source.preflight.schemes.pattern
+  (root : noble_kernel.shapes.Pattern) (work : source.Work) :
+  Result ((core.result.Result Unit Diagnostic) × source.Work)
+  := do
+  let (r, work1) ← source.Work.charge work 1#u64
+  match r with
+  | core.result.Result.Ok _ =>
+    let path :=
+      alloc.vec.Vec.with_capacity Std.Usize source.preflight.PATH_LIMIT
+    let (work2, failure) ←
+      source.preflight.schemes.pattern_loop root work1 path 0#u32
+    match failure with
+    | none => ok (core.result.Result.Ok (), work2)
+    | some problem => ok (core.result.Result.Err problem, work2)
+  | core.result.Result.Err _ => ok (r, work1)
+
+/-- [noble_wasm::source::preflight::schemes::check]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/preflight/schemes.rs', lines 204:4-212:5 -/
+@[rust_loop_body]
+def source.preflight.schemes.check_loop0.body
+  (v : alloc.vec.Vec noble_kernel.shapes.Pattern) (work : source.Work)
+  (index : Std.Usize) :
+  Result (ControlFlow (source.Work × Std.Usize) (source.Work × (Option
+    Diagnostic)))
+  := do
+  let i := alloc.vec.Vec.len v
+  if index < i
+  then
+    let p ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        noble_kernel.shapes.Pattern) v index
+    let (r, work1) ← source.preflight.schemes.pattern p work
+    match r with
+    | core.result.Result.Ok _ =>
+      let index1 ← index + 1#usize
+      ok (cont (work1, index1))
+    | core.result.Result.Err problem => ok (done (work1, some problem))
+  else ok (done (work, none))
+
+/-- [noble_wasm::source::preflight::schemes::check]: loop 0:
+    Source: 'crates/noble-wasm/src/source/preflight/schemes.rs', lines 204:4-212:5 -/
+@[rust_loop]
+def source.preflight.schemes.check_loop0
+  (v : alloc.vec.Vec noble_kernel.shapes.Pattern) (work : source.Work)
+  (index : Std.Usize) :
+  Result (source.Work × (Option Diagnostic))
+  := do
+  loop
+    (fun (work1, index1) => source.preflight.schemes.check_loop0.body v work1
+      index1)
+    (work, index)
+
+/-- [noble_wasm::source::preflight::schemes::check]: loop body 1:
+    Source: 'crates/noble-wasm/src/source/preflight/schemes.rs', lines 217:4-225:5 -/
+@[rust_loop_body]
+def source.preflight.schemes.check_loop1.body
+  (v : alloc.vec.Vec noble_kernel.shapes.Pattern) (work : source.Work)
+  (index : Std.Usize) :
+  Result (ControlFlow (source.Work × Std.Usize) (source.Work × (Option
+    Diagnostic)))
+  := do
+  let i := alloc.vec.Vec.len v
+  if index < i
+  then
+    let p ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        noble_kernel.shapes.Pattern) v index
+    let (r, work1) ← source.preflight.schemes.pattern p work
+    match r with
+    | core.result.Result.Ok _ =>
+      let index1 ← index + 1#usize
+      ok (cont (work1, index1))
+    | core.result.Result.Err problem => ok (done (work1, some problem))
+  else ok (done (work, none))
+
+/-- [noble_wasm::source::preflight::schemes::check]: loop 1:
+    Source: 'crates/noble-wasm/src/source/preflight/schemes.rs', lines 217:4-225:5 -/
+@[rust_loop]
+def source.preflight.schemes.check_loop1
+  (v : alloc.vec.Vec noble_kernel.shapes.Pattern) (work : source.Work)
+  (index : Std.Usize) :
+  Result (source.Work × (Option Diagnostic))
+  := do
+  loop
+    (fun (work1, index1) => source.preflight.schemes.check_loop1.body v work1
+      index1)
+    (work, index)
+
+/-- [noble_wasm::source::preflight::schemes::check]:
+    Source: 'crates/noble-wasm/src/source/preflight/schemes.rs', lines 189:0-230:1 -/
+def source.preflight.schemes.check
+  (scheme : noble_kernel.words.Scheme) (work : source.Work) :
+  Result ((core.result.Result Unit Diagnostic) × source.Work)
+  := do
+  let i := alloc.vec.Vec.len scheme.var_kinds
+  if i > 8#usize
+  then ok (core.result.Result.Err Diagnostic.Exhausted, work)
+  else
+    let i1 := alloc.vec.Vec.len scheme.stack_in
+    if i1 > source.preflight.STACK_LIMIT
+    then ok (core.result.Result.Err Diagnostic.Exhausted, work)
+    else
+      let i2 := alloc.vec.Vec.len scheme.stack_out
+      if i2 > source.preflight.STACK_LIMIT
+      then ok (core.result.Result.Err Diagnostic.Exhausted, work)
+      else
+        let i3 := alloc.vec.Vec.len scheme.effects
+        if i3 > 8#usize
+        then ok (core.result.Result.Err Diagnostic.Exhausted, work)
+        else
+          let (work1, failure) ←
+            source.preflight.schemes.check_loop0 scheme.stack_in work 0#usize
+          match failure with
+          | none =>
+            let (work2, failure1) ←
+              source.preflight.schemes.check_loop1 scheme.stack_out work1
+                0#usize
+            match failure1 with
+            | none => ok (core.result.Result.Ok (), work2)
+            | some problem => ok (core.result.Result.Err problem, work2)
+          | some problem => ok (core.result.Result.Err problem, work1)
+
+/-- [noble_wasm::source::preflight::check]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/preflight.rs', lines 152:4-160:5 -/
+@[rust_loop_body]
+def source.preflight.check_loop0.body
+  (v : alloc.vec.Vec noble_kernel.words.Scheme) (work : source.Work)
+  (index : Std.Usize) :
+  Result (ControlFlow (source.Work × Std.Usize) (source.Work × (Option
+    Diagnostic)))
+  := do
+  let i := alloc.vec.Vec.len v
+  if index < i
+  then
+    let s ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        noble_kernel.words.Scheme) v index
+    let (r, work1) ← source.preflight.schemes.check s work
+    match r with
+    | core.result.Result.Ok _ =>
+      let index1 ← index + 1#usize
+      ok (cont (work1, index1))
+    | core.result.Result.Err problem => ok (done (work1, some problem))
+  else ok (done (work, none))
+
+/-- [noble_wasm::source::preflight::check]: loop 0:
+    Source: 'crates/noble-wasm/src/source/preflight.rs', lines 152:4-160:5 -/
+@[rust_loop]
+def source.preflight.check_loop0
+  (v : alloc.vec.Vec noble_kernel.words.Scheme) (work : source.Work)
+  (index : Std.Usize) :
+  Result (source.Work × (Option Diagnostic))
+  := do
+  loop
+    (fun (work1, index1) => source.preflight.check_loop0.body v work1 index1)
+    (work, index)
+
+/-- [noble_wasm::source::preflight::check]: loop body 1:
+    Source: 'crates/noble-wasm/src/source/preflight.rs', lines 171:4-183:5 -/
+@[rust_loop_body]
+def source.preflight.check_loop1.body
+  (v : alloc.vec.Vec noble_kernel.execution.Definition)
+  (l : noble_kernel.untrusted.Limits) (work : source.Work) (index : Std.Usize)
+  :
+  Result (ControlFlow (source.Work × Std.Usize) (source.Work × (Option
+    Diagnostic)))
+  := do
+  let i := alloc.vec.Vec.len v
+  if index < i
+  then
+    let d ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        noble_kernel.execution.Definition) v index
+    let (r, work1) ← source.preflight.definition d l work
+    match r with
+    | core.result.Result.Ok _ =>
+      let index1 ← index + 1#usize
+      ok (cont (work1, index1))
+    | core.result.Result.Err problem => ok (done (work1, some problem))
+  else ok (done (work, none))
+
+/-- [noble_wasm::source::preflight::check]: loop 1:
+    Source: 'crates/noble-wasm/src/source/preflight.rs', lines 171:4-183:5 -/
+@[rust_loop]
+def source.preflight.check_loop1
+  (v : alloc.vec.Vec noble_kernel.execution.Definition)
+  (l : noble_kernel.untrusted.Limits) (work : source.Work) (index : Std.Usize)
+  :
+  Result (source.Work × (Option Diagnostic))
+  := do
+  loop
+    (fun (work1, index1) => source.preflight.check_loop1.body v l work1 index1)
+    (work, index)
+
+/-- [noble_wasm::source::preflight::check]:
+    Source: 'crates/noble-wasm/src/source/preflight.rs', lines 141:0-188:1 -/
+def source.preflight.check
+  (submission : noble_kernel.execution.Submission) (work : source.Work) :
+  Result ((core.result.Result Unit Diagnostic) × source.Work)
+  := do
+  let i := alloc.vec.Vec.len submission.environment.defs
+  let i1 ←
+    lift (core.num.Usize.saturating_add source.DEFINITION_LIMIT 24#usize)
+  if i > i1
+  then ok (core.result.Result.Err Diagnostic.Exhausted, work)
+  else
+    let i2 := alloc.vec.Vec.len submission.definitions
+    if i2 > source.DEFINITION_LIMIT
+    then ok (core.result.Result.Err Diagnostic.Exhausted, work)
+    else
+      let (work1, failure) ←
+        source.preflight.check_loop0 submission.environment.defs work 0#usize
+      match failure with
+      | none =>
+        let (r, work2) ←
+          source.preflight.expected submission.request.expected
+            submission.request.limits work1
+        match r with
+        | core.result.Result.Ok _ =>
+          let (r1, work3) ←
+            source.preflight.body submission.body submission.request.limits
+              work2
+          match r1 with
+          | core.result.Result.Ok _ =>
+            let (work4, failure1) ←
+              source.preflight.check_loop1 submission.definitions
+                submission.request.limits work3 0#usize
+            match failure1 with
+            | none => ok (core.result.Result.Ok (), work4)
+            | some problem => ok (core.result.Result.Err problem, work4)
+          | core.result.Result.Err _ => ok (r1, work3)
+        | core.result.Result.Err _ => ok (r, work2)
+      | some problem => ok (core.result.Result.Err problem, work1)
+
+/-- [noble_wasm::source::types::{noble_wasm::source::types::Registry}::new]:
+    Source: 'crates/noble-wasm/src/source/types.rs', lines 23:4-28:5 -/
+def source.types.Registry.new : Result source.types.Registry := do
+  ok
+    {
+      keys := (alloc.vec.Vec.new noble_kernel.types.Ty),
+      shapes := (alloc.vec.Vec.new source.types.Shape)
+    }
+
+/-- [noble_wasm::source::plan::operations::derivation]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/plan/operations.rs', lines 26:4-43:5 -/
+@[rust_loop_body]
+def source.plan.operations.derivation_loop.body
+  (checked : noble_kernel.untrusted.Checked)
+  (node : noble_kernel.untrusted.NodeId) (index : Std.Usize)
+  (found : Option noble_kernel.untrusted.Interface) :
+  Result (ControlFlow (Std.Usize × (Option noble_kernel.untrusted.Interface))
+    ((Option noble_kernel.untrusted.Interface) × (Option Diagnostic)))
+  := do
+  let i := alloc.vec.Vec.len checked.derivations
+  if index < i
+  then
+    let item ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        noble_kernel.untrusted.Derivation) checked.derivations index
+    let b ←
+      core.cmp.PartialEq.ne.trait_default
+        noble_kernel.untrusted.NodeId.Insts.CoreCmpPartialEqNodeId item.node
+        node
+    if b
+    then let index1 ← index + 1#usize
+         ok (cont (index1, found))
+    else
+      match found with
+      | none =>
+        let index1 ← index + 1#usize
+        ok (cont (index1, some item.interface))
+      | some previous =>
+        let b1 ←
+          alloc.vec.partial_eq.PartialEqVec.ne
+            noble_kernel.types.Ty.Insts.CoreCmpPartialEqTy previous.stack_in
+            item.interface.stack_in
+        if b1
+        then ok (done (found, some Diagnostic.Invalid))
+        else
+          let b2 ←
+            alloc.vec.partial_eq.PartialEqVec.ne
+              noble_kernel.types.Ty.Insts.CoreCmpPartialEqTy previous.stack_out
+              item.interface.stack_out
+          if b2
+          then ok (done (found, some Diagnostic.Invalid))
+          else
+            let b3 ←
+              core.cmp.PartialEq.ne.trait_default
+                noble_kernel.types.EffSet.Insts.CoreCmpPartialEqEffSet
+                previous.effects item.interface.effects
+            if b3
+            then ok (done (found, some Diagnostic.Invalid))
+            else
+              let index1 ← index + 1#usize
+              ok (cont (index1, some item.interface))
+  else ok (done (found, none))
+
+/-- [noble_wasm::source::plan::operations::derivation]: loop 0:
+    Source: 'crates/noble-wasm/src/source/plan/operations.rs', lines 26:4-43:5 -/
+@[rust_loop]
+def source.plan.operations.derivation_loop
+  (checked : noble_kernel.untrusted.Checked)
+  (node : noble_kernel.untrusted.NodeId) (index : Std.Usize)
+  (found : Option noble_kernel.untrusted.Interface) :
+  Result ((Option noble_kernel.untrusted.Interface) × (Option Diagnostic))
+  := do
+  loop
+    (fun (index1, found1) => source.plan.operations.derivation_loop.body
+      checked node index1 found1)
+    (index, found)
+
+/-- [noble_wasm::source::plan::operations::derivation]:
+    Source: 'crates/noble-wasm/src/source/plan/operations.rs', lines 19:0-51:1 -/
+def source.plan.operations.derivation
+  (checked : noble_kernel.untrusted.Checked)
+  (node : noble_kernel.untrusted.NodeId) :
+  Result (core.result.Result noble_kernel.untrusted.Interface Diagnostic)
+  := do
+  let (found, failure) ←
+    source.plan.operations.derivation_loop checked node 0#usize none
+  match failure with
+  | none =>
+    match found with
+    | none => ok (core.result.Result.Err Diagnostic.Invalid)
+    | some value => ok (core.result.Result.Ok value)
+  | some problem => ok (core.result.Result.Err problem)
+
+/-- [noble_wasm::source::plan::effect_mask]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/plan.rs', lines 66:4-76:5 -/
+@[rust_loop_body]
+def source.plan.effect_mask_loop.body
+  (effects : noble_kernel.types.EffSet) (mask : Std.U32) (index : Std.Usize) :
+  Result (ControlFlow (Std.U32 × Std.Usize) (Std.U32 × (Option Diagnostic)))
+  := do
+  let s ← noble_kernel.types.EffSet.as_slice effects
+  let i := Slice.len s
+  if index < i
+  then
+    let ei ← Slice.index_usize s index
+    match ei with
+    | 0#uscalar =>
+      let mask1 ← lift (mask ||| 1#u32)
+      let index1 ← index + 1#usize
+      ok (cont (mask1, index1))
+    | 1#uscalar =>
+      let mask1 ← lift (mask ||| 2#u32)
+      let index1 ← index + 1#usize
+      ok (cont (mask1, index1))
+    | _ => ok (done (mask, some Diagnostic.Unsupported))
+  else ok (done (mask, none))
+
+/-- [noble_wasm::source::plan::effect_mask]: loop 0:
+    Source: 'crates/noble-wasm/src/source/plan.rs', lines 66:4-76:5 -/
+@[rust_loop]
+def source.plan.effect_mask_loop
+  (effects : noble_kernel.types.EffSet) (mask : Std.U32) (index : Std.Usize) :
+  Result (Std.U32 × (Option Diagnostic))
+  := do
+  loop
+    (fun (mask1, index1) => source.plan.effect_mask_loop.body effects mask1
+      index1)
+    (mask, index)
+
+/-- [noble_wasm::source::plan::effect_mask]:
+    Source: 'crates/noble-wasm/src/source/plan.rs', lines 62:0-81:1 -/
+def source.plan.effect_mask
+  (effects : noble_kernel.types.EffSet) :
+  Result (core.result.Result Std.U32 Diagnostic)
+  := do
+  let (mask, failure) ← source.plan.effect_mask_loop effects 0#u32 0#usize
+  match failure with
+  | none => ok (core.result.Result.Ok mask)
+  | some problem => ok (core.result.Result.Err problem)
+
+/-- [noble_wasm::source::plan::allocation::signature]:
+    Source: 'crates/noble-wasm/src/source/plan/allocation.rs', lines 6:0-22:1 -/
+def source.plan.allocation.signature
+  (compiler : source.Compiler) (input : Slice noble_kernel.types.Ty)
+  (output : Slice noble_kernel.types.Ty) (effects : noble_kernel.types.EffSet)
+  (work : source.Work) :
+  Result ((core.result.Result source.plan.Program Diagnostic) ×
+    source.Compiler × source.Work)
+  := do
+  let (r, compiler1, work1) ← source.Compiler.signature compiler input work
+  match r with
+  | core.result.Result.Ok value =>
+    let (r1, compiler2, work2) ←
+      source.Compiler.signature compiler1 output work1
+    match r1 with
+    | core.result.Result.Ok value1 =>
+      let r2 ← source.plan.effect_mask effects
+      match r2 with
+      | core.result.Result.Ok value2 =>
+        ok (core.result.Result.Ok
+          {
+            entry := 0#u32,
+            input := value,
+            output := value1,
+            effects := value2,
+            operations := (alloc.vec.Vec.new source.plan.Operation),
+            depth := 0#u32,
+            leaves := 0#u32
+          }, compiler2, work2)
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, compiler2, work2)
+    | core.result.Result.Err failure =>
+      ok (core.result.Result.Err failure, compiler2, work2)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, compiler1, work1)
+
+/-- [noble_wasm::source::plan::allocation::quotation]:
+    Source: 'crates/noble-wasm/src/source/plan/allocation.rs', lines 28:0-44:1 -/
+def source.plan.allocation.quotation
+  (checked : noble_kernel.untrusted.Checked) (index : Std.Usize)
+  (compiler : source.Compiler) (work : source.Work) :
+  Result ((core.result.Result source.plan.Program Diagnostic) ×
+    source.Compiler × source.Work)
+  := do
+  let r ← source.plan.number index
+  match r with
+  | core.result.Result.Ok value =>
+    let r1 ← source.plan.operations.derivation checked value
+    match r1 with
+    | core.result.Result.Ok value1 =>
+      let s := alloc.vec.Vec.deref value1.stack_out
+      let o ← core.slice.Slice.last s
+      match o with
+      | none => ok (core.result.Result.Err Diagnostic.Invalid, compiler, work)
+      | some t =>
+        match t with
+        | noble_kernel.types.Ty.UnitType =>
+          ok (core.result.Result.Err Diagnostic.Invalid, compiler, work)
+        | noble_kernel.types.Ty.BoolType =>
+          ok (core.result.Result.Err Diagnostic.Invalid, compiler, work)
+        | noble_kernel.types.Ty.I64Type =>
+          ok (core.result.Result.Err Diagnostic.Invalid, compiler, work)
+        | noble_kernel.types.Ty.TextType =>
+          ok (core.result.Result.Err Diagnostic.Invalid, compiler, work)
+        | noble_kernel.types.Ty.SyntaxType =>
+          ok (core.result.Result.Err Diagnostic.Invalid, compiler, work)
+        | noble_kernel.types.Ty.PairType _ _ =>
+          ok (core.result.Result.Err Diagnostic.Invalid, compiler, work)
+        | noble_kernel.types.Ty.SumType _ _ =>
+          ok (core.result.Result.Err Diagnostic.Invalid, compiler, work)
+        | noble_kernel.types.Ty.ListType _ =>
+          ok (core.result.Result.Err Diagnostic.Invalid, compiler, work)
+        | noble_kernel.types.Ty.ProgramType input output effects =>
+          let s1 := alloc.vec.Vec.deref input
+          let s2 := alloc.vec.Vec.deref output
+          source.plan.allocation.signature compiler s1 s2 effects work
+        | noble_kernel.types.Ty.ResourceType _ =>
+          ok (core.result.Result.Err Diagnostic.Invalid, compiler, work)
+    | core.result.Result.Err failure =>
+      ok (core.result.Result.Err failure, compiler, work)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, compiler, work)
+
+/-- [noble_wasm::source::plan::allocation::arena]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/plan/allocation.rs', lines 70:4-84:5 -/
+@[rust_loop_body]
+def source.plan.allocation.arena_loop.body
+  (v : alloc.vec.Vec noble_kernel.untrusted.Node)
+  (v1 : alloc.vec.Vec noble_kernel.types.Ty)
+  (v2 : alloc.vec.Vec noble_kernel.types.Ty) (es : noble_kernel.types.EffSet)
+  (v3 : alloc.vec.Vec noble_kernel.untrusted.Derivation)
+  (programs : alloc.vec.Vec source.plan.Program) (compiler : source.Compiler)
+  (work : source.Work) (quotes : alloc.vec.Vec (Option Std.Usize))
+  (index : Std.Usize) :
+  Result (ControlFlow ((alloc.vec.Vec source.plan.Program) × source.Compiler
+    × source.Work × (alloc.vec.Vec (Option Std.Usize)) × Std.Usize)
+    ((alloc.vec.Vec source.plan.Program) × source.Compiler × source.Work ×
+    (alloc.vec.Vec (Option Std.Usize)) × (Option Diagnostic)))
+  := do
+  let i := alloc.vec.Vec.len v
+  if index < i
+  then
+    let n ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        noble_kernel.untrusted.Node) v index
+    match n with
+    | noble_kernel.untrusted.Node.Literal _ _ =>
+      let index1 ← index + 1#usize
+      ok (cont (programs, compiler, work, quotes, index1))
+    | noble_kernel.untrusted.Node.Invocation _ _ =>
+      let index1 ← index + 1#usize
+      ok (cont (programs, compiler, work, quotes, index1))
+    | noble_kernel.untrusted.Node.Quotation _ _ =>
+      let (r, compiler1, work1) ←
+        source.plan.allocation.quotation
+          {
+            interface := { stack_in := v1, stack_out := v2, effects := es },
+            derivations := v3
+          } index compiler work
+      match r with
+      | core.result.Result.Ok program =>
+        let i1 := alloc.vec.Vec.len programs
+        let (_, index_mut_back) ←
+          alloc.vec.Vec.index_mut (core.slice.index.SliceIndexUsizeSlice
+            (Option Std.Usize)) quotes index
+        let programs1 ← alloc.vec.Vec.push programs program
+        let index1 ← index + 1#usize
+        let quotes1 := index_mut_back (some i1)
+        ok (cont (programs1, compiler1, work1, quotes1, index1))
+      | core.result.Result.Err problem =>
+        ok (done (programs, compiler1, work1, quotes, some problem))
+  else ok (done (programs, compiler, work, quotes, none))
+
+/-- [noble_wasm::source::plan::allocation::arena]: loop 0:
+    Source: 'crates/noble-wasm/src/source/plan/allocation.rs', lines 70:4-84:5 -/
+@[rust_loop]
+def source.plan.allocation.arena_loop
+  (v : alloc.vec.Vec noble_kernel.untrusted.Node)
+  (v1 : alloc.vec.Vec noble_kernel.types.Ty)
+  (v2 : alloc.vec.Vec noble_kernel.types.Ty) (es : noble_kernel.types.EffSet)
+  (v3 : alloc.vec.Vec noble_kernel.untrusted.Derivation)
+  (programs : alloc.vec.Vec source.plan.Program) (compiler : source.Compiler)
+  (work : source.Work) (quotes : alloc.vec.Vec (Option Std.Usize))
+  (index : Std.Usize) :
+  Result ((alloc.vec.Vec source.plan.Program) × source.Compiler × source.Work
+    × (alloc.vec.Vec (Option Std.Usize)) × (Option Diagnostic))
+  := do
+  loop
+    (fun (programs1, compiler1, work1, quotes1, index1) =>
+      source.plan.allocation.arena_loop.body v v1 v2 es v3 programs1 compiler1
+      work1 quotes1 index1)
+    (programs, compiler, work, quotes, index)
+
+/-- [noble_wasm::source::plan::allocation::arena]:
+    Source: 'crates/noble-wasm/src/source/plan/allocation.rs', lines 51:0-89:1 -/
+def source.plan.allocation.arena
+  (body : noble_kernel.execution.Body)
+  (checked : noble_kernel.untrusted.Checked)
+  (programs : alloc.vec.Vec source.plan.Program) (compiler : source.Compiler)
+  (work : source.Work) :
+  Result ((core.result.Result source.plan.Arena Diagnostic) × (alloc.vec.Vec
+    source.plan.Program) × source.Compiler × source.Work)
+  := do
+  let i := alloc.vec.Vec.len body.candidate.nodes
+  let i1 ← lift (core.num.Usize.saturating_add i 1#usize)
+  let programs1 ← alloc.vec.Vec.reserve Global programs i1
+  let root := alloc.vec.Vec.len programs1
+  let s := alloc.vec.Vec.deref checked.interface.stack_in
+  let s1 := alloc.vec.Vec.deref checked.interface.stack_out
+  let (r, compiler1, work1) ←
+    source.plan.allocation.signature compiler s s1 checked.interface.effects
+      work
+  match r with
+  | core.result.Result.Ok value =>
+    let programs2 ← alloc.vec.Vec.push programs1 value
+    let i2 := alloc.vec.Vec.len body.candidate.nodes
+    let quotes ←
+      alloc.vec.from_elem (core.option.Option.Insts.CoreCloneClone
+        core.clone.CloneUsize) none i2
+    let (programs3, compiler2, work2, quotes1, failure) ←
+      source.plan.allocation.arena_loop body.candidate.nodes
+        checked.interface.stack_in checked.interface.stack_out
+        checked.interface.effects checked.derivations programs2 compiler1 work1
+        quotes 0#usize
+    match failure with
+    | none =>
+      ok (core.result.Result.Ok { root, quotes := quotes1 }, programs3,
+        compiler2, work2)
+    | some problem =>
+      ok (core.result.Result.Err problem, programs3, compiler2, work2)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, programs1, compiler1, work1)
+
+/-- [noble_wasm::source::plan::start]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/plan.rs', lines 98:4-115:5 -/
+@[rust_loop_body]
+def source.plan.start_loop.body
+  (v : alloc.vec.Vec noble_kernel.execution.Definition)
+  (checked : source.admission.Accepted) (compiler : source.Compiler)
+  (work : source.Work) (programs : alloc.vec.Vec source.plan.Program)
+  (arenas : alloc.vec.Vec source.plan.Arena) (index : Std.Usize) :
+  Result (ControlFlow (source.Compiler × source.Work × (alloc.vec.Vec
+    source.plan.Program) × (alloc.vec.Vec source.plan.Arena) × Std.Usize)
+    (source.admission.Accepted × source.Compiler × source.Work ×
+    (alloc.vec.Vec source.plan.Program) × (alloc.vec.Vec source.plan.Arena) ×
+    Std.Usize × (Option Diagnostic)))
+  := do
+  let i := alloc.vec.Vec.len v
+  if index < i
+  then
+    let d ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        noble_kernel.execution.Definition) v index
+    let c ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        noble_kernel.untrusted.Checked) checked.definitions index
+    let (r, programs1, compiler1, work1) ←
+      source.plan.allocation.arena d.body c programs compiler work
+    match r with
+    | core.result.Result.Ok arena =>
+      let arenas1 ← alloc.vec.Vec.push arenas arena
+      let index1 ← index + 1#usize
+      ok (cont (compiler1, work1, programs1, arenas1, index1))
+    | core.result.Result.Err problem =>
+      ok (done (checked, compiler1, work1, programs1, arenas, index, some
+        problem))
+  else ok (done (checked, compiler, work, programs, arenas, index, none))
+
+/-- [noble_wasm::source::plan::start]: loop 0:
+    Source: 'crates/noble-wasm/src/source/plan.rs', lines 98:4-115:5 -/
+@[rust_loop]
+def source.plan.start_loop
+  (v : alloc.vec.Vec noble_kernel.execution.Definition)
+  (checked : source.admission.Accepted) (compiler : source.Compiler)
+  (work : source.Work) (programs : alloc.vec.Vec source.plan.Program)
+  (arenas : alloc.vec.Vec source.plan.Arena) (index : Std.Usize) :
+  Result (source.admission.Accepted × source.Compiler × source.Work ×
+    (alloc.vec.Vec source.plan.Program) × (alloc.vec.Vec source.plan.Arena) ×
+    Std.Usize × (Option Diagnostic))
+  := do
+  loop
+    (fun (compiler1, work1, programs1, arenas1, index1) =>
+      source.plan.start_loop.body v checked compiler1 work1 programs1 arenas1
+      index1)
+    (compiler, work, programs, arenas, index)
+
+/-- [noble_wasm::source::plan::start]:
+    Source: 'crates/noble-wasm/src/source/plan.rs', lines 87:0-140:1 -/
+def source.plan.start
+  (submission : noble_kernel.execution.Submission)
+  (checked : source.admission.Accepted) (compiler : source.Compiler)
+  (work : source.Work) :
+  Result ((core.result.Result (source.plan.Layout × (alloc.vec.Vec
+    source.plan.Arena)) Diagnostic) × source.Compiler × source.Work)
+  := do
+  let i := alloc.vec.Vec.len submission.definitions
+  let body_count ← lift (core.num.Usize.saturating_add i 1#usize)
+  let programs := alloc.vec.Vec.with_capacity source.plan.Program body_count
+  let arenas := alloc.vec.Vec.with_capacity source.plan.Arena body_count
+  let (checked1, compiler1, work1, programs1, arenas1, index, failure) ←
+    source.plan.start_loop submission.definitions checked compiler work
+      programs arenas 0#usize
+  match failure with
+  | none =>
+    let (r, programs2, compiler2, work2) ←
+      source.plan.allocation.arena submission.body checked1.root programs1
+        compiler1 work1
+    match r with
+    | core.result.Result.Ok value =>
+      let arenas2 ← alloc.vec.Vec.push arenas1 value
+      let a ←
+        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+          source.plan.Arena) arenas2 index
+      let r1 ← source.types.Registry.new
+      ok (core.result.Result.Ok
+        ({
+           programs := programs2,
+           order := (alloc.vec.Vec.new Std.Usize),
+           first_function := compiler2.functions,
+           functions := compiler2.functions,
+           root := a.root,
+           data := (alloc.vec.Vec.new (Std.U32 × (alloc.vec.Vec Std.U8))),
+           descriptors := (alloc.vec.Vec.new (Std.U32 × Std.U32)),
+           types := r1,
+           input_types := (alloc.vec.Vec.new Std.U32),
+           output_types := (alloc.vec.Vec.new Std.U32),
+           text_witness := 0#u32
+         }, arenas2), compiler2, work2)
+    | core.result.Result.Err failure1 =>
+      ok (core.result.Result.Err failure1, compiler2, work2)
+  | some problem => ok (core.result.Result.Err problem, compiler1, work1)
+
+/-- [noble_wasm::source::plan::topology::extend]:
+    Source: 'crates/noble-wasm/src/source/plan/topology.rs', lines 10:0-38:1 -/
+def source.plan.topology.extend
+  (programs : Slice source.plan.Program) (done1 : Slice Bool)
+  (operation : source.plan.Operation) (depth : Std.U32) (leaves : Std.U32) :
+  Result ((core.result.Result Bool Diagnostic) × Std.U32 × Std.U32)
+  := do
+  let o ← lift (U32.checked_add leaves 1#u32)
+  match o with
+  | none => ok (core.result.Result.Err Diagnostic.Exhausted, depth, leaves)
+  | some value =>
+    match operation.action with
+    | source.plan.Action.I64 _ => ok (core.result.Result.Ok true, depth, value)
+    | source.plan.Action.Bool _ =>
+      ok (core.result.Result.Ok true, depth, value)
+    | source.plan.Action.Unit => ok (core.result.Result.Ok true, depth, value)
+    | source.plan.Action.Text _ _ =>
+      ok (core.result.Result.Ok true, depth, value)
+    | source.plan.Action.Program child =>
+      let b ← Slice.index_usize done1 child
+      if b
+      then
+        let p ← Slice.index_usize programs child
+        let o1 ← lift (U32.checked_add p.depth 1#u32)
+        match o1 with
+        | none =>
+          ok (core.result.Result.Err Diagnostic.Exhausted, depth, value)
+        | some value1 =>
+          let depth1 ← if depth < value1
+                         then ok value1
+                         else ok depth
+          let o2 ← lift (U32.checked_add value p.leaves)
+          match o2 with
+          | none =>
+            ok (core.result.Result.Err Diagnostic.Exhausted, depth1, value)
+          | some value2 => ok (core.result.Result.Ok true, depth1, value2)
+      else ok (core.result.Result.Ok false, depth, value)
+    | source.plan.Action.Word _ =>
+      ok (core.result.Result.Ok true, depth, value)
+    | source.plan.Action.Quote _ _ _ =>
+      ok (core.result.Result.Ok true, depth, value)
+    | source.plan.Action.Call _ _ =>
+      ok (core.result.Result.Ok true, depth, value)
+
+/-- [noble_wasm::source::plan::topology::program]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/plan/topology.rs', lines 57:4-75:5 -/
+@[rust_loop_body]
+def source.plan.topology.program_loop.body
+  (plan : source.plan.Layout) (done1 : Slice Bool) (index : Std.Usize)
+  (depth : Std.U32) (leaves : Std.U32) («at» : Std.Usize) :
+  Result (ControlFlow (Std.U32 × Std.U32 × Std.Usize) ((alloc.vec.Vec
+    source.plan.Program) × (alloc.vec.Vec Std.Usize) × Std.U32 × Std.U32 ×
+    Std.Usize × (alloc.vec.Vec (Std.U32 × (alloc.vec.Vec Std.U8))) ×
+    (alloc.vec.Vec (Std.U32 × Std.U32)) × source.types.Registry ×
+    (alloc.vec.Vec Std.U32) × (alloc.vec.Vec Std.U32) × Std.U32 × Bool ×
+    Std.U32 × Std.U32 × (Option Diagnostic)))
+  := do
+  let p ←
+    alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+      source.plan.Program) plan.programs index
+  let i := alloc.vec.Vec.len p.operations
+  if «at» < i
+  then
+    let s := alloc.vec.Vec.deref plan.programs
+    let o ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        source.plan.Operation) p.operations «at»
+    let (r, depth1, leaves1) ←
+      source.plan.topology.extend s done1 o depth leaves
+    match r with
+    | core.result.Result.Ok b =>
+      if b
+      then let at1 ← «at» + 1#usize
+           ok (cont (depth1, leaves1, at1))
+      else
+        ok (done (plan.programs, plan.order, plan.first_function,
+          plan.functions, plan.root, plan.data, plan.descriptors, plan.types,
+          plan.input_types, plan.output_types, plan.text_witness, false,
+          depth1, leaves1, none))
+    | core.result.Result.Err problem =>
+      ok (done (plan.programs, plan.order, plan.first_function, plan.functions,
+        plan.root, plan.data, plan.descriptors, plan.types, plan.input_types,
+        plan.output_types, plan.text_witness, true, depth1, leaves1, some
+        problem))
+  else
+    ok (done (plan.programs, plan.order, plan.first_function, plan.functions,
+      plan.root, plan.data, plan.descriptors, plan.types, plan.input_types,
+      plan.output_types, plan.text_witness, true, depth, leaves, none))
+
+/-- [noble_wasm::source::plan::topology::program]: loop 0:
+    Source: 'crates/noble-wasm/src/source/plan/topology.rs', lines 57:4-75:5 -/
+@[rust_loop]
+def source.plan.topology.program_loop
+  (plan : source.plan.Layout) (done1 : Slice Bool) (index : Std.Usize)
+  (depth : Std.U32) (leaves : Std.U32) («at» : Std.Usize) :
+  Result ((alloc.vec.Vec source.plan.Program) × (alloc.vec.Vec Std.Usize) ×
+    Std.U32 × Std.U32 × Std.Usize × (alloc.vec.Vec (Std.U32 ×
+    (alloc.vec.Vec Std.U8))) × (alloc.vec.Vec (Std.U32 × Std.U32)) ×
+    source.types.Registry × (alloc.vec.Vec Std.U32) × (alloc.vec.Vec Std.U32)
+    × Std.U32 × Bool × Std.U32 × Std.U32 × (Option Diagnostic))
+  := do
+  loop
+    (fun (depth1, leaves1, at1) => source.plan.topology.program_loop.body plan
+      done1 index depth1 leaves1 at1)
+    (depth, leaves, «at»)
+
+/-- [noble_wasm::source::plan::topology::program]:
+    Source: 'crates/noble-wasm/src/source/plan/topology.rs', lines 44:0-88:1 -/
+def source.plan.topology.program
+  (plan : source.plan.Layout) (done1 : Slice Bool) (index : Std.Usize) :
+  Result ((core.result.Result Unit Diagnostic) × source.plan.Layout × (Slice
+    Bool))
+  := do
+  let b ← Slice.index_usize done1 index
+  if b
+  then ok (core.result.Result.Ok (), plan, done1)
+  else
+    let (v, v1, i, i1, i2, v2, v3, r, v4, v5, i3, is_ready, depth, leaves,
+      failure) ←
+      source.plan.topology.program_loop plan done1 index 1#u32 0#u32 0#usize
+    match failure with
+    | none =>
+      if is_ready
+      then
+        let (p, index_mut_back) ←
+          alloc.vec.Vec.index_mut (core.slice.index.SliceIndexUsizeSlice
+            source.plan.Program) v index
+        let v6 := index_mut_back { p with depth }
+        let (p1, index_mut_back1) ←
+          alloc.vec.Vec.index_mut (core.slice.index.SliceIndexUsizeSlice
+            source.plan.Program) v6 index
+        let done2 ← Slice.update done1 index true
+        let v7 ← alloc.vec.Vec.push v1 index
+        let v8 := index_mut_back1 { p1 with leaves }
+        ok (core.result.Result.Ok (),
+          {
+            programs := v8,
+            order := v7,
+            first_function := i,
+            functions := i1,
+            root := i2,
+            data := v2,
+            descriptors := v3,
+            types := r,
+            input_types := v4,
+            output_types := v5,
+            text_witness := i3
+          }, done2)
+      else
+        ok (core.result.Result.Ok (),
+          {
+            programs := v,
+            order := v1,
+            first_function := i,
+            functions := i1,
+            root := i2,
+            data := v2,
+            descriptors := v3,
+            types := r,
+            input_types := v4,
+            output_types := v5,
+            text_witness := i3
+          }, done1)
+    | some problem =>
+      ok (core.result.Result.Err problem,
+        {
+          programs := v,
+          order := v1,
+          first_function := i,
+          functions := i1,
+          root := i2,
+          data := v2,
+          descriptors := v3,
+          types := r,
+          input_types := v4,
+          output_types := v5,
+          text_witness := i3
+        }, done1)
+
+/-- [noble_wasm::source::plan::topology::round]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/plan/topology.rs', lines 94:4-102:5 -/
+@[rust_loop_body]
+def source.plan.topology.round_loop.body
+  (plan : source.plan.Layout) (done1 : Slice Bool) (index : Std.Usize) :
+  Result (ControlFlow (source.plan.Layout × (Slice Bool) × Std.Usize)
+    (source.plan.Layout × (Slice Bool) × (Option Diagnostic)))
+  := do
+  let i := alloc.vec.Vec.len plan.programs
+  if index < i
+  then
+    let (r, plan1, done2) ← source.plan.topology.program plan done1 index
+    match r with
+    | core.result.Result.Ok _ =>
+      let index1 ← index + 1#usize
+      ok (cont (plan1, done2, index1))
+    | core.result.Result.Err problem => ok (done (plan1, done2, some problem))
+  else ok (done (plan, done1, none))
+
+/-- [noble_wasm::source::plan::topology::round]: loop 0:
+    Source: 'crates/noble-wasm/src/source/plan/topology.rs', lines 94:4-102:5 -/
+@[rust_loop]
+def source.plan.topology.round_loop
+  (plan : source.plan.Layout) (done1 : Slice Bool) (index : Std.Usize) :
+  Result (source.plan.Layout × (Slice Bool) × (Option Diagnostic))
+  := do
+  loop
+    (fun (plan1, done2, index1) => source.plan.topology.round_loop.body plan1
+      done2 index1)
+    (plan, done1, index)
+
+/-- [noble_wasm::source::plan::topology::round]:
+    Source: 'crates/noble-wasm/src/source/plan/topology.rs', lines 90:0-108:1 -/
+def source.plan.topology.round
+  (plan : source.plan.Layout) (done1 : Slice Bool) :
+  Result ((core.result.Result Unit Diagnostic) × source.plan.Layout × (Slice
+    Bool))
+  := do
+  let before := alloc.vec.Vec.len plan.order
+  let (plan1, done2, failure) ←
+    source.plan.topology.round_loop plan done1 0#usize
+  match failure with
+  | none =>
+    let i := alloc.vec.Vec.len plan1.order
+    if i = before
+    then ok (core.result.Result.Err Diagnostic.Invalid, plan1, done2)
+    else ok (core.result.Result.Ok (), plan1, done2)
+  | some problem => ok (core.result.Result.Err problem, plan1, done2)
+
+/-- [noble_wasm::source::plan::topology::order]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/plan/topology.rs', lines 114:4-122:5 -/
+@[rust_loop_body]
+def source.plan.topology.order_loop.body
+  (plan : source.plan.Layout) (done1 : alloc.vec.Vec Bool) :
+  Result (ControlFlow (source.plan.Layout × (alloc.vec.Vec Bool))
+    (source.plan.Layout × (Option Diagnostic)))
+  := do
+  let i := alloc.vec.Vec.len plan.order
+  let i1 := alloc.vec.Vec.len plan.programs
+  if i < i1
+  then
+    let (s, deref_mut_back) ← lift (alloc.vec.Vec.deref_mut done1)
+    let (r, plan1, s1) ← source.plan.topology.round plan s
+    match r with
+    | core.result.Result.Ok _ =>
+      let done2 := deref_mut_back s1
+      ok (cont (plan1, done2))
+    | core.result.Result.Err problem => ok (done (plan1, some problem))
+  else ok (done (plan, none))
+
+/-- [noble_wasm::source::plan::topology::order]: loop 0:
+    Source: 'crates/noble-wasm/src/source/plan/topology.rs', lines 114:4-122:5 -/
+@[rust_loop]
+def source.plan.topology.order_loop
+  (plan : source.plan.Layout) (done1 : alloc.vec.Vec Bool) :
+  Result (source.plan.Layout × (Option Diagnostic))
+  := do
+  loop
+    (fun (plan1, done2) => source.plan.topology.order_loop.body plan1 done2)
+    (plan, done1)
+
+/-- [noble_wasm::source::plan::topology::order]:
+    Source: 'crates/noble-wasm/src/source/plan/topology.rs', lines 110:0-127:1 -/
+def source.plan.topology.order
+  (plan : source.plan.Layout) :
+  Result ((core.result.Result Unit Diagnostic) × source.plan.Layout)
+  := do
+  let i := alloc.vec.Vec.len plan.programs
+  let v ← alloc.vec.Vec.reserve Global plan.order i
+  let i1 := alloc.vec.Vec.len plan.programs
+  let done1 ← alloc.vec.from_elem core.clone.CloneBool false i1
+  let (plan1, failure) ←
+    source.plan.topology.order_loop { plan with order := v } done1
+  match failure with
+  | none => ok (core.result.Result.Ok (), plan1)
+  | some problem => ok (core.result.Result.Err problem, plan1)
+
+/-- [noble_wasm::source::plan::operations::quote]:
+    Source: 'crates/noble-wasm/src/source/plan/operations.rs', lines 159:0-182:1 -/
+def source.plan.operations.quote
+  (interface : noble_kernel.untrusted.Interface) (compiler : source.Compiler)
+  (work : source.Work) :
+  Result ((core.result.Result source.plan.Action Diagnostic) × source.Compiler
+    × source.Work)
+  := do
+  let s := alloc.vec.Vec.deref interface.stack_in
+  let o ← core.slice.Slice.last s
+  match o with
+  | none => ok (core.result.Result.Err Diagnostic.Invalid, compiler, work)
+  | some value =>
+    let s1 ← core.slice.raw.from_ref value
+    let (r, compiler1, work1) ← source.Compiler.signature compiler s1 work
+    match r with
+    | core.result.Result.Ok value1 =>
+      let s2 := alloc.vec.Vec.deref interface.stack_out
+      let o1 ← core.slice.Slice.last s2
+      match o1 with
+      | none =>
+        ok (core.result.Result.Err Diagnostic.Invalid, compiler1, work1)
+      | some t =>
+        match t with
+        | noble_kernel.types.Ty.UnitType =>
+          ok (core.result.Result.Err Diagnostic.Invalid, compiler1, work1)
+        | noble_kernel.types.Ty.BoolType =>
+          ok (core.result.Result.Err Diagnostic.Invalid, compiler1, work1)
+        | noble_kernel.types.Ty.I64Type =>
+          ok (core.result.Result.Err Diagnostic.Invalid, compiler1, work1)
+        | noble_kernel.types.Ty.TextType =>
+          ok (core.result.Result.Err Diagnostic.Invalid, compiler1, work1)
+        | noble_kernel.types.Ty.SyntaxType =>
+          ok (core.result.Result.Err Diagnostic.Invalid, compiler1, work1)
+        | noble_kernel.types.Ty.PairType _ _ =>
+          ok (core.result.Result.Err Diagnostic.Invalid, compiler1, work1)
+        | noble_kernel.types.Ty.SumType _ _ =>
+          ok (core.result.Result.Err Diagnostic.Invalid, compiler1, work1)
+        | noble_kernel.types.Ty.ListType _ =>
+          ok (core.result.Result.Err Diagnostic.Invalid, compiler1, work1)
+        | noble_kernel.types.Ty.ProgramType input output effects =>
+          let b ← noble_kernel.types.EffSet.is_empty effects
+          if b
+          then
+            let s3 := alloc.vec.Vec.deref input
+            let (r1, compiler2, work2) ←
+              source.Compiler.signature compiler1 s3 work1
+            match r1 with
+            | core.result.Result.Ok value2 =>
+              let s4 := alloc.vec.Vec.deref output
+              let (r2, compiler3, work3) ←
+                source.Compiler.signature compiler2 s4 work2
+              match r2 with
+              | core.result.Result.Ok value3 =>
+                ok (core.result.Result.Ok (source.plan.Action.Quote value2
+                  value3 value1), compiler3, work3)
+              | core.result.Result.Err failure =>
+                ok (core.result.Result.Err failure, compiler3, work3)
+            | core.result.Result.Err failure =>
+              ok (core.result.Result.Err failure, compiler2, work2)
+          else ok (core.result.Result.Err Diagnostic.Invalid, compiler1, work1)
+        | noble_kernel.types.Ty.ResourceType _ =>
+          ok (core.result.Result.Err Diagnostic.Invalid, compiler1, work1)
+    | core.result.Result.Err failure =>
+      ok (core.result.Result.Err failure, compiler1, work1)
+
+/-- [noble_wasm::source::plan::allocation::bytes]:
+    Source: 'crates/noble-wasm/src/source/plan/allocation.rs', lines 95:0-113:1 -/
+def source.plan.allocation.bytes
+  (text_end : Std.U32)
+  (data : alloc.vec.Vec (Std.U32 × (alloc.vec.Vec Std.U8)))
+  (bytes : Slice Std.U8) :
+  Result ((core.result.Result (Std.U32 × Std.U32) Diagnostic) × Std.U32 ×
+    (alloc.vec.Vec (Std.U32 × (alloc.vec.Vec Std.U8))))
+  := do
+  let i := Slice.len bytes
+  let r ← source.plan.number i
+  match r with
+  | core.result.Result.Ok value =>
+    let o ← lift (U32.checked_add text_end value)
+    match o with
+    | none => ok (core.result.Result.Err Diagnostic.Exhausted, text_end, data)
+    | some value1 =>
+      if value1 > source.MEMORY_BYTES
+      then ok (core.result.Result.Err Diagnostic.Exhausted, text_end, data)
+      else
+        let data1 ← alloc.vec.Vec.reserve Global data 1#usize
+        let v ← alloc.slice.Slice.to_vec core.clone.CloneU8 bytes
+        let data2 ← alloc.vec.Vec.push data1 (text_end, v)
+        ok (core.result.Result.Ok (text_end, value), value1, data2)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, text_end, data)
+
+/-- [noble_wasm::source::plan::operations::lower_node]:
+    Source: 'crates/noble-wasm/src/source/plan/operations.rs', lines 90:0-152:1 -/
+def source.plan.operations.lower_node
+  (input : source.plan.operations.Input) (id : noble_kernel.untrusted.NodeId)
+  (compiler : source.Compiler) (layout : source.plan.Layout)
+  (work : source.Work) :
+  Result ((core.result.Result source.plan.Operation Diagnostic) ×
+    source.Compiler × source.plan.Layout × source.Work)
+  := do
+  let r ← source.plan.operations.derivation input.checked id
+  match r with
+  | core.result.Result.Ok value =>
+    let r1 ← source.admission.node input.body.candidate id
+    match r1 with
+    | core.result.Result.Ok value1 =>
+      match value1 with
+      | noble_kernel.untrusted.Node.Literal l _ =>
+        match l with
+        | noble_kernel.untrusted.Lit.I64Lit value2 =>
+          let s := alloc.vec.Vec.deref value.stack_in
+          let (r2, compiler1, work1) ←
+            source.Compiler.signature compiler s work
+          match r2 with
+          | core.result.Result.Ok value3 =>
+            let s1 := alloc.vec.Vec.deref value.stack_out
+            let (r3, compiler2, work2) ←
+              source.Compiler.signature compiler1 s1 work1
+            match r3 with
+            | core.result.Result.Ok value4 =>
+              let r4 ← source.plan.effect_mask value.effects
+              match r4 with
+              | core.result.Result.Ok value5 =>
+                ok (core.result.Result.Ok
+                  {
+                    action := (source.plan.Action.I64 value2),
+                    input := value3,
+                    output := value4,
+                    effects := value5
+                  }, compiler2, layout, work2)
+              | core.result.Result.Err failure =>
+                ok (core.result.Result.Err failure, compiler2, layout, work2)
+            | core.result.Result.Err failure =>
+              ok (core.result.Result.Err failure, compiler2, layout, work2)
+          | core.result.Result.Err failure =>
+            ok (core.result.Result.Err failure, compiler1, layout, work1)
+        | noble_kernel.untrusted.Lit.BoolLit value2 =>
+          let s := alloc.vec.Vec.deref value.stack_in
+          let (r2, compiler1, work1) ←
+            source.Compiler.signature compiler s work
+          match r2 with
+          | core.result.Result.Ok value3 =>
+            let s1 := alloc.vec.Vec.deref value.stack_out
+            let (r3, compiler2, work2) ←
+              source.Compiler.signature compiler1 s1 work1
+            match r3 with
+            | core.result.Result.Ok value4 =>
+              let r4 ← source.plan.effect_mask value.effects
+              match r4 with
+              | core.result.Result.Ok value5 =>
+                ok (core.result.Result.Ok
+                  {
+                    action := (source.plan.Action.Bool value2),
+                    input := value3,
+                    output := value4,
+                    effects := value5
+                  }, compiler2, layout, work2)
+              | core.result.Result.Err failure =>
+                ok (core.result.Result.Err failure, compiler2, layout, work2)
+            | core.result.Result.Err failure =>
+              ok (core.result.Result.Err failure, compiler2, layout, work2)
+          | core.result.Result.Err failure =>
+            ok (core.result.Result.Err failure, compiler1, layout, work1)
+        | noble_kernel.untrusted.Lit.TextLit =>
+          let r2 ← source.admission.text input.body id
+          match r2 with
+          | core.result.Result.Ok value2 =>
+            let (r3, i, v) ←
+              source.plan.allocation.bytes compiler.text_end layout.data value2
+            match r3 with
+            | core.result.Result.Ok value3 =>
+              let (address, length) := value3
+              let s := alloc.vec.Vec.deref value.stack_in
+              let (r4, compiler1, work1) ←
+                source.Compiler.signature { compiler with text_end := i } s
+                  work
+              match r4 with
+              | core.result.Result.Ok value4 =>
+                let s1 := alloc.vec.Vec.deref value.stack_out
+                let (r5, compiler2, work2) ←
+                  source.Compiler.signature compiler1 s1 work1
+                match r5 with
+                | core.result.Result.Ok value5 =>
+                  let r6 ← source.plan.effect_mask value.effects
+                  match r6 with
+                  | core.result.Result.Ok value6 =>
+                    ok (core.result.Result.Ok
+                      {
+                        action := (source.plan.Action.Text address length),
+                        input := value4,
+                        output := value5,
+                        effects := value6
+                      }, compiler2, { layout with data := v }, work2)
+                  | core.result.Result.Err failure =>
+                    ok (core.result.Result.Err failure, compiler2,
+                      { layout with data := v }, work2)
+                | core.result.Result.Err failure =>
+                  ok (core.result.Result.Err failure, compiler2,
+                    { layout with data := v }, work2)
+              | core.result.Result.Err failure =>
+                ok (core.result.Result.Err failure, compiler1,
+                  { layout with data := v }, work1)
+            | core.result.Result.Err failure =>
+              ok (core.result.Result.Err failure,
+                { compiler with text_end := i }, { layout with data := v },
+                work)
+          | core.result.Result.Err failure =>
+            ok (core.result.Result.Err failure, compiler, layout, work)
+        | noble_kernel.untrusted.Lit.UnitLit =>
+          let s := alloc.vec.Vec.deref value.stack_in
+          let (r2, compiler1, work1) ←
+            source.Compiler.signature compiler s work
+          match r2 with
+          | core.result.Result.Ok value2 =>
+            let s1 := alloc.vec.Vec.deref value.stack_out
+            let (r3, compiler2, work2) ←
+              source.Compiler.signature compiler1 s1 work1
+            match r3 with
+            | core.result.Result.Ok value3 =>
+              let r4 ← source.plan.effect_mask value.effects
+              match r4 with
+              | core.result.Result.Ok value4 =>
+                ok (core.result.Result.Ok
+                  {
+                    action := source.plan.Action.Unit,
+                    input := value2,
+                    output := value3,
+                    effects := value4
+                  }, compiler2, layout, work2)
+              | core.result.Result.Err failure =>
+                ok (core.result.Result.Err failure, compiler2, layout, work2)
+            | core.result.Result.Err failure =>
+              ok (core.result.Result.Err failure, compiler2, layout, work2)
+          | core.result.Result.Err failure =>
+            ok (core.result.Result.Err failure, compiler1, layout, work1)
+      | noble_kernel.untrusted.Node.Invocation «def» _ =>
+        if «def» = 8#u32
+        then
+          let (r2, compiler1, work1) ←
+            source.plan.operations.quote value compiler work
+          match r2 with
+          | core.result.Result.Ok value2 =>
+            let s := alloc.vec.Vec.deref value.stack_in
+            let (r3, compiler2, work2) ←
+              source.Compiler.signature compiler1 s work1
+            match r3 with
+            | core.result.Result.Ok value3 =>
+              let s1 := alloc.vec.Vec.deref value.stack_out
+              let (r4, compiler3, work3) ←
+                source.Compiler.signature compiler2 s1 work2
+              match r4 with
+              | core.result.Result.Ok value4 =>
+                let r5 ← source.plan.effect_mask value.effects
+                match r5 with
+                | core.result.Result.Ok value5 =>
+                  ok (core.result.Result.Ok
+                    {
+                      action := value2,
+                      input := value3,
+                      output := value4,
+                      effects := value5
+                    }, compiler3, layout, work3)
+                | core.result.Result.Err failure =>
+                  ok (core.result.Result.Err failure, compiler3, layout, work3)
+              | core.result.Result.Err failure =>
+                ok (core.result.Result.Err failure, compiler3, layout, work3)
+            | core.result.Result.Err failure =>
+              ok (core.result.Result.Err failure, compiler2, layout, work2)
+          | core.result.Result.Err failure =>
+            ok (core.result.Result.Err failure, compiler1, layout, work1)
+        else
+          if «def» < 24#u32
+          then
+            let s := alloc.vec.Vec.deref value.stack_in
+            let (r2, compiler1, work1) ←
+              source.Compiler.signature compiler s work
+            match r2 with
+            | core.result.Result.Ok value2 =>
+              let s1 := alloc.vec.Vec.deref value.stack_out
+              let (r3, compiler2, work2) ←
+                source.Compiler.signature compiler1 s1 work1
+              match r3 with
+              | core.result.Result.Ok value3 =>
+                let r4 ← source.plan.effect_mask value.effects
+                match r4 with
+                | core.result.Result.Ok value4 =>
+                  ok (core.result.Result.Ok
+                    {
+                      action := (source.plan.Action.Word «def»),
+                      input := value2,
+                      output := value3,
+                      effects := value4
+                    }, compiler2, layout, work2)
+                | core.result.Result.Err failure =>
+                  ok (core.result.Result.Err failure, compiler2, layout, work2)
+              | core.result.Result.Err failure =>
+                ok (core.result.Result.Err failure, compiler2, layout, work2)
+            | core.result.Result.Err failure =>
+              ok (core.result.Result.Err failure, compiler1, layout, work1)
+          else
+            let r2 ←
+              source.admission.definition_index input.submission «def»
+            match r2 with
+            | core.result.Result.Ok value2 =>
+              let a ← Slice.index_usize input.arenas value2
+              let d ←
+                alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+                  noble_kernel.execution.Definition)
+                  input.submission.definitions value2
+              let s := alloc.vec.Vec.deref value.stack_in
+              let (r3, compiler1, work1) ←
+                source.Compiler.signature compiler s work
+              match r3 with
+              | core.result.Result.Ok value3 =>
+                let s1 := alloc.vec.Vec.deref value.stack_out
+                let (r4, compiler2, work2) ←
+                  source.Compiler.signature compiler1 s1 work1
+                match r4 with
+                | core.result.Result.Ok value4 =>
+                  let r5 ← source.plan.effect_mask value.effects
+                  match r5 with
+                  | core.result.Result.Ok value5 =>
+                    ok (core.result.Result.Ok
+                      {
+                        action := (source.plan.Action.Call a.root d.identity),
+                        input := value3,
+                        output := value4,
+                        effects := value5
+                      }, compiler2, layout, work2)
+                  | core.result.Result.Err failure =>
+                    ok (core.result.Result.Err failure, compiler2, layout,
+                      work2)
+                | core.result.Result.Err failure =>
+                  ok (core.result.Result.Err failure, compiler2, layout, work2)
+              | core.result.Result.Err failure =>
+                ok (core.result.Result.Err failure, compiler1, layout, work1)
+            | core.result.Result.Err failure =>
+              ok (core.result.Result.Err failure, compiler, layout, work)
+      | noble_kernel.untrusted.Node.Quotation _ _ =>
+        let r2 ← admission.index id
+        match r2 with
+        | core.result.Result.Ok value2 =>
+          let o ←
+            alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice (Option
+              Std.Usize)) input.arena.quotes value2
+          match o with
+          | none =>
+            ok (core.result.Result.Err Diagnostic.Defective, compiler, layout,
+              work)
+          | some program =>
+            let s := alloc.vec.Vec.deref value.stack_in
+            let (r3, compiler1, work1) ←
+              source.Compiler.signature compiler s work
+            match r3 with
+            | core.result.Result.Ok value3 =>
+              let s1 := alloc.vec.Vec.deref value.stack_out
+              let (r4, compiler2, work2) ←
+                source.Compiler.signature compiler1 s1 work1
+              match r4 with
+              | core.result.Result.Ok value4 =>
+                let r5 ← source.plan.effect_mask value.effects
+                match r5 with
+                | core.result.Result.Ok value5 =>
+                  ok (core.result.Result.Ok
+                    {
+                      action := (source.plan.Action.Program program),
+                      input := value3,
+                      output := value4,
+                      effects := value5
+                    }, compiler2, layout, work2)
+                | core.result.Result.Err failure =>
+                  ok (core.result.Result.Err failure, compiler2, layout, work2)
+              | core.result.Result.Err failure =>
+                ok (core.result.Result.Err failure, compiler2, layout, work2)
+            | core.result.Result.Err failure =>
+              ok (core.result.Result.Err failure, compiler1, layout, work1)
+        | core.result.Result.Err failure =>
+          ok (core.result.Result.Err failure, compiler, layout, work)
+    | core.result.Result.Err failure =>
+      ok (core.result.Result.Err failure, compiler, layout, work)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, compiler, layout, work)
+
+/-- [noble_wasm::source::plan::operations::lower_sequence]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/plan/operations.rs', lines 67:4-78:5 -/
+@[rust_loop_body]
+def source.plan.operations.lower_sequence_loop.body
+  (s : noble_kernel.execution.Submission) (b : noble_kernel.execution.Body)
+  (c : noble_kernel.untrusted.Checked) (a : source.plan.Arena)
+  (s1 : Slice source.plan.Arena)
+  (entries : Slice noble_kernel.untrusted.NodeId) (compiler : source.Compiler)
+  (layout : source.plan.Layout) (work : source.Work)
+  (operations : alloc.vec.Vec source.plan.Operation) (index : Std.Usize) :
+  Result (ControlFlow (source.Compiler × source.plan.Layout × source.Work ×
+    (alloc.vec.Vec source.plan.Operation) × Std.Usize) (source.Compiler ×
+    source.plan.Layout × source.Work × (alloc.vec.Vec source.plan.Operation)
+    × (Option Diagnostic)))
+  := do
+  let i := Slice.len entries
+  if index < i
+  then
+    let ni ← Slice.index_usize entries index
+    let (r, compiler1, layout1, work1) ←
+      source.plan.operations.lower_node
+        { submission := s, body := b, checked := c, arena := a, arenas := s1 }
+        ni compiler layout work
+    match r with
+    | core.result.Result.Ok operation =>
+      let operations1 ← alloc.vec.Vec.push operations operation
+      let index1 ← index + 1#usize
+      ok (cont (compiler1, layout1, work1, operations1, index1))
+    | core.result.Result.Err problem =>
+      ok (done (compiler1, layout1, work1, operations, some problem))
+  else ok (done (compiler, layout, work, operations, none))
+
+/-- [noble_wasm::source::plan::operations::lower_sequence]: loop 0:
+    Source: 'crates/noble-wasm/src/source/plan/operations.rs', lines 67:4-78:5 -/
+@[rust_loop]
+def source.plan.operations.lower_sequence_loop
+  (s : noble_kernel.execution.Submission) (b : noble_kernel.execution.Body)
+  (c : noble_kernel.untrusted.Checked) (a : source.plan.Arena)
+  (s1 : Slice source.plan.Arena)
+  (entries : Slice noble_kernel.untrusted.NodeId) (compiler : source.Compiler)
+  (layout : source.plan.Layout) (work : source.Work)
+  (operations : alloc.vec.Vec source.plan.Operation) (index : Std.Usize) :
+  Result (source.Compiler × source.plan.Layout × source.Work ×
+    (alloc.vec.Vec source.plan.Operation) × (Option Diagnostic))
+  := do
+  loop
+    (fun (compiler1, layout1, work1, operations1, index1) =>
+      source.plan.operations.lower_sequence_loop.body s b c a s1 entries
+      compiler1 layout1 work1 operations1 index1)
+    (compiler, layout, work, operations, index)
+
+/-- [noble_wasm::source::plan::operations::lower_sequence]:
+    Source: 'crates/noble-wasm/src/source/plan/operations.rs', lines 57:0-83:1 -/
+def source.plan.operations.lower_sequence
+  (input : source.plan.operations.Input)
+  (entries : Slice noble_kernel.untrusted.NodeId) (compiler : source.Compiler)
+  (layout : source.plan.Layout) (work : source.Work) :
+  Result ((core.result.Result (alloc.vec.Vec source.plan.Operation) Diagnostic)
+    × source.Compiler × source.plan.Layout × source.Work)
+  := do
+  let i := Slice.len entries
+  let operations := alloc.vec.Vec.with_capacity source.plan.Operation i
+  let (compiler1, layout1, work1, operations1, failure) ←
+    source.plan.operations.lower_sequence_loop input.submission input.body
+      input.checked input.arena input.arenas entries compiler layout work
+      operations 0#usize
+  match failure with
+  | none => ok (core.result.Result.Ok operations1, compiler1, layout1, work1)
+  | some problem =>
+    ok (core.result.Result.Err problem, compiler1, layout1, work1)
+
+/-- [noble_wasm::source::plan::operations::fill_quotation]:
+    Source: 'crates/noble-wasm/src/source/plan/operations.rs', lines 188:0-206:1 -/
+def source.plan.operations.fill_quotation
+  (input : source.plan.operations.Input) (index : Std.Usize)
+  (compiler : source.Compiler) (layout : source.plan.Layout)
+  (work : source.Work) :
+  Result ((core.result.Result Unit Diagnostic) × source.Compiler ×
+    source.plan.Layout × source.Work)
+  := do
+  let n ←
+    alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+      noble_kernel.untrusted.Node) input.body.candidate.nodes index
+  match n with
+  | noble_kernel.untrusted.Node.Literal _ _ =>
+    ok (core.result.Result.Ok (), compiler, layout, work)
+  | noble_kernel.untrusted.Node.Invocation _ _ =>
+    ok (core.result.Result.Ok (), compiler, layout, work)
+  | noble_kernel.untrusted.Node.Quotation entries _ =>
+    let o ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice (Option
+        Std.Usize)) input.arena.quotes index
+    match o with
+    | none =>
+      ok (core.result.Result.Err Diagnostic.Defective, compiler, layout, work)
+    | some value =>
+      let s := alloc.vec.Vec.deref entries
+      let (r, compiler1, layout1, work1) ←
+        source.plan.operations.lower_sequence input s compiler layout work
+      match r with
+      | core.result.Result.Ok value1 =>
+        let (p, index_mut_back) ←
+          alloc.vec.Vec.index_mut (core.slice.index.SliceIndexUsizeSlice
+            source.plan.Program) layout1.programs value
+        let v := index_mut_back { p with operations := value1 }
+        ok (core.result.Result.Ok (), compiler1,
+          { layout1 with programs := v }, work1)
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, compiler1, layout1, work1)
+
+/-- [noble_wasm::source::plan::operations::fill]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/plan/operations.rs', lines 227:4-235:5 -/
+@[rust_loop_body]
+def source.plan.operations.fill_loop.body
+  (s : noble_kernel.execution.Submission) (i : Std.U32) (i1 : Std.U32)
+  (v : alloc.vec.Vec noble_kernel.untrusted.Node)
+  (v1 : alloc.vec.Vec noble_kernel.untrusted.NodeId)
+  (v2 : alloc.vec.Vec noble_kernel.execution.TextLiteral)
+  (c : noble_kernel.untrusted.Checked) (i2 : Std.Usize)
+  (v3 : alloc.vec.Vec (Option Std.Usize)) (s1 : Slice source.plan.Arena)
+  (compiler : source.Compiler) (layout : source.plan.Layout)
+  (work : source.Work) (index : Std.Usize) :
+  Result (ControlFlow (source.Compiler × source.plan.Layout × source.Work ×
+    Std.Usize) (source.Compiler × source.plan.Layout × source.Work × (Option
+    Diagnostic)))
+  := do
+  let i3 := alloc.vec.Vec.len v
+  if index < i3
+  then
+    let (r, compiler1, layout1, work1) ←
+      source.plan.operations.fill_quotation
+        {
+          submission := s,
+          body :=
+            {
+              candidate :=
+                { format := i, revision := i1, nodes := v, body := v1 },
+              texts := v2
+            },
+          checked := c,
+          arena := { root := i2, quotes := v3 },
+          arenas := s1
+        } index compiler layout work
+    match r with
+    | core.result.Result.Ok _ =>
+      let index1 ← index + 1#usize
+      ok (cont (compiler1, layout1, work1, index1))
+    | core.result.Result.Err problem =>
+      ok (done (compiler1, layout1, work1, some problem))
+  else ok (done (compiler, layout, work, none))
+
+/-- [noble_wasm::source::plan::operations::fill]: loop 0:
+    Source: 'crates/noble-wasm/src/source/plan/operations.rs', lines 227:4-235:5 -/
+@[rust_loop]
+def source.plan.operations.fill_loop
+  (s : noble_kernel.execution.Submission) (i : Std.U32) (i1 : Std.U32)
+  (v : alloc.vec.Vec noble_kernel.untrusted.Node)
+  (v1 : alloc.vec.Vec noble_kernel.untrusted.NodeId)
+  (v2 : alloc.vec.Vec noble_kernel.execution.TextLiteral)
+  (c : noble_kernel.untrusted.Checked) (i2 : Std.Usize)
+  (v3 : alloc.vec.Vec (Option Std.Usize)) (s1 : Slice source.plan.Arena)
+  (compiler : source.Compiler) (layout : source.plan.Layout)
+  (work : source.Work) (index : Std.Usize) :
+  Result (source.Compiler × source.plan.Layout × source.Work × (Option
+    Diagnostic))
+  := do
+  loop
+    (fun (compiler1, layout1, work1, index1) =>
+      source.plan.operations.fill_loop.body s i i1 v v1 v2 c i2 v3 s1 compiler1
+      layout1 work1 index1)
+    (compiler, layout, work, index)
+
+/-- [noble_wasm::source::plan::operations::fill]:
+    Source: 'crates/noble-wasm/src/source/plan/operations.rs', lines 212:0-240:1 -/
+def source.plan.operations.fill
+  (input : source.plan.operations.Input) (compiler : source.Compiler)
+  (layout : source.plan.Layout) (work : source.Work) :
+  Result ((core.result.Result Unit Diagnostic) × source.Compiler ×
+    source.plan.Layout × source.Work)
+  := do
+  let s := alloc.vec.Vec.deref input.body.candidate.body
+  let (r, compiler1, layout1, work1) ←
+    source.plan.operations.lower_sequence input s compiler layout work
+  match r with
+  | core.result.Result.Ok value =>
+    let (p, index_mut_back) ←
+      alloc.vec.Vec.index_mut (core.slice.index.SliceIndexUsizeSlice
+        source.plan.Program) layout1.programs input.arena.root
+    let v := index_mut_back { p with operations := value }
+    let (compiler2, layout2, work2, failure) ←
+      source.plan.operations.fill_loop input.submission
+        input.body.candidate.format input.body.candidate.revision
+        input.body.candidate.nodes input.body.candidate.body input.body.texts
+        input.checked input.arena.root input.arena.quotes input.arenas
+        compiler1 { layout1 with programs := v } work1 0#usize
+    match failure with
+    | none => ok (core.result.Result.Ok (), compiler2, layout2, work2)
+    | some problem =>
+      ok (core.result.Result.Err problem, compiler2, layout2, work2)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, compiler1, layout1, work1)
+
+/-- [noble_wasm::source::types::{noble_wasm::source::types::Registry}::key_matches]:
+    Source: 'crates/noble-wasm/src/source/types.rs', lines 80:4-88:5 -/
+def source.types.Registry.key_matches
+  (self : source.types.Registry) (index : Std.Usize)
+  (ty : noble_kernel.types.Ty) (work : source.Work) :
+  Result ((core.result.Result Bool Diagnostic) × source.Work)
+  := do
+  let (r, work1) ← source.Work.charge work 512#u64
+  match r with
+  | core.result.Result.Ok _ =>
+    let t ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        noble_kernel.types.Ty) self.keys index
+    let b ← noble_kernel.types.Ty.Insts.CoreCmpPartialEqTy.eq t ty
+    ok (core.result.Result.Ok b, work1)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, work1)
+
+/-- [noble_wasm::source::types::{noble_wasm::source::types::Registry}::find]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/types.rs', lines 57:8-69:9 -/
+@[rust_loop_body]
+def source.types.Registry.find_loop.body
+  (self : source.types.Registry) (ty : noble_kernel.types.Ty)
+  (work : source.Work) (index : Std.Usize) :
+  Result (ControlFlow (source.Work × Std.Usize) (source.Work × (Option
+    Std.Usize) × (Option Diagnostic)))
+  := do
+  let i := alloc.vec.Vec.len self.keys
+  if index < i
+  then
+    let (r, work1) ← source.types.Registry.key_matches self index ty work
+    match r with
+    | core.result.Result.Ok b =>
+      if b
+      then ok (done (work1, some index, none))
+      else let index1 ← index + 1#usize
+           ok (cont (work1, index1))
+    | core.result.Result.Err problem => ok (done (work1, none, some problem))
+  else ok (done (work, none, none))
+
+/-- [noble_wasm::source::types::{noble_wasm::source::types::Registry}::find]: loop 0:
+    Source: 'crates/noble-wasm/src/source/types.rs', lines 57:8-69:9 -/
+@[rust_loop]
+def source.types.Registry.find_loop
+  (self : source.types.Registry) (ty : noble_kernel.types.Ty)
+  (work : source.Work) (index : Std.Usize) :
+  Result (source.Work × (Option Std.Usize) × (Option Diagnostic))
+  := do
+  loop
+    (fun (work1, index1) => source.types.Registry.find_loop.body self ty work1
+      index1)
+    (work, index)
+
+/-- [noble_wasm::source::types::{noble_wasm::source::types::Registry}::find]:
+    Source: 'crates/noble-wasm/src/source/types.rs', lines 49:4-74:5 -/
+def source.types.Registry.find
+  (self : source.types.Registry) (ty : noble_kernel.types.Ty)
+  (work : source.Work) :
+  Result ((core.result.Result (Option Std.Usize) Diagnostic) × source.Work)
+  := do
+  let (work1, found, failure) ←
+    source.types.Registry.find_loop self ty work 0#usize
+  match failure with
+  | none => ok (core.result.Result.Ok found, work1)
+  | some problem => ok (core.result.Result.Err problem, work1)
+
+/-- [noble_wasm::source::types::{noble_wasm::source::types::Registry}::intern]:
+    Source: 'crates/noble-wasm/src/source/types.rs', lines 30:4-47:5 -/
+def source.types.Registry.intern
+  (self : source.types.Registry) (ty : noble_kernel.types.Ty)
+  (work : source.Work) :
+  Result ((core.result.Result Std.U32 Diagnostic) × source.types.Registry ×
+    source.Work)
+  := do
+  let (r, work1) ← source.Work.charge work 512#u64
+  match r with
+  | core.result.Result.Ok _ =>
+    let (r1, work2) ← source.types.Registry.find self ty work1
+    match r1 with
+    | core.result.Result.Ok value =>
+      match value with
+      | none =>
+        let i := alloc.vec.Vec.len self.keys
+        if i >= source.NODE_LIMIT
+        then ok (core.result.Result.Err Diagnostic.Exhausted, self, work2)
+        else
+          let i1 := alloc.vec.Vec.len self.keys
+          let r2 ← source.plan.number i1
+          match r2 with
+          | core.result.Result.Ok _ =>
+            let t ← noble_kernel.types.Ty.Insts.CoreCloneClone.clone ty
+            let v ← alloc.vec.Vec.push self.keys t
+            ok (r2, { self with keys := v }, work2)
+          | core.result.Result.Err _ => ok (r2, self, work2)
+      | some index => let r2 ← source.plan.number index
+                      ok (r2, self, work2)
+    | core.result.Result.Err failure =>
+      ok (core.result.Result.Err failure, self, work2)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, self, work1)
+
+/-- [noble_wasm::source::types::{noble_wasm::source::types::Registry}::next_shape]:
+    Source: 'crates/noble-wasm/src/source/types.rs', lines 134:4-164:5 -/
+def source.types.Registry.next_shape
+  (self : source.types.Registry) (compiler : source.Compiler)
+  (work : source.Work) :
+  Result ((core.result.Result source.types.Shape Diagnostic) ×
+    source.types.Registry × source.Compiler × source.Work)
+  := do
+  let (r, work1) ← source.Work.charge work 512#u64
+  match r with
+  | core.result.Result.Ok _ =>
+    let i := alloc.vec.Vec.len self.shapes
+    let t ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        noble_kernel.types.Ty) self.keys i
+    let ty ← noble_kernel.types.Ty.Insts.CoreCloneClone.clone t
+    match ty with
+    | noble_kernel.types.Ty.UnitType =>
+      ok (core.result.Result.Ok (source.types.Shape.Scalar 3#u32), self,
+        compiler, work1)
+    | noble_kernel.types.Ty.BoolType =>
+      ok (core.result.Result.Ok (source.types.Shape.Scalar 2#u32), self,
+        compiler, work1)
+    | noble_kernel.types.Ty.I64Type =>
+      ok (core.result.Result.Ok (source.types.Shape.Scalar 1#u32), self,
+        compiler, work1)
+    | noble_kernel.types.Ty.TextType =>
+      ok (core.result.Result.Ok source.types.Shape.Text, self, compiler, work1)
+    | noble_kernel.types.Ty.SyntaxType =>
+      ok (core.result.Result.Ok source.types.Shape.Syntax, self, compiler,
+        work1)
+    | noble_kernel.types.Ty.PairType left right =>
+      let (r1, self1, work2) ← source.types.Registry.intern self left work1
+      match r1 with
+      | core.result.Result.Ok value =>
+        let (r2, self2, work3) ←
+          source.types.Registry.intern self1 right work2
+        match r2 with
+        | core.result.Result.Ok value1 =>
+          ok (core.result.Result.Ok (source.types.Shape.Pair value value1),
+            self2, compiler, work3)
+        | core.result.Result.Err failure =>
+          ok (core.result.Result.Err failure, self2, compiler, work3)
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, self1, compiler, work2)
+    | noble_kernel.types.Ty.SumType left right =>
+      let (r1, self1, work2) ← source.types.Registry.intern self left work1
+      match r1 with
+      | core.result.Result.Ok value =>
+        let (r2, self2, work3) ←
+          source.types.Registry.intern self1 right work2
+        match r2 with
+        | core.result.Result.Ok value1 =>
+          ok (core.result.Result.Ok (source.types.Shape.Sum value value1),
+            self2, compiler, work3)
+        | core.result.Result.Err failure =>
+          ok (core.result.Result.Err failure, self2, compiler, work3)
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, self1, compiler, work2)
+    | noble_kernel.types.Ty.ListType item =>
+      let (r1, self1, work2) ← source.types.Registry.intern self item work1
+      match r1 with
+      | core.result.Result.Ok value =>
+        ok (core.result.Result.Ok (source.types.Shape.List value), self1,
+          compiler, work2)
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, self1, compiler, work2)
+    | noble_kernel.types.Ty.ProgramType input output effects =>
+      let s := alloc.vec.Vec.deref input
+      let (r1, compiler1, work2) ← source.Compiler.signature compiler s work1
+      match r1 with
+      | core.result.Result.Ok value =>
+        let s1 := alloc.vec.Vec.deref output
+        let (r2, compiler2, work3) ←
+          source.Compiler.signature compiler1 s1 work2
+        match r2 with
+        | core.result.Result.Ok value1 =>
+          let r3 ← source.plan.effect_mask effects
+          match r3 with
+          | core.result.Result.Ok value2 =>
+            ok (core.result.Result.Ok (source.types.Shape.Program value value1
+              value2), self, compiler2, work3)
+          | core.result.Result.Err failure =>
+            ok (core.result.Result.Err failure, self, compiler2, work3)
+        | core.result.Result.Err failure =>
+          ok (core.result.Result.Err failure, self, compiler2, work3)
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, self, compiler1, work2)
+    | noble_kernel.types.Ty.ResourceType _ =>
+      ok (core.result.Result.Err Diagnostic.Unsupported, self, compiler, work1)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, self, compiler, work1)
+
+/-- [noble_wasm::source::types::{noble_wasm::source::types::Registry}::stack]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/types.rs', lines 99:8-110:9 -/
+@[rust_loop_body]
+def source.types.Registry.stack_loop0.body
+  (stack : Slice noble_kernel.types.Ty) (self : source.types.Registry)
+  (work : source.Work) (result : alloc.vec.Vec Std.U32) (index : Std.Usize) :
+  Result (ControlFlow (source.types.Registry × source.Work × (alloc.vec.Vec
+    Std.U32) × Std.Usize) (source.types.Registry × source.Work ×
+    (alloc.vec.Vec Std.U32) × (Option Diagnostic)))
+  := do
+  let i := Slice.len stack
+  if index < i
+  then
+    let t ← Slice.index_usize stack index
+    let (r, self1, work1) ← source.types.Registry.intern self t work
+    match r with
+    | core.result.Result.Ok id =>
+      let result1 ← alloc.vec.Vec.push result id
+      let index1 ← index + 1#usize
+      ok (cont (self1, work1, result1, index1))
+    | core.result.Result.Err problem =>
+      ok (done (self1, work1, result, some problem))
+  else ok (done (self, work, result, none))
+
+/-- [noble_wasm::source::types::{noble_wasm::source::types::Registry}::stack]: loop 0:
+    Source: 'crates/noble-wasm/src/source/types.rs', lines 99:8-110:9 -/
+@[rust_loop]
+def source.types.Registry.stack_loop0
+  (self : source.types.Registry) (stack : Slice noble_kernel.types.Ty)
+  (work : source.Work) (result : alloc.vec.Vec Std.U32) (index : Std.Usize) :
+  Result (source.types.Registry × source.Work × (alloc.vec.Vec Std.U32) ×
+    (Option Diagnostic))
+  := do
+  loop
+    (fun (self1, work1, result1, index1) =>
+      source.types.Registry.stack_loop0.body stack self1 work1 result1 index1)
+    (self, work, result, index)
+
+/-- [noble_wasm::source::types::{noble_wasm::source::types::Registry}::stack]: loop body 1:
+    Source: 'crates/noble-wasm/src/source/types.rs', lines 115:8-123:9 -/
+@[rust_loop_body]
+def source.types.Registry.stack_loop1.body
+  (self : source.types.Registry) (compiler : source.Compiler)
+  (work : source.Work) :
+  Result (ControlFlow (source.types.Registry × source.Compiler × source.Work)
+    (source.types.Registry × source.Compiler × source.Work × (Option
+    Diagnostic)))
+  := do
+  let i := alloc.vec.Vec.len self.shapes
+  let i1 := alloc.vec.Vec.len self.keys
+  if i < i1
+  then
+    let (r, self1, compiler1, work1) ←
+      source.types.Registry.next_shape self compiler work
+    match r with
+    | core.result.Result.Ok shape =>
+      let v ← alloc.vec.Vec.push self1.shapes shape
+      ok (cont ({ self1 with shapes := v }, compiler1, work1))
+    | core.result.Result.Err problem =>
+      ok (done (self1, compiler1, work1, some problem))
+  else ok (done (self, compiler, work, none))
+
+/-- [noble_wasm::source::types::{noble_wasm::source::types::Registry}::stack]: loop 1:
+    Source: 'crates/noble-wasm/src/source/types.rs', lines 115:8-123:9 -/
+@[rust_loop]
+def source.types.Registry.stack_loop1
+  (self : source.types.Registry) (compiler : source.Compiler)
+  (work : source.Work) :
+  Result (source.types.Registry × source.Compiler × source.Work × (Option
+    Diagnostic))
+  := do
+  loop
+    (fun (self1, compiler1, work1) => source.types.Registry.stack_loop1.body
+      self1 compiler1 work1)
+    (self, compiler, work)
+
+/-- [noble_wasm::source::types::{noble_wasm::source::types::Registry}::stack]:
+    Source: 'crates/noble-wasm/src/source/types.rs', lines 90:4-128:5 -/
+def source.types.Registry.stack
+  (self : source.types.Registry) (stack : Slice noble_kernel.types.Ty)
+  (compiler : source.Compiler) (work : source.Work) :
+  Result ((core.result.Result (alloc.vec.Vec Std.U32) Diagnostic) ×
+    source.types.Registry × source.Compiler × source.Work)
+  := do
+  let i := Slice.len stack
+  let result := alloc.vec.Vec.with_capacity Std.U32 i
+  let (self1, work1, result1, failure) ←
+    source.types.Registry.stack_loop0 self stack work result 0#usize
+  match failure with
+  | none =>
+    let (self2, compiler1, work2, failure1) ←
+      source.types.Registry.stack_loop1 self1 compiler work1
+    match failure1 with
+    | none => ok (core.result.Result.Ok result1, self2, compiler1, work2)
+    | some problem =>
+      ok (core.result.Result.Err problem, self2, compiler1, work2)
+  | some problem => ok (core.result.Result.Err problem, self1, compiler, work1)
+
+/-- [noble_wasm::source::plan::allocation::entry]:
+    Source: 'crates/noble-wasm/src/source/plan/allocation.rs', lines 119:0-130:1 -/
+def source.plan.allocation.entry
+  (program : source.plan.Program) (functions : Std.U32) :
+  Result ((core.result.Result Unit Diagnostic) × source.plan.Program ×
+    Std.U32)
+  := do
+  let i := alloc.vec.Vec.len program.operations
+  let r ← source.plan.number i
+  match r with
+  | core.result.Result.Ok value =>
+    let functions1 ← if value = 0#u32
+                       then ok 0#u32
+                       else ok functions
+    let o ← lift (U32.checked_add functions value)
+    match o with
+    | none =>
+      ok (core.result.Result.Err Diagnostic.Exhausted,
+        { program with entry := functions1 }, functions)
+    | some value1 =>
+      if value1 > source.TABLE_LIMIT
+      then
+        ok (core.result.Result.Err Diagnostic.Exhausted,
+          { program with entry := functions1 }, value1)
+      else
+        ok (core.result.Result.Ok (), { program with entry := functions1 },
+          value1)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, program, functions)
+
+/-- [noble_wasm::source::plan::allocation::finish]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/plan/allocation.rs', lines 144:4-152:5 -/
+@[rust_loop_body]
+def source.plan.allocation.finish_loop0.body
+  (layout : source.plan.Layout) (compiler : source.Compiler)
+  (index : Std.Usize) :
+  Result (ControlFlow (source.plan.Layout × source.Compiler × Std.Usize)
+    ((alloc.vec.Vec source.plan.Program) × (alloc.vec.Vec Std.Usize) ×
+    Std.U32 × Std.U32 × Std.Usize × (alloc.vec.Vec (Std.U32 ×
+    (alloc.vec.Vec Std.U8))) × (alloc.vec.Vec (Std.U32 × Std.U32)) ×
+    source.types.Registry × (alloc.vec.Vec Std.U32) × (alloc.vec.Vec Std.U32)
+    × Std.U32 × source.Compiler × (Option Diagnostic)))
+  := do
+  let i := alloc.vec.Vec.len layout.programs
+  if index < i
+  then
+    let (p, index_mut_back) ←
+      alloc.vec.Vec.index_mut (core.slice.index.SliceIndexUsizeSlice
+        source.plan.Program) layout.programs index
+    let (r, p1, i1) ← source.plan.allocation.entry p compiler.functions
+    match r with
+    | core.result.Result.Ok _ =>
+      let index1 ← index + 1#usize
+      let v := index_mut_back p1
+      ok (cont ({ layout with programs := v },
+        { compiler with functions := i1 }, index1))
+    | core.result.Result.Err problem =>
+      let v := index_mut_back p1
+      ok (done (v, layout.order, layout.first_function, layout.functions,
+        layout.root, layout.data, layout.descriptors, layout.types,
+        layout.input_types, layout.output_types, layout.text_witness,
+        { compiler with functions := i1 }, some problem))
+  else
+    ok (done (layout.programs, layout.order, layout.first_function,
+      layout.functions, layout.root, layout.data, layout.descriptors,
+      layout.types, layout.input_types, layout.output_types,
+      layout.text_witness, compiler, none))
+
+/-- [noble_wasm::source::plan::allocation::finish]: loop 0:
+    Source: 'crates/noble-wasm/src/source/plan/allocation.rs', lines 144:4-152:5 -/
+@[rust_loop]
+def source.plan.allocation.finish_loop0
+  (layout : source.plan.Layout) (compiler : source.Compiler)
+  (index : Std.Usize) :
+  Result ((alloc.vec.Vec source.plan.Program) × (alloc.vec.Vec Std.Usize) ×
+    Std.U32 × Std.U32 × Std.Usize × (alloc.vec.Vec (Std.U32 ×
+    (alloc.vec.Vec Std.U8))) × (alloc.vec.Vec (Std.U32 × Std.U32)) ×
+    source.types.Registry × (alloc.vec.Vec Std.U32) × (alloc.vec.Vec Std.U32)
+    × Std.U32 × source.Compiler × (Option Diagnostic))
+  := do
+  loop
+    (fun (layout1, compiler1, index1) =>
+      source.plan.allocation.finish_loop0.body layout1 compiler1 index1)
+    (layout, compiler, index)
+
+/-- [noble_wasm::source::plan::allocation::finish]: loop body 1:
+    Source: 'crates/noble-wasm/src/source/plan/allocation.rs', lines 166:4-181:5 -/
+@[rust_loop_body]
+def source.plan.allocation.finish_loop1.body
+  (p : signatures.Pool) (v : alloc.vec.Vec (Std.U32 × (alloc.vec.Vec Std.U8)))
+  (i : Std.U32) (v1 : alloc.vec.Vec (Std.U32 × Std.U32)) (index : Std.Usize) :
+  Result (ControlFlow ((alloc.vec.Vec (Std.U32 × (alloc.vec.Vec Std.U8))) ×
+    Std.U32 × (alloc.vec.Vec (Std.U32 × Std.U32)) × Std.Usize)
+    ((alloc.vec.Vec (Std.U32 × (alloc.vec.Vec Std.U8))) × Std.U32 ×
+    (alloc.vec.Vec (alloc.vec.Vec Std.U8)) × Std.Usize × Bool ×
+    (alloc.vec.Vec (Std.U32 × Std.U32)) × (Option Diagnostic)))
+  := do
+  let i1 := alloc.vec.Vec.len p.keys
+  if index < i1
+  then
+    let v2 ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice (alloc.vec.Vec
+        Std.U8)) p.keys index
+    let s := alloc.vec.Vec.deref v2
+    let (r, i2, v3) ← source.plan.allocation.bytes i v s
+    match r with
+    | core.result.Result.Ok descriptor =>
+      let v4 ← alloc.vec.Vec.push v1 descriptor
+      let index1 ← index + 1#usize
+      ok (cont (v3, i2, v4, index1))
+    | core.result.Result.Err problem =>
+      ok (done (v3, i2, p.keys, p.bytes, p.extended, v1, some problem))
+  else ok (done (v, i, p.keys, p.bytes, p.extended, v1, none))
+
+/-- [noble_wasm::source::plan::allocation::finish]: loop 1:
+    Source: 'crates/noble-wasm/src/source/plan/allocation.rs', lines 166:4-181:5 -/
+@[rust_loop]
+def source.plan.allocation.finish_loop1
+  (v : alloc.vec.Vec (Std.U32 × (alloc.vec.Vec Std.U8))) (i : Std.U32)
+  (p : signatures.Pool) (v1 : alloc.vec.Vec (Std.U32 × Std.U32))
+  (index : Std.Usize) :
+  Result ((alloc.vec.Vec (Std.U32 × (alloc.vec.Vec Std.U8))) × Std.U32 ×
+    (alloc.vec.Vec (alloc.vec.Vec Std.U8)) × Std.Usize × Bool ×
+    (alloc.vec.Vec (Std.U32 × Std.U32)) × (Option Diagnostic))
+  := do
+  loop
+    (fun (v2, i1, v3, index1) => source.plan.allocation.finish_loop1.body p v2
+      i1 v3 index1)
+    (v, i, v1, index)
+
+/-- [noble_wasm::source::plan::allocation::finish]:
+    Source: 'crates/noble-wasm/src/source/plan/allocation.rs', lines 136:0-189:1 -/
+def source.plan.allocation.finish
+  (layout : source.plan.Layout) (compiler : source.Compiler)
+  (checked : noble_kernel.untrusted.Checked) (work : source.Work) :
+  Result ((core.result.Result Unit Diagnostic) × source.plan.Layout ×
+    source.Compiler × source.Work)
+  := do
+  let (v, v1, i, i1, i2, v2, v3, r, v4, v5, i3, compiler1, failure) ←
+    source.plan.allocation.finish_loop0 layout compiler 0#usize
+  match failure with
+  | none =>
+    let s := alloc.vec.Vec.deref checked.interface.stack_in
+    let (r1, r2, compiler2, work1) ←
+      source.types.Registry.stack r s compiler1 work
+    match r1 with
+    | core.result.Result.Ok value =>
+      let s1 := alloc.vec.Vec.deref checked.interface.stack_out
+      let (r3, r4, compiler3, work2) ←
+        source.types.Registry.stack r2 s1 compiler2 work1
+      match r3 with
+      | core.result.Result.Ok value1 =>
+        let s2 ←
+          lift (Array.to_slice
+            (Array.make 1#usize [ noble_kernel.types.Ty.TextType ]))
+        let (r5, compiler4, work3) ←
+          source.Compiler.signature compiler3 s2 work2
+        match r5 with
+        | core.result.Result.Ok value2 =>
+          let index := alloc.vec.Vec.len compiler4.descriptors
+          let (v6, i4, v7, i5, b, v8, failure1) ←
+            source.plan.allocation.finish_loop1 v2 compiler4.text_end
+              compiler4.signatures compiler4.descriptors index
+          match failure1 with
+          | none =>
+            let v9 ←
+              alloc.vec.CloneVec.clone (BuiltinClone (Std.U32 × Std.U32)) v8
+            ok (core.result.Result.Ok (),
+              {
+                programs := v,
+                order := v1,
+                first_function := i,
+                functions := compiler1.functions,
+                root := i2,
+                data := v6,
+                descriptors := v9,
+                types := r4,
+                input_types := value,
+                output_types := value1,
+                text_witness := value2
+              },
+              {
+                compiler4
+                  with
+                  text_end := i4,
+                  signatures := { keys := v7, bytes := i5, extended := b },
+                  descriptors := v8
+              }, work3)
+          | some problem =>
+            ok (core.result.Result.Err problem,
+              {
+                programs := v,
+                order := v1,
+                first_function := i,
+                functions := compiler1.functions,
+                root := i2,
+                data := v6,
+                descriptors := v3,
+                types := r4,
+                input_types := value,
+                output_types := value1,
+                text_witness := value2
+              },
+              {
+                compiler4
+                  with
+                  text_end := i4,
+                  signatures := { keys := v7, bytes := i5, extended := b },
+                  descriptors := v8
+              }, work3)
+        | core.result.Result.Err failure1 =>
+          ok (core.result.Result.Err failure1,
+            {
+              programs := v,
+              order := v1,
+              first_function := i,
+              functions := compiler1.functions,
+              root := i2,
+              data := v2,
+              descriptors := v3,
+              types := r4,
+              input_types := value,
+              output_types := value1,
+              text_witness := i3
+            }, compiler4, work3)
+      | core.result.Result.Err failure1 =>
+        ok (core.result.Result.Err failure1,
+          {
+            programs := v,
+            order := v1,
+            first_function := i,
+            functions := compiler1.functions,
+            root := i2,
+            data := v2,
+            descriptors := v3,
+            types := r4,
+            input_types := value,
+            output_types := v5,
+            text_witness := i3
+          }, compiler3, work2)
+    | core.result.Result.Err failure1 =>
+      ok (core.result.Result.Err failure1,
+        {
+          programs := v,
+          order := v1,
+          first_function := i,
+          functions := compiler1.functions,
+          root := i2,
+          data := v2,
+          descriptors := v3,
+          types := r2,
+          input_types := v4,
+          output_types := v5,
+          text_witness := i3
+        }, compiler2, work1)
+  | some problem =>
+    ok (core.result.Result.Err problem,
+      {
+        programs := v,
+        order := v1,
+        first_function := i,
+        functions := i1,
+        root := i2,
+        data := v2,
+        descriptors := v3,
+        types := r,
+        input_types := v4,
+        output_types := v5,
+        text_witness := i3
+      }, compiler1, work)
+
+/-- [noble_wasm::source::plan::lower]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/plan.rs', lines 155:4-170:5 -/
+@[rust_loop_body]
+def source.plan.lower_loop.body
+  (submission : noble_kernel.execution.Submission)
+  (checked : source.admission.Accepted)
+  (arenas : alloc.vec.Vec source.plan.Arena) (compiler : source.Compiler)
+  (work : source.Work) (layout : source.plan.Layout) (index : Std.Usize) :
+  Result (ControlFlow (source.Compiler × source.Work × source.plan.Layout ×
+    Std.Usize) (noble_kernel.contracts.Env × (alloc.vec.Vec
+    noble_kernel.execution.Definition) × noble_kernel.execution.Body ×
+    noble_kernel.untrusted.Request × source.admission.Accepted ×
+    source.Compiler × source.Work × source.plan.Layout × Std.Usize ×
+    (Option Diagnostic)))
+  := do
+  let i := alloc.vec.Vec.len submission.definitions
+  if index < i
+  then
+    let d ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        noble_kernel.execution.Definition) submission.definitions index
+    let c ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        noble_kernel.untrusted.Checked) checked.definitions index
+    let a ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        source.plan.Arena) arenas index
+    let s := alloc.vec.Vec.deref arenas
+    let (r, compiler1, layout1, work1) ←
+      source.plan.operations.fill
+        { submission, body := d.body, checked := c, arena := a, arenas := s }
+        compiler layout work
+    match r with
+    | core.result.Result.Ok _ =>
+      let index1 ← index + 1#usize
+      ok (cont (compiler1, work1, layout1, index1))
+    | core.result.Result.Err problem =>
+      ok (done (submission.environment, submission.definitions,
+        submission.body, submission.request, checked, compiler1, work1,
+        layout1, index, some problem))
+  else
+    ok (done (submission.environment, submission.definitions, submission.body,
+      submission.request, checked, compiler, work, layout, index, none))
+
+/-- [noble_wasm::source::plan::lower]: loop 0:
+    Source: 'crates/noble-wasm/src/source/plan.rs', lines 155:4-170:5 -/
+@[rust_loop]
+def source.plan.lower_loop
+  (submission : noble_kernel.execution.Submission)
+  (checked : source.admission.Accepted) (compiler : source.Compiler)
+  (work : source.Work) (layout : source.plan.Layout)
+  (arenas : alloc.vec.Vec source.plan.Arena) (index : Std.Usize) :
+  Result (noble_kernel.contracts.Env × (alloc.vec.Vec
+    noble_kernel.execution.Definition) × noble_kernel.execution.Body ×
+    noble_kernel.untrusted.Request × source.admission.Accepted ×
+    source.Compiler × source.Work × source.plan.Layout × Std.Usize ×
+    (Option Diagnostic))
+  := do
+  loop
+    (fun (compiler1, work1, layout1, index1) => source.plan.lower_loop.body
+      submission checked arenas compiler1 work1 layout1 index1)
+    (compiler, work, layout, index)
+
+/-- [noble_wasm::source::plan::lower]:
+    Source: 'crates/noble-wasm/src/source/plan.rs', lines 146:0-190:1 -/
+def source.plan.lower
+  (submission : noble_kernel.execution.Submission)
+  (checked : source.admission.Accepted) (compiler : source.Compiler)
+  (work : source.Work) :
+  Result ((core.result.Result source.plan.Layout Diagnostic) × source.Compiler
+    × source.Work)
+  := do
+  let (r, compiler1, work1) ←
+    source.plan.start submission checked compiler work
+  match r with
+  | core.result.Result.Ok value =>
+    let (layout, arenas) := value
+    let (e, v, b, r1, checked1, compiler2, work2, layout1, index, failure) ←
+      source.plan.lower_loop submission checked compiler1 work1 layout arenas
+        0#usize
+    match failure with
+    | none =>
+      let a ←
+        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+          source.plan.Arena) arenas index
+      let s := alloc.vec.Vec.deref arenas
+      let (r2, compiler3, layout2, work3) ←
+        source.plan.operations.fill
+          {
+            submission :=
+              { environment := e, definitions := v, body := b, request := r1 },
+            body := b,
+            checked := checked1.root,
+            arena := a,
+            arenas := s
+          } compiler2 layout1 work2
+      match r2 with
+      | core.result.Result.Ok _ =>
+        let (r3, layout3) ← source.plan.topology.order layout2
+        match r3 with
+        | core.result.Result.Ok _ =>
+          let (r4, layout4, compiler4, work4) ←
+            source.plan.allocation.finish layout3 compiler3 checked1.root work3
+          match r4 with
+          | core.result.Result.Ok _ =>
+            ok (core.result.Result.Ok layout4, compiler4, work4)
+          | core.result.Result.Err failure1 =>
+            ok (core.result.Result.Err failure1, compiler4, work4)
+        | core.result.Result.Err failure1 =>
+          ok (core.result.Result.Err failure1, compiler3, work3)
+      | core.result.Result.Err failure1 =>
+        ok (core.result.Result.Err failure1, compiler3, work3)
+    | some problem => ok (core.result.Result.Err problem, compiler2, work2)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, compiler1, work1)
+
+/-- [noble_wasm::source::{noble_wasm::source::Compiler}::prepare]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 139:8-147:9
+    Visibility: public -/
+@[rust_loop_body]
+def source.Compiler.prepare_loop.body
+  (v : alloc.vec.Vec source.Identity) (work : source.Work)
+  (identity : Std.Usize) :
+  Result (ControlFlow (source.Work × Std.Usize) (source.Work × (Option
+    Diagnostic)))
+  := do
+  let i := alloc.vec.Vec.len v
+  if identity < i
+  then
+    let i1 ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        source.Identity) v identity
+    let i2 := alloc.vec.Vec.len i1.recipe
+    let (r, work1) ← source.Work.entries work i2
+    match r with
+    | core.result.Result.Ok _ =>
+      let identity1 ← identity + 1#usize
+      ok (cont (work1, identity1))
+    | core.result.Result.Err problem => ok (done (work1, some problem))
+  else ok (done (work, none))
+
+/-- [noble_wasm::source::{noble_wasm::source::Compiler}::prepare]: loop 0:
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 139:8-147:9
+    Visibility: public -/
+@[rust_loop]
+def source.Compiler.prepare_loop
+  (v : alloc.vec.Vec source.Identity) (work : source.Work)
+  (identity : Std.Usize) :
+  Result (source.Work × (Option Diagnostic))
+  := do
+  loop
+    (fun (work1, identity1) => source.Compiler.prepare_loop.body v work1
+      identity1)
+    (work, identity)
+
+/-- [noble_wasm::source::{noble_wasm::source::Compiler}::prepare]:
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 123:4-174:5
+    Visibility: public -/
+def source.Compiler.prepare
+  (self : source.Compiler) (submission : noble_kernel.execution.Submission) :
+  Result (core.result.Result source.Prepared Diagnostic)
+  := do
+  let i ←
+    lift (core.convert.num.FromU64U32.from submission.request.limits.work)
+  let (r, work) ← source.preflight.check submission { remaining := i }
+  match r with
+  | core.result.Result.Ok _ =>
+    let (r1, work1) ← source.admission.check submission work
+    match r1 with
+    | core.result.Result.Ok value =>
+      let (r2, work2) ←
+        source.admission.meter.compilation value self.signatures work1
+      match r2 with
+      | core.result.Result.Ok _ =>
+        let (work3, failure) ←
+          source.Compiler.prepare_loop self.identities work2 0#usize
+        match failure with
+        | none =>
+          let o ← lift (U32.checked_add self.generation 1#u32)
+          match o with
+          | none => ok (core.result.Result.Err Diagnostic.Exhausted)
+          | some value1 =>
+            let p ←
+              signatures.Pool.Insts.CoreCloneClone.clone self.signatures
+            let v ←
+              alloc.vec.CloneVec.clone (BuiltinClone (Std.U32 × Std.U32))
+                self.descriptors
+            let v1 ←
+              alloc.vec.CloneVec.clone source.Identity.Insts.CoreCloneClone
+                self.identities
+            let (r3, v2, work4) ←
+              source.admission.identity.check submission v1 work3
+            match r3 with
+            | core.result.Result.Ok _ =>
+              let (r4, next, _) ←
+                source.plan.lower submission value
+                  {
+                    self
+                      with
+                      generation := value1,
+                      signatures := p,
+                      descriptors := v,
+                      identities := v2
+                  } work4
+              match r4 with
+              | core.result.Result.Ok value2 =>
+                let r5 ← source.emit.module value2 self.generation
+                match r5 with
+                | core.result.Result.Ok value3 =>
+                  let b ← source.transaction.Base.capture self
+                  ok (core.result.Result.Ok { base := b, next, wat := value3 })
+                | core.result.Result.Err failure1 =>
+                  ok (core.result.Result.Err failure1)
+              | core.result.Result.Err failure1 =>
+                ok (core.result.Result.Err failure1)
+            | core.result.Result.Err failure1 =>
+              ok (core.result.Result.Err failure1)
+        | some problem => ok (core.result.Result.Err problem)
+      | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+    | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_wasm::source::transaction::{noble_wasm::source::transaction::Base}::positions_match]:
+    Source: 'crates/noble-wasm/src/source/transaction.rs', lines 25:4-38:5 -/
+def source.transaction.Base.positions_match
+  (self : source.transaction.Base) (current : source.Compiler)
+  (next : source.Compiler) :
+  Result Bool
+  := do
+  if self.generation = current.generation
+  then
+    if self.functions = current.functions
+    then
+      if self.text_end_bytes = current.text_end
+      then
+        let i := alloc.vec.Vec.len current.signatures.keys
+        if self.signature_count = i
+        then
+          let i1 := alloc.vec.Vec.len current.descriptors
+          if self.descriptor_count = i1
+          then
+            let i2 := alloc.vec.Vec.len current.identities
+            if self.identity_count = i2
+            then
+              let i3 := alloc.vec.Vec.len next.signatures.keys
+              if self.signature_count <= i3
+              then
+                let i4 := alloc.vec.Vec.len next.descriptors
+                if self.descriptor_count <= i4
+                then
+                  let i5 := alloc.vec.Vec.len next.identities
+                  if self.identity_count <= i5
+                  then
+                    if self.signature_count <= signatures.SOURCE_KEY_LIMIT
+                    then
+                      if self.descriptor_count <= signatures.SOURCE_KEY_LIMIT
+                      then ok (self.identity_count <= source.DEFINITION_LIMIT)
+                      else ok false
+                    else ok false
+                  else ok false
+                else ok false
+              else ok false
+            else ok false
+          else ok false
+        else ok false
+      else ok false
+    else ok false
+  else ok false
+
+/-- [noble_wasm::source::transaction::{noble_wasm::source::transaction::Base}::matches]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/transaction.rs', lines 46:8-50:9 -/
+@[rust_loop_body]
+def source.transaction.Base.matches_loop0.body
+  (self : source.transaction.Base) (current : source.Compiler)
+  (next : source.Compiler) (index : Std.Usize) :
+  Result (ControlFlow Std.Usize (Std.Usize × Std.Usize × Std.Usize ×
+    source.Compiler × source.Compiler × Std.Usize))
+  := do
+  if index < self.signature_count
+  then
+    let v ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice (alloc.vec.Vec
+        Std.U8)) current.signatures.keys index
+    let v1 ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice (alloc.vec.Vec
+        Std.U8)) next.signatures.keys index
+    let b ← alloc.vec.partial_eq.PartialEqVec.eq core.cmp.PartialEqU8 v v1
+    if b
+    then let index1 ← index + 1#usize
+         ok (cont index1)
+    else
+      ok (done (self.signature_count, self.descriptor_count,
+        self.identity_count, current, next, index))
+  else
+    ok (done (self.signature_count, self.descriptor_count, self.identity_count,
+      current, next, index))
+
+/-- [noble_wasm::source::transaction::{noble_wasm::source::transaction::Base}::matches]: loop 0:
+    Source: 'crates/noble-wasm/src/source/transaction.rs', lines 46:8-50:9 -/
+@[rust_loop]
+def source.transaction.Base.matches_loop0
+  (self : source.transaction.Base) (current : source.Compiler)
+  (next : source.Compiler) (index : Std.Usize) :
+  Result (Std.Usize × Std.Usize × Std.Usize × source.Compiler ×
+    source.Compiler × Std.Usize)
+  := do
+  loop
+    (fun index1 => source.transaction.Base.matches_loop0.body self current next
+      index1)
+    index
+
+/-- [noble_wasm::source::transaction::{noble_wasm::source::transaction::Base}::matches]: loop body 1:
+    Source: 'crates/noble-wasm/src/source/transaction.rs', lines 55:8-58:9 -/
+@[rust_loop_body]
+def source.transaction.Base.matches_loop1.body
+  (i : Std.Usize) (current : source.Compiler) (next : source.Compiler)
+  (index : Std.Usize) :
+  Result (ControlFlow Std.Usize (source.Compiler × source.Compiler ×
+    Std.Usize))
+  := do
+  if index < i
+  then
+    let p ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice (Std.U32 ×
+        Std.U32)) current.descriptors index
+    let p1 ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice (Std.U32 ×
+        Std.U32)) next.descriptors index
+    let b ←
+      Pair.Insts.CoreCmpPartialEqPair.eq core.cmp.PartialEqU32
+        core.cmp.PartialEqU32 p p1
+    if b
+    then let index1 ← index + 1#usize
+         ok (cont index1)
+    else ok (done (current, next, index))
+  else ok (done (current, next, index))
+
+/-- [noble_wasm::source::transaction::{noble_wasm::source::transaction::Base}::matches]: loop 1:
+    Source: 'crates/noble-wasm/src/source/transaction.rs', lines 55:8-58:9 -/
+@[rust_loop]
+def source.transaction.Base.matches_loop1
+  (i : Std.Usize) (current : source.Compiler) (next : source.Compiler)
+  (index : Std.Usize) :
+  Result (source.Compiler × source.Compiler × Std.Usize)
+  := do
+  loop
+    (fun index1 => source.transaction.Base.matches_loop1.body i current next
+      index1)
+    index
+
+/-- [noble_wasm::source::transaction::{noble_wasm::source::transaction::Base}::matches]: loop body 2:
+    Source: 'crates/noble-wasm/src/source/transaction.rs', lines 63:8-71:9 -/
+@[rust_loop_body]
+def source.transaction.Base.matches_loop2.body
+  (i : Std.Usize) (current : source.Compiler) (next : source.Compiler)
+  (index : Std.Usize) :
+  Result (ControlFlow Std.Usize Std.Usize)
+  := do
+  if index < i
+  then
+    let before ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        source.Identity) current.identities index
+    let prepared ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        source.Identity) next.identities index
+    if before.id != prepared.id
+    then ok (done index)
+    else
+      let b ←
+        alloc.vec.partial_eq.PartialEqVec.ne core.cmp.PartialEqU8 before.recipe
+          prepared.recipe
+      if b
+      then ok (done index)
+      else let index1 ← index + 1#usize
+           ok (cont index1)
+  else ok (done index)
+
+/-- [noble_wasm::source::transaction::{noble_wasm::source::transaction::Base}::matches]: loop 2:
+    Source: 'crates/noble-wasm/src/source/transaction.rs', lines 63:8-71:9 -/
+@[rust_loop]
+def source.transaction.Base.matches_loop2
+  (i : Std.Usize) (current : source.Compiler) (next : source.Compiler)
+  (index : Std.Usize) :
+  Result Std.Usize
+  := do
+  loop
+    (fun index1 => source.transaction.Base.matches_loop2.body i current next
+      index1)
+    index
+
+/-- [noble_wasm::source::transaction::{noble_wasm::source::transaction::Base}::matches]:
+    Source: 'crates/noble-wasm/src/source/transaction.rs', lines 40:4-73:5 -/
+def source.transaction.Base.matches
+  (self : source.transaction.Base) (current : source.Compiler)
+  (next : source.Compiler) :
+  Result Bool
+  := do
+  let b ← source.transaction.Base.positions_match self current next
+  if b
+  then
+    let (i, i1, i2, current1, next1, index) ←
+      source.transaction.Base.matches_loop0 self current next 0#usize
+    if index != i
+    then ok false
+    else
+      let (current2, next2, index1) ←
+        source.transaction.Base.matches_loop1 i1 current1 next1 0#usize
+      if index1 != i1
+      then ok false
+      else
+        let index2 ←
+          source.transaction.Base.matches_loop2 i2 current2 next2 0#usize
+        ok (index2 = i2)
+  else ok false
+
+/-- [noble_wasm::source::{noble_wasm::source::Compiler}::commit]:
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 182:4-188:5
+    Visibility: public -/
+def source.Compiler.commit
+  (self : source.Compiler) (prepared : source.Prepared) :
+  Result ((core.result.Result Unit Diagnostic) × source.Compiler)
+  := do
+  let b ← source.transaction.Base.matches prepared.base self prepared.next
+  if b
+  then ok (core.result.Result.Ok (), prepared.next)
+  else ok (core.result.Result.Err Diagnostic.Invalid, self)
+
+/-- [noble_wasm::source::{impl core::default::Default for noble_wasm::source::Compiler}::default]:
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 192:4-194:5
+    Visibility: public -/
+def source.Compiler.Insts.CoreDefaultDefault.default
+  : Result source.Compiler := do
+  source.Compiler.new
+
+/-- Trait implementation: [noble_wasm::source::{impl core::default::Default for noble_wasm::source::Compiler}]
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 191:0-195:1 -/
+@[reducible]
+def source.Compiler.Insts.CoreDefaultDefault : core.default.Default
+  source.Compiler := {
+  default := source.Compiler.Insts.CoreDefaultDefault.default
+}
+
+/-- [noble_wasm::source::plan::operations::{impl core::clone::Clone for noble_wasm::source::plan::operations::Input<'a>}::clone]:
+    Source: 'crates/noble-wasm/src/source/plan/operations.rs', lines 6:9-6:14
+    Visibility: public -/
+def source.plan.operations.Input.Insts.CoreCloneClone.clone
+  (self : source.plan.operations.Input) :
+  Result source.plan.operations.Input
+  := do
+  ok self
+
+/-- Trait implementation: [noble_wasm::source::plan::operations::{impl core::clone::Clone for noble_wasm::source::plan::operations::Input<'a>}]
+    Source: 'crates/noble-wasm/src/source/plan/operations.rs', lines 6:9-6:14 -/
+@[reducible]
+def source.plan.operations.Input.Insts.CoreCloneClone : core.clone.Clone
+  source.plan.operations.Input := {
+  clone := source.plan.operations.Input.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_wasm::source::plan::operations::{impl core::marker::Copy for noble_wasm::source::plan::operations::Input<'a>}]
+    Source: 'crates/noble-wasm/src/source/plan/operations.rs', lines 6:16-6:20 -/
+@[reducible]
+def source.plan.operations.Input.Insts.CoreMarkerCopy : core.marker.Copy
+  source.plan.operations.Input := {
+  cloneInst := source.plan.operations.Input.Insts.CoreCloneClone
+}
+
+/-- [noble_wasm::source::plan::{impl core::clone::Clone for noble_wasm::source::plan::Action}::clone]:
+    Source: 'crates/noble-wasm/src/source/plan.rs', lines 10:9-10:14
+    Visibility: public -/
+def source.plan.Action.Insts.CoreCloneClone.clone
+  (self : source.plan.Action) : Result source.plan.Action := do
+  ok self
+
+/-- Trait implementation: [noble_wasm::source::plan::{impl core::clone::Clone for noble_wasm::source::plan::Action}]
+    Source: 'crates/noble-wasm/src/source/plan.rs', lines 10:9-10:14 -/
+@[reducible]
+def source.plan.Action.Insts.CoreCloneClone : core.clone.Clone
+  source.plan.Action := {
+  clone := source.plan.Action.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_wasm::source::plan::{impl core::marker::Copy for noble_wasm::source::plan::Action}]
+    Source: 'crates/noble-wasm/src/source/plan.rs', lines 10:16-10:20 -/
+@[reducible]
+def source.plan.Action.Insts.CoreMarkerCopy : core.marker.Copy
+  source.plan.Action := {
+  cloneInst := source.plan.Action.Insts.CoreCloneClone
+}
+
+/-- [noble_wasm::source::types::{impl core::clone::Clone for noble_wasm::source::types::Shape}::clone]:
+    Source: 'crates/noble-wasm/src/source/types.rs', lines 6:9-6:14
+    Visibility: public -/
+def source.types.Shape.Insts.CoreCloneClone.clone
+  (self : source.types.Shape) : Result source.types.Shape := do
+  ok self
+
+/-- Trait implementation: [noble_wasm::source::types::{impl core::clone::Clone for noble_wasm::source::types::Shape}]
+    Source: 'crates/noble-wasm/src/source/types.rs', lines 6:9-6:14 -/
+@[reducible]
+def source.types.Shape.Insts.CoreCloneClone : core.clone.Clone
+  source.types.Shape := {
+  clone := source.types.Shape.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_wasm::source::types::{impl core::marker::Copy for noble_wasm::source::types::Shape}]
+    Source: 'crates/noble-wasm/src/source/types.rs', lines 6:16-6:20 -/
+@[reducible]
+def source.types.Shape.Insts.CoreMarkerCopy : core.marker.Copy
+  source.types.Shape := {
+  cloneInst := source.types.Shape.Insts.CoreCloneClone
 }
 
 end noble_wasm

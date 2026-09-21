@@ -1,0 +1,266 @@
+{
+  "schema": "noble-m4-evidence/v1",
+  "milestone": "M4",
+  "date": "2026-09-21",
+  "scope": "Complete declared resource-free Core-Bootstrap source-to-independent-acceptance-to-managed-linear-memory Wasm execution and persistent sessions, including the mandatory scoped DX runtime extensions; not full-language or universal refinement.",
+  "runtime": {
+    "result": "passed",
+    "receipt": "acceptance.json",
+    "receipt_sha256": "824a31ffaa5289f817122f6227e748125382bf686bde3aa1a450fb54f9b5a831",
+    "archive": "runtime.tar.gz",
+    "archive_sha256": "df14b08756d8d3d180472690932571c15eda50ff410f7a275ba05606cb4fb758",
+    "source_revision": "sha256:141a385489070ef0ab681d7f78bfe8e2260fcfe8963454fd3d25b1ed1e2881a2",
+    "binary": {
+      "path": "/home/brittonr/git/noble/.pi/m4/noble-after-clippy",
+      "sha256": "8a29f24cb1a0fa8563676fa18bbb80a87a308c5053593fe8f0ad6a31d6a6fd95"
+    },
+    "retained_binary": "assurance.tar.gz:build/noble",
+    "core_cases": 18,
+    "runtime_controls": 11,
+    "core_workload_sha256": "4ff2ce8307f5600f79624446024ad6b26c8babece7e236eb3e8f96625c98e952",
+    "workflow_workload_sha256": "b29258796241fc27fe1f3e888dd51e3f3384640632a26ab1d00900ac3e47ed94",
+    "property": {
+      "receipt": "runtime.tar.gz:property-workflow.json",
+      "result": "passed",
+      "seed": "0x0B1E5EED00000004",
+      "trials": 100,
+      "replay_trials": 100,
+      "controls": 8,
+      "max_shrink_steps": 50,
+      "malformed_lane": {
+        "trials": 200,
+        "accepted": 0,
+        "panics": 0,
+        "invalid": 121,
+        "exhausted": 34,
+        "unsupported": 45,
+        "internal_failure": 0
+      }
+    },
+    "documentation": {
+      "receipt": "runtime.tar.gz:documentation-workflow.json",
+      "result": "passed",
+      "examples": 2,
+      "controls": 6,
+      "coverage": {
+        "expected_variants": 8,
+        "retained_variants": 8,
+        "omitted_variants": 0,
+        "by_status": {
+          "passed": 2,
+          "not-run": 1,
+          "runtime-not-run": 1,
+          "unsupported": 1,
+          "failed": 1,
+          "timeout": 1,
+          "rejected": 1
+        },
+        "hostile_controls_are_not_production_failures": true
+      }
+    },
+    "binding": "The actual binary was copied read-only after the complete Cargo test build; all runtime calls use that copy, and the gate rehashes binary, sources and workload projections before accepting."
+  },
+  "implementation": {
+    "result": "passed",
+    "receipt": "implementation.json",
+    "receipt_sha256": "e44a259e235e9592650bd28d2f02d69561cba23fe6d435ffda65dd10fe400a2a",
+    "source_revision": "sha256:ca18be63c089d8a30e0ffc1f8c0e8eacf1a83c557d65997ac5ebe1fe6de6a0ed",
+    "reviewed_lock": "extraction-lock.json",
+    "reviewed_lock_sha256": "360a40977527e1675552eb77322a57b39be783a22925e39ffed46754b63b9ee5",
+    "raw": "assurance.tar.gz:implementation",
+    "discovery": "assurance.tar.gz:discovery.json",
+    "whole_crates": [
+      "noble-kernel",
+      "noble-contracts",
+      "noble-wasm"
+    ],
+    "compiled_audit_lanes": [
+      "contracts",
+      "wasm"
+    ],
+    "refusal_controls": 27,
+    "stale_generated_files": [],
+    "translation_rows": {
+      "kernel": {
+        "functions": 373,
+        "types": 57,
+        "globals": 14,
+        "trait_decls": 0,
+        "trait_impls": 147
+      },
+      "contracts": {
+        "functions": 651,
+        "types": 142,
+        "globals": 4,
+        "trait_decls": 0,
+        "trait_impls": 132
+      },
+      "wasm": {
+        "functions": 490,
+        "types": 64,
+        "globals": 28,
+        "trait_decls": 0,
+        "trait_impls": 35
+      }
+    },
+    "row_scope": "Translation row totals include external and generated entries; the reviewed per-row inventories, source bindings, per-root dependencies and axiom sets are authoritative.",
+    "refinement": "Open; compiled extraction/audit acceptance is not universal source or backend correctness."
+  },
+  "source_inventory": {
+    "result": "passed",
+    "raw": "assurance.tar.gz:inventory",
+    "compiler_packet": "assurance.tar.gz:octet",
+    "counts": {
+      "bodies": 887,
+      "compiler_production_items": 1955,
+      "configurations": 1,
+      "dependencies": 5,
+      "excepted": 0,
+      "extracted": 0,
+      "future_components": 4,
+      "generated": 642,
+      "macro_origins": 25,
+      "modeled": 0,
+      "open": 887,
+      "open_refinement": 887,
+      "proved": 0,
+      "reviewed_subjects": 1903,
+      "structural": 374,
+      "test_subjects": 738,
+      "tools": 13,
+      "units": 19
+    },
+    "compiler_ir": "dd34aa0a528eff455b86ec6be2207ba3aaedba5c9141ed852dbf5aad1634a6ff",
+    "coverage": "7f5ac1609a6947b292b4cbc377a4ebeee83191adac1951c20edd4ee012236a52",
+    "architecture_receipt": "150a1fc038ad53e1d17f88dbd1e8221f255b4f990229f2dac720ed668643a0ce",
+    "refinement": "All 887 authored production body obligations remain open; generated and structural accounting is separate."
+  },
+  "quality": {
+    "deny_all": {
+      "result": "passed",
+      "rules": 73,
+      "findings": 0,
+      "warnings": 0,
+      "errors": 0,
+      "raw": "assurance.tar.gz:octet"
+    },
+    "clippy": {
+      "result": "passed",
+      "raw": "assurance.tar.gz:quality/clippy.log"
+    },
+    "format": {
+      "result": "passed",
+      "raw": "assurance.tar.gz:quality/format.log"
+    },
+    "nix": {
+      "checks": [
+        "boundary-controls",
+        "cairn",
+        "clippy",
+        "documents",
+        "format",
+        "native-assurance",
+        "octet",
+        "policy",
+        "rust-tests",
+        "source-coverage",
+        "tool-overrides",
+        "tool-selection",
+        "tool-versions"
+      ],
+      "receipt": "nix-checks.json",
+      "binding": "Separate post-closeout record; its generated output is excluded from its own source projection to avoid recursive self-binding.",
+      "result": "passed",
+      "boundary_controls": "assurance.tar.gz:quality/nix/boundary-controls.tar.xz"
+    },
+    "boundary_models": {
+      "result": "passed",
+      "scripts": [
+        "assurance.tar.gz:models/M4ContractsModelSmoke.lean",
+        "assurance.tar.gz:models/M4WasmModelSmoke.lean"
+      ],
+      "observations": [
+        "Unicode scalar limits and mutable UTF-8 buffer behavior",
+        "I64 little-endian decoding, minimum unsigned magnitude and saturation"
+      ],
+      "logs": [
+        "assurance.tar.gz:models/contracts.log",
+        "assurance.tar.gz:models/wasm.log"
+      ]
+    },
+    "document_checks": {
+      "result": "passed",
+      "self_tests": 226,
+      "tests": 100,
+      "scope": "Document and ledger validation only; not Noble runtime execution."
+    }
+  },
+  "regressions": {
+    "rust": {
+      "result": "passed",
+      "tests": 72,
+      "suites": 15,
+      "raw": "assurance.tar.gz:regressions/rust-tests.log"
+    },
+    "m3": {
+      "result": "eligible-for-selection",
+      "configurations": 4,
+      "workloads_per_configuration": 25,
+      "controls_per_configuration": 27,
+      "raw": "assurance.tar.gz:regressions/m3/report.json"
+    },
+    "kernel": {
+      "strict_proof_gate": "passed",
+      "coverage": "534/534 classified: 510 extracted, 1 proved, 18 modeled, 5 excepted, 0 open in the separate kernel coverage join.",
+      "raw": [
+        "assurance.tar.gz:regressions/kernel-strict-proof-gate.log",
+        "assurance.tar.gz:regressions/kernel-coverage-join.log"
+      ]
+    },
+    "mc1": {
+      "result": "passed",
+      "cases": 36,
+      "raw": "assurance.tar.gz:regressions/mc1-acceptance.json",
+      "binary_sha256": "8a29f24cb1a0fa8563676fa18bbb80a87a308c5053593fe8f0ad6a31d6a6fd95",
+      "consumer_sha256": "62c2d30b2d2e6e906509cc65aca1e5dffa4f6224ad843bb7d98d98528c36d9dc",
+      "gate_sha256": "feef4f4de1256b0eb02b254c4b1ae0468920356046a08f6e86d277f76f830fa5"
+    }
+  },
+  "assumptions": [
+    "The Rust compiler, selected assembler/optimizer/Node/V8, loader and host shell are trusted execution tooling.",
+    "Host observations concern declared resource-free test bindings, not protected external operations.",
+    "These bounded execution cases do not prove universal inference, kernel, compiler or backend correctness."
+  ],
+  "non_claims": [
+    "Not full draft language/component conformance or whole-project verification.",
+    "No universal frontend, kernel, compiler, WAT, backend, loader or ABI refinement; PO-17, PO-18 and SO-07 remain open.",
+    "Pinned Rust, Charon/Aeneas, Lean, explicit standard-library models and five inherited opaque kernel helpers remain scoped trust boundaries.",
+    "Strict theorem lanes admit only propext, Classical.choice and Quot.sound; separately inventoried closed native-evaluation/string-size obligations do not promote strict theorem lanes.",
+    "No MC2 runtime certified-program delivery or M5 live-resource/component delivery.",
+    "No physical GC allocation/reclamation or isolated engine memory-peak claim.",
+    "Property examples and documentation execution are bounded observations, not proofs; malformed fuzzing is a separate lane."
+  ],
+  "result": "passed",
+  "assurance": {
+    "archive": "assurance.tar.gz",
+    "sha256": "23d79f2dc2baafb1ff37c8dd9b9feacf7522dea16bb4421c93d5e8e6193efb0d",
+    "bytes": 81544647,
+    "scope": [
+      "Actual check-mode frozen source, LLBC, translator metadata, generated Lean, both compiled audit lanes and all refusal inputs/results",
+      "Complete Octet compiler/architecture packet and independent source-inventory comparison",
+      "All18 executed Nix boundary controls, their source fixtures, compiler artifacts and replay reports",
+      "Final read-only Noble binary, build/quality logs, MC1/M3/Rust/kernel regressions and final Lean boundary-model smoke sources/results"
+    ],
+    "cache_policy": "No Cargo target, .lake, .git, node_modules or .pi cache trees are retained.",
+    "boundary_packet": "quality/nix/boundary-controls.tar.xz",
+    "compression": "Lossless nested XZ packet retains every raw Nix boundary-control artifact without duplicating its uncompressed directory in the outer gzip archive."
+  },
+  "lifecycle": {
+    "archive": "../../.cairn/archive/2026-09-21-m4-end-to-end-core/tasks.md",
+    "canonical_spec": "../../.cairn/specs/core-bootstrap/spec.md",
+    "acceptance_is_not_archive": true,
+    "sync_manifest": "79bbff511d7debf95389e0e965c943d7f3a943141dfb084a14b1dcbd4775239c",
+    "archive_manifest": "9ce6f2ffc38e61c25a188fe1bc4a49815c65a303f6e3b6cd4fe0f0f884b3c684",
+    "archived": true
+  }
+}

@@ -1,7 +1,9 @@
+mod rendering;
+
 #[octet::sealed_enum]
 enum Step {
     Visit(u32),
-    Finish(super::Term),
+    Finish(super::Term, noble_kernel::types::EffSet),
 }
 
 #[octet::sealed_enum]
@@ -25,6 +27,18 @@ impl State {
 }
 
 impl super::Arena {
+    pub fn stack_value(
+        &self,
+        id: u32,
+        span: crate::Span,
+        meter: &mut crate::Meter,
+    ) -> Result<alloc::vec::Vec<noble_kernel::types::Ty>, crate::Diagnostic> {
+        match attempt!(self.materialize(id, span, meter)) {
+            Material::Stack(stack, _) => Ok(stack),
+            Material::Value(_, _) => Err(crate::internal(span)),
+        }
+    }
+
     pub fn instantiation(
         &self,
         variables: &[super::Variable],
@@ -67,6 +81,9 @@ impl super::Arena {
             Some(super::Variable::Effect) => Ok(noble_kernel::words::Binding::Effect(
                 noble_kernel::types::EffSet::empty(),
             )),
+            Some(super::Variable::EffectValue(id)) => Ok(noble_kernel::words::Binding::Effect(
+                attempt!(self.effect_value(*id, span)),
+            )),
             Some(super::Variable::Value(id)) => {
                 match attempt!(self.materialize(*id, span, meter)) {
                     Material::Value(ty, _) => Ok(noble_kernel::words::Binding::Value(ty)),
@@ -83,7 +100,7 @@ impl super::Arena {
         }
     }
 
-    fn materialize(
+    pub(super) fn materialize(
         &self,
         root: u32,
         span: crate::Span,
@@ -125,7 +142,7 @@ impl super::Arena {
         attempt!(meter.charge(1, span));
         match step {
             Step::Visit(id) => self.visit(id, state, span, meter),
-            Step::Finish(term) => state.finish(term, span),
+            Step::Finish(term, effects) => state.finish(term, effects, span),
         }
     }
 
@@ -156,18 +173,48 @@ impl super::Arena {
             | super::Term::Sum(a, b)
             | super::Term::Program(a, b)
             | super::Term::Push(a, b) => {
-                state.steps.push(Step::Finish(term));
+                let effects = if self.effectful && matches!(term, super::Term::Program(_, _)) {
+                    let effect = attempt!(self.program_effect(id, span, meter));
+                    attempt!(self.effect_value(effect, span))
+                } else {
+                    noble_kernel::types::EffSet::empty()
+                };
+                state.steps.push(Step::Finish(term, effects));
                 state.steps.push(Step::Visit(b));
                 state.steps.push(Step::Visit(a));
                 return Ok(state);
             }
             super::Term::List(item) => {
-                state.steps.push(Step::Finish(term));
+                state
+                    .steps
+                    .push(Step::Finish(term, noble_kernel::types::EffSet::empty()));
                 state.steps.push(Step::Visit(item));
                 return Ok(state);
             }
         };
         state.values.push(material);
         Ok(state)
+    }
+
+    /// Diagnostic rendering has a separate fixed output bound and consumes the
+    /// existing work budget. A rendering refusal never replaces the type error.
+    #[expect(
+        tigerstyle::ambiguous_params,
+        reason = "Owner: noble-maintainers; expected and actual are ordered IDs in the same term arena, supplied directly from the rejected stack equation only to render its two sides."
+    )]
+    pub fn join_message(
+        &self,
+        expected: u32,
+        actual: u32,
+        span: crate::Span,
+        meter: &mut crate::Meter,
+    ) -> Result<alloc::string::String, crate::Diagnostic> {
+        let expected = attempt!(rendering::describe(self, expected, span, meter));
+        let actual = attempt!(rendering::describe(self, actual, span, meter));
+        let mut message = alloc::string::String::from("stack/program join: expected ");
+        message.push_str(&expected);
+        message.push_str("; actual ");
+        message.push_str(&actual);
+        Ok(message)
     }
 }

@@ -6,7 +6,27 @@ Revision: 0.1.0-draft.5
 
 The twelve normative documents now live under `.cairn/specs/`. Their old paths contain generated compatibility views, not separate authority. This directory retains the scenario designs, proof ledger, roadmap, status, and supporting documents.
 
-The repository now contains the bounded checker, experimental MC1 contract frontend, and M3 compiled-program representation experiment. [Status](STATUS.json) and the [roadmap](roadmap.json) distinguish delivered scopes from open language and proof obligations. Amendment sections below record design adoption, not current completion.
+The repository now contains the bounded checker, experimental MC1 contract frontend,
+M3 compiled-program representation experiment, and M4 source-to-Wasm
+Core-Bootstrap implementation. M4 uses the selected managed-linear-memory backend:
+source is resolved and inferred, independently accepted by the kernel, rechecked
+for lowering, then executed as compiled Wasm. Persistent sessions retain compiled
+Programs, captures, stack and immutable resolved bindings rather than replaying
+source. Static refusals preserve prior state and make no candidate-body host
+requests; runtime traps retain already observed request prefixes.
+
+The implemented data/control scope includes wrapping `I64`, Bool/Text/Unit,
+Pair/Sum/List, quotation/composition/execution, inert exact reflection and
+bootstrap branch/stack operations. Only explicit resource-free test hosts are
+available; resources, imports, recursion and runtime proof companions remain out
+of scope. See the [CLI usage and evidence boundary](../README.md#running-core-bootstrap-source).
+[Status](STATUS.json) and the [roadmap](roadmap.json) distinguish implemented
+behavior from retained acceptance and open language/proof obligations. M4's
+retained runtime acceptance includes the integrated developer workflows;
+the [acceptance evidence](../README.md#m4-acceptance-evidence) separately records
+the passed extraction, regression and quality gates. M5 is the next primary milestone.
+Amendment sections below record design adoption,
+not automatic completion.
 
 ## Core and safety
 
@@ -41,9 +61,38 @@ The repository now contains the bounded checker, experimental MC1 contract front
 
 ## Developer-experience amendment to draft.5
 
-Select the bounded contracts in SPEC-DX001 and their unexecuted scenarios. M2 adds stack diagnostics; holes and guest declarations do not expand Core-Bootstrap. All implementation and proof status remains open.
+Select the bounded contracts in SPEC-DX001. M2 adds stack diagnostics; holes and
+guest declarations do not expand Core-Bootstrap. Implementation and execution
+status is scenario-specific, not a consequence of adopting this amendment.
 
-The second group selects local names, capability-aware modules, property testing, resource protocol types, and compiler-backed documentation. Syntax and later-profile gates remain open. Property and documentation checks accompany M2/M4 without adding kernel mechanisms.
+The second group selects local names, capability-aware modules, property testing,
+resource protocol types, and compiler-backed documentation. Syntax and
+later-profile gates remain open. Property and documentation checks accompany
+M2/M4 without adding kernel mechanisms.
+
+M4's retained runtime acceptance passed [DX-10's property harness](../verification/m4/property.mjs)
+and [DX-12's executable-documentation harness](../verification/m4/documentation.mjs).
+DX-10 passed 100 seeded Wasm composition/interface/recipe/effect trials,
+100 replay trials and eight hostile controls with 50-step bounded shrinking;
+its 200 malformed-kernel cases are a separate checker lane, not Wasm property
+coverage. DX-12 passed the two declared examples and six hostile controls with
+explicit resource-free hosts;
+unrun, unsupported, failed and timed-out examples remain visible. A
+whole-command timeout is not proof of guest entry. The same integrated run passed
+all 18 CORE cases and 11 controls using a read-only binary snapshot after Cargo
+tests, avoiding races with mutable build targets.
+
+The gate emits scoped `property-workflow.json` and `documentation-workflow.json`
+receipts alongside `acceptance.json`. The runtime evidence is retained at
+`verification/m4/acceptance.json` and `verification/m4/runtime.tar.gz`, with
+`verification/m4/evidence.json` recording the complete retained boundary.
+The separate actual-source extraction authorities are the reviewed
+`verification/m4/extraction-lock.json`, `verification/m4/implementation.json`
+and `verification/m4/assurance.tar.gz`. Discovery produces a review candidate;
+independent check mode re-extracts and compares source/generated identities,
+inventories, dependencies and axioms against that reviewed lock. Neither
+discovery nor runtime acceptance substitutes for that check, and no universal
+refinement or all-documentation execution claim follows.
 
 ## Calculator amendment to draft.5
 

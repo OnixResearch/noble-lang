@@ -71,37 +71,40 @@ let Pin = { rev | String, narHash | String } in
     backend_url | String = "https://github.com/AeneasVerif/aeneas",
     backend_subdir | String = "backends/lean",
   },
-  # All three are verification-only processes from the already locked Nixpkgs.
-  # They are not Noble production dependencies or a selected component runtime.
+  # Locked subprocess dependencies of the experimental Core-Bootstrap CLI and
+  # verification harnesses, not native linked crates or a component runtime.
   verification_tools | { _ : { source | String, attribute | String, version | String, role | String } } = {
     node = {
       source = "nixpkgs",
       attribute = "nodejs_24",
       version = "24.13.0",
-      role = "verification-only-wasm-host",
+      role = "core-bootstrap-and-verification-wasm-host",
     },
     wasm_tools = {
       source = "nixpkgs",
       attribute = "wasm-tools",
       version = "1.245.1",
-      role = "verification-only-wasm-assembler",
+      role = "core-bootstrap-and-verification-wasm-assembler",
     },
     binaryen = {
       source = "nixpkgs",
       attribute = "binaryen",
       version = "125",
-      role = "verification-only-wasm-optimizer",
+      role = "core-bootstrap-and-verification-wasm-optimizer",
     },
   },
   owned_wasm_runtime = {
     assets | Array String = [
+      "crates/noble-wasm/runtime/accounting.wat",
       "crates/noble-wasm/runtime/common.wat",
+      "crates/noble-wasm/runtime/data.wat",
       "crates/noble-wasm/runtime/experiment.wat",
       "crates/noble-wasm/runtime/gc-storage.wat",
       "crates/noble-wasm/runtime/linear-storage.wat",
       "crates/noble-wasm/runtime/operations.wat",
       "crates/noble-wasm/runtime/programs.wat",
       "crates/noble-wasm/runtime/reflection.wat",
+      "crates/noble-wasm/runtime/source.wat",
       "crates/noble-wasm/runtime/stack.wat",
     ],
     assurance | String = "byte-bound-runtime-semantics-unproved",
@@ -113,7 +116,7 @@ let Pin = { rev | String, narHash | String } in
       "component-support",
     ],
   },
-  # Digests use Nix's SHA-256 interface. New execution evidence uses BLAKE3.
+  # These file bindings use SHA-256; Octet separately binds compiler identities.
   file_sha256 | { _ : String } = import "tool-selection-files.ncl",
   tool_paths | { _ : { derivation | String, output | String } } = import "tool-selection-tools.ncl",
   future_unselected | Array String = ["Wasmtime", "WIT", "Verus", "byte-view dependency"],

@@ -5,13 +5,13 @@
       "core_handling": "forbidden",
       "executor_role": "composition-root",
       "family": "filesystem",
-      "rationale": "Only the CLI reads bounded contract, proof, rule-library and toolchain inputs, creates fresh artifacts, and removes its private temporary workspace."
+      "rationale": "Only the CLI reads bounded source, contract, proof, rule-library and toolchain inputs, creates fresh artifacts, and removes its private temporary workspace. Owned Wasm/JS assets are separately byte-bound by tool selection."
     },
     {
       "core_handling": "forbidden",
       "executor_role": "composition-root",
       "family": "process",
-      "rationale": "Only the CLI resolves the local Lean runtime closure, launches bounded proof workers through Linux bubblewrap and a user-systemd scope, captures their status, and terminates failed or expired workers. Missing isolation fails closed."
+      "rationale": "Only the CLI resolves the local Lean runtime closure, launches isolated proof workers, and runs the pinned resource-free Core-Bootstrap Node helper. Proof workers require bubblewrap and a user-systemd scope; missing proof isolation fails closed. The trusted Node/Wasm tool subprocess boundary is separate and is not claimed to have the proof sandbox."
     },
     {
       "core_handling": "forbidden",
@@ -23,19 +23,19 @@
       "core_handling": "forbidden",
       "executor_role": "composition-root",
       "family": "time",
-      "rationale": "Only the CLI observes clocks for bounded proof-worker deadlines and private temporary-directory naming; clock values never enter contract meaning."
+      "rationale": "Only the CLI observes clocks for bounded proof/runtime-worker supervision and private temporary-directory naming; clock values never enter Noble or contract meaning."
     },
     {
       "core_handling": "forbidden",
       "executor_role": "composition-root",
       "family": "concurrency",
-      "rationale": "Only the CLI starts and joins bounded stdout/stderr readers and sleeps while supervising proof workers. Domain-core evaluation remains synchronous and effect-free."
+      "rationale": "Only the CLI starts and joins bounded subprocess readers, receives bounded runtime replies and sleeps while supervising workers. Domain-core evaluation remains synchronous and effect-free."
     },
     {
       "core_handling": "forbidden",
       "executor_role": "composition-root",
       "family": "observability",
-      "rationale": "Only the CLI emits verification reports, help, internal smoke outcomes and diagnostics. Explanation and statement generation do not launch proof tools."
+      "rationale": "Only the CLI emits execution/verification reports, help, internal smoke outcomes and diagnostics. Explanation and statement generation do not launch proof tools. Resource-free guest test requests are observations, not protected capabilities."
     },
     {
       "core_handling": "forbidden",
@@ -47,7 +47,7 @@
   "collection_limits": {
     "max_artifact_bytes": 67108864,
     "max_calls": 8192,
-    "max_configurations": 512,
+    "max_configurations": 1024,
     "max_constructors": 4096,
     "max_effects": 4096,
     "max_expansions": 4096,
@@ -121,6 +121,10 @@
         "noble-cli::closure@crates/noble-cli/src/workflow/artifacts.rs:4242:4248",
         "noble-cli::closure@crates/noble-cli/src/workflow/rules.rs:5281:5288",
         "noble::<workflow::artifacts::Temporary as std::ops::Drop>::drop",
+        "noble::core::execute",
+        "noble::core::framing::read_file",
+        "noble::core::framing::write_new",
+        "noble::core::worker::configuration",
         "noble::sandbox::Environment::discover",
         "noble::sandbox::runtime::executable",
         "noble::sandbox::runtime::installation",
@@ -143,6 +147,9 @@
       "executor_methods": [
         "noble-cli::closure@crates/noble-cli/src/sandbox/launch.rs:3118:3124",
         "noble-cli::closure@crates/noble-cli/src/sandbox/launch.rs:3228:3235",
+        "noble::core::worker::launch",
+        "noble::core::worker::process::observe",
+        "noble::core::worker::process::stop",
         "noble::sandbox::launch::<impl sandbox::Environment>::run",
         "noble::sandbox::launch::<impl sandbox::Environment>::scoped_command",
         "noble::sandbox::process::capture",
@@ -156,7 +163,7 @@
       "executor_scope": "crates/noble-cli/src",
       "family": "process",
       "protected": null,
-      "rationale": "The shell queries the selected local Nix runtime closure, executes proof workers through the required user-systemd/bubblewrap boundary, supervises bounded output and deadlines, observes exit status, and reads its PID for private temporary naming. These local proof-tool operations grant no protected domain capability; missing isolation never authorizes an unsandboxed fallback."
+      "rationale": "The shell queries the selected local Nix runtime closure, executes proof workers through their required isolation boundary, and starts/reaps the immutable Node helper for independently accepted Core-Bootstrap Wasm. It supervises bounded replies and deadlines and observes child status. Node invokes the separately pinned assembler/optimizer; those trusted tools and owned JS/WAT are not proven or proof-sandboxed. None of these operations grants a protected guest capability, and missing proof isolation never authorizes a proof-worker fallback."
     },
     {
       "authority": "unprotected",
@@ -179,22 +186,29 @@
       "executor_scope": "crates/noble-cli/src",
       "family": "time",
       "protected": null,
-      "rationale": "Clock observations enforce the total proof-worker deadline and name fresh private temporary directories. They neither determine contract semantics nor authorize protected operations."
+      "rationale": "Clock observations enforce worker supervision deadlines and name fresh private temporary directories. They neither determine language/contract semantics nor authorize protected operations."
     },
     {
       "authority": "unprotected",
       "executor_methods": [
+        "noble::core::worker::Engine::close",
+        "noble::core::worker::Engine::finish",
+        "noble::core::worker::Engine::reply",
+        "noble::core::worker::Engine::start",
+        "noble::core::worker::process::observe",
         "noble::sandbox::process::capture",
         "noble::sandbox::process::monitor"
       ],
       "executor_scope": "crates/noble-cli/src",
       "family": "concurrency",
       "protected": null,
-      "rationale": "The shell starts and joins two bounded subprocess-output readers and sleeps while polling worker status. These local supervision threads grant no protected domain capability."
+      "rationale": "The proof shell starts and joins bounded subprocess-output readers. The runtime shell owns one reader with a bounded reply channel, joins it after child reaping, and receives replies with deadlines. Polling sleeps and local supervision threads grant no protected domain capability."
     },
     {
       "authority": "unprotected",
       "executor_methods": [
+        "noble::<core::worker::Engine as std::ops::Drop>::drop",
+        "noble::core::output::print",
         "noble::main",
         "noble::write_outcome",
         "noble::workflow::print_report"

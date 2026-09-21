@@ -25,7 +25,7 @@ const MAX_TIMEOUT: u64 = 600_000;
 
 mod arguments;
 mod artifacts;
-mod encoding;
+pub(crate) mod encoding;
 pub(super) mod output;
 mod rules;
 mod subject;

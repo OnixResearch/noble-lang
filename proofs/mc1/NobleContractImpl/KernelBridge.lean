@@ -870,6 +870,86 @@ def fromRequest (x : _root_.noble_kernel.untrusted.Request) : noble_kernel.untru
   cases x
   simp [toRequest, fromRequest]
 
+def toTextLiteral (x : noble_kernel.execution.TextLiteral) : _root_.noble_kernel.execution.TextLiteral :=
+  { node := x.node
+    bytes := x.bytes }
+
+def fromTextLiteral (x : _root_.noble_kernel.execution.TextLiteral) : noble_kernel.execution.TextLiteral :=
+  { node := x.node
+    bytes := x.bytes }
+
+@[simp] theorem fromTextLiteral_toTextLiteral (x : noble_kernel.execution.TextLiteral) :
+    fromTextLiteral (toTextLiteral x) = x := by
+  cases x
+  rfl
+
+@[simp] theorem toTextLiteral_fromTextLiteral (x : _root_.noble_kernel.execution.TextLiteral) :
+    toTextLiteral (fromTextLiteral x) = x := by
+  cases x
+  rfl
+
+def toBody (x : noble_kernel.execution.Body) : _root_.noble_kernel.execution.Body :=
+  { candidate := toCandidate x.candidate
+    texts := mapVec toTextLiteral x.texts }
+
+def fromBody (x : _root_.noble_kernel.execution.Body) : noble_kernel.execution.Body :=
+  { candidate := fromCandidate x.candidate
+    texts := mapVec fromTextLiteral x.texts }
+
+@[simp] theorem fromBody_toBody (x : noble_kernel.execution.Body) :
+    fromBody (toBody x) = x := by
+  cases x
+  simp [fromBody, toBody]
+
+@[simp] theorem toBody_fromBody (x : _root_.noble_kernel.execution.Body) :
+    toBody (fromBody x) = x := by
+  cases x
+  simp [toBody, fromBody]
+
+def toExecutionDefinition (x : noble_kernel.execution.Definition) : _root_.noble_kernel.execution.Definition :=
+  { definition := x.definition
+    identity := x.identity
+    body := toBody x.body
+    expected := toExpected x.expected }
+
+def fromExecutionDefinition (x : _root_.noble_kernel.execution.Definition) : noble_kernel.execution.Definition :=
+  { definition := x.definition
+    identity := x.identity
+    body := fromBody x.body
+    expected := fromExpected x.expected }
+
+@[simp] theorem fromExecutionDefinition_toExecutionDefinition (x : noble_kernel.execution.Definition) :
+    fromExecutionDefinition (toExecutionDefinition x) = x := by
+  cases x
+  simp [fromExecutionDefinition, toExecutionDefinition]
+
+@[simp] theorem toExecutionDefinition_fromExecutionDefinition (x : _root_.noble_kernel.execution.Definition) :
+    toExecutionDefinition (fromExecutionDefinition x) = x := by
+  cases x
+  simp [toExecutionDefinition, fromExecutionDefinition]
+
+def toSubmission (x : noble_kernel.execution.Submission) : _root_.noble_kernel.execution.Submission :=
+  { environment := toEnv x.environment
+    definitions := mapVec toExecutionDefinition x.definitions
+    body := toBody x.body
+    request := toRequest x.request }
+
+def fromSubmission (x : _root_.noble_kernel.execution.Submission) : noble_kernel.execution.Submission :=
+  { environment := fromEnv x.environment
+    definitions := mapVec fromExecutionDefinition x.definitions
+    body := fromBody x.body
+    request := fromRequest x.request }
+
+@[simp] theorem fromSubmission_toSubmission (x : noble_kernel.execution.Submission) :
+    fromSubmission (toSubmission x) = x := by
+  cases x
+  simp [fromSubmission, toSubmission]
+
+@[simp] theorem toSubmission_fromSubmission (x : _root_.noble_kernel.execution.Submission) :
+    toSubmission (fromSubmission x) = x := by
+  cases x
+  simp [toSubmission, fromSubmission]
+
 def toInterface (x : noble_kernel.untrusted.Interface) : _root_.noble_kernel.untrusted.Interface :=
   { stack_in := toTyVec x.stack_in
     stack_out := toTyVec x.stack_out
@@ -1115,6 +1195,14 @@ def noble_kernel.acceptance.check (env : noble_kernel.contracts.Env)
     (toEnv env) (toRequest request) (toCandidate candidate)
   ok (fromOutcome outcome)
 
+def noble_kernel.contracts.Definition.Insts.CoreCloneClone.clone
+    (definition : noble_kernel.contracts.Definition) : Result noble_kernel.contracts.Definition :=
+  _root_.noble_kernel.contracts.Definition.Insts.CoreCloneClone.clone definition
+
+def noble_kernel.contracts.Definition.Insts.CoreCmpPartialEqDefinition.eq
+    (left right : noble_kernel.contracts.Definition) : Result Bool :=
+  _root_.noble_kernel.contracts.Definition.Insts.CoreCmpPartialEqDefinition.eq left right
+
 def noble_kernel.contracts.Env.scheme (env : noble_kernel.contracts.Env)
     (definition : noble_kernel.contracts.Definition) :
     Result (Option noble_kernel.words.Scheme) := do
@@ -1127,6 +1215,23 @@ def noble_kernel.contracts.environment :
   match result with
   | .Ok env => ok (.Ok (fromEnv env))
   | .Err error => ok (.Err (fromDefect error))
+
+def noble_kernel.execution.Submission.Insts.CoreFmtDebug.fmt
+    (submission : noble_kernel.execution.Submission) (formatter : core.fmt.Formatter) :
+    Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter) :=
+  _root_.noble_kernel.execution.Submission.Insts.CoreFmtDebug.fmt (toSubmission submission) formatter
+
+def noble_kernel.shapes.Pattern.Insts.CoreCloneClone.clone (pattern : noble_kernel.shapes.Pattern) :
+    Result noble_kernel.shapes.Pattern := do
+  let cloned ← _root_.noble_kernel.shapes.Pattern.Insts.CoreCloneClone.clone (toPattern pattern)
+  ok (fromPattern cloned)
+
+def noble_kernel.shapes.Pattern.program
+    (stack_in stack_out : alloc.vec.Vec noble_kernel.shapes.Pattern)
+    (effects : alloc.vec.Vec noble_kernel.shapes.EffectSlot) : Result noble_kernel.shapes.Pattern := do
+  let pattern ← _root_.noble_kernel.shapes.Pattern.program
+    (toPatternVec stack_in) (toPatternVec stack_out) (mapVec toEffectSlot effects)
+  ok (fromPattern pattern)
 
 def noble_kernel.types.Ty.Insts.CoreCloneClone.clone (ty : noble_kernel.types.Ty) :
     Result noble_kernel.types.Ty := do
@@ -1142,8 +1247,20 @@ def noble_kernel.types.Ty.Insts.CoreFmtDebug.fmt
     Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter) :=
   _root_.noble_kernel.types.Ty.Insts.CoreFmtDebug.fmt (toTy ty) formatter
 
+def noble_kernel.types.EffId.Insts.CoreCloneClone.clone (effect : noble_kernel.types.EffId) :
+    Result noble_kernel.types.EffId :=
+  _root_.noble_kernel.types.EffId.Insts.CoreCloneClone.clone effect
+
 def noble_kernel.types.EffSet.empty : Result noble_kernel.types.EffSet :=
   _root_.noble_kernel.types.EffSet.empty
+
+def noble_kernel.types.EffSet.from_ids (effects : Slice noble_kernel.types.EffId) :
+    Result noble_kernel.types.EffSet :=
+  _root_.noble_kernel.types.EffSet.from_ids effects
+
+def noble_kernel.types.EffSet.as_slice (effects : noble_kernel.types.EffSet) :
+    Result (Slice noble_kernel.types.EffId) :=
+  _root_.noble_kernel.types.EffSet.as_slice effects
 
 def noble_kernel.types.EffSet.is_empty (effects : noble_kernel.types.EffSet) : Result Bool :=
   _root_.noble_kernel.types.EffSet.is_empty effects
@@ -1162,6 +1279,20 @@ def noble_kernel.untrusted.CANDIDATE_FORMAT : Result U32 :=
 
 def noble_kernel.untrusted.SEMANTIC_REVISION : Result U32 :=
   ok _root_.noble_kernel.untrusted.SEMANTIC_REVISION
+
+def noble_kernel.untrusted.Lit.Insts.CoreCloneClone.clone (lit : noble_kernel.untrusted.Lit) :
+    Result noble_kernel.untrusted.Lit := do
+  let cloned ← _root_.noble_kernel.untrusted.Lit.Insts.CoreCloneClone.clone (toLit lit)
+  ok (fromLit cloned)
+
+def noble_kernel.untrusted.Lit.Insts.CoreFmtDebug.fmt
+    (lit : noble_kernel.untrusted.Lit) (formatter : core.fmt.Formatter) :
+    Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter) :=
+  _root_.noble_kernel.untrusted.Lit.Insts.CoreFmtDebug.fmt (toLit lit) formatter
+
+def noble_kernel.untrusted.Lit.Insts.CoreCmpPartialEqLit.eq
+    (left right : noble_kernel.untrusted.Lit) : Result Bool :=
+  _root_.noble_kernel.untrusted.Lit.Insts.CoreCmpPartialEqLit.eq (toLit left) (toLit right)
 
 def noble_kernel.untrusted.Lit.ty (lit : noble_kernel.untrusted.Lit) :
     Result noble_kernel.types.Ty := do
@@ -1211,12 +1342,22 @@ def noble_kernel.words.resolve.bindings
 
 namespace KernelBridge
 
-/-- Distinct generated types, candidates, and requests cannot collapse under
+/-- Distinct generated inputs cannot collapse under
 conversion to the inherited kernel's representation. -/
 theorem toTy_injective : Function.Injective toTy := by
   intro x y h
   have same := congrArg fromTy h
   simpa only [fromTy_toTy] using same
+
+theorem toPattern_injective : Function.Injective toPattern := by
+  intro x y h
+  have same := congrArg fromPattern h
+  simpa only [fromPattern_toPattern] using same
+
+theorem toLit_injective : Function.Injective toLit := by
+  intro x y h
+  have same := congrArg fromLit h
+  simpa only [fromLit_toLit] using same
 
 theorem toCandidate_injective : Function.Injective toCandidate := by
   intro x y h
@@ -1227,6 +1368,26 @@ theorem toRequest_injective : Function.Injective toRequest := by
   intro x y h
   have same := congrArg fromRequest h
   simpa only [fromRequest_toRequest] using same
+
+theorem toTextLiteral_injective : Function.Injective toTextLiteral := by
+  intro x y h
+  have same := congrArg fromTextLiteral h
+  simpa only [fromTextLiteral_toTextLiteral] using same
+
+theorem toBody_injective : Function.Injective toBody := by
+  intro x y h
+  have same := congrArg fromBody h
+  simpa only [fromBody_toBody] using same
+
+theorem toExecutionDefinition_injective : Function.Injective toExecutionDefinition := by
+  intro x y h
+  have same := congrArg fromExecutionDefinition h
+  simpa only [fromExecutionDefinition_toExecutionDefinition] using same
+
+theorem toSubmission_injective : Function.Injective toSubmission := by
+  intro x y h
+  have same := congrArg fromSubmission h
+  simpa only [fromSubmission_toSubmission] using same
 
 /-- On inherited inputs the boundary is exactly the inherited extracted checker
 followed by the lossless outcome conversion, including its Result effects.

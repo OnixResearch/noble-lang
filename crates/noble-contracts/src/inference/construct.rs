@@ -1,11 +1,11 @@
-impl super::Arena {
-    pub(super) fn build_ty<'a>(
-        &mut self,
+impl<'a> super::build::State<'a> {
+    pub(super) fn build_ty(
+        mut self,
+        arena: &mut super::Arena,
         ty: &'a noble_kernel::types::Ty,
-        mut state: super::build::State<'a>,
         span: crate::Span,
         meter: &mut crate::Meter,
-    ) -> Result<super::build::State<'a>, crate::Diagnostic> {
+    ) -> Result<Self, crate::Diagnostic> {
         let term = match ty {
             noble_kernel::types::Ty::Unit => super::Term::Unit,
             noble_kernel::types::Ty::Bool => super::Term::Bool,
@@ -13,34 +13,38 @@ impl super::Arena {
             noble_kernel::types::Ty::Text => super::Term::Text,
             noble_kernel::types::Ty::Syntax => super::Term::Syntax,
             noble_kernel::types::Ty::Pair(a, b) | noble_kernel::types::Ty::Sum(a, b) => {
-                state
-                    .steps
+                self.steps
                     .push(if matches!(ty, noble_kernel::types::Ty::Pair(_, _)) {
                         super::build::Step::Pair
                     } else {
                         super::build::Step::Sum
                     });
-                state.steps.push(super::build::Step::Ty(b));
-                state.steps.push(super::build::Step::Ty(a));
-                return Ok(state);
+                self.steps.push(super::build::Step::Ty(b));
+                self.steps.push(super::build::Step::Ty(a));
+                return Ok(self);
             }
             noble_kernel::types::Ty::List(item) => {
-                state.steps.push(super::build::Step::List);
-                state.steps.push(super::build::Step::Ty(item));
-                return Ok(state);
+                self.steps.push(super::build::Step::List);
+                self.steps.push(super::build::Step::Ty(item));
+                return Ok(self);
             }
             noble_kernel::types::Ty::Program(inputs, outputs, effects) => {
-                if !effects.is_empty() {
+                if !arena.effectful && !effects.is_empty() {
                     return Err(crate::Diagnostic::new(
                         crate::DiagnosticKind::Unsupported,
                         span,
                         "effectful Program is outside the pure fragment",
                     ));
                 }
-                state.steps.push(super::build::Step::Program);
-                state.steps.push(super::build::Step::StackTy(outputs));
-                state.steps.push(super::build::Step::StackTy(inputs));
-                return Ok(state);
+                let effect = if arena.effectful {
+                    Some(attempt!(arena.effect_constant(effects, span, meter)))
+                } else {
+                    None
+                };
+                self.steps.push(super::build::Step::Program(effect));
+                self.steps.push(super::build::Step::StackTy(outputs));
+                self.steps.push(super::build::Step::StackTy(inputs));
+                return Ok(self);
             }
             noble_kernel::types::Ty::Resource(_) => {
                 return Err(crate::Diagnostic::new(
@@ -50,18 +54,18 @@ impl super::Arena {
                 ));
             }
         };
-        state.values.push(attempt!(self.add(term, span, meter)));
-        Ok(state)
+        self.values.push(attempt!(arena.add(term, span, meter)));
+        Ok(self)
     }
 
-    pub(super) fn build_pattern<'a>(
-        &mut self,
+    pub(super) fn build_pattern(
+        mut self,
+        arena: &mut super::Arena,
         pattern: &'a noble_kernel::shapes::Pattern,
-        mut state: super::build::State<'a>,
         variables: &[super::Variable],
         span: crate::Span,
         meter: &mut crate::Meter,
-    ) -> Result<super::build::State<'a>, crate::Diagnostic> {
+    ) -> Result<Self, crate::Diagnostic> {
         let term = match pattern {
             noble_kernel::shapes::Pattern::Unit => super::Term::Unit,
             noble_kernel::shapes::Pattern::Bool => super::Term::Bool,
@@ -70,42 +74,54 @@ impl super::Arena {
             noble_kernel::shapes::Pattern::Syntax => super::Term::Syntax,
             noble_kernel::shapes::Pattern::Pair(a, b)
             | noble_kernel::shapes::Pattern::Sum(a, b) => {
-                state.steps.push(
+                self.steps.push(
                     if matches!(pattern, noble_kernel::shapes::Pattern::Pair(_, _)) {
                         super::build::Step::Pair
                     } else {
                         super::build::Step::Sum
                     },
                 );
-                state.steps.push(super::build::Step::Pattern(b));
-                state.steps.push(super::build::Step::Pattern(a));
-                return Ok(state);
+                self.steps.push(super::build::Step::Pattern(b));
+                self.steps.push(super::build::Step::Pattern(a));
+                return Ok(self);
             }
             noble_kernel::shapes::Pattern::List(item) => {
-                state.steps.push(super::build::Step::List);
-                state.steps.push(super::build::Step::Pattern(item));
-                return Ok(state);
+                self.steps.push(super::build::Step::List);
+                self.steps.push(super::build::Step::Pattern(item));
+                return Ok(self);
             }
             noble_kernel::shapes::Pattern::Program(inputs, outputs, effects) => {
-                attempt!(super::pure_effects(effects, variables, span, meter));
-                state.steps.push(super::build::Step::Program);
-                state.steps.push(super::build::Step::StackPattern(outputs));
-                state.steps.push(super::build::Step::StackPattern(inputs));
-                return Ok(state);
+                let effect = if arena.effectful {
+                    Some(attempt!(
+                        arena.effect_pattern(effects, variables, span, meter)
+                    ))
+                } else {
+                    attempt!(super::pure_effects(effects, variables, span, meter));
+                    None
+                };
+                self.steps.push(super::build::Step::Program(effect));
+                self.steps.push(super::build::Step::StackPattern(outputs));
+                self.steps.push(super::build::Step::StackPattern(inputs));
+                return Ok(self);
             }
             noble_kernel::shapes::Pattern::Var(variable) => {
                 match super::variable_at(variables, variable.0, span) {
-                    Ok(super::Variable::Value(id)) => state.values.push(id),
-                    Ok(super::Variable::Stack(_) | super::Variable::Effect) | Err(_) => {
+                    Ok(super::Variable::Value(id)) => self.values.push(id),
+                    Ok(
+                        super::Variable::Stack(_)
+                        | super::Variable::Effect
+                        | super::Variable::EffectValue(_),
+                    )
+                    | Err(_) => {
                         return Err(crate::internal(span));
                     }
                 }
-                return Ok(state);
+                return Ok(self);
             }
             noble_kernel::shapes::Pattern::Resource(_)
             | noble_kernel::shapes::Pattern::StackVar(_) => return Err(crate::internal(span)),
         };
-        state.values.push(attempt!(self.add(term, span, meter)));
-        Ok(state)
+        self.values.push(attempt!(arena.add(term, span, meter)));
+        Ok(self)
     }
 }

@@ -1,5 +1,6 @@
 mod build;
 mod construct;
+mod effects;
 mod finish;
 mod materialize;
 mod unify;
@@ -34,17 +35,43 @@ pub(crate) enum Variable {
     Value(u32),
     Stack(u32),
     Effect,
+    EffectValue(u32),
+}
+
+pub(crate) struct Program {
+    pub input: u32,
+    pub output: u32,
+    pub effect: u32,
 }
 
 pub(crate) struct Arena {
     terms: alloc::vec::Vec<Term>,
+    effectful: bool,
+    effect_universe: u8,
+    effects: alloc::vec::Vec<effects::Effect>,
+    effect_bounds: alloc::vec::Vec<u8>,
+    effect_equations: alloc::vec::Vec<(u32, u32)>,
+    program_effects: alloc::vec::Vec<(u32, u32)>,
 }
 
 impl Arena {
     pub fn new() -> Self {
         Self {
             terms: alloc::vec::Vec::new(),
+            effectful: false,
+            effect_universe: 0,
+            effects: alloc::vec::Vec::new(),
+            effect_bounds: alloc::vec::Vec::new(),
+            effect_equations: alloc::vec::Vec::new(),
+            program_effects: alloc::vec::Vec::new(),
         }
+    }
+
+    pub fn source(test_hosts: bool) -> Self {
+        let mut arena = Self::new();
+        arena.effectful = true;
+        arena.effect_universe = if test_hosts { 3 } else { 0 };
+        arena
     }
 
     pub fn add(
@@ -59,18 +86,14 @@ impl Arena {
         Ok(id)
     }
 
-    #[expect(
-        tigerstyle::missing_const_fn,
-        reason = "Owner: noble-maintainers; checked ID conversion and invalid arena lookup construct owned diagnostics."
-    )]
-    fn get(&self, id: u32, span: crate::Span) -> Result<Term, crate::Diagnostic> {
+    pub(crate) fn get(&self, id: u32, span: crate::Span) -> Result<Term, crate::Diagnostic> {
         match self.terms.get(attempt!(crate::offset(id, span))) {
             Some(term) => Ok(*term),
             None => Err(crate::internal(span)),
         }
     }
 
-    fn root(
+    pub(crate) fn root(
         &self,
         mut id: u32,
         span: crate::Span,
@@ -178,7 +201,15 @@ impl Arena {
             Some(noble_kernel::words::VariableKind::Stack) => Ok(Variable::Stack(attempt!(
                 self.add(Term::Hole(Sort::Stack), span, meter)
             ))),
-            Some(noble_kernel::words::VariableKind::Effect) => Ok(Variable::Effect),
+            Some(noble_kernel::words::VariableKind::Effect) => {
+                if self.effectful {
+                    Ok(Variable::EffectValue(attempt!(
+                        self.effect_hole(span, meter)
+                    )))
+                } else {
+                    Ok(Variable::Effect)
+                }
+            }
             None => Err(crate::internal(span)),
         }
     }
@@ -252,7 +283,9 @@ fn pure_effect(
         Some(noble_kernel::shapes::EffectSlot::Var(variable)) => {
             match attempt!(variable_at(variables, variable.0, span)) {
                 Variable::Effect => Ok(()),
-                Variable::Value(_) | Variable::Stack(_) => Err(crate::internal(span)),
+                Variable::Value(_) | Variable::Stack(_) | Variable::EffectValue(_) => {
+                    Err(crate::internal(span))
+                }
             }
         }
         Some(noble_kernel::shapes::EffectSlot::Effect(_)) => Err(crate::Diagnostic::new(

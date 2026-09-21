@@ -19,7 +19,6 @@ inductive Ty where
   | sum : Ty → Ty → Ty
   | list : Ty → Ty
   | program : List Ty → List Ty → Ty
-  deriving Repr
 
 mutual
   inductive Value where
