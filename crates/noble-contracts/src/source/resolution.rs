@@ -1,3 +1,8 @@
+#![expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-maintainers; resolution rewrites only freshly parsed preparation-owned word nodes into call targets and advances bounded comparison worklists/meter; source bytes and the borrowed committed definitions/namespace remain unchanged."
+)]
+
 mod comparison;
 
 pub(super) fn resolve(

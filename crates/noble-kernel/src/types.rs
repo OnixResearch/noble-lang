@@ -165,6 +165,15 @@ pub enum Ty {
     Text,
     /// Inert syntax produced by `reflect`.
     Syntax,
+    /// An opaque inert contract descriptor. Supplied by the contract profile;
+    /// never constructed by a source word and never data-bearing.
+    Contract,
+    /// An opaque inert evidence reference. Possession names an accepted
+    /// evidence entry; it does not establish acceptance by itself.
+    Evidence,
+    /// An opaque inert certified-program companion. It carries a subject
+    /// program plus inert contract and evidence references.
+    Certified,
     /// A product of two payloads.
     Pair(alloc::boxed::Box<Ty>, alloc::boxed::Box<Ty>),
     /// A sum of two payloads.
@@ -223,7 +232,15 @@ impl Ty {
                     work.push(*right);
                 }
                 Ty::List(item) => work.push(*item),
-                Ty::Unit | Ty::Bool | Ty::I64 | Ty::Text | Ty::Syntax | Ty::Program(_, _, _) => {}
+                Ty::Unit
+                | Ty::Bool
+                | Ty::I64
+                | Ty::Text
+                | Ty::Syntax
+                | Ty::Contract
+                | Ty::Evidence
+                | Ty::Certified
+                | Ty::Program(_, _, _) => {}
             }
         }
         is_data

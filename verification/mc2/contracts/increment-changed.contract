@@ -1,0 +1,6 @@
+(contract 1 increment
+  (input (x I64))
+  (output (y I64))
+  (program [ 2 + ])
+  (requires true)
+  (ensures (eq (out y) (add (in x) 1))))

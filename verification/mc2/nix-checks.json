@@ -1,0 +1,243 @@
+{
+  "schema": "noble-mc2-nix-checks/v1",
+  "result": "passed",
+  "scope": "All thirteen required Nix checks: eleven production gates on frozen source/policy inputs, then documents and Cairn on the completed dated archive and final evidence index.",
+  "checks": {
+    "boundary-controls": {
+      "result": "passed",
+      "derivation": "/nix/store/35airc8a8bcg6ki6c7s6a3i2p7a6ic48-noble-boundary-controls.drv",
+      "output": "/nix/store/c9nlc2l7kdyamra4ah7pic35qhc7f721-noble-boundary-controls"
+    },
+    "rust-tests": {
+      "result": "passed",
+      "derivation": "/nix/store/4cawhgj9avyizjh9670js5kj11iphfb5-noble-rust-tests.drv",
+      "output": "/nix/store/b170x874bnm2gla3s268mdz4bvk50rzx-noble-rust-tests"
+    },
+    "clippy": {
+      "result": "passed",
+      "derivation": "/nix/store/5dq0ikprcc5sl6cw1wxcnkqmhq8z9wv6-noble-clippy.drv",
+      "output": "/nix/store/xg82hyf5drf1qqqn50fga0faf246fdm3-noble-clippy"
+    },
+    "format": {
+      "result": "passed",
+      "derivation": "/nix/store/5fbnhf28x93ny86nm1lq7mymxdj7c7pg-noble-format.drv",
+      "output": "/nix/store/ggxv6q4dd4i114fhy85bvwhid7zzbnch-noble-format"
+    },
+    "tool-versions": {
+      "result": "passed",
+      "derivation": "/nix/store/7mypcyybr841zljwiaqrvl3z1gpml6j2-noble-tool-versions.drv",
+      "output": "/nix/store/wp4rw4k5apyvi3mgah0wnd8zdcs1v6iq-noble-tool-versions"
+    },
+    "octet": {
+      "result": "passed",
+      "derivation": "/nix/store/hj1lbaayrjg1f19yayvwb95vd72pl4i7-noble-octet-deny-all.drv",
+      "output": "/nix/store/hgylkwgnwx914800p43n8vzhhbyb0agv-noble-octet-deny-all"
+    },
+    "policy": {
+      "result": "passed",
+      "derivation": "/nix/store/l12m7qm2ispzq20qx2vhzld5vpawhigw-noble-policy-freshness.drv",
+      "output": "/nix/store/jys2369g8nzcva6ygbxr29cysqryzdyg-noble-policy-freshness"
+    },
+    "tool-overrides": {
+      "result": "passed",
+      "derivation": "/nix/store/ppz2zdz1lz2h95qc6l8vkdd8y72lvv5m-noble-tool-overrides.drv",
+      "output": "/nix/store/cn08iwzlarmdng3wi04jf57zd8d4y233-noble-tool-overrides"
+    },
+    "tool-selection": {
+      "result": "passed",
+      "derivation": "/nix/store/rldqvmra3jcgi3myqy0djv5331ys079m-noble-tool-selection.drv",
+      "output": "/nix/store/a3mbjilq3aicw4kwh19q4a13s2qshaph-noble-tool-selection"
+    },
+    "native-assurance": {
+      "result": "passed",
+      "derivation": "/nix/store/snwc8qcv4rzv7h74mwpvwv40pvq7vwgv-noble-native-assurance.drv",
+      "output": "/nix/store/w96whw88mmwxx40xqp5x65cjhlkimfa7-noble-native-assurance"
+    },
+    "source-coverage": {
+      "result": "passed",
+      "derivation": "/nix/store/wvnvrb243fqg5b9chgjrdhxg8kf12f2i-noble-source-coverage.drv",
+      "output": "/nix/store/2s775hh6z5ks52pfk326c04cwbmjkl91-noble-source-coverage"
+    },
+    "cairn": {
+      "result": "passed",
+      "derivation": "/nix/store/16h7v086a6silaj5l7xc6d5bby25hv5m-noble-cairn.drv",
+      "output": "/nix/store/xl5jlxphgfqylkvincarahzv8q7zayv3-noble-cairn"
+    },
+    "documents": {
+      "result": "passed",
+      "derivation": "/nix/store/743adk8nalkmn3wvzlgmzk1nqihhmxh1-noble-documents.drv",
+      "output": "/nix/store/1q64drihk06dl1jcwd2m817h8lq091ki-noble-documents"
+    }
+  },
+  "production": {
+    "source": "/nix/store/wmranaq69cawcvd5zvnnbv1digrrb7lw-source",
+    "command": {
+      "label": "runtime-aligned-nix-production-checks",
+      "executable": "nix",
+      "args": [
+        "build",
+        "--out-link",
+        "/home/brittonr/git/noble-mc2-evidence-20260923/nix-production-runtime-aligned",
+        "--keep-going",
+        "--print-out-paths",
+        "-L",
+        "--option",
+        "min-free",
+        "0",
+        "--option",
+        "max-free",
+        "0",
+        "--option",
+        "builders",
+        "",
+        ".#checks.x86_64-linux.boundary-controls",
+        ".#checks.x86_64-linux.tool-selection",
+        ".#checks.x86_64-linux.tool-versions",
+        ".#checks.x86_64-linux.tool-overrides",
+        ".#checks.x86_64-linux.format",
+        ".#checks.x86_64-linux.rust-tests",
+        ".#checks.x86_64-linux.clippy",
+        ".#checks.x86_64-linux.policy",
+        ".#checks.x86_64-linux.octet",
+        ".#checks.x86_64-linux.source-coverage",
+        ".#checks.x86_64-linux.native-assurance"
+      ],
+      "cwd": "/home/brittonr/git/noble",
+      "environment": {},
+      "started_at": "2026-09-23T20:02:12.627Z",
+      "stdout": "runtime-aligned-nix-production-checks.stdout",
+      "stderr": "runtime-aligned-nix-production-checks.stderr",
+      "exit": 0,
+      "finished_at": "2026-09-23T20:04:01.869Z"
+    },
+    "raw": "quality.tar.xz:nix",
+    "canonical_implementation_source_revision": "sha256:2de39d671b9e8bca22e49bd5ff608ca63d7d7cef9bc67ee1f942518a59011d3c",
+    "input_correspondence": {
+      "compared": 514,
+      "byte_identical": 511,
+      "differences": [
+        {
+          "path": "proofs/m2/NobleKernel.lean",
+          "kind": "excluded-or-absent-in-production-nix-snapshot"
+        },
+        {
+          "path": "proofs/m3/NobleKernel.lean",
+          "kind": "excluded-or-absent-in-production-nix-snapshot"
+        },
+        {
+          "path": "verification/m4/extraction-lock.json",
+          "kind": "different",
+          "nix_sha256": "deb822f06a5454467fb28ca6cd6cc2d7af033c5f77f1799279a59ce6a9e91c9f",
+          "canonical_sha256": "47d7c1491b66d09ee7cba13e78e74537184af14f2c714b59dea1d68e4c28cd05"
+        }
+      ],
+      "explanation": "The two NobleKernel.lean entry files are excluded by the existing flake source filter. The shared reviewed extraction lock was subsequently renewed and independently checked; every other canonical implementation input, including all production Rust/runtime, proof and reviewed-policy files, matches byte-for-byte."
+    }
+  },
+  "closeout": {
+    "source": "/nix/store/wf5yy8pwhh64y5clizyw0vlnbq8qcsrr-noble-mc2-closeout-source",
+    "source_projection": {
+      "excluded_generated_receipt": "verification/mc2/nix-checks.json",
+      "excluded_cache_components": [
+        ".git",
+        ".pi",
+        ".lake",
+        ".lake-packages",
+        ".octet",
+        "target",
+        "node_modules"
+      ],
+      "reason": "This generated result cannot recursively bind itself. Source, documentation, reviewed policies, canonical ledger, dated archive and final evidence index are otherwise included."
+    },
+    "command": {
+      "label": "final-nix-closed-tree-cache-nixos",
+      "command": [
+        "nix",
+        "build",
+        "--option",
+        "min-free",
+        "0",
+        "--option",
+        "max-free",
+        "0",
+        "--option",
+        "builders",
+        "",
+        "--option",
+        "substituters",
+        "https://cache.nixos.org",
+        "--impure",
+        "--no-link",
+        "--print-out-paths",
+        "--expr",
+        "let root = /home/brittonr/git/noble; source = builtins.path { path = root; name = \"noble-mc2-closeout-source\"; filter = path: type: !(builtins.elem (baseNameOf path) [\".git\" \".pi\" \".lake\" \".lake-packages\" \".octet\" \"target\" \"node_modules\"]) && toString path != toString root + \"/verification/mc2/nix-checks.json\"; }; flake = builtins.getFlake (builtins.unsafeDiscardStringContext (\"path:\" + toString source)); in with flake.checks.x86_64-linux; [ documents cairn ]"
+      ],
+      "cwd": "/home/brittonr/git/noble",
+      "environment": {
+        "NIX_CONFIG": "min-free = 0\nmax-free = 0\nbuilders =\nsubstituters = https://cache.nixos.org\n"
+      },
+      "started_at": "2026-09-23T21:35:20.449Z",
+      "stdout": "/home/brittonr/git/noble-mc2-evidence-20260923/final-nix-closed-tree-cache-nixos.stdout",
+      "stderr": "/home/brittonr/git/noble-mc2-evidence-20260923/final-nix-closed-tree-cache-nixos.stderr",
+      "deadline_ms": 600000,
+      "pid": 2138017,
+      "exit": 0,
+      "timed_out": false,
+      "finished_at": "2026-09-23T21:35:43.273Z"
+    },
+    "source_binding_query_command": {
+      "label": "final-nix-closed-tree-source-query",
+      "command": [
+        "nix",
+        "eval",
+        "--option",
+        "min-free",
+        "0",
+        "--option",
+        "max-free",
+        "0",
+        "--option",
+        "builders",
+        "",
+        "--option",
+        "substituters",
+        "https://cache.nixos.org",
+        "--impure",
+        "--json",
+        "--expr",
+        "let root = /home/brittonr/git/noble; source = builtins.path { path = root; name = \"noble-mc2-closeout-source\"; filter = path: type: !(builtins.elem (baseNameOf path) [\".git\" \".pi\" \".lake\" \".lake-packages\" \".octet\" \"target\" \"node_modules\"]) && toString path != toString root + \"/verification/mc2/nix-checks.json\"; }; flake = builtins.getFlake (builtins.unsafeDiscardStringContext (\"path:\" + toString source)); in { inherit source; checks = builtins.mapAttrs (name: drv: { derivation = drv.drvPath; output = drv.outPath; }) { inherit (flake.checks.x86_64-linux) documents cairn; }; }"
+      ],
+      "cwd": "/home/brittonr/git/noble",
+      "environment": {
+        "NIX_CONFIG": "min-free = 0\nmax-free = 0\nbuilders =\nsubstituters = https://cache.nixos.org\n"
+      },
+      "started_at": "2026-09-23T21:35:20.449Z",
+      "stdout": "/home/brittonr/git/noble-mc2-evidence-20260923/final-nix-closed-tree-source-query.stdout",
+      "stderr": "/home/brittonr/git/noble-mc2-evidence-20260923/final-nix-closed-tree-source-query.stderr",
+      "deadline_ms": 600000,
+      "pid": 2138018,
+      "exit": 0,
+      "timed_out": false,
+      "finished_at": "2026-09-23T21:35:32.935Z"
+    },
+    "source_binding_query": {
+      "checks": {
+        "cairn": {
+          "derivation": "/nix/store/16h7v086a6silaj5l7xc6d5bby25hv5m-noble-cairn.drv",
+          "output": "/nix/store/xl5jlxphgfqylkvincarahzv8q7zayv3-noble-cairn"
+        },
+        "documents": {
+          "derivation": "/nix/store/743adk8nalkmn3wvzlgmzk1nqihhmxh1-noble-documents.drv",
+          "output": "/nix/store/1q64drihk06dl1jcwd2m817h8lq091ki-noble-documents"
+        }
+      },
+      "source": "/nix/store/wf5yy8pwhh64y5clizyw0vlnbq8qcsrr-noble-mc2-closeout-source"
+    },
+    "stdout": "/nix/store/xl5jlxphgfqylkvincarahzv8q7zayv3-noble-cairn\n/nix/store/1q64drihk06dl1jcwd2m817h8lq091ki-noble-documents\n",
+    "stderr": "waiting for another Nix process to finish fetching input 'path:/nix/store/wf5yy8pwhh64y5clizyw0vlnbq8qcsrr-noble-mc2-closeout-source'...\nwaiting for another Nix process to finish fetching input 'git+https://github.com/Nadrieril/tracing-tree?rev=841286bfffd3c2200810244506cd127013dbeff9&submodules=1'...\nwaiting for another Nix process to finish fetching input 'git+ssh://git@github.com/OnixResearch/bounded-exec.git?rev=44eb74eb639194665ee820562d5b2ce2c3ff6a94&submodules=1'...\nwaiting for another Nix process to finish fetching input 'git+ssh://git@github.com/OnixResearch/onix-artifact.git?rev=e41340bec587b6d049b5cc518ec7db925dde84be&submodules=1'...\nthese 2 derivations will be built:\n  /nix/store/16h7v086a6silaj5l7xc6d5bby25hv5m-noble-cairn.drv\n  /nix/store/743adk8nalkmn3wvzlgmzk1nqihhmxh1-noble-documents.drv\nbuilding '/nix/store/16h7v086a6silaj5l7xc6d5bby25hv5m-noble-cairn.drv'...\nbuilding '/nix/store/743adk8nalkmn3wvzlgmzk1nqihhmxh1-noble-documents.drv'...\n"
+  },
+  "non_claims": [
+    "Nix/documents/lifecycle validation is separate from actual MC2 runtime and Lean acceptance, which are retained in their own receipts.",
+    "No production rule, architecture limit, source-coverage obligation, sandbox or substitute-signature check was weakened."
+  ]
+}

@@ -41,7 +41,12 @@ fn step(
         noble_kernel::types::Ty::Unit | noble_kernel::types::Ty::Bool | noble_kernel::types::Ty::I64 | noble_kernel::types::Ty::Text => {},
         noble_kernel::types::Ty::Pair(a, b) | noble_kernel::types::Ty::Sum(a, b) => { traversal.pending.push(*a); traversal.pending.push(*b); }
         noble_kernel::types::Ty::List(item) => traversal.pending.push(*item),
-        noble_kernel::types::Ty::Program(_, _, _) | noble_kernel::types::Ty::Syntax | noble_kernel::types::Ty::Resource(_) => return Err(crate::Diagnostic::new(crate::DiagnosticKind::Unsupported, span, "eq operands and maps input/result must be scalar or structural data, without nested Program, Syntax, or resources")),
+        noble_kernel::types::Ty::Program(_, _, _)
+        | noble_kernel::types::Ty::Syntax
+        | noble_kernel::types::Ty::Contract
+        | noble_kernel::types::Ty::Evidence
+        | noble_kernel::types::Ty::Certified
+        | noble_kernel::types::Ty::Resource(_) => return Err(crate::Diagnostic::new(crate::DiagnosticKind::Unsupported, span, "eq operands and maps input/result must be scalar or structural data, without nested Program, Syntax, companion, or resource types")),
     }
     Ok(())
 }

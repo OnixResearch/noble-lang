@@ -48,6 +48,11 @@
   (if (i32.or (i32.eq (local.get $tag) (i32.const 4)) (i32.eq (local.get $tag) (i32.const 10))) (then
    (local.set $leaves (i32.add (local.get $leaves) (call $n (local.get $h))))
    (local.set $depth (i32.add (local.get $depth) (call $w (local.get $h))))))
+  ;; A companion's semantic payload is its subject program; count it like a
+  ;; captured program and never traverse it as a separate value.
+  (if (i32.eq (local.get $tag) (i32.const 16)) (then
+   (local.set $leaves (i32.add (local.get $leaves) (call $n (local.get $h))))
+   (local.set $depth (i32.add (local.get $depth) (call $w (local.get $h))))))
   (if (i32.gt_u (local.get $depth) (local.get $max_depth)) (then (local.set $max_depth (local.get $depth))))
   (if (i32.gt_u (local.get $leaves) (global.get $recipe_limit)) (then (call $quota (i32.const 2)) (br $done)))
   (if (i32.gt_u (local.get $max_depth) (global.get $depth_limit)) (then (call $quota (i32.const 3)) (br $done)))

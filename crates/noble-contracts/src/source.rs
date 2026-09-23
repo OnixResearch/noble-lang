@@ -149,6 +149,19 @@ impl Session {
         self.generation
     }
 
+    /// Consume a preparation as an explicit deterministic namespace transition.
+    ///
+    /// Generation, host configuration, and complete declaration history must
+    /// match; these checks and the next-generation check precede every mutation,
+    /// so any returned error leaves the session unchanged. A successful
+    /// declaration appends its owned definition and length-prefixed source
+    /// history together. Every successful commit advances generation once,
+    /// including executable submissions, which leave definitions/history intact.
+    /// Host configuration is unchanged; no submission or host code is executed.
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-maintainers; commit is the explicit owned namespace publication transition, not preparation scratch: snapshot and generation checks precede mutation, a declaration appends its definition/history, and every success advances generation once without executing guest or host code."
+    )]
     pub fn commit(&mut self, prepared: Prepared) -> Result<(), Error> {
         let span = crate::Span { start: 0, end: 0 };
         if prepared.generation != self.generation

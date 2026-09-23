@@ -1,14 +1,122 @@
 {
   "revision": "0.1.0-draft.5",
   "milestones": [
-    {"id": "M0", "name": "canonical-draft", "depends_on": [], "status": "specified"},
-    {"id": "M1", "name": "workspace", "depends_on": ["M0"], "status": "completed", "completion_record": "../.cairn/archive/2026-09-15-m1-workspace/tasks.md", "required_requirements": ["VT-SCOPE-01", "VT-SCOPE-02", "VT-SCOPE-03", "VT-SCOPE-04", "VT-SCOPE-05", "VT-CI-05", "VT-PIN-01", "VT-PIN-02", "VT-NATIVE-01", "VT-NATIVE-02", "VT-NATIVE-03", "VT-OCTET-01", "VT-OCTET-02", "VT-OCTET-03", "EV-BIND-01", "EV-TIER-01"]},
-    {"id": "M2", "name": "checker-proof-feasibility", "depends_on": ["M1"], "status": "completed", "completion_record": "../.cairn/archive/2026-09-18-m2-checker-feasibility/tasks.md", "required_requirements": ["B-CHECK-06", "B-CHECK-07", "B-DIAG-01", "B-IMPL-02", "B-IMPL-03", "VT-AENEAS-01", "VT-AENEAS-04", "VT-SCOPE-05", "VT-CI-05"]},
-    {"id":"M3","name":"wasm-feasibility","depends_on":["M1"],"status":"completed","required_requirements":["BE-COMPARE-01","BE-CONFIG-01","BE-DYNAMIC-01","BE-ARITY-01","BE-REFLECT-01","BE-LIMIT-01","BE-REPORT-01"],"comparison":{"candidates":["wasm-gc","managed-linear-memory"],"selected_backend":"managed-linear-memory","component_probe_blocks_m3":false,"evidence":[{"kind":"test","subject":"M3-backend-comparison","claim":"Both candidates passed the full bounded comparison; managed linear memory is selected for observable arena accounting and no required WasmGC feature, not performance superiority.","revision":"0.1.0-draft.5","source_revision":"sha256:291a87c00f9f9bd8960c83bf6201342ee4de49fbb647a6f37d3d2bcfe4f2c446","result":"passed","configuration":{"receipt":"../verification/m3-wasm/evidence.json","raw_report":"../verification/m3-wasm/runtime.tar.gz:report.json","workload_sha256":"5a5a75c990ce2b441bd1b467f9be69b8c294fc0fb9c3c2370b22df5368db6968","representations":["wasm-gc","managed-linear-memory"],"optimizations":["off","on"],"scope":"m3-resource-free-bounded-compiled-program-experiment"},"assumptions":["Pinned Nix/Rust build, owned WAT runtime, wasm-tools, Binaryen, Node/V8 and host oracles are trusted.","Exact declared variants and quota/cleanup controls only; not a general M4 compiler or whole-language conformance.","Tests do not discharge PO-17, PO-18 or SO-07; physical GC and isolated engine memory remain unknown."]}]},"completion_record":"../verification/m3-wasm/evidence.json","lifecycle_record":"../.cairn/archive/2026-09-20-m3-wasm-feasibility/tasks.md"},
+    {
+      "id": "M0",
+      "name": "canonical-draft",
+      "depends_on": [],
+      "status": "specified"
+    },
+    {
+      "id": "M1",
+      "name": "workspace",
+      "depends_on": [
+        "M0"
+      ],
+      "status": "completed",
+      "completion_record": "../.cairn/archive/2026-09-15-m1-workspace/tasks.md",
+      "required_requirements": [
+        "VT-SCOPE-01",
+        "VT-SCOPE-02",
+        "VT-SCOPE-03",
+        "VT-SCOPE-04",
+        "VT-SCOPE-05",
+        "VT-CI-05",
+        "VT-PIN-01",
+        "VT-PIN-02",
+        "VT-NATIVE-01",
+        "VT-NATIVE-02",
+        "VT-NATIVE-03",
+        "VT-OCTET-01",
+        "VT-OCTET-02",
+        "VT-OCTET-03",
+        "EV-BIND-01",
+        "EV-TIER-01"
+      ]
+    },
+    {
+      "id": "M2",
+      "name": "checker-proof-feasibility",
+      "depends_on": [
+        "M1"
+      ],
+      "status": "completed",
+      "completion_record": "../.cairn/archive/2026-09-18-m2-checker-feasibility/tasks.md",
+      "required_requirements": [
+        "B-CHECK-06",
+        "B-CHECK-07",
+        "B-DIAG-01",
+        "B-IMPL-02",
+        "B-IMPL-03",
+        "VT-AENEAS-01",
+        "VT-AENEAS-04",
+        "VT-SCOPE-05",
+        "VT-CI-05"
+      ]
+    },
+    {
+      "id": "M3",
+      "name": "wasm-feasibility",
+      "depends_on": [
+        "M1"
+      ],
+      "status": "completed",
+      "required_requirements": [
+        "BE-COMPARE-01",
+        "BE-CONFIG-01",
+        "BE-DYNAMIC-01",
+        "BE-ARITY-01",
+        "BE-REFLECT-01",
+        "BE-LIMIT-01",
+        "BE-REPORT-01"
+      ],
+      "comparison": {
+        "candidates": [
+          "wasm-gc",
+          "managed-linear-memory"
+        ],
+        "selected_backend": "managed-linear-memory",
+        "component_probe_blocks_m3": false,
+        "evidence": [
+          {
+            "kind": "test",
+            "subject": "M3-backend-comparison",
+            "claim": "Both candidates passed the full bounded comparison; managed linear memory is selected for observable arena accounting and no required WasmGC feature, not performance superiority.",
+            "revision": "0.1.0-draft.5",
+            "source_revision": "sha256:291a87c00f9f9bd8960c83bf6201342ee4de49fbb647a6f37d3d2bcfe4f2c446",
+            "result": "passed",
+            "configuration": {
+              "receipt": "../verification/m3-wasm/evidence.json",
+              "raw_report": "../verification/m3-wasm/runtime.tar.gz:report.json",
+              "workload_sha256": "5a5a75c990ce2b441bd1b467f9be69b8c294fc0fb9c3c2370b22df5368db6968",
+              "representations": [
+                "wasm-gc",
+                "managed-linear-memory"
+              ],
+              "optimizations": [
+                "off",
+                "on"
+              ],
+              "scope": "m3-resource-free-bounded-compiled-program-experiment"
+            },
+            "assumptions": [
+              "Pinned Nix/Rust build, owned WAT runtime, wasm-tools, Binaryen, Node/V8 and host oracles are trusted.",
+              "Exact declared variants and quota/cleanup controls only; not a general M4 compiler or whole-language conformance.",
+              "Tests do not discharge PO-17, PO-18 or SO-07; physical GC and isolated engine memory remain unknown."
+            ]
+          }
+        ]
+      },
+      "completion_record": "../verification/m3-wasm/evidence.json",
+      "lifecycle_record": "../.cairn/archive/2026-09-20-m3-wasm-feasibility/tasks.md"
+    },
     {
       "id": "M4",
       "name": "end-to-end-core",
-      "depends_on": ["M2", "M3"],
+      "depends_on": [
+        "M2",
+        "M3"
+      ],
       "status": "completed",
       "scope": "Selected managed-linear-memory Core-Bootstrap only: source frontend, independent kernel acceptance, compiled Wasm execution and persistent sessions retaining compiled values and immutable namespace snapshots.",
       "implementation": "Source parsing/resolution, nonrecursive rank-1 definitions, monomorphic first-class programs, complete ordered interfaces/effects, runtime captures, compiled quote/compose/run, exact inert reflection, resource-free hosts, bounded preparation/runtime outcomes and scoped DX-10/DX-12 runtime workflows are implemented and accepted.",
@@ -25,18 +133,282 @@
         "runtime_archive": "../verification/m4/runtime.tar.gz",
         "assurance_archive": "../verification/m4/assurance.tar.gz"
       },
-      "non_claims": ["MC2", "M5", "live resources and components", "universal frontend/kernel/compiler/backend refinement", "PO-17/PO-18/SO-07 closure", "physical GC allocation/reclamation or isolated engine memory peaks"]
+      "non_claims": [
+        "MC2",
+        "M5",
+        "live resources and components",
+        "universal frontend/kernel/compiler/backend refinement",
+        "PO-17/PO-18/SO-07 closure",
+        "physical GC allocation/reclamation or isolated engine memory peaks"
+      ]
     },
-    {"id": "MC1", "name": "contract-frontend-and-rules", "depends_on": ["M2"], "status": "completed", "completion_record": "../verification/mc1/evidence.json", "scope": "experimental MC1-v1; not universal exporter correctness, runtime certified programs, or MC2", "required_requirements": ["VC-SCOPE-02", "VC-INPUT-01", "VC-INPUT-02", "VC-INPUT-03", "VC-INPUT-04", "VC-LIB-01", "VC-LIB-02", "VC-GATE-01", "VT-CONTRACT-01"]},
-    {"id": "MC2", "name": "first-class-certified-programs", "depends_on": ["MC1", "M4"], "status": "not-started", "required_requirements": ["VC-SCOPE-03", "VC-VALUE-01", "VC-VALUE-02", "VC-VALUE-03", "VC-VALUE-04", "VC-VALUE-05", "VC-USE-01", "VC-LIB-03", "VC-LIB-04", "VC-TOOL-01", "VC-TOOL-02", "VC-TOOL-03", "VC-TOOL-04", "VC-GATE-02", "VC-GATE-03", "VT-CONTRACT-02"]},
-    {"id": "MA1", "name": "exact-calculator-library", "depends_on": ["M4"], "status": "not-started", "entry_gates": ["declarations-and-modules", "iteration-or-recursion", "text-processing", "error-schemas", "budget-accounting"], "required_requirements": ["CALC-SCOPE-02", "CALC-NUM-01", "CALC-NUM-02", "CALC-NUM-03", "CALC-NUM-04", "CALC-NUM-05", "CALC-NUM-06", "CALC-LIMIT-01", "CALC-GATE-01"]},
-    {"id": "MA2", "name": "exact-calculator-application", "depends_on": ["MA1"], "status": "not-started", "entry_gates": ["definition-command-grammar", "expression-and-session-interfaces"], "required_requirements": ["CALC-SCOPE-01", "CALC-PARSE-01", "CALC-PARSE-02", "CALC-STATE-01", "CALC-STATE-02", "CALC-BOUND-01", "CALC-DISPLAY-01", "CALC-APPROX-01", "CALC-EVIDENCE-01", "CALC-EVIDENCE-02"]},
-    {"id": "MA3", "name": "calculator-AI-authoring-evaluation", "depends_on": ["MA2"], "status": "not-started", "entry_gates": ["authoring-tool-schema", "independent-benchmark-harness", "route-specific-language-support"], "required_requirements": ["CALC-AI-01", "CALC-AI-02", "CALC-AI-03", "CALC-AI-04", "CALC-EVIDENCE-01"]},
-    {"id": "M5", "name": "synchronous-components", "depends_on": ["M4"], "status": "not-started", "required_requirements": ["WI-WIT-07", "BE-RESOURCE-01", "BE-BOUNDARY-01", "RA-OWN-02", "VT-SCOPE-02", "VT-SCOPE-03", "H-AUTH-01", "H-AUTH-02", "H-AUTH-03", "H-AUTH-04", "H-RECEIPT-01", "H-RECEIPT-02"]},
-    {"id": "M6", "name": "native-async", "depends_on": ["M5"], "status": "not-started", "required_requirements": ["RA-ASYNC-01", "RA-ASYNC-02", "RA-ASYNC-03", "RA-ASYNC-04", "RA-ASYNC-05", "DX-PROTOCOL-03"]},
-    {"id": "MW1", "name": "worker-interfaces-and-admission", "depends_on": ["M4", "M5"], "status": "not-started", "entry_gates": ["worker-interface-checker", "declared-schemas-and-modules", "preparation-service", "package-encoding", "bounded-execution-profile"], "required_requirements": ["K-PROG-09", "K-PROG-10", "K-EFFECT-05", "K-CHECK-06", "K-CHECK-07", "P-ROUND-01", "P-ROUND-02", "P-PACK-01", "P-PACK-02", "DX-MODULE-03", "DX-MODULE-04", "DX-TYPE-03", "DX-TYPE-04", "H-LIMIT-02", "H-LIMIT-03", "H-OUTCOME-01", "H-OUTCOME-02", "H-AUTH-01", "H-AUTH-02", "H-AUTH-03", "H-AUTH-04", "H-RECEIPT-01", "H-RECEIPT-02"]},
-    {"id": "MW2", "name": "worker-cancellation-slice", "depends_on": ["MW1", "M6"], "status": "not-started", "entry_gates": ["native-async-interfaces"], "required_requirements": ["RA-ASYNC-02", "RA-ASYNC-03", "RA-ASYNC-04", "RA-ASYNC-05", "H-OUTCOME-01", "H-OUTCOME-02", "DX-PROTOCOL-03", "H-AUTH-03", "H-RECEIPT-02"]},
-    {"id": "M7", "name": "syndicate-profile", "depends_on": ["M5"], "conditional_dependencies": [{"condition": "uses-native-async", "id": "M6"}], "status": "not-started"},
-    {"id": "M8", "name": "optional-higher-layers", "depends_on": ["M7"], "status": "not-started"}
+    {
+      "id": "MC1",
+      "name": "contract-frontend-and-rules",
+      "depends_on": [
+        "M2"
+      ],
+      "status": "completed",
+      "completion_record": "../verification/mc1/evidence.json",
+      "scope": "experimental MC1-v1; not universal exporter correctness, runtime certified programs, or MC2",
+      "required_requirements": [
+        "VC-SCOPE-02",
+        "VC-INPUT-01",
+        "VC-INPUT-02",
+        "VC-INPUT-03",
+        "VC-INPUT-04",
+        "VC-LIB-01",
+        "VC-LIB-02",
+        "VC-GATE-01",
+        "VT-CONTRACT-01"
+      ]
+    },
+    {
+      "id": "MC2",
+      "name": "first-class-certified-programs",
+      "depends_on": [
+        "MC1",
+        "M4"
+      ],
+      "status": "completed",
+      "scope": "Selected managed-linear-memory Core-Bootstrap with MC2-v1 companions: contract, evidence and certified cells are first-class runtime values whose admission is decided only by the deterministic Rust core in crates/noble-contracts/src/companion, with certified composition, family instantiation, guard-checked invocation and proof-required build admission. Not whole-language preservation, host effects, resource protocols or general termination.",
+      "implementation": "Runtime contract/evidence/certified cells with compiled observation and injection across kernel, Wasm backend and engine; Rust companion core with exact-statement admission, finite acyclic replay, guarded templates, composition and instantiation derivations; companion session driver with parking-based metered operations; noble build --require-proof; compiled Lean certificate library and versioned rule set.",
+      "acceptance_status": "passed",
+      "acceptance_scope": "All 15 canonical CONTRACT cases and every declared variant; 18 actual independent-checker/core controls; 84 Rust tests; strict semantic gate; fresh whole-crate reviewed extraction and independent check with 28 refusal controls; full uncapped 73-rule deny-all, 21-unit source/architecture coverage and source-bound MC1/M3/M4 regressions. Raw receipts retain the exact proof, tool and host boundaries.",
+      "verification_scope": "35 strict semantic roots, seven strict actual-source lemmas, two renderer-layout equations with disclosed native literal-size obligations, and 17 closed native source equations are separate lanes. All 312 companion bodies and 21 protocol roots are extraction-accounted, not universally refined. All 1319 authored production body refinement obligations and broad PO-16/20/21 remain open.",
+      "completion_record": "../verification/mc2/evidence.json",
+      "completion_record_status": "retained",
+      "lifecycle_record": "../.cairn/archive/2026-09-23-mc2-first-class-certified-programs/tasks.md",
+      "evidence_records": {
+        "runtime_acceptance": "../verification/mc2/acceptance.json",
+        "implementation": "../verification/mc2/implementation.json",
+        "extraction_lock": "../verification/m4/extraction-lock.json",
+        "runtime_archive": "../verification/mc2/runtime.tar.gz",
+        "extraction": "../verification/mc2/extraction.json",
+        "discovery_archive": "../verification/mc2/discovery.tar.gz",
+        "assurance_archive": "../verification/mc2/assurance.tar.gz",
+        "quality_archive": "../verification/mc2/quality.tar.xz"
+      },
+      "non_claims": [
+        "MA1-MA3",
+        "M5-M8",
+        "whole-language contract preservation",
+        "universal exporter or rule-set correctness",
+        "broad PO-16/20/21 closure",
+        "host effects and resource protocols"
+      ],
+      "required_requirements": [
+        "VC-SCOPE-03",
+        "VC-VALUE-01",
+        "VC-VALUE-02",
+        "VC-VALUE-03",
+        "VC-VALUE-04",
+        "VC-VALUE-05",
+        "VC-USE-01",
+        "VC-LIB-03",
+        "VC-LIB-04",
+        "VC-TOOL-01",
+        "VC-TOOL-02",
+        "VC-TOOL-03",
+        "VC-TOOL-04",
+        "VC-GATE-02",
+        "VC-GATE-03",
+        "VT-CONTRACT-02"
+      ]
+    },
+    {
+      "id": "MA1",
+      "name": "exact-calculator-library",
+      "depends_on": [
+        "M4"
+      ],
+      "status": "not-started",
+      "entry_gates": [
+        "declarations-and-modules",
+        "iteration-or-recursion",
+        "text-processing",
+        "error-schemas",
+        "budget-accounting"
+      ],
+      "required_requirements": [
+        "CALC-SCOPE-02",
+        "CALC-NUM-01",
+        "CALC-NUM-02",
+        "CALC-NUM-03",
+        "CALC-NUM-04",
+        "CALC-NUM-05",
+        "CALC-NUM-06",
+        "CALC-LIMIT-01",
+        "CALC-GATE-01"
+      ]
+    },
+    {
+      "id": "MA2",
+      "name": "exact-calculator-application",
+      "depends_on": [
+        "MA1"
+      ],
+      "status": "not-started",
+      "entry_gates": [
+        "definition-command-grammar",
+        "expression-and-session-interfaces"
+      ],
+      "required_requirements": [
+        "CALC-SCOPE-01",
+        "CALC-PARSE-01",
+        "CALC-PARSE-02",
+        "CALC-STATE-01",
+        "CALC-STATE-02",
+        "CALC-BOUND-01",
+        "CALC-DISPLAY-01",
+        "CALC-APPROX-01",
+        "CALC-EVIDENCE-01",
+        "CALC-EVIDENCE-02"
+      ]
+    },
+    {
+      "id": "MA3",
+      "name": "calculator-AI-authoring-evaluation",
+      "depends_on": [
+        "MA2"
+      ],
+      "status": "not-started",
+      "entry_gates": [
+        "authoring-tool-schema",
+        "independent-benchmark-harness",
+        "route-specific-language-support"
+      ],
+      "required_requirements": [
+        "CALC-AI-01",
+        "CALC-AI-02",
+        "CALC-AI-03",
+        "CALC-AI-04",
+        "CALC-EVIDENCE-01"
+      ]
+    },
+    {
+      "id": "M5",
+      "name": "synchronous-components",
+      "depends_on": [
+        "M4"
+      ],
+      "status": "not-started",
+      "required_requirements": [
+        "WI-WIT-07",
+        "BE-RESOURCE-01",
+        "BE-BOUNDARY-01",
+        "RA-OWN-02",
+        "VT-SCOPE-02",
+        "VT-SCOPE-03",
+        "H-AUTH-01",
+        "H-AUTH-02",
+        "H-AUTH-03",
+        "H-AUTH-04",
+        "H-RECEIPT-01",
+        "H-RECEIPT-02"
+      ]
+    },
+    {
+      "id": "M6",
+      "name": "native-async",
+      "depends_on": [
+        "M5"
+      ],
+      "status": "not-started",
+      "required_requirements": [
+        "RA-ASYNC-01",
+        "RA-ASYNC-02",
+        "RA-ASYNC-03",
+        "RA-ASYNC-04",
+        "RA-ASYNC-05",
+        "DX-PROTOCOL-03"
+      ]
+    },
+    {
+      "id": "MW1",
+      "name": "worker-interfaces-and-admission",
+      "depends_on": [
+        "M4",
+        "M5"
+      ],
+      "status": "not-started",
+      "entry_gates": [
+        "worker-interface-checker",
+        "declared-schemas-and-modules",
+        "preparation-service",
+        "package-encoding",
+        "bounded-execution-profile"
+      ],
+      "required_requirements": [
+        "K-PROG-09",
+        "K-PROG-10",
+        "K-EFFECT-05",
+        "K-CHECK-06",
+        "K-CHECK-07",
+        "P-ROUND-01",
+        "P-ROUND-02",
+        "P-PACK-01",
+        "P-PACK-02",
+        "DX-MODULE-03",
+        "DX-MODULE-04",
+        "DX-TYPE-03",
+        "DX-TYPE-04",
+        "H-LIMIT-02",
+        "H-LIMIT-03",
+        "H-OUTCOME-01",
+        "H-OUTCOME-02",
+        "H-AUTH-01",
+        "H-AUTH-02",
+        "H-AUTH-03",
+        "H-AUTH-04",
+        "H-RECEIPT-01",
+        "H-RECEIPT-02"
+      ]
+    },
+    {
+      "id": "MW2",
+      "name": "worker-cancellation-slice",
+      "depends_on": [
+        "MW1",
+        "M6"
+      ],
+      "status": "not-started",
+      "entry_gates": [
+        "native-async-interfaces"
+      ],
+      "required_requirements": [
+        "RA-ASYNC-02",
+        "RA-ASYNC-03",
+        "RA-ASYNC-04",
+        "RA-ASYNC-05",
+        "H-OUTCOME-01",
+        "H-OUTCOME-02",
+        "DX-PROTOCOL-03",
+        "H-AUTH-03",
+        "H-RECEIPT-02"
+      ]
+    },
+    {
+      "id": "M7",
+      "name": "syndicate-profile",
+      "depends_on": [
+        "M5"
+      ],
+      "conditional_dependencies": [
+        {
+          "condition": "uses-native-async",
+          "id": "M6"
+        }
+      ],
+      "status": "not-started"
+    },
+    {
+      "id": "M8",
+      "name": "optional-higher-layers",
+      "depends_on": [
+        "M7"
+      ],
+      "status": "not-started"
+    }
   ]
 }

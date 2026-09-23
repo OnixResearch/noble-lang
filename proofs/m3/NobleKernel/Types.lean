@@ -37,7 +37,7 @@ def types.EffSet := alloc.vec.Vec types.EffId
 def types.ResourceKind := Std.U32
 
 /-- [noble_kernel::types::Ty]
-    Source: 'crates/noble-kernel/src/types.rs', lines 157:0-182:1
+    Source: 'crates/noble-kernel/src/types.rs', lines 157:0-191:1
     Visibility: public -/
 @[discriminant isize]
 inductive types.Ty where
@@ -46,6 +46,9 @@ inductive types.Ty where
 | I64Type : types.Ty
 | TextType : types.Ty
 | SyntaxType : types.Ty
+| ContractType : types.Ty
+| EvidenceType : types.Ty
+| CertifiedType : types.Ty
 | PairType : types.Ty → types.Ty → types.Ty
 | SumType : types.Ty → types.Ty → types.Ty
 | ListType : types.Ty → types.Ty
@@ -188,7 +191,7 @@ inductive words.VariableKind where
 | Effect : words.VariableKind
 
 /-- [noble_kernel::shapes::EffectSlot]
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 74:0-79:1
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 80:0-85:1
     Visibility: public -/
 @[discriminant isize]
 inductive shapes.EffectSlot where
@@ -196,7 +199,7 @@ inductive shapes.EffectSlot where
 | Var : words.Variable → shapes.EffectSlot
 
 /-- [noble_kernel::shapes::Pattern]
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 26:0-55:1
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 26:0-61:1
     Visibility: public -/
 @[discriminant isize]
 inductive shapes.Pattern where
@@ -205,6 +208,9 @@ inductive shapes.Pattern where
 | I64Pattern : shapes.Pattern
 | TextPattern : shapes.Pattern
 | SyntaxPattern : shapes.Pattern
+| ContractPattern : shapes.Pattern
+| EvidencePattern : shapes.Pattern
+| CertifiedPattern : shapes.Pattern
 | PairPattern : shapes.Pattern → shapes.Pattern → shapes.Pattern
 | SumPattern : shapes.Pattern → shapes.Pattern → shapes.Pattern
 | ListPattern : shapes.Pattern → shapes.Pattern
@@ -390,7 +396,7 @@ def words.Scheme.subst_effects.closure := Unit
 def words.Scheme.subst_stack.closure := Unit
 
 /-- [noble_kernel::words::subst::Task]
-    Source: 'crates/noble-kernel/src/words/subst.rs', lines 18:0-23:1 -/
+    Source: 'crates/noble-kernel/src/words/subst.rs', lines 17:0-22:1 -/
 @[discriminant isize]
 inductive words.subst.Task where
 | Part : shapes.Pattern → words.subst.Task
@@ -399,13 +405,13 @@ inductive words.subst.Task where
 | Emit : alloc.vec.Vec types.Ty → words.subst.Task
 
 /-- [noble_kernel::words::subst::Walk]
-    Source: 'crates/noble-kernel/src/words/subst.rs', lines 26:0-31:1 -/
+    Source: 'crates/noble-kernel/src/words/subst.rs', lines 25:0-30:1 -/
 structure words.subst.Walk where
   work : alloc.vec.Vec words.subst.Task
   segments : alloc.vec.Vec (alloc.vec.Vec types.Ty)
 
 /-- [noble_kernel::words::subst::StepResult]
-    Source: 'crates/noble-kernel/src/words/subst.rs', lines 34:0-41:1 -/
+    Source: 'crates/noble-kernel/src/words/subst.rs', lines 33:0-40:1 -/
 @[discriminant isize]
 inductive words.subst.StepResult where
 | Continue : words.subst.StepResult
@@ -457,7 +463,7 @@ inductive untrusted.Outcome where
 | InternalFailure : untrusted.Outcome
 
 /-- [noble_kernel::shapes::Defect]
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 83:0-88:1
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 89:0-94:1
     Visibility: public -/
 @[discriminant isize]
 inductive shapes.Defect where
@@ -465,7 +471,7 @@ inductive shapes.Defect where
 | KindMismatch : shapes.Defect
 
 /-- [noble_kernel::shapes::Step]
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 94:0-98:1 -/
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 100:0-104:1 -/
 @[discriminant isize]
 inductive shapes.Step where
 | Pattern : shapes.Pattern → shapes.Step

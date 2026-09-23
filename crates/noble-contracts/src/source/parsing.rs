@@ -1,3 +1,8 @@
+#![expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-maintainers; parsing mutates only its fresh scanner, syntax arena/quotation frames, and preparation-owned meter under byte/node/depth/work bounds; declaration extraction moves an owned quotation body, while borrowed source bytes and the committed namespace remain unchanged."
+)]
+
 struct Frame {
     body: alloc::vec::Vec<u32>,
     start: u32,

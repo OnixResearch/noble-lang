@@ -6,7 +6,7 @@
   "canonical_spec": "README.md",
   "canonical_family_exists": true,
   "compiler_exists": true,
-  "compiler_scope": "Core-Bootstrap source parsing, immutable resolution and rank-1 named inference produce finite untrusted candidates; independent kernel acceptance precedes selected managed-linear-memory Wasm emission. Experimental MC1-v1 and the bounded M3 comparison remain separate scopes.",
+  "compiler_scope": "Core-Bootstrap source parsing, immutable resolution and rank-1 named inference produce finite untrusted candidates; independent kernel acceptance precedes selected managed-linear-memory Wasm emission. Experimental MC1-v1 and the bounded M3 comparison remain separate scopes. MC2-v1 adds exact companion admission and proof-required builds under separately recorded source and host assumptions.",
   "runtime_exists": true,
   "proof_implementation_exists": true,
   "verification_policy": {
@@ -18,16 +18,18 @@
     "verus": "reviewed-non-kernel-exceptions-only",
     "coverage_inventory": "reviewed-with-open-refinement",
     "coverage_record": "../policy/source-inventory.json",
-    "body_obligations": 887,
-    "open_refinement_obligations": 887,
-    "coverage_scope": "Complete all-target source classification; all 887 authored production bodies remain open refinement obligations. Generated and structural items are accounted separately, not treated as proved bodies.",
+    "body_obligations": 1319,
+    "open_refinement_obligations": 1319,
+    "coverage_scope": "Complete 21-unit all-target source classification; all 1319 authored production bodies remain open refinement obligations. The 977 generated and 549 structural paths are accounted separately, not treated as proved bodies.",
     "extraction_scope": "Whole kernel, frontend and compiler actual-Rust Charon/Aeneas/Lean extraction and dependency/axiom accounting; independent frontend and compiler environments avoid pinned Aeneas discriminant collisions. Successful extraction and compiled audits are not universal refinement.",
     "m4_extraction_acceptance": "passed-independent-whole-crate-check-and-27-refusal-controls",
+    "mc2_extraction_acceptance": "passed-independent-whole-crate-check-and-28-refusal-controls",
     "independent_proof_records": [
       "../verification/m3-coverage.json",
       "../verification/mc1/implementation.json",
       "../verification/m3-wasm/implementation.json",
-      "../verification/m4/implementation.json"
+      "../verification/m4/implementation.json",
+      "../verification/mc2/extraction.json"
     ],
     "approved_exceptions": []
   },
@@ -38,9 +40,16 @@
     "ordinary_programs_require_proofs": false,
     "ordinary_execution_runs_proof_search": false,
     "concrete_grammar": "experimental-mc1-v1-s-expression",
-    "companion_representation": "MC1-erased-typed-IR; first-class-runtime-representation-open",
-    "portable_encoding": "open",
-    "implementation_scope": "optional pure source contracts, exact Lean obligations, reusable rules, verification/explanation CLI; MC2 excluded",
+    "companion_representation": "MC2-v1 runtime contract/evidence/certified cells with compiled observation and injection; producer status text carries no authority",
+    "portable_encoding": "runtime cell encoding implemented and executed; cross-host encoding remains open",
+    "implementation_scope": "optional pure source contracts, exact Lean obligations, reusable rules, verification/explanation CLI, first-class certified programs, certified composition, family instantiation, guard-checked invocation and proof-required build admission",
+    "milestone": "MC2",
+    "implementation": "implemented",
+    "execution": "passed",
+    "execution_scope": "All 15 canonical CONTRACT cases and every declared variant execute against the actual frozen compiled implementation, including eighteen real independent-checker/core controls; all assertions pass.",
+    "acceptance": "passed",
+    "completion_record": "../verification/mc2/evidence.json",
+    "extraction_renewal": "passed-independent-source-bound-check",
     "claim_outcomes": [
       "proved",
       "disproved",
@@ -214,6 +223,79 @@
             "Pinned Lean, the source rule library, operating system and selected namespace/process-isolation tools remain trusted.",
             "Not MC2 delivery, universal implementation refinement or backend correspondence."
           ]
+        },
+        {
+          "claim": "All fifteen canonical MC2 CONTRACT cases and every declared variant pass on the frozen compiled runtime, including eighteen actual isolated independent-checker/core controls, real statement mismatch, registry/replay exhaustion, no-service execution and optimized aggregate-tail/handle preservation.",
+          "subject": "program-contracts",
+          "revision": "0.1.0-draft.5",
+          "kind": "test",
+          "result": "passed",
+          "source_revision": "sha256:2de39d671b9e8bca22e49bd5ff608ca63d7d7cef9bc67ee1f942518a59011d3c",
+          "configuration": {
+            "fragment": "MC2-v1-Core-Bootstrap",
+            "receipt": "../verification/mc2/acceptance.json",
+            "receipt_sha256": "74ee78c0f3c6ba5e520912eda0488a57f46888e80bfc67ea153a61ab7f631afc",
+            "implementation": "../verification/mc2/implementation.json",
+            "completion_record": "../verification/mc2/evidence.json",
+            "binary_sha256": "a93e0a773196bd4c6888a5a0d05a15001a2cb362259683f3172234beca73ecb2",
+            "cases": 15,
+            "core_controls": 18,
+            "independent_checker_runs": 18,
+            "workload_sha256": "1d5393dc46a500a31a245b1f79d7a34813d18fdc933e9944b2e316012e26f810"
+          },
+          "assumptions": [
+            "Pinned compiler, translator, Lean kernel, Wasm assembler/optimizer/engine, sandbox and host OS remain explicit trusted tooling boundaries.",
+            "CheckObservation records are an explicit authentic-and-sound host-check boundary: the source-bound CLI runs the isolated independent Lean consumer over the exact statement and submitted bytes. Arbitrary host Rust can construct observations; constructor availability does not prove their authenticity or soundness.",
+            "Strict semantic certificate theorems and extracted finite-rule/template/release correspondences are separate audited scopes, not a universal CLI/parser/backend refinement theorem.",
+            "Actual execution and hostile admission/replay controls establish only the exact canonical workload retained in acceptance.json.",
+            "Admitted declarations and replay derivations carry partial correctness, never total correctness, host authority or execution fuel guarantees.",
+            "Bounded runtime acceptance is not universal Rust/Wasm preservation or closure of broad PO-16/20/21."
+          ]
+        },
+        {
+          "claim": "MC2-v1 retains 35 strict semantic roots, seven strict actual-source lemmas, two renderer-layout equations and seventeen separately native closed actual-source equations; fresh whole-crate extraction accounts for 312 companion bodies and 21 protocol roots and passes 28 refusal controls.",
+          "subject": "program-contracts",
+          "revision": "0.1.0-draft.5",
+          "kind": "aeneas-lean",
+          "result": "accepted",
+          "source_revision": "sha256:4e5305daffb7bfc10a239b339664c82134a360945018674ee49c8ef08bcf3c81",
+          "configuration": {
+            "fragment": "MC2-v1-named-companion-source-fragments",
+            "receipt": "../verification/mc2/extraction.json",
+            "receipt_sha256": "7aef47920468b34088657fb6715af23d0d9939dff6bffa63ca90181c4c0a8a80",
+            "reviewed_lock": "../verification/m4/extraction-lock.json",
+            "reviewed_lock_sha256": "47d7c1491b66d09ee7cba13e78e74537184af14f2c714b59dea1d68e4c28cd05",
+            "semantic_gate": "proofs/mc2/MC2Gate.lean",
+            "source_gate": "proofs/mc2/MC2ExtractionGate.lean",
+            "scope_ledger": "verification/mc2/assurance.tar.gz:proofs/proof-ledger-inputs-r3.json"
+          },
+          "assumptions": [
+            "Strict semantic/source roots admit only propext, Classical.choice and Quot.sound. Renderer literal-size obligations and seventeen native-evaluation equations retain separately inventoried dependencies.",
+            "Authentic-and-sound trusted-host check observations are an explicit assumption; an ordinary Rust observation constructor does not authenticate callers or prove checker soundness.",
+            "Pinned Rust/Charon/Aeneas/Lean, explicit standard-library models and five byte-unchanged inherited opaque kernel helpers remain boundaries.",
+            "Complete extraction/accounting and named finite source equations do not prove every production body or close broad PO-16/20/21."
+          ]
+        },
+        {
+          "claim": "The same frozen MC2 CLI passes all 36 MC1 consumer controls, all 18 M4 CORE cases and 11 controls plus DX-10/DX-12, and all four bounded M3 backend configurations.",
+          "subject": "program-contracts",
+          "revision": "0.1.0-draft.5",
+          "kind": "test",
+          "result": "passed",
+          "source_revision": "binary-sha256:a93e0a773196bd4c6888a5a0d05a15001a2cb362259683f3172234beca73ecb2",
+          "configuration": {
+            "completion_record": "../verification/mc2/evidence.json",
+            "raw": "../verification/mc2/assurance.tar.gz:regressions",
+            "binary_sha256": "a93e0a773196bd4c6888a5a0d05a15001a2cb362259683f3172234beca73ecb2",
+            "mc1_cases": 36,
+            "m4_core_cases": 18,
+            "m4_controls": 11,
+            "m3_configurations": 4
+          },
+          "assumptions": [
+            "Regressions retain their original bounded MC1, M3 and M4 scopes and selected tooling/host assumptions.",
+            "Not universal frontend, consumer, compiler or backend refinement."
+          ]
         }
       ]
     },
@@ -371,13 +453,13 @@
     "Only CORE-01 through CORE-18 and scoped DX-10/DX-12 are promoted by M4; other draft profiles retain their independently scoped evidence states",
     "No universal proof of the complete Rust checker, contract frontend, exporter, or CLI",
     "No stable language or component conformance",
-    "No whole-project verification claim; all 887 authored-production-body source-inventory refinement obligations remain open",
+    "No whole-project verification claim; all 1319 authored-production-body source-inventory refinement obligations remain open",
     "Managed linear memory implements the selected M4 resource-free Core-Bootstrap scope; no universal backend or physical-memory superiority claim",
     "M4 completion is scoped to resource-free Core-Bootstrap and its mandatory runtime workflows, not the full language or later milestones",
-    "No first-class runtime certified programs or MC2 delivery, live resources/components or M5 delivery",
+    "MC2-v1 is accepted only for the recorded resource-free Core-Bootstrap fragment; broad PO-16/20/21, universal host/backend correctness, live resources/components and M5 remain open.",
     "PO-17, PO-18 and SO-07 remain open; extraction, bounded tests and accounting do not establish universal frontend/kernel/compiler/backend refinement",
     "Physical GC allocation/reclamation and isolated engine memory peaks remain unknown",
     "No zerocopy dependency selected"
   ],
-  "runtime_scope": "Selected managed-linear-memory Core-Bootstrap source-to-kernel-to-Wasm execution and persistent compiled sessions, with explicit resource-free hosts, preparation limits and runtime quotas. All 18 CORE cases, 11 runtime controls and scoped DX-10/DX-12 runtime workflows pass; the two-representation M3 experiment remains separate regression evidence."
+  "runtime_scope": "Selected managed-linear-memory Core-Bootstrap source-to-kernel-to-Wasm execution and persistent compiled sessions, with explicit resource-free hosts, preparation limits and runtime quotas. All 18 CORE cases, 11 runtime controls and scoped DX-10/DX-12 runtime workflows pass; the two-representation M3 experiment remains separate regression evidence. MC2-v1 first-class contract/evidence/certified inputs, results, aggregates, composition, runtime-capture instantiation and guarded invocation pass all fifteen CONTRACT cases and declared variants."
 }

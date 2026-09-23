@@ -55,7 +55,7 @@ impl_def noble_kernel.contracts.Behavior.Insts.CoreCmpPartialEqBehavior :
 }
 
 /-- Trait implementation: [noble_kernel::shapes::impls::{impl core::cmp::PartialEq<noble_kernel::shapes::Pattern> for noble_kernel::shapes::Pattern}]
-    Source: 'crates/noble-kernel/src/shapes/impls.rs', lines 165:0-165:41
+    Source: 'crates/noble-kernel/src/shapes/impls.rs', lines 68:0-68:41
     Name pattern: [core::cmp::PartialEq<noble_kernel::shapes::Pattern, noble_kernel::shapes::Pattern>] -/
 @[reducible, rust_trait_impl
   "core::cmp::PartialEq<noble_kernel::shapes::Pattern, noble_kernel::shapes::Pattern>"]
@@ -68,7 +68,7 @@ impl_def noble_kernel.shapes.Pattern.Insts.CoreCmpPartialEqPattern :
 }
 
 /-- Trait implementation: [noble_kernel::shapes::{impl core::cmp::PartialEq<noble_kernel::shapes::EffectSlot> for noble_kernel::shapes::EffectSlot}]
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 73:23-73:32
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 79:23-79:32
     Name pattern: [core::cmp::PartialEq<noble_kernel::shapes::EffectSlot, noble_kernel::shapes::EffectSlot>] -/
 @[reducible, rust_trait_impl
   "core::cmp::PartialEq<noble_kernel::shapes::EffectSlot, noble_kernel::shapes::EffectSlot>"]
@@ -81,7 +81,7 @@ impl_def noble_kernel.shapes.EffectSlot.Insts.CoreCmpPartialEqEffectSlot :
 }
 
 /-- Trait implementation: [noble_kernel::types::impls::{impl core::cmp::PartialEq<noble_kernel::types::Ty> for noble_kernel::types::Ty}]
-    Source: 'crates/noble-kernel/src/types/impls.rs', lines 147:0-147:35
+    Source: 'crates/noble-kernel/src/types/impls.rs', lines 153:0-153:35
     Name pattern: [core::cmp::PartialEq<noble_kernel::types::Ty, noble_kernel::types::Ty>] -/
 @[reducible, rust_trait_impl
   "core::cmp::PartialEq<noble_kernel::types::Ty, noble_kernel::types::Ty>"]
@@ -320,6 +320,12 @@ def admission.root_types_loop.body
     | noble_kernel.types.Ty.TextType =>
       ok (done (core.result.Result.Err Diagnostic.Unsupported))
     | noble_kernel.types.Ty.SyntaxType =>
+      ok (done (core.result.Result.Err Diagnostic.Unsupported))
+    | noble_kernel.types.Ty.ContractType =>
+      ok (done (core.result.Result.Err Diagnostic.Unsupported))
+    | noble_kernel.types.Ty.EvidenceType =>
+      ok (done (core.result.Result.Err Diagnostic.Unsupported))
+    | noble_kernel.types.Ty.CertifiedType =>
       ok (done (core.result.Result.Err Diagnostic.Unsupported))
     | noble_kernel.types.Ty.PairType _ _ =>
       ok (done (core.result.Result.Err Diagnostic.Unsupported))
@@ -1017,7 +1023,7 @@ def emit.GC_STORAGE : Str :=
 @[global_simps, irreducible]
 def emit.LINEAR_STORAGE : Str :=
   toStr
-    ";; Cells occupy [65536, 262144): 4096 immutable records of exactly 48 bytes.\n;; Check the unsigned handle range before subtraction/multiplication can address memory.\n(func $linear_address (param $h i32) (result i32)\n  (if (i32.gt_u (i32.sub (local.get $h) (i32.const 1)) (i32.const 4095))\n    (then unreachable))\n  (i32.add\n    (i32.const 65536)\n    (i32.mul (i32.sub (local.get $h) (i32.const 1)) (i32.const 48))))\n\n;; A current cell has both its expected id and a live kind, never a zero object.\n(func $linear_live_address (param $h i32) (result i32)\n  (local $p i32)\n  (if (i32.gt_u (local.get $h) (global.get $heap_cursor))\n    (then unreachable))\n  (local.set $p (call $linear_address (local.get $h)))\n  (if (i32.ne (i32.load offset=4 (local.get $p)) (local.get $h))\n    (then unreachable))\n  (if (i32.gt_u\n        (i32.sub (i32.load (local.get $p)) (i32.const 1))\n        (i32.const 12))\n    (then unreachable))\n  (local.get $p))\n\n;; Nullable edges point only backward to existing cells, preserving acyclicity.\n(func $linear_child (param $child i32) (param $parent i32) (result i32)\n  (if (i32.eqz (local.get $child))\n    (then (return (i32.const 0))))\n  (if (i32.ge_u (local.get $child) (local.get $parent))\n    (then unreachable))\n  (drop (call $linear_live_address (local.get $child)))\n  (local.get $child))\n\n(func $storage_init\n  ;; Leave scratch and common accounting untouched; initially this range is empty.\n  (memory.fill\n    (i32.const 65536)\n    (i32.const 0)\n    (i32.shl (i32.sub (memory.size) (i32.const 1)) (i32.const 16))))\n\n(func $storage_ensure (param $h i32) (result i32)\n  (local $needed i32)\n  (local $current i32)\n  (if (i32.gt_u (i32.sub (local.get $h) (i32.const 1)) (i32.const 4095))\n    (then (return (i32.const 0))))\n  ;; ceil((65536 + h * 48) / 65536) is at most four, without i32 overflow.\n  (local.set $needed\n    (i32.add\n      (i32.const 1)\n      (i32.shr_u\n        (i32.add (i32.mul (local.get $h) (i32.const 48)) (i32.const 65535))\n        (i32.const 16))))\n  (local.set $current (memory.size))\n  (if (i32.ge_u (local.get $current) (local.get $needed))\n    (then (return (i32.const 1))))\n  ;; reserve charges only after this succeeds; failed growth publishes no cell.\n  (i32.ne\n    (memory.grow (i32.sub (local.get $needed) (local.get $current)))\n    (i32.const -1)))\n\n(func $storage_discard (param $h i32)\n  ;; Clear kind and id together. Pages remain allocated; handles are region-private.\n  (i64.store (call $linear_live_address (local.get $h)) (i64.const 0)))\n\n(func $new\n  (param $kind i32) (param $payload i64)\n  (param $a i32) (param $b i32) (param $c i32)\n  (param $x i32) (param $y i32) (param $z i32)\n  (param $w i32) (param $n i32)\n  (result i32)\n  (local $h i32)\n  (local $p i32)\n  (local.set $h (call $reserve))\n  ;; In particular, failed reservations must not inspect child handles.\n  (if (i32.eqz (local.get $h))\n    (then (return (i32.const 0))))\n  (local.set $p (call $linear_address (local.get $h)))\n  (if (i32.gt_u (i32.sub (local.get $kind) (i32.const 1)) (i32.const 12))\n    (then unreachable))\n  (local.set $a (call $linear_child (local.get $a) (local.get $h)))\n  (local.set $b (call $linear_child (local.get $b) (local.get $h)))\n  (local.set $c (call $linear_child (local.get $c) (local.get $h)))\n  (i64.store offset=8 (local.get $p) (local.get $payload))\n  (i32.store offset=16 (local.get $p) (local.get $a))\n  (i32.store offset=20 (local.get $p) (local.get $b))\n  (i32.store offset=24 (local.get $p) (local.get $c))\n  (i32.store offset=28 (local.get $p) (local.get $x))\n  (i32.store offset=32 (local.get $p) (local.get $y))\n  (i32.store offset=36 (local.get $p) (local.get $z))\n  (i32.store offset=40 (local.get $p) (local.get $w))\n  (i32.store offset=44 (local.get $p) (local.get $n))\n  ;; Publish the live header only after every immutable field is initialized.\n  (i32.store offset=4 (local.get $p) (local.get $h))\n  (i32.store (local.get $p) (local.get $kind))\n  (local.get $h))\n\n(func $kind (param $h i32) (result i32)\n  (i32.load (call $linear_live_address (local.get $h))))\n\n(func $payload (param $h i32) (result i64)\n  (i64.load offset=8 (call $linear_live_address (local.get $h))))\n\n(func $a (param $h i32) (result i32)\n  (call $linear_child\n    (i32.load offset=16 (call $linear_live_address (local.get $h)))\n    (local.get $h)))\n\n(func $b (param $h i32) (result i32)\n  (call $linear_child\n    (i32.load offset=20 (call $linear_live_address (local.get $h)))\n    (local.get $h)))\n\n(func $c (param $h i32) (result i32)\n  (call $linear_child\n    (i32.load offset=24 (call $linear_live_address (local.get $h)))\n    (local.get $h)))\n\n(func $x (param $h i32) (result i32)\n  (i32.load offset=28 (call $linear_live_address (local.get $h))))\n\n(func $y (param $h i32) (result i32)\n  (i32.load offset=32 (call $linear_live_address (local.get $h))))\n\n(func $z (param $h i32) (result i32)\n  (i32.load offset=36 (call $linear_live_address (local.get $h))))\n\n(func $w (param $h i32) (result i32)\n  (i32.load offset=40 (call $linear_live_address (local.get $h))))\n\n(func $n (param $h i32) (result i32)\n  (i32.load offset=44 (call $linear_live_address (local.get $h))))\n"
+    ";; Cells occupy [65536, 262144): 4096 immutable records of exactly 48 bytes.\n;; Check the unsigned handle range before subtraction/multiplication can address memory.\n(func $linear_address (param $h i32) (result i32)\n  (if (i32.gt_u (i32.sub (local.get $h) (i32.const 1)) (i32.const 4095))\n    (then unreachable))\n  (i32.add\n    (i32.const 65536)\n    (i32.mul (i32.sub (local.get $h) (i32.const 1)) (i32.const 48))))\n\n;; A current cell has both its expected id and a live kind, never a zero object.\n(func $linear_live_address (param $h i32) (result i32)\n  (local $p i32)\n  (if (i32.gt_u (local.get $h) (global.get $heap_cursor))\n    (then unreachable))\n  (local.set $p (call $linear_address (local.get $h)))\n  (if (i32.ne (i32.load offset=4 (local.get $p)) (local.get $h))\n    (then unreachable))\n  (if (i32.gt_u\n        (i32.sub (i32.load (local.get $p)) (i32.const 1))\n        (i32.const 15))\n    (then unreachable))\n  (local.get $p))\n\n;; Nullable edges point only backward to existing cells, preserving acyclicity.\n(func $linear_child (param $child i32) (param $parent i32) (result i32)\n  (if (i32.eqz (local.get $child))\n    (then (return (i32.const 0))))\n  (if (i32.ge_u (local.get $child) (local.get $parent))\n    (then unreachable))\n  (drop (call $linear_live_address (local.get $child)))\n  (local.get $child))\n\n(func $storage_init\n  ;; Leave scratch and common accounting untouched; initially this range is empty.\n  (memory.fill\n    (i32.const 65536)\n    (i32.const 0)\n    (i32.shl (i32.sub (memory.size) (i32.const 1)) (i32.const 16))))\n\n(func $storage_ensure (param $h i32) (result i32)\n  (local $needed i32)\n  (local $current i32)\n  (if (i32.gt_u (i32.sub (local.get $h) (i32.const 1)) (i32.const 4095))\n    (then (return (i32.const 0))))\n  ;; ceil((65536 + h * 48) / 65536) is at most four, without i32 overflow.\n  (local.set $needed\n    (i32.add\n      (i32.const 1)\n      (i32.shr_u\n        (i32.add (i32.mul (local.get $h) (i32.const 48)) (i32.const 65535))\n        (i32.const 16))))\n  (local.set $current (memory.size))\n  (if (i32.ge_u (local.get $current) (local.get $needed))\n    (then (return (i32.const 1))))\n  ;; reserve charges only after this succeeds; failed growth publishes no cell.\n  (i32.ne\n    (memory.grow (i32.sub (local.get $needed) (local.get $current)))\n    (i32.const -1)))\n\n(func $storage_discard (param $h i32)\n  ;; Clear kind and id together. Pages remain allocated; handles are region-private.\n  (i64.store (call $linear_live_address (local.get $h)) (i64.const 0)))\n\n(func $new\n  (param $kind i32) (param $payload i64)\n  (param $a i32) (param $b i32) (param $c i32)\n  (param $x i32) (param $y i32) (param $z i32)\n  (param $w i32) (param $n i32)\n  (result i32)\n  (local $h i32)\n  (local $p i32)\n  (local.set $h (call $reserve))\n  ;; In particular, failed reservations must not inspect child handles.\n  (if (i32.eqz (local.get $h))\n    (then (return (i32.const 0))))\n  (local.set $p (call $linear_address (local.get $h)))\n  (if (i32.gt_u (i32.sub (local.get $kind) (i32.const 1)) (i32.const 15))\n    (then unreachable))\n  (local.set $a (call $linear_child (local.get $a) (local.get $h)))\n  (local.set $b (call $linear_child (local.get $b) (local.get $h)))\n  (local.set $c (call $linear_child (local.get $c) (local.get $h)))\n  (i64.store offset=8 (local.get $p) (local.get $payload))\n  (i32.store offset=16 (local.get $p) (local.get $a))\n  (i32.store offset=20 (local.get $p) (local.get $b))\n  (i32.store offset=24 (local.get $p) (local.get $c))\n  (i32.store offset=28 (local.get $p) (local.get $x))\n  (i32.store offset=32 (local.get $p) (local.get $y))\n  (i32.store offset=36 (local.get $p) (local.get $z))\n  (i32.store offset=40 (local.get $p) (local.get $w))\n  (i32.store offset=44 (local.get $p) (local.get $n))\n  ;; Publish the live header only after every immutable field is initialized.\n  (i32.store offset=4 (local.get $p) (local.get $h))\n  (i32.store (local.get $p) (local.get $kind))\n  (local.get $h))\n\n(func $kind (param $h i32) (result i32)\n  (i32.load (call $linear_live_address (local.get $h))))\n\n(func $payload (param $h i32) (result i64)\n  (i64.load offset=8 (call $linear_live_address (local.get $h))))\n\n(func $a (param $h i32) (result i32)\n  (call $linear_child\n    (i32.load offset=16 (call $linear_live_address (local.get $h)))\n    (local.get $h)))\n\n(func $b (param $h i32) (result i32)\n  (call $linear_child\n    (i32.load offset=20 (call $linear_live_address (local.get $h)))\n    (local.get $h)))\n\n(func $c (param $h i32) (result i32)\n  (call $linear_child\n    (i32.load offset=24 (call $linear_live_address (local.get $h)))\n    (local.get $h)))\n\n(func $x (param $h i32) (result i32)\n  (i32.load offset=28 (call $linear_live_address (local.get $h))))\n\n(func $y (param $h i32) (result i32)\n  (i32.load offset=32 (call $linear_live_address (local.get $h))))\n\n(func $z (param $h i32) (result i32)\n  (i32.load offset=36 (call $linear_live_address (local.get $h))))\n\n(func $w (param $h i32) (result i32)\n  (i32.load offset=40 (call $linear_live_address (local.get $h))))\n\n(func $n (param $h i32) (result i32)\n  (i32.load offset=44 (call $linear_live_address (local.get $h))))\n"
 
 /-- [noble_wasm::emit::STACK]
     Source: 'crates/noble-wasm/src/emit.rs', lines 15:0-15:57 -/
@@ -1045,7 +1051,7 @@ def emit.OPERATIONS : Str :=
 @[global_simps, irreducible]
 def emit.REFLECTION : Str :=
   toStr
-    ";; Observation walks immutable data only. It never invokes executable entries.\n;; Positive work items are recipe nodes, negative items boxed data, MIN_INT ends a group.\n(func $walk_push (param $recipe i32)\n (if (i32.or (global.get $failure) (i32.eqz (local.get $recipe))) (then (return)))\n (if (i32.ge_u (global.get $rp) (i32.const 2048))\n  (then (call $quota (i32.const 7)) (return)))\n (i32.store (i32.add (i32.const 12288) (i32.mul (global.get $rp) (i32.const 4))) (local.get $recipe))\n (global.set $rp (i32.add (global.get $rp) (i32.const 1))))\n(func $observation_tick (result i32)\n (if (global.get $failure) (then (return (i32.const 0))))\n (if (i32.ge_u (global.get $reflection_steps) (global.get $step_limit))\n  (then (call $quota (i32.const 7)) (return (i32.const 0))))\n (global.set $reflection_steps (i32.add (global.get $reflection_steps) (i32.const 1)))\n (i32.const 1))\n(func $observe_atom (param $tag i32) (param $value i64) (local $address i32)\n (if (global.get $failure) (then (return)))\n (if (i32.ge_u (global.get $recipe_count) (i32.const 2048))\n  (then (call $quota (i32.const 7)) (return)))\n (local.set $address (i32.add (i32.const 24576) (i32.mul (global.get $recipe_count) (i32.const 16))))\n (i32.store (local.get $address) (local.get $tag))\n (i64.store offset=8 (local.get $address) (local.get $value))\n (global.set $recipe_count (i32.add (global.get $recipe_count) (i32.const 1))))\n(func $observe_interface (param $program i32)\n (if (global.get $source_reflection) (then\n  (call $observe_atom (i32.const 17) (i64.extend_i32_u (call $y (local.get $program))))\n  (call $observe_atom (i32.const 18) (i64.extend_i32_u (call $z (local.get $program))))\n  (call $observe_atom (i32.const 19) (call $payload (local.get $program))))))\n(func $observe_data (param $value i32) (local $tag i32) (local $at i32) (local $length i32)\n (local.set $tag (call $kind (local.get $value)))\n (if (i32.eq (local.get $tag) (i32.const 1))\n  (then (call $observe_atom (i32.const 1) (call $payload (local.get $value))) (return)))\n (if (i32.eq (local.get $tag) (i32.const 2))\n  (then (call $observe_atom (i32.const 4) (call $payload (local.get $value))) (return)))\n (if (i32.eq (local.get $tag) (i32.const 3))\n  (then (call $observe_atom (i32.const 5) (i64.const 0)) (return)))\n (call $walk_push (i32.const -2147483648))\n (if (i32.eq (local.get $tag) (i32.const 4)) (then\n  (call $observe_atom (i32.const 14) (i64.const 0)) (call $observe_interface (local.get $value))\n  (call $walk_push (call $c (local.get $value))) (return)))\n (if (i32.eq (local.get $tag) (i32.const 5)) (then\n  (call $observe_atom (i32.const 9) (i64.const 0))\n  (call $walk_push (i32.sub (i32.const 0) (call $b (local.get $value))))\n  (call $walk_push (i32.sub (i32.const 0) (call $a (local.get $value)))) (return)))\n (if (i32.or (i32.eq (local.get $tag) (i32.const 6)) (i32.eq (local.get $tag) (i32.const 7))) (then\n  (call $observe_atom (i32.const 10) (i64.const 0))\n  (if (i32.eq (local.get $tag) (i32.const 6)) (then\n   (call $walk_push (i32.sub (i32.const 0) (call $b (local.get $value))))\n   (call $walk_push (i32.sub (i32.const 0) (call $a (local.get $value)))))) (return)))\n (if (i32.eq (local.get $tag) (i32.const 10)) (then\n  (call $observe_atom (i32.const 13) (i64.const 0))\n  (call $walk_push (call $a (local.get $value))) (return)))\n (if (i32.eq (local.get $tag) (i32.const 11)) (then\n  (call $observe_atom (i32.const 8) (i64.const 0))\n  (local.set $length (call $y (local.get $value)))\n  (block $done (loop $byte\n   (br_if $done (i32.or (global.get $failure) (i32.ge_u (local.get $at) (local.get $length))))\n   (if (i32.eqz (call $observation_tick)) (then (br $done)))\n   (call $observe_atom (i32.const 7) (i64.extend_i32_u (i32.load8_u (i32.add (call $x (local.get $value)) (local.get $at)))))\n   (local.set $at (i32.add (local.get $at) (i32.const 1))) (br $byte))) (return)))\n (if (i32.or (i32.eq (local.get $tag) (i32.const 12)) (i32.eq (local.get $tag) (i32.const 13))) (then\n  (call $observe_atom (i32.sub (local.get $tag) (i32.const 1)) (i64.const 0))\n  (call $walk_push (i32.sub (i32.const 0) (call $a (local.get $value)))) (return)))\n (call $fail (i32.const 4)))\n(func $observe_recipe (param $recipe i32) (local $tag i32)\n (local.set $tag (call $kind (local.get $recipe)))\n (if (i32.eq (local.get $tag) (i32.const 9)) (then\n  (call $walk_push (call $b (local.get $recipe)))\n  (call $walk_push (call $a (local.get $recipe))) (return)))\n (if (i32.ne (local.get $tag) (i32.const 8))\n  (then (call $fail (i32.const 4)) (return)))\n (local.set $tag (call $x (local.get $recipe)))\n (if (i32.eq (local.get $tag) (i32.const 3)) (then\n  (call $observe_atom (i32.const 3) (i64.const 0))\n  (call $observe_interface (call $a (local.get $recipe)))\n  (call $walk_push (i32.const -2147483648))\n  (call $walk_push (call $c (call $a (local.get $recipe)))) (return)))\n (if (i32.eq (local.get $tag) (i32.const 8)) (then\n  (if (i32.ne (call $kind (call $a (local.get $recipe))) (i32.const 11))\n   (then (call $observe_atom (i32.const 16) (i64.extend_i32_u (call $y (local.get $recipe))))))\n  (call $walk_push (i32.sub (i32.const 0) (call $a (local.get $recipe)))) (return)))\n (call $observe_atom (local.get $tag) (call $payload (local.get $recipe)))\n (if (i32.and (global.get $source_reflection)\n       (i32.or (i32.eq (local.get $tag) (i32.const 2)) (i32.eq (local.get $tag) (i32.const 15)))) (then\n  (call $observe_atom (i32.const 20) (i64.extend_i32_u (call $y (local.get $recipe))))\n  (call $observe_atom (i32.const 21) (i64.extend_i32_u (call $z (local.get $recipe))))\n  (call $observe_atom (i32.const 22) (i64.extend_i32_u (call $w (local.get $recipe)))))))\n(func $reflect_internal (export \"reflect\") (result i32) (local $recipe i32) (local $address i32)\n (global.set $phase (i32.const 1))\n (global.set $recipe_count (i32.const 0)) (global.set $rp (i32.const 0))\n (global.set $reflection_steps (i32.const 0))\n (if (global.get $failure) (then (return (global.get $failure))))\n (if (i32.eqz (global.get $observed_program))\n  (then (call $fail (i32.const 4)) (return (global.get $failure))))\n (if (i32.eq (call $kind (global.get $observed_program)) (i32.const 10))\n  (then (call $walk_push (call $a (global.get $observed_program))))\n  (else (call $walk_push (call $c (global.get $observed_program)))))\n (block $done (loop $next\n  (br_if $done (i32.or (global.get $failure) (i32.eqz (global.get $rp))))\n  (if (i32.eqz (call $observation_tick)) (then (br $done)))\n  (global.set $rp (i32.sub (global.get $rp) (i32.const 1)))\n  (local.set $address (i32.add (i32.const 12288) (i32.mul (global.get $rp) (i32.const 4))))\n  (local.set $recipe (i32.load (local.get $address)))\n  (i32.store (local.get $address) (i32.const 0))\n  (if (i32.eq (local.get $recipe) (i32.const -2147483648))\n   (then (call $observe_atom (i32.const 6) (i64.const 0)))\n   (else (if (i32.lt_s (local.get $recipe) (i32.const 0))\n    (then (call $observe_data (i32.sub (i32.const 0) (local.get $recipe))))\n    (else (call $observe_recipe (local.get $recipe))))))\n  (br $next)))\n (if (global.get $failure) (then (call $cleanup_internal)))\n (global.get $failure))\n(func (export \"recipe_length\") (result i32) (global.get $recipe_count))\n(func $recipe_address (param $index i32) (result i32)\n (if (i32.ge_u (local.get $index) (global.get $recipe_count))\n  (then (call $fail (i32.const 4)) (return (i32.const 0))))\n (i32.add (i32.const 24576) (i32.mul (local.get $index) (i32.const 16))))\n(func (export \"recipe_kind\") (param $index i32) (result i32) (local $address i32)\n (local.set $address (call $recipe_address (local.get $index)))\n (if (global.get $failure) (then (return (i32.const 0))))\n (i32.load (local.get $address)))\n(func (export \"recipe_value\") (param $index i32) (result i64) (local $address i32)\n (local.set $address (call $recipe_address (local.get $index)))\n (if (global.get $failure) (then (return (i64.const 0))))\n (i64.load offset=8 (local.get $address)))\n"
+    ";; Observation walks immutable data only. It never invokes executable entries.\n;; Positive work items are recipe nodes, negative items boxed data, MIN_INT ends a group.\n(func $walk_push (param $recipe i32)\n (if (i32.or (global.get $failure) (i32.eqz (local.get $recipe))) (then (return)))\n (if (i32.ge_u (global.get $rp) (i32.const 2048))\n  (then (call $quota (i32.const 7)) (return)))\n (i32.store (i32.add (i32.const 12288) (i32.mul (global.get $rp) (i32.const 4))) (local.get $recipe))\n (global.set $rp (i32.add (global.get $rp) (i32.const 1))))\n(func $observation_tick (result i32)\n (if (global.get $failure) (then (return (i32.const 0))))\n (if (i32.ge_u (global.get $reflection_steps) (global.get $step_limit))\n  (then (call $quota (i32.const 7)) (return (i32.const 0))))\n (global.set $reflection_steps (i32.add (global.get $reflection_steps) (i32.const 1)))\n (i32.const 1))\n(func $observe_atom (param $tag i32) (param $value i64) (local $address i32)\n (if (global.get $failure) (then (return)))\n (if (i32.ge_u (global.get $recipe_count) (i32.const 2048))\n  (then (call $quota (i32.const 7)) (return)))\n (local.set $address (i32.add (i32.const 24576) (i32.mul (global.get $recipe_count) (i32.const 16))))\n (i32.store (local.get $address) (local.get $tag))\n (i64.store offset=8 (local.get $address) (local.get $value))\n (global.set $recipe_count (i32.add (global.get $recipe_count) (i32.const 1))))\n(func $observe_interface (param $program i32)\n (if (global.get $source_reflection) (then\n  (call $observe_atom (i32.const 17) (i64.extend_i32_u (call $y (local.get $program))))\n  (call $observe_atom (i32.const 18) (i64.extend_i32_u (call $z (local.get $program))))\n  (call $observe_atom (i32.const 19) (call $payload (local.get $program))))))\n(func $observe_data (param $value i32) (local $tag i32) (local $at i32) (local $length i32)\n (local.set $tag (call $kind (local.get $value)))\n (if (i32.eq (local.get $tag) (i32.const 1))\n  (then (call $observe_atom (i32.const 1) (call $payload (local.get $value))) (return)))\n (if (i32.eq (local.get $tag) (i32.const 2))\n  (then (call $observe_atom (i32.const 4) (call $payload (local.get $value))) (return)))\n (if (i32.eq (local.get $tag) (i32.const 3))\n  (then (call $observe_atom (i32.const 5) (i64.const 0)) (return)))\n (call $walk_push (i32.const -2147483648))\n (if (i32.eq (local.get $tag) (i32.const 4)) (then\n  (call $observe_atom (i32.const 14) (i64.const 0)) (call $observe_interface (local.get $value))\n  (call $walk_push (call $c (local.get $value))) (return)))\n (if (i32.eq (local.get $tag) (i32.const 5)) (then\n  (call $observe_atom (i32.const 9) (i64.const 0))\n  (call $walk_push (i32.sub (i32.const 0) (call $b (local.get $value))))\n  (call $walk_push (i32.sub (i32.const 0) (call $a (local.get $value)))) (return)))\n (if (i32.or (i32.eq (local.get $tag) (i32.const 6)) (i32.eq (local.get $tag) (i32.const 7))) (then\n  (call $observe_atom (i32.const 10) (i64.const 0))\n  (if (i32.eq (local.get $tag) (i32.const 6)) (then\n   (call $walk_push (i32.sub (i32.const 0) (call $b (local.get $value))))\n   (call $walk_push (i32.sub (i32.const 0) (call $a (local.get $value)))))) (return)))\n (if (i32.eq (local.get $tag) (i32.const 10)) (then\n  (call $observe_atom (i32.const 13) (i64.const 0))\n  (call $walk_push (call $a (local.get $value))) (return)))\n (if (i32.eq (local.get $tag) (i32.const 11)) (then\n  (call $observe_atom (i32.const 8) (i64.const 0))\n  (local.set $length (call $y (local.get $value)))\n  (block $done (loop $byte\n   (br_if $done (i32.or (global.get $failure) (i32.ge_u (local.get $at) (local.get $length))))\n   (if (i32.eqz (call $observation_tick)) (then (br $done)))\n   (call $observe_atom (i32.const 7) (i64.extend_i32_u (i32.load8_u (i32.add (call $x (local.get $value)) (local.get $at)))))\n   (local.set $at (i32.add (local.get $at) (i32.const 1))) (br $byte))) (return)))\n (if (i32.or (i32.eq (local.get $tag) (i32.const 12)) (i32.eq (local.get $tag) (i32.const 13))) (then\n  (call $observe_atom (i32.sub (local.get $tag) (i32.const 1)) (i64.const 0))\n  (call $walk_push (i32.sub (i32.const 0) (call $a (local.get $value)))) (return)))\n (if (i32.eq (local.get $tag) (i32.const 14)) (then\n  (call $observe_atom (i32.const 23) (i64.extend_i32_u (call $x (local.get $value)))) (return)))\n (if (i32.eq (local.get $tag) (i32.const 15)) (then\n  (call $observe_atom (i32.const 24) (call $payload (local.get $value))) (return)))\n (if (i32.eq (local.get $tag) (i32.const 16)) (then\n  (call $observe_atom (i32.const 23) (i64.extend_i32_u (call $x (call $b (local.get $value)))))\n  (call $observe_atom (i32.const 24) (call $payload (call $c (local.get $value))))\n  (call $observe_atom (i32.const 25) (call $payload (local.get $value)))\n  (call $walk_push (i32.const -2147483648))\n  (call $walk_push (i32.sub (i32.const 0) (call $a (local.get $value)))) (return)))\n (call $fail (i32.const 4)))\n(func $observe_recipe (param $recipe i32) (local $tag i32)\n (local.set $tag (call $kind (local.get $recipe)))\n (if (i32.eq (local.get $tag) (i32.const 9)) (then\n  (call $walk_push (call $b (local.get $recipe)))\n  (call $walk_push (call $a (local.get $recipe))) (return)))\n (if (i32.ne (local.get $tag) (i32.const 8))\n  (then (call $fail (i32.const 4)) (return)))\n (local.set $tag (call $x (local.get $recipe)))\n (if (i32.eq (local.get $tag) (i32.const 3)) (then\n  (call $observe_atom (i32.const 3) (i64.const 0))\n  (call $observe_interface (call $a (local.get $recipe)))\n  (call $walk_push (i32.const -2147483648))\n  (call $walk_push (call $c (call $a (local.get $recipe)))) (return)))\n (if (i32.eq (local.get $tag) (i32.const 8)) (then\n  (if (i32.ne (call $kind (call $a (local.get $recipe))) (i32.const 11))\n   (then (call $observe_atom (i32.const 16) (i64.extend_i32_u (call $y (local.get $recipe))))))\n  (call $walk_push (i32.sub (i32.const 0) (call $a (local.get $recipe)))) (return)))\n (call $observe_atom (local.get $tag) (call $payload (local.get $recipe)))\n (if (i32.and (global.get $source_reflection)\n       (i32.or (i32.eq (local.get $tag) (i32.const 2)) (i32.eq (local.get $tag) (i32.const 15)))) (then\n  (call $observe_atom (i32.const 20) (i64.extend_i32_u (call $y (local.get $recipe))))\n  (call $observe_atom (i32.const 21) (i64.extend_i32_u (call $z (local.get $recipe))))\n  (call $observe_atom (i32.const 22) (i64.extend_i32_u (call $w (local.get $recipe)))))))\n(func $reflect_internal (export \"reflect\") (result i32) (local $recipe i32) (local $address i32)\n (global.set $phase (i32.const 1))\n (global.set $recipe_count (i32.const 0)) (global.set $rp (i32.const 0))\n (global.set $reflection_steps (i32.const 0))\n (if (global.get $failure) (then (return (global.get $failure))))\n (if (i32.eqz (global.get $observed_program))\n  (then (call $fail (i32.const 4)) (return (global.get $failure))))\n (if (i32.eq (call $kind (global.get $observed_program)) (i32.const 16))\n  (then (call $observe_data (global.get $observed_program)))\n  (else (if (i32.or (i32.eq (call $kind (global.get $observed_program)) (i32.const 14))\n                    (i32.eq (call $kind (global.get $observed_program)) (i32.const 15)))\n   (then (call $observe_data (global.get $observed_program)))\n   (else (if (i32.eq (call $kind (global.get $observed_program)) (i32.const 10))\n    (then (call $walk_push (call $a (global.get $observed_program))))\n    (else (call $walk_push (call $c (global.get $observed_program)))))))))\n (block $done (loop $next\n  (br_if $done (i32.or (global.get $failure) (i32.eqz (global.get $rp))))\n  (if (i32.eqz (call $observation_tick)) (then (br $done)))\n  (global.set $rp (i32.sub (global.get $rp) (i32.const 1)))\n  (local.set $address (i32.add (i32.const 12288) (i32.mul (global.get $rp) (i32.const 4))))\n  (local.set $recipe (i32.load (local.get $address)))\n  (i32.store (local.get $address) (i32.const 0))\n  (if (i32.eq (local.get $recipe) (i32.const -2147483648))\n   (then (call $observe_atom (i32.const 6) (i64.const 0)))\n   (else (if (i32.lt_s (local.get $recipe) (i32.const 0))\n    (then (call $observe_data (i32.sub (i32.const 0) (local.get $recipe))))\n    (else (call $observe_recipe (local.get $recipe))))))\n  (br $next)))\n (if (global.get $failure) (then (call $cleanup_internal)))\n (global.get $failure))\n(func (export \"recipe_length\") (result i32) (global.get $recipe_count))\n(func $recipe_address (param $index i32) (result i32)\n (if (i32.ge_u (local.get $index) (global.get $recipe_count))\n  (then (call $fail (i32.const 4)) (return (i32.const 0))))\n (i32.add (i32.const 24576) (i32.mul (local.get $index) (i32.const 16))))\n(func (export \"recipe_kind\") (param $index i32) (result i32) (local $address i32)\n (local.set $address (call $recipe_address (local.get $index)))\n (if (global.get $failure) (then (return (i32.const 0))))\n (i32.load (local.get $address)))\n(func (export \"recipe_value\") (param $index i32) (result i64) (local $address i32)\n (local.set $address (call $recipe_address (local.get $index)))\n (if (global.get $failure) (then (return (i64.const 0))))\n (i64.load offset=8 (local.get $address)))\n"
 
 /-- [noble_wasm::emit::EXPERIMENT]
     Source: 'crates/noble-wasm/src/emit.rs', lines 19:0-19:67 -/
@@ -2257,7 +2263,7 @@ def signatures.number
 def signatures.SOURCE_KEY_LIMIT : Std.Usize := 4096#usize
 
 /-- [noble_wasm::signatures::walk::emit_effects]: loop body 0:
-    Source: 'crates/noble-wasm/src/signatures/walk.rs', lines 191:4-199:1 -/
+    Source: 'crates/noble-wasm/src/signatures/walk.rs', lines 199:4-207:1 -/
 @[rust_loop_body]
 def signatures.walk.emit_effects_loop.body
   (effects : noble_kernel.types.EffSet) (out : output.Buffer)
@@ -2299,7 +2305,7 @@ def signatures.walk.emit_effects_loop.body
     ok (done (r, out1))
 
 /-- [noble_wasm::signatures::walk::emit_effects]: loop 0:
-    Source: 'crates/noble-wasm/src/signatures/walk.rs', lines 191:4-199:1 -/
+    Source: 'crates/noble-wasm/src/signatures/walk.rs', lines 199:4-207:1 -/
 @[rust_loop]
 def signatures.walk.emit_effects_loop
   (effects : noble_kernel.types.EffSet) (out : output.Buffer)
@@ -2312,7 +2318,7 @@ def signatures.walk.emit_effects_loop
     (out, index)
 
 /-- [noble_wasm::signatures::walk::emit_effects]:
-    Source: 'crates/noble-wasm/src/signatures/walk.rs', lines 181:0-199:1 -/
+    Source: 'crates/noble-wasm/src/signatures/walk.rs', lines 189:0-207:1 -/
 def signatures.walk.emit_effects
   (effects : noble_kernel.types.EffSet) (out : output.Buffer) :
   Result ((core.result.Result Unit Diagnostic) × output.Buffer)
@@ -2329,7 +2335,7 @@ def signatures.walk.emit_effects
     | core.result.Result.Err _ => ok (r, out1)
 
 /-- [noble_wasm::signatures::walk::push_type]:
-    Source: 'crates/noble-wasm/src/signatures/walk.rs', lines 119:0-175:1 -/
+    Source: 'crates/noble-wasm/src/signatures/walk.rs', lines 119:0-183:1 -/
 def signatures.walk.push_type
   (ty : noble_kernel.types.Ty) (work : alloc.vec.Vec signatures.walk.Step)
   (out : output.Buffer) (extended : Bool) :
@@ -2374,6 +2380,37 @@ def signatures.walk.push_type
       let s ←
         lift (Array.to_slice
           (Array.make 6#usize [ 83#u8, 121#u8, 110#u8, 116#u8, 97#u8, 120#u8 ]))
+      let (r, out1) ← output.Buffer.append out s
+      match r with
+      | core.result.Result.Ok _ => ok (core.result.Result.Ok (), work, out1)
+      | core.result.Result.Err _ => ok (r, work, out1)
+    | noble_kernel.types.Ty.ContractType =>
+      let s ←
+        lift (Array.to_slice
+          (Array.make 8#usize [
+            67#u8, 111#u8, 110#u8, 116#u8, 114#u8, 97#u8, 99#u8, 116#u8
+            ]))
+      let (r, out1) ← output.Buffer.append out s
+      match r with
+      | core.result.Result.Ok _ => ok (core.result.Result.Ok (), work, out1)
+      | core.result.Result.Err _ => ok (r, work, out1)
+    | noble_kernel.types.Ty.EvidenceType =>
+      let s ←
+        lift (Array.to_slice
+          (Array.make 8#usize [
+            69#u8, 118#u8, 105#u8, 100#u8, 101#u8, 110#u8, 99#u8, 101#u8
+            ]))
+      let (r, out1) ← output.Buffer.append out s
+      match r with
+      | core.result.Result.Ok _ => ok (core.result.Result.Ok (), work, out1)
+      | core.result.Result.Err _ => ok (r, work, out1)
+    | noble_kernel.types.Ty.CertifiedType =>
+      let s ←
+        lift (Array.to_slice
+          (Array.make 9#usize [
+            67#u8, 101#u8, 114#u8, 116#u8, 105#u8, 102#u8, 105#u8, 101#u8,
+            100#u8
+            ]))
       let (r, out1) ← output.Buffer.append out s
       match r with
       | core.result.Result.Ok _ => ok (core.result.Result.Ok (), work, out1)
@@ -2481,6 +2518,12 @@ def signatures.walk.push_type
       match r with
       | core.result.Result.Ok _ => ok (core.result.Result.Ok (), work, out1)
       | core.result.Result.Err _ => ok (r, work, out1)
+    | noble_kernel.types.Ty.ContractType =>
+      ok (core.result.Result.Err Diagnostic.Unsupported, work, out)
+    | noble_kernel.types.Ty.EvidenceType =>
+      ok (core.result.Result.Err Diagnostic.Unsupported, work, out)
+    | noble_kernel.types.Ty.CertifiedType =>
+      ok (core.result.Result.Err Diagnostic.Unsupported, work, out)
     | noble_kernel.types.Ty.PairType left right =>
       let s ←
         lift (Array.to_slice
@@ -2898,6 +2941,12 @@ def signatures.Pool.produced_program
       ok (core.result.Result.Err Diagnostic.Defective, self)
     | noble_kernel.types.Ty.SyntaxType =>
       ok (core.result.Result.Err Diagnostic.Defective, self)
+    | noble_kernel.types.Ty.ContractType =>
+      ok (core.result.Result.Err Diagnostic.Defective, self)
+    | noble_kernel.types.Ty.EvidenceType =>
+      ok (core.result.Result.Err Diagnostic.Defective, self)
+    | noble_kernel.types.Ty.CertifiedType =>
+      ok (core.result.Result.Err Diagnostic.Defective, self)
     | noble_kernel.types.Ty.PairType _ _ =>
       ok (core.result.Result.Err Diagnostic.Defective, self)
     | noble_kernel.types.Ty.SumType _ _ =>
@@ -3039,6 +3088,12 @@ def lowering.scalar_equality_loop.body
       ok (done (core.result.Result.Err Diagnostic.Unsupported))
     | noble_kernel.types.Ty.SyntaxType =>
       ok (done (core.result.Result.Err Diagnostic.Unsupported))
+    | noble_kernel.types.Ty.ContractType =>
+      ok (done (core.result.Result.Err Diagnostic.Unsupported))
+    | noble_kernel.types.Ty.EvidenceType =>
+      ok (done (core.result.Result.Err Diagnostic.Unsupported))
+    | noble_kernel.types.Ty.CertifiedType =>
+      ok (done (core.result.Result.Err Diagnostic.Unsupported))
     | noble_kernel.types.Ty.PairType _ _ =>
       ok (done (core.result.Result.Err Diagnostic.Unsupported))
     | noble_kernel.types.Ty.SumType _ _ =>
@@ -3098,6 +3153,12 @@ def lowering.scalar_capture
     | noble_kernel.types.Ty.TextType =>
       ok (core.result.Result.Err Diagnostic.Unsupported)
     | noble_kernel.types.Ty.SyntaxType =>
+      ok (core.result.Result.Err Diagnostic.Unsupported)
+    | noble_kernel.types.Ty.ContractType =>
+      ok (core.result.Result.Err Diagnostic.Unsupported)
+    | noble_kernel.types.Ty.EvidenceType =>
+      ok (core.result.Result.Err Diagnostic.Unsupported)
+    | noble_kernel.types.Ty.CertifiedType =>
       ok (core.result.Result.Err Diagnostic.Unsupported)
     | noble_kernel.types.Ty.PairType _ _ =>
       ok (core.result.Result.Err Diagnostic.Unsupported)
@@ -8307,7 +8368,7 @@ def source.emit.imports.runtime
   | core.result.Result.Ok _ =>
     let (r1, out2) ←
       source.emit.imports.fragment out1 (toStr
-        ";; Cells occupy [65536, 262144): 4096 immutable records of exactly 48 bytes.\n;; Check the unsigned handle range before subtraction/multiplication can address memory.\n(func $linear_address (param $h i32) (result i32)\n  (if (i32.gt_u (i32.sub (local.get $h) (i32.const 1)) (i32.const 4095))\n    (then unreachable))\n  (i32.add\n    (i32.const 65536)\n    (i32.mul (i32.sub (local.get $h) (i32.const 1)) (i32.const 48))))\n\n;; A current cell has both its expected id and a live kind, never a zero object.\n(func $linear_live_address (param $h i32) (result i32)\n  (local $p i32)\n  (if (i32.gt_u (local.get $h) (global.get $heap_cursor))\n    (then unreachable))\n  (local.set $p (call $linear_address (local.get $h)))\n  (if (i32.ne (i32.load offset=4 (local.get $p)) (local.get $h))\n    (then unreachable))\n  (if (i32.gt_u\n        (i32.sub (i32.load (local.get $p)) (i32.const 1))\n        (i32.const 12))\n    (then unreachable))\n  (local.get $p))\n\n;; Nullable edges point only backward to existing cells, preserving acyclicity.\n(func $linear_child (param $child i32) (param $parent i32) (result i32)\n  (if (i32.eqz (local.get $child))\n    (then (return (i32.const 0))))\n  (if (i32.ge_u (local.get $child) (local.get $parent))\n    (then unreachable))\n  (drop (call $linear_live_address (local.get $child)))\n  (local.get $child))\n\n(func $storage_init\n  ;; Leave scratch and common accounting untouched; initially this range is empty.\n  (memory.fill\n    (i32.const 65536)\n    (i32.const 0)\n    (i32.shl (i32.sub (memory.size) (i32.const 1)) (i32.const 16))))\n\n(func $storage_ensure (param $h i32) (result i32)\n  (local $needed i32)\n  (local $current i32)\n  (if (i32.gt_u (i32.sub (local.get $h) (i32.const 1)) (i32.const 4095))\n    (then (return (i32.const 0))))\n  ;; ceil((65536 + h * 48) / 65536) is at most four, without i32 overflow.\n  (local.set $needed\n    (i32.add\n      (i32.const 1)\n      (i32.shr_u\n        (i32.add (i32.mul (local.get $h) (i32.const 48)) (i32.const 65535))\n        (i32.const 16))))\n  (local.set $current (memory.size))\n  (if (i32.ge_u (local.get $current) (local.get $needed))\n    (then (return (i32.const 1))))\n  ;; reserve charges only after this succeeds; failed growth publishes no cell.\n  (i32.ne\n    (memory.grow (i32.sub (local.get $needed) (local.get $current)))\n    (i32.const -1)))\n\n(func $storage_discard (param $h i32)\n  ;; Clear kind and id together. Pages remain allocated; handles are region-private.\n  (i64.store (call $linear_live_address (local.get $h)) (i64.const 0)))\n\n(func $new\n  (param $kind i32) (param $payload i64)\n  (param $a i32) (param $b i32) (param $c i32)\n  (param $x i32) (param $y i32) (param $z i32)\n  (param $w i32) (param $n i32)\n  (result i32)\n  (local $h i32)\n  (local $p i32)\n  (local.set $h (call $reserve))\n  ;; In particular, failed reservations must not inspect child handles.\n  (if (i32.eqz (local.get $h))\n    (then (return (i32.const 0))))\n  (local.set $p (call $linear_address (local.get $h)))\n  (if (i32.gt_u (i32.sub (local.get $kind) (i32.const 1)) (i32.const 12))\n    (then unreachable))\n  (local.set $a (call $linear_child (local.get $a) (local.get $h)))\n  (local.set $b (call $linear_child (local.get $b) (local.get $h)))\n  (local.set $c (call $linear_child (local.get $c) (local.get $h)))\n  (i64.store offset=8 (local.get $p) (local.get $payload))\n  (i32.store offset=16 (local.get $p) (local.get $a))\n  (i32.store offset=20 (local.get $p) (local.get $b))\n  (i32.store offset=24 (local.get $p) (local.get $c))\n  (i32.store offset=28 (local.get $p) (local.get $x))\n  (i32.store offset=32 (local.get $p) (local.get $y))\n  (i32.store offset=36 (local.get $p) (local.get $z))\n  (i32.store offset=40 (local.get $p) (local.get $w))\n  (i32.store offset=44 (local.get $p) (local.get $n))\n  ;; Publish the live header only after every immutable field is initialized.\n  (i32.store offset=4 (local.get $p) (local.get $h))\n  (i32.store (local.get $p) (local.get $kind))\n  (local.get $h))\n\n(func $kind (param $h i32) (result i32)\n  (i32.load (call $linear_live_address (local.get $h))))\n\n(func $payload (param $h i32) (result i64)\n  (i64.load offset=8 (call $linear_live_address (local.get $h))))\n\n(func $a (param $h i32) (result i32)\n  (call $linear_child\n    (i32.load offset=16 (call $linear_live_address (local.get $h)))\n    (local.get $h)))\n\n(func $b (param $h i32) (result i32)\n  (call $linear_child\n    (i32.load offset=20 (call $linear_live_address (local.get $h)))\n    (local.get $h)))\n\n(func $c (param $h i32) (result i32)\n  (call $linear_child\n    (i32.load offset=24 (call $linear_live_address (local.get $h)))\n    (local.get $h)))\n\n(func $x (param $h i32) (result i32)\n  (i32.load offset=28 (call $linear_live_address (local.get $h))))\n\n(func $y (param $h i32) (result i32)\n  (i32.load offset=32 (call $linear_live_address (local.get $h))))\n\n(func $z (param $h i32) (result i32)\n  (i32.load offset=36 (call $linear_live_address (local.get $h))))\n\n(func $w (param $h i32) (result i32)\n  (i32.load offset=40 (call $linear_live_address (local.get $h))))\n\n(func $n (param $h i32) (result i32)\n  (i32.load offset=44 (call $linear_live_address (local.get $h))))\n")
+        ";; Cells occupy [65536, 262144): 4096 immutable records of exactly 48 bytes.\n;; Check the unsigned handle range before subtraction/multiplication can address memory.\n(func $linear_address (param $h i32) (result i32)\n  (if (i32.gt_u (i32.sub (local.get $h) (i32.const 1)) (i32.const 4095))\n    (then unreachable))\n  (i32.add\n    (i32.const 65536)\n    (i32.mul (i32.sub (local.get $h) (i32.const 1)) (i32.const 48))))\n\n;; A current cell has both its expected id and a live kind, never a zero object.\n(func $linear_live_address (param $h i32) (result i32)\n  (local $p i32)\n  (if (i32.gt_u (local.get $h) (global.get $heap_cursor))\n    (then unreachable))\n  (local.set $p (call $linear_address (local.get $h)))\n  (if (i32.ne (i32.load offset=4 (local.get $p)) (local.get $h))\n    (then unreachable))\n  (if (i32.gt_u\n        (i32.sub (i32.load (local.get $p)) (i32.const 1))\n        (i32.const 15))\n    (then unreachable))\n  (local.get $p))\n\n;; Nullable edges point only backward to existing cells, preserving acyclicity.\n(func $linear_child (param $child i32) (param $parent i32) (result i32)\n  (if (i32.eqz (local.get $child))\n    (then (return (i32.const 0))))\n  (if (i32.ge_u (local.get $child) (local.get $parent))\n    (then unreachable))\n  (drop (call $linear_live_address (local.get $child)))\n  (local.get $child))\n\n(func $storage_init\n  ;; Leave scratch and common accounting untouched; initially this range is empty.\n  (memory.fill\n    (i32.const 65536)\n    (i32.const 0)\n    (i32.shl (i32.sub (memory.size) (i32.const 1)) (i32.const 16))))\n\n(func $storage_ensure (param $h i32) (result i32)\n  (local $needed i32)\n  (local $current i32)\n  (if (i32.gt_u (i32.sub (local.get $h) (i32.const 1)) (i32.const 4095))\n    (then (return (i32.const 0))))\n  ;; ceil((65536 + h * 48) / 65536) is at most four, without i32 overflow.\n  (local.set $needed\n    (i32.add\n      (i32.const 1)\n      (i32.shr_u\n        (i32.add (i32.mul (local.get $h) (i32.const 48)) (i32.const 65535))\n        (i32.const 16))))\n  (local.set $current (memory.size))\n  (if (i32.ge_u (local.get $current) (local.get $needed))\n    (then (return (i32.const 1))))\n  ;; reserve charges only after this succeeds; failed growth publishes no cell.\n  (i32.ne\n    (memory.grow (i32.sub (local.get $needed) (local.get $current)))\n    (i32.const -1)))\n\n(func $storage_discard (param $h i32)\n  ;; Clear kind and id together. Pages remain allocated; handles are region-private.\n  (i64.store (call $linear_live_address (local.get $h)) (i64.const 0)))\n\n(func $new\n  (param $kind i32) (param $payload i64)\n  (param $a i32) (param $b i32) (param $c i32)\n  (param $x i32) (param $y i32) (param $z i32)\n  (param $w i32) (param $n i32)\n  (result i32)\n  (local $h i32)\n  (local $p i32)\n  (local.set $h (call $reserve))\n  ;; In particular, failed reservations must not inspect child handles.\n  (if (i32.eqz (local.get $h))\n    (then (return (i32.const 0))))\n  (local.set $p (call $linear_address (local.get $h)))\n  (if (i32.gt_u (i32.sub (local.get $kind) (i32.const 1)) (i32.const 15))\n    (then unreachable))\n  (local.set $a (call $linear_child (local.get $a) (local.get $h)))\n  (local.set $b (call $linear_child (local.get $b) (local.get $h)))\n  (local.set $c (call $linear_child (local.get $c) (local.get $h)))\n  (i64.store offset=8 (local.get $p) (local.get $payload))\n  (i32.store offset=16 (local.get $p) (local.get $a))\n  (i32.store offset=20 (local.get $p) (local.get $b))\n  (i32.store offset=24 (local.get $p) (local.get $c))\n  (i32.store offset=28 (local.get $p) (local.get $x))\n  (i32.store offset=32 (local.get $p) (local.get $y))\n  (i32.store offset=36 (local.get $p) (local.get $z))\n  (i32.store offset=40 (local.get $p) (local.get $w))\n  (i32.store offset=44 (local.get $p) (local.get $n))\n  ;; Publish the live header only after every immutable field is initialized.\n  (i32.store offset=4 (local.get $p) (local.get $h))\n  (i32.store (local.get $p) (local.get $kind))\n  (local.get $h))\n\n(func $kind (param $h i32) (result i32)\n  (i32.load (call $linear_live_address (local.get $h))))\n\n(func $payload (param $h i32) (result i64)\n  (i64.load offset=8 (call $linear_live_address (local.get $h))))\n\n(func $a (param $h i32) (result i32)\n  (call $linear_child\n    (i32.load offset=16 (call $linear_live_address (local.get $h)))\n    (local.get $h)))\n\n(func $b (param $h i32) (result i32)\n  (call $linear_child\n    (i32.load offset=20 (call $linear_live_address (local.get $h)))\n    (local.get $h)))\n\n(func $c (param $h i32) (result i32)\n  (call $linear_child\n    (i32.load offset=24 (call $linear_live_address (local.get $h)))\n    (local.get $h)))\n\n(func $x (param $h i32) (result i32)\n  (i32.load offset=28 (call $linear_live_address (local.get $h))))\n\n(func $y (param $h i32) (result i32)\n  (i32.load offset=32 (call $linear_live_address (local.get $h))))\n\n(func $z (param $h i32) (result i32)\n  (i32.load offset=36 (call $linear_live_address (local.get $h))))\n\n(func $w (param $h i32) (result i32)\n  (i32.load offset=40 (call $linear_live_address (local.get $h))))\n\n(func $n (param $h i32) (result i32)\n  (i32.load offset=44 (call $linear_live_address (local.get $h))))\n")
     match r1 with
     | core.result.Result.Ok _ =>
       let (r2, out3) ←
@@ -8327,17 +8388,17 @@ def source.emit.imports.runtime
           | core.result.Result.Ok _ =>
             let (r5, out6) ←
               source.emit.imports.fragment out5 (toStr
-                ";; Additional bootstrap data/control operations share the tagged stack and immutable cells.\n(func $text (param $address i32) (param $length i32) (result i32)\n (call $new (i32.const 11) (i64.const 0) (i32.const 0) (i32.const 0) (i32.const 0)\n  (local.get $address) (local.get $length) (i32.const 0) (i32.const 0) (i32.const 0)))\n(func $op_inl (local $value i32)\n (local.set $value (call $pop_box))\n (call $push_ref (call $new (i32.const 12) (i64.const 0) (local.get $value)\n  (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0))))\n(func $op_inr (local $value i32)\n (local.set $value (call $pop_box))\n (call $push_ref (call $new (i32.const 13) (i64.const 0) (local.get $value)\n  (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0))))\n(func $op_case (local $right i32) (local $left i32) (local $sum i32) (local $tag i32)\n (local.set $right (i32.wrap_i64 (call $pop_kind (i32.const 4))))\n (local.set $left (i32.wrap_i64 (call $pop_kind (i32.const 4))))\n (if (i32.eqz (call $need (i32.const 1))) (then (return)))\n (local.set $tag (call $slot_kind (i32.sub (global.get $sp) (i32.const 1))))\n (if (i32.and (i32.ne (local.get $tag) (i32.const 12)) (i32.ne (local.get $tag) (i32.const 13)))\n  (then (call $fail (i32.const 4)) (return)))\n (local.set $sum (i32.wrap_i64 (call $take)))\n (call $unbox (call $a (local.get $sum)))\n (if (i32.eq (local.get $tag) (i32.const 12))\n  (then (call $enqueue_program (local.get $left)))\n  (else (call $enqueue_program (local.get $right)))))\n(func $restore_entry (type $entry) (param $value i32) (call $unbox (local.get $value)))\n(func $op_dip (local $program i32) (local $value i32)\n (local.set $program (i32.wrap_i64 (call $pop_kind (i32.const 4))))\n (local.set $value (call $pop_box))\n (if (global.get $failure) (then (return)))\n (call $enqueue (i32.const 3) (local.get $value))\n (call $enqueue_program (local.get $program)))\n\n;; Iterative size/depth accounting for an exact captured datum, before its recipe\n;; or closure is allocated. Shared subgraphs count at each semantic occurrence.\n(func $measure_data (param $value i32) (result i64)\n (local $todo i32) (local $h i32) (local $depth i32) (local $max_depth i32)\n (local $leaves i32) (local $tag i32) (local $address i32) (local $a i32) (local $b i32)\n (i32.store (i32.const 8192) (local.get $value)) (i32.store (i32.const 8196) (i32.const 1))\n (local.set $todo (i32.const 1))\n (block $done (loop $next\n  (br_if $done (i32.or (global.get $failure) (i32.eqz (local.get $todo))))\n  (if (i32.eqz (call $runtime_tick)) (then (br $done)))\n  (local.set $todo (i32.sub (local.get $todo) (i32.const 1)))\n  (local.set $address (i32.add (i32.const 8192) (i32.mul (local.get $todo) (i32.const 8))))\n  (local.set $h (i32.load (local.get $address))) (local.set $depth (i32.load offset=4 (local.get $address)))\n  (local.set $tag (call $kind (local.get $h)))\n  (local.set $leaves (i32.add (local.get $leaves) (i32.const 1)))\n  (if (i32.or (i32.eq (local.get $tag) (i32.const 4)) (i32.eq (local.get $tag) (i32.const 10))) (then\n   (local.set $leaves (i32.add (local.get $leaves) (call $n (local.get $h))))\n   (local.set $depth (i32.add (local.get $depth) (call $w (local.get $h))))))\n  (if (i32.gt_u (local.get $depth) (local.get $max_depth)) (then (local.set $max_depth (local.get $depth))))\n  (if (i32.gt_u (local.get $leaves) (global.get $recipe_limit)) (then (call $quota (i32.const 2)) (br $done)))\n  (if (i32.gt_u (local.get $max_depth) (global.get $depth_limit)) (then (call $quota (i32.const 3)) (br $done)))\n  (local.set $a (i32.const 0)) (local.set $b (i32.const 0))\n  (if (i32.or (i32.eq (local.get $tag) (i32.const 5)) (i32.eq (local.get $tag) (i32.const 6)))\n   (then (local.set $a (call $a (local.get $h))) (local.set $b (call $b (local.get $h)))))\n  (if (i32.or (i32.eq (local.get $tag) (i32.const 12)) (i32.eq (local.get $tag) (i32.const 13)))\n   (then (local.set $a (call $a (local.get $h)))))\n  (if (i32.gt_u (local.get $todo) (i32.const 510)) (then (call $quota (i32.const 3)) (br $done)))\n  (if (local.get $b) (then\n   (local.set $address (i32.add (i32.const 8192) (i32.mul (local.get $todo) (i32.const 8))))\n   (i32.store (local.get $address) (local.get $b))\n   (i32.store offset=4 (local.get $address) (i32.add (local.get $depth) (i32.const 1)))\n   (local.set $todo (i32.add (local.get $todo) (i32.const 1)))))\n  (if (local.get $a) (then\n   (local.set $address (i32.add (i32.const 8192) (i32.mul (local.get $todo) (i32.const 8))))\n   (i32.store (local.get $address) (local.get $a))\n   (i32.store offset=4 (local.get $address) (i32.add (local.get $depth) (i32.const 1)))\n   (local.set $todo (i32.add (local.get $todo) (i32.const 1)))))\n  (br $next)))\n (i64.or (i64.extend_i32_u (local.get $leaves)) (i64.shl (i64.extend_i32_u (local.get $max_depth)) (i64.const 32))))\n\n(func $capture_recipe (param $value i32) (param $witness i32) (result i32) (local $tag i32)\n (local.set $tag (call $kind (local.get $value)))\n (if (i32.eq (local.get $tag) (i32.const 1))\n  (then (return (call $atom (i32.const 1) (call $payload (local.get $value)) (i32.const 0)))))\n (if (i32.eq (local.get $tag) (i32.const 2))\n  (then (return (call $atom (i32.const 4) (call $payload (local.get $value)) (i32.const 0)))))\n (if (i32.eq (local.get $tag) (i32.const 3))\n  (then (return (call $atom (i32.const 5) (i64.const 0) (i32.const 0)))))\n (if (i32.eq (local.get $tag) (i32.const 4))\n  (then (return (call $atom (i32.const 3) (i64.const 0) (local.get $value)))))\n ;; Complete type witness: both sum alternatives and nested Program interfaces.\n (call $new (i32.const 8) (i64.const 0) (local.get $value)\n  (i32.const 0) (i32.const 0) (i32.const 8) (local.get $witness)\n  (i32.const 0) (i32.const 0) (i32.const 0)))\n(func $op_quote_typed (param $input i32) (param $output i32) (param $witness i32)\n (local $value i32) (local $recipe i32) (local $measure i64)\n (if (i32.eqz (global.get $recipe_limit)) (then (call $quota (i32.const 2)) (return)))\n (if (i32.eqz (global.get $depth_limit)) (then (call $quota (i32.const 3)) (return)))\n (local.set $value (call $pop_box))\n (if (global.get $failure) (then (return)))\n (local.set $measure (call $measure_data (local.get $value)))\n (if (global.get $failure) (then (return)))\n (local.set $recipe (call $capture_recipe (local.get $value) (local.get $witness)))\n (call $push_ref (call $program (i32.const 1) (local.get $input) (local.get $output)\n  (local.get $recipe) (i64.const 0) (local.get $value) (i32.const 0)\n  (i32.wrap_i64 (i64.shr_u (local.get $measure) (i64.const 32))) (i32.wrap_i64 (local.get $measure)))))\n")
+                ";; Additional bootstrap data/control operations share the tagged stack and immutable cells.\n(func $text (param $address i32) (param $length i32) (result i32)\n (call $new (i32.const 11) (i64.const 0) (i32.const 0) (i32.const 0) (i32.const 0)\n  (local.get $address) (local.get $length) (i32.const 0) (i32.const 0) (i32.const 0)))\n(func $op_inl (local $value i32)\n (local.set $value (call $pop_box))\n (call $push_ref (call $new (i32.const 12) (i64.const 0) (local.get $value)\n  (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0))))\n(func $op_inr (local $value i32)\n (local.set $value (call $pop_box))\n (call $push_ref (call $new (i32.const 13) (i64.const 0) (local.get $value)\n  (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0))))\n(func $op_case (local $right i32) (local $left i32) (local $sum i32) (local $tag i32)\n (local.set $right (i32.wrap_i64 (call $pop_kind (i32.const 4))))\n (local.set $left (i32.wrap_i64 (call $pop_kind (i32.const 4))))\n (if (i32.eqz (call $need (i32.const 1))) (then (return)))\n (local.set $tag (call $slot_kind (i32.sub (global.get $sp) (i32.const 1))))\n (if (i32.and (i32.ne (local.get $tag) (i32.const 12)) (i32.ne (local.get $tag) (i32.const 13)))\n  (then (call $fail (i32.const 4)) (return)))\n (local.set $sum (i32.wrap_i64 (call $take)))\n (call $unbox (call $a (local.get $sum)))\n (if (i32.eq (local.get $tag) (i32.const 12))\n  (then (call $enqueue_program (local.get $left)))\n  (else (call $enqueue_program (local.get $right)))))\n(func $restore_entry (type $entry) (param $value i32) (call $unbox (local.get $value)))\n(func $op_dip (local $program i32) (local $value i32)\n (local.set $program (i32.wrap_i64 (call $pop_kind (i32.const 4))))\n (local.set $value (call $pop_box))\n (if (global.get $failure) (then (return)))\n (call $enqueue (i32.const 3) (local.get $value))\n (call $enqueue_program (local.get $program)))\n\n;; Iterative size/depth accounting for an exact captured datum, before its recipe\n;; or closure is allocated. Shared subgraphs count at each semantic occurrence.\n(func $measure_data (param $value i32) (result i64)\n (local $todo i32) (local $h i32) (local $depth i32) (local $max_depth i32)\n (local $leaves i32) (local $tag i32) (local $address i32) (local $a i32) (local $b i32)\n (i32.store (i32.const 8192) (local.get $value)) (i32.store (i32.const 8196) (i32.const 1))\n (local.set $todo (i32.const 1))\n (block $done (loop $next\n  (br_if $done (i32.or (global.get $failure) (i32.eqz (local.get $todo))))\n  (if (i32.eqz (call $runtime_tick)) (then (br $done)))\n  (local.set $todo (i32.sub (local.get $todo) (i32.const 1)))\n  (local.set $address (i32.add (i32.const 8192) (i32.mul (local.get $todo) (i32.const 8))))\n  (local.set $h (i32.load (local.get $address))) (local.set $depth (i32.load offset=4 (local.get $address)))\n  (local.set $tag (call $kind (local.get $h)))\n  (local.set $leaves (i32.add (local.get $leaves) (i32.const 1)))\n  (if (i32.or (i32.eq (local.get $tag) (i32.const 4)) (i32.eq (local.get $tag) (i32.const 10))) (then\n   (local.set $leaves (i32.add (local.get $leaves) (call $n (local.get $h))))\n   (local.set $depth (i32.add (local.get $depth) (call $w (local.get $h))))))\n  ;; A companion's semantic payload is its subject program; count it like a\n  ;; captured program and never traverse it as a separate value.\n  (if (i32.eq (local.get $tag) (i32.const 16)) (then\n   (local.set $leaves (i32.add (local.get $leaves) (call $n (local.get $h))))\n   (local.set $depth (i32.add (local.get $depth) (call $w (local.get $h))))))\n  (if (i32.gt_u (local.get $depth) (local.get $max_depth)) (then (local.set $max_depth (local.get $depth))))\n  (if (i32.gt_u (local.get $leaves) (global.get $recipe_limit)) (then (call $quota (i32.const 2)) (br $done)))\n  (if (i32.gt_u (local.get $max_depth) (global.get $depth_limit)) (then (call $quota (i32.const 3)) (br $done)))\n  (local.set $a (i32.const 0)) (local.set $b (i32.const 0))\n  (if (i32.or (i32.eq (local.get $tag) (i32.const 5)) (i32.eq (local.get $tag) (i32.const 6)))\n   (then (local.set $a (call $a (local.get $h))) (local.set $b (call $b (local.get $h)))))\n  (if (i32.or (i32.eq (local.get $tag) (i32.const 12)) (i32.eq (local.get $tag) (i32.const 13)))\n   (then (local.set $a (call $a (local.get $h)))))\n  (if (i32.gt_u (local.get $todo) (i32.const 510)) (then (call $quota (i32.const 3)) (br $done)))\n  (if (local.get $b) (then\n   (local.set $address (i32.add (i32.const 8192) (i32.mul (local.get $todo) (i32.const 8))))\n   (i32.store (local.get $address) (local.get $b))\n   (i32.store offset=4 (local.get $address) (i32.add (local.get $depth) (i32.const 1)))\n   (local.set $todo (i32.add (local.get $todo) (i32.const 1)))))\n  (if (local.get $a) (then\n   (local.set $address (i32.add (i32.const 8192) (i32.mul (local.get $todo) (i32.const 8))))\n   (i32.store (local.get $address) (local.get $a))\n   (i32.store offset=4 (local.get $address) (i32.add (local.get $depth) (i32.const 1)))\n   (local.set $todo (i32.add (local.get $todo) (i32.const 1)))))\n  (br $next)))\n (i64.or (i64.extend_i32_u (local.get $leaves)) (i64.shl (i64.extend_i32_u (local.get $max_depth)) (i64.const 32))))\n\n(func $capture_recipe (param $value i32) (param $witness i32) (result i32) (local $tag i32)\n (local.set $tag (call $kind (local.get $value)))\n (if (i32.eq (local.get $tag) (i32.const 1))\n  (then (return (call $atom (i32.const 1) (call $payload (local.get $value)) (i32.const 0)))))\n (if (i32.eq (local.get $tag) (i32.const 2))\n  (then (return (call $atom (i32.const 4) (call $payload (local.get $value)) (i32.const 0)))))\n (if (i32.eq (local.get $tag) (i32.const 3))\n  (then (return (call $atom (i32.const 5) (i64.const 0) (i32.const 0)))))\n (if (i32.eq (local.get $tag) (i32.const 4))\n  (then (return (call $atom (i32.const 3) (i64.const 0) (local.get $value)))))\n ;; Complete type witness: both sum alternatives and nested Program interfaces.\n (call $new (i32.const 8) (i64.const 0) (local.get $value)\n  (i32.const 0) (i32.const 0) (i32.const 8) (local.get $witness)\n  (i32.const 0) (i32.const 0) (i32.const 0)))\n(func $op_quote_typed (param $input i32) (param $output i32) (param $witness i32)\n (local $value i32) (local $recipe i32) (local $measure i64)\n (if (i32.eqz (global.get $recipe_limit)) (then (call $quota (i32.const 2)) (return)))\n (if (i32.eqz (global.get $depth_limit)) (then (call $quota (i32.const 3)) (return)))\n (local.set $value (call $pop_box))\n (if (global.get $failure) (then (return)))\n (local.set $measure (call $measure_data (local.get $value)))\n (if (global.get $failure) (then (return)))\n (local.set $recipe (call $capture_recipe (local.get $value) (local.get $witness)))\n (call $push_ref (call $program (i32.const 1) (local.get $input) (local.get $output)\n  (local.get $recipe) (i64.const 0) (local.get $value) (i32.const 0)\n  (i32.wrap_i64 (i64.shr_u (local.get $measure) (i64.const 32))) (i32.wrap_i64 (local.get $measure)))))\n")
             match r5 with
             | core.result.Result.Ok _ =>
               let (r6, out7) ←
                 source.emit.imports.fragment out6 (toStr
-                  ";; Observation walks immutable data only. It never invokes executable entries.\n;; Positive work items are recipe nodes, negative items boxed data, MIN_INT ends a group.\n(func $walk_push (param $recipe i32)\n (if (i32.or (global.get $failure) (i32.eqz (local.get $recipe))) (then (return)))\n (if (i32.ge_u (global.get $rp) (i32.const 2048))\n  (then (call $quota (i32.const 7)) (return)))\n (i32.store (i32.add (i32.const 12288) (i32.mul (global.get $rp) (i32.const 4))) (local.get $recipe))\n (global.set $rp (i32.add (global.get $rp) (i32.const 1))))\n(func $observation_tick (result i32)\n (if (global.get $failure) (then (return (i32.const 0))))\n (if (i32.ge_u (global.get $reflection_steps) (global.get $step_limit))\n  (then (call $quota (i32.const 7)) (return (i32.const 0))))\n (global.set $reflection_steps (i32.add (global.get $reflection_steps) (i32.const 1)))\n (i32.const 1))\n(func $observe_atom (param $tag i32) (param $value i64) (local $address i32)\n (if (global.get $failure) (then (return)))\n (if (i32.ge_u (global.get $recipe_count) (i32.const 2048))\n  (then (call $quota (i32.const 7)) (return)))\n (local.set $address (i32.add (i32.const 24576) (i32.mul (global.get $recipe_count) (i32.const 16))))\n (i32.store (local.get $address) (local.get $tag))\n (i64.store offset=8 (local.get $address) (local.get $value))\n (global.set $recipe_count (i32.add (global.get $recipe_count) (i32.const 1))))\n(func $observe_interface (param $program i32)\n (if (global.get $source_reflection) (then\n  (call $observe_atom (i32.const 17) (i64.extend_i32_u (call $y (local.get $program))))\n  (call $observe_atom (i32.const 18) (i64.extend_i32_u (call $z (local.get $program))))\n  (call $observe_atom (i32.const 19) (call $payload (local.get $program))))))\n(func $observe_data (param $value i32) (local $tag i32) (local $at i32) (local $length i32)\n (local.set $tag (call $kind (local.get $value)))\n (if (i32.eq (local.get $tag) (i32.const 1))\n  (then (call $observe_atom (i32.const 1) (call $payload (local.get $value))) (return)))\n (if (i32.eq (local.get $tag) (i32.const 2))\n  (then (call $observe_atom (i32.const 4) (call $payload (local.get $value))) (return)))\n (if (i32.eq (local.get $tag) (i32.const 3))\n  (then (call $observe_atom (i32.const 5) (i64.const 0)) (return)))\n (call $walk_push (i32.const -2147483648))\n (if (i32.eq (local.get $tag) (i32.const 4)) (then\n  (call $observe_atom (i32.const 14) (i64.const 0)) (call $observe_interface (local.get $value))\n  (call $walk_push (call $c (local.get $value))) (return)))\n (if (i32.eq (local.get $tag) (i32.const 5)) (then\n  (call $observe_atom (i32.const 9) (i64.const 0))\n  (call $walk_push (i32.sub (i32.const 0) (call $b (local.get $value))))\n  (call $walk_push (i32.sub (i32.const 0) (call $a (local.get $value)))) (return)))\n (if (i32.or (i32.eq (local.get $tag) (i32.const 6)) (i32.eq (local.get $tag) (i32.const 7))) (then\n  (call $observe_atom (i32.const 10) (i64.const 0))\n  (if (i32.eq (local.get $tag) (i32.const 6)) (then\n   (call $walk_push (i32.sub (i32.const 0) (call $b (local.get $value))))\n   (call $walk_push (i32.sub (i32.const 0) (call $a (local.get $value)))))) (return)))\n (if (i32.eq (local.get $tag) (i32.const 10)) (then\n  (call $observe_atom (i32.const 13) (i64.const 0))\n  (call $walk_push (call $a (local.get $value))) (return)))\n (if (i32.eq (local.get $tag) (i32.const 11)) (then\n  (call $observe_atom (i32.const 8) (i64.const 0))\n  (local.set $length (call $y (local.get $value)))\n  (block $done (loop $byte\n   (br_if $done (i32.or (global.get $failure) (i32.ge_u (local.get $at) (local.get $length))))\n   (if (i32.eqz (call $observation_tick)) (then (br $done)))\n   (call $observe_atom (i32.const 7) (i64.extend_i32_u (i32.load8_u (i32.add (call $x (local.get $value)) (local.get $at)))))\n   (local.set $at (i32.add (local.get $at) (i32.const 1))) (br $byte))) (return)))\n (if (i32.or (i32.eq (local.get $tag) (i32.const 12)) (i32.eq (local.get $tag) (i32.const 13))) (then\n  (call $observe_atom (i32.sub (local.get $tag) (i32.const 1)) (i64.const 0))\n  (call $walk_push (i32.sub (i32.const 0) (call $a (local.get $value)))) (return)))\n (call $fail (i32.const 4)))\n(func $observe_recipe (param $recipe i32) (local $tag i32)\n (local.set $tag (call $kind (local.get $recipe)))\n (if (i32.eq (local.get $tag) (i32.const 9)) (then\n  (call $walk_push (call $b (local.get $recipe)))\n  (call $walk_push (call $a (local.get $recipe))) (return)))\n (if (i32.ne (local.get $tag) (i32.const 8))\n  (then (call $fail (i32.const 4)) (return)))\n (local.set $tag (call $x (local.get $recipe)))\n (if (i32.eq (local.get $tag) (i32.const 3)) (then\n  (call $observe_atom (i32.const 3) (i64.const 0))\n  (call $observe_interface (call $a (local.get $recipe)))\n  (call $walk_push (i32.const -2147483648))\n  (call $walk_push (call $c (call $a (local.get $recipe)))) (return)))\n (if (i32.eq (local.get $tag) (i32.const 8)) (then\n  (if (i32.ne (call $kind (call $a (local.get $recipe))) (i32.const 11))\n   (then (call $observe_atom (i32.const 16) (i64.extend_i32_u (call $y (local.get $recipe))))))\n  (call $walk_push (i32.sub (i32.const 0) (call $a (local.get $recipe)))) (return)))\n (call $observe_atom (local.get $tag) (call $payload (local.get $recipe)))\n (if (i32.and (global.get $source_reflection)\n       (i32.or (i32.eq (local.get $tag) (i32.const 2)) (i32.eq (local.get $tag) (i32.const 15)))) (then\n  (call $observe_atom (i32.const 20) (i64.extend_i32_u (call $y (local.get $recipe))))\n  (call $observe_atom (i32.const 21) (i64.extend_i32_u (call $z (local.get $recipe))))\n  (call $observe_atom (i32.const 22) (i64.extend_i32_u (call $w (local.get $recipe)))))))\n(func $reflect_internal (export \"reflect\") (result i32) (local $recipe i32) (local $address i32)\n (global.set $phase (i32.const 1))\n (global.set $recipe_count (i32.const 0)) (global.set $rp (i32.const 0))\n (global.set $reflection_steps (i32.const 0))\n (if (global.get $failure) (then (return (global.get $failure))))\n (if (i32.eqz (global.get $observed_program))\n  (then (call $fail (i32.const 4)) (return (global.get $failure))))\n (if (i32.eq (call $kind (global.get $observed_program)) (i32.const 10))\n  (then (call $walk_push (call $a (global.get $observed_program))))\n  (else (call $walk_push (call $c (global.get $observed_program)))))\n (block $done (loop $next\n  (br_if $done (i32.or (global.get $failure) (i32.eqz (global.get $rp))))\n  (if (i32.eqz (call $observation_tick)) (then (br $done)))\n  (global.set $rp (i32.sub (global.get $rp) (i32.const 1)))\n  (local.set $address (i32.add (i32.const 12288) (i32.mul (global.get $rp) (i32.const 4))))\n  (local.set $recipe (i32.load (local.get $address)))\n  (i32.store (local.get $address) (i32.const 0))\n  (if (i32.eq (local.get $recipe) (i32.const -2147483648))\n   (then (call $observe_atom (i32.const 6) (i64.const 0)))\n   (else (if (i32.lt_s (local.get $recipe) (i32.const 0))\n    (then (call $observe_data (i32.sub (i32.const 0) (local.get $recipe))))\n    (else (call $observe_recipe (local.get $recipe))))))\n  (br $next)))\n (if (global.get $failure) (then (call $cleanup_internal)))\n (global.get $failure))\n(func (export \"recipe_length\") (result i32) (global.get $recipe_count))\n(func $recipe_address (param $index i32) (result i32)\n (if (i32.ge_u (local.get $index) (global.get $recipe_count))\n  (then (call $fail (i32.const 4)) (return (i32.const 0))))\n (i32.add (i32.const 24576) (i32.mul (local.get $index) (i32.const 16))))\n(func (export \"recipe_kind\") (param $index i32) (result i32) (local $address i32)\n (local.set $address (call $recipe_address (local.get $index)))\n (if (global.get $failure) (then (return (i32.const 0))))\n (i32.load (local.get $address)))\n(func (export \"recipe_value\") (param $index i32) (result i64) (local $address i32)\n (local.set $address (call $recipe_address (local.get $index)))\n (if (global.get $failure) (then (return (i64.const 0))))\n (i64.load offset=8 (local.get $address)))\n")
+                  ";; Observation walks immutable data only. It never invokes executable entries.\n;; Positive work items are recipe nodes, negative items boxed data, MIN_INT ends a group.\n(func $walk_push (param $recipe i32)\n (if (i32.or (global.get $failure) (i32.eqz (local.get $recipe))) (then (return)))\n (if (i32.ge_u (global.get $rp) (i32.const 2048))\n  (then (call $quota (i32.const 7)) (return)))\n (i32.store (i32.add (i32.const 12288) (i32.mul (global.get $rp) (i32.const 4))) (local.get $recipe))\n (global.set $rp (i32.add (global.get $rp) (i32.const 1))))\n(func $observation_tick (result i32)\n (if (global.get $failure) (then (return (i32.const 0))))\n (if (i32.ge_u (global.get $reflection_steps) (global.get $step_limit))\n  (then (call $quota (i32.const 7)) (return (i32.const 0))))\n (global.set $reflection_steps (i32.add (global.get $reflection_steps) (i32.const 1)))\n (i32.const 1))\n(func $observe_atom (param $tag i32) (param $value i64) (local $address i32)\n (if (global.get $failure) (then (return)))\n (if (i32.ge_u (global.get $recipe_count) (i32.const 2048))\n  (then (call $quota (i32.const 7)) (return)))\n (local.set $address (i32.add (i32.const 24576) (i32.mul (global.get $recipe_count) (i32.const 16))))\n (i32.store (local.get $address) (local.get $tag))\n (i64.store offset=8 (local.get $address) (local.get $value))\n (global.set $recipe_count (i32.add (global.get $recipe_count) (i32.const 1))))\n(func $observe_interface (param $program i32)\n (if (global.get $source_reflection) (then\n  (call $observe_atom (i32.const 17) (i64.extend_i32_u (call $y (local.get $program))))\n  (call $observe_atom (i32.const 18) (i64.extend_i32_u (call $z (local.get $program))))\n  (call $observe_atom (i32.const 19) (call $payload (local.get $program))))))\n(func $observe_data (param $value i32) (local $tag i32) (local $at i32) (local $length i32)\n (local.set $tag (call $kind (local.get $value)))\n (if (i32.eq (local.get $tag) (i32.const 1))\n  (then (call $observe_atom (i32.const 1) (call $payload (local.get $value))) (return)))\n (if (i32.eq (local.get $tag) (i32.const 2))\n  (then (call $observe_atom (i32.const 4) (call $payload (local.get $value))) (return)))\n (if (i32.eq (local.get $tag) (i32.const 3))\n  (then (call $observe_atom (i32.const 5) (i64.const 0)) (return)))\n (call $walk_push (i32.const -2147483648))\n (if (i32.eq (local.get $tag) (i32.const 4)) (then\n  (call $observe_atom (i32.const 14) (i64.const 0)) (call $observe_interface (local.get $value))\n  (call $walk_push (call $c (local.get $value))) (return)))\n (if (i32.eq (local.get $tag) (i32.const 5)) (then\n  (call $observe_atom (i32.const 9) (i64.const 0))\n  (call $walk_push (i32.sub (i32.const 0) (call $b (local.get $value))))\n  (call $walk_push (i32.sub (i32.const 0) (call $a (local.get $value)))) (return)))\n (if (i32.or (i32.eq (local.get $tag) (i32.const 6)) (i32.eq (local.get $tag) (i32.const 7))) (then\n  (call $observe_atom (i32.const 10) (i64.const 0))\n  (if (i32.eq (local.get $tag) (i32.const 6)) (then\n   (call $walk_push (i32.sub (i32.const 0) (call $b (local.get $value))))\n   (call $walk_push (i32.sub (i32.const 0) (call $a (local.get $value)))))) (return)))\n (if (i32.eq (local.get $tag) (i32.const 10)) (then\n  (call $observe_atom (i32.const 13) (i64.const 0))\n  (call $walk_push (call $a (local.get $value))) (return)))\n (if (i32.eq (local.get $tag) (i32.const 11)) (then\n  (call $observe_atom (i32.const 8) (i64.const 0))\n  (local.set $length (call $y (local.get $value)))\n  (block $done (loop $byte\n   (br_if $done (i32.or (global.get $failure) (i32.ge_u (local.get $at) (local.get $length))))\n   (if (i32.eqz (call $observation_tick)) (then (br $done)))\n   (call $observe_atom (i32.const 7) (i64.extend_i32_u (i32.load8_u (i32.add (call $x (local.get $value)) (local.get $at)))))\n   (local.set $at (i32.add (local.get $at) (i32.const 1))) (br $byte))) (return)))\n (if (i32.or (i32.eq (local.get $tag) (i32.const 12)) (i32.eq (local.get $tag) (i32.const 13))) (then\n  (call $observe_atom (i32.sub (local.get $tag) (i32.const 1)) (i64.const 0))\n  (call $walk_push (i32.sub (i32.const 0) (call $a (local.get $value)))) (return)))\n (if (i32.eq (local.get $tag) (i32.const 14)) (then\n  (call $observe_atom (i32.const 23) (i64.extend_i32_u (call $x (local.get $value)))) (return)))\n (if (i32.eq (local.get $tag) (i32.const 15)) (then\n  (call $observe_atom (i32.const 24) (call $payload (local.get $value))) (return)))\n (if (i32.eq (local.get $tag) (i32.const 16)) (then\n  (call $observe_atom (i32.const 23) (i64.extend_i32_u (call $x (call $b (local.get $value)))))\n  (call $observe_atom (i32.const 24) (call $payload (call $c (local.get $value))))\n  (call $observe_atom (i32.const 25) (call $payload (local.get $value)))\n  (call $walk_push (i32.const -2147483648))\n  (call $walk_push (i32.sub (i32.const 0) (call $a (local.get $value)))) (return)))\n (call $fail (i32.const 4)))\n(func $observe_recipe (param $recipe i32) (local $tag i32)\n (local.set $tag (call $kind (local.get $recipe)))\n (if (i32.eq (local.get $tag) (i32.const 9)) (then\n  (call $walk_push (call $b (local.get $recipe)))\n  (call $walk_push (call $a (local.get $recipe))) (return)))\n (if (i32.ne (local.get $tag) (i32.const 8))\n  (then (call $fail (i32.const 4)) (return)))\n (local.set $tag (call $x (local.get $recipe)))\n (if (i32.eq (local.get $tag) (i32.const 3)) (then\n  (call $observe_atom (i32.const 3) (i64.const 0))\n  (call $observe_interface (call $a (local.get $recipe)))\n  (call $walk_push (i32.const -2147483648))\n  (call $walk_push (call $c (call $a (local.get $recipe)))) (return)))\n (if (i32.eq (local.get $tag) (i32.const 8)) (then\n  (if (i32.ne (call $kind (call $a (local.get $recipe))) (i32.const 11))\n   (then (call $observe_atom (i32.const 16) (i64.extend_i32_u (call $y (local.get $recipe))))))\n  (call $walk_push (i32.sub (i32.const 0) (call $a (local.get $recipe)))) (return)))\n (call $observe_atom (local.get $tag) (call $payload (local.get $recipe)))\n (if (i32.and (global.get $source_reflection)\n       (i32.or (i32.eq (local.get $tag) (i32.const 2)) (i32.eq (local.get $tag) (i32.const 15)))) (then\n  (call $observe_atom (i32.const 20) (i64.extend_i32_u (call $y (local.get $recipe))))\n  (call $observe_atom (i32.const 21) (i64.extend_i32_u (call $z (local.get $recipe))))\n  (call $observe_atom (i32.const 22) (i64.extend_i32_u (call $w (local.get $recipe)))))))\n(func $reflect_internal (export \"reflect\") (result i32) (local $recipe i32) (local $address i32)\n (global.set $phase (i32.const 1))\n (global.set $recipe_count (i32.const 0)) (global.set $rp (i32.const 0))\n (global.set $reflection_steps (i32.const 0))\n (if (global.get $failure) (then (return (global.get $failure))))\n (if (i32.eqz (global.get $observed_program))\n  (then (call $fail (i32.const 4)) (return (global.get $failure))))\n (if (i32.eq (call $kind (global.get $observed_program)) (i32.const 16))\n  (then (call $observe_data (global.get $observed_program)))\n  (else (if (i32.or (i32.eq (call $kind (global.get $observed_program)) (i32.const 14))\n                    (i32.eq (call $kind (global.get $observed_program)) (i32.const 15)))\n   (then (call $observe_data (global.get $observed_program)))\n   (else (if (i32.eq (call $kind (global.get $observed_program)) (i32.const 10))\n    (then (call $walk_push (call $a (global.get $observed_program))))\n    (else (call $walk_push (call $c (global.get $observed_program)))))))))\n (block $done (loop $next\n  (br_if $done (i32.or (global.get $failure) (i32.eqz (global.get $rp))))\n  (if (i32.eqz (call $observation_tick)) (then (br $done)))\n  (global.set $rp (i32.sub (global.get $rp) (i32.const 1)))\n  (local.set $address (i32.add (i32.const 12288) (i32.mul (global.get $rp) (i32.const 4))))\n  (local.set $recipe (i32.load (local.get $address)))\n  (i32.store (local.get $address) (i32.const 0))\n  (if (i32.eq (local.get $recipe) (i32.const -2147483648))\n   (then (call $observe_atom (i32.const 6) (i64.const 0)))\n   (else (if (i32.lt_s (local.get $recipe) (i32.const 0))\n    (then (call $observe_data (i32.sub (i32.const 0) (local.get $recipe))))\n    (else (call $observe_recipe (local.get $recipe))))))\n  (br $next)))\n (if (global.get $failure) (then (call $cleanup_internal)))\n (global.get $failure))\n(func (export \"recipe_length\") (result i32) (global.get $recipe_count))\n(func $recipe_address (param $index i32) (result i32)\n (if (i32.ge_u (local.get $index) (global.get $recipe_count))\n  (then (call $fail (i32.const 4)) (return (i32.const 0))))\n (i32.add (i32.const 24576) (i32.mul (local.get $index) (i32.const 16))))\n(func (export \"recipe_kind\") (param $index i32) (result i32) (local $address i32)\n (local.set $address (call $recipe_address (local.get $index)))\n (if (global.get $failure) (then (return (i32.const 0))))\n (i32.load (local.get $address)))\n(func (export \"recipe_value\") (param $index i32) (result i64) (local $address i32)\n (local.set $address (call $recipe_address (local.get $index)))\n (if (global.get $failure) (then (return (i64.const 0))))\n (i64.load offset=8 (local.get $address)))\n")
               match r6 with
               | core.result.Result.Ok _ =>
                 let (r7, out8) ←
                   source.emit.imports.fragment out7 (toStr
-                    ";; Source ABI is distinct from the experiment's begin/build/invoke lifecycle.\n;; Heap, operand stack and continuations are shared imported objects. Failure is\n;; terminal: begin cannot clear it, old host requests are never rolled back.\n(func $cleanup_internal (global.set $cp (i32.const 0)))\n(func $is_live (param $handle i32) (result i32) (local $address i32)\n (if (i32.or (i32.eqz (local.get $handle)) (i32.gt_u (local.get $handle) (global.get $heap_cursor)))\n  (then (return (i32.const 0))))\n (local.set $address (call $linear_address (local.get $handle)))\n (i32.and (i32.eq (i32.load offset=4 (local.get $address)) (local.get $handle))\n  (i32.le_u (i32.sub (i32.load (local.get $address)) (i32.const 1)) (i32.const 12))))\n(func $boxed_value (param $handle i32) (result i64)\n (if (result i64) (i32.lt_u (call $kind (local.get $handle)) (i32.const 4))\n  (then (call $payload (local.get $handle)))\n  (else (i64.extend_i32_u (local.get $handle)))))\n(func (export \"begin\")\n (param $allocation i32) (param $recipes i32) (param $depth i32)\n (param $operands i32) (param $continuations i32) (param $step_count i32) (result i32)\n (if (global.get $failure) (then (return (global.get $failure))))\n (if (global.get $cp) (then (call $fail (i32.const 4)) (return (global.get $failure))))\n (if (i32.or (i32.or (i32.gt_u (local.get $allocation) (i32.const 196608))\n                     (i32.gt_u (local.get $recipes) (i32.const 256)))\n              (i32.or (i32.gt_u (local.get $depth) (i32.const 256))\n               (i32.or (i32.gt_u (local.get $operands) (i32.const 2048))\n                (i32.or (i32.gt_u (local.get $continuations) (i32.const 4096))\n                         (i32.gt_u (local.get $step_count) (i32.const 100000))))))\n  (then (call $fail (i32.const 4)) (return (global.get $failure))))\n (global.set $heap_baseline (global.get $heap_cursor))\n (global.set $quota_reason (i32.const 0)) (global.set $phase (i32.const 0))\n (global.set $allocated_total (i64.const 0)) (global.set $released_total (i64.const 0))\n (global.set $allocation_peak (i32.const 0))\n (global.set $operand_peak (i32.const 0)) (global.set $continuation_peak (i32.const 0))\n (global.set $steps (i32.const 0)) (global.set $quote_invocations (i32.const 0))\n (global.set $reflection_steps (i32.const 0))\n (global.set $allocation_limit (local.get $allocation))\n (global.set $recipe_limit (local.get $recipes)) (global.set $depth_limit (local.get $depth))\n (global.set $operand_limit (local.get $operands))\n (global.set $continuation_limit (local.get $continuations))\n (global.set $step_limit (local.get $step_count))\n (if (i32.gt_u (i32.mul (global.get $sp) (i32.const 16)) (local.get $operands))\n  (then (call $quota (i32.const 4))))\n (global.get $failure))\n(func $op_emit (local $text i32)\n (local.set $text (i32.wrap_i64 (call $pop_kind (i32.const 11))))\n (if (global.get $failure) (then (return)))\n ;; A native host throw also leaves the session poisoned. Successful return is\n ;; the only place this provisional host-call failure may be cleared.\n (global.set $failure (i32.const 5))\n (if (i32.eqz (call $host_emit (call $x (local.get $text)) (call $y (local.get $text))))\n  (then (global.set $failure (i32.const 0)))))\n(func $op_abort\n (if (global.get $failure) (then (return)))\n (call $fail (i32.const 6))\n (drop (call $host_abort)))\n(func (export \"push_i64\") (param $value i64) (result i32)\n (call $push_i64 (local.get $value)) (global.get $failure))\n(func (export \"push_bool\") (param $value i32) (result i32)\n (if (i32.gt_u (local.get $value) (i32.const 1)) (then (call $fail (i32.const 4))))\n (call $push_bool (local.get $value)) (global.get $failure))\n(func (export \"push_unit\") (result i32)\n (call $push_unit) (global.get $failure))\n(func (export \"push_program\") (param $handle i32) (result i32)\n (if (global.get $failure) (then (return (global.get $failure))))\n (if (i32.eqz (call $is_live (local.get $handle)))\n  (then (call $fail (i32.const 4)) (return (global.get $failure))))\n (if (i32.ne (call $kind (local.get $handle)) (i32.const 4))\n  (then (call $fail (i32.const 4)) (return (global.get $failure))))\n (call $push_ref (local.get $handle)) (global.get $failure))\n(func (export \"stack_length\") (result i32) (global.get $sp))\n(func (export \"stack_kind\") (param $index i32) (result i32) (call $slot_kind (local.get $index)))\n(func (export \"stack_value\") (param $index i32) (result i64) (call $slot_value (local.get $index)))\n(func (export \"cell_kind\") (param $h i32) (result i32) (call $kind (local.get $h)))\n(func (export \"cell_payload\") (param $h i32) (result i64) (call $payload (local.get $h)))\n(func (export \"cell_a\") (param $h i32) (result i32) (call $a (local.get $h)))\n(func (export \"cell_b\") (param $h i32) (result i32) (call $b (local.get $h)))\n(func (export \"cell_c\") (param $h i32) (result i32) (call $c (local.get $h)))\n(func (export \"cell_x\") (param $h i32) (result i32) (call $x (local.get $h)))\n(func (export \"cell_y\") (param $h i32) (result i32) (call $y (local.get $h)))\n(func (export \"cell_z\") (param $h i32) (result i32) (call $z (local.get $h)))\n(func (export \"cell_w\") (param $h i32) (result i32) (call $w (local.get $h)))\n(func (export \"cell_n\") (param $h i32) (result i32) (call $n (local.get $h)))\n(func (export \"observe\") (param $index i32) (result i32) (local $tag i32)\n (if (global.get $failure) (then (return (global.get $failure))))\n (local.set $tag (call $slot_kind (local.get $index)))\n (if (i32.and (i32.ne (local.get $tag) (i32.const 4)) (i32.ne (local.get $tag) (i32.const 10)))\n  (then (call $fail (i32.const 4)) (return (global.get $failure))))\n (global.set $observed_program (i32.wrap_i64 (call $slot_value (local.get $index))))\n (call $reflect_internal))\n")
+                    ";; Source ABI is distinct from the experiment's begin/build/invoke lifecycle.\n;; Heap, operand stack and continuations are shared imported objects. Failure is\n;; terminal: begin cannot clear it, old host requests are never rolled back.\n(func $cleanup_internal (global.set $cp (i32.const 0)))\n(func $is_live (param $handle i32) (result i32) (local $address i32)\n (if (i32.or (i32.eqz (local.get $handle)) (i32.gt_u (local.get $handle) (global.get $heap_cursor)))\n  (then (return (i32.const 0))))\n (local.set $address (call $linear_address (local.get $handle)))\n (i32.and (i32.eq (i32.load offset=4 (local.get $address)) (local.get $handle))\n  (i32.le_u (i32.sub (i32.load (local.get $address)) (i32.const 1)) (i32.const 15))))\n(func $boxed_value (param $handle i32) (result i64)\n (if (result i64) (i32.lt_u (call $kind (local.get $handle)) (i32.const 4))\n  (then (call $payload (local.get $handle)))\n  (else (i64.extend_i32_u (local.get $handle)))))\n(func (export \"begin\")\n (param $allocation i32) (param $recipes i32) (param $depth i32)\n (param $operands i32) (param $continuations i32) (param $step_count i32) (result i32)\n (if (global.get $failure) (then (return (global.get $failure))))\n (if (global.get $cp) (then (call $fail (i32.const 4)) (return (global.get $failure))))\n (if (i32.or (i32.or (i32.gt_u (local.get $allocation) (i32.const 196608))\n                     (i32.gt_u (local.get $recipes) (i32.const 256)))\n              (i32.or (i32.gt_u (local.get $depth) (i32.const 256))\n               (i32.or (i32.gt_u (local.get $operands) (i32.const 2048))\n                (i32.or (i32.gt_u (local.get $continuations) (i32.const 4096))\n                         (i32.gt_u (local.get $step_count) (i32.const 100000))))))\n  (then (call $fail (i32.const 4)) (return (global.get $failure))))\n (global.set $heap_baseline (global.get $heap_cursor))\n (global.set $quota_reason (i32.const 0)) (global.set $phase (i32.const 0))\n (global.set $allocated_total (i64.const 0)) (global.set $released_total (i64.const 0))\n (global.set $allocation_peak (i32.const 0))\n (global.set $operand_peak (i32.const 0)) (global.set $continuation_peak (i32.const 0))\n (global.set $steps (i32.const 0)) (global.set $quote_invocations (i32.const 0))\n (global.set $reflection_steps (i32.const 0))\n (global.set $allocation_limit (local.get $allocation))\n (global.set $recipe_limit (local.get $recipes)) (global.set $depth_limit (local.get $depth))\n (global.set $operand_limit (local.get $operands))\n (global.set $continuation_limit (local.get $continuations))\n (global.set $step_limit (local.get $step_count))\n (if (i32.gt_u (i32.mul (global.get $sp) (i32.const 16)) (local.get $operands))\n  (then (call $quota (i32.const 4))))\n (global.get $failure))\n(func $op_emit (local $text i32)\n (local.set $text (i32.wrap_i64 (call $pop_kind (i32.const 11))))\n (if (global.get $failure) (then (return)))\n ;; A native host throw also leaves the session poisoned. Successful return is\n ;; the only place this provisional host-call failure may be cleared.\n (global.set $failure (i32.const 5))\n (if (i32.eqz (call $host_emit (call $x (local.get $text)) (call $y (local.get $text))))\n  (then (global.set $failure (i32.const 0)))))\n(func $op_abort\n (if (global.get $failure) (then (return)))\n (call $fail (i32.const 6))\n (drop (call $host_abort)))\n(func (export \"push_i64\") (param $value i64) (result i32)\n (call $push_i64 (local.get $value)) (global.get $failure))\n(func (export \"push_bool\") (param $value i32) (result i32)\n (if (i32.gt_u (local.get $value) (i32.const 1)) (then (call $fail (i32.const 4))))\n (call $push_bool (local.get $value)) (global.get $failure))\n(func (export \"push_unit\") (result i32)\n (call $push_unit) (global.get $failure))\n(func (export \"push_program\") (param $handle i32) (result i32)\n (if (global.get $failure) (then (return (global.get $failure))))\n (if (i32.eqz (call $is_live (local.get $handle)))\n  (then (call $fail (i32.const 4)) (return (global.get $failure))))\n (if (i32.ne (call $kind (local.get $handle)) (i32.const 4))\n  (then (call $fail (i32.const 4)) (return (global.get $failure))))\n (call $push_ref (local.get $handle)) (global.get $failure))\n;; Host-only companion injection. No exported constructor can forge accepted\n;; status: each cell only names indices the deterministic core already accepted,\n;; and every push fails closed on a missing or mistyped cell.\n(func (export \"push_contract\")\n (param $index i32) (param $statement i64) (param $claim_kind i32) (param $revision i32)\n (result i32)\n (if (global.get $failure) (then (return (global.get $failure))))\n (if (i32.gt_u (local.get $claim_kind) (i32.const 1))\n  (then (call $fail (i32.const 4)) (return (global.get $failure))))\n (call $push_ref (call $new (i32.const 14) (local.get $statement)\n  (i32.const 0) (i32.const 0) (i32.const 0)\n  (local.get $index) (local.get $claim_kind) (local.get $revision)\n  (i32.const 0) (i32.const 0))) (global.get $failure))\n(func (export \"push_evidence\")\n (param $index i32) (param $class i32) (param $ruleset i32) (param $contract i32)\n (result i32)\n (if (global.get $failure) (then (return (global.get $failure))))\n (if (i32.eqz (call $is_live (local.get $contract)))\n  (then (call $fail (i32.const 4)) (return (global.get $failure))))\n (if (i32.ne (call $kind (local.get $contract)) (i32.const 14))\n  (then (call $fail (i32.const 4)) (return (global.get $failure))))\n (call $push_ref (call $new (i32.const 15) (i64.extend_i32_u (local.get $index))\n  (local.get $contract) (i32.const 0) (i32.const 0)\n  (local.get $class) (local.get $ruleset) (i32.const 0)\n  (i32.const 0) (i32.const 0))) (global.get $failure))\n(func (export \"push_certified\")\n (param $subject i32) (param $contract i32) (param $evidence i32) (param $identity i64)\n (result i32)\n (if (global.get $failure) (then (return (global.get $failure))))\n (if (i32.eqz (call $is_live (local.get $subject)))\n  (then (call $fail (i32.const 4)) (return (global.get $failure))))\n (if (i32.ne (call $kind (local.get $subject)) (i32.const 4))\n  (then (call $fail (i32.const 4)) (return (global.get $failure))))\n (if (i32.eqz (call $is_live (local.get $contract)))\n  (then (call $fail (i32.const 4)) (return (global.get $failure))))\n (if (i32.ne (call $kind (local.get $contract)) (i32.const 14))\n  (then (call $fail (i32.const 4)) (return (global.get $failure))))\n (if (i32.eqz (call $is_live (local.get $evidence)))\n  (then (call $fail (i32.const 4)) (return (global.get $failure))))\n (if (i32.ne (call $kind (local.get $evidence)) (i32.const 15))\n  (then (call $fail (i32.const 4)) (return (global.get $failure))))\n ;; The evidence cell must reference exactly the supplied contract cell.\n (if (i32.ne (call $a (local.get $evidence)) (local.get $contract))\n  (then (call $fail (i32.const 4)) (return (global.get $failure))))\n (call $push_ref (call $new (i32.const 16) (local.get $identity)\n  (local.get $subject) (local.get $contract) (local.get $evidence)\n  (call $y (local.get $subject)) (call $z (local.get $subject)) (i32.const 0)\n  (call $w (local.get $subject)) (call $n (local.get $subject)))) (global.get $failure))\n(func (export \"certified_subject\") (param $handle i32) (result i32)\n (if (global.get $failure) (then (return (i32.const 0))))\n (if (i32.eqz (call $is_live (local.get $handle)))\n  (then (call $fail (i32.const 4)) (return (i32.const 0))))\n (if (i32.ne (call $kind (local.get $handle)) (i32.const 16))\n  (then (call $fail (i32.const 4)) (return (i32.const 0))))\n (call $a (local.get $handle)))\n(func (export \"stack_length\") (result i32) (global.get $sp))\n(func (export \"stack_kind\") (param $index i32) (result i32) (call $slot_kind (local.get $index)))\n(func (export \"stack_value\") (param $index i32) (result i64) (call $slot_value (local.get $index)))\n(func (export \"cell_kind\") (param $h i32) (result i32) (call $kind (local.get $h)))\n(func (export \"cell_payload\") (param $h i32) (result i64) (call $payload (local.get $h)))\n(func (export \"cell_a\") (param $h i32) (result i32) (call $a (local.get $h)))\n(func (export \"cell_b\") (param $h i32) (result i32) (call $b (local.get $h)))\n(func (export \"cell_c\") (param $h i32) (result i32) (call $c (local.get $h)))\n(func (export \"cell_x\") (param $h i32) (result i32) (call $x (local.get $h)))\n(func (export \"cell_y\") (param $h i32) (result i32) (call $y (local.get $h)))\n(func (export \"cell_z\") (param $h i32) (result i32) (call $z (local.get $h)))\n(func (export \"cell_w\") (param $h i32) (result i32) (call $w (local.get $h)))\n(func (export \"cell_n\") (param $h i32) (result i32) (call $n (local.get $h)))\n(func (export \"observe\") (param $index i32) (result i32) (local $tag i32)\n (if (global.get $failure) (then (return (global.get $failure))))\n (local.set $tag (call $slot_kind (local.get $index)))\n (if (i32.eqz (i32.or (i32.eq (local.get $tag) (i32.const 4))\n       (i32.or (i32.eq (local.get $tag) (i32.const 10))\n        (i32.or (i32.eq (local.get $tag) (i32.const 14))\n         (i32.or (i32.eq (local.get $tag) (i32.const 15)) (i32.eq (local.get $tag) (i32.const 16)))))))\n  (then (call $fail (i32.const 4)) (return (global.get $failure))))\n (global.set $observed_program (i32.wrap_i64 (call $slot_value (local.get $index))))\n (call $reflect_internal))\n")
                 match r7 with
                 | core.result.Result.Ok _ =>
                   ok (core.result.Result.Ok (), out8)
@@ -11295,9 +11356,84 @@ def source.emit.code_elements
     | some problem => ok (core.result.Result.Err problem, out2)
   | core.result.Result.Err _ => ok (r, out1)
 
-/-- [noble_wasm::source::types::child]:
-    Source: 'crates/noble-wasm/src/source/types.rs', lines 269:0-277:1 -/
-def source.types.child
+/-- [noble_wasm::source::types::emission::scalar]:
+    Source: 'crates/noble-wasm/src/source/types/emission.rs', lines 101:0-112:1 -/
+def source.types.emission.scalar
+  (out : output.Buffer) (tag : Std.U32) :
+  Result ((core.result.Result Unit Diagnostic) × output.Buffer)
+  := do
+  let s ←
+    lift (Array.to_slice
+      (Array.make 29#usize [
+        40#u8, 105#u8, 102#u8, 32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8,
+        110#u8, 101#u8, 32#u8, 40#u8, 108#u8, 111#u8, 99#u8, 97#u8, 108#u8,
+        46#u8, 103#u8, 101#u8, 116#u8, 32#u8, 36#u8, 116#u8, 97#u8, 103#u8,
+        41#u8, 32#u8
+        ]))
+  let (r, out1) ← output.Buffer.append out s
+  match r with
+  | core.result.Result.Ok _ =>
+    let (r1, out2) ← output.Buffer.i32 out1 tag
+    match r1 with
+    | core.result.Result.Ok _ =>
+      let s1 ←
+        lift (Array.to_slice
+          (Array.make 33#usize [
+            41#u8, 32#u8, 40#u8, 116#u8, 104#u8, 101#u8, 110#u8, 32#u8, 40#u8,
+            114#u8, 101#u8, 116#u8, 117#u8, 114#u8, 110#u8, 32#u8, 40#u8,
+            105#u8, 51#u8, 50#u8, 46#u8, 99#u8, 111#u8, 110#u8, 115#u8, 116#u8,
+            32#u8, 48#u8, 41#u8, 41#u8, 41#u8, 41#u8, 10#u8
+            ]))
+      let (r2, out3) ← output.Buffer.append out2 s1
+      match r2 with
+      | core.result.Result.Ok _ =>
+        match tag with
+        | 2#uscalar =>
+          let s2 ←
+            lift (Array.to_slice
+              (Array.make 44#usize [
+                40#u8, 105#u8, 54#u8, 52#u8, 46#u8, 108#u8, 101#u8, 95#u8,
+                117#u8, 32#u8, 40#u8, 108#u8, 111#u8, 99#u8, 97#u8, 108#u8,
+                46#u8, 103#u8, 101#u8, 116#u8, 32#u8, 36#u8, 118#u8, 97#u8,
+                108#u8, 117#u8, 101#u8, 41#u8, 32#u8, 40#u8, 105#u8, 54#u8,
+                52#u8, 46#u8, 99#u8, 111#u8, 110#u8, 115#u8, 116#u8, 32#u8,
+                49#u8, 41#u8, 41#u8, 10#u8
+                ]))
+          let (r3, out4) ← output.Buffer.append out3 s2
+          match r3 with
+          | core.result.Result.Ok _ => ok (core.result.Result.Ok (), out4)
+          | core.result.Result.Err _ => ok (r3, out4)
+        | 3#uscalar =>
+          let s2 ←
+            lift (Array.to_slice
+              (Array.make 29#usize [
+                40#u8, 105#u8, 54#u8, 52#u8, 46#u8, 101#u8, 113#u8, 122#u8,
+                32#u8, 40#u8, 108#u8, 111#u8, 99#u8, 97#u8, 108#u8, 46#u8,
+                103#u8, 101#u8, 116#u8, 32#u8, 36#u8, 118#u8, 97#u8, 108#u8,
+                117#u8, 101#u8, 41#u8, 41#u8, 10#u8
+                ]))
+          let (r3, out4) ← output.Buffer.append out3 s2
+          match r3 with
+          | core.result.Result.Ok _ => ok (core.result.Result.Ok (), out4)
+          | core.result.Result.Err _ => ok (r3, out4)
+        | _ =>
+          let s2 ←
+            lift (Array.to_slice
+              (Array.make 14#usize [
+                40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8, 111#u8, 110#u8,
+                115#u8, 116#u8, 32#u8, 49#u8, 41#u8, 10#u8
+                ]))
+          let (r3, out4) ← output.Buffer.append out3 s2
+          match r3 with
+          | core.result.Result.Ok _ => ok (core.result.Result.Ok (), out4)
+          | core.result.Result.Err _ => ok (r3, out4)
+      | core.result.Result.Err _ => ok (r2, out3)
+    | core.result.Result.Err _ => ok (r1, out2)
+  | core.result.Result.Err _ => ok (r, out1)
+
+/-- [noble_wasm::source::types::emission::child]:
+    Source: 'crates/noble-wasm/src/source/types/emission.rs', lines 87:0-95:1 -/
+def source.types.emission.child
   (out : output.Buffer) (id : Std.U32) (edge : Slice Std.U8) :
   Result ((core.result.Result Unit Diagnostic) × output.Buffer)
   := do
@@ -11357,9 +11493,9 @@ def source.types.child
     | core.result.Result.Err _ => ok (r1, out2)
   | core.result.Result.Err _ => ok (r, out1)
 
-/-- [noble_wasm::source::types::live]:
-    Source: 'crates/noble-wasm/src/source/types.rs', lines 258:0-260:1 -/
-def source.types.live
+/-- [noble_wasm::source::types::emission::live]:
+    Source: 'crates/noble-wasm/src/source/types/emission.rs', lines 76:0-78:1 -/
+def source.types.emission.live
   (out : output.Buffer) :
   Result ((core.result.Result Unit Diagnostic) × output.Buffer)
   := do
@@ -11403,9 +11539,9 @@ def source.types.live
         ]))
   output.Buffer.append out s
 
-/-- [noble_wasm::source::types::reference]:
-    Source: 'crates/noble-wasm/src/source/types.rs', lines 262:0-267:1 -/
-def source.types.reference
+/-- [noble_wasm::source::types::emission::reference]:
+    Source: 'crates/noble-wasm/src/source/types/emission.rs', lines 80:0-85:1 -/
+def source.types.emission.reference
   (out : output.Buffer) (tag : Std.U32) :
   Result ((core.result.Result Unit Diagnostic) × output.Buffer)
   := do
@@ -11433,14 +11569,14 @@ def source.types.reference
             ]))
       let (r2, out3) ← output.Buffer.append out2 s1
       match r2 with
-      | core.result.Result.Ok _ => source.types.live out3
+      | core.result.Result.Ok _ => source.types.emission.live out3
       | core.result.Result.Err _ => ok (r2, out3)
     | core.result.Result.Err _ => ok (r1, out2)
   | core.result.Result.Err _ => ok (r, out1)
 
-/-- [noble_wasm::source::types::emit_shape]:
-    Source: 'crates/noble-wasm/src/source/types.rs', lines 191:0-256:1 -/
-def source.types.emit_shape
+/-- [noble_wasm::source::types::emission::shape]:
+    Source: 'crates/noble-wasm/src/source/types/emission.rs', lines 6:0-74:1 -/
+def source.types.emission.shape
   (out : output.Buffer) (index : Std.Usize) (shape : source.types.Shape) :
   Result ((core.result.Result Unit Diagnostic) × output.Buffer)
   := do
@@ -11480,91 +11616,15 @@ def source.types.emit_shape
       | core.result.Result.Ok _ =>
         match shape with
         | source.types.Shape.Scalar tag =>
-          let s2 ←
-            lift (Array.to_slice
-              (Array.make 29#usize [
-                40#u8, 105#u8, 102#u8, 32#u8, 40#u8, 105#u8, 51#u8, 50#u8,
-                46#u8, 110#u8, 101#u8, 32#u8, 40#u8, 108#u8, 111#u8, 99#u8,
-                97#u8, 108#u8, 46#u8, 103#u8, 101#u8, 116#u8, 32#u8, 36#u8,
-                116#u8, 97#u8, 103#u8, 41#u8, 32#u8
-                ]))
-          let (r3, out4) ← output.Buffer.append out3 s2
+          let (r3, out4) ← source.types.emission.scalar out3 tag
           match r3 with
           | core.result.Result.Ok _ =>
-            let (r4, out5) ← output.Buffer.i32 out4 tag
-            match r4 with
-            | core.result.Result.Ok _ =>
-              let s3 ←
-                lift (Array.to_slice
-                  (Array.make 33#usize [
-                    41#u8, 32#u8, 40#u8, 116#u8, 104#u8, 101#u8, 110#u8, 32#u8,
-                    40#u8, 114#u8, 101#u8, 116#u8, 117#u8, 114#u8, 110#u8,
-                    32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8, 111#u8,
-                    110#u8, 115#u8, 116#u8, 32#u8, 48#u8, 41#u8, 41#u8, 41#u8,
-                    41#u8, 10#u8
-                    ]))
-              let (r5, out6) ← output.Buffer.append out5 s3
-              match r5 with
-              | core.result.Result.Ok _ =>
-                match tag with
-                | 2#uscalar =>
-                  let s4 ←
-                    lift (Array.to_slice
-                      (Array.make 44#usize [
-                        40#u8, 105#u8, 54#u8, 52#u8, 46#u8, 108#u8, 101#u8,
-                        95#u8, 117#u8, 32#u8, 40#u8, 108#u8, 111#u8, 99#u8,
-                        97#u8, 108#u8, 46#u8, 103#u8, 101#u8, 116#u8, 32#u8,
-                        36#u8, 118#u8, 97#u8, 108#u8, 117#u8, 101#u8, 41#u8,
-                        32#u8, 40#u8, 105#u8, 54#u8, 52#u8, 46#u8, 99#u8,
-                        111#u8, 110#u8, 115#u8, 116#u8, 32#u8, 49#u8, 41#u8,
-                        41#u8, 10#u8
-                        ]))
-                  let (r6, out7) ← output.Buffer.append out6 s4
-                  match r6 with
-                  | core.result.Result.Ok _ =>
-                    let s5 ←
-                      lift (Array.to_slice
-                        (Array.make 2#usize [ 41#u8, 10#u8 ]))
-                    output.Buffer.append out7 s5
-                  | core.result.Result.Err _ => ok (r6, out7)
-                | 3#uscalar =>
-                  let s4 ←
-                    lift (Array.to_slice
-                      (Array.make 29#usize [
-                        40#u8, 105#u8, 54#u8, 52#u8, 46#u8, 101#u8, 113#u8,
-                        122#u8, 32#u8, 40#u8, 108#u8, 111#u8, 99#u8, 97#u8,
-                        108#u8, 46#u8, 103#u8, 101#u8, 116#u8, 32#u8, 36#u8,
-                        118#u8, 97#u8, 108#u8, 117#u8, 101#u8, 41#u8, 41#u8,
-                        10#u8
-                        ]))
-                  let (r6, out7) ← output.Buffer.append out6 s4
-                  match r6 with
-                  | core.result.Result.Ok _ =>
-                    let s5 ←
-                      lift (Array.to_slice
-                        (Array.make 2#usize [ 41#u8, 10#u8 ]))
-                    output.Buffer.append out7 s5
-                  | core.result.Result.Err _ => ok (r6, out7)
-                | _ =>
-                  let s4 ←
-                    lift (Array.to_slice
-                      (Array.make 14#usize [
-                        40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8, 111#u8,
-                        110#u8, 115#u8, 116#u8, 32#u8, 49#u8, 41#u8, 10#u8
-                        ]))
-                  let (r6, out7) ← output.Buffer.append out6 s4
-                  match r6 with
-                  | core.result.Result.Ok _ =>
-                    let s5 ←
-                      lift (Array.to_slice
-                        (Array.make 2#usize [ 41#u8, 10#u8 ]))
-                    output.Buffer.append out7 s5
-                  | core.result.Result.Err _ => ok (r6, out7)
-              | core.result.Result.Err _ => ok (r5, out6)
-            | core.result.Result.Err _ => ok (r4, out5)
+            let s2 ←
+              lift (Array.to_slice (Array.make 2#usize [ 41#u8, 10#u8 ]))
+            output.Buffer.append out4 s2
           | core.result.Result.Err _ => ok (r3, out4)
         | source.types.Shape.Pair left right =>
-          let (r3, out4) ← source.types.reference out3 5#u32
+          let (r3, out4) ← source.types.emission.reference out3 5#u32
           match r3 with
           | core.result.Result.Ok _ =>
             let s2 ←
@@ -11577,7 +11637,7 @@ def source.types.emit_shape
             match r4 with
             | core.result.Result.Ok _ =>
               let s3 ← lift (Array.to_slice (Array.make 1#usize [ 97#u8 ]))
-              let (r5, out6) ← source.types.child out5 left s3
+              let (r5, out6) ← source.types.emission.child out5 left s3
               match r5 with
               | core.result.Result.Ok _ =>
                 let s4 ←
@@ -11594,7 +11654,7 @@ def source.types.emit_shape
                 | core.result.Result.Ok _ =>
                   let s5 ←
                     lift (Array.to_slice (Array.make 1#usize [ 98#u8 ]))
-                  let (r7, out8) ← source.types.child out7 right s5
+                  let (r7, out8) ← source.types.emission.child out7 right s5
                   match r7 with
                   | core.result.Result.Ok _ =>
                     let s6 ←
@@ -11636,7 +11696,7 @@ def source.types.emit_shape
           let (r3, out4) ← output.Buffer.append out3 s2
           match r3 with
           | core.result.Result.Ok _ =>
-            let (r4, out5) ← source.types.live out4
+            let (r4, out5) ← source.types.emission.live out4
             match r4 with
             | core.result.Result.Ok _ =>
               let s3 ←
@@ -11656,7 +11716,7 @@ def source.types.emit_shape
               match r5 with
               | core.result.Result.Ok _ =>
                 let s4 ← lift (Array.to_slice (Array.make 1#usize [ 97#u8 ]))
-                let (r6, out7) ← source.types.child out6 left s4
+                let (r6, out7) ← source.types.emission.child out6 left s4
                 match r6 with
                 | core.result.Result.Ok _ =>
                   let s5 ←
@@ -11670,7 +11730,8 @@ def source.types.emit_shape
                   | core.result.Result.Ok _ =>
                     let s6 ←
                       lift (Array.to_slice (Array.make 1#usize [ 97#u8 ]))
-                    let (r8, out9) ← source.types.child out8 right s6
+                    let (r8, out9) ←
+                      source.types.emission.child out8 right s6
                     match r8 with
                     | core.result.Result.Ok _ =>
                       let s7 ←
@@ -11714,7 +11775,7 @@ def source.types.emit_shape
           let (r3, out4) ← output.Buffer.append out3 s2
           match r3 with
           | core.result.Result.Ok _ =>
-            let (r4, out5) ← source.types.live out4
+            let (r4, out5) ← source.types.emission.live out4
             match r4 with
             | core.result.Result.Ok _ =>
               let s3 ←
@@ -11760,7 +11821,7 @@ def source.types.emit_shape
               match r5 with
               | core.result.Result.Ok _ =>
                 let s4 ← lift (Array.to_slice (Array.make 1#usize [ 97#u8 ]))
-                let (r6, out7) ← source.types.child out6 item s4
+                let (r6, out7) ← source.types.emission.child out6 item s4
                 match r6 with
                 | core.result.Result.Ok _ =>
                   let s5 ←
@@ -11795,7 +11856,7 @@ def source.types.emit_shape
             | core.result.Result.Err _ => ok (r4, out5)
           | core.result.Result.Err _ => ok (r3, out4)
         | source.types.Shape.Program input output_signature effects =>
-          let (r3, out4) ← source.types.reference out3 4#u32
+          let (r3, out4) ← source.types.emission.reference out3 4#u32
           match r3 with
           | core.result.Result.Ok _ =>
             let s2 ←
@@ -11866,7 +11927,7 @@ def source.types.emit_shape
             | core.result.Result.Err _ => ok (r4, out5)
           | core.result.Result.Err _ => ok (r3, out4)
         | source.types.Shape.Syntax =>
-          let (r3, out4) ← source.types.reference out3 10#u32
+          let (r3, out4) ← source.types.emission.reference out3 10#u32
           match r3 with
           | core.result.Result.Ok _ =>
             let s2 ←
@@ -11884,7 +11945,7 @@ def source.types.emit_shape
             | core.result.Result.Err _ => ok (r4, out5)
           | core.result.Result.Err _ => ok (r3, out4)
         | source.types.Shape.Text =>
-          let (r3, out4) ← source.types.reference out3 11#u32
+          let (r3, out4) ← source.types.emission.reference out3 11#u32
           match r3 with
           | core.result.Result.Ok _ =>
             let s2 ←
@@ -11901,12 +11962,105 @@ def source.types.emit_shape
               output.Buffer.append out5 s3
             | core.result.Result.Err _ => ok (r4, out5)
           | core.result.Result.Err _ => ok (r3, out4)
+        | source.types.Shape.Contract =>
+          let (r3, out4) ← source.types.emission.reference out3 14#u32
+          match r3 with
+          | core.result.Result.Ok _ =>
+            let s2 ←
+              lift (Array.to_slice
+                (Array.make 14#usize [
+                  40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8, 111#u8, 110#u8,
+                  115#u8, 116#u8, 32#u8, 49#u8, 41#u8, 10#u8
+                  ]))
+            let (r4, out5) ← output.Buffer.append out4 s2
+            match r4 with
+            | core.result.Result.Ok _ =>
+              let s3 ←
+                lift (Array.to_slice (Array.make 2#usize [ 41#u8, 10#u8 ]))
+              output.Buffer.append out5 s3
+            | core.result.Result.Err _ => ok (r4, out5)
+          | core.result.Result.Err _ => ok (r3, out4)
+        | source.types.Shape.Evidence =>
+          let (r3, out4) ← source.types.emission.reference out3 15#u32
+          match r3 with
+          | core.result.Result.Ok _ =>
+            let s2 ←
+              lift (Array.to_slice
+                (Array.make 130#usize [
+                  40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 97#u8, 110#u8, 100#u8,
+                  32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 101#u8, 113#u8,
+                  122#u8, 32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 101#u8,
+                  113#u8, 32#u8, 40#u8, 99#u8, 97#u8, 108#u8, 108#u8, 32#u8,
+                  36#u8, 97#u8, 32#u8, 40#u8, 108#u8, 111#u8, 99#u8, 97#u8,
+                  108#u8, 46#u8, 103#u8, 101#u8, 116#u8, 32#u8, 36#u8, 104#u8,
+                  41#u8, 41#u8, 32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8,
+                  99#u8, 111#u8, 110#u8, 115#u8, 116#u8, 32#u8, 48#u8, 41#u8,
+                  41#u8, 41#u8, 32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8,
+                  101#u8, 113#u8, 32#u8, 40#u8, 99#u8, 97#u8, 108#u8, 108#u8,
+                  32#u8, 36#u8, 107#u8, 105#u8, 110#u8, 100#u8, 32#u8, 40#u8,
+                  99#u8, 97#u8, 108#u8, 108#u8, 32#u8, 36#u8, 97#u8, 32#u8,
+                  40#u8, 108#u8, 111#u8, 99#u8, 97#u8, 108#u8, 46#u8, 103#u8,
+                  101#u8, 116#u8, 32#u8, 36#u8, 104#u8, 41#u8, 41#u8, 41#u8,
+                  32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8, 111#u8,
+                  110#u8, 115#u8, 116#u8, 32#u8, 49#u8, 52#u8, 41#u8, 41#u8,
+                  41#u8, 10#u8
+                  ]))
+            let (r4, out5) ← output.Buffer.append out4 s2
+            match r4 with
+            | core.result.Result.Ok _ =>
+              let s3 ←
+                lift (Array.to_slice (Array.make 2#usize [ 41#u8, 10#u8 ]))
+              output.Buffer.append out5 s3
+            | core.result.Result.Err _ => ok (r4, out5)
+          | core.result.Result.Err _ => ok (r3, out4)
+        | source.types.Shape.Certified =>
+          let (r3, out4) ← source.types.emission.reference out3 16#u32
+          match r3 with
+          | core.result.Result.Ok _ =>
+            let s2 ←
+              lift (Array.to_slice
+                (Array.make 205#usize [
+                  40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 97#u8, 110#u8, 100#u8,
+                  32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8, 101#u8, 113#u8,
+                  32#u8, 40#u8, 99#u8, 97#u8, 108#u8, 108#u8, 32#u8, 36#u8,
+                  107#u8, 105#u8, 110#u8, 100#u8, 32#u8, 40#u8, 99#u8, 97#u8,
+                  108#u8, 108#u8, 32#u8, 36#u8, 97#u8, 32#u8, 40#u8, 108#u8,
+                  111#u8, 99#u8, 97#u8, 108#u8, 46#u8, 103#u8, 101#u8, 116#u8,
+                  32#u8, 36#u8, 104#u8, 41#u8, 41#u8, 41#u8, 32#u8, 40#u8,
+                  105#u8, 51#u8, 50#u8, 46#u8, 99#u8, 111#u8, 110#u8, 115#u8,
+                  116#u8, 32#u8, 52#u8, 41#u8, 41#u8, 32#u8, 40#u8, 105#u8,
+                  51#u8, 50#u8, 46#u8, 97#u8, 110#u8, 100#u8, 32#u8, 40#u8,
+                  105#u8, 51#u8, 50#u8, 46#u8, 101#u8, 113#u8, 32#u8, 40#u8,
+                  99#u8, 97#u8, 108#u8, 108#u8, 32#u8, 36#u8, 107#u8, 105#u8,
+                  110#u8, 100#u8, 32#u8, 40#u8, 99#u8, 97#u8, 108#u8, 108#u8,
+                  32#u8, 36#u8, 98#u8, 32#u8, 40#u8, 108#u8, 111#u8, 99#u8,
+                  97#u8, 108#u8, 46#u8, 103#u8, 101#u8, 116#u8, 32#u8, 36#u8,
+                  104#u8, 41#u8, 41#u8, 41#u8, 32#u8, 40#u8, 105#u8, 51#u8,
+                  50#u8, 46#u8, 99#u8, 111#u8, 110#u8, 115#u8, 116#u8, 32#u8,
+                  49#u8, 52#u8, 41#u8, 41#u8, 32#u8, 40#u8, 105#u8, 51#u8,
+                  50#u8, 46#u8, 101#u8, 113#u8, 32#u8, 40#u8, 99#u8, 97#u8,
+                  108#u8, 108#u8, 32#u8, 36#u8, 107#u8, 105#u8, 110#u8, 100#u8,
+                  32#u8, 40#u8, 99#u8, 97#u8, 108#u8, 108#u8, 32#u8, 36#u8,
+                  99#u8, 32#u8, 40#u8, 108#u8, 111#u8, 99#u8, 97#u8, 108#u8,
+                  46#u8, 103#u8, 101#u8, 116#u8, 32#u8, 36#u8, 104#u8, 41#u8,
+                  41#u8, 41#u8, 32#u8, 40#u8, 105#u8, 51#u8, 50#u8, 46#u8,
+                  99#u8, 111#u8, 110#u8, 115#u8, 116#u8, 32#u8, 49#u8, 53#u8,
+                  41#u8, 41#u8, 41#u8, 41#u8, 10#u8
+                  ]))
+            let (r4, out5) ← output.Buffer.append out4 s2
+            match r4 with
+            | core.result.Result.Ok _ =>
+              let s3 ←
+                lift (Array.to_slice (Array.make 2#usize [ 41#u8, 10#u8 ]))
+              output.Buffer.append out5 s3
+            | core.result.Result.Err _ => ok (r4, out5)
+          | core.result.Result.Err _ => ok (r3, out4)
       | core.result.Result.Err _ => ok (r2, out3)
     | core.result.Result.Err _ => ok (r1, out2)
   | core.result.Result.Err _ => ok (r, out1)
 
 /-- [noble_wasm::source::types::{noble_wasm::source::types::Registry}::emit]: loop body 0:
-    Source: 'crates/noble-wasm/src/source/types.rs', lines 169:8-177:9 -/
+    Source: 'crates/noble-wasm/src/source/types.rs', lines 177:8-185:9 -/
 @[rust_loop_body]
 def source.types.Registry.emit_loop.body
   (self : source.types.Registry) (out : output.Buffer) (index : Std.Usize) :
@@ -11919,7 +12073,7 @@ def source.types.Registry.emit_loop.body
     let s ←
       alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
         source.types.Shape) self.shapes index
-    let (r, out1) ← source.types.emit_shape out index s
+    let (r, out1) ← source.types.emission.shape out index s
     match r with
     | core.result.Result.Ok _ =>
       let index1 ← index + 1#usize
@@ -11928,7 +12082,7 @@ def source.types.Registry.emit_loop.body
   else ok (done (out, none))
 
 /-- [noble_wasm::source::types::{noble_wasm::source::types::Registry}::emit]: loop 0:
-    Source: 'crates/noble-wasm/src/source/types.rs', lines 169:8-177:9 -/
+    Source: 'crates/noble-wasm/src/source/types.rs', lines 177:8-185:9 -/
 @[rust_loop]
 def source.types.Registry.emit_loop
   (self : source.types.Registry) (out : output.Buffer) (index : Std.Usize) :
@@ -11940,7 +12094,7 @@ def source.types.Registry.emit_loop
     (out, index)
 
 /-- [noble_wasm::source::types::{noble_wasm::source::types::Registry}::emit]:
-    Source: 'crates/noble-wasm/src/source/types.rs', lines 166:4-182:5 -/
+    Source: 'crates/noble-wasm/src/source/types.rs', lines 174:4-190:5 -/
 def source.types.Registry.emit
   (self : source.types.Registry) (out : output.Buffer) :
   Result ((core.result.Result Unit Diagnostic) × output.Buffer)
@@ -13224,7 +13378,7 @@ def source.preflight.PATH_LIMIT : Std.Usize := 64#usize
 def source.preflight.TYPE_LIMIT : Std.U32 := 512#u32
 
 /-- [noble_wasm::source::preflight::concrete::type_child]:
-    Source: 'crates/noble-wasm/src/source/preflight/concrete.rs', lines 36:0-62:1 -/
+    Source: 'crates/noble-wasm/src/source/preflight/concrete.rs', lines 39:0-65:1 -/
 def source.preflight.concrete.type_child
   (ty : noble_kernel.types.Ty) (child : Std.Usize) :
   Result (core.result.Result noble_kernel.types.Ty Diagnostic)
@@ -13239,6 +13393,12 @@ def source.preflight.concrete.type_child
   | noble_kernel.types.Ty.TextType =>
     ok (core.result.Result.Err Diagnostic.Invalid)
   | noble_kernel.types.Ty.SyntaxType =>
+    ok (core.result.Result.Err Diagnostic.Invalid)
+  | noble_kernel.types.Ty.ContractType =>
+    ok (core.result.Result.Err Diagnostic.Invalid)
+  | noble_kernel.types.Ty.EvidenceType =>
+    ok (core.result.Result.Err Diagnostic.Invalid)
+  | noble_kernel.types.Ty.CertifiedType =>
     ok (core.result.Result.Err Diagnostic.Invalid)
   | noble_kernel.types.Ty.PairType left right =>
     if child = 0#usize
@@ -13271,7 +13431,7 @@ def source.preflight.concrete.type_child
     ok (core.result.Result.Err Diagnostic.Invalid)
 
 /-- [noble_wasm::source::preflight::concrete::type_at]: loop body 0:
-    Source: 'crates/noble-wasm/src/source/preflight/concrete.rs', lines 75:4-86:5 -/
+    Source: 'crates/noble-wasm/src/source/preflight/concrete.rs', lines 78:4-89:5 -/
 @[rust_loop_body]
 def source.preflight.concrete.type_at_loop.body
   (path : Slice Std.Usize) (ty : noble_kernel.types.Ty) (index : Std.Usize) :
@@ -13291,7 +13451,7 @@ def source.preflight.concrete.type_at_loop.body
   else ok (done (ty, none))
 
 /-- [noble_wasm::source::preflight::concrete::type_at]: loop 0:
-    Source: 'crates/noble-wasm/src/source/preflight/concrete.rs', lines 75:4-86:5 -/
+    Source: 'crates/noble-wasm/src/source/preflight/concrete.rs', lines 78:4-89:5 -/
 @[rust_loop]
 def source.preflight.concrete.type_at_loop
   (path : Slice Std.Usize) (ty : noble_kernel.types.Ty) (index : Std.Usize) :
@@ -13303,7 +13463,7 @@ def source.preflight.concrete.type_at_loop
     (ty, index)
 
 /-- [noble_wasm::source::preflight::concrete::type_at]:
-    Source: 'crates/noble-wasm/src/source/preflight/concrete.rs', lines 68:0-91:1 -/
+    Source: 'crates/noble-wasm/src/source/preflight/concrete.rs', lines 71:0-94:1 -/
 def source.preflight.concrete.type_at
   (root : noble_kernel.types.Ty) (path : Slice Std.Usize) :
   Result (core.result.Result noble_kernel.types.Ty Diagnostic)
@@ -13315,7 +13475,7 @@ def source.preflight.concrete.type_at
   | some problem => ok (core.result.Result.Err problem)
 
 /-- [noble_wasm::source::preflight::concrete::type_children]:
-    Source: 'crates/noble-wasm/src/source/preflight/concrete.rs', lines 10:0-30:1 -/
+    Source: 'crates/noble-wasm/src/source/preflight/concrete.rs', lines 10:0-33:1 -/
 def source.preflight.concrete.type_children
   (ty : noble_kernel.types.Ty) :
   Result (core.result.Result Std.Usize Diagnostic)
@@ -13326,6 +13486,9 @@ def source.preflight.concrete.type_children
   | noble_kernel.types.Ty.I64Type => ok (core.result.Result.Ok 0#usize)
   | noble_kernel.types.Ty.TextType => ok (core.result.Result.Ok 0#usize)
   | noble_kernel.types.Ty.SyntaxType => ok (core.result.Result.Ok 0#usize)
+  | noble_kernel.types.Ty.ContractType => ok (core.result.Result.Ok 0#usize)
+  | noble_kernel.types.Ty.EvidenceType => ok (core.result.Result.Ok 0#usize)
+  | noble_kernel.types.Ty.CertifiedType => ok (core.result.Result.Ok 0#usize)
   | noble_kernel.types.Ty.PairType _ _ => ok (core.result.Result.Ok 2#usize)
   | noble_kernel.types.Ty.SumType _ _ => ok (core.result.Result.Ok 2#usize)
   | noble_kernel.types.Ty.ListType _ => ok (core.result.Result.Ok 1#usize)
@@ -13350,7 +13513,7 @@ def source.preflight.concrete.type_children
   | noble_kernel.types.Ty.ResourceType _ => ok (core.result.Result.Ok 0#usize)
 
 /-- [noble_wasm::source::preflight::concrete::type_child_count]:
-    Source: 'crates/noble-wasm/src/source/preflight/concrete.rs', lines 93:0-100:1 -/
+    Source: 'crates/noble-wasm/src/source/preflight/concrete.rs', lines 96:0-103:1 -/
 def source.preflight.concrete.type_child_count
   (root : noble_kernel.types.Ty) (path : Slice Std.Usize) (work : source.Work)
   :
@@ -13372,7 +13535,7 @@ def source.preflight.concrete.type_child_count
     ok (core.result.Result.Err failure, work1)
 
 /-- [noble_wasm::source::preflight::concrete::type_step]: loop body 0:
-    Source: 'crates/noble-wasm/src/source/preflight/concrete.rs', lines 122:4-136:5 -/
+    Source: 'crates/noble-wasm/src/source/preflight/concrete.rs', lines 125:4-139:5 -/
 @[rust_loop_body]
 def source.preflight.concrete.type_step_loop.body
   (root : noble_kernel.types.Ty) (path : alloc.vec.Vec Std.Usize)
@@ -13397,7 +13560,7 @@ def source.preflight.concrete.type_step_loop.body
       ok (done (path1, work1, none, some problem))
 
 /-- [noble_wasm::source::preflight::concrete::type_step]: loop 0:
-    Source: 'crates/noble-wasm/src/source/preflight/concrete.rs', lines 122:4-136:5 -/
+    Source: 'crates/noble-wasm/src/source/preflight/concrete.rs', lines 125:4-139:5 -/
 @[rust_loop]
 def source.preflight.concrete.type_step_loop
   (path : alloc.vec.Vec Std.Usize) (root : noble_kernel.types.Ty)
@@ -13411,7 +13574,7 @@ def source.preflight.concrete.type_step_loop
     (path, work)
 
 /-- [noble_wasm::source::preflight::concrete::type_step]:
-    Source: 'crates/noble-wasm/src/source/preflight/concrete.rs', lines 107:0-147:1 -/
+    Source: 'crates/noble-wasm/src/source/preflight/concrete.rs', lines 110:0-150:1 -/
 def source.preflight.concrete.type_step
   (root : noble_kernel.types.Ty) (path : alloc.vec.Vec Std.Usize)
   (work : source.Work) :
@@ -13445,7 +13608,7 @@ def source.preflight.concrete.type_step
     ok (core.result.Result.Err failure, path, work1)
 
 /-- [noble_wasm::source::preflight::concrete::ty]: loop body 0:
-    Source: 'crates/noble-wasm/src/source/preflight/concrete.rs', lines 162:4-176:5 -/
+    Source: 'crates/noble-wasm/src/source/preflight/concrete.rs', lines 165:4-179:5 -/
 @[rust_loop_body]
 def source.preflight.concrete.ty_loop.body
   (root : noble_kernel.types.Ty) (max_node_count : Std.U32)
@@ -13470,7 +13633,7 @@ def source.preflight.concrete.ty_loop.body
     | core.result.Result.Err problem => ok (done (work1, some problem))
 
 /-- [noble_wasm::source::preflight::concrete::ty]: loop 0:
-    Source: 'crates/noble-wasm/src/source/preflight/concrete.rs', lines 162:4-176:5 -/
+    Source: 'crates/noble-wasm/src/source/preflight/concrete.rs', lines 165:4-179:5 -/
 @[rust_loop]
 def source.preflight.concrete.ty_loop
   (root : noble_kernel.types.Ty) (max_node_count : Std.U32)
@@ -13483,7 +13646,7 @@ def source.preflight.concrete.ty_loop
     (work, path, nodes)
 
 /-- [noble_wasm::source::preflight::concrete::ty]:
-    Source: 'crates/noble-wasm/src/source/preflight/concrete.rs', lines 153:0-181:1 -/
+    Source: 'crates/noble-wasm/src/source/preflight/concrete.rs', lines 156:0-184:1 -/
 def source.preflight.concrete.ty
   (root : noble_kernel.types.Ty) (max_node_count : Std.U32)
   (work : source.Work) :
@@ -13502,7 +13665,7 @@ def source.preflight.concrete.ty
   | core.result.Result.Err _ => ok (r, work1)
 
 /-- [noble_wasm::source::preflight::concrete::stack]: loop body 0:
-    Source: 'crates/noble-wasm/src/source/preflight/concrete.rs', lines 201:4-209:5 -/
+    Source: 'crates/noble-wasm/src/source/preflight/concrete.rs', lines 204:4-212:5 -/
 @[rust_loop_body]
 def source.preflight.concrete.stack_loop.body
   (stack : Slice noble_kernel.types.Ty) (i : Std.U32) (work : source.Work)
@@ -13523,7 +13686,7 @@ def source.preflight.concrete.stack_loop.body
   else ok (done (work, none))
 
 /-- [noble_wasm::source::preflight::concrete::stack]: loop 0:
-    Source: 'crates/noble-wasm/src/source/preflight/concrete.rs', lines 201:4-209:5 -/
+    Source: 'crates/noble-wasm/src/source/preflight/concrete.rs', lines 204:4-212:5 -/
 @[rust_loop]
 def source.preflight.concrete.stack_loop
   (stack : Slice noble_kernel.types.Ty) (i : Std.U32) (work : source.Work)
@@ -13536,7 +13699,7 @@ def source.preflight.concrete.stack_loop
     (work, index)
 
 /-- [noble_wasm::source::preflight::concrete::stack]:
-    Source: 'crates/noble-wasm/src/source/preflight/concrete.rs', lines 187:0-214:1 -/
+    Source: 'crates/noble-wasm/src/source/preflight/concrete.rs', lines 190:0-217:1 -/
 def source.preflight.concrete.stack
   (stack : Slice noble_kernel.types.Ty)
   (limits : noble_kernel.untrusted.Limits) (work : source.Work) :
@@ -13859,7 +14022,7 @@ def source.preflight.definition
   | core.result.Result.Err _ => ok (r, work1)
 
 /-- [noble_wasm::source::preflight::schemes::pattern_child]:
-    Source: 'crates/noble-wasm/src/source/preflight/schemes.rs', lines 38:0-65:1 -/
+    Source: 'crates/noble-wasm/src/source/preflight/schemes.rs', lines 41:0-68:1 -/
 def source.preflight.schemes.pattern_child
   (pattern : noble_kernel.shapes.Pattern) (child : Std.Usize) :
   Result (core.result.Result noble_kernel.shapes.Pattern Diagnostic)
@@ -13874,6 +14037,12 @@ def source.preflight.schemes.pattern_child
   | noble_kernel.shapes.Pattern.TextPattern =>
     ok (core.result.Result.Err Diagnostic.Invalid)
   | noble_kernel.shapes.Pattern.SyntaxPattern =>
+    ok (core.result.Result.Err Diagnostic.Invalid)
+  | noble_kernel.shapes.Pattern.ContractPattern =>
+    ok (core.result.Result.Err Diagnostic.Invalid)
+  | noble_kernel.shapes.Pattern.EvidencePattern =>
+    ok (core.result.Result.Err Diagnostic.Invalid)
+  | noble_kernel.shapes.Pattern.CertifiedPattern =>
     ok (core.result.Result.Err Diagnostic.Invalid)
   | noble_kernel.shapes.Pattern.PairPattern left right =>
     if child = 0#usize
@@ -13911,7 +14080,7 @@ def source.preflight.schemes.pattern_child
     ok (core.result.Result.Err Diagnostic.Invalid)
 
 /-- [noble_wasm::source::preflight::schemes::pattern_at]: loop body 0:
-    Source: 'crates/noble-wasm/src/source/preflight/schemes.rs', lines 78:4-89:5 -/
+    Source: 'crates/noble-wasm/src/source/preflight/schemes.rs', lines 81:4-92:5 -/
 @[rust_loop_body]
 def source.preflight.schemes.pattern_at_loop.body
   (path : Slice Std.Usize) (pattern : noble_kernel.shapes.Pattern)
@@ -13932,7 +14101,7 @@ def source.preflight.schemes.pattern_at_loop.body
   else ok (done (pattern, none))
 
 /-- [noble_wasm::source::preflight::schemes::pattern_at]: loop 0:
-    Source: 'crates/noble-wasm/src/source/preflight/schemes.rs', lines 78:4-89:5 -/
+    Source: 'crates/noble-wasm/src/source/preflight/schemes.rs', lines 81:4-92:5 -/
 @[rust_loop]
 def source.preflight.schemes.pattern_at_loop
   (path : Slice Std.Usize) (pattern : noble_kernel.shapes.Pattern)
@@ -13945,7 +14114,7 @@ def source.preflight.schemes.pattern_at_loop
     (pattern, index)
 
 /-- [noble_wasm::source::preflight::schemes::pattern_at]:
-    Source: 'crates/noble-wasm/src/source/preflight/schemes.rs', lines 71:0-94:1 -/
+    Source: 'crates/noble-wasm/src/source/preflight/schemes.rs', lines 74:0-97:1 -/
 def source.preflight.schemes.pattern_at
   (root : noble_kernel.shapes.Pattern) (path : Slice Std.Usize) :
   Result (core.result.Result noble_kernel.shapes.Pattern Diagnostic)
@@ -13957,7 +14126,7 @@ def source.preflight.schemes.pattern_at
   | some problem => ok (core.result.Result.Err problem)
 
 /-- [noble_wasm::source::preflight::schemes::pattern_children]:
-    Source: 'crates/noble-wasm/src/source/preflight/schemes.rs', lines 6:0-32:1 -/
+    Source: 'crates/noble-wasm/src/source/preflight/schemes.rs', lines 6:0-35:1 -/
 def source.preflight.schemes.pattern_children
   (pattern : noble_kernel.shapes.Pattern) :
   Result (core.result.Result Std.Usize Diagnostic)
@@ -13972,6 +14141,12 @@ def source.preflight.schemes.pattern_children
   | noble_kernel.shapes.Pattern.TextPattern =>
     ok (core.result.Result.Ok 0#usize)
   | noble_kernel.shapes.Pattern.SyntaxPattern =>
+    ok (core.result.Result.Ok 0#usize)
+  | noble_kernel.shapes.Pattern.ContractPattern =>
+    ok (core.result.Result.Ok 0#usize)
+  | noble_kernel.shapes.Pattern.EvidencePattern =>
+    ok (core.result.Result.Ok 0#usize)
+  | noble_kernel.shapes.Pattern.CertifiedPattern =>
     ok (core.result.Result.Ok 0#usize)
   | noble_kernel.shapes.Pattern.PairPattern _ _ =>
     ok (core.result.Result.Ok 2#usize)
@@ -14004,7 +14179,7 @@ def source.preflight.schemes.pattern_children
     ok (core.result.Result.Ok 0#usize)
 
 /-- [noble_wasm::source::preflight::schemes::pattern_child_count]:
-    Source: 'crates/noble-wasm/src/source/preflight/schemes.rs', lines 96:0-103:1 -/
+    Source: 'crates/noble-wasm/src/source/preflight/schemes.rs', lines 99:0-106:1 -/
 def source.preflight.schemes.pattern_child_count
   (root : noble_kernel.shapes.Pattern) (path : Slice Std.Usize)
   (work : source.Work) :
@@ -14026,7 +14201,7 @@ def source.preflight.schemes.pattern_child_count
     ok (core.result.Result.Err failure, work1)
 
 /-- [noble_wasm::source::preflight::schemes::pattern_step]: loop body 0:
-    Source: 'crates/noble-wasm/src/source/preflight/schemes.rs', lines 125:4-139:5 -/
+    Source: 'crates/noble-wasm/src/source/preflight/schemes.rs', lines 128:4-142:5 -/
 @[rust_loop_body]
 def source.preflight.schemes.pattern_step_loop.body
   (root : noble_kernel.shapes.Pattern) (path : alloc.vec.Vec Std.Usize)
@@ -14051,7 +14226,7 @@ def source.preflight.schemes.pattern_step_loop.body
       ok (done (path1, work1, none, some problem))
 
 /-- [noble_wasm::source::preflight::schemes::pattern_step]: loop 0:
-    Source: 'crates/noble-wasm/src/source/preflight/schemes.rs', lines 125:4-139:5 -/
+    Source: 'crates/noble-wasm/src/source/preflight/schemes.rs', lines 128:4-142:5 -/
 @[rust_loop]
 def source.preflight.schemes.pattern_step_loop
   (path : alloc.vec.Vec Std.Usize) (root : noble_kernel.shapes.Pattern)
@@ -14065,7 +14240,7 @@ def source.preflight.schemes.pattern_step_loop
     (path, work)
 
 /-- [noble_wasm::source::preflight::schemes::pattern_step]:
-    Source: 'crates/noble-wasm/src/source/preflight/schemes.rs', lines 110:0-150:1 -/
+    Source: 'crates/noble-wasm/src/source/preflight/schemes.rs', lines 113:0-153:1 -/
 def source.preflight.schemes.pattern_step
   (root : noble_kernel.shapes.Pattern) (path : alloc.vec.Vec Std.Usize)
   (work : source.Work) :
@@ -14099,7 +14274,7 @@ def source.preflight.schemes.pattern_step
     ok (core.result.Result.Err failure, path, work1)
 
 /-- [noble_wasm::source::preflight::schemes::pattern]: loop body 0:
-    Source: 'crates/noble-wasm/src/source/preflight/schemes.rs', lines 164:4-178:5 -/
+    Source: 'crates/noble-wasm/src/source/preflight/schemes.rs', lines 167:4-181:5 -/
 @[rust_loop_body]
 def source.preflight.schemes.pattern_loop.body
   (root : noble_kernel.shapes.Pattern) (work : source.Work)
@@ -14121,7 +14296,7 @@ def source.preflight.schemes.pattern_loop.body
     | core.result.Result.Err problem => ok (done (work1, some problem))
 
 /-- [noble_wasm::source::preflight::schemes::pattern]: loop 0:
-    Source: 'crates/noble-wasm/src/source/preflight/schemes.rs', lines 164:4-178:5 -/
+    Source: 'crates/noble-wasm/src/source/preflight/schemes.rs', lines 167:4-181:5 -/
 @[rust_loop]
 def source.preflight.schemes.pattern_loop
   (root : noble_kernel.shapes.Pattern) (work : source.Work)
@@ -14134,7 +14309,7 @@ def source.preflight.schemes.pattern_loop
     (work, path, nodes)
 
 /-- [noble_wasm::source::preflight::schemes::pattern]:
-    Source: 'crates/noble-wasm/src/source/preflight/schemes.rs', lines 156:0-183:1 -/
+    Source: 'crates/noble-wasm/src/source/preflight/schemes.rs', lines 159:0-186:1 -/
 def source.preflight.schemes.pattern
   (root : noble_kernel.shapes.Pattern) (work : source.Work) :
   Result ((core.result.Result Unit Diagnostic) × source.Work)
@@ -14152,7 +14327,7 @@ def source.preflight.schemes.pattern
   | core.result.Result.Err _ => ok (r, work1)
 
 /-- [noble_wasm::source::preflight::schemes::check]: loop body 0:
-    Source: 'crates/noble-wasm/src/source/preflight/schemes.rs', lines 204:4-212:5 -/
+    Source: 'crates/noble-wasm/src/source/preflight/schemes.rs', lines 207:4-215:5 -/
 @[rust_loop_body]
 def source.preflight.schemes.check_loop0.body
   (v : alloc.vec.Vec noble_kernel.shapes.Pattern) (work : source.Work)
@@ -14175,7 +14350,7 @@ def source.preflight.schemes.check_loop0.body
   else ok (done (work, none))
 
 /-- [noble_wasm::source::preflight::schemes::check]: loop 0:
-    Source: 'crates/noble-wasm/src/source/preflight/schemes.rs', lines 204:4-212:5 -/
+    Source: 'crates/noble-wasm/src/source/preflight/schemes.rs', lines 207:4-215:5 -/
 @[rust_loop]
 def source.preflight.schemes.check_loop0
   (v : alloc.vec.Vec noble_kernel.shapes.Pattern) (work : source.Work)
@@ -14188,7 +14363,7 @@ def source.preflight.schemes.check_loop0
     (work, index)
 
 /-- [noble_wasm::source::preflight::schemes::check]: loop body 1:
-    Source: 'crates/noble-wasm/src/source/preflight/schemes.rs', lines 217:4-225:5 -/
+    Source: 'crates/noble-wasm/src/source/preflight/schemes.rs', lines 220:4-228:5 -/
 @[rust_loop_body]
 def source.preflight.schemes.check_loop1.body
   (v : alloc.vec.Vec noble_kernel.shapes.Pattern) (work : source.Work)
@@ -14211,7 +14386,7 @@ def source.preflight.schemes.check_loop1.body
   else ok (done (work, none))
 
 /-- [noble_wasm::source::preflight::schemes::check]: loop 1:
-    Source: 'crates/noble-wasm/src/source/preflight/schemes.rs', lines 217:4-225:5 -/
+    Source: 'crates/noble-wasm/src/source/preflight/schemes.rs', lines 220:4-228:5 -/
 @[rust_loop]
 def source.preflight.schemes.check_loop1
   (v : alloc.vec.Vec noble_kernel.shapes.Pattern) (work : source.Work)
@@ -14224,7 +14399,7 @@ def source.preflight.schemes.check_loop1
     (work, index)
 
 /-- [noble_wasm::source::preflight::schemes::check]:
-    Source: 'crates/noble-wasm/src/source/preflight/schemes.rs', lines 189:0-230:1 -/
+    Source: 'crates/noble-wasm/src/source/preflight/schemes.rs', lines 192:0-233:1 -/
 def source.preflight.schemes.check
   (scheme : noble_kernel.words.Scheme) (work : source.Work) :
   Result ((core.result.Result Unit Diagnostic) × source.Work)
@@ -14370,7 +14545,7 @@ def source.preflight.check
       | some problem => ok (core.result.Result.Err problem, work1)
 
 /-- [noble_wasm::source::types::{noble_wasm::source::types::Registry}::new]:
-    Source: 'crates/noble-wasm/src/source/types.rs', lines 23:4-28:5 -/
+    Source: 'crates/noble-wasm/src/source/types.rs', lines 28:4-33:5 -/
 def source.types.Registry.new : Result source.types.Registry := do
   ok
     {
@@ -14574,6 +14749,12 @@ def source.plan.allocation.quotation
         | noble_kernel.types.Ty.TextType =>
           ok (core.result.Result.Err Diagnostic.Invalid, compiler, work)
         | noble_kernel.types.Ty.SyntaxType =>
+          ok (core.result.Result.Err Diagnostic.Invalid, compiler, work)
+        | noble_kernel.types.Ty.ContractType =>
+          ok (core.result.Result.Err Diagnostic.Invalid, compiler, work)
+        | noble_kernel.types.Ty.EvidenceType =>
+          ok (core.result.Result.Err Diagnostic.Invalid, compiler, work)
+        | noble_kernel.types.Ty.CertifiedType =>
           ok (core.result.Result.Err Diagnostic.Invalid, compiler, work)
         | noble_kernel.types.Ty.PairType _ _ =>
           ok (core.result.Result.Err Diagnostic.Invalid, compiler, work)
@@ -15110,6 +15291,12 @@ def source.plan.operations.quote
         | noble_kernel.types.Ty.TextType =>
           ok (core.result.Result.Err Diagnostic.Invalid, compiler1, work1)
         | noble_kernel.types.Ty.SyntaxType =>
+          ok (core.result.Result.Err Diagnostic.Invalid, compiler1, work1)
+        | noble_kernel.types.Ty.ContractType =>
+          ok (core.result.Result.Err Diagnostic.Invalid, compiler1, work1)
+        | noble_kernel.types.Ty.EvidenceType =>
+          ok (core.result.Result.Err Diagnostic.Invalid, compiler1, work1)
+        | noble_kernel.types.Ty.CertifiedType =>
           ok (core.result.Result.Err Diagnostic.Invalid, compiler1, work1)
         | noble_kernel.types.Ty.PairType _ _ =>
           ok (core.result.Result.Err Diagnostic.Invalid, compiler1, work1)
@@ -15665,7 +15852,7 @@ def source.plan.operations.fill
     ok (core.result.Result.Err failure, compiler1, layout1, work1)
 
 /-- [noble_wasm::source::types::{noble_wasm::source::types::Registry}::key_matches]:
-    Source: 'crates/noble-wasm/src/source/types.rs', lines 80:4-88:5 -/
+    Source: 'crates/noble-wasm/src/source/types.rs', lines 85:4-93:5 -/
 def source.types.Registry.key_matches
   (self : source.types.Registry) (index : Std.Usize)
   (ty : noble_kernel.types.Ty) (work : source.Work) :
@@ -15683,7 +15870,7 @@ def source.types.Registry.key_matches
     ok (core.result.Result.Err failure, work1)
 
 /-- [noble_wasm::source::types::{noble_wasm::source::types::Registry}::find]: loop body 0:
-    Source: 'crates/noble-wasm/src/source/types.rs', lines 57:8-69:9 -/
+    Source: 'crates/noble-wasm/src/source/types.rs', lines 62:8-74:9 -/
 @[rust_loop_body]
 def source.types.Registry.find_loop.body
   (self : source.types.Registry) (ty : noble_kernel.types.Ty)
@@ -15705,7 +15892,7 @@ def source.types.Registry.find_loop.body
   else ok (done (work, none, none))
 
 /-- [noble_wasm::source::types::{noble_wasm::source::types::Registry}::find]: loop 0:
-    Source: 'crates/noble-wasm/src/source/types.rs', lines 57:8-69:9 -/
+    Source: 'crates/noble-wasm/src/source/types.rs', lines 62:8-74:9 -/
 @[rust_loop]
 def source.types.Registry.find_loop
   (self : source.types.Registry) (ty : noble_kernel.types.Ty)
@@ -15718,7 +15905,7 @@ def source.types.Registry.find_loop
     (work, index)
 
 /-- [noble_wasm::source::types::{noble_wasm::source::types::Registry}::find]:
-    Source: 'crates/noble-wasm/src/source/types.rs', lines 49:4-74:5 -/
+    Source: 'crates/noble-wasm/src/source/types.rs', lines 54:4-79:5 -/
 def source.types.Registry.find
   (self : source.types.Registry) (ty : noble_kernel.types.Ty)
   (work : source.Work) :
@@ -15731,7 +15918,7 @@ def source.types.Registry.find
   | some problem => ok (core.result.Result.Err problem, work1)
 
 /-- [noble_wasm::source::types::{noble_wasm::source::types::Registry}::intern]:
-    Source: 'crates/noble-wasm/src/source/types.rs', lines 30:4-47:5 -/
+    Source: 'crates/noble-wasm/src/source/types.rs', lines 35:4-52:5 -/
 def source.types.Registry.intern
   (self : source.types.Registry) (ty : noble_kernel.types.Ty)
   (work : source.Work) :
@@ -15766,7 +15953,7 @@ def source.types.Registry.intern
     ok (core.result.Result.Err failure, self, work1)
 
 /-- [noble_wasm::source::types::{noble_wasm::source::types::Registry}::next_shape]:
-    Source: 'crates/noble-wasm/src/source/types.rs', lines 134:4-164:5 -/
+    Source: 'crates/noble-wasm/src/source/types.rs', lines 139:4-172:5 -/
 def source.types.Registry.next_shape
   (self : source.types.Registry) (compiler : source.Compiler)
   (work : source.Work) :
@@ -15795,6 +15982,15 @@ def source.types.Registry.next_shape
       ok (core.result.Result.Ok source.types.Shape.Text, self, compiler, work1)
     | noble_kernel.types.Ty.SyntaxType =>
       ok (core.result.Result.Ok source.types.Shape.Syntax, self, compiler,
+        work1)
+    | noble_kernel.types.Ty.ContractType =>
+      ok (core.result.Result.Ok source.types.Shape.Contract, self, compiler,
+        work1)
+    | noble_kernel.types.Ty.EvidenceType =>
+      ok (core.result.Result.Ok source.types.Shape.Evidence, self, compiler,
+        work1)
+    | noble_kernel.types.Ty.CertifiedType =>
+      ok (core.result.Result.Ok source.types.Shape.Certified, self, compiler,
         work1)
     | noble_kernel.types.Ty.PairType left right =>
       let (r1, self1, work2) ← source.types.Registry.intern self left work1
@@ -15859,7 +16055,7 @@ def source.types.Registry.next_shape
     ok (core.result.Result.Err failure, self, compiler, work1)
 
 /-- [noble_wasm::source::types::{noble_wasm::source::types::Registry}::stack]: loop body 0:
-    Source: 'crates/noble-wasm/src/source/types.rs', lines 99:8-110:9 -/
+    Source: 'crates/noble-wasm/src/source/types.rs', lines 104:8-115:9 -/
 @[rust_loop_body]
 def source.types.Registry.stack_loop0.body
   (stack : Slice noble_kernel.types.Ty) (self : source.types.Registry)
@@ -15883,7 +16079,7 @@ def source.types.Registry.stack_loop0.body
   else ok (done (self, work, result, none))
 
 /-- [noble_wasm::source::types::{noble_wasm::source::types::Registry}::stack]: loop 0:
-    Source: 'crates/noble-wasm/src/source/types.rs', lines 99:8-110:9 -/
+    Source: 'crates/noble-wasm/src/source/types.rs', lines 104:8-115:9 -/
 @[rust_loop]
 def source.types.Registry.stack_loop0
   (self : source.types.Registry) (stack : Slice noble_kernel.types.Ty)
@@ -15897,7 +16093,7 @@ def source.types.Registry.stack_loop0
     (self, work, result, index)
 
 /-- [noble_wasm::source::types::{noble_wasm::source::types::Registry}::stack]: loop body 1:
-    Source: 'crates/noble-wasm/src/source/types.rs', lines 115:8-123:9 -/
+    Source: 'crates/noble-wasm/src/source/types.rs', lines 120:8-128:9 -/
 @[rust_loop_body]
 def source.types.Registry.stack_loop1.body
   (self : source.types.Registry) (compiler : source.Compiler)
@@ -15921,7 +16117,7 @@ def source.types.Registry.stack_loop1.body
   else ok (done (self, compiler, work, none))
 
 /-- [noble_wasm::source::types::{noble_wasm::source::types::Registry}::stack]: loop 1:
-    Source: 'crates/noble-wasm/src/source/types.rs', lines 115:8-123:9 -/
+    Source: 'crates/noble-wasm/src/source/types.rs', lines 120:8-128:9 -/
 @[rust_loop]
 def source.types.Registry.stack_loop1
   (self : source.types.Registry) (compiler : source.Compiler)
@@ -15935,7 +16131,7 @@ def source.types.Registry.stack_loop1
     (self, compiler, work)
 
 /-- [noble_wasm::source::types::{noble_wasm::source::types::Registry}::stack]:
-    Source: 'crates/noble-wasm/src/source/types.rs', lines 90:4-128:5 -/
+    Source: 'crates/noble-wasm/src/source/types.rs', lines 95:4-133:5 -/
 def source.types.Registry.stack
   (self : source.types.Registry) (stack : Slice noble_kernel.types.Ty)
   (compiler : source.Compiler) (work : source.Work) :
@@ -16719,14 +16915,14 @@ def source.plan.Action.Insts.CoreMarkerCopy : core.marker.Copy
 }
 
 /-- [noble_wasm::source::types::{impl core::clone::Clone for noble_wasm::source::types::Shape}::clone]:
-    Source: 'crates/noble-wasm/src/source/types.rs', lines 6:9-6:14
+    Source: 'crates/noble-wasm/src/source/types.rs', lines 8:9-8:14
     Visibility: public -/
 def source.types.Shape.Insts.CoreCloneClone.clone
   (self : source.types.Shape) : Result source.types.Shape := do
   ok self
 
 /-- Trait implementation: [noble_wasm::source::types::{impl core::clone::Clone for noble_wasm::source::types::Shape}]
-    Source: 'crates/noble-wasm/src/source/types.rs', lines 6:9-6:14 -/
+    Source: 'crates/noble-wasm/src/source/types.rs', lines 8:9-8:14 -/
 @[reducible]
 def source.types.Shape.Insts.CoreCloneClone : core.clone.Clone
   source.types.Shape := {
@@ -16734,7 +16930,7 @@ def source.types.Shape.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [noble_wasm::source::types::{impl core::marker::Copy for noble_wasm::source::types::Shape}]
-    Source: 'crates/noble-wasm/src/source/types.rs', lines 6:16-6:20 -/
+    Source: 'crates/noble-wasm/src/source/types.rs', lines 8:16-8:20 -/
 @[reducible]
 def source.types.Shape.Insts.CoreMarkerCopy : core.marker.Copy
   source.types.Shape := {

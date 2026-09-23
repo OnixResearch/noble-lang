@@ -12,6 +12,9 @@ impl<'a> super::build::State<'a> {
             noble_kernel::types::Ty::I64 => super::Term::I64,
             noble_kernel::types::Ty::Text => super::Term::Text,
             noble_kernel::types::Ty::Syntax => super::Term::Syntax,
+            noble_kernel::types::Ty::Contract => super::Term::Contract,
+            noble_kernel::types::Ty::Evidence => super::Term::Evidence,
+            noble_kernel::types::Ty::Certified => super::Term::Certified,
             noble_kernel::types::Ty::Pair(a, b) | noble_kernel::types::Ty::Sum(a, b) => {
                 self.steps
                     .push(if matches!(ty, noble_kernel::types::Ty::Pair(_, _)) {
@@ -72,6 +75,9 @@ impl<'a> super::build::State<'a> {
             noble_kernel::shapes::Pattern::I64 => super::Term::I64,
             noble_kernel::shapes::Pattern::Text => super::Term::Text,
             noble_kernel::shapes::Pattern::Syntax => super::Term::Syntax,
+            noble_kernel::shapes::Pattern::Contract => super::Term::Contract,
+            noble_kernel::shapes::Pattern::Evidence => super::Term::Evidence,
+            noble_kernel::shapes::Pattern::Certified => super::Term::Certified,
             noble_kernel::shapes::Pattern::Pair(a, b)
             | noble_kernel::shapes::Pattern::Sum(a, b) => {
                 self.steps.push(

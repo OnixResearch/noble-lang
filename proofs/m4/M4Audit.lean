@@ -75,6 +75,11 @@ private def nativeStringBound (env : Environment) (decl : Name) : Bool := Id.run
   unless decision.isAppOfArity ``decide 2 do return false
   return literalStringSize decision.getAppArgs[0]!
 
+/-- Reuse the exact generated-literal size allowance in the separately labelled
+MC2 renderer audit. This does not make it a strict theorem axiom permission. -/
+def M4Audit.isGeneratedLiteralSizeAxiom (env : Environment) (decl : Name) : Bool :=
+  nativeStringBound env decl
+
 /-- The inherited formatting model also elaborates closed `_proof_` lemmas
 for those literal bounds. Report them as string obligations, never as strict
 bridge equations; the complete proposition is checked independently of names. -/

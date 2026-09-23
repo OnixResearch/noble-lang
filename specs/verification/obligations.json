@@ -210,7 +210,37 @@
       "claim": "Evidence admission binds subject, claim, and assumptions",
       "route": "lean-and-rust-refinement",
       "status": "open",
-      "evidence": []
+      "evidence": [
+        {
+          "claim": "MC2 strict semantic certificates and release-eligibility lemmas are linked to thirteen closed actual-Rust admission, refusal and stale-context equations; this is the named exact-observation fragment, not universal admission correctness",
+          "subject": "PO-16",
+          "revision": "0.1.0-draft.5",
+          "kind": "aeneas-lean",
+          "result": "accepted",
+          "source_revision": "sha256:4e5305daffb7bfc10a239b339664c82134a360945018674ee49c8ef08bcf3c81",
+          "configuration": {
+            "fragment": "mc2-v1-exact-observation-admission-and-release",
+            "semantic_gate": "proofs/mc2/MC2Gate.lean",
+            "source_gate": "proofs/mc2/MC2ExtractionGate.lean",
+            "receipt": "../../verification/mc2/extraction.json",
+            "receipt_sha256": "7aef47920468b34088657fb6715af23d0d9939dff6bffa63ca90181c4c0a8a80",
+            "reviewed_lock": "../../verification/m4/extraction-lock.json",
+            "source_equations": "NobleCertificates.SourceAdmission",
+            "strict_source_lemmas": [
+              "NobleCertificates.Correspondence.release_requires_proved",
+              "NobleCertificates.Correspondence.release_rejects_assumptions"
+            ],
+            "lean": "4.31.0"
+          },
+          "assumptions": [
+            "Strict certificates and the named strict source lemmas use only propext, Classical.choice and Quot.sound.",
+            "The thirteen closed source equations additionally trust the exact native-evaluation dependency/axiom inventory in the receipt; they are examples, not a universal Rust admission theorem.",
+            "CheckObservation is an explicit authentic-and-sound trusted-host boundary for the exact independently checked statement and submitted bytes. Arbitrary host Rust can construct observations; constructor availability proves neither authenticity nor checker soundness.",
+            "Pinned extraction/translation, the Lean kernel, reviewed standard-library models and five unchanged inherited opaque kernel helpers remain disclosed boundaries.",
+            "Broad PO-16, host authority and universal frontend/consumer/backend refinement remain open."
+          ]
+        }
+      ]
     },
     {
       "id": "PO-17",
@@ -262,14 +292,81 @@
       "claim": "Companion construction, finite rule replay, and proof erasure preserve certified claims and ordinary observations",
       "route": "lean-and-aeneas-companion-rules",
       "status": "open",
-      "evidence": []
+      "evidence": [
+        {
+          "claim": "MC2 strict semantic companion/rule certificates, universal actual-Rust finite-rule decoding lemmas and named closed composition/replay/application equations establish the recorded bounded fragment without claiming universal runtime refinement",
+          "subject": "PO-20",
+          "revision": "0.1.0-draft.5",
+          "kind": "aeneas-lean",
+          "result": "accepted",
+          "source_revision": "sha256:4e5305daffb7bfc10a239b339664c82134a360945018674ee49c8ef08bcf3c81",
+          "configuration": {
+            "fragment": "mc2-v1-finite-companion-rules-and-named-source-transitions",
+            "semantic_gate": "proofs/mc2/MC2Gate.lean",
+            "source_gate": "proofs/mc2/MC2ExtractionGate.lean",
+            "receipt": "../../verification/mc2/extraction.json",
+            "receipt_sha256": "7aef47920468b34088657fb6715af23d0d9939dff6bffa63ca90181c4c0a8a80",
+            "reviewed_lock": "../../verification/m4/extraction-lock.json",
+            "strict_source_lemmas": [
+              "NobleCertificates.Correspondence.rule_decode_roundtrip",
+              "NobleCertificates.Correspondence.rule_decode_bad_version",
+              "NobleCertificates.Correspondence.rule_decode_unknown",
+              "NobleCertificates.Correspondence.rule_code_corresponds"
+            ],
+            "closed_source_equations": [
+              "NobleCertificates.SourceReplay.composition_replay_retains_certification",
+              "NobleCertificates.SourceReplay.malformed_replay_refuses_without_minting",
+              "NobleCertificates.SourceReplay.exact_application_and_context_changes"
+            ],
+            "lean": "4.31.0"
+          },
+          "assumptions": [
+            "Strict semantic and finite-rule decoding theorems use only propext, Classical.choice and Quot.sound; application-proof admission does not allow native-evaluation shortcuts.",
+            "The closed replay/application equations use the separately audited native-evaluation inventory and explicit authentic/sound host-check observations; they do not prove every replay graph or arbitrary companion construction.",
+            "Fresh whole-crate extraction accounts for 312 companion bodies and 21 roots, but extraction and complete dependency accounting are not universal body refinement.",
+            "Source-bound runtime transport, capture instantiation and erasure observations are a separate acceptance lane; owned WAT, assembler, optimizer, engine, loader and host OS remain trusted.",
+            "Broad PO-20, general runtime/backend preservation, live resources and host effects remain open."
+          ]
+        }
+      ]
     },
     {
       "id": "PO-21",
       "claim": "Applicability checks establish the exact precondition before certified invocation",
       "route": "lean-and-aeneas-guard-correspondence",
       "status": "open",
-      "evidence": []
+      "evidence": [
+        {
+          "claim": "The three MC2 semantic guard templates are audited separately from actual-Rust template decoding, two wrapper-layout equations and the closed exact-context guard-selection equation",
+          "subject": "PO-21",
+          "revision": "0.1.0-draft.5",
+          "kind": "aeneas-lean",
+          "result": "accepted",
+          "source_revision": "sha256:4e5305daffb7bfc10a239b339664c82134a360945018674ee49c8ef08bcf3c81",
+          "configuration": {
+            "fragment": "mc2-v1-three-applicability-templates",
+            "semantic_gate": "proofs/mc2/MC2Gate.lean",
+            "source_gate": "proofs/mc2/MC2ExtractionGate.lean",
+            "receipt": "../../verification/mc2/extraction.json",
+            "receipt_sha256": "7aef47920468b34088657fb6715af23d0d9939dff6bffa63ca90181c4c0a8a80",
+            "reviewed_lock": "../../verification/m4/extraction-lock.json",
+            "strict_source_lemma": "NobleCertificates.Correspondence.guard_template_roundtrip",
+            "renderer_equations": [
+              "NobleCertificates.Correspondence.wrapper_source_layout",
+              "NobleCertificates.Correspondence.invocation_wrapper_layout"
+            ],
+            "closed_source_equation": "NobleCertificates.SourceReplay.guarded_selection_and_wrapper_layout",
+            "lean": "4.31.0"
+          },
+          "assumptions": [
+            "Semantic guard and actual-source decoding theorems use only propext, Classical.choice and Quot.sound.",
+            "The renderer equations additionally depend on explicitly inventoried generated literal-size native obligations; the closed source transition additionally uses its separately audited native-evaluation assumptions.",
+            "The guarded claim and context must be exact and current; admitted conditional correctness alone neither proves invocation applicability nor synthesizes an unsupported guard.",
+            "Wasm execution of the emitted guard wrapper is tested separately under trusted compiler/assembler/optimizer/engine/loading boundaries; no universal backend correspondence is claimed.",
+            "Broad PO-21, arbitrary guard synthesis, termination, PO-17 and PO-18 remain open."
+          ]
+        }
+      ]
     },
     {
       "id": "SO-01",

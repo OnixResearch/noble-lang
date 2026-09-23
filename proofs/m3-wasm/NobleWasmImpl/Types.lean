@@ -43,6 +43,9 @@ inductive noble_kernel.types.Ty where
 | I64Type : noble_kernel.types.Ty
 | TextType : noble_kernel.types.Ty
 | SyntaxType : noble_kernel.types.Ty
+| ContractType : noble_kernel.types.Ty
+| EvidenceType : noble_kernel.types.Ty
+| CertifiedType : noble_kernel.types.Ty
 | PairType :
   noble_kernel.types.Ty →
   noble_kernel.types.Ty →
@@ -307,7 +310,7 @@ inductive noble_kernel.words.VariableKind where
 | Effect : noble_kernel.words.VariableKind
 
 /-- [noble_kernel::shapes::EffectSlot]
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 74:0-74:19
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 80:0-80:19
     Name pattern: [noble_kernel::shapes::EffectSlot]
     Visibility: public -/
 @[discriminant isize, rust_type "noble_kernel::shapes::EffectSlot"]
@@ -326,6 +329,9 @@ inductive noble_kernel.shapes.Pattern where
 | I64Pattern : noble_kernel.shapes.Pattern
 | TextPattern : noble_kernel.shapes.Pattern
 | SyntaxPattern : noble_kernel.shapes.Pattern
+| ContractPattern : noble_kernel.shapes.Pattern
+| EvidencePattern : noble_kernel.shapes.Pattern
+| CertifiedPattern : noble_kernel.shapes.Pattern
 | PairPattern :
   noble_kernel.shapes.Pattern →
   noble_kernel.shapes.Pattern →
@@ -409,7 +415,7 @@ structure noble_kernel.contracts.Env where
   effects : alloc.vec.Vec noble_kernel.types.EffId
 
 /-- [noble_kernel::shapes::Defect]
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 83:0-83:15
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 89:0-89:15
     Name pattern: [noble_kernel::shapes::Defect]
     Visibility: public -/
 @[discriminant isize, rust_type "noble_kernel::shapes::Defect"]
@@ -616,7 +622,7 @@ structure source.plan.Program where
   leaves : Std.U32
 
 /-- [noble_wasm::source::types::Shape]
-    Source: 'crates/noble-wasm/src/source/types.rs', lines 7:0-15:1 -/
+    Source: 'crates/noble-wasm/src/source/types.rs', lines 9:0-20:1 -/
 @[discriminant isize]
 inductive source.types.Shape where
 | Scalar : Std.U32 → source.types.Shape
@@ -626,9 +632,12 @@ inductive source.types.Shape where
 | Program : Std.U32 → Std.U32 → Std.U32 → source.types.Shape
 | Syntax : source.types.Shape
 | Text : source.types.Shape
+| Contract : source.types.Shape
+| Evidence : source.types.Shape
+| Certified : source.types.Shape
 
 /-- [noble_wasm::source::types::Registry]
-    Source: 'crates/noble-wasm/src/source/types.rs', lines 17:0-20:1 -/
+    Source: 'crates/noble-wasm/src/source/types.rs', lines 22:0-25:1 -/
 structure source.types.Registry where
   keys : alloc.vec.Vec noble_kernel.types.Ty
   shapes : alloc.vec.Vec source.types.Shape

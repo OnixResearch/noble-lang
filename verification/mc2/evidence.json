@@ -1,0 +1,404 @@
+{
+  "schema": "noble-mc2-evidence/v1",
+  "milestone": "MC2",
+  "date": "2026-09-23",
+  "scope": "Complete declared MC2-v1 first-class certified programs on resource-free Core-Bootstrap managed-linear-memory Wasm; exact admission, finite derivations, composition/family instantiation, guarded invocation and proof-required builds. Not full-language or universal refinement.",
+  "result": "passed",
+  "runtime": {
+    "result": "passed",
+    "receipt": "acceptance.json",
+    "receipt_sha256": "74ee78c0f3c6ba5e520912eda0488a57f46888e80bfc67ea153a61ab7f631afc",
+    "archive": "runtime.tar.gz",
+    "sha256": "54130c382108ad5fc2000c45127c201caa537fed697d1c225574436c827bc704",
+    "bytes": 8841223,
+    "source_revision": "sha256:2de39d671b9e8bca22e49bd5ff608ca63d7d7cef9bc67ee1f942518a59011d3c",
+    "workload_sha256": "1d5393dc46a500a31a245b1f79d7a34813d18fdc933e9944b2e316012e26f810",
+    "binary_sha256": "a93e0a773196bd4c6888a5a0d05a15001a2cb362259683f3172234beca73ecb2",
+    "retained_binary": "runtime.tar.gz:noble-executed",
+    "retained_control_binary": "runtime.tar.gz:controls-executed",
+    "cases": 15,
+    "declared_variants": "all",
+    "core_controls": 18,
+    "independent_checker_runs": 18,
+    "frozen_executables": [
+      {
+        "supplied": "/var/tmp/noble-mc2-implementation-20260923-runtime-aligned/cargo-target/debug/noble",
+        "executed": "/var/tmp/noble-mc2-implementation-20260923-runtime-aligned/mc2-artifacts-gMC1Ef/noble-executed",
+        "sha256_at_start": "a93e0a773196bd4c6888a5a0d05a15001a2cb362259683f3172234beca73ecb2",
+        "sha256_at_end": "a93e0a773196bd4c6888a5a0d05a15001a2cb362259683f3172234beca73ecb2",
+        "unchanged": true
+      },
+      {
+        "supplied": "/var/tmp/noble-mc2-implementation-20260923-runtime-aligned/mc2-artifacts-gMC1Ef/cargo-target/debug/deps/noble-ac7a2371941a1c74",
+        "executed": "/var/tmp/noble-mc2-implementation-20260923-runtime-aligned/mc2-artifacts-gMC1Ef/controls-executed",
+        "sha256_at_start": "8fbf37c595c30a3a6a3bceba3df7f30b1e3bdb026071f5576910f667231ce962",
+        "sha256_at_end": "8fbf37c595c30a3a6a3bceba3df7f30b1e3bdb026071f5576910f667231ce962",
+        "unchanged": true
+      }
+    ],
+    "cases_summary": [
+      {
+        "id": "CONTRACT-01",
+        "name": "prove-accepted-increment",
+        "passed": true,
+        "assertions": 54,
+        "raw": "runtime.tar.gz:CONTRACT-01.json"
+      },
+      {
+        "id": "CONTRACT-02",
+        "name": "changed-contract-binding",
+        "passed": true,
+        "assertions": 104,
+        "raw": "runtime.tar.gz:CONTRACT-02.json"
+      },
+      {
+        "id": "CONTRACT-03",
+        "name": "compose-certified-increments",
+        "passed": true,
+        "assertions": 40,
+        "raw": "runtime.tar.gz:CONTRACT-03.json"
+      },
+      {
+        "id": "CONTRACT-04",
+        "name": "missing-composition-implication",
+        "passed": true,
+        "assertions": 58,
+        "raw": "runtime.tar.gz:CONTRACT-04.json"
+      },
+      {
+        "id": "CONTRACT-05",
+        "name": "instantiate-certified-runtime-builder",
+        "passed": true,
+        "assertions": 41,
+        "raw": "runtime.tar.gz:CONTRACT-05.json"
+      },
+      {
+        "id": "CONTRACT-06",
+        "name": "forged-companion-and-derivation",
+        "passed": true,
+        "assertions": 68,
+        "raw": "runtime.tar.gz:CONTRACT-06.json"
+      },
+      {
+        "id": "CONTRACT-07",
+        "name": "certified-invocation-false-guard",
+        "passed": true,
+        "assertions": 40,
+        "raw": "runtime.tar.gz:CONTRACT-07.json"
+      },
+      {
+        "id": "CONTRACT-08",
+        "name": "certified-invocation-true-guard",
+        "passed": true,
+        "assertions": 41,
+        "raw": "runtime.tar.gz:CONTRACT-08.json"
+      },
+      {
+        "id": "CONTRACT-09",
+        "name": "claim-outcome-and-required-build",
+        "passed": true,
+        "assertions": 107,
+        "raw": "runtime.tar.gz:CONTRACT-09.json"
+      },
+      {
+        "id": "CONTRACT-10",
+        "name": "first-class-companion-transport-and-inspection",
+        "passed": true,
+        "assertions": 74,
+        "raw": "runtime.tar.gz:CONTRACT-10.json"
+      },
+      {
+        "id": "CONTRACT-11",
+        "name": "ordinary-execution-without-contract-profile",
+        "passed": true,
+        "assertions": 26,
+        "raw": "runtime.tar.gz:CONTRACT-11.json"
+      },
+      {
+        "id": "CONTRACT-12",
+        "name": "ghost-and-evidence-eligibility",
+        "passed": true,
+        "assertions": 20,
+        "raw": "runtime.tar.gz:CONTRACT-12.json"
+      },
+      {
+        "id": "CONTRACT-13",
+        "name": "certified-source-unrelated-Wasm",
+        "passed": true,
+        "assertions": 9,
+        "raw": "runtime.tar.gz:CONTRACT-13.json"
+      },
+      {
+        "id": "CONTRACT-14",
+        "name": "contract-export-statement-mismatch",
+        "passed": true,
+        "assertions": 82,
+        "raw": "runtime.tar.gz:CONTRACT-14.json"
+      },
+      {
+        "id": "CONTRACT-15",
+        "name": "invalid-or-unsupported-contract-input",
+        "passed": true,
+        "assertions": 39,
+        "raw": "runtime.tar.gz:CONTRACT-15.json"
+      }
+    ],
+    "binding": "The gate executes read-only copied CLI and control binaries, retains original UTF-8 inputs and raw observations, and rehashes executable and input bytes. Canonical workload identity excludes later state/evidence annotations."
+  },
+  "implementation": {
+    "result": "passed",
+    "receipt": "implementation.json",
+    "receipt_sha256": "327ee0998fd07a9168f90a9541175a6b0075faf6f579bd52d26de02527504c05",
+    "source_revision": "sha256:2de39d671b9e8bca22e49bd5ff608ca63d7d7cef9bc67ee1f942518a59011d3c",
+    "source_files": 514,
+    "raw": "assurance.tar.gz:implementation",
+    "proof_gate": {
+      "extracted_correspondence": "separate-required-MC2ExtractionGate",
+      "guard_templates": 3,
+      "required_definitions": 6,
+      "required_theorems": 35,
+      "result": "passed",
+      "schema": "mc2-gate/v1",
+      "scope": "compiled semantic certificate theorems; actual Rust correspondence is a separate required audit",
+      "strict_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    }
+  },
+  "extraction": {
+    "result": "passed",
+    "mode": "check",
+    "receipt": "extraction.json",
+    "receipt_sha256": "7aef47920468b34088657fb6715af23d0d9939dff6bffa63ca90181c4c0a8a80",
+    "source_revision": "sha256:4e5305daffb7bfc10a239b339664c82134a360945018674ee49c8ef08bcf3c81",
+    "source_files": 413,
+    "reviewed_lock": "../m4/extraction-lock.json",
+    "reviewed_lock_sha256": "47d7c1491b66d09ee7cba13e78e74537184af14f2c714b59dea1d68e4c28cd05",
+    "discovery_archive": "discovery.tar.gz",
+    "discovery_archive_sha256": "aaf62bc639d0072988b954548eff2303ed11b915c453d7f113fb7fef29de0de2",
+    "raw": "assurance.tar.gz:extraction-check",
+    "review": "assurance.tar.gz:proofs/extraction-review-r3.json",
+    "companion_bodies": 312,
+    "protocol_roots": 21,
+    "refusal_controls": 28,
+    "accounting_mutations": 17,
+    "executed_lean_refusals": 11,
+    "stale_generated_files": [],
+    "host_observation": {
+      "classification": "authentic-sound-host-check-observation",
+      "request": {
+        "declaration": "noble_contracts.companion.admit.AdmissionRequest",
+        "compiler_type_id": 72,
+        "source": {
+          "file": "crates/noble-contracts/src/companion/admit/mod.rs",
+          "begin_line": 127,
+          "end_line": 134
+        }
+      },
+      "observation": {
+        "declaration": "noble_contracts.companion.admit.CheckObservation",
+        "compiler_type_id": 73,
+        "source": {
+          "file": "crates/noble-contracts/src/companion/admit/mod.rs",
+          "begin_line": 144,
+          "end_line": 148
+        }
+      },
+      "observation_constructor": "noble_contracts.companion.admit.observation.CheckObservation.new",
+      "expected_prepared_accessor": "noble_contracts.companion.admit.observation.AdmissionRequest.expected",
+      "submitted_offer_accessor": "noble_contracts.companion.admit.observation.AdmissionRequest.offer",
+      "begin": "noble_contracts.companion.core.Core.begin_admission",
+      "complete": "noble_contracts.companion.core.Core.complete_admission",
+      "assumption": "The source-bound CLI constructs CheckObservation only from the actual isolated independent Lean check of the exact statement and submitted source bytes. Arbitrary host Rust can construct observations; authenticity and host-checker soundness are explicit boundary assumptions, not proved by a data constructor."
+    },
+    "binding": "The discovery/review and independent-check receipts bind the same final reviewed lock. The 413-input extraction identity and 514-input canonical implementation identity are intentionally distinct scopes."
+  },
+  "proofs": {
+    "semantic_strict_theorems": 35,
+    "required_definitions": 6,
+    "guard_templates": 3,
+    "actual_source_strict_theorems": 7,
+    "renderer_layout_equations": 2,
+    "closed_native_source_equations": 17,
+    "extra_executed_compiled_audit_refusals": 2,
+    "strict_axioms": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "scope_ledger": "assurance.tar.gz:proofs/proof-ledger-inputs-r3.json",
+    "control_mutations_and_logs": "assurance.tar.gz:proofs/controls/proof-audit-controls.json",
+    "inherited_opaque_review": "assurance.tar.gz:proofs/inherited-opaque-review/review.json",
+    "broad_obligations": {
+      "PO-16": "open",
+      "PO-20": "open",
+      "PO-21": "open"
+    }
+  },
+  "source_inventory": {
+    "result": "passed",
+    "counts": {
+      "bodies": 1319,
+      "compiler_production_items": 2910,
+      "configurations": 1,
+      "dependencies": 5,
+      "excepted": 0,
+      "extracted": 0,
+      "future_components": 4,
+      "generated": 977,
+      "macro_origins": 26,
+      "modeled": 0,
+      "open": 1319,
+      "open_refinement": 1319,
+      "proved": 0,
+      "reviewed_subjects": 2845,
+      "structural": 549,
+      "test_subjects": 788,
+      "tools": 13,
+      "units": 21
+    },
+    "compiler_ir": "7b7c2e60c8791a365d9328d9d9123992e543bf93710008ff78eaece4cd86405c",
+    "coverage": "363c9f4cc73c548e0d4b0a5bc4850f57af718e9901a65add23761e44c22a9de8",
+    "architecture_receipt": "5808cd91c441b63080d0c964ea7a3a0addb4a473d60bfe4b2043729a2c1fa66f",
+    "raw": "quality.tar.xz:policy",
+    "refinement": "All 1319 authored production body refinement obligations remain open; generated and structural accounting does not prove them."
+  },
+  "quality": {
+    "archive": {
+      "archive": "quality.tar.xz",
+      "bytes": 32453152,
+      "sha256": "83482d07c88097d71f98b00c238e0811fe68975e4ad7268f4c924eba12ef30b7",
+      "uncompressed_tar": {
+        "bytes": 1471518720,
+        "sha256": "a8025de18c97d80ec7e57dd43f35c2c064be817aab935b8894c7539d5dfcba00"
+      },
+      "result": "byte-identical-lossless-recompression",
+      "compression": {
+        "format": "xz",
+        "threads": 1,
+        "preset": 9,
+        "dictionary_bytes": 268435456
+      },
+      "scope": "Complete final 21-unit policy/source packet and all raw outputs of the eleven production Nix checks, including every one of the eighteen boundary controls; no raw observations removed."
+    },
+    "deny_all": {
+      "result": "passed",
+      "rules": 73,
+      "findings": 0,
+      "warnings": 0,
+      "errors": 0,
+      "scope": "unchanged uncapped all-target/all-feature rule and architecture gates"
+    },
+    "clippy": {
+      "result": "passed",
+      "scope": "workspace all-targets all-features, -D warnings"
+    },
+    "format": {
+      "result": "passed"
+    },
+    "nix": {
+      "production_checks": [
+        "boundary-controls",
+        "tool-selection",
+        "tool-versions",
+        "tool-overrides",
+        "format",
+        "rust-tests",
+        "clippy",
+        "policy",
+        "octet",
+        "source-coverage",
+        "native-assurance"
+      ],
+      "production_result": "passed",
+      "raw": "quality.tar.xz:nix",
+      "receipt": "nix-checks.json",
+      "closeout_checks": [
+        "documents",
+        "cairn"
+      ],
+      "closeout_result": "passed",
+      "binding": "Eleven production Nix checks retain their final frozen source/policy outputs in quality.tar.xz; the separate post-closeout receipt binds documents and Cairn to the completed archived tree. Only that generated receipt is excluded from its own final source projection."
+    },
+    "document_checks": {
+      "result": "passed",
+      "self_tests": 226,
+      "tests": 100,
+      "raw": "assurance.tar.gz:documents",
+      "scope": "Document/ledger/native-specification validation only; not Noble runtime execution."
+    }
+  },
+  "regressions": {
+    "binary_sha256": "a93e0a773196bd4c6888a5a0d05a15001a2cb362259683f3172234beca73ecb2",
+    "rust": {
+      "result": "passed",
+      "tests": 84,
+      "raw": "assurance.tar.gz:implementation/workspace-tests.log"
+    },
+    "mc1": {
+      "result": "passed",
+      "cases": 36,
+      "consumer_sha256": "62c2d30b2d2e6e906509cc65aca1e5dffa4f6224ad843bb7d98d98528c36d9dc",
+      "gate_sha256": "feef4f4de1256b0eb02b254c4b1ae0468920356046a08f6e86d277f76f830fa5",
+      "raw": "assurance.tar.gz:regressions/mc1.json"
+    },
+    "m4": {
+      "result": "passed",
+      "core_cases": 18,
+      "runtime_controls": 11,
+      "workflows": [
+        "DX-10",
+        "DX-12"
+      ],
+      "raw": "assurance.tar.gz:regressions/m4/acceptance.json"
+    },
+    "m3": {
+      "result": "eligible-for-selection",
+      "configurations": 4,
+      "performance_claim": false,
+      "raw": "assurance.tar.gz:regressions/m3/report.json"
+    }
+  },
+  "assumptions": [
+    "Pinned compiler, translator, Lean kernel, Wasm assembler/optimizer/engine, sandbox and host OS remain explicit trusted tooling boundaries.",
+    "CheckObservation records are an explicit authentic-and-sound host-check boundary: the source-bound CLI runs the isolated independent Lean consumer over the exact statement and submitted bytes. Arbitrary host Rust can construct observations; constructor availability does not prove their authenticity or soundness.",
+    "Strict semantic certificate theorems and extracted finite-rule/template/release correspondences are separate audited scopes, not a universal CLI/parser/backend refinement theorem.",
+    "Actual execution and hostile admission/replay controls establish only the exact canonical workload retained in acceptance.json.",
+    "Admitted declarations and replay derivations carry partial correctness, never total correctness, host authority or execution fuel guarantees.",
+    "Renderer literal-size obligations and seventeen closed source equations retain their separately audited native-evaluation dependencies.",
+    "Pinned Rust/Charon/Aeneas/Lean, explicit standard models and five unchanged inherited opaque kernel helpers remain disclosed boundaries."
+  ],
+  "non_claims": [
+    "No universal frontend, exporter, Rust implementation, replay graph, WAT, loader, ABI or backend refinement; no digest-collision-freedom proof.",
+    "Authentic-and-sound host checker observations remain an assumption, not a property conferred by the Rust data constructor.",
+    "Broad PO-16/20/21, PO-17/18, SO-07 and all 1319 authored production body refinement obligations remain open.",
+    "No live-resource/component, host-effect protocol, general termination or M5-M8 delivery.",
+    "No physical-GC reclamation, isolated engine memory-peak or universal backend performance claim."
+  ],
+  "assurance": {
+    "archive": "assurance.tar.gz",
+    "result": "retained",
+    "scope": [
+      "Complete final independent extraction source/LLBC/generated/compiled/audit/refusal packet",
+      "Parent canonical implementation commands, proof gate, workspace tests and exact pre-annotation canonical workload bytes",
+      "Current MC1/M3/M4 raw regression observations and frozen executed binary",
+      "Exact additional compiled-audit mutations, bound sources, logs and inherited opaque-source comparison",
+      "Post-acceptance document/ledger tests and native specification synchronization receipts; final lifecycle and Nix closeout are separately retained."
+    ],
+    "sha256": "1ee35b0c2b67d638c6a97906c1c3bb81f854ffebbfd4eb774f75099f597815cd",
+    "bytes": 72930327,
+    "cache_policy": "Disposable extraction Cargo target/home and isolated home are omitted. Actual source, LLBC, generated/compiled Lean, audits and raw refusal artifacts are retained; extra proof-control build caches are omitted."
+  },
+  "lifecycle": {
+    "archive": "../../.cairn/archive/2026-09-23-mc2-first-class-certified-programs/tasks.md",
+    "canonical_spec": "../../.cairn/specs/program-contracts/spec.md",
+    "acceptance_is_not_archive": true,
+    "archived": true,
+    "receipt": "lifecycle.json",
+    "receipt_sha256": "8c7eec09af5c4967544ccbafa80dd9a2ab74503e9568be55cf8064415e8c02ab",
+    "sync_manifest": "faa95c525ad2c8fff1ae7db4ca9359db779824a25b5c11d21b954b5f4a9ed683",
+    "archive_manifest": "07f7c116ab63278f7dbeabd79999ad0f0ab1225bc2e23844921453f25934c7f5"
+  }
+}

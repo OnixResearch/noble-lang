@@ -4,6 +4,7 @@ mod protocol;
 const NODE: &str = "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node";
 const HOST: &str = concat!(
     include_str!("runtime/preamble.mjs"),
+    include_str!("runtime/values.mjs"),
     include_str!("runtime/engine.mjs"),
     include_str!("runtime/protocol.mjs"),
 );
@@ -64,6 +65,55 @@ impl Engine {
         self.reply()
     }
 
+    /// Execute one prepared module with explicitly typed host injections.
+    pub fn execute_inputs(
+        &mut self,
+        inputs: &str,
+    ) -> Result<super::output::Report, super::output::Failure> {
+        let header = std::format!("execute {}\n", inputs.len());
+        attempt!(self.write(header.as_bytes()));
+        attempt!(self.write(inputs.as_bytes()));
+        self.reply()
+    }
+
+    /// Push typed companion or program values onto the persistent session stack
+    /// without executing a candidate. One refused push is reported, never fatal.
+    pub fn push(&mut self, inputs: &str) -> Result<super::output::Report, super::output::Failure> {
+        let header = std::format!("push {}\n", inputs.len());
+        attempt!(self.write(header.as_bytes()));
+        attempt!(self.write(inputs.as_bytes()));
+        self.reply()
+    }
+
+    /// Suspend only existing live operand slots in one engine-owned frame.
+    pub fn park(&mut self) -> Result<super::output::Report, super::output::Failure> {
+        attempt!(self.write(b"park\n"));
+        self.reply()
+    }
+
+    /// Restore that frame without reconstructing cells or clearing failures.
+    pub fn restore(&mut self) -> Result<super::output::Report, super::output::Failure> {
+        attempt!(self.write(b"restore\n"));
+        self.reply()
+    }
+
+    /// Observe one stack slot from the last executed instance.
+    pub fn observe(&mut self, index: u32) -> Result<super::output::Report, super::output::Failure> {
+        let header = std::format!("observe {index}\n");
+        attempt!(self.write(header.as_bytes()));
+        self.reply()
+    }
+
+    /// Explicitly project one Certified handle to its subject Program handle.
+    pub fn project(
+        &mut self,
+        handle: u32,
+    ) -> Result<super::output::Report, super::output::Failure> {
+        let header = std::format!("project {handle}\n");
+        attempt!(self.write(header.as_bytes()));
+        self.reply()
+    }
+
     fn write(&mut self, bytes: &[u8]) -> Result<(), super::output::Failure> {
         let result = self
             .child
@@ -97,6 +147,19 @@ impl Engine {
                 },
                 std::format!("engine worker failed or exceeded wall-clock limit: {error}"),
             )),
+        };
+        // An engine-level internal failure is a protocol event, not a report a
+        // consumer interprets: surface the engine's own diagnostic and mark the
+        // session dead.
+        let result = match result {
+            Ok(report) if report.outcome == "internal-failure" => Err(super::output::Failure::new(
+                super::output::ErrorContext {
+                    stage: "wasm",
+                    outcome: "internal-failure",
+                },
+                report.json,
+            )),
+            other => other,
         };
         self.has_failed = match &result {
             Ok(report) => report.is_terminal(),

@@ -25,6 +25,9 @@ pub(super) fn sum_cases(
         | noble_kernel::types::Ty::I64
         | noble_kernel::types::Ty::Text
         | noble_kernel::types::Ty::Syntax
+        | noble_kernel::types::Ty::Contract
+        | noble_kernel::types::Ty::Evidence
+        | noble_kernel::types::Ty::Certified
         | noble_kernel::types::Ty::Pair(_, _)
         | noble_kernel::types::Ty::List(_)
         | noble_kernel::types::Ty::Program(_, _, _)
@@ -127,6 +130,9 @@ pub(super) fn list_cases(
         | noble_kernel::types::Ty::I64
         | noble_kernel::types::Ty::Text
         | noble_kernel::types::Ty::Syntax
+        | noble_kernel::types::Ty::Contract
+        | noble_kernel::types::Ty::Evidence
+        | noble_kernel::types::Ty::Certified
         | noble_kernel::types::Ty::Pair(_, _)
         | noble_kernel::types::Ty::Sum(_, _)
         | noble_kernel::types::Ty::Program(_, _, _)

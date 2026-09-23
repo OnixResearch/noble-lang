@@ -2,16 +2,18 @@
 
 Tasks 2.3 and 2.4 established the inventory mechanism. The `source-coverage` check collects the compiler-derived inventory and compares it with a reviewed classification.
 
-The checked-in classification is the **M4 Core-Bootstrap source renewal dated
-2026-09-21**, covering all 19 expected compiler units. Its durable review location
-is `verification/m4/assurance.tar.gz:octet`. The completed `quality-eighteenth`
-observation passed all 73 deny-all rules and the architecture gate over the
-complete scope; the separate `source-coverage-eighteenth.json` comparison is
-valid. These bound observations belong to the durable Octet packet, not a claim
-that all Nix checks or overall M4 closeout have passed. Classification, quality
-and the independent source-coverage comparison are separate observations;
-classification itself is not a quality or proof receipt. Later source changes
-require fresh bound receipts, not reuse of this pass.
+The checked-in classification is the **MC2 companion source renewal dated
+2026-09-23**, covering all 21 expected compiler units. The complete uncapped
+73-rule deny-all run has zero warnings, errors and architecture findings;
+the independent inventory comparison is valid. Its compiler IR is
+`7b7c2e60c8791a365d9328d9d9123992e543bf93710008ff78eaece4cd86405c`,
+coverage identity is
+`363c9f4cc73c548e0d4b0a5bc4850f57af718e9901a65add23761e44c22a9de8`,
+and architecture receipt is
+`5808cd91c441b63080d0c964ea7a3a0addb4a473d60bfe4b2043729a2c1fa66f`.
+Classification, quality, independent comparison and milestone acceptance are
+separate observations. Later source changes require fresh bound receipts, not
+reuse of this pass. Historical M4 evidence remains in its original archive.
 
 This is a named-scope accounting control, not milestone acceptance, an architecture-clean receipt, or a refinement proof.
 
@@ -59,15 +61,15 @@ Each compiler-derived production subject is reviewed as one of three categories.
 Bodies additionally carry a refinement status: `proved` or `open`.
 Only bodies enter the extraction, modeling, exception, proof, and open counts.
 
-The complete 19-unit reviewed observation contains 887 bodies, 642 generated paths,
-and 374 structural paths: 1,903 unique production paths covering 1,955 compiler
+The complete 21-unit reviewed observation contains 1,319 bodies, 977 generated paths,
+and 549 structural paths: 2,845 unique production paths covering 2,910 compiler
 item facts. A path shared by an authored body and generated items retains the
 body obligation. The difference between item and path counts also includes
 compiler observations of different item kinds under one qualified path.
 
-All 887 body dispositions and refinements remain `open` in this inventory.
+All 1,319 body dispositions and refinements remain `open` in this inventory.
 It does not import or discharge the separately bound kernel, MC1, Wasm-emitter
-or M4 frontend/compiler extraction and proof evidence. Zero bodies here are
+or M4/MC2 frontend/compiler/companion extraction and proof evidence. Zero bodies here are
 classified as extracted, modeled, excepted, or proved; that accounting limit is
 not a claim that the separate proof lanes have no evidence.
 
@@ -79,18 +81,18 @@ The dated 2026-09-15 M1 review at tree `3abd178bda9543155c545fdacf6b07f3fd5bbc49
 
 ## Compiler review observation
 
-The M4 review is bound by the compiler IR, coverage, collector receipt/policy,
+The MC2 review is bound by the compiler IR, coverage, collector receipt/policy,
 toolchain, Cargo graph and per-crate source identities recorded in
-[the reviewed policy](../policy/source-inventory.ncl). Its JSON export and
-the retained Octet packet at `verification/m4/assurance.tar.gz:octet` are the
-machine-comparable authorities. These identities bind the reviewed observation,
-not an arbitrary later source tree. Historical M3 identifiers are not the
-current M4 binding, and the archive location alone is not a passing receipt.
+[the reviewed policy](../policy/source-inventory.ncl). Its JSON export and the
+bound compiler packet are the machine-comparable authorities. These identities
+bind the reviewed observation, not an arbitrary later source tree. Historical
+M3/M4 identifiers are not the current MC2 binding, and an archive location alone
+is not a passing receipt.
 
-Coverage reports all 19 expected units for one target/feature configuration.
-There are 738 unique exclusively test-role paths across 868 test item facts,
-25 macro origins, five production dependency edges, no external Cargo edges,
-thirteen selected tools and 93 compiler-observed closures. The three domain-core
+Coverage reports all 21 expected units for one target/feature configuration.
+There are 788 unique exclusively test-role paths across 938 test item facts,
+26 macro origins, five production dependency edges, no external Cargo edges,
+and thirteen selected tools. The three domain-core
 crates retain their `no_std` policy obligations.
 
 Complete collection alone is not a passing architecture gate. The earlier interim run's required production desugaring unknowns were not waived; this observation was collected after those source corrections. Listing `<builtin>` in the macro-origin set does not waive any required unknown, and the full compiler IR can retain test-only unknown facts without granting them production authority. Gate mode, core capability prohibitions, and empty waiver/exception sets remain unchanged.
@@ -104,17 +106,17 @@ The inherited source comparison, policy/tool-selection freshness checks, and
 strict Octet gate remain separate acceptance controls; this document is not
 their execution receipt. Closure identities include source byte offsets, so even
 comment or help-text edits can require renewal. The collection limit is 24
-units/shards; all 19 expected units are mandatory, not optional coverage.
+units/shards; all 21 expected units are mandatory, not optional coverage.
 
-The M4 actual-source lane separately extracts the whole kernel, frontend and
+The actual-source lane separately extracts the whole kernel, frontend and
 compiler, using independent frontend and compiler Lean environments for the
 pinned Aeneas discriminants. Its reviewed extraction lock and implementation
 receipt are the authorities for exact functions, external models, dependencies
-and axioms: `verification/m4/extraction-lock.json` and
-`verification/m4/implementation.json`, with raw assurance under
-`verification/m4/assurance.tar.gz`. Fresh discovery and independent check both
-pass for this bound renewal; successful extraction or a compiled audit cannot
-turn the 887 open authored-body obligations into universal refinement.
+and axioms. The shared current lock is `verification/m4/extraction-lock.json`;
+historical M4 receipts retain their original scopes, and MC2's implementation
+receipt separately records its renewal and companion correspondence.
+Successful extraction or a compiled audit cannot turn the 1,319 open
+authored-body obligations into universal refinement.
 
 ## Rejection controls
 

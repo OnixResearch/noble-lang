@@ -1,7 +1,7 @@
 // The protocol has seven closed outcomes; additions must select a name and exit code.
 #[derive(Clone, Copy)]
 #[octet::sealed_enum]
-pub(super) enum Outcome {
+pub(crate) enum Outcome {
     Proved,
     Disproved,
     Unknown,
@@ -12,7 +12,7 @@ pub(super) enum Outcome {
 }
 
 impl Outcome {
-    pub(super) const fn name(self) -> &'static str {
+    pub(crate) const fn name(self) -> &'static str {
         match self {
             Self::Proved => "proved",
             Self::Disproved => "disproved",
@@ -24,7 +24,7 @@ impl Outcome {
         }
     }
 
-    pub(super) const fn exit(self) -> u8 {
+    pub(crate) const fn exit(self) -> u8 {
         match self {
             Self::Proved | Self::NotRun => 0,
             Self::Disproved => 1,
@@ -37,10 +37,10 @@ impl Outcome {
 }
 
 pub struct Failure {
-    pub(super) outcome: Outcome,
-    pub(super) code: &'static str,
-    pub(super) message: std::string::String,
-    pub(super) details: super::encoding::Json,
+    pub(crate) outcome: Outcome,
+    pub(crate) code: &'static str,
+    pub(crate) message: std::string::String,
+    pub(crate) details: super::encoding::Json,
 }
 
 impl Failure {
@@ -71,7 +71,7 @@ impl Failure {
         }
     }
 
-    pub(super) fn json(&self) -> super::encoding::Json {
+    pub(crate) fn json(&self) -> super::encoding::Json {
         super::encoding::object([
             ("code", super::encoding::string(self.code)),
             ("message", super::encoding::string(&self.message)),

@@ -62,6 +62,38 @@ def Slice.Insts.CoreCmpPartialEqArray.ne
   let equal ← Slice.Insts.CoreCmpPartialEqArray.eq inst left right
   ok (!equal)
 
+@[rust_fun "core::array::equality::{core::cmp::PartialEq<&'0 [@T], [@U; @N]>}::eq"]
+def Shared0Slice.Insts.CoreCmpPartialEqArray.eq
+    {T U : Type} {N : Usize} (inst : core.cmp.PartialEq T U)
+    (left : Slice T) (right : Array U N) : Result Bool :=
+  Slice.Insts.CoreCmpPartialEqArray.eq inst left right
+
+@[rust_fun "core::array::equality::{core::cmp::PartialEq<&'0 [@T], [@U; @N]>}::ne"]
+def Shared0Slice.Insts.CoreCmpPartialEqArray.ne
+    {T U : Type} {N : Usize} (inst : core.cmp.PartialEq T U)
+    (left : Slice T) (right : Array U N) : Result Bool :=
+  Slice.Insts.CoreCmpPartialEqArray.ne inst left right
+
+/-- The audited Rust target is little-endian x86_64. Reinterpretation retains
+all 64 bits, including negative two's-complement values; it is not a numeric
+conversion through a nonnegative integer. -/
+@[rust_fun "core::num::{u64}::to_ne_bytes"]
+def core.num.U64.to_ne_bytes (value : U64) : Result (Array U8 8#usize) :=
+  ok (_root_.Aeneas.Std.core.num.U64.to_le_bytes value)
+
+@[rust_fun "core::num::{u64}::from_ne_bytes"]
+def core.num.U64.from_ne_bytes (bytes : Array U8 8#usize) : Result U64 :=
+  ok (_root_.Aeneas.Std.core.num.U64.from_le_bytes bytes)
+
+@[rust_fun "core::num::{i64}::to_ne_bytes"]
+def core.num.I64.to_ne_bytes (value : I64) : Result (Array U8 8#usize) :=
+  core.num.U64.to_ne_bytes ⟨value.bv⟩
+
+@[rust_fun "core::num::{i64}::from_ne_bytes"]
+def core.num.I64.from_ne_bytes (bytes : Array U8 8#usize) : Result I64 := do
+  let value ← core.num.U64.from_ne_bytes bytes
+  ok ⟨value.bv⟩
+
 @[rust_fun "core::char::convert::{core::convert::From<char, u8>}::from"]
 def Char.Insts.CoreConvertFromU8.from (value : U8) : Result Char :=
   ok (_root_.Char.ofUInt8 (UInt8.ofBitVec value.bv))
@@ -134,6 +166,39 @@ def core.fmt.Formatter.debug_tuple_field2_finish
     match result with
     | .Err error => ok (.Err error, formatter)
     | .Ok () => second.inst.fmt second.value formatter
+
+@[rust_fun "core::fmt::{core::fmt::Formatter<'a>}::debug_c_like_enum_write_str"]
+def core.fmt.Formatter.debug_c_like_enum_write_str (formatter : core.fmt.Formatter)
+    (names : Str) (offsets : Slice Usize) (index : Usize) :
+    Result (core.result.Result Unit core.fmt.Error × core.fmt.Formatter) :=
+  _root_.noble_kernel.core.fmt.Formatter.debug_c_like_enum_write_str
+    formatter names offsets index
+
+@[rust_fun "core::fmt::{core::fmt::Debug<(@U, @T)>}::fmt"]
+def Pair.Insts.CoreFmtDebug.fmt {U T : Type}
+    (first : core.fmt.Debug U) (second : core.fmt.Debug T)
+    (value : U × T) (formatter : core.fmt.Formatter) :
+    Result (core.result.Result Unit core.fmt.Error × core.fmt.Formatter) := do
+  let (result, formatter) ← first.fmt value.1 formatter
+  match result with
+  | .Err error => ok (.Err error, formatter)
+  | .Ok () => second.fmt value.2 formatter
+
+/-- Preserve Rust's ordered short-circuiting, including custom `ne` methods;
+tuple inequality is not implemented by negating a call to `eq`. -/
+@[rust_fun "core::tuple::{core::cmp::PartialEq<(@U, @T), (@U, @T)>}::eq"]
+def Pair.Insts.CoreCmpPartialEqPair.eq {U T : Type}
+    (first : core.cmp.PartialEq U U) (second : core.cmp.PartialEq T T)
+    (left right : U × T) : Result Bool := do
+  let equal ← first.eq left.1 right.1
+  if equal then second.eq left.2 right.2 else ok false
+
+@[rust_fun "core::tuple::{core::cmp::PartialEq<(@U, @T), (@U, @T)>}::ne"]
+def Pair.Insts.CoreCmpPartialEqPair.ne {U T : Type}
+    (first : core.cmp.PartialEq U U) (second : core.cmp.PartialEq T T)
+    (left right : U × T) : Result Bool := do
+  let different ← first.ne left.1 right.1
+  if different then ok true else second.ne left.2 right.2
 
 @[rust_fun "core::fmt::{core::fmt::Formatter<'a>}::debug_tuple_field3_finish"]
 def core.fmt.Formatter.debug_tuple_field3_finish
@@ -227,6 +292,10 @@ def core.mem.take {T : Type} (inst : core.default.Default T) (value : T) :
   ok (value, replacement)
 
 /-! ## Slice and vector endpoints -/
+
+@[rust_fun "alloc::vec::{alloc::vec::Vec<@T>}::is_empty"]
+def alloc.vec.Vec.is_empty {T : Type} (A : Type) (vector : alloc.vec.Vec T) : Result Bool :=
+  _root_.noble_kernel.alloc.vec.Vec.is_empty A vector
 
 @[rust_fun "core::slice::{[@T]}::first"]
 def core.slice.Slice.first {T : Type} (slice : Slice T) : Result (Option T) :=

@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { CoreEngine } from '../../crates/noble-cli/src/core/runtime/host.mjs';
 import { digest } from '../../tools/m3-wasm-policy.mjs';
 import { runDocumentationWorkflow } from './documentation.mjs';
-import { runPropertyWorkflow } from './property.mjs';
+import { runPropertyWorkflow, semanticObservation, stackObservation } from './property.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const [binaryArgument, outputArgument] = process.argv.slice(2);
@@ -170,7 +170,7 @@ function quiet(value) {
 }
 function normal(value, expected) {
   assert.equal(value.stage, 'wasm'); assert.equal(value.outcome, 'normal');
-  assert.deepEqual(value.stack, expected); assert.equal(value.candidate_prepare_requests, 0);
+  assert.deepEqual(stackObservation(value.stack), expected); assert.equal(value.candidate_prepare_requests, 0);
 }
 function scalar(value) { return { type: 'I64', value: String(value) }; }
 function addCase(id, observations) {
@@ -288,13 +288,16 @@ try {
     const source = `${item.input.invocation_input} swap ${item.input.builder} dup [ run ] dip dup reflect pair`;
     for (const optimization of item.input.optimizations) {
       const [observed] = dynamicRuns('CORE-09', source, 'I64', [item.input.capture_after_compile], optimization);
-      assert.equal(observed.outcome, 'normal'); assert.deepEqual(observed.stack[0], scalar(item.expected.output));
+      assert.equal(observed.outcome, 'normal');
+      assert.equal(observed.stack[0].handle, null);
+      assert.deepEqual(semanticObservation(observed.stack[0]), scalar(item.expected.output));
       const [program, syntax] = observed.stack[1].value;
       assert.equal(program.type, 'Program'); assert.equal(syntax.type, 'Syntax');
       assert.deepEqual(program.recipe, item.expected.recipe); assert.deepEqual(syntax.recipe, item.expected.recipe);
       observations.push(observed);
     }
-    assert.deepEqual(observations[0].stack, observations[1].stack); addCase('CORE-09', observations);
+    assert.deepEqual(stackObservation(observations[0].stack), stackObservation(observations[1].stack));
+    addCase('CORE-09', observations);
   }
   {
     const result = command('structured-core-controls', 'cargo', ['test', '-p', 'noble-cli', '--test', 'core', '--locked', '--offline', '--', '--nocapture']);
@@ -345,7 +348,8 @@ try {
       assert.match(values[0].recipe[0].invoke, /^definition:/);
       observations.push({ optimization, normalization, identity });
     }
-    assert.deepEqual(observations[0].normalization.stack, observations[1].normalization.stack);
+    assert.deepEqual(stackObservation(observations[0].normalization.stack),
+      stackObservation(observations[1].normalization.stack));
     return observations;
   });
   control('fresh-rank-one-uses', () => {

@@ -73,6 +73,9 @@ impl super::Arena {
             | super::Term::I64
             | super::Term::Text
             | super::Term::Syntax
+            | super::Term::Contract
+            | super::Term::Evidence
+            | super::Term::Certified
             | super::Term::Empty => {}
         }
         Ok(pending)
@@ -141,7 +144,7 @@ impl super::Arena {
             attempt!(meter.node(span));
             self.effect_equations.push((a_effect, b_effect));
         }
-        if super::sort(a) != super::sort(b) {
+        if sort(a) != sort(b) {
             return Err(crate::invalid(
                 span,
                 "value and stack witness kinds do not match",
@@ -155,6 +158,9 @@ impl super::Arena {
             | (super::Term::I64, super::Term::I64)
             | (super::Term::Text, super::Term::Text)
             | (super::Term::Syntax, super::Term::Syntax)
+            | (super::Term::Contract, super::Term::Contract)
+            | (super::Term::Evidence, super::Term::Evidence)
+            | (super::Term::Certified, super::Term::Certified)
             | (super::Term::Empty, super::Term::Empty) => {}
             (super::Term::Pair(a, b), super::Term::Pair(c, d))
             | (super::Term::Sum(a, b), super::Term::Sum(c, d))
@@ -171,6 +177,9 @@ impl super::Arena {
                 | super::Term::I64
                 | super::Term::Text
                 | super::Term::Syntax
+                | super::Term::Contract
+                | super::Term::Evidence
+                | super::Term::Certified
                 | super::Term::Pair(_, _)
                 | super::Term::Sum(_, _)
                 | super::Term::List(_)
@@ -186,5 +195,25 @@ impl super::Arena {
             }
         }
         Ok(pending)
+    }
+}
+
+const fn sort(term: super::Term) -> super::Sort {
+    match term {
+        super::Term::Hole(sort) => sort,
+        super::Term::Empty | super::Term::Push(_, _) => super::Sort::Stack,
+        super::Term::Link(_)
+        | super::Term::Unit
+        | super::Term::Bool
+        | super::Term::I64
+        | super::Term::Text
+        | super::Term::Syntax
+        | super::Term::Contract
+        | super::Term::Evidence
+        | super::Term::Certified
+        | super::Term::Pair(_, _)
+        | super::Term::Sum(_, _)
+        | super::Term::List(_)
+        | super::Term::Program(_, _) => super::Sort::Value,
     }
 }

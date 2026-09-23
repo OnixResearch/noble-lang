@@ -23,6 +23,7 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { schema, sha, canonical, fail, equal, exactBytes, lanes, sourcePolicy, account, auditPacket, auditPackets } from './accounting.mjs';
 import { refusals } from './refusals.mjs';
+import { companionPacket, companionCoverage } from '../mc2/extraction.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const [mode, argument, ...extra] = process.argv.slice(2);
@@ -58,7 +59,9 @@ const evidence = {
     'Standard-library models abstract allocator failure, allocation identity, spare capacity and formatting layout; new external declarations are separately enumerated and audited.',
     'Layout-free collection models also erase destructor effects and type-layout allocation limits. This resource-free extraction uses the Global allocator; split_off does not claim to model arbitrary effectful allocator Clone implementations.',
     'Mutable UTF-8 string backward updates assume the unchanged byte length and valid UTF-8 guaranteed by safe Rust borrowed str values; arbitrary mathematical replacements outside that representation invariant are not a Rust behavior claim.',
-    'Only generated/inherited literal UTF-8 byte-array size obligations receive the separately shaped native-evaluation allowance; strict bridge/projection theorems cannot use it.',
+    'The inherited M4 native-evaluation allowance covers only generated/inherited literal UTF-8 byte-array size obligations; strict bridge/projection theorems cannot use it.',
+    'MC2 separately audits its explicitly named closed extracted-source equations and fixed literal size obligations. These finite native equations are not universal source-refinement theorems.',
+    'MC2 assumes an authentic, sound trusted host constructs CheckObservation for the exact independently checked statement, declaration and evidence class; arbitrary trusted Rust callers can forge such observations, while guest ingress cannot grant itself that authority.',
     'The explicit production resource-free test environment uses test.emit Text-- and test.abort; the historical kernel fixture environment keeps its different test.emit Text--Unit contract. No audit silently equates them.',
   ],
   non_claims: [
@@ -90,9 +93,12 @@ function snapshot() {
     'nix/tool-selection-files.nix', 'nix/source-inventory-derive.nix', 'nix/source-inventory.nix',
     'Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml',
     ...files('crates'),
-    ...['proofs/m3', 'proofs/mc1', 'proofs/m3-wasm', 'proofs/m4'].flatMap(directory =>
+    ...['proofs/m3', 'proofs/mc1', 'proofs/mc2', 'proofs/m3-wasm', 'proofs/m4'].flatMap(directory =>
       files(directory).filter(file => /\.(lean|toml|json)$/.test(file) || file.endsWith('/lean-toolchain'))),
     ...files('verification/m4').filter(file => file.endsWith('.mjs')),
+    'verification/mc2/extraction.mjs',
+    ...['increment', 'guarded'].flatMap(fixture => ['contract', 'proof.lean']
+      .map(extension => `verification/mc2/contracts/${fixture}.${extension}`)),
     'verification/m4/inherited-boundaries.json',
     'verification/mc1/implementation.mjs', 'verification/m3-wasm/implementation.mjs',
     'verification/m3-coverage-join.mjs', 'verification/m3-coverage-gate.sh',
@@ -296,7 +302,10 @@ try {
   const baseline = json(path.join(workspace, 'verification/m4/inherited-boundaries.json'));
   equal(baseline.schema, 'm4-inherited-boundaries/v1', 'BASELINE', 'schema');
   const packet = auditPacket(accounts, baseline.models);
+  const mc2Subjects = companionPacket(accounts, sourceFiles, raw.contracts.llbc);
+  packet.roots.push(...mc2Subjects.roots);
   const packets = auditPackets(packet);
+  save('mc2-subjects.json', mc2Subjects);
   save('audit-input.json', packet);
   for (const [lane, input] of Object.entries(packets)) save(`audit-input-${lane}.json`, input);
   evidence.boundary_renewal = { provenance: baseline.provenance,
@@ -325,6 +334,37 @@ try {
       'VERDICT', `incomplete ${lane} root audits`);
   }
   evidence.audit = audit;
+  const mc2Root = path.join(workspace, 'proofs/mc2');
+  fs.mkdirSync(path.join(mc2Root, '.lake'));
+  fs.symlinkSync(cache, path.join(mc2Root, '.lake/packages'), 'dir');
+  equal(json(path.join(mc2Root, 'lake-manifest.json')).packages,
+    json(path.join(proofRoot, 'lake-manifest.json')).packages,
+    'DEPENDENCIES', 'MC2 must share the exact audited dependency lock');
+  run('mc2-correspondence-build', binaries.lake, ['build', 'MC2ExtractionGate'], mc2Root);
+  const correspondenceRun = run('mc2-correspondence-audit', binaries.lake,
+    ['env', 'lean', 'MC2ExtractionGate.lean'], mc2Root);
+  const correspondenceRows = correspondenceRun.output.split('\n')
+    .filter(line => line.startsWith('MC2-EXTRACTION '))
+    .map(line => JSON.parse(line.slice('MC2-EXTRACTION '.length)));
+  if (correspondenceRows.length !== 1 ||
+      correspondenceRows[0].schema !== 'mc2-extraction-correspondence/v1' ||
+      correspondenceRows[0].result !== 'passed') {
+    fail('MC2-VERDICT', 'missing compiled actual-source correspondence audit');
+  }
+  const sourceFixtures = correspondenceRows[0].source_fixtures;
+  equal(sourceFixtures?.map(row => row.fixture), ['increment', 'guarded'],
+    'MC2-FIXTURE', 'closed source equations must identify the real independently checked fixtures');
+  for (const fixture of sourceFixtures) {
+    for (const [field, extension] of [['source', 'contract'], ['declaration', 'proof.lean']]) {
+      equal(fixture[field], fs.readFileSync(path.join(workspace,
+        `verification/mc2/contracts/${fixture.fixture}.${extension}`), 'utf8'),
+      'MC2-FIXTURE', `${fixture.fixture}: closed equation ${field} differs from the real host-check input`);
+    }
+  }
+  evidence.mc2 = { coverage: companionCoverage(mc2Subjects, audit.contracts),
+    correspondence: correspondenceRows[0] };
+  if (expectedLock) equal(evidence.mc2, expectedLock.mc2, 'MC2-VERDICT',
+    'unreviewed companion body, boundary or correspondence theorem');
   if (expectedLock) equal(audit, expectedLock.audit, 'DEPENDENCIES', 'unexpected dependency, axiom, theorem or compiled declaration');
   evidence.refusals = refusals({ raw, accounts, sources: sourceFiles, tools: evidence.tools, packet, packets, audit, run, proofRoot,
     lake: binaries.lake, artifacts, save });
@@ -335,7 +375,7 @@ try {
   noCargoConfiguration(workspace);
   if (expectedLock) equal(fileSha(path.join(root, lockFile)), evidence.reviewed_lock_sha256, 'LOCK', 'reviewed lock changed during gate');
   const candidate = { schema, source_files: sourceFiles, tools: evidence.tools, inventory: accounts,
-    generated_files: generatedFiles, audit };
+    generated_files: generatedFiles, audit, mc2: evidence.mc2 };
   if (mode === 'discover') {
     evidence.result = 'review-required';
     save('review-candidate.json', candidate);

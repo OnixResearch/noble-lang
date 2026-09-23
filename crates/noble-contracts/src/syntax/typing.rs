@@ -168,6 +168,15 @@ fn atom_type(kind: &[u8], span: crate::Span) -> Result<noble_kernel::types::Ty, 
     if kind == b"Syntax" {
         return Ok(noble_kernel::types::Ty::Syntax);
     }
+    if kind == b"Contract" {
+        return Ok(noble_kernel::types::Ty::Contract);
+    }
+    if kind == b"Evidence" {
+        return Ok(noble_kernel::types::Ty::Evidence);
+    }
+    if kind == b"Certified" {
+        return Ok(noble_kernel::types::Ty::Certified);
+    }
     if kind == b"Resource" {
         return Err(crate::Diagnostic::new(
             crate::DiagnosticKind::Unsupported,

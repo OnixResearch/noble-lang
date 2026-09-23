@@ -1,3 +1,8 @@
+#![expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-maintainers; predicate resolution mutates only preparation-owned metered worklists, node-metered expression arenas with crate::syntax::TYPE_CAP-bounded types, and work accounting; borrowed source, syntax, bindings, and definitions remain unchanged."
+)]
+
 mod application;
 mod binary;
 mod mapping;

@@ -1,9 +1,24 @@
 //! Source/session orchestration; execution occurs only in the selected Wasm engine.
 
 mod arguments;
+pub(crate) mod companions;
 mod framing;
 mod output;
+mod report;
 mod worker;
+
+pub(crate) const SOURCE_LIMITS: noble_contracts::Limits = noble_contracts::Limits {
+    bytes: 65_536,
+    nodes: 16_384,
+    depth: 64,
+    work: 2_000_000,
+};
+
+/// Evidence ingress has its own 512 KiB bound; source preparation stays 64 KiB.
+pub(crate) const EVIDENCE_LIMITS: noble_contracts::Limits = noble_contracts::Limits {
+    bytes: 524_288,
+    ..SOURCE_LIMITS
+};
 
 pub const USAGE: &str = "usage:
   noble run SOURCE [--opt off|on] [--emit NEW_DIR]
@@ -128,6 +143,40 @@ pub fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
             std::process::ExitCode::from(error.exit())
         }
     }
+}
+
+/// Assemble one accepted WAT module with the selected immutable tools.
+///
+/// The selected worker owns assembly and validation; this helper starts it once,
+/// keeps both artifacts beside the caller's directory, and returns the exact
+/// module bytes. A refusal returns the worker diagnostic unchanged: an
+/// assembled module is tool correspondence evidence, never a verified backend.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; selected-worker startup, assembly and artifact reads return typed failures. External tool and I/O failures must not become assertion panics."
+)]
+pub(crate) fn assemble_wat(
+    directory: &std::path::Path,
+    wat: &[u8],
+) -> Result<std::vec::Vec<u8>, std::string::String> {
+    let options = arguments::Options {
+        source: None,
+        compile_only: false,
+        inputs: std::vec::Vec::new(),
+        framed: false,
+        optimized: false,
+        emit: Some(directory.to_path_buf()),
+        limits: SOURCE_LIMITS,
+    };
+    let mut engine = attempt!(worker::Engine::start(&options).map_err(|failure| failure.message));
+    let report = attempt!(engine
+        .prepare(wat, &[], 1)
+        .map_err(|failure| failure.message));
+    if report.outcome != "ready" {
+        return Err(report.json);
+    }
+    std::fs::read(directory.join("engine").join("module-1.wasm"))
+        .map_err(|error| std::format!("assembled module is unavailable: {error}"))
 }
 
 #[expect(

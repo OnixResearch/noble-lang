@@ -27,6 +27,9 @@ impl super::materialize::State {
             | super::Term::I64
             | super::Term::Text
             | super::Term::Syntax
+            | super::Term::Contract
+            | super::Term::Evidence
+            | super::Term::Certified
             | super::Term::Empty => Err(crate::internal(span)),
         };
         self.values.push(attempt!(material));

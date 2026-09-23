@@ -1,3 +1,8 @@
+#![expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-maintainers; input admission mutates only the preparation-owned meter and fresh type-path/continuation counters bounded by constructor, stack, depth, node, and work limits; supplied types remain borrowed unchanged and no host program executes."
+)]
+
 pub(super) mod paths;
 
 pub(super) fn check(
@@ -110,6 +115,9 @@ impl Traversal {
             | noble_kernel::types::Ty::I64
             | noble_kernel::types::Ty::Text
             | noble_kernel::types::Ty::Syntax
+            | noble_kernel::types::Ty::Contract
+            | noble_kernel::types::Ty::Evidence
+            | noble_kernel::types::Ty::Certified
             | noble_kernel::types::Ty::Resource(_) => 0,
         };
         self.type_nodes = self.type_nodes.saturating_add(children);
@@ -174,7 +182,10 @@ impl Traversal {
             | noble_kernel::types::Ty::Bool
             | noble_kernel::types::Ty::I64
             | noble_kernel::types::Ty::Text
-            | noble_kernel::types::Ty::Syntax => Ok(()),
+            | noble_kernel::types::Ty::Syntax
+            | noble_kernel::types::Ty::Contract
+            | noble_kernel::types::Ty::Evidence
+            | noble_kernel::types::Ty::Certified => Ok(()),
         }
     }
 

@@ -1,3 +1,8 @@
+#![expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-maintainers; emission mutates only consumed inference state, a fresh environment, bounded assembly/materialization worklists, and the preparation-owned meter; no committed namespace or borrowed source/type is modified, and kernel admission never executes a body."
+)]
+
 mod contracts;
 mod materialization;
 

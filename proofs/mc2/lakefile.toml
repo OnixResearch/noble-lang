@@ -1,0 +1,36 @@
+name = "noble-mc2-contracts"
+defaultTargets = ["NobleCertificates", "CertifiedInvariant", "MC2Gate"]
+
+[[require]]
+name = "aeneas"
+git = { url = "https://github.com/AeneasVerif/aeneas", subDir = "backends/lean" }
+rev = "505b6ca35217e7be5c96c3e2f8045edfbdf47291"
+
+[[lean_lib]]
+name = "NobleCertificates"
+
+[[lean_lib]]
+name = "CertifiedInvariant"
+
+[[lean_lib]]
+name = "MC2Gate"
+
+[[lean_lib]]
+name = "MC2ExtractionGate"
+
+[[lean_lib]]
+name = "M4Audit"
+srcDir = "../m4"
+
+[[lean_lib]]
+name = "NobleContracts"
+srcDir = "../mc1"
+
+[[lean_lib]]
+name = "NobleContractImpl"
+srcDir = "../mc1"
+globs = ["NobleContractImpl", "NobleContractImpl.Projection"]
+
+[[lean_lib]]
+name = "NobleKernel"
+srcDir = "../m3"

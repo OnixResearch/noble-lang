@@ -108,11 +108,7 @@ fn append_value<'a>(
     tigerstyle::borrowed_argument_types,
     reason = "Owner: noble-maintainers. Appending escaped JSON string syntax requires the caller's growable String, not a fixed str slice."
 )]
-#[expect(
-    tigerstyle::missing_const_fn,
-    reason = "Owner: noble-maintainers; quote_json reserves and appends runtime UTF-8 text, iterates chars and formats control-character escapes. Those APIs are not const on the pinned compiler; reassess if that support changes."
-)]
-fn quote_json(value: &str, output: &mut std::string::String) {
+pub(crate) fn quote_json(value: &str, output: &mut std::string::String) {
     output.reserve(value.len().saturating_add(2));
     output.push('"');
     value.chars().for_each(|character| match character {

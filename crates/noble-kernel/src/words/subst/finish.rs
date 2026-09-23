@@ -42,6 +42,9 @@ pub(super) fn apply(node: crate::shapes::Pattern, mut walk: super::Walk) -> supe
         | crate::shapes::Pattern::I64
         | crate::shapes::Pattern::Text
         | crate::shapes::Pattern::Syntax
+        | crate::shapes::Pattern::Contract
+        | crate::shapes::Pattern::Evidence
+        | crate::shapes::Pattern::Certified
         | crate::shapes::Pattern::Resource(_) => Err(crate::words::InstError::KindMismatch),
     };
     match built {

@@ -1,3 +1,8 @@
+#![expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-maintainers; inference mutates only preparation-owned arena/draft bodies, bounded frame/validation worklists, and the shared preparation meter; source trees, supplied types, the environment, and the committed namespace remain borrowed unchanged."
+)]
+
 mod completion;
 mod operations;
 mod traversal;

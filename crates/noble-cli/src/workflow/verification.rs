@@ -1,10 +1,10 @@
 mod compilation;
 mod evidence;
 
-pub(super) struct Acceptance {
-    pub(super) axioms: std::vec::Vec<std::string::String>,
-    pub(super) wire: std::string::String,
-    pub(super) tools: super::encoding::Json,
+pub(crate) struct Acceptance {
+    pub(crate) axioms: std::vec::Vec<std::string::String>,
+    pub(crate) wire: std::string::String,
+    pub(crate) tools: super::encoding::Json,
 }
 
 struct Workspace {

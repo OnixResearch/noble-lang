@@ -30,6 +30,15 @@ def Slice.Insts.CoreCmpPartialEqArray {T : Type} {U : Type} (N : Std.Usize)
   ne := Slice.Insts.CoreCmpPartialEqArray.ne cmpPartialEqInst
 }
 
+/-- Trait implementation: [core::fmt::{impl core::fmt::Debug for (U, T)}]
+    Source: '/rustc/library/core/src/fmt/mod.rs', lines 3109:12-3109:57
+    Name pattern: [core::fmt::Debug<(@U, @T)>] -/
+@[reducible, rust_trait_impl "core::fmt::Debug<(@U, @T)>"]
+def Pair.Insts.CoreFmtDebug {U : Type} {T : Type} (DebugInst : core.fmt.Debug
+  U) (DebugInst1 : core.fmt.Debug T) : core.fmt.Debug (U × T) := {
+  fmt := Pair.Insts.CoreFmtDebug.fmt DebugInst DebugInst1
+}
+
 /-- Trait implementation: [core::option::{impl core::fmt::Debug for core::option::Option<T>}]
     Source: '/rustc/library/core/src/option.rs', lines 592:15-592:20
     Name pattern: [core::fmt::Debug<core::option::Option<@T>>] -/
@@ -73,6 +82,17 @@ impl_def Str.Insts.CoreCmpPartialEqStr : core.cmp.PartialEq Str Str := {
   ne := core.cmp.PartialEq.ne.trait_default Str.Insts.CoreCmpPartialEqStr
 }
 
+/-- Trait implementation: [core::tuple::{impl core::cmp::PartialEq<(U, T)> for (U, T)}]
+    Source: '/rustc/library/core/src/tuple.rs', lines 28:12-28:74
+    Name pattern: [core::cmp::PartialEq<(@U, @T), (@U, @T)>] -/
+@[reducible, rust_trait_impl "core::cmp::PartialEq<(@U, @T), (@U, @T)>"]
+def Pair.Insts.CoreCmpPartialEqPair {U : Type} {T : Type} (cmpPartialEqInst :
+  core.cmp.PartialEq U U) (cmpPartialEqInst1 : core.cmp.PartialEq T T) :
+  core.cmp.PartialEq (U × T) (U × T) := {
+  eq := Pair.Insts.CoreCmpPartialEqPair.eq cmpPartialEqInst cmpPartialEqInst1
+  ne := Pair.Insts.CoreCmpPartialEqPair.ne cmpPartialEqInst cmpPartialEqInst1
+}
+
 /-- Trait implementation: [alloc::boxed::{impl core::fmt::Debug for alloc::boxed::Box<T>}]
     Source: '/rustc/library/alloc/src/boxed.rs', lines 2277:0-2277:67
     Name pattern: [core::fmt::Debug<Box<@T>>] -/
@@ -80,6 +100,18 @@ impl_def Str.Insts.CoreCmpPartialEqStr : core.cmp.PartialEq Str Str := {
 def Box.Insts.CoreFmtDebug {T : Type} (A : Type) (corefmtDebugInst :
   core.fmt.Debug T) : core.fmt.Debug T := {
   fmt := Box.Insts.CoreFmtDebug.fmt A corefmtDebugInst
+}
+
+/-- Trait implementation: [alloc::string::{impl core::cmp::PartialEq<alloc::string::String> for alloc::string::String}]
+    Source: '/rustc/library/alloc/src/string.rs', lines 350:9-350:18
+    Name pattern: [core::cmp::PartialEq<alloc::string::String, alloc::string::String>] -/
+@[reducible, rust_trait_impl
+  "core::cmp::PartialEq<alloc::string::String, alloc::string::String>"]
+impl_def alloc.string.String.Insts.CoreCmpPartialEqString : core.cmp.PartialEq
+  String String := {
+  eq := alloc.string.String.Insts.CoreCmpPartialEqString.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    alloc.string.String.Insts.CoreCmpPartialEqString
 }
 
 /-- Trait implementation: [alloc::string::{impl core::fmt::Debug for alloc::string::String}]
@@ -149,7 +181,7 @@ def noble_kernel.types.Ty.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [noble_kernel::types::impls::{impl core::cmp::PartialEq<noble_kernel::types::Ty> for noble_kernel::types::Ty}]
-    Source: 'crates/noble-kernel/src/types/impls.rs', lines 147:0-147:35
+    Source: 'crates/noble-kernel/src/types/impls.rs', lines 153:0-153:35
     Name pattern: [core::cmp::PartialEq<noble_kernel::types::Ty, noble_kernel::types::Ty>] -/
 @[reducible, rust_trait_impl
   "core::cmp::PartialEq<noble_kernel::types::Ty, noble_kernel::types::Ty>"]
@@ -161,7 +193,7 @@ impl_def noble_kernel.types.Ty.Insts.CoreCmpPartialEqTy : core.cmp.PartialEq
 }
 
 /-- Trait implementation: [noble_kernel::types::impls::{impl core::fmt::Debug for noble_kernel::types::Ty}]
-    Source: 'crates/noble-kernel/src/types/impls.rs', lines 196:0-196:42
+    Source: 'crates/noble-kernel/src/types/impls.rs', lines 202:0-202:42
     Name pattern: [core::fmt::Debug<noble_kernel::types::Ty>] -/
 @[reducible, rust_trait_impl "core::fmt::Debug<noble_kernel::types::Ty>"]
 def noble_kernel.types.Ty.Insts.CoreFmtDebug : core.fmt.Debug
@@ -248,8 +280,8887 @@ def noble_kernel.untrusted.Checked.Insts.CoreFmtDebug : core.fmt.Debug
   fmt := noble_kernel.untrusted.Checked.Insts.CoreFmtDebug.fmt
 }
 
+/-- [noble_contracts::companion::admit::accept::declaration_bytes]:
+    Source: 'crates/noble-contracts/src/companion/admit/accept.rs', lines 1:0-7:1 -/
+def companion.admit.accept.declaration_bytes
+  (offer : companion.admit.EvidenceOffer) : Result Std.Usize := do
+  match offer.payload with
+  | companion.admit.EvidencePayload.Declaration bytes =>
+    ok (alloc.vec.Vec.len bytes)
+  | companion.admit.EvidencePayload.Resource _ => ok 0#usize
+  | companion.admit.EvidencePayload.ServiceCapability _ => ok 0#usize
+
+/-- [noble_contracts::{noble_contracts::Prepared}::candidate]:
+    Source: 'crates/noble-contracts/src/lib.rs', lines 206:4-208:5
+    Visibility: public -/
+def Prepared.impl.candidate
+  (self : Prepared) : Result noble_kernel.untrusted.Candidate := do
+  ok self.candidate
+
+/-- [noble_contracts::{noble_contracts::Prepared}::expressions]:
+    Source: 'crates/noble-contracts/src/lib.rs', lines 197:4-199:5
+    Visibility: public -/
+def Prepared.impl.expressions (self : Prepared) : Result (Slice Expr) := do
+  ok (alloc.vec.Vec.deref self.expressions)
+
+/-- [noble_contracts::companion::{noble_contracts::companion::Budget}::charge]:
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 183:4-191:5 -/
+def companion.Budget.charge
+  (self : companion.Budget) (amount : Std.U32) (exhausted : companion.Refusal)
+  :
+  Result ((core.result.Result Unit companion.Refusal) × companion.Budget)
+  := do
+  let o ← lift (U32.checked_sub self.work amount)
+  match o with
+  | none => ok (core.result.Result.Err exhausted, self)
+  | some remaining => ok (core.result.Result.Ok (), { work := remaining })
+
+/-- [noble_contracts::companion::{noble_contracts::companion::Budget}::new]:
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 179:4-181:5 -/
+def companion.Budget.new (limits : Limits) : Result companion.Budget := do
+  ok { work := limits.work }
+
+/-- [noble_contracts::companion::admit::check_evidence_purity]:
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 197:0-209:1 -/
+def companion.admit.check_evidence_purity
+  (offer : companion.admit.EvidenceOffer) :
+  Result (core.result.Result Unit companion.Refusal)
+  := do
+  match offer.payload with
+  | companion.admit.EvidencePayload.Declaration bytes =>
+    let s := alloc.vec.Vec.deref bytes
+    let r ← core.str.converts.from_utf8 s
+    match r with
+    | core.result.Result.Ok _ => ok (core.result.Result.Ok ())
+    | core.result.Result.Err _ =>
+      ok (core.result.Result.Err companion.Refusal.InvalidEvidenceEncoding)
+  | companion.admit.EvidencePayload.Resource _ =>
+    ok (core.result.Result.Err companion.Refusal.LiveCapabilityInEvidence)
+  | companion.admit.EvidencePayload.ServiceCapability _ =>
+    ok (core.result.Result.Err companion.Refusal.LiveCapabilityInEvidence)
+
+/-- [noble_contracts::{noble_contracts::Prepared}::params]:
+    Source: 'crates/noble-contracts/src/lib.rs', lines 191:4-193:5
+    Visibility: public -/
+def Prepared.impl.params (self : Prepared) : Result (Slice NamedType) := do
+  ok (alloc.vec.Vec.deref self.params)
+
+/-- [noble_contracts::companion::admit::check_ghost_eligibility]: loop body 0:
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 187:4-194:1 -/
+@[rust_loop_body]
+def companion.admit.check_ghost_eligibility_loop.body
+  (prepared : Prepared) (index1 : Std.Usize) :
+  Result (ControlFlow Std.Usize (core.result.Result Unit companion.Refusal))
+  := do
+  let s ← Prepared.impl.params prepared
+  let i := Slice.len s
+  if index1 < i
+  then
+    let nt ← Slice.index_usize s index1
+    let b ← noble_kernel.types.Ty.is_data nt.ty
+    if b
+    then
+      let index2 ← lift (core.num.Usize.saturating_add index1 1#usize)
+      ok (cont index2)
+    else ok (done (core.result.Result.Err companion.Refusal.IneligibleGhost))
+  else ok (done (core.result.Result.Ok ()))
+
+/-- [noble_contracts::companion::admit::check_ghost_eligibility]: loop 0:
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 187:4-194:1 -/
+@[rust_loop]
+def companion.admit.check_ghost_eligibility_loop
+  (prepared : Prepared) (index1 : Std.Usize) :
+  Result (core.result.Result Unit companion.Refusal)
+  := do
+  loop
+    (fun index2 => companion.admit.check_ghost_eligibility_loop.body prepared
+      index2)
+    index1
+
+/-- [noble_contracts::companion::admit::check_ghost_eligibility]:
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 183:0-194:1 -/
+@[reducible]
+def companion.admit.check_ghost_eligibility
+  (prepared : Prepared) :
+  Result (core.result.Result Unit companion.Refusal)
+  := do
+  companion.admit.check_ghost_eligibility_loop prepared 0#usize
+
+/-- [noble_contracts::companion::admit::accept::eligible]:
+    Source: 'crates/noble-contracts/src/companion/admit/accept.rs', lines 17:0-46:1 -/
+def companion.admit.accept.eligible
+  (engine : companion.Core) (prepared : Prepared)
+  (offer : companion.admit.EvidenceOffer) :
+  Result (core.result.Result Unit companion.Refusal)
+  := do
+  let r ← companion.admit.check_evidence_purity offer
+  match r with
+  | core.result.Result.Ok _ =>
+    let i ← noble_kernel.untrusted.SEMANTIC_REVISION
+    if engine.semantic_revision != i
+    then
+      ok (core.result.Result.Err companion.Refusal.UnsupportedSemanticRevision)
+    else
+      let budget ← companion.Budget.new engine.limits
+      let s ← Prepared.impl.expressions prepared
+      let i1 := Slice.len s
+      let c ← Prepared.impl.candidate prepared
+      let i2 := alloc.vec.Vec.len c.nodes
+      let i3 ← lift (core.num.Usize.saturating_add i1 i2)
+      let i4 ← companion.admit.accept.declaration_bytes offer
+      let i5 ← lift (core.num.Usize.saturating_add i3 i4)
+      let work ← lift (core.num.Usize.saturating_add i5 1#usize)
+      let r1 ←
+        core.convert.num.ptr_try_from_impls.TryFromU32Usize.try_from work
+      match r1 with
+      | core.result.Result.Ok work1 =>
+        let (r2, _) ←
+          companion.Budget.charge budget work1
+            companion.Refusal.ExhaustedRegistry
+        match r2 with
+        | core.result.Result.Ok _ =>
+          let r3 ←
+            core.convert.num.ptr_try_from_impls.TryFromU32Usize.try_from i4
+          match r3 with
+          | core.result.Result.Ok bytes =>
+            if engine.revision = core.num.U32.MAX
+            then
+              ok (core.result.Result.Err companion.Refusal.ExhaustedRegistry)
+            else
+              if bytes > engine.limits.bytes
+              then
+                ok (core.result.Result.Err companion.Refusal.ExhaustedRegistry)
+              else companion.admit.check_ghost_eligibility prepared
+          | core.result.Result.Err _ =>
+            ok (core.result.Result.Err companion.Refusal.ExhaustedRegistry)
+        | core.result.Result.Err _ => ok r2
+      | core.result.Result.Err _ =>
+        ok (core.result.Result.Err companion.Refusal.ExhaustedRegistry)
+  | core.result.Result.Err _ => ok r
+
+/-- [noble_contracts::rendering::rejected]:
+    Source: 'crates/noble-contracts/src/rendering/mod.rs', lines 93:0-101:1 -/
+def rendering.rejected (out : String) (message : Str) : Result String := do
+  let out1 ← alloc.string.String.push_str out (toStr "(by fail ")
+  let out2 ← alloc.string.String.push out1 '"'
+  let out3 ← alloc.string.String.push_str out2 message
+  let out4 ← alloc.string.String.push out3 '"'
+  alloc.string.String.push out4 ')'
+
+mutual
+
+/-- [noble_contracts::rendering::types::stack]:
+    Source: 'crates/noble-contracts/src/rendering/types.rs', lines 30:0-34:1 -/
+def rendering.types.stack
+  (out : String) (entries : Slice noble_kernel.types.Ty) : Result String := do
+  let out1 ← alloc.string.String.push out '['
+  let out2 ← rendering.types.stack_entries out1 entries 0#usize
+  alloc.string.String.push out2 ']'
+partial_fixpoint
+
+/-- [noble_contracts::rendering::types::stack_entries]:
+    Source: 'crates/noble-contracts/src/rendering/types.rs', lines 48:0-62:1 -/
+def rendering.types.stack_entries
+  (out : String) (entries : Slice noble_kernel.types.Ty) (index1 : Std.Usize) :
+  Result String
+  := do
+  let i := Slice.len entries
+  if index1 < i
+  then
+    let out1 ←
+      if index1 != 0#usize
+      then alloc.string.String.push_str out (toStr ", ")
+      else ok out
+    let t ← Slice.index_usize entries index1
+    let out2 ← rendering.types.value out1 t
+    let i1 ← index1 + 1#usize
+    rendering.types.stack_entries out2 entries i1
+  else ok out
+partial_fixpoint
+
+/-- [noble_contracts::rendering::types::value]:
+    Source: 'crates/noble-contracts/src/rendering/types.rs', lines 76:0-115:1 -/
+def rendering.types.value
+  (out : String) (ty : noble_kernel.types.Ty) : Result String := do
+  match ty with
+  | noble_kernel.types.Ty.UnitType =>
+    alloc.string.String.push_str out (toStr ".unit")
+  | noble_kernel.types.Ty.BoolType =>
+    alloc.string.String.push_str out (toStr ".bool")
+  | noble_kernel.types.Ty.I64Type =>
+    alloc.string.String.push_str out (toStr ".i64")
+  | noble_kernel.types.Ty.TextType =>
+    alloc.string.String.push_str out (toStr ".text")
+  | noble_kernel.types.Ty.SyntaxType =>
+    let out1 ← alloc.string.String.push out '.'
+    let c ← Char.Insts.CoreConvertFromU8.from 171#u8
+    let out2 ← alloc.string.String.push out1 c
+    let out3 ← alloc.string.String.push_str out2 (toStr "syntax")
+    let c1 ← Char.Insts.CoreConvertFromU8.from 187#u8
+    alloc.string.String.push out3 c1
+  | noble_kernel.types.Ty.ContractType =>
+    alloc.string.String.push_str out (toStr "Contract")
+  | noble_kernel.types.Ty.EvidenceType =>
+    alloc.string.String.push_str out (toStr "Evidence")
+  | noble_kernel.types.Ty.CertifiedType =>
+    alloc.string.String.push_str out (toStr "Certified")
+  | noble_kernel.types.Ty.PairType a b =>
+    rendering.types.binary out (toStr ".pair") a b
+  | noble_kernel.types.Ty.SumType a b =>
+    rendering.types.binary out (toStr ".sum") a b
+  | noble_kernel.types.Ty.ListType item =>
+    let out1 ← alloc.string.String.push_str out (toStr "(.list ")
+    let out2 ← rendering.types.value out1 item
+    alloc.string.String.push out2 ')'
+  | noble_kernel.types.Ty.ProgramType inputs outputs effects =>
+    let b ← noble_kernel.types.EffSet.is_empty effects
+    if b
+    then
+      let out1 ← alloc.string.String.push_str out (toStr "(.program ")
+      let s := alloc.vec.Vec.deref inputs
+      let out2 ← rendering.types.stack out1 s
+      let out3 ← alloc.string.String.push out2 ' '
+      let s1 := alloc.vec.Vec.deref outputs
+      let out4 ← rendering.types.stack out3 s1
+      alloc.string.String.push out4 ')'
+    else rendering.rejected out (toStr "unsupported host effect in contract")
+  | noble_kernel.types.Ty.ResourceType _ =>
+    rendering.rejected out (toStr "unsupported resource in contract")
+partial_fixpoint
+
+/-- [noble_contracts::rendering::types::binary]:
+    Source: 'crates/noble-contracts/src/rendering/types.rs', lines 121:0-134:1 -/
+def rendering.types.binary
+  (out : String) («name» : Str) (a : noble_kernel.types.Ty)
+  (b : noble_kernel.types.Ty) :
+  Result String
+  := do
+  let out1 ← alloc.string.String.push out '('
+  let out2 ← alloc.string.String.push_str out1 «name»
+  let out3 ← alloc.string.String.push out2 ' '
+  let out4 ← rendering.types.value out3 a
+  let out5 ← alloc.string.String.push out4 ' '
+  let out6 ← rendering.types.value out5 b
+  alloc.string.String.push out6 ')'
+partial_fixpoint
+
+end
+
+/-- [noble_contracts::rendering::types::named_stack]: loop body 0:
+    Source: 'crates/noble-contracts/src/rendering/types.rs', lines 16:4-22:5 -/
+@[rust_loop_body]
+def rendering.types.named_stack_loop.body
+  (entries : Slice NamedType) (out : String) (index1 : Std.Usize) :
+  Result (ControlFlow (String × Std.Usize) String)
+  := do
+  let i := Slice.len entries
+  if index1 < i
+  then
+    let out1 ←
+      if index1 != 0#usize
+      then alloc.string.String.push_str out (toStr ", ")
+      else ok out
+    let nt ← Slice.index_usize entries index1
+    let out2 ← rendering.types.value out1 nt.ty
+    let index2 ← index1 + 1#usize
+    ok (cont (out2, index2))
+  else ok (done out)
+
+/-- [noble_contracts::rendering::types::named_stack]: loop 0:
+    Source: 'crates/noble-contracts/src/rendering/types.rs', lines 16:4-22:5 -/
+@[rust_loop]
+def rendering.types.named_stack_loop
+  (out : String) (entries : Slice NamedType) (index1 : Std.Usize) :
+  Result String
+  := do
+  loop
+    (fun (out1, index2) => rendering.types.named_stack_loop.body entries out1
+      index2)
+    (out, index1)
+
+/-- [noble_contracts::rendering::types::named_stack]:
+    Source: 'crates/noble-contracts/src/rendering/types.rs', lines 7:0-24:1 -/
+def rendering.types.named_stack
+  (out : String) («name» : Str) (entries : Slice NamedType) :
+  Result String
+  := do
+  let out1 ← alloc.string.String.push_str out (toStr "def ")
+  let out2 ← alloc.string.String.push_str out1 «name»
+  let out3 ← alloc.string.String.push_str out2 (toStr " : List Ty := [")
+  let out4 ← rendering.types.named_stack_loop out3 entries 0#usize
+  alloc.string.String.push_str out4 (toStr "]\n")
+
+/-- [noble_contracts::wire::lower_body]: loop body 0:
+    Source: 'crates/noble-contracts/src/wire.rs', lines 35:4-38:5
+    Visibility: public -/
+@[rust_loop_body]
+def wire.lower_body_loop.body
+  (body : Slice noble_kernel.untrusted.NodeId) (result : alloc.vec.Vec Std.U32)
+  (index1 : Std.Usize) :
+  Result (ControlFlow ((alloc.vec.Vec Std.U32) × Std.Usize) (alloc.vec.Vec
+    Std.U32))
+  := do
+  let i := Slice.len body
+  if index1 < i
+  then
+    let ni ← Slice.index_usize body index1
+    let result1 ← alloc.vec.Vec.push result ni
+    let index2 ← index1 + 1#usize
+    ok (cont (result1, index2))
+  else ok (done result)
+
+/-- [noble_contracts::wire::lower_body]: loop 0:
+    Source: 'crates/noble-contracts/src/wire.rs', lines 35:4-38:5
+    Visibility: public -/
+@[rust_loop]
+def wire.lower_body_loop
+  (body : Slice noble_kernel.untrusted.NodeId) (result : alloc.vec.Vec Std.U32)
+  (index1 : Std.Usize) :
+  Result (alloc.vec.Vec Std.U32)
+  := do
+  loop
+    (fun (result1, index2) => wire.lower_body_loop.body body result1 index2)
+    (result, index1)
+
+/-- [noble_contracts::wire::lower_body]:
+    Source: 'crates/noble-contracts/src/wire.rs', lines 32:0-40:1
+    Visibility: public -/
+def wire.lower_body
+  (body : Slice noble_kernel.untrusted.NodeId) :
+  Result (alloc.vec.Vec Std.U32)
+  := do
+  let i := Slice.len body
+  let result := alloc.vec.Vec.with_capacity Std.U32 i
+  wire.lower_body_loop body result 0#usize
+
+/-- [noble_contracts::wire::lower_node]:
+    Source: 'crates/noble-contracts/src/wire.rs', lines 43:0-62:1
+    Visibility: public -/
+def wire.lower_node
+  (node : noble_kernel.untrusted.Node) :
+  Result (core.result.Result wire.SemanticNode wire.ProjectionError)
+  := do
+  match node with
+  | noble_kernel.untrusted.Node.Literal lit _ =>
+    match lit with
+    | noble_kernel.untrusted.Lit.I64Lit n =>
+      ok (core.result.Result.Ok (wire.SemanticNode.I64 n))
+    | noble_kernel.untrusted.Lit.BoolLit b =>
+      ok (core.result.Result.Ok (wire.SemanticNode.Boolean b))
+    | noble_kernel.untrusted.Lit.TextLit =>
+      ok (core.result.Result.Err wire.ProjectionError.PayloadlessText)
+    | noble_kernel.untrusted.Lit.UnitLit =>
+      ok (core.result.Result.Ok wire.SemanticNode.UnitValue)
+  | noble_kernel.untrusted.Node.Invocation «def» _ =>
+    if «def» < 22#u32
+    then ok (core.result.Result.Ok (wire.SemanticNode.Word «def»))
+    else ok (core.result.Result.Err wire.ProjectionError.HostWord)
+  | noble_kernel.untrusted.Node.Quotation body _ =>
+    let s := alloc.vec.Vec.deref body
+    let v ← wire.lower_body s
+    ok (core.result.Result.Ok (wire.SemanticNode.Quotation v))
+
+/-- [noble_contracts::wire::lower_subject]: loop body 0:
+    Source: 'crates/noble-contracts/src/wire.rs', lines 80:4-89:5
+    Visibility: public -/
+@[rust_loop_body]
+def wire.lower_subject_loop.body
+  (v : alloc.vec.Vec noble_kernel.untrusted.Node)
+  (nodes : alloc.vec.Vec wire.SemanticNode) (index1 : Std.Usize) :
+  Result (ControlFlow ((alloc.vec.Vec wire.SemanticNode) × Std.Usize)
+    ((alloc.vec.Vec wire.SemanticNode) × (Option wire.ProjectionError)))
+  := do
+  let i := alloc.vec.Vec.len v
+  if index1 < i
+  then
+    let n ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        noble_kernel.untrusted.Node) v index1
+    let r ← wire.lower_node n
+    match r with
+    | core.result.Result.Ok node =>
+      let nodes1 ← alloc.vec.Vec.push nodes node
+      let index2 ← index1 + 1#usize
+      ok (cont (nodes1, index2))
+    | core.result.Result.Err error => ok (done (nodes, some error))
+  else ok (done (nodes, none))
+
+/-- [noble_contracts::wire::lower_subject]: loop 0:
+    Source: 'crates/noble-contracts/src/wire.rs', lines 80:4-89:5
+    Visibility: public -/
+@[rust_loop]
+def wire.lower_subject_loop
+  (v : alloc.vec.Vec noble_kernel.untrusted.Node)
+  (nodes : alloc.vec.Vec wire.SemanticNode) (index1 : Std.Usize) :
+  Result ((alloc.vec.Vec wire.SemanticNode) × (Option wire.ProjectionError))
+  := do
+  loop
+    (fun (nodes1, index2) => wire.lower_subject_loop.body v nodes1 index2)
+    (nodes, index1)
+
+/-- [noble_contracts::wire::lower_subject]:
+    Source: 'crates/noble-contracts/src/wire.rs', lines 69:0-97:1
+    Visibility: public -/
+def wire.lower_subject
+  (candidate : noble_kernel.untrusted.Candidate) :
+  Result (core.result.Result wire.SemanticSubject wire.ProjectionError)
+  := do
+  let i ← noble_kernel.untrusted.CANDIDATE_FORMAT
+  if candidate.format != i
+  then ok (core.result.Result.Err wire.ProjectionError.Revision)
+  else
+    let i1 ← noble_kernel.untrusted.SEMANTIC_REVISION
+    if candidate.revision != i1
+    then ok (core.result.Result.Err wire.ProjectionError.Revision)
+    else
+      let i2 := alloc.vec.Vec.len candidate.nodes
+      let nodes := alloc.vec.Vec.with_capacity wire.SemanticNode i2
+      let (nodes1, failure) ←
+        wire.lower_subject_loop candidate.nodes nodes 0#usize
+      match failure with
+      | none =>
+        let s := alloc.vec.Vec.deref candidate.body
+        let v ← wire.lower_body s
+        ok (core.result.Result.Ok { nodes := nodes1, body := v })
+      | some error => ok (core.result.Result.Err error)
+
+/-- [noble_contracts::rendering::number]:
+    Source: 'crates/noble-contracts/src/rendering/mod.rs', lines 52:0-70:1 -/
+def rendering.number (out : String) (value : Std.U64) : Result String := do
+  let out1 ←
+    if value >= 10#u64
+    then do
+         let i ← value / 10#u64
+         rendering.number out i
+    else ok out
+  let i ← value % 10#u64
+  match i with
+  | 0#uscalar => alloc.string.String.push out1 '0'
+  | 1#uscalar => alloc.string.String.push out1 '1'
+  | 2#uscalar => alloc.string.String.push out1 '2'
+  | 3#uscalar => alloc.string.String.push out1 '3'
+  | 4#uscalar => alloc.string.String.push out1 '4'
+  | 5#uscalar => alloc.string.String.push out1 '5'
+  | 6#uscalar => alloc.string.String.push out1 '6'
+  | 7#uscalar => alloc.string.String.push out1 '7'
+  | 8#uscalar => alloc.string.String.push out1 '8'
+  | _ => alloc.string.String.push out1 '9'
+partial_fixpoint
+
+/-- [noble_contracts::rendering::subject::body]: loop body 0:
+    Source: 'crates/noble-contracts/src/rendering/subject.rs', lines 76:4-83:5 -/
+@[rust_loop_body]
+def rendering.subject.body_loop.body
+  (nodes : Slice Std.U32) (out : String) (index1 : Std.Usize) :
+  Result (ControlFlow (String × Std.Usize) String)
+  := do
+  let i := Slice.len nodes
+  if index1 < i
+  then
+    let out1 ←
+      if index1 != 0#usize
+      then alloc.string.String.push_str out (toStr ", ")
+      else ok out
+    let out2 ← alloc.string.String.push_str out1 (toStr "node_")
+    let i1 ← Slice.index_usize nodes index1
+    let i2 ← lift (core.convert.num.FromU64U32.from i1)
+    let out3 ← rendering.number out2 i2
+    let index2 ← index1 + 1#usize
+    ok (cont (out3, index2))
+  else ok (done out)
+
+/-- [noble_contracts::rendering::subject::body]: loop 0:
+    Source: 'crates/noble-contracts/src/rendering/subject.rs', lines 76:4-83:5 -/
+@[rust_loop]
+def rendering.subject.body_loop
+  (out : String) (nodes : Slice Std.U32) (index1 : Std.Usize) :
+  Result String
+  := do
+  loop
+    (fun (out1, index2) => rendering.subject.body_loop.body nodes out1 index2)
+    (out, index1)
+
+/-- [noble_contracts::rendering::subject::body]:
+    Source: 'crates/noble-contracts/src/rendering/subject.rs', lines 73:0-85:1 -/
+def rendering.subject.body
+  (out : String) (nodes : Slice Std.U32) : Result String := do
+  let out1 ← alloc.string.String.push out '['
+  let out2 ← rendering.subject.body_loop out1 nodes 0#usize
+  alloc.string.String.push out2 ']'
+
+/-- [noble_contracts::rendering::signed]:
+    Source: 'crates/noble-contracts/src/rendering/mod.rs', lines 80:0-87:1 -/
+def rendering.signed (out : String) (value : Std.I64) : Result String := do
+  let out1 ← alloc.string.String.push out '('
+  let out2 ←
+    if value < 0#i64
+    then alloc.string.String.push out1 '-'
+    else ok out1
+  let i ← core.num.I64.unsigned_abs value
+  let out3 ← rendering.number out2 i
+  alloc.string.String.push out3 ')'
+
+/-- [noble_contracts::rendering::subject::node]:
+    Source: 'crates/noble-contracts/src/rendering/subject.rs', lines 48:0-67:1 -/
+def rendering.subject.node
+  (out : String) (node : wire.SemanticNode) : Result String := do
+  match node with
+  | wire.SemanticNode.I64 value =>
+    let out1 ←
+      alloc.string.String.push_str out (toStr ".lit (.i64 (BitVec.ofInt 64 ")
+    let out2 ← rendering.signed out1 value
+    alloc.string.String.push_str out2 (toStr "))")
+  | wire.SemanticNode.Boolean b =>
+    if b
+    then alloc.string.String.push_str out (toStr ".lit (.bool true)")
+    else alloc.string.String.push_str out (toStr ".lit (.bool false)")
+  | wire.SemanticNode.UnitValue =>
+    alloc.string.String.push_str out (toStr ".lit .unit")
+  | wire.SemanticNode.Word «def» =>
+    let out1 ← alloc.string.String.push_str out (toStr ".word ")
+    let i ← lift (core.convert.num.FromU64U32.from «def»)
+    rendering.number out1 i
+  | wire.SemanticNode.Quotation nodes =>
+    let out1 ← alloc.string.String.push_str out (toStr ".block ")
+    let s := alloc.vec.Vec.deref nodes
+    rendering.subject.body out1 s
+
+/-- [noble_contracts::rendering::subject::resolved]: loop body 0:
+    Source: 'crates/noble-contracts/src/rendering/subject.rs', lines 27:4-34:5 -/
+@[rust_loop_body]
+def rendering.subject.resolved_loop.body
+  (subject : wire.SemanticSubject) (out : String) (index1 : Std.Usize) :
+  Result (ControlFlow (String × Std.Usize) (String × (alloc.vec.Vec
+    Std.U32)))
+  := do
+  let i := alloc.vec.Vec.len subject.nodes
+  if index1 < i
+  then
+    let out1 ← alloc.string.String.push_str out (toStr "def node_")
+    let i1 ← lift (UScalar.cast .U64 index1)
+    let out2 ← rendering.number out1 i1
+    let out3 ← alloc.string.String.push_str out2 (toStr " : Op := ")
+    let sn ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        wire.SemanticNode) subject.nodes index1
+    let out4 ← rendering.subject.node out3 sn
+    let out5 ← alloc.string.String.push out4 '
+'
+    let index2 ← index1 + 1#usize
+    ok (cont (out5, index2))
+  else ok (done (out, subject.body))
+
+/-- [noble_contracts::rendering::subject::resolved]: loop 0:
+    Source: 'crates/noble-contracts/src/rendering/subject.rs', lines 27:4-34:5 -/
+@[rust_loop]
+def rendering.subject.resolved_loop
+  (out : String) (subject : wire.SemanticSubject) (index1 : Std.Usize) :
+  Result (String × (alloc.vec.Vec Std.U32))
+  := do
+  loop
+    (fun (out1, index2) => rendering.subject.resolved_loop.body subject out1
+      index2)
+    (out, index1)
+
+/-- [noble_contracts::rendering::subject::resolved]:
+    Source: 'crates/noble-contracts/src/rendering/subject.rs', lines 25:0-38:1 -/
+def rendering.subject.resolved
+  (out : String) (subject : wire.SemanticSubject) : Result String := do
+  let (out1, v) ← rendering.subject.resolved_loop out subject 0#usize
+  let out2 ←
+    alloc.string.String.push_str out1 (toStr "def program : List Op := ")
+  let s := alloc.vec.Vec.deref v
+  let out3 ← rendering.subject.body out2 s
+  alloc.string.String.push_str out3 (toStr "\n\n")
+
+/-- [noble_contracts::rendering::subject::emit]:
+    Source: 'crates/noble-contracts/src/rendering/subject.rs', lines 7:0-19:1 -/
+def rendering.subject.emit
+  (out : String) (candidate : noble_kernel.untrusted.Candidate) :
+  Result String
+  := do
+  let r ← wire.lower_subject candidate
+  match r with
+  | core.result.Result.Ok subject => rendering.subject.resolved out subject
+  | core.result.Result.Err _ =>
+    let out1 ←
+      alloc.string.String.push_str out (toStr "def program : List Op := ")
+    let out2 ←
+      rendering.rejected out1 (toStr "unsupported semantic projection")
+    alloc.string.String.push out2 '
+'
+
+/-- [noble_contracts::rendering::expression::indexed]:
+    Source: 'crates/noble-contracts/src/rendering/expression.rs', lines 58:0-62:1 -/
+def rendering.expression.indexed
+  (out : String) («name» : Str) (index1 : Std.U32) : Result String := do
+  let out1 ← alloc.string.String.push_str out «name»
+  let out2 ← alloc.string.String.push out1 ' '
+  let i ← lift (core.convert.num.FromU64U32.from index1)
+  rendering.number out2 i
+
+/-- [noble_contracts::rendering::expression::reference]:
+    Source: 'crates/noble-contracts/src/rendering/expression.rs', lines 27:0-30:1 -/
+def rendering.expression.reference
+  (out : String) (index1 : Std.U32) : Result String := do
+  let out1 ← alloc.string.String.push_str out (toStr " expression_")
+  let i ← lift (core.convert.num.FromU64U32.from index1)
+  rendering.number out1 i
+
+/-- [noble_contracts::rendering::expression::unary]:
+    Source: 'crates/noble-contracts/src/rendering/expression.rs', lines 36:0-39:1 -/
+def rendering.expression.unary
+  (out : String) («name» : Str) (a : Std.U32) : Result String := do
+  let out1 ← alloc.string.String.push_str out «name»
+  rendering.expression.reference out1 a
+
+/-- [noble_contracts::rendering::expression::binary]:
+    Source: 'crates/noble-contracts/src/rendering/expression.rs', lines 49:0-52:1 -/
+def rendering.expression.binary
+  (out : String) («name» : Str) (a : Std.U32) (b : Std.U32) :
+  Result String
+  := do
+  let out1 ← rendering.expression.unary out «name» a
+  rendering.expression.reference out1 b
+
+/-- [noble_contracts::rendering::expression::term]:
+    Source: 'crates/noble-contracts/src/rendering/expression.rs', lines 72:0-127:1 -/
+def rendering.expression.term
+  (out : String) (kind : ExprKind) (definitions : Slice LogicDef) :
+  Result String
+  := do
+  match kind with
+  | ExprKind.I64Expr n =>
+    let out1 ← alloc.string.String.push_str out (toStr ".i64 ")
+    rendering.signed out1 n
+  | ExprKind.BoolExpr b =>
+    if b
+    then alloc.string.String.push_str out (toStr ".bool true")
+    else alloc.string.String.push_str out (toStr ".bool false")
+  | ExprKind.UnitExpr => alloc.string.String.push_str out (toStr ".unit")
+  | ExprKind.InputExpr i => rendering.expression.indexed out (toStr ".input") i
+  | ExprKind.OutputExpr i =>
+    rendering.expression.indexed out (toStr ".output") i
+  | ExprKind.ParamExpr i => rendering.expression.indexed out (toStr ".param") i
+  | ExprKind.DefinitionExpr i =>
+    let out1 ← rendering.expression.indexed out (toStr ".definition") i
+    let r ← Usize.Insts.CoreConvertTryFromU32TryFromIntError.try_from i
+    let definition ←
+      match r with
+      | core.result.Result.Ok index1 =>
+        core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice LogicDef)
+          definitions index1
+      | core.result.Result.Err _ => ok none
+    match definition with
+    | none =>
+      let out2 ← alloc.string.String.push out1 ' '
+      rendering.rejected out2 (toStr "unresolved logical definition")
+    | some definition1 => rendering.expression.reference out1 definition1.body
+  | ExprKind.NotExpr a => rendering.expression.unary out (toStr ".not") a
+  | ExprKind.AndExpr a b => rendering.expression.binary out (toStr ".and") a b
+  | ExprKind.OrExpr a b => rendering.expression.binary out (toStr ".or") a b
+  | ExprKind.ImpliesExpr a b =>
+    rendering.expression.binary out (toStr ".implies") a b
+  | ExprKind.EqExpr a b => rendering.expression.binary out (toStr ".eq") a b
+  | ExprKind.LtExpr a b => rendering.expression.binary out (toStr ".lt") a b
+  | ExprKind.LeExpr a b => rendering.expression.binary out (toStr ".le") a b
+  | ExprKind.AddExpr a b => rendering.expression.binary out (toStr ".add") a b
+  | ExprKind.SubExpr a b => rendering.expression.binary out (toStr ".sub") a b
+  | ExprKind.MulExpr a b => rendering.expression.binary out (toStr ".mul") a b
+  | ExprKind.PairExpr a b =>
+    rendering.expression.binary out (toStr ".pair") a b
+  | ExprKind.FirstExpr a => rendering.expression.unary out (toStr ".first") a
+  | ExprKind.SecondExpr a => rendering.expression.unary out (toStr ".second") a
+  | ExprKind.InlExpr a => rendering.expression.unary out (toStr ".inl") a
+  | ExprKind.InrExpr a => rendering.expression.unary out (toStr ".inr") a
+  | ExprKind.IsLeftExpr a => rendering.expression.unary out (toStr ".isLeft") a
+  | ExprKind.LeftExpr a => rendering.expression.unary out (toStr ".left") a
+  | ExprKind.RightExpr a => rendering.expression.unary out (toStr ".right") a
+  | ExprKind.NilExpr => alloc.string.String.push_str out (toStr ".nil")
+  | ExprKind.ConsExpr a b =>
+    rendering.expression.binary out (toStr ".cons") a b
+  | ExprKind.IsNilExpr a => rendering.expression.unary out (toStr ".isNil") a
+  | ExprKind.HeadExpr a => rendering.expression.unary out (toStr ".head") a
+  | ExprKind.TailExpr a => rendering.expression.unary out (toStr ".tail") a
+  | ExprKind.LengthExpr a => rendering.expression.unary out (toStr ".length") a
+  | ExprKind.MapsExpr p a b =>
+    let out1 ← rendering.expression.binary out (toStr ".maps") p a
+    rendering.expression.reference out1 b
+
+/-- [noble_contracts::{noble_contracts::Prepared}::definitions]:
+    Source: 'crates/noble-contracts/src/lib.rs', lines 194:4-196:5
+    Visibility: public -/
+def Prepared.impl.definitions (self : Prepared) : Result (Slice LogicDef) := do
+  ok (alloc.vec.Vec.deref self.definitions)
+
+/-- [noble_contracts::rendering::expression::emit]: loop body 0:
+    Source: 'crates/noble-contracts/src/rendering/expression.rs', lines 9:4-20:5 -/
+@[rust_loop_body]
+def rendering.expression.emit_loop.body
+  (prepared : Prepared) (out : String) (index1 : Std.Usize) :
+  Result (ControlFlow (String × Std.Usize) String)
+  := do
+  let s ← Prepared.impl.expressions prepared
+  let i := Slice.len s
+  if index1 < i
+  then
+    let out1 ← alloc.string.String.push_str out (toStr "def expression_")
+    let i1 ← lift (UScalar.cast .U64 index1)
+    let out2 ← rendering.number out1 i1
+    let out3 ← alloc.string.String.push_str out2 (toStr " : Term := ")
+    let e ← Slice.index_usize s index1
+    let s1 ← Prepared.impl.definitions prepared
+    let out4 ← rendering.expression.term out3 e.kind s1
+    let out5 ← alloc.string.String.push out4 '
+'
+    let index2 ← index1 + 1#usize
+    ok (cont (out5, index2))
+  else ok (done out)
+
+/-- [noble_contracts::rendering::expression::emit]: loop 0:
+    Source: 'crates/noble-contracts/src/rendering/expression.rs', lines 9:4-20:5 -/
+@[rust_loop]
+def rendering.expression.emit_loop
+  (out : String) (prepared : Prepared) (index1 : Std.Usize) :
+  Result String
+  := do
+  loop
+    (fun (out1, index2) => rendering.expression.emit_loop.body prepared out1
+      index2)
+    (out, index1)
+
+/-- [noble_contracts::rendering::expression::emit]:
+    Source: 'crates/noble-contracts/src/rendering/expression.rs', lines 7:0-21:1 -/
+@[reducible]
+def rendering.expression.emit
+  (out : String) (prepared : Prepared) : Result String := do
+  rendering.expression.emit_loop out prepared 0#usize
+
+/-- [noble_contracts::{noble_contracts::Prepared}::ensures]:
+    Source: 'crates/noble-contracts/src/lib.rs', lines 203:4-205:5
+    Visibility: public -/
+def Prepared.impl.ensures (self : Prepared) : Result Std.U32 := do
+  ok self.ensures
+
+/-- [noble_contracts::{noble_contracts::Prepared}::requires]:
+    Source: 'crates/noble-contracts/src/lib.rs', lines 200:4-202:5
+    Visibility: public -/
+def Prepared.impl.requires (self : Prepared) : Result Std.U32 := do
+  ok self.requires
+
+/-- [noble_contracts::{noble_contracts::Prepared}::outputs]:
+    Source: 'crates/noble-contracts/src/lib.rs', lines 188:4-190:5
+    Visibility: public -/
+def Prepared.impl.outputs (self : Prepared) : Result (Slice NamedType) := do
+  ok (alloc.vec.Vec.deref self.outputs)
+
+/-- [noble_contracts::{noble_contracts::Prepared}::inputs]:
+    Source: 'crates/noble-contracts/src/lib.rs', lines 185:4-187:5
+    Visibility: public -/
+def Prepared.impl.inputs (self : Prepared) : Result (Slice NamedType) := do
+  ok (alloc.vec.Vec.deref self.inputs)
+
+/-- [noble_contracts::rendering::export_lean]:
+    Source: 'crates/noble-contracts/src/rendering/mod.rs', lines 19:0-38:1
+    Visibility: public -/
+def rendering.export_lean (prepared : Prepared) : Result String := do
+  let out ← alloc.string.String.with_capacity 4096#usize
+  let out1 ←
+    alloc.string.String.push_str out (toStr
+      "import NobleContracts\nimport NobleContracts.Expression\n\n")
+  let out2 ←
+    alloc.string.String.push_str out1 (toStr
+      "open NobleContracts\nnamespace MC1Obligation\n\n")
+  let out3 ←
+    alloc.string.String.push_str out2 (toStr
+      "def irRevision : Nat := 1\ndef semanticRevision : Nat := ")
+  let c ← Prepared.impl.candidate prepared
+  let i ← lift (core.convert.num.FromU64U32.from c.revision)
+  let out4 ← rendering.number out3 i
+  let out5 ← alloc.string.String.push out4 '
+'
+  let out6 ← rendering.subject.emit out5 c
+  let s ← Prepared.impl.inputs prepared
+  let out7 ← rendering.types.named_stack out6 (toStr "inputTypes") s
+  let s1 ← Prepared.impl.outputs prepared
+  let out8 ← rendering.types.named_stack out7 (toStr "outputTypes") s1
+  let s2 ← Prepared.impl.params prepared
+  let out9 ← rendering.types.named_stack out8 (toStr "paramTypes") s2
+  let out10 ← rendering.expression.emit out9 prepared
+  let out11 ←
+    alloc.string.String.push_str out10 (toStr
+      "def precondition : Term := expression_")
+  let i1 ← Prepared.impl.requires prepared
+  let i2 ← lift (core.convert.num.FromU64U32.from i1)
+  let out12 ← rendering.number out11 i2
+  let out13 ←
+    alloc.string.String.push_str out12 (toStr
+      "\ndef postcondition : Term := expression_")
+  let i3 ← Prepared.impl.ensures prepared
+  let i4 ← lift (core.convert.num.FromU64U32.from i3)
+  let out14 ← rendering.number out13 i4
+  let out15 ←
+    alloc.string.String.push_str out14 (toStr
+      "\ndef claim : Prop := exportedClaim program inputTypes outputTypes paramTypes\n")
+  alloc.string.String.push_str out15 (toStr
+    "  (Holds precondition) (Holds postcondition)\n\nend MC1Obligation\n")
+
+/-- [noble_contracts::{noble_contracts::Prepared}::checked]:
+    Source: 'crates/noble-contracts/src/lib.rs', lines 212:4-214:5
+    Visibility: public -/
+def Prepared.impl.checked
+  (self : Prepared) : Result noble_kernel.untrusted.Checked := do
+  ok self.checked
+
+/-- [noble_contracts::companion::registry::entries::index_of]:
+    Source: 'crates/noble-contracts/src/companion/registry/entries.rs', lines 212:0-217:1 -/
+def companion.registry.entries.index_of
+  (count : Std.Usize) :
+  Result (core.result.Result Std.U32 companion.Refusal)
+  := do
+  let r ← core.convert.num.ptr_try_from_impls.TryFromU32Usize.try_from count
+  match r with
+  | core.result.Result.Ok index1 => ok (core.result.Result.Ok index1)
+  | core.result.Result.Err _ =>
+    ok (core.result.Result.Err companion.Refusal.ExhaustedRegistry)
+
+/-- [noble_contracts::companion::registry::entries::has_capacity]:
+    Source: 'crates/noble-contracts/src/companion/registry/entries.rs', lines 201:0-206:1 -/
+def companion.registry.entries.has_capacity
+  (count : Std.Usize) (capacity : Option Std.Usize) : Result Bool := do
+  match capacity with
+  | none => ok false
+  | some limit => ok (count < limit)
+
+/-- [noble_contracts::companion::registry::ContractId]:
+    Source: 'crates/noble-contracts/src/companion/registry/mod.rs', lines 43:0-43:31 -/
+def companion.registry.ContractId.constructor
+  (i : Std.U32) : Result companion.registry.ContractId := do
+  ok i
+
+/-- [noble_contracts::companion::registry::{impl core::ops::function::FnOnce<(u32,), noble_contracts::companion::registry::ContractId> for noble_contracts::companion::registry::ContractId}::call_once]:
+    Source: 'crates/noble-contracts/src/companion/registry/mod.rs', lines 43:0-43:31 -/
+def P.Insts.CoreOpsFunctionFnOnceTupleU32ContractId.call_once
+  (state : Std.U32 → Result companion.registry.ContractId) (args : Std.U32) :
+  Result companion.registry.ContractId
+  := do
+  companion.registry.ContractId.constructor args
+
+/-- Trait implementation: [noble_contracts::companion::registry::{impl core::ops::function::FnOnce<(u32,), noble_contracts::companion::registry::ContractId> for noble_contracts::companion::registry::ContractId}]
+    Source: 'crates/noble-contracts/src/companion/registry/mod.rs', lines 43:0-43:31 -/
+@[reducible]
+def P.Insts.CoreOpsFunctionFnOnceTupleU32ContractId : core.ops.function.FnOnce
+  (Std.U32 → Result companion.registry.ContractId) Std.U32
+  companion.registry.ContractId := {
+  call_once := P.Insts.CoreOpsFunctionFnOnceTupleU32ContractId.call_once
+}
+
+/-- [noble_contracts::companion::{impl core::cmp::PartialEq<noble_contracts::companion::GuardTemplate> for noble_contracts::companion::GuardTemplate}::eq]:
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 209:29-209:38
+    Visibility: public -/
+def companion.GuardTemplate.Insts.CoreCmpPartialEqGuardTemplate.eq
+  (self : companion.GuardTemplate) (other : companion.GuardTemplate) :
+  Result Bool
+  := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  if self1 = other1
+  then
+    match self with
+    | companion.GuardTemplate.LtI64Max => ok true
+    | companion.GuardTemplate.NeI64Min => ok true
+    | companion.GuardTemplate.EqI64Literal __self_0 =>
+      match other with
+      | companion.GuardTemplate.LtI64Max => ok true
+      | companion.GuardTemplate.NeI64Min => ok true
+      | companion.GuardTemplate.EqI64Literal __arg1_0 =>
+        lift (core.cmp.impls.PartialEqI64.eq __self_0 __arg1_0)
+  else ok false
+
+/-- Trait implementation: [noble_contracts::companion::{impl core::cmp::PartialEq<noble_contracts::companion::GuardTemplate> for noble_contracts::companion::GuardTemplate}]
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 209:29-209:38 -/
+@[reducible]
+impl_def companion.GuardTemplate.Insts.CoreCmpPartialEqGuardTemplate :
+  core.cmp.PartialEq companion.GuardTemplate companion.GuardTemplate := {
+  eq := companion.GuardTemplate.Insts.CoreCmpPartialEqGuardTemplate.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    companion.GuardTemplate.Insts.CoreCmpPartialEqGuardTemplate
+}
+
+/-- [noble_contracts::companion::admit::{impl core::cmp::PartialEq<noble_contracts::companion::admit::ClaimTemplate> for noble_contracts::companion::admit::ClaimTemplate}::eq]:
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 25:29-25:38
+    Visibility: public -/
+def companion.admit.ClaimTemplate.Insts.CoreCmpPartialEqClaimTemplate.eq
+  (self : companion.admit.ClaimTemplate)
+  (other : companion.admit.ClaimTemplate) :
+  Result Bool
+  := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  if self1 = other1
+  then
+    match self with
+    | companion.admit.ClaimTemplate.IncrementBy __self_0 =>
+      match other with
+      | companion.admit.ClaimTemplate.IncrementBy __arg1_0 =>
+        lift (core.cmp.impls.PartialEqI64.eq __self_0 __arg1_0)
+      | companion.admit.ClaimTemplate.IncrementByCapture => ok true
+      | companion.admit.ClaimTemplate.GuardCorrespondence _ => ok true
+      | companion.admit.ClaimTemplate.Admitted _ => ok true
+    | companion.admit.ClaimTemplate.IncrementByCapture => ok true
+    | companion.admit.ClaimTemplate.GuardCorrespondence __self_0 =>
+      match other with
+      | companion.admit.ClaimTemplate.IncrementBy _ => ok true
+      | companion.admit.ClaimTemplate.IncrementByCapture => ok true
+      | companion.admit.ClaimTemplate.GuardCorrespondence __arg1_0 =>
+        companion.GuardTemplate.Insts.CoreCmpPartialEqGuardTemplate.eq __self_0
+          __arg1_0
+      | companion.admit.ClaimTemplate.Admitted _ => ok true
+    | companion.admit.ClaimTemplate.Admitted __self_0 =>
+      match other with
+      | companion.admit.ClaimTemplate.IncrementBy _ => ok true
+      | companion.admit.ClaimTemplate.IncrementByCapture => ok true
+      | companion.admit.ClaimTemplate.GuardCorrespondence _ => ok true
+      | companion.admit.ClaimTemplate.Admitted __arg1_0 =>
+        lift (core.cmp.impls.PartialEqU64.eq __self_0 __arg1_0)
+  else ok false
+
+/-- Trait implementation: [noble_contracts::companion::admit::{impl core::cmp::PartialEq<noble_contracts::companion::admit::ClaimTemplate> for noble_contracts::companion::admit::ClaimTemplate}]
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 25:29-25:38 -/
+@[reducible]
+impl_def companion.admit.ClaimTemplate.Insts.CoreCmpPartialEqClaimTemplate :
+  core.cmp.PartialEq companion.admit.ClaimTemplate
+  companion.admit.ClaimTemplate := {
+  eq := companion.admit.ClaimTemplate.Insts.CoreCmpPartialEqClaimTemplate.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    companion.admit.ClaimTemplate.Insts.CoreCmpPartialEqClaimTemplate
+}
+
+/-- [noble_contracts::companion::registry::entries::matches_contract]:
+    Source: 'crates/noble-contracts/src/companion/registry/entries.rs', lines 176:0-199:1 -/
+def companion.registry.entries.matches_contract
+  (existing : companion.registry.ContractEntry)
+  (entry : companion.registry.ContractEntry) :
+  Result Bool
+  := do
+  if existing.statement != entry.statement
+  then ok false
+  else
+    let b ←
+      core.cmp.PartialEq.ne.trait_default
+        alloc.string.String.Insts.CoreCmpPartialEqString
+        existing.exact_statement entry.exact_statement
+    if b
+    then ok false
+    else
+      let b1 ←
+        core.cmp.PartialEq.ne.trait_default
+          companion.admit.ClaimTemplate.Insts.CoreCmpPartialEqClaimTemplate
+          existing.claim entry.claim
+      if b1
+      then ok false
+      else
+        let b2 ←
+          alloc.vec.partial_eq.PartialEqVec.ne (Pair.Insts.CoreCmpPartialEqPair
+            core.cmp.PartialEqU32 core.cmp.PartialEqU64) existing.program
+            entry.program
+        if b2
+        then ok false
+        else
+          let b3 ←
+            alloc.vec.partial_eq.PartialEqVec.ne
+              noble_kernel.types.Ty.Insts.CoreCmpPartialEqTy existing.input
+              entry.input
+          if b3
+          then ok false
+          else
+            let b4 ←
+              alloc.vec.partial_eq.PartialEqVec.ne
+                noble_kernel.types.Ty.Insts.CoreCmpPartialEqTy existing.output
+                entry.output
+            if b4
+            then ok false
+            else
+              if existing.input_signature != entry.input_signature
+              then ok false
+              else
+                if existing.output_signature != entry.output_signature
+                then ok false
+                else
+                  if existing.policy != entry.policy
+                  then ok false
+                  else ok (existing.revision = entry.revision)
+
+/-- [noble_contracts::companion::registry::entries::{noble_contracts::companion::registry::Registry}::find_contract]: loop body 0:
+    Source: 'crates/noble-contracts/src/companion/registry/entries.rs', lines 35:8-44:9 -/
+@[rust_loop_body]
+def companion.registry.entries.Registry.find_contract_loop.body
+  (self : companion.registry.Registry)
+  (entry : companion.registry.ContractEntry) (index1 : Std.Usize) :
+  Result (ControlFlow Std.Usize (Option companion.registry.ContractId))
+  := do
+  let i := alloc.vec.Vec.len self.contracts
+  if index1 < i
+  then
+    let existing ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        companion.registry.ContractEntry) self.contracts index1
+    let b ← companion.registry.entries.matches_contract existing entry
+    if b
+    then
+      let r ←
+        core.convert.num.ptr_try_from_impls.TryFromU32Usize.try_from index1
+      let o ← core.result.Result.ok r
+      let found ←
+        core.option.Option.map P.Insts.CoreOpsFunctionFnOnceTupleU32ContractId
+          o (companion.registry.ContractId.constructor)
+      ok (done found)
+    else
+      let index2 ← lift (core.num.Usize.saturating_add index1 1#usize)
+      ok (cont index2)
+  else ok (done none)
+
+/-- [noble_contracts::companion::registry::entries::{noble_contracts::companion::registry::Registry}::find_contract]: loop 0:
+    Source: 'crates/noble-contracts/src/companion/registry/entries.rs', lines 35:8-44:9 -/
+@[rust_loop]
+def companion.registry.entries.Registry.find_contract_loop
+  (self : companion.registry.Registry)
+  (entry : companion.registry.ContractEntry) (index1 : Std.Usize) :
+  Result (Option companion.registry.ContractId)
+  := do
+  loop
+    (fun index2 => companion.registry.entries.Registry.find_contract_loop.body
+      self entry index2)
+    index1
+
+/-- [noble_contracts::companion::registry::entries::{noble_contracts::companion::registry::Registry}::find_contract]:
+    Source: 'crates/noble-contracts/src/companion/registry/entries.rs', lines 29:4-46:5 -/
+@[reducible]
+def companion.registry.entries.Registry.find_contract
+  (self : companion.registry.Registry)
+  (entry : companion.registry.ContractEntry) :
+  Result (Option companion.registry.ContractId)
+  := do
+  companion.registry.entries.Registry.find_contract_loop self entry 0#usize
+
+/-- [noble_contracts::companion::registry::entries::{noble_contracts::companion::registry::Registry}::add_contract]:
+    Source: 'crates/noble-contracts/src/companion/registry/entries.rs', lines 48:4-61:5 -/
+def companion.registry.entries.Registry.add_contract
+  (self : companion.registry.Registry)
+  (entry : companion.registry.ContractEntry) :
+  Result ((core.result.Result companion.registry.ContractId companion.Refusal)
+    × companion.registry.Registry)
+  := do
+  let o ← companion.registry.entries.Registry.find_contract self entry
+  match o with
+  | none =>
+    let i := alloc.vec.Vec.len self.contracts
+    let b ← companion.registry.entries.has_capacity i self.contract_cap
+    if b
+    then
+      let i1 := alloc.vec.Vec.len self.contracts
+      let r ← companion.registry.entries.index_of i1
+      match r with
+      | core.result.Result.Ok value =>
+        let v ← alloc.vec.Vec.push self.contracts entry
+        ok (core.result.Result.Ok value, { self with contracts := v })
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, self)
+    else ok (core.result.Result.Err companion.Refusal.ExhaustedRegistry, self)
+  | some existing => ok (core.result.Result.Ok existing, self)
+
+/-- [noble_contracts::{noble_contracts::Prepared}::name]:
+    Source: 'crates/noble-contracts/src/lib.rs', lines 182:4-184:5
+    Visibility: public -/
+def Prepared.impl.name (self : Prepared) : Result Str := do
+  alloc.string.String.Insts.CoreOpsDerefDerefStr.deref self.name
+
+/-- [noble_contracts::companion::digest::{noble_contracts::companion::digest::Fold}::finish]:
+    Source: 'crates/noble-contracts/src/companion/digest.rs', lines 80:4-88:5 -/
+def companion.digest.Fold.finish
+  (self : companion.digest.Fold) : Result Std.U64 := do
+  let i ← self.state >>> 33#i32
+  let state ← lift (self.state ^^^ i)
+  let state1 ←
+    lift (core.num.U64.wrapping_mul state 18397679294719823053#u64)
+  let i1 ← state1 >>> 33#i32
+  let state2 ← lift (state1 ^^^ i1)
+  let state3 ←
+    lift (core.num.U64.wrapping_mul state2 14181476777654086739#u64)
+  let i2 ← state3 >>> 33#i32
+  ok (state3 ^^^ i2)
+
+/-- [noble_contracts::companion::digest::PRIME]
+    Source: 'crates/noble-contracts/src/companion/digest.rs', lines 27:0-27:41 -/
+@[global_simps, irreducible]
+def companion.digest.PRIME : Std.U64 := 1099511628211#u64
+
+/-- [noble_contracts::companion::digest::{noble_contracts::companion::digest::Fold}::absorb]: loop body 0:
+    Source: 'crates/noble-contracts/src/companion/digest.rs', lines 52:8-58:9 -/
+@[rust_loop_body]
+def companion.digest.Fold.absorb_loop.body
+  (value : Std.U64) (self : companion.digest.Fold) (shift : Std.U32)
+  (index1 : Std.U32) :
+  Result (ControlFlow (companion.digest.Fold × Std.U32 × Std.U32)
+    companion.digest.Fold)
+  := do
+  if index1 < 8#u32
+  then
+    let i ← value >>> shift
+    let byte ← lift (i &&& 255#u64)
+    let i1 ← lift (self.state ^^^ byte)
+    let i2 ← lift (core.num.U64.wrapping_mul i1 companion.digest.PRIME)
+    let shift1 ← lift (core.num.U32.saturating_add shift 8#u32)
+    let index2 ← lift (core.num.U32.saturating_add index1 1#u32)
+    ok (cont ({ state := i2 }, shift1, index2))
+  else ok (done self)
+
+/-- [noble_contracts::companion::digest::{noble_contracts::companion::digest::Fold}::absorb]: loop 0:
+    Source: 'crates/noble-contracts/src/companion/digest.rs', lines 52:8-58:9 -/
+@[rust_loop]
+def companion.digest.Fold.absorb_loop
+  (self : companion.digest.Fold) (value : Std.U64) (shift : Std.U32)
+  (index1 : Std.U32) :
+  Result companion.digest.Fold
+  := do
+  loop
+    (fun (self1, shift1, index2) => companion.digest.Fold.absorb_loop.body
+      value self1 shift1 index2)
+    (self, shift, index1)
+
+/-- [noble_contracts::companion::digest::{noble_contracts::companion::digest::Fold}::absorb]:
+    Source: 'crates/noble-contracts/src/companion/digest.rs', lines 49:4-59:5 -/
+@[reducible]
+def companion.digest.Fold.absorb
+  (self : companion.digest.Fold) (value : Std.U64) :
+  Result companion.digest.Fold
+  := do
+  companion.digest.Fold.absorb_loop self value 0#u32 0#u32
+
+/-- [noble_contracts::companion::digest::{noble_contracts::companion::digest::Fold}::absorb_count]:
+    Source: 'crates/noble-contracts/src/companion/digest.rs', lines 62:4-64:5 -/
+def companion.digest.Fold.absorb_count
+  (self : companion.digest.Fold) (count : Std.Usize) :
+  Result companion.digest.Fold
+  := do
+  let i ← lift (UScalar.cast .U64 count)
+  companion.digest.Fold.absorb self i
+
+/-- [noble_contracts::companion::digest::{noble_contracts::companion::digest::Fold}::absorb_bytes]: loop body 0:
+    Source: 'crates/noble-contracts/src/companion/digest.rs', lines 72:8-76:9 -/
+@[rust_loop_body]
+def companion.digest.Fold.absorb_bytes_loop.body
+  (bytes : Slice Std.U8) (self : companion.digest.Fold) (index1 : Std.Usize) :
+  Result (ControlFlow (companion.digest.Fold × Std.Usize)
+    companion.digest.Fold)
+  := do
+  let i := Slice.len bytes
+  if index1 < i
+  then
+    let i1 ← Slice.index_usize bytes index1
+    let i2 ← lift (core.convert.num.FromU64U8.from i1)
+    let i3 ← lift (self.state ^^^ i2)
+    let i4 ← lift (core.num.U64.wrapping_mul i3 companion.digest.PRIME)
+    let index2 ← lift (core.num.Usize.saturating_add index1 1#usize)
+    ok (cont ({ state := i4 }, index2))
+  else ok (done self)
+
+/-- [noble_contracts::companion::digest::{noble_contracts::companion::digest::Fold}::absorb_bytes]: loop 0:
+    Source: 'crates/noble-contracts/src/companion/digest.rs', lines 72:8-76:9 -/
+@[rust_loop]
+def companion.digest.Fold.absorb_bytes_loop
+  (self : companion.digest.Fold) (bytes : Slice Std.U8) (index1 : Std.Usize) :
+  Result companion.digest.Fold
+  := do
+  loop
+    (fun (self1, index2) => companion.digest.Fold.absorb_bytes_loop.body bytes
+      self1 index2)
+    (self, index1)
+
+/-- [noble_contracts::companion::digest::{noble_contracts::companion::digest::Fold}::absorb_bytes]:
+    Source: 'crates/noble-contracts/src/companion/digest.rs', lines 69:4-77:5 -/
+def companion.digest.Fold.absorb_bytes
+  (self : companion.digest.Fold) (bytes : Slice Std.U8) :
+  Result companion.digest.Fold
+  := do
+  let i := Slice.len bytes
+  let self1 ← companion.digest.Fold.absorb_count self i
+  companion.digest.Fold.absorb_bytes_loop self1 bytes 0#usize
+
+/-- [noble_contracts::companion::digest::OFFSET]
+    Source: 'crates/noble-contracts/src/companion/digest.rs', lines 26:0-26:42 -/
+@[global_simps, irreducible]
+def companion.digest.OFFSET : Std.U64 := 14695981039346656037#u64
+
+/-- [noble_contracts::companion::digest::DIGEST_VERSION]
+    Source: 'crates/noble-contracts/src/companion/digest.rs', lines 15:0-15:34
+    Visibility: public -/
+@[global_simps, irreducible]
+def companion.digest.DIGEST_VERSION : Std.U32 := 1#u32
+
+/-- [noble_contracts::companion::digest::{noble_contracts::companion::digest::Fold}::new]:
+    Source: 'crates/noble-contracts/src/companion/digest.rs', lines 41:4-46:5 -/
+def companion.digest.Fold.new
+  (domain : Std.U64) : Result companion.digest.Fold := do
+  let fold ←
+    companion.digest.Fold.absorb { state := companion.digest.OFFSET } domain
+  let i ←
+    lift (core.convert.num.FromU64U32.from companion.digest.DIGEST_VERSION)
+  companion.digest.Fold.absorb fold i
+
+/-- [noble_contracts::companion::digest::DOMAIN_STATEMENT]
+    Source: 'crates/noble-contracts/src/companion/digest.rs', lines 19:0-19:67 -/
+@[global_simps, irreducible]
+def companion.digest.DOMAIN_STATEMENT : Std.U64 := 6004496033387466324#u64
+
+/-- [noble_contracts::companion::admit::types::ty_tag]:
+    Source: 'crates/noble-contracts/src/companion/admit/types.rs', lines 7:0-23:1 -/
+def companion.admit.types.ty_tag
+  (ty : noble_kernel.types.Ty) : Result Std.U64 := do
+  match ty with
+  | noble_kernel.types.Ty.UnitType => ok 1#u64
+  | noble_kernel.types.Ty.BoolType => ok 2#u64
+  | noble_kernel.types.Ty.I64Type => ok 3#u64
+  | noble_kernel.types.Ty.TextType => ok 4#u64
+  | noble_kernel.types.Ty.SyntaxType => ok 5#u64
+  | noble_kernel.types.Ty.ContractType => ok 6#u64
+  | noble_kernel.types.Ty.EvidenceType => ok 7#u64
+  | noble_kernel.types.Ty.CertifiedType => ok 8#u64
+  | noble_kernel.types.Ty.PairType _ _ => ok 9#u64
+  | noble_kernel.types.Ty.SumType _ _ => ok 10#u64
+  | noble_kernel.types.Ty.ListType _ => ok 11#u64
+  | noble_kernel.types.Ty.ProgramType _ _ _ => ok 12#u64
+  | noble_kernel.types.Ty.ResourceType _ => ok 13#u64
+
+/-- [noble_contracts::companion::admit::types::fold]: loop body 1:
+    Source: 'crates/noble-contracts/src/companion/admit/types.rs', lines 49:16-52:17 -/
+@[rust_loop_body]
+def companion.admit.types.fold_loop0_loop0.body
+  (effects : noble_kernel.types.EffSet) (fold : companion.digest.Fold)
+  («at» : Std.Usize) :
+  Result (ControlFlow (companion.digest.Fold × Std.Usize)
+    companion.digest.Fold)
+  := do
+  let s ← noble_kernel.types.EffSet.as_slice effects
+  let i := Slice.len s
+  if «at» < i
+  then
+    let ei ← Slice.index_usize s «at»
+    let i1 ← lift (core.convert.num.FromU64U32.from ei)
+    let fold1 ← companion.digest.Fold.absorb fold i1
+    let at1 ← lift (core.num.Usize.saturating_add «at» 1#usize)
+    ok (cont (fold1, at1))
+  else ok (done fold)
+
+/-- [noble_contracts::companion::admit::types::fold]: loop 1:
+    Source: 'crates/noble-contracts/src/companion/admit/types.rs', lines 49:16-52:17 -/
+@[rust_loop]
+def companion.admit.types.fold_loop0_loop0
+  (fold : companion.digest.Fold) (effects : noble_kernel.types.EffSet)
+  («at» : Std.Usize) :
+  Result companion.digest.Fold
+  := do
+  loop
+    (fun (fold1, at1) => companion.admit.types.fold_loop0_loop0.body effects
+      fold1 at1)
+    (fold, «at»)
+
+/-- [noble_contracts::companion::admit::types::fold]: loop body 2:
+    Source: 'crates/noble-contracts/src/companion/admit/types.rs', lines 54:16-57:17 -/
+@[rust_loop_body]
+def companion.admit.types.fold_loop0_loop1.body
+  (output : alloc.vec.Vec noble_kernel.types.Ty)
+  (pending : alloc.vec.Vec noble_kernel.types.Ty) («at» : Std.Usize) :
+  Result (ControlFlow ((alloc.vec.Vec noble_kernel.types.Ty) × Std.Usize)
+    (alloc.vec.Vec noble_kernel.types.Ty))
+  := do
+  if «at» > 0#usize
+  then
+    let at1 ← «at» - 1#usize
+    let t ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        noble_kernel.types.Ty) output at1
+    let pending1 ← alloc.vec.Vec.push pending t
+    ok (cont (pending1, at1))
+  else ok (done pending)
+
+/-- [noble_contracts::companion::admit::types::fold]: loop 2:
+    Source: 'crates/noble-contracts/src/companion/admit/types.rs', lines 54:16-57:17 -/
+@[rust_loop]
+def companion.admit.types.fold_loop0_loop1
+  (pending : alloc.vec.Vec noble_kernel.types.Ty)
+  (output : alloc.vec.Vec noble_kernel.types.Ty) («at» : Std.Usize) :
+  Result (alloc.vec.Vec noble_kernel.types.Ty)
+  := do
+  loop
+    (fun (pending1, at1) => companion.admit.types.fold_loop0_loop1.body output
+      pending1 at1)
+    (pending, «at»)
+
+/-- [noble_contracts::companion::admit::types::fold]: loop body 3:
+    Source: 'crates/noble-contracts/src/companion/admit/types.rs', lines 59:16-62:17 -/
+@[rust_loop_body]
+def companion.admit.types.fold_loop0_loop2.body
+  (input : alloc.vec.Vec noble_kernel.types.Ty)
+  (pending : alloc.vec.Vec noble_kernel.types.Ty) («at» : Std.Usize) :
+  Result (ControlFlow ((alloc.vec.Vec noble_kernel.types.Ty) × Std.Usize)
+    (alloc.vec.Vec noble_kernel.types.Ty))
+  := do
+  if «at» > 0#usize
+  then
+    let at1 ← «at» - 1#usize
+    let t ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        noble_kernel.types.Ty) input at1
+    let pending1 ← alloc.vec.Vec.push pending t
+    ok (cont (pending1, at1))
+  else ok (done pending)
+
+/-- [noble_contracts::companion::admit::types::fold]: loop 3:
+    Source: 'crates/noble-contracts/src/companion/admit/types.rs', lines 59:16-62:17 -/
+@[rust_loop]
+def companion.admit.types.fold_loop0_loop2
+  (pending : alloc.vec.Vec noble_kernel.types.Ty)
+  (input : alloc.vec.Vec noble_kernel.types.Ty) («at» : Std.Usize) :
+  Result (alloc.vec.Vec noble_kernel.types.Ty)
+  := do
+  loop
+    (fun (pending1, at1) => companion.admit.types.fold_loop0_loop2.body input
+      pending1 at1)
+    (pending, «at»)
+
+/-- [noble_contracts::companion::admit::types::fold]: loop body 0:
+    Source: 'crates/noble-contracts/src/companion/admit/types.rs', lines 36:4-74:5 -/
+@[rust_loop_body]
+def companion.admit.types.fold_loop0.body
+  (pending : alloc.vec.Vec noble_kernel.types.Ty)
+  (fold : companion.digest.Fold) :
+  Result (ControlFlow ((alloc.vec.Vec noble_kernel.types.Ty) ×
+    companion.digest.Fold) companion.digest.Fold)
+  := do
+  let (o, pending1) ← alloc.vec.Vec.pop Global pending
+  match o with
+  | none => ok (done fold)
+  | some node =>
+    let i ← companion.admit.types.ty_tag node
+    let fold1 ← companion.digest.Fold.absorb fold i
+    match node with
+    | noble_kernel.types.Ty.UnitType => ok (cont (pending1, fold1))
+    | noble_kernel.types.Ty.BoolType => ok (cont (pending1, fold1))
+    | noble_kernel.types.Ty.I64Type => ok (cont (pending1, fold1))
+    | noble_kernel.types.Ty.TextType => ok (cont (pending1, fold1))
+    | noble_kernel.types.Ty.SyntaxType => ok (cont (pending1, fold1))
+    | noble_kernel.types.Ty.ContractType => ok (cont (pending1, fold1))
+    | noble_kernel.types.Ty.EvidenceType => ok (cont (pending1, fold1))
+    | noble_kernel.types.Ty.CertifiedType => ok (cont (pending1, fold1))
+    | noble_kernel.types.Ty.PairType a b =>
+      let pending2 ← alloc.vec.Vec.push pending1 b
+      let pending3 ← alloc.vec.Vec.push pending2 a
+      ok (cont (pending3, fold1))
+    | noble_kernel.types.Ty.SumType a b =>
+      let pending2 ← alloc.vec.Vec.push pending1 b
+      let pending3 ← alloc.vec.Vec.push pending2 a
+      ok (cont (pending3, fold1))
+    | noble_kernel.types.Ty.ListType element =>
+      let pending2 ← alloc.vec.Vec.push pending1 element
+      ok (cont (pending2, fold1))
+    | noble_kernel.types.Ty.ProgramType input output effects =>
+      let i1 := alloc.vec.Vec.len input
+      let fold2 ← companion.digest.Fold.absorb_count fold1 i1
+      let i2 := alloc.vec.Vec.len output
+      let fold3 ← companion.digest.Fold.absorb_count fold2 i2
+      let s ← noble_kernel.types.EffSet.as_slice effects
+      let i3 := Slice.len s
+      let fold4 ← companion.digest.Fold.absorb_count fold3 i3
+      let fold5 ←
+        companion.admit.types.fold_loop0_loop0 fold4 effects 0#usize
+      let «at» := alloc.vec.Vec.len output
+      let pending2 ←
+        companion.admit.types.fold_loop0_loop1 pending1 output «at»
+      let at1 := alloc.vec.Vec.len input
+      let pending3 ←
+        companion.admit.types.fold_loop0_loop2 pending2 input at1
+      ok (cont (pending3, fold5))
+    | noble_kernel.types.Ty.ResourceType kind =>
+      let i1 ← lift (core.convert.num.FromU64U32.from kind)
+      let fold2 ← companion.digest.Fold.absorb fold1 i1
+      ok (cont (pending1, fold2))
+
+/-- [noble_contracts::companion::admit::types::fold]: loop 0:
+    Source: 'crates/noble-contracts/src/companion/admit/types.rs', lines 36:4-74:5 -/
+@[rust_loop]
+def companion.admit.types.fold_loop0
+  (pending : alloc.vec.Vec noble_kernel.types.Ty)
+  (fold : companion.digest.Fold) :
+  Result companion.digest.Fold
+  := do
+  loop
+    (fun (pending1, fold1) => companion.admit.types.fold_loop0.body pending1
+      fold1)
+    (pending, fold)
+
+/-- [noble_contracts::companion::admit::types::fold]:
+    Source: 'crates/noble-contracts/src/companion/admit/types.rs', lines 30:0-75:1 -/
+def companion.admit.types.fold
+  (fold : companion.digest.Fold) (ty : noble_kernel.types.Ty) :
+  Result companion.digest.Fold
+  := do
+  let pending := alloc.vec.Vec.with_capacity noble_kernel.types.Ty 1#usize
+  let pending1 ← alloc.vec.Vec.push pending ty
+  companion.admit.types.fold_loop0 pending1 fold
+
+/-- [noble_contracts::companion::admit::statement::fold_subject]: loop body 1:
+    Source: 'crates/noble-contracts/src/companion/admit/statement.rs', lines 151:16-154:17 -/
+@[rust_loop_body]
+def companion.admit.statement.fold_subject_loop0_loop0.body
+  (nodes : alloc.vec.Vec Std.U32) (fold : companion.digest.Fold)
+  («at» : Std.Usize) :
+  Result (ControlFlow (companion.digest.Fold × Std.Usize)
+    companion.digest.Fold)
+  := do
+  let i := alloc.vec.Vec.len nodes
+  if «at» < i
+  then
+    let i1 ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice Std.U32) nodes
+        «at»
+    let i2 ← lift (core.convert.num.FromU64U32.from i1)
+    let fold1 ← companion.digest.Fold.absorb fold i2
+    let at1 ← lift (core.num.Usize.saturating_add «at» 1#usize)
+    ok (cont (fold1, at1))
+  else ok (done fold)
+
+/-- [noble_contracts::companion::admit::statement::fold_subject]: loop 1:
+    Source: 'crates/noble-contracts/src/companion/admit/statement.rs', lines 151:16-154:17 -/
+@[rust_loop]
+def companion.admit.statement.fold_subject_loop0_loop0
+  (fold : companion.digest.Fold) (nodes : alloc.vec.Vec Std.U32)
+  («at» : Std.Usize) :
+  Result companion.digest.Fold
+  := do
+  loop
+    (fun (fold1, at1) =>
+      companion.admit.statement.fold_subject_loop0_loop0.body nodes fold1 at1)
+    (fold, «at»)
+
+/-- [noble_contracts::companion::admit::statement::fold_subject]: loop body 0:
+    Source: 'crates/noble-contracts/src/companion/admit/statement.rs', lines 132:4-158:5 -/
+@[rust_loop_body]
+def companion.admit.statement.fold_subject_loop0.body
+  (v : alloc.vec.Vec wire.SemanticNode) (fold : companion.digest.Fold)
+  (index1 : Std.Usize) :
+  Result (ControlFlow (companion.digest.Fold × Std.Usize)
+    companion.digest.Fold)
+  := do
+  let i := alloc.vec.Vec.len v
+  if index1 < i
+  then
+    let sn ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        wire.SemanticNode) v index1
+    match sn with
+    | wire.SemanticNode.I64 value =>
+      let fold1 ← companion.digest.Fold.absorb fold 1#u64
+      let a ← core.num.I64.to_ne_bytes value
+      let i1 ← core.num.U64.from_ne_bytes a
+      let fold2 ← companion.digest.Fold.absorb fold1 i1
+      let index2 ← lift (core.num.Usize.saturating_add index1 1#usize)
+      ok (cont (fold2, index2))
+    | wire.SemanticNode.Boolean value =>
+      let fold1 ← companion.digest.Fold.absorb fold 2#u64
+      let i1 ← lift (core.convert.num.FromU64Bool.from value)
+      let fold2 ← companion.digest.Fold.absorb fold1 i1
+      let index2 ← lift (core.num.Usize.saturating_add index1 1#usize)
+      ok (cont (fold2, index2))
+    | wire.SemanticNode.UnitValue =>
+      let fold1 ← companion.digest.Fold.absorb fold 3#u64
+      let index2 ← lift (core.num.Usize.saturating_add index1 1#usize)
+      ok (cont (fold1, index2))
+    | wire.SemanticNode.Word «def» =>
+      let fold1 ← companion.digest.Fold.absorb fold 4#u64
+      let i1 ← lift (core.convert.num.FromU64U32.from «def»)
+      let fold2 ← companion.digest.Fold.absorb fold1 i1
+      let index2 ← lift (core.num.Usize.saturating_add index1 1#usize)
+      ok (cont (fold2, index2))
+    | wire.SemanticNode.Quotation nodes =>
+      let fold1 ← companion.digest.Fold.absorb fold 5#u64
+      let i1 := alloc.vec.Vec.len nodes
+      let fold2 ← companion.digest.Fold.absorb_count fold1 i1
+      let fold3 ←
+        companion.admit.statement.fold_subject_loop0_loop0 fold2 nodes 0#usize
+      let index2 ← lift (core.num.Usize.saturating_add index1 1#usize)
+      ok (cont (fold3, index2))
+  else ok (done fold)
+
+/-- [noble_contracts::companion::admit::statement::fold_subject]: loop 0:
+    Source: 'crates/noble-contracts/src/companion/admit/statement.rs', lines 132:4-158:5 -/
+@[rust_loop]
+def companion.admit.statement.fold_subject_loop0
+  (fold : companion.digest.Fold) (v : alloc.vec.Vec wire.SemanticNode)
+  (index1 : Std.Usize) :
+  Result companion.digest.Fold
+  := do
+  loop
+    (fun (fold1, index2) => companion.admit.statement.fold_subject_loop0.body v
+      fold1 index2)
+    (fold, index1)
+
+/-- [noble_contracts::companion::admit::statement::fold_subject]: loop body 2:
+    Source: 'crates/noble-contracts/src/companion/admit/statement.rs', lines 161:4-164:5 -/
+@[rust_loop_body]
+def companion.admit.statement.fold_subject_loop1.body
+  (v : alloc.vec.Vec Std.U32) (fold : companion.digest.Fold)
+  («at» : Std.Usize) :
+  Result (ControlFlow (companion.digest.Fold × Std.Usize)
+    companion.digest.Fold)
+  := do
+  let i := alloc.vec.Vec.len v
+  if «at» < i
+  then
+    let i1 ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice Std.U32) v
+        «at»
+    let i2 ← lift (core.convert.num.FromU64U32.from i1)
+    let fold1 ← companion.digest.Fold.absorb fold i2
+    let at1 ← lift (core.num.Usize.saturating_add «at» 1#usize)
+    ok (cont (fold1, at1))
+  else ok (done fold)
+
+/-- [noble_contracts::companion::admit::statement::fold_subject]: loop 2:
+    Source: 'crates/noble-contracts/src/companion/admit/statement.rs', lines 161:4-164:5 -/
+@[rust_loop]
+def companion.admit.statement.fold_subject_loop1
+  (fold : companion.digest.Fold) (v : alloc.vec.Vec Std.U32)
+  («at» : Std.Usize) :
+  Result companion.digest.Fold
+  := do
+  loop
+    (fun (fold1, at1) => companion.admit.statement.fold_subject_loop1.body v
+      fold1 at1)
+    (fold, «at»)
+
+/-- [noble_contracts::companion::admit::statement::fold_subject]:
+    Source: 'crates/noble-contracts/src/companion/admit/statement.rs', lines 115:0-165:1 -/
+def companion.admit.statement.fold_subject
+  (fold : companion.digest.Fold) (candidate : noble_kernel.untrusted.Candidate)
+  :
+  Result companion.digest.Fold
+  := do
+  let i ← lift (core.convert.num.FromU64U32.from candidate.format)
+  let fold1 ← companion.digest.Fold.absorb fold i
+  let i1 ← lift (core.convert.num.FromU64U32.from candidate.revision)
+  let fold2 ← companion.digest.Fold.absorb fold1 i1
+  let r ← wire.lower_subject candidate
+  match r with
+  | core.result.Result.Ok subject =>
+    let i2 := alloc.vec.Vec.len subject.nodes
+    let fold3 ← companion.digest.Fold.absorb_count fold2 i2
+    let fold4 ←
+      companion.admit.statement.fold_subject_loop0 fold3 subject.nodes 0#usize
+    let i3 := alloc.vec.Vec.len subject.body
+    let fold5 ← companion.digest.Fold.absorb_count fold4 i3
+    companion.admit.statement.fold_subject_loop1 fold5 subject.body 0#usize
+  | core.result.Result.Err _ =>
+    companion.digest.Fold.absorb fold2 core.num.U64.MAX
+
+/-- [noble_contracts::companion::admit::statement::fold_named]: loop body 0:
+    Source: 'crates/noble-contracts/src/companion/admit/statement.rs', lines 104:4-108:5 -/
+@[rust_loop_body]
+def companion.admit.statement.fold_named_loop.body
+  (entries : Slice NamedType) (fold : companion.digest.Fold)
+  (index1 : Std.Usize) :
+  Result (ControlFlow (companion.digest.Fold × Std.Usize)
+    companion.digest.Fold)
+  := do
+  let i := Slice.len entries
+  if index1 < i
+  then
+    let nt ← Slice.index_usize entries index1
+    let s ← alloc.string.String.as_bytes nt.name
+    let fold1 ← companion.digest.Fold.absorb_bytes fold s
+    let fold2 ← companion.admit.types.fold fold1 nt.ty
+    let index2 ← lift (core.num.Usize.saturating_add index1 1#usize)
+    ok (cont (fold2, index2))
+  else ok (done fold)
+
+/-- [noble_contracts::companion::admit::statement::fold_named]: loop 0:
+    Source: 'crates/noble-contracts/src/companion/admit/statement.rs', lines 104:4-108:5 -/
+@[rust_loop]
+def companion.admit.statement.fold_named_loop
+  (fold : companion.digest.Fold) (entries : Slice NamedType)
+  (index1 : Std.Usize) :
+  Result companion.digest.Fold
+  := do
+  loop
+    (fun (fold1, index2) => companion.admit.statement.fold_named_loop.body
+      entries fold1 index2)
+    (fold, index1)
+
+/-- [noble_contracts::companion::admit::statement::fold_named]:
+    Source: 'crates/noble-contracts/src/companion/admit/statement.rs', lines 98:0-109:1 -/
+def companion.admit.statement.fold_named
+  (fold : companion.digest.Fold) (entries : Slice NamedType) :
+  Result companion.digest.Fold
+  := do
+  let i := Slice.len entries
+  let fold1 ← companion.digest.Fold.absorb_count fold i
+  companion.admit.statement.fold_named_loop fold1 entries 0#usize
+
+/-- [noble_contracts::companion::admit::statement::expression_tag]:
+    Source: 'crates/noble-contracts/src/companion/admit/statement.rs', lines 6:0-41:1 -/
+def companion.admit.statement.expression_tag
+  (kind : ExprKind) : Result Std.U64 := do
+  match kind with
+  | ExprKind.I64Expr _ => ok 1#u64
+  | ExprKind.BoolExpr _ => ok 2#u64
+  | ExprKind.UnitExpr => ok 3#u64
+  | ExprKind.InputExpr _ => ok 4#u64
+  | ExprKind.OutputExpr _ => ok 5#u64
+  | ExprKind.ParamExpr _ => ok 6#u64
+  | ExprKind.DefinitionExpr _ => ok 7#u64
+  | ExprKind.NotExpr _ => ok 8#u64
+  | ExprKind.AndExpr _ _ => ok 9#u64
+  | ExprKind.OrExpr _ _ => ok 10#u64
+  | ExprKind.ImpliesExpr _ _ => ok 11#u64
+  | ExprKind.EqExpr _ _ => ok 12#u64
+  | ExprKind.LtExpr _ _ => ok 13#u64
+  | ExprKind.LeExpr _ _ => ok 14#u64
+  | ExprKind.AddExpr _ _ => ok 15#u64
+  | ExprKind.SubExpr _ _ => ok 16#u64
+  | ExprKind.MulExpr _ _ => ok 17#u64
+  | ExprKind.PairExpr _ _ => ok 18#u64
+  | ExprKind.FirstExpr _ => ok 19#u64
+  | ExprKind.SecondExpr _ => ok 20#u64
+  | ExprKind.InlExpr _ => ok 21#u64
+  | ExprKind.InrExpr _ => ok 22#u64
+  | ExprKind.IsLeftExpr _ => ok 23#u64
+  | ExprKind.LeftExpr _ => ok 24#u64
+  | ExprKind.RightExpr _ => ok 25#u64
+  | ExprKind.NilExpr => ok 26#u64
+  | ExprKind.ConsExpr _ _ => ok 27#u64
+  | ExprKind.IsNilExpr _ => ok 28#u64
+  | ExprKind.HeadExpr _ => ok 29#u64
+  | ExprKind.TailExpr _ => ok 30#u64
+  | ExprKind.LengthExpr _ => ok 31#u64
+  | ExprKind.MapsExpr _ _ _ => ok 32#u64
+
+/-- [noble_contracts::companion::admit::statement::absorb_expr]:
+    Source: 'crates/noble-contracts/src/companion/admit/statement.rs', lines 51:0-96:1 -/
+def companion.admit.statement.absorb_expr
+  (fold : companion.digest.Fold) (kind : ExprKind) :
+  Result companion.digest.Fold
+  := do
+  let i ← companion.admit.statement.expression_tag kind
+  let fold1 ← companion.digest.Fold.absorb fold i
+  match kind with
+  | ExprKind.I64Expr value =>
+    let a ← core.num.I64.to_ne_bytes value
+    let i1 ← core.num.U64.from_ne_bytes a
+    companion.digest.Fold.absorb fold1 i1
+  | ExprKind.BoolExpr value =>
+    let i1 ← lift (core.convert.num.FromU64Bool.from value)
+    companion.digest.Fold.absorb fold1 i1
+  | ExprKind.UnitExpr => ok fold1
+  | ExprKind.InputExpr index1 =>
+    let i1 ← lift (core.convert.num.FromU64U32.from index1)
+    companion.digest.Fold.absorb fold1 i1
+  | ExprKind.OutputExpr index1 =>
+    let i1 ← lift (core.convert.num.FromU64U32.from index1)
+    companion.digest.Fold.absorb fold1 i1
+  | ExprKind.ParamExpr index1 =>
+    let i1 ← lift (core.convert.num.FromU64U32.from index1)
+    companion.digest.Fold.absorb fold1 i1
+  | ExprKind.DefinitionExpr index1 =>
+    let i1 ← lift (core.convert.num.FromU64U32.from index1)
+    companion.digest.Fold.absorb fold1 i1
+  | ExprKind.NotExpr a =>
+    let i1 ← lift (core.convert.num.FromU64U32.from a)
+    companion.digest.Fold.absorb fold1 i1
+  | ExprKind.AndExpr a b =>
+    let i1 ← lift (core.convert.num.FromU64U32.from a)
+    let fold2 ← companion.digest.Fold.absorb fold1 i1
+    let i2 ← lift (core.convert.num.FromU64U32.from b)
+    companion.digest.Fold.absorb fold2 i2
+  | ExprKind.OrExpr a b =>
+    let i1 ← lift (core.convert.num.FromU64U32.from a)
+    let fold2 ← companion.digest.Fold.absorb fold1 i1
+    let i2 ← lift (core.convert.num.FromU64U32.from b)
+    companion.digest.Fold.absorb fold2 i2
+  | ExprKind.ImpliesExpr a b =>
+    let i1 ← lift (core.convert.num.FromU64U32.from a)
+    let fold2 ← companion.digest.Fold.absorb fold1 i1
+    let i2 ← lift (core.convert.num.FromU64U32.from b)
+    companion.digest.Fold.absorb fold2 i2
+  | ExprKind.EqExpr a b =>
+    let i1 ← lift (core.convert.num.FromU64U32.from a)
+    let fold2 ← companion.digest.Fold.absorb fold1 i1
+    let i2 ← lift (core.convert.num.FromU64U32.from b)
+    companion.digest.Fold.absorb fold2 i2
+  | ExprKind.LtExpr a b =>
+    let i1 ← lift (core.convert.num.FromU64U32.from a)
+    let fold2 ← companion.digest.Fold.absorb fold1 i1
+    let i2 ← lift (core.convert.num.FromU64U32.from b)
+    companion.digest.Fold.absorb fold2 i2
+  | ExprKind.LeExpr a b =>
+    let i1 ← lift (core.convert.num.FromU64U32.from a)
+    let fold2 ← companion.digest.Fold.absorb fold1 i1
+    let i2 ← lift (core.convert.num.FromU64U32.from b)
+    companion.digest.Fold.absorb fold2 i2
+  | ExprKind.AddExpr a b =>
+    let i1 ← lift (core.convert.num.FromU64U32.from a)
+    let fold2 ← companion.digest.Fold.absorb fold1 i1
+    let i2 ← lift (core.convert.num.FromU64U32.from b)
+    companion.digest.Fold.absorb fold2 i2
+  | ExprKind.SubExpr a b =>
+    let i1 ← lift (core.convert.num.FromU64U32.from a)
+    let fold2 ← companion.digest.Fold.absorb fold1 i1
+    let i2 ← lift (core.convert.num.FromU64U32.from b)
+    companion.digest.Fold.absorb fold2 i2
+  | ExprKind.MulExpr a b =>
+    let i1 ← lift (core.convert.num.FromU64U32.from a)
+    let fold2 ← companion.digest.Fold.absorb fold1 i1
+    let i2 ← lift (core.convert.num.FromU64U32.from b)
+    companion.digest.Fold.absorb fold2 i2
+  | ExprKind.PairExpr a b =>
+    let i1 ← lift (core.convert.num.FromU64U32.from a)
+    let fold2 ← companion.digest.Fold.absorb fold1 i1
+    let i2 ← lift (core.convert.num.FromU64U32.from b)
+    companion.digest.Fold.absorb fold2 i2
+  | ExprKind.FirstExpr a =>
+    let i1 ← lift (core.convert.num.FromU64U32.from a)
+    companion.digest.Fold.absorb fold1 i1
+  | ExprKind.SecondExpr a =>
+    let i1 ← lift (core.convert.num.FromU64U32.from a)
+    companion.digest.Fold.absorb fold1 i1
+  | ExprKind.InlExpr a =>
+    let i1 ← lift (core.convert.num.FromU64U32.from a)
+    companion.digest.Fold.absorb fold1 i1
+  | ExprKind.InrExpr a =>
+    let i1 ← lift (core.convert.num.FromU64U32.from a)
+    companion.digest.Fold.absorb fold1 i1
+  | ExprKind.IsLeftExpr a =>
+    let i1 ← lift (core.convert.num.FromU64U32.from a)
+    companion.digest.Fold.absorb fold1 i1
+  | ExprKind.LeftExpr a =>
+    let i1 ← lift (core.convert.num.FromU64U32.from a)
+    companion.digest.Fold.absorb fold1 i1
+  | ExprKind.RightExpr a =>
+    let i1 ← lift (core.convert.num.FromU64U32.from a)
+    companion.digest.Fold.absorb fold1 i1
+  | ExprKind.NilExpr => ok fold1
+  | ExprKind.ConsExpr a b =>
+    let i1 ← lift (core.convert.num.FromU64U32.from a)
+    let fold2 ← companion.digest.Fold.absorb fold1 i1
+    let i2 ← lift (core.convert.num.FromU64U32.from b)
+    companion.digest.Fold.absorb fold2 i2
+  | ExprKind.IsNilExpr a =>
+    let i1 ← lift (core.convert.num.FromU64U32.from a)
+    companion.digest.Fold.absorb fold1 i1
+  | ExprKind.HeadExpr a =>
+    let i1 ← lift (core.convert.num.FromU64U32.from a)
+    companion.digest.Fold.absorb fold1 i1
+  | ExprKind.TailExpr a =>
+    let i1 ← lift (core.convert.num.FromU64U32.from a)
+    companion.digest.Fold.absorb fold1 i1
+  | ExprKind.LengthExpr a =>
+    let i1 ← lift (core.convert.num.FromU64U32.from a)
+    companion.digest.Fold.absorb fold1 i1
+  | ExprKind.MapsExpr a b c =>
+    let i1 ← lift (core.convert.num.FromU64U32.from a)
+    let fold2 ← companion.digest.Fold.absorb fold1 i1
+    let i2 ← lift (core.convert.num.FromU64U32.from b)
+    let fold3 ← companion.digest.Fold.absorb fold2 i2
+    let i3 ← lift (core.convert.num.FromU64U32.from c)
+    companion.digest.Fold.absorb fold3 i3
+
+/-- [noble_contracts::companion::statement_digest]: loop body 0:
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 49:4-55:5
+    Visibility: public -/
+@[rust_loop_body]
+def companion.statement_digest_loop0.body
+  (prepared : Prepared) (fold : companion.digest.Fold) (index1 : Std.Usize) :
+  Result (ControlFlow (companion.digest.Fold × Std.Usize)
+    companion.digest.Fold)
+  := do
+  let s ← Prepared.impl.definitions prepared
+  let i := Slice.len s
+  if index1 < i
+  then
+    let definition ← Slice.index_usize s index1
+    let s1 ← alloc.string.String.as_bytes definition.name
+    let fold1 ← companion.digest.Fold.absorb_bytes fold s1
+    let fold2 ← companion.admit.types.fold fold1 definition.ty
+    let i1 ← lift (core.convert.num.FromU64U32.from definition.body)
+    let fold3 ← companion.digest.Fold.absorb fold2 i1
+    let index2 ← lift (core.num.Usize.saturating_add index1 1#usize)
+    ok (cont (fold3, index2))
+  else ok (done fold)
+
+/-- [noble_contracts::companion::statement_digest]: loop 0:
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 49:4-55:5
+    Visibility: public -/
+@[rust_loop]
+def companion.statement_digest_loop0
+  (prepared : Prepared) (fold : companion.digest.Fold) (index1 : Std.Usize) :
+  Result companion.digest.Fold
+  := do
+  loop
+    (fun (fold1, index2) => companion.statement_digest_loop0.body prepared
+      fold1 index2)
+    (fold, index1)
+
+/-- [noble_contracts::companion::statement_digest]: loop body 1:
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 58:4-64:5
+    Visibility: public -/
+@[rust_loop_body]
+def companion.statement_digest_loop1.body
+  (prepared : Prepared) (fold : companion.digest.Fold) (index1 : Std.Usize) :
+  Result (ControlFlow (companion.digest.Fold × Std.Usize)
+    companion.digest.Fold)
+  := do
+  let s ← Prepared.impl.expressions prepared
+  let i := Slice.len s
+  if index1 < i
+  then
+    let e ← Slice.index_usize s index1
+    let fold1 ← companion.admit.types.fold fold e.ty
+    let e1 ← Slice.index_usize s index1
+    let i1 ← lift (core.convert.num.FromU64Bool.from e1.total)
+    let fold2 ← companion.digest.Fold.absorb fold1 i1
+    let e2 ← Slice.index_usize s index1
+    let i2 ← lift (core.convert.num.FromU64Bool.from e2.uses_output)
+    let fold3 ← companion.digest.Fold.absorb fold2 i2
+    let e3 ← Slice.index_usize s index1
+    let fold4 ← companion.admit.statement.absorb_expr fold3 e3.kind
+    let index2 ← lift (core.num.Usize.saturating_add index1 1#usize)
+    ok (cont (fold4, index2))
+  else ok (done fold)
+
+/-- [noble_contracts::companion::statement_digest]: loop 1:
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 58:4-64:5
+    Visibility: public -/
+@[rust_loop]
+def companion.statement_digest_loop1
+  (prepared : Prepared) (fold : companion.digest.Fold) (index1 : Std.Usize) :
+  Result companion.digest.Fold
+  := do
+  loop
+    (fun (fold1, index2) => companion.statement_digest_loop1.body prepared
+      fold1 index2)
+    (fold, index1)
+
+/-- [noble_contracts::companion::statement_digest]:
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 41:0-69:1
+    Visibility: public -/
+def companion.statement_digest (prepared : Prepared) : Result Std.U64 := do
+  let fold ← companion.digest.Fold.new companion.digest.DOMAIN_STATEMENT
+  let s ← Prepared.impl.name prepared
+  let s1 ← core.str.Str.as_bytes s
+  let fold1 ← companion.digest.Fold.absorb_bytes fold s1
+  let s2 ← Prepared.impl.inputs prepared
+  let fold2 ← companion.admit.statement.fold_named fold1 s2
+  let s3 ← Prepared.impl.outputs prepared
+  let fold3 ← companion.admit.statement.fold_named fold2 s3
+  let s4 ← Prepared.impl.params prepared
+  let fold4 ← companion.admit.statement.fold_named fold3 s4
+  let s5 ← Prepared.impl.definitions prepared
+  let i := Slice.len s5
+  let fold5 ← companion.digest.Fold.absorb_count fold4 i
+  let fold6 ← companion.statement_digest_loop0 prepared fold5 0#usize
+  let s6 ← Prepared.impl.expressions prepared
+  let i1 := Slice.len s6
+  let fold7 ← companion.digest.Fold.absorb_count fold6 i1
+  let fold8 ← companion.statement_digest_loop1 prepared fold7 0#usize
+  let i2 ← Prepared.impl.requires prepared
+  let i3 ← lift (core.convert.num.FromU64U32.from i2)
+  let fold9 ← companion.digest.Fold.absorb fold8 i3
+  let i4 ← Prepared.impl.ensures prepared
+  let i5 ← lift (core.convert.num.FromU64U32.from i4)
+  let fold10 ← companion.digest.Fold.absorb fold9 i5
+  let c ← Prepared.impl.candidate prepared
+  let fold11 ← companion.admit.statement.fold_subject fold10 c
+  companion.digest.Fold.finish fold11
+
+/-- [noble_contracts::companion::GuardTemplate::EqI64Literal]:
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 217:4-217:21 -/
+def companion.GuardTemplate.EqI64Literal.constructor
+  (i : Std.I64) : Result companion.GuardTemplate := do
+  ok (companion.GuardTemplate.EqI64Literal i)
+
+/-- [noble_contracts::companion::GuardTemplate::{impl core::ops::function::FnOnce<(i64,), noble_contracts::companion::GuardTemplate> for noble_contracts::companion::GuardTemplate::EqI64Literal}::call_once]:
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 217:4-217:21 -/
+def P.Insts.CoreOpsFunctionFnOnceTupleI64GuardTemplate.call_once
+  (state : Std.I64 → Result companion.GuardTemplate) (args : Std.I64) :
+  Result companion.GuardTemplate
+  := do
+  companion.GuardTemplate.EqI64Literal.constructor args
+
+/-- Trait implementation: [noble_contracts::companion::GuardTemplate::{impl core::ops::function::FnOnce<(i64,), noble_contracts::companion::GuardTemplate> for noble_contracts::companion::GuardTemplate::EqI64Literal}]
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 217:4-217:21 -/
+@[reducible]
+def P.Insts.CoreOpsFunctionFnOnceTupleI64GuardTemplate :
+  core.ops.function.FnOnce (Std.I64 → Result companion.GuardTemplate) Std.I64
+  companion.GuardTemplate := {
+  call_once := P.Insts.CoreOpsFunctionFnOnceTupleI64GuardTemplate.call_once
+}
+
+/-- [noble_contracts::companion::admit::recognize::is_input_zero]:
+    Source: 'crates/noble-contracts/src/companion/admit/recognize.rs', lines 57:0-62:1 -/
+def companion.admit.recognize.is_input_zero
+  (kind : ExprKind) : Result Bool := do
+  match kind with
+  | ExprKind.I64Expr _ => ok false
+  | ExprKind.BoolExpr _ => ok false
+  | ExprKind.UnitExpr => ok false
+  | ExprKind.InputExpr index1 => ok (index1 = 0#u32)
+  | ExprKind.OutputExpr _ => ok false
+  | ExprKind.ParamExpr _ => ok false
+  | ExprKind.DefinitionExpr _ => ok false
+  | ExprKind.NotExpr _ => ok false
+  | ExprKind.AndExpr _ _ => ok false
+  | ExprKind.OrExpr _ _ => ok false
+  | ExprKind.ImpliesExpr _ _ => ok false
+  | ExprKind.EqExpr _ _ => ok false
+  | ExprKind.LtExpr _ _ => ok false
+  | ExprKind.LeExpr _ _ => ok false
+  | ExprKind.AddExpr _ _ => ok false
+  | ExprKind.SubExpr _ _ => ok false
+  | ExprKind.MulExpr _ _ => ok false
+  | ExprKind.PairExpr _ _ => ok false
+  | ExprKind.FirstExpr _ => ok false
+  | ExprKind.SecondExpr _ => ok false
+  | ExprKind.InlExpr _ => ok false
+  | ExprKind.InrExpr _ => ok false
+  | ExprKind.IsLeftExpr _ => ok false
+  | ExprKind.LeftExpr _ => ok false
+  | ExprKind.RightExpr _ => ok false
+  | ExprKind.NilExpr => ok false
+  | ExprKind.ConsExpr _ _ => ok false
+  | ExprKind.IsNilExpr _ => ok false
+  | ExprKind.HeadExpr _ => ok false
+  | ExprKind.TailExpr _ => ok false
+  | ExprKind.LengthExpr _ => ok false
+  | ExprKind.MapsExpr _ _ _ => ok false
+
+/-- [noble_contracts::companion::admit::recognize::expression]:
+    Source: 'crates/noble-contracts/src/companion/admit/recognize.rs', lines 3:0-8:1 -/
+def companion.admit.recognize.expression
+  (prepared : Prepared) (index1 : Std.U32) : Result (Option Expr) := do
+  let r ← Usize.Insts.CoreConvertTryFromU32TryFromIntError.try_from index1
+  match r with
+  | core.result.Result.Ok index2 =>
+    let s ← Prepared.impl.expressions prepared
+    core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice Expr) s index2
+  | core.result.Result.Err _ => ok none
+
+/-- [noble_contracts::companion::guard::is_input_zero]:
+    Source: 'crates/noble-contracts/src/companion/guard.rs', lines 98:0-103:1 -/
+def companion.guard.is_input_zero
+  (prepared : Prepared) (index1 : Std.U32) : Result Bool := do
+  let o ← companion.admit.recognize.expression prepared index1
+  match o with
+  | none => ok false
+  | some slot => companion.admit.recognize.is_input_zero slot.kind
+
+/-- [noble_contracts::companion::admit::recognize::literal]:
+    Source: 'crates/noble-contracts/src/companion/admit/recognize.rs', lines 82:0-87:1 -/
+def companion.admit.recognize.literal
+  (kind : ExprKind) : Result (Option Std.I64) := do
+  match kind with
+  | ExprKind.I64Expr value => ok (some value)
+  | ExprKind.BoolExpr _ => ok none
+  | ExprKind.UnitExpr => ok none
+  | ExprKind.InputExpr _ => ok none
+  | ExprKind.OutputExpr _ => ok none
+  | ExprKind.ParamExpr _ => ok none
+  | ExprKind.DefinitionExpr _ => ok none
+  | ExprKind.NotExpr _ => ok none
+  | ExprKind.AndExpr _ _ => ok none
+  | ExprKind.OrExpr _ _ => ok none
+  | ExprKind.ImpliesExpr _ _ => ok none
+  | ExprKind.EqExpr _ _ => ok none
+  | ExprKind.LtExpr _ _ => ok none
+  | ExprKind.LeExpr _ _ => ok none
+  | ExprKind.AddExpr _ _ => ok none
+  | ExprKind.SubExpr _ _ => ok none
+  | ExprKind.MulExpr _ _ => ok none
+  | ExprKind.PairExpr _ _ => ok none
+  | ExprKind.FirstExpr _ => ok none
+  | ExprKind.SecondExpr _ => ok none
+  | ExprKind.InlExpr _ => ok none
+  | ExprKind.InrExpr _ => ok none
+  | ExprKind.IsLeftExpr _ => ok none
+  | ExprKind.LeftExpr _ => ok none
+  | ExprKind.RightExpr _ => ok none
+  | ExprKind.NilExpr => ok none
+  | ExprKind.ConsExpr _ _ => ok none
+  | ExprKind.IsNilExpr _ => ok none
+  | ExprKind.HeadExpr _ => ok none
+  | ExprKind.TailExpr _ => ok none
+  | ExprKind.LengthExpr _ => ok none
+  | ExprKind.MapsExpr _ _ _ => ok none
+
+/-- [noble_contracts::companion::guard::literal_of]:
+    Source: 'crates/noble-contracts/src/companion/guard.rs', lines 39:0-45:1 -/
+def companion.guard.literal_of
+  (prepared : Prepared) (index1 : Std.U32) : Result (Option Std.I64) := do
+  let o ← companion.admit.recognize.expression prepared index1
+  match o with
+  | none => ok none
+  | some slot => companion.admit.recognize.literal slot.kind
+
+/-- [noble_contracts::companion::guard::input_equality]:
+    Source: 'crates/noble-contracts/src/companion/guard.rs', lines 125:0-133:1 -/
+def companion.guard.input_equality
+  (prepared : Prepared) (left : Std.U32) (right : Std.U32) :
+  Result (Option Std.I64)
+  := do
+  let b ← companion.guard.is_input_zero prepared left
+  if b
+  then companion.guard.literal_of prepared right
+  else
+    let b1 ← companion.guard.is_input_zero prepared right
+    if b1
+    then companion.guard.literal_of prepared left
+    else ok none
+
+/-- [noble_contracts::companion::guard::is_minimum_equality]:
+    Source: 'crates/noble-contracts/src/companion/guard.rs', lines 109:0-119:1 -/
+def companion.guard.is_minimum_equality
+  (prepared : Prepared) (index1 : Std.U32) : Result Bool := do
+  let o ← companion.admit.recognize.expression prepared index1
+  match o with
+  | none => ok false
+  | some slot =>
+    match slot.kind with
+    | ExprKind.I64Expr _ => ok false
+    | ExprKind.BoolExpr _ => ok false
+    | ExprKind.UnitExpr => ok false
+    | ExprKind.InputExpr _ => ok false
+    | ExprKind.OutputExpr _ => ok false
+    | ExprKind.ParamExpr _ => ok false
+    | ExprKind.DefinitionExpr _ => ok false
+    | ExprKind.NotExpr _ => ok false
+    | ExprKind.AndExpr _ _ => ok false
+    | ExprKind.OrExpr _ _ => ok false
+    | ExprKind.ImpliesExpr _ _ => ok false
+    | ExprKind.EqExpr a b =>
+      let o1 ← companion.guard.input_equality prepared a b
+      core.option.Option.Insts.CoreCmpPartialEqOption.eq core.cmp.PartialEqI64
+        o1 (some core.num.I64.MIN)
+    | ExprKind.LtExpr _ _ => ok false
+    | ExprKind.LeExpr _ _ => ok false
+    | ExprKind.AddExpr _ _ => ok false
+    | ExprKind.SubExpr _ _ => ok false
+    | ExprKind.MulExpr _ _ => ok false
+    | ExprKind.PairExpr _ _ => ok false
+    | ExprKind.FirstExpr _ => ok false
+    | ExprKind.SecondExpr _ => ok false
+    | ExprKind.InlExpr _ => ok false
+    | ExprKind.InrExpr _ => ok false
+    | ExprKind.IsLeftExpr _ => ok false
+    | ExprKind.LeftExpr _ => ok false
+    | ExprKind.RightExpr _ => ok false
+    | ExprKind.NilExpr => ok false
+    | ExprKind.ConsExpr _ _ => ok false
+    | ExprKind.IsNilExpr _ => ok false
+    | ExprKind.HeadExpr _ => ok false
+    | ExprKind.TailExpr _ => ok false
+    | ExprKind.LengthExpr _ => ok false
+    | ExprKind.MapsExpr _ _ _ => ok false
+
+/-- [noble_contracts::companion::guard::recognize]:
+    Source: 'crates/noble-contracts/src/companion/guard.rs', lines 70:0-92:1 -/
+def companion.guard.recognize
+  (prepared : Prepared) (kind : ExprKind) :
+  Result (Option companion.GuardTemplate)
+  := do
+  match kind with
+  | ExprKind.I64Expr _ => ok none
+  | ExprKind.BoolExpr _ => ok none
+  | ExprKind.UnitExpr => ok none
+  | ExprKind.InputExpr _ => ok none
+  | ExprKind.OutputExpr _ => ok none
+  | ExprKind.ParamExpr _ => ok none
+  | ExprKind.DefinitionExpr _ => ok none
+  | ExprKind.NotExpr inner =>
+    let b ← companion.guard.is_minimum_equality prepared inner
+    if b
+    then ok (some companion.GuardTemplate.NeI64Min)
+    else ok none
+  | ExprKind.AndExpr _ _ => ok none
+  | ExprKind.OrExpr _ _ => ok none
+  | ExprKind.ImpliesExpr _ _ => ok none
+  | ExprKind.EqExpr a b =>
+    let o ← companion.guard.input_equality prepared a b
+    core.option.Option.map P.Insts.CoreOpsFunctionFnOnceTupleI64GuardTemplate o
+      (companion.GuardTemplate.EqI64Literal.constructor)
+  | ExprKind.LtExpr a b =>
+    let b1 ← companion.guard.is_input_zero prepared a
+    if b1
+    then
+      let o ← companion.guard.literal_of prepared b
+      let b2 ←
+        core.option.Option.Insts.CoreCmpPartialEqOption.eq
+          core.cmp.PartialEqI64 o (some core.num.I64.MAX)
+      if b2
+      then ok (some companion.GuardTemplate.LtI64Max)
+      else ok none
+    else ok none
+  | ExprKind.LeExpr _ _ => ok none
+  | ExprKind.AddExpr _ _ => ok none
+  | ExprKind.SubExpr _ _ => ok none
+  | ExprKind.MulExpr _ _ => ok none
+  | ExprKind.PairExpr _ _ => ok none
+  | ExprKind.FirstExpr _ => ok none
+  | ExprKind.SecondExpr _ => ok none
+  | ExprKind.InlExpr _ => ok none
+  | ExprKind.InrExpr _ => ok none
+  | ExprKind.IsLeftExpr _ => ok none
+  | ExprKind.LeftExpr _ => ok none
+  | ExprKind.RightExpr _ => ok none
+  | ExprKind.NilExpr => ok none
+  | ExprKind.ConsExpr _ _ => ok none
+  | ExprKind.IsNilExpr _ => ok none
+  | ExprKind.HeadExpr _ => ok none
+  | ExprKind.TailExpr _ => ok none
+  | ExprKind.LengthExpr _ => ok none
+  | ExprKind.MapsExpr _ _ _ => ok none
+
+/-- [noble_contracts::companion::guard::templates_of]:
+    Source: 'crates/noble-contracts/src/companion/guard.rs', lines 48:0-63:1 -/
+def companion.guard.templates_of
+  (prepared : Prepared) : Result (alloc.vec.Vec companion.GuardTemplate) := do
+  let found := alloc.vec.Vec.with_capacity companion.GuardTemplate 1#usize
+  let c ← Prepared.impl.checked prepared
+  let s ← alloc.vec.Vec.as_slice Global c.interface.stack_in
+  let b ←
+    Shared0Slice.Insts.CoreCmpPartialEqArray.ne
+      noble_kernel.types.Ty.Insts.CoreCmpPartialEqTy s
+      (Array.make 1#usize [ noble_kernel.types.Ty.I64Type ])
+  if b
+  then ok found
+  else
+    let i ← Prepared.impl.requires prepared
+    let o ← companion.admit.recognize.expression prepared i
+    match o with
+    | none => ok found
+    | some slot =>
+      let o1 ← companion.guard.recognize prepared slot.kind
+      match o1 with
+      | none => ok found
+      | some template => alloc.vec.Vec.push found template
+
+/-- [noble_contracts::companion::digest::DOMAIN_SUBJECT]
+    Source: 'crates/noble-contracts/src/companion/digest.rs', lines 20:0-20:65 -/
+@[global_simps, irreducible]
+def companion.digest.DOMAIN_SUBJECT : Std.U64 := 6004778564925477888#u64
+
+/-- [noble_contracts::companion::admit::statement::interface_signature]: loop body 0:
+    Source: 'crates/noble-contracts/src/companion/admit/statement.rs', lines 172:4-175:5
+    Visibility: public -/
+@[rust_loop_body]
+def companion.admit.statement.interface_signature_loop.body
+  (entries : Slice noble_kernel.types.Ty) (fold : companion.digest.Fold)
+  (index1 : Std.Usize) :
+  Result (ControlFlow (companion.digest.Fold × Std.Usize)
+    companion.digest.Fold)
+  := do
+  let i := Slice.len entries
+  if index1 < i
+  then
+    let t ← Slice.index_usize entries index1
+    let fold1 ← companion.admit.types.fold fold t
+    let index2 ← lift (core.num.Usize.saturating_add index1 1#usize)
+    ok (cont (fold1, index2))
+  else ok (done fold)
+
+/-- [noble_contracts::companion::admit::statement::interface_signature]: loop 0:
+    Source: 'crates/noble-contracts/src/companion/admit/statement.rs', lines 172:4-175:5
+    Visibility: public -/
+@[rust_loop]
+def companion.admit.statement.interface_signature_loop
+  (entries : Slice noble_kernel.types.Ty) (fold : companion.digest.Fold)
+  (index1 : Std.Usize) :
+  Result companion.digest.Fold
+  := do
+  loop
+    (fun (fold1, index2) =>
+      companion.admit.statement.interface_signature_loop.body entries fold1
+      index2)
+    (fold, index1)
+
+/-- [noble_contracts::companion::admit::statement::interface_signature]:
+    Source: 'crates/noble-contracts/src/companion/admit/statement.rs', lines 168:0-177:1
+    Visibility: public -/
+def companion.admit.statement.interface_signature
+  (entries : Slice noble_kernel.types.Ty) : Result Std.U64 := do
+  let fold ← companion.digest.Fold.new companion.digest.DOMAIN_SUBJECT
+  let i := Slice.len entries
+  let fold1 ← companion.digest.Fold.absorb_count fold i
+  let fold2 ←
+    companion.admit.statement.interface_signature_loop entries fold1 0#usize
+  companion.digest.Fold.finish fold2
+
+/-- [noble_contracts::companion::admit::recognize::increment_operand]:
+    Source: 'crates/noble-contracts/src/companion/admit/recognize.rs', lines 101:0-121:1 -/
+def companion.admit.recognize.increment_operand
+  (prepared : Prepared) (index1 : Std.U32) : Result (Option Std.I64) := do
+  let o ← companion.admit.recognize.expression prepared index1
+  match o with
+  | none => ok none
+  | some slot =>
+    match slot.kind with
+    | ExprKind.I64Expr _ => companion.admit.recognize.literal slot.kind
+    | ExprKind.BoolExpr _ => companion.admit.recognize.literal slot.kind
+    | ExprKind.UnitExpr => companion.admit.recognize.literal ExprKind.UnitExpr
+    | ExprKind.InputExpr _ => companion.admit.recognize.literal slot.kind
+    | ExprKind.OutputExpr _ => companion.admit.recognize.literal slot.kind
+    | ExprKind.ParamExpr _ => companion.admit.recognize.literal slot.kind
+    | ExprKind.DefinitionExpr definition =>
+      let r ←
+        Usize.Insts.CoreConvertTryFromU32TryFromIntError.try_from definition
+      match r with
+      | core.result.Result.Ok index2 =>
+        let s ← Prepared.impl.definitions prepared
+        let o1 ←
+          core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice LogicDef)
+            s index2
+        match o1 with
+        | none => ok none
+        | some definition1 =>
+          let o2 ←
+            companion.admit.recognize.expression prepared definition1.body
+          match o2 with
+          | none => ok none
+          | some body => companion.admit.recognize.literal body.kind
+      | core.result.Result.Err _ => ok none
+    | ExprKind.NotExpr _ => companion.admit.recognize.literal slot.kind
+    | ExprKind.AndExpr _ _ => companion.admit.recognize.literal slot.kind
+    | ExprKind.OrExpr _ _ => companion.admit.recognize.literal slot.kind
+    | ExprKind.ImpliesExpr _ _ => companion.admit.recognize.literal slot.kind
+    | ExprKind.EqExpr _ _ => companion.admit.recognize.literal slot.kind
+    | ExprKind.LtExpr _ _ => companion.admit.recognize.literal slot.kind
+    | ExprKind.LeExpr _ _ => companion.admit.recognize.literal slot.kind
+    | ExprKind.AddExpr _ _ => companion.admit.recognize.literal slot.kind
+    | ExprKind.SubExpr _ _ => companion.admit.recognize.literal slot.kind
+    | ExprKind.MulExpr _ _ => companion.admit.recognize.literal slot.kind
+    | ExprKind.PairExpr _ _ => companion.admit.recognize.literal slot.kind
+    | ExprKind.FirstExpr _ => companion.admit.recognize.literal slot.kind
+    | ExprKind.SecondExpr _ => companion.admit.recognize.literal slot.kind
+    | ExprKind.InlExpr _ => companion.admit.recognize.literal slot.kind
+    | ExprKind.InrExpr _ => companion.admit.recognize.literal slot.kind
+    | ExprKind.IsLeftExpr _ => companion.admit.recognize.literal slot.kind
+    | ExprKind.LeftExpr _ => companion.admit.recognize.literal slot.kind
+    | ExprKind.RightExpr _ => companion.admit.recognize.literal slot.kind
+    | ExprKind.NilExpr => companion.admit.recognize.literal ExprKind.NilExpr
+    | ExprKind.ConsExpr _ _ => companion.admit.recognize.literal slot.kind
+    | ExprKind.IsNilExpr _ => companion.admit.recognize.literal slot.kind
+    | ExprKind.HeadExpr _ => companion.admit.recognize.literal slot.kind
+    | ExprKind.TailExpr _ => companion.admit.recognize.literal slot.kind
+    | ExprKind.LengthExpr _ => companion.admit.recognize.literal slot.kind
+    | ExprKind.MapsExpr _ _ _ => companion.admit.recognize.literal slot.kind
+
+/-- [noble_contracts::companion::admit::recognize::is_input]:
+    Source: 'crates/noble-contracts/src/companion/admit/recognize.rs', lines 50:0-55:1 -/
+def companion.admit.recognize.is_input
+  (prepared : Prepared) (index1 : Std.U32) : Result Bool := do
+  let o ← companion.admit.recognize.expression prepared index1
+  match o with
+  | none => ok false
+  | some slot => companion.admit.recognize.is_input_zero slot.kind
+
+/-- [noble_contracts::companion::admit::recognize::add_increment]:
+    Source: 'crates/noble-contracts/src/companion/admit/recognize.rs', lines 131:0-145:1 -/
+def companion.admit.recognize.add_increment
+  (prepared : Prepared) (index1 : Std.U32) : Result (Option Std.I64) := do
+  let o ← companion.admit.recognize.expression prepared index1
+  match o with
+  | none => ok none
+  | some slot =>
+    match slot.kind with
+    | ExprKind.I64Expr _ => ok none
+    | ExprKind.BoolExpr _ => ok none
+    | ExprKind.UnitExpr => ok none
+    | ExprKind.InputExpr _ => ok none
+    | ExprKind.OutputExpr _ => ok none
+    | ExprKind.ParamExpr _ => ok none
+    | ExprKind.DefinitionExpr _ => ok none
+    | ExprKind.NotExpr _ => ok none
+    | ExprKind.AndExpr _ _ => ok none
+    | ExprKind.OrExpr _ _ => ok none
+    | ExprKind.ImpliesExpr _ _ => ok none
+    | ExprKind.EqExpr _ _ => ok none
+    | ExprKind.LtExpr _ _ => ok none
+    | ExprKind.LeExpr _ _ => ok none
+    | ExprKind.AddExpr left right =>
+      let b ← companion.admit.recognize.is_input prepared left
+      if b
+      then companion.admit.recognize.increment_operand prepared right
+      else
+        let b1 ← companion.admit.recognize.is_input prepared right
+        if b1
+        then companion.admit.recognize.increment_operand prepared left
+        else ok none
+    | ExprKind.SubExpr _ _ => ok none
+    | ExprKind.MulExpr _ _ => ok none
+    | ExprKind.PairExpr _ _ => ok none
+    | ExprKind.FirstExpr _ => ok none
+    | ExprKind.SecondExpr _ => ok none
+    | ExprKind.InlExpr _ => ok none
+    | ExprKind.InrExpr _ => ok none
+    | ExprKind.IsLeftExpr _ => ok none
+    | ExprKind.LeftExpr _ => ok none
+    | ExprKind.RightExpr _ => ok none
+    | ExprKind.NilExpr => ok none
+    | ExprKind.ConsExpr _ _ => ok none
+    | ExprKind.IsNilExpr _ => ok none
+    | ExprKind.HeadExpr _ => ok none
+    | ExprKind.TailExpr _ => ok none
+    | ExprKind.LengthExpr _ => ok none
+    | ExprKind.MapsExpr _ _ _ => ok none
+
+/-- [noble_contracts::companion::admit::recognize::is_output_zero]:
+    Source: 'crates/noble-contracts/src/companion/admit/recognize.rs', lines 39:0-44:1 -/
+def companion.admit.recognize.is_output_zero
+  (kind : ExprKind) : Result Bool := do
+  match kind with
+  | ExprKind.I64Expr _ => ok false
+  | ExprKind.BoolExpr _ => ok false
+  | ExprKind.UnitExpr => ok false
+  | ExprKind.InputExpr _ => ok false
+  | ExprKind.OutputExpr index1 => ok (index1 = 0#u32)
+  | ExprKind.ParamExpr _ => ok false
+  | ExprKind.DefinitionExpr _ => ok false
+  | ExprKind.NotExpr _ => ok false
+  | ExprKind.AndExpr _ _ => ok false
+  | ExprKind.OrExpr _ _ => ok false
+  | ExprKind.ImpliesExpr _ _ => ok false
+  | ExprKind.EqExpr _ _ => ok false
+  | ExprKind.LtExpr _ _ => ok false
+  | ExprKind.LeExpr _ _ => ok false
+  | ExprKind.AddExpr _ _ => ok false
+  | ExprKind.SubExpr _ _ => ok false
+  | ExprKind.MulExpr _ _ => ok false
+  | ExprKind.PairExpr _ _ => ok false
+  | ExprKind.FirstExpr _ => ok false
+  | ExprKind.SecondExpr _ => ok false
+  | ExprKind.InlExpr _ => ok false
+  | ExprKind.InrExpr _ => ok false
+  | ExprKind.IsLeftExpr _ => ok false
+  | ExprKind.LeftExpr _ => ok false
+  | ExprKind.RightExpr _ => ok false
+  | ExprKind.NilExpr => ok false
+  | ExprKind.ConsExpr _ _ => ok false
+  | ExprKind.IsNilExpr _ => ok false
+  | ExprKind.HeadExpr _ => ok false
+  | ExprKind.TailExpr _ => ok false
+  | ExprKind.LengthExpr _ => ok false
+  | ExprKind.MapsExpr _ _ _ => ok false
+
+/-- [noble_contracts::companion::admit::recognize::is_output]:
+    Source: 'crates/noble-contracts/src/companion/admit/recognize.rs', lines 32:0-37:1 -/
+def companion.admit.recognize.is_output
+  (prepared : Prepared) (index1 : Std.U32) : Result Bool := do
+  let o ← companion.admit.recognize.expression prepared index1
+  match o with
+  | none => ok false
+  | some slot => companion.admit.recognize.is_output_zero slot.kind
+
+/-- [noble_contracts::companion::admit::recognize::output_increment]:
+    Source: 'crates/noble-contracts/src/companion/admit/recognize.rs', lines 151:0-159:1 -/
+def companion.admit.recognize.output_increment
+  (prepared : Prepared) (left : Std.U32) (right : Std.U32) :
+  Result (Option Std.I64)
+  := do
+  let b ← companion.admit.recognize.is_output prepared left
+  if b
+  then companion.admit.recognize.add_increment prepared right
+  else
+    let b1 ← companion.admit.recognize.is_output prepared right
+    if b1
+    then companion.admit.recognize.add_increment prepared left
+    else ok none
+
+/-- [noble_contracts::companion::admit::recognize::increment_result]:
+    Source: 'crates/noble-contracts/src/companion/admit/recognize.rs', lines 220:0-228:1 -/
+def companion.admit.recognize.increment_result
+  (prepared : Prepared) (kind : ExprKind) : Result (Option Std.I64) := do
+  let s ← Prepared.impl.params prepared
+  let b ← core.slice.Slice.is_empty s
+  if b
+  then
+    let s1 ← Prepared.impl.outputs prepared
+    let nt ← Slice.index_usize s1 0#usize
+    let b1 ←
+      core.cmp.PartialEq.ne.trait_default
+        noble_kernel.types.Ty.Insts.CoreCmpPartialEqTy nt.ty
+        noble_kernel.types.Ty.I64Type
+    if b1
+    then ok none
+    else
+      match kind with
+      | ExprKind.I64Expr _ => ok none
+      | ExprKind.BoolExpr _ => ok none
+      | ExprKind.UnitExpr => ok none
+      | ExprKind.InputExpr _ => ok none
+      | ExprKind.OutputExpr _ => ok none
+      | ExprKind.ParamExpr _ => ok none
+      | ExprKind.DefinitionExpr _ => ok none
+      | ExprKind.NotExpr _ => ok none
+      | ExprKind.AndExpr _ _ => ok none
+      | ExprKind.OrExpr _ _ => ok none
+      | ExprKind.ImpliesExpr _ _ => ok none
+      | ExprKind.EqExpr left right =>
+        companion.admit.recognize.output_increment prepared left right
+      | ExprKind.LtExpr _ _ => ok none
+      | ExprKind.LeExpr _ _ => ok none
+      | ExprKind.AddExpr _ _ => ok none
+      | ExprKind.SubExpr _ _ => ok none
+      | ExprKind.MulExpr _ _ => ok none
+      | ExprKind.PairExpr _ _ => ok none
+      | ExprKind.FirstExpr _ => ok none
+      | ExprKind.SecondExpr _ => ok none
+      | ExprKind.InlExpr _ => ok none
+      | ExprKind.InrExpr _ => ok none
+      | ExprKind.IsLeftExpr _ => ok none
+      | ExprKind.LeftExpr _ => ok none
+      | ExprKind.RightExpr _ => ok none
+      | ExprKind.NilExpr => ok none
+      | ExprKind.ConsExpr _ _ => ok none
+      | ExprKind.IsNilExpr _ => ok none
+      | ExprKind.HeadExpr _ => ok none
+      | ExprKind.TailExpr _ => ok none
+      | ExprKind.LengthExpr _ => ok none
+      | ExprKind.MapsExpr _ _ _ => ok none
+  else ok none
+
+/-- [noble_contracts::companion::admit::recognize::is_increment_program_type]:
+    Source: 'crates/noble-contracts/src/companion/admit/recognize.rs', lines 253:0-260:1 -/
+def companion.admit.recognize.is_increment_program_type
+  (ty : noble_kernel.types.Ty) : Result Bool := do
+  match ty with
+  | noble_kernel.types.Ty.UnitType => ok false
+  | noble_kernel.types.Ty.BoolType => ok false
+  | noble_kernel.types.Ty.I64Type => ok false
+  | noble_kernel.types.Ty.TextType => ok false
+  | noble_kernel.types.Ty.SyntaxType => ok false
+  | noble_kernel.types.Ty.ContractType => ok false
+  | noble_kernel.types.Ty.EvidenceType => ok false
+  | noble_kernel.types.Ty.CertifiedType => ok false
+  | noble_kernel.types.Ty.PairType _ _ => ok false
+  | noble_kernel.types.Ty.SumType _ _ => ok false
+  | noble_kernel.types.Ty.ListType _ => ok false
+  | noble_kernel.types.Ty.ProgramType input output effects =>
+    let s ← alloc.vec.Vec.as_slice Global input
+    let b ←
+      Shared0Slice.Insts.CoreCmpPartialEqArray.eq
+        noble_kernel.types.Ty.Insts.CoreCmpPartialEqTy s
+        (Array.make 1#usize [ noble_kernel.types.Ty.I64Type ])
+    if b
+    then
+      let s1 ← alloc.vec.Vec.as_slice Global output
+      let b1 ←
+        Shared0Slice.Insts.CoreCmpPartialEqArray.eq
+          noble_kernel.types.Ty.Insts.CoreCmpPartialEqTy s1
+          (Array.make 1#usize [ noble_kernel.types.Ty.I64Type ])
+      if b1
+      then noble_kernel.types.EffSet.is_empty effects
+      else ok false
+    else ok false
+  | noble_kernel.types.Ty.ResourceType _ => ok false
+
+/-- [noble_contracts::companion::admit::recognize::is_parameter_zero]:
+    Source: 'crates/noble-contracts/src/companion/admit/recognize.rs', lines 75:0-80:1 -/
+def companion.admit.recognize.is_parameter_zero
+  (kind : ExprKind) : Result Bool := do
+  match kind with
+  | ExprKind.I64Expr _ => ok false
+  | ExprKind.BoolExpr _ => ok false
+  | ExprKind.UnitExpr => ok false
+  | ExprKind.InputExpr _ => ok false
+  | ExprKind.OutputExpr _ => ok false
+  | ExprKind.ParamExpr index1 => ok (index1 = 0#u32)
+  | ExprKind.DefinitionExpr _ => ok false
+  | ExprKind.NotExpr _ => ok false
+  | ExprKind.AndExpr _ _ => ok false
+  | ExprKind.OrExpr _ _ => ok false
+  | ExprKind.ImpliesExpr _ _ => ok false
+  | ExprKind.EqExpr _ _ => ok false
+  | ExprKind.LtExpr _ _ => ok false
+  | ExprKind.LeExpr _ _ => ok false
+  | ExprKind.AddExpr _ _ => ok false
+  | ExprKind.SubExpr _ _ => ok false
+  | ExprKind.MulExpr _ _ => ok false
+  | ExprKind.PairExpr _ _ => ok false
+  | ExprKind.FirstExpr _ => ok false
+  | ExprKind.SecondExpr _ => ok false
+  | ExprKind.InlExpr _ => ok false
+  | ExprKind.InrExpr _ => ok false
+  | ExprKind.IsLeftExpr _ => ok false
+  | ExprKind.LeftExpr _ => ok false
+  | ExprKind.RightExpr _ => ok false
+  | ExprKind.NilExpr => ok false
+  | ExprKind.ConsExpr _ _ => ok false
+  | ExprKind.IsNilExpr _ => ok false
+  | ExprKind.HeadExpr _ => ok false
+  | ExprKind.TailExpr _ => ok false
+  | ExprKind.LengthExpr _ => ok false
+  | ExprKind.MapsExpr _ _ _ => ok false
+
+/-- [noble_contracts::companion::admit::recognize::is_param_zero]:
+    Source: 'crates/noble-contracts/src/companion/admit/recognize.rs', lines 68:0-73:1 -/
+def companion.admit.recognize.is_param_zero
+  (prepared : Prepared) (index1 : Std.U32) : Result Bool := do
+  let o ← companion.admit.recognize.expression prepared index1
+  match o with
+  | none => ok false
+  | some slot => companion.admit.recognize.is_parameter_zero slot.kind
+
+/-- [noble_contracts::companion::admit::recognize::is_family_addition]:
+    Source: 'crates/noble-contracts/src/companion/admit/recognize.rs', lines 241:0-247:1 -/
+def companion.admit.recognize.is_family_addition
+  (prepared : Prepared) (kind : ExprKind) : Result Bool := do
+  match kind with
+  | ExprKind.I64Expr _ => ok false
+  | ExprKind.BoolExpr _ => ok false
+  | ExprKind.UnitExpr => ok false
+  | ExprKind.InputExpr _ => ok false
+  | ExprKind.OutputExpr _ => ok false
+  | ExprKind.ParamExpr _ => ok false
+  | ExprKind.DefinitionExpr _ => ok false
+  | ExprKind.NotExpr _ => ok false
+  | ExprKind.AndExpr _ _ => ok false
+  | ExprKind.OrExpr _ _ => ok false
+  | ExprKind.ImpliesExpr _ _ => ok false
+  | ExprKind.EqExpr _ _ => ok false
+  | ExprKind.LtExpr _ _ => ok false
+  | ExprKind.LeExpr _ _ => ok false
+  | ExprKind.AddExpr left right =>
+    let b ← companion.admit.recognize.is_param_zero prepared left
+    if b
+    then
+      let b1 ← companion.admit.recognize.is_input prepared right
+      if b1
+      then ok true
+      else
+        let b2 ← companion.admit.recognize.is_param_zero prepared right
+        if b2
+        then companion.admit.recognize.is_input prepared left
+        else ok false
+    else
+      let b1 ← companion.admit.recognize.is_param_zero prepared right
+      if b1
+      then companion.admit.recognize.is_input prepared left
+      else ok false
+  | ExprKind.SubExpr _ _ => ok false
+  | ExprKind.MulExpr _ _ => ok false
+  | ExprKind.PairExpr _ _ => ok false
+  | ExprKind.FirstExpr _ => ok false
+  | ExprKind.SecondExpr _ => ok false
+  | ExprKind.InlExpr _ => ok false
+  | ExprKind.InrExpr _ => ok false
+  | ExprKind.IsLeftExpr _ => ok false
+  | ExprKind.LeftExpr _ => ok false
+  | ExprKind.RightExpr _ => ok false
+  | ExprKind.NilExpr => ok false
+  | ExprKind.ConsExpr _ _ => ok false
+  | ExprKind.IsNilExpr _ => ok false
+  | ExprKind.HeadExpr _ => ok false
+  | ExprKind.TailExpr _ => ok false
+  | ExprKind.LengthExpr _ => ok false
+  | ExprKind.MapsExpr _ _ _ => ok false
+
+/-- [noble_contracts::companion::admit::recognize::is_family_result]:
+    Source: 'crates/noble-contracts/src/companion/admit/recognize.rs', lines 234:0-239:1 -/
+def companion.admit.recognize.is_family_result
+  (prepared : Prepared) (index1 : Std.U32) : Result Bool := do
+  let o ← companion.admit.recognize.expression prepared index1
+  match o with
+  | none => ok false
+  | some slot =>
+    companion.admit.recognize.is_family_addition prepared slot.kind
+
+/-- [noble_contracts::companion::admit::recognize::is_family]:
+    Source: 'crates/noble-contracts/src/companion/admit/recognize.rs', lines 203:0-214:1 -/
+def companion.admit.recognize.is_family
+  (prepared : Prepared) (kind : ExprKind)
+  (program : Slice (Std.U32 × Std.U64)) :
+  Result Bool
+  := do
+  match kind with
+  | ExprKind.I64Expr _ => ok false
+  | ExprKind.BoolExpr _ => ok false
+  | ExprKind.UnitExpr => ok false
+  | ExprKind.InputExpr _ => ok false
+  | ExprKind.OutputExpr _ => ok false
+  | ExprKind.ParamExpr _ => ok false
+  | ExprKind.DefinitionExpr _ => ok false
+  | ExprKind.NotExpr _ => ok false
+  | ExprKind.AndExpr _ _ => ok false
+  | ExprKind.OrExpr _ _ => ok false
+  | ExprKind.ImpliesExpr _ _ => ok false
+  | ExprKind.EqExpr _ _ => ok false
+  | ExprKind.LtExpr _ _ => ok false
+  | ExprKind.LeExpr _ _ => ok false
+  | ExprKind.AddExpr _ _ => ok false
+  | ExprKind.SubExpr _ _ => ok false
+  | ExprKind.MulExpr _ _ => ok false
+  | ExprKind.PairExpr _ _ => ok false
+  | ExprKind.FirstExpr _ => ok false
+  | ExprKind.SecondExpr _ => ok false
+  | ExprKind.InlExpr _ => ok false
+  | ExprKind.InrExpr _ => ok false
+  | ExprKind.IsLeftExpr _ => ok false
+  | ExprKind.LeftExpr _ => ok false
+  | ExprKind.RightExpr _ => ok false
+  | ExprKind.NilExpr => ok false
+  | ExprKind.ConsExpr _ _ => ok false
+  | ExprKind.IsNilExpr _ => ok false
+  | ExprKind.HeadExpr _ => ok false
+  | ExprKind.TailExpr _ => ok false
+  | ExprKind.LengthExpr _ => ok false
+  | ExprKind.MapsExpr subject argument result =>
+    let b ← companion.admit.recognize.is_output prepared subject
+    if b
+    then
+      let b1 ← companion.admit.recognize.is_param_zero prepared argument
+      if b1
+      then
+        let b2 ← companion.admit.recognize.is_family_result prepared result
+        if b2
+        then
+          let s ← Prepared.impl.params prepared
+          let i := Slice.len s
+          if i = 1#usize
+          then
+            let nt ← Slice.index_usize s 0#usize
+            let b3 ←
+              noble_kernel.types.Ty.Insts.CoreCmpPartialEqTy.eq nt.ty
+                noble_kernel.types.Ty.I64Type
+            if b3
+            then
+              let s1 ← Prepared.impl.outputs prepared
+              let nt1 ← Slice.index_usize s1 0#usize
+              let b4 ←
+                companion.admit.recognize.is_increment_program_type nt1.ty
+              if b4
+              then
+                Shared0Slice.Insts.CoreCmpPartialEqArray.eq
+                  (Pair.Insts.CoreCmpPartialEqPair core.cmp.PartialEqU32
+                  core.cmp.PartialEqU64) program
+                  (Array.make 5#usize [
+                    (2#u32, 8#u64), (3#u32, 0#u64), (2#u32, 4#u64), (6#u32,
+                    0#u64), (2#u32, 9#u64)
+                    ])
+              else ok false
+            else ok false
+          else ok false
+        else ok false
+      else ok false
+    else ok false
+
+/-- [noble_contracts::companion::admit::recognize::is_boolean_true]:
+    Source: 'crates/noble-contracts/src/companion/admit/recognize.rs', lines 21:0-26:1 -/
+def companion.admit.recognize.is_boolean_true
+  (kind : ExprKind) : Result Bool := do
+  match kind with
+  | ExprKind.I64Expr _ => ok false
+  | ExprKind.BoolExpr value => ok value
+  | ExprKind.UnitExpr => ok false
+  | ExprKind.InputExpr _ => ok false
+  | ExprKind.OutputExpr _ => ok false
+  | ExprKind.ParamExpr _ => ok false
+  | ExprKind.DefinitionExpr _ => ok false
+  | ExprKind.NotExpr _ => ok false
+  | ExprKind.AndExpr _ _ => ok false
+  | ExprKind.OrExpr _ _ => ok false
+  | ExprKind.ImpliesExpr _ _ => ok false
+  | ExprKind.EqExpr _ _ => ok false
+  | ExprKind.LtExpr _ _ => ok false
+  | ExprKind.LeExpr _ _ => ok false
+  | ExprKind.AddExpr _ _ => ok false
+  | ExprKind.SubExpr _ _ => ok false
+  | ExprKind.MulExpr _ _ => ok false
+  | ExprKind.PairExpr _ _ => ok false
+  | ExprKind.FirstExpr _ => ok false
+  | ExprKind.SecondExpr _ => ok false
+  | ExprKind.InlExpr _ => ok false
+  | ExprKind.InrExpr _ => ok false
+  | ExprKind.IsLeftExpr _ => ok false
+  | ExprKind.LeftExpr _ => ok false
+  | ExprKind.RightExpr _ => ok false
+  | ExprKind.NilExpr => ok false
+  | ExprKind.ConsExpr _ _ => ok false
+  | ExprKind.IsNilExpr _ => ok false
+  | ExprKind.HeadExpr _ => ok false
+  | ExprKind.TailExpr _ => ok false
+  | ExprKind.LengthExpr _ => ok false
+  | ExprKind.MapsExpr _ _ _ => ok false
+
+/-- [noble_contracts::companion::admit::recognize::is_true]:
+    Source: 'crates/noble-contracts/src/companion/admit/recognize.rs', lines 14:0-19:1 -/
+def companion.admit.recognize.is_true
+  (prepared : Prepared) (index1 : Std.U32) : Result Bool := do
+  let o ← companion.admit.recognize.expression prepared index1
+  match o with
+  | none => ok false
+  | some slot => companion.admit.recognize.is_boolean_true slot.kind
+
+/-- [noble_contracts::companion::admit::recognize::classify]:
+    Source: 'crates/noble-contracts/src/companion/admit/recognize.rs', lines 166:0-197:1 -/
+def companion.admit.recognize.classify
+  (prepared : Prepared) (statement : Std.U64)
+  (program : Slice (Std.U32 × Std.U64)) :
+  Result companion.admit.ClaimTemplate
+  := do
+  let i ← Prepared.impl.requires prepared
+  let b ← companion.admit.recognize.is_true prepared i
+  if b
+  then
+    let s ← Prepared.impl.inputs prepared
+    let i1 := Slice.len s
+    if i1 != 1#usize
+    then ok (companion.admit.ClaimTemplate.Admitted statement)
+    else
+      let s1 ← Prepared.impl.outputs prepared
+      let i2 := Slice.len s1
+      if i2 != 1#usize
+      then ok (companion.admit.ClaimTemplate.Admitted statement)
+      else
+        let nt ← Slice.index_usize s 0#usize
+        let b1 ←
+          core.cmp.PartialEq.ne.trait_default
+            noble_kernel.types.Ty.Insts.CoreCmpPartialEqTy nt.ty
+            noble_kernel.types.Ty.I64Type
+        if b1
+        then ok (companion.admit.ClaimTemplate.Admitted statement)
+        else
+          let c ← Prepared.impl.checked prepared
+          let b2 ← noble_kernel.types.EffSet.is_empty c.interface.effects
+          if b2
+          then
+            let i3 ← Prepared.impl.ensures prepared
+            let o ← companion.admit.recognize.expression prepared i3
+            match o with
+            | none => ok (companion.admit.ClaimTemplate.Admitted statement)
+            | some slot =>
+              let b3 ←
+                companion.admit.recognize.is_family prepared slot.kind program
+              if b3
+              then ok companion.admit.ClaimTemplate.IncrementByCapture
+              else
+                let o1 ←
+                  companion.admit.recognize.increment_result prepared slot.kind
+                match o1 with
+                | none => ok (companion.admit.ClaimTemplate.Admitted statement)
+                | some value =>
+                  ok (companion.admit.ClaimTemplate.IncrementBy value)
+          else ok (companion.admit.ClaimTemplate.Admitted statement)
+  else ok (companion.admit.ClaimTemplate.Admitted statement)
+
+/-- [noble_contracts::companion::subject::OBSERVATION_CAP]
+    Source: 'crates/noble-contracts/src/companion/subject.rs', lines 11:0-11:40
+    Visibility: public -/
+@[global_simps, irreducible]
+def companion.subject.OBSERVATION_CAP : Std.Usize := 2048#usize
+
+/-- [noble_contracts::companion::admit::program::enqueue]: loop body 0:
+    Source: 'crates/noble-contracts/src/companion/admit/program.rs', lines 82:4-85:5 -/
+@[rust_loop_body]
+def companion.admit.program.enqueue_loop.body
+  (body : Slice Std.U32)
+  (pending : alloc.vec.Vec companion.admit.program.Pending)
+  («at» : Std.Usize) :
+  Result (ControlFlow ((alloc.vec.Vec companion.admit.program.Pending) ×
+    Std.Usize) (alloc.vec.Vec companion.admit.program.Pending))
+  := do
+  if «at» > 0#usize
+  then
+    let at1 ← «at» - 1#usize
+    let i ← Slice.index_usize body at1
+    let pending1 ←
+      alloc.vec.Vec.push pending (companion.admit.program.Pending.Node i)
+    ok (cont (pending1, at1))
+  else ok (done pending)
+
+/-- [noble_contracts::companion::admit::program::enqueue]: loop 0:
+    Source: 'crates/noble-contracts/src/companion/admit/program.rs', lines 82:4-85:5 -/
+@[rust_loop]
+def companion.admit.program.enqueue_loop
+  (body : Slice Std.U32)
+  (pending : alloc.vec.Vec companion.admit.program.Pending)
+  («at» : Std.Usize) :
+  Result (alloc.vec.Vec companion.admit.program.Pending)
+  := do
+  loop
+    (fun (pending1, at1) => companion.admit.program.enqueue_loop.body body
+      pending1 at1)
+    (pending, «at»)
+
+/-- [noble_contracts::companion::admit::program::enqueue]:
+    Source: 'crates/noble-contracts/src/companion/admit/program.rs', lines 74:0-87:1 -/
+def companion.admit.program.enqueue
+  (body : Slice Std.U32)
+  (pending : alloc.vec.Vec companion.admit.program.Pending) :
+  Result ((core.result.Result Unit companion.Refusal) × (alloc.vec.Vec
+    companion.admit.program.Pending))
+  := do
+  let i := alloc.vec.Vec.len pending
+  let i1 := Slice.len body
+  let i2 ← lift (core.num.Usize.saturating_add i i1)
+  if i2 > companion.subject.OBSERVATION_CAP
+  then ok (core.result.Result.Err companion.Refusal.ExhaustedReplay, pending)
+  else
+    let «at» := Slice.len body
+    let pending1 ← companion.admit.program.enqueue_loop body pending «at»
+    ok (core.result.Result.Ok (), pending1)
+
+/-- [noble_contracts::companion::admit::program::emit_node]:
+    Source: 'crates/noble-contracts/src/companion/admit/program.rs', lines 101:0-132:1 -/
+def companion.admit.program.emit_node
+  (subject : wire.SemanticSubject) (index1 : Std.U32)
+  (pending : alloc.vec.Vec companion.admit.program.Pending)
+  (out : alloc.vec.Vec (Std.U32 × Std.U64)) :
+  Result ((core.result.Result Unit companion.Refusal) × (alloc.vec.Vec
+    companion.admit.program.Pending) × (alloc.vec.Vec (Std.U32 × Std.U64)))
+  := do
+  let r ← Usize.Insts.CoreConvertTryFromU32TryFromIntError.try_from index1
+  match r with
+  | core.result.Result.Ok index2 =>
+    let s := alloc.vec.Vec.deref subject.nodes
+    let o ←
+      core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice
+        wire.SemanticNode) s index2
+    match o with
+    | none =>
+      ok (core.result.Result.Err companion.Refusal.MismatchedSubject, pending,
+        out)
+    | some node =>
+      match node with
+      | wire.SemanticNode.I64 value =>
+        let a ← core.num.I64.to_ne_bytes value
+        let i ← core.num.U64.from_ne_bytes a
+        let out1 ← alloc.vec.Vec.push out (1#u32, i)
+        ok (core.result.Result.Ok (), pending, out1)
+      | wire.SemanticNode.Boolean value =>
+        let i ← lift (core.convert.num.FromU64Bool.from value)
+        let out1 ← alloc.vec.Vec.push out (4#u32, i)
+        ok (core.result.Result.Ok (), pending, out1)
+      | wire.SemanticNode.UnitValue =>
+        let out1 ← alloc.vec.Vec.push out (5#u32, 0#u64)
+        ok (core.result.Result.Ok (), pending, out1)
+      | wire.SemanticNode.Word definition =>
+        let i ← lift (core.convert.num.FromU64U32.from definition)
+        let out1 ← alloc.vec.Vec.push out (2#u32, i)
+        ok (core.result.Result.Ok (), pending, out1)
+      | wire.SemanticNode.Quotation body =>
+        let i := alloc.vec.Vec.len pending
+        if i >= companion.subject.OBSERVATION_CAP
+        then
+          ok (core.result.Result.Err companion.Refusal.ExhaustedReplay,
+            pending, out)
+        else
+          let out1 ← alloc.vec.Vec.push out (3#u32, 0#u64)
+          let pending1 ←
+            alloc.vec.Vec.push pending
+              companion.admit.program.Pending.CloseQuotation
+          let s1 := alloc.vec.Vec.deref body
+          let (r1, pending2) ← companion.admit.program.enqueue s1 pending1
+          match r1 with
+          | core.result.Result.Ok _ =>
+            ok (core.result.Result.Ok (), pending2, out1)
+          | core.result.Result.Err _ => ok (r1, pending2, out1)
+  | core.result.Result.Err _ =>
+    ok (core.result.Result.Err companion.Refusal.MismatchedSubject, pending,
+      out)
+
+/-- [noble_contracts::companion::admit::program::emit]:
+    Source: 'crates/noble-contracts/src/companion/admit/program.rs', lines 52:0-68:1 -/
+def companion.admit.program.emit
+  (subject : wire.SemanticSubject) (item : companion.admit.program.Pending)
+  (pending : alloc.vec.Vec companion.admit.program.Pending)
+  (out : alloc.vec.Vec (Std.U32 × Std.U64)) :
+  Result ((core.result.Result Unit companion.Refusal) × (alloc.vec.Vec
+    companion.admit.program.Pending) × (alloc.vec.Vec (Std.U32 × Std.U64)))
+  := do
+  let i := alloc.vec.Vec.len out
+  if i >= companion.subject.OBSERVATION_CAP
+  then
+    ok (core.result.Result.Err companion.Refusal.ExhaustedReplay, pending, out)
+  else
+    match item with
+    | companion.admit.program.Pending.Node index1 =>
+      companion.admit.program.emit_node subject index1 pending out
+    | companion.admit.program.Pending.CloseQuotation =>
+      let out1 ← alloc.vec.Vec.push out (6#u32, 0#u64)
+      ok (core.result.Result.Ok (), pending, out1)
+
+/-- [noble_contracts::companion::admit::program::canonical_op_events]: loop body 0:
+    Source: 'crates/noble-contracts/src/companion/admit/program.rs', lines 32:4-37:5 -/
+@[rust_loop_body]
+def companion.admit.program.canonical_op_events_loop.body
+  (v : alloc.vec.Vec wire.SemanticNode) (v1 : alloc.vec.Vec Std.U32)
+  (pending : alloc.vec.Vec companion.admit.program.Pending)
+  (out : alloc.vec.Vec (Std.U32 × Std.U64)) :
+  Result (ControlFlow ((alloc.vec.Vec companion.admit.program.Pending) ×
+    (alloc.vec.Vec (Std.U32 × Std.U64))) ((alloc.vec.Vec (Std.U32 × Std.U64))
+    × (Option companion.Refusal)))
+  := do
+  let (o, pending1) ← alloc.vec.Vec.pop Global pending
+  match o with
+  | none => ok (done (out, none))
+  | some item =>
+    let (r, pending2, out1) ←
+      companion.admit.program.emit { nodes := v, body := v1 } item pending1 out
+    match r with
+    | core.result.Result.Ok _ => ok (cont (pending2, out1))
+    | core.result.Result.Err refusal => ok (done (out1, some refusal))
+
+/-- [noble_contracts::companion::admit::program::canonical_op_events]: loop 0:
+    Source: 'crates/noble-contracts/src/companion/admit/program.rs', lines 32:4-37:5 -/
+@[rust_loop]
+def companion.admit.program.canonical_op_events_loop
+  (pending : alloc.vec.Vec companion.admit.program.Pending)
+  (v : alloc.vec.Vec wire.SemanticNode) (v1 : alloc.vec.Vec Std.U32)
+  (out : alloc.vec.Vec (Std.U32 × Std.U64)) :
+  Result ((alloc.vec.Vec (Std.U32 × Std.U64)) × (Option companion.Refusal))
+  := do
+  loop
+    (fun (pending1, out1) =>
+      companion.admit.program.canonical_op_events_loop.body v v1 pending1 out1)
+    (pending, out)
+
+/-- [noble_contracts::companion::admit::program::canonical_op_events]:
+    Source: 'crates/noble-contracts/src/companion/admit/program.rs', lines 17:0-42:1 -/
+def companion.admit.program.canonical_op_events
+  (candidate : noble_kernel.untrusted.Candidate) :
+  Result (core.result.Result (alloc.vec.Vec (Std.U32 × Std.U64))
+    companion.Refusal)
+  := do
+  let r ← wire.lower_subject candidate
+  match r with
+  | core.result.Result.Ok subject =>
+    let i := alloc.vec.Vec.len subject.nodes
+    let entry_bound ←
+      core.cmp.Ord.min.trait_default core.cmp.OrdUsize i
+        companion.subject.OBSERVATION_CAP
+    let out := alloc.vec.Vec.with_capacity (Std.U32 × Std.U64) entry_bound
+    let pending :=
+      alloc.vec.Vec.with_capacity companion.admit.program.Pending entry_bound
+    let s := alloc.vec.Vec.deref subject.body
+    let (r1, pending1) ← companion.admit.program.enqueue s pending
+    match r1 with
+    | core.result.Result.Ok _ =>
+      let (out1, failure) ←
+        companion.admit.program.canonical_op_events_loop pending1 subject.nodes
+          subject.body out
+      match failure with
+      | none => ok (core.result.Result.Ok out1)
+      | some refusal => ok (core.result.Result.Err refusal)
+    | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+  | core.result.Result.Err _ =>
+    ok (core.result.Result.Err companion.Refusal.MismatchedSubject)
+
+/-- [noble_contracts::companion::admit::accept::register]:
+    Source: 'crates/noble-contracts/src/companion/admit/accept.rs', lines 57:0-90:1 -/
+def companion.admit.accept.register
+  (engine : companion.Core) (prepared : Prepared)
+  (offer : companion.admit.EvidenceOffer) :
+  Result ((core.result.Result (companion.registry.ContractId × Std.U64)
+    companion.Refusal) × companion.Core)
+  := do
+  let r ← companion.admit.accept.eligible engine prepared offer
+  match r with
+  | core.result.Result.Ok _ =>
+    let statement ← companion.statement_digest prepared
+    let c ← Prepared.impl.candidate prepared
+    let r1 ← companion.admit.program.canonical_op_events c
+    match r1 with
+    | core.result.Result.Ok value =>
+      let s := alloc.vec.Vec.deref value
+      let template ← companion.admit.recognize.classify prepared statement s
+      let guards ← companion.guard.templates_of prepared
+      let c1 ← Prepared.impl.checked prepared
+      let s1 := alloc.vec.Vec.deref c1.interface.stack_in
+      let input_signature ← companion.admit.statement.interface_signature s1
+      let s2 := alloc.vec.Vec.deref c1.interface.stack_out
+      let output_signature ← companion.admit.statement.interface_signature s2
+      let s3 ← rendering.export_lean prepared
+      let v ←
+        alloc.vec.CloneVec.clone noble_kernel.types.Ty.Insts.CoreCloneClone
+          c1.interface.stack_in
+      let v1 ←
+        alloc.vec.CloneVec.clone noble_kernel.types.Ty.Insts.CoreCloneClone
+          c1.interface.stack_out
+      let (r2, r3) ←
+        companion.registry.entries.Registry.add_contract engine.registry
+          {
+            statement,
+            exact_statement := s3,
+            claim := template,
+            policy := engine.policy,
+            revision := engine.revision,
+            guards,
+            program := value,
+            input_signature,
+            output_signature,
+            input := v,
+            output := v1
+          }
+      match r2 with
+      | core.result.Result.Ok value1 =>
+        ok (core.result.Result.Ok (value1, statement),
+          { engine with registry := r3 })
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, { engine with registry := r3 })
+    | core.result.Result.Err failure =>
+      ok (core.result.Result.Err failure, engine)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, engine)
+
+/-- [noble_contracts::companion::admit::refused]:
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 164:0-179:1 -/
+def companion.admit.refused
+  (outcome : companion.admit.Outcome)
+  (contract : Option companion.registry.ContractId)
+  (statement_digest : Std.U64) (refusal : companion.Refusal) :
+  Result companion.admit.Admission
+  := do
+  let refusals := alloc.vec.Vec.with_capacity companion.Refusal 1#usize
+  let refusals1 ← alloc.vec.Vec.push refusals refusal
+  ok
+    {
+      outcome,
+      contract,
+      evidence := none,
+      statement_digest,
+      refusals := refusals1
+    }
+
+/-- [noble_contracts::companion::{impl core::cmp::PartialEq<noble_contracts::companion::Refusal> for noble_contracts::companion::Refusal}::eq]:
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 137:29-137:38
+    Visibility: public -/
+def companion.Refusal.Insts.CoreCmpPartialEqRefusal.eq
+  (self : companion.Refusal) (other : companion.Refusal) : Result Bool := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  ok (self1 = other1)
+
+/-- [noble_contracts::companion::admit::accept::registration_failure]:
+    Source: 'crates/noble-contracts/src/companion/admit/accept.rs', lines 266:0-273:1 -/
+def companion.admit.accept.registration_failure
+  (refusal : companion.Refusal) : Result companion.admit.Admission := do
+  let b ←
+    companion.Refusal.Insts.CoreCmpPartialEqRefusal.eq refusal
+      companion.Refusal.UnsupportedSemanticRevision
+  let outcome ←
+    if b
+    then ok companion.admit.Outcome.Unsupported
+    else ok companion.admit.Outcome.Error
+  companion.admit.refused outcome none 0#u64 refusal
+
+/-- [noble_contracts::companion::admit::accept::unchecked]:
+    Source: 'crates/noble-contracts/src/companion/admit/accept.rs', lines 101:0-125:1 -/
+def companion.admit.accept.unchecked
+  (engine : companion.Core) (prepared : Prepared)
+  (offer : companion.admit.EvidenceOffer) :
+  Result (companion.admit.Admission × companion.Core)
+  := do
+  let (r, engine1) ← companion.admit.accept.register engine prepared offer
+  match r with
+  | core.result.Result.Ok binding =>
+    let (contract, statement) := binding
+    let i ← companion.admit.accept.declaration_bytes offer
+    if i = 0#usize
+    then
+      ok
+        ({
+           outcome := companion.admit.Outcome.Unknown,
+           contract := (some contract),
+           evidence := none,
+           statement_digest := statement,
+           refusals := (alloc.vec.Vec.new companion.Refusal)
+         }, engine1)
+    else
+      let a ←
+        companion.admit.refused companion.admit.Outcome.Error (some contract)
+          statement companion.Refusal.ForgedStatus
+      ok (a, engine1)
+  | core.result.Result.Err refusal =>
+    let a ← companion.admit.accept.registration_failure refusal
+    ok (a, engine1)
+
+/-- [noble_contracts::companion::registry::{impl core::cmp::PartialEq<noble_contracts::companion::registry::EvidenceClass> for noble_contracts::companion::registry::EvidenceClass}::eq]:
+    Source: 'crates/noble-contracts/src/companion/registry/mod.rs', lines 5:29-5:38
+    Visibility: public -/
+def companion.registry.EvidenceClass.Insts.CoreCmpPartialEqEvidenceClass.eq
+  (self : companion.registry.EvidenceClass)
+  (other : companion.registry.EvidenceClass) :
+  Result Bool
+  := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  ok (self1 = other1)
+
+/-- [noble_contracts::companion::admit::accept::check_class]:
+    Source: 'crates/noble-contracts/src/companion/admit/accept.rs', lines 175:0-192:1 -/
+def companion.admit.accept.check_class
+  (offer : companion.admit.EvidenceOffer) :
+  Result (core.result.Result Unit companion.Refusal)
+  := do
+  let (ec, is_supported) ←
+    match offer.class with
+    | companion.registry.EvidenceClass.LeanExact =>
+      ok (companion.registry.EvidenceClass.LeanExact, true)
+    | companion.registry.EvidenceClass.LeanRefutation =>
+      ok (companion.registry.EvidenceClass.LeanRefutation, true)
+    | companion.registry.EvidenceClass.Replay =>
+      ok (companion.registry.EvidenceClass.Replay, false)
+    | companion.registry.EvidenceClass.Assumption =>
+      ok (companion.registry.EvidenceClass.Assumption, false)
+  if is_supported
+  then
+    let b ←
+      companion.registry.EvidenceClass.Insts.CoreCmpPartialEqEvidenceClass.eq
+        ec companion.registry.EvidenceClass.LeanRefutation
+    if offer.refutation != b
+    then ok (core.result.Result.Err companion.Refusal.WrongPremiseClass)
+    else ok (core.result.Result.Ok ())
+  else ok (core.result.Result.Err companion.Refusal.UnsupportedEvidenceClass)
+
+/-- [noble_contracts::companion::admit::accept::begin]:
+    Source: 'crates/noble-contracts/src/companion/admit/accept.rs', lines 136:0-169:1 -/
+def companion.admit.accept.begin
+  (engine : companion.Core) (expected : Prepared)
+  (offer : companion.admit.EvidenceOffer) :
+  Result ((core.result.Result companion.admit.AdmissionRequest
+    companion.admit.Admission) × companion.Core)
+  := do
+  let i ← companion.admit.accept.declaration_bytes offer
+  if i = 0#usize
+  then
+    let (a, engine1) ← companion.admit.accept.unchecked engine expected offer
+    ok (core.result.Result.Err a, engine1)
+  else
+    let (r, engine1) ← companion.admit.accept.register engine expected offer
+    match r with
+    | core.result.Result.Ok binding =>
+      let (contract, statement) := binding
+      let r1 ← companion.admit.accept.check_class offer
+      match r1 with
+      | core.result.Result.Ok _ =>
+        ok (core.result.Result.Ok
+          {
+            expected,
+            offer,
+            contract,
+            statement,
+            policy := engine1.policy,
+            revision := engine1.revision
+          }, engine1)
+      | core.result.Result.Err refusal =>
+        let b ←
+          companion.Refusal.Insts.CoreCmpPartialEqRefusal.eq refusal
+            companion.Refusal.UnsupportedEvidenceClass
+        let outcome ←
+          if b
+          then ok companion.admit.Outcome.Unsupported
+          else ok companion.admit.Outcome.Error
+        let a ←
+          companion.admit.refused outcome (some contract) statement refusal
+        ok (core.result.Result.Err a, engine1)
+    | core.result.Result.Err refusal =>
+      let a ← companion.admit.accept.registration_failure refusal
+      ok (core.result.Result.Err a, engine1)
+
+/-- [noble_contracts::companion::registry::entries::{noble_contracts::companion::registry::Registry}::add_evidence]:
+    Source: 'crates/noble-contracts/src/companion/registry/entries.rs', lines 116:4-126:5 -/
+def companion.registry.entries.Registry.add_evidence
+  (self : companion.registry.Registry)
+  (entry : companion.registry.EvidenceEntry) :
+  Result ((core.result.Result companion.registry.EvidenceId companion.Refusal)
+    × companion.registry.Registry)
+  := do
+  let i := alloc.vec.Vec.len self.evidence
+  let b ← companion.registry.entries.has_capacity i self.evidence_cap
+  if b
+  then
+    let i1 := alloc.vec.Vec.len self.evidence
+    let r ← companion.registry.entries.index_of i1
+    match r with
+    | core.result.Result.Ok value =>
+      let v ← alloc.vec.Vec.push self.evidence entry
+      ok (core.result.Result.Ok value, { self with evidence := v })
+    | core.result.Result.Err failure =>
+      ok (core.result.Result.Err failure, self)
+  else ok (core.result.Result.Err companion.Refusal.ExhaustedRegistry, self)
+
+/-- [noble_contracts::companion::registry::entries::{noble_contracts::companion::registry::Registry}::contract]:
+    Source: 'crates/noble-contracts/src/companion/registry/entries.rs', lines 63:4-75:5 -/
+def companion.registry.entries.Registry.contract
+  (self : companion.registry.Registry) (id : companion.registry.ContractId) :
+  Result (core.result.Result companion.registry.ContractEntry
+    companion.Refusal)
+  := do
+  let r ← Usize.Insts.CoreConvertTryFromU32TryFromIntError.try_from id
+  match r with
+  | core.result.Result.Ok position =>
+    let s := alloc.vec.Vec.deref self.contracts
+    let o ←
+      core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice
+        companion.registry.ContractEntry) s position
+    match o with
+    | none => ok (core.result.Result.Err companion.Refusal.UnknownContract)
+    | some entry => ok (core.result.Result.Ok entry)
+  | core.result.Result.Err _ =>
+    ok (core.result.Result.Err companion.Refusal.UnknownContract)
+
+/-- [noble_contracts::companion::admit::accept::interface_subject]:
+    Source: 'crates/noble-contracts/src/companion/admit/accept.rs', lines 277:0-287:1 -/
+def companion.admit.accept.interface_subject
+  (contract : companion.registry.ContractEntry) :
+  Result companion.Subject
+  := do
+  let v ←
+    alloc.vec.CloneVec.clone (BuiltinClone (Std.U32 × Std.U64))
+      contract.program
+  ok
+    {
+      identity := contract.statement,
+      input_signature := contract.input_signature,
+      output_signature := contract.output_signature,
+      captures := (alloc.vec.Vec.new companion.CaptureBinding),
+      events := v
+    }
+
+/-- [noble_contracts::companion::admit::accept::checked_outcome]:
+    Source: 'crates/noble-contracts/src/companion/admit/accept.rs', lines 252:0-260:1 -/
+def companion.admit.accept.checked_outcome
+  (offer : companion.admit.EvidenceOffer) :
+  Result companion.admit.Outcome
+  := do
+  if offer.refutation
+  then ok companion.admit.Outcome.Disproved
+  else ok companion.admit.Outcome.Proved
+
+/-- [noble_contracts::companion::admit::accept::mint]:
+    Source: 'crates/noble-contracts/src/companion/admit/accept.rs', lines 202:0-250:1 -/
+def companion.admit.accept.mint
+  (engine : companion.Core) (contract : companion.registry.ContractId)
+  (statement : Std.U64) (offer : companion.admit.EvidenceOffer) :
+  Result (companion.admit.Admission × companion.Core)
+  := do
+  let outcome ← companion.admit.accept.checked_outcome offer
+  let r ←
+    companion.registry.entries.Registry.contract engine.registry contract
+  match r with
+  | core.result.Result.Ok retained =>
+    let s ← companion.admit.accept.interface_subject retained
+    let (r1, r2) ←
+      companion.registry.entries.Registry.add_evidence engine.registry
+        {
+          contract,
+          statement,
+          template := retained.claim,
+          subject := s,
+          «class» := offer.class,
+          outcome,
+          policy := engine.policy,
+          revision := engine.revision,
+          premises := (alloc.vec.Vec.new companion.registry.EvidenceId),
+          rule := none
+        }
+    match r1 with
+    | core.result.Result.Ok id =>
+      ok
+        ({
+           outcome,
+           contract := (some contract),
+           evidence := (some id),
+           statement_digest := statement,
+           refusals := (alloc.vec.Vec.new companion.Refusal)
+         }, { engine with registry := r2 })
+    | core.result.Result.Err refusal =>
+      let a ←
+        companion.admit.refused companion.admit.Outcome.Error (some contract)
+          statement refusal
+      ok (a, { engine with registry := r2 })
+  | core.result.Result.Err refusal =>
+    let a ←
+      companion.admit.refused companion.admit.Outcome.Error (some contract)
+        statement refusal
+    ok (a, engine)
+
+/-- [noble_contracts::companion::admit::CODE_CLAIMTEMPLATE_INCREMENTBY]
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 10:0-10:60 -/
+@[global_simps, irreducible]
+def companion.admit.CODE_CLAIMTEMPLATE_INCREMENTBY : Str :=
+  toStr "increment-by"
+
+/-- [noble_contracts::companion::admit::CODE_CLAIMTEMPLATE_INCREMENTBYCAPTURE]
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 11:0-11:75 -/
+@[global_simps, irreducible]
+def companion.admit.CODE_CLAIMTEMPLATE_INCREMENTBYCAPTURE : Str :=
+  toStr "increment-by-capture"
+
+/-- [noble_contracts::companion::admit::CODE_CLAIMTEMPLATE_GUARDCORRESPONDENCE]
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 12:0-12:76 -/
+@[global_simps, irreducible]
+def companion.admit.CODE_CLAIMTEMPLATE_GUARDCORRESPONDENCE : Str :=
+  toStr "guard-correspondence"
+
+/-- [noble_contracts::companion::admit::CODE_CLAIMTEMPLATE_ADMITTED]
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 13:0-13:53 -/
+@[global_simps, irreducible]
+def companion.admit.CODE_CLAIMTEMPLATE_ADMITTED : Str := toStr "admitted"
+
+/-- [noble_contracts::companion::admit::CODE_OUTCOME_PROVED]
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 14:0-14:43 -/
+@[global_simps, irreducible]
+def companion.admit.CODE_OUTCOME_PROVED : Str := toStr "proved"
+
+/-- [noble_contracts::companion::admit::CODE_OUTCOME_DISPROVED]
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 15:0-15:49 -/
+@[global_simps, irreducible]
+def companion.admit.CODE_OUTCOME_DISPROVED : Str := toStr "disproved"
+
+/-- [noble_contracts::companion::admit::CODE_OUTCOME_UNKNOWN]
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 16:0-16:45 -/
+@[global_simps, irreducible]
+def companion.admit.CODE_OUTCOME_UNKNOWN : Str := toStr "unknown"
+
+/-- [noble_contracts::companion::admit::CODE_OUTCOME_TIMEOUT]
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 17:0-17:45 -/
+@[global_simps, irreducible]
+def companion.admit.CODE_OUTCOME_TIMEOUT : Str := toStr "timeout"
+
+/-- [noble_contracts::companion::admit::CODE_OUTCOME_UNSUPPORTED]
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 18:0-18:53 -/
+@[global_simps, irreducible]
+def companion.admit.CODE_OUTCOME_UNSUPPORTED : Str := toStr "unsupported"
+
+/-- [noble_contracts::companion::admit::CODE_OUTCOME_ERROR]
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 19:0-19:41 -/
+@[global_simps, irreducible]
+def companion.admit.CODE_OUTCOME_ERROR : Str := toStr "error"
+
+/-- [noble_contracts::companion::admit::CODE_OUTCOME_NOTRUN]
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 20:0-20:44 -/
+@[global_simps, irreducible]
+def companion.admit.CODE_OUTCOME_NOTRUN : Str := toStr "not-run"
+
+/-- [noble_contracts::companion::admit::{impl core::clone::Clone for noble_contracts::companion::admit::ClaimTemplate}::clone]:
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 25:9-25:14
+    Visibility: public -/
+def companion.admit.ClaimTemplate.Insts.CoreCloneClone.clone
+  (self : companion.admit.ClaimTemplate) :
+  Result companion.admit.ClaimTemplate
+  := do
+  ok self
+
+/-- Trait implementation: [noble_contracts::companion::admit::{impl core::clone::Clone for noble_contracts::companion::admit::ClaimTemplate}]
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 25:9-25:14 -/
+@[reducible]
+def companion.admit.ClaimTemplate.Insts.CoreCloneClone : core.clone.Clone
+  companion.admit.ClaimTemplate := {
+  clone := companion.admit.ClaimTemplate.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_contracts::companion::admit::{impl core::marker::Copy for noble_contracts::companion::admit::ClaimTemplate}]
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 25:16-25:20 -/
+@[reducible]
+def companion.admit.ClaimTemplate.Insts.CoreMarkerCopy : core.marker.Copy
+  companion.admit.ClaimTemplate := {
+  cloneInst := companion.admit.ClaimTemplate.Insts.CoreCloneClone
+}
+
+/-- [noble_contracts::companion::{impl core::fmt::Debug for noble_contracts::companion::GuardTemplate}::fmt]:
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 209:22-209:27
+    Visibility: public -/
+def companion.GuardTemplate.Insts.CoreFmtDebug.fmt
+  (self : companion.GuardTemplate) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | companion.GuardTemplate.LtI64Max =>
+    core.fmt.Formatter.write_str f (toStr "LtI64Max")
+  | companion.GuardTemplate.NeI64Min =>
+    core.fmt.Formatter.write_str f (toStr "NeI64Min")
+  | companion.GuardTemplate.EqI64Literal __self_0 =>
+    let __self_01 := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugI64) __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "EqI64Literal")
+      __self_01
+
+/-- Trait implementation: [noble_contracts::companion::{impl core::fmt::Debug for noble_contracts::companion::GuardTemplate}]
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 209:22-209:27 -/
+@[reducible]
+def companion.GuardTemplate.Insts.CoreFmtDebug : core.fmt.Debug
+  companion.GuardTemplate := {
+  fmt := companion.GuardTemplate.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_contracts::companion::admit::{impl core::fmt::Debug for noble_contracts::companion::admit::ClaimTemplate}::fmt]:
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 25:22-25:27
+    Visibility: public -/
+def companion.admit.ClaimTemplate.Insts.CoreFmtDebug.fmt
+  (self : companion.admit.ClaimTemplate) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | companion.admit.ClaimTemplate.IncrementBy __self_0 =>
+    let __self_01 := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugI64) __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "IncrementBy")
+      __self_01
+  | companion.admit.ClaimTemplate.IncrementByCapture =>
+    core.fmt.Formatter.write_str f (toStr "IncrementByCapture")
+  | companion.admit.ClaimTemplate.GuardCorrespondence __self_0 =>
+    let __self_01 :=
+      Dyn.mk _ (core.fmt.DebugShared
+        companion.GuardTemplate.Insts.CoreFmtDebug) __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr
+      "GuardCorrespondence") __self_01
+  | companion.admit.ClaimTemplate.Admitted __self_0 =>
+    let __self_01 := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU64) __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Admitted") __self_01
+
+/-- Trait implementation: [noble_contracts::companion::admit::{impl core::fmt::Debug for noble_contracts::companion::admit::ClaimTemplate}]
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 25:22-25:27 -/
+@[reducible]
+def companion.admit.ClaimTemplate.Insts.CoreFmtDebug : core.fmt.Debug
+  companion.admit.ClaimTemplate := {
+  fmt := companion.admit.ClaimTemplate.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_contracts::companion::admit::{impl core::marker::StructuralPartialEq for noble_contracts::companion::admit::ClaimTemplate}]
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 25:29-25:38 -/
+@[reducible]
+def companion.admit.ClaimTemplate.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq companion.admit.ClaimTemplate := {
+}
+
+/-- [noble_contracts::companion::admit::{impl core::cmp::Eq for noble_contracts::companion::admit::ClaimTemplate}::assert_fields_are_eq]:
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 25:40-25:42
+    Visibility: public -/
+def companion.admit.ClaimTemplate.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : companion.admit.ClaimTemplate) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_contracts::companion::admit::{impl core::cmp::Eq for noble_contracts::companion::admit::ClaimTemplate}]
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 25:40-25:42 -/
+@[reducible]
+def companion.admit.ClaimTemplate.Insts.CoreCmpEq : core.cmp.Eq
+  companion.admit.ClaimTemplate := {
+  partialEqInst :=
+    companion.admit.ClaimTemplate.Insts.CoreCmpPartialEqClaimTemplate
+  assert_fields_are_eq :=
+    companion.admit.ClaimTemplate.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_contracts::companion::digest::DOMAIN_GUARD]
+    Source: 'crates/noble-contracts/src/companion/digest.rs', lines 24:0-24:63 -/
+@[global_simps, irreducible]
+def companion.digest.DOMAIN_GUARD : Std.U64 := 5140086371297263616#u64
+
+/-- [noble_contracts::companion::guard::{noble_contracts::companion::GuardTemplate}::digest]:
+    Source: 'crates/noble-contracts/src/companion/guard.rs', lines 9:4-20:5 -/
+def companion.guard.GuardTemplate.digest
+  (self : companion.GuardTemplate) : Result Std.U64 := do
+  let fold ← companion.digest.Fold.new companion.digest.DOMAIN_GUARD
+  let fold1 ←
+    match self with
+    | companion.GuardTemplate.LtI64Max =>
+      companion.digest.Fold.absorb fold 1#u64
+    | companion.GuardTemplate.NeI64Min =>
+      companion.digest.Fold.absorb fold 2#u64
+    | companion.GuardTemplate.EqI64Literal value =>
+      do
+      let fold2 ← companion.digest.Fold.absorb fold 3#u64
+      let a ← core.num.I64.to_ne_bytes value
+      let i ← core.num.U64.from_ne_bytes a
+      companion.digest.Fold.absorb fold2 i
+  companion.digest.Fold.finish fold1
+
+/-- [noble_contracts::companion::digest::DOMAIN_TEMPLATE]
+    Source: 'crates/noble-contracts/src/companion/digest.rs', lines 23:0-23:66 -/
+@[global_simps, irreducible]
+def companion.digest.DOMAIN_TEMPLATE : Std.U64 := 6072344679851054149#u64
+
+/-- [noble_contracts::companion::admit::{noble_contracts::companion::admit::ClaimTemplate}::digest]:
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 42:4-66:5
+    Visibility: public -/
+def companion.admit.ClaimTemplate.digest
+  (self : companion.admit.ClaimTemplate) : Result Std.U64 := do
+  match self with
+  | companion.admit.ClaimTemplate.IncrementBy k =>
+    let fold ← companion.digest.Fold.new companion.digest.DOMAIN_TEMPLATE
+    let fold1 ← companion.digest.Fold.absorb fold 1#u64
+    let a ← core.num.I64.to_ne_bytes k
+    let i ← core.num.U64.from_ne_bytes a
+    let fold2 ← companion.digest.Fold.absorb fold1 i
+    companion.digest.Fold.finish fold2
+  | companion.admit.ClaimTemplate.IncrementByCapture =>
+    let fold ← companion.digest.Fold.new companion.digest.DOMAIN_TEMPLATE
+    let fold1 ← companion.digest.Fold.absorb fold 2#u64
+    companion.digest.Fold.finish fold1
+  | companion.admit.ClaimTemplate.GuardCorrespondence template =>
+    let fold ← companion.digest.Fold.new companion.digest.DOMAIN_TEMPLATE
+    let fold1 ← companion.digest.Fold.absorb fold 3#u64
+    let i ← companion.guard.GuardTemplate.digest template
+    let fold2 ← companion.digest.Fold.absorb fold1 i
+    companion.digest.Fold.finish fold2
+  | companion.admit.ClaimTemplate.Admitted digest => ok digest
+
+/-- [noble_contracts::companion::admit::{noble_contracts::companion::admit::ClaimTemplate}::code]:
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 68:4-75:5
+    Visibility: public -/
+def companion.admit.ClaimTemplate.code
+  (self : companion.admit.ClaimTemplate) : Result Str := do
+  match self with
+  | companion.admit.ClaimTemplate.IncrementBy _ =>
+    ok companion.admit.CODE_CLAIMTEMPLATE_INCREMENTBY
+  | companion.admit.ClaimTemplate.IncrementByCapture =>
+    ok companion.admit.CODE_CLAIMTEMPLATE_INCREMENTBYCAPTURE
+  | companion.admit.ClaimTemplate.GuardCorrespondence _ =>
+    ok companion.admit.CODE_CLAIMTEMPLATE_GUARDCORRESPONDENCE
+  | companion.admit.ClaimTemplate.Admitted _ =>
+    ok companion.admit.CODE_CLAIMTEMPLATE_ADMITTED
+
+/-- [noble_contracts::companion::admit::{impl core::clone::Clone for noble_contracts::companion::admit::Outcome}::clone]:
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 79:9-79:14
+    Visibility: public -/
+def companion.admit.Outcome.Insts.CoreCloneClone.clone
+  (self : companion.admit.Outcome) : Result companion.admit.Outcome := do
+  ok self
+
+/-- Trait implementation: [noble_contracts::companion::admit::{impl core::clone::Clone for noble_contracts::companion::admit::Outcome}]
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 79:9-79:14 -/
+@[reducible]
+def companion.admit.Outcome.Insts.CoreCloneClone : core.clone.Clone
+  companion.admit.Outcome := {
+  clone := companion.admit.Outcome.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_contracts::companion::admit::{impl core::marker::Copy for noble_contracts::companion::admit::Outcome}]
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 79:16-79:20 -/
+@[reducible]
+def companion.admit.Outcome.Insts.CoreMarkerCopy : core.marker.Copy
+  companion.admit.Outcome := {
+  cloneInst := companion.admit.Outcome.Insts.CoreCloneClone
+}
+
+/-- [noble_contracts::companion::admit::{impl core::fmt::Debug for noble_contracts::companion::admit::Outcome}::fmt]:
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 79:22-79:27
+    Visibility: public -/
+def companion.admit.Outcome.Insts.CoreFmtDebug.fmt
+  (self : companion.admit.Outcome) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | companion.admit.Outcome.Proved =>
+    core.fmt.Formatter.write_str f (toStr "Proved")
+  | companion.admit.Outcome.Disproved =>
+    core.fmt.Formatter.write_str f (toStr "Disproved")
+  | companion.admit.Outcome.Unknown =>
+    core.fmt.Formatter.write_str f (toStr "Unknown")
+  | companion.admit.Outcome.Timeout =>
+    core.fmt.Formatter.write_str f (toStr "Timeout")
+  | companion.admit.Outcome.Unsupported =>
+    core.fmt.Formatter.write_str f (toStr "Unsupported")
+  | companion.admit.Outcome.Error =>
+    core.fmt.Formatter.write_str f (toStr "Error")
+  | companion.admit.Outcome.NotRun =>
+    core.fmt.Formatter.write_str f (toStr "NotRun")
+
+/-- Trait implementation: [noble_contracts::companion::admit::{impl core::fmt::Debug for noble_contracts::companion::admit::Outcome}]
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 79:22-79:27 -/
+@[reducible]
+def companion.admit.Outcome.Insts.CoreFmtDebug : core.fmt.Debug
+  companion.admit.Outcome := {
+  fmt := companion.admit.Outcome.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_contracts::companion::admit::{impl core::marker::StructuralPartialEq for noble_contracts::companion::admit::Outcome}]
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 79:29-79:38 -/
+@[reducible]
+def companion.admit.Outcome.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq companion.admit.Outcome := {
+}
+
+/-- [noble_contracts::companion::admit::{impl core::cmp::PartialEq<noble_contracts::companion::admit::Outcome> for noble_contracts::companion::admit::Outcome}::eq]:
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 79:29-79:38
+    Visibility: public -/
+def companion.admit.Outcome.Insts.CoreCmpPartialEqOutcome.eq
+  (self : companion.admit.Outcome) (other : companion.admit.Outcome) :
+  Result Bool
+  := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  ok (self1 = other1)
+
+/-- Trait implementation: [noble_contracts::companion::admit::{impl core::cmp::PartialEq<noble_contracts::companion::admit::Outcome> for noble_contracts::companion::admit::Outcome}]
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 79:29-79:38 -/
+@[reducible]
+impl_def companion.admit.Outcome.Insts.CoreCmpPartialEqOutcome :
+  core.cmp.PartialEq companion.admit.Outcome companion.admit.Outcome := {
+  eq := companion.admit.Outcome.Insts.CoreCmpPartialEqOutcome.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    companion.admit.Outcome.Insts.CoreCmpPartialEqOutcome
+}
+
+/-- [noble_contracts::companion::admit::{impl core::cmp::Eq for noble_contracts::companion::admit::Outcome}::assert_fields_are_eq]:
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 79:40-79:42
+    Visibility: public -/
+def companion.admit.Outcome.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : companion.admit.Outcome) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_contracts::companion::admit::{impl core::cmp::Eq for noble_contracts::companion::admit::Outcome}]
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 79:40-79:42 -/
+@[reducible]
+def companion.admit.Outcome.Insts.CoreCmpEq : core.cmp.Eq
+  companion.admit.Outcome := {
+  partialEqInst := companion.admit.Outcome.Insts.CoreCmpPartialEqOutcome
+  assert_fields_are_eq :=
+    companion.admit.Outcome.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_contracts::companion::admit::{noble_contracts::companion::admit::Outcome}::code]:
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 92:4-102:5
+    Visibility: public -/
+def companion.admit.Outcome.code
+  (self : companion.admit.Outcome) : Result Str := do
+  match self with
+  | companion.admit.Outcome.Proved => ok companion.admit.CODE_OUTCOME_PROVED
+  | companion.admit.Outcome.Disproved =>
+    ok companion.admit.CODE_OUTCOME_DISPROVED
+  | companion.admit.Outcome.Unknown => ok companion.admit.CODE_OUTCOME_UNKNOWN
+  | companion.admit.Outcome.Timeout => ok companion.admit.CODE_OUTCOME_TIMEOUT
+  | companion.admit.Outcome.Unsupported =>
+    ok companion.admit.CODE_OUTCOME_UNSUPPORTED
+  | companion.admit.Outcome.Error => ok companion.admit.CODE_OUTCOME_ERROR
+  | companion.admit.Outcome.NotRun => ok companion.admit.CODE_OUTCOME_NOTRUN
+
+/-- [noble_contracts::companion::registry::{impl core::clone::Clone for noble_contracts::companion::registry::EvidenceClass}::clone]:
+    Source: 'crates/noble-contracts/src/companion/registry/mod.rs', lines 5:9-5:14
+    Visibility: public -/
+def companion.registry.EvidenceClass.Insts.CoreCloneClone.clone
+  (self : companion.registry.EvidenceClass) :
+  Result companion.registry.EvidenceClass
+  := do
+  ok self
+
+/-- [noble_contracts::companion::admit::{impl core::clone::Clone for noble_contracts::companion::admit::EvidencePayload}::clone]:
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 116:9-116:14
+    Visibility: public -/
+def companion.admit.EvidencePayload.Insts.CoreCloneClone.clone
+  (self : companion.admit.EvidencePayload) :
+  Result companion.admit.EvidencePayload
+  := do
+  match self with
+  | companion.admit.EvidencePayload.Declaration __self_0 =>
+    let v ← alloc.vec.CloneVec.clone core.clone.CloneU8 __self_0
+    ok (companion.admit.EvidencePayload.Declaration v)
+  | companion.admit.EvidencePayload.Resource __self_0 =>
+    let i ← lift (core.clone.impls.CloneU64.clone __self_0)
+    ok (companion.admit.EvidencePayload.Resource i)
+  | companion.admit.EvidencePayload.ServiceCapability __self_0 =>
+    let i ← lift (core.clone.impls.CloneU64.clone __self_0)
+    ok (companion.admit.EvidencePayload.ServiceCapability i)
+
+/-- [noble_contracts::companion::admit::{impl core::clone::Clone for noble_contracts::companion::admit::EvidenceOffer}::clone]:
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 107:9-107:14
+    Visibility: public -/
+def companion.admit.EvidenceOffer.Insts.CoreCloneClone.clone
+  (self : companion.admit.EvidenceOffer) :
+  Result companion.admit.EvidenceOffer
+  := do
+  let ec ←
+    companion.registry.EvidenceClass.Insts.CoreCloneClone.clone self.class
+  let b ← lift (core.clone.impls.CloneBool.clone self.refutation)
+  let ep ←
+    companion.admit.EvidencePayload.Insts.CoreCloneClone.clone self.payload
+  ok { «class» := ec, refutation := b, payload := ep }
+
+/-- Trait implementation: [noble_contracts::companion::admit::{impl core::clone::Clone for noble_contracts::companion::admit::EvidenceOffer}]
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 107:9-107:14 -/
+@[reducible]
+def companion.admit.EvidenceOffer.Insts.CoreCloneClone : core.clone.Clone
+  companion.admit.EvidenceOffer := {
+  clone := companion.admit.EvidenceOffer.Insts.CoreCloneClone.clone
+}
+
+/-- [noble_contracts::companion::registry::{impl core::fmt::Debug for noble_contracts::companion::registry::EvidenceClass}::fmt]:
+    Source: 'crates/noble-contracts/src/companion/registry/mod.rs', lines 5:22-5:27
+    Visibility: public -/
+def companion.registry.EvidenceClass.Insts.CoreFmtDebug.fmt
+  (self : companion.registry.EvidenceClass) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | companion.registry.EvidenceClass.LeanExact =>
+    core.fmt.Formatter.write_str f (toStr "LeanExact")
+  | companion.registry.EvidenceClass.LeanRefutation =>
+    core.fmt.Formatter.write_str f (toStr "LeanRefutation")
+  | companion.registry.EvidenceClass.Replay =>
+    core.fmt.Formatter.write_str f (toStr "Replay")
+  | companion.registry.EvidenceClass.Assumption =>
+    core.fmt.Formatter.write_str f (toStr "Assumption")
+
+/-- Trait implementation: [noble_contracts::companion::registry::{impl core::fmt::Debug for noble_contracts::companion::registry::EvidenceClass}]
+    Source: 'crates/noble-contracts/src/companion/registry/mod.rs', lines 5:22-5:27 -/
+@[reducible]
+def companion.registry.EvidenceClass.Insts.CoreFmtDebug : core.fmt.Debug
+  companion.registry.EvidenceClass := {
+  fmt := companion.registry.EvidenceClass.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_contracts::companion::admit::{impl core::fmt::Debug for noble_contracts::companion::admit::EvidencePayload}::fmt]:
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 116:16-116:21
+    Visibility: public -/
+def companion.admit.EvidencePayload.Insts.CoreFmtDebug.fmt
+  (self : companion.admit.EvidencePayload) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | companion.admit.EvidencePayload.Declaration __self_0 =>
+    let __self_01 :=
+      Dyn.mk _ (core.fmt.DebugShared (core.fmt.DebugVec core.fmt.DebugU8))
+        __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Declaration")
+      __self_01
+  | companion.admit.EvidencePayload.Resource __self_0 =>
+    let __self_01 := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU64) __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Resource") __self_01
+  | companion.admit.EvidencePayload.ServiceCapability __self_0 =>
+    let __self_01 := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU64) __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "ServiceCapability")
+      __self_01
+
+/-- Trait implementation: [noble_contracts::companion::admit::{impl core::fmt::Debug for noble_contracts::companion::admit::EvidencePayload}]
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 116:16-116:21 -/
+@[reducible]
+def companion.admit.EvidencePayload.Insts.CoreFmtDebug : core.fmt.Debug
+  companion.admit.EvidencePayload := {
+  fmt := companion.admit.EvidencePayload.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_contracts::companion::admit::{impl core::fmt::Debug for noble_contracts::companion::admit::EvidenceOffer}::fmt]:
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 107:16-107:21
+    Visibility: public -/
+def companion.admit.EvidenceOffer.Insts.CoreFmtDebug.fmt
+  (self : companion.admit.EvidenceOffer) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn :=
+    Dyn.mk _ companion.registry.EvidenceClass.Insts.CoreFmtDebug self.class
+  let dyn1 := Dyn.mk _ core.fmt.DebugBool self.refutation
+  let dyn2 :=
+    Dyn.mk _ (core.fmt.DebugShared
+      companion.admit.EvidencePayload.Insts.CoreFmtDebug) self.payload
+  core.fmt.Formatter.debug_struct_field3_finish f (toStr "EvidenceOffer")
+    (toStr "class") dyn (toStr "refutation") dyn1 (toStr "payload") dyn2
+
+/-- Trait implementation: [noble_contracts::companion::admit::{impl core::fmt::Debug for noble_contracts::companion::admit::EvidenceOffer}]
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 107:16-107:21 -/
+@[reducible]
+def companion.admit.EvidenceOffer.Insts.CoreFmtDebug : core.fmt.Debug
+  companion.admit.EvidenceOffer := {
+  fmt := companion.admit.EvidenceOffer.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_contracts::companion::admit::{impl core::marker::StructuralPartialEq for noble_contracts::companion::admit::EvidenceOffer}]
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 107:23-107:32 -/
+@[reducible]
+def companion.admit.EvidenceOffer.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq companion.admit.EvidenceOffer := {
+}
+
+/-- [noble_contracts::companion::admit::{impl core::cmp::PartialEq<noble_contracts::companion::admit::EvidencePayload> for noble_contracts::companion::admit::EvidencePayload}::eq]:
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 116:23-116:32
+    Visibility: public -/
+def companion.admit.EvidencePayload.Insts.CoreCmpPartialEqEvidencePayload.eq
+  (self : companion.admit.EvidencePayload)
+  (other : companion.admit.EvidencePayload) :
+  Result Bool
+  := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  if self1 = other1
+  then
+    match self with
+    | companion.admit.EvidencePayload.Declaration __self_0 =>
+      match other with
+      | companion.admit.EvidencePayload.Declaration __arg1_0 =>
+        alloc.vec.partial_eq.PartialEqVec.eq core.cmp.PartialEqU8 __self_0
+          __arg1_0
+      | companion.admit.EvidencePayload.Resource _ => fail panic
+      | companion.admit.EvidencePayload.ServiceCapability _ => fail panic
+    | companion.admit.EvidencePayload.Resource __self_0 =>
+      match other with
+      | companion.admit.EvidencePayload.Declaration _ => fail panic
+      | companion.admit.EvidencePayload.Resource __arg1_0 =>
+        lift (core.cmp.impls.PartialEqU64.eq __self_0 __arg1_0)
+      | companion.admit.EvidencePayload.ServiceCapability _ => fail panic
+    | companion.admit.EvidencePayload.ServiceCapability __self_0 =>
+      match other with
+      | companion.admit.EvidencePayload.Declaration _ => fail panic
+      | companion.admit.EvidencePayload.Resource _ => fail panic
+      | companion.admit.EvidencePayload.ServiceCapability __arg1_0 =>
+        lift (core.cmp.impls.PartialEqU64.eq __self_0 __arg1_0)
+  else ok false
+
+/-- [noble_contracts::companion::admit::{impl core::cmp::PartialEq<noble_contracts::companion::admit::EvidenceOffer> for noble_contracts::companion::admit::EvidenceOffer}::eq]:
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 107:23-107:32
+    Visibility: public -/
+def companion.admit.EvidenceOffer.Insts.CoreCmpPartialEqEvidenceOffer.eq
+  (self : companion.admit.EvidenceOffer)
+  (other : companion.admit.EvidenceOffer) :
+  Result Bool
+  := do
+  if self.refutation = other.refutation
+  then
+    let b ←
+      companion.registry.EvidenceClass.Insts.CoreCmpPartialEqEvidenceClass.eq
+        self.class other.class
+    if b
+    then
+      companion.admit.EvidencePayload.Insts.CoreCmpPartialEqEvidencePayload.eq
+        self.payload other.payload
+    else ok false
+  else ok false
+
+/-- Trait implementation: [noble_contracts::companion::admit::{impl core::cmp::PartialEq<noble_contracts::companion::admit::EvidenceOffer> for noble_contracts::companion::admit::EvidenceOffer}]
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 107:23-107:32 -/
+@[reducible]
+impl_def companion.admit.EvidenceOffer.Insts.CoreCmpPartialEqEvidenceOffer :
+  core.cmp.PartialEq companion.admit.EvidenceOffer
+  companion.admit.EvidenceOffer := {
+  eq := companion.admit.EvidenceOffer.Insts.CoreCmpPartialEqEvidenceOffer.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    companion.admit.EvidenceOffer.Insts.CoreCmpPartialEqEvidenceOffer
+}
+
+/-- [noble_contracts::companion::admit::{impl core::cmp::Eq for noble_contracts::companion::admit::EvidenceOffer}::assert_fields_are_eq]:
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 107:34-107:36
+    Visibility: public -/
+def companion.admit.EvidenceOffer.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : companion.admit.EvidenceOffer) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_contracts::companion::admit::{impl core::cmp::Eq for noble_contracts::companion::admit::EvidenceOffer}]
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 107:34-107:36 -/
+@[reducible]
+def companion.admit.EvidenceOffer.Insts.CoreCmpEq : core.cmp.Eq
+  companion.admit.EvidenceOffer := {
+  partialEqInst :=
+    companion.admit.EvidenceOffer.Insts.CoreCmpPartialEqEvidenceOffer
+  assert_fields_are_eq :=
+    companion.admit.EvidenceOffer.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- Trait implementation: [noble_contracts::companion::admit::{impl core::clone::Clone for noble_contracts::companion::admit::EvidencePayload}]
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 116:9-116:14 -/
+@[reducible]
+def companion.admit.EvidencePayload.Insts.CoreCloneClone : core.clone.Clone
+  companion.admit.EvidencePayload := {
+  clone := companion.admit.EvidencePayload.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_contracts::companion::admit::{impl core::marker::StructuralPartialEq for noble_contracts::companion::admit::EvidencePayload}]
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 116:23-116:32 -/
+@[reducible]
+def companion.admit.EvidencePayload.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq companion.admit.EvidencePayload := {
+}
+
+/-- Trait implementation: [noble_contracts::companion::admit::{impl core::cmp::PartialEq<noble_contracts::companion::admit::EvidencePayload> for noble_contracts::companion::admit::EvidencePayload}]
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 116:23-116:32 -/
+@[reducible]
+impl_def companion.admit.EvidencePayload.Insts.CoreCmpPartialEqEvidencePayload
+  : core.cmp.PartialEq companion.admit.EvidencePayload
+  companion.admit.EvidencePayload := {
+  eq :=
+    companion.admit.EvidencePayload.Insts.CoreCmpPartialEqEvidencePayload.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    companion.admit.EvidencePayload.Insts.CoreCmpPartialEqEvidencePayload
+}
+
+/-- [noble_contracts::companion::admit::{impl core::cmp::Eq for noble_contracts::companion::admit::EvidencePayload}::assert_fields_are_eq]:
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 116:34-116:36
+    Visibility: public -/
+def companion.admit.EvidencePayload.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : companion.admit.EvidencePayload) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_contracts::companion::admit::{impl core::cmp::Eq for noble_contracts::companion::admit::EvidencePayload}]
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 116:34-116:36 -/
+@[reducible]
+def companion.admit.EvidencePayload.Insts.CoreCmpEq : core.cmp.Eq
+  companion.admit.EvidencePayload := {
+  partialEqInst :=
+    companion.admit.EvidencePayload.Insts.CoreCmpPartialEqEvidencePayload
+  assert_fields_are_eq :=
+    companion.admit.EvidencePayload.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_contracts::companion::registry::{impl core::clone::Clone for noble_contracts::companion::registry::EvidenceId}::clone]:
+    Source: 'crates/noble-contracts/src/companion/registry/mod.rs', lines 46:9-46:14
+    Visibility: public -/
+def companion.registry.EvidenceId.Insts.CoreCloneClone.clone
+  (self : companion.registry.EvidenceId) :
+  Result companion.registry.EvidenceId
+  := do
+  ok self
+
+/-- Trait implementation: [noble_contracts::companion::registry::{impl core::clone::Clone for noble_contracts::companion::registry::EvidenceId}]
+    Source: 'crates/noble-contracts/src/companion/registry/mod.rs', lines 46:9-46:14 -/
+@[reducible]
+def companion.registry.EvidenceId.Insts.CoreCloneClone : core.clone.Clone
+  companion.registry.EvidenceId := {
+  clone := companion.registry.EvidenceId.Insts.CoreCloneClone.clone
+}
+
+/-- [noble_contracts::companion::registry::{impl core::clone::Clone for noble_contracts::companion::registry::ContractId}::clone]:
+    Source: 'crates/noble-contracts/src/companion/registry/mod.rs', lines 42:9-42:14
+    Visibility: public -/
+def companion.registry.ContractId.Insts.CoreCloneClone.clone
+  (self : companion.registry.ContractId) :
+  Result companion.registry.ContractId
+  := do
+  ok self
+
+/-- Trait implementation: [noble_contracts::companion::registry::{impl core::clone::Clone for noble_contracts::companion::registry::ContractId}]
+    Source: 'crates/noble-contracts/src/companion/registry/mod.rs', lines 42:9-42:14 -/
+@[reducible]
+def companion.registry.ContractId.Insts.CoreCloneClone : core.clone.Clone
+  companion.registry.ContractId := {
+  clone := companion.registry.ContractId.Insts.CoreCloneClone.clone
+}
+
+/-- [noble_contracts::companion::{impl core::clone::Clone for noble_contracts::companion::Refusal}::clone]:
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 137:9-137:14
+    Visibility: public -/
+def companion.Refusal.Insts.CoreCloneClone.clone
+  (self : companion.Refusal) : Result companion.Refusal := do
+  ok self
+
+/-- Trait implementation: [noble_contracts::companion::{impl core::clone::Clone for noble_contracts::companion::Refusal}]
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 137:9-137:14 -/
+@[reducible]
+def companion.Refusal.Insts.CoreCloneClone : core.clone.Clone companion.Refusal
+  := {
+  clone := companion.Refusal.Insts.CoreCloneClone.clone
+}
+
+/-- [noble_contracts::companion::admit::{impl core::clone::Clone for noble_contracts::companion::admit::Admission}::clone]:
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 151:9-151:14
+    Visibility: public -/
+def companion.admit.Admission.Insts.CoreCloneClone.clone
+  (self : companion.admit.Admission) : Result companion.admit.Admission := do
+  let o ← companion.admit.Outcome.Insts.CoreCloneClone.clone self.outcome
+  let o1 ←
+    core.option.Option.Insts.CoreCloneClone.clone
+      companion.registry.ContractId.Insts.CoreCloneClone self.contract
+  let o2 ←
+    core.option.Option.Insts.CoreCloneClone.clone
+      companion.registry.EvidenceId.Insts.CoreCloneClone self.evidence
+  let i ← lift (core.clone.impls.CloneU64.clone self.statement_digest)
+  let v ←
+    alloc.vec.CloneVec.clone companion.Refusal.Insts.CoreCloneClone
+      self.refusals
+  ok
+    {
+      outcome := o,
+      contract := o1,
+      evidence := o2,
+      statement_digest := i,
+      refusals := v
+    }
+
+/-- Trait implementation: [noble_contracts::companion::admit::{impl core::clone::Clone for noble_contracts::companion::admit::Admission}]
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 151:9-151:14 -/
+@[reducible]
+def companion.admit.Admission.Insts.CoreCloneClone : core.clone.Clone
+  companion.admit.Admission := {
+  clone := companion.admit.Admission.Insts.CoreCloneClone.clone
+}
+
+/-- [noble_contracts::companion::registry::{impl core::fmt::Debug for noble_contracts::companion::registry::EvidenceId}::fmt]:
+    Source: 'crates/noble-contracts/src/companion/registry/mod.rs', lines 46:22-46:27
+    Visibility: public -/
+def companion.registry.EvidenceId.Insts.CoreFmtDebug.fmt
+  (self : companion.registry.EvidenceId) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU32) self
+  core.fmt.Formatter.debug_tuple_field1_finish f (toStr "EvidenceId") dyn
+
+/-- Trait implementation: [noble_contracts::companion::registry::{impl core::fmt::Debug for noble_contracts::companion::registry::EvidenceId}]
+    Source: 'crates/noble-contracts/src/companion/registry/mod.rs', lines 46:22-46:27 -/
+@[reducible]
+def companion.registry.EvidenceId.Insts.CoreFmtDebug : core.fmt.Debug
+  companion.registry.EvidenceId := {
+  fmt := companion.registry.EvidenceId.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_contracts::companion::registry::{impl core::fmt::Debug for noble_contracts::companion::registry::ContractId}::fmt]:
+    Source: 'crates/noble-contracts/src/companion/registry/mod.rs', lines 42:22-42:27
+    Visibility: public -/
+def companion.registry.ContractId.Insts.CoreFmtDebug.fmt
+  (self : companion.registry.ContractId) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU32) self
+  core.fmt.Formatter.debug_tuple_field1_finish f (toStr "ContractId") dyn
+
+/-- Trait implementation: [noble_contracts::companion::registry::{impl core::fmt::Debug for noble_contracts::companion::registry::ContractId}]
+    Source: 'crates/noble-contracts/src/companion/registry/mod.rs', lines 42:22-42:27 -/
+@[reducible]
+def companion.registry.ContractId.Insts.CoreFmtDebug : core.fmt.Debug
+  companion.registry.ContractId := {
+  fmt := companion.registry.ContractId.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_contracts::companion::{impl core::fmt::Debug for noble_contracts::companion::Refusal}::fmt::__OFFSET]
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 137:22-137:27 -/
+@[global_simps, irreducible]
+def companion.DebugRefusal.fmt.__OFFSET : Array Std.Usize 27#usize :=
+  Array.make 27#usize [
+    0#usize, 11#usize, 29#usize, 56#usize, 72#usize, 88#usize, 102#usize,
+    119#usize, 136#usize, 151#usize, 168#usize, 180#usize, 201#usize,
+    219#usize, 243#usize, 255#usize, 270#usize, 285#usize, 309#usize,
+    324#usize, 348#usize, 371#usize, 393#usize, 408#usize, 425#usize,
+    439#usize, 447#usize
+    ]
+
+/-- [noble_contracts::companion::{impl core::fmt::Debug for noble_contracts::companion::Refusal}::fmt::__NAMES]
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 137:22-137:27 -/
+@[global_simps, irreducible]
+def companion.DebugRefusal.fmt.__NAMES : Str :=
+  toStr
+    "UnknownRuleUnsupportedRulesetUnsupportedSemanticRevisionCyclicDerivationDuplicatePremiseMissingPremiseWrongPremiseClassMismatchedSubjectMismatchedClaimMismatchedContextStaleContextUnresolvedImplicationWrongInstantiationUnsupportedEvidenceClassForgedStatusUnknownContractUnknownEvidenceUnsupportedGuardTemplateIneligibleGhostLiveCapabilityInEvidenceInvalidEvidenceEncodingCorrespondenceMismatchExhaustedReplayExhaustedRegistryDuplicateEntryInternal"
+
+/-- [noble_contracts::companion::{impl core::fmt::Debug for noble_contracts::companion::Refusal}::fmt]:
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 137:22-137:27
+    Visibility: public -/
+def companion.Refusal.Insts.CoreFmtDebug.fmt
+  (self : companion.Refusal) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let self1 := read_discriminant self
+  let __d ← lift (IScalar.hcast .Usize self1)
+  let s ← lift (Array.to_slice companion.DebugRefusal.fmt.__OFFSET)
+  core.fmt.Formatter.debug_c_like_enum_write_str f
+    companion.DebugRefusal.fmt.__NAMES s __d
+
+/-- Trait implementation: [noble_contracts::companion::{impl core::fmt::Debug for noble_contracts::companion::Refusal}]
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 137:22-137:27 -/
+@[reducible]
+def companion.Refusal.Insts.CoreFmtDebug : core.fmt.Debug companion.Refusal
+  := {
+  fmt := companion.Refusal.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_contracts::companion::admit::{impl core::fmt::Debug for noble_contracts::companion::admit::Admission}::fmt]:
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 151:16-151:21
+    Visibility: public -/
+def companion.admit.Admission.Insts.CoreFmtDebug.fmt
+  (self : companion.admit.Admission) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ companion.admit.Outcome.Insts.CoreFmtDebug self.outcome
+  let dyn1 :=
+    Dyn.mk _ (core.option.Option.Insts.CoreFmtDebug
+      companion.registry.ContractId.Insts.CoreFmtDebug) self.contract
+  let dyn2 :=
+    Dyn.mk _ (core.option.Option.Insts.CoreFmtDebug
+      companion.registry.EvidenceId.Insts.CoreFmtDebug) self.evidence
+  let dyn3 := Dyn.mk _ core.fmt.DebugU64 self.statement_digest
+  let dyn4 :=
+    Dyn.mk _ (core.fmt.DebugShared (core.fmt.DebugVec
+      companion.Refusal.Insts.CoreFmtDebug)) self.refusals
+  core.fmt.Formatter.debug_struct_field5_finish f (toStr "Admission") (toStr
+    "outcome") dyn (toStr "contract") dyn1 (toStr "evidence") dyn2 (toStr
+    "statement_digest") dyn3 (toStr "refusals") dyn4
+
+/-- Trait implementation: [noble_contracts::companion::admit::{impl core::fmt::Debug for noble_contracts::companion::admit::Admission}]
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 151:16-151:21 -/
+@[reducible]
+def companion.admit.Admission.Insts.CoreFmtDebug : core.fmt.Debug
+  companion.admit.Admission := {
+  fmt := companion.admit.Admission.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_contracts::companion::admit::{impl core::marker::StructuralPartialEq for noble_contracts::companion::admit::Admission}]
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 151:23-151:32 -/
+@[reducible]
+def companion.admit.Admission.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq companion.admit.Admission := {
+}
+
+/-- [noble_contracts::companion::registry::{impl core::cmp::PartialEq<noble_contracts::companion::registry::EvidenceId> for noble_contracts::companion::registry::EvidenceId}::eq]:
+    Source: 'crates/noble-contracts/src/companion/registry/mod.rs', lines 46:29-46:38
+    Visibility: public -/
+def companion.registry.EvidenceId.Insts.CoreCmpPartialEqEvidenceId.eq
+  (self : companion.registry.EvidenceId)
+  (other : companion.registry.EvidenceId) :
+  Result Bool
+  := do
+  ok (self = other)
+
+/-- Trait implementation: [noble_contracts::companion::registry::{impl core::cmp::PartialEq<noble_contracts::companion::registry::EvidenceId> for noble_contracts::companion::registry::EvidenceId}]
+    Source: 'crates/noble-contracts/src/companion/registry/mod.rs', lines 46:29-46:38 -/
+@[reducible]
+impl_def companion.registry.EvidenceId.Insts.CoreCmpPartialEqEvidenceId :
+  core.cmp.PartialEq companion.registry.EvidenceId
+  companion.registry.EvidenceId := {
+  eq := companion.registry.EvidenceId.Insts.CoreCmpPartialEqEvidenceId.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    companion.registry.EvidenceId.Insts.CoreCmpPartialEqEvidenceId
+}
+
+/-- [noble_contracts::companion::registry::{impl core::cmp::PartialEq<noble_contracts::companion::registry::ContractId> for noble_contracts::companion::registry::ContractId}::eq]:
+    Source: 'crates/noble-contracts/src/companion/registry/mod.rs', lines 42:29-42:38
+    Visibility: public -/
+def companion.registry.ContractId.Insts.CoreCmpPartialEqContractId.eq
+  (self : companion.registry.ContractId)
+  (other : companion.registry.ContractId) :
+  Result Bool
+  := do
+  ok (self = other)
+
+/-- Trait implementation: [noble_contracts::companion::registry::{impl core::cmp::PartialEq<noble_contracts::companion::registry::ContractId> for noble_contracts::companion::registry::ContractId}]
+    Source: 'crates/noble-contracts/src/companion/registry/mod.rs', lines 42:29-42:38 -/
+@[reducible]
+impl_def companion.registry.ContractId.Insts.CoreCmpPartialEqContractId :
+  core.cmp.PartialEq companion.registry.ContractId
+  companion.registry.ContractId := {
+  eq := companion.registry.ContractId.Insts.CoreCmpPartialEqContractId.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    companion.registry.ContractId.Insts.CoreCmpPartialEqContractId
+}
+
+/-- Trait implementation: [noble_contracts::companion::{impl core::cmp::PartialEq<noble_contracts::companion::Refusal> for noble_contracts::companion::Refusal}]
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 137:29-137:38 -/
+@[reducible]
+impl_def companion.Refusal.Insts.CoreCmpPartialEqRefusal : core.cmp.PartialEq
+  companion.Refusal companion.Refusal := {
+  eq := companion.Refusal.Insts.CoreCmpPartialEqRefusal.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    companion.Refusal.Insts.CoreCmpPartialEqRefusal
+}
+
+/-- [noble_contracts::companion::admit::{impl core::cmp::PartialEq<noble_contracts::companion::admit::Admission> for noble_contracts::companion::admit::Admission}::eq]:
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 151:23-151:32
+    Visibility: public -/
+def companion.admit.Admission.Insts.CoreCmpPartialEqAdmission.eq
+  (self : companion.admit.Admission) (other : companion.admit.Admission) :
+  Result Bool
+  := do
+  if self.statement_digest = other.statement_digest
+  then
+    let b ←
+      companion.admit.Outcome.Insts.CoreCmpPartialEqOutcome.eq self.outcome
+        other.outcome
+    if b
+    then
+      let b1 ←
+        core.option.Option.Insts.CoreCmpPartialEqOption.eq
+          companion.registry.ContractId.Insts.CoreCmpPartialEqContractId
+          self.contract other.contract
+      if b1
+      then
+        let b2 ←
+          core.option.Option.Insts.CoreCmpPartialEqOption.eq
+            companion.registry.EvidenceId.Insts.CoreCmpPartialEqEvidenceId
+            self.evidence other.evidence
+        if b2
+        then
+          alloc.vec.partial_eq.PartialEqVec.eq
+            companion.Refusal.Insts.CoreCmpPartialEqRefusal self.refusals
+            other.refusals
+        else ok false
+      else ok false
+    else ok false
+  else ok false
+
+/-- Trait implementation: [noble_contracts::companion::admit::{impl core::cmp::PartialEq<noble_contracts::companion::admit::Admission> for noble_contracts::companion::admit::Admission}]
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 151:23-151:32 -/
+@[reducible]
+impl_def companion.admit.Admission.Insts.CoreCmpPartialEqAdmission :
+  core.cmp.PartialEq companion.admit.Admission companion.admit.Admission := {
+  eq := companion.admit.Admission.Insts.CoreCmpPartialEqAdmission.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    companion.admit.Admission.Insts.CoreCmpPartialEqAdmission
+}
+
+/-- [noble_contracts::companion::admit::{impl core::cmp::Eq for noble_contracts::companion::admit::Admission}::assert_fields_are_eq]:
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 151:34-151:36
+    Visibility: public -/
+def companion.admit.Admission.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : companion.admit.Admission) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_contracts::companion::admit::{impl core::cmp::Eq for noble_contracts::companion::admit::Admission}]
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 151:34-151:36 -/
+@[reducible]
+def companion.admit.Admission.Insts.CoreCmpEq : core.cmp.Eq
+  companion.admit.Admission := {
+  partialEqInst := companion.admit.Admission.Insts.CoreCmpPartialEqAdmission
+  assert_fields_are_eq :=
+    companion.admit.Admission.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_contracts::companion::admit::observation::{noble_contracts::companion::admit::AdmissionRequest<'a>}::expected]:
+    Source: 'crates/noble-contracts/src/companion/admit/observation.rs', lines 5:4-7:5
+    Visibility: public -/
+def companion.admit.observation.AdmissionRequest.expected
+  (self : companion.admit.AdmissionRequest) : Result Prepared := do
+  ok self.expected
+
+/-- [noble_contracts::companion::admit::observation::{noble_contracts::companion::admit::AdmissionRequest<'a>}::offer]:
+    Source: 'crates/noble-contracts/src/companion/admit/observation.rs', lines 9:4-11:5
+    Visibility: public -/
+def companion.admit.observation.AdmissionRequest.offer
+  (self : companion.admit.AdmissionRequest) :
+  Result companion.admit.EvidenceOffer
+  := do
+  ok self.offer
+
+/-- [noble_contracts::companion::admit::observation::{noble_contracts::companion::admit::CheckObservation}::new]:
+    Source: 'crates/noble-contracts/src/companion/admit/observation.rs', lines 18:4-28:5
+    Visibility: public -/
+def companion.admit.observation.CheckObservation.new
+  (checked_statement : String) (checked_source : alloc.vec.Vec Std.U8)
+  (result : core.result.Result companion.registry.EvidenceClass
+  companion.Refusal) :
+  Result companion.admit.CheckObservation
+  := do
+  ok { checked_statement, checked_source, result }
+
+/-- Trait implementation: [noble_contracts::companion::registry::{impl core::cmp::PartialEq<noble_contracts::companion::registry::EvidenceClass> for noble_contracts::companion::registry::EvidenceClass}]
+    Source: 'crates/noble-contracts/src/companion/registry/mod.rs', lines 5:29-5:38 -/
+@[reducible]
+impl_def companion.registry.EvidenceClass.Insts.CoreCmpPartialEqEvidenceClass :
+  core.cmp.PartialEq companion.registry.EvidenceClass
+  companion.registry.EvidenceClass := {
+  eq := companion.registry.EvidenceClass.Insts.CoreCmpPartialEqEvidenceClass.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    companion.registry.EvidenceClass.Insts.CoreCmpPartialEqEvidenceClass
+}
+
+/-- [noble_contracts::companion::registry::entries::{noble_contracts::companion::registry::Registry}::stale]:
+    Source: 'crates/noble-contracts/src/companion/registry/entries.rs', lines 19:4-26:5 -/
+def companion.registry.entries.Registry.stale
+  (engine : companion.Core) (retained : companion.registry.ContextSnapshot) :
+  Result Bool
+  := do
+  if engine.revision = core.num.U32.MAX
+  then ok true
+  else
+    if retained.policy != engine.policy
+    then ok true
+    else ok (retained.revision != engine.revision)
+
+/-- [noble_contracts::companion::admit::observation::charge]:
+    Source: 'crates/noble-contracts/src/companion/admit/observation.rs', lines 117:0-142:1 -/
+def companion.admit.observation.charge
+  (limits : Limits) (observation : companion.admit.CheckObservation) :
+  Result (core.result.Result Unit companion.Refusal)
+  := do
+  let i := alloc.vec.Vec.len observation.checked_source
+  let r ← core.convert.num.ptr_try_from_impls.TryFromU32Usize.try_from i
+  match r with
+  | core.result.Result.Ok count =>
+    let i1 ← alloc.string.String.len observation.checked_statement
+    let r1 ← core.convert.num.ptr_try_from_impls.TryFromU32Usize.try_from i1
+    match r1 with
+    | core.result.Result.Ok count1 =>
+      if count > limits.bytes
+      then ok (core.result.Result.Err companion.Refusal.ExhaustedRegistry)
+      else
+        if count1 > limits.bytes
+        then ok (core.result.Result.Err companion.Refusal.ExhaustedRegistry)
+        else
+          let o ← lift (U32.checked_add count count1)
+          match o with
+          | none =>
+            ok (core.result.Result.Err companion.Refusal.ExhaustedRegistry)
+          | some work =>
+            let o1 ← lift (U32.checked_add work 1#u32)
+            match o1 with
+            | none =>
+              ok (core.result.Result.Err companion.Refusal.ExhaustedRegistry)
+            | some work1 =>
+              let budget ← companion.Budget.new limits
+              let (r2, _) ←
+                companion.Budget.charge budget work1
+                  companion.Refusal.ExhaustedRegistry
+              ok r2
+    | core.result.Result.Err _ =>
+      ok (core.result.Result.Err companion.Refusal.ExhaustedRegistry)
+  | core.result.Result.Err _ =>
+    ok (core.result.Result.Err companion.Refusal.ExhaustedRegistry)
+
+/-- [noble_contracts::companion::admit::observation::applicable]:
+    Source: 'crates/noble-contracts/src/companion/admit/observation.rs', lines 64:0-107:1 -/
+def companion.admit.observation.applicable
+  (engine : companion.Core) (request : companion.admit.AdmissionRequest)
+  (observation : companion.admit.CheckObservation) :
+  Result (core.result.Result Unit companion.Refusal)
+  := do
+  let b ←
+    companion.registry.entries.Registry.stale engine
+      { policy := request.policy, revision := request.revision }
+  if b
+  then ok (core.result.Result.Err companion.Refusal.StaleContext)
+  else
+    let r ←
+      companion.registry.entries.Registry.contract engine.registry
+        request.contract
+    match r with
+    | core.result.Result.Ok value =>
+      let b1 ←
+        companion.registry.entries.Registry.stale engine
+          { policy := value.policy, revision := value.revision }
+      if b1
+      then ok (core.result.Result.Err companion.Refusal.StaleContext)
+      else
+        match observation.result with
+        | core.result.Result.Ok value1 =>
+          let r1 ←
+            companion.admit.observation.charge engine.limits observation
+          match r1 with
+          | core.result.Result.Ok _ =>
+            let b2 ←
+              core.cmp.PartialEq.ne.trait_default
+                companion.registry.EvidenceClass.Insts.CoreCmpPartialEqEvidenceClass
+                value1 request.offer.class
+            if b2
+            then
+              ok (core.result.Result.Err companion.Refusal.WrongPremiseClass)
+            else
+              if request.statement != value.statement
+              then
+                ok (core.result.Result.Err companion.Refusal.MismatchedClaim)
+              else
+                let b3 ←
+                  core.cmp.PartialEq.ne.trait_default
+                    alloc.string.String.Insts.CoreCmpPartialEqString
+                    observation.checked_statement value.exact_statement
+                if b3
+                then
+                  ok (core.result.Result.Err companion.Refusal.MismatchedClaim)
+                else
+                  match request.offer.payload with
+                  | companion.admit.EvidencePayload.Declaration bytes =>
+                    let b4 ←
+                      alloc.vec.partial_eq.PartialEqVec.ne core.cmp.PartialEqU8
+                        observation.checked_source bytes
+                    if b4
+                    then
+                      ok (core.result.Result.Err
+                        companion.Refusal.MismatchedClaim)
+                    else ok (core.result.Result.Ok ())
+                  | companion.admit.EvidencePayload.Resource _ =>
+                    ok (core.result.Result.Err
+                      companion.Refusal.LiveCapabilityInEvidence)
+                  | companion.admit.EvidencePayload.ServiceCapability _ =>
+                    ok (core.result.Result.Err
+                      companion.Refusal.LiveCapabilityInEvidence)
+          | core.result.Result.Err _ => ok r1
+        | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+    | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::companion::admit::observation::complete]:
+    Source: 'crates/noble-contracts/src/companion/admit/observation.rs', lines 35:0-54:1 -/
+def companion.admit.observation.complete
+  (engine : companion.Core) (request : companion.admit.AdmissionRequest)
+  (observation : companion.admit.CheckObservation) :
+  Result (companion.admit.Admission × companion.Core)
+  := do
+  let r ← companion.admit.observation.applicable engine request observation
+  match r with
+  | core.result.Result.Ok _ =>
+    companion.admit.accept.mint engine request.contract request.statement
+      request.offer
+  | core.result.Result.Err refusal =>
+    let a ←
+      companion.admit.refused companion.admit.Outcome.Error (some
+        request.contract) request.statement refusal
+    ok (a, engine)
+
+/-- [noble_contracts::companion::registry::entries::{noble_contracts::companion::registry::Registry}::new]:
+    Source: 'crates/noble-contracts/src/companion/registry/entries.rs', lines 7:4-17:5 -/
+def companion.registry.entries.Registry.new
+  (limits : Limits) : Result companion.registry.Registry := do
+  let r ←
+    Usize.Insts.CoreConvertTryFromU32TryFromIntError.try_from limits.nodes
+  let cap ← core.result.Result.ok r
+  ok
+    {
+      contracts := (alloc.vec.Vec.new companion.registry.ContractEntry),
+      evidence := (alloc.vec.Vec.new companion.registry.EvidenceEntry),
+      observations := (alloc.vec.Vec.new companion.registry.Observation),
+      contract_cap := cap,
+      evidence_cap := cap,
+      observation_cap := cap
+    }
+
+/-- [noble_contracts::companion::core::context::{noble_contracts::companion::Core}::new]:
+    Source: 'crates/noble-contracts/src/companion/core/context.rs', lines 7:4-17:5
+    Visibility: public -/
+def companion.core.context.Core.new
+  (limits : Limits) : Result companion.Core := do
+  let r ← companion.registry.entries.Registry.new limits
+  let i ← noble_kernel.untrusted.SEMANTIC_REVISION
+  ok
+    {
+      limits,
+      registry := r,
+      policy := 0#u32,
+      revision := 0#u32,
+      semantic_revision := i,
+      host_contract := 0#u64,
+      environment_fact := 0#u64
+    }
+
+/-- [noble_contracts::companion::core::context::{noble_contracts::companion::Core}::set_policy]:
+    Source: 'crates/noble-contracts/src/companion/core/context.rs', lines 22:4-27:5
+    Visibility: public -/
+def companion.core.context.Core.set_policy
+  (self : companion.Core) (policy : Std.U32) : Result companion.Core := do
+  if policy != self.policy
+  then
+    let i ← lift (core.num.U32.saturating_add self.revision 1#u32)
+    ok { self with policy, revision := i }
+  else ok self
+
+/-- [noble_contracts::companion::core::context::{noble_contracts::companion::Core}::set_semantic_revision]:
+    Source: 'crates/noble-contracts/src/companion/core/context.rs', lines 31:4-36:5
+    Visibility: public -/
+def companion.core.context.Core.set_semantic_revision
+  (self : companion.Core) (revision : Std.U32) : Result companion.Core := do
+  if revision != self.semantic_revision
+  then
+    let i ← lift (core.num.U32.saturating_add self.revision 1#u32)
+    ok { self with revision := i, semantic_revision := revision }
+  else ok self
+
+/-- [noble_contracts::companion::core::context::{noble_contracts::companion::Core}::set_host_contract]:
+    Source: 'crates/noble-contracts/src/companion/core/context.rs', lines 39:4-44:5
+    Visibility: public -/
+def companion.core.context.Core.set_host_contract
+  (self : companion.Core) (identity : Std.U64) : Result companion.Core := do
+  if identity != self.host_contract
+  then
+    let i ← lift (core.num.U32.saturating_add self.revision 1#u32)
+    ok { self with revision := i, host_contract := identity }
+  else ok self
+
+/-- [noble_contracts::companion::core::context::{noble_contracts::companion::Core}::set_environment_fact]:
+    Source: 'crates/noble-contracts/src/companion/core/context.rs', lines 47:4-52:5
+    Visibility: public -/
+def companion.core.context.Core.set_environment_fact
+  (self : companion.Core) (identity : Std.U64) : Result companion.Core := do
+  if identity != self.environment_fact
+  then
+    let i ← lift (core.num.U32.saturating_add self.revision 1#u32)
+    ok { self with revision := i, environment_fact := identity }
+  else ok self
+
+/-- [noble_contracts::companion::core::refusal::CODE_REFUSAL_UNKNOWNRULE]
+    Source: 'crates/noble-contracts/src/companion/core/refusal.rs', lines 1:0-1:54 -/
+@[global_simps, irreducible]
+def companion.core.refusal.CODE_REFUSAL_UNKNOWNRULE : Str :=
+  toStr "unknown-rule"
+
+/-- [noble_contracts::companion::core::refusal::CODE_REFUSAL_UNSUPPORTEDRULESET]
+    Source: 'crates/noble-contracts/src/companion/core/refusal.rs', lines 2:0-2:68 -/
+@[global_simps, irreducible]
+def companion.core.refusal.CODE_REFUSAL_UNSUPPORTEDRULESET : Str :=
+  toStr "unsupported-ruleset"
+
+/-- [noble_contracts::companion::core::refusal::CODE_REFUSAL_UNSUPPORTEDSEMANTICREVISION]
+    Source: 'crates/noble-contracts/src/companion/core/refusal.rs', lines 3:0-3:87 -/
+@[global_simps, irreducible]
+def companion.core.refusal.CODE_REFUSAL_UNSUPPORTEDSEMANTICREVISION : Str :=
+  toStr "unsupported-semantic-revision"
+
+/-- [noble_contracts::companion::core::refusal::CODE_REFUSAL_CYCLICDERIVATION]
+    Source: 'crates/noble-contracts/src/companion/core/refusal.rs', lines 4:0-4:64 -/
+@[global_simps, irreducible]
+def companion.core.refusal.CODE_REFUSAL_CYCLICDERIVATION : Str :=
+  toStr "cyclic-derivation"
+
+/-- [noble_contracts::companion::core::refusal::CODE_REFUSAL_DUPLICATEPREMISE]
+    Source: 'crates/noble-contracts/src/companion/core/refusal.rs', lines 5:0-5:64 -/
+@[global_simps, irreducible]
+def companion.core.refusal.CODE_REFUSAL_DUPLICATEPREMISE : Str :=
+  toStr "duplicate-premise"
+
+/-- [noble_contracts::companion::core::refusal::CODE_REFUSAL_MISSINGPREMISE]
+    Source: 'crates/noble-contracts/src/companion/core/refusal.rs', lines 6:0-6:60 -/
+@[global_simps, irreducible]
+def companion.core.refusal.CODE_REFUSAL_MISSINGPREMISE : Str :=
+  toStr "missing-premise"
+
+/-- [noble_contracts::companion::core::refusal::CODE_REFUSAL_WRONGPREMISECLASS]
+    Source: 'crates/noble-contracts/src/companion/core/refusal.rs', lines 7:0-7:67 -/
+@[global_simps, irreducible]
+def companion.core.refusal.CODE_REFUSAL_WRONGPREMISECLASS : Str :=
+  toStr "wrong-premise-class"
+
+/-- [noble_contracts::companion::core::refusal::CODE_REFUSAL_MISMATCHEDSUBJECT]
+    Source: 'crates/noble-contracts/src/companion/core/refusal.rs', lines 8:0-8:66 -/
+@[global_simps, irreducible]
+def companion.core.refusal.CODE_REFUSAL_MISMATCHEDSUBJECT : Str :=
+  toStr "mismatched-subject"
+
+/-- [noble_contracts::companion::core::refusal::CODE_REFUSAL_MISMATCHEDCLAIM]
+    Source: 'crates/noble-contracts/src/companion/core/refusal.rs', lines 9:0-9:62 -/
+@[global_simps, irreducible]
+def companion.core.refusal.CODE_REFUSAL_MISMATCHEDCLAIM : Str :=
+  toStr "mismatched-claim"
+
+/-- [noble_contracts::companion::core::refusal::CODE_REFUSAL_MISMATCHEDCONTEXT]
+    Source: 'crates/noble-contracts/src/companion/core/refusal.rs', lines 10:0-10:66 -/
+@[global_simps, irreducible]
+def companion.core.refusal.CODE_REFUSAL_MISMATCHEDCONTEXT : Str :=
+  toStr "mismatched-context"
+
+/-- [noble_contracts::companion::core::refusal::CODE_REFUSAL_STALECONTEXT]
+    Source: 'crates/noble-contracts/src/companion/core/refusal.rs', lines 11:0-11:56 -/
+@[global_simps, irreducible]
+def companion.core.refusal.CODE_REFUSAL_STALECONTEXT : Str :=
+  toStr "stale-context"
+
+/-- [noble_contracts::companion::core::refusal::CODE_REFUSAL_UNRESOLVEDIMPLICATION]
+    Source: 'crates/noble-contracts/src/companion/core/refusal.rs', lines 12:0-12:74 -/
+@[global_simps, irreducible]
+def companion.core.refusal.CODE_REFUSAL_UNRESOLVEDIMPLICATION : Str :=
+  toStr "unresolved-implication"
+
+/-- [noble_contracts::companion::core::refusal::CODE_REFUSAL_WRONGINSTANTIATION]
+    Source: 'crates/noble-contracts/src/companion/core/refusal.rs', lines 13:0-13:68 -/
+@[global_simps, irreducible]
+def companion.core.refusal.CODE_REFUSAL_WRONGINSTANTIATION : Str :=
+  toStr "wrong-instantiation"
+
+/-- [noble_contracts::companion::core::refusal::CODE_REFUSAL_UNSUPPORTEDEVIDENCECLASS]
+    Source: 'crates/noble-contracts/src/companion/core/refusal.rs', lines 14:0-14:81 -/
+@[global_simps, irreducible]
+def companion.core.refusal.CODE_REFUSAL_UNSUPPORTEDEVIDENCECLASS : Str :=
+  toStr "unsupported-evidence-class"
+
+/-- [noble_contracts::companion::core::refusal::CODE_REFUSAL_FORGEDSTATUS]
+    Source: 'crates/noble-contracts/src/companion/core/refusal.rs', lines 15:0-15:56 -/
+@[global_simps, irreducible]
+def companion.core.refusal.CODE_REFUSAL_FORGEDSTATUS : Str :=
+  toStr "forged-status"
+
+/-- [noble_contracts::companion::core::refusal::CODE_REFUSAL_UNKNOWNCONTRACT]
+    Source: 'crates/noble-contracts/src/companion/core/refusal.rs', lines 16:0-16:62 -/
+@[global_simps, irreducible]
+def companion.core.refusal.CODE_REFUSAL_UNKNOWNCONTRACT : Str :=
+  toStr "unknown-contract"
+
+/-- [noble_contracts::companion::core::refusal::CODE_REFUSAL_UNKNOWNEVIDENCE]
+    Source: 'crates/noble-contracts/src/companion/core/refusal.rs', lines 17:0-17:62 -/
+@[global_simps, irreducible]
+def companion.core.refusal.CODE_REFUSAL_UNKNOWNEVIDENCE : Str :=
+  toStr "unknown-evidence"
+
+/-- [noble_contracts::companion::core::refusal::CODE_REFUSAL_UNSUPPORTEDGUARDTEMPLATE]
+    Source: 'crates/noble-contracts/src/companion/core/refusal.rs', lines 18:0-18:81 -/
+@[global_simps, irreducible]
+def companion.core.refusal.CODE_REFUSAL_UNSUPPORTEDGUARDTEMPLATE : Str :=
+  toStr "unsupported-guard-template"
+
+/-- [noble_contracts::companion::core::refusal::CODE_REFUSAL_INELIGIBLEGHOST]
+    Source: 'crates/noble-contracts/src/companion/core/refusal.rs', lines 19:0-19:62 -/
+@[global_simps, irreducible]
+def companion.core.refusal.CODE_REFUSAL_INELIGIBLEGHOST : Str :=
+  toStr "ineligible-ghost"
+
+/-- [noble_contracts::companion::core::refusal::CODE_REFUSAL_LIVECAPABILITYINEVIDENCE]
+    Source: 'crates/noble-contracts/src/companion/core/refusal.rs', lines 20:0-20:82 -/
+@[global_simps, irreducible]
+def companion.core.refusal.CODE_REFUSAL_LIVECAPABILITYINEVIDENCE : Str :=
+  toStr "live-capability-in-evidence"
+
+/-- [noble_contracts::companion::core::refusal::CODE_REFUSAL_INVALIDEVIDENCEENCODING]
+    Source: 'crates/noble-contracts/src/companion/core/refusal.rs', lines 21:0-21:79 -/
+@[global_simps, irreducible]
+def companion.core.refusal.CODE_REFUSAL_INVALIDEVIDENCEENCODING : Str :=
+  toStr "invalid-evidence-encoding"
+
+/-- [noble_contracts::companion::core::refusal::CODE_REFUSAL_CORRESPONDENCEMISMATCH]
+    Source: 'crates/noble-contracts/src/companion/core/refusal.rs', lines 22:0-22:76 -/
+@[global_simps, irreducible]
+def companion.core.refusal.CODE_REFUSAL_CORRESPONDENCEMISMATCH : Str :=
+  toStr "correspondence-mismatch"
+
+/-- [noble_contracts::companion::core::refusal::CODE_REFUSAL_EXHAUSTEDREPLAY]
+    Source: 'crates/noble-contracts/src/companion/core/refusal.rs', lines 23:0-23:62 -/
+@[global_simps, irreducible]
+def companion.core.refusal.CODE_REFUSAL_EXHAUSTEDREPLAY : Str :=
+  toStr "exhausted-replay"
+
+/-- [noble_contracts::companion::core::refusal::CODE_REFUSAL_EXHAUSTEDREGISTRY]
+    Source: 'crates/noble-contracts/src/companion/core/refusal.rs', lines 24:0-24:66 -/
+@[global_simps, irreducible]
+def companion.core.refusal.CODE_REFUSAL_EXHAUSTEDREGISTRY : Str :=
+  toStr "exhausted-registry"
+
+/-- [noble_contracts::companion::core::refusal::CODE_REFUSAL_DUPLICATEENTRY]
+    Source: 'crates/noble-contracts/src/companion/core/refusal.rs', lines 25:0-25:60 -/
+@[global_simps, irreducible]
+def companion.core.refusal.CODE_REFUSAL_DUPLICATEENTRY : Str :=
+  toStr "duplicate-entry"
+
+/-- [noble_contracts::companion::core::refusal::CODE_REFUSAL_INTERNAL]
+    Source: 'crates/noble-contracts/src/companion/core/refusal.rs', lines 26:0-26:47 -/
+@[global_simps, irreducible]
+def companion.core.refusal.CODE_REFUSAL_INTERNAL : Str := toStr "internal"
+
+/-- [noble_contracts::companion::core::refusal::{noble_contracts::companion::Refusal}::code]:
+    Source: 'crates/noble-contracts/src/companion/core/refusal.rs', lines 31:4-60:5
+    Visibility: public -/
+def companion.core.refusal.Refusal.code
+  (self : companion.Refusal) : Result Str := do
+  match self with
+  | companion.Refusal.UnknownRule =>
+    ok companion.core.refusal.CODE_REFUSAL_UNKNOWNRULE
+  | companion.Refusal.UnsupportedRuleset =>
+    ok companion.core.refusal.CODE_REFUSAL_UNSUPPORTEDRULESET
+  | companion.Refusal.UnsupportedSemanticRevision =>
+    ok companion.core.refusal.CODE_REFUSAL_UNSUPPORTEDSEMANTICREVISION
+  | companion.Refusal.CyclicDerivation =>
+    ok companion.core.refusal.CODE_REFUSAL_CYCLICDERIVATION
+  | companion.Refusal.DuplicatePremise =>
+    ok companion.core.refusal.CODE_REFUSAL_DUPLICATEPREMISE
+  | companion.Refusal.MissingPremise =>
+    ok companion.core.refusal.CODE_REFUSAL_MISSINGPREMISE
+  | companion.Refusal.WrongPremiseClass =>
+    ok companion.core.refusal.CODE_REFUSAL_WRONGPREMISECLASS
+  | companion.Refusal.MismatchedSubject =>
+    ok companion.core.refusal.CODE_REFUSAL_MISMATCHEDSUBJECT
+  | companion.Refusal.MismatchedClaim =>
+    ok companion.core.refusal.CODE_REFUSAL_MISMATCHEDCLAIM
+  | companion.Refusal.MismatchedContext =>
+    ok companion.core.refusal.CODE_REFUSAL_MISMATCHEDCONTEXT
+  | companion.Refusal.StaleContext =>
+    ok companion.core.refusal.CODE_REFUSAL_STALECONTEXT
+  | companion.Refusal.UnresolvedImplication =>
+    ok companion.core.refusal.CODE_REFUSAL_UNRESOLVEDIMPLICATION
+  | companion.Refusal.WrongInstantiation =>
+    ok companion.core.refusal.CODE_REFUSAL_WRONGINSTANTIATION
+  | companion.Refusal.UnsupportedEvidenceClass =>
+    ok companion.core.refusal.CODE_REFUSAL_UNSUPPORTEDEVIDENCECLASS
+  | companion.Refusal.ForgedStatus =>
+    ok companion.core.refusal.CODE_REFUSAL_FORGEDSTATUS
+  | companion.Refusal.UnknownContract =>
+    ok companion.core.refusal.CODE_REFUSAL_UNKNOWNCONTRACT
+  | companion.Refusal.UnknownEvidence =>
+    ok companion.core.refusal.CODE_REFUSAL_UNKNOWNEVIDENCE
+  | companion.Refusal.UnsupportedGuardTemplate =>
+    ok companion.core.refusal.CODE_REFUSAL_UNSUPPORTEDGUARDTEMPLATE
+  | companion.Refusal.IneligibleGhost =>
+    ok companion.core.refusal.CODE_REFUSAL_INELIGIBLEGHOST
+  | companion.Refusal.LiveCapabilityInEvidence =>
+    ok companion.core.refusal.CODE_REFUSAL_LIVECAPABILITYINEVIDENCE
+  | companion.Refusal.InvalidEvidenceEncoding =>
+    ok companion.core.refusal.CODE_REFUSAL_INVALIDEVIDENCEENCODING
+  | companion.Refusal.CorrespondenceMismatch =>
+    ok companion.core.refusal.CODE_REFUSAL_CORRESPONDENCEMISMATCH
+  | companion.Refusal.ExhaustedReplay =>
+    ok companion.core.refusal.CODE_REFUSAL_EXHAUSTEDREPLAY
+  | companion.Refusal.ExhaustedRegistry =>
+    ok companion.core.refusal.CODE_REFUSAL_EXHAUSTEDREGISTRY
+  | companion.Refusal.DuplicateEntry =>
+    ok companion.core.refusal.CODE_REFUSAL_DUPLICATEENTRY
+  | companion.Refusal.Internal =>
+    ok companion.core.refusal.CODE_REFUSAL_INTERNAL
+
+/-- [noble_contracts::companion::core::{noble_contracts::companion::Core}::admit]:
+    Source: 'crates/noble-contracts/src/companion/core.rs', lines 12:4-18:5
+    Visibility: public -/
+def companion.core.Core.admit
+  (self : companion.Core) (prepared : Prepared)
+  (offer : companion.admit.EvidenceOffer) :
+  Result (companion.admit.Admission × companion.Core)
+  := do
+  companion.admit.accept.unchecked self prepared offer
+
+/-- [noble_contracts::companion::core::{noble_contracts::companion::Core}::begin_admission]:
+    Source: 'crates/noble-contracts/src/companion/core.rs', lines 22:4-29:5
+    Visibility: public -/
+def companion.core.Core.begin_admission
+  (self : companion.Core) (expected : Prepared)
+  (offer : companion.admit.EvidenceOffer) :
+  Result ((core.result.Result companion.admit.AdmissionRequest
+    companion.admit.Admission) × companion.Core)
+  := do
+  companion.admit.accept.begin self expected offer
+
+/-- [noble_contracts::companion::core::{noble_contracts::companion::Core}::complete_admission]:
+    Source: 'crates/noble-contracts/src/companion/core.rs', lines 33:4-39:5
+    Visibility: public -/
+def companion.core.Core.complete_admission
+  (self : companion.Core) (request : companion.admit.AdmissionRequest)
+  (observation : companion.admit.CheckObservation) :
+  Result (companion.admit.Admission × companion.Core)
+  := do
+  companion.admit.observation.complete self request observation
+
+/-- [noble_contracts::companion::rules::premises::queue_capacity]:
+    Source: 'crates/noble-contracts/src/companion/rules/premises.rs', lines 145:0-150:1 -/
+def companion.rules.premises.queue_capacity
+  (limits : Limits) :
+  Result (core.result.Result Std.Usize companion.Refusal)
+  := do
+  let r ←
+    Usize.Insts.CoreConvertTryFromU32TryFromIntError.try_from limits.work
+  match r with
+  | core.result.Result.Ok entry_bound => ok (core.result.Result.Ok entry_bound)
+  | core.result.Result.Err _ =>
+    ok (core.result.Result.Err companion.Refusal.ExhaustedReplay)
+
+/-- [noble_contracts::companion::rules::premises::finish]:
+    Source: 'crates/noble-contracts/src/companion/rules/premises.rs', lines 132:0-139:1 -/
+def companion.rules.premises.finish
+  (failure : Option companion.Refusal) :
+  Result (core.result.Result Unit companion.Refusal)
+  := do
+  match failure with
+  | none => ok (core.result.Result.Ok ())
+  | some refusal => ok (core.result.Result.Err refusal)
+
+/-- [noble_contracts::companion::rules::premises::queue]:
+    Source: 'crates/noble-contracts/src/companion/rules/premises.rs', lines 156:0-166:1 -/
+def companion.rules.premises.queue
+  (pending : alloc.vec.Vec companion.registry.EvidenceId)
+  (id : companion.registry.EvidenceId) (entry_bound : Std.Usize) :
+  Result ((core.result.Result Unit companion.Refusal) × (alloc.vec.Vec
+    companion.registry.EvidenceId))
+  := do
+  let i := alloc.vec.Vec.len pending
+  if i >= entry_bound
+  then ok (core.result.Result.Err companion.Refusal.ExhaustedReplay, pending)
+  else
+    let pending1 ← alloc.vec.Vec.push pending id
+    ok (core.result.Result.Ok (), pending1)
+
+/-- [noble_contracts::companion::rules::premises::step::ancestor]:
+    Source: 'crates/noble-contracts/src/companion/rules/premises/step.rs', lines 73:0-85:1 -/
+def companion.rules.premises.step.ancestor
+  (premise : companion.registry.EvidenceId)
+  (parent : companion.registry.EvidenceId)
+  (pending : alloc.vec.Vec companion.registry.EvidenceId)
+  (budget : companion.Budget) (entry_bound : Std.Usize) :
+  Result ((core.result.Result Unit companion.Refusal) × (alloc.vec.Vec
+    companion.registry.EvidenceId) × companion.Budget)
+  := do
+  let (r, budget1) ←
+    companion.Budget.charge budget 1#u32 companion.Refusal.ExhaustedReplay
+  match r with
+  | core.result.Result.Ok _ =>
+    if premise >= parent
+    then
+      ok (core.result.Result.Err companion.Refusal.CyclicDerivation, pending,
+        budget1)
+    else
+      let (r1, pending1) ←
+        companion.rules.premises.queue pending premise entry_bound
+      ok (r1, pending1, budget1)
+  | core.result.Result.Err _ => ok (r, pending, budget1)
+
+/-- [noble_contracts::companion::rules::premises::enqueue_ancestors]: loop body 0:
+    Source: 'crates/noble-contracts/src/companion/rules/premises.rs', lines 122:4-128:5 -/
+@[rust_loop_body]
+def companion.rules.premises.enqueue_ancestors_loop.body
+  (entry : companion.registry.EvidenceEntry)
+  (id : companion.registry.EvidenceId) (entry_bound : Std.Usize)
+  (pending : alloc.vec.Vec companion.registry.EvidenceId)
+  (budget : companion.Budget) («at» : Std.Usize) :
+  Result (ControlFlow ((alloc.vec.Vec companion.registry.EvidenceId) ×
+    companion.Budget × Std.Usize) ((alloc.vec.Vec
+    companion.registry.EvidenceId) × companion.Budget × (Option
+    companion.Refusal)))
+  := do
+  let i := alloc.vec.Vec.len entry.premises
+  if «at» < i
+  then
+    let ei ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        companion.registry.EvidenceId) entry.premises «at»
+    let (r, pending1, budget1) ←
+      companion.rules.premises.step.ancestor ei id pending budget entry_bound
+    match r with
+    | core.result.Result.Ok _ =>
+      let at1 ← lift (core.num.Usize.saturating_add «at» 1#usize)
+      ok (cont (pending1, budget1, at1))
+    | core.result.Result.Err refusal =>
+      ok (done (pending1, budget1, some refusal))
+  else ok (done (pending, budget, none))
+
+/-- [noble_contracts::companion::rules::premises::enqueue_ancestors]: loop 0:
+    Source: 'crates/noble-contracts/src/companion/rules/premises.rs', lines 122:4-128:5 -/
+@[rust_loop]
+def companion.rules.premises.enqueue_ancestors_loop
+  (entry : companion.registry.EvidenceEntry)
+  (id : companion.registry.EvidenceId)
+  (pending : alloc.vec.Vec companion.registry.EvidenceId)
+  (budget : companion.Budget) (entry_bound : Std.Usize) («at» : Std.Usize) :
+  Result ((alloc.vec.Vec companion.registry.EvidenceId) × companion.Budget ×
+    (Option companion.Refusal))
+  := do
+  loop
+    (fun (pending1, budget1, at1) =>
+      companion.rules.premises.enqueue_ancestors_loop.body entry id entry_bound
+      pending1 budget1 at1)
+    (pending, budget, «at»)
+
+/-- [noble_contracts::companion::rules::premises::enqueue_ancestors]:
+    Source: 'crates/noble-contracts/src/companion/rules/premises.rs', lines 113:0-130:1 -/
+def companion.rules.premises.enqueue_ancestors
+  (entry : companion.registry.EvidenceEntry)
+  (id : companion.registry.EvidenceId)
+  (pending : alloc.vec.Vec companion.registry.EvidenceId)
+  (budget : companion.Budget) (entry_bound : Std.Usize) :
+  Result ((core.result.Result Unit companion.Refusal) × (alloc.vec.Vec
+    companion.registry.EvidenceId) × companion.Budget)
+  := do
+  let (pending1, budget1, failure) ←
+    companion.rules.premises.enqueue_ancestors_loop entry id pending budget
+      entry_bound 0#usize
+  let r ← companion.rules.premises.finish failure
+  ok (r, pending1, budget1)
+
+/-- [noble_contracts::companion::registry::entries::{noble_contracts::companion::registry::Registry}::evidence]:
+    Source: 'crates/noble-contracts/src/companion/registry/entries.rs', lines 128:4-140:5 -/
+def companion.registry.entries.Registry.evidence
+  (self : companion.registry.Registry) (id : companion.registry.EvidenceId) :
+  Result (core.result.Result companion.registry.EvidenceEntry
+    companion.Refusal)
+  := do
+  let r ← Usize.Insts.CoreConvertTryFromU32TryFromIntError.try_from id
+  match r with
+  | core.result.Result.Ok position =>
+    let s := alloc.vec.Vec.deref self.evidence
+    let o ←
+      core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice
+        companion.registry.EvidenceEntry) s position
+    match o with
+    | none => ok (core.result.Result.Err companion.Refusal.UnknownEvidence)
+    | some entry => ok (core.result.Result.Ok entry)
+  | core.result.Result.Err _ =>
+    ok (core.result.Result.Err companion.Refusal.UnknownEvidence)
+
+/-- [noble_contracts::companion::registry::application::proved]:
+    Source: 'crates/noble-contracts/src/companion/registry/application.rs', lines 27:0-58:1 -/
+def companion.registry.application.proved
+  (engine : companion.Core) (id : companion.registry.EvidenceId) :
+  Result (core.result.Result companion.registry.EvidenceEntry
+    companion.Refusal)
+  := do
+  let r ← companion.registry.entries.Registry.evidence engine.registry id
+  match r with
+  | core.result.Result.Ok value =>
+    let r1 ←
+      companion.registry.entries.Registry.contract engine.registry
+        value.contract
+    match r1 with
+    | core.result.Result.Ok value1 =>
+      let b ←
+        companion.registry.entries.Registry.stale engine
+          { policy := value.policy, revision := value.revision }
+      if b
+      then ok (core.result.Result.Err companion.Refusal.StaleContext)
+      else
+        let b1 ←
+          companion.registry.entries.Registry.stale engine
+            { policy := value1.policy, revision := value1.revision }
+        if b1
+        then ok (core.result.Result.Err companion.Refusal.StaleContext)
+        else
+          let b2 ←
+            core.cmp.PartialEq.ne.trait_default
+              companion.admit.Outcome.Insts.CoreCmpPartialEqOutcome
+              value.outcome companion.admit.Outcome.Proved
+          if b2
+          then ok (core.result.Result.Err companion.Refusal.WrongPremiseClass)
+          else
+            let (ec, b3) ←
+              match value.class with
+              | companion.registry.EvidenceClass.LeanExact =>
+                ok (companion.registry.EvidenceClass.LeanExact, true)
+              | companion.registry.EvidenceClass.LeanRefutation =>
+                ok (companion.registry.EvidenceClass.LeanRefutation, false)
+              | companion.registry.EvidenceClass.Replay =>
+                ok (companion.registry.EvidenceClass.Replay, true)
+              | companion.registry.EvidenceClass.Assumption =>
+                ok (companion.registry.EvidenceClass.Assumption, false)
+            if b3
+            then ok (core.result.Result.Ok { value with «class» := ec })
+            else
+              ok (core.result.Result.Err companion.Refusal.WrongPremiseClass)
+    | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+  | core.result.Result.Err _ => ok r
+
+/-- [noble_contracts::companion::rules::premises::step::drain]:
+    Source: 'crates/noble-contracts/src/companion/rules/premises/step.rs', lines 40:0-50:1 -/
+def companion.rules.premises.step.drain
+  (engine : companion.Core) (id : companion.registry.EvidenceId)
+  (pending : alloc.vec.Vec companion.registry.EvidenceId)
+  (budget : companion.Budget) (entry_bound : Std.Usize) :
+  Result ((core.result.Result Unit companion.Refusal) × (alloc.vec.Vec
+    companion.registry.EvidenceId) × companion.Budget)
+  := do
+  let (r, budget1) ←
+    companion.Budget.charge budget 1#u32 companion.Refusal.ExhaustedReplay
+  match r with
+  | core.result.Result.Ok _ =>
+    let r1 ← companion.registry.application.proved engine id
+    match r1 with
+    | core.result.Result.Ok value =>
+      companion.rules.premises.enqueue_ancestors value id pending budget1
+        entry_bound
+    | core.result.Result.Err failure =>
+      ok (core.result.Result.Err failure, pending, budget1)
+  | core.result.Result.Err _ => ok (r, pending, budget1)
+
+/-- [noble_contracts::companion::rules::premises::drain]: loop body 0:
+    Source: 'crates/noble-contracts/src/companion/rules/premises.rs', lines 83:4-88:5 -/
+@[rust_loop_body]
+def companion.rules.premises.drain_loop.body
+  (l : Limits) (r : companion.registry.Registry) (i : Std.U32) (i1 : Std.U32)
+  (i2 : Std.U32) (i3 : Std.U64) (i4 : Std.U64) (entry_bound : Std.Usize)
+  (pending : alloc.vec.Vec companion.registry.EvidenceId)
+  (budget : companion.Budget) :
+  Result (ControlFlow ((alloc.vec.Vec companion.registry.EvidenceId) ×
+    companion.Budget) (companion.Budget × (Option companion.Refusal)))
+  := do
+  let (o, pending1) ← alloc.vec.Vec.pop Global pending
+  match o with
+  | none => ok (done (budget, none))
+  | some id =>
+    let (r1, pending2, budget1) ←
+      companion.rules.premises.step.drain
+        {
+          limits := l,
+          registry := r,
+          policy := i,
+          revision := i1,
+          semantic_revision := i2,
+          host_contract := i3,
+          environment_fact := i4
+        } id pending1 budget entry_bound
+    match r1 with
+    | core.result.Result.Ok _ => ok (cont (pending2, budget1))
+    | core.result.Result.Err refusal => ok (done (budget1, some refusal))
+
+/-- [noble_contracts::companion::rules::premises::drain]: loop 0:
+    Source: 'crates/noble-contracts/src/companion/rules/premises.rs', lines 83:4-88:5 -/
+@[rust_loop]
+def companion.rules.premises.drain_loop
+  (pending : alloc.vec.Vec companion.registry.EvidenceId) (l : Limits)
+  (r : companion.registry.Registry) (i : Std.U32) (i1 : Std.U32) (i2 : Std.U32)
+  (i3 : Std.U64) (i4 : Std.U64) (budget : companion.Budget)
+  (entry_bound : Std.Usize) :
+  Result (companion.Budget × (Option companion.Refusal))
+  := do
+  loop
+    (fun (pending1, budget1) => companion.rules.premises.drain_loop.body l r i
+      i1 i2 i3 i4 entry_bound pending1 budget1)
+    (pending, budget)
+
+/-- [noble_contracts::companion::rules::premises::drain]:
+    Source: 'crates/noble-contracts/src/companion/rules/premises.rs', lines 76:0-90:1 -/
+def companion.rules.premises.drain
+  (engine : companion.Core)
+  (pending : alloc.vec.Vec companion.registry.EvidenceId)
+  (budget : companion.Budget) :
+  Result ((core.result.Result Unit companion.Refusal) × companion.Budget)
+  := do
+  let r ← companion.rules.premises.queue_capacity engine.limits
+  match r with
+  | core.result.Result.Ok value =>
+    let (budget1, failure) ←
+      companion.rules.premises.drain_loop pending engine.limits engine.registry
+        engine.policy engine.revision engine.semantic_revision
+        engine.host_contract engine.environment_fact budget value
+    let r1 ← companion.rules.premises.finish failure
+    ok (r1, budget1)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, budget)
+
+/-- [noble_contracts::companion::rules::premises::step::unique]:
+    Source: 'crates/noble-contracts/src/companion/rules/premises/step.rs', lines 56:0-67:1 -/
+def companion.rules.premises.step.unique
+  (premises : Slice companion.registry.EvidenceId) (prior : Std.Usize)
+  (current : Std.Usize) (budget : companion.Budget) :
+  Result ((core.result.Result Unit companion.Refusal) × companion.Budget)
+  := do
+  let (r, budget1) ←
+    companion.Budget.charge budget 1#u32 companion.Refusal.ExhaustedReplay
+  match r with
+  | core.result.Result.Ok _ =>
+    let ei ← Slice.index_usize premises prior
+    let ei1 ← Slice.index_usize premises current
+    let b ←
+      companion.registry.EvidenceId.Insts.CoreCmpPartialEqEvidenceId.eq ei ei1
+    if b
+    then
+      ok (core.result.Result.Err companion.Refusal.DuplicatePremise, budget1)
+    else ok (core.result.Result.Ok (), budget1)
+  | core.result.Result.Err _ => ok (r, budget1)
+
+/-- [noble_contracts::companion::rules::premises::unique_premise]: loop body 0:
+    Source: 'crates/noble-contracts/src/companion/rules/premises.rs', lines 99:4-105:5 -/
+@[rust_loop_body]
+def companion.rules.premises.unique_premise_loop.body
+  (premises : Slice companion.registry.EvidenceId) (index1 : Std.Usize)
+  (budget : companion.Budget) (prior : Std.Usize) :
+  Result (ControlFlow (companion.Budget × Std.Usize) (companion.Budget ×
+    (Option companion.Refusal)))
+  := do
+  if prior < index1
+  then
+    let (r, budget1) ←
+      companion.rules.premises.step.unique premises prior index1 budget
+    match r with
+    | core.result.Result.Ok _ =>
+      let prior1 ← lift (core.num.Usize.saturating_add prior 1#usize)
+      ok (cont (budget1, prior1))
+    | core.result.Result.Err refusal => ok (done (budget1, some refusal))
+  else ok (done (budget, none))
+
+/-- [noble_contracts::companion::rules::premises::unique_premise]: loop 0:
+    Source: 'crates/noble-contracts/src/companion/rules/premises.rs', lines 99:4-105:5 -/
+@[rust_loop]
+def companion.rules.premises.unique_premise_loop
+  (premises : Slice companion.registry.EvidenceId) (index1 : Std.Usize)
+  (budget : companion.Budget) (prior : Std.Usize) :
+  Result (companion.Budget × (Option companion.Refusal))
+  := do
+  loop
+    (fun (budget1, prior1) => companion.rules.premises.unique_premise_loop.body
+      premises index1 budget1 prior1)
+    (budget, prior)
+
+/-- [noble_contracts::companion::rules::premises::unique_premise]:
+    Source: 'crates/noble-contracts/src/companion/rules/premises.rs', lines 92:0-107:1 -/
+def companion.rules.premises.unique_premise
+  (premises : Slice companion.registry.EvidenceId) (index1 : Std.Usize)
+  (budget : companion.Budget) :
+  Result ((core.result.Result Unit companion.Refusal) × companion.Budget)
+  := do
+  let (budget1, failure) ←
+    companion.rules.premises.unique_premise_loop premises index1 budget 0#usize
+  let r ← companion.rules.premises.finish failure
+  ok (r, budget1)
+
+/-- [noble_contracts::companion::rules::premises::step::seed]:
+    Source: 'crates/noble-contracts/src/companion/rules/premises/step.rs', lines 15:0-34:1 -/
+def companion.rules.premises.step.seed
+  (premises : Slice companion.registry.EvidenceId) (index1 : Std.Usize)
+  (bounds : companion.rules.premises.step.SeedBounds)
+  (pending : alloc.vec.Vec companion.registry.EvidenceId)
+  (budget : companion.Budget) :
+  Result ((core.result.Result Unit companion.Refusal) × (alloc.vec.Vec
+    companion.registry.EvidenceId) × companion.Budget)
+  := do
+  let (r, budget1) ←
+    companion.Budget.charge budget 1#u32 companion.Refusal.ExhaustedReplay
+  match r with
+  | core.result.Result.Ok _ =>
+    let id ← Slice.index_usize premises index1
+    if id = bounds.next
+    then
+      ok (core.result.Result.Err companion.Refusal.CyclicDerivation, pending,
+        budget1)
+    else
+      if id > bounds.next
+      then
+        ok (core.result.Result.Err companion.Refusal.MissingPremise, pending,
+          budget1)
+      else
+        if bounds.should_reject_duplicates
+        then
+          let (r1, budget2) ←
+            companion.rules.premises.unique_premise premises index1 budget1
+          match r1 with
+          | core.result.Result.Ok _ =>
+            let (r2, pending1) ←
+              companion.rules.premises.queue pending id bounds.entry_bound
+            ok (r2, pending1, budget2)
+          | core.result.Result.Err _ => ok (r1, pending, budget2)
+        else
+          let (r1, pending1) ←
+            companion.rules.premises.queue pending id bounds.entry_bound
+          ok (r1, pending1, budget1)
+  | core.result.Result.Err _ => ok (r, pending, budget1)
+
+/-- [noble_contracts::companion::registry::entries::{noble_contracts::companion::registry::Registry}::next_evidence]:
+    Source: 'crates/noble-contracts/src/companion/registry/entries.rs', lines 142:4-144:5 -/
+def companion.registry.entries.Registry.next_evidence
+  (self : companion.registry.Registry) :
+  Result (core.result.Result Std.U32 companion.Refusal)
+  := do
+  let i := alloc.vec.Vec.len self.evidence
+  companion.registry.entries.index_of i
+
+/-- [noble_contracts::companion::rules::premises::seed]: loop body 0:
+    Source: 'crates/noble-contracts/src/companion/rules/premises.rs', lines 63:4-69:5 -/
+@[rust_loop_body]
+def companion.rules.premises.seed_loop.body
+  (premises : Slice companion.registry.EvidenceId)
+  (should_reject_duplicates : Bool) (next : Std.U32) (entry_bound : Std.Usize)
+  (budget : companion.Budget)
+  (pending : alloc.vec.Vec companion.registry.EvidenceId) (index1 : Std.Usize)
+  :
+  Result (ControlFlow (companion.Budget × (alloc.vec.Vec
+    companion.registry.EvidenceId) × Std.Usize) (companion.Budget ×
+    (alloc.vec.Vec companion.registry.EvidenceId) × (Option
+    companion.Refusal)))
+  := do
+  let i := Slice.len premises
+  if index1 < i
+  then
+    let (r, pending1, budget1) ←
+      companion.rules.premises.step.seed premises index1
+        { next, entry_bound, should_reject_duplicates } pending budget
+    match r with
+    | core.result.Result.Ok _ =>
+      let index2 ← lift (core.num.Usize.saturating_add index1 1#usize)
+      ok (cont (budget1, pending1, index2))
+    | core.result.Result.Err refusal =>
+      ok (done (budget1, pending1, some refusal))
+  else ok (done (budget, pending, none))
+
+/-- [noble_contracts::companion::rules::premises::seed]: loop 0:
+    Source: 'crates/noble-contracts/src/companion/rules/premises.rs', lines 63:4-69:5 -/
+@[rust_loop]
+def companion.rules.premises.seed_loop
+  (premises : Slice companion.registry.EvidenceId) (budget : companion.Budget)
+  (should_reject_duplicates : Bool) (next : Std.U32) (entry_bound : Std.Usize)
+  (pending : alloc.vec.Vec companion.registry.EvidenceId) (index1 : Std.Usize)
+  :
+  Result (companion.Budget × (alloc.vec.Vec companion.registry.EvidenceId) ×
+    (Option companion.Refusal))
+  := do
+  loop
+    (fun (budget1, pending1, index2) => companion.rules.premises.seed_loop.body
+      premises should_reject_duplicates next entry_bound budget1 pending1
+      index2)
+    (budget, pending, index1)
+
+/-- [noble_contracts::companion::rules::premises::seed]:
+    Source: 'crates/noble-contracts/src/companion/rules/premises.rs', lines 47:0-74:1 -/
+def companion.rules.premises.seed
+  (engine : companion.Core) (premises : Slice companion.registry.EvidenceId)
+  (budget : companion.Budget) (should_reject_duplicates : Bool) :
+  Result ((core.result.Result (alloc.vec.Vec companion.registry.EvidenceId)
+    companion.Refusal) × companion.Budget)
+  := do
+  let r ← companion.registry.entries.Registry.next_evidence engine.registry
+  match r with
+  | core.result.Result.Ok value =>
+    let r1 ← companion.rules.premises.queue_capacity engine.limits
+    match r1 with
+    | core.result.Result.Ok value1 =>
+      let i := Slice.len premises
+      let i1 ← core.cmp.Ord.min.trait_default core.cmp.OrdUsize i value1
+      let pending :=
+        alloc.vec.Vec.with_capacity companion.registry.EvidenceId i1
+      let (budget1, pending1, failure) ←
+        companion.rules.premises.seed_loop premises budget
+          should_reject_duplicates value value1 pending 0#usize
+      match failure with
+      | none => ok (core.result.Result.Ok pending1, budget1)
+      | some refusal => ok (core.result.Result.Err refusal, budget1)
+    | core.result.Result.Err failure =>
+      ok (core.result.Result.Err failure, budget)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, budget)
+
+/-- [noble_contracts::companion::rules::premises::validate]:
+    Source: 'crates/noble-contracts/src/companion/rules/premises.rs', lines 33:0-41:1 -/
+def companion.rules.premises.validate
+  (engine : companion.Core) (premises : Slice companion.registry.EvidenceId)
+  (budget : companion.Budget) (should_reject_duplicates : Bool) :
+  Result ((core.result.Result Unit companion.Refusal) × companion.Budget)
+  := do
+  let (r, budget1) ←
+    companion.rules.premises.seed engine premises budget
+      should_reject_duplicates
+  match r with
+  | core.result.Result.Ok value =>
+    companion.rules.premises.drain engine value budget1
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, budget1)
+
+/-- [noble_contracts::companion::rules::premises::subject_work]:
+    Source: 'crates/noble-contracts/src/companion/rules/premises.rs', lines 8:0-28:1 -/
+def companion.rules.premises.subject_work
+  (budget : companion.Budget) (subject : companion.Subject) :
+  Result ((core.result.Result Unit companion.Refusal) × companion.Budget)
+  := do
+  let i := alloc.vec.Vec.len subject.events
+  let i1 := alloc.vec.Vec.len subject.captures
+  let i2 ← lift (core.num.Usize.saturating_add i i1)
+  let count ← lift (core.num.Usize.saturating_add i2 1#usize)
+  let r ← core.convert.num.ptr_try_from_impls.TryFromU32Usize.try_from count
+  match r with
+  | core.result.Result.Ok count1 =>
+    let (r1, budget1) ←
+      companion.Budget.charge budget count1 companion.Refusal.ExhaustedReplay
+    match r1 with
+    | core.result.Result.Ok _ =>
+      let i3 := alloc.vec.Vec.len subject.events
+      if i3 > companion.subject.OBSERVATION_CAP
+      then
+        ok (core.result.Result.Err companion.Refusal.ExhaustedReplay, budget1)
+      else
+        let i4 := alloc.vec.Vec.len subject.captures
+        if i4 > companion.subject.OBSERVATION_CAP
+        then
+          ok (core.result.Result.Err companion.Refusal.ExhaustedReplay,
+            budget1)
+        else ok (core.result.Result.Ok (), budget1)
+    | core.result.Result.Err _ => ok (r1, budget1)
+  | core.result.Result.Err _ =>
+    ok (core.result.Result.Err companion.Refusal.ExhaustedReplay, budget)
+
+/-- [noble_contracts::companion::rules::{impl core::cmp::PartialEq<noble_contracts::companion::rules::RuleId> for noble_contracts::companion::rules::RuleId}::eq]:
+    Source: 'crates/noble-contracts/src/companion/rules/mod.rs', lines 13:29-13:38
+    Visibility: public -/
+def companion.rules.RuleId.Insts.CoreCmpPartialEqRuleId.eq
+  (self : companion.rules.RuleId) (other : companion.rules.RuleId) :
+  Result Bool
+  := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  ok (self1 = other1)
+
+/-- [noble_contracts::companion::subject::CAPTURE_I64_EVENT]
+    Source: 'crates/noble-contracts/src/companion/subject.rs', lines 18:0-18:37
+    Visibility: public -/
+@[global_simps, irreducible]
+def companion.subject.CAPTURE_I64_EVENT : Std.U32 := 1#u32
+
+/-- [noble_contracts::companion::subject::observe]: loop body 0:
+    Source: 'crates/noble-contracts/src/companion/subject.rs', lines 43:4-53:5
+    Visibility: public -/
+@[rust_loop_body]
+def companion.subject.observe_loop.body
+  (events : Slice (Std.U32 × Std.U64)) (fold : companion.digest.Fold)
+  (captures : alloc.vec.Vec companion.CaptureBinding)
+  (retained : alloc.vec.Vec (Std.U32 × Std.U64)) (index1 : Std.Usize)
+  (slot : Std.U32) :
+  Result (ControlFlow (companion.digest.Fold × (alloc.vec.Vec
+    companion.CaptureBinding) × (alloc.vec.Vec (Std.U32 × Std.U64)) ×
+    Std.Usize × Std.U32) (companion.digest.Fold × (alloc.vec.Vec
+    companion.CaptureBinding) × (alloc.vec.Vec (Std.U32 × Std.U64))))
+  := do
+  let i := Slice.len events
+  if index1 < i
+  then
+    if index1 < companion.subject.OBSERVATION_CAP
+    then
+      let p ← Slice.index_usize events index1
+      let (kind, _) := p
+      let (_, value) := p
+      let i1 ← lift (core.convert.num.FromU64U32.from kind)
+      let fold1 ← companion.digest.Fold.absorb fold i1
+      let fold2 ← companion.digest.Fold.absorb fold1 value
+      let retained1 ← alloc.vec.Vec.push retained (kind, value)
+      let captures1 ←
+        if kind = companion.subject.CAPTURE_I64_EVENT
+        then
+          alloc.vec.Vec.push captures ({ slot, value } :
+            companion.CaptureBinding)
+        else ok captures
+      let index2 ← lift (core.num.Usize.saturating_add index1 1#usize)
+      let slot1 ← lift (core.num.U32.saturating_add slot 1#u32)
+      ok (cont (fold2, captures1, retained1, index2, slot1))
+    else ok (done (fold, captures, retained))
+  else ok (done (fold, captures, retained))
+
+/-- [noble_contracts::companion::subject::observe]: loop 0:
+    Source: 'crates/noble-contracts/src/companion/subject.rs', lines 43:4-53:5
+    Visibility: public -/
+@[rust_loop]
+def companion.subject.observe_loop
+  (events : Slice (Std.U32 × Std.U64)) (fold : companion.digest.Fold)
+  (captures : alloc.vec.Vec companion.CaptureBinding)
+  (retained : alloc.vec.Vec (Std.U32 × Std.U64)) (index1 : Std.Usize)
+  (slot : Std.U32) :
+  Result (companion.digest.Fold × (alloc.vec.Vec companion.CaptureBinding) ×
+    (alloc.vec.Vec (Std.U32 × Std.U64)))
+  := do
+  loop
+    (fun (fold1, captures1, retained1, index2, slot1) =>
+      companion.subject.observe_loop.body events fold1 captures1 retained1
+      index2 slot1)
+    (fold, captures, retained, index1, slot)
+
+/-- [noble_contracts::companion::subject::observe]:
+    Source: 'crates/noble-contracts/src/companion/subject.rs', lines 31:0-61:1
+    Visibility: public -/
+def companion.subject.observe
+  (events : Slice (Std.U32 × Std.U64))
+  (signatures : companion.InterfaceSignatures) :
+  Result companion.Subject
+  := do
+  let fold ← companion.digest.Fold.new companion.digest.DOMAIN_SUBJECT
+  let fold1 ← companion.digest.Fold.absorb fold signatures.input
+  let fold2 ← companion.digest.Fold.absorb fold1 signatures.output
+  let i := Slice.len events
+  let fold3 ← companion.digest.Fold.absorb_count fold2 i
+  let i1 := Slice.len events
+  let i2 ←
+    core.cmp.Ord.min.trait_default core.cmp.OrdUsize i1
+      companion.subject.OBSERVATION_CAP
+  let captures := alloc.vec.Vec.with_capacity companion.CaptureBinding i2
+  let i3 := Slice.len events
+  let i4 ←
+    core.cmp.Ord.min.trait_default core.cmp.OrdUsize i3
+      companion.subject.OBSERVATION_CAP
+  let retained := alloc.vec.Vec.with_capacity (Std.U32 × Std.U64) i4
+  let (fold4, captures1, retained1) ←
+    companion.subject.observe_loop events fold3 captures retained 0#usize 0#u32
+  let i5 ← companion.digest.Fold.finish fold4
+  ok
+    {
+      identity := i5,
+      input_signature := signatures.input,
+      output_signature := signatures.output,
+      captures := captures1,
+      events := retained1
+    }
+
+/-- [noble_contracts::companion::registry::application::is_program_op]:
+    Source: 'crates/noble-contracts/src/companion/registry/application.rs', lines 111:0-113:1 -/
+def companion.registry.application.is_program_op
+  (kind : Std.U32) : Result Bool := do
+  if 1#u32 <= kind
+  then if kind <= 7#u32
+       then ok true
+       else ok false
+  else ok false
+
+/-- [noble_contracts::companion::registry::application::op_stream]: loop body 0:
+    Source: 'crates/noble-contracts/src/companion/registry/application.rs', lines 101:4-107:5 -/
+@[rust_loop_body]
+def companion.registry.application.op_stream_loop.body
+  (events : Slice (Std.U32 × Std.U64))
+  (out : alloc.vec.Vec (Std.U32 × Std.U64)) (index1 : Std.Usize) :
+  Result (ControlFlow ((alloc.vec.Vec (Std.U32 × Std.U64)) × Std.Usize)
+    (alloc.vec.Vec (Std.U32 × Std.U64)))
+  := do
+  let i := Slice.len events
+  if index1 < i
+  then
+    let (i1, i2) ← Slice.index_usize events index1
+    let b ← companion.registry.application.is_program_op i1
+    let out1 ← if b
+                 then alloc.vec.Vec.push out (i1, i2)
+                 else ok out
+    let index2 ← lift (core.num.Usize.saturating_add index1 1#usize)
+    ok (cont (out1, index2))
+  else ok (done out)
+
+/-- [noble_contracts::companion::registry::application::op_stream]: loop 0:
+    Source: 'crates/noble-contracts/src/companion/registry/application.rs', lines 101:4-107:5 -/
+@[rust_loop]
+def companion.registry.application.op_stream_loop
+  (events : Slice (Std.U32 × Std.U64))
+  (out : alloc.vec.Vec (Std.U32 × Std.U64)) (index1 : Std.Usize) :
+  Result (alloc.vec.Vec (Std.U32 × Std.U64))
+  := do
+  loop
+    (fun (out1, index2) => companion.registry.application.op_stream_loop.body
+      events out1 index2)
+    (out, index1)
+
+/-- [noble_contracts::companion::registry::application::op_stream]:
+    Source: 'crates/noble-contracts/src/companion/registry/application.rs', lines 98:0-109:1 -/
+def companion.registry.application.op_stream
+  (events : Slice (Std.U32 × Std.U64)) :
+  Result (alloc.vec.Vec (Std.U32 × Std.U64))
+  := do
+  let i := Slice.len events
+  let out := alloc.vec.Vec.with_capacity (Std.U32 × Std.U64) i
+  companion.registry.application.op_stream_loop events out 0#usize
+
+/-- [noble_contracts::companion::{impl core::cmp::PartialEq<noble_contracts::companion::SubjectDigest> for noble_contracts::companion::SubjectDigest}::eq]:
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 228:29-228:38
+    Visibility: public -/
+def companion.SubjectDigest.Insts.CoreCmpPartialEqSubjectDigest.eq
+  (self : companion.SubjectDigest) (other : companion.SubjectDigest) :
+  Result Bool
+  := do
+  ok (self = other)
+
+/-- [noble_contracts::companion::{impl core::cmp::PartialEq<noble_contracts::companion::CaptureBinding> for noble_contracts::companion::CaptureBinding}::eq]:
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 221:29-221:38
+    Visibility: public -/
+def companion.CaptureBinding.Insts.CoreCmpPartialEqCaptureBinding.eq
+  (self : companion.CaptureBinding) (other : companion.CaptureBinding) :
+  Result Bool
+  := do
+  if self.slot = other.slot
+  then ok (self.value = other.value)
+  else ok false
+
+/-- Trait implementation: [noble_contracts::companion::{impl core::cmp::PartialEq<noble_contracts::companion::CaptureBinding> for noble_contracts::companion::CaptureBinding}]
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 221:29-221:38 -/
+@[reducible]
+impl_def companion.CaptureBinding.Insts.CoreCmpPartialEqCaptureBinding :
+  core.cmp.PartialEq companion.CaptureBinding companion.CaptureBinding := {
+  eq := companion.CaptureBinding.Insts.CoreCmpPartialEqCaptureBinding.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    companion.CaptureBinding.Insts.CoreCmpPartialEqCaptureBinding
+}
+
+/-- [noble_contracts::companion::{impl core::cmp::PartialEq<noble_contracts::companion::Subject> for noble_contracts::companion::Subject}::eq]:
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 233:23-233:32
+    Visibility: public -/
+def companion.Subject.Insts.CoreCmpPartialEqSubject.eq
+  (self : companion.Subject) (other : companion.Subject) : Result Bool := do
+  if self.input_signature = other.input_signature
+  then
+    if self.output_signature = other.output_signature
+    then
+      let b ←
+        companion.SubjectDigest.Insts.CoreCmpPartialEqSubjectDigest.eq
+          self.identity other.identity
+      if b
+      then
+        let b1 ←
+          alloc.vec.partial_eq.PartialEqVec.eq
+            companion.CaptureBinding.Insts.CoreCmpPartialEqCaptureBinding
+            self.captures other.captures
+        if b1
+        then
+          alloc.vec.partial_eq.PartialEqVec.eq (Pair.Insts.CoreCmpPartialEqPair
+            core.cmp.PartialEqU32 core.cmp.PartialEqU64) self.events
+            other.events
+        else ok false
+      else ok false
+    else ok false
+  else ok false
+
+/-- Trait implementation: [noble_contracts::companion::{impl core::cmp::PartialEq<noble_contracts::companion::Subject> for noble_contracts::companion::Subject}]
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 233:23-233:32 -/
+@[reducible]
+impl_def companion.Subject.Insts.CoreCmpPartialEqSubject : core.cmp.PartialEq
+  companion.Subject companion.Subject := {
+  eq := companion.Subject.Insts.CoreCmpPartialEqSubject.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    companion.Subject.Insts.CoreCmpPartialEqSubject
+}
+
+/-- [noble_contracts::companion::registry::application::matches_observation]:
+    Source: 'crates/noble-contracts/src/companion/registry/application.rs', lines 66:0-92:1 -/
+def companion.registry.application.matches_observation
+  (expected : companion.Subject) (offered : companion.Subject) :
+  Result (core.result.Result Unit companion.Refusal)
+  := do
+  let b ← companion.Subject.Insts.CoreCmpPartialEqSubject.eq expected offered
+  if b
+  then ok (core.result.Result.Ok ())
+  else
+    if offered.input_signature != expected.input_signature
+    then ok (core.result.Result.Err companion.Refusal.MismatchedSubject)
+    else
+      if offered.output_signature != expected.output_signature
+      then ok (core.result.Result.Err companion.Refusal.MismatchedSubject)
+      else
+        let s := alloc.vec.Vec.deref offered.events
+        let s1 ←
+          companion.subject.observe s
+            {
+              input := offered.input_signature,
+              output := offered.output_signature
+            }
+        let b1 ←
+          core.cmp.PartialEq.ne.trait_default
+            companion.Subject.Insts.CoreCmpPartialEqSubject s1 offered
+        if b1
+        then ok (core.result.Result.Err companion.Refusal.MismatchedSubject)
+        else
+          let s2 := alloc.vec.Vec.deref offered.events
+          let v ← companion.registry.application.op_stream s2
+          let s3 := alloc.vec.Vec.deref expected.events
+          let v1 ← companion.registry.application.op_stream s3
+          let b2 ←
+            alloc.vec.partial_eq.PartialEqVec.ne
+              (Pair.Insts.CoreCmpPartialEqPair core.cmp.PartialEqU32
+              core.cmp.PartialEqU64) v v1
+          if b2
+          then ok (core.result.Result.Err companion.Refusal.MismatchedSubject)
+          else ok (core.result.Result.Ok ())
+
+/-- [noble_contracts::companion::rules::derive::instantiation]:
+    Source: 'crates/noble-contracts/src/companion/rules/derive.rs', lines 61:0-89:1 -/
+def companion.rules.derive.instantiation
+  (engine : companion.Core) (family : companion.registry.EvidenceId)
+  (capture : Std.I64) (subject : companion.Subject) :
+  Result (core.result.Result companion.admit.ClaimTemplate companion.Refusal)
+  := do
+  let r ← companion.registry.application.proved engine family
+  match r with
+  | core.result.Result.Ok value =>
+    let b ←
+      core.cmp.PartialEq.ne.trait_default
+        companion.admit.ClaimTemplate.Insts.CoreCmpPartialEqClaimTemplate
+        value.template companion.admit.ClaimTemplate.IncrementByCapture
+    if b
+    then ok (core.result.Result.Err companion.Refusal.WrongInstantiation)
+    else
+      let a ← core.num.I64.to_ne_bytes capture
+      let value1 ← core.num.U64.from_ne_bytes a
+      let s ←
+        lift (Array.to_slice
+          (Array.make 1#usize [ noble_kernel.types.Ty.I64Type ]))
+      let signature ← companion.admit.statement.interface_signature s
+      let s1 ←
+        lift (Array.to_slice
+          (Array.make 2#usize [ (1#u32, value1), (2#u32, 4#u64) ]))
+      let expected ←
+        companion.subject.observe s1
+          { input := signature, output := signature }
+      let r1 ←
+        companion.registry.application.matches_observation expected subject
+      let b1 ← core.result.Result.is_err r1
+      if b1
+      then ok (core.result.Result.Err companion.Refusal.WrongInstantiation)
+      else
+        ok (core.result.Result.Ok (companion.admit.ClaimTemplate.IncrementBy
+          capture))
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::companion::subject::initial_captures]: loop body 0:
+    Source: 'crates/noble-contracts/src/companion/subject.rs', lines 69:4-72:5 -/
+@[rust_loop_body]
+def companion.subject.initial_captures_loop.body
+  (left : companion.Subject)
+  (captures : alloc.vec.Vec companion.CaptureBinding) (index1 : Std.Usize) :
+  Result (ControlFlow ((alloc.vec.Vec companion.CaptureBinding) × Std.Usize)
+    (alloc.vec.Vec companion.CaptureBinding))
+  := do
+  let i := alloc.vec.Vec.len left.captures
+  if index1 < i
+  then
+    let cb ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        companion.CaptureBinding) left.captures index1
+    let captures1 ← alloc.vec.Vec.push captures cb
+    let index2 ← lift (core.num.Usize.saturating_add index1 1#usize)
+    ok (cont (captures1, index2))
+  else ok (done captures)
+
+/-- [noble_contracts::companion::subject::initial_captures]: loop 0:
+    Source: 'crates/noble-contracts/src/companion/subject.rs', lines 69:4-72:5 -/
+@[rust_loop]
+def companion.subject.initial_captures_loop
+  (left : companion.Subject)
+  (captures : alloc.vec.Vec companion.CaptureBinding) (index1 : Std.Usize) :
+  Result (alloc.vec.Vec companion.CaptureBinding)
+  := do
+  loop
+    (fun (captures1, index2) => companion.subject.initial_captures_loop.body
+      left captures1 index2)
+    (captures, index1)
+
+/-- [noble_contracts::companion::subject::initial_captures]:
+    Source: 'crates/noble-contracts/src/companion/subject.rs', lines 63:0-74:1 -/
+def companion.subject.initial_captures
+  (left : companion.Subject) (entry_bound : Std.Usize) :
+  Result (alloc.vec.Vec companion.CaptureBinding)
+  := do
+  let captures :=
+    alloc.vec.Vec.with_capacity companion.CaptureBinding entry_bound
+  companion.subject.initial_captures_loop left captures 0#usize
+
+/-- [noble_contracts::companion::subject::capture_bindings]: loop body 0:
+    Source: 'crates/noble-contracts/src/companion/subject.rs', lines 94:4-106:1 -/
+@[rust_loop_body]
+def companion.subject.capture_bindings_loop.body
+  (v : alloc.vec.Vec companion.CaptureBinding) (event_index : Std.U32)
+  (captures : alloc.vec.Vec companion.CaptureBinding) (index1 : Std.Usize) :
+  Result (ControlFlow ((alloc.vec.Vec companion.CaptureBinding) × Std.Usize)
+    (core.result.Result (alloc.vec.Vec companion.CaptureBinding)
+    companion.Refusal))
+  := do
+  let i := alloc.vec.Vec.len v
+  if index1 < i
+  then
+    let cb ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        companion.CaptureBinding) v index1
+    let o ← lift (U32.checked_add cb.slot event_index)
+    match o with
+    | none =>
+      ok (done (core.result.Result.Err companion.Refusal.MismatchedSubject))
+    | some slot =>
+      let captures1 ← alloc.vec.Vec.push captures { cb with slot }
+      let index2 ← lift (core.num.Usize.saturating_add index1 1#usize)
+      ok (cont (captures1, index2))
+  else ok (done (core.result.Result.Ok captures))
+
+/-- [noble_contracts::companion::subject::capture_bindings]: loop 0:
+    Source: 'crates/noble-contracts/src/companion/subject.rs', lines 94:4-106:1 -/
+@[rust_loop]
+def companion.subject.capture_bindings_loop
+  (v : alloc.vec.Vec companion.CaptureBinding) (event_index : Std.U32)
+  (captures : alloc.vec.Vec companion.CaptureBinding) (index1 : Std.Usize) :
+  Result (core.result.Result (alloc.vec.Vec companion.CaptureBinding)
+    companion.Refusal)
+  := do
+  loop
+    (fun (captures1, index2) => companion.subject.capture_bindings_loop.body v
+      event_index captures1 index2)
+    (captures, index1)
+
+/-- [noble_contracts::companion::subject::capture_bindings]:
+    Source: 'crates/noble-contracts/src/companion/subject.rs', lines 80:0-106:1 -/
+def companion.subject.capture_bindings
+  (left : companion.Subject) (right : companion.Subject) :
+  Result (core.result.Result (alloc.vec.Vec companion.CaptureBinding)
+    companion.Refusal)
+  := do
+  let i := alloc.vec.Vec.len left.events
+  let r ← core.convert.num.ptr_try_from_impls.TryFromU32Usize.try_from i
+  match r with
+  | core.result.Result.Ok event_index =>
+    let i1 := alloc.vec.Vec.len left.captures
+    let i2 := alloc.vec.Vec.len right.captures
+    let i3 ← lift (core.num.Usize.saturating_add i1 i2)
+    let captures ← companion.subject.initial_captures left i3
+    companion.subject.capture_bindings_loop right.captures event_index captures
+      0#usize
+  | core.result.Result.Err _ =>
+    ok (core.result.Result.Err companion.Refusal.ExhaustedReplay)
+
+/-- [noble_contracts::companion::digest::DOMAIN_COMPOSE]
+    Source: 'crates/noble-contracts/src/companion/digest.rs', lines 21:0-21:65 -/
+@[global_simps, irreducible]
+def companion.digest.DOMAIN_COMPOSE : Std.U64 := 4850180331024893184#u64
+
+/-- [noble_contracts::companion::compose_subject]: loop body 0:
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 102:4-106:5
+    Visibility: public -/
+@[rust_loop_body]
+def companion.compose_subject_loop0.body
+  (captures : alloc.vec.Vec companion.CaptureBinding)
+  (fold : companion.digest.Fold) («at» : Std.Usize) :
+  Result (ControlFlow (companion.digest.Fold × Std.Usize)
+    companion.digest.Fold)
+  := do
+  let i := alloc.vec.Vec.len captures
+  if «at» < i
+  then
+    let cb ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        companion.CaptureBinding) captures «at»
+    let i1 ← lift (core.convert.num.FromU64U32.from cb.slot)
+    let fold1 ← companion.digest.Fold.absorb fold i1
+    let fold2 ← companion.digest.Fold.absorb fold1 cb.value
+    let at1 ← lift (core.num.Usize.saturating_add «at» 1#usize)
+    ok (cont (fold2, at1))
+  else ok (done fold)
+
+/-- [noble_contracts::companion::compose_subject]: loop 0:
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 102:4-106:5
+    Visibility: public -/
+@[rust_loop]
+def companion.compose_subject_loop0
+  (captures : alloc.vec.Vec companion.CaptureBinding)
+  (fold : companion.digest.Fold) («at» : Std.Usize) :
+  Result companion.digest.Fold
+  := do
+  loop
+    (fun (fold1, at1) => companion.compose_subject_loop0.body captures fold1
+      at1)
+    (fold, «at»)
+
+/-- [noble_contracts::companion::compose_subject]: loop body 1:
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 114:4-117:5
+    Visibility: public -/
+@[rust_loop_body]
+def companion.compose_subject_loop1.body
+  (v : alloc.vec.Vec (Std.U32 × Std.U64)) («at» : Std.Usize)
+  (events : alloc.vec.Vec (Std.U32 × Std.U64)) :
+  Result (ControlFlow (Std.Usize × (alloc.vec.Vec (Std.U32 × Std.U64)))
+    (alloc.vec.Vec (Std.U32 × Std.U64)))
+  := do
+  let i := alloc.vec.Vec.len v
+  if «at» < i
+  then
+    let i1 := alloc.vec.Vec.len events
+    if i1 < companion.subject.OBSERVATION_CAP
+    then
+      let p ←
+        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice (Std.U32 ×
+          Std.U64)) v «at»
+      let events1 ← alloc.vec.Vec.push events p
+      let at1 ← lift (core.num.Usize.saturating_add «at» 1#usize)
+      ok (cont (at1, events1))
+    else ok (done events)
+  else ok (done events)
+
+/-- [noble_contracts::companion::compose_subject]: loop 1:
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 114:4-117:5
+    Visibility: public -/
+@[rust_loop]
+def companion.compose_subject_loop1
+  (v : alloc.vec.Vec (Std.U32 × Std.U64)) («at» : Std.Usize)
+  (events : alloc.vec.Vec (Std.U32 × Std.U64)) :
+  Result (alloc.vec.Vec (Std.U32 × Std.U64))
+  := do
+  loop
+    (fun (at1, events1) => companion.compose_subject_loop1.body v at1 events1)
+    («at», events)
+
+/-- [noble_contracts::companion::compose_subject]: loop body 2:
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 119:4-122:5
+    Visibility: public -/
+@[rust_loop_body]
+def companion.compose_subject_loop2.body
+  (v : alloc.vec.Vec (Std.U32 × Std.U64)) («at» : Std.Usize)
+  (events : alloc.vec.Vec (Std.U32 × Std.U64)) :
+  Result (ControlFlow (Std.Usize × (alloc.vec.Vec (Std.U32 × Std.U64)))
+    (alloc.vec.Vec (Std.U32 × Std.U64)))
+  := do
+  let i := alloc.vec.Vec.len v
+  if «at» < i
+  then
+    let i1 := alloc.vec.Vec.len events
+    if i1 < companion.subject.OBSERVATION_CAP
+    then
+      let p ←
+        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice (Std.U32 ×
+          Std.U64)) v «at»
+      let events1 ← alloc.vec.Vec.push events p
+      let at1 ← lift (core.num.Usize.saturating_add «at» 1#usize)
+      ok (cont (at1, events1))
+    else ok (done events)
+  else ok (done events)
+
+/-- [noble_contracts::companion::compose_subject]: loop 2:
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 119:4-122:5
+    Visibility: public -/
+@[rust_loop]
+def companion.compose_subject_loop2
+  (v : alloc.vec.Vec (Std.U32 × Std.U64)) («at» : Std.Usize)
+  (events : alloc.vec.Vec (Std.U32 × Std.U64)) :
+  Result (alloc.vec.Vec (Std.U32 × Std.U64))
+  := do
+  loop
+    (fun (at1, events1) => companion.compose_subject_loop2.body v at1 events1)
+    («at», events)
+
+/-- [noble_contracts::companion::compose_subject]:
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 82:0-130:1
+    Visibility: public -/
+def companion.compose_subject
+  (left : companion.Subject) (right : companion.Subject) :
+  Result (core.result.Result companion.Subject companion.Refusal)
+  := do
+  if left.output_signature != right.input_signature
+  then ok (core.result.Result.Err companion.Refusal.UnresolvedImplication)
+  else
+    let i := alloc.vec.Vec.len left.events
+    let i1 := alloc.vec.Vec.len right.events
+    let i2 ← lift (core.num.Usize.saturating_add i i1)
+    if i2 > companion.subject.OBSERVATION_CAP
+    then ok (core.result.Result.Err companion.Refusal.ExhaustedReplay)
+    else
+      let i3 := alloc.vec.Vec.len left.captures
+      let i4 := alloc.vec.Vec.len right.captures
+      let i5 ← lift (core.num.Usize.saturating_add i3 i4)
+      if i5 > companion.subject.OBSERVATION_CAP
+      then ok (core.result.Result.Err companion.Refusal.ExhaustedReplay)
+      else
+        let r ← companion.subject.capture_bindings left right
+        match r with
+        | core.result.Result.Ok value =>
+          let fold ←
+            companion.digest.Fold.new companion.digest.DOMAIN_COMPOSE
+          let i6 := left.identity
+          let fold1 ← companion.digest.Fold.absorb fold i6
+          let i7 := right.identity
+          let fold2 ← companion.digest.Fold.absorb fold1 i7
+          let fold3 ← companion.digest.Fold.absorb fold2 left.input_signature
+          let fold4 ←
+            companion.digest.Fold.absorb fold3 right.output_signature
+          let fold5 ←
+            companion.digest.Fold.absorb fold4 left.output_signature
+          let i8 := alloc.vec.Vec.len value
+          let fold6 ← companion.digest.Fold.absorb_count fold5 i8
+          let fold7 ← companion.compose_subject_loop0 value fold6 0#usize
+          let i9 := alloc.vec.Vec.len left.events
+          let i10 := alloc.vec.Vec.len right.events
+          let i11 ← lift (core.num.Usize.saturating_add i9 i10)
+          let i12 ←
+            core.cmp.Ord.min.trait_default core.cmp.OrdUsize i11
+              companion.subject.OBSERVATION_CAP
+          let events := alloc.vec.Vec.with_capacity (Std.U32 × Std.U64) i12
+          let events1 ←
+            companion.compose_subject_loop1 left.events 0#usize events
+          let events2 ←
+            companion.compose_subject_loop2 right.events 0#usize events1
+          let i13 ← companion.digest.Fold.finish fold7
+          ok (core.result.Result.Ok
+            {
+              left
+                with
+                identity := i13,
+                output_signature := right.output_signature,
+                captures := value,
+                events := events2
+            })
+        | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::companion::rules::derive::composition]:
+    Source: 'crates/noble-contracts/src/companion/rules/derive.rs', lines 10:0-55:1 -/
+def companion.rules.derive.composition
+  (engine : companion.Core) (left : companion.registry.EvidenceId)
+  (right : companion.registry.EvidenceId) (subject : companion.Subject)
+  (budget : companion.Budget) :
+  Result ((core.result.Result companion.admit.ClaimTemplate companion.Refusal)
+    × companion.Budget)
+  := do
+  let r ← companion.registry.application.proved engine left
+  match r with
+  | core.result.Result.Ok value =>
+    let r1 ← companion.registry.application.proved engine right
+    match r1 with
+    | core.result.Result.Ok value1 =>
+      match value.template with
+      | companion.admit.ClaimTemplate.IncrementBy value2 =>
+        match value1.template with
+        | companion.admit.ClaimTemplate.IncrementBy value3 =>
+          let (r2, budget1) ←
+            companion.rules.premises.subject_work budget value.subject
+          match r2 with
+          | core.result.Result.Ok _ =>
+            let (r3, budget2) ←
+              companion.rules.premises.subject_work budget1 value1.subject
+            match r3 with
+            | core.result.Result.Ok _ =>
+              let r4 ← companion.compose_subject value.subject value1.subject
+              match r4 with
+              | core.result.Result.Ok value4 =>
+                let r5 ←
+                  companion.registry.application.matches_observation value4
+                    subject
+                match r5 with
+                | core.result.Result.Ok _ =>
+                  let i ← lift (core.num.I64.wrapping_add value2 value3)
+                  ok (core.result.Result.Ok
+                    (companion.admit.ClaimTemplate.IncrementBy i), budget2)
+                | core.result.Result.Err failure =>
+                  ok (core.result.Result.Err failure, budget2)
+              | core.result.Result.Err failure =>
+                ok (core.result.Result.Err failure, budget2)
+            | core.result.Result.Err failure =>
+              ok (core.result.Result.Err failure, budget2)
+          | core.result.Result.Err failure =>
+            ok (core.result.Result.Err failure, budget1)
+        | companion.admit.ClaimTemplate.IncrementByCapture =>
+          ok (core.result.Result.Err companion.Refusal.UnresolvedImplication,
+            budget)
+        | companion.admit.ClaimTemplate.GuardCorrespondence _ =>
+          ok (core.result.Result.Err companion.Refusal.UnresolvedImplication,
+            budget)
+        | companion.admit.ClaimTemplate.Admitted _ =>
+          ok (core.result.Result.Err companion.Refusal.UnresolvedImplication,
+            budget)
+      | companion.admit.ClaimTemplate.IncrementByCapture =>
+        ok (core.result.Result.Err companion.Refusal.UnresolvedImplication,
+          budget)
+      | companion.admit.ClaimTemplate.GuardCorrespondence _ =>
+        ok (core.result.Result.Err companion.Refusal.UnresolvedImplication,
+          budget)
+      | companion.admit.ClaimTemplate.Admitted _ =>
+        ok (core.result.Result.Err companion.Refusal.UnresolvedImplication,
+          budget)
+    | core.result.Result.Err failure =>
+      ok (core.result.Result.Err failure, budget)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, budget)
+
+/-- [noble_contracts::companion::guard::templates]: loop body 0:
+    Source: 'crates/noble-contracts/src/companion/guard.rs', lines 158:4-161:5 -/
+@[rust_loop_body]
+def companion.guard.templates_loop.body
+  (v : alloc.vec.Vec companion.GuardTemplate)
+  (out : alloc.vec.Vec companion.GuardTemplate) (index1 : Std.Usize) :
+  Result (ControlFlow ((alloc.vec.Vec companion.GuardTemplate) × Std.Usize)
+    (alloc.vec.Vec companion.GuardTemplate))
+  := do
+  let i := alloc.vec.Vec.len v
+  if index1 < i
+  then
+    let gt ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        companion.GuardTemplate) v index1
+    let out1 ← alloc.vec.Vec.push out gt
+    let index2 ← lift (core.num.Usize.saturating_add index1 1#usize)
+    ok (cont (out1, index2))
+  else ok (done out)
+
+/-- [noble_contracts::companion::guard::templates]: loop 0:
+    Source: 'crates/noble-contracts/src/companion/guard.rs', lines 158:4-161:5 -/
+@[rust_loop]
+def companion.guard.templates_loop
+  (v : alloc.vec.Vec companion.GuardTemplate)
+  (out : alloc.vec.Vec companion.GuardTemplate) (index1 : Std.Usize) :
+  Result (alloc.vec.Vec companion.GuardTemplate)
+  := do
+  loop
+    (fun (out1, index2) => companion.guard.templates_loop.body v out1 index2)
+    (out, index1)
+
+/-- [noble_contracts::companion::guard::templates]:
+    Source: 'crates/noble-contracts/src/companion/guard.rs', lines 139:0-163:1 -/
+def companion.guard.templates
+  (engine : companion.Core) (contract : companion.registry.ContractId) :
+  Result (core.result.Result (alloc.vec.Vec companion.GuardTemplate)
+    companion.Refusal)
+  := do
+  let r ←
+    companion.registry.entries.Registry.contract engine.registry contract
+  match r with
+  | core.result.Result.Ok value =>
+    let b ←
+      companion.registry.entries.Registry.stale engine
+        { policy := value.policy, revision := value.revision }
+    if b
+    then ok (core.result.Result.Err companion.Refusal.StaleContext)
+    else
+      let b1 ← alloc.vec.Vec.is_empty Global value.guards
+      if b1
+      then
+        ok (core.result.Result.Err companion.Refusal.UnsupportedGuardTemplate)
+      else
+        let i := alloc.vec.Vec.len value.guards
+        let out := alloc.vec.Vec.with_capacity companion.GuardTemplate i
+        let out1 ← companion.guard.templates_loop value.guards out 0#usize
+        ok (core.result.Result.Ok out1)
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::companion::rules::rule_checks]:
+    Source: 'crates/noble-contracts/src/companion/rules/mod.rs', lines 112:0-182:1 -/
+def companion.rules.rule_checks
+  (engine : companion.Core) (derivation : companion.rules.Derivation)
+  (budget : companion.Budget) :
+  Result ((core.result.Result (companion.admit.ClaimTemplate × Std.U64)
+    companion.Refusal) × companion.Budget)
+  := do
+  let (ri, count) ←
+    match derivation.rule with
+    | companion.rules.RuleId.AdmitLeanV1 =>
+      ok (companion.rules.RuleId.AdmitLeanV1, 1#usize)
+    | companion.rules.RuleId.ComposeV1 =>
+      ok (companion.rules.RuleId.ComposeV1, 2#usize)
+    | companion.rules.RuleId.InstantiateV1 =>
+      ok (companion.rules.RuleId.InstantiateV1, 1#usize)
+    | companion.rules.RuleId.GuardV1 =>
+      ok (companion.rules.RuleId.GuardV1, 1#usize)
+    | companion.rules.RuleId.ProjectV1 =>
+      ok (companion.rules.RuleId.ProjectV1, 1#usize)
+    | companion.rules.RuleId.InvokeV1 =>
+      ok (companion.rules.RuleId.InvokeV1, 1#usize)
+  let i := alloc.vec.Vec.len derivation.premises
+  if i < count
+  then ok (core.result.Result.Err companion.Refusal.MissingPremise, budget)
+  else
+    let i1 := alloc.vec.Vec.len derivation.premises
+    if i1 > count
+    then
+      ok (core.result.Result.Err companion.Refusal.WrongPremiseClass, budget)
+    else
+      let ei ←
+        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+          companion.registry.EvidenceId) derivation.premises 0#usize
+      let r ← companion.registry.application.proved engine ei
+      match r with
+      | core.result.Result.Ok value =>
+        let b ←
+          core.cmp.PartialEq.ne.trait_default
+            companion.registry.ContractId.Insts.CoreCmpPartialEqContractId
+            value.contract derivation.contract
+        if b
+        then
+          ok (core.result.Result.Err companion.Refusal.MismatchedContext,
+            budget)
+        else
+          match ri with
+          | companion.rules.RuleId.AdmitLeanV1 =>
+            let b1 ←
+              companion.rules.RuleId.Insts.CoreCmpPartialEqRuleId.eq
+                companion.rules.RuleId.AdmitLeanV1
+                companion.rules.RuleId.AdmitLeanV1
+            if b1
+            then
+              let b2 ←
+                core.cmp.PartialEq.ne.trait_default
+                  companion.registry.EvidenceClass.Insts.CoreCmpPartialEqEvidenceClass
+                  value.class companion.registry.EvidenceClass.LeanExact
+              if b2
+              then
+                ok (core.result.Result.Err companion.Refusal.WrongPremiseClass,
+                  budget)
+              else
+                let b3 ←
+                  companion.rules.RuleId.Insts.CoreCmpPartialEqRuleId.eq
+                    companion.rules.RuleId.AdmitLeanV1
+                    companion.rules.RuleId.GuardV1
+                if b3
+                then
+                  let r1 ←
+                    companion.guard.templates engine derivation.contract
+                  match r1 with
+                  | core.result.Result.Ok _ =>
+                    let b4 ←
+                      core.cmp.PartialEq.ne.trait_default
+                        companion.Subject.Insts.CoreCmpPartialEqSubject
+                        derivation.subject value.subject
+                    if b4
+                    then
+                      ok (core.result.Result.Err
+                        companion.Refusal.MismatchedSubject, budget)
+                    else
+                      ok (core.result.Result.Ok (value.template,
+                        value.statement), budget)
+                  | core.result.Result.Err failure =>
+                    ok (core.result.Result.Err failure, budget)
+                else
+                  let b4 ←
+                    core.cmp.PartialEq.ne.trait_default
+                      companion.Subject.Insts.CoreCmpPartialEqSubject
+                      derivation.subject value.subject
+                  if b4
+                  then
+                    ok (core.result.Result.Err
+                      companion.Refusal.MismatchedSubject, budget)
+                  else
+                    ok (core.result.Result.Ok (value.template,
+                      value.statement), budget)
+            else
+              let b2 ←
+                companion.rules.RuleId.Insts.CoreCmpPartialEqRuleId.eq
+                  companion.rules.RuleId.AdmitLeanV1
+                  companion.rules.RuleId.GuardV1
+              if b2
+              then
+                let r1 ← companion.guard.templates engine derivation.contract
+                match r1 with
+                | core.result.Result.Ok _ =>
+                  let b3 ←
+                    core.cmp.PartialEq.ne.trait_default
+                      companion.Subject.Insts.CoreCmpPartialEqSubject
+                      derivation.subject value.subject
+                  if b3
+                  then
+                    ok (core.result.Result.Err
+                      companion.Refusal.MismatchedSubject, budget)
+                  else
+                    ok (core.result.Result.Ok (value.template,
+                      value.statement), budget)
+                | core.result.Result.Err failure =>
+                  ok (core.result.Result.Err failure, budget)
+              else
+                let b3 ←
+                  core.cmp.PartialEq.ne.trait_default
+                    companion.Subject.Insts.CoreCmpPartialEqSubject
+                    derivation.subject value.subject
+                if b3
+                then
+                  ok (core.result.Result.Err
+                    companion.Refusal.MismatchedSubject, budget)
+                else
+                  ok (core.result.Result.Ok (value.template, value.statement),
+                    budget)
+          | companion.rules.RuleId.ComposeV1 =>
+            let ei1 ←
+              alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+                companion.registry.EvidenceId) derivation.premises 1#usize
+            let (r1, budget1) ←
+              companion.rules.derive.composition engine ei ei1
+                derivation.subject budget
+            match r1 with
+            | core.result.Result.Ok value1 =>
+              let i2 ← companion.admit.ClaimTemplate.digest value1
+              ok (core.result.Result.Ok (value1, i2), budget1)
+            | core.result.Result.Err failure =>
+              ok (core.result.Result.Err failure, budget1)
+          | companion.rules.RuleId.InstantiateV1 =>
+            let i2 := alloc.vec.Vec.len derivation.subject.captures
+            if i2 != 1#usize
+            then
+              ok (core.result.Result.Err companion.Refusal.WrongInstantiation,
+                budget)
+            else
+              let cb ←
+                alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+                  companion.CaptureBinding) derivation.subject.captures 0#usize
+              let a ← core.num.U64.to_ne_bytes cb.value
+              let capture ← core.num.I64.from_ne_bytes a
+              let r1 ←
+                companion.rules.derive.instantiation engine ei capture
+                  derivation.subject
+              match r1 with
+              | core.result.Result.Ok value1 =>
+                let i3 ← companion.admit.ClaimTemplate.digest value1
+                ok (core.result.Result.Ok (value1, i3), budget)
+              | core.result.Result.Err failure =>
+                ok (core.result.Result.Err failure, budget)
+          | companion.rules.RuleId.GuardV1 =>
+            let b1 ←
+              companion.rules.RuleId.Insts.CoreCmpPartialEqRuleId.eq
+                companion.rules.RuleId.GuardV1
+                companion.rules.RuleId.AdmitLeanV1
+            if b1
+            then
+              let b2 ←
+                core.cmp.PartialEq.ne.trait_default
+                  companion.registry.EvidenceClass.Insts.CoreCmpPartialEqEvidenceClass
+                  value.class companion.registry.EvidenceClass.LeanExact
+              if b2
+              then
+                ok (core.result.Result.Err companion.Refusal.WrongPremiseClass,
+                  budget)
+              else
+                let b3 ←
+                  companion.rules.RuleId.Insts.CoreCmpPartialEqRuleId.eq
+                    companion.rules.RuleId.GuardV1
+                    companion.rules.RuleId.GuardV1
+                if b3
+                then
+                  let r1 ←
+                    companion.guard.templates engine derivation.contract
+                  match r1 with
+                  | core.result.Result.Ok _ =>
+                    let b4 ←
+                      core.cmp.PartialEq.ne.trait_default
+                        companion.Subject.Insts.CoreCmpPartialEqSubject
+                        derivation.subject value.subject
+                    if b4
+                    then
+                      ok (core.result.Result.Err
+                        companion.Refusal.MismatchedSubject, budget)
+                    else
+                      ok (core.result.Result.Ok (value.template,
+                        value.statement), budget)
+                  | core.result.Result.Err failure =>
+                    ok (core.result.Result.Err failure, budget)
+                else
+                  let b4 ←
+                    core.cmp.PartialEq.ne.trait_default
+                      companion.Subject.Insts.CoreCmpPartialEqSubject
+                      derivation.subject value.subject
+                  if b4
+                  then
+                    ok (core.result.Result.Err
+                      companion.Refusal.MismatchedSubject, budget)
+                  else
+                    ok (core.result.Result.Ok (value.template,
+                      value.statement), budget)
+            else
+              let b2 ←
+                companion.rules.RuleId.Insts.CoreCmpPartialEqRuleId.eq
+                  companion.rules.RuleId.GuardV1 companion.rules.RuleId.GuardV1
+              if b2
+              then
+                let r1 ← companion.guard.templates engine derivation.contract
+                match r1 with
+                | core.result.Result.Ok _ =>
+                  let b3 ←
+                    core.cmp.PartialEq.ne.trait_default
+                      companion.Subject.Insts.CoreCmpPartialEqSubject
+                      derivation.subject value.subject
+                  if b3
+                  then
+                    ok (core.result.Result.Err
+                      companion.Refusal.MismatchedSubject, budget)
+                  else
+                    ok (core.result.Result.Ok (value.template,
+                      value.statement), budget)
+                | core.result.Result.Err failure =>
+                  ok (core.result.Result.Err failure, budget)
+              else
+                let b3 ←
+                  core.cmp.PartialEq.ne.trait_default
+                    companion.Subject.Insts.CoreCmpPartialEqSubject
+                    derivation.subject value.subject
+                if b3
+                then
+                  ok (core.result.Result.Err
+                    companion.Refusal.MismatchedSubject, budget)
+                else
+                  ok (core.result.Result.Ok (value.template, value.statement),
+                    budget)
+          | companion.rules.RuleId.ProjectV1 =>
+            let b1 ←
+              companion.rules.RuleId.Insts.CoreCmpPartialEqRuleId.eq
+                companion.rules.RuleId.ProjectV1
+                companion.rules.RuleId.AdmitLeanV1
+            if b1
+            then
+              let b2 ←
+                core.cmp.PartialEq.ne.trait_default
+                  companion.registry.EvidenceClass.Insts.CoreCmpPartialEqEvidenceClass
+                  value.class companion.registry.EvidenceClass.LeanExact
+              if b2
+              then
+                ok (core.result.Result.Err companion.Refusal.WrongPremiseClass,
+                  budget)
+              else
+                let b3 ←
+                  companion.rules.RuleId.Insts.CoreCmpPartialEqRuleId.eq
+                    companion.rules.RuleId.ProjectV1
+                    companion.rules.RuleId.GuardV1
+                if b3
+                then
+                  let r1 ←
+                    companion.guard.templates engine derivation.contract
+                  match r1 with
+                  | core.result.Result.Ok _ =>
+                    let b4 ←
+                      core.cmp.PartialEq.ne.trait_default
+                        companion.Subject.Insts.CoreCmpPartialEqSubject
+                        derivation.subject value.subject
+                    if b4
+                    then
+                      ok (core.result.Result.Err
+                        companion.Refusal.MismatchedSubject, budget)
+                    else
+                      ok (core.result.Result.Ok (value.template,
+                        value.statement), budget)
+                  | core.result.Result.Err failure =>
+                    ok (core.result.Result.Err failure, budget)
+                else
+                  let b4 ←
+                    core.cmp.PartialEq.ne.trait_default
+                      companion.Subject.Insts.CoreCmpPartialEqSubject
+                      derivation.subject value.subject
+                  if b4
+                  then
+                    ok (core.result.Result.Err
+                      companion.Refusal.MismatchedSubject, budget)
+                  else
+                    ok (core.result.Result.Ok (value.template,
+                      value.statement), budget)
+            else
+              let b2 ←
+                companion.rules.RuleId.Insts.CoreCmpPartialEqRuleId.eq
+                  companion.rules.RuleId.ProjectV1
+                  companion.rules.RuleId.GuardV1
+              if b2
+              then
+                let r1 ← companion.guard.templates engine derivation.contract
+                match r1 with
+                | core.result.Result.Ok _ =>
+                  let b3 ←
+                    core.cmp.PartialEq.ne.trait_default
+                      companion.Subject.Insts.CoreCmpPartialEqSubject
+                      derivation.subject value.subject
+                  if b3
+                  then
+                    ok (core.result.Result.Err
+                      companion.Refusal.MismatchedSubject, budget)
+                  else
+                    ok (core.result.Result.Ok (value.template,
+                      value.statement), budget)
+                | core.result.Result.Err failure =>
+                  ok (core.result.Result.Err failure, budget)
+              else
+                let b3 ←
+                  core.cmp.PartialEq.ne.trait_default
+                    companion.Subject.Insts.CoreCmpPartialEqSubject
+                    derivation.subject value.subject
+                if b3
+                then
+                  ok (core.result.Result.Err
+                    companion.Refusal.MismatchedSubject, budget)
+                else
+                  ok (core.result.Result.Ok (value.template, value.statement),
+                    budget)
+          | companion.rules.RuleId.InvokeV1 =>
+            let b1 ←
+              companion.rules.RuleId.Insts.CoreCmpPartialEqRuleId.eq
+                companion.rules.RuleId.InvokeV1
+                companion.rules.RuleId.AdmitLeanV1
+            if b1
+            then
+              let b2 ←
+                core.cmp.PartialEq.ne.trait_default
+                  companion.registry.EvidenceClass.Insts.CoreCmpPartialEqEvidenceClass
+                  value.class companion.registry.EvidenceClass.LeanExact
+              if b2
+              then
+                ok (core.result.Result.Err companion.Refusal.WrongPremiseClass,
+                  budget)
+              else
+                let b3 ←
+                  companion.rules.RuleId.Insts.CoreCmpPartialEqRuleId.eq
+                    companion.rules.RuleId.InvokeV1
+                    companion.rules.RuleId.GuardV1
+                if b3
+                then
+                  let r1 ←
+                    companion.guard.templates engine derivation.contract
+                  match r1 with
+                  | core.result.Result.Ok _ =>
+                    let b4 ←
+                      core.cmp.PartialEq.ne.trait_default
+                        companion.Subject.Insts.CoreCmpPartialEqSubject
+                        derivation.subject value.subject
+                    if b4
+                    then
+                      ok (core.result.Result.Err
+                        companion.Refusal.MismatchedSubject, budget)
+                    else
+                      ok (core.result.Result.Ok (value.template,
+                        value.statement), budget)
+                  | core.result.Result.Err failure =>
+                    ok (core.result.Result.Err failure, budget)
+                else
+                  let b4 ←
+                    core.cmp.PartialEq.ne.trait_default
+                      companion.Subject.Insts.CoreCmpPartialEqSubject
+                      derivation.subject value.subject
+                  if b4
+                  then
+                    ok (core.result.Result.Err
+                      companion.Refusal.MismatchedSubject, budget)
+                  else
+                    ok (core.result.Result.Ok (value.template,
+                      value.statement), budget)
+            else
+              let b2 ←
+                companion.rules.RuleId.Insts.CoreCmpPartialEqRuleId.eq
+                  companion.rules.RuleId.InvokeV1
+                  companion.rules.RuleId.GuardV1
+              if b2
+              then
+                let r1 ← companion.guard.templates engine derivation.contract
+                match r1 with
+                | core.result.Result.Ok _ =>
+                  let b3 ←
+                    core.cmp.PartialEq.ne.trait_default
+                      companion.Subject.Insts.CoreCmpPartialEqSubject
+                      derivation.subject value.subject
+                  if b3
+                  then
+                    ok (core.result.Result.Err
+                      companion.Refusal.MismatchedSubject, budget)
+                  else
+                    ok (core.result.Result.Ok (value.template,
+                      value.statement), budget)
+                | core.result.Result.Err failure =>
+                  ok (core.result.Result.Err failure, budget)
+              else
+                let b3 ←
+                  core.cmp.PartialEq.ne.trait_default
+                    companion.Subject.Insts.CoreCmpPartialEqSubject
+                    derivation.subject value.subject
+                if b3
+                then
+                  ok (core.result.Result.Err
+                    companion.Refusal.MismatchedSubject, budget)
+                else
+                  ok (core.result.Result.Ok (value.template, value.statement),
+                    budget)
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, budget)
+
+/-- [noble_contracts::companion::rules::{impl core::clone::Clone for noble_contracts::companion::rules::RuleId}::clone]:
+    Source: 'crates/noble-contracts/src/companion/rules/mod.rs', lines 13:9-13:14
+    Visibility: public -/
+def companion.rules.RuleId.Insts.CoreCloneClone.clone
+  (self : companion.rules.RuleId) : Result companion.rules.RuleId := do
+  ok self
+
+/-- [noble_contracts::companion::{impl core::clone::Clone for noble_contracts::companion::SubjectDigest}::clone]:
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 228:9-228:14
+    Visibility: public -/
+def companion.SubjectDigest.Insts.CoreCloneClone.clone
+  (self : companion.SubjectDigest) : Result companion.SubjectDigest := do
+  ok self
+
+/-- [noble_contracts::companion::{impl core::clone::Clone for noble_contracts::companion::CaptureBinding}::clone]:
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 221:9-221:14
+    Visibility: public -/
+def companion.CaptureBinding.Insts.CoreCloneClone.clone
+  (self : companion.CaptureBinding) : Result companion.CaptureBinding := do
+  ok self
+
+/-- Trait implementation: [noble_contracts::companion::{impl core::clone::Clone for noble_contracts::companion::CaptureBinding}]
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 221:9-221:14 -/
+@[reducible]
+def companion.CaptureBinding.Insts.CoreCloneClone : core.clone.Clone
+  companion.CaptureBinding := {
+  clone := companion.CaptureBinding.Insts.CoreCloneClone.clone
+}
+
+/-- [noble_contracts::companion::{impl core::clone::Clone for noble_contracts::companion::Subject}::clone]:
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 233:9-233:14
+    Visibility: public -/
+def companion.Subject.Insts.CoreCloneClone.clone
+  (self : companion.Subject) : Result companion.Subject := do
+  let sd ← companion.SubjectDigest.Insts.CoreCloneClone.clone self.identity
+  let i ← lift (core.clone.impls.CloneU64.clone self.input_signature)
+  let i1 ← lift (core.clone.impls.CloneU64.clone self.output_signature)
+  let v ←
+    alloc.vec.CloneVec.clone companion.CaptureBinding.Insts.CoreCloneClone
+      self.captures
+  let v1 ←
+    alloc.vec.CloneVec.clone (BuiltinClone (Std.U32 × Std.U64)) self.events
+  ok
+    {
+      identity := sd,
+      input_signature := i,
+      output_signature := i1,
+      captures := v,
+      events := v1
+    }
+
+/-- [noble_contracts::companion::rules::{impl core::clone::Clone for noble_contracts::companion::rules::Derivation}::clone]:
+    Source: 'crates/noble-contracts/src/companion/rules/mod.rs', lines 54:9-54:14
+    Visibility: public -/
+def companion.rules.Derivation.Insts.CoreCloneClone.clone
+  (self : companion.rules.Derivation) : Result companion.rules.Derivation := do
+  let ri ← companion.rules.RuleId.Insts.CoreCloneClone.clone self.rule
+  let ci ←
+    companion.registry.ContractId.Insts.CoreCloneClone.clone self.contract
+  let i ← lift (core.clone.impls.CloneU64.clone self.statement)
+  let s ← companion.Subject.Insts.CoreCloneClone.clone self.subject
+  let v ←
+    alloc.vec.CloneVec.clone companion.registry.EvidenceId.Insts.CoreCloneClone
+      self.premises
+  ok
+    { rule := ri, contract := ci, statement := i, subject := s, premises := v }
+
+/-- [noble_contracts::companion::rules::derive::conclusion]:
+    Source: 'crates/noble-contracts/src/companion/rules/derive.rs', lines 139:0-168:1 -/
+def companion.rules.derive.conclusion
+  (engine : companion.Core) (derivation : companion.rules.Derivation)
+  (template : companion.admit.ClaimTemplate) :
+  Result ((core.result.Result companion.registry.ContractId companion.Refusal)
+    × companion.Core)
+  := do
+  let b ←
+    match derivation.rule with
+    | companion.rules.RuleId.AdmitLeanV1 => ok false
+    | companion.rules.RuleId.ComposeV1 => ok true
+    | companion.rules.RuleId.InstantiateV1 => ok true
+    | companion.rules.RuleId.GuardV1 => ok false
+    | companion.rules.RuleId.ProjectV1 => ok false
+    | companion.rules.RuleId.InvokeV1 => ok false
+  if b
+  then
+    let input := alloc.vec.Vec.with_capacity noble_kernel.types.Ty 1#usize
+    let input1 ← alloc.vec.Vec.push input noble_kernel.types.Ty.I64Type
+    let output ←
+      alloc.vec.CloneVec.clone noble_kernel.types.Ty.Insts.CoreCloneClone
+        input1
+    let s ← alloc.string.String.new
+    let s1 := alloc.vec.Vec.deref derivation.subject.events
+    let v ← companion.registry.application.op_stream s1
+    let (r, r1) ←
+      companion.registry.entries.Registry.add_contract engine.registry
+        {
+          statement := derivation.statement,
+          exact_statement := s,
+          claim := template,
+          policy := engine.policy,
+          revision := engine.revision,
+          guards := (alloc.vec.Vec.new companion.GuardTemplate),
+          program := v,
+          input_signature := derivation.subject.input_signature,
+          output_signature := derivation.subject.output_signature,
+          input := input1,
+          output
+        }
+    ok (r, { engine with registry := r1 })
+  else ok (core.result.Result.Ok derivation.contract, engine)
+
+/-- [noble_contracts::companion::registry::EvidenceId]:
+    Source: 'crates/noble-contracts/src/companion/registry/mod.rs', lines 47:0-47:31 -/
+def companion.registry.EvidenceId.constructor
+  (i : Std.U32) : Result companion.registry.EvidenceId := do
+  ok i
+
+/-- [noble_contracts::companion::registry::{impl core::ops::function::FnOnce<(u32,), noble_contracts::companion::registry::EvidenceId> for noble_contracts::companion::registry::EvidenceId}::call_once]:
+    Source: 'crates/noble-contracts/src/companion/registry/mod.rs', lines 47:0-47:31 -/
+def P.Insts.CoreOpsFunctionFnOnceTupleU32EvidenceId.call_once
+  (state : Std.U32 → Result companion.registry.EvidenceId) (args : Std.U32) :
+  Result companion.registry.EvidenceId
+  := do
+  companion.registry.EvidenceId.constructor args
+
+/-- Trait implementation: [noble_contracts::companion::registry::{impl core::ops::function::FnOnce<(u32,), noble_contracts::companion::registry::EvidenceId> for noble_contracts::companion::registry::EvidenceId}]
+    Source: 'crates/noble-contracts/src/companion/registry/mod.rs', lines 47:0-47:31 -/
+@[reducible]
+def P.Insts.CoreOpsFunctionFnOnceTupleU32EvidenceId : core.ops.function.FnOnce
+  (Std.U32 → Result companion.registry.EvidenceId) Std.U32
+  companion.registry.EvidenceId := {
+  call_once := P.Insts.CoreOpsFunctionFnOnceTupleU32EvidenceId.call_once
+}
+
+/-- [noble_contracts::companion::registry::entries::{noble_contracts::companion::registry::Registry}::find_evidence]: loop body 0:
+    Source: 'crates/noble-contracts/src/companion/registry/entries.rs', lines 85:8-97:9 -/
+@[rust_loop_body]
+def companion.registry.entries.Registry.find_evidence_loop.body
+  (self : companion.registry.Registry)
+  (contract : companion.registry.ContractId) (statement : Std.U64)
+  (subject : companion.Subject) (index1 : Std.Usize) :
+  Result (ControlFlow Std.Usize (Option companion.registry.EvidenceId))
+  := do
+  let i := alloc.vec.Vec.len self.evidence
+  if index1 < i
+  then
+    let entry ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        companion.registry.EvidenceEntry) self.evidence index1
+    let b ←
+      companion.registry.ContractId.Insts.CoreCmpPartialEqContractId.eq
+        entry.contract contract
+    if b
+    then
+      if entry.statement = statement
+      then
+        let b1 ←
+          companion.Subject.Insts.CoreCmpPartialEqSubject.eq entry.subject
+            subject
+        if b1
+        then
+          let r ←
+            core.convert.num.ptr_try_from_impls.TryFromU32Usize.try_from index1
+          let o ← core.result.Result.ok r
+          let found ←
+            core.option.Option.map
+              P.Insts.CoreOpsFunctionFnOnceTupleU32EvidenceId o
+              (companion.registry.EvidenceId.constructor)
+          ok (done found)
+        else
+          let index2 ← lift (core.num.Usize.saturating_add index1 1#usize)
+          ok (cont index2)
+      else
+        let index2 ← lift (core.num.Usize.saturating_add index1 1#usize)
+        ok (cont index2)
+    else
+      let index2 ← lift (core.num.Usize.saturating_add index1 1#usize)
+      ok (cont index2)
+  else ok (done none)
+
+/-- [noble_contracts::companion::registry::entries::{noble_contracts::companion::registry::Registry}::find_evidence]: loop 0:
+    Source: 'crates/noble-contracts/src/companion/registry/entries.rs', lines 85:8-97:9 -/
+@[rust_loop]
+def companion.registry.entries.Registry.find_evidence_loop
+  (self : companion.registry.Registry)
+  (contract : companion.registry.ContractId) (statement : Std.U64)
+  (subject : companion.Subject) (index1 : Std.Usize) :
+  Result (Option companion.registry.EvidenceId)
+  := do
+  loop
+    (fun index2 => companion.registry.entries.Registry.find_evidence_loop.body
+      self contract statement subject index2)
+    index1
+
+/-- [noble_contracts::companion::registry::entries::{noble_contracts::companion::registry::Registry}::find_evidence]:
+    Source: 'crates/noble-contracts/src/companion/registry/entries.rs', lines 77:4-99:5 -/
+@[reducible]
+def companion.registry.entries.Registry.find_evidence
+  (self : companion.registry.Registry)
+  (contract : companion.registry.ContractId) (statement : Std.U64)
+  (subject : companion.Subject) :
+  Result (Option companion.registry.EvidenceId)
+  := do
+  companion.registry.entries.Registry.find_evidence_loop self contract
+    statement subject 0#usize
+
+/-- [noble_contracts::companion::rules::derive::insert]:
+    Source: 'crates/noble-contracts/src/companion/rules/derive.rs', lines 95:0-129:1 -/
+def companion.rules.derive.insert
+  (engine : companion.Core) (derivation : companion.rules.Derivation)
+  (template : companion.admit.ClaimTemplate) :
+  Result ((core.result.Result companion.rules.Derived companion.Refusal) ×
+    companion.Core)
+  := do
+  let (r, engine1) ←
+    companion.rules.derive.conclusion engine derivation template
+  match r with
+  | core.result.Result.Ok value =>
+    let o ←
+      companion.registry.entries.Registry.find_evidence engine1.registry value
+        derivation.statement derivation.subject
+    let b := core.option.Option.is_some o
+    if b
+    then ok (core.result.Result.Err companion.Refusal.DuplicateEntry, engine1)
+    else
+      let (r1, r2) ←
+        companion.registry.entries.Registry.add_evidence engine1.registry
+          {
+            contract := value,
+            statement := derivation.statement,
+            template,
+            subject := derivation.subject,
+            «class» := companion.registry.EvidenceClass.Replay,
+            outcome := companion.admit.Outcome.Proved,
+            policy := engine1.policy,
+            revision := engine1.revision,
+            premises := derivation.premises,
+            rule := (some derivation.rule)
+          }
+      match r1 with
+      | core.result.Result.Ok value1 =>
+        ok (core.result.Result.Ok
+          {
+            evidence := value1,
+            contract := value,
+            statement_digest := derivation.statement
+          }, { engine1 with registry := r2 })
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, { engine1 with registry := r2 })
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, engine1)
+
+/-- [noble_contracts::companion::rules::replay]:
+    Source: 'crates/noble-contracts/src/companion/rules/mod.rs', lines 73:0-101:1 -/
+def companion.rules.replay
+  (engine : companion.Core) (derivation : companion.rules.Derivation) :
+  Result ((core.result.Result companion.registry.EvidenceId companion.Refusal)
+    × companion.Core)
+  := do
+  let budget ← companion.Budget.new engine.limits
+  let (r, budget1) ←
+    companion.rules.premises.subject_work budget derivation.subject
+  match r with
+  | core.result.Result.Ok _ =>
+    let r1 ←
+      companion.registry.entries.Registry.contract engine.registry
+        derivation.contract
+    match r1 with
+    | core.result.Result.Ok value =>
+      let b ←
+        companion.registry.entries.Registry.stale engine
+          { policy := value.policy, revision := value.revision }
+      if b
+      then ok (core.result.Result.Err companion.Refusal.StaleContext, engine)
+      else
+        let s := alloc.vec.Vec.deref derivation.premises
+        let (r2, budget2) ←
+          companion.rules.premises.validate engine s budget1 true
+        match r2 with
+        | core.result.Result.Ok _ =>
+          let (r3, _) ← companion.rules.rule_checks engine derivation budget2
+          match r3 with
+          | core.result.Result.Ok value1 =>
+            let (template, statement) := value1
+            if derivation.statement != statement
+            then
+              ok (core.result.Result.Err companion.Refusal.MismatchedClaim,
+                engine)
+            else
+              let d ←
+                companion.rules.Derivation.Insts.CoreCloneClone.clone
+                  derivation
+              let (r4, engine1) ←
+                companion.rules.derive.insert engine d template
+              match r4 with
+              | core.result.Result.Ok value2 =>
+                ok (core.result.Result.Ok value2.evidence, engine1)
+              | core.result.Result.Err failure =>
+                ok (core.result.Result.Err failure, engine1)
+          | core.result.Result.Err failure =>
+            ok (core.result.Result.Err failure, engine)
+        | core.result.Result.Err failure =>
+          ok (core.result.Result.Err failure, engine)
+    | core.result.Result.Err failure =>
+      ok (core.result.Result.Err failure, engine)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, engine)
+
+/-- [noble_contracts::companion::core::{noble_contracts::companion::Core}::replay]:
+    Source: 'crates/noble-contracts/src/companion/core.rs', lines 42:4-47:5
+    Visibility: public -/
+def companion.core.Core.replay
+  (self : companion.Core) (derivation : companion.rules.Derivation) :
+  Result ((core.result.Result companion.registry.EvidenceId companion.Refusal)
+    × companion.Core)
+  := do
+  companion.rules.replay self derivation
+
+/-- [noble_contracts::companion::rules::derive::compose]:
+    Source: 'crates/noble-contracts/src/companion/rules/derive.rs', lines 181:0-218:1 -/
+def companion.rules.derive.compose
+  (engine : companion.Core) (left : companion.registry.EvidenceId)
+  (right : companion.registry.EvidenceId) (subject : companion.Subject) :
+  Result ((core.result.Result companion.rules.Derived companion.Refusal) ×
+    companion.Core)
+  := do
+  let budget ← companion.Budget.new engine.limits
+  let (r, budget1) ← companion.rules.premises.subject_work budget subject
+  match r with
+  | core.result.Result.Ok _ =>
+    let premises :=
+      alloc.vec.Vec.with_capacity companion.registry.EvidenceId 2#usize
+    let premises1 ← alloc.vec.Vec.push premises left
+    let premises2 ← alloc.vec.Vec.push premises1 right
+    let s := alloc.vec.Vec.deref premises2
+    let (r1, budget2) ←
+      companion.rules.premises.validate engine s budget1 false
+    match r1 with
+    | core.result.Result.Ok _ =>
+      let (r2, _) ←
+        companion.rules.derive.composition engine left right subject budget2
+      match r2 with
+      | core.result.Result.Ok value =>
+        let r3 ← companion.registry.application.proved engine left
+        match r3 with
+        | core.result.Result.Ok value1 =>
+          let statement ← companion.admit.ClaimTemplate.digest value
+          let s1 ← companion.Subject.Insts.CoreCloneClone.clone subject
+          companion.rules.derive.insert engine
+            {
+              rule := companion.rules.RuleId.ComposeV1,
+              contract := value1.contract,
+              statement,
+              subject := s1,
+              premises := premises2
+            } value
+        | core.result.Result.Err failure =>
+          ok (core.result.Result.Err failure, engine)
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, engine)
+    | core.result.Result.Err failure =>
+      ok (core.result.Result.Err failure, engine)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, engine)
+
+/-- [noble_contracts::companion::core::{noble_contracts::companion::Core}::derive_compose]:
+    Source: 'crates/noble-contracts/src/companion/core.rs', lines 53:4-60:5
+    Visibility: public -/
+def companion.core.Core.derive_compose
+  (self : companion.Core) (left : companion.registry.EvidenceId)
+  (right : companion.registry.EvidenceId) (subject : companion.Subject) :
+  Result ((core.result.Result companion.rules.Derived companion.Refusal) ×
+    companion.Core)
+  := do
+  companion.rules.derive.compose self left right subject
+
+/-- [noble_contracts::companion::rules::derive::instantiate]:
+    Source: 'crates/noble-contracts/src/companion/rules/derive.rs', lines 228:0-264:1 -/
+def companion.rules.derive.instantiate
+  (engine : companion.Core) (family : companion.registry.EvidenceId)
+  (capture : Std.I64) (subject : companion.Subject) :
+  Result ((core.result.Result companion.rules.Derived companion.Refusal) ×
+    companion.Core)
+  := do
+  let budget ← companion.Budget.new engine.limits
+  let (r, budget1) ← companion.rules.premises.subject_work budget subject
+  match r with
+  | core.result.Result.Ok _ =>
+    let premises :=
+      alloc.vec.Vec.with_capacity companion.registry.EvidenceId 1#usize
+    let premises1 ← alloc.vec.Vec.push premises family
+    let s := alloc.vec.Vec.deref premises1
+    let (r1, _) ← companion.rules.premises.validate engine s budget1 true
+    match r1 with
+    | core.result.Result.Ok _ =>
+      let r2 ←
+        companion.rules.derive.instantiation engine family capture subject
+      match r2 with
+      | core.result.Result.Ok value =>
+        let r3 ← companion.registry.application.proved engine family
+        match r3 with
+        | core.result.Result.Ok value1 =>
+          let statement ← companion.admit.ClaimTemplate.digest value
+          let s1 ← companion.Subject.Insts.CoreCloneClone.clone subject
+          companion.rules.derive.insert engine
+            {
+              rule := companion.rules.RuleId.InstantiateV1,
+              contract := value1.contract,
+              statement,
+              subject := s1,
+              premises := premises1
+            } value
+        | core.result.Result.Err failure =>
+          ok (core.result.Result.Err failure, engine)
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, engine)
+    | core.result.Result.Err failure =>
+      ok (core.result.Result.Err failure, engine)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, engine)
+
+/-- [noble_contracts::companion::core::{noble_contracts::companion::Core}::instantiate]:
+    Source: 'crates/noble-contracts/src/companion/core.rs', lines 63:4-70:5
+    Visibility: public -/
+def companion.core.Core.instantiate
+  (self : companion.Core) (family : companion.registry.EvidenceId)
+  (capture : Std.I64) (subject : companion.Subject) :
+  Result ((core.result.Result companion.rules.Derived companion.Refusal) ×
+    companion.Core)
+  := do
+  companion.rules.derive.instantiate self family capture subject
+
+/-- [noble_contracts::companion::registry::application::bind]:
+    Source: 'crates/noble-contracts/src/companion/registry/application.rs', lines 9:0-20:1 -/
+def companion.registry.application.bind
+  (engine : companion.Core) (evidence : companion.registry.EvidenceId)
+  (subject : companion.Subject) :
+  Result (core.result.Result companion.Subject companion.Refusal)
+  := do
+  let r ← companion.registry.application.proved engine evidence
+  match r with
+  | core.result.Result.Ok value =>
+    let b ←
+      companion.Subject.Insts.CoreCmpPartialEqSubject.eq value.subject subject
+    if b
+    then
+      let s ← companion.Subject.Insts.CoreCloneClone.clone value.subject
+      ok (core.result.Result.Ok s)
+    else
+      let r1 ←
+        companion.registry.application.matches_observation value.subject
+          subject
+      match r1 with
+      | core.result.Result.Ok _ =>
+        let s ← companion.Subject.Insts.CoreCloneClone.clone value.subject
+        ok (core.result.Result.Ok s)
+      | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::companion::core::{noble_contracts::companion::Core}::bind]:
+    Source: 'crates/noble-contracts/src/companion/core.rs', lines 76:4-82:5
+    Visibility: public -/
+def companion.core.Core.bind
+  (self : companion.Core) (evidence : companion.registry.EvidenceId)
+  (subject : companion.Subject) :
+  Result (core.result.Result companion.Subject companion.Refusal)
+  := do
+  companion.registry.application.bind self evidence subject
+
+/-- [noble_contracts::companion::core::{noble_contracts::companion::Core}::evidence_rule]:
+    Source: 'crates/noble-contracts/src/companion/core.rs', lines 85:4-91:5
+    Visibility: public -/
+def companion.core.Core.evidence_rule
+  (self : companion.Core) (evidence : companion.registry.EvidenceId) :
+  Result (core.result.Result (Option companion.rules.RuleId) companion.Refusal)
+  := do
+  let r ← companion.registry.entries.Registry.evidence self.registry evidence
+  match r with
+  | core.result.Result.Ok value => ok (core.result.Result.Ok value.rule)
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::companion::core::{noble_contracts::companion::Core}::claim]:
+    Source: 'crates/noble-contracts/src/companion/core.rs', lines 94:4-102:5
+    Visibility: public -/
+def companion.core.Core.claim
+  (self : companion.Core) (evidence : companion.registry.EvidenceId) :
+  Result (core.result.Result companion.admit.ClaimTemplate companion.Refusal)
+  := do
+  let r ← companion.registry.application.proved self evidence
+  match r with
+  | core.result.Result.Ok value => ok (core.result.Result.Ok value.template)
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::companion::core::{noble_contracts::companion::Core}::observe]:
+    Source: 'crates/noble-contracts/src/companion/core.rs', lines 106:4-111:5
+    Visibility: public -/
+def companion.core.Core.observe
+  (events : Slice (Std.U32 × Std.U64))
+  (signatures : companion.InterfaceSignatures) :
+  Result companion.Subject
+  := do
+  companion.subject.observe events signatures
+
+/-- [noble_contracts::companion::registry::entries::{noble_contracts::companion::registry::Registry}::record_observation]: loop body 0:
+    Source: 'crates/noble-contracts/src/companion/registry/entries.rs', lines 158:8-161:9 -/
+@[rust_loop_body]
+def companion.registry.entries.Registry.record_observation_loop.body
+  (events : Slice (Std.U32 × Std.U64))
+  (cached : alloc.vec.Vec (Std.U32 × Std.U64)) (index1 : Std.Usize) :
+  Result (ControlFlow ((alloc.vec.Vec (Std.U32 × Std.U64)) × Std.Usize)
+    (alloc.vec.Vec (Std.U32 × Std.U64)))
+  := do
+  let i := Slice.len events
+  if index1 < i
+  then
+    let p ← Slice.index_usize events index1
+    let cached1 ← alloc.vec.Vec.push cached p
+    let index2 ← lift (core.num.Usize.saturating_add index1 1#usize)
+    ok (cont (cached1, index2))
+  else ok (done cached)
+
+/-- [noble_contracts::companion::registry::entries::{noble_contracts::companion::registry::Registry}::record_observation]: loop 0:
+    Source: 'crates/noble-contracts/src/companion/registry/entries.rs', lines 158:8-161:9 -/
+@[rust_loop]
+def companion.registry.entries.Registry.record_observation_loop
+  (events : Slice (Std.U32 × Std.U64))
+  (cached : alloc.vec.Vec (Std.U32 × Std.U64)) (index1 : Std.Usize) :
+  Result (alloc.vec.Vec (Std.U32 × Std.U64))
+  := do
+  loop
+    (fun (cached1, index2) =>
+      companion.registry.entries.Registry.record_observation_loop.body events
+      cached1 index2)
+    (cached, index1)
+
+/-- [noble_contracts::companion::registry::entries::{noble_contracts::companion::registry::Registry}::record_observation]:
+    Source: 'crates/noble-contracts/src/companion/registry/entries.rs', lines 146:4-168:5 -/
+def companion.registry.entries.Registry.record_observation
+  (self : companion.registry.Registry) (subject : companion.Subject)
+  (events : Slice (Std.U32 × Std.U64)) :
+  Result ((core.result.Result Unit companion.Refusal) ×
+    companion.registry.Registry)
+  := do
+  let i := alloc.vec.Vec.len self.observations
+  let b ← companion.registry.entries.has_capacity i self.observation_cap
+  if b
+  then
+    let i1 := Slice.len events
+    if i1 > companion.subject.OBSERVATION_CAP
+    then ok (core.result.Result.Err companion.Refusal.ExhaustedRegistry, self)
+    else
+      let i2 := Slice.len events
+      let cached := alloc.vec.Vec.with_capacity (Std.U32 × Std.U64) i2
+      let cached1 ←
+        companion.registry.entries.Registry.record_observation_loop events
+          cached 0#usize
+      let v ←
+        alloc.vec.Vec.push self.observations
+          ({ subject := subject.identity, events := cached1 } :
+          companion.registry.Observation)
+      ok (core.result.Result.Ok (), { self with observations := v })
+  else ok (core.result.Result.Err companion.Refusal.ExhaustedRegistry, self)
+
+/-- [noble_contracts::companion::core::{noble_contracts::companion::Core}::observe_and_register]:
+    Source: 'crates/noble-contracts/src/companion/core.rs', lines 115:4-123:5
+    Visibility: public -/
+def companion.core.Core.observe_and_register
+  (self : companion.Core) (events : Slice (Std.U32 × Std.U64))
+  (signatures : companion.InterfaceSignatures) :
+  Result ((core.result.Result companion.Subject companion.Refusal) ×
+    companion.Core)
+  := do
+  let subject ← companion.subject.observe events signatures
+  let (r, r1) ←
+    companion.registry.entries.Registry.record_observation self.registry
+      subject events
+  match r with
+  | core.result.Result.Ok _ =>
+    ok (core.result.Result.Ok subject, { self with registry := r1 })
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, { self with registry := r1 })
+
+/-- [noble_contracts::companion::registry::entries::{noble_contracts::companion::registry::Registry}::cached_events]: loop body 0:
+    Source: 'crates/noble-contracts/src/companion/registry/entries.rs', lines 107:8-114:5 -/
+@[rust_loop_body]
+def companion.registry.entries.Registry.cached_events_loop.body
+  (self : companion.registry.Registry) (subject : companion.SubjectDigest)
+  (index1 : Std.Usize) :
+  Result (ControlFlow Std.Usize (Option (Slice (Std.U32 × Std.U64))))
+  := do
+  let i := alloc.vec.Vec.len self.observations
+  if index1 < i
+  then
+    let o ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        companion.registry.Observation) self.observations index1
+    let b ←
+      companion.SubjectDigest.Insts.CoreCmpPartialEqSubjectDigest.eq 
+        o.subject subject
+    if b
+    then let s := alloc.vec.Vec.deref o.events
+         ok (done (some s))
+    else
+      let index2 ← lift (core.num.Usize.saturating_add index1 1#usize)
+      ok (cont index2)
+  else ok (done none)
+
+/-- [noble_contracts::companion::registry::entries::{noble_contracts::companion::registry::Registry}::cached_events]: loop 0:
+    Source: 'crates/noble-contracts/src/companion/registry/entries.rs', lines 107:8-114:5 -/
+@[rust_loop]
+def companion.registry.entries.Registry.cached_events_loop
+  (self : companion.registry.Registry) (subject : companion.SubjectDigest)
+  (index1 : Std.Usize) :
+  Result (Option (Slice (Std.U32 × Std.U64)))
+  := do
+  loop
+    (fun index2 => companion.registry.entries.Registry.cached_events_loop.body
+      self subject index2)
+    index1
+
+/-- [noble_contracts::companion::registry::entries::{noble_contracts::companion::registry::Registry}::cached_events]:
+    Source: 'crates/noble-contracts/src/companion/registry/entries.rs', lines 102:4-114:5 -/
+@[reducible]
+def companion.registry.entries.Registry.cached_events
+  (self : companion.registry.Registry) (subject : companion.SubjectDigest) :
+  Result (Option (Slice (Std.U32 × Std.U64)))
+  := do
+  companion.registry.entries.Registry.cached_events_loop self subject 0#usize
+
+/-- [noble_contracts::companion::core::{noble_contracts::companion::Core}::cached_events]:
+    Source: 'crates/noble-contracts/src/companion/core.rs', lines 127:4-129:5
+    Visibility: public -/
+def companion.core.Core.cached_events
+  (self : companion.Core) (subject : companion.SubjectDigest) :
+  Result (Option (Slice (Std.U32 × Std.U64)))
+  := do
+  companion.registry.entries.Registry.cached_events self.registry subject
+
+/-- [noble_contracts::companion::core::{noble_contracts::companion::Core}::compose_subject]:
+    Source: 'crates/noble-contracts/src/companion/core.rs', lines 134:4-139:5
+    Visibility: public -/
+def companion.core.Core.compose_subject
+  (left : companion.Subject) (right : companion.Subject) :
+  Result (core.result.Result companion.Subject companion.Refusal)
+  := do
+  companion.compose_subject left right
+
+/-- [noble_contracts::companion::core::{noble_contracts::companion::Core}::guard_templates]:
+    Source: 'crates/noble-contracts/src/companion/core.rs', lines 143:4-148:5
+    Visibility: public -/
+def companion.core.Core.guard_templates
+  (self : companion.Core) (contract : companion.registry.ContractId) :
+  Result (core.result.Result (alloc.vec.Vec companion.GuardTemplate)
+    companion.Refusal)
+  := do
+  companion.guard.templates self contract
+
+/-- [noble_contracts::companion::core::{noble_contracts::companion::Core}::evidence_guard_templates]:
+    Source: 'crates/noble-contracts/src/companion/core.rs', lines 152:4-160:5
+    Visibility: public -/
+def companion.core.Core.evidence_guard_templates
+  (self : companion.Core) (evidence : companion.registry.EvidenceId) :
+  Result (core.result.Result (alloc.vec.Vec companion.GuardTemplate)
+    companion.Refusal)
+  := do
+  let r ← companion.registry.application.proved self evidence
+  match r with
+  | core.result.Result.Ok value =>
+    companion.guard.templates self value.contract
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::companion::guard::push_i64]: loop body 0:
+    Source: 'crates/noble-contracts/src/companion/guard.rs', lines 243:4-248:5 -/
+@[rust_loop_body]
+def companion.guard.push_i64_loop0.body
+  (digits : Array Std.U8 20#usize) (count : Std.Usize) (remaining : Std.U64) :
+  Result (ControlFlow ((Array Std.U8 20#usize) × Std.Usize × Std.U64) ((Array
+    Std.U8 20#usize) × Std.Usize))
+  := do
+  if remaining > 0#u64
+  then
+    if count < 20#usize
+    then
+      let i ← remaining % 10#u64
+      let a ← lift (core.num.U64.to_le_bytes i)
+      let digit ← Array.index_usize a 0#usize
+      let i1 ← lift (core.num.U8.saturating_add digit 48#u8)
+      let a1 ← Array.update digits count i1
+      let remaining1 ← remaining / 10#u64
+      let count1 ← lift (core.num.Usize.saturating_add count 1#usize)
+      ok (cont (a1, count1, remaining1))
+    else ok (done (digits, count))
+  else ok (done (digits, count))
+
+/-- [noble_contracts::companion::guard::push_i64]: loop 0:
+    Source: 'crates/noble-contracts/src/companion/guard.rs', lines 243:4-248:5 -/
+@[rust_loop]
+def companion.guard.push_i64_loop0
+  (digits : Array Std.U8 20#usize) (count : Std.Usize) (remaining : Std.U64) :
+  Result ((Array Std.U8 20#usize) × Std.Usize)
+  := do
+  loop
+    (fun (digits1, count1, remaining1) => companion.guard.push_i64_loop0.body
+      digits1 count1 remaining1)
+    (digits, count, remaining)
+
+/-- [noble_contracts::companion::guard::push_i64]: loop body 1:
+    Source: 'crates/noble-contracts/src/companion/guard.rs', lines 249:4-252:5 -/
+@[rust_loop_body]
+def companion.guard.push_i64_loop1.body
+  (digits : Array Std.U8 20#usize) (out : String) (count : Std.Usize) :
+  Result (ControlFlow (String × Std.Usize) String)
+  := do
+  if count > 0#usize
+  then
+    let count1 ← count - 1#usize
+    let i ← Array.index_usize digits count1
+    let c ← Char.Insts.CoreConvertFromU8.from i
+    let out1 ← alloc.string.String.push out c
+    ok (cont (out1, count1))
+  else ok (done out)
+
+/-- [noble_contracts::companion::guard::push_i64]: loop 1:
+    Source: 'crates/noble-contracts/src/companion/guard.rs', lines 249:4-252:5 -/
+@[rust_loop]
+def companion.guard.push_i64_loop1
+  (out : String) (digits : Array Std.U8 20#usize) (count : Std.Usize) :
+  Result String
+  := do
+  loop
+    (fun (out1, count1) => companion.guard.push_i64_loop1.body digits out1
+      count1)
+    (out, count)
+
+/-- [noble_contracts::companion::guard::push_i64]:
+    Source: 'crates/noble-contracts/src/companion/guard.rs', lines 232:0-253:1 -/
+def companion.guard.push_i64
+  (out : String) (value : Std.I64) : Result String := do
+  let out1 ←
+    if value < 0#i64
+    then alloc.string.String.push out '-'
+    else ok out
+  let digits := Array.repeat 20#usize 0#u8
+  let remaining ← core.num.I64.unsigned_abs value
+  if remaining = 0#u64
+  then alloc.string.String.push out1 '0'
+  else
+    let (digits1, count) ←
+      companion.guard.push_i64_loop0 digits 0#usize remaining
+    companion.guard.push_i64_loop1 out1 digits1 count
+
+/-- [noble_contracts::companion::guard::wrapper_source]:
+    Source: 'crates/noble-contracts/src/companion/guard.rs', lines 171:0-201:1 -/
+def companion.guard.wrapper_source
+  (_core : companion.Core) (template : companion.GuardTemplate) (subject : Str)
+  :
+  Result String
+  := do
+  let out ← alloc.string.String.new
+  match template with
+  | companion.GuardTemplate.LtI64Max =>
+    let out1 ← alloc.string.String.push_str out (toStr "[ dup ")
+    let out2 ← companion.guard.push_i64 out1 core.num.I64.MAX
+    let out3 ←
+      alloc.string.String.push_str out2 (toStr " = [ drop 1 inl ] [ [ ")
+    let out4 ← alloc.string.String.push_str out3 subject
+    alloc.string.String.push_str out4 (toStr " ] run inr ] if ]")
+  | companion.GuardTemplate.NeI64Min =>
+    let out1 ← alloc.string.String.push_str out (toStr "[ dup ")
+    let out2 ← companion.guard.push_i64 out1 core.num.I64.MIN
+    let out3 ←
+      alloc.string.String.push_str out2 (toStr " = [ drop 1 inl ] [ [ ")
+    let out4 ← alloc.string.String.push_str out3 subject
+    alloc.string.String.push_str out4 (toStr " ] run inr ] if ]")
+  | companion.GuardTemplate.EqI64Literal value =>
+    let out1 ← alloc.string.String.push_str out (toStr "[ dup ")
+    let out2 ← companion.guard.push_i64 out1 value
+    let out3 ← alloc.string.String.push_str out2 (toStr " = [ [ ")
+    let out4 ← alloc.string.String.push_str out3 subject
+    alloc.string.String.push_str out4 (toStr
+      " ] run inr ] [ drop 1 inl ] if ]")
+
+/-- [noble_contracts::companion::core::{noble_contracts::companion::Core}::wrapper_source]:
+    Source: 'crates/noble-contracts/src/companion/core.rs', lines 164:4-170:5
+    Visibility: public -/
+def companion.core.Core.wrapper_source
+  (self : companion.Core) (template : companion.GuardTemplate) (subject : Str)
+  :
+  Result String
+  := do
+  companion.guard.wrapper_source self template subject
+
+/-- [noble_contracts::companion::guard::invocation_wrapper]:
+    Source: 'crates/noble-contracts/src/companion/guard.rs', lines 205:0-224:1 -/
+def companion.guard.invocation_wrapper
+  (template : companion.GuardTemplate) : Result String := do
+  let out ←
+    alloc.string.String.Insts.CoreConvertFromShared0Str.from (toStr
+      "[ swap dup ")
+  let literal ←
+    match template with
+    | companion.GuardTemplate.LtI64Max => ok core.num.I64.MAX
+    | companion.GuardTemplate.NeI64Min => ok core.num.I64.MIN
+    | companion.GuardTemplate.EqI64Literal value => ok value
+  let out1 ← companion.guard.push_i64 out literal
+  match template with
+  | companion.GuardTemplate.LtI64Max =>
+    alloc.string.String.push_str out1 (toStr
+      " = [ drop drop 1 inl ] [ swap run inr ] if ]")
+  | companion.GuardTemplate.NeI64Min =>
+    alloc.string.String.push_str out1 (toStr
+      " = [ drop drop 1 inl ] [ swap run inr ] if ]")
+  | companion.GuardTemplate.EqI64Literal _ =>
+    alloc.string.String.push_str out1 (toStr
+      " = [ swap run inr ] [ drop drop 1 inl ] if ]")
+
+/-- [noble_contracts::companion::core::{noble_contracts::companion::Core}::invocation_wrapper]:
+    Source: 'crates/noble-contracts/src/companion/core.rs', lines 173:4-178:5
+    Visibility: public -/
+def companion.core.Core.invocation_wrapper
+  (self : companion.Core) (template : companion.GuardTemplate) :
+  Result String
+  := do
+  companion.guard.invocation_wrapper template
+
+/-- [noble_contracts::companion::rules::RULESET_V1]
+    Source: 'crates/noble-contracts/src/companion/rules/mod.rs', lines 11:0-11:30
+    Visibility: public -/
+@[global_simps, irreducible] def companion.rules.RULESET_V1 : Std.U32 := 1#u32
+
+/-- [noble_contracts::companion::release::select]:
+    Source: 'crates/noble-contracts/src/companion/release.rs', lines 4:0-19:1 -/
+def companion.release.select
+  (engine : companion.Core) (evidence : companion.registry.EvidenceId) :
+  Result (core.result.Result companion.Release companion.Refusal)
+  := do
+  let r ← companion.registry.application.proved engine evidence
+  match r with
+  | core.result.Result.Ok value =>
+    ok (core.result.Result.Ok
+      {
+        contract := value.contract,
+        evidence,
+        statement := value.statement,
+        subject := value.subject.identity,
+        policy := engine.policy,
+        ruleset := companion.rules.RULESET_V1
+      })
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::companion::core::{noble_contracts::companion::Core}::release]:
+    Source: 'crates/noble-contracts/src/companion/core.rs', lines 182:4-187:5
+    Visibility: public -/
+def companion.core.Core.release
+  (self : companion.Core) (evidence : companion.registry.EvidenceId) :
+  Result (core.result.Result companion.Release companion.Refusal)
+  := do
+  companion.release.select self evidence
+
+/-- [noble_contracts::companion::release::correspond]:
+    Source: 'crates/noble-contracts/src/companion/release.rs', lines 21:0-43:1 -/
+def companion.release.correspond
+  (engine : companion.Core) (evidence : companion.registry.EvidenceId)
+  (contract : companion.registry.ContractId) :
+  Result (core.result.Result Unit companion.Refusal)
+  := do
+  let r ← companion.registry.application.proved engine evidence
+  match r with
+  | core.result.Result.Ok value =>
+    let r1 ←
+      companion.registry.entries.Registry.contract engine.registry contract
+    match r1 with
+    | core.result.Result.Ok value1 =>
+      let b ←
+        companion.registry.entries.Registry.stale engine
+          { policy := value1.policy, revision := value1.revision }
+      if b
+      then ok (core.result.Result.Err companion.Refusal.StaleContext)
+      else
+        let b1 ←
+          core.cmp.PartialEq.ne.trait_default
+            companion.registry.ContractId.Insts.CoreCmpPartialEqContractId
+            value.contract contract
+        if b1
+        then
+          ok (core.result.Result.Err companion.Refusal.CorrespondenceMismatch)
+        else ok (core.result.Result.Ok ())
+    | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::companion::core::{noble_contracts::companion::Core}::correspond]:
+    Source: 'crates/noble-contracts/src/companion/core.rs', lines 192:4-198:5
+    Visibility: public -/
+def companion.core.Core.correspond
+  (self : companion.Core) (evidence : companion.registry.EvidenceId)
+  (contract : companion.registry.ContractId) :
+  Result (core.result.Result Unit companion.Refusal)
+  := do
+  companion.release.correspond self evidence contract
+
+/-- [noble_contracts::companion::release::checked]:
+    Source: 'crates/noble-contracts/src/companion/release.rs', lines 148:0-162:1 -/
+def companion.release.checked
+  (outcome : noble_kernel.untrusted.Outcome) :
+  Result (core.result.Result Unit companion.Refusal)
+  := do
+  match outcome with
+  | noble_kernel.untrusted.Outcome.Accepted _ => ok (core.result.Result.Ok ())
+  | noble_kernel.untrusted.Outcome.Invalid _ =>
+    ok (core.result.Result.Err companion.Refusal.CorrespondenceMismatch)
+  | noble_kernel.untrusted.Outcome.Unsupported _ =>
+    ok (core.result.Result.Err companion.Refusal.CorrespondenceMismatch)
+  | noble_kernel.untrusted.Outcome.Exhausted _ =>
+    ok (core.result.Result.Err companion.Refusal.ExhaustedReplay)
+  | noble_kernel.untrusted.Outcome.InternalFailure =>
+    ok (core.result.Result.Err companion.Refusal.CorrespondenceMismatch)
+
+/-- [noble_contracts::companion::release::artifact_request]:
+    Source: 'crates/noble-contracts/src/companion/release.rs', lines 124:0-146:1 -/
+def companion.release.artifact_request
+  (limits : Limits) (request : noble_kernel.untrusted.Request)
+  (contract : companion.registry.ContractEntry) :
+  Result noble_kernel.untrusted.Request
+  := do
+  let request1 ←
+    noble_kernel.untrusted.Request.Insts.CoreCloneClone.clone request
+  let stack_out := alloc.vec.Vec.with_capacity noble_kernel.types.Ty 1#usize
+  let v ←
+    alloc.vec.CloneVec.clone noble_kernel.types.Ty.Insts.CoreCloneClone
+      contract.input
+  let v1 ←
+    alloc.vec.CloneVec.clone noble_kernel.types.Ty.Insts.CoreCloneClone
+      contract.output
+  let es ← noble_kernel.types.EffSet.empty
+  let t ← noble_kernel.types.Ty.program v v1 es
+  let stack_out1 ← alloc.vec.Vec.push stack_out t
+  let i ←
+    core.cmp.Ord.min.trait_default core.cmp.OrdU32 request1.limits.work
+      limits.work
+  let i1 ←
+    core.cmp.Ord.min.trait_default core.cmp.OrdU32 request1.limits.nodes
+      limits.nodes
+  let i2 ←
+    core.cmp.Ord.min.trait_default core.cmp.OrdU32 request1.limits.depth
+      limits.depth
+  let i3 ←
+    core.cmp.Ord.min.trait_default core.cmp.OrdU32 request1.limits.bytes
+      limits.bytes
+  ok
+    {
+      request1
+        with
+        expected :=
+          {
+            stack_in := (alloc.vec.Vec.new noble_kernel.types.Ty),
+            stack_out := stack_out1,
+            allowed_effects := es
+          },
+        limits :=
+          {
+            request1.limits
+              with
+              bytes := i3, nodes := i1, depth := i2, work := i
+          }
+    }
+
+/-- [noble_contracts::companion::release::is_quotation_root]:
+    Source: 'crates/noble-contracts/src/companion/release.rs', lines 102:0-118:1 -/
+def companion.release.is_quotation_root
+  (candidate : noble_kernel.untrusted.Candidate) : Result Bool := do
+  let i := alloc.vec.Vec.len candidate.body
+  if i != 1#usize
+  then ok false
+  else
+    let ni ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        noble_kernel.untrusted.NodeId) candidate.body 0#usize
+    let r ← Usize.Insts.CoreConvertTryFromU32TryFromIntError.try_from ni
+    match r with
+    | core.result.Result.Ok root =>
+      let s := alloc.vec.Vec.deref candidate.nodes
+      let o ←
+        core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice
+          noble_kernel.untrusted.Node) s root
+      match o with
+      | none => ok false
+      | some node =>
+        match node with
+        | noble_kernel.untrusted.Node.Literal _ _ => ok false
+        | noble_kernel.untrusted.Node.Invocation _ _ => ok false
+        | noble_kernel.untrusted.Node.Quotation _ _ => ok true
+    | core.result.Result.Err _ => ok false
+
+/-- [noble_contracts::companion::release::bind_artifact]:
+    Source: 'crates/noble-contracts/src/companion/release.rs', lines 49:0-96:1 -/
+def companion.release.bind_artifact
+  (engine : companion.Core) (evidence : companion.registry.EvidenceId)
+  (submission : noble_kernel.execution.Submission) :
+  Result (core.result.Result companion.Subject companion.Refusal)
+  := do
+  let r ← companion.registry.application.proved engine evidence
+  match r with
+  | core.result.Result.Ok value =>
+    let r1 ←
+      companion.registry.entries.Registry.contract engine.registry
+        value.contract
+    match r1 with
+    | core.result.Result.Ok value1 =>
+      let b ← alloc.vec.Vec.is_empty Global submission.definitions
+      if b
+      then
+        let b1 ← alloc.vec.Vec.is_empty Global submission.body.texts
+        if b1
+        then
+          let b2 ←
+            companion.release.is_quotation_root submission.body.candidate
+          if b2
+          then
+            let r2 ← noble_kernel.contracts.environment
+            match r2 with
+            | core.result.Result.Ok environment =>
+              let request ←
+                companion.release.artifact_request engine.limits
+                  submission.request value1
+              let o ←
+                noble_kernel.acceptance.check environment request
+                  submission.body.candidate
+              let r3 ← companion.release.checked o
+              match r3 with
+              | core.result.Result.Ok _ =>
+                let r4 ←
+                  companion.admit.program.canonical_op_events
+                    submission.body.candidate
+                match r4 with
+                | core.result.Result.Ok value2 =>
+                  let i := alloc.vec.Vec.len value2
+                  let o1 ← lift (Usize.checked_sub i 1#usize)
+                  match o1 with
+                  | none =>
+                    ok (core.result.Result.Err
+                      companion.Refusal.CorrespondenceMismatch)
+                  | some last_index =>
+                    if last_index < 1#usize
+                    then
+                      ok (core.result.Result.Err
+                        companion.Refusal.CorrespondenceMismatch)
+                    else
+                      let p ←
+                        alloc.vec.Vec.index
+                          (core.slice.index.SliceIndexUsizeSlice (Std.U32 ×
+                          Std.U64)) value2 0#usize
+                      let b3 ←
+                        Pair.Insts.CoreCmpPartialEqPair.ne
+                          core.cmp.PartialEqU32 core.cmp.PartialEqU64 p (3#u32,
+                          0#u64)
+                      if b3
+                      then
+                        ok (core.result.Result.Err
+                          companion.Refusal.CorrespondenceMismatch)
+                      else
+                        let p1 ←
+                          alloc.vec.Vec.index
+                            (core.slice.index.SliceIndexUsizeSlice (Std.U32 ×
+                            Std.U64)) value2 last_index
+                        let b4 ←
+                          Pair.Insts.CoreCmpPartialEqPair.ne
+                            core.cmp.PartialEqU32 core.cmp.PartialEqU64 p1
+                            (6#u32, 0#u64)
+                        if b4
+                        then
+                          ok (core.result.Result.Err
+                            companion.Refusal.CorrespondenceMismatch)
+                        else
+                          let s ←
+                            alloc.vec.Vec.index
+                              (core.slice.index.SliceIndexRangeUsizeSlice
+                              (Std.U32 × Std.U64)) value2
+                              { start := 1#usize, «end» := last_index }
+                          let observed ←
+                            companion.subject.observe s
+                              {
+                                input := value.subject.input_signature,
+                                output := value.subject.output_signature
+                              }
+                          let r5 ←
+                            companion.core.Core.bind engine evidence observed
+                          match r5 with
+                          | core.result.Result.Ok _ => ok r5
+                          | core.result.Result.Err _ =>
+                            ok (core.result.Result.Err
+                              companion.Refusal.CorrespondenceMismatch)
+                | core.result.Result.Err failure =>
+                  ok (core.result.Result.Err failure)
+              | core.result.Result.Err failure =>
+                ok (core.result.Result.Err failure)
+            | core.result.Result.Err _ =>
+              ok (core.result.Result.Err companion.Refusal.Internal)
+          else
+            ok (core.result.Result.Err
+              companion.Refusal.CorrespondenceMismatch)
+        else
+          ok (core.result.Result.Err companion.Refusal.CorrespondenceMismatch)
+      else ok (core.result.Result.Err companion.Refusal.CorrespondenceMismatch)
+    | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::companion::core::{noble_contracts::companion::Core}::bind_artifact]:
+    Source: 'crates/noble-contracts/src/companion/core.rs', lines 202:4-208:5
+    Visibility: public -/
+def companion.core.Core.bind_artifact
+  (self : companion.Core) (evidence : companion.registry.EvidenceId)
+  (submission : noble_kernel.execution.Submission) :
+  Result (core.result.Result companion.Subject companion.Refusal)
+  := do
+  companion.release.bind_artifact self evidence submission
+
+/-- [noble_contracts::companion::core::{noble_contracts::companion::Core}::contract_program]:
+    Source: 'crates/noble-contracts/src/companion/core.rs', lines 213:4-219:5
+    Visibility: public -/
+def companion.core.Core.contract_program
+  (self : companion.Core) (contract : companion.registry.ContractId) :
+  Result (core.result.Result (Slice (Std.U32 × Std.U64)) companion.Refusal)
+  := do
+  let r ← companion.registry.entries.Registry.contract self.registry contract
+  match r with
+  | core.result.Result.Ok value =>
+    let s := alloc.vec.Vec.deref value.program
+    ok (core.result.Result.Ok s)
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::companion::digest::{impl core::clone::Clone for noble_contracts::companion::digest::Fold}::clone]:
+    Source: 'crates/noble-contracts/src/companion/digest.rs', lines 30:9-30:14
+    Visibility: public -/
+def companion.digest.Fold.Insts.CoreCloneClone.clone
+  (self : companion.digest.Fold) : Result companion.digest.Fold := do
+  ok self
+
+/-- Trait implementation: [noble_contracts::companion::digest::{impl core::clone::Clone for noble_contracts::companion::digest::Fold}]
+    Source: 'crates/noble-contracts/src/companion/digest.rs', lines 30:9-30:14 -/
+@[reducible]
+def companion.digest.Fold.Insts.CoreCloneClone : core.clone.Clone
+  companion.digest.Fold := {
+  clone := companion.digest.Fold.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_contracts::companion::digest::{impl core::marker::Copy for noble_contracts::companion::digest::Fold}]
+    Source: 'crates/noble-contracts/src/companion/digest.rs', lines 30:16-30:20 -/
+@[reducible]
+def companion.digest.Fold.Insts.CoreMarkerCopy : core.marker.Copy
+  companion.digest.Fold := {
+  cloneInst := companion.digest.Fold.Insts.CoreCloneClone
+}
+
+/-- [noble_contracts::companion::guard::CODE_LT_I64_MAX]
+    Source: 'crates/noble-contracts/src/companion/guard.rs', lines 4:0-4:43 -/
+@[global_simps, irreducible]
+def companion.guard.CODE_LT_I64_MAX : Str := toStr "lt-i64-max"
+
+/-- [noble_contracts::companion::guard::CODE_NE_I64_MIN]
+    Source: 'crates/noble-contracts/src/companion/guard.rs', lines 5:0-5:43 -/
+@[global_simps, irreducible]
+def companion.guard.CODE_NE_I64_MIN : Str := toStr "ne-i64-min"
+
+/-- [noble_contracts::companion::guard::CODE_EQ_I64_LITERAL]
+    Source: 'crates/noble-contracts/src/companion/guard.rs', lines 6:0-6:51 -/
+@[global_simps, irreducible]
+def companion.guard.CODE_EQ_I64_LITERAL : Str := toStr "eq-i64-literal"
+
+/-- [noble_contracts::companion::guard::{noble_contracts::companion::GuardTemplate}::code]:
+    Source: 'crates/noble-contracts/src/companion/guard.rs', lines 22:4-28:5
+    Visibility: public -/
+def companion.guard.GuardTemplate.code
+  (self : companion.GuardTemplate) : Result Str := do
+  match self with
+  | companion.GuardTemplate.LtI64Max => ok companion.guard.CODE_LT_I64_MAX
+  | companion.GuardTemplate.NeI64Min => ok companion.guard.CODE_NE_I64_MIN
+  | companion.GuardTemplate.EqI64Literal _ =>
+    ok companion.guard.CODE_EQ_I64_LITERAL
+
+/-- [noble_contracts::companion::{impl core::clone::Clone for noble_contracts::companion::InterfaceSignatures}::clone]:
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 22:9-22:14
+    Visibility: public -/
+def companion.InterfaceSignatures.Insts.CoreCloneClone.clone
+  (self : companion.InterfaceSignatures) :
+  Result companion.InterfaceSignatures
+  := do
+  ok self
+
+/-- Trait implementation: [noble_contracts::companion::{impl core::clone::Clone for noble_contracts::companion::InterfaceSignatures}]
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 22:9-22:14 -/
+@[reducible]
+def companion.InterfaceSignatures.Insts.CoreCloneClone : core.clone.Clone
+  companion.InterfaceSignatures := {
+  clone := companion.InterfaceSignatures.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_contracts::companion::{impl core::marker::Copy for noble_contracts::companion::InterfaceSignatures}]
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 22:16-22:20 -/
+@[reducible]
+def companion.InterfaceSignatures.Insts.CoreMarkerCopy : core.marker.Copy
+  companion.InterfaceSignatures := {
+  cloneInst := companion.InterfaceSignatures.Insts.CoreCloneClone
+}
+
+/-- [noble_contracts::companion::{impl core::fmt::Debug for noble_contracts::companion::InterfaceSignatures}::fmt]:
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 22:22-22:27
+    Visibility: public -/
+def companion.InterfaceSignatures.Insts.CoreFmtDebug.fmt
+  (self : companion.InterfaceSignatures) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ core.fmt.DebugU64 self.input
+  let dyn1 := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU64) self.output
+  core.fmt.Formatter.debug_struct_field2_finish f (toStr "InterfaceSignatures")
+    (toStr "input") dyn (toStr "output") dyn1
+
+/-- Trait implementation: [noble_contracts::companion::{impl core::fmt::Debug for noble_contracts::companion::InterfaceSignatures}]
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 22:22-22:27 -/
+@[reducible]
+def companion.InterfaceSignatures.Insts.CoreFmtDebug : core.fmt.Debug
+  companion.InterfaceSignatures := {
+  fmt := companion.InterfaceSignatures.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_contracts::companion::{impl core::marker::StructuralPartialEq for noble_contracts::companion::InterfaceSignatures}]
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 22:29-22:38 -/
+@[reducible]
+def companion.InterfaceSignatures.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq companion.InterfaceSignatures := {
+}
+
+/-- [noble_contracts::companion::{impl core::cmp::PartialEq<noble_contracts::companion::InterfaceSignatures> for noble_contracts::companion::InterfaceSignatures}::eq]:
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 22:29-22:38
+    Visibility: public -/
+def companion.InterfaceSignatures.Insts.CoreCmpPartialEqInterfaceSignatures.eq
+  (self : companion.InterfaceSignatures)
+  (other : companion.InterfaceSignatures) :
+  Result Bool
+  := do
+  if self.input = other.input
+  then ok (self.output = other.output)
+  else ok false
+
+/-- Trait implementation: [noble_contracts::companion::{impl core::cmp::PartialEq<noble_contracts::companion::InterfaceSignatures> for noble_contracts::companion::InterfaceSignatures}]
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 22:29-22:38 -/
+@[reducible]
+impl_def
+  companion.InterfaceSignatures.Insts.CoreCmpPartialEqInterfaceSignatures :
+  core.cmp.PartialEq companion.InterfaceSignatures
+  companion.InterfaceSignatures := {
+  eq :=
+    companion.InterfaceSignatures.Insts.CoreCmpPartialEqInterfaceSignatures.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    companion.InterfaceSignatures.Insts.CoreCmpPartialEqInterfaceSignatures
+}
+
+/-- [noble_contracts::companion::{impl core::cmp::Eq for noble_contracts::companion::InterfaceSignatures}::assert_fields_are_eq]:
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 22:40-22:42
+    Visibility: public -/
+def companion.InterfaceSignatures.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : companion.InterfaceSignatures) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_contracts::companion::{impl core::cmp::Eq for noble_contracts::companion::InterfaceSignatures}]
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 22:40-22:42 -/
+@[reducible]
+def companion.InterfaceSignatures.Insts.CoreCmpEq : core.cmp.Eq
+  companion.InterfaceSignatures := {
+  partialEqInst :=
+    companion.InterfaceSignatures.Insts.CoreCmpPartialEqInterfaceSignatures
+  assert_fields_are_eq :=
+    companion.InterfaceSignatures.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_contracts::companion::{impl core::clone::Clone for noble_contracts::companion::EncodedRule}::clone]:
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 29:9-29:14
+    Visibility: public -/
+def companion.EncodedRule.Insts.CoreCloneClone.clone
+  (self : companion.EncodedRule) : Result companion.EncodedRule := do
+  ok self
+
+/-- Trait implementation: [noble_contracts::companion::{impl core::clone::Clone for noble_contracts::companion::EncodedRule}]
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 29:9-29:14 -/
+@[reducible]
+def companion.EncodedRule.Insts.CoreCloneClone : core.clone.Clone
+  companion.EncodedRule := {
+  clone := companion.EncodedRule.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_contracts::companion::{impl core::marker::Copy for noble_contracts::companion::EncodedRule}]
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 29:16-29:20 -/
+@[reducible]
+def companion.EncodedRule.Insts.CoreMarkerCopy : core.marker.Copy
+  companion.EncodedRule := {
+  cloneInst := companion.EncodedRule.Insts.CoreCloneClone
+}
+
+/-- [noble_contracts::companion::{impl core::fmt::Debug for noble_contracts::companion::EncodedRule}::fmt]:
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 29:22-29:27
+    Visibility: public -/
+def companion.EncodedRule.Insts.CoreFmtDebug.fmt
+  (self : companion.EncodedRule) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ core.fmt.DebugU32 self.ruleset
+  let dyn1 := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU32) self.code
+  core.fmt.Formatter.debug_struct_field2_finish f (toStr "EncodedRule") (toStr
+    "ruleset") dyn (toStr "code") dyn1
+
+/-- Trait implementation: [noble_contracts::companion::{impl core::fmt::Debug for noble_contracts::companion::EncodedRule}]
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 29:22-29:27 -/
+@[reducible]
+def companion.EncodedRule.Insts.CoreFmtDebug : core.fmt.Debug
+  companion.EncodedRule := {
+  fmt := companion.EncodedRule.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_contracts::companion::{impl core::marker::StructuralPartialEq for noble_contracts::companion::EncodedRule}]
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 29:29-29:38 -/
+@[reducible]
+def companion.EncodedRule.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq companion.EncodedRule := {
+}
+
+/-- [noble_contracts::companion::{impl core::cmp::PartialEq<noble_contracts::companion::EncodedRule> for noble_contracts::companion::EncodedRule}::eq]:
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 29:29-29:38
+    Visibility: public -/
+def companion.EncodedRule.Insts.CoreCmpPartialEqEncodedRule.eq
+  (self : companion.EncodedRule) (other : companion.EncodedRule) :
+  Result Bool
+  := do
+  if self.ruleset = other.ruleset
+  then ok (self.code = other.code)
+  else ok false
+
+/-- Trait implementation: [noble_contracts::companion::{impl core::cmp::PartialEq<noble_contracts::companion::EncodedRule> for noble_contracts::companion::EncodedRule}]
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 29:29-29:38 -/
+@[reducible]
+impl_def companion.EncodedRule.Insts.CoreCmpPartialEqEncodedRule :
+  core.cmp.PartialEq companion.EncodedRule companion.EncodedRule := {
+  eq := companion.EncodedRule.Insts.CoreCmpPartialEqEncodedRule.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    companion.EncodedRule.Insts.CoreCmpPartialEqEncodedRule
+}
+
+/-- [noble_contracts::companion::{impl core::cmp::Eq for noble_contracts::companion::EncodedRule}::assert_fields_are_eq]:
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 29:40-29:42
+    Visibility: public -/
+def companion.EncodedRule.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : companion.EncodedRule) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_contracts::companion::{impl core::cmp::Eq for noble_contracts::companion::EncodedRule}]
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 29:40-29:42 -/
+@[reducible]
+def companion.EncodedRule.Insts.CoreCmpEq : core.cmp.Eq companion.EncodedRule
+  := {
+  partialEqInst := companion.EncodedRule.Insts.CoreCmpPartialEqEncodedRule
+  assert_fields_are_eq :=
+    companion.EncodedRule.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- Trait implementation: [noble_contracts::companion::{impl core::marker::Copy for noble_contracts::companion::Refusal}]
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 137:16-137:20 -/
+@[reducible]
+def companion.Refusal.Insts.CoreMarkerCopy : core.marker.Copy companion.Refusal
+  := {
+  cloneInst := companion.Refusal.Insts.CoreCloneClone
+}
+
+/-- Trait implementation: [noble_contracts::companion::{impl core::marker::StructuralPartialEq for noble_contracts::companion::Refusal}]
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 137:29-137:38 -/
+@[reducible]
+def companion.Refusal.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq companion.Refusal := {
+}
+
+/-- [noble_contracts::companion::{impl core::cmp::Eq for noble_contracts::companion::Refusal}::assert_fields_are_eq]:
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 137:40-137:42
+    Visibility: public -/
+def companion.Refusal.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : companion.Refusal) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_contracts::companion::{impl core::cmp::Eq for noble_contracts::companion::Refusal}]
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 137:40-137:42 -/
+@[reducible]
+def companion.Refusal.Insts.CoreCmpEq : core.cmp.Eq companion.Refusal := {
+  partialEqInst := companion.Refusal.Insts.CoreCmpPartialEqRefusal
+  assert_fields_are_eq :=
+    companion.Refusal.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_contracts::companion::{impl core::clone::Clone for noble_contracts::companion::GuardTemplate}::clone]:
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 209:9-209:14
+    Visibility: public -/
+def companion.GuardTemplate.Insts.CoreCloneClone.clone
+  (self : companion.GuardTemplate) : Result companion.GuardTemplate := do
+  ok self
+
+/-- Trait implementation: [noble_contracts::companion::{impl core::clone::Clone for noble_contracts::companion::GuardTemplate}]
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 209:9-209:14 -/
+@[reducible]
+def companion.GuardTemplate.Insts.CoreCloneClone : core.clone.Clone
+  companion.GuardTemplate := {
+  clone := companion.GuardTemplate.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_contracts::companion::{impl core::marker::Copy for noble_contracts::companion::GuardTemplate}]
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 209:16-209:20 -/
+@[reducible]
+def companion.GuardTemplate.Insts.CoreMarkerCopy : core.marker.Copy
+  companion.GuardTemplate := {
+  cloneInst := companion.GuardTemplate.Insts.CoreCloneClone
+}
+
+/-- Trait implementation: [noble_contracts::companion::{impl core::marker::StructuralPartialEq for noble_contracts::companion::GuardTemplate}]
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 209:29-209:38 -/
+@[reducible]
+def companion.GuardTemplate.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq companion.GuardTemplate := {
+}
+
+/-- [noble_contracts::companion::{impl core::cmp::Eq for noble_contracts::companion::GuardTemplate}::assert_fields_are_eq]:
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 209:40-209:42
+    Visibility: public -/
+def companion.GuardTemplate.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : companion.GuardTemplate) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_contracts::companion::{impl core::cmp::Eq for noble_contracts::companion::GuardTemplate}]
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 209:40-209:42 -/
+@[reducible]
+def companion.GuardTemplate.Insts.CoreCmpEq : core.cmp.Eq
+  companion.GuardTemplate := {
+  partialEqInst := companion.GuardTemplate.Insts.CoreCmpPartialEqGuardTemplate
+  assert_fields_are_eq :=
+    companion.GuardTemplate.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- Trait implementation: [noble_contracts::companion::{impl core::marker::Copy for noble_contracts::companion::CaptureBinding}]
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 221:16-221:20 -/
+@[reducible]
+def companion.CaptureBinding.Insts.CoreMarkerCopy : core.marker.Copy
+  companion.CaptureBinding := {
+  cloneInst := companion.CaptureBinding.Insts.CoreCloneClone
+}
+
+/-- [noble_contracts::companion::{impl core::fmt::Debug for noble_contracts::companion::CaptureBinding}::fmt]:
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 221:22-221:27
+    Visibility: public -/
+def companion.CaptureBinding.Insts.CoreFmtDebug.fmt
+  (self : companion.CaptureBinding) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ core.fmt.DebugU32 self.slot
+  let dyn1 := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU64) self.value
+  core.fmt.Formatter.debug_struct_field2_finish f (toStr "CaptureBinding")
+    (toStr "slot") dyn (toStr "value") dyn1
+
+/-- Trait implementation: [noble_contracts::companion::{impl core::fmt::Debug for noble_contracts::companion::CaptureBinding}]
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 221:22-221:27 -/
+@[reducible]
+def companion.CaptureBinding.Insts.CoreFmtDebug : core.fmt.Debug
+  companion.CaptureBinding := {
+  fmt := companion.CaptureBinding.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_contracts::companion::{impl core::marker::StructuralPartialEq for noble_contracts::companion::CaptureBinding}]
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 221:29-221:38 -/
+@[reducible]
+def companion.CaptureBinding.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq companion.CaptureBinding := {
+}
+
+/-- [noble_contracts::companion::{impl core::cmp::Eq for noble_contracts::companion::CaptureBinding}::assert_fields_are_eq]:
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 221:40-221:42
+    Visibility: public -/
+def companion.CaptureBinding.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : companion.CaptureBinding) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_contracts::companion::{impl core::cmp::Eq for noble_contracts::companion::CaptureBinding}]
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 221:40-221:42 -/
+@[reducible]
+def companion.CaptureBinding.Insts.CoreCmpEq : core.cmp.Eq
+  companion.CaptureBinding := {
+  partialEqInst :=
+    companion.CaptureBinding.Insts.CoreCmpPartialEqCaptureBinding
+  assert_fields_are_eq :=
+    companion.CaptureBinding.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- Trait implementation: [noble_contracts::companion::{impl core::clone::Clone for noble_contracts::companion::SubjectDigest}]
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 228:9-228:14 -/
+@[reducible]
+def companion.SubjectDigest.Insts.CoreCloneClone : core.clone.Clone
+  companion.SubjectDigest := {
+  clone := companion.SubjectDigest.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_contracts::companion::{impl core::marker::Copy for noble_contracts::companion::SubjectDigest}]
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 228:16-228:20 -/
+@[reducible]
+def companion.SubjectDigest.Insts.CoreMarkerCopy : core.marker.Copy
+  companion.SubjectDigest := {
+  cloneInst := companion.SubjectDigest.Insts.CoreCloneClone
+}
+
+/-- [noble_contracts::companion::{impl core::fmt::Debug for noble_contracts::companion::SubjectDigest}::fmt]:
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 228:22-228:27
+    Visibility: public -/
+def companion.SubjectDigest.Insts.CoreFmtDebug.fmt
+  (self : companion.SubjectDigest) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU64) self
+  core.fmt.Formatter.debug_tuple_field1_finish f (toStr "SubjectDigest") dyn
+
+/-- Trait implementation: [noble_contracts::companion::{impl core::fmt::Debug for noble_contracts::companion::SubjectDigest}]
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 228:22-228:27 -/
+@[reducible]
+def companion.SubjectDigest.Insts.CoreFmtDebug : core.fmt.Debug
+  companion.SubjectDigest := {
+  fmt := companion.SubjectDigest.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_contracts::companion::{impl core::marker::StructuralPartialEq for noble_contracts::companion::SubjectDigest}]
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 228:29-228:38 -/
+@[reducible]
+def companion.SubjectDigest.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq companion.SubjectDigest := {
+}
+
+/-- Trait implementation: [noble_contracts::companion::{impl core::cmp::PartialEq<noble_contracts::companion::SubjectDigest> for noble_contracts::companion::SubjectDigest}]
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 228:29-228:38 -/
+@[reducible]
+impl_def companion.SubjectDigest.Insts.CoreCmpPartialEqSubjectDigest :
+  core.cmp.PartialEq companion.SubjectDigest companion.SubjectDigest := {
+  eq := companion.SubjectDigest.Insts.CoreCmpPartialEqSubjectDigest.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    companion.SubjectDigest.Insts.CoreCmpPartialEqSubjectDigest
+}
+
+/-- [noble_contracts::companion::{impl core::cmp::Eq for noble_contracts::companion::SubjectDigest}::assert_fields_are_eq]:
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 228:40-228:42
+    Visibility: public -/
+def companion.SubjectDigest.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : companion.SubjectDigest) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_contracts::companion::{impl core::cmp::Eq for noble_contracts::companion::SubjectDigest}]
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 228:40-228:42 -/
+@[reducible]
+def companion.SubjectDigest.Insts.CoreCmpEq : core.cmp.Eq
+  companion.SubjectDigest := {
+  partialEqInst := companion.SubjectDigest.Insts.CoreCmpPartialEqSubjectDigest
+  assert_fields_are_eq :=
+    companion.SubjectDigest.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- Trait implementation: [noble_contracts::companion::{impl core::clone::Clone for noble_contracts::companion::Subject}]
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 233:9-233:14 -/
+@[reducible]
+def companion.Subject.Insts.CoreCloneClone : core.clone.Clone companion.Subject
+  := {
+  clone := companion.Subject.Insts.CoreCloneClone.clone
+}
+
+/-- [noble_contracts::companion::{impl core::fmt::Debug for noble_contracts::companion::Subject}::fmt]:
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 233:16-233:21
+    Visibility: public -/
+def companion.Subject.Insts.CoreFmtDebug.fmt
+  (self : companion.Subject) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ companion.SubjectDigest.Insts.CoreFmtDebug self.identity
+  let dyn1 := Dyn.mk _ core.fmt.DebugU64 self.input_signature
+  let dyn2 := Dyn.mk _ core.fmt.DebugU64 self.output_signature
+  let dyn3 :=
+    Dyn.mk _ (core.fmt.DebugVec companion.CaptureBinding.Insts.CoreFmtDebug)
+      self.captures
+  let dyn4 :=
+    Dyn.mk _ (core.fmt.DebugShared (core.fmt.DebugVec (Pair.Insts.CoreFmtDebug
+      core.fmt.DebugU32 core.fmt.DebugU64))) self.events
+  core.fmt.Formatter.debug_struct_field5_finish f (toStr "Subject") (toStr
+    "identity") dyn (toStr "input_signature") dyn1 (toStr "output_signature")
+    dyn2 (toStr "captures") dyn3 (toStr "events") dyn4
+
+/-- Trait implementation: [noble_contracts::companion::{impl core::fmt::Debug for noble_contracts::companion::Subject}]
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 233:16-233:21 -/
+@[reducible]
+def companion.Subject.Insts.CoreFmtDebug : core.fmt.Debug companion.Subject
+  := {
+  fmt := companion.Subject.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_contracts::companion::{impl core::marker::StructuralPartialEq for noble_contracts::companion::Subject}]
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 233:23-233:32 -/
+@[reducible]
+def companion.Subject.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq companion.Subject := {
+}
+
+/-- [noble_contracts::companion::{impl core::cmp::Eq for noble_contracts::companion::Subject}::assert_fields_are_eq]:
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 233:34-233:36
+    Visibility: public -/
+def companion.Subject.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : companion.Subject) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_contracts::companion::{impl core::cmp::Eq for noble_contracts::companion::Subject}]
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 233:34-233:36 -/
+@[reducible]
+def companion.Subject.Insts.CoreCmpEq : core.cmp.Eq companion.Subject := {
+  partialEqInst := companion.Subject.Insts.CoreCmpPartialEqSubject
+  assert_fields_are_eq :=
+    companion.Subject.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_contracts::companion::{impl core::clone::Clone for noble_contracts::companion::Release}::clone]:
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 249:9-249:14
+    Visibility: public -/
+def companion.Release.Insts.CoreCloneClone.clone
+  (self : companion.Release) : Result companion.Release := do
+  ok self
+
+/-- Trait implementation: [noble_contracts::companion::{impl core::clone::Clone for noble_contracts::companion::Release}]
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 249:9-249:14 -/
+@[reducible]
+def companion.Release.Insts.CoreCloneClone : core.clone.Clone companion.Release
+  := {
+  clone := companion.Release.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_contracts::companion::{impl core::marker::Copy for noble_contracts::companion::Release}]
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 249:16-249:20 -/
+@[reducible]
+def companion.Release.Insts.CoreMarkerCopy : core.marker.Copy companion.Release
+  := {
+  cloneInst := companion.Release.Insts.CoreCloneClone
+}
+
+/-- [noble_contracts::companion::{impl core::fmt::Debug for noble_contracts::companion::Release}::fmt]:
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 249:22-249:27
+    Visibility: public -/
+def companion.Release.Insts.CoreFmtDebug.fmt
+  (self : companion.Release) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn :=
+    Dyn.mk _ companion.registry.ContractId.Insts.CoreFmtDebug self.contract
+  let dyn1 :=
+    Dyn.mk _ companion.registry.EvidenceId.Insts.CoreFmtDebug self.evidence
+  let dyn2 := Dyn.mk _ core.fmt.DebugU64 self.statement
+  let dyn3 := Dyn.mk _ companion.SubjectDigest.Insts.CoreFmtDebug self.subject
+  let dyn4 := Dyn.mk _ core.fmt.DebugU32 self.policy
+  let dyn5 := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU32) self.ruleset
+  let values :=
+    Array.to_slice (Array.make 6#usize [ dyn, dyn1, dyn2, dyn3, dyn4, dyn5 ])
+  let s ←
+    lift (Array.to_slice
+      (Array.make 6#usize [
+        toStr "contract", toStr "evidence", toStr "statement", toStr "subject",
+        toStr "policy", toStr "ruleset"
+        ]))
+  core.fmt.Formatter.debug_struct_fields_finish f (toStr "Release") s values
+
+/-- Trait implementation: [noble_contracts::companion::{impl core::fmt::Debug for noble_contracts::companion::Release}]
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 249:22-249:27 -/
+@[reducible]
+def companion.Release.Insts.CoreFmtDebug : core.fmt.Debug companion.Release
+  := {
+  fmt := companion.Release.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_contracts::companion::{impl core::marker::StructuralPartialEq for noble_contracts::companion::Release}]
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 249:29-249:38 -/
+@[reducible]
+def companion.Release.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq companion.Release := {
+}
+
+/-- [noble_contracts::companion::{impl core::cmp::PartialEq<noble_contracts::companion::Release> for noble_contracts::companion::Release}::eq]:
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 249:29-249:38
+    Visibility: public -/
+def companion.Release.Insts.CoreCmpPartialEqRelease.eq
+  (self : companion.Release) (other : companion.Release) : Result Bool := do
+  if self.statement = other.statement
+  then
+    if self.policy = other.policy
+    then
+      if self.ruleset = other.ruleset
+      then
+        let b ←
+          companion.registry.ContractId.Insts.CoreCmpPartialEqContractId.eq
+            self.contract other.contract
+        if b
+        then
+          let b1 ←
+            companion.registry.EvidenceId.Insts.CoreCmpPartialEqEvidenceId.eq
+              self.evidence other.evidence
+          if b1
+          then
+            companion.SubjectDigest.Insts.CoreCmpPartialEqSubjectDigest.eq
+              self.subject other.subject
+          else ok false
+        else ok false
+      else ok false
+    else ok false
+  else ok false
+
+/-- Trait implementation: [noble_contracts::companion::{impl core::cmp::PartialEq<noble_contracts::companion::Release> for noble_contracts::companion::Release}]
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 249:29-249:38 -/
+@[reducible]
+impl_def companion.Release.Insts.CoreCmpPartialEqRelease : core.cmp.PartialEq
+  companion.Release companion.Release := {
+  eq := companion.Release.Insts.CoreCmpPartialEqRelease.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    companion.Release.Insts.CoreCmpPartialEqRelease
+}
+
+/-- [noble_contracts::companion::{impl core::cmp::Eq for noble_contracts::companion::Release}::assert_fields_are_eq]:
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 249:40-249:42
+    Visibility: public -/
+def companion.Release.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : companion.Release) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_contracts::companion::{impl core::cmp::Eq for noble_contracts::companion::Release}]
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 249:40-249:42 -/
+@[reducible]
+def companion.Release.Insts.CoreCmpEq : core.cmp.Eq companion.Release := {
+  partialEqInst := companion.Release.Insts.CoreCmpPartialEqRelease
+  assert_fields_are_eq :=
+    companion.Release.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- Trait implementation: [noble_contracts::companion::registry::{impl core::clone::Clone for noble_contracts::companion::registry::EvidenceClass}]
+    Source: 'crates/noble-contracts/src/companion/registry/mod.rs', lines 5:9-5:14 -/
+@[reducible]
+def companion.registry.EvidenceClass.Insts.CoreCloneClone : core.clone.Clone
+  companion.registry.EvidenceClass := {
+  clone := companion.registry.EvidenceClass.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_contracts::companion::registry::{impl core::marker::Copy for noble_contracts::companion::registry::EvidenceClass}]
+    Source: 'crates/noble-contracts/src/companion/registry/mod.rs', lines 5:16-5:20 -/
+@[reducible]
+def companion.registry.EvidenceClass.Insts.CoreMarkerCopy : core.marker.Copy
+  companion.registry.EvidenceClass := {
+  cloneInst := companion.registry.EvidenceClass.Insts.CoreCloneClone
+}
+
+/-- Trait implementation: [noble_contracts::companion::registry::{impl core::marker::StructuralPartialEq for noble_contracts::companion::registry::EvidenceClass}]
+    Source: 'crates/noble-contracts/src/companion/registry/mod.rs', lines 5:29-5:38 -/
+@[reducible]
+def companion.registry.EvidenceClass.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq companion.registry.EvidenceClass := {
+}
+
+/-- [noble_contracts::companion::registry::{impl core::cmp::Eq for noble_contracts::companion::registry::EvidenceClass}::assert_fields_are_eq]:
+    Source: 'crates/noble-contracts/src/companion/registry/mod.rs', lines 5:40-5:42
+    Visibility: public -/
+def companion.registry.EvidenceClass.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : companion.registry.EvidenceClass) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_contracts::companion::registry::{impl core::cmp::Eq for noble_contracts::companion::registry::EvidenceClass}]
+    Source: 'crates/noble-contracts/src/companion/registry/mod.rs', lines 5:40-5:42 -/
+@[reducible]
+def companion.registry.EvidenceClass.Insts.CoreCmpEq : core.cmp.Eq
+  companion.registry.EvidenceClass := {
+  partialEqInst :=
+    companion.registry.EvidenceClass.Insts.CoreCmpPartialEqEvidenceClass
+  assert_fields_are_eq :=
+    companion.registry.EvidenceClass.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_contracts::companion::registry::{noble_contracts::companion::registry::EvidenceClass}::decode]:
+    Source: 'crates/noble-contracts/src/companion/registry/mod.rs', lines 21:4-29:5
+    Visibility: public -/
+def companion.registry.EvidenceClass.decode
+  (code : Std.U32) :
+  Result (core.result.Result companion.registry.EvidenceClass
+    companion.Refusal)
+  := do
+  match code with
+  | 1#uscalar =>
+    ok (core.result.Result.Ok companion.registry.EvidenceClass.LeanExact)
+  | 2#uscalar =>
+    ok (core.result.Result.Ok companion.registry.EvidenceClass.LeanRefutation)
+  | 3#uscalar =>
+    ok (core.result.Result.Ok companion.registry.EvidenceClass.Replay)
+  | 4#uscalar =>
+    ok (core.result.Result.Ok companion.registry.EvidenceClass.Assumption)
+  | _ => ok (core.result.Result.Err companion.Refusal.UnsupportedEvidenceClass)
+
+/-- [noble_contracts::companion::registry::{noble_contracts::companion::registry::EvidenceClass}::code]:
+    Source: 'crates/noble-contracts/src/companion/registry/mod.rs', lines 31:4-38:5
+    Visibility: public -/
+def companion.registry.EvidenceClass.code
+  (self : companion.registry.EvidenceClass) : Result Std.U32 := do
+  match self with
+  | companion.registry.EvidenceClass.LeanExact => ok 1#u32
+  | companion.registry.EvidenceClass.LeanRefutation => ok 2#u32
+  | companion.registry.EvidenceClass.Replay => ok 3#u32
+  | companion.registry.EvidenceClass.Assumption => ok 4#u32
+
+/-- Trait implementation: [noble_contracts::companion::registry::{impl core::marker::Copy for noble_contracts::companion::registry::ContractId}]
+    Source: 'crates/noble-contracts/src/companion/registry/mod.rs', lines 42:16-42:20 -/
+@[reducible]
+def companion.registry.ContractId.Insts.CoreMarkerCopy : core.marker.Copy
+  companion.registry.ContractId := {
+  cloneInst := companion.registry.ContractId.Insts.CoreCloneClone
+}
+
+/-- Trait implementation: [noble_contracts::companion::registry::{impl core::marker::StructuralPartialEq for noble_contracts::companion::registry::ContractId}]
+    Source: 'crates/noble-contracts/src/companion/registry/mod.rs', lines 42:29-42:38 -/
+@[reducible]
+def companion.registry.ContractId.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq companion.registry.ContractId := {
+}
+
+/-- [noble_contracts::companion::registry::{impl core::cmp::Eq for noble_contracts::companion::registry::ContractId}::assert_fields_are_eq]:
+    Source: 'crates/noble-contracts/src/companion/registry/mod.rs', lines 42:40-42:42
+    Visibility: public -/
+def companion.registry.ContractId.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : companion.registry.ContractId) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_contracts::companion::registry::{impl core::cmp::Eq for noble_contracts::companion::registry::ContractId}]
+    Source: 'crates/noble-contracts/src/companion/registry/mod.rs', lines 42:40-42:42 -/
+@[reducible]
+def companion.registry.ContractId.Insts.CoreCmpEq : core.cmp.Eq
+  companion.registry.ContractId := {
+  partialEqInst :=
+    companion.registry.ContractId.Insts.CoreCmpPartialEqContractId
+  assert_fields_are_eq :=
+    companion.registry.ContractId.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- Trait implementation: [noble_contracts::companion::registry::{impl core::marker::Copy for noble_contracts::companion::registry::EvidenceId}]
+    Source: 'crates/noble-contracts/src/companion/registry/mod.rs', lines 46:16-46:20 -/
+@[reducible]
+def companion.registry.EvidenceId.Insts.CoreMarkerCopy : core.marker.Copy
+  companion.registry.EvidenceId := {
+  cloneInst := companion.registry.EvidenceId.Insts.CoreCloneClone
+}
+
+/-- Trait implementation: [noble_contracts::companion::registry::{impl core::marker::StructuralPartialEq for noble_contracts::companion::registry::EvidenceId}]
+    Source: 'crates/noble-contracts/src/companion/registry/mod.rs', lines 46:29-46:38 -/
+@[reducible]
+def companion.registry.EvidenceId.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq companion.registry.EvidenceId := {
+}
+
+/-- [noble_contracts::companion::registry::{impl core::cmp::Eq for noble_contracts::companion::registry::EvidenceId}::assert_fields_are_eq]:
+    Source: 'crates/noble-contracts/src/companion/registry/mod.rs', lines 46:40-46:42
+    Visibility: public -/
+def companion.registry.EvidenceId.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : companion.registry.EvidenceId) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_contracts::companion::registry::{impl core::cmp::Eq for noble_contracts::companion::registry::EvidenceId}]
+    Source: 'crates/noble-contracts/src/companion/registry/mod.rs', lines 46:40-46:42 -/
+@[reducible]
+def companion.registry.EvidenceId.Insts.CoreCmpEq : core.cmp.Eq
+  companion.registry.EvidenceId := {
+  partialEqInst :=
+    companion.registry.EvidenceId.Insts.CoreCmpPartialEqEvidenceId
+  assert_fields_are_eq :=
+    companion.registry.EvidenceId.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_contracts::companion::registry::{impl core::clone::Clone for noble_contracts::companion::registry::ContextSnapshot}::clone]:
+    Source: 'crates/noble-contracts/src/companion/registry/mod.rs', lines 50:9-50:14
+    Visibility: public -/
+def companion.registry.ContextSnapshot.Insts.CoreCloneClone.clone
+  (self : companion.registry.ContextSnapshot) :
+  Result companion.registry.ContextSnapshot
+  := do
+  ok self
+
+/-- Trait implementation: [noble_contracts::companion::registry::{impl core::clone::Clone for noble_contracts::companion::registry::ContextSnapshot}]
+    Source: 'crates/noble-contracts/src/companion/registry/mod.rs', lines 50:9-50:14 -/
+@[reducible]
+def companion.registry.ContextSnapshot.Insts.CoreCloneClone : core.clone.Clone
+  companion.registry.ContextSnapshot := {
+  clone := companion.registry.ContextSnapshot.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_contracts::companion::registry::{impl core::marker::Copy for noble_contracts::companion::registry::ContextSnapshot}]
+    Source: 'crates/noble-contracts/src/companion/registry/mod.rs', lines 50:16-50:20 -/
+@[reducible]
+def companion.registry.ContextSnapshot.Insts.CoreMarkerCopy : core.marker.Copy
+  companion.registry.ContextSnapshot := {
+  cloneInst := companion.registry.ContextSnapshot.Insts.CoreCloneClone
+}
+
+/-- [noble_contracts::companion::registry::{impl core::clone::Clone for noble_contracts::companion::registry::ContractEntry}::clone]:
+    Source: 'crates/noble-contracts/src/companion/registry/mod.rs', lines 59:9-59:14
+    Visibility: public -/
+def companion.registry.ContractEntry.Insts.CoreCloneClone.clone
+  (self : companion.registry.ContractEntry) :
+  Result companion.registry.ContractEntry
+  := do
+  let i ← lift (core.clone.impls.CloneU64.clone self.statement)
+  let s ← alloc.string.String.Insts.CoreCloneClone.clone self.exact_statement
+  let ct ←
+    companion.admit.ClaimTemplate.Insts.CoreCloneClone.clone self.claim
+  let i1 ← lift (core.clone.impls.CloneU32.clone self.policy)
+  let i2 ← lift (core.clone.impls.CloneU32.clone self.revision)
+  let v ←
+    alloc.vec.CloneVec.clone companion.GuardTemplate.Insts.CoreCloneClone
+      self.guards
+  let v1 ←
+    alloc.vec.CloneVec.clone (BuiltinClone (Std.U32 × Std.U64)) self.program
+  let i3 ← lift (core.clone.impls.CloneU64.clone self.input_signature)
+  let i4 ← lift (core.clone.impls.CloneU64.clone self.output_signature)
+  let v2 ←
+    alloc.vec.CloneVec.clone noble_kernel.types.Ty.Insts.CoreCloneClone
+      self.input
+  let v3 ←
+    alloc.vec.CloneVec.clone noble_kernel.types.Ty.Insts.CoreCloneClone
+      self.output
+  ok
+    {
+      statement := i,
+      exact_statement := s,
+      claim := ct,
+      policy := i1,
+      revision := i2,
+      guards := v,
+      program := v1,
+      input_signature := i3,
+      output_signature := i4,
+      input := v2,
+      output := v3
+    }
+
+/-- Trait implementation: [noble_contracts::companion::registry::{impl core::clone::Clone for noble_contracts::companion::registry::ContractEntry}]
+    Source: 'crates/noble-contracts/src/companion/registry/mod.rs', lines 59:9-59:14 -/
+@[reducible]
+def companion.registry.ContractEntry.Insts.CoreCloneClone : core.clone.Clone
+  companion.registry.ContractEntry := {
+  clone := companion.registry.ContractEntry.Insts.CoreCloneClone.clone
+}
+
+/-- [noble_contracts::companion::registry::{impl core::fmt::Debug for noble_contracts::companion::registry::ContractEntry}::fmt]:
+    Source: 'crates/noble-contracts/src/companion/registry/mod.rs', lines 59:16-59:21
+    Visibility: public -/
+def companion.registry.ContractEntry.Insts.CoreFmtDebug.fmt
+  (self : companion.registry.ContractEntry) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ core.fmt.DebugU64 self.statement
+  let dyn1 :=
+    Dyn.mk _ alloc.string.String.Insts.CoreFmtDebug self.exact_statement
+  let dyn2 :=
+    Dyn.mk _ companion.admit.ClaimTemplate.Insts.CoreFmtDebug self.claim
+  let dyn3 := Dyn.mk _ core.fmt.DebugU32 self.policy
+  let dyn4 := Dyn.mk _ core.fmt.DebugU32 self.revision
+  let dyn5 :=
+    Dyn.mk _ (core.fmt.DebugVec companion.GuardTemplate.Insts.CoreFmtDebug)
+      self.guards
+  let dyn6 :=
+    Dyn.mk _ (core.fmt.DebugVec (Pair.Insts.CoreFmtDebug core.fmt.DebugU32
+      core.fmt.DebugU64)) self.program
+  let dyn7 := Dyn.mk _ core.fmt.DebugU64 self.input_signature
+  let dyn8 := Dyn.mk _ core.fmt.DebugU64 self.output_signature
+  let dyn9 :=
+    Dyn.mk _ (core.fmt.DebugVec noble_kernel.types.Ty.Insts.CoreFmtDebug)
+      self.input
+  let dyn10 :=
+    Dyn.mk _ (core.fmt.DebugShared (core.fmt.DebugVec
+      noble_kernel.types.Ty.Insts.CoreFmtDebug)) self.output
+  let values :=
+    Array.to_slice
+      (Array.make 11#usize [
+        dyn, dyn1, dyn2, dyn3, dyn4, dyn5, dyn6, dyn7, dyn8, dyn9, dyn10
+        ])
+  let s ←
+    lift (Array.to_slice
+      (Array.make 11#usize [
+        toStr "statement", toStr "exact_statement", toStr "claim", toStr
+        "policy", toStr "revision", toStr "guards", toStr "program", toStr
+        "input_signature", toStr "output_signature", toStr "input", toStr
+        "output"
+        ]))
+  core.fmt.Formatter.debug_struct_fields_finish f (toStr "ContractEntry") s
+    values
+
+/-- Trait implementation: [noble_contracts::companion::registry::{impl core::fmt::Debug for noble_contracts::companion::registry::ContractEntry}]
+    Source: 'crates/noble-contracts/src/companion/registry/mod.rs', lines 59:16-59:21 -/
+@[reducible]
+def companion.registry.ContractEntry.Insts.CoreFmtDebug : core.fmt.Debug
+  companion.registry.ContractEntry := {
+  fmt := companion.registry.ContractEntry.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_contracts::companion::rules::{impl core::clone::Clone for noble_contracts::companion::rules::RuleId}]
+    Source: 'crates/noble-contracts/src/companion/rules/mod.rs', lines 13:9-13:14 -/
+@[reducible]
+def companion.rules.RuleId.Insts.CoreCloneClone : core.clone.Clone
+  companion.rules.RuleId := {
+  clone := companion.rules.RuleId.Insts.CoreCloneClone.clone
+}
+
+/-- [noble_contracts::companion::registry::{impl core::clone::Clone for noble_contracts::companion::registry::EvidenceEntry}::clone]:
+    Source: 'crates/noble-contracts/src/companion/registry/mod.rs', lines 80:9-80:14
+    Visibility: public -/
+def companion.registry.EvidenceEntry.Insts.CoreCloneClone.clone
+  (self : companion.registry.EvidenceEntry) :
+  Result companion.registry.EvidenceEntry
+  := do
+  let ci ←
+    companion.registry.ContractId.Insts.CoreCloneClone.clone self.contract
+  let i ← lift (core.clone.impls.CloneU64.clone self.statement)
+  let ct ←
+    companion.admit.ClaimTemplate.Insts.CoreCloneClone.clone self.template
+  let s ← companion.Subject.Insts.CoreCloneClone.clone self.subject
+  let ec ←
+    companion.registry.EvidenceClass.Insts.CoreCloneClone.clone self.class
+  let o ← companion.admit.Outcome.Insts.CoreCloneClone.clone self.outcome
+  let i1 ← lift (core.clone.impls.CloneU32.clone self.policy)
+  let i2 ← lift (core.clone.impls.CloneU32.clone self.revision)
+  let v ←
+    alloc.vec.CloneVec.clone companion.registry.EvidenceId.Insts.CoreCloneClone
+      self.premises
+  let o1 ←
+    core.option.Option.Insts.CoreCloneClone.clone
+      companion.rules.RuleId.Insts.CoreCloneClone self.rule
+  ok
+    {
+      contract := ci,
+      statement := i,
+      template := ct,
+      subject := s,
+      «class» := ec,
+      outcome := o,
+      policy := i1,
+      revision := i2,
+      premises := v,
+      rule := o1
+    }
+
+/-- Trait implementation: [noble_contracts::companion::registry::{impl core::clone::Clone for noble_contracts::companion::registry::EvidenceEntry}]
+    Source: 'crates/noble-contracts/src/companion/registry/mod.rs', lines 80:9-80:14 -/
+@[reducible]
+def companion.registry.EvidenceEntry.Insts.CoreCloneClone : core.clone.Clone
+  companion.registry.EvidenceEntry := {
+  clone := companion.registry.EvidenceEntry.Insts.CoreCloneClone.clone
+}
+
+/-- [noble_contracts::companion::rules::{impl core::fmt::Debug for noble_contracts::companion::rules::RuleId}::fmt]:
+    Source: 'crates/noble-contracts/src/companion/rules/mod.rs', lines 13:22-13:27
+    Visibility: public -/
+def companion.rules.RuleId.Insts.CoreFmtDebug.fmt
+  (self : companion.rules.RuleId) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | companion.rules.RuleId.AdmitLeanV1 =>
+    core.fmt.Formatter.write_str f (toStr "AdmitLeanV1")
+  | companion.rules.RuleId.ComposeV1 =>
+    core.fmt.Formatter.write_str f (toStr "ComposeV1")
+  | companion.rules.RuleId.InstantiateV1 =>
+    core.fmt.Formatter.write_str f (toStr "InstantiateV1")
+  | companion.rules.RuleId.GuardV1 =>
+    core.fmt.Formatter.write_str f (toStr "GuardV1")
+  | companion.rules.RuleId.ProjectV1 =>
+    core.fmt.Formatter.write_str f (toStr "ProjectV1")
+  | companion.rules.RuleId.InvokeV1 =>
+    core.fmt.Formatter.write_str f (toStr "InvokeV1")
+
+/-- Trait implementation: [noble_contracts::companion::rules::{impl core::fmt::Debug for noble_contracts::companion::rules::RuleId}]
+    Source: 'crates/noble-contracts/src/companion/rules/mod.rs', lines 13:22-13:27 -/
+@[reducible]
+def companion.rules.RuleId.Insts.CoreFmtDebug : core.fmt.Debug
+  companion.rules.RuleId := {
+  fmt := companion.rules.RuleId.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_contracts::companion::registry::{impl core::fmt::Debug for noble_contracts::companion::registry::EvidenceEntry}::fmt]:
+    Source: 'crates/noble-contracts/src/companion/registry/mod.rs', lines 80:16-80:21
+    Visibility: public -/
+def companion.registry.EvidenceEntry.Insts.CoreFmtDebug.fmt
+  (self : companion.registry.EvidenceEntry) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn :=
+    Dyn.mk _ companion.registry.ContractId.Insts.CoreFmtDebug self.contract
+  let dyn1 := Dyn.mk _ core.fmt.DebugU64 self.statement
+  let dyn2 :=
+    Dyn.mk _ companion.admit.ClaimTemplate.Insts.CoreFmtDebug self.template
+  let dyn3 := Dyn.mk _ companion.Subject.Insts.CoreFmtDebug self.subject
+  let dyn4 :=
+    Dyn.mk _ companion.registry.EvidenceClass.Insts.CoreFmtDebug self.class
+  let dyn5 := Dyn.mk _ companion.admit.Outcome.Insts.CoreFmtDebug self.outcome
+  let dyn6 := Dyn.mk _ core.fmt.DebugU32 self.policy
+  let dyn7 := Dyn.mk _ core.fmt.DebugU32 self.revision
+  let dyn8 :=
+    Dyn.mk _ (core.fmt.DebugVec
+      companion.registry.EvidenceId.Insts.CoreFmtDebug) self.premises
+  let dyn9 :=
+    Dyn.mk _ (core.fmt.DebugShared (core.option.Option.Insts.CoreFmtDebug
+      companion.rules.RuleId.Insts.CoreFmtDebug)) self.rule
+  let values :=
+    Array.to_slice
+      (Array.make 10#usize [
+        dyn, dyn1, dyn2, dyn3, dyn4, dyn5, dyn6, dyn7, dyn8, dyn9
+        ])
+  let s ←
+    lift (Array.to_slice
+      (Array.make 10#usize [
+        toStr "contract", toStr "statement", toStr "template", toStr "subject",
+        toStr "class", toStr "outcome", toStr "policy", toStr "revision", toStr
+        "premises", toStr "rule"
+        ]))
+  core.fmt.Formatter.debug_struct_fields_finish f (toStr "EvidenceEntry") s
+    values
+
+/-- Trait implementation: [noble_contracts::companion::registry::{impl core::fmt::Debug for noble_contracts::companion::registry::EvidenceEntry}]
+    Source: 'crates/noble-contracts/src/companion/registry/mod.rs', lines 80:16-80:21 -/
+@[reducible]
+def companion.registry.EvidenceEntry.Insts.CoreFmtDebug : core.fmt.Debug
+  companion.registry.EvidenceEntry := {
+  fmt := companion.registry.EvidenceEntry.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_contracts::companion::registry::{impl core::clone::Clone for noble_contracts::companion::registry::Observation}::clone]:
+    Source: 'crates/noble-contracts/src/companion/registry/mod.rs', lines 95:9-95:14
+    Visibility: public -/
+def companion.registry.Observation.Insts.CoreCloneClone.clone
+  (self : companion.registry.Observation) :
+  Result companion.registry.Observation
+  := do
+  let sd ← companion.SubjectDigest.Insts.CoreCloneClone.clone self.subject
+  let v ←
+    alloc.vec.CloneVec.clone (BuiltinClone (Std.U32 × Std.U64)) self.events
+  ok { subject := sd, events := v }
+
+/-- Trait implementation: [noble_contracts::companion::registry::{impl core::clone::Clone for noble_contracts::companion::registry::Observation}]
+    Source: 'crates/noble-contracts/src/companion/registry/mod.rs', lines 95:9-95:14 -/
+@[reducible]
+def companion.registry.Observation.Insts.CoreCloneClone : core.clone.Clone
+  companion.registry.Observation := {
+  clone := companion.registry.Observation.Insts.CoreCloneClone.clone
+}
+
+/-- [noble_contracts::companion::registry::{impl core::fmt::Debug for noble_contracts::companion::registry::Observation}::fmt]:
+    Source: 'crates/noble-contracts/src/companion/registry/mod.rs', lines 95:16-95:21
+    Visibility: public -/
+def companion.registry.Observation.Insts.CoreFmtDebug.fmt
+  (self : companion.registry.Observation) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ companion.SubjectDigest.Insts.CoreFmtDebug self.subject
+  let dyn1 :=
+    Dyn.mk _ (core.fmt.DebugShared (core.fmt.DebugVec (Pair.Insts.CoreFmtDebug
+      core.fmt.DebugU32 core.fmt.DebugU64))) self.events
+  core.fmt.Formatter.debug_struct_field2_finish f (toStr "Observation") (toStr
+    "subject") dyn (toStr "events") dyn1
+
+/-- Trait implementation: [noble_contracts::companion::registry::{impl core::fmt::Debug for noble_contracts::companion::registry::Observation}]
+    Source: 'crates/noble-contracts/src/companion/registry/mod.rs', lines 95:16-95:21 -/
+@[reducible]
+def companion.registry.Observation.Insts.CoreFmtDebug : core.fmt.Debug
+  companion.registry.Observation := {
+  fmt := companion.registry.Observation.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_contracts::companion::rules::{impl core::clone::Clone for noble_contracts::companion::rules::Derived}::clone]:
+    Source: 'crates/noble-contracts/src/companion/rules/mod.rs', lines 4:9-4:14
+    Visibility: public -/
+def companion.rules.Derived.Insts.CoreCloneClone.clone
+  (self : companion.rules.Derived) : Result companion.rules.Derived := do
+  ok self
+
+/-- Trait implementation: [noble_contracts::companion::rules::{impl core::clone::Clone for noble_contracts::companion::rules::Derived}]
+    Source: 'crates/noble-contracts/src/companion/rules/mod.rs', lines 4:9-4:14 -/
+@[reducible]
+def companion.rules.Derived.Insts.CoreCloneClone : core.clone.Clone
+  companion.rules.Derived := {
+  clone := companion.rules.Derived.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_contracts::companion::rules::{impl core::marker::Copy for noble_contracts::companion::rules::Derived}]
+    Source: 'crates/noble-contracts/src/companion/rules/mod.rs', lines 4:16-4:20 -/
+@[reducible]
+def companion.rules.Derived.Insts.CoreMarkerCopy : core.marker.Copy
+  companion.rules.Derived := {
+  cloneInst := companion.rules.Derived.Insts.CoreCloneClone
+}
+
+/-- [noble_contracts::companion::rules::{impl core::fmt::Debug for noble_contracts::companion::rules::Derived}::fmt]:
+    Source: 'crates/noble-contracts/src/companion/rules/mod.rs', lines 4:22-4:27
+    Visibility: public -/
+def companion.rules.Derived.Insts.CoreFmtDebug.fmt
+  (self : companion.rules.Derived) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn :=
+    Dyn.mk _ companion.registry.EvidenceId.Insts.CoreFmtDebug self.evidence
+  let dyn1 :=
+    Dyn.mk _ companion.registry.ContractId.Insts.CoreFmtDebug self.contract
+  let dyn2 :=
+    Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU64) self.statement_digest
+  core.fmt.Formatter.debug_struct_field3_finish f (toStr "Derived") (toStr
+    "evidence") dyn (toStr "contract") dyn1 (toStr "statement_digest") dyn2
+
+/-- Trait implementation: [noble_contracts::companion::rules::{impl core::fmt::Debug for noble_contracts::companion::rules::Derived}]
+    Source: 'crates/noble-contracts/src/companion/rules/mod.rs', lines 4:22-4:27 -/
+@[reducible]
+def companion.rules.Derived.Insts.CoreFmtDebug : core.fmt.Debug
+  companion.rules.Derived := {
+  fmt := companion.rules.Derived.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_contracts::companion::rules::{impl core::marker::StructuralPartialEq for noble_contracts::companion::rules::Derived}]
+    Source: 'crates/noble-contracts/src/companion/rules/mod.rs', lines 4:29-4:38 -/
+@[reducible]
+def companion.rules.Derived.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq companion.rules.Derived := {
+}
+
+/-- [noble_contracts::companion::rules::{impl core::cmp::PartialEq<noble_contracts::companion::rules::Derived> for noble_contracts::companion::rules::Derived}::eq]:
+    Source: 'crates/noble-contracts/src/companion/rules/mod.rs', lines 4:29-4:38
+    Visibility: public -/
+def companion.rules.Derived.Insts.CoreCmpPartialEqDerived.eq
+  (self : companion.rules.Derived) (other : companion.rules.Derived) :
+  Result Bool
+  := do
+  if self.statement_digest = other.statement_digest
+  then
+    let b ←
+      companion.registry.EvidenceId.Insts.CoreCmpPartialEqEvidenceId.eq
+        self.evidence other.evidence
+    if b
+    then
+      companion.registry.ContractId.Insts.CoreCmpPartialEqContractId.eq
+        self.contract other.contract
+    else ok false
+  else ok false
+
+/-- Trait implementation: [noble_contracts::companion::rules::{impl core::cmp::PartialEq<noble_contracts::companion::rules::Derived> for noble_contracts::companion::rules::Derived}]
+    Source: 'crates/noble-contracts/src/companion/rules/mod.rs', lines 4:29-4:38 -/
+@[reducible]
+impl_def companion.rules.Derived.Insts.CoreCmpPartialEqDerived :
+  core.cmp.PartialEq companion.rules.Derived companion.rules.Derived := {
+  eq := companion.rules.Derived.Insts.CoreCmpPartialEqDerived.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    companion.rules.Derived.Insts.CoreCmpPartialEqDerived
+}
+
+/-- [noble_contracts::companion::rules::{impl core::cmp::Eq for noble_contracts::companion::rules::Derived}::assert_fields_are_eq]:
+    Source: 'crates/noble-contracts/src/companion/rules/mod.rs', lines 4:40-4:42
+    Visibility: public -/
+def companion.rules.Derived.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : companion.rules.Derived) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_contracts::companion::rules::{impl core::cmp::Eq for noble_contracts::companion::rules::Derived}]
+    Source: 'crates/noble-contracts/src/companion/rules/mod.rs', lines 4:40-4:42 -/
+@[reducible]
+def companion.rules.Derived.Insts.CoreCmpEq : core.cmp.Eq
+  companion.rules.Derived := {
+  partialEqInst := companion.rules.Derived.Insts.CoreCmpPartialEqDerived
+  assert_fields_are_eq :=
+    companion.rules.Derived.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- Trait implementation: [noble_contracts::companion::rules::{impl core::marker::Copy for noble_contracts::companion::rules::RuleId}]
+    Source: 'crates/noble-contracts/src/companion/rules/mod.rs', lines 13:16-13:20 -/
+@[reducible]
+def companion.rules.RuleId.Insts.CoreMarkerCopy : core.marker.Copy
+  companion.rules.RuleId := {
+  cloneInst := companion.rules.RuleId.Insts.CoreCloneClone
+}
+
+/-- Trait implementation: [noble_contracts::companion::rules::{impl core::marker::StructuralPartialEq for noble_contracts::companion::rules::RuleId}]
+    Source: 'crates/noble-contracts/src/companion/rules/mod.rs', lines 13:29-13:38 -/
+@[reducible]
+def companion.rules.RuleId.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq companion.rules.RuleId := {
+}
+
+/-- Trait implementation: [noble_contracts::companion::rules::{impl core::cmp::PartialEq<noble_contracts::companion::rules::RuleId> for noble_contracts::companion::rules::RuleId}]
+    Source: 'crates/noble-contracts/src/companion/rules/mod.rs', lines 13:29-13:38 -/
+@[reducible]
+impl_def companion.rules.RuleId.Insts.CoreCmpPartialEqRuleId :
+  core.cmp.PartialEq companion.rules.RuleId companion.rules.RuleId := {
+  eq := companion.rules.RuleId.Insts.CoreCmpPartialEqRuleId.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    companion.rules.RuleId.Insts.CoreCmpPartialEqRuleId
+}
+
+/-- [noble_contracts::companion::rules::{impl core::cmp::Eq for noble_contracts::companion::rules::RuleId}::assert_fields_are_eq]:
+    Source: 'crates/noble-contracts/src/companion/rules/mod.rs', lines 13:40-13:42
+    Visibility: public -/
+def companion.rules.RuleId.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : companion.rules.RuleId) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_contracts::companion::rules::{impl core::cmp::Eq for noble_contracts::companion::rules::RuleId}]
+    Source: 'crates/noble-contracts/src/companion/rules/mod.rs', lines 13:40-13:42 -/
+@[reducible]
+def companion.rules.RuleId.Insts.CoreCmpEq : core.cmp.Eq companion.rules.RuleId
+  := {
+  partialEqInst := companion.rules.RuleId.Insts.CoreCmpPartialEqRuleId
+  assert_fields_are_eq :=
+    companion.rules.RuleId.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_contracts::companion::rules::{noble_contracts::companion::rules::RuleId}::decode]:
+    Source: 'crates/noble-contracts/src/companion/rules/mod.rs', lines 25:4-40:5
+    Visibility: public -/
+def companion.rules.RuleId.decode
+  (encoded : companion.EncodedRule) :
+  Result (core.result.Result companion.rules.RuleId companion.Refusal)
+  := do
+  if encoded.ruleset != companion.rules.RULESET_V1
+  then ok (core.result.Result.Err companion.Refusal.UnsupportedRuleset)
+  else
+    match encoded.code with
+    | 1#uscalar =>
+      ok (core.result.Result.Ok companion.rules.RuleId.AdmitLeanV1)
+    | 2#uscalar => ok (core.result.Result.Ok companion.rules.RuleId.ComposeV1)
+    | 3#uscalar =>
+      ok (core.result.Result.Ok companion.rules.RuleId.InstantiateV1)
+    | 4#uscalar => ok (core.result.Result.Ok companion.rules.RuleId.GuardV1)
+    | 5#uscalar => ok (core.result.Result.Ok companion.rules.RuleId.ProjectV1)
+    | 6#uscalar => ok (core.result.Result.Ok companion.rules.RuleId.InvokeV1)
+    | _ => ok (core.result.Result.Err companion.Refusal.UnknownRule)
+
+/-- [noble_contracts::companion::rules::{noble_contracts::companion::rules::RuleId}::code]:
+    Source: 'crates/noble-contracts/src/companion/rules/mod.rs', lines 42:4-51:5
+    Visibility: public -/
+def companion.rules.RuleId.code
+  (self : companion.rules.RuleId) : Result Std.U32 := do
+  match self with
+  | companion.rules.RuleId.AdmitLeanV1 => ok 1#u32
+  | companion.rules.RuleId.ComposeV1 => ok 2#u32
+  | companion.rules.RuleId.InstantiateV1 => ok 3#u32
+  | companion.rules.RuleId.GuardV1 => ok 4#u32
+  | companion.rules.RuleId.ProjectV1 => ok 5#u32
+  | companion.rules.RuleId.InvokeV1 => ok 6#u32
+
+/-- Trait implementation: [noble_contracts::companion::rules::{impl core::clone::Clone for noble_contracts::companion::rules::Derivation}]
+    Source: 'crates/noble-contracts/src/companion/rules/mod.rs', lines 54:9-54:14 -/
+@[reducible]
+def companion.rules.Derivation.Insts.CoreCloneClone : core.clone.Clone
+  companion.rules.Derivation := {
+  clone := companion.rules.Derivation.Insts.CoreCloneClone.clone
+}
+
+/-- [noble_contracts::companion::rules::{impl core::fmt::Debug for noble_contracts::companion::rules::Derivation}::fmt]:
+    Source: 'crates/noble-contracts/src/companion/rules/mod.rs', lines 54:16-54:21
+    Visibility: public -/
+def companion.rules.Derivation.Insts.CoreFmtDebug.fmt
+  (self : companion.rules.Derivation) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ companion.rules.RuleId.Insts.CoreFmtDebug self.rule
+  let dyn1 :=
+    Dyn.mk _ companion.registry.ContractId.Insts.CoreFmtDebug self.contract
+  let dyn2 := Dyn.mk _ core.fmt.DebugU64 self.statement
+  let dyn3 := Dyn.mk _ companion.Subject.Insts.CoreFmtDebug self.subject
+  let dyn4 :=
+    Dyn.mk _ (core.fmt.DebugShared (core.fmt.DebugVec
+      companion.registry.EvidenceId.Insts.CoreFmtDebug)) self.premises
+  core.fmt.Formatter.debug_struct_field5_finish f (toStr "Derivation") (toStr
+    "rule") dyn (toStr "contract") dyn1 (toStr "statement") dyn2 (toStr
+    "subject") dyn3 (toStr "premises") dyn4
+
+/-- Trait implementation: [noble_contracts::companion::rules::{impl core::fmt::Debug for noble_contracts::companion::rules::Derivation}]
+    Source: 'crates/noble-contracts/src/companion/rules/mod.rs', lines 54:16-54:21 -/
+@[reducible]
+def companion.rules.Derivation.Insts.CoreFmtDebug : core.fmt.Debug
+  companion.rules.Derivation := {
+  fmt := companion.rules.Derivation.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_contracts::companion::rules::{impl core::marker::StructuralPartialEq for noble_contracts::companion::rules::Derivation}]
+    Source: 'crates/noble-contracts/src/companion/rules/mod.rs', lines 54:23-54:32 -/
+@[reducible]
+def companion.rules.Derivation.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq companion.rules.Derivation := {
+}
+
+/-- [noble_contracts::companion::rules::{impl core::cmp::PartialEq<noble_contracts::companion::rules::Derivation> for noble_contracts::companion::rules::Derivation}::eq]:
+    Source: 'crates/noble-contracts/src/companion/rules/mod.rs', lines 54:23-54:32
+    Visibility: public -/
+def companion.rules.Derivation.Insts.CoreCmpPartialEqDerivation.eq
+  (self : companion.rules.Derivation) (other : companion.rules.Derivation) :
+  Result Bool
+  := do
+  if self.statement = other.statement
+  then
+    let b ←
+      companion.rules.RuleId.Insts.CoreCmpPartialEqRuleId.eq self.rule
+        other.rule
+    if b
+    then
+      let b1 ←
+        companion.registry.ContractId.Insts.CoreCmpPartialEqContractId.eq
+          self.contract other.contract
+      if b1
+      then
+        let b2 ←
+          companion.Subject.Insts.CoreCmpPartialEqSubject.eq self.subject
+            other.subject
+        if b2
+        then
+          alloc.vec.partial_eq.PartialEqVec.eq
+            companion.registry.EvidenceId.Insts.CoreCmpPartialEqEvidenceId
+            self.premises other.premises
+        else ok false
+      else ok false
+    else ok false
+  else ok false
+
+/-- Trait implementation: [noble_contracts::companion::rules::{impl core::cmp::PartialEq<noble_contracts::companion::rules::Derivation> for noble_contracts::companion::rules::Derivation}]
+    Source: 'crates/noble-contracts/src/companion/rules/mod.rs', lines 54:23-54:32 -/
+@[reducible]
+impl_def companion.rules.Derivation.Insts.CoreCmpPartialEqDerivation :
+  core.cmp.PartialEq companion.rules.Derivation companion.rules.Derivation := {
+  eq := companion.rules.Derivation.Insts.CoreCmpPartialEqDerivation.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    companion.rules.Derivation.Insts.CoreCmpPartialEqDerivation
+}
+
+/-- [noble_contracts::companion::rules::{impl core::cmp::Eq for noble_contracts::companion::rules::Derivation}::assert_fields_are_eq]:
+    Source: 'crates/noble-contracts/src/companion/rules/mod.rs', lines 54:34-54:36
+    Visibility: public -/
+def companion.rules.Derivation.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : companion.rules.Derivation) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_contracts::companion::rules::{impl core::cmp::Eq for noble_contracts::companion::rules::Derivation}]
+    Source: 'crates/noble-contracts/src/companion/rules/mod.rs', lines 54:34-54:36 -/
+@[reducible]
+def companion.rules.Derivation.Insts.CoreCmpEq : core.cmp.Eq
+  companion.rules.Derivation := {
+  partialEqInst := companion.rules.Derivation.Insts.CoreCmpPartialEqDerivation
+  assert_fields_are_eq :=
+    companion.rules.Derivation.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_contracts::companion::rules::premises::step::{impl core::clone::Clone for noble_contracts::companion::rules::premises::step::SeedBounds}::clone]:
+    Source: 'crates/noble-contracts/src/companion/rules/premises/step.rs', lines 4:9-4:14
+    Visibility: public -/
+def companion.rules.premises.step.SeedBounds.Insts.CoreCloneClone.clone
+  (self : companion.rules.premises.step.SeedBounds) :
+  Result companion.rules.premises.step.SeedBounds
+  := do
+  ok self
+
+/-- Trait implementation: [noble_contracts::companion::rules::premises::step::{impl core::clone::Clone for noble_contracts::companion::rules::premises::step::SeedBounds}]
+    Source: 'crates/noble-contracts/src/companion/rules/premises/step.rs', lines 4:9-4:14 -/
+@[reducible]
+def companion.rules.premises.step.SeedBounds.Insts.CoreCloneClone :
+  core.clone.Clone companion.rules.premises.step.SeedBounds := {
+  clone := companion.rules.premises.step.SeedBounds.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_contracts::companion::rules::premises::step::{impl core::marker::Copy for noble_contracts::companion::rules::premises::step::SeedBounds}]
+    Source: 'crates/noble-contracts/src/companion/rules/premises/step.rs', lines 4:16-4:20 -/
+@[reducible]
+def companion.rules.premises.step.SeedBounds.Insts.CoreMarkerCopy :
+  core.marker.Copy companion.rules.premises.step.SeedBounds := {
+  cloneInst := companion.rules.premises.step.SeedBounds.Insts.CoreCloneClone
+}
+
 /-- [noble_contracts::{noble_contracts::Diagnostic}::new]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 73:4-80:5 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 79:4-86:5 -/
 def Diagnostic.new
   (kind : DiagnosticKind) (span : Span) (message : Str) :
   Result Diagnostic
@@ -258,7 +9169,7 @@ def Diagnostic.new
   ok { kind, span, message := s, ordinary_typing := none }
 
 /-- [noble_contracts::metering::{noble_contracts::Meter}::charge]:
-    Source: 'crates/noble-contracts/src/metering.rs', lines 10:4-22:5
+    Source: 'crates/noble-contracts/src/metering.rs', lines 15:4-27:5
     Visibility: public -/
 def metering.Meter.charge
   (self : Meter) (amount : Std.U32) (span : Span) :
@@ -275,7 +9186,7 @@ def metering.Meter.charge
     ok (core.result.Result.Ok (), { self with work := remaining })
 
 /-- [noble_contracts::internal]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 225:0-231:1 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 231:0-237:1 -/
 def internal (span : Span) : Result Diagnostic := do
   Diagnostic.new DiagnosticKind.Internal span (toStr
     "inconsistent frontend arena")
@@ -301,7 +9212,7 @@ def syntax.typing.State.take_type
     ok (core.result.Result.Err failure, self, meter1)
 
 /-- [noble_contracts::index]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 233:0-242:1 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 239:0-248:1 -/
 def index
   (value : Std.Usize) (span : Span) :
   Result (core.result.Result Std.U32 Diagnostic)
@@ -316,7 +9227,7 @@ def index
     ok (core.result.Result.Err d)
 
 /-- [noble_contracts::syntax::typing::take_types]: loop body 0:
-    Source: 'crates/noble-contracts/src/syntax/typing.rs', lines 194:4-203:5 -/
+    Source: 'crates/noble-contracts/src/syntax/typing.rs', lines 203:4-212:5 -/
 @[rust_loop_body]
 def syntax.typing.take_types_loop.body
   (span : Span) (state : syntax.typing.State) (count : Std.Usize)
@@ -338,7 +9249,7 @@ def syntax.typing.take_types_loop.body
   else ok (done (state, meter, result, none))
 
 /-- [noble_contracts::syntax::typing::take_types]: loop 0:
-    Source: 'crates/noble-contracts/src/syntax/typing.rs', lines 194:4-203:5 -/
+    Source: 'crates/noble-contracts/src/syntax/typing.rs', lines 203:4-212:5 -/
 @[rust_loop]
 def syntax.typing.take_types_loop
   (state : syntax.typing.State) (count : Std.Usize) (span : Span)
@@ -352,7 +9263,7 @@ def syntax.typing.take_types_loop
     (state, count, meter, result)
 
 /-- [noble_contracts::syntax::typing::take_types]:
-    Source: 'crates/noble-contracts/src/syntax/typing.rs', lines 185:0-210:1 -/
+    Source: 'crates/noble-contracts/src/syntax/typing.rs', lines 194:0-219:1 -/
 def syntax.typing.take_types
   (state : syntax.typing.State) (count : Std.Usize) (span : Span)
   (meter : Meter) :
@@ -382,12 +9293,12 @@ def syntax.typing.take_types
   | some error => ok (core.result.Result.Err error, meter1)
 
 /-- [noble_contracts::invalid]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 221:0-223:1 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 227:0-229:1 -/
 def invalid (span : Span) (message : Str) : Result Diagnostic := do
   Diagnostic.new DiagnosticKind.Invalid span message
 
 /-- [noble_contracts::syntax::typing::atom_type]:
-    Source: 'crates/noble-contracts/src/syntax/typing.rs', lines 155:0-179:1 -/
+    Source: 'crates/noble-contracts/src/syntax/typing.rs', lines 155:0-188:1 -/
 def syntax.typing.atom_type
   (kind : Slice Std.U8) (span : Span) :
   Result (core.result.Result noble_kernel.types.Ty Diagnostic)
@@ -427,20 +9338,52 @@ def syntax.typing.atom_type
             let b5 ←
               Slice.Insts.CoreCmpPartialEqArray.eq core.cmp.PartialEqU8 kind
                 (Array.make 8#usize [
-                  82#u8, 101#u8, 115#u8, 111#u8, 117#u8, 114#u8, 99#u8, 101#u8
+                  67#u8, 111#u8, 110#u8, 116#u8, 114#u8, 97#u8, 99#u8, 116#u8
                   ])
             if b5
-            then
-              let d ←
-                Diagnostic.new DiagnosticKind.Unsupported span (toStr
-                  "resource and host types are outside the pure contract fragment")
-              ok (core.result.Result.Err d)
+            then ok (core.result.Result.Ok noble_kernel.types.Ty.ContractType)
             else
-              let d ← invalid span (toStr "unknown type")
-              ok (core.result.Result.Err d)
+              let b6 ←
+                Slice.Insts.CoreCmpPartialEqArray.eq core.cmp.PartialEqU8 kind
+                  (Array.make 8#usize [
+                    69#u8, 118#u8, 105#u8, 100#u8, 101#u8, 110#u8, 99#u8,
+                    101#u8
+                    ])
+              if b6
+              then
+                ok (core.result.Result.Ok noble_kernel.types.Ty.EvidenceType)
+              else
+                let b7 ←
+                  Slice.Insts.CoreCmpPartialEqArray.eq core.cmp.PartialEqU8
+                    kind
+                    (Array.make 9#usize [
+                      67#u8, 101#u8, 114#u8, 116#u8, 105#u8, 102#u8, 105#u8,
+                      101#u8, 100#u8
+                      ])
+                if b7
+                then
+                  ok (core.result.Result.Ok
+                    noble_kernel.types.Ty.CertifiedType)
+                else
+                  let b8 ←
+                    Slice.Insts.CoreCmpPartialEqArray.eq core.cmp.PartialEqU8
+                      kind
+                      (Array.make 8#usize [
+                        82#u8, 101#u8, 115#u8, 111#u8, 117#u8, 114#u8, 99#u8,
+                        101#u8
+                        ])
+                  if b8
+                  then
+                    let d ←
+                      Diagnostic.new DiagnosticKind.Unsupported span (toStr
+                        "resource and host types are outside the pure contract fragment")
+                    ok (core.result.Result.Err d)
+                  else
+                    let d ← invalid span (toStr "unknown type")
+                    ok (core.result.Result.Err d)
 
 /-- [noble_contracts::offset]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 244:0-253:1 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 250:0-259:1 -/
 def offset
   (value : Std.U32) (span : Span) :
   Result (core.result.Result Std.Usize Diagnostic)
@@ -455,7 +9398,7 @@ def offset
     ok (core.result.Result.Err d)
 
 /-- [noble_contracts::syntax::{noble_contracts::syntax::Tree}::node]:
-    Source: 'crates/noble-contracts/src/syntax/mod.rs', lines 24:4-30:5
+    Source: 'crates/noble-contracts/src/syntax/mod.rs', lines 29:4-35:5
     Visibility: public -/
 def syntax.Tree.node
   (self : syntax.Tree) (id : Std.U32) :
@@ -476,7 +9419,7 @@ def syntax.Tree.node
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_contracts::syntax::{noble_contracts::syntax::Tree}::atom]:
-    Source: 'crates/noble-contracts/src/syntax/mod.rs', lines 51:4-62:5
+    Source: 'crates/noble-contracts/src/syntax/mod.rs', lines 56:4-67:5
     Visibility: public -/
 def syntax.Tree.atom
   (self : syntax.Tree) (source : Slice Std.U8) (id : Std.U32) :
@@ -513,7 +9456,7 @@ def syntax.Tree.atom
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_contracts::syntax::child]:
-    Source: 'crates/noble-contracts/src/syntax/mod.rs', lines 65:0-74:1 -/
+    Source: 'crates/noble-contracts/src/syntax/mod.rs', lines 70:0-79:1 -/
 def syntax.child
   (children : Slice Std.U32) («at» : Std.Usize) (span : Span) :
   Result (core.result.Result Std.U32 Diagnostic)
@@ -528,7 +9471,7 @@ def syntax.child
   | some id => ok (core.result.Result.Ok id)
 
 /-- [noble_contracts::syntax::{noble_contracts::syntax::Tree}::round]:
-    Source: 'crates/noble-contracts/src/syntax/mod.rs', lines 32:4-38:5
+    Source: 'crates/noble-contracts/src/syntax/mod.rs', lines 37:4-43:5
     Visibility: public -/
 def syntax.Tree.round
   (self : syntax.Tree) (id : Std.U32) :
@@ -878,7 +9821,7 @@ def syntax.typing.visit
     ok (core.result.Result.Err failure, meter)
 
 /-- [noble_contracts::syntax::TYPE_CAP]
-    Source: 'crates/noble-contracts/src/syntax/mod.rs', lines 210:0-210:37 -/
+    Source: 'crates/noble-contracts/src/syntax/mod.rs', lines 215:0-215:37 -/
 @[global_simps, irreducible] def syntax.TYPE_CAP : Std.U32 := 256#u32
 
 /-- [noble_contracts::syntax::typing::step]:
@@ -978,7 +9921,7 @@ def syntax.typing.State.new (root : Std.U32) : Result syntax.typing.State := do
     }
 
 /-- [noble_contracts::syntax::ty]: loop body 0:
-    Source: 'crates/noble-contracts/src/syntax/mod.rs', lines 225:4-233:5 -/
+    Source: 'crates/noble-contracts/src/syntax/mod.rs', lines 230:4-238:5 -/
 @[rust_loop_body]
 def syntax.ty_loop.body
   (source : Slice Std.U8) (tree : syntax.Tree) (span : Span)
@@ -1001,7 +9944,7 @@ def syntax.ty_loop.body
   | core.result.Result.Err _ => ok (done (meter, outcome))
 
 /-- [noble_contracts::syntax::ty]: loop 0:
-    Source: 'crates/noble-contracts/src/syntax/mod.rs', lines 225:4-233:5 -/
+    Source: 'crates/noble-contracts/src/syntax/mod.rs', lines 230:4-238:5 -/
 @[rust_loop]
 def syntax.ty_loop
   (outcome : core.result.Result syntax.typing.State Diagnostic)
@@ -1014,7 +9957,7 @@ def syntax.ty_loop
     (outcome, meter)
 
 /-- [noble_contracts::syntax::ty]:
-    Source: 'crates/noble-contracts/src/syntax/mod.rs', lines 216:0-242:1 -/
+    Source: 'crates/noble-contracts/src/syntax/mod.rs', lines 221:0-247:1 -/
 def syntax.ty
   (source : Slice Std.U8) (tree : syntax.Tree) (root : Std.U32) (meter : Meter)
   :
@@ -1096,7 +10039,7 @@ def syntax.identifiers.byte
   | core.result.Result.Err _ => ok (r, meter1)
 
 /-- [noble_contracts::syntax::identifier]: loop body 0:
-    Source: 'crates/noble-contracts/src/syntax/mod.rs', lines 151:4-157:5 -/
+    Source: 'crates/noble-contracts/src/syntax/mod.rs', lines 156:4-162:5 -/
 @[rust_loop_body]
 def syntax.identifier_loop.body
   (span : Span) (bytes : Slice Std.U8) (meter : Meter) («at» : Std.Usize) :
@@ -1114,7 +10057,7 @@ def syntax.identifier_loop.body
   else ok (done (meter, none))
 
 /-- [noble_contracts::syntax::identifier]: loop 0:
-    Source: 'crates/noble-contracts/src/syntax/mod.rs', lines 151:4-157:5 -/
+    Source: 'crates/noble-contracts/src/syntax/mod.rs', lines 156:4-162:5 -/
 @[rust_loop]
 def syntax.identifier_loop
   (meter : Meter) (span : Span) (bytes : Slice Std.U8) («at» : Std.Usize) :
@@ -1125,7 +10068,7 @@ def syntax.identifier_loop
     (meter, «at»)
 
 /-- [noble_contracts::syntax::identifier]:
-    Source: 'crates/noble-contracts/src/syntax/mod.rs', lines 138:0-165:1 -/
+    Source: 'crates/noble-contracts/src/syntax/mod.rs', lines 143:0-170:1 -/
 def syntax.identifier
   (source : Slice Std.U8) (tree : syntax.Tree) (id : Std.U32) (meter : Meter) :
   Result ((core.result.Result String Diagnostic) × Meter)
@@ -1349,7 +10292,7 @@ def frontend.bindings.named
   | some error => ok (core.result.Result.Err error, meter1)
 
 /-- [noble_contracts::inference::STACK_CAP]
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 218:0-218:38 -/
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 229:0-229:38 -/
 @[global_simps, irreducible] def inference.STACK_CAP : Std.U32 := 256#u32
 
 /-- [noble_contracts::frontend::bindings::cloned_type]:
@@ -1801,7 +10744,7 @@ def frontend.logic.Declarations.Insts.CoreMarkerCopy : core.marker.Copy
 }
 
 /-- [noble_contracts::predicate::get]:
-    Source: 'crates/noble-contracts/src/predicate.rs', lines 184:0-193:1 -/
+    Source: 'crates/noble-contracts/src/predicate.rs', lines 189:0-198:1 -/
 def predicate.get
   (expressions : Slice Expr) (id : Std.U32) (span : Span) :
   Result (core.result.Result Expr Diagnostic)
@@ -1819,7 +10762,7 @@ def predicate.get
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_contracts::predicate::same]:
-    Source: 'crates/noble-contracts/src/predicate.rs', lines 170:0-182:1 -/
+    Source: 'crates/noble-contracts/src/predicate.rs', lines 175:0-187:1 -/
 def predicate.same
   (left : noble_kernel.types.Ty) (right : noble_kernel.types.Ty) (span : Span)
   (meter : Meter) :
@@ -1840,7 +10783,7 @@ def predicate.same
   | core.result.Result.Err _ => ok (r, meter1)
 
 /-- [noble_contracts::predicate::required]:
-    Source: 'crates/noble-contracts/src/predicate.rs', lines 199:0-204:1 -/
+    Source: 'crates/noble-contracts/src/predicate.rs', lines 204:0-209:1 -/
 def predicate.required
   (value : Option Std.U32) (span : Span) :
   Result (core.result.Result Std.U32 Diagnostic)
@@ -1851,7 +10794,7 @@ def predicate.required
   | some value1 => ok (core.result.Result.Ok value1)
 
 /-- [noble_contracts::predicate::arity]:
-    Source: 'crates/noble-contracts/src/predicate.rs', lines 140:0-168:1 -/
+    Source: 'crates/noble-contracts/src/predicate.rs', lines 145:0-173:1 -/
 def predicate.arity (op : predicate.Op) : Result Std.Usize := do
   match op with
   | predicate.Op.Not => ok 1#usize
@@ -1881,7 +10824,7 @@ def predicate.arity (op : predicate.Op) : Result Std.Usize := do
   | predicate.Op.Maps => ok 3#usize
 
 /-- [noble_contracts::metering::{noble_contracts::Meter}::node]:
-    Source: 'crates/noble-contracts/src/metering.rs', lines 24:4-35:5
+    Source: 'crates/noble-contracts/src/metering.rs', lines 29:4-40:5
     Visibility: public -/
 def metering.Meter.node
   (self : Meter) (span : Span) :
@@ -1902,7 +10845,7 @@ def metering.Meter.node
   | core.result.Result.Err _ => ok (r, self1)
 
 /-- [noble_contracts::predicate::{noble_contracts::predicate::Arena}::push]:
-    Source: 'crates/noble-contracts/src/predicate.rs', lines 34:4-61:5 -/
+    Source: 'crates/noble-contracts/src/predicate.rs', lines 39:4-66:5 -/
 def predicate.Arena.push
   (self : predicate.Arena) (expr : Expr) (meter : Meter) :
   Result ((core.result.Result Std.U32 Diagnostic) × predicate.Arena × Meter)
@@ -1942,7 +10885,7 @@ def predicate.Arena.push
     ok (core.result.Result.Err failure, self, meter1)
 
 /-- [noble_contracts::predicate::operation]:
-    Source: 'crates/noble-contracts/src/predicate.rs', lines 98:0-138:1 -/
+    Source: 'crates/noble-contracts/src/predicate.rs', lines 103:0-143:1 -/
 def predicate.operation
   («name» : Slice Std.U8) (span : Span) :
   Result (core.result.Result predicate.Op Diagnostic)
@@ -2967,7 +11910,7 @@ def syntax.integer.Accumulator.new
   ok { value := 0#i64, is_negative }
 
 /-- [noble_contracts::syntax::integer]: loop body 0:
-    Source: 'crates/noble-contracts/src/syntax/mod.rs', lines 197:4-203:5 -/
+    Source: 'crates/noble-contracts/src/syntax/mod.rs', lines 202:4-208:5 -/
 @[rust_loop_body]
 def syntax.integer_loop.body
   (bytes : Slice Std.U8) (span : Span) (meter : Meter) («at» : Std.Usize)
@@ -2988,7 +11931,7 @@ def syntax.integer_loop.body
   else ok (done (meter, value, none))
 
 /-- [noble_contracts::syntax::integer]: loop 0:
-    Source: 'crates/noble-contracts/src/syntax/mod.rs', lines 197:4-203:5 -/
+    Source: 'crates/noble-contracts/src/syntax/mod.rs', lines 202:4-208:5 -/
 @[rust_loop]
 def syntax.integer_loop
   (bytes : Slice Std.U8) (span : Span) (meter : Meter) («at» : Std.Usize)
@@ -3001,7 +11944,7 @@ def syntax.integer_loop
     (meter, «at», value)
 
 /-- [noble_contracts::syntax::integer]:
-    Source: 'crates/noble-contracts/src/syntax/mod.rs', lines 171:0-208:1 -/
+    Source: 'crates/noble-contracts/src/syntax/mod.rs', lines 176:0-213:1 -/
 def syntax.integer
   (bytes : Slice Std.U8) (span : Span) (meter : Meter) :
   Result ((core.result.Result (Option Std.I64) Diagnostic) × Meter)
@@ -3137,7 +12080,7 @@ def predicate.resolving.visit
     ok (core.result.Result.Err failure, state, arena, meter)
 
 /-- [noble_contracts::predicate::unary::list]:
-    Source: 'crates/noble-contracts/src/predicate/unary.rs', lines 186:0-238:1 -/
+    Source: 'crates/noble-contracts/src/predicate/unary.rs', lines 192:0-247:1 -/
 def predicate.unary.list
   (op : predicate.Op) (operand : predicate.application.Operand) (span : Span) :
   Result (core.result.Result (ExprKind × noble_kernel.types.Ty) Diagnostic)
@@ -3156,6 +12099,15 @@ def predicate.unary.list
     let d ← invalid span (toStr "list operation requires a List value")
     ok (core.result.Result.Err d)
   | noble_kernel.types.Ty.SyntaxType =>
+    let d ← invalid span (toStr "list operation requires a List value")
+    ok (core.result.Result.Err d)
+  | noble_kernel.types.Ty.ContractType =>
+    let d ← invalid span (toStr "list operation requires a List value")
+    ok (core.result.Result.Err d)
+  | noble_kernel.types.Ty.EvidenceType =>
+    let d ← invalid span (toStr "list operation requires a List value")
+    ok (core.result.Result.Err d)
+  | noble_kernel.types.Ty.CertifiedType =>
     let d ← invalid span (toStr "list operation requires a List value")
     ok (core.result.Result.Err d)
   | noble_kernel.types.Ty.PairType _ _ =>
@@ -3238,7 +12190,7 @@ def predicate.unary.list
     ok (core.result.Result.Err d)
 
 /-- [noble_contracts::predicate::unary::sum]:
-    Source: 'crates/noble-contracts/src/predicate/unary.rs', lines 130:0-179:1 -/
+    Source: 'crates/noble-contracts/src/predicate/unary.rs', lines 133:0-185:1 -/
 def predicate.unary.sum
   (op : predicate.Op) (operand : predicate.application.Operand) (span : Span) :
   Result (core.result.Result (ExprKind × noble_kernel.types.Ty) Diagnostic)
@@ -3257,6 +12209,15 @@ def predicate.unary.sum
     let d ← invalid span (toStr "sum operation requires a Sum value")
     ok (core.result.Result.Err d)
   | noble_kernel.types.Ty.SyntaxType =>
+    let d ← invalid span (toStr "sum operation requires a Sum value")
+    ok (core.result.Result.Err d)
+  | noble_kernel.types.Ty.ContractType =>
+    let d ← invalid span (toStr "sum operation requires a Sum value")
+    ok (core.result.Result.Err d)
+  | noble_kernel.types.Ty.EvidenceType =>
+    let d ← invalid span (toStr "sum operation requires a Sum value")
+    ok (core.result.Result.Err d)
+  | noble_kernel.types.Ty.CertifiedType =>
     let d ← invalid span (toStr "sum operation requires a Sum value")
     ok (core.result.Result.Err d)
   | noble_kernel.types.Ty.PairType _ _ =>
@@ -3338,7 +12299,7 @@ def predicate.unary.sum
     ok (core.result.Result.Err d)
 
 /-- [noble_contracts::predicate::unary::inject]:
-    Source: 'crates/noble-contracts/src/predicate/unary.rs', lines 96:0-123:1 -/
+    Source: 'crates/noble-contracts/src/predicate/unary.rs', lines 99:0-126:1 -/
 def predicate.unary.inject
   (op : predicate.Op) (operand : predicate.application.Operand)
   (annotation : Option noble_kernel.types.Ty) (span : Span) :
@@ -3388,7 +12349,7 @@ def predicate.unary.inject
         noble_kernel.types.Ty.SumType other t))
 
 /-- [noble_contracts::predicate::unary::pair]:
-    Source: 'crates/noble-contracts/src/predicate/unary.rs', lines 64:0-90:1 -/
+    Source: 'crates/noble-contracts/src/predicate/unary.rs', lines 64:0-93:1 -/
 def predicate.unary.pair
   (op : predicate.Op) (operand : predicate.application.Operand) (span : Span) :
   Result (core.result.Result (ExprKind × noble_kernel.types.Ty) Diagnostic)
@@ -3407,6 +12368,15 @@ def predicate.unary.pair
     let d ← invalid span (toStr "pair projection requires a Pair value")
     ok (core.result.Result.Err d)
   | noble_kernel.types.Ty.SyntaxType =>
+    let d ← invalid span (toStr "pair projection requires a Pair value")
+    ok (core.result.Result.Err d)
+  | noble_kernel.types.Ty.ContractType =>
+    let d ← invalid span (toStr "pair projection requires a Pair value")
+    ok (core.result.Result.Err d)
+  | noble_kernel.types.Ty.EvidenceType =>
+    let d ← invalid span (toStr "pair projection requires a Pair value")
+    ok (core.result.Result.Err d)
+  | noble_kernel.types.Ty.CertifiedType =>
     let d ← invalid span (toStr "pair projection requires a Pair value")
     ok (core.result.Result.Err d)
   | noble_kernel.types.Ty.PairType left right =>
@@ -3701,7 +12671,7 @@ def predicate.unary.apply
     ok (core.result.Result.Err d, meter)
 
 /-- [noble_contracts::predicate::structural::step]:
-    Source: 'crates/noble-contracts/src/predicate/structural.rs', lines 33:0-47:1 -/
+    Source: 'crates/noble-contracts/src/predicate/structural.rs', lines 33:0-52:1 -/
 def predicate.structural.step
   (ty : noble_kernel.types.Ty) (traversal : predicate.structural.Traversal)
   (span : Span) (meter : Meter) :
@@ -3723,7 +12693,22 @@ def predicate.structural.step
     | noble_kernel.types.Ty.SyntaxType =>
       let d ←
         Diagnostic.new DiagnosticKind.Unsupported span (toStr
-          "eq operands and maps input/result must be scalar or structural data, without nested Program, Syntax, or resources")
+          "eq operands and maps input/result must be scalar or structural data, without nested Program, Syntax, companion, or resource types")
+      ok (core.result.Result.Err d, traversal, meter1)
+    | noble_kernel.types.Ty.ContractType =>
+      let d ←
+        Diagnostic.new DiagnosticKind.Unsupported span (toStr
+          "eq operands and maps input/result must be scalar or structural data, without nested Program, Syntax, companion, or resource types")
+      ok (core.result.Result.Err d, traversal, meter1)
+    | noble_kernel.types.Ty.EvidenceType =>
+      let d ←
+        Diagnostic.new DiagnosticKind.Unsupported span (toStr
+          "eq operands and maps input/result must be scalar or structural data, without nested Program, Syntax, companion, or resource types")
+      ok (core.result.Result.Err d, traversal, meter1)
+    | noble_kernel.types.Ty.CertifiedType =>
+      let d ←
+        Diagnostic.new DiagnosticKind.Unsupported span (toStr
+          "eq operands and maps input/result must be scalar or structural data, without nested Program, Syntax, companion, or resource types")
       ok (core.result.Result.Err d, traversal, meter1)
     | noble_kernel.types.Ty.PairType a b =>
       let v ← alloc.vec.Vec.push traversal.pending a
@@ -3739,12 +12724,12 @@ def predicate.structural.step
     | noble_kernel.types.Ty.ProgramType _ _ _ =>
       let d ←
         Diagnostic.new DiagnosticKind.Unsupported span (toStr
-          "eq operands and maps input/result must be scalar or structural data, without nested Program, Syntax, or resources")
+          "eq operands and maps input/result must be scalar or structural data, without nested Program, Syntax, companion, or resource types")
       ok (core.result.Result.Err d, traversal, meter1)
     | noble_kernel.types.Ty.ResourceType _ =>
       let d ←
         Diagnostic.new DiagnosticKind.Unsupported span (toStr
-          "eq operands and maps input/result must be scalar or structural data, without nested Program, Syntax, or resources")
+          "eq operands and maps input/result must be scalar or structural data, without nested Program, Syntax, companion, or resource types")
       ok (core.result.Result.Err d, traversal, meter1)
   | core.result.Result.Err _ => ok (r, traversal, meter1)
 
@@ -3794,7 +12779,7 @@ def predicate.structural.check
   | some error => ok (core.result.Result.Err error, meter1)
 
 /-- [noble_contracts::predicate::mapping::apply]:
-    Source: 'crates/noble-contracts/src/predicate/mapping.rs', lines 5:0-66:1 -/
+    Source: 'crates/noble-contracts/src/predicate/mapping.rs', lines 5:0-69:1 -/
 def predicate.mapping.apply
   (operands : (predicate.application.Operand × predicate.application.Operand
   × predicate.application.Operand)) (span : Span) (meter : Meter) :
@@ -3819,6 +12804,18 @@ def predicate.mapping.apply
       invalid span (toStr "maps first argument must have a Program type")
     ok (core.result.Result.Err d, meter)
   | noble_kernel.types.Ty.SyntaxType =>
+    let d ←
+      invalid span (toStr "maps first argument must have a Program type")
+    ok (core.result.Result.Err d, meter)
+  | noble_kernel.types.Ty.ContractType =>
+    let d ←
+      invalid span (toStr "maps first argument must have a Program type")
+    ok (core.result.Result.Err d, meter)
+  | noble_kernel.types.Ty.EvidenceType =>
+    let d ←
+      invalid span (toStr "maps first argument must have a Program type")
+    ok (core.result.Result.Err d, meter)
+  | noble_kernel.types.Ty.CertifiedType =>
     let d ←
       invalid span (toStr "maps first argument must have a Program type")
     ok (core.result.Result.Err d, meter)
@@ -3914,7 +12911,7 @@ def predicate.mapping.apply
     ok (core.result.Result.Err d, meter)
 
 /-- [noble_contracts::predicate::binary::cons]:
-    Source: 'crates/noble-contracts/src/predicate/binary.rs', lines 195:0-225:1 -/
+    Source: 'crates/noble-contracts/src/predicate/binary.rs', lines 195:0-228:1 -/
 def predicate.binary.cons
   (operands : (predicate.application.Operand × predicate.application.Operand))
   (span : Span) (meter : Meter) :
@@ -3940,6 +12937,18 @@ def predicate.binary.cons
       invalid span (toStr "cons requires an item and a list of that item type")
     ok (core.result.Result.Err d, meter)
   | noble_kernel.types.Ty.SyntaxType =>
+    let d ←
+      invalid span (toStr "cons requires an item and a list of that item type")
+    ok (core.result.Result.Err d, meter)
+  | noble_kernel.types.Ty.ContractType =>
+    let d ←
+      invalid span (toStr "cons requires an item and a list of that item type")
+    ok (core.result.Result.Err d, meter)
+  | noble_kernel.types.Ty.EvidenceType =>
+    let d ←
+      invalid span (toStr "cons requires an item and a list of that item type")
+    ok (core.result.Result.Err d, meter)
+  | noble_kernel.types.Ty.CertifiedType =>
     let d ←
       invalid span (toStr "cons requires an item and a list of that item type")
     ok (core.result.Result.Err d, meter)
@@ -4903,7 +13912,7 @@ def predicate.resolving.resolve
     ok (core.result.Result.Err failure, arena, meter)
 
 /-- [noble_contracts::frontend::argument]:
-    Source: 'crates/noble-contracts/src/frontend.rs', lines 247:0-257:1 -/
+    Source: 'crates/noble-contracts/src/frontend.rs', lines 252:0-262:1 -/
 def frontend.argument
   (tree : syntax.Tree) (id : Std.U32) :
   Result (core.result.Result Std.U32 Diagnostic)
@@ -4926,7 +13935,7 @@ def frontend.argument
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_contracts::frontend::required]:
-    Source: 'crates/noble-contracts/src/frontend.rs', lines 232:0-241:1 -/
+    Source: 'crates/noble-contracts/src/frontend.rs', lines 237:0-246:1 -/
 def frontend.required
   (value : Option Std.U32) (span : Span) (message : Str) :
   Result (core.result.Result Std.U32 Diagnostic)
@@ -4937,7 +13946,7 @@ def frontend.required
   | some value1 => ok (core.result.Result.Ok value1)
 
 /-- [noble_contracts::frontend::{noble_contracts::frontend::Container<'a>}::new]:
-    Source: 'crates/noble-contracts/src/frontend.rs', lines 14:4-27:5 -/
+    Source: 'crates/noble-contracts/src/frontend.rs', lines 19:4-32:5 -/
 def frontend.Container.new
   (source : Slice Std.U8) (tree : syntax.Tree) (root : Std.U32) :
   Result (core.result.Result frontend.Container Diagnostic)
@@ -4954,13 +13963,13 @@ def frontend.Container.new
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_contracts::predicate::{noble_contracts::predicate::Arena}::new]:
-    Source: 'crates/noble-contracts/src/predicate.rs', lines 24:4-28:5
+    Source: 'crates/noble-contracts/src/predicate.rs', lines 29:4-33:5
     Visibility: public -/
 def predicate.Arena.new : Result predicate.Arena := do
   ok { expressions := (alloc.vec.Vec.new Expr) }
 
 /-- [noble_contracts::{noble_contracts::Expr}::is_total]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 112:4-114:5
+    Source: 'crates/noble-contracts/src/lib.rs', lines 118:4-120:5
     Visibility: public -/
 def Expr.is_total (self : Expr) : Result Bool := do
   ok self.total
@@ -5247,7 +14256,7 @@ def frontend.logic.kind
     | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_contracts::{noble_contracts::Expr}::uses_output]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 116:4-118:5
+    Source: 'crates/noble-contracts/src/lib.rs', lines 122:4-124:5
     Visibility: public -/
 def Expr.impl.uses_output (self : Expr) : Result Bool := do
   ok self.uses_output
@@ -5449,14 +14458,14 @@ def frontend.logic.resolve
     ok (core.result.Result.Err failure, meter)
 
 /-- [noble_contracts::frontend::{impl core::clone::Clone for noble_contracts::frontend::Container<'a>}::clone]:
-    Source: 'crates/noble-contracts/src/frontend.rs', lines 5:9-5:14
+    Source: 'crates/noble-contracts/src/frontend.rs', lines 10:9-10:14
     Visibility: public -/
 def frontend.Container.Insts.CoreCloneClone.clone
   (self : frontend.Container) : Result frontend.Container := do
   ok self
 
 /-- Trait implementation: [noble_contracts::frontend::{impl core::clone::Clone for noble_contracts::frontend::Container<'a>}]
-    Source: 'crates/noble-contracts/src/frontend.rs', lines 5:9-5:14 -/
+    Source: 'crates/noble-contracts/src/frontend.rs', lines 10:9-10:14 -/
 @[reducible]
 def frontend.Container.Insts.CoreCloneClone : core.clone.Clone
   frontend.Container := {
@@ -5464,7 +14473,7 @@ def frontend.Container.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [noble_contracts::frontend::{impl core::marker::Copy for noble_contracts::frontend::Container<'a>}]
-    Source: 'crates/noble-contracts/src/frontend.rs', lines 5:16-5:20 -/
+    Source: 'crates/noble-contracts/src/frontend.rs', lines 10:16-10:20 -/
 @[reducible]
 def frontend.Container.Insts.CoreMarkerCopy : core.marker.Copy
   frontend.Container := {
@@ -5727,7 +14736,7 @@ def syntax.parsing.close
           { state with frames := v, position := i })
 
 /-- [noble_contracts::metering::{noble_contracts::Meter}::depth]:
-    Source: 'crates/noble-contracts/src/metering.rs', lines 37:4-47:5
+    Source: 'crates/noble-contracts/src/metering.rs', lines 42:4-52:5
     Visibility: public -/
 def metering.Meter.depth
   (self : Meter) (depth : Std.U32) (span : Span) :
@@ -6081,7 +15090,7 @@ def syntax.parsing.State.new : Result syntax.parsing.State := do
     }
 
 /-- [noble_contracts::syntax::source_encoding]:
-    Source: 'crates/noble-contracts/src/syntax/mod.rs', lines 111:0-132:1 -/
+    Source: 'crates/noble-contracts/src/syntax/mod.rs', lines 116:0-137:1 -/
 def syntax.source_encoding
   (source : Slice Std.U8) (full : Span) (meter : Meter) :
   Result ((core.result.Result Unit Diagnostic) × Meter)
@@ -6120,7 +15129,7 @@ def syntax.source_encoding
   | core.result.Result.Err _ => ok (r, meter1)
 
 /-- [noble_contracts::syntax::parse]: loop body 0:
-    Source: 'crates/noble-contracts/src/syntax/mod.rs', lines 95:4-100:5 -/
+    Source: 'crates/noble-contracts/src/syntax/mod.rs', lines 100:4-105:5 -/
 @[rust_loop_body]
 def syntax.parse_loop.body
   (source : Slice Std.U8) (value : Std.U32) (meter : Meter)
@@ -6140,7 +15149,7 @@ def syntax.parse_loop.body
   else ok (done (meter, state, none))
 
 /-- [noble_contracts::syntax::parse]: loop 0:
-    Source: 'crates/noble-contracts/src/syntax/mod.rs', lines 95:4-100:5 -/
+    Source: 'crates/noble-contracts/src/syntax/mod.rs', lines 100:4-105:5 -/
 @[rust_loop]
 def syntax.parse_loop
   (source : Slice Std.U8) (meter : Meter) (value : Std.U32)
@@ -6152,7 +15161,7 @@ def syntax.parse_loop
     (meter, state)
 
 /-- [noble_contracts::syntax::parse]:
-    Source: 'crates/noble-contracts/src/syntax/mod.rs', lines 80:0-105:1 -/
+    Source: 'crates/noble-contracts/src/syntax/mod.rs', lines 85:0-110:1 -/
 def syntax.parse
   (source : Slice Std.U8) (meter : Meter) :
   Result ((core.result.Result syntax.Tree Diagnostic) × Meter)
@@ -6189,13 +15198,13 @@ def syntax.parse
     ok (core.result.Result.Err failure, meter)
 
 /-- [noble_contracts::metering::{noble_contracts::Meter}::new]:
-    Source: 'crates/noble-contracts/src/metering.rs', lines 2:4-8:5
+    Source: 'crates/noble-contracts/src/metering.rs', lines 7:4-13:5
     Visibility: public -/
 def metering.Meter.new (limits : Limits) : Result Meter := do
   ok { limits, work := limits.work, nodes := 0#u32 }
 
 /-- [noble_contracts::{noble_contracts::Diagnostic}::with_typing]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 82:4-85:5 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 88:4-91:5 -/
 def Diagnostic.with_typing
   (self : Diagnostic) (checked : noble_kernel.untrusted.Checked) :
   Result Diagnostic
@@ -6203,7 +15212,7 @@ def Diagnostic.with_typing
   ok { self with ordinary_typing := (some checked) }
 
 /-- [noble_contracts::inference::{noble_contracts::inference::Arena}::new]:
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 58:4-68:5
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 66:4-76:5
     Visibility: public -/
 def inference.Arena.new : Result inference.Arena := do
   ok
@@ -6218,7 +15227,7 @@ def inference.Arena.new : Result inference.Arena := do
     }
 
 /-- [noble_contracts::inference::{noble_contracts::inference::Arena}::source]:
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 70:4-75:5
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 78:4-83:5
     Visibility: public -/
 def inference.Arena.source (test_hosts : Bool) : Result inference.Arena := do
   let arena ← inference.Arena.new
@@ -6227,7 +15236,7 @@ def inference.Arena.source (test_hosts : Bool) : Result inference.Arena := do
   else ok { arena with effectful := true, effect_universe := 0#u8 }
 
 /-- [noble_contracts::inference::{noble_contracts::inference::Arena}::get]:
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 89:4-94:5 -/
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 97:4-102:5 -/
 def inference.Arena.get
   (self : inference.Arena) (id : Std.U32) (span : Span) :
   Result (core.result.Result inference.Term Diagnostic)
@@ -6246,7 +15255,7 @@ def inference.Arena.get
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_contracts::inference::{noble_contracts::inference::Arena}::root_step]:
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 135:4-157:5 -/
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 143:4-168:5 -/
 def inference.Arena.root_step
   (self : inference.Arena) (id : Std.U32) (span : Span) (meter : Meter) :
   Result ((core.result.Result (Option Std.U32) Diagnostic) × Meter)
@@ -6266,6 +15275,9 @@ def inference.Arena.root_step
       | inference.Term.I64Term => ok (core.result.Result.Ok none, meter1)
       | inference.Term.TextTerm => ok (core.result.Result.Ok none, meter1)
       | inference.Term.SyntaxTerm => ok (core.result.Result.Ok none, meter1)
+      | inference.Term.ContractTerm => ok (core.result.Result.Ok none, meter1)
+      | inference.Term.EvidenceTerm => ok (core.result.Result.Ok none, meter1)
+      | inference.Term.CertifiedTerm => ok (core.result.Result.Ok none, meter1)
       | inference.Term.PairTerm _ _ => ok (core.result.Result.Ok none, meter1)
       | inference.Term.SumTerm _ _ => ok (core.result.Result.Ok none, meter1)
       | inference.Term.ListTerm _ => ok (core.result.Result.Ok none, meter1)
@@ -6279,7 +15291,7 @@ def inference.Arena.root_step
     ok (core.result.Result.Err failure, meter1)
 
 /-- [noble_contracts::inference::{noble_contracts::inference::Arena}::root]: loop body 0:
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 105:8-118:9 -/
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 113:8-126:9 -/
 @[rust_loop_body]
 def inference.Arena.root_loop.body
   (v : alloc.vec.Vec inference.Term) (b : Bool) (i : Std.U8)
@@ -6315,7 +15327,7 @@ def inference.Arena.root_loop.body
   else ok (done (id, meter, false, none))
 
 /-- [noble_contracts::inference::{noble_contracts::inference::Arena}::root]: loop 0:
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 105:8-118:9 -/
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 113:8-126:9 -/
 @[rust_loop]
 def inference.Arena.root_loop
   (v : alloc.vec.Vec inference.Term) (b : Bool) (i : Std.U8)
@@ -6331,7 +15343,7 @@ def inference.Arena.root_loop
     (id, meter, remaining)
 
 /-- [noble_contracts::inference::{noble_contracts::inference::Arena}::root]:
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 96:4-129:5 -/
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 104:4-137:5 -/
 def inference.Arena.root
   (self : inference.Arena) (id : Std.U32) (span : Span) (meter : Meter) :
   Result ((core.result.Result Std.U32 Diagnostic) × Meter)
@@ -6351,7 +15363,7 @@ def inference.Arena.root
   | some problem => ok (core.result.Result.Err problem, meter1)
 
 /-- [noble_contracts::inference::materialize::rendering::{noble_contracts::inference::materialize::rendering::Traversal}::term]:
-    Source: 'crates/noble-contracts/src/inference/materialize/rendering.rs', lines 78:4-129:5 -/
+    Source: 'crates/noble-contracts/src/inference/materialize/rendering.rs', lines 78:4-132:5 -/
 def inference.materialize.rendering.Traversal.term
   (self : inference.materialize.rendering.Traversal) (id : Std.U32)
   (arena : inference.Arena) (span : Span) (meter : Meter) :
@@ -6389,6 +15401,15 @@ def inference.materialize.rendering.Traversal.term
         ok (core.result.Result.Ok (), { self with text := s }, meter1)
       | inference.Term.SyntaxTerm =>
         let s ← alloc.string.String.push_str self.text (toStr "Syntax")
+        ok (core.result.Result.Ok (), { self with text := s }, meter1)
+      | inference.Term.ContractTerm =>
+        let s ← alloc.string.String.push_str self.text (toStr "Contract")
+        ok (core.result.Result.Ok (), { self with text := s }, meter1)
+      | inference.Term.EvidenceTerm =>
+        let s ← alloc.string.String.push_str self.text (toStr "Evidence")
+        ok (core.result.Result.Ok (), { self with text := s }, meter1)
+      | inference.Term.CertifiedTerm =>
+        let s ← alloc.string.String.push_str self.text (toStr "Certified")
         ok (core.result.Result.Ok (), { self with text := s }, meter1)
       | inference.Term.PairTerm a b =>
         let v ←
@@ -6560,7 +15581,7 @@ def inference.materialize.rendering.describe
   | some problem => ok (core.result.Result.Err problem, meter1)
 
 /-- [noble_contracts::inference::materialize::{noble_contracts::inference::Arena}::join_message]:
-    Source: 'crates/noble-contracts/src/inference/materialize.rs', lines 205:4-219:5
+    Source: 'crates/noble-contracts/src/inference/materialize.rs', lines 208:4-222:5
     Visibility: public -/
 def inference.materialize.Arena.join_message
   (self : inference.Arena) (expected : Std.U32) (actual : Std.U32)
@@ -6589,7 +15610,7 @@ def inference.materialize.Arena.join_message
   | core.result.Result.Err _ => ok (r, meter1)
 
 /-- [noble_contracts::inference::build::require_id]:
-    Source: 'crates/noble-contracts/src/inference/build.rs', lines 245:0-250:1 -/
+    Source: 'crates/noble-contracts/src/inference/build.rs', lines 248:0-253:1 -/
 def inference.build.require_id
   (value : Option Std.U32) (span : Span) :
   Result (core.result.Result Std.U32 Diagnostic)
@@ -6600,7 +15621,7 @@ def inference.build.require_id
   | some value1 => ok (core.result.Result.Ok value1)
 
 /-- [noble_contracts::inference::{noble_contracts::inference::Arena}::add]:
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 77:4-87:5
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 85:4-95:5
     Visibility: public -/
 def inference.Arena.add
   (self : inference.Arena) (term : inference.Term) (span : Span)
@@ -6644,7 +15665,7 @@ def inference.effects.Arena.program
     ok (core.result.Result.Err failure, self, meter1)
 
 /-- [noble_contracts::inference::variable_at]:
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 237:0-246:1 -/
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 231:0-240:1 -/
 def inference.variable_at
   («variables» : Slice inference.Variable) (id : Std.U32) (span : Span) :
   Result (core.result.Result inference.Variable Diagnostic)
@@ -6663,7 +15684,7 @@ def inference.variable_at
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_contracts::inference::pure_effect]:
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 275:0-298:1 -/
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 269:0-292:1 -/
 def inference.pure_effect
   (effect : Option noble_kernel.shapes.EffectSlot)
   («variables» : Slice inference.Variable) (span : Span) (meter : Meter) :
@@ -6702,7 +15723,7 @@ def inference.pure_effect
   | core.result.Result.Err _ => ok (r, meter1)
 
 /-- [noble_contracts::inference::pure_effects]: loop body 0:
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 256:4-264:5 -/
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 250:4-258:5 -/
 @[rust_loop_body]
 def inference.pure_effects_loop.body
   (effects : Slice noble_kernel.shapes.EffectSlot)
@@ -6725,7 +15746,7 @@ def inference.pure_effects_loop.body
   else ok (done (meter, none))
 
 /-- [noble_contracts::inference::pure_effects]: loop 0:
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 256:4-264:5 -/
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 250:4-258:5 -/
 @[rust_loop]
 def inference.pure_effects_loop
   (effects : Slice noble_kernel.shapes.EffectSlot)
@@ -6739,7 +15760,7 @@ def inference.pure_effects_loop
     (meter, «at»)
 
 /-- [noble_contracts::inference::pure_effects]:
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 248:0-269:1 -/
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 242:0-263:1 -/
 def inference.pure_effects
   (effects : Slice noble_kernel.shapes.EffectSlot)
   («variables» : Slice inference.Variable) (span : Span) (meter : Meter) :
@@ -6929,7 +15950,7 @@ def inference.effects.Arena.effect_pattern
   | core.result.Result.Err _ => ok (r, self1, meter1)
 
 /-- [noble_contracts::inference::construct::{noble_contracts::inference::build::State<'a>}::build_pattern]:
-    Source: 'crates/noble-contracts/src/inference/construct.rs', lines 61:4-126:5 -/
+    Source: 'crates/noble-contracts/src/inference/construct.rs', lines 64:4-132:5 -/
 def inference.construct.State.build_pattern
   (self : inference.build.State) (arena : inference.Arena)
   (pattern : noble_kernel.shapes.Pattern)
@@ -6977,6 +15998,33 @@ def inference.construct.State.build_pattern
   | noble_kernel.shapes.Pattern.SyntaxPattern =>
     let (r, arena1, meter1) ←
       inference.Arena.add arena inference.Term.SyntaxTerm span meter
+    match r with
+    | core.result.Result.Ok value =>
+      let v ← alloc.vec.Vec.push self.values value
+      ok (core.result.Result.Ok { self with values := v }, arena1, meter1)
+    | core.result.Result.Err failure =>
+      ok (core.result.Result.Err failure, arena1, meter1)
+  | noble_kernel.shapes.Pattern.ContractPattern =>
+    let (r, arena1, meter1) ←
+      inference.Arena.add arena inference.Term.ContractTerm span meter
+    match r with
+    | core.result.Result.Ok value =>
+      let v ← alloc.vec.Vec.push self.values value
+      ok (core.result.Result.Ok { self with values := v }, arena1, meter1)
+    | core.result.Result.Err failure =>
+      ok (core.result.Result.Err failure, arena1, meter1)
+  | noble_kernel.shapes.Pattern.EvidencePattern =>
+    let (r, arena1, meter1) ←
+      inference.Arena.add arena inference.Term.EvidenceTerm span meter
+    match r with
+    | core.result.Result.Ok value =>
+      let v ← alloc.vec.Vec.push self.values value
+      ok (core.result.Result.Ok { self with values := v }, arena1, meter1)
+    | core.result.Result.Err failure =>
+      ok (core.result.Result.Err failure, arena1, meter1)
+  | noble_kernel.shapes.Pattern.CertifiedPattern =>
+    let (r, arena1, meter1) ←
+      inference.Arena.add arena inference.Term.CertifiedTerm span meter
     match r with
     | core.result.Result.Ok value =>
       let v ← alloc.vec.Vec.push self.values value
@@ -7125,7 +16173,7 @@ def inference.effects.Arena.effect_constant
   | some problem => ok (core.result.Result.Err problem, self, meter1)
 
 /-- [noble_contracts::inference::construct::{noble_contracts::inference::build::State<'a>}::build_ty]:
-    Source: 'crates/noble-contracts/src/inference/construct.rs', lines 2:4-59:5 -/
+    Source: 'crates/noble-contracts/src/inference/construct.rs', lines 2:4-62:5 -/
 def inference.construct.State.build_ty
   (self : inference.build.State) (arena : inference.Arena)
   (ty : noble_kernel.types.Ty) (span : Span) (meter : Meter) :
@@ -7172,6 +16220,33 @@ def inference.construct.State.build_ty
   | noble_kernel.types.Ty.SyntaxType =>
     let (r, arena1, meter1) ←
       inference.Arena.add arena inference.Term.SyntaxTerm span meter
+    match r with
+    | core.result.Result.Ok value =>
+      let v ← alloc.vec.Vec.push self.values value
+      ok (core.result.Result.Ok { self with values := v }, arena1, meter1)
+    | core.result.Result.Err failure =>
+      ok (core.result.Result.Err failure, arena1, meter1)
+  | noble_kernel.types.Ty.ContractType =>
+    let (r, arena1, meter1) ←
+      inference.Arena.add arena inference.Term.ContractTerm span meter
+    match r with
+    | core.result.Result.Ok value =>
+      let v ← alloc.vec.Vec.push self.values value
+      ok (core.result.Result.Ok { self with values := v }, arena1, meter1)
+    | core.result.Result.Err failure =>
+      ok (core.result.Result.Err failure, arena1, meter1)
+  | noble_kernel.types.Ty.EvidenceType =>
+    let (r, arena1, meter1) ←
+      inference.Arena.add arena inference.Term.EvidenceTerm span meter
+    match r with
+    | core.result.Result.Ok value =>
+      let v ← alloc.vec.Vec.push self.values value
+      ok (core.result.Result.Ok { self with values := v }, arena1, meter1)
+    | core.result.Result.Err failure =>
+      ok (core.result.Result.Err failure, arena1, meter1)
+  | noble_kernel.types.Ty.CertifiedType =>
+    let (r, arena1, meter1) ←
+      inference.Arena.add arena inference.Term.CertifiedTerm span meter
     match r with
     | core.result.Result.Ok value =>
       let v ← alloc.vec.Vec.push self.values value
@@ -7232,7 +16307,7 @@ def inference.construct.State.build_ty
     ok (core.result.Result.Err d, arena, meter)
 
 /-- [noble_contracts::inference::build::stack_pattern_step]:
-    Source: 'crates/noble-contracts/src/inference/build.rs', lines 258:0-277:1 -/
+    Source: 'crates/noble-contracts/src/inference/build.rs', lines 261:0-280:1 -/
 def inference.build.stack_pattern_step
   (stack : Slice noble_kernel.shapes.Pattern) (start : Std.Usize)
   («at» : Std.Usize) (state : inference.build.State) (span : Span) :
@@ -7257,7 +16332,7 @@ def inference.build.stack_pattern_step
     else ok (core.result.Result.Ok { state with steps := v1 })
 
 /-- [noble_contracts::inference::build::stack_ty_step]:
-    Source: 'crates/noble-contracts/src/inference/build.rs', lines 221:0-239:1 -/
+    Source: 'crates/noble-contracts/src/inference/build.rs', lines 224:0-242:1 -/
 def inference.build.stack_ty_step
   (stack : Slice noble_kernel.types.Ty) («at» : Std.Usize)
   (state : inference.build.State) (span : Span) :
@@ -7281,7 +16356,7 @@ def inference.build.stack_ty_step
     else ok (core.result.Result.Ok { state with steps := v1 })
 
 /-- [noble_contracts::inference::build::{noble_contracts::inference::Arena}::build_stack_pattern]:
-    Source: 'crates/noble-contracts/src/inference/build.rs', lines 170:4-213:5 -/
+    Source: 'crates/noble-contracts/src/inference/build.rs', lines 170:4-216:5 -/
 def inference.build.Arena.build_stack_pattern
   (self : inference.Arena) (stack : Slice noble_kernel.shapes.Pattern)
   (state : inference.build.State) («variables» : Slice inference.Variable)
@@ -7392,6 +16467,66 @@ def inference.build.Arena.build_stack_pattern
       | core.result.Result.Err failure =>
         ok (core.result.Result.Err failure, self1, meter1)
     | noble_kernel.shapes.Pattern.SyntaxPattern =>
+      let (r, self1, meter1) ←
+        inference.Arena.add self inference.Term.EmptyTerm span meter
+      match r with
+      | core.result.Result.Ok value =>
+        let v ← alloc.vec.Vec.push state.values value
+        let i := Slice.len stack
+        if i > 0#usize
+        then
+          let i1 := Slice.len stack
+          let i2 ← i1 - 1#usize
+          let v1 ←
+            alloc.vec.Vec.push state.steps
+              (inference.build.Step.StackPatternParts stack 0#usize i2)
+          ok (core.result.Result.Ok { steps := v1, values := v }, self1,
+            meter1)
+        else
+          ok (core.result.Result.Ok { state with values := v }, self1, meter1)
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, self1, meter1)
+    | noble_kernel.shapes.Pattern.ContractPattern =>
+      let (r, self1, meter1) ←
+        inference.Arena.add self inference.Term.EmptyTerm span meter
+      match r with
+      | core.result.Result.Ok value =>
+        let v ← alloc.vec.Vec.push state.values value
+        let i := Slice.len stack
+        if i > 0#usize
+        then
+          let i1 := Slice.len stack
+          let i2 ← i1 - 1#usize
+          let v1 ←
+            alloc.vec.Vec.push state.steps
+              (inference.build.Step.StackPatternParts stack 0#usize i2)
+          ok (core.result.Result.Ok { steps := v1, values := v }, self1,
+            meter1)
+        else
+          ok (core.result.Result.Ok { state with values := v }, self1, meter1)
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, self1, meter1)
+    | noble_kernel.shapes.Pattern.EvidencePattern =>
+      let (r, self1, meter1) ←
+        inference.Arena.add self inference.Term.EmptyTerm span meter
+      match r with
+      | core.result.Result.Ok value =>
+        let v ← alloc.vec.Vec.push state.values value
+        let i := Slice.len stack
+        if i > 0#usize
+        then
+          let i1 := Slice.len stack
+          let i2 ← i1 - 1#usize
+          let v1 ←
+            alloc.vec.Vec.push state.steps
+              (inference.build.Step.StackPatternParts stack 0#usize i2)
+          ok (core.result.Result.Ok { steps := v1, values := v }, self1,
+            meter1)
+        else
+          ok (core.result.Result.Ok { state with values := v }, self1, meter1)
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, self1, meter1)
+    | noble_kernel.shapes.Pattern.CertifiedPattern =>
       let (r, self1, meter1) ←
         inference.Arena.add self inference.Term.EmptyTerm span meter
       match r with
@@ -7819,7 +16954,7 @@ def inference.build.Arena.stack
     meter
 
 /-- [noble_contracts::program::rejection_shapes]:
-    Source: 'crates/noble-contracts/src/program.rs', lines 268:0-283:1 -/
+    Source: 'crates/noble-contracts/src/program.rs', lines 273:0-288:1 -/
 def program.rejection_shapes
   (diagnostic : noble_kernel.untrusted.Diagnostic)
   (request : noble_kernel.untrusted.Request) (span : Span) :
@@ -7856,7 +16991,7 @@ def program.rejection_shapes
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_contracts::program::check]:
-    Source: 'crates/noble-contracts/src/program.rs', lines 207:0-266:1 -/
+    Source: 'crates/noble-contracts/src/program.rs', lines 212:0-271:1 -/
 def program.check
   (env : noble_kernel.contracts.Env)
   (candidate : noble_kernel.untrusted.Candidate)
@@ -7986,7 +17121,7 @@ def program.check
     ok (core.result.Result.Err d)
 
 /-- [noble_contracts::syntax::{noble_contracts::syntax::Tree}::square]:
-    Source: 'crates/noble-contracts/src/syntax/mod.rs', lines 40:4-49:5
+    Source: 'crates/noble-contracts/src/syntax/mod.rs', lines 45:4-54:5
     Visibility: public -/
 def syntax.Tree.square
   (self : syntax.Tree) (id : Std.U32) :
@@ -8117,7 +17252,7 @@ def inference.effects.Arena.program_effect
   | some problem => ok (core.result.Result.Err problem, meter1)
 
 /-- [noble_contracts::inference::materialize::{noble_contracts::inference::Arena}::visit]:
-    Source: 'crates/noble-contracts/src/inference/materialize.rs', lines 149:4-197:5 -/
+    Source: 'crates/noble-contracts/src/inference/materialize.rs', lines 149:4-200:5 -/
 def inference.materialize.Arena.visit
   (self : inference.Arena) (id : Std.U32) (state : inference.materialize.State)
   (span : Span) (meter : Meter) :
@@ -8162,6 +17297,21 @@ def inference.materialize.Arena.visit
         let v ←
           alloc.vec.Vec.push state.values (inference.materialize.Material.Value
             noble_kernel.types.Ty.SyntaxType 1#u32)
+        ok (core.result.Result.Ok { state with values := v }, meter1)
+      | inference.Term.ContractTerm =>
+        let v ←
+          alloc.vec.Vec.push state.values (inference.materialize.Material.Value
+            noble_kernel.types.Ty.ContractType 1#u32)
+        ok (core.result.Result.Ok { state with values := v }, meter1)
+      | inference.Term.EvidenceTerm =>
+        let v ←
+          alloc.vec.Vec.push state.values (inference.materialize.Material.Value
+            noble_kernel.types.Ty.EvidenceType 1#u32)
+        ok (core.result.Result.Ok { state with values := v }, meter1)
+      | inference.Term.CertifiedTerm =>
+        let v ←
+          alloc.vec.Vec.push state.values (inference.materialize.Material.Value
+            noble_kernel.types.Ty.CertifiedType 1#u32)
         ok (core.result.Result.Ok { state with values := v }, meter1)
       | inference.Term.PairTerm a b =>
         if self.effectful
@@ -8279,7 +17429,7 @@ def inference.materialize.State.pop
   | some value => ok (core.result.Result.Ok value, { self with values := v })
 
 /-- [noble_contracts::inference::finish::push]:
-    Source: 'crates/noble-contracts/src/inference/finish.rs', lines 105:0-133:1 -/
+    Source: 'crates/noble-contracts/src/inference/finish.rs', lines 108:0-136:1 -/
 def inference.finish.push
   (stack : inference.materialize.Material)
   (value : inference.materialize.Material) (span : Span) :
@@ -8313,7 +17463,7 @@ def inference.finish.push
       ok (core.result.Result.Err d)
 
 /-- [noble_contracts::inference::finish::type_size]:
-    Source: 'crates/noble-contracts/src/inference/finish.rs', lines 139:0-149:1 -/
+    Source: 'crates/noble-contracts/src/inference/finish.rs', lines 142:0-152:1 -/
 def inference.finish.type_size
   (constructors : Std.U32) (span : Span) :
   Result (core.result.Result Std.U32 Diagnostic)
@@ -8327,7 +17477,7 @@ def inference.finish.type_size
   else ok (core.result.Result.Ok constructors)
 
 /-- [noble_contracts::inference::finish::program]:
-    Source: 'crates/noble-contracts/src/inference/finish.rs', lines 80:0-99:1 -/
+    Source: 'crates/noble-contracts/src/inference/finish.rs', lines 83:0-102:1 -/
 def inference.finish.program
   (inputs : inference.materialize.Material)
   (outputs : inference.materialize.Material)
@@ -8355,7 +17505,7 @@ def inference.finish.program
       | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_contracts::inference::finish::pair]:
-    Source: 'crates/noble-contracts/src/inference/finish.rs', lines 50:0-74:1 -/
+    Source: 'crates/noble-contracts/src/inference/finish.rs', lines 53:0-77:1 -/
 def inference.finish.pair
   (is_pair : Bool) (a : inference.materialize.Material)
   (b : inference.materialize.Material) (span : Span) :
@@ -8386,7 +17536,7 @@ def inference.finish.pair
     ok (core.result.Result.Err d)
 
 /-- [noble_contracts::inference::finish::list]:
-    Source: 'crates/noble-contracts/src/inference/finish.rs', lines 37:0-48:1 -/
+    Source: 'crates/noble-contracts/src/inference/finish.rs', lines 40:0-51:1 -/
 def inference.finish.list
   (item : inference.materialize.Material) (span : Span) :
   Result (core.result.Result inference.materialize.Material Diagnostic)
@@ -8405,7 +17555,7 @@ def inference.finish.list
     ok (core.result.Result.Err d)
 
 /-- [noble_contracts::inference::finish::{noble_contracts::inference::materialize::State}::finish]:
-    Source: 'crates/noble-contracts/src/inference/finish.rs', lines 2:4-34:5 -/
+    Source: 'crates/noble-contracts/src/inference/finish.rs', lines 2:4-37:5 -/
 def inference.finish.State.finish
   (self : inference.materialize.State) (term : inference.Term)
   (effects : noble_kernel.types.EffSet) (span : Span) :
@@ -8434,6 +17584,15 @@ def inference.finish.State.finish
       let failure ← internal span
       ok (core.result.Result.Err failure)
     | inference.Term.SyntaxTerm =>
+      let failure ← internal span
+      ok (core.result.Result.Err failure)
+    | inference.Term.ContractTerm =>
+      let failure ← internal span
+      ok (core.result.Result.Err failure)
+    | inference.Term.EvidenceTerm =>
+      let failure ← internal span
+      ok (core.result.Result.Err failure)
+    | inference.Term.CertifiedTerm =>
       let failure ← internal span
       ok (core.result.Result.Err failure)
     | inference.Term.PairTerm _ _ =>
@@ -8697,7 +17856,7 @@ def inference.materialize.Arena.instantiation
   | some problem => ok (core.result.Result.Err problem, meter1)
 
 /-- [noble_contracts::program::finish_draft]:
-    Source: 'crates/noble-contracts/src/program.rs', lines 179:0-205:1 -/
+    Source: 'crates/noble-contracts/src/program.rs', lines 184:0-210:1 -/
 def program.finish_draft
   (drafts : Slice (Option program.Draft)) («at» : Std.Usize)
   (arena : inference.Arena) (span : Span) (meter : Meter) :
@@ -8764,7 +17923,7 @@ def program.finish_draft
     ok (core.result.Result.Err failure, drafts, meter1)
 
 /-- [noble_contracts::program::finish]: loop body 0:
-    Source: 'crates/noble-contracts/src/program.rs', lines 147:4-159:5 -/
+    Source: 'crates/noble-contracts/src/program.rs', lines 152:4-164:5 -/
 @[rust_loop_body]
 def program.finish_loop.body
   (s : Span) (a : inference.Arena) (v : alloc.vec.Vec (Option program.Draft))
@@ -8793,7 +17952,7 @@ def program.finish_loop.body
   else ok (done (meter, nodes, spans, none))
 
 /-- [noble_contracts::program::finish]: loop 0:
-    Source: 'crates/noble-contracts/src/program.rs', lines 147:4-159:5 -/
+    Source: 'crates/noble-contracts/src/program.rs', lines 152:4-164:5 -/
 @[rust_loop]
 def program.finish_loop
   (s : Span) (a : inference.Arena) (v : alloc.vec.Vec (Option program.Draft))
@@ -8808,7 +17967,7 @@ def program.finish_loop
     (v, meter, nodes, spans, «at»)
 
 /-- [noble_contracts::program::finish]:
-    Source: 'crates/noble-contracts/src/program.rs', lines 133:0-172:1 -/
+    Source: 'crates/noble-contracts/src/program.rs', lines 138:0-177:1 -/
 def program.finish
   (state : program.Resolution) (meter : Meter) :
   Result ((core.result.Result (noble_kernel.untrusted.Candidate ×
@@ -8831,7 +17990,7 @@ def program.finish
   | some problem => ok (core.result.Result.Err problem, meter1)
 
 /-- [noble_contracts::program::{noble_contracts::program::Resolution}::add]:
-    Source: 'crates/noble-contracts/src/program.rs', lines 67:4-76:5 -/
+    Source: 'crates/noble-contracts/src/program.rs', lines 72:4-81:5 -/
 def program.Resolution.add
   (self : program.Resolution) (draft : program.Draft) (meter : Meter) :
   Result ((core.result.Result noble_kernel.untrusted.NodeId Diagnostic) ×
@@ -9095,8 +18254,29 @@ def program.words.identity
     else let d ← program.words.host_error span
          ok (core.result.Result.Err d)
 
+/-- [noble_contracts::inference::unify::sort]:
+    Source: 'crates/noble-contracts/src/inference/unify.rs', lines 201:0-219:1 -/
+def inference.unify.sort (term : inference.Term) : Result inference.Sort := do
+  match term with
+  | inference.Term.HoleTerm sort => ok sort
+  | inference.Term.LinkTerm _ => ok inference.Sort.Value
+  | inference.Term.UnitTerm => ok inference.Sort.Value
+  | inference.Term.BoolTerm => ok inference.Sort.Value
+  | inference.Term.I64Term => ok inference.Sort.Value
+  | inference.Term.TextTerm => ok inference.Sort.Value
+  | inference.Term.SyntaxTerm => ok inference.Sort.Value
+  | inference.Term.ContractTerm => ok inference.Sort.Value
+  | inference.Term.EvidenceTerm => ok inference.Sort.Value
+  | inference.Term.CertifiedTerm => ok inference.Sort.Value
+  | inference.Term.PairTerm _ _ => ok inference.Sort.Value
+  | inference.Term.SumTerm _ _ => ok inference.Sort.Value
+  | inference.Term.ListTerm _ => ok inference.Sort.Value
+  | inference.Term.ProgramTerm _ _ => ok inference.Sort.Value
+  | inference.Term.EmptyTerm => ok inference.Sort.Stack
+  | inference.Term.PushTerm _ _ => ok inference.Sort.Stack
+
 /-- [noble_contracts::inference::unify::{noble_contracts::inference::Arena}::occurs_step]:
-    Source: 'crates/noble-contracts/src/inference/unify.rs', lines 44:4-79:5 -/
+    Source: 'crates/noble-contracts/src/inference/unify.rs', lines 44:4-82:5 -/
 def inference.unify.Arena.occurs_step
   (self : inference.Arena) («variable» : Std.U32) (id : Std.U32)
   (pending : alloc.vec.Vec Std.U32) (span : Span) (meter : Meter) :
@@ -9132,6 +18312,12 @@ def inference.unify.Arena.occurs_step
           | inference.Term.TextTerm =>
             ok (core.result.Result.Ok pending, meter2)
           | inference.Term.SyntaxTerm =>
+            ok (core.result.Result.Ok pending, meter2)
+          | inference.Term.ContractTerm =>
+            ok (core.result.Result.Ok pending, meter2)
+          | inference.Term.EvidenceTerm =>
+            ok (core.result.Result.Ok pending, meter2)
+          | inference.Term.CertifiedTerm =>
             ok (core.result.Result.Ok pending, meter2)
           | inference.Term.PairTerm a b =>
             let pending1 ← alloc.vec.Vec.push pending a
@@ -9235,26 +18421,8 @@ def inference.unify.Arena.bind
   | core.result.Result.Err failure =>
     ok (core.result.Result.Err failure, self, meter1)
 
-/-- [noble_contracts::inference::sort]:
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 220:0-235:1 -/
-def inference.sort (term : inference.Term) : Result inference.Sort := do
-  match term with
-  | inference.Term.HoleTerm sort => ok sort
-  | inference.Term.LinkTerm _ => ok inference.Sort.Value
-  | inference.Term.UnitTerm => ok inference.Sort.Value
-  | inference.Term.BoolTerm => ok inference.Sort.Value
-  | inference.Term.I64Term => ok inference.Sort.Value
-  | inference.Term.TextTerm => ok inference.Sort.Value
-  | inference.Term.SyntaxTerm => ok inference.Sort.Value
-  | inference.Term.PairTerm _ _ => ok inference.Sort.Value
-  | inference.Term.SumTerm _ _ => ok inference.Sort.Value
-  | inference.Term.ListTerm _ => ok inference.Sort.Value
-  | inference.Term.ProgramTerm _ _ => ok inference.Sort.Value
-  | inference.Term.EmptyTerm => ok inference.Sort.Stack
-  | inference.Term.PushTerm _ _ => ok inference.Sort.Stack
-
 /-- [noble_contracts::inference::{impl core::cmp::PartialEq<noble_contracts::inference::Sort> for noble_contracts::inference::Sort}::eq]:
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 8:22-8:31
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 13:22-13:31
     Visibility: public -/
 def inference.Sort.Insts.CoreCmpPartialEqSort.eq
   (self : inference.Sort) (other : inference.Sort) : Result Bool := do
@@ -9263,7 +18431,7 @@ def inference.Sort.Insts.CoreCmpPartialEqSort.eq
   ok (self1 = other1)
 
 /-- Trait implementation: [noble_contracts::inference::{impl core::cmp::PartialEq<noble_contracts::inference::Sort> for noble_contracts::inference::Sort}]
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 8:22-8:31 -/
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 13:22-13:31 -/
 @[reducible]
 impl_def inference.Sort.Insts.CoreCmpPartialEqSort : core.cmp.PartialEq
   inference.Sort inference.Sort := {
@@ -9273,7 +18441,7 @@ impl_def inference.Sort.Insts.CoreCmpPartialEqSort : core.cmp.PartialEq
 }
 
 /-- [noble_contracts::inference::unify::{noble_contracts::inference::Arena}::unify_step]:
-    Source: 'crates/noble-contracts/src/inference/unify.rs', lines 119:4-189:5 -/
+    Source: 'crates/noble-contracts/src/inference/unify.rs', lines 122:4-198:5 -/
 def inference.unify.Arena.unify_step
   (self : inference.Arena) (left : Std.U32) (right : Std.U32)
   (pending : alloc.vec.Vec (Std.U32 × Std.U32)) (span : Span) (meter : Meter)
@@ -9310,6 +18478,9 @@ def inference.unify.Arena.unify_step
                   | inference.Term.I64Term => ok false
                   | inference.Term.TextTerm => ok false
                   | inference.Term.SyntaxTerm => ok false
+                  | inference.Term.ContractTerm => ok false
+                  | inference.Term.EvidenceTerm => ok false
+                  | inference.Term.CertifiedTerm => ok false
                   | inference.Term.PairTerm _ _ => ok false
                   | inference.Term.SumTerm _ _ => ok false
                   | inference.Term.ListTerm _ => ok false
@@ -9327,6 +18498,9 @@ def inference.unify.Arena.unify_step
                     | inference.Term.I64Term => ok false
                     | inference.Term.TextTerm => ok false
                     | inference.Term.SyntaxTerm => ok false
+                    | inference.Term.ContractTerm => ok false
+                    | inference.Term.EvidenceTerm => ok false
+                    | inference.Term.CertifiedTerm => ok false
                     | inference.Term.PairTerm _ _ => ok false
                     | inference.Term.SumTerm _ _ => ok false
                     | inference.Term.ListTerm _ => ok false
@@ -9351,8 +18525,8 @@ def inference.unify.Arena.unify_step
                           let v ←
                             alloc.vec.Vec.push self.effect_equations (value4,
                               value5)
-                          let s ← inference.sort value2
-                          let s1 ← inference.sort value3
+                          let s ← inference.unify.sort value2
+                          let s1 ← inference.unify.sort value3
                           let b2 ←
                             core.cmp.PartialEq.ne.trait_default
                               inference.Sort.Insts.CoreCmpPartialEqSort s s1
@@ -9422,6 +18596,24 @@ def inference.unify.Arena.unify_step
                                 ok (core.result.Result.Err d,
                                   { self with effect_equations := v }, meter6)
                               | inference.Term.SyntaxTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.ContractTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.EvidenceTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.CertifiedTerm =>
                                 let d ←
                                   invalid span (toStr
                                     "program type or stack witness cannot be resolved")
@@ -9510,6 +18702,24 @@ def inference.unify.Arena.unify_step
                                     "program type or stack witness cannot be resolved")
                                 ok (core.result.Result.Err d,
                                   { self with effect_equations := v }, meter6)
+                              | inference.Term.ContractTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.EvidenceTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.CertifiedTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
                               | inference.Term.PairTerm _ _ =>
                                 let d ←
                                   invalid span (toStr
@@ -9588,6 +18798,24 @@ def inference.unify.Arena.unify_step
                                 ok (core.result.Result.Err d,
                                   { self with effect_equations := v }, meter6)
                               | inference.Term.SyntaxTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.ContractTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.EvidenceTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.CertifiedTerm =>
                                 let d ←
                                   invalid span (toStr
                                     "program type or stack witness cannot be resolved")
@@ -9676,6 +18904,24 @@ def inference.unify.Arena.unify_step
                                     "program type or stack witness cannot be resolved")
                                 ok (core.result.Result.Err d,
                                   { self with effect_equations := v }, meter6)
+                              | inference.Term.ContractTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.EvidenceTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.CertifiedTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
                               | inference.Term.PairTerm _ _ =>
                                 let d ←
                                   invalid span (toStr
@@ -9754,6 +19000,24 @@ def inference.unify.Arena.unify_step
                                 ok (core.result.Result.Ok pending,
                                   { self with effect_equations := v }, meter6)
                               | inference.Term.SyntaxTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.ContractTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.EvidenceTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.CertifiedTerm =>
                                 let d ←
                                   invalid span (toStr
                                     "program type or stack witness cannot be resolved")
@@ -9842,6 +19106,327 @@ def inference.unify.Arena.unify_step
                               | inference.Term.SyntaxTerm =>
                                 ok (core.result.Result.Ok pending,
                                   { self with effect_equations := v }, meter6)
+                              | inference.Term.ContractTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.EvidenceTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.CertifiedTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.PairTerm _ _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.SumTerm _ _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.ListTerm _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.ProgramTerm _ _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.EmptyTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.PushTerm _ _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                            | inference.Term.ContractTerm =>
+                              match value3 with
+                              | inference.Term.HoleTerm _ =>
+                                let (r8, self1, meter7) ←
+                                  inference.unify.Arena.bind
+                                    { self with effect_equations := v } value1
+                                    value span meter6
+                                match r8 with
+                                | core.result.Result.Ok _ =>
+                                  ok (core.result.Result.Ok pending, self1,
+                                    meter7)
+                                | core.result.Result.Err failure =>
+                                  ok (core.result.Result.Err failure, self1,
+                                    meter7)
+                              | inference.Term.LinkTerm _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.UnitTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.BoolTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.I64Term =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.TextTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.SyntaxTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.ContractTerm =>
+                                ok (core.result.Result.Ok pending,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.EvidenceTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.CertifiedTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.PairTerm _ _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.SumTerm _ _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.ListTerm _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.ProgramTerm _ _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.EmptyTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.PushTerm _ _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                            | inference.Term.EvidenceTerm =>
+                              match value3 with
+                              | inference.Term.HoleTerm _ =>
+                                let (r8, self1, meter7) ←
+                                  inference.unify.Arena.bind
+                                    { self with effect_equations := v } value1
+                                    value span meter6
+                                match r8 with
+                                | core.result.Result.Ok _ =>
+                                  ok (core.result.Result.Ok pending, self1,
+                                    meter7)
+                                | core.result.Result.Err failure =>
+                                  ok (core.result.Result.Err failure, self1,
+                                    meter7)
+                              | inference.Term.LinkTerm _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.UnitTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.BoolTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.I64Term =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.TextTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.SyntaxTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.ContractTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.EvidenceTerm =>
+                                ok (core.result.Result.Ok pending,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.CertifiedTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.PairTerm _ _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.SumTerm _ _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.ListTerm _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.ProgramTerm _ _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.EmptyTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.PushTerm _ _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                            | inference.Term.CertifiedTerm =>
+                              match value3 with
+                              | inference.Term.HoleTerm _ =>
+                                let (r8, self1, meter7) ←
+                                  inference.unify.Arena.bind
+                                    { self with effect_equations := v } value1
+                                    value span meter6
+                                match r8 with
+                                | core.result.Result.Ok _ =>
+                                  ok (core.result.Result.Ok pending, self1,
+                                    meter7)
+                                | core.result.Result.Err failure =>
+                                  ok (core.result.Result.Err failure, self1,
+                                    meter7)
+                              | inference.Term.LinkTerm _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.UnitTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.BoolTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.I64Term =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.TextTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.SyntaxTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.ContractTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.EvidenceTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.CertifiedTerm =>
+                                ok (core.result.Result.Ok pending,
+                                  { self with effect_equations := v }, meter6)
                               | inference.Term.PairTerm _ _ =>
                                 let d ←
                                   invalid span (toStr
@@ -9923,6 +19508,24 @@ def inference.unify.Arena.unify_step
                                 ok (core.result.Result.Err d,
                                   { self with effect_equations := v }, meter6)
                               | inference.Term.SyntaxTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.ContractTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.EvidenceTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.CertifiedTerm =>
                                 let d ←
                                   invalid span (toStr
                                     "program type or stack witness cannot be resolved")
@@ -10015,6 +19618,24 @@ def inference.unify.Arena.unify_step
                                     "program type or stack witness cannot be resolved")
                                 ok (core.result.Result.Err d,
                                   { self with effect_equations := v }, meter6)
+                              | inference.Term.ContractTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.EvidenceTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.CertifiedTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
                               | inference.Term.PairTerm _ _ =>
                                 let d ←
                                   invalid span (toStr
@@ -10102,6 +19723,24 @@ def inference.unify.Arena.unify_step
                                     "program type or stack witness cannot be resolved")
                                 ok (core.result.Result.Err d,
                                   { self with effect_equations := v }, meter6)
+                              | inference.Term.ContractTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.EvidenceTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.CertifiedTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
                               | inference.Term.PairTerm _ _ =>
                                 let d ←
                                   invalid span (toStr
@@ -10182,6 +19821,24 @@ def inference.unify.Arena.unify_step
                                 ok (core.result.Result.Err d,
                                   { self with effect_equations := v }, meter6)
                               | inference.Term.SyntaxTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.ContractTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.EvidenceTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.CertifiedTerm =>
                                 let d ←
                                   invalid span (toStr
                                     "program type or stack witness cannot be resolved")
@@ -10274,6 +19931,24 @@ def inference.unify.Arena.unify_step
                                     "program type or stack witness cannot be resolved")
                                 ok (core.result.Result.Err d,
                                   { self with effect_equations := v }, meter6)
+                              | inference.Term.ContractTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.EvidenceTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.CertifiedTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
                               | inference.Term.PairTerm _ _ =>
                                 let d ←
                                   invalid span (toStr
@@ -10357,6 +20032,24 @@ def inference.unify.Arena.unify_step
                                     "program type or stack witness cannot be resolved")
                                 ok (core.result.Result.Err d,
                                   { self with effect_equations := v }, meter6)
+                              | inference.Term.ContractTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.EvidenceTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.CertifiedTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
                               | inference.Term.PairTerm _ _ =>
                                 let d ←
                                   invalid span (toStr
@@ -10401,8 +20094,8 @@ def inference.unify.Arena.unify_step
                     | core.result.Result.Err failure =>
                       ok (core.result.Result.Err failure, self, meter4)
                   else
-                    let s ← inference.sort value2
-                    let s1 ← inference.sort value3
+                    let s ← inference.unify.sort value2
+                    let s1 ← inference.unify.sort value3
                     let b2 ←
                       core.cmp.PartialEq.ne.trait_default
                         inference.Sort.Insts.CoreCmpPartialEqSort s s1
@@ -10460,6 +20153,21 @@ def inference.unify.Arena.unify_step
                               "program type or stack witness cannot be resolved")
                           ok (core.result.Result.Err d, self, meter3)
                         | inference.Term.SyntaxTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.ContractTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.EvidenceTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.CertifiedTerm =>
                           let d ←
                             invalid span (toStr
                               "program type or stack witness cannot be resolved")
@@ -10532,6 +20240,21 @@ def inference.unify.Arena.unify_step
                             invalid span (toStr
                               "program type or stack witness cannot be resolved")
                           ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.ContractTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.EvidenceTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.CertifiedTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
                         | inference.Term.PairTerm _ _ =>
                           let d ←
                             invalid span (toStr
@@ -10596,6 +20319,21 @@ def inference.unify.Arena.unify_step
                               "program type or stack witness cannot be resolved")
                           ok (core.result.Result.Err d, self, meter3)
                         | inference.Term.SyntaxTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.ContractTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.EvidenceTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.CertifiedTerm =>
                           let d ←
                             invalid span (toStr
                               "program type or stack witness cannot be resolved")
@@ -10668,6 +20406,21 @@ def inference.unify.Arena.unify_step
                             invalid span (toStr
                               "program type or stack witness cannot be resolved")
                           ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.ContractTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.EvidenceTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.CertifiedTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
                         | inference.Term.PairTerm _ _ =>
                           let d ←
                             invalid span (toStr
@@ -10732,6 +20485,21 @@ def inference.unify.Arena.unify_step
                         | inference.Term.TextTerm =>
                           ok (core.result.Result.Ok pending, self, meter3)
                         | inference.Term.SyntaxTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.ContractTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.EvidenceTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.CertifiedTerm =>
                           let d ←
                             invalid span (toStr
                               "program type or stack witness cannot be resolved")
@@ -10804,6 +20572,270 @@ def inference.unify.Arena.unify_step
                           ok (core.result.Result.Err d, self, meter3)
                         | inference.Term.SyntaxTerm =>
                           ok (core.result.Result.Ok pending, self, meter3)
+                        | inference.Term.ContractTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.EvidenceTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.CertifiedTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.PairTerm _ _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.SumTerm _ _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.ListTerm _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.ProgramTerm _ _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.EmptyTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.PushTerm _ _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.ContractTerm =>
+                        match value3 with
+                        | inference.Term.HoleTerm _ =>
+                          let (r5, self1, meter4) ←
+                            inference.unify.Arena.bind self value1 value span
+                              meter3
+                          match r5 with
+                          | core.result.Result.Ok _ =>
+                            ok (core.result.Result.Ok pending, self1, meter4)
+                          | core.result.Result.Err failure =>
+                            ok (core.result.Result.Err failure, self1, meter4)
+                        | inference.Term.LinkTerm _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.UnitTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.BoolTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.I64Term =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.TextTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.SyntaxTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.ContractTerm =>
+                          ok (core.result.Result.Ok pending, self, meter3)
+                        | inference.Term.EvidenceTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.CertifiedTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.PairTerm _ _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.SumTerm _ _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.ListTerm _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.ProgramTerm _ _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.EmptyTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.PushTerm _ _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.EvidenceTerm =>
+                        match value3 with
+                        | inference.Term.HoleTerm _ =>
+                          let (r5, self1, meter4) ←
+                            inference.unify.Arena.bind self value1 value span
+                              meter3
+                          match r5 with
+                          | core.result.Result.Ok _ =>
+                            ok (core.result.Result.Ok pending, self1, meter4)
+                          | core.result.Result.Err failure =>
+                            ok (core.result.Result.Err failure, self1, meter4)
+                        | inference.Term.LinkTerm _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.UnitTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.BoolTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.I64Term =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.TextTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.SyntaxTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.ContractTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.EvidenceTerm =>
+                          ok (core.result.Result.Ok pending, self, meter3)
+                        | inference.Term.CertifiedTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.PairTerm _ _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.SumTerm _ _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.ListTerm _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.ProgramTerm _ _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.EmptyTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.PushTerm _ _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.CertifiedTerm =>
+                        match value3 with
+                        | inference.Term.HoleTerm _ =>
+                          let (r5, self1, meter4) ←
+                            inference.unify.Arena.bind self value1 value span
+                              meter3
+                          match r5 with
+                          | core.result.Result.Ok _ =>
+                            ok (core.result.Result.Ok pending, self1, meter4)
+                          | core.result.Result.Err failure =>
+                            ok (core.result.Result.Err failure, self1, meter4)
+                        | inference.Term.LinkTerm _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.UnitTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.BoolTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.I64Term =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.TextTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.SyntaxTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.ContractTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.EvidenceTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.CertifiedTerm =>
+                          ok (core.result.Result.Ok pending, self, meter3)
                         | inference.Term.PairTerm _ _ =>
                           let d ←
                             invalid span (toStr
@@ -10871,6 +20903,21 @@ def inference.unify.Arena.unify_step
                               "program type or stack witness cannot be resolved")
                           ok (core.result.Result.Err d, self, meter3)
                         | inference.Term.SyntaxTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.ContractTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.EvidenceTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.CertifiedTerm =>
                           let d ←
                             invalid span (toStr
                               "program type or stack witness cannot be resolved")
@@ -10945,6 +20992,21 @@ def inference.unify.Arena.unify_step
                             invalid span (toStr
                               "program type or stack witness cannot be resolved")
                           ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.ContractTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.EvidenceTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.CertifiedTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
                         | inference.Term.PairTerm _ _ =>
                           let d ←
                             invalid span (toStr
@@ -11015,6 +21077,21 @@ def inference.unify.Arena.unify_step
                             invalid span (toStr
                               "program type or stack witness cannot be resolved")
                           ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.ContractTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.EvidenceTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.CertifiedTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
                         | inference.Term.PairTerm _ _ =>
                           let d ←
                             invalid span (toStr
@@ -11080,6 +21157,21 @@ def inference.unify.Arena.unify_step
                               "program type or stack witness cannot be resolved")
                           ok (core.result.Result.Err d, self, meter3)
                         | inference.Term.SyntaxTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.ContractTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.EvidenceTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.CertifiedTerm =>
                           let d ←
                             invalid span (toStr
                               "program type or stack witness cannot be resolved")
@@ -11154,6 +21246,21 @@ def inference.unify.Arena.unify_step
                             invalid span (toStr
                               "program type or stack witness cannot be resolved")
                           ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.ContractTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.EvidenceTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.CertifiedTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
                         | inference.Term.PairTerm _ _ =>
                           let d ←
                             invalid span (toStr
@@ -11222,6 +21329,21 @@ def inference.unify.Arena.unify_step
                             invalid span (toStr
                               "program type or stack witness cannot be resolved")
                           ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.ContractTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.EvidenceTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.CertifiedTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
                         | inference.Term.PairTerm _ _ =>
                           let d ←
                             invalid span (toStr
@@ -11252,8 +21374,8 @@ def inference.unify.Arena.unify_step
                           let pending2 ← alloc.vec.Vec.push pending1 (b3, d)
                           ok (core.result.Result.Ok pending2, self, meter3)
                 else
-                  let s ← inference.sort value2
-                  let s1 ← inference.sort value3
+                  let s ← inference.unify.sort value2
+                  let s1 ← inference.unify.sort value3
                   let b1 ←
                     core.cmp.PartialEq.ne.trait_default
                       inference.Sort.Insts.CoreCmpPartialEqSort s s1
@@ -11311,6 +21433,21 @@ def inference.unify.Arena.unify_step
                             "program type or stack witness cannot be resolved")
                         ok (core.result.Result.Err d, self, meter3)
                       | inference.Term.SyntaxTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.ContractTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.EvidenceTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.CertifiedTerm =>
                         let d ←
                           invalid span (toStr
                             "program type or stack witness cannot be resolved")
@@ -11383,6 +21520,21 @@ def inference.unify.Arena.unify_step
                           invalid span (toStr
                             "program type or stack witness cannot be resolved")
                         ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.ContractTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.EvidenceTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.CertifiedTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
                       | inference.Term.PairTerm _ _ =>
                         let d ←
                           invalid span (toStr
@@ -11447,6 +21599,21 @@ def inference.unify.Arena.unify_step
                             "program type or stack witness cannot be resolved")
                         ok (core.result.Result.Err d, self, meter3)
                       | inference.Term.SyntaxTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.ContractTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.EvidenceTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.CertifiedTerm =>
                         let d ←
                           invalid span (toStr
                             "program type or stack witness cannot be resolved")
@@ -11519,6 +21686,21 @@ def inference.unify.Arena.unify_step
                           invalid span (toStr
                             "program type or stack witness cannot be resolved")
                         ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.ContractTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.EvidenceTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.CertifiedTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
                       | inference.Term.PairTerm _ _ =>
                         let d ←
                           invalid span (toStr
@@ -11583,6 +21765,21 @@ def inference.unify.Arena.unify_step
                       | inference.Term.TextTerm =>
                         ok (core.result.Result.Ok pending, self, meter3)
                       | inference.Term.SyntaxTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.ContractTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.EvidenceTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.CertifiedTerm =>
                         let d ←
                           invalid span (toStr
                             "program type or stack witness cannot be resolved")
@@ -11655,6 +21852,270 @@ def inference.unify.Arena.unify_step
                         ok (core.result.Result.Err d, self, meter3)
                       | inference.Term.SyntaxTerm =>
                         ok (core.result.Result.Ok pending, self, meter3)
+                      | inference.Term.ContractTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.EvidenceTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.CertifiedTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.PairTerm _ _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.SumTerm _ _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.ListTerm _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.ProgramTerm _ _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.EmptyTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.PushTerm _ _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.ContractTerm =>
+                      match value3 with
+                      | inference.Term.HoleTerm _ =>
+                        let (r5, self1, meter4) ←
+                          inference.unify.Arena.bind self value1 value span
+                            meter3
+                        match r5 with
+                        | core.result.Result.Ok _ =>
+                          ok (core.result.Result.Ok pending, self1, meter4)
+                        | core.result.Result.Err failure =>
+                          ok (core.result.Result.Err failure, self1, meter4)
+                      | inference.Term.LinkTerm _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.UnitTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.BoolTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.I64Term =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.TextTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.SyntaxTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.ContractTerm =>
+                        ok (core.result.Result.Ok pending, self, meter3)
+                      | inference.Term.EvidenceTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.CertifiedTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.PairTerm _ _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.SumTerm _ _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.ListTerm _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.ProgramTerm _ _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.EmptyTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.PushTerm _ _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.EvidenceTerm =>
+                      match value3 with
+                      | inference.Term.HoleTerm _ =>
+                        let (r5, self1, meter4) ←
+                          inference.unify.Arena.bind self value1 value span
+                            meter3
+                        match r5 with
+                        | core.result.Result.Ok _ =>
+                          ok (core.result.Result.Ok pending, self1, meter4)
+                        | core.result.Result.Err failure =>
+                          ok (core.result.Result.Err failure, self1, meter4)
+                      | inference.Term.LinkTerm _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.UnitTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.BoolTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.I64Term =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.TextTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.SyntaxTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.ContractTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.EvidenceTerm =>
+                        ok (core.result.Result.Ok pending, self, meter3)
+                      | inference.Term.CertifiedTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.PairTerm _ _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.SumTerm _ _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.ListTerm _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.ProgramTerm _ _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.EmptyTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.PushTerm _ _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.CertifiedTerm =>
+                      match value3 with
+                      | inference.Term.HoleTerm _ =>
+                        let (r5, self1, meter4) ←
+                          inference.unify.Arena.bind self value1 value span
+                            meter3
+                        match r5 with
+                        | core.result.Result.Ok _ =>
+                          ok (core.result.Result.Ok pending, self1, meter4)
+                        | core.result.Result.Err failure =>
+                          ok (core.result.Result.Err failure, self1, meter4)
+                      | inference.Term.LinkTerm _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.UnitTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.BoolTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.I64Term =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.TextTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.SyntaxTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.ContractTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.EvidenceTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.CertifiedTerm =>
+                        ok (core.result.Result.Ok pending, self, meter3)
                       | inference.Term.PairTerm _ _ =>
                         let d ←
                           invalid span (toStr
@@ -11722,6 +22183,21 @@ def inference.unify.Arena.unify_step
                             "program type or stack witness cannot be resolved")
                         ok (core.result.Result.Err d, self, meter3)
                       | inference.Term.SyntaxTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.ContractTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.EvidenceTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.CertifiedTerm =>
                         let d ←
                           invalid span (toStr
                             "program type or stack witness cannot be resolved")
@@ -11796,6 +22272,21 @@ def inference.unify.Arena.unify_step
                           invalid span (toStr
                             "program type or stack witness cannot be resolved")
                         ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.ContractTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.EvidenceTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.CertifiedTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
                       | inference.Term.PairTerm _ _ =>
                         let d ←
                           invalid span (toStr
@@ -11866,6 +22357,21 @@ def inference.unify.Arena.unify_step
                           invalid span (toStr
                             "program type or stack witness cannot be resolved")
                         ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.ContractTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.EvidenceTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.CertifiedTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
                       | inference.Term.PairTerm _ _ =>
                         let d ←
                           invalid span (toStr
@@ -11931,6 +22437,21 @@ def inference.unify.Arena.unify_step
                             "program type or stack witness cannot be resolved")
                         ok (core.result.Result.Err d, self, meter3)
                       | inference.Term.SyntaxTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.ContractTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.EvidenceTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.CertifiedTerm =>
                         let d ←
                           invalid span (toStr
                             "program type or stack witness cannot be resolved")
@@ -12005,6 +22526,21 @@ def inference.unify.Arena.unify_step
                           invalid span (toStr
                             "program type or stack witness cannot be resolved")
                         ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.ContractTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.EvidenceTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.CertifiedTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
                       | inference.Term.PairTerm _ _ =>
                         let d ←
                           invalid span (toStr
@@ -12073,6 +22609,21 @@ def inference.unify.Arena.unify_step
                           invalid span (toStr
                             "program type or stack witness cannot be resolved")
                         ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.ContractTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.EvidenceTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.CertifiedTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
                       | inference.Term.PairTerm _ _ =>
                         let d ←
                           invalid span (toStr
@@ -12103,8 +22654,8 @@ def inference.unify.Arena.unify_step
                         let pending2 ← alloc.vec.Vec.push pending1 (b2, d)
                         ok (core.result.Result.Ok pending2, self, meter3)
               else
-                let s ← inference.sort value2
-                let s1 ← inference.sort value3
+                let s ← inference.unify.sort value2
+                let s1 ← inference.unify.sort value3
                 let b ←
                   core.cmp.PartialEq.ne.trait_default
                     inference.Sort.Insts.CoreCmpPartialEqSort s s1
@@ -12161,6 +22712,21 @@ def inference.unify.Arena.unify_step
                           "program type or stack witness cannot be resolved")
                       ok (core.result.Result.Err d, self, meter3)
                     | inference.Term.SyntaxTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.ContractTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.EvidenceTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.CertifiedTerm =>
                       let d ←
                         invalid span (toStr
                           "program type or stack witness cannot be resolved")
@@ -12233,6 +22799,21 @@ def inference.unify.Arena.unify_step
                         invalid span (toStr
                           "program type or stack witness cannot be resolved")
                       ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.ContractTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.EvidenceTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.CertifiedTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
                     | inference.Term.PairTerm _ _ =>
                       let d ←
                         invalid span (toStr
@@ -12297,6 +22878,21 @@ def inference.unify.Arena.unify_step
                           "program type or stack witness cannot be resolved")
                       ok (core.result.Result.Err d, self, meter3)
                     | inference.Term.SyntaxTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.ContractTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.EvidenceTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.CertifiedTerm =>
                       let d ←
                         invalid span (toStr
                           "program type or stack witness cannot be resolved")
@@ -12369,6 +22965,21 @@ def inference.unify.Arena.unify_step
                         invalid span (toStr
                           "program type or stack witness cannot be resolved")
                       ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.ContractTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.EvidenceTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.CertifiedTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
                     | inference.Term.PairTerm _ _ =>
                       let d ←
                         invalid span (toStr
@@ -12433,6 +23044,21 @@ def inference.unify.Arena.unify_step
                     | inference.Term.TextTerm =>
                       ok (core.result.Result.Ok pending, self, meter3)
                     | inference.Term.SyntaxTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.ContractTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.EvidenceTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.CertifiedTerm =>
                       let d ←
                         invalid span (toStr
                           "program type or stack witness cannot be resolved")
@@ -12505,6 +23131,270 @@ def inference.unify.Arena.unify_step
                       ok (core.result.Result.Err d, self, meter3)
                     | inference.Term.SyntaxTerm =>
                       ok (core.result.Result.Ok pending, self, meter3)
+                    | inference.Term.ContractTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.EvidenceTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.CertifiedTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.PairTerm _ _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.SumTerm _ _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.ListTerm _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.ProgramTerm _ _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.EmptyTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.PushTerm _ _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                  | inference.Term.ContractTerm =>
+                    match value3 with
+                    | inference.Term.HoleTerm _ =>
+                      let (r5, self1, meter4) ←
+                        inference.unify.Arena.bind self value1 value span
+                          meter3
+                      match r5 with
+                      | core.result.Result.Ok _ =>
+                        ok (core.result.Result.Ok pending, self1, meter4)
+                      | core.result.Result.Err failure =>
+                        ok (core.result.Result.Err failure, self1, meter4)
+                    | inference.Term.LinkTerm _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.UnitTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.BoolTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.I64Term =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.TextTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.SyntaxTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.ContractTerm =>
+                      ok (core.result.Result.Ok pending, self, meter3)
+                    | inference.Term.EvidenceTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.CertifiedTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.PairTerm _ _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.SumTerm _ _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.ListTerm _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.ProgramTerm _ _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.EmptyTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.PushTerm _ _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                  | inference.Term.EvidenceTerm =>
+                    match value3 with
+                    | inference.Term.HoleTerm _ =>
+                      let (r5, self1, meter4) ←
+                        inference.unify.Arena.bind self value1 value span
+                          meter3
+                      match r5 with
+                      | core.result.Result.Ok _ =>
+                        ok (core.result.Result.Ok pending, self1, meter4)
+                      | core.result.Result.Err failure =>
+                        ok (core.result.Result.Err failure, self1, meter4)
+                    | inference.Term.LinkTerm _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.UnitTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.BoolTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.I64Term =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.TextTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.SyntaxTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.ContractTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.EvidenceTerm =>
+                      ok (core.result.Result.Ok pending, self, meter3)
+                    | inference.Term.CertifiedTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.PairTerm _ _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.SumTerm _ _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.ListTerm _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.ProgramTerm _ _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.EmptyTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.PushTerm _ _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                  | inference.Term.CertifiedTerm =>
+                    match value3 with
+                    | inference.Term.HoleTerm _ =>
+                      let (r5, self1, meter4) ←
+                        inference.unify.Arena.bind self value1 value span
+                          meter3
+                      match r5 with
+                      | core.result.Result.Ok _ =>
+                        ok (core.result.Result.Ok pending, self1, meter4)
+                      | core.result.Result.Err failure =>
+                        ok (core.result.Result.Err failure, self1, meter4)
+                    | inference.Term.LinkTerm _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.UnitTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.BoolTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.I64Term =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.TextTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.SyntaxTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.ContractTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.EvidenceTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.CertifiedTerm =>
+                      ok (core.result.Result.Ok pending, self, meter3)
                     | inference.Term.PairTerm _ _ =>
                       let d ←
                         invalid span (toStr
@@ -12572,6 +23462,21 @@ def inference.unify.Arena.unify_step
                           "program type or stack witness cannot be resolved")
                       ok (core.result.Result.Err d, self, meter3)
                     | inference.Term.SyntaxTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.ContractTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.EvidenceTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.CertifiedTerm =>
                       let d ←
                         invalid span (toStr
                           "program type or stack witness cannot be resolved")
@@ -12646,6 +23551,21 @@ def inference.unify.Arena.unify_step
                         invalid span (toStr
                           "program type or stack witness cannot be resolved")
                       ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.ContractTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.EvidenceTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.CertifiedTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
                     | inference.Term.PairTerm _ _ =>
                       let d ←
                         invalid span (toStr
@@ -12716,6 +23636,21 @@ def inference.unify.Arena.unify_step
                         invalid span (toStr
                           "program type or stack witness cannot be resolved")
                       ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.ContractTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.EvidenceTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.CertifiedTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
                     | inference.Term.PairTerm _ _ =>
                       let d ←
                         invalid span (toStr
@@ -12781,6 +23716,21 @@ def inference.unify.Arena.unify_step
                           "program type or stack witness cannot be resolved")
                       ok (core.result.Result.Err d, self, meter3)
                     | inference.Term.SyntaxTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.ContractTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.EvidenceTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.CertifiedTerm =>
                       let d ←
                         invalid span (toStr
                           "program type or stack witness cannot be resolved")
@@ -12855,6 +23805,21 @@ def inference.unify.Arena.unify_step
                         invalid span (toStr
                           "program type or stack witness cannot be resolved")
                       ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.ContractTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.EvidenceTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.CertifiedTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
                     | inference.Term.PairTerm _ _ =>
                       let d ←
                         invalid span (toStr
@@ -12923,6 +23888,21 @@ def inference.unify.Arena.unify_step
                         invalid span (toStr
                           "program type or stack witness cannot be resolved")
                       ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.ContractTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.EvidenceTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.CertifiedTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
                     | inference.Term.PairTerm _ _ =>
                       let d ←
                         invalid span (toStr
@@ -12964,7 +23944,7 @@ def inference.unify.Arena.unify_step
     ok (core.result.Result.Err failure, self, meter1)
 
 /-- [noble_contracts::inference::unify::{noble_contracts::inference::Arena}::unify]: loop body 0:
-    Source: 'crates/noble-contracts/src/inference/unify.rs', lines 99:8-109:9
+    Source: 'crates/noble-contracts/src/inference/unify.rs', lines 102:8-112:9
     Visibility: public -/
 @[rust_loop_body]
 def inference.unify.Arena.unify_loop.body
@@ -12988,7 +23968,7 @@ def inference.unify.Arena.unify_loop.body
   | core.result.Result.Err _ => ok (done (self, meter, outcome))
 
 /-- [noble_contracts::inference::unify::{noble_contracts::inference::Arena}::unify]: loop 0:
-    Source: 'crates/noble-contracts/src/inference/unify.rs', lines 99:8-109:9
+    Source: 'crates/noble-contracts/src/inference/unify.rs', lines 102:8-112:9
     Visibility: public -/
 @[rust_loop]
 def inference.unify.Arena.unify_loop
@@ -13003,7 +23983,7 @@ def inference.unify.Arena.unify_loop
     (outcome, self, meter)
 
 /-- [noble_contracts::inference::unify::{noble_contracts::inference::Arena}::unify]:
-    Source: 'crates/noble-contracts/src/inference/unify.rs', lines 89:4-112:5
+    Source: 'crates/noble-contracts/src/inference/unify.rs', lines 92:4-115:5
     Visibility: public -/
 def inference.unify.Arena.unify
   (self : inference.Arena) (left : Std.U32) (right : Std.U32) (span : Span)
@@ -13288,7 +24268,7 @@ def inference.effects.Arena.effect_hole
     meter
 
 /-- [noble_contracts::inference::{noble_contracts::inference::Arena}::variable]:
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 190:4-215:5 -/
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 201:4-226:5 -/
 def inference.Arena.variable
   (self : inference.Arena) (kind : Option noble_kernel.words.VariableKind)
   (span : Span) (meter : Meter) :
@@ -13340,7 +24320,7 @@ def inference.Arena.variable
     ok (core.result.Result.Err failure, self, meter1)
 
 /-- [noble_contracts::inference::{noble_contracts::inference::Arena}::variables]: loop body 0:
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 168:8-179:9
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 179:8-190:9
     Visibility: public -/
 @[rust_loop_body]
 def inference.Arena.variables_loop.body
@@ -13368,7 +24348,7 @@ def inference.Arena.variables_loop.body
   else ok (done (self, meter, «variables», none))
 
 /-- [noble_contracts::inference::{noble_contracts::inference::Arena}::variables]: loop 0:
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 168:8-179:9
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 179:8-190:9
     Visibility: public -/
 @[rust_loop]
 def inference.Arena.variables_loop
@@ -13385,7 +24365,7 @@ def inference.Arena.variables_loop
     (self, meter, «variables», «at»)
 
 /-- [noble_contracts::inference::{noble_contracts::inference::Arena}::variables]:
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 159:4-184:5
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 170:4-195:5
     Visibility: public -/
 def inference.Arena.variables
   (self : inference.Arena) (kinds : Slice noble_kernel.words.VariableKind)
@@ -13675,7 +24655,7 @@ def program.traversal.complete
       ok (core.result.Result.Err failure, state1, meter1)
 
 /-- [noble_contracts::syntax::typing::item]:
-    Source: 'crates/noble-contracts/src/syntax/typing.rs', lines 212:0-226:1 -/
+    Source: 'crates/noble-contracts/src/syntax/typing.rs', lines 221:0-235:1 -/
 def syntax.typing.item
   (context : syntax.typing.Context) (children : Slice Std.U32)
   («at» : Std.Usize) (span : Span) (meter : Meter) :
@@ -13694,7 +24674,7 @@ def syntax.typing.item
     ok (core.result.Result.Err failure, meter1)
 
 /-- [noble_contracts::syntax::types]: loop body 0:
-    Source: 'crates/noble-contracts/src/syntax/mod.rs', lines 261:4-270:5 -/
+    Source: 'crates/noble-contracts/src/syntax/mod.rs', lines 266:4-275:5 -/
 @[rust_loop_body]
 def syntax.types_loop.body
   (source : Slice Std.U8) (tree : syntax.Tree) (span : Span)
@@ -13718,7 +24698,7 @@ def syntax.types_loop.body
   else ok (done (meter, values, none))
 
 /-- [noble_contracts::syntax::types]: loop 0:
-    Source: 'crates/noble-contracts/src/syntax/mod.rs', lines 261:4-270:5 -/
+    Source: 'crates/noble-contracts/src/syntax/mod.rs', lines 266:4-275:5 -/
 @[rust_loop]
 def syntax.types_loop
   (source : Slice Std.U8) (tree : syntax.Tree) (meter : Meter) (span : Span)
@@ -13733,7 +24713,7 @@ def syntax.types_loop
     (meter, values, «at»)
 
 /-- [noble_contracts::syntax::types]:
-    Source: 'crates/noble-contracts/src/syntax/mod.rs', lines 248:0-275:1 -/
+    Source: 'crates/noble-contracts/src/syntax/mod.rs', lines 253:0-280:1 -/
 def syntax.types
   (source : Slice Std.U8) (tree : syntax.Tree) (root : Std.U32) (meter : Meter)
   :
@@ -14379,7 +25359,7 @@ def program.traversal.step
   | core.result.Result.Err _ => ok (r, state, meter1)
 
 /-- [noble_contracts::program::resolve]: loop body 0:
-    Source: 'crates/noble-contracts/src/program.rs', lines 117:4-122:5 -/
+    Source: 'crates/noble-contracts/src/program.rs', lines 122:4-127:5 -/
 @[rust_loop_body]
 def program.resolve_loop.body
   (s : Slice Std.U8) (t : syntax.Tree) (e : noble_kernel.contracts.Env)
@@ -14400,7 +25380,7 @@ def program.resolve_loop.body
       ok (done (meter1, state1, some problem))
 
 /-- [noble_contracts::program::resolve]: loop 0:
-    Source: 'crates/noble-contracts/src/program.rs', lines 117:4-122:5 -/
+    Source: 'crates/noble-contracts/src/program.rs', lines 122:4-127:5 -/
 @[rust_loop]
 def program.resolve_loop
   (s : Slice Std.U8) (t : syntax.Tree) (e : noble_kernel.contracts.Env)
@@ -14412,7 +25392,7 @@ def program.resolve_loop
     (meter, state)
 
 /-- [noble_contracts::program::resolve]:
-    Source: 'crates/noble-contracts/src/program.rs', lines 83:0-127:1 -/
+    Source: 'crates/noble-contracts/src/program.rs', lines 88:0-132:1 -/
 def program.resolve
   (context : program.Context) (root : Std.U32)
   (inputs : Slice noble_kernel.types.Ty)
@@ -14468,7 +25448,7 @@ def program.resolve
     ok (core.result.Result.Err failure, meter)
 
 /-- [noble_contracts::frontend::ordinary]:
-    Source: 'crates/noble-contracts/src/frontend.rs', lines 165:0-226:1 -/
+    Source: 'crates/noble-contracts/src/frontend.rs', lines 170:0-231:1 -/
 def frontend.ordinary
   (container : frontend.Container) (body : Std.U32)
   («stacks» : ((alloc.vec.Vec noble_kernel.types.Ty) × (alloc.vec.Vec
@@ -14555,7 +25535,7 @@ def frontend.ordinary
     ok (core.result.Result.Err d, meter)
 
 /-- [noble_contracts::frontend::header]:
-    Source: 'crates/noble-contracts/src/frontend.rs', lines 115:0-157:1 -/
+    Source: 'crates/noble-contracts/src/frontend.rs', lines 120:0-162:1 -/
 def frontend.header
   (container : frontend.Container) (meter : Meter) :
   Result ((core.result.Result String Diagnostic) × Meter)
@@ -14627,7 +25607,7 @@ def frontend.header
     ok (core.result.Result.Err failure, meter)
 
 /-- [noble_contracts::frontend::prepare]:
-    Source: 'crates/noble-contracts/src/frontend.rs', lines 35:0-108:1 -/
+    Source: 'crates/noble-contracts/src/frontend.rs', lines 40:0-113:1 -/
 def frontend.prepare
   (source : Slice Std.U8) (limits : Limits) :
   Result (core.result.Result Prepared Diagnostic)
@@ -15181,6 +26161,12 @@ def inference.effects.solve.close_term
       | inference.Term.TextTerm => ok (core.result.Result.Ok (), term, meter1)
       | inference.Term.SyntaxTerm =>
         ok (core.result.Result.Ok (), term, meter1)
+      | inference.Term.ContractTerm =>
+        ok (core.result.Result.Ok (), term, meter1)
+      | inference.Term.EvidenceTerm =>
+        ok (core.result.Result.Ok (), term, meter1)
+      | inference.Term.CertifiedTerm =>
+        ok (core.result.Result.Ok (), term, meter1)
       | inference.Term.PairTerm _ _ =>
         ok (core.result.Result.Ok (), term, meter1)
       | inference.Term.SumTerm _ _ =>
@@ -15342,42 +26328,42 @@ def inference.materialize.Arena.stack_value
     ok (core.result.Result.Err failure, meter1)
 
 /-- [noble_contracts::inference::{impl core::clone::Clone for noble_contracts::inference::Sort}::clone]:
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 8:9-8:14
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 13:9-13:14
     Visibility: public -/
 def inference.Sort.Insts.CoreCloneClone.clone
   (self : inference.Sort) : Result inference.Sort := do
   ok self
 
 /-- Trait implementation: [noble_contracts::inference::{impl core::clone::Clone for noble_contracts::inference::Sort}]
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 8:9-8:14 -/
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 13:9-13:14 -/
 @[reducible]
 def inference.Sort.Insts.CoreCloneClone : core.clone.Clone inference.Sort := {
   clone := inference.Sort.Insts.CoreCloneClone.clone
 }
 
 /-- Trait implementation: [noble_contracts::inference::{impl core::marker::Copy for noble_contracts::inference::Sort}]
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 8:16-8:20 -/
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 13:16-13:20 -/
 @[reducible]
 def inference.Sort.Insts.CoreMarkerCopy : core.marker.Copy inference.Sort := {
   cloneInst := inference.Sort.Insts.CoreCloneClone
 }
 
 /-- Trait implementation: [noble_contracts::inference::{impl core::marker::StructuralPartialEq for noble_contracts::inference::Sort}]
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 8:22-8:31 -/
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 13:22-13:31 -/
 @[reducible]
 def inference.Sort.Insts.CoreMarkerStructuralPartialEq :
   core.marker.StructuralPartialEq inference.Sort := {
 }
 
 /-- [noble_contracts::inference::{impl core::cmp::Eq for noble_contracts::inference::Sort}::assert_fields_are_eq]:
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 8:33-8:35
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 13:33-13:35
     Visibility: public -/
 def inference.Sort.Insts.CoreCmpEq.assert_fields_are_eq
   (self : inference.Sort) : Result Unit := do
   ok ()
 
 /-- Trait implementation: [noble_contracts::inference::{impl core::cmp::Eq for noble_contracts::inference::Sort}]
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 8:33-8:35 -/
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 13:33-13:35 -/
 @[reducible]
 def inference.Sort.Insts.CoreCmpEq : core.cmp.Eq inference.Sort := {
   partialEqInst := inference.Sort.Insts.CoreCmpPartialEqSort
@@ -15385,35 +26371,35 @@ def inference.Sort.Insts.CoreCmpEq : core.cmp.Eq inference.Sort := {
 }
 
 /-- [noble_contracts::inference::{impl core::clone::Clone for noble_contracts::inference::Term}::clone]:
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 14:9-14:14
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 19:9-19:14
     Visibility: public -/
 def inference.Term.Insts.CoreCloneClone.clone
   (self : inference.Term) : Result inference.Term := do
   ok self
 
 /-- Trait implementation: [noble_contracts::inference::{impl core::clone::Clone for noble_contracts::inference::Term}]
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 14:9-14:14 -/
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 19:9-19:14 -/
 @[reducible]
 def inference.Term.Insts.CoreCloneClone : core.clone.Clone inference.Term := {
   clone := inference.Term.Insts.CoreCloneClone.clone
 }
 
 /-- Trait implementation: [noble_contracts::inference::{impl core::marker::Copy for noble_contracts::inference::Term}]
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 14:16-14:20 -/
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 19:16-19:20 -/
 @[reducible]
 def inference.Term.Insts.CoreMarkerCopy : core.marker.Copy inference.Term := {
   cloneInst := inference.Term.Insts.CoreCloneClone
 }
 
 /-- [noble_contracts::inference::{impl core::clone::Clone for noble_contracts::inference::Variable}::clone]:
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 33:9-33:14
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 41:9-41:14
     Visibility: public -/
 def inference.Variable.Insts.CoreCloneClone.clone
   (self : inference.Variable) : Result inference.Variable := do
   ok self
 
 /-- Trait implementation: [noble_contracts::inference::{impl core::clone::Clone for noble_contracts::inference::Variable}]
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 33:9-33:14 -/
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 41:9-41:14 -/
 @[reducible]
 def inference.Variable.Insts.CoreCloneClone : core.clone.Clone
   inference.Variable := {
@@ -15421,7 +26407,7 @@ def inference.Variable.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [noble_contracts::inference::{impl core::marker::Copy for noble_contracts::inference::Variable}]
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 33:16-33:20 -/
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 41:16-41:20 -/
 @[reducible]
 def inference.Variable.Insts.CoreMarkerCopy : core.marker.Copy
   inference.Variable := {
@@ -15429,27 +26415,27 @@ def inference.Variable.Insts.CoreMarkerCopy : core.marker.Copy
 }
 
 /-- [noble_contracts::{impl core::clone::Clone for noble_contracts::Limits}::clone]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 27:9-27:14
+    Source: 'crates/noble-contracts/src/lib.rs', lines 33:9-33:14
     Visibility: public -/
 def Limits.Insts.CoreCloneClone.clone (self : Limits) : Result Limits := do
   ok self
 
 /-- Trait implementation: [noble_contracts::{impl core::clone::Clone for noble_contracts::Limits}]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 27:9-27:14 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 33:9-33:14 -/
 @[reducible]
 def Limits.Insts.CoreCloneClone : core.clone.Clone Limits := {
   clone := Limits.Insts.CoreCloneClone.clone
 }
 
 /-- Trait implementation: [noble_contracts::{impl core::marker::Copy for noble_contracts::Limits}]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 27:16-27:20 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 33:16-33:20 -/
 @[reducible]
 def Limits.Insts.CoreMarkerCopy : core.marker.Copy Limits := {
   cloneInst := Limits.Insts.CoreCloneClone
 }
 
 /-- [noble_contracts::{impl core::fmt::Debug for noble_contracts::Limits}::fmt]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 27:22-27:27
+    Source: 'crates/noble-contracts/src/lib.rs', lines 33:22-33:27
     Visibility: public -/
 def Limits.Insts.CoreFmtDebug.fmt
   (self : Limits) (f : core.fmt.Formatter) :
@@ -15463,21 +26449,21 @@ def Limits.Insts.CoreFmtDebug.fmt
     "bytes") dyn (toStr "nodes") dyn1 (toStr "depth") dyn2 (toStr "work") dyn3
 
 /-- Trait implementation: [noble_contracts::{impl core::fmt::Debug for noble_contracts::Limits}]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 27:22-27:27 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 33:22-33:27 -/
 @[reducible]
 def Limits.Insts.CoreFmtDebug : core.fmt.Debug Limits := {
   fmt := Limits.Insts.CoreFmtDebug.fmt
 }
 
 /-- Trait implementation: [noble_contracts::{impl core::marker::StructuralPartialEq for noble_contracts::Limits}]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 27:29-27:38 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 33:29-33:38 -/
 @[reducible]
 def Limits.Insts.CoreMarkerStructuralPartialEq :
   core.marker.StructuralPartialEq Limits := {
 }
 
 /-- [noble_contracts::{impl core::cmp::PartialEq<noble_contracts::Limits> for noble_contracts::Limits}::eq]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 27:29-27:38
+    Source: 'crates/noble-contracts/src/lib.rs', lines 33:29-33:38
     Visibility: public -/
 def Limits.Insts.CoreCmpPartialEqLimits.eq
   (self : Limits) (other : Limits) : Result Bool := do
@@ -15492,7 +26478,7 @@ def Limits.Insts.CoreCmpPartialEqLimits.eq
   else ok false
 
 /-- Trait implementation: [noble_contracts::{impl core::cmp::PartialEq<noble_contracts::Limits> for noble_contracts::Limits}]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 27:29-27:38 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 33:29-33:38 -/
 @[reducible]
 impl_def Limits.Insts.CoreCmpPartialEqLimits : core.cmp.PartialEq Limits Limits
   := {
@@ -15501,14 +26487,14 @@ impl_def Limits.Insts.CoreCmpPartialEqLimits : core.cmp.PartialEq Limits Limits
 }
 
 /-- [noble_contracts::{impl core::cmp::Eq for noble_contracts::Limits}::assert_fields_are_eq]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 27:40-27:42
+    Source: 'crates/noble-contracts/src/lib.rs', lines 33:40-33:42
     Visibility: public -/
 def Limits.Insts.CoreCmpEq.assert_fields_are_eq
   (self : Limits) : Result Unit := do
   ok ()
 
 /-- Trait implementation: [noble_contracts::{impl core::cmp::Eq for noble_contracts::Limits}]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 27:40-27:42 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 33:40-33:42 -/
 @[reducible]
 def Limits.Insts.CoreCmpEq : core.cmp.Eq Limits := {
   partialEqInst := Limits.Insts.CoreCmpPartialEqLimits
@@ -15516,7 +26502,7 @@ def Limits.Insts.CoreCmpEq : core.cmp.Eq Limits := {
 }
 
 /-- [noble_contracts::{impl core::default::Default for noble_contracts::Limits}::default]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 36:4-43:5
+    Source: 'crates/noble-contracts/src/lib.rs', lines 42:4-49:5
     Visibility: public -/
 def Limits.Insts.CoreDefaultDefault.default : Result Limits := do
   ok
@@ -15528,34 +26514,34 @@ def Limits.Insts.CoreDefaultDefault.default : Result Limits := do
     }
 
 /-- Trait implementation: [noble_contracts::{impl core::default::Default for noble_contracts::Limits}]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 35:0-44:1 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 41:0-50:1 -/
 @[reducible]
 def Limits.Insts.CoreDefaultDefault : core.default.Default Limits := {
   default := Limits.Insts.CoreDefaultDefault.default
 }
 
 /-- [noble_contracts::{impl core::clone::Clone for noble_contracts::Span}::clone]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 46:9-46:14
+    Source: 'crates/noble-contracts/src/lib.rs', lines 52:9-52:14
     Visibility: public -/
 def Span.Insts.CoreCloneClone.clone (self : Span) : Result Span := do
   ok self
 
 /-- Trait implementation: [noble_contracts::{impl core::clone::Clone for noble_contracts::Span}]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 46:9-46:14 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 52:9-52:14 -/
 @[reducible]
 def Span.Insts.CoreCloneClone : core.clone.Clone Span := {
   clone := Span.Insts.CoreCloneClone.clone
 }
 
 /-- Trait implementation: [noble_contracts::{impl core::marker::Copy for noble_contracts::Span}]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 46:16-46:20 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 52:16-52:20 -/
 @[reducible]
 def Span.Insts.CoreMarkerCopy : core.marker.Copy Span := {
   cloneInst := Span.Insts.CoreCloneClone
 }
 
 /-- [noble_contracts::{impl core::fmt::Debug for noble_contracts::Span}::fmt]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 46:22-46:27
+    Source: 'crates/noble-contracts/src/lib.rs', lines 52:22-52:27
     Visibility: public -/
 def Span.Insts.CoreFmtDebug.fmt
   (self : Span) (f : core.fmt.Formatter) :
@@ -15567,21 +26553,21 @@ def Span.Insts.CoreFmtDebug.fmt
     "start") dyn (toStr "end") dyn1
 
 /-- Trait implementation: [noble_contracts::{impl core::fmt::Debug for noble_contracts::Span}]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 46:22-46:27 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 52:22-52:27 -/
 @[reducible]
 def Span.Insts.CoreFmtDebug : core.fmt.Debug Span := {
   fmt := Span.Insts.CoreFmtDebug.fmt
 }
 
 /-- Trait implementation: [noble_contracts::{impl core::marker::StructuralPartialEq for noble_contracts::Span}]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 46:29-46:38 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 52:29-52:38 -/
 @[reducible]
 def Span.Insts.CoreMarkerStructuralPartialEq : core.marker.StructuralPartialEq
   Span := {
 }
 
 /-- [noble_contracts::{impl core::cmp::PartialEq<noble_contracts::Span> for noble_contracts::Span}::eq]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 46:29-46:38
+    Source: 'crates/noble-contracts/src/lib.rs', lines 52:29-52:38
     Visibility: public -/
 def Span.Insts.CoreCmpPartialEqSpan.eq
   (self : Span) (other : Span) : Result Bool := do
@@ -15590,7 +26576,7 @@ def Span.Insts.CoreCmpPartialEqSpan.eq
   else ok false
 
 /-- Trait implementation: [noble_contracts::{impl core::cmp::PartialEq<noble_contracts::Span> for noble_contracts::Span}]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 46:29-46:38 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 52:29-52:38 -/
 @[reducible]
 impl_def Span.Insts.CoreCmpPartialEqSpan : core.cmp.PartialEq Span Span := {
   eq := Span.Insts.CoreCmpPartialEqSpan.eq
@@ -15598,13 +26584,13 @@ impl_def Span.Insts.CoreCmpPartialEqSpan : core.cmp.PartialEq Span Span := {
 }
 
 /-- [noble_contracts::{impl core::cmp::Eq for noble_contracts::Span}::assert_fields_are_eq]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 46:40-46:42
+    Source: 'crates/noble-contracts/src/lib.rs', lines 52:40-52:42
     Visibility: public -/
 def Span.Insts.CoreCmpEq.assert_fields_are_eq (self : Span) : Result Unit := do
   ok ()
 
 /-- Trait implementation: [noble_contracts::{impl core::cmp::Eq for noble_contracts::Span}]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 46:40-46:42 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 52:40-52:42 -/
 @[reducible]
 def Span.Insts.CoreCmpEq : core.cmp.Eq Span := {
   partialEqInst := Span.Insts.CoreCmpPartialEqSpan
@@ -15612,28 +26598,28 @@ def Span.Insts.CoreCmpEq : core.cmp.Eq Span := {
 }
 
 /-- [noble_contracts::{impl core::clone::Clone for noble_contracts::DiagnosticKind}::clone]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 52:9-52:14
+    Source: 'crates/noble-contracts/src/lib.rs', lines 58:9-58:14
     Visibility: public -/
 def DiagnosticKind.Insts.CoreCloneClone.clone
   (self : DiagnosticKind) : Result DiagnosticKind := do
   ok self
 
 /-- Trait implementation: [noble_contracts::{impl core::clone::Clone for noble_contracts::DiagnosticKind}]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 52:9-52:14 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 58:9-58:14 -/
 @[reducible]
 def DiagnosticKind.Insts.CoreCloneClone : core.clone.Clone DiagnosticKind := {
   clone := DiagnosticKind.Insts.CoreCloneClone.clone
 }
 
 /-- Trait implementation: [noble_contracts::{impl core::marker::Copy for noble_contracts::DiagnosticKind}]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 52:16-52:20 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 58:16-58:20 -/
 @[reducible]
 def DiagnosticKind.Insts.CoreMarkerCopy : core.marker.Copy DiagnosticKind := {
   cloneInst := DiagnosticKind.Insts.CoreCloneClone
 }
 
 /-- [noble_contracts::{impl core::fmt::Debug for noble_contracts::DiagnosticKind}::fmt]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 52:22-52:27
+    Source: 'crates/noble-contracts/src/lib.rs', lines 58:22-58:27
     Visibility: public -/
 def DiagnosticKind.Insts.CoreFmtDebug.fmt
   (self : DiagnosticKind) (f : core.fmt.Formatter) :
@@ -15649,21 +26635,21 @@ def DiagnosticKind.Insts.CoreFmtDebug.fmt
     core.fmt.Formatter.write_str f (toStr "Internal")
 
 /-- Trait implementation: [noble_contracts::{impl core::fmt::Debug for noble_contracts::DiagnosticKind}]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 52:22-52:27 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 58:22-58:27 -/
 @[reducible]
 def DiagnosticKind.Insts.CoreFmtDebug : core.fmt.Debug DiagnosticKind := {
   fmt := DiagnosticKind.Insts.CoreFmtDebug.fmt
 }
 
 /-- Trait implementation: [noble_contracts::{impl core::marker::StructuralPartialEq for noble_contracts::DiagnosticKind}]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 52:29-52:38 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 58:29-58:38 -/
 @[reducible]
 def DiagnosticKind.Insts.CoreMarkerStructuralPartialEq :
   core.marker.StructuralPartialEq DiagnosticKind := {
 }
 
 /-- [noble_contracts::{impl core::cmp::PartialEq<noble_contracts::DiagnosticKind> for noble_contracts::DiagnosticKind}::eq]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 52:29-52:38
+    Source: 'crates/noble-contracts/src/lib.rs', lines 58:29-58:38
     Visibility: public -/
 def DiagnosticKind.Insts.CoreCmpPartialEqDiagnosticKind.eq
   (self : DiagnosticKind) (other : DiagnosticKind) : Result Bool := do
@@ -15672,7 +26658,7 @@ def DiagnosticKind.Insts.CoreCmpPartialEqDiagnosticKind.eq
   ok (self1 = other1)
 
 /-- Trait implementation: [noble_contracts::{impl core::cmp::PartialEq<noble_contracts::DiagnosticKind> for noble_contracts::DiagnosticKind}]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 52:29-52:38 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 58:29-58:38 -/
 @[reducible]
 impl_def DiagnosticKind.Insts.CoreCmpPartialEqDiagnosticKind :
   core.cmp.PartialEq DiagnosticKind DiagnosticKind := {
@@ -15682,14 +26668,14 @@ impl_def DiagnosticKind.Insts.CoreCmpPartialEqDiagnosticKind :
 }
 
 /-- [noble_contracts::{impl core::cmp::Eq for noble_contracts::DiagnosticKind}::assert_fields_are_eq]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 52:40-52:42
+    Source: 'crates/noble-contracts/src/lib.rs', lines 58:40-58:42
     Visibility: public -/
 def DiagnosticKind.Insts.CoreCmpEq.assert_fields_are_eq
   (self : DiagnosticKind) : Result Unit := do
   ok ()
 
 /-- Trait implementation: [noble_contracts::{impl core::cmp::Eq for noble_contracts::DiagnosticKind}]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 52:40-52:42 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 58:40-58:42 -/
 @[reducible]
 def DiagnosticKind.Insts.CoreCmpEq : core.cmp.Eq DiagnosticKind := {
   partialEqInst := DiagnosticKind.Insts.CoreCmpPartialEqDiagnosticKind
@@ -15697,7 +26683,7 @@ def DiagnosticKind.Insts.CoreCmpEq : core.cmp.Eq DiagnosticKind := {
 }
 
 /-- [noble_contracts::{impl core::clone::Clone for noble_contracts::Diagnostic}::clone]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 60:9-60:14
+    Source: 'crates/noble-contracts/src/lib.rs', lines 66:9-66:14
     Visibility: public -/
 def Diagnostic.Insts.CoreCloneClone.clone
   (self : Diagnostic) : Result Diagnostic := do
@@ -15710,14 +26696,14 @@ def Diagnostic.Insts.CoreCloneClone.clone
   ok { kind := dk, span := s, message := s1, ordinary_typing := o }
 
 /-- Trait implementation: [noble_contracts::{impl core::clone::Clone for noble_contracts::Diagnostic}]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 60:9-60:14 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 66:9-66:14 -/
 @[reducible]
 def Diagnostic.Insts.CoreCloneClone : core.clone.Clone Diagnostic := {
   clone := Diagnostic.Insts.CoreCloneClone.clone
 }
 
 /-- [noble_contracts::{impl core::fmt::Debug for noble_contracts::Diagnostic}::fmt]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 60:16-60:21
+    Source: 'crates/noble-contracts/src/lib.rs', lines 66:16-66:21
     Visibility: public -/
 def Diagnostic.Insts.CoreFmtDebug.fmt
   (self : Diagnostic) (f : core.fmt.Formatter) :
@@ -15735,14 +26721,14 @@ def Diagnostic.Insts.CoreFmtDebug.fmt
     "ordinary_typing") dyn3
 
 /-- Trait implementation: [noble_contracts::{impl core::fmt::Debug for noble_contracts::Diagnostic}]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 60:16-60:21 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 66:16-66:21 -/
 @[reducible]
 def Diagnostic.Insts.CoreFmtDebug : core.fmt.Debug Diagnostic := {
   fmt := Diagnostic.Insts.CoreFmtDebug.fmt
 }
 
 /-- [noble_contracts::{noble_contracts::Diagnostic}::ordinary_typing]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 69:4-71:5
+    Source: 'crates/noble-contracts/src/lib.rs', lines 75:4-77:5
     Visibility: public -/
 def Diagnostic.impl.ordinary_typing
   (self : Diagnostic) : Result (Option noble_kernel.untrusted.Checked) := do
@@ -15750,7 +26736,7 @@ def Diagnostic.impl.ordinary_typing
     noble_kernel.untrusted.Checked) self.ordinary_typing
 
 /-- [noble_contracts::{impl core::clone::Clone for noble_contracts::NamedType}::clone]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 88:9-88:14
+    Source: 'crates/noble-contracts/src/lib.rs', lines 94:9-94:14
     Visibility: public -/
 def NamedType.Insts.CoreCloneClone.clone
   (self : NamedType) : Result NamedType := do
@@ -15759,14 +26745,14 @@ def NamedType.Insts.CoreCloneClone.clone
   ok { «name» := s, ty := t }
 
 /-- Trait implementation: [noble_contracts::{impl core::clone::Clone for noble_contracts::NamedType}]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 88:9-88:14 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 94:9-94:14 -/
 @[reducible]
 def NamedType.Insts.CoreCloneClone : core.clone.Clone NamedType := {
   clone := NamedType.Insts.CoreCloneClone.clone
 }
 
 /-- [noble_contracts::{impl core::fmt::Debug for noble_contracts::NamedType}::fmt]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 88:16-88:21
+    Source: 'crates/noble-contracts/src/lib.rs', lines 94:16-94:21
     Visibility: public -/
 def NamedType.Insts.CoreFmtDebug.fmt
   (self : NamedType) (f : core.fmt.Formatter) :
@@ -15780,14 +26766,14 @@ def NamedType.Insts.CoreFmtDebug.fmt
     "name") dyn (toStr "ty") dyn1
 
 /-- Trait implementation: [noble_contracts::{impl core::fmt::Debug for noble_contracts::NamedType}]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 88:16-88:21 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 94:16-94:21 -/
 @[reducible]
 def NamedType.Insts.CoreFmtDebug : core.fmt.Debug NamedType := {
   fmt := NamedType.Insts.CoreFmtDebug.fmt
 }
 
 /-- [noble_contracts::{impl core::clone::Clone for noble_contracts::LogicDef}::clone]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 94:9-94:14
+    Source: 'crates/noble-contracts/src/lib.rs', lines 100:9-100:14
     Visibility: public -/
 def LogicDef.Insts.CoreCloneClone.clone
   (self : LogicDef) : Result LogicDef := do
@@ -15797,14 +26783,14 @@ def LogicDef.Insts.CoreCloneClone.clone
   ok { «name» := s, ty := t, body := i }
 
 /-- Trait implementation: [noble_contracts::{impl core::clone::Clone for noble_contracts::LogicDef}]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 94:9-94:14 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 100:9-100:14 -/
 @[reducible]
 def LogicDef.Insts.CoreCloneClone : core.clone.Clone LogicDef := {
   clone := LogicDef.Insts.CoreCloneClone.clone
 }
 
 /-- [noble_contracts::{impl core::fmt::Debug for noble_contracts::LogicDef}::fmt]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 94:16-94:21
+    Source: 'crates/noble-contracts/src/lib.rs', lines 100:16-100:21
     Visibility: public -/
 def LogicDef.Insts.CoreFmtDebug.fmt
   (self : LogicDef) (f : core.fmt.Formatter) :
@@ -15817,14 +26803,14 @@ def LogicDef.Insts.CoreFmtDebug.fmt
     "name") dyn (toStr "ty") dyn1 (toStr "body") dyn2
 
 /-- Trait implementation: [noble_contracts::{impl core::fmt::Debug for noble_contracts::LogicDef}]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 94:16-94:21 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 100:16-100:21 -/
 @[reducible]
 def LogicDef.Insts.CoreFmtDebug : core.fmt.Debug LogicDef := {
   fmt := LogicDef.Insts.CoreFmtDebug.fmt
 }
 
 /-- [noble_contracts::{impl core::clone::Clone for noble_contracts::ExprKind}::clone]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 121:9-121:14
+    Source: 'crates/noble-contracts/src/lib.rs', lines 127:9-127:14
     Visibility: public -/
 def ExprKind.Insts.CoreCloneClone.clone
   (self : ExprKind) : Result ExprKind := do
@@ -15936,7 +26922,7 @@ def ExprKind.Insts.CoreCloneClone.clone
     ok (ExprKind.MapsExpr i i1 i2)
 
 /-- [noble_contracts::{impl core::clone::Clone for noble_contracts::Expr}::clone]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 101:9-101:14
+    Source: 'crates/noble-contracts/src/lib.rs', lines 107:9-107:14
     Visibility: public -/
 def Expr.Insts.CoreCloneClone.clone (self : Expr) : Result Expr := do
   let ek ← ExprKind.Insts.CoreCloneClone.clone self.kind
@@ -15947,14 +26933,14 @@ def Expr.Insts.CoreCloneClone.clone (self : Expr) : Result Expr := do
   ok { kind := ek, ty := t, span := s, total := b, uses_output := b1 }
 
 /-- Trait implementation: [noble_contracts::{impl core::clone::Clone for noble_contracts::Expr}]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 101:9-101:14 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 107:9-107:14 -/
 @[reducible]
 def Expr.Insts.CoreCloneClone : core.clone.Clone Expr := {
   clone := Expr.Insts.CoreCloneClone.clone
 }
 
 /-- [noble_contracts::{impl core::fmt::Debug for noble_contracts::ExprKind}::fmt]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 121:16-121:21
+    Source: 'crates/noble-contracts/src/lib.rs', lines 127:16-127:21
     Visibility: public -/
 def ExprKind.Insts.CoreFmtDebug.fmt
   (self : ExprKind) (f : core.fmt.Formatter) :
@@ -16082,14 +27068,14 @@ def ExprKind.Insts.CoreFmtDebug.fmt
       __self_11 __self_21
 
 /-- Trait implementation: [noble_contracts::{impl core::fmt::Debug for noble_contracts::ExprKind}]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 121:16-121:21 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 127:16-127:21 -/
 @[reducible]
 def ExprKind.Insts.CoreFmtDebug : core.fmt.Debug ExprKind := {
   fmt := ExprKind.Insts.CoreFmtDebug.fmt
 }
 
 /-- [noble_contracts::{impl core::fmt::Debug for noble_contracts::Expr}::fmt]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 101:16-101:21
+    Source: 'crates/noble-contracts/src/lib.rs', lines 107:16-107:21
     Visibility: public -/
 def Expr.Insts.CoreFmtDebug.fmt
   (self : Expr) (f : core.fmt.Formatter) :
@@ -16106,21 +27092,21 @@ def Expr.Insts.CoreFmtDebug.fmt
     "uses_output") dyn4
 
 /-- Trait implementation: [noble_contracts::{impl core::fmt::Debug for noble_contracts::Expr}]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 101:16-101:21 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 107:16-107:21 -/
 @[reducible]
 def Expr.Insts.CoreFmtDebug : core.fmt.Debug Expr := {
   fmt := Expr.Insts.CoreFmtDebug.fmt
 }
 
 /-- Trait implementation: [noble_contracts::{impl core::clone::Clone for noble_contracts::ExprKind}]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 121:9-121:14 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 127:9-127:14 -/
 @[reducible]
 def ExprKind.Insts.CoreCloneClone : core.clone.Clone ExprKind := {
   clone := ExprKind.Insts.CoreCloneClone.clone
 }
 
 /-- [noble_contracts::{impl core::clone::Clone for noble_contracts::Prepared}::clone]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 160:9-160:14
+    Source: 'crates/noble-contracts/src/lib.rs', lines 166:9-166:14
     Visibility: public -/
 def Prepared.Insts.CoreCloneClone.clone
   (self : Prepared) : Result Prepared := do
@@ -16158,14 +27144,14 @@ def Prepared.Insts.CoreCloneClone.clone
     }
 
 /-- Trait implementation: [noble_contracts::{impl core::clone::Clone for noble_contracts::Prepared}]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 160:9-160:14 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 166:9-166:14 -/
 @[reducible]
 def Prepared.Insts.CoreCloneClone : core.clone.Clone Prepared := {
   clone := Prepared.Insts.CoreCloneClone.clone
 }
 
 /-- [noble_contracts::{impl core::fmt::Debug for noble_contracts::Prepared}::fmt]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 160:16-160:21
+    Source: 'crates/noble-contracts/src/lib.rs', lines 166:16-166:21
     Visibility: public -/
 def Prepared.Insts.CoreFmtDebug.fmt
   (self : Prepared) (f : core.fmt.Formatter) :
@@ -16206,83 +27192,21 @@ def Prepared.Insts.CoreFmtDebug.fmt
   core.fmt.Formatter.debug_struct_fields_finish f (toStr "Prepared") s values
 
 /-- Trait implementation: [noble_contracts::{impl core::fmt::Debug for noble_contracts::Prepared}]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 160:16-160:21 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 166:16-166:21 -/
 @[reducible]
 def Prepared.Insts.CoreFmtDebug : core.fmt.Debug Prepared := {
   fmt := Prepared.Insts.CoreFmtDebug.fmt
 }
 
-/-- [noble_contracts::{noble_contracts::Prepared}::name]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 176:4-178:5
-    Visibility: public -/
-def Prepared.impl.name (self : Prepared) : Result Str := do
-  alloc.string.String.Insts.CoreOpsDerefDerefStr.deref self.name
-
-/-- [noble_contracts::{noble_contracts::Prepared}::inputs]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 179:4-181:5
-    Visibility: public -/
-def Prepared.impl.inputs (self : Prepared) : Result (Slice NamedType) := do
-  ok (alloc.vec.Vec.deref self.inputs)
-
-/-- [noble_contracts::{noble_contracts::Prepared}::outputs]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 182:4-184:5
-    Visibility: public -/
-def Prepared.impl.outputs (self : Prepared) : Result (Slice NamedType) := do
-  ok (alloc.vec.Vec.deref self.outputs)
-
-/-- [noble_contracts::{noble_contracts::Prepared}::params]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 185:4-187:5
-    Visibility: public -/
-def Prepared.impl.params (self : Prepared) : Result (Slice NamedType) := do
-  ok (alloc.vec.Vec.deref self.params)
-
-/-- [noble_contracts::{noble_contracts::Prepared}::definitions]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 188:4-190:5
-    Visibility: public -/
-def Prepared.impl.definitions (self : Prepared) : Result (Slice LogicDef) := do
-  ok (alloc.vec.Vec.deref self.definitions)
-
-/-- [noble_contracts::{noble_contracts::Prepared}::expressions]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 191:4-193:5
-    Visibility: public -/
-def Prepared.impl.expressions (self : Prepared) : Result (Slice Expr) := do
-  ok (alloc.vec.Vec.deref self.expressions)
-
-/-- [noble_contracts::{noble_contracts::Prepared}::requires]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 194:4-196:5
-    Visibility: public -/
-def Prepared.impl.requires (self : Prepared) : Result Std.U32 := do
-  ok self.requires
-
-/-- [noble_contracts::{noble_contracts::Prepared}::ensures]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 197:4-199:5
-    Visibility: public -/
-def Prepared.impl.ensures (self : Prepared) : Result Std.U32 := do
-  ok self.ensures
-
-/-- [noble_contracts::{noble_contracts::Prepared}::candidate]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 200:4-202:5
-    Visibility: public -/
-def Prepared.impl.candidate
-  (self : Prepared) : Result noble_kernel.untrusted.Candidate := do
-  ok self.candidate
-
 /-- [noble_contracts::{noble_contracts::Prepared}::request]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 203:4-205:5
+    Source: 'crates/noble-contracts/src/lib.rs', lines 209:4-211:5
     Visibility: public -/
 def Prepared.impl.request
   (self : Prepared) : Result noble_kernel.untrusted.Request := do
   ok self.request
 
-/-- [noble_contracts::{noble_contracts::Prepared}::checked]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 206:4-208:5
-    Visibility: public -/
-def Prepared.impl.checked
-  (self : Prepared) : Result noble_kernel.untrusted.Checked := do
-  ok self.checked
-
 /-- [noble_contracts::prepare]:
-    Source: 'crates/noble-contracts/src/lib.rs', lines 211:0-213:1
+    Source: 'crates/noble-contracts/src/lib.rs', lines 217:0-219:1
     Visibility: public -/
 def prepare
   (source : Slice Std.U8) (limits : Limits) :
@@ -16389,14 +27313,14 @@ def predicate.resolving.Round.Insts.CoreMarkerCopy : core.marker.Copy
 }
 
 /-- [noble_contracts::predicate::{impl core::clone::Clone for noble_contracts::predicate::Context<'a>}::clone]:
-    Source: 'crates/noble-contracts/src/predicate.rs', lines 9:9-9:14
+    Source: 'crates/noble-contracts/src/predicate.rs', lines 14:9-14:14
     Visibility: public -/
 def predicate.Context.Insts.CoreCloneClone.clone
   (self : predicate.Context) : Result predicate.Context := do
   ok self
 
 /-- Trait implementation: [noble_contracts::predicate::{impl core::clone::Clone for noble_contracts::predicate::Context<'a>}]
-    Source: 'crates/noble-contracts/src/predicate.rs', lines 9:9-9:14 -/
+    Source: 'crates/noble-contracts/src/predicate.rs', lines 14:9-14:14 -/
 @[reducible]
 def predicate.Context.Insts.CoreCloneClone : core.clone.Clone predicate.Context
   := {
@@ -16404,7 +27328,7 @@ def predicate.Context.Insts.CoreCloneClone : core.clone.Clone predicate.Context
 }
 
 /-- Trait implementation: [noble_contracts::predicate::{impl core::marker::Copy for noble_contracts::predicate::Context<'a>}]
-    Source: 'crates/noble-contracts/src/predicate.rs', lines 9:16-9:20 -/
+    Source: 'crates/noble-contracts/src/predicate.rs', lines 14:16-14:20 -/
 @[reducible]
 def predicate.Context.Insts.CoreMarkerCopy : core.marker.Copy predicate.Context
   := {
@@ -16412,21 +27336,21 @@ def predicate.Context.Insts.CoreMarkerCopy : core.marker.Copy predicate.Context
 }
 
 /-- [noble_contracts::predicate::{impl core::clone::Clone for noble_contracts::predicate::Op}::clone]:
-    Source: 'crates/noble-contracts/src/predicate.rs', lines 64:9-64:14
+    Source: 'crates/noble-contracts/src/predicate.rs', lines 69:9-69:14
     Visibility: public -/
 def predicate.Op.Insts.CoreCloneClone.clone
   (self : predicate.Op) : Result predicate.Op := do
   ok self
 
 /-- Trait implementation: [noble_contracts::predicate::{impl core::clone::Clone for noble_contracts::predicate::Op}]
-    Source: 'crates/noble-contracts/src/predicate.rs', lines 64:9-64:14 -/
+    Source: 'crates/noble-contracts/src/predicate.rs', lines 69:9-69:14 -/
 @[reducible]
 def predicate.Op.Insts.CoreCloneClone : core.clone.Clone predicate.Op := {
   clone := predicate.Op.Insts.CoreCloneClone.clone
 }
 
 /-- Trait implementation: [noble_contracts::predicate::{impl core::marker::Copy for noble_contracts::predicate::Op}]
-    Source: 'crates/noble-contracts/src/predicate.rs', lines 64:16-64:20 -/
+    Source: 'crates/noble-contracts/src/predicate.rs', lines 69:16-69:20 -/
 @[reducible]
 def predicate.Op.Insts.CoreMarkerCopy : core.marker.Copy predicate.Op := {
   cloneInst := predicate.Op.Insts.CoreCloneClone
@@ -16491,7 +27415,7 @@ def program.words.append_spelling
   alloc.string.String.push_str output spelling
 
 /-- [noble_contracts::program::bootstrap_word]:
-    Source: 'crates/noble-contracts/src/program.rs', lines 7:0-9:1 -/
+    Source: 'crates/noble-contracts/src/program.rs', lines 12:0-14:1 -/
 def program.bootstrap_word
   (word : Slice Std.U8) :
   Result (Option noble_kernel.contracts.Definition)
@@ -16499,7 +27423,7 @@ def program.bootstrap_word
   program.words.bootstrap word
 
 /-- [noble_contracts::program::append_bootstrap_spelling]:
-    Source: 'crates/noble-contracts/src/program.rs', lines 15:0-20:1 -/
+    Source: 'crates/noble-contracts/src/program.rs', lines 20:0-25:1 -/
 def program.append_bootstrap_spelling
   (definition : noble_kernel.contracts.Definition) (output : String) :
   Result String
@@ -16507,14 +27431,14 @@ def program.append_bootstrap_spelling
   program.words.append_spelling definition output
 
 /-- [noble_contracts::program::{impl core::clone::Clone for noble_contracts::program::Context<'a>}::clone]:
-    Source: 'crates/noble-contracts/src/program.rs', lines 22:9-22:14
+    Source: 'crates/noble-contracts/src/program.rs', lines 27:9-27:14
     Visibility: public -/
 def program.Context.Insts.CoreCloneClone.clone
   (self : program.Context) : Result program.Context := do
   ok self
 
 /-- Trait implementation: [noble_contracts::program::{impl core::clone::Clone for noble_contracts::program::Context<'a>}]
-    Source: 'crates/noble-contracts/src/program.rs', lines 22:9-22:14 -/
+    Source: 'crates/noble-contracts/src/program.rs', lines 27:9-27:14 -/
 @[reducible]
 def program.Context.Insts.CoreCloneClone : core.clone.Clone program.Context
   := {
@@ -16522,7 +27446,7 @@ def program.Context.Insts.CoreCloneClone : core.clone.Clone program.Context
 }
 
 /-- Trait implementation: [noble_contracts::program::{impl core::marker::Copy for noble_contracts::program::Context<'a>}]
-    Source: 'crates/noble-contracts/src/program.rs', lines 22:16-22:20 -/
+    Source: 'crates/noble-contracts/src/program.rs', lines 27:16-27:20 -/
 @[reducible]
 def program.Context.Insts.CoreMarkerCopy : core.marker.Copy program.Context
   := {
@@ -16530,659 +27454,28 @@ def program.Context.Insts.CoreMarkerCopy : core.marker.Copy program.Context
 }
 
 /-- [noble_contracts::program::{impl core::clone::Clone for noble_contracts::program::Form<'a>}::clone]:
-    Source: 'crates/noble-contracts/src/program.rs', lines 29:9-29:14
+    Source: 'crates/noble-contracts/src/program.rs', lines 34:9-34:14
     Visibility: public -/
 def program.Form.Insts.CoreCloneClone.clone
   (self : program.Form) : Result program.Form := do
   ok self
 
 /-- Trait implementation: [noble_contracts::program::{impl core::clone::Clone for noble_contracts::program::Form<'a>}]
-    Source: 'crates/noble-contracts/src/program.rs', lines 29:9-29:14 -/
+    Source: 'crates/noble-contracts/src/program.rs', lines 34:9-34:14 -/
 @[reducible]
 def program.Form.Insts.CoreCloneClone : core.clone.Clone program.Form := {
   clone := program.Form.Insts.CoreCloneClone.clone
 }
 
 /-- Trait implementation: [noble_contracts::program::{impl core::marker::Copy for noble_contracts::program::Form<'a>}]
-    Source: 'crates/noble-contracts/src/program.rs', lines 29:16-29:20 -/
+    Source: 'crates/noble-contracts/src/program.rs', lines 34:16-34:20 -/
 @[reducible]
 def program.Form.Insts.CoreMarkerCopy : core.marker.Copy program.Form := {
   cloneInst := program.Form.Insts.CoreCloneClone
 }
 
-/-- [noble_contracts::rendering::number]:
-    Source: 'crates/noble-contracts/src/rendering/mod.rs', lines 47:0-65:1 -/
-def rendering.number (out : String) (value : Std.U64) : Result String := do
-  let out1 ←
-    if value >= 10#u64
-    then do
-         let i ← value / 10#u64
-         rendering.number out i
-    else ok out
-  let i ← value % 10#u64
-  match i with
-  | 0#uscalar => alloc.string.String.push out1 '0'
-  | 1#uscalar => alloc.string.String.push out1 '1'
-  | 2#uscalar => alloc.string.String.push out1 '2'
-  | 3#uscalar => alloc.string.String.push out1 '3'
-  | 4#uscalar => alloc.string.String.push out1 '4'
-  | 5#uscalar => alloc.string.String.push out1 '5'
-  | 6#uscalar => alloc.string.String.push out1 '6'
-  | 7#uscalar => alloc.string.String.push out1 '7'
-  | 8#uscalar => alloc.string.String.push out1 '8'
-  | _ => alloc.string.String.push out1 '9'
-partial_fixpoint
-
-/-- [noble_contracts::rendering::rejected]:
-    Source: 'crates/noble-contracts/src/rendering/mod.rs', lines 88:0-96:1 -/
-def rendering.rejected (out : String) (message : Str) : Result String := do
-  let out1 ← alloc.string.String.push_str out (toStr "(by fail ")
-  let out2 ← alloc.string.String.push out1 '"'
-  let out3 ← alloc.string.String.push_str out2 message
-  let out4 ← alloc.string.String.push out3 '"'
-  alloc.string.String.push out4 ')'
-
-/-- [noble_contracts::rendering::signed]:
-    Source: 'crates/noble-contracts/src/rendering/mod.rs', lines 75:0-82:1 -/
-def rendering.signed (out : String) (value : Std.I64) : Result String := do
-  let out1 ← alloc.string.String.push out '('
-  let out2 ←
-    if value < 0#i64
-    then alloc.string.String.push out1 '-'
-    else ok out1
-  let i ← core.num.I64.unsigned_abs value
-  let out3 ← rendering.number out2 i
-  alloc.string.String.push out3 ')'
-
-/-- [noble_contracts::rendering::expression::indexed]:
-    Source: 'crates/noble-contracts/src/rendering/expression.rs', lines 58:0-62:1 -/
-def rendering.expression.indexed
-  (out : String) («name» : Str) (index1 : Std.U32) : Result String := do
-  let out1 ← alloc.string.String.push_str out «name»
-  let out2 ← alloc.string.String.push out1 ' '
-  let i ← lift (core.convert.num.FromU64U32.from index1)
-  rendering.number out2 i
-
-/-- [noble_contracts::rendering::expression::reference]:
-    Source: 'crates/noble-contracts/src/rendering/expression.rs', lines 27:0-30:1 -/
-def rendering.expression.reference
-  (out : String) (index1 : Std.U32) : Result String := do
-  let out1 ← alloc.string.String.push_str out (toStr " expression_")
-  let i ← lift (core.convert.num.FromU64U32.from index1)
-  rendering.number out1 i
-
-/-- [noble_contracts::rendering::expression::unary]:
-    Source: 'crates/noble-contracts/src/rendering/expression.rs', lines 36:0-39:1 -/
-def rendering.expression.unary
-  (out : String) («name» : Str) (a : Std.U32) : Result String := do
-  let out1 ← alloc.string.String.push_str out «name»
-  rendering.expression.reference out1 a
-
-/-- [noble_contracts::rendering::expression::binary]:
-    Source: 'crates/noble-contracts/src/rendering/expression.rs', lines 49:0-52:1 -/
-def rendering.expression.binary
-  (out : String) («name» : Str) (a : Std.U32) (b : Std.U32) :
-  Result String
-  := do
-  let out1 ← rendering.expression.unary out «name» a
-  rendering.expression.reference out1 b
-
-/-- [noble_contracts::rendering::expression::term]:
-    Source: 'crates/noble-contracts/src/rendering/expression.rs', lines 72:0-127:1 -/
-def rendering.expression.term
-  (out : String) (kind : ExprKind) (definitions : Slice LogicDef) :
-  Result String
-  := do
-  match kind with
-  | ExprKind.I64Expr n =>
-    let out1 ← alloc.string.String.push_str out (toStr ".i64 ")
-    rendering.signed out1 n
-  | ExprKind.BoolExpr b =>
-    if b
-    then alloc.string.String.push_str out (toStr ".bool true")
-    else alloc.string.String.push_str out (toStr ".bool false")
-  | ExprKind.UnitExpr => alloc.string.String.push_str out (toStr ".unit")
-  | ExprKind.InputExpr i => rendering.expression.indexed out (toStr ".input") i
-  | ExprKind.OutputExpr i =>
-    rendering.expression.indexed out (toStr ".output") i
-  | ExprKind.ParamExpr i => rendering.expression.indexed out (toStr ".param") i
-  | ExprKind.DefinitionExpr i =>
-    let out1 ← rendering.expression.indexed out (toStr ".definition") i
-    let r ← Usize.Insts.CoreConvertTryFromU32TryFromIntError.try_from i
-    let definition ←
-      match r with
-      | core.result.Result.Ok index1 =>
-        core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice LogicDef)
-          definitions index1
-      | core.result.Result.Err _ => ok none
-    match definition with
-    | none =>
-      let out2 ← alloc.string.String.push out1 ' '
-      rendering.rejected out2 (toStr "unresolved logical definition")
-    | some definition1 => rendering.expression.reference out1 definition1.body
-  | ExprKind.NotExpr a => rendering.expression.unary out (toStr ".not") a
-  | ExprKind.AndExpr a b => rendering.expression.binary out (toStr ".and") a b
-  | ExprKind.OrExpr a b => rendering.expression.binary out (toStr ".or") a b
-  | ExprKind.ImpliesExpr a b =>
-    rendering.expression.binary out (toStr ".implies") a b
-  | ExprKind.EqExpr a b => rendering.expression.binary out (toStr ".eq") a b
-  | ExprKind.LtExpr a b => rendering.expression.binary out (toStr ".lt") a b
-  | ExprKind.LeExpr a b => rendering.expression.binary out (toStr ".le") a b
-  | ExprKind.AddExpr a b => rendering.expression.binary out (toStr ".add") a b
-  | ExprKind.SubExpr a b => rendering.expression.binary out (toStr ".sub") a b
-  | ExprKind.MulExpr a b => rendering.expression.binary out (toStr ".mul") a b
-  | ExprKind.PairExpr a b =>
-    rendering.expression.binary out (toStr ".pair") a b
-  | ExprKind.FirstExpr a => rendering.expression.unary out (toStr ".first") a
-  | ExprKind.SecondExpr a => rendering.expression.unary out (toStr ".second") a
-  | ExprKind.InlExpr a => rendering.expression.unary out (toStr ".inl") a
-  | ExprKind.InrExpr a => rendering.expression.unary out (toStr ".inr") a
-  | ExprKind.IsLeftExpr a => rendering.expression.unary out (toStr ".isLeft") a
-  | ExprKind.LeftExpr a => rendering.expression.unary out (toStr ".left") a
-  | ExprKind.RightExpr a => rendering.expression.unary out (toStr ".right") a
-  | ExprKind.NilExpr => alloc.string.String.push_str out (toStr ".nil")
-  | ExprKind.ConsExpr a b =>
-    rendering.expression.binary out (toStr ".cons") a b
-  | ExprKind.IsNilExpr a => rendering.expression.unary out (toStr ".isNil") a
-  | ExprKind.HeadExpr a => rendering.expression.unary out (toStr ".head") a
-  | ExprKind.TailExpr a => rendering.expression.unary out (toStr ".tail") a
-  | ExprKind.LengthExpr a => rendering.expression.unary out (toStr ".length") a
-  | ExprKind.MapsExpr p a b =>
-    let out1 ← rendering.expression.binary out (toStr ".maps") p a
-    rendering.expression.reference out1 b
-
-/-- [noble_contracts::rendering::expression::emit]: loop body 0:
-    Source: 'crates/noble-contracts/src/rendering/expression.rs', lines 9:4-20:5 -/
-@[rust_loop_body]
-def rendering.expression.emit_loop.body
-  (prepared : Prepared) (out : String) (index1 : Std.Usize) :
-  Result (ControlFlow (String × Std.Usize) String)
-  := do
-  let s ← Prepared.impl.expressions prepared
-  let i := Slice.len s
-  if index1 < i
-  then
-    let out1 ← alloc.string.String.push_str out (toStr "def expression_")
-    let i1 ← lift (UScalar.cast .U64 index1)
-    let out2 ← rendering.number out1 i1
-    let out3 ← alloc.string.String.push_str out2 (toStr " : Term := ")
-    let e ← Slice.index_usize s index1
-    let s1 ← Prepared.impl.definitions prepared
-    let out4 ← rendering.expression.term out3 e.kind s1
-    let out5 ← alloc.string.String.push out4 '
-'
-    let index2 ← index1 + 1#usize
-    ok (cont (out5, index2))
-  else ok (done out)
-
-/-- [noble_contracts::rendering::expression::emit]: loop 0:
-    Source: 'crates/noble-contracts/src/rendering/expression.rs', lines 9:4-20:5 -/
-@[rust_loop]
-def rendering.expression.emit_loop
-  (out : String) (prepared : Prepared) (index1 : Std.Usize) :
-  Result String
-  := do
-  loop
-    (fun (out1, index2) => rendering.expression.emit_loop.body prepared out1
-      index2)
-    (out, index1)
-
-/-- [noble_contracts::rendering::expression::emit]:
-    Source: 'crates/noble-contracts/src/rendering/expression.rs', lines 7:0-21:1 -/
-@[reducible]
-def rendering.expression.emit
-  (out : String) (prepared : Prepared) : Result String := do
-  rendering.expression.emit_loop out prepared 0#usize
-
-mutual
-
-/-- [noble_contracts::rendering::types::stack]:
-    Source: 'crates/noble-contracts/src/rendering/types.rs', lines 30:0-34:1 -/
-def rendering.types.stack
-  (out : String) (entries : Slice noble_kernel.types.Ty) : Result String := do
-  let out1 ← alloc.string.String.push out '['
-  let out2 ← rendering.types.stack_entries out1 entries 0#usize
-  alloc.string.String.push out2 ']'
-partial_fixpoint
-
-/-- [noble_contracts::rendering::types::stack_entries]:
-    Source: 'crates/noble-contracts/src/rendering/types.rs', lines 48:0-62:1 -/
-def rendering.types.stack_entries
-  (out : String) (entries : Slice noble_kernel.types.Ty) (index1 : Std.Usize) :
-  Result String
-  := do
-  let i := Slice.len entries
-  if index1 < i
-  then
-    let out1 ←
-      if index1 != 0#usize
-      then alloc.string.String.push_str out (toStr ", ")
-      else ok out
-    let t ← Slice.index_usize entries index1
-    let out2 ← rendering.types.value out1 t
-    let i1 ← index1 + 1#usize
-    rendering.types.stack_entries out2 entries i1
-  else ok out
-partial_fixpoint
-
-/-- [noble_contracts::rendering::types::value]:
-    Source: 'crates/noble-contracts/src/rendering/types.rs', lines 76:0-112:1 -/
-def rendering.types.value
-  (out : String) (ty : noble_kernel.types.Ty) : Result String := do
-  match ty with
-  | noble_kernel.types.Ty.UnitType =>
-    alloc.string.String.push_str out (toStr ".unit")
-  | noble_kernel.types.Ty.BoolType =>
-    alloc.string.String.push_str out (toStr ".bool")
-  | noble_kernel.types.Ty.I64Type =>
-    alloc.string.String.push_str out (toStr ".i64")
-  | noble_kernel.types.Ty.TextType =>
-    alloc.string.String.push_str out (toStr ".text")
-  | noble_kernel.types.Ty.SyntaxType =>
-    let out1 ← alloc.string.String.push out '.'
-    let c ← Char.Insts.CoreConvertFromU8.from 171#u8
-    let out2 ← alloc.string.String.push out1 c
-    let out3 ← alloc.string.String.push_str out2 (toStr "syntax")
-    let c1 ← Char.Insts.CoreConvertFromU8.from 187#u8
-    alloc.string.String.push out3 c1
-  | noble_kernel.types.Ty.PairType a b =>
-    rendering.types.binary out (toStr ".pair") a b
-  | noble_kernel.types.Ty.SumType a b =>
-    rendering.types.binary out (toStr ".sum") a b
-  | noble_kernel.types.Ty.ListType item =>
-    let out1 ← alloc.string.String.push_str out (toStr "(.list ")
-    let out2 ← rendering.types.value out1 item
-    alloc.string.String.push out2 ')'
-  | noble_kernel.types.Ty.ProgramType inputs outputs effects =>
-    let b ← noble_kernel.types.EffSet.is_empty effects
-    if b
-    then
-      let out1 ← alloc.string.String.push_str out (toStr "(.program ")
-      let s := alloc.vec.Vec.deref inputs
-      let out2 ← rendering.types.stack out1 s
-      let out3 ← alloc.string.String.push out2 ' '
-      let s1 := alloc.vec.Vec.deref outputs
-      let out4 ← rendering.types.stack out3 s1
-      alloc.string.String.push out4 ')'
-    else rendering.rejected out (toStr "unsupported host effect in contract")
-  | noble_kernel.types.Ty.ResourceType _ =>
-    rendering.rejected out (toStr "unsupported resource in contract")
-partial_fixpoint
-
-/-- [noble_contracts::rendering::types::binary]:
-    Source: 'crates/noble-contracts/src/rendering/types.rs', lines 118:0-131:1 -/
-def rendering.types.binary
-  (out : String) («name» : Str) (a : noble_kernel.types.Ty)
-  (b : noble_kernel.types.Ty) :
-  Result String
-  := do
-  let out1 ← alloc.string.String.push out '('
-  let out2 ← alloc.string.String.push_str out1 «name»
-  let out3 ← alloc.string.String.push out2 ' '
-  let out4 ← rendering.types.value out3 a
-  let out5 ← alloc.string.String.push out4 ' '
-  let out6 ← rendering.types.value out5 b
-  alloc.string.String.push out6 ')'
-partial_fixpoint
-
-end
-
-/-- [noble_contracts::rendering::types::named_stack]: loop body 0:
-    Source: 'crates/noble-contracts/src/rendering/types.rs', lines 16:4-22:5 -/
-@[rust_loop_body]
-def rendering.types.named_stack_loop.body
-  (entries : Slice NamedType) (out : String) (index1 : Std.Usize) :
-  Result (ControlFlow (String × Std.Usize) String)
-  := do
-  let i := Slice.len entries
-  if index1 < i
-  then
-    let out1 ←
-      if index1 != 0#usize
-      then alloc.string.String.push_str out (toStr ", ")
-      else ok out
-    let nt ← Slice.index_usize entries index1
-    let out2 ← rendering.types.value out1 nt.ty
-    let index2 ← index1 + 1#usize
-    ok (cont (out2, index2))
-  else ok (done out)
-
-/-- [noble_contracts::rendering::types::named_stack]: loop 0:
-    Source: 'crates/noble-contracts/src/rendering/types.rs', lines 16:4-22:5 -/
-@[rust_loop]
-def rendering.types.named_stack_loop
-  (out : String) (entries : Slice NamedType) (index1 : Std.Usize) :
-  Result String
-  := do
-  loop
-    (fun (out1, index2) => rendering.types.named_stack_loop.body entries out1
-      index2)
-    (out, index1)
-
-/-- [noble_contracts::rendering::types::named_stack]:
-    Source: 'crates/noble-contracts/src/rendering/types.rs', lines 7:0-24:1 -/
-def rendering.types.named_stack
-  (out : String) («name» : Str) (entries : Slice NamedType) :
-  Result String
-  := do
-  let out1 ← alloc.string.String.push_str out (toStr "def ")
-  let out2 ← alloc.string.String.push_str out1 «name»
-  let out3 ← alloc.string.String.push_str out2 (toStr " : List Ty := [")
-  let out4 ← rendering.types.named_stack_loop out3 entries 0#usize
-  alloc.string.String.push_str out4 (toStr "]\n")
-
-/-- [noble_contracts::wire::lower_body]: loop body 0:
-    Source: 'crates/noble-contracts/src/wire.rs', lines 35:4-38:5
-    Visibility: public -/
-@[rust_loop_body]
-def wire.lower_body_loop.body
-  (body : Slice noble_kernel.untrusted.NodeId) (result : alloc.vec.Vec Std.U32)
-  (index1 : Std.Usize) :
-  Result (ControlFlow ((alloc.vec.Vec Std.U32) × Std.Usize) (alloc.vec.Vec
-    Std.U32))
-  := do
-  let i := Slice.len body
-  if index1 < i
-  then
-    let ni ← Slice.index_usize body index1
-    let result1 ← alloc.vec.Vec.push result ni
-    let index2 ← index1 + 1#usize
-    ok (cont (result1, index2))
-  else ok (done result)
-
-/-- [noble_contracts::wire::lower_body]: loop 0:
-    Source: 'crates/noble-contracts/src/wire.rs', lines 35:4-38:5
-    Visibility: public -/
-@[rust_loop]
-def wire.lower_body_loop
-  (body : Slice noble_kernel.untrusted.NodeId) (result : alloc.vec.Vec Std.U32)
-  (index1 : Std.Usize) :
-  Result (alloc.vec.Vec Std.U32)
-  := do
-  loop
-    (fun (result1, index2) => wire.lower_body_loop.body body result1 index2)
-    (result, index1)
-
-/-- [noble_contracts::wire::lower_body]:
-    Source: 'crates/noble-contracts/src/wire.rs', lines 32:0-40:1
-    Visibility: public -/
-def wire.lower_body
-  (body : Slice noble_kernel.untrusted.NodeId) :
-  Result (alloc.vec.Vec Std.U32)
-  := do
-  let i := Slice.len body
-  let result := alloc.vec.Vec.with_capacity Std.U32 i
-  wire.lower_body_loop body result 0#usize
-
-/-- [noble_contracts::wire::lower_node]:
-    Source: 'crates/noble-contracts/src/wire.rs', lines 43:0-62:1
-    Visibility: public -/
-def wire.lower_node
-  (node : noble_kernel.untrusted.Node) :
-  Result (core.result.Result wire.SemanticNode wire.ProjectionError)
-  := do
-  match node with
-  | noble_kernel.untrusted.Node.Literal lit _ =>
-    match lit with
-    | noble_kernel.untrusted.Lit.I64Lit n =>
-      ok (core.result.Result.Ok (wire.SemanticNode.I64 n))
-    | noble_kernel.untrusted.Lit.BoolLit b =>
-      ok (core.result.Result.Ok (wire.SemanticNode.Boolean b))
-    | noble_kernel.untrusted.Lit.TextLit =>
-      ok (core.result.Result.Err wire.ProjectionError.PayloadlessText)
-    | noble_kernel.untrusted.Lit.UnitLit =>
-      ok (core.result.Result.Ok wire.SemanticNode.UnitValue)
-  | noble_kernel.untrusted.Node.Invocation «def» _ =>
-    if «def» < 22#u32
-    then ok (core.result.Result.Ok (wire.SemanticNode.Word «def»))
-    else ok (core.result.Result.Err wire.ProjectionError.HostWord)
-  | noble_kernel.untrusted.Node.Quotation body _ =>
-    let s := alloc.vec.Vec.deref body
-    let v ← wire.lower_body s
-    ok (core.result.Result.Ok (wire.SemanticNode.Quotation v))
-
-/-- [noble_contracts::wire::lower_subject]: loop body 0:
-    Source: 'crates/noble-contracts/src/wire.rs', lines 80:4-89:5
-    Visibility: public -/
-@[rust_loop_body]
-def wire.lower_subject_loop.body
-  (v : alloc.vec.Vec noble_kernel.untrusted.Node)
-  (nodes : alloc.vec.Vec wire.SemanticNode) (index1 : Std.Usize) :
-  Result (ControlFlow ((alloc.vec.Vec wire.SemanticNode) × Std.Usize)
-    ((alloc.vec.Vec wire.SemanticNode) × (Option wire.ProjectionError)))
-  := do
-  let i := alloc.vec.Vec.len v
-  if index1 < i
-  then
-    let n ←
-      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-        noble_kernel.untrusted.Node) v index1
-    let r ← wire.lower_node n
-    match r with
-    | core.result.Result.Ok node =>
-      let nodes1 ← alloc.vec.Vec.push nodes node
-      let index2 ← index1 + 1#usize
-      ok (cont (nodes1, index2))
-    | core.result.Result.Err error => ok (done (nodes, some error))
-  else ok (done (nodes, none))
-
-/-- [noble_contracts::wire::lower_subject]: loop 0:
-    Source: 'crates/noble-contracts/src/wire.rs', lines 80:4-89:5
-    Visibility: public -/
-@[rust_loop]
-def wire.lower_subject_loop
-  (v : alloc.vec.Vec noble_kernel.untrusted.Node)
-  (nodes : alloc.vec.Vec wire.SemanticNode) (index1 : Std.Usize) :
-  Result ((alloc.vec.Vec wire.SemanticNode) × (Option wire.ProjectionError))
-  := do
-  loop
-    (fun (nodes1, index2) => wire.lower_subject_loop.body v nodes1 index2)
-    (nodes, index1)
-
-/-- [noble_contracts::wire::lower_subject]:
-    Source: 'crates/noble-contracts/src/wire.rs', lines 69:0-97:1
-    Visibility: public -/
-def wire.lower_subject
-  (candidate : noble_kernel.untrusted.Candidate) :
-  Result (core.result.Result wire.SemanticSubject wire.ProjectionError)
-  := do
-  let i ← noble_kernel.untrusted.CANDIDATE_FORMAT
-  if candidate.format != i
-  then ok (core.result.Result.Err wire.ProjectionError.Revision)
-  else
-    let i1 ← noble_kernel.untrusted.SEMANTIC_REVISION
-    if candidate.revision != i1
-    then ok (core.result.Result.Err wire.ProjectionError.Revision)
-    else
-      let i2 := alloc.vec.Vec.len candidate.nodes
-      let nodes := alloc.vec.Vec.with_capacity wire.SemanticNode i2
-      let (nodes1, failure) ←
-        wire.lower_subject_loop candidate.nodes nodes 0#usize
-      match failure with
-      | none =>
-        let s := alloc.vec.Vec.deref candidate.body
-        let v ← wire.lower_body s
-        ok (core.result.Result.Ok { nodes := nodes1, body := v })
-      | some error => ok (core.result.Result.Err error)
-
-/-- [noble_contracts::rendering::subject::body]: loop body 0:
-    Source: 'crates/noble-contracts/src/rendering/subject.rs', lines 76:4-83:5 -/
-@[rust_loop_body]
-def rendering.subject.body_loop.body
-  (nodes : Slice Std.U32) (out : String) (index1 : Std.Usize) :
-  Result (ControlFlow (String × Std.Usize) String)
-  := do
-  let i := Slice.len nodes
-  if index1 < i
-  then
-    let out1 ←
-      if index1 != 0#usize
-      then alloc.string.String.push_str out (toStr ", ")
-      else ok out
-    let out2 ← alloc.string.String.push_str out1 (toStr "node_")
-    let i1 ← Slice.index_usize nodes index1
-    let i2 ← lift (core.convert.num.FromU64U32.from i1)
-    let out3 ← rendering.number out2 i2
-    let index2 ← index1 + 1#usize
-    ok (cont (out3, index2))
-  else ok (done out)
-
-/-- [noble_contracts::rendering::subject::body]: loop 0:
-    Source: 'crates/noble-contracts/src/rendering/subject.rs', lines 76:4-83:5 -/
-@[rust_loop]
-def rendering.subject.body_loop
-  (out : String) (nodes : Slice Std.U32) (index1 : Std.Usize) :
-  Result String
-  := do
-  loop
-    (fun (out1, index2) => rendering.subject.body_loop.body nodes out1 index2)
-    (out, index1)
-
-/-- [noble_contracts::rendering::subject::body]:
-    Source: 'crates/noble-contracts/src/rendering/subject.rs', lines 73:0-85:1 -/
-def rendering.subject.body
-  (out : String) (nodes : Slice Std.U32) : Result String := do
-  let out1 ← alloc.string.String.push out '['
-  let out2 ← rendering.subject.body_loop out1 nodes 0#usize
-  alloc.string.String.push out2 ']'
-
-/-- [noble_contracts::rendering::subject::node]:
-    Source: 'crates/noble-contracts/src/rendering/subject.rs', lines 48:0-67:1 -/
-def rendering.subject.node
-  (out : String) (node : wire.SemanticNode) : Result String := do
-  match node with
-  | wire.SemanticNode.I64 value =>
-    let out1 ←
-      alloc.string.String.push_str out (toStr ".lit (.i64 (BitVec.ofInt 64 ")
-    let out2 ← rendering.signed out1 value
-    alloc.string.String.push_str out2 (toStr "))")
-  | wire.SemanticNode.Boolean b =>
-    if b
-    then alloc.string.String.push_str out (toStr ".lit (.bool true)")
-    else alloc.string.String.push_str out (toStr ".lit (.bool false)")
-  | wire.SemanticNode.UnitValue =>
-    alloc.string.String.push_str out (toStr ".lit .unit")
-  | wire.SemanticNode.Word «def» =>
-    let out1 ← alloc.string.String.push_str out (toStr ".word ")
-    let i ← lift (core.convert.num.FromU64U32.from «def»)
-    rendering.number out1 i
-  | wire.SemanticNode.Quotation nodes =>
-    let out1 ← alloc.string.String.push_str out (toStr ".block ")
-    let s := alloc.vec.Vec.deref nodes
-    rendering.subject.body out1 s
-
-/-- [noble_contracts::rendering::subject::resolved]: loop body 0:
-    Source: 'crates/noble-contracts/src/rendering/subject.rs', lines 27:4-34:5 -/
-@[rust_loop_body]
-def rendering.subject.resolved_loop.body
-  (subject : wire.SemanticSubject) (out : String) (index1 : Std.Usize) :
-  Result (ControlFlow (String × Std.Usize) (String × (alloc.vec.Vec
-    Std.U32)))
-  := do
-  let i := alloc.vec.Vec.len subject.nodes
-  if index1 < i
-  then
-    let out1 ← alloc.string.String.push_str out (toStr "def node_")
-    let i1 ← lift (UScalar.cast .U64 index1)
-    let out2 ← rendering.number out1 i1
-    let out3 ← alloc.string.String.push_str out2 (toStr " : Op := ")
-    let sn ←
-      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-        wire.SemanticNode) subject.nodes index1
-    let out4 ← rendering.subject.node out3 sn
-    let out5 ← alloc.string.String.push out4 '
-'
-    let index2 ← index1 + 1#usize
-    ok (cont (out5, index2))
-  else ok (done (out, subject.body))
-
-/-- [noble_contracts::rendering::subject::resolved]: loop 0:
-    Source: 'crates/noble-contracts/src/rendering/subject.rs', lines 27:4-34:5 -/
-@[rust_loop]
-def rendering.subject.resolved_loop
-  (out : String) (subject : wire.SemanticSubject) (index1 : Std.Usize) :
-  Result (String × (alloc.vec.Vec Std.U32))
-  := do
-  loop
-    (fun (out1, index2) => rendering.subject.resolved_loop.body subject out1
-      index2)
-    (out, index1)
-
-/-- [noble_contracts::rendering::subject::resolved]:
-    Source: 'crates/noble-contracts/src/rendering/subject.rs', lines 25:0-38:1 -/
-def rendering.subject.resolved
-  (out : String) (subject : wire.SemanticSubject) : Result String := do
-  let (out1, v) ← rendering.subject.resolved_loop out subject 0#usize
-  let out2 ←
-    alloc.string.String.push_str out1 (toStr "def program : List Op := ")
-  let s := alloc.vec.Vec.deref v
-  let out3 ← rendering.subject.body out2 s
-  alloc.string.String.push_str out3 (toStr "\n\n")
-
-/-- [noble_contracts::rendering::subject::emit]:
-    Source: 'crates/noble-contracts/src/rendering/subject.rs', lines 7:0-19:1 -/
-def rendering.subject.emit
-  (out : String) (candidate : noble_kernel.untrusted.Candidate) :
-  Result String
-  := do
-  let r ← wire.lower_subject candidate
-  match r with
-  | core.result.Result.Ok subject => rendering.subject.resolved out subject
-  | core.result.Result.Err _ =>
-    let out1 ←
-      alloc.string.String.push_str out (toStr "def program : List Op := ")
-    let out2 ←
-      rendering.rejected out1 (toStr "unsupported semantic projection")
-    alloc.string.String.push out2 '
-'
-
-/-- [noble_contracts::rendering::export_lean]:
-    Source: 'crates/noble-contracts/src/rendering/mod.rs', lines 14:0-33:1
-    Visibility: public -/
-def rendering.export_lean (prepared : Prepared) : Result String := do
-  let out ← alloc.string.String.with_capacity 4096#usize
-  let out1 ←
-    alloc.string.String.push_str out (toStr
-      "import NobleContracts\nimport NobleContracts.Expression\n\n")
-  let out2 ←
-    alloc.string.String.push_str out1 (toStr
-      "open NobleContracts\nnamespace MC1Obligation\n\n")
-  let out3 ←
-    alloc.string.String.push_str out2 (toStr
-      "def irRevision : Nat := 1\ndef semanticRevision : Nat := ")
-  let c ← Prepared.impl.candidate prepared
-  let i ← lift (core.convert.num.FromU64U32.from c.revision)
-  let out4 ← rendering.number out3 i
-  let out5 ← alloc.string.String.push out4 '
-'
-  let out6 ← rendering.subject.emit out5 c
-  let s ← Prepared.impl.inputs prepared
-  let out7 ← rendering.types.named_stack out6 (toStr "inputTypes") s
-  let s1 ← Prepared.impl.outputs prepared
-  let out8 ← rendering.types.named_stack out7 (toStr "outputTypes") s1
-  let s2 ← Prepared.impl.params prepared
-  let out9 ← rendering.types.named_stack out8 (toStr "paramTypes") s2
-  let out10 ← rendering.expression.emit out9 prepared
-  let out11 ←
-    alloc.string.String.push_str out10 (toStr
-      "def precondition : Term := expression_")
-  let i1 ← Prepared.impl.requires prepared
-  let i2 ← lift (core.convert.num.FromU64U32.from i1)
-  let out12 ← rendering.number out11 i2
-  let out13 ←
-    alloc.string.String.push_str out12 (toStr
-      "\ndef postcondition : Term := expression_")
-  let i3 ← Prepared.impl.ensures prepared
-  let i4 ← lift (core.convert.num.FromU64U32.from i3)
-  let out14 ← rendering.number out13 i4
-  let out15 ←
-    alloc.string.String.push_str out14 (toStr
-      "\ndef claim : Prop := exportedClaim program inputTypes outputTypes paramTypes\n")
-  alloc.string.String.push_str out15 (toStr
-    "  (Holds precondition) (Holds postcondition)\n\nend MC1Obligation\n")
-
 /-- [noble_contracts::source::emission::contracts::patterns::{noble_contracts::source::emission::contracts::patterns::Traversal}::take]:
-    Source: 'crates/noble-contracts/src/source/emission/contracts/patterns.rs', lines 228:4-236:5 -/
+    Source: 'crates/noble-contracts/src/source/emission/contracts/patterns.rs', lines 231:4-239:5 -/
 def source.emission.contracts.patterns.Traversal.take
   (self : source.emission.contracts.patterns.Traversal) (span : Span) :
   Result ((core.result.Result noble_kernel.shapes.Pattern Diagnostic) ×
@@ -17221,6 +27514,15 @@ def source.preflight.paths.child
     | noble_kernel.types.Ty.SyntaxType =>
       let d ← internal span
       ok (core.result.Result.Err d)
+    | noble_kernel.types.Ty.ContractType =>
+      let d ← internal span
+      ok (core.result.Result.Err d)
+    | noble_kernel.types.Ty.EvidenceType =>
+      let d ← internal span
+      ok (core.result.Result.Err d)
+    | noble_kernel.types.Ty.CertifiedType =>
+      let d ← internal span
+      ok (core.result.Result.Err d)
     | noble_kernel.types.Ty.PairType left _ => ok (core.result.Result.Ok left)
     | noble_kernel.types.Ty.SumType left _ => ok (core.result.Result.Ok left)
     | noble_kernel.types.Ty.ListType _ =>
@@ -17247,6 +27549,15 @@ def source.preflight.paths.child
       let d ← internal span
       ok (core.result.Result.Err d)
     | noble_kernel.types.Ty.SyntaxType =>
+      let d ← internal span
+      ok (core.result.Result.Err d)
+    | noble_kernel.types.Ty.ContractType =>
+      let d ← internal span
+      ok (core.result.Result.Err d)
+    | noble_kernel.types.Ty.EvidenceType =>
+      let d ← internal span
+      ok (core.result.Result.Err d)
+    | noble_kernel.types.Ty.CertifiedType =>
       let d ← internal span
       ok (core.result.Result.Err d)
     | noble_kernel.types.Ty.PairType _ right =>
@@ -17278,6 +27589,15 @@ def source.preflight.paths.child
     | noble_kernel.types.Ty.SyntaxType =>
       let d ← internal span
       ok (core.result.Result.Err d)
+    | noble_kernel.types.Ty.ContractType =>
+      let d ← internal span
+      ok (core.result.Result.Err d)
+    | noble_kernel.types.Ty.EvidenceType =>
+      let d ← internal span
+      ok (core.result.Result.Err d)
+    | noble_kernel.types.Ty.CertifiedType =>
+      let d ← internal span
+      ok (core.result.Result.Err d)
     | noble_kernel.types.Ty.PairType _ _ =>
       let d ← internal span
       ok (core.result.Result.Err d)
@@ -17306,6 +27626,15 @@ def source.preflight.paths.child
       let d ← internal span
       ok (core.result.Result.Err d)
     | noble_kernel.types.Ty.SyntaxType =>
+      let d ← internal span
+      ok (core.result.Result.Err d)
+    | noble_kernel.types.Ty.ContractType =>
+      let d ← internal span
+      ok (core.result.Result.Err d)
+    | noble_kernel.types.Ty.EvidenceType =>
+      let d ← internal span
+      ok (core.result.Result.Err d)
+    | noble_kernel.types.Ty.CertifiedType =>
       let d ← internal span
       ok (core.result.Result.Err d)
     | noble_kernel.types.Ty.PairType _ _ =>
@@ -17344,6 +27673,15 @@ def source.preflight.paths.child
       let d ← internal span
       ok (core.result.Result.Err d)
     | noble_kernel.types.Ty.SyntaxType =>
+      let d ← internal span
+      ok (core.result.Result.Err d)
+    | noble_kernel.types.Ty.ContractType =>
+      let d ← internal span
+      ok (core.result.Result.Err d)
+    | noble_kernel.types.Ty.EvidenceType =>
+      let d ← internal span
+      ok (core.result.Result.Err d)
+    | noble_kernel.types.Ty.CertifiedType =>
       let d ← internal span
       ok (core.result.Result.Err d)
     | noble_kernel.types.Ty.PairType _ _ =>
@@ -17476,7 +27814,7 @@ def source.emission.contracts.effect_slots
   | some problem => ok (core.result.Result.Err problem, meter1)
 
 /-- [noble_contracts::source::emission::contracts::patterns::{noble_contracts::source::emission::contracts::patterns::Traversal}::program]:
-    Source: 'crates/noble-contracts/src/source/emission/contracts/patterns.rs', lines 194:4-222:5 -/
+    Source: 'crates/noble-contracts/src/source/emission/contracts/patterns.rs', lines 197:4-225:5 -/
 def source.emission.contracts.patterns.Traversal.program
   (self : source.emission.contracts.patterns.Traversal)
   (root : noble_kernel.types.Ty) (depth : Std.Usize) (span : Span)
@@ -17504,6 +27842,15 @@ def source.emission.contracts.patterns.Traversal.program
       let d ← internal span
       ok (core.result.Result.Err d, { self with path := v }, meter)
     | noble_kernel.types.Ty.SyntaxType =>
+      let d ← internal span
+      ok (core.result.Result.Err d, { self with path := v }, meter)
+    | noble_kernel.types.Ty.ContractType =>
+      let d ← internal span
+      ok (core.result.Result.Err d, { self with path := v }, meter)
+    | noble_kernel.types.Ty.EvidenceType =>
+      let d ← internal span
+      ok (core.result.Result.Err d, { self with path := v }, meter)
+    | noble_kernel.types.Ty.CertifiedType =>
       let d ← internal span
       ok (core.result.Result.Err d, { self with path := v }, meter)
     | noble_kernel.types.Ty.PairType _ _ =>
@@ -17552,7 +27899,7 @@ def source.emission.contracts.patterns.Traversal.program
     ok (core.result.Result.Err failure, { self with path := v }, meter)
 
 /-- [noble_contracts::source::emission::contracts::patterns::{noble_contracts::source::emission::contracts::patterns::Traversal}::finish]:
-    Source: 'crates/noble-contracts/src/source/emission/contracts/patterns.rs', lines 155:4-188:5 -/
+    Source: 'crates/noble-contracts/src/source/emission/contracts/patterns.rs', lines 158:4-191:5 -/
 def source.emission.contracts.patterns.Traversal.finish
   (self : source.emission.contracts.patterns.Traversal)
   (step : source.emission.contracts.patterns.Step)
@@ -17603,7 +27950,7 @@ def source.emission.contracts.patterns.Traversal.finish
       meter
 
 /-- [noble_contracts::source::emission::contracts::patterns::{noble_contracts::source::emission::contracts::patterns::Traversal}::schedule]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/emission/contracts/patterns.rs', lines 144:8-152:9 -/
+    Source: 'crates/noble-contracts/src/source/emission/contracts/patterns.rs', lines 147:8-155:9 -/
 @[rust_loop_body]
 def source.emission.contracts.patterns.Traversal.schedule_loop.body
   (is_output : Bool) (depth : Std.Usize)
@@ -17626,7 +27973,7 @@ def source.emission.contracts.patterns.Traversal.schedule_loop.body
   else ok (done v)
 
 /-- [noble_contracts::source::emission::contracts::patterns::{noble_contracts::source::emission::contracts::patterns::Traversal}::schedule]: loop 0:
-    Source: 'crates/noble-contracts/src/source/emission/contracts/patterns.rs', lines 144:8-152:9 -/
+    Source: 'crates/noble-contracts/src/source/emission/contracts/patterns.rs', lines 147:8-155:9 -/
 @[rust_loop]
 def source.emission.contracts.patterns.Traversal.schedule_loop
   (v : alloc.vec.Vec source.emission.contracts.patterns.Step)
@@ -17640,7 +27987,7 @@ def source.emission.contracts.patterns.Traversal.schedule_loop
     (v, «at»)
 
 /-- [noble_contracts::source::emission::contracts::patterns::{noble_contracts::source::emission::contracts::patterns::Traversal}::schedule]:
-    Source: 'crates/noble-contracts/src/source/emission/contracts/patterns.rs', lines 140:4-153:5 -/
+    Source: 'crates/noble-contracts/src/source/emission/contracts/patterns.rs', lines 143:4-156:5 -/
 def source.emission.contracts.patterns.Traversal.schedule
   (self : source.emission.contracts.patterns.Traversal) (count : Std.Usize)
   (is_output : Bool) :
@@ -17654,7 +28001,7 @@ def source.emission.contracts.patterns.Traversal.schedule
   ok { self with pending := v1 }
 
 /-- [noble_contracts::source::emission::contracts::patterns::{noble_contracts::source::emission::contracts::patterns::Traversal}::visit]:
-    Source: 'crates/noble-contracts/src/source/emission/contracts/patterns.rs', lines 83:4-138:5 -/
+    Source: 'crates/noble-contracts/src/source/emission/contracts/patterns.rs', lines 83:4-141:5 -/
 def source.emission.contracts.patterns.Traversal.visit
   (self : source.emission.contracts.patterns.Traversal)
   (ty : noble_kernel.types.Ty) (depth : Std.Usize) (span : Span) :
@@ -17678,6 +28025,15 @@ def source.emission.contracts.patterns.Traversal.visit
   | noble_kernel.types.Ty.SyntaxType =>
     ok (core.result.Result.Ok (some noble_kernel.shapes.Pattern.SyntaxPattern),
       self)
+  | noble_kernel.types.Ty.ContractType =>
+    ok (core.result.Result.Ok (some
+      noble_kernel.shapes.Pattern.ContractPattern), self)
+  | noble_kernel.types.Ty.EvidenceType =>
+    ok (core.result.Result.Ok (some
+      noble_kernel.shapes.Pattern.EvidencePattern), self)
+  | noble_kernel.types.Ty.CertifiedType =>
+    ok (core.result.Result.Ok (some
+      noble_kernel.shapes.Pattern.CertifiedPattern), self)
   | noble_kernel.types.Ty.PairType _ _ =>
     let v ← alloc.vec.Vec.reserve Global self.pending 3#usize
     let v1 ←
@@ -18284,14 +28640,14 @@ def source.emission.materialization.body
   | some problem => ok (core.result.Result.Err problem, meter1)
 
 /-- [noble_contracts::source::emission::{impl core::clone::Clone for noble_contracts::source::emission::Admission<'a>}::clone]:
-    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 4:9-4:14
+    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 9:9-9:14
     Visibility: public -/
 def source.emission.Admission.Insts.CoreCloneClone.clone
   (self : source.emission.Admission) : Result source.emission.Admission := do
   ok self
 
 /-- Trait implementation: [noble_contracts::source::emission::{impl core::clone::Clone for noble_contracts::source::emission::Admission<'a>}]
-    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 4:9-4:14 -/
+    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 9:9-9:14 -/
 @[reducible]
 def source.emission.Admission.Insts.CoreCloneClone : core.clone.Clone
   source.emission.Admission := {
@@ -18299,7 +28655,7 @@ def source.emission.Admission.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [noble_contracts::source::emission::{impl core::marker::Copy for noble_contracts::source::emission::Admission<'a>}]
-    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 4:16-4:20 -/
+    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 9:16-9:20 -/
 @[reducible]
 def source.emission.Admission.Insts.CoreMarkerCopy : core.marker.Copy
   source.emission.Admission := {
@@ -18313,7 +28669,7 @@ def source.Error.at
   ok { stage, diagnostic }
 
 /-- [noble_contracts::source::emission::{noble_contracts::source::emission::Assembly}::install]:
-    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 31:4-58:5 -/
+    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 36:4-63:5 -/
 def source.emission.Assembly.install
   (self : source.emission.Assembly) (checked : source.emission.CheckedBody)
   (position : Std.Usize) (downstream_work : Std.U32) :
@@ -18354,7 +28710,7 @@ def source.emission.Assembly.install
       ok (core.result.Result.Err e, self)
 
 /-- [noble_contracts::source::emission::checked]:
-    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 237:0-284:1 -/
+    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 242:0-289:1 -/
 def source.emission.checked
   (draft : source.inference.Body)
   (expected : Option noble_kernel.untrusted.Expected) (arena : inference.Arena)
@@ -18409,7 +28765,7 @@ def source.emission.checked
       ok (core.result.Result.Err e, meter1)
 
 /-- [noble_contracts::source::emission::allowance::{impl core::ops::function::FnOnce<(u32,), core::option::Option<u32>> for noble_contracts::source::emission::allowance::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 217:18-217:55 -/
+    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 222:18-222:55 -/
 def
   source.emission.allowance.closure.Insts.CoreOpsFunctionFnOnceTupleU32OptionU32.call_once
   (c : source.emission.allowance.closure) (tupled_args : Std.U32) :
@@ -18418,7 +28774,7 @@ def
   ok (U32.checked_div c.work tupled_args)
 
 /-- Trait implementation: [noble_contracts::source::emission::allowance::{impl core::ops::function::FnOnce<(u32,), core::option::Option<u32>> for noble_contracts::source::emission::allowance::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 217:18-217:55 -/
+    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 222:18-222:55 -/
 @[reducible]
 def
   source.emission.allowance.closure.Insts.CoreOpsFunctionFnOnceTupleU32OptionU32
@@ -18429,7 +28785,7 @@ def
 }
 
 /-- [noble_contracts::source::emission::allowance]:
-    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 207:0-231:1 -/
+    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 212:0-236:1 -/
 def source.emission.allowance
   (body_count : Std.Usize) (span : Span) (meter : Meter) :
   Result (core.result.Result noble_kernel.untrusted.Limits Diagnostic)
@@ -18459,7 +28815,7 @@ def source.emission.allowance
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_contracts::source::emission::assemble]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 190:4-200:5 -/
+    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 195:4-205:5 -/
 @[rust_loop_body]
 def source.emission.assemble_loop.body
   (environment : noble_kernel.contracts.Env) (input_bytes : Std.U32)
@@ -18499,7 +28855,7 @@ def source.emission.assemble_loop.body
       ok (done (meter2, assembly1, some problem))
 
 /-- [noble_contracts::source::emission::assemble]: loop 0:
-    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 190:4-200:5 -/
+    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 195:4-205:5 -/
 @[rust_loop]
 def source.emission.assemble_loop
   (drafts : alloc.vec.into_iter.IntoIter source.inference.Body)
@@ -18517,7 +28873,7 @@ def source.emission.assemble_loop
     (drafts, meter, assembly, expected, position)
 
 /-- [noble_contracts::source::emission::assemble]:
-    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 165:0-205:1 -/
+    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 170:0-210:1 -/
 def source.emission.assemble
   (state : source.inference.State)
   (expected : alloc.vec.Vec noble_kernel.untrusted.Expected)
@@ -18545,7 +28901,7 @@ def source.emission.assemble
     ok (core.result.Result.Err e, meter)
 
 /-- [noble_contracts::source::emission::install_interface]:
-    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 135:0-155:1 -/
+    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 140:0-160:1 -/
 def source.emission.install_interface
   (body : source.inference.Body) (arena : inference.Arena)
   (environment : noble_kernel.contracts.Env) (meter : Meter) :
@@ -18584,7 +28940,7 @@ def source.emission.install_interface
   | core.result.Result.Err _ => ok (r, environment, meter1)
 
 /-- [noble_contracts::source::emission::interfaces]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 119:4-128:5 -/
+    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 124:4-133:5 -/
 @[rust_loop_body]
 def source.emission.interfaces_loop.body
   (a : inference.Arena) (v : alloc.vec.Vec source.inference.Body)
@@ -18614,7 +28970,7 @@ def source.emission.interfaces_loop.body
   else ok (done (environment, meter, expected, none))
 
 /-- [noble_contracts::source::emission::interfaces]: loop 0:
-    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 119:4-128:5 -/
+    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 124:4-133:5 -/
 @[rust_loop]
 def source.emission.interfaces_loop
   (a : inference.Arena) (v : alloc.vec.Vec source.inference.Body)
@@ -18631,7 +28987,7 @@ def source.emission.interfaces_loop
     (environment, meter, expected, «at»)
 
 /-- [noble_contracts::source::emission::interfaces]:
-    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 111:0-133:1 -/
+    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 116:0-138:1 -/
 def source.emission.interfaces
   (state : source.inference.State) (environment : noble_kernel.contracts.Env)
   (meter : Meter) :
@@ -18648,7 +29004,7 @@ def source.emission.interfaces
   | some problem => ok (core.result.Result.Err problem, environment1, meter1)
 
 /-- [noble_contracts::source::emission::emit]:
-    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 65:0-109:1 -/
+    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 70:0-114:1 -/
 def source.emission.emit
   (state : source.inference.State) (environment : noble_kernel.contracts.Env)
   (input_bytes : Std.Usize) (meter : Meter) :
@@ -18702,7 +29058,7 @@ def source.emission.emit
     ok (core.result.Result.Err e, meter1)
 
 /-- [noble_contracts::source::inference::add]:
-    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 223:0-237:1 -/
+    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 228:0-242:1 -/
 def source.inference.add
   (body : Std.Usize) (draft : source.inference.Draft)
   (state : source.inference.State) (meter : Meter) :
@@ -18980,14 +29336,14 @@ def source.inference.completion.complete
           { state with bodies := v } meter
 
 /-- [noble_contracts::source::inference::{impl core::clone::Clone for noble_contracts::source::inference::Origin}::clone]:
-    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 36:9-36:14
+    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 41:9-41:14
     Visibility: public -/
 def source.inference.Origin.Insts.CoreCloneClone.clone
   (self : source.inference.Origin) : Result source.inference.Origin := do
   ok self
 
 /-- Trait implementation: [noble_contracts::source::inference::{impl core::clone::Clone for noble_contracts::source::inference::Origin}]
-    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 36:9-36:14 -/
+    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 41:9-41:14 -/
 @[reducible]
 def source.inference.Origin.Insts.CoreCloneClone : core.clone.Clone
   source.inference.Origin := {
@@ -18995,7 +29351,7 @@ def source.inference.Origin.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [noble_contracts::source::inference::{impl core::marker::Copy for noble_contracts::source::inference::Origin}]
-    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 36:16-36:20 -/
+    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 41:16-41:20 -/
 @[reducible]
 def source.inference.Origin.Insts.CoreMarkerCopy : core.marker.Copy
   source.inference.Origin := {
@@ -19003,14 +29359,14 @@ def source.inference.Origin.Insts.CoreMarkerCopy : core.marker.Copy
 }
 
 /-- [noble_contracts::source::inference::{impl core::clone::Clone for noble_contracts::source::inference::TreeKey}::clone]:
-    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 43:9-43:14
+    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 48:9-48:14
     Visibility: public -/
 def source.inference.TreeKey.Insts.CoreCloneClone.clone
   (self : source.inference.TreeKey) : Result source.inference.TreeKey := do
   ok self
 
 /-- Trait implementation: [noble_contracts::source::inference::{impl core::clone::Clone for noble_contracts::source::inference::TreeKey}]
-    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 43:9-43:14 -/
+    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 48:9-48:14 -/
 @[reducible]
 def source.inference.TreeKey.Insts.CoreCloneClone : core.clone.Clone
   source.inference.TreeKey := {
@@ -19018,7 +29374,7 @@ def source.inference.TreeKey.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [noble_contracts::source::inference::{impl core::marker::Copy for noble_contracts::source::inference::TreeKey}]
-    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 43:16-43:20 -/
+    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 48:16-48:20 -/
 @[reducible]
 def source.inference.TreeKey.Insts.CoreMarkerCopy : core.marker.Copy
   source.inference.TreeKey := {
@@ -19026,14 +29382,14 @@ def source.inference.TreeKey.Insts.CoreMarkerCopy : core.marker.Copy
 }
 
 /-- [noble_contracts::source::inference::{impl core::clone::Clone for noble_contracts::source::inference::BodyKey}::clone]:
-    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 49:9-49:14
+    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 54:9-54:14
     Visibility: public -/
 def source.inference.BodyKey.Insts.CoreCloneClone.clone
   (self : source.inference.BodyKey) : Result source.inference.BodyKey := do
   ok self
 
 /-- Trait implementation: [noble_contracts::source::inference::{impl core::clone::Clone for noble_contracts::source::inference::BodyKey}]
-    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 49:9-49:14 -/
+    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 54:9-54:14 -/
 @[reducible]
 def source.inference.BodyKey.Insts.CoreCloneClone : core.clone.Clone
   source.inference.BodyKey := {
@@ -19041,7 +29397,7 @@ def source.inference.BodyKey.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [noble_contracts::source::inference::{impl core::marker::Copy for noble_contracts::source::inference::BodyKey}]
-    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 49:16-49:20 -/
+    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 54:16-54:20 -/
 @[reducible]
 def source.inference.BodyKey.Insts.CoreMarkerCopy : core.marker.Copy
   source.inference.BodyKey := {
@@ -19049,7 +29405,7 @@ def source.inference.BodyKey.Insts.CoreMarkerCopy : core.marker.Copy
 }
 
 /-- [noble_contracts::source::inference::{noble_contracts::source::inference::Scope<'_0>}::tree]:
-    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 86:4-104:5 -/
+    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 91:4-109:5 -/
 def source.inference.Scope.tree
   (self : source.inference.Scope) (tree_key : source.inference.TreeKey)
   (span : Span) :
@@ -19091,7 +29447,7 @@ def source.Tree.node
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_contracts::source::inference::items]:
-    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 112:0-123:1 -/
+    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 117:0-128:1 -/
 def source.inference.items
   (tree : source.Tree) (body_key : source.inference.BodyKey) :
   Result (core.result.Result (Slice Std.U32) Diagnostic)
@@ -19123,12 +29479,12 @@ def source.inference.items
     | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_contracts::source::exhausted]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 184:0-186:1 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 197:0-199:1 -/
 def source.exhausted (span : Span) (message : Str) : Result Diagnostic := do
   Diagnostic.new DiagnosticKind.Exhausted span message
 
 /-- [noble_contracts::source::inference::validation::{noble_contracts::source::inference::validation::Traversal}::value_group]:
-    Source: 'crates/noble-contracts/src/source/inference/validation.rs', lines 215:4-253:5 -/
+    Source: 'crates/noble-contracts/src/source/inference/validation.rs', lines 218:4-256:5 -/
 def source.inference.validation.Traversal.value_group
   (self : source.inference.validation.Traversal) (term : inference.Term)
   (group : Option Std.Usize) (span : Span) (meter : Meter) :
@@ -19147,6 +29503,9 @@ def source.inference.validation.Traversal.value_group
     | inference.Term.I64Term => ok false
     | inference.Term.TextTerm => ok false
     | inference.Term.SyntaxTerm => ok false
+    | inference.Term.ContractTerm => ok false
+    | inference.Term.EvidenceTerm => ok false
+    | inference.Term.CertifiedTerm => ok false
     | inference.Term.PairTerm _ _ => ok false
     | inference.Term.SumTerm _ _ => ok false
     | inference.Term.ListTerm _ => ok false
@@ -19218,7 +29577,7 @@ def source.inference.validation.Traversal.value_group
           ok (core.result.Result.Ok group, { self with sizes := v }, meter)
 
 /-- [noble_contracts::source::inference::validation::{noble_contracts::source::inference::validation::Traversal}::visit]:
-    Source: 'crates/noble-contracts/src/source/inference/validation.rs', lines 138:4-209:5 -/
+    Source: 'crates/noble-contracts/src/source/inference/validation.rs', lines 138:4-212:5 -/
 def source.inference.validation.Traversal.visit
   (self : source.inference.validation.Traversal) (arena : inference.Arena)
   (visit : source.inference.validation.Visit) (span : Span) (meter : Meter) :
@@ -19257,6 +29616,12 @@ def source.inference.validation.Traversal.visit
             | inference.Term.TextTerm =>
               ok (core.result.Result.Ok (), self1, meter4)
             | inference.Term.SyntaxTerm =>
+              ok (core.result.Result.Ok (), self1, meter4)
+            | inference.Term.ContractTerm =>
+              ok (core.result.Result.Ok (), self1, meter4)
+            | inference.Term.EvidenceTerm =>
+              ok (core.result.Result.Ok (), self1, meter4)
+            | inference.Term.CertifiedTerm =>
               ok (core.result.Result.Ok (), self1, meter4)
             | inference.Term.PairTerm a b =>
               let v ← alloc.vec.Vec.reserve Global self1.pending 2#usize
@@ -20083,7 +30448,7 @@ def source.inference.traversal.visit
   | core.result.Result.Err _ => ok (r, parents, state, meter1)
 
 /-- [noble_contracts::source::inference::initial]:
-    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 179:0-217:1 -/
+    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 184:0-222:1 -/
 def source.inference.initial
   (tree : source.Tree) (has_test_hosts : Bool) (mode : source.inference.Mode)
   (inputs : Slice noble_kernel.types.Ty) (meter : Meter) :
@@ -20170,7 +30535,7 @@ def source.inference.initial
       ok (core.result.Result.Err failure, meter1)
 
 /-- [noble_contracts::source::inference::infer]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 157:4-162:5 -/
+    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 162:4-167:5 -/
 @[rust_loop_body]
 def source.inference.infer_loop.body
   (tree : source.Tree) (v : alloc.vec.Vec source.Named)
@@ -20200,7 +30565,7 @@ def source.inference.infer_loop.body
       ok (done (meter1, state1, some problem))
 
 /-- [noble_contracts::source::inference::infer]: loop 0:
-    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 157:4-162:5 -/
+    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 162:4-167:5 -/
 @[rust_loop]
 def source.inference.infer_loop
   (frames : alloc.vec.Vec source.inference.Frame) (tree : source.Tree)
@@ -20215,7 +30580,7 @@ def source.inference.infer_loop
     (frames, meter, state)
 
 /-- [noble_contracts::source::inference::infer]:
-    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 129:0-169:1 -/
+    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 134:0-174:1 -/
 def source.inference.infer
   (scope : source.inference.Scope) (mode : source.inference.Mode)
   (inputs : Slice noble_kernel.types.Ty) (meter : Meter) :
@@ -20278,7 +30643,7 @@ def source.inference.infer
   | core.result.Result.Err _ => ok (r, meter1)
 
 /-- [noble_contracts::source::lexer::{noble_contracts::source::lexer::Scanner<'a>}::byte]:
-    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 164:4-176:5 -/
+    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 169:4-181:5 -/
 def source.lexer.Scanner.byte
   (self : source.lexer.Scanner) (meter : Meter) :
   Result ((core.result.Result Std.U8 Diagnostic) × source.lexer.Scanner ×
@@ -20302,7 +30667,7 @@ def source.lexer.Scanner.byte
     ok (core.result.Result.Err failure, self, meter1)
 
 /-- [noble_contracts::source::lexer::{noble_contracts::source::lexer::Scanner<'a>}::span]:
-    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 153:4-158:5 -/
+    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 158:4-163:5 -/
 def source.lexer.Scanner.span
   (self : source.lexer.Scanner) (start : Std.Usize) :
   Result (core.result.Result Span Diagnostic)
@@ -21007,7 +31372,7 @@ def source.lexer.tokens.classify
         | some problem => ok (core.result.Result.Err problem, meter1)
 
 /-- [noble_contracts::source::lexer::{noble_contracts::source::lexer::Scanner<'a>}::new]:
-    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 25:4-48:5
+    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 30:4-53:5
     Visibility: public -/
 def source.lexer.Scanner.new
   (source_bytes : Slice Std.U8) (meter : Meter) :
@@ -21049,7 +31414,7 @@ def source.lexer.Scanner.new
     ok (core.result.Result.Err failure, meter)
 
 /-- [noble_contracts::source::lexer::whitespace]:
-    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 179:0-181:1 -/
+    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 184:0-186:1 -/
 def source.lexer.whitespace (byte : Std.U8) : Result Bool := do
   match byte with
   | 32#uscalar => ok true
@@ -21059,7 +31424,7 @@ def source.lexer.whitespace (byte : Std.U8) : Result Bool := do
   | _ => ok false
 
 /-- [noble_contracts::source::lexer::{noble_contracts::source::lexer::Scanner<'a>}::word]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 132:18-141:9 -/
+    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 137:18-146:9 -/
 @[rust_loop_body]
 def source.lexer.Scanner.word_loop.body
   (s : Slice Std.U8) (s1 : Span) (start : Std.Usize) (meter : Meter) :
@@ -21093,7 +31458,7 @@ def source.lexer.Scanner.word_loop.body
     | core.result.Result.Err problem => ok (done (start, meter1, some problem))
 
 /-- [noble_contracts::source::lexer::{noble_contracts::source::lexer::Scanner<'a>}::word]: loop 0:
-    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 132:18-141:9 -/
+    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 137:18-146:9 -/
 @[rust_loop]
 def source.lexer.Scanner.word_loop
   (s : Slice Std.U8) (start : Std.Usize) (s1 : Span) (meter : Meter) :
@@ -21105,7 +31470,7 @@ def source.lexer.Scanner.word_loop
     (start, meter)
 
 /-- [noble_contracts::source::lexer::{noble_contracts::source::lexer::Scanner<'a>}::word]:
-    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 129:4-151:5 -/
+    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 134:4-156:5 -/
 def source.lexer.Scanner.word
   (self : source.lexer.Scanner) (meter : Meter) :
   Result ((core.result.Result source.lexer.TokenKind Diagnostic) ×
@@ -21134,7 +31499,7 @@ def source.lexer.Scanner.word
     ok (core.result.Result.Err problem, { self with «at» := i }, meter1)
 
 /-- [noble_contracts::source::lexer::{noble_contracts::source::lexer::Scanner<'a>}::comment]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 113:8-122:9 -/
+    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 118:8-127:9 -/
 @[rust_loop_body]
 def source.lexer.Scanner.comment_loop.body
   (s : Slice Std.U8) (s1 : Span) (i : Std.Usize) (meter : Meter) :
@@ -21160,7 +31525,7 @@ def source.lexer.Scanner.comment_loop.body
     | core.result.Result.Err problem => ok (done (i, meter1, some problem))
 
 /-- [noble_contracts::source::lexer::{noble_contracts::source::lexer::Scanner<'a>}::comment]: loop 0:
-    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 113:8-122:9 -/
+    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 118:8-127:9 -/
 @[rust_loop]
 def source.lexer.Scanner.comment_loop
   (s : Slice Std.U8) (i : Std.Usize) (s1 : Span) (meter : Meter) :
@@ -21171,7 +31536,7 @@ def source.lexer.Scanner.comment_loop
     (i, meter)
 
 /-- [noble_contracts::source::lexer::{noble_contracts::source::lexer::Scanner<'a>}::comment]:
-    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 111:4-127:5 -/
+    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 116:4-132:5 -/
 def source.lexer.Scanner.comment
   (self : source.lexer.Scanner) (meter : Meter) :
   Result ((core.result.Result Unit Diagnostic) × source.lexer.Scanner ×
@@ -21185,7 +31550,7 @@ def source.lexer.Scanner.comment
     ok (core.result.Result.Err problem, { self with «at» := i }, meter1)
 
 /-- [noble_contracts::source::lexer::{noble_contracts::source::lexer::Scanner<'a>}::skip_step]:
-    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 98:4-109:5 -/
+    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 103:4-114:5 -/
 def source.lexer.Scanner.skip_step
   (self : source.lexer.Scanner) (byte : Std.U8) (meter : Meter) :
   Result ((core.result.Result Bool Diagnostic) × source.lexer.Scanner ×
@@ -21213,7 +31578,7 @@ def source.lexer.Scanner.skip_step
     ok (core.result.Result.Err failure, self, meter1)
 
 /-- [noble_contracts::source::lexer::{noble_contracts::source::lexer::Scanner<'a>}::skip]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 78:8-87:9 -/
+    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 83:8-92:9 -/
 @[rust_loop_body]
 def source.lexer.Scanner.skip_loop.body
   (self : source.lexer.Scanner) (meter : Meter) :
@@ -21236,7 +31601,7 @@ def source.lexer.Scanner.skip_loop.body
     | core.result.Result.Err problem => ok (done (self1, meter1, some problem))
 
 /-- [noble_contracts::source::lexer::{noble_contracts::source::lexer::Scanner<'a>}::skip]: loop 0:
-    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 78:8-87:9 -/
+    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 83:8-92:9 -/
 @[rust_loop]
 def source.lexer.Scanner.skip_loop
   (self : source.lexer.Scanner) (meter : Meter) :
@@ -21247,7 +31612,7 @@ def source.lexer.Scanner.skip_loop
     (self, meter)
 
 /-- [noble_contracts::source::lexer::{noble_contracts::source::lexer::Scanner<'a>}::skip]:
-    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 76:4-92:5 -/
+    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 81:4-97:5 -/
 def source.lexer.Scanner.skip
   (self : source.lexer.Scanner) (meter : Meter) :
   Result ((core.result.Result Unit Diagnostic) × source.lexer.Scanner ×
@@ -21259,7 +31624,7 @@ def source.lexer.Scanner.skip
   | some problem => ok (core.result.Result.Err problem, self1, meter1)
 
 /-- [noble_contracts::source::lexer::{noble_contracts::source::lexer::Scanner<'a>}::next]:
-    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 50:4-74:5
+    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 55:4-79:5
     Visibility: public -/
 def source.lexer.Scanner.next
   (self : source.lexer.Scanner) (meter : Meter) :
@@ -21338,7 +31703,7 @@ def source.lexer.Scanner.next
     ok (core.result.Result.Err failure, self1, meter1)
 
 /-- [noble_contracts::source::parsing::declaration_body]:
-    Source: 'crates/noble-contracts/src/source/parsing.rs', lines 140:0-170:1 -/
+    Source: 'crates/noble-contracts/src/source/parsing.rs', lines 145:0-175:1 -/
 def source.parsing.declaration_body
   (frame : source.parsing.Frame) (nodes : Slice source.Node) (span : Span) :
   Result ((core.result.Result (alloc.vec.Vec Std.U32) Diagnostic) × (Slice
@@ -21399,7 +31764,7 @@ def source.parsing.declaration_body
         ok (core.result.Result.Err failure, nodes)
 
 /-- [noble_contracts::source::parsing::opening]:
-    Source: 'crates/noble-contracts/src/source/parsing.rs', lines 87:0-133:1 -/
+    Source: 'crates/noble-contracts/src/source/parsing.rs', lines 92:0-138:1 -/
 def source.parsing.opening
   (lexer : source.lexer.Scanner) (span : Span) (meter : Meter) :
   Result ((core.result.Result ((Option String) × (Option source.lexer.Token))
@@ -21517,7 +31882,7 @@ def source.parsing.opening
     ok (core.result.Result.Err failure, lexer1, meter1)
 
 /-- [noble_contracts::source::parsing::append]:
-    Source: 'crates/noble-contracts/src/source/parsing.rs', lines 246:0-260:1 -/
+    Source: 'crates/noble-contracts/src/source/parsing.rs', lines 251:0-265:1 -/
 def source.parsing.append
   (node : source.Node) (state : source.parsing.State) (meter : Meter) :
   Result ((core.result.Result Unit Diagnostic) × source.parsing.State ×
@@ -21549,7 +31914,7 @@ def source.parsing.append
   | core.result.Result.Err _ => ok (r, state, meter1)
 
 /-- [noble_contracts::source::parsing::step]:
-    Source: 'crates/noble-contracts/src/source/parsing.rs', lines 176:0-240:1 -/
+    Source: 'crates/noble-contracts/src/source/parsing.rs', lines 181:0-245:1 -/
 def source.parsing.step
   (token : source.lexer.Token) (state : source.parsing.State) (meter : Meter) :
   Result ((core.result.Result Unit Diagnostic) × source.parsing.State ×
@@ -21616,7 +31981,7 @@ def source.parsing.step
   | core.result.Result.Err _ => ok (r, state, meter1)
 
 /-- [noble_contracts::source::parsing::advance]:
-    Source: 'crates/noble-contracts/src/source/parsing.rs', lines 73:0-81:1 -/
+    Source: 'crates/noble-contracts/src/source/parsing.rs', lines 78:0-86:1 -/
 def source.parsing.advance
   (token : source.lexer.Token) (state : source.parsing.State)
   (lexer : source.lexer.Scanner) (meter : Meter) :
@@ -21632,7 +31997,7 @@ def source.parsing.advance
     ok (core.result.Result.Err failure, state1, lexer, meter1)
 
 /-- [noble_contracts::source::parsing::parse]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/parsing.rs', lines 39:4-47:5 -/
+    Source: 'crates/noble-contracts/src/source/parsing.rs', lines 44:4-52:5 -/
 @[rust_loop_body]
 def source.parsing.parse_loop.body
   (next : Option source.lexer.Token) (meter : Meter)
@@ -21653,7 +32018,7 @@ def source.parsing.parse_loop.body
       ok (done (meter1, state1, some problem))
 
 /-- [noble_contracts::source::parsing::parse]: loop 0:
-    Source: 'crates/noble-contracts/src/source/parsing.rs', lines 39:4-47:5 -/
+    Source: 'crates/noble-contracts/src/source/parsing.rs', lines 44:4-52:5 -/
 @[rust_loop]
 def source.parsing.parse_loop
   (next : Option source.lexer.Token) (meter : Meter)
@@ -21666,7 +32031,7 @@ def source.parsing.parse_loop
     (next, meter, lexer, state)
 
 /-- [noble_contracts::source::parsing::parse]:
-    Source: 'crates/noble-contracts/src/source/parsing.rs', lines 15:0-71:1 -/
+    Source: 'crates/noble-contracts/src/source/parsing.rs', lines 20:0-76:1 -/
 def source.parsing.parse
   (source_bytes : Slice Std.U8) (meter : Meter) :
   Result ((core.result.Result (source.Tree × (Option String)) Diagnostic) ×
@@ -21749,7 +32114,7 @@ def source.parsing.parse
     ok (core.result.Result.Err failure, meter1)
 
 /-- [noble_contracts::source::preflight::host_effects]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 225:4-240:5 -/
+    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 236:4-251:5 -/
 @[rust_loop_body]
 def source.preflight.host_effects_loop.body
   (span : Span) (effects : Slice noble_kernel.types.EffId)
@@ -21784,7 +32149,7 @@ def source.preflight.host_effects_loop.body
   else ok (done (meter, none))
 
 /-- [noble_contracts::source::preflight::host_effects]: loop 0:
-    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 225:4-240:5 -/
+    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 236:4-251:5 -/
 @[rust_loop]
 def source.preflight.host_effects_loop
   (has_test_hosts : Bool) (span : Span) (meter : Meter)
@@ -21798,7 +32163,7 @@ def source.preflight.host_effects_loop
     (has_test_hosts, meter, «at»)
 
 /-- [noble_contracts::source::preflight::host_effects]:
-    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 216:0-245:1 -/
+    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 227:0-256:1 -/
 def source.preflight.host_effects
   (effects : noble_kernel.types.EffSet) (has_test_hosts : Bool) (span : Span)
   (meter : Meter) :
@@ -21813,7 +32178,7 @@ def source.preflight.host_effects
   | some problem => ok (core.result.Result.Err problem, meter1)
 
 /-- [noble_contracts::source::preflight::{noble_contracts::source::preflight::Traversal}::schedule]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 192:8-204:9 -/
+    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 203:8-215:9 -/
 @[rust_loop_body]
 def source.preflight.Traversal.schedule_loop.body
   (count : Std.Usize) (output : Bool) (depth : Std.U32) (span : Span)
@@ -21840,7 +32205,7 @@ def source.preflight.Traversal.schedule_loop.body
   else ok (done (v, meter, none))
 
 /-- [noble_contracts::source::preflight::{noble_contracts::source::preflight::Traversal}::schedule]: loop 0:
-    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 192:8-204:9 -/
+    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 203:8-215:9 -/
 @[rust_loop]
 def source.preflight.Traversal.schedule_loop
   (v : alloc.vec.Vec source.preflight.Visit) (count : Std.Usize)
@@ -21855,7 +32220,7 @@ def source.preflight.Traversal.schedule_loop
     (v, meter, «at»)
 
 /-- [noble_contracts::source::preflight::{noble_contracts::source::preflight::Traversal}::schedule]:
-    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 181:4-209:5 -/
+    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 192:4-220:5 -/
 def source.preflight.Traversal.schedule
   (self : source.preflight.Traversal) (count : Std.Usize) (output : Bool)
   (depth : Std.U32) (span : Span) (meter : Meter) :
@@ -21872,7 +32237,7 @@ def source.preflight.Traversal.schedule
     ok (core.result.Result.Err problem, { self with pending := v1 }, meter1)
 
 /-- [noble_contracts::source::preflight::{noble_contracts::source::preflight::Traversal}::expand]:
-    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 126:4-179:5 -/
+    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 134:4-190:5 -/
 def source.preflight.Traversal.expand
   (self : source.preflight.Traversal) (ty : noble_kernel.types.Ty)
   (depth : Std.U32) (has_test_hosts : Bool) (span : Span) (meter : Meter) :
@@ -21889,6 +32254,12 @@ def source.preflight.Traversal.expand
   | noble_kernel.types.Ty.TextType =>
     ok (core.result.Result.Ok (), self, meter)
   | noble_kernel.types.Ty.SyntaxType =>
+    ok (core.result.Result.Ok (), self, meter)
+  | noble_kernel.types.Ty.ContractType =>
+    ok (core.result.Result.Ok (), self, meter)
+  | noble_kernel.types.Ty.EvidenceType =>
+    ok (core.result.Result.Ok (), self, meter)
+  | noble_kernel.types.Ty.CertifiedType =>
     ok (core.result.Result.Ok (), self, meter)
   | noble_kernel.types.Ty.PairType _ _ =>
     let (r, meter1) ← metering.Meter.node meter span
@@ -21980,7 +32351,7 @@ def source.preflight.Traversal.expand
     ok (core.result.Result.Err d, self, meter)
 
 /-- [noble_contracts::source::preflight::{noble_contracts::source::preflight::Traversal}::visit]:
-    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 86:4-124:5 -/
+    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 91:4-132:5 -/
 def source.preflight.Traversal.visit
   (self : source.preflight.Traversal) (entry : source.preflight.Visit)
   (root : noble_kernel.types.Ty) (has_test_hosts : Bool) (span : Span)
@@ -22010,6 +32381,9 @@ def source.preflight.Traversal.visit
             | noble_kernel.types.Ty.I64Type => ok 0#usize
             | noble_kernel.types.Ty.TextType => ok 0#usize
             | noble_kernel.types.Ty.SyntaxType => ok 0#usize
+            | noble_kernel.types.Ty.ContractType => ok 0#usize
+            | noble_kernel.types.Ty.EvidenceType => ok 0#usize
+            | noble_kernel.types.Ty.CertifiedType => ok 0#usize
             | noble_kernel.types.Ty.PairType _ _ => ok 2#usize
             | noble_kernel.types.Ty.SumType _ _ => ok 2#usize
             | noble_kernel.types.Ty.ListType _ => ok 1#usize
@@ -22046,7 +32420,7 @@ def source.preflight.Traversal.visit
   | core.result.Result.Err _ => ok (r, self, meter1)
 
 /-- [noble_contracts::source::preflight::value]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 69:4-74:5 -/
+    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 74:4-79:5 -/
 @[rust_loop_body]
 def source.preflight.value_loop.body
   (input : noble_kernel.types.Ty) (has_test_hosts : Bool) (span : Span)
@@ -22066,7 +32440,7 @@ def source.preflight.value_loop.body
     | core.result.Result.Err problem => ok (done (meter1, some problem))
 
 /-- [noble_contracts::source::preflight::value]: loop 0:
-    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 69:4-74:5 -/
+    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 74:4-79:5 -/
 @[rust_loop]
 def source.preflight.value_loop
   (input : noble_kernel.types.Ty) (has_test_hosts : Bool) (span : Span)
@@ -22079,7 +32453,7 @@ def source.preflight.value_loop
     (meter, walk)
 
 /-- [noble_contracts::source::preflight::value]:
-    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 52:0-79:1 -/
+    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 57:0-84:1 -/
 def source.preflight.value
   (input : noble_kernel.types.Ty) (has_test_hosts : Bool) (span : Span)
   (meter : Meter) :
@@ -22106,7 +32480,7 @@ def source.preflight.value
   | core.result.Result.Err _ => ok (r, meter1)
 
 /-- [noble_contracts::source::preflight::check]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 14:4-20:5 -/
+    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 19:4-25:5 -/
 @[rust_loop_body]
 def source.preflight.check_loop.body
   (inputs : Slice noble_kernel.types.Ty) (has_test_hosts : Bool) (span : Span)
@@ -22126,7 +32500,7 @@ def source.preflight.check_loop.body
   else ok (done (meter, none))
 
 /-- [noble_contracts::source::preflight::check]: loop 0:
-    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 14:4-20:5 -/
+    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 19:4-25:5 -/
 @[rust_loop]
 def source.preflight.check_loop
   (inputs : Slice noble_kernel.types.Ty) (has_test_hosts : Bool) (span : Span)
@@ -22139,7 +32513,7 @@ def source.preflight.check_loop
     (meter, «at»)
 
 /-- [noble_contracts::source::preflight::check]:
-    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 3:0-25:1 -/
+    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 8:0-30:1 -/
 def source.preflight.check
   (inputs : Slice noble_kernel.types.Ty) (has_test_hosts : Bool) (span : Span)
   (meter : Meter) :
@@ -22164,14 +32538,14 @@ def source.preflight.check
     ok (core.result.Result.Err failure, meter)
 
 /-- [noble_contracts::source::preflight::{impl core::clone::Clone for noble_contracts::source::preflight::PathStep}::clone]:
-    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 27:9-27:14
+    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 32:9-32:14
     Visibility: public -/
 def source.preflight.PathStep.Insts.CoreCloneClone.clone
   (self : source.preflight.PathStep) : Result source.preflight.PathStep := do
   ok self
 
 /-- Trait implementation: [noble_contracts::source::preflight::{impl core::clone::Clone for noble_contracts::source::preflight::PathStep}]
-    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 27:9-27:14 -/
+    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 32:9-32:14 -/
 @[reducible]
 def source.preflight.PathStep.Insts.CoreCloneClone : core.clone.Clone
   source.preflight.PathStep := {
@@ -22179,7 +32553,7 @@ def source.preflight.PathStep.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [noble_contracts::source::preflight::{impl core::marker::Copy for noble_contracts::source::preflight::PathStep}]
-    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 27:16-27:20 -/
+    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 32:16-32:20 -/
 @[reducible]
 def source.preflight.PathStep.Insts.CoreMarkerCopy : core.marker.Copy
   source.preflight.PathStep := {
@@ -22187,7 +32561,7 @@ def source.preflight.PathStep.Insts.CoreMarkerCopy : core.marker.Copy
 }
 
 /-- [noble_contracts::source::environment]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 194:0-217:1 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 207:0-230:1 -/
 def source.environment
   : Result (core.result.Result noble_kernel.contracts.Env Diagnostic) := do
   let r ← noble_kernel.contracts.environment
@@ -22253,7 +32627,7 @@ def source.environment
     ok (core.result.Result.Err d)
 
 /-- [noble_contracts::source::resolution::named_at]:
-    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 109:0-133:1 -/
+    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 114:0-138:1 -/
 def source.resolution.named_at
   (word : Slice Std.U8) (session : source.Session) («at» : Std.Usize)
   (span : Span) (meter : Meter) :
@@ -22300,7 +32674,7 @@ def source.resolution.named_at
     ok (core.result.Result.Err failure, meter1)
 
 /-- [noble_contracts::source::resolution::lookup]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 56:4-69:5 -/
+    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 61:4-74:5 -/
 @[rust_loop_body]
 def source.resolution.lookup_loop.body
   (word : Slice Std.U8) (v : alloc.vec.Vec source.Named)
@@ -22325,7 +32699,7 @@ def source.resolution.lookup_loop.body
   else ok (done (meter, none, none))
 
 /-- [noble_contracts::source::resolution::lookup]: loop 0:
-    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 56:4-69:5 -/
+    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 61:4-74:5 -/
 @[rust_loop]
 def source.resolution.lookup_loop
   (word : Slice Std.U8) (v : alloc.vec.Vec source.Named)
@@ -22339,7 +32713,7 @@ def source.resolution.lookup_loop
     (meter, «at»)
 
 /-- [noble_contracts::source::resolution::lookup]:
-    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 46:0-103:1 -/
+    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 51:0-108:1 -/
 def source.resolution.lookup
   (word : Slice Std.U8) (declaration : Option Str) (session : source.Session)
   (span : Span) (meter : Meter) :
@@ -22430,7 +32804,7 @@ def source.resolution.lookup
   | some problem => ok (core.result.Result.Err problem, meter1)
 
 /-- [noble_contracts::source::resolution::resolve_node]:
-    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 28:0-40:1 -/
+    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 33:0-45:1 -/
 def source.resolution.resolve_node
   (node : source.Node) (declaration : Option Str) (session : source.Session)
   (meter : Meter) :
@@ -22457,7 +32831,7 @@ def source.resolution.resolve_node
   | core.result.Result.Err _ => ok (r, node, meter1)
 
 /-- [noble_contracts::source::resolution::resolve]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 11:4-21:5 -/
+    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 16:4-26:5 -/
 @[rust_loop_body]
 def source.resolution.resolve_loop.body
   (declaration : Option Str) (session : source.Session) (tree : source.Tree)
@@ -22497,7 +32871,7 @@ def source.resolution.resolve_loop.body
   else ok (done (tree.nodes, tree.body, tree.span, meter, none))
 
 /-- [noble_contracts::source::resolution::resolve]: loop 0:
-    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 11:4-21:5 -/
+    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 16:4-26:5 -/
 @[rust_loop]
 def source.resolution.resolve_loop
   (tree : source.Tree) (declaration : Option Str) (session : source.Session)
@@ -22511,7 +32885,7 @@ def source.resolution.resolve_loop
     (tree, meter, «at»)
 
 /-- [noble_contracts::source::resolution::resolve]:
-    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 3:0-26:1 -/
+    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 8:0-31:1 -/
 def source.resolution.resolve
   (tree : source.Tree) (declaration : Option Str) (session : source.Session)
   (meter : Meter) :
@@ -22835,7 +33209,7 @@ def source.resolution.comparison.same_body
   | some problem => ok (core.result.Result.Err problem, meter1)
 
 /-- [noble_contracts::source::resolution::same_definition]:
-    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 185:0-207:1 -/
+    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 190:0-212:1 -/
 def source.resolution.same_definition
   (tree : source.Tree) («at» : Std.Usize) (session : source.Session)
   (meter : Meter) :
@@ -22867,7 +33241,7 @@ def source.resolution.same_definition
     ok (core.result.Result.Err failure, meter1)
 
 /-- [noble_contracts::source::resolution::identity::{impl core::ops::function::FnOnce<(u64,), core::option::Option<u64>> for noble_contracts::source::resolution::identity::{closure}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 171:18-171:40 -/
+    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 176:18-176:40 -/
 def
   source.resolution.identity.closure.Insts.CoreOpsFunctionFnOnceTupleU64OptionU64.call_once
   (c : source.resolution.identity.closure) (tupled_args : Std.U64) :
@@ -22876,7 +33250,7 @@ def
   ok (U64.checked_add tupled_args 1#u64)
 
 /-- Trait implementation: [noble_contracts::source::resolution::identity::{impl core::ops::function::FnOnce<(u64,), core::option::Option<u64>> for noble_contracts::source::resolution::identity::{closure}}]
-    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 171:18-171:40 -/
+    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 176:18-176:40 -/
 @[reducible]
 def
   source.resolution.identity.closure.Insts.CoreOpsFunctionFnOnceTupleU64OptionU64
@@ -22887,7 +33261,7 @@ def
 }
 
 /-- [noble_contracts::source::resolution::identity]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 149:4-162:5 -/
+    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 154:4-167:5 -/
 @[rust_loop_body]
 def source.resolution.identity_loop.body
   (tree : source.Tree) (session : source.Session) (meter : Meter)
@@ -22911,7 +33285,7 @@ def source.resolution.identity_loop.body
   else ok (done (session.definitions, meter, none, none))
 
 /-- [noble_contracts::source::resolution::identity]: loop 0:
-    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 149:4-162:5 -/
+    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 154:4-167:5 -/
 @[rust_loop]
 def source.resolution.identity_loop
   (tree : source.Tree) (session : source.Session) (meter : Meter)
@@ -22925,7 +33299,7 @@ def source.resolution.identity_loop
     (meter, «at»)
 
 /-- [noble_contracts::source::resolution::identity]:
-    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 141:0-179:1 -/
+    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 146:0-184:1 -/
 def source.resolution.identity
   (tree : source.Tree) (session : source.Session) (meter : Meter) :
   Result ((core.result.Result Std.U64 Diagnostic) × Meter)
@@ -22954,7 +33328,7 @@ def source.resolution.identity
   | some problem => ok (core.result.Result.Err problem, meter1)
 
 /-- [noble_contracts::source::preparation::declaration]:
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 101:0-124:1 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 106:0-129:1 -/
 def source.preparation.declaration
   (tree : source.Tree) («name» : String) (source_bytes : Slice Std.U8)
   (session : source.Session) (meter : Meter) :
@@ -22992,7 +33366,7 @@ def source.preparation.declaration
     ok (core.result.Result.Err failure, meter1)
 
 /-- [noble_contracts::source::preparation::{noble_contracts::source::Session}::retained]:
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 83:4-98:5 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 88:4-103:5 -/
 def source.preparation.Session.retained
   (self : source.Session) (extra : Std.Usize) (span : Span) (meter : Meter) :
   Result ((core.result.Result Unit Diagnostic) × Meter)
@@ -23019,7 +33393,7 @@ def source.preparation.Session.retained
     ok (core.result.Result.Err failure, meter)
 
 /-- [noble_contracts::source::preparation::{noble_contracts::source::Session}::prepare]:
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 2:4-77:5
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 7:4-82:5
     Visibility: public -/
 def source.preparation.Session.prepare
   (self : source.Session) (source_bytes : Slice Std.U8)
@@ -23653,7 +34027,7 @@ def source.Session.impl.generation
   ok self.generation
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::commit]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 152:4-181:5
+    Source: 'crates/noble-contracts/src/source.rs', lines 165:4-194:5
     Visibility: public -/
 def source.Session.commit
   (self : source.Session) (prepared : source.Prepared) :

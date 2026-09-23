@@ -87,6 +87,9 @@ fn value(out: &mut alloc::string::String, ty: &noble_kernel::types::Ty) {
             out.push_str("syntax");
             out.push(char::from(0xbb));
         }
+        noble_kernel::types::Ty::Contract => out.push_str("Contract"),
+        noble_kernel::types::Ty::Evidence => out.push_str("Evidence"),
+        noble_kernel::types::Ty::Certified => out.push_str("Certified"),
         noble_kernel::types::Ty::Pair(a, b) => binary(out, ".pair", a, b),
         noble_kernel::types::Ty::Sum(a, b) => binary(out, ".sum", a, b),
         noble_kernel::types::Ty::List(item) => {

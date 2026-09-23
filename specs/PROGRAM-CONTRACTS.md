@@ -253,6 +253,22 @@ The separate [implementation library](../proofs/mc1/NobleContractImpl.lean) conc
 
 Successful extraction/Lean compilation alone is not a refinement theorem; successful application checking does not establish Rust implementation correctness. Neither lane claims runtime admission, first-class guest evidence construction/replay, MC2/Wasm, whole-language preservation, general termination, host effects, or resource protocols. [IMPL-V001](VERIFICATION-TOOLCHAIN.md#72-mc1-evidence-boundaries) specifies the separation and evidence accounting.
 
+### 8.3 MC2 companion implementation and evidence boundaries
+
+MC2 extends the selected resource-free Core-Bootstrap runtime with immutable Contract, Evidence and Certified cells. These are actual compiled Wasm values: they can cross program inputs/results and homogeneous aggregates, retain inspection metadata after debug stripping, and explicitly project their underlying Program. A producer's serialized certification flag or constructor tag carries no admission authority. This experimental runtime representation is not a stable cross-host encoding.
+
+The deterministic [`companion` core](../crates/noble-contracts/src/companion) decides admission from an opaque request and a complete host-check observation. The source-bound CLI runs the isolated independent Lean consumer on the exact expected statement and submitted evidence bytes. Completion checks statement, bytes, evidence class and the retained/current context before minting evidence. Arbitrary host Rust can construct an observation: its authenticity and the independent checker's soundness are explicit trusted-host assumptions, not consequences of Rust constructor privacy.
+
+Certified composition requires the exact intermediate implication and compatible interfaces and context. Capture-family instantiation binds the value supplied after compilation to the derived subject. Derivations use the finite versioned rules and bounded, acyclic replay; unknown rules, missing premises, cycles and exhausted budgets fail explicitly. These operations do not run proof search or candidate preparation services. Retained evidence is not a capability to invoke hosts or bypass resource limits.
+
+Invocation also requires an installed applicability guard for the exact contract. An admitted theorem does not automatically synthesize a guard. A false precondition rejects before the candidate body starts; an unsupported guard remains unsupported. Companion operations preserve the original aggregate stack tail and live identities, including restoration on refusal. Explicit proof erasure projects the same underlying Program; it does not turn conditional correctness into unconditional applicability.
+
+`noble companions` provides streaming sessions over these operations; [`README.md`](../README.md#mc2-companion-sessions-and-proof-required-builds) documents executable commands, outcomes and setup. `noble build --require-proof` admits only an applicable independently checked proof and binds the exact accepted quotation to the emitted artifact. Its report separates the claim outcome from release permission. This is a trusted-build correspondence boundary, not a verified-backend theorem. Ordinary `noble run` remains available without contract evidence or proof services.
+
+The [semantic certificate gate](../proofs/mc2/MC2Gate.lean), [actual-source extraction gate](../verification/mc2/extraction.mjs) and [source-bound implementation gate](../verification/mc2/implementation.mjs) have separate obligations. Strict semantic theorems, strict extracted correspondences, renderer-layout equations, closed native-evaluated source equations and runtime controls must not be conflated. Native evaluation belongs only to its disclosed implementation lane, never the strict application-proof admission policy.
+
+The [canonical CONTRACT workload](conformance/contract-cases.json) and its per-case evidence record execution independently of proof status. The runtime gate must execute all fifteen cases and every declared variant, including real consumer statement mismatches and actual replay/registry exhaustion, against retained frozen executable bytes. The [status ledger](STATUS.json) and final source-bound receipts determine milestone acceptance. General frontend/compiler/backend refinement, host effects, live resources, total correctness and the broad PO-16/20/21 obligations remain outside this bounded fragment.
+
 ## 9. Typed contract inputs
 
 **VC-INPUT-01.** The compiler MUST resolve contract declarations into a typed, versioned contract IR with exact program and logical-definition references. The IR MUST bind ordered input/output stacks, initial snapshots, quantifiers, assumptions, and the claim kind. It MUST distinguish preconditions, postconditions, invariants, effect/trace constraints, and ownership predicates. Display names, comments, and unresolved strings MUST NOT serve as accepted propositions.
@@ -408,6 +424,30 @@ MC1 CLI operations are `noble verify CONTRACT [--emit DIR] [--proof FILE | --ref
 
 **VC-GATE-02.** `Contracts-Draft` conformance MUST include `[ 1 + ]`, certified increment composition, and an increment-by-runtime-capture family. The runtime demonstration MUST pass, return, inspect, and store eligible companions in aggregates. It MUST include positive applicability checks and rejection of forged evidence, changed captures, unmet preconditions, unresolved composition, and unrelated Wasm. Literal-only specialization or host-only metadata cannot satisfy this gate.
 
+MC2 acceptance MUST execute all fifteen declared CONTRACT cases and every declared variant against actual implementations. Expected fields MUST NOT be copied into observed results. Refusals at an earlier unrelated boundary MUST NOT substitute for a named consumer, replay or applicability control. Independent-checker controls MUST run the real isolated Lean consumer; service-disabled runtime controls MUST demonstrate that no proof service is available to the tested path.
+
+Runtime receipts MUST preserve actual inputs, commands, outcomes, complete ordered stacks, relevant live handles, reflected recipes, counters and artifact identities. Optimized aggregate transport MUST retain the original tail and companion identity. Executable bytes MUST be frozen before subprocess use and checked again before accepting a receipt; mutable build output paths alone are insufficient provenance.
+
+#### Scenario: Complete runtime and hostile-evidence matrix
+
+- GIVEN the complete canonical CONTRACT case set and every named input variant
+- WHEN the actual selected runtime and independent evidence consumer execute the positive and hostile paths
+- THEN retained observations satisfy every expected field, including exact subject binding, real bounded exhaustion, zero failed-path candidate execution and unchanged ordinary execution
+
+#### Scenario: Immutable executable and live-cell evidence
+
+- GIVEN frozen CLI and control executables and optimized first-class companion values
+- WHEN argument/result/list transport, inspection, projection and checked operations execute
+- THEN raw receipts bind the executed bytes and preserve the original compiled program, aggregate tail, live identity and reflected recipe without implicit evidence fetching
+
 **VC-GATE-03.** Profile reports MUST include applicable PO-15, PO-16, and PO-19 through PO-21 results and their implementation correspondence. Conformance requires accepted evidence for these obligations in the declared fragment, including actual Rust correspondence. Open obligations permit only an experimental report. Wasm demonstrations MUST separately identify their build/loading evidence under PO-17/18. A trusted-build demonstration MUST NOT claim a verified backend. Document validation and test execution MUST NOT close unproved theorem obligations.
 
-[ROADMAP.md](ROADMAP.md) schedules MC1 after checker/proof feasibility and MC2 after MC1 and the Wasm core. Resource and concurrency contracts remain separate later increments. Ordinary core delivery does not depend on optional application proofs.
+MC2 reports MUST distinguish strict semantic certificates, strict extracted correspondences, closed native-evaluated source equations, runtime observations and full source/compiler-policy coverage. Fresh extraction MUST bind current authored sources and actual transparent generated bodies to the reviewed inventory, models, compiled declarations, dependencies and axioms; stale or substituted generated code MUST be rejected. Host-check observation authenticity and independent-checker soundness MUST remain explicit assumptions rather than claims of arbitrary-host constructor unforgeability.
+
+The final milestone record MUST retain the complete unchanged quality policy, complete all-target source/architecture coverage and exact evidence scopes. Source/status/proof ledgers and the completed lifecycle archive MUST agree with the retained final receipts. Broad unproved obligations MUST remain open beyond each explicitly accepted fragment.
+
+#### Scenario: Source-bound assurance without scope promotion
+
+- GIVEN current Rust sources, selected tools and a reviewed extraction lock with disclosed external models and axioms
+- WHEN independent extraction, compiled audits, refusal controls and full unchanged source/compiler-policy gates pass
+- THEN the report accepts only the evidenced fragment, distinguishes native equations from strict proofs and leaves universal backend and other unproved claims open

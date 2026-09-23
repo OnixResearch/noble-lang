@@ -1,0 +1,6 @@
+(contract 1 conditional-monotonicity
+  (input (x I64))
+  (output (y I64))
+  (program [ 1 + ])
+  (requires (lt (in x) 9223372036854775807))
+  (ensures (lt (in x) (out y))))

@@ -40,8 +40,23 @@ let contracts = import "./architecture.contracts.ncl" in
   ],
   # The workspace has no third-party Cargo providers or application-owned ports.
   # The CLI owns consumer I/O; no domain-core crate executes host effects.
-  # Owned WAT fragments are byte-bound by tool selection, not Rust compiler
-  # subjects or proved runtime semantics.
+  # noble-contracts includes the MC2 companion admission, derivation, registry,
+  # guard and release core. Contract/proof text, guest handles, reported tags,
+  # runtime observations and producer status text are untrusted inputs, never
+  # acceptance witnesses. The core's retained decisions cannot be replaced by
+  # a host report, a wrapper, a cached digest or an asserted evidence class.
+  # Lean kernel acceptance and the CLI's exact source/claim binding form an
+  # explicit trusted boundary; process success alone does not certify a claim.
+  # Only the CLI runs the independent checker. The core issues an opaque
+  # admission request and consumes a complete immutable host observation,
+  # rechecking exact statement/source/class and retained policy/revision before
+  # bounded completion. No host callback or proof process executes in the core.
+  # Checker soundness and observation authenticity are explicit trusted
+  # premises, not Rust-body proofs or unforgeability against arbitrary host
+  # Rust. A guest offer, cached status or producer report is not that observation.
+  # Owned JS/WAT are byte-bound by tool selection, not Rust compiler subjects
+  # or proved runtime semantics. Engine handles identify guest values, not
+  # authority to fabricate core evidence or bypass a certified invocation guard.
   provider_classifications = [],
   ports = [],
   capability_classifications = [
@@ -49,13 +64,13 @@ let contracts = import "./architecture.contracts.ncl" in
       family = "filesystem",
       core_handling = "forbidden",
       executor_role = "composition-root",
-      rationale = "Only the CLI reads bounded source, contract, proof, rule-library and toolchain inputs, creates fresh artifacts, and removes its private temporary workspace. Owned Wasm/JS assets are separately byte-bound by tool selection.",
+      rationale = "Only the CLI reads bounded source, contract, proof, companion-session, rule-library and toolchain inputs, creates fresh artifacts, and removes its private temporary workspace. Proof-required builds release only after exact source/claim-bound admission. Owned Wasm/JS assets are separately byte-bound by tool selection.",
     },
     {
       family = "process",
       core_handling = "forbidden",
       executor_role = "composition-root",
-      rationale = "Only the CLI resolves the local Lean runtime closure, launches isolated proof workers, and runs the pinned resource-free Core-Bootstrap Node helper. Proof workers require bubblewrap and a user-systemd scope; missing proof isolation fails closed. The trusted Node/Wasm tool subprocess boundary is separate and is not claimed to have the proof sandbox.",
+      rationale = "Only the CLI resolves the local Lean runtime closure, launches isolated proof workers, and runs the pinned resource-free Core-Bootstrap/MC2 Node helper. Proof workers require bubblewrap and a user-systemd scope; missing proof isolation fails closed. The core consumes immutable exact independent-check observations and never invokes a host callback. Checker soundness and observation authenticity remain trusted premises; a process exit or producer report is not evidence admission. The trusted Node/Wasm tool subprocess boundary is separate and is not claimed to have the proof sandbox.",
     },
     {
       family = "environment",
@@ -79,7 +94,7 @@ let contracts = import "./architecture.contracts.ncl" in
       family = "observability",
       core_handling = "forbidden",
       executor_role = "composition-root",
-      rationale = "Only the CLI emits execution/verification reports, help, internal smoke outcomes and diagnostics. Explanation and statement generation do not launch proof tools. Resource-free guest test requests are observations, not protected capabilities.",
+      rationale = "Only the CLI emits execution/verification/build/companion reports, help, internal smoke outcomes and diagnostics. Explanation and statement generation do not launch proof tools. Resource-free guest test requests, inspection results, captured traces and seven-outcome text are observations, not proof acceptance or protected capabilities.",
     },
     {
       family = "unsafe-code",
@@ -93,12 +108,17 @@ let contracts = import "./architecture.contracts.ncl" in
       family = "filesystem",
       executor_scope = "crates/noble-cli/src",
       executor_methods = [
-        "noble-cli::closure@crates/noble-cli/src/sandbox/runtime.rs:193:204",
-        "noble-cli::closure@crates/noble-cli/src/sandbox/runtime.rs:2561:2569",
-        "noble-cli::closure@crates/noble-cli/src/sandbox/runtime.rs:3956:3962",
-        "noble-cli::closure@crates/noble-cli/src/workflow/artifacts.rs:4242:4248",
-        "noble-cli::closure@crates/noble-cli/src/workflow/rules.rs:5281:5288",
+        "noble-cli::closure@crates/noble-cli/src/sandbox/runtime.rs:3086:3094",
+        "noble-cli::closure@crates/noble-cli/src/sandbox/runtime.rs:467:478",
+        "noble-cli::closure@crates/noble-cli/src/sandbox/runtime.rs:4761:4767",
+        "noble-cli::closure@crates/noble-cli/src/workflow/artifacts.rs:4597:4603",
+        "noble-cli::closure@crates/noble-cli/src/workflow/rules.rs:6716:6723",
         "noble::<workflow::artifacts::Temporary as std::ops::Drop>::drop",
+        "noble::build::artifacts::emit",
+        "noble::core::assemble_wat",
+        "noble::core::companions::controls::checker::LeanConsumer::run",
+        "noble::core::companions::controls::exercise",
+        "noble::core::companions::entry::read_bounded",
         "noble::core::execute",
         "noble::core::framing::read_file",
         "noble::core::framing::write_new",
@@ -124,6 +144,8 @@ let contracts = import "./architecture.contracts.ncl" in
       executor_methods = [
         "noble-cli::closure@crates/noble-cli/src/sandbox/launch.rs:3118:3124",
         "noble-cli::closure@crates/noble-cli/src/sandbox/launch.rs:3228:3235",
+        "noble::core::companions::controls::checker::LeanConsumer::observation",
+        "noble::core::companions::controls::checker::LeanConsumer::run",
         "noble::core::worker::launch",
         "noble::core::worker::process::observe",
         "noble::core::worker::process::stop",
@@ -138,12 +160,13 @@ let contracts = import "./architecture.contracts.ncl" in
         "noble::workflow::verification::require_success",
       ],
       authority = "unprotected",
-      rationale = "The shell queries the selected local Nix runtime closure, executes proof workers through their required isolation boundary, and starts/reaps the immutable Node helper for independently accepted Core-Bootstrap Wasm. It supervises bounded replies and deadlines and observes child status. Node invokes the separately pinned assembler/optimizer; those trusted tools and owned JS/WAT are not proven or proof-sandboxed. None of these operations grants a protected guest capability, and missing proof isolation never authorizes a proof-worker fallback.",
+      rationale = "The shell queries the selected local Nix runtime closure, executes proof workers through their required isolation boundary, and starts/reaps the immutable Node helper for independently accepted Core-Bootstrap/MC2 Wasm. It supervises bounded replies and deadlines and observes child status. Node invokes the separately pinned assembler/optimizer; those trusted tools and owned JS/WAT are not proven or proof-sandboxed. Guest subject observations are re-bound by the deterministic companion core; reports, handles, wrapper construction and successful execution cannot mint accepted evidence. None of these operations grants a protected guest capability, and missing proof isolation never authorizes a proof-worker fallback.",
     },
     {
       family = "environment",
       executor_scope = "crates/noble-cli/src",
       executor_methods = [
+        "noble::core::companions::controls::exercise",
         "noble::read_arguments",
         "noble::sandbox::configured_path",
         "noble::workflow::artifacts::Temporary::create",
@@ -181,13 +204,22 @@ let contracts = import "./architecture.contracts.ncl" in
       executor_scope = "crates/noble-cli/src",
       executor_methods = [
         "noble::<core::worker::Engine as std::ops::Drop>::drop",
+        "noble::backend::execute",
+        "noble::backend::reject_owner_slot",
+        "noble::backend::run",
+        "noble::build::print_report",
+        "noble::core::companions::controls::exercise",
+        "noble::core::companions::entry::run",
+        "noble::core::companions::reporting::emit",
+        "noble::core::compile",
         "noble::core::output::print",
+        "noble::core::run",
         "noble::main",
-        "noble::write_outcome",
         "noble::workflow::print_report",
+        "noble::write_outcome",
       ],
       authority = "unprotected",
-      rationale = "Consumer-facing reports, help and smoke diagnostics write only to the CLI output streams. Output is not an authorization witness, an external-success receipt, or permission to execute a protected domain effect.",
+      rationale = "Consumer-facing execution, verification, build and companion-session reports, help and smoke diagnostics write only to the CLI output streams. Output is not an authorization witness, an external-success receipt, accepted evidence, or permission to execute a protected domain effect.",
     },
   ],
   core_no_std = [{ scope = "noble-kernel" }, { scope = "noble-contracts" }, { scope = "noble-wasm" }],

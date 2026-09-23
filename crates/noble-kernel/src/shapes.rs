@@ -34,6 +34,12 @@ pub enum Pattern {
     Text,
     /// Inert syntax.
     Syntax,
+    /// An opaque inert contract descriptor.
+    Contract,
+    /// An opaque inert evidence reference.
+    Evidence,
+    /// An opaque inert certified-program companion.
+    Certified,
     /// A product pattern.
     Pair(alloc::boxed::Box<Pattern>, alloc::boxed::Box<Pattern>),
     /// A sum pattern.
@@ -228,6 +234,9 @@ fn require_pattern(
         | Pattern::I64
         | Pattern::Text
         | Pattern::Syntax
+        | Pattern::Contract
+        | Pattern::Evidence
+        | Pattern::Certified
         | Pattern::Resource(_) => Ok(work),
     }
 }

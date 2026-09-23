@@ -1,0 +1,479 @@
+{
+  "schema": "noble-mc2-lifecycle/v1",
+  "result": "passed",
+  "scope": "Native specification synchronization and completed Cairn archive; lifecycle receipts do not substitute for runtime or proof acceptance.",
+  "commands": [
+    {
+      "label": "final-cairn-sync",
+      "executable": "bun",
+      "args": [
+        "tools/cairn.mjs",
+        "sync",
+        "mc2-first-class-certified-programs",
+        "--root",
+        ".",
+        "--execute"
+      ],
+      "cwd": "/home/brittonr/git/noble",
+      "environment": {
+        "NIX_CONFIG": "min-free = 0\nmax-free = 0\nbuilders =\n"
+      },
+      "started_at": "2026-09-23T21:17:20.537Z",
+      "stdout": "final-cairn-sync.stdout",
+      "stderr": "final-cairn-sync.stderr",
+      "exit": 0,
+      "finished_at": "2026-09-23T21:17:22.549Z"
+    },
+    {
+      "label": "final-cairn-archive-preview",
+      "executable": "bun",
+      "args": [
+        "tools/cairn.mjs",
+        "archive",
+        "mc2-first-class-certified-programs",
+        "--root",
+        "."
+      ],
+      "cwd": "/home/brittonr/git/noble",
+      "environment": {
+        "NIX_CONFIG": "min-free = 0\nmax-free = 0\nbuilders =\n"
+      },
+      "started_at": "2026-09-23T21:20:56.249Z",
+      "stdout": "final-cairn-archive-preview.stdout",
+      "stderr": "final-cairn-archive-preview.stderr",
+      "exit": 0,
+      "finished_at": "2026-09-23T21:20:57.890Z"
+    },
+    {
+      "label": "final-cairn-archive",
+      "executable": "bun",
+      "args": [
+        "tools/cairn.mjs",
+        "archive",
+        "mc2-first-class-certified-programs",
+        "--root",
+        ".",
+        "--execute"
+      ],
+      "cwd": "/home/brittonr/git/noble",
+      "environment": {
+        "NIX_CONFIG": "min-free = 0\nmax-free = 0\nbuilders =\n"
+      },
+      "started_at": "2026-09-23T21:21:17.399Z",
+      "stdout": "final-cairn-archive.stdout",
+      "stderr": "final-cairn-archive.stderr",
+      "exit": 0,
+      "finished_at": "2026-09-23T21:21:19.256Z"
+    },
+    {
+      "label": "final-cairn-dated-archive-preview",
+      "executable": "bun",
+      "args": [
+        "tools/cairn.mjs",
+        "archive",
+        "mc2-first-class-certified-programs",
+        "--root",
+        "."
+      ],
+      "cwd": "/home/brittonr/git/noble",
+      "environment": {
+        "NIX_CONFIG": "min-free = 0\nmax-free = 0\nbuilders =\n",
+        "CAIRN_ARCHIVE_DATE": "2026-09-23"
+      },
+      "started_at": "2026-09-23T21:24:10.965Z",
+      "stdout": "final-cairn-dated-archive-preview.stdout",
+      "stderr": "final-cairn-dated-archive-preview.stderr",
+      "exit": 0,
+      "finished_at": "2026-09-23T21:24:12.769Z"
+    },
+    {
+      "label": "final-cairn-dated-archive",
+      "executable": "bun",
+      "args": [
+        "tools/cairn.mjs",
+        "archive",
+        "mc2-first-class-certified-programs",
+        "--root",
+        ".",
+        "--execute"
+      ],
+      "cwd": "/home/brittonr/git/noble",
+      "environment": {
+        "NIX_CONFIG": "min-free = 0\nmax-free = 0\nbuilders =\n",
+        "CAIRN_ARCHIVE_DATE": "2026-09-23"
+      },
+      "started_at": "2026-09-23T21:24:12.770Z",
+      "stdout": "final-cairn-dated-archive.stdout",
+      "stderr": "final-cairn-dated-archive.stderr",
+      "exit": 0,
+      "finished_at": "2026-09-23T21:24:14.807Z"
+    }
+  ],
+  "sync": {
+    "acceptance_ids": [],
+    "actions": [
+      {
+        "description": "merge delta spec into main specs: ./.cairn/changes/mc2-first-class-certified-programs/specs/program-contracts/spec.md",
+        "kind": "sync_delta_spec",
+        "path": "./.cairn/changes/mc2-first-class-certified-programs/specs/program-contracts/spec.md"
+      }
+    ],
+    "blocked": false,
+    "change": "mc2-first-class-certified-programs",
+    "cross_repo_dependencies": {
+      "blocked_count": 0,
+      "dependency_count": 0,
+      "input_hash": "e890d3bebd6f9f984387d26d4c6685963b96d2172fdf1df42756927cfa255a9c",
+      "non_claims": [
+        "dependency satisfaction proves presented receipt linkage only",
+        "dependency satisfaction does not prove upstream correctness or remote trust",
+        "dependency satisfaction does not prove downstream integration correctness or release eligibility"
+      ],
+      "policy_hash": "8280151b7a53822eed460149ecb600bf11418d7463c935e0742009b334f4e7dd",
+      "receipt_hash": "b37bae535823028673cb011a8f08a9b26fbfca1414a5b5141892f75699ce5c01",
+      "rows": [],
+      "satisfied_count": 0,
+      "schema": "cairn.cross-repo-dependency-receipt.v1",
+      "valid": true,
+      "verdict": "PASS"
+    },
+    "cross_repo_evidence_issues": [],
+    "delta_specs": [
+      "./.cairn/changes/mc2-first-class-certified-programs/specs/program-contracts/spec.md"
+    ],
+    "dry_run": false,
+    "input_hash": "7247e3c54dd1066e83b82403b216f55f25d499785d33c89f994e4c244d6f17de",
+    "layout": "cairn",
+    "merge_preflight": {
+      "documents": [
+        {
+          "accepted_before_exists": true,
+          "accepted_before_hash": "479c1483b5f1169db5676ec335851c3d012aa385ee2d3107ed1688f49b5c3409",
+          "blocked": false,
+          "changed": true,
+          "delta_hash": "bbab9c101b2876dea83f2e2d3e162a116f0a765e41c3d06ec54f043453e98cbd",
+          "destination": ".cairn/specs/program-contracts/spec.md",
+          "diagnostics": [],
+          "expected_after_hash": "ac680260f8b37c1e7646c5670acff87b9f722dacb3a4dbf507aae8d105903a60",
+          "operations": [
+            {
+              "block_hash": "78dbcc61ce1fac7e71c22a4a6306be24e89754dc8c40fedbbaa50d10c0aefe9c",
+              "heading": "### Requirement: VC-GATE-02",
+              "kind": "modified",
+              "requirement_id": "VC-GATE-02"
+            },
+            {
+              "block_hash": "f67dad2daaf48496faee6c1e1f61dda7a3f95405ef2342e7d62adc478a623f31",
+              "heading": "### Requirement: VC-GATE-03",
+              "kind": "modified",
+              "requirement_id": "VC-GATE-03"
+            }
+          ],
+          "outcomes": [
+            {
+              "kind": "modified",
+              "requirement_id": "VC-GATE-02",
+              "state": "applied"
+            },
+            {
+              "kind": "modified",
+              "requirement_id": "VC-GATE-03",
+              "state": "applied"
+            }
+          ],
+          "source": ".cairn/changes/mc2-first-class-certified-programs/specs/program-contracts/spec.md"
+        }
+      ]
+    },
+    "mutated": true,
+    "mutation_manifest": {
+      "after": {
+        "entries": [
+          {
+            "content_hash": "ac680260f8b37c1e7646c5670acff87b9f722dacb3a4dbf507aae8d105903a60",
+            "exists": true,
+            "path": "./.cairn/specs/program-contracts/spec.md"
+          }
+        ],
+        "manifest_hash": "1492c61ea0450db31a630bea9c0ee3d1f3a2e55cc581e92b4c05fa7ece20bc22"
+      },
+      "before": {
+        "entries": [
+          {
+            "content_hash": "479c1483b5f1169db5676ec335851c3d012aa385ee2d3107ed1688f49b5c3409",
+            "exists": true,
+            "path": "./.cairn/specs/program-contracts/spec.md"
+          }
+        ],
+        "manifest_hash": "a082b3d73db0b0d915510fe7f6c4710ce40159744368600cf4232cd2af3dad70"
+      },
+      "kind": "sync",
+      "manifest_hash": "faa95c525ad2c8fff1ae7db4ca9359db779824a25b5c11d21b954b5f4a9ed683"
+    },
+    "non_claims": [
+      "workflow state proves only the selected policy graph and observed structural artifact facts",
+      "workflow instructions do not prove artifact truth, review quality, or implementation correctness",
+      "workflow state does not satisfy proposal, design, tasks, sync, archive, evidence, or release gates",
+      "workflow commands are read-only and do not create, edit, delete, or approve lifecycle artifacts"
+    ],
+    "plan_hash": "ccd46e66dcbe83f80f7aa9cf873aa959aa4f231edce91e2ad4ddef037d0a2dce",
+    "policy": "cairn-default",
+    "policy_hash": "8280151b7a53822eed460149ecb600bf11418d7463c935e0742009b334f4e7dd",
+    "profile_identity_hash": "9be717fd5a674fa6111ffbdb86e3fb6eafa9d20a5e19ac1150b219a3b5dd6660",
+    "reasons": [],
+    "receipt_hash": "39a69109df7a557beb62cea81c6eded4bd069ee14b7da778aa67398b9acc5792",
+    "review_receipt_hashes": [],
+    "spec_effect": "delta",
+    "workflow_profile": "spec-driven",
+    "workflow_profile_compatibility_fallback": false,
+    "workflow_profile_source": "change_create",
+    "workflow_profile_version": 1
+  },
+  "archive": {
+    "acceptance_ids": [],
+    "actions": [
+      {
+        "description": "move active change to archive: mc2-first-class-certified-programs",
+        "kind": "archive_change",
+        "path": "./.cairn/archive/2026-09-23-mc2-first-class-certified-programs"
+      }
+    ],
+    "blocked": false,
+    "change": "mc2-first-class-certified-programs",
+    "cross_repo_dependencies": {
+      "blocked_count": 0,
+      "dependency_count": 0,
+      "input_hash": "e890d3bebd6f9f984387d26d4c6685963b96d2172fdf1df42756927cfa255a9c",
+      "non_claims": [
+        "dependency satisfaction proves presented receipt linkage only",
+        "dependency satisfaction does not prove upstream correctness or remote trust",
+        "dependency satisfaction does not prove downstream integration correctness or release eligibility"
+      ],
+      "policy_hash": "8280151b7a53822eed460149ecb600bf11418d7463c935e0742009b334f4e7dd",
+      "receipt_hash": "b37bae535823028673cb011a8f08a9b26fbfca1414a5b5141892f75699ce5c01",
+      "rows": [],
+      "satisfied_count": 0,
+      "schema": "cairn.cross-repo-dependency-receipt.v1",
+      "valid": true,
+      "verdict": "PASS"
+    },
+    "cross_repo_evidence_issues": [],
+    "dry_run": false,
+    "input_hash": "816c06170c7bbb4dac1a246223edd3a23526e2278bbce76afdfb995bc997985f",
+    "layout": "cairn",
+    "mutated": true,
+    "mutation_manifest": {
+      "after": {
+        "entries": [
+          {
+            "content_hash": "5bf97d3a0d0b0d6bc4b9cfceb2da1388fe3916af93038fe8309b52607a024c17",
+            "exists": true,
+            "path": "./.cairn/archive/2026-09-23-mc2-first-class-certified-programs/design.md"
+          },
+          {
+            "content_hash": "df8b71bae570eb5accd702e7370a816b8ea9f2e4521254c5d75ea82a9cfcf4db",
+            "exists": true,
+            "path": "./.cairn/archive/2026-09-23-mc2-first-class-certified-programs/metadata.json"
+          },
+          {
+            "content_hash": "b18b3310f4818ad9e4edc26ddbf81fa1ebe24fed8b36a1d7a9faa0f5d3a5fcb1",
+            "exists": true,
+            "path": "./.cairn/archive/2026-09-23-mc2-first-class-certified-programs/proposal.md"
+          },
+          {
+            "content_hash": "bbab9c101b2876dea83f2e2d3e162a116f0a765e41c3d06ec54f043453e98cbd",
+            "exists": true,
+            "path": "./.cairn/archive/2026-09-23-mc2-first-class-certified-programs/specs/program-contracts/spec.md"
+          },
+          {
+            "content_hash": "0cc5dcb24922c2d49fc417153c5d2a0d4a0abae5d9f6cad007736b9af1163065",
+            "exists": true,
+            "path": "./.cairn/archive/2026-09-23-mc2-first-class-certified-programs/tasks.md"
+          },
+          {
+            "content_hash": null,
+            "exists": false,
+            "path": "./.cairn/changes/mc2-first-class-certified-programs"
+          }
+        ],
+        "manifest_hash": "03d2f77978d343d77d653b01f6894e1bb253d7af1a1afecaa3ff6e7a6eb89863"
+      },
+      "before": {
+        "entries": [
+          {
+            "content_hash": "5bf97d3a0d0b0d6bc4b9cfceb2da1388fe3916af93038fe8309b52607a024c17",
+            "exists": true,
+            "path": "./.cairn/changes/mc2-first-class-certified-programs/design.md"
+          },
+          {
+            "content_hash": "df8b71bae570eb5accd702e7370a816b8ea9f2e4521254c5d75ea82a9cfcf4db",
+            "exists": true,
+            "path": "./.cairn/changes/mc2-first-class-certified-programs/metadata.json"
+          },
+          {
+            "content_hash": "b18b3310f4818ad9e4edc26ddbf81fa1ebe24fed8b36a1d7a9faa0f5d3a5fcb1",
+            "exists": true,
+            "path": "./.cairn/changes/mc2-first-class-certified-programs/proposal.md"
+          },
+          {
+            "content_hash": "bbab9c101b2876dea83f2e2d3e162a116f0a765e41c3d06ec54f043453e98cbd",
+            "exists": true,
+            "path": "./.cairn/changes/mc2-first-class-certified-programs/specs/program-contracts/spec.md"
+          },
+          {
+            "content_hash": "0cc5dcb24922c2d49fc417153c5d2a0d4a0abae5d9f6cad007736b9af1163065",
+            "exists": true,
+            "path": "./.cairn/changes/mc2-first-class-certified-programs/tasks.md"
+          }
+        ],
+        "manifest_hash": "29b340796d771a9e2282cc09b8da59c07f883719b253aed2e5bc9f5f6acce0f8"
+      },
+      "kind": "archive",
+      "manifest_hash": "07f7c116ab63278f7dbeabd79999ad0f0ab1225bc2e23844921453f25934c7f5"
+    },
+    "non_claims": [
+      "workflow state proves only the selected policy graph and observed structural artifact facts",
+      "workflow instructions do not prove artifact truth, review quality, or implementation correctness",
+      "workflow state does not satisfy proposal, design, tasks, sync, archive, evidence, or release gates",
+      "workflow commands are read-only and do not create, edit, delete, or approve lifecycle artifacts"
+    ],
+    "plan_hash": "32c0509588d55aeb54eca02cd5a66d597947e66d141354f8f29a1dea881718b4",
+    "policy": "cairn-default",
+    "policy_hash": "8280151b7a53822eed460149ecb600bf11418d7463c935e0742009b334f4e7dd",
+    "profile_identity_hash": "9604fbcb2eba6e6c0df10b5a037e0f254df6a6e0a1aea9c32daf114055e0b6a5",
+    "reasons": [],
+    "receipt_hash": "7e9e54c698fad926c074a80ced902490a7c419d684041d7352e35b0370c312e6",
+    "review_receipt_hashes": [],
+    "spec_effect": "delta",
+    "workflow_profile": "spec-driven",
+    "workflow_profile_compatibility_fallback": false,
+    "workflow_profile_source": "change_create",
+    "workflow_profile_version": 1
+  },
+  "date_correction": {
+    "reason": "Pinned Cairn defaults to 1970-01-01 unless CAIRN_ARCHIVE_DATE is set. The first archive was restored byte-for-byte to its active path, then archived again through Cairn with the actual completion date.",
+    "restored_from": ".cairn/archive/1970-01-01-mc2-first-class-certified-programs",
+    "restored_to": ".cairn/changes/mc2-first-class-certified-programs",
+    "superseded_archive": {
+      "acceptance_ids": [],
+      "actions": [
+        {
+          "description": "move active change to archive: mc2-first-class-certified-programs",
+          "kind": "archive_change",
+          "path": "./.cairn/archive/1970-01-01-mc2-first-class-certified-programs"
+        }
+      ],
+      "blocked": false,
+      "change": "mc2-first-class-certified-programs",
+      "cross_repo_dependencies": {
+        "blocked_count": 0,
+        "dependency_count": 0,
+        "input_hash": "e890d3bebd6f9f984387d26d4c6685963b96d2172fdf1df42756927cfa255a9c",
+        "non_claims": [
+          "dependency satisfaction proves presented receipt linkage only",
+          "dependency satisfaction does not prove upstream correctness or remote trust",
+          "dependency satisfaction does not prove downstream integration correctness or release eligibility"
+        ],
+        "policy_hash": "8280151b7a53822eed460149ecb600bf11418d7463c935e0742009b334f4e7dd",
+        "receipt_hash": "b37bae535823028673cb011a8f08a9b26fbfca1414a5b5141892f75699ce5c01",
+        "rows": [],
+        "satisfied_count": 0,
+        "schema": "cairn.cross-repo-dependency-receipt.v1",
+        "valid": true,
+        "verdict": "PASS"
+      },
+      "cross_repo_evidence_issues": [],
+      "dry_run": false,
+      "input_hash": "816c06170c7bbb4dac1a246223edd3a23526e2278bbce76afdfb995bc997985f",
+      "layout": "cairn",
+      "mutated": true,
+      "mutation_manifest": {
+        "after": {
+          "entries": [
+            {
+              "content_hash": "5bf97d3a0d0b0d6bc4b9cfceb2da1388fe3916af93038fe8309b52607a024c17",
+              "exists": true,
+              "path": "./.cairn/archive/1970-01-01-mc2-first-class-certified-programs/design.md"
+            },
+            {
+              "content_hash": "df8b71bae570eb5accd702e7370a816b8ea9f2e4521254c5d75ea82a9cfcf4db",
+              "exists": true,
+              "path": "./.cairn/archive/1970-01-01-mc2-first-class-certified-programs/metadata.json"
+            },
+            {
+              "content_hash": "b18b3310f4818ad9e4edc26ddbf81fa1ebe24fed8b36a1d7a9faa0f5d3a5fcb1",
+              "exists": true,
+              "path": "./.cairn/archive/1970-01-01-mc2-first-class-certified-programs/proposal.md"
+            },
+            {
+              "content_hash": "bbab9c101b2876dea83f2e2d3e162a116f0a765e41c3d06ec54f043453e98cbd",
+              "exists": true,
+              "path": "./.cairn/archive/1970-01-01-mc2-first-class-certified-programs/specs/program-contracts/spec.md"
+            },
+            {
+              "content_hash": "0cc5dcb24922c2d49fc417153c5d2a0d4a0abae5d9f6cad007736b9af1163065",
+              "exists": true,
+              "path": "./.cairn/archive/1970-01-01-mc2-first-class-certified-programs/tasks.md"
+            },
+            {
+              "content_hash": null,
+              "exists": false,
+              "path": "./.cairn/changes/mc2-first-class-certified-programs"
+            }
+          ],
+          "manifest_hash": "e3cd4485e9fb043ba30ef3cda8695ea1551e6d8e9c9fb56452cc4a091720a817"
+        },
+        "before": {
+          "entries": [
+            {
+              "content_hash": "5bf97d3a0d0b0d6bc4b9cfceb2da1388fe3916af93038fe8309b52607a024c17",
+              "exists": true,
+              "path": "./.cairn/changes/mc2-first-class-certified-programs/design.md"
+            },
+            {
+              "content_hash": "df8b71bae570eb5accd702e7370a816b8ea9f2e4521254c5d75ea82a9cfcf4db",
+              "exists": true,
+              "path": "./.cairn/changes/mc2-first-class-certified-programs/metadata.json"
+            },
+            {
+              "content_hash": "b18b3310f4818ad9e4edc26ddbf81fa1ebe24fed8b36a1d7a9faa0f5d3a5fcb1",
+              "exists": true,
+              "path": "./.cairn/changes/mc2-first-class-certified-programs/proposal.md"
+            },
+            {
+              "content_hash": "bbab9c101b2876dea83f2e2d3e162a116f0a765e41c3d06ec54f043453e98cbd",
+              "exists": true,
+              "path": "./.cairn/changes/mc2-first-class-certified-programs/specs/program-contracts/spec.md"
+            },
+            {
+              "content_hash": "0cc5dcb24922c2d49fc417153c5d2a0d4a0abae5d9f6cad007736b9af1163065",
+              "exists": true,
+              "path": "./.cairn/changes/mc2-first-class-certified-programs/tasks.md"
+            }
+          ],
+          "manifest_hash": "29b340796d771a9e2282cc09b8da59c07f883719b253aed2e5bc9f5f6acce0f8"
+        },
+        "kind": "archive",
+        "manifest_hash": "f3adafe3ce70203365fc4d6d9933c46246548be33cf592d4f1f85f490a5b224b"
+      },
+      "non_claims": [
+        "workflow state proves only the selected policy graph and observed structural artifact facts",
+        "workflow instructions do not prove artifact truth, review quality, or implementation correctness",
+        "workflow state does not satisfy proposal, design, tasks, sync, archive, evidence, or release gates",
+        "workflow commands are read-only and do not create, edit, delete, or approve lifecycle artifacts"
+      ],
+      "plan_hash": "68ccffbab6183c52bee11c52134a81f1fb90151b12fd052cc5bb4516825c16a4",
+      "policy": "cairn-default",
+      "policy_hash": "8280151b7a53822eed460149ecb600bf11418d7463c935e0742009b334f4e7dd",
+      "profile_identity_hash": "9604fbcb2eba6e6c0df10b5a037e0f254df6a6e0a1aea9c32daf114055e0b6a5",
+      "reasons": [],
+      "receipt_hash": "e08d58d0fd76385eb50370335a6787c7b5b1cf888c409948255db7f36f6864a1",
+      "review_receipt_hashes": [],
+      "spec_effect": "delta",
+      "workflow_profile": "spec-driven",
+      "workflow_profile_compatibility_fallback": false,
+      "workflow_profile_source": "change_create",
+      "workflow_profile_version": 1
+    }
+  }
+}

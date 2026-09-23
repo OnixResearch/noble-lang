@@ -28,6 +28,30 @@ const scalar = value => ({ type: 'I64', value: String(value) });
 const wrap = value => BigInt.asIntN(64, value);
 const absolute = value => value < 0n ? -value : value;
 
+// MC2 reports retain live handles in addition to ordinary semantic values.
+// Keep the raw reports as evidence, validate bookkeeping, then compare only
+// semantics where a workload does not declare cross-operation cell identity.
+export function semanticObservation(value) {
+  if (Array.isArray(value)) return value.map(semanticObservation);
+  if (!value || typeof value !== 'object') return value;
+  if (Object.hasOwn(value, 'handle')) {
+    if (value.handle === null) assert.ok(['I64', 'Bool', 'Unit'].includes(value.type));
+    else assert.ok(Number.isSafeInteger(value.handle) && value.handle > 0, 'invalid live cell handle');
+  }
+  return Object.fromEntries(Object.entries(value).filter(([key]) => key !== 'handle')
+    .map(([key, item]) => [key, semanticObservation(item)]));
+}
+
+export function stackObservation(stack) {
+  assert.ok(Array.isArray(stack));
+  for (const value of stack) {
+    assert.ok(Object.hasOwn(value, 'handle'), 'live stack entry omitted handle metadata');
+    if (['I64', 'Bool', 'Unit'].includes(value.type)) assert.equal(value.handle, null);
+    else assert.ok(Number.isSafeInteger(value.handle) && value.handle > 0);
+  }
+  return semanticObservation(stack);
+}
+
 function stream(seed) {
   let state = BigInt(seed);
   return () => {
@@ -167,10 +191,11 @@ function compare(candidate, observed, before, after) {
     [composed, candidate.expected.composed], [syntax, candidate.expected.syntax],
     [components[0], candidate.expected.components[0]], [components[1], candidate.expected.components[1]],
   ]) {
-    check('retained-recipe-structure/atoms', actual?.recipe, expected.recipe);
+    check('retained-recipe-structure/atoms', semanticObservation(actual?.recipe), expected.recipe);
     check('retained-recipe-structure/invocation-witnesses', actual?.witnesses, expected.witnesses);
   }
-  check('reference-result-and-effect-agreement/result', result, candidate.expected.result);
+  check('reference-result-and-effect-agreement/immediate-handle', result?.handle, null);
+  check('reference-result-and-effect-agreement/result', semanticObservation(result), candidate.expected.result);
   check('reference-result-and-effect-agreement/trace', observed.request_trace, candidate.expected.request_trace);
   check('reference-result-and-effect-agreement/request-count', observed.guest_requests, candidate.expected.request_trace.length);
   return failures;

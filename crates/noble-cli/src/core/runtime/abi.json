@@ -32,6 +32,8 @@
     {"name":"generation","type":"i32","value":0}
   ],
   "globals_mutable": true,
+  "operand_slots": {"offset": 0, "stride": 16, "maximum": 128},
+  "host_stack_frames": "One bounded engine-owned park/restore frame preserves existing operand bytes and live handles across a companion operation. Frames are not supplied by callers and cannot construct values. Restoring never clears a runtime failure or rolls back heap/compiler generations.",
   "host_functions": [
     {"name":"test_emit","params":["i32","i32"],"result":"i32","contract":"UTF-8 memory byte offset and length; append exactly one text request; return 0 for success, nonzero for denial. No re-entry."},
     {"name":"test_abort","params":[],"result":"i32","contract":"Append exactly one abort request. Stack-polymorphic S -- S with effect 1. Any return terminates execution with status 6. No re-entry."}
@@ -43,6 +45,10 @@
     "push_bool":"(value:i32)->status:i32; rejects values other than 0 or 1",
     "push_unit":"()->status:i32; checked Unit injection",
     "push_program":"(handle:i32)->status:i32; only accepts existing live Program cells, never constructs code",
+    "push_contract":"(index:i32,statement:i64,claim_kind:i32,revision:i32)->status:i32; host-only injection of an inert Contract cell describing one admitted claim",
+    "push_evidence":"(index:i32,class:i32,ruleset:i32,contract:i32)->status:i32; host-only injection of an inert Evidence cell that names an accepted core entry and references exactly the supplied Contract cell",
+    "push_certified":"(subject:i32,contract:i32,evidence:i32,identity:i64)->status:i32; host-only injection of a Certified cell over a live Program cell; fails closed unless evidence references the supplied contract cell",
+    "certified_subject":"(handle:i32)->i32; explicit projection of a Certified cell to its live subject Program handle",
     "stack_length":"()->i32",
     "stack_kind":"(index:i32)->i32; bottom-first",
     "stack_value":"(index:i32)->i64; scalar value or unsigned cell handle",
@@ -68,7 +74,7 @@
   "quota_reason": {"1":"allocation","2":"recipe leaves","3":"program graph depth","4":"operand bytes","5":"continuation bytes","6":"execution work","7":"reflection/type-observation work"},
   "limits_maximum": {"allocation_bytes":196608,"recipe_leaves":256,"program_depth":256,"operand_bytes":2048,"continuation_bytes":4096,"steps":100000,"session_cells":4096,"session_functions":16384,"session_literal_bytes":786432},
   "metrics": {"0":"status","1":"quota_reason","2":"allocated_total_bytes","3":"released_total_bytes","4":"allocated_since_begin_bytes","5":"allocation_peak_bytes","6":"operand_peak_bytes","7":"continuation_peak_bytes","8":"execution_steps","9":"quote_invocations","10":"memory_bytes","11":"retained_before_begin_bytes","12":"stack_length","13":"reflection_steps"},
-  "value_tags": {"1":"I64","2":"Bool","3":"Unit","4":"Program","5":"Pair","6":"List.Cons","7":"List.Nil","8":"Recipe.Atom","9":"Recipe.Concat","10":"Syntax","11":"Text","12":"Sum.Left","13":"Sum.Right"},
+  "value_tags": {"1":"I64","2":"Bool","3":"Unit","4":"Program","5":"Pair","6":"List.Cons","7":"List.Nil","8":"Recipe.Atom","9":"Recipe.Concat","10":"Syntax","11":"Text","12":"Sum.Left","13":"Sum.Right","14":"Contract","15":"Evidence","16":"Certified"},
   "cells": {
     "layout":"48 immutable bytes: kind:i32,id:i32,payload:i64,a:i32,b:i32,c:i32,x:i32,y:i32,z:i32,w:i32,n:i32. Handles 1..4096 address 65536+(handle-1)*48. a/b/c are nullable backward cell edges; inspect only live handles obtained from checked output.",
     "Program":"payload=latent effect bitmask (bit0 emit, bit1 abort), a/b=immutable captures/compose children, c=exact recipe, x=compiled table entry, y/z=complete ordered input/output signature IDs, w=program depth,n=recipe leaves. Signature IDs are stable across Compiler commits. No exported constructor accepts these fields.",
@@ -78,11 +84,14 @@
     "Sum.Right":"a=boxed selected payload",
     "Syntax":"a=inert recipe (zero denotes empty)",
     "Text":"x=UTF-8 memory byte offset,y=byte length",
+    "Contract":"payload=admitted statement digest,x=session contract index,y=claim kind,z=claim revision; inert, resource-free, data-eligible",
+    "Evidence":"payload=accepted evidence index,x=evidence class,y=ruleset version,a=referenced Contract cell; possession names an accepted entry and establishes nothing by itself",
+    "Certified":"payload=subject identity digest,a=subject Program cell,b=Contract cell,c=Evidence cell,x/y=subject input/output signature IDs,w/n=subject depth/recipe leaves; immutable and inert",
     "Recipe.Atom":"x=atom tag,payload=scalar or immutable semantic definition identity,a=nested Program/data cell; tag8 y=complete one-slot captured data signature ID; tags2/15 y=invocation input signature,z=invocation output signature,w=invocation latent effect mask",
     "Recipe.Concat":"a=left recipe,b=right recipe"
   },
-  "recipe_events": {"1":"I64 payload","2":"builtin invocation Definition index","3":"quotation begin","4":"Bool payload","5":"Unit","6":"end aggregate/quotation","7":"text byte (one event per UTF-8 byte)","8":"text begin","9":"pair begin","10":"list begin","11":"sum-left begin","12":"sum-right begin","13":"syntax begin","14":"Program data begin (inside aggregate)","15":"immutable user definition identity (unsigned i64 bits)","16":"captured data complete one-slot type signature ID","17":"Program complete ordered input signature ID","18":"Program complete ordered output signature ID","19":"Program latent effect bitmask","20":"invocation input signature ID","21":"invocation output signature ID","22":"invocation latent effect bitmask"},
-  "signature_grammar":"Bottom-first [T T ...]; T=I64|Bool|Unit|Text|Syntax|List(T)|Pair(T,T)|Sum(T,T)|Program([T ...]->[T ...]!{effect IDs}). Empty effects omit !{}. Program effect IDs are sorted decimal 0=emit,1=abort. No resource types are admitted by this backend.",
+  "recipe_events": {"1":"I64 payload","2":"builtin invocation Definition index","3":"quotation begin","4":"Bool payload","5":"Unit","6":"end aggregate/quotation","7":"text byte (one event per UTF-8 byte)","8":"text begin","9":"pair begin","10":"list begin","11":"sum-left begin","12":"sum-right begin","13":"syntax begin","14":"Program data begin (inside aggregate)","15":"immutable user definition identity (unsigned i64 bits)","16":"captured data complete one-slot type signature ID","17":"Program complete ordered input signature ID","18":"Program complete ordered output signature ID","19":"Program latent effect bitmask","20":"invocation input signature ID","21":"invocation output signature ID","22":"invocation latent effect bitmask","23":"contract reference (session contract index)","24":"evidence reference (accepted evidence index)","25":"certified subject identity digest"},
+  "signature_grammar":"Bottom-first [T T ...]; T=I64|Bool|Unit|Text|Syntax|Contract|Evidence|Certified|List(T)|Pair(T,T)|Sum(T,T)|Program([T ...]->[T ...]!{effect IDs}). Empty effects omit !{}. Program effect IDs are sorted decimal 0=emit,1=abort. No resource types are admitted by this backend.",
   "compiler_limits":"One shared Request.limits.work budget covers structural preflight, payload/dependency validation, conservative full-environment cost, separate reserved kernel dependency/node-check allowances for every specialization/root, identity comparison and lowering/type/signature work. Additional hard bounds: 4096 candidate nodes total, 256 specialization entries, 512 nodes and 64 edges per structural type/pattern path, 128 stack slots, 8 instantiation bindings, 4096 session signatures, 1 MiB emitted WAT. Exhaustion returns no module and changes no Compiler state.",
   "recipe_atom_tags": {"1":"I64","2":"builtin invocation","3":"quotation Program child","4":"Bool","5":"Unit","8":"captured non-Program Data child","15":"immutable user definition identity"},
   "lifecycle": "Create one memory/table/global set per Compiler. Import it unchanged into each successive module; retain instances. Instantiation has no start function and changes no shared memory/table/globals: code and literal segments are passive. submit first checks generation and exact inputs, then installs its disjoint code/data before constructing inert recipes and executing. Call begin then inject explicitly typed inputs if needed then submit once. Compiler commit and frontend definition commit happen only after successful module preparation/instantiation. A nonzero runtime status or native engine/host trap poisons/ends the session; no rollback of already-issued host trace is claimed. Static preparation/assembly/instantiation refusals leave prior namespace and operand stack unchanged. The shell must never modify memory/table/global internals or forge heap handles. Reflection events are inert and are never executable input."

@@ -1,0 +1,7 @@
+(contract 1 resource-in-ghost-capture
+  (input (x I64))
+  (output (y I64))
+  (params (r (Resource Channel)))
+  (program [ 1 + ])
+  (requires true)
+  (ensures (eq (out y) (add (in x) 1))))

@@ -43,6 +43,9 @@ inductive noble_kernel.types.Ty where
 | I64Type : noble_kernel.types.Ty
 | TextType : noble_kernel.types.Ty
 | SyntaxType : noble_kernel.types.Ty
+| ContractType : noble_kernel.types.Ty
+| EvidenceType : noble_kernel.types.Ty
+| CertifiedType : noble_kernel.types.Ty
 | PairType :
   noble_kernel.types.Ty →
   noble_kernel.types.Ty →
@@ -307,7 +310,7 @@ inductive noble_kernel.words.VariableKind where
 | Effect : noble_kernel.words.VariableKind
 
 /-- [noble_kernel::shapes::EffectSlot]
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 74:0-74:19
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 80:0-80:19
     Name pattern: [noble_kernel::shapes::EffectSlot]
     Visibility: public -/
 @[discriminant isize, rust_type "noble_kernel::shapes::EffectSlot"]
@@ -326,6 +329,9 @@ inductive noble_kernel.shapes.Pattern where
 | I64Pattern : noble_kernel.shapes.Pattern
 | TextPattern : noble_kernel.shapes.Pattern
 | SyntaxPattern : noble_kernel.shapes.Pattern
+| ContractPattern : noble_kernel.shapes.Pattern
+| EvidencePattern : noble_kernel.shapes.Pattern
+| CertifiedPattern : noble_kernel.shapes.Pattern
 | PairPattern :
   noble_kernel.shapes.Pattern →
   noble_kernel.shapes.Pattern →
@@ -409,7 +415,7 @@ structure noble_kernel.contracts.Env where
   effects : alloc.vec.Vec noble_kernel.types.EffId
 
 /-- [noble_kernel::shapes::Defect]
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 83:0-83:15
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 89:0-89:15
     Name pattern: [noble_kernel::shapes::Defect]
     Visibility: public -/
 @[discriminant isize, rust_type "noble_kernel::shapes::Defect"]
@@ -472,8 +478,121 @@ inductive noble_kernel.words.InstError where
 | CyclicWitness : noble_kernel.words.InstError
 | WalkExhausted : noble_kernel.words.InstError
 
+/-- [noble_contracts::companion::admit::EvidencePayload]
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 118:0-122:1
+    Visibility: public -/
+@[discriminant isize]
+inductive companion.admit.EvidencePayload where
+| Declaration : alloc.vec.Vec Std.U8 → companion.admit.EvidencePayload
+| Resource : Std.U64 → companion.admit.EvidencePayload
+| ServiceCapability : Std.U64 → companion.admit.EvidencePayload
+
+/-- [noble_contracts::companion::registry::EvidenceClass]
+    Source: 'crates/noble-contracts/src/companion/registry/mod.rs', lines 7:0-16:1
+    Visibility: public -/
+@[discriminant isize]
+inductive companion.registry.EvidenceClass where
+| LeanExact : companion.registry.EvidenceClass
+| LeanRefutation : companion.registry.EvidenceClass
+| Replay : companion.registry.EvidenceClass
+| Assumption : companion.registry.EvidenceClass
+
+/-- [noble_contracts::companion::admit::EvidenceOffer]
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 108:0-112:1
+    Visibility: public -/
+structure companion.admit.EvidenceOffer where
+  «class» : companion.registry.EvidenceClass
+  refutation : Bool
+  payload : companion.admit.EvidencePayload
+
+/-- [noble_contracts::ExprKind]
+    Source: 'crates/noble-contracts/src/lib.rs', lines 130:0-163:1
+    Visibility: public -/
+@[discriminant isize]
+inductive ExprKind where
+| I64Expr : Std.I64 → ExprKind
+| BoolExpr : Bool → ExprKind
+| UnitExpr : ExprKind
+| InputExpr : Std.U32 → ExprKind
+| OutputExpr : Std.U32 → ExprKind
+| ParamExpr : Std.U32 → ExprKind
+| DefinitionExpr : Std.U32 → ExprKind
+| NotExpr : Std.U32 → ExprKind
+| AndExpr : Std.U32 → Std.U32 → ExprKind
+| OrExpr : Std.U32 → Std.U32 → ExprKind
+| ImpliesExpr : Std.U32 → Std.U32 → ExprKind
+| EqExpr : Std.U32 → Std.U32 → ExprKind
+| LtExpr : Std.U32 → Std.U32 → ExprKind
+| LeExpr : Std.U32 → Std.U32 → ExprKind
+| AddExpr : Std.U32 → Std.U32 → ExprKind
+| SubExpr : Std.U32 → Std.U32 → ExprKind
+| MulExpr : Std.U32 → Std.U32 → ExprKind
+| PairExpr : Std.U32 → Std.U32 → ExprKind
+| FirstExpr : Std.U32 → ExprKind
+| SecondExpr : Std.U32 → ExprKind
+| InlExpr : Std.U32 → ExprKind
+| InrExpr : Std.U32 → ExprKind
+| IsLeftExpr : Std.U32 → ExprKind
+| LeftExpr : Std.U32 → ExprKind
+| RightExpr : Std.U32 → ExprKind
+| NilExpr : ExprKind
+| ConsExpr : Std.U32 → Std.U32 → ExprKind
+| IsNilExpr : Std.U32 → ExprKind
+| HeadExpr : Std.U32 → ExprKind
+| TailExpr : Std.U32 → ExprKind
+| LengthExpr : Std.U32 → ExprKind
+| MapsExpr : Std.U32 → Std.U32 → Std.U32 → ExprKind
+
+/-- [noble_contracts::Span]
+    Source: 'crates/noble-contracts/src/lib.rs', lines 53:0-56:1
+    Visibility: public -/
+structure Span where
+  start : Std.U32
+  «end» : Std.U32
+
+/-- [noble_contracts::Expr]
+    Source: 'crates/noble-contracts/src/lib.rs', lines 108:0-114:1
+    Visibility: public -/
+structure Expr where
+  kind : ExprKind
+  ty : noble_kernel.types.Ty
+  span : Span
+  total : Bool
+  uses_output : Bool
+
+/-- [noble_contracts::LogicDef]
+    Source: 'crates/noble-contracts/src/lib.rs', lines 101:0-105:1
+    Visibility: public -/
+structure LogicDef where
+  «name» : String
+  ty : noble_kernel.types.Ty
+  body : Std.U32
+
+/-- [noble_contracts::NamedType]
+    Source: 'crates/noble-contracts/src/lib.rs', lines 95:0-98:1
+    Visibility: public -/
+structure NamedType where
+  «name» : String
+  ty : noble_kernel.types.Ty
+
+/-- [noble_contracts::Prepared]
+    Source: 'crates/noble-contracts/src/lib.rs', lines 167:0-179:1
+    Visibility: public -/
+structure Prepared where
+  «name» : String
+  inputs : alloc.vec.Vec NamedType
+  outputs : alloc.vec.Vec NamedType
+  params : alloc.vec.Vec NamedType
+  definitions : alloc.vec.Vec LogicDef
+  expressions : alloc.vec.Vec Expr
+  requires : Std.U32
+  ensures : Std.U32
+  candidate : noble_kernel.untrusted.Candidate
+  request : noble_kernel.untrusted.Request
+  checked : noble_kernel.untrusted.Checked
+
 /-- [noble_contracts::Limits]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 28:0-33:1
+    Source: 'crates/noble-contracts/src/lib.rs', lines 34:0-39:1
     Visibility: public -/
 structure Limits where
   bytes : Std.U32
@@ -481,22 +600,315 @@ structure Limits where
   depth : Std.U32
   work : Std.U32
 
+/-- [noble_contracts::companion::SubjectDigest]
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 229:0-229:34
+    Visibility: public -/
+@[reducible]
+def companion.SubjectDigest := Std.U64
+
+/-- [noble_contracts::companion::registry::Observation]
+    Source: 'crates/noble-contracts/src/companion/registry/mod.rs', lines 96:0-99:1 -/
+structure companion.registry.Observation where
+  subject : companion.SubjectDigest
+  events : alloc.vec.Vec (Std.U32 × Std.U64)
+
+/-- [noble_contracts::companion::rules::RuleId]
+    Source: 'crates/noble-contracts/src/companion/rules/mod.rs', lines 15:0-22:1
+    Visibility: public -/
+@[discriminant isize [1,2,3,4,5,6]]
+inductive companion.rules.RuleId where
+| AdmitLeanV1 : companion.rules.RuleId
+| ComposeV1 : companion.rules.RuleId
+| InstantiateV1 : companion.rules.RuleId
+| GuardV1 : companion.rules.RuleId
+| ProjectV1 : companion.rules.RuleId
+| InvokeV1 : companion.rules.RuleId
+
+/-- [noble_contracts::companion::registry::EvidenceId]
+    Source: 'crates/noble-contracts/src/companion/registry/mod.rs', lines 47:0-47:31
+    Visibility: public -/
+@[reducible]
+def companion.registry.EvidenceId := Std.U32
+
+/-- [noble_contracts::companion::registry::ContractId]
+    Source: 'crates/noble-contracts/src/companion/registry/mod.rs', lines 43:0-43:31
+    Visibility: public -/
+@[reducible]
+def companion.registry.ContractId := Std.U32
+
+/-- [noble_contracts::companion::CaptureBinding]
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 222:0-225:1
+    Visibility: public -/
+structure companion.CaptureBinding where
+  slot : Std.U32
+  value : Std.U64
+
+/-- [noble_contracts::companion::Subject]
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 234:0-244:1
+    Visibility: public -/
+structure companion.Subject where
+  identity : companion.SubjectDigest
+  input_signature : Std.U64
+  output_signature : Std.U64
+  captures : alloc.vec.Vec companion.CaptureBinding
+  events : alloc.vec.Vec (Std.U32 × Std.U64)
+
+/-- [noble_contracts::companion::admit::Outcome]
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 81:0-89:1
+    Visibility: public -/
+@[discriminant isize]
+inductive companion.admit.Outcome where
+| Proved : companion.admit.Outcome
+| Disproved : companion.admit.Outcome
+| Unknown : companion.admit.Outcome
+| Timeout : companion.admit.Outcome
+| Unsupported : companion.admit.Outcome
+| Error : companion.admit.Outcome
+| NotRun : companion.admit.Outcome
+
+/-- [noble_contracts::companion::GuardTemplate]
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 211:0-218:1
+    Visibility: public -/
+@[discriminant isize]
+inductive companion.GuardTemplate where
+| LtI64Max : companion.GuardTemplate
+| NeI64Min : companion.GuardTemplate
+| EqI64Literal : Std.I64 → companion.GuardTemplate
+
+/-- [noble_contracts::companion::admit::ClaimTemplate]
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 27:0-37:1
+    Visibility: public -/
+@[discriminant isize]
+inductive companion.admit.ClaimTemplate where
+| IncrementBy : Std.I64 → companion.admit.ClaimTemplate
+| IncrementByCapture : companion.admit.ClaimTemplate
+| GuardCorrespondence :
+  companion.GuardTemplate →
+  companion.admit.ClaimTemplate
+| Admitted : Std.U64 → companion.admit.ClaimTemplate
+
+/-- [noble_contracts::companion::registry::EvidenceEntry]
+    Source: 'crates/noble-contracts/src/companion/registry/mod.rs', lines 81:0-92:1 -/
+structure companion.registry.EvidenceEntry where
+  contract : companion.registry.ContractId
+  statement : Std.U64
+  template : companion.admit.ClaimTemplate
+  subject : companion.Subject
+  «class» : companion.registry.EvidenceClass
+  outcome : companion.admit.Outcome
+  policy : Std.U32
+  revision : Std.U32
+  premises : alloc.vec.Vec companion.registry.EvidenceId
+  rule : Option companion.rules.RuleId
+
+/-- [noble_contracts::companion::registry::ContractEntry]
+    Source: 'crates/noble-contracts/src/companion/registry/mod.rs', lines 60:0-77:1 -/
+structure companion.registry.ContractEntry where
+  statement : Std.U64
+  exact_statement : String
+  claim : companion.admit.ClaimTemplate
+  policy : Std.U32
+  revision : Std.U32
+  guards : alloc.vec.Vec companion.GuardTemplate
+  program : alloc.vec.Vec (Std.U32 × Std.U64)
+  input_signature : Std.U64
+  output_signature : Std.U64
+  input : alloc.vec.Vec noble_kernel.types.Ty
+  output : alloc.vec.Vec noble_kernel.types.Ty
+
+/-- [noble_contracts::companion::registry::Registry]
+    Source: 'crates/noble-contracts/src/companion/registry/mod.rs', lines 102:0-109:1 -/
+structure companion.registry.Registry where
+  contracts : alloc.vec.Vec companion.registry.ContractEntry
+  evidence : alloc.vec.Vec companion.registry.EvidenceEntry
+  observations : alloc.vec.Vec companion.registry.Observation
+  contract_cap : Option Std.Usize
+  evidence_cap : Option Std.Usize
+  observation_cap : Option Std.Usize
+
+/-- [noble_contracts::companion::Core]
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 195:0-206:1
+    Visibility: public -/
+structure companion.Core where
+  limits : Limits
+  registry : companion.registry.Registry
+  policy : Std.U32
+  revision : Std.U32
+  semantic_revision : Std.U32
+  host_contract : Std.U64
+  environment_fact : Std.U64
+
+/-- [noble_contracts::companion::Budget]
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 170:0-172:1 -/
+structure companion.Budget where
+  work : Std.U32
+
+/-- [noble_contracts::companion::Refusal]
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 139:0-166:1
+    Visibility: public -/
+@[discriminant isize]
+inductive companion.Refusal where
+| UnknownRule : companion.Refusal
+| UnsupportedRuleset : companion.Refusal
+| UnsupportedSemanticRevision : companion.Refusal
+| CyclicDerivation : companion.Refusal
+| DuplicatePremise : companion.Refusal
+| MissingPremise : companion.Refusal
+| WrongPremiseClass : companion.Refusal
+| MismatchedSubject : companion.Refusal
+| MismatchedClaim : companion.Refusal
+| MismatchedContext : companion.Refusal
+| StaleContext : companion.Refusal
+| UnresolvedImplication : companion.Refusal
+| WrongInstantiation : companion.Refusal
+| UnsupportedEvidenceClass : companion.Refusal
+| ForgedStatus : companion.Refusal
+| UnknownContract : companion.Refusal
+| UnknownEvidence : companion.Refusal
+| UnsupportedGuardTemplate : companion.Refusal
+| IneligibleGhost : companion.Refusal
+| LiveCapabilityInEvidence : companion.Refusal
+| InvalidEvidenceEncoding : companion.Refusal
+| CorrespondenceMismatch : companion.Refusal
+| ExhaustedReplay : companion.Refusal
+| ExhaustedRegistry : companion.Refusal
+| DuplicateEntry : companion.Refusal
+| Internal : companion.Refusal
+
+/-- [noble_contracts::wire::ProjectionError]
+    Source: 'crates/noble-contracts/src/wire.rs', lines 19:0-23:1
+    Visibility: public -/
+@[discriminant isize]
+inductive wire.ProjectionError where
+| Revision : wire.ProjectionError
+| PayloadlessText : wire.ProjectionError
+| HostWord : wire.ProjectionError
+
+/-- [noble_contracts::wire::SemanticNode]
+    Source: 'crates/noble-contracts/src/wire.rs', lines 9:0-15:1
+    Visibility: public -/
+@[discriminant isize]
+inductive wire.SemanticNode where
+| I64 : Std.I64 → wire.SemanticNode
+| Boolean : Bool → wire.SemanticNode
+| UnitValue : wire.SemanticNode
+| Word : Std.U32 → wire.SemanticNode
+| Quotation : alloc.vec.Vec Std.U32 → wire.SemanticNode
+
+/-- [noble_contracts::wire::SemanticSubject]
+    Source: 'crates/noble-contracts/src/wire.rs', lines 26:0-29:1
+    Visibility: public -/
+structure wire.SemanticSubject where
+  nodes : alloc.vec.Vec wire.SemanticNode
+  body : alloc.vec.Vec Std.U32
+
+/-- [noble_contracts::companion::digest::Fold]
+    Source: 'crates/noble-contracts/src/companion/digest.rs', lines 31:0-33:1 -/
+structure companion.digest.Fold where
+  state : Std.U64
+
+/-- [noble_contracts::companion::admit::program::Pending]
+    Source: 'crates/noble-contracts/src/companion/admit/program.rs', lines 8:0-11:1 -/
+@[discriminant isize]
+inductive companion.admit.program.Pending where
+| Node : Std.U32 → companion.admit.program.Pending
+| CloseQuotation : companion.admit.program.Pending
+
+/-- [noble_contracts::companion::admit::Admission]
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 152:0-158:1
+    Visibility: public -/
+structure companion.admit.Admission where
+  outcome : companion.admit.Outcome
+  contract : Option companion.registry.ContractId
+  evidence : Option companion.registry.EvidenceId
+  statement_digest : Std.U64
+  refusals : alloc.vec.Vec companion.Refusal
+
+/-- [noble_contracts::companion::admit::AdmissionRequest]
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 127:0-134:1
+    Visibility: public -/
+structure companion.admit.AdmissionRequest where
+  expected : Prepared
+  offer : companion.admit.EvidenceOffer
+  contract : companion.registry.ContractId
+  statement : Std.U64
+  policy : Std.U32
+  revision : Std.U32
+
+/-- [noble_contracts::companion::admit::CheckObservation]
+    Source: 'crates/noble-contracts/src/companion/admit/mod.rs', lines 144:0-148:1
+    Visibility: public -/
+structure companion.admit.CheckObservation where
+  checked_statement : String
+  checked_source : alloc.vec.Vec Std.U8
+  result : core.result.Result companion.registry.EvidenceClass
+    companion.Refusal
+
+/-- [noble_contracts::companion::registry::ContextSnapshot]
+    Source: 'crates/noble-contracts/src/companion/registry/mod.rs', lines 51:0-54:1 -/
+structure companion.registry.ContextSnapshot where
+  policy : Std.U32
+  revision : Std.U32
+
+/-- [noble_contracts::companion::rules::premises::step::SeedBounds]
+    Source: 'crates/noble-contracts/src/companion/rules/premises/step.rs', lines 5:0-9:1 -/
+structure companion.rules.premises.step.SeedBounds where
+  next : Std.U32
+  entry_bound : Std.Usize
+  should_reject_duplicates : Bool
+
+/-- [noble_contracts::companion::rules::Derivation]
+    Source: 'crates/noble-contracts/src/companion/rules/mod.rs', lines 55:0-61:1
+    Visibility: public -/
+structure companion.rules.Derivation where
+  rule : companion.rules.RuleId
+  contract : companion.registry.ContractId
+  statement : Std.U64
+  subject : companion.Subject
+  premises : alloc.vec.Vec companion.registry.EvidenceId
+
+/-- [noble_contracts::companion::InterfaceSignatures]
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 23:0-26:1
+    Visibility: public -/
+structure companion.InterfaceSignatures where
+  input : Std.U64
+  output : Std.U64
+
+/-- [noble_contracts::companion::rules::Derived]
+    Source: 'crates/noble-contracts/src/companion/rules/mod.rs', lines 5:0-9:1
+    Visibility: public -/
+structure companion.rules.Derived where
+  evidence : companion.registry.EvidenceId
+  contract : companion.registry.ContractId
+  statement_digest : Std.U64
+
+/-- [noble_contracts::companion::Release]
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 250:0-257:1
+    Visibility: public -/
+structure companion.Release where
+  contract : companion.registry.ContractId
+  evidence : companion.registry.EvidenceId
+  statement : Std.U64
+  subject : companion.SubjectDigest
+  policy : Std.U32
+  ruleset : Std.U32
+
+/-- [noble_contracts::companion::EncodedRule]
+    Source: 'crates/noble-contracts/src/companion/mod.rs', lines 30:0-33:1
+    Visibility: public -/
+structure companion.EncodedRule where
+  ruleset : Std.U32
+  code : Std.U32
+
 /-- [noble_contracts::Meter]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 215:0-219:1 -/
+    Source: 'crates/noble-contracts/src/lib.rs', lines 221:0-225:1 -/
 structure Meter where
   limits : Limits
   work : Std.U32
   nodes : Std.U32
 
-/-- [noble_contracts::NamedType]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 89:0-92:1
-    Visibility: public -/
-structure NamedType where
-  «name» : String
-  ty : noble_kernel.types.Ty
-
 /-- [noble_contracts::DiagnosticKind]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 53:0-58:1
+    Source: 'crates/noble-contracts/src/lib.rs', lines 59:0-64:1
     Visibility: public -/
 @[discriminant isize]
 inductive DiagnosticKind where
@@ -505,15 +917,8 @@ inductive DiagnosticKind where
 | Exhausted : DiagnosticKind
 | Internal : DiagnosticKind
 
-/-- [noble_contracts::Span]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 47:0-50:1
-    Visibility: public -/
-structure Span where
-  start : Std.U32
-  «end» : Std.U32
-
 /-- [noble_contracts::Diagnostic]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 61:0-66:1
+    Source: 'crates/noble-contracts/src/lib.rs', lines 67:0-72:1
     Visibility: public -/
 structure Diagnostic where
   kind : DiagnosticKind
@@ -522,7 +927,7 @@ structure Diagnostic where
   ordinary_typing : Option noble_kernel.untrusted.Checked
 
 /-- [noble_contracts::syntax::Form]
-    Source: 'crates/noble-contracts/src/syntax/mod.rs', lines 7:0-11:1 -/
+    Source: 'crates/noble-contracts/src/syntax/mod.rs', lines 12:0-16:1 -/
 @[discriminant isize]
 inductive syntax.Form where
 | Atom : syntax.Form
@@ -530,19 +935,19 @@ inductive syntax.Form where
 | Square : alloc.vec.Vec Std.U32 → syntax.Form
 
 /-- [noble_contracts::syntax::Node]
-    Source: 'crates/noble-contracts/src/syntax/mod.rs', lines 13:0-16:1 -/
+    Source: 'crates/noble-contracts/src/syntax/mod.rs', lines 18:0-21:1 -/
 structure syntax.Node where
   form : syntax.Form
   span : Span
 
 /-- [noble_contracts::syntax::Tree]
-    Source: 'crates/noble-contracts/src/syntax/mod.rs', lines 18:0-21:1 -/
+    Source: 'crates/noble-contracts/src/syntax/mod.rs', lines 23:0-26:1 -/
 structure syntax.Tree where
   nodes : alloc.vec.Vec syntax.Node
   root : Std.U32
 
 /-- [noble_contracts::frontend::Container]
-    Source: 'crates/noble-contracts/src/frontend.rs', lines 6:0-11:1 -/
+    Source: 'crates/noble-contracts/src/frontend.rs', lines 11:0-16:1 -/
 structure frontend.Container where
   source : Slice Std.U8
   tree : syntax.Tree
@@ -600,62 +1005,6 @@ inductive frontend.fields.Field where
 | Unsupported : frontend.fields.Field
 | Unknown : frontend.fields.Field
 
-/-- [noble_contracts::ExprKind]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 124:0-157:1
-    Visibility: public -/
-@[discriminant isize]
-inductive ExprKind where
-| I64Expr : Std.I64 → ExprKind
-| BoolExpr : Bool → ExprKind
-| UnitExpr : ExprKind
-| InputExpr : Std.U32 → ExprKind
-| OutputExpr : Std.U32 → ExprKind
-| ParamExpr : Std.U32 → ExprKind
-| DefinitionExpr : Std.U32 → ExprKind
-| NotExpr : Std.U32 → ExprKind
-| AndExpr : Std.U32 → Std.U32 → ExprKind
-| OrExpr : Std.U32 → Std.U32 → ExprKind
-| ImpliesExpr : Std.U32 → Std.U32 → ExprKind
-| EqExpr : Std.U32 → Std.U32 → ExprKind
-| LtExpr : Std.U32 → Std.U32 → ExprKind
-| LeExpr : Std.U32 → Std.U32 → ExprKind
-| AddExpr : Std.U32 → Std.U32 → ExprKind
-| SubExpr : Std.U32 → Std.U32 → ExprKind
-| MulExpr : Std.U32 → Std.U32 → ExprKind
-| PairExpr : Std.U32 → Std.U32 → ExprKind
-| FirstExpr : Std.U32 → ExprKind
-| SecondExpr : Std.U32 → ExprKind
-| InlExpr : Std.U32 → ExprKind
-| InrExpr : Std.U32 → ExprKind
-| IsLeftExpr : Std.U32 → ExprKind
-| LeftExpr : Std.U32 → ExprKind
-| RightExpr : Std.U32 → ExprKind
-| NilExpr : ExprKind
-| ConsExpr : Std.U32 → Std.U32 → ExprKind
-| IsNilExpr : Std.U32 → ExprKind
-| HeadExpr : Std.U32 → ExprKind
-| TailExpr : Std.U32 → ExprKind
-| LengthExpr : Std.U32 → ExprKind
-| MapsExpr : Std.U32 → Std.U32 → Std.U32 → ExprKind
-
-/-- [noble_contracts::Expr]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 102:0-108:1
-    Visibility: public -/
-structure Expr where
-  kind : ExprKind
-  ty : noble_kernel.types.Ty
-  span : Span
-  total : Bool
-  uses_output : Bool
-
-/-- [noble_contracts::LogicDef]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 95:0-99:1
-    Visibility: public -/
-structure LogicDef where
-  «name» : String
-  ty : noble_kernel.types.Ty
-  body : Std.U32
-
 /-- [noble_contracts::frontend::logic::Resolved]
     Source: 'crates/noble-contracts/src/frontend/logic.rs', lines 1:0-7:1 -/
 structure frontend.logic.Resolved where
@@ -672,12 +1021,12 @@ structure frontend.logic.Declarations where
   span : Span
 
 /-- [noble_contracts::predicate::Arena]
-    Source: 'crates/noble-contracts/src/predicate.rs', lines 19:0-21:1 -/
+    Source: 'crates/noble-contracts/src/predicate.rs', lines 24:0-26:1 -/
 structure predicate.Arena where
   expressions : alloc.vec.Vec Expr
 
 /-- [noble_contracts::predicate::Context]
-    Source: 'crates/noble-contracts/src/predicate.rs', lines 10:0-17:1 -/
+    Source: 'crates/noble-contracts/src/predicate.rs', lines 15:0-22:1 -/
 structure predicate.Context where
   source : Slice Std.U8
   tree : syntax.Tree
@@ -687,7 +1036,7 @@ structure predicate.Context where
   definitions : Slice LogicDef
 
 /-- [noble_contracts::predicate::Op]
-    Source: 'crates/noble-contracts/src/predicate.rs', lines 66:0-92:1 -/
+    Source: 'crates/noble-contracts/src/predicate.rs', lines 71:0-97:1 -/
 @[discriminant isize]
 inductive predicate.Op where
 | Not : predicate.Op
@@ -796,31 +1145,15 @@ structure syntax.parsing.State where
   root : Option Std.U32
   position : Std.Usize
 
-/-- [noble_contracts::Prepared]
-    Source: 'crates/noble-contracts/src/lib.rs', lines 161:0-173:1
-    Visibility: public -/
-structure Prepared where
-  «name» : String
-  inputs : alloc.vec.Vec NamedType
-  outputs : alloc.vec.Vec NamedType
-  params : alloc.vec.Vec NamedType
-  definitions : alloc.vec.Vec LogicDef
-  expressions : alloc.vec.Vec Expr
-  requires : Std.U32
-  ensures : Std.U32
-  candidate : noble_kernel.untrusted.Candidate
-  request : noble_kernel.untrusted.Request
-  checked : noble_kernel.untrusted.Checked
-
 /-- [noble_contracts::inference::Sort]
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 9:0-12:1 -/
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 14:0-17:1 -/
 @[discriminant isize]
 inductive inference.Sort where
 | Value : inference.Sort
 | Stack : inference.Sort
 
 /-- [noble_contracts::inference::Term]
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 17:0-31:1 -/
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 22:0-39:1 -/
 @[discriminant isize]
 inductive inference.Term where
 | HoleTerm : inference.Sort → inference.Term
@@ -830,6 +1163,9 @@ inductive inference.Term where
 | I64Term : inference.Term
 | TextTerm : inference.Term
 | SyntaxTerm : inference.Term
+| ContractTerm : inference.Term
+| EvidenceTerm : inference.Term
+| CertifiedTerm : inference.Term
 | PairTerm : Std.U32 → Std.U32 → inference.Term
 | SumTerm : Std.U32 → Std.U32 → inference.Term
 | ListTerm : Std.U32 → inference.Term
@@ -846,7 +1182,7 @@ inductive inference.effects.Effect where
 | Union : Std.U32 → Std.U32 → inference.effects.Effect
 
 /-- [noble_contracts::inference::Arena]
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 47:0-55:1 -/
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 55:0-63:1 -/
 structure inference.Arena where
   terms : alloc.vec.Vec inference.Term
   effectful : Bool
@@ -873,7 +1209,7 @@ structure inference.materialize.rendering.Traversal where
   text : String
 
 /-- [noble_contracts::inference::Variable]
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 34:0-39:1 -/
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 42:0-47:1 -/
 @[discriminant isize]
 inductive inference.Variable where
 | Value : Std.U32 → inference.Variable
@@ -882,7 +1218,7 @@ inductive inference.Variable where
 | EffectValue : Std.U32 → inference.Variable
 
 /-- [noble_contracts::inference::Program]
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 41:0-45:1 -/
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 49:0-53:1 -/
 structure inference.Program where
   input : Std.U32
   output : Std.U32
@@ -918,7 +1254,7 @@ structure inference.build.State where
   values : alloc.vec.Vec Std.U32
 
 /-- [noble_contracts::program::DraftKind]
-    Source: 'crates/noble-contracts/src/program.rs', lines 45:0-49:1 -/
+    Source: 'crates/noble-contracts/src/program.rs', lines 50:0-54:1 -/
 @[discriminant isize]
 inductive program.DraftKind where
 | Literal : noble_kernel.untrusted.Lit → program.DraftKind
@@ -926,7 +1262,7 @@ inductive program.DraftKind where
 | Quotation : alloc.vec.Vec noble_kernel.untrusted.NodeId → program.DraftKind
 
 /-- [noble_contracts::program::Draft]
-    Source: 'crates/noble-contracts/src/program.rs', lines 51:0-56:1 -/
+    Source: 'crates/noble-contracts/src/program.rs', lines 56:0-61:1 -/
 structure program.Draft where
   kind : program.DraftKind
   «variables» : alloc.vec.Vec inference.Variable
@@ -960,7 +1296,7 @@ structure inference.materialize.State where
   values : alloc.vec.Vec inference.materialize.Material
 
 /-- [noble_contracts::program::Frame]
-    Source: 'crates/noble-contracts/src/program.rs', lines 35:0-42:1 -/
+    Source: 'crates/noble-contracts/src/program.rs', lines 40:0-47:1 -/
 structure program.Frame where
   «syntax» : Std.U32
   position : Std.Usize
@@ -970,7 +1306,7 @@ structure program.Frame where
   origin : Option (Std.U32 × Std.U32 × Std.U32 × Span)
 
 /-- [noble_contracts::program::Resolution]
-    Source: 'crates/noble-contracts/src/program.rs', lines 58:0-64:1 -/
+    Source: 'crates/noble-contracts/src/program.rs', lines 63:0-69:1 -/
 structure program.Resolution where
   span : Span
   arena : inference.Arena
@@ -979,14 +1315,14 @@ structure program.Resolution where
   body : alloc.vec.Vec noble_kernel.untrusted.NodeId
 
 /-- [noble_contracts::program::Context]
-    Source: 'crates/noble-contracts/src/program.rs', lines 23:0-27:1 -/
+    Source: 'crates/noble-contracts/src/program.rs', lines 28:0-32:1 -/
 structure program.Context where
   source : Slice Std.U8
   tree : syntax.Tree
   env : noble_kernel.contracts.Env
 
 /-- [noble_contracts::program::Form]
-    Source: 'crates/noble-contracts/src/program.rs', lines 30:0-33:1 -/
+    Source: 'crates/noble-contracts/src/program.rs', lines 35:0-38:1 -/
 structure program.Form where
   children : Slice Std.U32
   span : Span
@@ -1014,35 +1350,8 @@ structure program.witness.Explicit where
   «variables» : Slice inference.Variable
   span : Span
 
-/-- [noble_contracts::wire::ProjectionError]
-    Source: 'crates/noble-contracts/src/wire.rs', lines 19:0-23:1
-    Visibility: public -/
-@[discriminant isize]
-inductive wire.ProjectionError where
-| Revision : wire.ProjectionError
-| PayloadlessText : wire.ProjectionError
-| HostWord : wire.ProjectionError
-
-/-- [noble_contracts::wire::SemanticNode]
-    Source: 'crates/noble-contracts/src/wire.rs', lines 9:0-15:1
-    Visibility: public -/
-@[discriminant isize]
-inductive wire.SemanticNode where
-| I64 : Std.I64 → wire.SemanticNode
-| Boolean : Bool → wire.SemanticNode
-| UnitValue : wire.SemanticNode
-| Word : Std.U32 → wire.SemanticNode
-| Quotation : alloc.vec.Vec Std.U32 → wire.SemanticNode
-
-/-- [noble_contracts::wire::SemanticSubject]
-    Source: 'crates/noble-contracts/src/wire.rs', lines 26:0-29:1
-    Visibility: public -/
-structure wire.SemanticSubject where
-  nodes : alloc.vec.Vec wire.SemanticNode
-  body : alloc.vec.Vec Std.U32
-
 /-- [noble_contracts::source::preflight::PathStep]
-    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 28:0-35:1 -/
+    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 33:0-40:1 -/
 @[discriminant isize]
 inductive source.preflight.PathStep where
 | Root : source.preflight.PathStep
@@ -1073,7 +1382,7 @@ structure source.emission.contracts.patterns.Traversal where
   values : alloc.vec.Vec noble_kernel.shapes.Pattern
 
 /-- [noble_contracts::source::inference::DraftKind]
-    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 6:0-10:1 -/
+    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 11:0-15:1 -/
 @[discriminant isize]
 inductive source.inference.DraftKind where
 | Literal : noble_kernel.untrusted.Lit → source.inference.DraftKind
@@ -1083,7 +1392,7 @@ inductive source.inference.DraftKind where
   source.inference.DraftKind
 
 /-- [noble_contracts::source::inference::Draft]
-    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 12:0-17:1 -/
+    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 17:0-22:1 -/
 structure source.inference.Draft where
   kind : source.inference.DraftKind
   «variables» : alloc.vec.Vec inference.Variable
@@ -1091,7 +1400,7 @@ structure source.inference.Draft where
   span : Span
 
 /-- [noble_contracts::source::inference::Body]
-    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 19:0-27:1 -/
+    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 24:0-32:1 -/
 structure source.inference.Body where
   nodes : alloc.vec.Vec source.inference.Draft
   root : alloc.vec.Vec noble_kernel.untrusted.NodeId
@@ -1109,20 +1418,20 @@ structure source.emission.materialization.Nodes where
   spans : alloc.vec.Vec Span
 
 /-- [noble_contracts::source::emission::Admission]
-    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 5:0-9:1 -/
+    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 10:0-14:1 -/
 structure source.emission.Admission where
   input_bytes : Std.U32
   limits : noble_kernel.untrusted.Limits
   environment : noble_kernel.contracts.Env
 
 /-- [noble_contracts::source::emission::Assembly]
-    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 11:0-17:1 -/
+    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 16:0-22:1 -/
 structure source.emission.Assembly where
   definitions : alloc.vec.Vec noble_kernel.execution.Definition
   root : Option (noble_kernel.execution.Body × noble_kernel.untrusted.Request)
 
 /-- [noble_contracts::source::emission::CheckedBody]
-    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 19:0-24:1 -/
+    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 24:0-29:1 -/
 structure source.emission.CheckedBody where
   body : noble_kernel.execution.Body
   request : noble_kernel.untrusted.Request
@@ -1147,7 +1456,7 @@ structure source.Error where
   diagnostic : Diagnostic
 
 /-- [noble_contracts::source::inference::State]
-    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 29:0-34:1 -/
+    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 34:0-39:1 -/
 structure source.inference.State where
   arena : inference.Arena
   bodies : alloc.vec.Vec source.inference.Body
@@ -1155,26 +1464,26 @@ structure source.inference.State where
   text_bytes : Std.U32
 
 /-- [noble_contracts::source::emission::allowance::{closure}]
-    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 217:18-217:55 -/
+    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 222:18-222:55 -/
 @[reducible]
 def source.emission.allowance.closure := Meter
 
 /-- [noble_contracts::source::inference::BodyKey]
-    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 50:0-53:1 -/
+    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 55:0-58:1 -/
 @[discriminant isize]
 inductive source.inference.BodyKey where
 | Root : source.inference.BodyKey
 | Quotation : Std.U32 → source.inference.BodyKey
 
 /-- [noble_contracts::source::inference::TreeKey]
-    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 44:0-47:1 -/
+    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 49:0-52:1 -/
 @[discriminant isize]
 inductive source.inference.TreeKey where
 | Root : source.inference.TreeKey
 | Named : Std.U32 → source.inference.TreeKey
 
 /-- [noble_contracts::source::inference::Origin]
-    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 37:0-41:1 -/
+    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 42:0-46:1 -/
 @[discriminant isize]
 inductive source.inference.Origin where
 | Root : source.inference.Origin
@@ -1182,7 +1491,7 @@ inductive source.inference.Origin where
 | Named : source.inference.Origin
 
 /-- [noble_contracts::source::inference::Frame]
-    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 60:0-72:1 -/
+    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 65:0-77:1 -/
 structure source.inference.Frame where
   tree : source.inference.TreeKey
   items : source.inference.BodyKey
@@ -1197,7 +1506,7 @@ structure source.inference.Frame where
   caller : Option Span
 
 /-- [noble_contracts::source::inference::Mode]
-    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 55:0-58:1 -/
+    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 60:0-63:1 -/
 @[discriminant isize]
 inductive source.inference.Mode where
 | Declaration : source.inference.Mode
@@ -1250,7 +1559,7 @@ structure source.Session where
   hosts : Bool
 
 /-- [noble_contracts::source::inference::Scope]
-    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 74:0-78:1 -/
+    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 79:0-83:1 -/
 structure source.inference.Scope where
   root : source.Tree
   session : source.Session
@@ -1277,14 +1586,14 @@ structure source.inference.operations.Call where
   span : Span
 
 /-- [noble_contracts::source::lexer::Scanner]
-    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 18:0-22:1 -/
+    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 23:0-27:1 -/
 structure source.lexer.Scanner where
   source : Slice Std.U8
   «at» : Std.Usize
   full : Span
 
 /-- [noble_contracts::source::lexer::TokenKind]
-    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 4:0-11:1 -/
+    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 9:0-16:1 -/
 @[discriminant isize]
 inductive source.lexer.TokenKind where
 | Open : source.lexer.TokenKind
@@ -1295,31 +1604,31 @@ inductive source.lexer.TokenKind where
 | Word : alloc.vec.Vec Std.U8 → source.lexer.TokenKind
 
 /-- [noble_contracts::source::lexer::Token]
-    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 13:0-16:1 -/
+    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 18:0-21:1 -/
 structure source.lexer.Token where
   kind : source.lexer.TokenKind
   span : Span
 
 /-- [noble_contracts::source::parsing::Frame]
-    Source: 'crates/noble-contracts/src/source/parsing.rs', lines 1:0-4:1 -/
+    Source: 'crates/noble-contracts/src/source/parsing.rs', lines 6:0-9:1 -/
 structure source.parsing.Frame where
   body : alloc.vec.Vec Std.U32
   start : Std.U32
 
 /-- [noble_contracts::source::parsing::State]
-    Source: 'crates/noble-contracts/src/source/parsing.rs', lines 6:0-9:1 -/
+    Source: 'crates/noble-contracts/src/source/parsing.rs', lines 11:0-14:1 -/
 structure source.parsing.State where
   frames : alloc.vec.Vec source.parsing.Frame
   nodes : alloc.vec.Vec source.Node
 
 /-- [noble_contracts::source::preflight::Visit]
-    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 37:0-40:1 -/
+    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 42:0-45:1 -/
 structure source.preflight.Visit where
   step : source.preflight.PathStep
   depth : Std.U32
 
 /-- [noble_contracts::source::preflight::Traversal]
-    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 42:0-46:1 -/
+    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 47:0-51:1 -/
 structure source.preflight.Traversal where
   pending : alloc.vec.Vec source.preflight.Visit
   path : alloc.vec.Vec source.preflight.PathStep
@@ -1360,7 +1669,7 @@ structure source.resolution.comparison.Entry where
   depth : Std.Usize
 
 /-- [noble_contracts::source::resolution::identity::{closure}]
-    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 171:18-171:40 -/
+    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 176:18-176:40 -/
 @[reducible]
 def source.resolution.identity.closure := Unit
 

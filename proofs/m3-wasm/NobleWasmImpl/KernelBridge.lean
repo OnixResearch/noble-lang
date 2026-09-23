@@ -81,6 +81,9 @@ mutual
     | .I64Type => .I64Type
     | .TextType => .TextType
     | .SyntaxType => .SyntaxType
+    | .ContractType => .ContractType
+    | .EvidenceType => .EvidenceType
+    | .CertifiedType => .CertifiedType
     | .PairType a b => .PairType (toTy a) (toTy b)
     | .SumType a b => .SumType (toTy a) (toTy b)
     | .ListType a => .ListType (toTy a)
@@ -129,6 +132,9 @@ mutual
     | .I64Type => .I64Type
     | .TextType => .TextType
     | .SyntaxType => .SyntaxType
+    | .ContractType => .ContractType
+    | .EvidenceType => .EvidenceType
+    | .CertifiedType => .CertifiedType
     | .PairType a b => .PairType (fromTy a) (fromTy b)
     | .SumType a b => .SumType (fromTy a) (fromTy b)
     | .ListType a => .ListType (fromTy a)
@@ -182,6 +188,12 @@ mutual
     | TextType =>
       simp only [toTy, fromTy]
     | SyntaxType =>
+      simp only [toTy, fromTy]
+    | ContractType =>
+      simp only [toTy, fromTy]
+    | EvidenceType =>
+      simp only [toTy, fromTy]
+    | CertifiedType =>
       simp only [toTy, fromTy]
     | PairType a b =>
       simp only [toTy, fromTy, fromTy_toTy a, fromTy_toTy b]
@@ -250,6 +262,12 @@ mutual
     | TextType =>
       simp only [fromTy, toTy]
     | SyntaxType =>
+      simp only [fromTy, toTy]
+    | ContractType =>
+      simp only [fromTy, toTy]
+    | EvidenceType =>
+      simp only [fromTy, toTy]
+    | CertifiedType =>
       simp only [fromTy, toTy]
     | PairType a b =>
       simp only [fromTy, toTy, toTy_fromTy a, toTy_fromTy b]
@@ -347,6 +365,9 @@ mutual
     | .I64Pattern => .I64Pattern
     | .TextPattern => .TextPattern
     | .SyntaxPattern => .SyntaxPattern
+    | .ContractPattern => .ContractPattern
+    | .EvidencePattern => .EvidencePattern
+    | .CertifiedPattern => .CertifiedPattern
     | .PairPattern a b => .PairPattern (toPattern a) (toPattern b)
     | .SumPattern a b => .SumPattern (toPattern a) (toPattern b)
     | .ListPattern a => .ListPattern (toPattern a)
@@ -397,6 +418,9 @@ mutual
     | .I64Pattern => .I64Pattern
     | .TextPattern => .TextPattern
     | .SyntaxPattern => .SyntaxPattern
+    | .ContractPattern => .ContractPattern
+    | .EvidencePattern => .EvidencePattern
+    | .CertifiedPattern => .CertifiedPattern
     | .PairPattern a b => .PairPattern (fromPattern a) (fromPattern b)
     | .SumPattern a b => .SumPattern (fromPattern a) (fromPattern b)
     | .ListPattern a => .ListPattern (fromPattern a)
@@ -452,6 +476,12 @@ mutual
     | TextPattern =>
       simp only [toPattern, fromPattern]
     | SyntaxPattern =>
+      simp only [toPattern, fromPattern]
+    | ContractPattern =>
+      simp only [toPattern, fromPattern]
+    | EvidencePattern =>
+      simp only [toPattern, fromPattern]
+    | CertifiedPattern =>
       simp only [toPattern, fromPattern]
     | PairPattern a b =>
       simp only [toPattern, fromPattern, fromPattern_toPattern a, fromPattern_toPattern b]
@@ -524,6 +554,12 @@ mutual
     | TextPattern =>
       simp only [fromPattern, toPattern]
     | SyntaxPattern =>
+      simp only [fromPattern, toPattern]
+    | ContractPattern =>
+      simp only [fromPattern, toPattern]
+    | EvidencePattern =>
+      simp only [fromPattern, toPattern]
+    | CertifiedPattern =>
       simp only [fromPattern, toPattern]
     | PairPattern a b =>
       simp only [fromPattern, toPattern, toPattern_fromPattern a, toPattern_fromPattern b]

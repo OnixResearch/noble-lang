@@ -1,3 +1,8 @@
+#![expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-maintainers; frontend orchestration mutates only its preparation-owned work meter and fresh predicate arena; disjoint frontend/kernel work reservations and checked node/type limits bound resolution, while bindings and definitions follow parsed child lists; borrowed source, syntax, and retained ordinary acceptance remain unchanged."
+)]
+
 mod bindings;
 mod fields;
 mod logic;

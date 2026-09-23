@@ -25,6 +25,9 @@ const fn pattern_children(
         | noble_kernel::shapes::Pattern::I64
         | noble_kernel::shapes::Pattern::Text
         | noble_kernel::shapes::Pattern::Syntax
+        | noble_kernel::shapes::Pattern::Contract
+        | noble_kernel::shapes::Pattern::Evidence
+        | noble_kernel::shapes::Pattern::Certified
         | noble_kernel::shapes::Pattern::Resource(_)
         | noble_kernel::shapes::Pattern::Var(_)
         | noble_kernel::shapes::Pattern::StackVar(_) => Ok(0),

@@ -127,6 +127,7 @@
         cargoLock.lockFile = ./Cargo.lock;
         cargoBuildFlags = [ "--package" "noble-cli" "--bin" "noble" "--all-features" ];
         cargoTestFlags = [ "--workspace" "--all-targets" "--all-features" ];
+        nativeCheckInputs = builtins.attrValues wasmVerificationTools;
         strictDeps = true;
       };
       m3Wasm = import ./nix/m3-wasm-app.nix {
@@ -379,7 +380,7 @@
         format = mkCheck "noble-format" [ ] ''
           cargo fmt --all -- --check
         '';
-        rust-tests = mkCheck "noble-rust-tests" [ ] ''
+        rust-tests = mkCheck "noble-rust-tests" (builtins.attrValues wasmVerificationTools) ''
           cargo test --workspace --all-targets --all-features --locked --offline
         '';
         clippy = mkCheck "noble-clippy" [ ] ''

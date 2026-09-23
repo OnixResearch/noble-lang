@@ -69,6 +69,9 @@ const fn count_children(node: &crate::types::Ty) -> usize {
         | crate::types::Ty::I64
         | crate::types::Ty::Text
         | crate::types::Ty::Syntax
+        | crate::types::Ty::Contract
+        | crate::types::Ty::Evidence
+        | crate::types::Ty::Certified
         | crate::types::Ty::Resource(_) => 0,
     }
 }
@@ -149,6 +152,9 @@ fn queue_children(
         | crate::types::Ty::I64
         | crate::types::Ty::Text
         | crate::types::Ty::Syntax
+        | crate::types::Ty::Contract
+        | crate::types::Ty::Evidence
+        | crate::types::Ty::Certified
         | crate::types::Ty::Resource(_) => sizes.push(1),
     }
     (todo, sizes)

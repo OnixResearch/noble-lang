@@ -1,0 +1,6 @@
+(contract 1 nonnegative-increment
+  (input (x I64))
+  (output (y I64))
+  (program [ 1 + ])
+  (requires (le 0 (in x)))
+  (ensures (eq (out y) (add (in x) 1))))

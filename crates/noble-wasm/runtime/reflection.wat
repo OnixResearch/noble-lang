@@ -60,6 +60,16 @@
  (if (i32.or (i32.eq (local.get $tag) (i32.const 12)) (i32.eq (local.get $tag) (i32.const 13))) (then
   (call $observe_atom (i32.sub (local.get $tag) (i32.const 1)) (i64.const 0))
   (call $walk_push (i32.sub (i32.const 0) (call $a (local.get $value)))) (return)))
+ (if (i32.eq (local.get $tag) (i32.const 14)) (then
+  (call $observe_atom (i32.const 23) (i64.extend_i32_u (call $x (local.get $value)))) (return)))
+ (if (i32.eq (local.get $tag) (i32.const 15)) (then
+  (call $observe_atom (i32.const 24) (call $payload (local.get $value))) (return)))
+ (if (i32.eq (local.get $tag) (i32.const 16)) (then
+  (call $observe_atom (i32.const 23) (i64.extend_i32_u (call $x (call $b (local.get $value)))))
+  (call $observe_atom (i32.const 24) (call $payload (call $c (local.get $value))))
+  (call $observe_atom (i32.const 25) (call $payload (local.get $value)))
+  (call $walk_push (i32.const -2147483648))
+  (call $walk_push (i32.sub (i32.const 0) (call $a (local.get $value)))) (return)))
  (call $fail (i32.const 4)))
 (func $observe_recipe (param $recipe i32) (local $tag i32)
  (local.set $tag (call $kind (local.get $recipe)))
@@ -91,9 +101,14 @@
  (if (global.get $failure) (then (return (global.get $failure))))
  (if (i32.eqz (global.get $observed_program))
   (then (call $fail (i32.const 4)) (return (global.get $failure))))
- (if (i32.eq (call $kind (global.get $observed_program)) (i32.const 10))
-  (then (call $walk_push (call $a (global.get $observed_program))))
-  (else (call $walk_push (call $c (global.get $observed_program)))))
+ (if (i32.eq (call $kind (global.get $observed_program)) (i32.const 16))
+  (then (call $observe_data (global.get $observed_program)))
+  (else (if (i32.or (i32.eq (call $kind (global.get $observed_program)) (i32.const 14))
+                    (i32.eq (call $kind (global.get $observed_program)) (i32.const 15)))
+   (then (call $observe_data (global.get $observed_program)))
+   (else (if (i32.eq (call $kind (global.get $observed_program)) (i32.const 10))
+    (then (call $walk_push (call $a (global.get $observed_program))))
+    (else (call $walk_push (call $c (global.get $observed_program)))))))))
  (block $done (loop $next
   (br_if $done (i32.or (global.get $failure) (i32.eqz (global.get $rp))))
   (if (i32.eqz (call $observation_tick)) (then (br $done)))

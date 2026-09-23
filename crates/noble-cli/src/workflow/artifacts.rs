@@ -2,7 +2,7 @@
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; read_bounded rejects non-files, I/O failures and content beyond the caller's byte budget before and after reading. Files may change after metadata observation, so these are typed input failures rather than assertions."
 )]
-pub(super) fn read_bounded(
+pub(crate) fn read_bounded(
     path: &std::path::Path,
     limit_bytes: usize,
     kind: &'static str,
@@ -39,12 +39,12 @@ pub(super) fn read_bounded(
     Ok(bytes)
 }
 
-pub(super) fn create_directory(path: &std::path::Path) -> Result<(), super::output::Failure> {
+pub(crate) fn create_directory(path: &std::path::Path) -> Result<(), super::output::Failure> {
     std::fs::create_dir_all(path)
         .map_err(|error| super::output::Failure::error("artifact-io", error.to_string()))
 }
 
-pub(super) fn write_source(
+pub(crate) fn write_source(
     path: &std::path::Path,
     bytes: &[u8],
 ) -> Result<(), super::output::Failure> {
@@ -149,8 +149,8 @@ pub(super) fn finish_outputs(
     })
 }
 
-pub(super) struct Temporary {
-    pub(super) path: std::path::PathBuf,
+pub(crate) struct Temporary {
+    pub(crate) path: std::path::PathBuf,
 }
 
 impl Temporary {
@@ -159,7 +159,7 @@ impl Temporary {
         tigerstyle::ambient_clock,
         reason = "Owner: noble-maintainers. The shell allocates a private unique disposable proof workspace."
     )]
-    pub(super) fn create() -> Result<Self, super::output::Failure> {
+    pub(crate) fn create() -> Result<Self, super::output::Failure> {
         let timestamp = attempt!(std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .map_err(|error| super::output::Failure::error("temporary-root", error.to_string())))

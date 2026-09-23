@@ -168,6 +168,9 @@ impl super::Arena {
             super::Term::I64 => Material::Value(noble_kernel::types::Ty::I64, 1),
             super::Term::Text => Material::Value(noble_kernel::types::Ty::Text, 1),
             super::Term::Syntax => Material::Value(noble_kernel::types::Ty::Syntax, 1),
+            super::Term::Contract => Material::Value(noble_kernel::types::Ty::Contract, 1),
+            super::Term::Evidence => Material::Value(noble_kernel::types::Ty::Evidence, 1),
+            super::Term::Certified => Material::Value(noble_kernel::types::Ty::Certified, 1),
             super::Term::Empty => Material::Stack(alloc::vec::Vec::new(), 0),
             super::Term::Pair(a, b)
             | super::Term::Sum(a, b)

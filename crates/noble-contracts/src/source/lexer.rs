@@ -1,3 +1,8 @@
+#![expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-maintainers; scanning advances only a preparation-owned cursor, decoded token buffers, and meter within admitted source-byte and work/node bounds; original source bytes remain borrowed immutable and no committed namespace is touched."
+)]
+
 mod text;
 mod tokens;
 

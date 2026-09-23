@@ -34,9 +34,12 @@ export const inheritedOpaque = [
 ];
 // These source files contain the five inherited opaque helpers. Changing them
 // requires a separately reviewed model renewal, not widening this allowance.
+// MC2 adds inert Contract/Evidence/Certified leaf branches; shape equality was
+// also moved to its owned module. The five helper bodies remain byte-identical
+// to the M4 baseline; their copy/format abstraction is unchanged.
 export const inheritedOpaqueSources = {
-  'crates/noble-kernel/src/types/impls.rs': 'e5c1107123339ca3233a0b4a01a285ebe155a2a582040d83840645f0aab323ca',
-  'crates/noble-kernel/src/shapes/impls.rs': 'b8b1a2df2a236b9703eaeb6df383ea183b31e137ca8d86240608cda260930510',
+  'crates/noble-kernel/src/types/impls.rs': 'f834b36f972feb518dfcdaf9c9f4f05c2ecc787a18f937a7f2e6d1a0898f0c3e',
+  'crates/noble-kernel/src/shapes/impls.rs': 'c7aec68c0201b14d978d4d3b7b9906794176088e0b3b3ca8912090ad1a505203',
 };
 const kinds = { functions: 'fun_decls', types: 'type_decls', globals: 'global_decls',
   trait_decls: 'trait_decls', trait_impls: 'trait_impls' };
@@ -218,8 +221,12 @@ export function account(lane, llbc, translation, sources) {
         'compiler-generated-vtable-not-translated', 'type-alias-expanded'].includes(disposition)) {
         fail('OMITTED-BODY', `${lane.id}: ${kind} ${decl.def_id} ${directRustName(decl) ?? ''}`);
       }
+      // An ADT constructor has a real compiler body and a real translated
+      // `.Variant.constructor` definition. It is not an omitted-body waiver.
+      const constructor = kind === 'functions' && decl.src === 'AdtConstructor';
       if (kind === 'functions' && disposition === 'translated' && !translated.some(row =>
-        row.lean_name.endsWith(`.${row.rust_name.split('::').at(-1)}`) && !row.lean_name.endsWith('_loop.body'))) {
+        !row.loop && row.lean_name.endsWith(
+          `.${row.rust_name.split('::').at(-1)}${constructor ? '.constructor' : ''}`))) {
         fail('OMITTED-BODY', `${lane.id}: only loop helpers remain for function ${decl.def_id}`);
       }
       if (kind === 'functions' && decl.body === 'Opaque' &&

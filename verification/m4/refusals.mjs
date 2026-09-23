@@ -24,6 +24,16 @@ export function refusals({ raw, accounts, sources, tools, packet, packets, audit
     changed.translation.functions = changed.translation.functions.filter(item => item.def_id !== subject.def_id);
     account(wasm, changed.llbc, changed.translation, sources);
   });
+  reject('omitted-local-adt-constructor', 'OMITTED-BODY', () => {
+    const contracts = lanes.find(lane => lane.id === 'contracts');
+    const translation = structuredClone(raw.contracts.translation);
+    const constructor = translation.functions.find(item => item.is_local && !item.loop &&
+      raw.contracts.llbc.translated.fun_decls[item.def_id]?.src === 'AdtConstructor' &&
+      item.lean_name.endsWith('.constructor'));
+    if (!constructor) fail('REFUSAL', 'actual contract translation unexpectedly contains no local ADT constructor body');
+    translation.functions = translation.functions.filter(item => item.def_id !== constructor.def_id);
+    account(contracts, raw.contracts.llbc, translation, sources);
+  });
   reject('omitted-function-with-retained-loop-helpers', 'OMITTED-BODY', () => {
     const changed = copied();
     const loop = changed.translation.functions.find(item => item.is_local && item.lean_name.endsWith('_loop.body'));

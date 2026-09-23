@@ -17,7 +17,7 @@ pub(super) struct Module {
     pub(super) imports: std::vec::Vec<std::string::String>,
 }
 
-pub(super) struct Library {
+pub(crate) struct Library {
     root: std::path::PathBuf,
     pub(super) modules: std::vec::Vec<Module>,
 }

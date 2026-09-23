@@ -82,6 +82,9 @@ fn pair(
         | noble_kernel::types::Ty::List(_)
         | noble_kernel::types::Ty::Program(_, _, _)
         | noble_kernel::types::Ty::Syntax
+        | noble_kernel::types::Ty::Contract
+        | noble_kernel::types::Ty::Evidence
+        | noble_kernel::types::Ty::Certified
         | noble_kernel::types::Ty::Resource(_) => Err(crate::invalid(
             span,
             "pair projection requires a Pair value",
@@ -142,6 +145,9 @@ fn sum(
         | noble_kernel::types::Ty::List(_)
         | noble_kernel::types::Ty::Program(_, _, _)
         | noble_kernel::types::Ty::Syntax
+        | noble_kernel::types::Ty::Contract
+        | noble_kernel::types::Ty::Evidence
+        | noble_kernel::types::Ty::Certified
         | noble_kernel::types::Ty::Resource(_) => {
             return Err(crate::invalid(span, "sum operation requires a Sum value"))
         }
@@ -198,6 +204,9 @@ fn list(
         | noble_kernel::types::Ty::Sum(_, _)
         | noble_kernel::types::Ty::Program(_, _, _)
         | noble_kernel::types::Ty::Syntax
+        | noble_kernel::types::Ty::Contract
+        | noble_kernel::types::Ty::Evidence
+        | noble_kernel::types::Ty::Certified
         | noble_kernel::types::Ty::Resource(_) => {
             return Err(crate::invalid(span, "list operation requires a List value"))
         }

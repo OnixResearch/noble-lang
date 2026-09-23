@@ -34,6 +34,9 @@ impl Clone for crate::types::Ty {
             crate::types::Ty::I64 => crate::types::Ty::I64,
             crate::types::Ty::Text => crate::types::Ty::Text,
             crate::types::Ty::Syntax => crate::types::Ty::Syntax,
+            crate::types::Ty::Contract => crate::types::Ty::Contract,
+            crate::types::Ty::Evidence => crate::types::Ty::Evidence,
+            crate::types::Ty::Certified => crate::types::Ty::Certified,
             crate::types::Ty::Pair(left, right) => crate::types::Ty::Pair(
                 alloc::boxed::Box::new((**left).clone()),
                 alloc::boxed::Box::new((**right).clone()),
@@ -103,6 +106,9 @@ fn ty_eq(left: &crate::types::Ty, right: &crate::types::Ty) -> bool {
                 (crate::types::Ty::I64, crate::types::Ty::I64) => true,
                 (crate::types::Ty::Text, crate::types::Ty::Text) => true,
                 (crate::types::Ty::Syntax, crate::types::Ty::Syntax) => true,
+                (crate::types::Ty::Contract, crate::types::Ty::Contract) => true,
+                (crate::types::Ty::Evidence, crate::types::Ty::Evidence) => true,
+                (crate::types::Ty::Certified, crate::types::Ty::Certified) => true,
                 (
                     crate::types::Ty::Resource(first_kind),
                     crate::types::Ty::Resource(second_kind),
@@ -209,6 +215,9 @@ impl core::fmt::Debug for crate::types::Ty {
             crate::types::Ty::I64 => core::fmt::Formatter::write_str(f, "I64"),
             crate::types::Ty::Text => core::fmt::Formatter::write_str(f, "Text"),
             crate::types::Ty::Syntax => core::fmt::Formatter::write_str(f, "Syntax"),
+            crate::types::Ty::Contract => core::fmt::Formatter::write_str(f, "Contract"),
+            crate::types::Ty::Evidence => core::fmt::Formatter::write_str(f, "Evidence"),
+            crate::types::Ty::Certified => core::fmt::Formatter::write_str(f, "Certified"),
             crate::types::Ty::Pair(left, right) => {
                 attempt!(core::fmt::Formatter::write_str(f, "Pair("));
                 attempt!(core::fmt::Debug::fmt(&**left, f));

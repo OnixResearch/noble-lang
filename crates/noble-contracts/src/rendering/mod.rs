@@ -1,6 +1,11 @@
 //! Deterministic export of the retained acceptance subject and resolved claim.
 //! No producer text is interpolated into Lean syntax.
 
+#![expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-maintainers; export_lean alone allocates the mutable output String; helper appends are bounded by the prepared candidate and expression arenas, 256-constructor types, and at most 20 decimal digits per number; the borrowed Prepared and its retained acceptance state remain unchanged."
+)]
+
 mod expression;
 mod subject;
 mod types;

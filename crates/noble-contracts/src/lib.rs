@@ -13,6 +13,7 @@ macro_rules! attempt {
     };
 }
 
+pub mod companion;
 mod frontend;
 mod inference;
 mod metering;
@@ -22,6 +23,11 @@ mod rendering;
 pub mod source;
 mod syntax;
 pub mod wire;
+pub use companion::{
+    Admission, CaptureBinding, ClaimTemplate, ContractId, Core, Derivation, Derived, EvidenceClass,
+    EvidenceId, EvidenceOffer, GuardTemplate, Outcome, Refusal, Release, RuleId, Subject,
+    SubjectDigest, RULESET_V1,
+};
 pub use rendering::export_lean;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

@@ -21,6 +21,9 @@ pub enum Type {
     I64,
     Text,
     Syntax,
+    Contract,
+    Evidence,
+    Certified,
     Pair(Box<Type>, Box<Type>),
     Sum(Box<Type>, Box<Type>),
     List(Box<Type>),
@@ -43,6 +46,9 @@ impl<'a> Mirror<'a> {
             noble_kernel::types::Ty::I64 => *destination = Type::I64,
             noble_kernel::types::Ty::Text => *destination = Type::Text,
             noble_kernel::types::Ty::Syntax => *destination = Type::Syntax,
+            noble_kernel::types::Ty::Contract => *destination = Type::Contract,
+            noble_kernel::types::Ty::Evidence => *destination = Type::Evidence,
+            noble_kernel::types::Ty::Certified => *destination = Type::Certified,
             noble_kernel::types::Ty::Resource(_) => *destination = Type::Resource,
             noble_kernel::types::Ty::Pair(left, right) => {
                 *destination = Type::Pair(Box::new(Type::Unit), Box::new(Type::Unit));
@@ -99,6 +105,9 @@ pub fn oty(ty: &noble_kernel::types::Ty) -> Type {
         noble_kernel::types::Ty::I64 => return Type::I64,
         noble_kernel::types::Ty::Text => return Type::Text,
         noble_kernel::types::Ty::Syntax => return Type::Syntax,
+        noble_kernel::types::Ty::Contract => return Type::Contract,
+        noble_kernel::types::Ty::Evidence => return Type::Evidence,
+        noble_kernel::types::Ty::Certified => return Type::Certified,
         noble_kernel::types::Ty::Resource(_) => return Type::Resource,
         noble_kernel::types::Ty::Pair(..)
         | noble_kernel::types::Ty::Sum(..)
@@ -130,7 +139,15 @@ pub fn oty_stack(stack: &[noble_kernel::types::Ty]) -> Vec<Type> {
 pub fn is_data(ty: &Type) -> bool {
     match ty {
         Type::Resource => return false,
-        Type::Unit | Type::Bool | Type::I64 | Type::Text | Type::Syntax | Type::Program(..) => {
+        Type::Unit
+        | Type::Bool
+        | Type::I64
+        | Type::Text
+        | Type::Syntax
+        | Type::Contract
+        | Type::Evidence
+        | Type::Certified
+        | Type::Program(..) => {
             return true;
         }
         Type::Pair(..) | Type::Sum(..) | Type::List(_) => {}
@@ -148,8 +165,15 @@ pub fn is_data(ty: &Type) -> bool {
                 pending.reserve(1);
                 pending.push(item);
             }
-            Type::Unit | Type::Bool | Type::I64 | Type::Text | Type::Syntax | Type::Program(..) => {
-            }
+            Type::Unit
+            | Type::Bool
+            | Type::I64
+            | Type::Text
+            | Type::Syntax
+            | Type::Contract
+            | Type::Evidence
+            | Type::Certified
+            | Type::Program(..) => {}
         }
     }
     true

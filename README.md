@@ -6,7 +6,7 @@ Noble is a statically typed concatenative language designed for first-class, ins
 
 **Implementation direction: Rust → Charon → Aeneas → Lean 4.** This route is mandatory for the entire semantic kernel and the target for all Noble-owned production Rust. Host effects require explicit proof boundaries. See [the toolchain policy](.cairn/specs/verification-toolchain/spec.md).
 
-**Application verification:** the optional [contract profile](.cairn/specs/program-contracts/spec.md) now has an MC1 frontend, versioned source/IR, Lean rules, and the `noble verify` / `noble explain-proof` CLI. First-class runtime evidence companions and proof-required admission remain future work; MC1 does not implement a runtime or Wasm backend.
+**Application verification:** the optional [contract profile](.cairn/specs/program-contracts/spec.md) has an MC1 frontend, versioned source/IR, Lean rules, and the `noble verify` / `noble explain-proof` CLI. MC2 adds first-class runtime evidence companions and proof-required admission on the selected Core-Bootstrap Wasm runtime. Their evidence scopes remain separate; ordinary execution does not require an application proof.
 
 ```text
 (contract 1 increment
@@ -92,10 +92,10 @@ and Syntax can be captured by `quote`; `compose` preserves ordered interfaces,
 captures, resolved identities and conservative latent effects. `reflect` returns
 an exact normalized recipe, not executable source or a runtime interpreter.
 Its only host words are resource-free `test.emit` (`Text --`) and `test.abort`.
-Resources, imports, recursive definitions, advanced inference, runtime proof
-companions and proof-required admission are not implemented by this runtime.
-The pure MC1 proof interface below remains separate: running a program is not
-application proof acceptance.
+Resources, imports, recursive definitions and advanced inference are not
+implemented by this runtime. The optional MC2 companion and proof-required
+build commands are described below. Running a program is not application proof
+acceptance.
 
 Preparation is fail-closed: parsing, resolution, inference, independent kernel
 acceptance and backend rechecking precede candidate-body execution. A rejected
@@ -143,19 +143,22 @@ re-extracts and compares sources, generated code, inventories, dependencies and
 axioms with the reviewed lock. The durable authorities are
 `verification/m4/extraction-lock.json`, `verification/m4/implementation.json`
 and `verification/m4/assurance.tar.gz`, not fixed function/model counts in prose.
-Fresh discovery and independent check both pass against the reviewed lock:
+At M4 completion, fresh discovery and independent check both passed its reviewed lock:
 no stale generated files, both compiled audits accepted, and all 27 refusal
-controls refused. The full 73-rule deny-all and architecture gate pass, the
-source-coverage comparison is valid, and all 13 Nix checks pass.
+controls refused. The full 73-rule deny-all and architecture gate passed, the
+source-coverage comparison was valid, and all 13 Nix checks passed.
 The [M4 completion record](verification/m4/evidence.json) binds these observations
 to retained runtime and assurance archives, including the final MC1 regression.
+The shared reviewed lock is renewed for MC2's source changes; the archived M4
+receipts do not establish acceptance of those later changes.
 
 MC1's 36-case regression and M3's four-configuration regression have passed in
-their own scopes. They do not replace those M4 gates. All 887 authored production
-body obligations remain open in the [reviewed inventory](verification/source-inventory.md).
+their own scopes. They do not replace those M4 gates. The current inventory's
+1,319 authored production body obligations remain open in the
+[reviewed inventory](verification/source-inventory.md).
 Neither extraction nor executed examples establish universal frontend, kernel,
-compiler or backend refinement; PO-17/18 and SO-07 remain open. M5's synchronous
-resource/component boundary is the next primary milestone.
+compiler or backend refinement; PO-17/18 and SO-07 remain open. MC2 adds optional
+checked companions; M5's resource/component boundary remains separate.
 
 ## Using MC1 contracts
 
@@ -232,6 +235,82 @@ treating a fixed prose count as current coverage. Native computation also
 discharges generated string-bound obligations; its exact axiom inventory is
 retained only in the implementation lane.
 
+## MC2 companion sessions and proof-required builds
+
+Using the same trusted proof-tool setup as MC1, a companion session admits a
+contract once and then operates on live compiled values:
+
+```sh
+printf '%s\n' \
+  'contract verification/mc2/contracts/guarded.contract verification/mc2/contracts/guarded.proof.lean' \
+  'submit verification/mc2/contracts/q-one.noble' \
+  'certify 0 0' \
+  'invoke 3 41' \
+  'inspect 3' \
+  'project 3' |
+  noble companions --timeout-ms 600000 --opt on
+```
+
+These operations report `proved`, `normal`, `certified`,
+`certified-invocation`, `inspected` and `projected`; the invocation returns
+`I64` value `42`. Only the initial proof admission invokes the checker.
+Indexes are zero-based live stack indexes; certification appends Contract,
+Evidence and Certified cells after the original Program. Each accepted input
+line emits and flushes one `noble-companions-report/v1` JSON record. Script
+processing exits zero even when an operation reports a refusal, so callers must
+check every record's outcome. Malformed command-line options and script I/O
+failures exit 2.
+
+`compose`, `instantiate` and `derive` use retained evidence and the finite
+versioned rules. Failed applicability or intermediate preparation restores the
+original frame instead of dropping its aggregate tail. `invoke` requires an
+installed guard for the exact contract; an admitted theorem alone does not
+synthesize an executable guard. Unsupported guards fail explicitly. Ordinary
+`noble run` remains available without contract evidence or proof services.
+
+Proof-required release binds the exact accepted quotation to the actual
+compiled artifact:
+
+```sh
+noble build --require-proof verification/mc2/contracts/q-one.noble \
+  --contract verification/mc2/contracts/guarded.contract \
+  --proof verification/mc2/contracts/guarded.proof.lean \
+  --timeout-ms 600000 --out /tmp/noble-certified-build
+```
+
+`--out` must name a new directory. A `noble-mc2-build/v1` report keeps the claim
+outcome separate from `release.allowed`. Refutation, missing/unfinished/rejected
+evidence, timeout, unsupported claims, stale applicability and unrelated
+artifacts cannot release. Accepted artifacts carry **trusted-build
+correspondence**, never a verified-backend claim.
+
+The deterministic core uses an opaque admission request and a complete
+host-check observation, not an I/O callback or a producer's certification flag.
+The source-bound CLI constructs that observation only after the isolated
+independent check. Arbitrary host Rust can construct observations; their
+authenticity and checker soundness remain explicit trusted-host assumptions.
+Strict semantic proofs, extracted correspondences, closed native source
+equations and runtime tests have separate scopes. The
+[implementation gate](verification/mc2/implementation.mjs) and
+[runtime gate](verification/mc2/gate.mjs) retain source/tool identities,
+frozen executable bytes and raw observations.
+
+The [MC2 completion record](verification/mc2/evidence.json) retains passing
+source-bound acceptance for all 15 CONTRACT cases and every declared variant,
+including 18 actual independent-checker/core controls. The same frozen CLI
+also passes the MC1, M3 and M4 regressions. Fresh whole-crate extraction accounts
+for 312 companion bodies and 21 protocol roots; its reviewed independent check
+passes all 28 refusal controls.
+
+The proof lanes remain separate: 35 strict semantic theorems, seven strict
+actual-source lemmas, two renderer-layout equations with disclosed literal-size
+obligations, and 17 closed native source equations. The unchanged 73-rule
+deny-all and complete 21-unit source gates pass. All 1319 authored production
+body refinement obligations and the broad PO-16/20/21 claims remain open.
+See [runtime acceptance](verification/mc2/acceptance.json),
+[independent extraction](verification/mc2/extraction.json) and
+[the status ledger](specs/STATUS.json) for exact scopes and assumptions.
+
 ## Bounded Wasm experiment
 
 M3 executes both WasmGC and managed-linear-memory representations, with optimization
@@ -259,13 +338,13 @@ the selected layout retains one extra 64-KiB linear-memory page. Physical GC
 allocation/reclamation and isolated engine peaks remain unknown.
 
 The pure emitter's actual extraction, explicit external models and strict kernel
-bridge are audited separately from runtime execution. The source-bound M3
-implementation receipt owns that historical inventory; M4's reviewed extraction
-lock and implementation receipt own the extended source/compiler inventory.
+bridge are audited separately from runtime execution. The source-bound M3 and
+M4 implementation receipts own their historical inventories. MC2's independent
+extraction receipt binds the current shared reviewed lock and extended inventory.
 Owned WAT, assembler, optimizer, engine and loader remain trust boundaries;
-PO-17/18 and SO-07 are open. End-to-end Core-Bootstrap is now implemented as
-described above, with final M4 acceptance pending. Runtime proof companions,
-resources and component interoperability remain MC2 and M5 work.
+PO-17/18 and SO-07 are open. M4 end-to-end Core-Bootstrap acceptance is retained
+in its completion record. MC2 companion assurance is a separate lane;
+resources and component interoperability remain M5 work.
 
 ## Current work
 

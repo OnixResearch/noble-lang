@@ -1,3 +1,8 @@
+#![expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-maintainers; syntax preparation mutates only fresh parser frames/nodes, type work/value stacks, checked I64 accumulators, and preparation-owned work accounting; source-byte/node/depth limits, the 256-constructor cap, and charged parsed-child scheduling bound this scratch; borrowed source and completed syntax trees remain unchanged."
+)]
+
 mod constructors;
 mod identifiers;
 mod integer;

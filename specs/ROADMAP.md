@@ -2,12 +2,16 @@
 
 Revision: 0.1.0-draft.5
 
-**Current: M4 — completed; next primary milestone: M5 — synchronous components.**
+**Current: MC2 — completed; next primary milestone: M5 — synchronous components.**
 M1, M2, MC1 and the bounded M3 representation experiment are implemented. M4
 connects accepted source to compiled managed-linear-memory Wasm and persistent
 sessions, with retained CORE/DX execution, extraction, regression and quality
-evidence. MC2 remains a separate required successor. Neither bounded execution
-nor successful extraction establishes a general or verified backend.
+evidence. MC2 adds first-class certified companions, exact admission and
+applicability checks, composition/family operations and proof-required builds.
+Its [completion record](../verification/mc2/evidence.json) retains all 15
+canonical cases and declared variants, separate scoped proof lanes, current
+extraction and complete quality gates. Neither bounded execution nor
+successful extraction establishes a general or verified backend.
 
 [roadmap.json](roadmap.json) records dependency edges. Milestone status is separate from test and proof results.
 
@@ -34,7 +38,7 @@ M2 and M3 are parallel workstreams in the dependency graph. They do not require 
 
 MC1 must discharge the named fragment of PO-15/19 for statement export and proof rules, including actual Rust correspondence. A frontend that proves a different handwritten program cannot pass. MC2 must discharge the applicable PO-16/20/21 obligations for admission, companion operations, and applicability checks. It must retain its exact backend/build assumptions. Executed Wasm examples do not establish backend verification.
 
-Before MC2 acceptance, execute the [contract scenarios](conformance/contract-cases.json) with actual implementations. Reject changed captures, forged certification, missing composition implications, false preconditions, incomplete proofs, and unrelated Wasm. No candidate body runs on a failed admission path.
+MC2 acceptance executes all [contract scenarios](conformance/contract-cases.json) and their declared variants against the actual implementation, including eighteen independent-checker/core controls. Changed captures, forged certification, missing composition implications, false preconditions, incomplete proofs and unrelated Wasm are rejected on their declared paths. The retained receipts distinguish strict semantic/source lemmas, renderer-layout obligations, closed native source equations and bounded runtime observations. Broad PO-16/20/21 and general backend/host correctness remain open.
 
 ## Exact-calculator application workstream
 
@@ -173,8 +177,9 @@ The reviewed receipt/inventory, not a fixed function/model count in prose,
 defines coverage. The [acceptance evidence](../README.md#m4-acceptance-evidence)
 distinguishes these completed observations from open refinement obligations.
 
-All 887 authored production bodies remain open refinement obligations in the
-complete 19-unit [source inventory](../verification/source-inventory.md).
+The M4 receipt recorded 887 open authored-body obligations in 19 units.
+The current MC2-renewed [source inventory](../verification/source-inventory.md)
+records 1,319 open authored-body obligations in 21 units.
 M4 does not claim universal frontend/kernel/compiler/backend refinement,
 PO-17/18 or SO-07 closure, MC2 companions, resources/components, physical GC
 reclamation or isolated engine peaks. Final milestone promotion and Cairn

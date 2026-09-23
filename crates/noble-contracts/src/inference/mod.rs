@@ -1,3 +1,8 @@
+#![expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-maintainers; type/effect inference mutates only preparation-owned, metered term and constraint arenas, traversal scratch, and bounded diagnostic buffers; borrowed source types and published session state remain unchanged."
+)]
+
 mod build;
 mod construct;
 mod effects;
@@ -22,6 +27,9 @@ pub(crate) enum Term {
     I64,
     Text,
     Syntax,
+    Contract,
+    Evidence,
+    Certified,
     Pair(u32, u32),
     Sum(u32, u32),
     List(u32),
@@ -147,6 +155,9 @@ impl Arena {
             | Term::I64
             | Term::Text
             | Term::Syntax
+            | Term::Contract
+            | Term::Evidence
+            | Term::Certified
             | Term::Pair(_, _)
             | Term::Sum(_, _)
             | Term::List(_)
@@ -216,23 +227,6 @@ impl Arena {
 }
 
 pub(crate) const STACK_CAP: u32 = 256;
-
-const fn sort(term: Term) -> Sort {
-    match term {
-        Term::Hole(sort) => sort,
-        Term::Empty | Term::Push(_, _) => Sort::Stack,
-        Term::Link(_)
-        | Term::Unit
-        | Term::Bool
-        | Term::I64
-        | Term::Text
-        | Term::Syntax
-        | Term::Pair(_, _)
-        | Term::Sum(_, _)
-        | Term::List(_)
-        | Term::Program(_, _) => Sort::Value,
-    }
-}
 
 pub(crate) fn variable_at(
     variables: &[Variable],

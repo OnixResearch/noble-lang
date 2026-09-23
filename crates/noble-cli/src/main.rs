@@ -15,6 +15,7 @@ macro_rules! attempt {
 }
 
 mod backend;
+mod build;
 mod core;
 mod sandbox;
 mod workflow;
@@ -53,12 +54,26 @@ fn main() -> std::process::ExitCode {
     }
     if arguments
         .first()
+        .is_some_and(|argument| argument == "build")
+    {
+        return build::run(&arguments);
+    }
+    if arguments
+        .first()
+        .is_some_and(|argument| argument == "companions")
+    {
+        return core::companions::run(&arguments);
+    }
+    if arguments
+        .first()
         .is_some_and(|argument| argument == "--help")
     {
         println!(
-            "{}\n\n{}\n\n{}",
+            "{}\n\n{}\n\n{}\n\n{}\n\n{}",
             core::USAGE,
             workflow::USAGE,
+            build::USAGE,
+            core::companions::USAGE,
             backend::USAGE
         );
         return std::process::ExitCode::SUCCESS;

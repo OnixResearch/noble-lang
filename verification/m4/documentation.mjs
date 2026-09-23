@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { digest, stable } from '../../tools/m3-wasm-policy.mjs';
+import { stackObservation } from './property.mjs';
 
 const PUBLICATION = 'specs/conformance/language-workflow-cases.json#DX-12';
 const HOST_IMPORTS = new Map([['noble:test_emit', 'test.emit'], ['noble:test_abort', 'test.abort']]);
@@ -21,7 +22,7 @@ function quiet(report) {
 
 function runtimeMatches(report, expected) {
   return report.stage === 'wasm' && report.outcome === 'normal' && report.status === 0
-    && same(report.stack, [expected]) && quiet(report) && same(report.request_trace, []);
+    && same(stackObservation(report.stack), [expected]) && quiet(report) && same(report.request_trace, []);
 }
 
 // CoreEngine's imports are a conservative authority bound, not the program's

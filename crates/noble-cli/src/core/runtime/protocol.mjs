@@ -49,15 +49,63 @@ async function protocol(config) {
             emit('closed', { outcome: 'closed' });
             return;
           }
-          if (header === 'execute') {
-            const report = engine.execute(); emit(report.outcome, report);
-            if (engine.poisoned) return;
+          if (header === 'park' || header === 'restore') {
+            const report = header === 'park' ? engine.park() : engine.restore();
+            emit(report.outcome, report);
             continue;
           }
-          const match = /^compile ([0-9]+) ([0-9]+) ([0-9]+)$/.exec(header);
-          if (!match) fail('invalid engine command');
-          command = { wat: integer(Number(match[1]), MAX_FRAME, 'WAT frame'), source: integer(Number(match[2]), 65536, 'source frame'),
-            submission: integer(Number(match[3]), Number.MAX_SAFE_INTEGER, 'submission') };
+          if (header === 'execute') {
+            command = { kind: 'execute', inputs: 0 };
+          } else if (/^execute [0-9]+$/.test(header)) {
+            const count = Number(header.slice('execute '.length));
+            command = { kind: 'execute', inputs: integer(count, MAX_FRAME, 'injection frame') };
+          } else if (/^observe [0-9]+$/.test(header)) {
+            try { emit('observed', engine.observe(Number(header.slice('observe '.length)))); }
+            catch (error) { emit('internal-failure', reportError(error)); return; }
+            continue;
+          } else if (/^push [0-9]+$/.test(header)) {
+            const count = Number(header.slice('push '.length));
+            command = { kind: 'push', inputs: integer(count, MAX_FRAME, 'injection frame') };
+          } else if (/^project [0-9]+$/.test(header)) {
+            try { emit('projected', engine.project(Number(header.slice('project '.length)))); }
+            catch (error) { emit('internal-failure', reportError(error)); return; }
+            continue;
+          } else {
+            const match = /^compile ([0-9]+) ([0-9]+) ([0-9]+)$/.exec(header);
+            if (!match) fail('invalid engine command');
+            command = { kind: 'compile', wat: integer(Number(match[1]), MAX_FRAME, 'WAT frame'),
+              source: integer(Number(match[2]), 65536, 'source frame'),
+              submission: integer(Number(match[3]), Number.MAX_SAFE_INTEGER, 'submission') };
+          }
+        }
+        if (command.kind === 'execute') {
+          if (pending.length < command.inputs) break;
+          const bytes = pending.subarray(0, command.inputs);
+          pending = pending.subarray(command.inputs);
+          command = null;
+          let inputs = [];
+          if (bytes.length) {
+            try { inputs = JSON.parse(utf8.decode(bytes)); }
+            catch (error) { emit('internal-failure', reportError(error)); return; }
+          }
+          try {
+            const report = engine.execute({ inputs });
+            emit(report.outcome, report);
+          } catch (error) { emit('internal-failure', reportError(error)); return; }
+          if (engine.poisoned) return;
+          continue;
+        }
+        if (command.kind === 'push') {
+          if (pending.length < command.inputs) break;
+          const bytes = pending.subarray(0, command.inputs);
+          pending = pending.subarray(command.inputs);
+          command = null;
+          let inputs;
+          try { inputs = JSON.parse(utf8.decode(bytes)); }
+          catch (error) { emit('internal-failure', reportError(error)); return; }
+          try { emit('pushed', engine.push(inputs)); }
+          catch (error) { emit('internal-failure', reportError(error)); return; }
+          continue;
         }
         if (pending.length < command.wat + command.source) break;
         const wat = pending.subarray(0, command.wat), source = pending.subarray(command.wat, command.wat + command.source);

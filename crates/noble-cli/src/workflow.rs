@@ -15,21 +15,37 @@ sandbox with no network, credentials, or writable host directories.
 Proof checking requires an active user systemd manager and XDG_RUNTIME_DIR.
 --emit creates a new directory; existing destinations are never overwritten.";
 
-const SOURCE_LIMIT: usize = 1_048_576;
-const PROOF_LIMIT: usize = 524_288;
+pub(crate) const SOURCE_LIMIT: usize = 1_048_576;
+pub(crate) const PROOF_LIMIT: usize = 524_288;
 const PROOF_WIRE_LIMIT: usize = 8_388_608;
 const LIBRARY_LIMIT: usize = 4_194_304;
 const MODULE_LIMIT: usize = 128;
-const DEFAULT_TIMEOUT: u64 = 120_000;
-const MAX_TIMEOUT: u64 = 600_000;
+pub(crate) const DEFAULT_TIMEOUT: u64 = 120_000;
+pub(crate) const MAX_TIMEOUT: u64 = 600_000;
 
+pub(crate) mod admission;
 mod arguments;
-mod artifacts;
+pub(crate) mod artifacts;
 pub(crate) mod encoding;
-pub(super) mod output;
+pub(crate) mod output;
 mod rules;
 mod subject;
 mod verification;
+
+// Shared host-only surface for the proof-required build lane. The build command
+// reuses the exact same preparation, library snapshot and sandboxed
+// producer/consumer pipeline rather than a second Lean route.
+pub(crate) fn read_bounded(
+    path: &std::path::Path,
+    limit_bytes: usize,
+    kind: &'static str,
+) -> Result<std::vec::Vec<u8>, output::Failure> {
+    artifacts::read_bounded(path, limit_bytes, kind)
+}
+
+pub(crate) fn subject_json(prepared: &noble_contracts::Prepared, source: &[u8]) -> encoding::Json {
+    subject::describe(prepared, source)
+}
 
 #[expect(
     tigerstyle::assertion_density,

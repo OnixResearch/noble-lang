@@ -5,6 +5,7 @@ export class CoreEngine {
     this.optimized = optimized;
     this.trace = [];
     this.pending = null;
+    this.parked = null;
     this.poisoned = false;
     this.compilations = 0;
     this.lastTraceStart = 0;
@@ -22,7 +23,7 @@ export class CoreEngine {
         global.type === 'i64' ? BigInt(global.value) : global.value);
     }
     this.shared.test_emit = (offset, count) => {
-      const text = this.text(offset, count);
+      const text = readText(this, offset, count);
       if (this.trace.length >= 4096) return 1;
       this.trace.push(`test.emit:${text}`);
       return 0;
@@ -124,6 +125,9 @@ export class CoreEngine {
     this.lastTraceStart = traceStart;
     this.pending = null;
     const runtime = instance.exports;
+    // Retain exactly one executed instance so post-execution inspection reads
+    // the same session state. The shared table already owns its callables.
+    this.last = instance;
     const defaults = this.abi.limits_maximum;
     const keys = ['allocation_bytes', 'recipe_leaves', 'program_depth', 'operand_bytes', 'continuation_bytes', 'steps'];
     if (Object.keys(limits).some(key => !keys.includes(key))) fail('unknown runtime limit');
@@ -132,16 +136,7 @@ export class CoreEngine {
     try {
       for (const input of inputs) {
         if (status) break;
-        if (input.type === 'I64') {
-          const value = BigInt(input.value);
-          if (BigInt.asIntN(64, value) !== value) fail('input is outside signed I64');
-          status = runtime.push_i64(value);
-        } else if (input.type === 'Bool') {
-          if (typeof input.value !== 'boolean') fail('invalid Bool input');
-          status = runtime.push_bool(input.value ? 1 : 0);
-        } else if (input.type === 'Unit') status = runtime.push_unit();
-        else if (input.type === 'Program') status = runtime.push_program(integer(input.handle, 4096, 'program handle'));
-        else fail('unsupported runtime input type');
+        status = this.inject(runtime, input);
       }
       if (status === 0) status = runtime.submit();
     } catch (error) {
@@ -152,7 +147,7 @@ export class CoreEngine {
     const metrics = Object.fromEntries(Object.entries(this.abi.metrics).map(([id, name]) => [name, Number(runtime.metric(Number(id)))]));
     const outcome = status === 0 ? 'normal' : status === 1 || status === 2 ? 'runtime-exhausted' : 'trap';
     let stack = [];
-    if (status === 0) stack = this.stack(runtime);
+    if (status === 0) stack = readStack(this, runtime);
     const report = { schema: 'noble-core-report/v1', profile: 'Core-Bootstrap', backend: 'managed-linear-memory',
       submission: record.submission ?? null, stage: 'wasm', outcome, status,
       quota_reason: this.abi.quota_reason[String(metrics.quota_reason)] ?? null, stack,
@@ -164,115 +159,97 @@ export class CoreEngine {
     return report;
   }
 
-  text(offset, count) {
-    integer(offset, this.memory.buffer.byteLength, 'text offset');
-    integer(count, this.memory.buffer.byteLength - offset, 'text length');
-    return utf8.decode(new Uint8Array(this.memory.buffer, offset, count));
-  }
-
-  signature(runtime, identity) {
-    integer(identity, 16384, 'signature identity');
-    return this.text(runtime.signature_address(identity), runtime.signature_length(identity));
-  }
-
-  stack(runtime) {
-    const count = integer(runtime.stack_length(), 128, 'stack height');
-    this.observationWork = 0;
-    return Array.from({ length: count }, (_, at) => this.value(runtime, runtime.stack_kind(at), runtime.stack_value(at), 0));
-  }
-
-  charge(depth) {
-    if (depth > 512 || ++this.observationWork > MAX_OBSERVATION_WORK) fail('observation limit exhausted');
-  }
-
-  boxed(runtime, handle, depth) {
-    integer(handle, this.abi.limits_maximum.session_cells, 'cell handle');
-    if (handle === 0 || handle > this.shared.heap_cursor.value) fail('invalid live cell handle');
-    const kind = runtime.cell_kind(handle);
-    return this.value(runtime, kind, kind < 4 ? runtime.cell_payload(handle) : BigInt(handle), depth);
-  }
-
-  value(runtime, kind, value, depth) {
-    this.charge(depth);
-    if (kind === 1) return { type: 'I64', value: String(value) };
-    if (kind === 2) {
-      if (value !== 0n && value !== 1n) fail('invalid Bool value');
-      return { type: 'Bool', value: value === 1n };
+  // Standalone typed injection outside one submission. Values stay first-class
+  // session state; each push fails closed on a missing or mistyped cell.
+  push(inputs) {
+    if (!this.last && (inputs.length !== 0 || this.shared.sp.value !== 0)) fail('no initialized runtime for injection');
+    const runtime = this.last ? this.runtime() : null;
+    let status = 0;
+    for (const input of inputs) {
+      if (status) break;
+      status = this.inject(runtime, input);
     }
-    if (kind === 3) return { type: 'Unit', value: null };
-    const handle = integer(Number(value), this.shared.heap_cursor.value, 'value handle');
-    if (!handle || runtime.cell_kind(handle) !== kind) fail('value tag disagrees with cell');
-    if (kind === 4) return { type: 'Program', interface: {
-      stack_in: this.signature(runtime, runtime.cell_y(handle)),
-      stack_out: this.signature(runtime, runtime.cell_z(handle)),
-      effects: [0, 1].filter(bit => Number(runtime.cell_payload(handle)) & (1 << bit))
-        .map(bit => bit === 0 ? 'test.emit' : 'test.abort'),
-    }, ...this.recipe(runtime, runtime.cell_c(handle), depth + 1) };
-    if (kind === 5) return { type: 'Pair', value: [this.boxed(runtime, runtime.cell_a(handle), depth + 1), this.boxed(runtime, runtime.cell_b(handle), depth + 1)] };
-    if (kind === 6 || kind === 7) {
-      const items = [];
-      let tail = handle;
-      while (runtime.cell_kind(tail) === 6) {
-        this.charge(depth);
-        items.push(this.boxed(runtime, runtime.cell_a(tail), depth + 1));
-        const next = runtime.cell_b(tail);
-        if (next <= 0 || next >= tail) fail('cyclic/non-backward list');
-        tail = next;
-      }
-      if (runtime.cell_kind(tail) !== 7) fail('invalid list tail');
-      return { type: 'List', value: items };
-    }
-    if (kind === 10) return { type: 'Syntax', ...this.recipe(runtime, runtime.cell_a(handle), depth + 1) };
-    if (kind === 11) return { type: 'Text', value: this.text(runtime.cell_x(handle), runtime.cell_y(handle)) };
-    if (kind === 12 || kind === 13) return { type: 'Sum', variant: kind === 12 ? 'left' : 'right', value: this.boxed(runtime, runtime.cell_a(handle), depth + 1) };
-    fail(`unsupported observable value kind: ${kind}`);
+    let stack = [];
+    if (!status && runtime) stack = readStack(this, runtime);
+    return { schema: 'noble-core-report/v1', profile: 'Core-Bootstrap', backend: 'managed-linear-memory',
+      stage: 'wasm', outcome: status ? 'injection-refused' : 'pushed', status, stack,
+      guest_requests: 0, protected_operations: 0, candidate_prepare_requests: 0,
+      session_state: 'retained' };
   }
 
-  recipe(runtime, root, depth) {
-    this.charge(depth);
-    const result = [];
-    const witnesses = [];
-    const pending = root ? [root] : [];
-    while (pending.length) {
-      this.charge(depth);
-      const handle = pending.pop();
-      integer(handle, this.shared.heap_cursor.value, 'recipe handle');
-      const kind = runtime.cell_kind(handle);
-      if (kind === 9) {
-        const left = runtime.cell_a(handle), right = runtime.cell_b(handle);
-        if (left <= 0 || right <= 0 || left >= handle || right >= handle) fail('non-backward recipe graph');
-        pending.push(right, left);
-        continue;
-      }
-      if (kind !== 8) fail('invalid recipe node');
-      const atom = runtime.cell_x(handle), value = runtime.cell_payload(handle), child = runtime.cell_a(handle);
-      if (atom === 1) result.push({ literal: { type: 'I64', value: String(value) } });
-      else if (atom === 4) result.push({ literal: { type: 'Bool', value: value !== 0n } });
-      else if (atom === 5) result.push({ literal: { type: 'Unit', value: null } });
-      else if (atom === 2) {
-        const id = integer(Number(value), 23, 'builtin identity');
-        result.push({ invoke: `${id < 22 ? 'builtin' : 'host'}:${names[id]}` });
-      } else if (atom === 15) result.push({ invoke: `definition:${BigInt.asUintN(64, value)}` });
-      else if (atom === 3) {
-        const program = this.boxed(runtime, child, depth + 1);
-        if (program.type !== 'Program') fail('quotation recipe has no program');
-        result.push({ quotation: program.recipe, interface: program.interface, witnesses: program.witnesses });
-      } else if (atom === 8) result.push({ literal: {
-        ...this.boxed(runtime, child, depth + 1),
-        schema: this.signature(runtime, runtime.cell_y(handle)),
-      } });
-      else fail(`unsupported recipe atom: ${atom}`);
-      if (atom === 2 || atom === 15) {
-        witnesses.push({
-          node: result.length - 1,
-          stack_in: this.signature(runtime, runtime.cell_y(handle)),
-          stack_out: this.signature(runtime, runtime.cell_z(handle)),
-          effects: [0, 1].filter(bit => runtime.cell_w(handle) & (1 << bit))
-            .map(bit => bit === 0 ? 'test.emit' : 'test.abort'),
-        });
-      }
+  // This engine owns the snapshot; no caller-supplied bytes become values.
+  // Cells are immutable and session handles stay live while the frame is parked.
+  park() {
+    if (this.poisoned || this.parked !== null || this.shared.cp.value !== 0) fail('cannot park this session');
+    const layout = this.abi.operand_slots;
+    const count = integer(this.shared.sp.value, layout.maximum, 'operand count');
+    const bytes = new Uint8Array(this.memory.buffer, layout.offset, count * layout.stride);
+    this.parked = { count, bytes: bytes.slice() };
+    bytes.fill(0);
+    this.shared.sp.value = 0;
+    return { outcome: 'parked', stack_length: count };
+  }
+
+  restore() {
+    if (this.poisoned || this.parked === null || this.shared.cp.value !== 0) fail('cannot restore this session');
+    const layout = this.abi.operand_slots;
+    const bytes = new Uint8Array(this.memory.buffer, layout.offset, layout.maximum * layout.stride);
+    bytes.fill(0);
+    bytes.set(this.parked.bytes);
+    this.shared.sp.value = this.parked.count;
+    this.parked = null;
+    return { outcome: 'restored', stack: readStack(this, this.runtime()) };
+  }
+
+  inject(runtime, input) {
+    if (input.type === 'I64') {
+      const value = BigInt(input.value);
+      if (BigInt.asIntN(64, value) !== value) fail('input is outside signed I64');
+      return runtime.push_i64(value);
     }
-    return { recipe: result, witnesses };
+    if (input.type === 'Bool') {
+      if (typeof input.value !== 'boolean') fail('invalid Bool input');
+      return runtime.push_bool(input.value ? 1 : 0);
+    }
+    if (input.type === 'Unit') return runtime.push_unit();
+    if (input.type === 'Program') return runtime.push_program(integer(input.handle, 4096, 'program handle'));
+    if (input.type === 'Contract') return runtime.push_contract(
+      integer(input.index, 4294967295, 'contract index'), BigInt(input.statement),
+      integer(input.claim_kind ?? 1, 1, 'claim kind'), integer(input.revision ?? 0, 4294967295, 'claim revision'));
+    if (input.type === 'Evidence') return runtime.push_evidence(
+      integer(input.index, 4294967295, 'evidence index'), integer(input.class ?? 1, 255, 'evidence class'),
+      integer(input.ruleset ?? 1, 4294967295, 'ruleset version'),
+      integer(input.contract, 4096, 'contract handle'));
+    if (input.type === 'Certified') return runtime.push_certified(
+      integer(input.subject, 4096, 'subject handle'), integer(input.contract, 4096, 'contract handle'),
+      integer(input.evidence, 4096, 'evidence handle'), BigInt(input.identity));
+    fail('unsupported runtime input type');
+  }
+
+  // Inspect one stack slot without executing candidate code. Only the bounded
+  // observation walk runs, and it issues no guest host requests.
+  observe(index) {
+    const runtime = this.runtime();
+    const status = runtime.observe(integer(index, 128, 'stack index'));
+    return { schema: 'noble-core-report/v1', profile: 'Core-Bootstrap', backend: 'managed-linear-memory',
+      stage: 'wasm', outcome: status ? 'observation-failed' : 'observed', status, index,
+      events: status ? [] : readReflection(this, runtime),
+      guest_requests: 0, protected_operations: 0, candidate_prepare_requests: 0 };
+  }
+
+  // Explicit projection of a Certified cell to its live subject Program handle.
+  project(handle) {
+    const runtime = this.runtime();
+    const subject = runtime.certified_subject(integer(handle, this.abi.limits_maximum.session_cells, 'cell handle'));
+    return { schema: 'noble-core-report/v1', profile: 'Core-Bootstrap', backend: 'managed-linear-memory',
+      stage: 'wasm', outcome: subject ? 'projected' : 'projection-failed', handle, subject,
+      identity_unchanged: subject !== 0,
+      guest_requests: 0, protected_operations: 0, candidate_prepare_requests: 0 };
+  }
+
+  runtime() {
+    if (!this.last) fail('no executed instance to inspect');
+    return this.last.exports;
   }
 
   close() {

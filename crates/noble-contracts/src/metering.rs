@@ -1,3 +1,8 @@
+#![expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-maintainers; Meter contains only limits and request-local work/node counters; these helpers perform checked work subtraction and limit-guarded node updates without access to source or published compiler state."
+)]
+
 impl crate::Meter {
     pub const fn new(limits: crate::Limits) -> Self {
         Self {

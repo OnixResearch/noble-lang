@@ -1,10 +1,9 @@
-//! Iterative post-order substitution of one pattern into a concrete type.
-//!
-//! One bounded work stack drives the walk; nested program patterns expand
-//! through explicit segments, and no step recurses. Each step threads its
-//! stacks in and returns them, so no loop body returns early.
+//! Bounded post-order substitution from patterns to concrete types.
+//! Nested programs use explicit segments; nonrecursive steps thread owned
+//! stacks without early loop returns.
 
 mod finish;
+mod schedule;
 
 /// Local bound for one substitution walk; beyond it substitution rejects.
 const WORK_CAP: usize = 512;
@@ -239,6 +238,15 @@ fn part_task(node: crate::shapes::Pattern, inst: &crate::words::Inst, mut walk: 
         crate::shapes::Pattern::I64 => walk.segments.push(alloc::vec![crate::types::Ty::I64]),
         crate::shapes::Pattern::Text => walk.segments.push(alloc::vec![crate::types::Ty::Text]),
         crate::shapes::Pattern::Syntax => walk.segments.push(alloc::vec![crate::types::Ty::Syntax]),
+        crate::shapes::Pattern::Contract => {
+            walk.segments.push(alloc::vec![crate::types::Ty::Contract])
+        }
+        crate::shapes::Pattern::Evidence => {
+            walk.segments.push(alloc::vec![crate::types::Ty::Evidence])
+        }
+        crate::shapes::Pattern::Certified => {
+            walk.segments.push(alloc::vec![crate::types::Ty::Certified])
+        }
         crate::shapes::Pattern::Resource(kind) => walk
             .segments
             .push(alloc::vec![crate::types::Ty::Resource(kind)]),
@@ -266,33 +274,8 @@ fn part_task(node: crate::shapes::Pattern, inst: &crate::words::Inst, mut walk: 
         }
         crate::shapes::Pattern::Program(stack_in, stack_out, _) => {
             walk.work.push(Task::Expand(marker));
-            walk = queue_parts(&stack_in, &stack_out, walk);
+            walk = schedule::queue(&stack_in, &stack_out, walk);
         }
     }
     (walk, Ok(()))
-}
-
-/// Queue the parts of one program pattern, result stack first.
-#[expect(
-    tigerstyle::raw_arithmetic_overflow,
-    reason = "Owner: noble-maintainers; nonzero-sized Pattern slices each have at most isize::MAX entries, so their sum fits usize; the loop and branch guards prove each reverse index stays within its input or output slice."
-)]
-fn queue_parts(
-    stack_in: &[crate::shapes::Pattern],
-    stack_out: &[crate::shapes::Pattern],
-    mut walk: Walk,
-) -> Walk {
-    let out_len = stack_out.len();
-    let in_len = stack_in.len();
-    let mut part_index = 0;
-    while part_index < in_len + out_len {
-        let part = if part_index < out_len {
-            &stack_out[out_len - 1 - part_index]
-        } else {
-            &stack_in[in_len + out_len - 1 - part_index]
-        };
-        walk.work.push(Task::Part(part.clone()));
-        part_index += 1;
-    }
-    walk
 }

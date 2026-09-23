@@ -127,6 +127,11 @@ fn push_type(
             noble_kernel::types::Ty::Text | noble_kernel::types::Ty::Sum(_, _) => {
                 return Err(crate::Diagnostic::Unsupported);
             }
+            noble_kernel::types::Ty::Contract
+            | noble_kernel::types::Ty::Evidence
+            | noble_kernel::types::Ty::Certified => {
+                return Err(crate::Diagnostic::Unsupported);
+            }
             noble_kernel::types::Ty::Program(_, _, effects) if !effects.is_empty() => {
                 return Err(crate::Diagnostic::Unsupported);
             }
@@ -139,6 +144,9 @@ fn push_type(
         noble_kernel::types::Ty::I64 => attempt!(out.append(b"I64")),
         noble_kernel::types::Ty::Text => attempt!(out.append(b"Text")),
         noble_kernel::types::Ty::Syntax => attempt!(out.append(b"Syntax")),
+        noble_kernel::types::Ty::Contract => attempt!(out.append(b"Contract")),
+        noble_kernel::types::Ty::Evidence => attempt!(out.append(b"Evidence")),
+        noble_kernel::types::Ty::Certified => attempt!(out.append(b"Certified")),
         noble_kernel::types::Ty::Resource(_) => return Err(crate::Diagnostic::Unsupported),
         noble_kernel::types::Ty::Pair(left, right) => {
             attempt!(out.append(b"Pair("));

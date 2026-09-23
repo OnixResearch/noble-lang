@@ -18,11 +18,18 @@ pub(super) fn receive(
     }
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; reply framing checks header syntax, UTF-8 and the 4 MiB byte limit before allocation, while short reads and worker closure return typed failures rather than panics."
+)]
 fn read_reply(
     reader: &mut impl std::io::BufRead,
 ) -> Result<crate::core::output::Report, crate::core::output::Failure> {
     let header = attempt!(crate::core::framing::read_line(reader, 128));
-    let header = attempt!(header.ok_or_else(error));
+    let header = match header {
+        Some(header) => header,
+        None => return Err(closed()),
+    };
     let header = attempt!(std::str::from_utf8(&header).map_err(|_| error()));
     let mut words = header.split_whitespace();
     let outcome = attempt!(words.next().ok_or_else(error)).to_owned();
@@ -38,6 +45,16 @@ fn read_reply(
     attempt!(std::io::Read::read_exact(reader, &mut bytes).map_err(crate::core::framing::io_error));
     let json = attempt!(std::string::String::from_utf8(bytes).map_err(|_| error()));
     Ok(crate::core::output::Report { outcome, json })
+}
+
+pub(super) fn closed() -> crate::core::output::Failure {
+    crate::core::output::Failure::new(
+        crate::core::output::ErrorContext {
+            stage: "wasm",
+            outcome: "internal-failure",
+        },
+        "engine worker closed its reply stream",
+    )
 }
 
 pub(super) fn error() -> crate::core::output::Failure {

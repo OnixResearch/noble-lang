@@ -1,3 +1,8 @@
+#![expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-maintainers; program construction mutates only preparation-owned node-metered inference and draft arenas, depth-checked traversal scratch, and work accounting; diagnostic spelling appends at most 10 bytes to an owned scratch String, while borrowed source, syntax, environment, and published candidates remain unchanged."
+)]
+
 mod bindings;
 mod forms;
 mod traversal;

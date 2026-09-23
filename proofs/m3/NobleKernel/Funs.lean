@@ -72,7 +72,7 @@ def types.EffSet.Insts.CoreCloneClone.clone
   ok v
 
 /-- [noble_kernel::types::impls::{impl core::clone::Clone for noble_kernel::types::Ty}::clone]:
-    Source: 'crates/noble-kernel/src/types/impls.rs', lines 30:4-55:5
+    Source: 'crates/noble-kernel/src/types/impls.rs', lines 30:4-58:5
     Visibility: public -/
 def types.Ty.Insts.CoreCloneClone.clone
   (self : types.Ty) : Result types.Ty := do
@@ -82,6 +82,9 @@ def types.Ty.Insts.CoreCloneClone.clone
   | types.Ty.I64Type => ok types.Ty.I64Type
   | types.Ty.TextType => ok types.Ty.TextType
   | types.Ty.SyntaxType => ok types.Ty.SyntaxType
+  | types.Ty.ContractType => ok types.Ty.ContractType
+  | types.Ty.EvidenceType => ok types.Ty.EvidenceType
+  | types.Ty.CertifiedType => ok types.Ty.CertifiedType
   | types.Ty.PairType left right =>
     let t ← types.Ty.Insts.CoreCloneClone.clone left
     let t1 ← types.Ty.Insts.CoreCloneClone.clone right
@@ -104,7 +107,7 @@ def types.Ty.Insts.CoreCloneClone.clone
 partial_fixpoint
 
 /-- Trait implementation: [noble_kernel::types::impls::{impl core::clone::Clone for noble_kernel::types::Ty}]
-    Source: 'crates/noble-kernel/src/types/impls.rs', lines 29:0-56:1 -/
+    Source: 'crates/noble-kernel/src/types/impls.rs', lines 29:0-59:1 -/
 @[reducible]
 def types.Ty.Insts.CoreCloneClone : core.clone.Clone types.Ty := {
   clone := types.Ty.Insts.CoreCloneClone.clone
@@ -309,7 +312,7 @@ def types.ResourceKind.Insts.CoreCmpPartialEqResourceKind.eq
 @[global_simps, irreducible] def types.WORK_CAP : Std.Usize := 512#usize
 
 /-- [noble_kernel::types::impls::push_type_program]: loop body 0:
-    Source: 'crates/noble-kernel/src/types/impls.rs', lines 70:4-73:5 -/
+    Source: 'crates/noble-kernel/src/types/impls.rs', lines 73:4-76:5 -/
 @[rust_loop_body]
 def types.impls.push_type_program_loop0.body
   (first_in : Slice types.Ty) (second_in : Slice types.Ty)
@@ -334,7 +337,7 @@ def types.impls.push_type_program_loop0.body
   else ok (done (work, is_comparable))
 
 /-- [noble_kernel::types::impls::push_type_program]: loop 0:
-    Source: 'crates/noble-kernel/src/types/impls.rs', lines 70:4-73:5 -/
+    Source: 'crates/noble-kernel/src/types/impls.rs', lines 73:4-76:5 -/
 @[rust_loop]
 def types.impls.push_type_program_loop0
   (work : alloc.vec.Vec (types.Ty × types.Ty)) (first_in : Slice types.Ty)
@@ -348,7 +351,7 @@ def types.impls.push_type_program_loop0
     (work, is_comparable, index)
 
 /-- [noble_kernel::types::impls::push_type_program]: loop body 1:
-    Source: 'crates/noble-kernel/src/types/impls.rs', lines 75:4-78:5 -/
+    Source: 'crates/noble-kernel/src/types/impls.rs', lines 78:4-81:5 -/
 @[rust_loop_body]
 def types.impls.push_type_program_loop1.body
   (first_out : Slice types.Ty) (second_out : Slice types.Ty)
@@ -373,7 +376,7 @@ def types.impls.push_type_program_loop1.body
   else ok (done (work, is_comparable))
 
 /-- [noble_kernel::types::impls::push_type_program]: loop 1:
-    Source: 'crates/noble-kernel/src/types/impls.rs', lines 75:4-78:5 -/
+    Source: 'crates/noble-kernel/src/types/impls.rs', lines 78:4-81:5 -/
 @[rust_loop]
 def types.impls.push_type_program_loop1
   (work : alloc.vec.Vec (types.Ty × types.Ty)) (first_out : Slice types.Ty)
@@ -387,7 +390,7 @@ def types.impls.push_type_program_loop1
     (work, is_comparable, index)
 
 /-- [noble_kernel::types::impls::push_type_program]:
-    Source: 'crates/noble-kernel/src/types/impls.rs', lines 59:0-80:1 -/
+    Source: 'crates/noble-kernel/src/types/impls.rs', lines 62:0-83:1 -/
 def types.impls.push_type_program
   (work : alloc.vec.Vec (types.Ty × types.Ty)) (first_in : Slice types.Ty)
   (first_out : Slice types.Ty) (second_in : Slice types.Ty)
@@ -413,7 +416,7 @@ def types.impls.push_type_program
     0#usize
 
 /-- [noble_kernel::types::impls::ty_eq]: loop body 0:
-    Source: 'crates/noble-kernel/src/types/impls.rs', lines 93:4-142:5 -/
+    Source: 'crates/noble-kernel/src/types/impls.rs', lines 96:4-148:5 -/
 @[rust_loop_body]
 def types.impls.ty_eq_loop.body
   (work : alloc.vec.Vec (types.Ty × types.Ty)) (is_mismatch : Bool) :
@@ -443,6 +446,9 @@ def types.impls.ty_eq_loop.body
               | types.Ty.I64Type => ok false
               | types.Ty.TextType => ok false
               | types.Ty.SyntaxType => ok false
+              | types.Ty.ContractType => ok false
+              | types.Ty.EvidenceType => ok false
+              | types.Ty.CertifiedType => ok false
               | types.Ty.PairType _ _ => ok false
               | types.Ty.SumType _ _ => ok false
               | types.Ty.ListType _ => ok false
@@ -458,6 +464,9 @@ def types.impls.ty_eq_loop.body
               | types.Ty.I64Type => ok false
               | types.Ty.TextType => ok false
               | types.Ty.SyntaxType => ok false
+              | types.Ty.ContractType => ok false
+              | types.Ty.EvidenceType => ok false
+              | types.Ty.CertifiedType => ok false
               | types.Ty.PairType _ _ => ok false
               | types.Ty.SumType _ _ => ok false
               | types.Ty.ListType _ => ok false
@@ -473,6 +482,9 @@ def types.impls.ty_eq_loop.body
               | types.Ty.I64Type => ok true
               | types.Ty.TextType => ok false
               | types.Ty.SyntaxType => ok false
+              | types.Ty.ContractType => ok false
+              | types.Ty.EvidenceType => ok false
+              | types.Ty.CertifiedType => ok false
               | types.Ty.PairType _ _ => ok false
               | types.Ty.SumType _ _ => ok false
               | types.Ty.ListType _ => ok false
@@ -488,6 +500,9 @@ def types.impls.ty_eq_loop.body
               | types.Ty.I64Type => ok false
               | types.Ty.TextType => ok true
               | types.Ty.SyntaxType => ok false
+              | types.Ty.ContractType => ok false
+              | types.Ty.EvidenceType => ok false
+              | types.Ty.CertifiedType => ok false
               | types.Ty.PairType _ _ => ok false
               | types.Ty.SumType _ _ => ok false
               | types.Ty.ListType _ => ok false
@@ -503,6 +518,63 @@ def types.impls.ty_eq_loop.body
               | types.Ty.I64Type => ok false
               | types.Ty.TextType => ok false
               | types.Ty.SyntaxType => ok true
+              | types.Ty.ContractType => ok false
+              | types.Ty.EvidenceType => ok false
+              | types.Ty.CertifiedType => ok false
+              | types.Ty.PairType _ _ => ok false
+              | types.Ty.SumType _ _ => ok false
+              | types.Ty.ListType _ => ok false
+              | types.Ty.ProgramType _ _ _ => ok false
+              | types.Ty.ResourceType _ => ok false
+            ok (work1, b1)
+          | types.Ty.ContractType =>
+            do
+            let b1 ←
+              match second with
+              | types.Ty.UnitType => ok false
+              | types.Ty.BoolType => ok false
+              | types.Ty.I64Type => ok false
+              | types.Ty.TextType => ok false
+              | types.Ty.SyntaxType => ok false
+              | types.Ty.ContractType => ok true
+              | types.Ty.EvidenceType => ok false
+              | types.Ty.CertifiedType => ok false
+              | types.Ty.PairType _ _ => ok false
+              | types.Ty.SumType _ _ => ok false
+              | types.Ty.ListType _ => ok false
+              | types.Ty.ProgramType _ _ _ => ok false
+              | types.Ty.ResourceType _ => ok false
+            ok (work1, b1)
+          | types.Ty.EvidenceType =>
+            do
+            let b1 ←
+              match second with
+              | types.Ty.UnitType => ok false
+              | types.Ty.BoolType => ok false
+              | types.Ty.I64Type => ok false
+              | types.Ty.TextType => ok false
+              | types.Ty.SyntaxType => ok false
+              | types.Ty.ContractType => ok false
+              | types.Ty.EvidenceType => ok true
+              | types.Ty.CertifiedType => ok false
+              | types.Ty.PairType _ _ => ok false
+              | types.Ty.SumType _ _ => ok false
+              | types.Ty.ListType _ => ok false
+              | types.Ty.ProgramType _ _ _ => ok false
+              | types.Ty.ResourceType _ => ok false
+            ok (work1, b1)
+          | types.Ty.CertifiedType =>
+            do
+            let b1 ←
+              match second with
+              | types.Ty.UnitType => ok false
+              | types.Ty.BoolType => ok false
+              | types.Ty.I64Type => ok false
+              | types.Ty.TextType => ok false
+              | types.Ty.SyntaxType => ok false
+              | types.Ty.ContractType => ok false
+              | types.Ty.EvidenceType => ok false
+              | types.Ty.CertifiedType => ok true
               | types.Ty.PairType _ _ => ok false
               | types.Ty.SumType _ _ => ok false
               | types.Ty.ListType _ => ok false
@@ -516,6 +588,9 @@ def types.impls.ty_eq_loop.body
             | types.Ty.I64Type => ok (work1, false)
             | types.Ty.TextType => ok (work1, false)
             | types.Ty.SyntaxType => ok (work1, false)
+            | types.Ty.ContractType => ok (work1, false)
+            | types.Ty.EvidenceType => ok (work1, false)
+            | types.Ty.CertifiedType => ok (work1, false)
             | types.Ty.PairType second_head second_tail =>
               do
               let work3 ← alloc.vec.Vec.push work1 (first_head, second_head)
@@ -532,6 +607,9 @@ def types.impls.ty_eq_loop.body
             | types.Ty.I64Type => ok (work1, false)
             | types.Ty.TextType => ok (work1, false)
             | types.Ty.SyntaxType => ok (work1, false)
+            | types.Ty.ContractType => ok (work1, false)
+            | types.Ty.EvidenceType => ok (work1, false)
+            | types.Ty.CertifiedType => ok (work1, false)
             | types.Ty.PairType _ _ => ok (work1, false)
             | types.Ty.SumType second_head second_tail =>
               do
@@ -548,6 +626,9 @@ def types.impls.ty_eq_loop.body
             | types.Ty.I64Type => ok (work1, false)
             | types.Ty.TextType => ok (work1, false)
             | types.Ty.SyntaxType => ok (work1, false)
+            | types.Ty.ContractType => ok (work1, false)
+            | types.Ty.EvidenceType => ok (work1, false)
+            | types.Ty.CertifiedType => ok (work1, false)
             | types.Ty.PairType _ _ => ok (work1, false)
             | types.Ty.SumType _ _ => ok (work1, false)
             | types.Ty.ListType second_item =>
@@ -563,6 +644,9 @@ def types.impls.ty_eq_loop.body
             | types.Ty.I64Type => ok (work1, false)
             | types.Ty.TextType => ok (work1, false)
             | types.Ty.SyntaxType => ok (work1, false)
+            | types.Ty.ContractType => ok (work1, false)
+            | types.Ty.EvidenceType => ok (work1, false)
+            | types.Ty.CertifiedType => ok (work1, false)
             | types.Ty.PairType _ _ => ok (work1, false)
             | types.Ty.SumType _ _ => ok (work1, false)
             | types.Ty.ListType _ => ok (work1, false)
@@ -589,6 +673,9 @@ def types.impls.ty_eq_loop.body
               | types.Ty.I64Type => ok false
               | types.Ty.TextType => ok false
               | types.Ty.SyntaxType => ok false
+              | types.Ty.ContractType => ok false
+              | types.Ty.EvidenceType => ok false
+              | types.Ty.CertifiedType => ok false
               | types.Ty.PairType _ _ => ok false
               | types.Ty.SumType _ _ => ok false
               | types.Ty.ListType _ => ok false
@@ -602,7 +689,7 @@ def types.impls.ty_eq_loop.body
       else ok (cont (work2, true))
 
 /-- [noble_kernel::types::impls::ty_eq]: loop 0:
-    Source: 'crates/noble-kernel/src/types/impls.rs', lines 93:4-142:5 -/
+    Source: 'crates/noble-kernel/src/types/impls.rs', lines 96:4-148:5 -/
 @[rust_loop]
 def types.impls.ty_eq_loop
   (work : alloc.vec.Vec (types.Ty × types.Ty)) (is_mismatch : Bool) :
@@ -614,7 +701,7 @@ def types.impls.ty_eq_loop
     (work, is_mismatch)
 
 /-- [noble_kernel::types::impls::ty_eq]:
-    Source: 'crates/noble-kernel/src/types/impls.rs', lines 88:0-144:1 -/
+    Source: 'crates/noble-kernel/src/types/impls.rs', lines 91:0-150:1 -/
 def types.impls.ty_eq (left : types.Ty) (right : types.Ty) : Result Bool := do
   let work := alloc.vec.Vec.with_capacity (types.Ty × types.Ty) 8#usize
   let t ← types.Ty.Insts.CoreCloneClone.clone left
@@ -624,14 +711,14 @@ def types.impls.ty_eq (left : types.Ty) (right : types.Ty) : Result Bool := do
   ok (¬ is_mismatch)
 
 /-- [noble_kernel::types::impls::{impl core::cmp::PartialEq<noble_kernel::types::Ty> for noble_kernel::types::Ty}::eq]:
-    Source: 'crates/noble-kernel/src/types/impls.rs', lines 148:4-150:5
+    Source: 'crates/noble-kernel/src/types/impls.rs', lines 154:4-156:5
     Visibility: public -/
 def types.Ty.Insts.CoreCmpPartialEqTy.eq
   (self : types.Ty) (other : types.Ty) : Result Bool := do
   types.impls.ty_eq self other
 
 /-- Trait implementation: [noble_kernel::types::impls::{impl core::cmp::PartialEq<noble_kernel::types::Ty> for noble_kernel::types::Ty}]
-    Source: 'crates/noble-kernel/src/types/impls.rs', lines 147:0-151:1 -/
+    Source: 'crates/noble-kernel/src/types/impls.rs', lines 153:0-157:1 -/
 @[reducible]
 impl_def types.Ty.Insts.CoreCmpPartialEqTy : core.cmp.PartialEq types.Ty
   types.Ty := {
@@ -1100,7 +1187,7 @@ def acceptance.parts.match_tail
     acceptance.parts.match_tail_loop stack expected tail_start 0#usize
 
 /-- [noble_kernel::types::size::queue_children]: loop body 0:
-    Source: 'crates/noble-kernel/src/types/size.rs', lines 137:12-140:13 -/
+    Source: 'crates/noble-kernel/src/types/size.rs', lines 140:12-143:13 -/
 @[rust_loop_body]
 def types.size.queue_children_loop0.body
   (stack_in : alloc.vec.Vec types.Ty) (todo : alloc.vec.Vec (types.Ty × Bool))
@@ -1121,7 +1208,7 @@ def types.size.queue_children_loop0.body
   else ok (done todo)
 
 /-- [noble_kernel::types::size::queue_children]: loop 0:
-    Source: 'crates/noble-kernel/src/types/size.rs', lines 137:12-140:13 -/
+    Source: 'crates/noble-kernel/src/types/size.rs', lines 140:12-143:13 -/
 @[rust_loop]
 def types.size.queue_children_loop0
   (todo : alloc.vec.Vec (types.Ty × Bool)) (stack_in : alloc.vec.Vec types.Ty)
@@ -1134,7 +1221,7 @@ def types.size.queue_children_loop0
     (todo, index)
 
 /-- [noble_kernel::types::size::queue_children]: loop body 1:
-    Source: 'crates/noble-kernel/src/types/size.rs', lines 142:12-145:13 -/
+    Source: 'crates/noble-kernel/src/types/size.rs', lines 145:12-148:13 -/
 @[rust_loop_body]
 def types.size.queue_children_loop1.body
   (stack_out : alloc.vec.Vec types.Ty)
@@ -1155,7 +1242,7 @@ def types.size.queue_children_loop1.body
   else ok (done todo)
 
 /-- [noble_kernel::types::size::queue_children]: loop 1:
-    Source: 'crates/noble-kernel/src/types/size.rs', lines 142:12-145:13 -/
+    Source: 'crates/noble-kernel/src/types/size.rs', lines 145:12-148:13 -/
 @[rust_loop]
 def types.size.queue_children_loop1
   (todo : alloc.vec.Vec (types.Ty × Bool))
@@ -1168,7 +1255,7 @@ def types.size.queue_children_loop1
     (todo, index)
 
 /-- [noble_kernel::types::size::queue_children]:
-    Source: 'crates/noble-kernel/src/types/size.rs', lines 116:0-155:1 -/
+    Source: 'crates/noble-kernel/src/types/size.rs', lines 119:0-161:1 -/
 def types.size.queue_children
   (node : types.Ty) (todo : alloc.vec.Vec (types.Ty × Bool))
   (sizes : alloc.vec.Vec Std.U32) :
@@ -1188,6 +1275,15 @@ def types.size.queue_children
     let sizes1 ← alloc.vec.Vec.push sizes 1#u32
     ok (todo, sizes1)
   | types.Ty.SyntaxType =>
+    let sizes1 ← alloc.vec.Vec.push sizes 1#u32
+    ok (todo, sizes1)
+  | types.Ty.ContractType =>
+    let sizes1 ← alloc.vec.Vec.push sizes 1#u32
+    ok (todo, sizes1)
+  | types.Ty.EvidenceType =>
+    let sizes1 ← alloc.vec.Vec.push sizes 1#u32
+    ok (todo, sizes1)
+  | types.Ty.CertifiedType =>
     let sizes1 ← alloc.vec.Vec.push sizes 1#u32
     ok (todo, sizes1)
   | types.Ty.PairType left right =>
@@ -1223,7 +1319,7 @@ def types.size.queue_children
     ok (todo, sizes1)
 
 /-- [noble_kernel::types::size::take_sizes]: loop body 0:
-    Source: 'crates/noble-kernel/src/types/size.rs', lines 90:4-99:5 -/
+    Source: 'crates/noble-kernel/src/types/size.rs', lines 93:4-102:5 -/
 @[rust_loop_body]
 def types.size.take_sizes_loop.body
   (count : Std.Usize) (sizes : alloc.vec.Vec Std.U32) (total : Std.U32)
@@ -1243,7 +1339,7 @@ def types.size.take_sizes_loop.body
   else ok (done (sizes, total, false))
 
 /-- [noble_kernel::types::size::take_sizes]: loop 0:
-    Source: 'crates/noble-kernel/src/types/size.rs', lines 90:4-99:5 -/
+    Source: 'crates/noble-kernel/src/types/size.rs', lines 93:4-102:5 -/
 @[rust_loop]
 def types.size.take_sizes_loop
   (sizes : alloc.vec.Vec Std.U32) (count : Std.Usize) (total : Std.U32)
@@ -1256,7 +1352,7 @@ def types.size.take_sizes_loop
     (sizes, total, step)
 
 /-- [noble_kernel::types::size::take_sizes]:
-    Source: 'crates/noble-kernel/src/types/size.rs', lines 83:0-105:1 -/
+    Source: 'crates/noble-kernel/src/types/size.rs', lines 86:0-108:1 -/
 def types.size.take_sizes
   (sizes : alloc.vec.Vec Std.U32) (count : Std.Usize) :
   Result ((alloc.vec.Vec Std.U32) × (Option Std.U32))
@@ -1268,7 +1364,7 @@ def types.size.take_sizes
   else ok (sizes1, some total)
 
 /-- [noble_kernel::types::size::count_children]:
-    Source: 'crates/noble-kernel/src/types/size.rs', lines 60:0-74:1 -/
+    Source: 'crates/noble-kernel/src/types/size.rs', lines 60:0-77:1 -/
 def types.size.count_children (node : types.Ty) : Result Std.Usize := do
   match node with
   | types.Ty.UnitType => ok 0#usize
@@ -1276,6 +1372,9 @@ def types.size.count_children (node : types.Ty) : Result Std.Usize := do
   | types.Ty.I64Type => ok 0#usize
   | types.Ty.TextType => ok 0#usize
   | types.Ty.SyntaxType => ok 0#usize
+  | types.Ty.ContractType => ok 0#usize
+  | types.Ty.EvidenceType => ok 0#usize
+  | types.Ty.CertifiedType => ok 0#usize
   | types.Ty.PairType _ _ => ok 2#usize
   | types.Ty.SumType _ _ => ok 2#usize
   | types.Ty.ListType _ => ok 1#usize
@@ -1341,7 +1440,7 @@ def types.Ty.size_loop
     (outcome, walk)
 
 /-- [noble_kernel::types::{noble_kernel::types::Ty}::size]:
-    Source: 'crates/noble-kernel/src/types.rs', lines 237:4-253:5
+    Source: 'crates/noble-kernel/src/types.rs', lines 254:4-270:5
     Visibility: public -/
 def types.Ty.size (self : types.Ty) : Result (Option Std.U32) := do
   let v := alloc.vec.Vec.with_capacity (types.Ty × Bool) 8#usize
@@ -1671,7 +1770,7 @@ def types.EffSet.from_ids (ids : Slice types.EffId) : Result types.EffSet := do
   ok sorted1
 
 /-- [noble_kernel::shapes::{impl core::clone::Clone for noble_kernel::shapes::EffectSlot}::clone]:
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 73:9-73:14
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 79:9-79:14
     Visibility: public -/
 def shapes.EffectSlot.Insts.CoreCloneClone.clone
   (self : shapes.EffectSlot) : Result shapes.EffectSlot := do
@@ -1830,7 +1929,7 @@ def words.Inst.value
       | words.Binding.Ref _ => ok none
 
 /-- [noble_kernel::shapes::impls::clone_slots]: loop body 0:
-    Source: 'crates/noble-kernel/src/shapes/impls.rs', lines 56:4-59:5 -/
+    Source: 'crates/noble-kernel/src/shapes/impls.rs', lines 61:4-64:5 -/
 @[rust_loop_body]
 def shapes.impls.clone_slots_loop.body
   (stack : Slice shapes.EffectSlot) (out : alloc.vec.Vec shapes.EffectSlot)
@@ -1849,7 +1948,7 @@ def shapes.impls.clone_slots_loop.body
   else ok (done out)
 
 /-- [noble_kernel::shapes::impls::clone_slots]: loop 0:
-    Source: 'crates/noble-kernel/src/shapes/impls.rs', lines 56:4-59:5 -/
+    Source: 'crates/noble-kernel/src/shapes/impls.rs', lines 61:4-64:5 -/
 @[rust_loop]
 def shapes.impls.clone_slots_loop
   (stack : Slice shapes.EffectSlot) (out : alloc.vec.Vec shapes.EffectSlot)
@@ -1862,7 +1961,7 @@ def shapes.impls.clone_slots_loop
     (out, index)
 
 /-- [noble_kernel::shapes::impls::clone_slots]:
-    Source: 'crates/noble-kernel/src/shapes/impls.rs', lines 52:0-61:1 -/
+    Source: 'crates/noble-kernel/src/shapes/impls.rs', lines 57:0-66:1 -/
 def shapes.impls.clone_slots
   (stack : Slice shapes.EffectSlot) :
   Result (alloc.vec.Vec shapes.EffectSlot)
@@ -1872,7 +1971,7 @@ def shapes.impls.clone_slots
   shapes.impls.clone_slots_loop stack out 0#usize
 
 /-- [noble_kernel::shapes::impls::{impl core::clone::Clone for noble_kernel::shapes::Pattern}::clone]:
-    Source: 'crates/noble-kernel/src/shapes/impls.rs', lines 18:4-49:5
+    Source: 'crates/noble-kernel/src/shapes/impls.rs', lines 20:4-54:5
     Visibility: public -/
 def shapes.Pattern.Insts.CoreCloneClone.clone
   (self : shapes.Pattern) : Result shapes.Pattern := do
@@ -1882,6 +1981,9 @@ def shapes.Pattern.Insts.CoreCloneClone.clone
   | shapes.Pattern.I64Pattern => ok shapes.Pattern.I64Pattern
   | shapes.Pattern.TextPattern => ok shapes.Pattern.TextPattern
   | shapes.Pattern.SyntaxPattern => ok shapes.Pattern.SyntaxPattern
+  | shapes.Pattern.ContractPattern => ok shapes.Pattern.ContractPattern
+  | shapes.Pattern.EvidencePattern => ok shapes.Pattern.EvidencePattern
+  | shapes.Pattern.CertifiedPattern => ok shapes.Pattern.CertifiedPattern
   | shapes.Pattern.PairPattern head tail =>
     let p ← shapes.Pattern.Insts.CoreCloneClone.clone head
     let p1 ← shapes.Pattern.Insts.CoreCloneClone.clone tail
@@ -1906,10 +2008,10 @@ def shapes.Pattern.Insts.CoreCloneClone.clone
   | shapes.Pattern.StackVarPattern _ => ok self
 partial_fixpoint
 
-/-- [noble_kernel::words::subst::queue_parts]: loop body 0:
-    Source: 'crates/noble-kernel/src/words/subst.rs', lines 288:4-296:5 -/
+/-- [noble_kernel::words::subst::schedule::queue]: loop body 0:
+    Source: 'crates/noble-kernel/src/words/subst/schedule.rs', lines 14:4-22:5 -/
 @[rust_loop_body]
-def words.subst.queue_parts_loop.body
+def words.subst.schedule.queue_loop.body
   (stack_in : Slice shapes.Pattern) (stack_out : Slice shapes.Pattern)
   (out_len : Std.Usize) (in_len : Std.Usize) (walk : words.subst.Walk)
   (part_index : Std.Usize) :
@@ -1936,33 +2038,34 @@ def words.subst.queue_parts_loop.body
     ok (cont ({ walk with work := v }, part_index1))
   else ok (done walk)
 
-/-- [noble_kernel::words::subst::queue_parts]: loop 0:
-    Source: 'crates/noble-kernel/src/words/subst.rs', lines 288:4-296:5 -/
+/-- [noble_kernel::words::subst::schedule::queue]: loop 0:
+    Source: 'crates/noble-kernel/src/words/subst/schedule.rs', lines 14:4-22:5 -/
 @[rust_loop]
-def words.subst.queue_parts_loop
+def words.subst.schedule.queue_loop
   (stack_in : Slice shapes.Pattern) (stack_out : Slice shapes.Pattern)
   (walk : words.subst.Walk) (out_len : Std.Usize) (in_len : Std.Usize)
   (part_index : Std.Usize) :
   Result words.subst.Walk
   := do
   loop
-    (fun (walk1, part_index1) => words.subst.queue_parts_loop.body stack_in
+    (fun (walk1, part_index1) => words.subst.schedule.queue_loop.body stack_in
       stack_out out_len in_len walk1 part_index1)
     (walk, part_index)
 
-/-- [noble_kernel::words::subst::queue_parts]:
-    Source: 'crates/noble-kernel/src/words/subst.rs', lines 280:0-298:1 -/
-def words.subst.queue_parts
+/-- [noble_kernel::words::subst::schedule::queue]:
+    Source: 'crates/noble-kernel/src/words/subst/schedule.rs', lines 6:0-24:1 -/
+def words.subst.schedule.queue
   (stack_in : Slice shapes.Pattern) (stack_out : Slice shapes.Pattern)
   (walk : words.subst.Walk) :
   Result words.subst.Walk
   := do
   let out_len := Slice.len stack_out
   let in_len := Slice.len stack_in
-  words.subst.queue_parts_loop stack_in stack_out walk out_len in_len 0#usize
+  words.subst.schedule.queue_loop stack_in stack_out walk out_len in_len
+    0#usize
 
 /-- [noble_kernel::words::subst::part_task]:
-    Source: 'crates/noble-kernel/src/words/subst.rs', lines 234:0-273:1 -/
+    Source: 'crates/noble-kernel/src/words/subst.rs', lines 233:0-281:1 -/
 def words.subst.part_task
   (node : shapes.Pattern) (inst : words.Inst) (walk : words.subst.Walk) :
   Result (words.subst.Walk × (core.result.Result Unit words.InstError))
@@ -2004,6 +2107,27 @@ def words.subst.part_task
     let ret := alloc.slice.Slice.into_vec y
     let v ← alloc.vec.Vec.push walk.segments ret
     ok ({ walk with segments := v }, core.result.Result.Ok ())
+  | shapes.Pattern.ContractPattern =>
+    let y ←
+      lift (Std.Array.to_slice (Array.make 1#usize [ types.Ty.ContractType ] :
+        Array types.Ty 1#usize))
+    let ret := alloc.slice.Slice.into_vec y
+    let v ← alloc.vec.Vec.push walk.segments ret
+    ok ({ walk with segments := v }, core.result.Result.Ok ())
+  | shapes.Pattern.EvidencePattern =>
+    let y ←
+      lift (Std.Array.to_slice (Array.make 1#usize [ types.Ty.EvidenceType ] :
+        Array types.Ty 1#usize))
+    let ret := alloc.slice.Slice.into_vec y
+    let v ← alloc.vec.Vec.push walk.segments ret
+    ok ({ walk with segments := v }, core.result.Result.Ok ())
+  | shapes.Pattern.CertifiedPattern =>
+    let y ←
+      lift (Std.Array.to_slice (Array.make 1#usize [ types.Ty.CertifiedType ] :
+        Array types.Ty 1#usize))
+    let ret := alloc.slice.Slice.into_vec y
+    let v ← alloc.vec.Vec.push walk.segments ret
+    ok ({ walk with segments := v }, core.result.Result.Ok ())
   | shapes.Pattern.PairPattern left right =>
     let v ← alloc.vec.Vec.push walk.work (words.subst.Task.Finish marker)
     let v1 ← alloc.vec.Vec.push v (words.subst.Task.Part right)
@@ -2022,7 +2146,7 @@ def words.subst.part_task
     let v ← alloc.vec.Vec.push walk.work (words.subst.Task.Expand marker)
     let s := alloc.vec.Vec.deref stack_in
     let s1 := alloc.vec.Vec.deref stack_out
-    let walk1 ← words.subst.queue_parts s s1 { walk with work := v }
+    let walk1 ← words.subst.schedule.queue s s1 { walk with work := v }
     ok (walk1, core.result.Result.Ok ())
   | shapes.Pattern.ResourcePattern kind =>
     let y ←
@@ -2054,7 +2178,7 @@ def words.subst.part_task
       ok ({ walk with work := v1 }, core.result.Result.Ok ())
 
 /-- [noble_kernel::types::{noble_kernel::types::Ty}::program]:
-    Source: 'crates/noble-kernel/src/types.rs', lines 186:4-196:5
+    Source: 'crates/noble-kernel/src/types.rs', lines 195:4-205:5
     Visibility: public -/
 def types.Ty.program
   (stack_in : alloc.vec.Vec types.Ty) (stack_out : alloc.vec.Vec types.Ty)
@@ -2064,7 +2188,7 @@ def types.Ty.program
   ok (types.Ty.ProgramType stack_in stack_out effects)
 
 /-- [noble_kernel::words::subst::expand_task]: loop body 0:
-    Source: 'crates/noble-kernel/src/words/subst.rs', lines 176:4-187:5 -/
+    Source: 'crates/noble-kernel/src/words/subst.rs', lines 175:4-186:5 -/
 @[rust_loop_body]
 def words.subst.expand_task_loop0.body
   (wanted : Std.Usize) (walk : words.subst.Walk)
@@ -2085,7 +2209,7 @@ def words.subst.expand_task_loop0.body
   else ok (done (walk, collected, false))
 
 /-- [noble_kernel::words::subst::expand_task]: loop 0:
-    Source: 'crates/noble-kernel/src/words/subst.rs', lines 176:4-187:5 -/
+    Source: 'crates/noble-kernel/src/words/subst.rs', lines 175:4-186:5 -/
 @[rust_loop]
 def words.subst.expand_task_loop0
   (walk : words.subst.Walk) (wanted : Std.Usize)
@@ -2098,7 +2222,7 @@ def words.subst.expand_task_loop0
     (walk, collected, popped)
 
 /-- [noble_kernel::words::subst::expand_task]: loop body 1:
-    Source: 'crates/noble-kernel/src/words/subst.rs', lines 196:4-201:5 -/
+    Source: 'crates/noble-kernel/src/words/subst.rs', lines 195:4-200:5 -/
 @[rust_loop_body]
 def words.subst.expand_task_loop1.body
   (parts_in : alloc.vec.Vec shapes.Pattern)
@@ -2123,7 +2247,7 @@ def words.subst.expand_task_loop1.body
   else ok (done (parts, stack_in))
 
 /-- [noble_kernel::words::subst::expand_task]: loop 1:
-    Source: 'crates/noble-kernel/src/words/subst.rs', lines 196:4-201:5 -/
+    Source: 'crates/noble-kernel/src/words/subst.rs', lines 195:4-200:5 -/
 @[rust_loop]
 def words.subst.expand_task_loop1
   (parts_in : alloc.vec.Vec shapes.Pattern)
@@ -2138,7 +2262,7 @@ def words.subst.expand_task_loop1
     (parts, stack_in, in_step)
 
 /-- [noble_kernel::words::subst::expand_task]: loop body 2:
-    Source: 'crates/noble-kernel/src/words/subst.rs', lines 205:4-210:5 -/
+    Source: 'crates/noble-kernel/src/words/subst.rs', lines 204:4-209:5 -/
 @[rust_loop_body]
 def words.subst.expand_task_loop2.body
   (parts_out : alloc.vec.Vec shapes.Pattern)
@@ -2162,7 +2286,7 @@ def words.subst.expand_task_loop2.body
   else ok (done stack_out)
 
 /-- [noble_kernel::words::subst::expand_task]: loop 2:
-    Source: 'crates/noble-kernel/src/words/subst.rs', lines 205:4-210:5 -/
+    Source: 'crates/noble-kernel/src/words/subst.rs', lines 204:4-209:5 -/
 @[rust_loop]
 def words.subst.expand_task_loop2
   (parts_out : alloc.vec.Vec shapes.Pattern)
@@ -2176,7 +2300,7 @@ def words.subst.expand_task_loop2
     (parts, stack_out, out_step)
 
 /-- [noble_kernel::words::subst::expand_task]:
-    Source: 'crates/noble-kernel/src/words/subst.rs', lines 152:0-219:1 -/
+    Source: 'crates/noble-kernel/src/words/subst.rs', lines 151:0-218:1 -/
 def words.subst.expand_task
   (scheme : words.Scheme) (node : shapes.Pattern) (inst : words.Inst)
   (walk : words.subst.Walk) :
@@ -2192,6 +2316,12 @@ def words.subst.expand_task
   | shapes.Pattern.TextPattern =>
     ok (walk, core.result.Result.Err words.InstError.KindMismatch)
   | shapes.Pattern.SyntaxPattern =>
+    ok (walk, core.result.Result.Err words.InstError.KindMismatch)
+  | shapes.Pattern.ContractPattern =>
+    ok (walk, core.result.Result.Err words.InstError.KindMismatch)
+  | shapes.Pattern.EvidencePattern =>
+    ok (walk, core.result.Result.Err words.InstError.KindMismatch)
+  | shapes.Pattern.CertifiedPattern =>
     ok (walk, core.result.Result.Err words.InstError.KindMismatch)
   | shapes.Pattern.PairPattern _ _ =>
     ok (walk, core.result.Result.Err words.InstError.KindMismatch)
@@ -2321,7 +2451,7 @@ def P.Insts.CoreOpsFunctionFnOnceTupleVecTyResultVecTyInstError :
 }
 
 /-- [noble_kernel::words::subst::finish::apply]:
-    Source: 'crates/noble-kernel/src/words/subst/finish.rs', lines 7:0-54:1 -/
+    Source: 'crates/noble-kernel/src/words/subst/finish.rs', lines 7:0-57:1 -/
 def words.subst.finish.apply
   (node : shapes.Pattern) (walk : words.subst.Walk) :
   Result (words.subst.Walk × (core.result.Result Unit words.InstError))
@@ -2388,6 +2518,51 @@ def words.subst.finish.apply
         ok ({ walk with segments := v1 }, core.result.Result.Err
           words.InstError.KindMismatch)
   | shapes.Pattern.SyntaxPattern =>
+    let (o, v) ← alloc.vec.Vec.pop Global walk.segments
+    let (o1, v1) ← alloc.vec.Vec.pop Global v
+    match o with
+    | none =>
+      ok ({ walk with segments := v1 }, core.result.Result.Err
+        words.InstError.OversizedType)
+    | some _ =>
+      match o1 with
+      | none =>
+        ok ({ walk with segments := v1 }, core.result.Result.Err
+          words.InstError.OversizedType)
+      | some _ =>
+        ok ({ walk with segments := v1 }, core.result.Result.Err
+          words.InstError.KindMismatch)
+  | shapes.Pattern.ContractPattern =>
+    let (o, v) ← alloc.vec.Vec.pop Global walk.segments
+    let (o1, v1) ← alloc.vec.Vec.pop Global v
+    match o with
+    | none =>
+      ok ({ walk with segments := v1 }, core.result.Result.Err
+        words.InstError.OversizedType)
+    | some _ =>
+      match o1 with
+      | none =>
+        ok ({ walk with segments := v1 }, core.result.Result.Err
+          words.InstError.OversizedType)
+      | some _ =>
+        ok ({ walk with segments := v1 }, core.result.Result.Err
+          words.InstError.KindMismatch)
+  | shapes.Pattern.EvidencePattern =>
+    let (o, v) ← alloc.vec.Vec.pop Global walk.segments
+    let (o1, v1) ← alloc.vec.Vec.pop Global v
+    match o with
+    | none =>
+      ok ({ walk with segments := v1 }, core.result.Result.Err
+        words.InstError.OversizedType)
+    | some _ =>
+      match o1 with
+      | none =>
+        ok ({ walk with segments := v1 }, core.result.Result.Err
+          words.InstError.OversizedType)
+      | some _ =>
+        ok ({ walk with segments := v1 }, core.result.Result.Err
+          words.InstError.KindMismatch)
+  | shapes.Pattern.CertifiedPattern =>
     let (o, v) ← alloc.vec.Vec.pop Global walk.segments
     let (o1, v1) ← alloc.vec.Vec.pop Global v
     match o with
@@ -2521,7 +2696,7 @@ def words.subst.finish.apply
           words.InstError.KindMismatch)
 
 /-- [noble_kernel::words::subst::run_task]:
-    Source: 'crates/noble-kernel/src/words/subst.rs', lines 130:0-145:1 -/
+    Source: 'crates/noble-kernel/src/words/subst.rs', lines 129:0-144:1 -/
 def words.subst.run_task
   (scheme : words.Scheme) (inst : words.Inst) (task : words.subst.Task)
   (walk : words.subst.Walk) :
@@ -2537,11 +2712,11 @@ def words.subst.run_task
     ok ({ walk with segments := v }, core.result.Result.Ok ())
 
 /-- [noble_kernel::words::subst::WORK_CAP]
-    Source: 'crates/noble-kernel/src/words/subst.rs', lines 10:0-10:28 -/
+    Source: 'crates/noble-kernel/src/words/subst.rs', lines 9:0-9:28 -/
 @[global_simps, irreducible] def words.subst.WORK_CAP : Std.Usize := 512#usize
 
 /-- [noble_kernel::words::subst::walk_step]:
-    Source: 'crates/noble-kernel/src/words/subst.rs', lines 97:0-122:1 -/
+    Source: 'crates/noble-kernel/src/words/subst.rs', lines 96:0-121:1 -/
 def words.subst.walk_step
   (scheme : words.Scheme) (inst : words.Inst) (walk : words.subst.Walk) :
   Result (words.subst.Walk × words.subst.StepResult)
@@ -2596,7 +2771,7 @@ def words.subst.Scheme.subst_pattern_loop
     (outcome, walk)
 
 /-- [noble_kernel::words::subst::{noble_kernel::words::Scheme}::subst_pattern]:
-    Source: 'crates/noble-kernel/src/words/subst.rs', lines 52:4-82:5
+    Source: 'crates/noble-kernel/src/words/subst.rs', lines 51:4-81:5
     Visibility: public -/
 def words.subst.Scheme.subst_pattern
   (self : words.Scheme) (pattern : shapes.Pattern) (inst : words.Inst) :
@@ -2692,6 +2867,39 @@ def words.Scheme.subst_stack_loop.body
         do
         let r ←
           words.subst.Scheme.subst_pattern self shapes.Pattern.SyntaxPattern
+            inst
+        match r with
+        | core.result.Result.Ok ty =>
+          let out2 ← alloc.vec.Vec.push out ty
+          ok (out2, core.result.Result.Ok ())
+        | core.result.Result.Err problem =>
+          ok (out, core.result.Result.Err problem)
+      | shapes.Pattern.ContractPattern =>
+        do
+        let r ←
+          words.subst.Scheme.subst_pattern self shapes.Pattern.ContractPattern
+            inst
+        match r with
+        | core.result.Result.Ok ty =>
+          let out2 ← alloc.vec.Vec.push out ty
+          ok (out2, core.result.Result.Ok ())
+        | core.result.Result.Err problem =>
+          ok (out, core.result.Result.Err problem)
+      | shapes.Pattern.EvidencePattern =>
+        do
+        let r ←
+          words.subst.Scheme.subst_pattern self shapes.Pattern.EvidencePattern
+            inst
+        match r with
+        | core.result.Result.Ok ty =>
+          let out2 ← alloc.vec.Vec.push out ty
+          ok (out2, core.result.Result.Ok ())
+        | core.result.Result.Err problem =>
+          ok (out, core.result.Result.Err problem)
+      | shapes.Pattern.CertifiedPattern =>
+        do
+        let r ←
+          words.subst.Scheme.subst_pattern self shapes.Pattern.CertifiedPattern
             inst
         match r with
         | core.result.Result.Ok ty =>
@@ -2806,7 +3014,7 @@ def words.Scheme.subst_stack
   | some problem => ok (core.result.Result.Err problem)
 
 /-- [noble_kernel::types::{noble_kernel::types::Ty}::is_data]: loop body 0:
-    Source: 'crates/noble-kernel/src/types.rs', lines 211:8-228:9
+    Source: 'crates/noble-kernel/src/types.rs', lines 220:8-245:9
     Visibility: public -/
 @[rust_loop_body]
 def types.Ty.is_data_loop.body
@@ -2827,6 +3035,9 @@ def types.Ty.is_data_loop.body
       | types.Ty.I64Type => ok (cont work1)
       | types.Ty.TextType => ok (cont work1)
       | types.Ty.SyntaxType => ok (cont work1)
+      | types.Ty.ContractType => ok (cont work1)
+      | types.Ty.EvidenceType => ok (cont work1)
+      | types.Ty.CertifiedType => ok (cont work1)
       | types.Ty.PairType left right =>
         let work2 ← alloc.vec.Vec.push work1 left
         let work3 ← alloc.vec.Vec.push work2 right
@@ -2842,7 +3053,7 @@ def types.Ty.is_data_loop.body
       | types.Ty.ResourceType _ => ok (done false)
 
 /-- [noble_kernel::types::{noble_kernel::types::Ty}::is_data]: loop 0:
-    Source: 'crates/noble-kernel/src/types.rs', lines 211:8-228:9
+    Source: 'crates/noble-kernel/src/types.rs', lines 220:8-245:9
     Visibility: public -/
 @[rust_loop]
 def types.Ty.is_data_loop (work : alloc.vec.Vec types.Ty) : Result Bool := do
@@ -2851,7 +3062,7 @@ def types.Ty.is_data_loop (work : alloc.vec.Vec types.Ty) : Result Bool := do
     work
 
 /-- [noble_kernel::types::{noble_kernel::types::Ty}::is_data]:
-    Source: 'crates/noble-kernel/src/types.rs', lines 207:4-230:5
+    Source: 'crates/noble-kernel/src/types.rs', lines 216:4-247:5
     Visibility: public -/
 def types.Ty.is_data (self : types.Ty) : Result Bool := do
   let work := alloc.vec.Vec.with_capacity types.Ty 8#usize
@@ -3607,7 +3818,7 @@ def acceptance.parts.instantiate.apply
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_kernel::shapes::{noble_kernel::shapes::Pattern}::program]:
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 59:4-69:5
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 65:4-75:5
     Visibility: public -/
 def shapes.Pattern.program
   (stack_in : alloc.vec.Vec shapes.Pattern)
@@ -3771,7 +3982,7 @@ def words.VariableKind.Insts.CoreCmpPartialEqVariableKind.eq
   ok (self1 = other1)
 
 /-- [noble_kernel::shapes::require_kind]:
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 105:0-123:1 -/
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 111:0-129:1 -/
 def shapes.require_kind
   (kinds : Slice words.VariableKind) (var : words.Variable)
   (expected : words.VariableKind) :
@@ -3795,7 +4006,7 @@ def shapes.require_kind
     ok (core.result.Result.Err shapes.Defect.UnknownVariable)
 
 /-- [noble_kernel::shapes::require_pattern]:
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 195:0-233:1 -/
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 201:0-242:1 -/
 def shapes.require_pattern
   (kinds : Slice words.VariableKind) (pattern : shapes.Pattern)
   (work : alloc.vec.Vec shapes.Step) :
@@ -3807,6 +4018,9 @@ def shapes.require_pattern
   | shapes.Pattern.I64Pattern => ok (core.result.Result.Ok work)
   | shapes.Pattern.TextPattern => ok (core.result.Result.Ok work)
   | shapes.Pattern.SyntaxPattern => ok (core.result.Result.Ok work)
+  | shapes.Pattern.ContractPattern => ok (core.result.Result.Ok work)
+  | shapes.Pattern.EvidencePattern => ok (core.result.Result.Ok work)
+  | shapes.Pattern.CertifiedPattern => ok (core.result.Result.Ok work)
   | shapes.Pattern.PairPattern left right =>
     let work1 ← alloc.vec.Vec.push work (shapes.Step.Pattern left)
     let work2 ← alloc.vec.Vec.push work1 (shapes.Step.Pattern right)
@@ -3836,7 +4050,7 @@ def shapes.require_pattern
     | core.result.Result.Err problem => ok (core.result.Result.Err problem)
 
 /-- [noble_kernel::shapes::require_parts]: loop body 0:
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 164:4-179:5 -/
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 170:4-185:5 -/
 @[rust_loop_body]
 def shapes.require_parts_loop.body
   (kinds : Slice words.VariableKind) (parts : alloc.vec.Vec shapes.Pattern)
@@ -3883,6 +4097,27 @@ def shapes.require_parts_loop.body
             shapes.Pattern.SyntaxPattern
         let work2 ← alloc.vec.Vec.push work (shapes.Step.Pattern p1)
         ok (work2, core.result.Result.Ok ())
+      | shapes.Pattern.ContractPattern =>
+        do
+        let p1 ←
+          shapes.Pattern.Insts.CoreCloneClone.clone
+            shapes.Pattern.ContractPattern
+        let work2 ← alloc.vec.Vec.push work (shapes.Step.Pattern p1)
+        ok (work2, core.result.Result.Ok ())
+      | shapes.Pattern.EvidencePattern =>
+        do
+        let p1 ←
+          shapes.Pattern.Insts.CoreCloneClone.clone
+            shapes.Pattern.EvidencePattern
+        let work2 ← alloc.vec.Vec.push work (shapes.Step.Pattern p1)
+        ok (work2, core.result.Result.Ok ())
+      | shapes.Pattern.CertifiedPattern =>
+        do
+        let p1 ←
+          shapes.Pattern.Insts.CoreCloneClone.clone
+            shapes.Pattern.CertifiedPattern
+        let work2 ← alloc.vec.Vec.push work (shapes.Step.Pattern p1)
+        ok (work2, core.result.Result.Ok ())
       | shapes.Pattern.PairPattern _ _ =>
         do
         let p1 ← shapes.Pattern.Insts.CoreCloneClone.clone p
@@ -3925,7 +4160,7 @@ def shapes.require_parts_loop.body
   else ok (done (work, none))
 
 /-- [noble_kernel::shapes::require_parts]: loop 0:
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 164:4-179:5 -/
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 170:4-185:5 -/
 @[rust_loop]
 def shapes.require_parts_loop
   (kinds : Slice words.VariableKind) (parts : alloc.vec.Vec shapes.Pattern)
@@ -3938,7 +4173,7 @@ def shapes.require_parts_loop
     (work, index)
 
 /-- [noble_kernel::shapes::require_parts]:
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 157:0-184:1 -/
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 163:0-190:1 -/
 def shapes.require_parts
   (kinds : Slice words.VariableKind) (parts : alloc.vec.Vec shapes.Pattern)
   (work : alloc.vec.Vec shapes.Step) :
@@ -3950,7 +4185,7 @@ def shapes.require_parts
   | some problem => ok (core.result.Result.Err problem)
 
 /-- [noble_kernel::shapes::require_slots]: loop body 0:
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 133:4-145:5 -/
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 139:4-151:5 -/
 @[rust_loop_body]
 def shapes.require_slots_loop.body
   (kinds : Slice words.VariableKind) (slots : Slice shapes.EffectSlot)
@@ -3974,7 +4209,7 @@ def shapes.require_slots_loop.body
   else ok (done none)
 
 /-- [noble_kernel::shapes::require_slots]: loop 0:
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 133:4-145:5 -/
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 139:4-151:5 -/
 @[rust_loop]
 def shapes.require_slots_loop
   (kinds : Slice words.VariableKind) (slots : Slice shapes.EffectSlot)
@@ -3986,7 +4221,7 @@ def shapes.require_slots_loop
     index
 
 /-- [noble_kernel::shapes::require_slots]:
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 130:0-150:1 -/
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 136:0-156:1 -/
 def shapes.require_slots
   (kinds : Slice words.VariableKind) (slots : Slice shapes.EffectSlot) :
   Result (core.result.Result Unit shapes.Defect)
@@ -3997,7 +4232,7 @@ def shapes.require_slots
   | some problem => ok (core.result.Result.Err problem)
 
 /-- Trait implementation: [noble_kernel::shapes::{impl core::clone::Clone for noble_kernel::shapes::EffectSlot}]
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 73:9-73:14 -/
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 79:9-79:14 -/
 @[reducible]
 def shapes.EffectSlot.Insts.CoreCloneClone : core.clone.Clone shapes.EffectSlot
   := {
@@ -4009,14 +4244,14 @@ def shapes.EffectSlot.Insts.CoreCloneClone : core.clone.Clone shapes.EffectSlot
 @[global_simps, irreducible] def shapes.WORK_CAP : Std.Usize := 512#usize
 
 /-- Trait implementation: [noble_kernel::shapes::impls::{impl core::clone::Clone for noble_kernel::shapes::Pattern}]
-    Source: 'crates/noble-kernel/src/shapes/impls.rs', lines 17:0-50:1 -/
+    Source: 'crates/noble-kernel/src/shapes/impls.rs', lines 19:0-55:1 -/
 @[reducible]
 def shapes.Pattern.Insts.CoreCloneClone : core.clone.Clone shapes.Pattern := {
   clone := shapes.Pattern.Insts.CoreCloneClone.clone
 }
 
 /-- [noble_kernel::shapes::validate]: loop body 0:
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 255:4-275:5
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 264:4-284:5
     Visibility: public -/
 @[rust_loop_body]
 def shapes.validate_loop.body
@@ -4049,7 +4284,7 @@ def shapes.validate_loop.body
       | core.result.Result.Err problem => ok (done (some problem))
 
 /-- [noble_kernel::shapes::validate]: loop 0:
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 255:4-275:5
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 264:4-284:5
     Visibility: public -/
 @[rust_loop]
 def shapes.validate_loop
@@ -4061,7 +4296,7 @@ def shapes.validate_loop
     work
 
 /-- [noble_kernel::shapes::validate]:
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 244:0-280:1
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 253:0-289:1
     Visibility: public -/
 def shapes.validate
   (kinds : Slice words.VariableKind) (stack_in : Slice shapes.Pattern)
@@ -6395,7 +6630,7 @@ def types.EffId.Insts.CoreFmtDebug : core.fmt.Debug types.EffId := {
 }
 
 /-- [noble_kernel::shapes::{impl core::fmt::Debug for noble_kernel::shapes::EffectSlot}::fmt]:
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 73:16-73:21
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 79:16-79:21
     Visibility: public -/
 def shapes.EffectSlot.Insts.CoreFmtDebug.fmt
   (self : shapes.EffectSlot) (f : core.fmt.Formatter) :
@@ -6413,7 +6648,7 @@ def shapes.EffectSlot.Insts.CoreFmtDebug.fmt
     core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Var") __self_01
 
 /-- Trait implementation: [noble_kernel::shapes::{impl core::fmt::Debug for noble_kernel::shapes::EffectSlot}]
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 73:16-73:21 -/
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 79:16-79:21 -/
 @[reducible]
 def shapes.EffectSlot.Insts.CoreFmtDebug : core.fmt.Debug shapes.EffectSlot
   := {
@@ -6431,7 +6666,7 @@ def types.ResourceKind.Insts.CoreFmtDebug.fmt
   core.fmt.Formatter.debug_tuple_field1_finish f (toStr "ResourceKind") dyn
 
 /-- [noble_kernel::shapes::impls::{impl core::fmt::Debug for noble_kernel::shapes::Pattern}::fmt]:
-    Source: 'crates/noble-kernel/src/shapes/impls.rs', lines 245:4-296:5
+    Source: 'crates/noble-kernel/src/shapes/impls.rs', lines 148:4-202:5
     Visibility: public -/
 def shapes.Pattern.Insts.CoreFmtDebug.fmt
   (self : shapes.Pattern) (f : core.fmt.Formatter) :
@@ -6444,6 +6679,12 @@ def shapes.Pattern.Insts.CoreFmtDebug.fmt
   | shapes.Pattern.TextPattern => core.fmt.Formatter.write_str f (toStr "Text")
   | shapes.Pattern.SyntaxPattern =>
     core.fmt.Formatter.write_str f (toStr "Syntax")
+  | shapes.Pattern.ContractPattern =>
+    core.fmt.Formatter.write_str f (toStr "Contract")
+  | shapes.Pattern.EvidencePattern =>
+    core.fmt.Formatter.write_str f (toStr "Evidence")
+  | shapes.Pattern.CertifiedPattern =>
+    core.fmt.Formatter.write_str f (toStr "Certified")
   | shapes.Pattern.PairPattern left right =>
     let (r, f1) ← core.fmt.Formatter.write_str f (toStr "Pair(")
     match r with
@@ -6548,7 +6789,7 @@ def shapes.Pattern.Insts.CoreFmtDebug.fmt
 partial_fixpoint
 
 /-- Trait implementation: [noble_kernel::shapes::impls::{impl core::fmt::Debug for noble_kernel::shapes::Pattern}]
-    Source: 'crates/noble-kernel/src/shapes/impls.rs', lines 236:0-297:1 -/
+    Source: 'crates/noble-kernel/src/shapes/impls.rs', lines 139:0-203:1 -/
 @[reducible]
 def shapes.Pattern.Insts.CoreFmtDebug : core.fmt.Debug shapes.Pattern := {
   fmt := shapes.Pattern.Insts.CoreFmtDebug.fmt
@@ -6943,7 +7184,7 @@ def types.EffSet.Insts.CoreFmtDebug : core.fmt.Debug types.EffSet := {
 }
 
 /-- [noble_kernel::types::impls::{impl core::fmt::Debug for noble_kernel::types::Ty}::fmt]:
-    Source: 'crates/noble-kernel/src/types/impls.rs', lines 205:4-246:5
+    Source: 'crates/noble-kernel/src/types/impls.rs', lines 211:4-255:5
     Visibility: public -/
 def types.Ty.Insts.CoreFmtDebug.fmt
   (self : types.Ty) (f : core.fmt.Formatter) :
@@ -6955,6 +7196,10 @@ def types.Ty.Insts.CoreFmtDebug.fmt
   | types.Ty.I64Type => core.fmt.Formatter.write_str f (toStr "I64")
   | types.Ty.TextType => core.fmt.Formatter.write_str f (toStr "Text")
   | types.Ty.SyntaxType => core.fmt.Formatter.write_str f (toStr "Syntax")
+  | types.Ty.ContractType => core.fmt.Formatter.write_str f (toStr "Contract")
+  | types.Ty.EvidenceType => core.fmt.Formatter.write_str f (toStr "Evidence")
+  | types.Ty.CertifiedType =>
+    core.fmt.Formatter.write_str f (toStr "Certified")
   | types.Ty.PairType left right =>
     let (r, f1) ← core.fmt.Formatter.write_str f (toStr "Pair(")
     match r with
@@ -7040,7 +7285,7 @@ def types.Ty.Insts.CoreFmtDebug.fmt
 partial_fixpoint
 
 /-- Trait implementation: [noble_kernel::types::impls::{impl core::fmt::Debug for noble_kernel::types::Ty}]
-    Source: 'crates/noble-kernel/src/types/impls.rs', lines 196:0-247:1 -/
+    Source: 'crates/noble-kernel/src/types/impls.rs', lines 202:0-256:1 -/
 @[reducible]
 def types.Ty.Insts.CoreFmtDebug : core.fmt.Debug types.Ty := {
   fmt := types.Ty.Insts.CoreFmtDebug.fmt
@@ -7418,10 +7663,10 @@ def consume_budget (remaining : Std.U32) : Result BudgetOutcome := do
   | none => ok BudgetOutcome.Exhausted
   | some next => ok (BudgetOutcome.Remaining next)
 
-/-- [noble_kernel::shapes::impls::push_pattern_program]: loop body 0:
-    Source: 'crates/noble-kernel/src/shapes/impls.rs', lines 78:4-81:5 -/
+/-- [noble_kernel::shapes::impls::equality::push_pattern_program]: loop body 0:
+    Source: 'crates/noble-kernel/src/shapes/impls/equality.rs', lines 18:4-21:5 -/
 @[rust_loop_body]
-def shapes.impls.push_pattern_program_loop0.body
+def shapes.impls.equality.push_pattern_program_loop0.body
   (first_in : Slice shapes.Pattern) (second_in : Slice shapes.Pattern)
   (work : alloc.vec.Vec (shapes.Pattern × shapes.Pattern))
   (is_comparable : Bool) (index : Std.Usize) :
@@ -7444,10 +7689,10 @@ def shapes.impls.push_pattern_program_loop0.body
     else ok (done (work, false))
   else ok (done (work, is_comparable))
 
-/-- [noble_kernel::shapes::impls::push_pattern_program]: loop 0:
-    Source: 'crates/noble-kernel/src/shapes/impls.rs', lines 78:4-81:5 -/
+/-- [noble_kernel::shapes::impls::equality::push_pattern_program]: loop 0:
+    Source: 'crates/noble-kernel/src/shapes/impls/equality.rs', lines 18:4-21:5 -/
 @[rust_loop]
-def shapes.impls.push_pattern_program_loop0
+def shapes.impls.equality.push_pattern_program_loop0
   (work : alloc.vec.Vec (shapes.Pattern × shapes.Pattern))
   (first_in : Slice shapes.Pattern) (second_in : Slice shapes.Pattern)
   (is_comparable : Bool) (index : Std.Usize) :
@@ -7455,14 +7700,14 @@ def shapes.impls.push_pattern_program_loop0
   := do
   loop
     (fun (work1, is_comparable1, index1) =>
-      shapes.impls.push_pattern_program_loop0.body first_in second_in work1
-      is_comparable1 index1)
+      shapes.impls.equality.push_pattern_program_loop0.body first_in second_in
+      work1 is_comparable1 index1)
     (work, is_comparable, index)
 
-/-- [noble_kernel::shapes::impls::push_pattern_program]: loop body 1:
-    Source: 'crates/noble-kernel/src/shapes/impls.rs', lines 83:4-86:5 -/
+/-- [noble_kernel::shapes::impls::equality::push_pattern_program]: loop body 1:
+    Source: 'crates/noble-kernel/src/shapes/impls/equality.rs', lines 23:4-26:5 -/
 @[rust_loop_body]
-def shapes.impls.push_pattern_program_loop1.body
+def shapes.impls.equality.push_pattern_program_loop1.body
   (first_out : Slice shapes.Pattern) (second_out : Slice shapes.Pattern)
   (work : alloc.vec.Vec (shapes.Pattern × shapes.Pattern))
   (is_comparable : Bool) (index : Std.Usize) :
@@ -7485,10 +7730,10 @@ def shapes.impls.push_pattern_program_loop1.body
     else ok (done (work, false))
   else ok (done (work, is_comparable))
 
-/-- [noble_kernel::shapes::impls::push_pattern_program]: loop 1:
-    Source: 'crates/noble-kernel/src/shapes/impls.rs', lines 83:4-86:5 -/
+/-- [noble_kernel::shapes::impls::equality::push_pattern_program]: loop 1:
+    Source: 'crates/noble-kernel/src/shapes/impls/equality.rs', lines 23:4-26:5 -/
 @[rust_loop]
-def shapes.impls.push_pattern_program_loop1
+def shapes.impls.equality.push_pattern_program_loop1
   (work : alloc.vec.Vec (shapes.Pattern × shapes.Pattern))
   (first_out : Slice shapes.Pattern) (second_out : Slice shapes.Pattern)
   (is_comparable : Bool) (index : Std.Usize) :
@@ -7496,13 +7741,13 @@ def shapes.impls.push_pattern_program_loop1
   := do
   loop
     (fun (work1, is_comparable1, index1) =>
-      shapes.impls.push_pattern_program_loop1.body first_out second_out work1
-      is_comparable1 index1)
+      shapes.impls.equality.push_pattern_program_loop1.body first_out
+      second_out work1 is_comparable1 index1)
     (work, is_comparable, index)
 
-/-- [noble_kernel::shapes::impls::push_pattern_program]:
-    Source: 'crates/noble-kernel/src/shapes/impls.rs', lines 64:0-88:1 -/
-def shapes.impls.push_pattern_program
+/-- [noble_kernel::shapes::impls::equality::push_pattern_program]:
+    Source: 'crates/noble-kernel/src/shapes/impls/equality.rs', lines 4:0-28:1 -/
+def shapes.impls.equality.push_pattern_program
   (work : alloc.vec.Vec (shapes.Pattern × shapes.Pattern))
   (first_in : Slice shapes.Pattern) (first_out : Slice shapes.Pattern)
   (second_in : Slice shapes.Pattern) (second_out : Slice shapes.Pattern) :
@@ -7521,9 +7766,9 @@ def shapes.impls.push_pattern_program
       else ok false
     else ok false
   let (work1, is_comparable1) ←
-    shapes.impls.push_pattern_program_loop0 work first_in second_in
+    shapes.impls.equality.push_pattern_program_loop0 work first_in second_in
       is_comparable 0#usize
-  shapes.impls.push_pattern_program_loop1 work1 first_out second_out
+  shapes.impls.equality.push_pattern_program_loop1 work1 first_out second_out
     is_comparable1 0#usize
 
 /-- [noble_kernel::words::{impl core::cmp::PartialEq<noble_kernel::words::Variable> for noble_kernel::words::Variable}::eq]:
@@ -7544,7 +7789,7 @@ impl_def words.Variable.Insts.CoreCmpPartialEqVariable : core.cmp.PartialEq
 }
 
 /-- [noble_kernel::shapes::{impl core::cmp::PartialEq<noble_kernel::shapes::EffectSlot> for noble_kernel::shapes::EffectSlot}::eq]:
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 73:23-73:32
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 79:23-79:32
     Visibility: public -/
 def shapes.EffectSlot.Insts.CoreCmpPartialEqEffectSlot.eq
   (self : shapes.EffectSlot) (other : shapes.EffectSlot) : Result Bool := do
@@ -7566,7 +7811,7 @@ def shapes.EffectSlot.Insts.CoreCmpPartialEqEffectSlot.eq
   else ok false
 
 /-- Trait implementation: [noble_kernel::shapes::{impl core::cmp::PartialEq<noble_kernel::shapes::EffectSlot> for noble_kernel::shapes::EffectSlot}]
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 73:23-73:32 -/
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 79:23-79:32 -/
 @[reducible]
 impl_def shapes.EffectSlot.Insts.CoreCmpPartialEqEffectSlot :
   core.cmp.PartialEq shapes.EffectSlot shapes.EffectSlot := {
@@ -7575,292 +7820,360 @@ impl_def shapes.EffectSlot.Insts.CoreCmpPartialEqEffectSlot :
     shapes.EffectSlot.Insts.CoreCmpPartialEqEffectSlot
 }
 
-/-- [noble_kernel::shapes::impls::pattern_eq]: loop body 0:
-    Source: 'crates/noble-kernel/src/shapes/impls.rs', lines 101:4-161:5 -/
+/-- [noble_kernel::shapes::impls::equality::compare]:
+    Source: 'crates/noble-kernel/src/shapes/impls/equality.rs', lines 56:0-111:1 -/
+def shapes.impls.equality.compare
+  (first : shapes.Pattern) (second : shapes.Pattern)
+  (work : alloc.vec.Vec (shapes.Pattern × shapes.Pattern)) :
+  Result ((alloc.vec.Vec (shapes.Pattern × shapes.Pattern)) × Bool)
+  := do
+  match first with
+  | shapes.Pattern.UnitPattern =>
+    match second with
+    | shapes.Pattern.UnitPattern => ok (work, true)
+    | shapes.Pattern.BoolPattern => ok (work, false)
+    | shapes.Pattern.I64Pattern => ok (work, false)
+    | shapes.Pattern.TextPattern => ok (work, false)
+    | shapes.Pattern.SyntaxPattern => ok (work, false)
+    | shapes.Pattern.ContractPattern => ok (work, false)
+    | shapes.Pattern.EvidencePattern => ok (work, false)
+    | shapes.Pattern.CertifiedPattern => ok (work, false)
+    | shapes.Pattern.PairPattern _ _ => ok (work, false)
+    | shapes.Pattern.SumPattern _ _ => ok (work, false)
+    | shapes.Pattern.ListPattern _ => ok (work, false)
+    | shapes.Pattern.ProgramPattern _ _ _ => ok (work, false)
+    | shapes.Pattern.ResourcePattern _ => ok (work, false)
+    | shapes.Pattern.VarPattern _ => ok (work, false)
+    | shapes.Pattern.StackVarPattern _ => ok (work, false)
+  | shapes.Pattern.BoolPattern =>
+    match second with
+    | shapes.Pattern.UnitPattern => ok (work, false)
+    | shapes.Pattern.BoolPattern => ok (work, true)
+    | shapes.Pattern.I64Pattern => ok (work, false)
+    | shapes.Pattern.TextPattern => ok (work, false)
+    | shapes.Pattern.SyntaxPattern => ok (work, false)
+    | shapes.Pattern.ContractPattern => ok (work, false)
+    | shapes.Pattern.EvidencePattern => ok (work, false)
+    | shapes.Pattern.CertifiedPattern => ok (work, false)
+    | shapes.Pattern.PairPattern _ _ => ok (work, false)
+    | shapes.Pattern.SumPattern _ _ => ok (work, false)
+    | shapes.Pattern.ListPattern _ => ok (work, false)
+    | shapes.Pattern.ProgramPattern _ _ _ => ok (work, false)
+    | shapes.Pattern.ResourcePattern _ => ok (work, false)
+    | shapes.Pattern.VarPattern _ => ok (work, false)
+    | shapes.Pattern.StackVarPattern _ => ok (work, false)
+  | shapes.Pattern.I64Pattern =>
+    match second with
+    | shapes.Pattern.UnitPattern => ok (work, false)
+    | shapes.Pattern.BoolPattern => ok (work, false)
+    | shapes.Pattern.I64Pattern => ok (work, true)
+    | shapes.Pattern.TextPattern => ok (work, false)
+    | shapes.Pattern.SyntaxPattern => ok (work, false)
+    | shapes.Pattern.ContractPattern => ok (work, false)
+    | shapes.Pattern.EvidencePattern => ok (work, false)
+    | shapes.Pattern.CertifiedPattern => ok (work, false)
+    | shapes.Pattern.PairPattern _ _ => ok (work, false)
+    | shapes.Pattern.SumPattern _ _ => ok (work, false)
+    | shapes.Pattern.ListPattern _ => ok (work, false)
+    | shapes.Pattern.ProgramPattern _ _ _ => ok (work, false)
+    | shapes.Pattern.ResourcePattern _ => ok (work, false)
+    | shapes.Pattern.VarPattern _ => ok (work, false)
+    | shapes.Pattern.StackVarPattern _ => ok (work, false)
+  | shapes.Pattern.TextPattern =>
+    match second with
+    | shapes.Pattern.UnitPattern => ok (work, false)
+    | shapes.Pattern.BoolPattern => ok (work, false)
+    | shapes.Pattern.I64Pattern => ok (work, false)
+    | shapes.Pattern.TextPattern => ok (work, true)
+    | shapes.Pattern.SyntaxPattern => ok (work, false)
+    | shapes.Pattern.ContractPattern => ok (work, false)
+    | shapes.Pattern.EvidencePattern => ok (work, false)
+    | shapes.Pattern.CertifiedPattern => ok (work, false)
+    | shapes.Pattern.PairPattern _ _ => ok (work, false)
+    | shapes.Pattern.SumPattern _ _ => ok (work, false)
+    | shapes.Pattern.ListPattern _ => ok (work, false)
+    | shapes.Pattern.ProgramPattern _ _ _ => ok (work, false)
+    | shapes.Pattern.ResourcePattern _ => ok (work, false)
+    | shapes.Pattern.VarPattern _ => ok (work, false)
+    | shapes.Pattern.StackVarPattern _ => ok (work, false)
+  | shapes.Pattern.SyntaxPattern =>
+    match second with
+    | shapes.Pattern.UnitPattern => ok (work, false)
+    | shapes.Pattern.BoolPattern => ok (work, false)
+    | shapes.Pattern.I64Pattern => ok (work, false)
+    | shapes.Pattern.TextPattern => ok (work, false)
+    | shapes.Pattern.SyntaxPattern => ok (work, true)
+    | shapes.Pattern.ContractPattern => ok (work, false)
+    | shapes.Pattern.EvidencePattern => ok (work, false)
+    | shapes.Pattern.CertifiedPattern => ok (work, false)
+    | shapes.Pattern.PairPattern _ _ => ok (work, false)
+    | shapes.Pattern.SumPattern _ _ => ok (work, false)
+    | shapes.Pattern.ListPattern _ => ok (work, false)
+    | shapes.Pattern.ProgramPattern _ _ _ => ok (work, false)
+    | shapes.Pattern.ResourcePattern _ => ok (work, false)
+    | shapes.Pattern.VarPattern _ => ok (work, false)
+    | shapes.Pattern.StackVarPattern _ => ok (work, false)
+  | shapes.Pattern.ContractPattern =>
+    match second with
+    | shapes.Pattern.UnitPattern => ok (work, false)
+    | shapes.Pattern.BoolPattern => ok (work, false)
+    | shapes.Pattern.I64Pattern => ok (work, false)
+    | shapes.Pattern.TextPattern => ok (work, false)
+    | shapes.Pattern.SyntaxPattern => ok (work, false)
+    | shapes.Pattern.ContractPattern => ok (work, true)
+    | shapes.Pattern.EvidencePattern => ok (work, false)
+    | shapes.Pattern.CertifiedPattern => ok (work, false)
+    | shapes.Pattern.PairPattern _ _ => ok (work, false)
+    | shapes.Pattern.SumPattern _ _ => ok (work, false)
+    | shapes.Pattern.ListPattern _ => ok (work, false)
+    | shapes.Pattern.ProgramPattern _ _ _ => ok (work, false)
+    | shapes.Pattern.ResourcePattern _ => ok (work, false)
+    | shapes.Pattern.VarPattern _ => ok (work, false)
+    | shapes.Pattern.StackVarPattern _ => ok (work, false)
+  | shapes.Pattern.EvidencePattern =>
+    match second with
+    | shapes.Pattern.UnitPattern => ok (work, false)
+    | shapes.Pattern.BoolPattern => ok (work, false)
+    | shapes.Pattern.I64Pattern => ok (work, false)
+    | shapes.Pattern.TextPattern => ok (work, false)
+    | shapes.Pattern.SyntaxPattern => ok (work, false)
+    | shapes.Pattern.ContractPattern => ok (work, false)
+    | shapes.Pattern.EvidencePattern => ok (work, true)
+    | shapes.Pattern.CertifiedPattern => ok (work, false)
+    | shapes.Pattern.PairPattern _ _ => ok (work, false)
+    | shapes.Pattern.SumPattern _ _ => ok (work, false)
+    | shapes.Pattern.ListPattern _ => ok (work, false)
+    | shapes.Pattern.ProgramPattern _ _ _ => ok (work, false)
+    | shapes.Pattern.ResourcePattern _ => ok (work, false)
+    | shapes.Pattern.VarPattern _ => ok (work, false)
+    | shapes.Pattern.StackVarPattern _ => ok (work, false)
+  | shapes.Pattern.CertifiedPattern =>
+    match second with
+    | shapes.Pattern.UnitPattern => ok (work, false)
+    | shapes.Pattern.BoolPattern => ok (work, false)
+    | shapes.Pattern.I64Pattern => ok (work, false)
+    | shapes.Pattern.TextPattern => ok (work, false)
+    | shapes.Pattern.SyntaxPattern => ok (work, false)
+    | shapes.Pattern.ContractPattern => ok (work, false)
+    | shapes.Pattern.EvidencePattern => ok (work, false)
+    | shapes.Pattern.CertifiedPattern => ok (work, true)
+    | shapes.Pattern.PairPattern _ _ => ok (work, false)
+    | shapes.Pattern.SumPattern _ _ => ok (work, false)
+    | shapes.Pattern.ListPattern _ => ok (work, false)
+    | shapes.Pattern.ProgramPattern _ _ _ => ok (work, false)
+    | shapes.Pattern.ResourcePattern _ => ok (work, false)
+    | shapes.Pattern.VarPattern _ => ok (work, false)
+    | shapes.Pattern.StackVarPattern _ => ok (work, false)
+  | shapes.Pattern.PairPattern first_head first_tail =>
+    match second with
+    | shapes.Pattern.UnitPattern => ok (work, false)
+    | shapes.Pattern.BoolPattern => ok (work, false)
+    | shapes.Pattern.I64Pattern => ok (work, false)
+    | shapes.Pattern.TextPattern => ok (work, false)
+    | shapes.Pattern.SyntaxPattern => ok (work, false)
+    | shapes.Pattern.ContractPattern => ok (work, false)
+    | shapes.Pattern.EvidencePattern => ok (work, false)
+    | shapes.Pattern.CertifiedPattern => ok (work, false)
+    | shapes.Pattern.PairPattern second_head second_tail =>
+      let work1 ← alloc.vec.Vec.push work (first_head, second_head)
+      let work2 ← alloc.vec.Vec.push work1 (first_tail, second_tail)
+      ok (work2, true)
+    | shapes.Pattern.SumPattern _ _ => ok (work, false)
+    | shapes.Pattern.ListPattern _ => ok (work, false)
+    | shapes.Pattern.ProgramPattern _ _ _ => ok (work, false)
+    | shapes.Pattern.ResourcePattern _ => ok (work, false)
+    | shapes.Pattern.VarPattern _ => ok (work, false)
+    | shapes.Pattern.StackVarPattern _ => ok (work, false)
+  | shapes.Pattern.SumPattern first_head first_tail =>
+    match second with
+    | shapes.Pattern.UnitPattern => ok (work, false)
+    | shapes.Pattern.BoolPattern => ok (work, false)
+    | shapes.Pattern.I64Pattern => ok (work, false)
+    | shapes.Pattern.TextPattern => ok (work, false)
+    | shapes.Pattern.SyntaxPattern => ok (work, false)
+    | shapes.Pattern.ContractPattern => ok (work, false)
+    | shapes.Pattern.EvidencePattern => ok (work, false)
+    | shapes.Pattern.CertifiedPattern => ok (work, false)
+    | shapes.Pattern.PairPattern _ _ => ok (work, false)
+    | shapes.Pattern.SumPattern second_head second_tail =>
+      let work1 ← alloc.vec.Vec.push work (first_head, second_head)
+      let work2 ← alloc.vec.Vec.push work1 (first_tail, second_tail)
+      ok (work2, true)
+    | shapes.Pattern.ListPattern _ => ok (work, false)
+    | shapes.Pattern.ProgramPattern _ _ _ => ok (work, false)
+    | shapes.Pattern.ResourcePattern _ => ok (work, false)
+    | shapes.Pattern.VarPattern _ => ok (work, false)
+    | shapes.Pattern.StackVarPattern _ => ok (work, false)
+  | shapes.Pattern.ListPattern first_item =>
+    match second with
+    | shapes.Pattern.UnitPattern => ok (work, false)
+    | shapes.Pattern.BoolPattern => ok (work, false)
+    | shapes.Pattern.I64Pattern => ok (work, false)
+    | shapes.Pattern.TextPattern => ok (work, false)
+    | shapes.Pattern.SyntaxPattern => ok (work, false)
+    | shapes.Pattern.ContractPattern => ok (work, false)
+    | shapes.Pattern.EvidencePattern => ok (work, false)
+    | shapes.Pattern.CertifiedPattern => ok (work, false)
+    | shapes.Pattern.PairPattern _ _ => ok (work, false)
+    | shapes.Pattern.SumPattern _ _ => ok (work, false)
+    | shapes.Pattern.ListPattern second_item =>
+      let work1 ← alloc.vec.Vec.push work (first_item, second_item)
+      ok (work1, true)
+    | shapes.Pattern.ProgramPattern _ _ _ => ok (work, false)
+    | shapes.Pattern.ResourcePattern _ => ok (work, false)
+    | shapes.Pattern.VarPattern _ => ok (work, false)
+    | shapes.Pattern.StackVarPattern _ => ok (work, false)
+  | shapes.Pattern.ProgramPattern a_in a_out a_eff =>
+    match second with
+    | shapes.Pattern.UnitPattern => ok (work, false)
+    | shapes.Pattern.BoolPattern => ok (work, false)
+    | shapes.Pattern.I64Pattern => ok (work, false)
+    | shapes.Pattern.TextPattern => ok (work, false)
+    | shapes.Pattern.SyntaxPattern => ok (work, false)
+    | shapes.Pattern.ContractPattern => ok (work, false)
+    | shapes.Pattern.EvidencePattern => ok (work, false)
+    | shapes.Pattern.CertifiedPattern => ok (work, false)
+    | shapes.Pattern.PairPattern _ _ => ok (work, false)
+    | shapes.Pattern.SumPattern _ _ => ok (work, false)
+    | shapes.Pattern.ListPattern _ => ok (work, false)
+    | shapes.Pattern.ProgramPattern b_in b_out b_eff =>
+      let s := alloc.vec.Vec.deref a_in
+      let s1 := alloc.vec.Vec.deref a_out
+      let s2 := alloc.vec.Vec.deref b_in
+      let s3 := alloc.vec.Vec.deref b_out
+      let (next, is_program_equal) ←
+        shapes.impls.equality.push_pattern_program work s s1 s2 s3
+      if is_program_equal
+      then
+        let is_equal ←
+          alloc.vec.partial_eq.PartialEqVec.eq
+            shapes.EffectSlot.Insts.CoreCmpPartialEqEffectSlot a_eff b_eff
+        ok (next, is_equal)
+      else ok (next, false)
+    | shapes.Pattern.ResourcePattern _ => ok (work, false)
+    | shapes.Pattern.VarPattern _ => ok (work, false)
+    | shapes.Pattern.StackVarPattern _ => ok (work, false)
+  | shapes.Pattern.ResourcePattern first_kind =>
+    match second with
+    | shapes.Pattern.UnitPattern => ok (work, false)
+    | shapes.Pattern.BoolPattern => ok (work, false)
+    | shapes.Pattern.I64Pattern => ok (work, false)
+    | shapes.Pattern.TextPattern => ok (work, false)
+    | shapes.Pattern.SyntaxPattern => ok (work, false)
+    | shapes.Pattern.ContractPattern => ok (work, false)
+    | shapes.Pattern.EvidencePattern => ok (work, false)
+    | shapes.Pattern.CertifiedPattern => ok (work, false)
+    | shapes.Pattern.PairPattern _ _ => ok (work, false)
+    | shapes.Pattern.SumPattern _ _ => ok (work, false)
+    | shapes.Pattern.ListPattern _ => ok (work, false)
+    | shapes.Pattern.ProgramPattern _ _ _ => ok (work, false)
+    | shapes.Pattern.ResourcePattern second_kind =>
+      let is_equal ←
+        types.ResourceKind.Insts.CoreCmpPartialEqResourceKind.eq first_kind
+          second_kind
+      ok (work, is_equal)
+    | shapes.Pattern.VarPattern _ => ok (work, false)
+    | shapes.Pattern.StackVarPattern _ => ok (work, false)
+  | shapes.Pattern.VarPattern first_var =>
+    match second with
+    | shapes.Pattern.UnitPattern => ok (work, false)
+    | shapes.Pattern.BoolPattern => ok (work, false)
+    | shapes.Pattern.I64Pattern => ok (work, false)
+    | shapes.Pattern.TextPattern => ok (work, false)
+    | shapes.Pattern.SyntaxPattern => ok (work, false)
+    | shapes.Pattern.ContractPattern => ok (work, false)
+    | shapes.Pattern.EvidencePattern => ok (work, false)
+    | shapes.Pattern.CertifiedPattern => ok (work, false)
+    | shapes.Pattern.PairPattern _ _ => ok (work, false)
+    | shapes.Pattern.SumPattern _ _ => ok (work, false)
+    | shapes.Pattern.ListPattern _ => ok (work, false)
+    | shapes.Pattern.ProgramPattern _ _ _ => ok (work, false)
+    | shapes.Pattern.ResourcePattern _ => ok (work, false)
+    | shapes.Pattern.VarPattern second_var =>
+      let is_equal ←
+        words.Variable.Insts.CoreCmpPartialEqVariable.eq first_var second_var
+      ok (work, is_equal)
+    | shapes.Pattern.StackVarPattern _ => ok (work, false)
+  | shapes.Pattern.StackVarPattern first_var =>
+    match second with
+    | shapes.Pattern.UnitPattern => ok (work, false)
+    | shapes.Pattern.BoolPattern => ok (work, false)
+    | shapes.Pattern.I64Pattern => ok (work, false)
+    | shapes.Pattern.TextPattern => ok (work, false)
+    | shapes.Pattern.SyntaxPattern => ok (work, false)
+    | shapes.Pattern.ContractPattern => ok (work, false)
+    | shapes.Pattern.EvidencePattern => ok (work, false)
+    | shapes.Pattern.CertifiedPattern => ok (work, false)
+    | shapes.Pattern.PairPattern _ _ => ok (work, false)
+    | shapes.Pattern.SumPattern _ _ => ok (work, false)
+    | shapes.Pattern.ListPattern _ => ok (work, false)
+    | shapes.Pattern.ProgramPattern _ _ _ => ok (work, false)
+    | shapes.Pattern.ResourcePattern _ => ok (work, false)
+    | shapes.Pattern.VarPattern _ => ok (work, false)
+    | shapes.Pattern.StackVarPattern second_var =>
+      let is_equal ←
+        words.Variable.Insts.CoreCmpPartialEqVariable.eq first_var second_var
+      ok (work, is_equal)
+
+/-- [noble_kernel::shapes::impls::equality::pattern_eq]: loop body 0:
+    Source: 'crates/noble-kernel/src/shapes/impls/equality.rs', lines 34:4-44:5 -/
 @[rust_loop_body]
-def shapes.impls.pattern_eq_loop.body
-  (work : alloc.vec.Vec (shapes.Pattern × shapes.Pattern))
-  (is_mismatch : Bool) :
+def shapes.impls.equality.pattern_eq_loop.body
+  (work : alloc.vec.Vec (shapes.Pattern × shapes.Pattern)) (is_equal : Bool) :
   Result (ControlFlow ((alloc.vec.Vec (shapes.Pattern × shapes.Pattern)) ×
     Bool) Bool)
   := do
   let b ← alloc.vec.Vec.is_empty Global work
   if b
-  then ok (done is_mismatch)
+  then ok (done is_equal)
   else
     let i := alloc.vec.Vec.len work
     if i >= shapes.WORK_CAP
-    then ok (done true)
+    then ok (done false)
     else
-      let (pair, work1) ← alloc.vec.Vec.pop Global work
-      let (work2, is_step_equal) ←
-        match pair with
-        | none => ok (work1, true)
-        | some p =>
-          let (first, second) := p
-          match first with
-          | shapes.Pattern.UnitPattern =>
-            do
-            let b1 ←
-              match second with
-              | shapes.Pattern.UnitPattern => ok true
-              | shapes.Pattern.BoolPattern => ok false
-              | shapes.Pattern.I64Pattern => ok false
-              | shapes.Pattern.TextPattern => ok false
-              | shapes.Pattern.SyntaxPattern => ok false
-              | shapes.Pattern.PairPattern _ _ => ok false
-              | shapes.Pattern.SumPattern _ _ => ok false
-              | shapes.Pattern.ListPattern _ => ok false
-              | shapes.Pattern.ProgramPattern _ _ _ => ok false
-              | shapes.Pattern.ResourcePattern _ => ok false
-              | shapes.Pattern.VarPattern _ => ok false
-              | shapes.Pattern.StackVarPattern _ => ok false
-            ok (work1, b1)
-          | shapes.Pattern.BoolPattern =>
-            do
-            let b1 ←
-              match second with
-              | shapes.Pattern.UnitPattern => ok false
-              | shapes.Pattern.BoolPattern => ok true
-              | shapes.Pattern.I64Pattern => ok false
-              | shapes.Pattern.TextPattern => ok false
-              | shapes.Pattern.SyntaxPattern => ok false
-              | shapes.Pattern.PairPattern _ _ => ok false
-              | shapes.Pattern.SumPattern _ _ => ok false
-              | shapes.Pattern.ListPattern _ => ok false
-              | shapes.Pattern.ProgramPattern _ _ _ => ok false
-              | shapes.Pattern.ResourcePattern _ => ok false
-              | shapes.Pattern.VarPattern _ => ok false
-              | shapes.Pattern.StackVarPattern _ => ok false
-            ok (work1, b1)
-          | shapes.Pattern.I64Pattern =>
-            do
-            let b1 ←
-              match second with
-              | shapes.Pattern.UnitPattern => ok false
-              | shapes.Pattern.BoolPattern => ok false
-              | shapes.Pattern.I64Pattern => ok true
-              | shapes.Pattern.TextPattern => ok false
-              | shapes.Pattern.SyntaxPattern => ok false
-              | shapes.Pattern.PairPattern _ _ => ok false
-              | shapes.Pattern.SumPattern _ _ => ok false
-              | shapes.Pattern.ListPattern _ => ok false
-              | shapes.Pattern.ProgramPattern _ _ _ => ok false
-              | shapes.Pattern.ResourcePattern _ => ok false
-              | shapes.Pattern.VarPattern _ => ok false
-              | shapes.Pattern.StackVarPattern _ => ok false
-            ok (work1, b1)
-          | shapes.Pattern.TextPattern =>
-            do
-            let b1 ←
-              match second with
-              | shapes.Pattern.UnitPattern => ok false
-              | shapes.Pattern.BoolPattern => ok false
-              | shapes.Pattern.I64Pattern => ok false
-              | shapes.Pattern.TextPattern => ok true
-              | shapes.Pattern.SyntaxPattern => ok false
-              | shapes.Pattern.PairPattern _ _ => ok false
-              | shapes.Pattern.SumPattern _ _ => ok false
-              | shapes.Pattern.ListPattern _ => ok false
-              | shapes.Pattern.ProgramPattern _ _ _ => ok false
-              | shapes.Pattern.ResourcePattern _ => ok false
-              | shapes.Pattern.VarPattern _ => ok false
-              | shapes.Pattern.StackVarPattern _ => ok false
-            ok (work1, b1)
-          | shapes.Pattern.SyntaxPattern =>
-            do
-            let b1 ←
-              match second with
-              | shapes.Pattern.UnitPattern => ok false
-              | shapes.Pattern.BoolPattern => ok false
-              | shapes.Pattern.I64Pattern => ok false
-              | shapes.Pattern.TextPattern => ok false
-              | shapes.Pattern.SyntaxPattern => ok true
-              | shapes.Pattern.PairPattern _ _ => ok false
-              | shapes.Pattern.SumPattern _ _ => ok false
-              | shapes.Pattern.ListPattern _ => ok false
-              | shapes.Pattern.ProgramPattern _ _ _ => ok false
-              | shapes.Pattern.ResourcePattern _ => ok false
-              | shapes.Pattern.VarPattern _ => ok false
-              | shapes.Pattern.StackVarPattern _ => ok false
-            ok (work1, b1)
-          | shapes.Pattern.PairPattern first_head first_tail =>
-            match second with
-            | shapes.Pattern.UnitPattern => ok (work1, false)
-            | shapes.Pattern.BoolPattern => ok (work1, false)
-            | shapes.Pattern.I64Pattern => ok (work1, false)
-            | shapes.Pattern.TextPattern => ok (work1, false)
-            | shapes.Pattern.SyntaxPattern => ok (work1, false)
-            | shapes.Pattern.PairPattern second_head second_tail =>
-              do
-              let work3 ← alloc.vec.Vec.push work1 (first_head, second_head)
-              let work4 ← alloc.vec.Vec.push work3 (first_tail, second_tail)
-              ok (work4, true)
-            | shapes.Pattern.SumPattern _ _ => ok (work1, false)
-            | shapes.Pattern.ListPattern _ => ok (work1, false)
-            | shapes.Pattern.ProgramPattern _ _ _ => ok (work1, false)
-            | shapes.Pattern.ResourcePattern _ => ok (work1, false)
-            | shapes.Pattern.VarPattern _ => ok (work1, false)
-            | shapes.Pattern.StackVarPattern _ => ok (work1, false)
-          | shapes.Pattern.SumPattern first_head first_tail =>
-            match second with
-            | shapes.Pattern.UnitPattern => ok (work1, false)
-            | shapes.Pattern.BoolPattern => ok (work1, false)
-            | shapes.Pattern.I64Pattern => ok (work1, false)
-            | shapes.Pattern.TextPattern => ok (work1, false)
-            | shapes.Pattern.SyntaxPattern => ok (work1, false)
-            | shapes.Pattern.PairPattern _ _ => ok (work1, false)
-            | shapes.Pattern.SumPattern second_head second_tail =>
-              do
-              let work3 ← alloc.vec.Vec.push work1 (first_head, second_head)
-              let work4 ← alloc.vec.Vec.push work3 (first_tail, second_tail)
-              ok (work4, true)
-            | shapes.Pattern.ListPattern _ => ok (work1, false)
-            | shapes.Pattern.ProgramPattern _ _ _ => ok (work1, false)
-            | shapes.Pattern.ResourcePattern _ => ok (work1, false)
-            | shapes.Pattern.VarPattern _ => ok (work1, false)
-            | shapes.Pattern.StackVarPattern _ => ok (work1, false)
-          | shapes.Pattern.ListPattern first_item =>
-            match second with
-            | shapes.Pattern.UnitPattern => ok (work1, false)
-            | shapes.Pattern.BoolPattern => ok (work1, false)
-            | shapes.Pattern.I64Pattern => ok (work1, false)
-            | shapes.Pattern.TextPattern => ok (work1, false)
-            | shapes.Pattern.SyntaxPattern => ok (work1, false)
-            | shapes.Pattern.PairPattern _ _ => ok (work1, false)
-            | shapes.Pattern.SumPattern _ _ => ok (work1, false)
-            | shapes.Pattern.ListPattern second_item =>
-              do
-              let work3 ← alloc.vec.Vec.push work1 (first_item, second_item)
-              ok (work3, true)
-            | shapes.Pattern.ProgramPattern _ _ _ => ok (work1, false)
-            | shapes.Pattern.ResourcePattern _ => ok (work1, false)
-            | shapes.Pattern.VarPattern _ => ok (work1, false)
-            | shapes.Pattern.StackVarPattern _ => ok (work1, false)
-          | shapes.Pattern.ProgramPattern a_in a_out a_eff =>
-            match second with
-            | shapes.Pattern.UnitPattern => ok (work1, false)
-            | shapes.Pattern.BoolPattern => ok (work1, false)
-            | shapes.Pattern.I64Pattern => ok (work1, false)
-            | shapes.Pattern.TextPattern => ok (work1, false)
-            | shapes.Pattern.SyntaxPattern => ok (work1, false)
-            | shapes.Pattern.PairPattern _ _ => ok (work1, false)
-            | shapes.Pattern.SumPattern _ _ => ok (work1, false)
-            | shapes.Pattern.ListPattern _ => ok (work1, false)
-            | shapes.Pattern.ProgramPattern b_in b_out b_eff =>
-              do
-              let s := alloc.vec.Vec.deref a_in
-              let s1 := alloc.vec.Vec.deref a_out
-              let s2 := alloc.vec.Vec.deref b_in
-              let s3 := alloc.vec.Vec.deref b_out
-              let (next, is_program_equal) ←
-                shapes.impls.push_pattern_program work1 s s1 s2 s3
-              let b1 ←
-                if is_program_equal
-                then
-                  alloc.vec.partial_eq.PartialEqVec.eq
-                    shapes.EffectSlot.Insts.CoreCmpPartialEqEffectSlot a_eff
-                    b_eff
-                else ok false
-              ok (next, b1)
-            | shapes.Pattern.ResourcePattern _ => ok (work1, false)
-            | shapes.Pattern.VarPattern _ => ok (work1, false)
-            | shapes.Pattern.StackVarPattern _ => ok (work1, false)
-          | shapes.Pattern.ResourcePattern first_kind =>
-            do
-            let b1 ←
-              match second with
-              | shapes.Pattern.UnitPattern => ok false
-              | shapes.Pattern.BoolPattern => ok false
-              | shapes.Pattern.I64Pattern => ok false
-              | shapes.Pattern.TextPattern => ok false
-              | shapes.Pattern.SyntaxPattern => ok false
-              | shapes.Pattern.PairPattern _ _ => ok false
-              | shapes.Pattern.SumPattern _ _ => ok false
-              | shapes.Pattern.ListPattern _ => ok false
-              | shapes.Pattern.ProgramPattern _ _ _ => ok false
-              | shapes.Pattern.ResourcePattern second_kind =>
-                types.ResourceKind.Insts.CoreCmpPartialEqResourceKind.eq
-                  first_kind second_kind
-              | shapes.Pattern.VarPattern _ => ok false
-              | shapes.Pattern.StackVarPattern _ => ok false
-            ok (work1, b1)
-          | shapes.Pattern.VarPattern first_var =>
-            do
-            let b1 ←
-              match second with
-              | shapes.Pattern.UnitPattern => ok false
-              | shapes.Pattern.BoolPattern => ok false
-              | shapes.Pattern.I64Pattern => ok false
-              | shapes.Pattern.TextPattern => ok false
-              | shapes.Pattern.SyntaxPattern => ok false
-              | shapes.Pattern.PairPattern _ _ => ok false
-              | shapes.Pattern.SumPattern _ _ => ok false
-              | shapes.Pattern.ListPattern _ => ok false
-              | shapes.Pattern.ProgramPattern _ _ _ => ok false
-              | shapes.Pattern.ResourcePattern _ => ok false
-              | shapes.Pattern.VarPattern second_var =>
-                words.Variable.Insts.CoreCmpPartialEqVariable.eq first_var
-                  second_var
-              | shapes.Pattern.StackVarPattern _ => ok false
-            ok (work1, b1)
-          | shapes.Pattern.StackVarPattern first_var =>
-            do
-            let b1 ←
-              match second with
-              | shapes.Pattern.UnitPattern => ok false
-              | shapes.Pattern.BoolPattern => ok false
-              | shapes.Pattern.I64Pattern => ok false
-              | shapes.Pattern.TextPattern => ok false
-              | shapes.Pattern.SyntaxPattern => ok false
-              | shapes.Pattern.PairPattern _ _ => ok false
-              | shapes.Pattern.SumPattern _ _ => ok false
-              | shapes.Pattern.ListPattern _ => ok false
-              | shapes.Pattern.ProgramPattern _ _ _ => ok false
-              | shapes.Pattern.ResourcePattern _ => ok false
-              | shapes.Pattern.VarPattern _ => ok false
-              | shapes.Pattern.StackVarPattern second_var =>
-                words.Variable.Insts.CoreCmpPartialEqVariable.eq first_var
-                  second_var
-            ok (work1, b1)
-      if is_step_equal
-      then ok (cont (work2, is_mismatch))
-      else ok (cont (work2, true))
+      let (o, work1) ← alloc.vec.Vec.pop Global work
+      match o with
+      | none => ok (cont (work1, is_equal))
+      | some p =>
+        let (first, second) := p
+        let (next, is_step_equal) ←
+          shapes.impls.equality.compare first second work1
+        if is_equal
+        then ok (cont (next, is_step_equal))
+        else ok (cont (next, false))
 
-/-- [noble_kernel::shapes::impls::pattern_eq]: loop 0:
-    Source: 'crates/noble-kernel/src/shapes/impls.rs', lines 101:4-161:5 -/
+/-- [noble_kernel::shapes::impls::equality::pattern_eq]: loop 0:
+    Source: 'crates/noble-kernel/src/shapes/impls/equality.rs', lines 34:4-44:5 -/
 @[rust_loop]
-def shapes.impls.pattern_eq_loop
-  (work : alloc.vec.Vec (shapes.Pattern × shapes.Pattern))
-  (is_mismatch : Bool) :
+def shapes.impls.equality.pattern_eq_loop
+  (work : alloc.vec.Vec (shapes.Pattern × shapes.Pattern)) (is_equal : Bool) :
   Result Bool
   := do
   loop
-    (fun (work1, is_mismatch1) => shapes.impls.pattern_eq_loop.body work1
-      is_mismatch1)
-    (work, is_mismatch)
+    (fun (work1, is_equal1) => shapes.impls.equality.pattern_eq_loop.body work1
+      is_equal1)
+    (work, is_equal)
 
-/-- [noble_kernel::shapes::impls::pattern_eq]:
-    Source: 'crates/noble-kernel/src/shapes/impls.rs', lines 96:0-163:1 -/
-def shapes.impls.pattern_eq
+/-- [noble_kernel::shapes::impls::equality::pattern_eq]:
+    Source: 'crates/noble-kernel/src/shapes/impls/equality.rs', lines 30:0-46:1 -/
+def shapes.impls.equality.pattern_eq
   (left : shapes.Pattern) (right : shapes.Pattern) : Result Bool := do
   let work :=
     alloc.vec.Vec.with_capacity (shapes.Pattern × shapes.Pattern) 8#usize
   let p ← shapes.Pattern.Insts.CoreCloneClone.clone left
   let p1 ← shapes.Pattern.Insts.CoreCloneClone.clone right
   let work1 ← alloc.vec.Vec.push work (p, p1)
-  let is_mismatch ← shapes.impls.pattern_eq_loop work1 false
-  ok (¬ is_mismatch)
+  shapes.impls.equality.pattern_eq_loop work1 true
 
 /-- [noble_kernel::shapes::impls::{impl core::cmp::PartialEq<noble_kernel::shapes::Pattern> for noble_kernel::shapes::Pattern}::eq]:
-    Source: 'crates/noble-kernel/src/shapes/impls.rs', lines 166:4-168:5
+    Source: 'crates/noble-kernel/src/shapes/impls.rs', lines 69:4-71:5
     Visibility: public -/
 def shapes.Pattern.Insts.CoreCmpPartialEqPattern.eq
   (self : shapes.Pattern) (other : shapes.Pattern) : Result Bool := do
-  shapes.impls.pattern_eq self other
+  shapes.impls.equality.pattern_eq self other
 
 /-- Trait implementation: [noble_kernel::shapes::impls::{impl core::cmp::PartialEq<noble_kernel::shapes::Pattern> for noble_kernel::shapes::Pattern}]
-    Source: 'crates/noble-kernel/src/shapes/impls.rs', lines 165:0-169:1 -/
+    Source: 'crates/noble-kernel/src/shapes/impls.rs', lines 68:0-72:1 -/
 @[reducible]
 impl_def shapes.Pattern.Insts.CoreCmpPartialEqPattern : core.cmp.PartialEq
   shapes.Pattern shapes.Pattern := {
@@ -7870,21 +8183,21 @@ impl_def shapes.Pattern.Insts.CoreCmpPartialEqPattern : core.cmp.PartialEq
 }
 
 /-- Trait implementation: [noble_kernel::shapes::{impl core::marker::StructuralPartialEq for noble_kernel::shapes::EffectSlot}]
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 73:23-73:32 -/
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 79:23-79:32 -/
 @[reducible]
 def shapes.EffectSlot.Insts.CoreMarkerStructuralPartialEq :
   core.marker.StructuralPartialEq shapes.EffectSlot := {
 }
 
 /-- [noble_kernel::shapes::{impl core::cmp::Eq for noble_kernel::shapes::EffectSlot}::assert_fields_are_eq]:
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 73:34-73:36
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 79:34-79:36
     Visibility: public -/
 def shapes.EffectSlot.Insts.CoreCmpEq.assert_fields_are_eq
   (self : shapes.EffectSlot) : Result Unit := do
   ok ()
 
 /-- Trait implementation: [noble_kernel::shapes::{impl core::cmp::Eq for noble_kernel::shapes::EffectSlot}]
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 73:34-73:36 -/
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 79:34-79:36 -/
 @[reducible]
 def shapes.EffectSlot.Insts.CoreCmpEq : core.cmp.Eq shapes.EffectSlot := {
   partialEqInst := shapes.EffectSlot.Insts.CoreCmpPartialEqEffectSlot
@@ -7893,28 +8206,28 @@ def shapes.EffectSlot.Insts.CoreCmpEq : core.cmp.Eq shapes.EffectSlot := {
 }
 
 /-- [noble_kernel::shapes::{impl core::clone::Clone for noble_kernel::shapes::Defect}::clone]:
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 82:9-82:14
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 88:9-88:14
     Visibility: public -/
 def shapes.Defect.Insts.CoreCloneClone.clone
   (self : shapes.Defect) : Result shapes.Defect := do
   ok self
 
 /-- Trait implementation: [noble_kernel::shapes::{impl core::clone::Clone for noble_kernel::shapes::Defect}]
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 82:9-82:14 -/
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 88:9-88:14 -/
 @[reducible]
 def shapes.Defect.Insts.CoreCloneClone : core.clone.Clone shapes.Defect := {
   clone := shapes.Defect.Insts.CoreCloneClone.clone
 }
 
 /-- Trait implementation: [noble_kernel::shapes::{impl core::marker::Copy for noble_kernel::shapes::Defect}]
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 82:16-82:20 -/
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 88:16-88:20 -/
 @[reducible]
 def shapes.Defect.Insts.CoreMarkerCopy : core.marker.Copy shapes.Defect := {
   cloneInst := shapes.Defect.Insts.CoreCloneClone
 }
 
 /-- [noble_kernel::shapes::{impl core::fmt::Debug for noble_kernel::shapes::Defect}::fmt]:
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 82:22-82:27
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 88:22-88:27
     Visibility: public -/
 def shapes.Defect.Insts.CoreFmtDebug.fmt
   (self : shapes.Defect) (f : core.fmt.Formatter) :
@@ -7927,21 +8240,21 @@ def shapes.Defect.Insts.CoreFmtDebug.fmt
     core.fmt.Formatter.write_str f (toStr "KindMismatch")
 
 /-- Trait implementation: [noble_kernel::shapes::{impl core::fmt::Debug for noble_kernel::shapes::Defect}]
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 82:22-82:27 -/
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 88:22-88:27 -/
 @[reducible]
 def shapes.Defect.Insts.CoreFmtDebug : core.fmt.Debug shapes.Defect := {
   fmt := shapes.Defect.Insts.CoreFmtDebug.fmt
 }
 
 /-- Trait implementation: [noble_kernel::shapes::{impl core::marker::StructuralPartialEq for noble_kernel::shapes::Defect}]
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 82:29-82:38 -/
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 88:29-88:38 -/
 @[reducible]
 def shapes.Defect.Insts.CoreMarkerStructuralPartialEq :
   core.marker.StructuralPartialEq shapes.Defect := {
 }
 
 /-- [noble_kernel::shapes::{impl core::cmp::PartialEq<noble_kernel::shapes::Defect> for noble_kernel::shapes::Defect}::eq]:
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 82:29-82:38
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 88:29-88:38
     Visibility: public -/
 def shapes.Defect.Insts.CoreCmpPartialEqDefect.eq
   (self : shapes.Defect) (other : shapes.Defect) : Result Bool := do
@@ -7950,7 +8263,7 @@ def shapes.Defect.Insts.CoreCmpPartialEqDefect.eq
   ok (self1 = other1)
 
 /-- Trait implementation: [noble_kernel::shapes::{impl core::cmp::PartialEq<noble_kernel::shapes::Defect> for noble_kernel::shapes::Defect}]
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 82:29-82:38 -/
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 88:29-88:38 -/
 @[reducible]
 impl_def shapes.Defect.Insts.CoreCmpPartialEqDefect : core.cmp.PartialEq
   shapes.Defect shapes.Defect := {
@@ -7960,14 +8273,14 @@ impl_def shapes.Defect.Insts.CoreCmpPartialEqDefect : core.cmp.PartialEq
 }
 
 /-- [noble_kernel::shapes::{impl core::cmp::Eq for noble_kernel::shapes::Defect}::assert_fields_are_eq]:
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 82:40-82:42
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 88:40-88:42
     Visibility: public -/
 def shapes.Defect.Insts.CoreCmpEq.assert_fields_are_eq
   (self : shapes.Defect) : Result Unit := do
   ok ()
 
 /-- Trait implementation: [noble_kernel::shapes::{impl core::cmp::Eq for noble_kernel::shapes::Defect}]
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 82:40-82:42 -/
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 88:40-88:42 -/
 @[reducible]
 def shapes.Defect.Insts.CoreCmpEq : core.cmp.Eq shapes.Defect := {
   partialEqInst := shapes.Defect.Insts.CoreCmpPartialEqDefect
@@ -8114,7 +8427,7 @@ def types.EffSet.is_empty (self : types.EffSet) : Result Bool := do
   ok (i = 0#usize)
 
 /-- [noble_kernel::types::stack_is_data]: loop body 0:
-    Source: 'crates/noble-kernel/src/types.rs', lines 259:4-265:5
+    Source: 'crates/noble-kernel/src/types.rs', lines 276:4-282:5
     Visibility: public -/
 @[rust_loop_body]
 def types.stack_is_data_loop.body
@@ -8133,7 +8446,7 @@ def types.stack_is_data_loop.body
   else ok (done true)
 
 /-- [noble_kernel::types::stack_is_data]: loop 0:
-    Source: 'crates/noble-kernel/src/types.rs', lines 259:4-265:5
+    Source: 'crates/noble-kernel/src/types.rs', lines 276:4-282:5
     Visibility: public -/
 @[rust_loop]
 def types.stack_is_data_loop
@@ -8143,7 +8456,7 @@ def types.stack_is_data_loop
     index
 
 /-- [noble_kernel::types::stack_is_data]:
-    Source: 'crates/noble-kernel/src/types.rs', lines 256:0-267:1
+    Source: 'crates/noble-kernel/src/types.rs', lines 273:0-284:1
     Visibility: public -/
 @[reducible]
 def types.stack_is_data (stack : Slice types.Ty) : Result Bool := do

@@ -194,6 +194,9 @@ impl super::Arena {
                 | noble_kernel::shapes::Pattern::I64
                 | noble_kernel::shapes::Pattern::Text
                 | noble_kernel::shapes::Pattern::Syntax
+                | noble_kernel::shapes::Pattern::Contract
+                | noble_kernel::shapes::Pattern::Evidence
+                | noble_kernel::shapes::Pattern::Certified
                 | noble_kernel::shapes::Pattern::Pair(_, _)
                 | noble_kernel::shapes::Pattern::Sum(_, _)
                 | noble_kernel::shapes::Pattern::List(_)
