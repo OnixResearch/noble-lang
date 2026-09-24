@@ -2,7 +2,7 @@
 // alter repository sources, reviewed expectations, or the positive audit input.
 import fs from 'node:fs';
 import path from 'node:path';
-import { account, auditPacket, auditPackets, rootsFor, lanes, equal, exactBytes, fail } from './accounting.mjs';
+import { account, auditPacket, auditPackets, canonicalLlbcHash, rootsFor, lanes, equal, exactBytes, fail } from './accounting.mjs';
 
 export function refusals({ raw, accounts, sources, tools, packet, packets, audit, run, proofRoot, lake, artifacts, save }) {
   const results = [];
@@ -19,6 +19,29 @@ export function refusals({ raw, accounts, sources, tools, packet, packets, audit
   const required = rootsFor(accounts).find(root => root.lane === 'wasm' && root.method === 'prepare');
   const subject = raw.wasm.translation.functions.find(item => item.lean_name === required.declaration);
   const copied = () => ({ llbc: structuredClone(raw.wasm.llbc), translation: structuredClone(raw.wasm.translation) });
+  const llbcHash = canonicalLlbcHash(raw.wasm.llbc);
+  const repacked = structuredClone(raw.wasm.llbc);
+  repacked.translated.options.dest_file = path.join('/another-artifact-directory',
+    path.basename(repacked.translated.options.dest_file));
+  repacked.translated.short_names.reverse();
+  equal(canonicalLlbcHash(repacked), llbcHash, 'LLBC-BINDING', 'physical repacking changed semantic binding');
+  save('llbc-normalization.json', { result: 'passed', canonical_llbc_sha256: llbcHash,
+    normalized: ['output-directory', 'short-name-map-order'], semantic_fields: 'retained' });
+  reject('changed-llbc-body-binding', 'LLBC-BINDING', () => {
+    const changed = copied().llbc;
+    changed.translated.fun_decls[subject.def_id].body = 'Opaque';
+    equal(canonicalLlbcHash(changed), llbcHash, 'LLBC-BINDING', 'semantic body changed');
+  });
+  reject('changed-llbc-extraction-options-binding', 'LLBC-BINDING', () => {
+    const changed = copied().llbc;
+    changed.translated.options.start_from = ['noble_wasm::compile'];
+    equal(canonicalLlbcHash(changed), llbcHash, 'LLBC-BINDING', 'extraction scope changed');
+  });
+  reject('duplicate-llbc-short-name', 'LLBC-NAMES', () => {
+    const changed = copied().llbc;
+    changed.translated.short_names.push(changed.translated.short_names[0]);
+    canonicalLlbcHash(changed);
+  });
   reject('omitted-local-body', 'OMITTED-BODY', () => {
     const changed = copied();
     changed.translation.functions = changed.translation.functions.filter(item => item.def_id !== subject.def_id);

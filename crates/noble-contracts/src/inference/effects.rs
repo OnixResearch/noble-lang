@@ -7,7 +7,7 @@ mod solve;
 #[derive(Clone, Copy)]
 pub(super) enum Effect {
     Hole,
-    Constant(u8),
+    Constant(u64),
     Union(u32, u32),
 }
 
@@ -31,7 +31,7 @@ impl super::Arena {
         let bound = match effect {
             Effect::Constant(bits) => bits,
             Effect::Hole => self.effect_universe,
-            Effect::Union(_, _) => 3,
+            Effect::Union(_, _) => self.effect_universe,
         };
         self.effects.push(effect);
         self.effect_bounds.push(bound);
@@ -70,8 +70,8 @@ impl super::Arena {
                 break;
             }
             match effect_bit(effect) {
-                Some(bit) => bits |= bit,
-                None => {
+                Some(bit) if bit & self.effect_universe != 0 => bits |= bit,
+                Some(_) | None => {
                     failure = Some(crate::Diagnostic::new(
                         crate::DiagnosticKind::Unsupported,
                         span,
@@ -151,8 +151,10 @@ impl super::Arena {
         match slot {
             Some(noble_kernel::shapes::EffectSlot::Effect(id)) => {
                 let bit = match effect_bit(*id) {
-                    Some(bit) => bit,
-                    None => return Err(crate::invalid(span, "unknown source host effect")),
+                    Some(bit) if bit & self.effect_universe != 0 => bit,
+                    Some(_) | None => {
+                        return Err(crate::invalid(span, "unknown source host effect"))
+                    }
                 };
                 self.add_effect(Effect::Constant(bit), span, meter)
             }
@@ -217,7 +219,7 @@ impl super::Arena {
         tigerstyle::missing_const_fn,
         reason = "Owner: noble-maintainers; checked arena offsets and missing effect IDs return allocating diagnostics."
     )]
-    fn effect_bound(&self, id: u32, span: crate::Span) -> Result<u8, crate::Diagnostic> {
+    fn effect_bound(&self, id: u32, span: crate::Span) -> Result<u64, crate::Diagnostic> {
         match self.effect_bounds.get(attempt!(crate::offset(id, span))) {
             Some(bits) => Ok(*bits),
             None => Err(crate::internal(span)),
@@ -231,7 +233,7 @@ impl super::Arena {
     fn narrow_effect(
         &mut self,
         id: u32,
-        bits: u8,
+        bits: u64,
         span: crate::Span,
     ) -> Result<bool, crate::Diagnostic> {
         match self
@@ -274,10 +276,6 @@ impl super::Arena {
     }
 }
 
-const fn effect_bit(effect: noble_kernel::types::EffId) -> Option<u8> {
-    match effect.0 {
-        0 => Some(1),
-        1 => Some(2),
-        _ => None,
-    }
+const fn effect_bit(effect: noble_kernel::types::EffId) -> Option<u64> {
+    1u64.checked_shl(effect.0)
 }

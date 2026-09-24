@@ -1,0 +1,21 @@
+name = "noble-m5-resources"
+defaultTargets = ["M5Resources", "M5Audit"]
+
+[[require]]
+name = "aeneas"
+git = { url = "https://github.com/AeneasVerif/aeneas", subDir = "backends/lean" }
+rev = "505b6ca35217e7be5c96c3e2f8045edfbdf47291"
+
+[[lean_lib]]
+name = "M5Resources"
+
+[[lean_lib]]
+name = "M5Audit"
+
+[[lean_lib]]
+name = "M4Audit"
+srcDir = "../m4"
+
+[[lean_lib]]
+name = "NobleKernel"
+srcDir = "../m3"

@@ -1,0 +1,25 @@
+{
+  "schema": "noble-m5-tool-pins/v1",
+  "profile": "Component-Sync-Bootstrap",
+  "world": "noble-test:sync/bootstrap@1.0.0",
+  "wit": "crates/noble-wasm/wit/bootstrap.wit",
+  "wasm_tools_version": "1.245.1",
+  "wasmtime_version": "40.0.2",
+  "wasmtime_source": "/nix/store/26a8xzacbx01hidm70lpyphyw926zhc5-source",
+  "wasmtime_source_nar_hash": "sha256-4y9WpCdyuF/Tp2k/1d5rZxwYunWNdeibEsFgHcBC52Q=",
+  "vendor": "/nix/store/4drsk5fp0k4s82psjch6vlsfyqs1mxgq-wasmtime-40.0.2-vendor",
+  "vendor_nar_hash": "sha256-EQ1olp92CFLQ5oHp6zIphL+ScKnIWQLuFFfZW/rIeDI=",
+  "linker_bin": "/nix/store/788mx070y81zjlg5ipcl0cra3afviw9k-gcc-wrapper-15.2.0/bin",
+  "canonical_abi": "memory32-sync-utf8",
+  "gc_control": "wasmtime-drc-real-collection-with-independent-native-pin",
+  "publication_probe": {
+    "shell": "/nix/store/2ndah67h0z5m31v2wkdmg2md4380ggr5-bash-interactive-5.3p15/bin/bash",
+    "prlimit": "/nix/store/mqvbf0flamqaq9c3ihb496aahag897n0-util-linux-2.42.3-bin/bin/prlimit"
+  },
+  "non_claims": [
+    "Component-Draft",
+    "WASI profile implementation",
+    "native async/future/stream execution",
+    "universal Canonical ABI or engine refinement"
+  ]
+}

@@ -1,0 +1,17 @@
+[package]
+name = "noble-m5-peer"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+# An independent verification host, not a Noble compiler or production dependency.
+[workspace]
+
+[dependencies]
+anyhow = "=1.0.100"
+serde_json = "=1.0.140"
+wasmtime = { path = "/nix/store/26a8xzacbx01hidm70lpyphyw926zhc5-source/crates/wasmtime", default-features = false, features = ["std", "runtime", "cranelift", "component-model", "wat", "gc", "gc-drc"] }
+noble-kernel = { path = "../../../crates/noble-kernel" }
+
+[profile.dev]
+debug = 0

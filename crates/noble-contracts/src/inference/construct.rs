@@ -49,7 +49,15 @@ impl<'a> super::build::State<'a> {
                 self.steps.push(super::build::Step::StackTy(inputs));
                 return Ok(self);
             }
-            noble_kernel::types::Ty::Resource(_) => {
+            noble_kernel::types::Ty::Resource(kind) => {
+                if arena.resources {
+                    self.values.push(attempt!(arena.add(
+                        super::Term::Resource(*kind),
+                        span,
+                        meter
+                    )));
+                    return Ok(self);
+                }
                 return Err(crate::Diagnostic::new(
                     crate::DiagnosticKind::Unsupported,
                     span,
@@ -124,8 +132,16 @@ impl<'a> super::build::State<'a> {
                 }
                 return Ok(self);
             }
-            noble_kernel::shapes::Pattern::Resource(_)
-            | noble_kernel::shapes::Pattern::StackVar(_) => return Err(crate::internal(span)),
+            noble_kernel::shapes::Pattern::Resource(kind) => {
+                if !arena.resources {
+                    return Err(crate::invalid(
+                        span,
+                        "resource pattern requires a component environment",
+                    ));
+                }
+                super::Term::Resource(*kind)
+            }
+            noble_kernel::shapes::Pattern::StackVar(_) => return Err(crate::internal(span)),
         };
         self.values.push(attempt!(arena.add(term, span, meter)));
         Ok(self)

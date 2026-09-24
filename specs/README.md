@@ -7,24 +7,30 @@ Revision: 0.1.0-draft.5
 The twelve normative documents now live under `.cairn/specs/`. Their old paths contain generated compatibility views, not separate authority. This directory retains the scenario designs, proof ledger, roadmap, status, and supporting documents.
 
 The repository now contains the bounded checker, experimental MC1 contract frontend,
-M3 compiled-program representation experiment, and M4 source-to-Wasm
-Core-Bootstrap implementation. M4 uses the selected managed-linear-memory backend:
+M3 compiled-program representation experiment, M4 source-to-Wasm Core-Bootstrap,
+MC2 first-class certified companions and the M5 synchronous component subset.
+M4 uses the selected managed-linear-memory backend:
 source is resolved and inferred, independently accepted by the kernel, rechecked
 for lowering, then executed as compiled Wasm. Persistent sessions retain compiled
 Programs, captures, stack and immutable resolved bindings rather than replaying
 source. Static refusals preserve prior state and make no candidate-body host
 requests; runtime traps retain already observed request prefixes.
 
-The implemented data/control scope includes wrapping `I64`, Bool/Text/Unit,
+The M4 data/control scope includes wrapping `I64`, Bool/Text/Unit,
 Pair/Sum/List, quotation/composition/execution, inert exact reflection and
-bootstrap branch/stack operations. Only explicit resource-free test hosts are
-available; resources, imports, recursion and runtime proof companions remain out
-of scope. See the [CLI usage and evidence boundary](../README.md#running-core-bootstrap-source).
+bootstrap branch/stack operations with explicit resource-free test hosts.
+MC2 separately adds checked first-class runtime companions to that resource-free
+path. M5 supplies a pinned typed WIT component path, move-only resources, protected
+host authorization and observation-backed receipts; it does not add general
+resource-bearing persistent sessions, arbitrary imports or native async.
+See the [CLI usage and evidence boundary](../README.md#running-core-bootstrap-source).
 [Status](STATUS.json) and the [roadmap](roadmap.json) distinguish implemented
 behavior from retained acceptance and open language/proof obligations. M4's
 retained runtime acceptance includes the integrated developer workflows;
 the [acceptance evidence](../README.md#m4-acceptance-evidence) separately records
-the passed extraction, regression and quality gates. M5 is the next primary milestone.
+the passed extraction, regression and quality gates. The separate
+[M5 completion record](../verification/m5/evidence.json) binds the bounded
+component/resource/authority acceptance. M6 is the next primary milestone.
 Amendment sections below record design adoption,
 not automatic completion.
 

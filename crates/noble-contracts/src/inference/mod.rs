@@ -30,6 +30,7 @@ pub(crate) enum Term {
     Contract,
     Evidence,
     Certified,
+    Resource(noble_kernel::types::ResourceKind),
     Pair(u32, u32),
     Sum(u32, u32),
     List(u32),
@@ -55,9 +56,10 @@ pub(crate) struct Program {
 pub(crate) struct Arena {
     terms: alloc::vec::Vec<Term>,
     effectful: bool,
-    effect_universe: u8,
+    effect_universe: u64,
+    resources: bool,
     effects: alloc::vec::Vec<effects::Effect>,
-    effect_bounds: alloc::vec::Vec<u8>,
+    effect_bounds: alloc::vec::Vec<u64>,
     effect_equations: alloc::vec::Vec<(u32, u32)>,
     program_effects: alloc::vec::Vec<(u32, u32)>,
 }
@@ -68,6 +70,7 @@ impl Arena {
             terms: alloc::vec::Vec::new(),
             effectful: false,
             effect_universe: 0,
+            resources: false,
             effects: alloc::vec::Vec::new(),
             effect_bounds: alloc::vec::Vec::new(),
             effect_equations: alloc::vec::Vec::new(),
@@ -75,10 +78,11 @@ impl Arena {
         }
     }
 
-    pub fn source(test_hosts: bool) -> Self {
+    pub fn source(effect_universe: u64, resources: bool) -> Self {
         let mut arena = Self::new();
         arena.effectful = true;
-        arena.effect_universe = if test_hosts { 3 } else { 0 };
+        arena.effect_universe = effect_universe;
+        arena.resources = resources;
         arena
     }
 
@@ -158,6 +162,7 @@ impl Arena {
             | Term::Contract
             | Term::Evidence
             | Term::Certified
+            | Term::Resource(_)
             | Term::Pair(_, _)
             | Term::Sum(_, _)
             | Term::List(_)

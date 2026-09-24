@@ -26,5 +26,6 @@ version = "0.0.0"
 name = "noble-wasm"
 version = "0.0.0"
 dependencies = [
+ "noble-contracts",
  "noble-kernel",
 ]

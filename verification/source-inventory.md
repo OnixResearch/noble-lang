@@ -2,18 +2,18 @@
 
 Tasks 2.3 and 2.4 established the inventory mechanism. The `source-coverage` check collects the compiler-derived inventory and compares it with a reviewed classification.
 
-The checked-in classification is the **MC2 companion source renewal dated
-2026-09-23**, covering all 21 expected compiler units. The complete uncapped
+The checked-in classification is the **M5 synchronous-component source renewal dated
+2026-09-24**, covering all 23 expected compiler units. The complete
 73-rule deny-all run has zero warnings, errors and architecture findings;
 the independent inventory comparison is valid. Its compiler IR is
-`7b7c2e60c8791a365d9328d9d9123992e543bf93710008ff78eaece4cd86405c`,
+`cbcae3e9ec7012839f3a1738f7192315f00e35df8eea7586bc8da860a9b71784`,
 coverage identity is
-`363c9f4cc73c548e0d4b0a5bc4850f57af718e9901a65add23761e44c22a9de8`,
+`a4b1f589e2a6b5eabdc9a37d3fa97e7ed546674b5a04066eefad396621166113`,
 and architecture receipt is
-`5808cd91c441b63080d0c964ea7a3a0addb4a473d60bfe4b2043729a2c1fa66f`.
+`a6812cfe862898b1e5c93914756261a42b55b2a7c36c3acd67a8b334efb1333d`.
 Classification, quality, independent comparison and milestone acceptance are
 separate observations. Later source changes require fresh bound receipts, not
-reuse of this pass. Historical M4 evidence remains in its original archive.
+reuse of this pass. Historical M4 and MC2 evidence remains in its original archives.
 
 This is a named-scope accounting control, not milestone acceptance, an architecture-clean receipt, or a refinement proof.
 
@@ -61,15 +61,15 @@ Each compiler-derived production subject is reviewed as one of three categories.
 Bodies additionally carry a refinement status: `proved` or `open`.
 Only bodies enter the extraction, modeling, exception, proof, and open counts.
 
-The complete 21-unit reviewed observation contains 1,319 bodies, 977 generated paths,
-and 549 structural paths: 2,845 unique production paths covering 2,910 compiler
+The complete 23-unit reviewed observation contains 1,620 bodies, 1,635 generated paths,
+and 731 structural paths: 3,986 unique production paths covering 4,069 compiler
 item facts. A path shared by an authored body and generated items retains the
 body obligation. The difference between item and path counts also includes
 compiler observations of different item kinds under one qualified path.
 
-All 1,319 body dispositions and refinements remain `open` in this inventory.
+All 1,620 body dispositions and refinements remain `open` in this inventory.
 It does not import or discharge the separately bound kernel, MC1, Wasm-emitter
-or M4/MC2 frontend/compiler/companion extraction and proof evidence. Zero bodies here are
+or M4/MC2/M5 frontend/compiler/companion/resource extraction and proof evidence. Zero bodies here are
 classified as extracted, modeled, excepted, or proved; that accounting limit is
 not a claim that the separate proof lanes have no evidence.
 
@@ -81,17 +81,17 @@ The dated 2026-09-15 M1 review at tree `3abd178bda9543155c545fdacf6b07f3fd5bbc49
 
 ## Compiler review observation
 
-The MC2 review is bound by the compiler IR, coverage, collector receipt/policy,
+The M5 review is bound by the compiler IR, coverage, collector receipt/policy,
 toolchain, Cargo graph and per-crate source identities recorded in
 [the reviewed policy](../policy/source-inventory.ncl). Its JSON export and the
 bound compiler packet are the machine-comparable authorities. These identities
 bind the reviewed observation, not an arbitrary later source tree. Historical
-M3/M4 identifiers are not the current MC2 binding, and an archive location alone
+M3/M4/MC2 identifiers are not the current M5 binding, and an archive location alone
 is not a passing receipt.
 
-Coverage reports all 21 expected units for one target/feature configuration.
-There are 788 unique exclusively test-role paths across 938 test item facts,
-26 macro origins, five production dependency edges, no external Cargo edges,
+Coverage reports all 23 expected units for one target/feature configuration.
+There are 948 unique exclusively test-role paths across 1,173 test item facts,
+26 macro origins, six production dependency edges, no external Cargo edges,
 and thirteen selected tools. The three domain-core
 crates retain their `no_std` policy obligations.
 
@@ -105,17 +105,23 @@ compiler-qualified closure identities and filesystem observations through
 The inherited source comparison, policy/tool-selection freshness checks, and
 strict Octet gate remain separate acceptance controls; this document is not
 their execution receipt. Closure identities include source byte offsets, so even
-comment or help-text edits can require renewal. The collection limit is 24
-units/shards; all 21 expected units are mandatory, not optional coverage.
+comment or help-text edits can require renewal. The collection limit is 25
+units/shards: all 23 production workspace units remain mandatory, and the
+acyclic boundary control adds both units of its synthetic shell library.
+No real or synthetic test target is disabled.
+The collector's configuration-entry capacity is 2,048; this does not enlarge
+the single declared target/feature configuration or waive incomplete collection.
 
 The actual-source lane separately extracts the whole kernel, frontend and
-compiler, using independent frontend and compiler Lean environments for the
-pinned Aeneas discriminants. Its reviewed extraction lock and implementation
+compiler. The backend imports actual frontend types before its own generated
+types; separate audit entrypoints include their transitive project dependencies.
+Its reviewed extraction lock and implementation
 receipt are the authorities for exact functions, external models, dependencies
 and axioms. The shared current lock is `verification/m4/extraction-lock.json`;
-historical M4 receipts retain their original scopes, and MC2's implementation
-receipt separately records its renewal and companion correspondence.
-Successful extraction or a compiled audit cannot turn the 1,319 open
+historical M4/MC2 receipts retain their original scopes, and each renewal requires
+a fresh independent check. M5's resource-transition theorems and component
+dependency coverage are separate from this classification.
+Successful extraction or a compiled audit cannot turn the 1,620 open
 authored-body obligations into universal refinement.
 
 ## Rejection controls

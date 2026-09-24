@@ -1,0 +1,46 @@
+{
+  "schema": "noble-m5-regressions/v1",
+  "result": "passed",
+  "binary_sha256": "7caad3c901bf56c57e94baee35278889dc84a61a4ed2c110f7fe6786f1dcea1a",
+  "production_source_files": 389,
+  "production_sources_unchanged": true,
+  "scope_note": "Runtime/compiler source bytes are unchanged. Verification-policy and proof-lock renewals have separately named snapshots; no identical whole-tree digest across scopes is asserted.",
+  "mc1": {
+    "cases": 36,
+    "passed": true,
+    "receipt": "assurance.tar.gz:regressions/mc1.json"
+  },
+  "mc2": {
+    "cases": 15,
+    "declared_variants": "all",
+    "controls": 18,
+    "independent_checker_runs": 18,
+    "passed": true,
+    "receipt": "assurance.tar.gz:regressions/mc2.json",
+    "raw": "assurance.tar.gz:regressions/mc2"
+  },
+  "m4": {
+    "cases": 18,
+    "controls": 11,
+    "workflows": [
+      "DX-10",
+      "DX-12"
+    ],
+    "result": "passed",
+    "receipt": "assurance.tar.gz:regressions/m4/acceptance.json"
+  },
+  "m3": {
+    "configurations": 4,
+    "result": "eligible-for-selection",
+    "performance_claim": false,
+    "receipt": "assurance.tar.gz:regressions/m3/report.json"
+  },
+  "rust": {
+    "result": "passed",
+    "tests": 128,
+    "test_suites": 19,
+    "nonempty_suites": 16,
+    "failed": 0,
+    "raw": "quality.tar.xz:nix/build.stderr"
+  }
+}

@@ -6,7 +6,7 @@
   "canonical_spec": "README.md",
   "canonical_family_exists": true,
   "compiler_exists": true,
-  "compiler_scope": "Core-Bootstrap source parsing, immutable resolution and rank-1 named inference produce finite untrusted candidates; independent kernel acceptance precedes selected managed-linear-memory Wasm emission. Experimental MC1-v1 and the bounded M3 comparison remain separate scopes. MC2-v1 adds exact companion admission and proof-required builds under separately recorded source and host assumptions.",
+  "compiler_scope": "Core-Bootstrap source parsing, immutable resolution and rank-1 named inference produce finite untrusted candidates; independent kernel acceptance precedes selected managed-linear-memory Wasm emission. Experimental MC1-v1 and the bounded M3 comparison remain separate scopes. MC2-v1 adds exact companion admission and proof-required builds under separately recorded source and host assumptions. Component-Sync-Bootstrap independently checks generated WIT bindings and emits validated synchronous components; it does not extend the resource-free session runtime.",
   "runtime_exists": true,
   "proof_implementation_exists": true,
   "verification_policy": {
@@ -18,9 +18,9 @@
     "verus": "reviewed-non-kernel-exceptions-only",
     "coverage_inventory": "reviewed-with-open-refinement",
     "coverage_record": "../policy/source-inventory.json",
-    "body_obligations": 1319,
-    "open_refinement_obligations": 1319,
-    "coverage_scope": "Complete 21-unit all-target source classification; all 1319 authored production bodies remain open refinement obligations. The 977 generated and 549 structural paths are accounted separately, not treated as proved bodies.",
+    "body_obligations": 1620,
+    "open_refinement_obligations": 1620,
+    "coverage_scope": "Complete 23-unit all-target source classification; all 1620 authored production bodies remain open refinement obligations. The 1635 generated and 731 structural paths are accounted separately, not treated as proved bodies.",
     "extraction_scope": "Whole kernel, frontend and compiler actual-Rust Charon/Aeneas/Lean extraction and dependency/axiom accounting; independent frontend and compiler environments avoid pinned Aeneas discriminant collisions. Successful extraction and compiled audits are not universal refinement.",
     "m4_extraction_acceptance": "passed-independent-whole-crate-check-and-27-refusal-controls",
     "mc2_extraction_acceptance": "passed-independent-whole-crate-check-and-28-refusal-controls",
@@ -29,9 +29,11 @@
       "../verification/mc1/implementation.json",
       "../verification/m3-wasm/implementation.json",
       "../verification/m4/implementation.json",
-      "../verification/mc2/extraction.json"
+      "../verification/mc2/extraction.json",
+      "../verification/m5/extraction.json"
     ],
-    "approved_exceptions": []
+    "approved_exceptions": [],
+    "m5_extraction_acceptance": "passed-independent-whole-crate-check-seven-strict-resource-roots-and-52-refusal-controls"
   },
   "program_contracts": {
     "profile": "Contracts-Draft",
@@ -129,10 +131,12 @@
     "Aeneas_route_replaced": false,
     "concrete_policy_files": "open",
     "toolchain_pin": "unselected",
-    "witness_interfaces": "open",
-    "receipt_adapter": "open",
-    "implementation": "absent",
-    "execution": "not-run",
+    "witness_interfaces": "implemented-for-Component-Sync-Bootstrap",
+    "receipt_adapter": "implemented-for-Component-Sync-Bootstrap",
+    "implementation": "partial",
+    "execution": "passed",
+    "execution_scope": "OCTET-01 through OCTET-04 and every declared variant pass through production authority decisions, opaque witness boundaries, exact binding/replay checks and scoped observation receipts. Other Octet adoption scenarios and concrete external policy integration remain open.",
+    "execution_record": "../verification/m5/acceptance.json",
     "proof": "open"
   },
   "selected_surface": {
@@ -422,12 +426,139 @@
     },
     {
       "id": "component-adapters",
-      "implementation": "absent",
-      "implementation_scope": "M4 resource-free test hosts are not live-resource or Component Model adapters; synchronous component delivery remains M5.",
-      "execution": "not-run",
+      "implementation": "partial",
+      "implementation_scope": "Component-Sync-Bootstrap: one pinned WIT world, generated typed imports/exports, independently checked signatures/effects, memory32 UTF-8/list conversion, move-only resource ownership, native-pin retirement and protected host authorization/observation. Broader Component-Draft, WASI and native async are not implemented.",
+      "execution": "passed",
+      "execution_scope": "All 24 selected cases, 84 variants, 44 native tests and 15 controls pass. Independent Wasmtime component calls are distinguished from hostile raw-core conversion probes and native decision tests. Actual guest collection does not discharge physical-memory or native-async claims.",
       "proof": "open",
-      "trust": "unassessed",
-      "evidence": []
+      "trust": "explicit",
+      "evidence": [
+        {
+          "claim": "The bounded synchronous component and protected-host cases execute through source-bound compiled artifacts, including cancellation/native-pin retirement, applicable receipts, valid WIT export-name collisions and atomic bundle publication.",
+          "subject": "component-adapters",
+          "revision": "0.1.0-draft.5",
+          "kind": "test",
+          "result": "passed",
+          "source_revision": "sha256:b72a0fecc46eeb45b10f8ecd11b7a52e8eaa9fe57a463739c26b8edc6753c21d",
+          "configuration": {
+            "profile": "Component-Sync-Bootstrap",
+            "receipt": "../verification/m5/acceptance.json",
+            "build": "../verification/m5/build.json",
+            "runtime_archive": "../verification/m5/runtime.tar.gz",
+            "binary_sha256": "7caad3c901bf56c57e94baee35278889dc84a61a4ed2c110f7fe6786f1dcea1a",
+            "peer": "wasmtime-40.0.2",
+            "cases": 24,
+            "variants": 84,
+            "native_tests": 44,
+            "controls": 15,
+            "receipt_sha256": "16d05ae874accd00c839e3a5a31f35ef6702446094775cf16e3ba4add1aa10f7"
+          },
+          "assumptions": [
+            "Rust, selected tools, owned WAT, Wasmtime/Node engines, canonical ABI and the filesystem remain trusted execution boundaries.",
+            "The independent peer supplies linking and typed conversion but reuses the production Noble resource/authority decisions for host policy.",
+            "Authentic current host facts and callbacks, physical native release and concrete external policy enforcement are not established by pure decisions or receipt-shaped data.",
+            "Bounded execution is separate from actual-Rust resource refinement and does not close universal component, authority-system or native-async obligations."
+          ]
+        },
+        {
+          "claim": "Seven strict actual-Rust resource transition/Table.decide correspondence and qualified lifecycle/accounting roots pass independent fresh extraction. Complete declaration accounting covers all resource, authority and component implementation scopes; 52 refusal controls pass without admitting native axioms into those seven roots.",
+          "subject": "component-adapters",
+          "revision": "0.1.0-draft.5",
+          "kind": "aeneas-lean",
+          "result": "accepted",
+          "source_revision": "sha256:2565ee6c1e596ce562058ab146f95da047e9211f00a93fccde1b082ac292bd3d",
+          "configuration": {
+            "profile": "Component-Sync-Bootstrap",
+            "receipt": "../verification/m5/extraction.json",
+            "receipt_sha256": "ba163c920777ab7cb555471314e5c6567a73d61b63737a33bc2000bd14c1c572",
+            "reviewed_lock": "../verification/m4/extraction-lock.json",
+            "reviewed_lock_sha256": "d23c35f8de0885b9efeff4bea7be3c89c0672c21d62a6fa4978fb4957abc71d1",
+            "strict_resource_roots": [
+              {
+                "declaration": "M5Resources.transition_refines",
+                "axioms": [
+                  "propext",
+                  "Classical.choice",
+                  "Quot.sound"
+                ],
+                "classification": "strict-universal-actual-Rust-resource-correspondence-or-invariant"
+              },
+              {
+                "declaration": "M5Resources.table_decide_refines",
+                "axioms": [
+                  "propext",
+                  "Classical.choice",
+                  "Quot.sound"
+                ],
+                "classification": "strict-universal-actual-Rust-resource-correspondence-or-invariant"
+              },
+              {
+                "declaration": "M5Resources.cancelled_pin_retained",
+                "axioms": [
+                  "propext",
+                  "Classical.choice",
+                  "Quot.sound"
+                ],
+                "classification": "strict-universal-actual-Rust-resource-correspondence-or-invariant"
+              },
+              {
+                "declaration": "M5Resources.late_completion_once",
+                "axioms": [
+                  "propext",
+                  "Classical.choice",
+                  "Quot.sound"
+                ],
+                "classification": "strict-universal-actual-Rust-resource-correspondence-or-invariant"
+              },
+              {
+                "declaration": "M5Resources.retired_completion_idempotent",
+                "axioms": [
+                  "propext",
+                  "Classical.choice",
+                  "Quot.sound"
+                ],
+                "classification": "strict-universal-actual-Rust-resource-correspondence-or-invariant"
+              },
+              {
+                "declaration": "M5Resources.normal_completion_owner_once",
+                "axioms": [
+                  "propext",
+                  "Classical.choice",
+                  "Quot.sound"
+                ],
+                "classification": "strict-universal-actual-Rust-resource-correspondence-or-invariant"
+              },
+              {
+                "declaration": "M5Resources.busy_owner_not_reusable",
+                "axioms": [
+                  "propext",
+                  "Classical.choice",
+                  "Quot.sound"
+                ],
+                "classification": "strict-universal-actual-Rust-resource-correspondence-or-invariant"
+              }
+            ],
+            "refusal_controls": 52,
+            "refusal_kinds": {
+              "mutated_extraction_accounting": 31,
+              "executed_Lean_audit": 21
+            },
+            "resource_proofs": "proofs/m5/M5Resources.lean",
+            "compiled_audit": "proofs/m5/M5Audit.lean"
+          },
+          "assumptions": [
+            "The seven strict resource roots admit only propext, Classical.choice and Quot.sound; compiled whole-source declaration accounting is not proof of every authored body.",
+            "Pinned Rust/Charon/Aeneas/Lean, explicit standard-library models and inherited reviewed opaque helpers remain tooling/model boundaries.",
+            "Trusted host serialization, namespace freshness, current facts, authenticated callbacks, faithful physical release and engine/ABI behavior are explicit embedding obligations.",
+            "The resource correspondence theorem does not establish universal authority-system, receipt-adapter, component frontend/backend, WASI or native-async correctness."
+          ]
+        }
+      ],
+      "milestone": "M5",
+      "acceptance": "passed",
+      "acceptance_scope": "Component-Sync-Bootstrap only; exact completion and final document/Nix bindings are retained separately.",
+      "completion_record": "../verification/m5/evidence.json",
+      "host_operation_policy": "../.cairn/specs/wit-wasi/spec.md#bootstrap-host-operation-classification"
     },
     {
       "id": "syndicate-profile",
@@ -447,19 +578,20 @@
     "choreography": "deferred",
     "durability": "optional-deferred"
   },
-  "next_milestone": "M5",
+  "next_milestone": "M6",
   "historical_snapshot": "../noble-project-handoff-2026-09-12/",
   "non_claims": [
     "Only CORE-01 through CORE-18 and scoped DX-10/DX-12 are promoted by M4; other draft profiles retain their independently scoped evidence states",
     "No universal proof of the complete Rust checker, contract frontend, exporter, or CLI",
     "No stable language or component conformance",
-    "No whole-project verification claim; all 1319 authored-production-body source-inventory refinement obligations remain open",
+    "No whole-project verification claim; all 1620 authored-production-body source-inventory refinement obligations remain open",
     "Managed linear memory implements the selected M4 resource-free Core-Bootstrap scope; no universal backend or physical-memory superiority claim",
     "M4 completion is scoped to resource-free Core-Bootstrap and its mandatory runtime workflows, not the full language or later milestones",
-    "MC2-v1 is accepted only for the recorded resource-free Core-Bootstrap fragment; broad PO-16/20/21, universal host/backend correctness, live resources/components and M5 remain open.",
+    "MC2-v1 remains scoped to resource-free Core-Bootstrap; broad PO-16/20/21 and universal host/backend correctness remain open. Separate M5 evidence owns the bounded synchronous resource/component slice.",
+    "Component-Sync-Bootstrap is not full Component-Draft, WASI, native async, general resource-protocol refinement or universal authority/receipt correctness.",
     "PO-17, PO-18 and SO-07 remain open; extraction, bounded tests and accounting do not establish universal frontend/kernel/compiler/backend refinement",
     "Physical GC allocation/reclamation and isolated engine memory peaks remain unknown",
     "No zerocopy dependency selected"
   ],
-  "runtime_scope": "Selected managed-linear-memory Core-Bootstrap source-to-kernel-to-Wasm execution and persistent compiled sessions, with explicit resource-free hosts, preparation limits and runtime quotas. All 18 CORE cases, 11 runtime controls and scoped DX-10/DX-12 runtime workflows pass; the two-representation M3 experiment remains separate regression evidence. MC2-v1 first-class contract/evidence/certified inputs, results, aggregates, composition, runtime-capture instantiation and guarded invocation pass all fifteen CONTRACT cases and declared variants."
+  "runtime_scope": "Selected managed-linear-memory Core-Bootstrap source-to-kernel-to-Wasm execution and persistent compiled sessions, with explicit resource-free hosts, preparation limits and runtime quotas. All 18 CORE cases, 11 runtime controls and scoped DX-10/DX-12 runtime workflows pass; the two-representation M3 experiment remains separate regression evidence. MC2-v1 first-class contract/evidence/certified inputs, results, aggregates, composition, runtime-capture instantiation and guarded invocation pass all fifteen CONTRACT cases and declared variants. The separate Component-Sync-Bootstrap path passes 24 selected component/resource/authority cases and 84 variants using an independent typed peer, explicit raw-core boundary probes and native policy controls."
 }

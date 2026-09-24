@@ -2,7 +2,7 @@
 
 Revision: 0.1.0-draft.5
 
-**Current: MC2 — completed; next primary milestone: M5 — synchronous components.**
+**Current: M5 — completed; next primary milestone: M6 — native async.**
 M1, M2, MC1 and the bounded M3 representation experiment are implemented. M4
 connects accepted source to compiled managed-linear-memory Wasm and persistent
 sessions, with retained CORE/DX execution, extraction, regression and quality
@@ -12,6 +12,16 @@ Its [completion record](../verification/mc2/evidence.json) retains all 15
 canonical cases and declared variants, separate scoped proof lanes, current
 extraction and complete quality gates. Neither bounded execution nor
 successful extraction establishes a general or verified backend.
+
+M5 delivers the pinned `Component-Sync-Bootstrap` world, independent typed
+component interoperability, move-only resource ownership and native-pin
+retirement, and protected host authorization with observation-backed receipts.
+Its [completion record](../verification/m5/evidence.json) binds all 24 selected
+cases and 84 variants, 44 native tests, seven strict actual-Rust resource roots,
+52 refusal controls, prior-milestone regressions and complete quality collection.
+The separately retained final document/Cairn Nix receipt is required for closeout.
+This is not full Component-Draft, WASI, native async or universal component,
+authority-system or physical-release refinement.
 
 [roadmap.json](roadmap.json) records dependency edges. Milestone status is separate from test and proof results.
 
@@ -178,8 +188,9 @@ defines coverage. The [acceptance evidence](../README.md#m4-acceptance-evidence)
 distinguishes these completed observations from open refinement obligations.
 
 The M4 receipt recorded 887 open authored-body obligations in 19 units.
-The current MC2-renewed [source inventory](../verification/source-inventory.md)
-records 1,319 open authored-body obligations in 21 units.
+MC2 recorded 1,319 open authored-body obligations in 21 units. The current
+M5-renewed [source inventory](../verification/source-inventory.md) records
+1,620 open authored-body obligations in 23 units.
 M4 does not claim universal frontend/kernel/compiler/backend refinement,
 PO-17/18 or SO-07 closure, MC2 companions, resources/components, physical GC
 reclamation or isolated engine peaks. Final milestone promotion and Cairn
@@ -191,7 +202,7 @@ sync/archive follow the retained gates, not implementation alone.
 
 Editor holes follow M2 and require a separate editor syntax contract. Guest domain types and Result library interfaces follow M4; they do not block bootstrap. Resource-bearing library execution also requires the ownership profile.
 
-Identity tools require resolved recipes. Portable cache keys additionally require canonical encoding; proof reuse follows SPEC-V002 evidence admission. Resource-free test hosts can use the M2 environment; live-resource substitution waits for M5.
+Identity tools require resolved recipes. Portable cache keys additionally require canonical encoding; proof reuse follows SPEC-V002 evidence admission. Resource-free test hosts can use the M2 environment. M5 supplies the bounded counter/resource host and its explicit ownership protocol; general guest library and resource-protocol interfaces remain separate work.
 
 M2 also requires bounded property-runner controls and compiler-backed static
 documentation checks under DX-PROPERTY-01/02 and DX-DOC-01/02. M4 extends these

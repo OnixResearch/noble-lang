@@ -95,6 +95,7 @@ impl Traversal {
             crate::inference::Term::Contract => "Contract",
             crate::inference::Term::Evidence => "Evidence",
             crate::inference::Term::Certified => "Certified",
+            crate::inference::Term::Resource(_) => "Resource",
             crate::inference::Term::Empty => "[]",
             crate::inference::Term::Link(_) => return Err(crate::internal(span)),
             crate::inference::Term::Push(stack, value) => {

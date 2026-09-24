@@ -490,6 +490,449 @@ structure acceptance.validate.DepWalk where
   stack : alloc.vec.Vec contracts.Definition
   spent : Std.U32
 
+/-- [noble_kernel::authority::report::ReceiptScope]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 86:0-91:1
+    Visibility: public -/
+@[discriminant isize]
+inductive authority.report.ReceiptScope where
+| AuthorizationBoundary : authority.report.ReceiptScope
+| AdmissionBoundary : authority.report.ReceiptScope
+| OperationBoundary : authority.report.ReceiptScope
+| InvocationDelivery : authority.report.ReceiptScope
+
+/-- [noble_kernel::authority::report::ReceiptClaim]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 76:0-83:1
+    Visibility: public -/
+@[discriminant isize]
+inductive authority.report.ReceiptClaim where
+| Denial : authority.report.ReceiptClaim
+| PreflightFailure : authority.report.ReceiptClaim
+| Unknown : authority.report.ReceiptClaim
+| OperationFailure : authority.report.ReceiptClaim
+| OperationSuccess : authority.report.ReceiptClaim
+| InvocationSuccess : authority.report.ReceiptClaim
+
+/-- [noble_kernel::authority::report::InvocationOutcome]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 3:0-8:1
+    Visibility: public -/
+@[discriminant isize]
+inductive authority.report.InvocationOutcome where
+| Pending : authority.report.InvocationOutcome
+| Succeeded : authority.report.InvocationOutcome
+| Failed : authority.report.InvocationOutcome
+| Cancelled : authority.report.InvocationOutcome
+
+/-- [noble_kernel::authority::OwnerContext]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 47:0-51:1
+    Visibility: public -/
+structure authority.OwnerContext where
+  «instance» : Std.U64
+  invocation : Std.U64
+  generation : Std.U64
+
+/-- [noble_kernel::authority::permit::AttemptKey]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 121:0-125:1
+    Visibility: public -/
+structure authority.permit.AttemptKey where
+  owner : authority.OwnerContext
+  slot : Std.Usize
+  generation : Std.U64
+
+/-- [noble_kernel::authority::permit::PreflightFailure]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 27:0-31:1
+    Visibility: public -/
+@[discriminant isize]
+inductive authority.permit.PreflightFailure where
+| WitnessCapacity : authority.permit.PreflightFailure
+| AttemptCapacity : authority.permit.PreflightFailure
+| RequestCapacity : authority.permit.PreflightFailure
+
+/-- [noble_kernel::authority::permit::Denial]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 2:0-24:1
+    Visibility: public -/
+@[discriminant isize]
+inductive authority.permit.Denial where
+| WrongAuthoritySource : authority.permit.Denial
+| StaleFacts : authority.permit.Denial
+| MissingFacts : authority.permit.Denial
+| InvalidCredentials : authority.permit.Denial
+| Revoked : authority.permit.Denial
+| ChangedPlan : authority.permit.Denial
+| WrongOwnerContext : authority.permit.Denial
+| ChangedPolicy : authority.permit.Denial
+| NotYetValid : authority.permit.Denial
+| Expired : authority.permit.Denial
+| QuotaExhausted : authority.permit.Denial
+| InconsistentQuota : authority.permit.Denial
+| WrongResourceKind : authority.permit.Denial
+| MissingRights : authority.permit.Denial
+| UnknownWitness : authority.permit.Denial
+| StaleGeneration : authority.permit.Denial
+| WrongScope : authority.permit.Denial
+| ConsumedWitness : authority.permit.Denial
+| RetiredWitness : authority.permit.Denial
+| UntrustedWitnessClaim : authority.permit.Denial
+| InvocationFinished : authority.permit.Denial
+
+/-- [noble_kernel::authority::QuotaId]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 43:0-43:28
+    Visibility: public -/
+@[reducible]
+def authority.QuotaId := Std.U64
+
+/-- [noble_kernel::authority::Constraints]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 68:0-74:1
+    Visibility: public -/
+structure authority.Constraints where
+  not_before : Std.U64
+  expires_at : Std.U64
+  quota : authority.QuotaId
+  units : Std.U64
+  scope : Std.U64
+
+/-- [noble_kernel::authority::OperationContract]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 62:0-65:1
+    Visibility: public -/
+structure authority.OperationContract where
+  «name» : alloc.vec.Vec Std.U8
+  effect : types.EffId
+
+/-- [noble_kernel::authority::PolicyRevision]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 39:0-39:35
+    Visibility: public -/
+@[reducible]
+def authority.PolicyRevision := Std.U64
+
+/-- [noble_kernel::authority::ActorId]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 37:0-37:28
+    Visibility: public -/
+@[reducible]
+def authority.ActorId := Std.U64
+
+/-- [noble_kernel::authority::PlanDescription]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 79:0-86:1
+    Visibility: public -/
+structure authority.PlanDescription where
+  operation : authority.OperationContract
+  arguments : alloc.vec.Vec Std.U8
+  actor : authority.ActorId
+  owner : authority.OwnerContext
+  policy : authority.PolicyRevision
+  constraints : authority.Constraints
+
+/-- [noble_kernel::authority::Plan]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 90:0-92:1
+    Visibility: public -/
+structure authority.Plan where
+  description : authority.PlanDescription
+
+/-- [noble_kernel::authority::Checkpoint]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 55:0-58:1
+    Visibility: public -/
+structure authority.Checkpoint where
+  sequence : Std.U64
+  now : Std.U64
+
+/-- [noble_kernel::authority::SourceId]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 41:0-41:29
+    Visibility: public -/
+@[reducible]
+def authority.SourceId := Std.U64
+
+/-- [noble_kernel::authority::report::ReceiptDescription]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 96:0-107:1
+    Visibility: public -/
+structure authority.report.ReceiptDescription where
+  plan : authority.Plan
+  boundary_owner : authority.OwnerContext
+  attempt : Option authority.permit.AttemptKey
+  source : authority.SourceId
+  checkpoint : authority.Checkpoint
+  claim : authority.report.ReceiptClaim
+  scope : authority.report.ReceiptScope
+  invocation : authority.report.InvocationOutcome
+  denial : Option authority.permit.Denial
+  preflight : Option authority.permit.PreflightFailure
+
+/-- [noble_kernel::authority::report::Receipt]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 110:0-112:1
+    Visibility: public -/
+structure authority.report.Receipt where
+  description : authority.report.ReceiptDescription
+
+/-- [noble_kernel::authority::report::Rejection]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 121:0-123:1
+    Visibility: public -/
+structure authority.report.Rejection where
+  receipt : authority.report.Receipt
+
+/-- [noble_kernel::authority::DeliveryRecord]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 213:0-216:1 -/
+structure authority.DeliveryRecord where
+  attempt : authority.permit.AttemptKey
+  checkpoint : authority.Checkpoint
+
+/-- [noble_kernel::authority::QuotaRecord]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 204:0-209:1 -/
+structure authority.QuotaRecord where
+  quota : authority.QuotaId
+  checkpoint : authority.Checkpoint
+  available : Std.U64
+  spent : Std.U64
+
+/-- [noble_kernel::authority::report::ObservedOutcome]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 12:0-16:1
+    Visibility: public -/
+@[discriminant isize]
+inductive authority.report.ObservedOutcome where
+| Unknown : authority.report.ObservedOutcome
+| OperationFailure : authority.report.ObservedOutcome
+| OperationSuccess : authority.report.ObservedOutcome
+
+/-- [noble_kernel::authority::report::ObservationDescription]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 20:0-26:1
+    Visibility: public -/
+structure authority.report.ObservationDescription where
+  attempt : authority.permit.AttemptKey
+  plan : authority.Plan
+  source : authority.SourceId
+  checkpoint : authority.Checkpoint
+  outcome : authority.report.ObservedOutcome
+
+/-- [noble_kernel::authority::AttemptRecord]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 195:0-202:1 -/
+structure authority.AttemptRecord where
+  key : authority.permit.AttemptKey
+  plan : authority.Plan
+  started : Bool
+  admitted : authority.Checkpoint
+  unknown : Option authority.report.ObservationDescription
+  terminal : Option authority.report.ObservationDescription
+
+/-- [noble_kernel::authority::permit::WitnessState]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 161:0-165:1
+    Visibility: public -/
+@[discriminant isize]
+inductive authority.permit.WitnessState where
+| Live : authority.permit.WitnessState
+| Consumed : authority.permit.WitnessState
+| Retired : authority.permit.WitnessState
+
+/-- [noble_kernel::authority::permit::WitnessClaim]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 43:0-50:1
+    Visibility: public -/
+structure authority.permit.WitnessClaim where
+  owner : authority.OwnerContext
+  slot : Std.Usize
+  generation : Std.U64
+  kind : types.ResourceKind
+  rights : Std.U32
+  scope : Std.U64
+
+/-- [noble_kernel::authority::WitnessRecord]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 189:0-193:1 -/
+structure authority.WitnessRecord where
+  claim : authority.permit.WitnessClaim
+  plan : authority.Plan
+  state : authority.permit.WitnessState
+
+/-- [noble_kernel::authority::Counters]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 178:0-187:1
+    Visibility: public -/
+structure authority.Counters where
+  authorization_requests : Std.U32
+  admission_requests : Std.U32
+  witnesses_created : Std.U32
+  witness_consumptions : Std.U32
+  attempts_admitted : Std.U32
+  protected_operations : Std.U32
+  approved_observations : Std.U32
+  successful_deliveries : Std.U32
+
+/-- [noble_kernel::authority::Limits]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 129:0-133:1
+    Visibility: public -/
+structure authority.Limits where
+  witnesses : Std.Usize
+  attempts : Std.Usize
+  requests : Std.U32
+
+/-- [noble_kernel::authority::Profile]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 138:0-146:1
+    Visibility: public -/
+structure authority.Profile where
+  owner : authority.OwnerContext
+  witness_kind : types.ResourceKind
+  authority_source : authority.SourceId
+  observation_source : authority.SourceId
+  invocation_source : authority.SourceId
+  checkpoint : authority.Checkpoint
+  limits : authority.Limits
+
+/-- [noble_kernel::authority::Authority]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 220:0-229:1
+    Visibility: public -/
+structure authority.Authority where
+  profile : authority.Profile
+  witnesses : alloc.vec.Vec authority.WitnessRecord
+  attempts : alloc.vec.Vec authority.AttemptRecord
+  quotas : alloc.vec.Vec authority.QuotaRecord
+  effects : alloc.vec.Vec types.EffId
+  counters : authority.Counters
+  invocation : authority.report.InvocationOutcome
+  delivered : Option authority.DeliveryRecord
+
+/-- [noble_kernel::authority::permit::Execution]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 130:0-132:1
+    Visibility: public -/
+structure authority.permit.Execution where
+  attempt : authority.permit.AttemptKey
+
+/-- [noble_kernel::authority::permit::Witness]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 81:0-83:1
+    Visibility: public -/
+structure authority.permit.Witness where
+  claim : authority.permit.WitnessClaim
+
+/-- [noble_kernel::authority::permit::Admission]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 108:0-118:1
+    Visibility: public -/
+@[discriminant isize]
+inductive authority.permit.Admission where
+| Committed : authority.permit.Execution → authority.permit.Admission
+| Denied :
+  Option authority.permit.Witness →
+  authority.report.Rejection →
+  authority.permit.Admission
+| Preflight :
+  Option authority.permit.Witness →
+  authority.report.Rejection →
+  authority.permit.Admission
+
+/-- [noble_kernel::authority::permit::AdmissionRequest]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 100:0-103:1
+    Visibility: public -/
+structure authority.permit.AdmissionRequest where
+  claim : authority.permit.WitnessClaim
+  plan : authority.Plan
+
+/-- [noble_kernel::authority::Grant]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 157:0-161:1
+    Visibility: public -/
+structure authority.Grant where
+  plan : authority.Plan
+  kind : types.ResourceKind
+  rights : Std.U32
+
+/-- [noble_kernel::authority::CurrentFacts]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 167:0-175:1
+    Visibility: public -/
+structure authority.CurrentFacts where
+  source : authority.SourceId
+  checkpoint : authority.Checkpoint
+  grant : Option authority.Grant
+  credentials_valid : Option Bool
+  revoked : Option Bool
+  policy : Option authority.PolicyRevision
+  quota_remaining : Option Std.U64
+
+/-- [noble_kernel::authority::report::BoundaryError]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 57:0-72:1
+    Visibility: public -/
+@[discriminant isize]
+inductive authority.report.BoundaryError where
+| WrongContext : authority.report.BoundaryError
+| UnknownAttempt : authority.report.BoundaryError
+| StaleGeneration : authority.report.BoundaryError
+| NotStarted : authority.report.BoundaryError
+| AlreadyStarted : authority.report.BoundaryError
+| WrongSource : authority.report.BoundaryError
+| StaleObservation : authority.report.BoundaryError
+| ChangedPlan : authority.report.BoundaryError
+| ConflictingObservation : authority.report.BoundaryError
+| MissingObservation : authority.report.BoundaryError
+| InapplicableObservation : authority.report.BoundaryError
+| InvocationFinished : authority.report.BoundaryError
+| ImportedTrustFlag : authority.report.BoundaryError
+| InapplicableReceipt : authority.report.BoundaryError
+
+/-- [noble_kernel::authority::permit::Started]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 144:0-147:1
+    Visibility: public -/
+structure authority.permit.Started where
+  attempt : authority.permit.AttemptKey
+  plan : authority.Plan
+
+/-- [noble_kernel::authority::permit::AttemptSnapshot]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 174:0-179:1
+    Visibility: public -/
+structure authority.permit.AttemptSnapshot where
+  key : authority.permit.AttemptKey
+  effect : types.EffId
+  started : Bool
+  outcome : Option authority.report.ObservedOutcome
+
+/-- [noble_kernel::authority::admission::{noble_kernel::authority::Authority}::attempt_snapshot::{closure}]
+    Source: 'crates/noble-kernel/src/authority/admission.rs', lines 267:21-267:54 -/
+@[reducible]
+def authority.admission.Authority.attempt_snapshot.closure := Unit
+
+/-- [noble_kernel::authority::SetupError]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 149:0-152:1
+    Visibility: public -/
+@[discriminant isize]
+inductive authority.SetupError where
+| InvalidLimits : authority.SetupError
+| StaleCheckpoint : authority.SetupError
+
+/-- [noble_kernel::authority::permit::Decision]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 35:0-38:1
+    Visibility: public -/
+@[discriminant isize]
+inductive authority.permit.Decision where
+| Allow : authority.permit.Decision
+| Deny : authority.permit.Denial → authority.permit.Decision
+
+/-- [noble_kernel::authority::permit::Authorization]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 93:0-97:1
+    Visibility: public -/
+@[discriminant isize]
+inductive authority.permit.Authorization where
+| Authorized : authority.permit.Witness → authority.permit.Authorization
+| Denied : authority.report.Rejection → authority.permit.Authorization
+| Preflight : authority.report.Rejection → authority.permit.Authorization
+
+/-- [noble_kernel::authority::PlanError]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 95:0-101:1
+    Visibility: public -/
+@[discriminant isize]
+inductive authority.PlanError where
+| EmptyContract : authority.PlanError
+| OversizedContract : authority.PlanError
+| OversizedArguments : authority.PlanError
+| InvalidValidity : authority.PlanError
+| EmptyQuotaCharge : authority.PlanError
+
+/-- [noble_kernel::authority::report::Observation]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 51:0-54:1
+    Visibility: public -/
+structure authority.report.Observation where
+  attempt : authority.permit.AttemptKey
+  outcome : authority.report.ObservedOutcome
+
+/-- [noble_kernel::authority::permit::WitnessSnapshot]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 168:0-171:1
+    Visibility: public -/
+structure authority.permit.WitnessSnapshot where
+  claim : authority.permit.WitnessClaim
+  state : authority.permit.WitnessState
+
+/-- [noble_kernel::authority::report::UntrustedReceipt]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 134:0-136:1
+    Visibility: public -/
+structure authority.report.UntrustedReceipt where
+  description : authority.report.ReceiptDescription
+
 /-- [noble_kernel::execution::TextLiteral]
     Source: 'crates/noble-kernel/src/execution/mod.rs', lines 9:0-12:1
     Visibility: public -/
@@ -523,11 +966,235 @@ structure execution.Submission where
   request : untrusted.Request
 
 /-- [noble_kernel::BudgetOutcome]
-    Source: 'crates/noble-kernel/src/lib.rs', lines 39:0-42:1
+    Source: 'crates/noble-kernel/src/lib.rs', lines 41:0-44:1
     Visibility: public -/
 @[discriminant isize]
 inductive BudgetOutcome where
 | Remaining : Std.U32 → BudgetOutcome
 | Exhausted : BudgetOutcome
+
+/-- [noble_kernel::resources::TableId]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 26:0-26:28
+    Visibility: public -/
+@[reducible]
+def resources.TableId := Std.U64
+
+/-- [noble_kernel::resources::Context]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 30:0-30:28
+    Visibility: public -/
+@[reducible]
+def resources.Context := Std.U64
+
+/-- [noble_kernel::resources::Rights]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 34:0-34:27
+    Visibility: public -/
+@[reducible]
+def resources.Rights := Std.U64
+
+/-- [noble_kernel::resources::Handle]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 38:0-45:1
+    Visibility: public -/
+structure resources.Handle where
+  table : resources.TableId
+  slot : Std.Usize
+  generation : Std.U64
+  context : resources.Context
+  kind : types.ResourceKind
+  rights : resources.Rights
+
+/-- [noble_kernel::resources::Requirement]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 49:0-53:1
+    Visibility: public -/
+structure resources.Requirement where
+  context : resources.Context
+  kind : types.ResourceKind
+  rights : resources.Rights
+
+/-- [noble_kernel::resources::Scope]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 57:0-60:1
+    Visibility: public -/
+structure resources.Scope where
+  handle : resources.Handle
+  serial : Std.U64
+
+/-- [noble_kernel::resources::State]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 65:0-70:1
+    Visibility: public -/
+@[discriminant isize]
+inductive resources.State where
+| Live : resources.State
+| Busy : Std.U64 → resources.State
+| Retiring : Std.U64 → resources.State
+| Retired : resources.State
+
+/-- [noble_kernel::resources::Retirement]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 74:0-79:1
+    Visibility: public -/
+@[discriminant isize]
+inductive resources.Retirement where
+| Cancelled : resources.Retirement
+| Trap : resources.Retirement
+| UnexpectedSuspension : resources.Retirement
+| HostCleanup : resources.Retirement
+
+/-- [noble_kernel::resources::Completion]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 83:0-86:1
+    Visibility: public -/
+@[discriminant isize]
+inductive resources.Completion where
+| Success : resources.Completion
+| DomainError : resources.Completion
+
+/-- [noble_kernel::resources::Snapshot]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 90:0-95:1
+    Visibility: public -/
+structure resources.Snapshot where
+  handle : resources.Handle
+  state : resources.State
+  last_scope : Option Std.U64
+  retirement : Option resources.Retirement
+
+/-- [noble_kernel::resources::Event]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 100:0-124:1
+    Visibility: public -/
+@[discriminant isize]
+inductive resources.Event where
+| Inspect : resources.Requirement → resources.Event
+| Begin : resources.Requirement → Std.U64 → resources.Event
+| Access : Std.U64 → resources.Event
+| Complete : Std.U64 → resources.Completion → resources.Event
+| Revoke : Std.U64 → resources.Retirement → resources.Event
+| Retire : resources.Retirement → resources.Event
+| Release : resources.Requirement → resources.Event
+| Transfer :
+  resources.Requirement →
+  resources.Context →
+  Std.U64 →
+  resources.Event
+
+/-- [noble_kernel::resources::Action]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 129:0-137:1
+    Visibility: public -/
+@[discriminant isize]
+inductive resources.Action where
+| Unchanged : resources.Action
+| BorrowAdmitted : resources.Action
+| OwnerReturned : resources.Completion → resources.Action
+| AccessRevoked : resources.Action
+| LocalRelease : resources.Action
+| RetirementCompleted : resources.Action
+| OwnerTransferred : resources.Action
+
+/-- [noble_kernel::resources::Decision]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 141:0-144:1
+    Visibility: public -/
+structure resources.Decision where
+  record : resources.Snapshot
+  action : resources.Action
+
+/-- [noble_kernel::resources::Accounting]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 148:0-154:1
+    Visibility: public -/
+structure resources.Accounting where
+  pins_acquired : Std.Usize
+  pins_released : Std.Usize
+  owners_returned : Std.Usize
+  owners_transferred : Std.Usize
+  local_releases : Std.Usize
+
+/-- [noble_kernel::resources::Error]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 186:0-205:1
+    Visibility: public -/
+@[discriminant isize]
+inductive resources.Error where
+| InvalidLimits : resources.Error
+| Capacity : resources.Error
+| PinCapacity : resources.Error
+| ContextCapacity : resources.Error
+| InvalidHandle : resources.Error
+| WrongContext : resources.Error
+| WrongKind : resources.Error
+| WrongGeneration : resources.Error
+| WrongRights : resources.Error
+| Busy : resources.Error
+| Retiring : resources.Error
+| Retired : resources.Error
+| WrongScope : resources.Error
+| GenerationExhausted : resources.Error
+| ScopeExhausted : resources.Error
+| ArgumentCount : resources.Error
+| DuplicateOwner : resources.Error
+| InvalidRecord : resources.Error
+
+/-- [noble_kernel::resources::Owner]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 209:0-211:1
+    Visibility: public -/
+structure resources.Owner where
+  handle : resources.Handle
+
+/-- [noble_kernel::resources::Borrow]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 222:0-224:1
+    Visibility: public -/
+structure resources.Borrow where
+  scope : resources.Scope
+
+/-- [noble_kernel::resources::Admitted]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 228:0-231:1
+    Visibility: public -/
+structure resources.Admitted where
+  borrow : resources.Borrow
+  decision : resources.Decision
+
+/-- [noble_kernel::resources::Rejected]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 242:0-245:1
+    Visibility: public -/
+structure resources.Rejected (T : Type) where
+  error : resources.Error
+  input : T
+
+/-- [noble_kernel::resources::Completed]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 249:0-252:1
+    Visibility: public -/
+structure resources.Completed where
+  owner : Option resources.Owner
+  decision : resources.Decision
+
+/-- [noble_kernel::resources::Transferred]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 256:0-259:1
+    Visibility: public -/
+structure resources.Transferred where
+  owners : alloc.vec.Vec resources.Owner
+  decisions : alloc.vec.Vec resources.Decision
+
+/-- [noble_kernel::resources::Limits]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 264:0-270:1
+    Visibility: public -/
+structure resources.Limits where
+  slots : Std.Usize
+  pins : Std.Usize
+  owners_per_context : Std.Usize
+  generations : Std.U64
+  scopes : Std.U64
+
+/-- [noble_kernel::resources::Observation]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 274:0-280:1
+    Visibility: public -/
+structure resources.Observation where
+  live : Std.Usize
+  busy : Std.Usize
+  retiring : Std.Usize
+  retired : Std.Usize
+  native_pins : Std.Usize
+
+/-- [noble_kernel::resources::table::Table]
+    Source: 'crates/noble-kernel/src/resources/table.rs', lines 16:0-23:1
+    Visibility: public -/
+structure resources.table.Table where
+  id : resources.TableId
+  limits : resources.Limits
+  records : alloc.vec.Vec resources.Snapshot
+  generation : Std.U64
+  scope : Std.U64
+  pins : Std.Usize
 
 end noble_kernel

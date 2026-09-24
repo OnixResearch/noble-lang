@@ -1,6 +1,7 @@
 import Aeneas
 import NobleWasmImpl.Types
 import NobleKernel.FunsExternal
+import NobleContractImpl.StdModels
 
 open Aeneas Aeneas.Std Result
 
@@ -78,10 +79,41 @@ def core.option.Option.Insts.CoreCloneClone.clone
     {T : Type} (inst : core.clone.Clone T) (value : Option T) : Result (Option T) :=
   _root_.noble_kernel.core.option.Option.Insts.CoreCloneClone.clone inst value
 
+@[rust_fun "core::option::{core::option::Option<&'0 @T>}::copied"]
+def core.option.OptionShared0T.copied
+    {T : Type} (inst : core.marker.Copy T) (value : Option T) : Result (Option T) :=
+  _root_.noble_contracts.core.option.OptionShared0T.copied inst value
+
+@[rust_fun
+  "core::option::{core::cmp::PartialEq<core::option::Option<@T>, core::option::Option<@T>>}::eq"]
+def core.option.Option.Insts.CoreCmpPartialEqOption.eq
+    {T : Type} (inst : core.cmp.PartialEq T T) (left right : Option T) : Result Bool :=
+  _root_.noble_contracts.core.option.Option.Insts.CoreCmpPartialEqOption.eq inst left right
+
+@[rust_fun "core::result::{core::result::Result<@T, @E>}::is_err"]
+def core.result.Result.is_err
+    {T E : Type} (value : core.result.Result T E) : Result Bool :=
+  _root_.noble_contracts.core.result.Result.is_err value
+
 @[rust_fun "core::result::{core::result::Result<@T, @E>}::unwrap_or"]
 def core.result.Result.unwrap_or
     {T E : Type} (value : core.result.Result T E) (fallback : T) : Result T :=
   _root_.noble_kernel.core.result.Result.unwrap_or value fallback
+
+/-- Reuse the frontend's state-threaded traversal: the returned iterator has
+consumed the matching item and the index is relative to its initial cursor. -/
+@[rust_fun
+  "core::slice::iter::{core::iter::traits::iterator::Iterator<core::slice::iter::Iter<'a, @T>, &'a @T>}::position"]
+def core.slice.iter.Iter.Insts.CoreIterTraitsIteratorIteratorSharedAT.position
+    {T P : Type} (inst : core.ops.function.FnMut P T Bool)
+    (iterator : core.slice.iter.Iter T) (predicate : P) :
+    Result (Option Usize × core.slice.iter.Iter T) :=
+  _root_.noble_contracts.core.slice.iter.Iter.Insts.CoreIterTraitsIteratorIteratorSharedAT.position
+    inst iterator predicate
+
+@[rust_fun "core::slice::{[@T]}::first"]
+def core.slice.Slice.first {T : Type} (slice : Slice T) : Result (Option T) :=
+  _root_.noble_contracts.core.slice.Slice.first slice
 
 @[rust_fun "core::slice::{[@T]}::last"]
 def core.slice.Slice.last {T : Type} (slice : Slice T) : Result (Option T) :=
@@ -90,6 +122,13 @@ def core.slice.Slice.last {T : Type} (slice : Slice T) : Result (Option T) :=
 @[rust_fun "core::slice::raw::from_ref"]
 def core.slice.raw.from_ref {T : Type} (value : T) : Result (Slice T) :=
   ok (.from [value] (by scalar_tac))
+
+/-- Both crates share the frontend's byte-preserving UTF-8 validation and its
+exact invalid-prefix/error-length representation. -/
+@[rust_fun "core::str::converts::from_utf8"]
+def core.str.converts.from_utf8 (bytes : Slice U8) :
+    Result (core.result.Result Str core.str.error.Utf8Error) :=
+  _root_.noble_contracts.core.str.converts.from_utf8 bytes
 
 /-- `Str` is the inherited exact UTF-8 byte slice; Rust's view does not copy it. -/
 @[rust_fun "core::str::{str}::as_bytes"]
@@ -105,12 +144,27 @@ def Pair.Insts.CoreCmpPartialEqPair.eq
   let equal ← first.eq left.1 right.1
   if equal then second.eq left.2 right.2 else ok false
 
+@[rust_fun "alloc::string::{alloc::string::String}::as_bytes"]
+def alloc.string.String.as_bytes (text : String) : Result (Slice U8) :=
+  _root_.noble_contracts.alloc.string.String.as_bytes text
+
+@[rust_fun "alloc::string::{core::clone::Clone<alloc::string::String>}::clone"]
+def alloc.string.String.Insts.CoreCloneClone.clone (text : String) : Result String :=
+  _root_.noble_contracts.alloc.string.String.Insts.CoreCloneClone.clone text
+
 /-- Reservation changes capacity, not elements. The inherited layout-free Vec
 model erases allocation, but an overflowing element count still panics. -/
 @[rust_fun "alloc::vec::{alloc::vec::Vec<@T>}::reserve"]
 def alloc.vec.Vec.reserve {T : Type} (_A : Type) (vector : alloc.vec.Vec T)
     (additional : Usize) : Result (alloc.vec.Vec T) :=
   if vector.val.length + additional.val ≤ Usize.max then ok vector else fail .panic
+
+/-- Exact reservation has the same element-count overflow boundary; only
+spare capacity differs, which the inherited vector representation erases. -/
+@[rust_fun "alloc::vec::{alloc::vec::Vec<@T>}::reserve_exact"]
+def alloc.vec.Vec.reserve_exact {T : Type} (A : Type) (vector : alloc.vec.Vec T)
+    (additional : Usize) : Result (alloc.vec.Vec T) :=
+  alloc.vec.Vec.reserve A vector additional
 
 @[rust_fun "alloc::vec::{alloc::vec::Vec<@T>}::as_slice"]
 def alloc.vec.Vec.as_slice {T : Type} (A : Type) (vector : alloc.vec.Vec T) :

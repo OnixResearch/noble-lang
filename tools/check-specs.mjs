@@ -1208,6 +1208,9 @@ function selfTest(base) {
   run('component-checker-test-without-runtime-is-valid', b => {
     changeJson(b, 'specs/STATUS.json', p => {
       p.compiler_exists = true; p.runtime_exists = false;
+      p.octet_adoption.implementation = 'absent';
+      p.octet_adoption.execution = 'not-run';
+      p.octet_adoption.proof = 'open';
       for (const component of p.components) component.execution = 'not-run';
       const c = p.components.find(c => c.id === 'core-checker');
       c.implementation = 'implemented'; c.execution = 'passed';

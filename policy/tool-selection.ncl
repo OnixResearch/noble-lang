@@ -119,6 +119,9 @@ let Pin = { rev | String, narHash | String } in
   # These file bindings use SHA-256; Octet separately binds compiler identities.
   file_sha256 | { _ : String } = import "tool-selection-files.ncl",
   tool_paths | { _ : { derivation | String, output | String } } = import "tool-selection-tools.ncl",
-  future_unselected | Array String = ["Wasmtime", "WIT", "Verus", "byte-view dependency"],
+  # A source-built independent Rust peer, not an unreviewed Wasmtime CLI.
+  # Compatibility is established by the M5 execution gate, never this selection.
+  component_sync = import "../verification/m5/pins.json",
+  future_unselected | Array String = ["Verus", "byte-view dependency"],
   claims | Array String = ["selection-policy-only", "execution-required-for-compatibility", "refinement-open", "m1-acceptance-open"],
 }

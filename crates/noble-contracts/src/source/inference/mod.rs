@@ -36,6 +36,7 @@ pub(super) struct State {
     pub bodies: alloc::vec::Vec<Body>,
     pub span: crate::Span,
     text_bytes: u32,
+    pub(super) definition_base: usize,
 }
 
 #[derive(Clone, Copy)]
@@ -138,7 +139,8 @@ pub(super) fn infer(
     meter: &mut crate::Meter,
 ) -> Result<State, crate::Diagnostic> {
     let tree = scope.root;
-    let mut state = attempt!(initial(tree, scope.session.hosts, mode, inputs, meter));
+    let mut state = attempt!(initial(tree, scope.session, mode, inputs, meter));
+    state.definition_base = scope.environment.defs.len();
     attempt!(meter.node(tree.span));
     let mut frames = alloc::vec::Vec::with_capacity(1);
     let body = match state.bodies.first() {
@@ -183,12 +185,13 @@ pub(super) fn infer(
 )]
 fn initial(
     tree: &super::Tree,
-    has_test_hosts: bool,
+    session: &super::Session,
     mode: Mode,
     inputs: &[noble_kernel::types::Ty],
     meter: &mut crate::Meter,
 ) -> Result<State, crate::Diagnostic> {
-    let mut arena = crate::inference::Arena::source(has_test_hosts);
+    let mut arena =
+        crate::inference::Arena::source(session.effect_universe(), session.bindings.is_some());
     #[expect(
         tigerstyle::fragile_exhaustive_enum_match,
         reason = "Owner: noble-maintainers; declarations must retain quantified stack holes while executable submissions use their supplied stack; any new inference mode must make this choice explicitly."
@@ -218,6 +221,7 @@ fn initial(
         bodies,
         span: tree.span,
         text_bytes: 0,
+        definition_base: 24,
     })
 }
 

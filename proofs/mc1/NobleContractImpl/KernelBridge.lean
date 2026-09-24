@@ -1235,9 +1235,24 @@ def noble_kernel.contracts.Definition.Insts.CoreCloneClone.clone
     (definition : noble_kernel.contracts.Definition) : Result noble_kernel.contracts.Definition :=
   _root_.noble_kernel.contracts.Definition.Insts.CoreCloneClone.clone definition
 
+def noble_kernel.contracts.Definition.Insts.CoreFmtDebug.fmt
+    (definition : noble_kernel.contracts.Definition) (formatter : core.fmt.Formatter) :
+    Result (core.result.Result Unit core.fmt.Error × core.fmt.Formatter) :=
+  _root_.noble_kernel.contracts.Definition.Insts.CoreFmtDebug.fmt definition formatter
+
 def noble_kernel.contracts.Definition.Insts.CoreCmpPartialEqDefinition.eq
     (left right : noble_kernel.contracts.Definition) : Result Bool :=
   _root_.noble_kernel.contracts.Definition.Insts.CoreCmpPartialEqDefinition.eq left right
+
+def noble_kernel.contracts.Env.Insts.CoreCloneClone.clone (env : noble_kernel.contracts.Env) :
+    Result noble_kernel.contracts.Env := do
+  let cloned ← _root_.noble_kernel.contracts.Env.Insts.CoreCloneClone.clone (toEnv env)
+  ok (fromEnv cloned)
+
+def noble_kernel.contracts.Env.Insts.CoreFmtDebug.fmt
+    (env : noble_kernel.contracts.Env) (formatter : core.fmt.Formatter) :
+    Result (core.result.Result Unit core.fmt.Error × core.fmt.Formatter) :=
+  _root_.noble_kernel.contracts.Env.Insts.CoreFmtDebug.fmt (toEnv env) formatter
 
 def noble_kernel.contracts.Env.scheme (env : noble_kernel.contracts.Env)
     (definition : noble_kernel.contracts.Definition) :
@@ -1283,9 +1298,27 @@ def noble_kernel.types.Ty.Insts.CoreFmtDebug.fmt
     Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter) :=
   _root_.noble_kernel.types.Ty.Insts.CoreFmtDebug.fmt (toTy ty) formatter
 
+def noble_kernel.types.ResourceKind.Insts.CoreCloneClone.clone
+    (kind : noble_kernel.types.ResourceKind) : Result noble_kernel.types.ResourceKind :=
+  _root_.noble_kernel.types.ResourceKind.Insts.CoreCloneClone.clone kind
+
+def noble_kernel.types.ResourceKind.Insts.CoreFmtDebug.fmt
+    (kind : noble_kernel.types.ResourceKind) (formatter : core.fmt.Formatter) :
+    Result (core.result.Result Unit core.fmt.Error × core.fmt.Formatter) :=
+  _root_.noble_kernel.types.ResourceKind.Insts.CoreFmtDebug.fmt kind formatter
+
+def noble_kernel.types.ResourceKind.Insts.CoreCmpPartialEqResourceKind.eq
+    (left right : noble_kernel.types.ResourceKind) : Result Bool :=
+  _root_.noble_kernel.types.ResourceKind.Insts.CoreCmpPartialEqResourceKind.eq left right
+
 def noble_kernel.types.EffId.Insts.CoreCloneClone.clone (effect : noble_kernel.types.EffId) :
     Result noble_kernel.types.EffId :=
   _root_.noble_kernel.types.EffId.Insts.CoreCloneClone.clone effect
+
+def noble_kernel.types.EffId.Insts.CoreFmtDebug.fmt
+    (effect : noble_kernel.types.EffId) (formatter : core.fmt.Formatter) :
+    Result (core.result.Result Unit core.fmt.Error × core.fmt.Formatter) :=
+  _root_.noble_kernel.types.EffId.Insts.CoreFmtDebug.fmt effect formatter
 
 def noble_kernel.types.EffSet.empty : Result noble_kernel.types.EffSet :=
   _root_.noble_kernel.types.EffSet.empty
@@ -1376,8 +1409,15 @@ def noble_kernel.words.resolve.bindings
   let result ← _root_.noble_kernel.words.resolve.bindings
     (mapSlice toVariableKind kinds) (toInst inst) fuel
   match result with
-  | .Ok (resolved, remaining) => ok (.Ok (fromInst resolved, remaining))
+  | .Ok (resolved, fuel) => ok (.Ok (fromInst resolved, fuel))
   | .Err error => ok (.Err (fromInstError error))
+
+def noble_kernel.words.Scheme.validate (scheme : noble_kernel.words.Scheme) :
+    Result (core.result.Result Unit noble_kernel.shapes.Defect) := do
+  let result ← _root_.noble_kernel.words.Scheme.validate (toScheme scheme)
+  match result with
+  | .Ok () => ok (.Ok ())
+  | .Err error => ok (.Err (fromDefect error))
 
 namespace KernelBridge
 

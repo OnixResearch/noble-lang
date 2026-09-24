@@ -14,6 +14,7 @@ macro_rules! attempt {
 }
 
 pub mod companion;
+pub mod component;
 mod frontend;
 mod inference;
 mod metering;

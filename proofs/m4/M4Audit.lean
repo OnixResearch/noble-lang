@@ -1,20 +1,22 @@
 import NobleKernel.Funs
 import Lean
 
--- Aeneas emits colliding global discriminant instances across the frontend and
--- compiler. Each gate imports one lane against this shared kernel-only audit.
+-- The backend imports frontend types before its own generated declarations,
+-- preserving unique discriminant instances and auditing transitive dependencies.
 open Lean Elab Command
 
 set_option maxHeartbeats 1000000
 set_option maxRecDepth 2048
 
+namespace M4Audit
+
 private inductive AuditLane
   | contracts
   | wasm
 
-private def strictAxioms : List Name := [``propext, ``Classical.choice, ``Quot.sound]
+def strictAxioms : List Name := [``propext, ``Classical.choice, ``Quot.sound]
 
-private def definingModule (env : Environment) (decl : Name) : Name :=
+def definingModule (env : Environment) (decl : Name) : Name :=
   match env.getModuleIdxFor? decl with
   | some index => env.header.moduleNames[index.toNat]?.getD .anonymous
   | none => .anonymous
@@ -36,7 +38,8 @@ private def modelModules (lane : String) : List Name :=
   else if lane == "contracts" then [ `NobleContractImpl.FunsExternal,
     `NobleContractImpl.TypesExternal, `NobleContractImpl.StdModels, `NobleContractImpl.KernelBridge ]
   else if lane == "wasm" then [ `NobleWasmImpl.FunsExternal,
-    `NobleWasmImpl.TypesExternal, `NobleWasmImpl.StdModels, `NobleWasmImpl.KernelBridge ]
+    `NobleWasmImpl.TypesExternal, `NobleWasmImpl.StdModels,
+    `NobleWasmImpl.KernelBridge, `NobleWasmImpl.ContractsBridge ]
   else []
 
 private def literalStringSize (expression : Expr) : Bool := Id.run do
@@ -77,7 +80,7 @@ private def nativeStringBound (env : Environment) (decl : Name) : Bool := Id.run
 
 /-- Reuse the exact generated-literal size allowance in the separately labelled
 MC2 renderer audit. This does not make it a strict theorem axiom permission. -/
-def M4Audit.isGeneratedLiteralSizeAxiom (env : Environment) (decl : Name) : Bool :=
+def isGeneratedLiteralSizeAxiom (env : Environment) (decl : Name) : Bool :=
   nativeStringBound env decl
 
 /-- The inherited formatting model also elaborates closed `_proof_` lemmas
@@ -97,12 +100,12 @@ private def abstractFormatter (env : Environment) (decl : Name) : Bool :=
     !info.isUnsafe && info.levelParams.isEmpty && info.type == mkSort (.succ .zero)
   | _ => false
 
-private def declaration (env : Environment) (declName : Name) : CommandElabM ConstantInfo := do
+def declaration (env : Environment) (declName : Name) : CommandElabM ConstantInfo := do
   match env.find? declName with
   | some info => pure info
   | none => throwError "M4-DECLARATION: required declaration absent: {declName}"
 
-private def transparent (env : Environment) (declName : Name) : CommandElabM ConstantInfo := do
+def transparent (env : Environment) (declName : Name) : CommandElabM ConstantInfo := do
   match ← declaration env declName with
   | info@(.defnInfo value) =>
     unless value.safety == .safe do throwError "M4-TRANSPARENT: unsafe/partial definition: {declName}"
@@ -144,7 +147,7 @@ private def requireConstants (declName : Name) (expression : Expr) (required : L
 
 /-- Logical dependencies, including declaration types and values. This is not
 an execution trace or a universal correspondence result. -/
-private def reachable (env : Environment) (root : Name) : CommandElabM (Array Name) := do
+def reachable (env : Environment) (root : Name) : CommandElabM (Array Name) := do
   let mut seen : NameSet := {}
   let mut pending := #[root]
   while !pending.isEmpty do
@@ -159,17 +162,18 @@ private def reachable (env : Environment) (root : Name) : CommandElabM (Array Na
       if let .inductInfo value := info then pending := pending ++ value.ctors.toArray
   return seen.toArray.qsort Name.lt
 
-private def auditAxioms (env : Environment) (declName : Name) (strict : Bool)
-    (allowFormatter : Bool := false) : CommandElabM (Array Name) := do
+def auditAxioms (env : Environment) (declName : Name) (strict : Bool)
+    (allowFormatter : Bool := false) (code : String := "M4-AXIOM") :
+    CommandElabM (Array Name) := do
   let axioms ← liftCoreM (collectAxioms declName)
   for axiomName in axioms do
     unless strictAxioms.contains axiomName do
       unless !strict && (nativeStringBound env axiomName ||
           (allowFormatter && abstractFormatter env axiomName)) do
-        throwError "M4-AXIOM: disallowed axiom {axiomName} in {declName}"
+        throwError "{code}: disallowed axiom {axiomName} in {declName}"
   return axioms.qsort Name.lt
 
-private def kind : ConstantInfo → String
+def kind : ConstantInfo → String
   | .defnInfo _ => "definition"
   | .thmInfo _ => "theorem"
   | .axiomInfo _ => "axiom"
@@ -197,7 +201,10 @@ private def strictTheorems (lane : AuditLane) : List Name := Id.run do
        `NobleContractImpl.Projection.rejects_nonpure_word])
     | .wasm => (`noble_wasm.KernelBridge,
       ["Ty", "Candidate", "Request", "Env", "Outcome", "InstError"],
-      [`noble_wasm.KernelBridge.check_from_inputs])
+      [`noble_wasm.KernelBridge.check_from_inputs] ++
+        ["Type", "Operation", "Stage", "Error"].flatMap (fun type =>
+          let frontend := `noble_wasm.ContractsBridge
+          [frontend.mkStr s!"from{type}_to{type}", frontend.mkStr s!"to{type}_from{type}"]))
   return types.flatMap (fun type =>
     [bridge.mkStr s!"from{type}_to{type}", bridge.mkStr s!"to{type}_from{type}"]) ++ additional
 
@@ -262,7 +269,8 @@ elab "check_m4_extraction" laneSyntax:str : command => do
     let isType := root.getObjValAs? String "kind" == .ok "types"
     if !isType then
       let _ ← transparent env declName
-      if root.getObjValAs? String "method" == .ok "prepare" ||
+      if root.getObjValAs? Bool "requires_acceptance" == .ok true ||
+          root.getObjValAs? String "method" == .ok "prepare" ||
           root.getObjValAs? String "rust" == .ok "noble_wasm::compile" then
         unless closure.contains ``noble_kernel.acceptance.check do
           throwError "M4-ACCEPTANCE-DEPENDENCY: {declName} bypasses the actual extracted checker"
@@ -305,6 +313,12 @@ elab "check_m4_extraction" laneSyntax:str : command => do
     for declName in [bridge.mkStr s!"from{type}_to{type}", bridge.mkStr s!"to{type}_from{type}"] do
       requireConstants declName (← declaration env declName).type
         [bridge.mkStr s!"from{type}", bridge.mkStr s!"to{type}"]
+  if laneName == "wasm" then
+    let frontend := `noble_wasm.ContractsBridge
+    for type in ["Type", "Operation", "Stage", "Error"] do
+      for declName in [frontend.mkStr s!"from{type}_to{type}", frontend.mkStr s!"to{type}_from{type}"] do
+        requireConstants declName (← declaration env declName).type
+          [frontend.mkStr s!"from{type}", frontend.mkStr s!"to{type}"]
 
   -- Audit unused project declarations too: dead admitted models or theorems
   -- cannot hide behind a successful prepare dependency closure.
@@ -353,3 +367,5 @@ elab "check_m4_extraction" laneSyntax:str : command => do
     ("project_declarations", toJson ownedRecords), ("native_string_obligations", toJson nativeRecords),
     ("abstract_standard_types", toJson ((abstractTypes.toArray.qsort Name.lt).map Name.toString)),
     ("scope", toJson "actual-Rust extraction and logical dependency audit; no universal frontend, session, lowering or Wasm refinement")]).compress
+
+end M4Audit

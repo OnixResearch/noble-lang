@@ -105,7 +105,10 @@ fn named(
     };
     body.root = frame.sequence;
     let definition = noble_kernel::contracts::Definition(attempt!(crate::index(
-        frame.body.saturating_add(23),
+        frame
+            .body
+            .saturating_sub(1)
+            .saturating_add(state.definition_base),
         frame.span
     )));
     let parent = match parents.last_mut() {

@@ -1,0 +1,37 @@
+package noble-test:sync@1.0.0;
+
+interface arithmetic {
+  inc: func(x: s64) -> s64;
+}
+
+interface echo {
+  text: func(value: string) -> string;
+  bytes: func(value: list<u8>) -> list<u8>;
+}
+
+interface counters {
+  resource counter {
+    read: func() -> result<s64, string>;
+  }
+  transfer: func(value: own<counter>) -> result<s64, string>;
+}
+
+interface authorization {
+  resource authorization;
+  prepare: func(argument: s64) -> own<authorization>;
+  protected: func(witness: own<authorization>, argument: s64) -> s64;
+}
+
+world bootstrap {
+  use counters.{counter};
+  import arithmetic;
+  import echo;
+  import counters;
+  import authorization;
+  export inc: func(x: s64) -> s64;
+  export echo-text: func(value: string) -> string;
+  export echo-bytes: func(value: list<u8>) -> list<u8>;
+  export read-counter: func(value: own<counter>) -> own<counter>;
+  export transfer-counter: func(value: own<counter>) -> result<s64, string>;
+  export protected: func(argument: s64) -> s64;
+}

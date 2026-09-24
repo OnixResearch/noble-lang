@@ -96,7 +96,7 @@ let
   orderPass = gate policy (set observation [ "lake_manifest" "packages" ] reversed);
   negativeCases = [
     (badObservation "missing selected tool builds" "tool-build-set" [ "tool_paths" ] { })
-    (badPolicy "unselected Wasmtime build" "tool-build-set" [ "tool_paths" ]
+    (badPolicy "unselected Wasmtime CLI build" "tool-build-set" [ "tool_paths" ]
       (policy.tool_paths // { wasmtime = policy.tool_paths.node; }))
     (badObservation "missing verification tool versions" "verification-tool-set"
       [ "verification_tool_versions" ] { })
@@ -113,6 +113,12 @@ let
     (badPolicy "owned WAT claim limits removed" "owned-wasm-runtime-boundary"
       [ "owned_wasm_runtime" "non_claims" ] [ ])
     (badPolicy "unselected tool scope removed" "unselected-tool-set" [ "future_unselected" ] [ ])
+    (badPolicy "component peer profile promoted" "component-sync-selection"
+      [ "component_sync" "profile" ] "Component-Draft")
+    (badPolicy "component peer version changed" "component-sync-selection"
+      [ "component_sync" "wasmtime_version" ] "unreviewed")
+    (badObservation "component input source pin changed" "component-sync-selection"
+      [ "component_sync" "wasmtime_source_nar_hash" ] "sha256-unreviewed")
     (badPolicy "unknown policy schema" "selection-schema" [ "schema_version" ] "legacy")
     (badPolicy "missing reviewed source set" "source-pin-set" [ "sources" ] { })
     (badObservation "missing observed source set" "source-pin-set" [ "sources" ] { })

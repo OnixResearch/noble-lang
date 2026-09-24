@@ -281,7 +281,7 @@ fn rejection_shapes(
         depth: request.limits.depth,
         work: request.limits.work.min(4096),
     });
-    let mut arena = crate::inference::Arena::source(true);
+    let mut arena = crate::inference::Arena::source(u64::MAX, true);
     let expected = attempt!(arena.stack(&diagnostic.expected, span, &mut meter));
     let actual = attempt!(arena.stack(&diagnostic.actual, span, &mut meter));
     arena.join_message(expected, actual, span, &mut meter)

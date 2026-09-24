@@ -64,7 +64,7 @@ impl Traversal {
                 let ty = attempt!(crate::source::preflight::paths::locate(
                     root, &self.path, span
                 ));
-                match attempt!(self.visit(ty, depth, span)) {
+                match self.visit(ty, depth) {
                     Some(value) => value,
                     None => return Ok(()),
                 }
@@ -78,14 +78,13 @@ impl Traversal {
 
     #[expect(
         tigerstyle::missing_const_fn,
-        reason = "Owner: noble-maintainers; each charged type visit appends owned child selectors rather than cloning recursive types; the bounded worklist allocates and resource types return a diagnostic."
+        reason = "Owner: noble-maintainers; each charged type visit appends owned child selectors rather than cloning recursive types; the bounded worklist allocates."
     )]
     fn visit(
         &mut self,
         ty: &noble_kernel::types::Ty,
         depth: usize,
-        span: crate::Span,
-    ) -> Result<Option<noble_kernel::shapes::Pattern>, crate::Diagnostic> {
+    ) -> Option<noble_kernel::shapes::Pattern> {
         let next_depth = depth.saturating_add(1);
         let value = match ty {
             noble_kernel::types::Ty::Unit => noble_kernel::shapes::Pattern::Unit,
@@ -96,11 +95,8 @@ impl Traversal {
             noble_kernel::types::Ty::Contract => noble_kernel::shapes::Pattern::Contract,
             noble_kernel::types::Ty::Evidence => noble_kernel::shapes::Pattern::Evidence,
             noble_kernel::types::Ty::Certified => noble_kernel::shapes::Pattern::Certified,
-            noble_kernel::types::Ty::Resource(_) => {
-                return Err(crate::invalid(
-                    span,
-                    "resource type in source specialization",
-                ));
+            noble_kernel::types::Ty::Resource(kind) => {
+                noble_kernel::shapes::Pattern::Resource(*kind)
             }
             noble_kernel::types::Ty::Pair(_, _) | noble_kernel::types::Ty::Sum(_, _) => {
                 self.pending.reserve(3);
@@ -118,7 +114,7 @@ impl Traversal {
                     crate::source::preflight::PathStep::Left,
                     next_depth,
                 ));
-                return Ok(None);
+                return None;
             }
             noble_kernel::types::Ty::List(_) => {
                 self.pending.reserve(2);
@@ -127,17 +123,17 @@ impl Traversal {
                     crate::source::preflight::PathStep::Item,
                     next_depth,
                 ));
-                return Ok(None);
+                return None;
             }
             noble_kernel::types::Ty::Program(input, output, _) => {
                 self.pending.reserve(1);
                 self.pending.push(Step::Program(depth));
                 self.schedule(output.len(), true);
                 self.schedule(input.len(), false);
-                return Ok(None);
+                return None;
             }
         };
-        Ok(Some(value))
+        Some(value)
     }
 
     fn schedule(&mut self, count: usize, is_output: bool) {

@@ -78,6 +78,11 @@ fn lookup(
     if let Some(target) = found {
         return Ok(target);
     }
+    if let Some(bindings) = &session.bindings {
+        if let Some(target) = attempt!(imported(word, bindings, span, meter)) {
+            return Ok(target);
+        }
+    }
     if let Some(definition) = crate::program::bootstrap_word(word) {
         if definition.0 < 22 || session.hosts {
             return Ok(super::Target::Builtin(definition.0));
@@ -105,6 +110,43 @@ fn lookup(
         span,
         "unbound word in immutable namespace snapshot",
     ))
+}
+
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; the finite generated-binding scan charges each compared name and propagates index or meter failure before returning an optional exact match."
+)]
+fn imported(
+    word: &[u8],
+    bindings: &crate::component::Bindings,
+    span: crate::Span,
+    meter: &mut crate::Meter,
+) -> Result<Option<super::Target>, crate::Diagnostic> {
+    let mut at = 0usize;
+    let mut found = None;
+    let mut failure = None;
+    while let Some((name, definition)) = bindings.words.get(at) {
+        let count = match crate::index(name.len(), span) {
+            Ok(count) => count,
+            Err(problem) => {
+                failure = Some(problem);
+                break;
+            }
+        };
+        if let Err(problem) = meter.charge(count, span) {
+            failure = Some(problem);
+            break;
+        }
+        if name.as_bytes() == word {
+            found = Some(super::Target::Builtin(definition.0));
+            break;
+        }
+        at = at.saturating_add(1);
+    }
+    match failure {
+        Some(problem) => Err(problem),
+        None => Ok(found),
+    }
 }
 
 #[expect(

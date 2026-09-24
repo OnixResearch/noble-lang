@@ -1,2 +1,3 @@
 import NobleWasmImpl.StdModels
 import NobleWasmImpl.KernelBridge
+import NobleWasmImpl.ContractsBridge

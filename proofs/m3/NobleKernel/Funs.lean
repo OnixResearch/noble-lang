@@ -5475,6 +5475,5635 @@ def acceptance.parts.Site.Insts.CoreMarkerCopy : core.marker.Copy
   cloneInst := acceptance.parts.Site.Insts.CoreCloneClone
 }
 
+/-- [noble_kernel::authority::receipts::{noble_kernel::authority::Authority}::preflight]:
+    Source: 'crates/noble-kernel/src/authority/receipts.rs', lines 146:4-168:5 -/
+def authority.receipts.Authority.preflight
+  (self : authority.Authority) (plan : authority.Plan)
+  (failure : authority.permit.PreflightFailure)
+  (scope : authority.report.ReceiptScope) :
+  Result authority.report.Rejection
+  := do
+  ok
+    {
+      receipt :=
+        {
+          description :=
+            {
+              plan,
+              boundary_owner := self.profile.owner,
+              attempt := none,
+              source := self.profile.authority_source,
+              checkpoint := self.profile.checkpoint,
+              claim := authority.report.ReceiptClaim.PreflightFailure,
+              scope,
+              invocation := self.invocation,
+              denial := none,
+              preflight := (some failure)
+            }
+        }
+    }
+
+/-- [noble_kernel::authority::receipts::{noble_kernel::authority::Authority}::deny]:
+    Source: 'crates/noble-kernel/src/authority/receipts.rs', lines 122:4-144:5 -/
+def authority.receipts.Authority.deny
+  (self : authority.Authority) (plan : authority.Plan)
+  (denial : authority.permit.Denial) (scope : authority.report.ReceiptScope) :
+  Result authority.report.Rejection
+  := do
+  ok
+    {
+      receipt :=
+        {
+          description :=
+            {
+              plan,
+              boundary_owner := self.profile.owner,
+              attempt := none,
+              source := self.profile.authority_source,
+              checkpoint := self.profile.checkpoint,
+              claim := authority.report.ReceiptClaim.Denial,
+              scope,
+              invocation := self.invocation,
+              denial := (some denial),
+              preflight := none
+            }
+        }
+    }
+
+/-- [noble_kernel::authority::{impl core::clone::Clone for noble_kernel::authority::Constraints}::clone]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 67:9-67:14
+    Visibility: public -/
+def authority.Constraints.Insts.CoreCloneClone.clone
+  (self : authority.Constraints) : Result authority.Constraints := do
+  ok self
+
+/-- [noble_kernel::authority::{impl core::clone::Clone for noble_kernel::authority::OperationContract}::clone]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 61:9-61:14
+    Visibility: public -/
+def authority.OperationContract.Insts.CoreCloneClone.clone
+  (self : authority.OperationContract) :
+  Result authority.OperationContract
+  := do
+  let v ← alloc.vec.CloneVec.clone core.clone.CloneU8 self.name
+  let ei ← types.EffId.Insts.CoreCloneClone.clone self.effect
+  ok { «name» := v, effect := ei }
+
+/-- [noble_kernel::authority::{impl core::clone::Clone for noble_kernel::authority::OwnerContext}::clone]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 46:9-46:14
+    Visibility: public -/
+def authority.OwnerContext.Insts.CoreCloneClone.clone
+  (self : authority.OwnerContext) : Result authority.OwnerContext := do
+  ok self
+
+/-- [noble_kernel::authority::{impl core::clone::Clone for noble_kernel::authority::PolicyRevision}::clone]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 38:9-38:14
+    Visibility: public -/
+def authority.PolicyRevision.Insts.CoreCloneClone.clone
+  (self : authority.PolicyRevision) : Result authority.PolicyRevision := do
+  ok self
+
+/-- [noble_kernel::authority::{impl core::clone::Clone for noble_kernel::authority::ActorId}::clone]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 36:9-36:14
+    Visibility: public -/
+def authority.ActorId.Insts.CoreCloneClone.clone
+  (self : authority.ActorId) : Result authority.ActorId := do
+  ok self
+
+/-- [noble_kernel::authority::{impl core::clone::Clone for noble_kernel::authority::PlanDescription}::clone]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 78:9-78:14
+    Visibility: public -/
+def authority.PlanDescription.Insts.CoreCloneClone.clone
+  (self : authority.PlanDescription) : Result authority.PlanDescription := do
+  let oc ←
+    authority.OperationContract.Insts.CoreCloneClone.clone self.operation
+  let v ← alloc.vec.CloneVec.clone core.clone.CloneU8 self.arguments
+  let ai ← authority.ActorId.Insts.CoreCloneClone.clone self.actor
+  let oc1 ← authority.OwnerContext.Insts.CoreCloneClone.clone self.owner
+  let pr ← authority.PolicyRevision.Insts.CoreCloneClone.clone self.policy
+  let c ← authority.Constraints.Insts.CoreCloneClone.clone self.constraints
+  ok
+    {
+      operation := oc,
+      arguments := v,
+      actor := ai,
+      owner := oc1,
+      policy := pr,
+      constraints := c
+    }
+
+/-- [noble_kernel::authority::{impl core::clone::Clone for noble_kernel::authority::Plan}::clone]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 89:9-89:14
+    Visibility: public -/
+def authority.Plan.Insts.CoreCloneClone.clone
+  (self : authority.Plan) : Result authority.Plan := do
+  let pd ←
+    authority.PlanDescription.Insts.CoreCloneClone.clone self.description
+  ok { description := pd }
+
+/-- [noble_kernel::authority::facts::{noble_kernel::authority::Authority}::request_available]:
+    Source: 'crates/noble-kernel/src/authority/facts.rs', lines 139:4-148:5 -/
+def authority.facts.Authority.request_available
+  (self : authority.Authority) : Result Bool := do
+  let o ←
+    lift (U32.checked_add self.counters.authorization_requests
+      self.counters.admission_requests)
+  match o with
+  | none => ok false
+  | some requests => ok (requests < self.profile.limits.requests)
+
+/-- [noble_kernel::authority::{impl core::cmp::PartialEq<noble_kernel::authority::Checkpoint> for noble_kernel::authority::Checkpoint}::eq]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 54:29-54:38
+    Visibility: public -/
+def authority.Checkpoint.Insts.CoreCmpPartialEqCheckpoint.eq
+  (self : authority.Checkpoint) (other : authority.Checkpoint) :
+  Result Bool
+  := do
+  if self.sequence = other.sequence
+  then ok (self.now = other.now)
+  else ok false
+
+/-- [noble_kernel::authority::{impl core::cmp::PartialEq<noble_kernel::authority::QuotaId> for noble_kernel::authority::QuotaId}::eq]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 42:29-42:38
+    Visibility: public -/
+def authority.QuotaId.Insts.CoreCmpPartialEqQuotaId.eq
+  (self : authority.QuotaId) (other : authority.QuotaId) : Result Bool := do
+  ok (self = other)
+
+/-- [noble_kernel::authority::facts::{noble_kernel::authority::Authority}::quota_position]: loop body 0:
+    Source: 'crates/noble-kernel/src/authority/facts.rs', lines 205:8-215:5 -/
+@[rust_loop_body]
+def authority.facts.Authority.quota_position_loop.body
+  (self : authority.Authority) (plan : authority.Plan) (index : Std.Usize) :
+  Result (ControlFlow Std.Usize (Option Std.Usize))
+  := do
+  let i := alloc.vec.Vec.len self.quotas
+  if index < i
+  then
+    let record ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        authority.QuotaRecord) self.quotas index
+    let b ←
+      authority.QuotaId.Insts.CoreCmpPartialEqQuotaId.eq record.quota
+        plan.description.constraints.quota
+    if b
+    then
+      let b1 ←
+        authority.Checkpoint.Insts.CoreCmpPartialEqCheckpoint.eq
+          record.checkpoint self.profile.checkpoint
+      if b1
+      then ok (done (some index))
+      else let index1 ← index + 1#usize
+           ok (cont index1)
+    else let index1 ← index + 1#usize
+         ok (cont index1)
+  else ok (done none)
+
+/-- [noble_kernel::authority::facts::{noble_kernel::authority::Authority}::quota_position]: loop 0:
+    Source: 'crates/noble-kernel/src/authority/facts.rs', lines 205:8-215:5 -/
+@[rust_loop]
+def authority.facts.Authority.quota_position_loop
+  (self : authority.Authority) (plan : authority.Plan) (index : Std.Usize) :
+  Result (Option Std.Usize)
+  := do
+  loop
+    (fun index1 => authority.facts.Authority.quota_position_loop.body self plan
+      index1)
+    index
+
+/-- [noble_kernel::authority::facts::{noble_kernel::authority::Authority}::quota_position]:
+    Source: 'crates/noble-kernel/src/authority/facts.rs', lines 203:4-215:5 -/
+@[reducible]
+def authority.facts.Authority.quota_position
+  (self : authority.Authority) (plan : authority.Plan) :
+  Result (Option Std.Usize)
+  := do
+  authority.facts.Authority.quota_position_loop self plan 0#usize
+
+/-- [noble_kernel::authority::admission::{noble_kernel::authority::Authority}::charge_quota]:
+    Source: 'crates/noble-kernel/src/authority/admission.rs', lines 147:4-167:5 -/
+def authority.admission.Authority.charge_quota
+  (self : authority.Authority) (plan : authority.Plan) (available : Std.U64) :
+  Result ((core.result.Result Unit authority.permit.Denial) ×
+    authority.Authority)
+  := do
+  let o ← authority.facts.Authority.quota_position self plan
+  match o with
+  | none =>
+    let v ←
+      alloc.vec.Vec.push self.quotas
+        ({
+           quota := plan.description.constraints.quota,
+           checkpoint := self.profile.checkpoint,
+           available,
+           spent := plan.description.constraints.units
+         } : authority.QuotaRecord)
+    ok (core.result.Result.Ok (), { self with quotas := v })
+  | some index =>
+    let qr ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        authority.QuotaRecord) self.quotas index
+    let o1 ←
+      lift (U64.checked_add qr.spent plan.description.constraints.units)
+    match o1 with
+    | none =>
+      ok (core.result.Result.Err authority.permit.Denial.QuotaExhausted, self)
+    | some spent =>
+      let (qr1, index_mut_back) ←
+        alloc.vec.Vec.index_mut (core.slice.index.SliceIndexUsizeSlice
+          authority.QuotaRecord) self.quotas index
+      let v := index_mut_back { qr1 with spent }
+      ok (core.result.Result.Ok (), { self with quotas := v })
+
+/-- [noble_kernel::authority::admission::{noble_kernel::authority::Authority}::commit]:
+    Source: 'crates/noble-kernel/src/authority/admission.rs', lines 112:4-140:5 -/
+def authority.admission.Authority.commit
+  (self : authority.Authority) (request : authority.permit.AdmissionRequest)
+  (available : Std.U64) (admitted : Std.U32) :
+  Result ((core.result.Result authority.permit.Execution
+    authority.permit.Denial) × authority.Authority)
+  := do
+  let i := alloc.vec.Vec.len self.attempts
+  let i1 ← lift (core.convert.num.FromU64U32.from admitted)
+  let p ← authority.Plan.Insts.CoreCloneClone.clone request.plan
+  let (r, self1) ←
+    authority.admission.Authority.charge_quota self request.plan available
+  match r with
+  | core.result.Result.Ok _ =>
+    let (wr, index_mut_back) ←
+      alloc.vec.Vec.index_mut (core.slice.index.SliceIndexUsizeSlice
+        authority.WitnessRecord) self1.witnesses request.claim.slot
+    let v ←
+      alloc.vec.Vec.push self1.attempts
+        ({
+           key := { owner := self.profile.owner, slot := i, generation := i1 },
+           plan := p,
+           started := false,
+           admitted := self.profile.checkpoint,
+           unknown := none,
+           terminal := none
+         } : authority.AttemptRecord)
+    let v1 :=
+      index_mut_back
+        { wr with state := authority.permit.WitnessState.Consumed }
+    ok (core.result.Result.Ok
+      { attempt := { owner := self.profile.owner, slot := i, generation := i1 }
+      },
+      {
+        self1
+          with
+          witnesses := v1,
+          attempts := v,
+          counters :=
+            {
+              self1.counters
+                with
+                witness_consumptions := admitted, attempts_admitted := admitted
+            }
+      })
+  | core.result.Result.Err denial => ok (core.result.Result.Err denial, self1)
+
+/-- [noble_kernel::authority::{impl core::cmp::PartialEq<noble_kernel::authority::OwnerContext> for noble_kernel::authority::OwnerContext}::eq]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 46:29-46:38
+    Visibility: public -/
+def authority.OwnerContext.Insts.CoreCmpPartialEqOwnerContext.eq
+  (self : authority.OwnerContext) (other : authority.OwnerContext) :
+  Result Bool
+  := do
+  if self.instance = other.instance
+  then
+    if self.invocation = other.invocation
+    then ok (self.generation = other.generation)
+    else ok false
+  else ok false
+
+/-- [noble_kernel::authority::permit::{impl core::cmp::PartialEq<noble_kernel::authority::permit::WitnessClaim> for noble_kernel::authority::permit::WitnessClaim}::eq]:
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 42:29-42:38
+    Visibility: public -/
+def authority.permit.WitnessClaim.Insts.CoreCmpPartialEqWitnessClaim.eq
+  (self : authority.permit.WitnessClaim)
+  (other : authority.permit.WitnessClaim) :
+  Result Bool
+  := do
+  if self.generation = other.generation
+  then
+    if self.rights = other.rights
+    then
+      if self.scope = other.scope
+      then
+        let b ←
+          authority.OwnerContext.Insts.CoreCmpPartialEqOwnerContext.eq
+            self.owner other.owner
+        if b
+        then
+          if self.slot = other.slot
+          then
+            types.ResourceKind.Insts.CoreCmpPartialEqResourceKind.eq 
+              self.kind other.kind
+          else ok false
+        else ok false
+      else ok false
+    else ok false
+  else ok false
+
+/-- Trait implementation: [noble_kernel::authority::permit::{impl core::cmp::PartialEq<noble_kernel::authority::permit::WitnessClaim> for noble_kernel::authority::permit::WitnessClaim}]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 42:29-42:38 -/
+@[reducible]
+impl_def authority.permit.WitnessClaim.Insts.CoreCmpPartialEqWitnessClaim :
+  core.cmp.PartialEq authority.permit.WitnessClaim
+  authority.permit.WitnessClaim := {
+  eq := authority.permit.WitnessClaim.Insts.CoreCmpPartialEqWitnessClaim.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    authority.permit.WitnessClaim.Insts.CoreCmpPartialEqWitnessClaim
+}
+
+/-- [noble_kernel::authority::{impl core::cmp::PartialEq<noble_kernel::authority::Constraints> for noble_kernel::authority::Constraints}::eq]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 67:29-67:38
+    Visibility: public -/
+def authority.Constraints.Insts.CoreCmpPartialEqConstraints.eq
+  (self : authority.Constraints) (other : authority.Constraints) :
+  Result Bool
+  := do
+  if self.not_before = other.not_before
+  then
+    if self.expires_at = other.expires_at
+    then
+      if self.units = other.units
+      then
+        if self.scope = other.scope
+        then
+          authority.QuotaId.Insts.CoreCmpPartialEqQuotaId.eq self.quota
+            other.quota
+        else ok false
+      else ok false
+    else ok false
+  else ok false
+
+/-- [noble_kernel::authority::{impl core::cmp::PartialEq<noble_kernel::authority::OperationContract> for noble_kernel::authority::OperationContract}::eq]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 61:23-61:32
+    Visibility: public -/
+def authority.OperationContract.Insts.CoreCmpPartialEqOperationContract.eq
+  (self : authority.OperationContract) (other : authority.OperationContract) :
+  Result Bool
+  := do
+  let b ←
+    alloc.vec.partial_eq.PartialEqVec.eq core.cmp.PartialEqU8 self.name
+      other.name
+  if b
+  then types.EffId.Insts.CoreCmpPartialEqEffId.eq self.effect other.effect
+  else ok false
+
+/-- [noble_kernel::authority::{impl core::cmp::PartialEq<noble_kernel::authority::PolicyRevision> for noble_kernel::authority::PolicyRevision}::eq]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 38:29-38:38
+    Visibility: public -/
+def authority.PolicyRevision.Insts.CoreCmpPartialEqPolicyRevision.eq
+  (self : authority.PolicyRevision) (other : authority.PolicyRevision) :
+  Result Bool
+  := do
+  ok (self = other)
+
+/-- [noble_kernel::authority::{impl core::cmp::PartialEq<noble_kernel::authority::ActorId> for noble_kernel::authority::ActorId}::eq]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 36:29-36:38
+    Visibility: public -/
+def authority.ActorId.Insts.CoreCmpPartialEqActorId.eq
+  (self : authority.ActorId) (other : authority.ActorId) : Result Bool := do
+  ok (self = other)
+
+/-- [noble_kernel::authority::{impl core::cmp::PartialEq<noble_kernel::authority::PlanDescription> for noble_kernel::authority::PlanDescription}::eq]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 78:23-78:32
+    Visibility: public -/
+def authority.PlanDescription.Insts.CoreCmpPartialEqPlanDescription.eq
+  (self : authority.PlanDescription) (other : authority.PlanDescription) :
+  Result Bool
+  := do
+  let b ←
+    authority.OperationContract.Insts.CoreCmpPartialEqOperationContract.eq
+      self.operation other.operation
+  if b
+  then
+    let b1 ←
+      alloc.vec.partial_eq.PartialEqVec.eq core.cmp.PartialEqU8 self.arguments
+        other.arguments
+    if b1
+    then
+      let b2 ←
+        authority.ActorId.Insts.CoreCmpPartialEqActorId.eq self.actor
+          other.actor
+      if b2
+      then
+        let b3 ←
+          authority.OwnerContext.Insts.CoreCmpPartialEqOwnerContext.eq
+            self.owner other.owner
+        if b3
+        then
+          let b4 ←
+            authority.PolicyRevision.Insts.CoreCmpPartialEqPolicyRevision.eq
+              self.policy other.policy
+          if b4
+          then
+            authority.Constraints.Insts.CoreCmpPartialEqConstraints.eq
+              self.constraints other.constraints
+          else ok false
+        else ok false
+      else ok false
+    else ok false
+  else ok false
+
+/-- [noble_kernel::authority::{impl core::cmp::PartialEq<noble_kernel::authority::Plan> for noble_kernel::authority::Plan}::eq]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 89:23-89:32
+    Visibility: public -/
+def authority.Plan.Insts.CoreCmpPartialEqPlan.eq
+  (self : authority.Plan) (other : authority.Plan) : Result Bool := do
+  authority.PlanDescription.Insts.CoreCmpPartialEqPlanDescription.eq
+    self.description other.description
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::cmp::PartialEq<noble_kernel::authority::Plan> for noble_kernel::authority::Plan}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 89:23-89:32 -/
+@[reducible]
+impl_def authority.Plan.Insts.CoreCmpPartialEqPlan : core.cmp.PartialEq
+  authority.Plan authority.Plan := {
+  eq := authority.Plan.Insts.CoreCmpPartialEqPlan.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    authority.Plan.Insts.CoreCmpPartialEqPlan
+}
+
+/-- [noble_kernel::authority::report::{impl core::cmp::PartialEq<noble_kernel::authority::report::InvocationOutcome> for noble_kernel::authority::report::InvocationOutcome}::eq]:
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 1:29-1:38
+    Visibility: public -/
+def
+  authority.report.InvocationOutcome.Insts.CoreCmpPartialEqInvocationOutcome.eq
+  (self : authority.report.InvocationOutcome)
+  (other : authority.report.InvocationOutcome) :
+  Result Bool
+  := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  ok (self1 = other1)
+
+/-- Trait implementation: [noble_kernel::authority::report::{impl core::cmp::PartialEq<noble_kernel::authority::report::InvocationOutcome> for noble_kernel::authority::report::InvocationOutcome}]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 1:29-1:38 -/
+@[reducible]
+impl_def
+  authority.report.InvocationOutcome.Insts.CoreCmpPartialEqInvocationOutcome :
+  core.cmp.PartialEq authority.report.InvocationOutcome
+  authority.report.InvocationOutcome := {
+  eq :=
+    authority.report.InvocationOutcome.Insts.CoreCmpPartialEqInvocationOutcome.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    authority.report.InvocationOutcome.Insts.CoreCmpPartialEqInvocationOutcome
+}
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::cmp::PartialEq<noble_kernel::authority::Checkpoint> for noble_kernel::authority::Checkpoint}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 54:29-54:38 -/
+@[reducible]
+impl_def authority.Checkpoint.Insts.CoreCmpPartialEqCheckpoint :
+  core.cmp.PartialEq authority.Checkpoint authority.Checkpoint := {
+  eq := authority.Checkpoint.Insts.CoreCmpPartialEqCheckpoint.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    authority.Checkpoint.Insts.CoreCmpPartialEqCheckpoint
+}
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::cmp::PartialEq<noble_kernel::authority::OwnerContext> for noble_kernel::authority::OwnerContext}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 46:29-46:38 -/
+@[reducible]
+impl_def authority.OwnerContext.Insts.CoreCmpPartialEqOwnerContext :
+  core.cmp.PartialEq authority.OwnerContext authority.OwnerContext := {
+  eq := authority.OwnerContext.Insts.CoreCmpPartialEqOwnerContext.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    authority.OwnerContext.Insts.CoreCmpPartialEqOwnerContext
+}
+
+/-- [noble_kernel::authority::{impl core::cmp::PartialEq<noble_kernel::authority::SourceId> for noble_kernel::authority::SourceId}::eq]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 40:29-40:38
+    Visibility: public -/
+def authority.SourceId.Insts.CoreCmpPartialEqSourceId.eq
+  (self : authority.SourceId) (other : authority.SourceId) : Result Bool := do
+  ok (self = other)
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::cmp::PartialEq<noble_kernel::authority::SourceId> for noble_kernel::authority::SourceId}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 40:29-40:38 -/
+@[reducible]
+impl_def authority.SourceId.Insts.CoreCmpPartialEqSourceId : core.cmp.PartialEq
+  authority.SourceId authority.SourceId := {
+  eq := authority.SourceId.Insts.CoreCmpPartialEqSourceId.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    authority.SourceId.Insts.CoreCmpPartialEqSourceId
+}
+
+/-- [noble_kernel::authority::facts::current_status]:
+    Source: 'crates/noble-kernel/src/authority/facts.rs', lines 251:0-277:1 -/
+def authority.facts.current_status
+  (plan : authority.Plan) (facts : authority.CurrentFacts) :
+  Result (core.result.Result Unit authority.permit.Denial)
+  := do
+  match facts.credentials_valid with
+  | none => ok (core.result.Result.Err authority.permit.Denial.MissingFacts)
+  | some b =>
+    if b
+    then
+      match facts.revoked with
+      | none =>
+        ok (core.result.Result.Err authority.permit.Denial.MissingFacts)
+      | some b1 =>
+        if b1
+        then ok (core.result.Result.Err authority.permit.Denial.Revoked)
+        else
+          match facts.policy with
+          | none =>
+            ok (core.result.Result.Err authority.permit.Denial.MissingFacts)
+          | some policy =>
+            let i := plan.description.policy
+            if policy = i
+            then
+              if facts.checkpoint.now < plan.description.constraints.not_before
+              then
+                ok (core.result.Result.Err authority.permit.Denial.NotYetValid)
+              else
+                if facts.checkpoint.now >=
+                  plan.description.constraints.expires_at
+                then
+                  ok (core.result.Result.Err authority.permit.Denial.Expired)
+                else ok (core.result.Result.Ok ())
+            else
+              ok (core.result.Result.Err authority.permit.Denial.ChangedPolicy)
+    else ok (core.result.Result.Err authority.permit.Denial.InvalidCredentials)
+
+/-- [noble_kernel::authority::facts::{noble_kernel::authority::Authority}::validate_quota]:
+    Source: 'crates/noble-kernel/src/authority/facts.rs', lines 221:4-244:5 -/
+def authority.facts.Authority.validate_quota
+  (self : authority.Authority) (plan : authority.Plan)
+  (facts : authority.CurrentFacts) :
+  Result (core.result.Result Unit authority.permit.Denial)
+  := do
+  match facts.quota_remaining with
+  | none => ok (core.result.Result.Err authority.permit.Denial.MissingFacts)
+  | some available =>
+    let o ← authority.facts.Authority.quota_position self plan
+    match o with
+    | none =>
+      let o1 ← lift (U64.checked_sub available 0#u64)
+      match o1 with
+      | none =>
+        ok (core.result.Result.Err authority.permit.Denial.QuotaExhausted)
+      | some remaining =>
+        if remaining >= plan.description.constraints.units
+        then ok (core.result.Result.Ok ())
+        else ok (core.result.Result.Err authority.permit.Denial.QuotaExhausted)
+    | some index =>
+      let record ←
+        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+          authority.QuotaRecord) self.quotas index
+      if record.available != available
+      then
+        ok (core.result.Result.Err authority.permit.Denial.InconsistentQuota)
+      else
+        let o1 ← lift (U64.checked_sub available record.spent)
+        match o1 with
+        | none =>
+          ok (core.result.Result.Err authority.permit.Denial.QuotaExhausted)
+        | some remaining =>
+          if remaining >= plan.description.constraints.units
+          then ok (core.result.Result.Ok ())
+          else
+            ok (core.result.Result.Err authority.permit.Denial.QuotaExhausted)
+
+/-- Trait implementation: [noble_kernel::types::{impl core::cmp::PartialEq<noble_kernel::types::ResourceKind> for noble_kernel::types::ResourceKind}]
+    Source: 'crates/noble-kernel/src/types.rs', lines 14:29-14:38 -/
+@[reducible]
+impl_def types.ResourceKind.Insts.CoreCmpPartialEqResourceKind :
+  core.cmp.PartialEq types.ResourceKind types.ResourceKind := {
+  eq := types.ResourceKind.Insts.CoreCmpPartialEqResourceKind.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    types.ResourceKind.Insts.CoreCmpPartialEqResourceKind
+}
+
+/-- [noble_kernel::authority::EXECUTE_RIGHT]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 31:0-31:33
+    Visibility: public -/
+@[global_simps, irreducible] def authority.EXECUTE_RIGHT : Std.U32 := 1#u32
+
+/-- [noble_kernel::authority::facts::{noble_kernel::authority::Authority}::validate_grant]:
+    Source: 'crates/noble-kernel/src/authority/facts.rs', lines 182:4-201:5 -/
+def authority.facts.Authority.validate_grant
+  (self : authority.Authority) (plan : authority.Plan)
+  (facts : authority.CurrentFacts) :
+  Result (core.result.Result Unit authority.permit.Denial)
+  := do
+  match facts.grant with
+  | none => ok (core.result.Result.Err authority.permit.Denial.MissingFacts)
+  | some grant =>
+    let b ←
+      core.cmp.PartialEq.ne.trait_default
+        types.ResourceKind.Insts.CoreCmpPartialEqResourceKind grant.kind
+        self.profile.witness_kind
+    if b
+    then ok (core.result.Result.Err authority.permit.Denial.WrongResourceKind)
+    else
+      let i ← lift (grant.rights &&& authority.EXECUTE_RIGHT)
+      if i = 0#u32
+      then ok (core.result.Result.Err authority.permit.Denial.MissingRights)
+      else
+        let b1 ←
+          core.cmp.PartialEq.ne.trait_default
+            authority.Plan.Insts.CoreCmpPartialEqPlan grant.plan plan
+        if b1
+        then ok (core.result.Result.Err authority.permit.Denial.ChangedPlan)
+        else ok (core.result.Result.Ok ())
+
+/-- [noble_kernel::authority::facts::{noble_kernel::authority::Authority}::validate_facts]:
+    Source: 'crates/noble-kernel/src/authority/facts.rs', lines 150:4-176:5 -/
+def authority.facts.Authority.validate_facts
+  (self : authority.Authority) (plan : authority.Plan)
+  (facts : authority.CurrentFacts) :
+  Result (core.result.Result Unit authority.permit.Denial)
+  := do
+  let b ←
+    core.cmp.PartialEq.ne.trait_default
+      authority.report.InvocationOutcome.Insts.CoreCmpPartialEqInvocationOutcome
+      self.invocation authority.report.InvocationOutcome.Pending
+  if b
+  then ok (core.result.Result.Err authority.permit.Denial.InvocationFinished)
+  else
+    let b1 ←
+      core.cmp.PartialEq.ne.trait_default
+        authority.OwnerContext.Insts.CoreCmpPartialEqOwnerContext
+        plan.description.owner self.profile.owner
+    if b1
+    then ok (core.result.Result.Err authority.permit.Denial.WrongOwnerContext)
+    else
+      let b2 ←
+        core.cmp.PartialEq.ne.trait_default
+          authority.SourceId.Insts.CoreCmpPartialEqSourceId facts.source
+          self.profile.authority_source
+      if b2
+      then
+        ok (core.result.Result.Err
+          authority.permit.Denial.WrongAuthoritySource)
+      else
+        let b3 ←
+          core.cmp.PartialEq.ne.trait_default
+            authority.Checkpoint.Insts.CoreCmpPartialEqCheckpoint
+            facts.checkpoint self.profile.checkpoint
+        if b3
+        then ok (core.result.Result.Err authority.permit.Denial.StaleFacts)
+        else
+          let r ← authority.facts.Authority.validate_grant self plan facts
+          match r with
+          | core.result.Result.Ok _ =>
+            let r1 ← authority.facts.current_status plan facts
+            match r1 with
+            | core.result.Result.Ok _ =>
+              authority.facts.Authority.validate_quota self plan facts
+            | core.result.Result.Err _ => ok r1
+          | core.result.Result.Err _ => ok r
+
+/-- [noble_kernel::authority::admission::{noble_kernel::authority::Authority}::witness_record]:
+    Source: 'crates/noble-kernel/src/authority/admission.rs', lines 169:4-196:5 -/
+def authority.admission.Authority.witness_record
+  (self : authority.Authority) (claim : authority.permit.WitnessClaim) :
+  Result (core.result.Result authority.WitnessRecord authority.permit.Denial)
+  := do
+  let b ←
+    core.cmp.PartialEq.ne.trait_default
+      authority.OwnerContext.Insts.CoreCmpPartialEqOwnerContext claim.owner
+      self.profile.owner
+  if b
+  then ok (core.result.Result.Err authority.permit.Denial.WrongOwnerContext)
+  else
+    let s := alloc.vec.Vec.deref self.witnesses
+    let o ←
+      core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice
+        authority.WitnessRecord) s claim.slot
+    match o with
+    | none =>
+      ok (core.result.Result.Err authority.permit.Denial.UnknownWitness)
+    | some record =>
+      if claim.generation != record.claim.generation
+      then ok (core.result.Result.Err authority.permit.Denial.StaleGeneration)
+      else
+        let b1 ←
+          core.cmp.PartialEq.ne.trait_default
+            types.ResourceKind.Insts.CoreCmpPartialEqResourceKind claim.kind
+            record.claim.kind
+        if b1
+        then
+          ok (core.result.Result.Err authority.permit.Denial.WrongResourceKind)
+        else
+          if claim.rights != record.claim.rights
+          then
+            ok (core.result.Result.Err authority.permit.Denial.MissingRights)
+          else
+            let i ← lift (claim.rights &&& authority.EXECUTE_RIGHT)
+            if i = 0#u32
+            then
+              ok (core.result.Result.Err authority.permit.Denial.MissingRights)
+            else
+              if claim.scope != record.claim.scope
+              then
+                ok (core.result.Result.Err authority.permit.Denial.WrongScope)
+              else ok (core.result.Result.Ok record)
+
+/-- [noble_kernel::authority::admission::{noble_kernel::authority::Authority}::validate_entry]:
+    Source: 'crates/noble-kernel/src/authority/admission.rs', lines 75:4-105:5 -/
+def authority.admission.Authority.validate_entry
+  (self : authority.Authority) (witness : Option authority.permit.Witness)
+  (request : authority.permit.AdmissionRequest)
+  (facts : authority.CurrentFacts) :
+  Result (core.result.Result Std.U64 authority.permit.Denial)
+  := do
+  match witness with
+  | none =>
+    ok (core.result.Result.Err authority.permit.Denial.UntrustedWitnessClaim)
+  | some witness1 =>
+    let r ← authority.admission.Authority.witness_record self request.claim
+    match r with
+    | core.result.Result.Ok value =>
+      let b ←
+        core.cmp.PartialEq.ne.trait_default
+          authority.permit.WitnessClaim.Insts.CoreCmpPartialEqWitnessClaim
+          witness1.claim request.claim
+      if b
+      then
+        ok (core.result.Result.Err
+          authority.permit.Denial.UntrustedWitnessClaim)
+      else
+        match value.state with
+        | authority.permit.WitnessState.Live =>
+          let b1 ←
+            core.cmp.PartialEq.ne.trait_default
+              authority.Plan.Insts.CoreCmpPartialEqPlan value.plan request.plan
+          if b1
+          then ok (core.result.Result.Err authority.permit.Denial.ChangedPlan)
+          else
+            let r1 ←
+              authority.facts.Authority.validate_facts self request.plan facts
+            match r1 with
+            | core.result.Result.Ok _ =>
+              match facts.quota_remaining with
+              | none =>
+                ok (core.result.Result.Err
+                  authority.permit.Denial.MissingFacts)
+              | some available => ok (core.result.Result.Ok available)
+            | core.result.Result.Err denial =>
+              ok (core.result.Result.Err denial)
+        | authority.permit.WitnessState.Consumed =>
+          ok (core.result.Result.Err authority.permit.Denial.ConsumedWitness)
+        | authority.permit.WitnessState.Retired =>
+          ok (core.result.Result.Err authority.permit.Denial.RetiredWitness)
+    | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_kernel::authority::admission::{noble_kernel::authority::Authority}::admit]:
+    Source: 'crates/noble-kernel/src/authority/admission.rs', lines 10:4-69:5
+    Visibility: public -/
+def authority.admission.Authority.admit
+  (self : authority.Authority) (witness : Option authority.permit.Witness)
+  (request : authority.permit.AdmissionRequest)
+  (facts : authority.CurrentFacts) :
+  Result (authority.permit.Admission × authority.Authority)
+  := do
+  let b ← authority.facts.Authority.request_available self
+  if b
+  then
+    let i ← self.counters.admission_requests + 1#u32
+    let v ←
+      alloc.vec.Vec.push self.effects request.plan.description.operation.effect
+    let o ← core.option.Option.as_ref witness
+    let r ←
+      authority.admission.Authority.validate_entry
+        {
+          self
+            with
+            effects := v,
+            counters := { self.counters with admission_requests := i }
+        } o request facts
+    match r with
+    | core.result.Result.Ok available =>
+      let i1 := alloc.vec.Vec.len self.attempts
+      if i1 >= self.profile.limits.attempts
+      then
+        let p ← authority.Plan.Insts.CoreCloneClone.clone request.plan
+        let rejection ←
+          authority.receipts.Authority.preflight
+            {
+              self
+                with
+                effects := v,
+                counters := { self.counters with admission_requests := i }
+            } p authority.permit.PreflightFailure.AttemptCapacity
+            authority.report.ReceiptScope.AdmissionBoundary
+        ok (authority.permit.Admission.Preflight witness rejection,
+          {
+            self
+              with
+              effects := v,
+              counters := { self.counters with admission_requests := i }
+          })
+      else
+        let o1 ← lift (U32.checked_add self.counters.attempts_admitted 1#u32)
+        match o1 with
+        | none =>
+          let p ← authority.Plan.Insts.CoreCloneClone.clone request.plan
+          let rejection ←
+            authority.receipts.Authority.preflight
+              {
+                self
+                  with
+                  effects := v,
+                  counters := { self.counters with admission_requests := i }
+              } p authority.permit.PreflightFailure.AttemptCapacity
+              authority.report.ReceiptScope.AdmissionBoundary
+          ok (authority.permit.Admission.Preflight witness rejection,
+            {
+              self
+                with
+                effects := v,
+                counters := { self.counters with admission_requests := i }
+            })
+        | some admitted =>
+          let (r1, self1) ←
+            authority.admission.Authority.commit
+              {
+                self
+                  with
+                  effects := v,
+                  counters := { self.counters with admission_requests := i }
+              } request available admitted
+          match r1 with
+          | core.result.Result.Ok execution =>
+            ok (authority.permit.Admission.Committed execution, self1)
+          | core.result.Result.Err denial =>
+            let p ← authority.Plan.Insts.CoreCloneClone.clone request.plan
+            let rejection ←
+              authority.receipts.Authority.deny self1 p denial
+                authority.report.ReceiptScope.AdmissionBoundary
+            ok (authority.permit.Admission.Denied witness rejection, self1)
+    | core.result.Result.Err denial =>
+      let p ← authority.Plan.Insts.CoreCloneClone.clone request.plan
+      let rejection ←
+        authority.receipts.Authority.deny
+          {
+            self
+              with
+              effects := v,
+              counters := { self.counters with admission_requests := i }
+          } p denial authority.report.ReceiptScope.AdmissionBoundary
+      ok (authority.permit.Admission.Denied witness rejection,
+        {
+          self
+            with
+            effects := v,
+            counters := { self.counters with admission_requests := i }
+        })
+  else
+    let p ← authority.Plan.Insts.CoreCloneClone.clone request.plan
+    let rejection ←
+      authority.receipts.Authority.preflight self p
+        authority.permit.PreflightFailure.RequestCapacity
+        authority.report.ReceiptScope.AdmissionBoundary
+    ok (authority.permit.Admission.Preflight witness rejection, self)
+
+/-- [noble_kernel::authority::admission::{noble_kernel::authority::Authority}::attempt_record]:
+    Source: 'crates/noble-kernel/src/authority/admission.rs', lines 225:4-240:5 -/
+def authority.admission.Authority.attempt_record
+  (self : authority.Authority) (key : authority.permit.AttemptKey) :
+  Result (core.result.Result authority.AttemptRecord
+    authority.report.BoundaryError)
+  := do
+  let b ←
+    core.cmp.PartialEq.ne.trait_default
+      authority.OwnerContext.Insts.CoreCmpPartialEqOwnerContext key.owner
+      self.profile.owner
+  if b
+  then ok (core.result.Result.Err authority.report.BoundaryError.WrongContext)
+  else
+    let s := alloc.vec.Vec.deref self.attempts
+    let o ←
+      core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice
+        authority.AttemptRecord) s key.slot
+    match o with
+    | none =>
+      ok (core.result.Result.Err authority.report.BoundaryError.UnknownAttempt)
+    | some record =>
+      if key.generation != record.key.generation
+      then
+        ok (core.result.Result.Err
+          authority.report.BoundaryError.StaleGeneration)
+      else ok (core.result.Result.Ok record)
+
+/-- [noble_kernel::authority::admission::{noble_kernel::authority::Authority}::start_execution]:
+    Source: 'crates/noble-kernel/src/authority/admission.rs', lines 205:4-223:5
+    Visibility: public -/
+def authority.admission.Authority.start_execution
+  (self : authority.Authority) (execution : authority.permit.Execution) :
+  Result ((core.result.Result authority.permit.Started
+    authority.report.BoundaryError) × authority.Authority)
+  := do
+  let r ← authority.admission.Authority.attempt_record self execution.attempt
+  match r with
+  | core.result.Result.Ok value =>
+    if value.started
+    then
+      ok (core.result.Result.Err authority.report.BoundaryError.AlreadyStarted,
+        self)
+    else
+      let b ←
+        core.cmp.PartialEq.ne.trait_default
+          authority.report.InvocationOutcome.Insts.CoreCmpPartialEqInvocationOutcome
+          self.invocation authority.report.InvocationOutcome.Pending
+      if b
+      then
+        ok (core.result.Result.Err
+          authority.report.BoundaryError.InvocationFinished, self)
+      else
+        let p ← authority.Plan.Insts.CoreCloneClone.clone value.plan
+        let (ar, index_mut_back) ←
+          alloc.vec.Vec.index_mut (core.slice.index.SliceIndexUsizeSlice
+            authority.AttemptRecord) self.attempts execution.attempt.slot
+        let i ← self.counters.protected_operations + 1#u32
+        let v := index_mut_back { ar with started := true }
+        ok (core.result.Result.Ok { attempt := value.key, plan := p },
+          {
+            self
+              with
+              attempts := v,
+              counters := { self.counters with protected_operations := i }
+          })
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure, self)
+
+/-- [noble_kernel::authority::admission::{noble_kernel::authority::Authority}::counters]:
+    Source: 'crates/noble-kernel/src/authority/admission.rs', lines 242:4-244:5
+    Visibility: public -/
+def authority.admission.Authority.counters
+  (self : authority.Authority) : Result authority.Counters := do
+  ok self.counters
+
+/-- [noble_kernel::authority::admission::{noble_kernel::authority::Authority}::requested_effects]:
+    Source: 'crates/noble-kernel/src/authority/admission.rs', lines 249:4-251:5
+    Visibility: public -/
+def authority.admission.Authority.requested_effects
+  (self : authority.Authority) : Result (Slice types.EffId) := do
+  ok (alloc.vec.Vec.deref self.effects)
+
+/-- [noble_kernel::authority::admission::{noble_kernel::authority::Authority}::invocation_outcome]:
+    Source: 'crates/noble-kernel/src/authority/admission.rs', lines 253:4-255:5
+    Visibility: public -/
+def authority.admission.Authority.invocation_outcome
+  (self : authority.Authority) :
+  Result authority.report.InvocationOutcome
+  := do
+  ok self.invocation
+
+/-- [noble_kernel::authority::admission::{noble_kernel::authority::Authority}::attempt_snapshot::{impl core::ops::function::FnOnce<(&'_ noble_kernel::authority::report::ObservationDescription,), noble_kernel::authority::report::ObservedOutcome> for noble_kernel::authority::admission::{noble_kernel::authority::Authority}::attempt_snapshot::{closure}}::call_once]:
+    Source: 'crates/noble-kernel/src/authority/admission.rs', lines 267:21-267:54 -/
+def
+  authority.admission.Authority.attempt_snapshot.closure.Insts.CoreOpsFunctionFnOnceTupleSharedObservationDescriptionObservedOutcome.call_once
+  (c : authority.admission.Authority.attempt_snapshot.closure)
+  (tupled_args : authority.report.ObservationDescription) :
+  Result authority.report.ObservedOutcome
+  := do
+  ok tupled_args.outcome
+
+/-- Trait implementation: [noble_kernel::authority::admission::{noble_kernel::authority::Authority}::attempt_snapshot::{impl core::ops::function::FnOnce<(&'_ noble_kernel::authority::report::ObservationDescription,), noble_kernel::authority::report::ObservedOutcome> for noble_kernel::authority::admission::{noble_kernel::authority::Authority}::attempt_snapshot::{closure}}]
+    Source: 'crates/noble-kernel/src/authority/admission.rs', lines 267:21-267:54 -/
+@[reducible]
+def
+  authority.admission.Authority.attempt_snapshot.closure.Insts.CoreOpsFunctionFnOnceTupleSharedObservationDescriptionObservedOutcome
+  : core.ops.function.FnOnce
+  authority.admission.Authority.attempt_snapshot.closure
+  authority.report.ObservationDescription authority.report.ObservedOutcome := {
+  call_once :=
+    authority.admission.Authority.attempt_snapshot.closure.Insts.CoreOpsFunctionFnOnceTupleSharedObservationDescriptionObservedOutcome.call_once
+}
+
+/-- [noble_kernel::authority::admission::{noble_kernel::authority::Authority}::attempt_snapshot]:
+    Source: 'crates/noble-kernel/src/authority/admission.rs', lines 257:4-275:5
+    Visibility: public -/
+def authority.admission.Authority.attempt_snapshot
+  (self : authority.Authority) (key : authority.permit.AttemptKey) :
+  Result (core.result.Result authority.permit.AttemptSnapshot
+    authority.report.BoundaryError)
+  := do
+  let r ← authority.admission.Authority.attempt_record self key
+  match r with
+  | core.result.Result.Ok value =>
+    match value.terminal with
+    | none =>
+      let o ← core.option.Option.as_ref value.unknown
+      let outcome ←
+        core.option.Option.map
+          authority.admission.Authority.attempt_snapshot.closure.Insts.CoreOpsFunctionFnOnceTupleSharedObservationDescriptionObservedOutcome
+          o ()
+      ok (core.result.Result.Ok
+        {
+          key := value.key,
+          effect := value.plan.description.operation.effect,
+          started := value.started,
+          outcome
+        })
+    | some observation =>
+      ok (core.result.Result.Ok
+        {
+          key := value.key,
+          effect := value.plan.description.operation.effect,
+          started := value.started,
+          outcome := (some observation.outcome)
+        })
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_kernel::authority::facts::MAX_REQUESTS]
+    Source: 'crates/noble-kernel/src/authority/facts.rs', lines 1:0-1:31 -/
+@[global_simps, irreducible]
+def authority.facts.MAX_REQUESTS : Std.U32 := 4096#u32
+
+/-- [noble_kernel::authority::MAX_RECORDS]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 32:0-32:35
+    Visibility: public -/
+@[global_simps, irreducible] def authority.MAX_RECORDS : Std.Usize := 256#usize
+
+/-- [noble_kernel::authority::facts::{noble_kernel::authority::Authority}::new]:
+    Source: 'crates/noble-kernel/src/authority/facts.rs', lines 7:4-44:5
+    Visibility: public -/
+def authority.facts.Authority.new
+  (profile : authority.Profile) :
+  Result (core.result.Result authority.Authority authority.SetupError)
+  := do
+  if profile.limits.witnesses > authority.MAX_RECORDS
+  then ok (core.result.Result.Err authority.SetupError.InvalidLimits)
+  else
+    if profile.limits.attempts > authority.MAX_RECORDS
+    then ok (core.result.Result.Err authority.SetupError.InvalidLimits)
+    else
+      if profile.limits.requests = 0#u32
+      then ok (core.result.Result.Err authority.SetupError.InvalidLimits)
+      else
+        if profile.limits.requests > authority.facts.MAX_REQUESTS
+        then ok (core.result.Result.Err authority.SetupError.InvalidLimits)
+        else
+          let r ←
+            Usize.Insts.CoreConvertTryFromU32TryFromIntError.try_from
+              profile.limits.requests
+          match r with
+          | core.result.Result.Ok requests =>
+            let v :=
+              alloc.vec.Vec.with_capacity authority.WitnessRecord
+                profile.limits.witnesses
+            let v1 :=
+              alloc.vec.Vec.with_capacity authority.AttemptRecord
+                profile.limits.attempts
+            let v2 :=
+              alloc.vec.Vec.with_capacity authority.QuotaRecord
+                profile.limits.attempts
+            let v3 := alloc.vec.Vec.with_capacity types.EffId requests
+            ok (core.result.Result.Ok
+              {
+                profile,
+                witnesses := v,
+                attempts := v1,
+                quotas := v2,
+                effects := v3,
+                counters :=
+                  {
+                    authorization_requests := 0#u32,
+                    admission_requests := 0#u32,
+                    witnesses_created := 0#u32,
+                    witness_consumptions := 0#u32,
+                    attempts_admitted := 0#u32,
+                    protected_operations := 0#u32,
+                    approved_observations := 0#u32,
+                    successful_deliveries := 0#u32
+                  },
+                invocation := authority.report.InvocationOutcome.Pending,
+                delivered := none
+              })
+          | core.result.Result.Err _ =>
+            ok (core.result.Result.Err authority.SetupError.InvalidLimits)
+
+/-- [noble_kernel::authority::facts::{noble_kernel::authority::Authority}::advance_from_trusted_host]:
+    Source: 'crates/noble-kernel/src/authority/facts.rs', lines 53:4-65:5
+    Visibility: public -/
+def authority.facts.Authority.advance_from_trusted_host
+  (self : authority.Authority) (checkpoint : authority.Checkpoint) :
+  Result ((core.result.Result Unit authority.SetupError) ×
+    authority.Authority)
+  := do
+  if checkpoint.sequence <= self.profile.checkpoint.sequence
+  then ok (core.result.Result.Err authority.SetupError.StaleCheckpoint, self)
+  else
+    if checkpoint.now < self.profile.checkpoint.now
+    then ok (core.result.Result.Err authority.SetupError.StaleCheckpoint, self)
+    else
+      ok (core.result.Result.Ok (),
+        { self with profile := { self.profile with checkpoint } })
+
+/-- [noble_kernel::authority::facts::{noble_kernel::authority::Authority}::decide]:
+    Source: 'crates/noble-kernel/src/authority/facts.rs', lines 68:4-73:5
+    Visibility: public -/
+def authority.facts.Authority.decide
+  (self : authority.Authority) (plan : authority.Plan)
+  (facts : authority.CurrentFacts) :
+  Result authority.permit.Decision
+  := do
+  let r ← authority.facts.Authority.validate_facts self plan facts
+  match r with
+  | core.result.Result.Ok _ => ok authority.permit.Decision.Allow
+  | core.result.Result.Err denial => ok (authority.permit.Decision.Deny denial)
+
+/-- [noble_kernel::authority::facts::{noble_kernel::authority::Authority}::authorize_from_trusted_host]:
+    Source: 'crates/noble-kernel/src/authority/facts.rs', lines 82:4-137:5
+    Visibility: public -/
+def authority.facts.Authority.authorize_from_trusted_host
+  (self : authority.Authority) (plan : authority.Plan)
+  (facts : authority.CurrentFacts) :
+  Result (authority.permit.Authorization × authority.Authority)
+  := do
+  let b ← authority.facts.Authority.request_available self
+  if b
+  then
+    let i ← self.counters.authorization_requests + 1#u32
+    let r ←
+      authority.facts.Authority.validate_facts
+        {
+          self
+            with
+            counters := { self.counters with authorization_requests := i }
+        } plan facts
+    match r with
+    | core.result.Result.Ok _ =>
+      let i1 := alloc.vec.Vec.len self.witnesses
+      if i1 >= self.profile.limits.witnesses
+      then
+        let r1 ←
+          authority.receipts.Authority.preflight
+            {
+              self
+                with
+                counters := { self.counters with authorization_requests := i }
+            } plan authority.permit.PreflightFailure.WitnessCapacity
+            authority.report.ReceiptScope.AuthorizationBoundary
+        ok (authority.permit.Authorization.Preflight r1,
+          {
+            self
+              with
+              counters := { self.counters with authorization_requests := i }
+          })
+      else
+        let o ← lift (U32.checked_add self.counters.witnesses_created 1#u32)
+        match o with
+        | none =>
+          let r1 ←
+            authority.receipts.Authority.preflight
+              {
+                self
+                  with
+                  counters :=
+                    { self.counters with authorization_requests := i }
+              } plan authority.permit.PreflightFailure.WitnessCapacity
+              authority.report.ReceiptScope.AuthorizationBoundary
+          ok (authority.permit.Authorization.Preflight r1,
+            {
+              self
+                with
+                counters := { self.counters with authorization_requests := i }
+            })
+        | some created =>
+          let i2 := alloc.vec.Vec.len self.witnesses
+          let i3 ← lift (core.convert.num.FromU64U32.from created)
+          let v ←
+            alloc.vec.Vec.push self.witnesses
+              ({
+                 claim :=
+                   {
+                     owner := self.profile.owner,
+                     slot := i2,
+                     generation := i3,
+                     kind := self.profile.witness_kind,
+                     rights := authority.EXECUTE_RIGHT,
+                     scope := plan.description.constraints.scope
+                   },
+                 plan,
+                 state := authority.permit.WitnessState.Live
+               } : authority.WitnessRecord)
+          ok (authority.permit.Authorization.Authorized
+            {
+              claim :=
+                {
+                  owner := self.profile.owner,
+                  slot := i2,
+                  generation := i3,
+                  kind := self.profile.witness_kind,
+                  rights := authority.EXECUTE_RIGHT,
+                  scope := plan.description.constraints.scope
+                }
+            },
+            {
+              self
+                with
+                witnesses := v,
+                counters :=
+                  {
+                    self.counters
+                      with
+                      authorization_requests := i, witnesses_created := created
+                  }
+            })
+    | core.result.Result.Err denial =>
+      let r1 ←
+        authority.receipts.Authority.deny
+          {
+            self
+              with
+              counters := { self.counters with authorization_requests := i }
+          } plan denial authority.report.ReceiptScope.AuthorizationBoundary
+      ok (authority.permit.Authorization.Denied r1,
+        {
+          self
+            with
+            counters := { self.counters with authorization_requests := i }
+        })
+  else
+    let r ←
+      authority.receipts.Authority.preflight self plan
+        authority.permit.PreflightFailure.RequestCapacity
+        authority.report.ReceiptScope.AuthorizationBoundary
+    ok (authority.permit.Authorization.Preflight r, self)
+
+/-- [noble_kernel::authority::WITNESS_KIND]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 30:0-30:83
+    Visibility: public -/
+@[global_simps, irreducible]
+def authority.WITNESS_KIND : types.ResourceKind := 2#u32
+
+/-- [noble_kernel::authority::MAX_ARGUMENT_BYTES]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 33:0-33:43
+    Visibility: public -/
+@[global_simps, irreducible]
+def authority.MAX_ARGUMENT_BYTES : Std.Usize := 4096#usize
+
+/-- [noble_kernel::authority::MAX_CONTRACT_BYTES]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 34:0-34:42
+    Visibility: public -/
+@[global_simps, irreducible]
+def authority.MAX_CONTRACT_BYTES : Std.Usize := 256#usize
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::clone::Clone for noble_kernel::authority::ActorId}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 36:9-36:14 -/
+@[reducible]
+def authority.ActorId.Insts.CoreCloneClone : core.clone.Clone authority.ActorId
+  := {
+  clone := authority.ActorId.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::marker::Copy for noble_kernel::authority::ActorId}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 36:16-36:20 -/
+@[reducible]
+def authority.ActorId.Insts.CoreMarkerCopy : core.marker.Copy authority.ActorId
+  := {
+  cloneInst := authority.ActorId.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::authority::{impl core::fmt::Debug for noble_kernel::authority::ActorId}::fmt]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 36:22-36:27
+    Visibility: public -/
+def authority.ActorId.Insts.CoreFmtDebug.fmt
+  (self : authority.ActorId) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU64) self
+  core.fmt.Formatter.debug_tuple_field1_finish f (toStr "ActorId") dyn
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::fmt::Debug for noble_kernel::authority::ActorId}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 36:22-36:27 -/
+@[reducible]
+def authority.ActorId.Insts.CoreFmtDebug : core.fmt.Debug authority.ActorId
+  := {
+  fmt := authority.ActorId.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::marker::StructuralPartialEq for noble_kernel::authority::ActorId}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 36:29-36:38 -/
+@[reducible]
+def authority.ActorId.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq authority.ActorId := {
+}
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::cmp::PartialEq<noble_kernel::authority::ActorId> for noble_kernel::authority::ActorId}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 36:29-36:38 -/
+@[reducible]
+impl_def authority.ActorId.Insts.CoreCmpPartialEqActorId : core.cmp.PartialEq
+  authority.ActorId authority.ActorId := {
+  eq := authority.ActorId.Insts.CoreCmpPartialEqActorId.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    authority.ActorId.Insts.CoreCmpPartialEqActorId
+}
+
+/-- [noble_kernel::authority::{impl core::cmp::Eq for noble_kernel::authority::ActorId}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 36:40-36:42
+    Visibility: public -/
+def authority.ActorId.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : authority.ActorId) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::cmp::Eq for noble_kernel::authority::ActorId}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 36:40-36:42 -/
+@[reducible]
+def authority.ActorId.Insts.CoreCmpEq : core.cmp.Eq authority.ActorId := {
+  partialEqInst := authority.ActorId.Insts.CoreCmpPartialEqActorId
+  assert_fields_are_eq :=
+    authority.ActorId.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::clone::Clone for noble_kernel::authority::PolicyRevision}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 38:9-38:14 -/
+@[reducible]
+def authority.PolicyRevision.Insts.CoreCloneClone : core.clone.Clone
+  authority.PolicyRevision := {
+  clone := authority.PolicyRevision.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::marker::Copy for noble_kernel::authority::PolicyRevision}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 38:16-38:20 -/
+@[reducible]
+def authority.PolicyRevision.Insts.CoreMarkerCopy : core.marker.Copy
+  authority.PolicyRevision := {
+  cloneInst := authority.PolicyRevision.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::authority::{impl core::fmt::Debug for noble_kernel::authority::PolicyRevision}::fmt]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 38:22-38:27
+    Visibility: public -/
+def authority.PolicyRevision.Insts.CoreFmtDebug.fmt
+  (self : authority.PolicyRevision) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU64) self
+  core.fmt.Formatter.debug_tuple_field1_finish f (toStr "PolicyRevision") dyn
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::fmt::Debug for noble_kernel::authority::PolicyRevision}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 38:22-38:27 -/
+@[reducible]
+def authority.PolicyRevision.Insts.CoreFmtDebug : core.fmt.Debug
+  authority.PolicyRevision := {
+  fmt := authority.PolicyRevision.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::marker::StructuralPartialEq for noble_kernel::authority::PolicyRevision}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 38:29-38:38 -/
+@[reducible]
+def authority.PolicyRevision.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq authority.PolicyRevision := {
+}
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::cmp::PartialEq<noble_kernel::authority::PolicyRevision> for noble_kernel::authority::PolicyRevision}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 38:29-38:38 -/
+@[reducible]
+impl_def authority.PolicyRevision.Insts.CoreCmpPartialEqPolicyRevision :
+  core.cmp.PartialEq authority.PolicyRevision authority.PolicyRevision := {
+  eq := authority.PolicyRevision.Insts.CoreCmpPartialEqPolicyRevision.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    authority.PolicyRevision.Insts.CoreCmpPartialEqPolicyRevision
+}
+
+/-- [noble_kernel::authority::{impl core::cmp::Eq for noble_kernel::authority::PolicyRevision}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 38:40-38:42
+    Visibility: public -/
+def authority.PolicyRevision.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : authority.PolicyRevision) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::cmp::Eq for noble_kernel::authority::PolicyRevision}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 38:40-38:42 -/
+@[reducible]
+def authority.PolicyRevision.Insts.CoreCmpEq : core.cmp.Eq
+  authority.PolicyRevision := {
+  partialEqInst :=
+    authority.PolicyRevision.Insts.CoreCmpPartialEqPolicyRevision
+  assert_fields_are_eq :=
+    authority.PolicyRevision.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::authority::{impl core::clone::Clone for noble_kernel::authority::SourceId}::clone]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 40:9-40:14
+    Visibility: public -/
+def authority.SourceId.Insts.CoreCloneClone.clone
+  (self : authority.SourceId) : Result authority.SourceId := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::clone::Clone for noble_kernel::authority::SourceId}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 40:9-40:14 -/
+@[reducible]
+def authority.SourceId.Insts.CoreCloneClone : core.clone.Clone
+  authority.SourceId := {
+  clone := authority.SourceId.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::marker::Copy for noble_kernel::authority::SourceId}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 40:16-40:20 -/
+@[reducible]
+def authority.SourceId.Insts.CoreMarkerCopy : core.marker.Copy
+  authority.SourceId := {
+  cloneInst := authority.SourceId.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::authority::{impl core::fmt::Debug for noble_kernel::authority::SourceId}::fmt]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 40:22-40:27
+    Visibility: public -/
+def authority.SourceId.Insts.CoreFmtDebug.fmt
+  (self : authority.SourceId) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU64) self
+  core.fmt.Formatter.debug_tuple_field1_finish f (toStr "SourceId") dyn
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::fmt::Debug for noble_kernel::authority::SourceId}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 40:22-40:27 -/
+@[reducible]
+def authority.SourceId.Insts.CoreFmtDebug : core.fmt.Debug authority.SourceId
+  := {
+  fmt := authority.SourceId.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::marker::StructuralPartialEq for noble_kernel::authority::SourceId}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 40:29-40:38 -/
+@[reducible]
+def authority.SourceId.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq authority.SourceId := {
+}
+
+/-- [noble_kernel::authority::{impl core::cmp::Eq for noble_kernel::authority::SourceId}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 40:40-40:42
+    Visibility: public -/
+def authority.SourceId.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : authority.SourceId) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::cmp::Eq for noble_kernel::authority::SourceId}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 40:40-40:42 -/
+@[reducible]
+def authority.SourceId.Insts.CoreCmpEq : core.cmp.Eq authority.SourceId := {
+  partialEqInst := authority.SourceId.Insts.CoreCmpPartialEqSourceId
+  assert_fields_are_eq :=
+    authority.SourceId.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::authority::{impl core::clone::Clone for noble_kernel::authority::QuotaId}::clone]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 42:9-42:14
+    Visibility: public -/
+def authority.QuotaId.Insts.CoreCloneClone.clone
+  (self : authority.QuotaId) : Result authority.QuotaId := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::clone::Clone for noble_kernel::authority::QuotaId}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 42:9-42:14 -/
+@[reducible]
+def authority.QuotaId.Insts.CoreCloneClone : core.clone.Clone authority.QuotaId
+  := {
+  clone := authority.QuotaId.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::marker::Copy for noble_kernel::authority::QuotaId}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 42:16-42:20 -/
+@[reducible]
+def authority.QuotaId.Insts.CoreMarkerCopy : core.marker.Copy authority.QuotaId
+  := {
+  cloneInst := authority.QuotaId.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::authority::{impl core::fmt::Debug for noble_kernel::authority::QuotaId}::fmt]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 42:22-42:27
+    Visibility: public -/
+def authority.QuotaId.Insts.CoreFmtDebug.fmt
+  (self : authority.QuotaId) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU64) self
+  core.fmt.Formatter.debug_tuple_field1_finish f (toStr "QuotaId") dyn
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::fmt::Debug for noble_kernel::authority::QuotaId}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 42:22-42:27 -/
+@[reducible]
+def authority.QuotaId.Insts.CoreFmtDebug : core.fmt.Debug authority.QuotaId
+  := {
+  fmt := authority.QuotaId.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::marker::StructuralPartialEq for noble_kernel::authority::QuotaId}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 42:29-42:38 -/
+@[reducible]
+def authority.QuotaId.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq authority.QuotaId := {
+}
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::cmp::PartialEq<noble_kernel::authority::QuotaId> for noble_kernel::authority::QuotaId}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 42:29-42:38 -/
+@[reducible]
+impl_def authority.QuotaId.Insts.CoreCmpPartialEqQuotaId : core.cmp.PartialEq
+  authority.QuotaId authority.QuotaId := {
+  eq := authority.QuotaId.Insts.CoreCmpPartialEqQuotaId.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    authority.QuotaId.Insts.CoreCmpPartialEqQuotaId
+}
+
+/-- [noble_kernel::authority::{impl core::cmp::Eq for noble_kernel::authority::QuotaId}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 42:40-42:42
+    Visibility: public -/
+def authority.QuotaId.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : authority.QuotaId) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::cmp::Eq for noble_kernel::authority::QuotaId}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 42:40-42:42 -/
+@[reducible]
+def authority.QuotaId.Insts.CoreCmpEq : core.cmp.Eq authority.QuotaId := {
+  partialEqInst := authority.QuotaId.Insts.CoreCmpPartialEqQuotaId
+  assert_fields_are_eq :=
+    authority.QuotaId.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::clone::Clone for noble_kernel::authority::OwnerContext}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 46:9-46:14 -/
+@[reducible]
+def authority.OwnerContext.Insts.CoreCloneClone : core.clone.Clone
+  authority.OwnerContext := {
+  clone := authority.OwnerContext.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::marker::Copy for noble_kernel::authority::OwnerContext}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 46:16-46:20 -/
+@[reducible]
+def authority.OwnerContext.Insts.CoreMarkerCopy : core.marker.Copy
+  authority.OwnerContext := {
+  cloneInst := authority.OwnerContext.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::authority::{impl core::fmt::Debug for noble_kernel::authority::OwnerContext}::fmt]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 46:22-46:27
+    Visibility: public -/
+def authority.OwnerContext.Insts.CoreFmtDebug.fmt
+  (self : authority.OwnerContext) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ core.fmt.DebugU64 self.instance
+  let dyn1 := Dyn.mk _ core.fmt.DebugU64 self.invocation
+  let dyn2 := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU64) self.generation
+  core.fmt.Formatter.debug_struct_field3_finish f (toStr "OwnerContext") (toStr
+    "instance") dyn (toStr "invocation") dyn1 (toStr "generation") dyn2
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::fmt::Debug for noble_kernel::authority::OwnerContext}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 46:22-46:27 -/
+@[reducible]
+def authority.OwnerContext.Insts.CoreFmtDebug : core.fmt.Debug
+  authority.OwnerContext := {
+  fmt := authority.OwnerContext.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::marker::StructuralPartialEq for noble_kernel::authority::OwnerContext}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 46:29-46:38 -/
+@[reducible]
+def authority.OwnerContext.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq authority.OwnerContext := {
+}
+
+/-- [noble_kernel::authority::{impl core::cmp::Eq for noble_kernel::authority::OwnerContext}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 46:40-46:42
+    Visibility: public -/
+def authority.OwnerContext.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : authority.OwnerContext) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::cmp::Eq for noble_kernel::authority::OwnerContext}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 46:40-46:42 -/
+@[reducible]
+def authority.OwnerContext.Insts.CoreCmpEq : core.cmp.Eq authority.OwnerContext
+  := {
+  partialEqInst := authority.OwnerContext.Insts.CoreCmpPartialEqOwnerContext
+  assert_fields_are_eq :=
+    authority.OwnerContext.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::authority::{impl core::clone::Clone for noble_kernel::authority::Checkpoint}::clone]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 54:9-54:14
+    Visibility: public -/
+def authority.Checkpoint.Insts.CoreCloneClone.clone
+  (self : authority.Checkpoint) : Result authority.Checkpoint := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::clone::Clone for noble_kernel::authority::Checkpoint}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 54:9-54:14 -/
+@[reducible]
+def authority.Checkpoint.Insts.CoreCloneClone : core.clone.Clone
+  authority.Checkpoint := {
+  clone := authority.Checkpoint.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::marker::Copy for noble_kernel::authority::Checkpoint}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 54:16-54:20 -/
+@[reducible]
+def authority.Checkpoint.Insts.CoreMarkerCopy : core.marker.Copy
+  authority.Checkpoint := {
+  cloneInst := authority.Checkpoint.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::authority::{impl core::fmt::Debug for noble_kernel::authority::Checkpoint}::fmt]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 54:22-54:27
+    Visibility: public -/
+def authority.Checkpoint.Insts.CoreFmtDebug.fmt
+  (self : authority.Checkpoint) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ core.fmt.DebugU64 self.sequence
+  let dyn1 := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU64) self.now
+  core.fmt.Formatter.debug_struct_field2_finish f (toStr "Checkpoint") (toStr
+    "sequence") dyn (toStr "now") dyn1
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::fmt::Debug for noble_kernel::authority::Checkpoint}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 54:22-54:27 -/
+@[reducible]
+def authority.Checkpoint.Insts.CoreFmtDebug : core.fmt.Debug
+  authority.Checkpoint := {
+  fmt := authority.Checkpoint.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::marker::StructuralPartialEq for noble_kernel::authority::Checkpoint}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 54:29-54:38 -/
+@[reducible]
+def authority.Checkpoint.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq authority.Checkpoint := {
+}
+
+/-- [noble_kernel::authority::{impl core::cmp::Eq for noble_kernel::authority::Checkpoint}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 54:40-54:42
+    Visibility: public -/
+def authority.Checkpoint.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : authority.Checkpoint) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::cmp::Eq for noble_kernel::authority::Checkpoint}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 54:40-54:42 -/
+@[reducible]
+def authority.Checkpoint.Insts.CoreCmpEq : core.cmp.Eq authority.Checkpoint
+  := {
+  partialEqInst := authority.Checkpoint.Insts.CoreCmpPartialEqCheckpoint
+  assert_fields_are_eq :=
+    authority.Checkpoint.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::clone::Clone for noble_kernel::authority::OperationContract}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 61:9-61:14 -/
+@[reducible]
+def authority.OperationContract.Insts.CoreCloneClone : core.clone.Clone
+  authority.OperationContract := {
+  clone := authority.OperationContract.Insts.CoreCloneClone.clone
+}
+
+/-- [noble_kernel::types::{impl core::fmt::Debug for noble_kernel::types::EffId}::fmt]:
+    Source: 'crates/noble-kernel/src/types.rs', lines 25:22-25:27
+    Visibility: public -/
+def types.EffId.Insts.CoreFmtDebug.fmt
+  (self : types.EffId) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU32) self
+  core.fmt.Formatter.debug_tuple_field1_finish f (toStr "EffId") dyn
+
+/-- Trait implementation: [noble_kernel::types::{impl core::fmt::Debug for noble_kernel::types::EffId}]
+    Source: 'crates/noble-kernel/src/types.rs', lines 25:22-25:27 -/
+@[reducible]
+def types.EffId.Insts.CoreFmtDebug : core.fmt.Debug types.EffId := {
+  fmt := types.EffId.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_kernel::authority::{impl core::fmt::Debug for noble_kernel::authority::OperationContract}::fmt]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 61:16-61:21
+    Visibility: public -/
+def authority.OperationContract.Insts.CoreFmtDebug.fmt
+  (self : authority.OperationContract) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ (core.fmt.DebugVec core.fmt.DebugU8) self.name
+  let dyn1 :=
+    Dyn.mk _ (core.fmt.DebugShared types.EffId.Insts.CoreFmtDebug) self.effect
+  core.fmt.Formatter.debug_struct_field2_finish f (toStr "OperationContract")
+    (toStr "name") dyn (toStr "effect") dyn1
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::fmt::Debug for noble_kernel::authority::OperationContract}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 61:16-61:21 -/
+@[reducible]
+def authority.OperationContract.Insts.CoreFmtDebug : core.fmt.Debug
+  authority.OperationContract := {
+  fmt := authority.OperationContract.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::marker::StructuralPartialEq for noble_kernel::authority::OperationContract}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 61:23-61:32 -/
+@[reducible]
+def authority.OperationContract.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq authority.OperationContract := {
+}
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::cmp::PartialEq<noble_kernel::authority::OperationContract> for noble_kernel::authority::OperationContract}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 61:23-61:32 -/
+@[reducible]
+impl_def authority.OperationContract.Insts.CoreCmpPartialEqOperationContract :
+  core.cmp.PartialEq authority.OperationContract authority.OperationContract
+  := {
+  eq := authority.OperationContract.Insts.CoreCmpPartialEqOperationContract.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    authority.OperationContract.Insts.CoreCmpPartialEqOperationContract
+}
+
+/-- [noble_kernel::authority::{impl core::cmp::Eq for noble_kernel::authority::OperationContract}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 61:34-61:36
+    Visibility: public -/
+def authority.OperationContract.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : authority.OperationContract) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::cmp::Eq for noble_kernel::authority::OperationContract}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 61:34-61:36 -/
+@[reducible]
+def authority.OperationContract.Insts.CoreCmpEq : core.cmp.Eq
+  authority.OperationContract := {
+  partialEqInst :=
+    authority.OperationContract.Insts.CoreCmpPartialEqOperationContract
+  assert_fields_are_eq :=
+    authority.OperationContract.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::clone::Clone for noble_kernel::authority::Constraints}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 67:9-67:14 -/
+@[reducible]
+def authority.Constraints.Insts.CoreCloneClone : core.clone.Clone
+  authority.Constraints := {
+  clone := authority.Constraints.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::marker::Copy for noble_kernel::authority::Constraints}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 67:16-67:20 -/
+@[reducible]
+def authority.Constraints.Insts.CoreMarkerCopy : core.marker.Copy
+  authority.Constraints := {
+  cloneInst := authority.Constraints.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::authority::{impl core::fmt::Debug for noble_kernel::authority::Constraints}::fmt]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 67:22-67:27
+    Visibility: public -/
+def authority.Constraints.Insts.CoreFmtDebug.fmt
+  (self : authority.Constraints) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ core.fmt.DebugU64 self.not_before
+  let dyn1 := Dyn.mk _ core.fmt.DebugU64 self.expires_at
+  let dyn2 := Dyn.mk _ authority.QuotaId.Insts.CoreFmtDebug self.quota
+  let dyn3 := Dyn.mk _ core.fmt.DebugU64 self.units
+  let dyn4 := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU64) self.scope
+  core.fmt.Formatter.debug_struct_field5_finish f (toStr "Constraints") (toStr
+    "not_before") dyn (toStr "expires_at") dyn1 (toStr "quota") dyn2 (toStr
+    "units") dyn3 (toStr "scope") dyn4
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::fmt::Debug for noble_kernel::authority::Constraints}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 67:22-67:27 -/
+@[reducible]
+def authority.Constraints.Insts.CoreFmtDebug : core.fmt.Debug
+  authority.Constraints := {
+  fmt := authority.Constraints.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::marker::StructuralPartialEq for noble_kernel::authority::Constraints}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 67:29-67:38 -/
+@[reducible]
+def authority.Constraints.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq authority.Constraints := {
+}
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::cmp::PartialEq<noble_kernel::authority::Constraints> for noble_kernel::authority::Constraints}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 67:29-67:38 -/
+@[reducible]
+impl_def authority.Constraints.Insts.CoreCmpPartialEqConstraints :
+  core.cmp.PartialEq authority.Constraints authority.Constraints := {
+  eq := authority.Constraints.Insts.CoreCmpPartialEqConstraints.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    authority.Constraints.Insts.CoreCmpPartialEqConstraints
+}
+
+/-- [noble_kernel::authority::{impl core::cmp::Eq for noble_kernel::authority::Constraints}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 67:40-67:42
+    Visibility: public -/
+def authority.Constraints.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : authority.Constraints) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::cmp::Eq for noble_kernel::authority::Constraints}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 67:40-67:42 -/
+@[reducible]
+def authority.Constraints.Insts.CoreCmpEq : core.cmp.Eq authority.Constraints
+  := {
+  partialEqInst := authority.Constraints.Insts.CoreCmpPartialEqConstraints
+  assert_fields_are_eq :=
+    authority.Constraints.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::clone::Clone for noble_kernel::authority::PlanDescription}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 78:9-78:14 -/
+@[reducible]
+def authority.PlanDescription.Insts.CoreCloneClone : core.clone.Clone
+  authority.PlanDescription := {
+  clone := authority.PlanDescription.Insts.CoreCloneClone.clone
+}
+
+/-- [noble_kernel::authority::{impl core::fmt::Debug for noble_kernel::authority::PlanDescription}::fmt]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 78:16-78:21
+    Visibility: public -/
+def authority.PlanDescription.Insts.CoreFmtDebug.fmt
+  (self : authority.PlanDescription) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn :=
+    Dyn.mk _ authority.OperationContract.Insts.CoreFmtDebug self.operation
+  let dyn1 := Dyn.mk _ (core.fmt.DebugVec core.fmt.DebugU8) self.arguments
+  let dyn2 := Dyn.mk _ authority.ActorId.Insts.CoreFmtDebug self.actor
+  let dyn3 := Dyn.mk _ authority.OwnerContext.Insts.CoreFmtDebug self.owner
+  let dyn4 := Dyn.mk _ authority.PolicyRevision.Insts.CoreFmtDebug self.policy
+  let dyn5 :=
+    Dyn.mk _ (core.fmt.DebugShared authority.Constraints.Insts.CoreFmtDebug)
+      self.constraints
+  let values :=
+    Array.to_slice (Array.make 6#usize [ dyn, dyn1, dyn2, dyn3, dyn4, dyn5 ])
+  let s ←
+    lift (Array.to_slice
+      (Array.make 6#usize [
+        toStr "operation", toStr "arguments", toStr "actor", toStr "owner",
+        toStr "policy", toStr "constraints"
+        ]))
+  core.fmt.Formatter.debug_struct_fields_finish f (toStr "PlanDescription") s
+    values
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::fmt::Debug for noble_kernel::authority::PlanDescription}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 78:16-78:21 -/
+@[reducible]
+def authority.PlanDescription.Insts.CoreFmtDebug : core.fmt.Debug
+  authority.PlanDescription := {
+  fmt := authority.PlanDescription.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::marker::StructuralPartialEq for noble_kernel::authority::PlanDescription}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 78:23-78:32 -/
+@[reducible]
+def authority.PlanDescription.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq authority.PlanDescription := {
+}
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::cmp::PartialEq<noble_kernel::authority::PlanDescription> for noble_kernel::authority::PlanDescription}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 78:23-78:32 -/
+@[reducible]
+impl_def authority.PlanDescription.Insts.CoreCmpPartialEqPlanDescription :
+  core.cmp.PartialEq authority.PlanDescription authority.PlanDescription := {
+  eq := authority.PlanDescription.Insts.CoreCmpPartialEqPlanDescription.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    authority.PlanDescription.Insts.CoreCmpPartialEqPlanDescription
+}
+
+/-- [noble_kernel::authority::{impl core::cmp::Eq for noble_kernel::authority::PlanDescription}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 78:34-78:36
+    Visibility: public -/
+def authority.PlanDescription.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : authority.PlanDescription) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::cmp::Eq for noble_kernel::authority::PlanDescription}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 78:34-78:36 -/
+@[reducible]
+def authority.PlanDescription.Insts.CoreCmpEq : core.cmp.Eq
+  authority.PlanDescription := {
+  partialEqInst :=
+    authority.PlanDescription.Insts.CoreCmpPartialEqPlanDescription
+  assert_fields_are_eq :=
+    authority.PlanDescription.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::clone::Clone for noble_kernel::authority::Plan}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 89:9-89:14 -/
+@[reducible]
+def authority.Plan.Insts.CoreCloneClone : core.clone.Clone authority.Plan := {
+  clone := authority.Plan.Insts.CoreCloneClone.clone
+}
+
+/-- [noble_kernel::authority::{impl core::fmt::Debug for noble_kernel::authority::Plan}::fmt]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 89:16-89:21
+    Visibility: public -/
+def authority.Plan.Insts.CoreFmtDebug.fmt
+  (self : authority.Plan) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn :=
+    Dyn.mk _ (core.fmt.DebugShared
+      authority.PlanDescription.Insts.CoreFmtDebug) self.description
+  core.fmt.Formatter.debug_struct_field1_finish f (toStr "Plan") (toStr
+    "description") dyn
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::fmt::Debug for noble_kernel::authority::Plan}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 89:16-89:21 -/
+@[reducible]
+def authority.Plan.Insts.CoreFmtDebug : core.fmt.Debug authority.Plan := {
+  fmt := authority.Plan.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::marker::StructuralPartialEq for noble_kernel::authority::Plan}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 89:23-89:32 -/
+@[reducible]
+def authority.Plan.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq authority.Plan := {
+}
+
+/-- [noble_kernel::authority::{impl core::cmp::Eq for noble_kernel::authority::Plan}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 89:34-89:36
+    Visibility: public -/
+def authority.Plan.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : authority.Plan) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::cmp::Eq for noble_kernel::authority::Plan}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 89:34-89:36 -/
+@[reducible]
+def authority.Plan.Insts.CoreCmpEq : core.cmp.Eq authority.Plan := {
+  partialEqInst := authority.Plan.Insts.CoreCmpPartialEqPlan
+  assert_fields_are_eq := authority.Plan.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::authority::{impl core::clone::Clone for noble_kernel::authority::PlanError}::clone]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 94:9-94:14
+    Visibility: public -/
+def authority.PlanError.Insts.CoreCloneClone.clone
+  (self : authority.PlanError) : Result authority.PlanError := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::clone::Clone for noble_kernel::authority::PlanError}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 94:9-94:14 -/
+@[reducible]
+def authority.PlanError.Insts.CoreCloneClone : core.clone.Clone
+  authority.PlanError := {
+  clone := authority.PlanError.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::marker::Copy for noble_kernel::authority::PlanError}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 94:16-94:20 -/
+@[reducible]
+def authority.PlanError.Insts.CoreMarkerCopy : core.marker.Copy
+  authority.PlanError := {
+  cloneInst := authority.PlanError.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::authority::{impl core::fmt::Debug for noble_kernel::authority::PlanError}::fmt]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 94:22-94:27
+    Visibility: public -/
+def authority.PlanError.Insts.CoreFmtDebug.fmt
+  (self : authority.PlanError) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | authority.PlanError.EmptyContract =>
+    core.fmt.Formatter.write_str f (toStr "EmptyContract")
+  | authority.PlanError.OversizedContract =>
+    core.fmt.Formatter.write_str f (toStr "OversizedContract")
+  | authority.PlanError.OversizedArguments =>
+    core.fmt.Formatter.write_str f (toStr "OversizedArguments")
+  | authority.PlanError.InvalidValidity =>
+    core.fmt.Formatter.write_str f (toStr "InvalidValidity")
+  | authority.PlanError.EmptyQuotaCharge =>
+    core.fmt.Formatter.write_str f (toStr "EmptyQuotaCharge")
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::fmt::Debug for noble_kernel::authority::PlanError}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 94:22-94:27 -/
+@[reducible]
+def authority.PlanError.Insts.CoreFmtDebug : core.fmt.Debug authority.PlanError
+  := {
+  fmt := authority.PlanError.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::marker::StructuralPartialEq for noble_kernel::authority::PlanError}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 94:29-94:38 -/
+@[reducible]
+def authority.PlanError.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq authority.PlanError := {
+}
+
+/-- [noble_kernel::authority::{impl core::cmp::PartialEq<noble_kernel::authority::PlanError> for noble_kernel::authority::PlanError}::eq]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 94:29-94:38
+    Visibility: public -/
+def authority.PlanError.Insts.CoreCmpPartialEqPlanError.eq
+  (self : authority.PlanError) (other : authority.PlanError) :
+  Result Bool
+  := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  ok (self1 = other1)
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::cmp::PartialEq<noble_kernel::authority::PlanError> for noble_kernel::authority::PlanError}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 94:29-94:38 -/
+@[reducible]
+impl_def authority.PlanError.Insts.CoreCmpPartialEqPlanError :
+  core.cmp.PartialEq authority.PlanError authority.PlanError := {
+  eq := authority.PlanError.Insts.CoreCmpPartialEqPlanError.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    authority.PlanError.Insts.CoreCmpPartialEqPlanError
+}
+
+/-- [noble_kernel::authority::{impl core::cmp::Eq for noble_kernel::authority::PlanError}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 94:40-94:42
+    Visibility: public -/
+def authority.PlanError.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : authority.PlanError) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::cmp::Eq for noble_kernel::authority::PlanError}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 94:40-94:42 -/
+@[reducible]
+def authority.PlanError.Insts.CoreCmpEq : core.cmp.Eq authority.PlanError := {
+  partialEqInst := authority.PlanError.Insts.CoreCmpPartialEqPlanError
+  assert_fields_are_eq :=
+    authority.PlanError.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::authority::{noble_kernel::authority::Plan}::new]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 104:4-121:5
+    Visibility: public -/
+def authority.Plan.new
+  (description : authority.PlanDescription) :
+  Result (core.result.Result authority.Plan authority.PlanError)
+  := do
+  let b ← alloc.vec.Vec.is_empty Global description.operation.name
+  if b
+  then ok (core.result.Result.Err authority.PlanError.EmptyContract)
+  else
+    let i := alloc.vec.Vec.len description.operation.name
+    if i > authority.MAX_CONTRACT_BYTES
+    then ok (core.result.Result.Err authority.PlanError.OversizedContract)
+    else
+      let i1 := alloc.vec.Vec.len description.arguments
+      if i1 > authority.MAX_ARGUMENT_BYTES
+      then ok (core.result.Result.Err authority.PlanError.OversizedArguments)
+      else
+        if description.constraints.not_before >=
+          description.constraints.expires_at
+        then ok (core.result.Result.Err authority.PlanError.InvalidValidity)
+        else
+          if description.constraints.units = 0#u64
+          then ok (core.result.Result.Err authority.PlanError.EmptyQuotaCharge)
+          else ok (core.result.Result.Ok { description })
+
+/-- [noble_kernel::authority::{noble_kernel::authority::Plan}::description]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 123:4-125:5
+    Visibility: public -/
+def authority.Plan.impl.description
+  (self : authority.Plan) : Result authority.PlanDescription := do
+  ok self.description
+
+/-- [noble_kernel::authority::{impl core::clone::Clone for noble_kernel::authority::Limits}::clone]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 128:9-128:14
+    Visibility: public -/
+def authority.Limits.Insts.CoreCloneClone.clone
+  (self : authority.Limits) : Result authority.Limits := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::clone::Clone for noble_kernel::authority::Limits}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 128:9-128:14 -/
+@[reducible]
+def authority.Limits.Insts.CoreCloneClone : core.clone.Clone authority.Limits
+  := {
+  clone := authority.Limits.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::marker::Copy for noble_kernel::authority::Limits}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 128:16-128:20 -/
+@[reducible]
+def authority.Limits.Insts.CoreMarkerCopy : core.marker.Copy authority.Limits
+  := {
+  cloneInst := authority.Limits.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::authority::{impl core::fmt::Debug for noble_kernel::authority::Limits}::fmt]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 128:22-128:27
+    Visibility: public -/
+def authority.Limits.Insts.CoreFmtDebug.fmt
+  (self : authority.Limits) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ core.fmt.DebugUsize self.witnesses
+  let dyn1 := Dyn.mk _ core.fmt.DebugUsize self.attempts
+  let dyn2 := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU32) self.requests
+  core.fmt.Formatter.debug_struct_field3_finish f (toStr "Limits") (toStr
+    "witnesses") dyn (toStr "attempts") dyn1 (toStr "requests") dyn2
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::fmt::Debug for noble_kernel::authority::Limits}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 128:22-128:27 -/
+@[reducible]
+def authority.Limits.Insts.CoreFmtDebug : core.fmt.Debug authority.Limits := {
+  fmt := authority.Limits.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::marker::StructuralPartialEq for noble_kernel::authority::Limits}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 128:29-128:38 -/
+@[reducible]
+def authority.Limits.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq authority.Limits := {
+}
+
+/-- [noble_kernel::authority::{impl core::cmp::PartialEq<noble_kernel::authority::Limits> for noble_kernel::authority::Limits}::eq]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 128:29-128:38
+    Visibility: public -/
+def authority.Limits.Insts.CoreCmpPartialEqLimits.eq
+  (self : authority.Limits) (other : authority.Limits) : Result Bool := do
+  if self.requests = other.requests
+  then
+    if self.witnesses = other.witnesses
+    then ok (self.attempts = other.attempts)
+    else ok false
+  else ok false
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::cmp::PartialEq<noble_kernel::authority::Limits> for noble_kernel::authority::Limits}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 128:29-128:38 -/
+@[reducible]
+impl_def authority.Limits.Insts.CoreCmpPartialEqLimits : core.cmp.PartialEq
+  authority.Limits authority.Limits := {
+  eq := authority.Limits.Insts.CoreCmpPartialEqLimits.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    authority.Limits.Insts.CoreCmpPartialEqLimits
+}
+
+/-- [noble_kernel::authority::{impl core::cmp::Eq for noble_kernel::authority::Limits}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 128:40-128:42
+    Visibility: public -/
+def authority.Limits.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : authority.Limits) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::cmp::Eq for noble_kernel::authority::Limits}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 128:40-128:42 -/
+@[reducible]
+def authority.Limits.Insts.CoreCmpEq : core.cmp.Eq authority.Limits := {
+  partialEqInst := authority.Limits.Insts.CoreCmpPartialEqLimits
+  assert_fields_are_eq := authority.Limits.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::authority::{impl core::clone::Clone for noble_kernel::authority::Profile}::clone]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 137:9-137:14
+    Visibility: public -/
+def authority.Profile.Insts.CoreCloneClone.clone
+  (self : authority.Profile) : Result authority.Profile := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::clone::Clone for noble_kernel::authority::Profile}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 137:9-137:14 -/
+@[reducible]
+def authority.Profile.Insts.CoreCloneClone : core.clone.Clone authority.Profile
+  := {
+  clone := authority.Profile.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::marker::Copy for noble_kernel::authority::Profile}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 137:16-137:20 -/
+@[reducible]
+def authority.Profile.Insts.CoreMarkerCopy : core.marker.Copy authority.Profile
+  := {
+  cloneInst := authority.Profile.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::types::{impl core::fmt::Debug for noble_kernel::types::ResourceKind}::fmt]:
+    Source: 'crates/noble-kernel/src/types.rs', lines 14:22-14:27
+    Visibility: public -/
+def types.ResourceKind.Insts.CoreFmtDebug.fmt
+  (self : types.ResourceKind) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU32) self
+  core.fmt.Formatter.debug_tuple_field1_finish f (toStr "ResourceKind") dyn
+
+/-- Trait implementation: [noble_kernel::types::{impl core::fmt::Debug for noble_kernel::types::ResourceKind}]
+    Source: 'crates/noble-kernel/src/types.rs', lines 14:22-14:27 -/
+@[reducible]
+def types.ResourceKind.Insts.CoreFmtDebug : core.fmt.Debug types.ResourceKind
+  := {
+  fmt := types.ResourceKind.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_kernel::authority::{impl core::fmt::Debug for noble_kernel::authority::Profile}::fmt]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 137:22-137:27
+    Visibility: public -/
+def authority.Profile.Insts.CoreFmtDebug.fmt
+  (self : authority.Profile) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ authority.OwnerContext.Insts.CoreFmtDebug self.owner
+  let dyn1 := Dyn.mk _ types.ResourceKind.Insts.CoreFmtDebug self.witness_kind
+  let dyn2 :=
+    Dyn.mk _ authority.SourceId.Insts.CoreFmtDebug self.authority_source
+  let dyn3 :=
+    Dyn.mk _ authority.SourceId.Insts.CoreFmtDebug self.observation_source
+  let dyn4 :=
+    Dyn.mk _ authority.SourceId.Insts.CoreFmtDebug self.invocation_source
+  let dyn5 := Dyn.mk _ authority.Checkpoint.Insts.CoreFmtDebug self.checkpoint
+  let dyn6 :=
+    Dyn.mk _ (core.fmt.DebugShared authority.Limits.Insts.CoreFmtDebug)
+      self.limits
+  let values :=
+    Array.to_slice
+      (Array.make 7#usize [ dyn, dyn1, dyn2, dyn3, dyn4, dyn5, dyn6 ])
+  let s ←
+    lift (Array.to_slice
+      (Array.make 7#usize [
+        toStr "owner", toStr "witness_kind", toStr "authority_source", toStr
+        "observation_source", toStr "invocation_source", toStr "checkpoint",
+        toStr "limits"
+        ]))
+  core.fmt.Formatter.debug_struct_fields_finish f (toStr "Profile") s values
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::fmt::Debug for noble_kernel::authority::Profile}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 137:22-137:27 -/
+@[reducible]
+def authority.Profile.Insts.CoreFmtDebug : core.fmt.Debug authority.Profile
+  := {
+  fmt := authority.Profile.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::marker::StructuralPartialEq for noble_kernel::authority::Profile}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 137:29-137:38 -/
+@[reducible]
+def authority.Profile.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq authority.Profile := {
+}
+
+/-- [noble_kernel::authority::{impl core::cmp::PartialEq<noble_kernel::authority::Profile> for noble_kernel::authority::Profile}::eq]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 137:29-137:38
+    Visibility: public -/
+def authority.Profile.Insts.CoreCmpPartialEqProfile.eq
+  (self : authority.Profile) (other : authority.Profile) : Result Bool := do
+  let b ←
+    authority.OwnerContext.Insts.CoreCmpPartialEqOwnerContext.eq self.owner
+      other.owner
+  if b
+  then
+    let b1 ←
+      types.ResourceKind.Insts.CoreCmpPartialEqResourceKind.eq
+        self.witness_kind other.witness_kind
+    if b1
+    then
+      let b2 ←
+        authority.SourceId.Insts.CoreCmpPartialEqSourceId.eq
+          self.authority_source other.authority_source
+      if b2
+      then
+        let b3 ←
+          authority.SourceId.Insts.CoreCmpPartialEqSourceId.eq
+            self.observation_source other.observation_source
+        if b3
+        then
+          let b4 ←
+            authority.SourceId.Insts.CoreCmpPartialEqSourceId.eq
+              self.invocation_source other.invocation_source
+          if b4
+          then
+            let b5 ←
+              authority.Checkpoint.Insts.CoreCmpPartialEqCheckpoint.eq
+                self.checkpoint other.checkpoint
+            if b5
+            then
+              authority.Limits.Insts.CoreCmpPartialEqLimits.eq self.limits
+                other.limits
+            else ok false
+          else ok false
+        else ok false
+      else ok false
+    else ok false
+  else ok false
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::cmp::PartialEq<noble_kernel::authority::Profile> for noble_kernel::authority::Profile}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 137:29-137:38 -/
+@[reducible]
+impl_def authority.Profile.Insts.CoreCmpPartialEqProfile : core.cmp.PartialEq
+  authority.Profile authority.Profile := {
+  eq := authority.Profile.Insts.CoreCmpPartialEqProfile.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    authority.Profile.Insts.CoreCmpPartialEqProfile
+}
+
+/-- [noble_kernel::authority::{impl core::cmp::Eq for noble_kernel::authority::Profile}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 137:40-137:42
+    Visibility: public -/
+def authority.Profile.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : authority.Profile) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::cmp::Eq for noble_kernel::authority::Profile}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 137:40-137:42 -/
+@[reducible]
+def authority.Profile.Insts.CoreCmpEq : core.cmp.Eq authority.Profile := {
+  partialEqInst := authority.Profile.Insts.CoreCmpPartialEqProfile
+  assert_fields_are_eq :=
+    authority.Profile.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::authority::{impl core::clone::Clone for noble_kernel::authority::SetupError}::clone]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 148:9-148:14
+    Visibility: public -/
+def authority.SetupError.Insts.CoreCloneClone.clone
+  (self : authority.SetupError) : Result authority.SetupError := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::clone::Clone for noble_kernel::authority::SetupError}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 148:9-148:14 -/
+@[reducible]
+def authority.SetupError.Insts.CoreCloneClone : core.clone.Clone
+  authority.SetupError := {
+  clone := authority.SetupError.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::marker::Copy for noble_kernel::authority::SetupError}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 148:16-148:20 -/
+@[reducible]
+def authority.SetupError.Insts.CoreMarkerCopy : core.marker.Copy
+  authority.SetupError := {
+  cloneInst := authority.SetupError.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::authority::{impl core::fmt::Debug for noble_kernel::authority::SetupError}::fmt]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 148:22-148:27
+    Visibility: public -/
+def authority.SetupError.Insts.CoreFmtDebug.fmt
+  (self : authority.SetupError) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | authority.SetupError.InvalidLimits =>
+    core.fmt.Formatter.write_str f (toStr "InvalidLimits")
+  | authority.SetupError.StaleCheckpoint =>
+    core.fmt.Formatter.write_str f (toStr "StaleCheckpoint")
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::fmt::Debug for noble_kernel::authority::SetupError}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 148:22-148:27 -/
+@[reducible]
+def authority.SetupError.Insts.CoreFmtDebug : core.fmt.Debug
+  authority.SetupError := {
+  fmt := authority.SetupError.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::marker::StructuralPartialEq for noble_kernel::authority::SetupError}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 148:29-148:38 -/
+@[reducible]
+def authority.SetupError.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq authority.SetupError := {
+}
+
+/-- [noble_kernel::authority::{impl core::cmp::PartialEq<noble_kernel::authority::SetupError> for noble_kernel::authority::SetupError}::eq]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 148:29-148:38
+    Visibility: public -/
+def authority.SetupError.Insts.CoreCmpPartialEqSetupError.eq
+  (self : authority.SetupError) (other : authority.SetupError) :
+  Result Bool
+  := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  ok (self1 = other1)
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::cmp::PartialEq<noble_kernel::authority::SetupError> for noble_kernel::authority::SetupError}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 148:29-148:38 -/
+@[reducible]
+impl_def authority.SetupError.Insts.CoreCmpPartialEqSetupError :
+  core.cmp.PartialEq authority.SetupError authority.SetupError := {
+  eq := authority.SetupError.Insts.CoreCmpPartialEqSetupError.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    authority.SetupError.Insts.CoreCmpPartialEqSetupError
+}
+
+/-- [noble_kernel::authority::{impl core::cmp::Eq for noble_kernel::authority::SetupError}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 148:40-148:42
+    Visibility: public -/
+def authority.SetupError.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : authority.SetupError) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::cmp::Eq for noble_kernel::authority::SetupError}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 148:40-148:42 -/
+@[reducible]
+def authority.SetupError.Insts.CoreCmpEq : core.cmp.Eq authority.SetupError
+  := {
+  partialEqInst := authority.SetupError.Insts.CoreCmpPartialEqSetupError
+  assert_fields_are_eq :=
+    authority.SetupError.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::types::{impl core::clone::Clone for noble_kernel::types::ResourceKind}::clone]:
+    Source: 'crates/noble-kernel/src/types.rs', lines 14:9-14:14
+    Visibility: public -/
+def types.ResourceKind.Insts.CoreCloneClone.clone
+  (self : types.ResourceKind) : Result types.ResourceKind := do
+  ok self
+
+/-- [noble_kernel::authority::{impl core::clone::Clone for noble_kernel::authority::Grant}::clone]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 156:9-156:14
+    Visibility: public -/
+def authority.Grant.Insts.CoreCloneClone.clone
+  (self : authority.Grant) : Result authority.Grant := do
+  let p ← authority.Plan.Insts.CoreCloneClone.clone self.plan
+  let rk ← types.ResourceKind.Insts.CoreCloneClone.clone self.kind
+  let i ← lift (core.clone.impls.CloneU32.clone self.rights)
+  ok { plan := p, kind := rk, rights := i }
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::clone::Clone for noble_kernel::authority::Grant}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 156:9-156:14 -/
+@[reducible]
+def authority.Grant.Insts.CoreCloneClone : core.clone.Clone authority.Grant
+  := {
+  clone := authority.Grant.Insts.CoreCloneClone.clone
+}
+
+/-- [noble_kernel::authority::{impl core::fmt::Debug for noble_kernel::authority::Grant}::fmt]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 156:16-156:21
+    Visibility: public -/
+def authority.Grant.Insts.CoreFmtDebug.fmt
+  (self : authority.Grant) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ authority.Plan.Insts.CoreFmtDebug self.plan
+  let dyn1 := Dyn.mk _ types.ResourceKind.Insts.CoreFmtDebug self.kind
+  let dyn2 := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU32) self.rights
+  core.fmt.Formatter.debug_struct_field3_finish f (toStr "Grant") (toStr
+    "plan") dyn (toStr "kind") dyn1 (toStr "rights") dyn2
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::fmt::Debug for noble_kernel::authority::Grant}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 156:16-156:21 -/
+@[reducible]
+def authority.Grant.Insts.CoreFmtDebug : core.fmt.Debug authority.Grant := {
+  fmt := authority.Grant.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::marker::StructuralPartialEq for noble_kernel::authority::Grant}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 156:23-156:32 -/
+@[reducible]
+def authority.Grant.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq authority.Grant := {
+}
+
+/-- [noble_kernel::authority::{impl core::cmp::PartialEq<noble_kernel::authority::Grant> for noble_kernel::authority::Grant}::eq]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 156:23-156:32
+    Visibility: public -/
+def authority.Grant.Insts.CoreCmpPartialEqGrant.eq
+  (self : authority.Grant) (other : authority.Grant) : Result Bool := do
+  if self.rights = other.rights
+  then
+    let b ← authority.Plan.Insts.CoreCmpPartialEqPlan.eq self.plan other.plan
+    if b
+    then
+      types.ResourceKind.Insts.CoreCmpPartialEqResourceKind.eq self.kind
+        other.kind
+    else ok false
+  else ok false
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::cmp::PartialEq<noble_kernel::authority::Grant> for noble_kernel::authority::Grant}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 156:23-156:32 -/
+@[reducible]
+impl_def authority.Grant.Insts.CoreCmpPartialEqGrant : core.cmp.PartialEq
+  authority.Grant authority.Grant := {
+  eq := authority.Grant.Insts.CoreCmpPartialEqGrant.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    authority.Grant.Insts.CoreCmpPartialEqGrant
+}
+
+/-- [noble_kernel::authority::{impl core::cmp::Eq for noble_kernel::authority::Grant}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 156:34-156:36
+    Visibility: public -/
+def authority.Grant.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : authority.Grant) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::cmp::Eq for noble_kernel::authority::Grant}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 156:34-156:36 -/
+@[reducible]
+def authority.Grant.Insts.CoreCmpEq : core.cmp.Eq authority.Grant := {
+  partialEqInst := authority.Grant.Insts.CoreCmpPartialEqGrant
+  assert_fields_are_eq := authority.Grant.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::authority::{impl core::clone::Clone for noble_kernel::authority::CurrentFacts}::clone]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 166:9-166:14
+    Visibility: public -/
+def authority.CurrentFacts.Insts.CoreCloneClone.clone
+  (self : authority.CurrentFacts) : Result authority.CurrentFacts := do
+  let si ← authority.SourceId.Insts.CoreCloneClone.clone self.source
+  let c ← authority.Checkpoint.Insts.CoreCloneClone.clone self.checkpoint
+  let o ←
+    core.option.Option.Insts.CoreCloneClone.clone
+      authority.Grant.Insts.CoreCloneClone self.grant
+  let o1 ←
+    core.option.Option.Insts.CoreCloneClone.clone core.clone.CloneBool
+      self.credentials_valid
+  let o2 ←
+    core.option.Option.Insts.CoreCloneClone.clone core.clone.CloneBool
+      self.revoked
+  let o3 ←
+    core.option.Option.Insts.CoreCloneClone.clone
+      authority.PolicyRevision.Insts.CoreCloneClone self.policy
+  let o4 ←
+    core.option.Option.Insts.CoreCloneClone.clone core.clone.CloneU64
+      self.quota_remaining
+  ok
+    {
+      source := si,
+      checkpoint := c,
+      grant := o,
+      credentials_valid := o1,
+      revoked := o2,
+      policy := o3,
+      quota_remaining := o4
+    }
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::clone::Clone for noble_kernel::authority::CurrentFacts}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 166:9-166:14 -/
+@[reducible]
+def authority.CurrentFacts.Insts.CoreCloneClone : core.clone.Clone
+  authority.CurrentFacts := {
+  clone := authority.CurrentFacts.Insts.CoreCloneClone.clone
+}
+
+/-- [noble_kernel::authority::{impl core::fmt::Debug for noble_kernel::authority::CurrentFacts}::fmt]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 166:16-166:21
+    Visibility: public -/
+def authority.CurrentFacts.Insts.CoreFmtDebug.fmt
+  (self : authority.CurrentFacts) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ authority.SourceId.Insts.CoreFmtDebug self.source
+  let dyn1 := Dyn.mk _ authority.Checkpoint.Insts.CoreFmtDebug self.checkpoint
+  let dyn2 :=
+    Dyn.mk _ (core.option.Option.Insts.CoreFmtDebug
+      authority.Grant.Insts.CoreFmtDebug) self.grant
+  let dyn3 :=
+    Dyn.mk _ (core.option.Option.Insts.CoreFmtDebug core.fmt.DebugBool)
+      self.credentials_valid
+  let dyn4 :=
+    Dyn.mk _ (core.option.Option.Insts.CoreFmtDebug core.fmt.DebugBool)
+      self.revoked
+  let dyn5 :=
+    Dyn.mk _ (core.option.Option.Insts.CoreFmtDebug
+      authority.PolicyRevision.Insts.CoreFmtDebug) self.policy
+  let dyn6 :=
+    Dyn.mk _ (core.fmt.DebugShared (core.option.Option.Insts.CoreFmtDebug
+      core.fmt.DebugU64)) self.quota_remaining
+  let values :=
+    Array.to_slice
+      (Array.make 7#usize [ dyn, dyn1, dyn2, dyn3, dyn4, dyn5, dyn6 ])
+  let s ←
+    lift (Array.to_slice
+      (Array.make 7#usize [
+        toStr "source", toStr "checkpoint", toStr "grant", toStr
+        "credentials_valid", toStr "revoked", toStr "policy", toStr
+        "quota_remaining"
+        ]))
+  core.fmt.Formatter.debug_struct_fields_finish f (toStr "CurrentFacts") s
+    values
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::fmt::Debug for noble_kernel::authority::CurrentFacts}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 166:16-166:21 -/
+@[reducible]
+def authority.CurrentFacts.Insts.CoreFmtDebug : core.fmt.Debug
+  authority.CurrentFacts := {
+  fmt := authority.CurrentFacts.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::marker::StructuralPartialEq for noble_kernel::authority::CurrentFacts}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 166:23-166:32 -/
+@[reducible]
+def authority.CurrentFacts.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq authority.CurrentFacts := {
+}
+
+/-- [noble_kernel::authority::{impl core::cmp::PartialEq<noble_kernel::authority::CurrentFacts> for noble_kernel::authority::CurrentFacts}::eq]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 166:23-166:32
+    Visibility: public -/
+def authority.CurrentFacts.Insts.CoreCmpPartialEqCurrentFacts.eq
+  (self : authority.CurrentFacts) (other : authority.CurrentFacts) :
+  Result Bool
+  := do
+  let b ←
+    authority.SourceId.Insts.CoreCmpPartialEqSourceId.eq self.source
+      other.source
+  if b
+  then
+    let b1 ←
+      authority.Checkpoint.Insts.CoreCmpPartialEqCheckpoint.eq self.checkpoint
+        other.checkpoint
+    if b1
+    then
+      let b2 ←
+        core.option.Option.Insts.CoreCmpPartialEqOption.eq
+          authority.Grant.Insts.CoreCmpPartialEqGrant self.grant other.grant
+      if b2
+      then
+        let b3 ←
+          core.option.Option.Insts.CoreCmpPartialEqOption.eq
+            core.cmp.PartialEqBool self.credentials_valid
+            other.credentials_valid
+        if b3
+        then
+          let b4 ←
+            core.option.Option.Insts.CoreCmpPartialEqOption.eq
+              core.cmp.PartialEqBool self.revoked other.revoked
+          if b4
+          then
+            let b5 ←
+              core.option.Option.Insts.CoreCmpPartialEqOption.eq
+                authority.PolicyRevision.Insts.CoreCmpPartialEqPolicyRevision
+                self.policy other.policy
+            if b5
+            then
+              core.option.Option.Insts.CoreCmpPartialEqOption.eq
+                core.cmp.PartialEqU64 self.quota_remaining
+                other.quota_remaining
+            else ok false
+          else ok false
+        else ok false
+      else ok false
+    else ok false
+  else ok false
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::cmp::PartialEq<noble_kernel::authority::CurrentFacts> for noble_kernel::authority::CurrentFacts}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 166:23-166:32 -/
+@[reducible]
+impl_def authority.CurrentFacts.Insts.CoreCmpPartialEqCurrentFacts :
+  core.cmp.PartialEq authority.CurrentFacts authority.CurrentFacts := {
+  eq := authority.CurrentFacts.Insts.CoreCmpPartialEqCurrentFacts.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    authority.CurrentFacts.Insts.CoreCmpPartialEqCurrentFacts
+}
+
+/-- [noble_kernel::authority::{impl core::cmp::Eq for noble_kernel::authority::CurrentFacts}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 166:34-166:36
+    Visibility: public -/
+def authority.CurrentFacts.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : authority.CurrentFacts) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::cmp::Eq for noble_kernel::authority::CurrentFacts}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 166:34-166:36 -/
+@[reducible]
+def authority.CurrentFacts.Insts.CoreCmpEq : core.cmp.Eq authority.CurrentFacts
+  := {
+  partialEqInst := authority.CurrentFacts.Insts.CoreCmpPartialEqCurrentFacts
+  assert_fields_are_eq :=
+    authority.CurrentFacts.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::authority::{impl core::clone::Clone for noble_kernel::authority::Counters}::clone]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 177:9-177:14
+    Visibility: public -/
+def authority.Counters.Insts.CoreCloneClone.clone
+  (self : authority.Counters) : Result authority.Counters := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::clone::Clone for noble_kernel::authority::Counters}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 177:9-177:14 -/
+@[reducible]
+def authority.Counters.Insts.CoreCloneClone : core.clone.Clone
+  authority.Counters := {
+  clone := authority.Counters.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::marker::Copy for noble_kernel::authority::Counters}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 177:16-177:20 -/
+@[reducible]
+def authority.Counters.Insts.CoreMarkerCopy : core.marker.Copy
+  authority.Counters := {
+  cloneInst := authority.Counters.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::authority::{impl core::fmt::Debug for noble_kernel::authority::Counters}::fmt]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 177:22-177:27
+    Visibility: public -/
+def authority.Counters.Insts.CoreFmtDebug.fmt
+  (self : authority.Counters) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ core.fmt.DebugU32 self.authorization_requests
+  let dyn1 := Dyn.mk _ core.fmt.DebugU32 self.admission_requests
+  let dyn2 := Dyn.mk _ core.fmt.DebugU32 self.witnesses_created
+  let dyn3 := Dyn.mk _ core.fmt.DebugU32 self.witness_consumptions
+  let dyn4 := Dyn.mk _ core.fmt.DebugU32 self.attempts_admitted
+  let dyn5 := Dyn.mk _ core.fmt.DebugU32 self.protected_operations
+  let dyn6 := Dyn.mk _ core.fmt.DebugU32 self.approved_observations
+  let dyn7 :=
+    Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU32)
+      self.successful_deliveries
+  let values :=
+    Array.to_slice
+      (Array.make 8#usize [ dyn, dyn1, dyn2, dyn3, dyn4, dyn5, dyn6, dyn7 ])
+  let s ←
+    lift (Array.to_slice
+      (Array.make 8#usize [
+        toStr "authorization_requests", toStr "admission_requests", toStr
+        "witnesses_created", toStr "witness_consumptions", toStr
+        "attempts_admitted", toStr "protected_operations", toStr
+        "approved_observations", toStr "successful_deliveries"
+        ]))
+  core.fmt.Formatter.debug_struct_fields_finish f (toStr "Counters") s values
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::fmt::Debug for noble_kernel::authority::Counters}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 177:22-177:27 -/
+@[reducible]
+def authority.Counters.Insts.CoreFmtDebug : core.fmt.Debug authority.Counters
+  := {
+  fmt := authority.Counters.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::marker::StructuralPartialEq for noble_kernel::authority::Counters}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 177:29-177:38 -/
+@[reducible]
+def authority.Counters.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq authority.Counters := {
+}
+
+/-- [noble_kernel::authority::{impl core::cmp::PartialEq<noble_kernel::authority::Counters> for noble_kernel::authority::Counters}::eq]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 177:29-177:38
+    Visibility: public -/
+def authority.Counters.Insts.CoreCmpPartialEqCounters.eq
+  (self : authority.Counters) (other : authority.Counters) : Result Bool := do
+  if self.authorization_requests = other.authorization_requests
+  then
+    if self.admission_requests = other.admission_requests
+    then
+      if self.witnesses_created = other.witnesses_created
+      then
+        if self.witness_consumptions = other.witness_consumptions
+        then
+          if self.attempts_admitted = other.attempts_admitted
+          then
+            if self.protected_operations = other.protected_operations
+            then
+              if self.approved_observations = other.approved_observations
+              then
+                ok (self.successful_deliveries = other.successful_deliveries)
+              else ok false
+            else ok false
+          else ok false
+        else ok false
+      else ok false
+    else ok false
+  else ok false
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::cmp::PartialEq<noble_kernel::authority::Counters> for noble_kernel::authority::Counters}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 177:29-177:38 -/
+@[reducible]
+impl_def authority.Counters.Insts.CoreCmpPartialEqCounters : core.cmp.PartialEq
+  authority.Counters authority.Counters := {
+  eq := authority.Counters.Insts.CoreCmpPartialEqCounters.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    authority.Counters.Insts.CoreCmpPartialEqCounters
+}
+
+/-- [noble_kernel::authority::{impl core::cmp::Eq for noble_kernel::authority::Counters}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 177:40-177:42
+    Visibility: public -/
+def authority.Counters.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : authority.Counters) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::authority::{impl core::cmp::Eq for noble_kernel::authority::Counters}]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 177:40-177:42 -/
+@[reducible]
+def authority.Counters.Insts.CoreCmpEq : core.cmp.Eq authority.Counters := {
+  partialEqInst := authority.Counters.Insts.CoreCmpPartialEqCounters
+  assert_fields_are_eq :=
+    authority.Counters.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::authority::report::{impl core::cmp::PartialEq<noble_kernel::authority::report::ObservedOutcome> for noble_kernel::authority::report::ObservedOutcome}::eq]:
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 10:29-10:38
+    Visibility: public -/
+def authority.report.ObservedOutcome.Insts.CoreCmpPartialEqObservedOutcome.eq
+  (self : authority.report.ObservedOutcome)
+  (other : authority.report.ObservedOutcome) :
+  Result Bool
+  := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  ok (self1 = other1)
+
+/-- [noble_kernel::authority::permit::{impl core::cmp::PartialEq<noble_kernel::authority::permit::AttemptKey> for noble_kernel::authority::permit::AttemptKey}::eq]:
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 120:29-120:38
+    Visibility: public -/
+def authority.permit.AttemptKey.Insts.CoreCmpPartialEqAttemptKey.eq
+  (self : authority.permit.AttemptKey) (other : authority.permit.AttemptKey) :
+  Result Bool
+  := do
+  if self.generation = other.generation
+  then
+    let b ←
+      authority.OwnerContext.Insts.CoreCmpPartialEqOwnerContext.eq self.owner
+        other.owner
+    if b
+    then ok (self.slot = other.slot)
+    else ok false
+  else ok false
+
+/-- [noble_kernel::authority::report::{impl core::cmp::PartialEq<noble_kernel::authority::report::ObservationDescription> for noble_kernel::authority::report::ObservationDescription}::eq]:
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 19:23-19:32
+    Visibility: public -/
+def
+  authority.report.ObservationDescription.Insts.CoreCmpPartialEqObservationDescription.eq
+  (self : authority.report.ObservationDescription)
+  (other : authority.report.ObservationDescription) :
+  Result Bool
+  := do
+  let b ←
+    authority.permit.AttemptKey.Insts.CoreCmpPartialEqAttemptKey.eq
+      self.attempt other.attempt
+  if b
+  then
+    let b1 ←
+      authority.Plan.Insts.CoreCmpPartialEqPlan.eq self.plan other.plan
+    if b1
+    then
+      let b2 ←
+        authority.SourceId.Insts.CoreCmpPartialEqSourceId.eq self.source
+          other.source
+      if b2
+      then
+        let b3 ←
+          authority.Checkpoint.Insts.CoreCmpPartialEqCheckpoint.eq
+            self.checkpoint other.checkpoint
+        if b3
+        then
+          authority.report.ObservedOutcome.Insts.CoreCmpPartialEqObservedOutcome.eq
+            self.outcome other.outcome
+        else ok false
+      else ok false
+    else ok false
+  else ok false
+
+/-- [noble_kernel::authority::observation::{noble_kernel::authority::Authority}::validate_observation]:
+    Source: 'crates/noble-kernel/src/authority/observation.rs', lines 50:4-74:5 -/
+def authority.observation.Authority.validate_observation
+  (self : authority.Authority)
+  (description : authority.report.ObservationDescription) :
+  Result (core.result.Result Unit authority.report.BoundaryError)
+  := do
+  let b ←
+    core.cmp.PartialEq.ne.trait_default
+      authority.SourceId.Insts.CoreCmpPartialEqSourceId description.source
+      self.profile.observation_source
+  if b
+  then ok (core.result.Result.Err authority.report.BoundaryError.WrongSource)
+  else
+    let r ←
+      authority.admission.Authority.attempt_record self description.attempt
+    match r with
+    | core.result.Result.Ok value =>
+      if value.started
+      then
+        let b1 ←
+          core.cmp.PartialEq.ne.trait_default
+            authority.Plan.Insts.CoreCmpPartialEqPlan description.plan
+            value.plan
+        if b1
+        then
+          ok (core.result.Result.Err
+            authority.report.BoundaryError.ChangedPlan)
+        else
+          let b2 ←
+            core.cmp.PartialEq.ne.trait_default
+              authority.Checkpoint.Insts.CoreCmpPartialEqCheckpoint
+              description.checkpoint self.profile.checkpoint
+          if b2
+          then
+            ok (core.result.Result.Err
+              authority.report.BoundaryError.StaleObservation)
+          else
+            if description.checkpoint.sequence < value.admitted.sequence
+            then
+              ok (core.result.Result.Err
+                authority.report.BoundaryError.StaleObservation)
+            else
+              if description.checkpoint.now < value.admitted.now
+              then
+                ok (core.result.Result.Err
+                  authority.report.BoundaryError.StaleObservation)
+              else ok (core.result.Result.Ok ())
+      else
+        ok (core.result.Result.Err authority.report.BoundaryError.NotStarted)
+    | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_kernel::authority::observation::{noble_kernel::authority::Authority}::observe_from_trusted_host]:
+    Source: 'crates/noble-kernel/src/authority/observation.rs', lines 11:4-44:5
+    Visibility: public -/
+def authority.observation.Authority.observe_from_trusted_host
+  (self : authority.Authority)
+  (description : authority.report.ObservationDescription) :
+  Result ((core.result.Result authority.report.Observation
+    authority.report.BoundaryError) × authority.Authority)
+  := do
+  let r ←
+    authority.observation.Authority.validate_observation self description
+  match r with
+  | core.result.Result.Ok _ =>
+    let (record, index_mut_back) ←
+      alloc.vec.Vec.index_mut (core.slice.index.SliceIndexUsizeSlice
+        authority.AttemptRecord) self.attempts description.attempt.slot
+    match description.outcome with
+    | authority.report.ObservedOutcome.Unknown =>
+      let b := core.option.Option.is_some record.terminal
+      if b
+      then
+        let v := index_mut_back record
+        ok (core.result.Result.Err
+          authority.report.BoundaryError.ConflictingObservation,
+          { self with attempts := v })
+      else
+        match record.unknown with
+        | none =>
+          let i ← self.counters.approved_observations + 1#u32
+          let v := index_mut_back { record with unknown := (some description) }
+          ok (core.result.Result.Ok
+            {
+              attempt := description.attempt,
+              outcome := authority.report.ObservedOutcome.Unknown
+            },
+            {
+              self
+                with
+                attempts := v,
+                counters := { self.counters with approved_observations := i }
+            })
+        | some previous =>
+          let b1 ←
+            authority.report.ObservationDescription.Insts.CoreCmpPartialEqObservationDescription.eq
+              previous description
+          if b1
+          then
+            let v := index_mut_back record
+            ok (core.result.Result.Ok
+              {
+                attempt := description.attempt,
+                outcome := authority.report.ObservedOutcome.Unknown
+              }, { self with attempts := v })
+          else
+            let v := index_mut_back record
+            ok (core.result.Result.Err
+              authority.report.BoundaryError.ConflictingObservation,
+              { self with attempts := v })
+    | authority.report.ObservedOutcome.OperationFailure =>
+      match record.terminal with
+      | none =>
+        let i ← self.counters.approved_observations + 1#u32
+        let v := index_mut_back { record with terminal := (some description) }
+        ok (core.result.Result.Ok
+          {
+            attempt := description.attempt,
+            outcome := authority.report.ObservedOutcome.OperationFailure
+          },
+          {
+            self
+              with
+              attempts := v,
+              counters := { self.counters with approved_observations := i }
+          })
+      | some previous =>
+        let b ←
+          authority.report.ObservationDescription.Insts.CoreCmpPartialEqObservationDescription.eq
+            previous description
+        if b
+        then
+          let v := index_mut_back record
+          ok (core.result.Result.Ok
+            {
+              attempt := description.attempt,
+              outcome := authority.report.ObservedOutcome.OperationFailure
+            }, { self with attempts := v })
+        else
+          let v := index_mut_back record
+          ok (core.result.Result.Err
+            authority.report.BoundaryError.ConflictingObservation,
+            { self with attempts := v })
+    | authority.report.ObservedOutcome.OperationSuccess =>
+      match record.terminal with
+      | none =>
+        let i ← self.counters.approved_observations + 1#u32
+        let v := index_mut_back { record with terminal := (some description) }
+        ok (core.result.Result.Ok
+          {
+            attempt := description.attempt,
+            outcome := authority.report.ObservedOutcome.OperationSuccess
+          },
+          {
+            self
+              with
+              attempts := v,
+              counters := { self.counters with approved_observations := i }
+          })
+      | some previous =>
+        let b ←
+          authority.report.ObservationDescription.Insts.CoreCmpPartialEqObservationDescription.eq
+            previous description
+        if b
+        then
+          let v := index_mut_back record
+          ok (core.result.Result.Ok
+            {
+              attempt := description.attempt,
+              outcome := authority.report.ObservedOutcome.OperationSuccess
+            }, { self with attempts := v })
+        else
+          let v := index_mut_back record
+          ok (core.result.Result.Err
+            authority.report.BoundaryError.ConflictingObservation,
+            { self with attempts := v })
+  | core.result.Result.Err error => ok (core.result.Result.Err error, self)
+
+/-- [noble_kernel::authority::observation::{noble_kernel::authority::Authority}::approved_observation]:
+    Source: 'crates/noble-kernel/src/authority/observation.rs', lines 76:4-92:5 -/
+def authority.observation.Authority.approved_observation
+  (self : authority.Authority) (observation : authority.report.Observation) :
+  Result (core.result.Result authority.report.ObservationDescription
+    authority.report.BoundaryError)
+  := do
+  let r ←
+    authority.admission.Authority.attempt_record self observation.attempt
+  match r with
+  | core.result.Result.Ok value =>
+    let (oo, retained) ←
+      match observation.outcome with
+      | authority.report.ObservedOutcome.Unknown =>
+        ok (authority.report.ObservedOutcome.Unknown, value.unknown)
+      | authority.report.ObservedOutcome.OperationFailure =>
+        ok (authority.report.ObservedOutcome.OperationFailure, value.terminal)
+      | authority.report.ObservedOutcome.OperationSuccess =>
+        ok (authority.report.ObservedOutcome.OperationSuccess, value.terminal)
+    match retained with
+    | none =>
+      ok (core.result.Result.Err
+        authority.report.BoundaryError.MissingObservation)
+    | some retained1 =>
+      let b ←
+        authority.report.ObservedOutcome.Insts.CoreCmpPartialEqObservedOutcome.eq
+          retained1.outcome oo
+      if b
+      then ok (core.result.Result.Ok retained1)
+      else
+        ok (core.result.Result.Err
+          authority.report.BoundaryError.InapplicableObservation)
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_kernel::authority::observation::{noble_kernel::authority::Authority}::retire_live_witnesses]: loop body 0:
+    Source: 'crates/noble-kernel/src/authority/observation.rs', lines 206:8-214:9 -/
+@[rust_loop_body]
+def authority.observation.Authority.retire_live_witnesses_loop.body
+  (self : authority.Authority) (index : Std.Usize) :
+  Result (ControlFlow (authority.Authority × Std.Usize) (authority.Profile ×
+    (alloc.vec.Vec authority.WitnessRecord) × (alloc.vec.Vec
+    authority.AttemptRecord) × (alloc.vec.Vec authority.QuotaRecord) ×
+    (alloc.vec.Vec types.EffId) × authority.Counters ×
+    authority.report.InvocationOutcome × (Option authority.DeliveryRecord)))
+  := do
+  let i := alloc.vec.Vec.len self.witnesses
+  if index < i
+  then
+    let wr ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        authority.WitnessRecord) self.witnesses index
+    let v ←
+      match wr.state with
+      | authority.permit.WitnessState.Live =>
+        do
+        let (wr1, index_mut_back) ←
+          alloc.vec.Vec.index_mut (core.slice.index.SliceIndexUsizeSlice
+            authority.WitnessRecord) self.witnesses index
+        ok (index_mut_back
+          { wr1 with state := authority.permit.WitnessState.Retired })
+      | authority.permit.WitnessState.Consumed => ok self.witnesses
+      | authority.permit.WitnessState.Retired => ok self.witnesses
+    let index1 ← index + 1#usize
+    ok (cont ({ self with witnesses := v }, index1))
+  else
+    ok (done (self.profile, self.witnesses, self.attempts, self.quotas,
+      self.effects, self.counters, self.invocation, self.delivered))
+
+/-- [noble_kernel::authority::observation::{noble_kernel::authority::Authority}::retire_live_witnesses]: loop 0:
+    Source: 'crates/noble-kernel/src/authority/observation.rs', lines 206:8-214:9 -/
+@[rust_loop]
+def authority.observation.Authority.retire_live_witnesses_loop
+  (self : authority.Authority) (index : Std.Usize) :
+  Result (authority.Profile × (alloc.vec.Vec authority.WitnessRecord) ×
+    (alloc.vec.Vec authority.AttemptRecord) × (alloc.vec.Vec
+    authority.QuotaRecord) × (alloc.vec.Vec types.EffId) × authority.Counters
+    × authority.report.InvocationOutcome × (Option authority.DeliveryRecord))
+  := do
+  loop
+    (fun (self1, index1) =>
+      authority.observation.Authority.retire_live_witnesses_loop.body self1
+      index1)
+    (self, index)
+
+/-- [noble_kernel::authority::observation::{noble_kernel::authority::Authority}::retire_live_witnesses]:
+    Source: 'crates/noble-kernel/src/authority/observation.rs', lines 204:4-215:5 -/
+def authority.observation.Authority.retire_live_witnesses
+  (self : authority.Authority) : Result authority.Authority := do
+  let (p, v, v1, v2, v3, c, io, o) ←
+    authority.observation.Authority.retire_live_witnesses_loop self 0#usize
+  ok
+    {
+      profile := p,
+      witnesses := v,
+      attempts := v1,
+      quotas := v2,
+      effects := v3,
+      counters := c,
+      invocation := io,
+      delivered := o
+    }
+
+/-- [noble_kernel::authority::observation::{noble_kernel::authority::Authority}::cancel_invocation]:
+    Source: 'crates/noble-kernel/src/authority/observation.rs', lines 102:4-114:5
+    Visibility: public -/
+def authority.observation.Authority.cancel_invocation
+  (self : authority.Authority) :
+  Result ((core.result.Result authority.report.InvocationOutcome
+    authority.report.BoundaryError) × authority.Authority)
+  := do
+  match self.invocation with
+  | authority.report.InvocationOutcome.Pending =>
+    let self1 ←
+      authority.observation.Authority.retire_live_witnesses
+        { self with invocation := authority.report.InvocationOutcome.Cancelled
+        }
+    ok (core.result.Result.Ok self1.invocation, self1)
+  | authority.report.InvocationOutcome.Succeeded =>
+    ok (core.result.Result.Err
+      authority.report.BoundaryError.InvocationFinished, self)
+  | authority.report.InvocationOutcome.Failed =>
+    ok (core.result.Result.Err
+      authority.report.BoundaryError.InvocationFinished, self)
+  | authority.report.InvocationOutcome.Cancelled =>
+    ok (core.result.Result.Ok authority.report.InvocationOutcome.Cancelled,
+      self)
+
+/-- [noble_kernel::authority::observation::{noble_kernel::authority::Authority}::fail_invocation]:
+    Source: 'crates/noble-kernel/src/authority/observation.rs', lines 120:4-132:5
+    Visibility: public -/
+def authority.observation.Authority.fail_invocation
+  (self : authority.Authority) :
+  Result ((core.result.Result authority.report.InvocationOutcome
+    authority.report.BoundaryError) × authority.Authority)
+  := do
+  match self.invocation with
+  | authority.report.InvocationOutcome.Pending =>
+    let self1 ←
+      authority.observation.Authority.retire_live_witnesses
+        { self with invocation := authority.report.InvocationOutcome.Failed }
+    ok (core.result.Result.Ok self1.invocation, self1)
+  | authority.report.InvocationOutcome.Succeeded =>
+    ok (core.result.Result.Err
+      authority.report.BoundaryError.InvocationFinished, self)
+  | authority.report.InvocationOutcome.Failed =>
+    ok (core.result.Result.Ok authority.report.InvocationOutcome.Failed, self)
+  | authority.report.InvocationOutcome.Cancelled =>
+    ok (core.result.Result.Err
+      authority.report.BoundaryError.InvocationFinished, self)
+
+/-- Trait implementation: [noble_kernel::authority::permit::{impl core::cmp::PartialEq<noble_kernel::authority::permit::AttemptKey> for noble_kernel::authority::permit::AttemptKey}]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 120:29-120:38 -/
+@[reducible]
+impl_def authority.permit.AttemptKey.Insts.CoreCmpPartialEqAttemptKey :
+  core.cmp.PartialEq authority.permit.AttemptKey authority.permit.AttemptKey
+  := {
+  eq := authority.permit.AttemptKey.Insts.CoreCmpPartialEqAttemptKey.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    authority.permit.AttemptKey.Insts.CoreCmpPartialEqAttemptKey
+}
+
+/-- [noble_kernel::authority::receipts::{noble_kernel::authority::Authority}::applicable]:
+    Source: 'crates/noble-kernel/src/authority/receipts.rs', lines 47:4-100:5 -/
+def authority.receipts.Authority.applicable
+  (self : authority.Authority) (attempt : authority.permit.AttemptKey)
+  (claim : authority.report.ReceiptClaim)
+  (observation : Option authority.report.Observation) :
+  Result (core.result.Result authority.report.ObservationDescription
+    authority.report.BoundaryError)
+  := do
+  match observation with
+  | none =>
+    ok (core.result.Result.Err
+      authority.report.BoundaryError.MissingObservation)
+  | some observation1 =>
+    let b ←
+      core.cmp.PartialEq.ne.trait_default
+        authority.permit.AttemptKey.Insts.CoreCmpPartialEqAttemptKey
+        observation1.attempt attempt
+    if b
+    then
+      ok (core.result.Result.Err
+        authority.report.BoundaryError.InapplicableObservation)
+    else
+      let r ←
+        authority.observation.Authority.approved_observation self observation1
+      match r with
+      | core.result.Result.Ok value =>
+        match claim with
+        | authority.report.ReceiptClaim.Denial =>
+          match value.outcome with
+          | authority.report.ObservedOutcome.Unknown =>
+            ok (core.result.Result.Err
+              authority.report.BoundaryError.InapplicableObservation)
+          | authority.report.ObservedOutcome.OperationFailure =>
+            ok (core.result.Result.Err
+              authority.report.BoundaryError.InapplicableObservation)
+          | authority.report.ObservedOutcome.OperationSuccess =>
+            ok (core.result.Result.Err
+              authority.report.BoundaryError.InapplicableObservation)
+        | authority.report.ReceiptClaim.PreflightFailure =>
+          match value.outcome with
+          | authority.report.ObservedOutcome.Unknown =>
+            ok (core.result.Result.Err
+              authority.report.BoundaryError.InapplicableObservation)
+          | authority.report.ObservedOutcome.OperationFailure =>
+            ok (core.result.Result.Err
+              authority.report.BoundaryError.InapplicableObservation)
+          | authority.report.ObservedOutcome.OperationSuccess =>
+            ok (core.result.Result.Err
+              authority.report.BoundaryError.InapplicableObservation)
+        | authority.report.ReceiptClaim.Unknown =>
+          match value.outcome with
+          | authority.report.ObservedOutcome.Unknown => ok r
+          | authority.report.ObservedOutcome.OperationFailure =>
+            ok (core.result.Result.Err
+              authority.report.BoundaryError.InapplicableObservation)
+          | authority.report.ObservedOutcome.OperationSuccess =>
+            ok (core.result.Result.Err
+              authority.report.BoundaryError.InapplicableObservation)
+        | authority.report.ReceiptClaim.OperationFailure =>
+          match value.outcome with
+          | authority.report.ObservedOutcome.Unknown =>
+            ok (core.result.Result.Err
+              authority.report.BoundaryError.InapplicableObservation)
+          | authority.report.ObservedOutcome.OperationFailure => ok r
+          | authority.report.ObservedOutcome.OperationSuccess =>
+            ok (core.result.Result.Err
+              authority.report.BoundaryError.InapplicableObservation)
+        | authority.report.ReceiptClaim.OperationSuccess =>
+          match value.outcome with
+          | authority.report.ObservedOutcome.Unknown =>
+            ok (core.result.Result.Err
+              authority.report.BoundaryError.InapplicableObservation)
+          | authority.report.ObservedOutcome.OperationFailure =>
+            ok (core.result.Result.Err
+              authority.report.BoundaryError.InapplicableObservation)
+          | authority.report.ObservedOutcome.OperationSuccess => ok r
+        | authority.report.ReceiptClaim.InvocationSuccess =>
+          match value.outcome with
+          | authority.report.ObservedOutcome.Unknown =>
+            match self.delivered with
+            | none =>
+              ok (core.result.Result.Err
+                authority.report.BoundaryError.InapplicableReceipt)
+            | some delivery =>
+              let b1 ←
+                authority.report.InvocationOutcome.Insts.CoreCmpPartialEqInvocationOutcome.eq
+                  self.invocation authority.report.InvocationOutcome.Succeeded
+              if b1
+              then
+                let b2 ←
+                  authority.permit.AttemptKey.Insts.CoreCmpPartialEqAttemptKey.eq
+                    delivery.attempt attempt
+                if b2
+                then ok r
+                else
+                  ok (core.result.Result.Err
+                    authority.report.BoundaryError.InapplicableReceipt)
+              else
+                ok (core.result.Result.Err
+                  authority.report.BoundaryError.InapplicableReceipt)
+          | authority.report.ObservedOutcome.OperationFailure =>
+            match self.delivered with
+            | none =>
+              ok (core.result.Result.Err
+                authority.report.BoundaryError.InapplicableReceipt)
+            | some delivery =>
+              let b1 ←
+                authority.report.InvocationOutcome.Insts.CoreCmpPartialEqInvocationOutcome.eq
+                  self.invocation authority.report.InvocationOutcome.Succeeded
+              if b1
+              then
+                let b2 ←
+                  authority.permit.AttemptKey.Insts.CoreCmpPartialEqAttemptKey.eq
+                    delivery.attempt attempt
+                if b2
+                then ok r
+                else
+                  ok (core.result.Result.Err
+                    authority.report.BoundaryError.InapplicableReceipt)
+              else
+                ok (core.result.Result.Err
+                  authority.report.BoundaryError.InapplicableReceipt)
+          | authority.report.ObservedOutcome.OperationSuccess =>
+            match self.delivered with
+            | none =>
+              ok (core.result.Result.Err
+                authority.report.BoundaryError.InapplicableReceipt)
+            | some delivery =>
+              let b1 ←
+                authority.report.InvocationOutcome.Insts.CoreCmpPartialEqInvocationOutcome.eq
+                  self.invocation authority.report.InvocationOutcome.Succeeded
+              if b1
+              then
+                let b2 ←
+                  authority.permit.AttemptKey.Insts.CoreCmpPartialEqAttemptKey.eq
+                    delivery.attempt attempt
+                if b2
+                then ok r
+                else
+                  ok (core.result.Result.Err
+                    authority.report.BoundaryError.InapplicableReceipt)
+              else
+                ok (core.result.Result.Err
+                  authority.report.BoundaryError.InapplicableReceipt)
+      | core.result.Result.Err _ => ok r
+
+/-- [noble_kernel::authority::receipts::{noble_kernel::authority::Authority}::receipt]:
+    Source: 'crates/noble-kernel/src/authority/receipts.rs', lines 4:4-45:5
+    Visibility: public -/
+def authority.receipts.Authority.receipt
+  (self : authority.Authority) (attempt : authority.permit.AttemptKey)
+  (claim : authority.report.ReceiptClaim)
+  (observation : Option authority.report.Observation) :
+  Result (core.result.Result authority.report.Receipt
+    authority.report.BoundaryError)
+  := do
+  let r ←
+    authority.receipts.Authority.applicable self attempt claim observation
+  match r with
+  | core.result.Result.Ok value =>
+    match claim with
+    | authority.report.ReceiptClaim.Denial =>
+      ok (core.result.Result.Err
+        authority.report.BoundaryError.InapplicableReceipt)
+    | authority.report.ReceiptClaim.PreflightFailure =>
+      ok (core.result.Result.Err
+        authority.report.BoundaryError.InapplicableReceipt)
+    | authority.report.ReceiptClaim.Unknown =>
+      let p ← authority.Plan.Insts.CoreCloneClone.clone value.plan
+      ok (core.result.Result.Ok
+        {
+          description :=
+            {
+              plan := p,
+              boundary_owner := self.profile.owner,
+              attempt := (some attempt),
+              source := value.source,
+              checkpoint := value.checkpoint,
+              claim := authority.report.ReceiptClaim.Unknown,
+              scope := authority.report.ReceiptScope.OperationBoundary,
+              invocation := self.invocation,
+              denial := none,
+              preflight := none
+            }
+        })
+    | authority.report.ReceiptClaim.OperationFailure =>
+      let p ← authority.Plan.Insts.CoreCloneClone.clone value.plan
+      ok (core.result.Result.Ok
+        {
+          description :=
+            {
+              plan := p,
+              boundary_owner := self.profile.owner,
+              attempt := (some attempt),
+              source := value.source,
+              checkpoint := value.checkpoint,
+              claim := authority.report.ReceiptClaim.OperationFailure,
+              scope := authority.report.ReceiptScope.OperationBoundary,
+              invocation := self.invocation,
+              denial := none,
+              preflight := none
+            }
+        })
+    | authority.report.ReceiptClaim.OperationSuccess =>
+      let p ← authority.Plan.Insts.CoreCloneClone.clone value.plan
+      ok (core.result.Result.Ok
+        {
+          description :=
+            {
+              plan := p,
+              boundary_owner := self.profile.owner,
+              attempt := (some attempt),
+              source := value.source,
+              checkpoint := value.checkpoint,
+              claim := authority.report.ReceiptClaim.OperationSuccess,
+              scope := authority.report.ReceiptScope.OperationBoundary,
+              invocation := self.invocation,
+              denial := none,
+              preflight := none
+            }
+        })
+    | authority.report.ReceiptClaim.InvocationSuccess =>
+      match self.delivered with
+      | none =>
+        ok (core.result.Result.Err
+          authority.report.BoundaryError.InapplicableReceipt)
+      | some delivery =>
+        let p ← authority.Plan.Insts.CoreCloneClone.clone value.plan
+        ok (core.result.Result.Ok
+          {
+            description :=
+              {
+                plan := p,
+                boundary_owner := self.profile.owner,
+                attempt := (some attempt),
+                source := self.profile.invocation_source,
+                checkpoint := delivery.checkpoint,
+                claim := authority.report.ReceiptClaim.InvocationSuccess,
+                scope := authority.report.ReceiptScope.InvocationDelivery,
+                invocation := self.invocation,
+                denial := none,
+                preflight := none
+              }
+          })
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_kernel::authority::observation::{noble_kernel::authority::Authority}::deliver_success]:
+    Source: 'crates/noble-kernel/src/authority/observation.rs', lines 143:4-167:5
+    Visibility: public -/
+def authority.observation.Authority.deliver_success
+  (self : authority.Authority) (attempt : authority.permit.AttemptKey)
+  (observation : authority.report.Observation) :
+  Result ((core.result.Result authority.report.Receipt
+    authority.report.BoundaryError) × authority.Authority)
+  := do
+  let r ←
+    authority.observation.Authority.approved_observation self observation
+  match r with
+  | core.result.Result.Ok value =>
+    let b ←
+      core.cmp.PartialEq.ne.trait_default
+        authority.permit.AttemptKey.Insts.CoreCmpPartialEqAttemptKey
+        value.attempt attempt
+    if b
+    then
+      ok (core.result.Result.Err
+        authority.report.BoundaryError.InapplicableObservation, self)
+    else
+      let b1 ←
+        core.cmp.PartialEq.ne.trait_default
+          authority.report.InvocationOutcome.Insts.CoreCmpPartialEqInvocationOutcome
+          self.invocation authority.report.InvocationOutcome.Pending
+      if b1
+      then
+        ok (core.result.Result.Err
+          authority.report.BoundaryError.InvocationFinished, self)
+      else
+        let i ← self.counters.successful_deliveries + 1#u32
+        let self1 ←
+          authority.observation.Authority.retire_live_witnesses
+            {
+              self
+                with
+                counters := { self.counters with successful_deliveries := i },
+                invocation := authority.report.InvocationOutcome.Succeeded,
+                delivered :=
+                  (some { attempt, checkpoint := self.profile.checkpoint })
+            }
+        let r1 ←
+          authority.receipts.Authority.receipt self1 attempt
+            authority.report.ReceiptClaim.InvocationSuccess (some observation)
+        ok (r1, self1)
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure, self)
+
+/-- [noble_kernel::authority::observation::{noble_kernel::authority::Authority}::retire_witness]:
+    Source: 'crates/noble-kernel/src/authority/observation.rs', lines 174:4-185:5
+    Visibility: public -/
+def authority.observation.Authority.retire_witness
+  (self : authority.Authority) (witness : authority.permit.Witness) :
+  Result ((core.result.Result Unit authority.permit.Denial) ×
+    authority.Authority)
+  := do
+  let r ← authority.admission.Authority.witness_record self witness.claim
+  match r with
+  | core.result.Result.Ok record =>
+    match record.state with
+    | authority.permit.WitnessState.Live =>
+      let (wr, index_mut_back) ←
+        alloc.vec.Vec.index_mut (core.slice.index.SliceIndexUsizeSlice
+          authority.WitnessRecord) self.witnesses witness.claim.slot
+      let v :=
+        index_mut_back
+          { wr with state := authority.permit.WitnessState.Retired }
+      ok (core.result.Result.Ok (), { self with witnesses := v })
+    | authority.permit.WitnessState.Consumed =>
+      ok (core.result.Result.Err authority.permit.Denial.ConsumedWitness, self)
+    | authority.permit.WitnessState.Retired =>
+      ok (core.result.Result.Err authority.permit.Denial.RetiredWitness, self)
+  | core.result.Result.Err denial => ok (core.result.Result.Err denial, self)
+
+/-- [noble_kernel::authority::observation::{noble_kernel::authority::Authority}::witness_snapshot]:
+    Source: 'crates/noble-kernel/src/authority/observation.rs', lines 187:4-198:5
+    Visibility: public -/
+def authority.observation.Authority.witness_snapshot
+  (self : authority.Authority) (claim : authority.permit.WitnessClaim) :
+  Result (core.result.Result authority.permit.WitnessSnapshot
+    authority.permit.Denial)
+  := do
+  let r ← authority.admission.Authority.witness_record self claim
+  match r with
+  | core.result.Result.Ok record =>
+    ok (core.result.Result.Ok { claim := record.claim, state := record.state })
+  | core.result.Result.Err denial => ok (core.result.Result.Err denial)
+
+/-- [noble_kernel::authority::permit::{impl core::clone::Clone for noble_kernel::authority::permit::Denial}::clone]:
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 1:9-1:14
+    Visibility: public -/
+def authority.permit.Denial.Insts.CoreCloneClone.clone
+  (self : authority.permit.Denial) : Result authority.permit.Denial := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::authority::permit::{impl core::clone::Clone for noble_kernel::authority::permit::Denial}]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 1:9-1:14 -/
+@[reducible]
+def authority.permit.Denial.Insts.CoreCloneClone : core.clone.Clone
+  authority.permit.Denial := {
+  clone := authority.permit.Denial.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::authority::permit::{impl core::marker::Copy for noble_kernel::authority::permit::Denial}]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 1:16-1:20 -/
+@[reducible]
+def authority.permit.Denial.Insts.CoreMarkerCopy : core.marker.Copy
+  authority.permit.Denial := {
+  cloneInst := authority.permit.Denial.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::authority::permit::{impl core::fmt::Debug for noble_kernel::authority::permit::Denial}::fmt::__OFFSET]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 1:22-1:27 -/
+@[global_simps, irreducible]
+def authority.permit.DebugDenial.fmt.__OFFSET : Array Std.Usize 22#usize :=
+  Array.make 22#usize [
+    0#usize, 20#usize, 30#usize, 42#usize, 60#usize, 67#usize, 78#usize,
+    95#usize, 108#usize, 119#usize, 126#usize, 140#usize, 157#usize, 174#usize,
+    187#usize, 201#usize, 216#usize, 226#usize, 241#usize, 255#usize,
+    276#usize, 294#usize
+    ]
+
+/-- [noble_kernel::authority::permit::{impl core::fmt::Debug for noble_kernel::authority::permit::Denial}::fmt::__NAMES]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 1:22-1:27 -/
+@[global_simps, irreducible]
+def authority.permit.DebugDenial.fmt.__NAMES : Str :=
+  toStr
+    "WrongAuthoritySourceStaleFactsMissingFactsInvalidCredentialsRevokedChangedPlanWrongOwnerContextChangedPolicyNotYetValidExpiredQuotaExhaustedInconsistentQuotaWrongResourceKindMissingRightsUnknownWitnessStaleGenerationWrongScopeConsumedWitnessRetiredWitnessUntrustedWitnessClaimInvocationFinished"
+
+/-- [noble_kernel::authority::permit::{impl core::fmt::Debug for noble_kernel::authority::permit::Denial}::fmt]:
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 1:22-1:27
+    Visibility: public -/
+def authority.permit.Denial.Insts.CoreFmtDebug.fmt
+  (self : authority.permit.Denial) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let self1 := read_discriminant self
+  let __d ← lift (IScalar.hcast .Usize self1)
+  let s ← lift (Array.to_slice authority.permit.DebugDenial.fmt.__OFFSET)
+  core.fmt.Formatter.debug_c_like_enum_write_str f
+    authority.permit.DebugDenial.fmt.__NAMES s __d
+
+/-- Trait implementation: [noble_kernel::authority::permit::{impl core::fmt::Debug for noble_kernel::authority::permit::Denial}]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 1:22-1:27 -/
+@[reducible]
+def authority.permit.Denial.Insts.CoreFmtDebug : core.fmt.Debug
+  authority.permit.Denial := {
+  fmt := authority.permit.Denial.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::authority::permit::{impl core::marker::StructuralPartialEq for noble_kernel::authority::permit::Denial}]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 1:29-1:38 -/
+@[reducible]
+def authority.permit.Denial.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq authority.permit.Denial := {
+}
+
+/-- [noble_kernel::authority::permit::{impl core::cmp::PartialEq<noble_kernel::authority::permit::Denial> for noble_kernel::authority::permit::Denial}::eq]:
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 1:29-1:38
+    Visibility: public -/
+def authority.permit.Denial.Insts.CoreCmpPartialEqDenial.eq
+  (self : authority.permit.Denial) (other : authority.permit.Denial) :
+  Result Bool
+  := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  ok (self1 = other1)
+
+/-- Trait implementation: [noble_kernel::authority::permit::{impl core::cmp::PartialEq<noble_kernel::authority::permit::Denial> for noble_kernel::authority::permit::Denial}]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 1:29-1:38 -/
+@[reducible]
+impl_def authority.permit.Denial.Insts.CoreCmpPartialEqDenial :
+  core.cmp.PartialEq authority.permit.Denial authority.permit.Denial := {
+  eq := authority.permit.Denial.Insts.CoreCmpPartialEqDenial.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    authority.permit.Denial.Insts.CoreCmpPartialEqDenial
+}
+
+/-- [noble_kernel::authority::permit::{impl core::cmp::Eq for noble_kernel::authority::permit::Denial}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 1:40-1:42
+    Visibility: public -/
+def authority.permit.Denial.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : authority.permit.Denial) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::authority::permit::{impl core::cmp::Eq for noble_kernel::authority::permit::Denial}]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 1:40-1:42 -/
+@[reducible]
+def authority.permit.Denial.Insts.CoreCmpEq : core.cmp.Eq
+  authority.permit.Denial := {
+  partialEqInst := authority.permit.Denial.Insts.CoreCmpPartialEqDenial
+  assert_fields_are_eq :=
+    authority.permit.Denial.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::authority::permit::{impl core::clone::Clone for noble_kernel::authority::permit::PreflightFailure}::clone]:
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 26:9-26:14
+    Visibility: public -/
+def authority.permit.PreflightFailure.Insts.CoreCloneClone.clone
+  (self : authority.permit.PreflightFailure) :
+  Result authority.permit.PreflightFailure
+  := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::authority::permit::{impl core::clone::Clone for noble_kernel::authority::permit::PreflightFailure}]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 26:9-26:14 -/
+@[reducible]
+def authority.permit.PreflightFailure.Insts.CoreCloneClone : core.clone.Clone
+  authority.permit.PreflightFailure := {
+  clone := authority.permit.PreflightFailure.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::authority::permit::{impl core::marker::Copy for noble_kernel::authority::permit::PreflightFailure}]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 26:16-26:20 -/
+@[reducible]
+def authority.permit.PreflightFailure.Insts.CoreMarkerCopy : core.marker.Copy
+  authority.permit.PreflightFailure := {
+  cloneInst := authority.permit.PreflightFailure.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::authority::permit::{impl core::fmt::Debug for noble_kernel::authority::permit::PreflightFailure}::fmt]:
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 26:22-26:27
+    Visibility: public -/
+def authority.permit.PreflightFailure.Insts.CoreFmtDebug.fmt
+  (self : authority.permit.PreflightFailure) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | authority.permit.PreflightFailure.WitnessCapacity =>
+    core.fmt.Formatter.write_str f (toStr "WitnessCapacity")
+  | authority.permit.PreflightFailure.AttemptCapacity =>
+    core.fmt.Formatter.write_str f (toStr "AttemptCapacity")
+  | authority.permit.PreflightFailure.RequestCapacity =>
+    core.fmt.Formatter.write_str f (toStr "RequestCapacity")
+
+/-- Trait implementation: [noble_kernel::authority::permit::{impl core::fmt::Debug for noble_kernel::authority::permit::PreflightFailure}]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 26:22-26:27 -/
+@[reducible]
+def authority.permit.PreflightFailure.Insts.CoreFmtDebug : core.fmt.Debug
+  authority.permit.PreflightFailure := {
+  fmt := authority.permit.PreflightFailure.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::authority::permit::{impl core::marker::StructuralPartialEq for noble_kernel::authority::permit::PreflightFailure}]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 26:29-26:38 -/
+@[reducible]
+def authority.permit.PreflightFailure.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq authority.permit.PreflightFailure := {
+}
+
+/-- [noble_kernel::authority::permit::{impl core::cmp::PartialEq<noble_kernel::authority::permit::PreflightFailure> for noble_kernel::authority::permit::PreflightFailure}::eq]:
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 26:29-26:38
+    Visibility: public -/
+def authority.permit.PreflightFailure.Insts.CoreCmpPartialEqPreflightFailure.eq
+  (self : authority.permit.PreflightFailure)
+  (other : authority.permit.PreflightFailure) :
+  Result Bool
+  := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  ok (self1 = other1)
+
+/-- Trait implementation: [noble_kernel::authority::permit::{impl core::cmp::PartialEq<noble_kernel::authority::permit::PreflightFailure> for noble_kernel::authority::permit::PreflightFailure}]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 26:29-26:38 -/
+@[reducible]
+impl_def
+  authority.permit.PreflightFailure.Insts.CoreCmpPartialEqPreflightFailure :
+  core.cmp.PartialEq authority.permit.PreflightFailure
+  authority.permit.PreflightFailure := {
+  eq :=
+    authority.permit.PreflightFailure.Insts.CoreCmpPartialEqPreflightFailure.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    authority.permit.PreflightFailure.Insts.CoreCmpPartialEqPreflightFailure
+}
+
+/-- [noble_kernel::authority::permit::{impl core::cmp::Eq for noble_kernel::authority::permit::PreflightFailure}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 26:40-26:42
+    Visibility: public -/
+def authority.permit.PreflightFailure.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : authority.permit.PreflightFailure) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::authority::permit::{impl core::cmp::Eq for noble_kernel::authority::permit::PreflightFailure}]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 26:40-26:42 -/
+@[reducible]
+def authority.permit.PreflightFailure.Insts.CoreCmpEq : core.cmp.Eq
+  authority.permit.PreflightFailure := {
+  partialEqInst :=
+    authority.permit.PreflightFailure.Insts.CoreCmpPartialEqPreflightFailure
+  assert_fields_are_eq :=
+    authority.permit.PreflightFailure.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::authority::permit::{impl core::clone::Clone for noble_kernel::authority::permit::Decision}::clone]:
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 34:9-34:14
+    Visibility: public -/
+def authority.permit.Decision.Insts.CoreCloneClone.clone
+  (self : authority.permit.Decision) : Result authority.permit.Decision := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::authority::permit::{impl core::clone::Clone for noble_kernel::authority::permit::Decision}]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 34:9-34:14 -/
+@[reducible]
+def authority.permit.Decision.Insts.CoreCloneClone : core.clone.Clone
+  authority.permit.Decision := {
+  clone := authority.permit.Decision.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::authority::permit::{impl core::marker::Copy for noble_kernel::authority::permit::Decision}]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 34:16-34:20 -/
+@[reducible]
+def authority.permit.Decision.Insts.CoreMarkerCopy : core.marker.Copy
+  authority.permit.Decision := {
+  cloneInst := authority.permit.Decision.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::authority::permit::{impl core::fmt::Debug for noble_kernel::authority::permit::Decision}::fmt]:
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 34:22-34:27
+    Visibility: public -/
+def authority.permit.Decision.Insts.CoreFmtDebug.fmt
+  (self : authority.permit.Decision) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | authority.permit.Decision.Allow =>
+    core.fmt.Formatter.write_str f (toStr "Allow")
+  | authority.permit.Decision.Deny __self_0 =>
+    let __self_01 :=
+      Dyn.mk _ (core.fmt.DebugShared
+        authority.permit.Denial.Insts.CoreFmtDebug) __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Deny") __self_01
+
+/-- Trait implementation: [noble_kernel::authority::permit::{impl core::fmt::Debug for noble_kernel::authority::permit::Decision}]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 34:22-34:27 -/
+@[reducible]
+def authority.permit.Decision.Insts.CoreFmtDebug : core.fmt.Debug
+  authority.permit.Decision := {
+  fmt := authority.permit.Decision.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::authority::permit::{impl core::marker::StructuralPartialEq for noble_kernel::authority::permit::Decision}]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 34:29-34:38 -/
+@[reducible]
+def authority.permit.Decision.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq authority.permit.Decision := {
+}
+
+/-- [noble_kernel::authority::permit::{impl core::cmp::PartialEq<noble_kernel::authority::permit::Decision> for noble_kernel::authority::permit::Decision}::eq]:
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 34:29-34:38
+    Visibility: public -/
+def authority.permit.Decision.Insts.CoreCmpPartialEqDecision.eq
+  (self : authority.permit.Decision) (other : authority.permit.Decision) :
+  Result Bool
+  := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  if self1 = other1
+  then
+    match self with
+    | authority.permit.Decision.Allow => ok true
+    | authority.permit.Decision.Deny __self_0 =>
+      match other with
+      | authority.permit.Decision.Allow => ok true
+      | authority.permit.Decision.Deny __arg1_0 =>
+        authority.permit.Denial.Insts.CoreCmpPartialEqDenial.eq __self_0
+          __arg1_0
+  else ok false
+
+/-- Trait implementation: [noble_kernel::authority::permit::{impl core::cmp::PartialEq<noble_kernel::authority::permit::Decision> for noble_kernel::authority::permit::Decision}]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 34:29-34:38 -/
+@[reducible]
+impl_def authority.permit.Decision.Insts.CoreCmpPartialEqDecision :
+  core.cmp.PartialEq authority.permit.Decision authority.permit.Decision := {
+  eq := authority.permit.Decision.Insts.CoreCmpPartialEqDecision.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    authority.permit.Decision.Insts.CoreCmpPartialEqDecision
+}
+
+/-- [noble_kernel::authority::permit::{impl core::cmp::Eq for noble_kernel::authority::permit::Decision}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 34:40-34:42
+    Visibility: public -/
+def authority.permit.Decision.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : authority.permit.Decision) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::authority::permit::{impl core::cmp::Eq for noble_kernel::authority::permit::Decision}]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 34:40-34:42 -/
+@[reducible]
+def authority.permit.Decision.Insts.CoreCmpEq : core.cmp.Eq
+  authority.permit.Decision := {
+  partialEqInst := authority.permit.Decision.Insts.CoreCmpPartialEqDecision
+  assert_fields_are_eq :=
+    authority.permit.Decision.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::authority::permit::{impl core::clone::Clone for noble_kernel::authority::permit::WitnessClaim}::clone]:
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 42:9-42:14
+    Visibility: public -/
+def authority.permit.WitnessClaim.Insts.CoreCloneClone.clone
+  (self : authority.permit.WitnessClaim) :
+  Result authority.permit.WitnessClaim
+  := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::authority::permit::{impl core::clone::Clone for noble_kernel::authority::permit::WitnessClaim}]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 42:9-42:14 -/
+@[reducible]
+def authority.permit.WitnessClaim.Insts.CoreCloneClone : core.clone.Clone
+  authority.permit.WitnessClaim := {
+  clone := authority.permit.WitnessClaim.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::authority::permit::{impl core::marker::Copy for noble_kernel::authority::permit::WitnessClaim}]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 42:16-42:20 -/
+@[reducible]
+def authority.permit.WitnessClaim.Insts.CoreMarkerCopy : core.marker.Copy
+  authority.permit.WitnessClaim := {
+  cloneInst := authority.permit.WitnessClaim.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::authority::permit::{impl core::fmt::Debug for noble_kernel::authority::permit::WitnessClaim}::fmt]:
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 42:22-42:27
+    Visibility: public -/
+def authority.permit.WitnessClaim.Insts.CoreFmtDebug.fmt
+  (self : authority.permit.WitnessClaim) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ authority.OwnerContext.Insts.CoreFmtDebug self.owner
+  let dyn1 := Dyn.mk _ core.fmt.DebugUsize self.slot
+  let dyn2 := Dyn.mk _ core.fmt.DebugU64 self.generation
+  let dyn3 := Dyn.mk _ types.ResourceKind.Insts.CoreFmtDebug self.kind
+  let dyn4 := Dyn.mk _ core.fmt.DebugU32 self.rights
+  let dyn5 := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU64) self.scope
+  let values :=
+    Array.to_slice (Array.make 6#usize [ dyn, dyn1, dyn2, dyn3, dyn4, dyn5 ])
+  let s ←
+    lift (Array.to_slice
+      (Array.make 6#usize [
+        toStr "owner", toStr "slot", toStr "generation", toStr "kind", toStr
+        "rights", toStr "scope"
+        ]))
+  core.fmt.Formatter.debug_struct_fields_finish f (toStr "WitnessClaim") s
+    values
+
+/-- Trait implementation: [noble_kernel::authority::permit::{impl core::fmt::Debug for noble_kernel::authority::permit::WitnessClaim}]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 42:22-42:27 -/
+@[reducible]
+def authority.permit.WitnessClaim.Insts.CoreFmtDebug : core.fmt.Debug
+  authority.permit.WitnessClaim := {
+  fmt := authority.permit.WitnessClaim.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::authority::permit::{impl core::marker::StructuralPartialEq for noble_kernel::authority::permit::WitnessClaim}]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 42:29-42:38 -/
+@[reducible]
+def authority.permit.WitnessClaim.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq authority.permit.WitnessClaim := {
+}
+
+/-- [noble_kernel::authority::permit::{impl core::cmp::Eq for noble_kernel::authority::permit::WitnessClaim}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 42:40-42:42
+    Visibility: public -/
+def authority.permit.WitnessClaim.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : authority.permit.WitnessClaim) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::authority::permit::{impl core::cmp::Eq for noble_kernel::authority::permit::WitnessClaim}]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 42:40-42:42 -/
+@[reducible]
+def authority.permit.WitnessClaim.Insts.CoreCmpEq : core.cmp.Eq
+  authority.permit.WitnessClaim := {
+  partialEqInst :=
+    authority.permit.WitnessClaim.Insts.CoreCmpPartialEqWitnessClaim
+  assert_fields_are_eq :=
+    authority.permit.WitnessClaim.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::authority::permit::{impl core::fmt::Debug for noble_kernel::authority::permit::Witness}::fmt]:
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 79:9-79:14
+    Visibility: public -/
+def authority.permit.Witness.Insts.CoreFmtDebug.fmt
+  (self : authority.permit.Witness) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn :=
+    Dyn.mk _ (core.fmt.DebugShared
+      authority.permit.WitnessClaim.Insts.CoreFmtDebug) self.claim
+  core.fmt.Formatter.debug_struct_field1_finish f (toStr "Witness") (toStr
+    "claim") dyn
+
+/-- Trait implementation: [noble_kernel::authority::permit::{impl core::fmt::Debug for noble_kernel::authority::permit::Witness}]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 79:9-79:14 -/
+@[reducible]
+def authority.permit.Witness.Insts.CoreFmtDebug : core.fmt.Debug
+  authority.permit.Witness := {
+  fmt := authority.permit.Witness.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_kernel::authority::permit::{noble_kernel::authority::permit::Witness}::claim]:
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 87:4-89:5
+    Visibility: public -/
+def authority.permit.Witness.impl.claim
+  (self : authority.permit.Witness) :
+  Result authority.permit.WitnessClaim
+  := do
+  ok self.claim
+
+/-- [noble_kernel::authority::report::{impl core::fmt::Debug for noble_kernel::authority::report::ReceiptScope}::fmt]:
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 85:22-85:27
+    Visibility: public -/
+def authority.report.ReceiptScope.Insts.CoreFmtDebug.fmt
+  (self : authority.report.ReceiptScope) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | authority.report.ReceiptScope.AuthorizationBoundary =>
+    core.fmt.Formatter.write_str f (toStr "AuthorizationBoundary")
+  | authority.report.ReceiptScope.AdmissionBoundary =>
+    core.fmt.Formatter.write_str f (toStr "AdmissionBoundary")
+  | authority.report.ReceiptScope.OperationBoundary =>
+    core.fmt.Formatter.write_str f (toStr "OperationBoundary")
+  | authority.report.ReceiptScope.InvocationDelivery =>
+    core.fmt.Formatter.write_str f (toStr "InvocationDelivery")
+
+/-- Trait implementation: [noble_kernel::authority::report::{impl core::fmt::Debug for noble_kernel::authority::report::ReceiptScope}]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 85:22-85:27 -/
+@[reducible]
+def authority.report.ReceiptScope.Insts.CoreFmtDebug : core.fmt.Debug
+  authority.report.ReceiptScope := {
+  fmt := authority.report.ReceiptScope.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_kernel::authority::report::{impl core::fmt::Debug for noble_kernel::authority::report::ReceiptClaim}::fmt]:
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 74:22-74:27
+    Visibility: public -/
+def authority.report.ReceiptClaim.Insts.CoreFmtDebug.fmt
+  (self : authority.report.ReceiptClaim) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | authority.report.ReceiptClaim.Denial =>
+    core.fmt.Formatter.write_str f (toStr "Denial")
+  | authority.report.ReceiptClaim.PreflightFailure =>
+    core.fmt.Formatter.write_str f (toStr "PreflightFailure")
+  | authority.report.ReceiptClaim.Unknown =>
+    core.fmt.Formatter.write_str f (toStr "Unknown")
+  | authority.report.ReceiptClaim.OperationFailure =>
+    core.fmt.Formatter.write_str f (toStr "OperationFailure")
+  | authority.report.ReceiptClaim.OperationSuccess =>
+    core.fmt.Formatter.write_str f (toStr "OperationSuccess")
+  | authority.report.ReceiptClaim.InvocationSuccess =>
+    core.fmt.Formatter.write_str f (toStr "InvocationSuccess")
+
+/-- Trait implementation: [noble_kernel::authority::report::{impl core::fmt::Debug for noble_kernel::authority::report::ReceiptClaim}]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 74:22-74:27 -/
+@[reducible]
+def authority.report.ReceiptClaim.Insts.CoreFmtDebug : core.fmt.Debug
+  authority.report.ReceiptClaim := {
+  fmt := authority.report.ReceiptClaim.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_kernel::authority::report::{impl core::fmt::Debug for noble_kernel::authority::report::InvocationOutcome}::fmt]:
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 1:22-1:27
+    Visibility: public -/
+def authority.report.InvocationOutcome.Insts.CoreFmtDebug.fmt
+  (self : authority.report.InvocationOutcome) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | authority.report.InvocationOutcome.Pending =>
+    core.fmt.Formatter.write_str f (toStr "Pending")
+  | authority.report.InvocationOutcome.Succeeded =>
+    core.fmt.Formatter.write_str f (toStr "Succeeded")
+  | authority.report.InvocationOutcome.Failed =>
+    core.fmt.Formatter.write_str f (toStr "Failed")
+  | authority.report.InvocationOutcome.Cancelled =>
+    core.fmt.Formatter.write_str f (toStr "Cancelled")
+
+/-- Trait implementation: [noble_kernel::authority::report::{impl core::fmt::Debug for noble_kernel::authority::report::InvocationOutcome}]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 1:22-1:27 -/
+@[reducible]
+def authority.report.InvocationOutcome.Insts.CoreFmtDebug : core.fmt.Debug
+  authority.report.InvocationOutcome := {
+  fmt := authority.report.InvocationOutcome.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_kernel::authority::permit::{impl core::fmt::Debug for noble_kernel::authority::permit::AttemptKey}::fmt]:
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 120:22-120:27
+    Visibility: public -/
+def authority.permit.AttemptKey.Insts.CoreFmtDebug.fmt
+  (self : authority.permit.AttemptKey) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ authority.OwnerContext.Insts.CoreFmtDebug self.owner
+  let dyn1 := Dyn.mk _ core.fmt.DebugUsize self.slot
+  let dyn2 := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU64) self.generation
+  core.fmt.Formatter.debug_struct_field3_finish f (toStr "AttemptKey") (toStr
+    "owner") dyn (toStr "slot") dyn1 (toStr "generation") dyn2
+
+/-- Trait implementation: [noble_kernel::authority::permit::{impl core::fmt::Debug for noble_kernel::authority::permit::AttemptKey}]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 120:22-120:27 -/
+@[reducible]
+def authority.permit.AttemptKey.Insts.CoreFmtDebug : core.fmt.Debug
+  authority.permit.AttemptKey := {
+  fmt := authority.permit.AttemptKey.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_kernel::authority::report::{impl core::fmt::Debug for noble_kernel::authority::report::ReceiptDescription}::fmt]:
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 95:16-95:21
+    Visibility: public -/
+def authority.report.ReceiptDescription.Insts.CoreFmtDebug.fmt
+  (self : authority.report.ReceiptDescription) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ authority.Plan.Insts.CoreFmtDebug self.plan
+  let dyn1 :=
+    Dyn.mk _ authority.OwnerContext.Insts.CoreFmtDebug self.boundary_owner
+  let dyn2 :=
+    Dyn.mk _ (core.option.Option.Insts.CoreFmtDebug
+      authority.permit.AttemptKey.Insts.CoreFmtDebug) self.attempt
+  let dyn3 := Dyn.mk _ authority.SourceId.Insts.CoreFmtDebug self.source
+  let dyn4 := Dyn.mk _ authority.Checkpoint.Insts.CoreFmtDebug self.checkpoint
+  let dyn5 :=
+    Dyn.mk _ authority.report.ReceiptClaim.Insts.CoreFmtDebug self.claim
+  let dyn6 :=
+    Dyn.mk _ authority.report.ReceiptScope.Insts.CoreFmtDebug self.scope
+  let dyn7 :=
+    Dyn.mk _ authority.report.InvocationOutcome.Insts.CoreFmtDebug
+      self.invocation
+  let dyn8 :=
+    Dyn.mk _ (core.option.Option.Insts.CoreFmtDebug
+      authority.permit.Denial.Insts.CoreFmtDebug) self.denial
+  let dyn9 :=
+    Dyn.mk _ (core.fmt.DebugShared (core.option.Option.Insts.CoreFmtDebug
+      authority.permit.PreflightFailure.Insts.CoreFmtDebug)) self.preflight
+  let values :=
+    Array.to_slice
+      (Array.make 10#usize [
+        dyn, dyn1, dyn2, dyn3, dyn4, dyn5, dyn6, dyn7, dyn8, dyn9
+        ])
+  let s ←
+    lift (Array.to_slice
+      (Array.make 10#usize [
+        toStr "plan", toStr "boundary_owner", toStr "attempt", toStr "source",
+        toStr "checkpoint", toStr "claim", toStr "scope", toStr "invocation",
+        toStr "denial", toStr "preflight"
+        ]))
+  core.fmt.Formatter.debug_struct_fields_finish f (toStr "ReceiptDescription")
+    s values
+
+/-- Trait implementation: [noble_kernel::authority::report::{impl core::fmt::Debug for noble_kernel::authority::report::ReceiptDescription}]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 95:16-95:21 -/
+@[reducible]
+def authority.report.ReceiptDescription.Insts.CoreFmtDebug : core.fmt.Debug
+  authority.report.ReceiptDescription := {
+  fmt := authority.report.ReceiptDescription.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_kernel::authority::report::{impl core::fmt::Debug for noble_kernel::authority::report::Receipt}::fmt]:
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 109:16-109:21
+    Visibility: public -/
+def authority.report.Receipt.Insts.CoreFmtDebug.fmt
+  (self : authority.report.Receipt) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn :=
+    Dyn.mk _ (core.fmt.DebugShared
+      authority.report.ReceiptDescription.Insts.CoreFmtDebug) self.description
+  core.fmt.Formatter.debug_struct_field1_finish f (toStr "Receipt") (toStr
+    "description") dyn
+
+/-- Trait implementation: [noble_kernel::authority::report::{impl core::fmt::Debug for noble_kernel::authority::report::Receipt}]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 109:16-109:21 -/
+@[reducible]
+def authority.report.Receipt.Insts.CoreFmtDebug : core.fmt.Debug
+  authority.report.Receipt := {
+  fmt := authority.report.Receipt.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_kernel::authority::report::{impl core::fmt::Debug for noble_kernel::authority::report::Rejection}::fmt]:
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 120:9-120:14
+    Visibility: public -/
+def authority.report.Rejection.Insts.CoreFmtDebug.fmt
+  (self : authority.report.Rejection) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn :=
+    Dyn.mk _ (core.fmt.DebugShared authority.report.Receipt.Insts.CoreFmtDebug)
+      self.receipt
+  core.fmt.Formatter.debug_struct_field1_finish f (toStr "Rejection") (toStr
+    "receipt") dyn
+
+/-- Trait implementation: [noble_kernel::authority::report::{impl core::fmt::Debug for noble_kernel::authority::report::Rejection}]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 120:9-120:14 -/
+@[reducible]
+def authority.report.Rejection.Insts.CoreFmtDebug : core.fmt.Debug
+  authority.report.Rejection := {
+  fmt := authority.report.Rejection.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_kernel::authority::permit::{impl core::fmt::Debug for noble_kernel::authority::permit::Authorization}::fmt]:
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 92:9-92:14
+    Visibility: public -/
+def authority.permit.Authorization.Insts.CoreFmtDebug.fmt
+  (self : authority.permit.Authorization) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | authority.permit.Authorization.Authorized __self_0 =>
+    let __self_01 :=
+      Dyn.mk _ (core.fmt.DebugShared
+        authority.permit.Witness.Insts.CoreFmtDebug) __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Authorized")
+      __self_01
+  | authority.permit.Authorization.Denied __self_0 =>
+    let __self_01 :=
+      Dyn.mk _ (core.fmt.DebugShared
+        authority.report.Rejection.Insts.CoreFmtDebug) __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Denied") __self_01
+  | authority.permit.Authorization.Preflight __self_0 =>
+    let __self_01 :=
+      Dyn.mk _ (core.fmt.DebugShared
+        authority.report.Rejection.Insts.CoreFmtDebug) __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Preflight")
+      __self_01
+
+/-- Trait implementation: [noble_kernel::authority::permit::{impl core::fmt::Debug for noble_kernel::authority::permit::Authorization}]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 92:9-92:14 -/
+@[reducible]
+def authority.permit.Authorization.Insts.CoreFmtDebug : core.fmt.Debug
+  authority.permit.Authorization := {
+  fmt := authority.permit.Authorization.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_kernel::authority::permit::{impl core::clone::Clone for noble_kernel::authority::permit::AdmissionRequest}::clone]:
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 99:9-99:14
+    Visibility: public -/
+def authority.permit.AdmissionRequest.Insts.CoreCloneClone.clone
+  (self : authority.permit.AdmissionRequest) :
+  Result authority.permit.AdmissionRequest
+  := do
+  let wc ←
+    authority.permit.WitnessClaim.Insts.CoreCloneClone.clone self.claim
+  let p ← authority.Plan.Insts.CoreCloneClone.clone self.plan
+  ok { claim := wc, plan := p }
+
+/-- Trait implementation: [noble_kernel::authority::permit::{impl core::clone::Clone for noble_kernel::authority::permit::AdmissionRequest}]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 99:9-99:14 -/
+@[reducible]
+def authority.permit.AdmissionRequest.Insts.CoreCloneClone : core.clone.Clone
+  authority.permit.AdmissionRequest := {
+  clone := authority.permit.AdmissionRequest.Insts.CoreCloneClone.clone
+}
+
+/-- [noble_kernel::authority::permit::{impl core::fmt::Debug for noble_kernel::authority::permit::AdmissionRequest}::fmt]:
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 99:16-99:21
+    Visibility: public -/
+def authority.permit.AdmissionRequest.Insts.CoreFmtDebug.fmt
+  (self : authority.permit.AdmissionRequest) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn :=
+    Dyn.mk _ authority.permit.WitnessClaim.Insts.CoreFmtDebug self.claim
+  let dyn1 :=
+    Dyn.mk _ (core.fmt.DebugShared authority.Plan.Insts.CoreFmtDebug) self.plan
+  core.fmt.Formatter.debug_struct_field2_finish f (toStr "AdmissionRequest")
+    (toStr "claim") dyn (toStr "plan") dyn1
+
+/-- Trait implementation: [noble_kernel::authority::permit::{impl core::fmt::Debug for noble_kernel::authority::permit::AdmissionRequest}]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 99:16-99:21 -/
+@[reducible]
+def authority.permit.AdmissionRequest.Insts.CoreFmtDebug : core.fmt.Debug
+  authority.permit.AdmissionRequest := {
+  fmt := authority.permit.AdmissionRequest.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::authority::permit::{impl core::marker::StructuralPartialEq for noble_kernel::authority::permit::AdmissionRequest}]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 99:23-99:32 -/
+@[reducible]
+def authority.permit.AdmissionRequest.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq authority.permit.AdmissionRequest := {
+}
+
+/-- [noble_kernel::authority::permit::{impl core::cmp::PartialEq<noble_kernel::authority::permit::AdmissionRequest> for noble_kernel::authority::permit::AdmissionRequest}::eq]:
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 99:23-99:32
+    Visibility: public -/
+def authority.permit.AdmissionRequest.Insts.CoreCmpPartialEqAdmissionRequest.eq
+  (self : authority.permit.AdmissionRequest)
+  (other : authority.permit.AdmissionRequest) :
+  Result Bool
+  := do
+  let b ←
+    authority.permit.WitnessClaim.Insts.CoreCmpPartialEqWitnessClaim.eq
+      self.claim other.claim
+  if b
+  then authority.Plan.Insts.CoreCmpPartialEqPlan.eq self.plan other.plan
+  else ok false
+
+/-- Trait implementation: [noble_kernel::authority::permit::{impl core::cmp::PartialEq<noble_kernel::authority::permit::AdmissionRequest> for noble_kernel::authority::permit::AdmissionRequest}]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 99:23-99:32 -/
+@[reducible]
+impl_def
+  authority.permit.AdmissionRequest.Insts.CoreCmpPartialEqAdmissionRequest :
+  core.cmp.PartialEq authority.permit.AdmissionRequest
+  authority.permit.AdmissionRequest := {
+  eq :=
+    authority.permit.AdmissionRequest.Insts.CoreCmpPartialEqAdmissionRequest.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    authority.permit.AdmissionRequest.Insts.CoreCmpPartialEqAdmissionRequest
+}
+
+/-- [noble_kernel::authority::permit::{impl core::cmp::Eq for noble_kernel::authority::permit::AdmissionRequest}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 99:34-99:36
+    Visibility: public -/
+def authority.permit.AdmissionRequest.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : authority.permit.AdmissionRequest) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::authority::permit::{impl core::cmp::Eq for noble_kernel::authority::permit::AdmissionRequest}]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 99:34-99:36 -/
+@[reducible]
+def authority.permit.AdmissionRequest.Insts.CoreCmpEq : core.cmp.Eq
+  authority.permit.AdmissionRequest := {
+  partialEqInst :=
+    authority.permit.AdmissionRequest.Insts.CoreCmpPartialEqAdmissionRequest
+  assert_fields_are_eq :=
+    authority.permit.AdmissionRequest.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::authority::permit::{impl core::fmt::Debug for noble_kernel::authority::permit::Execution}::fmt]:
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 128:9-128:14
+    Visibility: public -/
+def authority.permit.Execution.Insts.CoreFmtDebug.fmt
+  (self : authority.permit.Execution) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn :=
+    Dyn.mk _ (core.fmt.DebugShared
+      authority.permit.AttemptKey.Insts.CoreFmtDebug) self.attempt
+  core.fmt.Formatter.debug_struct_field1_finish f (toStr "Execution") (toStr
+    "attempt") dyn
+
+/-- Trait implementation: [noble_kernel::authority::permit::{impl core::fmt::Debug for noble_kernel::authority::permit::Execution}]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 128:9-128:14 -/
+@[reducible]
+def authority.permit.Execution.Insts.CoreFmtDebug : core.fmt.Debug
+  authority.permit.Execution := {
+  fmt := authority.permit.Execution.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_kernel::authority::permit::{impl core::fmt::Debug for noble_kernel::authority::permit::Admission}::fmt]:
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 107:9-107:14
+    Visibility: public -/
+def authority.permit.Admission.Insts.CoreFmtDebug.fmt
+  (self : authority.permit.Admission) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | authority.permit.Admission.Committed __self_0 =>
+    let __self_01 :=
+      Dyn.mk _ (core.fmt.DebugShared
+        authority.permit.Execution.Insts.CoreFmtDebug) __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Committed")
+      __self_01
+  | authority.permit.Admission.Denied __self_0 __self_1 =>
+    let __self_01 :=
+      Dyn.mk _ (core.option.Option.Insts.CoreFmtDebug
+        authority.permit.Witness.Insts.CoreFmtDebug) __self_0
+    let __self_11 :=
+      Dyn.mk _ (core.fmt.DebugShared
+        authority.report.Rejection.Insts.CoreFmtDebug) __self_1
+    core.fmt.Formatter.debug_struct_field2_finish f (toStr "Denied") (toStr
+      "witness") __self_01 (toStr "rejection") __self_11
+  | authority.permit.Admission.Preflight __self_0 __self_1 =>
+    let __self_01 :=
+      Dyn.mk _ (core.option.Option.Insts.CoreFmtDebug
+        authority.permit.Witness.Insts.CoreFmtDebug) __self_0
+    let __self_11 :=
+      Dyn.mk _ (core.fmt.DebugShared
+        authority.report.Rejection.Insts.CoreFmtDebug) __self_1
+    core.fmt.Formatter.debug_struct_field2_finish f (toStr "Preflight") (toStr
+      "witness") __self_01 (toStr "rejection") __self_11
+
+/-- Trait implementation: [noble_kernel::authority::permit::{impl core::fmt::Debug for noble_kernel::authority::permit::Admission}]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 107:9-107:14 -/
+@[reducible]
+def authority.permit.Admission.Insts.CoreFmtDebug : core.fmt.Debug
+  authority.permit.Admission := {
+  fmt := authority.permit.Admission.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_kernel::authority::permit::{impl core::clone::Clone for noble_kernel::authority::permit::AttemptKey}::clone]:
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 120:9-120:14
+    Visibility: public -/
+def authority.permit.AttemptKey.Insts.CoreCloneClone.clone
+  (self : authority.permit.AttemptKey) :
+  Result authority.permit.AttemptKey
+  := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::authority::permit::{impl core::clone::Clone for noble_kernel::authority::permit::AttemptKey}]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 120:9-120:14 -/
+@[reducible]
+def authority.permit.AttemptKey.Insts.CoreCloneClone : core.clone.Clone
+  authority.permit.AttemptKey := {
+  clone := authority.permit.AttemptKey.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::authority::permit::{impl core::marker::Copy for noble_kernel::authority::permit::AttemptKey}]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 120:16-120:20 -/
+@[reducible]
+def authority.permit.AttemptKey.Insts.CoreMarkerCopy : core.marker.Copy
+  authority.permit.AttemptKey := {
+  cloneInst := authority.permit.AttemptKey.Insts.CoreCloneClone
+}
+
+/-- Trait implementation: [noble_kernel::authority::permit::{impl core::marker::StructuralPartialEq for noble_kernel::authority::permit::AttemptKey}]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 120:29-120:38 -/
+@[reducible]
+def authority.permit.AttemptKey.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq authority.permit.AttemptKey := {
+}
+
+/-- [noble_kernel::authority::permit::{impl core::cmp::Eq for noble_kernel::authority::permit::AttemptKey}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 120:40-120:42
+    Visibility: public -/
+def authority.permit.AttemptKey.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : authority.permit.AttemptKey) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::authority::permit::{impl core::cmp::Eq for noble_kernel::authority::permit::AttemptKey}]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 120:40-120:42 -/
+@[reducible]
+def authority.permit.AttemptKey.Insts.CoreCmpEq : core.cmp.Eq
+  authority.permit.AttemptKey := {
+  partialEqInst := authority.permit.AttemptKey.Insts.CoreCmpPartialEqAttemptKey
+  assert_fields_are_eq :=
+    authority.permit.AttemptKey.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::authority::permit::{noble_kernel::authority::permit::Execution}::attempt]:
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 135:4-137:5
+    Visibility: public -/
+def authority.permit.Execution.impl.attempt
+  (self : authority.permit.Execution) :
+  Result authority.permit.AttemptKey
+  := do
+  ok self.attempt
+
+/-- [noble_kernel::authority::permit::{impl core::fmt::Debug for noble_kernel::authority::permit::Started}::fmt]:
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 142:9-142:14
+    Visibility: public -/
+def authority.permit.Started.Insts.CoreFmtDebug.fmt
+  (self : authority.permit.Started) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn :=
+    Dyn.mk _ authority.permit.AttemptKey.Insts.CoreFmtDebug self.attempt
+  let dyn1 :=
+    Dyn.mk _ (core.fmt.DebugShared authority.Plan.Insts.CoreFmtDebug) self.plan
+  core.fmt.Formatter.debug_struct_field2_finish f (toStr "Started") (toStr
+    "attempt") dyn (toStr "plan") dyn1
+
+/-- Trait implementation: [noble_kernel::authority::permit::{impl core::fmt::Debug for noble_kernel::authority::permit::Started}]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 142:9-142:14 -/
+@[reducible]
+def authority.permit.Started.Insts.CoreFmtDebug : core.fmt.Debug
+  authority.permit.Started := {
+  fmt := authority.permit.Started.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_kernel::authority::permit::{noble_kernel::authority::permit::Started}::attempt]:
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 150:4-152:5
+    Visibility: public -/
+def authority.permit.Started.impl.attempt
+  (self : authority.permit.Started) : Result authority.permit.AttemptKey := do
+  ok self.attempt
+
+/-- [noble_kernel::authority::permit::{noble_kernel::authority::permit::Started}::plan]:
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 154:4-156:5
+    Visibility: public -/
+def authority.permit.Started.impl.plan
+  (self : authority.permit.Started) : Result authority.Plan := do
+  ok self.plan
+
+/-- [noble_kernel::authority::permit::{impl core::clone::Clone for noble_kernel::authority::permit::WitnessState}::clone]:
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 159:9-159:14
+    Visibility: public -/
+def authority.permit.WitnessState.Insts.CoreCloneClone.clone
+  (self : authority.permit.WitnessState) :
+  Result authority.permit.WitnessState
+  := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::authority::permit::{impl core::clone::Clone for noble_kernel::authority::permit::WitnessState}]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 159:9-159:14 -/
+@[reducible]
+def authority.permit.WitnessState.Insts.CoreCloneClone : core.clone.Clone
+  authority.permit.WitnessState := {
+  clone := authority.permit.WitnessState.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::authority::permit::{impl core::marker::Copy for noble_kernel::authority::permit::WitnessState}]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 159:16-159:20 -/
+@[reducible]
+def authority.permit.WitnessState.Insts.CoreMarkerCopy : core.marker.Copy
+  authority.permit.WitnessState := {
+  cloneInst := authority.permit.WitnessState.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::authority::permit::{impl core::fmt::Debug for noble_kernel::authority::permit::WitnessState}::fmt]:
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 159:22-159:27
+    Visibility: public -/
+def authority.permit.WitnessState.Insts.CoreFmtDebug.fmt
+  (self : authority.permit.WitnessState) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | authority.permit.WitnessState.Live =>
+    core.fmt.Formatter.write_str f (toStr "Live")
+  | authority.permit.WitnessState.Consumed =>
+    core.fmt.Formatter.write_str f (toStr "Consumed")
+  | authority.permit.WitnessState.Retired =>
+    core.fmt.Formatter.write_str f (toStr "Retired")
+
+/-- Trait implementation: [noble_kernel::authority::permit::{impl core::fmt::Debug for noble_kernel::authority::permit::WitnessState}]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 159:22-159:27 -/
+@[reducible]
+def authority.permit.WitnessState.Insts.CoreFmtDebug : core.fmt.Debug
+  authority.permit.WitnessState := {
+  fmt := authority.permit.WitnessState.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::authority::permit::{impl core::marker::StructuralPartialEq for noble_kernel::authority::permit::WitnessState}]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 159:29-159:38 -/
+@[reducible]
+def authority.permit.WitnessState.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq authority.permit.WitnessState := {
+}
+
+/-- [noble_kernel::authority::permit::{impl core::cmp::PartialEq<noble_kernel::authority::permit::WitnessState> for noble_kernel::authority::permit::WitnessState}::eq]:
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 159:29-159:38
+    Visibility: public -/
+def authority.permit.WitnessState.Insts.CoreCmpPartialEqWitnessState.eq
+  (self : authority.permit.WitnessState)
+  (other : authority.permit.WitnessState) :
+  Result Bool
+  := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  ok (self1 = other1)
+
+/-- Trait implementation: [noble_kernel::authority::permit::{impl core::cmp::PartialEq<noble_kernel::authority::permit::WitnessState> for noble_kernel::authority::permit::WitnessState}]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 159:29-159:38 -/
+@[reducible]
+impl_def authority.permit.WitnessState.Insts.CoreCmpPartialEqWitnessState :
+  core.cmp.PartialEq authority.permit.WitnessState
+  authority.permit.WitnessState := {
+  eq := authority.permit.WitnessState.Insts.CoreCmpPartialEqWitnessState.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    authority.permit.WitnessState.Insts.CoreCmpPartialEqWitnessState
+}
+
+/-- [noble_kernel::authority::permit::{impl core::cmp::Eq for noble_kernel::authority::permit::WitnessState}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 159:40-159:42
+    Visibility: public -/
+def authority.permit.WitnessState.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : authority.permit.WitnessState) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::authority::permit::{impl core::cmp::Eq for noble_kernel::authority::permit::WitnessState}]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 159:40-159:42 -/
+@[reducible]
+def authority.permit.WitnessState.Insts.CoreCmpEq : core.cmp.Eq
+  authority.permit.WitnessState := {
+  partialEqInst :=
+    authority.permit.WitnessState.Insts.CoreCmpPartialEqWitnessState
+  assert_fields_are_eq :=
+    authority.permit.WitnessState.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::authority::permit::{impl core::clone::Clone for noble_kernel::authority::permit::WitnessSnapshot}::clone]:
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 167:9-167:14
+    Visibility: public -/
+def authority.permit.WitnessSnapshot.Insts.CoreCloneClone.clone
+  (self : authority.permit.WitnessSnapshot) :
+  Result authority.permit.WitnessSnapshot
+  := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::authority::permit::{impl core::clone::Clone for noble_kernel::authority::permit::WitnessSnapshot}]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 167:9-167:14 -/
+@[reducible]
+def authority.permit.WitnessSnapshot.Insts.CoreCloneClone : core.clone.Clone
+  authority.permit.WitnessSnapshot := {
+  clone := authority.permit.WitnessSnapshot.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::authority::permit::{impl core::marker::Copy for noble_kernel::authority::permit::WitnessSnapshot}]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 167:16-167:20 -/
+@[reducible]
+def authority.permit.WitnessSnapshot.Insts.CoreMarkerCopy : core.marker.Copy
+  authority.permit.WitnessSnapshot := {
+  cloneInst := authority.permit.WitnessSnapshot.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::authority::permit::{impl core::fmt::Debug for noble_kernel::authority::permit::WitnessSnapshot}::fmt]:
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 167:22-167:27
+    Visibility: public -/
+def authority.permit.WitnessSnapshot.Insts.CoreFmtDebug.fmt
+  (self : authority.permit.WitnessSnapshot) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn :=
+    Dyn.mk _ authority.permit.WitnessClaim.Insts.CoreFmtDebug self.claim
+  let dyn1 :=
+    Dyn.mk _ (core.fmt.DebugShared
+      authority.permit.WitnessState.Insts.CoreFmtDebug) self.state
+  core.fmt.Formatter.debug_struct_field2_finish f (toStr "WitnessSnapshot")
+    (toStr "claim") dyn (toStr "state") dyn1
+
+/-- Trait implementation: [noble_kernel::authority::permit::{impl core::fmt::Debug for noble_kernel::authority::permit::WitnessSnapshot}]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 167:22-167:27 -/
+@[reducible]
+def authority.permit.WitnessSnapshot.Insts.CoreFmtDebug : core.fmt.Debug
+  authority.permit.WitnessSnapshot := {
+  fmt := authority.permit.WitnessSnapshot.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::authority::permit::{impl core::marker::StructuralPartialEq for noble_kernel::authority::permit::WitnessSnapshot}]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 167:29-167:38 -/
+@[reducible]
+def authority.permit.WitnessSnapshot.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq authority.permit.WitnessSnapshot := {
+}
+
+/-- [noble_kernel::authority::permit::{impl core::cmp::PartialEq<noble_kernel::authority::permit::WitnessSnapshot> for noble_kernel::authority::permit::WitnessSnapshot}::eq]:
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 167:29-167:38
+    Visibility: public -/
+def authority.permit.WitnessSnapshot.Insts.CoreCmpPartialEqWitnessSnapshot.eq
+  (self : authority.permit.WitnessSnapshot)
+  (other : authority.permit.WitnessSnapshot) :
+  Result Bool
+  := do
+  let b ←
+    authority.permit.WitnessClaim.Insts.CoreCmpPartialEqWitnessClaim.eq
+      self.claim other.claim
+  if b
+  then
+    authority.permit.WitnessState.Insts.CoreCmpPartialEqWitnessState.eq
+      self.state other.state
+  else ok false
+
+/-- Trait implementation: [noble_kernel::authority::permit::{impl core::cmp::PartialEq<noble_kernel::authority::permit::WitnessSnapshot> for noble_kernel::authority::permit::WitnessSnapshot}]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 167:29-167:38 -/
+@[reducible]
+impl_def authority.permit.WitnessSnapshot.Insts.CoreCmpPartialEqWitnessSnapshot
+  : core.cmp.PartialEq authority.permit.WitnessSnapshot
+  authority.permit.WitnessSnapshot := {
+  eq :=
+    authority.permit.WitnessSnapshot.Insts.CoreCmpPartialEqWitnessSnapshot.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    authority.permit.WitnessSnapshot.Insts.CoreCmpPartialEqWitnessSnapshot
+}
+
+/-- [noble_kernel::authority::permit::{impl core::cmp::Eq for noble_kernel::authority::permit::WitnessSnapshot}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 167:40-167:42
+    Visibility: public -/
+def authority.permit.WitnessSnapshot.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : authority.permit.WitnessSnapshot) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::authority::permit::{impl core::cmp::Eq for noble_kernel::authority::permit::WitnessSnapshot}]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 167:40-167:42 -/
+@[reducible]
+def authority.permit.WitnessSnapshot.Insts.CoreCmpEq : core.cmp.Eq
+  authority.permit.WitnessSnapshot := {
+  partialEqInst :=
+    authority.permit.WitnessSnapshot.Insts.CoreCmpPartialEqWitnessSnapshot
+  assert_fields_are_eq :=
+    authority.permit.WitnessSnapshot.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::authority::permit::{impl core::clone::Clone for noble_kernel::authority::permit::AttemptSnapshot}::clone]:
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 173:9-173:14
+    Visibility: public -/
+def authority.permit.AttemptSnapshot.Insts.CoreCloneClone.clone
+  (self : authority.permit.AttemptSnapshot) :
+  Result authority.permit.AttemptSnapshot
+  := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::authority::permit::{impl core::clone::Clone for noble_kernel::authority::permit::AttemptSnapshot}]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 173:9-173:14 -/
+@[reducible]
+def authority.permit.AttemptSnapshot.Insts.CoreCloneClone : core.clone.Clone
+  authority.permit.AttemptSnapshot := {
+  clone := authority.permit.AttemptSnapshot.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::authority::permit::{impl core::marker::Copy for noble_kernel::authority::permit::AttemptSnapshot}]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 173:16-173:20 -/
+@[reducible]
+def authority.permit.AttemptSnapshot.Insts.CoreMarkerCopy : core.marker.Copy
+  authority.permit.AttemptSnapshot := {
+  cloneInst := authority.permit.AttemptSnapshot.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::authority::report::{impl core::fmt::Debug for noble_kernel::authority::report::ObservedOutcome}::fmt]:
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 10:22-10:27
+    Visibility: public -/
+def authority.report.ObservedOutcome.Insts.CoreFmtDebug.fmt
+  (self : authority.report.ObservedOutcome) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | authority.report.ObservedOutcome.Unknown =>
+    core.fmt.Formatter.write_str f (toStr "Unknown")
+  | authority.report.ObservedOutcome.OperationFailure =>
+    core.fmt.Formatter.write_str f (toStr "OperationFailure")
+  | authority.report.ObservedOutcome.OperationSuccess =>
+    core.fmt.Formatter.write_str f (toStr "OperationSuccess")
+
+/-- Trait implementation: [noble_kernel::authority::report::{impl core::fmt::Debug for noble_kernel::authority::report::ObservedOutcome}]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 10:22-10:27 -/
+@[reducible]
+def authority.report.ObservedOutcome.Insts.CoreFmtDebug : core.fmt.Debug
+  authority.report.ObservedOutcome := {
+  fmt := authority.report.ObservedOutcome.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_kernel::authority::permit::{impl core::fmt::Debug for noble_kernel::authority::permit::AttemptSnapshot}::fmt]:
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 173:22-173:27
+    Visibility: public -/
+def authority.permit.AttemptSnapshot.Insts.CoreFmtDebug.fmt
+  (self : authority.permit.AttemptSnapshot) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ authority.permit.AttemptKey.Insts.CoreFmtDebug self.key
+  let dyn1 := Dyn.mk _ types.EffId.Insts.CoreFmtDebug self.effect
+  let dyn2 := Dyn.mk _ core.fmt.DebugBool self.started
+  let dyn3 :=
+    Dyn.mk _ (core.fmt.DebugShared (core.option.Option.Insts.CoreFmtDebug
+      authority.report.ObservedOutcome.Insts.CoreFmtDebug)) self.outcome
+  core.fmt.Formatter.debug_struct_field4_finish f (toStr "AttemptSnapshot")
+    (toStr "key") dyn (toStr "effect") dyn1 (toStr "started") dyn2 (toStr
+    "outcome") dyn3
+
+/-- Trait implementation: [noble_kernel::authority::permit::{impl core::fmt::Debug for noble_kernel::authority::permit::AttemptSnapshot}]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 173:22-173:27 -/
+@[reducible]
+def authority.permit.AttemptSnapshot.Insts.CoreFmtDebug : core.fmt.Debug
+  authority.permit.AttemptSnapshot := {
+  fmt := authority.permit.AttemptSnapshot.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::authority::permit::{impl core::marker::StructuralPartialEq for noble_kernel::authority::permit::AttemptSnapshot}]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 173:29-173:38 -/
+@[reducible]
+def authority.permit.AttemptSnapshot.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq authority.permit.AttemptSnapshot := {
+}
+
+/-- Trait implementation: [noble_kernel::authority::report::{impl core::cmp::PartialEq<noble_kernel::authority::report::ObservedOutcome> for noble_kernel::authority::report::ObservedOutcome}]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 10:29-10:38 -/
+@[reducible]
+impl_def authority.report.ObservedOutcome.Insts.CoreCmpPartialEqObservedOutcome
+  : core.cmp.PartialEq authority.report.ObservedOutcome
+  authority.report.ObservedOutcome := {
+  eq :=
+    authority.report.ObservedOutcome.Insts.CoreCmpPartialEqObservedOutcome.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    authority.report.ObservedOutcome.Insts.CoreCmpPartialEqObservedOutcome
+}
+
+/-- [noble_kernel::authority::permit::{impl core::cmp::PartialEq<noble_kernel::authority::permit::AttemptSnapshot> for noble_kernel::authority::permit::AttemptSnapshot}::eq]:
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 173:29-173:38
+    Visibility: public -/
+def authority.permit.AttemptSnapshot.Insts.CoreCmpPartialEqAttemptSnapshot.eq
+  (self : authority.permit.AttemptSnapshot)
+  (other : authority.permit.AttemptSnapshot) :
+  Result Bool
+  := do
+  if self.started = other.started
+  then
+    let b ←
+      authority.permit.AttemptKey.Insts.CoreCmpPartialEqAttemptKey.eq 
+        self.key other.key
+    if b
+    then
+      let b1 ←
+        types.EffId.Insts.CoreCmpPartialEqEffId.eq self.effect other.effect
+      if b1
+      then
+        core.option.Option.Insts.CoreCmpPartialEqOption.eq
+          authority.report.ObservedOutcome.Insts.CoreCmpPartialEqObservedOutcome
+          self.outcome other.outcome
+      else ok false
+    else ok false
+  else ok false
+
+/-- Trait implementation: [noble_kernel::authority::permit::{impl core::cmp::PartialEq<noble_kernel::authority::permit::AttemptSnapshot> for noble_kernel::authority::permit::AttemptSnapshot}]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 173:29-173:38 -/
+@[reducible]
+impl_def authority.permit.AttemptSnapshot.Insts.CoreCmpPartialEqAttemptSnapshot
+  : core.cmp.PartialEq authority.permit.AttemptSnapshot
+  authority.permit.AttemptSnapshot := {
+  eq :=
+    authority.permit.AttemptSnapshot.Insts.CoreCmpPartialEqAttemptSnapshot.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    authority.permit.AttemptSnapshot.Insts.CoreCmpPartialEqAttemptSnapshot
+}
+
+/-- [noble_kernel::authority::permit::{impl core::cmp::Eq for noble_kernel::authority::permit::AttemptSnapshot}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 173:40-173:42
+    Visibility: public -/
+def authority.permit.AttemptSnapshot.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : authority.permit.AttemptSnapshot) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::authority::permit::{impl core::cmp::Eq for noble_kernel::authority::permit::AttemptSnapshot}]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 173:40-173:42 -/
+@[reducible]
+def authority.permit.AttemptSnapshot.Insts.CoreCmpEq : core.cmp.Eq
+  authority.permit.AttemptSnapshot := {
+  partialEqInst :=
+    authority.permit.AttemptSnapshot.Insts.CoreCmpPartialEqAttemptSnapshot
+  assert_fields_are_eq :=
+    authority.permit.AttemptSnapshot.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::authority::report::{impl core::cmp::PartialEq<noble_kernel::authority::report::ReceiptScope> for noble_kernel::authority::report::ReceiptScope}::eq]:
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 85:29-85:38
+    Visibility: public -/
+def authority.report.ReceiptScope.Insts.CoreCmpPartialEqReceiptScope.eq
+  (self : authority.report.ReceiptScope)
+  (other : authority.report.ReceiptScope) :
+  Result Bool
+  := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  ok (self1 = other1)
+
+/-- [noble_kernel::authority::report::{impl core::cmp::PartialEq<noble_kernel::authority::report::ReceiptClaim> for noble_kernel::authority::report::ReceiptClaim}::eq]:
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 74:29-74:38
+    Visibility: public -/
+def authority.report.ReceiptClaim.Insts.CoreCmpPartialEqReceiptClaim.eq
+  (self : authority.report.ReceiptClaim)
+  (other : authority.report.ReceiptClaim) :
+  Result Bool
+  := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  ok (self1 = other1)
+
+/-- [noble_kernel::authority::report::{impl core::cmp::PartialEq<noble_kernel::authority::report::ReceiptDescription> for noble_kernel::authority::report::ReceiptDescription}::eq]:
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 95:23-95:32
+    Visibility: public -/
+def
+  authority.report.ReceiptDescription.Insts.CoreCmpPartialEqReceiptDescription.eq
+  (self : authority.report.ReceiptDescription)
+  (other : authority.report.ReceiptDescription) :
+  Result Bool
+  := do
+  let b ← authority.Plan.Insts.CoreCmpPartialEqPlan.eq self.plan other.plan
+  if b
+  then
+    let b1 ←
+      authority.OwnerContext.Insts.CoreCmpPartialEqOwnerContext.eq
+        self.boundary_owner other.boundary_owner
+    if b1
+    then
+      let b2 ←
+        core.option.Option.Insts.CoreCmpPartialEqOption.eq
+          authority.permit.AttemptKey.Insts.CoreCmpPartialEqAttemptKey
+          self.attempt other.attempt
+      if b2
+      then
+        let b3 ←
+          authority.SourceId.Insts.CoreCmpPartialEqSourceId.eq self.source
+            other.source
+        if b3
+        then
+          let b4 ←
+            authority.Checkpoint.Insts.CoreCmpPartialEqCheckpoint.eq
+              self.checkpoint other.checkpoint
+          if b4
+          then
+            let b5 ←
+              authority.report.ReceiptClaim.Insts.CoreCmpPartialEqReceiptClaim.eq
+                self.claim other.claim
+            if b5
+            then
+              let b6 ←
+                authority.report.ReceiptScope.Insts.CoreCmpPartialEqReceiptScope.eq
+                  self.scope other.scope
+              if b6
+              then
+                let b7 ←
+                  authority.report.InvocationOutcome.Insts.CoreCmpPartialEqInvocationOutcome.eq
+                    self.invocation other.invocation
+                if b7
+                then
+                  let b8 ←
+                    core.option.Option.Insts.CoreCmpPartialEqOption.eq
+                      authority.permit.Denial.Insts.CoreCmpPartialEqDenial
+                      self.denial other.denial
+                  if b8
+                  then
+                    core.option.Option.Insts.CoreCmpPartialEqOption.eq
+                      authority.permit.PreflightFailure.Insts.CoreCmpPartialEqPreflightFailure
+                      self.preflight other.preflight
+                  else ok false
+                else ok false
+              else ok false
+            else ok false
+          else ok false
+        else ok false
+      else ok false
+    else ok false
+  else ok false
+
+/-- Trait implementation: [noble_kernel::authority::report::{impl core::cmp::PartialEq<noble_kernel::authority::report::ReceiptDescription> for noble_kernel::authority::report::ReceiptDescription}]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 95:23-95:32 -/
+@[reducible]
+impl_def
+  authority.report.ReceiptDescription.Insts.CoreCmpPartialEqReceiptDescription
+  : core.cmp.PartialEq authority.report.ReceiptDescription
+  authority.report.ReceiptDescription := {
+  eq :=
+    authority.report.ReceiptDescription.Insts.CoreCmpPartialEqReceiptDescription.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    authority.report.ReceiptDescription.Insts.CoreCmpPartialEqReceiptDescription
+}
+
+/-- [noble_kernel::authority::receipts::{noble_kernel::authority::Authority}::admit_receipt]:
+    Source: 'crates/noble-kernel/src/authority/receipts.rs', lines 105:4-120:5
+    Visibility: public -/
+def authority.receipts.Authority.admit_receipt
+  (self : authority.Authority) (imported : authority.report.UntrustedReceipt)
+  (observation : authority.report.Observation) :
+  Result (core.result.Result authority.report.Receipt
+    authority.report.BoundaryError)
+  := do
+  match imported.description.attempt with
+  | none =>
+    ok (core.result.Result.Err
+      authority.report.BoundaryError.InapplicableReceipt)
+  | some attempt =>
+    let r ←
+      authority.receipts.Authority.receipt self attempt
+        imported.description.claim (some observation)
+    match r with
+    | core.result.Result.Ok value =>
+      let b ←
+        core.cmp.PartialEq.ne.trait_default
+          authority.report.ReceiptDescription.Insts.CoreCmpPartialEqReceiptDescription
+          value.description imported.description
+      if b
+      then
+        ok (core.result.Result.Err
+          authority.report.BoundaryError.InapplicableReceipt)
+      else ok r
+    | core.result.Result.Err _ => ok r
+
+/-- [noble_kernel::authority::report::{impl core::clone::Clone for noble_kernel::authority::report::InvocationOutcome}::clone]:
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 1:9-1:14
+    Visibility: public -/
+def authority.report.InvocationOutcome.Insts.CoreCloneClone.clone
+  (self : authority.report.InvocationOutcome) :
+  Result authority.report.InvocationOutcome
+  := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::authority::report::{impl core::clone::Clone for noble_kernel::authority::report::InvocationOutcome}]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 1:9-1:14 -/
+@[reducible]
+def authority.report.InvocationOutcome.Insts.CoreCloneClone : core.clone.Clone
+  authority.report.InvocationOutcome := {
+  clone := authority.report.InvocationOutcome.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::authority::report::{impl core::marker::Copy for noble_kernel::authority::report::InvocationOutcome}]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 1:16-1:20 -/
+@[reducible]
+def authority.report.InvocationOutcome.Insts.CoreMarkerCopy : core.marker.Copy
+  authority.report.InvocationOutcome := {
+  cloneInst := authority.report.InvocationOutcome.Insts.CoreCloneClone
+}
+
+/-- Trait implementation: [noble_kernel::authority::report::{impl core::marker::StructuralPartialEq for noble_kernel::authority::report::InvocationOutcome}]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 1:29-1:38 -/
+@[reducible]
+def authority.report.InvocationOutcome.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq authority.report.InvocationOutcome := {
+}
+
+/-- [noble_kernel::authority::report::{impl core::cmp::Eq for noble_kernel::authority::report::InvocationOutcome}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 1:40-1:42
+    Visibility: public -/
+def authority.report.InvocationOutcome.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : authority.report.InvocationOutcome) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::authority::report::{impl core::cmp::Eq for noble_kernel::authority::report::InvocationOutcome}]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 1:40-1:42 -/
+@[reducible]
+def authority.report.InvocationOutcome.Insts.CoreCmpEq : core.cmp.Eq
+  authority.report.InvocationOutcome := {
+  partialEqInst :=
+    authority.report.InvocationOutcome.Insts.CoreCmpPartialEqInvocationOutcome
+  assert_fields_are_eq :=
+    authority.report.InvocationOutcome.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::authority::report::{impl core::clone::Clone for noble_kernel::authority::report::ObservedOutcome}::clone]:
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 10:9-10:14
+    Visibility: public -/
+def authority.report.ObservedOutcome.Insts.CoreCloneClone.clone
+  (self : authority.report.ObservedOutcome) :
+  Result authority.report.ObservedOutcome
+  := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::authority::report::{impl core::clone::Clone for noble_kernel::authority::report::ObservedOutcome}]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 10:9-10:14 -/
+@[reducible]
+def authority.report.ObservedOutcome.Insts.CoreCloneClone : core.clone.Clone
+  authority.report.ObservedOutcome := {
+  clone := authority.report.ObservedOutcome.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::authority::report::{impl core::marker::Copy for noble_kernel::authority::report::ObservedOutcome}]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 10:16-10:20 -/
+@[reducible]
+def authority.report.ObservedOutcome.Insts.CoreMarkerCopy : core.marker.Copy
+  authority.report.ObservedOutcome := {
+  cloneInst := authority.report.ObservedOutcome.Insts.CoreCloneClone
+}
+
+/-- Trait implementation: [noble_kernel::authority::report::{impl core::marker::StructuralPartialEq for noble_kernel::authority::report::ObservedOutcome}]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 10:29-10:38 -/
+@[reducible]
+def authority.report.ObservedOutcome.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq authority.report.ObservedOutcome := {
+}
+
+/-- [noble_kernel::authority::report::{impl core::cmp::Eq for noble_kernel::authority::report::ObservedOutcome}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 10:40-10:42
+    Visibility: public -/
+def authority.report.ObservedOutcome.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : authority.report.ObservedOutcome) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::authority::report::{impl core::cmp::Eq for noble_kernel::authority::report::ObservedOutcome}]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 10:40-10:42 -/
+@[reducible]
+def authority.report.ObservedOutcome.Insts.CoreCmpEq : core.cmp.Eq
+  authority.report.ObservedOutcome := {
+  partialEqInst :=
+    authority.report.ObservedOutcome.Insts.CoreCmpPartialEqObservedOutcome
+  assert_fields_are_eq :=
+    authority.report.ObservedOutcome.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::authority::report::{impl core::clone::Clone for noble_kernel::authority::report::ObservationDescription}::clone]:
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 19:9-19:14
+    Visibility: public -/
+def authority.report.ObservationDescription.Insts.CoreCloneClone.clone
+  (self : authority.report.ObservationDescription) :
+  Result authority.report.ObservationDescription
+  := do
+  let ak ←
+    authority.permit.AttemptKey.Insts.CoreCloneClone.clone self.attempt
+  let p ← authority.Plan.Insts.CoreCloneClone.clone self.plan
+  let si ← authority.SourceId.Insts.CoreCloneClone.clone self.source
+  let c ← authority.Checkpoint.Insts.CoreCloneClone.clone self.checkpoint
+  let oo ←
+    authority.report.ObservedOutcome.Insts.CoreCloneClone.clone self.outcome
+  ok { attempt := ak, plan := p, source := si, checkpoint := c, outcome := oo }
+
+/-- Trait implementation: [noble_kernel::authority::report::{impl core::clone::Clone for noble_kernel::authority::report::ObservationDescription}]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 19:9-19:14 -/
+@[reducible]
+def authority.report.ObservationDescription.Insts.CoreCloneClone :
+  core.clone.Clone authority.report.ObservationDescription := {
+  clone := authority.report.ObservationDescription.Insts.CoreCloneClone.clone
+}
+
+/-- [noble_kernel::authority::report::{impl core::fmt::Debug for noble_kernel::authority::report::ObservationDescription}::fmt]:
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 19:16-19:21
+    Visibility: public -/
+def authority.report.ObservationDescription.Insts.CoreFmtDebug.fmt
+  (self : authority.report.ObservationDescription) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn :=
+    Dyn.mk _ authority.permit.AttemptKey.Insts.CoreFmtDebug self.attempt
+  let dyn1 := Dyn.mk _ authority.Plan.Insts.CoreFmtDebug self.plan
+  let dyn2 := Dyn.mk _ authority.SourceId.Insts.CoreFmtDebug self.source
+  let dyn3 := Dyn.mk _ authority.Checkpoint.Insts.CoreFmtDebug self.checkpoint
+  let dyn4 :=
+    Dyn.mk _ (core.fmt.DebugShared
+      authority.report.ObservedOutcome.Insts.CoreFmtDebug) self.outcome
+  core.fmt.Formatter.debug_struct_field5_finish f (toStr
+    "ObservationDescription") (toStr "attempt") dyn (toStr "plan") dyn1 (toStr
+    "source") dyn2 (toStr "checkpoint") dyn3 (toStr "outcome") dyn4
+
+/-- Trait implementation: [noble_kernel::authority::report::{impl core::fmt::Debug for noble_kernel::authority::report::ObservationDescription}]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 19:16-19:21 -/
+@[reducible]
+def authority.report.ObservationDescription.Insts.CoreFmtDebug : core.fmt.Debug
+  authority.report.ObservationDescription := {
+  fmt := authority.report.ObservationDescription.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::authority::report::{impl core::marker::StructuralPartialEq for noble_kernel::authority::report::ObservationDescription}]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 19:23-19:32 -/
+@[reducible]
+def authority.report.ObservationDescription.Insts.CoreMarkerStructuralPartialEq
+  : core.marker.StructuralPartialEq authority.report.ObservationDescription
+  := {
+}
+
+/-- Trait implementation: [noble_kernel::authority::report::{impl core::cmp::PartialEq<noble_kernel::authority::report::ObservationDescription> for noble_kernel::authority::report::ObservationDescription}]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 19:23-19:32 -/
+@[reducible]
+impl_def
+  authority.report.ObservationDescription.Insts.CoreCmpPartialEqObservationDescription
+  : core.cmp.PartialEq authority.report.ObservationDescription
+  authority.report.ObservationDescription := {
+  eq :=
+    authority.report.ObservationDescription.Insts.CoreCmpPartialEqObservationDescription.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    authority.report.ObservationDescription.Insts.CoreCmpPartialEqObservationDescription
+}
+
+/-- [noble_kernel::authority::report::{impl core::cmp::Eq for noble_kernel::authority::report::ObservationDescription}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 19:34-19:36
+    Visibility: public -/
+def
+  authority.report.ObservationDescription.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : authority.report.ObservationDescription) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::authority::report::{impl core::cmp::Eq for noble_kernel::authority::report::ObservationDescription}]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 19:34-19:36 -/
+@[reducible]
+def authority.report.ObservationDescription.Insts.CoreCmpEq : core.cmp.Eq
+  authority.report.ObservationDescription := {
+  partialEqInst :=
+    authority.report.ObservationDescription.Insts.CoreCmpPartialEqObservationDescription
+  assert_fields_are_eq :=
+    authority.report.ObservationDescription.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::authority::report::{impl core::fmt::Debug for noble_kernel::authority::report::Observation}::fmt]:
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 50:9-50:14
+    Visibility: public -/
+def authority.report.Observation.Insts.CoreFmtDebug.fmt
+  (self : authority.report.Observation) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn :=
+    Dyn.mk _ authority.permit.AttemptKey.Insts.CoreFmtDebug self.attempt
+  let dyn1 :=
+    Dyn.mk _ (core.fmt.DebugShared
+      authority.report.ObservedOutcome.Insts.CoreFmtDebug) self.outcome
+  core.fmt.Formatter.debug_struct_field2_finish f (toStr "Observation") (toStr
+    "attempt") dyn (toStr "outcome") dyn1
+
+/-- Trait implementation: [noble_kernel::authority::report::{impl core::fmt::Debug for noble_kernel::authority::report::Observation}]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 50:9-50:14 -/
+@[reducible]
+def authority.report.Observation.Insts.CoreFmtDebug : core.fmt.Debug
+  authority.report.Observation := {
+  fmt := authority.report.Observation.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_kernel::authority::report::{impl core::clone::Clone for noble_kernel::authority::report::BoundaryError}::clone]:
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 56:9-56:14
+    Visibility: public -/
+def authority.report.BoundaryError.Insts.CoreCloneClone.clone
+  (self : authority.report.BoundaryError) :
+  Result authority.report.BoundaryError
+  := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::authority::report::{impl core::clone::Clone for noble_kernel::authority::report::BoundaryError}]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 56:9-56:14 -/
+@[reducible]
+def authority.report.BoundaryError.Insts.CoreCloneClone : core.clone.Clone
+  authority.report.BoundaryError := {
+  clone := authority.report.BoundaryError.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::authority::report::{impl core::marker::Copy for noble_kernel::authority::report::BoundaryError}]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 56:16-56:20 -/
+@[reducible]
+def authority.report.BoundaryError.Insts.CoreMarkerCopy : core.marker.Copy
+  authority.report.BoundaryError := {
+  cloneInst := authority.report.BoundaryError.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::authority::report::{impl core::fmt::Debug for noble_kernel::authority::report::BoundaryError}::fmt::__OFFSET]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 56:22-56:27 -/
+@[global_simps, irreducible]
+def authority.report.DebugBoundaryError.fmt.__OFFSET
+  : Array Std.Usize 15#usize :=
+  Array.make 15#usize [
+    0#usize, 12#usize, 26#usize, 41#usize, 51#usize, 65#usize, 76#usize,
+    92#usize, 103#usize, 125#usize, 143#usize, 166#usize, 184#usize, 201#usize,
+    220#usize
+    ]
+
+/-- [noble_kernel::authority::report::{impl core::fmt::Debug for noble_kernel::authority::report::BoundaryError}::fmt::__NAMES]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 56:22-56:27 -/
+@[global_simps, irreducible]
+def authority.report.DebugBoundaryError.fmt.__NAMES : Str :=
+  toStr
+    "WrongContextUnknownAttemptStaleGenerationNotStartedAlreadyStartedWrongSourceStaleObservationChangedPlanConflictingObservationMissingObservationInapplicableObservationInvocationFinishedImportedTrustFlagInapplicableReceipt"
+
+/-- [noble_kernel::authority::report::{impl core::fmt::Debug for noble_kernel::authority::report::BoundaryError}::fmt]:
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 56:22-56:27
+    Visibility: public -/
+def authority.report.BoundaryError.Insts.CoreFmtDebug.fmt
+  (self : authority.report.BoundaryError) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let self1 := read_discriminant self
+  let __d ← lift (IScalar.hcast .Usize self1)
+  let s ←
+    lift (Array.to_slice authority.report.DebugBoundaryError.fmt.__OFFSET)
+  core.fmt.Formatter.debug_c_like_enum_write_str f
+    authority.report.DebugBoundaryError.fmt.__NAMES s __d
+
+/-- Trait implementation: [noble_kernel::authority::report::{impl core::fmt::Debug for noble_kernel::authority::report::BoundaryError}]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 56:22-56:27 -/
+@[reducible]
+def authority.report.BoundaryError.Insts.CoreFmtDebug : core.fmt.Debug
+  authority.report.BoundaryError := {
+  fmt := authority.report.BoundaryError.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::authority::report::{impl core::marker::StructuralPartialEq for noble_kernel::authority::report::BoundaryError}]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 56:29-56:38 -/
+@[reducible]
+def authority.report.BoundaryError.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq authority.report.BoundaryError := {
+}
+
+/-- [noble_kernel::authority::report::{impl core::cmp::PartialEq<noble_kernel::authority::report::BoundaryError> for noble_kernel::authority::report::BoundaryError}::eq]:
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 56:29-56:38
+    Visibility: public -/
+def authority.report.BoundaryError.Insts.CoreCmpPartialEqBoundaryError.eq
+  (self : authority.report.BoundaryError)
+  (other : authority.report.BoundaryError) :
+  Result Bool
+  := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  ok (self1 = other1)
+
+/-- Trait implementation: [noble_kernel::authority::report::{impl core::cmp::PartialEq<noble_kernel::authority::report::BoundaryError> for noble_kernel::authority::report::BoundaryError}]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 56:29-56:38 -/
+@[reducible]
+impl_def authority.report.BoundaryError.Insts.CoreCmpPartialEqBoundaryError :
+  core.cmp.PartialEq authority.report.BoundaryError
+  authority.report.BoundaryError := {
+  eq := authority.report.BoundaryError.Insts.CoreCmpPartialEqBoundaryError.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    authority.report.BoundaryError.Insts.CoreCmpPartialEqBoundaryError
+}
+
+/-- [noble_kernel::authority::report::{impl core::cmp::Eq for noble_kernel::authority::report::BoundaryError}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 56:40-56:42
+    Visibility: public -/
+def authority.report.BoundaryError.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : authority.report.BoundaryError) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::authority::report::{impl core::cmp::Eq for noble_kernel::authority::report::BoundaryError}]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 56:40-56:42 -/
+@[reducible]
+def authority.report.BoundaryError.Insts.CoreCmpEq : core.cmp.Eq
+  authority.report.BoundaryError := {
+  partialEqInst :=
+    authority.report.BoundaryError.Insts.CoreCmpPartialEqBoundaryError
+  assert_fields_are_eq :=
+    authority.report.BoundaryError.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::authority::report::{impl core::clone::Clone for noble_kernel::authority::report::ReceiptClaim}::clone]:
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 74:9-74:14
+    Visibility: public -/
+def authority.report.ReceiptClaim.Insts.CoreCloneClone.clone
+  (self : authority.report.ReceiptClaim) :
+  Result authority.report.ReceiptClaim
+  := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::authority::report::{impl core::clone::Clone for noble_kernel::authority::report::ReceiptClaim}]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 74:9-74:14 -/
+@[reducible]
+def authority.report.ReceiptClaim.Insts.CoreCloneClone : core.clone.Clone
+  authority.report.ReceiptClaim := {
+  clone := authority.report.ReceiptClaim.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::authority::report::{impl core::marker::Copy for noble_kernel::authority::report::ReceiptClaim}]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 74:16-74:20 -/
+@[reducible]
+def authority.report.ReceiptClaim.Insts.CoreMarkerCopy : core.marker.Copy
+  authority.report.ReceiptClaim := {
+  cloneInst := authority.report.ReceiptClaim.Insts.CoreCloneClone
+}
+
+/-- Trait implementation: [noble_kernel::authority::report::{impl core::marker::StructuralPartialEq for noble_kernel::authority::report::ReceiptClaim}]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 74:29-74:38 -/
+@[reducible]
+def authority.report.ReceiptClaim.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq authority.report.ReceiptClaim := {
+}
+
+/-- Trait implementation: [noble_kernel::authority::report::{impl core::cmp::PartialEq<noble_kernel::authority::report::ReceiptClaim> for noble_kernel::authority::report::ReceiptClaim}]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 74:29-74:38 -/
+@[reducible]
+impl_def authority.report.ReceiptClaim.Insts.CoreCmpPartialEqReceiptClaim :
+  core.cmp.PartialEq authority.report.ReceiptClaim
+  authority.report.ReceiptClaim := {
+  eq := authority.report.ReceiptClaim.Insts.CoreCmpPartialEqReceiptClaim.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    authority.report.ReceiptClaim.Insts.CoreCmpPartialEqReceiptClaim
+}
+
+/-- [noble_kernel::authority::report::{impl core::cmp::Eq for noble_kernel::authority::report::ReceiptClaim}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 74:40-74:42
+    Visibility: public -/
+def authority.report.ReceiptClaim.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : authority.report.ReceiptClaim) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::authority::report::{impl core::cmp::Eq for noble_kernel::authority::report::ReceiptClaim}]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 74:40-74:42 -/
+@[reducible]
+def authority.report.ReceiptClaim.Insts.CoreCmpEq : core.cmp.Eq
+  authority.report.ReceiptClaim := {
+  partialEqInst :=
+    authority.report.ReceiptClaim.Insts.CoreCmpPartialEqReceiptClaim
+  assert_fields_are_eq :=
+    authority.report.ReceiptClaim.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::authority::report::{impl core::clone::Clone for noble_kernel::authority::report::ReceiptScope}::clone]:
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 85:9-85:14
+    Visibility: public -/
+def authority.report.ReceiptScope.Insts.CoreCloneClone.clone
+  (self : authority.report.ReceiptScope) :
+  Result authority.report.ReceiptScope
+  := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::authority::report::{impl core::clone::Clone for noble_kernel::authority::report::ReceiptScope}]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 85:9-85:14 -/
+@[reducible]
+def authority.report.ReceiptScope.Insts.CoreCloneClone : core.clone.Clone
+  authority.report.ReceiptScope := {
+  clone := authority.report.ReceiptScope.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::authority::report::{impl core::marker::Copy for noble_kernel::authority::report::ReceiptScope}]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 85:16-85:20 -/
+@[reducible]
+def authority.report.ReceiptScope.Insts.CoreMarkerCopy : core.marker.Copy
+  authority.report.ReceiptScope := {
+  cloneInst := authority.report.ReceiptScope.Insts.CoreCloneClone
+}
+
+/-- Trait implementation: [noble_kernel::authority::report::{impl core::marker::StructuralPartialEq for noble_kernel::authority::report::ReceiptScope}]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 85:29-85:38 -/
+@[reducible]
+def authority.report.ReceiptScope.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq authority.report.ReceiptScope := {
+}
+
+/-- Trait implementation: [noble_kernel::authority::report::{impl core::cmp::PartialEq<noble_kernel::authority::report::ReceiptScope> for noble_kernel::authority::report::ReceiptScope}]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 85:29-85:38 -/
+@[reducible]
+impl_def authority.report.ReceiptScope.Insts.CoreCmpPartialEqReceiptScope :
+  core.cmp.PartialEq authority.report.ReceiptScope
+  authority.report.ReceiptScope := {
+  eq := authority.report.ReceiptScope.Insts.CoreCmpPartialEqReceiptScope.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    authority.report.ReceiptScope.Insts.CoreCmpPartialEqReceiptScope
+}
+
+/-- [noble_kernel::authority::report::{impl core::cmp::Eq for noble_kernel::authority::report::ReceiptScope}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 85:40-85:42
+    Visibility: public -/
+def authority.report.ReceiptScope.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : authority.report.ReceiptScope) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::authority::report::{impl core::cmp::Eq for noble_kernel::authority::report::ReceiptScope}]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 85:40-85:42 -/
+@[reducible]
+def authority.report.ReceiptScope.Insts.CoreCmpEq : core.cmp.Eq
+  authority.report.ReceiptScope := {
+  partialEqInst :=
+    authority.report.ReceiptScope.Insts.CoreCmpPartialEqReceiptScope
+  assert_fields_are_eq :=
+    authority.report.ReceiptScope.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::authority::report::{impl core::clone::Clone for noble_kernel::authority::report::ReceiptDescription}::clone]:
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 95:9-95:14
+    Visibility: public -/
+def authority.report.ReceiptDescription.Insts.CoreCloneClone.clone
+  (self : authority.report.ReceiptDescription) :
+  Result authority.report.ReceiptDescription
+  := do
+  let p ← authority.Plan.Insts.CoreCloneClone.clone self.plan
+  let oc ←
+    authority.OwnerContext.Insts.CoreCloneClone.clone self.boundary_owner
+  let o ←
+    core.option.Option.Insts.CoreCloneClone.clone
+      authority.permit.AttemptKey.Insts.CoreCloneClone self.attempt
+  let si ← authority.SourceId.Insts.CoreCloneClone.clone self.source
+  let c ← authority.Checkpoint.Insts.CoreCloneClone.clone self.checkpoint
+  let rc ←
+    authority.report.ReceiptClaim.Insts.CoreCloneClone.clone self.claim
+  let rs ←
+    authority.report.ReceiptScope.Insts.CoreCloneClone.clone self.scope
+  let io ←
+    authority.report.InvocationOutcome.Insts.CoreCloneClone.clone
+      self.invocation
+  let o1 ←
+    core.option.Option.Insts.CoreCloneClone.clone
+      authority.permit.Denial.Insts.CoreCloneClone self.denial
+  let o2 ←
+    core.option.Option.Insts.CoreCloneClone.clone
+      authority.permit.PreflightFailure.Insts.CoreCloneClone self.preflight
+  ok
+    {
+      plan := p,
+      boundary_owner := oc,
+      attempt := o,
+      source := si,
+      checkpoint := c,
+      claim := rc,
+      scope := rs,
+      invocation := io,
+      denial := o1,
+      preflight := o2
+    }
+
+/-- Trait implementation: [noble_kernel::authority::report::{impl core::clone::Clone for noble_kernel::authority::report::ReceiptDescription}]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 95:9-95:14 -/
+@[reducible]
+def authority.report.ReceiptDescription.Insts.CoreCloneClone : core.clone.Clone
+  authority.report.ReceiptDescription := {
+  clone := authority.report.ReceiptDescription.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::authority::report::{impl core::marker::StructuralPartialEq for noble_kernel::authority::report::ReceiptDescription}]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 95:23-95:32 -/
+@[reducible]
+def authority.report.ReceiptDescription.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq authority.report.ReceiptDescription := {
+}
+
+/-- [noble_kernel::authority::report::{impl core::cmp::Eq for noble_kernel::authority::report::ReceiptDescription}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 95:34-95:36
+    Visibility: public -/
+def authority.report.ReceiptDescription.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : authority.report.ReceiptDescription) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::authority::report::{impl core::cmp::Eq for noble_kernel::authority::report::ReceiptDescription}]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 95:34-95:36 -/
+@[reducible]
+def authority.report.ReceiptDescription.Insts.CoreCmpEq : core.cmp.Eq
+  authority.report.ReceiptDescription := {
+  partialEqInst :=
+    authority.report.ReceiptDescription.Insts.CoreCmpPartialEqReceiptDescription
+  assert_fields_are_eq :=
+    authority.report.ReceiptDescription.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::authority::report::{impl core::clone::Clone for noble_kernel::authority::report::Receipt}::clone]:
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 109:9-109:14
+    Visibility: public -/
+def authority.report.Receipt.Insts.CoreCloneClone.clone
+  (self : authority.report.Receipt) : Result authority.report.Receipt := do
+  let rd ←
+    authority.report.ReceiptDescription.Insts.CoreCloneClone.clone
+      self.description
+  ok { description := rd }
+
+/-- Trait implementation: [noble_kernel::authority::report::{impl core::clone::Clone for noble_kernel::authority::report::Receipt}]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 109:9-109:14 -/
+@[reducible]
+def authority.report.Receipt.Insts.CoreCloneClone : core.clone.Clone
+  authority.report.Receipt := {
+  clone := authority.report.Receipt.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::authority::report::{impl core::marker::StructuralPartialEq for noble_kernel::authority::report::Receipt}]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 109:23-109:32 -/
+@[reducible]
+def authority.report.Receipt.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq authority.report.Receipt := {
+}
+
+/-- [noble_kernel::authority::report::{impl core::cmp::PartialEq<noble_kernel::authority::report::Receipt> for noble_kernel::authority::report::Receipt}::eq]:
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 109:23-109:32
+    Visibility: public -/
+def authority.report.Receipt.Insts.CoreCmpPartialEqReceipt.eq
+  (self : authority.report.Receipt) (other : authority.report.Receipt) :
+  Result Bool
+  := do
+  authority.report.ReceiptDescription.Insts.CoreCmpPartialEqReceiptDescription.eq
+    self.description other.description
+
+/-- Trait implementation: [noble_kernel::authority::report::{impl core::cmp::PartialEq<noble_kernel::authority::report::Receipt> for noble_kernel::authority::report::Receipt}]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 109:23-109:32 -/
+@[reducible]
+impl_def authority.report.Receipt.Insts.CoreCmpPartialEqReceipt :
+  core.cmp.PartialEq authority.report.Receipt authority.report.Receipt := {
+  eq := authority.report.Receipt.Insts.CoreCmpPartialEqReceipt.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    authority.report.Receipt.Insts.CoreCmpPartialEqReceipt
+}
+
+/-- [noble_kernel::authority::report::{impl core::cmp::Eq for noble_kernel::authority::report::Receipt}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 109:34-109:36
+    Visibility: public -/
+def authority.report.Receipt.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : authority.report.Receipt) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::authority::report::{impl core::cmp::Eq for noble_kernel::authority::report::Receipt}]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 109:34-109:36 -/
+@[reducible]
+def authority.report.Receipt.Insts.CoreCmpEq : core.cmp.Eq
+  authority.report.Receipt := {
+  partialEqInst := authority.report.Receipt.Insts.CoreCmpPartialEqReceipt
+  assert_fields_are_eq :=
+    authority.report.Receipt.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::authority::report::{noble_kernel::authority::report::Receipt}::description]:
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 115:4-117:5
+    Visibility: public -/
+def authority.report.Receipt.impl.description
+  (self : authority.report.Receipt) :
+  Result authority.report.ReceiptDescription
+  := do
+  ok self.description
+
+/-- [noble_kernel::authority::report::{noble_kernel::authority::report::Rejection}::receipt]:
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 126:4-128:5
+    Visibility: public -/
+def authority.report.Rejection.impl.receipt
+  (self : authority.report.Rejection) : Result authority.report.Receipt := do
+  ok self.receipt
+
+/-- [noble_kernel::authority::report::{impl core::clone::Clone for noble_kernel::authority::report::UntrustedReceipt}::clone]:
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 133:9-133:14
+    Visibility: public -/
+def authority.report.UntrustedReceipt.Insts.CoreCloneClone.clone
+  (self : authority.report.UntrustedReceipt) :
+  Result authority.report.UntrustedReceipt
+  := do
+  let rd ←
+    authority.report.ReceiptDescription.Insts.CoreCloneClone.clone
+      self.description
+  ok { description := rd }
+
+/-- Trait implementation: [noble_kernel::authority::report::{impl core::clone::Clone for noble_kernel::authority::report::UntrustedReceipt}]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 133:9-133:14 -/
+@[reducible]
+def authority.report.UntrustedReceipt.Insts.CoreCloneClone : core.clone.Clone
+  authority.report.UntrustedReceipt := {
+  clone := authority.report.UntrustedReceipt.Insts.CoreCloneClone.clone
+}
+
+/-- [noble_kernel::authority::report::{impl core::fmt::Debug for noble_kernel::authority::report::UntrustedReceipt}::fmt]:
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 133:16-133:21
+    Visibility: public -/
+def authority.report.UntrustedReceipt.Insts.CoreFmtDebug.fmt
+  (self : authority.report.UntrustedReceipt) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn :=
+    Dyn.mk _ (core.fmt.DebugShared
+      authority.report.ReceiptDescription.Insts.CoreFmtDebug) self.description
+  core.fmt.Formatter.debug_struct_field1_finish f (toStr "UntrustedReceipt")
+    (toStr "description") dyn
+
+/-- Trait implementation: [noble_kernel::authority::report::{impl core::fmt::Debug for noble_kernel::authority::report::UntrustedReceipt}]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 133:16-133:21 -/
+@[reducible]
+def authority.report.UntrustedReceipt.Insts.CoreFmtDebug : core.fmt.Debug
+  authority.report.UntrustedReceipt := {
+  fmt := authority.report.UntrustedReceipt.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::authority::report::{impl core::marker::StructuralPartialEq for noble_kernel::authority::report::UntrustedReceipt}]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 133:23-133:32 -/
+@[reducible]
+def authority.report.UntrustedReceipt.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq authority.report.UntrustedReceipt := {
+}
+
+/-- [noble_kernel::authority::report::{impl core::cmp::PartialEq<noble_kernel::authority::report::UntrustedReceipt> for noble_kernel::authority::report::UntrustedReceipt}::eq]:
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 133:23-133:32
+    Visibility: public -/
+def authority.report.UntrustedReceipt.Insts.CoreCmpPartialEqUntrustedReceipt.eq
+  (self : authority.report.UntrustedReceipt)
+  (other : authority.report.UntrustedReceipt) :
+  Result Bool
+  := do
+  authority.report.ReceiptDescription.Insts.CoreCmpPartialEqReceiptDescription.eq
+    self.description other.description
+
+/-- Trait implementation: [noble_kernel::authority::report::{impl core::cmp::PartialEq<noble_kernel::authority::report::UntrustedReceipt> for noble_kernel::authority::report::UntrustedReceipt}]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 133:23-133:32 -/
+@[reducible]
+impl_def
+  authority.report.UntrustedReceipt.Insts.CoreCmpPartialEqUntrustedReceipt :
+  core.cmp.PartialEq authority.report.UntrustedReceipt
+  authority.report.UntrustedReceipt := {
+  eq :=
+    authority.report.UntrustedReceipt.Insts.CoreCmpPartialEqUntrustedReceipt.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    authority.report.UntrustedReceipt.Insts.CoreCmpPartialEqUntrustedReceipt
+}
+
+/-- [noble_kernel::authority::report::{impl core::cmp::Eq for noble_kernel::authority::report::UntrustedReceipt}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 133:34-133:36
+    Visibility: public -/
+def authority.report.UntrustedReceipt.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : authority.report.UntrustedReceipt) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::authority::report::{impl core::cmp::Eq for noble_kernel::authority::report::UntrustedReceipt}]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 133:34-133:36 -/
+@[reducible]
+def authority.report.UntrustedReceipt.Insts.CoreCmpEq : core.cmp.Eq
+  authority.report.UntrustedReceipt := {
+  partialEqInst :=
+    authority.report.UntrustedReceipt.Insts.CoreCmpPartialEqUntrustedReceipt
+  assert_fields_are_eq :=
+    authority.report.UntrustedReceipt.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::authority::report::{noble_kernel::authority::report::UntrustedReceipt}::import]:
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 139:4-147:5
+    Visibility: public -/
+def authority.report.UntrustedReceipt.import
+  (description : authority.report.ReceiptDescription)
+  (trust_flag : Option Bool) :
+  Result (core.result.Result authority.report.UntrustedReceipt
+    authority.report.BoundaryError)
+  := do
+  match trust_flag with
+  | none => ok (core.result.Result.Ok { description })
+  | some _ =>
+    ok (core.result.Result.Err
+      authority.report.BoundaryError.ImportedTrustFlag)
+
+/-- [noble_kernel::authority::report::{noble_kernel::authority::report::UntrustedReceipt}::description]:
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 149:4-151:5
+    Visibility: public -/
+def authority.report.UntrustedReceipt.impl.description
+  (self : authority.report.UntrustedReceipt) :
+  Result authority.report.ReceiptDescription
+  := do
+  ok self.description
+
 /-- [noble_kernel::contracts::bootstrap::scheme]:
     Source: 'crates/noble-kernel/src/contracts/bootstrap.rs', lines 44:0-56:1 -/
 def contracts.bootstrap.scheme
@@ -6612,23 +12241,6 @@ def words.Variable.Insts.CoreFmtDebug : core.fmt.Debug words.Variable := {
   fmt := words.Variable.Insts.CoreFmtDebug.fmt
 }
 
-/-- [noble_kernel::types::{impl core::fmt::Debug for noble_kernel::types::EffId}::fmt]:
-    Source: 'crates/noble-kernel/src/types.rs', lines 25:22-25:27
-    Visibility: public -/
-def types.EffId.Insts.CoreFmtDebug.fmt
-  (self : types.EffId) (f : core.fmt.Formatter) :
-  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
-  := do
-  let dyn := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU32) self
-  core.fmt.Formatter.debug_tuple_field1_finish f (toStr "EffId") dyn
-
-/-- Trait implementation: [noble_kernel::types::{impl core::fmt::Debug for noble_kernel::types::EffId}]
-    Source: 'crates/noble-kernel/src/types.rs', lines 25:22-25:27 -/
-@[reducible]
-def types.EffId.Insts.CoreFmtDebug : core.fmt.Debug types.EffId := {
-  fmt := types.EffId.Insts.CoreFmtDebug.fmt
-}
-
 /-- [noble_kernel::shapes::{impl core::fmt::Debug for noble_kernel::shapes::EffectSlot}::fmt]:
     Source: 'crates/noble-kernel/src/shapes.rs', lines 79:16-79:21
     Visibility: public -/
@@ -6654,16 +12266,6 @@ def shapes.EffectSlot.Insts.CoreFmtDebug : core.fmt.Debug shapes.EffectSlot
   := {
   fmt := shapes.EffectSlot.Insts.CoreFmtDebug.fmt
 }
-
-/-- [noble_kernel::types::{impl core::fmt::Debug for noble_kernel::types::ResourceKind}::fmt]:
-    Source: 'crates/noble-kernel/src/types.rs', lines 14:22-14:27
-    Visibility: public -/
-def types.ResourceKind.Insts.CoreFmtDebug.fmt
-  (self : types.ResourceKind) (f : core.fmt.Formatter) :
-  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
-  := do
-  let dyn := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU32) self
-  core.fmt.Formatter.debug_tuple_field1_finish f (toStr "ResourceKind") dyn
 
 /-- [noble_kernel::shapes::impls::{impl core::fmt::Debug for noble_kernel::shapes::Pattern}::fmt]:
     Source: 'crates/noble-kernel/src/shapes/impls.rs', lines 148:4-202:5
@@ -7655,13 +13257,3371 @@ def execution.Submission.Insts.CoreFmtDebug : core.fmt.Debug
 }
 
 /-- [noble_kernel::consume_budget]:
-    Source: 'crates/noble-kernel/src/lib.rs', lines 46:0-51:1
+    Source: 'crates/noble-kernel/src/lib.rs', lines 48:0-53:1
     Visibility: public -/
 def consume_budget (remaining : Std.U32) : Result BudgetOutcome := do
   let o ← lift (U32.checked_sub remaining 1#u32)
   match o with
   | none => ok BudgetOutcome.Exhausted
   | some next => ok (BudgetOutcome.Remaining next)
+
+/-- [noble_kernel::resources::MAX_SLOTS]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 22:0-22:33
+    Visibility: public -/
+@[global_simps, irreducible] def resources.MAX_SLOTS : Std.Usize := 256#usize
+
+/-- [noble_kernel::resources::{impl core::clone::Clone for noble_kernel::resources::TableId}::clone]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 25:9-25:14
+    Visibility: public -/
+def resources.TableId.Insts.CoreCloneClone.clone
+  (self : resources.TableId) : Result resources.TableId := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::clone::Clone for noble_kernel::resources::TableId}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 25:9-25:14 -/
+@[reducible]
+def resources.TableId.Insts.CoreCloneClone : core.clone.Clone resources.TableId
+  := {
+  clone := resources.TableId.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::marker::Copy for noble_kernel::resources::TableId}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 25:16-25:20 -/
+@[reducible]
+def resources.TableId.Insts.CoreMarkerCopy : core.marker.Copy resources.TableId
+  := {
+  cloneInst := resources.TableId.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::resources::{impl core::fmt::Debug for noble_kernel::resources::TableId}::fmt]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 25:22-25:27
+    Visibility: public -/
+def resources.TableId.Insts.CoreFmtDebug.fmt
+  (self : resources.TableId) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU64) self
+  core.fmt.Formatter.debug_tuple_field1_finish f (toStr "TableId") dyn
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::fmt::Debug for noble_kernel::resources::TableId}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 25:22-25:27 -/
+@[reducible]
+def resources.TableId.Insts.CoreFmtDebug : core.fmt.Debug resources.TableId
+  := {
+  fmt := resources.TableId.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::marker::StructuralPartialEq for noble_kernel::resources::TableId}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 25:29-25:38 -/
+@[reducible]
+def resources.TableId.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq resources.TableId := {
+}
+
+/-- [noble_kernel::resources::{impl core::cmp::PartialEq<noble_kernel::resources::TableId> for noble_kernel::resources::TableId}::eq]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 25:29-25:38
+    Visibility: public -/
+def resources.TableId.Insts.CoreCmpPartialEqTableId.eq
+  (self : resources.TableId) (other : resources.TableId) : Result Bool := do
+  ok (self = other)
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::cmp::PartialEq<noble_kernel::resources::TableId> for noble_kernel::resources::TableId}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 25:29-25:38 -/
+@[reducible]
+impl_def resources.TableId.Insts.CoreCmpPartialEqTableId : core.cmp.PartialEq
+  resources.TableId resources.TableId := {
+  eq := resources.TableId.Insts.CoreCmpPartialEqTableId.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    resources.TableId.Insts.CoreCmpPartialEqTableId
+}
+
+/-- [noble_kernel::resources::{impl core::cmp::Eq for noble_kernel::resources::TableId}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 25:40-25:42
+    Visibility: public -/
+def resources.TableId.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : resources.TableId) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::cmp::Eq for noble_kernel::resources::TableId}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 25:40-25:42 -/
+@[reducible]
+def resources.TableId.Insts.CoreCmpEq : core.cmp.Eq resources.TableId := {
+  partialEqInst := resources.TableId.Insts.CoreCmpPartialEqTableId
+  assert_fields_are_eq :=
+    resources.TableId.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::resources::{impl core::clone::Clone for noble_kernel::resources::Context}::clone]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 29:9-29:14
+    Visibility: public -/
+def resources.Context.Insts.CoreCloneClone.clone
+  (self : resources.Context) : Result resources.Context := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::clone::Clone for noble_kernel::resources::Context}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 29:9-29:14 -/
+@[reducible]
+def resources.Context.Insts.CoreCloneClone : core.clone.Clone resources.Context
+  := {
+  clone := resources.Context.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::marker::Copy for noble_kernel::resources::Context}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 29:16-29:20 -/
+@[reducible]
+def resources.Context.Insts.CoreMarkerCopy : core.marker.Copy resources.Context
+  := {
+  cloneInst := resources.Context.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::resources::{impl core::fmt::Debug for noble_kernel::resources::Context}::fmt]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 29:22-29:27
+    Visibility: public -/
+def resources.Context.Insts.CoreFmtDebug.fmt
+  (self : resources.Context) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU64) self
+  core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Context") dyn
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::fmt::Debug for noble_kernel::resources::Context}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 29:22-29:27 -/
+@[reducible]
+def resources.Context.Insts.CoreFmtDebug : core.fmt.Debug resources.Context
+  := {
+  fmt := resources.Context.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::marker::StructuralPartialEq for noble_kernel::resources::Context}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 29:29-29:38 -/
+@[reducible]
+def resources.Context.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq resources.Context := {
+}
+
+/-- [noble_kernel::resources::{impl core::cmp::PartialEq<noble_kernel::resources::Context> for noble_kernel::resources::Context}::eq]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 29:29-29:38
+    Visibility: public -/
+def resources.Context.Insts.CoreCmpPartialEqContext.eq
+  (self : resources.Context) (other : resources.Context) : Result Bool := do
+  ok (self = other)
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::cmp::PartialEq<noble_kernel::resources::Context> for noble_kernel::resources::Context}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 29:29-29:38 -/
+@[reducible]
+impl_def resources.Context.Insts.CoreCmpPartialEqContext : core.cmp.PartialEq
+  resources.Context resources.Context := {
+  eq := resources.Context.Insts.CoreCmpPartialEqContext.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    resources.Context.Insts.CoreCmpPartialEqContext
+}
+
+/-- [noble_kernel::resources::{impl core::cmp::Eq for noble_kernel::resources::Context}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 29:40-29:42
+    Visibility: public -/
+def resources.Context.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : resources.Context) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::cmp::Eq for noble_kernel::resources::Context}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 29:40-29:42 -/
+@[reducible]
+def resources.Context.Insts.CoreCmpEq : core.cmp.Eq resources.Context := {
+  partialEqInst := resources.Context.Insts.CoreCmpPartialEqContext
+  assert_fields_are_eq :=
+    resources.Context.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::resources::{impl core::clone::Clone for noble_kernel::resources::Rights}::clone]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 33:9-33:14
+    Visibility: public -/
+def resources.Rights.Insts.CoreCloneClone.clone
+  (self : resources.Rights) : Result resources.Rights := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::clone::Clone for noble_kernel::resources::Rights}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 33:9-33:14 -/
+@[reducible]
+def resources.Rights.Insts.CoreCloneClone : core.clone.Clone resources.Rights
+  := {
+  clone := resources.Rights.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::marker::Copy for noble_kernel::resources::Rights}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 33:16-33:20 -/
+@[reducible]
+def resources.Rights.Insts.CoreMarkerCopy : core.marker.Copy resources.Rights
+  := {
+  cloneInst := resources.Rights.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::resources::{impl core::fmt::Debug for noble_kernel::resources::Rights}::fmt]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 33:22-33:27
+    Visibility: public -/
+def resources.Rights.Insts.CoreFmtDebug.fmt
+  (self : resources.Rights) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU64) self
+  core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Rights") dyn
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::fmt::Debug for noble_kernel::resources::Rights}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 33:22-33:27 -/
+@[reducible]
+def resources.Rights.Insts.CoreFmtDebug : core.fmt.Debug resources.Rights := {
+  fmt := resources.Rights.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::marker::StructuralPartialEq for noble_kernel::resources::Rights}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 33:29-33:38 -/
+@[reducible]
+def resources.Rights.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq resources.Rights := {
+}
+
+/-- [noble_kernel::resources::{impl core::cmp::PartialEq<noble_kernel::resources::Rights> for noble_kernel::resources::Rights}::eq]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 33:29-33:38
+    Visibility: public -/
+def resources.Rights.Insts.CoreCmpPartialEqRights.eq
+  (self : resources.Rights) (other : resources.Rights) : Result Bool := do
+  ok (self = other)
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::cmp::PartialEq<noble_kernel::resources::Rights> for noble_kernel::resources::Rights}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 33:29-33:38 -/
+@[reducible]
+impl_def resources.Rights.Insts.CoreCmpPartialEqRights : core.cmp.PartialEq
+  resources.Rights resources.Rights := {
+  eq := resources.Rights.Insts.CoreCmpPartialEqRights.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    resources.Rights.Insts.CoreCmpPartialEqRights
+}
+
+/-- [noble_kernel::resources::{impl core::cmp::Eq for noble_kernel::resources::Rights}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 33:40-33:42
+    Visibility: public -/
+def resources.Rights.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : resources.Rights) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::cmp::Eq for noble_kernel::resources::Rights}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 33:40-33:42 -/
+@[reducible]
+def resources.Rights.Insts.CoreCmpEq : core.cmp.Eq resources.Rights := {
+  partialEqInst := resources.Rights.Insts.CoreCmpPartialEqRights
+  assert_fields_are_eq := resources.Rights.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::resources::{impl core::clone::Clone for noble_kernel::resources::Handle}::clone]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 37:9-37:14
+    Visibility: public -/
+def resources.Handle.Insts.CoreCloneClone.clone
+  (self : resources.Handle) : Result resources.Handle := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::clone::Clone for noble_kernel::resources::Handle}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 37:9-37:14 -/
+@[reducible]
+def resources.Handle.Insts.CoreCloneClone : core.clone.Clone resources.Handle
+  := {
+  clone := resources.Handle.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::marker::Copy for noble_kernel::resources::Handle}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 37:16-37:20 -/
+@[reducible]
+def resources.Handle.Insts.CoreMarkerCopy : core.marker.Copy resources.Handle
+  := {
+  cloneInst := resources.Handle.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::resources::{impl core::fmt::Debug for noble_kernel::resources::Handle}::fmt]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 37:22-37:27
+    Visibility: public -/
+def resources.Handle.Insts.CoreFmtDebug.fmt
+  (self : resources.Handle) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ resources.TableId.Insts.CoreFmtDebug self.table
+  let dyn1 := Dyn.mk _ core.fmt.DebugUsize self.slot
+  let dyn2 := Dyn.mk _ core.fmt.DebugU64 self.generation
+  let dyn3 := Dyn.mk _ resources.Context.Insts.CoreFmtDebug self.context
+  let dyn4 := Dyn.mk _ types.ResourceKind.Insts.CoreFmtDebug self.kind
+  let dyn5 :=
+    Dyn.mk _ (core.fmt.DebugShared resources.Rights.Insts.CoreFmtDebug)
+      self.rights
+  let values :=
+    Array.to_slice (Array.make 6#usize [ dyn, dyn1, dyn2, dyn3, dyn4, dyn5 ])
+  let s ←
+    lift (Array.to_slice
+      (Array.make 6#usize [
+        toStr "table", toStr "slot", toStr "generation", toStr "context", toStr
+        "kind", toStr "rights"
+        ]))
+  core.fmt.Formatter.debug_struct_fields_finish f (toStr "Handle") s values
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::fmt::Debug for noble_kernel::resources::Handle}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 37:22-37:27 -/
+@[reducible]
+def resources.Handle.Insts.CoreFmtDebug : core.fmt.Debug resources.Handle := {
+  fmt := resources.Handle.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::marker::StructuralPartialEq for noble_kernel::resources::Handle}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 37:29-37:38 -/
+@[reducible]
+def resources.Handle.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq resources.Handle := {
+}
+
+/-- [noble_kernel::resources::{impl core::cmp::PartialEq<noble_kernel::resources::Handle> for noble_kernel::resources::Handle}::eq]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 37:29-37:38
+    Visibility: public -/
+def resources.Handle.Insts.CoreCmpPartialEqHandle.eq
+  (self : resources.Handle) (other : resources.Handle) : Result Bool := do
+  if self.generation = other.generation
+  then
+    let b ←
+      resources.TableId.Insts.CoreCmpPartialEqTableId.eq self.table other.table
+    if b
+    then
+      if self.slot = other.slot
+      then
+        let b1 ←
+          resources.Context.Insts.CoreCmpPartialEqContext.eq self.context
+            other.context
+        if b1
+        then
+          let b2 ←
+            types.ResourceKind.Insts.CoreCmpPartialEqResourceKind.eq 
+              self.kind other.kind
+          if b2
+          then
+            resources.Rights.Insts.CoreCmpPartialEqRights.eq self.rights
+              other.rights
+          else ok false
+        else ok false
+      else ok false
+    else ok false
+  else ok false
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::cmp::PartialEq<noble_kernel::resources::Handle> for noble_kernel::resources::Handle}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 37:29-37:38 -/
+@[reducible]
+impl_def resources.Handle.Insts.CoreCmpPartialEqHandle : core.cmp.PartialEq
+  resources.Handle resources.Handle := {
+  eq := resources.Handle.Insts.CoreCmpPartialEqHandle.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    resources.Handle.Insts.CoreCmpPartialEqHandle
+}
+
+/-- [noble_kernel::resources::{impl core::cmp::Eq for noble_kernel::resources::Handle}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 37:40-37:42
+    Visibility: public -/
+def resources.Handle.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : resources.Handle) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::cmp::Eq for noble_kernel::resources::Handle}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 37:40-37:42 -/
+@[reducible]
+def resources.Handle.Insts.CoreCmpEq : core.cmp.Eq resources.Handle := {
+  partialEqInst := resources.Handle.Insts.CoreCmpPartialEqHandle
+  assert_fields_are_eq := resources.Handle.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::resources::{impl core::clone::Clone for noble_kernel::resources::Requirement}::clone]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 48:9-48:14
+    Visibility: public -/
+def resources.Requirement.Insts.CoreCloneClone.clone
+  (self : resources.Requirement) : Result resources.Requirement := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::clone::Clone for noble_kernel::resources::Requirement}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 48:9-48:14 -/
+@[reducible]
+def resources.Requirement.Insts.CoreCloneClone : core.clone.Clone
+  resources.Requirement := {
+  clone := resources.Requirement.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::marker::Copy for noble_kernel::resources::Requirement}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 48:16-48:20 -/
+@[reducible]
+def resources.Requirement.Insts.CoreMarkerCopy : core.marker.Copy
+  resources.Requirement := {
+  cloneInst := resources.Requirement.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::resources::{impl core::fmt::Debug for noble_kernel::resources::Requirement}::fmt]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 48:22-48:27
+    Visibility: public -/
+def resources.Requirement.Insts.CoreFmtDebug.fmt
+  (self : resources.Requirement) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ resources.Context.Insts.CoreFmtDebug self.context
+  let dyn1 := Dyn.mk _ types.ResourceKind.Insts.CoreFmtDebug self.kind
+  let dyn2 :=
+    Dyn.mk _ (core.fmt.DebugShared resources.Rights.Insts.CoreFmtDebug)
+      self.rights
+  core.fmt.Formatter.debug_struct_field3_finish f (toStr "Requirement") (toStr
+    "context") dyn (toStr "kind") dyn1 (toStr "rights") dyn2
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::fmt::Debug for noble_kernel::resources::Requirement}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 48:22-48:27 -/
+@[reducible]
+def resources.Requirement.Insts.CoreFmtDebug : core.fmt.Debug
+  resources.Requirement := {
+  fmt := resources.Requirement.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::marker::StructuralPartialEq for noble_kernel::resources::Requirement}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 48:29-48:38 -/
+@[reducible]
+def resources.Requirement.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq resources.Requirement := {
+}
+
+/-- [noble_kernel::resources::{impl core::cmp::PartialEq<noble_kernel::resources::Requirement> for noble_kernel::resources::Requirement}::eq]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 48:29-48:38
+    Visibility: public -/
+def resources.Requirement.Insts.CoreCmpPartialEqRequirement.eq
+  (self : resources.Requirement) (other : resources.Requirement) :
+  Result Bool
+  := do
+  let b ←
+    resources.Context.Insts.CoreCmpPartialEqContext.eq self.context
+      other.context
+  if b
+  then
+    let b1 ←
+      types.ResourceKind.Insts.CoreCmpPartialEqResourceKind.eq self.kind
+        other.kind
+    if b1
+    then
+      resources.Rights.Insts.CoreCmpPartialEqRights.eq self.rights other.rights
+    else ok false
+  else ok false
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::cmp::PartialEq<noble_kernel::resources::Requirement> for noble_kernel::resources::Requirement}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 48:29-48:38 -/
+@[reducible]
+impl_def resources.Requirement.Insts.CoreCmpPartialEqRequirement :
+  core.cmp.PartialEq resources.Requirement resources.Requirement := {
+  eq := resources.Requirement.Insts.CoreCmpPartialEqRequirement.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    resources.Requirement.Insts.CoreCmpPartialEqRequirement
+}
+
+/-- [noble_kernel::resources::{impl core::cmp::Eq for noble_kernel::resources::Requirement}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 48:40-48:42
+    Visibility: public -/
+def resources.Requirement.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : resources.Requirement) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::cmp::Eq for noble_kernel::resources::Requirement}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 48:40-48:42 -/
+@[reducible]
+def resources.Requirement.Insts.CoreCmpEq : core.cmp.Eq resources.Requirement
+  := {
+  partialEqInst := resources.Requirement.Insts.CoreCmpPartialEqRequirement
+  assert_fields_are_eq :=
+    resources.Requirement.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::resources::{impl core::clone::Clone for noble_kernel::resources::Scope}::clone]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 56:9-56:14
+    Visibility: public -/
+def resources.Scope.Insts.CoreCloneClone.clone
+  (self : resources.Scope) : Result resources.Scope := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::clone::Clone for noble_kernel::resources::Scope}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 56:9-56:14 -/
+@[reducible]
+def resources.Scope.Insts.CoreCloneClone : core.clone.Clone resources.Scope
+  := {
+  clone := resources.Scope.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::marker::Copy for noble_kernel::resources::Scope}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 56:16-56:20 -/
+@[reducible]
+def resources.Scope.Insts.CoreMarkerCopy : core.marker.Copy resources.Scope
+  := {
+  cloneInst := resources.Scope.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::resources::{impl core::fmt::Debug for noble_kernel::resources::Scope}::fmt]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 56:22-56:27
+    Visibility: public -/
+def resources.Scope.Insts.CoreFmtDebug.fmt
+  (self : resources.Scope) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ resources.Handle.Insts.CoreFmtDebug self.handle
+  let dyn1 := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU64) self.serial
+  core.fmt.Formatter.debug_struct_field2_finish f (toStr "Scope") (toStr
+    "handle") dyn (toStr "serial") dyn1
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::fmt::Debug for noble_kernel::resources::Scope}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 56:22-56:27 -/
+@[reducible]
+def resources.Scope.Insts.CoreFmtDebug : core.fmt.Debug resources.Scope := {
+  fmt := resources.Scope.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::marker::StructuralPartialEq for noble_kernel::resources::Scope}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 56:29-56:38 -/
+@[reducible]
+def resources.Scope.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq resources.Scope := {
+}
+
+/-- [noble_kernel::resources::{impl core::cmp::PartialEq<noble_kernel::resources::Scope> for noble_kernel::resources::Scope}::eq]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 56:29-56:38
+    Visibility: public -/
+def resources.Scope.Insts.CoreCmpPartialEqScope.eq
+  (self : resources.Scope) (other : resources.Scope) : Result Bool := do
+  if self.serial = other.serial
+  then
+    resources.Handle.Insts.CoreCmpPartialEqHandle.eq self.handle other.handle
+  else ok false
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::cmp::PartialEq<noble_kernel::resources::Scope> for noble_kernel::resources::Scope}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 56:29-56:38 -/
+@[reducible]
+impl_def resources.Scope.Insts.CoreCmpPartialEqScope : core.cmp.PartialEq
+  resources.Scope resources.Scope := {
+  eq := resources.Scope.Insts.CoreCmpPartialEqScope.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    resources.Scope.Insts.CoreCmpPartialEqScope
+}
+
+/-- [noble_kernel::resources::{impl core::cmp::Eq for noble_kernel::resources::Scope}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 56:40-56:42
+    Visibility: public -/
+def resources.Scope.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : resources.Scope) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::cmp::Eq for noble_kernel::resources::Scope}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 56:40-56:42 -/
+@[reducible]
+def resources.Scope.Insts.CoreCmpEq : core.cmp.Eq resources.Scope := {
+  partialEqInst := resources.Scope.Insts.CoreCmpPartialEqScope
+  assert_fields_are_eq := resources.Scope.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::resources::{impl core::clone::Clone for noble_kernel::resources::State}::clone]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 63:9-63:14
+    Visibility: public -/
+def resources.State.Insts.CoreCloneClone.clone
+  (self : resources.State) : Result resources.State := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::clone::Clone for noble_kernel::resources::State}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 63:9-63:14 -/
+@[reducible]
+def resources.State.Insts.CoreCloneClone : core.clone.Clone resources.State
+  := {
+  clone := resources.State.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::marker::Copy for noble_kernel::resources::State}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 63:16-63:20 -/
+@[reducible]
+def resources.State.Insts.CoreMarkerCopy : core.marker.Copy resources.State
+  := {
+  cloneInst := resources.State.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::resources::{impl core::fmt::Debug for noble_kernel::resources::State}::fmt]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 63:22-63:27
+    Visibility: public -/
+def resources.State.Insts.CoreFmtDebug.fmt
+  (self : resources.State) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | resources.State.Live => core.fmt.Formatter.write_str f (toStr "Live")
+  | resources.State.Busy __self_0 =>
+    let __self_01 := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU64) __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Busy") __self_01
+  | resources.State.Retiring __self_0 =>
+    let __self_01 := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU64) __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Retiring") __self_01
+  | resources.State.Retired => core.fmt.Formatter.write_str f (toStr "Retired")
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::fmt::Debug for noble_kernel::resources::State}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 63:22-63:27 -/
+@[reducible]
+def resources.State.Insts.CoreFmtDebug : core.fmt.Debug resources.State := {
+  fmt := resources.State.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::marker::StructuralPartialEq for noble_kernel::resources::State}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 63:29-63:38 -/
+@[reducible]
+def resources.State.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq resources.State := {
+}
+
+/-- [noble_kernel::resources::{impl core::cmp::PartialEq<noble_kernel::resources::State> for noble_kernel::resources::State}::eq]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 63:29-63:38
+    Visibility: public -/
+def resources.State.Insts.CoreCmpPartialEqState.eq
+  (self : resources.State) (other : resources.State) : Result Bool := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  if self1 = other1
+  then
+    match self with
+    | resources.State.Live => ok true
+    | resources.State.Busy __self_0 =>
+      match other with
+      | resources.State.Live => ok true
+      | resources.State.Busy __arg1_0 =>
+        lift (core.cmp.impls.PartialEqU64.eq __self_0 __arg1_0)
+      | resources.State.Retiring _ => ok true
+      | resources.State.Retired => ok true
+    | resources.State.Retiring __self_0 =>
+      match other with
+      | resources.State.Live => ok true
+      | resources.State.Busy _ => ok true
+      | resources.State.Retiring __arg1_0 =>
+        lift (core.cmp.impls.PartialEqU64.eq __self_0 __arg1_0)
+      | resources.State.Retired => ok true
+    | resources.State.Retired => ok true
+  else ok false
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::cmp::PartialEq<noble_kernel::resources::State> for noble_kernel::resources::State}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 63:29-63:38 -/
+@[reducible]
+impl_def resources.State.Insts.CoreCmpPartialEqState : core.cmp.PartialEq
+  resources.State resources.State := {
+  eq := resources.State.Insts.CoreCmpPartialEqState.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    resources.State.Insts.CoreCmpPartialEqState
+}
+
+/-- [noble_kernel::resources::{impl core::cmp::Eq for noble_kernel::resources::State}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 63:40-63:42
+    Visibility: public -/
+def resources.State.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : resources.State) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::cmp::Eq for noble_kernel::resources::State}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 63:40-63:42 -/
+@[reducible]
+def resources.State.Insts.CoreCmpEq : core.cmp.Eq resources.State := {
+  partialEqInst := resources.State.Insts.CoreCmpPartialEqState
+  assert_fields_are_eq := resources.State.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::resources::{impl core::clone::Clone for noble_kernel::resources::Retirement}::clone]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 73:9-73:14
+    Visibility: public -/
+def resources.Retirement.Insts.CoreCloneClone.clone
+  (self : resources.Retirement) : Result resources.Retirement := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::clone::Clone for noble_kernel::resources::Retirement}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 73:9-73:14 -/
+@[reducible]
+def resources.Retirement.Insts.CoreCloneClone : core.clone.Clone
+  resources.Retirement := {
+  clone := resources.Retirement.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::marker::Copy for noble_kernel::resources::Retirement}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 73:16-73:20 -/
+@[reducible]
+def resources.Retirement.Insts.CoreMarkerCopy : core.marker.Copy
+  resources.Retirement := {
+  cloneInst := resources.Retirement.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::resources::{impl core::fmt::Debug for noble_kernel::resources::Retirement}::fmt]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 73:22-73:27
+    Visibility: public -/
+def resources.Retirement.Insts.CoreFmtDebug.fmt
+  (self : resources.Retirement) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | resources.Retirement.Cancelled =>
+    core.fmt.Formatter.write_str f (toStr "Cancelled")
+  | resources.Retirement.Trap => core.fmt.Formatter.write_str f (toStr "Trap")
+  | resources.Retirement.UnexpectedSuspension =>
+    core.fmt.Formatter.write_str f (toStr "UnexpectedSuspension")
+  | resources.Retirement.HostCleanup =>
+    core.fmt.Formatter.write_str f (toStr "HostCleanup")
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::fmt::Debug for noble_kernel::resources::Retirement}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 73:22-73:27 -/
+@[reducible]
+def resources.Retirement.Insts.CoreFmtDebug : core.fmt.Debug
+  resources.Retirement := {
+  fmt := resources.Retirement.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::marker::StructuralPartialEq for noble_kernel::resources::Retirement}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 73:29-73:38 -/
+@[reducible]
+def resources.Retirement.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq resources.Retirement := {
+}
+
+/-- [noble_kernel::resources::{impl core::cmp::PartialEq<noble_kernel::resources::Retirement> for noble_kernel::resources::Retirement}::eq]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 73:29-73:38
+    Visibility: public -/
+def resources.Retirement.Insts.CoreCmpPartialEqRetirement.eq
+  (self : resources.Retirement) (other : resources.Retirement) :
+  Result Bool
+  := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  ok (self1 = other1)
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::cmp::PartialEq<noble_kernel::resources::Retirement> for noble_kernel::resources::Retirement}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 73:29-73:38 -/
+@[reducible]
+impl_def resources.Retirement.Insts.CoreCmpPartialEqRetirement :
+  core.cmp.PartialEq resources.Retirement resources.Retirement := {
+  eq := resources.Retirement.Insts.CoreCmpPartialEqRetirement.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    resources.Retirement.Insts.CoreCmpPartialEqRetirement
+}
+
+/-- [noble_kernel::resources::{impl core::cmp::Eq for noble_kernel::resources::Retirement}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 73:40-73:42
+    Visibility: public -/
+def resources.Retirement.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : resources.Retirement) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::cmp::Eq for noble_kernel::resources::Retirement}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 73:40-73:42 -/
+@[reducible]
+def resources.Retirement.Insts.CoreCmpEq : core.cmp.Eq resources.Retirement
+  := {
+  partialEqInst := resources.Retirement.Insts.CoreCmpPartialEqRetirement
+  assert_fields_are_eq :=
+    resources.Retirement.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::resources::{impl core::clone::Clone for noble_kernel::resources::Completion}::clone]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 82:9-82:14
+    Visibility: public -/
+def resources.Completion.Insts.CoreCloneClone.clone
+  (self : resources.Completion) : Result resources.Completion := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::clone::Clone for noble_kernel::resources::Completion}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 82:9-82:14 -/
+@[reducible]
+def resources.Completion.Insts.CoreCloneClone : core.clone.Clone
+  resources.Completion := {
+  clone := resources.Completion.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::marker::Copy for noble_kernel::resources::Completion}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 82:16-82:20 -/
+@[reducible]
+def resources.Completion.Insts.CoreMarkerCopy : core.marker.Copy
+  resources.Completion := {
+  cloneInst := resources.Completion.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::resources::{impl core::fmt::Debug for noble_kernel::resources::Completion}::fmt]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 82:22-82:27
+    Visibility: public -/
+def resources.Completion.Insts.CoreFmtDebug.fmt
+  (self : resources.Completion) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | resources.Completion.Success =>
+    core.fmt.Formatter.write_str f (toStr "Success")
+  | resources.Completion.DomainError =>
+    core.fmt.Formatter.write_str f (toStr "DomainError")
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::fmt::Debug for noble_kernel::resources::Completion}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 82:22-82:27 -/
+@[reducible]
+def resources.Completion.Insts.CoreFmtDebug : core.fmt.Debug
+  resources.Completion := {
+  fmt := resources.Completion.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::marker::StructuralPartialEq for noble_kernel::resources::Completion}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 82:29-82:38 -/
+@[reducible]
+def resources.Completion.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq resources.Completion := {
+}
+
+/-- [noble_kernel::resources::{impl core::cmp::PartialEq<noble_kernel::resources::Completion> for noble_kernel::resources::Completion}::eq]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 82:29-82:38
+    Visibility: public -/
+def resources.Completion.Insts.CoreCmpPartialEqCompletion.eq
+  (self : resources.Completion) (other : resources.Completion) :
+  Result Bool
+  := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  ok (self1 = other1)
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::cmp::PartialEq<noble_kernel::resources::Completion> for noble_kernel::resources::Completion}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 82:29-82:38 -/
+@[reducible]
+impl_def resources.Completion.Insts.CoreCmpPartialEqCompletion :
+  core.cmp.PartialEq resources.Completion resources.Completion := {
+  eq := resources.Completion.Insts.CoreCmpPartialEqCompletion.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    resources.Completion.Insts.CoreCmpPartialEqCompletion
+}
+
+/-- [noble_kernel::resources::{impl core::cmp::Eq for noble_kernel::resources::Completion}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 82:40-82:42
+    Visibility: public -/
+def resources.Completion.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : resources.Completion) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::cmp::Eq for noble_kernel::resources::Completion}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 82:40-82:42 -/
+@[reducible]
+def resources.Completion.Insts.CoreCmpEq : core.cmp.Eq resources.Completion
+  := {
+  partialEqInst := resources.Completion.Insts.CoreCmpPartialEqCompletion
+  assert_fields_are_eq :=
+    resources.Completion.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::resources::{impl core::clone::Clone for noble_kernel::resources::Snapshot}::clone]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 89:9-89:14
+    Visibility: public -/
+def resources.Snapshot.Insts.CoreCloneClone.clone
+  (self : resources.Snapshot) : Result resources.Snapshot := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::clone::Clone for noble_kernel::resources::Snapshot}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 89:9-89:14 -/
+@[reducible]
+def resources.Snapshot.Insts.CoreCloneClone : core.clone.Clone
+  resources.Snapshot := {
+  clone := resources.Snapshot.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::marker::Copy for noble_kernel::resources::Snapshot}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 89:16-89:20 -/
+@[reducible]
+def resources.Snapshot.Insts.CoreMarkerCopy : core.marker.Copy
+  resources.Snapshot := {
+  cloneInst := resources.Snapshot.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::resources::{impl core::fmt::Debug for noble_kernel::resources::Snapshot}::fmt]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 89:22-89:27
+    Visibility: public -/
+def resources.Snapshot.Insts.CoreFmtDebug.fmt
+  (self : resources.Snapshot) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ resources.Handle.Insts.CoreFmtDebug self.handle
+  let dyn1 := Dyn.mk _ resources.State.Insts.CoreFmtDebug self.state
+  let dyn2 :=
+    Dyn.mk _ (core.option.Option.Insts.CoreFmtDebug core.fmt.DebugU64)
+      self.last_scope
+  let dyn3 :=
+    Dyn.mk _ (core.fmt.DebugShared (core.option.Option.Insts.CoreFmtDebug
+      resources.Retirement.Insts.CoreFmtDebug)) self.retirement
+  core.fmt.Formatter.debug_struct_field4_finish f (toStr "Snapshot") (toStr
+    "handle") dyn (toStr "state") dyn1 (toStr "last_scope") dyn2 (toStr
+    "retirement") dyn3
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::fmt::Debug for noble_kernel::resources::Snapshot}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 89:22-89:27 -/
+@[reducible]
+def resources.Snapshot.Insts.CoreFmtDebug : core.fmt.Debug resources.Snapshot
+  := {
+  fmt := resources.Snapshot.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::marker::StructuralPartialEq for noble_kernel::resources::Snapshot}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 89:29-89:38 -/
+@[reducible]
+def resources.Snapshot.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq resources.Snapshot := {
+}
+
+/-- [noble_kernel::resources::{impl core::cmp::PartialEq<noble_kernel::resources::Snapshot> for noble_kernel::resources::Snapshot}::eq]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 89:29-89:38
+    Visibility: public -/
+def resources.Snapshot.Insts.CoreCmpPartialEqSnapshot.eq
+  (self : resources.Snapshot) (other : resources.Snapshot) : Result Bool := do
+  let b ←
+    resources.Handle.Insts.CoreCmpPartialEqHandle.eq self.handle other.handle
+  if b
+  then
+    let b1 ←
+      resources.State.Insts.CoreCmpPartialEqState.eq self.state other.state
+    if b1
+    then
+      let b2 ←
+        core.option.Option.Insts.CoreCmpPartialEqOption.eq
+          core.cmp.PartialEqU64 self.last_scope other.last_scope
+      if b2
+      then
+        core.option.Option.Insts.CoreCmpPartialEqOption.eq
+          resources.Retirement.Insts.CoreCmpPartialEqRetirement self.retirement
+          other.retirement
+      else ok false
+    else ok false
+  else ok false
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::cmp::PartialEq<noble_kernel::resources::Snapshot> for noble_kernel::resources::Snapshot}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 89:29-89:38 -/
+@[reducible]
+impl_def resources.Snapshot.Insts.CoreCmpPartialEqSnapshot : core.cmp.PartialEq
+  resources.Snapshot resources.Snapshot := {
+  eq := resources.Snapshot.Insts.CoreCmpPartialEqSnapshot.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    resources.Snapshot.Insts.CoreCmpPartialEqSnapshot
+}
+
+/-- [noble_kernel::resources::{impl core::cmp::Eq for noble_kernel::resources::Snapshot}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 89:40-89:42
+    Visibility: public -/
+def resources.Snapshot.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : resources.Snapshot) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::cmp::Eq for noble_kernel::resources::Snapshot}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 89:40-89:42 -/
+@[reducible]
+def resources.Snapshot.Insts.CoreCmpEq : core.cmp.Eq resources.Snapshot := {
+  partialEqInst := resources.Snapshot.Insts.CoreCmpPartialEqSnapshot
+  assert_fields_are_eq :=
+    resources.Snapshot.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::resources::{impl core::clone::Clone for noble_kernel::resources::Event}::clone]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 98:9-98:14
+    Visibility: public -/
+def resources.Event.Insts.CoreCloneClone.clone
+  (self : resources.Event) : Result resources.Event := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::clone::Clone for noble_kernel::resources::Event}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 98:9-98:14 -/
+@[reducible]
+def resources.Event.Insts.CoreCloneClone : core.clone.Clone resources.Event
+  := {
+  clone := resources.Event.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::marker::Copy for noble_kernel::resources::Event}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 98:16-98:20 -/
+@[reducible]
+def resources.Event.Insts.CoreMarkerCopy : core.marker.Copy resources.Event
+  := {
+  cloneInst := resources.Event.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::resources::{impl core::fmt::Debug for noble_kernel::resources::Event}::fmt]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 98:22-98:27
+    Visibility: public -/
+def resources.Event.Insts.CoreFmtDebug.fmt
+  (self : resources.Event) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | resources.Event.Inspect __self_0 =>
+    let __self_01 :=
+      Dyn.mk _ (core.fmt.DebugShared resources.Requirement.Insts.CoreFmtDebug)
+        __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Inspect") __self_01
+  | resources.Event.Begin __self_0 __self_1 =>
+    let __self_01 := Dyn.mk _ resources.Requirement.Insts.CoreFmtDebug __self_0
+    let __self_11 := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU64) __self_1
+    core.fmt.Formatter.debug_struct_field2_finish f (toStr "Begin") (toStr
+      "required") __self_01 (toStr "serial") __self_11
+  | resources.Event.Access __self_0 =>
+    let __self_01 := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU64) __self_0
+    core.fmt.Formatter.debug_struct_field1_finish f (toStr "Access") (toStr
+      "serial") __self_01
+  | resources.Event.Complete __self_0 __self_1 =>
+    let __self_01 := Dyn.mk _ core.fmt.DebugU64 __self_0
+    let __self_11 :=
+      Dyn.mk _ (core.fmt.DebugShared resources.Completion.Insts.CoreFmtDebug)
+        __self_1
+    core.fmt.Formatter.debug_struct_field2_finish f (toStr "Complete") (toStr
+      "serial") __self_01 (toStr "result") __self_11
+  | resources.Event.Revoke __self_0 __self_1 =>
+    let __self_01 := Dyn.mk _ core.fmt.DebugU64 __self_0
+    let __self_11 :=
+      Dyn.mk _ (core.fmt.DebugShared resources.Retirement.Insts.CoreFmtDebug)
+        __self_1
+    core.fmt.Formatter.debug_struct_field2_finish f (toStr "Revoke") (toStr
+      "serial") __self_01 (toStr "reason") __self_11
+  | resources.Event.Retire __self_0 =>
+    let __self_01 :=
+      Dyn.mk _ (core.fmt.DebugShared resources.Retirement.Insts.CoreFmtDebug)
+        __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Retire") __self_01
+  | resources.Event.Release __self_0 =>
+    let __self_01 :=
+      Dyn.mk _ (core.fmt.DebugShared resources.Requirement.Insts.CoreFmtDebug)
+        __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Release") __self_01
+  | resources.Event.Transfer __self_0 __self_1 __self_2 =>
+    let __self_01 := Dyn.mk _ resources.Requirement.Insts.CoreFmtDebug __self_0
+    let __self_11 := Dyn.mk _ resources.Context.Insts.CoreFmtDebug __self_1
+    let __self_21 := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU64) __self_2
+    core.fmt.Formatter.debug_struct_field3_finish f (toStr "Transfer") (toStr
+      "required") __self_01 (toStr "receiver") __self_11 (toStr "generation")
+      __self_21
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::fmt::Debug for noble_kernel::resources::Event}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 98:22-98:27 -/
+@[reducible]
+def resources.Event.Insts.CoreFmtDebug : core.fmt.Debug resources.Event := {
+  fmt := resources.Event.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::marker::StructuralPartialEq for noble_kernel::resources::Event}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 98:29-98:38 -/
+@[reducible]
+def resources.Event.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq resources.Event := {
+}
+
+/-- [noble_kernel::resources::{impl core::cmp::PartialEq<noble_kernel::resources::Event> for noble_kernel::resources::Event}::eq]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 98:29-98:38
+    Visibility: public -/
+def resources.Event.Insts.CoreCmpPartialEqEvent.eq
+  (self : resources.Event) (other : resources.Event) : Result Bool := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  if self1 = other1
+  then
+    match self with
+    | resources.Event.Inspect __self_0 =>
+      match other with
+      | resources.Event.Inspect __arg1_0 =>
+        resources.Requirement.Insts.CoreCmpPartialEqRequirement.eq __self_0
+          __arg1_0
+      | resources.Event.Begin _ _ => fail panic
+      | resources.Event.Access _ => fail panic
+      | resources.Event.Complete _ _ => fail panic
+      | resources.Event.Revoke _ _ => fail panic
+      | resources.Event.Retire _ => fail panic
+      | resources.Event.Release _ => fail panic
+      | resources.Event.Transfer _ _ _ => fail panic
+    | resources.Event.Begin __self_0 __self_1 =>
+      match other with
+      | resources.Event.Inspect _ => fail panic
+      | resources.Event.Begin __arg1_0 __arg1_1 =>
+        let b ← lift (core.cmp.impls.PartialEqU64.eq __self_1 __arg1_1)
+        if b
+        then
+          resources.Requirement.Insts.CoreCmpPartialEqRequirement.eq __self_0
+            __arg1_0
+        else ok false
+      | resources.Event.Access _ => fail panic
+      | resources.Event.Complete _ _ => fail panic
+      | resources.Event.Revoke _ _ => fail panic
+      | resources.Event.Retire _ => fail panic
+      | resources.Event.Release _ => fail panic
+      | resources.Event.Transfer _ _ _ => fail panic
+    | resources.Event.Access __self_0 =>
+      match other with
+      | resources.Event.Inspect _ => fail panic
+      | resources.Event.Begin _ _ => fail panic
+      | resources.Event.Access __arg1_0 =>
+        lift (core.cmp.impls.PartialEqU64.eq __self_0 __arg1_0)
+      | resources.Event.Complete _ _ => fail panic
+      | resources.Event.Revoke _ _ => fail panic
+      | resources.Event.Retire _ => fail panic
+      | resources.Event.Release _ => fail panic
+      | resources.Event.Transfer _ _ _ => fail panic
+    | resources.Event.Complete __self_0 __self_1 =>
+      match other with
+      | resources.Event.Inspect _ => fail panic
+      | resources.Event.Begin _ _ => fail panic
+      | resources.Event.Access _ => fail panic
+      | resources.Event.Complete __arg1_0 __arg1_1 =>
+        let b ← lift (core.cmp.impls.PartialEqU64.eq __self_0 __arg1_0)
+        if b
+        then
+          resources.Completion.Insts.CoreCmpPartialEqCompletion.eq __self_1
+            __arg1_1
+        else ok false
+      | resources.Event.Revoke _ _ => fail panic
+      | resources.Event.Retire _ => fail panic
+      | resources.Event.Release _ => fail panic
+      | resources.Event.Transfer _ _ _ => fail panic
+    | resources.Event.Revoke __self_0 __self_1 =>
+      match other with
+      | resources.Event.Inspect _ => fail panic
+      | resources.Event.Begin _ _ => fail panic
+      | resources.Event.Access _ => fail panic
+      | resources.Event.Complete _ _ => fail panic
+      | resources.Event.Revoke __arg1_0 __arg1_1 =>
+        let b ← lift (core.cmp.impls.PartialEqU64.eq __self_0 __arg1_0)
+        if b
+        then
+          resources.Retirement.Insts.CoreCmpPartialEqRetirement.eq __self_1
+            __arg1_1
+        else ok false
+      | resources.Event.Retire _ => fail panic
+      | resources.Event.Release _ => fail panic
+      | resources.Event.Transfer _ _ _ => fail panic
+    | resources.Event.Retire __self_0 =>
+      match other with
+      | resources.Event.Inspect _ => fail panic
+      | resources.Event.Begin _ _ => fail panic
+      | resources.Event.Access _ => fail panic
+      | resources.Event.Complete _ _ => fail panic
+      | resources.Event.Revoke _ _ => fail panic
+      | resources.Event.Retire __arg1_0 =>
+        resources.Retirement.Insts.CoreCmpPartialEqRetirement.eq __self_0
+          __arg1_0
+      | resources.Event.Release _ => fail panic
+      | resources.Event.Transfer _ _ _ => fail panic
+    | resources.Event.Release __self_0 =>
+      match other with
+      | resources.Event.Inspect _ => fail panic
+      | resources.Event.Begin _ _ => fail panic
+      | resources.Event.Access _ => fail panic
+      | resources.Event.Complete _ _ => fail panic
+      | resources.Event.Revoke _ _ => fail panic
+      | resources.Event.Retire _ => fail panic
+      | resources.Event.Release __arg1_0 =>
+        resources.Requirement.Insts.CoreCmpPartialEqRequirement.eq __self_0
+          __arg1_0
+      | resources.Event.Transfer _ _ _ => fail panic
+    | resources.Event.Transfer __self_0 __self_1 __self_2 =>
+      match other with
+      | resources.Event.Inspect _ => fail panic
+      | resources.Event.Begin _ _ => fail panic
+      | resources.Event.Access _ => fail panic
+      | resources.Event.Complete _ _ => fail panic
+      | resources.Event.Revoke _ _ => fail panic
+      | resources.Event.Retire _ => fail panic
+      | resources.Event.Release _ => fail panic
+      | resources.Event.Transfer __arg1_0 __arg1_1 __arg1_2 =>
+        let b ← lift (core.cmp.impls.PartialEqU64.eq __self_2 __arg1_2)
+        if b
+        then
+          let b1 ←
+            resources.Requirement.Insts.CoreCmpPartialEqRequirement.eq __self_0
+              __arg1_0
+          if b1
+          then
+            resources.Context.Insts.CoreCmpPartialEqContext.eq __self_1
+              __arg1_1
+          else ok false
+        else ok false
+  else ok false
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::cmp::PartialEq<noble_kernel::resources::Event> for noble_kernel::resources::Event}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 98:29-98:38 -/
+@[reducible]
+impl_def resources.Event.Insts.CoreCmpPartialEqEvent : core.cmp.PartialEq
+  resources.Event resources.Event := {
+  eq := resources.Event.Insts.CoreCmpPartialEqEvent.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    resources.Event.Insts.CoreCmpPartialEqEvent
+}
+
+/-- [noble_kernel::resources::{impl core::cmp::Eq for noble_kernel::resources::Event}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 98:40-98:42
+    Visibility: public -/
+def resources.Event.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : resources.Event) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::cmp::Eq for noble_kernel::resources::Event}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 98:40-98:42 -/
+@[reducible]
+def resources.Event.Insts.CoreCmpEq : core.cmp.Eq resources.Event := {
+  partialEqInst := resources.Event.Insts.CoreCmpPartialEqEvent
+  assert_fields_are_eq := resources.Event.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::resources::{impl core::clone::Clone for noble_kernel::resources::Action}::clone]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 127:9-127:14
+    Visibility: public -/
+def resources.Action.Insts.CoreCloneClone.clone
+  (self : resources.Action) : Result resources.Action := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::clone::Clone for noble_kernel::resources::Action}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 127:9-127:14 -/
+@[reducible]
+def resources.Action.Insts.CoreCloneClone : core.clone.Clone resources.Action
+  := {
+  clone := resources.Action.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::marker::Copy for noble_kernel::resources::Action}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 127:16-127:20 -/
+@[reducible]
+def resources.Action.Insts.CoreMarkerCopy : core.marker.Copy resources.Action
+  := {
+  cloneInst := resources.Action.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::resources::{impl core::fmt::Debug for noble_kernel::resources::Action}::fmt]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 127:22-127:27
+    Visibility: public -/
+def resources.Action.Insts.CoreFmtDebug.fmt
+  (self : resources.Action) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | resources.Action.Unchanged =>
+    core.fmt.Formatter.write_str f (toStr "Unchanged")
+  | resources.Action.BorrowAdmitted =>
+    core.fmt.Formatter.write_str f (toStr "BorrowAdmitted")
+  | resources.Action.OwnerReturned __self_0 =>
+    let __self_01 :=
+      Dyn.mk _ (core.fmt.DebugShared resources.Completion.Insts.CoreFmtDebug)
+        __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "OwnerReturned")
+      __self_01
+  | resources.Action.AccessRevoked =>
+    core.fmt.Formatter.write_str f (toStr "AccessRevoked")
+  | resources.Action.LocalRelease =>
+    core.fmt.Formatter.write_str f (toStr "LocalRelease")
+  | resources.Action.RetirementCompleted =>
+    core.fmt.Formatter.write_str f (toStr "RetirementCompleted")
+  | resources.Action.OwnerTransferred =>
+    core.fmt.Formatter.write_str f (toStr "OwnerTransferred")
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::fmt::Debug for noble_kernel::resources::Action}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 127:22-127:27 -/
+@[reducible]
+def resources.Action.Insts.CoreFmtDebug : core.fmt.Debug resources.Action := {
+  fmt := resources.Action.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::marker::StructuralPartialEq for noble_kernel::resources::Action}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 127:29-127:38 -/
+@[reducible]
+def resources.Action.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq resources.Action := {
+}
+
+/-- [noble_kernel::resources::{impl core::cmp::PartialEq<noble_kernel::resources::Action> for noble_kernel::resources::Action}::eq]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 127:29-127:38
+    Visibility: public -/
+def resources.Action.Insts.CoreCmpPartialEqAction.eq
+  (self : resources.Action) (other : resources.Action) : Result Bool := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  if self1 = other1
+  then
+    match self with
+    | resources.Action.Unchanged => ok true
+    | resources.Action.BorrowAdmitted => ok true
+    | resources.Action.OwnerReturned __self_0 =>
+      match other with
+      | resources.Action.Unchanged => ok true
+      | resources.Action.BorrowAdmitted => ok true
+      | resources.Action.OwnerReturned __arg1_0 =>
+        resources.Completion.Insts.CoreCmpPartialEqCompletion.eq __self_0
+          __arg1_0
+      | resources.Action.AccessRevoked => ok true
+      | resources.Action.LocalRelease => ok true
+      | resources.Action.RetirementCompleted => ok true
+      | resources.Action.OwnerTransferred => ok true
+    | resources.Action.AccessRevoked => ok true
+    | resources.Action.LocalRelease => ok true
+    | resources.Action.RetirementCompleted => ok true
+    | resources.Action.OwnerTransferred => ok true
+  else ok false
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::cmp::PartialEq<noble_kernel::resources::Action> for noble_kernel::resources::Action}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 127:29-127:38 -/
+@[reducible]
+impl_def resources.Action.Insts.CoreCmpPartialEqAction : core.cmp.PartialEq
+  resources.Action resources.Action := {
+  eq := resources.Action.Insts.CoreCmpPartialEqAction.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    resources.Action.Insts.CoreCmpPartialEqAction
+}
+
+/-- [noble_kernel::resources::{impl core::cmp::Eq for noble_kernel::resources::Action}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 127:40-127:42
+    Visibility: public -/
+def resources.Action.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : resources.Action) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::cmp::Eq for noble_kernel::resources::Action}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 127:40-127:42 -/
+@[reducible]
+def resources.Action.Insts.CoreCmpEq : core.cmp.Eq resources.Action := {
+  partialEqInst := resources.Action.Insts.CoreCmpPartialEqAction
+  assert_fields_are_eq := resources.Action.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::resources::{impl core::clone::Clone for noble_kernel::resources::Decision}::clone]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 140:9-140:14
+    Visibility: public -/
+def resources.Decision.Insts.CoreCloneClone.clone
+  (self : resources.Decision) : Result resources.Decision := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::clone::Clone for noble_kernel::resources::Decision}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 140:9-140:14 -/
+@[reducible]
+def resources.Decision.Insts.CoreCloneClone : core.clone.Clone
+  resources.Decision := {
+  clone := resources.Decision.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::marker::Copy for noble_kernel::resources::Decision}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 140:16-140:20 -/
+@[reducible]
+def resources.Decision.Insts.CoreMarkerCopy : core.marker.Copy
+  resources.Decision := {
+  cloneInst := resources.Decision.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::resources::{impl core::fmt::Debug for noble_kernel::resources::Decision}::fmt]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 140:22-140:27
+    Visibility: public -/
+def resources.Decision.Insts.CoreFmtDebug.fmt
+  (self : resources.Decision) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ resources.Snapshot.Insts.CoreFmtDebug self.record
+  let dyn1 :=
+    Dyn.mk _ (core.fmt.DebugShared resources.Action.Insts.CoreFmtDebug)
+      self.action
+  core.fmt.Formatter.debug_struct_field2_finish f (toStr "Decision") (toStr
+    "record") dyn (toStr "action") dyn1
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::fmt::Debug for noble_kernel::resources::Decision}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 140:22-140:27 -/
+@[reducible]
+def resources.Decision.Insts.CoreFmtDebug : core.fmt.Debug resources.Decision
+  := {
+  fmt := resources.Decision.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::marker::StructuralPartialEq for noble_kernel::resources::Decision}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 140:29-140:38 -/
+@[reducible]
+def resources.Decision.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq resources.Decision := {
+}
+
+/-- [noble_kernel::resources::{impl core::cmp::PartialEq<noble_kernel::resources::Decision> for noble_kernel::resources::Decision}::eq]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 140:29-140:38
+    Visibility: public -/
+def resources.Decision.Insts.CoreCmpPartialEqDecision.eq
+  (self : resources.Decision) (other : resources.Decision) : Result Bool := do
+  let b ←
+    resources.Snapshot.Insts.CoreCmpPartialEqSnapshot.eq self.record
+      other.record
+  if b
+  then
+    resources.Action.Insts.CoreCmpPartialEqAction.eq self.action other.action
+  else ok false
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::cmp::PartialEq<noble_kernel::resources::Decision> for noble_kernel::resources::Decision}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 140:29-140:38 -/
+@[reducible]
+impl_def resources.Decision.Insts.CoreCmpPartialEqDecision : core.cmp.PartialEq
+  resources.Decision resources.Decision := {
+  eq := resources.Decision.Insts.CoreCmpPartialEqDecision.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    resources.Decision.Insts.CoreCmpPartialEqDecision
+}
+
+/-- [noble_kernel::resources::{impl core::cmp::Eq for noble_kernel::resources::Decision}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 140:40-140:42
+    Visibility: public -/
+def resources.Decision.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : resources.Decision) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::cmp::Eq for noble_kernel::resources::Decision}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 140:40-140:42 -/
+@[reducible]
+def resources.Decision.Insts.CoreCmpEq : core.cmp.Eq resources.Decision := {
+  partialEqInst := resources.Decision.Insts.CoreCmpPartialEqDecision
+  assert_fields_are_eq :=
+    resources.Decision.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::resources::{impl core::clone::Clone for noble_kernel::resources::Accounting}::clone]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 147:9-147:14
+    Visibility: public -/
+def resources.Accounting.Insts.CoreCloneClone.clone
+  (self : resources.Accounting) : Result resources.Accounting := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::clone::Clone for noble_kernel::resources::Accounting}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 147:9-147:14 -/
+@[reducible]
+def resources.Accounting.Insts.CoreCloneClone : core.clone.Clone
+  resources.Accounting := {
+  clone := resources.Accounting.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::marker::Copy for noble_kernel::resources::Accounting}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 147:16-147:20 -/
+@[reducible]
+def resources.Accounting.Insts.CoreMarkerCopy : core.marker.Copy
+  resources.Accounting := {
+  cloneInst := resources.Accounting.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::resources::{impl core::fmt::Debug for noble_kernel::resources::Accounting}::fmt]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 147:22-147:27
+    Visibility: public -/
+def resources.Accounting.Insts.CoreFmtDebug.fmt
+  (self : resources.Accounting) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ core.fmt.DebugUsize self.pins_acquired
+  let dyn1 := Dyn.mk _ core.fmt.DebugUsize self.pins_released
+  let dyn2 := Dyn.mk _ core.fmt.DebugUsize self.owners_returned
+  let dyn3 := Dyn.mk _ core.fmt.DebugUsize self.owners_transferred
+  let dyn4 :=
+    Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugUsize) self.local_releases
+  core.fmt.Formatter.debug_struct_field5_finish f (toStr "Accounting") (toStr
+    "pins_acquired") dyn (toStr "pins_released") dyn1 (toStr "owners_returned")
+    dyn2 (toStr "owners_transferred") dyn3 (toStr "local_releases") dyn4
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::fmt::Debug for noble_kernel::resources::Accounting}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 147:22-147:27 -/
+@[reducible]
+def resources.Accounting.Insts.CoreFmtDebug : core.fmt.Debug
+  resources.Accounting := {
+  fmt := resources.Accounting.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::marker::StructuralPartialEq for noble_kernel::resources::Accounting}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 147:29-147:38 -/
+@[reducible]
+def resources.Accounting.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq resources.Accounting := {
+}
+
+/-- [noble_kernel::resources::{impl core::cmp::PartialEq<noble_kernel::resources::Accounting> for noble_kernel::resources::Accounting}::eq]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 147:29-147:38
+    Visibility: public -/
+def resources.Accounting.Insts.CoreCmpPartialEqAccounting.eq
+  (self : resources.Accounting) (other : resources.Accounting) :
+  Result Bool
+  := do
+  if self.pins_acquired = other.pins_acquired
+  then
+    if self.pins_released = other.pins_released
+    then
+      if self.owners_returned = other.owners_returned
+      then
+        if self.owners_transferred = other.owners_transferred
+        then ok (self.local_releases = other.local_releases)
+        else ok false
+      else ok false
+    else ok false
+  else ok false
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::cmp::PartialEq<noble_kernel::resources::Accounting> for noble_kernel::resources::Accounting}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 147:29-147:38 -/
+@[reducible]
+impl_def resources.Accounting.Insts.CoreCmpPartialEqAccounting :
+  core.cmp.PartialEq resources.Accounting resources.Accounting := {
+  eq := resources.Accounting.Insts.CoreCmpPartialEqAccounting.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    resources.Accounting.Insts.CoreCmpPartialEqAccounting
+}
+
+/-- [noble_kernel::resources::{impl core::cmp::Eq for noble_kernel::resources::Accounting}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 147:40-147:42
+    Visibility: public -/
+def resources.Accounting.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : resources.Accounting) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::cmp::Eq for noble_kernel::resources::Accounting}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 147:40-147:42 -/
+@[reducible]
+def resources.Accounting.Insts.CoreCmpEq : core.cmp.Eq resources.Accounting
+  := {
+  partialEqInst := resources.Accounting.Insts.CoreCmpPartialEqAccounting
+  assert_fields_are_eq :=
+    resources.Accounting.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::resources::{noble_kernel::resources::Decision}::accounting]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 158:4-181:5
+    Visibility: public -/
+def resources.Decision.accounting
+  (self : resources.Decision) : Result resources.Accounting := do
+  match self.action with
+  | resources.Action.Unchanged =>
+    ok
+      {
+        pins_acquired := 0#usize,
+        pins_released := 0#usize,
+        owners_returned := 0#usize,
+        owners_transferred := 0#usize,
+        local_releases := 0#usize
+      }
+  | resources.Action.BorrowAdmitted =>
+    ok
+      {
+        pins_acquired := 1#usize,
+        pins_released := 0#usize,
+        owners_returned := 0#usize,
+        owners_transferred := 0#usize,
+        local_releases := 0#usize
+      }
+  | resources.Action.OwnerReturned _ =>
+    ok
+      {
+        pins_acquired := 0#usize,
+        pins_released := 1#usize,
+        owners_returned := 1#usize,
+        owners_transferred := 0#usize,
+        local_releases := 0#usize
+      }
+  | resources.Action.AccessRevoked =>
+    ok
+      {
+        pins_acquired := 0#usize,
+        pins_released := 0#usize,
+        owners_returned := 0#usize,
+        owners_transferred := 0#usize,
+        local_releases := 0#usize
+      }
+  | resources.Action.LocalRelease =>
+    ok
+      {
+        pins_acquired := 0#usize,
+        pins_released := 0#usize,
+        owners_returned := 0#usize,
+        owners_transferred := 0#usize,
+        local_releases := 1#usize
+      }
+  | resources.Action.RetirementCompleted =>
+    ok
+      {
+        pins_acquired := 0#usize,
+        pins_released := 1#usize,
+        owners_returned := 0#usize,
+        owners_transferred := 0#usize,
+        local_releases := 1#usize
+      }
+  | resources.Action.OwnerTransferred =>
+    ok
+      {
+        pins_acquired := 0#usize,
+        pins_released := 0#usize,
+        owners_returned := 0#usize,
+        owners_transferred := 1#usize,
+        local_releases := 0#usize
+      }
+
+/-- [noble_kernel::resources::{impl core::clone::Clone for noble_kernel::resources::Error}::clone]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 185:9-185:14
+    Visibility: public -/
+def resources.Error.Insts.CoreCloneClone.clone
+  (self : resources.Error) : Result resources.Error := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::clone::Clone for noble_kernel::resources::Error}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 185:9-185:14 -/
+@[reducible]
+def resources.Error.Insts.CoreCloneClone : core.clone.Clone resources.Error
+  := {
+  clone := resources.Error.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::marker::Copy for noble_kernel::resources::Error}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 185:16-185:20 -/
+@[reducible]
+def resources.Error.Insts.CoreMarkerCopy : core.marker.Copy resources.Error
+  := {
+  cloneInst := resources.Error.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::resources::{impl core::fmt::Debug for noble_kernel::resources::Error}::fmt::__OFFSET]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 185:22-185:27 -/
+@[global_simps, irreducible]
+def resources.DebugError.fmt.__OFFSET : Array Std.Usize 19#usize :=
+  Array.make 19#usize [
+    0#usize, 13#usize, 21#usize, 32#usize, 47#usize, 60#usize, 72#usize,
+    81#usize, 96#usize, 107#usize, 111#usize, 119#usize, 126#usize, 136#usize,
+    155#usize, 169#usize, 182#usize, 196#usize, 209#usize
+    ]
+
+/-- [noble_kernel::resources::{impl core::fmt::Debug for noble_kernel::resources::Error}::fmt::__NAMES]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 185:22-185:27 -/
+@[global_simps, irreducible]
+def resources.DebugError.fmt.__NAMES : Str :=
+  toStr
+    "InvalidLimitsCapacityPinCapacityContextCapacityInvalidHandleWrongContextWrongKindWrongGenerationWrongRightsBusyRetiringRetiredWrongScopeGenerationExhaustedScopeExhaustedArgumentCountDuplicateOwnerInvalidRecord"
+
+/-- [noble_kernel::resources::{impl core::fmt::Debug for noble_kernel::resources::Error}::fmt]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 185:22-185:27
+    Visibility: public -/
+def resources.Error.Insts.CoreFmtDebug.fmt
+  (self : resources.Error) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let self1 := read_discriminant self
+  let __d ← lift (IScalar.hcast .Usize self1)
+  let s ← lift (Array.to_slice resources.DebugError.fmt.__OFFSET)
+  core.fmt.Formatter.debug_c_like_enum_write_str f
+    resources.DebugError.fmt.__NAMES s __d
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::fmt::Debug for noble_kernel::resources::Error}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 185:22-185:27 -/
+@[reducible]
+def resources.Error.Insts.CoreFmtDebug : core.fmt.Debug resources.Error := {
+  fmt := resources.Error.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::marker::StructuralPartialEq for noble_kernel::resources::Error}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 185:29-185:38 -/
+@[reducible]
+def resources.Error.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq resources.Error := {
+}
+
+/-- [noble_kernel::resources::{impl core::cmp::PartialEq<noble_kernel::resources::Error> for noble_kernel::resources::Error}::eq]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 185:29-185:38
+    Visibility: public -/
+def resources.Error.Insts.CoreCmpPartialEqError.eq
+  (self : resources.Error) (other : resources.Error) : Result Bool := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  ok (self1 = other1)
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::cmp::PartialEq<noble_kernel::resources::Error> for noble_kernel::resources::Error}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 185:29-185:38 -/
+@[reducible]
+impl_def resources.Error.Insts.CoreCmpPartialEqError : core.cmp.PartialEq
+  resources.Error resources.Error := {
+  eq := resources.Error.Insts.CoreCmpPartialEqError.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    resources.Error.Insts.CoreCmpPartialEqError
+}
+
+/-- [noble_kernel::resources::{impl core::cmp::Eq for noble_kernel::resources::Error}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 185:40-185:42
+    Visibility: public -/
+def resources.Error.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : resources.Error) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::cmp::Eq for noble_kernel::resources::Error}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 185:40-185:42 -/
+@[reducible]
+def resources.Error.Insts.CoreCmpEq : core.cmp.Eq resources.Error := {
+  partialEqInst := resources.Error.Insts.CoreCmpPartialEqError
+  assert_fields_are_eq := resources.Error.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::resources::{impl core::fmt::Debug for noble_kernel::resources::Owner}::fmt]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 208:9-208:14
+    Visibility: public -/
+def resources.Owner.Insts.CoreFmtDebug.fmt
+  (self : resources.Owner) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn :=
+    Dyn.mk _ (core.fmt.DebugShared resources.Handle.Insts.CoreFmtDebug)
+      self.handle
+  core.fmt.Formatter.debug_struct_field1_finish f (toStr "Owner") (toStr
+    "handle") dyn
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::fmt::Debug for noble_kernel::resources::Owner}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 208:9-208:14 -/
+@[reducible]
+def resources.Owner.Insts.CoreFmtDebug : core.fmt.Debug resources.Owner := {
+  fmt := resources.Owner.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_kernel::resources::{noble_kernel::resources::Owner}::handle]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 215:4-217:5
+    Visibility: public -/
+def resources.Owner.impl.handle
+  (self : resources.Owner) : Result resources.Handle := do
+  ok self.handle
+
+/-- [noble_kernel::resources::{impl core::fmt::Debug for noble_kernel::resources::Borrow}::fmt]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 221:9-221:14
+    Visibility: public -/
+def resources.Borrow.Insts.CoreFmtDebug.fmt
+  (self : resources.Borrow) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn :=
+    Dyn.mk _ (core.fmt.DebugShared resources.Scope.Insts.CoreFmtDebug)
+      self.scope
+  core.fmt.Formatter.debug_struct_field1_finish f (toStr "Borrow") (toStr
+    "scope") dyn
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::fmt::Debug for noble_kernel::resources::Borrow}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 221:9-221:14 -/
+@[reducible]
+def resources.Borrow.Insts.CoreFmtDebug : core.fmt.Debug resources.Borrow := {
+  fmt := resources.Borrow.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_kernel::resources::{impl core::fmt::Debug for noble_kernel::resources::Admitted}::fmt]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 227:9-227:14
+    Visibility: public -/
+def resources.Admitted.Insts.CoreFmtDebug.fmt
+  (self : resources.Admitted) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ resources.Borrow.Insts.CoreFmtDebug self.borrow
+  let dyn1 :=
+    Dyn.mk _ (core.fmt.DebugShared resources.Decision.Insts.CoreFmtDebug)
+      self.decision
+  core.fmt.Formatter.debug_struct_field2_finish f (toStr "Admitted") (toStr
+    "borrow") dyn (toStr "decision") dyn1
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::fmt::Debug for noble_kernel::resources::Admitted}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 227:9-227:14 -/
+@[reducible]
+def resources.Admitted.Insts.CoreFmtDebug : core.fmt.Debug resources.Admitted
+  := {
+  fmt := resources.Admitted.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_kernel::resources::{noble_kernel::resources::Borrow}::scope]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 235:4-237:5
+    Visibility: public -/
+def resources.Borrow.impl.scope
+  (self : resources.Borrow) : Result resources.Scope := do
+  ok self.scope
+
+/-- [noble_kernel::resources::{impl core::fmt::Debug for noble_kernel::resources::Rejected<T>}::fmt]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 241:9-241:14
+    Visibility: public -/
+def resources.Rejected.Insts.CoreFmtDebug.fmt
+  {T : Type} (corefmtDebugInst : core.fmt.Debug T)
+  (self : resources.Rejected T) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ resources.Error.Insts.CoreFmtDebug self.error
+  let dyn1 := Dyn.mk _ (core.fmt.DebugShared corefmtDebugInst) self.input
+  core.fmt.Formatter.debug_struct_field2_finish f (toStr "Rejected") (toStr
+    "error") dyn (toStr "input") dyn1
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::fmt::Debug for noble_kernel::resources::Rejected<T>}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 241:9-241:14 -/
+@[reducible]
+def resources.Rejected.Insts.CoreFmtDebug {T : Type} (corefmtDebugInst :
+  core.fmt.Debug T) : core.fmt.Debug (resources.Rejected T) := {
+  fmt := resources.Rejected.Insts.CoreFmtDebug.fmt corefmtDebugInst
+}
+
+/-- [noble_kernel::resources::{impl core::fmt::Debug for noble_kernel::resources::Completed}::fmt]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 248:9-248:14
+    Visibility: public -/
+def resources.Completed.Insts.CoreFmtDebug.fmt
+  (self : resources.Completed) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn :=
+    Dyn.mk _ (core.option.Option.Insts.CoreFmtDebug
+      resources.Owner.Insts.CoreFmtDebug) self.owner
+  let dyn1 :=
+    Dyn.mk _ (core.fmt.DebugShared resources.Decision.Insts.CoreFmtDebug)
+      self.decision
+  core.fmt.Formatter.debug_struct_field2_finish f (toStr "Completed") (toStr
+    "owner") dyn (toStr "decision") dyn1
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::fmt::Debug for noble_kernel::resources::Completed}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 248:9-248:14 -/
+@[reducible]
+def resources.Completed.Insts.CoreFmtDebug : core.fmt.Debug resources.Completed
+  := {
+  fmt := resources.Completed.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_kernel::resources::{impl core::fmt::Debug for noble_kernel::resources::Transferred}::fmt]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 255:9-255:14
+    Visibility: public -/
+def resources.Transferred.Insts.CoreFmtDebug.fmt
+  (self : resources.Transferred) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn :=
+    Dyn.mk _ (core.fmt.DebugVec resources.Owner.Insts.CoreFmtDebug) self.owners
+  let dyn1 :=
+    Dyn.mk _ (core.fmt.DebugShared (core.fmt.DebugVec
+      resources.Decision.Insts.CoreFmtDebug)) self.decisions
+  core.fmt.Formatter.debug_struct_field2_finish f (toStr "Transferred") (toStr
+    "owners") dyn (toStr "decisions") dyn1
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::fmt::Debug for noble_kernel::resources::Transferred}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 255:9-255:14 -/
+@[reducible]
+def resources.Transferred.Insts.CoreFmtDebug : core.fmt.Debug
+  resources.Transferred := {
+  fmt := resources.Transferred.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_kernel::resources::{impl core::clone::Clone for noble_kernel::resources::Limits}::clone]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 263:9-263:14
+    Visibility: public -/
+def resources.Limits.Insts.CoreCloneClone.clone
+  (self : resources.Limits) : Result resources.Limits := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::clone::Clone for noble_kernel::resources::Limits}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 263:9-263:14 -/
+@[reducible]
+def resources.Limits.Insts.CoreCloneClone : core.clone.Clone resources.Limits
+  := {
+  clone := resources.Limits.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::marker::Copy for noble_kernel::resources::Limits}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 263:16-263:20 -/
+@[reducible]
+def resources.Limits.Insts.CoreMarkerCopy : core.marker.Copy resources.Limits
+  := {
+  cloneInst := resources.Limits.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::resources::{impl core::fmt::Debug for noble_kernel::resources::Limits}::fmt]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 263:22-263:27
+    Visibility: public -/
+def resources.Limits.Insts.CoreFmtDebug.fmt
+  (self : resources.Limits) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ core.fmt.DebugUsize self.slots
+  let dyn1 := Dyn.mk _ core.fmt.DebugUsize self.pins
+  let dyn2 := Dyn.mk _ core.fmt.DebugUsize self.owners_per_context
+  let dyn3 := Dyn.mk _ core.fmt.DebugU64 self.generations
+  let dyn4 := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU64) self.scopes
+  core.fmt.Formatter.debug_struct_field5_finish f (toStr "Limits") (toStr
+    "slots") dyn (toStr "pins") dyn1 (toStr "owners_per_context") dyn2 (toStr
+    "generations") dyn3 (toStr "scopes") dyn4
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::fmt::Debug for noble_kernel::resources::Limits}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 263:22-263:27 -/
+@[reducible]
+def resources.Limits.Insts.CoreFmtDebug : core.fmt.Debug resources.Limits := {
+  fmt := resources.Limits.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::marker::StructuralPartialEq for noble_kernel::resources::Limits}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 263:29-263:38 -/
+@[reducible]
+def resources.Limits.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq resources.Limits := {
+}
+
+/-- [noble_kernel::resources::{impl core::cmp::PartialEq<noble_kernel::resources::Limits> for noble_kernel::resources::Limits}::eq]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 263:29-263:38
+    Visibility: public -/
+def resources.Limits.Insts.CoreCmpPartialEqLimits.eq
+  (self : resources.Limits) (other : resources.Limits) : Result Bool := do
+  if self.generations = other.generations
+  then
+    if self.scopes = other.scopes
+    then
+      if self.slots = other.slots
+      then
+        if self.pins = other.pins
+        then ok (self.owners_per_context = other.owners_per_context)
+        else ok false
+      else ok false
+    else ok false
+  else ok false
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::cmp::PartialEq<noble_kernel::resources::Limits> for noble_kernel::resources::Limits}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 263:29-263:38 -/
+@[reducible]
+impl_def resources.Limits.Insts.CoreCmpPartialEqLimits : core.cmp.PartialEq
+  resources.Limits resources.Limits := {
+  eq := resources.Limits.Insts.CoreCmpPartialEqLimits.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    resources.Limits.Insts.CoreCmpPartialEqLimits
+}
+
+/-- [noble_kernel::resources::{impl core::cmp::Eq for noble_kernel::resources::Limits}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 263:40-263:42
+    Visibility: public -/
+def resources.Limits.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : resources.Limits) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::cmp::Eq for noble_kernel::resources::Limits}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 263:40-263:42 -/
+@[reducible]
+def resources.Limits.Insts.CoreCmpEq : core.cmp.Eq resources.Limits := {
+  partialEqInst := resources.Limits.Insts.CoreCmpPartialEqLimits
+  assert_fields_are_eq := resources.Limits.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::resources::{impl core::clone::Clone for noble_kernel::resources::Observation}::clone]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 273:9-273:14
+    Visibility: public -/
+def resources.Observation.Insts.CoreCloneClone.clone
+  (self : resources.Observation) : Result resources.Observation := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::clone::Clone for noble_kernel::resources::Observation}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 273:9-273:14 -/
+@[reducible]
+def resources.Observation.Insts.CoreCloneClone : core.clone.Clone
+  resources.Observation := {
+  clone := resources.Observation.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::marker::Copy for noble_kernel::resources::Observation}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 273:16-273:20 -/
+@[reducible]
+def resources.Observation.Insts.CoreMarkerCopy : core.marker.Copy
+  resources.Observation := {
+  cloneInst := resources.Observation.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::resources::{impl core::fmt::Debug for noble_kernel::resources::Observation}::fmt]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 273:22-273:27
+    Visibility: public -/
+def resources.Observation.Insts.CoreFmtDebug.fmt
+  (self : resources.Observation) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ core.fmt.DebugUsize self.live
+  let dyn1 := Dyn.mk _ core.fmt.DebugUsize self.busy
+  let dyn2 := Dyn.mk _ core.fmt.DebugUsize self.retiring
+  let dyn3 := Dyn.mk _ core.fmt.DebugUsize self.retired
+  let dyn4 :=
+    Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugUsize) self.native_pins
+  core.fmt.Formatter.debug_struct_field5_finish f (toStr "Observation") (toStr
+    "live") dyn (toStr "busy") dyn1 (toStr "retiring") dyn2 (toStr "retired")
+    dyn3 (toStr "native_pins") dyn4
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::fmt::Debug for noble_kernel::resources::Observation}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 273:22-273:27 -/
+@[reducible]
+def resources.Observation.Insts.CoreFmtDebug : core.fmt.Debug
+  resources.Observation := {
+  fmt := resources.Observation.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::marker::StructuralPartialEq for noble_kernel::resources::Observation}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 273:29-273:38 -/
+@[reducible]
+def resources.Observation.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq resources.Observation := {
+}
+
+/-- [noble_kernel::resources::{impl core::cmp::PartialEq<noble_kernel::resources::Observation> for noble_kernel::resources::Observation}::eq]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 273:29-273:38
+    Visibility: public -/
+def resources.Observation.Insts.CoreCmpPartialEqObservation.eq
+  (self : resources.Observation) (other : resources.Observation) :
+  Result Bool
+  := do
+  if self.live = other.live
+  then
+    if self.busy = other.busy
+    then
+      if self.retiring = other.retiring
+      then
+        if self.retired = other.retired
+        then ok (self.native_pins = other.native_pins)
+        else ok false
+      else ok false
+    else ok false
+  else ok false
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::cmp::PartialEq<noble_kernel::resources::Observation> for noble_kernel::resources::Observation}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 273:29-273:38 -/
+@[reducible]
+impl_def resources.Observation.Insts.CoreCmpPartialEqObservation :
+  core.cmp.PartialEq resources.Observation resources.Observation := {
+  eq := resources.Observation.Insts.CoreCmpPartialEqObservation.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    resources.Observation.Insts.CoreCmpPartialEqObservation
+}
+
+/-- [noble_kernel::resources::{impl core::cmp::Eq for noble_kernel::resources::Observation}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 273:40-273:42
+    Visibility: public -/
+def resources.Observation.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : resources.Observation) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::cmp::Eq for noble_kernel::resources::Observation}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 273:40-273:42 -/
+@[reducible]
+def resources.Observation.Insts.CoreCmpEq : core.cmp.Eq resources.Observation
+  := {
+  partialEqInst := resources.Observation.Insts.CoreCmpPartialEqObservation
+  assert_fields_are_eq :=
+    resources.Observation.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::resources::table::next]:
+    Source: 'crates/noble-kernel/src/resources/table.rs', lines 177:0-185:1 -/
+def resources.table.next
+  (current : Std.U64) (ceiling : Std.U64) (exhausted : resources.Error) :
+  Result (core.result.Result Std.U64 resources.Error)
+  := do
+  if current >= ceiling
+  then ok (core.result.Result.Err exhausted)
+  else
+    let o ← lift (U64.checked_add current 1#u64)
+    match o with
+    | none => ok (core.result.Result.Err exhausted)
+    | some next => ok (core.result.Result.Ok next)
+
+/-- [noble_kernel::resources::table::{noble_kernel::resources::table::Table}::commit]:
+    Source: 'crates/noble-kernel/src/resources/table.rs', lines 142:4-170:5 -/
+def resources.table.Table.commit
+  (self : resources.table.Table) (decision : resources.Decision) :
+  Result ((core.result.Result Unit resources.Error) × resources.table.Table)
+  := do
+  match decision.action with
+  | resources.Action.Unchanged =>
+    let (s, deref_mut_back) ← lift (alloc.vec.Vec.deref_mut self.records)
+    let (o, get_mut_back) ←
+      core.slice.Slice.get_mut (core.slice.index.SliceIndexUsizeSlice
+        resources.Snapshot) s decision.record.handle.slot
+    match o with
+    | none =>
+      let s1 := get_mut_back none
+      let v := deref_mut_back s1
+      ok (core.result.Result.Err resources.Error.InvalidHandle,
+        { self with records := v })
+    | some _ =>
+      let s1 := get_mut_back (some decision.record)
+      let v := deref_mut_back s1
+      ok (core.result.Result.Ok (), { self with records := v })
+  | resources.Action.BorrowAdmitted =>
+    if self.pins >= self.limits.pins
+    then ok (core.result.Result.Err resources.Error.PinCapacity, self)
+    else
+      let o ← lift (Usize.checked_add self.pins 1#usize)
+      match o with
+      | none => ok (core.result.Result.Err resources.Error.InvalidRecord, self)
+      | some pins =>
+        let (s, deref_mut_back) ← lift (alloc.vec.Vec.deref_mut self.records)
+        let (o1, get_mut_back) ←
+          core.slice.Slice.get_mut (core.slice.index.SliceIndexUsizeSlice
+            resources.Snapshot) s decision.record.handle.slot
+        match o1 with
+        | none =>
+          let s1 := get_mut_back none
+          let v := deref_mut_back s1
+          ok (core.result.Result.Err resources.Error.InvalidHandle,
+            { self with records := v })
+        | some _ =>
+          let s1 := get_mut_back (some decision.record)
+          let v := deref_mut_back s1
+          ok (core.result.Result.Ok (), { self with records := v, pins })
+  | resources.Action.OwnerReturned _ =>
+    let o ← lift (Usize.checked_sub self.pins 1#usize)
+    match o with
+    | none => ok (core.result.Result.Err resources.Error.InvalidRecord, self)
+    | some pins =>
+      let (s, deref_mut_back) ← lift (alloc.vec.Vec.deref_mut self.records)
+      let (o1, get_mut_back) ←
+        core.slice.Slice.get_mut (core.slice.index.SliceIndexUsizeSlice
+          resources.Snapshot) s decision.record.handle.slot
+      match o1 with
+      | none =>
+        let s1 := get_mut_back none
+        let v := deref_mut_back s1
+        ok (core.result.Result.Err resources.Error.InvalidHandle,
+          { self with records := v })
+      | some _ =>
+        let s1 := get_mut_back (some decision.record)
+        let v := deref_mut_back s1
+        ok (core.result.Result.Ok (), { self with records := v, pins })
+  | resources.Action.AccessRevoked =>
+    let (s, deref_mut_back) ← lift (alloc.vec.Vec.deref_mut self.records)
+    let (o, get_mut_back) ←
+      core.slice.Slice.get_mut (core.slice.index.SliceIndexUsizeSlice
+        resources.Snapshot) s decision.record.handle.slot
+    match o with
+    | none =>
+      let s1 := get_mut_back none
+      let v := deref_mut_back s1
+      ok (core.result.Result.Err resources.Error.InvalidHandle,
+        { self with records := v })
+    | some _ =>
+      let s1 := get_mut_back (some decision.record)
+      let v := deref_mut_back s1
+      ok (core.result.Result.Ok (), { self with records := v })
+  | resources.Action.LocalRelease =>
+    let (s, deref_mut_back) ← lift (alloc.vec.Vec.deref_mut self.records)
+    let (o, get_mut_back) ←
+      core.slice.Slice.get_mut (core.slice.index.SliceIndexUsizeSlice
+        resources.Snapshot) s decision.record.handle.slot
+    match o with
+    | none =>
+      let s1 := get_mut_back none
+      let v := deref_mut_back s1
+      ok (core.result.Result.Err resources.Error.InvalidHandle,
+        { self with records := v })
+    | some _ =>
+      let s1 := get_mut_back (some decision.record)
+      let v := deref_mut_back s1
+      ok (core.result.Result.Ok (), { self with records := v })
+  | resources.Action.RetirementCompleted =>
+    let o ← lift (Usize.checked_sub self.pins 1#usize)
+    match o with
+    | none => ok (core.result.Result.Err resources.Error.InvalidRecord, self)
+    | some pins =>
+      let (s, deref_mut_back) ← lift (alloc.vec.Vec.deref_mut self.records)
+      let (o1, get_mut_back) ←
+        core.slice.Slice.get_mut (core.slice.index.SliceIndexUsizeSlice
+          resources.Snapshot) s decision.record.handle.slot
+      match o1 with
+      | none =>
+        let s1 := get_mut_back none
+        let v := deref_mut_back s1
+        ok (core.result.Result.Err resources.Error.InvalidHandle,
+          { self with records := v })
+      | some _ =>
+        let s1 := get_mut_back (some decision.record)
+        let v := deref_mut_back s1
+        ok (core.result.Result.Ok (), { self with records := v, pins })
+  | resources.Action.OwnerTransferred =>
+    let (s, deref_mut_back) ← lift (alloc.vec.Vec.deref_mut self.records)
+    let (o, get_mut_back) ←
+      core.slice.Slice.get_mut (core.slice.index.SliceIndexUsizeSlice
+        resources.Snapshot) s decision.record.handle.slot
+    match o with
+    | none =>
+      let s1 := get_mut_back none
+      let v := deref_mut_back s1
+      ok (core.result.Result.Err resources.Error.InvalidHandle,
+        { self with records := v })
+    | some _ =>
+      let s1 := get_mut_back (some decision.record)
+      let v := deref_mut_back s1
+      ok (core.result.Result.Ok (), { self with records := v })
+
+/-- [noble_kernel::resources::transition::require_live]:
+    Source: 'crates/noble-kernel/src/resources/transition.rs', lines 92:0-111:1 -/
+def resources.transition.require_live
+  (record : resources.Snapshot) (required : resources.Requirement) :
+  Result (core.result.Result Unit resources.Error)
+  := do
+  let i := record.handle.context
+  let i1 := required.context
+  if i != i1
+  then ok (core.result.Result.Err resources.Error.WrongContext)
+  else
+    let i2 := record.handle.kind
+    let i3 := required.kind
+    if i2 != i3
+    then ok (core.result.Result.Err resources.Error.WrongKind)
+    else
+      let i4 := record.handle.rights
+      let i5 := required.rights
+      let i6 ← lift (i4 &&& i5)
+      if i6 != i5
+      then ok (core.result.Result.Err resources.Error.WrongRights)
+      else
+        match record.state with
+        | resources.State.Live => ok (core.result.Result.Ok ())
+        | resources.State.Busy _ =>
+          ok (core.result.Result.Err resources.Error.Busy)
+        | resources.State.Retiring _ =>
+          ok (core.result.Result.Err resources.Error.Retiring)
+        | resources.State.Retired =>
+          ok (core.result.Result.Err resources.Error.Retired)
+
+/-- [noble_kernel::resources::transition::transfer]:
+    Source: 'crates/noble-kernel/src/resources/transition.rs', lines 251:0-271:1 -/
+def resources.transition.transfer
+  (record : resources.Snapshot) (required : resources.Requirement)
+  (receiver : resources.Context) (generation : Std.U64) :
+  Result (core.result.Result resources.Decision resources.Error)
+  := do
+  let r ← resources.transition.require_live record required
+  match r with
+  | core.result.Result.Ok _ =>
+    if generation <= record.handle.generation
+    then ok (core.result.Result.Err resources.Error.WrongGeneration)
+    else
+      ok (core.result.Result.Ok
+        {
+          record :=
+            {
+              record
+                with
+                handle :=
+                  { record.handle with generation, context := receiver },
+                last_scope := none
+            },
+          action := resources.Action.OwnerTransferred
+        })
+  | core.result.Result.Err error => ok (core.result.Result.Err error)
+
+/-- [noble_kernel::resources::transition::release]:
+    Source: 'crates/noble-kernel/src/resources/transition.rs', lines 236:0-249:1 -/
+def resources.transition.release
+  (record : resources.Snapshot) (required : resources.Requirement) :
+  Result (core.result.Result resources.Decision resources.Error)
+  := do
+  let r ← resources.transition.require_live record required
+  match r with
+  | core.result.Result.Ok _ =>
+    ok (core.result.Result.Ok
+      {
+        record := { record with state := resources.State.Retired },
+        action := resources.Action.LocalRelease
+      })
+  | core.result.Result.Err error => ok (core.result.Result.Err error)
+
+/-- [noble_kernel::resources::transition::retire]:
+    Source: 'crates/noble-kernel/src/resources/transition.rs', lines 218:0-234:1 -/
+def resources.transition.retire
+  (record : resources.Snapshot) (reason : resources.Retirement) :
+  Result resources.Decision
+  := do
+  match record.state with
+  | resources.State.Live =>
+    ok
+      {
+        record :=
+          {
+            record
+              with
+              state := resources.State.Retired, retirement := (some reason)
+          },
+        action := resources.Action.LocalRelease
+      }
+  | resources.State.Busy serial =>
+    ok
+      {
+        record :=
+          {
+            record
+              with
+              state := (resources.State.Retiring serial),
+              retirement := (some reason)
+          },
+        action := resources.Action.AccessRevoked
+      }
+  | resources.State.Retiring _ =>
+    ok { record, action := resources.Action.Unchanged }
+  | resources.State.Retired =>
+    ok { record, action := resources.Action.Unchanged }
+
+/-- [noble_kernel::resources::transition::require_scope]:
+    Source: 'crates/noble-kernel/src/resources/transition.rs', lines 150:0-158:1 -/
+def resources.transition.require_scope
+  (record : resources.Snapshot) (serial : Std.U64) :
+  Result (core.result.Result Unit resources.Error)
+  := do
+  if serial = 0#u64
+  then ok (core.result.Result.Err resources.Error.WrongScope)
+  else
+    match record.last_scope with
+    | none => ok (core.result.Result.Err resources.Error.WrongScope)
+    | some previous =>
+      if previous = serial
+      then ok (core.result.Result.Ok ())
+      else ok (core.result.Result.Err resources.Error.WrongScope)
+
+/-- [noble_kernel::resources::transition::revoke]:
+    Source: 'crates/noble-kernel/src/resources/transition.rs', lines 200:0-216:1 -/
+def resources.transition.revoke
+  (record : resources.Snapshot) (serial : Std.U64)
+  (reason : resources.Retirement) :
+  Result (core.result.Result resources.Decision resources.Error)
+  := do
+  let r ← resources.transition.require_scope record serial
+  match r with
+  | core.result.Result.Ok _ =>
+    match record.state with
+    | resources.State.Live =>
+      ok (core.result.Result.Ok
+        { record, action := resources.Action.Unchanged })
+    | resources.State.Busy _ =>
+      let d ← resources.transition.retire record reason
+      ok (core.result.Result.Ok d)
+    | resources.State.Retiring _ =>
+      let d ← resources.transition.retire record reason
+      ok (core.result.Result.Ok d)
+    | resources.State.Retired =>
+      ok (core.result.Result.Ok
+        { record, action := resources.Action.Unchanged })
+  | core.result.Result.Err error => ok (core.result.Result.Err error)
+
+/-- [noble_kernel::resources::transition::complete]:
+    Source: 'crates/noble-kernel/src/resources/transition.rs', lines 176:0-198:1 -/
+def resources.transition.complete
+  (record : resources.Snapshot) (serial : Std.U64)
+  (result : resources.Completion) :
+  Result (core.result.Result resources.Decision resources.Error)
+  := do
+  let r ← resources.transition.require_scope record serial
+  match r with
+  | core.result.Result.Ok _ =>
+    match record.state with
+    | resources.State.Live =>
+      ok (core.result.Result.Ok
+        { record, action := resources.Action.Unchanged })
+    | resources.State.Busy _ =>
+      ok (core.result.Result.Ok
+        {
+          record := { record with state := resources.State.Live },
+          action := (resources.Action.OwnerReturned result)
+        })
+    | resources.State.Retiring _ =>
+      ok (core.result.Result.Ok
+        {
+          record := { record with state := resources.State.Retired },
+          action := resources.Action.RetirementCompleted
+        })
+    | resources.State.Retired =>
+      ok (core.result.Result.Ok
+        { record, action := resources.Action.Unchanged })
+  | core.result.Result.Err error => ok (core.result.Result.Err error)
+
+/-- [noble_kernel::resources::transition::access]:
+    Source: 'crates/noble-kernel/src/resources/transition.rs', lines 160:0-174:1 -/
+def resources.transition.access
+  (record : resources.Snapshot) (serial : Std.U64) :
+  Result (core.result.Result resources.Decision resources.Error)
+  := do
+  let r ← resources.transition.require_scope record serial
+  match r with
+  | core.result.Result.Ok _ =>
+    match record.state with
+    | resources.State.Live =>
+      ok (core.result.Result.Err resources.Error.WrongScope)
+    | resources.State.Busy _ =>
+      ok (core.result.Result.Ok
+        { record, action := resources.Action.Unchanged })
+    | resources.State.Retiring _ =>
+      ok (core.result.Result.Err resources.Error.Retiring)
+    | resources.State.Retired =>
+      ok (core.result.Result.Err resources.Error.Retired)
+  | core.result.Result.Err error => ok (core.result.Result.Err error)
+
+/-- [noble_kernel::resources::transition::begin]:
+    Source: 'crates/noble-kernel/src/resources/transition.rs', lines 126:0-148:1 -/
+def resources.transition.begin
+  (record : resources.Snapshot) (required : resources.Requirement)
+  (serial : Std.U64) :
+  Result (core.result.Result resources.Decision resources.Error)
+  := do
+  let r ← resources.transition.require_live record required
+  match r with
+  | core.result.Result.Ok _ =>
+    if serial = 0#u64
+    then ok (core.result.Result.Err resources.Error.WrongScope)
+    else
+      match record.last_scope with
+      | none =>
+        ok (core.result.Result.Ok
+          {
+            record :=
+              {
+                record
+                  with
+                  state := (resources.State.Busy serial),
+                  last_scope := (some serial)
+              },
+            action := resources.Action.BorrowAdmitted
+          })
+      | some previous =>
+        if serial <= previous
+        then ok (core.result.Result.Err resources.Error.WrongScope)
+        else
+          ok (core.result.Result.Ok
+            {
+              record :=
+                {
+                  record
+                    with
+                    state := (resources.State.Busy serial),
+                    last_scope := (some serial)
+                },
+              action := resources.Action.BorrowAdmitted
+            })
+  | core.result.Result.Err error => ok (core.result.Result.Err error)
+
+/-- [noble_kernel::resources::transition::inspect]:
+    Source: 'crates/noble-kernel/src/resources/transition.rs', lines 113:0-124:1 -/
+def resources.transition.inspect
+  (record : resources.Snapshot) (required : resources.Requirement) :
+  Result (core.result.Result resources.Decision resources.Error)
+  := do
+  let r ← resources.transition.require_live record required
+  match r with
+  | core.result.Result.Ok _ =>
+    ok (core.result.Result.Ok { record, action := resources.Action.Unchanged })
+  | core.result.Result.Err error => ok (core.result.Result.Err error)
+
+/-- [noble_kernel::resources::transition::validate_handle]:
+    Source: 'crates/noble-kernel/src/resources/transition.rs', lines 67:0-90:1 -/
+def resources.transition.validate_handle
+  (retained : resources.Handle) (claim : resources.Handle) :
+  Result (core.result.Result Unit resources.Error)
+  := do
+  let i := retained.table
+  let i1 := claim.table
+  if i != i1
+  then ok (core.result.Result.Err resources.Error.InvalidHandle)
+  else
+    if retained.slot != claim.slot
+    then ok (core.result.Result.Err resources.Error.InvalidHandle)
+    else
+      let i2 := retained.context
+      let i3 := claim.context
+      if i2 != i3
+      then ok (core.result.Result.Err resources.Error.WrongContext)
+      else
+        let i4 := retained.kind
+        let i5 := claim.kind
+        if i4 != i5
+        then ok (core.result.Result.Err resources.Error.WrongKind)
+        else
+          if retained.generation != claim.generation
+          then ok (core.result.Result.Err resources.Error.WrongGeneration)
+          else
+            let i6 := retained.rights
+            let i7 := claim.rights
+            if i6 != i7
+            then ok (core.result.Result.Err resources.Error.WrongRights)
+            else ok (core.result.Result.Ok ())
+
+/-- [noble_kernel::resources::transition::valid_record]:
+    Source: 'crates/noble-kernel/src/resources/transition.rs', lines 44:0-61:1 -/
+def resources.transition.valid_record
+  (record : resources.Snapshot) : Result Bool := do
+  if record.handle.generation = 0#u64
+  then ok false
+  else
+    let (o, b) ←
+      match record.last_scope with
+      | none => ok (none, false)
+      | some i =>
+        do
+        let b1 ← match i with
+                   | 0#uscalar => ok true
+                   | _ => ok false
+        ok (record.last_scope, b1)
+    if b
+    then ok false
+    else
+      match record.state with
+      | resources.State.Live =>
+        ok (core.option.Option.is_none record.retirement)
+      | resources.State.Busy serial =>
+        let r ←
+          resources.transition.require_scope { record with last_scope := o }
+            serial
+        let b1 ← core.result.Result.is_ok r
+        if b1
+        then ok (core.option.Option.is_none record.retirement)
+        else ok false
+      | resources.State.Retiring serial =>
+        let r ←
+          resources.transition.require_scope { record with last_scope := o }
+            serial
+        let b1 ← core.result.Result.is_ok r
+        if b1
+        then ok (core.option.Option.is_some record.retirement)
+        else ok false
+      | resources.State.Retired => ok true
+
+/-- [noble_kernel::resources::transition::transition]:
+    Source: 'crates/noble-kernel/src/resources/transition.rs', lines 16:0-42:1
+    Visibility: public -/
+def resources.transition.transition
+  (record : resources.Snapshot) (claim : resources.Handle)
+  (event : resources.Event) :
+  Result (core.result.Result resources.Decision resources.Error)
+  := do
+  let b ← resources.transition.valid_record record
+  if b
+  then
+    let r ← resources.transition.validate_handle record.handle claim
+    match r with
+    | core.result.Result.Ok _ =>
+      match event with
+      | resources.Event.Inspect required =>
+        resources.transition.inspect record required
+      | resources.Event.Begin required serial =>
+        resources.transition.begin record required serial
+      | resources.Event.Access serial =>
+        resources.transition.access record serial
+      | resources.Event.Complete serial result =>
+        resources.transition.complete record serial result
+      | resources.Event.Revoke serial reason =>
+        resources.transition.revoke record serial reason
+      | resources.Event.Retire reason =>
+        let d ← resources.transition.retire record reason
+        ok (core.result.Result.Ok d)
+      | resources.Event.Release required =>
+        resources.transition.release record required
+      | resources.Event.Transfer required receiver generation =>
+        resources.transition.transfer record required receiver generation
+    | core.result.Result.Err error => ok (core.result.Result.Err error)
+  else ok (core.result.Result.Err resources.Error.InvalidRecord)
+
+/-- [noble_kernel::resources::table::{noble_kernel::resources::table::Table}::decide]:
+    Source: 'crates/noble-kernel/src/resources/table.rs', lines 109:4-118:5 -/
+def resources.table.Table.decide
+  (self : resources.table.Table) (claim : resources.Handle)
+  (event : resources.Event) :
+  Result (core.result.Result resources.Decision resources.Error)
+  := do
+  let s := alloc.vec.Vec.deref self.records
+  let o ←
+    core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice
+      resources.Snapshot) s claim.slot
+  match o with
+  | none => ok (core.result.Result.Err resources.Error.InvalidHandle)
+  | some record => resources.transition.transition record claim event
+
+/-- [noble_kernel::resources::table::access::{noble_kernel::resources::table::Table}::begin]:
+    Source: 'crates/noble-kernel/src/resources/table/access.rs', lines 10:4-59:5
+    Visibility: public -/
+def resources.table.access.Table.begin
+  (self : resources.table.Table) (owner : resources.Owner)
+  (required : resources.Requirement) :
+  Result ((core.result.Result resources.Admitted (resources.Rejected
+    resources.Owner)) × resources.table.Table)
+  := do
+  let r ←
+    resources.table.next self.scope self.limits.scopes
+      resources.Error.ScopeExhausted
+  match r with
+  | core.result.Result.Ok serial =>
+    let r1 ←
+      resources.table.Table.decide self owner.handle (resources.Event.Begin
+        required serial)
+    match r1 with
+    | core.result.Result.Ok decision =>
+      let (r2, self1) ← resources.table.Table.commit self decision
+      match r2 with
+      | core.result.Result.Ok _ =>
+        ok (core.result.Result.Ok
+          { borrow := { scope := { handle := owner.handle, serial } }, decision
+          }, { self1 with scope := serial })
+      | core.result.Result.Err error =>
+        ok (core.result.Result.Err { error, input := owner }, self1)
+    | core.result.Result.Err error =>
+      ok (core.result.Result.Err { error, input := owner }, self)
+  | core.result.Result.Err error =>
+    ok (core.result.Result.Err { error, input := owner }, self)
+
+/-- [noble_kernel::resources::table::access::{noble_kernel::resources::table::Table}::native_access]:
+    Source: 'crates/noble-kernel/src/resources/table/access.rs', lines 63:4-76:5
+    Visibility: public -/
+def resources.table.access.Table.native_access
+  (self : resources.table.Table) (borrow : resources.Borrow) :
+  Result (core.result.Result resources.Snapshot resources.Error)
+  := do
+  let r ←
+    resources.table.Table.decide self borrow.scope.handle
+      (resources.Event.Access borrow.scope.serial)
+  match r with
+  | core.result.Result.Ok decision =>
+    ok (core.result.Result.Ok decision.record)
+  | core.result.Result.Err error => ok (core.result.Result.Err error)
+
+/-- [noble_kernel::resources::table::access::{noble_kernel::resources::table::Table}::complete]:
+    Source: 'crates/noble-kernel/src/resources/table/access.rs', lines 85:4-113:5
+    Visibility: public -/
+def resources.table.access.Table.complete
+  (self : resources.table.Table) (scope : resources.Scope)
+  (result : resources.Completion) :
+  Result ((core.result.Result resources.Completed resources.Error) ×
+    resources.table.Table)
+  := do
+  let r ←
+    resources.table.Table.decide self scope.handle (resources.Event.Complete
+      scope.serial result)
+  match r with
+  | core.result.Result.Ok value =>
+    let (r1, self1) ← resources.table.Table.commit self value
+    match r1 with
+    | core.result.Result.Ok _ =>
+      match value.action with
+      | resources.Action.Unchanged =>
+        ok (core.result.Result.Ok { owner := none, decision := value }, self1)
+      | resources.Action.BorrowAdmitted =>
+        ok (core.result.Result.Ok { owner := none, decision := value }, self1)
+      | resources.Action.OwnerReturned _ =>
+        ok (core.result.Result.Ok
+          {
+            owner := (some { handle := value.record.handle }),
+            decision := value
+          }, self1)
+      | resources.Action.AccessRevoked =>
+        ok (core.result.Result.Ok { owner := none, decision := value }, self1)
+      | resources.Action.LocalRelease =>
+        ok (core.result.Result.Ok { owner := none, decision := value }, self1)
+      | resources.Action.RetirementCompleted =>
+        ok (core.result.Result.Ok { owner := none, decision := value }, self1)
+      | resources.Action.OwnerTransferred =>
+        ok (core.result.Result.Ok { owner := none, decision := value }, self1)
+    | core.result.Result.Err error => ok (core.result.Result.Err error, self1)
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure, self)
+
+/-- [noble_kernel::resources::table::{noble_kernel::resources::table::Table}::apply]:
+    Source: 'crates/noble-kernel/src/resources/table.rs', lines 125:4-135:5 -/
+def resources.table.Table.apply
+  (self : resources.table.Table) (claim : resources.Handle)
+  (event : resources.Event) :
+  Result ((core.result.Result resources.Decision resources.Error) ×
+    resources.table.Table)
+  := do
+  let r ← resources.table.Table.decide self claim event
+  match r with
+  | core.result.Result.Ok value =>
+    let (r1, self1) ← resources.table.Table.commit self value
+    match r1 with
+    | core.result.Result.Ok _ => ok (r, self1)
+    | core.result.Result.Err error => ok (core.result.Result.Err error, self1)
+  | core.result.Result.Err _ => ok (r, self)
+
+/-- [noble_kernel::resources::table::access::{noble_kernel::resources::table::Table}::revoke]:
+    Source: 'crates/noble-kernel/src/resources/table/access.rs', lines 121:4-133:5
+    Visibility: public -/
+def resources.table.access.Table.revoke
+  (self : resources.table.Table) (scope : resources.Scope)
+  (reason : resources.Retirement) :
+  Result ((core.result.Result resources.Decision resources.Error) ×
+    resources.table.Table)
+  := do
+  resources.table.Table.apply self scope.handle (resources.Event.Revoke
+    scope.serial reason)
+
+/-- [noble_kernel::resources::table::access::{noble_kernel::resources::table::Table}::retire]:
+    Source: 'crates/noble-kernel/src/resources/table/access.rs', lines 141:4-147:5
+    Visibility: public -/
+def resources.table.access.Table.retire
+  (self : resources.table.Table) (claim : resources.Handle)
+  (reason : resources.Retirement) :
+  Result ((core.result.Result resources.Decision resources.Error) ×
+    resources.table.Table)
+  := do
+  resources.table.Table.apply self claim (resources.Event.Retire reason)
+
+/-- [noble_kernel::resources::table::access::{noble_kernel::resources::table::Table}::release]:
+    Source: 'crates/noble-kernel/src/resources/table/access.rs', lines 155:4-168:5
+    Visibility: public -/
+def resources.table.access.Table.release
+  (self : resources.table.Table) (owner : resources.Owner)
+  (required : resources.Requirement) :
+  Result ((core.result.Result resources.Decision (resources.Rejected
+    resources.Owner)) × resources.table.Table)
+  := do
+  let (r, self1) ←
+    resources.table.Table.apply self owner.handle (resources.Event.Release
+      required)
+  match r with
+  | core.result.Result.Ok decision =>
+    ok (core.result.Result.Ok decision, self1)
+  | core.result.Result.Err error =>
+    ok (core.result.Result.Err { error, input := owner }, self1)
+
+/-- [noble_kernel::resources::table::inspection::{noble_kernel::resources::table::Table}::snapshot]:
+    Source: 'crates/noble-kernel/src/resources/table/inspection.rs', lines 7:4-9:5
+    Visibility: public -/
+def resources.table.inspection.Table.snapshot
+  (self : resources.table.Table) (slot : Std.Usize) :
+  Result (Option resources.Snapshot)
+  := do
+  let s := alloc.vec.Vec.deref self.records
+  let o ←
+    core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice
+      resources.Snapshot) s slot
+  core.option.OptionShared0T.copied resources.Snapshot.Insts.CoreMarkerCopy o
+
+/-- [noble_kernel::resources::table::inspection::{noble_kernel::resources::table::Table}::observation]: loop body 0:
+    Source: 'crates/noble-kernel/src/resources/table/inspection.rs', lines 21:8-29:9
+    Visibility: public -/
+@[rust_loop_body]
+def resources.table.inspection.Table.observation_loop.body
+  (v : alloc.vec.Vec resources.Snapshot) (i : Std.Usize) (i1 : Std.Usize)
+  (i2 : Std.Usize) (i3 : Std.Usize) (index : Std.Usize) :
+  Result (ControlFlow (Std.Usize × Std.Usize × Std.Usize × Std.Usize ×
+    Std.Usize) (Std.Usize × Std.Usize × Std.Usize × Std.Usize))
+  := do
+  let i4 := alloc.vec.Vec.len v
+  if index < i4
+  then
+    let s ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        resources.Snapshot) v index
+    let (i5, i6, i7, i8) ←
+      match s.state with
+      | resources.State.Live => do
+                                let i9 ← i + 1#usize
+                                ok (i9, i1, i2, i3)
+      | resources.State.Busy _ => do
+                                  let i9 ← i1 + 1#usize
+                                  ok (i, i9, i2, i3)
+      | resources.State.Retiring _ =>
+        do
+        let i9 ← i2 + 1#usize
+        ok (i, i1, i9, i3)
+      | resources.State.Retired =>
+        do
+        let i9 ← i3 + 1#usize
+        ok (i, i1, i2, i9)
+    let index1 ← index + 1#usize
+    ok (cont (i5, i6, i7, i8, index1))
+  else ok (done (i, i1, i2, i3))
+
+/-- [noble_kernel::resources::table::inspection::{noble_kernel::resources::table::Table}::observation]: loop 0:
+    Source: 'crates/noble-kernel/src/resources/table/inspection.rs', lines 21:8-29:9
+    Visibility: public -/
+@[rust_loop]
+def resources.table.inspection.Table.observation_loop
+  (v : alloc.vec.Vec resources.Snapshot) (i : Std.Usize) (i1 : Std.Usize)
+  (i2 : Std.Usize) (i3 : Std.Usize) (index : Std.Usize) :
+  Result (Std.Usize × Std.Usize × Std.Usize × Std.Usize)
+  := do
+  loop
+    (fun (i4, i5, i6, i7, index1) =>
+      resources.table.inspection.Table.observation_loop.body v i4 i5 i6 i7
+      index1)
+    (i, i1, i2, i3, index)
+
+/-- [noble_kernel::resources::table::inspection::{noble_kernel::resources::table::Table}::observation]:
+    Source: 'crates/noble-kernel/src/resources/table/inspection.rs', lines 12:4-31:5
+    Visibility: public -/
+def resources.table.inspection.Table.observation
+  (self : resources.table.Table) : Result resources.Observation := do
+  let (i, i1, i2, i3) ←
+    resources.table.inspection.Table.observation_loop self.records 0#usize
+      0#usize 0#usize 0#usize 0#usize
+  ok
+    {
+      live := i,
+      busy := i1,
+      retiring := i2,
+      retired := i3,
+      native_pins := self.pins
+    }
+
+/-- [noble_kernel::resources::table::inspection::{noble_kernel::resources::table::Table}::free_slot]: loop body 0:
+    Source: 'crates/noble-kernel/src/resources/table/inspection.rs', lines 35:8-49:5 -/
+@[rust_loop_body]
+def resources.table.inspection.Table.free_slot_loop.body
+  (self : resources.table.Table) (index : Std.Usize) :
+  Result (ControlFlow Std.Usize (core.result.Result Std.Usize resources.Error))
+  := do
+  let i := alloc.vec.Vec.len self.records
+  if index < i
+  then
+    let s ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        resources.Snapshot) self.records index
+    match s.state with
+    | resources.State.Live => let index1 ← index + 1#usize
+                              ok (cont index1)
+    | resources.State.Busy _ => let index1 ← index + 1#usize
+                                ok (cont index1)
+    | resources.State.Retiring _ =>
+      let index1 ← index + 1#usize
+      ok (cont index1)
+    | resources.State.Retired => ok (done (core.result.Result.Ok index))
+  else
+    if index < self.limits.slots
+    then ok (done (core.result.Result.Ok index))
+    else ok (done (core.result.Result.Err resources.Error.Capacity))
+
+/-- [noble_kernel::resources::table::inspection::{noble_kernel::resources::table::Table}::free_slot]: loop 0:
+    Source: 'crates/noble-kernel/src/resources/table/inspection.rs', lines 35:8-49:5 -/
+@[rust_loop]
+def resources.table.inspection.Table.free_slot_loop
+  (self : resources.table.Table) (index : Std.Usize) :
+  Result (core.result.Result Std.Usize resources.Error)
+  := do
+  loop
+    (fun index1 => resources.table.inspection.Table.free_slot_loop.body self
+      index1)
+    index
+
+/-- [noble_kernel::resources::table::inspection::{noble_kernel::resources::table::Table}::free_slot]:
+    Source: 'crates/noble-kernel/src/resources/table/inspection.rs', lines 33:4-49:5 -/
+@[reducible]
+def resources.table.inspection.Table.free_slot
+  (self : resources.table.Table) :
+  Result (core.result.Result Std.Usize resources.Error)
+  := do
+  resources.table.inspection.Table.free_slot_loop self 0#usize
+
+/-- [noble_kernel::resources::table::inspection::{noble_kernel::resources::table::Table}::context_count]: loop body 0:
+    Source: 'crates/noble-kernel/src/resources/table/inspection.rs', lines 54:8-65:9 -/
+@[rust_loop_body]
+def resources.table.inspection.Table.context_count_loop.body
+  (self : resources.table.Table) (context : resources.Context)
+  (count : Std.Usize) (index : Std.Usize) :
+  Result (ControlFlow (Std.Usize × Std.Usize) Std.Usize)
+  := do
+  let i := alloc.vec.Vec.len self.records
+  if index < i
+  then
+    let record ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        resources.Snapshot) self.records index
+    let b ←
+      resources.Context.Insts.CoreCmpPartialEqContext.eq record.handle.context
+        context
+    let count1 ←
+      if b
+      then
+        match record.state with
+        | resources.State.Live => count + 1#usize
+        | resources.State.Busy _ => count + 1#usize
+        | resources.State.Retiring _ => count + 1#usize
+        | resources.State.Retired => ok count
+      else ok count
+    let index1 ← index + 1#usize
+    ok (cont (count1, index1))
+  else ok (done count)
+
+/-- [noble_kernel::resources::table::inspection::{noble_kernel::resources::table::Table}::context_count]: loop 0:
+    Source: 'crates/noble-kernel/src/resources/table/inspection.rs', lines 54:8-65:9 -/
+@[rust_loop]
+def resources.table.inspection.Table.context_count_loop
+  (self : resources.table.Table) (context : resources.Context)
+  (count : Std.Usize) (index : Std.Usize) :
+  Result Std.Usize
+  := do
+  loop
+    (fun (count1, index1) =>
+      resources.table.inspection.Table.context_count_loop.body self context
+      count1 index1)
+    (count, index)
+
+/-- [noble_kernel::resources::table::inspection::{noble_kernel::resources::table::Table}::context_count]:
+    Source: 'crates/noble-kernel/src/resources/table/inspection.rs', lines 51:4-67:5 -/
+@[reducible]
+def resources.table.inspection.Table.context_count
+  (self : resources.table.Table) (context : resources.Context) :
+  Result Std.Usize
+  := do
+  resources.table.inspection.Table.context_count_loop self context 0#usize
+    0#usize
+
+/-- [noble_kernel::resources::table::transfer::unique_argument]: loop body 0:
+    Source: 'crates/noble-kernel/src/resources/table/transfer.rs', lines 137:4-144:1 -/
+@[rust_loop_body]
+def resources.table.transfer.unique_argument_loop.body
+  (owners : Slice resources.Owner) (index : Std.Usize) (previous : Std.Usize) :
+  Result (ControlFlow Std.Usize (core.result.Result Unit resources.Error))
+  := do
+  if previous < index
+  then
+    let o ← Slice.index_usize owners previous
+    let o1 ← Slice.index_usize owners index
+    if o.handle.slot = o1.handle.slot
+    then ok (done (core.result.Result.Err resources.Error.DuplicateOwner))
+    else let previous1 ← previous + 1#usize
+         ok (cont previous1)
+  else ok (done (core.result.Result.Ok ()))
+
+/-- [noble_kernel::resources::table::transfer::unique_argument]: loop 0:
+    Source: 'crates/noble-kernel/src/resources/table/transfer.rs', lines 137:4-144:1 -/
+@[rust_loop]
+def resources.table.transfer.unique_argument_loop
+  (owners : Slice resources.Owner) (index : Std.Usize) (previous : Std.Usize) :
+  Result (core.result.Result Unit resources.Error)
+  := do
+  loop
+    (fun previous1 => resources.table.transfer.unique_argument_loop.body owners
+      index previous1)
+    previous
+
+/-- [noble_kernel::resources::table::transfer::unique_argument]:
+    Source: 'crates/noble-kernel/src/resources/table/transfer.rs', lines 132:0-144:1 -/
+@[reducible]
+def resources.table.transfer.unique_argument
+  (owners : Slice resources.Owner) (index : Std.Usize) :
+  Result (core.result.Result Unit resources.Error)
+  := do
+  resources.table.transfer.unique_argument_loop owners index 0#usize
+
+/-- [noble_kernel::resources::table::transfer::{noble_kernel::resources::table::Table}::transfer_preflight]: loop body 0:
+    Source: 'crates/noble-kernel/src/resources/table/transfer.rs', lines 102:8-129:5 -/
+@[rust_loop_body]
+def resources.table.transfer.Table.transfer_preflight_loop.body
+  (ti : resources.TableId) (i : Std.Usize) (i1 : Std.Usize) (i2 : Std.Usize)
+  (i3 : Std.U64) (i4 : Std.U64) (v : alloc.vec.Vec resources.Snapshot)
+  (generation : Std.U64) (i5 : Std.U64) (i6 : Std.Usize)
+  (owners : Slice resources.Owner) (required : Slice resources.Requirement)
+  (receiver : resources.Context) (decisions : alloc.vec.Vec resources.Decision)
+  (receiver_count : Std.Usize) (generation1 : Std.U64) (index : Std.Usize) :
+  Result (ControlFlow ((alloc.vec.Vec resources.Decision) × Std.Usize ×
+    Std.U64 × Std.Usize) (core.result.Result (alloc.vec.Vec
+    resources.Decision) resources.Error))
+  := do
+  let i7 := Slice.len owners
+  if index < i7
+  then
+    let o ← Slice.index_usize owners index
+    let r ← resources.table.transfer.unique_argument owners index
+    match r with
+    | core.result.Result.Ok _ =>
+      let r1 ←
+        resources.table.next generation1 i3 resources.Error.GenerationExhausted
+      match r1 with
+      | core.result.Result.Ok value =>
+        let r2 ← Slice.index_usize required index
+        let r3 ←
+          resources.table.Table.decide
+            {
+              id := ti,
+              limits :=
+                {
+                  slots := i,
+                  pins := i1,
+                  owners_per_context := i2,
+                  generations := i3,
+                  scopes := i4
+                },
+              records := v,
+              generation,
+              scope := i5,
+              pins := i6
+            } o.handle (resources.Event.Transfer r2 receiver value)
+        match r3 with
+        | core.result.Result.Ok value1 =>
+          let b ←
+            core.cmp.PartialEq.ne.trait_default
+              resources.Context.Insts.CoreCmpPartialEqContext o.handle.context
+              receiver
+          if b
+          then
+            if receiver_count >= i2
+            then
+              ok (done (core.result.Result.Err
+                resources.Error.ContextCapacity))
+            else
+              let receiver_count1 ← receiver_count + 1#usize
+              let decisions1 ← alloc.vec.Vec.push decisions value1
+              let index1 ← index + 1#usize
+              ok (cont (decisions1, receiver_count1, value, index1))
+          else
+            let decisions1 ← alloc.vec.Vec.push decisions value1
+            let index1 ← index + 1#usize
+            ok (cont (decisions1, receiver_count, value, index1))
+        | core.result.Result.Err failure =>
+          ok (done (core.result.Result.Err failure))
+      | core.result.Result.Err failure =>
+        ok (done (core.result.Result.Err failure))
+    | core.result.Result.Err error => ok (done (core.result.Result.Err error))
+  else ok (done (core.result.Result.Ok decisions))
+
+/-- [noble_kernel::resources::table::transfer::{noble_kernel::resources::table::Table}::transfer_preflight]: loop 0:
+    Source: 'crates/noble-kernel/src/resources/table/transfer.rs', lines 102:8-129:5 -/
+@[rust_loop]
+def resources.table.transfer.Table.transfer_preflight_loop
+  (ti : resources.TableId) (i : Std.Usize) (i1 : Std.Usize) (i2 : Std.Usize)
+  (i3 : Std.U64) (i4 : Std.U64) (v : alloc.vec.Vec resources.Snapshot)
+  (generation : Std.U64) (i5 : Std.U64) (i6 : Std.Usize)
+  (owners : Slice resources.Owner) (required : Slice resources.Requirement)
+  (receiver : resources.Context) (decisions : alloc.vec.Vec resources.Decision)
+  (receiver_count : Std.Usize) (generation1 : Std.U64) (index : Std.Usize) :
+  Result (core.result.Result (alloc.vec.Vec resources.Decision)
+    resources.Error)
+  := do
+  loop
+    (fun (decisions1, receiver_count1, generation2, index1) =>
+      resources.table.transfer.Table.transfer_preflight_loop.body ti i i1 i2 i3
+      i4 v generation i5 i6 owners required receiver decisions1 receiver_count1
+      generation2 index1)
+    (decisions, receiver_count, generation1, index)
+
+/-- [noble_kernel::resources::table::transfer::{noble_kernel::resources::table::Table}::transfer_preflight]:
+    Source: 'crates/noble-kernel/src/resources/table/transfer.rs', lines 83:4-129:5 -/
+def resources.table.transfer.Table.transfer_preflight
+  (self : resources.table.Table) (owners : Slice resources.Owner)
+  (required : Slice resources.Requirement) (receiver : resources.Context) :
+  Result (core.result.Result (alloc.vec.Vec resources.Decision)
+    resources.Error)
+  := do
+  let b ← core.slice.Slice.is_empty owners
+  if b
+  then ok (core.result.Result.Err resources.Error.ArgumentCount)
+  else
+    let i := Slice.len owners
+    if i > self.limits.slots
+    then ok (core.result.Result.Err resources.Error.ArgumentCount)
+    else
+      let i1 := Slice.len owners
+      let i2 := Slice.len required
+      if i1 != i2
+      then ok (core.result.Result.Err resources.Error.ArgumentCount)
+      else
+        let i3 := Slice.len owners
+        let decisions := alloc.vec.Vec.with_capacity resources.Decision i3
+        let receiver_count ←
+          resources.table.inspection.Table.context_count self receiver
+        resources.table.transfer.Table.transfer_preflight_loop self.id
+          self.limits.slots self.limits.pins self.limits.owners_per_context
+          self.limits.generations self.limits.scopes self.records
+          self.generation self.scope self.pins owners required receiver
+          decisions receiver_count self.generation 0#usize
+
+/-- [noble_kernel::resources::table::transfer::{noble_kernel::resources::table::Table}::transfer]: loop body 0:
+    Source: 'crates/noble-kernel/src/resources/table/transfer.rs', lines 35:8-41:9
+    Visibility: public -/
+@[rust_loop_body]
+def resources.table.transfer.Table.transfer_loop.body
+  (decisions : alloc.vec.Vec resources.Decision) (self : resources.table.Table)
+  (owners : alloc.vec.Vec resources.Owner) (index : Std.Usize) :
+  Result (ControlFlow (resources.table.Table × (alloc.vec.Vec resources.Owner)
+    × Std.Usize) (resources.table.Table × (alloc.vec.Vec resources.Owner)))
+  := do
+  let i := alloc.vec.Vec.len decisions
+  if index < i
+  then
+    let decision ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        resources.Decision) decisions index
+    let (_, index_mut_back) ←
+      alloc.vec.Vec.index_mut (core.slice.index.SliceIndexUsizeSlice
+        resources.Snapshot) self.records decision.record.handle.slot
+    let (_, index_mut_back1) ←
+      alloc.vec.Vec.index_mut (core.slice.index.SliceIndexUsizeSlice
+        resources.Owner) owners index
+    let index1 ← index + 1#usize
+    let owners1 := index_mut_back1 { handle := decision.record.handle }
+    let v := index_mut_back decision.record
+    ok (cont
+      ({
+         self
+           with
+           records := v, generation := decision.record.handle.generation
+       }, owners1, index1))
+  else ok (done (self, owners))
+
+/-- [noble_kernel::resources::table::transfer::{noble_kernel::resources::table::Table}::transfer]: loop 0:
+    Source: 'crates/noble-kernel/src/resources/table/transfer.rs', lines 35:8-41:9
+    Visibility: public -/
+@[rust_loop]
+def resources.table.transfer.Table.transfer_loop
+  (self : resources.table.Table) (owners : alloc.vec.Vec resources.Owner)
+  (decisions : alloc.vec.Vec resources.Decision) (index : Std.Usize) :
+  Result (resources.table.Table × (alloc.vec.Vec resources.Owner))
+  := do
+  loop
+    (fun (self1, owners1, index1) =>
+      resources.table.transfer.Table.transfer_loop.body decisions self1 owners1
+      index1)
+    (self, owners, index)
+
+/-- [noble_kernel::resources::table::transfer::{noble_kernel::resources::table::Table}::transfer]:
+    Source: 'crates/noble-kernel/src/resources/table/transfer.rs', lines 16:4-43:5
+    Visibility: public -/
+def resources.table.transfer.Table.transfer
+  (self : resources.table.Table) (owners : alloc.vec.Vec resources.Owner)
+  (required : Slice resources.Requirement) (receiver : resources.Context) :
+  Result ((core.result.Result resources.Transferred (resources.Rejected
+    (alloc.vec.Vec resources.Owner))) × resources.table.Table)
+  := do
+  let s := alloc.vec.Vec.deref owners
+  let r ←
+    resources.table.transfer.Table.transfer_preflight self s required receiver
+  match r with
+  | core.result.Result.Ok decisions =>
+    let (self1, owners1) ←
+      resources.table.transfer.Table.transfer_loop self owners decisions
+        0#usize
+    ok (core.result.Result.Ok { owners := owners1, decisions }, self1)
+  | core.result.Result.Err error =>
+    ok (core.result.Result.Err { error, input := owners }, self)
+
+/-- [noble_kernel::resources::table::transfer::{noble_kernel::resources::table::Table}::retire_context]: loop body 1:
+    Source: 'crates/noble-kernel/src/resources/table/transfer.rs', lines 75:8-79:9
+    Visibility: public -/
+@[rust_loop_body]
+def resources.table.transfer.Table.retire_context_loop0_loop0.body
+  (decisions : alloc.vec.Vec resources.Decision)
+  (v : alloc.vec.Vec resources.Snapshot) (index : Std.Usize) :
+  Result (ControlFlow ((alloc.vec.Vec resources.Snapshot) × Std.Usize)
+    (alloc.vec.Vec resources.Snapshot))
+  := do
+  let i := alloc.vec.Vec.len decisions
+  if index < i
+  then
+    let decision ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        resources.Decision) decisions index
+    let (_, index_mut_back) ←
+      alloc.vec.Vec.index_mut (core.slice.index.SliceIndexUsizeSlice
+        resources.Snapshot) v decision.record.handle.slot
+    let index1 ← index + 1#usize
+    let v1 := index_mut_back decision.record
+    ok (cont (v1, index1))
+  else ok (done v)
+
+/-- [noble_kernel::resources::table::transfer::{noble_kernel::resources::table::Table}::retire_context]: loop 1:
+    Source: 'crates/noble-kernel/src/resources/table/transfer.rs', lines 75:8-79:9
+    Visibility: public -/
+@[rust_loop]
+def resources.table.transfer.Table.retire_context_loop0_loop0
+  (v : alloc.vec.Vec resources.Snapshot)
+  (decisions : alloc.vec.Vec resources.Decision) (index : Std.Usize) :
+  Result (alloc.vec.Vec resources.Snapshot)
+  := do
+  loop
+    (fun (v1, index1) =>
+      resources.table.transfer.Table.retire_context_loop0_loop0.body decisions
+      v1 index1)
+    (v, index)
+
+/-- [noble_kernel::resources::table::transfer::{noble_kernel::resources::table::Table}::retire_context]: loop body 0:
+    Source: 'crates/noble-kernel/src/resources/table/transfer.rs', lines 61:8-73:9
+    Visibility: public -/
+@[rust_loop_body]
+def resources.table.transfer.Table.retire_context_loop0.body
+  (self : resources.table.Table) (context : resources.Context)
+  (reason : resources.Retirement)
+  (decisions : alloc.vec.Vec resources.Decision) (index : Std.Usize) :
+  Result (ControlFlow ((alloc.vec.Vec resources.Decision) × Std.Usize)
+    ((core.result.Result (alloc.vec.Vec resources.Decision) resources.Error) ×
+    resources.TableId × resources.Limits × (alloc.vec.Vec resources.Snapshot)
+    × Std.U64 × Std.U64 × Std.Usize))
+  := do
+  let i := alloc.vec.Vec.len self.records
+  if index < i
+  then
+    let record ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        resources.Snapshot) self.records index
+    let b ←
+      resources.Context.Insts.CoreCmpPartialEqContext.eq record.handle.context
+        context
+    if b
+    then
+      let b1 ←
+        core.cmp.PartialEq.ne.trait_default
+          resources.State.Insts.CoreCmpPartialEqState record.state
+          resources.State.Retired
+      if b1
+      then
+        let r ←
+          resources.transition.transition record record.handle
+            (resources.Event.Retire reason)
+        match r with
+        | core.result.Result.Ok value =>
+          let decisions1 ← alloc.vec.Vec.push decisions value
+          let index1 ← index + 1#usize
+          ok (cont (decisions1, index1))
+        | core.result.Result.Err failure =>
+          ok (done (core.result.Result.Err failure, self.id, self.limits,
+            self.records, self.generation, self.scope, self.pins))
+      else let index1 ← index + 1#usize
+           ok (cont (decisions, index1))
+    else let index1 ← index + 1#usize
+         ok (cont (decisions, index1))
+  else
+    let v ←
+      resources.table.transfer.Table.retire_context_loop0_loop0 self.records
+        decisions 0#usize
+    ok (done (core.result.Result.Ok decisions, self.id, self.limits, v,
+      self.generation, self.scope, self.pins))
+
+/-- [noble_kernel::resources::table::transfer::{noble_kernel::resources::table::Table}::retire_context]: loop 0:
+    Source: 'crates/noble-kernel/src/resources/table/transfer.rs', lines 61:8-73:9
+    Visibility: public -/
+@[rust_loop]
+def resources.table.transfer.Table.retire_context_loop0
+  (self : resources.table.Table) (context : resources.Context)
+  (reason : resources.Retirement)
+  (decisions : alloc.vec.Vec resources.Decision) (index : Std.Usize) :
+  Result ((core.result.Result (alloc.vec.Vec resources.Decision)
+    resources.Error) × resources.TableId × resources.Limits × (alloc.vec.Vec
+    resources.Snapshot) × Std.U64 × Std.U64 × Std.Usize)
+  := do
+  loop
+    (fun (decisions1, index1) =>
+      resources.table.transfer.Table.retire_context_loop0.body self context
+      reason decisions1 index1)
+    (decisions, index)
+
+/-- [noble_kernel::resources::table::transfer::{noble_kernel::resources::table::Table}::retire_context]:
+    Source: 'crates/noble-kernel/src/resources/table/transfer.rs', lines 54:4-81:5
+    Visibility: public -/
+def resources.table.transfer.Table.retire_context
+  (self : resources.table.Table) (context : resources.Context)
+  (reason : resources.Retirement) :
+  Result ((core.result.Result (alloc.vec.Vec resources.Decision)
+    resources.Error) × resources.table.Table)
+  := do
+  let i ← resources.table.inspection.Table.context_count self context
+  let decisions := alloc.vec.Vec.with_capacity resources.Decision i
+  let (r, ti, l, v, i1, i2, i3) ←
+    resources.table.transfer.Table.retire_context_loop0 self context reason
+      decisions 0#usize
+  ok (r,
+    {
+      id := ti,
+      limits := l,
+      records := v,
+      generation := i1,
+      scope := i2,
+      pins := i3
+    })
+
+/-- [noble_kernel::resources::table::{noble_kernel::resources::table::Table}::new]:
+    Source: 'crates/noble-kernel/src/resources/table.rs', lines 27:4-48:5
+    Visibility: public -/
+def resources.table.Table.new
+  (id : resources.TableId) (limits : resources.Limits) :
+  Result (core.result.Result resources.table.Table resources.Error)
+  := do
+  if limits.slots = 0#usize
+  then ok (core.result.Result.Err resources.Error.InvalidLimits)
+  else
+    if limits.slots > resources.MAX_SLOTS
+    then ok (core.result.Result.Err resources.Error.InvalidLimits)
+    else
+      if limits.pins > limits.slots
+      then ok (core.result.Result.Err resources.Error.InvalidLimits)
+      else
+        if limits.owners_per_context > limits.slots
+        then ok (core.result.Result.Err resources.Error.InvalidLimits)
+        else
+          let v := alloc.vec.Vec.with_capacity resources.Snapshot limits.slots
+          ok (core.result.Result.Ok
+            {
+              id,
+              limits,
+              records := v,
+              generation := 0#u64,
+              scope := 0#u64,
+              pins := 0#usize
+            })
+
+/-- [noble_kernel::resources::table::{noble_kernel::resources::table::Table}::register]:
+    Source: 'crates/noble-kernel/src/resources/table.rs', lines 57:4-88:5
+    Visibility: public -/
+def resources.table.Table.register
+  (self : resources.table.Table) (granted : resources.Requirement) :
+  Result ((core.result.Result resources.Owner resources.Error) ×
+    resources.table.Table)
+  := do
+  let r ← resources.table.inspection.Table.free_slot self
+  match r with
+  | core.result.Result.Ok value =>
+    let i ←
+      resources.table.inspection.Table.context_count self granted.context
+    if i >= self.limits.owners_per_context
+    then ok (core.result.Result.Err resources.Error.ContextCapacity, self)
+    else
+      let r1 ←
+        resources.table.next self.generation self.limits.generations
+          resources.Error.GenerationExhausted
+      match r1 with
+      | core.result.Result.Ok value1 =>
+        let i1 := alloc.vec.Vec.len self.records
+        if value = i1
+        then
+          let v ←
+            alloc.vec.Vec.push self.records
+              ({
+                 handle :=
+                   {
+                     table := self.id,
+                     slot := value,
+                     generation := value1,
+                     context := granted.context,
+                     kind := granted.kind,
+                     rights := granted.rights
+                   },
+                 state := resources.State.Live,
+                 last_scope := none,
+                 retirement := none
+               } : resources.Snapshot)
+          ok (core.result.Result.Ok
+            {
+              handle :=
+                {
+                  table := self.id,
+                  slot := value,
+                  generation := value1,
+                  context := granted.context,
+                  kind := granted.kind,
+                  rights := granted.rights
+                }
+            }, { self with records := v, generation := value1 })
+        else
+          let (_, index_mut_back) ←
+            alloc.vec.Vec.index_mut (core.slice.index.SliceIndexUsizeSlice
+              resources.Snapshot) self.records value
+          let v :=
+            index_mut_back
+              {
+                handle :=
+                  {
+                    table := self.id,
+                    slot := value,
+                    generation := value1,
+                    context := granted.context,
+                    kind := granted.kind,
+                    rights := granted.rights
+                  },
+                state := resources.State.Live,
+                last_scope := none,
+                retirement := none
+              }
+          ok (core.result.Result.Ok
+            {
+              handle :=
+                {
+                  table := self.id,
+                  slot := value,
+                  generation := value1,
+                  context := granted.context,
+                  kind := granted.kind,
+                  rights := granted.rights
+                }
+            }, { self with records := v, generation := value1 })
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, self)
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure, self)
+
+/-- [noble_kernel::resources::table::{noble_kernel::resources::table::Table}::validate]:
+    Source: 'crates/noble-kernel/src/resources/table.rs', lines 94:4-103:5
+    Visibility: public -/
+def resources.table.Table.validate
+  (self : resources.table.Table) (claim : resources.Handle)
+  (required : resources.Requirement) :
+  Result (core.result.Result resources.Snapshot resources.Error)
+  := do
+  let r ←
+    resources.table.Table.decide self claim (resources.Event.Inspect required)
+  match r with
+  | core.result.Result.Ok decision =>
+    ok (core.result.Result.Ok decision.record)
+  | core.result.Result.Err error => ok (core.result.Result.Err error)
 
 /-- [noble_kernel::shapes::impls::equality::push_pattern_program]: loop body 0:
     Source: 'crates/noble-kernel/src/shapes/impls/equality.rs', lines 18:4-21:5 -/
@@ -8287,13 +17247,6 @@ def shapes.Defect.Insts.CoreCmpEq : core.cmp.Eq shapes.Defect := {
   assert_fields_are_eq := shapes.Defect.Insts.CoreCmpEq.assert_fields_are_eq
 }
 
-/-- [noble_kernel::types::{impl core::clone::Clone for noble_kernel::types::ResourceKind}::clone]:
-    Source: 'crates/noble-kernel/src/types.rs', lines 14:9-14:14
-    Visibility: public -/
-def types.ResourceKind.Insts.CoreCloneClone.clone
-  (self : types.ResourceKind) : Result types.ResourceKind := do
-  ok self
-
 /-- Trait implementation: [noble_kernel::types::{impl core::clone::Clone for noble_kernel::types::ResourceKind}]
     Source: 'crates/noble-kernel/src/types.rs', lines 14:9-14:14 -/
 @[reducible]
@@ -8310,29 +17263,11 @@ def types.ResourceKind.Insts.CoreMarkerCopy : core.marker.Copy
   cloneInst := types.ResourceKind.Insts.CoreCloneClone
 }
 
-/-- Trait implementation: [noble_kernel::types::{impl core::fmt::Debug for noble_kernel::types::ResourceKind}]
-    Source: 'crates/noble-kernel/src/types.rs', lines 14:22-14:27 -/
-@[reducible]
-def types.ResourceKind.Insts.CoreFmtDebug : core.fmt.Debug types.ResourceKind
-  := {
-  fmt := types.ResourceKind.Insts.CoreFmtDebug.fmt
-}
-
 /-- Trait implementation: [noble_kernel::types::{impl core::marker::StructuralPartialEq for noble_kernel::types::ResourceKind}]
     Source: 'crates/noble-kernel/src/types.rs', lines 14:29-14:38 -/
 @[reducible]
 def types.ResourceKind.Insts.CoreMarkerStructuralPartialEq :
   core.marker.StructuralPartialEq types.ResourceKind := {
-}
-
-/-- Trait implementation: [noble_kernel::types::{impl core::cmp::PartialEq<noble_kernel::types::ResourceKind> for noble_kernel::types::ResourceKind}]
-    Source: 'crates/noble-kernel/src/types.rs', lines 14:29-14:38 -/
-@[reducible]
-impl_def types.ResourceKind.Insts.CoreCmpPartialEqResourceKind :
-  core.cmp.PartialEq types.ResourceKind types.ResourceKind := {
-  eq := types.ResourceKind.Insts.CoreCmpPartialEqResourceKind.eq
-  ne := core.cmp.PartialEq.ne.trait_default
-    types.ResourceKind.Insts.CoreCmpPartialEqResourceKind
 }
 
 /-- [noble_kernel::types::{impl core::cmp::Eq for noble_kernel::types::ResourceKind}::assert_fields_are_eq]:

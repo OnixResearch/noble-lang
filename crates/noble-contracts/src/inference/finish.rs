@@ -30,6 +30,7 @@ impl super::materialize::State {
             | super::Term::Contract
             | super::Term::Evidence
             | super::Term::Certified
+            | super::Term::Resource(_)
             | super::Term::Empty => Err(crate::internal(span)),
         };
         self.values.push(attempt!(material));

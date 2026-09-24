@@ -161,12 +161,16 @@ pub(super) fn value(
     span: crate::Span,
 ) -> Result<noble_kernel::types::EffSet, crate::Diagnostic> {
     let bits = attempt!(arena.effect_bound(id, span));
-    let mut ids = alloc::vec::Vec::new();
-    if bits & 1 != 0 {
-        ids.push(noble_kernel::types::EffId(0));
-    }
-    if bits & 2 != 0 {
-        ids.push(noble_kernel::types::EffId(1));
+    let effect_count = attempt!(crate::offset(bits.count_ones(), span));
+    let mut ids = alloc::vec::Vec::with_capacity(effect_count);
+    let mut remaining = bits;
+    let mut at = 0u32;
+    while remaining != 0 {
+        if remaining & 1 != 0 {
+            ids.push(noble_kernel::types::EffId(at));
+        }
+        remaining >>= 1;
+        at = at.saturating_add(1);
     }
     Ok(noble_kernel::types::EffSet::from_ids(&ids))
 }

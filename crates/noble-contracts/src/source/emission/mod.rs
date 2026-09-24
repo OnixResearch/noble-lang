@@ -14,6 +14,7 @@ struct Admission<'a> {
 }
 
 struct Assembly {
+    definition_base: usize,
     definitions: alloc::vec::Vec<noble_kernel::execution::Definition>,
     root: Option<(
         noble_kernel::execution::Body,
@@ -41,7 +42,12 @@ impl Assembly {
     ) -> Result<(), super::Error> {
         match checked.identity {
             Some(identity) => {
-                let definition = match crate::index(position.saturating_add(23), checked.span) {
+                let definition = match crate::index(
+                    position
+                        .saturating_sub(1)
+                        .saturating_add(self.definition_base),
+                    checked.span,
+                ) {
                     Ok(id) => noble_kernel::contracts::Definition(id),
                     Err(error) => return Err(super::Error::at(crate::source::Stage::Check, error)),
                 };
@@ -184,6 +190,7 @@ fn assemble(
         environment,
     };
     let mut assembly = Assembly {
+        definition_base: state.definition_base,
         definitions: alloc::vec::Vec::with_capacity(state.bodies.len().saturating_sub(1)),
         root: None,
     };

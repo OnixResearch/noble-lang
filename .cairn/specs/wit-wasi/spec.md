@@ -15,10 +15,50 @@ Scenario clauses declare designs; the conformance ledger records execution and e
 Document: SPEC-W001  
 Revision: 0.1.0-draft.5  
 Project: noble  
-Status: Canonical working profile; implementation and conformance remain open  
+Status: Canonical working profile with a delivered synchronous slice; broader implementation and conformance remain open  
 Depends on: SPEC-0001, SPEC-S001, SPEC-V001 and SPEC-R001 at 0.1.0-draft.5
 
 The first delivery is a named synchronous subset, not full `Component-Draft` conformance. See [RESOURCE-ADAPTERS.md](../resource-adapters/spec.md) and [ROADMAP.md](../../../specs/ROADMAP.md).
+
+The delivered `Component-Sync-Bootstrap` slice compiles the pinned [`noble-test:sync/bootstrap@1.0.0` world](../../../crates/noble-wasm/wit/bootstrap.wit), with typed imports/exports for arithmetic, UTF-8 strings, byte lists, owned counters and host-established authorization. Generated imports retain exact fully qualified versioned request effects, including for reviewed-pure operations; each export's complete stack interface and effects are independently checked before emission. Unsupported signatures and bodies are refused rather than treated as full WIT support.
+
+The [M5 gate](../../../verification/m5/gate.mjs) exercises emitted components against an independent Rust/Wasmtime 40.0.2 peer under the [pinned synchronous memory32/UTF-8 ABI](../../../verification/m5/pins.json). The peer independently supplies component linking and typed conversion, while using Noble's production resource/authority decisions for host policy. Protected work requires a host-established one-shot witness bound to the exact plan and current applicable facts; admission consumes the witness and records the attempt before work. Receipts distinguish admission, operation observations and invocation outcomes: a plan, request, handle, effect or digest does not establish authority or success, and late operation success cannot reverse invocation cancellation.
+
+The [M5 completion record](../../../verification/m5/evidence.json) owns acceptance of this bounded slice. It does not implement WASI, native async/future/stream execution, full `Component-Draft`, or an arbitrary first-class `Program` ABI. Actual resource-transition correspondence is a separate [strict proof lane](../../../proofs/m5/M5Resources.lean); it does not prove native release, host fact/callback authenticity, or universal component compiler, ABI or engine refinement.
+
+### Bootstrap host-operation classification
+
+The synchronous bootstrap execution profile classifies every admitted outbound
+operation below. These are scope-specific host policies, not permissions inferred
+from a WIT declaration or guest effect annotation. Import words refer to the
+`noble-test:sync@1.0.0` interfaces in the pinned world.
+
+| Operation | Classification | Scope and review rationale |
+|---|---|---|
+| `arithmetic.inc` | Unprotected | Wrapping arithmetic on the supplied `s64`; no protected external operation. |
+| `echo.text`, `echo.bytes` | Unprotected | Copy and return the supplied string or byte list within the bounded invocation; no external authority or zero-copy claim. |
+| `counter.read` | Unprotected | Read an already-owned local fixture counter through a scoped borrow; kind, context, generation, rights and ownership checks remain mandatory. |
+| `counters.transfer` | Unprotected | Transfer the local fixture counter to the receiver and discharge that receiver's cleanup obligation, including on its domain-error result; no remote operation or permission is implied. |
+| `authorization.prepare` | Unprotected authorization request | Request the trusted local authorizer's decision without executing the protected operation. Only independently supplied current host facts can establish the returned one-shot witness. |
+| `authorization.protected` | Protected | Bind the exact argument and operation plan, revalidate current facts, consume the witness and record the attempt before updating the local protected counter; observation and receipt construction follow separately. |
+| Canonical counter destruction and invocation cleanup | Unprotected retirement | Discharge existing local ownership obligations; cleanup grants no new access and does not turn GC reachability into resource retirement. |
+| Canonical authorization destruction and invocation cleanup | Unprotected revocation | Retire an unused witness without executing, restoring or duplicating its authority. This emergency boundary cleanup is not generic guest `drop` permission. |
+
+The independent-peer compatibility aliases
+`noble-test:math/arithmetic@1.0.0#inc` and
+`noble-test:counter/counters@1.0.0` use the same bounded arithmetic/counter
+classifications. The separate `noble-test:store/api@1.0.0#read` negative probe is
+protected and always denied because this profile supplies no host grant.
+Unapproved interfaces and operations are rejected.
+
+Authorization is synchronized within one serialized synchronous host invocation.
+Its configured checkpoint, authenticated authority/observation sources and
+current credential, revocation, policy and quota facts are trusted embedding
+inputs, not guest claims. The profile promises neither remote authorization
+atomicity nor a distributed revocation service. Ordinary CLI filesystem,
+process, environment, clock, supervision and diagnostic I/O have the separately
+scoped unprotected classifications and rationales in
+[`policy/architecture.ncl`](../../../policy/architecture.ncl).
 
 ## 1. Purpose
 
@@ -245,7 +285,7 @@ r[WI-WIT-07]
 
 **WI-WIT-07.** The adapter contract MUST account for allocation, copying, and buffer ownership during lifting/lowering and cleanup. A failed conversion MUST NOT publish a partially initialized trusted value. Internal GC support or a byte-view library MUST NOT imply zero-copy component transfer.
 
-M5 checks normal and failed string/list conversions against an independent peer. The M3 component probe in [SPEC-BE001](../backend-experiments/spec.md) is not that conformance evidence.
+M5 checks lossless UTF-8 string and byte-list round trips through the independent component peer. Separate hostile-import probes run the unchanged emitted core Wasm to exercise allocation-quota failures, malformed UTF-8 and truncated ranges, with cleanup and no partially trusted result publication. These are core-boundary probes, not malformed typed Wasmtime values. Success-path canonical post-return and trap-path host cleanup are distinct; core allocation/copy counters do not measure all engine allocations or physical copies. The historical, nonblocking M3 component probe in [SPEC-BE001](../backend-experiments/spec.md) is not M5 conformance evidence.
 
 
 <!-- cairn:scenario-links:start -->
@@ -814,7 +854,7 @@ This is a scenario design, not an execution result. The case's `state` and `evid
 
 ## 12. Conformance scenarios
 
-The accompanying `conformance/wit-wasi-cases.json` contains expected scenarios. All scenarios in this revision are `not-run` until executed against an implementation.
+The accompanying [conformance/wit-wasi-cases.json](../../../specs/conformance/wit-wasi-cases.json) contains expected scenarios and their recorded state/evidence. The M5 runtime gate executes WI-01, WI-02, WI-04 through WI-10, and WI-15 in the declared synchronous slice, together with resource, boundary-conversion and authorization cases. These executed scopes do not close the remaining Component-Draft, WASI or native-async scenarios.
 
 A conforming Component profile must cover at least:
 
@@ -836,6 +876,8 @@ A conforming Component profile must cover at least:
 ## 13. Release gates and open work
 
 Before the standard Component profile can be called stable, the project must complete:
+
+The table retains the broader standard-profile gates. M5 supplies a bounded implementation and executable evidence for portions of OW-02, OW-03, OW-04 and OW-08, plus the separately scoped resource correspondence described above; it does not close these gates for the full profile.
 
 | ID | Deliverable |
 |---|---|

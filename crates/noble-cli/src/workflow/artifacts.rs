@@ -156,15 +156,22 @@ pub(crate) struct Temporary {
 impl Temporary {
     #[allow(
         tigerstyle::ambient_env,
-        tigerstyle::ambient_clock,
-        reason = "Owner: noble-maintainers. The shell allocates a private unique disposable proof workspace."
+        reason = "Owner: noble-maintainers. The shell selects the environment-provided temporary parent for disposable workspaces."
     )]
     pub(crate) fn create() -> Result<Self, super::output::Failure> {
+        Self::create_in(&std::env::temp_dir())
+    }
+
+    #[allow(
+        tigerstyle::ambient_clock,
+        reason = "Owner: noble-maintainers. The shell timestamps private unique disposable workspace names before exclusive directory creation."
+    )]
+    pub(crate) fn create_in(parent: &std::path::Path) -> Result<Self, super::output::Failure> {
         let timestamp = attempt!(std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .map_err(|error| super::output::Failure::error("temporary-root", error.to_string())))
         .as_nanos();
-        let parent = attempt!(std::fs::canonicalize(std::env::temp_dir())
+        let parent = attempt!(std::fs::canonicalize(parent)
             .map_err(|error| super::output::Failure::error("temporary-root", error.to_string())));
         let mut attempt = 0;
         while attempt < 128 {
@@ -197,7 +204,7 @@ impl Drop for Temporary {
     fn drop(&mut self) {
         if let Err(error) = std::fs::remove_dir_all(&self.path) {
             // Best-effort private-workspace cleanup cannot replace the already
-            // determined proof result, including while unwinding another error.
+            // determined caller result, including while unwinding another error.
             drop(error);
         }
     }

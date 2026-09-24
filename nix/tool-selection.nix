@@ -307,8 +307,23 @@ let
       ]
     ) "owned-wasm-runtime-boundary")
     (require (
-      get policy "future_unselected" == [ "Wasmtime" "WIT" "Verus" "byte-view dependency" ]
+      get policy "future_unselected" == [ "Verus" "byte-view dependency" ]
     ) "unselected-tool-set")
+    (require (
+      get policy "component_sync" == get observation "component_sync"
+      && at policy [ "component_sync" "schema" ] == "noble-m5-tool-pins/v1"
+      && at policy [ "component_sync" "profile" ] == "Component-Sync-Bootstrap"
+      && at policy [ "component_sync" "world" ] == "noble-test:sync/bootstrap@1.0.0"
+      && at policy [ "component_sync" "wasmtime_version" ] == "40.0.2"
+      && at policy [ "component_sync" "wasm_tools_version" ] == at policy [ "verification_tools" "wasm_tools" "version" ]
+      && at policy [ "component_sync" "canonical_abi" ] == "memory32-sync-utf8"
+      && at policy [ "component_sync" "non_claims" ] == [
+        "Component-Draft"
+        "WASI profile implementation"
+        "native async/future/stream execution"
+        "universal Canonical ABI or engine refinement"
+      ]
+    ) "component-sync-selection")
     (require (
       equalKeys (get policy "file_sha256") fileNames
       && equalKeys (get observation "file_sha256") fileNames

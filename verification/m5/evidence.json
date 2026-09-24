@@ -1,0 +1,739 @@
+{
+  "schema": "noble-m5-evidence/v1",
+  "milestone": "M5",
+  "date": "2026-09-24",
+  "scope": "Complete Component-Sync-Bootstrap acceptance for the pinned noble-test:sync/bootstrap@1.0.0 world, synchronous typed imports/exports, move-only resources and protected host authorization/receipts. Not full Component-Draft, WASI, native async or universal refinement.",
+  "result": "passed",
+  "requirements": {
+    "WI-WIT-07": {
+      "scope": "Pinned memory32/UTF-8 lowering, lifting, copied buffers, allocation failure, malformed input and cleanup without partial trusted results.",
+      "cases": [
+        "ADAPT-11",
+        "WI-05",
+        "WI-10"
+      ],
+      "evidence": [
+        "acceptance.json",
+        "runtime.tar.gz"
+      ],
+      "boundary": "Independent typed peer round trips and separate hostile-import probes over unchanged emitted core Wasm are distinguished; engine-wide allocation counts and zero-copy are not claimed."
+    },
+    "BE-RESOURCE-01": {
+      "scope": "Actual Wasmtime DRC collection does not discharge a live native pin or resource obligation.",
+      "cases": [
+        "RA-CASE-04",
+        "RA-CASE-05",
+        "RA-CASE-06"
+      ],
+      "controls": [
+        "engine-collection-and-native-retirement"
+      ],
+      "evidence": [
+        "acceptance.json",
+        "extraction.json"
+      ]
+    },
+    "BE-BOUNDARY-01": {
+      "scope": "Pinned ABI conversion accounts for copies, allocation and cleanup on normal and failed paths.",
+      "cases": [
+        "ADAPT-11",
+        "WI-05",
+        "WI-10"
+      ],
+      "evidence": [
+        "acceptance.json",
+        "runtime.tar.gz"
+      ],
+      "boundary": "Core diagnostic counters are not all physical engine allocations or copies."
+    },
+    "RA-OWN-02": {
+      "scope": "Move-only, noncapturable owners; reachability is separate from retirement and physical release.",
+      "cases": [
+        "RA-CASE-01",
+        "RA-CASE-02",
+        "RA-CASE-03",
+        "RA-CASE-04",
+        "RA-CASE-05",
+        "RA-CASE-06",
+        "RA-CASE-07",
+        "RA-CASE-08",
+        "RA-CASE-09"
+      ],
+      "evidence": [
+        "acceptance.json",
+        "extraction.json"
+      ]
+    },
+    "VT-SCOPE-02": {
+      "scope": "Production resource-table and authority decisions remain safe sequential no_std Rust and participate in actual whole-crate extraction and compiled declaration accounting.",
+      "evidence": [
+        "extraction.json",
+        "quality.tar.xz"
+      ],
+      "boundary": "Seven named resource roots claim strict correspondence/invariants; whole-source accounting is not universal authority, frontend or backend refinement."
+    },
+    "VT-SCOPE-03": {
+      "scope": "The host supplies explicit current facts, executes only committed typed work, authenticates scoped observations and applies returned resource accounting separately from pure retirement decisions.",
+      "cases": [
+        "OCTET-01",
+        "OCTET-02",
+        "OCTET-04",
+        "RA-CASE-05",
+        "RA-CASE-06",
+        "RA-CASE-09"
+      ],
+      "evidence": [
+        "acceptance.json",
+        "extraction.json"
+      ],
+      "boundary": "Serialization, namespace freshness, authenticated callbacks/facts and faithful physical application remain explicit embedding correspondence obligations."
+    },
+    "H-AUTH-01": {
+      "scope": "Every admitted bootstrap import and cleanup operation has an explicit protected or scoped unprotected classification; protected plans, authorization, attempts, observations and receipts remain distinct.",
+      "profile": "../../.cairn/specs/wit-wasi/spec.md#bootstrap-host-operation-classification",
+      "cases": [
+        "OCTET-01"
+      ],
+      "evidence": [
+        "acceptance.json"
+      ]
+    },
+    "H-AUTH-02": {
+      "scope": "Only the trusted host establishes witnesses after checking exact operation, plan/arguments, actor/owner, policy, checkpoint, validity and quota bindings; missing required current facts fail closed.",
+      "cases": [
+        "OCTET-01",
+        "OCTET-02"
+      ],
+      "evidence": [
+        "acceptance.json"
+      ],
+      "boundary": "One serialized local synchronization scope; no remote authorization atomicity or credential-authenticity theorem."
+    },
+    "H-AUTH-03": {
+      "scope": "Admission consumes the one-shot witness and records the attempt before execution; failed preflight preserves valid obligations, while committed failure/cancellation/unknown cannot restore or retry authorization.",
+      "cases": [
+        "OCTET-01",
+        "OCTET-02"
+      ],
+      "evidence": [
+        "acceptance.json"
+      ]
+    },
+    "H-AUTH-04": {
+      "scope": "Opaque Rust and guest resource boundaries prevent unchecked witness construction, generic duplication/discard/serialization and Data/Capture eligibility.",
+      "cases": [
+        "OCTET-02",
+        "OCTET-03"
+      ],
+      "controls": [
+        "rustdoc-opacity-evidence",
+        "owning-resource-generic-drop-rejection"
+      ],
+      "evidence": [
+        "acceptance.json",
+        "build.json"
+      ]
+    },
+    "H-RECEIPT-01": {
+      "scope": "Receipt admission requires applicable authenticated observations for the exact attempt, operation, source, context and requested outcome; absent, failed, unknown or unrelated observations do not establish success.",
+      "cases": [
+        "OCTET-01",
+        "OCTET-04"
+      ],
+      "evidence": [
+        "acceptance.json"
+      ]
+    },
+    "H-RECEIPT-02": {
+      "scope": "Operation receipts remain separate from invocation outcome; confirmed late operation success cannot uncancel invocation delivery, restore ownership or recreate witness authority.",
+      "cases": [
+        "OCTET-01",
+        "OCTET-04"
+      ],
+      "evidence": [
+        "acceptance.json"
+      ]
+    }
+  },
+  "build": {
+    "result": "passed",
+    "receipt": "build.json",
+    "receipt_sha256": "41688a689276132ec7b43ec58b59c1f82eb0126ff20a174097c26eaed406af9e",
+    "archive": {
+      "archive": "build.tar.gz",
+      "sha256": "09fdf45d89a21a8e865b03fb954ba9572d8794cd4eb3799956f76a5b657e3ef3",
+      "bytes": 493476
+    },
+    "source_files": 389,
+    "binary_sha256": "7caad3c901bf56c57e94baee35278889dc84a61a4ed2c110f7fe6786f1dcea1a",
+    "opacity": "Compiled external-crate unchecked-construction controls are retained in the build packet and exercised by the runtime gate.",
+    "binding": "The 389 compiled-source inputs still match the final tree. Source-bound build evidence and frozen executed binaries are separate retained artifacts."
+  },
+  "runtime": {
+    "result": "passed",
+    "receipt": "acceptance.json",
+    "receipt_sha256": "16d05ae874accd00c839e3a5a31f35ef6702446094775cf16e3ba4add1aa10f7",
+    "archive": {
+      "archive": "runtime.tar.gz",
+      "sha256": "4ab92b6edaf724ebb8f98ac01011f261059dff6d9c983055ce89dd8e19fda999",
+      "bytes": 64083633,
+      "integrity": "tar comparison against the executed frozen packet passed"
+    },
+    "source_revision": "sha256:b72a0fecc46eeb45b10f8ecd11b7a52e8eaa9fe57a463739c26b8edc6753c21d",
+    "source_files": 405,
+    "world": "noble-test:sync/bootstrap@1.0.0",
+    "canonical_abi": "memory32-sync-utf8",
+    "peer": "Wasmtime 40.0.2",
+    "cases": 24,
+    "variants": 84,
+    "native_tests": 44,
+    "controls": 15,
+    "executables": {
+      "cli": {
+        "sha256": "7caad3c901bf56c57e94baee35278889dc84a61a4ed2c110f7fe6786f1dcea1a",
+        "bytes": 17118776,
+        "retained": "runtime.tar.gz:executables/cli"
+      },
+      "peer": {
+        "sha256": "bc63ab8deb4a920764a035e05b9675ffdc8d9ec43fc0c91688ea25ae272edfa9",
+        "bytes": 61314624,
+        "retained": "runtime.tar.gz:executables/peer"
+      },
+      "resources": {
+        "sha256": "e2c9cd60d8297deab3171b07064af26ea0e86cdc8c7617e303ae1864027b7dd3",
+        "bytes": 8538096,
+        "retained": "runtime.tar.gz:executables/resources"
+      },
+      "authority": {
+        "sha256": "444ed2f5a0dae1dac74a61fb2b7c2468806084585ec71c69be03296b1026d1ad",
+        "bytes": 8471096,
+        "retained": "runtime.tar.gz:executables/authority"
+      },
+      "shell": {
+        "sha256": "58256e0bb8fe5c7661eea40900c1e8fc960316ff7bd401b05ef7fcdf28398c1f",
+        "bytes": 1213640,
+        "retained": "runtime.tar.gz:executables/shell"
+      },
+      "prlimit": {
+        "sha256": "5077a21561c61cb7b928124ed30b6f22ade51085f051eb678631148720403023",
+        "bytes": 90640,
+        "retained": "runtime.tar.gz:executables/prlimit"
+      },
+      "node": {
+        "sha256": "ad2d5c03bb247d3690f8baf48b2aac572fe0ed5252b4c5bdcfa7987a169b8f3b",
+        "bytes": 71432512,
+        "retained": "runtime.tar.gz:executables/node"
+      },
+      "wasm_tools": {
+        "sha256": "30b6ccb08b58d6159f196eb3d21beea1dcfcf9ec2948a791e32aad95f6d91d2f",
+        "bytes": 21245664,
+        "retained": "runtime.tar.gz:executables/wasm_tools"
+      }
+    },
+    "case_summary": [
+      {
+        "id": "RA-CASE-01",
+        "result": "passed",
+        "variants": 2
+      },
+      {
+        "id": "RA-CASE-02",
+        "result": "passed",
+        "variants": 5
+      },
+      {
+        "id": "RA-CASE-03",
+        "result": "passed",
+        "variants": 4
+      },
+      {
+        "id": "RA-CASE-04",
+        "result": "passed",
+        "variants": 1
+      },
+      {
+        "id": "RA-CASE-05",
+        "result": "passed",
+        "variants": 1
+      },
+      {
+        "id": "RA-CASE-06",
+        "result": "passed",
+        "variants": 3
+      },
+      {
+        "id": "RA-CASE-07",
+        "result": "passed",
+        "variants": 1
+      },
+      {
+        "id": "RA-CASE-08",
+        "result": "passed",
+        "variants": 1
+      },
+      {
+        "id": "RA-CASE-09",
+        "result": "passed",
+        "variants": 1
+      },
+      {
+        "id": "ADAPT-11",
+        "result": "passed",
+        "variants": 6
+      },
+      {
+        "id": "WI-01",
+        "result": "passed",
+        "variants": 1
+      },
+      {
+        "id": "WI-02",
+        "result": "passed",
+        "variants": 1
+      },
+      {
+        "id": "WI-04",
+        "result": "passed",
+        "variants": 3
+      },
+      {
+        "id": "WI-05",
+        "result": "passed",
+        "variants": 4
+      },
+      {
+        "id": "WI-06",
+        "result": "passed",
+        "variants": 4
+      },
+      {
+        "id": "WI-07",
+        "result": "passed",
+        "variants": 4
+      },
+      {
+        "id": "WI-08",
+        "result": "passed",
+        "variants": 1
+      },
+      {
+        "id": "WI-09",
+        "result": "passed",
+        "variants": 2
+      },
+      {
+        "id": "WI-10",
+        "result": "passed",
+        "variants": 1
+      },
+      {
+        "id": "WI-15",
+        "result": "passed",
+        "variants": 1
+      },
+      {
+        "id": "OCTET-01",
+        "result": "passed",
+        "variants": 4
+      },
+      {
+        "id": "OCTET-02",
+        "result": "passed",
+        "variants": 14
+      },
+      {
+        "id": "OCTET-03",
+        "result": "passed",
+        "variants": 8
+      },
+      {
+        "id": "OCTET-04",
+        "result": "passed",
+        "variants": 11
+      }
+    ],
+    "control_names": [
+      "rustdoc-opacity-evidence",
+      "selected-wasm-tools-version",
+      "selected-node-version",
+      "resource-native-execution",
+      "resources-native-inventory",
+      "authority-native-execution",
+      "authority-native-inventory",
+      "engine-collection-and-native-retirement",
+      "wit-export-and-runtime-namespaces",
+      "atomic-component-bundle-publication",
+      "compiled-pinned-bootstrap-world",
+      "owning-resource-generic-drop-rejection",
+      "typed-input-failure-retires-prior-resource-arguments",
+      "changed-plan-denial-retires-preserved-witness-once",
+      "bootstrap-component-artifact-reassembly"
+    ],
+    "binding": "Typed component interoperability, hostile unchanged-core Canonical ABI probes and native resource/authority decisions are separately labeled. The peer supplies independent linking/conversion, not an independent implementation of Noble host policy."
+  },
+  "extraction": {
+    "result": "passed",
+    "receipt": "extraction.json",
+    "receipt_sha256": "ba163c920777ab7cb555471314e5c6567a73d61b63737a33bc2000bd14c1c572",
+    "source_revision": "sha256:2565ee6c1e596ce562058ab146f95da047e9211f00a93fccde1b082ac292bd3d",
+    "source_files": 485,
+    "reviewed_lock": "../m4/extraction-lock.json",
+    "reviewed_lock_sha256": "d23c35f8de0885b9efeff4bea7be3c89c0672c21d62a6fa4978fb4957abc71d1",
+    "discovery": {
+      "archive": "discovery.tar.gz",
+      "sha256": "833328e02ca406e241442534d8c754b2d94c74f399ce01df48b78329bd3f09a1",
+      "bytes": 77361852
+    },
+    "raw": "assurance.tar.gz:extraction",
+    "stale_generated_files": 0,
+    "strict_resource_roots": [
+      {
+        "declaration": "M5Resources.transition_refines",
+        "axioms": [
+          "propext",
+          "Classical.choice",
+          "Quot.sound"
+        ],
+        "classification": "strict-universal-actual-Rust-resource-correspondence-or-invariant"
+      },
+      {
+        "declaration": "M5Resources.table_decide_refines",
+        "axioms": [
+          "propext",
+          "Classical.choice",
+          "Quot.sound"
+        ],
+        "classification": "strict-universal-actual-Rust-resource-correspondence-or-invariant"
+      },
+      {
+        "declaration": "M5Resources.cancelled_pin_retained",
+        "axioms": [
+          "propext",
+          "Classical.choice",
+          "Quot.sound"
+        ],
+        "classification": "strict-universal-actual-Rust-resource-correspondence-or-invariant"
+      },
+      {
+        "declaration": "M5Resources.late_completion_once",
+        "axioms": [
+          "propext",
+          "Classical.choice",
+          "Quot.sound"
+        ],
+        "classification": "strict-universal-actual-Rust-resource-correspondence-or-invariant"
+      },
+      {
+        "declaration": "M5Resources.retired_completion_idempotent",
+        "axioms": [
+          "propext",
+          "Classical.choice",
+          "Quot.sound"
+        ],
+        "classification": "strict-universal-actual-Rust-resource-correspondence-or-invariant"
+      },
+      {
+        "declaration": "M5Resources.normal_completion_owner_once",
+        "axioms": [
+          "propext",
+          "Classical.choice",
+          "Quot.sound"
+        ],
+        "classification": "strict-universal-actual-Rust-resource-correspondence-or-invariant"
+      },
+      {
+        "declaration": "M5Resources.busy_owner_not_reusable",
+        "axioms": [
+          "propext",
+          "Classical.choice",
+          "Quot.sound"
+        ],
+        "classification": "strict-universal-actual-Rust-resource-correspondence-or-invariant"
+      }
+    ],
+    "strict_axioms": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "declaration_coverage": [
+      {
+        "id": "resources",
+        "lane": "kernel",
+        "declarations": 262
+      },
+      {
+        "id": "authority",
+        "lane": "kernel",
+        "declarations": 463
+      },
+      {
+        "id": "component-frontend",
+        "lane": "contracts",
+        "declarations": 285
+      },
+      {
+        "id": "component-backend",
+        "lane": "wasm",
+        "declarations": 160
+      }
+    ],
+    "refusal_controls": 52,
+    "refusal_kinds": {
+      "mutated_extraction_accounting_not_additional_Rust_extraction": 31,
+      "executed_Lean_audit": 21
+    },
+    "llbc_binding": {
+      "raw_artifact_hashes_retained": true,
+      "normalized_metadata_only": [
+        "translated.options.dest_file directory",
+        "translated.short_names serialization order"
+      ],
+      "canonical_full_document_hashes": {
+        "kernel": "de6a9cce34f7b0c7e7a844ad7a62c06d66ccd9539ece4e01f0a9d1f47704b622",
+        "contracts": "fb6d4ab334efb72a5be799cf8cda528773c1fdd7df8e4b3997aa6a48d1a5a677",
+        "wasm": "5e2d66cb1c41227ff1cfa80d3eb1bffad2d3fb6c1bd18bf78d1a3e088a305e50"
+      },
+      "independent_fresh_directory_check": "passed",
+      "semantic_mutation_controls": "Body changes, extraction-option changes and duplicate short-name keys are refused.",
+      "raw": "assurance.tar.gz:canonical-llbc/accepted-independent-check.json"
+    },
+    "binding": "Discovery is review input, not acceptance. Independent check re-extracts, recompiles and compares the complete reviewed packet. Declaration accounting does not establish universal authority, component compiler or ABI refinement."
+  },
+  "source_inventory": {
+    "result": "valid",
+    "counts": {
+      "bodies": 1620,
+      "compiler_production_items": 4069,
+      "configurations": 1,
+      "dependencies": 6,
+      "excepted": 0,
+      "extracted": 0,
+      "future_components": 2,
+      "generated": 1635,
+      "macro_origins": 26,
+      "modeled": 0,
+      "open": 1620,
+      "open_refinement": 1620,
+      "proved": 0,
+      "reviewed_subjects": 3986,
+      "structural": 731,
+      "test_subjects": 948,
+      "tools": 13,
+      "units": 23
+    },
+    "compiler_ir": "cbcae3e9ec7012839f3a1738f7192315f00e35df8eea7586bc8da860a9b71784",
+    "coverage": "a4b1f589e2a6b5eabdc9a37d3fa97e7ed546674b5a04066eefad396621166113",
+    "collector_manifest": "5697a0f8beee282165005ede7e2d4becf1890863a539a814e7525bde24adbfed",
+    "architecture_receipt": "a6812cfe862898b1e5c93914756261a42b55b2a7c36c3acd67a8b334efb1333d",
+    "raw": "quality.tar.xz:policy",
+    "refinement": "All 1620 authored production body refinement obligations remain open. Generated/structural accounting and seven named strict resource roots do not close every body."
+  },
+  "quality": {
+    "deny_all": {
+      "result": "passed",
+      "rules": 73,
+      "findings": 0,
+      "warnings": 0,
+      "errors": 0,
+      "workspace_units": 23,
+      "positive_boundary_units": 25,
+      "unit_and_shard_capacity": 25,
+      "scope": "Complete all-target/all-feature collection. The capacity grew from 24 to 25 to admit the actual 23+2 fixture roster; no lint, unit, test target, waiver or exception was removed."
+    },
+    "clippy": {
+      "result": "passed",
+      "scope": "workspace all-targets all-features, -D warnings"
+    },
+    "format": {
+      "result": "passed"
+    },
+    "nix": {
+      "production_checks": [
+        "boundary-controls",
+        "tool-selection",
+        "tool-versions",
+        "tool-overrides",
+        "format",
+        "rust-tests",
+        "clippy",
+        "policy",
+        "octet",
+        "source-coverage",
+        "native-assurance"
+      ],
+      "production_result": "passed",
+      "raw": "quality.tar.xz:nix",
+      "receipt": "nix-checks.json",
+      "closeout_checks": [
+        "documents",
+        "cairn"
+      ],
+      "binding": "Eleven production checks bind their frozen source/policy outputs. The separately generated final document/Cairn receipt must pass against the completed tree; only that receipt is excluded from its own final source projection."
+    },
+    "document_checks": {
+      "result": "passed",
+      "conversion_self_tests": 26,
+      "self_tests": 226,
+      "tests": 100,
+      "native_specifications": 12,
+      "raw": "assurance.tar.gz:documents",
+      "scope": "Document/ledger/native-specification validation only, not Noble runtime or proof execution."
+    },
+    "archive": {
+      "archive": "quality.tar.xz",
+      "sha256": "0be1cfd292d4466fc0eacfd4ad94625299ae23155de13a665431bd06d9fb5b53",
+      "bytes": 46833432,
+      "scope": "Complete current 23-unit source/policy packet, positive 25-unit fixture and all raw outputs of the eleven production Nix checks, including all eighteen boundary controls; no raw observations removed.",
+      "compression": {
+        "format": "xz",
+        "threads": 1,
+        "preset": 9,
+        "dictionary_bytes": 268435456
+      },
+      "integrity": "tar comparison against the complete staged packet passed"
+    }
+  },
+  "regressions": {
+    "schema": "noble-m5-regressions/v1",
+    "result": "passed",
+    "binary_sha256": "7caad3c901bf56c57e94baee35278889dc84a61a4ed2c110f7fe6786f1dcea1a",
+    "production_source_files": 389,
+    "production_sources_unchanged": true,
+    "scope_note": "Runtime/compiler source bytes are unchanged. Verification-policy and proof-lock renewals have separately named snapshots; no identical whole-tree digest across scopes is asserted.",
+    "mc1": {
+      "cases": 36,
+      "passed": true,
+      "receipt": "assurance.tar.gz:regressions/mc1.json"
+    },
+    "mc2": {
+      "cases": 15,
+      "declared_variants": "all",
+      "controls": 18,
+      "independent_checker_runs": 18,
+      "passed": true,
+      "receipt": "assurance.tar.gz:regressions/mc2.json",
+      "raw": "assurance.tar.gz:regressions/mc2"
+    },
+    "m4": {
+      "cases": 18,
+      "controls": 11,
+      "workflows": [
+        "DX-10",
+        "DX-12"
+      ],
+      "result": "passed",
+      "receipt": "assurance.tar.gz:regressions/m4/acceptance.json"
+    },
+    "m3": {
+      "configurations": 4,
+      "result": "eligible-for-selection",
+      "performance_claim": false,
+      "receipt": "assurance.tar.gz:regressions/m3/report.json"
+    },
+    "rust": {
+      "result": "passed",
+      "tests": 128,
+      "test_suites": 19,
+      "nonempty_suites": 16,
+      "failed": 0,
+      "raw": "quality.tar.xz:nix/build.stderr"
+    },
+    "receipt": "regressions.json",
+    "receipt_sha256": "dc8d8b510859043615fdbd76a4ada9464599bc28d6b4109714f2f107d9f922f0"
+  },
+  "review_fixes": [
+    {
+      "issue": "Valid WIT exports collide with core memory/runtime exports",
+      "result": "fixed-and-executed",
+      "controls": [
+        "wit-export-and-runtime-namespaces"
+      ],
+      "raw": "assurance.tar.gz:review-regressions"
+    },
+    {
+      "issue": "Failed bundle writes leave partial public output",
+      "result": "fixed-and-executed-with-real-RLIMIT_FSIZE",
+      "controls": [
+        "atomic-component-bundle-publication"
+      ],
+      "raw": "assurance.tar.gz:review-regressions"
+    },
+    {
+      "issue": "Raw Charon output-path/name-map serialization prevents fresh-directory lock acceptance",
+      "result": "fixed-and-independently-reextracted",
+      "raw": "assurance.tar.gz:canonical-llbc"
+    },
+    {
+      "issue": "No-runtime positive document fixture inherits newly executed host-policy state",
+      "result": "fixture-corrected-without-changing-validator-and-all-226-self-tests-pass",
+      "raw": "assurance.tar.gz:documents/ledger-before-fixture-fix.stderr"
+    }
+  ],
+  "assumptions": [
+    "Rust, the supplied native executables, the pinned wasm-tools, Bash/prlimit quota-probe tools, Node/V8, Wasmtime, the filesystem and this gate are trusted execution tooling.",
+    "Copied source bytes and executable hashes bind the observations; separate build provenance is required to establish that the supplied native binaries were built from these sources.",
+    "The Rust peer independently implements canonical component linking and typed conversion, but deliberately reuses the production Noble resource/authority decision libraries for host policy.",
+    "Native resource tests concern deterministic ownership and pin accounting. Physical native releases, real credentials and authenticated external observations remain trusted host obligations.",
+    "Core hostile-import probes execute unchanged production Wasm. Their diagnostics are core-only instrumentation, never exported WIT or an independent Component Model implementation.",
+    "Success-path canonical post-return and explicit trap-path host cleanup are distinct. Core counters do not measure all engine allocations or physical copies.",
+    "The seven strict resource roots admit only propext, Classical.choice and Quot.sound; compiled whole-source declaration accounting is not proof of every authored body.",
+    "Pinned Rust/Charon/Aeneas/Lean, explicit standard-library models and inherited reviewed opaque helpers remain tooling/model boundaries.",
+    "Trusted host serialization, namespace freshness, current facts, authenticated callbacks, faithful physical release and engine/ABI behavior are explicit embedding obligations.",
+    "The resource correspondence theorem does not establish universal authority-system, receipt-adapter, component frontend/backend, WASI or native-async correctness."
+  ],
+  "non_claims": [
+    "Component-Draft or full WASI",
+    "async/future/stream execution",
+    "general Program-to-WIT adapters",
+    "universal compiler or backend refinement",
+    "remote exactly-once effects",
+    "receipt authenticity from a digest",
+    "physical guest GC implies resource release",
+    "source review or a fixture label alone establishes execution",
+    "compiler-internal subprocess transcripts are available: the gate retains its own commands and independently reassembles the emitted artifacts",
+    "No universal authority-system, frontend, backend, Canonical ABI, host authenticity or physical-release theorem.",
+    "All 1620 authored-body refinement obligations and broader PO/SO obligations remain open.",
+    "Engine-backed reachability controls do not replace the selected resource-free Core-Bootstrap arena with a collector or establish physical-memory superiority."
+  ],
+  "lifecycle": {
+    "native_changes": 0,
+    "archived": false,
+    "archive_claim": false,
+    "canonical_specs": [
+      "../../.cairn/specs/wit-wasi/spec.md",
+      "../../.cairn/specs/resource-adapters/spec.md",
+      "../../.cairn/specs/backend-experiments/spec.md"
+    ],
+    "binding": "Canonical specifications were updated directly under the documented native-spec editing workflow. No unregistered M5 change, synchronization receipt or archive was fabricated."
+  },
+  "host_operation_profile": {
+    "path": "../../.cairn/specs/wit-wasi/spec.md#bootstrap-host-operation-classification",
+    "file_sha256": "69fbe055cb169a601ee22163bc1beafb68e2da064b33415ef4a60a2fb9071c52"
+  },
+  "assurance": {
+    "archive": "assurance.tar.gz",
+    "sha256": "e4597541d5924cacf195289adbf96454c8c254ccf14d5e727e8f9473ac9453df",
+    "bytes": 101743396,
+    "result": "retained",
+    "scope": [
+      "Independent fresh extraction source/LLBC/generated/compiled/audit/refusal packet",
+      "All MC1/MC2/M3/M4 regression observations and frozen exercised artifacts",
+      "Before/after namespace and atomic-publication reproductions",
+      "Canonical LLBC invariance and semantic refusal evidence",
+      "Post-promotion document/ledger and pinned native specification validation"
+    ],
+    "cache_policy": "Disposable extraction Cargo target/home and isolated home are omitted; actual source, raw LLBC, generated/compiled Lean, audit and refusal artifacts are retained.",
+    "compression": {
+      "format": "gzip",
+      "level": 9,
+      "header_mtime": 0,
+      "original_compressed": {
+        "sha256": "ada0a1971b68e26655dbe75975c30b527f100ac2bf466070ed2cf4d1fc42d6a1",
+        "bytes": 106416667
+      },
+      "result": "byte-identical-uncompressed-tar-payload",
+      "verification": "gzip integrity check and cmp of the full old/new decompressed streams passed; no tar members were regenerated, removed or changed."
+    }
+  }
+}

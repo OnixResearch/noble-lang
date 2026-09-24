@@ -12,3 +12,7 @@ name = "NobleWasmImpl"
 [[lean_lib]]
 name = "NobleKernel"
 srcDir = "../m3"
+
+[[lean_lib]]
+name = "NobleContractImpl"
+srcDir = "../mc1"

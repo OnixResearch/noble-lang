@@ -19,25 +19,23 @@ impl super::Session {
         {
             return Err(super::Error::at(super::Stage::Resolve, error));
         }
-        if let Err(error) = super::preflight::check(inputs, self.hosts, tree.span, &mut meter) {
+        if let Err(error) = super::preflight::check(inputs, self, tree.span, &mut meter) {
             return Err(super::Error::at(super::Stage::Check, error));
         }
-        let extra = if name.is_some() {
-            source_bytes.len().saturating_add(4)
+        let (extra, mode) = if name.is_some() {
+            (
+                source_bytes.len().saturating_add(4),
+                super::inference::Mode::Declaration,
+            )
         } else {
-            0
+            (0, super::inference::Mode::Submission)
         };
         if let Err(error) = self.retained(extra, tree.span, &mut meter) {
             return Err(super::Error::at(super::Stage::Check, error));
         }
-        let environment = match super::environment() {
+        let environment = match self.environment() {
             Ok(environment) => environment,
             Err(error) => return Err(super::Error::at(super::Stage::Check, error)),
-        };
-        let mode = if name.is_some() {
-            super::inference::Mode::Declaration
-        } else {
-            super::inference::Mode::Submission
         };
         let scope = super::inference::Scope {
             root: &tree,
@@ -74,11 +72,23 @@ impl super::Session {
             generation: self.generation,
             history: self.history.clone(),
             hosts: self.hosts,
+            boundary: self.bindings.as_ref().map(|bindings| bindings.key.clone()),
             definition,
             addition,
             submission,
             output,
         })
+    }
+
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-maintainers; preparation owns a runtime clone of the retained binding environment or builds the checked bootstrap environment, both allocating operations."
+    )]
+    fn environment(&self) -> Result<noble_kernel::contracts::Env, crate::Diagnostic> {
+        match &self.bindings {
+            Some(bindings) => Ok(bindings.environment.clone()),
+            None => super::environment(),
+        }
     }
 
     #[expect(

@@ -7,7 +7,7 @@ pub(super) mod paths;
 
 pub(super) fn check(
     inputs: &[noble_kernel::types::Ty],
-    has_test_hosts: bool,
+    session: &super::Session,
     span: crate::Span,
     meter: &mut crate::Meter,
 ) -> Result<(), crate::Diagnostic> {
@@ -17,7 +17,7 @@ pub(super) fn check(
     let mut at = 0usize;
     let mut failure = None;
     while at < inputs.len() {
-        if let Err(problem) = value(&inputs[at], has_test_hosts, span, meter) {
+        if let Err(problem) = value(&inputs[at], session, span, meter) {
             failure = Some(problem);
             break;
         }
@@ -56,7 +56,7 @@ struct Traversal {
 )]
 fn value(
     input: &noble_kernel::types::Ty,
-    has_test_hosts: bool,
+    session: &super::Session,
     span: crate::Span,
     meter: &mut crate::Meter,
 ) -> Result<(), crate::Diagnostic> {
@@ -72,7 +72,7 @@ fn value(
     });
     let mut failure = None;
     while let Some(entry) = walk.pending.pop() {
-        if let Err(problem) = walk.visit(entry, input, has_test_hosts, span, meter) {
+        if let Err(problem) = walk.visit(entry, input, session, span, meter) {
             failure = Some(problem);
             break;
         }
@@ -92,7 +92,7 @@ impl Traversal {
         &mut self,
         entry: Visit,
         root: &noble_kernel::types::Ty,
-        has_test_hosts: bool,
+        session: &super::Session,
         span: crate::Span,
         meter: &mut crate::Meter,
     ) -> Result<(), crate::Diagnostic> {
@@ -128,23 +128,37 @@ impl Traversal {
             ));
         }
         self.pending.reserve(children);
-        self.expand(ty, depth, has_test_hosts, span, meter)
+        self.expand(ty, depth, session, span, meter)
     }
 
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-maintainers; structural expansion charges the mutable runtime meter, grows the owned work vector and constructs owned type diagnostics."
+    )]
     fn expand(
         &mut self,
         ty: &noble_kernel::types::Ty,
         depth: u32,
-        has_test_hosts: bool,
+        session: &super::Session,
         span: crate::Span,
         meter: &mut crate::Meter,
     ) -> Result<(), crate::Diagnostic> {
         let next_depth = depth.saturating_add(1);
         match ty {
-            noble_kernel::types::Ty::Resource(_) => Err(crate::invalid(
-                span,
-                "resource-bearing input is not eligible for Core-Bootstrap data or capture",
-            )),
+            noble_kernel::types::Ty::Resource(kind) => {
+                let is_known = match &session.bindings {
+                    Some(bindings) => depth == 0 && bindings.resources.contains(kind),
+                    None => false,
+                };
+                if is_known {
+                    Ok(())
+                } else {
+                    Err(crate::invalid(
+                        span,
+                        "resource input is not a declared top-level component owner",
+                    ))
+                }
+            }
             noble_kernel::types::Ty::Pair(_, _) | noble_kernel::types::Ty::Sum(_, _) => {
                 attempt!(meter.node(span));
                 attempt!(meter.node(span));
@@ -174,7 +188,12 @@ impl Traversal {
                         "source program interface stack limit exceeded",
                     ));
                 }
-                attempt!(host_effects(effects, has_test_hosts, span, meter));
+                attempt!(host_effects(
+                    effects,
+                    session.effect_universe(),
+                    span,
+                    meter
+                ));
                 attempt!(self.schedule(input.len(), false, next_depth, span, meter));
                 self.schedule(output.len(), true, next_depth, span, meter)
             }
@@ -222,11 +241,11 @@ impl Traversal {
 
 #[expect(
     tigerstyle::assertion_density,
-    reason = "Owner: noble-maintainers; every latent effect consumes work and must belong to the explicitly enabled two-effect test environment; invalid effects and exhaustion return diagnostics."
+    reason = "Owner: noble-maintainers; every latent effect consumes work and must belong to the session's explicitly enabled test or generated-component effect universe; invalid effects and exhaustion return diagnostics."
 )]
 fn host_effects(
     effects: &noble_kernel::types::EffSet,
-    has_test_hosts: bool,
+    universe: u64,
     span: crate::Span,
     meter: &mut crate::Meter,
 ) -> Result<(), crate::Diagnostic> {
@@ -239,7 +258,7 @@ fn host_effects(
             failure = Some(problem);
             break;
         }
-        if effect.0 > 1 || !has_test_hosts {
+        if 1u64.checked_shl(effect.0).unwrap_or(0) & universe == 0 {
             failure = Some(crate::Diagnostic::new(
                 crate::DiagnosticKind::Unsupported,
                 span,

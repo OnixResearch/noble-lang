@@ -16,6 +16,7 @@ macro_rules! attempt {
 
 mod backend;
 mod build;
+mod component;
 mod core;
 mod sandbox;
 mod workflow;
@@ -34,6 +35,12 @@ enum InputError {
 )]
 fn main() -> std::process::ExitCode {
     let arguments: std::vec::Vec<std::ffi::OsString> = read_arguments().skip(1).collect();
+    if arguments
+        .first()
+        .is_some_and(|argument| argument == "component")
+    {
+        return component::run(&arguments);
+    }
     if arguments
         .first()
         .is_some_and(|argument| argument == "run" || argument == "session" || argument == "compile")
@@ -69,12 +76,13 @@ fn main() -> std::process::ExitCode {
         .is_some_and(|argument| argument == "--help")
     {
         println!(
-            "{}\n\n{}\n\n{}\n\n{}\n\n{}",
+            "{}\n\n{}\n\n{}\n\n{}\n\n{}\n\n{}",
             core::USAGE,
             workflow::USAGE,
             build::USAGE,
             core::companions::USAGE,
-            backend::USAGE
+            backend::USAGE,
+            component::USAGE
         );
         return std::process::ExitCode::SUCCESS;
     }

@@ -93,6 +93,7 @@ pub struct Prepared {
     generation: u64,
     history: alloc::vec::Vec<u8>,
     hosts: bool,
+    boundary: Option<alloc::vec::Vec<u8>>,
     definition: Option<Named>,
     addition: alloc::vec::Vec<u8>,
     submission: Option<noble_kernel::execution::Submission>,
@@ -120,6 +121,7 @@ pub struct Session {
     history: alloc::vec::Vec<u8>,
     generation: u64,
     hosts: bool,
+    bindings: Option<crate::component::Bindings>,
 }
 
 impl Default for Session {
@@ -135,6 +137,7 @@ impl Session {
             history: alloc::vec::Vec::new(),
             generation: 0,
             hosts: true,
+            bindings: None,
         }
     }
     pub const fn without_test_hosts() -> Self {
@@ -143,10 +146,31 @@ impl Session {
             history: alloc::vec::Vec::new(),
             generation: 0,
             hosts: false,
+            bindings: None,
         }
     }
     pub const fn generation(&self) -> u64 {
         self.generation
+    }
+
+    pub(crate) fn with_bindings(bindings: crate::component::Bindings) -> Self {
+        Self {
+            bindings: Some(bindings),
+            ..Self::without_test_hosts()
+        }
+    }
+
+    const fn effect_universe(&self) -> u64 {
+        match &self.bindings {
+            Some(bindings) => bindings.effects,
+            None => {
+                if self.hosts {
+                    3
+                } else {
+                    0
+                }
+            }
+        }
     }
 
     /// Consume a preparation as an explicit deterministic namespace transition.
@@ -164,10 +188,7 @@ impl Session {
     )]
     pub fn commit(&mut self, prepared: Prepared) -> Result<(), Error> {
         let span = crate::Span { start: 0, end: 0 };
-        if prepared.generation != self.generation
-            || prepared.hosts != self.hosts
-            || prepared.history != self.history
-        {
+        if !self.is_current_namespace(&prepared) {
             return Err(Error::at(
                 Stage::Acceptance,
                 crate::invalid(
@@ -192,6 +213,24 @@ impl Session {
         self.generation = next;
         Ok(())
     }
+
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-maintainers; namespace comparison uses non-const exact Vec content equality over retained history and optional boundary identities."
+    )]
+    fn is_current_namespace(&self, prepared: &Prepared) -> bool {
+        if prepared.generation != self.generation
+            || prepared.hosts != self.hosts
+            || prepared.history != self.history
+        {
+            return false;
+        }
+        match (&self.bindings, &prepared.boundary) {
+            (Some(bindings), Some(boundary)) => bindings.key == *boundary,
+            (None, None) => true,
+            (Some(_), None) | (None, Some(_)) => false,
+        }
+    }
 }
 
 fn exhausted(span: crate::Span, message: &str) -> crate::Diagnostic {
@@ -204,7 +243,7 @@ fn exhausted(span: crate::Span, message: &str) -> crate::Diagnostic {
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; the fixed bootstrap environment and emit slot are checked fallibly before appending matching scheme, behavior, dependency, and effect entries."
 )]
-fn environment() -> Result<noble_kernel::contracts::Env, crate::Diagnostic> {
+pub(crate) fn environment() -> Result<noble_kernel::contracts::Env, crate::Diagnostic> {
     let span = crate::Span { start: 0, end: 0 };
     let mut env = match noble_kernel::contracts::environment() {
         Ok(env) => env,

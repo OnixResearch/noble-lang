@@ -4,7 +4,7 @@
   schema_version | String = "noble-native-assurance-policy/v1",
   owner | String = "noble-maintainers",
   scope_note | String =
-    "Four-crate workspace scope: noble-kernel, noble-contracts, noble-wasm and noble-cli on x86_64-unknown-linux-gnu. This records native Rust and dependency scope, not whole-program soundness or Wasm runtime correspondence. Owned WAT assets and Node/wasm-tools/Binaryen subprocesses used by the experimental Core-Bootstrap CLI and verification harnesses are separately byte-bound by tool selection; their semantics are unproved and are not Rust inventory subjects or native linked dependencies.",
+    "Four-crate workspace scope: noble-kernel, noble-contracts, noble-wasm and noble-cli on x86_64-unknown-linux-gnu. This records native Rust and dependency scope, not whole-program soundness or Wasm runtime correspondence. Owned WAT assets and Node/wasm-tools/Binaryen subprocesses used by Core-Bootstrap and Component-Sync-Bootstrap are separately byte-bound by tool selection; their semantics are unproved and are not Rust inventory subjects or native linked dependencies. The independent Wasmtime peer is a separate verification-only Cargo workspace, pinned with its complete Cargo.lock and source/vendor NAR identities in verification/m5/pins.json; its engine, native resource lifetime and host credential provenance are explicit assumptions, not production dependency or unsafe-code discharge.",
   required_packages | Array String = [ "noble-kernel", "noble-contracts", "noble-wasm", "noble-cli" ],
   required_targets | Array { triple | String, features | Array String, default_features | Bool } = [
     { triple = "x86_64-unknown-linux-gnu", features = [], default_features = true },
@@ -59,7 +59,7 @@
     },
     {
       scope = "noble-wasm",
-      argument = "Safe no_std emitter with explicit owned checked-kernel inputs and allocation limits, depending inward on noble-kernel. The workspace forbids unsafe_code; native accounting must confirm the absence of unsafe and foreign-item facts. Emitting or byte-binding owned WAT does not prove those fragments, backend lowering, loader binding or Wasm execution semantics. The selected Miri subject remains the kernel budget test and does not establish emitter execution coverage.",
+      argument = "Safe no_std emitter with explicit owned checked-kernel and checked WIT export inputs and allocation limits, depending inward on noble-kernel and noble-contracts. The workspace forbids unsafe_code; native accounting must confirm the absence of unsafe and foreign-item facts. Emitting or byte-binding owned WAT does not prove those fragments, backend lowering, loader binding or Wasm execution semantics. The selected Miri subject remains the kernel budget test and does not establish emitter execution coverage.",
     },
     {
       scope = "noble-cli",
@@ -74,7 +74,8 @@
         "64-bit little-endian target",
         "strict provenance is the required Miri model",
         "no target-specific native library is linked",
-        "Core-Bootstrap managed-linear-memory execution and the two M3 Wasm experiments are separately scoped guest execution, not additional claimed native Rust targets",
+        "Core-Bootstrap managed-linear-memory execution, Component-Sync-Bootstrap and the two M3 Wasm experiments are separately scoped guest execution, not additional claimed native Rust targets",
+        "The verification-only Wasmtime peer and its dependencies are not included in the four-crate production unsafe-code or native dependency inventory",
       ],
     },
   ],

@@ -54,6 +54,8 @@ let case = fun case_id mutation_value statement_value std_value lint_value obser
     "noble-kernel:test+test:crates/noble-kernel/tests/docexamples.rs:test",
     "noble-kernel:test+test:crates/noble-kernel/tests/dx01.rs:test",
     "noble-kernel:test+test:crates/noble-kernel/tests/fragment.rs:test",
+    "noble-kernel:test+test:crates/noble-kernel/tests/m5-authority.rs:test",
+    "noble-kernel:test+test:crates/noble-kernel/tests/m5-resources.rs:test",
     "noble-kernel:test+test:crates/noble-kernel/tests/property.rs:test",
     "noble-kernel:test+test:crates/noble-kernel/tests/recursion-schema-cycle.rs:test",
     "noble-wasm:lib:crates/noble-wasm/src/lib.rs:domain-core",

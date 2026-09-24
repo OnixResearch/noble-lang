@@ -21,9 +21,11 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { schema, sha, canonical, fail, equal, exactBytes, lanes, sourcePolicy, account, auditPacket, auditPackets } from './accounting.mjs';
+import { schema, sha, canonical, canonicalLlbcHash, fail, equal, exactBytes, lanes, sourcePolicy, account, auditPacket, auditPackets } from './accounting.mjs';
 import { refusals } from './refusals.mjs';
 import { companionPacket, companionCoverage } from '../mc2/extraction.mjs';
+import { componentPacket, componentCoverage, resourceAuditPacket, resourceAudit,
+  componentRefusals } from '../m5/extraction.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const [mode, argument, ...extra] = process.argv.slice(2);
@@ -49,7 +51,7 @@ const pins = {
 };
 const aeneasRevision = '505b6ca35217e7be5c96c3e2f8045edfbdf47291';
 const evidence = {
-  schema: 'm4-implementation-evidence/v1', scope: 'actual-core-bootstrap-pure-rust-extraction',
+  schema: 'm4-implementation-evidence/v1', scope: 'actual-core-and-component-bootstrap-pure-rust-extraction',
   mode, result: 'running', commands: [], extractions: {},
   assumptions: [
     'Selected Charon/Aeneas, Rust, Lean, Node, host OS and Nix store integrity are trusted tooling boundaries.',
@@ -57,17 +59,19 @@ const evidence = {
     'Local Rust declarations are joined by compiler IDs with Aeneas output. Expanded type aliases and compiler-generated destructor/vtable scaffolding are separately accounted, not authored-body exemptions or independent refinement evidence.',
     'Exactly the five unchanged inherited kernel copy/format helpers remain local opaque models, not extracted Rust bodies.',
     'Standard-library models abstract allocator failure, allocation identity, spare capacity and formatting layout; new external declarations are separately enumerated and audited.',
-    'Layout-free collection models also erase destructor effects and type-layout allocation limits. This resource-free extraction uses the Global allocator; split_off does not claim to model arbitrary effectful allocator Clone implementations.',
+    'Layout-free collection models erase destructor effects and type-layout allocation limits. Extracted resource accounting is data, not a native release. The pure extraction uses the Global allocator; split_off does not model arbitrary effectful allocator Clone implementations.',
     'Mutable UTF-8 string backward updates assume the unchanged byte length and valid UTF-8 guaranteed by safe Rust borrowed str values; arbitrary mathematical replacements outside that representation invariant are not a Rust behavior claim.',
     'The inherited M4 native-evaluation allowance covers only generated/inherited literal UTF-8 byte-array size obligations; strict bridge/projection theorems cannot use it.',
     'MC2 separately audits its explicitly named closed extracted-source equations and fixed literal size obligations. These finite native equations are not universal source-refinement theorems.',
     'MC2 assumes an authentic, sound trusted host constructs CheckObservation for the exact independently checked statement, declaration and evidence class; arbitrary trusted Rust callers can forge such observations, while guest ingress cannot grant itself that authority.',
     'The explicit production resource-free test environment uses test.emit Text-- and test.abort; the historical kernel fixture environment keeps its different test.emit Text--Unit contract. No audit silently equates them.',
+    'M5 requires universal correspondence between the actual extracted resource transition/production Table.decide and the total reference steps, plus strict semantic lifecycle/accounting invariants. Host serialization, namespace freshness, authentic callbacks and applying returned accounting once remain embedding obligations.',
   ],
   non_claims: [
     'No universal frontend inference, immutable namespace/session, acceptance-to-execution or backend refinement theorem.',
     'No trust is conferred by the public untrusted kernel execution metadata or by a source/frontend acceptance flag.',
     'No WAT/Wasm runtime, optimizer, assembler, engine, loader, host environment or ABI correctness theorem.',
+    'No physical host/native release, arbitrary authority-system refinement or externally authenticated observation theorem.',
     'No execution/conformance result, source-inventory policy discharge, M4 milestone completion, MC2 or M5 closure.',
   ],
 };
@@ -93,9 +97,10 @@ function snapshot() {
     'nix/tool-selection-files.nix', 'nix/source-inventory-derive.nix', 'nix/source-inventory.nix',
     'Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml',
     ...files('crates'),
-    ...['proofs/m3', 'proofs/mc1', 'proofs/mc2', 'proofs/m3-wasm', 'proofs/m4'].flatMap(directory =>
+    ...['proofs/m3', 'proofs/mc1', 'proofs/mc2', 'proofs/m3-wasm', 'proofs/m4', 'proofs/m5'].flatMap(directory =>
       files(directory).filter(file => /\.(lean|toml|json)$/.test(file) || file.endsWith('/lean-toolchain'))),
-    ...files('verification/m4').filter(file => file.endsWith('.mjs')),
+    ...['verification/m4', 'verification/m5'].flatMap(directory =>
+      files(directory).filter(file => file.endsWith('.mjs'))),
     'verification/mc2/extraction.mjs',
     ...['increment', 'guarded'].flatMap(fixture => ['contract', 'proof.lean']
       .map(extension => `verification/mc2/contracts/${fixture}.${extension}`)),
@@ -198,7 +203,7 @@ try {
   selection = json(path.join(root, 'policy/tool-selection.json'));
   validateSelection();
   evidence.selection = selection;
-  const forbidden = /^(?:CHARON_|AENEAS_|LEAN_|LAKE_|NOBLE_M4_|RUSTC(?:_|$)|RUSTFLAGS$|RUSTDOCFLAGS$|RUSTUP_TOOLCHAIN$|CARGO_(?!HOME$)|LD_PRELOAD$|LD_LIBRARY_PATH$|NODE_OPTIONS$|NODE_PATH$|GIT_(?:CONFIG|DIR|WORK_TREE|OBJECT|ALTERNATE))/;
+  const forbidden = /^(?:CHARON_|AENEAS_|LEAN_|LAKE_|NOBLE_M[45]_|RUSTC(?:_|$)|RUSTFLAGS$|RUSTDOCFLAGS$|RUSTUP_TOOLCHAIN$|CARGO_(?!HOME$)|LD_PRELOAD$|LD_LIBRARY_PATH$|NODE_OPTIONS$|NODE_PATH$|GIT_(?:CONFIG|DIR|WORK_TREE|OBJECT|ALTERNATE))/;
   for (const [name, value] of Object.entries(process.env)) if (value && forbidden.test(name)) fail('OVERRIDE', name);
   noCargoConfiguration(artifacts);
   fs.mkdirSync(workspace);
@@ -257,6 +262,7 @@ try {
   const raw = {};
   const accounts = {};
   const generatedFiles = {};
+  const extractionBindings = {};
   const stale = [];
   for (const lane of lanes) {
     const directory = path.join(artifacts, lane.id);
@@ -293,9 +299,12 @@ try {
         staged[checked] = sha(actual);
       }
     }
-    evidence.extractions[lane.id] = { llbc_sha256: fileSha(llbc),
+    extractionBindings[lane.id] = { canonical_llbc_sha256: canonicalLlbcHash(raw[lane.id].llbc),
       translation_sha256: fileSha(path.join(generated, 'translation.json')), comparisons,
       generated: generatedFiles[lane.id] };
+    // Physical artifact bytes remain independently retained and hashed, but their
+    // output path and unordered name-map serialization cannot define a lock.
+    evidence.extractions[lane.id] = { llbc_sha256: fileSha(llbc), ...extractionBindings[lane.id] };
     save('translation-inventory.json', accounts);
     save('extraction-progress.json', evidence.extractions);
   }
@@ -303,9 +312,11 @@ try {
   equal(baseline.schema, 'm4-inherited-boundaries/v1', 'BASELINE', 'schema');
   const packet = auditPacket(accounts, baseline.models);
   const mc2Subjects = companionPacket(accounts, sourceFiles, raw.contracts.llbc);
-  packet.roots.push(...mc2Subjects.roots);
+  const m5Subjects = componentPacket(accounts, sourceFiles, packet);
+  packet.roots.push(...mc2Subjects.roots, ...m5Subjects.roots);
   const packets = auditPackets(packet);
   save('mc2-subjects.json', mc2Subjects);
+  save('m5-subjects.json', m5Subjects);
   save('audit-input.json', packet);
   for (const [lane, input] of Object.entries(packets)) save(`audit-input-${lane}.json`, input);
   evidence.boundary_renewal = { provenance: baseline.provenance,
@@ -365,9 +376,31 @@ try {
     correspondence: correspondenceRows[0] };
   if (expectedLock) equal(evidence.mc2, expectedLock.mc2, 'MC2-VERDICT',
     'unreviewed companion body, boundary or correspondence theorem');
+  const m5Root = path.join(workspace, 'proofs/m5');
+  fs.mkdirSync(path.join(m5Root, '.lake'));
+  fs.symlinkSync(cache, path.join(m5Root, '.lake/packages'), 'dir');
+  equal(fs.readFileSync(path.join(m5Root, 'lean-toolchain'), 'utf8').trim(),
+    selection.lean.toolchain, 'DEPENDENCIES', 'M5 Lean toolchain');
+  equal(packagePins(m5Root, 'm5-before', git), dependencies,
+    'DEPENDENCIES', 'M5 must share the exact audited dependency lock and sources');
+  const m5Coverage = componentCoverage(m5Subjects, audit);
+  save('m5-compiled-coverage.json', m5Coverage);
+  const m5Packet = resourceAuditPacket(m5Subjects, {
+    source_revision: evidence.source_revision, source_files: sourceFiles, staged_source_files: staged,
+    tools: evidence.tools, dependencies, extractions: extractionBindings,
+    inventory_sha256: sha(canonical(accounts)), canonical_audit_input_sha256: evidence.audit_input_sha256,
+    component_subjects_sha256: fileSha(path.join(artifacts, 'm5-subjects.json')),
+  });
+  evidence.m5 = { coverage: m5Coverage, resource_refinement: resourceAudit({
+    packet: m5Packet, run, proofRoot: m5Root, lake: binaries.lake, artifacts, save }) };
+  if (expectedLock) equal(evidence.m5, expectedLock.m5, 'M5-VERDICT',
+    'unreviewed resource/authority/component body, model, dependency or strict theorem');
   if (expectedLock) equal(audit, expectedLock.audit, 'DEPENDENCIES', 'unexpected dependency, axiom, theorem or compiled declaration');
   evidence.refusals = refusals({ raw, accounts, sources: sourceFiles, tools: evidence.tools, packet, packets, audit, run, proofRoot,
     lake: binaries.lake, artifacts, save });
+  evidence.m5_refusals = componentRefusals({ raw, accounts, sources: sourceFiles, packet, subjects: m5Subjects,
+    coverage: audit, proofPacket: m5Packet, run, proofRoot: m5Root, lake: binaries.lake, artifacts, save });
+  equal(packagePins(m5Root, 'm5-after', git), dependencies, 'DEPENDENCIES', 'M5 Lean source changed during gate');
   equal(packagePins(proofRoot, 'after', git), dependencies, 'DEPENDENCIES', 'Lean source changed during gate');
   for (const [name, binary] of Object.entries(binaries)) equal(identity(binary), evidence.tools[name], 'TOOL', name);
   equal(snapshot(), sourceFiles, 'SOURCE', 'repository changed during gate');
@@ -375,7 +408,7 @@ try {
   noCargoConfiguration(workspace);
   if (expectedLock) equal(fileSha(path.join(root, lockFile)), evidence.reviewed_lock_sha256, 'LOCK', 'reviewed lock changed during gate');
   const candidate = { schema, source_files: sourceFiles, tools: evidence.tools, inventory: accounts,
-    generated_files: generatedFiles, audit, mc2: evidence.mc2 };
+    generated_files: generatedFiles, audit, mc2: evidence.mc2, m5: evidence.m5 };
   if (mode === 'discover') {
     evidence.result = 'review-required';
     save('review-candidate.json', candidate);

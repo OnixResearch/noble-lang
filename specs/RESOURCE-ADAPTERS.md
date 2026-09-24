@@ -4,13 +4,19 @@
 Document: SPEC-R001  
 Revision: 0.1.0-draft.5  
 Depends on: SPEC-0001 and SPEC-S001 at 0.1.0-draft.5  
-Status: First synchronous subset specified; implementation and proofs open
+Status: Bounded synchronous implementation delivered; broader contracts and milestone acceptance remain separate
 
 ## Scope
 
 **RA-SCOPE-01.** Implementations of `Component-Sync-Bootstrap` MUST support synchronous WIT imports/exports and owned resources. Borrow support is limited to adapter-local borrows for imported calls. This is not full `Component-Draft` conformance.
 
 The subset excludes borrowed exports, borrowed values in guest storage, and suspension during a borrowed call. It adds no source borrow type or general lifetime-polymorphic program.
+
+The delivered M5 slice uses the pinned [`noble-test:sync/bootstrap@1.0.0` world](../crates/noble-wasm/wit/bootstrap.wit). Owners are move-only and noncapturable; imported borrows use adapter-local tokens, not guest values or serializable authority. Normal success and domain errors return the borrowed owner once. Owned transfer instead commits only after preflight and does not implicitly return ownership on a domain error.
+
+The [M5 runtime gate](../verification/m5/gate.mjs) exercises the production resource table and an independent Rust/Wasmtime 40.0.2 component peer. Its bounded local cancellation and unexpected-suspension control revokes guest access, retains the native pin through actual guest GC, and handles completion, duplicate callbacks and repeated retirement without resurrection or a second release. This control is not native async execution. The peer independently links and converts component values but reuses Noble's resource/authority decision libraries for host policy.
+
+The [strict resource proof lane](../proofs/m5/M5Resources.lean) relates the extracted Rust transition and checked table-decision functions to their logical transitions, with separate owner-return, busy-owner, cancellation-pin and late-completion properties. The [extraction audit](../verification/m5/extraction.mjs) binds those seven theorem roots to actual Rust definitions; broader authority and component body/dependency coverage is not refinement. Native release, authenticated host facts and callbacks, and engine/ABI correctness remain external assumptions. Fresh complete extraction/check receipts, not these descriptions or a diagnostic proof audit, determine milestone acceptance.
 
 **RA-SCOPE-02.** The compiler MUST reject unsupported borrow or async patterns before component emission. A boundary that unexpectedly suspends or reenters a busy owner must fail closed under the cleanup protocol.
 
@@ -135,4 +141,4 @@ The concrete ABI mapping, interruption latency, stream buffering policy, and sch
 
 ## Conformance
 
-[conformance/resource-cases.json](conformance/resource-cases.json) covers normal errors, escape attempts, reentrancy, suspension, cancellation, and late callbacks. [Worker cases](conformance/worker-cases.json) add async ownership races and admission limits. These are unexecuted harness designs.
+[conformance/resource-cases.json](conformance/resource-cases.json) covers normal errors, escape attempts, reentrancy, suspension, cancellation, and late callbacks. The M5 runtime gate executes RA-CASE-01 through RA-CASE-09 in the bounded synchronous scope above; each case's state and evidence fields remain the authority for recorded acceptance. [Worker cases](conformance/worker-cases.json) add later async ownership races and admission limits; they are not delivered by these M5 controls. Full native async, borrowed exports, general lifetime support and universal host/backend refinement remain open.

@@ -1,7 +1,7 @@
 //! Linux process boundary. Source elaboration never has an unsandboxed fallback.
 
 mod launch;
-mod process;
+pub(crate) mod process;
 mod runtime;
 
 pub const PIN: &str = "leanprover/lean4:v4.31.0";

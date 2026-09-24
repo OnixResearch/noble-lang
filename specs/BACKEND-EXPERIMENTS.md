@@ -58,7 +58,9 @@ The comparison uses left-associated, right-associated, and balanced trees over t
 
 **BE-BOUNDARY-01.** A component compatibility probe MUST account for lifting/lowering, memory allocation, copies, and cleanup under a pinned ABI. Internal WasmGC support MUST NOT imply zero-copy WIT strings or lists.
 
-The component probe is nonblocking for resource-free M3. Its incomplete results remain M5 work. M5 requires independent-peer checks and cannot inherit conformance from this probe.
+The historical component probe was nonblocking for resource-free M3. Its incomplete results are not M5 evidence, and M5 cannot inherit conformance from that probe. The separate [M5 gate](../verification/m5/gate.mjs) exercises the pinned `noble-test:sync/bootstrap@1.0.0` world against an independent Rust/Wasmtime 40.0.2 component peer. Lossless UTF-8 string and byte-list round trips are paired with unchanged core-Wasm hostile-import probes for allocation failure, malformed UTF-8 and truncated ranges, including cleanup without partial trusted results. Core instrumentation is not independent component-peer evidence and does not measure all engine allocations or physical copies.
+
+M5 also exercises cancellation and unexpected-suspension retirement with actual guest GC and a separately retained native pin, followed by late and duplicate callbacks. This bounded local control does not implement native async or make GC responsible for resource retirement. The [resource-transition correspondence](../proofs/m5/M5Resources.lean) has a narrower claim than native release, authenticated host callbacks or universal backend/ABI refinement. Neither these scopes nor M3's representation comparison establish full `Component-Draft` or WASI conformance.
 
 ## Comparison record
 

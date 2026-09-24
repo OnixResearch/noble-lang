@@ -171,6 +171,9 @@ impl super::Arena {
             super::Term::Contract => Material::Value(noble_kernel::types::Ty::Contract, 1),
             super::Term::Evidence => Material::Value(noble_kernel::types::Ty::Evidence, 1),
             super::Term::Certified => Material::Value(noble_kernel::types::Ty::Certified, 1),
+            super::Term::Resource(kind) => {
+                Material::Value(noble_kernel::types::Ty::Resource(kind), 1)
+            }
             super::Term::Empty => Material::Stack(alloc::vec::Vec::new(), 0),
             super::Term::Pair(a, b)
             | super::Term::Sum(a, b)

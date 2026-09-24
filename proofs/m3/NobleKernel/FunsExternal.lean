@@ -120,6 +120,21 @@ def core.num.Usize.saturating_mul (x y : Usize) : Result Usize :=
 
 /-! ## core::option -/
 
+/-- Shared option references preserve the optional value in the functional model. -/
+@[rust_fun "core::option::{core::option::Option<@T>}::as_ref"]
+def core.option.Option.as_ref {T : Type} (value : Option T) : Result (Option T) :=
+  ok value
+
+/-- Optional equality compares payloads only when both values are present. -/
+@[rust_fun
+  "core::option::{core::cmp::PartialEq<core::option::Option<@T>, core::option::Option<@T>>}::eq"]
+def core.option.Option.Insts.CoreCmpPartialEqOption.eq {T : Type}
+  (partialEq : core.cmp.PartialEq T T) (left right : Option T) : Result Bool :=
+  match left, right with
+  | none, none => ok true
+  | some left, some right => partialEq.eq left right
+  | _, _ => ok false
+
 /-- [core::option::{core::option::Option<T>}::map]:
     `None` stays `None`, `Some(v)` becomes `Some(f(v))`. -/
 @[rust_fun "core::option::{core::option::Option<@T>}::map"]

@@ -2,7 +2,7 @@
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; capture reports spawn, pipe, deadline, output-budget, reader and wait failures through Failure. Child termination/reaping and reader joins must complete rather than be interrupted by assertions."
 )]
-pub(super) fn capture(
+pub(crate) fn capture(
     mut command: std::process::Command,
     deadline: std::time::Instant,
 ) -> Result<super::Transcript, crate::workflow::output::Failure> {

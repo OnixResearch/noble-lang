@@ -95,14 +95,12 @@ fn opening(
     meter: &mut crate::Meter,
 ) -> Result<(Option<alloc::string::String>, Option<super::lexer::Token>), crate::Diagnostic> {
     let first = attempt!(lexer.next(meter));
-    if !matches!(
-        &first,
+    match first {
         Some(super::lexer::Token {
             kind: super::lexer::TokenKind::Def,
             ..
-        })
-    ) {
-        return Ok((None, first));
+        }) => {}
+        first => return Ok((None, first)),
     }
     let word = match attempt!(lexer.next(meter)) {
         Some(super::lexer::Token {

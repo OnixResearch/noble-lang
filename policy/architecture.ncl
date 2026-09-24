@@ -57,6 +57,12 @@ let contracts = import "./architecture.contracts.ncl" in
   # Owned JS/WAT are byte-bound by tool selection, not Rust compiler subjects
   # or proved runtime semantics. Engine handles identify guest values, not
   # authority to fabricate core evidence or bypass a certified invocation guard.
+  # M5 resource ownership and protected admission are deterministic core state
+  # machines. Trusted host facts and authenticated observations enter explicitly;
+  # a guest request, handle, plan or receipt-shaped data cannot supply authority.
+  # The independent Rust/Wasmtime peer is verification-only, outside production
+  # workspace accounting. Its engine/native release and credential provenance
+  # remain explicit host assumptions, not consequences of pure Rust refinement.
   provider_classifications = [],
   ports = [],
   capability_classifications = [
@@ -64,13 +70,13 @@ let contracts = import "./architecture.contracts.ncl" in
       family = "filesystem",
       core_handling = "forbidden",
       executor_role = "composition-root",
-      rationale = "Only the CLI reads bounded source, contract, proof, companion-session, rule-library and toolchain inputs, creates fresh artifacts, and removes its private temporary workspace. Proof-required builds release only after exact source/claim-bound admission. Owned Wasm/JS assets are separately byte-bound by tool selection.",
+      rationale = "Only the CLI reads bounded source, contract, proof, companion-session, WIT, rule-library and toolchain inputs, creates fresh artifacts, and removes its private temporary workspace. Proof-required builds release only after exact source/claim-bound admission. Component builds emit only independently accepted typed exports for one selected WIT world. Owned Wasm/JS assets are separately byte-bound by tool selection.",
     },
     {
       family = "process",
       core_handling = "forbidden",
       executor_role = "composition-root",
-      rationale = "Only the CLI resolves the local Lean runtime closure, launches isolated proof workers, and runs the pinned resource-free Core-Bootstrap/MC2 Node helper. Proof workers require bubblewrap and a user-systemd scope; missing proof isolation fails closed. The core consumes immutable exact independent-check observations and never invokes a host callback. Checker soundness and observation authenticity remain trusted premises; a process exit or producer report is not evidence admission. The trusted Node/Wasm tool subprocess boundary is separate and is not claimed to have the proof sandbox.",
+      rationale = "Only the CLI resolves the local Lean runtime closure, launches isolated proof workers, runs the pinned resource-free Core-Bootstrap/MC2 Node helper, and assembles the pinned synchronous component ABI with bounded wasm-tools subprocesses. Proof workers require bubblewrap and a user-systemd scope; missing proof isolation fails closed. The core consumes immutable exact independent-check observations and never invokes a host callback. Checker soundness and observation authenticity remain trusted premises; a process exit or producer report is not evidence admission. The trusted Node/Wasm tool subprocess boundary is separate and is not claimed to have the proof sandbox.",
     },
     {
       family = "environment",
@@ -115,6 +121,7 @@ let contracts = import "./architecture.contracts.ncl" in
         "noble-cli::closure@crates/noble-cli/src/workflow/rules.rs:6716:6723",
         "noble::<workflow::artifacts::Temporary as std::ops::Drop>::drop",
         "noble::build::artifacts::emit",
+        "noble::component::artifacts::emit",
         "noble::core::assemble_wat",
         "noble::core::companions::controls::checker::LeanConsumer::run",
         "noble::core::companions::controls::exercise",
@@ -144,6 +151,7 @@ let contracts = import "./architecture.contracts.ncl" in
       executor_methods = [
         "noble-cli::closure@crates/noble-cli/src/sandbox/launch.rs:3118:3124",
         "noble-cli::closure@crates/noble-cli/src/sandbox/launch.rs:3228:3235",
+        "noble::component::artifacts::invoke",
         "noble::core::companions::controls::checker::LeanConsumer::observation",
         "noble::core::companions::controls::checker::LeanConsumer::run",
         "noble::core::worker::launch",
@@ -160,7 +168,7 @@ let contracts = import "./architecture.contracts.ncl" in
         "noble::workflow::verification::require_success",
       ],
       authority = "unprotected",
-      rationale = "The shell queries the selected local Nix runtime closure, executes proof workers through their required isolation boundary, and starts/reaps the immutable Node helper for independently accepted Core-Bootstrap/MC2 Wasm. It supervises bounded replies and deadlines and observes child status. Node invokes the separately pinned assembler/optimizer; those trusted tools and owned JS/WAT are not proven or proof-sandboxed. Guest subject observations are re-bound by the deterministic companion core; reports, handles, wrapper construction and successful execution cannot mint accepted evidence. None of these operations grants a protected guest capability, and missing proof isolation never authorizes a proof-worker fallback.",
+      rationale = "The shell queries the selected local Nix runtime closure, executes proof workers through their required isolation boundary, starts/reaps the immutable Node helper for independently accepted Core-Bootstrap/MC2 Wasm, and runs the selected synchronous component assembler. It supervises bounded replies and deadlines and observes child status. The separately pinned assembler/optimizer and owned JS/WAT are not proven or proof-sandboxed. Guest subject observations are re-bound by the deterministic companion core; reports, handles, wrapper construction and successful execution cannot mint accepted evidence. None of these operations grants a protected guest capability, and missing proof isolation never authorizes a proof-worker fallback.",
     },
     {
       family = "environment",
@@ -208,6 +216,7 @@ let contracts = import "./architecture.contracts.ncl" in
         "noble::backend::reject_owner_slot",
         "noble::backend::run",
         "noble::build::print_report",
+        "noble::component::run",
         "noble::core::companions::controls::exercise",
         "noble::core::companions::entry::run",
         "noble::core::companions::reporting::emit",
@@ -226,9 +235,10 @@ let contracts = import "./architecture.contracts.ncl" in
   admission = null,
   waivers = [],
   collection_limits = {
-    # Four crates retain workspace/all-target/all-feature collection.
-    max_units = 24,
-    max_shards = 24,
+    # M5 has 23 real units; the acyclic boundary control adds two shell-library
+    # units. Retain every target and shard, including that library's test unit.
+    max_units = 25,
+    max_shards = 25,
     max_modules = 1024,
     max_items = 4096,
     max_types = 4096,
@@ -239,9 +249,10 @@ let contracts = import "./architecture.contracts.ncl" in
     max_constructors = 4096,
     max_effects = 4096,
     max_expansions = 4096,
-    # M4's frontend exceeds 512 compiler-observed attribute/configuration
-    # facts. This collection capacity does not widen selected configurations.
-    max_configurations = 1024,
+    # M5's frontend saturates the previous 1024 compiler-observed attribute/
+    # configuration facts per unit. Retain complete collection without widening
+    # the single declared target/feature configuration.
+    max_configurations = 2048,
     max_type_shapes = 4096,
     max_function_safety_facts = 4096,
     max_value_provenance_facts = 8192,

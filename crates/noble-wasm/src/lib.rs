@@ -18,6 +18,7 @@ macro_rules! attempt {
 }
 
 mod admission;
+pub mod component;
 mod emit;
 mod lowering;
 mod operations;

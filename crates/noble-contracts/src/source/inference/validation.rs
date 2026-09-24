@@ -205,6 +205,7 @@ impl Traversal {
             | crate::inference::Term::Contract
             | crate::inference::Term::Evidence
             | crate::inference::Term::Certified
+            | crate::inference::Term::Resource(_)
             | crate::inference::Term::Empty => {}
             crate::inference::Term::Link(_) => return Err(crate::internal(span)),
         }

@@ -149,16 +149,120 @@ controls refused. The full 73-rule deny-all and architecture gate passed, the
 source-coverage comparison was valid, and all 13 Nix checks passed.
 The [M4 completion record](verification/m4/evidence.json) binds these observations
 to retained runtime and assurance archives, including the final MC1 regression.
-The shared reviewed lock is renewed for MC2's source changes; the archived M4
-receipts do not establish acceptance of those later changes.
+MC2 renewed the shared reviewed lock for its source changes. M5 independently
+renewed it for resources, authority and component compilation, including seven
+strict actual-Rust resource roots and 52 refusal controls. Archived M4 and MC2
+receipts do not substitute for that later source-bound acceptance.
 
 MC1's 36-case regression and M3's four-configuration regression have passed in
 their own scopes. They do not replace those M4 gates. The current inventory's
-1,319 authored production body obligations remain open in the
+1,620 authored production body obligations remain open in the
 [reviewed inventory](verification/source-inventory.md).
 Neither extraction nor executed examples establish universal frontend, kernel,
 compiler or backend refinement; PO-17/18 and SO-07 remain open. MC2 adds optional
 checked companions; M5's resource/component boundary remains separate.
+
+## Compiling synchronous WIT components
+
+`noble component` selects **Component-Sync-Bootstrap**, separate from the
+resource-free `run`/`session` runtime. The pinned interoperability world is
+[`noble-test:sync/bootstrap@1.0.0`](crates/noble-wasm/wit/bootstrap.wit).
+Generated imports retain their fully qualified, versioned request effects:
+
+```sh
+noble component bindings crates/noble-wasm/wit/bootstrap.wit bootstrap
+noble component check-effect crates/noble-wasm/wit/bootstrap.wit bootstrap \
+  arithmetic.inc 'noble-test:sync/arithmetic@1.0.0#inc'
+```
+
+Compilation requires exactly one source file for every selected export and a
+fresh artifact directory:
+
+```sh
+noble component compile crates/noble-wasm/wit/bootstrap.wit bootstrap component-out \
+  inc=inc.noble echo-text=echo-text.noble echo-bytes=echo-bytes.noble \
+  read-counter=read-counter.noble transfer-counter=transfer-counter.noble \
+  protected=protected.noble
+```
+
+The corresponding source bodies are:
+
+| Export | Source |
+|---|---|
+| `inc` | `arithmetic.inc` |
+| `echo-text` | `echo.text` |
+| `echo-bytes` | `echo.bytes` |
+| `read-counter` | `counter.read drop` |
+| `transfer-counter` | `counters.transfer` |
+| `protected` | `dup authorization.prepare swap authorization.protected` |
+
+The CLI independently checks each complete input/output stack and effect set
+before emitting `module.wat`, `core.wasm`, and validated `component.wasm`.
+The complete bundle, including its report, WIT and source snapshots, is staged
+privately and published by one same-filesystem rename. A write failure can leave
+an empty reserved directory, but not a partially published bundle. A pre-existing
+destination is refused. Valid WIT names such as `memory` and `noble-cleanup` do
+not collide with canonical ABI or internal diagnostic exports.
+The selected synchronous memory32/UTF-8 ABI copies strings and byte lists at the
+boundary, validates ranges and encodings, and completes owned-argument preflight
+before calling the host. Borrowing returns the same owner; an owned transfer
+does not implicitly return it. Borrow tokens are adapter-local and have no guest
+value or serialization constructor.
+
+The [independent Rust/Wasmtime peer](verification/m5/peer) exercises the emitted
+component with pinned Wasmtime 40.0.2, rather than the emitter's binding
+implementation. It independently supplies component linking and typed conversion,
+but reuses Noble's production resource/authority decisions for host policy. The
+[source-bound build](verification/m5/build.mjs) and
+[conformance gate](verification/m5/gate.mjs) retain binary, source, input and raw
+command identities. [Tool and peer pins](verification/m5/pins.json) fix the world,
+engine, assembler and dependency source/vendor trees.
+
+Lossless UTF-8 and byte-list round trips use that component peer. Allocation
+failures, malformed UTF-8 and truncated ranges use separate hostile-import
+probes against unchanged emitted core Wasm, checking cleanup without partial
+trusted results; they are not malformed typed peer values. Core allocation/copy
+counters do not measure all engine allocations or physical copies.
+
+Owners remain move-only and noncapturable. Bounded cancellation and
+unexpected-suspension controls revoke guest access while retaining the native
+pin through actual guest GC; late completion, duplicate callbacks and repeated
+retirement cannot resurrect ownership or release twice. These local controls
+are not native async execution.
+
+Protected calls require trusted host-established one-shot authorization for the
+exact plan. A request, handle, effect annotation or receipt-shaped value is not
+authority. Admission commits the consumed witness and attempt before work;
+receipts require an authentic, applicable observation. Cancellation of an
+invocation cannot be reversed by a late successful operation observation.
+The [bootstrap operation policy](.cairn/specs/wit-wasi/spec.md#bootstrap-host-operation-classification)
+explicitly classifies protected work, unprotected local helpers, authorization
+requests and obligation-only cleanup; it grants no ambient or remote authority.
+Native release, authentic host facts/callbacks and engine/ABI correctness remain
+explicit host assumptions, separate from the [strict resource proof
+lane](proofs/m5/M5Resources.lean). Its seven theorem roots concern actual extracted
+Rust transitions and checked table decisions, including owner return, busy-owner
+exclusion, cancellation pins and late completion. Whole-source authority and
+component extraction/dependency coverage is not universal refinement.
+
+M5 is complete for this bounded profile. Acceptance is recorded in separate
+[source-bound build](verification/m5/build.json),
+[runtime acceptance](verification/m5/acceptance.json),
+[extraction/check](verification/m5/extraction.json),
+[Nix checks](verification/m5/nix-checks.json) and
+[completion evidence](verification/m5/evidence.json) receipts. Their exact source,
+binary, proof and archive bindings determine acceptance: 24 cases, all 84
+variants, 44 native resource/authority tests and 15 controls; seven strict
+resource roots and 52 extraction/audit refusal controls. The frozen CLI also
+passes the retained MC1, MC2, M3 and M4 regressions. Complete collection covers
+23 workspace units and the 25-unit positive boundary fixture under the unchanged
+73-rule deny-all policy. The final document/Cairn Nix receipt is a separate
+required closeout gate. All 1,620 authored-body inventory obligations remain open.
+
+This profile does not implement the full Component-Draft, WASI, native async,
+or a portable ABI for arbitrary first-class Noble Programs. Unsupported
+signatures and bodies fail before component emission; a reviewed-pure import
+still has its exact guest-request effect.
 
 ## Using MC1 contracts
 
@@ -304,9 +408,10 @@ passes all 28 refusal controls.
 
 The proof lanes remain separate: 35 strict semantic theorems, seven strict
 actual-source lemmas, two renderer-layout equations with disclosed literal-size
-obligations, and 17 closed native source equations. The unchanged 73-rule
-deny-all and complete 21-unit source gates pass. All 1319 authored production
-body refinement obligations and the broad PO-16/20/21 claims remain open.
+obligations, and 17 closed native source equations. At MC2 completion, the
+73-rule deny-all and complete 21-unit source gates passed; its inventory had
+1,319 open authored-body obligations. M5 renews that classification separately.
+The broad PO-16/20/21 claims remain open.
 See [runtime acceptance](verification/mc2/acceptance.json),
 [independent extraction](verification/mc2/extraction.json) and
 [the status ledger](specs/STATUS.json) for exact scopes and assumptions.
@@ -338,13 +443,14 @@ the selected layout retains one extra 64-KiB linear-memory page. Physical GC
 allocation/reclamation and isolated engine peaks remain unknown.
 
 The pure emitter's actual extraction, explicit external models and strict kernel
-bridge are audited separately from runtime execution. The source-bound M3 and
-M4 implementation receipts own their historical inventories. MC2's independent
-extraction receipt binds the current shared reviewed lock and extended inventory.
+bridge are audited separately from runtime execution. The source-bound M3, M4
+and MC2 implementation receipts own their historical inventories and reviewed
+locks. M5 separately renews the shared lock and extended inventory for its sources.
 Owned WAT, assembler, optimizer, engine and loader remain trust boundaries;
 PO-17/18 and SO-07 are open. M4 end-to-end Core-Bootstrap acceptance is retained
-in its completion record. MC2 companion assurance is a separate lane;
-resources and component interoperability remain M5 work.
+in its completion record. MC2 companion assurance is a separate lane; the
+accepted M5 resource/component slice has its own source-bound evidence above,
+not acceptance inherited from the historical M3 component probe.
 
 ## Current work
 

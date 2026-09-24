@@ -43,6 +43,7 @@ in
       value = hashFile "sha256" (root + "/${name}");
     }) fileNames
   );
+  component_sync = fromJSON (readFile (root + "/verification/m5/pins.json"));
   inherit system;
   quality_rust = rust.toolchain.channel;
   extraction_rust = (fromTOML (readFile (charon + "/rust-toolchain"))).toolchain.channel;

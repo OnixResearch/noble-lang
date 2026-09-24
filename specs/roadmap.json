@@ -292,7 +292,7 @@
       "depends_on": [
         "M4"
       ],
-      "status": "not-started",
+      "status": "completed",
       "required_requirements": [
         "WI-WIT-07",
         "BE-RESOURCE-01",
@@ -306,6 +306,34 @@
         "H-AUTH-04",
         "H-RECEIPT-01",
         "H-RECEIPT-02"
+      ],
+      "scope": "Complete Component-Sync-Bootstrap acceptance for the pinned noble-test:sync/bootstrap@1.0.0 world, synchronous typed imports/exports, move-only resources and protected host authorization/receipts. Not full Component-Draft, WASI, native async or universal refinement.",
+      "implementation": "Generated typed WIT bindings and independently checked export contracts; validated synchronous component emission; bounded move-only resource table and native-pin retirement; trusted-host one-shot authorization, attempt-before-work admission and observation-backed operation receipts; independent Wasmtime peer and actual-Rust resource proofs.",
+      "acceptance_status": "passed",
+      "acceptance_scope": "All 24 selected cases and 84 declared variants, 44 native resource/authority tests and 15 runtime controls; 128 workspace Rust tests; seven strict resource roots and 52 extraction/audit refusal controls; independent fresh whole-crate check; complete 23-unit source inventory and 25-unit positive boundary fixture under unchanged 73-rule deny-all; source-bound MC1/MC2/M3/M4 regressions. The linked final document/Cairn Nix receipt is required for closeout.",
+      "verification_scope": "Seven named actual-Rust transition/Table.decide correspondence and qualified lifecycle/accounting roots admit only propext, Classical.choice and Quot.sound. Resource, authority and component declaration accounting is not universal refinement. All 1620 authored-body obligations and broader PO/SO obligations remain open.",
+      "completion_record": "../verification/m5/evidence.json",
+      "completion_record_status": "retained",
+      "evidence_records": {
+        "build": "../verification/m5/build.json",
+        "runtime_acceptance": "../verification/m5/acceptance.json",
+        "extraction": "../verification/m5/extraction.json",
+        "extraction_lock": "../verification/m4/extraction-lock.json",
+        "regressions": "../verification/m5/regressions.json",
+        "nix_checks": "../verification/m5/nix-checks.json",
+        "runtime_archive": "../verification/m5/runtime.tar.gz",
+        "build_archive": "../verification/m5/build.tar.gz",
+        "discovery_archive": "../verification/m5/discovery.tar.gz",
+        "assurance_archive": "../verification/m5/assurance.tar.gz",
+        "quality_archive": "../verification/m5/quality.tar.xz"
+      },
+      "non_claims": [
+        "full Component-Draft",
+        "WASI",
+        "native async/future/stream execution",
+        "universal authority, receipt, component compiler or ABI refinement",
+        "physical-release or host-authenticity proof",
+        "arbitrary first-class Program component ABI"
       ]
     },
     {

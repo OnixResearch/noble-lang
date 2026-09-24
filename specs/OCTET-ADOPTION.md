@@ -1,11 +1,17 @@
 # Octet contract adoption
 
 Revision: 0.1.0-draft.5  
-Status: Selected spec amendment, with no Octet or Noble implementation run
+Status: Selected amendment with bounded M5 host-authority execution; broader adoption remains open
 
 ## Scope
 
 Noble already requires a pinned, deny-all Octet lint gate for its Rust workspace. This amendment adds explicit architecture, authority, lifecycle, nominal-domain, and evidence contracts. It does not translate the entire Rust lint catalog into Noble language rules.
+
+The [M5 receipt](../verification/m5/acceptance.json) executes OCTET-01 through
+OCTET-04 and every declared variant for `Component-Sync-Bootstrap`, with explicit
+[host-operation classifications](../.cairn/specs/wit-wasi/spec.md#bootstrap-host-operation-classification).
+This is not general worker/native-async delivery, a universal authority/receipt
+proof, or selection of an external Octet policy service.
 
 | Adopted contract | Noble owner | Requirement IDs |
 |---|---|---|

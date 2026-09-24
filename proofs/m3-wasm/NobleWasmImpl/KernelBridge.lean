@@ -906,6 +906,31 @@ def fromRequest (x : _root_.noble_kernel.untrusted.Request) : noble_kernel.untru
   cases x
   simp [toRequest, fromRequest]
 
+def fromTextLiteral (x : _root_.noble_kernel.execution.TextLiteral) :
+    noble_kernel.execution.TextLiteral :=
+  { node := x.node
+    bytes := x.bytes }
+
+def fromBody (x : _root_.noble_kernel.execution.Body) : noble_kernel.execution.Body :=
+  { candidate := fromCandidate x.candidate
+    texts := mapVec fromTextLiteral x.texts }
+
+def fromExecutionDefinition (x : _root_.noble_kernel.execution.Definition) :
+    noble_kernel.execution.Definition :=
+  { definition := x.definition
+    identity := x.identity
+    body := fromBody x.body
+    expected := fromExpected x.expected }
+
+/-- Transport actual admitted submissions without changing definition order,
+literal bytes, candidate structure, environment, or resource limits. -/
+def fromSubmission (x : _root_.noble_kernel.execution.Submission) :
+    noble_kernel.execution.Submission :=
+  { environment := fromEnv x.environment
+    definitions := mapVec fromExecutionDefinition x.definitions
+    body := fromBody x.body
+    request := fromRequest x.request }
+
 def toInterface (x : noble_kernel.untrusted.Interface) : _root_.noble_kernel.untrusted.Interface :=
   { stack_in := toTyVec x.stack_in
     stack_out := toTyVec x.stack_out
@@ -1220,6 +1245,10 @@ def noble_kernel.types.EffSet.as_slice (effects : noble_kernel.types.EffSet) :
 def noble_kernel.types.EffSet.is_empty (effects : noble_kernel.types.EffSet) : Result Bool :=
   _root_.noble_kernel.types.EffSet.is_empty effects
 
+@[rust_fun "noble_kernel::types::{noble_kernel::types::Ty}::is_data"]
+def noble_kernel.types.Ty.is_data (ty : noble_kernel.types.Ty) : Result Bool :=
+  _root_.noble_kernel.types.Ty.is_data (toTy ty)
+
 @[rust_fun "noble_kernel::types::{noble_kernel::types::Ty}::size"]
 def noble_kernel.types.Ty.size (ty : noble_kernel.types.Ty) : Result (Option U32) :=
   _root_.noble_kernel.types.Ty.size (toTy ty)
@@ -1236,6 +1265,12 @@ def noble_kernel.untrusted.SEMANTIC_REVISION : Result U32 :=
 def noble_kernel.untrusted.NodeId.Insts.CoreCmpPartialEqNodeId.eq
     (left right : noble_kernel.untrusted.NodeId) : Result Bool :=
   _root_.noble_kernel.untrusted.NodeId.Insts.CoreCmpPartialEqNodeId.eq left right
+
+@[rust_fun "noble_kernel::untrusted::{noble_kernel::untrusted::Lit}::ty"]
+def noble_kernel.untrusted.Lit.ty (literal : noble_kernel.untrusted.Lit) :
+    Result noble_kernel.types.Ty := do
+  let ty ← _root_.noble_kernel.untrusted.Lit.ty (toLit literal)
+  ok (fromTy ty)
 
 @[rust_fun "noble_kernel::untrusted::{core::clone::Clone<noble_kernel::untrusted::Expected>}::clone"]
 def noble_kernel.untrusted.Expected.Insts.CoreCloneClone.clone

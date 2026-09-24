@@ -1,0 +1,173 @@
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; reconstruction checks every definition, effect and scheme through typed failures before publishing an environment; assertions would replace the total rejection boundary with panics."
+)]
+pub(super) fn make(world: &super::World) -> Result<super::Bindings, super::Error> {
+    let mut environment = match crate::source::environment() {
+        Ok(environment) => environment,
+        Err(diagnostic) => {
+            return Err(super::Error {
+                stage: super::Stage::Binding,
+                diagnostic,
+            })
+        }
+    };
+    let count = world.imports.len();
+    environment.defs.reserve(count);
+    environment.kinds.reserve(count);
+    environment.effects.reserve(count);
+    environment.deps.reserve(count);
+    let mut words = alloc::vec::Vec::with_capacity(count);
+    let mut effects = 0u64;
+    let mut at = 0usize;
+    let mut failure = None;
+    while at < count {
+        match install(&world.imports[at], &mut environment, &mut words) {
+            Ok(bit) => effects |= bit,
+            Err(problem) => {
+                failure = Some(problem);
+                break;
+            }
+        }
+        at = at.saturating_add(1);
+    }
+    if let Some(problem) = failure {
+        return Err(problem);
+    }
+    let mut resources = alloc::vec::Vec::with_capacity(world.resources.len());
+    at = 0;
+    while at < world.resources.len() {
+        resources.push(world.resources[at].kind);
+        at = at.saturating_add(1);
+    }
+    Ok(super::Bindings {
+        environment,
+        words,
+        resources,
+        effects,
+        key: world.build_context(),
+    })
+}
+
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-maintainers; installation appends to make's newly owned environment and name Vec after validating this import's identity and contract, requiring growable storage rather than a slice; the World remains borrowed unchanged."
+)]
+fn install(
+    operation: &super::Operation,
+    environment: &mut noble_kernel::contracts::Env,
+    words: &mut alloc::vec::Vec<(alloc::string::String, noble_kernel::contracts::Definition)>,
+) -> Result<u64, super::Error> {
+    let definition = match u32::try_from(environment.defs.len()) {
+        Ok(id) => noble_kernel::contracts::Definition(id),
+        Err(_) => return Err(super::exhausted()),
+    };
+    let (scheme, effect, bit) = attempt!(contract(operation, definition));
+    environment.defs.push(scheme);
+    environment
+        .kinds
+        .push(noble_kernel::contracts::Behavior::Named);
+    environment.effects.push(effect);
+    environment.deps.push(alloc::vec::Vec::new());
+    words.push((operation.word.clone(), definition));
+    Ok(bit)
+}
+
+#[expect(
+    tigerstyle::assertion_density,
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; this independently rebuilt environment checks every definition identity, operation effect, scheme and primitive collision before publication; invalid generated contracts return diagnostics rather than assertions."
+)]
+fn contract(
+    operation: &super::Operation,
+    definition: noble_kernel::contracts::Definition,
+) -> Result<(noble_kernel::words::Scheme, noble_kernel::types::EffId, u64), super::Error> {
+    let effect = match operation.effect {
+        Some(effect) => effect,
+        None => return Err(super::invalid("missing import effect")),
+    };
+    if operation.definition != Some(definition) {
+        return Err(super::invalid("import definition identity mismatch"));
+    }
+    let scheme = attempt!(scheme(operation));
+    if scheme.validate().is_err() {
+        return Err(super::invalid("invalid generated WIT import contract"));
+    }
+    let bit = match 1u64.checked_shl(effect.0) {
+        Some(bit) => bit,
+        None => return Err(super::exhausted()),
+    };
+    if crate::program::bootstrap_word(operation.word.as_bytes()).is_some() {
+        return Err(super::invalid("WIT import shadows a Noble primitive"));
+    }
+    Ok((scheme, effect, bit))
+}
+
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; this bounded typed conversion threads borrowed owners in order and rejects missing operation identity with an owned diagnostic; it has no assertion preconditions on caller data."
+)]
+fn scheme(operation: &super::Operation) -> Result<noble_kernel::words::Scheme, super::Error> {
+    let tail = noble_kernel::shapes::Pattern::StackVar(noble_kernel::words::Variable(0));
+    let input_count = operation.parameters.len().saturating_add(1);
+    let mut stack_in = alloc::vec::Vec::with_capacity(input_count);
+    let mut stack_out =
+        alloc::vec::Vec::with_capacity(input_count.saturating_add(operation.results.len()));
+    stack_in.push(tail.clone());
+    stack_out.push(tail);
+    let mut at = 0usize;
+    while at < operation.parameters.len() {
+        parameter(operation.parameters[at], &mut stack_in, &mut stack_out);
+        at = at.saturating_add(1);
+    }
+    at = 0;
+    while at < operation.results.len() {
+        stack_out.push(pattern(operation.results[at]));
+        at = at.saturating_add(1);
+    }
+    let effect = match operation.effect {
+        Some(effect) => effect,
+        None => return Err(super::invalid("missing WIT operation identity")),
+    };
+    Ok(noble_kernel::words::Scheme {
+        var_kinds: alloc::vec![noble_kernel::words::VariableKind::Stack],
+        stack_in,
+        stack_out,
+        effects: alloc::vec![noble_kernel::shapes::EffectSlot::Effect(effect)],
+    })
+}
+
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-maintainers; parameter conversion appends descriptors to the two newly owned scheme vectors; growable Vec storage is required and no runtime owner is copied."
+)]
+fn parameter(
+    ty: super::Type,
+    stack_in: &mut alloc::vec::Vec<noble_kernel::shapes::Pattern>,
+    stack_out: &mut alloc::vec::Vec<noble_kernel::shapes::Pattern>,
+) {
+    stack_in.push(pattern(ty));
+    if matches!(ty, super::Type::Borrow(_)) {
+        stack_out.push(pattern(ty));
+    }
+}
+
+fn pattern(ty: super::Type) -> noble_kernel::shapes::Pattern {
+    match ty {
+        super::Type::Boolean => noble_kernel::shapes::Pattern::Bool,
+        super::Type::S64 => noble_kernel::shapes::Pattern::I64,
+        super::Type::String => noble_kernel::shapes::Pattern::Text,
+        super::Type::Bytes => noble_kernel::shapes::Pattern::List(alloc::boxed::Box::new(
+            noble_kernel::shapes::Pattern::I64,
+        )),
+        super::Type::ResultS64String => noble_kernel::shapes::Pattern::Sum(
+            alloc::boxed::Box::new(noble_kernel::shapes::Pattern::I64),
+            alloc::boxed::Box::new(noble_kernel::shapes::Pattern::Text),
+        ),
+        super::Type::Own(kind) | super::Type::Borrow(kind) => {
+            noble_kernel::shapes::Pattern::Resource(kind)
+        }
+    }
+}

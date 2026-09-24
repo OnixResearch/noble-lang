@@ -76,6 +76,7 @@ impl super::Arena {
             | super::Term::Contract
             | super::Term::Evidence
             | super::Term::Certified
+            | super::Term::Resource(_)
             | super::Term::Empty => {}
         }
         Ok(pending)
@@ -162,6 +163,7 @@ impl super::Arena {
             | (super::Term::Evidence, super::Term::Evidence)
             | (super::Term::Certified, super::Term::Certified)
             | (super::Term::Empty, super::Term::Empty) => {}
+            (super::Term::Resource(a), super::Term::Resource(b)) if a == b => {}
             (super::Term::Pair(a, b), super::Term::Pair(c, d))
             | (super::Term::Sum(a, b), super::Term::Sum(c, d))
             | (super::Term::Program(a, b), super::Term::Program(c, d))
@@ -180,6 +182,7 @@ impl super::Arena {
                 | super::Term::Contract
                 | super::Term::Evidence
                 | super::Term::Certified
+                | super::Term::Resource(_)
                 | super::Term::Pair(_, _)
                 | super::Term::Sum(_, _)
                 | super::Term::List(_)
@@ -211,6 +214,7 @@ const fn sort(term: super::Term) -> super::Sort {
         | super::Term::Contract
         | super::Term::Evidence
         | super::Term::Certified
+        | super::Term::Resource(_)
         | super::Term::Pair(_, _)
         | super::Term::Sum(_, _)
         | super::Term::List(_)
