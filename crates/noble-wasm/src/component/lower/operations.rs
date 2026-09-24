@@ -141,6 +141,8 @@ fn invoke(
             state.stack.push(value);
             Ok(())
         }
+        13 => pair(state),
+        14 => unpair(state),
         24.. => {
             let imports = world.imports();
             let position = imports
@@ -158,6 +160,47 @@ fn invoke(
         }
         _ => Err(crate::Diagnostic::Unsupported),
     }
+}
+
+fn pair(state: &mut super::State) -> Result<(), crate::Diagnostic> {
+    if state.pairs.len() >= super::super::NODE_LIMIT {
+        return Err(crate::Diagnostic::Exhausted);
+    }
+    let right = attempt!(state.pop());
+    let left = attempt!(state.pop());
+    let ty = noble_kernel::types::Ty::Pair(
+        alloc::boxed::Box::new(left.ty.clone()),
+        alloc::boxed::Box::new(right.ty.clone()),
+    );
+    let index = state.pairs.len();
+    state.pairs.push((left, right));
+    state.stack.push(super::Value {
+        ty,
+        storage: super::Storage::Pair(index),
+    });
+    Ok(())
+}
+
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; unpair removes an owned stack entry, clones compiler-local descriptors through non-const trait methods and appends to the private stack Vec."
+)]
+fn unpair(state: &mut super::State) -> Result<(), crate::Diagnostic> {
+    let value = attempt!(state.pop());
+    let index = match value.storage {
+        super::Storage::Pair(index) => index,
+        super::Storage::Flat(_) => return Err(crate::Diagnostic::Invalid),
+    };
+    let (left, right) = match state.pairs.get(index) {
+        Some(pair) => pair.clone(),
+        None => return Err(crate::Diagnostic::Defective),
+    };
+    // These are compiler local references, not copies of guest values. Pair
+    // ownership leaves the stack before its two constituents are exposed;
+    // duplication/discard still requires recursively checked Data eligibility.
+    state.stack.push(left);
+    state.stack.push(right);
+    Ok(())
 }
 
 #[expect(

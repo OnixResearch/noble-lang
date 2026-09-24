@@ -26,7 +26,7 @@ namespace noble_wasm
 def noble_kernel.types.ResourceKind := Std.U32
 
 /-- [noble_contracts::component::Type]
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 16:0-16:13
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 47:0-47:13
     Name pattern: [noble_contracts::component::Type]
     Visibility: public -/
 @[discriminant isize, rust_type "noble_contracts::component::Type"]
@@ -36,6 +36,10 @@ inductive noble_contracts.component.Type where
 | String : noble_contracts.component.Type
 | Bytes : noble_contracts.component.Type
 | ResultS64String : noble_contracts.component.Type
+| ResultBytesString : noble_contracts.component.Type
+| StreamU8 : noble_contracts.component.Type
+| FutureS64 : noble_contracts.component.Type
+| FutureResultS64String : noble_contracts.component.Type
 | Own : noble_kernel.types.ResourceKind → noble_contracts.component.Type
 | Borrow : noble_kernel.types.ResourceKind → noble_contracts.component.Type
 
@@ -84,7 +88,7 @@ def noble_kernel.types.EffId := Std.U32
 def noble_kernel.contracts.Definition := Std.U32
 
 /-- [noble_contracts::component::Operation]
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 55:0-55:20
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 118:0-118:20
     Name pattern: [noble_contracts::component::Operation]
     Visibility: public -/
 @[rust_type "noble_contracts::component::Operation"]
@@ -96,6 +100,7 @@ structure noble_contracts.component.Operation where
   export_name : String
   parameters : alloc.vec.Vec noble_contracts.component.Type
   results : alloc.vec.Vec noble_contracts.component.Type
+  asynchronous : Bool
   effect : Option noble_kernel.types.EffId
   definition : Option noble_kernel.contracts.Definition
 
@@ -229,7 +234,7 @@ structure noble_kernel.contracts.Env where
   effects : alloc.vec.Vec noble_kernel.types.EffId
 
 /-- [noble_contracts::component::Stage]
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 176:0-176:14
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 238:0-238:14
     Name pattern: [noble_contracts::component::Stage]
     Visibility: public -/
 @[discriminant isize, rust_type "noble_contracts::component::Stage"]
@@ -240,7 +245,7 @@ inductive noble_contracts.component.Stage where
 | Acceptance : noble_contracts.component.Stage
 
 /-- [noble_contracts::component::Error]
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 184:0-184:16
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 246:0-246:16
     Name pattern: [noble_contracts::component::Error]
     Visibility: public -/
 @[rust_type "noble_contracts::component::Error"]
@@ -550,6 +555,11 @@ inductive component.abi.Lane where
 structure output.Buffer where
   bytes : alloc.vec.Vec Std.U8
 
+/-- [noble_wasm::component::abi::indirect_parameters::{closure}]
+    Source: 'crates/noble-wasm/src/component/abi.rs', lines 124:26-124:75 -/
+@[reducible]
+def component.abi.indirect_parameters.closure := Unit
+
 /-- [noble_wasm::component::admission::Context]
     Source: 'crates/noble-wasm/src/component/admission/mod.rs', lines 4:0-8:1 -/
 structure component.admission.Context where
@@ -558,36 +568,57 @@ structure component.admission.Context where
   environment : noble_kernel.contracts.Env
 
 /-- [noble_wasm::component::lower::Plan]
-    Source: 'crates/noble-wasm/src/component/lower.rs', lines 14:0-20:1 -/
+    Source: 'crates/noble-wasm/src/component/lower.rs', lines 15:0-23:1 -/
 structure component.lower.Plan where
   «name» : String
+  ordinal : Std.U32
+  asynchronous : Bool
   parameters : alloc.vec.Vec noble_contracts.component.Type
   result : Option noble_contracts.component.Type
   locals : alloc.vec.Vec component.abi.Lane
   code : alloc.vec.Vec Std.U8
 
+/-- [noble_wasm::component::emit::task::write::{closure}]
+    Source: 'crates/noble-wasm/src/component/emit/task.rs', lines 11:36-11:56 -/
+@[reducible]
+def component.emit.task.write.closure := Unit
+
 /-- [noble_wasm::component::lower::Data]
-    Source: 'crates/noble-wasm/src/component/lower.rs', lines 10:0-13:1 -/
+    Source: 'crates/noble-wasm/src/component/lower.rs', lines 11:0-14:1 -/
 structure component.lower.Data where
   segments : alloc.vec.Vec (Std.U32 × (alloc.vec.Vec Std.U8))
   «end» : Std.U32
 
+/-- [noble_wasm::component::lower::Storage]
+    Source: 'crates/noble-wasm/src/component/lower.rs', lines 28:0-31:1 -/
+@[discriminant isize]
+inductive component.lower.Storage where
+| Flat : Array (Option Std.U32) 3#usize → component.lower.Storage
+| Pair : Std.Usize → component.lower.Storage
+
 /-- [noble_wasm::component::lower::Value]
-    Source: 'crates/noble-wasm/src/component/lower.rs', lines 24:0-27:1 -/
+    Source: 'crates/noble-wasm/src/component/lower.rs', lines 33:0-36:1 -/
 structure component.lower.Value where
   ty : noble_kernel.types.Ty
-  locals : Array (Option Std.U32) 3#usize
+  storage : component.lower.Storage
 
 /-- [noble_wasm::component::lower::State]
-    Source: 'crates/noble-wasm/src/component/lower.rs', lines 28:0-33:1 -/
+    Source: 'crates/noble-wasm/src/component/lower.rs', lines 45:0-53:1 -/
 structure component.lower.State where
   locals : alloc.vec.Vec component.abi.Lane
   parameters : Std.Usize
   stack : alloc.vec.Vec component.lower.Value
+  pairs : alloc.vec.Vec (component.lower.Value × component.lower.Value)
   code : output.Buffer
 
+/-- [noble_wasm::component::lower::calls::IndirectLocals]
+    Source: 'crates/noble-wasm/src/component/lower/calls.rs', lines 73:0-76:1 -/
+structure component.lower.calls.IndirectLocals where
+  area : Std.U32
+  field : Std.U32
+
 /-- [noble_wasm::component::lower::operations::invoke::{closure}]
-    Source: 'crates/noble-wasm/src/component/lower/operations.rs', lines 148:26-148:78 -/
+    Source: 'crates/noble-wasm/src/component/lower/operations.rs', lines 150:26-150:78 -/
 @[reducible]
 def component.lower.operations.invoke.closure :=
   noble_kernel.contracts.Definition
@@ -598,7 +629,7 @@ def component.lower.operations.invoke.closure :=
 def component.lower.operations.text.closure := noble_kernel.untrusted.NodeId
 
 /-- [noble_wasm::component::Artifact]
-    Source: 'crates/noble-wasm/src/component/mod.rs', lines 25:0-28:1
+    Source: 'crates/noble-wasm/src/component/mod.rs', lines 27:0-30:1
     Visibility: public -/
 structure component.Artifact where
   wat : alloc.vec.Vec Std.U8

@@ -1,0 +1,30 @@
+{
+  "schema": "noble-m6-tool-pins/v1",
+  "profile": "Component-Async-Bootstrap",
+  "world": "noble-test:async-boundary/bootstrap@1.0.0",
+  "wit": "crates/noble-wasm/wit/async.wit",
+  "wasm_tools_version": "1.245.1",
+  "wasmtime_version": "40.0.2",
+  "binding_generator": "wasmtime-wit-bindgen-40.0.2",
+  "wit_parser_version": "0.243.0",
+  "wit_component_version": "0.243.0",
+  "wasmtime_source": "/nix/store/26a8xzacbx01hidm70lpyphyw926zhc5-source",
+  "wasmtime_source_nar_hash": "sha256-4y9WpCdyuF/Tp2k/1d5rZxwYunWNdeibEsFgHcBC52Q=",
+  "vendor": "/nix/store/4drsk5fp0k4s82psjch6vlsfyqs1mxgq-wasmtime-40.0.2-vendor",
+  "vendor_nar_hash": "sha256-EQ1olp92CFLQ5oHp6zIphL+ScKnIWQLuFFfZW/rIeDI=",
+  "linker_bin": "/nix/store/788mx070y81zjlg5ipcl0cra3afviw9k-gcc-wrapper-15.2.0/bin",
+  "extra_sources": [
+    {"name":"parking-lot","path":"/nix/store/1syikrsg0j8gbz57iaxqqj6v8cbvhqhh-cargo-package-parking_lot-0.12.5","nar_hash":"sha256-q/gjMLY9+HzQ51G6SpvUAMmRnm+WdmIMVhN/wdNSXHU="},
+    {"name":"lock-api","path":"/nix/store/5mwhb6hsn5bvvgnbasgzbsb2173mcb8m-cargo-package-lock_api-0.4.14","nar_hash":"sha256-NxTKULbSlhk9uJRBN54qRomA537MjX1h7bxWxf6LuNc="},
+    {"name":"parking-lot-core","path":"/nix/store/75qqqmy8xz4kzsf4jgzg2xi3asmgnbbw-cargo-package-parking_lot_core-0.9.12","nar_hash":"sha256-bx4toEQMAz2ffOKvZToLOMFVPAR7G7WWA81LyWWoRrA="},
+    {"name":"scopeguard","path":"/nix/store/0g2ipzda8dsp4jvmkqmmgmi4m1d3w573-cargo-package-scopeguard-1.2.0","nar_hash":"sha256-GlvFsi4iXSaGE1oqYPMch8fzjJayS3IGoXlM6XuOAs4="},
+    {"name":"redox-syscall","path":"/nix/store/ia1hffmz062l0z0rjj1x1pcyzqn3lxq2-cargo-package-redox_syscall-0.5.17","nar_hash":"sha256-rk3Ie7T/XHvQ4YVAjcpcRdugxBPaes4p+FaLBkwuIZk="},
+    {"name":"windows-link","path":"/nix/store/11qyih4kprkpmfybwpq4y60z8bx9jhm4-cargo-package-windows-link-0.2.1","nar_hash":"sha256-VnKzj8mldsgp6TYtP5EDHp9kPwt6BzVEiHOl1O0SeEU="}
+  ],
+  "canonical_abi": "memory32-utf8-async-lower-stackful-lift-task-return",
+  "engine_features": ["async_support", "component_model", "component_model_async", "component_model_async_builtins", "component_model_async_stackful", "consume_fuel", "epoch_interruption"],
+  "wasm_tools_features": ["cm-async", "cm-async-stackful", "cm-async-builtins"],
+  "wasi": {"source":"same pinned Wasmtime source","version":"0.3.0-rc-2025-09-16","executed_interface":"wasi:clocks/monotonic-clock@0.3.0-rc-2025-09-16","executed_operation":"wait-for","stable_0_3_0":"rejected at link; not silently substituted"},
+  "driver": {"kind":"single-thread cooperative engine with bounded external blocking workers","guest_fuel":100000,"fuel_yield_quantum":1000,"store_memory_limit_bytes":4194304,"native_job_limit":32,"live_value_limit":8,"event_limit":256,"task_exit":"explicitly awaited before successful export observation","cancellation":"logical production-table revocation; invocation-isolated Store destruction; native pins retained externally until actual native stop","stream_buffer":"one byte engine producer buffer; 64-byte bounded consumer payload; terminal outcome separate from read-end closure","live_payload_reservations":{"result_bytes":128,"parked_local_bytes":128,"parked_external_bytes":128,"scope":"payload storage only; engine, task metadata and bounded worker thread stacks are not whole-process heap accounting"}},
+  "non_claims": ["all Component-Draft or all WASI interfaces","stable WASI0.3 linkage","Wasmtime per-task cancellation API (not provided in40.0.2)","general guest task scheduler or spawn/channel language","full MW-WORKER conformance","universal Canonical ABI, engine, OS scheduling or physical native resource proof"]
+}

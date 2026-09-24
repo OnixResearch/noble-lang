@@ -21,12 +21,16 @@ pub(super) fn invoke(
         None => None,
     };
     let area = match result_type {
-        Some(ty) if super::super::abi::lane_count(ty) > 1 => {
+        Some(ty) if operation.asynchronous || super::super::abi::lane_count(ty) > 1 => {
             Some(attempt!(super::results::allocate(ty, state)))
         }
         Some(_) | None => None,
     };
-    attempt!(read_arguments(&arguments, state));
+    if super::super::abi::indirect_parameters(operation) {
+        attempt!(indirect_arguments(operation, &arguments, state));
+    } else {
+        attempt!(read_arguments(&arguments, state));
+    }
     if let Some(area) = area {
         attempt!(super::super::abi::get(&mut state.code, area));
     }
@@ -37,6 +41,12 @@ pub(super) fn invoke(
     attempt!(state.code.append(b" call $i"));
     attempt!(state.code.number(u64::from(definition.0)));
     attempt!(state.code.append(b"\n"));
+    if operation.asynchronous {
+        // No following source instruction is emitted before this subtask has
+        // returned and its native handle has been dropped. The result area and
+        // indirect argument tuple remain allocated across engine suspension.
+        attempt!(state.code.append(b" call $await-subtask\n"));
+    }
     if let Some(value) = &returned {
         match area {
             Some(area) => attempt!(super::results::load(
@@ -58,6 +68,63 @@ pub(super) fn invoke(
         state.stack.push(value);
     }
     Ok(())
+}
+
+struct IndirectLocals {
+    area: u32,
+    field: u32,
+}
+
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; invocation has already collected exactly the checked signature's arguments; tuple layout, private local allocation and every emitted store preserve exhaustion diagnostics rather than assertion failures."
+)]
+fn indirect_arguments(
+    operation: &noble_contracts::component::Operation,
+    arguments: &[super::Value],
+    state: &mut super::State,
+) -> Result<(), crate::Diagnostic> {
+    let layout = attempt!(super::super::abi::tuple_layout(&operation.parameters));
+    let area = attempt!(super::results::allocate_layout(layout, state));
+    let locals = IndirectLocals {
+        area,
+        field: attempt!(state.local(super::super::abi::Lane::I32)),
+    };
+    let mut offset_bytes = 0u32;
+    let mut at = 0usize;
+    let mut failure = None;
+    let count = arguments.len();
+    while at < count && failure.is_none() {
+        let ty = operation.parameters[at];
+        match store_argument(ty, &arguments[at], &locals, offset_bytes, &mut state.code) {
+            Ok(next) => offset_bytes = next,
+            Err(error) => failure = Some(error),
+        }
+        at = at.saturating_add(1);
+    }
+    if let Some(error) = failure {
+        return Err(error);
+    }
+    super::super::abi::get(&mut state.code, area)
+}
+
+fn store_argument(
+    ty: noble_contracts::component::Type,
+    value: &super::Value,
+    locals: &IndirectLocals,
+    offset_bytes: u32,
+    buffer: &mut crate::output::Buffer,
+) -> Result<u32, crate::Diagnostic> {
+    let (align, size_bytes) = super::super::abi::memory_layout(ty);
+    let offset_bytes = attempt!(super::super::abi::align_to(offset_bytes, align));
+    attempt!(super::super::abi::get(buffer, locals.area));
+    attempt!(buffer.i32(offset_bytes));
+    attempt!(buffer.append(b" i32.add\n"));
+    attempt!(super::super::abi::set(buffer, locals.field));
+    attempt!(super::results::store(ty, locals.field, value, buffer));
+    offset_bytes
+        .checked_add(size_bytes)
+        .ok_or(crate::Diagnostic::Exhausted)
 }
 
 fn validate_arguments(

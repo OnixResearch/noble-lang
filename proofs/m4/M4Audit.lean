@@ -270,7 +270,8 @@ elab "check_m4_extraction" laneSyntax:str : command => do
     if !isType then
       let _ ← transparent env declName
       if root.getObjValAs? Bool "requires_acceptance" == .ok true ||
-          root.getObjValAs? String "method" == .ok "prepare" ||
+          (owner == `NobleContractImpl.Funs &&
+            root.getObjValAs? String "method" == .ok "prepare") ||
           root.getObjValAs? String "rust" == .ok "noble_wasm::compile" then
         unless closure.contains ``noble_kernel.acceptance.check do
           throwError "M4-ACCEPTANCE-DEPENDENCY: {declName} bypasses the actual extracted checker"

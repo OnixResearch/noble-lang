@@ -119,7 +119,25 @@
         {"case": "repeated-cancellation-during-retirement", "order": ["admit", "cancel", "cancel"], "terminal_state": "Retiring", "result_deliveries": 0, "result_owner": "host-retirement", "cleanup_restarted": false}
       ]},
       "expected": {"stage": "local-task-transitions", "outcome": "each-order-matches", "owner_resurrections": 0, "double_releases": 0, "unaccounted_pins": 0, "cancellation_ack_proves_native_completion": false, "automatic_retry": false, "distributed_exactly_once_claimed": false},
-      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [{
+        "claim": "All thirteen declared local ownership-race variants execute against the production task decisions in the independent native peer; this is not completion of a worker service.",
+        "subject": "WORKER-08", "revision": "0.1.0-draft.5", "kind": "test", "result": "passed",
+        "source_revision": "sha256:9f65e7ad115d8af14cf1f4a706346ec4555adcd1abb955d2c43dbec23609898a",
+        "configuration": {
+          "profile": "Component-Async-Bootstrap", "receipt": "../../verification/m6/acceptance.json",
+          "receipt_sha256": "c7d6aa31180961a7748b4fdfd674c3ddbecabf11ae816476aea6f8906a761ed5",
+          "runtime_archive": "../../verification/m6/runtime.tar.gz", "gate": "verification/m6/gate.mjs", "case": "WORKER-08",
+          "binary_sha256": "dc951c1a12512669857a96ba3a0765569e28024db13923cf92dd3ebde0755377",
+          "workload_binding": "Exact id/input/expected projection; execution-time raw conformance files retained before metadata promotion."
+        },
+        "assumptions": [
+          "This case exercises deterministic local task decisions, not compiled worker-service execution or exhaustive payload exploration.",
+          "The host must authenticate identities and callbacks, serialize admission/delivery/retirement, retain actual storage and faithfully apply physical release.",
+          "Cancellation acknowledgement does not establish native completion, invocation success, restored authority, automatic retry or distributed exactly-once effects.",
+          "WORKER-01/09 supply applicable designs only; their full canonical cases and MW1/MW2 remain unaccepted."
+        ]
+      }]
     },
     {
       "id": "WORKER-09", "profile": "Worker-Design", "kind": "runtime",

@@ -342,14 +342,56 @@
       "depends_on": [
         "M5"
       ],
-      "status": "not-started",
+      "status": "completed",
+      "scope": "Complete selected Component-Async-Bootstrap boundary extension of M5: direct-style sequential calls, typed live future/stream values, bounded host-owned task admission and retirement, and preserved protected-host authorization/receipts. Pinned memory32/UTF-8 Component Model native async lowering and stackful lifting, Wasmtime 40.0.2 cooperative host driver, measured interruption limits and bounded buffering; no new guest async syntax.",
+      "implementation": "Compiled native async Noble WIT imports/exports, mixed synchronous ABI, safe five-state/fifteen-event serialized task table, reservations before transfer, exact callback identities, invocation-isolated Store with host-held pins until actual native settlement, and independently linked/converted typed peer.",
+      "acceptance_status": "passed",
+      "acceptance_scope": "WI-11, WI-12, WI-16 and local WORKER-08 pass 38 variants, 62 controls and 13 native kernel tests against compiled Noble and separately scoped host/progress lanes; complete 75-pair lifecycle schema; 24/84/44 M5 regression, MC1 36, MC2 15 and 18 core controls, M4 18/11 plus DX-10/DX-12, four M3 configurations; 148 Rust workspace tests and unchanged 73-rule deny-all with 25 real plus 27 positive-fixture units; all thirteen Nix checks. The final documents/Cairn source projection excludes only its own generated Nix receipt.",
+      "verification_scope": "Independent fresh whole-source Charon/Aeneas/Lean check passed 14 strict actual-Rust async roots, all 75 state/event constructor pairs and 176 M6 refusal controls against 526 bound files. All 1939 authored-body source inventory refinement obligations remain open. Trusted host synchronization, authenticated callbacks/facts, engine/ABI correctness and physical native retirement remain separate obligations.",
+      "completion_record": "../verification/m6/evidence.json",
+      "completion_record_status": "retained",
+      "lifecycle_record": "../.cairn/archive/1970-01-01-m6-native-async/tasks.md",
+      "evidence_records": {
+        "build": "../verification/m6/build.json",
+        "runtime_acceptance": "../verification/m6/acceptance.json",
+        "extraction": "../verification/m6/extraction.json",
+        "extraction_lock": "../verification/m4/extraction-lock.json",
+        "regressions": "../verification/m6/regressions.json",
+        "nix_checks": "../verification/m6/nix-checks.json",
+        "runtime_archive": "../verification/m6/runtime.tar.gz",
+        "formal_archives": "../verification/m6/formal-archives.json",
+        "assurance_archive": "../verification/m6/assurance-archive.json",
+        "quality_archive": "../verification/m6/quality-archive.json"
+      },
       "required_requirements": [
+        "WI-ASYNC-01",
+        "WI-ASYNC-02",
+        "WI-ASYNC-03",
+        "WI-ASYNC-04",
+        "WI-ASYNC-05",
+        "WI-RES-04",
         "RA-ASYNC-01",
         "RA-ASYNC-02",
         "RA-ASYNC-03",
         "RA-ASYNC-04",
         "RA-ASYNC-05",
-        "DX-PROTOCOL-03"
+        "DX-PROTOCOL-03",
+        "VT-SCOPE-02",
+        "VT-SCOPE-03",
+        "H-AUTH-01",
+        "H-AUTH-02",
+        "H-AUTH-03",
+        "H-AUTH-04",
+        "H-RECEIPT-01",
+        "H-RECEIPT-02"
+      ],
+      "non_claims": [
+        "new guest async/await syntax, IO monad or general spawn/channel language",
+        "general async borrowing or all WASI/Component-Draft interfaces",
+        "full MW1/MW2 worker services, Syndicate or distributed retry semantics",
+        "stable WASI 0.3 linkage or full official WASI compatibility",
+        "universal component compiler, ABI, authority-system or physical-release refinement",
+        "eventual native completion, universal scheduling fairness or whole-process heap bounds"
       ]
     },
     {

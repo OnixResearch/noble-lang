@@ -16,7 +16,7 @@ const VERSION_PARTS: u32 = 3;
 const MAX_VERSION_DIGITS: usize = 10;
 const MAX_VERSION_BYTES: usize = 32;
 
-// These are exactly the parsed synchronous profile, not extensible fallbacks.
+// These are exactly the parsed boundary profiles, not extensible fallbacks.
 #[octet::sealed_enum]
 #[derive(Clone)]
 enum RawType {
@@ -25,6 +25,10 @@ enum RawType {
     String,
     Bytes,
     ResultS64String,
+    ResultBytesString,
+    StreamU8,
+    FutureS64,
+    FutureResultS64String,
     Own(alloc::string::String),
     Borrow(alloc::string::String),
 }
@@ -34,6 +38,7 @@ struct Function {
     method: Option<alloc::string::String>,
     parameters: alloc::vec::Vec<RawType>,
     results: alloc::vec::Vec<RawType>,
+    asynchronous: bool,
 }
 struct Interface {
     name: alloc::string::String,

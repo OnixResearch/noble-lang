@@ -1,0 +1,30 @@
+{
+  "schema": "noble-m6-formal-archives/v1",
+  "result": "verified",
+  "scope": "Full discovery and independent fresh check products, omitting only disposable cargo-target, cargo-home and home directories. GNU tar preserves regular-file content and modes, in-archive hardlinks and external dependency symlinks; execution-time inode identity and timestamps are not claimed.",
+  "verification": "Independent xz -t and fresh GNU tar extraction; exact member set, every regular-file SHA-256, byte size and mode, symlink target and within-archive hardlink group matched the frozen source trees.",
+  "archives": [
+    {
+      "path": "discovery.tar.xz",
+      "sha256": "bc1263ba4c3d31d70c6aabeca67b7f30c8f211f807325c7cc50653d0a704c9d9",
+      "bytes": 51707696,
+      "members": 1614,
+      "regular_files": 1407,
+      "symlinks": 4,
+      "logical_file_bytes": 826777636,
+      "within_archive_hardlink_groups": 59,
+      "report": "discovery/discovery.json"
+    },
+    {
+      "path": "extraction.tar.xz",
+      "sha256": "b6318b81e6c7b8edaee37f5dec2b40ba436e2c71112ef169b20532c52679aeeb",
+      "bytes": 50682312,
+      "members": 1613,
+      "regular_files": 1406,
+      "symlinks": 4,
+      "logical_file_bytes": 760771164,
+      "within_archive_hardlink_groups": 59,
+      "report": "extraction/implementation.json"
+    }
+  ]
+}

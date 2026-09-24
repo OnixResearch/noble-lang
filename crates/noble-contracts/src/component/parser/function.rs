@@ -5,8 +5,9 @@ impl super::Cursor<'_> {
         method: Option<alloc::string::String>,
     ) -> Result<super::Function, crate::component::Error> {
         attempt!(self.take(":"));
-        if self.peek("async") {
-            return Err(crate::component::unsupported("async and suspension, including async with borrow, are outside the synchronous boundary"));
+        let is_async = self.peek("async");
+        if is_async {
+            attempt!(self.take("async"));
         }
         attempt!(self.take("func"));
         attempt!(self.take("("));
@@ -46,6 +47,7 @@ impl super::Cursor<'_> {
             method,
             parameters,
             results,
+            asynchronous: is_async,
         })
     }
 
@@ -75,20 +77,18 @@ impl super::Cursor<'_> {
             "bool" => Ok(super::RawType::Bool),
             "s64" => Ok(super::RawType::S64),
             "string" => Ok(super::RawType::String),
-            "list" => {
+            "list" | "stream" => {
                 attempt!(self.take("<"));
                 attempt!(self.take("u8"));
                 attempt!(self.take(">"));
-                Ok(super::RawType::Bytes)
+                if name == "list" {
+                    Ok(super::RawType::Bytes)
+                } else {
+                    Ok(super::RawType::StreamU8)
+                }
             }
-            "result" => {
-                attempt!(self.take("<"));
-                attempt!(self.take("s64"));
-                attempt!(self.take(","));
-                attempt!(self.take("string"));
-                attempt!(self.take(">"));
-                Ok(super::RawType::ResultS64String)
-            }
+            "result" => self.result_type(),
+            "future" => self.future(),
             "own" | "borrow" => {
                 attempt!(self.take("<"));
                 let resource = attempt!(self.name());
@@ -100,13 +100,68 @@ impl super::Cursor<'_> {
                 }
             }
             "u8" | "s8" | "u16" | "s16" | "u32" | "s32" | "u64" | "f32" | "f64" | "char"
-            | "tuple" | "option" | "future" | "stream" => Err(crate::component::unsupported(
-                "WIT type has no exact supported synchronous adapter",
+            | "tuple" | "option" => Err(crate::component::unsupported(
+                "WIT type has no exact supported bounded adapter",
             )),
             _ => {
                 self.at = self.at.saturating_sub(1);
                 Ok(super::RawType::Own(attempt!(self.name())))
             }
         }
+    }
+
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-maintainers; future parsing consumes metered tokens through non-const cursor methods and constructs owned diagnostics on unsupported payloads."
+    )]
+    fn future(&mut self) -> Result<super::RawType, crate::component::Error> {
+        attempt!(self.take("<"));
+        let ty = match attempt!(self.next()) {
+            "s64" => super::RawType::FutureS64,
+            "result" => {
+                if !matches!(
+                    attempt!(self.result_type()),
+                    super::RawType::ResultS64String
+                ) {
+                    return Err(crate::component::unsupported(
+                        "only future<s64> and future<result<s64,string>> have bounded adapters",
+                    ));
+                }
+                super::RawType::FutureResultS64String
+            }
+            _ => {
+                return Err(crate::component::unsupported(
+                    "only future<s64> and future<result<s64,string>> have bounded adapters",
+                ))
+            }
+        };
+        attempt!(self.take(">"));
+        Ok(ty)
+    }
+
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-maintainers; result parsing consumes metered tokens through non-const cursor methods and constructs owned diagnostics on unsupported payloads."
+    )]
+    fn result_type(&mut self) -> Result<super::RawType, crate::component::Error> {
+        attempt!(self.take("<"));
+        let ty = match attempt!(self.next()) {
+            "s64" => super::RawType::ResultS64String,
+            "list" => {
+                attempt!(self.take("<"));
+                attempt!(self.take("u8"));
+                attempt!(self.take(">"));
+                super::RawType::ResultBytesString
+            }
+            _ => {
+                return Err(crate::component::unsupported(
+                    "only result<s64,string> and result<list<u8>,string> have bounded adapters",
+                ))
+            }
+        };
+        attempt!(self.take(","));
+        attempt!(self.take("string"));
+        attempt!(self.take(">"));
+        Ok(ty)
     }
 }

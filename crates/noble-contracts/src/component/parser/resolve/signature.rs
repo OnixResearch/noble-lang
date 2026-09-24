@@ -29,6 +29,12 @@ impl super::Context<'_> {
                     break;
                 }
             };
+            if function.asynchronous && matches!(value, crate::component::Type::Borrow(_)) {
+                failure = Some(crate::component::unsupported(
+                    "an async WIT operation cannot retain a borrow",
+                ));
+                break;
+            }
             if !is_imported && matches!(value, crate::component::Type::Borrow(_)) {
                 failure = Some(crate::component::unsupported(
                     "borrowed exports are outside the synchronous subset",
@@ -44,9 +50,13 @@ impl super::Context<'_> {
         let flat_count = parameters.iter().fold(0usize, |count, ty| {
             count.saturating_add(match ty {
                 crate::component::Type::String | crate::component::Type::Bytes => 2,
-                crate::component::Type::ResultS64String => 3,
+                crate::component::Type::ResultS64String
+                | crate::component::Type::ResultBytesString => 3,
                 crate::component::Type::Boolean
                 | crate::component::Type::S64
+                | crate::component::Type::StreamU8
+                | crate::component::Type::FutureS64
+                | crate::component::Type::FutureResultS64String
                 | crate::component::Type::Own(_)
                 | crate::component::Type::Borrow(_) => 1,
             })

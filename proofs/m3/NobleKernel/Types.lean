@@ -490,6 +490,381 @@ structure acceptance.validate.DepWalk where
   stack : alloc.vec.Vec contracts.Definition
   spent : Std.U32
 
+/-- [noble_kernel::async_tasks::domain::Obligations]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 72:0-76:1
+    Visibility: public -/
+structure async_tasks.domain.Obligations where
+  inputs : Std.U64
+  results : Std.U64
+  buffers : Std.U8
+
+/-- [noble_kernel::async_tasks::domain::Accounting]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 169:0-183:1
+    Visibility: public -/
+structure async_tasks.domain.Accounting where
+  acquired : async_tasks.domain.Obligations
+  consumed_inputs : Std.U64
+  retirement_withdrawn_inputs : Std.U64
+  retired : async_tasks.domain.Obligations
+  delivered : async_tasks.domain.Obligations
+  cleaned : async_tasks.domain.Obligations
+  pins_acquired : Std.U64
+  pins_released : Std.U64
+  rejected_result_bytes : Std.Usize
+  completion_accepted : Bool
+  wake_queued : Bool
+  wake_removed : Bool
+  reservation_released : Bool
+
+/-- [noble_kernel::async_tasks::domain::Outcome]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 47:0-50:1
+    Visibility: public -/
+@[discriminant isize]
+inductive async_tasks.domain.Outcome where
+| Success : async_tasks.domain.Outcome
+| DomainError : async_tasks.domain.Outcome
+
+/-- [noble_kernel::async_tasks::domain::Failure]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 37:0-43:1
+    Visibility: public -/
+@[discriminant isize]
+inductive async_tasks.domain.Failure where
+| Cancelled : async_tasks.domain.Failure
+| Trap : async_tasks.domain.Failure
+| Deadline : async_tasks.domain.Failure
+| Budget : async_tasks.domain.Failure
+| Internal : async_tasks.domain.Failure
+
+/-- [noble_kernel::async_tasks::domain::Action]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 147:0-165:1
+    Visibility: public -/
+@[discriminant isize]
+inductive async_tasks.domain.Action where
+| Admitted : async_tasks.domain.Action
+| Inspected : async_tasks.domain.Action
+| ResultReady : async_tasks.domain.Outcome → async_tasks.domain.Action
+| ResultDelivered : async_tasks.domain.Action
+| CancellationAcknowledged : async_tasks.domain.Action
+| FailureRecorded : async_tasks.domain.Failure → async_tasks.domain.Action
+| CompletionRetired : async_tasks.domain.Outcome → async_tasks.domain.Action
+| OversizedResult : async_tasks.domain.Action
+| NativeStopObserved : async_tasks.domain.Action
+| PinsSettled : async_tasks.domain.Action
+| CleanupSettled : async_tasks.domain.Action
+| WakeQueued : async_tasks.domain.Action
+| WakeCoalesced : async_tasks.domain.Action
+| WakeTaken : async_tasks.domain.Action
+| RetirementCompleted : async_tasks.domain.Action
+| DeliverySettled : async_tasks.domain.Action
+| Duplicate : async_tasks.domain.Action
+
+/-- [noble_kernel::async_tasks::domain::Disposition]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 54:0-58:1
+    Visibility: public -/
+structure async_tasks.domain.Disposition where
+  returned : Std.U64
+  consumed : Std.U64
+  retired : Std.U64
+
+/-- [noble_kernel::async_tasks::domain::Completion]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 63:0-67:1
+    Visibility: public -/
+structure async_tasks.domain.Completion where
+  inputs : async_tasks.domain.Disposition
+  produced : Std.U64
+  bytes : Std.Usize
+
+/-- [noble_kernel::async_tasks::domain::State]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 27:0-33:1
+    Visibility: public -/
+@[discriminant isize]
+inductive async_tasks.domain.State where
+| Pending : async_tasks.domain.State
+| Ready : async_tasks.domain.State
+| Delivered : async_tasks.domain.State
+| Retiring : async_tasks.domain.State
+| Retired : async_tasks.domain.State
+
+/-- [noble_kernel::resources::Context]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 30:0-30:28
+    Visibility: public -/
+@[reducible]
+def resources.Context := Std.U64
+
+/-- [noble_kernel::async_tasks::domain::TableId]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 3:0-3:28
+    Visibility: public -/
+@[reducible]
+def async_tasks.domain.TableId := Std.U64
+
+/-- [noble_kernel::async_tasks::domain::Handle]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 11:0-16:1
+    Visibility: public -/
+structure async_tasks.domain.Handle where
+  table : async_tasks.domain.TableId
+  slot : Std.Usize
+  generation : Std.U64
+  context : resources.Context
+
+/-- [noble_kernel::async_tasks::domain::NativeId]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 7:0-7:29
+    Visibility: public -/
+@[reducible]
+def async_tasks.domain.NativeId := Std.U64
+
+/-- [noble_kernel::async_tasks::bounds::Request]
+    Source: 'crates/noble-kernel/src/async_tasks/bounds.rs', lines 10:0-20:1
+    Visibility: public -/
+structure async_tasks.bounds.Request where
+  context : resources.Context
+  native : async_tasks.domain.NativeId
+  inputs : Std.U8
+  results : Std.U8
+  input_bytes : Std.Usize
+  result_bytes : Std.Usize
+  parked_bytes : Std.Usize
+  pins : Std.U8
+  wakeups : Std.U32
+
+/-- [noble_kernel::async_tasks::domain::Snapshot]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 90:0-108:1
+    Visibility: public -/
+structure async_tasks.domain.Snapshot where
+  handle : async_tasks.domain.Handle
+  native : async_tasks.domain.NativeId
+  state : async_tasks.domain.State
+  reservation : async_tasks.bounds.Request
+  completion : Option async_tasks.domain.Completion
+  outcome : Option async_tasks.domain.Outcome
+  failure : Option async_tasks.domain.Failure
+  completion_closed : Bool
+  native_stopped : Bool
+  pins : Std.U64
+  returned_inputs : Std.U64
+  retiring_inputs : Std.U64
+  results : Std.U64
+  buffers : Std.U8
+  wake_pending : Bool
+  wakeups_remaining : Std.U32
+  finalized : Bool
+
+/-- [noble_kernel::async_tasks::domain::Decision]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 187:0-191:1
+    Visibility: public -/
+structure async_tasks.domain.Decision where
+  record : async_tasks.domain.Snapshot
+  action : async_tasks.domain.Action
+  accounting : async_tasks.domain.Accounting
+
+/-- [noble_kernel::async_tasks::bounds::Limits]
+    Source: 'crates/noble-kernel/src/async_tasks/bounds.rs', lines 23:0-32:1
+    Visibility: public -/
+structure async_tasks.bounds.Limits where
+  tasks : Std.Usize
+  terminal_results : Std.Usize
+  bytes : Std.Usize
+  parked_payloads : Std.Usize
+  pins : Std.Usize
+  wakeups : Std.U64
+  retirement_work : Std.Usize
+  generations : Std.U64
+
+/-- [noble_kernel::async_tasks::bounds::Footprint]
+    Source: 'crates/noble-kernel/src/async_tasks/bounds.rs', lines 36:0-44:1
+    Visibility: public -/
+structure async_tasks.bounds.Footprint where
+  tasks : Std.Usize
+  terminal_results : Std.Usize
+  bytes : Std.Usize
+  parked_payloads : Std.Usize
+  pins : Std.Usize
+  wakeups : Std.U64
+  retirement_work : Std.Usize
+
+/-- [noble_kernel::async_tasks::domain::Error]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 195:0-225:1
+    Visibility: public -/
+@[discriminant isize]
+inductive async_tasks.domain.Error where
+| InvalidLimits : async_tasks.domain.Error
+| InvalidRequest : async_tasks.domain.Error
+| StorageUnavailable : async_tasks.domain.Error
+| TaskCapacity : async_tasks.domain.Error
+| TerminalCapacity : async_tasks.domain.Error
+| ByteCapacity : async_tasks.domain.Error
+| ParkedCapacity : async_tasks.domain.Error
+| PinCapacity : async_tasks.domain.Error
+| WakeCapacity : async_tasks.domain.Error
+| RetirementCapacity : async_tasks.domain.Error
+| GenerationExhausted : async_tasks.domain.Error
+| InvalidHandle : async_tasks.domain.Error
+| WrongContext : async_tasks.domain.Error
+| WrongGeneration : async_tasks.domain.Error
+| WrongNative : async_tasks.domain.Error
+| InvalidRecord : async_tasks.domain.Error
+| InvalidDisposition : async_tasks.domain.Error
+| ResultCapacity : async_tasks.domain.Error
+| Pending : async_tasks.domain.Error
+| Ready : async_tasks.domain.Error
+| Delivered : async_tasks.domain.Error
+| Retiring : async_tasks.domain.Error
+| Retired : async_tasks.domain.Error
+| NativeStillRunning : async_tasks.domain.Error
+| PinsOutstanding : async_tasks.domain.Error
+| InvalidPins : async_tasks.domain.Error
+| InvalidCleanup : async_tasks.domain.Error
+| CleanupOutstanding : async_tasks.domain.Error
+| NoWakeup : async_tasks.domain.Error
+
+/-- [noble_kernel::async_tasks::domain::Callback]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 20:0-23:1
+    Visibility: public -/
+structure async_tasks.domain.Callback where
+  task : async_tasks.domain.Handle
+  native : async_tasks.domain.NativeId
+
+/-- [noble_kernel::async_tasks::domain::Event]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 113:0-142:1
+    Visibility: public -/
+@[discriminant isize]
+inductive async_tasks.domain.Event where
+| Inspect : async_tasks.domain.Event
+| CompleteSuccess :
+  async_tasks.domain.NativeId →
+  async_tasks.domain.Completion →
+  async_tasks.domain.Event
+| CompleteDomainError :
+  async_tasks.domain.NativeId →
+  async_tasks.domain.Completion →
+  async_tasks.domain.Event
+| Deliver : async_tasks.domain.Event
+| Cancel : async_tasks.domain.Event
+| Trap : async_tasks.domain.Event
+| Deadline : async_tasks.domain.Event
+| Budget : async_tasks.domain.Event
+| InternalFailure : async_tasks.domain.Event
+| NativeStopped : async_tasks.domain.NativeId → async_tasks.domain.Event
+| SettlePins :
+  async_tasks.domain.NativeId →
+  Std.U64 →
+  async_tasks.domain.Event
+| Cleanup : async_tasks.domain.Obligations → async_tasks.domain.Event
+| Wake : async_tasks.domain.NativeId → async_tasks.domain.Event
+| TakeWake : async_tasks.domain.Event
+| Finish : async_tasks.domain.Event
+
+/-- [noble_kernel::async_tasks::Task]
+    Source: 'crates/noble-kernel/src/async_tasks/mod.rs', lines 39:0-41:1
+    Visibility: public -/
+structure async_tasks.Task where
+  handle : async_tasks.domain.Handle
+
+/-- [noble_kernel::async_tasks::Rejected]
+    Source: 'crates/noble-kernel/src/async_tasks/mod.rs', lines 52:0-55:1
+    Visibility: public -/
+structure async_tasks.Rejected (T : Type) where
+  error : async_tasks.domain.Error
+  input : T
+
+/-- [noble_kernel::async_tasks::Admitted]
+    Source: 'crates/noble-kernel/src/async_tasks/mod.rs', lines 59:0-64:1
+    Visibility: public -/
+structure async_tasks.Admitted (T : Type) where
+  task : async_tasks.Task
+  callback : async_tasks.domain.Callback
+  inputs : T
+  decision : async_tasks.domain.Decision
+
+/-- [noble_kernel::async_tasks::Observation]
+    Source: 'crates/noble-kernel/src/async_tasks/mod.rs', lines 68:0-77:1
+    Visibility: public -/
+structure async_tasks.Observation where
+  pending : Std.Usize
+  ready : Std.Usize
+  delivered : Std.Usize
+  retiring : Std.Usize
+  retired : Std.Usize
+  outstanding_pins : Std.Usize
+  queued_wakeups : Std.Usize
+  reserved : async_tasks.bounds.Footprint
+
+/-- [noble_kernel::async_tasks::schema::Rule]
+    Source: 'crates/noble-kernel/src/async_tasks/schema.rs', lines 96:0-111:1
+    Visibility: public -/
+@[discriminant isize]
+inductive async_tasks.schema.Rule where
+| Inspect : async_tasks.schema.Rule
+| Complete :
+  async_tasks.domain.Outcome →
+  async_tasks.domain.Completion →
+  async_tasks.schema.Rule
+| Deliver : async_tasks.schema.Rule
+| Retire : async_tasks.domain.Failure → async_tasks.schema.Rule
+| ObserveStop : async_tasks.schema.Rule
+| SettlePins : Std.U64 → async_tasks.schema.Rule
+| Cleanup : async_tasks.domain.Obligations → async_tasks.schema.Rule
+| Wake : async_tasks.schema.Rule
+| TakeWake : async_tasks.schema.Rule
+| Finish : async_tasks.schema.Rule
+| Duplicate : async_tasks.schema.Rule
+
+/-- [noble_kernel::async_tasks::schema::EventKind]
+    Source: 'crates/noble-kernel/src/async_tasks/schema.rs', lines 30:0-46:1
+    Visibility: public -/
+@[discriminant isize]
+inductive async_tasks.schema.EventKind where
+| Inspect : async_tasks.schema.EventKind
+| CompleteSuccess : async_tasks.schema.EventKind
+| CompleteDomainError : async_tasks.schema.EventKind
+| Deliver : async_tasks.schema.EventKind
+| Cancel : async_tasks.schema.EventKind
+| Trap : async_tasks.schema.EventKind
+| Deadline : async_tasks.schema.EventKind
+| Budget : async_tasks.schema.EventKind
+| InternalFailure : async_tasks.schema.EventKind
+| NativeStopped : async_tasks.schema.EventKind
+| SettlePins : async_tasks.schema.EventKind
+| Cleanup : async_tasks.schema.EventKind
+| Wake : async_tasks.schema.EventKind
+| TakeWake : async_tasks.schema.EventKind
+| Finish : async_tasks.schema.EventKind
+
+/-- [noble_kernel::async_tasks::schema::coverage::CoverageRow]
+    Source: 'crates/noble-kernel/src/async_tasks/schema/coverage.rs', lines 8:0-12:1
+    Visibility: public -/
+structure async_tasks.schema.coverage.CoverageRow where
+  state : async_tasks.domain.State
+  event : async_tasks.schema.EventKind
+  rule : core.result.Result async_tasks.schema.Rule async_tasks.domain.Error
+
+/-- [noble_kernel::async_tasks::schema::coverage::CoverageError]
+    Source: 'crates/noble-kernel/src/async_tasks/schema/coverage.rs', lines 19:0-26:1
+    Visibility: public -/
+@[discriminant isize]
+inductive async_tasks.schema.coverage.CoverageError where
+| StateSchema : async_tasks.schema.coverage.CoverageError
+| EventSchema : async_tasks.schema.coverage.CoverageError
+| ExcessRows : async_tasks.schema.coverage.CoverageError
+| DuplicatePair : async_tasks.schema.coverage.CoverageError
+| MissingPair : async_tasks.schema.coverage.CoverageError
+| WrongDisposition : async_tasks.schema.coverage.CoverageError
+
+/-- [noble_kernel::async_tasks::table::Table]
+    Source: 'crates/noble-kernel/src/async_tasks/table.rs', lines 8:0-13:1
+    Visibility: public -/
+structure async_tasks.table.Table where
+  id : async_tasks.domain.TableId
+  limits : async_tasks.bounds.Limits
+  records : alloc.vec.Vec async_tasks.domain.Snapshot
+  generation : Std.U64
+
+/-- [noble_kernel::async_tasks::table::Admission]
+    Source: 'crates/noble-kernel/src/async_tasks/table.rs', lines 19:0-22:1
+    Visibility: public -/
+structure async_tasks.table.Admission where
+  table : async_tasks.table.Table
+  record : async_tasks.domain.Snapshot
+
 /-- [noble_kernel::authority::report::ReceiptScope]
     Source: 'crates/noble-kernel/src/authority/report.rs', lines 86:0-91:1
     Visibility: public -/
@@ -966,7 +1341,7 @@ structure execution.Submission where
   request : untrusted.Request
 
 /-- [noble_kernel::BudgetOutcome]
-    Source: 'crates/noble-kernel/src/lib.rs', lines 41:0-44:1
+    Source: 'crates/noble-kernel/src/lib.rs', lines 42:0-45:1
     Visibility: public -/
 @[discriminant isize]
 inductive BudgetOutcome where
@@ -978,12 +1353,6 @@ inductive BudgetOutcome where
     Visibility: public -/
 @[reducible]
 def resources.TableId := Std.U64
-
-/-- [noble_kernel::resources::Context]
-    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 30:0-30:28
-    Visibility: public -/
-@[reducible]
-def resources.Context := Std.U64
 
 /-- [noble_kernel::resources::Rights]
     Source: 'crates/noble-kernel/src/resources/mod.rs', lines 34:0-34:27

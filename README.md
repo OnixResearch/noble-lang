@@ -156,11 +156,11 @@ receipts do not substitute for that later source-bound acceptance.
 
 MC1's 36-case regression and M3's four-configuration regression have passed in
 their own scopes. They do not replace those M4 gates. The current inventory's
-1,620 authored production body obligations remain open in the
+1,939 authored production body obligations remain open in the
 [reviewed inventory](verification/source-inventory.md).
 Neither extraction nor executed examples establish universal frontend, kernel,
 compiler or backend refinement; PO-17/18 and SO-07 remain open. MC2 adds optional
-checked companions; M5's resource/component boundary remains separate.
+checked companions; M5 and M6's resource/component boundaries remain separate.
 
 ## Compiling synchronous WIT components
 
@@ -257,12 +257,120 @@ resource roots and 52 extraction/audit refusal controls. The frozen CLI also
 passes the retained MC1, MC2, M3 and M4 regressions. Complete collection covers
 23 workspace units and the 25-unit positive boundary fixture under the unchanged
 73-rule deny-all policy. The final document/Cairn Nix receipt is a separate
-required closeout gate. All 1,620 authored-body inventory obligations remain open.
+required closeout gate. At M5 completion, all 1,620 authored-body inventory
+obligations remained open; that historical count is not the current inventory.
 
-This profile does not implement the full Component-Draft, WASI, native async,
-or a portable ABI for arbitrary first-class Noble Programs. Unsupported
+This synchronous profile does not implement the full Component-Draft, WASI,
+native async, or a portable ABI for arbitrary first-class Noble Programs. Unsupported
 signatures and bodies fail before component emission; a reviewed-pure import
 still has its exact guest-request effect.
+
+## Compiling native async WIT components
+
+The implemented **Component-Async-Bootstrap** selection is a separate bounded
+component path, not an expansion of resource-free `run`/`session` or permission
+to suspend an M5 borrowed call. Its primary world is
+[`noble-test:async-boundary/bootstrap@1.0.0`](crates/noble-wasm/wit/async.wit).
+The following uses the exact WIT and all five Noble export bodies compiled by
+the [native gate](verification/m6/gate.mjs); the output directory must be new:
+
+```sh
+noble component bindings crates/noble-wasm/wit/async.wit bootstrap
+noble component compile crates/noble-wasm/wit/async.wit bootstrap async-component-out \
+  order=verification/m6/cases/order.noble \
+  future-result=verification/m6/cases/future-result.noble \
+  stream-result=verification/m6/cases/stream-result.noble \
+  future-cancel=verification/m6/cases/future-cancel.noble \
+  stream-close=verification/m6/cases/stream-close.noble
+```
+
+The selected world determines the async profile; no new Noble `async`/`await`
+syntax or guest scheduler is involved. The `order` body is
+`host.first host.second`: native suspension completes the first import before
+the second starts. The other bodies create and consume
+`future<result<s64,string>>` or `stream<u8>` through typed host operations.
+Live values, including a live stream nested in a Noble `Pair`, are move-only,
+non-`Data` and non-`Capture`; generic duplication, dropping, capture and the
+quote-then-reflect serialization route are rejected. Explicit future
+cancellation, stream read-end closure and invocation cancellation are different
+operations; closure alone is not producer completion or a terminal error.
+
+Independent export/kernel checking precedes component emission. The selected
+memory32/UTF-8 ABI uses native async lowering, stackful async lifting,
+waitable-set/subtask operations and `task.return`; mixed synchronous members
+keep their synchronous ABI. [The pins](verification/m6/pins.json) select
+`wasm-tools` 1.245.1, Wasmtime and `wasmtime-wit-bindgen` 40.0.2, and
+`wit-parser`/`wit-component` 0.243.0. The
+[independent Rust peer](verification/m6/peer) supplies Component Model linking,
+binding generation and typed conversion while deliberately reusing Noble's
+production task, resource and authority decisions.
+
+The peer's selected driver uses one cooperative engine thread, 100,000 guest
+fuel, a 1,000-fuel yield quantum, a 4,194,304-byte linear-memory limit and at
+most 32 retained external native jobs. It awaits task exit before observing a
+successful export. Up to eight live values each reserve 128 result bytes and
+128 local plus 128 external parked payload bytes. A stream has a one-byte
+producer buffer and a 64-byte bounded consumer payload. These are payload and
+linear-memory limits, not whole-process heap accounting or a scheduling bound.
+The [resource contract](.cairn/specs/resource-adapters/spec.md#async-extension-gate)
+records the task, pin, wakeup and retirement reservations separately.
+
+Cancellation revokes guest access through the production ownership table and
+invocation-isolated Store destruction; host state and native pins survive until
+actual native stop and accounted retirement. Wasmtime 40.0.2 does **not** supply
+a per-task cancellation API here. Protected admission still requires a trusted
+one-shot witness for the exact plan. A late authentic operation success may
+justify an operation receipt, but cannot uncancel the invocation or restore
+guest ownership.
+
+### M6 native execution and scoped completion
+
+The retained [native receipt](verification/m6/acceptance.json) passes WI-11,
+WI-12, WI-16 and WORKER-08: 38 variants, 62 controls, 13 native kernel tests
+and 157 recorded commands. Its [source-bound build](verification/m6/build.mjs)
+binds CLI SHA256
+`dc951c1a12512669857a96ba3a0765569e28024db13923cf92dd3ebde0755377`.
+The lanes are deliberately separate:
+
+- **Compiled Noble:** sequential native imports, future/stream terminal cases,
+  live-value eligibility refusals and positive construction controls run through
+  actual component compilation and the independent peer. Additional compiled
+  worlds exercise owned-resource return/domain errors and five-parameter calls.
+- **Local ownership and progress:** WORKER-08's task-owner races, the complete
+  five-state/fifteen-event schema controls, and fuel/epoch/blocking-deadline
+  probes exercise production decisions and the peer. They are not a completed
+  worker service or compiled Noble coverage for every local probe.
+- **Official WASI compatibility:** a separate
+  [hand-written clock component](verification/m6/peer/src/clock.wat), not Noble
+  output, executes `wasi:clocks/monotonic-clock@0.3.0-rc-2025-09-16#wait-for`
+  and awaits task exit. Stable `0.3.0` linkage is rejected, not substituted.
+  This is neither stable WASI 0.3 support nor full WASI conformance.
+
+[The M6 completion record](verification/m6/evidence.json) binds the native,
+formal, regression and quality lanes for the selected profile. The
+[runtime archive](verification/m6/runtime.tar.gz) and its
+[verified manifest](verification/m6/runtime-manifest.json) retain 1,709 files,
+including all 1,708 gate-retained members. Hardlink deduplication preserves their
+paths, bytes and permission modes, not execution-time inode identity.
+
+The [independently checked extraction](verification/m6/extraction.json) binds
+526 current source files, 14 strict actual-Rust async correspondence and
+lifecycle roots, all 75 declared constructor pairs, and 176 M6 refusal
+controls (228 across the inherited lanes). Its
+[reviewed lock](verification/m4/extraction-lock.json) and
+[roundtrip-verified discovery/check archives](verification/m6/formal-archives.json)
+retain the translated sources, generated Lean and compiled audits. These
+qualified proof results do not establish physical native release or universal
+host/backend refinement. The [full MC1/MC2/M3/M4/M5 regressions](verification/m6/regressions.json)
+and [all thirteen declared Nix checks](verification/m6/nix-checks.json)
+pass; the [roundtrip-verified assurance](verification/m6/assurance-archive.json)
+and [quality](verification/m6/quality-archive.json) archives retain raw
+observations. Native execution or extraction alone does not substitute for
+these separate gates.
+Callback/fact authenticity, physical native release, engine/ABI correctness,
+clocks and OS scheduling remain explicit trust boundaries. General async
+borrowing, full Component-Draft/WASI, MW1/MW2, Syndicate and universal
+frontend/kernel/compiler/backend refinement remain open.
 
 ## Using MC1 contracts
 

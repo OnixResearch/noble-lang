@@ -10,24 +10,18 @@ pub(super) fn validate(
 ) -> Result<(), crate::Diagnostic> {
     match ty {
         noble_contracts::component::Type::Boolean => {
-            attempt!(super::super::abi::get(
-                buffer,
-                attempt!(super::slot(value, 0))
-            ));
+            attempt!(read_lane(value, 0, buffer));
             buffer.append(b" i32.const 1 i32.gt_u if unreachable end\n")
         }
         noble_contracts::component::Type::S64
+        | noble_contracts::component::Type::StreamU8
+        | noble_contracts::component::Type::FutureS64
+        | noble_contracts::component::Type::FutureResultS64String
         | noble_contracts::component::Type::Own(_)
         | noble_contracts::component::Type::Borrow(_) => Ok(()),
         noble_contracts::component::Type::String | noble_contracts::component::Type::Bytes => {
-            attempt!(super::super::abi::get(
-                buffer,
-                attempt!(super::slot(value, 0))
-            ));
-            attempt!(super::super::abi::get(
-                buffer,
-                attempt!(super::slot(value, 1))
-            ));
+            attempt!(read_lane(value, 0, buffer));
+            attempt!(read_lane(value, 1, buffer));
             if ty == noble_contracts::component::Type::String {
                 buffer.append(b" call $utf8\n")
             } else {
@@ -35,31 +29,28 @@ pub(super) fn validate(
             }
         }
         noble_contracts::component::Type::ResultS64String => {
-            attempt!(super::super::abi::get(
-                buffer,
-                attempt!(super::slot(value, 0))
-            ));
+            attempt!(read_lane(value, 0, buffer));
             attempt!(buffer.append(b" i32.const 1 i32.gt_u if unreachable end\n"));
-            attempt!(super::super::abi::get(
-                buffer,
-                attempt!(super::slot(value, 0))
-            ));
+            attempt!(read_lane(value, 0, buffer));
             attempt!(buffer.append(b" if\n"));
-            attempt!(super::super::abi::get(
-                buffer,
-                attempt!(super::slot(value, 1))
-            ));
+            attempt!(read_lane(value, 1, buffer));
             attempt!(buffer.append(b" i64.const 4294967295 i64.gt_u if unreachable end\n"));
-            attempt!(super::super::abi::get(
-                buffer,
-                attempt!(super::slot(value, 1))
-            ));
+            attempt!(read_lane(value, 1, buffer));
             attempt!(buffer.append(b" i32.wrap_i64\n"));
-            attempt!(super::super::abi::get(
-                buffer,
-                attempt!(super::slot(value, 2))
-            ));
+            attempt!(read_lane(value, 2, buffer));
             buffer.append(b" call $utf8 end\n")
+        }
+        noble_contracts::component::Type::ResultBytesString => {
+            attempt!(read_lane(value, 0, buffer));
+            attempt!(buffer.append(b" i32.const 1 i32.gt_u if unreachable end\n"));
+            attempt!(read_lane(value, 0, buffer));
+            attempt!(buffer.append(b" if\n"));
+            attempt!(read_lane(value, 1, buffer));
+            attempt!(read_lane(value, 2, buffer));
+            attempt!(buffer.append(b" call $utf8\n else\n"));
+            attempt!(read_lane(value, 1, buffer));
+            attempt!(read_lane(value, 2, buffer));
+            buffer.append(b" call $range\n end\n")
         }
     }
 }
@@ -68,10 +59,17 @@ pub(super) fn allocate(
     ty: noble_contracts::component::Type,
     state: &mut super::State,
 ) -> Result<u32, crate::Diagnostic> {
+    allocate_layout(super::super::abi::memory_layout(ty), state)
+}
+
+pub(super) fn allocate_layout(
+    layout: (u32, u32),
+    state: &mut super::State,
+) -> Result<u32, crate::Diagnostic> {
+    let (align, size_bytes) = layout;
     let area = attempt!(state.local(super::super::abi::Lane::I32));
-    let (align, size) = super::super::abi::memory_layout(ty);
     attempt!(state.code.i32(align));
-    attempt!(state.code.i32(size));
+    attempt!(state.code.i32(size_bytes));
     attempt!(state.code.append(b" call $alloc\n"));
     attempt!(super::super::abi::set(&mut state.code, area));
     Ok(area)
@@ -84,59 +82,67 @@ pub(super) fn load(
     buffer: &mut crate::output::Buffer,
 ) -> Result<(), crate::Diagnostic> {
     match ty {
+        Some(noble_contracts::component::Type::Boolean) => {
+            attempt!(super::super::abi::get(buffer, area));
+            attempt!(buffer.append(b" i32.load8_u\n"));
+            capture_lane(value, 0, buffer)
+        }
+        Some(noble_contracts::component::Type::S64) => {
+            attempt!(super::super::abi::get(buffer, area));
+            attempt!(buffer.append(b" i64.load\n"));
+            capture_lane(value, 0, buffer)
+        }
+        Some(
+            noble_contracts::component::Type::Own(_)
+            | noble_contracts::component::Type::Borrow(_)
+            | noble_contracts::component::Type::StreamU8
+            | noble_contracts::component::Type::FutureS64
+            | noble_contracts::component::Type::FutureResultS64String,
+        ) => {
+            attempt!(super::super::abi::get(buffer, area));
+            attempt!(buffer.append(b" i32.load\n"));
+            capture_lane(value, 0, buffer)
+        }
         Some(
             noble_contracts::component::Type::String | noble_contracts::component::Type::Bytes,
         ) => {
             attempt!(super::super::abi::get(buffer, area));
             attempt!(buffer.append(b" i32.load\n"));
-            attempt!(super::super::abi::set(
-                buffer,
-                attempt!(super::slot(value, 0))
-            ));
+            attempt!(capture_lane(value, 0, buffer));
             attempt!(super::super::abi::get(buffer, area));
             attempt!(buffer.append(b" i32.load offset=4\n"));
-            super::super::abi::set(buffer, attempt!(super::slot(value, 1)))
+            capture_lane(value, 1, buffer)
         }
         Some(noble_contracts::component::Type::ResultS64String) => {
             attempt!(super::super::abi::get(buffer, area));
             attempt!(buffer.append(b" i32.load8_u\n"));
-            attempt!(super::super::abi::set(
-                buffer,
-                attempt!(super::slot(value, 0))
-            ));
-            attempt!(super::super::abi::get(
-                buffer,
-                attempt!(super::slot(value, 0))
-            ));
+            attempt!(capture_lane(value, 0, buffer));
+            attempt!(read_lane(value, 0, buffer));
             attempt!(buffer.append(b" i32.eqz if\n"));
             attempt!(super::super::abi::get(buffer, area));
             attempt!(buffer.append(b" i64.load offset=8\n"));
-            attempt!(super::super::abi::set(
-                buffer,
-                attempt!(super::slot(value, 1))
-            ));
+            attempt!(capture_lane(value, 1, buffer));
             attempt!(buffer.append(b" else\n"));
             attempt!(super::super::abi::get(buffer, area));
             attempt!(buffer.append(b" i32.load offset=8 i64.extend_i32_u\n"));
-            attempt!(super::super::abi::set(
-                buffer,
-                attempt!(super::slot(value, 1))
-            ));
+            attempt!(capture_lane(value, 1, buffer));
             attempt!(super::super::abi::get(buffer, area));
             attempt!(buffer.append(b" i32.load offset=12\n"));
-            attempt!(super::super::abi::set(
-                buffer,
-                attempt!(super::slot(value, 2))
-            ));
+            attempt!(capture_lane(value, 2, buffer));
             buffer.append(b" end\n")
         }
-        Some(
-            noble_contracts::component::Type::Boolean
-            | noble_contracts::component::Type::S64
-            | noble_contracts::component::Type::Own(_)
-            | noble_contracts::component::Type::Borrow(_),
-        )
-        | None => Err(crate::Diagnostic::Defective),
+        Some(noble_contracts::component::Type::ResultBytesString) => {
+            attempt!(super::super::abi::get(buffer, area));
+            attempt!(buffer.append(b" i32.load8_u\n"));
+            attempt!(capture_lane(value, 0, buffer));
+            attempt!(super::super::abi::get(buffer, area));
+            attempt!(buffer.append(b" i32.load offset=4\n"));
+            attempt!(capture_lane(value, 1, buffer));
+            attempt!(super::super::abi::get(buffer, area));
+            attempt!(buffer.append(b" i32.load offset=8\n"));
+            capture_lane(value, 2, buffer)
+        }
+        None => Err(crate::Diagnostic::Defective),
     }
 }
 
@@ -146,6 +152,7 @@ pub(super) fn load(
 )]
 pub(super) fn finish(
     result: Option<noble_contracts::component::Type>,
+    asynchronous: bool,
     state: &mut super::State,
 ) -> Result<(), crate::Diagnostic> {
     let ty = match result {
@@ -165,7 +172,10 @@ pub(super) fn finish(
         return Err(crate::Diagnostic::Invalid);
     }
     attempt!(validate(ty, &value, &mut state.code));
-    if super::super::abi::lane_count(ty) == 1 {
+    // task.return lifts its parameters synchronously, including pointed-to
+    // strings/lists, before returning control to guest cleanup. It uses the
+    // sixteen-lane parameter ABI, not the synchronous one-result return ABI.
+    if asynchronous || super::super::abi::lane_count(ty) == 1 {
         return state.read(&value);
     }
     attempt!(copy_result(ty, &value, &mut state.code));
@@ -185,100 +195,103 @@ fn copy_result(
 ) -> Result<(), crate::Diagnostic> {
     match ty {
         noble_contracts::component::Type::String | noble_contracts::component::Type::Bytes => {
-            attempt!(super::super::abi::get(
-                buffer,
-                attempt!(super::slot(value, 0))
-            ));
-            attempt!(super::super::abi::get(
-                buffer,
-                attempt!(super::slot(value, 1))
-            ));
+            attempt!(read_lane(value, 0, buffer));
+            attempt!(read_lane(value, 1, buffer));
             attempt!(buffer.append(b" call $copy\n"));
-            super::super::abi::set(buffer, attempt!(super::slot(value, 0)))
+            capture_lane(value, 0, buffer)
         }
         noble_contracts::component::Type::ResultS64String => {
-            attempt!(super::super::abi::get(
-                buffer,
-                attempt!(super::slot(value, 0))
-            ));
+            attempt!(read_lane(value, 0, buffer));
             attempt!(buffer.append(b" if\n"));
-            attempt!(super::super::abi::get(
-                buffer,
-                attempt!(super::slot(value, 1))
-            ));
+            attempt!(read_lane(value, 1, buffer));
             attempt!(buffer.append(b" i32.wrap_i64\n"));
-            attempt!(super::super::abi::get(
-                buffer,
-                attempt!(super::slot(value, 2))
-            ));
+            attempt!(read_lane(value, 2, buffer));
             attempt!(buffer.append(b" call $copy i64.extend_i32_u\n"));
-            attempt!(super::super::abi::set(
-                buffer,
-                attempt!(super::slot(value, 1))
-            ));
+            attempt!(capture_lane(value, 1, buffer));
             buffer.append(b" end\n")
+        }
+        noble_contracts::component::Type::ResultBytesString => {
+            attempt!(read_lane(value, 1, buffer));
+            attempt!(read_lane(value, 2, buffer));
+            attempt!(buffer.append(b" call $copy\n"));
+            capture_lane(value, 1, buffer)
         }
         noble_contracts::component::Type::Boolean
         | noble_contracts::component::Type::S64
+        | noble_contracts::component::Type::StreamU8
+        | noble_contracts::component::Type::FutureS64
+        | noble_contracts::component::Type::FutureResultS64String
         | noble_contracts::component::Type::Own(_)
         | noble_contracts::component::Type::Borrow(_) => Err(crate::Diagnostic::Defective),
     }
 }
 
 #[expect(
-    tigerstyle::missing_const_fn,
     tigerstyle::assertion_density,
-    reason = "Owner: noble-maintainers; canonical aggregate storage emits exact discriminant and payload offsets through the non-const bounded sink; checked lane lookup and explicit scalar rejection propagate diagnostics rather than asserting on plans."
+    reason = "Owner: noble-maintainers; canonical storage emits exact scalar widths, discriminant and payload offsets through the non-const bounded sink; checked lane lookup propagates diagnostics rather than asserting on plans."
 )]
-fn store(
+pub(super) fn store(
     ty: noble_contracts::component::Type,
     area: u32,
     value: &super::Value,
     buffer: &mut crate::output::Buffer,
 ) -> Result<(), crate::Diagnostic> {
     attempt!(super::super::abi::get(buffer, area));
-    attempt!(super::super::abi::get(
-        buffer,
-        attempt!(super::slot(value, 0))
-    ));
-    attempt!(buffer.append(b" i32.store\n"));
+    attempt!(read_lane(value, 0, buffer));
     match ty {
+        noble_contracts::component::Type::Boolean => buffer.append(b" i32.store8\n"),
+        noble_contracts::component::Type::S64 => buffer.append(b" i64.store\n"),
+        noble_contracts::component::Type::Own(_)
+        | noble_contracts::component::Type::Borrow(_)
+        | noble_contracts::component::Type::StreamU8
+        | noble_contracts::component::Type::FutureS64
+        | noble_contracts::component::Type::FutureResultS64String => buffer.append(b" i32.store\n"),
         noble_contracts::component::Type::String | noble_contracts::component::Type::Bytes => {
+            attempt!(buffer.append(b" i32.store\n"));
             attempt!(super::super::abi::get(buffer, area));
-            attempt!(super::super::abi::get(
-                buffer,
-                attempt!(super::slot(value, 1))
-            ));
+            attempt!(read_lane(value, 1, buffer));
             buffer.append(b" i32.store offset=4\n")
         }
         noble_contracts::component::Type::ResultS64String => {
-            attempt!(super::super::abi::get(
-                buffer,
-                attempt!(super::slot(value, 0))
-            ));
+            attempt!(buffer.append(b" i32.store\n"));
+            attempt!(read_lane(value, 0, buffer));
             attempt!(buffer.append(b" i32.eqz if\n"));
             attempt!(super::super::abi::get(buffer, area));
-            attempt!(super::super::abi::get(
-                buffer,
-                attempt!(super::slot(value, 1))
-            ));
+            attempt!(read_lane(value, 1, buffer));
             attempt!(buffer.append(b" i64.store offset=8\n else\n"));
             attempt!(super::super::abi::get(buffer, area));
-            attempt!(super::super::abi::get(
-                buffer,
-                attempt!(super::slot(value, 1))
-            ));
+            attempt!(read_lane(value, 1, buffer));
             attempt!(buffer.append(b" i32.wrap_i64 i32.store offset=8\n"));
             attempt!(super::super::abi::get(buffer, area));
-            attempt!(super::super::abi::get(
-                buffer,
-                attempt!(super::slot(value, 2))
-            ));
+            attempt!(read_lane(value, 2, buffer));
             buffer.append(b" i32.store offset=12\n end\n")
         }
-        noble_contracts::component::Type::Boolean
-        | noble_contracts::component::Type::S64
-        | noble_contracts::component::Type::Own(_)
-        | noble_contracts::component::Type::Borrow(_) => Err(crate::Diagnostic::Defective),
+        noble_contracts::component::Type::ResultBytesString => {
+            attempt!(buffer.append(b" i32.store8\n"));
+            attempt!(super::super::abi::get(buffer, area));
+            attempt!(read_lane(value, 1, buffer));
+            attempt!(buffer.append(b" i32.store offset=4\n"));
+            attempt!(super::super::abi::get(buffer, area));
+            attempt!(read_lane(value, 2, buffer));
+            buffer.append(b" i32.store offset=8\n")
+        }
     }
+}
+
+fn read_lane(
+    value: &super::Value,
+    at: usize,
+    buffer: &mut crate::output::Buffer,
+) -> Result<(), crate::Diagnostic> {
+    let local = attempt!(super::slot(value, at));
+    super::super::abi::get(buffer, local)
+}
+
+fn capture_lane(
+    value: &super::Value,
+    at: usize,
+    buffer: &mut crate::output::Buffer,
+) -> Result<(), crate::Diagnostic> {
+    let local = attempt!(super::slot(value, at));
+    super::super::abi::set(buffer, local)
 }

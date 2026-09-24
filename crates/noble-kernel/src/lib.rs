@@ -28,6 +28,7 @@ macro_rules! attempt {
 }
 
 pub mod acceptance;
+pub mod async_tasks;
 pub mod authority;
 pub mod contracts;
 pub mod execution;

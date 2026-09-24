@@ -1,0 +1,28 @@
+{
+  "schema": "noble-m6-archive-roundtrip/v1",
+  "result": "passed",
+  "kind": "quality",
+  "members": 1501,
+  "hardlinks": 653,
+  "symlinks": 0,
+  "manifest": "quality-manifest.json",
+  "parts": [
+    {
+      "path": "quality.tar.xz.part-aa",
+      "bytes": 94371840,
+      "sha256": "fa30690612848b447de13f5453a7e11a62504b05c30b69e7791eb3e0e8451632"
+    },
+    {
+      "path": "quality.tar.xz.part-ab",
+      "bytes": 94371840,
+      "sha256": "0e390a2f72b1fa2acea013ae858e1d2b1a3db790b5918c68c2a7854925a0d213"
+    },
+    {
+      "path": "quality.tar.xz.part-ac",
+      "bytes": 41439188,
+      "sha256": "8609e2091a0e51054fdebad47bedb6e6f29906a4da45a229d930a811a79328e1"
+    }
+  ],
+  "check": "fresh xz tar extraction; exact path set, per-member SHA256, byte size, mode, symlink target and declared hardlink inode equality",
+  "compression": "xz -9e --threads=1, long dictionary"
+}

@@ -1,0 +1,131 @@
+{
+  "acceptance_ids": [],
+  "actions": [
+    {
+      "description": "move active change to archive: m6-native-async",
+      "kind": "archive_change",
+      "path": "./.cairn/archive/1970-01-01-m6-native-async"
+    }
+  ],
+  "blocked": false,
+  "change": "m6-native-async",
+  "cross_repo_dependencies": {
+    "blocked_count": 0,
+    "dependency_count": 0,
+    "input_hash": "e890d3bebd6f9f984387d26d4c6685963b96d2172fdf1df42756927cfa255a9c",
+    "non_claims": [
+      "dependency satisfaction proves presented receipt linkage only",
+      "dependency satisfaction does not prove upstream correctness or remote trust",
+      "dependency satisfaction does not prove downstream integration correctness or release eligibility"
+    ],
+    "policy_hash": "8280151b7a53822eed460149ecb600bf11418d7463c935e0742009b334f4e7dd",
+    "receipt_hash": "b37bae535823028673cb011a8f08a9b26fbfca1414a5b5141892f75699ce5c01",
+    "rows": [],
+    "satisfied_count": 0,
+    "schema": "cairn.cross-repo-dependency-receipt.v1",
+    "valid": true,
+    "verdict": "PASS"
+  },
+  "cross_repo_evidence_issues": [],
+  "dry_run": false,
+  "input_hash": "1245dc5f93d4bac665b0b3100ffff75dbed28e8cef1d7d1d2c33743be020936e",
+  "layout": "cairn",
+  "mutated": true,
+  "mutation_manifest": {
+    "after": {
+      "entries": [
+        {
+          "content_hash": "0364a2f4444d42646005db5ea2a47a42d9864edb45bffdb43f75d778a65e1e79",
+          "exists": true,
+          "path": "./.cairn/archive/1970-01-01-m6-native-async/design.md"
+        },
+        {
+          "content_hash": "df8b71bae570eb5accd702e7370a816b8ea9f2e4521254c5d75ea82a9cfcf4db",
+          "exists": true,
+          "path": "./.cairn/archive/1970-01-01-m6-native-async/metadata.json"
+        },
+        {
+          "content_hash": "d2540125990d59266351f4c51ea86a9d05b84e6420a28f452d8c8403f828cbd3",
+          "exists": true,
+          "path": "./.cairn/archive/1970-01-01-m6-native-async/proposal.md"
+        },
+        {
+          "content_hash": "12a8ba6983b055f809c2658cdef0a23d2e3b686dd6c88570c6a8c63811c127c9",
+          "exists": true,
+          "path": "./.cairn/archive/1970-01-01-m6-native-async/specs/resource-adapters/spec.md"
+        },
+        {
+          "content_hash": "3933cde5fcbb43614a52288672b89c763078cdd378442ebcece8b24220bbc58f",
+          "exists": true,
+          "path": "./.cairn/archive/1970-01-01-m6-native-async/specs/wit-wasi/spec.md"
+        },
+        {
+          "content_hash": "c7b88cf0c31afd9f499e8b7df162ff09f8f98711e18764c97dc5c0a53560f260",
+          "exists": true,
+          "path": "./.cairn/archive/1970-01-01-m6-native-async/tasks.md"
+        },
+        {
+          "content_hash": null,
+          "exists": false,
+          "path": "./.cairn/changes/m6-native-async"
+        }
+      ],
+      "manifest_hash": "3bfda7fc5eccc2edf1c728b5d3c1133bc10c163c3d38702f9873021fffe8ef00"
+    },
+    "before": {
+      "entries": [
+        {
+          "content_hash": "0364a2f4444d42646005db5ea2a47a42d9864edb45bffdb43f75d778a65e1e79",
+          "exists": true,
+          "path": "./.cairn/changes/m6-native-async/design.md"
+        },
+        {
+          "content_hash": "df8b71bae570eb5accd702e7370a816b8ea9f2e4521254c5d75ea82a9cfcf4db",
+          "exists": true,
+          "path": "./.cairn/changes/m6-native-async/metadata.json"
+        },
+        {
+          "content_hash": "d2540125990d59266351f4c51ea86a9d05b84e6420a28f452d8c8403f828cbd3",
+          "exists": true,
+          "path": "./.cairn/changes/m6-native-async/proposal.md"
+        },
+        {
+          "content_hash": "12a8ba6983b055f809c2658cdef0a23d2e3b686dd6c88570c6a8c63811c127c9",
+          "exists": true,
+          "path": "./.cairn/changes/m6-native-async/specs/resource-adapters/spec.md"
+        },
+        {
+          "content_hash": "3933cde5fcbb43614a52288672b89c763078cdd378442ebcece8b24220bbc58f",
+          "exists": true,
+          "path": "./.cairn/changes/m6-native-async/specs/wit-wasi/spec.md"
+        },
+        {
+          "content_hash": "c7b88cf0c31afd9f499e8b7df162ff09f8f98711e18764c97dc5c0a53560f260",
+          "exists": true,
+          "path": "./.cairn/changes/m6-native-async/tasks.md"
+        }
+      ],
+      "manifest_hash": "9330cbcb90b067a3d93c30d879ad5c0550874da36bffb666b3d175f1d6e0775d"
+    },
+    "kind": "archive",
+    "manifest_hash": "db9041f029f01e55c58b8b498b424e9403441c09bdac2cee8f14d2144c3e6d04"
+  },
+  "non_claims": [
+    "workflow state proves only the selected policy graph and observed structural artifact facts",
+    "workflow instructions do not prove artifact truth, review quality, or implementation correctness",
+    "workflow state does not satisfy proposal, design, tasks, sync, archive, evidence, or release gates",
+    "workflow commands are read-only and do not create, edit, delete, or approve lifecycle artifacts"
+  ],
+  "plan_hash": "5c541d78a8b6dd0069598fcd565ed47a6db9ca9aef23be13df39705f68ad66b0",
+  "policy": "cairn-default",
+  "policy_hash": "8280151b7a53822eed460149ecb600bf11418d7463c935e0742009b334f4e7dd",
+  "profile_identity_hash": "f6de1bb7ed6ca0defb603e34aa62fda5e0855ae0f047b213a863d62574d0556a",
+  "reasons": [],
+  "receipt_hash": "e9e31e1f5175f85fdb5e5e883127c68e91a1c507b4b0304e7c9834c2aa4c9924",
+  "review_receipt_hashes": [],
+  "spec_effect": "delta",
+  "workflow_profile": "spec-driven",
+  "workflow_profile_compatibility_fallback": false,
+  "workflow_profile_source": "change_create",
+  "workflow_profile_version": 1
+}

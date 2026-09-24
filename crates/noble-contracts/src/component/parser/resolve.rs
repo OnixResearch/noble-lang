@@ -48,6 +48,7 @@ pub(super) fn world(
         imports: alloc::vec::Vec::new(),
         exports: alloc::vec::Vec::new(),
         resources,
+        asynchronous: false,
         limits,
     };
     let context = Context {
@@ -170,6 +171,8 @@ impl Context<'_> {
     ) -> Result<(), crate::component::Error> {
         let (parameters, results) =
             attempt!(self.signature(interface, function, &world.resources, is_imported));
+        world.asynchronous |=
+            function.asynchronous || contains_live(&parameters) || contains_live(&results);
         let name = match &function.method {
             Some(resource) => method_name(resource, function),
             None => function.name.clone(),
@@ -216,6 +219,7 @@ impl Context<'_> {
             export_name,
             parameters,
             results,
+            asynchronous: function.asynchronous,
             effect,
             definition,
         };
@@ -238,6 +242,22 @@ impl Context<'_> {
         target.push(operation);
         Ok(())
     }
+}
+
+const fn contains_live(types: &[crate::component::Type]) -> bool {
+    let mut at = 0;
+    while at < types.len() {
+        if matches!(
+            types[at],
+            crate::component::Type::StreamU8
+                | crate::component::Type::FutureS64
+                | crate::component::Type::FutureResultS64String
+        ) {
+            return true;
+        }
+        at = at.saturating_add(1);
+    }
+    false
 }
 
 #[expect(

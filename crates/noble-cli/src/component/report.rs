@@ -45,7 +45,7 @@ pub(super) fn bindings(
         ),
         (
             "profile",
-            crate::workflow::encoding::string(noble_contracts::component::PROFILE),
+            crate::workflow::encoding::string(world.profile().name()),
         ),
         (
             "outcome",
@@ -104,6 +104,10 @@ fn operation(operation: &noble_contracts::component::Operation) -> crate::workfl
         ),
         ("word", crate::workflow::encoding::string(&operation.word)),
         (
+            "asynchronous",
+            crate::workflow::encoding::Json::Bool(operation.asynchronous),
+        ),
+        (
             "export",
             crate::workflow::encoding::string(&operation.export_name),
         ),
@@ -148,6 +152,24 @@ fn types(types: &[noble_kernel::types::Ty]) -> crate::workflow::encoding::Json {
     )
 }
 
+fn source_exports(sources: &[super::Source]) -> crate::workflow::encoding::Json {
+    crate::workflow::encoding::Json::Array(
+        sources
+            .iter()
+            .enumerate()
+            .map(|(index, source)| {
+                crate::workflow::encoding::object([
+                    ("name", crate::workflow::encoding::string(&source.name)),
+                    (
+                        "source",
+                        crate::workflow::encoding::string(std::format!("export-{index}.noble")),
+                    ),
+                ])
+            })
+            .collect(),
+    )
+}
+
 #[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; report construction checks the component byte-count conversion and serializes already independently accepted metadata; it grants no host authority or proof acceptance."
@@ -169,7 +191,7 @@ pub(super) fn compiled(
         ),
         (
             "profile",
-            crate::workflow::encoding::string(noble_contracts::component::PROFILE),
+            crate::workflow::encoding::string(world.profile().name()),
         ),
         ("outcome", crate::workflow::encoding::string("compiled")),
         ("world", crate::workflow::encoding::string(world.identity())),
@@ -191,26 +213,7 @@ pub(super) fn compiled(
             "component_bytes",
             crate::workflow::encoding::Json::Number(component_bytes),
         ),
-        (
-            "exports",
-            crate::workflow::encoding::Json::Array(
-                sources
-                    .iter()
-                    .enumerate()
-                    .map(|(index, source)| {
-                        crate::workflow::encoding::object([
-                            ("name", crate::workflow::encoding::string(&source.name)),
-                            (
-                                "source",
-                                crate::workflow::encoding::string(std::format!(
-                                    "export-{index}.noble"
-                                )),
-                            ),
-                        ])
-                    })
-                    .collect(),
-            ),
-        ),
+        ("exports", source_exports(sources)),
         (
             "output",
             crate::workflow::encoding::string(output.to_string_lossy()),
@@ -221,7 +224,11 @@ pub(super) fn compiled(
         ),
         (
             "abi",
-            crate::workflow::encoding::string("wasm-tools-1.245.1-sync-memory32-utf8"),
+            crate::workflow::encoding::string(if world.is_async() {
+                "wasm-tools-1.245.1-async-stackful-memory32-utf8"
+            } else {
+                "wasm-tools-1.245.1-sync-memory32-utf8"
+            }),
         ),
     ]))
 }

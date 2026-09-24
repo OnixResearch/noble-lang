@@ -1,0 +1,21 @@
+package noble-test:async-boundary@1.0.0;
+
+interface host {
+  first: async func(value: s64) -> s64;
+  second: async func(value: s64) -> s64;
+  make-future: func() -> future<result<s64, string>>;
+  finish-future: async func(value: future<result<s64, string>>) -> result<s64, string>;
+  make-stream: func() -> stream<u8>;
+  drain-stream: async func(value: stream<u8>) -> result<list<u8>, string>;
+  cancel-future: func(value: future<result<s64, string>>);
+  close-stream: func(value: stream<u8>);
+}
+
+world bootstrap {
+  import host;
+  export order: async func(value: s64) -> s64;
+  export future-result: async func() -> result<s64, string>;
+  export stream-result: async func() -> result<list<u8>, string>;
+  export future-cancel: async func();
+  export stream-close: async func();
+}

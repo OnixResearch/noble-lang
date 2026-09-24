@@ -8,6 +8,10 @@
 -- extracted type or function definitions of this crate (the extraction of the
 -- reachable code never mentions it); we still give it a faithful model: a
 -- value which is either uninitialized or holds a `T`.
+--
+-- `TryReserveError` records element-capacity overflow in the existing
+-- layout-free Aeneas vector model. Allocator exhaustion and byte-layout
+-- limits are outside that model; no physical allocation guarantee follows.
 import Aeneas
 open Aeneas Aeneas.Std Result ControlFlow Error
 set_option linter.dupNamespace false
@@ -31,5 +35,11 @@ namespace noble_kernel
     Visibility: public -/
 @[rust_type "core::mem::maybe_uninit::MaybeUninit"]
 def core.mem.maybe_uninit.MaybeUninit (T : Type) : Type := Option T
+
+/-- The observable reservation rejection represented by the value-only
+    vector abstraction. Rust's allocator/layout error payload is not modeled. -/
+@[rust_type "alloc::collections::TryReserveError"]
+inductive alloc.collections.TryReserveError where
+  | CapacityOverflow
 
 end noble_kernel

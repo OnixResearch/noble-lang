@@ -1,0 +1,13 @@
+package noble-test:async-eligibility@1.0.0;
+
+interface host {
+  make-stream: func() -> stream<u8>;
+  make-future: func() -> future<s64>;
+  close-stream: func(value: stream<u8>);
+  finish-future: async func(value: future<s64>) -> s64;
+}
+
+world demo {
+  import host;
+  export check: async func() -> s64;
+}

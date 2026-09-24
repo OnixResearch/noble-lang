@@ -3,6 +3,8 @@
     reason = "Owner: noble-maintainers; emission mutates only the fresh compiler-owned bounded byte sink; checked plans, data segments and regenerated WIT bindings remain immutable and no partial module escapes."
 )]
 
+mod task;
+
 #[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; independently admitted imports, plans and data segments are emitted in their fixed order; every bounded sink failure propagates a diagnostic, and asserting on producer-derived contents would replace required refusals."
@@ -26,7 +28,13 @@ pub(super) fn module(
     if let Some(error) = failure {
         return Err(error);
     }
+    if world.is_async() {
+        attempt!(async_imports(plans, &mut buffer));
+    }
     attempt!(buffer.append(include_str!("runtime.wat").as_bytes()));
+    if world.is_async() {
+        attempt!(buffer.append(include_str!("async.wat").as_bytes()));
+    }
     at = 0;
     let plan_count = plans.len();
     while at < plan_count && failure.is_none() {
@@ -76,6 +84,7 @@ fn segment(
 
 #[expect(
     tigerstyle::missing_const_fn,
+    tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; import signatures require checked canonical parameter flattening and writes to the non-const bounded output sink; missing definitions and unsupported result arities remain diagnostics."
 )]
 fn import(
@@ -89,16 +98,70 @@ fn import(
     attempt!(buffer.append(b" (import "));
     attempt!(quoted(operation.core_module.as_bytes(), buffer));
     attempt!(buffer.append(b" "));
-    attempt!(quoted(operation.core_name.as_bytes(), buffer));
+    let prefix: &[u8] = if operation.asynchronous {
+        b"[async-lower]"
+    } else {
+        b""
+    };
+    attempt!(quoted_prefixed(
+        prefix,
+        operation.core_name.as_bytes(),
+        buffer
+    ));
     attempt!(buffer.append(b" (func $i"));
     attempt!(buffer.number(u64::from(definition.0)));
-    attempt!(super::abi::parameters(&operation.parameters, buffer));
-    match attempt!(super::abi::result(&operation.results)) {
-        Some(ty) if super::abi::lane_count(ty) > 1 => attempt!(buffer.append(b" (param i32)")),
-        Some(ty) => attempt!(result(Some(ty), buffer)),
-        None => {}
+    if super::abi::indirect_parameters(operation) {
+        attempt!(buffer.append(b" (param i32)"));
+    } else {
+        attempt!(super::abi::parameters(&operation.parameters, buffer));
+    }
+    let returned = attempt!(super::abi::result(&operation.results));
+    if operation.asynchronous {
+        if returned.is_some() {
+            attempt!(buffer.append(b" (param i32)"));
+        }
+        attempt!(buffer.append(b" (result i32)"));
+    } else {
+        match returned {
+            Some(ty) if super::abi::lane_count(ty) > 1 => attempt!(buffer.append(b" (param i32)")),
+            Some(ty) => attempt!(result(Some(ty), buffer)),
+            None => {}
+        }
     }
     buffer.append(b"))\n")
+}
+
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; async intrinsic signatures are fixed canonical ABI declarations and each bounded sink write propagates exhaustion; task-return signatures come from checked plans rather than assertion preconditions."
+)]
+fn async_imports(
+    plans: &[super::lower::Plan],
+    buffer: &mut crate::output::Buffer,
+) -> Result<(), crate::Diagnostic> {
+    attempt!(buffer.append(
+        b" (import \"$root\" \"[waitable-set-new]\" (func $waitable-set-new (result i32)))\n\
+           (import \"$root\" \"[waitable-set-wait]\" (func $waitable-set-wait (param i32 i32) (result i32)))\n\
+           (import \"$root\" \"[waitable-set-drop]\" (func $waitable-set-drop (param i32)))\n\
+           (import \"$root\" \"[waitable-join]\" (func $waitable-join (param i32 i32)))\n\
+           (import \"$root\" \"[subtask-drop]\" (func $subtask-drop (param i32)))\n"
+    ));
+    let mut at = 0usize;
+    let mut failure = None;
+    let count = plans.len();
+    while at < count && failure.is_none() {
+        let plan = &plans[at];
+        if plan.asynchronous {
+            if let Err(error) = task::write(plan, buffer) {
+                failure = Some(error);
+            }
+        }
+        at = at.saturating_add(1);
+    }
+    match failure {
+        Some(error) => Err(error),
+        None => Ok(()),
+    }
 }
 
 #[expect(
@@ -109,12 +172,20 @@ fn function(
     plan: &super::lower::Plan,
     buffer: &mut crate::output::Buffer,
 ) -> Result<(), crate::Diagnostic> {
-    // Standard32 function names cannot collide with runtime ABI exports.
-    attempt!(buffer.append(b" (func (export \"cm32p2||"));
+    attempt!(buffer.append(b" (func (export \""));
+    if plan.asynchronous {
+        attempt!(buffer.append(b"[async-lift-stackful]"));
+    } else {
+        // Keep Standard32 for synchronous members, including in mixed worlds,
+        // so legal WIT names cannot collide with runtime ABI exports.
+        attempt!(buffer.append(b"cm32p2||"));
+    }
     attempt!(buffer.append(plan.name.as_bytes()));
     attempt!(buffer.append(b"\")"));
     attempt!(super::abi::parameters(&plan.parameters, buffer));
-    attempt!(result(plan.result, buffer));
+    if !plan.asynchronous {
+        attempt!(result(plan.result, buffer));
+    }
     let mut at = 0usize;
     let mut failure = None;
     let end = plan.locals.len();
@@ -131,13 +202,18 @@ fn function(
     attempt!(buffer.append(b"\n call $enter\n"));
     attempt!(buffer.append(&plan.code));
     attempt!(buffer.append(b")\n"));
+    // Native task.return lifts the result before guest cleanup; the async ABI
+    // forbids post-return. Synchronous members of an async world still use it.
+    if plan.asynchronous {
+        return Ok(());
+    }
     attempt!(buffer.append(b" (func (export \"cm32p2||"));
     attempt!(buffer.append(plan.name.as_bytes()));
     attempt!(buffer.append(b"_post\")"));
     let result_type = plan.result;
     if let Some(ty) = result_type {
         attempt!(buffer.append(b" (param "));
-        attempt!(result_lane(ty).write(buffer));
+        attempt!(attempt!(super::abi::lane(ty, 0)).write(buffer));
         attempt!(buffer.append(b")"));
     }
     buffer.append(b" call $cleanup)\n")
@@ -158,26 +234,28 @@ fn result(
 ) -> Result<(), crate::Diagnostic> {
     if let Some(ty) = ty {
         attempt!(buffer.append(b" (result "));
-        attempt!(result_lane(ty).write(buffer));
+        attempt!(attempt!(super::abi::lane(ty, 0)).write(buffer));
         attempt!(buffer.append(b")"));
     }
     Ok(())
 }
 
-const fn result_lane(ty: noble_contracts::component::Type) -> super::abi::Lane {
-    match ty {
-        noble_contracts::component::Type::S64 => super::abi::Lane::I64,
-        noble_contracts::component::Type::Boolean
-        | noble_contracts::component::Type::String
-        | noble_contracts::component::Type::Bytes
-        | noble_contracts::component::Type::ResultS64String
-        | noble_contracts::component::Type::Own(_)
-        | noble_contracts::component::Type::Borrow(_) => super::abi::Lane::I32,
-    }
+fn quoted(bytes: &[u8], buffer: &mut crate::output::Buffer) -> Result<(), crate::Diagnostic> {
+    quoted_prefixed(b"", bytes, buffer)
 }
 
-fn quoted(bytes: &[u8], buffer: &mut crate::output::Buffer) -> Result<(), crate::Diagnostic> {
+fn quoted_prefixed(
+    prefix: &[u8],
+    bytes: &[u8],
+    buffer: &mut crate::output::Buffer,
+) -> Result<(), crate::Diagnostic> {
     attempt!(buffer.append(b"\""));
+    attempt!(escaped(prefix, buffer));
+    attempt!(escaped(bytes, buffer));
+    buffer.append(b"\"")
+}
+
+fn escaped(bytes: &[u8], buffer: &mut crate::output::Buffer) -> Result<(), crate::Diagnostic> {
     let mut at = 0usize;
     let mut failure = None;
     let end = bytes.len();
@@ -190,7 +268,7 @@ fn quoted(bytes: &[u8], buffer: &mut crate::output::Buffer) -> Result<(), crate:
     }
     match failure {
         Some(error) => Err(error),
-        None => buffer.append(b"\""),
+        None => Ok(()),
     }
 }
 

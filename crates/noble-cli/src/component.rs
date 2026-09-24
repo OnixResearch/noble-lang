@@ -1,4 +1,4 @@
-//! Component-Sync-Bootstrap compiler shell; execution belongs to the linked host.
+//! Bounded Component Model compiler shell; execution belongs to the linked host.
 mod artifacts;
 mod report;
 
@@ -7,11 +7,13 @@ pub(crate) const USAGE: &str = "usage:
   noble component check-effect WIT WORLD WORD CLAIMED_EFFECT ...
   noble component compile WIT WORLD NEW_DIR EXPORT=SOURCE ...
 
-Component-Sync-Bootstrap generates typed WIT bindings and independently checks
-all export bodies before emitting a component. Every selected world export must
-be supplied exactly once. Exports use isolated parameter/result stacks; async
-and borrowed exports are rejected. NEW_DIR must not exist. Host resource and
-authorization contracts remain the responsibility of the linked host profile.";
+Component-Sync-Bootstrap and Component-Async-Bootstrap generate typed WIT
+bindings and independently check all export bodies before emitting a component.
+Every selected world export must be supplied exactly once. Exports use isolated
+parameter/result stacks. Native async calls preserve sequential Noble order;
+borrowed exports and async borrowing are rejected. NEW_DIR must not exist.
+Host resource, task-retirement and authorization contracts remain the
+responsibility of the linked host profile.";
 
 pub(crate) struct Source {
     name: std::string::String,
@@ -125,11 +127,7 @@ fn compile(
         .collect::<Result<std::vec::Vec<_>, _>>());
     let artifact =
         attempt!(noble_wasm::component::compile(world, &exports).map_err(report::backend));
-    let component = attempt!(artifacts::assemble(
-        world.wit(),
-        world.name(),
-        artifact.wat()
-    ));
+    let component = attempt!(artifacts::assemble(world, artifact.wat()));
     let document = attempt!(report::compiled(
         world, &artifact, sources, &component, output
     ));

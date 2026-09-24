@@ -1,0 +1,206 @@
+{
+  "change_issues": [],
+  "changes": 1,
+  "cross_repo_dependencies": [],
+  "cross_repo_evidence_issues": [],
+  "findings": [],
+  "issues": [],
+  "layout": "cairn",
+  "policy": "cairn-default",
+  "profile_issues": [],
+  "resolution": {
+    "diagnostics": [],
+    "locator_consulted": false,
+    "registry_lookup": "local_locator_only",
+    "selected": {
+      "project_identity": null,
+      "root": ".",
+      "source": "explicit_root",
+      "store_id": null,
+      "store_identity": null
+    },
+    "valid": true
+  },
+  "spec_findings": [],
+  "spec_issues": [],
+  "spec_substance": [
+    {
+      "path": "./.cairn/changes/m6-native-async/specs/resource-adapters/spec.md",
+      "requirement_blocks": 5,
+      "scenario_blocks": 12,
+      "substantive_requirement_blocks": 5
+    },
+    {
+      "path": "./.cairn/changes/m6-native-async/specs/wit-wasi/spec.md",
+      "requirement_blocks": 6,
+      "scenario_blocks": 14,
+      "substantive_requirement_blocks": 6
+    },
+    {
+      "path": "./.cairn/specs/backend-experiments/spec.md",
+      "requirement_blocks": 9,
+      "scenario_blocks": 20,
+      "substantive_requirement_blocks": 9
+    },
+    {
+      "path": "./.cairn/specs/calculator/spec.md",
+      "requirement_blocks": 23,
+      "scenario_blocks": 36,
+      "substantive_requirement_blocks": 23
+    },
+    {
+      "path": "./.cairn/specs/core-bootstrap/spec.md",
+      "requirement_blocks": 18,
+      "scenario_blocks": 23,
+      "substantive_requirement_blocks": 18
+    },
+    {
+      "path": "./.cairn/specs/developer-experience/spec.md",
+      "requirement_blocks": 25,
+      "scenario_blocks": 30,
+      "substantive_requirement_blocks": 25
+    },
+    {
+      "path": "./.cairn/specs/evidence/spec.md",
+      "requirement_blocks": 14,
+      "scenario_blocks": 11,
+      "substantive_requirement_blocks": 14
+    },
+    {
+      "path": "./.cairn/specs/language/spec.md",
+      "requirement_blocks": 148,
+      "scenario_blocks": 97,
+      "substantive_requirement_blocks": 148
+    },
+    {
+      "path": "./.cairn/specs/program-contracts/spec.md",
+      "requirement_blocks": 51,
+      "scenario_blocks": 78,
+      "substantive_requirement_blocks": 51
+    },
+    {
+      "path": "./.cairn/specs/resource-adapters/spec.md",
+      "requirement_blocks": 18,
+      "scenario_blocks": 41,
+      "substantive_requirement_blocks": 18
+    },
+    {
+      "path": "./.cairn/specs/safety/spec.md",
+      "requirement_blocks": 40,
+      "scenario_blocks": 46,
+      "substantive_requirement_blocks": 40
+    },
+    {
+      "path": "./.cairn/specs/verification-toolchain/spec.md",
+      "requirement_blocks": 56,
+      "scenario_blocks": 57,
+      "substantive_requirement_blocks": 56
+    },
+    {
+      "path": "./.cairn/specs/verification/spec.md",
+      "requirement_blocks": 36,
+      "scenario_blocks": 5,
+      "substantive_requirement_blocks": 36
+    },
+    {
+      "path": "./.cairn/specs/wit-wasi/spec.md",
+      "requirement_blocks": 44,
+      "scenario_blocks": 54,
+      "substantive_requirement_blocks": 44
+    }
+  ],
+  "specs_validated": 14,
+  "substance": [
+    {
+      "checkbox_tasks": 0,
+      "kind": "design",
+      "malformed_dependency_markers": 0,
+      "path": "./.cairn/changes/m6-native-async/design.md",
+      "requirement_blocks": 0,
+      "scenario_blocks": 0,
+      "substantive_lines": 125,
+      "substantive_requirement_blocks": 0,
+      "substantive_tasks": 0,
+      "task_done": 0,
+      "task_in_progress": 0,
+      "task_todo": 0
+    },
+    {
+      "checkbox_tasks": 0,
+      "kind": "proposal",
+      "malformed_dependency_markers": 0,
+      "path": "./.cairn/changes/m6-native-async/proposal.md",
+      "requirement_blocks": 0,
+      "scenario_blocks": 0,
+      "substantive_lines": 25,
+      "substantive_requirement_blocks": 0,
+      "substantive_tasks": 0,
+      "task_done": 0,
+      "task_in_progress": 0,
+      "task_todo": 0
+    },
+    {
+      "checkbox_tasks": 0,
+      "kind": "delta_spec",
+      "malformed_dependency_markers": 0,
+      "path": "./.cairn/changes/m6-native-async/specs/resource-adapters/spec.md",
+      "requirement_blocks": 5,
+      "scenario_blocks": 12,
+      "substantive_lines": 78,
+      "substantive_requirement_blocks": 5,
+      "substantive_tasks": 0,
+      "task_done": 0,
+      "task_in_progress": 0,
+      "task_todo": 0
+    },
+    {
+      "checkbox_tasks": 0,
+      "kind": "delta_spec",
+      "malformed_dependency_markers": 0,
+      "path": "./.cairn/changes/m6-native-async/specs/wit-wasi/spec.md",
+      "requirement_blocks": 6,
+      "scenario_blocks": 14,
+      "substantive_lines": 71,
+      "substantive_requirement_blocks": 6,
+      "substantive_tasks": 0,
+      "task_done": 0,
+      "task_in_progress": 0,
+      "task_todo": 0
+    },
+    {
+      "checkbox_tasks": 14,
+      "kind": "tasks",
+      "malformed_dependency_markers": 0,
+      "path": "./.cairn/changes/m6-native-async/tasks.md",
+      "requirement_blocks": 0,
+      "scenario_blocks": 0,
+      "substantive_lines": 14,
+      "substantive_requirement_blocks": 0,
+      "substantive_tasks": 14,
+      "task_done": 13,
+      "task_in_progress": 0,
+      "task_todo": 1
+    }
+  ],
+  "substance_findings": [],
+  "substance_issues": [],
+  "valid": true,
+  "workflow_profiles": [
+    {
+      "acceptance_ids": [],
+      "non_claims": [
+        "workflow state proves only the selected policy graph and observed structural artifact facts",
+        "workflow instructions do not prove artifact truth, review quality, or implementation correctness",
+        "workflow state does not satisfy proposal, design, tasks, sync, archive, evidence, or release gates",
+        "workflow commands are read-only and do not create, edit, delete, or approve lifecycle artifacts"
+      ],
+      "profile_identity_hash": "c7df06090877cbb23f4e11997c62aa99a5d8aa87321652d5dea79ab1841bc31c",
+      "review_receipt_hashes": [],
+      "spec_effect": "delta",
+      "workflow_profile": "spec-driven",
+      "workflow_profile_compatibility_fallback": false,
+      "workflow_profile_source": "change_create",
+      "workflow_profile_version": 1
+    }
+  ]
+}

@@ -1,5 +1,6 @@
-//! Pure synchronous boundary compiler. The shell assembles the returned core
-//! WAT with the original WIT and a pinned Canonical ABI component toolchain.
+//! Pure direct-style boundary compiler. The shell assembles the returned core
+//! WAT with the original WIT and a pinned synchronous or native async Canonical
+//! ABI component toolchain. Engine suspension never schedules later Noble words.
 //! Guest borrowed-owner threading is not the WIT borrow: only the call operand
 //! is lowered as borrow, while the owner is unavailable to guest instructions.
 mod abi;
@@ -8,6 +9,7 @@ mod emit;
 mod lower;
 
 pub const BOOTSTRAP_WIT: &[u8] = include_str!("../../wit/bootstrap.wit").as_bytes();
+pub const ASYNC_WIT: &[u8] = include_str!("../../wit/async.wit").as_bytes();
 pub const MEMORY_BYTES: u32 = 1_048_576;
 pub const HEAP_START: u32 = 65_536;
 #[expect(
@@ -74,11 +76,15 @@ fn context(
     world: &noble_contracts::component::World,
     exports: &[noble_contracts::component::CheckedExport],
 ) -> Result<alloc::vec::Vec<u8>, crate::Diagnostic> {
-    const DOMAIN: &[u8] = b"\0noble-component-canonical32-v1\0";
+    let domain: &[u8] = if world.is_async() {
+        b"\0noble-component-async-canonical32-v1\0"
+    } else {
+        b"\0noble-component-canonical32-v1\0"
+    };
     let mut build_context = world.build_context();
-    let capacity_bytes = attempt!(context_capacity(exports, DOMAIN.len()));
+    let capacity_bytes = attempt!(context_capacity(exports, domain.len()));
     build_context.reserve_exact(capacity_bytes);
-    build_context.extend_from_slice(DOMAIN);
+    build_context.extend_from_slice(domain);
     attempt!(context_exports(exports, &mut build_context));
     Ok(build_context)
 }

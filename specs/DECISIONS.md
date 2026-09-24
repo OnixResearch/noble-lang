@@ -138,6 +138,30 @@ SPEC-DX001 sections 6–10 define these additions. Local bindings and modules fo
 
 [Octet adoption](OCTET-ADOPTION.md) records the inspected revision and delivery gates. This amendment leaves concrete policy files and compatible pins open. It does not import Octet implementation code or move Noble to Verus.
 
+## Native-async implementation direction
+
+The Bend2 comparison inspected
+[`bendlang/bend` revision `d37909174ebd664338ae3194799a9e0899dedd51`](https://github.com/bendlang/bend/commit/d37909174ebd664338ae3194799a9e0899dedd51)
+(2.0.27). Its [library IO and fork/join definitions](https://github.com/bendlang/bend/blob/d37909174ebd664338ae3194799a9e0899dedd51/bend2/base.bend#L109-L239)
+and [cooperative scheduler](https://github.com/bendlang/bend/blob/d37909174ebd664338ae3194799a9e0899dedd51/bend2/comp.ts#L5875-L5949)
+are implementation references, not selected dependencies or Noble acceptance
+evidence. Bend's affine resource payloads coexist with duplicable channel
+endpoints; its C channels have generation checks, but those are not a complete
+async-task retirement protocol.
+
+| ID | Decision | Consequence |
+|---|---|---|
+| ND-56 | Keep M6 async suspension at the standard component boundary with sequential direct-style Noble calls | No required IO monad, new async/await syntax, guest task constructor, or general spawn/channel language |
+| ND-57 | Evaluate a bounded cooperative host driver using the pinned component engine's async facilities | ABI, concrete scheduler, interruption limits, and buffering policy require an executed compatibility probe; no Bend runtime dependency or second concurrency model |
+| ND-58 | Preserve task ownership, bounded admission, and explicit retirement independently of the executor | Copyable result channels, stream closure, and process termination cannot substitute for cancellation/delivery rules, native-pin accounting, complete lifecycle coverage, or protected-host authorization |
+
+The [M6 plan](ROADMAP.md#m6-native-async-implementation-and-closeout) applies these
+decisions to WI-ASYNC-01–05, RA-ASYNC-01–05, and DX-PROTOCOL-03. It preserves
+H-AUTH-01–04 and H-RECEIPT-01–02, including the distinction between a late
+operation-success receipt and a cancelled invocation. The comparison selects
+implementation work, not new language semantics, completed async support, or
+changes to the MW1/MW2 and Syndicate dependencies.
+
 ## Platform direction
 
 Component Model and WIT remain the standard external boundary. WASI 0.3 remains the preferred host family, with exact versions selected through executed compatibility work.
@@ -151,5 +175,5 @@ Choreography must target the selected concurrency layer. Durability must record 
 1. Complete inference, candidate encoding, recursive checking, and declaration syntax.
 2. Canonical semantic bytes, recursion identity, and portable package transport.
 3. Internal Wasm calling convention, generic lowering, memory management, and session recovery.
-4. Exact component type mapping, borrowed exports, async lifetimes, and tested toolchain pins.
+4. Exact component type mapping, borrowed exports, async lifetimes/interfaces, scheduler and interruption limits, stream buffering policy, and tested toolchain pins.
 5. Full Syndicate transitions, bounded Preserves adaptation, choreography projection, and durability contracts.

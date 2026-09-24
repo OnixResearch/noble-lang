@@ -100,6 +100,14 @@ def core.result.Result.unwrap_or
     {T E : Type} (value : core.result.Result T E) (fallback : T) : Result T :=
   _root_.noble_kernel.core.result.Result.unwrap_or value fallback
 
+@[rust_fun
+  "core::slice::iter::{core::iter::traits::iterator::Iterator<core::slice::iter::Iter<'a, @T>, &'a @T>}::fold"]
+def core.slice.iter.Iter.Insts.CoreIterTraitsIteratorIteratorSharedAT.fold
+    {T B F : Type} (inst : core.ops.function.FnMut F (B × T) B)
+    (iterator : core.slice.iter.Iter T) (initial : B) (function : F) : Result B :=
+  _root_.noble_contracts.core.slice.iter.Iter.Insts.CoreIterTraitsIteratorIteratorSharedAT.fold
+    inst iterator initial function
+
 /-- Reuse the frontend's state-threaded traversal: the returned iterator has
 consumed the matching item and the index is relative to its initial cursor. -/
 @[rust_fun

@@ -34,19 +34,89 @@ pub(super) fn make(world: &super::World) -> Result<super::Bindings, super::Error
     if let Some(problem) = failure {
         return Err(problem);
     }
-    let mut resources = alloc::vec::Vec::with_capacity(world.resources.len());
-    at = 0;
+    Ok(super::Bindings {
+        environment,
+        words,
+        resources: resource_kinds(world),
+        effects,
+        key: world.build_context(),
+    })
+}
+
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; this total bounded collection copies declared kinds and adds each live async kind once; every index is checked by its loop bound and caller data has no assertion preconditions."
+)]
+fn resource_kinds(world: &super::World) -> alloc::vec::Vec<noble_kernel::types::ResourceKind> {
+    let live = gather_live(&world.imports, [None; 3]);
+    let live = gather_live(&world.exports, live);
+    let mut live_count = 0usize;
+    let mut at = 0usize;
+    while at < live.len() {
+        if live[at].is_some() {
+            live_count = live_count.saturating_add(1);
+        }
+        at = at.saturating_add(1);
+    }
+    let kind_count = world.resources.len().saturating_add(live_count);
+    let mut resources = alloc::vec::Vec::with_capacity(kind_count);
+    let mut at = 0usize;
     while at < world.resources.len() {
         resources.push(world.resources[at].kind);
         at = at.saturating_add(1);
     }
-    Ok(super::Bindings {
-        environment,
-        words,
-        resources,
-        effects,
-        key: world.build_context(),
-    })
+    at = 0;
+    while at < live.len() {
+        let kind = live[at];
+        if let Some(kind) = kind {
+            resources.push(kind);
+        }
+        at = at.saturating_add(1);
+    }
+    resources
+}
+
+fn gather_live(
+    operations: &[super::Operation],
+    mut live: [Option<noble_kernel::types::ResourceKind>; 3],
+) -> [Option<noble_kernel::types::ResourceKind>; 3] {
+    let mut at = 0;
+    while at < operations.len() {
+        live = gather_types(&operations[at].parameters, live);
+        live = gather_types(&operations[at].results, live);
+        at = at.saturating_add(1);
+    }
+    live
+}
+
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; this total classification visits a bounded type slice and writes only three fixed array indices; all supported types are explicitly classified without caller preconditions or panic paths."
+)]
+const fn gather_types(
+    types: &[super::Type],
+    mut live: [Option<noble_kernel::types::ResourceKind>; 3],
+) -> [Option<noble_kernel::types::ResourceKind>; 3] {
+    let mut at = 0;
+    while at < types.len() {
+        match types[at] {
+            super::Type::StreamU8 => live[0] = Some(super::STREAM_U8_KIND),
+            super::Type::FutureS64 => live[1] = Some(super::FUTURE_S64_KIND),
+            super::Type::FutureResultS64String => {
+                live[2] = Some(super::FUTURE_RESULT_S64_STRING_KIND)
+            }
+            super::Type::Boolean
+            | super::Type::S64
+            | super::Type::String
+            | super::Type::Bytes
+            | super::Type::ResultS64String
+            | super::Type::ResultBytesString
+            | super::Type::Own(_)
+            | super::Type::Borrow(_) => {}
+        }
+        at = at.saturating_add(1);
+    }
+    live
 }
 
 #[expect(
@@ -166,6 +236,17 @@ fn pattern(ty: super::Type) -> noble_kernel::shapes::Pattern {
             alloc::boxed::Box::new(noble_kernel::shapes::Pattern::I64),
             alloc::boxed::Box::new(noble_kernel::shapes::Pattern::Text),
         ),
+        super::Type::ResultBytesString => noble_kernel::shapes::Pattern::Sum(
+            alloc::boxed::Box::new(noble_kernel::shapes::Pattern::List(alloc::boxed::Box::new(
+                noble_kernel::shapes::Pattern::I64,
+            ))),
+            alloc::boxed::Box::new(noble_kernel::shapes::Pattern::Text),
+        ),
+        super::Type::StreamU8 => noble_kernel::shapes::Pattern::Resource(super::STREAM_U8_KIND),
+        super::Type::FutureS64 => noble_kernel::shapes::Pattern::Resource(super::FUTURE_S64_KIND),
+        super::Type::FutureResultS64String => {
+            noble_kernel::shapes::Pattern::Resource(super::FUTURE_RESULT_S64_STRING_KIND)
+        }
         super::Type::Own(kind) | super::Type::Borrow(kind) => {
             noble_kernel::shapes::Pattern::Resource(kind)
         }

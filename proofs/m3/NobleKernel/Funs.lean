@@ -28,6 +28,44 @@ def core.option.Option.Insts.CoreFmtDebug {T : Type} (fmtDebugInst :
   fmt := core.option.Option.Insts.CoreFmtDebug.fmt fmtDebugInst
 }
 
+/-- Trait implementation: [core::result::{impl core::fmt::Debug for core::result::Result<T, E>}]
+    Source: '/rustc/library/core/src/result.rs', lines 553:15-553:20
+    Name pattern: [core::fmt::Debug<core::result::Result<@T, @E>>] -/
+@[reducible, rust_trait_impl "core::fmt::Debug<core::result::Result<@T, @E>>"]
+def core.result.Result.Insts.CoreFmtDebug {T : Type} {E : Type} (fmtDebugInst :
+  core.fmt.Debug T) (fmtDebugInst1 : core.fmt.Debug E) : core.fmt.Debug
+  (core.result.Result T E) := {
+  fmt := core.result.Result.Insts.CoreFmtDebug.fmt fmtDebugInst fmtDebugInst1
+}
+
+/-- Trait implementation: [core::result::{impl core::cmp::PartialEq<core::result::Result<T, E>> for core::result::Result<T, E>}]
+    Source: '/rustc/library/core/src/result.rs', lines 554:15-554:24
+    Name pattern: [core::cmp::PartialEq<core::result::Result<@T, @E>, core::result::Result<@T, @E>>] -/
+@[reducible, rust_trait_impl
+  "core::cmp::PartialEq<core::result::Result<@T, @E>, core::result::Result<@T, @E>>"]
+impl_def core.result.Result.Insts.CoreCmpPartialEqResult {T : Type} {E : Type}
+  (cmpPartialEqInst : core.cmp.PartialEq T T) (cmpPartialEqInst1 :
+  core.cmp.PartialEq E E) : core.cmp.PartialEq (core.result.Result T E)
+  (core.result.Result T E) := {
+  eq := core.result.Result.Insts.CoreCmpPartialEqResult.eq cmpPartialEqInst
+    cmpPartialEqInst1
+  ne := core.cmp.PartialEq.ne.trait_default
+    (core.result.Result.Insts.CoreCmpPartialEqResult cmpPartialEqInst
+    cmpPartialEqInst1)
+}
+
+/-- Trait implementation: [core::slice::cmp::{impl core::cmp::PartialEq<[U]> for [T]}]
+    Source: '/rustc/library/core/src/slice/cmp.rs', lines 14:0-16:28
+    Name pattern: [core::cmp::PartialEq<[@T], [@U]>] -/
+@[reducible, rust_trait_impl "core::cmp::PartialEq<[@T], [@U]>"]
+impl_def Slice.Insts.CoreCmpPartialEqSlice {T : Type} {U : Type}
+  (cmpPartialEqInst : core.cmp.PartialEq T U) : core.cmp.PartialEq (Slice T)
+  (Slice U) := {
+  eq := core.slice.cmp.PartialEqSlice.eq cmpPartialEqInst
+  ne := core.cmp.PartialEq.ne.trait_default (Slice.Insts.CoreCmpPartialEqSlice
+    cmpPartialEqInst)
+}
+
 /-- [noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::NodeId}::clone]:
     Source: 'crates/noble-kernel/src/untrusted.rs', lines 17:9-17:14
     Visibility: public -/
@@ -5474,6 +5512,5956 @@ def acceptance.parts.Site.Insts.CoreMarkerCopy : core.marker.Copy
   acceptance.parts.Site := {
   cloneInst := acceptance.parts.Site.Insts.CoreCloneClone
 }
+
+/-- [noble_kernel::async_tasks::domain::{noble_kernel::async_tasks::domain::Obligations}::empty]:
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 79:4-85:5
+    Visibility: public -/
+def async_tasks.domain.Obligations.empty
+  : Result async_tasks.domain.Obligations := do
+  ok { inputs := 0#u64, results := 0#u64, buffers := 0#u8 }
+
+/-- [noble_kernel::async_tasks::accounting::{noble_kernel::async_tasks::domain::Accounting}::empty]:
+    Source: 'crates/noble-kernel/src/async_tasks/accounting.rs', lines 2:4-18:5
+    Visibility: public -/
+def async_tasks.accounting.Accounting.empty
+  : Result async_tasks.domain.Accounting := do
+  let o ← async_tasks.domain.Obligations.empty
+  ok
+    {
+      acquired := o,
+      consumed_inputs := 0#u64,
+      retirement_withdrawn_inputs := 0#u64,
+      retired := o,
+      delivered := o,
+      cleaned := o,
+      pins_acquired := 0#u64,
+      pins_released := 0#u64,
+      rejected_result_bytes := 0#usize,
+      completion_accepted := false,
+      wake_queued := false,
+      wake_removed := false,
+      reservation_released := false
+    }
+
+/-- [noble_kernel::async_tasks::accounting::{noble_kernel::async_tasks::domain::Decision}::accounting]:
+    Source: 'crates/noble-kernel/src/async_tasks/accounting.rs', lines 23:4-25:5
+    Visibility: public -/
+def async_tasks.accounting.Decision.accounting
+  (self : async_tasks.domain.Decision) :
+  Result async_tasks.domain.Accounting
+  := do
+  ok self.accounting
+
+/-- [noble_kernel::async_tasks::accounting::{noble_kernel::async_tasks::domain::Decision}::unchanged]:
+    Source: 'crates/noble-kernel/src/async_tasks/accounting.rs', lines 27:4-33:5 -/
+def async_tasks.accounting.Decision.unchanged
+  (record : async_tasks.domain.Snapshot) (action : async_tasks.domain.Action) :
+  Result async_tasks.domain.Decision
+  := do
+  let a ← async_tasks.accounting.Accounting.empty
+  ok { record, action, accounting := a }
+
+/-- [noble_kernel::async_tasks::bounds::MAX_SLOTS]
+    Source: 'crates/noble-kernel/src/async_tasks/bounds.rs', lines 2:0-2:33
+    Visibility: public -/
+@[global_simps, irreducible]
+def async_tasks.bounds.MAX_SLOTS : Std.Usize := 256#usize
+
+/-- [noble_kernel::async_tasks::bounds::MAX_OBLIGATIONS]
+    Source: 'crates/noble-kernel/src/async_tasks/bounds.rs', lines 3:0-3:35
+    Visibility: public -/
+@[global_simps, irreducible]
+def async_tasks.bounds.MAX_OBLIGATIONS : Std.U8 := 64#u8
+
+/-- [noble_kernel::async_tasks::bounds::MAX_BYTES]
+    Source: 'crates/noble-kernel/src/async_tasks/bounds.rs', lines 4:0-4:40
+    Visibility: public -/
+@[global_simps, irreducible]
+def async_tasks.bounds.MAX_BYTES : Std.Usize := 67108864#usize
+
+/-- [noble_kernel::async_tasks::bounds::MAX_WAKEUPS]
+    Source: 'crates/noble-kernel/src/async_tasks/bounds.rs', lines 5:0-5:36
+    Visibility: public -/
+@[global_simps, irreducible]
+def async_tasks.bounds.MAX_WAKEUPS : Std.U64 := 65536#u64
+
+/-- [noble_kernel::async_tasks::bounds::{impl core::clone::Clone for noble_kernel::async_tasks::bounds::Request}::clone]:
+    Source: 'crates/noble-kernel/src/async_tasks/bounds.rs', lines 9:9-9:14
+    Visibility: public -/
+def async_tasks.bounds.Request.Insts.CoreCloneClone.clone
+  (self : async_tasks.bounds.Request) : Result async_tasks.bounds.Request := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::async_tasks::bounds::{impl core::clone::Clone for noble_kernel::async_tasks::bounds::Request}]
+    Source: 'crates/noble-kernel/src/async_tasks/bounds.rs', lines 9:9-9:14 -/
+@[reducible]
+def async_tasks.bounds.Request.Insts.CoreCloneClone : core.clone.Clone
+  async_tasks.bounds.Request := {
+  clone := async_tasks.bounds.Request.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::async_tasks::bounds::{impl core::marker::Copy for noble_kernel::async_tasks::bounds::Request}]
+    Source: 'crates/noble-kernel/src/async_tasks/bounds.rs', lines 9:16-9:20 -/
+@[reducible]
+def async_tasks.bounds.Request.Insts.CoreMarkerCopy : core.marker.Copy
+  async_tasks.bounds.Request := {
+  cloneInst := async_tasks.bounds.Request.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::resources::{impl core::fmt::Debug for noble_kernel::resources::Context}::fmt]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 29:22-29:27
+    Visibility: public -/
+def resources.Context.Insts.CoreFmtDebug.fmt
+  (self : resources.Context) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU64) self
+  core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Context") dyn
+
+/-- Trait implementation: [noble_kernel::resources::{impl core::fmt::Debug for noble_kernel::resources::Context}]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 29:22-29:27 -/
+@[reducible]
+def resources.Context.Insts.CoreFmtDebug : core.fmt.Debug resources.Context
+  := {
+  fmt := resources.Context.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_kernel::async_tasks::domain::{impl core::fmt::Debug for noble_kernel::async_tasks::domain::NativeId}::fmt]:
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 6:22-6:27
+    Visibility: public -/
+def async_tasks.domain.NativeId.Insts.CoreFmtDebug.fmt
+  (self : async_tasks.domain.NativeId) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU64) self
+  core.fmt.Formatter.debug_tuple_field1_finish f (toStr "NativeId") dyn
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::fmt::Debug for noble_kernel::async_tasks::domain::NativeId}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 6:22-6:27 -/
+@[reducible]
+def async_tasks.domain.NativeId.Insts.CoreFmtDebug : core.fmt.Debug
+  async_tasks.domain.NativeId := {
+  fmt := async_tasks.domain.NativeId.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_kernel::async_tasks::bounds::{impl core::fmt::Debug for noble_kernel::async_tasks::bounds::Request}::fmt]:
+    Source: 'crates/noble-kernel/src/async_tasks/bounds.rs', lines 9:22-9:27
+    Visibility: public -/
+def async_tasks.bounds.Request.Insts.CoreFmtDebug.fmt
+  (self : async_tasks.bounds.Request) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ resources.Context.Insts.CoreFmtDebug self.context
+  let dyn1 :=
+    Dyn.mk _ async_tasks.domain.NativeId.Insts.CoreFmtDebug self.native
+  let dyn2 := Dyn.mk _ core.fmt.DebugU8 self.inputs
+  let dyn3 := Dyn.mk _ core.fmt.DebugU8 self.results
+  let dyn4 := Dyn.mk _ core.fmt.DebugUsize self.input_bytes
+  let dyn5 := Dyn.mk _ core.fmt.DebugUsize self.result_bytes
+  let dyn6 := Dyn.mk _ core.fmt.DebugUsize self.parked_bytes
+  let dyn7 := Dyn.mk _ core.fmt.DebugU8 self.pins
+  let dyn8 := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU32) self.wakeups
+  let values :=
+    Array.to_slice
+      (Array.make 9#usize [
+        dyn, dyn1, dyn2, dyn3, dyn4, dyn5, dyn6, dyn7, dyn8
+        ])
+  let s ←
+    lift (Array.to_slice
+      (Array.make 9#usize [
+        toStr "context", toStr "native", toStr "inputs", toStr "results", toStr
+        "input_bytes", toStr "result_bytes", toStr "parked_bytes", toStr
+        "pins", toStr "wakeups"
+        ]))
+  core.fmt.Formatter.debug_struct_fields_finish f (toStr "Request") s values
+
+/-- Trait implementation: [noble_kernel::async_tasks::bounds::{impl core::fmt::Debug for noble_kernel::async_tasks::bounds::Request}]
+    Source: 'crates/noble-kernel/src/async_tasks/bounds.rs', lines 9:22-9:27 -/
+@[reducible]
+def async_tasks.bounds.Request.Insts.CoreFmtDebug : core.fmt.Debug
+  async_tasks.bounds.Request := {
+  fmt := async_tasks.bounds.Request.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::async_tasks::bounds::{impl core::marker::StructuralPartialEq for noble_kernel::async_tasks::bounds::Request}]
+    Source: 'crates/noble-kernel/src/async_tasks/bounds.rs', lines 9:29-9:38 -/
+@[reducible]
+def async_tasks.bounds.Request.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq async_tasks.bounds.Request := {
+}
+
+/-- [noble_kernel::resources::{impl core::cmp::PartialEq<noble_kernel::resources::Context> for noble_kernel::resources::Context}::eq]:
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 29:29-29:38
+    Visibility: public -/
+def resources.Context.Insts.CoreCmpPartialEqContext.eq
+  (self : resources.Context) (other : resources.Context) : Result Bool := do
+  ok (self = other)
+
+/-- [noble_kernel::async_tasks::domain::{impl core::cmp::PartialEq<noble_kernel::async_tasks::domain::NativeId> for noble_kernel::async_tasks::domain::NativeId}::eq]:
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 6:29-6:38
+    Visibility: public -/
+def async_tasks.domain.NativeId.Insts.CoreCmpPartialEqNativeId.eq
+  (self : async_tasks.domain.NativeId) (other : async_tasks.domain.NativeId) :
+  Result Bool
+  := do
+  ok (self = other)
+
+/-- [noble_kernel::async_tasks::bounds::{impl core::cmp::PartialEq<noble_kernel::async_tasks::bounds::Request> for noble_kernel::async_tasks::bounds::Request}::eq]:
+    Source: 'crates/noble-kernel/src/async_tasks/bounds.rs', lines 9:29-9:38
+    Visibility: public -/
+def async_tasks.bounds.Request.Insts.CoreCmpPartialEqRequest.eq
+  (self : async_tasks.bounds.Request) (other : async_tasks.bounds.Request) :
+  Result Bool
+  := do
+  if self.inputs = other.inputs
+  then
+    if self.results = other.results
+    then
+      if self.pins = other.pins
+      then
+        if self.wakeups = other.wakeups
+        then
+          let b ←
+            resources.Context.Insts.CoreCmpPartialEqContext.eq self.context
+              other.context
+          if b
+          then
+            let b1 ←
+              async_tasks.domain.NativeId.Insts.CoreCmpPartialEqNativeId.eq
+                self.native other.native
+            if b1
+            then
+              if self.input_bytes = other.input_bytes
+              then
+                if self.result_bytes = other.result_bytes
+                then ok (self.parked_bytes = other.parked_bytes)
+                else ok false
+              else ok false
+            else ok false
+          else ok false
+        else ok false
+      else ok false
+    else ok false
+  else ok false
+
+/-- Trait implementation: [noble_kernel::async_tasks::bounds::{impl core::cmp::PartialEq<noble_kernel::async_tasks::bounds::Request> for noble_kernel::async_tasks::bounds::Request}]
+    Source: 'crates/noble-kernel/src/async_tasks/bounds.rs', lines 9:29-9:38 -/
+@[reducible]
+impl_def async_tasks.bounds.Request.Insts.CoreCmpPartialEqRequest :
+  core.cmp.PartialEq async_tasks.bounds.Request async_tasks.bounds.Request := {
+  eq := async_tasks.bounds.Request.Insts.CoreCmpPartialEqRequest.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    async_tasks.bounds.Request.Insts.CoreCmpPartialEqRequest
+}
+
+/-- [noble_kernel::async_tasks::bounds::{impl core::cmp::Eq for noble_kernel::async_tasks::bounds::Request}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/async_tasks/bounds.rs', lines 9:40-9:42
+    Visibility: public -/
+def async_tasks.bounds.Request.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : async_tasks.bounds.Request) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::async_tasks::bounds::{impl core::cmp::Eq for noble_kernel::async_tasks::bounds::Request}]
+    Source: 'crates/noble-kernel/src/async_tasks/bounds.rs', lines 9:40-9:42 -/
+@[reducible]
+def async_tasks.bounds.Request.Insts.CoreCmpEq : core.cmp.Eq
+  async_tasks.bounds.Request := {
+  partialEqInst := async_tasks.bounds.Request.Insts.CoreCmpPartialEqRequest
+  assert_fields_are_eq :=
+    async_tasks.bounds.Request.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::async_tasks::bounds::{impl core::clone::Clone for noble_kernel::async_tasks::bounds::Limits}::clone]:
+    Source: 'crates/noble-kernel/src/async_tasks/bounds.rs', lines 22:9-22:14
+    Visibility: public -/
+def async_tasks.bounds.Limits.Insts.CoreCloneClone.clone
+  (self : async_tasks.bounds.Limits) : Result async_tasks.bounds.Limits := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::async_tasks::bounds::{impl core::clone::Clone for noble_kernel::async_tasks::bounds::Limits}]
+    Source: 'crates/noble-kernel/src/async_tasks/bounds.rs', lines 22:9-22:14 -/
+@[reducible]
+def async_tasks.bounds.Limits.Insts.CoreCloneClone : core.clone.Clone
+  async_tasks.bounds.Limits := {
+  clone := async_tasks.bounds.Limits.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::async_tasks::bounds::{impl core::marker::Copy for noble_kernel::async_tasks::bounds::Limits}]
+    Source: 'crates/noble-kernel/src/async_tasks/bounds.rs', lines 22:16-22:20 -/
+@[reducible]
+def async_tasks.bounds.Limits.Insts.CoreMarkerCopy : core.marker.Copy
+  async_tasks.bounds.Limits := {
+  cloneInst := async_tasks.bounds.Limits.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::async_tasks::bounds::{impl core::fmt::Debug for noble_kernel::async_tasks::bounds::Limits}::fmt]:
+    Source: 'crates/noble-kernel/src/async_tasks/bounds.rs', lines 22:22-22:27
+    Visibility: public -/
+def async_tasks.bounds.Limits.Insts.CoreFmtDebug.fmt
+  (self : async_tasks.bounds.Limits) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ core.fmt.DebugUsize self.tasks
+  let dyn1 := Dyn.mk _ core.fmt.DebugUsize self.terminal_results
+  let dyn2 := Dyn.mk _ core.fmt.DebugUsize self.bytes
+  let dyn3 := Dyn.mk _ core.fmt.DebugUsize self.parked_payloads
+  let dyn4 := Dyn.mk _ core.fmt.DebugUsize self.pins
+  let dyn5 := Dyn.mk _ core.fmt.DebugU64 self.wakeups
+  let dyn6 := Dyn.mk _ core.fmt.DebugUsize self.retirement_work
+  let dyn7 :=
+    Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU64) self.generations
+  let values :=
+    Array.to_slice
+      (Array.make 8#usize [ dyn, dyn1, dyn2, dyn3, dyn4, dyn5, dyn6, dyn7 ])
+  let s ←
+    lift (Array.to_slice
+      (Array.make 8#usize [
+        toStr "tasks", toStr "terminal_results", toStr "bytes", toStr
+        "parked_payloads", toStr "pins", toStr "wakeups", toStr
+        "retirement_work", toStr "generations"
+        ]))
+  core.fmt.Formatter.debug_struct_fields_finish f (toStr "Limits") s values
+
+/-- Trait implementation: [noble_kernel::async_tasks::bounds::{impl core::fmt::Debug for noble_kernel::async_tasks::bounds::Limits}]
+    Source: 'crates/noble-kernel/src/async_tasks/bounds.rs', lines 22:22-22:27 -/
+@[reducible]
+def async_tasks.bounds.Limits.Insts.CoreFmtDebug : core.fmt.Debug
+  async_tasks.bounds.Limits := {
+  fmt := async_tasks.bounds.Limits.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::async_tasks::bounds::{impl core::marker::StructuralPartialEq for noble_kernel::async_tasks::bounds::Limits}]
+    Source: 'crates/noble-kernel/src/async_tasks/bounds.rs', lines 22:29-22:38 -/
+@[reducible]
+def async_tasks.bounds.Limits.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq async_tasks.bounds.Limits := {
+}
+
+/-- [noble_kernel::async_tasks::bounds::{impl core::cmp::PartialEq<noble_kernel::async_tasks::bounds::Limits> for noble_kernel::async_tasks::bounds::Limits}::eq]:
+    Source: 'crates/noble-kernel/src/async_tasks/bounds.rs', lines 22:29-22:38
+    Visibility: public -/
+def async_tasks.bounds.Limits.Insts.CoreCmpPartialEqLimits.eq
+  (self : async_tasks.bounds.Limits) (other : async_tasks.bounds.Limits) :
+  Result Bool
+  := do
+  if self.wakeups = other.wakeups
+  then
+    if self.generations = other.generations
+    then
+      if self.tasks = other.tasks
+      then
+        if self.terminal_results = other.terminal_results
+        then
+          if self.bytes = other.bytes
+          then
+            if self.parked_payloads = other.parked_payloads
+            then
+              if self.pins = other.pins
+              then ok (self.retirement_work = other.retirement_work)
+              else ok false
+            else ok false
+          else ok false
+        else ok false
+      else ok false
+    else ok false
+  else ok false
+
+/-- Trait implementation: [noble_kernel::async_tasks::bounds::{impl core::cmp::PartialEq<noble_kernel::async_tasks::bounds::Limits> for noble_kernel::async_tasks::bounds::Limits}]
+    Source: 'crates/noble-kernel/src/async_tasks/bounds.rs', lines 22:29-22:38 -/
+@[reducible]
+impl_def async_tasks.bounds.Limits.Insts.CoreCmpPartialEqLimits :
+  core.cmp.PartialEq async_tasks.bounds.Limits async_tasks.bounds.Limits := {
+  eq := async_tasks.bounds.Limits.Insts.CoreCmpPartialEqLimits.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    async_tasks.bounds.Limits.Insts.CoreCmpPartialEqLimits
+}
+
+/-- [noble_kernel::async_tasks::bounds::{impl core::cmp::Eq for noble_kernel::async_tasks::bounds::Limits}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/async_tasks/bounds.rs', lines 22:40-22:42
+    Visibility: public -/
+def async_tasks.bounds.Limits.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : async_tasks.bounds.Limits) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::async_tasks::bounds::{impl core::cmp::Eq for noble_kernel::async_tasks::bounds::Limits}]
+    Source: 'crates/noble-kernel/src/async_tasks/bounds.rs', lines 22:40-22:42 -/
+@[reducible]
+def async_tasks.bounds.Limits.Insts.CoreCmpEq : core.cmp.Eq
+  async_tasks.bounds.Limits := {
+  partialEqInst := async_tasks.bounds.Limits.Insts.CoreCmpPartialEqLimits
+  assert_fields_are_eq :=
+    async_tasks.bounds.Limits.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::async_tasks::bounds::{impl core::clone::Clone for noble_kernel::async_tasks::bounds::Footprint}::clone]:
+    Source: 'crates/noble-kernel/src/async_tasks/bounds.rs', lines 35:9-35:14
+    Visibility: public -/
+def async_tasks.bounds.Footprint.Insts.CoreCloneClone.clone
+  (self : async_tasks.bounds.Footprint) :
+  Result async_tasks.bounds.Footprint
+  := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::async_tasks::bounds::{impl core::clone::Clone for noble_kernel::async_tasks::bounds::Footprint}]
+    Source: 'crates/noble-kernel/src/async_tasks/bounds.rs', lines 35:9-35:14 -/
+@[reducible]
+def async_tasks.bounds.Footprint.Insts.CoreCloneClone : core.clone.Clone
+  async_tasks.bounds.Footprint := {
+  clone := async_tasks.bounds.Footprint.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::async_tasks::bounds::{impl core::marker::Copy for noble_kernel::async_tasks::bounds::Footprint}]
+    Source: 'crates/noble-kernel/src/async_tasks/bounds.rs', lines 35:16-35:20 -/
+@[reducible]
+def async_tasks.bounds.Footprint.Insts.CoreMarkerCopy : core.marker.Copy
+  async_tasks.bounds.Footprint := {
+  cloneInst := async_tasks.bounds.Footprint.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::async_tasks::bounds::{impl core::fmt::Debug for noble_kernel::async_tasks::bounds::Footprint}::fmt]:
+    Source: 'crates/noble-kernel/src/async_tasks/bounds.rs', lines 35:22-35:27
+    Visibility: public -/
+def async_tasks.bounds.Footprint.Insts.CoreFmtDebug.fmt
+  (self : async_tasks.bounds.Footprint) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ core.fmt.DebugUsize self.tasks
+  let dyn1 := Dyn.mk _ core.fmt.DebugUsize self.terminal_results
+  let dyn2 := Dyn.mk _ core.fmt.DebugUsize self.bytes
+  let dyn3 := Dyn.mk _ core.fmt.DebugUsize self.parked_payloads
+  let dyn4 := Dyn.mk _ core.fmt.DebugUsize self.pins
+  let dyn5 := Dyn.mk _ core.fmt.DebugU64 self.wakeups
+  let dyn6 :=
+    Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugUsize) self.retirement_work
+  let values :=
+    Array.to_slice
+      (Array.make 7#usize [ dyn, dyn1, dyn2, dyn3, dyn4, dyn5, dyn6 ])
+  let s ←
+    lift (Array.to_slice
+      (Array.make 7#usize [
+        toStr "tasks", toStr "terminal_results", toStr "bytes", toStr
+        "parked_payloads", toStr "pins", toStr "wakeups", toStr
+        "retirement_work"
+        ]))
+  core.fmt.Formatter.debug_struct_fields_finish f (toStr "Footprint") s values
+
+/-- Trait implementation: [noble_kernel::async_tasks::bounds::{impl core::fmt::Debug for noble_kernel::async_tasks::bounds::Footprint}]
+    Source: 'crates/noble-kernel/src/async_tasks/bounds.rs', lines 35:22-35:27 -/
+@[reducible]
+def async_tasks.bounds.Footprint.Insts.CoreFmtDebug : core.fmt.Debug
+  async_tasks.bounds.Footprint := {
+  fmt := async_tasks.bounds.Footprint.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::async_tasks::bounds::{impl core::marker::StructuralPartialEq for noble_kernel::async_tasks::bounds::Footprint}]
+    Source: 'crates/noble-kernel/src/async_tasks/bounds.rs', lines 35:29-35:38 -/
+@[reducible]
+def async_tasks.bounds.Footprint.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq async_tasks.bounds.Footprint := {
+}
+
+/-- [noble_kernel::async_tasks::bounds::{impl core::cmp::PartialEq<noble_kernel::async_tasks::bounds::Footprint> for noble_kernel::async_tasks::bounds::Footprint}::eq]:
+    Source: 'crates/noble-kernel/src/async_tasks/bounds.rs', lines 35:29-35:38
+    Visibility: public -/
+def async_tasks.bounds.Footprint.Insts.CoreCmpPartialEqFootprint.eq
+  (self : async_tasks.bounds.Footprint) (other : async_tasks.bounds.Footprint)
+  :
+  Result Bool
+  := do
+  if self.wakeups = other.wakeups
+  then
+    if self.tasks = other.tasks
+    then
+      if self.terminal_results = other.terminal_results
+      then
+        if self.bytes = other.bytes
+        then
+          if self.parked_payloads = other.parked_payloads
+          then
+            if self.pins = other.pins
+            then ok (self.retirement_work = other.retirement_work)
+            else ok false
+          else ok false
+        else ok false
+      else ok false
+    else ok false
+  else ok false
+
+/-- Trait implementation: [noble_kernel::async_tasks::bounds::{impl core::cmp::PartialEq<noble_kernel::async_tasks::bounds::Footprint> for noble_kernel::async_tasks::bounds::Footprint}]
+    Source: 'crates/noble-kernel/src/async_tasks/bounds.rs', lines 35:29-35:38 -/
+@[reducible]
+impl_def async_tasks.bounds.Footprint.Insts.CoreCmpPartialEqFootprint :
+  core.cmp.PartialEq async_tasks.bounds.Footprint async_tasks.bounds.Footprint
+  := {
+  eq := async_tasks.bounds.Footprint.Insts.CoreCmpPartialEqFootprint.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    async_tasks.bounds.Footprint.Insts.CoreCmpPartialEqFootprint
+}
+
+/-- [noble_kernel::async_tasks::bounds::{impl core::cmp::Eq for noble_kernel::async_tasks::bounds::Footprint}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/async_tasks/bounds.rs', lines 35:40-35:42
+    Visibility: public -/
+def async_tasks.bounds.Footprint.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : async_tasks.bounds.Footprint) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::async_tasks::bounds::{impl core::cmp::Eq for noble_kernel::async_tasks::bounds::Footprint}]
+    Source: 'crates/noble-kernel/src/async_tasks/bounds.rs', lines 35:40-35:42 -/
+@[reducible]
+def async_tasks.bounds.Footprint.Insts.CoreCmpEq : core.cmp.Eq
+  async_tasks.bounds.Footprint := {
+  partialEqInst := async_tasks.bounds.Footprint.Insts.CoreCmpPartialEqFootprint
+  assert_fields_are_eq :=
+    async_tasks.bounds.Footprint.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::async_tasks::bounds::{noble_kernel::async_tasks::bounds::Footprint}::empty]:
+    Source: 'crates/noble-kernel/src/async_tasks/bounds.rs', lines 47:4-57:5
+    Visibility: public -/
+def async_tasks.bounds.Footprint.empty
+  : Result async_tasks.bounds.Footprint := do
+  ok
+    {
+      tasks := 0#usize,
+      terminal_results := 0#usize,
+      bytes := 0#usize,
+      parked_payloads := 0#usize,
+      pins := 0#usize,
+      wakeups := 0#u64,
+      retirement_work := 0#usize
+    }
+
+/-- [noble_kernel::async_tasks::bounds::{noble_kernel::async_tasks::bounds::Footprint}::add]:
+    Source: 'crates/noble-kernel/src/async_tasks/bounds.rs', lines 63:4-73:5 -/
+def async_tasks.bounds.Footprint.add
+  (self : async_tasks.bounds.Footprint) (next : async_tasks.bounds.Footprint) :
+  Result async_tasks.bounds.Footprint
+  := do
+  let i ← self.tasks + next.tasks
+  let i1 ← self.terminal_results + next.terminal_results
+  let i2 ← self.bytes + next.bytes
+  let i3 ← self.parked_payloads + next.parked_payloads
+  let i4 ← self.pins + next.pins
+  let i5 ← self.wakeups + next.wakeups
+  let i6 ← self.retirement_work + next.retirement_work
+  ok
+    {
+      tasks := i,
+      terminal_results := i1,
+      bytes := i2,
+      parked_payloads := i3,
+      pins := i4,
+      wakeups := i5,
+      retirement_work := i6
+    }
+
+/-- [noble_kernel::async_tasks::bounds::{noble_kernel::async_tasks::bounds::Footprint}::fits]:
+    Source: 'crates/noble-kernel/src/async_tasks/bounds.rs', lines 75:4-98:5 -/
+def async_tasks.bounds.Footprint.fits
+  (self : async_tasks.bounds.Footprint) (limits : async_tasks.bounds.Limits) :
+  Result (core.result.Result Unit async_tasks.domain.Error)
+  := do
+  if self.tasks > limits.tasks
+  then ok (core.result.Result.Err async_tasks.domain.Error.TaskCapacity)
+  else
+    if self.terminal_results > limits.terminal_results
+    then ok (core.result.Result.Err async_tasks.domain.Error.TerminalCapacity)
+    else
+      if self.bytes > limits.bytes
+      then ok (core.result.Result.Err async_tasks.domain.Error.ByteCapacity)
+      else
+        if self.parked_payloads > limits.parked_payloads
+        then
+          ok (core.result.Result.Err async_tasks.domain.Error.ParkedCapacity)
+        else
+          if self.pins > limits.pins
+          then ok (core.result.Result.Err async_tasks.domain.Error.PinCapacity)
+          else
+            if self.wakeups > limits.wakeups
+            then
+              ok (core.result.Result.Err async_tasks.domain.Error.WakeCapacity)
+            else
+              if self.retirement_work > limits.retirement_work
+              then
+                ok (core.result.Result.Err
+                  async_tasks.domain.Error.RetirementCapacity)
+              else ok (core.result.Result.Ok ())
+
+/-- [noble_kernel::async_tasks::bounds::{noble_kernel::async_tasks::bounds::Request}::validated_footprint]:
+    Source: 'crates/noble-kernel/src/async_tasks/bounds.rs', lines 135:4-154:5 -/
+def async_tasks.bounds.Request.validated_footprint
+  (self : async_tasks.bounds.Request) :
+  Result async_tasks.bounds.Footprint
+  := do
+  let i ← self.input_bytes + self.result_bytes
+  let bytes ← i + self.parked_bytes
+  let input_buffer ←
+    if self.input_bytes = 0#usize
+    then ok 0#usize
+    else ok 1#usize
+  let result_buffer ←
+    if self.result_bytes = 0#usize
+    then ok 0#usize
+    else ok 1#usize
+  let parked ← if self.parked_bytes = 0#usize
+                 then ok 0#usize
+                 else ok 1#usize
+  let i1 ← lift (UScalar.cast .Usize self.pins)
+  let i2 ← lift (UScalar.cast .U64 self.wakeups)
+  let i3 ← lift (UScalar.cast .Usize self.inputs)
+  let i4 ← lift (UScalar.cast .Usize self.results)
+  let i5 ← i3 + i4
+  let i6 ← i5 + input_buffer
+  let i7 ← i6 + result_buffer
+  let i8 ← i7 + parked
+  let i9 ← i8 + 1#usize
+  ok
+    {
+      tasks := 1#usize,
+      terminal_results := 1#usize,
+      bytes,
+      parked_payloads := parked,
+      pins := i1,
+      wakeups := i2,
+      retirement_work := i9
+    }
+
+/-- [noble_kernel::async_tasks::bounds::{noble_kernel::async_tasks::bounds::Request}::footprint]:
+    Source: 'crates/noble-kernel/src/async_tasks/bounds.rs', lines 102:4-123:5
+    Visibility: public -/
+def async_tasks.bounds.Request.footprint
+  (self : async_tasks.bounds.Request) :
+  Result (core.result.Result async_tasks.bounds.Footprint
+    async_tasks.domain.Error)
+  := do
+  if self.inputs > async_tasks.bounds.MAX_OBLIGATIONS
+  then ok (core.result.Result.Err async_tasks.domain.Error.InvalidRequest)
+  else
+    if self.results > async_tasks.bounds.MAX_OBLIGATIONS
+    then ok (core.result.Result.Err async_tasks.domain.Error.InvalidRequest)
+    else
+      if self.pins > async_tasks.bounds.MAX_OBLIGATIONS
+      then ok (core.result.Result.Err async_tasks.domain.Error.InvalidRequest)
+      else
+        let i := self.native
+        if i = 0#u64
+        then
+          ok (core.result.Result.Err async_tasks.domain.Error.InvalidRequest)
+        else
+          if self.input_bytes > async_tasks.bounds.MAX_BYTES
+          then
+            ok (core.result.Result.Err async_tasks.domain.Error.InvalidRequest)
+          else
+            if self.result_bytes > async_tasks.bounds.MAX_BYTES
+            then
+              ok (core.result.Result.Err
+                async_tasks.domain.Error.InvalidRequest)
+            else
+              if self.parked_bytes > async_tasks.bounds.MAX_BYTES
+              then
+                ok (core.result.Result.Err
+                  async_tasks.domain.Error.InvalidRequest)
+              else
+                let i1 ← lift (UScalar.cast .U64 self.wakeups)
+                if i1 > async_tasks.bounds.MAX_WAKEUPS
+                then
+                  ok (core.result.Result.Err
+                    async_tasks.domain.Error.InvalidRequest)
+                else
+                  let footprint ←
+                    async_tasks.bounds.Request.validated_footprint self
+                  if footprint.bytes > async_tasks.bounds.MAX_BYTES
+                  then
+                    ok (core.result.Result.Err
+                      async_tasks.domain.Error.ByteCapacity)
+                  else ok (core.result.Result.Ok footprint)
+
+/-- [noble_kernel::async_tasks::bounds::validate_limits]:
+    Source: 'crates/noble-kernel/src/async_tasks/bounds.rs', lines 165:0-182:1 -/
+def async_tasks.bounds.validate_limits
+  (limits : async_tasks.bounds.Limits) :
+  Result (core.result.Result Unit async_tasks.domain.Error)
+  := do
+  if limits.tasks = 0#usize
+  then ok (core.result.Result.Err async_tasks.domain.Error.InvalidLimits)
+  else
+    if limits.tasks > async_tasks.bounds.MAX_SLOTS
+    then ok (core.result.Result.Err async_tasks.domain.Error.InvalidLimits)
+    else
+      if limits.terminal_results > async_tasks.bounds.MAX_SLOTS
+      then ok (core.result.Result.Err async_tasks.domain.Error.InvalidLimits)
+      else
+        if limits.bytes > async_tasks.bounds.MAX_BYTES
+        then ok (core.result.Result.Err async_tasks.domain.Error.InvalidLimits)
+        else
+          if limits.parked_payloads > async_tasks.bounds.MAX_SLOTS
+          then
+            ok (core.result.Result.Err async_tasks.domain.Error.InvalidLimits)
+          else
+            let i ←
+              lift (UScalar.cast .Usize async_tasks.bounds.MAX_OBLIGATIONS)
+            let i1 ← async_tasks.bounds.MAX_SLOTS * i
+            if limits.pins > i1
+            then
+              ok (core.result.Result.Err
+                async_tasks.domain.Error.InvalidLimits)
+            else
+              if limits.wakeups > async_tasks.bounds.MAX_WAKEUPS
+              then
+                ok (core.result.Result.Err
+                  async_tasks.domain.Error.InvalidLimits)
+              else
+                let i2 ←
+                  lift (UScalar.cast .Usize async_tasks.bounds.MAX_OBLIGATIONS)
+                let i3 ← 2#usize * i2
+                let i4 ← i3 + 4#usize
+                let i5 ← async_tasks.bounds.MAX_SLOTS * i4
+                if limits.retirement_work > i5
+                then
+                  ok (core.result.Result.Err
+                    async_tasks.domain.Error.InvalidLimits)
+                else ok (core.result.Result.Ok ())
+
+/-- [noble_kernel::async_tasks::bounds::mask]:
+    Source: 'crates/noble-kernel/src/async_tasks/bounds.rs', lines 188:0-196:1 -/
+def async_tasks.bounds.mask (count : Std.U8) : Result Std.U64 := do
+  if count = 0#u8
+  then ok 0#u64
+  else
+    if count >= async_tasks.bounds.MAX_OBLIGATIONS
+    then ok core.num.U64.MAX
+    else let i ← 1#u64 <<< count
+         i - 1#u64
+
+/-- [noble_kernel::async_tasks::domain::{impl core::clone::Clone for noble_kernel::async_tasks::domain::TableId}::clone]:
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 2:9-2:14
+    Visibility: public -/
+def async_tasks.domain.TableId.Insts.CoreCloneClone.clone
+  (self : async_tasks.domain.TableId) : Result async_tasks.domain.TableId := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::clone::Clone for noble_kernel::async_tasks::domain::TableId}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 2:9-2:14 -/
+@[reducible]
+def async_tasks.domain.TableId.Insts.CoreCloneClone : core.clone.Clone
+  async_tasks.domain.TableId := {
+  clone := async_tasks.domain.TableId.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::marker::Copy for noble_kernel::async_tasks::domain::TableId}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 2:16-2:20 -/
+@[reducible]
+def async_tasks.domain.TableId.Insts.CoreMarkerCopy : core.marker.Copy
+  async_tasks.domain.TableId := {
+  cloneInst := async_tasks.domain.TableId.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::async_tasks::domain::{impl core::fmt::Debug for noble_kernel::async_tasks::domain::TableId}::fmt]:
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 2:22-2:27
+    Visibility: public -/
+def async_tasks.domain.TableId.Insts.CoreFmtDebug.fmt
+  (self : async_tasks.domain.TableId) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU64) self
+  core.fmt.Formatter.debug_tuple_field1_finish f (toStr "TableId") dyn
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::fmt::Debug for noble_kernel::async_tasks::domain::TableId}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 2:22-2:27 -/
+@[reducible]
+def async_tasks.domain.TableId.Insts.CoreFmtDebug : core.fmt.Debug
+  async_tasks.domain.TableId := {
+  fmt := async_tasks.domain.TableId.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::marker::StructuralPartialEq for noble_kernel::async_tasks::domain::TableId}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 2:29-2:38 -/
+@[reducible]
+def async_tasks.domain.TableId.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq async_tasks.domain.TableId := {
+}
+
+/-- [noble_kernel::async_tasks::domain::{impl core::cmp::PartialEq<noble_kernel::async_tasks::domain::TableId> for noble_kernel::async_tasks::domain::TableId}::eq]:
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 2:29-2:38
+    Visibility: public -/
+def async_tasks.domain.TableId.Insts.CoreCmpPartialEqTableId.eq
+  (self : async_tasks.domain.TableId) (other : async_tasks.domain.TableId) :
+  Result Bool
+  := do
+  ok (self = other)
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::cmp::PartialEq<noble_kernel::async_tasks::domain::TableId> for noble_kernel::async_tasks::domain::TableId}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 2:29-2:38 -/
+@[reducible]
+impl_def async_tasks.domain.TableId.Insts.CoreCmpPartialEqTableId :
+  core.cmp.PartialEq async_tasks.domain.TableId async_tasks.domain.TableId := {
+  eq := async_tasks.domain.TableId.Insts.CoreCmpPartialEqTableId.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    async_tasks.domain.TableId.Insts.CoreCmpPartialEqTableId
+}
+
+/-- [noble_kernel::async_tasks::domain::{impl core::cmp::Eq for noble_kernel::async_tasks::domain::TableId}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 2:40-2:42
+    Visibility: public -/
+def async_tasks.domain.TableId.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : async_tasks.domain.TableId) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::cmp::Eq for noble_kernel::async_tasks::domain::TableId}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 2:40-2:42 -/
+@[reducible]
+def async_tasks.domain.TableId.Insts.CoreCmpEq : core.cmp.Eq
+  async_tasks.domain.TableId := {
+  partialEqInst := async_tasks.domain.TableId.Insts.CoreCmpPartialEqTableId
+  assert_fields_are_eq :=
+    async_tasks.domain.TableId.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::async_tasks::domain::{impl core::clone::Clone for noble_kernel::async_tasks::domain::NativeId}::clone]:
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 6:9-6:14
+    Visibility: public -/
+def async_tasks.domain.NativeId.Insts.CoreCloneClone.clone
+  (self : async_tasks.domain.NativeId) :
+  Result async_tasks.domain.NativeId
+  := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::clone::Clone for noble_kernel::async_tasks::domain::NativeId}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 6:9-6:14 -/
+@[reducible]
+def async_tasks.domain.NativeId.Insts.CoreCloneClone : core.clone.Clone
+  async_tasks.domain.NativeId := {
+  clone := async_tasks.domain.NativeId.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::marker::Copy for noble_kernel::async_tasks::domain::NativeId}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 6:16-6:20 -/
+@[reducible]
+def async_tasks.domain.NativeId.Insts.CoreMarkerCopy : core.marker.Copy
+  async_tasks.domain.NativeId := {
+  cloneInst := async_tasks.domain.NativeId.Insts.CoreCloneClone
+}
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::marker::StructuralPartialEq for noble_kernel::async_tasks::domain::NativeId}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 6:29-6:38 -/
+@[reducible]
+def async_tasks.domain.NativeId.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq async_tasks.domain.NativeId := {
+}
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::cmp::PartialEq<noble_kernel::async_tasks::domain::NativeId> for noble_kernel::async_tasks::domain::NativeId}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 6:29-6:38 -/
+@[reducible]
+impl_def async_tasks.domain.NativeId.Insts.CoreCmpPartialEqNativeId :
+  core.cmp.PartialEq async_tasks.domain.NativeId async_tasks.domain.NativeId
+  := {
+  eq := async_tasks.domain.NativeId.Insts.CoreCmpPartialEqNativeId.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    async_tasks.domain.NativeId.Insts.CoreCmpPartialEqNativeId
+}
+
+/-- [noble_kernel::async_tasks::domain::{impl core::cmp::Eq for noble_kernel::async_tasks::domain::NativeId}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 6:40-6:42
+    Visibility: public -/
+def async_tasks.domain.NativeId.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : async_tasks.domain.NativeId) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::cmp::Eq for noble_kernel::async_tasks::domain::NativeId}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 6:40-6:42 -/
+@[reducible]
+def async_tasks.domain.NativeId.Insts.CoreCmpEq : core.cmp.Eq
+  async_tasks.domain.NativeId := {
+  partialEqInst := async_tasks.domain.NativeId.Insts.CoreCmpPartialEqNativeId
+  assert_fields_are_eq :=
+    async_tasks.domain.NativeId.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::async_tasks::domain::{impl core::clone::Clone for noble_kernel::async_tasks::domain::Handle}::clone]:
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 10:9-10:14
+    Visibility: public -/
+def async_tasks.domain.Handle.Insts.CoreCloneClone.clone
+  (self : async_tasks.domain.Handle) : Result async_tasks.domain.Handle := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::clone::Clone for noble_kernel::async_tasks::domain::Handle}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 10:9-10:14 -/
+@[reducible]
+def async_tasks.domain.Handle.Insts.CoreCloneClone : core.clone.Clone
+  async_tasks.domain.Handle := {
+  clone := async_tasks.domain.Handle.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::marker::Copy for noble_kernel::async_tasks::domain::Handle}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 10:16-10:20 -/
+@[reducible]
+def async_tasks.domain.Handle.Insts.CoreMarkerCopy : core.marker.Copy
+  async_tasks.domain.Handle := {
+  cloneInst := async_tasks.domain.Handle.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::async_tasks::domain::{impl core::fmt::Debug for noble_kernel::async_tasks::domain::Handle}::fmt]:
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 10:22-10:27
+    Visibility: public -/
+def async_tasks.domain.Handle.Insts.CoreFmtDebug.fmt
+  (self : async_tasks.domain.Handle) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ async_tasks.domain.TableId.Insts.CoreFmtDebug self.table
+  let dyn1 := Dyn.mk _ core.fmt.DebugUsize self.slot
+  let dyn2 := Dyn.mk _ core.fmt.DebugU64 self.generation
+  let dyn3 :=
+    Dyn.mk _ (core.fmt.DebugShared resources.Context.Insts.CoreFmtDebug)
+      self.context
+  core.fmt.Formatter.debug_struct_field4_finish f (toStr "Handle") (toStr
+    "table") dyn (toStr "slot") dyn1 (toStr "generation") dyn2 (toStr
+    "context") dyn3
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::fmt::Debug for noble_kernel::async_tasks::domain::Handle}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 10:22-10:27 -/
+@[reducible]
+def async_tasks.domain.Handle.Insts.CoreFmtDebug : core.fmt.Debug
+  async_tasks.domain.Handle := {
+  fmt := async_tasks.domain.Handle.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::marker::StructuralPartialEq for noble_kernel::async_tasks::domain::Handle}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 10:29-10:38 -/
+@[reducible]
+def async_tasks.domain.Handle.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq async_tasks.domain.Handle := {
+}
+
+/-- [noble_kernel::async_tasks::domain::{impl core::cmp::PartialEq<noble_kernel::async_tasks::domain::Handle> for noble_kernel::async_tasks::domain::Handle}::eq]:
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 10:29-10:38
+    Visibility: public -/
+def async_tasks.domain.Handle.Insts.CoreCmpPartialEqHandle.eq
+  (self : async_tasks.domain.Handle) (other : async_tasks.domain.Handle) :
+  Result Bool
+  := do
+  if self.generation = other.generation
+  then
+    let b ←
+      async_tasks.domain.TableId.Insts.CoreCmpPartialEqTableId.eq self.table
+        other.table
+    if b
+    then
+      if self.slot = other.slot
+      then
+        resources.Context.Insts.CoreCmpPartialEqContext.eq self.context
+          other.context
+      else ok false
+    else ok false
+  else ok false
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::cmp::PartialEq<noble_kernel::async_tasks::domain::Handle> for noble_kernel::async_tasks::domain::Handle}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 10:29-10:38 -/
+@[reducible]
+impl_def async_tasks.domain.Handle.Insts.CoreCmpPartialEqHandle :
+  core.cmp.PartialEq async_tasks.domain.Handle async_tasks.domain.Handle := {
+  eq := async_tasks.domain.Handle.Insts.CoreCmpPartialEqHandle.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    async_tasks.domain.Handle.Insts.CoreCmpPartialEqHandle
+}
+
+/-- [noble_kernel::async_tasks::domain::{impl core::cmp::Eq for noble_kernel::async_tasks::domain::Handle}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 10:40-10:42
+    Visibility: public -/
+def async_tasks.domain.Handle.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : async_tasks.domain.Handle) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::cmp::Eq for noble_kernel::async_tasks::domain::Handle}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 10:40-10:42 -/
+@[reducible]
+def async_tasks.domain.Handle.Insts.CoreCmpEq : core.cmp.Eq
+  async_tasks.domain.Handle := {
+  partialEqInst := async_tasks.domain.Handle.Insts.CoreCmpPartialEqHandle
+  assert_fields_are_eq :=
+    async_tasks.domain.Handle.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::async_tasks::domain::{impl core::clone::Clone for noble_kernel::async_tasks::domain::Callback}::clone]:
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 19:9-19:14
+    Visibility: public -/
+def async_tasks.domain.Callback.Insts.CoreCloneClone.clone
+  (self : async_tasks.domain.Callback) :
+  Result async_tasks.domain.Callback
+  := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::clone::Clone for noble_kernel::async_tasks::domain::Callback}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 19:9-19:14 -/
+@[reducible]
+def async_tasks.domain.Callback.Insts.CoreCloneClone : core.clone.Clone
+  async_tasks.domain.Callback := {
+  clone := async_tasks.domain.Callback.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::marker::Copy for noble_kernel::async_tasks::domain::Callback}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 19:16-19:20 -/
+@[reducible]
+def async_tasks.domain.Callback.Insts.CoreMarkerCopy : core.marker.Copy
+  async_tasks.domain.Callback := {
+  cloneInst := async_tasks.domain.Callback.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::async_tasks::domain::{impl core::fmt::Debug for noble_kernel::async_tasks::domain::Callback}::fmt]:
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 19:22-19:27
+    Visibility: public -/
+def async_tasks.domain.Callback.Insts.CoreFmtDebug.fmt
+  (self : async_tasks.domain.Callback) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ async_tasks.domain.Handle.Insts.CoreFmtDebug self.task
+  let dyn1 :=
+    Dyn.mk _ (core.fmt.DebugShared
+      async_tasks.domain.NativeId.Insts.CoreFmtDebug) self.native
+  core.fmt.Formatter.debug_struct_field2_finish f (toStr "Callback") (toStr
+    "task") dyn (toStr "native") dyn1
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::fmt::Debug for noble_kernel::async_tasks::domain::Callback}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 19:22-19:27 -/
+@[reducible]
+def async_tasks.domain.Callback.Insts.CoreFmtDebug : core.fmt.Debug
+  async_tasks.domain.Callback := {
+  fmt := async_tasks.domain.Callback.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::marker::StructuralPartialEq for noble_kernel::async_tasks::domain::Callback}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 19:29-19:38 -/
+@[reducible]
+def async_tasks.domain.Callback.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq async_tasks.domain.Callback := {
+}
+
+/-- [noble_kernel::async_tasks::domain::{impl core::cmp::PartialEq<noble_kernel::async_tasks::domain::Callback> for noble_kernel::async_tasks::domain::Callback}::eq]:
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 19:29-19:38
+    Visibility: public -/
+def async_tasks.domain.Callback.Insts.CoreCmpPartialEqCallback.eq
+  (self : async_tasks.domain.Callback) (other : async_tasks.domain.Callback) :
+  Result Bool
+  := do
+  let b ←
+    async_tasks.domain.Handle.Insts.CoreCmpPartialEqHandle.eq self.task
+      other.task
+  if b
+  then
+    async_tasks.domain.NativeId.Insts.CoreCmpPartialEqNativeId.eq self.native
+      other.native
+  else ok false
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::cmp::PartialEq<noble_kernel::async_tasks::domain::Callback> for noble_kernel::async_tasks::domain::Callback}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 19:29-19:38 -/
+@[reducible]
+impl_def async_tasks.domain.Callback.Insts.CoreCmpPartialEqCallback :
+  core.cmp.PartialEq async_tasks.domain.Callback async_tasks.domain.Callback
+  := {
+  eq := async_tasks.domain.Callback.Insts.CoreCmpPartialEqCallback.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    async_tasks.domain.Callback.Insts.CoreCmpPartialEqCallback
+}
+
+/-- [noble_kernel::async_tasks::domain::{impl core::cmp::Eq for noble_kernel::async_tasks::domain::Callback}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 19:40-19:42
+    Visibility: public -/
+def async_tasks.domain.Callback.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : async_tasks.domain.Callback) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::cmp::Eq for noble_kernel::async_tasks::domain::Callback}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 19:40-19:42 -/
+@[reducible]
+def async_tasks.domain.Callback.Insts.CoreCmpEq : core.cmp.Eq
+  async_tasks.domain.Callback := {
+  partialEqInst := async_tasks.domain.Callback.Insts.CoreCmpPartialEqCallback
+  assert_fields_are_eq :=
+    async_tasks.domain.Callback.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::async_tasks::domain::{impl core::clone::Clone for noble_kernel::async_tasks::domain::State}::clone]:
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 25:9-25:14
+    Visibility: public -/
+def async_tasks.domain.State.Insts.CoreCloneClone.clone
+  (self : async_tasks.domain.State) : Result async_tasks.domain.State := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::clone::Clone for noble_kernel::async_tasks::domain::State}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 25:9-25:14 -/
+@[reducible]
+def async_tasks.domain.State.Insts.CoreCloneClone : core.clone.Clone
+  async_tasks.domain.State := {
+  clone := async_tasks.domain.State.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::marker::Copy for noble_kernel::async_tasks::domain::State}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 25:16-25:20 -/
+@[reducible]
+def async_tasks.domain.State.Insts.CoreMarkerCopy : core.marker.Copy
+  async_tasks.domain.State := {
+  cloneInst := async_tasks.domain.State.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::async_tasks::domain::{impl core::fmt::Debug for noble_kernel::async_tasks::domain::State}::fmt]:
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 25:22-25:27
+    Visibility: public -/
+def async_tasks.domain.State.Insts.CoreFmtDebug.fmt
+  (self : async_tasks.domain.State) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | async_tasks.domain.State.Pending =>
+    core.fmt.Formatter.write_str f (toStr "Pending")
+  | async_tasks.domain.State.Ready =>
+    core.fmt.Formatter.write_str f (toStr "Ready")
+  | async_tasks.domain.State.Delivered =>
+    core.fmt.Formatter.write_str f (toStr "Delivered")
+  | async_tasks.domain.State.Retiring =>
+    core.fmt.Formatter.write_str f (toStr "Retiring")
+  | async_tasks.domain.State.Retired =>
+    core.fmt.Formatter.write_str f (toStr "Retired")
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::fmt::Debug for noble_kernel::async_tasks::domain::State}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 25:22-25:27 -/
+@[reducible]
+def async_tasks.domain.State.Insts.CoreFmtDebug : core.fmt.Debug
+  async_tasks.domain.State := {
+  fmt := async_tasks.domain.State.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::marker::StructuralPartialEq for noble_kernel::async_tasks::domain::State}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 25:29-25:38 -/
+@[reducible]
+def async_tasks.domain.State.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq async_tasks.domain.State := {
+}
+
+/-- [noble_kernel::async_tasks::domain::{impl core::cmp::PartialEq<noble_kernel::async_tasks::domain::State> for noble_kernel::async_tasks::domain::State}::eq]:
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 25:29-25:38
+    Visibility: public -/
+def async_tasks.domain.State.Insts.CoreCmpPartialEqState.eq
+  (self : async_tasks.domain.State) (other : async_tasks.domain.State) :
+  Result Bool
+  := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  ok (self1 = other1)
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::cmp::PartialEq<noble_kernel::async_tasks::domain::State> for noble_kernel::async_tasks::domain::State}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 25:29-25:38 -/
+@[reducible]
+impl_def async_tasks.domain.State.Insts.CoreCmpPartialEqState :
+  core.cmp.PartialEq async_tasks.domain.State async_tasks.domain.State := {
+  eq := async_tasks.domain.State.Insts.CoreCmpPartialEqState.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    async_tasks.domain.State.Insts.CoreCmpPartialEqState
+}
+
+/-- [noble_kernel::async_tasks::domain::{impl core::cmp::Eq for noble_kernel::async_tasks::domain::State}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 25:40-25:42
+    Visibility: public -/
+def async_tasks.domain.State.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : async_tasks.domain.State) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::cmp::Eq for noble_kernel::async_tasks::domain::State}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 25:40-25:42 -/
+@[reducible]
+def async_tasks.domain.State.Insts.CoreCmpEq : core.cmp.Eq
+  async_tasks.domain.State := {
+  partialEqInst := async_tasks.domain.State.Insts.CoreCmpPartialEqState
+  assert_fields_are_eq :=
+    async_tasks.domain.State.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::async_tasks::domain::{impl core::clone::Clone for noble_kernel::async_tasks::domain::Failure}::clone]:
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 36:9-36:14
+    Visibility: public -/
+def async_tasks.domain.Failure.Insts.CoreCloneClone.clone
+  (self : async_tasks.domain.Failure) : Result async_tasks.domain.Failure := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::clone::Clone for noble_kernel::async_tasks::domain::Failure}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 36:9-36:14 -/
+@[reducible]
+def async_tasks.domain.Failure.Insts.CoreCloneClone : core.clone.Clone
+  async_tasks.domain.Failure := {
+  clone := async_tasks.domain.Failure.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::marker::Copy for noble_kernel::async_tasks::domain::Failure}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 36:16-36:20 -/
+@[reducible]
+def async_tasks.domain.Failure.Insts.CoreMarkerCopy : core.marker.Copy
+  async_tasks.domain.Failure := {
+  cloneInst := async_tasks.domain.Failure.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::async_tasks::domain::{impl core::fmt::Debug for noble_kernel::async_tasks::domain::Failure}::fmt]:
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 36:22-36:27
+    Visibility: public -/
+def async_tasks.domain.Failure.Insts.CoreFmtDebug.fmt
+  (self : async_tasks.domain.Failure) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | async_tasks.domain.Failure.Cancelled =>
+    core.fmt.Formatter.write_str f (toStr "Cancelled")
+  | async_tasks.domain.Failure.Trap =>
+    core.fmt.Formatter.write_str f (toStr "Trap")
+  | async_tasks.domain.Failure.Deadline =>
+    core.fmt.Formatter.write_str f (toStr "Deadline")
+  | async_tasks.domain.Failure.Budget =>
+    core.fmt.Formatter.write_str f (toStr "Budget")
+  | async_tasks.domain.Failure.Internal =>
+    core.fmt.Formatter.write_str f (toStr "Internal")
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::fmt::Debug for noble_kernel::async_tasks::domain::Failure}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 36:22-36:27 -/
+@[reducible]
+def async_tasks.domain.Failure.Insts.CoreFmtDebug : core.fmt.Debug
+  async_tasks.domain.Failure := {
+  fmt := async_tasks.domain.Failure.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::marker::StructuralPartialEq for noble_kernel::async_tasks::domain::Failure}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 36:29-36:38 -/
+@[reducible]
+def async_tasks.domain.Failure.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq async_tasks.domain.Failure := {
+}
+
+/-- [noble_kernel::async_tasks::domain::{impl core::cmp::PartialEq<noble_kernel::async_tasks::domain::Failure> for noble_kernel::async_tasks::domain::Failure}::eq]:
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 36:29-36:38
+    Visibility: public -/
+def async_tasks.domain.Failure.Insts.CoreCmpPartialEqFailure.eq
+  (self : async_tasks.domain.Failure) (other : async_tasks.domain.Failure) :
+  Result Bool
+  := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  ok (self1 = other1)
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::cmp::PartialEq<noble_kernel::async_tasks::domain::Failure> for noble_kernel::async_tasks::domain::Failure}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 36:29-36:38 -/
+@[reducible]
+impl_def async_tasks.domain.Failure.Insts.CoreCmpPartialEqFailure :
+  core.cmp.PartialEq async_tasks.domain.Failure async_tasks.domain.Failure := {
+  eq := async_tasks.domain.Failure.Insts.CoreCmpPartialEqFailure.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    async_tasks.domain.Failure.Insts.CoreCmpPartialEqFailure
+}
+
+/-- [noble_kernel::async_tasks::domain::{impl core::cmp::Eq for noble_kernel::async_tasks::domain::Failure}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 36:40-36:42
+    Visibility: public -/
+def async_tasks.domain.Failure.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : async_tasks.domain.Failure) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::cmp::Eq for noble_kernel::async_tasks::domain::Failure}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 36:40-36:42 -/
+@[reducible]
+def async_tasks.domain.Failure.Insts.CoreCmpEq : core.cmp.Eq
+  async_tasks.domain.Failure := {
+  partialEqInst := async_tasks.domain.Failure.Insts.CoreCmpPartialEqFailure
+  assert_fields_are_eq :=
+    async_tasks.domain.Failure.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::async_tasks::domain::{impl core::clone::Clone for noble_kernel::async_tasks::domain::Outcome}::clone]:
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 46:9-46:14
+    Visibility: public -/
+def async_tasks.domain.Outcome.Insts.CoreCloneClone.clone
+  (self : async_tasks.domain.Outcome) : Result async_tasks.domain.Outcome := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::clone::Clone for noble_kernel::async_tasks::domain::Outcome}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 46:9-46:14 -/
+@[reducible]
+def async_tasks.domain.Outcome.Insts.CoreCloneClone : core.clone.Clone
+  async_tasks.domain.Outcome := {
+  clone := async_tasks.domain.Outcome.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::marker::Copy for noble_kernel::async_tasks::domain::Outcome}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 46:16-46:20 -/
+@[reducible]
+def async_tasks.domain.Outcome.Insts.CoreMarkerCopy : core.marker.Copy
+  async_tasks.domain.Outcome := {
+  cloneInst := async_tasks.domain.Outcome.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::async_tasks::domain::{impl core::fmt::Debug for noble_kernel::async_tasks::domain::Outcome}::fmt]:
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 46:22-46:27
+    Visibility: public -/
+def async_tasks.domain.Outcome.Insts.CoreFmtDebug.fmt
+  (self : async_tasks.domain.Outcome) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | async_tasks.domain.Outcome.Success =>
+    core.fmt.Formatter.write_str f (toStr "Success")
+  | async_tasks.domain.Outcome.DomainError =>
+    core.fmt.Formatter.write_str f (toStr "DomainError")
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::fmt::Debug for noble_kernel::async_tasks::domain::Outcome}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 46:22-46:27 -/
+@[reducible]
+def async_tasks.domain.Outcome.Insts.CoreFmtDebug : core.fmt.Debug
+  async_tasks.domain.Outcome := {
+  fmt := async_tasks.domain.Outcome.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::marker::StructuralPartialEq for noble_kernel::async_tasks::domain::Outcome}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 46:29-46:38 -/
+@[reducible]
+def async_tasks.domain.Outcome.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq async_tasks.domain.Outcome := {
+}
+
+/-- [noble_kernel::async_tasks::domain::{impl core::cmp::PartialEq<noble_kernel::async_tasks::domain::Outcome> for noble_kernel::async_tasks::domain::Outcome}::eq]:
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 46:29-46:38
+    Visibility: public -/
+def async_tasks.domain.Outcome.Insts.CoreCmpPartialEqOutcome.eq
+  (self : async_tasks.domain.Outcome) (other : async_tasks.domain.Outcome) :
+  Result Bool
+  := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  ok (self1 = other1)
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::cmp::PartialEq<noble_kernel::async_tasks::domain::Outcome> for noble_kernel::async_tasks::domain::Outcome}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 46:29-46:38 -/
+@[reducible]
+impl_def async_tasks.domain.Outcome.Insts.CoreCmpPartialEqOutcome :
+  core.cmp.PartialEq async_tasks.domain.Outcome async_tasks.domain.Outcome := {
+  eq := async_tasks.domain.Outcome.Insts.CoreCmpPartialEqOutcome.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    async_tasks.domain.Outcome.Insts.CoreCmpPartialEqOutcome
+}
+
+/-- [noble_kernel::async_tasks::domain::{impl core::cmp::Eq for noble_kernel::async_tasks::domain::Outcome}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 46:40-46:42
+    Visibility: public -/
+def async_tasks.domain.Outcome.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : async_tasks.domain.Outcome) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::cmp::Eq for noble_kernel::async_tasks::domain::Outcome}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 46:40-46:42 -/
+@[reducible]
+def async_tasks.domain.Outcome.Insts.CoreCmpEq : core.cmp.Eq
+  async_tasks.domain.Outcome := {
+  partialEqInst := async_tasks.domain.Outcome.Insts.CoreCmpPartialEqOutcome
+  assert_fields_are_eq :=
+    async_tasks.domain.Outcome.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::async_tasks::domain::{impl core::clone::Clone for noble_kernel::async_tasks::domain::Disposition}::clone]:
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 53:9-53:14
+    Visibility: public -/
+def async_tasks.domain.Disposition.Insts.CoreCloneClone.clone
+  (self : async_tasks.domain.Disposition) :
+  Result async_tasks.domain.Disposition
+  := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::clone::Clone for noble_kernel::async_tasks::domain::Disposition}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 53:9-53:14 -/
+@[reducible]
+def async_tasks.domain.Disposition.Insts.CoreCloneClone : core.clone.Clone
+  async_tasks.domain.Disposition := {
+  clone := async_tasks.domain.Disposition.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::marker::Copy for noble_kernel::async_tasks::domain::Disposition}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 53:16-53:20 -/
+@[reducible]
+def async_tasks.domain.Disposition.Insts.CoreMarkerCopy : core.marker.Copy
+  async_tasks.domain.Disposition := {
+  cloneInst := async_tasks.domain.Disposition.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::async_tasks::domain::{impl core::fmt::Debug for noble_kernel::async_tasks::domain::Disposition}::fmt]:
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 53:22-53:27
+    Visibility: public -/
+def async_tasks.domain.Disposition.Insts.CoreFmtDebug.fmt
+  (self : async_tasks.domain.Disposition) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ core.fmt.DebugU64 self.returned
+  let dyn1 := Dyn.mk _ core.fmt.DebugU64 self.consumed
+  let dyn2 := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU64) self.retired
+  core.fmt.Formatter.debug_struct_field3_finish f (toStr "Disposition") (toStr
+    "returned") dyn (toStr "consumed") dyn1 (toStr "retired") dyn2
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::fmt::Debug for noble_kernel::async_tasks::domain::Disposition}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 53:22-53:27 -/
+@[reducible]
+def async_tasks.domain.Disposition.Insts.CoreFmtDebug : core.fmt.Debug
+  async_tasks.domain.Disposition := {
+  fmt := async_tasks.domain.Disposition.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::marker::StructuralPartialEq for noble_kernel::async_tasks::domain::Disposition}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 53:29-53:38 -/
+@[reducible]
+def async_tasks.domain.Disposition.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq async_tasks.domain.Disposition := {
+}
+
+/-- [noble_kernel::async_tasks::domain::{impl core::cmp::PartialEq<noble_kernel::async_tasks::domain::Disposition> for noble_kernel::async_tasks::domain::Disposition}::eq]:
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 53:29-53:38
+    Visibility: public -/
+def async_tasks.domain.Disposition.Insts.CoreCmpPartialEqDisposition.eq
+  (self : async_tasks.domain.Disposition)
+  (other : async_tasks.domain.Disposition) :
+  Result Bool
+  := do
+  if self.returned = other.returned
+  then
+    if self.consumed = other.consumed
+    then ok (self.retired = other.retired)
+    else ok false
+  else ok false
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::cmp::PartialEq<noble_kernel::async_tasks::domain::Disposition> for noble_kernel::async_tasks::domain::Disposition}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 53:29-53:38 -/
+@[reducible]
+impl_def async_tasks.domain.Disposition.Insts.CoreCmpPartialEqDisposition :
+  core.cmp.PartialEq async_tasks.domain.Disposition
+  async_tasks.domain.Disposition := {
+  eq := async_tasks.domain.Disposition.Insts.CoreCmpPartialEqDisposition.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    async_tasks.domain.Disposition.Insts.CoreCmpPartialEqDisposition
+}
+
+/-- [noble_kernel::async_tasks::domain::{impl core::cmp::Eq for noble_kernel::async_tasks::domain::Disposition}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 53:40-53:42
+    Visibility: public -/
+def async_tasks.domain.Disposition.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : async_tasks.domain.Disposition) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::cmp::Eq for noble_kernel::async_tasks::domain::Disposition}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 53:40-53:42 -/
+@[reducible]
+def async_tasks.domain.Disposition.Insts.CoreCmpEq : core.cmp.Eq
+  async_tasks.domain.Disposition := {
+  partialEqInst :=
+    async_tasks.domain.Disposition.Insts.CoreCmpPartialEqDisposition
+  assert_fields_are_eq :=
+    async_tasks.domain.Disposition.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::async_tasks::domain::{impl core::clone::Clone for noble_kernel::async_tasks::domain::Completion}::clone]:
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 62:9-62:14
+    Visibility: public -/
+def async_tasks.domain.Completion.Insts.CoreCloneClone.clone
+  (self : async_tasks.domain.Completion) :
+  Result async_tasks.domain.Completion
+  := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::clone::Clone for noble_kernel::async_tasks::domain::Completion}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 62:9-62:14 -/
+@[reducible]
+def async_tasks.domain.Completion.Insts.CoreCloneClone : core.clone.Clone
+  async_tasks.domain.Completion := {
+  clone := async_tasks.domain.Completion.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::marker::Copy for noble_kernel::async_tasks::domain::Completion}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 62:16-62:20 -/
+@[reducible]
+def async_tasks.domain.Completion.Insts.CoreMarkerCopy : core.marker.Copy
+  async_tasks.domain.Completion := {
+  cloneInst := async_tasks.domain.Completion.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::async_tasks::domain::{impl core::fmt::Debug for noble_kernel::async_tasks::domain::Completion}::fmt]:
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 62:22-62:27
+    Visibility: public -/
+def async_tasks.domain.Completion.Insts.CoreFmtDebug.fmt
+  (self : async_tasks.domain.Completion) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn :=
+    Dyn.mk _ async_tasks.domain.Disposition.Insts.CoreFmtDebug self.inputs
+  let dyn1 := Dyn.mk _ core.fmt.DebugU64 self.produced
+  let dyn2 := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugUsize) self.bytes
+  core.fmt.Formatter.debug_struct_field3_finish f (toStr "Completion") (toStr
+    "inputs") dyn (toStr "produced") dyn1 (toStr "bytes") dyn2
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::fmt::Debug for noble_kernel::async_tasks::domain::Completion}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 62:22-62:27 -/
+@[reducible]
+def async_tasks.domain.Completion.Insts.CoreFmtDebug : core.fmt.Debug
+  async_tasks.domain.Completion := {
+  fmt := async_tasks.domain.Completion.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::marker::StructuralPartialEq for noble_kernel::async_tasks::domain::Completion}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 62:29-62:38 -/
+@[reducible]
+def async_tasks.domain.Completion.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq async_tasks.domain.Completion := {
+}
+
+/-- [noble_kernel::async_tasks::domain::{impl core::cmp::PartialEq<noble_kernel::async_tasks::domain::Completion> for noble_kernel::async_tasks::domain::Completion}::eq]:
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 62:29-62:38
+    Visibility: public -/
+def async_tasks.domain.Completion.Insts.CoreCmpPartialEqCompletion.eq
+  (self : async_tasks.domain.Completion)
+  (other : async_tasks.domain.Completion) :
+  Result Bool
+  := do
+  if self.produced = other.produced
+  then
+    let b ←
+      async_tasks.domain.Disposition.Insts.CoreCmpPartialEqDisposition.eq
+        self.inputs other.inputs
+    if b
+    then ok (self.bytes = other.bytes)
+    else ok false
+  else ok false
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::cmp::PartialEq<noble_kernel::async_tasks::domain::Completion> for noble_kernel::async_tasks::domain::Completion}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 62:29-62:38 -/
+@[reducible]
+impl_def async_tasks.domain.Completion.Insts.CoreCmpPartialEqCompletion :
+  core.cmp.PartialEq async_tasks.domain.Completion
+  async_tasks.domain.Completion := {
+  eq := async_tasks.domain.Completion.Insts.CoreCmpPartialEqCompletion.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    async_tasks.domain.Completion.Insts.CoreCmpPartialEqCompletion
+}
+
+/-- [noble_kernel::async_tasks::domain::{impl core::cmp::Eq for noble_kernel::async_tasks::domain::Completion}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 62:40-62:42
+    Visibility: public -/
+def async_tasks.domain.Completion.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : async_tasks.domain.Completion) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::cmp::Eq for noble_kernel::async_tasks::domain::Completion}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 62:40-62:42 -/
+@[reducible]
+def async_tasks.domain.Completion.Insts.CoreCmpEq : core.cmp.Eq
+  async_tasks.domain.Completion := {
+  partialEqInst :=
+    async_tasks.domain.Completion.Insts.CoreCmpPartialEqCompletion
+  assert_fields_are_eq :=
+    async_tasks.domain.Completion.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::async_tasks::domain::{impl core::clone::Clone for noble_kernel::async_tasks::domain::Obligations}::clone]:
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 71:9-71:14
+    Visibility: public -/
+def async_tasks.domain.Obligations.Insts.CoreCloneClone.clone
+  (self : async_tasks.domain.Obligations) :
+  Result async_tasks.domain.Obligations
+  := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::clone::Clone for noble_kernel::async_tasks::domain::Obligations}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 71:9-71:14 -/
+@[reducible]
+def async_tasks.domain.Obligations.Insts.CoreCloneClone : core.clone.Clone
+  async_tasks.domain.Obligations := {
+  clone := async_tasks.domain.Obligations.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::marker::Copy for noble_kernel::async_tasks::domain::Obligations}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 71:16-71:20 -/
+@[reducible]
+def async_tasks.domain.Obligations.Insts.CoreMarkerCopy : core.marker.Copy
+  async_tasks.domain.Obligations := {
+  cloneInst := async_tasks.domain.Obligations.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::async_tasks::domain::{impl core::fmt::Debug for noble_kernel::async_tasks::domain::Obligations}::fmt]:
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 71:22-71:27
+    Visibility: public -/
+def async_tasks.domain.Obligations.Insts.CoreFmtDebug.fmt
+  (self : async_tasks.domain.Obligations) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ core.fmt.DebugU64 self.inputs
+  let dyn1 := Dyn.mk _ core.fmt.DebugU64 self.results
+  let dyn2 := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU8) self.buffers
+  core.fmt.Formatter.debug_struct_field3_finish f (toStr "Obligations") (toStr
+    "inputs") dyn (toStr "results") dyn1 (toStr "buffers") dyn2
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::fmt::Debug for noble_kernel::async_tasks::domain::Obligations}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 71:22-71:27 -/
+@[reducible]
+def async_tasks.domain.Obligations.Insts.CoreFmtDebug : core.fmt.Debug
+  async_tasks.domain.Obligations := {
+  fmt := async_tasks.domain.Obligations.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::marker::StructuralPartialEq for noble_kernel::async_tasks::domain::Obligations}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 71:29-71:38 -/
+@[reducible]
+def async_tasks.domain.Obligations.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq async_tasks.domain.Obligations := {
+}
+
+/-- [noble_kernel::async_tasks::domain::{impl core::cmp::PartialEq<noble_kernel::async_tasks::domain::Obligations> for noble_kernel::async_tasks::domain::Obligations}::eq]:
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 71:29-71:38
+    Visibility: public -/
+def async_tasks.domain.Obligations.Insts.CoreCmpPartialEqObligations.eq
+  (self : async_tasks.domain.Obligations)
+  (other : async_tasks.domain.Obligations) :
+  Result Bool
+  := do
+  if self.inputs = other.inputs
+  then
+    if self.results = other.results
+    then ok (self.buffers = other.buffers)
+    else ok false
+  else ok false
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::cmp::PartialEq<noble_kernel::async_tasks::domain::Obligations> for noble_kernel::async_tasks::domain::Obligations}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 71:29-71:38 -/
+@[reducible]
+impl_def async_tasks.domain.Obligations.Insts.CoreCmpPartialEqObligations :
+  core.cmp.PartialEq async_tasks.domain.Obligations
+  async_tasks.domain.Obligations := {
+  eq := async_tasks.domain.Obligations.Insts.CoreCmpPartialEqObligations.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    async_tasks.domain.Obligations.Insts.CoreCmpPartialEqObligations
+}
+
+/-- [noble_kernel::async_tasks::domain::{impl core::cmp::Eq for noble_kernel::async_tasks::domain::Obligations}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 71:40-71:42
+    Visibility: public -/
+def async_tasks.domain.Obligations.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : async_tasks.domain.Obligations) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::cmp::Eq for noble_kernel::async_tasks::domain::Obligations}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 71:40-71:42 -/
+@[reducible]
+def async_tasks.domain.Obligations.Insts.CoreCmpEq : core.cmp.Eq
+  async_tasks.domain.Obligations := {
+  partialEqInst :=
+    async_tasks.domain.Obligations.Insts.CoreCmpPartialEqObligations
+  assert_fields_are_eq :=
+    async_tasks.domain.Obligations.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::async_tasks::domain::{impl core::clone::Clone for noble_kernel::async_tasks::domain::Snapshot}::clone]:
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 89:9-89:14
+    Visibility: public -/
+def async_tasks.domain.Snapshot.Insts.CoreCloneClone.clone
+  (self : async_tasks.domain.Snapshot) :
+  Result async_tasks.domain.Snapshot
+  := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::clone::Clone for noble_kernel::async_tasks::domain::Snapshot}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 89:9-89:14 -/
+@[reducible]
+def async_tasks.domain.Snapshot.Insts.CoreCloneClone : core.clone.Clone
+  async_tasks.domain.Snapshot := {
+  clone := async_tasks.domain.Snapshot.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::marker::Copy for noble_kernel::async_tasks::domain::Snapshot}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 89:16-89:20 -/
+@[reducible]
+def async_tasks.domain.Snapshot.Insts.CoreMarkerCopy : core.marker.Copy
+  async_tasks.domain.Snapshot := {
+  cloneInst := async_tasks.domain.Snapshot.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::async_tasks::domain::{impl core::fmt::Debug for noble_kernel::async_tasks::domain::Snapshot}::fmt]:
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 89:22-89:27
+    Visibility: public -/
+def async_tasks.domain.Snapshot.Insts.CoreFmtDebug.fmt
+  (self : async_tasks.domain.Snapshot) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ async_tasks.domain.Handle.Insts.CoreFmtDebug self.handle
+  let dyn1 :=
+    Dyn.mk _ async_tasks.domain.NativeId.Insts.CoreFmtDebug self.native
+  let dyn2 := Dyn.mk _ async_tasks.domain.State.Insts.CoreFmtDebug self.state
+  let dyn3 :=
+    Dyn.mk _ async_tasks.bounds.Request.Insts.CoreFmtDebug self.reservation
+  let dyn4 :=
+    Dyn.mk _ (core.option.Option.Insts.CoreFmtDebug
+      async_tasks.domain.Completion.Insts.CoreFmtDebug) self.completion
+  let dyn5 :=
+    Dyn.mk _ (core.option.Option.Insts.CoreFmtDebug
+      async_tasks.domain.Outcome.Insts.CoreFmtDebug) self.outcome
+  let dyn6 :=
+    Dyn.mk _ (core.option.Option.Insts.CoreFmtDebug
+      async_tasks.domain.Failure.Insts.CoreFmtDebug) self.failure
+  let dyn7 := Dyn.mk _ core.fmt.DebugBool self.completion_closed
+  let dyn8 := Dyn.mk _ core.fmt.DebugBool self.native_stopped
+  let dyn9 := Dyn.mk _ core.fmt.DebugU64 self.pins
+  let dyn10 := Dyn.mk _ core.fmt.DebugU64 self.returned_inputs
+  let dyn11 := Dyn.mk _ core.fmt.DebugU64 self.retiring_inputs
+  let dyn12 := Dyn.mk _ core.fmt.DebugU64 self.results
+  let dyn13 := Dyn.mk _ core.fmt.DebugU8 self.buffers
+  let dyn14 := Dyn.mk _ core.fmt.DebugBool self.wake_pending
+  let dyn15 := Dyn.mk _ core.fmt.DebugU32 self.wakeups_remaining
+  let dyn16 :=
+    Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugBool) self.finalized
+  let values :=
+    Array.to_slice
+      (Array.make 17#usize [
+        dyn, dyn1, dyn2, dyn3, dyn4, dyn5, dyn6, dyn7, dyn8, dyn9, dyn10,
+        dyn11, dyn12, dyn13, dyn14, dyn15, dyn16
+        ])
+  let s ←
+    lift (Array.to_slice
+      (Array.make 17#usize [
+        toStr "handle", toStr "native", toStr "state", toStr "reservation",
+        toStr "completion", toStr "outcome", toStr "failure", toStr
+        "completion_closed", toStr "native_stopped", toStr "pins", toStr
+        "returned_inputs", toStr "retiring_inputs", toStr "results", toStr
+        "buffers", toStr "wake_pending", toStr "wakeups_remaining", toStr
+        "finalized"
+        ]))
+  core.fmt.Formatter.debug_struct_fields_finish f (toStr "Snapshot") s values
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::fmt::Debug for noble_kernel::async_tasks::domain::Snapshot}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 89:22-89:27 -/
+@[reducible]
+def async_tasks.domain.Snapshot.Insts.CoreFmtDebug : core.fmt.Debug
+  async_tasks.domain.Snapshot := {
+  fmt := async_tasks.domain.Snapshot.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::marker::StructuralPartialEq for noble_kernel::async_tasks::domain::Snapshot}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 89:29-89:38 -/
+@[reducible]
+def async_tasks.domain.Snapshot.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq async_tasks.domain.Snapshot := {
+}
+
+/-- [noble_kernel::async_tasks::domain::{impl core::cmp::PartialEq<noble_kernel::async_tasks::domain::Snapshot> for noble_kernel::async_tasks::domain::Snapshot}::eq]:
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 89:29-89:38
+    Visibility: public -/
+def async_tasks.domain.Snapshot.Insts.CoreCmpPartialEqSnapshot.eq
+  (self : async_tasks.domain.Snapshot) (other : async_tasks.domain.Snapshot) :
+  Result Bool
+  := do
+  if self.completion_closed = other.completion_closed
+  then
+    if self.native_stopped = other.native_stopped
+    then
+      if self.pins = other.pins
+      then
+        if self.returned_inputs = other.returned_inputs
+        then
+          if self.retiring_inputs = other.retiring_inputs
+          then
+            if self.results = other.results
+            then
+              if self.buffers = other.buffers
+              then
+                if self.wake_pending = other.wake_pending
+                then
+                  if self.wakeups_remaining = other.wakeups_remaining
+                  then
+                    if self.finalized = other.finalized
+                    then
+                      let b ←
+                        async_tasks.domain.Handle.Insts.CoreCmpPartialEqHandle.eq
+                          self.handle other.handle
+                      if b
+                      then
+                        let b1 ←
+                          async_tasks.domain.NativeId.Insts.CoreCmpPartialEqNativeId.eq
+                            self.native other.native
+                        if b1
+                        then
+                          let b2 ←
+                            async_tasks.domain.State.Insts.CoreCmpPartialEqState.eq
+                              self.state other.state
+                          if b2
+                          then
+                            let b3 ←
+                              async_tasks.bounds.Request.Insts.CoreCmpPartialEqRequest.eq
+                                self.reservation other.reservation
+                            if b3
+                            then
+                              let b4 ←
+                                core.option.Option.Insts.CoreCmpPartialEqOption.eq
+                                  async_tasks.domain.Completion.Insts.CoreCmpPartialEqCompletion
+                                  self.completion other.completion
+                              if b4
+                              then
+                                let b5 ←
+                                  core.option.Option.Insts.CoreCmpPartialEqOption.eq
+                                    async_tasks.domain.Outcome.Insts.CoreCmpPartialEqOutcome
+                                    self.outcome other.outcome
+                                if b5
+                                then
+                                  core.option.Option.Insts.CoreCmpPartialEqOption.eq
+                                    async_tasks.domain.Failure.Insts.CoreCmpPartialEqFailure
+                                    self.failure other.failure
+                                else ok false
+                              else ok false
+                            else ok false
+                          else ok false
+                        else ok false
+                      else ok false
+                    else ok false
+                  else ok false
+                else ok false
+              else ok false
+            else ok false
+          else ok false
+        else ok false
+      else ok false
+    else ok false
+  else ok false
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::cmp::PartialEq<noble_kernel::async_tasks::domain::Snapshot> for noble_kernel::async_tasks::domain::Snapshot}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 89:29-89:38 -/
+@[reducible]
+impl_def async_tasks.domain.Snapshot.Insts.CoreCmpPartialEqSnapshot :
+  core.cmp.PartialEq async_tasks.domain.Snapshot async_tasks.domain.Snapshot
+  := {
+  eq := async_tasks.domain.Snapshot.Insts.CoreCmpPartialEqSnapshot.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    async_tasks.domain.Snapshot.Insts.CoreCmpPartialEqSnapshot
+}
+
+/-- [noble_kernel::async_tasks::domain::{impl core::cmp::Eq for noble_kernel::async_tasks::domain::Snapshot}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 89:40-89:42
+    Visibility: public -/
+def async_tasks.domain.Snapshot.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : async_tasks.domain.Snapshot) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::cmp::Eq for noble_kernel::async_tasks::domain::Snapshot}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 89:40-89:42 -/
+@[reducible]
+def async_tasks.domain.Snapshot.Insts.CoreCmpEq : core.cmp.Eq
+  async_tasks.domain.Snapshot := {
+  partialEqInst := async_tasks.domain.Snapshot.Insts.CoreCmpPartialEqSnapshot
+  assert_fields_are_eq :=
+    async_tasks.domain.Snapshot.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::async_tasks::domain::{impl core::clone::Clone for noble_kernel::async_tasks::domain::Event}::clone]:
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 111:9-111:14
+    Visibility: public -/
+def async_tasks.domain.Event.Insts.CoreCloneClone.clone
+  (self : async_tasks.domain.Event) : Result async_tasks.domain.Event := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::clone::Clone for noble_kernel::async_tasks::domain::Event}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 111:9-111:14 -/
+@[reducible]
+def async_tasks.domain.Event.Insts.CoreCloneClone : core.clone.Clone
+  async_tasks.domain.Event := {
+  clone := async_tasks.domain.Event.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::marker::Copy for noble_kernel::async_tasks::domain::Event}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 111:16-111:20 -/
+@[reducible]
+def async_tasks.domain.Event.Insts.CoreMarkerCopy : core.marker.Copy
+  async_tasks.domain.Event := {
+  cloneInst := async_tasks.domain.Event.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::async_tasks::domain::{impl core::fmt::Debug for noble_kernel::async_tasks::domain::Event}::fmt]:
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 111:22-111:27
+    Visibility: public -/
+def async_tasks.domain.Event.Insts.CoreFmtDebug.fmt
+  (self : async_tasks.domain.Event) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | async_tasks.domain.Event.Inspect =>
+    core.fmt.Formatter.write_str f (toStr "Inspect")
+  | async_tasks.domain.Event.CompleteSuccess __self_0 __self_1 =>
+    let __self_01 :=
+      Dyn.mk _ async_tasks.domain.NativeId.Insts.CoreFmtDebug __self_0
+    let __self_11 :=
+      Dyn.mk _ (core.fmt.DebugShared
+        async_tasks.domain.Completion.Insts.CoreFmtDebug) __self_1
+    core.fmt.Formatter.debug_struct_field2_finish f (toStr "CompleteSuccess")
+      (toStr "native") __self_01 (toStr "completion") __self_11
+  | async_tasks.domain.Event.CompleteDomainError __self_0 __self_1 =>
+    let __self_01 :=
+      Dyn.mk _ async_tasks.domain.NativeId.Insts.CoreFmtDebug __self_0
+    let __self_11 :=
+      Dyn.mk _ (core.fmt.DebugShared
+        async_tasks.domain.Completion.Insts.CoreFmtDebug) __self_1
+    core.fmt.Formatter.debug_struct_field2_finish f (toStr
+      "CompleteDomainError") (toStr "native") __self_01 (toStr "completion")
+      __self_11
+  | async_tasks.domain.Event.Deliver =>
+    core.fmt.Formatter.write_str f (toStr "Deliver")
+  | async_tasks.domain.Event.Cancel =>
+    core.fmt.Formatter.write_str f (toStr "Cancel")
+  | async_tasks.domain.Event.Trap =>
+    core.fmt.Formatter.write_str f (toStr "Trap")
+  | async_tasks.domain.Event.Deadline =>
+    core.fmt.Formatter.write_str f (toStr "Deadline")
+  | async_tasks.domain.Event.Budget =>
+    core.fmt.Formatter.write_str f (toStr "Budget")
+  | async_tasks.domain.Event.InternalFailure =>
+    core.fmt.Formatter.write_str f (toStr "InternalFailure")
+  | async_tasks.domain.Event.NativeStopped __self_0 =>
+    let __self_01 :=
+      Dyn.mk _ (core.fmt.DebugShared
+        async_tasks.domain.NativeId.Insts.CoreFmtDebug) __self_0
+    core.fmt.Formatter.debug_struct_field1_finish f (toStr "NativeStopped")
+      (toStr "native") __self_01
+  | async_tasks.domain.Event.SettlePins __self_0 __self_1 =>
+    let __self_01 :=
+      Dyn.mk _ async_tasks.domain.NativeId.Insts.CoreFmtDebug __self_0
+    let __self_11 := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU64) __self_1
+    core.fmt.Formatter.debug_struct_field2_finish f (toStr "SettlePins") (toStr
+      "native") __self_01 (toStr "pins") __self_11
+  | async_tasks.domain.Event.Cleanup __self_0 =>
+    let __self_01 :=
+      Dyn.mk _ (core.fmt.DebugShared
+        async_tasks.domain.Obligations.Insts.CoreFmtDebug) __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Cleanup") __self_01
+  | async_tasks.domain.Event.Wake __self_0 =>
+    let __self_01 :=
+      Dyn.mk _ (core.fmt.DebugShared
+        async_tasks.domain.NativeId.Insts.CoreFmtDebug) __self_0
+    core.fmt.Formatter.debug_struct_field1_finish f (toStr "Wake") (toStr
+      "native") __self_01
+  | async_tasks.domain.Event.TakeWake =>
+    core.fmt.Formatter.write_str f (toStr "TakeWake")
+  | async_tasks.domain.Event.Finish =>
+    core.fmt.Formatter.write_str f (toStr "Finish")
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::fmt::Debug for noble_kernel::async_tasks::domain::Event}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 111:22-111:27 -/
+@[reducible]
+def async_tasks.domain.Event.Insts.CoreFmtDebug : core.fmt.Debug
+  async_tasks.domain.Event := {
+  fmt := async_tasks.domain.Event.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::marker::StructuralPartialEq for noble_kernel::async_tasks::domain::Event}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 111:29-111:38 -/
+@[reducible]
+def async_tasks.domain.Event.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq async_tasks.domain.Event := {
+}
+
+/-- [noble_kernel::async_tasks::domain::{impl core::cmp::PartialEq<noble_kernel::async_tasks::domain::Event> for noble_kernel::async_tasks::domain::Event}::eq]:
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 111:29-111:38
+    Visibility: public -/
+def async_tasks.domain.Event.Insts.CoreCmpPartialEqEvent.eq
+  (self : async_tasks.domain.Event) (other : async_tasks.domain.Event) :
+  Result Bool
+  := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  if self1 = other1
+  then
+    match self with
+    | async_tasks.domain.Event.Inspect => ok true
+    | async_tasks.domain.Event.CompleteSuccess __self_0 __self_1 =>
+      match other with
+      | async_tasks.domain.Event.Inspect => ok true
+      | async_tasks.domain.Event.CompleteSuccess __arg1_0 __arg1_1 =>
+        let b ←
+          async_tasks.domain.NativeId.Insts.CoreCmpPartialEqNativeId.eq
+            __self_0 __arg1_0
+        if b
+        then
+          async_tasks.domain.Completion.Insts.CoreCmpPartialEqCompletion.eq
+            __self_1 __arg1_1
+        else ok false
+      | async_tasks.domain.Event.CompleteDomainError _ _ => ok true
+      | async_tasks.domain.Event.Deliver => ok true
+      | async_tasks.domain.Event.Cancel => ok true
+      | async_tasks.domain.Event.Trap => ok true
+      | async_tasks.domain.Event.Deadline => ok true
+      | async_tasks.domain.Event.Budget => ok true
+      | async_tasks.domain.Event.InternalFailure => ok true
+      | async_tasks.domain.Event.NativeStopped _ => ok true
+      | async_tasks.domain.Event.SettlePins _ _ => ok true
+      | async_tasks.domain.Event.Cleanup _ => ok true
+      | async_tasks.domain.Event.Wake _ => ok true
+      | async_tasks.domain.Event.TakeWake => ok true
+      | async_tasks.domain.Event.Finish => ok true
+    | async_tasks.domain.Event.CompleteDomainError __self_0 __self_1 =>
+      match other with
+      | async_tasks.domain.Event.Inspect => ok true
+      | async_tasks.domain.Event.CompleteSuccess _ _ => ok true
+      | async_tasks.domain.Event.CompleteDomainError __arg1_0 __arg1_1 =>
+        let b ←
+          async_tasks.domain.NativeId.Insts.CoreCmpPartialEqNativeId.eq
+            __self_0 __arg1_0
+        if b
+        then
+          async_tasks.domain.Completion.Insts.CoreCmpPartialEqCompletion.eq
+            __self_1 __arg1_1
+        else ok false
+      | async_tasks.domain.Event.Deliver => ok true
+      | async_tasks.domain.Event.Cancel => ok true
+      | async_tasks.domain.Event.Trap => ok true
+      | async_tasks.domain.Event.Deadline => ok true
+      | async_tasks.domain.Event.Budget => ok true
+      | async_tasks.domain.Event.InternalFailure => ok true
+      | async_tasks.domain.Event.NativeStopped _ => ok true
+      | async_tasks.domain.Event.SettlePins _ _ => ok true
+      | async_tasks.domain.Event.Cleanup _ => ok true
+      | async_tasks.domain.Event.Wake _ => ok true
+      | async_tasks.domain.Event.TakeWake => ok true
+      | async_tasks.domain.Event.Finish => ok true
+    | async_tasks.domain.Event.Deliver => ok true
+    | async_tasks.domain.Event.Cancel => ok true
+    | async_tasks.domain.Event.Trap => ok true
+    | async_tasks.domain.Event.Deadline => ok true
+    | async_tasks.domain.Event.Budget => ok true
+    | async_tasks.domain.Event.InternalFailure => ok true
+    | async_tasks.domain.Event.NativeStopped __self_0 =>
+      match other with
+      | async_tasks.domain.Event.Inspect => ok true
+      | async_tasks.domain.Event.CompleteSuccess _ _ => ok true
+      | async_tasks.domain.Event.CompleteDomainError _ _ => ok true
+      | async_tasks.domain.Event.Deliver => ok true
+      | async_tasks.domain.Event.Cancel => ok true
+      | async_tasks.domain.Event.Trap => ok true
+      | async_tasks.domain.Event.Deadline => ok true
+      | async_tasks.domain.Event.Budget => ok true
+      | async_tasks.domain.Event.InternalFailure => ok true
+      | async_tasks.domain.Event.NativeStopped __arg1_0 =>
+        async_tasks.domain.NativeId.Insts.CoreCmpPartialEqNativeId.eq __self_0
+          __arg1_0
+      | async_tasks.domain.Event.SettlePins _ _ => ok true
+      | async_tasks.domain.Event.Cleanup _ => ok true
+      | async_tasks.domain.Event.Wake _ => ok true
+      | async_tasks.domain.Event.TakeWake => ok true
+      | async_tasks.domain.Event.Finish => ok true
+    | async_tasks.domain.Event.SettlePins __self_0 __self_1 =>
+      match other with
+      | async_tasks.domain.Event.Inspect => ok true
+      | async_tasks.domain.Event.CompleteSuccess _ _ => ok true
+      | async_tasks.domain.Event.CompleteDomainError _ _ => ok true
+      | async_tasks.domain.Event.Deliver => ok true
+      | async_tasks.domain.Event.Cancel => ok true
+      | async_tasks.domain.Event.Trap => ok true
+      | async_tasks.domain.Event.Deadline => ok true
+      | async_tasks.domain.Event.Budget => ok true
+      | async_tasks.domain.Event.InternalFailure => ok true
+      | async_tasks.domain.Event.NativeStopped _ => ok true
+      | async_tasks.domain.Event.SettlePins __arg1_0 __arg1_1 =>
+        let b ← lift (core.cmp.impls.PartialEqU64.eq __self_1 __arg1_1)
+        if b
+        then
+          async_tasks.domain.NativeId.Insts.CoreCmpPartialEqNativeId.eq
+            __self_0 __arg1_0
+        else ok false
+      | async_tasks.domain.Event.Cleanup _ => ok true
+      | async_tasks.domain.Event.Wake _ => ok true
+      | async_tasks.domain.Event.TakeWake => ok true
+      | async_tasks.domain.Event.Finish => ok true
+    | async_tasks.domain.Event.Cleanup __self_0 =>
+      match other with
+      | async_tasks.domain.Event.Inspect => ok true
+      | async_tasks.domain.Event.CompleteSuccess _ _ => ok true
+      | async_tasks.domain.Event.CompleteDomainError _ _ => ok true
+      | async_tasks.domain.Event.Deliver => ok true
+      | async_tasks.domain.Event.Cancel => ok true
+      | async_tasks.domain.Event.Trap => ok true
+      | async_tasks.domain.Event.Deadline => ok true
+      | async_tasks.domain.Event.Budget => ok true
+      | async_tasks.domain.Event.InternalFailure => ok true
+      | async_tasks.domain.Event.NativeStopped _ => ok true
+      | async_tasks.domain.Event.SettlePins _ _ => ok true
+      | async_tasks.domain.Event.Cleanup __arg1_0 =>
+        async_tasks.domain.Obligations.Insts.CoreCmpPartialEqObligations.eq
+          __self_0 __arg1_0
+      | async_tasks.domain.Event.Wake _ => ok true
+      | async_tasks.domain.Event.TakeWake => ok true
+      | async_tasks.domain.Event.Finish => ok true
+    | async_tasks.domain.Event.Wake __self_0 =>
+      match other with
+      | async_tasks.domain.Event.Inspect => ok true
+      | async_tasks.domain.Event.CompleteSuccess _ _ => ok true
+      | async_tasks.domain.Event.CompleteDomainError _ _ => ok true
+      | async_tasks.domain.Event.Deliver => ok true
+      | async_tasks.domain.Event.Cancel => ok true
+      | async_tasks.domain.Event.Trap => ok true
+      | async_tasks.domain.Event.Deadline => ok true
+      | async_tasks.domain.Event.Budget => ok true
+      | async_tasks.domain.Event.InternalFailure => ok true
+      | async_tasks.domain.Event.NativeStopped _ => ok true
+      | async_tasks.domain.Event.SettlePins _ _ => ok true
+      | async_tasks.domain.Event.Cleanup _ => ok true
+      | async_tasks.domain.Event.Wake __arg1_0 =>
+        async_tasks.domain.NativeId.Insts.CoreCmpPartialEqNativeId.eq __self_0
+          __arg1_0
+      | async_tasks.domain.Event.TakeWake => ok true
+      | async_tasks.domain.Event.Finish => ok true
+    | async_tasks.domain.Event.TakeWake => ok true
+    | async_tasks.domain.Event.Finish => ok true
+  else ok false
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::cmp::PartialEq<noble_kernel::async_tasks::domain::Event> for noble_kernel::async_tasks::domain::Event}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 111:29-111:38 -/
+@[reducible]
+impl_def async_tasks.domain.Event.Insts.CoreCmpPartialEqEvent :
+  core.cmp.PartialEq async_tasks.domain.Event async_tasks.domain.Event := {
+  eq := async_tasks.domain.Event.Insts.CoreCmpPartialEqEvent.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    async_tasks.domain.Event.Insts.CoreCmpPartialEqEvent
+}
+
+/-- [noble_kernel::async_tasks::domain::{impl core::cmp::Eq for noble_kernel::async_tasks::domain::Event}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 111:40-111:42
+    Visibility: public -/
+def async_tasks.domain.Event.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : async_tasks.domain.Event) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::cmp::Eq for noble_kernel::async_tasks::domain::Event}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 111:40-111:42 -/
+@[reducible]
+def async_tasks.domain.Event.Insts.CoreCmpEq : core.cmp.Eq
+  async_tasks.domain.Event := {
+  partialEqInst := async_tasks.domain.Event.Insts.CoreCmpPartialEqEvent
+  assert_fields_are_eq :=
+    async_tasks.domain.Event.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::async_tasks::domain::{impl core::clone::Clone for noble_kernel::async_tasks::domain::Action}::clone]:
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 145:9-145:14
+    Visibility: public -/
+def async_tasks.domain.Action.Insts.CoreCloneClone.clone
+  (self : async_tasks.domain.Action) : Result async_tasks.domain.Action := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::clone::Clone for noble_kernel::async_tasks::domain::Action}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 145:9-145:14 -/
+@[reducible]
+def async_tasks.domain.Action.Insts.CoreCloneClone : core.clone.Clone
+  async_tasks.domain.Action := {
+  clone := async_tasks.domain.Action.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::marker::Copy for noble_kernel::async_tasks::domain::Action}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 145:16-145:20 -/
+@[reducible]
+def async_tasks.domain.Action.Insts.CoreMarkerCopy : core.marker.Copy
+  async_tasks.domain.Action := {
+  cloneInst := async_tasks.domain.Action.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::async_tasks::domain::{impl core::fmt::Debug for noble_kernel::async_tasks::domain::Action}::fmt]:
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 145:22-145:27
+    Visibility: public -/
+def async_tasks.domain.Action.Insts.CoreFmtDebug.fmt
+  (self : async_tasks.domain.Action) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | async_tasks.domain.Action.Admitted =>
+    core.fmt.Formatter.write_str f (toStr "Admitted")
+  | async_tasks.domain.Action.Inspected =>
+    core.fmt.Formatter.write_str f (toStr "Inspected")
+  | async_tasks.domain.Action.ResultReady __self_0 =>
+    let __self_01 :=
+      Dyn.mk _ (core.fmt.DebugShared
+        async_tasks.domain.Outcome.Insts.CoreFmtDebug) __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "ResultReady")
+      __self_01
+  | async_tasks.domain.Action.ResultDelivered =>
+    core.fmt.Formatter.write_str f (toStr "ResultDelivered")
+  | async_tasks.domain.Action.CancellationAcknowledged =>
+    core.fmt.Formatter.write_str f (toStr "CancellationAcknowledged")
+  | async_tasks.domain.Action.FailureRecorded __self_0 =>
+    let __self_01 :=
+      Dyn.mk _ (core.fmt.DebugShared
+        async_tasks.domain.Failure.Insts.CoreFmtDebug) __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "FailureRecorded")
+      __self_01
+  | async_tasks.domain.Action.CompletionRetired __self_0 =>
+    let __self_01 :=
+      Dyn.mk _ (core.fmt.DebugShared
+        async_tasks.domain.Outcome.Insts.CoreFmtDebug) __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "CompletionRetired")
+      __self_01
+  | async_tasks.domain.Action.OversizedResult =>
+    core.fmt.Formatter.write_str f (toStr "OversizedResult")
+  | async_tasks.domain.Action.NativeStopObserved =>
+    core.fmt.Formatter.write_str f (toStr "NativeStopObserved")
+  | async_tasks.domain.Action.PinsSettled =>
+    core.fmt.Formatter.write_str f (toStr "PinsSettled")
+  | async_tasks.domain.Action.CleanupSettled =>
+    core.fmt.Formatter.write_str f (toStr "CleanupSettled")
+  | async_tasks.domain.Action.WakeQueued =>
+    core.fmt.Formatter.write_str f (toStr "WakeQueued")
+  | async_tasks.domain.Action.WakeCoalesced =>
+    core.fmt.Formatter.write_str f (toStr "WakeCoalesced")
+  | async_tasks.domain.Action.WakeTaken =>
+    core.fmt.Formatter.write_str f (toStr "WakeTaken")
+  | async_tasks.domain.Action.RetirementCompleted =>
+    core.fmt.Formatter.write_str f (toStr "RetirementCompleted")
+  | async_tasks.domain.Action.DeliverySettled =>
+    core.fmt.Formatter.write_str f (toStr "DeliverySettled")
+  | async_tasks.domain.Action.Duplicate =>
+    core.fmt.Formatter.write_str f (toStr "Duplicate")
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::fmt::Debug for noble_kernel::async_tasks::domain::Action}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 145:22-145:27 -/
+@[reducible]
+def async_tasks.domain.Action.Insts.CoreFmtDebug : core.fmt.Debug
+  async_tasks.domain.Action := {
+  fmt := async_tasks.domain.Action.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::marker::StructuralPartialEq for noble_kernel::async_tasks::domain::Action}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 145:29-145:38 -/
+@[reducible]
+def async_tasks.domain.Action.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq async_tasks.domain.Action := {
+}
+
+/-- [noble_kernel::async_tasks::domain::{impl core::cmp::PartialEq<noble_kernel::async_tasks::domain::Action> for noble_kernel::async_tasks::domain::Action}::eq]:
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 145:29-145:38
+    Visibility: public -/
+def async_tasks.domain.Action.Insts.CoreCmpPartialEqAction.eq
+  (self : async_tasks.domain.Action) (other : async_tasks.domain.Action) :
+  Result Bool
+  := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  if self1 = other1
+  then
+    match self with
+    | async_tasks.domain.Action.Admitted => ok true
+    | async_tasks.domain.Action.Inspected => ok true
+    | async_tasks.domain.Action.ResultReady __self_0 =>
+      match other with
+      | async_tasks.domain.Action.Admitted => ok true
+      | async_tasks.domain.Action.Inspected => ok true
+      | async_tasks.domain.Action.ResultReady __arg1_0 =>
+        async_tasks.domain.Outcome.Insts.CoreCmpPartialEqOutcome.eq __self_0
+          __arg1_0
+      | async_tasks.domain.Action.ResultDelivered => ok true
+      | async_tasks.domain.Action.CancellationAcknowledged => ok true
+      | async_tasks.domain.Action.FailureRecorded _ => ok true
+      | async_tasks.domain.Action.CompletionRetired _ => ok true
+      | async_tasks.domain.Action.OversizedResult => ok true
+      | async_tasks.domain.Action.NativeStopObserved => ok true
+      | async_tasks.domain.Action.PinsSettled => ok true
+      | async_tasks.domain.Action.CleanupSettled => ok true
+      | async_tasks.domain.Action.WakeQueued => ok true
+      | async_tasks.domain.Action.WakeCoalesced => ok true
+      | async_tasks.domain.Action.WakeTaken => ok true
+      | async_tasks.domain.Action.RetirementCompleted => ok true
+      | async_tasks.domain.Action.DeliverySettled => ok true
+      | async_tasks.domain.Action.Duplicate => ok true
+    | async_tasks.domain.Action.ResultDelivered => ok true
+    | async_tasks.domain.Action.CancellationAcknowledged => ok true
+    | async_tasks.domain.Action.FailureRecorded __self_0 =>
+      match other with
+      | async_tasks.domain.Action.Admitted => ok true
+      | async_tasks.domain.Action.Inspected => ok true
+      | async_tasks.domain.Action.ResultReady _ => ok true
+      | async_tasks.domain.Action.ResultDelivered => ok true
+      | async_tasks.domain.Action.CancellationAcknowledged => ok true
+      | async_tasks.domain.Action.FailureRecorded __arg1_0 =>
+        async_tasks.domain.Failure.Insts.CoreCmpPartialEqFailure.eq __self_0
+          __arg1_0
+      | async_tasks.domain.Action.CompletionRetired _ => ok true
+      | async_tasks.domain.Action.OversizedResult => ok true
+      | async_tasks.domain.Action.NativeStopObserved => ok true
+      | async_tasks.domain.Action.PinsSettled => ok true
+      | async_tasks.domain.Action.CleanupSettled => ok true
+      | async_tasks.domain.Action.WakeQueued => ok true
+      | async_tasks.domain.Action.WakeCoalesced => ok true
+      | async_tasks.domain.Action.WakeTaken => ok true
+      | async_tasks.domain.Action.RetirementCompleted => ok true
+      | async_tasks.domain.Action.DeliverySettled => ok true
+      | async_tasks.domain.Action.Duplicate => ok true
+    | async_tasks.domain.Action.CompletionRetired __self_0 =>
+      match other with
+      | async_tasks.domain.Action.Admitted => ok true
+      | async_tasks.domain.Action.Inspected => ok true
+      | async_tasks.domain.Action.ResultReady _ => ok true
+      | async_tasks.domain.Action.ResultDelivered => ok true
+      | async_tasks.domain.Action.CancellationAcknowledged => ok true
+      | async_tasks.domain.Action.FailureRecorded _ => ok true
+      | async_tasks.domain.Action.CompletionRetired __arg1_0 =>
+        async_tasks.domain.Outcome.Insts.CoreCmpPartialEqOutcome.eq __self_0
+          __arg1_0
+      | async_tasks.domain.Action.OversizedResult => ok true
+      | async_tasks.domain.Action.NativeStopObserved => ok true
+      | async_tasks.domain.Action.PinsSettled => ok true
+      | async_tasks.domain.Action.CleanupSettled => ok true
+      | async_tasks.domain.Action.WakeQueued => ok true
+      | async_tasks.domain.Action.WakeCoalesced => ok true
+      | async_tasks.domain.Action.WakeTaken => ok true
+      | async_tasks.domain.Action.RetirementCompleted => ok true
+      | async_tasks.domain.Action.DeliverySettled => ok true
+      | async_tasks.domain.Action.Duplicate => ok true
+    | async_tasks.domain.Action.OversizedResult => ok true
+    | async_tasks.domain.Action.NativeStopObserved => ok true
+    | async_tasks.domain.Action.PinsSettled => ok true
+    | async_tasks.domain.Action.CleanupSettled => ok true
+    | async_tasks.domain.Action.WakeQueued => ok true
+    | async_tasks.domain.Action.WakeCoalesced => ok true
+    | async_tasks.domain.Action.WakeTaken => ok true
+    | async_tasks.domain.Action.RetirementCompleted => ok true
+    | async_tasks.domain.Action.DeliverySettled => ok true
+    | async_tasks.domain.Action.Duplicate => ok true
+  else ok false
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::cmp::PartialEq<noble_kernel::async_tasks::domain::Action> for noble_kernel::async_tasks::domain::Action}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 145:29-145:38 -/
+@[reducible]
+impl_def async_tasks.domain.Action.Insts.CoreCmpPartialEqAction :
+  core.cmp.PartialEq async_tasks.domain.Action async_tasks.domain.Action := {
+  eq := async_tasks.domain.Action.Insts.CoreCmpPartialEqAction.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    async_tasks.domain.Action.Insts.CoreCmpPartialEqAction
+}
+
+/-- [noble_kernel::async_tasks::domain::{impl core::cmp::Eq for noble_kernel::async_tasks::domain::Action}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 145:40-145:42
+    Visibility: public -/
+def async_tasks.domain.Action.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : async_tasks.domain.Action) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::cmp::Eq for noble_kernel::async_tasks::domain::Action}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 145:40-145:42 -/
+@[reducible]
+def async_tasks.domain.Action.Insts.CoreCmpEq : core.cmp.Eq
+  async_tasks.domain.Action := {
+  partialEqInst := async_tasks.domain.Action.Insts.CoreCmpPartialEqAction
+  assert_fields_are_eq :=
+    async_tasks.domain.Action.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::async_tasks::domain::{impl core::clone::Clone for noble_kernel::async_tasks::domain::Accounting}::clone]:
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 168:9-168:14
+    Visibility: public -/
+def async_tasks.domain.Accounting.Insts.CoreCloneClone.clone
+  (self : async_tasks.domain.Accounting) :
+  Result async_tasks.domain.Accounting
+  := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::clone::Clone for noble_kernel::async_tasks::domain::Accounting}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 168:9-168:14 -/
+@[reducible]
+def async_tasks.domain.Accounting.Insts.CoreCloneClone : core.clone.Clone
+  async_tasks.domain.Accounting := {
+  clone := async_tasks.domain.Accounting.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::marker::Copy for noble_kernel::async_tasks::domain::Accounting}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 168:16-168:20 -/
+@[reducible]
+def async_tasks.domain.Accounting.Insts.CoreMarkerCopy : core.marker.Copy
+  async_tasks.domain.Accounting := {
+  cloneInst := async_tasks.domain.Accounting.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::async_tasks::domain::{impl core::fmt::Debug for noble_kernel::async_tasks::domain::Accounting}::fmt]:
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 168:22-168:27
+    Visibility: public -/
+def async_tasks.domain.Accounting.Insts.CoreFmtDebug.fmt
+  (self : async_tasks.domain.Accounting) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn :=
+    Dyn.mk _ async_tasks.domain.Obligations.Insts.CoreFmtDebug self.acquired
+  let dyn1 := Dyn.mk _ core.fmt.DebugU64 self.consumed_inputs
+  let dyn2 := Dyn.mk _ core.fmt.DebugU64 self.retirement_withdrawn_inputs
+  let dyn3 :=
+    Dyn.mk _ async_tasks.domain.Obligations.Insts.CoreFmtDebug self.retired
+  let dyn4 :=
+    Dyn.mk _ async_tasks.domain.Obligations.Insts.CoreFmtDebug self.delivered
+  let dyn5 :=
+    Dyn.mk _ async_tasks.domain.Obligations.Insts.CoreFmtDebug self.cleaned
+  let dyn6 := Dyn.mk _ core.fmt.DebugU64 self.pins_acquired
+  let dyn7 := Dyn.mk _ core.fmt.DebugU64 self.pins_released
+  let dyn8 := Dyn.mk _ core.fmt.DebugUsize self.rejected_result_bytes
+  let dyn9 := Dyn.mk _ core.fmt.DebugBool self.completion_accepted
+  let dyn10 := Dyn.mk _ core.fmt.DebugBool self.wake_queued
+  let dyn11 := Dyn.mk _ core.fmt.DebugBool self.wake_removed
+  let dyn12 :=
+    Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugBool)
+      self.reservation_released
+  let values :=
+    Array.to_slice
+      (Array.make 13#usize [
+        dyn, dyn1, dyn2, dyn3, dyn4, dyn5, dyn6, dyn7, dyn8, dyn9, dyn10,
+        dyn11, dyn12
+        ])
+  let s ←
+    lift (Array.to_slice
+      (Array.make 13#usize [
+        toStr "acquired", toStr "consumed_inputs", toStr
+        "retirement_withdrawn_inputs", toStr "retired", toStr "delivered",
+        toStr "cleaned", toStr "pins_acquired", toStr "pins_released", toStr
+        "rejected_result_bytes", toStr "completion_accepted", toStr
+        "wake_queued", toStr "wake_removed", toStr "reservation_released"
+        ]))
+  core.fmt.Formatter.debug_struct_fields_finish f (toStr "Accounting") s values
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::fmt::Debug for noble_kernel::async_tasks::domain::Accounting}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 168:22-168:27 -/
+@[reducible]
+def async_tasks.domain.Accounting.Insts.CoreFmtDebug : core.fmt.Debug
+  async_tasks.domain.Accounting := {
+  fmt := async_tasks.domain.Accounting.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::marker::StructuralPartialEq for noble_kernel::async_tasks::domain::Accounting}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 168:29-168:38 -/
+@[reducible]
+def async_tasks.domain.Accounting.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq async_tasks.domain.Accounting := {
+}
+
+/-- [noble_kernel::async_tasks::domain::{impl core::cmp::PartialEq<noble_kernel::async_tasks::domain::Accounting> for noble_kernel::async_tasks::domain::Accounting}::eq]:
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 168:29-168:38
+    Visibility: public -/
+def async_tasks.domain.Accounting.Insts.CoreCmpPartialEqAccounting.eq
+  (self : async_tasks.domain.Accounting)
+  (other : async_tasks.domain.Accounting) :
+  Result Bool
+  := do
+  if self.consumed_inputs = other.consumed_inputs
+  then
+    if self.retirement_withdrawn_inputs = other.retirement_withdrawn_inputs
+    then
+      if self.pins_acquired = other.pins_acquired
+      then
+        if self.pins_released = other.pins_released
+        then
+          if self.completion_accepted = other.completion_accepted
+          then
+            if self.wake_queued = other.wake_queued
+            then
+              if self.wake_removed = other.wake_removed
+              then
+                if self.reservation_released = other.reservation_released
+                then
+                  let b ←
+                    async_tasks.domain.Obligations.Insts.CoreCmpPartialEqObligations.eq
+                      self.acquired other.acquired
+                  if b
+                  then
+                    let b1 ←
+                      async_tasks.domain.Obligations.Insts.CoreCmpPartialEqObligations.eq
+                        self.retired other.retired
+                    if b1
+                    then
+                      let b2 ←
+                        async_tasks.domain.Obligations.Insts.CoreCmpPartialEqObligations.eq
+                          self.delivered other.delivered
+                      if b2
+                      then
+                        let b3 ←
+                          async_tasks.domain.Obligations.Insts.CoreCmpPartialEqObligations.eq
+                            self.cleaned other.cleaned
+                        if b3
+                        then
+                          ok (self.rejected_result_bytes =
+                            other.rejected_result_bytes)
+                        else ok false
+                      else ok false
+                    else ok false
+                  else ok false
+                else ok false
+              else ok false
+            else ok false
+          else ok false
+        else ok false
+      else ok false
+    else ok false
+  else ok false
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::cmp::PartialEq<noble_kernel::async_tasks::domain::Accounting> for noble_kernel::async_tasks::domain::Accounting}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 168:29-168:38 -/
+@[reducible]
+impl_def async_tasks.domain.Accounting.Insts.CoreCmpPartialEqAccounting :
+  core.cmp.PartialEq async_tasks.domain.Accounting
+  async_tasks.domain.Accounting := {
+  eq := async_tasks.domain.Accounting.Insts.CoreCmpPartialEqAccounting.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    async_tasks.domain.Accounting.Insts.CoreCmpPartialEqAccounting
+}
+
+/-- [noble_kernel::async_tasks::domain::{impl core::cmp::Eq for noble_kernel::async_tasks::domain::Accounting}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 168:40-168:42
+    Visibility: public -/
+def async_tasks.domain.Accounting.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : async_tasks.domain.Accounting) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::cmp::Eq for noble_kernel::async_tasks::domain::Accounting}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 168:40-168:42 -/
+@[reducible]
+def async_tasks.domain.Accounting.Insts.CoreCmpEq : core.cmp.Eq
+  async_tasks.domain.Accounting := {
+  partialEqInst :=
+    async_tasks.domain.Accounting.Insts.CoreCmpPartialEqAccounting
+  assert_fields_are_eq :=
+    async_tasks.domain.Accounting.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::async_tasks::domain::{impl core::clone::Clone for noble_kernel::async_tasks::domain::Decision}::clone]:
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 186:9-186:14
+    Visibility: public -/
+def async_tasks.domain.Decision.Insts.CoreCloneClone.clone
+  (self : async_tasks.domain.Decision) :
+  Result async_tasks.domain.Decision
+  := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::clone::Clone for noble_kernel::async_tasks::domain::Decision}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 186:9-186:14 -/
+@[reducible]
+def async_tasks.domain.Decision.Insts.CoreCloneClone : core.clone.Clone
+  async_tasks.domain.Decision := {
+  clone := async_tasks.domain.Decision.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::marker::Copy for noble_kernel::async_tasks::domain::Decision}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 186:16-186:20 -/
+@[reducible]
+def async_tasks.domain.Decision.Insts.CoreMarkerCopy : core.marker.Copy
+  async_tasks.domain.Decision := {
+  cloneInst := async_tasks.domain.Decision.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::async_tasks::domain::{impl core::fmt::Debug for noble_kernel::async_tasks::domain::Decision}::fmt]:
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 186:22-186:27
+    Visibility: public -/
+def async_tasks.domain.Decision.Insts.CoreFmtDebug.fmt
+  (self : async_tasks.domain.Decision) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn :=
+    Dyn.mk _ async_tasks.domain.Snapshot.Insts.CoreFmtDebug self.record
+  let dyn1 := Dyn.mk _ async_tasks.domain.Action.Insts.CoreFmtDebug self.action
+  let dyn2 :=
+    Dyn.mk _ (core.fmt.DebugShared
+      async_tasks.domain.Accounting.Insts.CoreFmtDebug) self.accounting
+  core.fmt.Formatter.debug_struct_field3_finish f (toStr "Decision") (toStr
+    "record") dyn (toStr "action") dyn1 (toStr "accounting") dyn2
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::fmt::Debug for noble_kernel::async_tasks::domain::Decision}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 186:22-186:27 -/
+@[reducible]
+def async_tasks.domain.Decision.Insts.CoreFmtDebug : core.fmt.Debug
+  async_tasks.domain.Decision := {
+  fmt := async_tasks.domain.Decision.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::marker::StructuralPartialEq for noble_kernel::async_tasks::domain::Decision}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 186:29-186:38 -/
+@[reducible]
+def async_tasks.domain.Decision.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq async_tasks.domain.Decision := {
+}
+
+/-- [noble_kernel::async_tasks::domain::{impl core::cmp::PartialEq<noble_kernel::async_tasks::domain::Decision> for noble_kernel::async_tasks::domain::Decision}::eq]:
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 186:29-186:38
+    Visibility: public -/
+def async_tasks.domain.Decision.Insts.CoreCmpPartialEqDecision.eq
+  (self : async_tasks.domain.Decision) (other : async_tasks.domain.Decision) :
+  Result Bool
+  := do
+  let b ←
+    async_tasks.domain.Snapshot.Insts.CoreCmpPartialEqSnapshot.eq self.record
+      other.record
+  if b
+  then
+    let b1 ←
+      async_tasks.domain.Action.Insts.CoreCmpPartialEqAction.eq self.action
+        other.action
+    if b1
+    then
+      async_tasks.domain.Accounting.Insts.CoreCmpPartialEqAccounting.eq
+        self.accounting other.accounting
+    else ok false
+  else ok false
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::cmp::PartialEq<noble_kernel::async_tasks::domain::Decision> for noble_kernel::async_tasks::domain::Decision}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 186:29-186:38 -/
+@[reducible]
+impl_def async_tasks.domain.Decision.Insts.CoreCmpPartialEqDecision :
+  core.cmp.PartialEq async_tasks.domain.Decision async_tasks.domain.Decision
+  := {
+  eq := async_tasks.domain.Decision.Insts.CoreCmpPartialEqDecision.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    async_tasks.domain.Decision.Insts.CoreCmpPartialEqDecision
+}
+
+/-- [noble_kernel::async_tasks::domain::{impl core::cmp::Eq for noble_kernel::async_tasks::domain::Decision}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 186:40-186:42
+    Visibility: public -/
+def async_tasks.domain.Decision.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : async_tasks.domain.Decision) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::cmp::Eq for noble_kernel::async_tasks::domain::Decision}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 186:40-186:42 -/
+@[reducible]
+def async_tasks.domain.Decision.Insts.CoreCmpEq : core.cmp.Eq
+  async_tasks.domain.Decision := {
+  partialEqInst := async_tasks.domain.Decision.Insts.CoreCmpPartialEqDecision
+  assert_fields_are_eq :=
+    async_tasks.domain.Decision.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::async_tasks::domain::{impl core::clone::Clone for noble_kernel::async_tasks::domain::Error}::clone]:
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 194:9-194:14
+    Visibility: public -/
+def async_tasks.domain.Error.Insts.CoreCloneClone.clone
+  (self : async_tasks.domain.Error) : Result async_tasks.domain.Error := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::clone::Clone for noble_kernel::async_tasks::domain::Error}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 194:9-194:14 -/
+@[reducible]
+def async_tasks.domain.Error.Insts.CoreCloneClone : core.clone.Clone
+  async_tasks.domain.Error := {
+  clone := async_tasks.domain.Error.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::marker::Copy for noble_kernel::async_tasks::domain::Error}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 194:16-194:20 -/
+@[reducible]
+def async_tasks.domain.Error.Insts.CoreMarkerCopy : core.marker.Copy
+  async_tasks.domain.Error := {
+  cloneInst := async_tasks.domain.Error.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::async_tasks::domain::{impl core::fmt::Debug for noble_kernel::async_tasks::domain::Error}::fmt::__OFFSET]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 194:22-194:27 -/
+@[global_simps, irreducible]
+def async_tasks.domain.DebugError.fmt.__OFFSET : Array Std.Usize 30#usize :=
+  Array.make 30#usize [
+    0#usize, 13#usize, 27#usize, 45#usize, 57#usize, 73#usize, 85#usize,
+    99#usize, 110#usize, 122#usize, 140#usize, 159#usize, 172#usize, 184#usize,
+    199#usize, 210#usize, 223#usize, 241#usize, 255#usize, 262#usize,
+    267#usize, 276#usize, 284#usize, 291#usize, 309#usize, 324#usize,
+    335#usize, 349#usize, 367#usize, 375#usize
+    ]
+
+/-- [noble_kernel::async_tasks::domain::{impl core::fmt::Debug for noble_kernel::async_tasks::domain::Error}::fmt::__NAMES]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 194:22-194:27 -/
+@[global_simps, irreducible]
+def async_tasks.domain.DebugError.fmt.__NAMES : Str :=
+  toStr
+    "InvalidLimitsInvalidRequestStorageUnavailableTaskCapacityTerminalCapacityByteCapacityParkedCapacityPinCapacityWakeCapacityRetirementCapacityGenerationExhaustedInvalidHandleWrongContextWrongGenerationWrongNativeInvalidRecordInvalidDispositionResultCapacityPendingReadyDeliveredRetiringRetiredNativeStillRunningPinsOutstandingInvalidPinsInvalidCleanupCleanupOutstandingNoWakeup"
+
+/-- [noble_kernel::async_tasks::domain::{impl core::fmt::Debug for noble_kernel::async_tasks::domain::Error}::fmt]:
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 194:22-194:27
+    Visibility: public -/
+def async_tasks.domain.Error.Insts.CoreFmtDebug.fmt
+  (self : async_tasks.domain.Error) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let self1 := read_discriminant self
+  let __d ← lift (IScalar.hcast .Usize self1)
+  let s ← lift (Array.to_slice async_tasks.domain.DebugError.fmt.__OFFSET)
+  core.fmt.Formatter.debug_c_like_enum_write_str f
+    async_tasks.domain.DebugError.fmt.__NAMES s __d
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::fmt::Debug for noble_kernel::async_tasks::domain::Error}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 194:22-194:27 -/
+@[reducible]
+def async_tasks.domain.Error.Insts.CoreFmtDebug : core.fmt.Debug
+  async_tasks.domain.Error := {
+  fmt := async_tasks.domain.Error.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::marker::StructuralPartialEq for noble_kernel::async_tasks::domain::Error}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 194:29-194:38 -/
+@[reducible]
+def async_tasks.domain.Error.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq async_tasks.domain.Error := {
+}
+
+/-- [noble_kernel::async_tasks::domain::{impl core::cmp::PartialEq<noble_kernel::async_tasks::domain::Error> for noble_kernel::async_tasks::domain::Error}::eq]:
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 194:29-194:38
+    Visibility: public -/
+def async_tasks.domain.Error.Insts.CoreCmpPartialEqError.eq
+  (self : async_tasks.domain.Error) (other : async_tasks.domain.Error) :
+  Result Bool
+  := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  ok (self1 = other1)
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::cmp::PartialEq<noble_kernel::async_tasks::domain::Error> for noble_kernel::async_tasks::domain::Error}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 194:29-194:38 -/
+@[reducible]
+impl_def async_tasks.domain.Error.Insts.CoreCmpPartialEqError :
+  core.cmp.PartialEq async_tasks.domain.Error async_tasks.domain.Error := {
+  eq := async_tasks.domain.Error.Insts.CoreCmpPartialEqError.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    async_tasks.domain.Error.Insts.CoreCmpPartialEqError
+}
+
+/-- [noble_kernel::async_tasks::domain::{impl core::cmp::Eq for noble_kernel::async_tasks::domain::Error}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 194:40-194:42
+    Visibility: public -/
+def async_tasks.domain.Error.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : async_tasks.domain.Error) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::async_tasks::domain::{impl core::cmp::Eq for noble_kernel::async_tasks::domain::Error}]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 194:40-194:42 -/
+@[reducible]
+def async_tasks.domain.Error.Insts.CoreCmpEq : core.cmp.Eq
+  async_tasks.domain.Error := {
+  partialEqInst := async_tasks.domain.Error.Insts.CoreCmpPartialEqError
+  assert_fields_are_eq :=
+    async_tasks.domain.Error.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::async_tasks::{impl core::fmt::Debug for noble_kernel::async_tasks::Task}::fmt]:
+    Source: 'crates/noble-kernel/src/async_tasks/mod.rs', lines 38:9-38:14
+    Visibility: public -/
+def async_tasks.Task.Insts.CoreFmtDebug.fmt
+  (self : async_tasks.Task) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn :=
+    Dyn.mk _ (core.fmt.DebugShared
+      async_tasks.domain.Handle.Insts.CoreFmtDebug) self.handle
+  core.fmt.Formatter.debug_struct_field1_finish f (toStr "Task") (toStr
+    "handle") dyn
+
+/-- Trait implementation: [noble_kernel::async_tasks::{impl core::fmt::Debug for noble_kernel::async_tasks::Task}]
+    Source: 'crates/noble-kernel/src/async_tasks/mod.rs', lines 38:9-38:14 -/
+@[reducible]
+def async_tasks.Task.Insts.CoreFmtDebug : core.fmt.Debug async_tasks.Task := {
+  fmt := async_tasks.Task.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_kernel::async_tasks::{noble_kernel::async_tasks::Task}::handle]:
+    Source: 'crates/noble-kernel/src/async_tasks/mod.rs', lines 45:4-47:5
+    Visibility: public -/
+def async_tasks.Task.impl.handle
+  (self : async_tasks.Task) : Result async_tasks.domain.Handle := do
+  ok self.handle
+
+/-- [noble_kernel::async_tasks::{impl core::fmt::Debug for noble_kernel::async_tasks::Rejected<T>}::fmt]:
+    Source: 'crates/noble-kernel/src/async_tasks/mod.rs', lines 51:9-51:14
+    Visibility: public -/
+def async_tasks.Rejected.Insts.CoreFmtDebug.fmt
+  {T : Type} (corefmtDebugInst : core.fmt.Debug T)
+  (self : async_tasks.Rejected T) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ async_tasks.domain.Error.Insts.CoreFmtDebug self.error
+  let dyn1 := Dyn.mk _ (core.fmt.DebugShared corefmtDebugInst) self.input
+  core.fmt.Formatter.debug_struct_field2_finish f (toStr "Rejected") (toStr
+    "error") dyn (toStr "input") dyn1
+
+/-- Trait implementation: [noble_kernel::async_tasks::{impl core::fmt::Debug for noble_kernel::async_tasks::Rejected<T>}]
+    Source: 'crates/noble-kernel/src/async_tasks/mod.rs', lines 51:9-51:14 -/
+@[reducible]
+def async_tasks.Rejected.Insts.CoreFmtDebug {T : Type} (corefmtDebugInst :
+  core.fmt.Debug T) : core.fmt.Debug (async_tasks.Rejected T) := {
+  fmt := async_tasks.Rejected.Insts.CoreFmtDebug.fmt corefmtDebugInst
+}
+
+/-- [noble_kernel::async_tasks::{impl core::fmt::Debug for noble_kernel::async_tasks::Admitted<T>}::fmt]:
+    Source: 'crates/noble-kernel/src/async_tasks/mod.rs', lines 58:9-58:14
+    Visibility: public -/
+def async_tasks.Admitted.Insts.CoreFmtDebug.fmt
+  {T : Type} (corefmtDebugInst : core.fmt.Debug T)
+  (self : async_tasks.Admitted T) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ async_tasks.Task.Insts.CoreFmtDebug self.task
+  let dyn1 :=
+    Dyn.mk _ async_tasks.domain.Callback.Insts.CoreFmtDebug self.callback
+  let dyn2 := Dyn.mk _ corefmtDebugInst self.inputs
+  let dyn3 :=
+    Dyn.mk _ (core.fmt.DebugShared
+      async_tasks.domain.Decision.Insts.CoreFmtDebug) self.decision
+  core.fmt.Formatter.debug_struct_field4_finish f (toStr "Admitted") (toStr
+    "task") dyn (toStr "callback") dyn1 (toStr "inputs") dyn2 (toStr
+    "decision") dyn3
+
+/-- Trait implementation: [noble_kernel::async_tasks::{impl core::fmt::Debug for noble_kernel::async_tasks::Admitted<T>}]
+    Source: 'crates/noble-kernel/src/async_tasks/mod.rs', lines 58:9-58:14 -/
+@[reducible]
+def async_tasks.Admitted.Insts.CoreFmtDebug {T : Type} (corefmtDebugInst :
+  core.fmt.Debug T) : core.fmt.Debug (async_tasks.Admitted T) := {
+  fmt := async_tasks.Admitted.Insts.CoreFmtDebug.fmt corefmtDebugInst
+}
+
+/-- [noble_kernel::async_tasks::{impl core::clone::Clone for noble_kernel::async_tasks::Observation}::clone]:
+    Source: 'crates/noble-kernel/src/async_tasks/mod.rs', lines 67:9-67:14
+    Visibility: public -/
+def async_tasks.Observation.Insts.CoreCloneClone.clone
+  (self : async_tasks.Observation) : Result async_tasks.Observation := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::async_tasks::{impl core::clone::Clone for noble_kernel::async_tasks::Observation}]
+    Source: 'crates/noble-kernel/src/async_tasks/mod.rs', lines 67:9-67:14 -/
+@[reducible]
+def async_tasks.Observation.Insts.CoreCloneClone : core.clone.Clone
+  async_tasks.Observation := {
+  clone := async_tasks.Observation.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::async_tasks::{impl core::marker::Copy for noble_kernel::async_tasks::Observation}]
+    Source: 'crates/noble-kernel/src/async_tasks/mod.rs', lines 67:16-67:20 -/
+@[reducible]
+def async_tasks.Observation.Insts.CoreMarkerCopy : core.marker.Copy
+  async_tasks.Observation := {
+  cloneInst := async_tasks.Observation.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::async_tasks::{impl core::fmt::Debug for noble_kernel::async_tasks::Observation}::fmt]:
+    Source: 'crates/noble-kernel/src/async_tasks/mod.rs', lines 67:22-67:27
+    Visibility: public -/
+def async_tasks.Observation.Insts.CoreFmtDebug.fmt
+  (self : async_tasks.Observation) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ core.fmt.DebugUsize self.pending
+  let dyn1 := Dyn.mk _ core.fmt.DebugUsize self.ready
+  let dyn2 := Dyn.mk _ core.fmt.DebugUsize self.delivered
+  let dyn3 := Dyn.mk _ core.fmt.DebugUsize self.retiring
+  let dyn4 := Dyn.mk _ core.fmt.DebugUsize self.retired
+  let dyn5 := Dyn.mk _ core.fmt.DebugUsize self.outstanding_pins
+  let dyn6 := Dyn.mk _ core.fmt.DebugUsize self.queued_wakeups
+  let dyn7 :=
+    Dyn.mk _ (core.fmt.DebugShared
+      async_tasks.bounds.Footprint.Insts.CoreFmtDebug) self.reserved
+  let values :=
+    Array.to_slice
+      (Array.make 8#usize [ dyn, dyn1, dyn2, dyn3, dyn4, dyn5, dyn6, dyn7 ])
+  let s ←
+    lift (Array.to_slice
+      (Array.make 8#usize [
+        toStr "pending", toStr "ready", toStr "delivered", toStr "retiring",
+        toStr "retired", toStr "outstanding_pins", toStr "queued_wakeups",
+        toStr "reserved"
+        ]))
+  core.fmt.Formatter.debug_struct_fields_finish f (toStr "Observation") s
+    values
+
+/-- Trait implementation: [noble_kernel::async_tasks::{impl core::fmt::Debug for noble_kernel::async_tasks::Observation}]
+    Source: 'crates/noble-kernel/src/async_tasks/mod.rs', lines 67:22-67:27 -/
+@[reducible]
+def async_tasks.Observation.Insts.CoreFmtDebug : core.fmt.Debug
+  async_tasks.Observation := {
+  fmt := async_tasks.Observation.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::async_tasks::{impl core::marker::StructuralPartialEq for noble_kernel::async_tasks::Observation}]
+    Source: 'crates/noble-kernel/src/async_tasks/mod.rs', lines 67:29-67:38 -/
+@[reducible]
+def async_tasks.Observation.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq async_tasks.Observation := {
+}
+
+/-- [noble_kernel::async_tasks::{impl core::cmp::PartialEq<noble_kernel::async_tasks::Observation> for noble_kernel::async_tasks::Observation}::eq]:
+    Source: 'crates/noble-kernel/src/async_tasks/mod.rs', lines 67:29-67:38
+    Visibility: public -/
+def async_tasks.Observation.Insts.CoreCmpPartialEqObservation.eq
+  (self : async_tasks.Observation) (other : async_tasks.Observation) :
+  Result Bool
+  := do
+  if self.pending = other.pending
+  then
+    if self.ready = other.ready
+    then
+      if self.delivered = other.delivered
+      then
+        if self.retiring = other.retiring
+        then
+          if self.retired = other.retired
+          then
+            if self.outstanding_pins = other.outstanding_pins
+            then
+              if self.queued_wakeups = other.queued_wakeups
+              then
+                async_tasks.bounds.Footprint.Insts.CoreCmpPartialEqFootprint.eq
+                  self.reserved other.reserved
+              else ok false
+            else ok false
+          else ok false
+        else ok false
+      else ok false
+    else ok false
+  else ok false
+
+/-- Trait implementation: [noble_kernel::async_tasks::{impl core::cmp::PartialEq<noble_kernel::async_tasks::Observation> for noble_kernel::async_tasks::Observation}]
+    Source: 'crates/noble-kernel/src/async_tasks/mod.rs', lines 67:29-67:38 -/
+@[reducible]
+impl_def async_tasks.Observation.Insts.CoreCmpPartialEqObservation :
+  core.cmp.PartialEq async_tasks.Observation async_tasks.Observation := {
+  eq := async_tasks.Observation.Insts.CoreCmpPartialEqObservation.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    async_tasks.Observation.Insts.CoreCmpPartialEqObservation
+}
+
+/-- [noble_kernel::async_tasks::{impl core::cmp::Eq for noble_kernel::async_tasks::Observation}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/async_tasks/mod.rs', lines 67:40-67:42
+    Visibility: public -/
+def async_tasks.Observation.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : async_tasks.Observation) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::async_tasks::{impl core::cmp::Eq for noble_kernel::async_tasks::Observation}]
+    Source: 'crates/noble-kernel/src/async_tasks/mod.rs', lines 67:40-67:42 -/
+@[reducible]
+def async_tasks.Observation.Insts.CoreCmpEq : core.cmp.Eq
+  async_tasks.Observation := {
+  partialEqInst := async_tasks.Observation.Insts.CoreCmpPartialEqObservation
+  assert_fields_are_eq :=
+    async_tasks.Observation.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::async_tasks::schema::coverage::{impl core::clone::Clone for noble_kernel::async_tasks::schema::coverage::CoverageRow}::clone]:
+    Source: 'crates/noble-kernel/src/async_tasks/schema/coverage.rs', lines 3:9-3:14
+    Visibility: public -/
+def async_tasks.schema.coverage.CoverageRow.Insts.CoreCloneClone.clone
+  (self : async_tasks.schema.coverage.CoverageRow) :
+  Result async_tasks.schema.coverage.CoverageRow
+  := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::async_tasks::schema::coverage::{impl core::clone::Clone for noble_kernel::async_tasks::schema::coverage::CoverageRow}]
+    Source: 'crates/noble-kernel/src/async_tasks/schema/coverage.rs', lines 3:9-3:14 -/
+@[reducible]
+def async_tasks.schema.coverage.CoverageRow.Insts.CoreCloneClone :
+  core.clone.Clone async_tasks.schema.coverage.CoverageRow := {
+  clone := async_tasks.schema.coverage.CoverageRow.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::async_tasks::schema::coverage::{impl core::marker::Copy for noble_kernel::async_tasks::schema::coverage::CoverageRow}]
+    Source: 'crates/noble-kernel/src/async_tasks/schema/coverage.rs', lines 3:16-3:20 -/
+@[reducible]
+def async_tasks.schema.coverage.CoverageRow.Insts.CoreMarkerCopy :
+  core.marker.Copy async_tasks.schema.coverage.CoverageRow := {
+  cloneInst := async_tasks.schema.coverage.CoverageRow.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::async_tasks::schema::{impl core::fmt::Debug for noble_kernel::async_tasks::schema::Rule}::fmt]:
+    Source: 'crates/noble-kernel/src/async_tasks/schema.rs', lines 95:22-95:27
+    Visibility: public -/
+def async_tasks.schema.Rule.Insts.CoreFmtDebug.fmt
+  (self : async_tasks.schema.Rule) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | async_tasks.schema.Rule.Inspect =>
+    core.fmt.Formatter.write_str f (toStr "Inspect")
+  | async_tasks.schema.Rule.Complete __self_0 __self_1 =>
+    let __self_01 :=
+      Dyn.mk _ async_tasks.domain.Outcome.Insts.CoreFmtDebug __self_0
+    let __self_11 :=
+      Dyn.mk _ (core.fmt.DebugShared
+        async_tasks.domain.Completion.Insts.CoreFmtDebug) __self_1
+    core.fmt.Formatter.debug_struct_field2_finish f (toStr "Complete") (toStr
+      "outcome") __self_01 (toStr "completion") __self_11
+  | async_tasks.schema.Rule.Deliver =>
+    core.fmt.Formatter.write_str f (toStr "Deliver")
+  | async_tasks.schema.Rule.Retire __self_0 =>
+    let __self_01 :=
+      Dyn.mk _ (core.fmt.DebugShared
+        async_tasks.domain.Failure.Insts.CoreFmtDebug) __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Retire") __self_01
+  | async_tasks.schema.Rule.ObserveStop =>
+    core.fmt.Formatter.write_str f (toStr "ObserveStop")
+  | async_tasks.schema.Rule.SettlePins __self_0 =>
+    let __self_01 := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU64) __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "SettlePins")
+      __self_01
+  | async_tasks.schema.Rule.Cleanup __self_0 =>
+    let __self_01 :=
+      Dyn.mk _ (core.fmt.DebugShared
+        async_tasks.domain.Obligations.Insts.CoreFmtDebug) __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Cleanup") __self_01
+  | async_tasks.schema.Rule.Wake =>
+    core.fmt.Formatter.write_str f (toStr "Wake")
+  | async_tasks.schema.Rule.TakeWake =>
+    core.fmt.Formatter.write_str f (toStr "TakeWake")
+  | async_tasks.schema.Rule.Finish =>
+    core.fmt.Formatter.write_str f (toStr "Finish")
+  | async_tasks.schema.Rule.Duplicate =>
+    core.fmt.Formatter.write_str f (toStr "Duplicate")
+
+/-- Trait implementation: [noble_kernel::async_tasks::schema::{impl core::fmt::Debug for noble_kernel::async_tasks::schema::Rule}]
+    Source: 'crates/noble-kernel/src/async_tasks/schema.rs', lines 95:22-95:27 -/
+@[reducible]
+def async_tasks.schema.Rule.Insts.CoreFmtDebug : core.fmt.Debug
+  async_tasks.schema.Rule := {
+  fmt := async_tasks.schema.Rule.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_kernel::async_tasks::schema::{impl core::fmt::Debug for noble_kernel::async_tasks::schema::EventKind}::fmt::__OFFSET]
+    Source: 'crates/noble-kernel/src/async_tasks/schema.rs', lines 29:22-29:27 -/
+@[global_simps, irreducible]
+def async_tasks.schema.DebugEventKind.fmt.__OFFSET
+  : Array Std.Usize 16#usize :=
+  Array.make 16#usize [
+    0#usize, 7#usize, 22#usize, 41#usize, 48#usize, 54#usize, 58#usize,
+    66#usize, 72#usize, 87#usize, 100#usize, 110#usize, 117#usize, 121#usize,
+    129#usize, 135#usize
+    ]
+
+/-- [noble_kernel::async_tasks::schema::{impl core::fmt::Debug for noble_kernel::async_tasks::schema::EventKind}::fmt::__NAMES]
+    Source: 'crates/noble-kernel/src/async_tasks/schema.rs', lines 29:22-29:27 -/
+@[global_simps, irreducible]
+def async_tasks.schema.DebugEventKind.fmt.__NAMES : Str :=
+  toStr
+    "InspectCompleteSuccessCompleteDomainErrorDeliverCancelTrapDeadlineBudgetInternalFailureNativeStoppedSettlePinsCleanupWakeTakeWakeFinish"
+
+/-- [noble_kernel::async_tasks::schema::{impl core::fmt::Debug for noble_kernel::async_tasks::schema::EventKind}::fmt]:
+    Source: 'crates/noble-kernel/src/async_tasks/schema.rs', lines 29:22-29:27
+    Visibility: public -/
+def async_tasks.schema.EventKind.Insts.CoreFmtDebug.fmt
+  (self : async_tasks.schema.EventKind) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let self1 := read_discriminant self
+  let __d ← lift (IScalar.hcast .Usize self1)
+  let s ←
+    lift (Array.to_slice async_tasks.schema.DebugEventKind.fmt.__OFFSET)
+  core.fmt.Formatter.debug_c_like_enum_write_str f
+    async_tasks.schema.DebugEventKind.fmt.__NAMES s __d
+
+/-- Trait implementation: [noble_kernel::async_tasks::schema::{impl core::fmt::Debug for noble_kernel::async_tasks::schema::EventKind}]
+    Source: 'crates/noble-kernel/src/async_tasks/schema.rs', lines 29:22-29:27 -/
+@[reducible]
+def async_tasks.schema.EventKind.Insts.CoreFmtDebug : core.fmt.Debug
+  async_tasks.schema.EventKind := {
+  fmt := async_tasks.schema.EventKind.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_kernel::async_tasks::schema::coverage::{impl core::fmt::Debug for noble_kernel::async_tasks::schema::coverage::CoverageRow}::fmt]:
+    Source: 'crates/noble-kernel/src/async_tasks/schema/coverage.rs', lines 3:22-3:27
+    Visibility: public -/
+def async_tasks.schema.coverage.CoverageRow.Insts.CoreFmtDebug.fmt
+  (self : async_tasks.schema.coverage.CoverageRow) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ async_tasks.domain.State.Insts.CoreFmtDebug self.state
+  let dyn1 :=
+    Dyn.mk _ async_tasks.schema.EventKind.Insts.CoreFmtDebug self.event
+  let dyn2 :=
+    Dyn.mk _ (core.fmt.DebugShared (core.result.Result.Insts.CoreFmtDebug
+      async_tasks.schema.Rule.Insts.CoreFmtDebug
+      async_tasks.domain.Error.Insts.CoreFmtDebug)) self.rule
+  core.fmt.Formatter.debug_struct_field3_finish f (toStr "CoverageRow") (toStr
+    "state") dyn (toStr "event") dyn1 (toStr "rule") dyn2
+
+/-- Trait implementation: [noble_kernel::async_tasks::schema::coverage::{impl core::fmt::Debug for noble_kernel::async_tasks::schema::coverage::CoverageRow}]
+    Source: 'crates/noble-kernel/src/async_tasks/schema/coverage.rs', lines 3:22-3:27 -/
+@[reducible]
+def async_tasks.schema.coverage.CoverageRow.Insts.CoreFmtDebug : core.fmt.Debug
+  async_tasks.schema.coverage.CoverageRow := {
+  fmt := async_tasks.schema.coverage.CoverageRow.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::async_tasks::schema::coverage::{impl core::marker::StructuralPartialEq for noble_kernel::async_tasks::schema::coverage::CoverageRow}]
+    Source: 'crates/noble-kernel/src/async_tasks/schema/coverage.rs', lines 3:29-3:38 -/
+@[reducible]
+def async_tasks.schema.coverage.CoverageRow.Insts.CoreMarkerStructuralPartialEq
+  : core.marker.StructuralPartialEq async_tasks.schema.coverage.CoverageRow
+  := {
+}
+
+/-- [noble_kernel::async_tasks::schema::{impl core::cmp::PartialEq<noble_kernel::async_tasks::schema::Rule> for noble_kernel::async_tasks::schema::Rule}::eq]:
+    Source: 'crates/noble-kernel/src/async_tasks/schema.rs', lines 95:29-95:38
+    Visibility: public -/
+def async_tasks.schema.Rule.Insts.CoreCmpPartialEqRule.eq
+  (self : async_tasks.schema.Rule) (other : async_tasks.schema.Rule) :
+  Result Bool
+  := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  if self1 = other1
+  then
+    match self with
+    | async_tasks.schema.Rule.Inspect => ok true
+    | async_tasks.schema.Rule.Complete __self_0 __self_1 =>
+      match other with
+      | async_tasks.schema.Rule.Inspect => ok true
+      | async_tasks.schema.Rule.Complete __arg1_0 __arg1_1 =>
+        let b ←
+          async_tasks.domain.Outcome.Insts.CoreCmpPartialEqOutcome.eq __self_0
+            __arg1_0
+        if b
+        then
+          async_tasks.domain.Completion.Insts.CoreCmpPartialEqCompletion.eq
+            __self_1 __arg1_1
+        else ok false
+      | async_tasks.schema.Rule.Deliver => ok true
+      | async_tasks.schema.Rule.Retire _ => ok true
+      | async_tasks.schema.Rule.ObserveStop => ok true
+      | async_tasks.schema.Rule.SettlePins _ => ok true
+      | async_tasks.schema.Rule.Cleanup _ => ok true
+      | async_tasks.schema.Rule.Wake => ok true
+      | async_tasks.schema.Rule.TakeWake => ok true
+      | async_tasks.schema.Rule.Finish => ok true
+      | async_tasks.schema.Rule.Duplicate => ok true
+    | async_tasks.schema.Rule.Deliver => ok true
+    | async_tasks.schema.Rule.Retire __self_0 =>
+      match other with
+      | async_tasks.schema.Rule.Inspect => ok true
+      | async_tasks.schema.Rule.Complete _ _ => ok true
+      | async_tasks.schema.Rule.Deliver => ok true
+      | async_tasks.schema.Rule.Retire __arg1_0 =>
+        async_tasks.domain.Failure.Insts.CoreCmpPartialEqFailure.eq __self_0
+          __arg1_0
+      | async_tasks.schema.Rule.ObserveStop => ok true
+      | async_tasks.schema.Rule.SettlePins _ => ok true
+      | async_tasks.schema.Rule.Cleanup _ => ok true
+      | async_tasks.schema.Rule.Wake => ok true
+      | async_tasks.schema.Rule.TakeWake => ok true
+      | async_tasks.schema.Rule.Finish => ok true
+      | async_tasks.schema.Rule.Duplicate => ok true
+    | async_tasks.schema.Rule.ObserveStop => ok true
+    | async_tasks.schema.Rule.SettlePins __self_0 =>
+      match other with
+      | async_tasks.schema.Rule.Inspect => ok true
+      | async_tasks.schema.Rule.Complete _ _ => ok true
+      | async_tasks.schema.Rule.Deliver => ok true
+      | async_tasks.schema.Rule.Retire _ => ok true
+      | async_tasks.schema.Rule.ObserveStop => ok true
+      | async_tasks.schema.Rule.SettlePins __arg1_0 =>
+        lift (core.cmp.impls.PartialEqU64.eq __self_0 __arg1_0)
+      | async_tasks.schema.Rule.Cleanup _ => ok true
+      | async_tasks.schema.Rule.Wake => ok true
+      | async_tasks.schema.Rule.TakeWake => ok true
+      | async_tasks.schema.Rule.Finish => ok true
+      | async_tasks.schema.Rule.Duplicate => ok true
+    | async_tasks.schema.Rule.Cleanup __self_0 =>
+      match other with
+      | async_tasks.schema.Rule.Inspect => ok true
+      | async_tasks.schema.Rule.Complete _ _ => ok true
+      | async_tasks.schema.Rule.Deliver => ok true
+      | async_tasks.schema.Rule.Retire _ => ok true
+      | async_tasks.schema.Rule.ObserveStop => ok true
+      | async_tasks.schema.Rule.SettlePins _ => ok true
+      | async_tasks.schema.Rule.Cleanup __arg1_0 =>
+        async_tasks.domain.Obligations.Insts.CoreCmpPartialEqObligations.eq
+          __self_0 __arg1_0
+      | async_tasks.schema.Rule.Wake => ok true
+      | async_tasks.schema.Rule.TakeWake => ok true
+      | async_tasks.schema.Rule.Finish => ok true
+      | async_tasks.schema.Rule.Duplicate => ok true
+    | async_tasks.schema.Rule.Wake => ok true
+    | async_tasks.schema.Rule.TakeWake => ok true
+    | async_tasks.schema.Rule.Finish => ok true
+    | async_tasks.schema.Rule.Duplicate => ok true
+  else ok false
+
+/-- Trait implementation: [noble_kernel::async_tasks::schema::{impl core::cmp::PartialEq<noble_kernel::async_tasks::schema::Rule> for noble_kernel::async_tasks::schema::Rule}]
+    Source: 'crates/noble-kernel/src/async_tasks/schema.rs', lines 95:29-95:38 -/
+@[reducible]
+impl_def async_tasks.schema.Rule.Insts.CoreCmpPartialEqRule :
+  core.cmp.PartialEq async_tasks.schema.Rule async_tasks.schema.Rule := {
+  eq := async_tasks.schema.Rule.Insts.CoreCmpPartialEqRule.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    async_tasks.schema.Rule.Insts.CoreCmpPartialEqRule
+}
+
+/-- [noble_kernel::async_tasks::schema::{impl core::cmp::PartialEq<noble_kernel::async_tasks::schema::EventKind> for noble_kernel::async_tasks::schema::EventKind}::eq]:
+    Source: 'crates/noble-kernel/src/async_tasks/schema.rs', lines 29:29-29:38
+    Visibility: public -/
+def async_tasks.schema.EventKind.Insts.CoreCmpPartialEqEventKind.eq
+  (self : async_tasks.schema.EventKind) (other : async_tasks.schema.EventKind)
+  :
+  Result Bool
+  := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  ok (self1 = other1)
+
+/-- [noble_kernel::async_tasks::schema::coverage::{impl core::cmp::PartialEq<noble_kernel::async_tasks::schema::coverage::CoverageRow> for noble_kernel::async_tasks::schema::coverage::CoverageRow}::eq]:
+    Source: 'crates/noble-kernel/src/async_tasks/schema/coverage.rs', lines 3:29-3:38
+    Visibility: public -/
+def
+  async_tasks.schema.coverage.CoverageRow.Insts.CoreCmpPartialEqCoverageRow.eq
+  (self : async_tasks.schema.coverage.CoverageRow)
+  (other : async_tasks.schema.coverage.CoverageRow) :
+  Result Bool
+  := do
+  let b ←
+    async_tasks.domain.State.Insts.CoreCmpPartialEqState.eq self.state
+      other.state
+  if b
+  then
+    let b1 ←
+      async_tasks.schema.EventKind.Insts.CoreCmpPartialEqEventKind.eq
+        self.event other.event
+    if b1
+    then
+      core.result.Result.Insts.CoreCmpPartialEqResult.eq
+        async_tasks.schema.Rule.Insts.CoreCmpPartialEqRule
+        async_tasks.domain.Error.Insts.CoreCmpPartialEqError self.rule
+        other.rule
+    else ok false
+  else ok false
+
+/-- Trait implementation: [noble_kernel::async_tasks::schema::coverage::{impl core::cmp::PartialEq<noble_kernel::async_tasks::schema::coverage::CoverageRow> for noble_kernel::async_tasks::schema::coverage::CoverageRow}]
+    Source: 'crates/noble-kernel/src/async_tasks/schema/coverage.rs', lines 3:29-3:38 -/
+@[reducible]
+impl_def
+  async_tasks.schema.coverage.CoverageRow.Insts.CoreCmpPartialEqCoverageRow :
+  core.cmp.PartialEq async_tasks.schema.coverage.CoverageRow
+  async_tasks.schema.coverage.CoverageRow := {
+  eq :=
+    async_tasks.schema.coverage.CoverageRow.Insts.CoreCmpPartialEqCoverageRow.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    async_tasks.schema.coverage.CoverageRow.Insts.CoreCmpPartialEqCoverageRow
+}
+
+/-- [noble_kernel::async_tasks::schema::coverage::{impl core::cmp::Eq for noble_kernel::async_tasks::schema::coverage::CoverageRow}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/async_tasks/schema/coverage.rs', lines 3:40-3:42
+    Visibility: public -/
+def
+  async_tasks.schema.coverage.CoverageRow.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : async_tasks.schema.coverage.CoverageRow) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::async_tasks::schema::coverage::{impl core::cmp::Eq for noble_kernel::async_tasks::schema::coverage::CoverageRow}]
+    Source: 'crates/noble-kernel/src/async_tasks/schema/coverage.rs', lines 3:40-3:42 -/
+@[reducible]
+def async_tasks.schema.coverage.CoverageRow.Insts.CoreCmpEq : core.cmp.Eq
+  async_tasks.schema.coverage.CoverageRow := {
+  partialEqInst :=
+    async_tasks.schema.coverage.CoverageRow.Insts.CoreCmpPartialEqCoverageRow
+  assert_fields_are_eq :=
+    async_tasks.schema.coverage.CoverageRow.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::async_tasks::schema::coverage::{impl core::clone::Clone for noble_kernel::async_tasks::schema::coverage::CoverageError}::clone]:
+    Source: 'crates/noble-kernel/src/async_tasks/schema/coverage.rs', lines 14:9-14:14
+    Visibility: public -/
+def async_tasks.schema.coverage.CoverageError.Insts.CoreCloneClone.clone
+  (self : async_tasks.schema.coverage.CoverageError) :
+  Result async_tasks.schema.coverage.CoverageError
+  := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::async_tasks::schema::coverage::{impl core::clone::Clone for noble_kernel::async_tasks::schema::coverage::CoverageError}]
+    Source: 'crates/noble-kernel/src/async_tasks/schema/coverage.rs', lines 14:9-14:14 -/
+@[reducible]
+def async_tasks.schema.coverage.CoverageError.Insts.CoreCloneClone :
+  core.clone.Clone async_tasks.schema.coverage.CoverageError := {
+  clone := async_tasks.schema.coverage.CoverageError.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::async_tasks::schema::coverage::{impl core::marker::Copy for noble_kernel::async_tasks::schema::coverage::CoverageError}]
+    Source: 'crates/noble-kernel/src/async_tasks/schema/coverage.rs', lines 14:16-14:20 -/
+@[reducible]
+def async_tasks.schema.coverage.CoverageError.Insts.CoreMarkerCopy :
+  core.marker.Copy async_tasks.schema.coverage.CoverageError := {
+  cloneInst := async_tasks.schema.coverage.CoverageError.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::async_tasks::schema::coverage::{impl core::fmt::Debug for noble_kernel::async_tasks::schema::coverage::CoverageError}::fmt]:
+    Source: 'crates/noble-kernel/src/async_tasks/schema/coverage.rs', lines 14:22-14:27
+    Visibility: public -/
+def async_tasks.schema.coverage.CoverageError.Insts.CoreFmtDebug.fmt
+  (self : async_tasks.schema.coverage.CoverageError) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | async_tasks.schema.coverage.CoverageError.StateSchema =>
+    core.fmt.Formatter.write_str f (toStr "StateSchema")
+  | async_tasks.schema.coverage.CoverageError.EventSchema =>
+    core.fmt.Formatter.write_str f (toStr "EventSchema")
+  | async_tasks.schema.coverage.CoverageError.ExcessRows =>
+    core.fmt.Formatter.write_str f (toStr "ExcessRows")
+  | async_tasks.schema.coverage.CoverageError.DuplicatePair =>
+    core.fmt.Formatter.write_str f (toStr "DuplicatePair")
+  | async_tasks.schema.coverage.CoverageError.MissingPair =>
+    core.fmt.Formatter.write_str f (toStr "MissingPair")
+  | async_tasks.schema.coverage.CoverageError.WrongDisposition =>
+    core.fmt.Formatter.write_str f (toStr "WrongDisposition")
+
+/-- Trait implementation: [noble_kernel::async_tasks::schema::coverage::{impl core::fmt::Debug for noble_kernel::async_tasks::schema::coverage::CoverageError}]
+    Source: 'crates/noble-kernel/src/async_tasks/schema/coverage.rs', lines 14:22-14:27 -/
+@[reducible]
+def async_tasks.schema.coverage.CoverageError.Insts.CoreFmtDebug :
+  core.fmt.Debug async_tasks.schema.coverage.CoverageError := {
+  fmt := async_tasks.schema.coverage.CoverageError.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::async_tasks::schema::coverage::{impl core::marker::StructuralPartialEq for noble_kernel::async_tasks::schema::coverage::CoverageError}]
+    Source: 'crates/noble-kernel/src/async_tasks/schema/coverage.rs', lines 14:29-14:38 -/
+@[reducible]
+def
+  async_tasks.schema.coverage.CoverageError.Insts.CoreMarkerStructuralPartialEq
+  : core.marker.StructuralPartialEq async_tasks.schema.coverage.CoverageError
+  := {
+}
+
+/-- [noble_kernel::async_tasks::schema::coverage::{impl core::cmp::PartialEq<noble_kernel::async_tasks::schema::coverage::CoverageError> for noble_kernel::async_tasks::schema::coverage::CoverageError}::eq]:
+    Source: 'crates/noble-kernel/src/async_tasks/schema/coverage.rs', lines 14:29-14:38
+    Visibility: public -/
+def
+  async_tasks.schema.coverage.CoverageError.Insts.CoreCmpPartialEqCoverageError.eq
+  (self : async_tasks.schema.coverage.CoverageError)
+  (other : async_tasks.schema.coverage.CoverageError) :
+  Result Bool
+  := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  ok (self1 = other1)
+
+/-- Trait implementation: [noble_kernel::async_tasks::schema::coverage::{impl core::cmp::PartialEq<noble_kernel::async_tasks::schema::coverage::CoverageError> for noble_kernel::async_tasks::schema::coverage::CoverageError}]
+    Source: 'crates/noble-kernel/src/async_tasks/schema/coverage.rs', lines 14:29-14:38 -/
+@[reducible]
+impl_def
+  async_tasks.schema.coverage.CoverageError.Insts.CoreCmpPartialEqCoverageError
+  : core.cmp.PartialEq async_tasks.schema.coverage.CoverageError
+  async_tasks.schema.coverage.CoverageError := {
+  eq :=
+    async_tasks.schema.coverage.CoverageError.Insts.CoreCmpPartialEqCoverageError.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    async_tasks.schema.coverage.CoverageError.Insts.CoreCmpPartialEqCoverageError
+}
+
+/-- [noble_kernel::async_tasks::schema::coverage::{impl core::cmp::Eq for noble_kernel::async_tasks::schema::coverage::CoverageError}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/async_tasks/schema/coverage.rs', lines 14:40-14:42
+    Visibility: public -/
+def
+  async_tasks.schema.coverage.CoverageError.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : async_tasks.schema.coverage.CoverageError) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::async_tasks::schema::coverage::{impl core::cmp::Eq for noble_kernel::async_tasks::schema::coverage::CoverageError}]
+    Source: 'crates/noble-kernel/src/async_tasks/schema/coverage.rs', lines 14:40-14:42 -/
+@[reducible]
+def async_tasks.schema.coverage.CoverageError.Insts.CoreCmpEq : core.cmp.Eq
+  async_tasks.schema.coverage.CoverageError := {
+  partialEqInst :=
+    async_tasks.schema.coverage.CoverageError.Insts.CoreCmpPartialEqCoverageError
+  assert_fields_are_eq :=
+    async_tasks.schema.coverage.CoverageError.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::async_tasks::schema::EVENT_SCHEMA]
+    Source: 'crates/noble-kernel/src/async_tasks/schema.rs', lines 9:0-20:2
+    Visibility: public -/
+@[global_simps, irreducible]
+def async_tasks.schema.EVENT_SCHEMA : Str :=
+  toStr
+    "noble-kernel::async_tasks::domain::Event{Inspect;CompleteSuccess{native:NativeId,completion:Completion};CompleteDomainError{native:NativeId,completion:Completion};Deliver;Cancel;Trap;Deadline;Budget;InternalFailure;NativeStopped{native:NativeId};SettlePins{native:NativeId,pins:u64};Cleanup(Obligations);Wake{native:NativeId};TakeWake;Finish};noble-kernel::async_tasks::domain::NativeId(u64);noble-kernel::async_tasks::domain::Completion{inputs:Disposition,produced:u64,bytes:usize};noble-kernel::async_tasks::domain::Disposition{returned:u64,consumed:u64,retired:u64};noble-kernel::async_tasks::domain::Obligations{inputs:u64,results:u64,buffers:u8}"
+
+/-- [noble_kernel::async_tasks::schema::STATE_SCHEMA]
+    Source: 'crates/noble-kernel/src/async_tasks/schema.rs', lines 5:0-8:2
+    Visibility: public -/
+@[global_simps, irreducible]
+def async_tasks.schema.STATE_SCHEMA : Str :=
+  toStr
+    "noble-kernel::async_tasks::domain::State{Pending;Ready;Delivered;Retiring;Retired}"
+
+/-- [noble_kernel::async_tasks::schema::retirement_rule]:
+    Source: 'crates/noble-kernel/src/async_tasks/schema.rs', lines 211:0-216:1 -/
+def async_tasks.schema.retirement_rule
+  (state : async_tasks.domain.State) (reason : async_tasks.domain.Failure) :
+  Result async_tasks.schema.Rule
+  := do
+  match state with
+  | async_tasks.domain.State.Pending =>
+    ok (async_tasks.schema.Rule.Retire reason)
+  | async_tasks.domain.State.Ready =>
+    ok (async_tasks.schema.Rule.Retire reason)
+  | async_tasks.domain.State.Delivered => ok async_tasks.schema.Rule.Duplicate
+  | async_tasks.domain.State.Retiring => ok async_tasks.schema.Rule.Duplicate
+  | async_tasks.domain.State.Retired => ok async_tasks.schema.Rule.Duplicate
+
+/-- [noble_kernel::async_tasks::schema::completion_rule]:
+    Source: 'crates/noble-kernel/src/async_tasks/schema.rs', lines 197:0-209:1 -/
+def async_tasks.schema.completion_rule
+  (state : async_tasks.domain.State) (outcome : async_tasks.domain.Outcome)
+  (completion : async_tasks.domain.Completion) :
+  Result async_tasks.schema.Rule
+  := do
+  match state with
+  | async_tasks.domain.State.Pending =>
+    ok (async_tasks.schema.Rule.Complete outcome completion)
+  | async_tasks.domain.State.Ready => ok async_tasks.schema.Rule.Duplicate
+  | async_tasks.domain.State.Delivered => ok async_tasks.schema.Rule.Duplicate
+  | async_tasks.domain.State.Retiring =>
+    ok (async_tasks.schema.Rule.Complete outcome completion)
+  | async_tasks.domain.State.Retired => ok async_tasks.schema.Rule.Duplicate
+
+/-- [noble_kernel::async_tasks::schema::delivery_rule]:
+    Source: 'crates/noble-kernel/src/async_tasks/schema.rs', lines 187:0-195:1 -/
+def async_tasks.schema.delivery_rule
+  (state : async_tasks.domain.State) :
+  Result (core.result.Result async_tasks.schema.Rule async_tasks.domain.Error)
+  := do
+  match state with
+  | async_tasks.domain.State.Pending =>
+    ok (core.result.Result.Err async_tasks.domain.Error.Pending)
+  | async_tasks.domain.State.Ready =>
+    ok (core.result.Result.Ok async_tasks.schema.Rule.Deliver)
+  | async_tasks.domain.State.Delivered =>
+    ok (core.result.Result.Err async_tasks.domain.Error.Delivered)
+  | async_tasks.domain.State.Retiring =>
+    ok (core.result.Result.Err async_tasks.domain.Error.Retiring)
+  | async_tasks.domain.State.Retired =>
+    ok (core.result.Result.Err async_tasks.domain.Error.Retired)
+
+/-- [noble_kernel::async_tasks::schema::classify]:
+    Source: 'crates/noble-kernel/src/async_tasks/schema.rs', lines 117:0-185:1
+    Visibility: public -/
+def async_tasks.schema.classify
+  (state : async_tasks.domain.State) (event : async_tasks.domain.Event) :
+  Result (core.result.Result async_tasks.schema.Rule async_tasks.domain.Error)
+  := do
+  match event with
+  | async_tasks.domain.Event.Inspect =>
+    ok (core.result.Result.Ok async_tasks.schema.Rule.Inspect)
+  | async_tasks.domain.Event.CompleteSuccess _ completion =>
+    let r ←
+      async_tasks.schema.completion_rule state
+        async_tasks.domain.Outcome.Success completion
+    ok (core.result.Result.Ok r)
+  | async_tasks.domain.Event.CompleteDomainError _ completion =>
+    let r ←
+      async_tasks.schema.completion_rule state
+        async_tasks.domain.Outcome.DomainError completion
+    ok (core.result.Result.Ok r)
+  | async_tasks.domain.Event.Deliver => async_tasks.schema.delivery_rule state
+  | async_tasks.domain.Event.Cancel =>
+    let r ←
+      async_tasks.schema.retirement_rule state
+        async_tasks.domain.Failure.Cancelled
+    ok (core.result.Result.Ok r)
+  | async_tasks.domain.Event.Trap =>
+    let r ←
+      async_tasks.schema.retirement_rule state async_tasks.domain.Failure.Trap
+    ok (core.result.Result.Ok r)
+  | async_tasks.domain.Event.Deadline =>
+    let r ←
+      async_tasks.schema.retirement_rule state
+        async_tasks.domain.Failure.Deadline
+    ok (core.result.Result.Ok r)
+  | async_tasks.domain.Event.Budget =>
+    let r ←
+      async_tasks.schema.retirement_rule state
+        async_tasks.domain.Failure.Budget
+    ok (core.result.Result.Ok r)
+  | async_tasks.domain.Event.InternalFailure =>
+    let r ←
+      async_tasks.schema.retirement_rule state
+        async_tasks.domain.Failure.Internal
+    ok (core.result.Result.Ok r)
+  | async_tasks.domain.Event.NativeStopped _ =>
+    match state with
+    | async_tasks.domain.State.Pending =>
+      ok (core.result.Result.Ok async_tasks.schema.Rule.ObserveStop)
+    | async_tasks.domain.State.Ready =>
+      ok (core.result.Result.Ok async_tasks.schema.Rule.ObserveStop)
+    | async_tasks.domain.State.Delivered =>
+      ok (core.result.Result.Ok async_tasks.schema.Rule.ObserveStop)
+    | async_tasks.domain.State.Retiring =>
+      ok (core.result.Result.Ok async_tasks.schema.Rule.ObserveStop)
+    | async_tasks.domain.State.Retired =>
+      ok (core.result.Result.Ok async_tasks.schema.Rule.Duplicate)
+  | async_tasks.domain.Event.SettlePins _ pins =>
+    match state with
+    | async_tasks.domain.State.Pending =>
+      ok (core.result.Result.Ok (async_tasks.schema.Rule.SettlePins pins))
+    | async_tasks.domain.State.Ready =>
+      ok (core.result.Result.Ok (async_tasks.schema.Rule.SettlePins pins))
+    | async_tasks.domain.State.Delivered =>
+      ok (core.result.Result.Ok (async_tasks.schema.Rule.SettlePins pins))
+    | async_tasks.domain.State.Retiring =>
+      ok (core.result.Result.Ok (async_tasks.schema.Rule.SettlePins pins))
+    | async_tasks.domain.State.Retired =>
+      ok (core.result.Result.Err async_tasks.domain.Error.Retired)
+  | async_tasks.domain.Event.Cleanup obligations =>
+    match state with
+    | async_tasks.domain.State.Pending =>
+      ok (core.result.Result.Err async_tasks.domain.Error.Pending)
+    | async_tasks.domain.State.Ready =>
+      ok (core.result.Result.Ok (async_tasks.schema.Rule.Cleanup obligations))
+    | async_tasks.domain.State.Delivered =>
+      ok (core.result.Result.Ok (async_tasks.schema.Rule.Cleanup obligations))
+    | async_tasks.domain.State.Retiring =>
+      ok (core.result.Result.Ok (async_tasks.schema.Rule.Cleanup obligations))
+    | async_tasks.domain.State.Retired =>
+      ok (core.result.Result.Err async_tasks.domain.Error.Retired)
+  | async_tasks.domain.Event.Wake _ =>
+    match state with
+    | async_tasks.domain.State.Pending =>
+      ok (core.result.Result.Ok async_tasks.schema.Rule.Wake)
+    | async_tasks.domain.State.Ready =>
+      ok (core.result.Result.Ok async_tasks.schema.Rule.Wake)
+    | async_tasks.domain.State.Delivered =>
+      ok (core.result.Result.Err async_tasks.domain.Error.Delivered)
+    | async_tasks.domain.State.Retiring =>
+      ok (core.result.Result.Err async_tasks.domain.Error.Retiring)
+    | async_tasks.domain.State.Retired =>
+      ok (core.result.Result.Err async_tasks.domain.Error.Retired)
+  | async_tasks.domain.Event.TakeWake =>
+    match state with
+    | async_tasks.domain.State.Pending =>
+      ok (core.result.Result.Ok async_tasks.schema.Rule.TakeWake)
+    | async_tasks.domain.State.Ready =>
+      ok (core.result.Result.Ok async_tasks.schema.Rule.TakeWake)
+    | async_tasks.domain.State.Delivered =>
+      ok (core.result.Result.Err async_tasks.domain.Error.Delivered)
+    | async_tasks.domain.State.Retiring =>
+      ok (core.result.Result.Err async_tasks.domain.Error.Retiring)
+    | async_tasks.domain.State.Retired =>
+      ok (core.result.Result.Err async_tasks.domain.Error.Retired)
+  | async_tasks.domain.Event.Finish =>
+    match state with
+    | async_tasks.domain.State.Pending =>
+      ok (core.result.Result.Err async_tasks.domain.Error.Pending)
+    | async_tasks.domain.State.Ready =>
+      ok (core.result.Result.Err async_tasks.domain.Error.Ready)
+    | async_tasks.domain.State.Delivered =>
+      ok (core.result.Result.Ok async_tasks.schema.Rule.Finish)
+    | async_tasks.domain.State.Retiring =>
+      ok (core.result.Result.Ok async_tasks.schema.Rule.Finish)
+    | async_tasks.domain.State.Retired =>
+      ok (core.result.Result.Ok async_tasks.schema.Rule.Duplicate)
+
+/-- [noble_kernel::async_tasks::schema::coverage::{noble_kernel::async_tasks::schema::EventKind}::representative]:
+    Source: 'crates/noble-kernel/src/async_tasks/schema/coverage.rs', lines 131:4-165:5
+    Visibility: public -/
+def async_tasks.schema.coverage.EventKind.representative
+  (self : async_tasks.schema.EventKind) : Result async_tasks.domain.Event := do
+  match self with
+  | async_tasks.schema.EventKind.Inspect => ok async_tasks.domain.Event.Inspect
+  | async_tasks.schema.EventKind.CompleteSuccess =>
+    ok (async_tasks.domain.Event.CompleteSuccess 1#u64
+      {
+        inputs := { returned := 0#u64, consumed := 0#u64, retired := 0#u64 },
+        produced := 0#u64,
+        bytes := 0#usize
+      })
+  | async_tasks.schema.EventKind.CompleteDomainError =>
+    ok (async_tasks.domain.Event.CompleteDomainError 1#u64
+      {
+        inputs := { returned := 0#u64, consumed := 0#u64, retired := 0#u64 },
+        produced := 0#u64,
+        bytes := 0#usize
+      })
+  | async_tasks.schema.EventKind.Deliver => ok async_tasks.domain.Event.Deliver
+  | async_tasks.schema.EventKind.Cancel => ok async_tasks.domain.Event.Cancel
+  | async_tasks.schema.EventKind.Trap => ok async_tasks.domain.Event.Trap
+  | async_tasks.schema.EventKind.Deadline =>
+    ok async_tasks.domain.Event.Deadline
+  | async_tasks.schema.EventKind.Budget => ok async_tasks.domain.Event.Budget
+  | async_tasks.schema.EventKind.InternalFailure =>
+    ok async_tasks.domain.Event.InternalFailure
+  | async_tasks.schema.EventKind.NativeStopped =>
+    ok (async_tasks.domain.Event.NativeStopped 1#u64)
+  | async_tasks.schema.EventKind.SettlePins =>
+    ok (async_tasks.domain.Event.SettlePins 1#u64 0#u64)
+  | async_tasks.schema.EventKind.Cleanup =>
+    let o ← async_tasks.domain.Obligations.empty
+    ok (async_tasks.domain.Event.Cleanup o)
+  | async_tasks.schema.EventKind.Wake =>
+    ok (async_tasks.domain.Event.Wake 1#u64)
+  | async_tasks.schema.EventKind.TakeWake =>
+    ok async_tasks.domain.Event.TakeWake
+  | async_tasks.schema.EventKind.Finish => ok async_tasks.domain.Event.Finish
+
+/-- [noble_kernel::async_tasks::schema::coverage::{noble_kernel::async_tasks::schema::EventKind}::index]:
+    Source: 'crates/noble-kernel/src/async_tasks/schema/coverage.rs', lines 105:4-123:5 -/
+def async_tasks.schema.coverage.EventKind.index
+  (self : async_tasks.schema.EventKind) : Result Std.U32 := do
+  match self with
+  | async_tasks.schema.EventKind.Inspect => ok 0#u32
+  | async_tasks.schema.EventKind.CompleteSuccess => ok 1#u32
+  | async_tasks.schema.EventKind.CompleteDomainError => ok 2#u32
+  | async_tasks.schema.EventKind.Deliver => ok 3#u32
+  | async_tasks.schema.EventKind.Cancel => ok 4#u32
+  | async_tasks.schema.EventKind.Trap => ok 5#u32
+  | async_tasks.schema.EventKind.Deadline => ok 6#u32
+  | async_tasks.schema.EventKind.Budget => ok 7#u32
+  | async_tasks.schema.EventKind.InternalFailure => ok 8#u32
+  | async_tasks.schema.EventKind.NativeStopped => ok 9#u32
+  | async_tasks.schema.EventKind.SettlePins => ok 10#u32
+  | async_tasks.schema.EventKind.Cleanup => ok 11#u32
+  | async_tasks.schema.EventKind.Wake => ok 12#u32
+  | async_tasks.schema.EventKind.TakeWake => ok 13#u32
+  | async_tasks.schema.EventKind.Finish => ok 14#u32
+
+/-- [noble_kernel::async_tasks::schema::coverage::state_index]:
+    Source: 'crates/noble-kernel/src/async_tasks/schema/coverage.rs', lines 90:0-98:1 -/
+def async_tasks.schema.coverage.state_index
+  (state : async_tasks.domain.State) : Result Std.U32 := do
+  match state with
+  | async_tasks.domain.State.Pending => ok 0#u32
+  | async_tasks.domain.State.Ready => ok 1#u32
+  | async_tasks.domain.State.Delivered => ok 2#u32
+  | async_tasks.domain.State.Retiring => ok 3#u32
+  | async_tasks.domain.State.Retired => ok 4#u32
+
+/-- [noble_kernel::async_tasks::schema::coverage::check_row]:
+    Source: 'crates/noble-kernel/src/async_tasks/schema/coverage.rs', lines 78:0-88:1 -/
+def async_tasks.schema.coverage.check_row
+  (seen : Std.U128) (row : async_tasks.schema.coverage.CoverageRow) :
+  Result (core.result.Result Std.U128
+    async_tasks.schema.coverage.CoverageError)
+  := do
+  let i ← async_tasks.schema.coverage.state_index row.state
+  let i1 ← i * 15#u32
+  let i2 ← async_tasks.schema.coverage.EventKind.index row.event
+  let i3 ← i1 + i2
+  let bit ← 1#u128 <<< i3
+  let i4 ← lift (seen &&& bit)
+  if i4 != 0#u128
+  then
+    ok (core.result.Result.Err
+      async_tasks.schema.coverage.CoverageError.DuplicatePair)
+  else
+    let e ← async_tasks.schema.coverage.EventKind.representative row.event
+    let expected ← async_tasks.schema.classify row.state e
+    let b ←
+      core.cmp.PartialEq.ne.trait_default
+        (core.result.Result.Insts.CoreCmpPartialEqResult
+        async_tasks.schema.Rule.Insts.CoreCmpPartialEqRule
+        async_tasks.domain.Error.Insts.CoreCmpPartialEqError) row.rule expected
+    if b
+    then
+      ok (core.result.Result.Err
+        async_tasks.schema.coverage.CoverageError.WrongDisposition)
+    else let i5 ← lift (seen ||| bit)
+         ok (core.result.Result.Ok i5)
+
+/-- [noble_kernel::async_tasks::schema::coverage::validate_rows]: loop body 0:
+    Source: 'crates/noble-kernel/src/async_tasks/schema/coverage.rs', lines 60:4-68:1 -/
+@[rust_loop_body]
+def async_tasks.schema.coverage.validate_rows_loop.body
+  (rows : Slice async_tasks.schema.coverage.CoverageRow) (seen : Std.U128)
+  (index : Std.Usize) :
+  Result (ControlFlow (Std.U128 × Std.Usize) (core.result.Result Unit
+    async_tasks.schema.coverage.CoverageError))
+  := do
+  let i := Slice.len rows
+  if index < i
+  then
+    let cr ← Slice.index_usize rows index
+    let r ← async_tasks.schema.coverage.check_row seen cr
+    match r with
+    | core.result.Result.Ok value =>
+      let index1 ← index + 1#usize
+      ok (cont (value, index1))
+    | core.result.Result.Err failure =>
+      ok (done (core.result.Result.Err failure))
+  else
+    let i1 ← 1#u128 <<< 75#i32
+    let i2 ← i1 - 1#u128
+    if seen != i2
+    then
+      ok (done (core.result.Result.Err
+        async_tasks.schema.coverage.CoverageError.MissingPair))
+    else ok (done (core.result.Result.Ok ()))
+
+/-- [noble_kernel::async_tasks::schema::coverage::validate_rows]: loop 0:
+    Source: 'crates/noble-kernel/src/async_tasks/schema/coverage.rs', lines 60:4-68:1 -/
+@[rust_loop]
+def async_tasks.schema.coverage.validate_rows_loop
+  (rows : Slice async_tasks.schema.coverage.CoverageRow) (seen : Std.U128)
+  (index : Std.Usize) :
+  Result (core.result.Result Unit async_tasks.schema.coverage.CoverageError)
+  := do
+  loop
+    (fun (seen1, index1) => async_tasks.schema.coverage.validate_rows_loop.body
+      rows seen1 index1)
+    (seen, index)
+
+/-- [noble_kernel::async_tasks::schema::coverage::validate_rows]:
+    Source: 'crates/noble-kernel/src/async_tasks/schema/coverage.rs', lines 54:0-68:1 -/
+def async_tasks.schema.coverage.validate_rows
+  (rows : Slice async_tasks.schema.coverage.CoverageRow) :
+  Result (core.result.Result Unit async_tasks.schema.coverage.CoverageError)
+  := do
+  let i := Slice.len rows
+  if i > 75#usize
+  then
+    ok (core.result.Result.Err
+      async_tasks.schema.coverage.CoverageError.ExcessRows)
+  else async_tasks.schema.coverage.validate_rows_loop rows 0#u128 0#usize
+
+/-- [noble_kernel::async_tasks::schema::coverage::validate_coverage]:
+    Source: 'crates/noble-kernel/src/async_tasks/schema/coverage.rs', lines 36:0-48:1
+    Visibility: public -/
+def async_tasks.schema.coverage.validate_coverage
+  (state_schema : Slice Std.U8) (event_schema : Slice Std.U8)
+  (rows : Slice async_tasks.schema.coverage.CoverageRow) :
+  Result (core.result.Result Unit async_tasks.schema.coverage.CoverageError)
+  := do
+  let s ← core.str.Str.as_bytes async_tasks.schema.STATE_SCHEMA
+  let b ←
+    core.cmp.impls.PartialEqShared.ne (Slice.Insts.CoreCmpPartialEqSlice
+      core.cmp.PartialEqU8) state_schema s
+  if b
+  then
+    ok (core.result.Result.Err
+      async_tasks.schema.coverage.CoverageError.StateSchema)
+  else
+    let s1 ← core.str.Str.as_bytes async_tasks.schema.EVENT_SCHEMA
+    let b1 ←
+      core.cmp.impls.PartialEqShared.ne (Slice.Insts.CoreCmpPartialEqSlice
+        core.cmp.PartialEqU8) event_schema s1
+    if b1
+    then
+      ok (core.result.Result.Err
+        async_tasks.schema.coverage.CoverageError.EventSchema)
+    else async_tasks.schema.coverage.validate_rows rows
+
+/-- [noble_kernel::async_tasks::schema::STATE_CONSTRUCTORS]
+    Source: 'crates/noble-kernel/src/async_tasks/schema.rs', lines 21:0-27:2
+    Visibility: public -/
+@[global_simps, irreducible]
+def async_tasks.schema.STATE_CONSTRUCTORS
+  : Array async_tasks.domain.State 5#usize :=
+  Array.make 5#usize [
+    async_tasks.domain.State.Pending, async_tasks.domain.State.Ready,
+    async_tasks.domain.State.Delivered, async_tasks.domain.State.Retiring,
+    async_tasks.domain.State.Retired
+    ]
+
+/-- [noble_kernel::async_tasks::schema::{impl core::clone::Clone for noble_kernel::async_tasks::schema::EventKind}::clone]:
+    Source: 'crates/noble-kernel/src/async_tasks/schema.rs', lines 29:9-29:14
+    Visibility: public -/
+def async_tasks.schema.EventKind.Insts.CoreCloneClone.clone
+  (self : async_tasks.schema.EventKind) :
+  Result async_tasks.schema.EventKind
+  := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::async_tasks::schema::{impl core::clone::Clone for noble_kernel::async_tasks::schema::EventKind}]
+    Source: 'crates/noble-kernel/src/async_tasks/schema.rs', lines 29:9-29:14 -/
+@[reducible]
+def async_tasks.schema.EventKind.Insts.CoreCloneClone : core.clone.Clone
+  async_tasks.schema.EventKind := {
+  clone := async_tasks.schema.EventKind.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::async_tasks::schema::{impl core::marker::Copy for noble_kernel::async_tasks::schema::EventKind}]
+    Source: 'crates/noble-kernel/src/async_tasks/schema.rs', lines 29:16-29:20 -/
+@[reducible]
+def async_tasks.schema.EventKind.Insts.CoreMarkerCopy : core.marker.Copy
+  async_tasks.schema.EventKind := {
+  cloneInst := async_tasks.schema.EventKind.Insts.CoreCloneClone
+}
+
+/-- Trait implementation: [noble_kernel::async_tasks::schema::{impl core::marker::StructuralPartialEq for noble_kernel::async_tasks::schema::EventKind}]
+    Source: 'crates/noble-kernel/src/async_tasks/schema.rs', lines 29:29-29:38 -/
+@[reducible]
+def async_tasks.schema.EventKind.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq async_tasks.schema.EventKind := {
+}
+
+/-- Trait implementation: [noble_kernel::async_tasks::schema::{impl core::cmp::PartialEq<noble_kernel::async_tasks::schema::EventKind> for noble_kernel::async_tasks::schema::EventKind}]
+    Source: 'crates/noble-kernel/src/async_tasks/schema.rs', lines 29:29-29:38 -/
+@[reducible]
+impl_def async_tasks.schema.EventKind.Insts.CoreCmpPartialEqEventKind :
+  core.cmp.PartialEq async_tasks.schema.EventKind async_tasks.schema.EventKind
+  := {
+  eq := async_tasks.schema.EventKind.Insts.CoreCmpPartialEqEventKind.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    async_tasks.schema.EventKind.Insts.CoreCmpPartialEqEventKind
+}
+
+/-- [noble_kernel::async_tasks::schema::{impl core::cmp::Eq for noble_kernel::async_tasks::schema::EventKind}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/async_tasks/schema.rs', lines 29:40-29:42
+    Visibility: public -/
+def async_tasks.schema.EventKind.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : async_tasks.schema.EventKind) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::async_tasks::schema::{impl core::cmp::Eq for noble_kernel::async_tasks::schema::EventKind}]
+    Source: 'crates/noble-kernel/src/async_tasks/schema.rs', lines 29:40-29:42 -/
+@[reducible]
+def async_tasks.schema.EventKind.Insts.CoreCmpEq : core.cmp.Eq
+  async_tasks.schema.EventKind := {
+  partialEqInst := async_tasks.schema.EventKind.Insts.CoreCmpPartialEqEventKind
+  assert_fields_are_eq :=
+    async_tasks.schema.EventKind.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::async_tasks::schema::EVENT_CONSTRUCTORS]
+    Source: 'crates/noble-kernel/src/async_tasks/schema.rs', lines 48:0-64:2
+    Visibility: public -/
+@[global_simps, irreducible]
+def async_tasks.schema.EVENT_CONSTRUCTORS
+  : Array async_tasks.schema.EventKind 15#usize :=
+  Array.make 15#usize [
+    async_tasks.schema.EventKind.Inspect,
+    async_tasks.schema.EventKind.CompleteSuccess,
+    async_tasks.schema.EventKind.CompleteDomainError,
+    async_tasks.schema.EventKind.Deliver, async_tasks.schema.EventKind.Cancel,
+    async_tasks.schema.EventKind.Trap, async_tasks.schema.EventKind.Deadline,
+    async_tasks.schema.EventKind.Budget,
+    async_tasks.schema.EventKind.InternalFailure,
+    async_tasks.schema.EventKind.NativeStopped,
+    async_tasks.schema.EventKind.SettlePins,
+    async_tasks.schema.EventKind.Cleanup, async_tasks.schema.EventKind.Wake,
+    async_tasks.schema.EventKind.TakeWake, async_tasks.schema.EventKind.Finish
+    ]
+
+/-- [noble_kernel::async_tasks::schema::{noble_kernel::async_tasks::domain::Event}::kind]:
+    Source: 'crates/noble-kernel/src/async_tasks/schema.rs', lines 67:4-91:5
+    Visibility: public -/
+def async_tasks.schema.Event.kind
+  (self : async_tasks.domain.Event) : Result async_tasks.schema.EventKind := do
+  match self with
+  | async_tasks.domain.Event.Inspect => ok async_tasks.schema.EventKind.Inspect
+  | async_tasks.domain.Event.CompleteSuccess _ _ =>
+    ok async_tasks.schema.EventKind.CompleteSuccess
+  | async_tasks.domain.Event.CompleteDomainError _ _ =>
+    ok async_tasks.schema.EventKind.CompleteDomainError
+  | async_tasks.domain.Event.Deliver => ok async_tasks.schema.EventKind.Deliver
+  | async_tasks.domain.Event.Cancel => ok async_tasks.schema.EventKind.Cancel
+  | async_tasks.domain.Event.Trap => ok async_tasks.schema.EventKind.Trap
+  | async_tasks.domain.Event.Deadline =>
+    ok async_tasks.schema.EventKind.Deadline
+  | async_tasks.domain.Event.Budget => ok async_tasks.schema.EventKind.Budget
+  | async_tasks.domain.Event.InternalFailure =>
+    ok async_tasks.schema.EventKind.InternalFailure
+  | async_tasks.domain.Event.NativeStopped _ =>
+    ok async_tasks.schema.EventKind.NativeStopped
+  | async_tasks.domain.Event.SettlePins _ _ =>
+    ok async_tasks.schema.EventKind.SettlePins
+  | async_tasks.domain.Event.Cleanup _ =>
+    ok async_tasks.schema.EventKind.Cleanup
+  | async_tasks.domain.Event.Wake _ => ok async_tasks.schema.EventKind.Wake
+  | async_tasks.domain.Event.TakeWake =>
+    ok async_tasks.schema.EventKind.TakeWake
+  | async_tasks.domain.Event.Finish => ok async_tasks.schema.EventKind.Finish
+
+/-- [noble_kernel::async_tasks::schema::{impl core::clone::Clone for noble_kernel::async_tasks::schema::Rule}::clone]:
+    Source: 'crates/noble-kernel/src/async_tasks/schema.rs', lines 95:9-95:14
+    Visibility: public -/
+def async_tasks.schema.Rule.Insts.CoreCloneClone.clone
+  (self : async_tasks.schema.Rule) : Result async_tasks.schema.Rule := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::async_tasks::schema::{impl core::clone::Clone for noble_kernel::async_tasks::schema::Rule}]
+    Source: 'crates/noble-kernel/src/async_tasks/schema.rs', lines 95:9-95:14 -/
+@[reducible]
+def async_tasks.schema.Rule.Insts.CoreCloneClone : core.clone.Clone
+  async_tasks.schema.Rule := {
+  clone := async_tasks.schema.Rule.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::async_tasks::schema::{impl core::marker::Copy for noble_kernel::async_tasks::schema::Rule}]
+    Source: 'crates/noble-kernel/src/async_tasks/schema.rs', lines 95:16-95:20 -/
+@[reducible]
+def async_tasks.schema.Rule.Insts.CoreMarkerCopy : core.marker.Copy
+  async_tasks.schema.Rule := {
+  cloneInst := async_tasks.schema.Rule.Insts.CoreCloneClone
+}
+
+/-- Trait implementation: [noble_kernel::async_tasks::schema::{impl core::marker::StructuralPartialEq for noble_kernel::async_tasks::schema::Rule}]
+    Source: 'crates/noble-kernel/src/async_tasks/schema.rs', lines 95:29-95:38 -/
+@[reducible]
+def async_tasks.schema.Rule.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq async_tasks.schema.Rule := {
+}
+
+/-- [noble_kernel::async_tasks::schema::{impl core::cmp::Eq for noble_kernel::async_tasks::schema::Rule}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/async_tasks/schema.rs', lines 95:40-95:42
+    Visibility: public -/
+def async_tasks.schema.Rule.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : async_tasks.schema.Rule) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::async_tasks::schema::{impl core::cmp::Eq for noble_kernel::async_tasks::schema::Rule}]
+    Source: 'crates/noble-kernel/src/async_tasks/schema.rs', lines 95:40-95:42 -/
+@[reducible]
+def async_tasks.schema.Rule.Insts.CoreCmpEq : core.cmp.Eq
+  async_tasks.schema.Rule := {
+  partialEqInst := async_tasks.schema.Rule.Insts.CoreCmpPartialEqRule
+  assert_fields_are_eq :=
+    async_tasks.schema.Rule.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::async_tasks::table::inspection::{noble_kernel::async_tasks::table::Table}::observation]: loop body 0:
+    Source: 'crates/noble-kernel/src/async_tasks/table/inspection.rs', lines 42:8-61:9
+    Visibility: public -/
+@[rust_loop_body]
+def async_tasks.table.inspection.Table.observation_loop.body
+  (self : async_tasks.table.Table) (i : Std.Usize) (i1 : Std.Usize)
+  (i2 : Std.Usize) (i3 : Std.Usize) (i4 : Std.Usize) (i5 : Std.Usize)
+  (i6 : Std.Usize) (f : async_tasks.bounds.Footprint) (index : Std.Usize) :
+  Result (ControlFlow (Std.Usize × Std.Usize × Std.Usize × Std.Usize ×
+    Std.Usize × Std.Usize × Std.Usize × async_tasks.bounds.Footprint ×
+    Std.Usize) (Std.Usize × Std.Usize × Std.Usize × Std.Usize × Std.Usize
+    × Std.Usize × Std.Usize × async_tasks.bounds.Footprint))
+  := do
+  let i7 := alloc.vec.Vec.len self.records
+  if index < i7
+  then
+    let record ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        async_tasks.domain.Snapshot) self.records index
+    let (i8, i9, i10, i11, i12) ←
+      match record.state with
+      | async_tasks.domain.State.Pending =>
+        do
+        let i13 ← i + 1#usize
+        ok (i13, i1, i2, i3, i4)
+      | async_tasks.domain.State.Ready =>
+        do
+        let i13 ← i1 + 1#usize
+        ok (i, i13, i2, i3, i4)
+      | async_tasks.domain.State.Delivered =>
+        do
+        let i13 ← i2 + 1#usize
+        ok (i, i1, i13, i3, i4)
+      | async_tasks.domain.State.Retiring =>
+        do
+        let i13 ← i3 + 1#usize
+        ok (i, i1, i2, i13, i4)
+      | async_tasks.domain.State.Retired =>
+        do
+        let i13 ← i4 + 1#usize
+        ok (i, i1, i2, i3, i13)
+    let i13 ← core.num.U64.count_ones record.pins
+    let i14 ← lift (UScalar.cast .Usize i13)
+    let i15 ← i5 + i14
+    let i16 ← if record.wake_pending
+                then i6 + 1#usize
+                else ok i6
+    let f1 ←
+      if record.finalized
+      then ok f
+      else
+        do
+        let footprint ←
+          async_tasks.bounds.Request.validated_footprint record.reservation
+        async_tasks.bounds.Footprint.add f footprint
+    let index1 ← index + 1#usize
+    ok (cont (i8, i9, i10, i11, i12, i15, i16, f1, index1))
+  else ok (done (i, i1, i2, i3, i4, i5, i6, f))
+
+/-- [noble_kernel::async_tasks::table::inspection::{noble_kernel::async_tasks::table::Table}::observation]: loop 0:
+    Source: 'crates/noble-kernel/src/async_tasks/table/inspection.rs', lines 42:8-61:9
+    Visibility: public -/
+@[rust_loop]
+def async_tasks.table.inspection.Table.observation_loop
+  (self : async_tasks.table.Table) (i : Std.Usize) (i1 : Std.Usize)
+  (i2 : Std.Usize) (i3 : Std.Usize) (i4 : Std.Usize) (i5 : Std.Usize)
+  (i6 : Std.Usize) (f : async_tasks.bounds.Footprint) (index : Std.Usize) :
+  Result (Std.Usize × Std.Usize × Std.Usize × Std.Usize × Std.Usize ×
+    Std.Usize × Std.Usize × async_tasks.bounds.Footprint)
+  := do
+  loop
+    (fun (i7, i8, i9, i10, i11, i12, i13, f1, index1) =>
+      async_tasks.table.inspection.Table.observation_loop.body self i7 i8 i9
+      i10 i11 i12 i13 f1 index1)
+    (i, i1, i2, i3, i4, i5, i6, f, index)
+
+/-- [noble_kernel::async_tasks::table::inspection::{noble_kernel::async_tasks::table::Table}::observation]:
+    Source: 'crates/noble-kernel/src/async_tasks/table/inspection.rs', lines 30:4-63:5
+    Visibility: public -/
+def async_tasks.table.inspection.Table.observation
+  (self : async_tasks.table.Table) : Result async_tasks.Observation := do
+  let f ← async_tasks.bounds.Footprint.empty
+  let (i, i1, i2, i3, i4, i5, i6, f1) ←
+    async_tasks.table.inspection.Table.observation_loop self 0#usize 0#usize
+      0#usize 0#usize 0#usize 0#usize 0#usize f 0#usize
+  ok
+    {
+      pending := i,
+      ready := i1,
+      delivered := i2,
+      retiring := i3,
+      retired := i4,
+      outstanding_pins := i5,
+      queued_wakeups := i6,
+      reserved := f1
+    }
+
+/-- [noble_kernel::async_tasks::table::admission::{noble_kernel::async_tasks::table::Table}::free_slot]: loop body 0:
+    Source: 'crates/noble-kernel/src/async_tasks/table/admission.rs', lines 83:8-94:5 -/
+@[rust_loop_body]
+def async_tasks.table.admission.Table.free_slot_loop.body
+  (self : async_tasks.table.Table) (index : Std.Usize) :
+  Result (ControlFlow Std.Usize (core.result.Result Std.Usize
+    async_tasks.domain.Error))
+  := do
+  let i := alloc.vec.Vec.len self.records
+  if index < i
+  then
+    let s ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        async_tasks.domain.Snapshot) self.records index
+    if s.finalized
+    then ok (done (core.result.Result.Ok index))
+    else let index1 ← index + 1#usize
+         ok (cont index1)
+  else
+    if index < self.limits.tasks
+    then ok (done (core.result.Result.Ok index))
+    else
+      ok (done (core.result.Result.Err async_tasks.domain.Error.TaskCapacity))
+
+/-- [noble_kernel::async_tasks::table::admission::{noble_kernel::async_tasks::table::Table}::free_slot]: loop 0:
+    Source: 'crates/noble-kernel/src/async_tasks/table/admission.rs', lines 83:8-94:5 -/
+@[rust_loop]
+def async_tasks.table.admission.Table.free_slot_loop
+  (self : async_tasks.table.Table) (index : Std.Usize) :
+  Result (core.result.Result Std.Usize async_tasks.domain.Error)
+  := do
+  loop
+    (fun index1 => async_tasks.table.admission.Table.free_slot_loop.body self
+      index1)
+    index
+
+/-- [noble_kernel::async_tasks::table::admission::{noble_kernel::async_tasks::table::Table}::free_slot]:
+    Source: 'crates/noble-kernel/src/async_tasks/table/admission.rs', lines 81:4-94:5 -/
+@[reducible]
+def async_tasks.table.admission.Table.free_slot
+  (self : async_tasks.table.Table) :
+  Result (core.result.Result Std.Usize async_tasks.domain.Error)
+  := do
+  async_tasks.table.admission.Table.free_slot_loop self 0#usize
+
+/-- [noble_kernel::async_tasks::table::admission::{noble_kernel::async_tasks::table::Table}::prepare]:
+    Source: 'crates/noble-kernel/src/async_tasks/table/admission.rs', lines 9:4-59:5
+    Visibility: public -/
+def async_tasks.table.admission.Table.prepare
+  (self : async_tasks.table.Table) (request : async_tasks.bounds.Request) :
+  Result ((core.result.Result async_tasks.table.Admission
+    async_tasks.domain.Error) × (core.result.Result
+    async_tasks.table.Admission async_tasks.domain.Error →
+    async_tasks.table.Table))
+  := do
+  let r ← async_tasks.bounds.Request.footprint request
+  match r with
+  | core.result.Result.Ok value =>
+    let r1 ← async_tasks.table.admission.Table.free_slot self
+    match r1 with
+    | core.result.Result.Ok value1 =>
+      let o ← async_tasks.table.inspection.Table.observation self
+      let f ← async_tasks.bounds.Footprint.add o.reserved value
+      let r2 ← async_tasks.bounds.Footprint.fits f self.limits
+      match r2 with
+      | core.result.Result.Ok _ =>
+        if self.generation >= self.limits.generations
+        then
+          let back := fun r3 => self
+          ok (core.result.Result.Err
+            async_tasks.domain.Error.GenerationExhausted, back)
+        else
+          let o1 ← lift (U64.checked_add self.generation 1#u64)
+          match o1 with
+          | none =>
+            let back := fun r3 => self
+            ok (core.result.Result.Err
+              async_tasks.domain.Error.GenerationExhausted, back)
+          | some generation =>
+            let buffers ←
+              if request.input_bytes != 0#usize
+              then ok (0#u8 ||| 1#u8)
+              else ok 0#u8
+            let buffers1 ←
+              if request.parked_bytes != 0#usize
+              then ok (buffers ||| 4#u8)
+              else ok buffers
+            let i ← async_tasks.bounds.mask request.pins
+            let back :=
+              fun r3 =>
+                match r3 with
+                | core.result.Result.Ok (async_tasks.table.Admission.mk t _) =>
+                  t
+                | _ => self
+            ok (core.result.Result.Ok
+              {
+                table := self,
+                record :=
+                  {
+                    handle :=
+                      {
+                        table := self.id,
+                        slot := value1,
+                        generation,
+                        context := request.context
+                      },
+                    native := request.native,
+                    state := async_tasks.domain.State.Pending,
+                    reservation := request,
+                    completion := none,
+                    outcome := none,
+                    failure := none,
+                    completion_closed := false,
+                    native_stopped := false,
+                    pins := i,
+                    returned_inputs := 0#u64,
+                    retiring_inputs := 0#u64,
+                    results := 0#u64,
+                    buffers := buffers1,
+                    wake_pending := false,
+                    wakeups_remaining := request.wakeups,
+                    finalized := false
+                  }
+              }, back)
+      | core.result.Result.Err failure =>
+        let back := fun r3 => self
+        ok (core.result.Result.Err failure, back)
+    | core.result.Result.Err failure =>
+      let back := fun r2 => self
+      ok (core.result.Result.Err failure, back)
+  | core.result.Result.Err failure =>
+    let back := fun r1 => self
+    ok (core.result.Result.Err failure, back)
+
+/-- [noble_kernel::async_tasks::table::admission::{noble_kernel::async_tasks::table::Admission<'_0>}::commit]:
+    Source: 'crates/noble-kernel/src/async_tasks/table/admission.rs', lines 101:4-128:5
+    Visibility: public -/
+def async_tasks.table.admission.Admission.commit
+  {T : Type} (self : async_tasks.table.Admission) (inputs : T) :
+  Result ((async_tasks.Admitted T) × async_tasks.table.Admission)
+  := do
+  let i := alloc.vec.Vec.len self.table.records
+  let v ←
+    if self.record.handle.slot = i
+    then alloc.vec.Vec.push self.table.records self.record
+    else
+      do
+      let (_, index_mut_back) ←
+        alloc.vec.Vec.index_mut (core.slice.index.SliceIndexUsizeSlice
+          async_tasks.domain.Snapshot) self.table.records
+          self.record.handle.slot
+      ok (index_mut_back self.record)
+  let decision ←
+    async_tasks.accounting.Decision.unchanged self.record
+      async_tasks.domain.Action.Admitted
+  let i1 ← async_tasks.bounds.mask self.record.reservation.inputs
+  ok
+    ({
+       task := { handle := self.record.handle },
+       callback := { task := self.record.handle, native := self.record.native },
+       inputs,
+       decision :=
+         {
+           decision
+             with
+             accounting :=
+               {
+                 decision.accounting
+                   with
+                   acquired :=
+                     {
+                       decision.accounting.acquired
+                         with
+                         inputs := i1, buffers := self.record.buffers
+                     },
+                   pins_acquired := self.record.pins
+               }
+         }
+     },
+    {
+      self
+        with
+        table :=
+          {
+            self.table
+              with
+              records := v, generation := self.record.handle.generation
+          }
+    })
+
+/-- [noble_kernel::async_tasks::table::admission::{noble_kernel::async_tasks::table::Table}::admit]:
+    Source: 'crates/noble-kernel/src/async_tasks/table/admission.rs', lines 67:4-79:5
+    Visibility: public -/
+def async_tasks.table.admission.Table.admit
+  {T : Type} (self : async_tasks.table.Table)
+  (request : async_tasks.bounds.Request) (inputs : T) :
+  Result ((core.result.Result (async_tasks.Admitted T) (async_tasks.Rejected
+    T)) × async_tasks.table.Table)
+  := do
+  let (r, prepare_back) ←
+    async_tasks.table.admission.Table.prepare self request
+  match r with
+  | core.result.Result.Ok a =>
+    let (a1, a2) ← async_tasks.table.admission.Admission.commit a inputs
+    let self1 :=
+      prepare_back (core.result.Result.Ok { a with table := a2.table })
+    ok (core.result.Result.Ok a1, self1)
+  | core.result.Result.Err error =>
+    let self1 := prepare_back r
+    ok (core.result.Result.Err { error, input := inputs }, self1)
+
+/-- [noble_kernel::async_tasks::transition::validation::settled]:
+    Source: 'crates/noble-kernel/src/async_tasks/transition/validation.rs', lines 205:0-212:1 -/
+def async_tasks.transition.validation.settled
+  (record : async_tasks.domain.Snapshot) : Result Bool := do
+  if record.native_stopped
+  then
+    if record.pins = 0#u64
+    then
+      if record.retiring_inputs = 0#u64
+      then
+        if record.returned_inputs = 0#u64
+        then
+          if record.results = 0#u64
+          then ok (record.buffers = 0#u8)
+          else ok false
+        else ok false
+      else ok false
+    else ok false
+  else ok false
+
+/-- [noble_kernel::async_tasks::transition::validation::state_valid]:
+    Source: 'crates/noble-kernel/src/async_tasks/transition/validation.rs', lines 160:0-203:1 -/
+def async_tasks.transition.validation.state_valid
+  (record : async_tasks.domain.Snapshot) : Result Bool := do
+  match record.state with
+  | async_tasks.domain.State.Pending =>
+    let b := core.option.Option.is_none record.failure
+    if b
+    then
+      let b1 := core.option.Option.is_none record.completion
+      if b1
+      then
+        if record.completion_closed
+        then ok false
+        else
+          if record.finalized
+          then ok false
+          else ok (record.retiring_inputs = 0#u64)
+      else ok false
+    else ok false
+  | async_tasks.domain.State.Ready =>
+    match record.completion with
+    | none => ok false
+    | some value =>
+      let b := core.option.Option.is_none record.failure
+      if b
+      then
+        if record.finalized
+        then ok false
+        else
+          if value.bytes <= record.reservation.result_bytes
+          then
+            if record.returned_inputs = value.inputs.returned
+            then
+              if record.results = value.produced
+              then
+                let i ← lift (~~~ value.inputs.retired)
+                let i1 ← lift (record.retiring_inputs &&& i)
+                if i1 = 0#u64
+                then
+                  let i2 ← lift (record.buffers &&& 2#u8)
+                  ok ((i2 != 0#u8) = (value.bytes != 0#usize))
+                else ok false
+              else ok false
+            else ok false
+          else ok false
+      else ok false
+  | async_tasks.domain.State.Delivered =>
+    let b := core.option.Option.is_none record.failure
+    if b
+    then
+      let b1 := core.option.Option.is_some record.completion
+      if b1
+      then
+        if record.returned_inputs = 0#u64
+        then
+          if record.results = 0#u64
+          then let i ← lift (record.buffers &&& 2#u8)
+               ok (i = 0#u8)
+          else ok false
+        else ok false
+      else ok false
+    else ok false
+  | async_tasks.domain.State.Retiring =>
+    let b := core.option.Option.is_some record.failure
+    if b
+    then
+      if record.finalized
+      then ok false
+      else
+        if record.returned_inputs = 0#u64
+        then ok (¬ record.wake_pending)
+        else ok false
+    else ok false
+  | async_tasks.domain.State.Retired =>
+    let b := core.option.Option.is_some record.failure
+    if b
+    then
+      if record.finalized
+      then
+        if record.completion_closed
+        then
+          let b1 ← async_tasks.transition.validation.settled record
+          if b1
+          then ok (¬ record.wake_pending)
+          else ok false
+        else ok false
+      else ok false
+    else ok false
+
+/-- [noble_kernel::async_tasks::transition::validation::disposition]:
+    Source: 'crates/noble-kernel/src/async_tasks/transition/validation.rs', lines 59:0-79:1 -/
+def async_tasks.transition.validation.disposition
+  (record : async_tasks.domain.Snapshot)
+  (completion : async_tasks.domain.Completion) :
+  Result (core.result.Result Unit async_tasks.domain.Error)
+  := do
+  let i ← lift (completion.inputs.returned &&& completion.inputs.consumed)
+  if i != 0#u64
+  then ok (core.result.Result.Err async_tasks.domain.Error.InvalidDisposition)
+  else
+    let i1 ← lift (completion.inputs.returned &&& completion.inputs.retired)
+    if i1 != 0#u64
+    then
+      ok (core.result.Result.Err async_tasks.domain.Error.InvalidDisposition)
+    else
+      let i2 ←
+        lift (completion.inputs.consumed &&& completion.inputs.retired)
+      if i2 != 0#u64
+      then
+        ok (core.result.Result.Err async_tasks.domain.Error.InvalidDisposition)
+      else
+        let all ← async_tasks.bounds.mask record.reservation.inputs
+        let i3 ←
+          lift (completion.inputs.returned ||| completion.inputs.consumed)
+        let i4 ← lift (i3 ||| completion.inputs.retired)
+        if i4 != all
+        then
+          ok (core.result.Result.Err
+            async_tasks.domain.Error.InvalidDisposition)
+        else
+          let results ← async_tasks.bounds.mask record.reservation.results
+          let i5 ← lift (~~~ results)
+          let i6 ← lift (completion.produced &&& i5)
+          if i6 != 0#u64
+          then
+            ok (core.result.Result.Err async_tasks.domain.Error.ResultCapacity)
+          else ok (core.result.Result.Ok ())
+
+/-- [noble_kernel::async_tasks::transition::validation::owners_valid]:
+    Source: 'crates/noble-kernel/src/async_tasks/transition/validation.rs', lines 123:0-158:1 -/
+def async_tasks.transition.validation.owners_valid
+  (record : async_tasks.domain.Snapshot) : Result Bool := do
+  match record.completion with
+  | none =>
+    let b := core.option.Option.is_none record.outcome
+    if b
+    then
+      if record.returned_inputs = 0#u64
+      then
+        if record.results = 0#u64
+        then
+          let i ← lift (record.buffers &&& 2#u8)
+          if i = 0#u8
+          then
+            let i1 ← async_tasks.bounds.mask record.reservation.inputs
+            let i2 ← lift (~~~ i1)
+            let i3 ← lift (record.retiring_inputs &&& i2)
+            if i3 = 0#u64
+            then
+              if record.completion_closed
+              then ok record.native_stopped
+              else ok true
+            else ok false
+          else ok false
+        else ok false
+      else ok false
+    else ok false
+  | some completion =>
+    let r ← async_tasks.transition.validation.disposition record completion
+    let b ← core.result.Result.is_err r
+    if b
+    then ok false
+    else
+      if record.completion_closed
+      then
+        let b1 := core.option.Option.is_none record.outcome
+        if b1
+        then ok false
+        else
+          let i ← lift (~~~ completion.inputs.returned)
+          let i1 ← lift (record.returned_inputs &&& i)
+          if i1 != 0#u64
+          then ok false
+          else
+            let i2 ←
+              lift (completion.inputs.retired ||| completion.inputs.returned)
+            let i3 ← lift (~~~ i2)
+            let i4 ← lift (record.retiring_inputs &&& i3)
+            if i4 != 0#u64
+            then ok false
+            else
+              let i5 ← lift (~~~ completion.produced)
+              let i6 ← lift (record.results &&& i5)
+              if i6 != 0#u64
+              then ok false
+              else
+                let i7 ← lift (record.buffers &&& 2#u8)
+                if i7 != 0#u8
+                then
+                  if completion.bytes = 0#usize
+                  then ok false
+                  else
+                    if completion.bytes > record.reservation.result_bytes
+                    then ok false
+                    else ok true
+                else ok true
+      else ok false
+
+/-- [noble_kernel::async_tasks::transition::validation::record]:
+    Source: 'crates/noble-kernel/src/async_tasks/transition/validation.rs', lines 85:0-121:1 -/
+def async_tasks.transition.validation.record
+  (record : async_tasks.domain.Snapshot) :
+  Result (core.result.Result Unit async_tasks.domain.Error)
+  := do
+  let r ← async_tasks.bounds.Request.footprint record.reservation
+  let b ← core.result.Result.is_err r
+  if b
+  then ok (core.result.Result.Err async_tasks.domain.Error.InvalidRecord)
+  else
+    if record.handle.generation = 0#u64
+    then ok (core.result.Result.Err async_tasks.domain.Error.InvalidRecord)
+    else
+      if record.handle.slot >= async_tasks.bounds.MAX_SLOTS
+      then ok (core.result.Result.Err async_tasks.domain.Error.InvalidRecord)
+      else
+        let i := record.native
+        let i1 := record.reservation.native
+        if i != i1
+        then ok (core.result.Result.Err async_tasks.domain.Error.InvalidRecord)
+        else
+          let i2 := record.handle.context
+          let i3 := record.reservation.context
+          if i2 != i3
+          then
+            ok (core.result.Result.Err async_tasks.domain.Error.InvalidRecord)
+          else
+            let i4 ← async_tasks.bounds.mask record.reservation.pins
+            let i5 ← lift (~~~ i4)
+            let i6 ← lift (record.pins &&& i5)
+            if i6 != 0#u64
+            then
+              ok (core.result.Result.Err
+                async_tasks.domain.Error.InvalidRecord)
+            else
+              if record.wakeups_remaining > record.reservation.wakeups
+              then
+                ok (core.result.Result.Err
+                  async_tasks.domain.Error.InvalidRecord)
+              else
+                let i7 ← lift (~~~ 7#u8)
+                let i8 ← lift (record.buffers &&& i7)
+                if i8 != 0#u8
+                then
+                  ok (core.result.Result.Err
+                    async_tasks.domain.Error.InvalidRecord)
+                else
+                  let i9 ← lift (record.buffers &&& 1#u8)
+                  if i9 != 0#u8
+                  then
+                    if record.reservation.input_bytes = 0#usize
+                    then
+                      ok (core.result.Result.Err
+                        async_tasks.domain.Error.InvalidRecord)
+                    else
+                      let i10 ← lift (record.buffers &&& 4#u8)
+                      if i10 != 0#u8
+                      then
+                        if record.reservation.parked_bytes = 0#usize
+                        then
+                          ok (core.result.Result.Err
+                            async_tasks.domain.Error.InvalidRecord)
+                        else
+                          let i11 ←
+                            lift (record.returned_inputs &&&
+                              record.retiring_inputs)
+                          if i11 != 0#u64
+                          then
+                            ok (core.result.Result.Err
+                              async_tasks.domain.Error.InvalidRecord)
+                          else
+                            let b1 ←
+                              async_tasks.transition.validation.owners_valid
+                                record
+                            if b1
+                            then
+                              let b2 ←
+                                async_tasks.transition.validation.state_valid
+                                  record
+                              if b2
+                              then
+                                if record.finalized
+                                then
+                                  let b3 ←
+                                    async_tasks.transition.validation.settled
+                                      record
+                                  if b3
+                                  then
+                                    if record.wake_pending
+                                    then
+                                      ok (core.result.Result.Err
+                                        async_tasks.domain.Error.InvalidRecord)
+                                    else ok (core.result.Result.Ok ())
+                                  else
+                                    ok (core.result.Result.Err
+                                      async_tasks.domain.Error.InvalidRecord)
+                                else ok (core.result.Result.Ok ())
+                              else
+                                ok (core.result.Result.Err
+                                  async_tasks.domain.Error.InvalidRecord)
+                            else
+                              ok (core.result.Result.Err
+                                async_tasks.domain.Error.InvalidRecord)
+                      else
+                        let i11 ←
+                          lift (record.returned_inputs &&&
+                            record.retiring_inputs)
+                        if i11 != 0#u64
+                        then
+                          ok (core.result.Result.Err
+                            async_tasks.domain.Error.InvalidRecord)
+                        else
+                          let b1 ←
+                            async_tasks.transition.validation.owners_valid
+                              record
+                          if b1
+                          then
+                            let b2 ←
+                              async_tasks.transition.validation.state_valid
+                                record
+                            if b2
+                            then
+                              if record.finalized
+                              then
+                                let b3 ←
+                                  async_tasks.transition.validation.settled
+                                    record
+                                if b3
+                                then
+                                  if record.wake_pending
+                                  then
+                                    ok (core.result.Result.Err
+                                      async_tasks.domain.Error.InvalidRecord)
+                                  else ok (core.result.Result.Ok ())
+                                else
+                                  ok (core.result.Result.Err
+                                    async_tasks.domain.Error.InvalidRecord)
+                              else ok (core.result.Result.Ok ())
+                            else
+                              ok (core.result.Result.Err
+                                async_tasks.domain.Error.InvalidRecord)
+                          else
+                            ok (core.result.Result.Err
+                              async_tasks.domain.Error.InvalidRecord)
+                  else
+                    let i10 ← lift (record.buffers &&& 4#u8)
+                    if i10 != 0#u8
+                    then
+                      if record.reservation.parked_bytes = 0#usize
+                      then
+                        ok (core.result.Result.Err
+                          async_tasks.domain.Error.InvalidRecord)
+                      else
+                        let i11 ←
+                          lift (record.returned_inputs &&&
+                            record.retiring_inputs)
+                        if i11 != 0#u64
+                        then
+                          ok (core.result.Result.Err
+                            async_tasks.domain.Error.InvalidRecord)
+                        else
+                          let b1 ←
+                            async_tasks.transition.validation.owners_valid
+                              record
+                          if b1
+                          then
+                            let b2 ←
+                              async_tasks.transition.validation.state_valid
+                                record
+                            if b2
+                            then
+                              if record.finalized
+                              then
+                                let b3 ←
+                                  async_tasks.transition.validation.settled
+                                    record
+                                if b3
+                                then
+                                  if record.wake_pending
+                                  then
+                                    ok (core.result.Result.Err
+                                      async_tasks.domain.Error.InvalidRecord)
+                                  else ok (core.result.Result.Ok ())
+                                else
+                                  ok (core.result.Result.Err
+                                    async_tasks.domain.Error.InvalidRecord)
+                              else ok (core.result.Result.Ok ())
+                            else
+                              ok (core.result.Result.Err
+                                async_tasks.domain.Error.InvalidRecord)
+                          else
+                            ok (core.result.Result.Err
+                              async_tasks.domain.Error.InvalidRecord)
+                    else
+                      let i11 ←
+                        lift (record.returned_inputs &&&
+                          record.retiring_inputs)
+                      if i11 != 0#u64
+                      then
+                        ok (core.result.Result.Err
+                          async_tasks.domain.Error.InvalidRecord)
+                      else
+                        let b1 ←
+                          async_tasks.transition.validation.owners_valid record
+                        if b1
+                        then
+                          let b2 ←
+                            async_tasks.transition.validation.state_valid
+                              record
+                          if b2
+                          then
+                            if record.finalized
+                            then
+                              let b3 ←
+                                async_tasks.transition.validation.settled
+                                  record
+                              if b3
+                              then
+                                if record.wake_pending
+                                then
+                                  ok (core.result.Result.Err
+                                    async_tasks.domain.Error.InvalidRecord)
+                                else ok (core.result.Result.Ok ())
+                              else
+                                ok (core.result.Result.Err
+                                  async_tasks.domain.Error.InvalidRecord)
+                            else ok (core.result.Result.Ok ())
+                          else
+                            ok (core.result.Result.Err
+                              async_tasks.domain.Error.InvalidRecord)
+                        else
+                          ok (core.result.Result.Err
+                            async_tasks.domain.Error.InvalidRecord)
+
+/-- [noble_kernel::async_tasks::transition::validation::native]:
+    Source: 'crates/noble-kernel/src/async_tasks/transition/validation.rs', lines 21:0-57:1 -/
+def async_tasks.transition.validation.native
+  (retained : async_tasks.domain.NativeId) (event : async_tasks.domain.Event) :
+  Result (core.result.Result Unit async_tasks.domain.Error)
+  := do
+  let supplied ←
+    match event with
+    | async_tasks.domain.Event.Inspect => ok none
+    | async_tasks.domain.Event.CompleteSuccess native _ => ok (some native)
+    | async_tasks.domain.Event.CompleteDomainError native _ => ok (some native)
+    | async_tasks.domain.Event.Deliver => ok none
+    | async_tasks.domain.Event.Cancel => ok none
+    | async_tasks.domain.Event.Trap => ok none
+    | async_tasks.domain.Event.Deadline => ok none
+    | async_tasks.domain.Event.Budget => ok none
+    | async_tasks.domain.Event.InternalFailure => ok none
+    | async_tasks.domain.Event.NativeStopped native => ok (some native)
+    | async_tasks.domain.Event.SettlePins native _ => ok (some native)
+    | async_tasks.domain.Event.Cleanup _ => ok none
+    | async_tasks.domain.Event.Wake native => ok (some native)
+    | async_tasks.domain.Event.TakeWake => ok none
+    | async_tasks.domain.Event.Finish => ok none
+  match supplied with
+  | none => ok (core.result.Result.Ok ())
+  | some supplied1 =>
+    if supplied1 != retained
+    then ok (core.result.Result.Err async_tasks.domain.Error.WrongNative)
+    else ok (core.result.Result.Ok ())
+
+/-- [noble_kernel::async_tasks::transition::validation::handle]:
+    Source: 'crates/noble-kernel/src/async_tasks/transition/validation.rs', lines 1:0-15:1 -/
+def async_tasks.transition.validation.handle
+  (retained : async_tasks.domain.Handle) (claim : async_tasks.domain.Handle) :
+  Result (core.result.Result Unit async_tasks.domain.Error)
+  := do
+  let i := retained.table
+  let i1 := claim.table
+  if i != i1
+  then ok (core.result.Result.Err async_tasks.domain.Error.InvalidHandle)
+  else
+    if retained.slot != claim.slot
+    then ok (core.result.Result.Err async_tasks.domain.Error.InvalidHandle)
+    else
+      let i2 := retained.context
+      let i3 := claim.context
+      if i2 != i3
+      then ok (core.result.Result.Err async_tasks.domain.Error.WrongContext)
+      else
+        if retained.generation != claim.generation
+        then
+          ok (core.result.Result.Err async_tasks.domain.Error.WrongGeneration)
+        else ok (core.result.Result.Ok ())
+
+/-- [noble_kernel::async_tasks::transition::lifecycle::take_wake]:
+    Source: 'crates/noble-kernel/src/async_tasks/transition/lifecycle.rs', lines 116:0-127:1 -/
+def async_tasks.transition.lifecycle.take_wake
+  (record : async_tasks.domain.Snapshot) :
+  Result (core.result.Result async_tasks.domain.Decision
+    async_tasks.domain.Error)
+  := do
+  if record.wake_pending
+  then
+    let decision ←
+      async_tasks.accounting.Decision.unchanged
+        { record with wake_pending := false }
+        async_tasks.domain.Action.WakeTaken
+    ok (core.result.Result.Ok
+      {
+        decision
+          with
+          accounting := { decision.accounting with wake_removed := true }
+      })
+  else ok (core.result.Result.Err async_tasks.domain.Error.NoWakeup)
+
+/-- [noble_kernel::async_tasks::transition::lifecycle::retire]:
+    Source: 'crates/noble-kernel/src/async_tasks/transition/lifecycle.rs', lines 9:0-53:1 -/
+def async_tasks.transition.lifecycle.retire
+  (record : async_tasks.domain.Snapshot) (reason : async_tasks.domain.Failure)
+  :
+  Result async_tasks.domain.Decision
+  := do
+  let accounting ← async_tasks.accounting.Accounting.empty
+  let (r, inputs) ←
+    match record.state with
+    | async_tasks.domain.State.Pending =>
+      do
+      let inputs1 ← async_tasks.bounds.mask record.reservation.inputs
+      ok (record.reservation, inputs1)
+    | async_tasks.domain.State.Ready =>
+      ok (record.reservation, record.returned_inputs)
+    | async_tasks.domain.State.Delivered => ok (record.reservation, 0#u64)
+    | async_tasks.domain.State.Retiring => ok (record.reservation, 0#u64)
+    | async_tasks.domain.State.Retired => ok (record.reservation, 0#u64)
+  let i ← lift (record.buffers &&& 2#u8)
+  let i1 ← lift (record.retiring_inputs ||| inputs)
+  let (b, b1) ←
+    if record.native_stopped
+    then ok (true, true)
+    else ok (record.completion_closed, false)
+  match reason with
+  | async_tasks.domain.Failure.Cancelled =>
+    ok
+      {
+        record :=
+          {
+            record
+              with
+              state := async_tasks.domain.State.Retiring,
+              reservation := r,
+              failure := (some async_tasks.domain.Failure.Cancelled),
+              completion_closed := b,
+              native_stopped := b1,
+              returned_inputs := 0#u64,
+              retiring_inputs := i1,
+              wake_pending := false
+          },
+        action := async_tasks.domain.Action.CancellationAcknowledged,
+        accounting :=
+          {
+            accounting
+              with
+              retired := { inputs, results := record.results, buffers := i },
+              wake_removed := record.wake_pending
+          }
+      }
+  | async_tasks.domain.Failure.Trap =>
+    ok
+      {
+        record :=
+          {
+            record
+              with
+              state := async_tasks.domain.State.Retiring,
+              reservation := r,
+              failure := (some async_tasks.domain.Failure.Trap),
+              completion_closed := b,
+              native_stopped := b1,
+              returned_inputs := 0#u64,
+              retiring_inputs := i1,
+              wake_pending := false
+          },
+        action :=
+          (async_tasks.domain.Action.FailureRecorded
+            async_tasks.domain.Failure.Trap),
+        accounting :=
+          {
+            accounting
+              with
+              retired := { inputs, results := record.results, buffers := i },
+              wake_removed := record.wake_pending
+          }
+      }
+  | async_tasks.domain.Failure.Deadline =>
+    ok
+      {
+        record :=
+          {
+            record
+              with
+              state := async_tasks.domain.State.Retiring,
+              reservation := r,
+              failure := (some async_tasks.domain.Failure.Deadline),
+              completion_closed := b,
+              native_stopped := b1,
+              returned_inputs := 0#u64,
+              retiring_inputs := i1,
+              wake_pending := false
+          },
+        action :=
+          (async_tasks.domain.Action.FailureRecorded
+            async_tasks.domain.Failure.Deadline),
+        accounting :=
+          {
+            accounting
+              with
+              retired := { inputs, results := record.results, buffers := i },
+              wake_removed := record.wake_pending
+          }
+      }
+  | async_tasks.domain.Failure.Budget =>
+    ok
+      {
+        record :=
+          {
+            record
+              with
+              state := async_tasks.domain.State.Retiring,
+              reservation := r,
+              failure := (some async_tasks.domain.Failure.Budget),
+              completion_closed := b,
+              native_stopped := b1,
+              returned_inputs := 0#u64,
+              retiring_inputs := i1,
+              wake_pending := false
+          },
+        action :=
+          (async_tasks.domain.Action.FailureRecorded
+            async_tasks.domain.Failure.Budget),
+        accounting :=
+          {
+            accounting
+              with
+              retired := { inputs, results := record.results, buffers := i },
+              wake_removed := record.wake_pending
+          }
+      }
+  | async_tasks.domain.Failure.Internal =>
+    ok
+      {
+        record :=
+          {
+            record
+              with
+              state := async_tasks.domain.State.Retiring,
+              reservation := r,
+              failure := (some async_tasks.domain.Failure.Internal),
+              completion_closed := b,
+              native_stopped := b1,
+              returned_inputs := 0#u64,
+              retiring_inputs := i1,
+              wake_pending := false
+          },
+        action :=
+          (async_tasks.domain.Action.FailureRecorded
+            async_tasks.domain.Failure.Internal),
+        accounting :=
+          {
+            accounting
+              with
+              retired := { inputs, results := record.results, buffers := i },
+              wake_removed := record.wake_pending
+          }
+      }
+
+/-- [noble_kernel::async_tasks::transition::lifecycle::wake]:
+    Source: 'crates/noble-kernel/src/async_tasks/transition/lifecycle.rs', lines 98:0-114:1 -/
+def async_tasks.transition.lifecycle.wake
+  (record : async_tasks.domain.Snapshot) :
+  Result async_tasks.domain.Decision
+  := do
+  if record.wake_pending
+  then
+    async_tasks.accounting.Decision.unchanged record
+      async_tasks.domain.Action.WakeCoalesced
+  else
+    if record.wakeups_remaining = 0#u32
+    then
+      async_tasks.transition.lifecycle.retire record
+        async_tasks.domain.Failure.Budget
+    else
+      let i ← record.wakeups_remaining - 1#u32
+      let decision ←
+        async_tasks.accounting.Decision.unchanged
+          { record with wake_pending := true, wakeups_remaining := i }
+          async_tasks.domain.Action.WakeQueued
+      ok
+        {
+          decision
+            with
+            accounting := { decision.accounting with wake_queued := true }
+        }
+
+/-- [noble_kernel::async_tasks::transition::lifecycle::native_stop]:
+    Source: 'crates/noble-kernel/src/async_tasks/transition/lifecycle.rs', lines 77:0-96:1 -/
+def async_tasks.transition.lifecycle.native_stop
+  (record : async_tasks.domain.Snapshot) :
+  Result async_tasks.domain.Decision
+  := do
+  if record.native_stopped
+  then
+    async_tasks.accounting.Decision.unchanged record
+      async_tasks.domain.Action.Duplicate
+  else
+    let (s, b) ←
+      match record.state with
+      | async_tasks.domain.State.Pending =>
+        ok (async_tasks.domain.State.Pending, record.completion_closed)
+      | async_tasks.domain.State.Ready =>
+        ok (async_tasks.domain.State.Ready, record.completion_closed)
+      | async_tasks.domain.State.Delivered =>
+        ok (async_tasks.domain.State.Delivered, record.completion_closed)
+      | async_tasks.domain.State.Retiring =>
+        ok (async_tasks.domain.State.Retiring, true)
+      | async_tasks.domain.State.Retired =>
+        ok (async_tasks.domain.State.Retired, true)
+    async_tasks.accounting.Decision.unchanged
+      { record with state := s, completion_closed := b, native_stopped := true
+      } async_tasks.domain.Action.NativeStopObserved
+
+/-- [noble_kernel::async_tasks::transition::lifecycle::deliver]:
+    Source: 'crates/noble-kernel/src/async_tasks/transition/lifecycle.rs', lines 55:0-75:1 -/
+def async_tasks.transition.lifecycle.deliver
+  (record : async_tasks.domain.Snapshot) :
+  Result async_tasks.domain.Decision
+  := do
+  let accounting ← async_tasks.accounting.Accounting.empty
+  let i ← lift (record.buffers &&& 2#u8)
+  let i1 ← lift (~~~ 2#u8)
+  let i2 ← lift (record.buffers &&& i1)
+  ok
+    {
+      record :=
+        {
+          record
+            with
+            state := async_tasks.domain.State.Delivered,
+            returned_inputs := 0#u64,
+            results := 0#u64,
+            buffers := i2,
+            wake_pending := false
+        },
+      action := async_tasks.domain.Action.ResultDelivered,
+      accounting :=
+        {
+          accounting
+            with
+            delivered :=
+              {
+                inputs := record.returned_inputs,
+                results := record.results,
+                buffers := i
+              },
+            wake_removed := record.wake_pending
+        }
+    }
+
+/-- [noble_kernel::async_tasks::transition::completion::exceeds_limit]:
+    Source: 'crates/noble-kernel/src/async_tasks/transition/completion.rs', lines 76:0-78:1 -/
+def async_tasks.transition.completion.exceeds_limit
+  (completion : async_tasks.domain.Completion) (result_bytes : Std.Usize) :
+  Result Bool
+  := do
+  ok (completion.bytes > result_bytes)
+
+/-- [noble_kernel::async_tasks::transition::completion::complete]:
+    Source: 'crates/noble-kernel/src/async_tasks/transition/completion.rs', lines 8:0-72:1 -/
+def async_tasks.transition.completion.complete
+  (record : async_tasks.domain.Snapshot) (outcome : async_tasks.domain.Outcome)
+  (completion : async_tasks.domain.Completion) :
+  Result (core.result.Result async_tasks.domain.Decision
+    async_tasks.domain.Error)
+  := do
+  if record.completion_closed
+  then
+    let d ←
+      async_tasks.accounting.Decision.unchanged record
+        async_tasks.domain.Action.Duplicate
+    ok (core.result.Result.Ok d)
+  else
+    let r ← async_tasks.transition.validation.disposition record completion
+    match r with
+    | core.result.Result.Ok _ =>
+      let is_oversized ←
+        async_tasks.transition.completion.exceeds_limit completion
+          record.reservation.result_bytes
+      let was_retiring ←
+        match record.state with
+        | async_tasks.domain.State.Pending => ok false
+        | async_tasks.domain.State.Ready => ok false
+        | async_tasks.domain.State.Delivered => ok false
+        | async_tasks.domain.State.Retiring => ok true
+        | async_tasks.domain.State.Retired => ok false
+      let accounting ← async_tasks.accounting.Accounting.empty
+      let i ← lift (record.retiring_inputs &&& completion.inputs.consumed)
+      let (i1, is_oversized1, i2) ←
+        if completion.bytes != 0#usize
+        then
+          do
+          let (i3, i4) ←
+            if is_oversized
+            then ok (record.buffers, accounting.acquired.buffers)
+            else do
+                 let i5 ← lift (record.buffers ||| 2#u8)
+                 ok (i5, 2#u8)
+          ok (i3, is_oversized, i4)
+        else ok (record.buffers, is_oversized, accounting.acquired.buffers)
+      let (s, o, i3, i4, b, o1, i5, b1, action) ←
+        if was_retiring
+        then
+          do
+          let i6 ←
+            lift (completion.inputs.retired ||| completion.inputs.returned)
+          let i7 ← lift (i1 &&& 2#u8)
+          let (o2, i8, a) ←
+            if is_oversized1
+            then
+              do
+              let b2 := core.option.Option.is_none record.failure
+              let o3 ←
+                if b2
+                then ok (some async_tasks.domain.Failure.Budget)
+                else ok record.failure
+              ok (o3, completion.bytes,
+                async_tasks.domain.Action.OversizedResult)
+            else
+              ok (record.failure, accounting.rejected_result_bytes,
+                async_tasks.domain.Action.CompletionRetired outcome)
+          ok (async_tasks.domain.State.Retiring, o2, 0#u64, i6, false,
+            {
+              accounting.retired
+                with
+                results := completion.produced, buffers := i7
+            }, i8, record.wake_pending, a)
+        else
+          if is_oversized1
+          then
+            do
+            let i6 ←
+              lift (completion.inputs.retired ||| completion.inputs.returned)
+            let i7 ← lift (i1 &&& 2#u8)
+            let b2 := core.option.Option.is_none record.failure
+            let o2 ←
+              if b2
+              then ok (some async_tasks.domain.Failure.Budget)
+              else ok record.failure
+            ok (async_tasks.domain.State.Retiring, o2, 0#u64, i6, false,
+              {
+                accounting.retired
+                  with
+                  results := completion.produced, buffers := i7
+              }, completion.bytes, record.wake_pending,
+              async_tasks.domain.Action.OversizedResult)
+          else
+            ok (async_tasks.domain.State.Ready, record.failure,
+              completion.inputs.returned, completion.inputs.retired,
+              record.wake_pending, accounting.retired,
+              accounting.rejected_result_bytes, accounting.wake_removed,
+              async_tasks.domain.Action.ResultReady outcome)
+      let i6 ← lift (~~~ record.retiring_inputs)
+      let i7 ← lift (i4 &&& i6)
+      ok (core.result.Result.Ok
+        {
+          record :=
+            {
+              record
+                with
+                state := s,
+                completion := (some completion),
+                outcome := (some outcome),
+                failure := o,
+                completion_closed := true,
+                returned_inputs := i3,
+                retiring_inputs := i4,
+                results := completion.produced,
+                buffers := i1,
+                wake_pending := b
+            },
+          action,
+          accounting :=
+            {
+              accounting
+                with
+                acquired :=
+                  {
+                    accounting.acquired
+                      with
+                      results := completion.produced, buffers := i2
+                  },
+                consumed_inputs := completion.inputs.consumed,
+                retirement_withdrawn_inputs := i,
+                retired := { o1 with inputs := i7 },
+                rejected_result_bytes := i5,
+                completion_accepted := true,
+                wake_removed := b1
+            }
+        })
+    | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_kernel::async_tasks::transition::cleanup::finish]:
+    Source: 'crates/noble-kernel/src/async_tasks/transition/cleanup.rs', lines 73:0-107:1 -/
+def async_tasks.transition.cleanup.finish
+  (record : async_tasks.domain.Snapshot) :
+  Result (core.result.Result async_tasks.domain.Decision
+    async_tasks.domain.Error)
+  := do
+  if record.finalized
+  then
+    let d ←
+      async_tasks.accounting.Decision.unchanged record
+        async_tasks.domain.Action.Duplicate
+    ok (core.result.Result.Ok d)
+  else
+    if record.native_stopped
+    then
+      if record.pins != 0#u64
+      then ok (core.result.Result.Err async_tasks.domain.Error.PinsOutstanding)
+      else
+        let b ← async_tasks.transition.validation.settled record
+        if b
+        then
+          match record.state with
+          | async_tasks.domain.State.Pending =>
+            ok (core.result.Result.Err async_tasks.domain.Error.InvalidRecord)
+          | async_tasks.domain.State.Ready =>
+            ok (core.result.Result.Err async_tasks.domain.Error.InvalidRecord)
+          | async_tasks.domain.State.Delivered =>
+            let decision ←
+              async_tasks.accounting.Decision.unchanged
+                { record with finalized := true }
+                async_tasks.domain.Action.DeliverySettled
+            ok (core.result.Result.Ok
+              {
+                decision
+                  with
+                  accounting :=
+                    { decision.accounting with reservation_released := true }
+              })
+          | async_tasks.domain.State.Retiring =>
+            let decision ←
+              async_tasks.accounting.Decision.unchanged
+                {
+                  record
+                    with
+                    state := async_tasks.domain.State.Retired,
+                    finalized := true
+                } async_tasks.domain.Action.RetirementCompleted
+            ok (core.result.Result.Ok
+              {
+                decision
+                  with
+                  accounting :=
+                    { decision.accounting with reservation_released := true }
+              })
+          | async_tasks.domain.State.Retired =>
+            ok (core.result.Result.Err async_tasks.domain.Error.InvalidRecord)
+        else
+          ok (core.result.Result.Err
+            async_tasks.domain.Error.CleanupOutstanding)
+    else
+      ok (core.result.Result.Err async_tasks.domain.Error.NativeStillRunning)
+
+/-- [noble_kernel::async_tasks::transition::cleanup::settle]:
+    Source: 'crates/noble-kernel/src/async_tasks/transition/cleanup.rs', lines 24:0-67:1 -/
+def async_tasks.transition.cleanup.settle
+  (record : async_tasks.domain.Snapshot)
+  (settled : async_tasks.domain.Obligations) :
+  Result (core.result.Result async_tasks.domain.Decision
+    async_tasks.domain.Error)
+  := do
+  if record.native_stopped
+  then
+    if record.pins != 0#u64
+    then ok (core.result.Result.Err async_tasks.domain.Error.PinsOutstanding)
+    else
+      match record.state with
+      | async_tasks.domain.State.Pending =>
+        ok (core.result.Result.Err async_tasks.domain.Error.InvalidCleanup)
+      | async_tasks.domain.State.Ready =>
+        let i ← lift (~~~ 2#u8)
+        let i1 ← lift (record.buffers &&& i)
+        if settled.inputs = 0#u64
+        then
+          if settled.results = 0#u64
+          then
+            if settled.buffers = 0#u8
+            then
+              ok (core.result.Result.Err
+                async_tasks.domain.Error.InvalidCleanup)
+            else
+              let i2 ← lift (~~~ record.retiring_inputs)
+              let i3 ← lift (settled.inputs &&& i2)
+              if i3 != 0#u64
+              then
+                ok (core.result.Result.Err
+                  async_tasks.domain.Error.InvalidCleanup)
+              else
+                let i4 ← lift (~~~ 0#u64)
+                let i5 ← lift (settled.results &&& i4)
+                if i5 != 0#u64
+                then
+                  ok (core.result.Result.Err
+                    async_tasks.domain.Error.InvalidCleanup)
+                else
+                  let i6 ← lift (~~~ i1)
+                  let i7 ← lift (settled.buffers &&& i6)
+                  if i7 != 0#u8
+                  then
+                    ok (core.result.Result.Err
+                      async_tasks.domain.Error.InvalidCleanup)
+                  else
+                    let i8 ← lift (~~~ settled.inputs)
+                    let i9 ← lift (record.retiring_inputs &&& i8)
+                    let i10 ← lift (~~~ settled.results)
+                    let i11 ← lift (record.results &&& i10)
+                    let i12 ← lift (~~~ settled.buffers)
+                    let i13 ← lift (record.buffers &&& i12)
+                    let decision ←
+                      async_tasks.accounting.Decision.unchanged
+                        {
+                          record
+                            with
+                            retiring_inputs := i9,
+                            results := i11,
+                            buffers := i13
+                        } async_tasks.domain.Action.CleanupSettled
+                    ok (core.result.Result.Ok
+                      {
+                        decision
+                          with
+                          accounting :=
+                            { decision.accounting with cleaned := settled }
+                      })
+          else
+            let i2 ← lift (~~~ record.retiring_inputs)
+            let i3 ← lift (settled.inputs &&& i2)
+            if i3 != 0#u64
+            then
+              ok (core.result.Result.Err
+                async_tasks.domain.Error.InvalidCleanup)
+            else
+              let i4 ← lift (~~~ 0#u64)
+              let i5 ← lift (settled.results &&& i4)
+              if i5 != 0#u64
+              then
+                ok (core.result.Result.Err
+                  async_tasks.domain.Error.InvalidCleanup)
+              else
+                let i6 ← lift (~~~ i1)
+                let i7 ← lift (settled.buffers &&& i6)
+                if i7 != 0#u8
+                then
+                  ok (core.result.Result.Err
+                    async_tasks.domain.Error.InvalidCleanup)
+                else
+                  let i8 ← lift (~~~ settled.inputs)
+                  let i9 ← lift (record.retiring_inputs &&& i8)
+                  let i10 ← lift (~~~ settled.results)
+                  let i11 ← lift (record.results &&& i10)
+                  let i12 ← lift (~~~ settled.buffers)
+                  let i13 ← lift (record.buffers &&& i12)
+                  let decision ←
+                    async_tasks.accounting.Decision.unchanged
+                      {
+                        record
+                          with
+                          retiring_inputs := i9, results := i11, buffers := i13
+                      } async_tasks.domain.Action.CleanupSettled
+                  ok (core.result.Result.Ok
+                    {
+                      decision
+                        with
+                        accounting :=
+                          { decision.accounting with cleaned := settled }
+                    })
+        else
+          let i2 ← lift (~~~ record.retiring_inputs)
+          let i3 ← lift (settled.inputs &&& i2)
+          if i3 != 0#u64
+          then
+            ok (core.result.Result.Err async_tasks.domain.Error.InvalidCleanup)
+          else
+            let i4 ← lift (~~~ 0#u64)
+            let i5 ← lift (settled.results &&& i4)
+            if i5 != 0#u64
+            then
+              ok (core.result.Result.Err
+                async_tasks.domain.Error.InvalidCleanup)
+            else
+              let i6 ← lift (~~~ i1)
+              let i7 ← lift (settled.buffers &&& i6)
+              if i7 != 0#u8
+              then
+                ok (core.result.Result.Err
+                  async_tasks.domain.Error.InvalidCleanup)
+              else
+                let i8 ← lift (~~~ settled.inputs)
+                let i9 ← lift (record.retiring_inputs &&& i8)
+                let i10 ← lift (~~~ settled.results)
+                let i11 ← lift (record.results &&& i10)
+                let i12 ← lift (~~~ settled.buffers)
+                let i13 ← lift (record.buffers &&& i12)
+                let decision ←
+                  async_tasks.accounting.Decision.unchanged
+                    {
+                      record
+                        with
+                        retiring_inputs := i9, results := i11, buffers := i13
+                    } async_tasks.domain.Action.CleanupSettled
+                ok (core.result.Result.Ok
+                  {
+                    decision
+                      with
+                      accounting :=
+                        { decision.accounting with cleaned := settled }
+                  })
+      | async_tasks.domain.State.Delivered =>
+        if settled.inputs = 0#u64
+        then
+          if settled.results = 0#u64
+          then
+            if settled.buffers = 0#u8
+            then
+              ok (core.result.Result.Err
+                async_tasks.domain.Error.InvalidCleanup)
+            else
+              let i ← lift (~~~ record.retiring_inputs)
+              let i1 ← lift (settled.inputs &&& i)
+              if i1 != 0#u64
+              then
+                ok (core.result.Result.Err
+                  async_tasks.domain.Error.InvalidCleanup)
+              else
+                let i2 ← lift (~~~ record.results)
+                let i3 ← lift (settled.results &&& i2)
+                if i3 != 0#u64
+                then
+                  ok (core.result.Result.Err
+                    async_tasks.domain.Error.InvalidCleanup)
+                else
+                  let i4 ← lift (~~~ record.buffers)
+                  let i5 ← lift (settled.buffers &&& i4)
+                  if i5 != 0#u8
+                  then
+                    ok (core.result.Result.Err
+                      async_tasks.domain.Error.InvalidCleanup)
+                  else
+                    let i6 ← lift (~~~ settled.inputs)
+                    let i7 ← lift (record.retiring_inputs &&& i6)
+                    let i8 ← lift (~~~ settled.results)
+                    let i9 ← lift (record.results &&& i8)
+                    let i10 ← lift (~~~ settled.buffers)
+                    let i11 ← lift (record.buffers &&& i10)
+                    let decision ←
+                      async_tasks.accounting.Decision.unchanged
+                        {
+                          record
+                            with
+                            retiring_inputs := i7,
+                            results := i9,
+                            buffers := i11
+                        } async_tasks.domain.Action.CleanupSettled
+                    ok (core.result.Result.Ok
+                      {
+                        decision
+                          with
+                          accounting :=
+                            { decision.accounting with cleaned := settled }
+                      })
+          else
+            let i ← lift (~~~ record.retiring_inputs)
+            let i1 ← lift (settled.inputs &&& i)
+            if i1 != 0#u64
+            then
+              ok (core.result.Result.Err
+                async_tasks.domain.Error.InvalidCleanup)
+            else
+              let i2 ← lift (~~~ record.results)
+              let i3 ← lift (settled.results &&& i2)
+              if i3 != 0#u64
+              then
+                ok (core.result.Result.Err
+                  async_tasks.domain.Error.InvalidCleanup)
+              else
+                let i4 ← lift (~~~ record.buffers)
+                let i5 ← lift (settled.buffers &&& i4)
+                if i5 != 0#u8
+                then
+                  ok (core.result.Result.Err
+                    async_tasks.domain.Error.InvalidCleanup)
+                else
+                  let i6 ← lift (~~~ settled.inputs)
+                  let i7 ← lift (record.retiring_inputs &&& i6)
+                  let i8 ← lift (~~~ settled.results)
+                  let i9 ← lift (record.results &&& i8)
+                  let i10 ← lift (~~~ settled.buffers)
+                  let i11 ← lift (record.buffers &&& i10)
+                  let decision ←
+                    async_tasks.accounting.Decision.unchanged
+                      {
+                        record
+                          with
+                          retiring_inputs := i7, results := i9, buffers := i11
+                      } async_tasks.domain.Action.CleanupSettled
+                  ok (core.result.Result.Ok
+                    {
+                      decision
+                        with
+                        accounting :=
+                          { decision.accounting with cleaned := settled }
+                    })
+        else
+          let i ← lift (~~~ record.retiring_inputs)
+          let i1 ← lift (settled.inputs &&& i)
+          if i1 != 0#u64
+          then
+            ok (core.result.Result.Err async_tasks.domain.Error.InvalidCleanup)
+          else
+            let i2 ← lift (~~~ record.results)
+            let i3 ← lift (settled.results &&& i2)
+            if i3 != 0#u64
+            then
+              ok (core.result.Result.Err
+                async_tasks.domain.Error.InvalidCleanup)
+            else
+              let i4 ← lift (~~~ record.buffers)
+              let i5 ← lift (settled.buffers &&& i4)
+              if i5 != 0#u8
+              then
+                ok (core.result.Result.Err
+                  async_tasks.domain.Error.InvalidCleanup)
+              else
+                let i6 ← lift (~~~ settled.inputs)
+                let i7 ← lift (record.retiring_inputs &&& i6)
+                let i8 ← lift (~~~ settled.results)
+                let i9 ← lift (record.results &&& i8)
+                let i10 ← lift (~~~ settled.buffers)
+                let i11 ← lift (record.buffers &&& i10)
+                let decision ←
+                  async_tasks.accounting.Decision.unchanged
+                    {
+                      record
+                        with
+                        retiring_inputs := i7, results := i9, buffers := i11
+                    } async_tasks.domain.Action.CleanupSettled
+                ok (core.result.Result.Ok
+                  {
+                    decision
+                      with
+                      accounting :=
+                        { decision.accounting with cleaned := settled }
+                  })
+      | async_tasks.domain.State.Retiring =>
+        if settled.inputs = 0#u64
+        then
+          if settled.results = 0#u64
+          then
+            if settled.buffers = 0#u8
+            then
+              ok (core.result.Result.Err
+                async_tasks.domain.Error.InvalidCleanup)
+            else
+              let i ← lift (~~~ record.retiring_inputs)
+              let i1 ← lift (settled.inputs &&& i)
+              if i1 != 0#u64
+              then
+                ok (core.result.Result.Err
+                  async_tasks.domain.Error.InvalidCleanup)
+              else
+                let i2 ← lift (~~~ record.results)
+                let i3 ← lift (settled.results &&& i2)
+                if i3 != 0#u64
+                then
+                  ok (core.result.Result.Err
+                    async_tasks.domain.Error.InvalidCleanup)
+                else
+                  let i4 ← lift (~~~ record.buffers)
+                  let i5 ← lift (settled.buffers &&& i4)
+                  if i5 != 0#u8
+                  then
+                    ok (core.result.Result.Err
+                      async_tasks.domain.Error.InvalidCleanup)
+                  else
+                    let i6 ← lift (~~~ settled.inputs)
+                    let i7 ← lift (record.retiring_inputs &&& i6)
+                    let i8 ← lift (~~~ settled.results)
+                    let i9 ← lift (record.results &&& i8)
+                    let i10 ← lift (~~~ settled.buffers)
+                    let i11 ← lift (record.buffers &&& i10)
+                    let decision ←
+                      async_tasks.accounting.Decision.unchanged
+                        {
+                          record
+                            with
+                            retiring_inputs := i7,
+                            results := i9,
+                            buffers := i11
+                        } async_tasks.domain.Action.CleanupSettled
+                    ok (core.result.Result.Ok
+                      {
+                        decision
+                          with
+                          accounting :=
+                            { decision.accounting with cleaned := settled }
+                      })
+          else
+            let i ← lift (~~~ record.retiring_inputs)
+            let i1 ← lift (settled.inputs &&& i)
+            if i1 != 0#u64
+            then
+              ok (core.result.Result.Err
+                async_tasks.domain.Error.InvalidCleanup)
+            else
+              let i2 ← lift (~~~ record.results)
+              let i3 ← lift (settled.results &&& i2)
+              if i3 != 0#u64
+              then
+                ok (core.result.Result.Err
+                  async_tasks.domain.Error.InvalidCleanup)
+              else
+                let i4 ← lift (~~~ record.buffers)
+                let i5 ← lift (settled.buffers &&& i4)
+                if i5 != 0#u8
+                then
+                  ok (core.result.Result.Err
+                    async_tasks.domain.Error.InvalidCleanup)
+                else
+                  let i6 ← lift (~~~ settled.inputs)
+                  let i7 ← lift (record.retiring_inputs &&& i6)
+                  let i8 ← lift (~~~ settled.results)
+                  let i9 ← lift (record.results &&& i8)
+                  let i10 ← lift (~~~ settled.buffers)
+                  let i11 ← lift (record.buffers &&& i10)
+                  let decision ←
+                    async_tasks.accounting.Decision.unchanged
+                      {
+                        record
+                          with
+                          retiring_inputs := i7, results := i9, buffers := i11
+                      } async_tasks.domain.Action.CleanupSettled
+                  ok (core.result.Result.Ok
+                    {
+                      decision
+                        with
+                        accounting :=
+                          { decision.accounting with cleaned := settled }
+                    })
+        else
+          let i ← lift (~~~ record.retiring_inputs)
+          let i1 ← lift (settled.inputs &&& i)
+          if i1 != 0#u64
+          then
+            ok (core.result.Result.Err async_tasks.domain.Error.InvalidCleanup)
+          else
+            let i2 ← lift (~~~ record.results)
+            let i3 ← lift (settled.results &&& i2)
+            if i3 != 0#u64
+            then
+              ok (core.result.Result.Err
+                async_tasks.domain.Error.InvalidCleanup)
+            else
+              let i4 ← lift (~~~ record.buffers)
+              let i5 ← lift (settled.buffers &&& i4)
+              if i5 != 0#u8
+              then
+                ok (core.result.Result.Err
+                  async_tasks.domain.Error.InvalidCleanup)
+              else
+                let i6 ← lift (~~~ settled.inputs)
+                let i7 ← lift (record.retiring_inputs &&& i6)
+                let i8 ← lift (~~~ settled.results)
+                let i9 ← lift (record.results &&& i8)
+                let i10 ← lift (~~~ settled.buffers)
+                let i11 ← lift (record.buffers &&& i10)
+                let decision ←
+                  async_tasks.accounting.Decision.unchanged
+                    {
+                      record
+                        with
+                        retiring_inputs := i7, results := i9, buffers := i11
+                    } async_tasks.domain.Action.CleanupSettled
+                ok (core.result.Result.Ok
+                  {
+                    decision
+                      with
+                      accounting :=
+                        { decision.accounting with cleaned := settled }
+                  })
+      | async_tasks.domain.State.Retired =>
+        ok (core.result.Result.Err async_tasks.domain.Error.InvalidCleanup)
+  else ok (core.result.Result.Err async_tasks.domain.Error.NativeStillRunning)
+
+/-- [noble_kernel::async_tasks::transition::cleanup::pins]:
+    Source: 'crates/noble-kernel/src/async_tasks/transition/cleanup.rs', lines 1:0-16:1 -/
+def async_tasks.transition.cleanup.pins
+  (record : async_tasks.domain.Snapshot) (pins : Std.U64) :
+  Result (core.result.Result async_tasks.domain.Decision
+    async_tasks.domain.Error)
+  := do
+  if record.native_stopped
+  then
+    if pins = 0#u64
+    then ok (core.result.Result.Err async_tasks.domain.Error.InvalidPins)
+    else
+      let i ← lift (~~~ record.pins)
+      let i1 ← lift (pins &&& i)
+      if i1 != 0#u64
+      then ok (core.result.Result.Err async_tasks.domain.Error.InvalidPins)
+      else
+        let i2 ← lift (~~~ pins)
+        let i3 ← lift (record.pins &&& i2)
+        let decision ←
+          async_tasks.accounting.Decision.unchanged { record with pins := i3 }
+            async_tasks.domain.Action.PinsSettled
+        ok (core.result.Result.Ok
+          {
+            decision
+              with
+              accounting := { decision.accounting with pins_released := pins }
+          })
+  else ok (core.result.Result.Err async_tasks.domain.Error.NativeStillRunning)
+
+/-- [noble_kernel::async_tasks::transition::transition]:
+    Source: 'crates/noble-kernel/src/async_tasks/transition.rs', lines 24:0-53:1
+    Visibility: public -/
+def async_tasks.transition.transition
+  (record : async_tasks.domain.Snapshot) (claim : async_tasks.domain.Handle)
+  (event : async_tasks.domain.Event) :
+  Result (core.result.Result async_tasks.domain.Decision
+    async_tasks.domain.Error)
+  := do
+  let r ← async_tasks.transition.validation.record record
+  match r with
+  | core.result.Result.Ok _ =>
+    let r1 ← async_tasks.transition.validation.handle record.handle claim
+    match r1 with
+    | core.result.Result.Ok _ =>
+      let r2 ← async_tasks.transition.validation.native record.native event
+      match r2 with
+      | core.result.Result.Ok _ =>
+        let r3 ← async_tasks.schema.classify record.state event
+        match r3 with
+        | core.result.Result.Ok value =>
+          match value with
+          | async_tasks.schema.Rule.Inspect =>
+            let d ←
+              async_tasks.accounting.Decision.unchanged record
+                async_tasks.domain.Action.Inspected
+            ok (core.result.Result.Ok d)
+          | async_tasks.schema.Rule.Complete outcome completion =>
+            async_tasks.transition.completion.complete record outcome
+              completion
+          | async_tasks.schema.Rule.Deliver =>
+            let d ← async_tasks.transition.lifecycle.deliver record
+            ok (core.result.Result.Ok d)
+          | async_tasks.schema.Rule.Retire reason =>
+            let d ← async_tasks.transition.lifecycle.retire record reason
+            ok (core.result.Result.Ok d)
+          | async_tasks.schema.Rule.ObserveStop =>
+            let d ← async_tasks.transition.lifecycle.native_stop record
+            ok (core.result.Result.Ok d)
+          | async_tasks.schema.Rule.SettlePins pins =>
+            async_tasks.transition.cleanup.pins record pins
+          | async_tasks.schema.Rule.Cleanup obligations =>
+            async_tasks.transition.cleanup.settle record obligations
+          | async_tasks.schema.Rule.Wake =>
+            let d ← async_tasks.transition.lifecycle.wake record
+            ok (core.result.Result.Ok d)
+          | async_tasks.schema.Rule.TakeWake =>
+            async_tasks.transition.lifecycle.take_wake record
+          | async_tasks.schema.Rule.Finish =>
+            async_tasks.transition.cleanup.finish record
+          | async_tasks.schema.Rule.Duplicate =>
+            let d ←
+              async_tasks.accounting.Decision.unchanged record
+                async_tasks.domain.Action.Duplicate
+            ok (core.result.Result.Ok d)
+        | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+      | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+    | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_kernel::async_tasks::table::{noble_kernel::async_tasks::table::Table}::decide]:
+    Source: 'crates/noble-kernel/src/async_tasks/table.rs', lines 43:4-55:5 -/
+def async_tasks.table.Table.decide
+  (self : async_tasks.table.Table) (claim : async_tasks.domain.Handle)
+  (event : async_tasks.domain.Event) :
+  Result (core.result.Result async_tasks.domain.Decision
+    async_tasks.domain.Error)
+  := do
+  let i := claim.table
+  let i1 := self.id
+  if i != i1
+  then ok (core.result.Result.Err async_tasks.domain.Error.InvalidHandle)
+  else
+    let s := alloc.vec.Vec.deref self.records
+    let o ←
+      core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice
+        async_tasks.domain.Snapshot) s claim.slot
+    match o with
+    | none =>
+      ok (core.result.Result.Err async_tasks.domain.Error.InvalidHandle)
+    | some record => async_tasks.transition.transition record claim event
+
+/-- [noble_kernel::async_tasks::table::{noble_kernel::async_tasks::table::Table}::apply]:
+    Source: 'crates/noble-kernel/src/async_tasks/table.rs', lines 61:4-70:5 -/
+def async_tasks.table.Table.apply
+  (self : async_tasks.table.Table) (claim : async_tasks.domain.Handle)
+  (event : async_tasks.domain.Event) :
+  Result ((core.result.Result async_tasks.domain.Decision
+    async_tasks.domain.Error) × async_tasks.table.Table)
+  := do
+  let r ← async_tasks.table.Table.decide self claim event
+  match r with
+  | core.result.Result.Ok value =>
+    let (_, index_mut_back) ←
+      alloc.vec.Vec.index_mut (core.slice.index.SliceIndexUsizeSlice
+        async_tasks.domain.Snapshot) self.records claim.slot
+    let v := index_mut_back value.record
+    ok (r, { self with records := v })
+  | core.result.Result.Err _ => ok (r, self)
+
+/-- [noble_kernel::async_tasks::table::callbacks::{noble_kernel::async_tasks::table::Table}::complete]:
+    Source: 'crates/noble-kernel/src/async_tasks/table/callbacks.rs', lines 15:4-34:5
+    Visibility: public -/
+def async_tasks.table.callbacks.Table.complete
+  (self : async_tasks.table.Table) (callback : async_tasks.domain.Callback)
+  (outcome : async_tasks.domain.Outcome)
+  (completion : async_tasks.domain.Completion) :
+  Result ((core.result.Result async_tasks.domain.Decision
+    async_tasks.domain.Error) × async_tasks.table.Table)
+  := do
+  let event ←
+    match outcome with
+    | async_tasks.domain.Outcome.Success =>
+      ok (async_tasks.domain.Event.CompleteSuccess callback.native completion)
+    | async_tasks.domain.Outcome.DomainError =>
+      ok (async_tasks.domain.Event.CompleteDomainError callback.native
+        completion)
+  async_tasks.table.Table.apply self callback.task event
+
+/-- [noble_kernel::async_tasks::table::callbacks::{noble_kernel::async_tasks::table::Table}::native_stopped]:
+    Source: 'crates/noble-kernel/src/async_tasks/table/callbacks.rs', lines 43:4-53:5
+    Visibility: public -/
+def async_tasks.table.callbacks.Table.native_stopped
+  (self : async_tasks.table.Table) (callback : async_tasks.domain.Callback) :
+  Result ((core.result.Result async_tasks.domain.Decision
+    async_tasks.domain.Error) × async_tasks.table.Table)
+  := do
+  async_tasks.table.Table.apply self callback.task
+    (async_tasks.domain.Event.NativeStopped callback.native)
+
+/-- [noble_kernel::async_tasks::table::callbacks::{noble_kernel::async_tasks::table::Table}::settle_pins]:
+    Source: 'crates/noble-kernel/src/async_tasks/table/callbacks.rs', lines 61:4-73:5
+    Visibility: public -/
+def async_tasks.table.callbacks.Table.settle_pins
+  (self : async_tasks.table.Table) (callback : async_tasks.domain.Callback)
+  (pins : Std.U64) :
+  Result ((core.result.Result async_tasks.domain.Decision
+    async_tasks.domain.Error) × async_tasks.table.Table)
+  := do
+  async_tasks.table.Table.apply self callback.task
+    (async_tasks.domain.Event.SettlePins callback.native pins)
+
+/-- [noble_kernel::async_tasks::table::callbacks::{noble_kernel::async_tasks::table::Table}::wake]:
+    Source: 'crates/noble-kernel/src/async_tasks/table/callbacks.rs', lines 81:4-91:5
+    Visibility: public -/
+def async_tasks.table.callbacks.Table.wake
+  (self : async_tasks.table.Table) (callback : async_tasks.domain.Callback) :
+  Result ((core.result.Result async_tasks.domain.Decision
+    async_tasks.domain.Error) × async_tasks.table.Table)
+  := do
+  async_tasks.table.Table.apply self callback.task
+    (async_tasks.domain.Event.Wake callback.native)
+
+/-- [noble_kernel::async_tasks::table::inspection::{noble_kernel::async_tasks::table::Table}::inspect]:
+    Source: 'crates/noble-kernel/src/async_tasks/table/inspection.rs', lines 3:4-15:5
+    Visibility: public -/
+def async_tasks.table.inspection.Table.inspect
+  (self : async_tasks.table.Table) (handle : async_tasks.domain.Handle)
+  (context : resources.Context) :
+  Result (core.result.Result async_tasks.domain.Snapshot
+    async_tasks.domain.Error)
+  := do
+  let i := handle.context
+  if i != context
+  then ok (core.result.Result.Err async_tasks.domain.Error.WrongContext)
+  else
+    let r ←
+      async_tasks.table.Table.decide self handle
+        async_tasks.domain.Event.Inspect
+    match r with
+    | core.result.Result.Ok decision =>
+      ok (core.result.Result.Ok decision.record)
+    | core.result.Result.Err error => ok (core.result.Result.Err error)
+
+/-- [noble_kernel::async_tasks::table::inspection::{noble_kernel::async_tasks::table::Table}::snapshot]:
+    Source: 'crates/noble-kernel/src/async_tasks/table/inspection.rs', lines 22:4-24:5
+    Visibility: public -/
+def async_tasks.table.inspection.Table.snapshot
+  (self : async_tasks.table.Table) (slot : Std.Usize) :
+  Result (Option async_tasks.domain.Snapshot)
+  := do
+  let s := alloc.vec.Vec.deref self.records
+  let o ←
+    core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice
+      async_tasks.domain.Snapshot) s slot
+  core.option.OptionShared0T.copied
+    async_tasks.domain.Snapshot.Insts.CoreMarkerCopy o
+
+/-- [noble_kernel::async_tasks::table::ownership::{noble_kernel::async_tasks::table::Table}::consume]:
+    Source: 'crates/noble-kernel/src/async_tasks/table/ownership.rs', lines 39:4-56:5 -/
+def async_tasks.table.ownership.Table.consume
+  (self : async_tasks.table.Table) (task : async_tasks.Task)
+  (context : resources.Context) (event : async_tasks.domain.Event) :
+  Result ((core.result.Result async_tasks.domain.Decision (async_tasks.Rejected
+    async_tasks.Task)) × async_tasks.table.Table)
+  := do
+  let i := task.handle.context
+  if i != context
+  then
+    ok (core.result.Result.Err
+      {
+        error := async_tasks.domain.Error.WrongContext,
+        input := { handle := task.handle }
+      }, self)
+  else
+    let (r, self1) ← async_tasks.table.Table.apply self task.handle event
+    match r with
+    | core.result.Result.Ok decision =>
+      ok (core.result.Result.Ok decision, self1)
+    | core.result.Result.Err error =>
+      ok (core.result.Result.Err { error, input := { handle := task.handle } },
+        self1)
+
+/-- [noble_kernel::async_tasks::table::ownership::{noble_kernel::async_tasks::table::Table}::deliver]:
+    Source: 'crates/noble-kernel/src/async_tasks/table/ownership.rs', lines 8:4-15:5
+    Visibility: public -/
+def async_tasks.table.ownership.Table.deliver
+  (self : async_tasks.table.Table) (task : async_tasks.Task)
+  (context : resources.Context) :
+  Result ((core.result.Result async_tasks.domain.Decision (async_tasks.Rejected
+    async_tasks.Task)) × async_tasks.table.Table)
+  := do
+  async_tasks.table.ownership.Table.consume self task context
+    async_tasks.domain.Event.Deliver
+
+/-- [noble_kernel::async_tasks::table::ownership::{noble_kernel::async_tasks::table::Table}::cancel]:
+    Source: 'crates/noble-kernel/src/async_tasks/table/ownership.rs', lines 22:4-29:5
+    Visibility: public -/
+def async_tasks.table.ownership.Table.cancel
+  (self : async_tasks.table.Table) (task : async_tasks.Task)
+  (context : resources.Context) :
+  Result ((core.result.Result async_tasks.domain.Decision (async_tasks.Rejected
+    async_tasks.Task)) × async_tasks.table.Table)
+  := do
+  async_tasks.table.ownership.Table.consume self task context
+    async_tasks.domain.Event.Cancel
+
+/-- [noble_kernel::async_tasks::table::ownership::{noble_kernel::async_tasks::table::Table}::retire]:
+    Source: 'crates/noble-kernel/src/async_tasks/table/ownership.rs', lines 68:4-81:5
+    Visibility: public -/
+def async_tasks.table.ownership.Table.retire
+  (self : async_tasks.table.Table) (handle : async_tasks.domain.Handle)
+  (failure : async_tasks.domain.Failure) :
+  Result ((core.result.Result async_tasks.domain.Decision
+    async_tasks.domain.Error) × async_tasks.table.Table)
+  := do
+  let event ←
+    match failure with
+    | async_tasks.domain.Failure.Cancelled =>
+      ok async_tasks.domain.Event.Cancel
+    | async_tasks.domain.Failure.Trap => ok async_tasks.domain.Event.Trap
+    | async_tasks.domain.Failure.Deadline =>
+      ok async_tasks.domain.Event.Deadline
+    | async_tasks.domain.Failure.Budget => ok async_tasks.domain.Event.Budget
+    | async_tasks.domain.Failure.Internal =>
+      ok async_tasks.domain.Event.InternalFailure
+  async_tasks.table.Table.apply self handle event
+
+/-- [noble_kernel::async_tasks::table::ownership::{noble_kernel::async_tasks::table::Table}::cleanup]:
+    Source: 'crates/noble-kernel/src/async_tasks/table/ownership.rs', lines 88:4-94:5
+    Visibility: public -/
+def async_tasks.table.ownership.Table.cleanup
+  (self : async_tasks.table.Table) (handle : async_tasks.domain.Handle)
+  (obligations : async_tasks.domain.Obligations) :
+  Result ((core.result.Result async_tasks.domain.Decision
+    async_tasks.domain.Error) × async_tasks.table.Table)
+  := do
+  async_tasks.table.Table.apply self handle (async_tasks.domain.Event.Cleanup
+    obligations)
+
+/-- [noble_kernel::async_tasks::table::ownership::{noble_kernel::async_tasks::table::Table}::take_wake]:
+    Source: 'crates/noble-kernel/src/async_tasks/table/ownership.rs', lines 100:4-105:5
+    Visibility: public -/
+def async_tasks.table.ownership.Table.take_wake
+  (self : async_tasks.table.Table) (handle : async_tasks.domain.Handle) :
+  Result ((core.result.Result async_tasks.domain.Decision
+    async_tasks.domain.Error) × async_tasks.table.Table)
+  := do
+  async_tasks.table.Table.apply self handle async_tasks.domain.Event.TakeWake
+
+/-- [noble_kernel::async_tasks::table::ownership::{noble_kernel::async_tasks::table::Table}::finish]:
+    Source: 'crates/noble-kernel/src/async_tasks/table/ownership.rs', lines 113:4-118:5
+    Visibility: public -/
+def async_tasks.table.ownership.Table.finish
+  (self : async_tasks.table.Table) (handle : async_tasks.domain.Handle) :
+  Result ((core.result.Result async_tasks.domain.Decision
+    async_tasks.domain.Error) × async_tasks.table.Table)
+  := do
+  async_tasks.table.Table.apply self handle async_tasks.domain.Event.Finish
+
+/-- [noble_kernel::async_tasks::table::{noble_kernel::async_tasks::table::Table}::new]:
+    Source: 'crates/noble-kernel/src/async_tasks/table.rs', lines 25:4-37:5
+    Visibility: public -/
+def async_tasks.table.Table.new
+  (id : async_tasks.domain.TableId) (limits : async_tasks.bounds.Limits) :
+  Result (core.result.Result async_tasks.table.Table async_tasks.domain.Error)
+  := do
+  let r ← async_tasks.bounds.validate_limits limits
+  match r with
+  | core.result.Result.Ok _ =>
+    let (r1, records) ←
+      alloc.vec.Vec.try_reserve_exact Global (alloc.vec.Vec.new
+        async_tasks.domain.Snapshot) limits.tasks
+    let b ← core.result.Result.is_err r1
+    if b
+    then
+      ok (core.result.Result.Err async_tasks.domain.Error.StorageUnavailable)
+    else
+      ok (core.result.Result.Ok { id, limits, records, generation := 0#u64 })
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_kernel::authority::receipts::{noble_kernel::authority::Authority}::preflight]:
     Source: 'crates/noble-kernel/src/authority/receipts.rs', lines 146:4-168:5 -/
@@ -13257,7 +19245,7 @@ def execution.Submission.Insts.CoreFmtDebug : core.fmt.Debug
 }
 
 /-- [noble_kernel::consume_budget]:
-    Source: 'crates/noble-kernel/src/lib.rs', lines 48:0-53:1
+    Source: 'crates/noble-kernel/src/lib.rs', lines 49:0-54:1
     Visibility: public -/
 def consume_budget (remaining : Std.U32) : Result BudgetOutcome := do
   let o ← lift (U32.checked_sub remaining 1#u32)
@@ -13374,37 +19362,12 @@ def resources.Context.Insts.CoreMarkerCopy : core.marker.Copy resources.Context
   cloneInst := resources.Context.Insts.CoreCloneClone
 }
 
-/-- [noble_kernel::resources::{impl core::fmt::Debug for noble_kernel::resources::Context}::fmt]:
-    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 29:22-29:27
-    Visibility: public -/
-def resources.Context.Insts.CoreFmtDebug.fmt
-  (self : resources.Context) (f : core.fmt.Formatter) :
-  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
-  := do
-  let dyn := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU64) self
-  core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Context") dyn
-
-/-- Trait implementation: [noble_kernel::resources::{impl core::fmt::Debug for noble_kernel::resources::Context}]
-    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 29:22-29:27 -/
-@[reducible]
-def resources.Context.Insts.CoreFmtDebug : core.fmt.Debug resources.Context
-  := {
-  fmt := resources.Context.Insts.CoreFmtDebug.fmt
-}
-
 /-- Trait implementation: [noble_kernel::resources::{impl core::marker::StructuralPartialEq for noble_kernel::resources::Context}]
     Source: 'crates/noble-kernel/src/resources/mod.rs', lines 29:29-29:38 -/
 @[reducible]
 def resources.Context.Insts.CoreMarkerStructuralPartialEq :
   core.marker.StructuralPartialEq resources.Context := {
 }
-
-/-- [noble_kernel::resources::{impl core::cmp::PartialEq<noble_kernel::resources::Context> for noble_kernel::resources::Context}::eq]:
-    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 29:29-29:38
-    Visibility: public -/
-def resources.Context.Insts.CoreCmpPartialEqContext.eq
-  (self : resources.Context) (other : resources.Context) : Result Bool := do
-  ok (self = other)
 
 /-- Trait implementation: [noble_kernel::resources::{impl core::cmp::PartialEq<noble_kernel::resources::Context> for noble_kernel::resources::Context}]
     Source: 'crates/noble-kernel/src/resources/mod.rs', lines 29:29-29:38 -/

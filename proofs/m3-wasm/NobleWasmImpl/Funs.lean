@@ -50,7 +50,7 @@ impl_def Slice.Insts.CoreCmpPartialEqSlice {T : Type} {U : Type}
 }
 
 /-- Trait implementation: [noble_contracts::component::{impl core::clone::Clone for noble_contracts::component::Type}]
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 15:9-15:14
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 46:9-46:14
     Name pattern: [core::clone::Clone<noble_contracts::component::Type>] -/
 @[reducible, rust_trait_impl
   "core::clone::Clone<noble_contracts::component::Type>"]
@@ -60,7 +60,7 @@ def noble_contracts.component.Type.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [noble_contracts::component::{impl core::marker::Copy for noble_contracts::component::Type}]
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 15:16-15:20
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 46:16-46:20
     Name pattern: [core::marker::Copy<noble_contracts::component::Type>] -/
 @[reducible, rust_trait_impl
   "core::marker::Copy<noble_contracts::component::Type>"]
@@ -526,7 +526,7 @@ def component.abi.Lane.write
     output.Buffer.append buffer s
 
 /-- [noble_wasm::component::abi::lane_count]:
-    Source: 'crates/noble-wasm/src/component/abi.rs', lines 22:0-31:1 -/
+    Source: 'crates/noble-wasm/src/component/abi.rs', lines 22:0-35:1 -/
 def component.abi.lane_count
   (ty : noble_contracts.component.Type) : Result Std.Usize := do
   match ty with
@@ -535,11 +535,15 @@ def component.abi.lane_count
   | noble_contracts.component.Type.String => ok 2#usize
   | noble_contracts.component.Type.Bytes => ok 2#usize
   | noble_contracts.component.Type.ResultS64String => ok 3#usize
+  | noble_contracts.component.Type.ResultBytesString => ok 3#usize
+  | noble_contracts.component.Type.StreamU8 => ok 1#usize
+  | noble_contracts.component.Type.FutureS64 => ok 1#usize
+  | noble_contracts.component.Type.FutureResultS64String => ok 1#usize
   | noble_contracts.component.Type.Own _ => ok 1#usize
   | noble_contracts.component.Type.Borrow _ => ok 1#usize
 
 /-- [noble_wasm::component::abi::lane]:
-    Source: 'crates/noble-wasm/src/component/abi.rs', lines 33:0-50:1 -/
+    Source: 'crates/noble-wasm/src/component/abi.rs', lines 37:0-58:1 -/
 def component.abi.lane
   (ty : noble_contracts.component.Type) («at» : Std.Usize) :
   Result (core.result.Result component.abi.Lane Diagnostic)
@@ -561,13 +565,21 @@ def component.abi.lane
       if «at» = 1#usize
       then ok (core.result.Result.Ok component.abi.Lane.I64)
       else ok (core.result.Result.Ok component.abi.Lane.I32)
+    | noble_contracts.component.Type.ResultBytesString =>
+      ok (core.result.Result.Ok component.abi.Lane.I32)
+    | noble_contracts.component.Type.StreamU8 =>
+      ok (core.result.Result.Ok component.abi.Lane.I32)
+    | noble_contracts.component.Type.FutureS64 =>
+      ok (core.result.Result.Ok component.abi.Lane.I32)
+    | noble_contracts.component.Type.FutureResultS64String =>
+      ok (core.result.Result.Ok component.abi.Lane.I32)
     | noble_contracts.component.Type.Own _ =>
       ok (core.result.Result.Ok component.abi.Lane.I32)
     | noble_contracts.component.Type.Borrow _ =>
       ok (core.result.Result.Ok component.abi.Lane.I32)
 
 /-- [noble_wasm::component::abi::value_type]:
-    Source: 'crates/noble-wasm/src/component/abi.rs', lines 52:0-85:1 -/
+    Source: 'crates/noble-wasm/src/component/abi.rs', lines 60:0-98:1 -/
 def component.abi.value_type
   (ty : noble_kernel.types.Ty) :
   Result (core.result.Result (Option noble_contracts.component.Type)
@@ -594,20 +606,53 @@ def component.abi.value_type
   | noble_kernel.types.Ty.SumType ok1 error =>
     let b ←
       core.cmp.PartialEq.ne.trait_default
-        noble_kernel.types.Ty.Insts.CoreCmpPartialEqTy ok1
-        noble_kernel.types.Ty.I64Type
+        noble_kernel.types.Ty.Insts.CoreCmpPartialEqTy error
+        noble_kernel.types.Ty.TextType
     if b
     then ok (core.result.Result.Err Diagnostic.Unsupported)
     else
       let b1 ←
-        core.cmp.PartialEq.ne.trait_default
-          noble_kernel.types.Ty.Insts.CoreCmpPartialEqTy error
-          noble_kernel.types.Ty.TextType
+        noble_kernel.types.Ty.Insts.CoreCmpPartialEqTy.eq ok1
+          noble_kernel.types.Ty.I64Type
       if b1
-      then ok (core.result.Result.Err Diagnostic.Unsupported)
-      else
+      then
         ok (core.result.Result.Ok (some
           noble_contracts.component.Type.ResultS64String))
+      else
+        match ok1 with
+        | noble_kernel.types.Ty.UnitType =>
+          ok (core.result.Result.Err Diagnostic.Unsupported)
+        | noble_kernel.types.Ty.BoolType =>
+          ok (core.result.Result.Err Diagnostic.Unsupported)
+        | noble_kernel.types.Ty.I64Type =>
+          ok (core.result.Result.Err Diagnostic.Unsupported)
+        | noble_kernel.types.Ty.TextType =>
+          ok (core.result.Result.Err Diagnostic.Unsupported)
+        | noble_kernel.types.Ty.SyntaxType =>
+          ok (core.result.Result.Err Diagnostic.Unsupported)
+        | noble_kernel.types.Ty.ContractType =>
+          ok (core.result.Result.Err Diagnostic.Unsupported)
+        | noble_kernel.types.Ty.EvidenceType =>
+          ok (core.result.Result.Err Diagnostic.Unsupported)
+        | noble_kernel.types.Ty.CertifiedType =>
+          ok (core.result.Result.Err Diagnostic.Unsupported)
+        | noble_kernel.types.Ty.PairType _ _ =>
+          ok (core.result.Result.Err Diagnostic.Unsupported)
+        | noble_kernel.types.Ty.SumType _ _ =>
+          ok (core.result.Result.Err Diagnostic.Unsupported)
+        | noble_kernel.types.Ty.ListType item =>
+          let b2 ←
+            noble_kernel.types.Ty.Insts.CoreCmpPartialEqTy.eq item
+              noble_kernel.types.Ty.I64Type
+          if b2
+          then
+            ok (core.result.Result.Ok (some
+              noble_contracts.component.Type.ResultBytesString))
+          else ok (core.result.Result.Err Diagnostic.Unsupported)
+        | noble_kernel.types.Ty.ProgramType _ _ _ =>
+          ok (core.result.Result.Err Diagnostic.Unsupported)
+        | noble_kernel.types.Ty.ResourceType _ =>
+          ok (core.result.Result.Err Diagnostic.Unsupported)
   | noble_kernel.types.Ty.ListType item =>
     let b ←
       core.cmp.PartialEq.ne.trait_default
@@ -622,7 +667,7 @@ def component.abi.value_type
     ok (core.result.Result.Ok (some (noble_contracts.component.Type.Own kind)))
 
 /-- [noble_wasm::component::abi::memory_layout]:
-    Source: 'crates/noble-wasm/src/component/abi.rs', lines 87:0-99:1 -/
+    Source: 'crates/noble-wasm/src/component/abi.rs', lines 100:0-115:1 -/
 def component.abi.memory_layout
   (ty : noble_contracts.component.Type) : Result (Std.U32 × Std.U32) := do
   match ty with
@@ -631,16 +676,168 @@ def component.abi.memory_layout
   | noble_contracts.component.Type.String => ok (4#u32, 8#u32)
   | noble_contracts.component.Type.Bytes => ok (4#u32, 8#u32)
   | noble_contracts.component.Type.ResultS64String => ok (8#u32, 16#u32)
+  | noble_contracts.component.Type.ResultBytesString => ok (4#u32, 12#u32)
+  | noble_contracts.component.Type.StreamU8 => ok (4#u32, 4#u32)
+  | noble_contracts.component.Type.FutureS64 => ok (4#u32, 4#u32)
+  | noble_contracts.component.Type.FutureResultS64String => ok (4#u32, 4#u32)
   | noble_contracts.component.Type.Own _ => ok (4#u32, 4#u32)
   | noble_contracts.component.Type.Borrow _ => ok (4#u32, 4#u32)
 
+/-- [noble_wasm::component::abi::indirect_parameters::{impl core::ops::function::FnMut<(usize, &'_ noble_contracts::component::Type), usize> for noble_wasm::component::abi::indirect_parameters::{closure}}::call_mut]:
+    Source: 'crates/noble-wasm/src/component/abi.rs', lines 124:26-124:75 -/
+def
+  component.abi.indirect_parameters.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTypeUsize.call_mut
+  (c : component.abi.indirect_parameters.closure)
+  (tupled_args : (Std.Usize × noble_contracts.component.Type)) :
+  Result (Std.Usize × component.abi.indirect_parameters.closure)
+  := do
+  let (count, ty) := tupled_args
+  let i ← component.abi.lane_count ty
+  let i1 ← lift (core.num.Usize.saturating_add count i)
+  ok (i1, c)
+
+/-- [noble_wasm::component::abi::indirect_parameters::{impl core::ops::function::FnOnce<(usize, &'_ noble_contracts::component::Type), usize> for noble_wasm::component::abi::indirect_parameters::{closure}}::call_once]:
+    Source: 'crates/noble-wasm/src/component/abi.rs', lines 124:26-124:75 -/
+def
+  component.abi.indirect_parameters.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTypeUsize.call_once
+  (c : component.abi.indirect_parameters.closure)
+  (p : (Std.Usize × noble_contracts.component.Type)) :
+  Result Std.Usize
+  := do
+  let (i, _) ←
+    component.abi.indirect_parameters.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTypeUsize.call_mut
+      c p
+  ok i
+
+/-- Trait implementation: [noble_wasm::component::abi::indirect_parameters::{impl core::ops::function::FnOnce<(usize, &'_ noble_contracts::component::Type), usize> for noble_wasm::component::abi::indirect_parameters::{closure}}]
+    Source: 'crates/noble-wasm/src/component/abi.rs', lines 124:26-124:75 -/
+@[reducible]
+def
+  component.abi.indirect_parameters.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTypeUsize
+  : core.ops.function.FnOnce component.abi.indirect_parameters.closure
+  (Std.Usize × noble_contracts.component.Type) Std.Usize := {
+  call_once :=
+    component.abi.indirect_parameters.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTypeUsize.call_once
+}
+
+/-- Trait implementation: [noble_wasm::component::abi::indirect_parameters::{impl core::ops::function::FnMut<(usize, &'_ noble_contracts::component::Type), usize> for noble_wasm::component::abi::indirect_parameters::{closure}}]
+    Source: 'crates/noble-wasm/src/component/abi.rs', lines 124:26-124:75 -/
+@[reducible]
+def
+  component.abi.indirect_parameters.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTypeUsize
+  : core.ops.function.FnMut component.abi.indirect_parameters.closure
+  (Std.Usize × noble_contracts.component.Type) Std.Usize := {
+  FnOnceInst :=
+    component.abi.indirect_parameters.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTypeUsize
+  call_mut :=
+    component.abi.indirect_parameters.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTypeUsize.call_mut
+}
+
+/-- [noble_wasm::component::abi::indirect_parameters]:
+    Source: 'crates/noble-wasm/src/component/abi.rs', lines 119:0-126:1 -/
+def component.abi.indirect_parameters
+  (operation : noble_contracts.component.Operation) : Result Bool := do
+  if operation.asynchronous
+  then
+    let s := alloc.vec.Vec.deref operation.parameters
+    let i ← core.slice.Slice.iter s
+    let i1 ←
+      core.slice.iter.Iter.Insts.CoreIterTraitsIteratorIteratorSharedAT.fold
+        component.abi.indirect_parameters.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTypeUsize
+        i 0#usize ()
+    ok (i1 > 4#usize)
+  else ok false
+
+/-- [noble_wasm::component::abi::align_to]:
+    Source: 'crates/noble-wasm/src/component/abi.rs', lines 164:0-170:1 -/
+def component.abi.align_to
+  (offset_bytes : Std.U32) (alignment : Std.U32) :
+  Result (core.result.Result Std.U32 Diagnostic)
+  := do
+  let mask ← lift (core.num.U32.saturating_sub alignment 1#u32)
+  let o ← lift (U32.checked_add offset_bytes mask)
+  match o with
+  | none => ok (core.result.Result.Err Diagnostic.Exhausted)
+  | some value =>
+    let i ← lift (~~~ mask)
+    let i1 ← lift (value &&& i)
+    ok (core.result.Result.Ok i1)
+
+/-- [noble_wasm::component::abi::tuple_layout]: loop body 0:
+    Source: 'crates/noble-wasm/src/component/abi.rs', lines 140:4-153:5 -/
+@[rust_loop_body]
+def component.abi.tuple_layout_loop.body
+  (types : Slice noble_contracts.component.Type) (count : Std.Usize)
+  (alignment : Std.U32) (size_bytes : Std.U32) («at» : Std.Usize)
+  (failure : Option Diagnostic) :
+  Result (ControlFlow (Std.U32 × Std.U32 × Std.Usize × (Option Diagnostic))
+    (Std.U32 × Std.U32 × (Option Diagnostic)))
+  := do
+  if «at» < count
+  then
+    let b := core.option.Option.is_none failure
+    if b
+    then
+      let t ← Slice.index_usize types «at»
+      let (align, bytes) ← component.abi.memory_layout t
+      let alignment1 ← if align > alignment
+                         then ok align
+                         else ok alignment
+      let r ← component.abi.align_to size_bytes align
+      let (size_bytes1, failure1) ←
+        match r with
+        | core.result.Result.Ok aligned =>
+          do
+          let o ← lift (U32.checked_add aligned bytes)
+          match o with
+          | none => ok (size_bytes, some Diagnostic.Exhausted)
+          | some next => ok (next, failure)
+        | core.result.Result.Err error => ok (size_bytes, some error)
+      let at1 ← lift (core.num.Usize.saturating_add «at» 1#usize)
+      ok (cont (alignment1, size_bytes1, at1, failure1))
+    else ok (done (alignment, size_bytes, failure))
+  else ok (done (alignment, size_bytes, failure))
+
+/-- [noble_wasm::component::abi::tuple_layout]: loop 0:
+    Source: 'crates/noble-wasm/src/component/abi.rs', lines 140:4-153:5 -/
+@[rust_loop]
+def component.abi.tuple_layout_loop
+  (types : Slice noble_contracts.component.Type) (alignment : Std.U32)
+  (size_bytes : Std.U32) («at» : Std.Usize) (failure : Option Diagnostic)
+  (count : Std.Usize) :
+  Result (Std.U32 × Std.U32 × (Option Diagnostic))
+  := do
+  loop
+    (fun (alignment1, size_bytes1, at1, failure1) =>
+      component.abi.tuple_layout_loop.body types count alignment1 size_bytes1
+      at1 failure1)
+    (alignment, size_bytes, «at», failure)
+
+/-- [noble_wasm::component::abi::tuple_layout]:
+    Source: 'crates/noble-wasm/src/component/abi.rs', lines 132:0-158:1 -/
+def component.abi.tuple_layout
+  (types : Slice noble_contracts.component.Type) :
+  Result (core.result.Result (Std.U32 × Std.U32) Diagnostic)
+  := do
+  let count := Slice.len types
+  let (alignment, size_bytes, failure) ←
+    component.abi.tuple_layout_loop types 1#u32 0#u32 0#usize none count
+  match failure with
+  | none =>
+    let r ← component.abi.align_to size_bytes alignment
+    match r with
+    | core.result.Result.Ok value =>
+      ok (core.result.Result.Ok (alignment, value))
+    | core.result.Result.Err failure1 => ok (core.result.Result.Err failure1)
+  | some error => ok (core.result.Result.Err error)
+
 /-- [noble_wasm::component::FLAT_PARAMETER_LIMIT]
-    Source: 'crates/noble-wasm/src/component/mod.rs', lines 21:0-21:39 -/
+    Source: 'crates/noble-wasm/src/component/mod.rs', lines 23:0-23:39 -/
 @[global_simps, irreducible]
 def component.FLAT_PARAMETER_LIMIT : Std.Usize := 16#usize
 
 /-- [noble_wasm::component::abi::parameter]:
-    Source: 'crates/noble-wasm/src/component/abi.rs', lines 158:0-162:1 -/
+    Source: 'crates/noble-wasm/src/component/abi.rs', lines 229:0-233:1 -/
 def component.abi.parameter
   (lane : component.abi.Lane) (buffer : output.Buffer) :
   Result ((core.result.Result Unit Diagnostic) × output.Buffer)
@@ -662,7 +859,7 @@ def component.abi.parameter
   | core.result.Result.Err _ => ok (r, buffer1)
 
 /-- [noble_wasm::component::abi::parameter_type]: loop body 0:
-    Source: 'crates/noble-wasm/src/component/abi.rs', lines 141:4-151:5 -/
+    Source: 'crates/noble-wasm/src/component/abi.rs', lines 212:4-222:5 -/
 @[rust_loop_body]
 def component.abi.parameter_type_loop.body
   (ty : noble_contracts.component.Type) (count : Std.Usize)
@@ -693,7 +890,7 @@ def component.abi.parameter_type_loop.body
   else ok (done (buffer, failure))
 
 /-- [noble_wasm::component::abi::parameter_type]: loop 0:
-    Source: 'crates/noble-wasm/src/component/abi.rs', lines 141:4-151:5 -/
+    Source: 'crates/noble-wasm/src/component/abi.rs', lines 212:4-222:5 -/
 @[rust_loop]
 def component.abi.parameter_type_loop
   (ty : noble_contracts.component.Type) (buffer : output.Buffer)
@@ -706,7 +903,7 @@ def component.abi.parameter_type_loop
     (buffer, «at», failure)
 
 /-- [noble_wasm::component::abi::parameter_type]:
-    Source: 'crates/noble-wasm/src/component/abi.rs', lines 134:0-156:1 -/
+    Source: 'crates/noble-wasm/src/component/abi.rs', lines 205:0-227:1 -/
 def component.abi.parameter_type
   (ty : noble_contracts.component.Type) (buffer : output.Buffer) :
   Result ((core.result.Result Std.Usize Diagnostic) × output.Buffer)
@@ -719,7 +916,7 @@ def component.abi.parameter_type
   | some error => ok (core.result.Result.Err error, buffer1)
 
 /-- [noble_wasm::component::abi::parameters]: loop body 0:
-    Source: 'crates/noble-wasm/src/component/abi.rs', lines 113:4-120:5 -/
+    Source: 'crates/noble-wasm/src/component/abi.rs', lines 184:4-191:5 -/
 @[rust_loop_body]
 def component.abi.parameters_loop.body
   (types : Slice noble_contracts.component.Type) («end» : Std.Usize)
@@ -748,7 +945,7 @@ def component.abi.parameters_loop.body
   else ok (done (buffer, count, failure))
 
 /-- [noble_wasm::component::abi::parameters]: loop 0:
-    Source: 'crates/noble-wasm/src/component/abi.rs', lines 113:4-120:5 -/
+    Source: 'crates/noble-wasm/src/component/abi.rs', lines 184:4-191:5 -/
 @[rust_loop]
 def component.abi.parameters_loop
   (types : Slice noble_contracts.component.Type) (buffer : output.Buffer)
@@ -762,7 +959,7 @@ def component.abi.parameters_loop
     (buffer, count, «at», failure)
 
 /-- [noble_wasm::component::abi::parameters]:
-    Source: 'crates/noble-wasm/src/component/abi.rs', lines 105:0-128:1 -/
+    Source: 'crates/noble-wasm/src/component/abi.rs', lines 176:0-199:1 -/
 def component.abi.parameters
   (types : Slice noble_contracts.component.Type) (buffer : output.Buffer) :
   Result ((core.result.Result Std.Usize Diagnostic) × output.Buffer)
@@ -778,7 +975,7 @@ def component.abi.parameters
   | some error => ok (core.result.Result.Err error, buffer1)
 
 /-- [noble_wasm::component::abi::result]:
-    Source: 'crates/noble-wasm/src/component/abi.rs', lines 164:0-171:1 -/
+    Source: 'crates/noble-wasm/src/component/abi.rs', lines 235:0-242:1 -/
 def component.abi.result
   (types : Slice noble_contracts.component.Type) :
   Result (core.result.Result (Option noble_contracts.component.Type)
@@ -853,7 +1050,7 @@ def output.Buffer.number
   output.Buffer.number_loop self value digits start
 
 /-- [noble_wasm::component::abi::get]:
-    Source: 'crates/noble-wasm/src/component/abi.rs', lines 173:0-177:1 -/
+    Source: 'crates/noble-wasm/src/component/abi.rs', lines 244:0-248:1 -/
 def component.abi.get
   (buffer : output.Buffer) («local» : Std.U32) :
   Result ((core.result.Result Unit Diagnostic) × output.Buffer)
@@ -877,7 +1074,7 @@ def component.abi.get
   | core.result.Result.Err _ => ok (r, buffer1)
 
 /-- [noble_wasm::component::abi::set]:
-    Source: 'crates/noble-wasm/src/component/abi.rs', lines 178:0-182:1 -/
+    Source: 'crates/noble-wasm/src/component/abi.rs', lines 249:0-253:1 -/
 def component.abi.set
   (buffer : output.Buffer) («local» : Std.U32) :
   Result ((core.result.Result Unit Diagnostic) × output.Buffer)
@@ -1032,7 +1229,7 @@ def component.admission.body.is_text
   | noble_kernel.untrusted.Node.Quotation _ _ => ok false
 
 /-- [noble_wasm::component::TEXT_BYTE_LIMIT]
-    Source: 'crates/noble-wasm/src/component/mod.rs', lines 22:0-22:38 -/
+    Source: 'crates/noble-wasm/src/component/mod.rs', lines 24:0-24:38 -/
 @[global_simps, irreducible]
 def component.TEXT_BYTE_LIMIT : Std.Usize := 60000#usize
 
@@ -1239,7 +1436,7 @@ def component.admission.Context.Insts.CoreMarkerCopy : core.marker.Copy
 }
 
 /-- [noble_wasm::component::NODE_LIMIT]
-    Source: 'crates/noble-wasm/src/component/mod.rs', lines 18:0-18:31 -/
+    Source: 'crates/noble-wasm/src/component/mod.rs', lines 20:0-20:31 -/
 @[global_simps, irreducible] def component.NODE_LIMIT : Std.Usize := 4096#usize
 
 /-- [noble_wasm::component::admission::same_definition]:
@@ -1590,7 +1787,8 @@ def component.admission.check
     if i2 > i3
     then ok (core.result.Result.Err Diagnostic.Invalid)
     else
-      let world_context ← noble_contracts.component.World.build_context world
+      let world_context ←
+        noble_contracts.component.context.World.build_context world
       let r ← noble_contracts.component.World.environment world
       match r with
       | core.result.Result.Ok environment =>
@@ -1607,6 +1805,286 @@ def component.admission.check
       | core.result.Result.Err _ =>
         ok (core.result.Result.Err Diagnostic.Invalid)
 
+/-- [noble_wasm::component::emit::hex]:
+    Source: 'crates/noble-wasm/src/component/emit.rs', lines 280:0-285:1 -/
+def component.emit.hex (nibble : Std.U8) : Result Std.U8 := do
+  if 0#u8 <= nibble
+  then
+    if nibble <= 9#u8
+    then ok (core.num.U8.saturating_add 48#u8 nibble)
+    else
+      let i ← lift (core.num.U8.saturating_sub nibble 10#u8)
+      ok (core.num.U8.saturating_add 97#u8 i)
+  else
+    let i ← lift (core.num.U8.saturating_sub nibble 10#u8)
+    ok (core.num.U8.saturating_add 97#u8 i)
+
+/-- [noble_wasm::component::emit::quoted_byte]:
+    Source: 'crates/noble-wasm/src/component/emit.rs', lines 275:0-278:1 -/
+def component.emit.quoted_byte
+  (byte : Std.U8) (buffer : output.Buffer) :
+  Result ((core.result.Result Unit Diagnostic) × output.Buffer)
+  := do
+  let i ← byte >>> 4#i32
+  let i1 ← component.emit.hex i
+  let i2 ← lift (byte &&& 15#u8)
+  let i3 ← component.emit.hex i2
+  let s ← lift (Array.to_slice (Array.make 3#usize [ 92#u8, i1, i3 ]))
+  output.Buffer.append buffer s
+
+/-- [noble_wasm::component::emit::escaped]: loop body 0:
+    Source: 'crates/noble-wasm/src/component/emit.rs', lines 262:4-268:5 -/
+@[rust_loop_body]
+def component.emit.escaped_loop.body
+  (bytes : Slice Std.U8) («end» : Std.Usize) (buffer : output.Buffer)
+  («at» : Std.Usize) (failure : Option Diagnostic) :
+  Result (ControlFlow (output.Buffer × Std.Usize × (Option Diagnostic))
+    (output.Buffer × (Option Diagnostic)))
+  := do
+  if «at» < «end»
+  then
+    let b := core.option.Option.is_none failure
+    if b
+    then
+      let byte ← Slice.index_usize bytes «at»
+      let (r, buffer1) ← component.emit.quoted_byte byte buffer
+      let failure1 ←
+        match r with
+        | core.result.Result.Ok _ => ok failure
+        | core.result.Result.Err error => ok (some error)
+      let at1 ← lift (core.num.Usize.saturating_add «at» 1#usize)
+      ok (cont (buffer1, at1, failure1))
+    else ok (done (buffer, failure))
+  else ok (done (buffer, failure))
+
+/-- [noble_wasm::component::emit::escaped]: loop 0:
+    Source: 'crates/noble-wasm/src/component/emit.rs', lines 262:4-268:5 -/
+@[rust_loop]
+def component.emit.escaped_loop
+  (bytes : Slice Std.U8) (buffer : output.Buffer) («at» : Std.Usize)
+  (failure : Option Diagnostic) («end» : Std.Usize) :
+  Result (output.Buffer × (Option Diagnostic))
+  := do
+  loop
+    (fun (buffer1, at1, failure1) => component.emit.escaped_loop.body bytes
+      «end» buffer1 at1 failure1)
+    (buffer, «at», failure)
+
+/-- [noble_wasm::component::emit::escaped]:
+    Source: 'crates/noble-wasm/src/component/emit.rs', lines 258:0-273:1 -/
+def component.emit.escaped
+  (bytes : Slice Std.U8) (buffer : output.Buffer) :
+  Result ((core.result.Result Unit Diagnostic) × output.Buffer)
+  := do
+  let «end» := Slice.len bytes
+  let (buffer1, failure) ←
+    component.emit.escaped_loop bytes buffer 0#usize none «end»
+  match failure with
+  | none => ok (core.result.Result.Ok (), buffer1)
+  | some error => ok (core.result.Result.Err error, buffer1)
+
+/-- [noble_wasm::component::emit::quoted_prefixed]:
+    Source: 'crates/noble-wasm/src/component/emit.rs', lines 247:0-256:1 -/
+def component.emit.quoted_prefixed
+  («prefix» : Slice Std.U8) (bytes : Slice Std.U8) (buffer : output.Buffer) :
+  Result ((core.result.Result Unit Diagnostic) × output.Buffer)
+  := do
+  let s ← lift (Array.to_slice (Array.make 1#usize [ 34#u8 ]))
+  let (r, buffer1) ← output.Buffer.append buffer s
+  match r with
+  | core.result.Result.Ok _ =>
+    let (r1, buffer2) ← component.emit.escaped «prefix» buffer1
+    match r1 with
+    | core.result.Result.Ok _ =>
+      let (r2, buffer3) ← component.emit.escaped bytes buffer2
+      match r2 with
+      | core.result.Result.Ok _ =>
+        let s1 ← lift (Array.to_slice (Array.make 1#usize [ 34#u8 ]))
+        output.Buffer.append buffer3 s1
+      | core.result.Result.Err _ => ok (r2, buffer3)
+    | core.result.Result.Err _ => ok (r1, buffer2)
+  | core.result.Result.Err _ => ok (r, buffer1)
+
+/-- [noble_wasm::component::emit::task::names]:
+    Source: 'crates/noble-wasm/src/component/emit/task.rs', lines 34:0-42:1 -/
+def component.emit.task.names
+  (module : Slice Std.U8) («name» : Slice Std.U8) (buffer : output.Buffer) :
+  Result ((core.result.Result Unit Diagnostic) × output.Buffer)
+  := do
+  let s ←
+    lift (Array.to_slice
+      (Array.make 8#usize [
+        91#u8, 101#u8, 120#u8, 112#u8, 111#u8, 114#u8, 116#u8, 93#u8
+        ]))
+  let (r, buffer1) ← component.emit.quoted_prefixed s module buffer
+  match r with
+  | core.result.Result.Ok _ =>
+    let s1 ← lift (Array.to_slice (Array.make 1#usize [ 32#u8 ]))
+    let (r1, buffer2) ← output.Buffer.append buffer1 s1
+    match r1 with
+    | core.result.Result.Ok _ =>
+      let s2 ←
+        lift (Array.to_slice
+          (Array.make 13#usize [
+            91#u8, 116#u8, 97#u8, 115#u8, 107#u8, 45#u8, 114#u8, 101#u8,
+            116#u8, 117#u8, 114#u8, 110#u8, 93#u8
+            ]))
+      component.emit.quoted_prefixed s2 «name» buffer2
+    | core.result.Result.Err _ => ok (r1, buffer2)
+  | core.result.Result.Err _ => ok (r, buffer1)
+
+/-- [noble_wasm::component::emit::task::write::{impl core::ops::function::FnMut<(&'_ u8,), bool> for noble_wasm::component::emit::task::write::{closure}}::call_mut]:
+    Source: 'crates/noble-wasm/src/component/emit/task.rs', lines 11:36-11:56 -/
+def
+  component.emit.task.write.closure.Insts.CoreOpsFunctionFnMutTupleSharedU8Bool.call_mut
+  (c : component.emit.task.write.closure) (tupled_args : Std.U8) :
+  Result (Bool × component.emit.task.write.closure)
+  := do
+  ok (tupled_args = 35#u8, c)
+
+/-- [noble_wasm::component::emit::task::write::{impl core::ops::function::FnOnce<(&'_ u8,), bool> for noble_wasm::component::emit::task::write::{closure}}::call_once]:
+    Source: 'crates/noble-wasm/src/component/emit/task.rs', lines 11:36-11:56 -/
+def
+  component.emit.task.write.closure.Insts.CoreOpsFunctionFnOnceTupleSharedU8Bool.call_once
+  (c : component.emit.task.write.closure) (i : Std.U8) : Result Bool := do
+  let (b, _) ←
+    component.emit.task.write.closure.Insts.CoreOpsFunctionFnMutTupleSharedU8Bool.call_mut
+      c i
+  ok b
+
+/-- Trait implementation: [noble_wasm::component::emit::task::write::{impl core::ops::function::FnOnce<(&'_ u8,), bool> for noble_wasm::component::emit::task::write::{closure}}]
+    Source: 'crates/noble-wasm/src/component/emit/task.rs', lines 11:36-11:56 -/
+@[reducible]
+def
+  component.emit.task.write.closure.Insts.CoreOpsFunctionFnOnceTupleSharedU8Bool
+  : core.ops.function.FnOnce component.emit.task.write.closure Std.U8 Bool := {
+  call_once :=
+    component.emit.task.write.closure.Insts.CoreOpsFunctionFnOnceTupleSharedU8Bool.call_once
+}
+
+/-- Trait implementation: [noble_wasm::component::emit::task::write::{impl core::ops::function::FnMut<(&'_ u8,), bool> for noble_wasm::component::emit::task::write::{closure}}]
+    Source: 'crates/noble-wasm/src/component/emit/task.rs', lines 11:36-11:56 -/
+@[reducible]
+def
+  component.emit.task.write.closure.Insts.CoreOpsFunctionFnMutTupleSharedU8Bool
+  : core.ops.function.FnMut component.emit.task.write.closure Std.U8 Bool := {
+  FnOnceInst :=
+    component.emit.task.write.closure.Insts.CoreOpsFunctionFnOnceTupleSharedU8Bool
+  call_mut :=
+    component.emit.task.write.closure.Insts.CoreOpsFunctionFnMutTupleSharedU8Bool.call_mut
+}
+
+/-- [noble_wasm::component::emit::task::write]:
+    Source: 'crates/noble-wasm/src/component/emit/task.rs', lines 5:0-32:1 -/
+def component.emit.task.write
+  (plan : component.lower.Plan) (buffer : output.Buffer) :
+  Result ((core.result.Result Unit Diagnostic) × output.Buffer)
+  := do
+  let qualified ← alloc.string.String.as_bytes plan.name
+  let s ←
+    lift (Array.to_slice
+      (Array.make 9#usize [
+        32#u8, 40#u8, 105#u8, 109#u8, 112#u8, 111#u8, 114#u8, 116#u8, 32#u8
+        ]))
+  let (r, buffer1) ← output.Buffer.append buffer s
+  match r with
+  | core.result.Result.Ok _ =>
+    let i ← core.slice.Slice.iter qualified
+    let (o, _) ←
+      core.slice.iter.Iter.Insts.CoreIterTraitsIteratorIteratorSharedAT.position
+        component.emit.task.write.closure.Insts.CoreOpsFunctionFnMutTupleSharedU8Bool
+        i ()
+    match o with
+    | none =>
+      let s1 ←
+        lift (Array.to_slice
+          (Array.make 5#usize [ 36#u8, 114#u8, 111#u8, 111#u8, 116#u8 ]))
+      let (r1, buffer2) ← component.emit.task.names s1 qualified buffer1
+      match r1 with
+      | core.result.Result.Ok _ =>
+        let s2 ←
+          lift (Array.to_slice
+            (Array.make 20#usize [
+              32#u8, 40#u8, 102#u8, 117#u8, 110#u8, 99#u8, 32#u8, 36#u8,
+              116#u8, 97#u8, 115#u8, 107#u8, 45#u8, 114#u8, 101#u8, 116#u8,
+              117#u8, 114#u8, 110#u8, 45#u8
+              ]))
+        let (r2, buffer3) ← output.Buffer.append buffer2 s2
+        match r2 with
+        | core.result.Result.Ok _ =>
+          let i1 ← lift (core.convert.num.FromU64U32.from plan.ordinal)
+          let (r3, buffer4) ← output.Buffer.number buffer3 i1
+          match r3 with
+          | core.result.Result.Ok _ =>
+            match plan.result with
+            | none =>
+              let s3 ←
+                lift (Array.to_slice
+                  (Array.make 3#usize [ 41#u8, 41#u8, 10#u8 ]))
+              output.Buffer.append buffer4 s3
+            | some ty =>
+              let s3 ← core.slice.raw.from_ref ty
+              let (r4, buffer5) ← component.abi.parameters s3 buffer4
+              match r4 with
+              | core.result.Result.Ok _ =>
+                let s4 ←
+                  lift (Array.to_slice
+                    (Array.make 3#usize [ 41#u8, 41#u8, 10#u8 ]))
+                output.Buffer.append buffer5 s4
+              | core.result.Result.Err failure =>
+                ok (core.result.Result.Err failure, buffer5)
+          | core.result.Result.Err _ => ok (r3, buffer4)
+        | core.result.Result.Err _ => ok (r2, buffer3)
+      | core.result.Result.Err _ => ok (r1, buffer2)
+    | some «at» =>
+      let s1 ←
+        core.slice.index.Slice.index
+          (core.slice.index.SliceIndexRangeToUsizeSlice Std.U8) qualified
+          { «end» := «at» }
+      let i1 ← lift (core.num.Usize.saturating_add «at» 1#usize)
+      let s2 ←
+        core.slice.index.Slice.index
+          (core.slice.index.SliceIndexRangeFromUsizeSlice Std.U8) qualified
+          { start := i1 }
+      let (r1, buffer2) ← component.emit.task.names s1 s2 buffer1
+      match r1 with
+      | core.result.Result.Ok _ =>
+        let s3 ←
+          lift (Array.to_slice
+            (Array.make 20#usize [
+              32#u8, 40#u8, 102#u8, 117#u8, 110#u8, 99#u8, 32#u8, 36#u8,
+              116#u8, 97#u8, 115#u8, 107#u8, 45#u8, 114#u8, 101#u8, 116#u8,
+              117#u8, 114#u8, 110#u8, 45#u8
+              ]))
+        let (r2, buffer3) ← output.Buffer.append buffer2 s3
+        match r2 with
+        | core.result.Result.Ok _ =>
+          let i2 ← lift (core.convert.num.FromU64U32.from plan.ordinal)
+          let (r3, buffer4) ← output.Buffer.number buffer3 i2
+          match r3 with
+          | core.result.Result.Ok _ =>
+            match plan.result with
+            | none =>
+              let s4 ←
+                lift (Array.to_slice
+                  (Array.make 3#usize [ 41#u8, 41#u8, 10#u8 ]))
+              output.Buffer.append buffer4 s4
+            | some ty =>
+              let s4 ← core.slice.raw.from_ref ty
+              let (r4, buffer5) ← component.abi.parameters s4 buffer4
+              match r4 with
+              | core.result.Result.Ok _ =>
+                let s5 ←
+                  lift (Array.to_slice
+                    (Array.make 3#usize [ 41#u8, 41#u8, 10#u8 ]))
+                output.Buffer.append buffer5 s5
+              | core.result.Result.Err failure =>
+                ok (core.result.Result.Err failure, buffer5)
+          | core.result.Result.Err _ => ok (r3, buffer4)
+        | core.result.Result.Err _ => ok (r2, buffer3)
+      | core.result.Result.Err _ => ok (r1, buffer2)
+  | core.result.Result.Err _ => ok (r, buffer1)
+
 /-- [noble_wasm::output::{noble_wasm::output::Buffer}::finish]:
     Source: 'crates/noble-wasm/src/output.rs', lines 90:4-92:5 -/
 def output.Buffer.finish
@@ -1619,21 +2097,8 @@ def output.Buffer.new (capacity_bytes : Std.Usize) : Result output.Buffer := do
   let v := alloc.vec.Vec.with_capacity Std.U8 capacity_bytes
   ok { bytes := v }
 
-/-- [noble_wasm::component::emit::result_lane]:
-    Source: 'crates/noble-wasm/src/component/emit.rs', lines 167:0-177:1 -/
-def component.emit.result_lane
-  (ty : noble_contracts.component.Type) : Result component.abi.Lane := do
-  match ty with
-  | noble_contracts.component.Type.Boolean => ok component.abi.Lane.I32
-  | noble_contracts.component.Type.S64 => ok component.abi.Lane.I64
-  | noble_contracts.component.Type.String => ok component.abi.Lane.I32
-  | noble_contracts.component.Type.Bytes => ok component.abi.Lane.I32
-  | noble_contracts.component.Type.ResultS64String => ok component.abi.Lane.I32
-  | noble_contracts.component.Type.Own _ => ok component.abi.Lane.I32
-  | noble_contracts.component.Type.Borrow _ => ok component.abi.Lane.I32
-
 /-- [noble_wasm::component::emit::result]:
-    Source: 'crates/noble-wasm/src/component/emit.rs', lines 155:0-165:1 -/
+    Source: 'crates/noble-wasm/src/component/emit.rs', lines 231:0-241:1 -/
 def component.emit.result
   (ty : Option noble_contracts.component.Type) (buffer : output.Buffer) :
   Result ((core.result.Result Unit Diagnostic) × output.Buffer)
@@ -1649,20 +2114,24 @@ def component.emit.result
     let (r, buffer1) ← output.Buffer.append buffer s
     match r with
     | core.result.Result.Ok _ =>
-      let l ← component.emit.result_lane ty1
-      let (r1, buffer2) ← component.abi.Lane.write l buffer1
+      let r1 ← component.abi.lane ty1 0#usize
       match r1 with
-      | core.result.Result.Ok _ =>
-        let s1 ← lift (Array.to_slice (Array.make 1#usize [ 41#u8 ]))
-        let (r2, buffer3) ← output.Buffer.append buffer2 s1
+      | core.result.Result.Ok value =>
+        let (r2, buffer2) ← component.abi.Lane.write value buffer1
         match r2 with
-        | core.result.Result.Ok _ => ok (core.result.Result.Ok (), buffer3)
-        | core.result.Result.Err _ => ok (r2, buffer3)
-      | core.result.Result.Err _ => ok (r1, buffer2)
+        | core.result.Result.Ok _ =>
+          let s1 ← lift (Array.to_slice (Array.make 1#usize [ 41#u8 ]))
+          let (r3, buffer3) ← output.Buffer.append buffer2 s1
+          match r3 with
+          | core.result.Result.Ok _ => ok (core.result.Result.Ok (), buffer3)
+          | core.result.Result.Err _ => ok (r3, buffer3)
+        | core.result.Result.Err _ => ok (r2, buffer2)
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, buffer1)
     | core.result.Result.Err _ => ok (r, buffer1)
 
 /-- [noble_wasm::component::emit::local]:
-    Source: 'crates/noble-wasm/src/component/emit.rs', lines 146:0-153:1 -/
+    Source: 'crates/noble-wasm/src/component/emit.rs', lines 222:0-229:1 -/
 def component.emit.local
   (lane : component.abi.Lane) (buffer : output.Buffer) :
   Result ((core.result.Result Unit Diagnostic) × output.Buffer)
@@ -1684,9 +2153,9 @@ def component.emit.local
   | core.result.Result.Err _ => ok (r, buffer1)
 
 /-- [noble_wasm::component::emit::function]: loop body 0:
-    Source: 'crates/noble-wasm/src/component/emit.rs', lines 121:4-127:5 -/
+    Source: 'crates/noble-wasm/src/component/emit.rs', lines 192:4-198:5 -/
 @[rust_loop_body]
-def component.emit.function_loop.body
+def component.emit.function_loop0.body
   (v : alloc.vec.Vec component.abi.Lane) («end» : Std.Usize)
   (buffer : output.Buffer) («at» : Std.Usize) (failure : Option Diagnostic) :
   Result (ControlFlow (output.Buffer × Std.Usize × (Option Diagnostic))
@@ -1711,191 +2180,24 @@ def component.emit.function_loop.body
   else ok (done (buffer, failure))
 
 /-- [noble_wasm::component::emit::function]: loop 0:
-    Source: 'crates/noble-wasm/src/component/emit.rs', lines 121:4-127:5 -/
+    Source: 'crates/noble-wasm/src/component/emit.rs', lines 192:4-198:5 -/
 @[rust_loop]
-def component.emit.function_loop
+def component.emit.function_loop0
   (v : alloc.vec.Vec component.abi.Lane) (buffer : output.Buffer)
   («at» : Std.Usize) (failure : Option Diagnostic) («end» : Std.Usize) :
   Result (output.Buffer × (Option Diagnostic))
   := do
   loop
-    (fun (buffer1, at1, failure1) => component.emit.function_loop.body v
+    (fun (buffer1, at1, failure1) => component.emit.function_loop0.body v
       «end» buffer1 at1 failure1)
     (buffer, «at», failure)
 
-/-- [noble_wasm::component::emit::function]:
-    Source: 'crates/noble-wasm/src/component/emit.rs', lines 108:0-144:1 -/
-def component.emit.function
-  (plan : component.lower.Plan) (buffer : output.Buffer) :
-  Result ((core.result.Result Unit Diagnostic) × output.Buffer)
-  := do
-  let s ←
-    lift (Array.to_slice
-      (Array.make 24#usize [
-        32#u8, 40#u8, 102#u8, 117#u8, 110#u8, 99#u8, 32#u8, 40#u8, 101#u8,
-        120#u8, 112#u8, 111#u8, 114#u8, 116#u8, 32#u8, 34#u8, 99#u8, 109#u8,
-        51#u8, 50#u8, 112#u8, 50#u8, 124#u8, 124#u8
-        ]))
-  let (r, buffer1) ← output.Buffer.append buffer s
-  match r with
-  | core.result.Result.Ok _ =>
-    let s1 ← alloc.string.String.as_bytes plan.name
-    let (r1, buffer2) ← output.Buffer.append buffer1 s1
-    match r1 with
-    | core.result.Result.Ok _ =>
-      let s2 ← lift (Array.to_slice (Array.make 2#usize [ 34#u8, 41#u8 ]))
-      let (r2, buffer3) ← output.Buffer.append buffer2 s2
-      match r2 with
-      | core.result.Result.Ok _ =>
-        let s3 := alloc.vec.Vec.deref plan.parameters
-        let (r3, buffer4) ← component.abi.parameters s3 buffer3
-        match r3 with
-        | core.result.Result.Ok _ =>
-          let (r4, buffer5) ← component.emit.result plan.result buffer4
-          match r4 with
-          | core.result.Result.Ok _ =>
-            let «end» := alloc.vec.Vec.len plan.locals
-            let (buffer6, failure) ←
-              component.emit.function_loop plan.locals buffer5 0#usize none
-                «end»
-            match failure with
-            | none =>
-              let s4 ←
-                lift (Array.to_slice
-                  (Array.make 14#usize [
-                    10#u8, 32#u8, 99#u8, 97#u8, 108#u8, 108#u8, 32#u8, 36#u8,
-                    101#u8, 110#u8, 116#u8, 101#u8, 114#u8, 10#u8
-                    ]))
-              let (r5, buffer7) ← output.Buffer.append buffer6 s4
-              match r5 with
-              | core.result.Result.Ok _ =>
-                let s5 := alloc.vec.Vec.deref plan.code
-                let (r6, buffer8) ← output.Buffer.append buffer7 s5
-                match r6 with
-                | core.result.Result.Ok _ =>
-                  let s6 ←
-                    lift (Array.to_slice (Array.make 2#usize [ 41#u8, 10#u8 ]))
-                  let (r7, buffer9) ← output.Buffer.append buffer8 s6
-                  match r7 with
-                  | core.result.Result.Ok _ =>
-                    let s7 ←
-                      lift (Array.to_slice
-                        (Array.make 24#usize [
-                          32#u8, 40#u8, 102#u8, 117#u8, 110#u8, 99#u8, 32#u8,
-                          40#u8, 101#u8, 120#u8, 112#u8, 111#u8, 114#u8,
-                          116#u8, 32#u8, 34#u8, 99#u8, 109#u8, 51#u8, 50#u8,
-                          112#u8, 50#u8, 124#u8, 124#u8
-                          ]))
-                    let (r8, buffer10) ← output.Buffer.append buffer9 s7
-                    match r8 with
-                    | core.result.Result.Ok _ =>
-                      let s8 ← alloc.string.String.as_bytes plan.name
-                      let (r9, buffer11) ← output.Buffer.append buffer10 s8
-                      match r9 with
-                      | core.result.Result.Ok _ =>
-                        let s9 ←
-                          lift (Array.to_slice
-                            (Array.make 7#usize [
-                              95#u8, 112#u8, 111#u8, 115#u8, 116#u8, 34#u8,
-                              41#u8
-                              ]))
-                        let (r10, buffer12) ←
-                          output.Buffer.append buffer11 s9
-                        match r10 with
-                        | core.result.Result.Ok _ =>
-                          match plan.result with
-                          | none =>
-                            let s10 ←
-                              lift (Array.to_slice
-                                (Array.make 16#usize [
-                                  32#u8, 99#u8, 97#u8, 108#u8, 108#u8, 32#u8,
-                                  36#u8, 99#u8, 108#u8, 101#u8, 97#u8, 110#u8,
-                                  117#u8, 112#u8, 41#u8, 10#u8
-                                  ]))
-                            output.Buffer.append buffer12 s10
-                          | some ty =>
-                            let s10 ←
-                              lift (Array.to_slice
-                                (Array.make 8#usize [
-                                  32#u8, 40#u8, 112#u8, 97#u8, 114#u8, 97#u8,
-                                  109#u8, 32#u8
-                                  ]))
-                            let (r11, buffer13) ←
-                              output.Buffer.append buffer12 s10
-                            match r11 with
-                            | core.result.Result.Ok _ =>
-                              let l ← component.emit.result_lane ty
-                              let (r12, buffer14) ←
-                                component.abi.Lane.write l buffer13
-                              match r12 with
-                              | core.result.Result.Ok _ =>
-                                let s11 ←
-                                  lift (Array.to_slice
-                                    (Array.make 1#usize [ 41#u8 ]))
-                                let (r13, buffer15) ←
-                                  output.Buffer.append buffer14 s11
-                                match r13 with
-                                | core.result.Result.Ok _ =>
-                                  let s12 ←
-                                    lift (Array.to_slice
-                                      (Array.make 16#usize [
-                                        32#u8, 99#u8, 97#u8, 108#u8, 108#u8,
-                                        32#u8, 36#u8, 99#u8, 108#u8, 101#u8,
-                                        97#u8, 110#u8, 117#u8, 112#u8, 41#u8,
-                                        10#u8
-                                        ]))
-                                  output.Buffer.append buffer15 s12
-                                | core.result.Result.Err _ =>
-                                  ok (r13, buffer15)
-                              | core.result.Result.Err _ => ok (r12, buffer14)
-                            | core.result.Result.Err _ => ok (r11, buffer13)
-                        | core.result.Result.Err _ => ok (r10, buffer12)
-                      | core.result.Result.Err _ => ok (r9, buffer11)
-                    | core.result.Result.Err _ => ok (r8, buffer10)
-                  | core.result.Result.Err _ => ok (r7, buffer9)
-                | core.result.Result.Err _ => ok (r6, buffer8)
-              | core.result.Result.Err _ => ok (r5, buffer7)
-            | some error => ok (core.result.Result.Err error, buffer6)
-          | core.result.Result.Err _ => ok (r4, buffer5)
-        | core.result.Result.Err failure =>
-          ok (core.result.Result.Err failure, buffer4)
-      | core.result.Result.Err _ => ok (r2, buffer3)
-    | core.result.Result.Err _ => ok (r1, buffer2)
-  | core.result.Result.Err _ => ok (r, buffer1)
-
-/-- [noble_wasm::component::emit::hex]:
-    Source: 'crates/noble-wasm/src/component/emit.rs', lines 202:0-207:1 -/
-def component.emit.hex (nibble : Std.U8) : Result Std.U8 := do
-  if 0#u8 <= nibble
-  then
-    if nibble <= 9#u8
-    then ok (core.num.U8.saturating_add 48#u8 nibble)
-    else
-      let i ← lift (core.num.U8.saturating_sub nibble 10#u8)
-      ok (core.num.U8.saturating_add 97#u8 i)
-  else
-    let i ← lift (core.num.U8.saturating_sub nibble 10#u8)
-    ok (core.num.U8.saturating_add 97#u8 i)
-
-/-- [noble_wasm::component::emit::quoted_byte]:
-    Source: 'crates/noble-wasm/src/component/emit.rs', lines 197:0-200:1 -/
-def component.emit.quoted_byte
-  (byte : Std.U8) (buffer : output.Buffer) :
-  Result ((core.result.Result Unit Diagnostic) × output.Buffer)
-  := do
-  let i ← byte >>> 4#i32
-  let i1 ← component.emit.hex i
-  let i2 ← lift (byte &&& 15#u8)
-  let i3 ← component.emit.hex i2
-  let s ← lift (Array.to_slice (Array.make 3#usize [ 92#u8, i1, i3 ]))
-  output.Buffer.append buffer s
-
-/-- [noble_wasm::component::emit::quoted]: loop body 0:
-    Source: 'crates/noble-wasm/src/component/emit.rs', lines 184:4-190:5 -/
+/-- [noble_wasm::component::emit::function]: loop body 1:
+    Source: 'crates/noble-wasm/src/component/emit.rs', lines 192:4-198:5 -/
 @[rust_loop_body]
-def component.emit.quoted_loop.body
-  (bytes : Slice Std.U8) («end» : Std.Usize) (buffer : output.Buffer)
-  («at» : Std.Usize) (failure : Option Diagnostic) :
+def component.emit.function_loop1.body
+  (v : alloc.vec.Vec component.abi.Lane) («end» : Std.Usize)
+  (buffer : output.Buffer) («at» : Std.Usize) (failure : Option Diagnostic) :
   Result (ControlFlow (output.Buffer × Std.Usize × (Option Diagnostic))
     (output.Buffer × (Option Diagnostic)))
   := do
@@ -1904,8 +2206,10 @@ def component.emit.quoted_loop.body
     let b := core.option.Option.is_none failure
     if b
     then
-      let byte ← Slice.index_usize bytes «at»
-      let (r, buffer1) ← component.emit.quoted_byte byte buffer
+      let lane ←
+        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+          component.abi.Lane) v «at»
+      let (r, buffer1) ← component.emit.local lane buffer
       let failure1 ←
         match r with
         | core.result.Result.Ok _ => ok failure
@@ -1915,41 +2219,358 @@ def component.emit.quoted_loop.body
     else ok (done (buffer, failure))
   else ok (done (buffer, failure))
 
-/-- [noble_wasm::component::emit::quoted]: loop 0:
-    Source: 'crates/noble-wasm/src/component/emit.rs', lines 184:4-190:5 -/
+/-- [noble_wasm::component::emit::function]: loop 1:
+    Source: 'crates/noble-wasm/src/component/emit.rs', lines 192:4-198:5 -/
 @[rust_loop]
-def component.emit.quoted_loop
-  (bytes : Slice Std.U8) (buffer : output.Buffer) («at» : Std.Usize)
-  (failure : Option Diagnostic) («end» : Std.Usize) :
+def component.emit.function_loop1
+  (v : alloc.vec.Vec component.abi.Lane) (buffer : output.Buffer)
+  («at» : Std.Usize) (failure : Option Diagnostic) («end» : Std.Usize) :
   Result (output.Buffer × (Option Diagnostic))
   := do
   loop
-    (fun (buffer1, at1, failure1) => component.emit.quoted_loop.body bytes
+    (fun (buffer1, at1, failure1) => component.emit.function_loop1.body v
       «end» buffer1 at1 failure1)
     (buffer, «at», failure)
 
+/-- [noble_wasm::component::emit::function]:
+    Source: 'crates/noble-wasm/src/component/emit.rs', lines 171:0-220:1 -/
+def component.emit.function
+  (plan : component.lower.Plan) (buffer : output.Buffer) :
+  Result ((core.result.Result Unit Diagnostic) × output.Buffer)
+  := do
+  let s ←
+    lift (Array.to_slice
+      (Array.make 16#usize [
+        32#u8, 40#u8, 102#u8, 117#u8, 110#u8, 99#u8, 32#u8, 40#u8, 101#u8,
+        120#u8, 112#u8, 111#u8, 114#u8, 116#u8, 32#u8, 34#u8
+        ]))
+  let (r, buffer1) ← output.Buffer.append buffer s
+  match r with
+  | core.result.Result.Ok _ =>
+    if plan.asynchronous
+    then
+      let s1 ←
+        lift (Array.to_slice
+          (Array.make 21#usize [
+            91#u8, 97#u8, 115#u8, 121#u8, 110#u8, 99#u8, 45#u8, 108#u8, 105#u8,
+            102#u8, 116#u8, 45#u8, 115#u8, 116#u8, 97#u8, 99#u8, 107#u8,
+            102#u8, 117#u8, 108#u8, 93#u8
+            ]))
+      let (r1, buffer2) ← output.Buffer.append buffer1 s1
+      match r1 with
+      | core.result.Result.Ok _ =>
+        let s2 ← alloc.string.String.as_bytes plan.name
+        let (r2, buffer3) ← output.Buffer.append buffer2 s2
+        match r2 with
+        | core.result.Result.Ok _ =>
+          let s3 ←
+            lift (Array.to_slice (Array.make 2#usize [ 34#u8, 41#u8 ]))
+          let (r3, buffer4) ← output.Buffer.append buffer3 s3
+          match r3 with
+          | core.result.Result.Ok _ =>
+            let s4 := alloc.vec.Vec.deref plan.parameters
+            let (r4, buffer5) ← component.abi.parameters s4 buffer4
+            match r4 with
+            | core.result.Result.Ok _ =>
+              let «end» := alloc.vec.Vec.len plan.locals
+              let (buffer6, failure) ←
+                component.emit.function_loop0 plan.locals buffer5 0#usize none
+                  «end»
+              match failure with
+              | none =>
+                let s5 ←
+                  lift (Array.to_slice
+                    (Array.make 14#usize [
+                      10#u8, 32#u8, 99#u8, 97#u8, 108#u8, 108#u8, 32#u8, 36#u8,
+                      101#u8, 110#u8, 116#u8, 101#u8, 114#u8, 10#u8
+                      ]))
+                let (r5, buffer7) ← output.Buffer.append buffer6 s5
+                match r5 with
+                | core.result.Result.Ok _ =>
+                  let s6 := alloc.vec.Vec.deref plan.code
+                  let (r6, buffer8) ← output.Buffer.append buffer7 s6
+                  match r6 with
+                  | core.result.Result.Ok _ =>
+                    let s7 ←
+                      lift (Array.to_slice
+                        (Array.make 2#usize [ 41#u8, 10#u8 ]))
+                    let (r7, buffer9) ← output.Buffer.append buffer8 s7
+                    match r7 with
+                    | core.result.Result.Ok _ =>
+                      ok (core.result.Result.Ok (), buffer9)
+                    | core.result.Result.Err _ => ok (r7, buffer9)
+                  | core.result.Result.Err _ => ok (r6, buffer8)
+                | core.result.Result.Err _ => ok (r5, buffer7)
+              | some error => ok (core.result.Result.Err error, buffer6)
+            | core.result.Result.Err failure =>
+              ok (core.result.Result.Err failure, buffer5)
+          | core.result.Result.Err _ => ok (r3, buffer4)
+        | core.result.Result.Err _ => ok (r2, buffer3)
+      | core.result.Result.Err _ => ok (r1, buffer2)
+    else
+      let s1 ←
+        lift (Array.to_slice
+          (Array.make 8#usize [
+            99#u8, 109#u8, 51#u8, 50#u8, 112#u8, 50#u8, 124#u8, 124#u8
+            ]))
+      let (r1, buffer2) ← output.Buffer.append buffer1 s1
+      match r1 with
+      | core.result.Result.Ok _ =>
+        let s2 ← alloc.string.String.as_bytes plan.name
+        let (r2, buffer3) ← output.Buffer.append buffer2 s2
+        match r2 with
+        | core.result.Result.Ok _ =>
+          let s3 ←
+            lift (Array.to_slice (Array.make 2#usize [ 34#u8, 41#u8 ]))
+          let (r3, buffer4) ← output.Buffer.append buffer3 s3
+          match r3 with
+          | core.result.Result.Ok _ =>
+            let s4 := alloc.vec.Vec.deref plan.parameters
+            let (r4, buffer5) ← component.abi.parameters s4 buffer4
+            match r4 with
+            | core.result.Result.Ok _ =>
+              let (r5, buffer6) ← component.emit.result plan.result buffer5
+              match r5 with
+              | core.result.Result.Ok _ =>
+                let «end» := alloc.vec.Vec.len plan.locals
+                let (buffer7, failure) ←
+                  component.emit.function_loop1 plan.locals buffer6 0#usize
+                    none «end»
+                match failure with
+                | none =>
+                  let s5 ←
+                    lift (Array.to_slice
+                      (Array.make 14#usize [
+                        10#u8, 32#u8, 99#u8, 97#u8, 108#u8, 108#u8, 32#u8,
+                        36#u8, 101#u8, 110#u8, 116#u8, 101#u8, 114#u8, 10#u8
+                        ]))
+                  let (r6, buffer8) ← output.Buffer.append buffer7 s5
+                  match r6 with
+                  | core.result.Result.Ok _ =>
+                    let s6 := alloc.vec.Vec.deref plan.code
+                    let (r7, buffer9) ← output.Buffer.append buffer8 s6
+                    match r7 with
+                    | core.result.Result.Ok _ =>
+                      let s7 ←
+                        lift (Array.to_slice
+                          (Array.make 2#usize [ 41#u8, 10#u8 ]))
+                      let (r8, buffer10) ← output.Buffer.append buffer9 s7
+                      match r8 with
+                      | core.result.Result.Ok _ =>
+                        let s8 ←
+                          lift (Array.to_slice
+                            (Array.make 24#usize [
+                              32#u8, 40#u8, 102#u8, 117#u8, 110#u8, 99#u8,
+                              32#u8, 40#u8, 101#u8, 120#u8, 112#u8, 111#u8,
+                              114#u8, 116#u8, 32#u8, 34#u8, 99#u8, 109#u8,
+                              51#u8, 50#u8, 112#u8, 50#u8, 124#u8, 124#u8
+                              ]))
+                        let (r9, buffer11) ← output.Buffer.append buffer10 s8
+                        match r9 with
+                        | core.result.Result.Ok _ =>
+                          let s9 ← alloc.string.String.as_bytes plan.name
+                          let (r10, buffer12) ←
+                            output.Buffer.append buffer11 s9
+                          match r10 with
+                          | core.result.Result.Ok _ =>
+                            let s10 ←
+                              lift (Array.to_slice
+                                (Array.make 7#usize [
+                                  95#u8, 112#u8, 111#u8, 115#u8, 116#u8, 34#u8,
+                                  41#u8
+                                  ]))
+                            let (r11, buffer13) ←
+                              output.Buffer.append buffer12 s10
+                            match r11 with
+                            | core.result.Result.Ok _ =>
+                              match plan.result with
+                              | none =>
+                                let s11 ←
+                                  lift (Array.to_slice
+                                    (Array.make 16#usize [
+                                      32#u8, 99#u8, 97#u8, 108#u8, 108#u8,
+                                      32#u8, 36#u8, 99#u8, 108#u8, 101#u8,
+                                      97#u8, 110#u8, 117#u8, 112#u8, 41#u8,
+                                      10#u8
+                                      ]))
+                                output.Buffer.append buffer13 s11
+                              | some ty =>
+                                let s11 ←
+                                  lift (Array.to_slice
+                                    (Array.make 8#usize [
+                                      32#u8, 40#u8, 112#u8, 97#u8, 114#u8,
+                                      97#u8, 109#u8, 32#u8
+                                      ]))
+                                let (r12, buffer14) ←
+                                  output.Buffer.append buffer13 s11
+                                match r12 with
+                                | core.result.Result.Ok _ =>
+                                  let r13 ← component.abi.lane ty 0#usize
+                                  match r13 with
+                                  | core.result.Result.Ok value =>
+                                    let (r14, buffer15) ←
+                                      component.abi.Lane.write value buffer14
+                                    match r14 with
+                                    | core.result.Result.Ok _ =>
+                                      let s12 ←
+                                        lift (Array.to_slice
+                                          (Array.make 1#usize [ 41#u8 ]))
+                                      let (r15, buffer16) ←
+                                        output.Buffer.append buffer15 s12
+                                      match r15 with
+                                      | core.result.Result.Ok _ =>
+                                        let s13 ←
+                                          lift (Array.to_slice
+                                            (Array.make 16#usize [
+                                              32#u8, 99#u8, 97#u8, 108#u8,
+                                              108#u8, 32#u8, 36#u8, 99#u8,
+                                              108#u8, 101#u8, 97#u8, 110#u8,
+                                              117#u8, 112#u8, 41#u8, 10#u8
+                                              ]))
+                                        output.Buffer.append buffer16 s13
+                                      | core.result.Result.Err _ =>
+                                        ok (r15, buffer16)
+                                    | core.result.Result.Err _ =>
+                                      ok (r14, buffer15)
+                                  | core.result.Result.Err failure1 =>
+                                    ok (core.result.Result.Err failure1,
+                                      buffer14)
+                                | core.result.Result.Err _ =>
+                                  ok (r12, buffer14)
+                            | core.result.Result.Err _ => ok (r11, buffer13)
+                          | core.result.Result.Err _ => ok (r10, buffer12)
+                        | core.result.Result.Err _ => ok (r9, buffer11)
+                      | core.result.Result.Err _ => ok (r8, buffer10)
+                    | core.result.Result.Err _ => ok (r7, buffer9)
+                  | core.result.Result.Err _ => ok (r6, buffer8)
+                | some error => ok (core.result.Result.Err error, buffer7)
+              | core.result.Result.Err _ => ok (r5, buffer6)
+            | core.result.Result.Err failure =>
+              ok (core.result.Result.Err failure, buffer5)
+          | core.result.Result.Err _ => ok (r3, buffer4)
+        | core.result.Result.Err _ => ok (r2, buffer3)
+      | core.result.Result.Err _ => ok (r1, buffer2)
+  | core.result.Result.Err _ => ok (r, buffer1)
+
+/-- [noble_wasm::component::emit::async_imports]: loop body 0:
+    Source: 'crates/noble-wasm/src/component/emit.rs', lines 152:4-160:5 -/
+@[rust_loop_body]
+def component.emit.async_imports_loop.body
+  (plans : Slice component.lower.Plan) (count : Std.Usize)
+  (buffer : output.Buffer) («at» : Std.Usize) (failure : Option Diagnostic) :
+  Result (ControlFlow (output.Buffer × Std.Usize × (Option Diagnostic))
+    (output.Buffer × (Option Diagnostic)))
+  := do
+  if «at» < count
+  then
+    let b := core.option.Option.is_none failure
+    if b
+    then
+      let plan ← Slice.index_usize plans «at»
+      let (buffer1, failure1) ←
+        if plan.asynchronous
+        then
+          do
+          let (r, buffer2) ← component.emit.task.write plan buffer
+          let o ←
+            match r with
+            | core.result.Result.Ok _ => ok failure
+            | core.result.Result.Err error => ok (some error)
+          ok (buffer2, o)
+        else ok (buffer, failure)
+      let at1 ← lift (core.num.Usize.saturating_add «at» 1#usize)
+      ok (cont (buffer1, at1, failure1))
+    else ok (done (buffer, failure))
+  else ok (done (buffer, failure))
+
+/-- [noble_wasm::component::emit::async_imports]: loop 0:
+    Source: 'crates/noble-wasm/src/component/emit.rs', lines 152:4-160:5 -/
+@[rust_loop]
+def component.emit.async_imports_loop
+  (plans : Slice component.lower.Plan) (buffer : output.Buffer)
+  («at» : Std.Usize) (failure : Option Diagnostic) (count : Std.Usize) :
+  Result (output.Buffer × (Option Diagnostic))
+  := do
+  loop
+    (fun (buffer1, at1, failure1) => component.emit.async_imports_loop.body
+      plans count buffer1 at1 failure1)
+    (buffer, «at», failure)
+
+/-- [noble_wasm::component::emit::async_imports]:
+    Source: 'crates/noble-wasm/src/component/emit.rs', lines 138:0-165:1 -/
+def component.emit.async_imports
+  (plans : Slice component.lower.Plan) (buffer : output.Buffer) :
+  Result ((core.result.Result Unit Diagnostic) × output.Buffer)
+  := do
+  let s ←
+    lift (Array.to_slice
+      (Array.make 388#usize [
+        32#u8, 40#u8, 105#u8, 109#u8, 112#u8, 111#u8, 114#u8, 116#u8, 32#u8,
+        34#u8, 36#u8, 114#u8, 111#u8, 111#u8, 116#u8, 34#u8, 32#u8, 34#u8,
+        91#u8, 119#u8, 97#u8, 105#u8, 116#u8, 97#u8, 98#u8, 108#u8, 101#u8,
+        45#u8, 115#u8, 101#u8, 116#u8, 45#u8, 110#u8, 101#u8, 119#u8, 93#u8,
+        34#u8, 32#u8, 40#u8, 102#u8, 117#u8, 110#u8, 99#u8, 32#u8, 36#u8,
+        119#u8, 97#u8, 105#u8, 116#u8, 97#u8, 98#u8, 108#u8, 101#u8, 45#u8,
+        115#u8, 101#u8, 116#u8, 45#u8, 110#u8, 101#u8, 119#u8, 32#u8, 40#u8,
+        114#u8, 101#u8, 115#u8, 117#u8, 108#u8, 116#u8, 32#u8, 105#u8, 51#u8,
+        50#u8, 41#u8, 41#u8, 41#u8, 10#u8, 40#u8, 105#u8, 109#u8, 112#u8,
+        111#u8, 114#u8, 116#u8, 32#u8, 34#u8, 36#u8, 114#u8, 111#u8, 111#u8,
+        116#u8, 34#u8, 32#u8, 34#u8, 91#u8, 119#u8, 97#u8, 105#u8, 116#u8,
+        97#u8, 98#u8, 108#u8, 101#u8, 45#u8, 115#u8, 101#u8, 116#u8, 45#u8,
+        119#u8, 97#u8, 105#u8, 116#u8, 93#u8, 34#u8, 32#u8, 40#u8, 102#u8,
+        117#u8, 110#u8, 99#u8, 32#u8, 36#u8, 119#u8, 97#u8, 105#u8, 116#u8,
+        97#u8, 98#u8, 108#u8, 101#u8, 45#u8, 115#u8, 101#u8, 116#u8, 45#u8,
+        119#u8, 97#u8, 105#u8, 116#u8, 32#u8, 40#u8, 112#u8, 97#u8, 114#u8,
+        97#u8, 109#u8, 32#u8, 105#u8, 51#u8, 50#u8, 32#u8, 105#u8, 51#u8,
+        50#u8, 41#u8, 32#u8, 40#u8, 114#u8, 101#u8, 115#u8, 117#u8, 108#u8,
+        116#u8, 32#u8, 105#u8, 51#u8, 50#u8, 41#u8, 41#u8, 41#u8, 10#u8, 40#u8,
+        105#u8, 109#u8, 112#u8, 111#u8, 114#u8, 116#u8, 32#u8, 34#u8, 36#u8,
+        114#u8, 111#u8, 111#u8, 116#u8, 34#u8, 32#u8, 34#u8, 91#u8, 119#u8,
+        97#u8, 105#u8, 116#u8, 97#u8, 98#u8, 108#u8, 101#u8, 45#u8, 115#u8,
+        101#u8, 116#u8, 45#u8, 100#u8, 114#u8, 111#u8, 112#u8, 93#u8, 34#u8,
+        32#u8, 40#u8, 102#u8, 117#u8, 110#u8, 99#u8, 32#u8, 36#u8, 119#u8,
+        97#u8, 105#u8, 116#u8, 97#u8, 98#u8, 108#u8, 101#u8, 45#u8, 115#u8,
+        101#u8, 116#u8, 45#u8, 100#u8, 114#u8, 111#u8, 112#u8, 32#u8, 40#u8,
+        112#u8, 97#u8, 114#u8, 97#u8, 109#u8, 32#u8, 105#u8, 51#u8, 50#u8,
+        41#u8, 41#u8, 41#u8, 10#u8, 40#u8, 105#u8, 109#u8, 112#u8, 111#u8,
+        114#u8, 116#u8, 32#u8, 34#u8, 36#u8, 114#u8, 111#u8, 111#u8, 116#u8,
+        34#u8, 32#u8, 34#u8, 91#u8, 119#u8, 97#u8, 105#u8, 116#u8, 97#u8,
+        98#u8, 108#u8, 101#u8, 45#u8, 106#u8, 111#u8, 105#u8, 110#u8, 93#u8,
+        34#u8, 32#u8, 40#u8, 102#u8, 117#u8, 110#u8, 99#u8, 32#u8, 36#u8,
+        119#u8, 97#u8, 105#u8, 116#u8, 97#u8, 98#u8, 108#u8, 101#u8, 45#u8,
+        106#u8, 111#u8, 105#u8, 110#u8, 32#u8, 40#u8, 112#u8, 97#u8, 114#u8,
+        97#u8, 109#u8, 32#u8, 105#u8, 51#u8, 50#u8, 32#u8, 105#u8, 51#u8,
+        50#u8, 41#u8, 41#u8, 41#u8, 10#u8, 40#u8, 105#u8, 109#u8, 112#u8,
+        111#u8, 114#u8, 116#u8, 32#u8, 34#u8, 36#u8, 114#u8, 111#u8, 111#u8,
+        116#u8, 34#u8, 32#u8, 34#u8, 91#u8, 115#u8, 117#u8, 98#u8, 116#u8,
+        97#u8, 115#u8, 107#u8, 45#u8, 100#u8, 114#u8, 111#u8, 112#u8, 93#u8,
+        34#u8, 32#u8, 40#u8, 102#u8, 117#u8, 110#u8, 99#u8, 32#u8, 36#u8,
+        115#u8, 117#u8, 98#u8, 116#u8, 97#u8, 115#u8, 107#u8, 45#u8, 100#u8,
+        114#u8, 111#u8, 112#u8, 32#u8, 40#u8, 112#u8, 97#u8, 114#u8, 97#u8,
+        109#u8, 32#u8, 105#u8, 51#u8, 50#u8, 41#u8, 41#u8, 41#u8, 10#u8
+        ]))
+  let (r, buffer1) ← output.Buffer.append buffer s
+  match r with
+  | core.result.Result.Ok _ =>
+    let count := Slice.len plans
+    let (buffer2, failure) ←
+      component.emit.async_imports_loop plans buffer1 0#usize none count
+    match failure with
+    | none => ok (core.result.Result.Ok (), buffer2)
+    | some error => ok (core.result.Result.Err error, buffer2)
+  | core.result.Result.Err _ => ok (r, buffer1)
+
 /-- [noble_wasm::component::emit::quoted]:
-    Source: 'crates/noble-wasm/src/component/emit.rs', lines 179:0-195:1 -/
+    Source: 'crates/noble-wasm/src/component/emit.rs', lines 243:0-245:1 -/
 def component.emit.quoted
   (bytes : Slice Std.U8) (buffer : output.Buffer) :
   Result ((core.result.Result Unit Diagnostic) × output.Buffer)
   := do
-  let s ← lift (Array.to_slice (Array.make 1#usize [ 34#u8 ]))
-  let (r, buffer1) ← output.Buffer.append buffer s
-  match r with
-  | core.result.Result.Ok _ =>
-    let «end» := Slice.len bytes
-    let (buffer2, failure) ←
-      component.emit.quoted_loop bytes buffer1 0#usize none «end»
-    match failure with
-    | none =>
-      let s1 ← lift (Array.to_slice (Array.make 1#usize [ 34#u8 ]))
-      output.Buffer.append buffer2 s1
-    | some error => ok (core.result.Result.Err error, buffer2)
-  | core.result.Result.Err _ => ok (r, buffer1)
+  let s ← lift (Array.to_slice (Std.Array.empty Std.U8))
+  component.emit.quoted_prefixed s bytes buffer
 
 /-- [noble_wasm::component::emit::import]:
-    Source: 'crates/noble-wasm/src/component/emit.rs', lines 81:0-102:1 -/
+    Source: 'crates/noble-wasm/src/component/emit.rs', lines 90:0-132:1 -/
 def component.emit.import
   (operation : noble_contracts.component.Operation) (buffer : output.Buffer) :
   Result ((core.result.Result Unit Diagnostic) × output.Buffer)
@@ -1973,8 +2594,24 @@ def component.emit.import
         let (r2, buffer3) ← output.Buffer.append buffer2 s2
         match r2 with
         | core.result.Result.Ok _ =>
+          let (b, «prefix») ←
+            if operation.asynchronous
+            then
+              do
+              let prefix1 ←
+                lift (Array.to_slice
+                  (Array.make 13#usize [
+                    91#u8, 97#u8, 115#u8, 121#u8, 110#u8, 99#u8, 45#u8, 108#u8,
+                    111#u8, 119#u8, 101#u8, 114#u8, 93#u8
+                    ]))
+              ok (true, prefix1)
+            else
+              do
+              let prefix1 ← lift (Array.to_slice (Std.Array.empty Std.U8))
+              ok (false, prefix1)
           let s3 ← alloc.string.String.as_bytes operation.core_name
-          let (r3, buffer4) ← component.emit.quoted s3 buffer3
+          let (r3, buffer4) ←
+            component.emit.quoted_prefixed «prefix» s3 buffer3
           match r3 with
           | core.result.Result.Ok _ =>
             let s4 ←
@@ -1990,52 +2627,210 @@ def component.emit.import
               let (r5, buffer6) ← output.Buffer.number buffer5 i
               match r5 with
               | core.result.Result.Ok _ =>
-                let s5 := alloc.vec.Vec.deref operation.parameters
-                let (r6, buffer7) ← component.abi.parameters s5 buffer6
-                match r6 with
-                | core.result.Result.Ok _ =>
-                  let s6 := alloc.vec.Vec.deref operation.results
-                  let r7 ← component.abi.result s6
-                  match r7 with
-                  | core.result.Result.Ok value =>
-                    match value with
-                    | none =>
-                      let s7 ←
-                        lift (Array.to_slice
-                          (Array.make 3#usize [ 41#u8, 41#u8, 10#u8 ]))
-                      output.Buffer.append buffer7 s7
-                    | some ty =>
-                      let i1 ← component.abi.lane_count ty
-                      if i1 > 1#usize
+                let b1 ←
+                  component.abi.indirect_parameters
+                    {
+                      operation
+                        with
+                        asynchronous := b, definition := (some definition)
+                    }
+                if b1
+                then
+                  let s5 ←
+                    lift (Array.to_slice
+                      (Array.make 12#usize [
+                        32#u8, 40#u8, 112#u8, 97#u8, 114#u8, 97#u8, 109#u8,
+                        32#u8, 105#u8, 51#u8, 50#u8, 41#u8
+                        ]))
+                  let (r6, buffer7) ← output.Buffer.append buffer6 s5
+                  match r6 with
+                  | core.result.Result.Ok _ =>
+                    let s6 := alloc.vec.Vec.deref operation.results
+                    let r7 ← component.abi.result s6
+                    match r7 with
+                    | core.result.Result.Ok value =>
+                      if b
                       then
-                        let s7 ←
-                          lift (Array.to_slice
-                            (Array.make 12#usize [
-                              32#u8, 40#u8, 112#u8, 97#u8, 114#u8, 97#u8,
-                              109#u8, 32#u8, 105#u8, 51#u8, 50#u8, 41#u8
-                              ]))
-                        let (r8, buffer8) ← output.Buffer.append buffer7 s7
-                        match r8 with
-                        | core.result.Result.Ok _ =>
-                          let s8 ←
+                        let b2 := core.option.Option.is_some value
+                        if b2
+                        then
+                          let s7 ←
                             lift (Array.to_slice
-                              (Array.make 3#usize [ 41#u8, 41#u8, 10#u8 ]))
-                          output.Buffer.append buffer8 s8
-                        | core.result.Result.Err _ => ok (r8, buffer8)
+                              (Array.make 12#usize [
+                                32#u8, 40#u8, 112#u8, 97#u8, 114#u8, 97#u8,
+                                109#u8, 32#u8, 105#u8, 51#u8, 50#u8, 41#u8
+                                ]))
+                          let (r8, buffer8) ← output.Buffer.append buffer7 s7
+                          match r8 with
+                          | core.result.Result.Ok _ =>
+                            let s8 ←
+                              lift (Array.to_slice
+                                (Array.make 13#usize [
+                                  32#u8, 40#u8, 114#u8, 101#u8, 115#u8, 117#u8,
+                                  108#u8, 116#u8, 32#u8, 105#u8, 51#u8, 50#u8,
+                                  41#u8
+                                  ]))
+                            let (r9, buffer9) ←
+                              output.Buffer.append buffer8 s8
+                            match r9 with
+                            | core.result.Result.Ok _ =>
+                              let s9 ←
+                                lift (Array.to_slice
+                                  (Array.make 3#usize [ 41#u8, 41#u8, 10#u8 ]))
+                              output.Buffer.append buffer9 s9
+                            | core.result.Result.Err _ => ok (r9, buffer9)
+                          | core.result.Result.Err _ => ok (r8, buffer8)
+                        else
+                          let s7 ←
+                            lift (Array.to_slice
+                              (Array.make 13#usize [
+                                32#u8, 40#u8, 114#u8, 101#u8, 115#u8, 117#u8,
+                                108#u8, 116#u8, 32#u8, 105#u8, 51#u8, 50#u8,
+                                41#u8
+                                ]))
+                          let (r8, buffer8) ← output.Buffer.append buffer7 s7
+                          match r8 with
+                          | core.result.Result.Ok _ =>
+                            let s8 ←
+                              lift (Array.to_slice
+                                (Array.make 3#usize [ 41#u8, 41#u8, 10#u8 ]))
+                            output.Buffer.append buffer8 s8
+                          | core.result.Result.Err _ => ok (r8, buffer8)
                       else
-                        let (r8, buffer8) ←
-                          component.emit.result value buffer7
-                        match r8 with
-                        | core.result.Result.Ok _ =>
+                        match value with
+                        | none =>
                           let s7 ←
                             lift (Array.to_slice
                               (Array.make 3#usize [ 41#u8, 41#u8, 10#u8 ]))
-                          output.Buffer.append buffer8 s7
-                        | core.result.Result.Err _ => ok (r8, buffer8)
+                          output.Buffer.append buffer7 s7
+                        | some ty =>
+                          let i1 ← component.abi.lane_count ty
+                          if i1 > 1#usize
+                          then
+                            let s7 ←
+                              lift (Array.to_slice
+                                (Array.make 12#usize [
+                                  32#u8, 40#u8, 112#u8, 97#u8, 114#u8, 97#u8,
+                                  109#u8, 32#u8, 105#u8, 51#u8, 50#u8, 41#u8
+                                  ]))
+                            let (r8, buffer8) ←
+                              output.Buffer.append buffer7 s7
+                            match r8 with
+                            | core.result.Result.Ok _ =>
+                              let s8 ←
+                                lift (Array.to_slice
+                                  (Array.make 3#usize [ 41#u8, 41#u8, 10#u8 ]))
+                              output.Buffer.append buffer8 s8
+                            | core.result.Result.Err _ => ok (r8, buffer8)
+                          else
+                            let (r8, buffer8) ←
+                              component.emit.result value buffer7
+                            match r8 with
+                            | core.result.Result.Ok _ =>
+                              let s7 ←
+                                lift (Array.to_slice
+                                  (Array.make 3#usize [ 41#u8, 41#u8, 10#u8 ]))
+                              output.Buffer.append buffer8 s7
+                            | core.result.Result.Err _ => ok (r8, buffer8)
+                    | core.result.Result.Err failure =>
+                      ok (core.result.Result.Err failure, buffer7)
+                  | core.result.Result.Err _ => ok (r6, buffer7)
+                else
+                  let s5 := alloc.vec.Vec.deref operation.parameters
+                  let (r6, buffer7) ← component.abi.parameters s5 buffer6
+                  match r6 with
+                  | core.result.Result.Ok _ =>
+                    let s6 := alloc.vec.Vec.deref operation.results
+                    let r7 ← component.abi.result s6
+                    match r7 with
+                    | core.result.Result.Ok value =>
+                      if b
+                      then
+                        let b2 := core.option.Option.is_some value
+                        if b2
+                        then
+                          let s7 ←
+                            lift (Array.to_slice
+                              (Array.make 12#usize [
+                                32#u8, 40#u8, 112#u8, 97#u8, 114#u8, 97#u8,
+                                109#u8, 32#u8, 105#u8, 51#u8, 50#u8, 41#u8
+                                ]))
+                          let (r8, buffer8) ← output.Buffer.append buffer7 s7
+                          match r8 with
+                          | core.result.Result.Ok _ =>
+                            let s8 ←
+                              lift (Array.to_slice
+                                (Array.make 13#usize [
+                                  32#u8, 40#u8, 114#u8, 101#u8, 115#u8, 117#u8,
+                                  108#u8, 116#u8, 32#u8, 105#u8, 51#u8, 50#u8,
+                                  41#u8
+                                  ]))
+                            let (r9, buffer9) ←
+                              output.Buffer.append buffer8 s8
+                            match r9 with
+                            | core.result.Result.Ok _ =>
+                              let s9 ←
+                                lift (Array.to_slice
+                                  (Array.make 3#usize [ 41#u8, 41#u8, 10#u8 ]))
+                              output.Buffer.append buffer9 s9
+                            | core.result.Result.Err _ => ok (r9, buffer9)
+                          | core.result.Result.Err _ => ok (r8, buffer8)
+                        else
+                          let s7 ←
+                            lift (Array.to_slice
+                              (Array.make 13#usize [
+                                32#u8, 40#u8, 114#u8, 101#u8, 115#u8, 117#u8,
+                                108#u8, 116#u8, 32#u8, 105#u8, 51#u8, 50#u8,
+                                41#u8
+                                ]))
+                          let (r8, buffer8) ← output.Buffer.append buffer7 s7
+                          match r8 with
+                          | core.result.Result.Ok _ =>
+                            let s8 ←
+                              lift (Array.to_slice
+                                (Array.make 3#usize [ 41#u8, 41#u8, 10#u8 ]))
+                            output.Buffer.append buffer8 s8
+                          | core.result.Result.Err _ => ok (r8, buffer8)
+                      else
+                        match value with
+                        | none =>
+                          let s7 ←
+                            lift (Array.to_slice
+                              (Array.make 3#usize [ 41#u8, 41#u8, 10#u8 ]))
+                          output.Buffer.append buffer7 s7
+                        | some ty =>
+                          let i1 ← component.abi.lane_count ty
+                          if i1 > 1#usize
+                          then
+                            let s7 ←
+                              lift (Array.to_slice
+                                (Array.make 12#usize [
+                                  32#u8, 40#u8, 112#u8, 97#u8, 114#u8, 97#u8,
+                                  109#u8, 32#u8, 105#u8, 51#u8, 50#u8, 41#u8
+                                  ]))
+                            let (r8, buffer8) ←
+                              output.Buffer.append buffer7 s7
+                            match r8 with
+                            | core.result.Result.Ok _ =>
+                              let s8 ←
+                                lift (Array.to_slice
+                                  (Array.make 3#usize [ 41#u8, 41#u8, 10#u8 ]))
+                              output.Buffer.append buffer8 s8
+                            | core.result.Result.Err _ => ok (r8, buffer8)
+                          else
+                            let (r8, buffer8) ←
+                              component.emit.result value buffer7
+                            match r8 with
+                            | core.result.Result.Ok _ =>
+                              let s7 ←
+                                lift (Array.to_slice
+                                  (Array.make 3#usize [ 41#u8, 41#u8, 10#u8 ]))
+                              output.Buffer.append buffer8 s7
+                            | core.result.Result.Err _ => ok (r8, buffer8)
+                    | core.result.Result.Err failure =>
+                      ok (core.result.Result.Err failure, buffer7)
                   | core.result.Result.Err failure =>
                     ok (core.result.Result.Err failure, buffer7)
-                | core.result.Result.Err failure =>
-                  ok (core.result.Result.Err failure, buffer7)
               | core.result.Result.Err _ => ok (r5, buffer6)
             | core.result.Result.Err _ => ok (r4, buffer5)
           | core.result.Result.Err _ => ok (r3, buffer4)
@@ -2068,7 +2863,7 @@ def output.Buffer.i32
   | core.result.Result.Err _ => ok (r, self1)
 
 /-- [noble_wasm::component::emit::segment]:
-    Source: 'crates/noble-wasm/src/component/emit.rs', lines 65:0-75:1 -/
+    Source: 'crates/noble-wasm/src/component/emit.rs', lines 73:0-83:1 -/
 def component.emit.segment
   (offset_bytes : Std.U32) (bytes : Slice Std.U8) (buffer : output.Buffer) :
   Result ((core.result.Result Unit Diagnostic) × output.Buffer)
@@ -2100,7 +2895,7 @@ def component.emit.segment
   | core.result.Result.Err _ => ok (r, buffer1)
 
 /-- [noble_wasm::component::emit::data_segment]:
-    Source: 'crates/noble-wasm/src/component/emit.rs', lines 56:0-63:1 -/
+    Source: 'crates/noble-wasm/src/component/emit.rs', lines 64:0-71:1 -/
 def component.emit.data_segment
   (data : component.lower.Data) («at» : Std.Usize) (buffer : output.Buffer) :
   Result ((core.result.Result Unit Diagnostic) × output.Buffer)
@@ -2112,7 +2907,7 @@ def component.emit.data_segment
   component.emit.segment offset s buffer
 
 /-- [noble_wasm::component::emit::module]: loop body 0:
-    Source: 'crates/noble-wasm/src/component/emit.rs', lines 20:4-25:5 -/
+    Source: 'crates/noble-wasm/src/component/emit.rs', lines 22:4-27:5 -/
 @[rust_loop_body]
 def component.emit.module_loop0.body
   (world : noble_contracts.component.World) (operation_count : Std.Usize)
@@ -2138,7 +2933,7 @@ def component.emit.module_loop0.body
   else ok (done (buffer, failure))
 
 /-- [noble_wasm::component::emit::module]: loop 0:
-    Source: 'crates/noble-wasm/src/component/emit.rs', lines 20:4-25:5 -/
+    Source: 'crates/noble-wasm/src/component/emit.rs', lines 22:4-27:5 -/
 @[rust_loop]
 def component.emit.module_loop0
   (world : noble_contracts.component.World) (buffer : output.Buffer)
@@ -2152,7 +2947,7 @@ def component.emit.module_loop0
     (buffer, «at», failure)
 
 /-- [noble_wasm::component::emit::module]: loop body 1:
-    Source: 'crates/noble-wasm/src/component/emit.rs', lines 32:4-37:5 -/
+    Source: 'crates/noble-wasm/src/component/emit.rs', lines 40:4-45:5 -/
 @[rust_loop_body]
 def component.emit.module_loop1.body
   (plans : Slice component.lower.Plan) (plan_count : Std.Usize)
@@ -2177,7 +2972,7 @@ def component.emit.module_loop1.body
   else ok (done (buffer, failure))
 
 /-- [noble_wasm::component::emit::module]: loop 1:
-    Source: 'crates/noble-wasm/src/component/emit.rs', lines 32:4-37:5 -/
+    Source: 'crates/noble-wasm/src/component/emit.rs', lines 40:4-45:5 -/
 @[rust_loop]
 def component.emit.module_loop1
   (plans : Slice component.lower.Plan) (buffer : output.Buffer)
@@ -2190,7 +2985,7 @@ def component.emit.module_loop1
     (buffer, «at», failure)
 
 /-- [noble_wasm::component::emit::module]: loop body 2:
-    Source: 'crates/noble-wasm/src/component/emit.rs', lines 43:4-48:5 -/
+    Source: 'crates/noble-wasm/src/component/emit.rs', lines 51:4-56:5 -/
 @[rust_loop_body]
 def component.emit.module_loop2.body
   (v : alloc.vec.Vec (Std.U32 × (alloc.vec.Vec Std.U8))) (i : Std.U32)
@@ -2217,7 +3012,7 @@ def component.emit.module_loop2.body
   else ok (done (buffer, failure))
 
 /-- [noble_wasm::component::emit::module]: loop 2:
-    Source: 'crates/noble-wasm/src/component/emit.rs', lines 43:4-48:5 -/
+    Source: 'crates/noble-wasm/src/component/emit.rs', lines 51:4-56:5 -/
 @[rust_loop]
 def component.emit.module_loop2
   (v : alloc.vec.Vec (Std.U32 × (alloc.vec.Vec Std.U8))) (i : Std.U32)
@@ -2230,8 +3025,245 @@ def component.emit.module_loop2
       segment_count buffer1 at1 failure1)
     (buffer, «at», failure)
 
+/-- [noble_wasm::component::emit::module]: loop body 3:
+    Source: 'crates/noble-wasm/src/component/emit.rs', lines 40:4-45:5 -/
+@[rust_loop_body]
+def component.emit.module_loop3.body
+  (plans : Slice component.lower.Plan) (plan_count : Std.Usize)
+  (buffer : output.Buffer) («at» : Std.Usize) (failure : Option Diagnostic) :
+  Result (ControlFlow (output.Buffer × Std.Usize × (Option Diagnostic))
+    (output.Buffer × (Option Diagnostic)))
+  := do
+  if «at» < plan_count
+  then
+    let b := core.option.Option.is_none failure
+    if b
+    then
+      let p ← Slice.index_usize plans «at»
+      let (r, buffer1) ← component.emit.function p buffer
+      let failure1 ←
+        match r with
+        | core.result.Result.Ok _ => ok failure
+        | core.result.Result.Err error => ok (some error)
+      let at1 ← lift (core.num.Usize.saturating_add «at» 1#usize)
+      ok (cont (buffer1, at1, failure1))
+    else ok (done (buffer, failure))
+  else ok (done (buffer, failure))
+
+/-- [noble_wasm::component::emit::module]: loop 3:
+    Source: 'crates/noble-wasm/src/component/emit.rs', lines 40:4-45:5 -/
+@[rust_loop]
+def component.emit.module_loop3
+  (plans : Slice component.lower.Plan) (buffer : output.Buffer)
+  («at» : Std.Usize) (failure : Option Diagnostic) (plan_count : Std.Usize) :
+  Result (output.Buffer × (Option Diagnostic))
+  := do
+  loop
+    (fun (buffer1, at1, failure1) => component.emit.module_loop3.body plans
+      plan_count buffer1 at1 failure1)
+    (buffer, «at», failure)
+
+/-- [noble_wasm::component::emit::module]: loop body 4:
+    Source: 'crates/noble-wasm/src/component/emit.rs', lines 51:4-56:5 -/
+@[rust_loop_body]
+def component.emit.module_loop4.body
+  (v : alloc.vec.Vec (Std.U32 × (alloc.vec.Vec Std.U8))) (i : Std.U32)
+  (segment_count : Std.Usize) (buffer : output.Buffer) («at» : Std.Usize)
+  (failure : Option Diagnostic) :
+  Result (ControlFlow (output.Buffer × Std.Usize × (Option Diagnostic))
+    (output.Buffer × (Option Diagnostic)))
+  := do
+  if «at» < segment_count
+  then
+    let b := core.option.Option.is_none failure
+    if b
+    then
+      let (r, buffer1) ←
+        component.emit.data_segment { segments := v, «end» := i } «at»
+          buffer
+      let failure1 ←
+        match r with
+        | core.result.Result.Ok _ => ok failure
+        | core.result.Result.Err error => ok (some error)
+      let at1 ← lift (core.num.Usize.saturating_add «at» 1#usize)
+      ok (cont (buffer1, at1, failure1))
+    else ok (done (buffer, failure))
+  else ok (done (buffer, failure))
+
+/-- [noble_wasm::component::emit::module]: loop 4:
+    Source: 'crates/noble-wasm/src/component/emit.rs', lines 51:4-56:5 -/
+@[rust_loop]
+def component.emit.module_loop4
+  (v : alloc.vec.Vec (Std.U32 × (alloc.vec.Vec Std.U8))) (i : Std.U32)
+  (buffer : output.Buffer) («at» : Std.Usize) (failure : Option Diagnostic)
+  (segment_count : Std.Usize) :
+  Result (output.Buffer × (Option Diagnostic))
+  := do
+  loop
+    (fun (buffer1, at1, failure1) => component.emit.module_loop4.body v i
+      segment_count buffer1 at1 failure1)
+    (buffer, «at», failure)
+
+/-- [noble_wasm::component::emit::module]: loop body 5:
+    Source: 'crates/noble-wasm/src/component/emit.rs', lines 40:4-45:5 -/
+@[rust_loop_body]
+def component.emit.module_loop5.body
+  (plans : Slice component.lower.Plan) (plan_count : Std.Usize)
+  (buffer : output.Buffer) («at» : Std.Usize) (failure : Option Diagnostic) :
+  Result (ControlFlow (output.Buffer × Std.Usize × (Option Diagnostic))
+    (output.Buffer × (Option Diagnostic)))
+  := do
+  if «at» < plan_count
+  then
+    let b := core.option.Option.is_none failure
+    if b
+    then
+      let p ← Slice.index_usize plans «at»
+      let (r, buffer1) ← component.emit.function p buffer
+      let failure1 ←
+        match r with
+        | core.result.Result.Ok _ => ok failure
+        | core.result.Result.Err error => ok (some error)
+      let at1 ← lift (core.num.Usize.saturating_add «at» 1#usize)
+      ok (cont (buffer1, at1, failure1))
+    else ok (done (buffer, failure))
+  else ok (done (buffer, failure))
+
+/-- [noble_wasm::component::emit::module]: loop 5:
+    Source: 'crates/noble-wasm/src/component/emit.rs', lines 40:4-45:5 -/
+@[rust_loop]
+def component.emit.module_loop5
+  (plans : Slice component.lower.Plan) (buffer : output.Buffer)
+  («at» : Std.Usize) (failure : Option Diagnostic) (plan_count : Std.Usize) :
+  Result (output.Buffer × (Option Diagnostic))
+  := do
+  loop
+    (fun (buffer1, at1, failure1) => component.emit.module_loop5.body plans
+      plan_count buffer1 at1 failure1)
+    (buffer, «at», failure)
+
+/-- [noble_wasm::component::emit::module]: loop body 6:
+    Source: 'crates/noble-wasm/src/component/emit.rs', lines 51:4-56:5 -/
+@[rust_loop_body]
+def component.emit.module_loop6.body
+  (v : alloc.vec.Vec (Std.U32 × (alloc.vec.Vec Std.U8))) (i : Std.U32)
+  (segment_count : Std.Usize) (buffer : output.Buffer) («at» : Std.Usize)
+  (failure : Option Diagnostic) :
+  Result (ControlFlow (output.Buffer × Std.Usize × (Option Diagnostic))
+    (output.Buffer × (Option Diagnostic)))
+  := do
+  if «at» < segment_count
+  then
+    let b := core.option.Option.is_none failure
+    if b
+    then
+      let (r, buffer1) ←
+        component.emit.data_segment { segments := v, «end» := i } «at»
+          buffer
+      let failure1 ←
+        match r with
+        | core.result.Result.Ok _ => ok failure
+        | core.result.Result.Err error => ok (some error)
+      let at1 ← lift (core.num.Usize.saturating_add «at» 1#usize)
+      ok (cont (buffer1, at1, failure1))
+    else ok (done (buffer, failure))
+  else ok (done (buffer, failure))
+
+/-- [noble_wasm::component::emit::module]: loop 6:
+    Source: 'crates/noble-wasm/src/component/emit.rs', lines 51:4-56:5 -/
+@[rust_loop]
+def component.emit.module_loop6
+  (v : alloc.vec.Vec (Std.U32 × (alloc.vec.Vec Std.U8))) (i : Std.U32)
+  (buffer : output.Buffer) («at» : Std.Usize) (failure : Option Diagnostic)
+  (segment_count : Std.Usize) :
+  Result (output.Buffer × (Option Diagnostic))
+  := do
+  loop
+    (fun (buffer1, at1, failure1) => component.emit.module_loop6.body v i
+      segment_count buffer1 at1 failure1)
+    (buffer, «at», failure)
+
+/-- [noble_wasm::component::emit::module]: loop body 7:
+    Source: 'crates/noble-wasm/src/component/emit.rs', lines 40:4-45:5 -/
+@[rust_loop_body]
+def component.emit.module_loop7.body
+  (plans : Slice component.lower.Plan) (plan_count : Std.Usize)
+  (buffer : output.Buffer) («at» : Std.Usize) (failure : Option Diagnostic) :
+  Result (ControlFlow (output.Buffer × Std.Usize × (Option Diagnostic))
+    (output.Buffer × (Option Diagnostic)))
+  := do
+  if «at» < plan_count
+  then
+    let b := core.option.Option.is_none failure
+    if b
+    then
+      let p ← Slice.index_usize plans «at»
+      let (r, buffer1) ← component.emit.function p buffer
+      let failure1 ←
+        match r with
+        | core.result.Result.Ok _ => ok failure
+        | core.result.Result.Err error => ok (some error)
+      let at1 ← lift (core.num.Usize.saturating_add «at» 1#usize)
+      ok (cont (buffer1, at1, failure1))
+    else ok (done (buffer, failure))
+  else ok (done (buffer, failure))
+
+/-- [noble_wasm::component::emit::module]: loop 7:
+    Source: 'crates/noble-wasm/src/component/emit.rs', lines 40:4-45:5 -/
+@[rust_loop]
+def component.emit.module_loop7
+  (plans : Slice component.lower.Plan) (buffer : output.Buffer)
+  («at» : Std.Usize) (failure : Option Diagnostic) (plan_count : Std.Usize) :
+  Result (output.Buffer × (Option Diagnostic))
+  := do
+  loop
+    (fun (buffer1, at1, failure1) => component.emit.module_loop7.body plans
+      plan_count buffer1 at1 failure1)
+    (buffer, «at», failure)
+
+/-- [noble_wasm::component::emit::module]: loop body 8:
+    Source: 'crates/noble-wasm/src/component/emit.rs', lines 51:4-56:5 -/
+@[rust_loop_body]
+def component.emit.module_loop8.body
+  (v : alloc.vec.Vec (Std.U32 × (alloc.vec.Vec Std.U8))) (i : Std.U32)
+  (segment_count : Std.Usize) (buffer : output.Buffer) («at» : Std.Usize)
+  (failure : Option Diagnostic) :
+  Result (ControlFlow (output.Buffer × Std.Usize × (Option Diagnostic))
+    (output.Buffer × (Option Diagnostic)))
+  := do
+  if «at» < segment_count
+  then
+    let b := core.option.Option.is_none failure
+    if b
+    then
+      let (r, buffer1) ←
+        component.emit.data_segment { segments := v, «end» := i } «at»
+          buffer
+      let failure1 ←
+        match r with
+        | core.result.Result.Ok _ => ok failure
+        | core.result.Result.Err error => ok (some error)
+      let at1 ← lift (core.num.Usize.saturating_add «at» 1#usize)
+      ok (cont (buffer1, at1, failure1))
+    else ok (done (buffer, failure))
+  else ok (done (buffer, failure))
+
+/-- [noble_wasm::component::emit::module]: loop 8:
+    Source: 'crates/noble-wasm/src/component/emit.rs', lines 51:4-56:5 -/
+@[rust_loop]
+def component.emit.module_loop8
+  (v : alloc.vec.Vec (Std.U32 × (alloc.vec.Vec Std.U8))) (i : Std.U32)
+  (buffer : output.Buffer) («at» : Std.Usize) (failure : Option Diagnostic)
+  (segment_count : Std.Usize) :
+  Result (output.Buffer × (Option Diagnostic))
+  := do
+  loop
+    (fun (buffer1, at1, failure1) => component.emit.module_loop8.body v i
+      segment_count buffer1 at1 failure1)
+    (buffer, «at», failure)
+
 /-- [noble_wasm::component::emit::module]:
-    Source: 'crates/noble-wasm/src/component/emit.rs', lines 10:0-54:1 -/
+    Source: 'crates/noble-wasm/src/component/emit.rs', lines 12:0-62:1 -/
 def component.emit.module
   (world : noble_contracts.component.World)
   (plans : Slice component.lower.Plan) (data : component.lower.Data) :
@@ -2252,43 +3284,164 @@ def component.emit.module
       component.emit.module_loop0 world buffer1 0#usize none operation_count
     match failure with
     | none =>
-      let s2 ←
-        core.str.Str.as_bytes (toStr
-          "  (memory (export \"memory\") 16 16)\n  (global $heap (mut i32) (i32.const 65536))\n  (global $quota (mut i32) (i32.const 983040))\n  (global $busy (mut i32) (i32.const 0))\n  (global $allocations (mut i64) (i64.const 0))\n  (global $allocated (mut i64) (i64.const 0))\n  (global $copied (mut i64) (i64.const 0))\n  (global $cleanups (mut i64) (i64.const 0))\n  ;; '$' cannot occur in a WIT identifier; diagnostics never alias guest exports.\n  (func (export \"noble$set-allocation-limit\") (param $limit i32)\n    global.get $busy if unreachable end\n    global.get $heap i32.const 65536 i32.ne if unreachable end\n    local.get $limit i32.const 983040 i32.gt_u if unreachable end\n    local.get $limit global.set $quota)\n  (func (export \"noble$allocation-count\") (result i64) global.get $allocations)\n  (func (export \"noble$allocated-bytes\") (result i64) global.get $allocated)\n  (func (export \"noble$copied-bytes\") (result i64) global.get $copied)\n  (func (export \"noble$live-bytes\") (result i32) global.get $heap i32.const 65536 i32.sub)\n  (func (export \"noble$cleanup-count\") (result i64) global.get $cleanups)\n  (func $cleanup (export \"noble$cleanup\")\n    i32.const 65536 global.set $heap\n    i32.const 0 global.set $busy\n    global.get $cleanups i64.const 1 i64.add global.set $cleanups)\n  (func $enter\n    global.get $busy if unreachable end\n    i32.const 1 global.set $busy)\n  (func $range (param $ptr i32) (param $len i32)\n    local.get $ptr i32.const 1048576 i32.gt_u if unreachable end\n    local.get $len i32.const 1048576 local.get $ptr i32.sub i32.gt_u if unreachable end)\n  (func $alloc (param $align i32) (param $size i32) (result i32)\n    (local $ptr i32) (local $end i32)\n    local.get $align i32.eqz if unreachable end\n    local.get $align i32.const 8 i32.gt_u if unreachable end\n    local.get $align local.get $align i32.const 1 i32.sub i32.and if unreachable end\n    global.get $heap local.get $align i32.const 1 i32.sub i32.add\n    i32.const 0 local.get $align i32.sub i32.and local.set $ptr\n    local.get $ptr i32.const 1048576 i32.gt_u if unreachable end\n    local.get $size i32.const 1048576 local.get $ptr i32.sub i32.gt_u if unreachable end\n    local.get $ptr local.get $size i32.add local.set $end\n    local.get $end i32.const 65536 i32.sub global.get $quota i32.gt_u if unreachable end\n    local.get $end global.set $heap\n    global.get $allocations i64.const 1 i64.add global.set $allocations\n    global.get $allocated local.get $size i64.extend_i32_u i64.add global.set $allocated\n    local.get $ptr)\n  (func $copy (param $old i32) (param $size i32) (result i32)\n    (local $ptr i32)\n    local.get $old local.get $size call $range\n    i32.const 1 local.get $size call $alloc local.set $ptr\n    local.get $ptr local.get $old local.get $size memory.copy\n    global.get $copied local.get $size i64.extend_i32_u i64.add global.set $copied\n    local.get $ptr)\n  (func (export \"cabi_realloc\") (param $old i32) (param $old_size i32) (param $align i32) (param $size i32) (result i32)\n    (local $ptr i32) (local $count i32)\n    local.get $old_size if\n      local.get $old local.get $old_size call $range\n      local.get $old i32.const 65536 i32.lt_u if unreachable end\n      local.get $old local.get $old_size i32.add global.get $heap i32.gt_u if unreachable end\n    end\n    local.get $size i32.eqz if i32.const 0 return end\n    local.get $align local.get $size call $alloc local.set $ptr\n    local.get $old_size local.get $size local.get $old_size local.get $size i32.lt_u select local.set $count\n    local.get $count if\n      local.get $ptr local.get $old local.get $count memory.copy\n      global.get $copied local.get $count i64.extend_i32_u i64.add global.set $copied\n    end\n    local.get $ptr)\n  (func $utf8 (param $ptr i32) (param $len i32)\n    (local $at i32) (local $lead i32) (local $next i32) (local $need i32)\n    local.get $ptr local.get $len call $range\n    block $done loop $scan\n      local.get $at local.get $len i32.eq br_if $done\n      local.get $ptr local.get $at i32.add i32.load8_u local.set $lead\n      local.get $at i32.const 1 i32.add local.set $at\n      local.get $lead i32.const 128 i32.lt_u br_if $scan\n      local.get $lead i32.const 194 i32.lt_u if unreachable end\n      local.get $lead i32.const 244 i32.gt_u if unreachable end\n      i32.const 1 local.set $need\n      local.get $lead i32.const 224 i32.ge_u if i32.const 2 local.set $need end\n      local.get $lead i32.const 240 i32.ge_u if i32.const 3 local.set $need end\n      local.get $need local.get $len local.get $at i32.sub i32.gt_u if unreachable end\n      local.get $ptr local.get $at i32.add i32.load8_u local.set $next\n      local.get $lead i32.const 224 i32.eq local.get $next i32.const 160 i32.lt_u i32.and if unreachable end\n      local.get $lead i32.const 237 i32.eq local.get $next i32.const 160 i32.ge_u i32.and if unreachable end\n      local.get $lead i32.const 240 i32.eq local.get $next i32.const 144 i32.lt_u i32.and if unreachable end\n      local.get $lead i32.const 244 i32.eq local.get $next i32.const 144 i32.ge_u i32.and if unreachable end\n      loop $continuations\n        local.get $ptr local.get $at i32.add i32.load8_u local.set $next\n        local.get $next i32.const 128 i32.lt_u if unreachable end\n        local.get $next i32.const 191 i32.gt_u if unreachable end\n        local.get $at i32.const 1 i32.add local.set $at\n        local.get $need i32.const 1 i32.sub local.tee $need br_if $continuations\n      end\n      br $scan\n    end end)\n")
-      let (r1, buffer3) ← output.Buffer.append buffer2 s2
-      match r1 with
-      | core.result.Result.Ok _ =>
-        let plan_count := Slice.len plans
-        let (buffer4, failure1) ←
-          component.emit.module_loop1 plans buffer3 0#usize none plan_count
-        match failure1 with
-        | none =>
-          let segment_count := alloc.vec.Vec.len data.segments
-          let (buffer5, failure2) ←
-            component.emit.module_loop2 data.segments data.end buffer4 0#usize
-              none segment_count
-          match failure2 with
-          | none =>
+      let b ← noble_contracts.component.World.is_async world
+      if b
+      then
+        let (r1, buffer3) ← component.emit.async_imports plans buffer2
+        match r1 with
+        | core.result.Result.Ok _ =>
+          let s2 ←
+            core.str.Str.as_bytes (toStr
+              "  (memory (export \"memory\") 16 16)\n  (global $heap (mut i32) (i32.const 65536))\n  (global $quota (mut i32) (i32.const 983040))\n  (global $busy (mut i32) (i32.const 0))\n  (global $allocations (mut i64) (i64.const 0))\n  (global $allocated (mut i64) (i64.const 0))\n  (global $copied (mut i64) (i64.const 0))\n  (global $cleanups (mut i64) (i64.const 0))\n  ;; '$' cannot occur in a WIT identifier; diagnostics never alias guest exports.\n  (func (export \"noble$set-allocation-limit\") (param $limit i32)\n    global.get $busy if unreachable end\n    global.get $heap i32.const 65536 i32.ne if unreachable end\n    local.get $limit i32.const 983040 i32.gt_u if unreachable end\n    local.get $limit global.set $quota)\n  (func (export \"noble$allocation-count\") (result i64) global.get $allocations)\n  (func (export \"noble$allocated-bytes\") (result i64) global.get $allocated)\n  (func (export \"noble$copied-bytes\") (result i64) global.get $copied)\n  (func (export \"noble$live-bytes\") (result i32) global.get $heap i32.const 65536 i32.sub)\n  (func (export \"noble$cleanup-count\") (result i64) global.get $cleanups)\n  (func $cleanup (export \"noble$cleanup\")\n    i32.const 65536 global.set $heap\n    i32.const 0 global.set $busy\n    global.get $cleanups i64.const 1 i64.add global.set $cleanups)\n  (func $enter\n    global.get $busy if unreachable end\n    i32.const 1 global.set $busy)\n  (func $range (param $ptr i32) (param $len i32)\n    local.get $ptr i32.const 1048576 i32.gt_u if unreachable end\n    local.get $len i32.const 1048576 local.get $ptr i32.sub i32.gt_u if unreachable end)\n  (func $alloc (param $align i32) (param $size i32) (result i32)\n    (local $ptr i32) (local $end i32)\n    local.get $align i32.eqz if unreachable end\n    local.get $align i32.const 8 i32.gt_u if unreachable end\n    local.get $align local.get $align i32.const 1 i32.sub i32.and if unreachable end\n    global.get $heap local.get $align i32.const 1 i32.sub i32.add\n    i32.const 0 local.get $align i32.sub i32.and local.set $ptr\n    local.get $ptr i32.const 1048576 i32.gt_u if unreachable end\n    local.get $size i32.const 1048576 local.get $ptr i32.sub i32.gt_u if unreachable end\n    local.get $ptr local.get $size i32.add local.set $end\n    local.get $end i32.const 65536 i32.sub global.get $quota i32.gt_u if unreachable end\n    local.get $end global.set $heap\n    global.get $allocations i64.const 1 i64.add global.set $allocations\n    global.get $allocated local.get $size i64.extend_i32_u i64.add global.set $allocated\n    local.get $ptr)\n  (func $copy (param $old i32) (param $size i32) (result i32)\n    (local $ptr i32)\n    local.get $old local.get $size call $range\n    i32.const 1 local.get $size call $alloc local.set $ptr\n    local.get $ptr local.get $old local.get $size memory.copy\n    global.get $copied local.get $size i64.extend_i32_u i64.add global.set $copied\n    local.get $ptr)\n  (func (export \"cabi_realloc\") (param $old i32) (param $old_size i32) (param $align i32) (param $size i32) (result i32)\n    (local $ptr i32) (local $count i32)\n    local.get $old_size if\n      local.get $old local.get $old_size call $range\n      local.get $old i32.const 65536 i32.lt_u if unreachable end\n      local.get $old local.get $old_size i32.add global.get $heap i32.gt_u if unreachable end\n    end\n    local.get $size i32.eqz if i32.const 0 return end\n    local.get $align local.get $size call $alloc local.set $ptr\n    local.get $old_size local.get $size local.get $old_size local.get $size i32.lt_u select local.set $count\n    local.get $count if\n      local.get $ptr local.get $old local.get $count memory.copy\n      global.get $copied local.get $count i64.extend_i32_u i64.add global.set $copied\n    end\n    local.get $ptr)\n  (func $utf8 (param $ptr i32) (param $len i32)\n    (local $at i32) (local $lead i32) (local $next i32) (local $need i32)\n    local.get $ptr local.get $len call $range\n    block $done loop $scan\n      local.get $at local.get $len i32.eq br_if $done\n      local.get $ptr local.get $at i32.add i32.load8_u local.set $lead\n      local.get $at i32.const 1 i32.add local.set $at\n      local.get $lead i32.const 128 i32.lt_u br_if $scan\n      local.get $lead i32.const 194 i32.lt_u if unreachable end\n      local.get $lead i32.const 244 i32.gt_u if unreachable end\n      i32.const 1 local.set $need\n      local.get $lead i32.const 224 i32.ge_u if i32.const 2 local.set $need end\n      local.get $lead i32.const 240 i32.ge_u if i32.const 3 local.set $need end\n      local.get $need local.get $len local.get $at i32.sub i32.gt_u if unreachable end\n      local.get $ptr local.get $at i32.add i32.load8_u local.set $next\n      local.get $lead i32.const 224 i32.eq local.get $next i32.const 160 i32.lt_u i32.and if unreachable end\n      local.get $lead i32.const 237 i32.eq local.get $next i32.const 160 i32.ge_u i32.and if unreachable end\n      local.get $lead i32.const 240 i32.eq local.get $next i32.const 144 i32.lt_u i32.and if unreachable end\n      local.get $lead i32.const 244 i32.eq local.get $next i32.const 144 i32.ge_u i32.and if unreachable end\n      loop $continuations\n        local.get $ptr local.get $at i32.add i32.load8_u local.set $next\n        local.get $next i32.const 128 i32.lt_u if unreachable end\n        local.get $next i32.const 191 i32.gt_u if unreachable end\n        local.get $at i32.const 1 i32.add local.set $at\n        local.get $need i32.const 1 i32.sub local.tee $need br_if $continuations\n      end\n      br $scan\n    end end)\n")
+          let (r2, buffer4) ← output.Buffer.append buffer3 s2
+          match r2 with
+          | core.result.Result.Ok _ =>
+            if b
+            then
+              let s3 ←
+                core.str.Str.as_bytes (toStr
+                  "  ;; One direct-style import is outstanding at a time. Offsets 0..8 are\n  ;; reserved event scratch, below literals; $busy excludes guest reentrancy.\n  ;; The engine, not a guest scheduler, suspends this stack at wait.\n  (func $await-subtask (param $packed i32)\n    (local $task i32) (local $set i32) (local $state i32)\n    (local $next i32) (local $remaining i32)\n    ;; An eagerly returned call has no native subtask handle to drop.\n    local.get $packed i32.const 2 i32.eq if return end\n    local.get $packed i32.const 15 i32.and local.tee $state\n    i32.const 1 i32.gt_u if unreachable end\n    local.get $packed i32.const 4 i32.shr_u local.tee $task\n    i32.eqz if unreachable end\n    call $waitable-set-new local.set $set\n    local.get $task local.get $set call $waitable-join\n    i32.const 2 local.set $remaining\n    block $returned\n      loop $progress\n        local.get $remaining i32.eqz if unreachable end\n        local.get $remaining i32.const 1 i32.sub local.set $remaining\n        local.get $set i32.const 0 call $waitable-set-wait\n        i32.const 1 i32.ne if unreachable end\n        i32.const 0 i32.load local.get $task i32.ne if unreachable end\n        i32.const 4 i32.load local.tee $next\n        local.get $state i32.le_u if unreachable end\n        local.get $next i32.const 4 i32.gt_u if unreachable end\n        local.get $next local.set $state\n        local.get $state i32.const 2 i32.ge_u br_if $returned\n        br $progress\n      end\n    end\n    local.get $task i32.const 0 call $waitable-join\n    local.get $task call $subtask-drop\n    local.get $set call $waitable-set-drop\n    ;; Native cancellation is not a successful result. The shell retains\n    ;; abnormal ownership/retirement obligations after this trap.\n    local.get $state i32.const 2 i32.ne if unreachable end)\n")
+              let (r3, buffer5) ← output.Buffer.append buffer4 s3
+              match r3 with
+              | core.result.Result.Ok _ =>
+                let plan_count := Slice.len plans
+                let (buffer6, failure1) ←
+                  component.emit.module_loop1 plans buffer5 0#usize none
+                    plan_count
+                match failure1 with
+                | none =>
+                  let segment_count := alloc.vec.Vec.len data.segments
+                  let (buffer7, failure2) ←
+                    component.emit.module_loop2 data.segments data.end buffer6
+                      0#usize none segment_count
+                  match failure2 with
+                  | none =>
+                    let s4 ←
+                      lift (Array.to_slice
+                        (Array.make 2#usize [ 41#u8, 10#u8 ]))
+                    let (r4, buffer8) ← output.Buffer.append buffer7 s4
+                    match r4 with
+                    | core.result.Result.Ok _ =>
+                      let v ← output.Buffer.finish buffer8
+                      ok (core.result.Result.Ok v)
+                    | core.result.Result.Err failure3 =>
+                      ok (core.result.Result.Err failure3)
+                  | some error => ok (core.result.Result.Err error)
+                | some error => ok (core.result.Result.Err error)
+              | core.result.Result.Err failure1 =>
+                ok (core.result.Result.Err failure1)
+            else
+              let plan_count := Slice.len plans
+              let (buffer5, failure1) ←
+                component.emit.module_loop3 plans buffer4 0#usize none
+                  plan_count
+              match failure1 with
+              | none =>
+                let segment_count := alloc.vec.Vec.len data.segments
+                let (buffer6, failure2) ←
+                  component.emit.module_loop4 data.segments data.end buffer5
+                    0#usize none segment_count
+                match failure2 with
+                | none =>
+                  let s3 ←
+                    lift (Array.to_slice (Array.make 2#usize [ 41#u8, 10#u8 ]))
+                  let (r3, buffer7) ← output.Buffer.append buffer6 s3
+                  match r3 with
+                  | core.result.Result.Ok _ =>
+                    let v ← output.Buffer.finish buffer7
+                    ok (core.result.Result.Ok v)
+                  | core.result.Result.Err failure3 =>
+                    ok (core.result.Result.Err failure3)
+                | some error => ok (core.result.Result.Err error)
+              | some error => ok (core.result.Result.Err error)
+          | core.result.Result.Err failure1 =>
+            ok (core.result.Result.Err failure1)
+        | core.result.Result.Err failure1 =>
+          ok (core.result.Result.Err failure1)
+      else
+        let s2 ←
+          core.str.Str.as_bytes (toStr
+            "  (memory (export \"memory\") 16 16)\n  (global $heap (mut i32) (i32.const 65536))\n  (global $quota (mut i32) (i32.const 983040))\n  (global $busy (mut i32) (i32.const 0))\n  (global $allocations (mut i64) (i64.const 0))\n  (global $allocated (mut i64) (i64.const 0))\n  (global $copied (mut i64) (i64.const 0))\n  (global $cleanups (mut i64) (i64.const 0))\n  ;; '$' cannot occur in a WIT identifier; diagnostics never alias guest exports.\n  (func (export \"noble$set-allocation-limit\") (param $limit i32)\n    global.get $busy if unreachable end\n    global.get $heap i32.const 65536 i32.ne if unreachable end\n    local.get $limit i32.const 983040 i32.gt_u if unreachable end\n    local.get $limit global.set $quota)\n  (func (export \"noble$allocation-count\") (result i64) global.get $allocations)\n  (func (export \"noble$allocated-bytes\") (result i64) global.get $allocated)\n  (func (export \"noble$copied-bytes\") (result i64) global.get $copied)\n  (func (export \"noble$live-bytes\") (result i32) global.get $heap i32.const 65536 i32.sub)\n  (func (export \"noble$cleanup-count\") (result i64) global.get $cleanups)\n  (func $cleanup (export \"noble$cleanup\")\n    i32.const 65536 global.set $heap\n    i32.const 0 global.set $busy\n    global.get $cleanups i64.const 1 i64.add global.set $cleanups)\n  (func $enter\n    global.get $busy if unreachable end\n    i32.const 1 global.set $busy)\n  (func $range (param $ptr i32) (param $len i32)\n    local.get $ptr i32.const 1048576 i32.gt_u if unreachable end\n    local.get $len i32.const 1048576 local.get $ptr i32.sub i32.gt_u if unreachable end)\n  (func $alloc (param $align i32) (param $size i32) (result i32)\n    (local $ptr i32) (local $end i32)\n    local.get $align i32.eqz if unreachable end\n    local.get $align i32.const 8 i32.gt_u if unreachable end\n    local.get $align local.get $align i32.const 1 i32.sub i32.and if unreachable end\n    global.get $heap local.get $align i32.const 1 i32.sub i32.add\n    i32.const 0 local.get $align i32.sub i32.and local.set $ptr\n    local.get $ptr i32.const 1048576 i32.gt_u if unreachable end\n    local.get $size i32.const 1048576 local.get $ptr i32.sub i32.gt_u if unreachable end\n    local.get $ptr local.get $size i32.add local.set $end\n    local.get $end i32.const 65536 i32.sub global.get $quota i32.gt_u if unreachable end\n    local.get $end global.set $heap\n    global.get $allocations i64.const 1 i64.add global.set $allocations\n    global.get $allocated local.get $size i64.extend_i32_u i64.add global.set $allocated\n    local.get $ptr)\n  (func $copy (param $old i32) (param $size i32) (result i32)\n    (local $ptr i32)\n    local.get $old local.get $size call $range\n    i32.const 1 local.get $size call $alloc local.set $ptr\n    local.get $ptr local.get $old local.get $size memory.copy\n    global.get $copied local.get $size i64.extend_i32_u i64.add global.set $copied\n    local.get $ptr)\n  (func (export \"cabi_realloc\") (param $old i32) (param $old_size i32) (param $align i32) (param $size i32) (result i32)\n    (local $ptr i32) (local $count i32)\n    local.get $old_size if\n      local.get $old local.get $old_size call $range\n      local.get $old i32.const 65536 i32.lt_u if unreachable end\n      local.get $old local.get $old_size i32.add global.get $heap i32.gt_u if unreachable end\n    end\n    local.get $size i32.eqz if i32.const 0 return end\n    local.get $align local.get $size call $alloc local.set $ptr\n    local.get $old_size local.get $size local.get $old_size local.get $size i32.lt_u select local.set $count\n    local.get $count if\n      local.get $ptr local.get $old local.get $count memory.copy\n      global.get $copied local.get $count i64.extend_i32_u i64.add global.set $copied\n    end\n    local.get $ptr)\n  (func $utf8 (param $ptr i32) (param $len i32)\n    (local $at i32) (local $lead i32) (local $next i32) (local $need i32)\n    local.get $ptr local.get $len call $range\n    block $done loop $scan\n      local.get $at local.get $len i32.eq br_if $done\n      local.get $ptr local.get $at i32.add i32.load8_u local.set $lead\n      local.get $at i32.const 1 i32.add local.set $at\n      local.get $lead i32.const 128 i32.lt_u br_if $scan\n      local.get $lead i32.const 194 i32.lt_u if unreachable end\n      local.get $lead i32.const 244 i32.gt_u if unreachable end\n      i32.const 1 local.set $need\n      local.get $lead i32.const 224 i32.ge_u if i32.const 2 local.set $need end\n      local.get $lead i32.const 240 i32.ge_u if i32.const 3 local.set $need end\n      local.get $need local.get $len local.get $at i32.sub i32.gt_u if unreachable end\n      local.get $ptr local.get $at i32.add i32.load8_u local.set $next\n      local.get $lead i32.const 224 i32.eq local.get $next i32.const 160 i32.lt_u i32.and if unreachable end\n      local.get $lead i32.const 237 i32.eq local.get $next i32.const 160 i32.ge_u i32.and if unreachable end\n      local.get $lead i32.const 240 i32.eq local.get $next i32.const 144 i32.lt_u i32.and if unreachable end\n      local.get $lead i32.const 244 i32.eq local.get $next i32.const 144 i32.ge_u i32.and if unreachable end\n      loop $continuations\n        local.get $ptr local.get $at i32.add i32.load8_u local.set $next\n        local.get $next i32.const 128 i32.lt_u if unreachable end\n        local.get $next i32.const 191 i32.gt_u if unreachable end\n        local.get $at i32.const 1 i32.add local.set $at\n        local.get $need i32.const 1 i32.sub local.tee $need br_if $continuations\n      end\n      br $scan\n    end end)\n")
+        let (r1, buffer3) ← output.Buffer.append buffer2 s2
+        match r1 with
+        | core.result.Result.Ok _ =>
+          if b
+          then
             let s3 ←
-              lift (Array.to_slice (Array.make 2#usize [ 41#u8, 10#u8 ]))
-            let (r2, buffer6) ← output.Buffer.append buffer5 s3
+              core.str.Str.as_bytes (toStr
+                "  ;; One direct-style import is outstanding at a time. Offsets 0..8 are\n  ;; reserved event scratch, below literals; $busy excludes guest reentrancy.\n  ;; The engine, not a guest scheduler, suspends this stack at wait.\n  (func $await-subtask (param $packed i32)\n    (local $task i32) (local $set i32) (local $state i32)\n    (local $next i32) (local $remaining i32)\n    ;; An eagerly returned call has no native subtask handle to drop.\n    local.get $packed i32.const 2 i32.eq if return end\n    local.get $packed i32.const 15 i32.and local.tee $state\n    i32.const 1 i32.gt_u if unreachable end\n    local.get $packed i32.const 4 i32.shr_u local.tee $task\n    i32.eqz if unreachable end\n    call $waitable-set-new local.set $set\n    local.get $task local.get $set call $waitable-join\n    i32.const 2 local.set $remaining\n    block $returned\n      loop $progress\n        local.get $remaining i32.eqz if unreachable end\n        local.get $remaining i32.const 1 i32.sub local.set $remaining\n        local.get $set i32.const 0 call $waitable-set-wait\n        i32.const 1 i32.ne if unreachable end\n        i32.const 0 i32.load local.get $task i32.ne if unreachable end\n        i32.const 4 i32.load local.tee $next\n        local.get $state i32.le_u if unreachable end\n        local.get $next i32.const 4 i32.gt_u if unreachable end\n        local.get $next local.set $state\n        local.get $state i32.const 2 i32.ge_u br_if $returned\n        br $progress\n      end\n    end\n    local.get $task i32.const 0 call $waitable-join\n    local.get $task call $subtask-drop\n    local.get $set call $waitable-set-drop\n    ;; Native cancellation is not a successful result. The shell retains\n    ;; abnormal ownership/retirement obligations after this trap.\n    local.get $state i32.const 2 i32.ne if unreachable end)\n")
+            let (r2, buffer4) ← output.Buffer.append buffer3 s3
             match r2 with
             | core.result.Result.Ok _ =>
-              let v ← output.Buffer.finish buffer6
-              ok (core.result.Result.Ok v)
-            | core.result.Result.Err failure3 =>
-              ok (core.result.Result.Err failure3)
-          | some error => ok (core.result.Result.Err error)
-        | some error => ok (core.result.Result.Err error)
-      | core.result.Result.Err failure1 => ok (core.result.Result.Err failure1)
+              let plan_count := Slice.len plans
+              let (buffer5, failure1) ←
+                component.emit.module_loop5 plans buffer4 0#usize none
+                  plan_count
+              match failure1 with
+              | none =>
+                let segment_count := alloc.vec.Vec.len data.segments
+                let (buffer6, failure2) ←
+                  component.emit.module_loop6 data.segments data.end buffer5
+                    0#usize none segment_count
+                match failure2 with
+                | none =>
+                  let s4 ←
+                    lift (Array.to_slice (Array.make 2#usize [ 41#u8, 10#u8 ]))
+                  let (r3, buffer7) ← output.Buffer.append buffer6 s4
+                  match r3 with
+                  | core.result.Result.Ok _ =>
+                    let v ← output.Buffer.finish buffer7
+                    ok (core.result.Result.Ok v)
+                  | core.result.Result.Err failure3 =>
+                    ok (core.result.Result.Err failure3)
+                | some error => ok (core.result.Result.Err error)
+              | some error => ok (core.result.Result.Err error)
+            | core.result.Result.Err failure1 =>
+              ok (core.result.Result.Err failure1)
+          else
+            let plan_count := Slice.len plans
+            let (buffer4, failure1) ←
+              component.emit.module_loop7 plans buffer3 0#usize none plan_count
+            match failure1 with
+            | none =>
+              let segment_count := alloc.vec.Vec.len data.segments
+              let (buffer5, failure2) ←
+                component.emit.module_loop8 data.segments data.end buffer4
+                  0#usize none segment_count
+              match failure2 with
+              | none =>
+                let s3 ←
+                  lift (Array.to_slice (Array.make 2#usize [ 41#u8, 10#u8 ]))
+                let (r2, buffer6) ← output.Buffer.append buffer5 s3
+                match r2 with
+                | core.result.Result.Ok _ =>
+                  let v ← output.Buffer.finish buffer6
+                  ok (core.result.Result.Ok v)
+                | core.result.Result.Err failure3 =>
+                  ok (core.result.Result.Err failure3)
+              | some error => ok (core.result.Result.Err error)
+            | some error => ok (core.result.Result.Err error)
+        | core.result.Result.Err failure1 =>
+          ok (core.result.Result.Err failure1)
     | some error => ok (core.result.Result.Err error)
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
+/-- [noble_wasm::component::lower::{noble_wasm::component::lower::Value}::flat]:
+    Source: 'crates/noble-wasm/src/component/lower.rs', lines 38:4-43:5 -/
+def component.lower.Value.flat
+  (self : component.lower.Value) :
+  Result (core.result.Result (Array (Option Std.U32) 3#usize) Diagnostic)
+  := do
+  match self.storage with
+  | component.lower.Storage.Flat locals => ok (core.result.Result.Ok locals)
+  | component.lower.Storage.Pair _ =>
+    ok (core.result.Result.Err Diagnostic.Unsupported)
+
 /-- [noble_wasm::component::lower::{noble_wasm::component::lower::State}::capture]: loop body 0:
-    Source: 'crates/noble-wasm/src/component/lower.rs', lines 107:8-115:9 -/
+    Source: 'crates/noble-wasm/src/component/lower.rs', lines 132:8-140:9 -/
 @[rust_loop_body]
 def component.lower.State.capture_loop.body
-  (a : Array (Option Std.U32) 3#usize) (self : component.lower.State)
+  (locals : Array (Option Std.U32) 3#usize) (self : component.lower.State)
   («at» : Std.Usize) (failure : Option Diagnostic) :
   Result (ControlFlow (component.lower.State × Std.Usize × (Option
     Diagnostic)) (component.lower.State × (Option Diagnostic)))
@@ -2299,7 +3452,7 @@ def component.lower.State.capture_loop.body
     if b
     then
       let at1 ← lift (core.num.Usize.saturating_sub «at» 1#usize)
-      let «local» ← Array.index_usize a at1
+      let «local» ← Array.index_usize locals at1
       match «local» with
       | none => ok (cont (self, at1, failure))
       | some local1 =>
@@ -2313,39 +3466,43 @@ def component.lower.State.capture_loop.body
   else ok (done (self, failure))
 
 /-- [noble_wasm::component::lower::{noble_wasm::component::lower::State}::capture]: loop 0:
-    Source: 'crates/noble-wasm/src/component/lower.rs', lines 107:8-115:9 -/
+    Source: 'crates/noble-wasm/src/component/lower.rs', lines 132:8-140:9 -/
 @[rust_loop]
 def component.lower.State.capture_loop
-  (self : component.lower.State) (a : Array (Option Std.U32) 3#usize)
+  (self : component.lower.State) (locals : Array (Option Std.U32) 3#usize)
   («at» : Std.Usize) (failure : Option Diagnostic) :
   Result (component.lower.State × (Option Diagnostic))
   := do
   loop
-    (fun (self1, at1, failure1) => component.lower.State.capture_loop.body a
-      self1 at1 failure1)
+    (fun (self1, at1, failure1) => component.lower.State.capture_loop.body
+      locals self1 at1 failure1)
     (self, «at», failure)
 
 /-- [noble_wasm::component::lower::{noble_wasm::component::lower::State}::capture]:
-    Source: 'crates/noble-wasm/src/component/lower.rs', lines 104:4-120:5 -/
+    Source: 'crates/noble-wasm/src/component/lower.rs', lines 128:4-145:5 -/
 def component.lower.State.capture
   (self : component.lower.State) (value : component.lower.Value) :
   Result ((core.result.Result Unit Diagnostic) × component.lower.State)
   := do
-  let s ← lift (Array.to_slice value.locals)
-  let «at» := Slice.len s
-  let (self1, failure) ←
-    component.lower.State.capture_loop self value.locals «at» none
-  match failure with
-  | none => ok (core.result.Result.Ok (), self1)
-  | some error => ok (core.result.Result.Err error, self1)
+  let r ← component.lower.Value.flat value
+  match r with
+  | core.result.Result.Ok value1 =>
+    let s ← lift (Array.to_slice value1)
+    let «at» := Slice.len s
+    let (self1, failure) ←
+      component.lower.State.capture_loop self value1 «at» none
+    match failure with
+    | none => ok (core.result.Result.Ok (), self1)
+    | some error => ok (core.result.Result.Err error, self1)
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure, self)
 
 /-- [noble_wasm::component::LOCAL_LIMIT]
-    Source: 'crates/noble-wasm/src/component/mod.rs', lines 20:0-20:34 -/
+    Source: 'crates/noble-wasm/src/component/mod.rs', lines 22:0-22:34 -/
 @[global_simps, irreducible]
 def component.LOCAL_LIMIT : Std.Usize := 16384#usize
 
 /-- [noble_wasm::component::lower::{noble_wasm::component::lower::State}::local]:
-    Source: 'crates/noble-wasm/src/component/lower.rs', lines 39:4-50:5 -/
+    Source: 'crates/noble-wasm/src/component/lower.rs', lines 59:4-70:5 -/
 def component.lower.State.local
   (self : component.lower.State) (lane : component.abi.Lane) :
   Result ((core.result.Result Std.U32 Diagnostic) × component.lower.State)
@@ -2365,7 +3522,7 @@ def component.lower.State.local
       ok (core.result.Result.Err Diagnostic.Exhausted, self)
 
 /-- [noble_wasm::component::lower::{noble_wasm::component::lower::State}::typed_local]:
-    Source: 'crates/noble-wasm/src/component/lower.rs', lines 75:4-82:5 -/
+    Source: 'crates/noble-wasm/src/component/lower.rs', lines 98:4-105:5 -/
 def component.lower.State.typed_local
   (self : component.lower.State) (ty : noble_contracts.component.Type)
   («at» : Std.Usize) :
@@ -2377,7 +3534,7 @@ def component.lower.State.typed_local
   | core.result.Result.Err failure => ok (core.result.Result.Err failure, self)
 
 /-- [noble_wasm::component::lower::{noble_wasm::component::lower::State}::value]: loop body 0:
-    Source: 'crates/noble-wasm/src/component/lower.rs', lines 58:12-68:13 -/
+    Source: 'crates/noble-wasm/src/component/lower.rs', lines 78:12-88:13 -/
 @[rust_loop_body]
 def component.lower.State.value_loop.body
   (canonical : noble_contracts.component.Type) (count : Std.Usize)
@@ -2415,7 +3572,7 @@ def component.lower.State.value_loop.body
   else ok (done (self, locals, failure))
 
 /-- [noble_wasm::component::lower::{noble_wasm::component::lower::State}::value]: loop 0:
-    Source: 'crates/noble-wasm/src/component/lower.rs', lines 58:12-68:13 -/
+    Source: 'crates/noble-wasm/src/component/lower.rs', lines 78:12-88:13 -/
 @[rust_loop]
 def component.lower.State.value_loop
   (self : component.lower.State) (canonical : noble_contracts.component.Type)
@@ -2431,7 +3588,7 @@ def component.lower.State.value_loop
     (self, locals, «at», failure)
 
 /-- [noble_wasm::component::lower::{noble_wasm::component::lower::State}::value]:
-    Source: 'crates/noble-wasm/src/component/lower.rs', lines 51:4-74:5 -/
+    Source: 'crates/noble-wasm/src/component/lower.rs', lines 71:4-97:5 -/
 def component.lower.State.value
   (self : component.lower.State) (ty : noble_kernel.types.Ty) :
   Result ((core.result.Result component.lower.Value Diagnostic) ×
@@ -2442,39 +3599,73 @@ def component.lower.State.value
   | core.result.Result.Ok value =>
     let locals := Array.repeat 3#usize none
     match value with
-    | none => ok (core.result.Result.Ok { ty, locals }, self)
+    | none =>
+      ok (core.result.Result.Ok
+        { ty, storage := (component.lower.Storage.Flat locals) }, self)
     | some canonical =>
       let count ← component.abi.lane_count canonical
       let (self1, locals1, failure) ←
         component.lower.State.value_loop self canonical locals 0#usize none
           count
       match failure with
-      | none => ok (core.result.Result.Ok { ty, locals := locals1 }, self1)
+      | none =>
+        ok (core.result.Result.Ok
+          { ty, storage := (component.lower.Storage.Flat locals1) }, self1)
       | some error => ok (core.result.Result.Err error, self1)
   | core.result.Result.Err failure => ok (core.result.Result.Err failure, self)
 
 /-- [noble_wasm::component::lower::slot]:
-    Source: 'crates/noble-wasm/src/component/lower.rs', lines 265:0-271:1 -/
+    Source: 'crates/noble-wasm/src/component/lower.rs', lines 215:0-222:1 -/
 def component.lower.slot
   (value : component.lower.Value) («at» : Std.Usize) :
   Result (core.result.Result Std.U32 Diagnostic)
   := do
-  let s ← lift (Array.to_slice value.locals)
-  let o ←
-    core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice (Option
-      Std.U32)) s «at»
-  let «local» ←
-    core.option.OptionShared0T.copied (core.option.Option.Insts.CoreMarkerCopy
-      core.marker.CopyU32) o
-  match «local» with
-  | none => ok (core.result.Result.Err Diagnostic.Invalid)
-  | some o1 =>
-    match o1 with
+  let r ← component.lower.Value.flat value
+  match r with
+  | core.result.Result.Ok value1 =>
+    let s ← lift (Array.to_slice value1)
+    let o ←
+      core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice (Option
+        Std.U32)) s «at»
+    let «local» ←
+      core.option.OptionShared0T.copied
+        (core.option.Option.Insts.CoreMarkerCopy core.marker.CopyU32) o
+    match «local» with
     | none => ok (core.result.Result.Err Diagnostic.Invalid)
-    | some local1 => ok (core.result.Result.Ok local1)
+    | some o1 =>
+      match o1 with
+      | none => ok (core.result.Result.Err Diagnostic.Invalid)
+      | some local1 => ok (core.result.Result.Ok local1)
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_wasm::component::lower::results::capture_lane]:
+    Source: 'crates/noble-wasm/src/component/lower/results.rs', lines 290:0-297:1 -/
+def component.lower.results.capture_lane
+  (value : component.lower.Value) («at» : Std.Usize) (buffer : output.Buffer)
+  :
+  Result ((core.result.Result Unit Diagnostic) × output.Buffer)
+  := do
+  let r ← component.lower.slot value «at»
+  match r with
+  | core.result.Result.Ok value1 => component.abi.set buffer value1
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, buffer)
+
+/-- [noble_wasm::component::lower::results::read_lane]:
+    Source: 'crates/noble-wasm/src/component/lower/results.rs', lines 281:0-288:1 -/
+def component.lower.results.read_lane
+  (value : component.lower.Value) («at» : Std.Usize) (buffer : output.Buffer)
+  :
+  Result ((core.result.Result Unit Diagnostic) × output.Buffer)
+  := do
+  let r ← component.lower.slot value «at»
+  match r with
+  | core.result.Result.Ok value1 => component.abi.get buffer value1
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, buffer)
 
 /-- [noble_wasm::component::lower::results::load]:
-    Source: 'crates/noble-wasm/src/component/lower/results.rs', lines 80:0-141:1 -/
+    Source: 'crates/noble-wasm/src/component/lower/results.rs', lines 78:0-147:1 -/
 def component.lower.results.load
   (ty : Option noble_contracts.component.Type) (area : Std.U32)
   (value : component.lower.Value) (buffer : output.Buffer) :
@@ -2485,9 +3676,37 @@ def component.lower.results.load
   | some t =>
     match t with
     | noble_contracts.component.Type.Boolean =>
-      ok (core.result.Result.Err Diagnostic.Defective, buffer)
+      let (r, buffer1) ← component.abi.get buffer area
+      match r with
+      | core.result.Result.Ok _ =>
+        let s ←
+          lift (Array.to_slice
+            (Array.make 13#usize [
+              32#u8, 105#u8, 51#u8, 50#u8, 46#u8, 108#u8, 111#u8, 97#u8,
+              100#u8, 56#u8, 95#u8, 117#u8, 10#u8
+              ]))
+        let (r1, buffer2) ← output.Buffer.append buffer1 s
+        match r1 with
+        | core.result.Result.Ok _ =>
+          component.lower.results.capture_lane value 0#usize buffer2
+        | core.result.Result.Err _ => ok (r1, buffer2)
+      | core.result.Result.Err _ => ok (r, buffer1)
     | noble_contracts.component.Type.S64 =>
-      ok (core.result.Result.Err Diagnostic.Defective, buffer)
+      let (r, buffer1) ← component.abi.get buffer area
+      match r with
+      | core.result.Result.Ok _ =>
+        let s ←
+          lift (Array.to_slice
+            (Array.make 10#usize [
+              32#u8, 105#u8, 54#u8, 52#u8, 46#u8, 108#u8, 111#u8, 97#u8,
+              100#u8, 10#u8
+              ]))
+        let (r1, buffer2) ← output.Buffer.append buffer1 s
+        match r1 with
+        | core.result.Result.Ok _ =>
+          component.lower.results.capture_lane value 0#usize buffer2
+        | core.result.Result.Err _ => ok (r1, buffer2)
+      | core.result.Result.Err _ => ok (r, buffer1)
     | noble_contracts.component.Type.String =>
       let (r, buffer1) ← component.abi.get buffer area
       match r with
@@ -2501,36 +3720,27 @@ def component.lower.results.load
         let (r1, buffer2) ← output.Buffer.append buffer1 s
         match r1 with
         | core.result.Result.Ok _ =>
-          let r2 ← component.lower.slot value 0#usize
+          let (r2, buffer3) ←
+            component.lower.results.capture_lane value 0#usize buffer2
           match r2 with
-          | core.result.Result.Ok value1 =>
-            let (r3, buffer3) ← component.abi.set buffer2 value1
+          | core.result.Result.Ok _ =>
+            let (r3, buffer4) ← component.abi.get buffer3 area
             match r3 with
             | core.result.Result.Ok _ =>
-              let (r4, buffer4) ← component.abi.get buffer3 area
+              let s1 ←
+                lift (Array.to_slice
+                  (Array.make 19#usize [
+                    32#u8, 105#u8, 51#u8, 50#u8, 46#u8, 108#u8, 111#u8, 97#u8,
+                    100#u8, 32#u8, 111#u8, 102#u8, 102#u8, 115#u8, 101#u8,
+                    116#u8, 61#u8, 52#u8, 10#u8
+                    ]))
+              let (r4, buffer5) ← output.Buffer.append buffer4 s1
               match r4 with
               | core.result.Result.Ok _ =>
-                let s1 ←
-                  lift (Array.to_slice
-                    (Array.make 19#usize [
-                      32#u8, 105#u8, 51#u8, 50#u8, 46#u8, 108#u8, 111#u8,
-                      97#u8, 100#u8, 32#u8, 111#u8, 102#u8, 102#u8, 115#u8,
-                      101#u8, 116#u8, 61#u8, 52#u8, 10#u8
-                      ]))
-                let (r5, buffer5) ← output.Buffer.append buffer4 s1
-                match r5 with
-                | core.result.Result.Ok _ =>
-                  let r6 ← component.lower.slot value 1#usize
-                  match r6 with
-                  | core.result.Result.Ok value2 =>
-                    component.abi.set buffer5 value2
-                  | core.result.Result.Err failure =>
-                    ok (core.result.Result.Err failure, buffer5)
-                | core.result.Result.Err _ => ok (r5, buffer5)
-              | core.result.Result.Err _ => ok (r4, buffer4)
-            | core.result.Result.Err _ => ok (r3, buffer3)
-          | core.result.Result.Err failure =>
-            ok (core.result.Result.Err failure, buffer2)
+                component.lower.results.capture_lane value 1#usize buffer5
+              | core.result.Result.Err _ => ok (r4, buffer5)
+            | core.result.Result.Err _ => ok (r3, buffer4)
+          | core.result.Result.Err _ => ok (r2, buffer3)
         | core.result.Result.Err _ => ok (r1, buffer2)
       | core.result.Result.Err _ => ok (r, buffer1)
     | noble_contracts.component.Type.Bytes =>
@@ -2546,36 +3756,27 @@ def component.lower.results.load
         let (r1, buffer2) ← output.Buffer.append buffer1 s
         match r1 with
         | core.result.Result.Ok _ =>
-          let r2 ← component.lower.slot value 0#usize
+          let (r2, buffer3) ←
+            component.lower.results.capture_lane value 0#usize buffer2
           match r2 with
-          | core.result.Result.Ok value1 =>
-            let (r3, buffer3) ← component.abi.set buffer2 value1
+          | core.result.Result.Ok _ =>
+            let (r3, buffer4) ← component.abi.get buffer3 area
             match r3 with
             | core.result.Result.Ok _ =>
-              let (r4, buffer4) ← component.abi.get buffer3 area
+              let s1 ←
+                lift (Array.to_slice
+                  (Array.make 19#usize [
+                    32#u8, 105#u8, 51#u8, 50#u8, 46#u8, 108#u8, 111#u8, 97#u8,
+                    100#u8, 32#u8, 111#u8, 102#u8, 102#u8, 115#u8, 101#u8,
+                    116#u8, 61#u8, 52#u8, 10#u8
+                    ]))
+              let (r4, buffer5) ← output.Buffer.append buffer4 s1
               match r4 with
               | core.result.Result.Ok _ =>
-                let s1 ←
-                  lift (Array.to_slice
-                    (Array.make 19#usize [
-                      32#u8, 105#u8, 51#u8, 50#u8, 46#u8, 108#u8, 111#u8,
-                      97#u8, 100#u8, 32#u8, 111#u8, 102#u8, 102#u8, 115#u8,
-                      101#u8, 116#u8, 61#u8, 52#u8, 10#u8
-                      ]))
-                let (r5, buffer5) ← output.Buffer.append buffer4 s1
-                match r5 with
-                | core.result.Result.Ok _ =>
-                  let r6 ← component.lower.slot value 1#usize
-                  match r6 with
-                  | core.result.Result.Ok value2 =>
-                    component.abi.set buffer5 value2
-                  | core.result.Result.Err failure =>
-                    ok (core.result.Result.Err failure, buffer5)
-                | core.result.Result.Err _ => ok (r5, buffer5)
-              | core.result.Result.Err _ => ok (r4, buffer4)
-            | core.result.Result.Err _ => ok (r3, buffer3)
-          | core.result.Result.Err failure =>
-            ok (core.result.Result.Err failure, buffer2)
+                component.lower.results.capture_lane value 1#usize buffer5
+              | core.result.Result.Err _ => ok (r4, buffer5)
+            | core.result.Result.Err _ => ok (r3, buffer4)
+          | core.result.Result.Err _ => ok (r2, buffer3)
         | core.result.Result.Err _ => ok (r1, buffer2)
       | core.result.Result.Err _ => ok (r, buffer1)
     | noble_contracts.component.Type.ResultS64String =>
@@ -2591,164 +3792,267 @@ def component.lower.results.load
         let (r1, buffer2) ← output.Buffer.append buffer1 s
         match r1 with
         | core.result.Result.Ok _ =>
-          let r2 ← component.lower.slot value 0#usize
+          let (r2, buffer3) ←
+            component.lower.results.capture_lane value 0#usize buffer2
           match r2 with
-          | core.result.Result.Ok value1 =>
-            let (r3, buffer3) ← component.abi.set buffer2 value1
+          | core.result.Result.Ok _ =>
+            let (r3, buffer4) ←
+              component.lower.results.read_lane value 0#usize buffer3
             match r3 with
             | core.result.Result.Ok _ =>
-              match r2 with
-              | core.result.Result.Ok value2 =>
-                let (r4, buffer4) ← component.abi.get buffer3 value2
-                match r4 with
+              let s1 ←
+                lift (Array.to_slice
+                  (Array.make 12#usize [
+                    32#u8, 105#u8, 51#u8, 50#u8, 46#u8, 101#u8, 113#u8, 122#u8,
+                    32#u8, 105#u8, 102#u8, 10#u8
+                    ]))
+              let (r4, buffer5) ← output.Buffer.append buffer4 s1
+              match r4 with
+              | core.result.Result.Ok _ =>
+                let (r5, buffer6) ← component.abi.get buffer5 area
+                match r5 with
                 | core.result.Result.Ok _ =>
-                  let s1 ←
+                  let s2 ←
                     lift (Array.to_slice
-                      (Array.make 12#usize [
-                        32#u8, 105#u8, 51#u8, 50#u8, 46#u8, 101#u8, 113#u8,
-                        122#u8, 32#u8, 105#u8, 102#u8, 10#u8
+                      (Array.make 19#usize [
+                        32#u8, 105#u8, 54#u8, 52#u8, 46#u8, 108#u8, 111#u8,
+                        97#u8, 100#u8, 32#u8, 111#u8, 102#u8, 102#u8, 115#u8,
+                        101#u8, 116#u8, 61#u8, 56#u8, 10#u8
                         ]))
-                  let (r5, buffer5) ← output.Buffer.append buffer4 s1
-                  match r5 with
+                  let (r6, buffer7) ← output.Buffer.append buffer6 s2
+                  match r6 with
                   | core.result.Result.Ok _ =>
-                    let (r6, buffer6) ← component.abi.get buffer5 area
-                    match r6 with
+                    let (r7, buffer8) ←
+                      component.lower.results.capture_lane value 1#usize
+                        buffer7
+                    match r7 with
                     | core.result.Result.Ok _ =>
-                      let s2 ←
+                      let s3 ←
                         lift (Array.to_slice
-                          (Array.make 19#usize [
-                            32#u8, 105#u8, 54#u8, 52#u8, 46#u8, 108#u8, 111#u8,
-                            97#u8, 100#u8, 32#u8, 111#u8, 102#u8, 102#u8,
-                            115#u8, 101#u8, 116#u8, 61#u8, 56#u8, 10#u8
+                          (Array.make 6#usize [
+                            32#u8, 101#u8, 108#u8, 115#u8, 101#u8, 10#u8
                             ]))
-                      let (r7, buffer7) ← output.Buffer.append buffer6 s2
-                      match r7 with
+                      let (r8, buffer9) ← output.Buffer.append buffer8 s3
+                      match r8 with
                       | core.result.Result.Ok _ =>
-                        let r8 ← component.lower.slot value 1#usize
-                        match r8 with
-                        | core.result.Result.Ok value3 =>
-                          let (r9, buffer8) ←
-                            component.abi.set buffer7 value3
-                          match r9 with
+                        let (r9, buffer10) ← component.abi.get buffer9 area
+                        match r9 with
+                        | core.result.Result.Ok _ =>
+                          let s4 ←
+                            lift (Array.to_slice
+                              (Array.make 36#usize [
+                                32#u8, 105#u8, 51#u8, 50#u8, 46#u8, 108#u8,
+                                111#u8, 97#u8, 100#u8, 32#u8, 111#u8, 102#u8,
+                                102#u8, 115#u8, 101#u8, 116#u8, 61#u8, 56#u8,
+                                32#u8, 105#u8, 54#u8, 52#u8, 46#u8, 101#u8,
+                                120#u8, 116#u8, 101#u8, 110#u8, 100#u8, 95#u8,
+                                105#u8, 51#u8, 50#u8, 95#u8, 117#u8, 10#u8
+                                ]))
+                          let (r10, buffer11) ←
+                            output.Buffer.append buffer10 s4
+                          match r10 with
                           | core.result.Result.Ok _ =>
-                            let s3 ←
-                              lift (Array.to_slice
-                                (Array.make 6#usize [
-                                  32#u8, 101#u8, 108#u8, 115#u8, 101#u8, 10#u8
-                                  ]))
-                            let (r10, buffer9) ←
-                              output.Buffer.append buffer8 s3
-                            match r10 with
+                            let (r11, buffer12) ←
+                              component.lower.results.capture_lane value
+                                1#usize buffer11
+                            match r11 with
                             | core.result.Result.Ok _ =>
-                              let (r11, buffer10) ←
-                                component.abi.get buffer9 area
-                              match r11 with
+                              let (r12, buffer13) ←
+                                component.abi.get buffer12 area
+                              match r12 with
                               | core.result.Result.Ok _ =>
-                                let s4 ←
+                                let s5 ←
                                   lift (Array.to_slice
-                                    (Array.make 36#usize [
+                                    (Array.make 20#usize [
                                       32#u8, 105#u8, 51#u8, 50#u8, 46#u8,
                                       108#u8, 111#u8, 97#u8, 100#u8, 32#u8,
                                       111#u8, 102#u8, 102#u8, 115#u8, 101#u8,
-                                      116#u8, 61#u8, 56#u8, 32#u8, 105#u8,
-                                      54#u8, 52#u8, 46#u8, 101#u8, 120#u8,
-                                      116#u8, 101#u8, 110#u8, 100#u8, 95#u8,
-                                      105#u8, 51#u8, 50#u8, 95#u8, 117#u8,
-                                      10#u8
+                                      116#u8, 61#u8, 49#u8, 50#u8, 10#u8
                                       ]))
-                                let (r12, buffer11) ←
-                                  output.Buffer.append buffer10 s4
-                                match r12 with
+                                let (r13, buffer14) ←
+                                  output.Buffer.append buffer13 s5
+                                match r13 with
                                 | core.result.Result.Ok _ =>
-                                  match r8 with
-                                  | core.result.Result.Ok value4 =>
-                                    let (r13, buffer12) ←
-                                      component.abi.set buffer11 value4
-                                    match r13 with
-                                    | core.result.Result.Ok _ =>
-                                      let (r14, buffer13) ←
-                                        component.abi.get buffer12 area
-                                      match r14 with
-                                      | core.result.Result.Ok _ =>
-                                        let s5 ←
-                                          lift (Array.to_slice
-                                            (Array.make 20#usize [
-                                              32#u8, 105#u8, 51#u8, 50#u8,
-                                              46#u8, 108#u8, 111#u8, 97#u8,
-                                              100#u8, 32#u8, 111#u8, 102#u8,
-                                              102#u8, 115#u8, 101#u8, 116#u8,
-                                              61#u8, 49#u8, 50#u8, 10#u8
-                                              ]))
-                                        let (r15, buffer14) ←
-                                          output.Buffer.append buffer13 s5
-                                        match r15 with
-                                        | core.result.Result.Ok _ =>
-                                          let r16 ←
-                                            component.lower.slot value 2#usize
-                                          match r16 with
-                                          | core.result.Result.Ok value5 =>
-                                            let (r17, buffer15) ←
-                                              component.abi.set buffer14 value5
-                                            match r17 with
-                                            | core.result.Result.Ok _ =>
-                                              let s6 ←
-                                                lift (Array.to_slice
-                                                  (Array.make 5#usize [
-                                                    32#u8, 101#u8, 110#u8,
-                                                    100#u8, 10#u8
-                                                    ]))
-                                              output.Buffer.append buffer15 s6
-                                            | core.result.Result.Err _ =>
-                                              ok (r17, buffer15)
-                                          | core.result.Result.Err failure =>
-                                            ok (core.result.Result.Err failure,
-                                              buffer14)
-                                        | core.result.Result.Err _ =>
-                                          ok (r15, buffer14)
-                                      | core.result.Result.Err _ =>
-                                        ok (r14, buffer13)
-                                    | core.result.Result.Err _ =>
-                                      ok (r13, buffer12)
-                                  | core.result.Result.Err failure =>
-                                    ok (core.result.Result.Err failure,
-                                      buffer11)
+                                  let (r14, buffer15) ←
+                                    component.lower.results.capture_lane value
+                                      2#usize buffer14
+                                  match r14 with
+                                  | core.result.Result.Ok _ =>
+                                    let s6 ←
+                                      lift (Array.to_slice
+                                        (Array.make 5#usize [
+                                          32#u8, 101#u8, 110#u8, 100#u8, 10#u8
+                                          ]))
+                                    output.Buffer.append buffer15 s6
+                                  | core.result.Result.Err _ =>
+                                    ok (r14, buffer15)
                                 | core.result.Result.Err _ =>
-                                  ok (r12, buffer11)
-                              | core.result.Result.Err _ => ok (r11, buffer10)
-                            | core.result.Result.Err _ => ok (r10, buffer9)
-                          | core.result.Result.Err _ => ok (r9, buffer8)
-                        | core.result.Result.Err failure =>
-                          ok (core.result.Result.Err failure, buffer7)
-                      | core.result.Result.Err _ => ok (r7, buffer7)
-                    | core.result.Result.Err _ => ok (r6, buffer6)
-                  | core.result.Result.Err _ => ok (r5, buffer5)
-                | core.result.Result.Err _ => ok (r4, buffer4)
-              | core.result.Result.Err failure =>
-                ok (core.result.Result.Err failure, buffer3)
-            | core.result.Result.Err _ => ok (r3, buffer3)
-          | core.result.Result.Err failure =>
-            ok (core.result.Result.Err failure, buffer2)
+                                  ok (r13, buffer14)
+                              | core.result.Result.Err _ => ok (r12, buffer13)
+                            | core.result.Result.Err _ => ok (r11, buffer12)
+                          | core.result.Result.Err _ => ok (r10, buffer11)
+                        | core.result.Result.Err _ => ok (r9, buffer10)
+                      | core.result.Result.Err _ => ok (r8, buffer9)
+                    | core.result.Result.Err _ => ok (r7, buffer8)
+                  | core.result.Result.Err _ => ok (r6, buffer7)
+                | core.result.Result.Err _ => ok (r5, buffer6)
+              | core.result.Result.Err _ => ok (r4, buffer5)
+            | core.result.Result.Err _ => ok (r3, buffer4)
+          | core.result.Result.Err _ => ok (r2, buffer3)
+        | core.result.Result.Err _ => ok (r1, buffer2)
+      | core.result.Result.Err _ => ok (r, buffer1)
+    | noble_contracts.component.Type.ResultBytesString =>
+      let (r, buffer1) ← component.abi.get buffer area
+      match r with
+      | core.result.Result.Ok _ =>
+        let s ←
+          lift (Array.to_slice
+            (Array.make 13#usize [
+              32#u8, 105#u8, 51#u8, 50#u8, 46#u8, 108#u8, 111#u8, 97#u8,
+              100#u8, 56#u8, 95#u8, 117#u8, 10#u8
+              ]))
+        let (r1, buffer2) ← output.Buffer.append buffer1 s
+        match r1 with
+        | core.result.Result.Ok _ =>
+          let (r2, buffer3) ←
+            component.lower.results.capture_lane value 0#usize buffer2
+          match r2 with
+          | core.result.Result.Ok _ =>
+            let (r3, buffer4) ← component.abi.get buffer3 area
+            match r3 with
+            | core.result.Result.Ok _ =>
+              let s1 ←
+                lift (Array.to_slice
+                  (Array.make 19#usize [
+                    32#u8, 105#u8, 51#u8, 50#u8, 46#u8, 108#u8, 111#u8, 97#u8,
+                    100#u8, 32#u8, 111#u8, 102#u8, 102#u8, 115#u8, 101#u8,
+                    116#u8, 61#u8, 52#u8, 10#u8
+                    ]))
+              let (r4, buffer5) ← output.Buffer.append buffer4 s1
+              match r4 with
+              | core.result.Result.Ok _ =>
+                let (r5, buffer6) ←
+                  component.lower.results.capture_lane value 1#usize buffer5
+                match r5 with
+                | core.result.Result.Ok _ =>
+                  let (r6, buffer7) ← component.abi.get buffer6 area
+                  match r6 with
+                  | core.result.Result.Ok _ =>
+                    let s2 ←
+                      lift (Array.to_slice
+                        (Array.make 19#usize [
+                          32#u8, 105#u8, 51#u8, 50#u8, 46#u8, 108#u8, 111#u8,
+                          97#u8, 100#u8, 32#u8, 111#u8, 102#u8, 102#u8, 115#u8,
+                          101#u8, 116#u8, 61#u8, 56#u8, 10#u8
+                          ]))
+                    let (r7, buffer8) ← output.Buffer.append buffer7 s2
+                    match r7 with
+                    | core.result.Result.Ok _ =>
+                      component.lower.results.capture_lane value 2#usize
+                        buffer8
+                    | core.result.Result.Err _ => ok (r7, buffer8)
+                  | core.result.Result.Err _ => ok (r6, buffer7)
+                | core.result.Result.Err _ => ok (r5, buffer6)
+              | core.result.Result.Err _ => ok (r4, buffer5)
+            | core.result.Result.Err _ => ok (r3, buffer4)
+          | core.result.Result.Err _ => ok (r2, buffer3)
+        | core.result.Result.Err _ => ok (r1, buffer2)
+      | core.result.Result.Err _ => ok (r, buffer1)
+    | noble_contracts.component.Type.StreamU8 =>
+      let (r, buffer1) ← component.abi.get buffer area
+      match r with
+      | core.result.Result.Ok _ =>
+        let s ←
+          lift (Array.to_slice
+            (Array.make 10#usize [
+              32#u8, 105#u8, 51#u8, 50#u8, 46#u8, 108#u8, 111#u8, 97#u8,
+              100#u8, 10#u8
+              ]))
+        let (r1, buffer2) ← output.Buffer.append buffer1 s
+        match r1 with
+        | core.result.Result.Ok _ =>
+          component.lower.results.capture_lane value 0#usize buffer2
+        | core.result.Result.Err _ => ok (r1, buffer2)
+      | core.result.Result.Err _ => ok (r, buffer1)
+    | noble_contracts.component.Type.FutureS64 =>
+      let (r, buffer1) ← component.abi.get buffer area
+      match r with
+      | core.result.Result.Ok _ =>
+        let s ←
+          lift (Array.to_slice
+            (Array.make 10#usize [
+              32#u8, 105#u8, 51#u8, 50#u8, 46#u8, 108#u8, 111#u8, 97#u8,
+              100#u8, 10#u8
+              ]))
+        let (r1, buffer2) ← output.Buffer.append buffer1 s
+        match r1 with
+        | core.result.Result.Ok _ =>
+          component.lower.results.capture_lane value 0#usize buffer2
+        | core.result.Result.Err _ => ok (r1, buffer2)
+      | core.result.Result.Err _ => ok (r, buffer1)
+    | noble_contracts.component.Type.FutureResultS64String =>
+      let (r, buffer1) ← component.abi.get buffer area
+      match r with
+      | core.result.Result.Ok _ =>
+        let s ←
+          lift (Array.to_slice
+            (Array.make 10#usize [
+              32#u8, 105#u8, 51#u8, 50#u8, 46#u8, 108#u8, 111#u8, 97#u8,
+              100#u8, 10#u8
+              ]))
+        let (r1, buffer2) ← output.Buffer.append buffer1 s
+        match r1 with
+        | core.result.Result.Ok _ =>
+          component.lower.results.capture_lane value 0#usize buffer2
         | core.result.Result.Err _ => ok (r1, buffer2)
       | core.result.Result.Err _ => ok (r, buffer1)
     | noble_contracts.component.Type.Own _ =>
-      ok (core.result.Result.Err Diagnostic.Defective, buffer)
+      let (r, buffer1) ← component.abi.get buffer area
+      match r with
+      | core.result.Result.Ok _ =>
+        let s ←
+          lift (Array.to_slice
+            (Array.make 10#usize [
+              32#u8, 105#u8, 51#u8, 50#u8, 46#u8, 108#u8, 111#u8, 97#u8,
+              100#u8, 10#u8
+              ]))
+        let (r1, buffer2) ← output.Buffer.append buffer1 s
+        match r1 with
+        | core.result.Result.Ok _ =>
+          component.lower.results.capture_lane value 0#usize buffer2
+        | core.result.Result.Err _ => ok (r1, buffer2)
+      | core.result.Result.Err _ => ok (r, buffer1)
     | noble_contracts.component.Type.Borrow _ =>
-      ok (core.result.Result.Err Diagnostic.Defective, buffer)
+      let (r, buffer1) ← component.abi.get buffer area
+      match r with
+      | core.result.Result.Ok _ =>
+        let s ←
+          lift (Array.to_slice
+            (Array.make 10#usize [
+              32#u8, 105#u8, 51#u8, 50#u8, 46#u8, 108#u8, 111#u8, 97#u8,
+              100#u8, 10#u8
+              ]))
+        let (r1, buffer2) ← output.Buffer.append buffer1 s
+        match r1 with
+        | core.result.Result.Ok _ =>
+          component.lower.results.capture_lane value 0#usize buffer2
+        | core.result.Result.Err _ => ok (r1, buffer2)
+      | core.result.Result.Err _ => ok (r, buffer1)
 
-/-- [noble_wasm::component::lower::results::allocate]:
-    Source: 'crates/noble-wasm/src/component/lower/results.rs', lines 67:0-78:1 -/
-def component.lower.results.allocate
-  (ty : noble_contracts.component.Type) (state : component.lower.State) :
+/-- [noble_wasm::component::lower::results::allocate_layout]:
+    Source: 'crates/noble-wasm/src/component/lower/results.rs', lines 65:0-76:1 -/
+def component.lower.results.allocate_layout
+  (layout : (Std.U32 × Std.U32)) (state : component.lower.State) :
   Result ((core.result.Result Std.U32 Diagnostic) × component.lower.State)
   := do
+  let (align, size_bytes) := layout
   let (r, state1) ← component.lower.State.local state component.abi.Lane.I32
   match r with
   | core.result.Result.Ok value =>
-    let (align, size) ← component.abi.memory_layout ty
     let (r1, b) ← output.Buffer.i32 state1.code align
     match r1 with
     | core.result.Result.Ok _ =>
-      let (r2, b1) ← output.Buffer.i32 b size
+      let (r2, b1) ← output.Buffer.i32 b size_bytes
       match r2 with
       | core.result.Result.Ok _ =>
         let s ←
@@ -2773,8 +4077,17 @@ def component.lower.results.allocate
       ok (core.result.Result.Err failure, { state1 with code := b })
   | core.result.Result.Err _ => ok (r, state1)
 
+/-- [noble_wasm::component::lower::results::allocate]:
+    Source: 'crates/noble-wasm/src/component/lower/results.rs', lines 58:0-63:1 -/
+def component.lower.results.allocate
+  (ty : noble_contracts.component.Type) (state : component.lower.State) :
+  Result ((core.result.Result Std.U32 Diagnostic) × component.lower.State)
+  := do
+  let p ← component.abi.memory_layout ty
+  component.lower.results.allocate_layout p state
+
 /-- [noble_wasm::component::lower::results::validate]:
-    Source: 'crates/noble-wasm/src/component/lower/results.rs', lines 6:0-65:1 -/
+    Source: 'crates/noble-wasm/src/component/lower/results.rs', lines 6:0-56:1 -/
 def component.lower.results.validate
   (ty : noble_contracts.component.Type) (value : component.lower.Value)
   (buffer : output.Buffer) :
@@ -2782,214 +4095,243 @@ def component.lower.results.validate
   := do
   match ty with
   | noble_contracts.component.Type.Boolean =>
-    let r ← component.lower.slot value 0#usize
+    let (r, buffer1) ← component.lower.results.read_lane value 0#usize buffer
     match r with
-    | core.result.Result.Ok value1 =>
-      let (r1, buffer1) ← component.abi.get buffer value1
-      match r1 with
-      | core.result.Result.Ok _ =>
-        let s ←
-          lift (Array.to_slice
-            (Array.make 41#usize [
-              32#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8, 111#u8, 110#u8,
-              115#u8, 116#u8, 32#u8, 49#u8, 32#u8, 105#u8, 51#u8, 50#u8, 46#u8,
-              103#u8, 116#u8, 95#u8, 117#u8, 32#u8, 105#u8, 102#u8, 32#u8,
-              117#u8, 110#u8, 114#u8, 101#u8, 97#u8, 99#u8, 104#u8, 97#u8,
-              98#u8, 108#u8, 101#u8, 32#u8, 101#u8, 110#u8, 100#u8, 10#u8
-              ]))
-        output.Buffer.append buffer1 s
-      | core.result.Result.Err _ => ok (r1, buffer1)
-    | core.result.Result.Err failure =>
-      ok (core.result.Result.Err failure, buffer)
+    | core.result.Result.Ok _ =>
+      let s ←
+        lift (Array.to_slice
+          (Array.make 41#usize [
+            32#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8, 111#u8, 110#u8, 115#u8,
+            116#u8, 32#u8, 49#u8, 32#u8, 105#u8, 51#u8, 50#u8, 46#u8, 103#u8,
+            116#u8, 95#u8, 117#u8, 32#u8, 105#u8, 102#u8, 32#u8, 117#u8,
+            110#u8, 114#u8, 101#u8, 97#u8, 99#u8, 104#u8, 97#u8, 98#u8, 108#u8,
+            101#u8, 32#u8, 101#u8, 110#u8, 100#u8, 10#u8
+            ]))
+      output.Buffer.append buffer1 s
+    | core.result.Result.Err _ => ok (r, buffer1)
   | noble_contracts.component.Type.S64 => ok (core.result.Result.Ok (), buffer)
   | noble_contracts.component.Type.String =>
-    let r ← component.lower.slot value 0#usize
+    let (r, buffer1) ← component.lower.results.read_lane value 0#usize buffer
     match r with
-    | core.result.Result.Ok value1 =>
-      let (r1, buffer1) ← component.abi.get buffer value1
+    | core.result.Result.Ok _ =>
+      let (r1, buffer2) ←
+        component.lower.results.read_lane value 1#usize buffer1
       match r1 with
       | core.result.Result.Ok _ =>
-        let r2 ← component.lower.slot value 1#usize
-        match r2 with
-        | core.result.Result.Ok value2 =>
-          let (r3, buffer2) ← component.abi.get buffer1 value2
-          match r3 with
-          | core.result.Result.Ok _ =>
-            let b ←
-              noble_contracts.component.Type.Insts.CoreCmpPartialEqType.eq
-                noble_contracts.component.Type.String
-                noble_contracts.component.Type.String
-            if b
-            then
-              let s ←
-                lift (Array.to_slice
-                  (Array.make 12#usize [
-                    32#u8, 99#u8, 97#u8, 108#u8, 108#u8, 32#u8, 36#u8, 117#u8,
-                    116#u8, 102#u8, 56#u8, 10#u8
-                    ]))
-              output.Buffer.append buffer2 s
-            else
-              let s ←
-                lift (Array.to_slice
-                  (Array.make 13#usize [
-                    32#u8, 99#u8, 97#u8, 108#u8, 108#u8, 32#u8, 36#u8, 114#u8,
-                    97#u8, 110#u8, 103#u8, 101#u8, 10#u8
-                    ]))
-              output.Buffer.append buffer2 s
-          | core.result.Result.Err _ => ok (r3, buffer2)
-        | core.result.Result.Err failure =>
-          ok (core.result.Result.Err failure, buffer1)
-      | core.result.Result.Err _ => ok (r1, buffer1)
-    | core.result.Result.Err failure =>
-      ok (core.result.Result.Err failure, buffer)
+        let b ←
+          noble_contracts.component.Type.Insts.CoreCmpPartialEqType.eq
+            noble_contracts.component.Type.String
+            noble_contracts.component.Type.String
+        if b
+        then
+          let s ←
+            lift (Array.to_slice
+              (Array.make 12#usize [
+                32#u8, 99#u8, 97#u8, 108#u8, 108#u8, 32#u8, 36#u8, 117#u8,
+                116#u8, 102#u8, 56#u8, 10#u8
+                ]))
+          output.Buffer.append buffer2 s
+        else
+          let s ←
+            lift (Array.to_slice
+              (Array.make 13#usize [
+                32#u8, 99#u8, 97#u8, 108#u8, 108#u8, 32#u8, 36#u8, 114#u8,
+                97#u8, 110#u8, 103#u8, 101#u8, 10#u8
+                ]))
+          output.Buffer.append buffer2 s
+      | core.result.Result.Err _ => ok (r1, buffer2)
+    | core.result.Result.Err _ => ok (r, buffer1)
   | noble_contracts.component.Type.Bytes =>
-    let r ← component.lower.slot value 0#usize
+    let (r, buffer1) ← component.lower.results.read_lane value 0#usize buffer
     match r with
-    | core.result.Result.Ok value1 =>
-      let (r1, buffer1) ← component.abi.get buffer value1
+    | core.result.Result.Ok _ =>
+      let (r1, buffer2) ←
+        component.lower.results.read_lane value 1#usize buffer1
       match r1 with
       | core.result.Result.Ok _ =>
-        let r2 ← component.lower.slot value 1#usize
-        match r2 with
-        | core.result.Result.Ok value2 =>
-          let (r3, buffer2) ← component.abi.get buffer1 value2
-          match r3 with
-          | core.result.Result.Ok _ =>
-            let b ←
-              noble_contracts.component.Type.Insts.CoreCmpPartialEqType.eq
-                noble_contracts.component.Type.Bytes
-                noble_contracts.component.Type.String
-            if b
-            then
-              let s ←
-                lift (Array.to_slice
-                  (Array.make 12#usize [
-                    32#u8, 99#u8, 97#u8, 108#u8, 108#u8, 32#u8, 36#u8, 117#u8,
-                    116#u8, 102#u8, 56#u8, 10#u8
-                    ]))
-              output.Buffer.append buffer2 s
-            else
-              let s ←
-                lift (Array.to_slice
-                  (Array.make 13#usize [
-                    32#u8, 99#u8, 97#u8, 108#u8, 108#u8, 32#u8, 36#u8, 114#u8,
-                    97#u8, 110#u8, 103#u8, 101#u8, 10#u8
-                    ]))
-              output.Buffer.append buffer2 s
-          | core.result.Result.Err _ => ok (r3, buffer2)
-        | core.result.Result.Err failure =>
-          ok (core.result.Result.Err failure, buffer1)
-      | core.result.Result.Err _ => ok (r1, buffer1)
-    | core.result.Result.Err failure =>
-      ok (core.result.Result.Err failure, buffer)
+        let b ←
+          noble_contracts.component.Type.Insts.CoreCmpPartialEqType.eq
+            noble_contracts.component.Type.Bytes
+            noble_contracts.component.Type.String
+        if b
+        then
+          let s ←
+            lift (Array.to_slice
+              (Array.make 12#usize [
+                32#u8, 99#u8, 97#u8, 108#u8, 108#u8, 32#u8, 36#u8, 117#u8,
+                116#u8, 102#u8, 56#u8, 10#u8
+                ]))
+          output.Buffer.append buffer2 s
+        else
+          let s ←
+            lift (Array.to_slice
+              (Array.make 13#usize [
+                32#u8, 99#u8, 97#u8, 108#u8, 108#u8, 32#u8, 36#u8, 114#u8,
+                97#u8, 110#u8, 103#u8, 101#u8, 10#u8
+                ]))
+          output.Buffer.append buffer2 s
+      | core.result.Result.Err _ => ok (r1, buffer2)
+    | core.result.Result.Err _ => ok (r, buffer1)
   | noble_contracts.component.Type.ResultS64String =>
-    let r ← component.lower.slot value 0#usize
+    let (r, buffer1) ← component.lower.results.read_lane value 0#usize buffer
     match r with
-    | core.result.Result.Ok value1 =>
-      let (r1, buffer1) ← component.abi.get buffer value1
+    | core.result.Result.Ok _ =>
+      let s ←
+        lift (Array.to_slice
+          (Array.make 41#usize [
+            32#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8, 111#u8, 110#u8, 115#u8,
+            116#u8, 32#u8, 49#u8, 32#u8, 105#u8, 51#u8, 50#u8, 46#u8, 103#u8,
+            116#u8, 95#u8, 117#u8, 32#u8, 105#u8, 102#u8, 32#u8, 117#u8,
+            110#u8, 114#u8, 101#u8, 97#u8, 99#u8, 104#u8, 97#u8, 98#u8, 108#u8,
+            101#u8, 32#u8, 101#u8, 110#u8, 100#u8, 10#u8
+            ]))
+      let (r1, buffer2) ← output.Buffer.append buffer1 s
       match r1 with
       | core.result.Result.Ok _ =>
-        let s ←
-          lift (Array.to_slice
-            (Array.make 41#usize [
-              32#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8, 111#u8, 110#u8,
-              115#u8, 116#u8, 32#u8, 49#u8, 32#u8, 105#u8, 51#u8, 50#u8, 46#u8,
-              103#u8, 116#u8, 95#u8, 117#u8, 32#u8, 105#u8, 102#u8, 32#u8,
-              117#u8, 110#u8, 114#u8, 101#u8, 97#u8, 99#u8, 104#u8, 97#u8,
-              98#u8, 108#u8, 101#u8, 32#u8, 101#u8, 110#u8, 100#u8, 10#u8
-              ]))
-        let (r2, buffer2) ← output.Buffer.append buffer1 s
+        let (r2, buffer3) ←
+          component.lower.results.read_lane value 0#usize buffer2
         match r2 with
         | core.result.Result.Ok _ =>
-          match r with
-          | core.result.Result.Ok value2 =>
-            let (r3, buffer3) ← component.abi.get buffer2 value2
-            match r3 with
+          let s1 ←
+            lift (Array.to_slice
+              (Array.make 4#usize [ 32#u8, 105#u8, 102#u8, 10#u8 ]))
+          let (r3, buffer4) ← output.Buffer.append buffer3 s1
+          match r3 with
+          | core.result.Result.Ok _ =>
+            let (r4, buffer5) ←
+              component.lower.results.read_lane value 1#usize buffer4
+            match r4 with
             | core.result.Result.Ok _ =>
-              let s1 ←
+              let s2 ←
                 lift (Array.to_slice
-                  (Array.make 4#usize [ 32#u8, 105#u8, 102#u8, 10#u8 ]))
-              let (r4, buffer4) ← output.Buffer.append buffer3 s1
-              match r4 with
+                  (Array.make 50#usize [
+                    32#u8, 105#u8, 54#u8, 52#u8, 46#u8, 99#u8, 111#u8, 110#u8,
+                    115#u8, 116#u8, 32#u8, 52#u8, 50#u8, 57#u8, 52#u8, 57#u8,
+                    54#u8, 55#u8, 50#u8, 57#u8, 53#u8, 32#u8, 105#u8, 54#u8,
+                    52#u8, 46#u8, 103#u8, 116#u8, 95#u8, 117#u8, 32#u8, 105#u8,
+                    102#u8, 32#u8, 117#u8, 110#u8, 114#u8, 101#u8, 97#u8,
+                    99#u8, 104#u8, 97#u8, 98#u8, 108#u8, 101#u8, 32#u8, 101#u8,
+                    110#u8, 100#u8, 10#u8
+                    ]))
+              let (r5, buffer6) ← output.Buffer.append buffer5 s2
+              match r5 with
               | core.result.Result.Ok _ =>
-                let r5 ← component.lower.slot value 1#usize
-                match r5 with
-                | core.result.Result.Ok value3 =>
-                  let (r6, buffer5) ← component.abi.get buffer4 value3
-                  match r6 with
+                let (r6, buffer7) ←
+                  component.lower.results.read_lane value 1#usize buffer6
+                match r6 with
+                | core.result.Result.Ok _ =>
+                  let s3 ←
+                    lift (Array.to_slice
+                      (Array.make 14#usize [
+                        32#u8, 105#u8, 51#u8, 50#u8, 46#u8, 119#u8, 114#u8,
+                        97#u8, 112#u8, 95#u8, 105#u8, 54#u8, 52#u8, 10#u8
+                        ]))
+                  let (r7, buffer8) ← output.Buffer.append buffer7 s3
+                  match r7 with
                   | core.result.Result.Ok _ =>
-                    let s2 ←
-                      lift (Array.to_slice
-                        (Array.make 50#usize [
-                          32#u8, 105#u8, 54#u8, 52#u8, 46#u8, 99#u8, 111#u8,
-                          110#u8, 115#u8, 116#u8, 32#u8, 52#u8, 50#u8, 57#u8,
-                          52#u8, 57#u8, 54#u8, 55#u8, 50#u8, 57#u8, 53#u8,
-                          32#u8, 105#u8, 54#u8, 52#u8, 46#u8, 103#u8, 116#u8,
-                          95#u8, 117#u8, 32#u8, 105#u8, 102#u8, 32#u8, 117#u8,
-                          110#u8, 114#u8, 101#u8, 97#u8, 99#u8, 104#u8, 97#u8,
-                          98#u8, 108#u8, 101#u8, 32#u8, 101#u8, 110#u8, 100#u8,
-                          10#u8
-                          ]))
-                    let (r7, buffer6) ← output.Buffer.append buffer5 s2
-                    match r7 with
+                    let (r8, buffer9) ←
+                      component.lower.results.read_lane value 2#usize buffer8
+                    match r8 with
                     | core.result.Result.Ok _ =>
-                      match r5 with
-                      | core.result.Result.Ok value4 =>
-                        let (r8, buffer7) ← component.abi.get buffer6 value4
-                        match r8 with
-                        | core.result.Result.Ok _ =>
-                          let s3 ←
-                            lift (Array.to_slice
-                              (Array.make 14#usize [
-                                32#u8, 105#u8, 51#u8, 50#u8, 46#u8, 119#u8,
-                                114#u8, 97#u8, 112#u8, 95#u8, 105#u8, 54#u8,
-                                52#u8, 10#u8
-                                ]))
-                          let (r9, buffer8) ← output.Buffer.append buffer7 s3
-                          match r9 with
-                          | core.result.Result.Ok _ =>
-                            let r10 ← component.lower.slot value 2#usize
-                            match r10 with
-                            | core.result.Result.Ok value5 =>
-                              let (r11, buffer9) ←
-                                component.abi.get buffer8 value5
-                              match r11 with
-                              | core.result.Result.Ok _ =>
-                                let s4 ←
-                                  lift (Array.to_slice
-                                    (Array.make 16#usize [
-                                      32#u8, 99#u8, 97#u8, 108#u8, 108#u8,
-                                      32#u8, 36#u8, 117#u8, 116#u8, 102#u8,
-                                      56#u8, 32#u8, 101#u8, 110#u8, 100#u8,
-                                      10#u8
-                                      ]))
-                                output.Buffer.append buffer9 s4
-                              | core.result.Result.Err _ => ok (r11, buffer9)
-                            | core.result.Result.Err failure =>
-                              ok (core.result.Result.Err failure, buffer8)
-                          | core.result.Result.Err _ => ok (r9, buffer8)
-                        | core.result.Result.Err _ => ok (r8, buffer7)
-                      | core.result.Result.Err failure =>
-                        ok (core.result.Result.Err failure, buffer6)
-                    | core.result.Result.Err _ => ok (r7, buffer6)
-                  | core.result.Result.Err _ => ok (r6, buffer5)
-                | core.result.Result.Err failure =>
-                  ok (core.result.Result.Err failure, buffer4)
-              | core.result.Result.Err _ => ok (r4, buffer4)
-            | core.result.Result.Err _ => ok (r3, buffer3)
-          | core.result.Result.Err failure =>
-            ok (core.result.Result.Err failure, buffer2)
-        | core.result.Result.Err _ => ok (r2, buffer2)
-      | core.result.Result.Err _ => ok (r1, buffer1)
-    | core.result.Result.Err failure =>
-      ok (core.result.Result.Err failure, buffer)
+                      let s4 ←
+                        lift (Array.to_slice
+                          (Array.make 16#usize [
+                            32#u8, 99#u8, 97#u8, 108#u8, 108#u8, 32#u8, 36#u8,
+                            117#u8, 116#u8, 102#u8, 56#u8, 32#u8, 101#u8,
+                            110#u8, 100#u8, 10#u8
+                            ]))
+                      output.Buffer.append buffer9 s4
+                    | core.result.Result.Err _ => ok (r8, buffer9)
+                  | core.result.Result.Err _ => ok (r7, buffer8)
+                | core.result.Result.Err _ => ok (r6, buffer7)
+              | core.result.Result.Err _ => ok (r5, buffer6)
+            | core.result.Result.Err _ => ok (r4, buffer5)
+          | core.result.Result.Err _ => ok (r3, buffer4)
+        | core.result.Result.Err _ => ok (r2, buffer3)
+      | core.result.Result.Err _ => ok (r1, buffer2)
+    | core.result.Result.Err _ => ok (r, buffer1)
+  | noble_contracts.component.Type.ResultBytesString =>
+    let (r, buffer1) ← component.lower.results.read_lane value 0#usize buffer
+    match r with
+    | core.result.Result.Ok _ =>
+      let s ←
+        lift (Array.to_slice
+          (Array.make 41#usize [
+            32#u8, 105#u8, 51#u8, 50#u8, 46#u8, 99#u8, 111#u8, 110#u8, 115#u8,
+            116#u8, 32#u8, 49#u8, 32#u8, 105#u8, 51#u8, 50#u8, 46#u8, 103#u8,
+            116#u8, 95#u8, 117#u8, 32#u8, 105#u8, 102#u8, 32#u8, 117#u8,
+            110#u8, 114#u8, 101#u8, 97#u8, 99#u8, 104#u8, 97#u8, 98#u8, 108#u8,
+            101#u8, 32#u8, 101#u8, 110#u8, 100#u8, 10#u8
+            ]))
+      let (r1, buffer2) ← output.Buffer.append buffer1 s
+      match r1 with
+      | core.result.Result.Ok _ =>
+        let (r2, buffer3) ←
+          component.lower.results.read_lane value 0#usize buffer2
+        match r2 with
+        | core.result.Result.Ok _ =>
+          let s1 ←
+            lift (Array.to_slice
+              (Array.make 4#usize [ 32#u8, 105#u8, 102#u8, 10#u8 ]))
+          let (r3, buffer4) ← output.Buffer.append buffer3 s1
+          match r3 with
+          | core.result.Result.Ok _ =>
+            let (r4, buffer5) ←
+              component.lower.results.read_lane value 1#usize buffer4
+            match r4 with
+            | core.result.Result.Ok _ =>
+              let (r5, buffer6) ←
+                component.lower.results.read_lane value 2#usize buffer5
+              match r5 with
+              | core.result.Result.Ok _ =>
+                let s2 ←
+                  lift (Array.to_slice
+                    (Array.make 18#usize [
+                      32#u8, 99#u8, 97#u8, 108#u8, 108#u8, 32#u8, 36#u8,
+                      117#u8, 116#u8, 102#u8, 56#u8, 10#u8, 32#u8, 101#u8,
+                      108#u8, 115#u8, 101#u8, 10#u8
+                      ]))
+                let (r6, buffer7) ← output.Buffer.append buffer6 s2
+                match r6 with
+                | core.result.Result.Ok _ =>
+                  let (r7, buffer8) ←
+                    component.lower.results.read_lane value 1#usize buffer7
+                  match r7 with
+                  | core.result.Result.Ok _ =>
+                    let (r8, buffer9) ←
+                      component.lower.results.read_lane value 2#usize buffer8
+                    match r8 with
+                    | core.result.Result.Ok _ =>
+                      let s3 ←
+                        lift (Array.to_slice
+                          (Array.make 18#usize [
+                            32#u8, 99#u8, 97#u8, 108#u8, 108#u8, 32#u8, 36#u8,
+                            114#u8, 97#u8, 110#u8, 103#u8, 101#u8, 10#u8,
+                            32#u8, 101#u8, 110#u8, 100#u8, 10#u8
+                            ]))
+                      output.Buffer.append buffer9 s3
+                    | core.result.Result.Err _ => ok (r8, buffer9)
+                  | core.result.Result.Err _ => ok (r7, buffer8)
+                | core.result.Result.Err _ => ok (r6, buffer7)
+              | core.result.Result.Err _ => ok (r5, buffer6)
+            | core.result.Result.Err _ => ok (r4, buffer5)
+          | core.result.Result.Err _ => ok (r3, buffer4)
+        | core.result.Result.Err _ => ok (r2, buffer3)
+      | core.result.Result.Err _ => ok (r1, buffer2)
+    | core.result.Result.Err _ => ok (r, buffer1)
+  | noble_contracts.component.Type.StreamU8 =>
+    ok (core.result.Result.Ok (), buffer)
+  | noble_contracts.component.Type.FutureS64 =>
+    ok (core.result.Result.Ok (), buffer)
+  | noble_contracts.component.Type.FutureResultS64String =>
+    ok (core.result.Result.Ok (), buffer)
   | noble_contracts.component.Type.Own _ =>
     ok (core.result.Result.Ok (), buffer)
   | noble_contracts.component.Type.Borrow _ =>
     ok (core.result.Result.Ok (), buffer)
 
 /-- [noble_wasm::component::lower::calls::restore_borrows]: loop body 0:
-    Source: 'crates/noble-wasm/src/component/lower/calls.rs', lines 153:4-164:5 -/
+    Source: 'crates/noble-wasm/src/component/lower/calls.rs', lines 220:4-231:5 -/
 @[rust_loop_body]
 def component.lower.calls.restore_borrows_loop.body
   (count : Std.Usize) (operation : noble_contracts.component.Operation)
@@ -3023,6 +4365,10 @@ def component.lower.calls.restore_borrows_loop.body
             | noble_contracts.component.Type.String => ok false
             | noble_contracts.component.Type.Bytes => ok false
             | noble_contracts.component.Type.ResultS64String => ok false
+            | noble_contracts.component.Type.ResultBytesString => ok false
+            | noble_contracts.component.Type.StreamU8 => ok false
+            | noble_contracts.component.Type.FutureS64 => ok false
+            | noble_contracts.component.Type.FutureResultS64String => ok false
             | noble_contracts.component.Type.Own _ => ok false
             | noble_contracts.component.Type.Borrow _ => ok true
           let s ←
@@ -3039,7 +4385,7 @@ def component.lower.calls.restore_borrows_loop.body
   else ok (done (state, failure))
 
 /-- [noble_wasm::component::lower::calls::restore_borrows]: loop 0:
-    Source: 'crates/noble-wasm/src/component/lower/calls.rs', lines 153:4-164:5 -/
+    Source: 'crates/noble-wasm/src/component/lower/calls.rs', lines 220:4-231:5 -/
 @[rust_loop]
 def component.lower.calls.restore_borrows_loop
   (operation : noble_contracts.component.Operation)
@@ -3055,7 +4401,7 @@ def component.lower.calls.restore_borrows_loop
     (operation, state, arguments, «at», failure)
 
 /-- [noble_wasm::component::lower::calls::restore_borrows]:
-    Source: 'crates/noble-wasm/src/component/lower/calls.rs', lines 144:0-169:1 -/
+    Source: 'crates/noble-wasm/src/component/lower/calls.rs', lines 211:0-236:1 -/
 def component.lower.calls.restore_borrows
   (operation : noble_contracts.component.Operation)
   (arguments : alloc.vec.Vec component.lower.Value)
@@ -3072,7 +4418,7 @@ def component.lower.calls.restore_borrows
   | some error => ok (core.result.Result.Err error, state1)
 
 /-- [noble_wasm::component::lower::{noble_wasm::component::lower::State}::pop]:
-    Source: 'crates/noble-wasm/src/component/lower.rs', lines 83:4-85:5 -/
+    Source: 'crates/noble-wasm/src/component/lower.rs', lines 106:4-108:5 -/
 def component.lower.State.pop
   (self : component.lower.State) :
   Result ((core.result.Result component.lower.Value Diagnostic) ×
@@ -3083,7 +4429,7 @@ def component.lower.State.pop
   ok (r, { self with stack := v })
 
 /-- [noble_wasm::component::lower::calls::argument]:
-    Source: 'crates/noble-wasm/src/component/lower/calls.rs', lines 129:0-138:1 -/
+    Source: 'crates/noble-wasm/src/component/lower/calls.rs', lines 196:0-205:1 -/
 def component.lower.calls.argument
   (ty : noble_contracts.component.Type) (state : component.lower.State) :
   Result ((core.result.Result component.lower.Value Diagnostic) ×
@@ -3102,7 +4448,7 @@ def component.lower.calls.argument
   | core.result.Result.Err _ => ok (r, state1)
 
 /-- [noble_wasm::component::lower::calls::arguments]: loop body 0:
-    Source: 'crates/noble-wasm/src/component/lower/calls.rs', lines 110:4-117:5 -/
+    Source: 'crates/noble-wasm/src/component/lower/calls.rs', lines 177:4-184:5 -/
 @[rust_loop_body]
 def component.lower.calls.arguments_loop.body
   (v : alloc.vec.Vec noble_contracts.component.Type)
@@ -3134,7 +4480,7 @@ def component.lower.calls.arguments_loop.body
   else ok (done (state, arguments, failure))
 
 /-- [noble_wasm::component::lower::calls::arguments]: loop 0:
-    Source: 'crates/noble-wasm/src/component/lower/calls.rs', lines 110:4-117:5 -/
+    Source: 'crates/noble-wasm/src/component/lower/calls.rs', lines 177:4-184:5 -/
 @[rust_loop]
 def component.lower.calls.arguments_loop
   (v : alloc.vec.Vec noble_contracts.component.Type)
@@ -3151,7 +4497,7 @@ def component.lower.calls.arguments_loop
     (state, arguments, «at», failure)
 
 /-- [noble_wasm::component::lower::calls::arguments]:
-    Source: 'crates/noble-wasm/src/component/lower/calls.rs', lines 103:0-123:1 -/
+    Source: 'crates/noble-wasm/src/component/lower/calls.rs', lines 170:0-190:1 -/
 def component.lower.calls.arguments
   (operation : noble_contracts.component.Operation)
   (state : component.lower.State) :
@@ -3173,10 +4519,10 @@ def component.lower.calls.arguments
   | some error => ok (core.result.Result.Err error, state1)
 
 /-- [noble_wasm::component::lower::{noble_wasm::component::lower::State}::read]: loop body 0:
-    Source: 'crates/noble-wasm/src/component/lower.rs', lines 90:8-98:9 -/
+    Source: 'crates/noble-wasm/src/component/lower.rs', lines 114:8-122:9 -/
 @[rust_loop_body]
 def component.lower.State.read_loop.body
-  (a : Array (Option Std.U32) 3#usize) (count : Std.Usize)
+  (locals : Array (Option Std.U32) 3#usize) (count : Std.Usize)
   (self : component.lower.State) («at» : Std.Usize)
   (failure : Option Diagnostic) :
   Result (ControlFlow (component.lower.State × Std.Usize × (Option
@@ -3187,7 +4533,7 @@ def component.lower.State.read_loop.body
     let b := core.option.Option.is_none failure
     if b
     then
-      let «local» ← Array.index_usize a «at»
+      let «local» ← Array.index_usize locals «at»
       let (self1, failure1) ←
         match «local» with
         | none => ok (self, failure)
@@ -3205,34 +4551,38 @@ def component.lower.State.read_loop.body
   else ok (done (self, failure))
 
 /-- [noble_wasm::component::lower::{noble_wasm::component::lower::State}::read]: loop 0:
-    Source: 'crates/noble-wasm/src/component/lower.rs', lines 90:8-98:9 -/
+    Source: 'crates/noble-wasm/src/component/lower.rs', lines 114:8-122:9 -/
 @[rust_loop]
 def component.lower.State.read_loop
-  (self : component.lower.State) (a : Array (Option Std.U32) 3#usize)
+  (self : component.lower.State) (locals : Array (Option Std.U32) 3#usize)
   («at» : Std.Usize) (failure : Option Diagnostic) (count : Std.Usize) :
   Result (component.lower.State × (Option Diagnostic))
   := do
   loop
-    (fun (self1, at1, failure1) => component.lower.State.read_loop.body a count
-      self1 at1 failure1)
+    (fun (self1, at1, failure1) => component.lower.State.read_loop.body locals
+      count self1 at1 failure1)
     (self, «at», failure)
 
 /-- [noble_wasm::component::lower::{noble_wasm::component::lower::State}::read]:
-    Source: 'crates/noble-wasm/src/component/lower.rs', lines 86:4-103:5 -/
+    Source: 'crates/noble-wasm/src/component/lower.rs', lines 109:4-127:5 -/
 def component.lower.State.read
   (self : component.lower.State) (value : component.lower.Value) :
   Result ((core.result.Result Unit Diagnostic) × component.lower.State)
   := do
-  let s ← lift (Array.to_slice value.locals)
-  let count := Slice.len s
-  let (self1, failure) ←
-    component.lower.State.read_loop self value.locals 0#usize none count
-  match failure with
-  | none => ok (core.result.Result.Ok (), self1)
-  | some error => ok (core.result.Result.Err error, self1)
+  let r ← component.lower.Value.flat value
+  match r with
+  | core.result.Result.Ok value1 =>
+    let s ← lift (Array.to_slice value1)
+    let count := Slice.len s
+    let (self1, failure) ←
+      component.lower.State.read_loop self value1 0#usize none count
+    match failure with
+    | none => ok (core.result.Result.Ok (), self1)
+    | some error => ok (core.result.Result.Err error, self1)
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure, self)
 
 /-- [noble_wasm::component::lower::calls::read_arguments]: loop body 0:
-    Source: 'crates/noble-wasm/src/component/lower/calls.rs', lines 91:4-96:5 -/
+    Source: 'crates/noble-wasm/src/component/lower/calls.rs', lines 158:4-163:5 -/
 @[rust_loop_body]
 def component.lower.calls.read_arguments_loop.body
   (arguments : Slice component.lower.Value) (count : Std.Usize)
@@ -3258,7 +4608,7 @@ def component.lower.calls.read_arguments_loop.body
   else ok (done (state, failure))
 
 /-- [noble_wasm::component::lower::calls::read_arguments]: loop 0:
-    Source: 'crates/noble-wasm/src/component/lower/calls.rs', lines 91:4-96:5 -/
+    Source: 'crates/noble-wasm/src/component/lower/calls.rs', lines 158:4-163:5 -/
 @[rust_loop]
 def component.lower.calls.read_arguments_loop
   (arguments : Slice component.lower.Value) (state : component.lower.State)
@@ -3272,7 +4622,7 @@ def component.lower.calls.read_arguments_loop
     (state, «at», failure)
 
 /-- [noble_wasm::component::lower::calls::read_arguments]:
-    Source: 'crates/noble-wasm/src/component/lower/calls.rs', lines 84:0-101:1 -/
+    Source: 'crates/noble-wasm/src/component/lower/calls.rs', lines 151:0-168:1 -/
 def component.lower.calls.read_arguments
   (arguments : Slice component.lower.Value) (state : component.lower.State) :
   Result ((core.result.Result Unit Diagnostic) × component.lower.State)
@@ -3286,7 +4636,7 @@ def component.lower.calls.read_arguments
   | some error => ok (core.result.Result.Err error, state1)
 
 /-- [noble_wasm::component::lower::calls::validate_arguments]: loop body 0:
-    Source: 'crates/noble-wasm/src/component/lower/calls.rs', lines 71:4-77:5 -/
+    Source: 'crates/noble-wasm/src/component/lower/calls.rs', lines 138:4-144:5 -/
 @[rust_loop_body]
 def component.lower.calls.validate_arguments_loop.body
   (operation : noble_contracts.component.Operation)
@@ -3315,7 +4665,7 @@ def component.lower.calls.validate_arguments_loop.body
   else ok (done (buffer, failure))
 
 /-- [noble_wasm::component::lower::calls::validate_arguments]: loop 0:
-    Source: 'crates/noble-wasm/src/component/lower/calls.rs', lines 71:4-77:5 -/
+    Source: 'crates/noble-wasm/src/component/lower/calls.rs', lines 138:4-144:5 -/
 @[rust_loop]
 def component.lower.calls.validate_arguments_loop
   (operation : noble_contracts.component.Operation)
@@ -3330,7 +4680,7 @@ def component.lower.calls.validate_arguments_loop
     (buffer, «at», failure)
 
 /-- [noble_wasm::component::lower::calls::validate_arguments]:
-    Source: 'crates/noble-wasm/src/component/lower/calls.rs', lines 63:0-82:1 -/
+    Source: 'crates/noble-wasm/src/component/lower/calls.rs', lines 130:0-149:1 -/
 def component.lower.calls.validate_arguments
   (operation : noble_contracts.component.Operation)
   (arguments : Slice component.lower.Value) (buffer : output.Buffer) :
@@ -3344,8 +4694,408 @@ def component.lower.calls.validate_arguments
   | none => ok (core.result.Result.Ok (), buffer1)
   | some error => ok (core.result.Result.Err error, buffer1)
 
+/-- [noble_wasm::component::lower::results::store]:
+    Source: 'crates/noble-wasm/src/component/lower/results.rs', lines 233:0-279:1 -/
+def component.lower.results.store
+  (ty : noble_contracts.component.Type) (area : Std.U32)
+  (value : component.lower.Value) (buffer : output.Buffer) :
+  Result ((core.result.Result Unit Diagnostic) × output.Buffer)
+  := do
+  let (r, buffer1) ← component.abi.get buffer area
+  match r with
+  | core.result.Result.Ok _ =>
+    let (r1, buffer2) ←
+      component.lower.results.read_lane value 0#usize buffer1
+    match r1 with
+    | core.result.Result.Ok _ =>
+      match ty with
+      | noble_contracts.component.Type.Boolean =>
+        let s ←
+          lift (Array.to_slice
+            (Array.make 12#usize [
+              32#u8, 105#u8, 51#u8, 50#u8, 46#u8, 115#u8, 116#u8, 111#u8,
+              114#u8, 101#u8, 56#u8, 10#u8
+              ]))
+        output.Buffer.append buffer2 s
+      | noble_contracts.component.Type.S64 =>
+        let s ←
+          lift (Array.to_slice
+            (Array.make 11#usize [
+              32#u8, 105#u8, 54#u8, 52#u8, 46#u8, 115#u8, 116#u8, 111#u8,
+              114#u8, 101#u8, 10#u8
+              ]))
+        output.Buffer.append buffer2 s
+      | noble_contracts.component.Type.String =>
+        let s ←
+          lift (Array.to_slice
+            (Array.make 11#usize [
+              32#u8, 105#u8, 51#u8, 50#u8, 46#u8, 115#u8, 116#u8, 111#u8,
+              114#u8, 101#u8, 10#u8
+              ]))
+        let (r2, buffer3) ← output.Buffer.append buffer2 s
+        match r2 with
+        | core.result.Result.Ok _ =>
+          let (r3, buffer4) ← component.abi.get buffer3 area
+          match r3 with
+          | core.result.Result.Ok _ =>
+            let (r4, buffer5) ←
+              component.lower.results.read_lane value 1#usize buffer4
+            match r4 with
+            | core.result.Result.Ok _ =>
+              let s1 ←
+                lift (Array.to_slice
+                  (Array.make 20#usize [
+                    32#u8, 105#u8, 51#u8, 50#u8, 46#u8, 115#u8, 116#u8, 111#u8,
+                    114#u8, 101#u8, 32#u8, 111#u8, 102#u8, 102#u8, 115#u8,
+                    101#u8, 116#u8, 61#u8, 52#u8, 10#u8
+                    ]))
+              output.Buffer.append buffer5 s1
+            | core.result.Result.Err _ => ok (r4, buffer5)
+          | core.result.Result.Err _ => ok (r3, buffer4)
+        | core.result.Result.Err _ => ok (r2, buffer3)
+      | noble_contracts.component.Type.Bytes =>
+        let s ←
+          lift (Array.to_slice
+            (Array.make 11#usize [
+              32#u8, 105#u8, 51#u8, 50#u8, 46#u8, 115#u8, 116#u8, 111#u8,
+              114#u8, 101#u8, 10#u8
+              ]))
+        let (r2, buffer3) ← output.Buffer.append buffer2 s
+        match r2 with
+        | core.result.Result.Ok _ =>
+          let (r3, buffer4) ← component.abi.get buffer3 area
+          match r3 with
+          | core.result.Result.Ok _ =>
+            let (r4, buffer5) ←
+              component.lower.results.read_lane value 1#usize buffer4
+            match r4 with
+            | core.result.Result.Ok _ =>
+              let s1 ←
+                lift (Array.to_slice
+                  (Array.make 20#usize [
+                    32#u8, 105#u8, 51#u8, 50#u8, 46#u8, 115#u8, 116#u8, 111#u8,
+                    114#u8, 101#u8, 32#u8, 111#u8, 102#u8, 102#u8, 115#u8,
+                    101#u8, 116#u8, 61#u8, 52#u8, 10#u8
+                    ]))
+              output.Buffer.append buffer5 s1
+            | core.result.Result.Err _ => ok (r4, buffer5)
+          | core.result.Result.Err _ => ok (r3, buffer4)
+        | core.result.Result.Err _ => ok (r2, buffer3)
+      | noble_contracts.component.Type.ResultS64String =>
+        let s ←
+          lift (Array.to_slice
+            (Array.make 11#usize [
+              32#u8, 105#u8, 51#u8, 50#u8, 46#u8, 115#u8, 116#u8, 111#u8,
+              114#u8, 101#u8, 10#u8
+              ]))
+        let (r2, buffer3) ← output.Buffer.append buffer2 s
+        match r2 with
+        | core.result.Result.Ok _ =>
+          let (r3, buffer4) ←
+            component.lower.results.read_lane value 0#usize buffer3
+          match r3 with
+          | core.result.Result.Ok _ =>
+            let s1 ←
+              lift (Array.to_slice
+                (Array.make 12#usize [
+                  32#u8, 105#u8, 51#u8, 50#u8, 46#u8, 101#u8, 113#u8, 122#u8,
+                  32#u8, 105#u8, 102#u8, 10#u8
+                  ]))
+            let (r4, buffer5) ← output.Buffer.append buffer4 s1
+            match r4 with
+            | core.result.Result.Ok _ =>
+              let (r5, buffer6) ← component.abi.get buffer5 area
+              match r5 with
+              | core.result.Result.Ok _ =>
+                let (r6, buffer7) ←
+                  component.lower.results.read_lane value 1#usize buffer6
+                match r6 with
+                | core.result.Result.Ok _ =>
+                  let s2 ←
+                    lift (Array.to_slice
+                      (Array.make 26#usize [
+                        32#u8, 105#u8, 54#u8, 52#u8, 46#u8, 115#u8, 116#u8,
+                        111#u8, 114#u8, 101#u8, 32#u8, 111#u8, 102#u8, 102#u8,
+                        115#u8, 101#u8, 116#u8, 61#u8, 56#u8, 10#u8, 32#u8,
+                        101#u8, 108#u8, 115#u8, 101#u8, 10#u8
+                        ]))
+                  let (r7, buffer8) ← output.Buffer.append buffer7 s2
+                  match r7 with
+                  | core.result.Result.Ok _ =>
+                    let (r8, buffer9) ← component.abi.get buffer8 area
+                    match r8 with
+                    | core.result.Result.Ok _ =>
+                      let (r9, buffer10) ←
+                        component.lower.results.read_lane value 1#usize buffer9
+                      match r9 with
+                      | core.result.Result.Ok _ =>
+                        let s3 ←
+                          lift (Array.to_slice
+                            (Array.make 33#usize [
+                              32#u8, 105#u8, 51#u8, 50#u8, 46#u8, 119#u8,
+                              114#u8, 97#u8, 112#u8, 95#u8, 105#u8, 54#u8,
+                              52#u8, 32#u8, 105#u8, 51#u8, 50#u8, 46#u8,
+                              115#u8, 116#u8, 111#u8, 114#u8, 101#u8, 32#u8,
+                              111#u8, 102#u8, 102#u8, 115#u8, 101#u8, 116#u8,
+                              61#u8, 56#u8, 10#u8
+                              ]))
+                        let (r10, buffer11) ←
+                          output.Buffer.append buffer10 s3
+                        match r10 with
+                        | core.result.Result.Ok _ =>
+                          let (r11, buffer12) ←
+                            component.abi.get buffer11 area
+                          match r11 with
+                          | core.result.Result.Ok _ =>
+                            let (r12, buffer13) ←
+                              component.lower.results.read_lane value 2#usize
+                                buffer12
+                            match r12 with
+                            | core.result.Result.Ok _ =>
+                              let s4 ←
+                                lift (Array.to_slice
+                                  (Array.make 26#usize [
+                                    32#u8, 105#u8, 51#u8, 50#u8, 46#u8, 115#u8,
+                                    116#u8, 111#u8, 114#u8, 101#u8, 32#u8,
+                                    111#u8, 102#u8, 102#u8, 115#u8, 101#u8,
+                                    116#u8, 61#u8, 49#u8, 50#u8, 10#u8, 32#u8,
+                                    101#u8, 110#u8, 100#u8, 10#u8
+                                    ]))
+                              output.Buffer.append buffer13 s4
+                            | core.result.Result.Err _ => ok (r12, buffer13)
+                          | core.result.Result.Err _ => ok (r11, buffer12)
+                        | core.result.Result.Err _ => ok (r10, buffer11)
+                      | core.result.Result.Err _ => ok (r9, buffer10)
+                    | core.result.Result.Err _ => ok (r8, buffer9)
+                  | core.result.Result.Err _ => ok (r7, buffer8)
+                | core.result.Result.Err _ => ok (r6, buffer7)
+              | core.result.Result.Err _ => ok (r5, buffer6)
+            | core.result.Result.Err _ => ok (r4, buffer5)
+          | core.result.Result.Err _ => ok (r3, buffer4)
+        | core.result.Result.Err _ => ok (r2, buffer3)
+      | noble_contracts.component.Type.ResultBytesString =>
+        let s ←
+          lift (Array.to_slice
+            (Array.make 12#usize [
+              32#u8, 105#u8, 51#u8, 50#u8, 46#u8, 115#u8, 116#u8, 111#u8,
+              114#u8, 101#u8, 56#u8, 10#u8
+              ]))
+        let (r2, buffer3) ← output.Buffer.append buffer2 s
+        match r2 with
+        | core.result.Result.Ok _ =>
+          let (r3, buffer4) ← component.abi.get buffer3 area
+          match r3 with
+          | core.result.Result.Ok _ =>
+            let (r4, buffer5) ←
+              component.lower.results.read_lane value 1#usize buffer4
+            match r4 with
+            | core.result.Result.Ok _ =>
+              let s1 ←
+                lift (Array.to_slice
+                  (Array.make 20#usize [
+                    32#u8, 105#u8, 51#u8, 50#u8, 46#u8, 115#u8, 116#u8, 111#u8,
+                    114#u8, 101#u8, 32#u8, 111#u8, 102#u8, 102#u8, 115#u8,
+                    101#u8, 116#u8, 61#u8, 52#u8, 10#u8
+                    ]))
+              let (r5, buffer6) ← output.Buffer.append buffer5 s1
+              match r5 with
+              | core.result.Result.Ok _ =>
+                let (r6, buffer7) ← component.abi.get buffer6 area
+                match r6 with
+                | core.result.Result.Ok _ =>
+                  let (r7, buffer8) ←
+                    component.lower.results.read_lane value 2#usize buffer7
+                  match r7 with
+                  | core.result.Result.Ok _ =>
+                    let s2 ←
+                      lift (Array.to_slice
+                        (Array.make 20#usize [
+                          32#u8, 105#u8, 51#u8, 50#u8, 46#u8, 115#u8, 116#u8,
+                          111#u8, 114#u8, 101#u8, 32#u8, 111#u8, 102#u8,
+                          102#u8, 115#u8, 101#u8, 116#u8, 61#u8, 56#u8, 10#u8
+                          ]))
+                    output.Buffer.append buffer8 s2
+                  | core.result.Result.Err _ => ok (r7, buffer8)
+                | core.result.Result.Err _ => ok (r6, buffer7)
+              | core.result.Result.Err _ => ok (r5, buffer6)
+            | core.result.Result.Err _ => ok (r4, buffer5)
+          | core.result.Result.Err _ => ok (r3, buffer4)
+        | core.result.Result.Err _ => ok (r2, buffer3)
+      | noble_contracts.component.Type.StreamU8 =>
+        let s ←
+          lift (Array.to_slice
+            (Array.make 11#usize [
+              32#u8, 105#u8, 51#u8, 50#u8, 46#u8, 115#u8, 116#u8, 111#u8,
+              114#u8, 101#u8, 10#u8
+              ]))
+        output.Buffer.append buffer2 s
+      | noble_contracts.component.Type.FutureS64 =>
+        let s ←
+          lift (Array.to_slice
+            (Array.make 11#usize [
+              32#u8, 105#u8, 51#u8, 50#u8, 46#u8, 115#u8, 116#u8, 111#u8,
+              114#u8, 101#u8, 10#u8
+              ]))
+        output.Buffer.append buffer2 s
+      | noble_contracts.component.Type.FutureResultS64String =>
+        let s ←
+          lift (Array.to_slice
+            (Array.make 11#usize [
+              32#u8, 105#u8, 51#u8, 50#u8, 46#u8, 115#u8, 116#u8, 111#u8,
+              114#u8, 101#u8, 10#u8
+              ]))
+        output.Buffer.append buffer2 s
+      | noble_contracts.component.Type.Own _ =>
+        let s ←
+          lift (Array.to_slice
+            (Array.make 11#usize [
+              32#u8, 105#u8, 51#u8, 50#u8, 46#u8, 115#u8, 116#u8, 111#u8,
+              114#u8, 101#u8, 10#u8
+              ]))
+        output.Buffer.append buffer2 s
+      | noble_contracts.component.Type.Borrow _ =>
+        let s ←
+          lift (Array.to_slice
+            (Array.make 11#usize [
+              32#u8, 105#u8, 51#u8, 50#u8, 46#u8, 115#u8, 116#u8, 111#u8,
+              114#u8, 101#u8, 10#u8
+              ]))
+        output.Buffer.append buffer2 s
+    | core.result.Result.Err _ => ok (r1, buffer2)
+  | core.result.Result.Err _ => ok (r, buffer1)
+
+/-- [noble_wasm::component::lower::calls::store_argument]:
+    Source: 'crates/noble-wasm/src/component/lower/calls.rs', lines 111:0-128:1 -/
+def component.lower.calls.store_argument
+  (ty : noble_contracts.component.Type) (value : component.lower.Value)
+  (locals : component.lower.calls.IndirectLocals) (offset_bytes : Std.U32)
+  (buffer : output.Buffer) :
+  Result ((core.result.Result Std.U32 Diagnostic) × output.Buffer)
+  := do
+  let (align, size_bytes) ← component.abi.memory_layout ty
+  let r ← component.abi.align_to offset_bytes align
+  match r with
+  | core.result.Result.Ok value1 =>
+    let (r1, buffer1) ← component.abi.get buffer locals.area
+    match r1 with
+    | core.result.Result.Ok _ =>
+      let (r2, buffer2) ← output.Buffer.i32 buffer1 value1
+      match r2 with
+      | core.result.Result.Ok _ =>
+        let s ←
+          lift (Array.to_slice
+            (Array.make 9#usize [
+              32#u8, 105#u8, 51#u8, 50#u8, 46#u8, 97#u8, 100#u8, 100#u8, 10#u8
+              ]))
+        let (r3, buffer3) ← output.Buffer.append buffer2 s
+        match r3 with
+        | core.result.Result.Ok _ =>
+          let (r4, buffer4) ← component.abi.set buffer3 locals.field
+          match r4 with
+          | core.result.Result.Ok _ =>
+            let (r5, buffer5) ←
+              component.lower.results.store ty locals.field value buffer4
+            match r5 with
+            | core.result.Result.Ok _ =>
+              let o ← lift (U32.checked_add value1 size_bytes)
+              let r6 ← core.option.Option.ok_or o Diagnostic.Exhausted
+              ok (r6, buffer5)
+            | core.result.Result.Err failure =>
+              ok (core.result.Result.Err failure, buffer5)
+          | core.result.Result.Err failure =>
+            ok (core.result.Result.Err failure, buffer4)
+        | core.result.Result.Err failure =>
+          ok (core.result.Result.Err failure, buffer3)
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, buffer2)
+    | core.result.Result.Err failure =>
+      ok (core.result.Result.Err failure, buffer1)
+  | core.result.Result.Err _ => ok (r, buffer)
+
+/-- [noble_wasm::component::lower::calls::indirect_arguments]: loop body 0:
+    Source: 'crates/noble-wasm/src/component/lower/calls.rs', lines 97:4-104:5 -/
+@[rust_loop_body]
+def component.lower.calls.indirect_arguments_loop.body
+  (v : alloc.vec.Vec noble_contracts.component.Type)
+  (arguments : Slice component.lower.Value) (area : Std.U32) (value : Std.U32)
+  (count : Std.Usize) (state : component.lower.State) (offset_bytes : Std.U32)
+  («at» : Std.Usize) (failure : Option Diagnostic) :
+  Result (ControlFlow (component.lower.State × Std.U32 × Std.Usize × (Option
+    Diagnostic)) (component.lower.State × (Option Diagnostic)))
+  := do
+  if «at» < count
+  then
+    let b := core.option.Option.is_none failure
+    if b
+    then
+      let ty ←
+        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+          noble_contracts.component.Type) v «at»
+      let v1 ← Slice.index_usize arguments «at»
+      let (r, b1) ←
+        component.lower.calls.store_argument ty v1 { area, field := value }
+          offset_bytes state.code
+      let (offset_bytes1, failure1) ←
+        match r with
+        | core.result.Result.Ok next => ok (next, failure)
+        | core.result.Result.Err error => ok (offset_bytes, some error)
+      let at1 ← lift (core.num.Usize.saturating_add «at» 1#usize)
+      ok (cont ({ state with code := b1 }, offset_bytes1, at1, failure1))
+    else ok (done (state, failure))
+  else ok (done (state, failure))
+
+/-- [noble_wasm::component::lower::calls::indirect_arguments]: loop 0:
+    Source: 'crates/noble-wasm/src/component/lower/calls.rs', lines 97:4-104:5 -/
+@[rust_loop]
+def component.lower.calls.indirect_arguments_loop
+  (v : alloc.vec.Vec noble_contracts.component.Type)
+  (arguments : Slice component.lower.Value) (state : component.lower.State)
+  (area : Std.U32) (value : Std.U32) (offset_bytes : Std.U32)
+  («at» : Std.Usize) (failure : Option Diagnostic) (count : Std.Usize) :
+  Result (component.lower.State × (Option Diagnostic))
+  := do
+  loop
+    (fun (state1, offset_bytes1, at1, failure1) =>
+      component.lower.calls.indirect_arguments_loop.body v arguments area value
+      count state1 offset_bytes1 at1 failure1)
+    (state, offset_bytes, «at», failure)
+
+/-- [noble_wasm::component::lower::calls::indirect_arguments]:
+    Source: 'crates/noble-wasm/src/component/lower/calls.rs', lines 82:0-109:1 -/
+def component.lower.calls.indirect_arguments
+  (operation : noble_contracts.component.Operation)
+  (arguments : Slice component.lower.Value) (state : component.lower.State) :
+  Result ((core.result.Result Unit Diagnostic) × component.lower.State)
+  := do
+  let s := alloc.vec.Vec.deref operation.parameters
+  let r ← component.abi.tuple_layout s
+  match r with
+  | core.result.Result.Ok value =>
+    let (r1, state1) ← component.lower.results.allocate_layout value state
+    match r1 with
+    | core.result.Result.Ok value1 =>
+      let (r2, state2) ←
+        component.lower.State.local state1 component.abi.Lane.I32
+      match r2 with
+      | core.result.Result.Ok value2 =>
+        let count := Slice.len arguments
+        let (state3, failure) ←
+          component.lower.calls.indirect_arguments_loop operation.parameters
+            arguments state2 value1 value2 0#u32 0#usize none count
+        match failure with
+        | none =>
+          let (r3, b) ← component.abi.get state3.code value1
+          ok (r3, { state3 with code := b })
+        | some error => ok (core.result.Result.Err error, state3)
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, state2)
+    | core.result.Result.Err failure =>
+      ok (core.result.Result.Err failure, state1)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, state)
+
 /-- [noble_wasm::component::lower::calls::invoke]:
-    Source: 'crates/noble-wasm/src/component/lower/calls.rs', lines 10:0-61:1 -/
+    Source: 'crates/noble-wasm/src/component/lower/calls.rs', lines 10:0-71:1 -/
 def component.lower.calls.invoke
   (operation : noble_contracts.component.Operation)
   (state : component.lower.State) :
@@ -3365,69 +5115,496 @@ def component.lower.calls.invoke
       | core.result.Result.Ok value1 =>
         match value1 with
         | none =>
-          let s2 := alloc.vec.Vec.deref value
-          let (r3, state2) ←
-            component.lower.calls.read_arguments s2 { state1 with code := b }
-          match r3 with
-          | core.result.Result.Ok _ =>
-            match operation.definition with
-            | none => ok (core.result.Result.Err Diagnostic.Invalid, state2)
-            | some definition =>
-              let s3 ←
-                lift (Array.to_slice
-                  (Array.make 8#usize [
-                    32#u8, 99#u8, 97#u8, 108#u8, 108#u8, 32#u8, 36#u8, 105#u8
-                    ]))
-              let (r4, b1) ← output.Buffer.append state2.code s3
-              match r4 with
-              | core.result.Result.Ok _ =>
-                let i ← lift (core.convert.num.FromU64U32.from definition)
-                let (r5, b2) ← output.Buffer.number b1 i
-                match r5 with
+          let b1 ← component.abi.indirect_parameters operation
+          if b1
+          then
+            let s2 := alloc.vec.Vec.deref value
+            let (r3, state2) ←
+              component.lower.calls.indirect_arguments operation s2
+                { state1 with code := b }
+            match r3 with
+            | core.result.Result.Ok _ =>
+              match operation.definition with
+              | none => ok (core.result.Result.Err Diagnostic.Invalid, state2)
+              | some definition =>
+                let s3 ←
+                  lift (Array.to_slice
+                    (Array.make 8#usize [
+                      32#u8, 99#u8, 97#u8, 108#u8, 108#u8, 32#u8, 36#u8, 105#u8
+                      ]))
+                let (r4, b2) ← output.Buffer.append state2.code s3
+                match r4 with
                 | core.result.Result.Ok _ =>
-                  let s4 ←
-                    lift (Array.to_slice (Array.make 1#usize [ 10#u8 ]))
-                  let (r6, b3) ← output.Buffer.append b2 s4
-                  match r6 with
+                  let i ← lift (core.convert.num.FromU64U32.from definition)
+                  let (r5, b3) ← output.Buffer.number b2 i
+                  match r5 with
                   | core.result.Result.Ok _ =>
-                    let (r7, state3) ←
-                      component.lower.calls.restore_borrows
-                        { operation with definition := (some definition) }
-                        value { state2 with code := b3 }
-                    match r7 with
+                    let s4 ←
+                      lift (Array.to_slice (Array.make 1#usize [ 10#u8 ]))
+                    let (r6, b4) ← output.Buffer.append b3 s4
+                    match r6 with
                     | core.result.Result.Ok _ =>
-                      ok (core.result.Result.Ok (), state3)
-                    | core.result.Result.Err _ => ok (r7, state3)
+                      if operation.asynchronous
+                      then
+                        let s5 ←
+                          lift (Array.to_slice
+                            (Array.make 21#usize [
+                              32#u8, 99#u8, 97#u8, 108#u8, 108#u8, 32#u8,
+                              36#u8, 97#u8, 119#u8, 97#u8, 105#u8, 116#u8,
+                              45#u8, 115#u8, 117#u8, 98#u8, 116#u8, 97#u8,
+                              115#u8, 107#u8, 10#u8
+                              ]))
+                        let (r7, b5) ← output.Buffer.append b4 s5
+                        match r7 with
+                        | core.result.Result.Ok _ =>
+                          let (r8, state3) ←
+                            component.lower.calls.restore_borrows
+                              { operation with definition := (some definition)
+                              } value { state2 with code := b5 }
+                          match r8 with
+                          | core.result.Result.Ok _ =>
+                            ok (core.result.Result.Ok (), state3)
+                          | core.result.Result.Err _ => ok (r8, state3)
+                        | core.result.Result.Err _ =>
+                          ok (r7, { state2 with code := b5 })
+                      else
+                        let (r7, state3) ←
+                          component.lower.calls.restore_borrows
+                            { operation with definition := (some definition) }
+                            value { state2 with code := b4 }
+                        match r7 with
+                        | core.result.Result.Ok _ =>
+                          ok (core.result.Result.Ok (), state3)
+                        | core.result.Result.Err _ => ok (r7, state3)
+                    | core.result.Result.Err _ =>
+                      ok (r6, { state2 with code := b4 })
                   | core.result.Result.Err _ =>
-                    ok (r6, { state2 with code := b3 })
+                    ok (r5, { state2 with code := b3 })
                 | core.result.Result.Err _ =>
-                  ok (r5, { state2 with code := b2 })
-              | core.result.Result.Err _ => ok (r4, { state2 with code := b1 })
-          | core.result.Result.Err _ => ok (r3, state2)
+                  ok (r4, { state2 with code := b2 })
+            | core.result.Result.Err _ => ok (r3, state2)
+          else
+            let s2 := alloc.vec.Vec.deref value
+            let (r3, state2) ←
+              component.lower.calls.read_arguments s2 { state1 with code := b }
+            match r3 with
+            | core.result.Result.Ok _ =>
+              match operation.definition with
+              | none => ok (core.result.Result.Err Diagnostic.Invalid, state2)
+              | some definition =>
+                let s3 ←
+                  lift (Array.to_slice
+                    (Array.make 8#usize [
+                      32#u8, 99#u8, 97#u8, 108#u8, 108#u8, 32#u8, 36#u8, 105#u8
+                      ]))
+                let (r4, b2) ← output.Buffer.append state2.code s3
+                match r4 with
+                | core.result.Result.Ok _ =>
+                  let i ← lift (core.convert.num.FromU64U32.from definition)
+                  let (r5, b3) ← output.Buffer.number b2 i
+                  match r5 with
+                  | core.result.Result.Ok _ =>
+                    let s4 ←
+                      lift (Array.to_slice (Array.make 1#usize [ 10#u8 ]))
+                    let (r6, b4) ← output.Buffer.append b3 s4
+                    match r6 with
+                    | core.result.Result.Ok _ =>
+                      if operation.asynchronous
+                      then
+                        let s5 ←
+                          lift (Array.to_slice
+                            (Array.make 21#usize [
+                              32#u8, 99#u8, 97#u8, 108#u8, 108#u8, 32#u8,
+                              36#u8, 97#u8, 119#u8, 97#u8, 105#u8, 116#u8,
+                              45#u8, 115#u8, 117#u8, 98#u8, 116#u8, 97#u8,
+                              115#u8, 107#u8, 10#u8
+                              ]))
+                        let (r7, b5) ← output.Buffer.append b4 s5
+                        match r7 with
+                        | core.result.Result.Ok _ =>
+                          let (r8, state3) ←
+                            component.lower.calls.restore_borrows
+                              { operation with definition := (some definition)
+                              } value { state2 with code := b5 }
+                          match r8 with
+                          | core.result.Result.Ok _ =>
+                            ok (core.result.Result.Ok (), state3)
+                          | core.result.Result.Err _ => ok (r8, state3)
+                        | core.result.Result.Err _ =>
+                          ok (r7, { state2 with code := b5 })
+                      else
+                        let (r7, state3) ←
+                          component.lower.calls.restore_borrows
+                            { operation with definition := (some definition) }
+                            value { state2 with code := b4 }
+                        match r7 with
+                        | core.result.Result.Ok _ =>
+                          ok (core.result.Result.Ok (), state3)
+                        | core.result.Result.Err _ => ok (r7, state3)
+                    | core.result.Result.Err _ =>
+                      ok (r6, { state2 with code := b4 })
+                  | core.result.Result.Err _ =>
+                    ok (r5, { state2 with code := b3 })
+                | core.result.Result.Err _ =>
+                  ok (r4, { state2 with code := b2 })
+            | core.result.Result.Err _ => ok (r3, state2)
         | some ty =>
           let t ← noble_contracts.component.Type.noble ty
           let (r3, state2) ←
             component.lower.State.value { state1 with code := b } t
           match r3 with
           | core.result.Result.Ok value2 =>
-            let i ← component.abi.lane_count ty
-            if i > 1#usize
+            if operation.asynchronous
             then
               let (r4, state3) ← component.lower.results.allocate ty state2
               match r4 with
               | core.result.Result.Ok value3 =>
-                let s2 := alloc.vec.Vec.deref value
-                let (r5, state4) ←
-                  component.lower.calls.read_arguments s2 state3
-                match r5 with
-                | core.result.Result.Ok _ =>
-                  let (r6, b1) ← component.abi.get state4.code value3
-                  match r6 with
+                let b1 ← component.abi.indirect_parameters operation
+                if b1
+                then
+                  let s2 := alloc.vec.Vec.deref value
+                  let (r5, state4) ←
+                    component.lower.calls.indirect_arguments operation s2
+                      state3
+                  match r5 with
+                  | core.result.Result.Ok _ =>
+                    let (r6, b2) ← component.abi.get state4.code value3
+                    match r6 with
+                    | core.result.Result.Ok _ =>
+                      match operation.definition with
+                      | none =>
+                        ok (core.result.Result.Err Diagnostic.Invalid,
+                          { state4 with code := b2 })
+                      | some definition =>
+                        let s3 ←
+                          lift (Array.to_slice
+                            (Array.make 8#usize [
+                              32#u8, 99#u8, 97#u8, 108#u8, 108#u8, 32#u8,
+                              36#u8, 105#u8
+                              ]))
+                        let (r7, b3) ← output.Buffer.append b2 s3
+                        match r7 with
+                        | core.result.Result.Ok _ =>
+                          let i ←
+                            lift (core.convert.num.FromU64U32.from definition)
+                          let (r8, b4) ← output.Buffer.number b3 i
+                          match r8 with
+                          | core.result.Result.Ok _ =>
+                            let s4 ←
+                              lift (Array.to_slice
+                                (Array.make 1#usize [ 10#u8 ]))
+                            let (r9, b5) ← output.Buffer.append b4 s4
+                            match r9 with
+                            | core.result.Result.Ok _ =>
+                              let s5 ←
+                                lift (Array.to_slice
+                                  (Array.make 21#usize [
+                                    32#u8, 99#u8, 97#u8, 108#u8, 108#u8, 32#u8,
+                                    36#u8, 97#u8, 119#u8, 97#u8, 105#u8,
+                                    116#u8, 45#u8, 115#u8, 117#u8, 98#u8,
+                                    116#u8, 97#u8, 115#u8, 107#u8, 10#u8
+                                    ]))
+                              let (r10, b6) ← output.Buffer.append b5 s5
+                              match r10 with
+                              | core.result.Result.Ok _ =>
+                                let (r11, b7) ←
+                                  component.lower.results.load value1 value3
+                                    value2 b6
+                                match r11 with
+                                | core.result.Result.Ok _ =>
+                                  let (r12, b8) ←
+                                    component.lower.results.validate ty value2
+                                      b7
+                                  match r12 with
+                                  | core.result.Result.Ok _ =>
+                                    let (r13, state5) ←
+                                      component.lower.calls.restore_borrows
+                                        {
+                                          operation
+                                            with
+                                            definition := (some definition)
+                                        } value { state4 with code := b8 }
+                                    match r13 with
+                                    | core.result.Result.Ok _ =>
+                                      let v ←
+                                        alloc.vec.Vec.push state5.stack value2
+                                      ok (core.result.Result.Ok (),
+                                        { state5 with stack := v })
+                                    | core.result.Result.Err _ =>
+                                      ok (r13, state5)
+                                  | core.result.Result.Err _ =>
+                                    ok (r12, { state4 with code := b8 })
+                                | core.result.Result.Err _ =>
+                                  ok (r11, { state4 with code := b7 })
+                              | core.result.Result.Err _ =>
+                                ok (r10, { state4 with code := b6 })
+                            | core.result.Result.Err _ =>
+                              ok (r9, { state4 with code := b5 })
+                          | core.result.Result.Err _ =>
+                            ok (r8, { state4 with code := b4 })
+                        | core.result.Result.Err _ =>
+                          ok (r7, { state4 with code := b3 })
+                    | core.result.Result.Err _ =>
+                      ok (r6, { state4 with code := b2 })
+                  | core.result.Result.Err _ => ok (r5, state4)
+                else
+                  let s2 := alloc.vec.Vec.deref value
+                  let (r5, state4) ←
+                    component.lower.calls.read_arguments s2 state3
+                  match r5 with
+                  | core.result.Result.Ok _ =>
+                    let (r6, b2) ← component.abi.get state4.code value3
+                    match r6 with
+                    | core.result.Result.Ok _ =>
+                      match operation.definition with
+                      | none =>
+                        ok (core.result.Result.Err Diagnostic.Invalid,
+                          { state4 with code := b2 })
+                      | some definition =>
+                        let s3 ←
+                          lift (Array.to_slice
+                            (Array.make 8#usize [
+                              32#u8, 99#u8, 97#u8, 108#u8, 108#u8, 32#u8,
+                              36#u8, 105#u8
+                              ]))
+                        let (r7, b3) ← output.Buffer.append b2 s3
+                        match r7 with
+                        | core.result.Result.Ok _ =>
+                          let i ←
+                            lift (core.convert.num.FromU64U32.from definition)
+                          let (r8, b4) ← output.Buffer.number b3 i
+                          match r8 with
+                          | core.result.Result.Ok _ =>
+                            let s4 ←
+                              lift (Array.to_slice
+                                (Array.make 1#usize [ 10#u8 ]))
+                            let (r9, b5) ← output.Buffer.append b4 s4
+                            match r9 with
+                            | core.result.Result.Ok _ =>
+                              let s5 ←
+                                lift (Array.to_slice
+                                  (Array.make 21#usize [
+                                    32#u8, 99#u8, 97#u8, 108#u8, 108#u8, 32#u8,
+                                    36#u8, 97#u8, 119#u8, 97#u8, 105#u8,
+                                    116#u8, 45#u8, 115#u8, 117#u8, 98#u8,
+                                    116#u8, 97#u8, 115#u8, 107#u8, 10#u8
+                                    ]))
+                              let (r10, b6) ← output.Buffer.append b5 s5
+                              match r10 with
+                              | core.result.Result.Ok _ =>
+                                let (r11, b7) ←
+                                  component.lower.results.load value1 value3
+                                    value2 b6
+                                match r11 with
+                                | core.result.Result.Ok _ =>
+                                  let (r12, b8) ←
+                                    component.lower.results.validate ty value2
+                                      b7
+                                  match r12 with
+                                  | core.result.Result.Ok _ =>
+                                    let (r13, state5) ←
+                                      component.lower.calls.restore_borrows
+                                        {
+                                          operation
+                                            with
+                                            definition := (some definition)
+                                        } value { state4 with code := b8 }
+                                    match r13 with
+                                    | core.result.Result.Ok _ =>
+                                      let v ←
+                                        alloc.vec.Vec.push state5.stack value2
+                                      ok (core.result.Result.Ok (),
+                                        { state5 with stack := v })
+                                    | core.result.Result.Err _ =>
+                                      ok (r13, state5)
+                                  | core.result.Result.Err _ =>
+                                    ok (r12, { state4 with code := b8 })
+                                | core.result.Result.Err _ =>
+                                  ok (r11, { state4 with code := b7 })
+                              | core.result.Result.Err _ =>
+                                ok (r10, { state4 with code := b6 })
+                            | core.result.Result.Err _ =>
+                              ok (r9, { state4 with code := b5 })
+                          | core.result.Result.Err _ =>
+                            ok (r8, { state4 with code := b4 })
+                        | core.result.Result.Err _ =>
+                          ok (r7, { state4 with code := b3 })
+                    | core.result.Result.Err _ =>
+                      ok (r6, { state4 with code := b2 })
+                  | core.result.Result.Err _ => ok (r5, state4)
+              | core.result.Result.Err failure =>
+                ok (core.result.Result.Err failure, state3)
+            else
+              let i ← component.abi.lane_count ty
+              if i > 1#usize
+              then
+                let (r4, state3) ← component.lower.results.allocate ty state2
+                match r4 with
+                | core.result.Result.Ok value3 =>
+                  let b1 ← component.abi.indirect_parameters operation
+                  if b1
+                  then
+                    let s2 := alloc.vec.Vec.deref value
+                    let (r5, state4) ←
+                      component.lower.calls.indirect_arguments operation s2
+                        state3
+                    match r5 with
+                    | core.result.Result.Ok _ =>
+                      let (r6, b2) ← component.abi.get state4.code value3
+                      match r6 with
+                      | core.result.Result.Ok _ =>
+                        match operation.definition with
+                        | none =>
+                          ok (core.result.Result.Err Diagnostic.Invalid,
+                            { state4 with code := b2 })
+                        | some definition =>
+                          let s3 ←
+                            lift (Array.to_slice
+                              (Array.make 8#usize [
+                                32#u8, 99#u8, 97#u8, 108#u8, 108#u8, 32#u8,
+                                36#u8, 105#u8
+                                ]))
+                          let (r7, b3) ← output.Buffer.append b2 s3
+                          match r7 with
+                          | core.result.Result.Ok _ =>
+                            let i1 ←
+                              lift (core.convert.num.FromU64U32.from
+                                definition)
+                            let (r8, b4) ← output.Buffer.number b3 i1
+                            match r8 with
+                            | core.result.Result.Ok _ =>
+                              let s4 ←
+                                lift (Array.to_slice
+                                  (Array.make 1#usize [ 10#u8 ]))
+                              let (r9, b5) ← output.Buffer.append b4 s4
+                              match r9 with
+                              | core.result.Result.Ok _ =>
+                                let (r10, b6) ←
+                                  component.lower.results.load value1 value3
+                                    value2 b5
+                                match r10 with
+                                | core.result.Result.Ok _ =>
+                                  let (r11, b7) ←
+                                    component.lower.results.validate ty value2
+                                      b6
+                                  match r11 with
+                                  | core.result.Result.Ok _ =>
+                                    let (r12, state5) ←
+                                      component.lower.calls.restore_borrows
+                                        {
+                                          operation
+                                            with
+                                            definition := (some definition)
+                                        } value { state4 with code := b7 }
+                                    match r12 with
+                                    | core.result.Result.Ok _ =>
+                                      let v ←
+                                        alloc.vec.Vec.push state5.stack value2
+                                      ok (core.result.Result.Ok (),
+                                        { state5 with stack := v })
+                                    | core.result.Result.Err _ =>
+                                      ok (r12, state5)
+                                  | core.result.Result.Err _ =>
+                                    ok (r11, { state4 with code := b7 })
+                                | core.result.Result.Err _ =>
+                                  ok (r10, { state4 with code := b6 })
+                              | core.result.Result.Err _ =>
+                                ok (r9, { state4 with code := b5 })
+                            | core.result.Result.Err _ =>
+                              ok (r8, { state4 with code := b4 })
+                          | core.result.Result.Err _ =>
+                            ok (r7, { state4 with code := b3 })
+                      | core.result.Result.Err _ =>
+                        ok (r6, { state4 with code := b2 })
+                    | core.result.Result.Err _ => ok (r5, state4)
+                  else
+                    let s2 := alloc.vec.Vec.deref value
+                    let (r5, state4) ←
+                      component.lower.calls.read_arguments s2 state3
+                    match r5 with
+                    | core.result.Result.Ok _ =>
+                      let (r6, b2) ← component.abi.get state4.code value3
+                      match r6 with
+                      | core.result.Result.Ok _ =>
+                        match operation.definition with
+                        | none =>
+                          ok (core.result.Result.Err Diagnostic.Invalid,
+                            { state4 with code := b2 })
+                        | some definition =>
+                          let s3 ←
+                            lift (Array.to_slice
+                              (Array.make 8#usize [
+                                32#u8, 99#u8, 97#u8, 108#u8, 108#u8, 32#u8,
+                                36#u8, 105#u8
+                                ]))
+                          let (r7, b3) ← output.Buffer.append b2 s3
+                          match r7 with
+                          | core.result.Result.Ok _ =>
+                            let i1 ←
+                              lift (core.convert.num.FromU64U32.from
+                                definition)
+                            let (r8, b4) ← output.Buffer.number b3 i1
+                            match r8 with
+                            | core.result.Result.Ok _ =>
+                              let s4 ←
+                                lift (Array.to_slice
+                                  (Array.make 1#usize [ 10#u8 ]))
+                              let (r9, b5) ← output.Buffer.append b4 s4
+                              match r9 with
+                              | core.result.Result.Ok _ =>
+                                let (r10, b6) ←
+                                  component.lower.results.load value1 value3
+                                    value2 b5
+                                match r10 with
+                                | core.result.Result.Ok _ =>
+                                  let (r11, b7) ←
+                                    component.lower.results.validate ty value2
+                                      b6
+                                  match r11 with
+                                  | core.result.Result.Ok _ =>
+                                    let (r12, state5) ←
+                                      component.lower.calls.restore_borrows
+                                        {
+                                          operation
+                                            with
+                                            definition := (some definition)
+                                        } value { state4 with code := b7 }
+                                    match r12 with
+                                    | core.result.Result.Ok _ =>
+                                      let v ←
+                                        alloc.vec.Vec.push state5.stack value2
+                                      ok (core.result.Result.Ok (),
+                                        { state5 with stack := v })
+                                    | core.result.Result.Err _ =>
+                                      ok (r12, state5)
+                                  | core.result.Result.Err _ =>
+                                    ok (r11, { state4 with code := b7 })
+                                | core.result.Result.Err _ =>
+                                  ok (r10, { state4 with code := b6 })
+                              | core.result.Result.Err _ =>
+                                ok (r9, { state4 with code := b5 })
+                            | core.result.Result.Err _ =>
+                              ok (r8, { state4 with code := b4 })
+                          | core.result.Result.Err _ =>
+                            ok (r7, { state4 with code := b3 })
+                      | core.result.Result.Err _ =>
+                        ok (r6, { state4 with code := b2 })
+                    | core.result.Result.Err _ => ok (r5, state4)
+                | core.result.Result.Err failure =>
+                  ok (core.result.Result.Err failure, state3)
+              else
+                let b1 ← component.abi.indirect_parameters operation
+                if b1
+                then
+                  let s2 := alloc.vec.Vec.deref value
+                  let (r4, state3) ←
+                    component.lower.calls.indirect_arguments operation s2
+                      state2
+                  match r4 with
                   | core.result.Result.Ok _ =>
                     match operation.definition with
                     | none =>
-                      ok (core.result.Result.Err Diagnostic.Invalid,
-                        { state4 with code := b1 })
+                      ok (core.result.Result.Err Diagnostic.Invalid, state3)
                     | some definition =>
                       let s3 ←
                         lift (Array.to_slice
@@ -3435,120 +5612,118 @@ def component.lower.calls.invoke
                             32#u8, 99#u8, 97#u8, 108#u8, 108#u8, 32#u8, 36#u8,
                             105#u8
                             ]))
-                      let (r7, b2) ← output.Buffer.append b1 s3
-                      match r7 with
+                      let (r5, b2) ← output.Buffer.append state3.code s3
+                      match r5 with
                       | core.result.Result.Ok _ =>
                         let i1 ←
                           lift (core.convert.num.FromU64U32.from definition)
-                        let (r8, b3) ← output.Buffer.number b2 i1
-                        match r8 with
+                        let (r6, b3) ← output.Buffer.number b2 i1
+                        match r6 with
                         | core.result.Result.Ok _ =>
                           let s4 ←
                             lift (Array.to_slice
                               (Array.make 1#usize [ 10#u8 ]))
-                          let (r9, b4) ← output.Buffer.append b3 s4
-                          match r9 with
+                          let (r7, b4) ← output.Buffer.append b3 s4
+                          match r7 with
                           | core.result.Result.Ok _ =>
-                            let (r10, b5) ←
-                              component.lower.results.load value1 value3 value2
-                                b4
-                            match r10 with
+                            let (r8, state4) ←
+                              component.lower.State.capture
+                                { state3 with code := b4 } value2
+                            match r8 with
                             | core.result.Result.Ok _ =>
-                              let (r11, b6) ←
-                                component.lower.results.validate ty value2 b5
-                              match r11 with
+                              let (r9, b5) ←
+                                component.lower.results.validate ty value2
+                                  state4.code
+                              match r9 with
                               | core.result.Result.Ok _ =>
-                                let (r12, state5) ←
+                                let (r10, state5) ←
                                   component.lower.calls.restore_borrows
                                     {
                                       operation
                                         with
                                         definition := (some definition)
-                                    } value { state4 with code := b6 }
-                                match r12 with
+                                    } value { state4 with code := b5 }
+                                match r10 with
                                 | core.result.Result.Ok _ =>
                                   let v ←
                                     alloc.vec.Vec.push state5.stack value2
                                   ok (core.result.Result.Ok (),
                                     { state5 with stack := v })
-                                | core.result.Result.Err _ => ok (r12, state5)
+                                | core.result.Result.Err _ => ok (r10, state5)
                               | core.result.Result.Err _ =>
-                                ok (r11, { state4 with code := b6 })
-                            | core.result.Result.Err _ =>
-                              ok (r10, { state4 with code := b5 })
+                                ok (r9, { state4 with code := b5 })
+                            | core.result.Result.Err _ => ok (r8, state4)
                           | core.result.Result.Err _ =>
-                            ok (r9, { state4 with code := b4 })
+                            ok (r7, { state3 with code := b4 })
                         | core.result.Result.Err _ =>
-                          ok (r8, { state4 with code := b3 })
+                          ok (r6, { state3 with code := b3 })
                       | core.result.Result.Err _ =>
-                        ok (r7, { state4 with code := b2 })
-                  | core.result.Result.Err _ =>
-                    ok (r6, { state4 with code := b1 })
-                | core.result.Result.Err _ => ok (r5, state4)
-              | core.result.Result.Err failure =>
-                ok (core.result.Result.Err failure, state3)
-            else
-              let s2 := alloc.vec.Vec.deref value
-              let (r4, state3) ←
-                component.lower.calls.read_arguments s2 state2
-              match r4 with
-              | core.result.Result.Ok _ =>
-                match operation.definition with
-                | none =>
-                  ok (core.result.Result.Err Diagnostic.Invalid, state3)
-                | some definition =>
-                  let s3 ←
-                    lift (Array.to_slice
-                      (Array.make 8#usize [
-                        32#u8, 99#u8, 97#u8, 108#u8, 108#u8, 32#u8, 36#u8,
-                        105#u8
-                        ]))
-                  let (r5, b1) ← output.Buffer.append state3.code s3
-                  match r5 with
+                        ok (r5, { state3 with code := b2 })
+                  | core.result.Result.Err _ => ok (r4, state3)
+                else
+                  let s2 := alloc.vec.Vec.deref value
+                  let (r4, state3) ←
+                    component.lower.calls.read_arguments s2 state2
+                  match r4 with
                   | core.result.Result.Ok _ =>
-                    let i1 ←
-                      lift (core.convert.num.FromU64U32.from definition)
-                    let (r6, b2) ← output.Buffer.number b1 i1
-                    match r6 with
-                    | core.result.Result.Ok _ =>
-                      let s4 ←
-                        lift (Array.to_slice (Array.make 1#usize [ 10#u8 ]))
-                      let (r7, b3) ← output.Buffer.append b2 s4
-                      match r7 with
+                    match operation.definition with
+                    | none =>
+                      ok (core.result.Result.Err Diagnostic.Invalid, state3)
+                    | some definition =>
+                      let s3 ←
+                        lift (Array.to_slice
+                          (Array.make 8#usize [
+                            32#u8, 99#u8, 97#u8, 108#u8, 108#u8, 32#u8, 36#u8,
+                            105#u8
+                            ]))
+                      let (r5, b2) ← output.Buffer.append state3.code s3
+                      match r5 with
                       | core.result.Result.Ok _ =>
-                        let (r8, state4) ←
-                          component.lower.State.capture
-                            { state3 with code := b3 } value2
-                        match r8 with
+                        let i1 ←
+                          lift (core.convert.num.FromU64U32.from definition)
+                        let (r6, b3) ← output.Buffer.number b2 i1
+                        match r6 with
                         | core.result.Result.Ok _ =>
-                          let (r9, b4) ←
-                            component.lower.results.validate ty value2
-                              state4.code
-                          match r9 with
+                          let s4 ←
+                            lift (Array.to_slice
+                              (Array.make 1#usize [ 10#u8 ]))
+                          let (r7, b4) ← output.Buffer.append b3 s4
+                          match r7 with
                           | core.result.Result.Ok _ =>
-                            let (r10, state5) ←
-                              component.lower.calls.restore_borrows
-                                {
-                                  operation
-                                    with
-                                    definition := (some definition)
-                                } value { state4 with code := b4 }
-                            match r10 with
+                            let (r8, state4) ←
+                              component.lower.State.capture
+                                { state3 with code := b4 } value2
+                            match r8 with
                             | core.result.Result.Ok _ =>
-                              let v ← alloc.vec.Vec.push state5.stack value2
-                              ok (core.result.Result.Ok (),
-                                { state5 with stack := v })
-                            | core.result.Result.Err _ => ok (r10, state5)
+                              let (r9, b5) ←
+                                component.lower.results.validate ty value2
+                                  state4.code
+                              match r9 with
+                              | core.result.Result.Ok _ =>
+                                let (r10, state5) ←
+                                  component.lower.calls.restore_borrows
+                                    {
+                                      operation
+                                        with
+                                        definition := (some definition)
+                                    } value { state4 with code := b5 }
+                                match r10 with
+                                | core.result.Result.Ok _ =>
+                                  let v ←
+                                    alloc.vec.Vec.push state5.stack value2
+                                  ok (core.result.Result.Ok (),
+                                    { state5 with stack := v })
+                                | core.result.Result.Err _ => ok (r10, state5)
+                              | core.result.Result.Err _ =>
+                                ok (r9, { state4 with code := b5 })
+                            | core.result.Result.Err _ => ok (r8, state4)
                           | core.result.Result.Err _ =>
-                            ok (r9, { state4 with code := b4 })
-                        | core.result.Result.Err _ => ok (r8, state4)
+                            ok (r7, { state3 with code := b4 })
+                        | core.result.Result.Err _ =>
+                          ok (r6, { state3 with code := b3 })
                       | core.result.Result.Err _ =>
-                        ok (r7, { state3 with code := b3 })
-                    | core.result.Result.Err _ =>
-                      ok (r6, { state3 with code := b2 })
-                  | core.result.Result.Err _ =>
-                    ok (r5, { state3 with code := b1 })
-              | core.result.Result.Err _ => ok (r4, state3)
+                        ok (r5, { state3 with code := b2 })
+                  | core.result.Result.Err _ => ok (r4, state3)
           | core.result.Result.Err failure =>
             ok (core.result.Result.Err failure, state2)
       | core.result.Result.Err failure =>
@@ -3557,23 +5732,205 @@ def component.lower.calls.invoke
   | core.result.Result.Err failure =>
     ok (core.result.Result.Err failure, state1)
 
+/-- [noble_wasm::component::lower::inputs::input_lane]:
+    Source: 'crates/noble-wasm/src/component/lower/inputs.rs', lines 75:0-91:1 -/
+def component.lower.inputs.input_lane
+  (parameters : Std.Usize) (locals : Array (Option Std.U32) 3#usize)
+  (lane : Std.Usize) :
+  Result ((core.result.Result Unit Diagnostic) × Std.Usize × (Array (Option
+    Std.U32) 3#usize))
+  := do
+  let r ←
+    core.convert.num.ptr_try_from_impls.TryFromU32Usize.try_from parameters
+  match r with
+  | core.result.Result.Ok index =>
+    let (s, to_slice_mut_back) ← lift (Array.to_slice_mut locals)
+    let (o, get_mut_back) ←
+      core.slice.Slice.get_mut (core.slice.index.SliceIndexUsizeSlice (Option
+        Std.U32)) s lane
+    match o with
+    | none =>
+      let s1 := get_mut_back none
+      let locals1 := to_slice_mut_back s1
+      ok (core.result.Result.Err Diagnostic.Defective, parameters, locals1)
+    | some _ =>
+      let parameters1 ←
+        lift (core.num.Usize.saturating_add parameters 1#usize)
+      let s1 := get_mut_back (some (some index))
+      let locals1 := to_slice_mut_back s1
+      ok (core.result.Result.Ok (), parameters1, locals1)
+  | core.result.Result.Err _ =>
+    ok (core.result.Result.Err Diagnostic.Exhausted, parameters, locals)
+
+/-- [noble_wasm::component::lower::inputs::input_value]: loop body 0:
+    Source: 'crates/noble-wasm/src/component/lower/inputs.rs', lines 53:4-58:5 -/
+@[rust_loop_body]
+def component.lower.inputs.input_value_loop.body
+  (count : Std.Usize) (parameters : Std.Usize)
+  (locals : Array (Option Std.U32) 3#usize) (lane : Std.Usize)
+  (failure : Option Diagnostic) :
+  Result (ControlFlow (Std.Usize × (Array (Option Std.U32) 3#usize) ×
+    Std.Usize × (Option Diagnostic)) (Std.Usize × (Array (Option Std.U32)
+    3#usize) × (Option Diagnostic)))
+  := do
+  if lane < count
+  then
+    let b := core.option.Option.is_none failure
+    if b
+    then
+      let (r, parameters1, locals1) ←
+        component.lower.inputs.input_lane parameters locals lane
+      let failure1 ←
+        match r with
+        | core.result.Result.Ok _ => ok failure
+        | core.result.Result.Err error => ok (some error)
+      let lane1 ← lift (core.num.Usize.saturating_add lane 1#usize)
+      ok (cont (parameters1, locals1, lane1, failure1))
+    else ok (done (parameters, locals, failure))
+  else ok (done (parameters, locals, failure))
+
+/-- [noble_wasm::component::lower::inputs::input_value]: loop 0:
+    Source: 'crates/noble-wasm/src/component/lower/inputs.rs', lines 53:4-58:5 -/
+@[rust_loop]
+def component.lower.inputs.input_value_loop
+  (parameters : Std.Usize) (locals : Array (Option Std.U32) 3#usize)
+  (lane : Std.Usize) (failure : Option Diagnostic) (count : Std.Usize) :
+  Result (Std.Usize × (Array (Option Std.U32) 3#usize) × (Option Diagnostic))
+  := do
+  loop
+    (fun (parameters1, locals1, lane1, failure1) =>
+      component.lower.inputs.input_value_loop.body count parameters1 locals1
+      lane1 failure1)
+    (parameters, locals, lane, failure)
+
+/-- [noble_wasm::component::lower::inputs::input_value]:
+    Source: 'crates/noble-wasm/src/component/lower/inputs.rs', lines 45:0-69:1 -/
+def component.lower.inputs.input_value
+  (ty : noble_contracts.component.Type) (parameters : Std.Usize) :
+  Result ((core.result.Result component.lower.Value Diagnostic) × Std.Usize)
+  := do
+  let locals := Array.repeat 3#usize none
+  let count ← component.abi.lane_count ty
+  let (parameters1, locals1, failure) ←
+    component.lower.inputs.input_value_loop parameters locals 0#usize none
+      count
+  match failure with
+  | none =>
+    if parameters1 > component.FLAT_PARAMETER_LIMIT
+    then ok (core.result.Result.Err Diagnostic.Unsupported, parameters1)
+    else
+      let t ← noble_contracts.component.Type.noble ty
+      ok (core.result.Result.Ok
+        { ty := t, storage := (component.lower.Storage.Flat locals1) },
+        parameters1)
+  | some error => ok (core.result.Result.Err error, parameters1)
+
+/-- [noble_wasm::component::lower::inputs::input]:
+    Source: 'crates/noble-wasm/src/component/lower/inputs.rs', lines 31:0-39:1 -/
+def component.lower.inputs.input
+  (ty : noble_contracts.component.Type) (state : component.lower.State) :
+  Result ((core.result.Result Unit Diagnostic) × component.lower.State)
+  := do
+  let (r, i) ← component.lower.inputs.input_value ty state.parameters
+  match r with
+  | core.result.Result.Ok value =>
+    let (r1, b) ← component.lower.results.validate ty value state.code
+    match r1 with
+    | core.result.Result.Ok _ =>
+      let v ← alloc.vec.Vec.push state.stack value
+      ok (core.result.Result.Ok (),
+        { state with parameters := i, stack := v, code := b })
+    | core.result.Result.Err _ =>
+      ok (r1, { state with parameters := i, code := b })
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, { state with parameters := i })
+
+/-- [noble_wasm::component::lower::inputs::initial]: loop body 0:
+    Source: 'crates/noble-wasm/src/component/lower/inputs.rs', lines 18:4-24:5 -/
+@[rust_loop_body]
+def component.lower.inputs.initial_loop.body
+  (parameters : Slice noble_contracts.component.Type) («end» : Std.Usize)
+  (state : component.lower.State) («at» : Std.Usize)
+  (failure : Option Diagnostic) :
+  Result (ControlFlow (component.lower.State × Std.Usize × (Option
+    Diagnostic)) (component.lower.State × (Option Diagnostic)))
+  := do
+  if «at» < «end»
+  then
+    let b := core.option.Option.is_none failure
+    if b
+    then
+      let ty ← Slice.index_usize parameters «at»
+      let (r, state1) ← component.lower.inputs.input ty state
+      let failure1 ←
+        match r with
+        | core.result.Result.Ok _ => ok failure
+        | core.result.Result.Err error => ok (some error)
+      let at1 ← lift (core.num.Usize.saturating_add «at» 1#usize)
+      ok (cont (state1, at1, failure1))
+    else ok (done (state, failure))
+  else ok (done (state, failure))
+
+/-- [noble_wasm::component::lower::inputs::initial]: loop 0:
+    Source: 'crates/noble-wasm/src/component/lower/inputs.rs', lines 18:4-24:5 -/
+@[rust_loop]
+def component.lower.inputs.initial_loop
+  (parameters : Slice noble_contracts.component.Type)
+  (state : component.lower.State) («at» : Std.Usize)
+  (failure : Option Diagnostic) («end» : Std.Usize) :
+  Result (component.lower.State × (Option Diagnostic))
+  := do
+  loop
+    (fun (state1, at1, failure1) => component.lower.inputs.initial_loop.body
+      parameters «end» state1 at1 failure1)
+    (state, «at», failure)
+
+/-- [noble_wasm::component::lower::inputs::initial]:
+    Source: 'crates/noble-wasm/src/component/lower/inputs.rs', lines 5:0-29:1 -/
+def component.lower.inputs.initial
+  (parameters : Slice noble_contracts.component.Type) :
+  Result (core.result.Result component.lower.State Diagnostic)
+  := do
+  let i := Slice.len parameters
+  let v := alloc.vec.Vec.with_capacity component.lower.Value i
+  let b ← output.Buffer.new 1024#usize
+  let «end» := Slice.len parameters
+  let (state, failure) ←
+    component.lower.inputs.initial_loop parameters
+      {
+        locals := (alloc.vec.Vec.new component.abi.Lane),
+        parameters := 0#usize,
+        stack := v,
+        pairs :=
+          (alloc.vec.Vec.new (component.lower.Value × component.lower.Value)),
+        code := b
+      } 0#usize none «end»
+  match failure with
+  | none => ok (core.result.Result.Ok state)
+  | some error => ok (core.result.Result.Err error)
+
 /-- [noble_wasm::component::STACK_LIMIT]
-    Source: 'crates/noble-wasm/src/component/mod.rs', lines 19:0-19:31 -/
+    Source: 'crates/noble-wasm/src/component/mod.rs', lines 21:0-21:31 -/
 @[global_simps, irreducible] def component.STACK_LIMIT : Std.Usize := 256#usize
 
+/-- [noble_wasm::component::lower::{impl core::clone::Clone for noble_wasm::component::lower::Storage}::clone]:
+    Source: 'crates/noble-wasm/src/component/lower.rs', lines 26:9-26:14
+    Visibility: public -/
+def component.lower.Storage.Insts.CoreCloneClone.clone
+  (self : component.lower.Storage) : Result component.lower.Storage := do
+  ok self
+
 /-- [noble_wasm::component::lower::{impl core::clone::Clone for noble_wasm::component::lower::Value}::clone]:
-    Source: 'crates/noble-wasm/src/component/lower.rs', lines 23:9-23:14
+    Source: 'crates/noble-wasm/src/component/lower.rs', lines 32:9-32:14
     Visibility: public -/
 def component.lower.Value.Insts.CoreCloneClone.clone
   (self : component.lower.Value) : Result component.lower.Value := do
   let t ← noble_kernel.types.Ty.Insts.CoreCloneClone.clone self.ty
-  let a ←
-    core.array.CloneArray.clone (core.option.Option.Insts.CoreCloneClone
-      core.clone.CloneU32) self.locals
-  ok { ty := t, locals := a }
+  let s ← component.lower.Storage.Insts.CoreCloneClone.clone self.storage
+  ok { ty := t, storage := s }
 
 /-- [noble_wasm::component::lower::operations::arithmetic_instruction]:
-    Source: 'crates/noble-wasm/src/component/lower/operations.rs', lines 195:0-206:1 -/
+    Source: 'crates/noble-wasm/src/component/lower/operations.rs', lines 238:0-249:1 -/
 def component.lower.operations.arithmetic_instruction
   (definition : Std.U32) (buffer : output.Buffer) :
   Result ((core.result.Result Unit Diagnostic) × output.Buffer)
@@ -3610,7 +5967,7 @@ def component.lower.operations.arithmetic_instruction
   | _ => ok (core.result.Result.Err Diagnostic.Invalid, buffer)
 
 /-- [noble_wasm::component::lower::operations::arithmetic]:
-    Source: 'crates/noble-wasm/src/component/lower/operations.rs', lines 168:0-189:1 -/
+    Source: 'crates/noble-wasm/src/component/lower/operations.rs', lines 211:0-232:1 -/
 def component.lower.operations.arithmetic
   (definition : Std.U32) (state : component.lower.State) :
   Result ((core.result.Result Unit Diagnostic) × component.lower.State)
@@ -3672,8 +6029,69 @@ def component.lower.operations.arithmetic
   | core.result.Result.Err failure =>
     ok (core.result.Result.Err failure, state1)
 
+/-- [noble_wasm::component::lower::operations::unpair]:
+    Source: 'crates/noble-wasm/src/component/lower/operations.rs', lines 188:0-204:1 -/
+def component.lower.operations.unpair
+  (state : component.lower.State) :
+  Result ((core.result.Result Unit Diagnostic) × component.lower.State)
+  := do
+  let (r, state1) ← component.lower.State.pop state
+  match r with
+  | core.result.Result.Ok value =>
+    match value.storage with
+    | component.lower.Storage.Flat _ =>
+      ok (core.result.Result.Err Diagnostic.Invalid, state1)
+    | component.lower.Storage.Pair index =>
+      let s := alloc.vec.Vec.deref state1.pairs
+      let o ←
+        core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice
+          (component.lower.Value × component.lower.Value)) s index
+      match o with
+      | none => ok (core.result.Result.Err Diagnostic.Defective, state1)
+      | some pair =>
+        let (left, right) ←
+          (BuiltinClone (component.lower.Value × component.lower.Value)).clone
+            pair
+        let v ← alloc.vec.Vec.push state1.stack left
+        let v1 ← alloc.vec.Vec.push v right
+        ok (core.result.Result.Ok (), { state1 with stack := v1 })
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, state1)
+
+/-- [noble_wasm::component::lower::operations::pair]:
+    Source: 'crates/noble-wasm/src/component/lower/operations.rs', lines 165:0-182:1 -/
+def component.lower.operations.pair
+  (state : component.lower.State) :
+  Result ((core.result.Result Unit Diagnostic) × component.lower.State)
+  := do
+  let i := alloc.vec.Vec.len state.pairs
+  if i >= component.NODE_LIMIT
+  then ok (core.result.Result.Err Diagnostic.Exhausted, state)
+  else
+    let (r, state1) ← component.lower.State.pop state
+    match r with
+    | core.result.Result.Ok value =>
+      let (r1, state2) ← component.lower.State.pop state1
+      match r1 with
+      | core.result.Result.Ok value1 =>
+        let t ← noble_kernel.types.Ty.Insts.CoreCloneClone.clone value1.ty
+        let t1 ← noble_kernel.types.Ty.Insts.CoreCloneClone.clone value.ty
+        let index := alloc.vec.Vec.len state2.pairs
+        let v ← alloc.vec.Vec.push state2.pairs (value1, value)
+        let v1 ←
+          alloc.vec.Vec.push state2.stack
+            ({
+               ty := (noble_kernel.types.Ty.PairType t t1),
+               storage := (component.lower.Storage.Pair index)
+             } : component.lower.Value)
+        ok (core.result.Result.Ok (), { state2 with stack := v1, pairs := v })
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, state2)
+    | core.result.Result.Err failure =>
+      ok (core.result.Result.Err failure, state1)
+
 /-- [noble_wasm::component::lower::operations::invoke::{impl core::ops::function::FnMut<(&'_ noble_contracts::component::Operation,), bool> for noble_wasm::component::lower::operations::invoke::{closure}<'_0>}::call_mut]:
-    Source: 'crates/noble-wasm/src/component/lower/operations.rs', lines 148:26-148:78 -/
+    Source: 'crates/noble-wasm/src/component/lower/operations.rs', lines 150:26-150:78 -/
 def
   component.lower.operations.invoke.closure.Insts.CoreOpsFunctionFnMutTupleSharedOperationBool.call_mut
   (c : component.lower.operations.invoke.closure)
@@ -3687,7 +6105,7 @@ def
   ok (b, c)
 
 /-- [noble_wasm::component::lower::operations::invoke::{impl core::ops::function::FnOnce<(&'_ noble_contracts::component::Operation,), bool> for noble_wasm::component::lower::operations::invoke::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-wasm/src/component/lower/operations.rs', lines 148:26-148:78 -/
+    Source: 'crates/noble-wasm/src/component/lower/operations.rs', lines 150:26-150:78 -/
 def
   component.lower.operations.invoke.closure.Insts.CoreOpsFunctionFnOnceTupleSharedOperationBool.call_once
   (c : component.lower.operations.invoke.closure)
@@ -3700,7 +6118,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_wasm::component::lower::operations::invoke::{impl core::ops::function::FnOnce<(&'_ noble_contracts::component::Operation,), bool> for noble_wasm::component::lower::operations::invoke::{closure}<'_0>}]
-    Source: 'crates/noble-wasm/src/component/lower/operations.rs', lines 148:26-148:78 -/
+    Source: 'crates/noble-wasm/src/component/lower/operations.rs', lines 150:26-150:78 -/
 @[reducible]
 def
   component.lower.operations.invoke.closure.Insts.CoreOpsFunctionFnOnceTupleSharedOperationBool
@@ -3711,7 +6129,7 @@ def
 }
 
 /-- Trait implementation: [noble_wasm::component::lower::operations::invoke::{impl core::ops::function::FnMut<(&'_ noble_contracts::component::Operation,), bool> for noble_wasm::component::lower::operations::invoke::{closure}<'_0>}]
-    Source: 'crates/noble-wasm/src/component/lower/operations.rs', lines 148:26-148:78 -/
+    Source: 'crates/noble-wasm/src/component/lower/operations.rs', lines 150:26-150:78 -/
 @[reducible]
 def
   component.lower.operations.invoke.closure.Insts.CoreOpsFunctionFnMutTupleSharedOperationBool
@@ -3724,7 +6142,7 @@ def
 }
 
 /-- [noble_wasm::component::lower::operations::invoke]:
-    Source: 'crates/noble-wasm/src/component/lower/operations.rs', lines 107:0-161:1 -/
+    Source: 'crates/noble-wasm/src/component/lower/operations.rs', lines 107:0-163:1 -/
 def component.lower.operations.invoke
   (definition : noble_kernel.contracts.Definition)
   (world : noble_contracts.component.World) (state : component.lower.State) :
@@ -3778,6 +6196,8 @@ def component.lower.operations.invoke
       ok (core.result.Result.Ok (), { state1 with stack := v })
     | core.result.Result.Err failure =>
       ok (core.result.Result.Err failure, state1)
+  | 13#uscalar => component.lower.operations.pair state
+  | 14#uscalar => component.lower.operations.unpair state
   | _ =>
     if 4#u32 <= definition
     then
@@ -3864,7 +6284,7 @@ def output.Buffer.i64
   | core.result.Result.Err _ => ok (r, self1)
 
 /-- [noble_wasm::component::HEAP_START]
-    Source: 'crates/noble-wasm/src/component/mod.rs', lines 12:0-12:35
+    Source: 'crates/noble-wasm/src/component/mod.rs', lines 14:0-14:35
     Visibility: public -/
 @[global_simps, irreducible] def component.HEAP_START : Std.U32 := 65536#u32
 
@@ -4073,198 +6493,8 @@ def component.lower.operations.node
   | core.result.Result.Err _ =>
     ok (core.result.Result.Err Diagnostic.Invalid, data, state)
 
-/-- [noble_wasm::component::lower::results::store]:
-    Source: 'crates/noble-wasm/src/component/lower/results.rs', lines 233:0-284:1 -/
-def component.lower.results.store
-  (ty : noble_contracts.component.Type) (area : Std.U32)
-  (value : component.lower.Value) (buffer : output.Buffer) :
-  Result ((core.result.Result Unit Diagnostic) × output.Buffer)
-  := do
-  let (r, buffer1) ← component.abi.get buffer area
-  match r with
-  | core.result.Result.Ok _ =>
-    let r1 ← component.lower.slot value 0#usize
-    match r1 with
-    | core.result.Result.Ok value1 =>
-      let (r2, buffer2) ← component.abi.get buffer1 value1
-      match r2 with
-      | core.result.Result.Ok _ =>
-        let s ←
-          lift (Array.to_slice
-            (Array.make 11#usize [
-              32#u8, 105#u8, 51#u8, 50#u8, 46#u8, 115#u8, 116#u8, 111#u8,
-              114#u8, 101#u8, 10#u8
-              ]))
-        let (r3, buffer3) ← output.Buffer.append buffer2 s
-        match r3 with
-        | core.result.Result.Ok _ =>
-          match ty with
-          | noble_contracts.component.Type.Boolean =>
-            ok (core.result.Result.Err Diagnostic.Defective, buffer3)
-          | noble_contracts.component.Type.S64 =>
-            ok (core.result.Result.Err Diagnostic.Defective, buffer3)
-          | noble_contracts.component.Type.String =>
-            let (r4, buffer4) ← component.abi.get buffer3 area
-            match r4 with
-            | core.result.Result.Ok _ =>
-              let r5 ← component.lower.slot value 1#usize
-              match r5 with
-              | core.result.Result.Ok value2 =>
-                let (r6, buffer5) ← component.abi.get buffer4 value2
-                match r6 with
-                | core.result.Result.Ok _ =>
-                  let s1 ←
-                    lift (Array.to_slice
-                      (Array.make 20#usize [
-                        32#u8, 105#u8, 51#u8, 50#u8, 46#u8, 115#u8, 116#u8,
-                        111#u8, 114#u8, 101#u8, 32#u8, 111#u8, 102#u8, 102#u8,
-                        115#u8, 101#u8, 116#u8, 61#u8, 52#u8, 10#u8
-                        ]))
-                  output.Buffer.append buffer5 s1
-                | core.result.Result.Err _ => ok (r6, buffer5)
-              | core.result.Result.Err failure =>
-                ok (core.result.Result.Err failure, buffer4)
-            | core.result.Result.Err _ => ok (r4, buffer4)
-          | noble_contracts.component.Type.Bytes =>
-            let (r4, buffer4) ← component.abi.get buffer3 area
-            match r4 with
-            | core.result.Result.Ok _ =>
-              let r5 ← component.lower.slot value 1#usize
-              match r5 with
-              | core.result.Result.Ok value2 =>
-                let (r6, buffer5) ← component.abi.get buffer4 value2
-                match r6 with
-                | core.result.Result.Ok _ =>
-                  let s1 ←
-                    lift (Array.to_slice
-                      (Array.make 20#usize [
-                        32#u8, 105#u8, 51#u8, 50#u8, 46#u8, 115#u8, 116#u8,
-                        111#u8, 114#u8, 101#u8, 32#u8, 111#u8, 102#u8, 102#u8,
-                        115#u8, 101#u8, 116#u8, 61#u8, 52#u8, 10#u8
-                        ]))
-                  output.Buffer.append buffer5 s1
-                | core.result.Result.Err _ => ok (r6, buffer5)
-              | core.result.Result.Err failure =>
-                ok (core.result.Result.Err failure, buffer4)
-            | core.result.Result.Err _ => ok (r4, buffer4)
-          | noble_contracts.component.Type.ResultS64String =>
-            match r1 with
-            | core.result.Result.Ok value2 =>
-              let (r4, buffer4) ← component.abi.get buffer3 value2
-              match r4 with
-              | core.result.Result.Ok _ =>
-                let s1 ←
-                  lift (Array.to_slice
-                    (Array.make 12#usize [
-                      32#u8, 105#u8, 51#u8, 50#u8, 46#u8, 101#u8, 113#u8,
-                      122#u8, 32#u8, 105#u8, 102#u8, 10#u8
-                      ]))
-                let (r5, buffer5) ← output.Buffer.append buffer4 s1
-                match r5 with
-                | core.result.Result.Ok _ =>
-                  let (r6, buffer6) ← component.abi.get buffer5 area
-                  match r6 with
-                  | core.result.Result.Ok _ =>
-                    let r7 ← component.lower.slot value 1#usize
-                    match r7 with
-                    | core.result.Result.Ok value3 =>
-                      let (r8, buffer7) ← component.abi.get buffer6 value3
-                      match r8 with
-                      | core.result.Result.Ok _ =>
-                        let s2 ←
-                          lift (Array.to_slice
-                            (Array.make 26#usize [
-                              32#u8, 105#u8, 54#u8, 52#u8, 46#u8, 115#u8,
-                              116#u8, 111#u8, 114#u8, 101#u8, 32#u8, 111#u8,
-                              102#u8, 102#u8, 115#u8, 101#u8, 116#u8, 61#u8,
-                              56#u8, 10#u8, 32#u8, 101#u8, 108#u8, 115#u8,
-                              101#u8, 10#u8
-                              ]))
-                        let (r9, buffer8) ← output.Buffer.append buffer7 s2
-                        match r9 with
-                        | core.result.Result.Ok _ =>
-                          let (r10, buffer9) ← component.abi.get buffer8 area
-                          match r10 with
-                          | core.result.Result.Ok _ =>
-                            match r7 with
-                            | core.result.Result.Ok value4 =>
-                              let (r11, buffer10) ←
-                                component.abi.get buffer9 value4
-                              match r11 with
-                              | core.result.Result.Ok _ =>
-                                let s3 ←
-                                  lift (Array.to_slice
-                                    (Array.make 33#usize [
-                                      32#u8, 105#u8, 51#u8, 50#u8, 46#u8,
-                                      119#u8, 114#u8, 97#u8, 112#u8, 95#u8,
-                                      105#u8, 54#u8, 52#u8, 32#u8, 105#u8,
-                                      51#u8, 50#u8, 46#u8, 115#u8, 116#u8,
-                                      111#u8, 114#u8, 101#u8, 32#u8, 111#u8,
-                                      102#u8, 102#u8, 115#u8, 101#u8, 116#u8,
-                                      61#u8, 56#u8, 10#u8
-                                      ]))
-                                let (r12, buffer11) ←
-                                  output.Buffer.append buffer10 s3
-                                match r12 with
-                                | core.result.Result.Ok _ =>
-                                  let (r13, buffer12) ←
-                                    component.abi.get buffer11 area
-                                  match r13 with
-                                  | core.result.Result.Ok _ =>
-                                    let r14 ←
-                                      component.lower.slot value 2#usize
-                                    match r14 with
-                                    | core.result.Result.Ok value5 =>
-                                      let (r15, buffer13) ←
-                                        component.abi.get buffer12 value5
-                                      match r15 with
-                                      | core.result.Result.Ok _ =>
-                                        let s4 ←
-                                          lift (Array.to_slice
-                                            (Array.make 26#usize [
-                                              32#u8, 105#u8, 51#u8, 50#u8,
-                                              46#u8, 115#u8, 116#u8, 111#u8,
-                                              114#u8, 101#u8, 32#u8, 111#u8,
-                                              102#u8, 102#u8, 115#u8, 101#u8,
-                                              116#u8, 61#u8, 49#u8, 50#u8,
-                                              10#u8, 32#u8, 101#u8, 110#u8,
-                                              100#u8, 10#u8
-                                              ]))
-                                        output.Buffer.append buffer13 s4
-                                      | core.result.Result.Err _ =>
-                                        ok (r15, buffer13)
-                                    | core.result.Result.Err failure =>
-                                      ok (core.result.Result.Err failure,
-                                        buffer12)
-                                  | core.result.Result.Err _ =>
-                                    ok (r13, buffer12)
-                                | core.result.Result.Err _ =>
-                                  ok (r12, buffer11)
-                              | core.result.Result.Err _ => ok (r11, buffer10)
-                            | core.result.Result.Err failure =>
-                              ok (core.result.Result.Err failure, buffer9)
-                          | core.result.Result.Err _ => ok (r10, buffer9)
-                        | core.result.Result.Err _ => ok (r9, buffer8)
-                      | core.result.Result.Err _ => ok (r8, buffer7)
-                    | core.result.Result.Err failure =>
-                      ok (core.result.Result.Err failure, buffer6)
-                  | core.result.Result.Err _ => ok (r6, buffer6)
-                | core.result.Result.Err _ => ok (r5, buffer5)
-              | core.result.Result.Err _ => ok (r4, buffer4)
-            | core.result.Result.Err failure =>
-              ok (core.result.Result.Err failure, buffer3)
-          | noble_contracts.component.Type.Own _ =>
-            ok (core.result.Result.Err Diagnostic.Defective, buffer3)
-          | noble_contracts.component.Type.Borrow _ =>
-            ok (core.result.Result.Err Diagnostic.Defective, buffer3)
-        | core.result.Result.Err _ => ok (r3, buffer3)
-      | core.result.Result.Err _ => ok (r2, buffer2)
-    | core.result.Result.Err failure =>
-      ok (core.result.Result.Err failure, buffer1)
-  | core.result.Result.Err _ => ok (r, buffer1)
-
 /-- [noble_wasm::component::lower::results::copy_result]:
-    Source: 'crates/noble-wasm/src/component/lower/results.rs', lines 181:0-226:1 -/
+    Source: 'crates/noble-wasm/src/component/lower/results.rs', lines 191:0-227:1 -/
 def component.lower.results.copy_result
   (ty : noble_contracts.component.Type) (value : component.lower.Value)
   (buffer : output.Buffer) :
@@ -4276,154 +6506,138 @@ def component.lower.results.copy_result
   | noble_contracts.component.Type.S64 =>
     ok (core.result.Result.Err Diagnostic.Defective, buffer)
   | noble_contracts.component.Type.String =>
-    let r ← component.lower.slot value 0#usize
+    let (r, buffer1) ← component.lower.results.read_lane value 0#usize buffer
     match r with
-    | core.result.Result.Ok value1 =>
-      let (r1, buffer1) ← component.abi.get buffer value1
-      match r1 with
-      | core.result.Result.Ok _ =>
-        let r2 ← component.lower.slot value 1#usize
-        match r2 with
-        | core.result.Result.Ok value2 =>
-          let (r3, buffer2) ← component.abi.get buffer1 value2
-          match r3 with
-          | core.result.Result.Ok _ =>
-            let s ←
-              lift (Array.to_slice
-                (Array.make 12#usize [
-                  32#u8, 99#u8, 97#u8, 108#u8, 108#u8, 32#u8, 36#u8, 99#u8,
-                  111#u8, 112#u8, 121#u8, 10#u8
-                  ]))
-            let (r4, buffer3) ← output.Buffer.append buffer2 s
-            match r4 with
-            | core.result.Result.Ok _ =>
-              match r with
-              | core.result.Result.Ok value3 =>
-                component.abi.set buffer3 value3
-              | core.result.Result.Err failure =>
-                ok (core.result.Result.Err failure, buffer3)
-            | core.result.Result.Err _ => ok (r4, buffer3)
-          | core.result.Result.Err _ => ok (r3, buffer2)
-        | core.result.Result.Err failure =>
-          ok (core.result.Result.Err failure, buffer1)
-      | core.result.Result.Err _ => ok (r1, buffer1)
-    | core.result.Result.Err failure =>
-      ok (core.result.Result.Err failure, buffer)
-  | noble_contracts.component.Type.Bytes =>
-    let r ← component.lower.slot value 0#usize
-    match r with
-    | core.result.Result.Ok value1 =>
-      let (r1, buffer1) ← component.abi.get buffer value1
-      match r1 with
-      | core.result.Result.Ok _ =>
-        let r2 ← component.lower.slot value 1#usize
-        match r2 with
-        | core.result.Result.Ok value2 =>
-          let (r3, buffer2) ← component.abi.get buffer1 value2
-          match r3 with
-          | core.result.Result.Ok _ =>
-            let s ←
-              lift (Array.to_slice
-                (Array.make 12#usize [
-                  32#u8, 99#u8, 97#u8, 108#u8, 108#u8, 32#u8, 36#u8, 99#u8,
-                  111#u8, 112#u8, 121#u8, 10#u8
-                  ]))
-            let (r4, buffer3) ← output.Buffer.append buffer2 s
-            match r4 with
-            | core.result.Result.Ok _ =>
-              match r with
-              | core.result.Result.Ok value3 =>
-                component.abi.set buffer3 value3
-              | core.result.Result.Err failure =>
-                ok (core.result.Result.Err failure, buffer3)
-            | core.result.Result.Err _ => ok (r4, buffer3)
-          | core.result.Result.Err _ => ok (r3, buffer2)
-        | core.result.Result.Err failure =>
-          ok (core.result.Result.Err failure, buffer1)
-      | core.result.Result.Err _ => ok (r1, buffer1)
-    | core.result.Result.Err failure =>
-      ok (core.result.Result.Err failure, buffer)
-  | noble_contracts.component.Type.ResultS64String =>
-    let r ← component.lower.slot value 0#usize
-    match r with
-    | core.result.Result.Ok value1 =>
-      let (r1, buffer1) ← component.abi.get buffer value1
+    | core.result.Result.Ok _ =>
+      let (r1, buffer2) ←
+        component.lower.results.read_lane value 1#usize buffer1
       match r1 with
       | core.result.Result.Ok _ =>
         let s ←
           lift (Array.to_slice
-            (Array.make 4#usize [ 32#u8, 105#u8, 102#u8, 10#u8 ]))
-        let (r2, buffer2) ← output.Buffer.append buffer1 s
+            (Array.make 12#usize [
+              32#u8, 99#u8, 97#u8, 108#u8, 108#u8, 32#u8, 36#u8, 99#u8, 111#u8,
+              112#u8, 121#u8, 10#u8
+              ]))
+        let (r2, buffer3) ← output.Buffer.append buffer2 s
         match r2 with
         | core.result.Result.Ok _ =>
-          let r3 ← component.lower.slot value 1#usize
+          component.lower.results.capture_lane value 0#usize buffer3
+        | core.result.Result.Err _ => ok (r2, buffer3)
+      | core.result.Result.Err _ => ok (r1, buffer2)
+    | core.result.Result.Err _ => ok (r, buffer1)
+  | noble_contracts.component.Type.Bytes =>
+    let (r, buffer1) ← component.lower.results.read_lane value 0#usize buffer
+    match r with
+    | core.result.Result.Ok _ =>
+      let (r1, buffer2) ←
+        component.lower.results.read_lane value 1#usize buffer1
+      match r1 with
+      | core.result.Result.Ok _ =>
+        let s ←
+          lift (Array.to_slice
+            (Array.make 12#usize [
+              32#u8, 99#u8, 97#u8, 108#u8, 108#u8, 32#u8, 36#u8, 99#u8, 111#u8,
+              112#u8, 121#u8, 10#u8
+              ]))
+        let (r2, buffer3) ← output.Buffer.append buffer2 s
+        match r2 with
+        | core.result.Result.Ok _ =>
+          component.lower.results.capture_lane value 0#usize buffer3
+        | core.result.Result.Err _ => ok (r2, buffer3)
+      | core.result.Result.Err _ => ok (r1, buffer2)
+    | core.result.Result.Err _ => ok (r, buffer1)
+  | noble_contracts.component.Type.ResultS64String =>
+    let (r, buffer1) ← component.lower.results.read_lane value 0#usize buffer
+    match r with
+    | core.result.Result.Ok _ =>
+      let s ←
+        lift (Array.to_slice
+          (Array.make 4#usize [ 32#u8, 105#u8, 102#u8, 10#u8 ]))
+      let (r1, buffer2) ← output.Buffer.append buffer1 s
+      match r1 with
+      | core.result.Result.Ok _ =>
+        let (r2, buffer3) ←
+          component.lower.results.read_lane value 1#usize buffer2
+        match r2 with
+        | core.result.Result.Ok _ =>
+          let s1 ←
+            lift (Array.to_slice
+              (Array.make 14#usize [
+                32#u8, 105#u8, 51#u8, 50#u8, 46#u8, 119#u8, 114#u8, 97#u8,
+                112#u8, 95#u8, 105#u8, 54#u8, 52#u8, 10#u8
+                ]))
+          let (r3, buffer4) ← output.Buffer.append buffer3 s1
           match r3 with
-          | core.result.Result.Ok value2 =>
-            let (r4, buffer3) ← component.abi.get buffer2 value2
+          | core.result.Result.Ok _ =>
+            let (r4, buffer5) ←
+              component.lower.results.read_lane value 2#usize buffer4
             match r4 with
             | core.result.Result.Ok _ =>
-              let s1 ←
+              let s2 ←
                 lift (Array.to_slice
-                  (Array.make 14#usize [
-                    32#u8, 105#u8, 51#u8, 50#u8, 46#u8, 119#u8, 114#u8, 97#u8,
-                    112#u8, 95#u8, 105#u8, 54#u8, 52#u8, 10#u8
+                  (Array.make 29#usize [
+                    32#u8, 99#u8, 97#u8, 108#u8, 108#u8, 32#u8, 36#u8, 99#u8,
+                    111#u8, 112#u8, 121#u8, 32#u8, 105#u8, 54#u8, 52#u8, 46#u8,
+                    101#u8, 120#u8, 116#u8, 101#u8, 110#u8, 100#u8, 95#u8,
+                    105#u8, 51#u8, 50#u8, 95#u8, 117#u8, 10#u8
                     ]))
-              let (r5, buffer4) ← output.Buffer.append buffer3 s1
+              let (r5, buffer6) ← output.Buffer.append buffer5 s2
               match r5 with
               | core.result.Result.Ok _ =>
-                let r6 ← component.lower.slot value 2#usize
+                let (r6, buffer7) ←
+                  component.lower.results.capture_lane value 1#usize buffer6
                 match r6 with
-                | core.result.Result.Ok value3 =>
-                  let (r7, buffer5) ← component.abi.get buffer4 value3
-                  match r7 with
-                  | core.result.Result.Ok _ =>
-                    let s2 ←
-                      lift (Array.to_slice
-                        (Array.make 29#usize [
-                          32#u8, 99#u8, 97#u8, 108#u8, 108#u8, 32#u8, 36#u8,
-                          99#u8, 111#u8, 112#u8, 121#u8, 32#u8, 105#u8, 54#u8,
-                          52#u8, 46#u8, 101#u8, 120#u8, 116#u8, 101#u8, 110#u8,
-                          100#u8, 95#u8, 105#u8, 51#u8, 50#u8, 95#u8, 117#u8,
-                          10#u8
-                          ]))
-                    let (r8, buffer6) ← output.Buffer.append buffer5 s2
-                    match r8 with
-                    | core.result.Result.Ok _ =>
-                      match r3 with
-                      | core.result.Result.Ok value4 =>
-                        let (r9, buffer7) ← component.abi.set buffer6 value4
-                        match r9 with
-                        | core.result.Result.Ok _ =>
-                          let s3 ←
-                            lift (Array.to_slice
-                              (Array.make 5#usize [
-                                32#u8, 101#u8, 110#u8, 100#u8, 10#u8
-                                ]))
-                          output.Buffer.append buffer7 s3
-                        | core.result.Result.Err _ => ok (r9, buffer7)
-                      | core.result.Result.Err failure =>
-                        ok (core.result.Result.Err failure, buffer6)
-                    | core.result.Result.Err _ => ok (r8, buffer6)
-                  | core.result.Result.Err _ => ok (r7, buffer5)
-                | core.result.Result.Err failure =>
-                  ok (core.result.Result.Err failure, buffer4)
-              | core.result.Result.Err _ => ok (r5, buffer4)
-            | core.result.Result.Err _ => ok (r4, buffer3)
-          | core.result.Result.Err failure =>
-            ok (core.result.Result.Err failure, buffer2)
-        | core.result.Result.Err _ => ok (r2, buffer2)
-      | core.result.Result.Err _ => ok (r1, buffer1)
-    | core.result.Result.Err failure =>
-      ok (core.result.Result.Err failure, buffer)
+                | core.result.Result.Ok _ =>
+                  let s3 ←
+                    lift (Array.to_slice
+                      (Array.make 5#usize [
+                        32#u8, 101#u8, 110#u8, 100#u8, 10#u8
+                        ]))
+                  output.Buffer.append buffer7 s3
+                | core.result.Result.Err _ => ok (r6, buffer7)
+              | core.result.Result.Err _ => ok (r5, buffer6)
+            | core.result.Result.Err _ => ok (r4, buffer5)
+          | core.result.Result.Err _ => ok (r3, buffer4)
+        | core.result.Result.Err _ => ok (r2, buffer3)
+      | core.result.Result.Err _ => ok (r1, buffer2)
+    | core.result.Result.Err _ => ok (r, buffer1)
+  | noble_contracts.component.Type.ResultBytesString =>
+    let (r, buffer1) ← component.lower.results.read_lane value 1#usize buffer
+    match r with
+    | core.result.Result.Ok _ =>
+      let (r1, buffer2) ←
+        component.lower.results.read_lane value 2#usize buffer1
+      match r1 with
+      | core.result.Result.Ok _ =>
+        let s ←
+          lift (Array.to_slice
+            (Array.make 12#usize [
+              32#u8, 99#u8, 97#u8, 108#u8, 108#u8, 32#u8, 36#u8, 99#u8, 111#u8,
+              112#u8, 121#u8, 10#u8
+              ]))
+        let (r2, buffer3) ← output.Buffer.append buffer2 s
+        match r2 with
+        | core.result.Result.Ok _ =>
+          component.lower.results.capture_lane value 1#usize buffer3
+        | core.result.Result.Err _ => ok (r2, buffer3)
+      | core.result.Result.Err _ => ok (r1, buffer2)
+    | core.result.Result.Err _ => ok (r, buffer1)
+  | noble_contracts.component.Type.StreamU8 =>
+    ok (core.result.Result.Err Diagnostic.Defective, buffer)
+  | noble_contracts.component.Type.FutureS64 =>
+    ok (core.result.Result.Err Diagnostic.Defective, buffer)
+  | noble_contracts.component.Type.FutureResultS64String =>
+    ok (core.result.Result.Err Diagnostic.Defective, buffer)
   | noble_contracts.component.Type.Own _ =>
     ok (core.result.Result.Err Diagnostic.Defective, buffer)
   | noble_contracts.component.Type.Borrow _ =>
     ok (core.result.Result.Err Diagnostic.Defective, buffer)
 
 /-- [noble_wasm::component::lower::results::finish]:
-    Source: 'crates/noble-wasm/src/component/lower/results.rs', lines 147:0-175:1 -/
+    Source: 'crates/noble-wasm/src/component/lower/results.rs', lines 153:0-185:1 -/
 def component.lower.results.finish
-  (result : Option noble_contracts.component.Type)
+  (result : Option noble_contracts.component.Type) (asynchronous : Bool)
   (state : component.lower.State) :
   Result ((core.result.Result Unit Diagnostic) × component.lower.State)
   := do
@@ -4451,221 +6665,70 @@ def component.lower.results.finish
             component.lower.results.validate ty value state1.code
           match r1 with
           | core.result.Result.Ok _ =>
-            let i ← component.abi.lane_count ty
-            if i = 1#usize
+            if asynchronous
             then component.lower.State.read { state1 with code := b2 } value
             else
-              let (r2, b3) ← component.lower.results.copy_result ty value b2
-              match r2 with
-              | core.result.Result.Ok _ =>
-                let (r3, state2) ←
-                  component.lower.results.allocate ty
-                    { state1 with code := b3 }
-                match r3 with
-                | core.result.Result.Ok value1 =>
-                  let (r4, b4) ←
-                    component.lower.results.store ty value1 value state2.code
-                  match r4 with
-                  | core.result.Result.Ok _ =>
-                    let (r5, b5) ← component.abi.get b4 value1
-                    ok (r5, { state2 with code := b5 })
-                  | core.result.Result.Err _ =>
-                    ok (r4, { state2 with code := b4 })
-                | core.result.Result.Err failure =>
-                  ok (core.result.Result.Err failure, state2)
-              | core.result.Result.Err _ => ok (r2, { state1 with code := b3 })
+              let i ← component.abi.lane_count ty
+              if i = 1#usize
+              then component.lower.State.read { state1 with code := b2 } value
+              else
+                let (r2, b3) ←
+                  component.lower.results.copy_result ty value b2
+                match r2 with
+                | core.result.Result.Ok _ =>
+                  let (r3, state2) ←
+                    component.lower.results.allocate ty
+                      { state1 with code := b3 }
+                  match r3 with
+                  | core.result.Result.Ok value1 =>
+                    let (r4, b4) ←
+                      component.lower.results.store ty value1 value state2.code
+                    match r4 with
+                    | core.result.Result.Ok _ =>
+                      let (r5, b5) ← component.abi.get b4 value1
+                      ok (r5, { state2 with code := b5 })
+                    | core.result.Result.Err _ =>
+                      ok (r4, { state2 with code := b4 })
+                  | core.result.Result.Err failure =>
+                    ok (core.result.Result.Err failure, state2)
+                | core.result.Result.Err _ =>
+                  ok (r2, { state1 with code := b3 })
           | core.result.Result.Err _ => ok (r1, { state1 with code := b2 })
       else ok (core.result.Result.Err Diagnostic.Invalid, state1)
     | core.result.Result.Err failure =>
       ok (core.result.Result.Err failure, state1)
 
 /-- [noble_wasm::component::lower::VALUE_LANES]
-    Source: 'crates/noble-wasm/src/component/lower.rs', lines 22:0-22:29 -/
+    Source: 'crates/noble-wasm/src/component/lower.rs', lines 25:0-25:29 -/
 @[global_simps, irreducible]
 def component.lower.VALUE_LANES : Std.Usize := 3#usize
 
+/-- Trait implementation: [noble_wasm::component::lower::{impl core::clone::Clone for noble_wasm::component::lower::Storage}]
+    Source: 'crates/noble-wasm/src/component/lower.rs', lines 26:9-26:14 -/
+@[reducible]
+def component.lower.Storage.Insts.CoreCloneClone : core.clone.Clone
+  component.lower.Storage := {
+  clone := component.lower.Storage.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_wasm::component::lower::{impl core::marker::Copy for noble_wasm::component::lower::Storage}]
+    Source: 'crates/noble-wasm/src/component/lower.rs', lines 26:16-26:20 -/
+@[reducible]
+def component.lower.Storage.Insts.CoreMarkerCopy : core.marker.Copy
+  component.lower.Storage := {
+  cloneInst := component.lower.Storage.Insts.CoreCloneClone
+}
+
 /-- Trait implementation: [noble_wasm::component::lower::{impl core::clone::Clone for noble_wasm::component::lower::Value}]
-    Source: 'crates/noble-wasm/src/component/lower.rs', lines 23:9-23:14 -/
+    Source: 'crates/noble-wasm/src/component/lower.rs', lines 32:9-32:14 -/
 @[reducible]
 def component.lower.Value.Insts.CoreCloneClone : core.clone.Clone
   component.lower.Value := {
   clone := component.lower.Value.Insts.CoreCloneClone.clone
 }
 
-/-- [noble_wasm::component::lower::input_lane]:
-    Source: 'crates/noble-wasm/src/component/lower.rs', lines 243:0-259:1 -/
-def component.lower.input_lane
-  (parameters : Std.Usize) (locals : Array (Option Std.U32) 3#usize)
-  (lane : Std.Usize) :
-  Result ((core.result.Result Unit Diagnostic) × Std.Usize × (Array (Option
-    Std.U32) 3#usize))
-  := do
-  let r ←
-    core.convert.num.ptr_try_from_impls.TryFromU32Usize.try_from parameters
-  match r with
-  | core.result.Result.Ok index =>
-    let (s, to_slice_mut_back) ← lift (Array.to_slice_mut locals)
-    let (o, get_mut_back) ←
-      core.slice.Slice.get_mut (core.slice.index.SliceIndexUsizeSlice (Option
-        Std.U32)) s lane
-    match o with
-    | none =>
-      let s1 := get_mut_back none
-      let locals1 := to_slice_mut_back s1
-      ok (core.result.Result.Err Diagnostic.Defective, parameters, locals1)
-    | some _ =>
-      let parameters1 ←
-        lift (core.num.Usize.saturating_add parameters 1#usize)
-      let s1 := get_mut_back (some (some index))
-      let locals1 := to_slice_mut_back s1
-      ok (core.result.Result.Ok (), parameters1, locals1)
-  | core.result.Result.Err _ =>
-    ok (core.result.Result.Err Diagnostic.Exhausted, parameters, locals)
-
-/-- [noble_wasm::component::lower::input_value]: loop body 0:
-    Source: 'crates/noble-wasm/src/component/lower.rs', lines 221:4-226:5 -/
-@[rust_loop_body]
-def component.lower.input_value_loop.body
-  (count : Std.Usize) (parameters : Std.Usize)
-  (locals : Array (Option Std.U32) 3#usize) (lane : Std.Usize)
-  (failure : Option Diagnostic) :
-  Result (ControlFlow (Std.Usize × (Array (Option Std.U32) 3#usize) ×
-    Std.Usize × (Option Diagnostic)) (Std.Usize × (Array (Option Std.U32)
-    3#usize) × (Option Diagnostic)))
-  := do
-  if lane < count
-  then
-    let b := core.option.Option.is_none failure
-    if b
-    then
-      let (r, parameters1, locals1) ←
-        component.lower.input_lane parameters locals lane
-      let failure1 ←
-        match r with
-        | core.result.Result.Ok _ => ok failure
-        | core.result.Result.Err error => ok (some error)
-      let lane1 ← lift (core.num.Usize.saturating_add lane 1#usize)
-      ok (cont (parameters1, locals1, lane1, failure1))
-    else ok (done (parameters, locals, failure))
-  else ok (done (parameters, locals, failure))
-
-/-- [noble_wasm::component::lower::input_value]: loop 0:
-    Source: 'crates/noble-wasm/src/component/lower.rs', lines 221:4-226:5 -/
-@[rust_loop]
-def component.lower.input_value_loop
-  (parameters : Std.Usize) (locals : Array (Option Std.U32) 3#usize)
-  (lane : Std.Usize) (failure : Option Diagnostic) (count : Std.Usize) :
-  Result (Std.Usize × (Array (Option Std.U32) 3#usize) × (Option Diagnostic))
-  := do
-  loop
-    (fun (parameters1, locals1, lane1, failure1) =>
-      component.lower.input_value_loop.body count parameters1 locals1 lane1
-      failure1)
-    (parameters, locals, lane, failure)
-
-/-- [noble_wasm::component::lower::input_value]:
-    Source: 'crates/noble-wasm/src/component/lower.rs', lines 213:0-237:1 -/
-def component.lower.input_value
-  (ty : noble_contracts.component.Type) (parameters : Std.Usize) :
-  Result ((core.result.Result component.lower.Value Diagnostic) × Std.Usize)
-  := do
-  let locals := Array.repeat 3#usize none
-  let count ← component.abi.lane_count ty
-  let (parameters1, locals1, failure) ←
-    component.lower.input_value_loop parameters locals 0#usize none count
-  match failure with
-  | none =>
-    if parameters1 > component.FLAT_PARAMETER_LIMIT
-    then ok (core.result.Result.Err Diagnostic.Unsupported, parameters1)
-    else
-      let t ← noble_contracts.component.Type.noble ty
-      ok (core.result.Result.Ok { ty := t, locals := locals1 }, parameters1)
-  | some error => ok (core.result.Result.Err error, parameters1)
-
-/-- [noble_wasm::component::lower::input]:
-    Source: 'crates/noble-wasm/src/component/lower.rs', lines 202:0-207:1 -/
-def component.lower.input
-  (ty : noble_contracts.component.Type) (state : component.lower.State) :
-  Result ((core.result.Result Unit Diagnostic) × component.lower.State)
-  := do
-  let (r, i) ← component.lower.input_value ty state.parameters
-  match r with
-  | core.result.Result.Ok value =>
-    let (r1, b) ← component.lower.results.validate ty value state.code
-    match r1 with
-    | core.result.Result.Ok _ =>
-      let v ← alloc.vec.Vec.push state.stack value
-      ok (core.result.Result.Ok (),
-        { state with parameters := i, stack := v, code := b })
-    | core.result.Result.Err _ =>
-      ok (r1, { state with parameters := i, code := b })
-  | core.result.Result.Err failure =>
-    ok (core.result.Result.Err failure, { state with parameters := i })
-
-/-- [noble_wasm::component::lower::initial]: loop body 0:
-    Source: 'crates/noble-wasm/src/component/lower.rs', lines 189:4-195:5 -/
-@[rust_loop_body]
-def component.lower.initial_loop.body
-  (parameters : Slice noble_contracts.component.Type) («end» : Std.Usize)
-  (state : component.lower.State) («at» : Std.Usize)
-  (failure : Option Diagnostic) :
-  Result (ControlFlow (component.lower.State × Std.Usize × (Option
-    Diagnostic)) (component.lower.State × (Option Diagnostic)))
-  := do
-  if «at» < «end»
-  then
-    let b := core.option.Option.is_none failure
-    if b
-    then
-      let ty ← Slice.index_usize parameters «at»
-      let (r, state1) ← component.lower.input ty state
-      let failure1 ←
-        match r with
-        | core.result.Result.Ok _ => ok failure
-        | core.result.Result.Err error => ok (some error)
-      let at1 ← lift (core.num.Usize.saturating_add «at» 1#usize)
-      ok (cont (state1, at1, failure1))
-    else ok (done (state, failure))
-  else ok (done (state, failure))
-
-/-- [noble_wasm::component::lower::initial]: loop 0:
-    Source: 'crates/noble-wasm/src/component/lower.rs', lines 189:4-195:5 -/
-@[rust_loop]
-def component.lower.initial_loop
-  (parameters : Slice noble_contracts.component.Type)
-  (state : component.lower.State) («at» : Std.Usize)
-  (failure : Option Diagnostic) («end» : Std.Usize) :
-  Result (component.lower.State × (Option Diagnostic))
-  := do
-  loop
-    (fun (state1, at1, failure1) => component.lower.initial_loop.body
-      parameters «end» state1 at1 failure1)
-    (state, «at», failure)
-
-/-- [noble_wasm::component::lower::initial]:
-    Source: 'crates/noble-wasm/src/component/lower.rs', lines 179:0-200:1 -/
-def component.lower.initial
-  (parameters : Slice noble_contracts.component.Type) :
-  Result (core.result.Result component.lower.State Diagnostic)
-  := do
-  let i := Slice.len parameters
-  let v := alloc.vec.Vec.with_capacity component.lower.Value i
-  let b ← output.Buffer.new 1024#usize
-  let «end» := Slice.len parameters
-  let (state, failure) ←
-    component.lower.initial_loop parameters
-      {
-        locals := (alloc.vec.Vec.new component.abi.Lane),
-        parameters := 0#usize,
-        stack := v,
-        code := b
-      } 0#usize none «end»
-  match failure with
-  | none => ok (core.result.Result.Ok state)
-  | some error => ok (core.result.Result.Err error)
-
 /-- [noble_wasm::component::lower::nodes]: loop body 0:
-    Source: 'crates/noble-wasm/src/component/lower.rs', lines 162:4-168:5 -/
+    Source: 'crates/noble-wasm/src/component/lower.rs', lines 198:4-204:5 -/
 @[rust_loop_body]
 def component.lower.nodes_loop.body
   (world : noble_contracts.component.World) (i : Std.U32) (i1 : Std.U32)
@@ -4703,7 +6766,7 @@ def component.lower.nodes_loop.body
   else ok (done (data, state, failure))
 
 /-- [noble_wasm::component::lower::nodes]: loop 0:
-    Source: 'crates/noble-wasm/src/component/lower.rs', lines 162:4-168:5 -/
+    Source: 'crates/noble-wasm/src/component/lower.rs', lines 198:4-204:5 -/
 @[rust_loop]
 def component.lower.nodes_loop
   (world : noble_contracts.component.World) (i : Std.U32) (i1 : Std.U32)
@@ -4720,7 +6783,7 @@ def component.lower.nodes_loop
     (data, state, «at», failure)
 
 /-- [noble_wasm::component::lower::nodes]:
-    Source: 'crates/noble-wasm/src/component/lower.rs', lines 153:0-173:1 -/
+    Source: 'crates/noble-wasm/src/component/lower.rs', lines 189:0-209:1 -/
 def component.lower.nodes
   (world : noble_contracts.component.World)
   (body : noble_kernel.execution.Body) (data : component.lower.Data)
@@ -4738,7 +6801,7 @@ def component.lower.nodes
   | some error => ok (core.result.Result.Err error, data1, state1)
 
 /-- [noble_wasm::component::lower::function]:
-    Source: 'crates/noble-wasm/src/component/lower.rs', lines 127:0-151:1 -/
+    Source: 'crates/noble-wasm/src/component/lower.rs', lines 152:0-187:1 -/
 def component.lower.function
   (world : noble_contracts.component.World)
   («export» : noble_contracts.component.CheckedExport)
@@ -4759,7 +6822,7 @@ def component.lower.function
     | none => ok (core.result.Result.Err Diagnostic.Invalid, data)
     | some submission =>
       let s1 := alloc.vec.Vec.deref operation.parameters
-      let r ← component.lower.initial s1
+      let r ← component.lower.inputs.initial s1
       match r with
       | core.result.Result.Ok value =>
         let (r1, data1, value1) ←
@@ -4770,25 +6833,86 @@ def component.lower.function
           let r2 ← component.abi.result s2
           match r2 with
           | core.result.Result.Ok value2 =>
-            let (r3, value3) ← component.lower.results.finish value2 value1
+            let (r3, value3) ←
+              component.lower.results.finish value2 operation.asynchronous
+                value1
             match r3 with
             | core.result.Result.Ok _ =>
-              let s3 ←
-                alloc.string.String.Insts.CoreCloneClone.clone
-                  operation.export_name
-              let v ←
-                alloc.vec.CloneVec.clone
-                  noble_contracts.component.Type.Insts.CoreCloneClone
-                  operation.parameters
-              let v1 ← output.Buffer.finish value3.code
-              ok (core.result.Result.Ok
-                {
-                  «name» := s3,
-                  parameters := v,
-                  result := value2,
-                  locals := value3.locals,
-                  code := v1
-                }, data1)
+              let r4 ←
+                core.convert.num.ptr_try_from_impls.TryFromU32Usize.try_from i
+              match r4 with
+              | core.result.Result.Ok ordinal =>
+                if operation.asynchronous
+                then
+                  let s3 ←
+                    lift (Array.to_slice
+                      (Array.make 19#usize [
+                        32#u8, 99#u8, 97#u8, 108#u8, 108#u8, 32#u8, 36#u8,
+                        116#u8, 97#u8, 115#u8, 107#u8, 45#u8, 114#u8, 101#u8,
+                        116#u8, 117#u8, 114#u8, 110#u8, 45#u8
+                        ]))
+                  let (r5, b) ← output.Buffer.append value3.code s3
+                  match r5 with
+                  | core.result.Result.Ok _ =>
+                    let i1 ← lift (core.convert.num.FromU64U32.from ordinal)
+                    let (r6, b1) ← output.Buffer.number b i1
+                    match r6 with
+                    | core.result.Result.Ok _ =>
+                      let s4 ←
+                        lift (Array.to_slice
+                          (Array.make 16#usize [
+                            10#u8, 32#u8, 99#u8, 97#u8, 108#u8, 108#u8, 32#u8,
+                            36#u8, 99#u8, 108#u8, 101#u8, 97#u8, 110#u8,
+                            117#u8, 112#u8, 10#u8
+                            ]))
+                      let (r7, b2) ← output.Buffer.append b1 s4
+                      match r7 with
+                      | core.result.Result.Ok _ =>
+                        let s5 ←
+                          alloc.string.String.Insts.CoreCloneClone.clone
+                            operation.export_name
+                        let v ←
+                          alloc.vec.CloneVec.clone
+                            noble_contracts.component.Type.Insts.CoreCloneClone
+                            operation.parameters
+                        let v1 ← output.Buffer.finish b2
+                        ok (core.result.Result.Ok
+                          {
+                            «name» := s5,
+                            ordinal,
+                            asynchronous := true,
+                            parameters := v,
+                            result := value2,
+                            locals := value3.locals,
+                            code := v1
+                          }, data1)
+                      | core.result.Result.Err failure =>
+                        ok (core.result.Result.Err failure, data1)
+                    | core.result.Result.Err failure =>
+                      ok (core.result.Result.Err failure, data1)
+                  | core.result.Result.Err failure =>
+                    ok (core.result.Result.Err failure, data1)
+                else
+                  let s3 ←
+                    alloc.string.String.Insts.CoreCloneClone.clone
+                      operation.export_name
+                  let v ←
+                    alloc.vec.CloneVec.clone
+                      noble_contracts.component.Type.Insts.CoreCloneClone
+                      operation.parameters
+                  let v1 ← output.Buffer.finish value3.code
+                  ok (core.result.Result.Ok
+                    {
+                      «name» := s3,
+                      ordinal,
+                      asynchronous := false,
+                      parameters := v,
+                      result := value2,
+                      locals := value3.locals,
+                      code := v1
+                    }, data1)
+              | core.result.Result.Err _ =>
+                ok (core.result.Result.Err Diagnostic.Exhausted, data1)
             | core.result.Result.Err failure =>
               ok (core.result.Result.Err failure, data1)
           | core.result.Result.Err failure =>
@@ -4799,51 +6923,59 @@ def component.lower.function
         ok (core.result.Result.Err failure, data)
 
 /-- [noble_wasm::component::BOOTSTRAP_WIT]
-    Source: 'crates/noble-wasm/src/component/mod.rs', lines 10:0-10:84
+    Source: 'crates/noble-wasm/src/component/mod.rs', lines 11:0-11:84
     Visibility: public -/
 @[global_simps, irreducible]
 def component.BOOTSTRAP_WIT : Result (Slice Std.U8) :=
   core.str.Str.as_bytes (toStr
     "package noble-test:sync@1.0.0;\n\ninterface arithmetic {\n  inc: func(x: s64) -> s64;\n}\n\ninterface echo {\n  text: func(value: string) -> string;\n  bytes: func(value: list<u8>) -> list<u8>;\n}\n\ninterface counters {\n  resource counter {\n    read: func() -> result<s64, string>;\n  }\n  transfer: func(value: own<counter>) -> result<s64, string>;\n}\n\ninterface authorization {\n  resource authorization;\n  prepare: func(argument: s64) -> own<authorization>;\n  protected: func(witness: own<authorization>, argument: s64) -> s64;\n}\n\nworld bootstrap {\n  use counters.{counter};\n  import arithmetic;\n  import echo;\n  import counters;\n  import authorization;\n  export inc: func(x: s64) -> s64;\n  export echo-text: func(value: string) -> string;\n  export echo-bytes: func(value: list<u8>) -> list<u8>;\n  export read-counter: func(value: own<counter>) -> own<counter>;\n  export transfer-counter: func(value: own<counter>) -> result<s64, string>;\n  export protected: func(argument: s64) -> s64;\n}\n")
 
+/-- [noble_wasm::component::ASYNC_WIT]
+    Source: 'crates/noble-wasm/src/component/mod.rs', lines 12:0-12:76
+    Visibility: public -/
+@[global_simps, irreducible]
+def component.ASYNC_WIT : Result (Slice Std.U8) :=
+  core.str.Str.as_bytes (toStr
+    "package noble-test:async-boundary@1.0.0;\n\ninterface host {\n  first: async func(value: s64) -> s64;\n  second: async func(value: s64) -> s64;\n  make-future: func() -> future<result<s64, string>>;\n  finish-future: async func(value: future<result<s64, string>>) -> result<s64, string>;\n  make-stream: func() -> stream<u8>;\n  drain-stream: async func(value: stream<u8>) -> result<list<u8>, string>;\n  cancel-future: func(value: future<result<s64, string>>);\n  close-stream: func(value: stream<u8>);\n}\n\nworld bootstrap {\n  import host;\n  export order: async func(value: s64) -> s64;\n  export future-result: async func() -> result<s64, string>;\n  export stream-result: async func() -> result<list<u8>, string>;\n  export future-cancel: async func();\n  export stream-close: async func();\n}\n")
+
 /-- [noble_wasm::component::MEMORY_BYTES]
-    Source: 'crates/noble-wasm/src/component/mod.rs', lines 11:0-11:40
+    Source: 'crates/noble-wasm/src/component/mod.rs', lines 13:0-13:40
     Visibility: public -/
 @[global_simps, irreducible]
 def component.MEMORY_BYTES : Std.U32 := 1048576#u32
 
 /-- [noble_wasm::component::DEFAULT_ALLOCATION_LIMIT]
-    Source: 'crates/noble-wasm/src/component/mod.rs', lines 17:0-17:68
+    Source: 'crates/noble-wasm/src/component/mod.rs', lines 19:0-19:68
     Visibility: public -/
 @[global_simps, irreducible]
 def component.DEFAULT_ALLOCATION_LIMIT : Result Std.U32 :=
   component.MEMORY_BYTES - component.HEAP_START
 
 /-- [noble_wasm::component::TEXT_START]
-    Source: 'crates/noble-wasm/src/component/mod.rs', lines 23:0-23:29 -/
+    Source: 'crates/noble-wasm/src/component/mod.rs', lines 25:0-25:29 -/
 @[global_simps, irreducible] def component.TEXT_START : Std.U32 := 1024#u32
 
 /-- [noble_wasm::component::{noble_wasm::component::Artifact}::wat]:
-    Source: 'crates/noble-wasm/src/component/mod.rs', lines 30:4-32:5
+    Source: 'crates/noble-wasm/src/component/mod.rs', lines 32:4-34:5
     Visibility: public -/
 def component.Artifact.impl.wat
   (self : component.Artifact) : Result (Slice Std.U8) := do
   ok (alloc.vec.Vec.deref self.wat)
 
 /-- [noble_wasm::component::{noble_wasm::component::Artifact}::build_context]:
-    Source: 'crates/noble-wasm/src/component/mod.rs', lines 33:4-35:5
+    Source: 'crates/noble-wasm/src/component/mod.rs', lines 35:4-37:5
     Visibility: public -/
 def component.Artifact.impl.build_context
   (self : component.Artifact) : Result (Slice Std.U8) := do
   ok (alloc.vec.Vec.deref self.build_context)
 
 /-- [noble_wasm::component::export_capacity::HEADER_BYTES]
-    Source: 'crates/noble-wasm/src/component/mod.rs', lines 164:4-164:34 -/
+    Source: 'crates/noble-wasm/src/component/mod.rs', lines 170:4-170:34 -/
 @[global_simps, irreducible]
 def component.export_capacity.HEADER_BYTES : Std.Usize := 8#usize
 
 /-- [noble_wasm::component::export_capacity]:
-    Source: 'crates/noble-wasm/src/component/mod.rs', lines 160:0-172:1 -/
+    Source: 'crates/noble-wasm/src/component/mod.rs', lines 166:0-178:1 -/
 def component.export_capacity
   («export» : noble_contracts.component.CheckedExport) (bytes : Std.Usize) :
   Result (core.result.Result Std.Usize Diagnostic)
@@ -4859,7 +6991,7 @@ def component.export_capacity
     core.option.Option.ok_or o1 Diagnostic.Exhausted
 
 /-- [noble_wasm::component::context_capacity]: loop body 0:
-    Source: 'crates/noble-wasm/src/component/mod.rs', lines 143:4-149:5 -/
+    Source: 'crates/noble-wasm/src/component/mod.rs', lines 149:4-155:5 -/
 @[rust_loop_body]
 def component.context_capacity_loop.body
   (exports : Slice noble_contracts.component.CheckedExport) (count : Std.Usize)
@@ -4884,7 +7016,7 @@ def component.context_capacity_loop.body
   else ok (done (bytes, failure))
 
 /-- [noble_wasm::component::context_capacity]: loop 0:
-    Source: 'crates/noble-wasm/src/component/mod.rs', lines 143:4-149:5 -/
+    Source: 'crates/noble-wasm/src/component/mod.rs', lines 149:4-155:5 -/
 @[rust_loop]
 def component.context_capacity_loop
   (exports : Slice noble_contracts.component.CheckedExport) (bytes : Std.Usize)
@@ -4897,7 +7029,7 @@ def component.context_capacity_loop
     (bytes, index, failure)
 
 /-- [noble_wasm::component::context_capacity]:
-    Source: 'crates/noble-wasm/src/component/mod.rs', lines 136:0-154:1 -/
+    Source: 'crates/noble-wasm/src/component/mod.rs', lines 142:0-160:1 -/
 def component.context_capacity
   (exports : Slice noble_contracts.component.CheckedExport) (bytes : Std.Usize)
   :
@@ -4911,7 +7043,7 @@ def component.context_capacity
   | some error => ok (core.result.Result.Err error)
 
 /-- [noble_wasm::component::context_export]:
-    Source: 'crates/noble-wasm/src/component/mod.rs', lines 116:0-134:1 -/
+    Source: 'crates/noble-wasm/src/component/mod.rs', lines 122:0-140:1 -/
 def component.context_export
   («export» : noble_contracts.component.CheckedExport)
   (build_context : alloc.vec.Vec Std.U8) :
@@ -4943,7 +7075,7 @@ def component.context_export
     ok (core.result.Result.Err Diagnostic.Exhausted, build_context)
 
 /-- [noble_wasm::component::context_exports]: loop body 0:
-    Source: 'crates/noble-wasm/src/component/mod.rs', lines 98:4-103:5 -/
+    Source: 'crates/noble-wasm/src/component/mod.rs', lines 104:4-109:5 -/
 @[rust_loop_body]
 def component.context_exports_loop.body
   (exports : Slice noble_contracts.component.CheckedExport) (count : Std.Usize)
@@ -4969,7 +7101,7 @@ def component.context_exports_loop.body
   else ok (done (build_context, failure))
 
 /-- [noble_wasm::component::context_exports]: loop 0:
-    Source: 'crates/noble-wasm/src/component/mod.rs', lines 98:4-103:5 -/
+    Source: 'crates/noble-wasm/src/component/mod.rs', lines 104:4-109:5 -/
 @[rust_loop]
 def component.context_exports_loop
   (exports : Slice noble_contracts.component.CheckedExport)
@@ -4984,7 +7116,7 @@ def component.context_exports_loop
     (build_context, index, failure)
 
 /-- [noble_wasm::component::context_exports]:
-    Source: 'crates/noble-wasm/src/component/mod.rs', lines 91:0-108:1 -/
+    Source: 'crates/noble-wasm/src/component/mod.rs', lines 97:0-114:1 -/
 def component.context_exports
   (exports : Slice noble_contracts.component.CheckedExport)
   (build_context : alloc.vec.Vec Std.U8) :
@@ -4997,35 +7129,43 @@ def component.context_exports
   | none => ok (core.result.Result.Ok (), build_context1)
   | some error => ok (core.result.Result.Err error, build_context1)
 
-/-- [noble_wasm::component::context::DOMAIN]
-    Source: 'crates/noble-wasm/src/component/mod.rs', lines 77:4-77:64 -/
-@[global_simps, irreducible]
-def component.context.DOMAIN : Slice Std.U8 :=
-  Array.to_slice
-    (Array.make 32#usize [
-      0#u8, 110#u8, 111#u8, 98#u8, 108#u8, 101#u8, 45#u8, 99#u8, 111#u8,
-      109#u8, 112#u8, 111#u8, 110#u8, 101#u8, 110#u8, 116#u8, 45#u8, 99#u8,
-      97#u8, 110#u8, 111#u8, 110#u8, 105#u8, 99#u8, 97#u8, 108#u8, 51#u8,
-      50#u8, 45#u8, 118#u8, 49#u8, 0#u8
-      ])
-
 /-- [noble_wasm::component::context]:
-    Source: 'crates/noble-wasm/src/component/mod.rs', lines 73:0-84:1 -/
+    Source: 'crates/noble-wasm/src/component/mod.rs', lines 75:0-90:1 -/
 def component.context
   (world : noble_contracts.component.World)
   (exports : Slice noble_contracts.component.CheckedExport) :
   Result (core.result.Result (alloc.vec.Vec Std.U8) Diagnostic)
   := do
-  let build_context ← noble_contracts.component.World.build_context world
-  let i := Slice.len component.context.DOMAIN
+  let b ← noble_contracts.component.World.is_async world
+  let domain ←
+    if b
+    then
+      ok (Array.to_slice
+        (Array.make 38#usize [
+          0#u8, 110#u8, 111#u8, 98#u8, 108#u8, 101#u8, 45#u8, 99#u8, 111#u8,
+          109#u8, 112#u8, 111#u8, 110#u8, 101#u8, 110#u8, 116#u8, 45#u8, 97#u8,
+          115#u8, 121#u8, 110#u8, 99#u8, 45#u8, 99#u8, 97#u8, 110#u8, 111#u8,
+          110#u8, 105#u8, 99#u8, 97#u8, 108#u8, 51#u8, 50#u8, 45#u8, 118#u8,
+          49#u8, 0#u8
+          ]))
+    else
+      ok (Array.to_slice
+        (Array.make 32#usize [
+          0#u8, 110#u8, 111#u8, 98#u8, 108#u8, 101#u8, 45#u8, 99#u8, 111#u8,
+          109#u8, 112#u8, 111#u8, 110#u8, 101#u8, 110#u8, 116#u8, 45#u8, 99#u8,
+          97#u8, 110#u8, 111#u8, 110#u8, 105#u8, 99#u8, 97#u8, 108#u8, 51#u8,
+          50#u8, 45#u8, 118#u8, 49#u8, 0#u8
+          ]))
+  let build_context ←
+    noble_contracts.component.context.World.build_context world
+  let i := Slice.len domain
   let r ← component.context_capacity exports i
   match r with
   | core.result.Result.Ok value =>
     let build_context1 ←
       alloc.vec.Vec.reserve_exact Global build_context value
     let build_context2 ←
-      alloc.vec.Vec.extend_from_slice core.clone.CloneU8 build_context1
-        component.context.DOMAIN
+      alloc.vec.Vec.extend_from_slice core.clone.CloneU8 build_context1 domain
     let (r1, build_context3) ←
       component.context_exports exports build_context2
     match r1 with
@@ -5034,7 +7174,7 @@ def component.context
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_wasm::component::compile]: loop body 0:
-    Source: 'crates/noble-wasm/src/component/mod.rs', lines 58:4-64:5
+    Source: 'crates/noble-wasm/src/component/mod.rs', lines 60:4-66:5
     Visibility: public -/
 @[rust_loop_body]
 def component.compile_loop.body
@@ -5066,7 +7206,7 @@ def component.compile_loop.body
   else ok (done (plans, data, failure))
 
 /-- [noble_wasm::component::compile]: loop 0:
-    Source: 'crates/noble-wasm/src/component/mod.rs', lines 58:4-64:5
+    Source: 'crates/noble-wasm/src/component/mod.rs', lines 60:4-66:5
     Visibility: public -/
 @[rust_loop]
 def component.compile_loop
@@ -5083,7 +7223,7 @@ def component.compile_loop
     (plans, data, index, failure)
 
 /-- [noble_wasm::component::compile]:
-    Source: 'crates/noble-wasm/src/component/mod.rs', lines 45:0-71:1
+    Source: 'crates/noble-wasm/src/component/mod.rs', lines 47:0-73:1
     Visibility: public -/
 def component.compile
   (world : noble_contracts.component.World)

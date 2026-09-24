@@ -928,7 +928,7 @@ structure Diagnostic where
   ordinary_typing : Option noble_kernel.untrusted.Checked
 
 /-- [noble_contracts::component::Stage]
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 176:0-181:1
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 238:0-243:1
     Visibility: public -/
 @[discriminant isize]
 inductive component.Stage where
@@ -938,14 +938,14 @@ inductive component.Stage where
 | Acceptance : component.Stage
 
 /-- [noble_contracts::component::Error]
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 184:0-187:1
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 246:0-249:1
     Visibility: public -/
 structure component.Error where
   stage : component.Stage
   diagnostic : Diagnostic
 
 /-- [noble_contracts::component::Bindings]
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 167:0-173:1 -/
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 229:0-235:1 -/
 structure component.Bindings where
   environment : noble_kernel.contracts.Env
   words : alloc.vec.Vec (String × noble_kernel.contracts.Definition)
@@ -954,7 +954,7 @@ structure component.Bindings where
   key : alloc.vec.Vec Std.U8
 
 /-- [noble_contracts::component::Type]
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 16:0-24:1
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 47:0-59:1
     Visibility: public -/
 @[discriminant isize]
 inductive component.Type where
@@ -963,11 +963,15 @@ inductive component.Type where
 | String : component.Type
 | Bytes : component.Type
 | ResultS64String : component.Type
+| ResultBytesString : component.Type
+| StreamU8 : component.Type
+| FutureS64 : component.Type
+| FutureResultS64String : component.Type
 | Own : noble_kernel.types.ResourceKind → component.Type
 | Borrow : noble_kernel.types.ResourceKind → component.Type
 
 /-- [noble_contracts::component::Operation]
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 55:0-70:1
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 118:0-135:1
     Visibility: public -/
 structure component.Operation where
   identity : String
@@ -977,11 +981,12 @@ structure component.Operation where
   export_name : String
   parameters : alloc.vec.Vec component.Type
   results : alloc.vec.Vec component.Type
+  asynchronous : Bool
   effect : Option noble_kernel.types.EffId
   definition : Option noble_kernel.contracts.Definition
 
 /-- [noble_contracts::component::Resource]
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 47:0-52:1
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 110:0-115:1
     Visibility: public -/
 structure component.Resource where
   identity : String
@@ -990,7 +995,7 @@ structure component.Resource where
   kind : noble_kernel.types.ResourceKind
 
 /-- [noble_contracts::component::World]
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 105:0-113:1
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 170:0-179:1
     Visibility: public -/
 structure component.World where
   identity : String
@@ -999,10 +1004,19 @@ structure component.World where
   imports : alloc.vec.Vec component.Operation
   exports : alloc.vec.Vec component.Operation
   resources : alloc.vec.Vec component.Resource
+  asynchronous : Bool
   limits : Limits
 
+/-- [noble_contracts::component::Profile]
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 29:0-32:1
+    Visibility: public -/
+@[discriminant isize]
+inductive component.Profile where
+| Sync : component.Profile
+| Async : component.Profile
+
 /-- [noble_contracts::component::parser::Cursor]
-    Source: 'crates/noble-contracts/src/component/parser.rs', lines 64:0-69:1 -/
+    Source: 'crates/noble-contracts/src/component/parser.rs', lines 69:0-74:1 -/
 structure component.parser.Cursor where
   source : Str
   tokens : alloc.vec.Vec (core.ops.range.Range Std.Usize)
@@ -1010,7 +1024,7 @@ structure component.parser.Cursor where
   remaining : Std.U32
 
 /-- [noble_contracts::component::parser::RawType]
-    Source: 'crates/noble-contracts/src/component/parser.rs', lines 22:0-30:1 -/
+    Source: 'crates/noble-contracts/src/component/parser.rs', lines 22:0-34:1 -/
 @[discriminant isize]
 inductive component.parser.RawType where
 | Bool : component.parser.RawType
@@ -1018,32 +1032,37 @@ inductive component.parser.RawType where
 | String : component.parser.RawType
 | Bytes : component.parser.RawType
 | ResultS64String : component.parser.RawType
+| ResultBytesString : component.parser.RawType
+| StreamU8 : component.parser.RawType
+| FutureS64 : component.parser.RawType
+| FutureResultS64String : component.parser.RawType
 | Own : String → component.parser.RawType
 | Borrow : String → component.parser.RawType
 
 /-- [noble_contracts::component::parser::Function]
-    Source: 'crates/noble-contracts/src/component/parser.rs', lines 32:0-37:1 -/
+    Source: 'crates/noble-contracts/src/component/parser.rs', lines 36:0-42:1 -/
 structure component.parser.Function where
   «name» : String
   method : Option String
   parameters : alloc.vec.Vec component.parser.RawType
   results : alloc.vec.Vec component.parser.RawType
+  asynchronous : Bool
 
 /-- [noble_contracts::component::parser::Interface]
-    Source: 'crates/noble-contracts/src/component/parser.rs', lines 38:0-42:1 -/
+    Source: 'crates/noble-contracts/src/component/parser.rs', lines 43:0-47:1 -/
 structure component.parser.Interface where
   «name» : String
   resources : alloc.vec.Vec String
   functions : alloc.vec.Vec component.parser.Function
 
 /-- [noble_contracts::component::parser::Use]
-    Source: 'crates/noble-contracts/src/component/parser.rs', lines 43:0-46:1 -/
+    Source: 'crates/noble-contracts/src/component/parser.rs', lines 48:0-51:1 -/
 structure component.parser.Use where
   interface : String
   «name» : String
 
 /-- [noble_contracts::component::parser::Item]
-    Source: 'crates/noble-contracts/src/component/parser.rs', lines 48:0-52:1 -/
+    Source: 'crates/noble-contracts/src/component/parser.rs', lines 53:0-57:1 -/
 @[discriminant isize]
 inductive component.parser.Item where
 | Interface : Bool → String → component.parser.Item
@@ -1051,13 +1070,13 @@ inductive component.parser.Item where
 | Use : component.parser.Use → component.parser.Item
 
 /-- [noble_contracts::component::parser::RawWorld]
-    Source: 'crates/noble-contracts/src/component/parser.rs', lines 53:0-56:1 -/
+    Source: 'crates/noble-contracts/src/component/parser.rs', lines 58:0-61:1 -/
 structure component.parser.RawWorld where
   «name» : String
   items : alloc.vec.Vec component.parser.Item
 
 /-- [noble_contracts::component::parser::Package]
-    Source: 'crates/noble-contracts/src/component/parser.rs', lines 57:0-63:1 -/
+    Source: 'crates/noble-contracts/src/component/parser.rs', lines 62:0-68:1 -/
 structure component.parser.Package where
   «namespace» : String
   «name» : String
@@ -1071,7 +1090,7 @@ structure component.parser.Package where
 def component.parser.cursor.Cursor.version_part.closure := Unit
 
 /-- [noble_contracts::component::parser::resolve::{noble_contracts::component::parser::resolve::Context<'_0>}::install::{closure}]
-    Source: 'crates/noble-contracts/src/component/parser/resolve.rs', lines 232:17-232:93 -/
+    Source: 'crates/noble-contracts/src/component/parser/resolve.rs', lines 236:17-236:93 -/
 def component.parser.resolve.Context.install.closure := String × String
 
 /-- [noble_contracts::component::parser::resolve::Context]
@@ -1081,16 +1100,16 @@ structure component.parser.resolve.Context where
   selected : component.parser.RawWorld
 
 /-- [noble_contracts::component::parser::resolve::types::scoped_resource::{closure}]
-    Source: 'crates/noble-contracts/src/component/parser/resolve/types.rs', lines 64:18-64:85 -/
+    Source: 'crates/noble-contracts/src/component/parser/resolve/types.rs', lines 70:18-70:85 -/
 def component.parser.resolve.types.scoped_resource.closure := Str × Str
 
 /-- [noble_contracts::component::parser::resolve::signature::{noble_contracts::component::parser::resolve::Context<'_0>}::signature::{closure}]
-    Source: 'crates/noble-contracts/src/component/parser/resolve/signature.rs', lines 44:56-53:9 -/
+    Source: 'crates/noble-contracts/src/component/parser/resolve/signature.rs', lines 50:56-63:9 -/
 @[reducible]
 def component.parser.resolve.signature.Context.signature.closure := Unit
 
 /-- [noble_contracts::component::parser::resolve::{noble_contracts::component::parser::resolve::Context<'_0>}::item::{closure}]
-    Source: 'crates/noble-contracts/src/component/parser/resolve.rs', lines 154:30-154:65 -/
+    Source: 'crates/noble-contracts/src/component/parser/resolve.rs', lines 155:30-155:65 -/
 @[reducible]
 def component.parser.resolve.Context.item.closure := String
 
@@ -1160,7 +1179,7 @@ structure source.Prepared where
   output : alloc.vec.Vec noble_kernel.types.Ty
 
 /-- [noble_contracts::component::CheckedExport]
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 210:0-215:1
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 272:0-277:1
     Visibility: public -/
 structure component.CheckedExport where
   world : alloc.vec.Vec Std.U8

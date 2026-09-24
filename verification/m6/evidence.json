@@ -1,0 +1,98 @@
+{
+  "schema": "noble-m6-evidence/v1",
+  "milestone": "M6",
+  "date": "2026-09-24",
+  "result": "passed",
+  "scope": "Complete selected Component-Async-Bootstrap profile: direct-style sequential Noble code compiled to native Component Model async, selected live future/stream operations, bounded serialized host task lifecycle, independent typed component peer and preserved M5 protected-admission/receipt obligations. Local WORKER-08 is not a worker service; official prerelease WASI clock compatibility is peer-only.",
+  "requirements": ["WI-ASYNC-01", "WI-ASYNC-02", "WI-ASYNC-03", "WI-ASYNC-04", "WI-ASYNC-05", "WI-RES-04", "RA-ASYNC-01", "RA-ASYNC-02", "RA-ASYNC-03", "RA-ASYNC-04", "RA-ASYNC-05", "DX-PROTOCOL-03", "VT-SCOPE-02", "VT-SCOPE-03", "H-AUTH-01", "H-AUTH-02", "H-AUTH-03", "H-AUTH-04", "H-RECEIPT-01", "H-RECEIPT-02"],
+  "build": {
+    "result": "built",
+    "receipt": "build.json",
+    "receipt_sha256": "5fb9960554335020fa2766d5fd9e8102f74740882eb0afdb24697e53ef61d041",
+    "binary_sha256": "dc951c1a12512669857a96ba3a0765569e28024db13923cf92dd3ebde0755377",
+    "source_revision": "sha256:9f65e7ad115d8af14cf1f4a706346ec4555adcd1abb955d2c43dbec23609898a"
+  },
+  "runtime": {
+    "result": "passed",
+    "receipt": "acceptance.json",
+    "receipt_sha256": "c7d6aa31180961a7748b4fdfd674c3ddbecabf11ae816476aea6f8906a761ed5",
+    "cases": ["WI-11", "WI-12", "WI-16", "WORKER-08"],
+    "variants": 38,
+    "controls": 62,
+    "native_tests": 13,
+    "recorded_commands": 157,
+    "source_revision": "sha256:9f65e7ad115d8af14cf1f4a706346ec4555adcd1abb955d2c43dbec23609898a",
+    "archive": "runtime.tar.gz",
+    "archive_sha256": "d6668d5a5b38b5e129513a5c8c61dc7adccdd4e32637c38751a3f3fb70fdb700",
+    "manifest": "runtime-manifest.json",
+    "manifest_sha256": "ea13ac42ad2e8caeacfd19b41a67bcf8dd8e4585ed43460af1223d5acd6701d5",
+    "retained_members": 1709,
+    "gate_members_verified": 1708,
+    "scope_note": "Compiled Noble/independent-peer cases, local task/progress controls and the peer-only official prerelease WASI clock probe are distinguished in the runtime receipt."
+  },
+  "extraction": {
+    "result": "passed",
+    "receipt": "extraction.json",
+    "receipt_sha256": "2df058685f4d57e42080c13e356fa4c998b910f449f834cff637706f8bebaa33",
+    "source_revision": "sha256:d19269c4824da767bd67bf8427885770cab68f22afbb79f7147bd589d42f80bf",
+    "source_files": 526,
+    "reviewed_lock": "../m4/extraction-lock.json",
+    "reviewed_lock_sha256": "28bbc8ca1f7f80c8032e4f62145d47b4d6f2d126cadea4dd73739ad43ab1aa84",
+    "strict_actual_rust_async_roots": 14,
+    "strict_axioms": ["propext", "Classical.choice", "Quot.sound"],
+    "state_event_pairs": 75,
+    "m6_refusal_controls": 176,
+    "total_inherited_refusal_controls": 228,
+    "archives": "formal-archives.json",
+    "archives_sha256": "7f8b3a04264b893288ceb976ce0a57a92289d39a5e412aedef60d0d25e74b9ca",
+    "qualification": "Named actual-Rust transition, classifier and table decision correspondence and lifecycle invariants; complete compiled declaration inventory is not proof of all bodies or universal native host/ABI behavior."
+  },
+  "source_inventory": {
+    "result": "valid",
+    "policy": "../../policy/source-inventory.json",
+    "policy_sha256": "70cc532916ff655322f473f09d8adb0eddc3d56b375351575906ce514fe7d8bf",
+    "workspace_units": 25,
+    "positive_boundary_fixture_units": 27,
+    "authored_bodies": 1939,
+    "open_refinement_obligations": 1939,
+    "generated_paths": 1707,
+    "structural_paths": 837,
+    "scope_note": "Inventory classification is neither a universal proof nor a replacement for the fourteen named strict actual-Rust async roots."
+  },
+  "regressions": {
+    "result": "passed",
+    "receipt": "regressions.json",
+    "receipt_sha256": "7ad7fcbb65a2bd81470a90da15928604fe51cf5e1d86efabca3aa89b4b86cad5",
+    "archive": "assurance-archive.json",
+    "scope": "MC1 36; MC2 15 with 18 core controls; M3 four configurations; M4 18 cases, 11 controls and DX-10/DX-12; M5 24 cases, 84 variants, 44 native tests and 15 controls."
+  },
+  "quality": {
+    "deny_all_result": "passed",
+    "deny_all_rules": 73,
+    "deny_all_findings": 0,
+    "workspace_rust_tests": 148,
+    "clippy": "passed-all-targets-all-features-D-warnings",
+    "format": "passed",
+    "nix_result": "passed",
+    "nix_checks": "nix-checks.json",
+    "nix_count": 13,
+    "archive": "quality-archive.json",
+    "scope_note": "Eleven production Nix checks bind their frozen source/policy outputs. The separately checked final document/Cairn snapshot excludes only its generated Nix receipt from the final source projection; the private input was substituted by an identical content-addressed NAR with a changed URI/nested follows identity, recorded explicitly."
+  },
+  "lifecycle": {
+    "profile": "spec-driven",
+    "change": "m6-native-async",
+    "synchronized_specs": ["resource-adapters", "wit-wasi"],
+    "archive": "../../.cairn/archive/1970-01-01-m6-native-async",
+    "canonical_views": "generated from synchronized .cairn/specs",
+    "binding": "Cairn structural gates and document checks are separate from compiled native acceptance and actual-Rust refinement."
+  },
+  "assumptions": [
+    "Rust, generated Noble binaries, pinned Wasmtime, wasm-tools, Node, proof toolchain and independent acceptance gates are trusted tooling; the peer reuses production Noble task, resource and authorization decision libraries.",
+    "Host synchronization, callback provenance, current facts, one-shot witness validity and authentic external operation observations are embedding obligations, not consequences of a task token or receipt-shaped data.",
+    "A native-stop observation and settlement are distinct from cancellation acknowledgement, Store destruction and guest reachability. Physical release and engine/ABI correctness remain external assumptions.",
+    "Fuel, epoch and blocking-deadline probes establish only measured local interruption behavior, not universal fairness, whole-process heap bounds, eventual native completion or distributed exactly-once effects.",
+    "Fourteen strict roots admit only propext, Classical.choice and Quot.sound; inherited reviewed opaque helpers and explicit standard-library models remain separate boundaries."
+  ],
+  "non_claims": ["stable WASI 0.3 or full WASI/Component-Draft", "guest async/await, IO monad or general spawn/channel syntax", "general async borrowing", "WORKER-01/09 or full MW1/MW2 services", "Syndicate or distributed retry correctness", "universal frontend, kernel, compiler, backend, Component Model ABI, host authority or physical-release refinement", "closure of any of the 1939 open authored-body refinement obligations"]
+}

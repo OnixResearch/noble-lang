@@ -1,0 +1,14 @@
+package noble-test:async-resources@1.0.0;
+
+interface counters {
+  resource counter;
+  transfer: async func(value: own<counter>, argument: s64) -> own<counter>;
+  consume-error: async func(value: own<counter>, argument: s64) -> result<s64, string>;
+}
+
+world demo {
+  import counters;
+  use counters.{counter};
+  export returned: async func(value: own<counter>, argument: s64) -> own<counter>;
+  export error: async func(value: own<counter>, argument: s64) -> result<s64, string>;
+}

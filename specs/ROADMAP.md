@@ -2,7 +2,7 @@
 
 Revision: 0.1.0-draft.5
 
-**Current: M5 — completed; next primary milestone: M6 — native async.**
+**M5 and M6 are complete for their separately bounded component profiles.**
 M1, M2, MC1 and the bounded M3 representation experiment are implemented. M4
 connects accepted source to compiled managed-linear-memory Wasm and persistent
 sessions, with retained CORE/DX execution, extraction, regression and quality
@@ -20,8 +20,17 @@ Its [completion record](../verification/m5/evidence.json) binds all 24 selected
 cases and 84 variants, 44 native tests, seven strict actual-Rust resource roots,
 52 refusal controls, prior-milestone regressions and complete quality collection.
 The separately retained final document/Cairn Nix receipt is required for closeout.
-This is not full Component-Draft, WASI, native async or universal component,
+This M5 evidence is not full Component-Draft, WASI, native async or universal component,
 authority-system or physical-release refinement.
+
+M6 completes the selected `Component-Async-Bootstrap` profile under its
+[completion record](../verification/m6/evidence.json). The
+[native acceptance receipt](../verification/m6/acceptance.json) passes WI-11,
+WI-12, WI-16 and local WORKER-08: 38 variants, 62 controls and 13 native
+kernel tests. The independent source-bound extraction/check, full prior
+regressions, unchanged deny-all/architecture gate and all thirteen
+[Nix checks](../verification/m6/nix-checks.json) pass; native execution,
+qualified local correspondence and milestone acceptance remain separate.
 
 [roadmap.json](roadmap.json) records dependency edges. Milestone status is separate from test and proof results.
 
@@ -73,15 +82,112 @@ Optional calculator proof claims additionally require applicable MC1/MC2 support
 | Milestone | Depends on | Exit criterion |
 |---|---|---|
 | M5 — Synchronous components | M4 | One pinned WIT world, independent peer, exact mappings, Aeneas-refined resource transitions, and SPEC-R001 cases |
-| M6 — Native async | M5 | Complete async ownership contract, pinned ABI matrix, stream/future/cancellation cases |
+| M6 — Native async | M5 | Pinned async ABI, direct-style execution, bounded ownership and retirement, complete lifecycle coverage, independent stream/future/cancellation cases, and actual-Rust refinement |
 | M7 — Syndicate profile | M5 | Normative dataspace/facet model, bounded Preserves adapter, WIT boundary, and executed first service scenario |
 | M8 — Optional higher layers | M7 | Choreography projection or durability contracts with separate acceptance evidence |
 
 If M7 uses native async, that slice also depends on M6. No full concurrency claim can rely on unspecified async behavior.
 
+### M6 native-async implementation and closeout
+
+The bounded M6 implementation addresses WI-ASYNC-01 through WI-ASYNC-05 and RA-ASYNC-01 through
+RA-ASYNC-05, preserving WI-RES-04, the M5 protected-host contracts, and
+DX-PROTOCOL-03. It is implemented, natively exercised and accepted for the
+selected scope. [ND-56 through ND-58](DECISIONS.md#native-async-implementation-direction)
+record the bounded lessons from the Bend2 comparison.
+
+Suspension stays at the Component Model boundary and preserves sequential Noble
+word order. Direct-style imports use host-owned task records, not an `IO` monad,
+`async`/`await` syntax, a guest task constructor or a general spawn/channel
+language. Pure computational parallelism is not an async-host ownership contract.
+
+Implementation and retained acceptance scope:
+
+1. **Selected native boundary.** [M6 pins](../verification/m6/pins.json) select
+   `noble-test:async-boundary/bootstrap@1.0.0`, memory32/UTF-8 native async
+   lowering, stackful lifting and `task.return`, Wasmtime/bindgen 40.0.2,
+   `wasm-tools` 1.245.1 and WIT parser/component tooling 0.243.0. Mixed
+   synchronous members retain their synchronous ABI. A separate hand-written
+   peer component executes official
+   `wasi:clocks/monotonic-clock@0.3.0-rc-2025-09-16#wait-for`; it is not Noble
+   output or stable WASI 0.3 acceptance. Stable linkage and disabled
+   async/stackful engine configurations are explicitly refused.
+2. **Implemented ownership core.** The production task table reuses the M5
+   resource and authority boundaries and covers `Pending`, `Ready`,
+   `Delivered`, `Retiring` and `Retired` against fifteen event constructors.
+   The exact 75-pair schema includes invalid and duplicate outcomes;
+   payload/identity guards remain additional obligations. Namespace, owner
+   context, generation and native-operation identities guard callbacks.
+   Completion, result delivery, cancellation and retirement are distinct,
+   serialized decisions with accounted input owners, result owners and pins.
+3. **Selected admission and progress bounds.** Task, terminal-result, payload,
+   parked-payload, pin, wakeup and retirement capacity is reserved before
+   transferring owners or starting protected work. The cooperative driver
+   uses 100,000 guest fuel, a 1,000-fuel yield quantum, a 4,194,304-byte
+   linear-memory limit, eight live values and at most 32 retained external
+   native jobs. Each live future/stream reserves 128 result bytes and 128 local
+   plus 128 external parked bytes; the stream producer buffer is one byte and
+   the consumer payload is bounded to 64 bytes. These are not whole-process
+   heap bounds. Separate measured fuel, epoch and blocking-deadline probes
+   establish their local interruption observations, not universal latency,
+   fairness, eventual native completion or cleanup.
+4. **Compiled Noble surface.** The [native gate](../verification/m6/gate.mjs)
+   compiles and independently validates actual Noble components before the
+   Rust peer runs WI-11's ordered imports and WI-12's future/stream terminal
+   matrix. WI-16 rejects duplication, capture, generic drop and serialization
+   of live values, including a Noble `Pair<Text,stream<u8>>`, with independently
+   executed positive construction controls. Additional compiled worlds cover
+   owned-resource return/domain errors and five-parameter calls. Live values
+   remain non-`Data` and non-`Capture`; borrow-retaining async calls are refused.
+5. **Ownership races and abnormal exit.** WORKER-08 and the local lifecycle,
+   schema and progress controls exercise production decisions separately from
+   the compiled Noble cases. Cancellation before completion, ready-result
+   cancellation, delivery before cancellation, domain errors, stale/foreign
+   callbacks, duplicate events, quota failures and late completion retain
+   distinct observations. Stream closure is not producer completion or
+   invocation cancellation. Abnormal exit revokes guest access in an isolated
+   Store while host state and native pins survive until actual native stop
+   and settlement. Wasmtime 40.0.2 provides no selected per-task cancellation
+   API; Store destruction is not proof of retirement. This does not complete
+   WORKER-01/09, a worker service or MW1/MW2.
+6. **Authority, assurance and scoped closeout.** One-shot witness consumption
+   and resource transfer remain separate obligations at the same admission
+   boundary. Late authentic operation success cannot uncancel an invocation
+   or restore guest ownership. The [independent fresh
+   check](../verification/m6/extraction.json) passed the reviewed source-bound
+   Charon → Aeneas → Lean lock: 14 strict actual-Rust roots, all 75 constructor
+   pairs, 176 M6 and 228 total refusal controls across 526 bound source files.
+   [Both formal archives](../verification/m6/formal-archives.json) passed full
+   member-by-member roundtrip checks. Constructor coverage, correspondence and
+   compiled declaration accounting are distinct from native runtime behavior.
+   The [full prior-milestone regressions](../verification/m6/regressions.json)
+   and [all thirteen Nix checks](../verification/m6/nix-checks.json) passed
+   against their independently recorded source snapshots; the final
+   documents/Cairn source projection excludes only its own generated receipt.
+   The earlier-milestone regressions and unchanged deny-all/architecture
+   gates remain separate; native acceptance alone does not replace them.
+
+The [retained runtime archive](../verification/m6/runtime.tar.gz) and
+[verified manifest](../verification/m6/runtime-manifest.json) preserve all
+1,708 gate-retained members within 1,709 files. Deduplication preserves bytes
+and permission modes, not execution-time inode identity. The renewed
+[source inventory](../verification/source-inventory.md) covers 25 units with
+1,939 open authored-body obligations; historical milestone receipts keep their
+historical inventories. Neither extraction nor this native execution closes
+the broader frontend, kernel, compiler or backend proof obligations.
+
+The executor is a mechanism, not authority or cleanup evidence. Bend2's
+copyable result channels, channel-close behavior, and whole-loop halt are not
+substitutes for Noble's admission/delivery/retirement protocol. M6 does not
+close general async borrowing, all WASI/Component-Draft interfaces, worker
+services, Syndicate, distributed retries, or universal backend/host refinement.
+
 ## Typed-worker conformance workstream
 
-[WORKER-CONFORMANCE.md](WORKER-CONFORMANCE.md) connects kernel and host contracts without new agent syntax. Its cases remain unexecuted harness designs.
+[WORKER-CONFORMANCE.md](WORKER-CONFORMANCE.md) connects kernel and host contracts
+without new agent syntax. The M6 receipt retains WORKER-08's local task-owner
+race slice; the broader actual worker/shell harness remains unimplemented and
+unaccepted. That local evidence does not promote MW1 or MW2.
 
 | Milestone | Depends on | Exit criterion |
 |---|---|---|

@@ -58,6 +58,15 @@ def core.option.Option.Insts.CoreFmtDebug {T : Type} (fmtDebugInst :
   fmt := core.option.Option.Insts.CoreFmtDebug.fmt fmtDebugInst
 }
 
+/-- Trait implementation: [core::option::{impl core::clone::Clone for core::option::Option<T>}]
+    Source: '/rustc/library/core/src/option.rs', lines 2266:0-2270:40
+    Name pattern: [core::clone::Clone<core::option::Option<@T>>] -/
+@[reducible, rust_trait_impl "core::clone::Clone<core::option::Option<@T>>"]
+def core.option.Option.Insts.CoreCloneClone {T : Type} (cloneCloneInst :
+  core.clone.Clone T) : core.clone.Clone (Option T) := {
+  clone := core.option.Option.Insts.CoreCloneClone.clone cloneCloneInst
+}
+
 /-- Trait implementation: [core::option::{impl core::cmp::PartialEq<core::option::Option<T>> for core::option::Option<T>}]
     Source: '/rustc/library/core/src/option.rs', lines 2434:0-2434:56
     Name pattern: [core::cmp::PartialEq<core::option::Option<@T>, core::option::Option<@T>>] -/
@@ -9371,35 +9380,128 @@ def source.environment
     let d ← internal { start := 0#u32, «end» := 0#u32 }
     ok (core.result.Result.Err d)
 
+/-- [noble_contracts::component::{noble_contracts::component::World}::profile]:
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 207:4-213:5
+    Visibility: public -/
+def component.World.profile
+  (self : component.World) : Result component.Profile := do
+  if self.asynchronous
+  then ok component.Profile.Async
+  else ok component.Profile.Sync
+
+/-- [noble_contracts::component::ASYNC_ABI]
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 25:0-25:94 -/
+@[global_simps, irreducible]
+def component.ASYNC_ABI : Str :=
+  toStr "Canonical-Async-Legacy-Lower-WaitableSet-LiftStackful-TaskReturn-v1"
+
+/-- [noble_contracts::component::SYNC_ABI]
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 24:0-24:47 -/
+@[global_simps, irreducible]
+def component.SYNC_ABI : Str := toStr "Canonical-Sync-cm32p2"
+
+/-- [noble_contracts::component::ASYNC_PROFILE]
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 9:0-9:60
+    Visibility: public -/
+@[global_simps, irreducible]
+def component.ASYNC_PROFILE : Str := toStr "Component-Async-Bootstrap"
+
 /-- [noble_contracts::component::PROFILE]
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 7:0-7:53
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 8:0-8:53
     Visibility: public -/
 @[global_simps, irreducible]
 def component.PROFILE : Str := toStr "Component-Sync-Bootstrap"
 
-/-- [noble_contracts::component::{noble_contracts::component::World}::build_context]:
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 141:4-154:5
+/-- [noble_contracts::component::BINDING_SCHEMA]
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 23:0-23:175 -/
+@[global_simps, irreducible]
+def component.BINDING_SCHEMA : Str :=
+  toStr
+    "WIT-Bounded-v3:bool,s64,string,list<u8>,result<s64,string>,result<list<u8>,string>,own,borrow,stream<u8>,future<s64>,future<result<s64,string>>"
+
+/-- [noble_contracts::component::FUTURE_RESULT_S64_STRING_KIND]
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 20:0-21:48
     Visibility: public -/
-def component.World.build_context
-  (self : component.World) : Result (alloc.vec.Vec Std.U8) := do
-  let i ← core.str.Str.len component.PROFILE
-  let i1 ← alloc.string.String.len self.identity
+@[global_simps, irreducible]
+def component.FUTURE_RESULT_S64_STRING_KIND
+  : noble_kernel.types.ResourceKind :=
+  core.num.U32.MAX
+
+/-- [noble_contracts::component::FUTURE_S64_KIND]
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 18:0-19:66
+    Visibility: public -/
+@[global_simps, irreducible]
+def component.FUTURE_S64_KIND : noble_kernel.types.ResourceKind :=
+  let i := core.num.U32.saturating_sub core.num.U32.MAX 1#u32
+  i
+
+/-- [noble_contracts::component::STREAM_U8_KIND]
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 16:0-17:66
+    Visibility: public -/
+@[global_simps, irreducible]
+def component.STREAM_U8_KIND : noble_kernel.types.ResourceKind :=
+  let i := core.num.U32.saturating_sub core.num.U32.MAX 2#u32
+  i
+
+/-- [noble_contracts::component::context::{noble_contracts::component::World}::context]:
+    Source: 'crates/noble-contracts/src/component/context.rs', lines 14:4-36:5 -/
+def component.context.World.context
+  (self : component.World) (profile : Str) (abi : Str) :
+  Result (alloc.vec.Vec Std.U8)
+  := do
+  let i ← core.str.Str.len profile
+  let i1 ← core.str.Str.len component.BINDING_SCHEMA
   let i2 ← lift (core.num.Usize.saturating_add i i1)
-  let i3 := alloc.vec.Vec.len self.wit
+  let i3 ← core.str.Str.len abi
   let i4 ← lift (core.num.Usize.saturating_add i2 i3)
-  let capacity_bytes ← lift (core.num.Usize.saturating_add i4 2#usize)
+  let i5 ← alloc.string.String.len self.identity
+  let i6 ← lift (core.num.Usize.saturating_add i4 i5)
+  let i7 := alloc.vec.Vec.len self.wit
+  let i8 ← lift (core.num.Usize.saturating_add i6 i7)
+  let capacity_bytes ← lift (core.num.Usize.saturating_add i8 16#usize)
   let key := alloc.vec.Vec.with_capacity Std.U8 capacity_bytes
-  let s ← core.str.Str.as_bytes component.PROFILE
+  let s ← core.str.Str.as_bytes profile
   let key1 ← alloc.vec.Vec.extend_from_slice core.clone.CloneU8 key s
   let key2 ← alloc.vec.Vec.push key1 0#u8
-  let s1 ← alloc.string.String.as_bytes self.identity
+  let s1 ← core.str.Str.as_bytes component.BINDING_SCHEMA
   let key3 ← alloc.vec.Vec.extend_from_slice core.clone.CloneU8 key2 s1
   let key4 ← alloc.vec.Vec.push key3 0#u8
-  let s2 := alloc.vec.Vec.deref self.wit
-  alloc.vec.Vec.extend_from_slice core.clone.CloneU8 key4 s2
+  let i9 := component.STREAM_U8_KIND
+  let a ← lift (core.num.U32.to_le_bytes i9)
+  let s2 ← lift (Array.to_slice a)
+  let key5 ← alloc.vec.Vec.extend_from_slice core.clone.CloneU8 key4 s2
+  let i10 := component.FUTURE_S64_KIND
+  let a1 ← lift (core.num.U32.to_le_bytes i10)
+  let s3 ← lift (Array.to_slice a1)
+  let key6 ← alloc.vec.Vec.extend_from_slice core.clone.CloneU8 key5 s3
+  let i11 := component.FUTURE_RESULT_S64_STRING_KIND
+  let a2 ← lift (core.num.U32.to_le_bytes i11)
+  let s4 ← lift (Array.to_slice a2)
+  let key7 ← alloc.vec.Vec.extend_from_slice core.clone.CloneU8 key6 s4
+  let s5 ← core.str.Str.as_bytes abi
+  let key8 ← alloc.vec.Vec.extend_from_slice core.clone.CloneU8 key7 s5
+  let key9 ← alloc.vec.Vec.push key8 0#u8
+  let s6 ← alloc.string.String.as_bytes self.identity
+  let key10 ← alloc.vec.Vec.extend_from_slice core.clone.CloneU8 key9 s6
+  let key11 ← alloc.vec.Vec.push key10 0#u8
+  let s7 := alloc.vec.Vec.deref self.wit
+  alloc.vec.Vec.extend_from_slice core.clone.CloneU8 key11 s7
+
+/-- [noble_contracts::component::context::{noble_contracts::component::World}::build_context]:
+    Source: 'crates/noble-contracts/src/component/context.rs', lines 3:4-8:5
+    Visibility: public -/
+def component.context.World.build_context
+  (self : component.World) : Result (alloc.vec.Vec Std.U8) := do
+  let p ← component.World.profile self
+  match p with
+  | component.Profile.Sync =>
+    component.context.World.context self component.PROFILE component.SYNC_ABI
+  | component.Profile.Async =>
+    component.context.World.context self component.ASYNC_PROFILE
+      component.ASYNC_ABI
 
 /-- [noble_contracts::component::error]:
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 189:0-194:1 -/
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 251:0-256:1 -/
 def component.error
   (stage : component.Stage) (kind : DiagnosticKind) (message : Str) :
   Result component.Error
@@ -9408,7 +9510,7 @@ def component.error
   ok { stage, diagnostic := d }
 
 /-- [noble_contracts::component::exhausted]:
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 201:0-207:1 -/
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 263:0-269:1 -/
 def component.exhausted : Result component.Error := do
   component.error component.Stage.Wit DiagnosticKind.Exhausted (toStr
     "bounded WIT compiler limit exceeded")
@@ -9628,12 +9730,12 @@ def program.bootstrap_word
   program.words.bootstrap word
 
 /-- [noble_contracts::component::invalid]:
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 195:0-197:1 -/
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 257:0-259:1 -/
 def component.invalid (message : Str) : Result component.Error := do
   component.error component.Stage.Wit DiagnosticKind.Invalid message
 
 /-- [noble_contracts::component::bindings::pattern]:
-    Source: 'crates/noble-contracts/src/component/bindings.rs', lines 157:0-173:1 -/
+    Source: 'crates/noble-contracts/src/component/bindings.rs', lines 227:0-254:1 -/
 def component.bindings.pattern
   (ty : component.Type) : Result noble_kernel.shapes.Pattern := do
   match ty with
@@ -9647,13 +9749,25 @@ def component.bindings.pattern
     ok (noble_kernel.shapes.Pattern.SumPattern
       noble_kernel.shapes.Pattern.I64Pattern
       noble_kernel.shapes.Pattern.TextPattern)
+  | component.Type.ResultBytesString =>
+    ok (noble_kernel.shapes.Pattern.SumPattern
+      (noble_kernel.shapes.Pattern.ListPattern
+      noble_kernel.shapes.Pattern.I64Pattern)
+      noble_kernel.shapes.Pattern.TextPattern)
+  | component.Type.StreamU8 =>
+    ok (noble_kernel.shapes.Pattern.ResourcePattern component.STREAM_U8_KIND)
+  | component.Type.FutureS64 =>
+    ok (noble_kernel.shapes.Pattern.ResourcePattern component.FUTURE_S64_KIND)
+  | component.Type.FutureResultS64String =>
+    ok (noble_kernel.shapes.Pattern.ResourcePattern
+      component.FUTURE_RESULT_S64_STRING_KIND)
   | component.Type.Own kind =>
     ok (noble_kernel.shapes.Pattern.ResourcePattern kind)
   | component.Type.Borrow kind =>
     ok (noble_kernel.shapes.Pattern.ResourcePattern kind)
 
 /-- [noble_contracts::component::bindings::parameter]:
-    Source: 'crates/noble-contracts/src/component/bindings.rs', lines 146:0-155:1 -/
+    Source: 'crates/noble-contracts/src/component/bindings.rs', lines 216:0-225:1 -/
 def component.bindings.parameter
   (ty : component.Type) (stack_in : alloc.vec.Vec noble_kernel.shapes.Pattern)
   (stack_out : alloc.vec.Vec noble_kernel.shapes.Pattern) :
@@ -9669,6 +9783,10 @@ def component.bindings.parameter
     | component.Type.String => ok false
     | component.Type.Bytes => ok false
     | component.Type.ResultS64String => ok false
+    | component.Type.ResultBytesString => ok false
+    | component.Type.StreamU8 => ok false
+    | component.Type.FutureS64 => ok false
+    | component.Type.FutureResultS64String => ok false
     | component.Type.Own _ => ok false
     | component.Type.Borrow _ => ok true
   if b
@@ -9679,7 +9797,7 @@ def component.bindings.parameter
   else ok (stack_in1, stack_out)
 
 /-- [noble_contracts::component::bindings::scheme]: loop body 0:
-    Source: 'crates/noble-contracts/src/component/bindings.rs', lines 120:4-123:5 -/
+    Source: 'crates/noble-contracts/src/component/bindings.rs', lines 190:4-193:5 -/
 @[rust_loop_body]
 def component.bindings.scheme_loop0.body
   (v : alloc.vec.Vec component.Type)
@@ -9704,7 +9822,7 @@ def component.bindings.scheme_loop0.body
   else ok (done (stack_in, stack_out))
 
 /-- [noble_contracts::component::bindings::scheme]: loop 0:
-    Source: 'crates/noble-contracts/src/component/bindings.rs', lines 120:4-123:5 -/
+    Source: 'crates/noble-contracts/src/component/bindings.rs', lines 190:4-193:5 -/
 @[rust_loop]
 def component.bindings.scheme_loop0
   (v : alloc.vec.Vec component.Type)
@@ -9720,7 +9838,7 @@ def component.bindings.scheme_loop0
     (stack_in, stack_out, «at»)
 
 /-- [noble_contracts::component::bindings::scheme]: loop body 1:
-    Source: 'crates/noble-contracts/src/component/bindings.rs', lines 125:4-128:5 -/
+    Source: 'crates/noble-contracts/src/component/bindings.rs', lines 195:4-198:5 -/
 @[rust_loop_body]
 def component.bindings.scheme_loop1.body
   (v : alloc.vec.Vec component.Type)
@@ -9742,7 +9860,7 @@ def component.bindings.scheme_loop1.body
   else ok (done stack_out)
 
 /-- [noble_contracts::component::bindings::scheme]: loop 1:
-    Source: 'crates/noble-contracts/src/component/bindings.rs', lines 125:4-128:5 -/
+    Source: 'crates/noble-contracts/src/component/bindings.rs', lines 195:4-198:5 -/
 @[rust_loop]
 def component.bindings.scheme_loop1
   (v : alloc.vec.Vec component.Type)
@@ -9756,7 +9874,7 @@ def component.bindings.scheme_loop1
     (stack_out, «at»)
 
 /-- [noble_contracts::component::bindings::scheme]:
-    Source: 'crates/noble-contracts/src/component/bindings.rs', lines 111:0-139:1 -/
+    Source: 'crates/noble-contracts/src/component/bindings.rs', lines 181:0-209:1 -/
 def component.bindings.scheme
   (operation : component.Operation) :
   Result (core.result.Result noble_kernel.words.Scheme component.Error)
@@ -9804,7 +9922,7 @@ def component.bindings.scheme
       })
 
 /-- [noble_contracts::component::bindings::contract]:
-    Source: 'crates/noble-contracts/src/component/bindings.rs', lines 82:0-105:1 -/
+    Source: 'crates/noble-contracts/src/component/bindings.rs', lines 152:0-175:1 -/
 def component.bindings.contract
   (operation : component.Operation)
   (definition : noble_kernel.contracts.Definition) :
@@ -9855,7 +9973,7 @@ def component.bindings.contract
       | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_contracts::component::bindings::install]:
-    Source: 'crates/noble-contracts/src/component/bindings.rs', lines 57:0-75:1 -/
+    Source: 'crates/noble-contracts/src/component/bindings.rs', lines 127:0-145:1 -/
 def component.bindings.install
   (operation : component.Operation) (environment : noble_kernel.contracts.Env)
   (words : alloc.vec.Vec (String × noble_kernel.contracts.Definition)) :
@@ -9890,10 +10008,243 @@ def component.bindings.install
     let e ← component.exhausted
     ok (core.result.Result.Err e, environment, words)
 
+/-- [noble_contracts::component::bindings::gather_types]: loop body 0:
+    Source: 'crates/noble-contracts/src/component/bindings.rs', lines 101:4-118:5 -/
+@[rust_loop_body]
+def component.bindings.gather_types_loop.body
+  (types : Slice component.Type)
+  (live : Array (Option noble_kernel.types.ResourceKind) 3#usize)
+  («at» : Std.Usize) :
+  Result (ControlFlow ((Array (Option noble_kernel.types.ResourceKind) 3#usize)
+    × Std.Usize) (Array (Option noble_kernel.types.ResourceKind) 3#usize))
+  := do
+  let i := Slice.len types
+  if «at» < i
+  then
+    let t ← Slice.index_usize types «at»
+    let live1 ←
+      match t with
+      | component.Type.Boolean => ok live
+      | component.Type.S64 => ok live
+      | component.Type.String => ok live
+      | component.Type.Bytes => ok live
+      | component.Type.ResultS64String => ok live
+      | component.Type.ResultBytesString => ok live
+      | component.Type.StreamU8 =>
+        Array.update live 0#usize (some component.STREAM_U8_KIND)
+      | component.Type.FutureS64 =>
+        Array.update live 1#usize (some component.FUTURE_S64_KIND)
+      | component.Type.FutureResultS64String =>
+        Array.update live 2#usize (some
+          component.FUTURE_RESULT_S64_STRING_KIND)
+      | component.Type.Own _ => ok live
+      | component.Type.Borrow _ => ok live
+    let at1 ← lift (core.num.Usize.saturating_add «at» 1#usize)
+    ok (cont (live1, at1))
+  else ok (done live)
+
+/-- [noble_contracts::component::bindings::gather_types]: loop 0:
+    Source: 'crates/noble-contracts/src/component/bindings.rs', lines 101:4-118:5 -/
+@[rust_loop]
+def component.bindings.gather_types_loop
+  (types : Slice component.Type)
+  (live : Array (Option noble_kernel.types.ResourceKind) 3#usize)
+  («at» : Std.Usize) :
+  Result (Array (Option noble_kernel.types.ResourceKind) 3#usize)
+  := do
+  loop
+    (fun (live1, at1) => component.bindings.gather_types_loop.body types live1
+      at1)
+    (live, «at»)
+
+/-- [noble_contracts::component::bindings::gather_types]:
+    Source: 'crates/noble-contracts/src/component/bindings.rs', lines 96:0-120:1 -/
+@[reducible]
+def component.bindings.gather_types
+  (types : Slice component.Type)
+  (live : Array (Option noble_kernel.types.ResourceKind) 3#usize) :
+  Result (Array (Option noble_kernel.types.ResourceKind) 3#usize)
+  := do
+  component.bindings.gather_types_loop types live 0#usize
+
+/-- [noble_contracts::component::bindings::gather_live]: loop body 0:
+    Source: 'crates/noble-contracts/src/component/bindings.rs', lines 84:4-88:5 -/
+@[rust_loop_body]
+def component.bindings.gather_live_loop.body
+  (operations : Slice component.Operation)
+  (live : Array (Option noble_kernel.types.ResourceKind) 3#usize)
+  («at» : Std.Usize) :
+  Result (ControlFlow ((Array (Option noble_kernel.types.ResourceKind) 3#usize)
+    × Std.Usize) (Array (Option noble_kernel.types.ResourceKind) 3#usize))
+  := do
+  let i := Slice.len operations
+  if «at» < i
+  then
+    let o ← Slice.index_usize operations «at»
+    let s := alloc.vec.Vec.deref o.parameters
+    let live1 ← component.bindings.gather_types s live
+    let s1 := alloc.vec.Vec.deref o.results
+    let live2 ← component.bindings.gather_types s1 live1
+    let at1 ← lift (core.num.Usize.saturating_add «at» 1#usize)
+    ok (cont (live2, at1))
+  else ok (done live)
+
+/-- [noble_contracts::component::bindings::gather_live]: loop 0:
+    Source: 'crates/noble-contracts/src/component/bindings.rs', lines 84:4-88:5 -/
+@[rust_loop]
+def component.bindings.gather_live_loop
+  (operations : Slice component.Operation)
+  (live : Array (Option noble_kernel.types.ResourceKind) 3#usize)
+  («at» : Std.Usize) :
+  Result (Array (Option noble_kernel.types.ResourceKind) 3#usize)
+  := do
+  loop
+    (fun (live1, at1) => component.bindings.gather_live_loop.body operations
+      live1 at1)
+    (live, «at»)
+
+/-- [noble_contracts::component::bindings::gather_live]:
+    Source: 'crates/noble-contracts/src/component/bindings.rs', lines 79:0-90:1 -/
+@[reducible]
+def component.bindings.gather_live
+  (operations : Slice component.Operation)
+  (live : Array (Option noble_kernel.types.ResourceKind) 3#usize) :
+  Result (Array (Option noble_kernel.types.ResourceKind) 3#usize)
+  := do
+  component.bindings.gather_live_loop operations live 0#usize
+
+/-- [noble_contracts::component::bindings::resource_kinds]: loop body 0:
+    Source: 'crates/noble-contracts/src/component/bindings.rs', lines 55:4-60:5 -/
+@[rust_loop_body]
+def component.bindings.resource_kinds_loop0.body
+  (live : Array (Option noble_kernel.types.ResourceKind) 3#usize)
+  (live_count : Std.Usize) («at» : Std.Usize) :
+  Result (ControlFlow (Std.Usize × Std.Usize) Std.Usize)
+  := do
+  let s ← lift (Array.to_slice live)
+  let i := Slice.len s
+  if «at» < i
+  then
+    let o ← Array.index_usize live «at»
+    let b := core.option.Option.is_some o
+    let live_count1 ←
+      if b
+      then ok (core.num.Usize.saturating_add live_count 1#usize)
+      else ok live_count
+    let at1 ← lift (core.num.Usize.saturating_add «at» 1#usize)
+    ok (cont (live_count1, at1))
+  else ok (done live_count)
+
+/-- [noble_contracts::component::bindings::resource_kinds]: loop 0:
+    Source: 'crates/noble-contracts/src/component/bindings.rs', lines 55:4-60:5 -/
+@[rust_loop]
+def component.bindings.resource_kinds_loop0
+  (live : Array (Option noble_kernel.types.ResourceKind) 3#usize)
+  (live_count : Std.Usize) («at» : Std.Usize) :
+  Result Std.Usize
+  := do
+  loop
+    (fun (live_count1, at1) => component.bindings.resource_kinds_loop0.body
+      live live_count1 at1)
+    (live_count, «at»)
+
+/-- [noble_contracts::component::bindings::resource_kinds]: loop body 1:
+    Source: 'crates/noble-contracts/src/component/bindings.rs', lines 64:4-67:5 -/
+@[rust_loop_body]
+def component.bindings.resource_kinds_loop1.body
+  (v : alloc.vec.Vec component.Resource)
+  (resources : alloc.vec.Vec noble_kernel.types.ResourceKind)
+  («at» : Std.Usize) :
+  Result (ControlFlow ((alloc.vec.Vec noble_kernel.types.ResourceKind) ×
+    Std.Usize) (alloc.vec.Vec noble_kernel.types.ResourceKind))
+  := do
+  let i := alloc.vec.Vec.len v
+  if «at» < i
+  then
+    let r ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        component.Resource) v «at»
+    let resources1 ← alloc.vec.Vec.push resources r.kind
+    let at1 ← lift (core.num.Usize.saturating_add «at» 1#usize)
+    ok (cont (resources1, at1))
+  else ok (done resources)
+
+/-- [noble_contracts::component::bindings::resource_kinds]: loop 1:
+    Source: 'crates/noble-contracts/src/component/bindings.rs', lines 64:4-67:5 -/
+@[rust_loop]
+def component.bindings.resource_kinds_loop1
+  (v : alloc.vec.Vec component.Resource)
+  (resources : alloc.vec.Vec noble_kernel.types.ResourceKind)
+  («at» : Std.Usize) :
+  Result (alloc.vec.Vec noble_kernel.types.ResourceKind)
+  := do
+  loop
+    (fun (resources1, at1) => component.bindings.resource_kinds_loop1.body v
+      resources1 at1)
+    (resources, «at»)
+
+/-- [noble_contracts::component::bindings::resource_kinds]: loop body 2:
+    Source: 'crates/noble-contracts/src/component/bindings.rs', lines 69:4-75:5 -/
+@[rust_loop_body]
+def component.bindings.resource_kinds_loop2.body
+  (live : Array (Option noble_kernel.types.ResourceKind) 3#usize)
+  (resources : alloc.vec.Vec noble_kernel.types.ResourceKind)
+  («at» : Std.Usize) :
+  Result (ControlFlow ((alloc.vec.Vec noble_kernel.types.ResourceKind) ×
+    Std.Usize) (alloc.vec.Vec noble_kernel.types.ResourceKind))
+  := do
+  let s ← lift (Array.to_slice live)
+  let i := Slice.len s
+  if «at» < i
+  then
+    let kind ← Array.index_usize live «at»
+    let resources1 ←
+      match kind with
+      | none => ok resources
+      | some kind1 => alloc.vec.Vec.push resources kind1
+    let at1 ← lift (core.num.Usize.saturating_add «at» 1#usize)
+    ok (cont (resources1, at1))
+  else ok (done resources)
+
+/-- [noble_contracts::component::bindings::resource_kinds]: loop 2:
+    Source: 'crates/noble-contracts/src/component/bindings.rs', lines 69:4-75:5 -/
+@[rust_loop]
+def component.bindings.resource_kinds_loop2
+  (live : Array (Option noble_kernel.types.ResourceKind) 3#usize)
+  (resources : alloc.vec.Vec noble_kernel.types.ResourceKind)
+  («at» : Std.Usize) :
+  Result (alloc.vec.Vec noble_kernel.types.ResourceKind)
+  := do
+  loop
+    (fun (resources1, at1) => component.bindings.resource_kinds_loop2.body live
+      resources1 at1)
+    (resources, «at»)
+
+/-- [noble_contracts::component::bindings::resource_kinds]:
+    Source: 'crates/noble-contracts/src/component/bindings.rs', lines 50:0-77:1 -/
+def component.bindings.resource_kinds
+  (world : component.World) :
+  Result (alloc.vec.Vec noble_kernel.types.ResourceKind)
+  := do
+  let s := alloc.vec.Vec.deref world.imports
+  let a := Array.repeat 3#usize none
+  let live ← component.bindings.gather_live s a
+  let s1 := alloc.vec.Vec.deref world.exports
+  let live1 ← component.bindings.gather_live s1 live
+  let live_count ←
+    component.bindings.resource_kinds_loop0 live1 0#usize 0#usize
+  let i := alloc.vec.Vec.len world.resources
+  let kind_count ← lift (core.num.Usize.saturating_add i live_count)
+  let resources :=
+    alloc.vec.Vec.with_capacity noble_kernel.types.ResourceKind kind_count
+  let resources1 ←
+    component.bindings.resource_kinds_loop1 world.resources resources 0#usize
+  component.bindings.resource_kinds_loop2 live1 resources1 0#usize
+
 /-- [noble_contracts::component::bindings::make]: loop body 0:
     Source: 'crates/noble-contracts/src/component/bindings.rs', lines 24:4-33:5 -/
 @[rust_loop_body]
-def component.bindings.make_loop0.body
+def component.bindings.make_loop.body
   (v : alloc.vec.Vec component.Operation) (count : Std.Usize)
   (environment : noble_kernel.contracts.Env)
   (words : alloc.vec.Vec (String × noble_kernel.contracts.Definition))
@@ -9923,7 +10274,7 @@ def component.bindings.make_loop0.body
 /-- [noble_contracts::component::bindings::make]: loop 0:
     Source: 'crates/noble-contracts/src/component/bindings.rs', lines 24:4-33:5 -/
 @[rust_loop]
-def component.bindings.make_loop0
+def component.bindings.make_loop
   (v : alloc.vec.Vec component.Operation)
   (environment : noble_kernel.contracts.Env) (count : Std.Usize)
   (words : alloc.vec.Vec (String × noble_kernel.contracts.Definition))
@@ -9933,46 +10284,12 @@ def component.bindings.make_loop0
   := do
   loop
     (fun (environment1, words1, effects1, at1) =>
-      component.bindings.make_loop0.body v count environment1 words1 effects1
+      component.bindings.make_loop.body v count environment1 words1 effects1
       at1)
     (environment, words, effects, «at»)
 
-/-- [noble_contracts::component::bindings::make]: loop body 1:
-    Source: 'crates/noble-contracts/src/component/bindings.rs', lines 39:4-42:5 -/
-@[rust_loop_body]
-def component.bindings.make_loop1.body
-  (v : alloc.vec.Vec component.Resource) («at» : Std.Usize)
-  (resources : alloc.vec.Vec noble_kernel.types.ResourceKind) :
-  Result (ControlFlow (Std.Usize × (alloc.vec.Vec
-    noble_kernel.types.ResourceKind)) (alloc.vec.Vec
-    noble_kernel.types.ResourceKind))
-  := do
-  let i := alloc.vec.Vec.len v
-  if «at» < i
-  then
-    let r ←
-      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-        component.Resource) v «at»
-    let resources1 ← alloc.vec.Vec.push resources r.kind
-    let at1 ← lift (core.num.Usize.saturating_add «at» 1#usize)
-    ok (cont (at1, resources1))
-  else ok (done resources)
-
-/-- [noble_contracts::component::bindings::make]: loop 1:
-    Source: 'crates/noble-contracts/src/component/bindings.rs', lines 39:4-42:5 -/
-@[rust_loop]
-def component.bindings.make_loop1
-  (v : alloc.vec.Vec component.Resource) («at» : Std.Usize)
-  (resources : alloc.vec.Vec noble_kernel.types.ResourceKind) :
-  Result (alloc.vec.Vec noble_kernel.types.ResourceKind)
-  := do
-  loop
-    (fun (at1, resources1) => component.bindings.make_loop1.body v at1
-      resources1)
-    («at», resources)
-
 /-- [noble_contracts::component::bindings::make]:
-    Source: 'crates/noble-contracts/src/component/bindings.rs', lines 5:0-50:1 -/
+    Source: 'crates/noble-contracts/src/component/bindings.rs', lines 5:0-44:1 -/
 def component.bindings.make
   (world : component.World) :
   Result (core.result.Result component.Bindings component.Error)
@@ -9989,24 +10306,20 @@ def component.bindings.make
       alloc.vec.Vec.with_capacity (String × noble_kernel.contracts.Definition)
         count
     let (environment1, words1, effects, failure) ←
-      component.bindings.make_loop0 world.imports
+      component.bindings.make_loop world.imports
         { environment with defs := v, kinds := v1, deps := v3, effects := v2 }
         count words 0#u64 0#usize
     match failure with
     | none =>
-      let i := alloc.vec.Vec.len world.resources
-      let resources :=
-        alloc.vec.Vec.with_capacity noble_kernel.types.ResourceKind i
-      let resources1 ←
-        component.bindings.make_loop1 world.resources 0#usize resources
-      let v4 ← component.World.build_context world
+      let v4 ← component.bindings.resource_kinds world
+      let v5 ← component.context.World.build_context world
       ok (core.result.Result.Ok
         {
           environment := environment1,
           words := words1,
-          resources := resources1,
+          resources := v4,
           effects,
-          key := v4
+          key := v5
         })
     | some problem => ok (core.result.Result.Err problem)
   | core.result.Result.Err diagnostic =>
@@ -10014,46 +10327,138 @@ def component.bindings.make
       { stage := component.Stage.Binding, diagnostic })
 
 /-- [noble_contracts::component::MAX_OPERATIONS]
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 8:0-8:37
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 10:0-10:37
     Visibility: public -/
 @[global_simps, irreducible]
 def component.MAX_OPERATIONS : Std.Usize := 62#usize
 
 /-- [noble_contracts::component::MAX_RESOURCES]
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 9:0-9:36
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 11:0-11:36
     Visibility: public -/
 @[global_simps, irreducible]
 def component.MAX_RESOURCES : Std.Usize := 32#usize
 
 /-- [noble_contracts::component::MAX_PARAMETERS]
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 10:0-10:37
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 12:0-12:37
     Visibility: public -/
 @[global_simps, irreducible]
 def component.MAX_PARAMETERS : Std.Usize := 16#usize
 
+/-- [noble_contracts::component::{impl core::clone::Clone for noble_contracts::component::Profile}::clone]:
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 28:9-28:14
+    Visibility: public -/
+def component.Profile.Insts.CoreCloneClone.clone
+  (self : component.Profile) : Result component.Profile := do
+  ok self
+
+/-- Trait implementation: [noble_contracts::component::{impl core::clone::Clone for noble_contracts::component::Profile}]
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 28:9-28:14 -/
+@[reducible]
+def component.Profile.Insts.CoreCloneClone : core.clone.Clone component.Profile
+  := {
+  clone := component.Profile.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_contracts::component::{impl core::marker::Copy for noble_contracts::component::Profile}]
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 28:16-28:20 -/
+@[reducible]
+def component.Profile.Insts.CoreMarkerCopy : core.marker.Copy component.Profile
+  := {
+  cloneInst := component.Profile.Insts.CoreCloneClone
+}
+
+/-- [noble_contracts::component::{impl core::fmt::Debug for noble_contracts::component::Profile}::fmt]:
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 28:22-28:27
+    Visibility: public -/
+def component.Profile.Insts.CoreFmtDebug.fmt
+  (self : component.Profile) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | component.Profile.Sync => core.fmt.Formatter.write_str f (toStr "Sync")
+  | component.Profile.Async => core.fmt.Formatter.write_str f (toStr "Async")
+
+/-- Trait implementation: [noble_contracts::component::{impl core::fmt::Debug for noble_contracts::component::Profile}]
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 28:22-28:27 -/
+@[reducible]
+def component.Profile.Insts.CoreFmtDebug : core.fmt.Debug component.Profile
+  := {
+  fmt := component.Profile.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_contracts::component::{impl core::marker::StructuralPartialEq for noble_contracts::component::Profile}]
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 28:29-28:38 -/
+@[reducible]
+def component.Profile.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq component.Profile := {
+}
+
+/-- [noble_contracts::component::{impl core::cmp::PartialEq<noble_contracts::component::Profile> for noble_contracts::component::Profile}::eq]:
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 28:29-28:38
+    Visibility: public -/
+def component.Profile.Insts.CoreCmpPartialEqProfile.eq
+  (self : component.Profile) (other : component.Profile) : Result Bool := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  ok (self1 = other1)
+
+/-- Trait implementation: [noble_contracts::component::{impl core::cmp::PartialEq<noble_contracts::component::Profile> for noble_contracts::component::Profile}]
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 28:29-28:38 -/
+@[reducible]
+impl_def component.Profile.Insts.CoreCmpPartialEqProfile : core.cmp.PartialEq
+  component.Profile component.Profile := {
+  eq := component.Profile.Insts.CoreCmpPartialEqProfile.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    component.Profile.Insts.CoreCmpPartialEqProfile
+}
+
+/-- [noble_contracts::component::{impl core::cmp::Eq for noble_contracts::component::Profile}::assert_fields_are_eq]:
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 28:40-28:42
+    Visibility: public -/
+def component.Profile.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : component.Profile) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_contracts::component::{impl core::cmp::Eq for noble_contracts::component::Profile}]
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 28:40-28:42 -/
+@[reducible]
+def component.Profile.Insts.CoreCmpEq : core.cmp.Eq component.Profile := {
+  partialEqInst := component.Profile.Insts.CoreCmpPartialEqProfile
+  assert_fields_are_eq :=
+    component.Profile.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_contracts::component::{noble_contracts::component::Profile}::name]:
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 35:4-40:5
+    Visibility: public -/
+def component.Profile.name (self : component.Profile) : Result Str := do
+  match self with
+  | component.Profile.Sync => ok component.PROFILE
+  | component.Profile.Async => ok component.ASYNC_PROFILE
+
 /-- [noble_contracts::component::{impl core::clone::Clone for noble_contracts::component::Type}::clone]:
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 15:9-15:14
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 46:9-46:14
     Visibility: public -/
 def component.Type.Insts.CoreCloneClone.clone
   (self : component.Type) : Result component.Type := do
   ok self
 
 /-- Trait implementation: [noble_contracts::component::{impl core::clone::Clone for noble_contracts::component::Type}]
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 15:9-15:14 -/
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 46:9-46:14 -/
 @[reducible]
 def component.Type.Insts.CoreCloneClone : core.clone.Clone component.Type := {
   clone := component.Type.Insts.CoreCloneClone.clone
 }
 
 /-- Trait implementation: [noble_contracts::component::{impl core::marker::Copy for noble_contracts::component::Type}]
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 15:16-15:20 -/
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 46:16-46:20 -/
 @[reducible]
 def component.Type.Insts.CoreMarkerCopy : core.marker.Copy component.Type := {
   cloneInst := component.Type.Insts.CoreCloneClone
 }
 
 /-- [noble_contracts::component::{impl core::fmt::Debug for noble_contracts::component::Type}::fmt]:
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 15:22-15:27
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 46:22-46:27
     Visibility: public -/
 def component.Type.Insts.CoreFmtDebug.fmt
   (self : component.Type) (f : core.fmt.Formatter) :
@@ -10066,6 +10471,14 @@ def component.Type.Insts.CoreFmtDebug.fmt
   | component.Type.Bytes => core.fmt.Formatter.write_str f (toStr "Bytes")
   | component.Type.ResultS64String =>
     core.fmt.Formatter.write_str f (toStr "ResultS64String")
+  | component.Type.ResultBytesString =>
+    core.fmt.Formatter.write_str f (toStr "ResultBytesString")
+  | component.Type.StreamU8 =>
+    core.fmt.Formatter.write_str f (toStr "StreamU8")
+  | component.Type.FutureS64 =>
+    core.fmt.Formatter.write_str f (toStr "FutureS64")
+  | component.Type.FutureResultS64String =>
+    core.fmt.Formatter.write_str f (toStr "FutureResultS64String")
   | component.Type.Own __self_0 =>
     let __self_01 :=
       Dyn.mk _ (core.fmt.DebugShared
@@ -10078,21 +10491,21 @@ def component.Type.Insts.CoreFmtDebug.fmt
     core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Borrow") __self_01
 
 /-- Trait implementation: [noble_contracts::component::{impl core::fmt::Debug for noble_contracts::component::Type}]
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 15:22-15:27 -/
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 46:22-46:27 -/
 @[reducible]
 def component.Type.Insts.CoreFmtDebug : core.fmt.Debug component.Type := {
   fmt := component.Type.Insts.CoreFmtDebug.fmt
 }
 
 /-- Trait implementation: [noble_contracts::component::{impl core::marker::StructuralPartialEq for noble_contracts::component::Type}]
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 15:29-15:38 -/
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 46:29-46:38 -/
 @[reducible]
 def component.Type.Insts.CoreMarkerStructuralPartialEq :
   core.marker.StructuralPartialEq component.Type := {
 }
 
 /-- [noble_contracts::component::{impl core::cmp::PartialEq<noble_contracts::component::Type> for noble_contracts::component::Type}::eq]:
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 15:29-15:38
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 46:29-46:38
     Visibility: public -/
 def component.Type.Insts.CoreCmpPartialEqType.eq
   (self : component.Type) (other : component.Type) : Result Bool := do
@@ -10106,6 +10519,10 @@ def component.Type.Insts.CoreCmpPartialEqType.eq
     | component.Type.String => ok true
     | component.Type.Bytes => ok true
     | component.Type.ResultS64String => ok true
+    | component.Type.ResultBytesString => ok true
+    | component.Type.StreamU8 => ok true
+    | component.Type.FutureS64 => ok true
+    | component.Type.FutureResultS64String => ok true
     | component.Type.Own __self_0 =>
       match other with
       | component.Type.Boolean => ok true
@@ -10113,6 +10530,10 @@ def component.Type.Insts.CoreCmpPartialEqType.eq
       | component.Type.String => ok true
       | component.Type.Bytes => ok true
       | component.Type.ResultS64String => ok true
+      | component.Type.ResultBytesString => ok true
+      | component.Type.StreamU8 => ok true
+      | component.Type.FutureS64 => ok true
+      | component.Type.FutureResultS64String => ok true
       | component.Type.Own __arg1_0 =>
         noble_kernel.types.ResourceKind.Insts.CoreCmpPartialEqResourceKind.eq
           __self_0 __arg1_0
@@ -10124,6 +10545,10 @@ def component.Type.Insts.CoreCmpPartialEqType.eq
       | component.Type.String => ok true
       | component.Type.Bytes => ok true
       | component.Type.ResultS64String => ok true
+      | component.Type.ResultBytesString => ok true
+      | component.Type.StreamU8 => ok true
+      | component.Type.FutureS64 => ok true
+      | component.Type.FutureResultS64String => ok true
       | component.Type.Own _ => ok true
       | component.Type.Borrow __arg1_0 =>
         noble_kernel.types.ResourceKind.Insts.CoreCmpPartialEqResourceKind.eq
@@ -10131,7 +10556,7 @@ def component.Type.Insts.CoreCmpPartialEqType.eq
   else ok false
 
 /-- Trait implementation: [noble_contracts::component::{impl core::cmp::PartialEq<noble_contracts::component::Type> for noble_contracts::component::Type}]
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 15:29-15:38 -/
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 46:29-46:38 -/
 @[reducible]
 impl_def component.Type.Insts.CoreCmpPartialEqType : core.cmp.PartialEq
   component.Type component.Type := {
@@ -10141,22 +10566,43 @@ impl_def component.Type.Insts.CoreCmpPartialEqType : core.cmp.PartialEq
 }
 
 /-- [noble_contracts::component::{impl core::cmp::Eq for noble_contracts::component::Type}::assert_fields_are_eq]:
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 15:40-15:42
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 46:40-46:42
     Visibility: public -/
 def component.Type.Insts.CoreCmpEq.assert_fields_are_eq
   (self : component.Type) : Result Unit := do
   ok ()
 
 /-- Trait implementation: [noble_contracts::component::{impl core::cmp::Eq for noble_contracts::component::Type}]
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 15:40-15:42 -/
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 46:40-46:42 -/
 @[reducible]
 def component.Type.Insts.CoreCmpEq : core.cmp.Eq component.Type := {
   partialEqInst := component.Type.Insts.CoreCmpPartialEqType
   assert_fields_are_eq := component.Type.Insts.CoreCmpEq.assert_fields_are_eq
 }
 
+/-- [noble_contracts::component::{noble_contracts::component::Type}::resource_kind]:
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 63:4-76:5
+    Visibility: public -/
+def component.Type.resource_kind
+  (self : component.Type) :
+  Result (Option noble_kernel.types.ResourceKind)
+  := do
+  match self with
+  | component.Type.Boolean => ok none
+  | component.Type.S64 => ok none
+  | component.Type.String => ok none
+  | component.Type.Bytes => ok none
+  | component.Type.ResultS64String => ok none
+  | component.Type.ResultBytesString => ok none
+  | component.Type.StreamU8 => ok (some component.STREAM_U8_KIND)
+  | component.Type.FutureS64 => ok (some component.FUTURE_S64_KIND)
+  | component.Type.FutureResultS64String =>
+    ok (some component.FUTURE_RESULT_S64_STRING_KIND)
+  | component.Type.Own kind => ok (some kind)
+  | component.Type.Borrow kind => ok (some kind)
+
 /-- [noble_contracts::component::{noble_contracts::component::Type}::noble]:
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 29:4-43:5
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 81:4-106:5
     Visibility: public -/
 def component.Type.noble
   (self : component.Type) : Result noble_kernel.types.Ty := do
@@ -10169,11 +10615,21 @@ def component.Type.noble
   | component.Type.ResultS64String =>
     ok (noble_kernel.types.Ty.SumType noble_kernel.types.Ty.I64Type
       noble_kernel.types.Ty.TextType)
+  | component.Type.ResultBytesString =>
+    ok (noble_kernel.types.Ty.SumType (noble_kernel.types.Ty.ListType
+      noble_kernel.types.Ty.I64Type) noble_kernel.types.Ty.TextType)
+  | component.Type.StreamU8 =>
+    ok (noble_kernel.types.Ty.ResourceType component.STREAM_U8_KIND)
+  | component.Type.FutureS64 =>
+    ok (noble_kernel.types.Ty.ResourceType component.FUTURE_S64_KIND)
+  | component.Type.FutureResultS64String =>
+    ok (noble_kernel.types.Ty.ResourceType
+      component.FUTURE_RESULT_S64_STRING_KIND)
   | component.Type.Own kind => ok (noble_kernel.types.Ty.ResourceType kind)
   | component.Type.Borrow kind => ok (noble_kernel.types.Ty.ResourceType kind)
 
 /-- [noble_contracts::component::{impl core::clone::Clone for noble_contracts::component::Resource}::clone]:
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 46:9-46:14
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 109:9-109:14
     Visibility: public -/
 def component.Resource.Insts.CoreCloneClone.clone
   (self : component.Resource) : Result component.Resource := do
@@ -10185,7 +10641,7 @@ def component.Resource.Insts.CoreCloneClone.clone
   ok { identity := s, interface := s1, «name» := s2, kind := rk }
 
 /-- Trait implementation: [noble_contracts::component::{impl core::clone::Clone for noble_contracts::component::Resource}]
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 46:9-46:14 -/
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 109:9-109:14 -/
 @[reducible]
 def component.Resource.Insts.CoreCloneClone : core.clone.Clone
   component.Resource := {
@@ -10193,7 +10649,7 @@ def component.Resource.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- [noble_contracts::component::{impl core::fmt::Debug for noble_contracts::component::Resource}::fmt]:
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 46:16-46:21
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 109:16-109:21
     Visibility: public -/
 def component.Resource.Insts.CoreFmtDebug.fmt
   (self : component.Resource) (f : core.fmt.Formatter) :
@@ -10210,7 +10666,7 @@ def component.Resource.Insts.CoreFmtDebug.fmt
     dyn3
 
 /-- Trait implementation: [noble_contracts::component::{impl core::fmt::Debug for noble_contracts::component::Resource}]
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 46:16-46:21 -/
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 109:16-109:21 -/
 @[reducible]
 def component.Resource.Insts.CoreFmtDebug : core.fmt.Debug component.Resource
   := {
@@ -10218,7 +10674,7 @@ def component.Resource.Insts.CoreFmtDebug : core.fmt.Debug component.Resource
 }
 
 /-- [noble_contracts::component::{impl core::clone::Clone for noble_contracts::component::Operation}::clone]:
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 54:9-54:14
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 117:9-117:14
     Visibility: public -/
 def component.Operation.Insts.CoreCloneClone.clone
   (self : component.Operation) : Result component.Operation := do
@@ -10232,6 +10688,7 @@ def component.Operation.Insts.CoreCloneClone.clone
       self.parameters
   let v1 ←
     alloc.vec.CloneVec.clone component.Type.Insts.CoreCloneClone self.results
+  let b ← lift (core.clone.impls.CloneBool.clone self.asynchronous)
   let o ←
     core.option.Option.Insts.CoreCloneClone.clone
       noble_kernel.types.EffId.Insts.CoreCloneClone self.effect
@@ -10247,12 +10704,13 @@ def component.Operation.Insts.CoreCloneClone.clone
       export_name := s4,
       parameters := v,
       results := v1,
+      asynchronous := b,
       effect := o,
       definition := o1
     }
 
 /-- Trait implementation: [noble_contracts::component::{impl core::clone::Clone for noble_contracts::component::Operation}]
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 54:9-54:14 -/
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 117:9-117:14 -/
 @[reducible]
 def component.Operation.Insts.CoreCloneClone : core.clone.Clone
   component.Operation := {
@@ -10260,7 +10718,7 @@ def component.Operation.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- [noble_contracts::component::{impl core::fmt::Debug for noble_contracts::component::Operation}::fmt]:
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 54:16-54:21
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 117:16-117:21
     Visibility: public -/
 def component.Operation.Insts.CoreFmtDebug.fmt
   (self : component.Operation) (f : core.fmt.Formatter) :
@@ -10276,28 +10734,29 @@ def component.Operation.Insts.CoreFmtDebug.fmt
       self.parameters
   let dyn6 :=
     Dyn.mk _ (core.fmt.DebugVec component.Type.Insts.CoreFmtDebug) self.results
-  let dyn7 :=
+  let dyn7 := Dyn.mk _ core.fmt.DebugBool self.asynchronous
+  let dyn8 :=
     Dyn.mk _ (core.option.Option.Insts.CoreFmtDebug
       noble_kernel.types.EffId.Insts.CoreFmtDebug) self.effect
-  let dyn8 :=
+  let dyn9 :=
     Dyn.mk _ (core.fmt.DebugShared (core.option.Option.Insts.CoreFmtDebug
       noble_kernel.contracts.Definition.Insts.CoreFmtDebug)) self.definition
   let values :=
     Array.to_slice
-      (Array.make 9#usize [
-        dyn, dyn1, dyn2, dyn3, dyn4, dyn5, dyn6, dyn7, dyn8
+      (Array.make 10#usize [
+        dyn, dyn1, dyn2, dyn3, dyn4, dyn5, dyn6, dyn7, dyn8, dyn9
         ])
   let s ←
     lift (Array.to_slice
-      (Array.make 9#usize [
+      (Array.make 10#usize [
         toStr "identity", toStr "word", toStr "core_module", toStr "core_name",
         toStr "export_name", toStr "parameters", toStr "results", toStr
-        "effect", toStr "definition"
+        "asynchronous", toStr "effect", toStr "definition"
         ]))
   core.fmt.Formatter.debug_struct_fields_finish f (toStr "Operation") s values
 
 /-- Trait implementation: [noble_contracts::component::{impl core::fmt::Debug for noble_contracts::component::Operation}]
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 54:16-54:21 -/
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 117:16-117:21 -/
 @[reducible]
 def component.Operation.Insts.CoreFmtDebug : core.fmt.Debug component.Operation
   := {
@@ -10305,7 +10764,7 @@ def component.Operation.Insts.CoreFmtDebug : core.fmt.Debug component.Operation
 }
 
 /-- [noble_contracts::component::{noble_contracts::component::Operation}::input_types]: loop body 0:
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 76:8-79:9
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 141:8-144:9
     Visibility: public -/
 @[rust_loop_body]
 def component.Operation.input_types_loop.body
@@ -10327,7 +10786,7 @@ def component.Operation.input_types_loop.body
   else ok (done result)
 
 /-- [noble_contracts::component::{noble_contracts::component::Operation}::input_types]: loop 0:
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 76:8-79:9
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 141:8-144:9
     Visibility: public -/
 @[rust_loop]
 def component.Operation.input_types_loop
@@ -10341,7 +10800,7 @@ def component.Operation.input_types_loop
     (result, «at»)
 
 /-- [noble_contracts::component::{noble_contracts::component::Operation}::input_types]:
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 73:4-81:5
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 138:4-146:5
     Visibility: public -/
 def component.Operation.input_types
   (self : component.Operation) :
@@ -10352,7 +10811,7 @@ def component.Operation.input_types
   component.Operation.input_types_loop self.parameters result 0#usize
 
 /-- [noble_contracts::component::{noble_contracts::component::Operation}::output_types]: loop body 0:
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 89:8-94:9
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 154:8-159:9
     Visibility: public -/
 @[rust_loop_body]
 def component.Operation.output_types_loop0.body
@@ -10375,6 +10834,10 @@ def component.Operation.output_types_loop0.body
       | component.Type.String => ok result
       | component.Type.Bytes => ok result
       | component.Type.ResultS64String => ok result
+      | component.Type.ResultBytesString => ok result
+      | component.Type.StreamU8 => ok result
+      | component.Type.FutureS64 => ok result
+      | component.Type.FutureResultS64String => ok result
       | component.Type.Own _ => ok result
       | component.Type.Borrow kind =>
         alloc.vec.Vec.push result (noble_kernel.types.Ty.ResourceType kind)
@@ -10382,7 +10845,7 @@ def component.Operation.output_types_loop0.body
     ok (cont (result1, at1))
 
 /-- [noble_contracts::component::{noble_contracts::component::Operation}::output_types]: loop 0:
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 89:8-94:9
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 154:8-159:9
     Visibility: public -/
 @[rust_loop]
 def component.Operation.output_types_loop0
@@ -10396,7 +10859,7 @@ def component.Operation.output_types_loop0
     (result, «at»)
 
 /-- [noble_contracts::component::{noble_contracts::component::Operation}::output_types]: loop body 1:
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 96:8-99:9
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 161:8-164:9
     Visibility: public -/
 @[rust_loop_body]
 def component.Operation.output_types_loop1.body
@@ -10418,7 +10881,7 @@ def component.Operation.output_types_loop1.body
   else ok (done result)
 
 /-- [noble_contracts::component::{noble_contracts::component::Operation}::output_types]: loop 1:
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 96:8-99:9
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 161:8-164:9
     Visibility: public -/
 @[rust_loop]
 def component.Operation.output_types_loop1
@@ -10432,7 +10895,7 @@ def component.Operation.output_types_loop1
     (result, «at»)
 
 /-- [noble_contracts::component::{noble_contracts::component::Operation}::output_types]:
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 84:4-101:5
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 149:4-166:5
     Visibility: public -/
 def component.Operation.output_types
   (self : component.Operation) :
@@ -10453,7 +10916,7 @@ def Limits.Insts.CoreCloneClone.clone (self : Limits) : Result Limits := do
   ok self
 
 /-- [noble_contracts::component::{impl core::clone::Clone for noble_contracts::component::World}::clone]:
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 104:9-104:14
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 169:9-169:14
     Visibility: public -/
 def component.World.Insts.CoreCloneClone.clone
   (self : component.World) : Result component.World := do
@@ -10469,6 +10932,7 @@ def component.World.Insts.CoreCloneClone.clone
   let v3 ←
     alloc.vec.CloneVec.clone component.Resource.Insts.CoreCloneClone
       self.resources
+  let b ← lift (core.clone.impls.CloneBool.clone self.asynchronous)
   let l ← Limits.Insts.CoreCloneClone.clone self.limits
   ok
     {
@@ -10478,11 +10942,12 @@ def component.World.Insts.CoreCloneClone.clone
       imports := v1,
       exports := v2,
       resources := v3,
+      asynchronous := b,
       limits := l
     }
 
 /-- Trait implementation: [noble_contracts::component::{impl core::clone::Clone for noble_contracts::component::World}]
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 104:9-104:14 -/
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 169:9-169:14 -/
 @[reducible]
 def component.World.Insts.CoreCloneClone : core.clone.Clone component.World
   := {
@@ -10511,7 +10976,7 @@ def Limits.Insts.CoreFmtDebug : core.fmt.Debug Limits := {
 }
 
 /-- [noble_contracts::component::{impl core::fmt::Debug for noble_contracts::component::World}::fmt]:
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 104:16-104:21
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 169:16-169:21
     Visibility: public -/
 def component.World.Insts.CoreFmtDebug.fmt
   (self : component.World) (f : core.fmt.Formatter) :
@@ -10529,25 +10994,244 @@ def component.World.Insts.CoreFmtDebug.fmt
   let dyn5 :=
     Dyn.mk _ (core.fmt.DebugVec component.Resource.Insts.CoreFmtDebug)
       self.resources
-  let dyn6 :=
+  let dyn6 := Dyn.mk _ core.fmt.DebugBool self.asynchronous
+  let dyn7 :=
     Dyn.mk _ (core.fmt.DebugShared Limits.Insts.CoreFmtDebug) self.limits
   let values :=
     Array.to_slice
-      (Array.make 7#usize [ dyn, dyn1, dyn2, dyn3, dyn4, dyn5, dyn6 ])
+      (Array.make 8#usize [ dyn, dyn1, dyn2, dyn3, dyn4, dyn5, dyn6, dyn7 ])
   let s ←
     lift (Array.to_slice
-      (Array.make 7#usize [
+      (Array.make 8#usize [
         toStr "identity", toStr "name", toStr "wit", toStr "imports", toStr
-        "exports", toStr "resources", toStr "limits"
+        "exports", toStr "resources", toStr "asynchronous", toStr "limits"
         ]))
   core.fmt.Formatter.debug_struct_fields_finish f (toStr "World") s values
 
 /-- Trait implementation: [noble_contracts::component::{impl core::fmt::Debug for noble_contracts::component::World}]
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 104:16-104:21 -/
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 169:16-169:21 -/
 @[reducible]
 def component.World.Insts.CoreFmtDebug : core.fmt.Debug component.World := {
   fmt := component.World.Insts.CoreFmtDebug.fmt
 }
+
+/-- [noble_contracts::component::parser::cursor::{noble_contracts::component::parser::Cursor<'a>}::next]:
+    Source: 'crates/noble-contracts/src/component/parser/cursor.rs', lines 2:4-16:5 -/
+def component.parser.cursor.Cursor.next
+  (self : component.parser.Cursor) :
+  Result ((core.result.Result Str component.Error) × component.parser.Cursor)
+  := do
+  let o ← lift (U32.checked_sub self.remaining 1#u32)
+  match o with
+  | none => let e ← component.exhausted
+            ok (core.result.Result.Err e, self)
+  | some value =>
+    let s := alloc.vec.Vec.deref self.tokens
+    let o1 ←
+      core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice
+        (core.ops.range.Range Std.Usize)) s self.at
+    match o1 with
+    | none =>
+      let e ← component.invalid (toStr "unexpected end of WIT")
+      ok (core.result.Result.Err e, { self with remaining := value })
+    | some token =>
+      let token1 ←
+        core.ops.range.Range.Insts.CoreCloneClone.clone core.clone.CloneUsize
+          token
+      let i ← lift (core.num.Usize.saturating_add self.at 1#usize)
+      let o2 ←
+        core.str.Str.get
+          core.ops.range.RangeUsize.Insts.CoreSliceIndexSliceIndexStrStr
+          self.source token1
+      match o2 with
+      | none =>
+        let e ← component.invalid (toStr "invalid WIT token boundary")
+        ok (core.result.Result.Err e,
+          { self with «at» := i, remaining := value })
+      | some token2 =>
+        ok (core.result.Result.Ok token2,
+          { self with «at» := i, remaining := value })
+
+/-- [noble_contracts::component::parser::cursor::{noble_contracts::component::parser::Cursor<'a>}::take]:
+    Source: 'crates/noble-contracts/src/component/parser/cursor.rs', lines 18:4-24:5 -/
+def component.parser.cursor.Cursor.take
+  (self : component.parser.Cursor) (value : Str) :
+  Result ((core.result.Result Unit component.Error) × component.parser.Cursor)
+  := do
+  let (r, self1) ← component.parser.cursor.Cursor.next self
+  match r with
+  | core.result.Result.Ok value1 =>
+    let b ← Str.Insts.CoreCmpPartialEqStr.eq value1 value
+    if b
+    then ok (core.result.Result.Ok (), self1)
+    else
+      let e ← component.invalid (toStr "unexpected WIT token")
+      ok (core.result.Result.Err e, self1)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, self1)
+
+/-- [noble_contracts::component::unsupported]:
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 260:0-262:1 -/
+def component.unsupported (message : Str) : Result component.Error := do
+  component.error component.Stage.Wit DiagnosticKind.Unsupported message
+
+/-- [noble_contracts::component::parser::function::{noble_contracts::component::parser::Cursor<'_0>}::result_type]:
+    Source: 'crates/noble-contracts/src/component/parser/function.rs', lines 146:4-166:5 -/
+def component.parser.function.Cursor.result_type
+  (self : component.parser.Cursor) :
+  Result ((core.result.Result component.parser.RawType component.Error) ×
+    component.parser.Cursor)
+  := do
+  let (r, self1) ← component.parser.cursor.Cursor.take self (toStr "<")
+  match r with
+  | core.result.Result.Ok _ =>
+    let (r1, self2) ← component.parser.cursor.Cursor.next self1
+    match r1 with
+    | core.result.Result.Ok value =>
+      let b ← Str.Insts.CoreCmpPartialEqStr.eq value (toStr "s64")
+      if b
+      then
+        let (r2, self3) ←
+          component.parser.cursor.Cursor.take self2 (toStr ",")
+        match r2 with
+        | core.result.Result.Ok _ =>
+          let (r3, self4) ←
+            component.parser.cursor.Cursor.take self3 (toStr "string")
+          match r3 with
+          | core.result.Result.Ok _ =>
+            let (r4, self5) ←
+              component.parser.cursor.Cursor.take self4 (toStr ">")
+            match r4 with
+            | core.result.Result.Ok _ =>
+              ok (core.result.Result.Ok
+                component.parser.RawType.ResultS64String, self5)
+            | core.result.Result.Err failure =>
+              ok (core.result.Result.Err failure, self5)
+          | core.result.Result.Err failure =>
+            ok (core.result.Result.Err failure, self4)
+        | core.result.Result.Err failure =>
+          ok (core.result.Result.Err failure, self3)
+      else
+        let b1 ← Str.Insts.CoreCmpPartialEqStr.eq value (toStr "list")
+        if b1
+        then
+          let (r2, self3) ←
+            component.parser.cursor.Cursor.take self2 (toStr "<")
+          match r2 with
+          | core.result.Result.Ok _ =>
+            let (r3, self4) ←
+              component.parser.cursor.Cursor.take self3 (toStr "u8")
+            match r3 with
+            | core.result.Result.Ok _ =>
+              let (r4, self5) ←
+                component.parser.cursor.Cursor.take self4 (toStr ">")
+              match r4 with
+              | core.result.Result.Ok _ =>
+                let (r5, self6) ←
+                  component.parser.cursor.Cursor.take self5 (toStr ",")
+                match r5 with
+                | core.result.Result.Ok _ =>
+                  let (r6, self7) ←
+                    component.parser.cursor.Cursor.take self6 (toStr "string")
+                  match r6 with
+                  | core.result.Result.Ok _ =>
+                    let (r7, self8) ←
+                      component.parser.cursor.Cursor.take self7 (toStr ">")
+                    match r7 with
+                    | core.result.Result.Ok _ =>
+                      ok (core.result.Result.Ok
+                        component.parser.RawType.ResultBytesString, self8)
+                    | core.result.Result.Err failure =>
+                      ok (core.result.Result.Err failure, self8)
+                  | core.result.Result.Err failure =>
+                    ok (core.result.Result.Err failure, self7)
+                | core.result.Result.Err failure =>
+                  ok (core.result.Result.Err failure, self6)
+              | core.result.Result.Err failure =>
+                ok (core.result.Result.Err failure, self5)
+            | core.result.Result.Err failure =>
+              ok (core.result.Result.Err failure, self4)
+          | core.result.Result.Err failure =>
+            ok (core.result.Result.Err failure, self3)
+        else
+          let e ←
+            component.unsupported (toStr
+              "only result<s64,string> and result<list<u8>,string> have bounded adapters")
+          ok (core.result.Result.Err e, self2)
+    | core.result.Result.Err failure =>
+      ok (core.result.Result.Err failure, self2)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, self1)
+
+/-- [noble_contracts::component::parser::function::{noble_contracts::component::parser::Cursor<'_0>}::future]:
+    Source: 'crates/noble-contracts/src/component/parser/function.rs', lines 117:4-140:5 -/
+def component.parser.function.Cursor.future
+  (self : component.parser.Cursor) :
+  Result ((core.result.Result component.parser.RawType component.Error) ×
+    component.parser.Cursor)
+  := do
+  let (r, self1) ← component.parser.cursor.Cursor.take self (toStr "<")
+  match r with
+  | core.result.Result.Ok _ =>
+    let (r1, self2) ← component.parser.cursor.Cursor.next self1
+    match r1 with
+    | core.result.Result.Ok value =>
+      let b ← Str.Insts.CoreCmpPartialEqStr.eq value (toStr "s64")
+      if b
+      then
+        let (r2, self3) ←
+          component.parser.cursor.Cursor.take self2 (toStr ">")
+        match r2 with
+        | core.result.Result.Ok _ =>
+          ok (core.result.Result.Ok component.parser.RawType.FutureS64, self3)
+        | core.result.Result.Err failure =>
+          ok (core.result.Result.Err failure, self3)
+      else
+        let b1 ← Str.Insts.CoreCmpPartialEqStr.eq value (toStr "result")
+        if b1
+        then
+          let (r2, self3) ←
+            component.parser.function.Cursor.result_type self2
+          match r2 with
+          | core.result.Result.Ok value1 =>
+            let b2 ←
+              match value1 with
+              | component.parser.RawType.Bool => ok false
+              | component.parser.RawType.S64 => ok false
+              | component.parser.RawType.String => ok false
+              | component.parser.RawType.Bytes => ok false
+              | component.parser.RawType.ResultS64String => ok true
+              | component.parser.RawType.ResultBytesString => ok false
+              | component.parser.RawType.StreamU8 => ok false
+              | component.parser.RawType.FutureS64 => ok false
+              | component.parser.RawType.FutureResultS64String => ok false
+              | component.parser.RawType.Own _ => ok false
+              | component.parser.RawType.Borrow _ => ok false
+            if b2
+            then
+              let (r3, self4) ←
+                component.parser.cursor.Cursor.take self3 (toStr ">")
+              match r3 with
+              | core.result.Result.Ok _ =>
+                ok (core.result.Result.Ok
+                  component.parser.RawType.FutureResultS64String, self4)
+              | core.result.Result.Err failure =>
+                ok (core.result.Result.Err failure, self4)
+            else
+              let e ←
+                component.unsupported (toStr
+                  "only future<s64> and future<result<s64,string>> have bounded adapters")
+              ok (core.result.Result.Err e, self3)
+          | core.result.Result.Err _ => ok (r2, self3)
+        else
+          let e ←
+            component.unsupported (toStr
+              "only future<s64> and future<result<s64,string>> have bounded adapters")
+          ok (core.result.Result.Err e, self2)
+    | core.result.Result.Err failure =>
+      ok (core.result.Result.Err failure, self2)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, self1)
 
 /-- [noble_contracts::component::parser::MAX_NAME_BYTES]
     Source: 'crates/noble-contracts/src/component/parser.rs', lines 14:0-14:34 -/
@@ -11043,43 +11727,6 @@ def component.parser.cursor.identifier
               let e ← component.invalid (toStr "invalid WIT identifier")
               ok (core.result.Result.Err e)
 
-/-- [noble_contracts::component::parser::cursor::{noble_contracts::component::parser::Cursor<'a>}::next]:
-    Source: 'crates/noble-contracts/src/component/parser/cursor.rs', lines 2:4-16:5 -/
-def component.parser.cursor.Cursor.next
-  (self : component.parser.Cursor) :
-  Result ((core.result.Result Str component.Error) × component.parser.Cursor)
-  := do
-  let o ← lift (U32.checked_sub self.remaining 1#u32)
-  match o with
-  | none => let e ← component.exhausted
-            ok (core.result.Result.Err e, self)
-  | some value =>
-    let s := alloc.vec.Vec.deref self.tokens
-    let o1 ←
-      core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice
-        (core.ops.range.Range Std.Usize)) s self.at
-    match o1 with
-    | none =>
-      let e ← component.invalid (toStr "unexpected end of WIT")
-      ok (core.result.Result.Err e, { self with remaining := value })
-    | some token =>
-      let token1 ←
-        core.ops.range.Range.Insts.CoreCloneClone.clone core.clone.CloneUsize
-          token
-      let i ← lift (core.num.Usize.saturating_add self.at 1#usize)
-      let o2 ←
-        core.str.Str.get
-          core.ops.range.RangeUsize.Insts.CoreSliceIndexSliceIndexStrStr
-          self.source token1
-      match o2 with
-      | none =>
-        let e ← component.invalid (toStr "invalid WIT token boundary")
-        ok (core.result.Result.Err e,
-          { self with «at» := i, remaining := value })
-      | some token2 =>
-        ok (core.result.Result.Ok token2,
-          { self with «at» := i, remaining := value })
-
 /-- [noble_contracts::component::parser::cursor::{noble_contracts::component::parser::Cursor<'a>}::name]:
     Source: 'crates/noble-contracts/src/component/parser/cursor.rs', lines 37:4-39:5 -/
 def component.parser.cursor.Cursor.name
@@ -11095,31 +11742,8 @@ def component.parser.cursor.Cursor.name
   | core.result.Result.Err failure =>
     ok (core.result.Result.Err failure, self1)
 
-/-- [noble_contracts::component::parser::cursor::{noble_contracts::component::parser::Cursor<'a>}::take]:
-    Source: 'crates/noble-contracts/src/component/parser/cursor.rs', lines 18:4-24:5 -/
-def component.parser.cursor.Cursor.take
-  (self : component.parser.Cursor) (value : Str) :
-  Result ((core.result.Result Unit component.Error) × component.parser.Cursor)
-  := do
-  let (r, self1) ← component.parser.cursor.Cursor.next self
-  match r with
-  | core.result.Result.Ok value1 =>
-    let b ← Str.Insts.CoreCmpPartialEqStr.eq value1 value
-    if b
-    then ok (core.result.Result.Ok (), self1)
-    else
-      let e ← component.invalid (toStr "unexpected WIT token")
-      ok (core.result.Result.Err e, self1)
-  | core.result.Result.Err failure =>
-    ok (core.result.Result.Err failure, self1)
-
-/-- [noble_contracts::component::unsupported]:
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 198:0-200:1 -/
-def component.unsupported (message : Str) : Result component.Error := do
-  component.error component.Stage.Wit DiagnosticKind.Unsupported message
-
 /-- [noble_contracts::component::parser::function::{noble_contracts::component::parser::Cursor<'_0>}::ty]:
-    Source: 'crates/noble-contracts/src/component/parser/function.rs', lines 72:4-111:5 -/
+    Source: 'crates/noble-contracts/src/component/parser/function.rs', lines 74:4-111:5 -/
 def component.parser.function.Cursor.ty
   (self : component.parser.Cursor) :
   Result ((core.result.Result component.parser.RawType component.Error) ×
@@ -11155,8 +11779,13 @@ def component.parser.function.Cursor.ty
                   component.parser.cursor.Cursor.take self3 (toStr ">")
                 match r3 with
                 | core.result.Result.Ok _ =>
-                  ok (core.result.Result.Ok component.parser.RawType.Bytes,
-                    self4)
+                  if b3
+                  then
+                    ok (core.result.Result.Ok component.parser.RawType.Bytes,
+                      self4)
+                  else
+                    ok (core.result.Result.Ok
+                      component.parser.RawType.StreamU8, self4)
                 | core.result.Result.Err failure =>
                   ok (core.result.Result.Err failure, self4)
               | core.result.Result.Err failure =>
@@ -11164,7 +11793,7 @@ def component.parser.function.Cursor.ty
             | core.result.Result.Err failure =>
               ok (core.result.Result.Err failure, self2)
           else
-            let b4 ← Str.Insts.CoreCmpPartialEqStr.eq value (toStr "result")
+            let b4 ← Str.Insts.CoreCmpPartialEqStr.eq value (toStr "stream")
             if b4
             then
               let (r1, self2) ←
@@ -11172,28 +11801,20 @@ def component.parser.function.Cursor.ty
               match r1 with
               | core.result.Result.Ok _ =>
                 let (r2, self3) ←
-                  component.parser.cursor.Cursor.take self2 (toStr "s64")
+                  component.parser.cursor.Cursor.take self2 (toStr "u8")
                 match r2 with
                 | core.result.Result.Ok _ =>
                   let (r3, self4) ←
-                    component.parser.cursor.Cursor.take self3 (toStr ",")
+                    component.parser.cursor.Cursor.take self3 (toStr ">")
                   match r3 with
                   | core.result.Result.Ok _ =>
-                    let (r4, self5) ←
-                      component.parser.cursor.Cursor.take self4 (toStr
-                        "string")
-                    match r4 with
-                    | core.result.Result.Ok _ =>
-                      let (r5, self6) ←
-                        component.parser.cursor.Cursor.take self5 (toStr ">")
-                      match r5 with
-                      | core.result.Result.Ok _ =>
-                        ok (core.result.Result.Ok
-                          component.parser.RawType.ResultS64String, self6)
-                      | core.result.Result.Err failure =>
-                        ok (core.result.Result.Err failure, self6)
-                    | core.result.Result.Err failure =>
-                      ok (core.result.Result.Err failure, self5)
+                    if b3
+                    then
+                      ok (core.result.Result.Ok component.parser.RawType.Bytes,
+                        self4)
+                    else
+                      ok (core.result.Result.Ok
+                        component.parser.RawType.StreamU8, self4)
                   | core.result.Result.Err failure =>
                     ok (core.result.Result.Err failure, self4)
                 | core.result.Result.Err failure =>
@@ -11201,199 +11822,195 @@ def component.parser.function.Cursor.ty
               | core.result.Result.Err failure =>
                 ok (core.result.Result.Err failure, self2)
             else
-              let b5 ← Str.Insts.CoreCmpPartialEqStr.eq value (toStr "own")
+              let b5 ←
+                Str.Insts.CoreCmpPartialEqStr.eq value (toStr "result")
               if b5
-              then
-                let (r1, self2) ←
-                  component.parser.cursor.Cursor.take self1 (toStr "<")
-                match r1 with
-                | core.result.Result.Ok _ =>
-                  let (r2, self3) ← component.parser.cursor.Cursor.name self2
-                  match r2 with
-                  | core.result.Result.Ok value1 =>
-                    let (r3, self4) ←
-                      component.parser.cursor.Cursor.take self3 (toStr ">")
-                    match r3 with
-                    | core.result.Result.Ok _ =>
-                      if b5
-                      then
-                        ok (core.result.Result.Ok (component.parser.RawType.Own
-                          value1), self4)
-                      else
-                        ok (core.result.Result.Ok
-                          (component.parser.RawType.Borrow value1), self4)
-                    | core.result.Result.Err failure =>
-                      ok (core.result.Result.Err failure, self4)
-                  | core.result.Result.Err failure =>
-                    ok (core.result.Result.Err failure, self3)
-                | core.result.Result.Err failure =>
-                  ok (core.result.Result.Err failure, self2)
+              then component.parser.function.Cursor.result_type self1
               else
                 let b6 ←
-                  Str.Insts.CoreCmpPartialEqStr.eq value (toStr "borrow")
+                  Str.Insts.CoreCmpPartialEqStr.eq value (toStr "future")
                 if b6
-                then
-                  let (r1, self2) ←
-                    component.parser.cursor.Cursor.take self1 (toStr "<")
-                  match r1 with
-                  | core.result.Result.Ok _ =>
-                    let (r2, self3) ←
-                      component.parser.cursor.Cursor.name self2
-                    match r2 with
-                    | core.result.Result.Ok value1 =>
-                      let (r3, self4) ←
-                        component.parser.cursor.Cursor.take self3 (toStr ">")
-                      match r3 with
-                      | core.result.Result.Ok _ =>
-                        if b5
-                        then
-                          ok (core.result.Result.Ok
-                            (component.parser.RawType.Own value1), self4)
-                        else
-                          ok (core.result.Result.Ok
-                            (component.parser.RawType.Borrow value1), self4)
-                      | core.result.Result.Err failure =>
-                        ok (core.result.Result.Err failure, self4)
-                    | core.result.Result.Err failure =>
-                      ok (core.result.Result.Err failure, self3)
-                  | core.result.Result.Err failure =>
-                    ok (core.result.Result.Err failure, self2)
+                then component.parser.function.Cursor.future self1
                 else
                   let b7 ←
-                    Str.Insts.CoreCmpPartialEqStr.eq value (toStr "u8")
+                    Str.Insts.CoreCmpPartialEqStr.eq value (toStr "own")
                   if b7
                   then
-                    let e ←
-                      component.unsupported (toStr
-                        "WIT type has no exact supported synchronous adapter")
-                    ok (core.result.Result.Err e, self1)
+                    let (r1, self2) ←
+                      component.parser.cursor.Cursor.take self1 (toStr "<")
+                    match r1 with
+                    | core.result.Result.Ok _ =>
+                      let (r2, self3) ←
+                        component.parser.cursor.Cursor.name self2
+                      match r2 with
+                      | core.result.Result.Ok value1 =>
+                        let (r3, self4) ←
+                          component.parser.cursor.Cursor.take self3 (toStr ">")
+                        match r3 with
+                        | core.result.Result.Ok _ =>
+                          if b7
+                          then
+                            ok (core.result.Result.Ok
+                              (component.parser.RawType.Own value1), self4)
+                          else
+                            ok (core.result.Result.Ok
+                              (component.parser.RawType.Borrow value1), self4)
+                        | core.result.Result.Err failure =>
+                          ok (core.result.Result.Err failure, self4)
+                      | core.result.Result.Err failure =>
+                        ok (core.result.Result.Err failure, self3)
+                    | core.result.Result.Err failure =>
+                      ok (core.result.Result.Err failure, self2)
                   else
                     let b8 ←
-                      Str.Insts.CoreCmpPartialEqStr.eq value (toStr "s8")
+                      Str.Insts.CoreCmpPartialEqStr.eq value (toStr "borrow")
                     if b8
                     then
-                      let e ←
-                        component.unsupported (toStr
-                          "WIT type has no exact supported synchronous adapter")
-                      ok (core.result.Result.Err e, self1)
+                      let (r1, self2) ←
+                        component.parser.cursor.Cursor.take self1 (toStr "<")
+                      match r1 with
+                      | core.result.Result.Ok _ =>
+                        let (r2, self3) ←
+                          component.parser.cursor.Cursor.name self2
+                        match r2 with
+                        | core.result.Result.Ok value1 =>
+                          let (r3, self4) ←
+                            component.parser.cursor.Cursor.take self3 (toStr
+                              ">")
+                          match r3 with
+                          | core.result.Result.Ok _ =>
+                            if b7
+                            then
+                              ok (core.result.Result.Ok
+                                (component.parser.RawType.Own value1), self4)
+                            else
+                              ok (core.result.Result.Ok
+                                (component.parser.RawType.Borrow value1),
+                                self4)
+                          | core.result.Result.Err failure =>
+                            ok (core.result.Result.Err failure, self4)
+                        | core.result.Result.Err failure =>
+                          ok (core.result.Result.Err failure, self3)
+                      | core.result.Result.Err failure =>
+                        ok (core.result.Result.Err failure, self2)
                     else
                       let b9 ←
-                        Str.Insts.CoreCmpPartialEqStr.eq value (toStr "u16")
+                        Str.Insts.CoreCmpPartialEqStr.eq value (toStr "u8")
                       if b9
                       then
                         let e ←
                           component.unsupported (toStr
-                            "WIT type has no exact supported synchronous adapter")
+                            "WIT type has no exact supported bounded adapter")
                         ok (core.result.Result.Err e, self1)
                       else
                         let b10 ←
-                          Str.Insts.CoreCmpPartialEqStr.eq value (toStr "s16")
+                          Str.Insts.CoreCmpPartialEqStr.eq value (toStr "s8")
                         if b10
                         then
                           let e ←
                             component.unsupported (toStr
-                              "WIT type has no exact supported synchronous adapter")
+                              "WIT type has no exact supported bounded adapter")
                           ok (core.result.Result.Err e, self1)
                         else
                           let b11 ←
                             Str.Insts.CoreCmpPartialEqStr.eq value (toStr
-                              "u32")
+                              "u16")
                           if b11
                           then
                             let e ←
                               component.unsupported (toStr
-                                "WIT type has no exact supported synchronous adapter")
+                                "WIT type has no exact supported bounded adapter")
                             ok (core.result.Result.Err e, self1)
                           else
                             let b12 ←
                               Str.Insts.CoreCmpPartialEqStr.eq value (toStr
-                                "s32")
+                                "s16")
                             if b12
                             then
                               let e ←
                                 component.unsupported (toStr
-                                  "WIT type has no exact supported synchronous adapter")
+                                  "WIT type has no exact supported bounded adapter")
                               ok (core.result.Result.Err e, self1)
                             else
                               let b13 ←
                                 Str.Insts.CoreCmpPartialEqStr.eq value (toStr
-                                  "u64")
+                                  "u32")
                               if b13
                               then
                                 let e ←
                                   component.unsupported (toStr
-                                    "WIT type has no exact supported synchronous adapter")
+                                    "WIT type has no exact supported bounded adapter")
                                 ok (core.result.Result.Err e, self1)
                               else
                                 let b14 ←
                                   Str.Insts.CoreCmpPartialEqStr.eq value (toStr
-                                    "f32")
+                                    "s32")
                                 if b14
                                 then
                                   let e ←
                                     component.unsupported (toStr
-                                      "WIT type has no exact supported synchronous adapter")
+                                      "WIT type has no exact supported bounded adapter")
                                   ok (core.result.Result.Err e, self1)
                                 else
                                   let b15 ←
                                     Str.Insts.CoreCmpPartialEqStr.eq value
-                                      (toStr "f64")
+                                      (toStr "u64")
                                   if b15
                                   then
                                     let e ←
                                       component.unsupported (toStr
-                                        "WIT type has no exact supported synchronous adapter")
+                                        "WIT type has no exact supported bounded adapter")
                                     ok (core.result.Result.Err e, self1)
                                   else
                                     let b16 ←
                                       Str.Insts.CoreCmpPartialEqStr.eq value
-                                        (toStr "char")
+                                        (toStr "f32")
                                     if b16
                                     then
                                       let e ←
                                         component.unsupported (toStr
-                                          "WIT type has no exact supported synchronous adapter")
+                                          "WIT type has no exact supported bounded adapter")
                                       ok (core.result.Result.Err e, self1)
                                     else
                                       let b17 ←
                                         Str.Insts.CoreCmpPartialEqStr.eq value
-                                          (toStr "tuple")
+                                          (toStr "f64")
                                       if b17
                                       then
                                         let e ←
                                           component.unsupported (toStr
-                                            "WIT type has no exact supported synchronous adapter")
+                                            "WIT type has no exact supported bounded adapter")
                                         ok (core.result.Result.Err e, self1)
                                       else
                                         let b18 ←
                                           Str.Insts.CoreCmpPartialEqStr.eq
-                                            value (toStr "option")
+                                            value (toStr "char")
                                         if b18
                                         then
                                           let e ←
                                             component.unsupported (toStr
-                                              "WIT type has no exact supported synchronous adapter")
+                                              "WIT type has no exact supported bounded adapter")
                                           ok (core.result.Result.Err e, self1)
                                         else
                                           let b19 ←
                                             Str.Insts.CoreCmpPartialEqStr.eq
-                                              value (toStr "future")
+                                              value (toStr "tuple")
                                           if b19
                                           then
                                             let e ←
                                               component.unsupported (toStr
-                                                "WIT type has no exact supported synchronous adapter")
+                                                "WIT type has no exact supported bounded adapter")
                                             ok (core.result.Result.Err e,
                                               self1)
                                           else
                                             let b20 ←
                                               Str.Insts.CoreCmpPartialEqStr.eq
-                                                value (toStr "stream")
+                                                value (toStr "option")
                                             if b20
                                             then
                                               let e ←
                                                 component.unsupported (toStr
-                                                  "WIT type has no exact supported synchronous adapter")
+                                                  "WIT type has no exact supported bounded adapter")
                                               ok (core.result.Result.Err e,
                                                 self1)
                                             else
@@ -11439,7 +12056,7 @@ def component.parser.cursor.Cursor.peek
     | some token => Str.Insts.CoreCmpPartialEqStr.eq token value
 
 /-- [noble_contracts::component::parser::function::{noble_contracts::component::parser::Cursor<'_0>}::parameter]:
-    Source: 'crates/noble-contracts/src/component/parser/function.rs', lines 52:4-66:5 -/
+    Source: 'crates/noble-contracts/src/component/parser/function.rs', lines 54:4-68:5 -/
 def component.parser.function.Cursor.parameter
   (self : component.parser.Cursor) (names : Slice String) :
   Result ((core.result.Result (String × component.parser.RawType)
@@ -11481,9 +12098,9 @@ def component.parser.function.Cursor.parameter
     ok (core.result.Result.Err failure, self1)
 
 /-- [noble_contracts::component::parser::function::{noble_contracts::component::parser::Cursor<'_0>}::function]: loop body 0:
-    Source: 'crates/noble-contracts/src/component/parser/function.rs', lines 19:8-30:9 -/
+    Source: 'crates/noble-contracts/src/component/parser/function.rs', lines 20:8-31:9 -/
 @[rust_loop_body]
-def component.parser.function.Cursor.function_loop.body
+def component.parser.function.Cursor.function_loop0.body
   (self : component.parser.Cursor)
   (parameters : alloc.vec.Vec component.parser.RawType)
   (names : alloc.vec.Vec String) :
@@ -11512,9 +12129,9 @@ def component.parser.function.Cursor.function_loop.body
   else ok (done (self, parameters, none))
 
 /-- [noble_contracts::component::parser::function::{noble_contracts::component::parser::Cursor<'_0>}::function]: loop 0:
-    Source: 'crates/noble-contracts/src/component/parser/function.rs', lines 19:8-30:9 -/
+    Source: 'crates/noble-contracts/src/component/parser/function.rs', lines 20:8-31:9 -/
 @[rust_loop]
-def component.parser.function.Cursor.function_loop
+def component.parser.function.Cursor.function_loop0
   (self : component.parser.Cursor)
   (parameters : alloc.vec.Vec component.parser.RawType)
   (names : alloc.vec.Vec String) :
@@ -11523,12 +12140,59 @@ def component.parser.function.Cursor.function_loop
   := do
   loop
     (fun (self1, parameters1, names1) =>
-      component.parser.function.Cursor.function_loop.body self1 parameters1
+      component.parser.function.Cursor.function_loop0.body self1 parameters1
+      names1)
+    (self, parameters, names)
+
+/-- [noble_contracts::component::parser::function::{noble_contracts::component::parser::Cursor<'_0>}::function]: loop body 1:
+    Source: 'crates/noble-contracts/src/component/parser/function.rs', lines 20:8-31:9 -/
+@[rust_loop_body]
+def component.parser.function.Cursor.function_loop1.body
+  (self : component.parser.Cursor)
+  (parameters : alloc.vec.Vec component.parser.RawType)
+  (names : alloc.vec.Vec String) :
+  Result (ControlFlow (component.parser.Cursor × (alloc.vec.Vec
+    component.parser.RawType) × (alloc.vec.Vec String))
+    (component.parser.Cursor × (alloc.vec.Vec component.parser.RawType) ×
+    (Option component.Error)))
+  := do
+  let i := alloc.vec.Vec.len parameters
+  if i < component.MAX_PARAMETERS
+  then
+    let b ← component.parser.cursor.Cursor.peek self (toStr ")")
+    if b
+    then ok (done (self, parameters, none))
+    else
+      let s := alloc.vec.Vec.deref names
+      let (r, self1) ← component.parser.function.Cursor.parameter self s
+      match r with
+      | core.result.Result.Ok p =>
+        let («name», ty) := p
+        let names1 ← alloc.vec.Vec.push names «name»
+        let parameters1 ← alloc.vec.Vec.push parameters ty
+        ok (cont (self1, parameters1, names1))
+      | core.result.Result.Err problem =>
+        ok (done (self1, parameters, some problem))
+  else ok (done (self, parameters, none))
+
+/-- [noble_contracts::component::parser::function::{noble_contracts::component::parser::Cursor<'_0>}::function]: loop 1:
+    Source: 'crates/noble-contracts/src/component/parser/function.rs', lines 20:8-31:9 -/
+@[rust_loop]
+def component.parser.function.Cursor.function_loop1
+  (self : component.parser.Cursor)
+  (parameters : alloc.vec.Vec component.parser.RawType)
+  (names : alloc.vec.Vec String) :
+  Result (component.parser.Cursor × (alloc.vec.Vec component.parser.RawType)
+    × (Option component.Error))
+  := do
+  loop
+    (fun (self1, parameters1, names1) =>
+      component.parser.function.Cursor.function_loop1.body self1 parameters1
       names1)
     (self, parameters, names)
 
 /-- [noble_contracts::component::parser::function::{noble_contracts::component::parser::Cursor<'_0>}::function]:
-    Source: 'crates/noble-contracts/src/component/parser/function.rs', lines 2:4-50:5 -/
+    Source: 'crates/noble-contracts/src/component/parser/function.rs', lines 2:4-52:5 -/
 def component.parser.function.Cursor.function
   (self : component.parser.Cursor) («name» : String) (method : Option String)
   :
@@ -11538,13 +12202,105 @@ def component.parser.function.Cursor.function
   let (r, self1) ← component.parser.cursor.Cursor.take self (toStr ":")
   match r with
   | core.result.Result.Ok _ =>
-    let b ← component.parser.cursor.Cursor.peek self1 (toStr "async")
-    if b
+    let is_async ← component.parser.cursor.Cursor.peek self1 (toStr "async")
+    if is_async
     then
-      let e ←
-        component.unsupported (toStr
-          "async and suspension, including async with borrow, are outside the synchronous boundary")
-      ok (core.result.Result.Err e, self1)
+      let (r1, self2) ←
+        component.parser.cursor.Cursor.take self1 (toStr "async")
+      match r1 with
+      | core.result.Result.Ok _ =>
+        let (r2, self3) ←
+          component.parser.cursor.Cursor.take self2 (toStr "func")
+        match r2 with
+        | core.result.Result.Ok _ =>
+          let (r3, self4) ←
+            component.parser.cursor.Cursor.take self3 (toStr "(")
+          match r3 with
+          | core.result.Result.Ok _ =>
+            let names :=
+              alloc.vec.Vec.with_capacity String component.MAX_PARAMETERS
+            let parameters ←
+              match method with
+              | none => ok (alloc.vec.Vec.new component.parser.RawType)
+              | some resource =>
+                do
+                let s ←
+                  alloc.string.String.Insts.CoreCloneClone.clone resource
+                alloc.vec.Vec.push (alloc.vec.Vec.new component.parser.RawType)
+                  (component.parser.RawType.Borrow s)
+            let (self5, parameters1, failure) ←
+              component.parser.function.Cursor.function_loop0 self4 parameters
+                names
+            match failure with
+            | none =>
+              let b ← component.parser.cursor.Cursor.peek self5 (toStr ")")
+              if b
+              then
+                let (r4, self6) ←
+                  component.parser.cursor.Cursor.take self5 (toStr ")")
+                match r4 with
+                | core.result.Result.Ok _ =>
+                  let b1 ←
+                    component.parser.cursor.Cursor.peek self6 (toStr "->")
+                  if b1
+                  then
+                    let (r5, self7) ←
+                      component.parser.cursor.Cursor.take self6 (toStr "->")
+                    match r5 with
+                    | core.result.Result.Ok _ =>
+                      let (r6, self8) ←
+                        component.parser.function.Cursor.ty self7
+                      match r6 with
+                      | core.result.Result.Ok value =>
+                        let results ←
+                          alloc.vec.Vec.push (alloc.vec.Vec.new
+                            component.parser.RawType) value
+                        let (r7, self9) ←
+                          component.parser.cursor.Cursor.take self8 (toStr ";")
+                        match r7 with
+                        | core.result.Result.Ok _ =>
+                          ok (core.result.Result.Ok
+                            {
+                              «name»,
+                              method,
+                              parameters := parameters1,
+                              results,
+                              asynchronous := true
+                            }, self9)
+                        | core.result.Result.Err failure1 =>
+                          ok (core.result.Result.Err failure1, self9)
+                      | core.result.Result.Err failure1 =>
+                        ok (core.result.Result.Err failure1, self8)
+                    | core.result.Result.Err failure1 =>
+                      ok (core.result.Result.Err failure1, self7)
+                  else
+                    let (r5, self7) ←
+                      component.parser.cursor.Cursor.take self6 (toStr ";")
+                    match r5 with
+                    | core.result.Result.Ok _ =>
+                      ok (core.result.Result.Ok
+                        {
+                          «name»,
+                          method,
+                          parameters := parameters1,
+                          results :=
+                            (alloc.vec.Vec.new component.parser.RawType),
+                          asynchronous := true
+                        }, self7)
+                    | core.result.Result.Err failure1 =>
+                      ok (core.result.Result.Err failure1, self7)
+                | core.result.Result.Err failure1 =>
+                  ok (core.result.Result.Err failure1, self6)
+              else
+                let e ← component.exhausted
+                ok (core.result.Result.Err e, self5)
+            | some problem => ok (core.result.Result.Err problem, self5)
+          | core.result.Result.Err failure =>
+            ok (core.result.Result.Err failure, self4)
+        | core.result.Result.Err failure =>
+          ok (core.result.Result.Err failure, self3)
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, self2)
     else
       let (r1, self2) ←
         component.parser.cursor.Cursor.take self1 (toStr "func")
@@ -11565,20 +12321,20 @@ def component.parser.function.Cursor.function
               alloc.vec.Vec.push (alloc.vec.Vec.new component.parser.RawType)
                 (component.parser.RawType.Borrow s)
           let (self4, parameters1, failure) ←
-            component.parser.function.Cursor.function_loop self3 parameters
+            component.parser.function.Cursor.function_loop1 self3 parameters
               names
           match failure with
           | none =>
-            let b1 ← component.parser.cursor.Cursor.peek self4 (toStr ")")
-            if b1
+            let b ← component.parser.cursor.Cursor.peek self4 (toStr ")")
+            if b
             then
               let (r3, self5) ←
                 component.parser.cursor.Cursor.take self4 (toStr ")")
               match r3 with
               | core.result.Result.Ok _ =>
-                let b2 ←
+                let b1 ←
                   component.parser.cursor.Cursor.peek self5 (toStr "->")
-                if b2
+                if b1
                 then
                   let (r4, self6) ←
                     component.parser.cursor.Cursor.take self5 (toStr "->")
@@ -11600,7 +12356,8 @@ def component.parser.function.Cursor.function
                             «name»,
                             method,
                             parameters := parameters1,
-                            results
+                            results,
+                            asynchronous := false
                           }, self8)
                       | core.result.Result.Err failure1 =>
                         ok (core.result.Result.Err failure1, self8)
@@ -11618,7 +12375,8 @@ def component.parser.function.Cursor.function
                         «name»,
                         method,
                         parameters := parameters1,
-                        results := (alloc.vec.Vec.new component.parser.RawType)
+                        results := (alloc.vec.Vec.new component.parser.RawType),
+                        asynchronous := false
                       }, self6)
                   | core.result.Result.Err failure1 =>
                     ok (core.result.Result.Err failure1, self6)
@@ -11636,7 +12394,7 @@ def component.parser.function.Cursor.function
     ok (core.result.Result.Err failure, self1)
 
 /-- [noble_contracts::component::parser::{noble_contracts::component::parser::Cursor<'_0>}::method]:
-    Source: 'crates/noble-contracts/src/component/parser.rs', lines 196:4-204:5 -/
+    Source: 'crates/noble-contracts/src/component/parser.rs', lines 201:4-209:5 -/
 def component.parser.Cursor.method
   (self : component.parser.Cursor) (resource : Str)
   (interface : component.parser.Interface) :
@@ -11666,7 +12424,7 @@ def component.parser.Cursor.method
       ok (core.result.Result.Err failure, self1, interface)
 
 /-- [noble_contracts::component::parser::{noble_contracts::component::parser::Cursor<'_0>}::resource]: loop body 0:
-    Source: 'crates/noble-contracts/src/component/parser.rs', lines 184:8-189:9 -/
+    Source: 'crates/noble-contracts/src/component/parser.rs', lines 189:8-194:9 -/
 @[rust_loop_body]
 def component.parser.Cursor.resource_loop.body
   («name» : String) (self : component.parser.Cursor)
@@ -11688,7 +12446,7 @@ def component.parser.Cursor.resource_loop.body
       ok (done (self1, interface1, some problem))
 
 /-- [noble_contracts::component::parser::{noble_contracts::component::parser::Cursor<'_0>}::resource]: loop 0:
-    Source: 'crates/noble-contracts/src/component/parser.rs', lines 184:8-189:9 -/
+    Source: 'crates/noble-contracts/src/component/parser.rs', lines 189:8-194:9 -/
 @[rust_loop]
 def component.parser.Cursor.resource_loop
   (self : component.parser.Cursor) (interface : component.parser.Interface)
@@ -11702,7 +12460,7 @@ def component.parser.Cursor.resource_loop
     (self, interface)
 
 /-- [noble_contracts::component::parser::{noble_contracts::component::parser::Cursor<'_0>}::resource]:
-    Source: 'crates/noble-contracts/src/component/parser.rs', lines 171:4-194:5 -/
+    Source: 'crates/noble-contracts/src/component/parser.rs', lines 176:4-199:5 -/
 def component.parser.Cursor.resource
   (self : component.parser.Cursor) (interface : component.parser.Interface) :
   Result ((core.result.Result Unit component.Error) × component.parser.Cursor
@@ -11762,7 +12520,7 @@ def component.parser.Cursor.resource
   | core.result.Result.Err _ => ok (r, self1, interface)
 
 /-- [noble_contracts::component::parser::{noble_contracts::component::parser::Cursor<'_0>}::interface_item]:
-    Source: 'crates/noble-contracts/src/component/parser.rs', lines 157:4-169:5 -/
+    Source: 'crates/noble-contracts/src/component/parser.rs', lines 162:4-174:5 -/
 def component.parser.Cursor.interface_item
   (self : component.parser.Cursor) (interface : component.parser.Interface) :
   Result ((core.result.Result Unit component.Error) × component.parser.Cursor
@@ -11794,7 +12552,7 @@ def component.parser.Cursor.interface_item
         ok (core.result.Result.Err failure, self1, interface)
 
 /-- [noble_contracts::component::parser::{noble_contracts::component::parser::Cursor<'_0>}::interface]: loop body 0:
-    Source: 'crates/noble-contracts/src/component/parser.rs', lines 144:8-149:9 -/
+    Source: 'crates/noble-contracts/src/component/parser.rs', lines 149:8-154:9 -/
 @[rust_loop_body]
 def component.parser.Cursor.interface_loop.body
   (self : component.parser.Cursor) (interface : component.parser.Interface) :
@@ -11814,7 +12572,7 @@ def component.parser.Cursor.interface_loop.body
       ok (done (self1, interface1, some problem))
 
 /-- [noble_contracts::component::parser::{noble_contracts::component::parser::Cursor<'_0>}::interface]: loop 0:
-    Source: 'crates/noble-contracts/src/component/parser.rs', lines 144:8-149:9 -/
+    Source: 'crates/noble-contracts/src/component/parser.rs', lines 149:8-154:9 -/
 @[rust_loop]
 def component.parser.Cursor.interface_loop
   (self : component.parser.Cursor) (interface : component.parser.Interface) :
@@ -11827,7 +12585,7 @@ def component.parser.Cursor.interface_loop
     (self, interface)
 
 /-- [noble_contracts::component::parser::{noble_contracts::component::parser::Cursor<'_0>}::interface]:
-    Source: 'crates/noble-contracts/src/component/parser.rs', lines 135:4-155:5 -/
+    Source: 'crates/noble-contracts/src/component/parser.rs', lines 140:4-160:5 -/
 def component.parser.Cursor.interface
   (self : component.parser.Cursor) :
   Result ((core.result.Result component.parser.Interface component.Error) ×
@@ -12163,7 +12921,7 @@ def component.parser.world.Cursor.world
     ok (core.result.Result.Err failure, self1)
 
 /-- [noble_contracts::component::parser::{noble_contracts::component::parser::Cursor<'_0>}::declaration]:
-    Source: 'crates/noble-contracts/src/component/parser.rs', lines 114:4-133:5 -/
+    Source: 'crates/noble-contracts/src/component/parser.rs', lines 119:4-138:5 -/
 def component.parser.Cursor.declaration
   (self : component.parser.Cursor) (package : component.parser.Package) :
   Result ((core.result.Result Unit component.Error) × component.parser.Cursor
@@ -12500,7 +13258,7 @@ def component.parser.cursor.Cursor.version
   | some problem => ok (core.result.Result.Err problem, self1)
 
 /-- [noble_contracts::component::parser::{noble_contracts::component::parser::Cursor<'_0>}::package]: loop body 0:
-    Source: 'crates/noble-contracts/src/component/parser.rs', lines 98:8-103:9 -/
+    Source: 'crates/noble-contracts/src/component/parser.rs', lines 103:8-108:9 -/
 @[rust_loop_body]
 def component.parser.Cursor.package_loop.body
   (self : component.parser.Cursor) (package : component.parser.Package) :
@@ -12520,7 +13278,7 @@ def component.parser.Cursor.package_loop.body
   else ok (done (self, package, none))
 
 /-- [noble_contracts::component::parser::{noble_contracts::component::parser::Cursor<'_0>}::package]: loop 0:
-    Source: 'crates/noble-contracts/src/component/parser.rs', lines 98:8-103:9 -/
+    Source: 'crates/noble-contracts/src/component/parser.rs', lines 103:8-108:9 -/
 @[rust_loop]
 def component.parser.Cursor.package_loop
   (self : component.parser.Cursor) (package : component.parser.Package) :
@@ -12533,7 +13291,7 @@ def component.parser.Cursor.package_loop
     (self, package)
 
 /-- [noble_contracts::component::parser::{noble_contracts::component::parser::Cursor<'_0>}::package]:
-    Source: 'crates/noble-contracts/src/component/parser.rs', lines 82:4-108:5 -/
+    Source: 'crates/noble-contracts/src/component/parser.rs', lines 87:4-113:5 -/
 def component.parser.Cursor.package
   (self : component.parser.Cursor) :
   Result ((core.result.Result component.parser.Package component.Error) ×
@@ -12591,7 +13349,7 @@ def component.parser.Cursor.package
     ok (core.result.Result.Err failure, self1)
 
 /-- [noble_contracts::component::parser::resolve::number]:
-    Source: 'crates/noble-contracts/src/component/parser/resolve.rs', lines 247:0-252:1 -/
+    Source: 'crates/noble-contracts/src/component/parser/resolve.rs', lines 267:0-272:1 -/
 def component.parser.resolve.number
   (value : Std.Usize) :
   Result (core.result.Result Std.U32 component.Error)
@@ -12603,8 +13361,55 @@ def component.parser.resolve.number
     let e ← component.exhausted
     ok (core.result.Result.Err e)
 
+/-- [noble_contracts::component::parser::resolve::contains_live]: loop body 0:
+    Source: 'crates/noble-contracts/src/component/parser/resolve.rs', lines 249:10-257:9 -/
+@[rust_loop_body]
+def component.parser.resolve.contains_live_loop.body
+  (types : Slice component.Type) («at» : Std.Usize) :
+  Result (ControlFlow Std.Usize Bool)
+  := do
+  let i := Slice.len types
+  if «at» < i
+  then
+    let t ← Slice.index_usize types «at»
+    let b ←
+      match t with
+      | component.Type.Boolean => ok false
+      | component.Type.S64 => ok false
+      | component.Type.String => ok false
+      | component.Type.Bytes => ok false
+      | component.Type.ResultS64String => ok false
+      | component.Type.ResultBytesString => ok false
+      | component.Type.StreamU8 => ok true
+      | component.Type.FutureS64 => ok true
+      | component.Type.FutureResultS64String => ok true
+      | component.Type.Own _ => ok false
+      | component.Type.Borrow _ => ok false
+    if b
+    then ok (done true)
+    else
+      let at1 ← lift (core.num.Usize.saturating_add «at» 1#usize)
+      ok (cont at1)
+  else ok (done false)
+
+/-- [noble_contracts::component::parser::resolve::contains_live]: loop 0:
+    Source: 'crates/noble-contracts/src/component/parser/resolve.rs', lines 249:10-257:9 -/
+@[rust_loop]
+def component.parser.resolve.contains_live_loop
+  (types : Slice component.Type) («at» : Std.Usize) : Result Bool := do
+  loop
+    (fun at1 => component.parser.resolve.contains_live_loop.body types at1)
+    «at»
+
+/-- [noble_contracts::component::parser::resolve::contains_live]:
+    Source: 'crates/noble-contracts/src/component/parser/resolve.rs', lines 247:0-261:1 -/
+@[reducible]
+def component.parser.resolve.contains_live
+  (types : Slice component.Type) : Result Bool := do
+  component.parser.resolve.contains_live_loop types 0#usize
+
 /-- [noble_contracts::component::parser::resolve::{noble_contracts::component::parser::resolve::Context<'_0>}::install::{impl core::ops::function::FnMut<(&'_ noble_contracts::component::Operation,), bool> for noble_contracts::component::parser::resolve::{noble_contracts::component::parser::resolve::Context<'_0>}::install::{closure}<'_0, '_1, '_2>}::call_mut]:
-    Source: 'crates/noble-contracts/src/component/parser/resolve.rs', lines 232:17-232:93 -/
+    Source: 'crates/noble-contracts/src/component/parser/resolve.rs', lines 236:17-236:93 -/
 def
   component.parser.resolve.Context.install.closure.Insts.CoreOpsFunctionFnMutTupleSharedOperationBool.call_mut
   (c : component.parser.resolve.Context.install.closure)
@@ -12623,7 +13428,7 @@ def
     ok (b1, c)
 
 /-- [noble_contracts::component::parser::resolve::{noble_contracts::component::parser::resolve::Context<'_0>}::install::{impl core::ops::function::FnOnce<(&'_ noble_contracts::component::Operation,), bool> for noble_contracts::component::parser::resolve::{noble_contracts::component::parser::resolve::Context<'_0>}::install::{closure}<'_0, '_1, '_2>}::call_once]:
-    Source: 'crates/noble-contracts/src/component/parser/resolve.rs', lines 232:17-232:93 -/
+    Source: 'crates/noble-contracts/src/component/parser/resolve.rs', lines 236:17-236:93 -/
 def
   component.parser.resolve.Context.install.closure.Insts.CoreOpsFunctionFnOnceTupleSharedOperationBool.call_once
   (c : component.parser.resolve.Context.install.closure)
@@ -12636,7 +13441,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_contracts::component::parser::resolve::{noble_contracts::component::parser::resolve::Context<'_0>}::install::{impl core::ops::function::FnOnce<(&'_ noble_contracts::component::Operation,), bool> for noble_contracts::component::parser::resolve::{noble_contracts::component::parser::resolve::Context<'_0>}::install::{closure}<'_0, '_1, '_2>}]
-    Source: 'crates/noble-contracts/src/component/parser/resolve.rs', lines 232:17-232:93 -/
+    Source: 'crates/noble-contracts/src/component/parser/resolve.rs', lines 236:17-236:93 -/
 @[reducible]
 def
   component.parser.resolve.Context.install.closure.Insts.CoreOpsFunctionFnOnceTupleSharedOperationBool
@@ -12647,7 +13452,7 @@ def
 }
 
 /-- Trait implementation: [noble_contracts::component::parser::resolve::{noble_contracts::component::parser::resolve::Context<'_0>}::install::{impl core::ops::function::FnMut<(&'_ noble_contracts::component::Operation,), bool> for noble_contracts::component::parser::resolve::{noble_contracts::component::parser::resolve::Context<'_0>}::install::{closure}<'_0, '_1, '_2>}]
-    Source: 'crates/noble-contracts/src/component/parser/resolve.rs', lines 232:17-232:93 -/
+    Source: 'crates/noble-contracts/src/component/parser/resolve.rs', lines 236:17-236:93 -/
 @[reducible]
 def
   component.parser.resolve.Context.install.closure.Insts.CoreOpsFunctionFnMutTupleSharedOperationBool
@@ -12660,7 +13465,7 @@ def
 }
 
 /-- [noble_contracts::component::parser::resolve::method_name]:
-    Source: 'crates/noble-contracts/src/component/parser/resolve.rs', lines 113:0-124:1 -/
+    Source: 'crates/noble-contracts/src/component/parser/resolve.rs', lines 114:0-125:1 -/
 def component.parser.resolve.method_name
   (resource : Str) (function : component.parser.Function) : Result String := do
   let i ← core.str.Str.len resource
@@ -12675,7 +13480,7 @@ def component.parser.resolve.method_name
   alloc.string.String.push_str result3 s
 
 /-- [noble_contracts::component::parser::resolve::joined]:
-    Source: 'crates/noble-contracts/src/component/parser/resolve.rs', lines 101:0-111:1 -/
+    Source: 'crates/noble-contracts/src/component/parser/resolve.rs', lines 102:0-112:1 -/
 def component.parser.resolve.joined
   («prefix» : Str) (separator : Str) (suffix : Str) : Result String := do
   let i ← core.str.Str.len «prefix»
@@ -12689,7 +13494,7 @@ def component.parser.resolve.joined
   alloc.string.String.push_str result2 suffix
 
 /-- [noble_contracts::component::parser::resolve::qualified]:
-    Source: 'crates/noble-contracts/src/component/parser/resolve.rs', lines 78:0-95:1 -/
+    Source: 'crates/noble-contracts/src/component/parser/resolve.rs', lines 79:0-96:1 -/
 def component.parser.resolve.qualified
   (package : component.parser.Package) («name» : Str) : Result String := do
   let i ← alloc.string.String.len package.namespace
@@ -12730,7 +13535,7 @@ def component.parser.resolve.BOOTSTRAP_DEFINITIONS : Std.Usize := 24#usize
 def component.parser.resolve.MAX_FLAT_PARAMETERS : Std.Usize := 16#usize
 
 /-- [noble_contracts::component::parser::resolve::types::use_index]: loop body 0:
-    Source: 'crates/noble-contracts/src/component/parser/resolve/types.rs', lines 92:4-103:5 -/
+    Source: 'crates/noble-contracts/src/component/parser/resolve/types.rs', lines 98:4-109:5 -/
 @[rust_loop_body]
 def component.parser.resolve.types.use_index_loop.body
   (selected : component.parser.RawWorld) («name» : Str)
@@ -12771,7 +13576,7 @@ def component.parser.resolve.types.use_index_loop.body
         ok (cont (scope, at1))
 
 /-- [noble_contracts::component::parser::resolve::types::use_index]: loop 0:
-    Source: 'crates/noble-contracts/src/component/parser/resolve/types.rs', lines 92:4-103:5 -/
+    Source: 'crates/noble-contracts/src/component/parser/resolve/types.rs', lines 98:4-109:5 -/
 @[rust_loop]
 def component.parser.resolve.types.use_index_loop
   (selected : component.parser.RawWorld) («name» : Str)
@@ -12784,7 +13589,7 @@ def component.parser.resolve.types.use_index_loop
     (scope, «at»)
 
 /-- [noble_contracts::component::parser::resolve::types::use_index]:
-    Source: 'crates/noble-contracts/src/component/parser/resolve/types.rs', lines 85:0-108:1 -/
+    Source: 'crates/noble-contracts/src/component/parser/resolve/types.rs', lines 91:0-114:1 -/
 def component.parser.resolve.types.use_index
   (selected : component.parser.RawWorld) («name» : Str) :
   Result (core.result.Result (Option Std.Usize) component.Error)
@@ -12797,7 +13602,7 @@ def component.parser.resolve.types.use_index
   | some problem => ok (core.result.Result.Err problem)
 
 /-- [noble_contracts::component::parser::resolve::types::scoped_resource::{impl core::ops::function::FnMut<(&'_ noble_contracts::component::Resource,), bool> for noble_contracts::component::parser::resolve::types::scoped_resource::{closure}<'_0, '_1, '_2, '_3>}::call_mut]:
-    Source: 'crates/noble-contracts/src/component/parser/resolve/types.rs', lines 64:18-64:85 -/
+    Source: 'crates/noble-contracts/src/component/parser/resolve/types.rs', lines 70:18-70:85 -/
 def
   component.parser.resolve.types.scoped_resource.closure.Insts.CoreOpsFunctionFnMutTupleSharedResourceBool.call_mut
   (c : component.parser.resolve.types.scoped_resource.closure)
@@ -12816,7 +13621,7 @@ def
   else ok (false, c)
 
 /-- [noble_contracts::component::parser::resolve::types::scoped_resource::{impl core::ops::function::FnOnce<(&'_ noble_contracts::component::Resource,), bool> for noble_contracts::component::parser::resolve::types::scoped_resource::{closure}<'_0, '_1, '_2, '_3>}::call_once]:
-    Source: 'crates/noble-contracts/src/component/parser/resolve/types.rs', lines 64:18-64:85 -/
+    Source: 'crates/noble-contracts/src/component/parser/resolve/types.rs', lines 70:18-70:85 -/
 def
   component.parser.resolve.types.scoped_resource.closure.Insts.CoreOpsFunctionFnOnceTupleSharedResourceBool.call_once
   (c : component.parser.resolve.types.scoped_resource.closure)
@@ -12829,7 +13634,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_contracts::component::parser::resolve::types::scoped_resource::{impl core::ops::function::FnOnce<(&'_ noble_contracts::component::Resource,), bool> for noble_contracts::component::parser::resolve::types::scoped_resource::{closure}<'_0, '_1, '_2, '_3>}]
-    Source: 'crates/noble-contracts/src/component/parser/resolve/types.rs', lines 64:18-64:85 -/
+    Source: 'crates/noble-contracts/src/component/parser/resolve/types.rs', lines 70:18-70:85 -/
 @[reducible]
 def
   component.parser.resolve.types.scoped_resource.closure.Insts.CoreOpsFunctionFnOnceTupleSharedResourceBool
@@ -12841,7 +13646,7 @@ def
 }
 
 /-- Trait implementation: [noble_contracts::component::parser::resolve::types::scoped_resource::{impl core::ops::function::FnMut<(&'_ noble_contracts::component::Resource,), bool> for noble_contracts::component::parser::resolve::types::scoped_resource::{closure}<'_0, '_1, '_2, '_3>}]
-    Source: 'crates/noble-contracts/src/component/parser/resolve/types.rs', lines 64:18-64:85 -/
+    Source: 'crates/noble-contracts/src/component/parser/resolve/types.rs', lines 70:18-70:85 -/
 @[reducible]
 def
   component.parser.resolve.types.scoped_resource.closure.Insts.CoreOpsFunctionFnMutTupleSharedResourceBool
@@ -12855,7 +13660,7 @@ def
 }
 
 /-- [noble_contracts::component::parser::resolve::types::scoped_resource]:
-    Source: 'crates/noble-contracts/src/component/parser/resolve/types.rs', lines 57:0-79:1 -/
+    Source: 'crates/noble-contracts/src/component/parser/resolve/types.rs', lines 63:0-85:1 -/
 def component.parser.resolve.types.scoped_resource
   (resources : Slice component.Resource) (interface : Str) («name» : Str) :
   Result (core.result.Result noble_kernel.types.ResourceKind component.Error)
@@ -12883,7 +13688,7 @@ def component.parser.resolve.types.scoped_resource
     | some resource => ok (core.result.Result.Ok resource.kind)
 
 /-- [noble_contracts::component::parser::resolve::types::resource]:
-    Source: 'crates/noble-contracts/src/component/parser/resolve/types.rs', lines 22:0-50:1 -/
+    Source: 'crates/noble-contracts/src/component/parser/resolve/types.rs', lines 28:0-56:1 -/
 def component.parser.resolve.types.resource
   (resources : Slice component.Resource) (interface : Option Str)
   («name» : Str) (selected : component.parser.RawWorld) :
@@ -12935,7 +13740,7 @@ def component.parser.resolve.types.resource
       «name»
 
 /-- [noble_contracts::component::parser::resolve::types::ty]:
-    Source: 'crates/noble-contracts/src/component/parser/resolve/types.rs', lines 1:0-20:1 -/
+    Source: 'crates/noble-contracts/src/component/parser/resolve/types.rs', lines 1:0-26:1 -/
 def component.parser.resolve.types.ty
   (ty : component.parser.RawType) (interface : Option Str)
   (selected : component.parser.RawWorld) (resources : Slice component.Resource)
@@ -12953,6 +13758,14 @@ def component.parser.resolve.types.ty
     ok (core.result.Result.Ok component.Type.Bytes)
   | component.parser.RawType.ResultS64String =>
     ok (core.result.Result.Ok component.Type.ResultS64String)
+  | component.parser.RawType.ResultBytesString =>
+    ok (core.result.Result.Ok component.Type.ResultBytesString)
+  | component.parser.RawType.StreamU8 =>
+    ok (core.result.Result.Ok component.Type.StreamU8)
+  | component.parser.RawType.FutureS64 =>
+    ok (core.result.Result.Ok component.Type.FutureS64)
+  | component.parser.RawType.FutureResultS64String =>
+    ok (core.result.Result.Ok component.Type.FutureResultS64String)
   | component.parser.RawType.Own «name» =>
     let s ← alloc.string.String.Insts.CoreOpsDerefDerefStr.deref «name»
     let r ←
@@ -12971,7 +13784,7 @@ def component.parser.resolve.types.ty
     | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_contracts::component::parser::resolve::signature::{noble_contracts::component::parser::resolve::Context<'_0>}::signature::{impl core::ops::function::FnMut<(usize, &'_ noble_contracts::component::Type), usize> for noble_contracts::component::parser::resolve::signature::{noble_contracts::component::parser::resolve::Context<'_0>}::signature::{closure}<'_0>}::call_mut]:
-    Source: 'crates/noble-contracts/src/component/parser/resolve/signature.rs', lines 44:56-53:9 -/
+    Source: 'crates/noble-contracts/src/component/parser/resolve/signature.rs', lines 50:56-63:9 -/
 def
   component.parser.resolve.signature.Context.signature.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTypeUsize.call_mut
   (c : component.parser.resolve.signature.Context.signature.closure)
@@ -12987,13 +13800,17 @@ def
     | component.Type.String => ok 2#usize
     | component.Type.Bytes => ok 2#usize
     | component.Type.ResultS64String => ok 3#usize
+    | component.Type.ResultBytesString => ok 3#usize
+    | component.Type.StreamU8 => ok 1#usize
+    | component.Type.FutureS64 => ok 1#usize
+    | component.Type.FutureResultS64String => ok 1#usize
     | component.Type.Own _ => ok 1#usize
     | component.Type.Borrow _ => ok 1#usize
   let i1 ← lift (core.num.Usize.saturating_add count i)
   ok (i1, ())
 
 /-- [noble_contracts::component::parser::resolve::signature::{noble_contracts::component::parser::resolve::Context<'_0>}::signature::{impl core::ops::function::FnOnce<(usize, &'_ noble_contracts::component::Type), usize> for noble_contracts::component::parser::resolve::signature::{noble_contracts::component::parser::resolve::Context<'_0>}::signature::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/component/parser/resolve/signature.rs', lines 44:56-53:9 -/
+    Source: 'crates/noble-contracts/src/component/parser/resolve/signature.rs', lines 50:56-63:9 -/
 def
   component.parser.resolve.signature.Context.signature.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTypeUsize.call_once
   (c : component.parser.resolve.signature.Context.signature.closure)
@@ -13006,7 +13823,7 @@ def
   ok i
 
 /-- Trait implementation: [noble_contracts::component::parser::resolve::signature::{noble_contracts::component::parser::resolve::Context<'_0>}::signature::{impl core::ops::function::FnOnce<(usize, &'_ noble_contracts::component::Type), usize> for noble_contracts::component::parser::resolve::signature::{noble_contracts::component::parser::resolve::Context<'_0>}::signature::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/component/parser/resolve/signature.rs', lines 44:56-53:9 -/
+    Source: 'crates/noble-contracts/src/component/parser/resolve/signature.rs', lines 50:56-63:9 -/
 @[reducible]
 def
   component.parser.resolve.signature.Context.signature.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTypeUsize
@@ -13018,7 +13835,7 @@ def
 }
 
 /-- Trait implementation: [noble_contracts::component::parser::resolve::signature::{noble_contracts::component::parser::resolve::Context<'_0>}::signature::{impl core::ops::function::FnMut<(usize, &'_ noble_contracts::component::Type), usize> for noble_contracts::component::parser::resolve::signature::{noble_contracts::component::parser::resolve::Context<'_0>}::signature::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/component/parser/resolve/signature.rs', lines 44:56-53:9 -/
+    Source: 'crates/noble-contracts/src/component/parser/resolve/signature.rs', lines 50:56-63:9 -/
 @[reducible]
 def
   component.parser.resolve.signature.Context.signature.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTypeUsize
@@ -13032,15 +13849,15 @@ def
 }
 
 /-- [noble_contracts::component::parser::resolve::signature::{noble_contracts::component::parser::resolve::Context<'_0>}::signature]: loop body 0:
-    Source: 'crates/noble-contracts/src/component/parser/resolve/signature.rs', lines 19:8-40:9 -/
+    Source: 'crates/noble-contracts/src/component/parser/resolve/signature.rs', lines 19:8-46:9 -/
 @[rust_loop_body]
 def component.parser.resolve.signature.Context.signature_loop0.body
   (rw : component.parser.RawWorld) (interface : Option Str)
   (v : alloc.vec.Vec component.parser.RawType)
-  (resources : Slice component.Resource) (is_imported : Bool)
+  (resources : Slice component.Resource) (b : Bool) (is_imported : Bool)
   (parameters : alloc.vec.Vec component.Type) («at» : Std.Usize) :
-  Result (ControlFlow (Bool × (alloc.vec.Vec component.Type) × Std.Usize)
-    ((alloc.vec.Vec component.Type) × (Option component.Error)))
+  Result (ControlFlow (Bool × Bool × (alloc.vec.Vec component.Type) ×
+    Std.Usize) ((alloc.vec.Vec component.Type) × (Option component.Error)))
   := do
   let i := alloc.vec.Vec.len v
   if «at» < i
@@ -13051,52 +13868,108 @@ def component.parser.resolve.signature.Context.signature_loop0.body
     let r ← component.parser.resolve.types.ty rt interface rw resources
     match r with
     | core.result.Result.Ok value =>
-      if is_imported
+      if b
       then
-        let parameters1 ← alloc.vec.Vec.push parameters value
-        let at1 ← lift (core.num.Usize.saturating_add «at» 1#usize)
-        ok (cont (true, parameters1, at1))
-      else
-        let b ←
+        let b1 ←
           match value with
           | component.Type.Boolean => ok false
           | component.Type.S64 => ok false
           | component.Type.String => ok false
           | component.Type.Bytes => ok false
           | component.Type.ResultS64String => ok false
+          | component.Type.ResultBytesString => ok false
+          | component.Type.StreamU8 => ok false
+          | component.Type.FutureS64 => ok false
+          | component.Type.FutureResultS64String => ok false
           | component.Type.Own _ => ok false
           | component.Type.Borrow _ => ok true
-        if b
+        if b1
         then
           let e ←
             component.unsupported (toStr
-              "borrowed exports are outside the synchronous subset")
+              "an async WIT operation cannot retain a borrow")
           ok (done (parameters, some e))
         else
+          if is_imported
+          then
+            let parameters1 ← alloc.vec.Vec.push parameters value
+            let at1 ← lift (core.num.Usize.saturating_add «at» 1#usize)
+            ok (cont (true, true, parameters1, at1))
+          else
+            let b2 ←
+              match value with
+              | component.Type.Boolean => ok false
+              | component.Type.S64 => ok false
+              | component.Type.String => ok false
+              | component.Type.Bytes => ok false
+              | component.Type.ResultS64String => ok false
+              | component.Type.ResultBytesString => ok false
+              | component.Type.StreamU8 => ok false
+              | component.Type.FutureS64 => ok false
+              | component.Type.FutureResultS64String => ok false
+              | component.Type.Own _ => ok false
+              | component.Type.Borrow _ => ok true
+            if b2
+            then
+              let e ←
+                component.unsupported (toStr
+                  "borrowed exports are outside the synchronous subset")
+              ok (done (parameters, some e))
+            else
+              let parameters1 ← alloc.vec.Vec.push parameters value
+              let at1 ← lift (core.num.Usize.saturating_add «at» 1#usize)
+              ok (cont (true, false, parameters1, at1))
+      else
+        if is_imported
+        then
           let parameters1 ← alloc.vec.Vec.push parameters value
           let at1 ← lift (core.num.Usize.saturating_add «at» 1#usize)
-          ok (cont (false, parameters1, at1))
+          ok (cont (false, true, parameters1, at1))
+        else
+          let b1 ←
+            match value with
+            | component.Type.Boolean => ok false
+            | component.Type.S64 => ok false
+            | component.Type.String => ok false
+            | component.Type.Bytes => ok false
+            | component.Type.ResultS64String => ok false
+            | component.Type.ResultBytesString => ok false
+            | component.Type.StreamU8 => ok false
+            | component.Type.FutureS64 => ok false
+            | component.Type.FutureResultS64String => ok false
+            | component.Type.Own _ => ok false
+            | component.Type.Borrow _ => ok true
+          if b1
+          then
+            let e ←
+              component.unsupported (toStr
+                "borrowed exports are outside the synchronous subset")
+            ok (done (parameters, some e))
+          else
+            let parameters1 ← alloc.vec.Vec.push parameters value
+            let at1 ← lift (core.num.Usize.saturating_add «at» 1#usize)
+            ok (cont (false, false, parameters1, at1))
     | core.result.Result.Err problem => ok (done (parameters, some problem))
   else ok (done (parameters, none))
 
 /-- [noble_contracts::component::parser::resolve::signature::{noble_contracts::component::parser::resolve::Context<'_0>}::signature]: loop 0:
-    Source: 'crates/noble-contracts/src/component/parser/resolve/signature.rs', lines 19:8-40:9 -/
+    Source: 'crates/noble-contracts/src/component/parser/resolve/signature.rs', lines 19:8-46:9 -/
 @[rust_loop]
 def component.parser.resolve.signature.Context.signature_loop0
   (rw : component.parser.RawWorld) (interface : Option Str)
-  (v : alloc.vec.Vec component.parser.RawType)
+  (v : alloc.vec.Vec component.parser.RawType) (b : Bool)
   (resources : Slice component.Resource) (is_imported : Bool)
   (parameters : alloc.vec.Vec component.Type) («at» : Std.Usize) :
   Result ((alloc.vec.Vec component.Type) × (Option component.Error))
   := do
   loop
-    (fun (is_imported1, parameters1, at1) =>
+    (fun (b1, is_imported1, parameters1, at1) =>
       component.parser.resolve.signature.Context.signature_loop0.body rw
-      interface v resources is_imported1 parameters1 at1)
-    (is_imported, parameters, «at»)
+      interface v resources b1 is_imported1 parameters1 at1)
+    (b, is_imported, parameters, «at»)
 
 /-- [noble_contracts::component::parser::resolve::signature::{noble_contracts::component::parser::resolve::Context<'_0>}::signature]: loop body 1:
-    Source: 'crates/noble-contracts/src/component/parser/resolve/signature.rs', lines 60:8-81:9 -/
+    Source: 'crates/noble-contracts/src/component/parser/resolve/signature.rs', lines 70:8-91:9 -/
 @[rust_loop_body]
 def component.parser.resolve.signature.Context.signature_loop1.body
   (rw : component.parser.RawWorld) (interface : Option Str)
@@ -13122,6 +13995,10 @@ def component.parser.resolve.signature.Context.signature_loop1.body
         | component.Type.String => ok false
         | component.Type.Bytes => ok false
         | component.Type.ResultS64String => ok false
+        | component.Type.ResultBytesString => ok false
+        | component.Type.StreamU8 => ok false
+        | component.Type.FutureS64 => ok false
+        | component.Type.FutureResultS64String => ok false
         | component.Type.Own _ => ok false
         | component.Type.Borrow _ => ok true
       if b
@@ -13138,7 +14015,7 @@ def component.parser.resolve.signature.Context.signature_loop1.body
   else ok (done (results, none))
 
 /-- [noble_contracts::component::parser::resolve::signature::{noble_contracts::component::parser::resolve::Context<'_0>}::signature]: loop 1:
-    Source: 'crates/noble-contracts/src/component/parser/resolve/signature.rs', lines 60:8-81:9 -/
+    Source: 'crates/noble-contracts/src/component/parser/resolve/signature.rs', lines 70:8-91:9 -/
 @[rust_loop]
 def component.parser.resolve.signature.Context.signature_loop1
   (rw : component.parser.RawWorld) (interface : Option Str)
@@ -13154,7 +14031,7 @@ def component.parser.resolve.signature.Context.signature_loop1
     (results, «at»)
 
 /-- [noble_contracts::component::parser::resolve::signature::{noble_contracts::component::parser::resolve::Context<'_0>}::signature]:
-    Source: 'crates/noble-contracts/src/component/parser/resolve/signature.rs', lines 2:4-86:5 -/
+    Source: 'crates/noble-contracts/src/component/parser/resolve/signature.rs', lines 2:4-96:5 -/
 def component.parser.resolve.signature.Context.signature
   (self : component.parser.resolve.Context) (interface : Option Str)
   (function : component.parser.Function) (resources : Slice component.Resource)
@@ -13168,7 +14045,8 @@ def component.parser.resolve.signature.Context.signature
   let results := alloc.vec.Vec.with_capacity component.Type i1
   let (parameters1, failure) ←
     component.parser.resolve.signature.Context.signature_loop0 self.selected
-      interface function.parameters resources is_imported parameters 0#usize
+      interface function.parameters function.asynchronous resources is_imported
+      parameters 0#usize
   match failure with
   | none =>
     let s := alloc.vec.Vec.deref parameters1
@@ -13193,7 +14071,7 @@ def component.parser.resolve.signature.Context.signature
   | some problem => ok (core.result.Result.Err problem)
 
 /-- [noble_contracts::component::parser::resolve::{noble_contracts::component::parser::resolve::Context<'_0>}::install]:
-    Source: 'crates/noble-contracts/src/component/parser/resolve.rs', lines 164:4-240:5 -/
+    Source: 'crates/noble-contracts/src/component/parser/resolve.rs', lines 165:4-244:5 -/
 def component.parser.resolve.Context.install
   (self : component.parser.resolve.Context) (interface : Option Str)
   (function : component.parser.Function) (is_imported : Bool)
@@ -13207,6 +14085,20 @@ def component.parser.resolve.Context.install
   match r with
   | core.result.Result.Ok value =>
     let (parameters, results) := value
+    let (b, b1) ←
+      if function.asynchronous
+      then ok (true, true)
+      else
+        do
+        let s1 := alloc.vec.Vec.deref parameters
+        let b2 ← component.parser.resolve.contains_live s1
+        let b3 ←
+          if b2
+          then ok true
+          else
+            let s2 := alloc.vec.Vec.deref results
+            component.parser.resolve.contains_live s2
+        ok (false, b3)
     let (o, «name») ←
       match function.method with
       | none =>
@@ -13218,7 +14110,9 @@ def component.parser.resolve.Context.install
         do
         let s1 ←
           alloc.string.String.Insts.CoreOpsDerefDerefStr.deref resource
-        let name1 ← component.parser.resolve.method_name s1 function
+        let name1 ←
+          component.parser.resolve.method_name s1
+            { function with asynchronous := b }
         ok (function.method, name1)
     let module ←
       match interface with
@@ -13293,20 +14187,22 @@ def component.parser.resolve.Context.install
           if i2 >= component.MAX_OPERATIONS
           then
             let e ← component.exhausted
-            ok (core.result.Result.Err e, world)
+            ok (core.result.Result.Err e,
+              { world with asynchronous := (world.asynchronous || b1) })
           else
             let s4 := alloc.vec.Vec.deref world.imports
             let i3 ← core.slice.Slice.iter s4
-            let (b, _) ←
+            let (b2, _) ←
               core.slice.iter.Iter.Insts.CoreIterTraitsIteratorIteratorSharedAT.any
                 component.parser.resolve.Context.install.closure.Insts.CoreOpsFunctionFnMutTupleSharedOperationBool
                 i3 (word, export_name)
-            if b
+            if b2
             then
               let e ←
                 component.invalid (toStr
                   "duplicate or ambiguous generated WIT word")
-              ok (core.result.Result.Err e, world)
+              ok (core.result.Result.Err e,
+                { world with asynchronous := (world.asynchronous || b1) })
             else
               let target ←
                 alloc.vec.Vec.push world.imports
@@ -13318,14 +14214,23 @@ def component.parser.resolve.Context.install
                      export_name,
                      parameters,
                      results,
+                     asynchronous := b,
                      effect := (some value2),
                      definition := (some value1)
                    } : component.Operation)
-              ok (core.result.Result.Ok (), { world with imports := target })
+              ok (core.result.Result.Ok (),
+                {
+                  world
+                    with
+                    imports := target,
+                    asynchronous := (world.asynchronous || b1)
+                })
         | core.result.Result.Err failure =>
-          ok (core.result.Result.Err failure, world)
+          ok (core.result.Result.Err failure,
+            { world with asynchronous := (world.asynchronous || b1) })
       | core.result.Result.Err failure =>
-        ok (core.result.Result.Err failure, world)
+        ok (core.result.Result.Err failure,
+          { world with asynchronous := (world.asynchronous || b1) })
     else
       let s1 ←
         alloc.string.String.Insts.CoreOpsDerefDerefStr.deref identity_base
@@ -13333,21 +14238,24 @@ def component.parser.resolve.Context.install
       let s3 ← component.parser.resolve.joined s1 (toStr "#") s2
       let i := alloc.vec.Vec.len world.exports
       if i >= component.MAX_OPERATIONS
-      then let e ← component.exhausted
-           ok (core.result.Result.Err e, world)
+      then
+        let e ← component.exhausted
+        ok (core.result.Result.Err e,
+          { world with asynchronous := (world.asynchronous || b1) })
       else
         let s4 := alloc.vec.Vec.deref world.exports
         let i1 ← core.slice.Slice.iter s4
-        let (b, _) ←
+        let (b2, _) ←
           core.slice.iter.Iter.Insts.CoreIterTraitsIteratorIteratorSharedAT.any
             component.parser.resolve.Context.install.closure.Insts.CoreOpsFunctionFnMutTupleSharedOperationBool
             i1 (word, export_name)
-        if b
+        if b2
         then
           let e ←
             component.invalid (toStr
               "duplicate or ambiguous generated WIT word")
-          ok (core.result.Result.Err e, world)
+          ok (core.result.Result.Err e,
+            { world with asynchronous := (world.asynchronous || b1) })
         else
           let target ←
             alloc.vec.Vec.push world.exports
@@ -13359,15 +14267,21 @@ def component.parser.resolve.Context.install
                  export_name,
                  parameters,
                  results,
+                 asynchronous := b,
                  effect := none,
                  definition := none
                } : component.Operation)
-          ok (core.result.Result.Ok (), { world with exports := target })
+          ok (core.result.Result.Ok (),
+            {
+              world
+                with
+                exports := target, asynchronous := (world.asynchronous || b1)
+            })
   | core.result.Result.Err failure =>
     ok (core.result.Result.Err failure, world)
 
 /-- [noble_contracts::component::parser::resolve::{noble_contracts::component::parser::resolve::Context<'_0>}::item::{impl core::ops::function::FnMut<(&'_ noble_contracts::component::parser::Interface,), bool> for noble_contracts::component::parser::resolve::{noble_contracts::component::parser::resolve::Context<'_0>}::item::{closure}<'_0, '_1, '_2>}::call_mut]:
-    Source: 'crates/noble-contracts/src/component/parser/resolve.rs', lines 154:30-154:65 -/
+    Source: 'crates/noble-contracts/src/component/parser/resolve.rs', lines 155:30-155:65 -/
 def
   component.parser.resolve.Context.item.closure.Insts.CoreOpsFunctionFnMutTupleSharedInterfaceBool.call_mut
   (c : component.parser.resolve.Context.item.closure)
@@ -13379,7 +14293,7 @@ def
   ok (b, c)
 
 /-- [noble_contracts::component::parser::resolve::{noble_contracts::component::parser::resolve::Context<'_0>}::item::{impl core::ops::function::FnOnce<(&'_ noble_contracts::component::parser::Interface,), bool> for noble_contracts::component::parser::resolve::{noble_contracts::component::parser::resolve::Context<'_0>}::item::{closure}<'_0, '_1, '_2>}::call_once]:
-    Source: 'crates/noble-contracts/src/component/parser/resolve.rs', lines 154:30-154:65 -/
+    Source: 'crates/noble-contracts/src/component/parser/resolve.rs', lines 155:30-155:65 -/
 def
   component.parser.resolve.Context.item.closure.Insts.CoreOpsFunctionFnOnceTupleSharedInterfaceBool.call_once
   (c : component.parser.resolve.Context.item.closure)
@@ -13392,7 +14306,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_contracts::component::parser::resolve::{noble_contracts::component::parser::resolve::Context<'_0>}::item::{impl core::ops::function::FnOnce<(&'_ noble_contracts::component::parser::Interface,), bool> for noble_contracts::component::parser::resolve::{noble_contracts::component::parser::resolve::Context<'_0>}::item::{closure}<'_0, '_1, '_2>}]
-    Source: 'crates/noble-contracts/src/component/parser/resolve.rs', lines 154:30-154:65 -/
+    Source: 'crates/noble-contracts/src/component/parser/resolve.rs', lines 155:30-155:65 -/
 @[reducible]
 def
   component.parser.resolve.Context.item.closure.Insts.CoreOpsFunctionFnOnceTupleSharedInterfaceBool
@@ -13403,7 +14317,7 @@ def
 }
 
 /-- Trait implementation: [noble_contracts::component::parser::resolve::{noble_contracts::component::parser::resolve::Context<'_0>}::item::{impl core::ops::function::FnMut<(&'_ noble_contracts::component::parser::Interface,), bool> for noble_contracts::component::parser::resolve::{noble_contracts::component::parser::resolve::Context<'_0>}::item::{closure}<'_0, '_1, '_2>}]
-    Source: 'crates/noble-contracts/src/component/parser/resolve.rs', lines 154:30-154:65 -/
+    Source: 'crates/noble-contracts/src/component/parser/resolve.rs', lines 155:30-155:65 -/
 @[reducible]
 def
   component.parser.resolve.Context.item.closure.Insts.CoreOpsFunctionFnMutTupleSharedInterfaceBool
@@ -13538,7 +14452,7 @@ def component.parser.resolve.traversal.Context.install_interface
     ok (core.result.Result.Err failure, world)
 
 /-- [noble_contracts::component::parser::resolve::{noble_contracts::component::parser::resolve::Context<'_0>}::item]:
-    Source: 'crates/noble-contracts/src/component/parser/resolve.rs', lines 131:4-162:5 -/
+    Source: 'crates/noble-contracts/src/component/parser/resolve.rs', lines 132:4-163:5 -/
 def component.parser.resolve.Context.item
   (self : component.parser.resolve.Context) (item : component.parser.Item)
   (world : component.World) :
@@ -14287,7 +15201,7 @@ def component.parser.resolve.world_loop0
     (selected_index, «at»)
 
 /-- [noble_contracts::component::parser::resolve::world]: loop body 1:
-    Source: 'crates/noble-contracts/src/component/parser/resolve.rs', lines 59:4-65:5 -/
+    Source: 'crates/noble-contracts/src/component/parser/resolve.rs', lines 60:4-66:5 -/
 @[rust_loop_body]
 def component.parser.resolve.world_loop1.body
   (s : String) (s1 : String) (s2 : String)
@@ -14325,7 +15239,7 @@ def component.parser.resolve.world_loop1.body
     | core.result.Result.Err problem => ok (done (world1, some problem))
 
 /-- [noble_contracts::component::parser::resolve::world]: loop 1:
-    Source: 'crates/noble-contracts/src/component/parser/resolve.rs', lines 59:4-65:5 -/
+    Source: 'crates/noble-contracts/src/component/parser/resolve.rs', lines 60:4-66:5 -/
 @[rust_loop]
 def component.parser.resolve.world_loop1
   (s : String) (s1 : String) (s2 : String)
@@ -14341,7 +15255,7 @@ def component.parser.resolve.world_loop1
     («at», world)
 
 /-- [noble_contracts::component::parser::resolve::world]:
-    Source: 'crates/noble-contracts/src/component/parser/resolve.rs', lines 20:0-76:1 -/
+    Source: 'crates/noble-contracts/src/component/parser/resolve.rs', lines 20:0-77:1 -/
 def component.parser.resolve.world
   (package : component.parser.Package) (wit : Slice Std.U8) (selected : Str)
   (limits : Limits) :
@@ -14400,6 +15314,7 @@ def component.parser.resolve.world
                 imports := (alloc.vec.Vec.new component.Operation),
                 exports := (alloc.vec.Vec.new component.Operation),
                 resources := value,
+                asynchronous := false,
                 limits
               }
           match failure with
@@ -14905,7 +15820,7 @@ def component.parser.lexer.cursor
     ok (core.result.Result.Err e)
 
 /-- [noble_contracts::component::parser::parse]:
-    Source: 'crates/noble-contracts/src/component/parser.rs', lines 71:0-79:1 -/
+    Source: 'crates/noble-contracts/src/component/parser.rs', lines 76:0-84:1 -/
 def component.parser.parse
   (wit : Slice Std.U8) (selected : Str) (limits : Limits) :
   Result (core.result.Result component.World component.Error)
@@ -14921,7 +15836,7 @@ def component.parser.parse
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_contracts::component::{noble_contracts::component::World}::parse]:
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 116:4-118:5
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 182:4-184:5
     Visibility: public -/
 def component.World.parse
   (wit : Slice Std.U8) (world : Str) (limits : Limits) :
@@ -14930,53 +15845,59 @@ def component.World.parse
   component.parser.parse wit world limits
 
 /-- [noble_contracts::component::{noble_contracts::component::World}::identity]:
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 119:4-121:5
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 185:4-187:5
     Visibility: public -/
 def component.World.impl.identity (self : component.World) : Result Str := do
   alloc.string.String.Insts.CoreOpsDerefDerefStr.deref self.identity
 
 /-- [noble_contracts::component::{noble_contracts::component::World}::name]:
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 122:4-124:5
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 188:4-190:5
     Visibility: public -/
 def component.World.impl.name (self : component.World) : Result Str := do
   alloc.string.String.Insts.CoreOpsDerefDerefStr.deref self.name
 
 /-- [noble_contracts::component::{noble_contracts::component::World}::wit]:
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 125:4-127:5
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 191:4-193:5
     Visibility: public -/
 def component.World.impl.wit
   (self : component.World) : Result (Slice Std.U8) := do
   ok (alloc.vec.Vec.deref self.wit)
 
 /-- [noble_contracts::component::{noble_contracts::component::World}::imports]:
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 128:4-130:5
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 194:4-196:5
     Visibility: public -/
 def component.World.impl.imports
   (self : component.World) : Result (Slice component.Operation) := do
   ok (alloc.vec.Vec.deref self.imports)
 
 /-- [noble_contracts::component::{noble_contracts::component::World}::exports]:
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 131:4-133:5
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 197:4-199:5
     Visibility: public -/
 def component.World.impl.exports
   (self : component.World) : Result (Slice component.Operation) := do
   ok (alloc.vec.Vec.deref self.exports)
 
 /-- [noble_contracts::component::{noble_contracts::component::World}::resources]:
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 134:4-136:5
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 200:4-202:5
     Visibility: public -/
 def component.World.impl.resources
   (self : component.World) : Result (Slice component.Resource) := do
   ok (alloc.vec.Vec.deref self.resources)
 
+/-- [noble_contracts::component::{noble_contracts::component::World}::is_async]:
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 204:4-206:5
+    Visibility: public -/
+def component.World.is_async (self : component.World) : Result Bool := do
+  ok self.asynchronous
+
 /-- [noble_contracts::component::{noble_contracts::component::World}::limits]:
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 137:4-139:5
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 214:4-216:5
     Visibility: public -/
 def component.World.impl.limits (self : component.World) : Result Limits := do
   ok self.limits
 
 /-- [noble_contracts::component::{noble_contracts::component::World}::environment]:
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 156:4-158:5
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 218:4-220:5
     Visibility: public -/
 def component.World.environment
   (self : component.World) :
@@ -15008,7 +15929,7 @@ def source.Session.with_bindings
   ok { s with bindings := (some bindings) }
 
 /-- [noble_contracts::component::{noble_contracts::component::World}::session]:
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 159:4-163:5
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 221:4-225:5
     Visibility: public -/
 def component.World.session
   (self : component.World) :
@@ -15022,7 +15943,7 @@ def component.World.session
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_contracts::component::{impl core::clone::Clone for noble_contracts::component::Bindings}::clone]:
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 166:9-166:14
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 228:9-228:14
     Visibility: public -/
 def component.Bindings.Insts.CoreCloneClone.clone
   (self : component.Bindings) : Result component.Bindings := do
@@ -15039,7 +15960,7 @@ def component.Bindings.Insts.CoreCloneClone.clone
   ok { environment := e, words := v, resources := v1, effects := i, key := v2 }
 
 /-- Trait implementation: [noble_contracts::component::{impl core::clone::Clone for noble_contracts::component::Bindings}]
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 166:9-166:14 -/
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 228:9-228:14 -/
 @[reducible]
 def component.Bindings.Insts.CoreCloneClone : core.clone.Clone
   component.Bindings := {
@@ -15047,7 +15968,7 @@ def component.Bindings.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- [noble_contracts::component::{impl core::fmt::Debug for noble_contracts::component::Bindings}::fmt]:
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 166:16-166:21
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 228:16-228:21
     Visibility: public -/
 def component.Bindings.Insts.CoreFmtDebug.fmt
   (self : component.Bindings) (f : core.fmt.Formatter) :
@@ -15071,7 +15992,7 @@ def component.Bindings.Insts.CoreFmtDebug.fmt
     "effects") dyn3 (toStr "key") dyn4
 
 /-- Trait implementation: [noble_contracts::component::{impl core::fmt::Debug for noble_contracts::component::Bindings}]
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 166:16-166:21 -/
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 228:16-228:21 -/
 @[reducible]
 def component.Bindings.Insts.CoreFmtDebug : core.fmt.Debug component.Bindings
   := {
@@ -15079,14 +16000,14 @@ def component.Bindings.Insts.CoreFmtDebug : core.fmt.Debug component.Bindings
 }
 
 /-- [noble_contracts::component::{impl core::clone::Clone for noble_contracts::component::Stage}::clone]:
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 175:9-175:14
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 237:9-237:14
     Visibility: public -/
 def component.Stage.Insts.CoreCloneClone.clone
   (self : component.Stage) : Result component.Stage := do
   ok self
 
 /-- Trait implementation: [noble_contracts::component::{impl core::clone::Clone for noble_contracts::component::Stage}]
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 175:9-175:14 -/
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 237:9-237:14 -/
 @[reducible]
 def component.Stage.Insts.CoreCloneClone : core.clone.Clone component.Stage
   := {
@@ -15094,7 +16015,7 @@ def component.Stage.Insts.CoreCloneClone : core.clone.Clone component.Stage
 }
 
 /-- Trait implementation: [noble_contracts::component::{impl core::marker::Copy for noble_contracts::component::Stage}]
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 175:16-175:20 -/
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 237:16-237:20 -/
 @[reducible]
 def component.Stage.Insts.CoreMarkerCopy : core.marker.Copy component.Stage
   := {
@@ -15102,7 +16023,7 @@ def component.Stage.Insts.CoreMarkerCopy : core.marker.Copy component.Stage
 }
 
 /-- [noble_contracts::component::{impl core::fmt::Debug for noble_contracts::component::Stage}::fmt]:
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 175:22-175:27
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 237:22-237:27
     Visibility: public -/
 def component.Stage.Insts.CoreFmtDebug.fmt
   (self : component.Stage) (f : core.fmt.Formatter) :
@@ -15116,21 +16037,21 @@ def component.Stage.Insts.CoreFmtDebug.fmt
     core.fmt.Formatter.write_str f (toStr "Acceptance")
 
 /-- Trait implementation: [noble_contracts::component::{impl core::fmt::Debug for noble_contracts::component::Stage}]
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 175:22-175:27 -/
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 237:22-237:27 -/
 @[reducible]
 def component.Stage.Insts.CoreFmtDebug : core.fmt.Debug component.Stage := {
   fmt := component.Stage.Insts.CoreFmtDebug.fmt
 }
 
 /-- Trait implementation: [noble_contracts::component::{impl core::marker::StructuralPartialEq for noble_contracts::component::Stage}]
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 175:29-175:38 -/
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 237:29-237:38 -/
 @[reducible]
 def component.Stage.Insts.CoreMarkerStructuralPartialEq :
   core.marker.StructuralPartialEq component.Stage := {
 }
 
 /-- [noble_contracts::component::{impl core::cmp::PartialEq<noble_contracts::component::Stage> for noble_contracts::component::Stage}::eq]:
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 175:29-175:38
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 237:29-237:38
     Visibility: public -/
 def component.Stage.Insts.CoreCmpPartialEqStage.eq
   (self : component.Stage) (other : component.Stage) : Result Bool := do
@@ -15139,7 +16060,7 @@ def component.Stage.Insts.CoreCmpPartialEqStage.eq
   ok (self1 = other1)
 
 /-- Trait implementation: [noble_contracts::component::{impl core::cmp::PartialEq<noble_contracts::component::Stage> for noble_contracts::component::Stage}]
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 175:29-175:38 -/
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 237:29-237:38 -/
 @[reducible]
 impl_def component.Stage.Insts.CoreCmpPartialEqStage : core.cmp.PartialEq
   component.Stage component.Stage := {
@@ -15149,14 +16070,14 @@ impl_def component.Stage.Insts.CoreCmpPartialEqStage : core.cmp.PartialEq
 }
 
 /-- [noble_contracts::component::{impl core::cmp::Eq for noble_contracts::component::Stage}::assert_fields_are_eq]:
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 175:40-175:42
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 237:40-237:42
     Visibility: public -/
 def component.Stage.Insts.CoreCmpEq.assert_fields_are_eq
   (self : component.Stage) : Result Unit := do
   ok ()
 
 /-- Trait implementation: [noble_contracts::component::{impl core::cmp::Eq for noble_contracts::component::Stage}]
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 175:40-175:42 -/
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 237:40-237:42 -/
 @[reducible]
 def component.Stage.Insts.CoreCmpEq : core.cmp.Eq component.Stage := {
   partialEqInst := component.Stage.Insts.CoreCmpPartialEqStage
@@ -15190,7 +16111,7 @@ def Diagnostic.Insts.CoreCloneClone.clone
   ok { kind := dk, span := s, message := s1, ordinary_typing := o }
 
 /-- [noble_contracts::component::{impl core::clone::Clone for noble_contracts::component::Error}::clone]:
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 183:9-183:14
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 245:9-245:14
     Visibility: public -/
 def component.Error.Insts.CoreCloneClone.clone
   (self : component.Error) : Result component.Error := do
@@ -15199,7 +16120,7 @@ def component.Error.Insts.CoreCloneClone.clone
   ok { stage := s, diagnostic := d }
 
 /-- Trait implementation: [noble_contracts::component::{impl core::clone::Clone for noble_contracts::component::Error}]
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 183:9-183:14 -/
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 245:9-245:14 -/
 @[reducible]
 def component.Error.Insts.CoreCloneClone : core.clone.Clone component.Error
   := {
@@ -15274,7 +16195,7 @@ def Diagnostic.Insts.CoreFmtDebug : core.fmt.Debug Diagnostic := {
 }
 
 /-- [noble_contracts::component::{impl core::fmt::Debug for noble_contracts::component::Error}::fmt]:
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 183:16-183:21
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 245:16-245:21
     Visibility: public -/
 def component.Error.Insts.CoreFmtDebug.fmt
   (self : component.Error) (f : core.fmt.Formatter) :
@@ -15288,28 +16209,28 @@ def component.Error.Insts.CoreFmtDebug.fmt
     "stage") dyn (toStr "diagnostic") dyn1
 
 /-- Trait implementation: [noble_contracts::component::{impl core::fmt::Debug for noble_contracts::component::Error}]
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 183:16-183:21 -/
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 245:16-245:21 -/
 @[reducible]
 def component.Error.Insts.CoreFmtDebug : core.fmt.Debug component.Error := {
   fmt := component.Error.Insts.CoreFmtDebug.fmt
 }
 
 /-- [noble_contracts::component::{noble_contracts::component::CheckedExport}::world_context]:
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 217:4-219:5
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 279:4-281:5
     Visibility: public -/
 def component.CheckedExport.world_context
   (self : component.CheckedExport) : Result (Slice Std.U8) := do
   ok (alloc.vec.Vec.deref self.world)
 
 /-- [noble_contracts::component::{noble_contracts::component::CheckedExport}::index]:
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 224:4-226:5
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 286:4-288:5
     Visibility: public -/
 def component.CheckedExport.impl.index
   (self : component.CheckedExport) : Result Std.Usize := do
   ok self.index
 
 /-- [noble_contracts::component::{noble_contracts::component::CheckedExport}::source]:
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 227:4-229:5
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 289:4-291:5
     Visibility: public -/
 def component.CheckedExport.source
   (self : component.CheckedExport) : Result (Slice Std.U8) := do
@@ -15325,7 +16246,7 @@ def source.Prepared.impl.submission
   core.option.Option.as_ref self.submission
 
 /-- [noble_contracts::component::{noble_contracts::component::CheckedExport}::submission]:
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 230:4-232:5
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 292:4-294:5
     Visibility: public -/
 def component.CheckedExport.submission
   (self : component.CheckedExport) :
@@ -15370,6 +16291,12 @@ def component.parser.RawType.Insts.CoreCloneClone.clone
   | component.parser.RawType.Bytes => ok component.parser.RawType.Bytes
   | component.parser.RawType.ResultS64String =>
     ok component.parser.RawType.ResultS64String
+  | component.parser.RawType.ResultBytesString =>
+    ok component.parser.RawType.ResultBytesString
+  | component.parser.RawType.StreamU8 => ok component.parser.RawType.StreamU8
+  | component.parser.RawType.FutureS64 => ok component.parser.RawType.FutureS64
+  | component.parser.RawType.FutureResultS64String =>
+    ok component.parser.RawType.FutureResultS64String
   | component.parser.RawType.Own __self_0 =>
     let s ← alloc.string.String.Insts.CoreCloneClone.clone __self_0
     ok (component.parser.RawType.Own s)
@@ -15386,7 +16313,7 @@ def component.parser.RawType.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- [noble_contracts::component::parser::{impl core::clone::Clone for noble_contracts::component::parser::Function}::clone]:
-    Source: 'crates/noble-contracts/src/component/parser.rs', lines 31:9-31:14
+    Source: 'crates/noble-contracts/src/component/parser.rs', lines 35:9-35:14
     Visibility: public -/
 def component.parser.Function.Insts.CoreCloneClone.clone
   (self : component.parser.Function) : Result component.parser.Function := do
@@ -15400,10 +16327,18 @@ def component.parser.Function.Insts.CoreCloneClone.clone
   let v1 ←
     alloc.vec.CloneVec.clone component.parser.RawType.Insts.CoreCloneClone
       self.results
-  ok { «name» := s, method := o, parameters := v, results := v1 }
+  let b ← lift (core.clone.impls.CloneBool.clone self.asynchronous)
+  ok
+    {
+      «name» := s,
+      method := o,
+      parameters := v,
+      results := v1,
+      asynchronous := b
+    }
 
 /-- Trait implementation: [noble_contracts::component::parser::{impl core::clone::Clone for noble_contracts::component::parser::Function}]
-    Source: 'crates/noble-contracts/src/component/parser.rs', lines 31:9-31:14 -/
+    Source: 'crates/noble-contracts/src/component/parser.rs', lines 35:9-35:14 -/
 @[reducible]
 def component.parser.Function.Insts.CoreCloneClone : core.clone.Clone
   component.parser.Function := {
@@ -31817,7 +32752,7 @@ def component.preparation.World.prepare_export
                   (toStr "missing checked export body")
               ok (core.result.Result.Err e)
             else
-              let v2 ← component.World.build_context self
+              let v2 ← component.context.World.build_context self
               let v3 ←
                 alloc.slice.Slice.to_vec core.clone.CloneU8 source_bytes
               ok (core.result.Result.Ok

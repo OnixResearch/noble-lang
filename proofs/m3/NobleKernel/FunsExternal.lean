@@ -21,6 +21,12 @@
 --     keeps the extraction reproducible: Aeneas cannot functionalize those
 --     loops inside the trait-instance mutual block, which is why the
 --     attributes exist.
+--   * `try_reserve_exact` uses the existing value-only `Vec.with_capacity`
+--     allocation abstraction. It checks element-count overflow and preserves
+--     contents, but does not model allocator exhaustion or byte-layout limits.
+--     Its successful result is not evidence of a physical allocation, pin,
+--     or native-operation admission. The M6 transition/Table.decide roots do
+--     not depend on this table-construction abstraction.
 --
 -- Note: the declarations live in the `noble_kernel` namespace (like they did
 -- in the previous monolithic extraction) so that all the fully qualified
@@ -110,6 +116,14 @@ def core.option.Option.Insts.CoreFmtDebug.fmt {T : Type} (fmtDebugInst :
 
 /-! ## core::num -/
 
+/-- [core::num::{u64}::count_ones]: count the set bits at the 64 positions
+    of the scalar representation. The count is at most 64, so constructing
+    the u32 result does not truncate it. -/
+@[rust_fun "core::num::{u64}::count_ones"]
+def core.num.U64.count_ones (value : U64) : Result U32 :=
+  ok ⟨BitVec.ofNat _ ((List.range 64).foldl
+    (fun count bit => if value.bv.getLsbD bit then count + 1 else count) 0)⟩
+
 /-- [core::num::{usize}::saturating_mul]: the product, clamped to
     `usize::MAX`. Mirrors `UScalar.saturating_add` in the standard library
     model (Lean `Nat` does not overflow, so clamping the exact product is the
@@ -173,6 +187,33 @@ def core.option.Option.Insts.CoreCloneClone.clone
 
 /-! ## core::result -/
 
+/-- [core::result::{impl core::fmt::Debug for Result<T, E>}::fmt].
+    Under the existing Aeneas formatter abstraction, the constructor name
+    and punctuation writes are unobservable successful pass-through steps.
+    The selected payload formatter still runs, and its returned formatter
+    and any formatting error are preserved exactly. -/
+@[rust_fun
+  "core::result::{core::fmt::Debug<core::result::Result<@T, @E>>}::fmt"]
+def core.result.Result.Insts.CoreFmtDebug.fmt {T E : Type}
+  (valueDebug : core.fmt.Debug T) (errorDebug : core.fmt.Debug E)
+  (value : core.result.Result T E) (formatter : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter) :=
+  match value with
+  | .Ok payload => valueDebug.fmt payload formatter
+  | .Err error => errorDebug.fmt error formatter
+
+/-- Result equality compares only corresponding payload variants and uses
+    the supplied Rust PartialEq implementations, including their effects. -/
+@[rust_fun
+  "core::result::{core::cmp::PartialEq<core::result::Result<@T, @E>, core::result::Result<@T, @E>>}::eq"]
+def core.result.Result.Insts.CoreCmpPartialEqResult.eq {T E : Type}
+  (valueEq : core.cmp.PartialEq T T) (errorEq : core.cmp.PartialEq E E)
+  (left right : core.result.Result T E) : Result Bool :=
+  match left, right with
+  | .Ok left, .Ok right => valueEq.eq left right
+  | .Err left, .Err right => errorEq.eq left right
+  | _, _ => pure false
+
 /-- [core::result::{core::result::Result<T, E>}::is_err]. -/
 @[rust_fun "core::result::{core::result::Result<@T, @E>}::is_err"]
 def core.result.Result.is_err
@@ -202,7 +243,28 @@ def core.result.Result.unwrap_or
     | .Ok v => pure v
     | .Err _ => pure default
 
+/-! ## core::str -/
+
+/-- The Aeneas `Str` representation is already a byte slice. This returns
+    those exact UTF-8 bytes without decoding, normalizing or re-encoding. -/
+@[rust_fun "core::str::{str}::as_bytes"]
+def core.str.Str.as_bytes (value : Str) : Result (Slice U8) := ok value
+
 /-! ## alloc::vec -/
+
+/-- [alloc::vec::{alloc::vec::Vec<T>}::try_reserve_exact].
+    As with the pinned Aeneas `Vec.with_capacity` model, capacity/storage
+    is not retained in `Vec`. Element-count overflow is rejected and the
+    contents remain unchanged on both branches. Physical allocation failure
+    and byte-layout overflow are deliberately outside this abstraction. -/
+@[rust_fun "alloc::vec::{alloc::vec::Vec<@T>}::try_reserve_exact"]
+def alloc.vec.Vec.try_reserve_exact {T : Type} (_ : Type)
+  (value : alloc.vec.Vec T) (additional : Usize) :
+  Result ((core.result.Result Unit alloc.collections.TryReserveError) × alloc.vec.Vec T) :=
+  if value.val.length + additional.val ≤ Usize.max then
+    ok (.Ok (), value)
+  else
+    ok (.Err .CapacityOverflow, value)
 
 /-- [alloc::vec::{alloc::vec::Vec<T>}::truncate]:
     keeps the first `min(len, self.len())` elements. -/

@@ -1,0 +1,17 @@
+{
+  "schema": "noble-m6-archive-roundtrip/v1",
+  "result": "passed",
+  "kind": "assurance",
+  "members": 5896,
+  "hardlinks": 2763,
+  "symlinks": 0,
+  "manifest": "assurance-manifest.json",
+  "parts": [
+    {
+      "path": "assurance.tar.zst.part-aa",
+      "bytes": 52407935,
+      "sha256": "2c82a4dd9e01618ea748019b84ca5a53cbf4c2f623b397a8c0269198402eb920"
+    }
+  ],
+  "check": "fresh tar extraction; exact path set, per-member SHA256, byte size, mode, symlink target and declared hardlink inode equality"
+}

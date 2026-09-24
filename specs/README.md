@@ -8,7 +8,8 @@ The twelve normative documents now live under `.cairn/specs/`. Their old paths c
 
 The repository now contains the bounded checker, experimental MC1 contract frontend,
 M3 compiled-program representation experiment, M4 source-to-Wasm Core-Bootstrap,
-MC2 first-class certified companions and the M5 synchronous component subset.
+MC2 first-class certified companions, the M5 synchronous component subset and
+the completed bounded M6 native-async boundary.
 M4 uses the selected managed-linear-memory backend:
 source is resolved and inferred, independently accepted by the kernel, rechecked
 for lowering, then executed as compiled Wasm. Persistent sessions retain compiled
@@ -23,6 +24,10 @@ MC2 separately adds checked first-class runtime companions to that resource-free
 path. M5 supplies a pinned typed WIT component path, move-only resources, protected
 host authorization and observation-backed receipts; it does not add general
 resource-bearing persistent sessions, arbitrary imports or native async.
+M6 separately implements `Component-Async-Bootstrap`: compiled direct-style
+native suspension, selected live future/stream operations and bounded task,
+ownership and retirement decisions. It does not relax M5's borrow restrictions
+or provide a general guest scheduler.
 See the [CLI usage and evidence boundary](../README.md#running-core-bootstrap-source).
 [Status](STATUS.json) and the [roadmap](roadmap.json) distinguish implemented
 behavior from retained acceptance and open language/proof obligations. M4's
@@ -30,7 +35,24 @@ retained runtime acceptance includes the integrated developer workflows;
 the [acceptance evidence](../README.md#m4-acceptance-evidence) separately records
 the passed extraction, regression and quality gates. The separate
 [M5 completion record](../verification/m5/evidence.json) binds the bounded
-component/resource/authority acceptance. M6 is the next primary milestone.
+component/resource/authority acceptance. The retained
+[M6 native receipt](../verification/m6/acceptance.json) passes WI-11, WI-12,
+WI-16 and the local WORKER-08 slice, with 38 variants, 62 controls and 13 native
+kernel tests. [Native usage and evidence scope](../README.md#compiling-native-async-wit-components)
+distinguish compiled Noble from peer-only official prerelease WASI clock
+compatibility and local lifecycle/schema/progress probes. The pin is
+`0.3.0-rc-2025-09-16`, not stable WASI 0.3 or full WASI support.
+The [independently checked extraction](../verification/m6/extraction.json)
+passed 14 strict actual-Rust roots, all 75 constructor pairs and 176 M6
+refusal controls against the [reviewed lock](../verification/m4/extraction-lock.json);
+its [formal archives](../verification/m6/formal-archives.json) retain the
+products. [The completion record](../verification/m6/evidence.json) binds the
+full [prior regressions](../verification/m6/regressions.json), all thirteen
+[Nix checks](../verification/m6/nix-checks.json) and Cairn lifecycle. Neither
+execution nor extraction alone completes the milestone.
+The current [source inventory](../verification/source-inventory.md) covers 25
+units and retains 1,939 open authored production body obligations. Historical
+M4, MC2 and M5 receipts retain their own source counts and assurance scopes.
 Amendment sections below record design adoption,
 not automatic completion.
 
@@ -42,8 +64,8 @@ not automatic completion.
 | [Bootstrap scope](CORE-BOOTSTRAP.md) | SPEC-B001 | First finite checker and Wasm acceptance target |
 | [Backend experiments](BACKEND-EXPERIMENTS.md) | SPEC-BE001 | M3 comparison; managed linear memory selected for the M4 direction |
 | [Safety](SAFETY.md) | SPEC-S001 | Mandatory safety invariants and claim boundaries |
-| [WIT/WASI](WIT-WASI.md) | SPEC-W001 | Full target component profile |
-| [Resource adapters](RESOURCE-ADAPTERS.md) | SPEC-R001 | First bounded synchronous resource adapter contract |
+| [WIT/WASI](WIT-WASI.md) | SPEC-W001 | Full target component profile; bounded synchronous and selected native-async implementations |
+| [Resource adapters](RESOURCE-ADAPTERS.md) | SPEC-R001 | Bounded synchronous and selected native-async ownership contracts |
 | [Developer experience](DEVELOPER-EXPERIENCE.md) | SPEC-DX001 | Scoped language ergonomics, libraries, module boundaries, protocol types, and development tools |
 | [Exact calculator](CALCULATOR.md) | SPEC-CALC001 | First reference application: exact arithmetic, lexical functions, and bounded AI-authoring evaluation |
 
@@ -110,7 +132,13 @@ Select an exact programmable calculator as the first AI-authoring reference appl
 
 Tighten runtime-selected interfaces, explicit effect widening, recipe round trips, package dependencies, bounded admission, async ownership, and failure observations. These contracts add no agent-specific kernel syntax and do not expand Core-Bootstrap.
 
-[Worker conformance](WORKER-CONFORMANCE.md) defines a generated pure worker plus an independently authorized shell action. Its [scenarios](conformance/worker-cases.json) include cancellation races, hostile packages, and exhausted budgets. MW1/MW2 retain separate implementation gates. All runtime and proof results remain absent/open.
+[Worker conformance](WORKER-CONFORMANCE.md) defines a generated pure worker plus
+an independently authorized shell action. Its
+[scenarios](conformance/worker-cases.json) include cancellation races, hostile
+packages, and exhausted budgets. M6 retains executed WORKER-08 local task-owner
+races; that evidence is not an actual worker/shell service or full MW-WORKER
+conformance. MW1/MW2 retain separate open language, service, implementation and
+proof gates; neither the native receipt nor the task-core audit closes them.
 
 ## Octet contract amendment to draft.5
 

@@ -1,0 +1,10 @@
+package noble-test:async-wide@1.0.0;
+
+interface host {
+  sum5: async func(a: s64, b: s64, c: s64, d: s64, e: s64) -> s64;
+}
+
+world demo {
+  import host;
+  export sum5: async func(a: s64, b: s64, c: s64, d: s64, e: s64) -> s64;
+}

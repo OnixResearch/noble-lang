@@ -1,0 +1,250 @@
+{
+  "acceptance_ids": [],
+  "actions": [
+    {
+      "description": "merge delta spec into main specs: ./.cairn/changes/m6-native-async/specs/resource-adapters/spec.md",
+      "kind": "sync_delta_spec",
+      "path": "./.cairn/changes/m6-native-async/specs/resource-adapters/spec.md"
+    },
+    {
+      "description": "merge delta spec into main specs: ./.cairn/changes/m6-native-async/specs/wit-wasi/spec.md",
+      "kind": "sync_delta_spec",
+      "path": "./.cairn/changes/m6-native-async/specs/wit-wasi/spec.md"
+    }
+  ],
+  "blocked": false,
+  "change": "m6-native-async",
+  "cross_repo_dependencies": {
+    "blocked_count": 0,
+    "dependency_count": 0,
+    "input_hash": "e890d3bebd6f9f984387d26d4c6685963b96d2172fdf1df42756927cfa255a9c",
+    "non_claims": [
+      "dependency satisfaction proves presented receipt linkage only",
+      "dependency satisfaction does not prove upstream correctness or remote trust",
+      "dependency satisfaction does not prove downstream integration correctness or release eligibility"
+    ],
+    "policy_hash": "8280151b7a53822eed460149ecb600bf11418d7463c935e0742009b334f4e7dd",
+    "receipt_hash": "b37bae535823028673cb011a8f08a9b26fbfca1414a5b5141892f75699ce5c01",
+    "rows": [],
+    "satisfied_count": 0,
+    "schema": "cairn.cross-repo-dependency-receipt.v1",
+    "valid": true,
+    "verdict": "PASS"
+  },
+  "cross_repo_evidence_issues": [],
+  "delta_specs": [
+    "./.cairn/changes/m6-native-async/specs/resource-adapters/spec.md",
+    "./.cairn/changes/m6-native-async/specs/wit-wasi/spec.md"
+  ],
+  "dry_run": false,
+  "input_hash": "26c999d613f05613731a7cbf198c8c49a393b44bbb3ac2121b653ede8b05e055",
+  "layout": "cairn",
+  "merge_preflight": {
+    "documents": [
+      {
+        "accepted_before_exists": true,
+        "accepted_before_hash": "c72f2d8137b0f398fe33976cfcb96bb182ee8fc62b2ead0f3530ea58d777dd9d",
+        "blocked": false,
+        "changed": true,
+        "delta_hash": "12a8ba6983b055f809c2658cdef0a23d2e3b686dd6c88570c6a8c63811c127c9",
+        "destination": ".cairn/specs/resource-adapters/spec.md",
+        "diagnostics": [],
+        "expected_after_hash": "d9c0c7e58153a191a2f84892961748d1977d331f7f0749934e67637445e96f6f",
+        "operations": [
+          {
+            "block_hash": "16bad2962610fd79967d237da21268ee0379a2d5fcc94dcf3e475e191cc74411",
+            "heading": "### Requirement: RA-ASYNC-01",
+            "kind": "modified",
+            "requirement_id": "RA-ASYNC-01"
+          },
+          {
+            "block_hash": "c2ff62e68c5880a4a0f49c5a06a491cf2ea1d193e8771036e00e671b6ae4c3e1",
+            "heading": "### Requirement: RA-ASYNC-02",
+            "kind": "modified",
+            "requirement_id": "RA-ASYNC-02"
+          },
+          {
+            "block_hash": "5c642bd2c42c67a05ee5bcad62fc1525269ac0e80a93093e0aad55f01bcd8385",
+            "heading": "### Requirement: RA-ASYNC-03",
+            "kind": "modified",
+            "requirement_id": "RA-ASYNC-03"
+          },
+          {
+            "block_hash": "f14e0c77dc1663624279679a3c46325ffbb0c62ce0b214c27ddb9ccb890411b8",
+            "heading": "### Requirement: RA-ASYNC-04",
+            "kind": "modified",
+            "requirement_id": "RA-ASYNC-04"
+          },
+          {
+            "block_hash": "23eb16e62be5a69386b7456eb20ad99bc63f36f358656be6cb6dd4e601abf6f6",
+            "heading": "### Requirement: RA-ASYNC-05",
+            "kind": "modified",
+            "requirement_id": "RA-ASYNC-05"
+          }
+        ],
+        "outcomes": [
+          {
+            "kind": "modified",
+            "requirement_id": "RA-ASYNC-01",
+            "state": "applied"
+          },
+          {
+            "kind": "modified",
+            "requirement_id": "RA-ASYNC-02",
+            "state": "applied"
+          },
+          {
+            "kind": "modified",
+            "requirement_id": "RA-ASYNC-03",
+            "state": "applied"
+          },
+          {
+            "kind": "modified",
+            "requirement_id": "RA-ASYNC-04",
+            "state": "applied"
+          },
+          {
+            "kind": "modified",
+            "requirement_id": "RA-ASYNC-05",
+            "state": "applied"
+          }
+        ],
+        "source": ".cairn/changes/m6-native-async/specs/resource-adapters/spec.md"
+      },
+      {
+        "accepted_before_exists": true,
+        "accepted_before_hash": "b3bf60f80f74bf4ab0cea100f444048e5c944f342d595f2b01ebb9a788f2f086",
+        "blocked": false,
+        "changed": true,
+        "delta_hash": "3933cde5fcbb43614a52288672b89c763078cdd378442ebcece8b24220bbc58f",
+        "destination": ".cairn/specs/wit-wasi/spec.md",
+        "diagnostics": [],
+        "expected_after_hash": "9fe21b63846700d837d60216fa4a017933d3293e986b4a051c722b6a811becb0",
+        "operations": [
+          {
+            "block_hash": "a1be97b8e0a64c61dcf427771251f9e38b0661f3c9f4f3827f6eab1d17ecd600",
+            "heading": "### Requirement: WI-WASI-02",
+            "kind": "modified",
+            "requirement_id": "WI-WASI-02"
+          },
+          {
+            "block_hash": "99a3d4c61416b5c4e0cd769883e76a2ded19d2f3df3d91486eb4326e10b99097",
+            "heading": "### Requirement: WI-ASYNC-01",
+            "kind": "modified",
+            "requirement_id": "WI-ASYNC-01"
+          },
+          {
+            "block_hash": "59429107d6cfcce86b69c03e34d45cc6f095e090892667ee0f67716437fdd317",
+            "heading": "### Requirement: WI-ASYNC-02",
+            "kind": "modified",
+            "requirement_id": "WI-ASYNC-02"
+          },
+          {
+            "block_hash": "2920e479b4b77532dc2aa7c0a5162aa67a72ff92fd5793db28b5b325c1fba085",
+            "heading": "### Requirement: WI-ASYNC-03",
+            "kind": "modified",
+            "requirement_id": "WI-ASYNC-03"
+          },
+          {
+            "block_hash": "d43690af8387524f5a8c3fb84fe466df0ed3076965766286fcd8b3e65f759af6",
+            "heading": "### Requirement: WI-ASYNC-04",
+            "kind": "modified",
+            "requirement_id": "WI-ASYNC-04"
+          },
+          {
+            "block_hash": "10473b55de4eb66796eb7760626aeb8cdd04353a8e78934e172f210cda56b6db",
+            "heading": "### Requirement: WI-ASYNC-05",
+            "kind": "modified",
+            "requirement_id": "WI-ASYNC-05"
+          }
+        ],
+        "outcomes": [
+          {
+            "kind": "modified",
+            "requirement_id": "WI-WASI-02",
+            "state": "applied"
+          },
+          {
+            "kind": "modified",
+            "requirement_id": "WI-ASYNC-01",
+            "state": "applied"
+          },
+          {
+            "kind": "modified",
+            "requirement_id": "WI-ASYNC-02",
+            "state": "applied"
+          },
+          {
+            "kind": "modified",
+            "requirement_id": "WI-ASYNC-03",
+            "state": "applied"
+          },
+          {
+            "kind": "modified",
+            "requirement_id": "WI-ASYNC-04",
+            "state": "applied"
+          },
+          {
+            "kind": "modified",
+            "requirement_id": "WI-ASYNC-05",
+            "state": "applied"
+          }
+        ],
+        "source": ".cairn/changes/m6-native-async/specs/wit-wasi/spec.md"
+      }
+    ]
+  },
+  "mutated": true,
+  "mutation_manifest": {
+    "after": {
+      "entries": [
+        {
+          "content_hash": "d9c0c7e58153a191a2f84892961748d1977d331f7f0749934e67637445e96f6f",
+          "exists": true,
+          "path": "./.cairn/specs/resource-adapters/spec.md"
+        },
+        {
+          "content_hash": "9fe21b63846700d837d60216fa4a017933d3293e986b4a051c722b6a811becb0",
+          "exists": true,
+          "path": "./.cairn/specs/wit-wasi/spec.md"
+        }
+      ],
+      "manifest_hash": "6bab8d01af4302026d86f310d6a09bdb4dbc9508facb2e6d8f124ca403dec975"
+    },
+    "before": {
+      "entries": [
+        {
+          "content_hash": "c72f2d8137b0f398fe33976cfcb96bb182ee8fc62b2ead0f3530ea58d777dd9d",
+          "exists": true,
+          "path": "./.cairn/specs/resource-adapters/spec.md"
+        },
+        {
+          "content_hash": "b3bf60f80f74bf4ab0cea100f444048e5c944f342d595f2b01ebb9a788f2f086",
+          "exists": true,
+          "path": "./.cairn/specs/wit-wasi/spec.md"
+        }
+      ],
+      "manifest_hash": "a8eebe104d3ebc26b9c49e6376a2de00372ba89f05827bc7a21478a2a6353ddf"
+    },
+    "kind": "sync",
+    "manifest_hash": "26aa45281f470679db4aa40266cdf6e971e978fdbb461a6b99032d9baae6e791"
+  },
+  "non_claims": [
+    "workflow state proves only the selected policy graph and observed structural artifact facts",
+    "workflow instructions do not prove artifact truth, review quality, or implementation correctness",
+    "workflow state does not satisfy proposal, design, tasks, sync, archive, evidence, or release gates",
+    "workflow commands are read-only and do not create, edit, delete, or approve lifecycle artifacts"
+  ],
+  "plan_hash": "eb7dbbdd89f9f12800181fe0fb6dd43303fa9a9c65c10d653ed37060a7d9b868",
+  "policy": "cairn-default",
+  "policy_hash": "8280151b7a53822eed460149ecb600bf11418d7463c935e0742009b334f4e7dd",
+  "profile_identity_hash": "c7df06090877cbb23f4e11997c62aa99a5d8aa87321652d5dea79ab1841bc31c",
+  "reasons": [],
+  "receipt_hash": "d914f21b229d8e779cda785cc3d0a1e2cb45c48caddf46db2ce8f395c95425bb",
+  "review_receipt_hashes": [],
+  "spec_effect": "delta",
+  "workflow_profile": "spec-driven",
+  "workflow_profile_compatibility_fallback": false,
+  "workflow_profile_source": "change_create",
+  "workflow_profile_version": 1
+}

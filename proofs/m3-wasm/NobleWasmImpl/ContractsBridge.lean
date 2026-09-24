@@ -18,6 +18,10 @@ def toType : noble_contracts.component.Type → _root_.noble_contracts.component
   | .String => .String
   | .Bytes => .Bytes
   | .ResultS64String => .ResultS64String
+  | .ResultBytesString => .ResultBytesString
+  | .StreamU8 => .StreamU8
+  | .FutureS64 => .FutureS64
+  | .FutureResultS64String => .FutureResultS64String
   | .Own kind => .Own kind
   | .Borrow kind => .Borrow kind
 
@@ -27,6 +31,10 @@ def fromType : _root_.noble_contracts.component.Type → noble_contracts.compone
   | .String => .String
   | .Bytes => .Bytes
   | .ResultS64String => .ResultS64String
+  | .ResultBytesString => .ResultBytesString
+  | .StreamU8 => .StreamU8
+  | .FutureS64 => .FutureS64
+  | .FutureResultS64String => .FutureResultS64String
   | .Own kind => .Own kind
   | .Borrow kind => .Borrow kind
 
@@ -47,6 +55,7 @@ def toOperation (x : noble_contracts.component.Operation) :
     export_name := x.export_name
     parameters := KernelBridge.mapVec toType x.parameters
     results := KernelBridge.mapVec toType x.results
+    asynchronous := x.asynchronous
     effect := x.effect
     definition := x.definition }
 
@@ -59,6 +68,7 @@ def fromOperation (x : _root_.noble_contracts.component.Operation) :
     export_name := x.export_name
     parameters := KernelBridge.mapVec fromType x.parameters
     results := KernelBridge.mapVec fromType x.results
+    asynchronous := x.asynchronous
     effect := x.effect
     definition := x.definition }
 
@@ -170,10 +180,15 @@ def noble_contracts.component.World.exports
   let value ← _root_.noble_contracts.component.World.impl.exports self
   ok (KernelBridge.mapSlice fromOperation value)
 
-@[rust_fun "noble_contracts::component::{noble_contracts::component::World}::build_context"]
-def noble_contracts.component.World.build_context
+@[rust_fun "noble_contracts::component::{noble_contracts::component::World}::is_async"]
+def noble_contracts.component.World.is_async
+    (self : noble_contracts.component.World) : Result Bool :=
+  _root_.noble_contracts.component.World.is_async self
+
+@[rust_fun "noble_contracts::component::context::{noble_contracts::component::World}::build_context"]
+def noble_contracts.component.context.World.build_context
     (self : noble_contracts.component.World) : Result (alloc.vec.Vec Std.U8) :=
-  _root_.noble_contracts.component.World.build_context self
+  _root_.noble_contracts.component.context.World.build_context self
 
 @[rust_fun "noble_contracts::component::{noble_contracts::component::World}::environment"]
 def noble_contracts.component.World.environment

@@ -26,6 +26,8 @@ import { refusals } from './refusals.mjs';
 import { companionPacket, companionCoverage } from '../mc2/extraction.mjs';
 import { componentPacket, componentCoverage, resourceAuditPacket, resourceAudit,
   componentRefusals } from '../m5/extraction.mjs';
+import { asyncPacket, asyncCoverage, asyncAuditPacket, asyncAudit,
+  asyncRefusals } from '../m6/extraction.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const [mode, argument, ...extra] = process.argv.slice(2);
@@ -51,7 +53,7 @@ const pins = {
 };
 const aeneasRevision = '505b6ca35217e7be5c96c3e2f8045edfbdf47291';
 const evidence = {
-  schema: 'm4-implementation-evidence/v1', scope: 'actual-core-and-component-bootstrap-pure-rust-extraction',
+  schema: 'm4-implementation-evidence/v1', scope: 'actual-core-sync-and-async-component-bootstrap-pure-rust-extraction',
   mode, result: 'running', commands: [], extractions: {},
   assumptions: [
     'Selected Charon/Aeneas, Rust, Lean, Node, host OS and Nix store integrity are trusted tooling boundaries.',
@@ -66,6 +68,8 @@ const evidence = {
     'MC2 assumes an authentic, sound trusted host constructs CheckObservation for the exact independently checked statement, declaration and evidence class; arbitrary trusted Rust callers can forge such observations, while guest ingress cannot grant itself that authority.',
     'The explicit production resource-free test environment uses test.emit Text-- and test.abort; the historical kernel fixture environment keeps its different test.emit Text--Unit contract. No audit silently equates them.',
     'M5 requires universal correspondence between the actual extracted resource transition/production Table.decide and the total reference steps, plus strict semantic lifecycle/accounting invariants. Host serialization, namespace freshness, authentic callbacks and applying returned accounting once remain embedding obligations.',
+    'M6 extends the same full inventory with native async transitions, retained Table.decide, schema classifier and strict ownership/accounting correspondence. Checked-machine Result correspondence is not a global panic-freedom theorem. Serialized authentic callbacks and truthful native-stop/cleanup notifications remain embedding obligations.',
+    'The transparent try_reserve_exact external model preserves vector elements and checks element-count overflow; like the inherited layout-free vector model, it abstracts successful physical allocation, byte layout and OOM, not native storage or admission availability.',
   ],
   non_claims: [
     'No universal frontend inference, immutable namespace/session, acceptance-to-execution or backend refinement theorem.',
@@ -97,9 +101,9 @@ function snapshot() {
     'nix/tool-selection-files.nix', 'nix/source-inventory-derive.nix', 'nix/source-inventory.nix',
     'Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml',
     ...files('crates'),
-    ...['proofs/m3', 'proofs/mc1', 'proofs/mc2', 'proofs/m3-wasm', 'proofs/m4', 'proofs/m5'].flatMap(directory =>
+    ...['proofs/m3', 'proofs/mc1', 'proofs/mc2', 'proofs/m3-wasm', 'proofs/m4', 'proofs/m5', 'proofs/m6'].flatMap(directory =>
       files(directory).filter(file => /\.(lean|toml|json)$/.test(file) || file.endsWith('/lean-toolchain'))),
-    ...['verification/m4', 'verification/m5'].flatMap(directory =>
+    ...['verification/m4', 'verification/m5', 'verification/m6'].flatMap(directory =>
       files(directory).filter(file => file.endsWith('.mjs'))),
     'verification/mc2/extraction.mjs',
     ...['increment', 'guarded'].flatMap(fixture => ['contract', 'proof.lean']
@@ -314,9 +318,16 @@ try {
   const mc2Subjects = companionPacket(accounts, sourceFiles, raw.contracts.llbc);
   const m5Subjects = componentPacket(accounts, sourceFiles, packet);
   packet.roots.push(...mc2Subjects.roots, ...m5Subjects.roots);
+  const m6Subjects = asyncPacket(accounts, sourceFiles, packet);
+  for (const entry of m6Subjects.roots) {
+    if (!packet.roots.some(root => root.declaration === entry.declaration && root.owner === entry.owner)) {
+      packet.roots.push(entry);
+    }
+  }
   const packets = auditPackets(packet);
   save('mc2-subjects.json', mc2Subjects);
   save('m5-subjects.json', m5Subjects);
+  save('m6-subjects.json', m6Subjects);
   save('audit-input.json', packet);
   for (const [lane, input] of Object.entries(packets)) save(`audit-input-${lane}.json`, input);
   evidence.boundary_renewal = { provenance: baseline.provenance,
@@ -395,11 +406,34 @@ try {
     packet: m5Packet, run, proofRoot: m5Root, lake: binaries.lake, artifacts, save }) };
   if (expectedLock) equal(evidence.m5, expectedLock.m5, 'M5-VERDICT',
     'unreviewed resource/authority/component body, model, dependency or strict theorem');
+  const m6Root = path.join(workspace, 'proofs/m6');
+  fs.mkdirSync(path.join(m6Root, '.lake'));
+  fs.symlinkSync(cache, path.join(m6Root, '.lake/packages'), 'dir');
+  equal(fs.readFileSync(path.join(m6Root, 'lean-toolchain'), 'utf8').trim(),
+    selection.lean.toolchain, 'DEPENDENCIES', 'M6 Lean toolchain');
+  equal(packagePins(m6Root, 'm6-before', git), dependencies,
+    'DEPENDENCIES', 'M6 must share the exact audited dependency lock and sources');
+  const m6Coverage = asyncCoverage(m6Subjects, audit);
+  save('m6-compiled-coverage.json', m6Coverage);
+  const m6Packet = asyncAuditPacket(m6Subjects, {
+    source_revision: evidence.source_revision, source_files: sourceFiles, staged_source_files: staged,
+    tools: evidence.tools, dependencies, extractions: extractionBindings,
+    inventory_sha256: sha(canonical(accounts)), canonical_audit_input_sha256: evidence.audit_input_sha256,
+    async_subjects_sha256: fileSha(path.join(artifacts, 'm6-subjects.json')),
+  });
+  evidence.m6 = { coverage: m6Coverage, async_refinement: asyncAudit({
+    packet: m6Packet, run, proofRoot: m6Root, lake: binaries.lake, artifacts, save }) };
+  if (expectedLock) equal(evidence.m6, expectedLock.m6, 'M6-VERDICT',
+    'unreviewed async extraction or strict correspondence');
   if (expectedLock) equal(audit, expectedLock.audit, 'DEPENDENCIES', 'unexpected dependency, axiom, theorem or compiled declaration');
   evidence.refusals = refusals({ raw, accounts, sources: sourceFiles, tools: evidence.tools, packet, packets, audit, run, proofRoot,
     lake: binaries.lake, artifacts, save });
   evidence.m5_refusals = componentRefusals({ raw, accounts, sources: sourceFiles, packet, subjects: m5Subjects,
     coverage: audit, proofPacket: m5Packet, run, proofRoot: m5Root, lake: binaries.lake, artifacts, save });
+  evidence.m6_refusals = asyncRefusals({ raw, accounts, sources: sourceFiles, packet,
+    subjects: m6Subjects, coverage: audit, proofPacket: m6Packet,
+    run, proofRoot: m6Root, lake: binaries.lake, artifacts, save });
+  equal(packagePins(m6Root, 'm6-after', git), dependencies, 'DEPENDENCIES', 'M6 Lean source changed during gate');
   equal(packagePins(m5Root, 'm5-after', git), dependencies, 'DEPENDENCIES', 'M5 Lean source changed during gate');
   equal(packagePins(proofRoot, 'after', git), dependencies, 'DEPENDENCIES', 'Lean source changed during gate');
   for (const [name, binary] of Object.entries(binaries)) equal(identity(binary), evidence.tools[name], 'TOOL', name);
@@ -408,7 +442,7 @@ try {
   noCargoConfiguration(workspace);
   if (expectedLock) equal(fileSha(path.join(root, lockFile)), evidence.reviewed_lock_sha256, 'LOCK', 'reviewed lock changed during gate');
   const candidate = { schema, source_files: sourceFiles, tools: evidence.tools, inventory: accounts,
-    generated_files: generatedFiles, audit, mc2: evidence.mc2, m5: evidence.m5 };
+    generated_files: generatedFiles, audit, mc2: evidence.mc2, m5: evidence.m5, m6: evidence.m6 };
   if (mode === 'discover') {
     evidence.result = 'review-required';
     save('review-candidate.json', candidate);

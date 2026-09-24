@@ -10,6 +10,12 @@ pub(super) fn ty(
         super::super::RawType::String => Ok(crate::component::Type::String),
         super::super::RawType::Bytes => Ok(crate::component::Type::Bytes),
         super::super::RawType::ResultS64String => Ok(crate::component::Type::ResultS64String),
+        super::super::RawType::ResultBytesString => Ok(crate::component::Type::ResultBytesString),
+        super::super::RawType::StreamU8 => Ok(crate::component::Type::StreamU8),
+        super::super::RawType::FutureS64 => Ok(crate::component::Type::FutureS64),
+        super::super::RawType::FutureResultS64String => {
+            Ok(crate::component::Type::FutureResultS64String)
+        }
         super::super::RawType::Own(name) => Ok(crate::component::Type::Own(attempt!(resource(
             resources, interface, name, selected
         )))),

@@ -235,10 +235,10 @@ let contracts = import "./architecture.contracts.ncl" in
   admission = null,
   waivers = [],
   collection_limits = {
-    # M5 has 23 real units; the acyclic boundary control adds two shell-library
+    # M6 has 25 real units; the acyclic boundary control adds two shell-library
     # units. Retain every target and shard, including that library's test unit.
-    max_units = 25,
-    max_shards = 25,
+    max_units = 27,
+    max_shards = 27,
     max_modules = 1024,
     max_items = 4096,
     max_types = 4096,

@@ -1,0 +1,46 @@
+{
+  "schema": "noble-m6-regressions/v1",
+  "result": "passed",
+  "binary_sha256": "dc951c1a12512669857a96ba3a0765569e28024db13923cf92dd3ebde0755377",
+  "archive": "assurance.tar.zst.part-*",
+  "mc1": {
+    "passed": true,
+    "cases": 36,
+    "receipt": "regressions/mc1.json",
+    "sha256": "b117271094629254a11bd5a8f3a3405492037c7c63cca8677de3e99e111f3c2a"
+  },
+  "mc2": {
+    "passed": true,
+    "cases": 15,
+    "executed": 15,
+    "core_controls": 18,
+    "independent_recheck_baselines": 16,
+    "receipt": "regressions/mc2.json",
+    "sha256": "ecf102daee365fe6688478211dafb47dd925abde191dd93abbde9315c74f03c4",
+    "raw": "regressions/mc2"
+  },
+  "m3": {
+    "result": "eligible-for-selection",
+    "executed_configurations": ["wasm-gc/off", "wasm-gc/on", "managed-linear-memory/off", "managed-linear-memory/on"],
+    "receipt": "regressions/m3/report.json",
+    "sha256": "ed66ffd651b04864bab4ffb0752d9a535f132eae03d644286feeccf4d08ab4b8"
+  },
+  "m4": {
+    "result": "passed",
+    "cases": 18,
+    "controls": 11,
+    "workflows": ["DX-10", "DX-12"],
+    "receipt": "regressions/m4/acceptance.json",
+    "sha256": "116438861d8b874b83ff91edfc4f8b574566f4cbfaa4e581e52db68da14f3357"
+  },
+  "m5": {
+    "result": "passed",
+    "cases": 24,
+    "variants": 84,
+    "native_tests": 44,
+    "controls": 15,
+    "receipt": "regressions/m5/report.json",
+    "sha256": "682804271286a96cfaedfc415333acb6523111f555b8c8dc5d2a36c0752a588b"
+  },
+  "scope": "These are complete reruns against the final M6 compiled CLI and their own captured source inputs, not identical whole-tree revisions across all milestones. The unsuccessful wrong-test-binary and daemon-reset MC2 attempts remain separately labeled in the assurance archive; only the successful full rerun is acceptance."
+}

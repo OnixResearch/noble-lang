@@ -4,6 +4,7 @@
 )]
 
 mod calls;
+mod inputs;
 mod operations;
 mod results;
 
@@ -13,6 +14,8 @@ pub(super) struct Data {
 }
 pub(super) struct Plan {
     pub(super) name: alloc::string::String,
+    pub(super) ordinal: u32,
+    pub(super) asynchronous: bool,
     pub(super) parameters: alloc::vec::Vec<noble_contracts::component::Type>,
     pub(super) result: Option<noble_contracts::component::Type>,
     pub(super) locals: alloc::vec::Vec<super::abi::Lane>,
@@ -20,15 +23,32 @@ pub(super) struct Plan {
 }
 
 const VALUE_LANES: usize = 3;
+#[derive(Clone, Copy)]
+#[octet::sealed_enum]
+enum Storage {
+    Flat([Option<u32>; VALUE_LANES]),
+    Pair(usize),
+}
 #[derive(Clone)]
 struct Value {
     ty: noble_kernel::types::Ty,
-    locals: [Option<u32>; VALUE_LANES],
+    storage: Storage,
+}
+impl Value {
+    const fn flat(&self) -> Result<&[Option<u32>; VALUE_LANES], crate::Diagnostic> {
+        match &self.storage {
+            Storage::Flat(locals) => Ok(locals),
+            Storage::Pair(_) => Err(crate::Diagnostic::Unsupported),
+        }
+    }
 }
 struct State {
     locals: alloc::vec::Vec<super::abi::Lane>,
     parameters: usize,
     stack: alloc::vec::Vec<Value>,
+    // Internal source pairs only reference existing locals. The immutable,
+    // bounded arena avoids recursive values or guest aggregate allocations.
+    pairs: alloc::vec::Vec<(Value, Value)>,
     code: crate::output::Buffer,
 }
 impl State {
@@ -69,7 +89,10 @@ impl State {
         }
         match failure {
             Some(error) => Err(error),
-            None => Ok(Value { ty, locals }),
+            None => Ok(Value {
+                ty,
+                storage: Storage::Flat(locals),
+            }),
         }
     }
     fn typed_local(
@@ -84,11 +107,12 @@ impl State {
         self.stack.pop().ok_or(crate::Diagnostic::Invalid)
     }
     fn read(&mut self, value: &Value) -> Result<(), crate::Diagnostic> {
+        let locals = attempt!(value.flat());
         let mut at = 0usize;
         let mut failure = None;
-        let count = value.locals.len();
+        let count = locals.len();
         while at < count && failure.is_none() {
-            let local = value.locals[at];
+            let local = locals[at];
             if let Some(local) = local {
                 if let Err(error) = super::abi::get(&mut self.code, local) {
                     failure = Some(error);
@@ -102,11 +126,12 @@ impl State {
         }
     }
     fn capture(&mut self, value: &Value) -> Result<(), crate::Diagnostic> {
-        let mut at = value.locals.len();
+        let locals = attempt!(value.flat());
+        let mut at = locals.len();
         let mut failure = None;
         while at > 0 && failure.is_none() {
             at = at.saturating_sub(1);
-            let local = value.locals[at];
+            let local = locals[at];
             if let Some(local) = local {
                 if let Err(error) = super::abi::set(&mut self.code, local) {
                     failure = Some(error);
@@ -137,12 +162,23 @@ pub(super) fn function(
         Some(submission) => &submission.body,
         None => return Err(crate::Diagnostic::Invalid),
     };
-    let mut state = attempt!(initial(&operation.parameters));
+    let mut state = attempt!(inputs::initial(&operation.parameters));
     attempt!(nodes(world, body, data, &mut state));
     let result = attempt!(super::abi::result(&operation.results));
-    attempt!(results::finish(result, &mut state));
+    attempt!(results::finish(result, operation.asynchronous, &mut state));
+    let ordinal = match u32::try_from(export.index()) {
+        Ok(ordinal) => ordinal,
+        Err(_) => return Err(crate::Diagnostic::Exhausted),
+    };
+    if operation.asynchronous {
+        attempt!(state.code.append(b" call $task-return-"));
+        attempt!(state.code.number(u64::from(ordinal)));
+        attempt!(state.code.append(b"\n call $cleanup\n"));
+    }
     Ok(Plan {
         name: operation.export_name.clone(),
+        ordinal,
+        asynchronous: operation.asynchronous,
         parameters: operation.parameters.clone(),
         result,
         locals: state.locals,
@@ -173,97 +209,12 @@ fn nodes(
 }
 
 #[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-maintainers; each input's lane assignment and emitted value validation must succeed before the compiler state is returned; failures remain typed and unpublished."
-)]
-fn initial(parameters: &[noble_contracts::component::Type]) -> Result<State, crate::Diagnostic> {
-    let mut state = State {
-        locals: alloc::vec::Vec::new(),
-        parameters: 0,
-        stack: alloc::vec::Vec::with_capacity(parameters.len()),
-        code: crate::output::Buffer::new(1024),
-    };
-    let mut at = 0usize;
-    let mut failure = None;
-    let end = parameters.len();
-    while at < end && failure.is_none() {
-        let ty = parameters[at];
-        if let Err(error) = input(ty, &mut state) {
-            failure = Some(error);
-        }
-        at = at.saturating_add(1);
-    }
-    match failure {
-        Some(error) => Err(error),
-        None => Ok(state),
-    }
-}
-
-fn input(ty: noble_contracts::component::Type, state: &mut State) -> Result<(), crate::Diagnostic> {
-    let value = attempt!(input_value(ty, &mut state.parameters));
-    attempt!(results::validate(ty, &value, &mut state.code));
-    state.stack.push(value);
-    Ok(())
-}
-
-#[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-maintainers; lane indexing, integer conversion and the canonical flat-parameter ceiling are checked fallibly; missing or excessive lanes cannot become a default local."
-)]
-fn input_value(
-    ty: noble_contracts::component::Type,
-    parameters: &mut usize,
-) -> Result<Value, crate::Diagnostic> {
-    let mut locals = [None; VALUE_LANES];
-    let mut lane = 0usize;
-    let mut failure = None;
-    let count = super::abi::lane_count(ty);
-    while lane < count && failure.is_none() {
-        if let Err(error) = input_lane(parameters, &mut locals, lane) {
-            failure = Some(error);
-        }
-        lane = lane.saturating_add(1);
-    }
-    if let Some(error) = failure {
-        return Err(error);
-    }
-    if *parameters > super::FLAT_PARAMETER_LIMIT {
-        return Err(crate::Diagnostic::Unsupported);
-    }
-    Ok(Value {
-        ty: ty.noble(),
-        locals,
-    })
-}
-
-#[expect(
-    tigerstyle::missing_const_fn,
-    reason = "Owner: noble-maintainers; local assignment requires non-const TryFrom and checked mutable lane lookup, preserving Exhausted or Defective instead of truncating a local index."
-)]
-fn input_lane(
-    parameters: &mut usize,
-    locals: &mut [Option<u32>; VALUE_LANES],
-    lane: usize,
-) -> Result<(), crate::Diagnostic> {
-    let index = match u32::try_from(*parameters) {
-        Ok(index) => index,
-        Err(_) => return Err(crate::Diagnostic::Exhausted),
-    };
-    let slot = match locals.get_mut(lane) {
-        Some(slot) => slot,
-        None => return Err(crate::Diagnostic::Defective),
-    };
-    *slot = Some(index);
-    *parameters = parameters.saturating_add(1);
-    Ok(())
-}
-
-#[expect(
     tigerstyle::missing_const_fn,
     reason = "Owner: noble-maintainers; canonical lane lookup uses non-const slice indexing and rejects absent lanes with Invalid rather than defaulting a local index."
 )]
 fn slot(value: &Value, at: usize) -> Result<u32, crate::Diagnostic> {
-    let local = value.locals.get(at).copied();
+    let locals = attempt!(value.flat());
+    let local = locals.get(at).copied();
     match local {
         Some(Some(local)) => Ok(local),
         Some(None) | None => Err(crate::Diagnostic::Invalid),

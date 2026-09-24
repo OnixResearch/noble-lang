@@ -1,13 +1,44 @@
-//! The bounded synchronous WIT boundary. WIT is parsed, not replaced by a
+//! The bounded WIT boundary. WIT is parsed, not replaced by a
 //! parallel IDL. Unsupported shapes fail before source or Wasm emission.
 mod bindings;
+mod context;
 mod parser;
 mod preparation;
 
 pub const PROFILE: &str = "Component-Sync-Bootstrap";
+pub const ASYNC_PROFILE: &str = "Component-Async-Bootstrap";
 pub const MAX_OPERATIONS: usize = 62;
 pub const MAX_RESOURCES: usize = 32;
 pub const MAX_PARAMETERS: usize = 16;
+
+// Declared resources occupy 1..=MAX_RESOURCES, including declared witnesses.
+// Live async kinds have fixed identities independent of declaration order.
+pub const STREAM_U8_KIND: noble_kernel::types::ResourceKind =
+    noble_kernel::types::ResourceKind(u32::MAX.saturating_sub(2));
+pub const FUTURE_S64_KIND: noble_kernel::types::ResourceKind =
+    noble_kernel::types::ResourceKind(u32::MAX.saturating_sub(1));
+pub const FUTURE_RESULT_S64_STRING_KIND: noble_kernel::types::ResourceKind =
+    noble_kernel::types::ResourceKind(u32::MAX);
+
+const BINDING_SCHEMA: &str = "WIT-Bounded-v3:bool,s64,string,list<u8>,result<s64,string>,result<list<u8>,string>,own,borrow,stream<u8>,future<s64>,future<result<s64,string>>";
+const SYNC_ABI: &str = "Canonical-Sync-cm32p2";
+const ASYNC_ABI: &str = "Canonical-Async-Legacy-Lower-WaitableSet-LiftStackful-TaskReturn-v1";
+
+#[octet::sealed_enum]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Profile {
+    Sync,
+    Async,
+}
+
+impl Profile {
+    pub fn name(self) -> &'static str {
+        match self {
+            Self::Sync => PROFILE,
+            Self::Async => ASYNC_PROFILE,
+        }
+    }
+}
 
 /// The adapter profile is closed: new types require an exact Noble mapping
 /// and a separately reviewed Canonical ABI adapter.
@@ -19,13 +50,34 @@ pub enum Type {
     String,
     Bytes,
     ResultS64String,
+    ResultBytesString,
+    StreamU8,
+    FutureS64,
+    FutureResultS64String,
     Own(noble_kernel::types::ResourceKind),
     Borrow(noble_kernel::types::ResourceKind),
 }
 
 impl Type {
+    /// A type identity, not a live handle or an authorization witness.
+    pub const fn resource_kind(self) -> Option<noble_kernel::types::ResourceKind> {
+        match self {
+            Self::StreamU8 => Some(STREAM_U8_KIND),
+            Self::FutureS64 => Some(FUTURE_S64_KIND),
+            Self::FutureResultS64String => Some(FUTURE_RESULT_S64_STRING_KIND),
+            Self::Own(kind) | Self::Borrow(kind) => Some(kind),
+            Self::Boolean
+            | Self::S64
+            | Self::String
+            | Self::Bytes
+            | Self::ResultS64String
+            | Self::ResultBytesString => None,
+        }
+    }
+
     /// Bytes use checked u8 conversions at the boundary, never I64 truncation.
     /// Borrow maps to its guest owner only; no borrow token enters guest types.
+    /// Streams and futures use the same move-only discipline as owned resources.
     pub fn noble(self) -> noble_kernel::types::Ty {
         match self {
             Self::Boolean => noble_kernel::types::Ty::Bool,
@@ -38,6 +90,17 @@ impl Type {
                 alloc::boxed::Box::new(noble_kernel::types::Ty::I64),
                 alloc::boxed::Box::new(noble_kernel::types::Ty::Text),
             ),
+            Self::ResultBytesString => noble_kernel::types::Ty::Sum(
+                alloc::boxed::Box::new(noble_kernel::types::Ty::List(alloc::boxed::Box::new(
+                    noble_kernel::types::Ty::I64,
+                ))),
+                alloc::boxed::Box::new(noble_kernel::types::Ty::Text),
+            ),
+            Self::StreamU8 => noble_kernel::types::Ty::Resource(STREAM_U8_KIND),
+            Self::FutureS64 => noble_kernel::types::Ty::Resource(FUTURE_S64_KIND),
+            Self::FutureResultS64String => {
+                noble_kernel::types::Ty::Resource(FUTURE_RESULT_S64_STRING_KIND)
+            }
             Self::Own(kind) | Self::Borrow(kind) => noble_kernel::types::Ty::Resource(kind),
         }
     }
@@ -64,6 +127,8 @@ pub struct Operation {
     pub export_name: alloc::string::String,
     pub parameters: alloc::vec::Vec<Type>,
     pub results: alloc::vec::Vec<Type>,
+    /// Native suspension preserves the direct-style sequential Noble contract.
+    pub asynchronous: bool,
     /// Import-only identities; export contracts do not invent host effects.
     pub effect: Option<noble_kernel::types::EffId>,
     pub definition: Option<noble_kernel::contracts::Definition>,
@@ -109,6 +174,7 @@ pub struct World {
     imports: alloc::vec::Vec<Operation>,
     exports: alloc::vec::Vec<Operation>,
     resources: alloc::vec::Vec<Resource>,
+    asynchronous: bool,
     limits: crate::Limits,
 }
 
@@ -134,23 +200,19 @@ impl World {
     pub fn resources(&self) -> &[Resource] {
         &self.resources
     }
+    /// Native async ABI is also required by live stream and future values.
+    pub const fn is_async(&self) -> bool {
+        self.asynchronous
+    }
+    pub const fn profile(&self) -> Profile {
+        if self.asynchronous {
+            Profile::Async
+        } else {
+            Profile::Sync
+        }
+    }
     pub const fn limits(&self) -> crate::Limits {
         self.limits
-    }
-    /// Full build binding, not a digest offered as authority.
-    pub fn build_context(&self) -> alloc::vec::Vec<u8> {
-        let capacity_bytes = PROFILE
-            .len()
-            .saturating_add(self.identity.len())
-            .saturating_add(self.wit.len())
-            .saturating_add(2);
-        let mut key = alloc::vec::Vec::with_capacity(capacity_bytes);
-        key.extend_from_slice(PROFILE.as_bytes());
-        key.push(0);
-        key.extend_from_slice(self.identity.as_bytes());
-        key.push(0);
-        key.extend_from_slice(&self.wit);
-        key
     }
     /// Independently reconstruct the exact generated import environment.
     pub fn environment(&self) -> Result<noble_kernel::contracts::Env, Error> {

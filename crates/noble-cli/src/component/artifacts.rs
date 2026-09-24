@@ -14,10 +14,15 @@ pub(super) struct Bundle {
     reason = "Owner: noble-maintainers; pinned tool identity, supervised deadline, each assembler/validator exit and bounded output reads are checked fallibly before returning a complete bundle."
 )]
 pub(super) fn assemble(
-    wit: &[u8],
-    world: &str,
+    world: &noble_contracts::component::World,
     wat: &[u8],
 ) -> Result<Bundle, crate::workflow::output::Failure> {
+    let features = match world.profile() {
+        noble_contracts::component::Profile::Sync => None,
+        noble_contracts::component::Profile::Async => {
+            Some("cm-async,cm-async-stackful,cm-async-builtins")
+        }
+    };
     let temporary = attempt!(crate::workflow::artifacts::Temporary::create());
     let deadline = attempt!(crate::sandbox::now()
         .checked_add(std::time::Duration::from_secs(30))
@@ -29,12 +34,12 @@ pub(super) fn assemble(
     if version.stdout.trim() != "wasm-tools 1.245.1" {
         return Err(crate::workflow::output::Failure::unsupported(
             "component-tool-pin",
-            "Component-Sync-Bootstrap requires wasm-tools 1.245.1".into(),
+            "component bootstrap profiles require wasm-tools 1.245.1".into(),
         ));
     }
     attempt!(crate::workflow::artifacts::write_source(
         &temporary.path.join("world.wit"),
-        wit
+        world.wit()
     ));
     attempt!(crate::workflow::artifacts::write_source(
         &temporary.path.join("module.wat"),
@@ -51,7 +56,7 @@ pub(super) fn assemble(
             "component",
             "embed",
             "--world",
-            world,
+            world.name(),
             "--encoding",
             "utf8",
             "world.wit",
@@ -66,19 +71,27 @@ pub(super) fn assemble(
         &["component", "new", "embedded.wasm", "-o", "component.wasm"],
         deadline,
     ));
-    attempt!(invoke(
-        &temporary.path,
-        &["validate", "component.wasm"],
-        deadline,
-    ));
+    let validation = match features {
+        Some(features) => invoke(
+            &temporary.path,
+            &["validate", "--features", features, "component.wasm"],
+            deadline,
+        ),
+        None => invoke(&temporary.path, &["validate", "component.wasm"], deadline),
+    };
+    attempt!(validation);
+    read_bundle(&temporary.path)
+}
+
+fn read_bundle(directory: &std::path::Path) -> Result<Bundle, crate::workflow::output::Failure> {
     Ok(Bundle {
         core: attempt!(crate::workflow::artifacts::read_bounded(
-            &temporary.path.join("embedded.wasm"),
+            &directory.join("embedded.wasm"),
             ARTIFACT_LIMIT_BYTES,
             "component-core-artifact",
         )),
         binary: attempt!(crate::workflow::artifacts::read_bounded(
-            &temporary.path.join("component.wasm"),
+            &directory.join("component.wasm"),
             ARTIFACT_LIMIT_BYTES,
             "component-artifact",
         )),
