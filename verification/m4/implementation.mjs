@@ -28,6 +28,8 @@ import { componentPacket, componentCoverage, resourceAuditPacket, resourceAudit,
   componentRefusals } from '../m5/extraction.mjs';
 import { asyncPacket, asyncCoverage, asyncAuditPacket, asyncAudit,
   asyncRefusals } from '../m6/extraction.mjs';
+import { syndicatePacket, syndicateCoverage, syndicateAuditPacket, syndicateAudit,
+  syndicateRefusals } from '../m7/extraction.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const [mode, argument, ...extra] = process.argv.slice(2);
@@ -70,6 +72,7 @@ const evidence = {
     'M5 requires universal correspondence between the actual extracted resource transition/production Table.decide and the total reference steps, plus strict semantic lifecycle/accounting invariants. Host serialization, namespace freshness, authentic callbacks and applying returned accounting once remain embedding obligations.',
     'M6 extends the same full inventory with native async transitions, retained Table.decide, schema classifier and strict ownership/accounting correspondence. Checked-machine Result correspondence is not a global panic-freedom theorem. Serialized authentic callbacks and truthful native-stop/cleanup notifications remain embedding obligations.',
     'The transparent try_reserve_exact external model preserves vector elements and checks element-count overflow; like the inherited layout-free vector model, it abstracts successful physical allocation, byte layout and OOM, not native storage or admission availability.',
+    'M7 independently audits exactly three extracted pure dataspace kernel functions against total transparent references; table/wire bodies, capability provenance, component adapter and host/engine behavior remain separate obligations.',
   ],
   non_claims: [
     'No universal frontend inference, immutable namespace/session, acceptance-to-execution or backend refinement theorem.',
@@ -77,6 +80,7 @@ const evidence = {
     'No WAT/Wasm runtime, optimizer, assembler, engine, loader, host environment or ABI correctness theorem.',
     'No physical host/native release, arbitrary authority-system refinement or externally authenticated observation theorem.',
     'No execution/conformance result, source-inventory policy discharge, M4 milestone completion, MC2 or M5 closure.',
+    'No universal dataspace table/wire, Syndicate adapter, Preserves decoder or Component Model runtime correspondence theorem.',
   ],
 };
 let selection;
@@ -101,10 +105,12 @@ function snapshot() {
     'nix/tool-selection-files.nix', 'nix/source-inventory-derive.nix', 'nix/source-inventory.nix',
     'Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml',
     ...files('crates'),
-    ...['proofs/m3', 'proofs/mc1', 'proofs/mc2', 'proofs/m3-wasm', 'proofs/m4', 'proofs/m5', 'proofs/m6'].flatMap(directory =>
+    ...['proofs/m3', 'proofs/mc1', 'proofs/mc2', 'proofs/m3-wasm', 'proofs/m4', 'proofs/m5', 'proofs/m6', 'proofs/m7'].flatMap(directory =>
       files(directory).filter(file => /\.(lean|toml|json)$/.test(file) || file.endsWith('/lean-toolchain'))),
     ...['verification/m4', 'verification/m5', 'verification/m6'].flatMap(directory =>
       files(directory).filter(file => file.endsWith('.mjs'))),
+    ...files('verification/m7').filter(file => file.endsWith('.mjs') ||
+      file.startsWith('verification/m7/peer/')),
     'verification/mc2/extraction.mjs',
     ...['increment', 'guarded'].flatMap(fixture => ['contract', 'proof.lean']
       .map(extension => `verification/mc2/contracts/${fixture}.${extension}`)),
@@ -324,10 +330,13 @@ try {
       packet.roots.push(entry);
     }
   }
+  const m7Subjects = syndicatePacket(accounts, sourceFiles, packet);
+  packet.roots.push(...m7Subjects.roots);
   const packets = auditPackets(packet);
   save('mc2-subjects.json', mc2Subjects);
   save('m5-subjects.json', m5Subjects);
   save('m6-subjects.json', m6Subjects);
+  save('m7-subjects.json', m7Subjects);
   save('audit-input.json', packet);
   for (const [lane, input] of Object.entries(packets)) save(`audit-input-${lane}.json`, input);
   evidence.boundary_renewal = { provenance: baseline.provenance,
@@ -425,6 +434,25 @@ try {
     packet: m6Packet, run, proofRoot: m6Root, lake: binaries.lake, artifacts, save }) };
   if (expectedLock) equal(evidence.m6, expectedLock.m6, 'M6-VERDICT',
     'unreviewed async extraction or strict correspondence');
+  const m7Root = path.join(workspace, 'proofs/m7');
+  fs.mkdirSync(path.join(m7Root, '.lake'));
+  fs.symlinkSync(cache, path.join(m7Root, '.lake/packages'), 'dir');
+  equal(fs.readFileSync(path.join(m7Root, 'lean-toolchain'), 'utf8').trim(),
+    selection.lean.toolchain, 'DEPENDENCIES', 'M7 Lean toolchain');
+  equal(packagePins(m7Root, 'm7-before', git), dependencies,
+    'DEPENDENCIES', 'M7 must share the exact audited dependency lock and sources');
+  const m7Coverage = syndicateCoverage(m7Subjects, audit);
+  save('m7-compiled-coverage.json', m7Coverage);
+  const m7Packet = syndicateAuditPacket(m7Subjects, {
+    source_revision: evidence.source_revision, source_files: sourceFiles, staged_source_files: staged,
+    tools: evidence.tools, dependencies, extractions: extractionBindings,
+    inventory_sha256: sha(canonical(accounts)), canonical_audit_input_sha256: evidence.audit_input_sha256,
+    syndicate_subjects_sha256: fileSha(path.join(artifacts, 'm7-subjects.json')),
+  });
+  evidence.m7 = { coverage: m7Coverage, syndicate_refinement: syndicateAudit({
+    packet: m7Packet, run, proofRoot: m7Root, lake: binaries.lake, artifacts, save }) };
+  if (expectedLock) equal(evidence.m7, expectedLock.m7, 'M7-VERDICT',
+    'unreviewed dataspace extraction or strict correspondence');
   if (expectedLock) equal(audit, expectedLock.audit, 'DEPENDENCIES', 'unexpected dependency, axiom, theorem or compiled declaration');
   evidence.refusals = refusals({ raw, accounts, sources: sourceFiles, tools: evidence.tools, packet, packets, audit, run, proofRoot,
     lake: binaries.lake, artifacts, save });
@@ -433,6 +461,10 @@ try {
   evidence.m6_refusals = asyncRefusals({ raw, accounts, sources: sourceFiles, packet,
     subjects: m6Subjects, coverage: audit, proofPacket: m6Packet,
     run, proofRoot: m6Root, lake: binaries.lake, artifacts, save });
+  evidence.m7_refusals = syndicateRefusals({ raw, accounts, sources: sourceFiles, packet,
+    subjects: m7Subjects, coverage: audit, proofPacket: m7Packet,
+    run, proofRoot: m7Root, lake: binaries.lake, artifacts, save });
+  equal(packagePins(m7Root, 'm7-after', git), dependencies, 'DEPENDENCIES', 'M7 Lean source changed during gate');
   equal(packagePins(m6Root, 'm6-after', git), dependencies, 'DEPENDENCIES', 'M6 Lean source changed during gate');
   equal(packagePins(m5Root, 'm5-after', git), dependencies, 'DEPENDENCIES', 'M5 Lean source changed during gate');
   equal(packagePins(proofRoot, 'after', git), dependencies, 'DEPENDENCIES', 'Lean source changed during gate');
@@ -442,7 +474,7 @@ try {
   noCargoConfiguration(workspace);
   if (expectedLock) equal(fileSha(path.join(root, lockFile)), evidence.reviewed_lock_sha256, 'LOCK', 'reviewed lock changed during gate');
   const candidate = { schema, source_files: sourceFiles, tools: evidence.tools, inventory: accounts,
-    generated_files: generatedFiles, audit, mc2: evidence.mc2, m5: evidence.m5, m6: evidence.m6 };
+    generated_files: generatedFiles, audit, mc2: evidence.mc2, m5: evidence.m5, m6: evidence.m6, m7: evidence.m7 };
   if (mode === 'discover') {
     evidence.result = 'review-required';
     save('review-candidate.json', candidate);

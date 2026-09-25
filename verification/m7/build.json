@@ -1,0 +1,274 @@
+{
+  "schema": "noble-m7-build/v1",
+  "result": "built",
+  "source_root": "/home/brittonr/git/noble",
+  "artifact_directory": "/var/tmp/noble-m7-user1555-final/assurance-policy-fixed/build",
+  "node": {
+    "executable": "/nix/store/h4apbnz8p5fmjwcmzlaxcjm5vr70d97x-nodejs-slim-24.13.0/bin/node",
+    "sha256": "ad2d5c03bb247d3690f8baf48b2aac572fe0ed5252b4c5bdcfa7987a169b8f3b",
+    "version": "v24.13.0"
+  },
+  "base": {
+    "receipt": "base/build.json",
+    "receipt_sha256": "34750247cc50db6b9bb7e868e8d068ca7b51baaecb0ad074c1b6ee6e8257bfc9",
+    "source_revision": "sha256:08e13851e037891582ea488f6577df51bbaf8b11a75f495fde574f4f5c448538",
+    "cargo_lock_sha256": "918fbf668c6de38a4e9eb108d52ab51b1141e24a516b046014f0eb3d26e8b693"
+  },
+  "opacity": {
+    "report": "m5-opacity/opacity.json",
+    "sha256": "8f2684a6985ee063c3a7f8bfcd340cc84148f132370796fb46998c2abf90beab",
+    "build_receipt": "m5-opacity/build.json",
+    "build_receipt_sha256": "19f664dc688bc7d7b7e493ecc17431f39bc94890f7e1a3d916644f85ac7549ad",
+    "source_count": 428,
+    "locked_sources": 394,
+    "base_sources": 425
+  },
+  "sources": {
+    "verification/m7/peer/Cargo.lock": {
+      "sha256": "6a90a8cccc740d6c6f8d4126ee3ca7190cdb948d13b364ed91f7af8c300b8b80",
+      "bytes": 26132,
+      "snapshot": "verification/m7/peer/Cargo.lock"
+    },
+    "verification/m7/peer/Cargo.toml": {
+      "sha256": "66c48fc7ca574cc69d8f545a676f579b3d2c07a00fbf5d6cf136b50d6d884831",
+      "bytes": 516,
+      "snapshot": "verification/m7/peer/Cargo.toml"
+    },
+    "verification/m7/peer/src/main.rs": {
+      "sha256": "394a82ea01629573be7ee2c406404867a7b1082a6f11581cabfe0de41443f8a6",
+      "bytes": 24107,
+      "snapshot": "verification/m7/peer/src/main.rs"
+    },
+    "verification/m7/build.mjs": {
+      "sha256": "6cf578db082826cc962e2b680c207aa2da563441efa03ad5827bef0a641fef44",
+      "bytes": 13020,
+      "snapshot": "verification/m7/build.mjs"
+    },
+    "verification/m7/gate.mjs": {
+      "sha256": "0002d01b21a0805f71d7d5e7ec4c4fc75de8e7bf927f7658ee30b6da30097bdc",
+      "bytes": 23443,
+      "snapshot": "verification/m7/gate.mjs"
+    },
+    "specs/conformance/safety-cases.json": {
+      "sha256": "4a2ea2fc88a9d3b9d0e7eb750576e0db9dbbd76da7c668b4722b363bb20a0235",
+      "bytes": 10080,
+      "snapshot": "specs/conformance/safety-cases.json"
+    },
+    "specs/conformance/wit-wasi-cases.json": {
+      "sha256": "f4ee046239ca61cabc8be5a82e16320bfa9a6f5de345ffd061335192ad72e647",
+      "bytes": 24400,
+      "snapshot": "specs/conformance/wit-wasi-cases.json"
+    },
+    ".cairn/specs/safety/spec.md": {
+      "sha256": "5db78d6f9255da47c5678145f7da072f6bbeff6fbd5818ebbf9d0e0047248275",
+      "bytes": 54360,
+      "snapshot": ".cairn/specs/safety/spec.md"
+    },
+    ".cairn/specs/wit-wasi/spec.md": {
+      "sha256": "01aeb03d67c23eedc28e0adf583cd4eed2c19b6c987432f505e0bcabf165fdc0",
+      "bytes": 77552,
+      "snapshot": ".cairn/specs/wit-wasi/spec.md"
+    }
+  },
+  "commands": [
+    {
+      "label": "full-workspace-and-inherited-peer-build",
+      "executable": "/nix/store/h4apbnz8p5fmjwcmzlaxcjm5vr70d97x-nodejs-slim-24.13.0/bin/node",
+      "executable_sha256": "ad2d5c03bb247d3690f8baf48b2aac572fe0ed5252b4c5bdcfa7987a169b8f3b",
+      "argv": [
+        "/home/brittonr/git/noble/verification/m6/build.mjs",
+        "/var/tmp/noble-m7-user1555-final/assurance-policy-fixed/build/base",
+        "--with-m5-peer"
+      ],
+      "cwd": "/home/brittonr/git/noble",
+      "environment": {
+        "PATH": "/run/current-system/sw/bin",
+        "HOME": "/var/tmp/noble-m7-user1555-final/assurance-policy-fixed/build/home",
+        "LANG": "C.UTF-8",
+        "LC_ALL": "C.UTF-8",
+        "NODE_OPTIONS": ""
+      },
+      "timeout_ms": 3600000,
+      "stdout": "commands/001-full-workspace-and-inherited-peer-build.stdout",
+      "stderr": "commands/001-full-workspace-and-inherited-peer-build.stderr",
+      "status": 0,
+      "signal": null,
+      "error": null,
+      "stdout_sha256": "f9f52d03aaf4c275b5d37d75b37875a377da942c279eafacbbfd962cdbcd94c1",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "m7-independent-peer-build",
+      "executable": "/nix/store/1yvh3d6y3fj3xk2dgwczrp1dj5svd92c-rust-default-1.96.0-nightly-2026-03-21/bin/cargo",
+      "executable_sha256": "862f9dd92f6d1065dbda15da68138db4432ad85581bceadf568ba2749171ddd4",
+      "argv": [
+        "build",
+        "--manifest-path",
+        "verification/m7/peer/Cargo.toml",
+        "--locked",
+        "--offline",
+        "--message-format=json",
+        "--config",
+        "source.crates-io.replace-with=\"m6-vendor\"",
+        "--config",
+        "source.m6-vendor.directory=\"/nix/store/4drsk5fp0k4s82psjch6vlsfyqs1mxgq-wasmtime-40.0.2-vendor/source-registry-0\""
+      ],
+      "cwd": "/var/tmp/noble-m7-user1555-final/assurance-policy-fixed/build/base/workspace",
+      "environment": {
+        "PATH": "/nix/store/1yvh3d6y3fj3xk2dgwczrp1dj5svd92c-rust-default-1.96.0-nightly-2026-03-21/bin:/nix/store/788mx070y81zjlg5ipcl0cra3afviw9k-gcc-wrapper-15.2.0/bin:/run/current-system/sw/bin",
+        "HOME": "/var/tmp/noble-m7-user1555-final/assurance-policy-fixed/build/base/home",
+        "CARGO_HOME": "/var/tmp/noble-m7-user1555-final/assurance-policy-fixed/build/base/cargo-home",
+        "CARGO_TARGET_DIR": "/var/tmp/noble-m7-user1555-final/assurance-policy-fixed/build/m7-peer-target",
+        "RUSTC": "/nix/store/1yvh3d6y3fj3xk2dgwczrp1dj5svd92c-rust-default-1.96.0-nightly-2026-03-21/bin/rustc",
+        "RUSTDOC": "/nix/store/1yvh3d6y3fj3xk2dgwczrp1dj5svd92c-rust-default-1.96.0-nightly-2026-03-21/bin/rustdoc",
+        "RUSTC_WRAPPER": "",
+        "RUSTC_WORKSPACE_WRAPPER": "",
+        "RUSTFLAGS": "",
+        "CARGO_ENCODED_RUSTFLAGS": "",
+        "CARGO_INCREMENTAL": "0",
+        "LANG": "C.UTF-8",
+        "LC_ALL": "C.UTF-8"
+      },
+      "timeout_ms": 1800000,
+      "stdout": "commands/002-m7-independent-peer-build.stdout",
+      "stderr": "commands/002-m7-independent-peer-build.stderr",
+      "status": 0,
+      "signal": null,
+      "error": null,
+      "stdout_sha256": "6652e8566265d86f37a7c51b4ee28c2ffc26c7a72112bf6e8b6c10e7914073e3",
+      "stderr_sha256": "4bd9cdcd0e15ded82aeb0d4a43a35ab2eb08ed22776f6710f0e8209605772330"
+    },
+    {
+      "label": "mc2-cli-core-control-test-build",
+      "executable": "/nix/store/1yvh3d6y3fj3xk2dgwczrp1dj5svd92c-rust-default-1.96.0-nightly-2026-03-21/bin/cargo",
+      "executable_sha256": "862f9dd92f6d1065dbda15da68138db4432ad85581bceadf568ba2749171ddd4",
+      "argv": [
+        "test",
+        "-p",
+        "noble-cli",
+        "--bin",
+        "noble",
+        "--no-run",
+        "--locked",
+        "--offline",
+        "--message-format=json",
+        "--config",
+        "source.crates-io.replace-with=\"m6-vendor\"",
+        "--config",
+        "source.m6-vendor.directory=\"/nix/store/4drsk5fp0k4s82psjch6vlsfyqs1mxgq-wasmtime-40.0.2-vendor/source-registry-0\""
+      ],
+      "cwd": "/var/tmp/noble-m7-user1555-final/assurance-policy-fixed/build/base/workspace",
+      "environment": {
+        "PATH": "/nix/store/1yvh3d6y3fj3xk2dgwczrp1dj5svd92c-rust-default-1.96.0-nightly-2026-03-21/bin:/nix/store/788mx070y81zjlg5ipcl0cra3afviw9k-gcc-wrapper-15.2.0/bin:/run/current-system/sw/bin",
+        "HOME": "/var/tmp/noble-m7-user1555-final/assurance-policy-fixed/build/base/home",
+        "CARGO_HOME": "/var/tmp/noble-m7-user1555-final/assurance-policy-fixed/build/base/cargo-home",
+        "CARGO_TARGET_DIR": "/var/tmp/noble-m7-user1555-final/assurance-policy-fixed/build/base/target",
+        "RUSTC": "/nix/store/1yvh3d6y3fj3xk2dgwczrp1dj5svd92c-rust-default-1.96.0-nightly-2026-03-21/bin/rustc",
+        "RUSTDOC": "/nix/store/1yvh3d6y3fj3xk2dgwczrp1dj5svd92c-rust-default-1.96.0-nightly-2026-03-21/bin/rustdoc",
+        "RUSTC_WRAPPER": "",
+        "RUSTC_WORKSPACE_WRAPPER": "",
+        "RUSTFLAGS": "",
+        "CARGO_ENCODED_RUSTFLAGS": "",
+        "CARGO_INCREMENTAL": "0",
+        "LANG": "C.UTF-8",
+        "LC_ALL": "C.UTF-8"
+      },
+      "timeout_ms": 1800000,
+      "stdout": "commands/003-mc2-cli-core-control-test-build.stdout",
+      "stderr": "commands/003-mc2-cli-core-control-test-build.stderr",
+      "status": 0,
+      "signal": null,
+      "error": null,
+      "stdout_sha256": "483ff2d38f84e50f195a3272b08d8d5358d739a55d55047744955e41303492c0",
+      "stderr_sha256": "7684d1a819c7613020f243bddbc3045519cfac3b718e516cfaa8c0b15bb15584"
+    },
+    {
+      "label": "m5-source-bound-opacity-build",
+      "executable": "/nix/store/h4apbnz8p5fmjwcmzlaxcjm5vr70d97x-nodejs-slim-24.13.0/bin/node",
+      "executable_sha256": "ad2d5c03bb247d3690f8baf48b2aac572fe0ed5252b4c5bdcfa7987a169b8f3b",
+      "argv": [
+        "/home/brittonr/git/noble/verification/m5/build.mjs",
+        "/var/tmp/noble-m7-user1555-final/assurance-policy-fixed/build/m5-opacity"
+      ],
+      "cwd": "/home/brittonr/git/noble",
+      "environment": {
+        "PATH": "/run/current-system/sw/bin",
+        "HOME": "/var/tmp/noble-m7-user1555-final/assurance-policy-fixed/build/home",
+        "LANG": "C.UTF-8",
+        "LC_ALL": "C.UTF-8",
+        "NODE_OPTIONS": ""
+      },
+      "timeout_ms": 3600000,
+      "stdout": "commands/004-m5-source-bound-opacity-build.stdout",
+      "stderr": "commands/004-m5-source-bound-opacity-build.stderr",
+      "status": 0,
+      "signal": null,
+      "error": null,
+      "stdout_sha256": "5e1f9b4e5f5986a471be7e5e99583f2bfab9dbd6a20b9fd84ed8a9090d08249c",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "binaries": {
+    "cli": {
+      "path": "/var/tmp/noble-m7-user1555-final/assurance-policy-fixed/build/base/executables/cli",
+      "sha256": "4aaf179aa75bf1395dd5c5d690783eacb4890bef72a178f5e2da6d61b54eaa3b",
+      "source": "fresh-current-workspace-base-build"
+    },
+    "m5_peer": {
+      "path": "/var/tmp/noble-m7-user1555-final/assurance-policy-fixed/build/base/executables/m5_peer",
+      "sha256": "95c9e14589c218c5dfdd591193d54af8ea4b4919694a6910fd6e1e678dc04e0a",
+      "source": "fresh-current-workspace-base-build"
+    },
+    "peer": {
+      "path": "/var/tmp/noble-m7-user1555-final/assurance-policy-fixed/build/base/executables/peer",
+      "sha256": "80b5d618a444f87aca9b65a2e4359cc52dadcc8b455cfc903b7d52f63853a722",
+      "source": "fresh-current-workspace-base-build"
+    },
+    "task_tests": {
+      "path": "/var/tmp/noble-m7-user1555-final/assurance-policy-fixed/build/base/executables/task_tests",
+      "sha256": "3e59d2b4bbbfd9a32d4bc72e6488c8b7439e3b44a9e6aa53ff6b0154d410f66a",
+      "source": "fresh-current-workspace-base-build"
+    },
+    "resource_tests": {
+      "path": "/var/tmp/noble-m7-user1555-final/assurance-policy-fixed/build/base/executables/resource_tests",
+      "sha256": "505da5a701f1f24f023267f1f202f0abc956f0df7492fb527d82b39ebb263cab",
+      "source": "fresh-current-workspace-base-build"
+    },
+    "authority_tests": {
+      "path": "/var/tmp/noble-m7-user1555-final/assurance-policy-fixed/build/base/executables/authority_tests",
+      "sha256": "6f4ec61351aa0bc7299e5c601b8c95407a18ed1e7f68555ccb1ffece129295a0",
+      "source": "fresh-current-workspace-base-build"
+    },
+    "m7_peer": {
+      "path": "/var/tmp/noble-m7-user1555-final/assurance-policy-fixed/build/executables/m7-peer",
+      "sha256": "52f07e53b9eacf147218a697b7a7c0b3a133ee65cb7347b7f0b8bb1eaf2d6354",
+      "bytes": 202920504,
+      "command": "m7-independent-peer-build",
+      "compiled_path": "/var/tmp/noble-m7-user1555-final/assurance-policy-fixed/build/m7-peer-target/debug/noble-m7-peer",
+      "kind": "bin",
+      "target": "noble-m7-peer"
+    },
+    "mc2_tests": {
+      "path": "/var/tmp/noble-m7-user1555-final/assurance-policy-fixed/build/executables/mc2-core-control-tests",
+      "sha256": "ad20b7917a5d8093e55eca12376d81f5559300c8e7e4228d5afebe8ac28b694d",
+      "bytes": 12977408,
+      "command": "mc2-cli-core-control-test-build",
+      "compiled_path": "/var/tmp/noble-m7-user1555-final/assurance-policy-fixed/build/base/target/debug/deps/noble-535f54072589bd76",
+      "kind": "bin/test",
+      "target": "noble"
+    }
+  },
+  "integrity_failures": [],
+  "assumptions": [
+    "The pinned Rust, Nix closures, Node and Cargo build tooling remain trusted; source/binary hashes are provenance, not extraction or proof.",
+    "The base M6 build snapshots the complete current root workspace and builds CLI, M5/M6 peers and native tests, but does not accept M7 or rerun earlier milestones.",
+    "This script snapshots the separately pinned M7 independent peer source and builds it against the same root source snapshot and vendor selection."
+  ],
+  "non_claims": [
+    "M7 acceptance or any historical milestone acceptance",
+    "strict M7 Charon/Aeneas/Lean proof",
+    "physical host/engine correctness",
+    "root workspace Octet or Nix quality gates"
+  ],
+  "source_revision": "sha256:693530f98a2fc35bdd636d4c08b931d40b6d37d70c1ddd46d872b670ffd7a8ad"
+}

@@ -1,0 +1,217 @@
+{
+  "schema": "noble-m7-evidence/v1",
+  "milestone": "M7",
+  "date": "2026-09-25",
+  "result": "passed",
+  "scope": "Selected bounded local synchronous Syndicate service: finite serialized host-owned facet dataspace, canonical Preserves service values, two independently compiled Noble publisher/subscriber components, four versioned WIT imports and independent typed Wasmtime peer; broader Syndicate, Preserves and WASI profiles remain open.",
+  "requirements": [
+    "S-CONC-01",
+    "S-CONC-02",
+    "S-CONC-03",
+    "S-CONC-04",
+    "S-CONC-05",
+    "S-CONC-07",
+    "S-CONC-08",
+    "S-MEM-03",
+    "S-RES-05",
+    "WI-SAFE-02",
+    "WI-SYN-01",
+    "WI-SYN-02",
+    "WI-SYN-03",
+    "WI-SYN-04",
+    "WI-WIT-03"
+  ],
+  "build": {
+    "result": "built",
+    "receipt": "build.json",
+    "receipt_sha256": "49ff5e295c786ce5c5938c80fd2f444d676979700be863896f4267f8cadac080",
+    "source_revision": "sha256:693530f98a2fc35bdd636d4c08b931d40b6d37d70c1ddd46d872b670ffd7a8ad",
+    "binary_sha256": "4aaf179aa75bf1395dd5c5d690783eacb4890bef72a178f5e2da6d61b54eaa3b",
+    "peer_sha256": "52f07e53b9eacf147218a697b7a7c0b3a133ee65cb7347b7f0b8bb1eaf2d6354",
+    "m5_opacity_source_files": 428,
+    "m5_opacity_locked_sources": 394
+  },
+  "runtime": {
+    "result": "passed",
+    "receipt": "acceptance.json",
+    "receipt_sha256": "22c7415d476c2361cd13e1f994f3c23b9485aa0333c356d8d1fff21af8989582",
+    "cases": [
+      "S-CASE-09",
+      "S-CASE-10",
+      "S-CASE-11",
+      "S-CASE-12",
+      "S-CASE-17",
+      "WI-14",
+      "WI-18"
+    ],
+    "variants": 16,
+    "recorded_commands": 8,
+    "compiled_participants": 2,
+    "component_shas": {
+      "publisher": "6341b110b6c4595822d6e84814167836d6f58d8ae8436403bb72d53ccdd02074",
+      "subscriber": "e0d9d4bc11f996cbd4a2f055357433cc96b6424608ceb4729928c26e9b6a907b"
+    },
+    "source_revision": "sha256:693530f98a2fc35bdd636d4c08b931d40b6d37d70c1ddd46d872b670ffd7a8ad",
+    "scope_note": "Seven canonical cases and sixteen declared hostile variants pass; independently compiled Noble participants execute with an independently typed peer, and production dataspace/host decisions govern local state."
+  },
+  "extraction": {
+    "result": "passed",
+    "receipt": "extraction.json",
+    "receipt_sha256": "fb70c82cf8fc64cb4fa682ac4d045ed4ca5bcf828a1300ce460ec1d0619a8cc5",
+    "source_revision": "sha256:50522e7bc93a85ad97ad2552328a257b0366ca47ff13460d57d915e76520501a",
+    "source_files": 548,
+    "reviewed_lock": "../m4/extraction-lock.json",
+    "reviewed_lock_sha256": "23e085e4e0284d1c8f487e70ad14472e864df88c4ffcf3a04ce562bb18f85d8a",
+    "pure_implementation_roots": [
+      {
+        "declaration": "noble_kernel.dataspace.admit_shared_memory",
+        "def_id": 31
+      },
+      {
+        "declaration": "noble_kernel.dataspace.decide_publication",
+        "def_id": 32
+      },
+      {
+        "declaration": "noble_kernel.dataspace.permits",
+        "def_id": 33
+      }
+    ],
+    "strict_theorem_roots": [
+      {
+        "declaration": "M7Syndicate.publication_refines",
+        "axioms": [
+          "propext",
+          "Quot.sound"
+        ]
+      },
+      {
+        "declaration": "M7Syndicate.permission_refines",
+        "axioms": [
+          "propext",
+          "Quot.sound"
+        ]
+      },
+      {
+        "declaration": "M7Syndicate.shared_memory_refines",
+        "axioms": [
+          "propext",
+          "Quot.sound"
+        ]
+      },
+      {
+        "declaration": "M7Syndicate.shared_memory_refused",
+        "axioms": [
+          "propext",
+          "Quot.sound"
+        ]
+      },
+      {
+        "declaration": "M7Syndicate.publish_right_required",
+        "axioms": [
+          "propext",
+          "Quot.sound"
+        ]
+      },
+      {
+        "declaration": "M7Syndicate.observe_right_required",
+        "axioms": [
+          "propext",
+          "Quot.sound"
+        ]
+      },
+      {
+        "declaration": "M7Syndicate.duplicate_publication_unchanged",
+        "axioms": [
+          "propext",
+          "Quot.sound"
+        ]
+      },
+      {
+        "declaration": "M7Syndicate.changed_publication_replaces",
+        "axioms": [
+          "propext",
+          "Quot.sound"
+        ]
+      },
+      {
+        "declaration": "M7Syndicate.first_publication_adds",
+        "axioms": [
+          "propext",
+          "Quot.sound"
+        ]
+      }
+    ],
+    "strict_axioms": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "m7_refusal_controls": 37,
+    "total_refusal_controls": 265,
+    "qualification": "Exactly three compiler-ID-joined pure actual-Rust functions have nine strict Lean theorems against independent finite references; other extracted/table/wire/host/ABI/engine code is not universally refined."
+  },
+  "source_inventory": {
+    "result": "valid",
+    "policy": "../../policy/source-inventory.json",
+    "policy_sha256": "c1c89c33ec20348ca2a4afe6636e82a2605d1edd2754ffce042ef9f63dbcd04a",
+    "workspace_units": 29,
+    "authored_bodies": 2006,
+    "open_refinement_obligations": 2006,
+    "generated_paths": 1861,
+    "structural_paths": 879,
+    "production_paths": 4746,
+    "production_item_facts": 4840,
+    "test_paths": 1076,
+    "macro_origins": 27,
+    "production_dependency_edges": 7,
+    "selected_tools": 13,
+    "approved_exceptions": 0,
+    "scope_note": "Current complete-Nix source-coverage output independently matches 29 reviewed compiler units; all 2006 authored production bodies remain open conservative refinement obligations."
+  },
+  "quality": {
+    "pre_promotion_receipt": "assurance.json",
+    "pre_promotion_receipt_sha256": "72922ea31684dcd8c8e7978a8c2f75285dc5db618d867b1aa974b8cde50896d5",
+    "commands": 16,
+    "verified_gates": 10,
+    "published_deny_all": "passed",
+    "workspace_rust_tests": "passed-all-targets-all-features",
+    "workspace_clippy": "passed-all-targets-all-features-D-warnings",
+    "complete_nix_flake_check": "passed-keep-going-L",
+    "post_promotion_nix_checks": "nix-checks.json",
+    "scope_note": "All sixteen fresh pre-promotion commands passed without integrity failures; the separate final documents/Cairn Nix check will bind the later archived, promoted source."
+  },
+  "lifecycle": {
+    "profile": "spec-driven",
+    "change": "m7-syndicate-service",
+    "synchronized_specs": [
+      "safety",
+      "wit-wasi"
+    ],
+    "archive": "../../.cairn/archive/2026-09-25-m7-syndicate-service",
+    "canonical_views": "regenerated from synchronized accepted .cairn/specs",
+    "sync_reconciliation": {
+      "limitation": "The pinned Cairn parser treats the following ## section heading as part of each accepted terminal requirement but as the end of a MODIFIED delta; exact no-op sync is impossible for S-CONC-08/WI-SYN-04. Archive-local case links also require five-parent paths, whereas accepted canonical links require three-parent paths. After genuine pinned native sync, the complete accepted safety file was restored byte-identically and the WIT file preserved every normative requirement byte while updating only two stale M7 acceptance-status sentences. A later replay must rebase archive links and preserve terminal headings; it is not directly idempotent.",
+      "safety_before_sha256": "5db78d6f9255da47c5678145f7da072f6bbeff6fbd5818ebbf9d0e0047248275",
+      "safety_after_sha256": "5db78d6f9255da47c5678145f7da072f6bbeff6fbd5818ebbf9d0e0047248275",
+      "wit_before_sha256": "01aeb03d67c23eedc28e0adf583cd4eed2c19b6c987432f505e0bcabf165fdc0",
+      "wit_after_sha256": "a3ff332b2e84068cd34f375c603d87c1a67b0f6bd78cb012871fcd5913ba91f7",
+      "preserved_full_requirement_blocks": 12,
+      "accepted_status_sentences_updated": 2,
+      "archive_scenario_links_rebased": 21,
+      "replay_status": "requires-context-link-rebase-and-terminal-heading-preservation"
+    },
+    "binding": "Cairn and document checks do not replace compiled two-participant execution or scoped pure Rust proof."
+  },
+  "assumptions": [
+    "The Wasmtime 40 peer independently supplies Component Model linking and dynamic typed conversion while reusing production Noble host policy and dataspace decisions.",
+    "Host serialization, host-bound facet assignment and callback authenticity, Wasmtime engine/ABI correctness and physical resource release remain trusted embedding obligations.",
+    "The nine strict Lean roots are scoped to three pure actual Rust functions at compiler DefIDs 31/32/33 under the reviewed source lock; extraction and audits do not prove table, wire, adapter or host behavior.",
+    "Finite local synchronous decisions do not imply fairness, distributed exactly-once, transport progress, durability, native async semantics, full Syndicate or stable WASI."
+  ],
+  "non_claims": [
+    "Not general Syndicate/Synit, general Preserves, full Component-Draft or general WASI conformance.",
+    "Not fairness, distributed exactly-once delivery, remote transport progress, durability or native async execution.",
+    "Not universal host, ABI, engine, compiler, frontend/backend or all 2006 authored-production-body refinement.",
+    "Not a replacement for independently retained M5/M6 acceptance, actual-source extraction, prior regressions or the separate final archived-source document/Cairn Nix checks."
+  ]
+}

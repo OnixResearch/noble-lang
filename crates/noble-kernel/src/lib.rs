@@ -7,6 +7,7 @@
 // tests; only Charon reads it.
 #![feature(register_tool)]
 #![register_tool(charon)]
+#![register_tool(octet)]
 #![register_tool(tigerstyle)]
 
 extern crate alloc;
@@ -31,6 +32,7 @@ pub mod acceptance;
 pub mod async_tasks;
 pub mod authority;
 pub mod contracts;
+pub mod dataspace;
 pub mod execution;
 pub mod resources;
 pub mod shapes;

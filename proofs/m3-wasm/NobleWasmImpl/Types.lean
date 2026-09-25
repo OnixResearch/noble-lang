@@ -629,7 +629,7 @@ def component.lower.operations.invoke.closure :=
 def component.lower.operations.text.closure := noble_kernel.untrusted.NodeId
 
 /-- [noble_wasm::component::Artifact]
-    Source: 'crates/noble-wasm/src/component/mod.rs', lines 27:0-30:1
+    Source: 'crates/noble-wasm/src/component/mod.rs', lines 28:0-31:1
     Visibility: public -/
 structure component.Artifact where
   wat : alloc.vec.Vec Std.U8

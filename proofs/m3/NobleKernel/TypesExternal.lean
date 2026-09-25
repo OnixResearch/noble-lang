@@ -36,6 +36,13 @@ namespace noble_kernel
 @[rust_type "core::mem::maybe_uninit::MaybeUninit"]
 def core.mem.maybe_uninit.MaybeUninit (T : Type) : Type := Option T
 
+/-- The dataspace decoder discards UTF-8 diagnostic position and length
+    immediately, retaining only success versus failure. This value-only
+    external model therefore has one observable error constructor. -/
+@[rust_type "core::str::error::Utf8Error"]
+inductive core.str.error.Utf8Error where
+  | Invalid
+
 /-- The observable reservation rejection represented by the value-only
     vector abstraction. Rust's allocator/layout error payload is not modeled. -/
 @[rust_type "alloc::collections::TryReserveError"]

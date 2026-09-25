@@ -1308,6 +1308,138 @@ structure authority.permit.WitnessSnapshot where
 structure authority.report.UntrustedReceipt where
   description : authority.report.ReceiptDescription
 
+/-- [noble_kernel::dataspace::Error]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 18:0-26:1
+    Visibility: public -/
+@[discriminant isize]
+inductive dataspace.Error where
+| ByteLimit : dataspace.Error
+| DepthLimit : dataspace.Error
+| Schema : dataspace.Error
+| InvalidName : dataspace.Error
+| InvalidFacet : dataspace.Error
+| Denied : dataspace.Error
+| Capacity : dataspace.Error
+
+/-- [noble_kernel::dataspace::Rights]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 43:0-46:1
+    Visibility: public -/
+structure dataspace.Rights where
+  publish : Bool
+  observe : Bool
+
+/-- [noble_kernel::dataspace::Publication]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 49:0-53:1
+    Visibility: public -/
+@[discriminant isize]
+inductive dataspace.Publication where
+| Unchanged : dataspace.Publication
+| Added : dataspace.Publication
+| Replaced : dataspace.Publication
+
+/-- [noble_kernel::dataspace::Operation]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 67:0-70:1
+    Visibility: public -/
+@[discriminant isize]
+inductive dataspace.Operation where
+| Publish : dataspace.Operation
+| Observe : dataspace.Operation
+
+/-- [noble_kernel::dataspace::Facet]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 82:0-82:22
+    Visibility: public -/
+@[reducible]
+def dataspace.Facet := Std.U64
+
+/-- [noble_kernel::dataspace::Limits]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 85:0-90:1
+    Visibility: public -/
+structure dataspace.Limits where
+  facets : Std.Usize
+  assertions : Std.Usize
+  interests : Std.Usize
+  events : Std.Usize
+
+/-- [noble_kernel::dataspace::Service]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 93:0-96:1
+    Visibility: public -/
+structure dataspace.Service where
+  «name» : String
+  ready : Bool
+
+/-- [noble_kernel::dataspace::wire::ServiceRef]
+    Source: 'crates/noble-kernel/src/dataspace/wire.rs', lines 7:0-10:1
+    Visibility: public -/
+structure dataspace.wire.ServiceRef where
+  «name» : Str
+  ready : Bool
+
+/-- [noble_kernel::dataspace::Change]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 108:0-111:1
+    Visibility: public -/
+@[discriminant isize]
+inductive dataspace.Change where
+| Added : dataspace.Change
+| Removed : dataspace.Change
+
+/-- [noble_kernel::dataspace::Event]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 114:0-118:1
+    Visibility: public -/
+structure dataspace.Event where
+  observer : dataspace.Facet
+  service : dataspace.Service
+  change : dataspace.Change
+
+/-- [noble_kernel::dataspace::Scope]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 120:0-125:1 -/
+structure dataspace.Scope where
+  id : dataspace.Facet
+  parent : Option dataspace.Facet
+  rights : dataspace.Rights
+  live : Bool
+
+/-- [noble_kernel::dataspace::Assertion]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 127:0-130:1 -/
+structure dataspace.Assertion where
+  owner : dataspace.Facet
+  service : dataspace.Service
+
+/-- [noble_kernel::dataspace::Interest]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 132:0-135:1 -/
+structure dataspace.Interest where
+  owner : dataspace.Facet
+  service : dataspace.Service
+
+/-- [noble_kernel::dataspace::Table]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 137:0-144:1
+    Visibility: public -/
+structure dataspace.Table where
+  limits : dataspace.Limits
+  next : Std.U64
+  scopes : alloc.vec.Vec dataspace.Scope
+  assertions : alloc.vec.Vec dataspace.Assertion
+  interests : alloc.vec.Vec dataspace.Interest
+  events : alloc.vec.Vec dataspace.Event
+
+/-- [noble_kernel::dataspace::table::Reservation]
+    Source: 'crates/noble-kernel/src/dataspace/table.rs', lines 4:0-7:1 -/
+structure dataspace.table.Reservation where
+  immediate : Std.Usize
+  removals : Std.Usize
+
+/-- [noble_kernel::dataspace::table::actions::{noble_kernel::dataspace::Table}::publish::{closure}]
+    Source: 'crates/noble-kernel/src/dataspace/table/actions.rs', lines 13:33-13:77 -/
+@[reducible]
+def dataspace.table.actions.Table.publish.closure :=
+  alloc.vec.Vec dataspace.Assertion
+
+/-- [noble_kernel::dataspace::wire::Packet]
+    Source: 'crates/noble-kernel/src/dataspace/wire.rs', lines 13:0-16:1
+    Visibility: public -/
+structure dataspace.wire.Packet where
+  bytes : Array Std.U8 64#usize
+  len : Std.Usize
+
 /-- [noble_kernel::execution::TextLiteral]
     Source: 'crates/noble-kernel/src/execution/mod.rs', lines 9:0-12:1
     Visibility: public -/
@@ -1341,7 +1473,7 @@ structure execution.Submission where
   request : untrusted.Request
 
 /-- [noble_kernel::BudgetOutcome]
-    Source: 'crates/noble-kernel/src/lib.rs', lines 42:0-45:1
+    Source: 'crates/noble-kernel/src/lib.rs', lines 44:0-47:1
     Visibility: public -/
 @[discriminant isize]
 inductive BudgetOutcome where

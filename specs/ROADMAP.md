@@ -2,7 +2,8 @@
 
 Revision: 0.1.0-draft.5
 
-**M5 and M6 are complete for their separately bounded component profiles.**
+**M5, M6 and M7 are complete for their separately bounded component and
+local-service profiles; M8 remains open.**
 M1, M2, MC1 and the bounded M3 representation experiment are implemented. M4
 connects accepted source to compiled managed-linear-memory Wasm and persistent
 sessions, with retained CORE/DX execution, extraction, regression and quality
@@ -88,6 +89,37 @@ Optional calculator proof claims additionally require applicable MC1/MC2 support
 
 If M7 uses native async, that slice also depends on M6. No full concurrency claim can rely on unspecified async behavior.
 
+### M7 selected local synchronous service (bounded acceptance complete)
+
+The archived [M7 Cairn change](../.cairn/archive/2026-09-25-m7-syndicate-service/proposal.md)
+selects a finite serialized dataspace with facet-owned assertions/interests,
+bounded canonical Preserves text for `service(name:Text,ready:Bool)`, and the
+versioned synchronous `noble:syndicate@1.0.0` WIT `service` world. The
+`observe(name,ready)` Boolean denotes exact assertion membership, not
+readiness. A compiled publisher publishes, an independently compiled
+subscriber observes true and false readiness as distinct exact-pair
+assertions, and the publisher's compiled publish-then-trap path retracts its
+assertion for the surviving subscriber. The trusted independent Wasmtime
+peer supplies dynamic typed Component Model linking/conversion and invokes
+accounted production dataspace and host-policy decisions; it is not a
+deployable general Syndicate runtime. This local synchronous slice does not
+use or expand M6 native async.
+
+The [M7 completion record](../verification/m7/evidence.json) binds all five
+S-CASE-09/10/11/12/17 and two WI-14/18 cases and all 16 hostile variants to
+fresh [compiled acceptance](../verification/m7/acceptance.json), including the
+inspected shared-memory Wasm admission refusal and child/interest trap cleanup.
+Its [independent whole-crate extraction](../verification/m7/extraction.json)
+binds 548 source files, three compiler-ID-joined pure Rust dataspace functions
+and nine strict Lean theorems; 37 M7 and 265 combined refusal controls pass.
+The [sixteen-command assurance](../verification/m7/assurance.json) passes
+earlier regressions, workspace Rust tests/Clippy, published Octet deny-all,
+full Nix flake and Cairn/documents. The separate final archived-source
+documents/Cairn Nix receipt is `verification/m7/nix-checks.json`. The 2,006
+authored-body inventory refinements remain open. General Syndicate/Preserves,
+fairness, transport, durability, M8 and universal compiler/engine
+correspondence remain outside this accepted selection.
+
 ### M6 native-async implementation and closeout
 
 The bounded M6 implementation addresses WI-ASYNC-01 through WI-ASYNC-05 and RA-ASYNC-01 through
@@ -170,11 +202,13 @@ Implementation and retained acceptance scope:
 The [retained runtime archive](../verification/m6/runtime.tar.gz) and
 [verified manifest](../verification/m6/runtime-manifest.json) preserve all
 1,708 gate-retained members within 1,709 files. Deduplication preserves bytes
-and permission modes, not execution-time inode identity. The renewed
-[source inventory](../verification/source-inventory.md) covers 25 units with
-1,939 open authored-body obligations; historical milestone receipts keep their
-historical inventories. Neither extraction nor this native execution closes
-the broader frontend, kernel, compiler or backend proof obligations.
+and permission modes, not execution-time inode identity.
+
+At M6 completion the [source inventory](../verification/source-inventory.md)
+covered 25 units with 1,939 open authored-body obligations; the current M7
+renewal covers 29 units with 2,006 still open. Historical milestone receipts
+keep their historical inventories. Neither extraction nor this native execution
+closes the broader frontend, kernel, compiler or backend proof obligations.
 
 The executor is a mechanism, not authority or cleanup evidence. Bend2's
 copyable result channels, channel-close behavior, and whole-loop halt are not
@@ -198,7 +232,7 @@ MW1 requires a worker-interface checker, declared schemas/modules, an explicit p
 
 The MW1 case set is WORKER-02 through WORKER-07 and WORKER-09 through WORKER-12. Async-dependent rows in WORKER-09 remain MW2 obligations rather than false MW1 coverage. MW2 executes WORKER-01 and WORKER-08 plus those deferred rows. Reports retain a result for every applicable matrix entry.
 
-Neither milestone blocks M1 through M4, MC1/MC2, or the calculator. These tests do not select worker scheduling, task leases, distributed retries, or durability. A completed single-worker slice does not close M7 or M8.
+Neither milestone blocks M1 through M4, MC1/MC2, or the calculator. These tests do not select worker scheduling, task leases, distributed retries, or durability. M6's completed local WORKER-08 slice did not establish the separate M7 service acceptance, and the completed bounded M7 service does not close M8 or the broader worker milestones.
 
 ## M1 architecture and quality gates
 

@@ -9,7 +9,8 @@ The twelve normative documents now live under `.cairn/specs/`. Their old paths c
 The repository now contains the bounded checker, experimental MC1 contract frontend,
 M3 compiled-program representation experiment, M4 source-to-Wasm Core-Bootstrap,
 MC2 first-class certified companions, the M5 synchronous component subset and
-the completed bounded M6 native-async boundary.
+the completed bounded M6 native-async boundary and separately accepted M7
+local synchronous service.
 M4 uses the selected managed-linear-memory backend:
 source is resolved and inferred, independently accepted by the kernel, rechecked
 for lowering, then executed as compiled Wasm. Persistent sessions retain compiled
@@ -50,9 +51,18 @@ products. [The completion record](../verification/m6/evidence.json) binds the
 full [prior regressions](../verification/m6/regressions.json), all thirteen
 [Nix checks](../verification/m6/nix-checks.json) and Cairn lifecycle. Neither
 execution nor extraction alone completes the milestone.
-The current [source inventory](../verification/source-inventory.md) covers 25
-units and retains 1,939 open authored production body obligations. Historical
-M4, MC2 and M5 receipts retain their own source counts and assurance scopes.
+The separately accepted [M7 completion record](../verification/m7/evidence.json)
+binds S-CASE-09/10/11/12/17 and WI-14/18 with all 16 hostile variants, two
+separately compiled Noble participants, independently typed Wasmtime linking
+and source-bound formal checks of three pure dataspace Rust functions against
+nine strict Lean roots. The scoped [assurance](../verification/m7/assurance.json)
+passes sixteen pre-promotion build, execution, prior-regression and quality
+commands; the archived-source document/Cairn Nix result is separate at
+`verification/m7/nix-checks.json`. This is not general Syndicate, Preserves,
+Component-Draft or WASI conformance. The current
+[source inventory](../verification/source-inventory.md) covers 29 units and
+retains 2,006 open authored production body obligations. Historical M4, MC2,
+M5 and M6 receipts retain their own source counts and assurance scopes.
 Amendment sections below record design adoption,
 not automatic completion.
 

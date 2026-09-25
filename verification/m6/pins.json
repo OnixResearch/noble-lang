@@ -14,7 +14,7 @@
   "vendor_nar_hash": "sha256-EQ1olp92CFLQ5oHp6zIphL+ScKnIWQLuFFfZW/rIeDI=",
   "linker_bin": "/nix/store/788mx070y81zjlg5ipcl0cra3afviw9k-gcc-wrapper-15.2.0/bin",
   "extra_sources": [
-    {"name":"parking-lot","path":"/nix/store/1syikrsg0j8gbz57iaxqqj6v8cbvhqhh-cargo-package-parking_lot-0.12.5","nar_hash":"sha256-q/gjMLY9+HzQ51G6SpvUAMmRnm+WdmIMVhN/wdNSXHU="},
+    {"name":"parking-lot","path":"/nix/store/i9qi2rh8xwv1pk66443wywkvqnpjbv9l-cargo-package-parking_lot-0.12.5","nar_hash":"sha256-q/gjMLY9+HzQ51G6SpvUAMmRnm+WdmIMVhN/wdNSXHU="},
     {"name":"lock-api","path":"/nix/store/5mwhb6hsn5bvvgnbasgzbsb2173mcb8m-cargo-package-lock_api-0.4.14","nar_hash":"sha256-NxTKULbSlhk9uJRBN54qRomA537MjX1h7bxWxf6LuNc="},
     {"name":"parking-lot-core","path":"/nix/store/75qqqmy8xz4kzsf4jgzg2xi3asmgnbbw-cargo-package-parking_lot_core-0.9.12","nar_hash":"sha256-bx4toEQMAz2ffOKvZToLOMFVPAR7G7WWA81LyWWoRrA="},
     {"name":"scopeguard","path":"/nix/store/0g2ipzda8dsp4jvmkqmmgmi4m1d3w573-cargo-package-scopeguard-1.2.0","nar_hash":"sha256-GlvFsi4iXSaGE1oqYPMch8fzjJayS3IGoXlM6XuOAs4="},

@@ -15,10 +15,10 @@
     "node_api": "26.3.0"
   },
   "documents": 12,
-  "requirements": 482,
-  "scenarios": 149,
-  "scenarios_executed": 67,
-  "open_test_design": 195,
+  "requirements": 485,
+  "scenarios": 151,
+  "scenarios_executed": 74,
+  "open_test_design": 193,
   "proof_obligations": 30,
   "completed_proofs": 3,
   "self_tests": [
@@ -1307,6 +1307,26 @@
       "sha256": "7ec97e79c2968bb144b1d37d1a57392f2fcb2afc1a3bac344c0f35464858f18c"
     },
     {
+      "file": ".cairn/archive/2026-09-25-m7-syndicate-service/design.md",
+      "sha256": "a649ad98747f038b930b579ee983049c059759dffb4ba52802acdac894e7917c"
+    },
+    {
+      "file": ".cairn/archive/2026-09-25-m7-syndicate-service/proposal.md",
+      "sha256": "b720a8fb2d8ec7342a7531202d277bf2fd8cfb4a8e07e1ecb0ee4e9c3cbdb8b1"
+    },
+    {
+      "file": ".cairn/archive/2026-09-25-m7-syndicate-service/specs/safety/spec.md",
+      "sha256": "6ebda6b31ef7e1e78569f40e618ab71f31b9dfcd25e9f0030d1e02bd60cd8b67"
+    },
+    {
+      "file": ".cairn/archive/2026-09-25-m7-syndicate-service/specs/wit-wasi/spec.md",
+      "sha256": "9edfecba02baf5c281d77bea9599b02d1f7df698367f36e8c9c1e731699d9e50"
+    },
+    {
+      "file": ".cairn/archive/2026-09-25-m7-syndicate-service/tasks.md",
+      "sha256": "457d15787b82722282c352037c3ca82aded6aaac13cd2b50d473b2e4e41a210c"
+    },
+    {
       "file": ".cairn/MIGRATION.md",
       "sha256": "e05f953b21ae5551711f99b85588b966a04c83f751e6faabdcadd9c6f38184f4"
     },
@@ -1348,7 +1368,7 @@
     },
     {
       "file": ".cairn/specs/safety/spec.md",
-      "sha256": "acf10d9bdd208b8d7bdd081975c5ddd91b1bf9159a7ccba309e7e4e8ef663134"
+      "sha256": "5db78d6f9255da47c5678145f7da072f6bbeff6fbd5818ebbf9d0e0047248275"
     },
     {
       "file": ".cairn/specs/verification-toolchain/spec.md",
@@ -1360,7 +1380,7 @@
     },
     {
       "file": ".cairn/specs/wit-wasi/spec.md",
-      "sha256": "83f8a8f1b0234ec052af88454854191df995e3b75413b80c96b22cad547f0816"
+      "sha256": "a3ff332b2e84068cd34f375c603d87c1a67b0f6bd78cb012871fcd5913ba91f7"
     },
     {
       "file": "noble-project-handoff-2026-09-12/reference/baseline/PROGRAM-CONTRACTS.md",
@@ -1392,7 +1412,7 @@
     },
     {
       "file": "README.md",
-      "sha256": "60f353edcfb3a2a78120ea96119d4d74744400f4238775259f37ec78da2a673c"
+      "sha256": "579518650823cab6e15a941e00e2b4e49fad556309870a6d618d763dffd2a4ee"
     },
     {
       "file": "specs/BACKEND-EXPERIMENTS.md",
@@ -1440,7 +1460,7 @@
     },
     {
       "file": "specs/conformance/safety-cases.json",
-      "sha256": "993c6c4fe252d1be768ab3701e468ae2b250bb880cb4649e16f4cb0c5021460c"
+      "sha256": "61c6aa4d159f330eeb19a6b0bc2adb5d9e8656d400a4407aaa3a526fb5e311bf"
     },
     {
       "file": "specs/conformance/verification-cases.json",
@@ -1448,7 +1468,7 @@
     },
     {
       "file": "specs/conformance/wit-wasi-cases.json",
-      "sha256": "8ab98ca24295f4424c9899a6cabc7d50b20ea2236ab5ca681aba96ccade8a0f6"
+      "sha256": "e9e9b00480c2da32704cd1c4d2e5a9252b619fa1c567ba8551da9f91dd582365"
     },
     {
       "file": "specs/conformance/worker-cases.json",
@@ -1460,7 +1480,7 @@
     },
     {
       "file": "specs/DECISIONS.md",
-      "sha256": "11d1f005c6263893ebf6113e3ac9b5b5f863a4e3d3b8fcd527e2c1abdba9386a"
+      "sha256": "12ab3b648bc92da8933b98759e81ac3ae9e8e00c943523a9416d3f31093861a5"
     },
     {
       "file": "specs/DEVELOPER-EXPERIENCE.md",
@@ -1480,11 +1500,11 @@
     },
     {
       "file": "specs/README.md",
-      "sha256": "66e9e8180032b9694d3035a8bc8b0c4fd083b6f0dd5b50a1a5ec6d4eae28203f"
+      "sha256": "dc2de5d7d5cc605c0591ec5efadac18631db99d18f1e677950deb77779ffd019"
     },
     {
       "file": "specs/requirements.json",
-      "sha256": "eb5a8cdc904a363ecb02983d218ac3ae3be9cec5f84ea40713db6659574c091c"
+      "sha256": "0eb0304878faa5aec4e2ab4e89944689512b2b9f8cab103ac212b7ecc06e8274"
     },
     {
       "file": "specs/RESOURCE-ADAPTERS.md",
@@ -1496,15 +1516,15 @@
     },
     {
       "file": "specs/roadmap.json",
-      "sha256": "9699fb93b9866c9838ad7e20d2607fb5057fab988c9b70c718439d665c784b0b"
+      "sha256": "7e52101965c2bfe25381aa829449745d6a35fd35e01d8b2bed12a685de1016ca"
     },
     {
       "file": "specs/ROADMAP.md",
-      "sha256": "dbb0490c64903db8808bd0f65f1580151fe10957aa0f62159d39728ba48248af"
+      "sha256": "a21e6295765a217e3898421994201acbf14f1e2519b5ee3635d011ab7e2bb72c"
     },
     {
       "file": "specs/SAFETY.md",
-      "sha256": "809a60e008e4654a1eeb2cafd6aeae81852d35e9866b5626a487d83fa1def57b"
+      "sha256": "6916c452bbdbc1cb439a311fcf09987f757975502b5cacb2d691737c40298b9b"
     },
     {
       "file": "specs/SOURCES.md",
@@ -1520,7 +1540,7 @@
     },
     {
       "file": "specs/STATUS.json",
-      "sha256": "ebee34d096bcd177c0d568c7c17f9af6064cb34de0ac12bfcb788fc4525b6f92"
+      "sha256": "6453c0b57612efa87ead8989ccbaaf5636d99265fc966a9dd79b81c2ab49f70c"
     },
     {
       "file": "specs/VERIFICATION-TOOLCHAIN.md",
@@ -1540,7 +1560,7 @@
     },
     {
       "file": "specs/WIT-WASI.md",
-      "sha256": "bdeb0611954169174701149bef146269884a0bf7e87719417dee9f8e87397245"
+      "sha256": "fcacdc31dc541f23728987c63d26aa165817e36ef58494cae3f7b356afff6a17"
     },
     {
       "file": "specs/WORKER-CONFORMANCE.md",
@@ -1628,7 +1648,7 @@
     },
     {
       "file": "verification/source-inventory.md",
-      "sha256": "53ef3f9c9037e5b7c4646c518560e8abe841c119f2cc8acd1694fc8d1308f84d"
+      "sha256": "f042eb10d3a3d569a38250fbd897e92fed022f4dd64f4b665945d18fe36d9ba2"
     },
     {
       "file": "verification/tool-selection.md",

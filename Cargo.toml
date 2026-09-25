@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/noble-kernel", "crates/noble-contracts", "crates/noble-wasm", "crates/noble-cli"]
+members = ["crates/noble-kernel", "crates/noble-contracts", "crates/noble-wasm", "crates/noble-cli", "crates/noble-syndicate"]
 resolver = "2"
 
 [workspace.package]

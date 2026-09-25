@@ -470,7 +470,45 @@
           "id": "M6"
         }
       ],
-      "status": "not-started"
+      "status": "completed",
+      "required_requirements": [
+        "S-CONC-01",
+        "S-CONC-02",
+        "S-CONC-03",
+        "S-CONC-04",
+        "S-CONC-05",
+        "S-CONC-07",
+        "S-CONC-08",
+        "S-MEM-03",
+        "S-RES-05",
+        "WI-SAFE-02",
+        "WI-SYN-01",
+        "WI-SYN-02",
+        "WI-SYN-03",
+        "WI-SYN-04",
+        "WI-WIT-03"
+      ],
+      "scope": "Selected Syndicate-Sync-Service-M7 only: finite serialized local host-owned dataspace (eight facets/assertions/interests, 32 events), bounded canonical service Preserves text and synchronous noble:syndicate/service@1.0.0 WIT world; no native async.",
+      "implementation": "Production kernel dataspace and noble-syndicate host policy, four typed WIT imports/exports and two separately compiled Noble participants with independent Wasmtime linking/conversion; not a general Syndicate or Preserves profile.",
+      "acceptance_status": "passed",
+      "acceptance_scope": "All five S-CASE-09/10/11/12/17 and two WI-14/18 selected cases, sixteen declared variants and exact two-participant event/roundtrip/trap observations pass. Fresh MC1/MC2/M3/M4/M5/M6 regressions, all-workspace Rust tests and Clippy, published Octet deny-all, full Nix flake and Cairn/documents passed in sixteen-command pre-promotion assurance. A distinct final documents/Cairn Nix receipt binds the promoted archive source.",
+      "verification_scope": "Fresh whole-crate check binds 548 actual Rust source files under a reviewed lock; three pure dataspace functions at compiler DefIDs 31/32/33 have nine strict Lean correspondence/refusal/invariance theorems and 37 M7 mutation refusals (265 total). Table, wire, host, adapter, engine and all 2006 authored-production-body inventory refinement obligations remain open.",
+      "completion_record": "../verification/m7/evidence.json",
+      "lifecycle_record": "../.cairn/archive/2026-09-25-m7-syndicate-service/tasks.md",
+      "evidence_records": {
+        "build": "../verification/m7/build.json",
+        "runtime_acceptance": "../verification/m7/acceptance.json",
+        "extraction": "../verification/m7/extraction.json",
+        "extraction_lock": "../verification/m4/extraction-lock.json",
+        "assurance": "../verification/m7/assurance.json",
+        "final_nix_checks": "../verification/m7/nix-checks.json"
+      },
+      "non_claims": [
+        "Not general Syndicate/Synit, general Preserves, full Component-Draft or general WASI conformance.",
+        "Not fairness, distributed exactly-once delivery, remote transport progress, durability or native async execution.",
+        "Not universal host, ABI, engine, compiler, frontend/backend or all 2006 authored-production-body refinement.",
+        "Not a replacement for independently retained M5/M6 acceptance, actual-source extraction, prior regressions or the separate final archived-source document/Cairn Nix checks."
+      ]
     },
     {
       "id": "M8",

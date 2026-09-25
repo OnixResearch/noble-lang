@@ -1,0 +1,1478 @@
+{
+  "schema": "noble-m7-acceptance/v1",
+  "profile": "Syndicate-Sync-Service-M7",
+  "result": "passed",
+  "source_root": "/home/brittonr/git/noble",
+  "artifact_directory": "/var/tmp/noble-m7-user1555-final/assurance-policy-fixed/m7",
+  "engine": {
+    "executable": "/nix/store/h4apbnz8p5fmjwcmzlaxcjm5vr70d97x-nodejs-slim-24.13.0/bin/node",
+    "version": "v24.13.0"
+  },
+  "sources": {
+    "verification/m7/gate.mjs": {
+      "sha256": "0002d01b21a0805f71d7d5e7ec4c4fc75de8e7bf927f7658ee30b6da30097bdc",
+      "snapshot": "sources/verification/m7/gate.mjs",
+      "bytes": 23443
+    },
+    "crates/noble-wasm/wit/syndicate.wit": {
+      "sha256": "ac3ef5e4db79abf387bd6950451675e998202f0adc02f8e6340e26446f230762",
+      "snapshot": "sources/crates/noble-wasm/wit/syndicate.wit",
+      "bytes": 509
+    },
+    "crates/noble-syndicate/src/lib.rs": {
+      "sha256": "5264a8f64af65f288aeab37b7e74d1ddb8b7d6b836980834f997be4a778bcf78",
+      "snapshot": "sources/crates/noble-syndicate/src/lib.rs",
+      "bytes": 7275
+    },
+    ".cairn/specs/safety/spec.md": {
+      "sha256": "5db78d6f9255da47c5678145f7da072f6bbeff6fbd5818ebbf9d0e0047248275",
+      "snapshot": "sources/.cairn/specs/safety/spec.md",
+      "bytes": 54360
+    },
+    ".cairn/specs/wit-wasi/spec.md": {
+      "sha256": "01aeb03d67c23eedc28e0adf583cd4eed2c19b6c987432f505e0bcabf165fdc0",
+      "snapshot": "sources/.cairn/specs/wit-wasi/spec.md",
+      "bytes": 77552
+    },
+    "specs/conformance/safety-cases.json": {
+      "sha256": "4a2ea2fc88a9d3b9d0e7eb750576e0db9dbbd76da7c668b4722b363bb20a0235",
+      "snapshot": "sources/specs/conformance/safety-cases.json",
+      "bytes": 10080
+    },
+    "specs/conformance/wit-wasi-cases.json": {
+      "sha256": "f4ee046239ca61cabc8be5a82e16320bfa9a6f5de345ffd061335192ad72e647",
+      "snapshot": "sources/specs/conformance/wit-wasi-cases.json",
+      "bytes": 24400
+    },
+    "verification/m7/peer/Cargo.toml": {
+      "sha256": "66c48fc7ca574cc69d8f545a676f579b3d2c07a00fbf5d6cf136b50d6d884831",
+      "snapshot": "sources/verification/m7/peer/Cargo.toml",
+      "bytes": 516
+    },
+    "crates/noble-kernel/src/dataspace/mod.rs": {
+      "sha256": "5ba97535f38318bc3a11ba0c6c0122a8fac7f42d22d92e0dba5c5b948c40fd6f",
+      "snapshot": "sources/crates/noble-kernel/src/dataspace/mod.rs",
+      "bytes": 3593
+    },
+    "crates/noble-kernel/src/dataspace/table/actions.rs": {
+      "sha256": "199d8afb23e45de6d1f098b9a0a4f0914cbfae5511b19ce25d23180722a67a14",
+      "snapshot": "sources/crates/noble-kernel/src/dataspace/table/actions.rs",
+      "bytes": 10179
+    },
+    "crates/noble-kernel/src/dataspace/table.rs": {
+      "sha256": "568bb6249883a3dd4821b8adbc00d28f690933868805019147a0d06a832771de",
+      "snapshot": "sources/crates/noble-kernel/src/dataspace/table.rs",
+      "bytes": 6712
+    },
+    "crates/noble-kernel/src/dataspace/wire.rs": {
+      "sha256": "38b722dcbe36f6d986be105a76fd17472e5c8d72a126c1db813c7878d1915d08",
+      "snapshot": "sources/crates/noble-kernel/src/dataspace/wire.rs",
+      "bytes": 4811
+    },
+    "verification/m7/peer/src/main.rs": {
+      "sha256": "394a82ea01629573be7ee2c406404867a7b1082a6f11581cabfe0de41443f8a6",
+      "snapshot": "sources/verification/m7/peer/src/main.rs",
+      "bytes": 24107
+    }
+  },
+  "executables": {
+    "cli": {
+      "original": "/var/tmp/noble-m7-user1555-final/assurance-policy-fixed/build/base/executables/cli",
+      "frozen": "/var/tmp/noble-m7-user1555-final/assurance-policy-fixed/m7/executables/cli",
+      "sha256": "4aaf179aa75bf1395dd5c5d690783eacb4890bef72a178f5e2da6d61b54eaa3b",
+      "bytes": 15831248
+    },
+    "peer": {
+      "original": "/var/tmp/noble-m7-user1555-final/assurance-policy-fixed/build/executables/m7-peer",
+      "frozen": "/var/tmp/noble-m7-user1555-final/assurance-policy-fixed/m7/executables/peer",
+      "sha256": "52f07e53b9eacf147218a697b7a7c0b3a133ee65cb7347b7f0b8bb1eaf2d6354",
+      "bytes": 202920504
+    },
+    "wasm_tools": {
+      "original": "/nix/store/2n9b5yzj7n8jlnglp60gd5nmfjnf4xhf-wasm-tools-1.245.1/bin/wasm-tools",
+      "frozen": "/var/tmp/noble-m7-user1555-final/assurance-policy-fixed/m7/executables/wasm_tools",
+      "sha256": "30b6ccb08b58d6159f196eb3d21beea1dcfcf9ec2948a791e32aad95f6d91d2f",
+      "bytes": 21245664
+    },
+    "node": {
+      "original": "/nix/store/h4apbnz8p5fmjwcmzlaxcjm5vr70d97x-nodejs-slim-24.13.0/bin/node",
+      "frozen": "/var/tmp/noble-m7-user1555-final/assurance-policy-fixed/m7/executables/node",
+      "sha256": "ad2d5c03bb247d3690f8baf48b2aac572fe0ed5252b4c5bdcfa7987a169b8f3b",
+      "bytes": 71432512
+    }
+  },
+  "inputs": {
+    "specs/conformance/safety-cases.json": {
+      "sha256": "4a2ea2fc88a9d3b9d0e7eb750576e0db9dbbd76da7c668b4722b363bb20a0235",
+      "workload_sha256": "2f63c58f99d63dde877b458ef0f1932e4263df9e5877e72d165a49ad2bd241a9",
+      "workload": [
+        {
+          "id": "S-CASE-09",
+          "input": {
+            "harness": "production-preserves-bounds",
+            "schema": "service(name:Text,ready:Bool)",
+            "max_bytes": 64,
+            "max_depth": 4,
+            "mutations": [
+              "invalid-tag",
+              "65-byte-input",
+              "depth-5",
+              "invalid-utf8",
+              "noncanonical-spacing",
+              "trailing-content",
+              "extension-syntax"
+            ]
+          },
+          "expected": {
+            "stage": "decode",
+            "outcome": "reject",
+            "typed_protocol_values_created": 0,
+            "facet_rights_created": 0
+          }
+        },
+        {
+          "id": "S-CASE-10",
+          "input": {
+            "harness": "production-protocol-schema-mismatch",
+            "schema": "service(name:Text,ready:Bool)",
+            "decoded_fields": {
+              "name": "store",
+              "ready": "not-a-bool"
+            },
+            "additional_mutations": [
+              "empty-name",
+              "name-longer-than-32",
+              "name-outside-ascii-or-allowed-set"
+            ]
+          },
+          "expected": {
+            "stage": "schema",
+            "outcome": "reject",
+            "typed_protocol_values_created": 0,
+            "assertions_published": 0
+          }
+        },
+        {
+          "id": "S-CASE-11",
+          "input": {
+            "harness": "inspected-shared-memory-admission",
+            "participants": 2,
+            "requested_shared_mutable_noble_memory": true,
+            "shared_memory_core_wasm_hex": "0061736d01000000050401030101",
+            "separate_component_instances": true
+          },
+          "expected": {
+            "stage": "profile-admission",
+            "outcome": "unsupported",
+            "inspected_shared_memory": true,
+            "selected_engine_loader_rejected": true,
+            "facet_rights_created": 0,
+            "guest_requests": 0,
+            "protected_operations": 0
+          }
+        },
+        {
+          "id": "S-CASE-12",
+          "input": {
+            "harness": "facet-failure-cleanup",
+            "scope": "facet-1",
+            "owned_assertions": 2,
+            "owned_interests": 1,
+            "child_scopes": 1,
+            "event": "actor-trap"
+          },
+          "expected": {
+            "stage": "cleanup",
+            "outcome": "retired",
+            "remaining_scope_assertions": 0,
+            "remaining_scope_interests": 0,
+            "live_child_scopes": 0,
+            "duplicate_retractions": 0
+          }
+        },
+        {
+          "id": "S-CASE-17",
+          "input": {
+            "harness": "compiled-two-participant-service",
+            "world": "noble:syndicate/service@1.0.0",
+            "participants": [
+              {
+                "role": "publisher",
+                "component": "compiled-noble",
+                "facet": "publisher"
+              },
+              {
+                "role": "subscriber",
+                "component": "separately-compiled-noble",
+                "facet": "subscriber"
+              }
+            ],
+            "steps": [
+              {
+                "call": "observer",
+                "name": "clock",
+                "ready": true,
+                "membership": false
+              },
+              {
+                "call": "publisher",
+                "name": "clock",
+                "ready": true,
+                "result": true
+              },
+              {
+                "call": "observer",
+                "name": "clock",
+                "ready": true,
+                "membership": true
+              },
+              {
+                "call": "withdraw",
+                "name": "clock",
+                "result": true
+              },
+              {
+                "call": "observer",
+                "name": "clock",
+                "ready": true,
+                "membership": false
+              },
+              {
+                "call": "observer",
+                "name": "clock",
+                "ready": false,
+                "membership": false
+              },
+              {
+                "call": "publisher",
+                "name": "clock",
+                "ready": false,
+                "result": true
+              },
+              {
+                "call": "observer",
+                "name": "clock",
+                "ready": false,
+                "membership": true
+              },
+              {
+                "call": "withdraw",
+                "name": "clock",
+                "result": true
+              },
+              {
+                "call": "observer",
+                "name": "clock",
+                "ready": false,
+                "membership": false
+              },
+              {
+                "call": "observer",
+                "name": "alarm",
+                "ready": false,
+                "membership": false
+              },
+              {
+                "call": "publish-and-trap",
+                "name": "alarm",
+                "ready": false,
+                "outcome": "trap-after-publication"
+              },
+              {
+                "call": "observer",
+                "name": "alarm",
+                "ready": false,
+                "membership": false
+              }
+            ]
+          },
+          "expected": {
+            "stage": "independent-component-peer",
+            "outcome": "each-step-matches",
+            "shared_mutable_noble_memory": false,
+            "host_bound_facet_rights": true,
+            "typed_observer_events": [
+              {
+                "kind": "add",
+                "name": "clock",
+                "ready": true
+              },
+              {
+                "kind": "remove",
+                "name": "clock",
+                "ready": true
+              },
+              {
+                "kind": "add",
+                "name": "clock",
+                "ready": false
+              },
+              {
+                "kind": "remove",
+                "name": "clock",
+                "ready": false
+              },
+              {
+                "kind": "add",
+                "name": "alarm",
+                "ready": false
+              },
+              {
+                "kind": "remove",
+                "name": "alarm",
+                "ready": false
+              }
+            ],
+            "publisher_trap_reported_success": false,
+            "remaining_publisher_assertions": 0,
+            "subscriber_still_active": true
+          }
+        }
+      ],
+      "interpretation": "complete selected id/input/expected projection; metadata does not execute cases"
+    },
+    "specs/conformance/wit-wasi-cases.json": {
+      "sha256": "f4ee046239ca61cabc8be5a82e16320bfa9a6f5de345ffd061335192ad72e647",
+      "workload_sha256": "f2fecc5beaf855542599b0e2066221190c00154be3479a6d8cc13b4add7c7d09",
+      "workload": [
+        {
+          "id": "WI-14",
+          "input": {
+            "harness": "production-preserves-capability-forgery",
+            "payload": {
+              "resource_kind": "Directory",
+              "slot": 7
+            },
+            "valid_but_unprivileged_service": "<service \"Directory\" #t>",
+            "invalid_extension": "<service \"Directory\" #t><resource 7>",
+            "validated_authority_transfer": false
+          },
+          "expected": {
+            "stage": "protocol-adapter",
+            "outcome": "reject-capability-conversion",
+            "valid_service_remains_data_only": true,
+            "invalid_extension_decoded": false,
+            "live_resources_created": 0,
+            "facet_rights_created": 0,
+            "protected_operations": 0
+          }
+        },
+        {
+          "id": "WI-18",
+          "input": {
+            "harness": "compiled-component-service-wire",
+            "world": "noble:syndicate/service@1.0.0",
+            "instances": [
+              "separately-compiled-noble-publisher",
+              "separately-compiled-noble-subscriber"
+            ],
+            "imports": [
+              "noble:syndicate/dataspace@1.0.0#publish",
+              "noble:syndicate/dataspace@1.0.0#observe",
+              "noble:syndicate/dataspace@1.0.0#retract",
+              "noble:syndicate/dataspace@1.0.0#fail"
+            ],
+            "service_values": [
+              {
+                "name": "clock",
+                "ready": true,
+                "canonical_text": "<service \"clock\" #t>"
+              },
+              {
+                "name": "clock",
+                "ready": false,
+                "canonical_text": "<service \"clock\" #f>"
+              }
+            ],
+            "trap_export": "publish-and-trap",
+            "malformed_or_forged_controls": [
+              "wrong-wit-version",
+              "wrong-signature",
+              "invalid-preserves-tag",
+              "invalid-preserves-schema",
+              "resource-shaped-payload"
+            ]
+          },
+          "expected": {
+            "stage": "typed-component-peer",
+            "outcome": "compiled-boundary-and-roundtrips",
+            "native_async_used": false,
+            "exact_versioned_import_effects": true,
+            "roundtrip_preserves_both_ready_values": true,
+            "exact_pair_membership_distinguishes_false_from_absence": true,
+            "host_event_trace_distinguishes_add_remove": true,
+            "trap_invocation_success": false,
+            "retired_publisher_assertions": 0,
+            "host_only_fixture_satisfies_case": false,
+            "forged_controls_create_authority": false
+          }
+        }
+      ],
+      "interpretation": "complete selected id/input/expected projection; metadata does not execute cases"
+    }
+  },
+  "retained": {
+    "sources/verification/m7/gate.mjs": {
+      "sha256": "0002d01b21a0805f71d7d5e7ec4c4fc75de8e7bf927f7658ee30b6da30097bdc",
+      "bytes": 23443
+    },
+    "sources/crates/noble-wasm/wit/syndicate.wit": {
+      "sha256": "ac3ef5e4db79abf387bd6950451675e998202f0adc02f8e6340e26446f230762",
+      "bytes": 509
+    },
+    "sources/crates/noble-syndicate/src/lib.rs": {
+      "sha256": "5264a8f64af65f288aeab37b7e74d1ddb8b7d6b836980834f997be4a778bcf78",
+      "bytes": 7275
+    },
+    "sources/.cairn/specs/safety/spec.md": {
+      "sha256": "5db78d6f9255da47c5678145f7da072f6bbeff6fbd5818ebbf9d0e0047248275",
+      "bytes": 54360
+    },
+    "sources/.cairn/specs/wit-wasi/spec.md": {
+      "sha256": "01aeb03d67c23eedc28e0adf583cd4eed2c19b6c987432f505e0bcabf165fdc0",
+      "bytes": 77552
+    },
+    "sources/specs/conformance/safety-cases.json": {
+      "sha256": "4a2ea2fc88a9d3b9d0e7eb750576e0db9dbbd76da7c668b4722b363bb20a0235",
+      "bytes": 10080
+    },
+    "sources/specs/conformance/wit-wasi-cases.json": {
+      "sha256": "f4ee046239ca61cabc8be5a82e16320bfa9a6f5de345ffd061335192ad72e647",
+      "bytes": 24400
+    },
+    "sources/verification/m7/peer/Cargo.toml": {
+      "sha256": "66c48fc7ca574cc69d8f545a676f579b3d2c07a00fbf5d6cf136b50d6d884831",
+      "bytes": 516
+    },
+    "sources/crates/noble-kernel/src/dataspace/mod.rs": {
+      "sha256": "5ba97535f38318bc3a11ba0c6c0122a8fac7f42d22d92e0dba5c5b948c40fd6f",
+      "bytes": 3593
+    },
+    "sources/crates/noble-kernel/src/dataspace/table/actions.rs": {
+      "sha256": "199d8afb23e45de6d1f098b9a0a4f0914cbfae5511b19ce25d23180722a67a14",
+      "bytes": 10179
+    },
+    "sources/crates/noble-kernel/src/dataspace/table.rs": {
+      "sha256": "568bb6249883a3dd4821b8adbc00d28f690933868805019147a0d06a832771de",
+      "bytes": 6712
+    },
+    "sources/crates/noble-kernel/src/dataspace/wire.rs": {
+      "sha256": "38b722dcbe36f6d986be105a76fd17472e5c8d72a126c1db813c7878d1915d08",
+      "bytes": 4811
+    },
+    "sources/verification/m7/peer/src/main.rs": {
+      "sha256": "394a82ea01629573be7ee2c406404867a7b1082a6f11581cabfe0de41443f8a6",
+      "bytes": 24107
+    },
+    "executables/cli": {
+      "sha256": "4aaf179aa75bf1395dd5c5d690783eacb4890bef72a178f5e2da6d61b54eaa3b",
+      "bytes": 15831248
+    },
+    "executables/peer": {
+      "sha256": "52f07e53b9eacf147218a697b7a7c0b3a133ee65cb7347b7f0b8bb1eaf2d6354",
+      "bytes": 202920504
+    },
+    "executables/wasm_tools": {
+      "sha256": "30b6ccb08b58d6159f196eb3d21beea1dcfcf9ec2948a791e32aad95f6d91d2f",
+      "bytes": 21245664
+    },
+    "executables/node": {
+      "sha256": "ad2d5c03bb247d3690f8baf48b2aac572fe0ed5252b4c5bdcfa7987a169b8f3b",
+      "bytes": 71432512
+    },
+    "inputs/selected-service.wit": {
+      "sha256": "ac3ef5e4db79abf387bd6950451675e998202f0adc02f8e6340e26446f230762",
+      "bytes": 509
+    },
+    "inputs/publisher-publisher.noble": {
+      "sha256": "2a12746da1c365fc05bf670addc8c2787f1b9e0a566d4d3abdf979929b636a5c",
+      "bytes": 17
+    },
+    "inputs/publisher-observer.noble": {
+      "sha256": "0f1239af8b1afe0dea2564ae8a11c581294dc3fd0fba306fe9b3a11901ce3b56",
+      "bytes": 17
+    },
+    "inputs/publisher-withdraw.noble": {
+      "sha256": "ce3f57c9732dae0d37279e0f0ce94b1a6a4d4ba0b6e265f7f8f027fcc07b0bd4",
+      "bytes": 17
+    },
+    "inputs/publisher-publish-and-trap.noble": {
+      "sha256": "fad51c5690164e5ba8f4587b0fc1850347d556be4fe14001ca8dc5c1cc523577",
+      "bytes": 32
+    },
+    "commands/0001-publisher-compile.stdout": {
+      "sha256": "549cda714e60aadd098611ec39835a6b169712d28c9cb57a59e6c467fcbb682b",
+      "bytes": 2445
+    },
+    "commands/0001-publisher-compile.stderr": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "components/publisher/component.wasm": {
+      "sha256": "6341b110b6c4595822d6e84814167836d6f58d8ae8436403bb72d53ccdd02074",
+      "bytes": 4019
+    },
+    "components/publisher/core.wasm": {
+      "sha256": "be2dace02c5120d9ed35b86db607d627e0355f92db1f1a9ddda059b84dfbe0ff",
+      "bytes": 2275
+    },
+    "components/publisher/export-0.noble": {
+      "sha256": "2a12746da1c365fc05bf670addc8c2787f1b9e0a566d4d3abdf979929b636a5c",
+      "bytes": 17
+    },
+    "components/publisher/export-1.noble": {
+      "sha256": "0f1239af8b1afe0dea2564ae8a11c581294dc3fd0fba306fe9b3a11901ce3b56",
+      "bytes": 17
+    },
+    "components/publisher/export-2.noble": {
+      "sha256": "ce3f57c9732dae0d37279e0f0ce94b1a6a4d4ba0b6e265f7f8f027fcc07b0bd4",
+      "bytes": 17
+    },
+    "components/publisher/export-3.noble": {
+      "sha256": "fad51c5690164e5ba8f4587b0fc1850347d556be4fe14001ca8dc5c1cc523577",
+      "bytes": 32
+    },
+    "components/publisher/module.wat": {
+      "sha256": "5339fa0a36ea4fe6c8967c0a90c4cf76eda0ba0e780efb6b26f49060ea92c1a6",
+      "bytes": 8415
+    },
+    "components/publisher/report.json": {
+      "sha256": "dce59fec0e65a418ae216619a2d87ac502d1b2ba6ea3ac10acff1a01eb1084da",
+      "bytes": 2444
+    },
+    "components/publisher/world.wit": {
+      "sha256": "ac3ef5e4db79abf387bd6950451675e998202f0adc02f8e6340e26446f230762",
+      "bytes": 509
+    },
+    "commands/0002-publisher-wasm-validate.stdout": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "commands/0002-publisher-wasm-validate.stderr": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "commands/0003-publisher-wit-inspect.stdout": {
+      "sha256": "267aaa97f2533e8e02b439641f9b00ec273bfb7eb274dd0598d7942f3db6eb30",
+      "bytes": 570
+    },
+    "commands/0003-publisher-wit-inspect.stderr": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "inputs/subscriber-publisher.noble": {
+      "sha256": "2a12746da1c365fc05bf670addc8c2787f1b9e0a566d4d3abdf979929b636a5c",
+      "bytes": 17
+    },
+    "inputs/subscriber-observer.noble": {
+      "sha256": "0f1239af8b1afe0dea2564ae8a11c581294dc3fd0fba306fe9b3a11901ce3b56",
+      "bytes": 17
+    },
+    "inputs/subscriber-withdraw.noble": {
+      "sha256": "12c140bb99126835a90c00c66efeb1ba1cba56f18c1796a59d8c1c8480e77327",
+      "bytes": 28
+    },
+    "inputs/subscriber-publish-and-trap.noble": {
+      "sha256": "fad51c5690164e5ba8f4587b0fc1850347d556be4fe14001ca8dc5c1cc523577",
+      "bytes": 32
+    },
+    "commands/0004-subscriber-compile.stdout": {
+      "sha256": "71e378ab1e1ba843b990bd36a42363d138d44edb1ae5bef6f25b24cbc2358940",
+      "bytes": 2468
+    },
+    "commands/0004-subscriber-compile.stderr": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "components/subscriber/component.wasm": {
+      "sha256": "e0d9d4bc11f996cbd4a2f055357433cc96b6424608ceb4729928c26e9b6a907b",
+      "bytes": 4023
+    },
+    "components/subscriber/core.wasm": {
+      "sha256": "8b8fbce0ee04de122a8099f820e70d27ef863748a4e346f382265b3daea9636e",
+      "bytes": 2279
+    },
+    "components/subscriber/export-0.noble": {
+      "sha256": "2a12746da1c365fc05bf670addc8c2787f1b9e0a566d4d3abdf979929b636a5c",
+      "bytes": 17
+    },
+    "components/subscriber/export-1.noble": {
+      "sha256": "0f1239af8b1afe0dea2564ae8a11c581294dc3fd0fba306fe9b3a11901ce3b56",
+      "bytes": 17
+    },
+    "components/subscriber/export-2.noble": {
+      "sha256": "12c140bb99126835a90c00c66efeb1ba1cba56f18c1796a59d8c1c8480e77327",
+      "bytes": 28
+    },
+    "components/subscriber/export-3.noble": {
+      "sha256": "fad51c5690164e5ba8f4587b0fc1850347d556be4fe14001ca8dc5c1cc523577",
+      "bytes": 32
+    },
+    "components/subscriber/module.wat": {
+      "sha256": "79101bfdc8ac719bb0203c0ce7199531ffb75bdb947fe0e2c5c1f154d07f929d",
+      "bytes": 8453
+    },
+    "components/subscriber/report.json": {
+      "sha256": "4026e44a8e75999e031b77fbccc6d5e94d7c803d836242cbcdafb7b847623fe4",
+      "bytes": 2467
+    },
+    "components/subscriber/world.wit": {
+      "sha256": "ac3ef5e4db79abf387bd6950451675e998202f0adc02f8e6340e26446f230762",
+      "bytes": 509
+    },
+    "commands/0005-subscriber-wasm-validate.stdout": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "commands/0005-subscriber-wasm-validate.stderr": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "commands/0006-subscriber-wit-inspect.stdout": {
+      "sha256": "267aaa97f2533e8e02b439641f9b00ec273bfb7eb274dd0598d7942f3db6eb30",
+      "bytes": 570
+    },
+    "commands/0006-subscriber-wit-inspect.stderr": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "inputs/shared-memory-core.wasm": {
+      "sha256": "16803d186a986a899b6ba3707c5f5cedcc1c8d16b0a785a29034b011874f61c5",
+      "bytes": 14
+    },
+    "commands/0007-shared-memory-wasm-validate.stdout": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "commands/0007-shared-memory-wasm-validate.stderr": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "commands/0008-independent-wasmtime-peer.stdout": {
+      "sha256": "54d68800f477d0b36d3c054a42d620bda7bee73c9a61d3a4ab036b5cab2ee9d0",
+      "bytes": 7974
+    },
+    "commands/0008-independent-wasmtime-peer.stderr": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    }
+  },
+  "commands": [
+    {
+      "id": 1,
+      "label": "publisher-compile",
+      "executable": "executables/cli",
+      "executable_sha256": "4aaf179aa75bf1395dd5c5d690783eacb4890bef72a178f5e2da6d61b54eaa3b",
+      "arguments": [
+        "component",
+        "compile",
+        "/var/tmp/noble-m7-user1555-final/assurance-policy-fixed/m7/inputs/selected-service.wit",
+        "service",
+        "/var/tmp/noble-m7-user1555-final/assurance-policy-fixed/m7/components/publisher",
+        "publisher=/var/tmp/noble-m7-user1555-final/assurance-policy-fixed/m7/inputs/publisher-publisher.noble",
+        "observer=/var/tmp/noble-m7-user1555-final/assurance-policy-fixed/m7/inputs/publisher-observer.noble",
+        "withdraw=/var/tmp/noble-m7-user1555-final/assurance-policy-fixed/m7/inputs/publisher-withdraw.noble",
+        "publish-and-trap=/var/tmp/noble-m7-user1555-final/assurance-policy-fixed/m7/inputs/publisher-publish-and-trap.noble"
+      ],
+      "cwd": "/home/brittonr/git/noble",
+      "timeout_ms": 180000,
+      "stdout": "commands/0001-publisher-compile.stdout",
+      "stderr": "commands/0001-publisher-compile.stderr",
+      "status": 0,
+      "signal": null,
+      "error": null
+    },
+    {
+      "id": 2,
+      "label": "publisher-wasm-validate",
+      "executable": "executables/wasm_tools",
+      "executable_sha256": "30b6ccb08b58d6159f196eb3d21beea1dcfcf9ec2948a791e32aad95f6d91d2f",
+      "arguments": [
+        "validate",
+        "/var/tmp/noble-m7-user1555-final/assurance-policy-fixed/m7/components/publisher/component.wasm"
+      ],
+      "cwd": "/home/brittonr/git/noble",
+      "timeout_ms": 180000,
+      "stdout": "commands/0002-publisher-wasm-validate.stdout",
+      "stderr": "commands/0002-publisher-wasm-validate.stderr",
+      "status": 0,
+      "signal": null,
+      "error": null
+    },
+    {
+      "id": 3,
+      "label": "publisher-wit-inspect",
+      "executable": "executables/wasm_tools",
+      "executable_sha256": "30b6ccb08b58d6159f196eb3d21beea1dcfcf9ec2948a791e32aad95f6d91d2f",
+      "arguments": [
+        "component",
+        "wit",
+        "/var/tmp/noble-m7-user1555-final/assurance-policy-fixed/m7/components/publisher/component.wasm"
+      ],
+      "cwd": "/home/brittonr/git/noble",
+      "timeout_ms": 180000,
+      "stdout": "commands/0003-publisher-wit-inspect.stdout",
+      "stderr": "commands/0003-publisher-wit-inspect.stderr",
+      "status": 0,
+      "signal": null,
+      "error": null
+    },
+    {
+      "id": 4,
+      "label": "subscriber-compile",
+      "executable": "executables/cli",
+      "executable_sha256": "4aaf179aa75bf1395dd5c5d690783eacb4890bef72a178f5e2da6d61b54eaa3b",
+      "arguments": [
+        "component",
+        "compile",
+        "/var/tmp/noble-m7-user1555-final/assurance-policy-fixed/m7/inputs/selected-service.wit",
+        "service",
+        "/var/tmp/noble-m7-user1555-final/assurance-policy-fixed/m7/components/subscriber",
+        "publisher=/var/tmp/noble-m7-user1555-final/assurance-policy-fixed/m7/inputs/subscriber-publisher.noble",
+        "observer=/var/tmp/noble-m7-user1555-final/assurance-policy-fixed/m7/inputs/subscriber-observer.noble",
+        "withdraw=/var/tmp/noble-m7-user1555-final/assurance-policy-fixed/m7/inputs/subscriber-withdraw.noble",
+        "publish-and-trap=/var/tmp/noble-m7-user1555-final/assurance-policy-fixed/m7/inputs/subscriber-publish-and-trap.noble"
+      ],
+      "cwd": "/home/brittonr/git/noble",
+      "timeout_ms": 180000,
+      "stdout": "commands/0004-subscriber-compile.stdout",
+      "stderr": "commands/0004-subscriber-compile.stderr",
+      "status": 0,
+      "signal": null,
+      "error": null
+    },
+    {
+      "id": 5,
+      "label": "subscriber-wasm-validate",
+      "executable": "executables/wasm_tools",
+      "executable_sha256": "30b6ccb08b58d6159f196eb3d21beea1dcfcf9ec2948a791e32aad95f6d91d2f",
+      "arguments": [
+        "validate",
+        "/var/tmp/noble-m7-user1555-final/assurance-policy-fixed/m7/components/subscriber/component.wasm"
+      ],
+      "cwd": "/home/brittonr/git/noble",
+      "timeout_ms": 180000,
+      "stdout": "commands/0005-subscriber-wasm-validate.stdout",
+      "stderr": "commands/0005-subscriber-wasm-validate.stderr",
+      "status": 0,
+      "signal": null,
+      "error": null
+    },
+    {
+      "id": 6,
+      "label": "subscriber-wit-inspect",
+      "executable": "executables/wasm_tools",
+      "executable_sha256": "30b6ccb08b58d6159f196eb3d21beea1dcfcf9ec2948a791e32aad95f6d91d2f",
+      "arguments": [
+        "component",
+        "wit",
+        "/var/tmp/noble-m7-user1555-final/assurance-policy-fixed/m7/components/subscriber/component.wasm"
+      ],
+      "cwd": "/home/brittonr/git/noble",
+      "timeout_ms": 180000,
+      "stdout": "commands/0006-subscriber-wit-inspect.stdout",
+      "stderr": "commands/0006-subscriber-wit-inspect.stderr",
+      "status": 0,
+      "signal": null,
+      "error": null
+    },
+    {
+      "id": 7,
+      "label": "shared-memory-wasm-validate",
+      "executable": "executables/wasm_tools",
+      "executable_sha256": "30b6ccb08b58d6159f196eb3d21beea1dcfcf9ec2948a791e32aad95f6d91d2f",
+      "arguments": [
+        "validate",
+        "/var/tmp/noble-m7-user1555-final/assurance-policy-fixed/m7/inputs/shared-memory-core.wasm"
+      ],
+      "cwd": "/home/brittonr/git/noble",
+      "timeout_ms": 180000,
+      "stdout": "commands/0007-shared-memory-wasm-validate.stdout",
+      "stderr": "commands/0007-shared-memory-wasm-validate.stderr",
+      "status": 0,
+      "signal": null,
+      "error": null
+    },
+    {
+      "id": 8,
+      "label": "independent-wasmtime-peer",
+      "executable": "executables/peer",
+      "executable_sha256": "52f07e53b9eacf147218a697b7a7c0b3a133ee65cb7347b7f0b8bb1eaf2d6354",
+      "arguments": [
+        "/var/tmp/noble-m7-user1555-final/assurance-policy-fixed/m7/components/publisher/component.wasm",
+        "/var/tmp/noble-m7-user1555-final/assurance-policy-fixed/m7/components/subscriber/component.wasm",
+        "scenario",
+        "/var/tmp/noble-m7-user1555-final/assurance-policy-fixed/m7/inputs/shared-memory-core.wasm"
+      ],
+      "cwd": "/home/brittonr/git/noble",
+      "timeout_ms": 180000,
+      "stdout": "commands/0008-independent-wasmtime-peer.stdout",
+      "stderr": "commands/0008-independent-wasmtime-peer.stderr",
+      "status": 0,
+      "signal": null,
+      "error": null
+    }
+  ],
+  "components": {
+    "publisher": {
+      "artifact": "components/publisher/component.wasm",
+      "sha256": "6341b110b6c4595822d6e84814167836d6f58d8ae8436403bb72d53ccdd02074",
+      "compile": 1,
+      "validation": 2,
+      "inspection": 3,
+      "source_exports": [
+        {
+          "name": "publisher",
+          "sha256": "2a12746da1c365fc05bf670addc8c2787f1b9e0a566d4d3abdf979929b636a5c"
+        },
+        {
+          "name": "observer",
+          "sha256": "0f1239af8b1afe0dea2564ae8a11c581294dc3fd0fba306fe9b3a11901ce3b56"
+        },
+        {
+          "name": "withdraw",
+          "sha256": "ce3f57c9732dae0d37279e0f0ce94b1a6a4d4ba0b6e265f7f8f027fcc07b0bd4"
+        },
+        {
+          "name": "publish-and-trap",
+          "sha256": "fad51c5690164e5ba8f4587b0fc1850347d556be4fe14001ca8dc5c1cc523577"
+        }
+      ],
+      "resolved_imports": null
+    },
+    "subscriber": {
+      "artifact": "components/subscriber/component.wasm",
+      "sha256": "e0d9d4bc11f996cbd4a2f055357433cc96b6424608ceb4729928c26e9b6a907b",
+      "compile": 4,
+      "validation": 5,
+      "inspection": 6,
+      "source_exports": [
+        {
+          "name": "publisher",
+          "sha256": "2a12746da1c365fc05bf670addc8c2787f1b9e0a566d4d3abdf979929b636a5c"
+        },
+        {
+          "name": "observer",
+          "sha256": "0f1239af8b1afe0dea2564ae8a11c581294dc3fd0fba306fe9b3a11901ce3b56"
+        },
+        {
+          "name": "withdraw",
+          "sha256": "12c140bb99126835a90c00c66efeb1ba1cba56f18c1796a59d8c1c8480e77327"
+        },
+        {
+          "name": "publish-and-trap",
+          "sha256": "fad51c5690164e5ba8f4587b0fc1850347d556be4fe14001ca8dc5c1cc523577"
+        }
+      ],
+      "resolved_imports": null
+    }
+  },
+  "cases": [
+    {
+      "id": "S-CASE-09",
+      "input": {
+        "harness": "production-preserves-bounds",
+        "schema": "service(name:Text,ready:Bool)",
+        "max_bytes": 64,
+        "max_depth": 4,
+        "mutations": [
+          "invalid-tag",
+          "65-byte-input",
+          "depth-5",
+          "invalid-utf8",
+          "noncanonical-spacing",
+          "trailing-content",
+          "extension-syntax"
+        ]
+      },
+      "expected": {
+        "stage": "decode",
+        "outcome": "reject",
+        "typed_protocol_values_created": 0,
+        "facet_rights_created": 0
+      },
+      "result": "passed",
+      "evidence": [
+        {
+          "command": 8,
+          "detail": "production bounded Preserves decoder called for every declared malformed input"
+        }
+      ],
+      "variants": [
+        {
+          "name": "invalid-tag",
+          "observed": {
+            "error": "Some(Kernel(Schema))",
+            "facet_rights_created": 0,
+            "name": "invalid-tag",
+            "outcome": "reject",
+            "typed_protocol_values_created": 0
+          },
+          "result": "passed"
+        },
+        {
+          "name": "65-byte-input",
+          "observed": {
+            "error": "Some(Kernel(ByteLimit))",
+            "facet_rights_created": 0,
+            "name": "65-byte-input",
+            "outcome": "reject",
+            "typed_protocol_values_created": 0
+          },
+          "result": "passed"
+        },
+        {
+          "name": "depth-5",
+          "observed": {
+            "error": "Some(Kernel(DepthLimit))",
+            "facet_rights_created": 0,
+            "name": "depth-5",
+            "outcome": "reject",
+            "typed_protocol_values_created": 0
+          },
+          "result": "passed"
+        },
+        {
+          "name": "invalid-utf8",
+          "observed": {
+            "error": "Some(Kernel(Schema))",
+            "facet_rights_created": 0,
+            "name": "invalid-utf8",
+            "outcome": "reject",
+            "typed_protocol_values_created": 0
+          },
+          "result": "passed"
+        },
+        {
+          "name": "noncanonical-spacing",
+          "observed": {
+            "error": "Some(Kernel(Schema))",
+            "facet_rights_created": 0,
+            "name": "noncanonical-spacing",
+            "outcome": "reject",
+            "typed_protocol_values_created": 0
+          },
+          "result": "passed"
+        },
+        {
+          "name": "trailing-content",
+          "observed": {
+            "error": "Some(Kernel(Schema))",
+            "facet_rights_created": 0,
+            "name": "trailing-content",
+            "outcome": "reject",
+            "typed_protocol_values_created": 0
+          },
+          "result": "passed"
+        },
+        {
+          "name": "extension-syntax",
+          "observed": {
+            "error": "Some(Kernel(Schema))",
+            "facet_rights_created": 0,
+            "name": "extension-syntax",
+            "outcome": "reject",
+            "typed_protocol_values_created": 0
+          },
+          "result": "passed"
+        }
+      ]
+    },
+    {
+      "id": "S-CASE-10",
+      "input": {
+        "harness": "production-protocol-schema-mismatch",
+        "schema": "service(name:Text,ready:Bool)",
+        "decoded_fields": {
+          "name": "store",
+          "ready": "not-a-bool"
+        },
+        "additional_mutations": [
+          "empty-name",
+          "name-longer-than-32",
+          "name-outside-ascii-or-allowed-set"
+        ]
+      },
+      "expected": {
+        "stage": "schema",
+        "outcome": "reject",
+        "typed_protocol_values_created": 0,
+        "assertions_published": 0
+      },
+      "result": "passed",
+      "evidence": [
+        {
+          "command": 8,
+          "detail": "production schema rejection before assertion publication"
+        }
+      ],
+      "variants": [
+        {
+          "name": "ready-not-bool",
+          "observed": {
+            "assertions_published": 0,
+            "name": "ready-not-bool",
+            "outcome": "reject",
+            "typed_protocol_values_created": 0
+          },
+          "result": "passed"
+        },
+        {
+          "name": "empty-name",
+          "observed": {
+            "assertions_published": 0,
+            "name": "empty-name",
+            "outcome": "reject",
+            "typed_protocol_values_created": 0
+          },
+          "result": "passed"
+        },
+        {
+          "name": "name-longer-than-32",
+          "observed": {
+            "assertions_published": 0,
+            "name": "name-longer-than-32",
+            "outcome": "reject",
+            "typed_protocol_values_created": 0
+          },
+          "result": "passed"
+        },
+        {
+          "name": "name-outside-ascii-or-allowed-set",
+          "observed": {
+            "assertions_published": 0,
+            "name": "name-outside-ascii-or-allowed-set",
+            "outcome": "reject",
+            "typed_protocol_values_created": 0
+          },
+          "result": "passed"
+        }
+      ]
+    },
+    {
+      "id": "S-CASE-11",
+      "input": {
+        "harness": "inspected-shared-memory-admission",
+        "participants": 2,
+        "requested_shared_mutable_noble_memory": true,
+        "shared_memory_core_wasm_hex": "0061736d01000000050401030101",
+        "separate_component_instances": true
+      },
+      "expected": {
+        "stage": "profile-admission",
+        "outcome": "unsupported",
+        "inspected_shared_memory": true,
+        "selected_engine_loader_rejected": true,
+        "facet_rights_created": 0,
+        "guest_requests": 0,
+        "protected_operations": 0
+      },
+      "result": "passed",
+      "evidence": [
+        {
+          "command": 8,
+          "detail": "gate-supplied shared Wasm validated, memory section inspected by peer, production profile refused before facet/guest work"
+        }
+      ],
+      "variants": []
+    },
+    {
+      "id": "S-CASE-12",
+      "input": {
+        "harness": "facet-failure-cleanup",
+        "scope": "facet-1",
+        "owned_assertions": 2,
+        "owned_interests": 1,
+        "child_scopes": 1,
+        "event": "actor-trap"
+      },
+      "expected": {
+        "stage": "cleanup",
+        "outcome": "retired",
+        "remaining_scope_assertions": 0,
+        "remaining_scope_interests": 0,
+        "live_child_scopes": 0,
+        "duplicate_retractions": 0
+      },
+      "result": "passed",
+      "evidence": [
+        {
+          "command": 8,
+          "detail": "production recursive retirement with child and interest, distinct from compiled trap path"
+        }
+      ],
+      "variants": []
+    },
+    {
+      "id": "S-CASE-17",
+      "input": {
+        "harness": "compiled-two-participant-service",
+        "world": "noble:syndicate/service@1.0.0",
+        "participants": [
+          {
+            "role": "publisher",
+            "component": "compiled-noble",
+            "facet": "publisher"
+          },
+          {
+            "role": "subscriber",
+            "component": "separately-compiled-noble",
+            "facet": "subscriber"
+          }
+        ],
+        "steps": [
+          {
+            "call": "observer",
+            "name": "clock",
+            "ready": true,
+            "membership": false
+          },
+          {
+            "call": "publisher",
+            "name": "clock",
+            "ready": true,
+            "result": true
+          },
+          {
+            "call": "observer",
+            "name": "clock",
+            "ready": true,
+            "membership": true
+          },
+          {
+            "call": "withdraw",
+            "name": "clock",
+            "result": true
+          },
+          {
+            "call": "observer",
+            "name": "clock",
+            "ready": true,
+            "membership": false
+          },
+          {
+            "call": "observer",
+            "name": "clock",
+            "ready": false,
+            "membership": false
+          },
+          {
+            "call": "publisher",
+            "name": "clock",
+            "ready": false,
+            "result": true
+          },
+          {
+            "call": "observer",
+            "name": "clock",
+            "ready": false,
+            "membership": true
+          },
+          {
+            "call": "withdraw",
+            "name": "clock",
+            "result": true
+          },
+          {
+            "call": "observer",
+            "name": "clock",
+            "ready": false,
+            "membership": false
+          },
+          {
+            "call": "observer",
+            "name": "alarm",
+            "ready": false,
+            "membership": false
+          },
+          {
+            "call": "publish-and-trap",
+            "name": "alarm",
+            "ready": false,
+            "outcome": "trap-after-publication"
+          },
+          {
+            "call": "observer",
+            "name": "alarm",
+            "ready": false,
+            "membership": false
+          }
+        ]
+      },
+      "expected": {
+        "stage": "independent-component-peer",
+        "outcome": "each-step-matches",
+        "shared_mutable_noble_memory": false,
+        "host_bound_facet_rights": true,
+        "typed_observer_events": [
+          {
+            "kind": "add",
+            "name": "clock",
+            "ready": true
+          },
+          {
+            "kind": "remove",
+            "name": "clock",
+            "ready": true
+          },
+          {
+            "kind": "add",
+            "name": "clock",
+            "ready": false
+          },
+          {
+            "kind": "remove",
+            "name": "clock",
+            "ready": false
+          },
+          {
+            "kind": "add",
+            "name": "alarm",
+            "ready": false
+          },
+          {
+            "kind": "remove",
+            "name": "alarm",
+            "ready": false
+          }
+        ],
+        "publisher_trap_reported_success": false,
+        "remaining_publisher_assertions": 0,
+        "subscriber_still_active": true
+      },
+      "result": "passed",
+      "evidence": [
+        {
+          "command": 8,
+          "detail": "compiled two-participant exact membership and typed add/remove/trap observations"
+        }
+      ],
+      "variants": []
+    },
+    {
+      "id": "WI-14",
+      "input": {
+        "harness": "production-preserves-capability-forgery",
+        "payload": {
+          "resource_kind": "Directory",
+          "slot": 7
+        },
+        "valid_but_unprivileged_service": "<service \"Directory\" #t>",
+        "invalid_extension": "<service \"Directory\" #t><resource 7>",
+        "validated_authority_transfer": false
+      },
+      "expected": {
+        "stage": "protocol-adapter",
+        "outcome": "reject-capability-conversion",
+        "valid_service_remains_data_only": true,
+        "invalid_extension_decoded": false,
+        "live_resources_created": 0,
+        "facet_rights_created": 0,
+        "protected_operations": 0
+      },
+      "result": "passed",
+      "evidence": [
+        {
+          "command": 8,
+          "detail": "actual production adapter refuses wire-to-resource and wire-to-facet authority"
+        }
+      ],
+      "variants": []
+    },
+    {
+      "id": "WI-18",
+      "input": {
+        "harness": "compiled-component-service-wire",
+        "world": "noble:syndicate/service@1.0.0",
+        "instances": [
+          "separately-compiled-noble-publisher",
+          "separately-compiled-noble-subscriber"
+        ],
+        "imports": [
+          "noble:syndicate/dataspace@1.0.0#publish",
+          "noble:syndicate/dataspace@1.0.0#observe",
+          "noble:syndicate/dataspace@1.0.0#retract",
+          "noble:syndicate/dataspace@1.0.0#fail"
+        ],
+        "service_values": [
+          {
+            "name": "clock",
+            "ready": true,
+            "canonical_text": "<service \"clock\" #t>"
+          },
+          {
+            "name": "clock",
+            "ready": false,
+            "canonical_text": "<service \"clock\" #f>"
+          }
+        ],
+        "trap_export": "publish-and-trap",
+        "malformed_or_forged_controls": [
+          "wrong-wit-version",
+          "wrong-signature",
+          "invalid-preserves-tag",
+          "invalid-preserves-schema",
+          "resource-shaped-payload"
+        ]
+      },
+      "expected": {
+        "stage": "typed-component-peer",
+        "outcome": "compiled-boundary-and-roundtrips",
+        "native_async_used": false,
+        "exact_versioned_import_effects": true,
+        "roundtrip_preserves_both_ready_values": true,
+        "exact_pair_membership_distinguishes_false_from_absence": true,
+        "host_event_trace_distinguishes_add_remove": true,
+        "trap_invocation_success": false,
+        "retired_publisher_assertions": 0,
+        "host_only_fixture_satisfies_case": false,
+        "forged_controls_create_authority": false
+      },
+      "result": "passed",
+      "evidence": [
+        {
+          "command": 8,
+          "detail": "independently validated WIT shape, actual Noble component calls, production Preserves roundtrip and hostile boundary probes"
+        }
+      ],
+      "variants": [
+        {
+          "name": "wrong-wit-version",
+          "observed": {
+            "error": "component imports instance `noble:syndicate/dataspace@1.0.0`, but a matching implementation was not found in the linker: instance export `observe` has the wrong type: function implementation is missing",
+            "facet_rights_created": 0,
+            "guest_requests": 0,
+            "name": "wrong-wit-version",
+            "outcome": "reject",
+            "protected_operations": 0,
+            "stage": "link"
+          },
+          "result": "passed"
+        },
+        {
+          "name": "wrong-signature",
+          "observed": {
+            "error": "component imports instance `noble:syndicate/dataspace@1.0.0`, but a matching implementation was not found in the linker: instance export `publish` has the wrong type: type mismatch with parameters: expected `s64` found `string`",
+            "facet_rights_created": 0,
+            "guest_requests": 0,
+            "name": "wrong-signature",
+            "outcome": "reject",
+            "protected_operations": 0,
+            "stage": "link"
+          },
+          "result": "passed"
+        },
+        {
+          "name": "invalid-preserves-tag",
+          "observed": {
+            "error": "Some(Kernel(Schema))",
+            "facet_rights_created": 0,
+            "guest_requests": 0,
+            "name": "invalid-preserves-tag",
+            "outcome": "reject",
+            "protected_operations": 0,
+            "stage": "decode",
+            "typed_protocol_values_created": 0
+          },
+          "result": "passed"
+        },
+        {
+          "name": "invalid-preserves-schema",
+          "observed": {
+            "error": "Some(Kernel(Schema))",
+            "facet_rights_created": 0,
+            "guest_requests": 0,
+            "name": "invalid-preserves-schema",
+            "outcome": "reject",
+            "protected_operations": 0,
+            "stage": "schema",
+            "typed_protocol_values_created": 0
+          },
+          "result": "passed"
+        },
+        {
+          "name": "resource-shaped-payload",
+          "observed": {
+            "error": "Some(Kernel(Schema))",
+            "facet_rights_created": 0,
+            "guest_requests": 0,
+            "name": "resource-shaped-payload",
+            "outcome": "reject",
+            "protected_operations": 0,
+            "stage": "protocol-adapter",
+            "typed_protocol_values_created": 0
+          },
+          "result": "passed"
+        }
+      ]
+    }
+  ],
+  "controls": [
+    {
+      "name": "actual-shared-memory-module-validated",
+      "command": 7,
+      "input": "inputs/shared-memory-core.wasm",
+      "sha256": "16803d186a986a899b6ba3707c5f5cedcc1c8d16b0a785a29034b011874f61c5"
+    },
+    {
+      "name": "production-replacement-and-idempotence",
+      "command": 8,
+      "scope": "local production decisions, separate from compiled two-participant execution",
+      "observed": {
+        "events": [
+          {
+            "kind": "add",
+            "name": "clock",
+            "ready": true
+          },
+          {
+            "kind": "remove",
+            "name": "clock",
+            "ready": true
+          },
+          {
+            "kind": "add",
+            "name": "clock",
+            "ready": false
+          }
+        ],
+        "idempotent_replay_events": 0,
+        "outcome": "replace-atomic",
+        "remaining": [
+          0,
+          0,
+          0
+        ]
+      }
+    }
+  ],
+  "integrity_failures": [],
+  "assumptions": [
+    "The supplied CLI/peer/wasm-tools binaries and Node/Wasmtime/OS are trusted execution tooling; their captured hashes do not prove correspondence to source.",
+    "The independent Rust peer performs dynamic Wasmtime Component Model linking and typed Val conversion while reusing Noble production dataspace and Preserves decisions.",
+    "Host-granted facet rights, serialized access, actual Store isolation, trap authenticity and physical cleanup remain separate host/engine assumptions.",
+    "This selected synchronous service proves neither full Syndicate/Preserves/WASI nor native async, fairness, distributed delivery, or universal source-to-Wasm refinement."
+  ],
+  "peer": {
+    "command": 8,
+    "schema": "noble-m7-peer/v1",
+    "engine": "wasmtime-40.0.2",
+    "components": {
+      "distinct": true,
+      "publisher_sha256": "6341b110b6c4595822d6e84814167836d6f58d8ae8436403bb72d53ccdd02074",
+      "shared_memory_enabled": false,
+      "subscriber_sha256": "e0d9d4bc11f996cbd4a2f055357433cc96b6424608ceb4729928c26e9b6a907b",
+      "threads_enabled": false
+    }
+  },
+  "summary": {
+    "required_cases": 7,
+    "executed_cases": 7,
+    "passed_cases": 7,
+    "failed_cases": [],
+    "missing_cases": [],
+    "variant_count": 16,
+    "commands": 8,
+    "integrity_failures": 0
+  }
+}

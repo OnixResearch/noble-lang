@@ -54,16 +54,16 @@
     "max_function_safety_facts": 4096,
     "max_implementations": 1024,
     "max_items": 4096,
-    "max_modules": 1024,
+    "max_modules": 2048,
     "max_shard_bytes": 16777216,
-    "max_shards": 27,
+    "max_shards": 31,
     "max_signatures": 4096,
     "max_span_bytes": 1048576,
     "max_spans": 8192,
     "max_traits": 512,
     "max_type_shapes": 4096,
     "max_types": 4096,
-    "max_units": 27,
+    "max_units": 31,
     "max_unknowns": 4096,
     "max_value_flow_bodies": 4096,
     "max_value_flow_rounds": 64,
@@ -245,13 +245,15 @@
       "noble-kernel",
       "noble-contracts",
       "noble-wasm",
-      "noble-cli"
+      "noble-cli",
+      "noble-syndicate"
     ],
     "source_scopes": [
       "crates/noble-kernel/src",
       "crates/noble-contracts/src",
       "crates/noble-wasm/src",
-      "crates/noble-cli/src"
+      "crates/noble-cli/src",
+      "crates/noble-syndicate/src"
     ],
     "targets": [
       {
@@ -285,6 +287,11 @@
       "scope_kind": "package"
     },
     {
+      "role": "composition-root",
+      "scope": "noble-syndicate",
+      "scope_kind": "package"
+    },
+    {
       "role": "domain-core",
       "scope": "crates/noble-kernel/src",
       "scope_kind": "source"
@@ -305,6 +312,11 @@
       "scope_kind": "source"
     },
     {
+      "role": "composition-root",
+      "scope": "crates/noble-syndicate/src",
+      "scope_kind": "source"
+    },
+    {
       "role": "test",
       "scope": "crates/noble-kernel/tests",
       "scope_kind": "source"
@@ -322,6 +334,11 @@
     {
       "role": "test",
       "scope": "crates/noble-cli/tests",
+      "scope_kind": "source"
+    },
+    {
+      "role": "test",
+      "scope": "crates/noble-syndicate/tests",
       "scope_kind": "source"
     }
   ],

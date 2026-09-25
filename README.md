@@ -156,11 +156,12 @@ receipts do not substitute for that later source-bound acceptance.
 
 MC1's 36-case regression and M3's four-configuration regression have passed in
 their own scopes. They do not replace those M4 gates. The current inventory's
-1,939 authored production body obligations remain open in the
+2,006 authored production body obligations remain open in the
 [reviewed inventory](verification/source-inventory.md).
 Neither extraction nor executed examples establish universal frontend, kernel,
 compiler or backend refinement; PO-17/18 and SO-07 remain open. MC2 adds optional
-checked companions; M5 and M6's resource/component boundaries remain separate.
+checked companions; M5, M6 and M7's bounded resource/component/service boundaries
+remain separate.
 
 ## Compiling synchronous WIT components
 
@@ -369,8 +370,38 @@ observations. Native execution or extraction alone does not substitute for
 these separate gates.
 Callback/fact authenticity, physical native release, engine/ABI correctness,
 clocks and OS scheduling remain explicit trust boundaries. General async
-borrowing, full Component-Draft/WASI, MW1/MW2, Syndicate and universal
+borrowing, full Component-Draft/WASI, MW1/MW2, general Syndicate and universal
 frontend/kernel/compiler/backend refinement remain open.
+
+## M7 local synchronous Syndicate service
+
+The separately accepted [M7 completion record](verification/m7/evidence.json)
+selects a finite local host-owned dataspace, facet-scoped assertions and
+exact-pair interests, canonical bounded Preserves `service(name:Text,ready:Bool)`
+values and the synchronous `noble:syndicate@1.0.0` WIT `service` world.
+The [fresh acceptance receipt](verification/m7/acceptance.json) passes
+S-CASE-09/10/11/12/17 and WI-14/18 with all 16 declared hostile variants.
+Two separately compiled Noble components exercise true and false readiness,
+typed add/remove, withdrawal and compiled publish-then-trap cleanup through an
+independently typed Wasmtime 40 peer; the real shared-memory Wasm refusal,
+Preserves schema/authority controls and facet retirement have their own case
+observations. The peer supplies trusted linking and conversion, not a general
+Syndicate runtime or a proof of Wasmtime/host semantics.
+
+The [source-bound build](verification/m7/build.json) and
+[independent extraction](verification/m7/extraction.json) retain a reviewed
+548-source lock, exactly three pure actual-Rust dataspace functions at compiler
+DefIDs 31/32/33, nine strict Lean theorems, 37 M7 mutation refusals and 265
+combined refusals. The [sixteen-command assurance](verification/m7/assurance.json)
+separately passed prior regressions, workspace Rust checks, published Octet
+deny-all, complete Nix flake and pre-promotion Cairn/documents. The
+[archived Cairn change](.cairn/archive/2026-09-25-m7-syndicate-service/proposal.md)
+preserves the selected contract; `verification/m7/nix-checks.json` separately
+binds the final promoted document/Cairn source. All 2,006 current authored
+production bodies remain open inventory refinement obligations. This bounded
+synchronous selection is not general Syndicate/Preserves, native async, full
+Component-Draft/WASI, fairness, distributed exactly-once or universal
+host/engine/backend refinement.
 
 ## Using MC1 contracts
 

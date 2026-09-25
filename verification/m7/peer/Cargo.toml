@@ -1,0 +1,16 @@
+[package]
+name = "noble-m7-peer"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[workspace]
+
+[dependencies]
+anyhow = "=1.0.100"
+serde_json = "=1.0.140"
+sha2 = "=0.10.2"
+wasmparser = "=0.243.0"
+wasmtime = { path = "/nix/store/26a8xzacbx01hidm70lpyphyw926zhc5-source/crates/wasmtime", default-features = false, features = ["std", "runtime", "cranelift", "component-model", "wat", "threads"] }
+noble-kernel = { path = "../../../crates/noble-kernel" }
+noble-syndicate = { path = "../../../crates/noble-syndicate" }

@@ -19,6 +19,14 @@ set_option maxRecDepth 2048
 
 namespace noble_kernel
 
+/-- Trait implementation: [core::fmt::{impl core::fmt::Debug for str}]
+    Source: '/rustc/library/core/src/fmt/mod.rs', lines 2931:0-2931:18
+    Name pattern: [core::fmt::Debug<str>] -/
+@[reducible, rust_trait_impl "core::fmt::Debug<str>"]
+def Str.Insts.CoreFmtDebug : core.fmt.Debug Str := {
+  fmt := Str.Insts.CoreFmtDebug.fmt
+}
+
 /-- Trait implementation: [core::option::{impl core::fmt::Debug for core::option::Option<T>}]
     Source: '/rustc/library/core/src/option.rs', lines 592:15-592:20
     Name pattern: [core::fmt::Debug<core::option::Option<@T>>] -/
@@ -26,6 +34,19 @@ namespace noble_kernel
 def core.option.Option.Insts.CoreFmtDebug {T : Type} (fmtDebugInst :
   core.fmt.Debug T) : core.fmt.Debug (Option T) := {
   fmt := core.option.Option.Insts.CoreFmtDebug.fmt fmtDebugInst
+}
+
+/-- Trait implementation: [core::option::{impl core::cmp::PartialEq<core::option::Option<T>> for core::option::Option<T>}]
+    Source: '/rustc/library/core/src/option.rs', lines 2434:0-2434:56
+    Name pattern: [core::cmp::PartialEq<core::option::Option<@T>, core::option::Option<@T>>] -/
+@[reducible, rust_trait_impl
+  "core::cmp::PartialEq<core::option::Option<@T>, core::option::Option<@T>>"]
+impl_def core.option.Option.Insts.CoreCmpPartialEqOption {T : Type}
+  (cmpPartialEqInst : core.cmp.PartialEq T T) : core.cmp.PartialEq (Option T)
+  (Option T) := {
+  eq := core.option.Option.Insts.CoreCmpPartialEqOption.eq cmpPartialEqInst
+  ne := core.cmp.PartialEq.ne.trait_default
+    (core.option.Option.Insts.CoreCmpPartialEqOption cmpPartialEqInst)
 }
 
 /-- Trait implementation: [core::result::{impl core::fmt::Debug for core::result::Result<T, E>}]
@@ -64,6 +85,23 @@ impl_def Slice.Insts.CoreCmpPartialEqSlice {T : Type} {U : Type}
   eq := core.slice.cmp.PartialEqSlice.eq cmpPartialEqInst
   ne := core.cmp.PartialEq.ne.trait_default (Slice.Insts.CoreCmpPartialEqSlice
     cmpPartialEqInst)
+}
+
+/-- Trait implementation: [core::str::traits::{impl core::cmp::PartialEq<str> for str}]
+    Source: '/rustc/library/core/src/str/traits.rs', lines 27:0-27:28
+    Name pattern: [core::cmp::PartialEq<str, str>] -/
+@[reducible, rust_trait_impl "core::cmp::PartialEq<str, str>"]
+impl_def Str.Insts.CoreCmpPartialEqStr : core.cmp.PartialEq Str Str := {
+  eq := Str.Insts.CoreCmpPartialEqStr.eq
+  ne := core.cmp.PartialEq.ne.trait_default Str.Insts.CoreCmpPartialEqStr
+}
+
+/-- Trait implementation: [alloc::string::{impl core::fmt::Debug for alloc::string::String}]
+    Source: '/rustc/library/alloc/src/string.rs', lines 2754:0-2754:26
+    Name pattern: [core::fmt::Debug<alloc::string::String>] -/
+@[reducible, rust_trait_impl "core::fmt::Debug<alloc::string::String>"]
+def alloc.string.String.Insts.CoreFmtDebug : core.fmt.Debug String := {
+  fmt := alloc.string.String.Insts.CoreFmtDebug.fmt
 }
 
 /-- [noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::NodeId}::clone]:
@@ -18660,6 +18698,2779 @@ def contracts.environment
       })
   | some problem => ok (core.result.Result.Err problem)
 
+/-- [noble_kernel::dataspace::MAX_WIRE_BYTES]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 9:0-9:37
+    Visibility: public -/
+@[global_simps, irreducible]
+def dataspace.MAX_WIRE_BYTES : Std.Usize := 64#usize
+
+/-- [noble_kernel::dataspace::MAX_WIRE_DEPTH]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 10:0-10:34
+    Visibility: public -/
+@[global_simps, irreducible] def dataspace.MAX_WIRE_DEPTH : Std.U32 := 4#u32
+
+/-- [noble_kernel::dataspace::MAX_NAME_BYTES]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 11:0-11:37
+    Visibility: public -/
+@[global_simps, irreducible]
+def dataspace.MAX_NAME_BYTES : Std.Usize := 32#usize
+
+/-- [noble_kernel::dataspace::MAX_FACETS]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 12:0-12:32
+    Visibility: public -/
+@[global_simps, irreducible] def dataspace.MAX_FACETS : Std.Usize := 8#usize
+
+/-- [noble_kernel::dataspace::MAX_ASSERTIONS]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 13:0-13:36
+    Visibility: public -/
+@[global_simps, irreducible]
+def dataspace.MAX_ASSERTIONS : Std.Usize := 8#usize
+
+/-- [noble_kernel::dataspace::MAX_INTERESTS]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 14:0-14:35
+    Visibility: public -/
+@[global_simps, irreducible] def dataspace.MAX_INTERESTS : Std.Usize := 8#usize
+
+/-- [noble_kernel::dataspace::MAX_EVENTS]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 15:0-15:33
+    Visibility: public -/
+@[global_simps, irreducible] def dataspace.MAX_EVENTS : Std.Usize := 32#usize
+
+/-- [noble_kernel::dataspace::{impl core::clone::Clone for noble_kernel::dataspace::Error}::clone]:
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 17:9-17:14
+    Visibility: public -/
+def dataspace.Error.Insts.CoreCloneClone.clone
+  (self : dataspace.Error) : Result dataspace.Error := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::dataspace::{impl core::clone::Clone for noble_kernel::dataspace::Error}]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 17:9-17:14 -/
+@[reducible]
+def dataspace.Error.Insts.CoreCloneClone : core.clone.Clone dataspace.Error
+  := {
+  clone := dataspace.Error.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::dataspace::{impl core::marker::Copy for noble_kernel::dataspace::Error}]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 17:16-17:20 -/
+@[reducible]
+def dataspace.Error.Insts.CoreMarkerCopy : core.marker.Copy dataspace.Error
+  := {
+  cloneInst := dataspace.Error.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::dataspace::{impl core::fmt::Debug for noble_kernel::dataspace::Error}::fmt]:
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 17:22-17:27
+    Visibility: public -/
+def dataspace.Error.Insts.CoreFmtDebug.fmt
+  (self : dataspace.Error) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | dataspace.Error.ByteLimit =>
+    core.fmt.Formatter.write_str f (toStr "ByteLimit")
+  | dataspace.Error.DepthLimit =>
+    core.fmt.Formatter.write_str f (toStr "DepthLimit")
+  | dataspace.Error.Schema => core.fmt.Formatter.write_str f (toStr "Schema")
+  | dataspace.Error.InvalidName =>
+    core.fmt.Formatter.write_str f (toStr "InvalidName")
+  | dataspace.Error.InvalidFacet =>
+    core.fmt.Formatter.write_str f (toStr "InvalidFacet")
+  | dataspace.Error.Denied => core.fmt.Formatter.write_str f (toStr "Denied")
+  | dataspace.Error.Capacity =>
+    core.fmt.Formatter.write_str f (toStr "Capacity")
+
+/-- Trait implementation: [noble_kernel::dataspace::{impl core::fmt::Debug for noble_kernel::dataspace::Error}]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 17:22-17:27 -/
+@[reducible]
+def dataspace.Error.Insts.CoreFmtDebug : core.fmt.Debug dataspace.Error := {
+  fmt := dataspace.Error.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::dataspace::{impl core::marker::StructuralPartialEq for noble_kernel::dataspace::Error}]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 17:29-17:38 -/
+@[reducible]
+def dataspace.Error.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq dataspace.Error := {
+}
+
+/-- [noble_kernel::dataspace::{impl core::cmp::PartialEq<noble_kernel::dataspace::Error> for noble_kernel::dataspace::Error}::eq]:
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 17:29-17:38
+    Visibility: public -/
+def dataspace.Error.Insts.CoreCmpPartialEqError.eq
+  (self : dataspace.Error) (other : dataspace.Error) : Result Bool := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  ok (self1 = other1)
+
+/-- Trait implementation: [noble_kernel::dataspace::{impl core::cmp::PartialEq<noble_kernel::dataspace::Error> for noble_kernel::dataspace::Error}]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 17:29-17:38 -/
+@[reducible]
+impl_def dataspace.Error.Insts.CoreCmpPartialEqError : core.cmp.PartialEq
+  dataspace.Error dataspace.Error := {
+  eq := dataspace.Error.Insts.CoreCmpPartialEqError.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    dataspace.Error.Insts.CoreCmpPartialEqError
+}
+
+/-- [noble_kernel::dataspace::{impl core::cmp::Eq for noble_kernel::dataspace::Error}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 17:40-17:42
+    Visibility: public -/
+def dataspace.Error.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : dataspace.Error) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::dataspace::{impl core::cmp::Eq for noble_kernel::dataspace::Error}]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 17:40-17:42 -/
+@[reducible]
+def dataspace.Error.Insts.CoreCmpEq : core.cmp.Eq dataspace.Error := {
+  partialEqInst := dataspace.Error.Insts.CoreCmpPartialEqError
+  assert_fields_are_eq := dataspace.Error.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::dataspace::admit_shared_memory]:
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 34:0-40:1
+    Visibility: public -/
+def dataspace.admit_shared_memory
+  (requested : Bool) : Result (core.result.Result Unit dataspace.Error) := do
+  if requested
+  then ok (core.result.Result.Err dataspace.Error.Denied)
+  else ok (core.result.Result.Ok ())
+
+/-- [noble_kernel::dataspace::{impl core::clone::Clone for noble_kernel::dataspace::Rights}::clone]:
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 42:9-42:14
+    Visibility: public -/
+def dataspace.Rights.Insts.CoreCloneClone.clone
+  (self : dataspace.Rights) : Result dataspace.Rights := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::dataspace::{impl core::clone::Clone for noble_kernel::dataspace::Rights}]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 42:9-42:14 -/
+@[reducible]
+def dataspace.Rights.Insts.CoreCloneClone : core.clone.Clone dataspace.Rights
+  := {
+  clone := dataspace.Rights.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::dataspace::{impl core::marker::Copy for noble_kernel::dataspace::Rights}]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 42:16-42:20 -/
+@[reducible]
+def dataspace.Rights.Insts.CoreMarkerCopy : core.marker.Copy dataspace.Rights
+  := {
+  cloneInst := dataspace.Rights.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::dataspace::{impl core::fmt::Debug for noble_kernel::dataspace::Rights}::fmt]:
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 42:22-42:27
+    Visibility: public -/
+def dataspace.Rights.Insts.CoreFmtDebug.fmt
+  (self : dataspace.Rights) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ core.fmt.DebugBool self.publish
+  let dyn1 := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugBool) self.observe
+  core.fmt.Formatter.debug_struct_field2_finish f (toStr "Rights") (toStr
+    "publish") dyn (toStr "observe") dyn1
+
+/-- Trait implementation: [noble_kernel::dataspace::{impl core::fmt::Debug for noble_kernel::dataspace::Rights}]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 42:22-42:27 -/
+@[reducible]
+def dataspace.Rights.Insts.CoreFmtDebug : core.fmt.Debug dataspace.Rights := {
+  fmt := dataspace.Rights.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::dataspace::{impl core::marker::StructuralPartialEq for noble_kernel::dataspace::Rights}]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 42:29-42:38 -/
+@[reducible]
+def dataspace.Rights.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq dataspace.Rights := {
+}
+
+/-- [noble_kernel::dataspace::{impl core::cmp::PartialEq<noble_kernel::dataspace::Rights> for noble_kernel::dataspace::Rights}::eq]:
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 42:29-42:38
+    Visibility: public -/
+def dataspace.Rights.Insts.CoreCmpPartialEqRights.eq
+  (self : dataspace.Rights) (other : dataspace.Rights) : Result Bool := do
+  if self.publish = other.publish
+  then ok (self.observe = other.observe)
+  else ok false
+
+/-- Trait implementation: [noble_kernel::dataspace::{impl core::cmp::PartialEq<noble_kernel::dataspace::Rights> for noble_kernel::dataspace::Rights}]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 42:29-42:38 -/
+@[reducible]
+impl_def dataspace.Rights.Insts.CoreCmpPartialEqRights : core.cmp.PartialEq
+  dataspace.Rights dataspace.Rights := {
+  eq := dataspace.Rights.Insts.CoreCmpPartialEqRights.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    dataspace.Rights.Insts.CoreCmpPartialEqRights
+}
+
+/-- [noble_kernel::dataspace::{impl core::cmp::Eq for noble_kernel::dataspace::Rights}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 42:40-42:42
+    Visibility: public -/
+def dataspace.Rights.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : dataspace.Rights) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::dataspace::{impl core::cmp::Eq for noble_kernel::dataspace::Rights}]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 42:40-42:42 -/
+@[reducible]
+def dataspace.Rights.Insts.CoreCmpEq : core.cmp.Eq dataspace.Rights := {
+  partialEqInst := dataspace.Rights.Insts.CoreCmpPartialEqRights
+  assert_fields_are_eq := dataspace.Rights.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::dataspace::{impl core::clone::Clone for noble_kernel::dataspace::Publication}::clone]:
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 48:9-48:14
+    Visibility: public -/
+def dataspace.Publication.Insts.CoreCloneClone.clone
+  (self : dataspace.Publication) : Result dataspace.Publication := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::dataspace::{impl core::clone::Clone for noble_kernel::dataspace::Publication}]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 48:9-48:14 -/
+@[reducible]
+def dataspace.Publication.Insts.CoreCloneClone : core.clone.Clone
+  dataspace.Publication := {
+  clone := dataspace.Publication.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::dataspace::{impl core::marker::Copy for noble_kernel::dataspace::Publication}]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 48:16-48:20 -/
+@[reducible]
+def dataspace.Publication.Insts.CoreMarkerCopy : core.marker.Copy
+  dataspace.Publication := {
+  cloneInst := dataspace.Publication.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::dataspace::{impl core::fmt::Debug for noble_kernel::dataspace::Publication}::fmt]:
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 48:22-48:27
+    Visibility: public -/
+def dataspace.Publication.Insts.CoreFmtDebug.fmt
+  (self : dataspace.Publication) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | dataspace.Publication.Unchanged =>
+    core.fmt.Formatter.write_str f (toStr "Unchanged")
+  | dataspace.Publication.Added =>
+    core.fmt.Formatter.write_str f (toStr "Added")
+  | dataspace.Publication.Replaced =>
+    core.fmt.Formatter.write_str f (toStr "Replaced")
+
+/-- Trait implementation: [noble_kernel::dataspace::{impl core::fmt::Debug for noble_kernel::dataspace::Publication}]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 48:22-48:27 -/
+@[reducible]
+def dataspace.Publication.Insts.CoreFmtDebug : core.fmt.Debug
+  dataspace.Publication := {
+  fmt := dataspace.Publication.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::dataspace::{impl core::marker::StructuralPartialEq for noble_kernel::dataspace::Publication}]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 48:29-48:38 -/
+@[reducible]
+def dataspace.Publication.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq dataspace.Publication := {
+}
+
+/-- [noble_kernel::dataspace::{impl core::cmp::PartialEq<noble_kernel::dataspace::Publication> for noble_kernel::dataspace::Publication}::eq]:
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 48:29-48:38
+    Visibility: public -/
+def dataspace.Publication.Insts.CoreCmpPartialEqPublication.eq
+  (self : dataspace.Publication) (other : dataspace.Publication) :
+  Result Bool
+  := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  ok (self1 = other1)
+
+/-- Trait implementation: [noble_kernel::dataspace::{impl core::cmp::PartialEq<noble_kernel::dataspace::Publication> for noble_kernel::dataspace::Publication}]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 48:29-48:38 -/
+@[reducible]
+impl_def dataspace.Publication.Insts.CoreCmpPartialEqPublication :
+  core.cmp.PartialEq dataspace.Publication dataspace.Publication := {
+  eq := dataspace.Publication.Insts.CoreCmpPartialEqPublication.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    dataspace.Publication.Insts.CoreCmpPartialEqPublication
+}
+
+/-- [noble_kernel::dataspace::{impl core::cmp::Eq for noble_kernel::dataspace::Publication}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 48:40-48:42
+    Visibility: public -/
+def dataspace.Publication.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : dataspace.Publication) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::dataspace::{impl core::cmp::Eq for noble_kernel::dataspace::Publication}]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 48:40-48:42 -/
+@[reducible]
+def dataspace.Publication.Insts.CoreCmpEq : core.cmp.Eq dataspace.Publication
+  := {
+  partialEqInst := dataspace.Publication.Insts.CoreCmpPartialEqPublication
+  assert_fields_are_eq :=
+    dataspace.Publication.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::dataspace::decide_publication]:
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 57:0-63:1
+    Visibility: public -/
+def dataspace.decide_publication
+  (current : Option Bool) (requested : Bool) :
+  Result dataspace.Publication
+  := do
+  match current with
+  | none => ok dataspace.Publication.Added
+  | some value =>
+    if value = requested
+    then ok dataspace.Publication.Unchanged
+    else ok dataspace.Publication.Replaced
+
+/-- [noble_kernel::dataspace::{impl core::clone::Clone for noble_kernel::dataspace::Operation}::clone]:
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 65:9-65:14
+    Visibility: public -/
+def dataspace.Operation.Insts.CoreCloneClone.clone
+  (self : dataspace.Operation) : Result dataspace.Operation := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::dataspace::{impl core::clone::Clone for noble_kernel::dataspace::Operation}]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 65:9-65:14 -/
+@[reducible]
+def dataspace.Operation.Insts.CoreCloneClone : core.clone.Clone
+  dataspace.Operation := {
+  clone := dataspace.Operation.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::dataspace::{impl core::marker::Copy for noble_kernel::dataspace::Operation}]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 65:16-65:20 -/
+@[reducible]
+def dataspace.Operation.Insts.CoreMarkerCopy : core.marker.Copy
+  dataspace.Operation := {
+  cloneInst := dataspace.Operation.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::dataspace::{impl core::fmt::Debug for noble_kernel::dataspace::Operation}::fmt]:
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 65:22-65:27
+    Visibility: public -/
+def dataspace.Operation.Insts.CoreFmtDebug.fmt
+  (self : dataspace.Operation) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | dataspace.Operation.Publish =>
+    core.fmt.Formatter.write_str f (toStr "Publish")
+  | dataspace.Operation.Observe =>
+    core.fmt.Formatter.write_str f (toStr "Observe")
+
+/-- Trait implementation: [noble_kernel::dataspace::{impl core::fmt::Debug for noble_kernel::dataspace::Operation}]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 65:22-65:27 -/
+@[reducible]
+def dataspace.Operation.Insts.CoreFmtDebug : core.fmt.Debug dataspace.Operation
+  := {
+  fmt := dataspace.Operation.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::dataspace::{impl core::marker::StructuralPartialEq for noble_kernel::dataspace::Operation}]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 65:29-65:38 -/
+@[reducible]
+def dataspace.Operation.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq dataspace.Operation := {
+}
+
+/-- [noble_kernel::dataspace::{impl core::cmp::PartialEq<noble_kernel::dataspace::Operation> for noble_kernel::dataspace::Operation}::eq]:
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 65:29-65:38
+    Visibility: public -/
+def dataspace.Operation.Insts.CoreCmpPartialEqOperation.eq
+  (self : dataspace.Operation) (other : dataspace.Operation) :
+  Result Bool
+  := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  ok (self1 = other1)
+
+/-- Trait implementation: [noble_kernel::dataspace::{impl core::cmp::PartialEq<noble_kernel::dataspace::Operation> for noble_kernel::dataspace::Operation}]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 65:29-65:38 -/
+@[reducible]
+impl_def dataspace.Operation.Insts.CoreCmpPartialEqOperation :
+  core.cmp.PartialEq dataspace.Operation dataspace.Operation := {
+  eq := dataspace.Operation.Insts.CoreCmpPartialEqOperation.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    dataspace.Operation.Insts.CoreCmpPartialEqOperation
+}
+
+/-- [noble_kernel::dataspace::{impl core::cmp::Eq for noble_kernel::dataspace::Operation}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 65:40-65:42
+    Visibility: public -/
+def dataspace.Operation.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : dataspace.Operation) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::dataspace::{impl core::cmp::Eq for noble_kernel::dataspace::Operation}]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 65:40-65:42 -/
+@[reducible]
+def dataspace.Operation.Insts.CoreCmpEq : core.cmp.Eq dataspace.Operation := {
+  partialEqInst := dataspace.Operation.Insts.CoreCmpPartialEqOperation
+  assert_fields_are_eq :=
+    dataspace.Operation.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::dataspace::permits]:
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 74:0-79:1
+    Visibility: public -/
+def dataspace.permits
+  (rights : dataspace.Rights) (operation : dataspace.Operation) :
+  Result Bool
+  := do
+  match operation with
+  | dataspace.Operation.Publish => ok rights.publish
+  | dataspace.Operation.Observe => ok rights.observe
+
+/-- [noble_kernel::dataspace::{impl core::clone::Clone for noble_kernel::dataspace::Facet}::clone]:
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 81:9-81:14
+    Visibility: public -/
+def dataspace.Facet.Insts.CoreCloneClone.clone
+  (self : dataspace.Facet) : Result dataspace.Facet := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::dataspace::{impl core::clone::Clone for noble_kernel::dataspace::Facet}]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 81:9-81:14 -/
+@[reducible]
+def dataspace.Facet.Insts.CoreCloneClone : core.clone.Clone dataspace.Facet
+  := {
+  clone := dataspace.Facet.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::dataspace::{impl core::marker::Copy for noble_kernel::dataspace::Facet}]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 81:16-81:20 -/
+@[reducible]
+def dataspace.Facet.Insts.CoreMarkerCopy : core.marker.Copy dataspace.Facet
+  := {
+  cloneInst := dataspace.Facet.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::dataspace::{impl core::fmt::Debug for noble_kernel::dataspace::Facet}::fmt]:
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 81:22-81:27
+    Visibility: public -/
+def dataspace.Facet.Insts.CoreFmtDebug.fmt
+  (self : dataspace.Facet) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU64) self
+  core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Facet") dyn
+
+/-- Trait implementation: [noble_kernel::dataspace::{impl core::fmt::Debug for noble_kernel::dataspace::Facet}]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 81:22-81:27 -/
+@[reducible]
+def dataspace.Facet.Insts.CoreFmtDebug : core.fmt.Debug dataspace.Facet := {
+  fmt := dataspace.Facet.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::dataspace::{impl core::marker::StructuralPartialEq for noble_kernel::dataspace::Facet}]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 81:29-81:38 -/
+@[reducible]
+def dataspace.Facet.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq dataspace.Facet := {
+}
+
+/-- [noble_kernel::dataspace::{impl core::cmp::PartialEq<noble_kernel::dataspace::Facet> for noble_kernel::dataspace::Facet}::eq]:
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 81:29-81:38
+    Visibility: public -/
+def dataspace.Facet.Insts.CoreCmpPartialEqFacet.eq
+  (self : dataspace.Facet) (other : dataspace.Facet) : Result Bool := do
+  ok (self = other)
+
+/-- Trait implementation: [noble_kernel::dataspace::{impl core::cmp::PartialEq<noble_kernel::dataspace::Facet> for noble_kernel::dataspace::Facet}]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 81:29-81:38 -/
+@[reducible]
+impl_def dataspace.Facet.Insts.CoreCmpPartialEqFacet : core.cmp.PartialEq
+  dataspace.Facet dataspace.Facet := {
+  eq := dataspace.Facet.Insts.CoreCmpPartialEqFacet.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    dataspace.Facet.Insts.CoreCmpPartialEqFacet
+}
+
+/-- [noble_kernel::dataspace::{impl core::cmp::Eq for noble_kernel::dataspace::Facet}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 81:40-81:42
+    Visibility: public -/
+def dataspace.Facet.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : dataspace.Facet) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::dataspace::{impl core::cmp::Eq for noble_kernel::dataspace::Facet}]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 81:40-81:42 -/
+@[reducible]
+def dataspace.Facet.Insts.CoreCmpEq : core.cmp.Eq dataspace.Facet := {
+  partialEqInst := dataspace.Facet.Insts.CoreCmpPartialEqFacet
+  assert_fields_are_eq := dataspace.Facet.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::dataspace::{impl core::clone::Clone for noble_kernel::dataspace::Limits}::clone]:
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 84:9-84:14
+    Visibility: public -/
+def dataspace.Limits.Insts.CoreCloneClone.clone
+  (self : dataspace.Limits) : Result dataspace.Limits := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::dataspace::{impl core::clone::Clone for noble_kernel::dataspace::Limits}]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 84:9-84:14 -/
+@[reducible]
+def dataspace.Limits.Insts.CoreCloneClone : core.clone.Clone dataspace.Limits
+  := {
+  clone := dataspace.Limits.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::dataspace::{impl core::marker::Copy for noble_kernel::dataspace::Limits}]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 84:16-84:20 -/
+@[reducible]
+def dataspace.Limits.Insts.CoreMarkerCopy : core.marker.Copy dataspace.Limits
+  := {
+  cloneInst := dataspace.Limits.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::dataspace::{impl core::fmt::Debug for noble_kernel::dataspace::Limits}::fmt]:
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 84:22-84:27
+    Visibility: public -/
+def dataspace.Limits.Insts.CoreFmtDebug.fmt
+  (self : dataspace.Limits) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ core.fmt.DebugUsize self.facets
+  let dyn1 := Dyn.mk _ core.fmt.DebugUsize self.assertions
+  let dyn2 := Dyn.mk _ core.fmt.DebugUsize self.interests
+  let dyn3 := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugUsize) self.events
+  core.fmt.Formatter.debug_struct_field4_finish f (toStr "Limits") (toStr
+    "facets") dyn (toStr "assertions") dyn1 (toStr "interests") dyn2 (toStr
+    "events") dyn3
+
+/-- Trait implementation: [noble_kernel::dataspace::{impl core::fmt::Debug for noble_kernel::dataspace::Limits}]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 84:22-84:27 -/
+@[reducible]
+def dataspace.Limits.Insts.CoreFmtDebug : core.fmt.Debug dataspace.Limits := {
+  fmt := dataspace.Limits.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::dataspace::{impl core::marker::StructuralPartialEq for noble_kernel::dataspace::Limits}]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 84:29-84:38 -/
+@[reducible]
+def dataspace.Limits.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq dataspace.Limits := {
+}
+
+/-- [noble_kernel::dataspace::{impl core::cmp::PartialEq<noble_kernel::dataspace::Limits> for noble_kernel::dataspace::Limits}::eq]:
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 84:29-84:38
+    Visibility: public -/
+def dataspace.Limits.Insts.CoreCmpPartialEqLimits.eq
+  (self : dataspace.Limits) (other : dataspace.Limits) : Result Bool := do
+  if self.facets = other.facets
+  then
+    if self.assertions = other.assertions
+    then
+      if self.interests = other.interests
+      then ok (self.events = other.events)
+      else ok false
+    else ok false
+  else ok false
+
+/-- Trait implementation: [noble_kernel::dataspace::{impl core::cmp::PartialEq<noble_kernel::dataspace::Limits> for noble_kernel::dataspace::Limits}]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 84:29-84:38 -/
+@[reducible]
+impl_def dataspace.Limits.Insts.CoreCmpPartialEqLimits : core.cmp.PartialEq
+  dataspace.Limits dataspace.Limits := {
+  eq := dataspace.Limits.Insts.CoreCmpPartialEqLimits.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    dataspace.Limits.Insts.CoreCmpPartialEqLimits
+}
+
+/-- [noble_kernel::dataspace::{impl core::cmp::Eq for noble_kernel::dataspace::Limits}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 84:40-84:42
+    Visibility: public -/
+def dataspace.Limits.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : dataspace.Limits) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::dataspace::{impl core::cmp::Eq for noble_kernel::dataspace::Limits}]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 84:40-84:42 -/
+@[reducible]
+def dataspace.Limits.Insts.CoreCmpEq : core.cmp.Eq dataspace.Limits := {
+  partialEqInst := dataspace.Limits.Insts.CoreCmpPartialEqLimits
+  assert_fields_are_eq := dataspace.Limits.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::dataspace::{impl core::clone::Clone for noble_kernel::dataspace::Service}::clone]:
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 92:9-92:14
+    Visibility: public -/
+def dataspace.Service.Insts.CoreCloneClone.clone
+  (self : dataspace.Service) : Result dataspace.Service := do
+  let s ← alloc.string.String.Insts.CoreCloneClone.clone self.name
+  let b ← lift (core.clone.impls.CloneBool.clone self.ready)
+  ok { «name» := s, ready := b }
+
+/-- Trait implementation: [noble_kernel::dataspace::{impl core::clone::Clone for noble_kernel::dataspace::Service}]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 92:9-92:14 -/
+@[reducible]
+def dataspace.Service.Insts.CoreCloneClone : core.clone.Clone dataspace.Service
+  := {
+  clone := dataspace.Service.Insts.CoreCloneClone.clone
+}
+
+/-- [noble_kernel::dataspace::{impl core::fmt::Debug for noble_kernel::dataspace::Service}::fmt]:
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 92:16-92:21
+    Visibility: public -/
+def dataspace.Service.Insts.CoreFmtDebug.fmt
+  (self : dataspace.Service) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ alloc.string.String.Insts.CoreFmtDebug self.name
+  let dyn1 := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugBool) self.ready
+  core.fmt.Formatter.debug_struct_field2_finish f (toStr "Service") (toStr
+    "name") dyn (toStr "ready") dyn1
+
+/-- Trait implementation: [noble_kernel::dataspace::{impl core::fmt::Debug for noble_kernel::dataspace::Service}]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 92:16-92:21 -/
+@[reducible]
+def dataspace.Service.Insts.CoreFmtDebug : core.fmt.Debug dataspace.Service
+  := {
+  fmt := dataspace.Service.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::dataspace::{impl core::marker::StructuralPartialEq for noble_kernel::dataspace::Service}]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 92:23-92:32 -/
+@[reducible]
+def dataspace.Service.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq dataspace.Service := {
+}
+
+/-- [noble_kernel::dataspace::{impl core::cmp::PartialEq<noble_kernel::dataspace::Service> for noble_kernel::dataspace::Service}::eq]:
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 92:23-92:32
+    Visibility: public -/
+def dataspace.Service.Insts.CoreCmpPartialEqService.eq
+  (self : dataspace.Service) (other : dataspace.Service) : Result Bool := do
+  if self.ready = other.ready
+  then alloc.string.String.Insts.CoreCmpPartialEqString.eq self.name other.name
+  else ok false
+
+/-- Trait implementation: [noble_kernel::dataspace::{impl core::cmp::PartialEq<noble_kernel::dataspace::Service> for noble_kernel::dataspace::Service}]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 92:23-92:32 -/
+@[reducible]
+impl_def dataspace.Service.Insts.CoreCmpPartialEqService : core.cmp.PartialEq
+  dataspace.Service dataspace.Service := {
+  eq := dataspace.Service.Insts.CoreCmpPartialEqService.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    dataspace.Service.Insts.CoreCmpPartialEqService
+}
+
+/-- [noble_kernel::dataspace::{impl core::cmp::Eq for noble_kernel::dataspace::Service}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 92:34-92:36
+    Visibility: public -/
+def dataspace.Service.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : dataspace.Service) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::dataspace::{impl core::cmp::Eq for noble_kernel::dataspace::Service}]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 92:34-92:36 -/
+@[reducible]
+def dataspace.Service.Insts.CoreCmpEq : core.cmp.Eq dataspace.Service := {
+  partialEqInst := dataspace.Service.Insts.CoreCmpPartialEqService
+  assert_fields_are_eq :=
+    dataspace.Service.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::dataspace::{noble_kernel::dataspace::Service}::from_ref]:
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 99:4-104:5 -/
+def dataspace.Service.from_ref
+  (value : dataspace.wire.ServiceRef) : Result dataspace.Service := do
+  let s ← alloc.string.String.Insts.CoreConvertFromShared0Str.from value.name
+  ok { «name» := s, ready := value.ready }
+
+/-- [noble_kernel::dataspace::{impl core::clone::Clone for noble_kernel::dataspace::Change}::clone]:
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 107:9-107:14
+    Visibility: public -/
+def dataspace.Change.Insts.CoreCloneClone.clone
+  (self : dataspace.Change) : Result dataspace.Change := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::dataspace::{impl core::clone::Clone for noble_kernel::dataspace::Change}]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 107:9-107:14 -/
+@[reducible]
+def dataspace.Change.Insts.CoreCloneClone : core.clone.Clone dataspace.Change
+  := {
+  clone := dataspace.Change.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::dataspace::{impl core::marker::Copy for noble_kernel::dataspace::Change}]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 107:16-107:20 -/
+@[reducible]
+def dataspace.Change.Insts.CoreMarkerCopy : core.marker.Copy dataspace.Change
+  := {
+  cloneInst := dataspace.Change.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::dataspace::{impl core::fmt::Debug for noble_kernel::dataspace::Change}::fmt]:
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 107:22-107:27
+    Visibility: public -/
+def dataspace.Change.Insts.CoreFmtDebug.fmt
+  (self : dataspace.Change) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | dataspace.Change.Added => core.fmt.Formatter.write_str f (toStr "Added")
+  | dataspace.Change.Removed =>
+    core.fmt.Formatter.write_str f (toStr "Removed")
+
+/-- Trait implementation: [noble_kernel::dataspace::{impl core::fmt::Debug for noble_kernel::dataspace::Change}]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 107:22-107:27 -/
+@[reducible]
+def dataspace.Change.Insts.CoreFmtDebug : core.fmt.Debug dataspace.Change := {
+  fmt := dataspace.Change.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::dataspace::{impl core::marker::StructuralPartialEq for noble_kernel::dataspace::Change}]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 107:29-107:38 -/
+@[reducible]
+def dataspace.Change.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq dataspace.Change := {
+}
+
+/-- [noble_kernel::dataspace::{impl core::cmp::PartialEq<noble_kernel::dataspace::Change> for noble_kernel::dataspace::Change}::eq]:
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 107:29-107:38
+    Visibility: public -/
+def dataspace.Change.Insts.CoreCmpPartialEqChange.eq
+  (self : dataspace.Change) (other : dataspace.Change) : Result Bool := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  ok (self1 = other1)
+
+/-- Trait implementation: [noble_kernel::dataspace::{impl core::cmp::PartialEq<noble_kernel::dataspace::Change> for noble_kernel::dataspace::Change}]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 107:29-107:38 -/
+@[reducible]
+impl_def dataspace.Change.Insts.CoreCmpPartialEqChange : core.cmp.PartialEq
+  dataspace.Change dataspace.Change := {
+  eq := dataspace.Change.Insts.CoreCmpPartialEqChange.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    dataspace.Change.Insts.CoreCmpPartialEqChange
+}
+
+/-- [noble_kernel::dataspace::{impl core::cmp::Eq for noble_kernel::dataspace::Change}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 107:40-107:42
+    Visibility: public -/
+def dataspace.Change.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : dataspace.Change) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::dataspace::{impl core::cmp::Eq for noble_kernel::dataspace::Change}]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 107:40-107:42 -/
+@[reducible]
+def dataspace.Change.Insts.CoreCmpEq : core.cmp.Eq dataspace.Change := {
+  partialEqInst := dataspace.Change.Insts.CoreCmpPartialEqChange
+  assert_fields_are_eq := dataspace.Change.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::dataspace::{impl core::clone::Clone for noble_kernel::dataspace::Event}::clone]:
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 113:9-113:14
+    Visibility: public -/
+def dataspace.Event.Insts.CoreCloneClone.clone
+  (self : dataspace.Event) : Result dataspace.Event := do
+  let f ← dataspace.Facet.Insts.CoreCloneClone.clone self.observer
+  let s ← dataspace.Service.Insts.CoreCloneClone.clone self.service
+  let c ← dataspace.Change.Insts.CoreCloneClone.clone self.change
+  ok { observer := f, service := s, change := c }
+
+/-- Trait implementation: [noble_kernel::dataspace::{impl core::clone::Clone for noble_kernel::dataspace::Event}]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 113:9-113:14 -/
+@[reducible]
+def dataspace.Event.Insts.CoreCloneClone : core.clone.Clone dataspace.Event
+  := {
+  clone := dataspace.Event.Insts.CoreCloneClone.clone
+}
+
+/-- [noble_kernel::dataspace::{impl core::fmt::Debug for noble_kernel::dataspace::Event}::fmt]:
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 113:16-113:21
+    Visibility: public -/
+def dataspace.Event.Insts.CoreFmtDebug.fmt
+  (self : dataspace.Event) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ dataspace.Facet.Insts.CoreFmtDebug self.observer
+  let dyn1 := Dyn.mk _ dataspace.Service.Insts.CoreFmtDebug self.service
+  let dyn2 :=
+    Dyn.mk _ (core.fmt.DebugShared dataspace.Change.Insts.CoreFmtDebug)
+      self.change
+  core.fmt.Formatter.debug_struct_field3_finish f (toStr "Event") (toStr
+    "observer") dyn (toStr "service") dyn1 (toStr "change") dyn2
+
+/-- Trait implementation: [noble_kernel::dataspace::{impl core::fmt::Debug for noble_kernel::dataspace::Event}]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 113:16-113:21 -/
+@[reducible]
+def dataspace.Event.Insts.CoreFmtDebug : core.fmt.Debug dataspace.Event := {
+  fmt := dataspace.Event.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::dataspace::{impl core::marker::StructuralPartialEq for noble_kernel::dataspace::Event}]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 113:23-113:32 -/
+@[reducible]
+def dataspace.Event.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq dataspace.Event := {
+}
+
+/-- [noble_kernel::dataspace::{impl core::cmp::PartialEq<noble_kernel::dataspace::Event> for noble_kernel::dataspace::Event}::eq]:
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 113:23-113:32
+    Visibility: public -/
+def dataspace.Event.Insts.CoreCmpPartialEqEvent.eq
+  (self : dataspace.Event) (other : dataspace.Event) : Result Bool := do
+  let b ←
+    dataspace.Facet.Insts.CoreCmpPartialEqFacet.eq self.observer other.observer
+  if b
+  then
+    let b1 ←
+      dataspace.Service.Insts.CoreCmpPartialEqService.eq self.service
+        other.service
+    if b1
+    then
+      dataspace.Change.Insts.CoreCmpPartialEqChange.eq self.change other.change
+    else ok false
+  else ok false
+
+/-- Trait implementation: [noble_kernel::dataspace::{impl core::cmp::PartialEq<noble_kernel::dataspace::Event> for noble_kernel::dataspace::Event}]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 113:23-113:32 -/
+@[reducible]
+impl_def dataspace.Event.Insts.CoreCmpPartialEqEvent : core.cmp.PartialEq
+  dataspace.Event dataspace.Event := {
+  eq := dataspace.Event.Insts.CoreCmpPartialEqEvent.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    dataspace.Event.Insts.CoreCmpPartialEqEvent
+}
+
+/-- [noble_kernel::dataspace::{impl core::cmp::Eq for noble_kernel::dataspace::Event}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 113:34-113:36
+    Visibility: public -/
+def dataspace.Event.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : dataspace.Event) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::dataspace::{impl core::cmp::Eq for noble_kernel::dataspace::Event}]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 113:34-113:36 -/
+@[reducible]
+def dataspace.Event.Insts.CoreCmpEq : core.cmp.Eq dataspace.Event := {
+  partialEqInst := dataspace.Event.Insts.CoreCmpPartialEqEvent
+  assert_fields_are_eq := dataspace.Event.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::dataspace::table::{noble_kernel::dataspace::Table}::reserve]:
+    Source: 'crates/noble-kernel/src/dataspace/table.rs', lines 161:4-170:5 -/
+def dataspace.table.Table.reserve
+  (self : dataspace.Table) (reservation : dataspace.table.Reservation) :
+  Result (core.result.Result Unit dataspace.Error)
+  := do
+  let o ← lift (Usize.checked_add reservation.immediate reservation.removals)
+  match o with
+  | none => ok (core.result.Result.Err dataspace.Error.Capacity)
+  | some required =>
+    let i := alloc.vec.Vec.len self.events
+    let i1 ← lift (core.num.Usize.saturating_sub self.limits.events i)
+    if required > i1
+    then ok (core.result.Result.Err dataspace.Error.Capacity)
+    else ok (core.result.Result.Ok ())
+
+/-- [noble_kernel::dataspace::table::{noble_kernel::dataspace::Table}::owned_index]: loop body 0:
+    Source: 'crates/noble-kernel/src/dataspace/table.rs', lines 149:8-157:5 -/
+@[rust_loop_body]
+def dataspace.table.Table.owned_index_loop.body
+  (self : dataspace.Table) (facet : dataspace.Facet) («name» : Str)
+  (index : Std.Usize) :
+  Result (ControlFlow Std.Usize (Option Std.Usize))
+  := do
+  let i := alloc.vec.Vec.len self.assertions
+  if index < i
+  then
+    let a ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        dataspace.Assertion) self.assertions index
+    let b ← dataspace.Facet.Insts.CoreCmpPartialEqFacet.eq a.owner facet
+    if b
+    then
+      let b1 ←
+        alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq a.service.name
+          «name»
+      if b1
+      then ok (done (some index))
+      else let index1 ← index + 1#usize
+           ok (cont index1)
+    else let index1 ← index + 1#usize
+         ok (cont index1)
+  else ok (done none)
+
+/-- [noble_kernel::dataspace::table::{noble_kernel::dataspace::Table}::owned_index]: loop 0:
+    Source: 'crates/noble-kernel/src/dataspace/table.rs', lines 149:8-157:5 -/
+@[rust_loop]
+def dataspace.table.Table.owned_index_loop
+  (self : dataspace.Table) (facet : dataspace.Facet) («name» : Str)
+  (index : Std.Usize) :
+  Result (Option Std.Usize)
+  := do
+  loop
+    (fun index1 => dataspace.table.Table.owned_index_loop.body self facet
+      «name» index1)
+    index
+
+/-- [noble_kernel::dataspace::table::{noble_kernel::dataspace::Table}::owned_index]:
+    Source: 'crates/noble-kernel/src/dataspace/table.rs', lines 147:4-157:5 -/
+@[reducible]
+def dataspace.table.Table.owned_index
+  (self : dataspace.Table) (facet : dataspace.Facet) («name» : Str) :
+  Result (Option Std.Usize)
+  := do
+  dataspace.table.Table.owned_index_loop self facet «name» 0#usize
+
+/-- [noble_kernel::dataspace::table::{noble_kernel::dataspace::Table}::interested_count]: loop body 0:
+    Source: 'crates/noble-kernel/src/dataspace/table.rs', lines 136:8-143:9 -/
+@[rust_loop_body]
+def dataspace.table.Table.interested_count_loop.body
+  (self : dataspace.Table) («name» : Str) (ready : Bool) (count : Std.Usize)
+  (index : Std.Usize) :
+  Result (ControlFlow (Std.Usize × Std.Usize) Std.Usize)
+  := do
+  let i := alloc.vec.Vec.len self.interests
+  if index < i
+  then
+    let i1 ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        dataspace.Interest) self.interests index
+    let b ←
+      alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq i1.service.name
+        «name»
+    let count1 ←
+      if b
+      then if i1.service.ready = ready
+           then count + 1#usize
+           else ok count
+      else ok count
+    let index1 ← index + 1#usize
+    ok (cont (count1, index1))
+  else ok (done count)
+
+/-- [noble_kernel::dataspace::table::{noble_kernel::dataspace::Table}::interested_count]: loop 0:
+    Source: 'crates/noble-kernel/src/dataspace/table.rs', lines 136:8-143:9 -/
+@[rust_loop]
+def dataspace.table.Table.interested_count_loop
+  (self : dataspace.Table) («name» : Str) (ready : Bool) (count : Std.Usize)
+  (index : Std.Usize) :
+  Result Std.Usize
+  := do
+  loop
+    (fun (count1, index1) => dataspace.table.Table.interested_count_loop.body
+      self «name» ready count1 index1)
+    (count, index)
+
+/-- [noble_kernel::dataspace::table::{noble_kernel::dataspace::Table}::interested_count]:
+    Source: 'crates/noble-kernel/src/dataspace/table.rs', lines 133:4-145:5 -/
+@[reducible]
+def dataspace.table.Table.interested_count
+  (self : dataspace.Table) («name» : Str) (ready : Bool) :
+  Result Std.Usize
+  := do
+  dataspace.table.Table.interested_count_loop self «name» ready 0#usize
+    0#usize
+
+/-- [noble_kernel::dataspace::table::{noble_kernel::dataspace::Table}::asserted]: loop body 0:
+    Source: 'crates/noble-kernel/src/dataspace/table.rs', lines 108:8-116:5 -/
+@[rust_loop_body]
+def dataspace.table.Table.asserted_loop.body
+  (self : dataspace.Table) («name» : Str) (ready : Bool)
+  (except : Option Std.Usize) (index : Std.Usize) :
+  Result (ControlFlow Std.Usize Bool)
+  := do
+  let i := alloc.vec.Vec.len self.assertions
+  if index < i
+  then
+    let a ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        dataspace.Assertion) self.assertions index
+    let b ←
+      core.cmp.PartialEq.ne.trait_default
+        (core.option.Option.Insts.CoreCmpPartialEqOption
+        core.cmp.PartialEqUsize) (some index) except
+    if b
+    then
+      let b1 ←
+        alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq a.service.name
+          «name»
+      if b1
+      then
+        if a.service.ready = ready
+        then ok (done true)
+        else let index1 ← index + 1#usize
+             ok (cont index1)
+      else let index1 ← index + 1#usize
+           ok (cont index1)
+    else let index1 ← index + 1#usize
+         ok (cont index1)
+  else ok (done false)
+
+/-- [noble_kernel::dataspace::table::{noble_kernel::dataspace::Table}::asserted]: loop 0:
+    Source: 'crates/noble-kernel/src/dataspace/table.rs', lines 108:8-116:5 -/
+@[rust_loop]
+def dataspace.table.Table.asserted_loop
+  (self : dataspace.Table) («name» : Str) (ready : Bool)
+  (except : Option Std.Usize) (index : Std.Usize) :
+  Result Bool
+  := do
+  loop
+    (fun index1 => dataspace.table.Table.asserted_loop.body self «name» ready
+      except index1)
+    index
+
+/-- [noble_kernel::dataspace::table::{noble_kernel::dataspace::Table}::asserted]:
+    Source: 'crates/noble-kernel/src/dataspace/table.rs', lines 106:4-116:5 -/
+@[reducible]
+def dataspace.table.Table.asserted
+  (self : dataspace.Table) («name» : Str) (ready : Bool)
+  (except : Option Std.Usize) :
+  Result Bool
+  := do
+  dataspace.table.Table.asserted_loop self «name» ready except 0#usize
+
+/-- [noble_kernel::dataspace::table::{noble_kernel::dataspace::Table}::matches_count]: loop body 0:
+    Source: 'crates/noble-kernel/src/dataspace/table.rs', lines 93:8-102:9 -/
+@[rust_loop_body]
+def dataspace.table.Table.matches_count_loop.body
+  (self : dataspace.Table) (count : Std.Usize) (index : Std.Usize) :
+  Result (ControlFlow (Std.Usize × Std.Usize) Std.Usize)
+  := do
+  let i := alloc.vec.Vec.len self.interests
+  if index < i
+  then
+    let i1 ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        dataspace.Interest) self.interests index
+    let s ←
+      alloc.string.String.Insts.CoreOpsDerefDerefStr.deref i1.service.name
+    let is_visible ←
+      dataspace.table.Table.asserted self s i1.service.ready none
+    let count1 ← if is_visible
+                   then count + 1#usize
+                   else ok count
+    let index1 ← index + 1#usize
+    ok (cont (count1, index1))
+  else ok (done count)
+
+/-- [noble_kernel::dataspace::table::{noble_kernel::dataspace::Table}::matches_count]: loop 0:
+    Source: 'crates/noble-kernel/src/dataspace/table.rs', lines 93:8-102:9 -/
+@[rust_loop]
+def dataspace.table.Table.matches_count_loop
+  (self : dataspace.Table) (count : Std.Usize) (index : Std.Usize) :
+  Result Std.Usize
+  := do
+  loop
+    (fun (count1, index1) => dataspace.table.Table.matches_count_loop.body self
+      count1 index1)
+    (count, index)
+
+/-- [noble_kernel::dataspace::table::{noble_kernel::dataspace::Table}::matches_count]:
+    Source: 'crates/noble-kernel/src/dataspace/table.rs', lines 90:4-104:5 -/
+@[reducible]
+def dataspace.table.Table.matches_count
+  (self : dataspace.Table) : Result Std.Usize := do
+  dataspace.table.Table.matches_count_loop self 0#usize 0#usize
+
+/-- [noble_kernel::dataspace::wire::valid_name]: loop body 0:
+    Source: 'crates/noble-kernel/src/dataspace/wire.rs', lines 30:4-38:1
+    Visibility: public -/
+@[rust_loop_body]
+def dataspace.wire.valid_name_loop.body
+  (bytes : Slice Std.U8) (index : Std.Usize) :
+  Result (ControlFlow Std.Usize Bool)
+  := do
+  let i := Slice.len bytes
+  if index < i
+  then
+    let byte ← Slice.index_usize bytes index
+    let b ← core.num.U8.is_ascii_alphanumeric byte
+    if b
+    then let index1 ← index + 1#usize
+         ok (cont index1)
+    else
+      if byte != 95#u8
+      then
+        if byte != 45#u8
+        then ok (done false)
+        else let index1 ← index + 1#usize
+             ok (cont index1)
+      else let index1 ← index + 1#usize
+           ok (cont index1)
+  else ok (done true)
+
+/-- [noble_kernel::dataspace::wire::valid_name]: loop 0:
+    Source: 'crates/noble-kernel/src/dataspace/wire.rs', lines 30:4-38:1
+    Visibility: public -/
+@[rust_loop]
+def dataspace.wire.valid_name_loop
+  (bytes : Slice Std.U8) (index : Std.Usize) : Result Bool := do
+  loop
+    (fun index1 => dataspace.wire.valid_name_loop.body bytes index1)
+    index
+
+/-- [noble_kernel::dataspace::wire::valid_name]:
+    Source: 'crates/noble-kernel/src/dataspace/wire.rs', lines 24:0-38:1
+    Visibility: public -/
+def dataspace.wire.valid_name («name» : Str) : Result Bool := do
+  let b ← core.str.Str.is_empty «name»
+  if b
+  then ok false
+  else
+    let i ← core.str.Str.len «name»
+    if i > dataspace.MAX_NAME_BYTES
+    then ok false
+    else
+      let bytes ← core.str.Str.as_bytes «name»
+      dataspace.wire.valid_name_loop bytes 0#usize
+
+/-- [noble_kernel::dataspace::table::{noble_kernel::dataspace::Table}::retired_ancestor]: loop body 0:
+    Source: 'crates/noble-kernel/src/dataspace/table.rs', lines 199:8-205:9 -/
+@[rust_loop_body]
+def dataspace.table.Table.retired_ancestor_loop0.body
+  (self : dataspace.Table) (id : dataspace.Facet) (index : Std.Usize) :
+  Result (ControlFlow Std.Usize ((alloc.vec.Vec dataspace.Scope) × Std.Usize
+    × (Option dataspace.Facet)))
+  := do
+  let i := alloc.vec.Vec.len self.scopes
+  if index < i
+  then
+    let s ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        dataspace.Scope) self.scopes index
+    let b ← dataspace.Facet.Insts.CoreCmpPartialEqFacet.eq s.id id
+    if b
+    then ok (done (self.scopes, index, s.parent))
+    else let index1 ← index + 1#usize
+         ok (cont index1)
+  else ok (done (self.scopes, index, none))
+
+/-- [noble_kernel::dataspace::table::{noble_kernel::dataspace::Table}::retired_ancestor]: loop 0:
+    Source: 'crates/noble-kernel/src/dataspace/table.rs', lines 199:8-205:9 -/
+@[rust_loop]
+def dataspace.table.Table.retired_ancestor_loop0
+  (self : dataspace.Table) (id : dataspace.Facet) (index : Std.Usize) :
+  Result ((alloc.vec.Vec dataspace.Scope) × Std.Usize × (Option
+    dataspace.Facet))
+  := do
+  loop
+    (fun index1 => dataspace.table.Table.retired_ancestor_loop0.body self id
+      index1)
+    index
+
+/-- [noble_kernel::dataspace::table::{noble_kernel::dataspace::Table}::retired_ancestor]: loop body 2:
+    Source: 'crates/noble-kernel/src/dataspace/table.rs', lines 208:12-210:13 -/
+@[rust_loop_body]
+def dataspace.table.Table.retired_ancestor_loop1_loop0.body
+  (v : alloc.vec.Vec dataspace.Scope) (id : dataspace.Facet)
+  (index : Std.Usize) :
+  Result (ControlFlow Std.Usize Std.Usize)
+  := do
+  let i := alloc.vec.Vec.len v
+  if index < i
+  then
+    let s ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        dataspace.Scope) v index
+    let b ←
+      core.cmp.PartialEq.ne.trait_default
+        dataspace.Facet.Insts.CoreCmpPartialEqFacet s.id id
+    if b
+    then let index1 ← index + 1#usize
+         ok (cont index1)
+    else ok (done index)
+  else ok (done index)
+
+/-- [noble_kernel::dataspace::table::{noble_kernel::dataspace::Table}::retired_ancestor]: loop 2:
+    Source: 'crates/noble-kernel/src/dataspace/table.rs', lines 208:12-210:13 -/
+@[rust_loop]
+def dataspace.table.Table.retired_ancestor_loop1_loop0
+  (v : alloc.vec.Vec dataspace.Scope) (index : Std.Usize)
+  (id : dataspace.Facet) :
+  Result Std.Usize
+  := do
+  loop
+    (fun index1 => dataspace.table.Table.retired_ancestor_loop1_loop0.body v id
+      index1)
+    index
+
+/-- [noble_kernel::dataspace::table::{noble_kernel::dataspace::Table}::retired_ancestor]: loop body 1:
+    Source: 'crates/noble-kernel/src/dataspace/table.rs', lines 206:8-217:5 -/
+@[rust_loop_body]
+def dataspace.table.Table.retired_ancestor_loop1.body
+  (v : alloc.vec.Vec dataspace.Scope) (parent : Option dataspace.Facet)
+  (index : Std.Usize) :
+  Result (ControlFlow ((Option dataspace.Facet) × Std.Usize) Bool)
+  := do
+  match parent with
+  | none => ok (done false)
+  | some id =>
+    let index1 ←
+      dataspace.table.Table.retired_ancestor_loop1_loop0 v 0#usize id
+    let i := alloc.vec.Vec.len v
+    if index1 = i
+    then ok (done true)
+    else
+      let s ←
+        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+          dataspace.Scope) v index1
+      if s.live
+      then ok (cont (s.parent, index1))
+      else ok (done true)
+
+/-- [noble_kernel::dataspace::table::{noble_kernel::dataspace::Table}::retired_ancestor]: loop 1:
+    Source: 'crates/noble-kernel/src/dataspace/table.rs', lines 206:8-217:5 -/
+@[rust_loop]
+def dataspace.table.Table.retired_ancestor_loop1
+  (parent : Option dataspace.Facet) (v : alloc.vec.Vec dataspace.Scope)
+  (index : Std.Usize) :
+  Result Bool
+  := do
+  loop
+    (fun (parent1, index1) => dataspace.table.Table.retired_ancestor_loop1.body
+      v parent1 index1)
+    (parent, index)
+
+/-- [noble_kernel::dataspace::table::{noble_kernel::dataspace::Table}::retired_ancestor]:
+    Source: 'crates/noble-kernel/src/dataspace/table.rs', lines 196:4-217:5 -/
+def dataspace.table.Table.retired_ancestor
+  (self : dataspace.Table) (id : dataspace.Facet) : Result Bool := do
+  let (v, index, parent) ←
+    dataspace.table.Table.retired_ancestor_loop0 self id 0#usize
+  dataspace.table.Table.retired_ancestor_loop1 parent v index
+
+/-- [noble_kernel::dataspace::table::{noble_kernel::dataspace::Table}::scope]: loop body 0:
+    Source: 'crates/noble-kernel/src/dataspace/table.rs', lines 61:8-71:5 -/
+@[rust_loop_body]
+def dataspace.table.Table.scope_loop.body
+  (self : dataspace.Table) (facet : dataspace.Facet) (index : Std.Usize) :
+  Result (ControlFlow Std.Usize (core.result.Result dataspace.Scope
+    dataspace.Error))
+  := do
+  let i := alloc.vec.Vec.len self.scopes
+  if index < i
+  then
+    let s ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        dataspace.Scope) self.scopes index
+    let b ← dataspace.Facet.Insts.CoreCmpPartialEqFacet.eq s.id facet
+    if b
+    then
+      if s.live
+      then
+        let b1 ← dataspace.table.Table.retired_ancestor self facet
+        if b1
+        then let index1 ← index + 1#usize
+             ok (cont index1)
+        else ok (done (core.result.Result.Ok s))
+      else let index1 ← index + 1#usize
+           ok (cont index1)
+    else let index1 ← index + 1#usize
+         ok (cont index1)
+  else ok (done (core.result.Result.Err dataspace.Error.InvalidFacet))
+
+/-- [noble_kernel::dataspace::table::{noble_kernel::dataspace::Table}::scope]: loop 0:
+    Source: 'crates/noble-kernel/src/dataspace/table.rs', lines 61:8-71:5 -/
+@[rust_loop]
+def dataspace.table.Table.scope_loop
+  (self : dataspace.Table) (facet : dataspace.Facet) (index : Std.Usize) :
+  Result (core.result.Result dataspace.Scope dataspace.Error)
+  := do
+  loop
+    (fun index1 => dataspace.table.Table.scope_loop.body self facet index1)
+    index
+
+/-- [noble_kernel::dataspace::table::{noble_kernel::dataspace::Table}::scope]:
+    Source: 'crates/noble-kernel/src/dataspace/table.rs', lines 59:4-71:5 -/
+@[reducible]
+def dataspace.table.Table.scope
+  (self : dataspace.Table) (facet : dataspace.Facet) :
+  Result (core.result.Result dataspace.Scope dataspace.Error)
+  := do
+  dataspace.table.Table.scope_loop self facet 0#usize
+
+/-- [noble_kernel::dataspace::table::{noble_kernel::dataspace::Table}::value]:
+    Source: 'crates/noble-kernel/src/dataspace/table.rs', lines 73:4-88:5 -/
+def dataspace.table.Table.value
+  (self : dataspace.Table) (facet : dataspace.Facet) («name» : Str)
+  (ready : Bool) (operation : dataspace.Operation) :
+  Result (core.result.Result dataspace.wire.ServiceRef dataspace.Error)
+  := do
+  let r ← dataspace.table.Table.scope self facet
+  match r with
+  | core.result.Result.Ok value =>
+    let b ← dataspace.permits value.rights operation
+    if b
+    then
+      let b1 ← dataspace.wire.valid_name «name»
+      if b1
+      then ok (core.result.Result.Ok { «name», ready })
+      else ok (core.result.Result.Err dataspace.Error.InvalidName)
+    else ok (core.result.Result.Err dataspace.Error.Denied)
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_kernel::dataspace::table::actions::{noble_kernel::dataspace::Table}::notify]: loop body 0:
+    Source: 'crates/noble-kernel/src/dataspace/table/actions.rs', lines 185:8-195:9 -/
+@[rust_loop_body]
+def dataspace.table.actions.Table.notify_loop.body
+  (service : dataspace.Service) (change : dataspace.Change)
+  (self : dataspace.Table) (index : Std.Usize) :
+  Result (ControlFlow (dataspace.Table × Std.Usize) (dataspace.Limits ×
+    Std.U64 × (alloc.vec.Vec dataspace.Scope) × (alloc.vec.Vec
+    dataspace.Assertion) × (alloc.vec.Vec dataspace.Interest) ×
+    (alloc.vec.Vec dataspace.Event)))
+  := do
+  let i := alloc.vec.Vec.len self.interests
+  if index < i
+  then
+    let i1 ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        dataspace.Interest) self.interests index
+    let b ←
+      dataspace.Service.Insts.CoreCmpPartialEqService.eq i1.service service
+    let v ←
+      if b
+      then
+        do
+        let s ← dataspace.Service.Insts.CoreCloneClone.clone service
+        alloc.vec.Vec.push self.events
+          ({ observer := i1.owner, service := s, change } : dataspace.Event)
+      else ok self.events
+    let index1 ← index + 1#usize
+    ok (cont ({ self with events := v }, index1))
+  else
+    ok (done (self.limits, self.next, self.scopes, self.assertions,
+      self.interests, self.events))
+
+/-- [noble_kernel::dataspace::table::actions::{noble_kernel::dataspace::Table}::notify]: loop 0:
+    Source: 'crates/noble-kernel/src/dataspace/table/actions.rs', lines 185:8-195:9 -/
+@[rust_loop]
+def dataspace.table.actions.Table.notify_loop
+  (self : dataspace.Table) (service : dataspace.Service)
+  (change : dataspace.Change) (index : Std.Usize) :
+  Result (dataspace.Limits × Std.U64 × (alloc.vec.Vec dataspace.Scope) ×
+    (alloc.vec.Vec dataspace.Assertion) × (alloc.vec.Vec dataspace.Interest)
+    × (alloc.vec.Vec dataspace.Event))
+  := do
+  loop
+    (fun (self1, index1) => dataspace.table.actions.Table.notify_loop.body
+      service change self1 index1)
+    (self, index)
+
+/-- [noble_kernel::dataspace::table::actions::{noble_kernel::dataspace::Table}::notify]:
+    Source: 'crates/noble-kernel/src/dataspace/table/actions.rs', lines 183:4-196:5 -/
+def dataspace.table.actions.Table.notify
+  (self : dataspace.Table) (service : dataspace.Service)
+  (change : dataspace.Change) :
+  Result dataspace.Table
+  := do
+  let (l, i, v, v1, v2, v3) ←
+    dataspace.table.actions.Table.notify_loop self service change 0#usize
+  ok
+    {
+      limits := l,
+      next := i,
+      scopes := v,
+      assertions := v1,
+      interests := v2,
+      events := v3
+    }
+
+/-- [noble_kernel::dataspace::table::actions::{noble_kernel::dataspace::Table}::publish::{impl core::ops::function::FnOnce<(usize,), bool> for noble_kernel::dataspace::table::actions::{noble_kernel::dataspace::Table}::publish::{closure}<'_0>}::call_once]:
+    Source: 'crates/noble-kernel/src/dataspace/table/actions.rs', lines 13:33-13:77 -/
+def
+  dataspace.table.actions.Table.publish.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeBool.call_once
+  (c : dataspace.table.actions.Table.publish.closure) (tupled_args : Std.Usize)
+  :
+  Result Bool
+  := do
+  let a ←
+    alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+      dataspace.Assertion) c tupled_args
+  ok a.service.ready
+
+/-- Trait implementation: [noble_kernel::dataspace::table::actions::{noble_kernel::dataspace::Table}::publish::{impl core::ops::function::FnOnce<(usize,), bool> for noble_kernel::dataspace::table::actions::{noble_kernel::dataspace::Table}::publish::{closure}<'_0>}]
+    Source: 'crates/noble-kernel/src/dataspace/table/actions.rs', lines 13:33-13:77 -/
+@[reducible]
+def
+  dataspace.table.actions.Table.publish.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeBool
+  : core.ops.function.FnOnce dataspace.table.actions.Table.publish.closure
+  Std.Usize Bool := {
+  call_once :=
+    dataspace.table.actions.Table.publish.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeBool.call_once
+}
+
+/-- [noble_kernel::dataspace::table::actions::{noble_kernel::dataspace::Table}::publish]:
+    Source: 'crates/noble-kernel/src/dataspace/table/actions.rs', lines 10:4-64:5
+    Visibility: public -/
+def dataspace.table.actions.Table.publish
+  (self : dataspace.Table) (facet : dataspace.Facet) («name» : Str)
+  (ready : Bool) :
+  Result ((core.result.Result Bool dataspace.Error) × dataspace.Table)
+  := do
+  let r ←
+    dataspace.table.Table.value self facet «name» ready
+      dataspace.Operation.Publish
+  match r with
+  | core.result.Result.Ok sr =>
+    let existing ← dataspace.table.Table.owned_index self facet «name»
+    let prior ←
+      core.option.Option.map
+        dataspace.table.actions.Table.publish.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeBool
+        existing self.assertions
+    let p ← dataspace.decide_publication prior ready
+    let b ←
+      dataspace.Publication.Insts.CoreCmpPartialEqPublication.eq p
+        dataspace.Publication.Unchanged
+    if b
+    then ok (core.result.Result.Ok true, self)
+    else
+      let b1 := core.option.Option.is_none existing
+      if b1
+      then
+        let i := alloc.vec.Vec.len self.assertions
+        if i >= self.limits.assertions
+        then ok (core.result.Result.Err dataspace.Error.Capacity, self)
+        else
+          let old_count ←
+            match existing with
+            | none => ok 0#usize
+            | some index =>
+              do
+              let a ←
+                alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+                  dataspace.Assertion) self.assertions index
+              let b2 ←
+                dataspace.table.Table.asserted self «name» a.service.ready
+                  existing
+              if b2
+              then ok 0#usize
+              else
+                dataspace.table.Table.interested_count self «name»
+                  a.service.ready
+          let b2 ← dataspace.table.Table.asserted self «name» ready none
+          let new_count ←
+            if ¬ b2
+            then dataspace.table.Table.interested_count self «name» ready
+            else ok 0#usize
+          let o ← lift (Usize.checked_add old_count new_count)
+          match o with
+          | none => ok (core.result.Result.Err dataspace.Error.Capacity, self)
+          | some immediate =>
+            let i1 ← dataspace.table.Table.matches_count self
+            let o1 ← lift (Usize.checked_sub i1 old_count)
+            match o1 with
+            | none =>
+              ok (core.result.Result.Err dataspace.Error.Capacity, self)
+            | some remaining =>
+              let o2 ← lift (Usize.checked_add remaining new_count)
+              match o2 with
+              | none =>
+                ok (core.result.Result.Err dataspace.Error.Capacity, self)
+              | some removals =>
+                let r1 ←
+                  dataspace.table.Table.reserve self { immediate, removals }
+                match r1 with
+                | core.result.Result.Ok _ =>
+                  let self1 ←
+                    match existing with
+                    | none => ok self
+                    | some index =>
+                      do
+                      let (old, v) ←
+                        alloc.vec.Vec.swap_remove Global self.assertions index
+                      let s ←
+                        alloc.string.String.Insts.CoreOpsDerefDerefStr.deref
+                          old.service.name
+                      let b3 ←
+                        dataspace.table.Table.asserted
+                          { self with assertions := v } s old.service.ready
+                          none
+                      if b3
+                      then ok { self with assertions := v }
+                      else
+                        dataspace.table.actions.Table.notify
+                          { self with assertions := v } old.service
+                          dataspace.Change.Removed
+                  let service ← dataspace.Service.from_ref sr
+                  let s ←
+                    alloc.string.String.Insts.CoreOpsDerefDerefStr.deref
+                      service.name
+                  let b3 ←
+                    dataspace.table.Table.asserted self1 s service.ready none
+                  let self2 ←
+                    if b3
+                    then ok self1
+                    else
+                      dataspace.table.actions.Table.notify self1 service
+                        dataspace.Change.Added
+                  let v ←
+                    alloc.vec.Vec.push self2.assertions
+                      ({ owner := facet, service } : dataspace.Assertion)
+                  ok (core.result.Result.Ok true,
+                    { self2 with assertions := v })
+                | core.result.Result.Err failure =>
+                  ok (core.result.Result.Err failure, self)
+      else
+        let old_count ←
+          match existing with
+          | none => ok 0#usize
+          | some index =>
+            do
+            let a ←
+              alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+                dataspace.Assertion) self.assertions index
+            let b2 ←
+              dataspace.table.Table.asserted self «name» a.service.ready
+                existing
+            if b2
+            then ok 0#usize
+            else
+              dataspace.table.Table.interested_count self «name»
+                a.service.ready
+        let b2 ← dataspace.table.Table.asserted self «name» ready none
+        let new_count ←
+          if ¬ b2
+          then dataspace.table.Table.interested_count self «name» ready
+          else ok 0#usize
+        let o ← lift (Usize.checked_add old_count new_count)
+        match o with
+        | none => ok (core.result.Result.Err dataspace.Error.Capacity, self)
+        | some immediate =>
+          let i ← dataspace.table.Table.matches_count self
+          let o1 ← lift (Usize.checked_sub i old_count)
+          match o1 with
+          | none => ok (core.result.Result.Err dataspace.Error.Capacity, self)
+          | some remaining =>
+            let o2 ← lift (Usize.checked_add remaining new_count)
+            match o2 with
+            | none =>
+              ok (core.result.Result.Err dataspace.Error.Capacity, self)
+            | some removals =>
+              let r1 ←
+                dataspace.table.Table.reserve self { immediate, removals }
+              match r1 with
+              | core.result.Result.Ok _ =>
+                let self1 ←
+                  match existing with
+                  | none => ok self
+                  | some index =>
+                    do
+                    let (old, v) ←
+                      alloc.vec.Vec.swap_remove Global self.assertions index
+                    let s ←
+                      alloc.string.String.Insts.CoreOpsDerefDerefStr.deref
+                        old.service.name
+                    let b3 ←
+                      dataspace.table.Table.asserted
+                        { self with assertions := v } s old.service.ready none
+                    if b3
+                    then ok { self with assertions := v }
+                    else
+                      dataspace.table.actions.Table.notify
+                        { self with assertions := v } old.service
+                        dataspace.Change.Removed
+                let service ← dataspace.Service.from_ref sr
+                let s ←
+                  alloc.string.String.Insts.CoreOpsDerefDerefStr.deref
+                    service.name
+                let b3 ←
+                  dataspace.table.Table.asserted self1 s service.ready none
+                let self2 ←
+                  if b3
+                  then ok self1
+                  else
+                    dataspace.table.actions.Table.notify self1 service
+                      dataspace.Change.Added
+                let v ←
+                  alloc.vec.Vec.push self2.assertions
+                    ({ owner := facet, service } : dataspace.Assertion)
+                ok (core.result.Result.Ok true, { self2 with assertions := v })
+              | core.result.Result.Err failure =>
+                ok (core.result.Result.Err failure, self)
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure, self)
+
+/-- [noble_kernel::dataspace::table::{noble_kernel::dataspace::Table}::interested]: loop body 0:
+    Source: 'crates/noble-kernel/src/dataspace/table.rs', lines 120:8-131:5 -/
+@[rust_loop_body]
+def dataspace.table.Table.interested_loop.body
+  (self : dataspace.Table) (facet : dataspace.Facet) («name» : Str)
+  (ready : Bool) (index : Std.Usize) :
+  Result (ControlFlow Std.Usize Bool)
+  := do
+  let i := alloc.vec.Vec.len self.interests
+  if index < i
+  then
+    let interest ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        dataspace.Interest) self.interests index
+    let b ←
+      dataspace.Facet.Insts.CoreCmpPartialEqFacet.eq interest.owner facet
+    if b
+    then
+      let b1 ←
+        alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq
+          interest.service.name «name»
+      if b1
+      then
+        if interest.service.ready = ready
+        then ok (done true)
+        else let index1 ← index + 1#usize
+             ok (cont index1)
+      else let index1 ← index + 1#usize
+           ok (cont index1)
+    else let index1 ← index + 1#usize
+         ok (cont index1)
+  else ok (done false)
+
+/-- [noble_kernel::dataspace::table::{noble_kernel::dataspace::Table}::interested]: loop 0:
+    Source: 'crates/noble-kernel/src/dataspace/table.rs', lines 120:8-131:5 -/
+@[rust_loop]
+def dataspace.table.Table.interested_loop
+  (self : dataspace.Table) (facet : dataspace.Facet) («name» : Str)
+  (ready : Bool) (index : Std.Usize) :
+  Result Bool
+  := do
+  loop
+    (fun index1 => dataspace.table.Table.interested_loop.body self facet
+      «name» ready index1)
+    index
+
+/-- [noble_kernel::dataspace::table::{noble_kernel::dataspace::Table}::interested]:
+    Source: 'crates/noble-kernel/src/dataspace/table.rs', lines 118:4-131:5 -/
+@[reducible]
+def dataspace.table.Table.interested
+  (self : dataspace.Table) (facet : dataspace.Facet) («name» : Str)
+  (ready : Bool) :
+  Result Bool
+  := do
+  dataspace.table.Table.interested_loop self facet «name» ready 0#usize
+
+/-- [noble_kernel::dataspace::table::actions::{noble_kernel::dataspace::Table}::observe]:
+    Source: 'crates/noble-kernel/src/dataspace/table/actions.rs', lines 71:4-101:5
+    Visibility: public -/
+def dataspace.table.actions.Table.observe
+  (self : dataspace.Table) (facet : dataspace.Facet) («name» : Str)
+  (ready : Bool) :
+  Result ((core.result.Result Bool dataspace.Error) × dataspace.Table)
+  := do
+  let r ←
+    dataspace.table.Table.value self facet «name» ready
+      dataspace.Operation.Observe
+  match r with
+  | core.result.Result.Ok sr =>
+    let is_present ← dataspace.table.Table.asserted self «name» ready none
+    let b ← dataspace.table.Table.interested self facet «name» ready
+    if b
+    then ok (core.result.Result.Ok is_present, self)
+    else
+      let i := alloc.vec.Vec.len self.interests
+      if i >= self.limits.interests
+      then ok (core.result.Result.Err dataspace.Error.Capacity, self)
+      else
+        let matching ← lift (core.convert.num.FromUsizeBool.from is_present)
+        let i1 ← dataspace.table.Table.matches_count self
+        let o ← lift (Usize.checked_add i1 matching)
+        match o with
+        | none => ok (core.result.Result.Err dataspace.Error.Capacity, self)
+        | some removals =>
+          let r1 ←
+            dataspace.table.Table.reserve self
+              { immediate := matching, removals }
+          match r1 with
+          | core.result.Result.Ok _ =>
+            let service ← dataspace.Service.from_ref sr
+            let v ←
+              if is_present
+              then
+                do
+                let s ← dataspace.Service.Insts.CoreCloneClone.clone service
+                alloc.vec.Vec.push self.events
+                  ({
+                     observer := facet,
+                     service := s,
+                     change := dataspace.Change.Added
+                   } : dataspace.Event)
+              else ok self.events
+            let v1 ←
+              alloc.vec.Vec.push self.interests ({ owner := facet, service } :
+                dataspace.Interest)
+            ok (core.result.Result.Ok is_present,
+              { self with interests := v1, events := v })
+          | core.result.Result.Err failure =>
+            ok (core.result.Result.Err failure, self)
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure, self)
+
+/-- [noble_kernel::dataspace::table::actions::{noble_kernel::dataspace::Table}::retract]:
+    Source: 'crates/noble-kernel/src/dataspace/table/actions.rs', lines 107:4-131:5
+    Visibility: public -/
+def dataspace.table.actions.Table.retract
+  (self : dataspace.Table) (facet : dataspace.Facet) («name» : Str) :
+  Result ((core.result.Result Bool dataspace.Error) × dataspace.Table)
+  := do
+  let r ←
+    dataspace.table.Table.value self facet «name» false
+      dataspace.Operation.Publish
+  match r with
+  | core.result.Result.Ok _ =>
+    let o ← dataspace.table.Table.owned_index self facet «name»
+    match o with
+    | none => ok (core.result.Result.Ok false, self)
+    | some index =>
+      let a ←
+        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+          dataspace.Assertion) self.assertions index
+      let b ← dataspace.table.Table.asserted self «name» a.service.ready o
+      let count ←
+        if ¬ b
+        then
+          dataspace.table.Table.interested_count self «name» a.service.ready
+        else ok 0#usize
+      let i ← dataspace.table.Table.matches_count self
+      let o1 ← lift (Usize.checked_sub i count)
+      match o1 with
+      | none => ok (core.result.Result.Err dataspace.Error.Capacity, self)
+      | some removals =>
+        let r1 ←
+          dataspace.table.Table.reserve self { immediate := count, removals }
+        match r1 with
+        | core.result.Result.Ok _ =>
+          let (old, v) ←
+            alloc.vec.Vec.swap_remove Global self.assertions index
+          let s ←
+            alloc.string.String.Insts.CoreOpsDerefDerefStr.deref
+              old.service.name
+          let b1 ←
+            dataspace.table.Table.asserted { self with assertions := v } s
+              old.service.ready none
+          if b1
+          then ok (core.result.Result.Ok true, { self with assertions := v })
+          else
+            let self1 ←
+              dataspace.table.actions.Table.notify
+                { self with assertions := v } old.service
+                dataspace.Change.Removed
+            ok (core.result.Result.Ok true, self1)
+        | core.result.Result.Err failure =>
+          ok (core.result.Result.Err failure, self)
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure, self)
+
+/-- [noble_kernel::dataspace::wire::decode_service::MIN_SERVICE_BYTES]
+    Source: 'crates/noble-kernel/src/dataspace/wire.rs', lines 105:4-105:64 -/
+@[global_simps, irreducible]
+def dataspace.wire.decode_service.MIN_SERVICE_BYTES : Std.Usize :=
+  let s :=
+    Array.to_slice
+      (Array.make 15#usize [
+        60#u8, 115#u8, 101#u8, 114#u8, 118#u8, 105#u8, 99#u8, 101#u8, 32#u8,
+        34#u8, 34#u8, 32#u8, 35#u8, 116#u8, 62#u8
+        ])
+  Slice.len s
+
+/-- [noble_kernel::dataspace::wire::has_service_prefix]: loop body 0:
+    Source: 'crates/noble-kernel/src/dataspace/wire.rs', lines 93:4-100:1 -/
+@[rust_loop_body]
+def dataspace.wire.has_service_prefix_loop.body
+  (bytes : Slice Std.U8) («prefix» : Array Std.U8 10#usize)
+  (index : Std.Usize) :
+  Result (ControlFlow Std.Usize Bool)
+  := do
+  let s ← lift (Array.to_slice «prefix»)
+  let i := Slice.len s
+  if index < i
+  then
+    let i1 ← Slice.index_usize bytes index
+    let i2 ← Array.index_usize «prefix» index
+    if i1 != i2
+    then ok (done false)
+    else let index1 ← index + 1#usize
+         ok (cont index1)
+  else ok (done true)
+
+/-- [noble_kernel::dataspace::wire::has_service_prefix]: loop 0:
+    Source: 'crates/noble-kernel/src/dataspace/wire.rs', lines 93:4-100:1 -/
+@[rust_loop]
+def dataspace.wire.has_service_prefix_loop
+  (bytes : Slice Std.U8) («prefix» : Array Std.U8 10#usize)
+  (index : Std.Usize) :
+  Result Bool
+  := do
+  loop
+    (fun index1 => dataspace.wire.has_service_prefix_loop.body bytes «prefix»
+      index1)
+    index
+
+/-- [noble_kernel::dataspace::wire::has_service_prefix]:
+    Source: 'crates/noble-kernel/src/dataspace/wire.rs', lines 90:0-100:1 -/
+@[reducible]
+def dataspace.wire.has_service_prefix
+  (bytes : Slice Std.U8) : Result Bool := do
+  dataspace.wire.has_service_prefix_loop bytes
+    (Array.make 10#usize [
+      60#u8, 115#u8, 101#u8, 114#u8, 118#u8, 105#u8, 99#u8, 101#u8, 32#u8,
+      34#u8
+      ]) 0#usize
+
+/-- [noble_kernel::dataspace::wire::check_depth]: loop body 0:
+    Source: 'crates/noble-kernel/src/dataspace/wire.rs', lines 75:4-88:1 -/
+@[rust_loop_body]
+def dataspace.wire.check_depth_loop.body
+  (bytes : Slice Std.U8) (max_depth : Std.U32) (depth : Std.U32)
+  (index : Std.Usize) :
+  Result (ControlFlow (Std.U32 × Std.Usize) (core.result.Result Unit
+    dataspace.Error))
+  := do
+  let i := Slice.len bytes
+  if index < i
+  then
+    let byte ← Slice.index_usize bytes index
+    if byte = 60#u8
+    then
+      let depth1 ← depth + 1#u32
+      if depth1 > max_depth
+      then ok (done (core.result.Result.Err dataspace.Error.DepthLimit))
+      else let index1 ← index + 1#usize
+           ok (cont (depth1, index1))
+    else
+      let depth1 ←
+        if byte = 62#u8
+        then ok (core.num.U32.saturating_sub depth 1#u32)
+        else ok depth
+      let index1 ← index + 1#usize
+      ok (cont (depth1, index1))
+  else ok (done (core.result.Result.Ok ()))
+
+/-- [noble_kernel::dataspace::wire::check_depth]: loop 0:
+    Source: 'crates/noble-kernel/src/dataspace/wire.rs', lines 75:4-88:1 -/
+@[rust_loop]
+def dataspace.wire.check_depth_loop
+  (bytes : Slice Std.U8) (max_depth : Std.U32) (depth : Std.U32)
+  (index : Std.Usize) :
+  Result (core.result.Result Unit dataspace.Error)
+  := do
+  loop
+    (fun (depth1, index1) => dataspace.wire.check_depth_loop.body bytes
+      max_depth depth1 index1)
+    (depth, index)
+
+/-- [noble_kernel::dataspace::wire::check_depth]:
+    Source: 'crates/noble-kernel/src/dataspace/wire.rs', lines 69:0-88:1 -/
+@[reducible]
+def dataspace.wire.check_depth
+  (bytes : Slice Std.U8) (max_depth : Std.U32) :
+  Result (core.result.Result Unit dataspace.Error)
+  := do
+  dataspace.wire.check_depth_loop bytes max_depth 0#u32 0#usize
+
+/-- [noble_kernel::dataspace::wire::decode_service]:
+    Source: 'crates/noble-kernel/src/dataspace/wire.rs', lines 102:0-151:1
+    Visibility: public -/
+def dataspace.wire.decode_service
+  (bytes : Slice Std.U8) (max_depth : Std.U32) :
+  Result (core.result.Result dataspace.wire.ServiceRef dataspace.Error)
+  := do
+  let i := Slice.len bytes
+  if i > dataspace.MAX_WIRE_BYTES
+  then ok (core.result.Result.Err dataspace.Error.ByteLimit)
+  else
+    if max_depth = 0#u32
+    then ok (core.result.Result.Err dataspace.Error.DepthLimit)
+    else
+      if max_depth > dataspace.MAX_WIRE_DEPTH
+      then ok (core.result.Result.Err dataspace.Error.DepthLimit)
+      else
+        let r ← dataspace.wire.check_depth bytes max_depth
+        match r with
+        | core.result.Result.Ok _ =>
+          let s ←
+            lift (Array.to_slice
+              (Array.make 10#usize [
+                60#u8, 115#u8, 101#u8, 114#u8, 118#u8, 105#u8, 99#u8, 101#u8,
+                32#u8, 34#u8
+                ]))
+          let prefix_len := Slice.len s
+          let s1 ←
+            lift (Array.to_slice
+              (Array.make 5#usize [ 34#u8, 32#u8, 35#u8, 116#u8, 62#u8 ]))
+          let suffix_len := Slice.len s1
+          let i1 := Slice.len bytes
+          if i1 < dataspace.wire.decode_service.MIN_SERVICE_BYTES
+          then ok (core.result.Result.Err dataspace.Error.Schema)
+          else
+            let b ← dataspace.wire.has_service_prefix bytes
+            if b
+            then
+              let i2 := Slice.len bytes
+              let o ← lift (Usize.checked_sub i2 suffix_len)
+              match o with
+              | none => ok (core.result.Result.Err dataspace.Error.Schema)
+              | some name_end =>
+                if name_end < prefix_len
+                then ok (core.result.Result.Err dataspace.Error.Schema)
+                else
+                  let suffix ←
+                    core.slice.index.Slice.index
+                      (core.slice.index.SliceIndexRangeFromUsizeSlice Std.U8)
+                      bytes { start := name_end }
+                  let i3 ← Slice.index_usize suffix 0#usize
+                  let has_quote_and_space ←
+                    if i3 = 34#u8
+                    then
+                      do
+                      let i4 ← Slice.index_usize suffix 1#usize
+                      ok (i4 = 32#u8)
+                    else ok false
+                  let i4 ← Slice.index_usize suffix 2#usize
+                  let has_tag_and_close ←
+                    if i4 = 35#u8
+                    then
+                      do
+                      let i5 ← Slice.index_usize suffix 4#usize
+                      ok (i5 = 62#u8)
+                    else ok false
+                  if has_quote_and_space
+                  then
+                    if has_tag_and_close
+                    then
+                      let i5 ← Slice.index_usize suffix 3#usize
+                      match i5 with
+                      | 116#uscalar =>
+                        let «name» ←
+                          core.slice.index.Slice.index
+                            (core.slice.index.SliceIndexRangeUsizeSlice Std.U8)
+                            bytes { start := prefix_len, «end» := name_end }
+                        let r1 ← core.str.converts.from_utf8 «name»
+                        match r1 with
+                        | core.result.Result.Ok name1 =>
+                          let b1 ← dataspace.wire.valid_name name1
+                          if b1
+                          then
+                            ok (core.result.Result.Ok
+                              { «name» := name1, ready := true })
+                          else
+                            ok (core.result.Result.Err dataspace.Error.Schema)
+                        | core.result.Result.Err _ =>
+                          ok (core.result.Result.Err dataspace.Error.Schema)
+                      | 102#uscalar =>
+                        let «name» ←
+                          core.slice.index.Slice.index
+                            (core.slice.index.SliceIndexRangeUsizeSlice Std.U8)
+                            bytes { start := prefix_len, «end» := name_end }
+                        let r1 ← core.str.converts.from_utf8 «name»
+                        match r1 with
+                        | core.result.Result.Ok name1 =>
+                          let b1 ← dataspace.wire.valid_name name1
+                          if b1
+                          then
+                            ok (core.result.Result.Ok
+                              { «name» := name1, ready := false })
+                          else
+                            ok (core.result.Result.Err dataspace.Error.Schema)
+                        | core.result.Result.Err _ =>
+                          ok (core.result.Result.Err dataspace.Error.Schema)
+                      | _ => ok (core.result.Result.Err dataspace.Error.Schema)
+                    else ok (core.result.Result.Err dataspace.Error.Schema)
+                  else ok (core.result.Result.Err dataspace.Error.Schema)
+            else ok (core.result.Result.Err dataspace.Error.Schema)
+        | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_kernel::dataspace::table::actions::{noble_kernel::dataspace::Table}::publish_wire_receipt]:
+    Source: 'crates/noble-kernel/src/dataspace/table/actions.rs', lines 149:4-159:5
+    Visibility: public -/
+def dataspace.table.actions.Table.publish_wire_receipt
+  (self : dataspace.Table) (facet : dataspace.Facet) (wire : Slice Std.U8) :
+  Result ((core.result.Result (Bool × dataspace.wire.ServiceRef)
+    dataspace.Error) × dataspace.Table)
+  := do
+  let r ← dataspace.wire.decode_service wire dataspace.MAX_WIRE_DEPTH
+  match r with
+  | core.result.Result.Ok sr =>
+    let (r1, self1) ←
+      dataspace.table.actions.Table.publish self facet sr.name sr.ready
+    match r1 with
+    | core.result.Result.Ok value =>
+      ok (core.result.Result.Ok (value, sr), self1)
+    | core.result.Result.Err failure =>
+      ok (core.result.Result.Err failure, self1)
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure, self)
+
+/-- [noble_kernel::dataspace::table::actions::{noble_kernel::dataspace::Table}::publish_wire]:
+    Source: 'crates/noble-kernel/src/dataspace/table/actions.rs', lines 139:4-141:5
+    Visibility: public -/
+def dataspace.table.actions.Table.publish_wire
+  (self : dataspace.Table) (facet : dataspace.Facet) (wire : Slice Std.U8) :
+  Result ((core.result.Result Bool dataspace.Error) × dataspace.Table)
+  := do
+  let (r, self1) ←
+    dataspace.table.actions.Table.publish_wire_receipt self facet wire
+  match r with
+  | core.result.Result.Ok p =>
+    let (b, _) := p
+    ok (core.result.Result.Ok b, self1)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, self1)
+
+/-- [noble_kernel::dataspace::table::actions::{noble_kernel::dataspace::Table}::observe_wire]:
+    Source: 'crates/noble-kernel/src/dataspace/table/actions.rs', lines 165:4-168:5
+    Visibility: public -/
+def dataspace.table.actions.Table.observe_wire
+  (self : dataspace.Table) (facet : dataspace.Facet) (wire : Slice Std.U8) :
+  Result ((core.result.Result Bool dataspace.Error) × dataspace.Table)
+  := do
+  let r ← dataspace.wire.decode_service wire dataspace.MAX_WIRE_DEPTH
+  match r with
+  | core.result.Result.Ok sr =>
+    dataspace.table.actions.Table.observe self facet sr.name sr.ready
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure, self)
+
+/-- [noble_kernel::dataspace::table::actions::{noble_kernel::dataspace::Table}::retract_wire]:
+    Source: 'crates/noble-kernel/src/dataspace/table/actions.rs', lines 174:4-177:5
+    Visibility: public -/
+def dataspace.table.actions.Table.retract_wire
+  (self : dataspace.Table) (facet : dataspace.Facet) (wire : Slice Std.U8) :
+  Result ((core.result.Result Bool dataspace.Error) × dataspace.Table)
+  := do
+  let r ← dataspace.wire.decode_service wire dataspace.MAX_WIRE_DEPTH
+  match r with
+  | core.result.Result.Ok sr =>
+    dataspace.table.actions.Table.retract self facet sr.name
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure, self)
+
+/-- [noble_kernel::dataspace::table::{noble_kernel::dataspace::Table}::within]: loop body 1:
+    Source: 'crates/noble-kernel/src/dataspace/table.rs', lines 184:12-190:13 -/
+@[rust_loop_body]
+def dataspace.table.Table.within_loop0_loop0.body
+  (scopes : Slice dataspace.Scope) (id : dataspace.Facet) (index : Std.Usize) :
+  Result (ControlFlow Std.Usize (Option dataspace.Facet))
+  := do
+  let i := Slice.len scopes
+  if index < i
+  then
+    let s ← Slice.index_usize scopes index
+    let b ← dataspace.Facet.Insts.CoreCmpPartialEqFacet.eq s.id id
+    if b
+    then ok (done s.parent)
+    else let index1 ← index + 1#usize
+         ok (cont index1)
+  else ok (done none)
+
+/-- [noble_kernel::dataspace::table::{noble_kernel::dataspace::Table}::within]: loop 1:
+    Source: 'crates/noble-kernel/src/dataspace/table.rs', lines 184:12-190:13 -/
+@[rust_loop]
+def dataspace.table.Table.within_loop0_loop0
+  (scopes : Slice dataspace.Scope) (id : dataspace.Facet) (index : Std.Usize) :
+  Result (Option dataspace.Facet)
+  := do
+  loop
+    (fun index1 => dataspace.table.Table.within_loop0_loop0.body scopes id
+      index1)
+    index
+
+/-- [noble_kernel::dataspace::table::{noble_kernel::dataspace::Table}::within]: loop body 0:
+    Source: 'crates/noble-kernel/src/dataspace/table.rs', lines 178:8-194:5 -/
+@[rust_loop_body]
+def dataspace.table.Table.within_loop0.body
+  (scopes : Slice dataspace.Scope) (parent : dataspace.Facet)
+  (current : Option dataspace.Facet) :
+  Result (ControlFlow (Option dataspace.Facet) Bool)
+  := do
+  match current with
+  | none => ok (done false)
+  | some id =>
+    let b ← dataspace.Facet.Insts.CoreCmpPartialEqFacet.eq id parent
+    if b
+    then ok (done true)
+    else
+      let next ← dataspace.table.Table.within_loop0_loop0 scopes id 0#usize
+      ok (cont next)
+
+/-- [noble_kernel::dataspace::table::{noble_kernel::dataspace::Table}::within]: loop 0:
+    Source: 'crates/noble-kernel/src/dataspace/table.rs', lines 178:8-194:5 -/
+@[rust_loop]
+def dataspace.table.Table.within_loop0
+  (current : Option dataspace.Facet) (scopes : Slice dataspace.Scope)
+  (parent : dataspace.Facet) :
+  Result Bool
+  := do
+  loop
+    (fun current1 => dataspace.table.Table.within_loop0.body scopes parent
+      current1)
+    current
+
+/-- [noble_kernel::dataspace::table::{noble_kernel::dataspace::Table}::within]:
+    Source: 'crates/noble-kernel/src/dataspace/table.rs', lines 176:4-194:5 -/
+@[reducible]
+def dataspace.table.Table.within
+  (scopes : Slice dataspace.Scope) (candidate : dataspace.Facet)
+  (parent : dataspace.Facet) :
+  Result Bool
+  := do
+  dataspace.table.Table.within_loop0 (some candidate) scopes parent
+
+/-- [noble_kernel::dataspace::table::{noble_kernel::dataspace::Table}::descendant]:
+    Source: 'crates/noble-kernel/src/dataspace/table.rs', lines 172:4-174:5 -/
+def dataspace.table.Table.descendant
+  (self : dataspace.Table) (candidate : dataspace.Facet)
+  (parent : dataspace.Facet) :
+  Result Bool
+  := do
+  let s := alloc.vec.Vec.deref self.scopes
+  dataspace.table.Table.within s candidate parent
+
+/-- [noble_kernel::dataspace::table::actions::{noble_kernel::dataspace::Table}::retire]: loop body 0:
+    Source: 'crates/noble-kernel/src/dataspace/table/actions.rs', lines 208:8-214:9
+    Visibility: public -/
+@[rust_loop_body]
+def dataspace.table.actions.Table.retire_loop0.body
+  (scopes : alloc.vec.Vec dataspace.Scope) (facet : dataspace.Facet)
+  (v : alloc.vec.Vec dataspace.Interest) (index : Std.Usize) :
+  Result (ControlFlow ((alloc.vec.Vec dataspace.Interest) × Std.Usize)
+    (alloc.vec.Vec dataspace.Interest))
+  := do
+  let i := alloc.vec.Vec.len v
+  if index < i
+  then
+    let s := alloc.vec.Vec.deref scopes
+    let i1 ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        dataspace.Interest) v index
+    let b ← dataspace.table.Table.within s i1.owner facet
+    if b
+    then
+      let (_, v1) ← alloc.vec.Vec.remove Global v index
+      ok (cont (v1, index))
+    else let index1 ← index + 1#usize
+         ok (cont (v, index1))
+  else ok (done v)
+
+/-- [noble_kernel::dataspace::table::actions::{noble_kernel::dataspace::Table}::retire]: loop 0:
+    Source: 'crates/noble-kernel/src/dataspace/table/actions.rs', lines 208:8-214:9
+    Visibility: public -/
+@[rust_loop]
+def dataspace.table.actions.Table.retire_loop0
+  (scopes : alloc.vec.Vec dataspace.Scope)
+  (v : alloc.vec.Vec dataspace.Interest) (facet : dataspace.Facet)
+  (index : Std.Usize) :
+  Result (alloc.vec.Vec dataspace.Interest)
+  := do
+  loop
+    (fun (v1, index1) => dataspace.table.actions.Table.retire_loop0.body scopes
+      facet v1 index1)
+    (v, index)
+
+/-- [noble_kernel::dataspace::table::actions::{noble_kernel::dataspace::Table}::retire]: loop body 1:
+    Source: 'crates/noble-kernel/src/dataspace/table/actions.rs', lines 216:8-225:9
+    Visibility: public -/
+@[rust_loop_body]
+def dataspace.table.actions.Table.retire_loop1.body
+  (facet : dataspace.Facet) (self : dataspace.Table) (index : Std.Usize) :
+  Result (ControlFlow (dataspace.Table × Std.Usize) (dataspace.Limits ×
+    Std.U64 × (alloc.vec.Vec dataspace.Scope) × (alloc.vec.Vec
+    dataspace.Assertion) × (alloc.vec.Vec dataspace.Interest) ×
+    (alloc.vec.Vec dataspace.Event)))
+  := do
+  let i := alloc.vec.Vec.len self.assertions
+  if index < i
+  then
+    let a ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        dataspace.Assertion) self.assertions index
+    let b ← dataspace.table.Table.descendant self a.owner facet
+    if b
+    then
+      let (old, v) ← alloc.vec.Vec.swap_remove Global self.assertions index
+      let s ←
+        alloc.string.String.Insts.CoreOpsDerefDerefStr.deref old.service.name
+      let b1 ←
+        dataspace.table.Table.asserted { self with assertions := v } s
+          old.service.ready none
+      if b1
+      then ok (cont ({ self with assertions := v }, index))
+      else
+        let self1 ←
+          dataspace.table.actions.Table.notify { self with assertions := v }
+            old.service dataspace.Change.Removed
+        ok (cont (self1, index))
+    else let index1 ← index + 1#usize
+         ok (cont (self, index1))
+  else
+    ok (done (self.limits, self.next, self.scopes, self.assertions,
+      self.interests, self.events))
+
+/-- [noble_kernel::dataspace::table::actions::{noble_kernel::dataspace::Table}::retire]: loop 1:
+    Source: 'crates/noble-kernel/src/dataspace/table/actions.rs', lines 216:8-225:9
+    Visibility: public -/
+@[rust_loop]
+def dataspace.table.actions.Table.retire_loop1
+  (self : dataspace.Table) (facet : dataspace.Facet) (index : Std.Usize) :
+  Result (dataspace.Limits × Std.U64 × (alloc.vec.Vec dataspace.Scope) ×
+    (alloc.vec.Vec dataspace.Assertion) × (alloc.vec.Vec dataspace.Interest)
+    × (alloc.vec.Vec dataspace.Event))
+  := do
+  loop
+    (fun (self1, index1) => dataspace.table.actions.Table.retire_loop1.body
+      facet self1 index1)
+    (self, index)
+
+/-- [noble_kernel::dataspace::table::actions::{noble_kernel::dataspace::Table}::retire]: loop body 2:
+    Source: 'crates/noble-kernel/src/dataspace/table/actions.rs', lines 229:8-235:9
+    Visibility: public -/
+@[rust_loop_body]
+def dataspace.table.actions.Table.retire_loop2.body
+  (scopes : alloc.vec.Vec dataspace.Scope) (facet : dataspace.Facet)
+  (v : alloc.vec.Vec dataspace.Event) (index : Std.Usize) :
+  Result (ControlFlow ((alloc.vec.Vec dataspace.Event) × Std.Usize)
+    (alloc.vec.Vec dataspace.Event))
+  := do
+  let i := alloc.vec.Vec.len v
+  if index < i
+  then
+    let s := alloc.vec.Vec.deref scopes
+    let e ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        dataspace.Event) v index
+    let b ← dataspace.table.Table.within s e.observer facet
+    if b
+    then
+      let (_, v1) ← alloc.vec.Vec.remove Global v index
+      ok (cont (v1, index))
+    else let index1 ← index + 1#usize
+         ok (cont (v, index1))
+  else ok (done v)
+
+/-- [noble_kernel::dataspace::table::actions::{noble_kernel::dataspace::Table}::retire]: loop 2:
+    Source: 'crates/noble-kernel/src/dataspace/table/actions.rs', lines 229:8-235:9
+    Visibility: public -/
+@[rust_loop]
+def dataspace.table.actions.Table.retire_loop2
+  (scopes : alloc.vec.Vec dataspace.Scope) (v : alloc.vec.Vec dataspace.Event)
+  (facet : dataspace.Facet) (index : Std.Usize) :
+  Result (alloc.vec.Vec dataspace.Event)
+  := do
+  loop
+    (fun (v1, index1) => dataspace.table.actions.Table.retire_loop2.body scopes
+      facet v1 index1)
+    (v, index)
+
+/-- [noble_kernel::dataspace::table::actions::{noble_kernel::dataspace::Table}::retire]: loop body 3:
+    Source: 'crates/noble-kernel/src/dataspace/table/actions.rs', lines 237:8-242:9
+    Visibility: public -/
+@[rust_loop_body]
+def dataspace.table.actions.Table.retire_loop3.body
+  (facet : dataspace.Facet) (scopes : alloc.vec.Vec dataspace.Scope)
+  (index : Std.Usize) :
+  Result (ControlFlow ((alloc.vec.Vec dataspace.Scope) × Std.Usize)
+    (alloc.vec.Vec dataspace.Scope))
+  := do
+  let i := alloc.vec.Vec.len scopes
+  if index < i
+  then
+    let s := alloc.vec.Vec.deref scopes
+    let s1 ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        dataspace.Scope) scopes index
+    let b ← dataspace.table.Table.within s s1.id facet
+    let v ←
+      if b
+      then
+        do
+        let (s2, index_mut_back) ←
+          alloc.vec.Vec.index_mut (core.slice.index.SliceIndexUsizeSlice
+            dataspace.Scope) scopes index
+        ok (index_mut_back { s2 with live := false })
+      else ok scopes
+    let index1 ← index + 1#usize
+    ok (cont (v, index1))
+  else ok (done scopes)
+
+/-- [noble_kernel::dataspace::table::actions::{noble_kernel::dataspace::Table}::retire]: loop 3:
+    Source: 'crates/noble-kernel/src/dataspace/table/actions.rs', lines 237:8-242:9
+    Visibility: public -/
+@[rust_loop]
+def dataspace.table.actions.Table.retire_loop3
+  (scopes : alloc.vec.Vec dataspace.Scope) (facet : dataspace.Facet)
+  (index : Std.Usize) :
+  Result (alloc.vec.Vec dataspace.Scope)
+  := do
+  loop
+    (fun (scopes1, index1) => dataspace.table.actions.Table.retire_loop3.body
+      facet scopes1 index1)
+    (scopes, index)
+
+/-- [noble_kernel::dataspace::table::actions::{noble_kernel::dataspace::Table}::retire]:
+    Source: 'crates/noble-kernel/src/dataspace/table/actions.rs', lines 204:4-244:5
+    Visibility: public -/
+def dataspace.table.actions.Table.retire
+  (self : dataspace.Table) (facet : dataspace.Facet) :
+  Result ((core.result.Result Unit dataspace.Error) × dataspace.Table)
+  := do
+  let r ← dataspace.table.Table.scope self facet
+  match r with
+  | core.result.Result.Ok _ =>
+    let v ←
+      dataspace.table.actions.Table.retire_loop0 self.scopes self.interests
+        facet 0#usize
+    let (l, i, scopes, v1, v2, v3) ←
+      dataspace.table.actions.Table.retire_loop1 { self with interests := v }
+        facet 0#usize
+    let v4 ←
+      dataspace.table.actions.Table.retire_loop2 scopes v3 facet 0#usize
+    let v5 ← dataspace.table.actions.Table.retire_loop3 scopes facet 0#usize
+    ok (core.result.Result.Ok (),
+      {
+        limits := l,
+        next := i,
+        scopes := v5,
+        assertions := v1,
+        interests := v2,
+        events := v4
+      })
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure, self)
+
+/-- [noble_kernel::dataspace::table::actions::{noble_kernel::dataspace::Table}::events]:
+    Source: 'crates/noble-kernel/src/dataspace/table/actions.rs', lines 246:4-248:5
+    Visibility: public -/
+def dataspace.table.actions.Table.events
+  (self : dataspace.Table) : Result (Slice dataspace.Event) := do
+  ok (alloc.vec.Vec.deref self.events)
+
+/-- [noble_kernel::dataspace::table::actions::{noble_kernel::dataspace::Table}::clear_events]:
+    Source: 'crates/noble-kernel/src/dataspace/table/actions.rs', lines 253:4-255:5
+    Visibility: public -/
+def dataspace.table.actions.Table.clear_events
+  (self : dataspace.Table) : Result dataspace.Table := do
+  let v ← alloc.vec.Vec.clear Global self.events
+  ok { self with events := v }
+
+/-- [noble_kernel::dataspace::table::actions::{noble_kernel::dataspace::Table}::counts]: loop body 0:
+    Source: 'crates/noble-kernel/src/dataspace/table/actions.rs', lines 260:8-265:9
+    Visibility: public -/
+@[rust_loop_body]
+def dataspace.table.actions.Table.counts_loop.body
+  (self : dataspace.Table) (live : Std.U32) (index : Std.Usize) :
+  Result (ControlFlow (Std.U32 × Std.Usize) ((alloc.vec.Vec
+    dataspace.Assertion) × (alloc.vec.Vec dataspace.Interest) × Std.U32))
+  := do
+  let i := alloc.vec.Vec.len self.scopes
+  if index < i
+  then
+    let s ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        dataspace.Scope) self.scopes index
+    let live1 ←
+      if s.live
+      then
+        do
+        let b ← dataspace.table.Table.retired_ancestor self s.id
+        if b
+        then ok live
+        else live + 1#u32
+      else ok live
+    let index1 ← index + 1#usize
+    ok (cont (live1, index1))
+  else ok (done (self.assertions, self.interests, live))
+
+/-- [noble_kernel::dataspace::table::actions::{noble_kernel::dataspace::Table}::counts]: loop 0:
+    Source: 'crates/noble-kernel/src/dataspace/table/actions.rs', lines 260:8-265:9
+    Visibility: public -/
+@[rust_loop]
+def dataspace.table.actions.Table.counts_loop
+  (self : dataspace.Table) (live : Std.U32) (index : Std.Usize) :
+  Result ((alloc.vec.Vec dataspace.Assertion) × (alloc.vec.Vec
+    dataspace.Interest) × Std.U32)
+  := do
+  loop
+    (fun (live1, index1) => dataspace.table.actions.Table.counts_loop.body self
+      live1 index1)
+    (live, index)
+
+/-- [noble_kernel::dataspace::table::actions::{noble_kernel::dataspace::Table}::counts]:
+    Source: 'crates/noble-kernel/src/dataspace/table/actions.rs', lines 256:4-271:5
+    Visibility: public -/
+def dataspace.table.actions.Table.counts
+  (self : dataspace.Table) : Result (Std.U32 × Std.U32 × Std.U32) := do
+  let (v, v1, live) ←
+    dataspace.table.actions.Table.counts_loop self 0#u32 0#usize
+  let i := alloc.vec.Vec.len v
+  let i1 ← lift (UScalar.cast .U32 i)
+  let i2 := alloc.vec.Vec.len v1
+  let i3 ← lift (UScalar.cast .U32 i2)
+  ok (live, i1, i3)
+
+/-- [noble_kernel::dataspace::table::{noble_kernel::dataspace::Table}::new]:
+    Source: 'crates/noble-kernel/src/dataspace/table.rs', lines 10:4-31:5
+    Visibility: public -/
+def dataspace.table.Table.new
+  (limits : dataspace.Limits) :
+  Result (core.result.Result dataspace.Table dataspace.Error)
+  := do
+  if limits.facets = 0#usize
+  then ok (core.result.Result.Err dataspace.Error.Capacity)
+  else
+    if limits.facets > dataspace.MAX_FACETS
+    then ok (core.result.Result.Err dataspace.Error.Capacity)
+    else
+      if limits.assertions = 0#usize
+      then ok (core.result.Result.Err dataspace.Error.Capacity)
+      else
+        if limits.assertions > dataspace.MAX_ASSERTIONS
+        then ok (core.result.Result.Err dataspace.Error.Capacity)
+        else
+          if limits.interests = 0#usize
+          then ok (core.result.Result.Err dataspace.Error.Capacity)
+          else
+            if limits.interests > dataspace.MAX_INTERESTS
+            then ok (core.result.Result.Err dataspace.Error.Capacity)
+            else
+              if limits.events = 0#usize
+              then ok (core.result.Result.Err dataspace.Error.Capacity)
+              else
+                if limits.events > dataspace.MAX_EVENTS
+                then ok (core.result.Result.Err dataspace.Error.Capacity)
+                else
+                  let v :=
+                    alloc.vec.Vec.with_capacity dataspace.Scope limits.facets
+                  let v1 :=
+                    alloc.vec.Vec.with_capacity dataspace.Assertion
+                      limits.assertions
+                  let v2 :=
+                    alloc.vec.Vec.with_capacity dataspace.Interest
+                      limits.interests
+                  let v3 :=
+                    alloc.vec.Vec.with_capacity dataspace.Event limits.events
+                  ok (core.result.Result.Ok
+                    {
+                      limits,
+                      next := 0#u64,
+                      scopes := v,
+                      assertions := v1,
+                      interests := v2,
+                      events := v3
+                    })
+
+/-- [noble_kernel::dataspace::table::{noble_kernel::dataspace::Table}::open]:
+    Source: 'crates/noble-kernel/src/dataspace/table.rs', lines 38:4-57:5
+    Visibility: public -/
+def dataspace.table.Table.open
+  (self : dataspace.Table) (parent : Option dataspace.Facet)
+  (rights : dataspace.Rights) :
+  Result ((core.result.Result dataspace.Facet dataspace.Error) ×
+    dataspace.Table)
+  := do
+  let i := alloc.vec.Vec.len self.scopes
+  if i >= self.limits.facets
+  then ok (core.result.Result.Err dataspace.Error.Capacity, self)
+  else
+    match parent with
+    | none =>
+      let o ← lift (U64.checked_add self.next 1#u64)
+      match o with
+      | none => ok (core.result.Result.Err dataspace.Error.Capacity, self)
+      | some next =>
+        let v ←
+          alloc.vec.Vec.push self.scopes
+            ({ id := next, parent := none, rights, live := true } :
+            dataspace.Scope)
+        ok (core.result.Result.Ok next, { self with next, scopes := v })
+    | some parent1 =>
+      let r ← dataspace.table.Table.scope self parent1
+      match r with
+      | core.result.Result.Ok _ =>
+        let o ← lift (U64.checked_add self.next 1#u64)
+        match o with
+        | none => ok (core.result.Result.Err dataspace.Error.Capacity, self)
+        | some next =>
+          let v ←
+            alloc.vec.Vec.push self.scopes
+              ({ id := next, parent, rights, live := true } : dataspace.Scope)
+          ok (core.result.Result.Ok next, { self with next, scopes := v })
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, self)
+
+/-- [noble_kernel::dataspace::wire::{impl core::clone::Clone for noble_kernel::dataspace::wire::ServiceRef<'a>}::clone]:
+    Source: 'crates/noble-kernel/src/dataspace/wire.rs', lines 6:9-6:14
+    Visibility: public -/
+def dataspace.wire.ServiceRef.Insts.CoreCloneClone.clone
+  (self : dataspace.wire.ServiceRef) : Result dataspace.wire.ServiceRef := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::dataspace::wire::{impl core::clone::Clone for noble_kernel::dataspace::wire::ServiceRef<'a>}]
+    Source: 'crates/noble-kernel/src/dataspace/wire.rs', lines 6:9-6:14 -/
+@[reducible]
+def dataspace.wire.ServiceRef.Insts.CoreCloneClone : core.clone.Clone
+  dataspace.wire.ServiceRef := {
+  clone := dataspace.wire.ServiceRef.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::dataspace::wire::{impl core::marker::Copy for noble_kernel::dataspace::wire::ServiceRef<'a>}]
+    Source: 'crates/noble-kernel/src/dataspace/wire.rs', lines 6:16-6:20 -/
+@[reducible]
+def dataspace.wire.ServiceRef.Insts.CoreMarkerCopy : core.marker.Copy
+  dataspace.wire.ServiceRef := {
+  cloneInst := dataspace.wire.ServiceRef.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::dataspace::wire::{impl core::fmt::Debug for noble_kernel::dataspace::wire::ServiceRef<'a>}::fmt]:
+    Source: 'crates/noble-kernel/src/dataspace/wire.rs', lines 6:22-6:27
+    Visibility: public -/
+def dataspace.wire.ServiceRef.Insts.CoreFmtDebug.fmt
+  (self : dataspace.wire.ServiceRef) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ (core.fmt.DebugShared Str.Insts.CoreFmtDebug) self.name
+  let dyn1 := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugBool) self.ready
+  core.fmt.Formatter.debug_struct_field2_finish f (toStr "ServiceRef") (toStr
+    "name") dyn (toStr "ready") dyn1
+
+/-- Trait implementation: [noble_kernel::dataspace::wire::{impl core::fmt::Debug for noble_kernel::dataspace::wire::ServiceRef<'a>}]
+    Source: 'crates/noble-kernel/src/dataspace/wire.rs', lines 6:22-6:27 -/
+@[reducible]
+def dataspace.wire.ServiceRef.Insts.CoreFmtDebug : core.fmt.Debug
+  dataspace.wire.ServiceRef := {
+  fmt := dataspace.wire.ServiceRef.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::dataspace::wire::{impl core::marker::StructuralPartialEq for noble_kernel::dataspace::wire::ServiceRef<'a>}]
+    Source: 'crates/noble-kernel/src/dataspace/wire.rs', lines 6:29-6:38 -/
+@[reducible]
+def dataspace.wire.ServiceRef.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq dataspace.wire.ServiceRef := {
+}
+
+/-- [noble_kernel::dataspace::wire::{impl core::cmp::PartialEq<noble_kernel::dataspace::wire::ServiceRef<'a>> for noble_kernel::dataspace::wire::ServiceRef<'a>}::eq]:
+    Source: 'crates/noble-kernel/src/dataspace/wire.rs', lines 6:29-6:38
+    Visibility: public -/
+def dataspace.wire.ServiceRef.Insts.CoreCmpPartialEqServiceRef.eq
+  (self : dataspace.wire.ServiceRef) (other : dataspace.wire.ServiceRef) :
+  Result Bool
+  := do
+  if self.ready = other.ready
+  then Str.Insts.CoreCmpPartialEqStr.eq self.name other.name
+  else ok false
+
+/-- Trait implementation: [noble_kernel::dataspace::wire::{impl core::cmp::PartialEq<noble_kernel::dataspace::wire::ServiceRef<'a>> for noble_kernel::dataspace::wire::ServiceRef<'a>}]
+    Source: 'crates/noble-kernel/src/dataspace/wire.rs', lines 6:29-6:38 -/
+@[reducible]
+impl_def dataspace.wire.ServiceRef.Insts.CoreCmpPartialEqServiceRef :
+  core.cmp.PartialEq dataspace.wire.ServiceRef dataspace.wire.ServiceRef := {
+  eq := dataspace.wire.ServiceRef.Insts.CoreCmpPartialEqServiceRef.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    dataspace.wire.ServiceRef.Insts.CoreCmpPartialEqServiceRef
+}
+
+/-- [noble_kernel::dataspace::wire::{impl core::cmp::Eq for noble_kernel::dataspace::wire::ServiceRef<'a>}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/dataspace/wire.rs', lines 6:40-6:42
+    Visibility: public -/
+def dataspace.wire.ServiceRef.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : dataspace.wire.ServiceRef) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::dataspace::wire::{impl core::cmp::Eq for noble_kernel::dataspace::wire::ServiceRef<'a>}]
+    Source: 'crates/noble-kernel/src/dataspace/wire.rs', lines 6:40-6:42 -/
+@[reducible]
+def dataspace.wire.ServiceRef.Insts.CoreCmpEq : core.cmp.Eq
+  dataspace.wire.ServiceRef := {
+  partialEqInst := dataspace.wire.ServiceRef.Insts.CoreCmpPartialEqServiceRef
+  assert_fields_are_eq :=
+    dataspace.wire.ServiceRef.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::dataspace::wire::{impl core::clone::Clone for noble_kernel::dataspace::wire::Packet}::clone]:
+    Source: 'crates/noble-kernel/src/dataspace/wire.rs', lines 12:9-12:14
+    Visibility: public -/
+def dataspace.wire.Packet.Insts.CoreCloneClone.clone
+  (self : dataspace.wire.Packet) : Result dataspace.wire.Packet := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::dataspace::wire::{impl core::clone::Clone for noble_kernel::dataspace::wire::Packet}]
+    Source: 'crates/noble-kernel/src/dataspace/wire.rs', lines 12:9-12:14 -/
+@[reducible]
+def dataspace.wire.Packet.Insts.CoreCloneClone : core.clone.Clone
+  dataspace.wire.Packet := {
+  clone := dataspace.wire.Packet.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::dataspace::wire::{impl core::marker::Copy for noble_kernel::dataspace::wire::Packet}]
+    Source: 'crates/noble-kernel/src/dataspace/wire.rs', lines 12:16-12:20 -/
+@[reducible]
+def dataspace.wire.Packet.Insts.CoreMarkerCopy : core.marker.Copy
+  dataspace.wire.Packet := {
+  cloneInst := dataspace.wire.Packet.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::dataspace::wire::{impl core::fmt::Debug for noble_kernel::dataspace::wire::Packet}::fmt]:
+    Source: 'crates/noble-kernel/src/dataspace/wire.rs', lines 12:22-12:27
+    Visibility: public -/
+def dataspace.wire.Packet.Insts.CoreFmtDebug.fmt
+  (self : dataspace.wire.Packet) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn :=
+    Dyn.mk _ (Array.Insts.CoreFmtDebug 64#usize core.fmt.DebugU8) self.bytes
+  let dyn1 := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugUsize) self.len
+  core.fmt.Formatter.debug_struct_field2_finish f (toStr "Packet") (toStr
+    "bytes") dyn (toStr "len") dyn1
+
+/-- Trait implementation: [noble_kernel::dataspace::wire::{impl core::fmt::Debug for noble_kernel::dataspace::wire::Packet}]
+    Source: 'crates/noble-kernel/src/dataspace/wire.rs', lines 12:22-12:27 -/
+@[reducible]
+def dataspace.wire.Packet.Insts.CoreFmtDebug : core.fmt.Debug
+  dataspace.wire.Packet := {
+  fmt := dataspace.wire.Packet.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::dataspace::wire::{impl core::marker::StructuralPartialEq for noble_kernel::dataspace::wire::Packet}]
+    Source: 'crates/noble-kernel/src/dataspace/wire.rs', lines 12:29-12:38 -/
+@[reducible]
+def dataspace.wire.Packet.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq dataspace.wire.Packet := {
+}
+
+/-- [noble_kernel::dataspace::wire::{impl core::cmp::PartialEq<noble_kernel::dataspace::wire::Packet> for noble_kernel::dataspace::wire::Packet}::eq]:
+    Source: 'crates/noble-kernel/src/dataspace/wire.rs', lines 12:29-12:38
+    Visibility: public -/
+def dataspace.wire.Packet.Insts.CoreCmpPartialEqPacket.eq
+  (self : dataspace.wire.Packet) (other : dataspace.wire.Packet) :
+  Result Bool
+  := do
+  let b ←
+    core.array.equality.PartialEqArray.eq core.cmp.PartialEqU8 self.bytes
+      other.bytes
+  if b
+  then ok (self.len = other.len)
+  else ok false
+
+/-- Trait implementation: [noble_kernel::dataspace::wire::{impl core::cmp::PartialEq<noble_kernel::dataspace::wire::Packet> for noble_kernel::dataspace::wire::Packet}]
+    Source: 'crates/noble-kernel/src/dataspace/wire.rs', lines 12:29-12:38 -/
+@[reducible]
+impl_def dataspace.wire.Packet.Insts.CoreCmpPartialEqPacket :
+  core.cmp.PartialEq dataspace.wire.Packet dataspace.wire.Packet := {
+  eq := dataspace.wire.Packet.Insts.CoreCmpPartialEqPacket.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    dataspace.wire.Packet.Insts.CoreCmpPartialEqPacket
+}
+
+/-- [noble_kernel::dataspace::wire::{impl core::cmp::Eq for noble_kernel::dataspace::wire::Packet}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/dataspace/wire.rs', lines 12:40-12:42
+    Visibility: public -/
+def dataspace.wire.Packet.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : dataspace.wire.Packet) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::dataspace::wire::{impl core::cmp::Eq for noble_kernel::dataspace::wire::Packet}]
+    Source: 'crates/noble-kernel/src/dataspace/wire.rs', lines 12:40-12:42 -/
+@[reducible]
+def dataspace.wire.Packet.Insts.CoreCmpEq : core.cmp.Eq dataspace.wire.Packet
+  := {
+  partialEqInst := dataspace.wire.Packet.Insts.CoreCmpPartialEqPacket
+  assert_fields_are_eq :=
+    dataspace.wire.Packet.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::dataspace::wire::{noble_kernel::dataspace::wire::Packet}::as_bytes]:
+    Source: 'crates/noble-kernel/src/dataspace/wire.rs', lines 19:4-21:5
+    Visibility: public -/
+def dataspace.wire.Packet.as_bytes
+  (self : dataspace.wire.Packet) : Result (Slice Std.U8) := do
+  core.array.Array.index (core.ops.index.IndexSlice
+    (core.slice.index.SliceIndexRangeToUsizeSlice Std.U8)) self.bytes
+    { «end» := self.len }
+
+/-- [noble_kernel::dataspace::wire::encode_service]:
+    Source: 'crates/noble-kernel/src/dataspace/wire.rs', lines 40:0-67:1
+    Visibility: public -/
+def dataspace.wire.encode_service
+  («name» : Str) (ready : Bool) :
+  Result (core.result.Result dataspace.wire.Packet dataspace.Error)
+  := do
+  let b ← dataspace.wire.valid_name «name»
+  if b
+  then
+    let bytes := Array.repeat 64#usize 0#u8
+    let suffix ←
+      if ready
+      then
+        ok (Array.make 5#usize [ 34#u8, 32#u8, 35#u8, 116#u8, 62#u8 ] : Array
+          Std.U8 5#usize)
+      else
+        ok (Array.make 5#usize [ 34#u8, 32#u8, 35#u8, 102#u8, 62#u8 ] : Array
+          Std.U8 5#usize)
+    let s ←
+      lift (Array.to_slice
+        (Array.make 10#usize [
+          60#u8, 115#u8, 101#u8, 114#u8, 118#u8, 105#u8, 99#u8, 101#u8, 32#u8,
+          34#u8
+          ]))
+    let i := Slice.len s
+    let i1 ← core.str.Str.len «name»
+    let o ← lift (Usize.checked_add i i1)
+    match o with
+    | none => ok (core.result.Result.Err dataspace.Error.ByteLimit)
+    | some «end» =>
+      let s1 ← lift (Array.to_slice suffix)
+      let i2 := Slice.len s1
+      let o1 ← lift (Usize.checked_add «end» i2)
+      match o1 with
+      | none => ok (core.result.Result.Err dataspace.Error.ByteLimit)
+      | some total =>
+        if total > dataspace.MAX_WIRE_BYTES
+        then ok (core.result.Result.Err dataspace.Error.ByteLimit)
+        else
+          let s2 ←
+            lift (Array.to_slice
+              (Array.make 10#usize [
+                60#u8, 115#u8, 101#u8, 114#u8, 118#u8, 105#u8, 99#u8, 101#u8,
+                32#u8, 34#u8
+                ]))
+          let i3 := Slice.len s2
+          let (s3, index_mut_back) ←
+            core.array.Array.index_mut (core.ops.index.IndexMutSlice
+              (core.slice.index.SliceIndexRangeToUsizeSlice Std.U8)) bytes
+              { «end» := i3 }
+          let s4 ←
+            lift (Array.to_slice
+              (Array.make 10#usize [
+                60#u8, 115#u8, 101#u8, 114#u8, 118#u8, 105#u8, 99#u8, 101#u8,
+                32#u8, 34#u8
+                ]))
+          let s5 ← core.slice.Slice.copy_from_slice core.marker.CopyU8 s3 s4
+          let bytes1 := index_mut_back s5
+          let s6 ←
+            lift (Array.to_slice
+              (Array.make 10#usize [
+                60#u8, 115#u8, 101#u8, 114#u8, 118#u8, 105#u8, 99#u8, 101#u8,
+                32#u8, 34#u8
+                ]))
+          let i4 := Slice.len s6
+          let (s7, index_mut_back1) ←
+            core.array.Array.index_mut (core.ops.index.IndexMutSlice
+              (core.slice.index.SliceIndexRangeUsizeSlice Std.U8)) bytes1
+              { start := i4, «end» }
+          let s8 ← core.str.Str.as_bytes «name»
+          let s9 ← core.slice.Slice.copy_from_slice core.marker.CopyU8 s7 s8
+          let bytes2 := index_mut_back1 s9
+          let (s10, index_mut_back2) ←
+            core.array.Array.index_mut (core.ops.index.IndexMutSlice
+              (core.slice.index.SliceIndexRangeUsizeSlice Std.U8)) bytes2
+              { start := «end», «end» := total }
+          let s11 ← lift (Array.to_slice suffix)
+          let s12 ←
+            core.slice.Slice.copy_from_slice core.marker.CopyU8 s10 s11
+          let bytes3 := index_mut_back2 s12
+          ok (core.result.Result.Ok { bytes := bytes3, len := total })
+  else ok (core.result.Result.Err dataspace.Error.InvalidName)
+
+/-- [noble_kernel::dataspace::wire::encode_service::MIN_SERVICE_BYTES]
+    Source: 'crates/noble-kernel/src/dataspace/wire.rs', lines 43:4-43:64 -/
+@[global_simps, irreducible]
+def dataspace.wire.encode_service.MIN_SERVICE_BYTES : Std.Usize :=
+  let s :=
+    Array.to_slice
+      (Array.make 15#usize [
+        60#u8, 115#u8, 101#u8, 114#u8, 118#u8, 105#u8, 99#u8, 101#u8, 32#u8,
+        34#u8, 34#u8, 32#u8, 35#u8, 116#u8, 62#u8
+        ])
+  Slice.len s
+
 /-- [noble_kernel::execution::{impl core::clone::Clone for noble_kernel::execution::TextLiteral}::clone]:
     Source: 'crates/noble-kernel/src/execution/mod.rs', lines 8:9-8:14
     Visibility: public -/
@@ -19245,7 +22056,7 @@ def execution.Submission.Insts.CoreFmtDebug : core.fmt.Debug
 }
 
 /-- [noble_kernel::consume_budget]:
-    Source: 'crates/noble-kernel/src/lib.rs', lines 49:0-54:1
+    Source: 'crates/noble-kernel/src/lib.rs', lines 51:0-56:1
     Visibility: public -/
 def consume_budget (remaining : Std.U32) : Result BudgetOutcome := do
   let o ← lift (U32.checked_sub remaining 1#u32)

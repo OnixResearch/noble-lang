@@ -1,0 +1,16 @@
+package noble:syndicate@1.0.0;
+
+interface dataspace {
+  publish: func(name: string, ready: bool) -> bool;
+  observe: func(name: string, ready: bool) -> bool;
+  retract: func(name: string) -> bool;
+  fail: func(value: bool) -> bool;
+}
+
+world service {
+  import dataspace;
+  export publisher: func(name: string, ready: bool) -> bool;
+  export observer: func(name: string, ready: bool) -> bool;
+  export withdraw: func(name: string) -> bool;
+  export publish-and-trap: func(name: string, ready: bool) -> bool;
+}

@@ -10,7 +10,7 @@ publish = false
 [dependencies]
 anyhow = "=1.0.100"
 serde_json = "=1.0.140"
-parking_lot = { path = "/nix/store/1syikrsg0j8gbz57iaxqqj6v8cbvhqhh-cargo-package-parking_lot-0.12.5" }
+parking_lot = { path = "/nix/store/i9qi2rh8xwv1pk66443wywkvqnpjbv9l-cargo-package-parking_lot-0.12.5" }
 tokio = { version = "=1.48.0", features = ["rt", "time", "macros", "sync"] }
 wasmtime = { path = "/nix/store/26a8xzacbx01hidm70lpyphyw926zhc5-source/crates/wasmtime", default-features = false, features = ["std", "runtime", "cranelift", "component-model", "component-model-async", "wat"] }
 wasmtime-wasi = { path = "/nix/store/26a8xzacbx01hidm70lpyphyw926zhc5-source/crates/wasi", default-features = false, features = ["p3"] }

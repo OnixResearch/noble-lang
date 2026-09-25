@@ -23,6 +23,13 @@ name = "noble-kernel"
 version = "0.0.0"
 
 [[package]]
+name = "noble-syndicate"
+version = "0.0.0"
+dependencies = [
+ "noble-kernel",
+]
+
+[[package]]
 name = "noble-wasm"
 version = "0.0.0"
 dependencies = [

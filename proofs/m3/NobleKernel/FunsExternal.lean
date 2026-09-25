@@ -116,6 +116,14 @@ def core.option.Option.Insts.CoreFmtDebug.fmt {T : Type} (fmtDebugInst :
 
 /-! ## core::num -/
 
+/-- Rust's ASCII alphanumeric predicate for an unsigned byte, preserving the
+    bounded wire-name decoder's rejection of non-ASCII and punctuation. -/
+@[rust_fun "core::num::{u8}::is_ascii_alphanumeric"]
+def core.num.U8.is_ascii_alphanumeric (value : U8) : Result Bool :=
+  ok (decide ((48 ≤ value.val ∧ value.val ≤ 57) ∨
+    (65 ≤ value.val ∧ value.val ≤ 90) ∨
+    (97 ≤ value.val ∧ value.val ≤ 122)))
+
 /-- [core::num::{u64}::count_ones]: count the set bits at the 64 positions
     of the scalar representation. The count is at most 64, so constructing
     the u32 result does not truncate it. -/
@@ -245,10 +253,79 @@ def core.result.Result.unwrap_or
 
 /-! ## core::str -/
 
+/-- The entire Rust `str` payload is the byte-slice view in this Aeneas model. -/
+@[rust_fun "core::str::{str}::len"]
+def core.str.Str.len (value : Str) : Result Usize := ok value.len
+
+@[rust_fun "core::str::{str}::is_empty"]
+def core.str.Str.is_empty (value : Str) : Result Bool := ok value.val.isEmpty
+
+private def utf8Bytes (value : Str) : ByteArray :=
+  ByteArray.mk (value.val.map (fun byte => UInt8.ofNat byte.val)).toArray
+
+/-- Preserve the exact input bytes on success. The checked decoder discards
+    the error's diagnostic fields and retains only the failure branch. -/
+@[rust_fun "core::str::converts::from_utf8"]
+def core.str.converts.from_utf8 (value : Slice U8) :
+    Result (core.result.Result Str core.str.error.Utf8Error) :=
+  match String.fromUTF8? (utf8Bytes value) with
+  | some _ => ok (.Ok value)
+  | none => ok (.Err .Invalid)
+
+@[rust_fun "core::str::traits::{core::cmp::PartialEq<str, str>}::eq"]
+def Str.Insts.CoreCmpPartialEqStr.eq (left right : Str) : Result Bool :=
+  ok (left.val == right.val)
+
+@[rust_fun "core::fmt::{core::fmt::Debug<str>}::fmt"]
+def Str.Insts.CoreFmtDebug.fmt (_ : Str) (formatter : core.fmt.Formatter) :
+    Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter) :=
+  ok (.Ok (), formatter)
+
 /-- The Aeneas `Str` representation is already a byte slice. This returns
     those exact UTF-8 bytes without decoding, normalizing or re-encoding. -/
 @[rust_fun "core::str::{str}::as_bytes"]
 def core.str.Str.as_bytes (value : Str) : Result (Slice U8) := ok value
+
+/-! ## alloc::string -/
+
+@[rust_fun "alloc::string::{core::cmp::PartialEq<alloc::string::String, alloc::string::String>}::eq"]
+def alloc.string.String.Insts.CoreCmpPartialEqString.eq (left right : String) : Result Bool :=
+  ok (left == right)
+
+@[rust_fun "alloc::string::{core::clone::Clone<alloc::string::String>}::clone"]
+def alloc.string.String.Insts.CoreCloneClone.clone (value : String) : Result String := ok value
+
+@[rust_fun "alloc::string::{core::cmp::PartialEq<alloc::string::String, &'0 str>}::eq"]
+def alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq (left : String) (right : Str) :
+    Result Bool :=
+  match String.fromUTF8? (utf8Bytes right) with
+  | some decoded => ok (left == decoded)
+  | none => ok false
+
+@[rust_fun "alloc::string::{core::fmt::Debug<alloc::string::String>}::fmt"]
+def alloc.string.String.Insts.CoreFmtDebug.fmt (_ : String) (formatter : core.fmt.Formatter) :
+    Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter) :=
+  ok (.Ok (), formatter)
+
+private def ownedByte (byte : UInt8) : U8 :=
+  ⟨byte.toNat, by
+    cases byte
+    simp only [UInt8.toNat_ofBitVec, UScalarTy.U8_numBits_eq, Nat.reducePow]
+    omega⟩
+
+@[rust_fun "alloc::string::{core::ops::deref::Deref<alloc::string::String, str>}::deref"]
+def alloc.string.String.Insts.CoreOpsDerefDerefStr.deref (value : String) : Result Str :=
+  let bytes := value.toUTF8.toList.map ownedByte
+  if valid : bytes.length ≤ Usize.max then
+    ok (.from bytes valid)
+  else
+    fail .panic
+
+@[rust_fun "alloc::string::{core::convert::From<alloc::string::String, &'0 str>}::from"]
+def alloc.string.String.Insts.CoreConvertFromShared0Str.from (value : Str) : Result String :=
+  match String.fromUTF8? (utf8Bytes value) with
+  | some decoded => ok decoded
+  | none => fail .panic
 
 /-! ## alloc::vec -/
 
@@ -284,6 +361,46 @@ def alloc.vec.Vec.truncate
 def alloc.vec.Vec.as_slice
   {T : Type} (A : Type) : alloc.vec.Vec T → Result (Slice T) :=
   fun v => ok v.slice
+
+/- Remove the indexed value by replacing it with the final value. The owned
+    table never calls this with an invalid index; the external model still
+    retains Rust's out-of-bounds failure for fabricated inputs. -/
+set_option Aeneas.customDoElab false in
+@[rust_fun "alloc::vec::{alloc::vec::Vec<@T>}::swap_remove"]
+def alloc.vec.Vec.swap_remove {T : Type} (_ : Type)
+    (value : alloc.vec.Vec T) (index : Usize) :
+    Result (T × alloc.vec.Vec T) := do
+  if valid : index.val < value.val.length then
+    let removed := value.val[index.val]
+    match value.val.getLast? with
+    | none => fail .panic
+    | some last =>
+      let retained := (value.val.take (value.val.length - 1)).set index.val last
+      ok (removed, .from retained (by
+        have bound := value.property
+        simp [retained, List.length_set, List.length_take] <;> omega))
+  else
+    fail .arrayOutOfBounds
+
+/- Preserve the relative order of all other entries when retiring observer
+    interests and queued events. Their number is bounded by the table limit. -/
+set_option Aeneas.customDoElab false in
+@[rust_fun "alloc::vec::{alloc::vec::Vec<@T>}::remove"]
+def alloc.vec.Vec.remove {T : Type} (_ : Type)
+    (value : alloc.vec.Vec T) (index : Usize) :
+    Result (T × alloc.vec.Vec T) := do
+  if valid : index.val < value.val.length then
+    let removed := value.val[index.val]
+    let retained := value.val.take index.val ++ value.val.drop (index.val + 1)
+    ok (removed, .from retained (by
+      have bound := value.property
+      simp [retained, List.length_append, List.length_take, List.length_drop] <;> omega))
+  else
+    fail .arrayOutOfBounds
+
+@[rust_fun "alloc::vec::{alloc::vec::Vec<@T>}::clear"]
+def alloc.vec.Vec.clear {T : Type} (_ : Type) (_ : alloc.vec.Vec T) :
+    Result (alloc.vec.Vec T) := ok (.from [] (by simp))
 
 /-- [alloc::vec::{alloc::vec::Vec<T>}::pop]:
     `None` when empty, else the last element and the vector without it. -/

@@ -4,8 +4,8 @@ let contracts = import "./architecture.contracts.ncl" in
   project_id = "noble",
   mode = "gate",
   production = {
-    packages = ["noble-kernel", "noble-contracts", "noble-wasm", "noble-cli"],
-    source_scopes = ["crates/noble-kernel/src", "crates/noble-contracts/src", "crates/noble-wasm/src", "crates/noble-cli/src"],
+    packages = ["noble-kernel", "noble-contracts", "noble-wasm", "noble-cli", "noble-syndicate"],
+    source_scopes = ["crates/noble-kernel/src", "crates/noble-contracts/src", "crates/noble-wasm/src", "crates/noble-cli/src", "crates/noble-syndicate/src"],
     targets = [{
       triple = "x86_64-unknown-linux-gnu",
       features = [],
@@ -17,14 +17,17 @@ let contracts = import "./architecture.contracts.ncl" in
     { scope_kind = "package", scope = "noble-contracts", role = "domain-core" },
     { scope_kind = "package", scope = "noble-wasm", role = "domain-core" },
     { scope_kind = "package", scope = "noble-cli", role = "composition-root" },
+    { scope_kind = "package", scope = "noble-syndicate", role = "composition-root" },
     { scope_kind = "source", scope = "crates/noble-kernel/src", role = "domain-core" },
     { scope_kind = "source", scope = "crates/noble-contracts/src", role = "domain-core" },
     { scope_kind = "source", scope = "crates/noble-wasm/src", role = "domain-core" },
     { scope_kind = "source", scope = "crates/noble-cli/src", role = "composition-root" },
+    { scope_kind = "source", scope = "crates/noble-syndicate/src", role = "composition-root" },
     { scope_kind = "source", scope = "crates/noble-kernel/tests", role = "test" },
     { scope_kind = "source", scope = "crates/noble-contracts/tests", role = "test" },
     { scope_kind = "source", scope = "crates/noble-wasm/tests", role = "test" },
     { scope_kind = "source", scope = "crates/noble-cli/tests", role = "test" },
+    { scope_kind = "source", scope = "crates/noble-syndicate/tests", role = "test" },
   ],
   dependency_rules = [
     {
@@ -235,11 +238,13 @@ let contracts = import "./architecture.contracts.ncl" in
   admission = null,
   waivers = [],
   collection_limits = {
-    # M6 has 25 real units; the acyclic boundary control adds two shell-library
-    # units. Retain every target and shard, including that library's test unit.
-    max_units = 27,
-    max_shards = 27,
-    max_modules = 1024,
+    # M7 has 29 real units (five packages); the acyclic boundary control adds
+    # two shell-library units. Retain every target and test shard.
+    max_units = 31,
+    max_shards = 31,
+    # M7's kernel dataspace module pushes both kernel library shards over the
+    # earlier 1024 module-fact cap. Preserve complete compiler coverage.
+    max_modules = 2048,
     max_items = 4096,
     max_types = 4096,
     max_traits = 512,

@@ -168,6 +168,24 @@ Component Model and WIT remain the standard external boundary. WASI 0.3 remains 
 
 Syndicate/Synit and Preserves remain the concurrency and protocol direction. BEAM/OTP supplies secondary operational lessons, not primary concurrency semantics.
 
+The accepted M7 selection is a bounded synchronous local service, not a new
+general concurrency model. Its checked, serialized host-bound facets own
+`service(name:Text,ready:Bool)` assertions and exact-pair interests under
+finite capacities. Only canonical
+[`<service "NAME" #t>` or `<service "NAME" #f>` Preserves text](https://preserves.dev/preserves-text.html)
+is admitted (ASCII name 1–32, at most 64 bytes/depth four); decoding cannot
+grant rights or a WIT resource. The selected versioned
+`noble:syndicate@1.0.0` WIT boundary uses
+`observe(name:string,ready:bool)->bool` as exact membership, avoiding the
+ambiguity between a false readiness value and absence. Normal/trap cleanup
+retracts scope-owned state. The archived
+[change](../.cairn/archive/2026-09-25-m7-syndicate-service/proposal.md)
+records this selected decision; the separate
+[M7 completion evidence](../verification/m7/evidence.json) binds seven
+executed cases, sixteen hostile variants and nine strict roots for three
+pure dataspace functions. The decision alone grants no execution or proof;
+that accepted local service does not close general Syndicate or WASI.
+
 Choreography must target the selected concurrency layer. Durability must record observable nondeterminism and ambiguous outcomes. Neither is part of the first core milestone.
 
 ## Open decisions
@@ -176,4 +194,8 @@ Choreography must target the selected concurrency layer. Durability must record 
 2. Canonical semantic bytes, recursion identity, and portable package transport.
 3. Internal Wasm calling convention, generic lowering, memory management, and session recovery.
 4. Exact component type mapping, borrowed exports, async lifetimes/interfaces, scheduler and interruption limits, stream buffering policy, and tested toolchain pins.
-5. Full Syndicate transitions, bounded Preserves adaptation, choreography projection, and durability contracts.
+5. Full Syndicate transitions and general Preserves adaptation beyond the
+   accepted bounded M7 local service, plus separate choreography projection
+   and durability contracts. M7's selected implementation, execution and
+   scoped formal/assurance evidence are retained separately; these broader
+   design obligations remain open.

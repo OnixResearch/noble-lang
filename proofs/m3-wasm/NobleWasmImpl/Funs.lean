@@ -832,7 +832,7 @@ def component.abi.tuple_layout
   | some error => ok (core.result.Result.Err error)
 
 /-- [noble_wasm::component::FLAT_PARAMETER_LIMIT]
-    Source: 'crates/noble-wasm/src/component/mod.rs', lines 23:0-23:39 -/
+    Source: 'crates/noble-wasm/src/component/mod.rs', lines 24:0-24:39 -/
 @[global_simps, irreducible]
 def component.FLAT_PARAMETER_LIMIT : Std.Usize := 16#usize
 
@@ -1229,7 +1229,7 @@ def component.admission.body.is_text
   | noble_kernel.untrusted.Node.Quotation _ _ => ok false
 
 /-- [noble_wasm::component::TEXT_BYTE_LIMIT]
-    Source: 'crates/noble-wasm/src/component/mod.rs', lines 24:0-24:38 -/
+    Source: 'crates/noble-wasm/src/component/mod.rs', lines 25:0-25:38 -/
 @[global_simps, irreducible]
 def component.TEXT_BYTE_LIMIT : Std.Usize := 60000#usize
 
@@ -1436,7 +1436,7 @@ def component.admission.Context.Insts.CoreMarkerCopy : core.marker.Copy
 }
 
 /-- [noble_wasm::component::NODE_LIMIT]
-    Source: 'crates/noble-wasm/src/component/mod.rs', lines 20:0-20:31 -/
+    Source: 'crates/noble-wasm/src/component/mod.rs', lines 21:0-21:31 -/
 @[global_simps, irreducible] def component.NODE_LIMIT : Std.Usize := 4096#usize
 
 /-- [noble_wasm::component::admission::same_definition]:
@@ -3497,7 +3497,7 @@ def component.lower.State.capture
   | core.result.Result.Err failure => ok (core.result.Result.Err failure, self)
 
 /-- [noble_wasm::component::LOCAL_LIMIT]
-    Source: 'crates/noble-wasm/src/component/mod.rs', lines 22:0-22:34 -/
+    Source: 'crates/noble-wasm/src/component/mod.rs', lines 23:0-23:34 -/
 @[global_simps, irreducible]
 def component.LOCAL_LIMIT : Std.Usize := 16384#usize
 
@@ -5910,7 +5910,7 @@ def component.lower.inputs.initial
   | some error => ok (core.result.Result.Err error)
 
 /-- [noble_wasm::component::STACK_LIMIT]
-    Source: 'crates/noble-wasm/src/component/mod.rs', lines 21:0-21:31 -/
+    Source: 'crates/noble-wasm/src/component/mod.rs', lines 22:0-22:31 -/
 @[global_simps, irreducible] def component.STACK_LIMIT : Std.Usize := 256#usize
 
 /-- [noble_wasm::component::lower::{impl core::clone::Clone for noble_wasm::component::lower::Storage}::clone]:
@@ -6284,7 +6284,7 @@ def output.Buffer.i64
   | core.result.Result.Err _ => ok (r, self1)
 
 /-- [noble_wasm::component::HEAP_START]
-    Source: 'crates/noble-wasm/src/component/mod.rs', lines 14:0-14:35
+    Source: 'crates/noble-wasm/src/component/mod.rs', lines 15:0-15:35
     Visibility: public -/
 @[global_simps, irreducible] def component.HEAP_START : Std.U32 := 65536#u32
 
@@ -6938,44 +6938,52 @@ def component.ASYNC_WIT : Result (Slice Std.U8) :=
   core.str.Str.as_bytes (toStr
     "package noble-test:async-boundary@1.0.0;\n\ninterface host {\n  first: async func(value: s64) -> s64;\n  second: async func(value: s64) -> s64;\n  make-future: func() -> future<result<s64, string>>;\n  finish-future: async func(value: future<result<s64, string>>) -> result<s64, string>;\n  make-stream: func() -> stream<u8>;\n  drain-stream: async func(value: stream<u8>) -> result<list<u8>, string>;\n  cancel-future: func(value: future<result<s64, string>>);\n  close-stream: func(value: stream<u8>);\n}\n\nworld bootstrap {\n  import host;\n  export order: async func(value: s64) -> s64;\n  export future-result: async func() -> result<s64, string>;\n  export stream-result: async func() -> result<list<u8>, string>;\n  export future-cancel: async func();\n  export stream-close: async func();\n}\n")
 
+/-- [noble_wasm::component::SYNDICATE_WIT]
+    Source: 'crates/noble-wasm/src/component/mod.rs', lines 13:0-13:84
+    Visibility: public -/
+@[global_simps, irreducible]
+def component.SYNDICATE_WIT : Result (Slice Std.U8) :=
+  core.str.Str.as_bytes (toStr
+    "package noble:syndicate@1.0.0;\n\ninterface dataspace {\n  publish: func(name: string, ready: bool) -> bool;\n  observe: func(name: string, ready: bool) -> bool;\n  retract: func(name: string) -> bool;\n  fail: func(value: bool) -> bool;\n}\n\nworld service {\n  import dataspace;\n  export publisher: func(name: string, ready: bool) -> bool;\n  export observer: func(name: string, ready: bool) -> bool;\n  export withdraw: func(name: string) -> bool;\n  export publish-and-trap: func(name: string, ready: bool) -> bool;\n}\n")
+
 /-- [noble_wasm::component::MEMORY_BYTES]
-    Source: 'crates/noble-wasm/src/component/mod.rs', lines 13:0-13:40
+    Source: 'crates/noble-wasm/src/component/mod.rs', lines 14:0-14:40
     Visibility: public -/
 @[global_simps, irreducible]
 def component.MEMORY_BYTES : Std.U32 := 1048576#u32
 
 /-- [noble_wasm::component::DEFAULT_ALLOCATION_LIMIT]
-    Source: 'crates/noble-wasm/src/component/mod.rs', lines 19:0-19:68
+    Source: 'crates/noble-wasm/src/component/mod.rs', lines 20:0-20:68
     Visibility: public -/
 @[global_simps, irreducible]
 def component.DEFAULT_ALLOCATION_LIMIT : Result Std.U32 :=
   component.MEMORY_BYTES - component.HEAP_START
 
 /-- [noble_wasm::component::TEXT_START]
-    Source: 'crates/noble-wasm/src/component/mod.rs', lines 25:0-25:29 -/
+    Source: 'crates/noble-wasm/src/component/mod.rs', lines 26:0-26:29 -/
 @[global_simps, irreducible] def component.TEXT_START : Std.U32 := 1024#u32
 
 /-- [noble_wasm::component::{noble_wasm::component::Artifact}::wat]:
-    Source: 'crates/noble-wasm/src/component/mod.rs', lines 32:4-34:5
+    Source: 'crates/noble-wasm/src/component/mod.rs', lines 33:4-35:5
     Visibility: public -/
 def component.Artifact.impl.wat
   (self : component.Artifact) : Result (Slice Std.U8) := do
   ok (alloc.vec.Vec.deref self.wat)
 
 /-- [noble_wasm::component::{noble_wasm::component::Artifact}::build_context]:
-    Source: 'crates/noble-wasm/src/component/mod.rs', lines 35:4-37:5
+    Source: 'crates/noble-wasm/src/component/mod.rs', lines 36:4-38:5
     Visibility: public -/
 def component.Artifact.impl.build_context
   (self : component.Artifact) : Result (Slice Std.U8) := do
   ok (alloc.vec.Vec.deref self.build_context)
 
 /-- [noble_wasm::component::export_capacity::HEADER_BYTES]
-    Source: 'crates/noble-wasm/src/component/mod.rs', lines 170:4-170:34 -/
+    Source: 'crates/noble-wasm/src/component/mod.rs', lines 171:4-171:34 -/
 @[global_simps, irreducible]
 def component.export_capacity.HEADER_BYTES : Std.Usize := 8#usize
 
 /-- [noble_wasm::component::export_capacity]:
-    Source: 'crates/noble-wasm/src/component/mod.rs', lines 166:0-178:1 -/
+    Source: 'crates/noble-wasm/src/component/mod.rs', lines 167:0-179:1 -/
 def component.export_capacity
   («export» : noble_contracts.component.CheckedExport) (bytes : Std.Usize) :
   Result (core.result.Result Std.Usize Diagnostic)
@@ -6991,7 +6999,7 @@ def component.export_capacity
     core.option.Option.ok_or o1 Diagnostic.Exhausted
 
 /-- [noble_wasm::component::context_capacity]: loop body 0:
-    Source: 'crates/noble-wasm/src/component/mod.rs', lines 149:4-155:5 -/
+    Source: 'crates/noble-wasm/src/component/mod.rs', lines 150:4-156:5 -/
 @[rust_loop_body]
 def component.context_capacity_loop.body
   (exports : Slice noble_contracts.component.CheckedExport) (count : Std.Usize)
@@ -7016,7 +7024,7 @@ def component.context_capacity_loop.body
   else ok (done (bytes, failure))
 
 /-- [noble_wasm::component::context_capacity]: loop 0:
-    Source: 'crates/noble-wasm/src/component/mod.rs', lines 149:4-155:5 -/
+    Source: 'crates/noble-wasm/src/component/mod.rs', lines 150:4-156:5 -/
 @[rust_loop]
 def component.context_capacity_loop
   (exports : Slice noble_contracts.component.CheckedExport) (bytes : Std.Usize)
@@ -7029,7 +7037,7 @@ def component.context_capacity_loop
     (bytes, index, failure)
 
 /-- [noble_wasm::component::context_capacity]:
-    Source: 'crates/noble-wasm/src/component/mod.rs', lines 142:0-160:1 -/
+    Source: 'crates/noble-wasm/src/component/mod.rs', lines 143:0-161:1 -/
 def component.context_capacity
   (exports : Slice noble_contracts.component.CheckedExport) (bytes : Std.Usize)
   :
@@ -7043,7 +7051,7 @@ def component.context_capacity
   | some error => ok (core.result.Result.Err error)
 
 /-- [noble_wasm::component::context_export]:
-    Source: 'crates/noble-wasm/src/component/mod.rs', lines 122:0-140:1 -/
+    Source: 'crates/noble-wasm/src/component/mod.rs', lines 123:0-141:1 -/
 def component.context_export
   («export» : noble_contracts.component.CheckedExport)
   (build_context : alloc.vec.Vec Std.U8) :
@@ -7075,7 +7083,7 @@ def component.context_export
     ok (core.result.Result.Err Diagnostic.Exhausted, build_context)
 
 /-- [noble_wasm::component::context_exports]: loop body 0:
-    Source: 'crates/noble-wasm/src/component/mod.rs', lines 104:4-109:5 -/
+    Source: 'crates/noble-wasm/src/component/mod.rs', lines 105:4-110:5 -/
 @[rust_loop_body]
 def component.context_exports_loop.body
   (exports : Slice noble_contracts.component.CheckedExport) (count : Std.Usize)
@@ -7101,7 +7109,7 @@ def component.context_exports_loop.body
   else ok (done (build_context, failure))
 
 /-- [noble_wasm::component::context_exports]: loop 0:
-    Source: 'crates/noble-wasm/src/component/mod.rs', lines 104:4-109:5 -/
+    Source: 'crates/noble-wasm/src/component/mod.rs', lines 105:4-110:5 -/
 @[rust_loop]
 def component.context_exports_loop
   (exports : Slice noble_contracts.component.CheckedExport)
@@ -7116,7 +7124,7 @@ def component.context_exports_loop
     (build_context, index, failure)
 
 /-- [noble_wasm::component::context_exports]:
-    Source: 'crates/noble-wasm/src/component/mod.rs', lines 97:0-114:1 -/
+    Source: 'crates/noble-wasm/src/component/mod.rs', lines 98:0-115:1 -/
 def component.context_exports
   (exports : Slice noble_contracts.component.CheckedExport)
   (build_context : alloc.vec.Vec Std.U8) :
@@ -7130,7 +7138,7 @@ def component.context_exports
   | some error => ok (core.result.Result.Err error, build_context1)
 
 /-- [noble_wasm::component::context]:
-    Source: 'crates/noble-wasm/src/component/mod.rs', lines 75:0-90:1 -/
+    Source: 'crates/noble-wasm/src/component/mod.rs', lines 76:0-91:1 -/
 def component.context
   (world : noble_contracts.component.World)
   (exports : Slice noble_contracts.component.CheckedExport) :
@@ -7174,7 +7182,7 @@ def component.context
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_wasm::component::compile]: loop body 0:
-    Source: 'crates/noble-wasm/src/component/mod.rs', lines 60:4-66:5
+    Source: 'crates/noble-wasm/src/component/mod.rs', lines 61:4-67:5
     Visibility: public -/
 @[rust_loop_body]
 def component.compile_loop.body
@@ -7206,7 +7214,7 @@ def component.compile_loop.body
   else ok (done (plans, data, failure))
 
 /-- [noble_wasm::component::compile]: loop 0:
-    Source: 'crates/noble-wasm/src/component/mod.rs', lines 60:4-66:5
+    Source: 'crates/noble-wasm/src/component/mod.rs', lines 61:4-67:5
     Visibility: public -/
 @[rust_loop]
 def component.compile_loop
@@ -7223,7 +7231,7 @@ def component.compile_loop
     (plans, data, index, failure)
 
 /-- [noble_wasm::component::compile]:
-    Source: 'crates/noble-wasm/src/component/mod.rs', lines 47:0-73:1
+    Source: 'crates/noble-wasm/src/component/mod.rs', lines 48:0-74:1
     Visibility: public -/
 def component.compile
   (world : noble_contracts.component.World)

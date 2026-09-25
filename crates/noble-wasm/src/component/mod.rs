@@ -10,6 +10,7 @@ mod lower;
 
 pub const BOOTSTRAP_WIT: &[u8] = include_str!("../../wit/bootstrap.wit").as_bytes();
 pub const ASYNC_WIT: &[u8] = include_str!("../../wit/async.wit").as_bytes();
+pub const SYNDICATE_WIT: &[u8] = include_str!("../../wit/syndicate.wit").as_bytes();
 pub const MEMORY_BYTES: u32 = 1_048_576;
 pub const HEAP_START: u32 = 65_536;
 #[expect(

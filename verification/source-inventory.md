@@ -2,18 +2,18 @@
 
 Tasks 2.3 and 2.4 established the inventory mechanism. The `source-coverage` check collects the compiler-derived inventory and compares it with a reviewed classification.
 
-The current checked-in classification is the **M6 native-async source renewal dated
-2026-09-24**, covering all 25 expected compiler units.
-[The current JSON export](../policy/source-inventory.json) records the renewed
-conservative accounting. The complete, unchanged 73-rule deny-all run retained
-in the [roundtrip-verified M6 quality archive](m6/quality-archive.json) has zero
-warnings, errors and architecture findings; the independently checked
-`source-coverage` Nix output is valid. These are separate current-source
-observations, not a universal refinement or runtime acceptance receipt.
+The current checked-in classification is the **M7 local synchronous service
+renewal dated 2026-09-25**, covering all 29 expected compiler units.
+[The current JSON export](../policy/source-inventory.json) records conservative
+accounting; the [fresh M7 assurance](m7/assurance.json) passes the complete
+Nix `source-coverage`, boundary/deny-all, policy and quality checks. The
+previous [M6 quality archive](m6/quality-archive.json) retains its separately
+bound historical observation. Neither quality gate nor compiler
+classification is universal refinement or runtime acceptance.
 Classification, quality, independent comparison and milestone acceptance are
 separate observations. Later source changes require fresh bound receipts, not
-reuse of this pass. Historical M4, MC2 and M5 evidence retains its original scope,
-counts and bindings.
+reuse of this pass. Historical M4, MC2, M5 and M6 evidence retains its original
+scope, counts and bindings.
 
 This is a named-scope accounting control, not milestone acceptance, an architecture-clean receipt, or a refinement proof.
 
@@ -46,7 +46,14 @@ The inventory comes from `cargo-octet check` on the real workspace with all targ
 Nothing in the inventory is hand-written: units, subjects, macro origins, dependency edges, and the compiler coverage report are compiler-derived.
 The reviewed classifications are project-owned policy, not compiler certifications.
 
-The policy is not an isolated historical M1 fixture. `flake.nix` still compares it with the current workspace compiler inventory and current architecture scope. Its authoritative scope includes `noble-kernel`, `noble-contracts`, `noble-wasm`, and `noble-cli`; the CLI executable's compiler namespace is `noble`. Independent Wasmtime peers are separate verification-only workspaces. Owned JS/WAT/runtime assets, the canonical ABI, host provenance, native release and external tools require separately bound evidence and trust accounting, not Rust extraction coverage.
+The policy is not an isolated historical M1 fixture. `flake.nix` still compares
+it with the current workspace compiler inventory and current architecture
+scope. Its authoritative scope includes `noble-kernel`, `noble-contracts`,
+`noble-wasm`, `noble-cli` and `noble-syndicate`; the CLI executable's compiler
+namespace is `noble`. Independent Wasmtime peers are separate
+verification-only workspaces. Owned JS/WAT/runtime assets, the canonical ABI,
+host provenance, native release and external tools require separately bound
+evidence and trust accounting, not Rust extraction coverage.
 
 ## Classification
 
@@ -61,24 +68,25 @@ Each compiler-derived production subject is reviewed as one of three categories.
 Bodies additionally carry a refinement status: `proved` or `open`.
 Only bodies enter the extraction, modeling, exception, proof, and open counts.
 
-The complete 25-unit reviewed observation contains 1,939 authored-body paths,
-1,707 generated paths and 837 structural paths: 4,483 unique production paths
-covering 4,573 compiler
-item facts. A path shared by an authored body and generated items retains the
-body obligation. The difference between item and path counts also includes
+The complete 29-unit current observation contains 2,006 authored-body paths,
+1,861 generated paths and 879 structural paths: 4,746 unique production paths
+covering 4,840 compiler item facts. A path shared by an authored body and
+generated items retains the body obligation. The difference between item and
+path counts also includes
 compiler observations of different item kinds under one qualified path.
 
-This renewal restored 195 retained authored closures from `generated` classification
+The M6 renewal restored 195 retained authored closures from `generated` classification
 to `body` / `open` / `open`, removed 18 stale source-offset closure entries, and
 added 19 new closure entries. Anonymous syntax or a generated wrapper does not
 erase authored semantics. The correction restores explicit obligations; it does
 not extract, model or prove those bodies, and removing a stale offset is not a
 discharge of its semantic obligation.
 
-All 1,939 body dispositions and refinements remain `open` in this inventory.
+All 2,006 body dispositions and refinements remain `open` in this inventory.
 It does not import or discharge the separately bound kernel, MC1, Wasm-emitter
-or M4/MC2/M5 frontend/compiler/companion/resource evidence, or the bounded M6
-async extraction and proof observations. Zero bodies here are
+or M4/MC2/M5 frontend/compiler/companion/resource evidence, the bounded M6
+async extraction, or the three pure selected M7 dataspace functions. Zero
+bodies here are
 classified as extracted, modeled, excepted, or proved; that accounting limit is
 not a claim that the separate proof lanes have no evidence.
 
@@ -103,7 +111,26 @@ These remain historical M5 counts and bindings, not the current M6 expectation.
 
 ## Compiler review observation
 
-The M6 review is bound by the compiler IR, coverage, collector receipt/policy,
+The current M7 [sixteen-command assurance](m7/assurance.json) independently
+passed complete Nix flake checks over frozen pre-promotion source. Its
+`source-coverage` output reports all 29 expected and observed compiler unit
+identities with none missing, unexpected or duplicated, valid shard coverage,
+one selected `x86_64-unknown-linux-gnu` default-feature configuration and
+2,006 open authored bodies. The fresh compiler architecture IR identity is
+`b2c98fe0a17d37b06a7f796730177cbd71e332e6a270e10fe04de23f211586e7`,
+the matching unit-coverage identity is
+`fb7adb09b9aae311b66ebce774935393129d75b809bf2c0b5d469cbe64df675b`,
+and its checked exported architecture policy identity is
+`c9e505706e8821ccf700038c36b9405cce3127e48da587b59fae409e6304cd3a`.
+The separately checked [M7 completion record](m7/evidence.json) retains 1,076
+exclusively test-role paths, 27 macro origins, seven production dependency
+edges, thirteen selected tools and no approved exceptions. Historical
+pre-capacity diagnostic IDs in comments of the frozen reviewed Nickel
+inventory do not replace these fresh complete-Nix observations.
+
+### Historical M6 compiler review observation
+
+The M6 review was bound by the compiler IR, coverage, collector receipt/policy,
 toolchain, Cargo graph and per-crate source identities recorded in
 [the reviewed policy](../policy/source-inventory.ncl). Its JSON export and the
 complete compiler packet retained at `quality.tar.xz.part-*:workspace-octet`
@@ -120,12 +147,13 @@ These identities bind the reviewed observation, not an arbitrary later source
 tree. The [production Nix source and outputs](m6/nix-checks.json) and the
 independently [verified quality archive](m6/quality-archive.json) retain the
 passing comparison and its raw compiler observations. Historical M3/M4/MC2/M5
-identifiers are not the current M6 binding, and an archive location alone is
-not a passing receipt.
+identifiers are not the historical M6 binding, and an archive location alone
+is not a passing receipt.
 
-Coverage reports all 25 expected units: six domain-core units (three library and
-three library-test configurations), two composition-root units (binary and
-binary-test), and seventeen test-role units. The single declared configuration is
+Historical M6 coverage reported all 25 expected units: six domain-core units
+(three library and three library-test configurations), two composition-root
+units (binary and binary-test), and seventeen test-role units. The single
+declared configuration is
 `x86_64-unknown-linux-gnu`, `features=[]`, `default_features=true`.
 There are 1,044 unique exclusively test-role paths across 1,302 test item facts,
 26 macro origins, six production dependency edges, no external Cargo edges,
@@ -135,7 +163,13 @@ policy obligations.
 
 Complete collection alone is not a passing architecture gate. The earlier interim run's required production desugaring unknowns were not waived; this observation was collected after those source corrections. Listing `<builtin>` in the macro-origin set does not waive any required unknown, and the full compiler IR can retain test-only unknown facts without granting them production authority. Gate mode, core capability prohibitions, and empty waiver/exception sets remain unchanged.
 
-The default catalog was insufficient for acceptance. The published deny-all hook enables 73 rules, including off-by-default rules. The current source resolves their findings through legal const helpers, closed-enum declarations, bounded module separation, explicit units, and narrowly scoped explanations where heuristic requirements conflict with fallible validation or guarded arithmetic bounds. No assertion padding, new opaque extraction boundary, policy waiver, or catalog weakening was introduced.
+The default catalog was insufficient for M6 acceptance. The published deny-all
+hook enables 73 rules, including off-by-default rules. That M6 source resolved
+its findings through legal const helpers, closed-enum declarations, bounded
+module separation, explicit units, and narrowly scoped explanations where
+heuristic requirements conflict with fallible validation or guarded arithmetic
+bounds. No assertion padding, new opaque extraction boundary, policy waiver,
+or catalog weakening was introduced.
 
 The architecture policy names the exact observed CLI effect owners, including
 compiler-qualified closure identities and filesystem observations through
@@ -143,8 +177,9 @@ compiler-qualified closure identities and filesystem observations through
 The inherited source comparison, policy/tool-selection freshness checks, and
 strict Octet gate remain separate acceptance controls; this document is not
 their execution receipt. Closure identities include source byte offsets, so even
-comment or help-text edits can require renewal. All 25 expected workspace units
-remain mandatory. An acyclic boundary control must additionally retain both
+comment or help-text edits can require renewal. All 25 expected M6 workspace
+units were mandatory; the current M7 renewal requires all 29. An acyclic
+boundary control must additionally retain both
 units of its synthetic shell library; collection capacity is not permission to
 omit real or synthetic test targets.
 The collector's configuration-entry capacity is 2,048; this does not enlarge
@@ -165,7 +200,7 @@ dependency coverage remain separate from this classification.
 M6 adds the async-task kernel, WIT/component frontend and async component
 lowering/emission scopes. The [independent fresh
 check](../verification/m6/extraction.json) passed against the renewed
-[reviewed lock](../verification/m4/extraction-lock.json): 526 source files,
+[reviewed lock](../verification/m4/extraction-lock.json): 526 M6 source files,
 fourteen strict actual-Rust roots for transition, table-decision, classifier
 and record-validation correspondence plus qualified lifecycle properties,
 all 75 state/event constructor pairs, and 176 M6 refusal controls (228 total
@@ -175,11 +210,17 @@ Native execution, constructor coverage, extracted-body coverage and
 refinement remain distinct; none establishes unmodeled host or native runtime
 semantics.
 
-The [corrected full MC2 regression](m6/regressions.json) and all thirteen
-[declared Nix checks](m6/nix-checks.json) pass. Neither native execution nor
-independently checked extraction closes
-the inherited proof obligations or turns the 1,939 open authored-body
-obligations into universal refinement.
+M7 separately [checks 548 actual Rust source files](m7/extraction.json) under
+the reviewed lock. Exactly three compiler-ID-joined transparent pure Rust
+dataspace functions at DefIDs 31/32/33 have nine strict Lean
+correspondence/refusal/invariant theorems against independent finite
+references, and the whole-crate check rejects 37 M7 mutations (265 combined
+inherited and M7 controls). This is not table, wire, host, adapter, engine,
+full frontend/backend or 2,006-body refinement. The
+[M7 assurance](m7/assurance.json) independently passes MC1/MC2/M3/M4/M5/M6
+regressions, workspace Rust tests/Clippy and complete published Octet and Nix
+quality; the earlier [M6 regression](m6/regressions.json) and
+[declared checks](m6/nix-checks.json) retain their own bound scope.
 
 ## Rejection controls
 
