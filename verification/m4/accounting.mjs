@@ -6,9 +6,11 @@ import crypto from 'node:crypto';
 
 export const schema = 'm4-extraction-lock/v1';
 export const sha = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
-export const canonical = value => JSON.stringify(value, (_, item) =>
-  item && typeof item === 'object' && !Array.isArray(item)
-    ? Object.fromEntries(Object.keys(item).sort().map(key => [key, item[key]])) : item);
+export const canonical = (value, normalize) => JSON.stringify(value, (_, item) => {
+  if (!item || typeof item !== 'object' || Array.isArray(item)) return item;
+  if (normalize) item = normalize(item);
+  return Object.fromEntries(Object.keys(item).sort().map(key => [key, item[key]]));
+});
 export function fail(code, detail) { throw Error(`M4-${code}: ${detail}`); }
 export function equal(actual, expected, code, detail) {
   if (canonical(actual) !== canonical(expected)) fail(code, detail);
@@ -17,18 +19,73 @@ export function exactBytes(actual, expected, detail) {
   if (!Buffer.from(actual).equals(Buffer.from(expected))) fail('GENERATED', detail);
 }
 
-export function canonicalLlbcHash(llbc) {
+// The two independent discoveries of identical sources/tooling differed only in
+// four macro-expansion span end columns: zero width versus the full macro token.
+// Bind the exact source site and one occurrence per site; do not erase ordinary
+// spans, the rest of these spans, any body, or any extraction option.
+const syntheticExpansionSites = {
+  noble_kernel: [
+    { file: 'crates/noble-kernel/src/lib.rs', crate: 'noble_kernel', line: 24, end: 19,
+      source: '        match $step {' },
+  ],
+  noble_contracts: [
+    { file: 'crates/noble-contracts/src/lib.rs', crate: 'noble_contracts', line: 9, end: 19,
+      source: '        match $step {' },
+    { file: '/rustc/library/core/src/macros/mod.rs', crate: 'core', line: 434, end: 25,
+      source: null },
+  ],
+  noble_wasm: [
+    { file: 'crates/noble-wasm/src/lib.rs', crate: 'noble_wasm', line: 13, end: 19,
+      source: '        match $step {' },
+  ],
+};
+
+export function canonicalLlbcHash(llbc, normalizedSpans) {
   // Charon serializes this name map in hash-table order and records the physical
   // output directory. Preserve every other field, including all bodies/options.
   const translated = llbc.translated;
+  const sites = syntheticExpansionSites[translated.crate_name];
+  if (!sites) fail('LLBC-SPAN', `unreviewed crate ${translated.crate_name}`);
+  const byFile = new Map();
+  for (const site of sites) {
+    const files = translated.files.filter(file => file?.name?.Local === site.file);
+    if (files.length !== 1 || files[0].crate_name !== site.crate ||
+        (site.source === null ? files[0].contents !== null :
+          files[0].contents?.split('\n')[site.line - 1] !== site.source)) {
+      fail('LLBC-SPAN', `unreviewed expansion source ${site.file}:${site.line}`);
+    }
+    byFile.set(files[0].id, { ...site, seen: 0 });
+  }
+  const normalizeSpan = item => {
+    const value = item.Value;
+    if (!Array.isArray(value) || value.length !== 2 || typeof value[0] !== 'number') return item;
+    const span = value[1];
+    const data = span?.data;
+    const site = byFile.get(data?.file_id);
+    if (!site || data.beg?.line !== site.line || data.beg?.col !== 8 ||
+        data.end?.line !== site.line || span.generated_from_span !== null) return item;
+    if (data.end.col !== 8 && data.end.col !== site.end) {
+      fail('LLBC-SPAN', `unreviewed expansion end ${site.file}:${site.line}:${data.end.col}`);
+    }
+    if (++site.seen !== 1) fail('LLBC-SPAN', `duplicate expansion ${site.file}:${site.line}`);
+    normalizedSpans?.push({ source: site.file, line: site.line, begin_col: 8,
+      observed_end_col: data.end.col, canonical_end_col: site.end, field: 'span.Value[1].data.end.col' });
+    return data.end.col === site.end ? item : { ...item, Value: [value[0], {
+      ...span, data: { ...data, end: { ...data.end, col: site.end } },
+    }] };
+  };
   const names = translated.short_names.map(row => ({ key: canonical(row.key), row }));
   names.sort((a, b) => a.key < b.key ? -1 : a.key > b.key ? 1 : 0);
   for (let index = 1; index < names.length; index++) {
     if (names[index - 1].key === names[index].key) fail('LLBC-NAMES', 'duplicate short-name key');
   }
-  return sha(canonical({ ...llbc, translated: { ...translated,
+  const binding = canonical({ ...llbc, translated: { ...translated,
     options: { ...translated.options, dest_file: path.basename(translated.options.dest_file) },
-    short_names: names.map(entry => entry.row) } }));
+    short_names: names.map(entry => entry.row) } }, normalizeSpan);
+  for (const site of byFile.values()) {
+    if (site.seen !== 1) fail('LLBC-SPAN', `missing expansion ${site.file}:${site.line}`);
+  }
+  return sha(binding);
 }
 
 export const lanes = [

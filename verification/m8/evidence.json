@@ -1,0 +1,203 @@
+{
+  "schema": "noble-m8-evidence/v1",
+  "milestone": "M8",
+  "date": "2026-09-26",
+  "result": "passed",
+  "scope": "Selected finite Choreography-Service-M8: one/two-round strict UTF-8 JSON data-descriptor projection, serialized host-owned M7 dataspace admission/monitor and separately compiled Noble publisher/subscriber components linked by an independent typed Wasmtime peer; general choreography and wider profiles remain open.",
+  "requirements": [
+    "S-CONC-09",
+    "WI-SYN-05"
+  ],
+  "build": {
+    "result": "built",
+    "receipt": "build.json",
+    "receipt_sha256": "3c95eb7ae6c1322934ee80a18d67e252e00f64d6bfcc153929551a10c91dc163",
+    "source_revision": "sha256:471c7003e4ca76a5cc4b4cca9af1ae49ea7b8d939c91aa93c378c3b9e7a5b0a9",
+    "binary_sha256": "9ecbac84d84f28eda5cecb5d688003e087b4dc20b29640f51c3431a547fb4f51",
+    "peer_sha256": "4112153cb39f156b688a9c30522af8012622b8d4c1368a1e9b410ef68c919310"
+  },
+  "runtime": {
+    "result": "passed",
+    "receipt": "acceptance.json",
+    "receipt_sha256": "a02c47bda7f69040ee6f0a0bb2ca9019e0bfe615efb08dfdaa7388bc5da3bf0d",
+    "source_revision": "sha256:471c7003e4ca76a5cc4b4cca9af1ae49ea7b8d939c91aa93c378c3b9e7a5b0a9",
+    "cases": [
+      "S-CASE-18",
+      "S-CASE-19",
+      "WI-19",
+      "WI-20"
+    ],
+    "variants": 38,
+    "strict_json_edges": 10,
+    "one_round_reservations": 3,
+    "recorded_commands": 22,
+    "compiled_participants": 2,
+    "compiled_components": 7,
+    "component_shas": {
+      "publisher": "6341b110b6c4595822d6e84814167836d6f58d8ae8436403bb72d53ccdd02074",
+      "subscriber": "e0d9d4bc11f996cbd4a2f055357433cc96b6424608ceb4729928c26e9b6a907b",
+      "wrong-version": "c289dfb203725d22cd250503b30bb69cfa21ad96e945aa3070b1126e3d28b85b",
+      "wrong-signature": "822d779d58cce584aa8023bd26fd0aba6e4176628e933a603719785231feb533",
+      "bad-import-identity": "0ce38e02d8b3ecbbcc47c08cac6c6d0420da05924c34344ee7b7e6163fa3697d",
+      "bad-import-arguments": "747bc7e94623f12cc805f8bb1ab419e9460659b55407523e65d8db80242c6146",
+      "missing-fail": "bb9c691b8a31be620bcc850b1e34c5a0d483a86e3be1cbba4fd5b39e2800c327"
+    },
+    "exact_wit_patch_refusal": {
+      "interface": "noble:syndicate/dataspace@1.0.1",
+      "component_sha256": "c289dfb203725d22cd250503b30bb69cfa21ad96e945aa3070b1126e3d28b85b",
+      "outcome": "reject",
+      "stage": "link",
+      "facet_rights_created": 0,
+      "guest_invoked": false,
+      "before_equals_after": true
+    },
+    "scope_note": "Four canonical cases and all 38 declared variants pass from freshly compiled source, including ten strict JSON controls, three one-round reservation controls and actual @1.0.1 component rejection at typed linking before guest or facet effects."
+  },
+  "extraction": {
+    "result": "passed",
+    "receipt": "extraction.json",
+    "receipt_sha256": "b0a6247c2131cef4a6fc045d7fcad4f85fc01c5ef18b87edc2f5a67b615fdd3f",
+    "source_revision": "sha256:0f496de6593db5cf9c757c8b2a6771a11cd2837e3c15de019f5fcc0bcb86472b",
+    "source_files": 562,
+    "reviewed_lock": "../m4/extraction-lock.json",
+    "reviewed_lock_sha256": "579bf5c5481e9f24c94fc8d2f5c2a145c17f3a3c112c3cc1be955bb5e0bb5b9c",
+    "pure_implementation_roots": [
+      {
+        "declaration": "noble_kernel.dataspace.admit_shared_memory",
+        "def_id": 31
+      },
+      {
+        "declaration": "noble_kernel.dataspace.decide_publication",
+        "def_id": 32
+      },
+      {
+        "declaration": "noble_kernel.dataspace.permits",
+        "def_id": 33
+      }
+    ],
+    "strict_theorem_roots": [
+      {
+        "declaration": "M7Syndicate.publication_refines",
+        "axioms": [
+          "propext",
+          "Quot.sound"
+        ]
+      },
+      {
+        "declaration": "M7Syndicate.permission_refines",
+        "axioms": [
+          "propext",
+          "Quot.sound"
+        ]
+      },
+      {
+        "declaration": "M7Syndicate.shared_memory_refines",
+        "axioms": [
+          "propext",
+          "Quot.sound"
+        ]
+      },
+      {
+        "declaration": "M7Syndicate.shared_memory_refused",
+        "axioms": [
+          "propext",
+          "Quot.sound"
+        ]
+      },
+      {
+        "declaration": "M7Syndicate.publish_right_required",
+        "axioms": [
+          "propext",
+          "Quot.sound"
+        ]
+      },
+      {
+        "declaration": "M7Syndicate.observe_right_required",
+        "axioms": [
+          "propext",
+          "Quot.sound"
+        ]
+      },
+      {
+        "declaration": "M7Syndicate.duplicate_publication_unchanged",
+        "axioms": [
+          "propext",
+          "Quot.sound"
+        ]
+      },
+      {
+        "declaration": "M7Syndicate.changed_publication_replaces",
+        "axioms": [
+          "propext",
+          "Quot.sound"
+        ]
+      },
+      {
+        "declaration": "M7Syndicate.first_publication_adds",
+        "axioms": [
+          "propext",
+          "Quot.sound"
+        ]
+      }
+    ],
+    "strict_axioms": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "m7_refusal_controls": 37,
+    "total_refusal_controls": 265,
+    "qualification": "Exactly three compiler-ID-joined pure actual-Rust M7 dataspace functions retain nine strict Lean theorems at DefIDs 31/32/33; all 265 inherited/renewed mutation controls refuse. M8 parser, projector, monitor, adapter, host and engine bodies have no new universal refinement theorem."
+  },
+  "source_inventory": {
+    "result": "valid",
+    "policy": "../../policy/source-inventory.json",
+    "policy_sha256": "1c0f58ce73d857b48542e5b8467e76b4578399bd2ee10d5e3a0ff9729235b7da",
+    "workspace_units": 30,
+    "authored_bodies": 2087,
+    "open_refinement_obligations": 2087,
+    "generated_paths": 2026,
+    "structural_paths": 939,
+    "production_paths": 5052,
+    "production_item_facts": 5153,
+    "test_paths": 1120,
+    "macro_origins": 27,
+    "production_dependency_edges": 7,
+    "selected_tools": 13,
+    "approved_exceptions": 0,
+    "scope_note": "Complete 30-unit compiler-derived all-target source classification on the reviewed five-crate workspace; all 2087 authored production bodies remain conservative open refinement obligations, not proved by classification."
+  },
+  "quality": {
+    "pre_promotion_receipt": "assurance.json",
+    "pre_promotion_receipt_sha256": "43fc8c8ffebc888672b0113dc98ae8fc4263e7d8a0d4ab2b9fde275eb29f0dd4",
+    "source_revision": "sha256:50bbe0db0aac4cbc6f120e72ace4f199457ed46cd2d071a6b8e82a0d9c1ebf16",
+    "commands": 17,
+    "verified_gates": 11,
+    "published_deny_all": "passed",
+    "workspace_rust_tests": "passed-all-targets-all-features",
+    "workspace_clippy": "passed-all-targets-all-features-D-warnings",
+    "complete_nix_flake_check": "passed-keep-going-L",
+    "fresh_m7_regression": {
+      "assurance_gate": "m7-regression",
+      "receipt_sha256": "39ffbcb800754a60ce2772be085bab3855cb10cc4a36771406e942811caf993c",
+      "required_cases": 7,
+      "passed_cases": 7,
+      "variants": 16
+    },
+    "post_promotion_nix_checks": "nix-checks.json",
+    "scope_note": "All 17 freshly executed pre-promotion commands and 11 source-bound gates passed with zero failures or integrity faults, including published Octet deny-all and complete Nix flake. A distinct post-promotion archived-source documents/Cairn Nix receipt must bind later staged contract changes."
+  },
+  "assumptions": [
+    "Pinned Wasmtime 40, the selected compiler/wasm-tools/Node/Cargo/Nix/Octet/Charon/Aeneas/Lean and host OS provide trustworthy execution and checking of the recorded byte-identical inputs; hashes are provenance, not semantic proofs.",
+    "Trusted host serialization, authentic component role/facet assignments, callback provenance, actual component Store separation, trap reporting and physical cleanup remain embedding obligations.",
+    "The retained strict Lean proof is scoped to three compiler-ID-joined pure M7 Rust dataspace functions under the reviewed source lock; M8 parser/monitor/adapter/engine correspondence remains open.",
+    "Host-only verification used a user-owned disk-backed private /tmp bind and read-only user/system SSH configuration copies retaining host-key checking set to ask; no SSH key-agent authorization of fetches is asserted.",
+    "The user-owned private Nix configuration copy (SHA-256 226289cf0b807ab6e17058b1a6f3410d9560643d6e2e27edb9b9a5c1a1215013) removed unreachable private extra-substituters and set min-free/max-free to zero client-side; the daemon ignored those client-only GC settings. Signature checking and sandboxing remained enabled (require-sigs=true, sandbox=true), with user-owned GC roots retaining pinned Cairn and source-bound Nix outputs. The selected source-bound Nix commands also used the exact client CLI option --option builders '' to schedule local builds instead of the unusable shared-daemon grpc/aspen remote builder lock; original signed substitutes, sandbox, pinned tools and per-command timeouts were preserved. The isolated user-store pilot encountered a pinned Valence source HTTP 404 and is not an accepted gate."
+  ],
+  "non_claims": [
+    "Not general Syndicate/Synit, arbitrary Preserves, user-defined/general choreography, new WIT world or facet authority, full Component-Draft or general WASI conformance.",
+    "Not native async scheduling, distributed exactly-once delivery, remote transport fairness/progress, durability or a process-memory bound.",
+    "Not universal parser, projector, monitor, adapter, host, ABI, engine, compiler or all 2087 authored-production-body refinement.",
+    "Not a replacement for fresh M7 regression, independent M5/M6 acceptance, actual-source extraction, or the separate final archived-source documents/Cairn Nix check."
+  ]
+}

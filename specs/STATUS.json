@@ -6,7 +6,7 @@
   "canonical_spec": "README.md",
   "canonical_family_exists": true,
   "compiler_exists": true,
-  "compiler_scope": "Core-Bootstrap source parsing, immutable resolution and rank-1 named inference produce finite untrusted candidates; independent kernel acceptance precedes selected managed-linear-memory Wasm emission. Experimental MC1-v1 and the bounded M3 comparison remain separate scopes. MC2-v1 adds exact companion admission and proof-required builds under separately recorded source and host assumptions. Component-Sync-Bootstrap independently checks generated WIT bindings and emits validated synchronous components; it does not extend the resource-free session runtime. Component-Async-Bootstrap separately compiles selected direct-style WIT async imports/exports into native Component Model async lowering without adding guest concurrency syntax. The selected M7 synchronous noble:syndicate/service@1.0.0 world independently compiles four typed imports and four exports without general Syndicate or native async guest semantics.",
+  "compiler_scope": "Core-Bootstrap source parsing, immutable resolution and rank-1 named inference produce finite untrusted candidates; independent kernel acceptance precedes selected managed-linear-memory Wasm emission. Experimental MC1-v1 and the bounded M3 comparison remain separate scopes. MC2-v1 adds exact companion admission and proof-required builds under separately recorded source and host assumptions. Component-Sync-Bootstrap independently checks generated WIT bindings and emits validated synchronous components; it does not extend the resource-free session runtime. Component-Async-Bootstrap separately compiles selected direct-style WIT async imports/exports into native Component Model async lowering without adding guest concurrency syntax. The selected M7 synchronous noble:syndicate/service@1.0.0 world independently compiles four typed imports and four exports without general Syndicate or native async guest semantics. M8 reuses that unchanged world; its finite descriptor and projector are host-owned data, not new compiler syntax or WIT authority.",
   "runtime_exists": true,
   "proof_implementation_exists": true,
   "verification_policy": {
@@ -18,10 +18,10 @@
     "verus": "reviewed-non-kernel-exceptions-only",
     "coverage_inventory": "reviewed-with-open-refinement",
     "coverage_record": "../policy/source-inventory.json",
-    "body_obligations": 2006,
-    "open_refinement_obligations": 2006,
-    "coverage_scope": "Complete 29-unit all-target compiler-derived source classification covering noble-kernel, noble-contracts, noble-wasm, noble-cli and noble-syndicate; all 2006 authored production bodies remain open refinement obligations. The 1861 generated and 879 structural paths are separate accounting, not proved bodies; reviewed exceptions remain empty.",
-    "extraction_scope": "Whole kernel, frontend and compiler actual-Rust Charon/Aeneas/Lean extraction and dependency/axiom accounting; independent frontend and compiler environments avoid pinned Aeneas discriminant collisions. Successful extraction and compiled audits are not universal refinement. The separately fresh M7 strict lane checks nine Lean roots for exactly three compiler-ID-joined pure Rust dataspace functions; table, wire, host, adapter and engine refinement remain open.",
+    "body_obligations": 2087,
+    "open_refinement_obligations": 2087,
+    "coverage_scope": "Complete 30-unit all-target compiler-derived source classification covering noble-kernel, noble-contracts, noble-wasm, noble-cli and noble-syndicate; all 2087 authored production bodies remain open refinement obligations. The 2026 generated and 939 structural paths are separate accounting, not proved bodies; 5052 reviewed production paths, 1120 test paths and empty reviewed exceptions have independent source-coverage evidence.",
+    "extraction_scope": "Whole kernel, frontend and compiler actual-Rust Charon/Aeneas/Lean extraction and dependency/axiom accounting; independent frontend and compiler environments avoid pinned Aeneas discriminant collisions. Successful extraction and compiled audits are not universal refinement. The fresh M7 strict lane retains nine Lean roots for exactly three compiler-ID-joined pure Rust dataspace functions, checked again in M8 whole-crate extraction with 265 inherited refusal controls. M8 parser, projector, monitor, adapter, host and engine refinement remain open; tests and the inventory do not discharge those authored-body obligations.",
     "m4_extraction_acceptance": "passed-independent-whole-crate-check-and-27-refusal-controls",
     "mc2_extraction_acceptance": "passed-independent-whole-crate-check-and-28-refusal-controls",
     "independent_proof_records": [
@@ -32,7 +32,8 @@
       "../verification/mc2/extraction.json",
       "../verification/m5/extraction.json",
       "../verification/m6/extraction.json",
-      "../verification/m7/extraction.json"
+      "../verification/m7/extraction.json",
+      "../verification/m8/extraction.json"
     ],
     "approved_exceptions": [],
     "m5_extraction_acceptance": "passed-independent-whole-crate-check-seven-strict-resource-roots-and-52-refusal-controls",
@@ -704,6 +705,85 @@
       "acceptance": "passed",
       "acceptance_scope": "Bounded local synchronous selected world only; a separate post-promotion documents/Cairn Nix receipt binds the archived canonical source.",
       "completion_record": "../verification/m7/evidence.json"
+    },
+    {
+      "id": "choreography-profile",
+      "implementation": "partial",
+      "execution": "passed",
+      "proof": "open",
+      "trust": "explicit",
+      "evidence": [
+        {
+          "claim": "The four selected M8 cases and all 38 hostile variants pass against independently compiled Noble participants and a typed independent Wasmtime peer, including ten strict JSON boundary mutations and three one-round capacity reservations; general choreography remains unaccepted.",
+          "subject": "choreography-profile",
+          "revision": "0.1.0-draft.5",
+          "kind": "test",
+          "result": "passed",
+          "source_revision": "sha256:471c7003e4ca76a5cc4b4cca9af1ae49ea7b8d939c91aa93c378c3b9e7a5b0a9",
+          "configuration": {
+            "profile": "Selected-Finite-Choreography-M8",
+            "receipt": "../verification/m8/acceptance.json",
+            "receipt_sha256": "a02c47bda7f69040ee6f0a0bb2ca9019e0bfe615efb08dfdaa7388bc5da3bf0d",
+            "build": "../verification/m8/build.json",
+            "build_sha256": "3c95eb7ae6c1322934ee80a18d67e252e00f64d6bfcc153929551a10c91dc163",
+            "binary_sha256": "9ecbac84d84f28eda5cecb5d688003e087b4dc20b29640f51c3431a547fb4f51",
+            "peer_sha256": "4112153cb39f156b688a9c30522af8012622b8d4c1368a1e9b410ef68c919310",
+            "cases": 4,
+            "variants": 38,
+            "strict_json_edges": 10,
+            "one_round_reservations": 3,
+            "fresh_m7_regression_cases": 7,
+            "fresh_m7_regression_variants": 16
+          },
+          "assumptions": [
+            "Trusted host serialization, authentic role/facet assignment and callback provenance, Wasmtime ABI/engine correctness and physical cleanup remain embedding obligations.",
+            "This finite synchronous selected profile is not general choreography, a new WIT world, general Syndicate or a distributed progress guarantee."
+          ]
+        },
+        {
+          "claim": "Fresh whole-crate extraction retains the three compiler-ID-joined pure M7 Rust dataspace functions and nine strict Lean roots with all 265 inherited refusal controls; none proves M8 parser, projector, monitor, adapter, host or engine refinement.",
+          "subject": "choreography-profile",
+          "revision": "0.1.0-draft.5",
+          "kind": "aeneas-lean",
+          "result": "accepted",
+          "source_revision": "sha256:0f496de6593db5cf9c757c8b2a6771a11cd2837e3c15de019f5fcc0bcb86472b",
+          "configuration": {
+            "profile": "Selected-Finite-Choreography-M8",
+            "receipt": "../verification/m8/extraction.json",
+            "receipt_sha256": "b0a6247c2131cef4a6fc045d7fcad4f85fc01c5ef18b87edc2f5a67b615fdd3f",
+            "reviewed_lock": "../verification/m4/extraction-lock.json",
+            "reviewed_lock_sha256": "579bf5c5481e9f24c94fc8d2f5c2a145c17f3a3c112c3cc1be955bb5e0bb5b9c",
+            "pure_implementation_roots": [
+              {
+                "declaration": "noble_kernel.dataspace.admit_shared_memory",
+                "def_id": 31
+              },
+              {
+                "declaration": "noble_kernel.dataspace.decide_publication",
+                "def_id": 32
+              },
+              {
+                "declaration": "noble_kernel.dataspace.permits",
+                "def_id": 33
+              }
+            ],
+            "strict_theorem_roots": 9,
+            "m7_refusal_controls": 37,
+            "total_refusal_controls": 265,
+            "authored_body_obligations": 2087
+          },
+          "assumptions": [
+            "The nine inherited Lean roots concern only three pure actual Rust dataspace functions at compiler DefIDs 31/32/33; the M8 parser, projector, monitor, adapter, host and engine are open.",
+            "Pinned Rust/Charon/Aeneas/Lean, explicit models and reviewed inherited opaque kernel helpers remain trusted tooling and model boundaries; extraction/accounting alone does not discharge refinement."
+          ]
+        }
+      ],
+      "implementation_scope": "Selected finite synchronous JSON choreography descriptor parser, deterministic projection and host-owned admission/monitor decisions over the unchanged M7 service world; general choreography remains open.",
+      "execution_scope": "S-CASE-18/19 and WI-19/20 pass every declared observation and all 38 hostile variants, including ten strict JSON edges and three one-round capacity reservations. Compiled publisher/subscriber participants interact with an independent typed Wasmtime 40 peer, and fresh M7 regressions retain seven cases and sixteen variants.",
+      "milestone": "M8",
+      "acceptance": "passed",
+      "acceptance_scope": "Bounded selected local synchronous choreography only; a separate post-promotion documents/Cairn Nix receipt binds archived canonical source.",
+      "completion_record": "../verification/m8/evidence.json"
     }
   ],
   "profile_status": {
@@ -712,16 +792,16 @@
     "synchronous_components": "bounded-contract-draft",
     "full_async": "bounded-native-component-async",
     "syndicate": "bounded-local-synchronous-service; full-Syndicate-profile-open",
-    "choreography": "deferred",
+    "choreography": "selected-bounded-M8-local-synchronous-service; execution-passed; general-choreography-and-refinement-open",
     "durability": "optional-deferred"
   },
-  "next_milestone": "M8",
+  "next_milestone": null,
   "historical_snapshot": "../noble-project-handoff-2026-09-12/",
   "non_claims": [
     "Only CORE-01 through CORE-18 and scoped DX-10/DX-12 are promoted by M4; other draft profiles retain their independently scoped evidence states",
     "No universal proof of the complete Rust checker, contract frontend, exporter, or CLI",
     "No stable language or component conformance",
-    "No whole-project verification claim; all 2006 authored-production-body source-inventory refinement obligations remain open",
+    "No whole-project verification claim; all 2087 authored-production-body source-inventory refinement obligations remain open",
     "Managed linear memory implements the selected M4 resource-free Core-Bootstrap scope; no universal backend or physical-memory superiority claim",
     "M4 completion is scoped to resource-free Core-Bootstrap and its mandatory runtime workflows, not the full language or later milestones",
     "MC2-v1 remains scoped to resource-free Core-Bootstrap; broad PO-16/20/21 and universal host/backend correctness remain open. Separate M5 evidence owns the bounded synchronous resource/component slice.",
@@ -730,7 +810,8 @@
     "PO-17, PO-18 and SO-07 remain open; extraction, bounded tests and accounting do not establish universal frontend/kernel/compiler/backend refinement",
     "Physical GC allocation/reclamation and isolated engine memory peaks remain unknown",
     "No zerocopy dependency selected",
-    "The accepted M7 local synchronous service is not general Syndicate/Synit, general Preserves, transport fairness, distributed exactly-once, durability, stable WASI, general Component-Draft, native async use or universal engine/host refinement. Only three pure actual-Rust dataspace roots have scoped strict Lean theorems; all 2006 inventory body obligations stay open."
+    "The accepted M7 local synchronous service is not general Syndicate/Synit, general Preserves, transport fairness, distributed exactly-once, durability, stable WASI, general Component-Draft, native async use or universal engine/host refinement. Only three pure actual-Rust dataspace roots have scoped strict Lean theorems; all 2087 current inventory body obligations stay open.",
+    "M8 selected finite local synchronous choreography acceptance is not general choreography, arbitrary untrusted descriptor admission, a new WIT world, cross-host progress, native async or universal parser, projector, monitor, adapter, host, engine or compiler refinement."
   ],
-  "runtime_scope": "Selected managed-linear-memory Core-Bootstrap source-to-kernel-to-Wasm execution and persistent compiled sessions, with explicit resource-free hosts, preparation limits and runtime quotas. All 18 CORE cases, 11 runtime controls and scoped DX-10/DX-12 runtime workflows pass; the two-representation M3 experiment remains separate regression evidence. MC2-v1 first-class contract/evidence/certified inputs, results, aggregates, composition, runtime-capture instantiation and guarded invocation pass all fifteen CONTRACT cases and declared variants. The separate Component-Sync-Bootstrap path passes 24 selected component/resource/authority cases and 84 variants using an independent typed peer, explicit raw-core boundary probes and native policy controls. Component-Async-Bootstrap separately passes 38 selected native variants and 62 controls through the compiled Noble/independent-peer and local ownership/progress lanes; it does not extend the resource-free session runtime or complete worker services. The selected M7 synchronous local service separately passes seven case families and sixteen hostile variants through two independently compiled Noble participants and an independently typed Wasmtime 40 peer, using production dataspace, bounded Preserves admission and explicit host-bound facet/trap retirement; it is not a deployable general Syndicate or full Component-Draft/WASI runtime."
+  "runtime_scope": "Selected managed-linear-memory Core-Bootstrap source-to-kernel-to-Wasm execution and persistent compiled sessions, with explicit resource-free hosts, preparation limits and runtime quotas. All 18 CORE cases, 11 runtime controls and scoped DX-10/DX-12 runtime workflows pass; the two-representation M3 experiment remains separate regression evidence. MC2-v1 first-class contract/evidence/certified inputs, results, aggregates, composition, runtime-capture instantiation and guarded invocation pass all fifteen CONTRACT cases and declared variants. The separate Component-Sync-Bootstrap path passes 24 selected component/resource/authority cases and 84 variants using an independent typed peer, explicit raw-core boundary probes and native policy controls. Component-Async-Bootstrap separately passes 38 selected native variants and 62 controls through the compiled Noble/independent-peer and local ownership/progress lanes; it does not extend the resource-free session runtime or complete worker services. The selected M7 synchronous local service separately passes seven case families and sixteen hostile variants through two independently compiled Noble participants and an independently typed Wasmtime 40 peer, using production dataspace, bounded Preserves admission and explicit host-bound facet/trap retirement; it is not a deployable general Syndicate or full Component-Draft/WASI runtime. The selected M8 finite synchronous choreography parser, projection and host-owned monitor over that same M7 world separately pass four cases and 38 variants, including strict JSON boundary refusal and one-round reservations. General choreography and correspondence of parser, projector, monitor, adapter, host and engine remain open."
 }

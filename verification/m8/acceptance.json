@@ -1,0 +1,5187 @@
+{
+  "schema": "noble-m8-acceptance/v1",
+  "profile": "Choreography-Service-M8",
+  "result": "passed",
+  "source_root": "/home/brittonr/git/noble",
+  "artifact_directory": "/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8",
+  "sources": {
+    "verification/m8/gate.mjs": {
+      "sha256": "7eea4e1cc8f6b5faad28a17b47613f1a48eec1bd9f235853463c25481c5932d8",
+      "bytes": 37338,
+      "snapshot": "sources/verification/m8/gate.mjs"
+    },
+    "verification/m8/build.mjs": {
+      "sha256": "8efa73e49985a9b9640c35b817b09cfaf6022ede74591faeb04b0024aed46be1",
+      "bytes": 10680,
+      "snapshot": "sources/verification/m8/build.mjs"
+    },
+    "verification/m8/assurance.mjs": {
+      "sha256": "8a6ddb6051b85b5017f4b89bcc0da0de84f0c5c2d341b06f814300dcd08702d0",
+      "bytes": 24467,
+      "snapshot": "sources/verification/m8/assurance.mjs"
+    },
+    "verification/m8/source-projection.mjs": {
+      "sha256": "30862a4d3f6805a71ba69f9a0c9a78ff48cbfb53fb5d78b0b3d423fb70bfec18",
+      "bytes": 3785,
+      "snapshot": "sources/verification/m8/source-projection.mjs"
+    },
+    "verification/m8/final-documents.mjs": {
+      "sha256": "b050e1bb19c93d70e681735d5dd7bc879971f36cd8f62676c705d9a72238022c",
+      "bytes": 23426,
+      "snapshot": "sources/verification/m8/final-documents.mjs"
+    },
+    "crates/noble-wasm/wit/syndicate.wit": {
+      "sha256": "ac3ef5e4db79abf387bd6950451675e998202f0adc02f8e6340e26446f230762",
+      "bytes": 509,
+      "snapshot": "sources/crates/noble-wasm/wit/syndicate.wit"
+    },
+    "crates/noble-syndicate/Cargo.toml": {
+      "sha256": "111546759bcc1665f5575e63f08f9f464ba1ce28d1cf6596aaf49cda659f78f2",
+      "bytes": 196,
+      "snapshot": "sources/crates/noble-syndicate/Cargo.toml"
+    },
+    ".cairn/specs/safety/spec.md": {
+      "sha256": "d7327a3fec8c08212da7f07b52a5346325cb6fb3bb5f015c0ed00f7ab559514a",
+      "bytes": 61598,
+      "snapshot": "sources/.cairn/specs/safety/spec.md"
+    },
+    ".cairn/specs/wit-wasi/spec.md": {
+      "sha256": "2caec07607b46dc3ed665bcbaa898a194ad22c50f50a39d05fdfcb022064fe67",
+      "bytes": 80723,
+      "snapshot": "sources/.cairn/specs/wit-wasi/spec.md"
+    },
+    "specs/conformance/safety-cases.json": {
+      "sha256": "f9536c4610eaff902e1b5984b2fb75bcf2326c14a2ae135e1bfb02496909165e",
+      "bytes": 22036,
+      "snapshot": "sources/specs/conformance/safety-cases.json"
+    },
+    "specs/conformance/wit-wasi-cases.json": {
+      "sha256": "5173a64c23cf069bb68fd63d1958e81382b3c8973f5bfbe2a88862e21967dcc3",
+      "bytes": 30039,
+      "snapshot": "sources/specs/conformance/wit-wasi-cases.json"
+    },
+    "verification/m8/peer/Cargo.toml": {
+      "sha256": "4e18fb85bc469b42cc01860b7a7e7c76e417af3fe1a5cf08f1d070e61edfec06",
+      "bytes": 516,
+      "snapshot": "sources/verification/m8/peer/Cargo.toml"
+    },
+    "policy/architecture.ncl": {
+      "sha256": "5fc93ddc73de52fbf50e0298d75be92e3d0dc9b5bfec9fa6b01d2104ae730b8b",
+      "bytes": 15709,
+      "snapshot": "sources/policy/architecture.ncl"
+    },
+    "policy/source-inventory.json": {
+      "sha256": "1c0f58ce73d857b48542e5b8467e76b4578399bd2ee10d5e3a0ff9729235b7da",
+      "bytes": 1846934,
+      "snapshot": "sources/policy/source-inventory.json"
+    },
+    "policy/tool-selection.json": {
+      "sha256": "311fb6ab6c55fae3c199b0c419698043be4d078c4fe07fbb5d9297f2b6f9ed49",
+      "bytes": 19069,
+      "snapshot": "sources/policy/tool-selection.json"
+    },
+    "verification/m4/extraction-lock.json": {
+      "sha256": "579bf5c5481e9f24c94fc8d2f5c2a145c17f3a3c112c3cc1be955bb5e0bb5b9c",
+      "bytes": 67971119,
+      "snapshot": "sources/verification/m4/extraction-lock.json"
+    },
+    "crates/noble-kernel/src/dataspace/mod.rs": {
+      "sha256": "5ba97535f38318bc3a11ba0c6c0122a8fac7f42d22d92e0dba5c5b948c40fd6f",
+      "bytes": 3593,
+      "snapshot": "sources/crates/noble-kernel/src/dataspace/mod.rs"
+    },
+    "crates/noble-kernel/src/dataspace/table/actions.rs": {
+      "sha256": "ab02f1a631cb1958c38bed12bbd3ad417380193012de5c30322329b74850d1a2",
+      "bytes": 10921,
+      "snapshot": "sources/crates/noble-kernel/src/dataspace/table/actions.rs"
+    },
+    "crates/noble-kernel/src/dataspace/table.rs": {
+      "sha256": "568bb6249883a3dd4821b8adbc00d28f690933868805019147a0d06a832771de",
+      "bytes": 6712,
+      "snapshot": "sources/crates/noble-kernel/src/dataspace/table.rs"
+    },
+    "crates/noble-kernel/src/dataspace/wire.rs": {
+      "sha256": "38b722dcbe36f6d986be105a76fd17472e5c8d72a126c1db813c7878d1915d08",
+      "bytes": 4811,
+      "snapshot": "sources/crates/noble-kernel/src/dataspace/wire.rs"
+    },
+    "crates/noble-syndicate/src/choreography/json/scan.rs": {
+      "sha256": "18fc514097bee497f75dde67b00a8a64a381241fc758decb13041890a496d006",
+      "bytes": 8067,
+      "snapshot": "sources/crates/noble-syndicate/src/choreography/json/scan.rs"
+    },
+    "crates/noble-syndicate/src/choreography/json.rs": {
+      "sha256": "d1ec5b3cd4ee6820bff0f62bc0e23dc5b90cccb6aef499f4a976a17b24a98736",
+      "bytes": 4469,
+      "snapshot": "sources/crates/noble-syndicate/src/choreography/json.rs"
+    },
+    "crates/noble-syndicate/src/choreography/monitor/admit.rs": {
+      "sha256": "7fbc9257b164c748870ce6826a1ed6c15a0822643bc753ee8fe6ce093ca83bc9",
+      "bytes": 4350,
+      "snapshot": "sources/crates/noble-syndicate/src/choreography/monitor/admit.rs"
+    },
+    "crates/noble-syndicate/src/choreography/monitor/drive.rs": {
+      "sha256": "30d78e469e8936fa746bb5b22f552a797e62da9b8dc54cbde85f891b4db9c966",
+      "bytes": 8967,
+      "snapshot": "sources/crates/noble-syndicate/src/choreography/monitor/drive.rs"
+    },
+    "crates/noble-syndicate/src/choreography/monitor.rs": {
+      "sha256": "28ffda5d421576e5939fc0021a2dfd9da0c3e3dc86987cb0315ee383f5e4a5d9",
+      "bytes": 4965,
+      "snapshot": "sources/crates/noble-syndicate/src/choreography/monitor.rs"
+    },
+    "crates/noble-syndicate/src/choreography/projection.rs": {
+      "sha256": "c2221019dddc5dc344393cfb2c1a2c9c460c159bb60f83896d7267944a772fb0",
+      "bytes": 5796,
+      "snapshot": "sources/crates/noble-syndicate/src/choreography/projection.rs"
+    },
+    "crates/noble-syndicate/src/choreography.rs": {
+      "sha256": "fee989ce55befc8a59d75287b7949d6ca621e1ed032371ebf51fd81272bef80d",
+      "bytes": 2942,
+      "snapshot": "sources/crates/noble-syndicate/src/choreography.rs"
+    },
+    "crates/noble-syndicate/src/lib.rs": {
+      "sha256": "c9eb69a8904a09ea496c9ecc5a6b65160869e1c04e01cd585df4af44a69abed8",
+      "bytes": 7996,
+      "snapshot": "sources/crates/noble-syndicate/src/lib.rs"
+    },
+    "verification/m8/peer/src/main.rs": {
+      "sha256": "d9642779819fd9fc31a8f8acb004e32833005e42fd0f9abc5e1c693794e4c622",
+      "bytes": 44130,
+      "snapshot": "sources/verification/m8/peer/src/main.rs"
+    },
+    ".cairn/changes/m8-choreography-projection/design.md": {
+      "sha256": "3ef7caa33d3e5721b2671d4659f4c2ddcc47b59fa1c7a724a6659fc4c2a11319",
+      "bytes": 9792,
+      "snapshot": "sources/.cairn/changes/m8-choreography-projection/design.md"
+    },
+    ".cairn/changes/m8-choreography-projection/metadata.json": {
+      "sha256": "a6fd5ca231a3bb7b2746437ddfeea40804e0b37172b383ad5cf5ca2bf064d0a9",
+      "bytes": 105,
+      "snapshot": "sources/.cairn/changes/m8-choreography-projection/metadata.json"
+    },
+    ".cairn/changes/m8-choreography-projection/proposal.md": {
+      "sha256": "46ba98ead4a41615c076e8bdc94cd5fad2001cb13d9f106be0f48b09cbb635c3",
+      "bytes": 2739,
+      "snapshot": "sources/.cairn/changes/m8-choreography-projection/proposal.md"
+    },
+    ".cairn/changes/m8-choreography-projection/specs/safety/spec.md": {
+      "sha256": "e068a600451a56f7e196ff72641871805dda932429d4482c16e3111241d59495",
+      "bytes": 7457,
+      "snapshot": "sources/.cairn/changes/m8-choreography-projection/specs/safety/spec.md"
+    },
+    ".cairn/changes/m8-choreography-projection/specs/wit-wasi/spec.md": {
+      "sha256": "e853b04ebcaeafcf3b541583a7d7048acf421c1840130025f92f1e102edcd2f0",
+      "bytes": 3248,
+      "snapshot": "sources/.cairn/changes/m8-choreography-projection/specs/wit-wasi/spec.md"
+    },
+    ".cairn/changes/m8-choreography-projection/tasks.md": {
+      "sha256": "a658e0d0a79b0b19912e1db8b2135d90ff682dcb8f175d9744a99cdefc07e57e",
+      "bytes": 2371,
+      "snapshot": "sources/.cairn/changes/m8-choreography-projection/tasks.md"
+    }
+  },
+  "executables": {
+    "cli": {
+      "original": "/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/build/m7/base/executables/cli",
+      "frozen": "/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/executables/cli",
+      "sha256": "9ecbac84d84f28eda5cecb5d688003e087b4dc20b29640f51c3431a547fb4f51",
+      "bytes": 15832000
+    },
+    "peer": {
+      "original": "/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/build/executables/m8-peer",
+      "frozen": "/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/executables/peer",
+      "sha256": "4112153cb39f156b688a9c30522af8012622b8d4c1368a1e9b410ef68c919310",
+      "bytes": 203622552
+    },
+    "wasm_tools": {
+      "original": "/nix/store/2n9b5yzj7n8jlnglp60gd5nmfjnf4xhf-wasm-tools-1.245.1/bin/wasm-tools",
+      "frozen": "/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/executables/wasm_tools",
+      "sha256": "30b6ccb08b58d6159f196eb3d21beea1dcfcf9ec2948a791e32aad95f6d91d2f",
+      "bytes": 21245664
+    },
+    "node": {
+      "original": "/nix/store/h4apbnz8p5fmjwcmzlaxcjm5vr70d97x-nodejs-slim-24.13.0/bin/node",
+      "frozen": "/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/executables/node",
+      "sha256": "ad2d5c03bb247d3690f8baf48b2aac572fe0ed5252b4c5bdcfa7987a169b8f3b",
+      "bytes": 71432512
+    }
+  },
+  "inputs": {
+    "specs/conformance/safety-cases.json": {
+      "sha256": "f9536c4610eaff902e1b5984b2fb75bcf2326c14a2ae135e1bfb02496909165e",
+      "workload_sha256": "bac4b3f21fff602d9b22b2376573959c49e0c272bb05a1e4102961e75e754d7f",
+      "workload": [
+        {
+          "id": "S-CASE-18",
+          "input": {
+            "harness": "production-finite-service-projector",
+            "descriptor": {
+              "protocol": "noble:choreography/service@1.0.0",
+              "rounds": [
+                {
+                  "name": "clock",
+                  "ready": false,
+                  "exit": "withdraw"
+                },
+                {
+                  "name": "alarm",
+                  "ready": true,
+                  "exit": "trap"
+                }
+              ]
+            },
+            "descriptor_utf8": "{\"protocol\":\"noble:choreography/service@1.0.0\",\"rounds\":[{\"name\":\"clock\",\"ready\":false,\"exit\":\"withdraw\"},{\"name\":\"alarm\",\"ready\":true,\"exit\":\"trap\"}]}",
+            "descriptor_bytes": 151,
+            "world": "noble:syndicate/service@1.0.0"
+          },
+          "expected": {
+            "stage": "projection",
+            "outcome": "admitted",
+            "guest_requests": 0,
+            "protected_operations": 0,
+            "global_actions": [
+              {
+                "step": 0,
+                "round": 0,
+                "role": "subscriber",
+                "export": "observer",
+                "name": "clock",
+                "ready": false,
+                "result": false
+              },
+              {
+                "step": 1,
+                "round": 0,
+                "role": "publisher",
+                "export": "publisher",
+                "name": "clock",
+                "ready": false,
+                "result": true
+              },
+              {
+                "step": 2,
+                "round": 0,
+                "role": "subscriber",
+                "export": "observer",
+                "name": "clock",
+                "ready": false,
+                "result": true
+              },
+              {
+                "step": 3,
+                "round": 0,
+                "role": "publisher",
+                "export": "withdraw",
+                "name": "clock",
+                "result": true
+              },
+              {
+                "step": 4,
+                "round": 0,
+                "role": "subscriber",
+                "export": "observer",
+                "name": "clock",
+                "ready": false,
+                "result": false
+              },
+              {
+                "step": 5,
+                "round": 1,
+                "role": "subscriber",
+                "export": "observer",
+                "name": "alarm",
+                "ready": true,
+                "result": false
+              },
+              {
+                "step": 6,
+                "round": 1,
+                "role": "publisher",
+                "export": "publish-and-trap",
+                "name": "alarm",
+                "ready": true,
+                "result": "trap-after-publication"
+              },
+              {
+                "step": 7,
+                "round": 1,
+                "role": "subscriber",
+                "export": "observer",
+                "name": "alarm",
+                "ready": true,
+                "result": false
+              }
+            ],
+            "publisher_steps": [
+              1,
+              3,
+              6
+            ],
+            "subscriber_steps": [
+              0,
+              2,
+              4,
+              5,
+              7
+            ],
+            "descriptor_grants_authority": false,
+            "new_wit_world_created": false
+          }
+        },
+        {
+          "id": "S-CASE-19",
+          "input": {
+            "harness": "production-choreography-admission-and-monitor-refusals",
+            "baseline": {
+              "protocol": "noble:choreography/service@1.0.0",
+              "rounds": [
+                {
+                  "name": "clock",
+                  "ready": false,
+                  "exit": "withdraw"
+                },
+                {
+                  "name": "alarm",
+                  "ready": true,
+                  "exit": "trap"
+                }
+              ]
+            },
+            "descriptor_encoding": "strict-utf8-json",
+            "max_bytes": 512,
+            "max_container_depth": 3,
+            "baseline_utf8": "{\"protocol\":\"noble:choreography/service@1.0.0\",\"rounds\":[{\"name\":\"clock\",\"ready\":false,\"exit\":\"withdraw\"},{\"name\":\"alarm\",\"ready\":true,\"exit\":\"trap\"}]}",
+            "baseline_bytes": 151,
+            "pre_session_mutations": [
+              "wrong-protocol-version",
+              "unknown-field",
+              "wrong-ready-type",
+              "invalid-name",
+              "duplicate-name",
+              "zero-rounds",
+              "three-rounds",
+              "nonterminal-trap",
+              "513-byte-input",
+              "depth-four",
+              "invalid-utf8",
+              "duplicate-object-key",
+              "duplicate-round-key",
+              "trailing-content",
+              "nonempty-dataspace"
+            ],
+            "descriptor_byte_variants": {
+              "wrong-protocol-version": {
+                "utf8": "{\"protocol\":\"noble:choreography/service@2.0.0\",\"rounds\":[{\"name\":\"clock\",\"ready\":false,\"exit\":\"withdraw\"}]}"
+              },
+              "unknown-field": {
+                "utf8": "{\"protocol\":\"noble:choreography/service@1.0.0\",\"rounds\":[{\"name\":\"clock\",\"ready\":false,\"exit\":\"withdraw\",\"extra\":0}]}"
+              },
+              "wrong-ready-type": {
+                "utf8": "{\"protocol\":\"noble:choreography/service@1.0.0\",\"rounds\":[{\"name\":\"clock\",\"ready\":\"false\",\"exit\":\"withdraw\"}]}"
+              },
+              "invalid-name": {
+                "utf8": "{\"protocol\":\"noble:choreography/service@1.0.0\",\"rounds\":[{\"name\":\"!\",\"ready\":false,\"exit\":\"withdraw\"}]}"
+              },
+              "duplicate-name": {
+                "utf8": "{\"protocol\":\"noble:choreography/service@1.0.0\",\"rounds\":[{\"name\":\"clock\",\"ready\":false,\"exit\":\"withdraw\"},{\"name\":\"clock\",\"ready\":true,\"exit\":\"trap\"}]}"
+              },
+              "zero-rounds": {
+                "utf8": "{\"protocol\":\"noble:choreography/service@1.0.0\",\"rounds\":[]}"
+              },
+              "three-rounds": {
+                "utf8": "{\"protocol\":\"noble:choreography/service@1.0.0\",\"rounds\":[{\"name\":\"a\",\"ready\":false,\"exit\":\"withdraw\"},{\"name\":\"b\",\"ready\":false,\"exit\":\"withdraw\"},{\"name\":\"c\",\"ready\":true,\"exit\":\"withdraw\"}]}"
+              },
+              "nonterminal-trap": {
+                "utf8": "{\"protocol\":\"noble:choreography/service@1.0.0\",\"rounds\":[{\"name\":\"clock\",\"ready\":false,\"exit\":\"trap\"},{\"name\":\"alarm\",\"ready\":true,\"exit\":\"withdraw\"}]}"
+              },
+              "513-byte-input": {
+                "prefix": "baseline_utf8",
+                "append_ascii_space_count": 362,
+                "total_bytes": 513
+              },
+              "depth-four": {
+                "utf8": "{\"protocol\":\"noble:choreography/service@1.0.0\",\"rounds\":[{\"name\":\"clock\",\"ready\":false,\"exit\":\"withdraw\",\"extra\":[0]}]}"
+              },
+              "invalid-utf8": {
+                "prefix_utf8": "{\"protocol\":\"noble:choreography/service@1.0.0\",\"rounds\":[{\"name\":\"",
+                "insert_hex": "ff",
+                "suffix_utf8": "\",\"ready\":false,\"exit\":\"withdraw\"}]}"
+              },
+              "duplicate-object-key": {
+                "utf8": "{\"protocol\":\"noble:choreography/service@1.0.0\",\"protocol\":\"noble:choreography/service@1.0.0\",\"rounds\":[{\"name\":\"clock\",\"ready\":false,\"exit\":\"withdraw\"}]}"
+              },
+              "duplicate-round-key": {
+                "utf8": "{\"protocol\":\"noble:choreography/service@1.0.0\",\"rounds\":[{\"name\":\"clock\",\"ready\":false,\"ready\":false,\"exit\":\"withdraw\"}]}"
+              },
+              "trailing-content": {
+                "prefix": "baseline_utf8",
+                "append_utf8": "{}"
+              }
+            },
+            "pre_export_mutations": [
+              "wrong-role",
+              "out-of-order",
+              "replayed-step",
+              "wrong-export-publisher-instead-of-publish-and-trap",
+              "wrong-name",
+              "wrong-ready",
+              "foreign-facet",
+              "retired-facet",
+              "forged-rights",
+              "false-ready-mistaken-for-absence"
+            ],
+            "in_flight_mutations": [
+              "wrong-import-identity",
+              "wrong-import-arguments",
+              "missing-fail-after-trap-publication"
+            ],
+            "in_flight_injection_role": "publisher",
+            "baseline_cleanup_assertion_owned_before_in_flight_refusal": true
+          },
+          "expected": {
+            "stage": "production-boundaries",
+            "outcome": "reject-all-declared-mutations",
+            "pre_session": {
+              "typed_descriptors_created": 0,
+              "facet_rights_created": 0,
+              "guest_requests": 0,
+              "protected_operations": 0,
+              "dataspace_unchanged": true,
+              "byte_variant_rejection_stage": {
+                "513-byte-input": "pre-parse-length",
+                "depth-four": "pre-parse-depth",
+                "invalid-utf8": "pre-parse-utf8",
+                "duplicate-object-key": "typed-deserialize",
+                "duplicate-round-key": "typed-deserialize",
+                "trailing-content": "parser-end"
+              }
+            },
+            "pre_export": {
+              "cursor_unchanged": true,
+              "dataspace_unchanged": true,
+              "events_unchanged": true,
+              "rights_unchanged": true,
+              "guest_requests_unchanged": true,
+              "protected_operations_unchanged": true
+            },
+            "in_flight": {
+              "unauthorized_m7_operations": 0,
+              "unauthorized_protected_operations": 0,
+              "session_cursor_unchanged": true,
+              "mandatory_trap_cleanup_permitted": true,
+              "owned_assertions_retracted_on_trap": true,
+              "typed_removal_permitted": true,
+              "choreography_completed": false
+            }
+          }
+        }
+      ],
+      "interpretation": "complete exact canonical selected case inputs/expectations; metadata is not execution"
+    },
+    "specs/conformance/wit-wasi-cases.json": {
+      "sha256": "5173a64c23cf069bb68fd63d1958e81382b3c8973f5bfbe2a88862e21967dcc3",
+      "workload_sha256": "7b8a1a253d9b0401657d0ad1b2cd6813e107ea462594fa377603873d976a4c8d",
+      "workload": [
+        {
+          "id": "WI-19",
+          "input": {
+            "harness": "compiled-monitored-choreography-service",
+            "descriptor": {
+              "protocol": "noble:choreography/service@1.0.0",
+              "rounds": [
+                {
+                  "name": "clock",
+                  "ready": false,
+                  "exit": "withdraw"
+                },
+                {
+                  "name": "alarm",
+                  "ready": true,
+                  "exit": "trap"
+                }
+              ]
+            },
+            "descriptor_utf8": "{\"protocol\":\"noble:choreography/service@1.0.0\",\"rounds\":[{\"name\":\"clock\",\"ready\":false,\"exit\":\"withdraw\"},{\"name\":\"alarm\",\"ready\":true,\"exit\":\"trap\"}]}",
+            "world": "noble:syndicate/service@1.0.0",
+            "instances": [
+              "separately-compiled-noble-publisher",
+              "separately-compiled-noble-subscriber"
+            ],
+            "peer": "independent-typed-wasmtime-linker",
+            "dispatch_steps": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "all_imports_use_production_monitor": true
+          },
+          "expected": {
+            "stage": "independent-component-peer",
+            "outcome": "complete-projected-plan",
+            "publisher_exports": [
+              "publisher",
+              "withdraw",
+              "publish-and-trap"
+            ],
+            "subscriber_exports": [
+              "observer",
+              "observer",
+              "observer",
+              "observer",
+              "observer"
+            ],
+            "observer_membership": [
+              false,
+              true,
+              false,
+              false,
+              false
+            ],
+            "typed_events": [
+              {
+                "kind": "add",
+                "name": "clock",
+                "ready": false
+              },
+              {
+                "kind": "remove",
+                "name": "clock",
+                "ready": false
+              },
+              {
+                "kind": "add",
+                "name": "alarm",
+                "ready": true
+              },
+              {
+                "kind": "remove",
+                "name": "alarm",
+                "ready": true
+              }
+            ],
+            "trap_import_sequence": [
+              "publish",
+              "fail"
+            ],
+            "trap_publish_import_succeeded": true,
+            "trap_fail_import_observed": true,
+            "compiled_invocation_error_observed": true,
+            "earlier_authorization_trap_satisfies_step": false,
+            "compiled_trap_observed": true,
+            "publisher_trap_reported_success": false,
+            "subscriber_observes_absence_after_trap": true,
+            "remaining_publisher_assertions": 0,
+            "subscriber_still_active": true,
+            "false_readiness_is_distinct_from_absence": true,
+            "new_wit_world_created": false,
+            "guest_facet_authority_from_descriptor": false,
+            "host_only_fixture_satisfies_case": false
+          }
+        },
+        {
+          "id": "WI-20",
+          "input": {
+            "harness": "monitored-component-boundary-refusals",
+            "world": "noble:syndicate/service@1.0.0",
+            "pre_export_mutations": [
+              "wrong-wit-version",
+              "wrong-wit-signature",
+              "wrong-export-at-trap-step",
+              "wrong-component-role",
+              "foreign-facet",
+              "forged-rights",
+              "replayed-export",
+              "false-ready-pair-confused-with-absence"
+            ],
+            "post_start_mutations": [
+              "wrong-import-after-admitted-export",
+              "missing-fail-after-publish-and-trap-publication"
+            ],
+            "post_start_injection_role": "publisher",
+            "already_owned_assertion_before_post_start_refusal": true
+          },
+          "expected": {
+            "stage": "typed-component-boundary",
+            "outcome": "reject-all-declared-mutations",
+            "pre_export": {
+              "guest_invoked": false,
+              "cursor_unchanged": true,
+              "dataspace_unchanged": true,
+              "events_unchanged": true,
+              "rights_unchanged": true,
+              "guest_requests_unchanged": true,
+              "protected_operations_unchanged": true
+            },
+            "post_start": {
+              "unauthorized_m7_operations": 0,
+              "unauthorized_protected_operations": 0,
+              "cursor_unchanged": true,
+              "facet_retired_on_protocol_failure": true,
+              "previously_owned_assertions_retracted": true,
+              "typed_removal_permitted": true,
+              "reported_success": false
+            },
+            "direct_m7_profile_bypass": false
+          }
+        }
+      ],
+      "interpretation": "complete exact canonical selected case inputs/expectations; metadata is not execution"
+    },
+    "workload": {
+      "file": "inputs/selected-workload.json",
+      "sha256": "25f8979ce9fc0dacb80acf77105bb767acdca686bcf5bf0790ff39253ff55765",
+      "descriptor_sha256": "fbf57500594dc7f6bd15c59d3cca626ced61a4b3902ca38bf100e481059aafb7",
+      "components": {
+        "wrong-wit-version": {
+          "artifact": "/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/components/wrong-version/component.wasm",
+          "sha256": "c289dfb203725d22cd250503b30bb69cfa21ad96e945aa3070b1126e3d28b85b"
+        },
+        "wrong-wit-signature": {
+          "artifact": "/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/components/wrong-signature/component.wasm",
+          "sha256": "822d779d58cce584aa8023bd26fd0aba6e4176628e933a603719785231feb533"
+        },
+        "wrong-import-identity": {
+          "artifact": "/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/components/bad-import-identity/component.wasm",
+          "sha256": "0ce38e02d8b3ecbbcc47c08cac6c6d0420da05924c34344ee7b7e6163fa3697d"
+        },
+        "wrong-import-arguments": {
+          "artifact": "/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/components/bad-import-arguments/component.wasm",
+          "sha256": "747bc7e94623f12cc805f8bb1ab419e9460659b55407523e65d8db80242c6146"
+        },
+        "missing-fail-after-trap-publication": {
+          "artifact": "/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/components/missing-fail/component.wasm",
+          "sha256": "bb9c691b8a31be620bcc850b1e34c5a0d483a86e3be1cbba4fd5b39e2800c327"
+        }
+      },
+      "variants": [
+        {
+          "name": "wrong-protocol-version",
+          "sha256": "c19ae631d341f071e42c1c176102d169ad7664ab8e7c0e33e1b85c6d7a798725",
+          "bytes": 107
+        },
+        {
+          "name": "unknown-field",
+          "sha256": "244f5372d40c2dadb4b43e358e70b6a579055a0bb8c2602fd56c253825642f68",
+          "bytes": 117
+        },
+        {
+          "name": "wrong-ready-type",
+          "sha256": "478573c93da55e122aaa966eda20da4eedad62c8196b45aa62cf6e14fb8cbd2d",
+          "bytes": 109
+        },
+        {
+          "name": "invalid-name",
+          "sha256": "3507cf572f67033285af497008e1ff30a712866ce599acb91328bce87763f71f",
+          "bytes": 103
+        },
+        {
+          "name": "duplicate-name",
+          "sha256": "07ffe2125e49d0eb2d5ad3d6d5e946c425f0ace4e54713456b0eb7d58621a89e",
+          "bytes": 151
+        },
+        {
+          "name": "zero-rounds",
+          "sha256": "21fc34a2826553b7f2658e03d2811a75ae4a95d076d689d23ca8f64f16e599c3",
+          "bytes": 59
+        },
+        {
+          "name": "three-rounds",
+          "sha256": "27c89e0aa45ccb57abf8f2c0fd1b28e9f632e2bcff7aa47d1e37752d66af7f65",
+          "bytes": 192
+        },
+        {
+          "name": "nonterminal-trap",
+          "sha256": "185f77772e8b5a1c247b161d4a3affabf4812ef62a3f7fb9f9b7595ff1883609",
+          "bytes": 151
+        },
+        {
+          "name": "513-byte-input",
+          "sha256": "0846a1dd0ec28887497732947c62396a19796a2c74590eead7a3358217f4f607",
+          "bytes": 513
+        },
+        {
+          "name": "depth-four",
+          "sha256": "47796f3782169e0ca98b03c1299438494e1d7d66fb461774cbeb25e49f55eb40",
+          "bytes": 119
+        },
+        {
+          "name": "invalid-utf8",
+          "sha256": "706306a64b3dfcb66db2d49636319be90c7b20b233f850485268c6357d543316",
+          "bytes": 103
+        },
+        {
+          "name": "duplicate-object-key",
+          "sha256": "85149581c80def724059a73acd973a6f588de6a5ea44ef1c483051d137ff0225",
+          "bytes": 153
+        },
+        {
+          "name": "duplicate-round-key",
+          "sha256": "28e7fce1f736f8937fb05d2efb0605d3645bb4d3f737c96183ee8e0cddc39c5e",
+          "bytes": 121
+        },
+        {
+          "name": "trailing-content",
+          "sha256": "b1db19f5f980b6db35ee7286dcb1ef344ec1621954a533358d7c44bd178e2a1d",
+          "bytes": 153
+        }
+      ],
+      "strict_json_edges": [
+        {
+          "name": "valid-escaped-ascii-keys-and-values",
+          "outcome": "admit",
+          "error": null,
+          "sha256": "50a497e447162e4f449c1a3b4931a8e2df13008a8581684b731561780290e6d0",
+          "bytes": 176
+        },
+        {
+          "name": "decoded-duplicate-root-key",
+          "outcome": "reject",
+          "error": "Descriptor",
+          "sha256": "18b68151f053f05db59303e3384efa8fd1c9ae2debcb07b9f08d5948654d455f",
+          "bytes": 202
+        },
+        {
+          "name": "decoded-duplicate-round-key",
+          "outcome": "reject",
+          "error": "Descriptor",
+          "sha256": "98e1c39518d8feacae680e5ee6c5da296216e819afbfd47dc9cf7faff15d691c",
+          "bytes": 171
+        },
+        {
+          "name": "valid-surrogate-pair-then-protocol-refusal",
+          "outcome": "reject",
+          "error": "Protocol",
+          "sha256": "36a8c5a057cb1643ae9dfc0e03d3eab3b4b3fd4b0a54a9c1bf3f8573ef4c7bd4",
+          "bytes": 163
+        },
+        {
+          "name": "unpaired-high-surrogate",
+          "outcome": "reject",
+          "error": "Descriptor",
+          "sha256": "9b55f4c5c5c8ddb5a85d401a795e6174e59ecfea62609cc5bdb40a149bc16fb7",
+          "bytes": 157
+        },
+        {
+          "name": "unpaired-low-surrogate",
+          "outcome": "reject",
+          "error": "Descriptor",
+          "sha256": "02d8129e3182408b36a122e0c19b84da5bf11ee466fea00074cc51d5cc31da14",
+          "bytes": 157
+        },
+        {
+          "name": "invalid-unicode-hex",
+          "outcome": "reject",
+          "error": "Descriptor",
+          "sha256": "fe1d12d540048aadfa77ce101b681d439df29fec107e6511164644059d035f2c",
+          "bytes": 157
+        },
+        {
+          "name": "invalid-json-escape",
+          "outcome": "reject",
+          "error": "Descriptor",
+          "sha256": "e641eb4e09f9abcbbeaeac1249103efd20f17764201f9a3165134c1bee65bfe5",
+          "bytes": 153
+        },
+        {
+          "name": "unescaped-control-newline",
+          "outcome": "reject",
+          "error": "Descriptor",
+          "sha256": "3d9889cbc4adf1b91e893377eadc885bb05ac2058cd5dd58a887d0db9babfb34",
+          "bytes": 152
+        },
+        {
+          "name": "unescaped-control-nul",
+          "outcome": "reject",
+          "error": "Descriptor",
+          "sha256": "2d08ae84b573414efb5e9de8ede5650251f8b7696887f97a133927eb0c18051a",
+          "bytes": 152
+        }
+      ],
+      "one_round": {
+        "sha256": "fb0d4a43a19a15a4410fd9dbc8b400072e66499bfc501ec3409dd85b75ca0ee8",
+        "bytes": 107
+      }
+    }
+  },
+  "retained": {
+    "sources/verification/m8/gate.mjs": {
+      "sha256": "7eea4e1cc8f6b5faad28a17b47613f1a48eec1bd9f235853463c25481c5932d8",
+      "bytes": 37338
+    },
+    "sources/verification/m8/build.mjs": {
+      "sha256": "8efa73e49985a9b9640c35b817b09cfaf6022ede74591faeb04b0024aed46be1",
+      "bytes": 10680
+    },
+    "sources/verification/m8/assurance.mjs": {
+      "sha256": "8a6ddb6051b85b5017f4b89bcc0da0de84f0c5c2d341b06f814300dcd08702d0",
+      "bytes": 24467
+    },
+    "sources/verification/m8/source-projection.mjs": {
+      "sha256": "30862a4d3f6805a71ba69f9a0c9a78ff48cbfb53fb5d78b0b3d423fb70bfec18",
+      "bytes": 3785
+    },
+    "sources/verification/m8/final-documents.mjs": {
+      "sha256": "b050e1bb19c93d70e681735d5dd7bc879971f36cd8f62676c705d9a72238022c",
+      "bytes": 23426
+    },
+    "sources/crates/noble-wasm/wit/syndicate.wit": {
+      "sha256": "ac3ef5e4db79abf387bd6950451675e998202f0adc02f8e6340e26446f230762",
+      "bytes": 509
+    },
+    "sources/crates/noble-syndicate/Cargo.toml": {
+      "sha256": "111546759bcc1665f5575e63f08f9f464ba1ce28d1cf6596aaf49cda659f78f2",
+      "bytes": 196
+    },
+    "sources/.cairn/specs/safety/spec.md": {
+      "sha256": "d7327a3fec8c08212da7f07b52a5346325cb6fb3bb5f015c0ed00f7ab559514a",
+      "bytes": 61598
+    },
+    "sources/.cairn/specs/wit-wasi/spec.md": {
+      "sha256": "2caec07607b46dc3ed665bcbaa898a194ad22c50f50a39d05fdfcb022064fe67",
+      "bytes": 80723
+    },
+    "sources/specs/conformance/safety-cases.json": {
+      "sha256": "f9536c4610eaff902e1b5984b2fb75bcf2326c14a2ae135e1bfb02496909165e",
+      "bytes": 22036
+    },
+    "sources/specs/conformance/wit-wasi-cases.json": {
+      "sha256": "5173a64c23cf069bb68fd63d1958e81382b3c8973f5bfbe2a88862e21967dcc3",
+      "bytes": 30039
+    },
+    "sources/verification/m8/peer/Cargo.toml": {
+      "sha256": "4e18fb85bc469b42cc01860b7a7e7c76e417af3fe1a5cf08f1d070e61edfec06",
+      "bytes": 516
+    },
+    "sources/policy/architecture.ncl": {
+      "sha256": "5fc93ddc73de52fbf50e0298d75be92e3d0dc9b5bfec9fa6b01d2104ae730b8b",
+      "bytes": 15709
+    },
+    "sources/policy/source-inventory.json": {
+      "sha256": "1c0f58ce73d857b48542e5b8467e76b4578399bd2ee10d5e3a0ff9729235b7da",
+      "bytes": 1846934
+    },
+    "sources/policy/tool-selection.json": {
+      "sha256": "311fb6ab6c55fae3c199b0c419698043be4d078c4fe07fbb5d9297f2b6f9ed49",
+      "bytes": 19069
+    },
+    "sources/verification/m4/extraction-lock.json": {
+      "sha256": "579bf5c5481e9f24c94fc8d2f5c2a145c17f3a3c112c3cc1be955bb5e0bb5b9c",
+      "bytes": 67971119
+    },
+    "sources/crates/noble-kernel/src/dataspace/mod.rs": {
+      "sha256": "5ba97535f38318bc3a11ba0c6c0122a8fac7f42d22d92e0dba5c5b948c40fd6f",
+      "bytes": 3593
+    },
+    "sources/crates/noble-kernel/src/dataspace/table/actions.rs": {
+      "sha256": "ab02f1a631cb1958c38bed12bbd3ad417380193012de5c30322329b74850d1a2",
+      "bytes": 10921
+    },
+    "sources/crates/noble-kernel/src/dataspace/table.rs": {
+      "sha256": "568bb6249883a3dd4821b8adbc00d28f690933868805019147a0d06a832771de",
+      "bytes": 6712
+    },
+    "sources/crates/noble-kernel/src/dataspace/wire.rs": {
+      "sha256": "38b722dcbe36f6d986be105a76fd17472e5c8d72a126c1db813c7878d1915d08",
+      "bytes": 4811
+    },
+    "sources/crates/noble-syndicate/src/choreography/json/scan.rs": {
+      "sha256": "18fc514097bee497f75dde67b00a8a64a381241fc758decb13041890a496d006",
+      "bytes": 8067
+    },
+    "sources/crates/noble-syndicate/src/choreography/json.rs": {
+      "sha256": "d1ec5b3cd4ee6820bff0f62bc0e23dc5b90cccb6aef499f4a976a17b24a98736",
+      "bytes": 4469
+    },
+    "sources/crates/noble-syndicate/src/choreography/monitor/admit.rs": {
+      "sha256": "7fbc9257b164c748870ce6826a1ed6c15a0822643bc753ee8fe6ce093ca83bc9",
+      "bytes": 4350
+    },
+    "sources/crates/noble-syndicate/src/choreography/monitor/drive.rs": {
+      "sha256": "30d78e469e8936fa746bb5b22f552a797e62da9b8dc54cbde85f891b4db9c966",
+      "bytes": 8967
+    },
+    "sources/crates/noble-syndicate/src/choreography/monitor.rs": {
+      "sha256": "28ffda5d421576e5939fc0021a2dfd9da0c3e3dc86987cb0315ee383f5e4a5d9",
+      "bytes": 4965
+    },
+    "sources/crates/noble-syndicate/src/choreography/projection.rs": {
+      "sha256": "c2221019dddc5dc344393cfb2c1a2c9c460c159bb60f83896d7267944a772fb0",
+      "bytes": 5796
+    },
+    "sources/crates/noble-syndicate/src/choreography.rs": {
+      "sha256": "fee989ce55befc8a59d75287b7949d6ca621e1ed032371ebf51fd81272bef80d",
+      "bytes": 2942
+    },
+    "sources/crates/noble-syndicate/src/lib.rs": {
+      "sha256": "c9eb69a8904a09ea496c9ecc5a6b65160869e1c04e01cd585df4af44a69abed8",
+      "bytes": 7996
+    },
+    "sources/verification/m8/peer/src/main.rs": {
+      "sha256": "d9642779819fd9fc31a8f8acb004e32833005e42fd0f9abc5e1c693794e4c622",
+      "bytes": 44130
+    },
+    "sources/.cairn/changes/m8-choreography-projection/design.md": {
+      "sha256": "3ef7caa33d3e5721b2671d4659f4c2ddcc47b59fa1c7a724a6659fc4c2a11319",
+      "bytes": 9792
+    },
+    "sources/.cairn/changes/m8-choreography-projection/metadata.json": {
+      "sha256": "a6fd5ca231a3bb7b2746437ddfeea40804e0b37172b383ad5cf5ca2bf064d0a9",
+      "bytes": 105
+    },
+    "sources/.cairn/changes/m8-choreography-projection/proposal.md": {
+      "sha256": "46ba98ead4a41615c076e8bdc94cd5fad2001cb13d9f106be0f48b09cbb635c3",
+      "bytes": 2739
+    },
+    "sources/.cairn/changes/m8-choreography-projection/specs/safety/spec.md": {
+      "sha256": "e068a600451a56f7e196ff72641871805dda932429d4482c16e3111241d59495",
+      "bytes": 7457
+    },
+    "sources/.cairn/changes/m8-choreography-projection/specs/wit-wasi/spec.md": {
+      "sha256": "e853b04ebcaeafcf3b541583a7d7048acf421c1840130025f92f1e102edcd2f0",
+      "bytes": 3248
+    },
+    "sources/.cairn/changes/m8-choreography-projection/tasks.md": {
+      "sha256": "a658e0d0a79b0b19912e1db8b2135d90ff682dcb8f175d9744a99cdefc07e57e",
+      "bytes": 2371
+    },
+    "executables/cli": {
+      "sha256": "9ecbac84d84f28eda5cecb5d688003e087b4dc20b29640f51c3431a547fb4f51",
+      "bytes": 15832000
+    },
+    "executables/peer": {
+      "sha256": "4112153cb39f156b688a9c30522af8012622b8d4c1368a1e9b410ef68c919310",
+      "bytes": 203622552
+    },
+    "executables/wasm_tools": {
+      "sha256": "30b6ccb08b58d6159f196eb3d21beea1dcfcf9ec2948a791e32aad95f6d91d2f",
+      "bytes": 21245664
+    },
+    "executables/node": {
+      "sha256": "ad2d5c03bb247d3690f8baf48b2aac572fe0ed5252b4c5bdcfa7987a169b8f3b",
+      "bytes": 71432512
+    },
+    "inputs/selected-syndicate.wit": {
+      "sha256": "ac3ef5e4db79abf387bd6950451675e998202f0adc02f8e6340e26446f230762",
+      "bytes": 509
+    },
+    "inputs/publisher-publisher.noble": {
+      "sha256": "2a12746da1c365fc05bf670addc8c2787f1b9e0a566d4d3abdf979929b636a5c",
+      "bytes": 17
+    },
+    "inputs/publisher-observer.noble": {
+      "sha256": "0f1239af8b1afe0dea2564ae8a11c581294dc3fd0fba306fe9b3a11901ce3b56",
+      "bytes": 17
+    },
+    "inputs/publisher-withdraw.noble": {
+      "sha256": "ce3f57c9732dae0d37279e0f0ce94b1a6a4d4ba0b6e265f7f8f027fcc07b0bd4",
+      "bytes": 17
+    },
+    "inputs/publisher-publish-and-trap.noble": {
+      "sha256": "fad51c5690164e5ba8f4587b0fc1850347d556be4fe14001ca8dc5c1cc523577",
+      "bytes": 32
+    },
+    "commands/0001-publisher-compile.stdout": {
+      "sha256": "6942b53426d34800422635692ca5c61edf0aafc99ea6aef15083c734d41f6f75",
+      "bytes": 2463
+    },
+    "commands/0001-publisher-compile.stderr": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "components/publisher/component.wasm": {
+      "sha256": "6341b110b6c4595822d6e84814167836d6f58d8ae8436403bb72d53ccdd02074",
+      "bytes": 4019
+    },
+    "components/publisher/core.wasm": {
+      "sha256": "be2dace02c5120d9ed35b86db607d627e0355f92db1f1a9ddda059b84dfbe0ff",
+      "bytes": 2275
+    },
+    "components/publisher/export-0.noble": {
+      "sha256": "2a12746da1c365fc05bf670addc8c2787f1b9e0a566d4d3abdf979929b636a5c",
+      "bytes": 17
+    },
+    "components/publisher/export-1.noble": {
+      "sha256": "0f1239af8b1afe0dea2564ae8a11c581294dc3fd0fba306fe9b3a11901ce3b56",
+      "bytes": 17
+    },
+    "components/publisher/export-2.noble": {
+      "sha256": "ce3f57c9732dae0d37279e0f0ce94b1a6a4d4ba0b6e265f7f8f027fcc07b0bd4",
+      "bytes": 17
+    },
+    "components/publisher/export-3.noble": {
+      "sha256": "fad51c5690164e5ba8f4587b0fc1850347d556be4fe14001ca8dc5c1cc523577",
+      "bytes": 32
+    },
+    "components/publisher/module.wat": {
+      "sha256": "5339fa0a36ea4fe6c8967c0a90c4cf76eda0ba0e780efb6b26f49060ea92c1a6",
+      "bytes": 8415
+    },
+    "components/publisher/report.json": {
+      "sha256": "45202f956a5a6de9b890f95d4cae776963b4c35a966657a8c03ebec2fbeaf8fa",
+      "bytes": 2462
+    },
+    "components/publisher/world.wit": {
+      "sha256": "ac3ef5e4db79abf387bd6950451675e998202f0adc02f8e6340e26446f230762",
+      "bytes": 509
+    },
+    "commands/0002-publisher-wasm-validate.stdout": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "commands/0002-publisher-wasm-validate.stderr": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "commands/0003-publisher-wit-inspect.stdout": {
+      "sha256": "267aaa97f2533e8e02b439641f9b00ec273bfb7eb274dd0598d7942f3db6eb30",
+      "bytes": 570
+    },
+    "commands/0003-publisher-wit-inspect.stderr": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "inputs/subscriber-publisher.noble": {
+      "sha256": "2a12746da1c365fc05bf670addc8c2787f1b9e0a566d4d3abdf979929b636a5c",
+      "bytes": 17
+    },
+    "inputs/subscriber-observer.noble": {
+      "sha256": "0f1239af8b1afe0dea2564ae8a11c581294dc3fd0fba306fe9b3a11901ce3b56",
+      "bytes": 17
+    },
+    "inputs/subscriber-withdraw.noble": {
+      "sha256": "12c140bb99126835a90c00c66efeb1ba1cba56f18c1796a59d8c1c8480e77327",
+      "bytes": 28
+    },
+    "inputs/subscriber-publish-and-trap.noble": {
+      "sha256": "fad51c5690164e5ba8f4587b0fc1850347d556be4fe14001ca8dc5c1cc523577",
+      "bytes": 32
+    },
+    "commands/0004-subscriber-compile.stdout": {
+      "sha256": "b474a8453479523a603b66e0faa1923f6c9412b0a835e776bdcef868ef3ac9d6",
+      "bytes": 2486
+    },
+    "commands/0004-subscriber-compile.stderr": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "components/subscriber/component.wasm": {
+      "sha256": "e0d9d4bc11f996cbd4a2f055357433cc96b6424608ceb4729928c26e9b6a907b",
+      "bytes": 4023
+    },
+    "components/subscriber/core.wasm": {
+      "sha256": "8b8fbce0ee04de122a8099f820e70d27ef863748a4e346f382265b3daea9636e",
+      "bytes": 2279
+    },
+    "components/subscriber/export-0.noble": {
+      "sha256": "2a12746da1c365fc05bf670addc8c2787f1b9e0a566d4d3abdf979929b636a5c",
+      "bytes": 17
+    },
+    "components/subscriber/export-1.noble": {
+      "sha256": "0f1239af8b1afe0dea2564ae8a11c581294dc3fd0fba306fe9b3a11901ce3b56",
+      "bytes": 17
+    },
+    "components/subscriber/export-2.noble": {
+      "sha256": "12c140bb99126835a90c00c66efeb1ba1cba56f18c1796a59d8c1c8480e77327",
+      "bytes": 28
+    },
+    "components/subscriber/export-3.noble": {
+      "sha256": "fad51c5690164e5ba8f4587b0fc1850347d556be4fe14001ca8dc5c1cc523577",
+      "bytes": 32
+    },
+    "components/subscriber/module.wat": {
+      "sha256": "79101bfdc8ac719bb0203c0ce7199531ffb75bdb947fe0e2c5c1f154d07f929d",
+      "bytes": 8453
+    },
+    "components/subscriber/report.json": {
+      "sha256": "81d5c2b0e4ad1557cd2d2cb8c6d4c8b5244a9463f0d9dfd6108260b0ce423e31",
+      "bytes": 2485
+    },
+    "components/subscriber/world.wit": {
+      "sha256": "ac3ef5e4db79abf387bd6950451675e998202f0adc02f8e6340e26446f230762",
+      "bytes": 509
+    },
+    "commands/0005-subscriber-wasm-validate.stdout": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "commands/0005-subscriber-wasm-validate.stderr": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "commands/0006-subscriber-wit-inspect.stdout": {
+      "sha256": "267aaa97f2533e8e02b439641f9b00ec273bfb7eb274dd0598d7942f3db6eb30",
+      "bytes": 570
+    },
+    "commands/0006-subscriber-wit-inspect.stderr": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "inputs/wrong-version.wit": {
+      "sha256": "3cb32daf5c715234a25e94fcd1d8844dead2f2c74717be925610c9c7bad9e576",
+      "bytes": 509
+    },
+    "inputs/wrong-version-publisher.noble": {
+      "sha256": "2a12746da1c365fc05bf670addc8c2787f1b9e0a566d4d3abdf979929b636a5c",
+      "bytes": 17
+    },
+    "inputs/wrong-version-observer.noble": {
+      "sha256": "0f1239af8b1afe0dea2564ae8a11c581294dc3fd0fba306fe9b3a11901ce3b56",
+      "bytes": 17
+    },
+    "inputs/wrong-version-withdraw.noble": {
+      "sha256": "ce3f57c9732dae0d37279e0f0ce94b1a6a4d4ba0b6e265f7f8f027fcc07b0bd4",
+      "bytes": 17
+    },
+    "inputs/wrong-version-publish-and-trap.noble": {
+      "sha256": "fad51c5690164e5ba8f4587b0fc1850347d556be4fe14001ca8dc5c1cc523577",
+      "bytes": 32
+    },
+    "commands/0007-wrong-version-compile.stdout": {
+      "sha256": "1f0e8806c5d8b960f1f185a4407d055f80f5ee062625f4ea4558d696e4549921",
+      "bytes": 2467
+    },
+    "commands/0007-wrong-version-compile.stderr": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "components/wrong-version/component.wasm": {
+      "sha256": "c289dfb203725d22cd250503b30bb69cfa21ad96e945aa3070b1126e3d28b85b",
+      "bytes": 4019
+    },
+    "components/wrong-version/core.wasm": {
+      "sha256": "f63043d7b305be84f3d6f9393a3d48152982858ddd0b56ded3f35c34008bcc2d",
+      "bytes": 2275
+    },
+    "components/wrong-version/export-0.noble": {
+      "sha256": "2a12746da1c365fc05bf670addc8c2787f1b9e0a566d4d3abdf979929b636a5c",
+      "bytes": 17
+    },
+    "components/wrong-version/export-1.noble": {
+      "sha256": "0f1239af8b1afe0dea2564ae8a11c581294dc3fd0fba306fe9b3a11901ce3b56",
+      "bytes": 17
+    },
+    "components/wrong-version/export-2.noble": {
+      "sha256": "ce3f57c9732dae0d37279e0f0ce94b1a6a4d4ba0b6e265f7f8f027fcc07b0bd4",
+      "bytes": 17
+    },
+    "components/wrong-version/export-3.noble": {
+      "sha256": "fad51c5690164e5ba8f4587b0fc1850347d556be4fe14001ca8dc5c1cc523577",
+      "bytes": 32
+    },
+    "components/wrong-version/module.wat": {
+      "sha256": "a6a54abfd8f0e1b71c21d44695d112b1f6b81dfcebb5243baa43609dd05642f3",
+      "bytes": 8415
+    },
+    "components/wrong-version/report.json": {
+      "sha256": "db51d24df93704a586a75e0788d3f38819b0354f78968e94dd830beb0f162316",
+      "bytes": 2466
+    },
+    "components/wrong-version/world.wit": {
+      "sha256": "3cb32daf5c715234a25e94fcd1d8844dead2f2c74717be925610c9c7bad9e576",
+      "bytes": 509
+    },
+    "commands/0008-wrong-version-wasm-validate.stdout": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "commands/0008-wrong-version-wasm-validate.stderr": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "commands/0009-wrong-version-wit-inspect.stdout": {
+      "sha256": "ecfa2cebee2109cc6b5fe35c3060445796c4a9ea28a982e79526743fbaf5bd50",
+      "bytes": 570
+    },
+    "commands/0009-wrong-version-wit-inspect.stderr": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "inputs/wrong-signature.wit": {
+      "sha256": "e31b33bc91ed88bffb7ad3768b4d3f0c66f274b55cb22b72dd923cdc05d9c280",
+      "bytes": 506
+    },
+    "inputs/wrong-signature-publisher.noble": {
+      "sha256": "f9c112e77b3512d995263b2da604c20897c586b158af7f230e290ce05b5ab2e3",
+      "bytes": 15
+    },
+    "inputs/wrong-signature-observer.noble": {
+      "sha256": "0f1239af8b1afe0dea2564ae8a11c581294dc3fd0fba306fe9b3a11901ce3b56",
+      "bytes": 17
+    },
+    "inputs/wrong-signature-withdraw.noble": {
+      "sha256": "ce3f57c9732dae0d37279e0f0ce94b1a6a4d4ba0b6e265f7f8f027fcc07b0bd4",
+      "bytes": 17
+    },
+    "inputs/wrong-signature-publish-and-trap.noble": {
+      "sha256": "f9c112e77b3512d995263b2da604c20897c586b158af7f230e290ce05b5ab2e3",
+      "bytes": 15
+    },
+    "commands/0010-wrong-signature-compile.stdout": {
+      "sha256": "f4f131f24db32f023d8fbfe1200b717383d6674ca2b9e494a1fec0d077f34bd2",
+      "bytes": 2425
+    },
+    "commands/0010-wrong-signature-compile.stderr": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "components/wrong-signature/component.wasm": {
+      "sha256": "822d779d58cce584aa8023bd26fd0aba6e4176628e933a603719785231feb533",
+      "bytes": 3830
+    },
+    "components/wrong-signature/core.wasm": {
+      "sha256": "c086117184f9e07a98cc25eae8210144a8a4635cbef9725ec3ab7831184b0921",
+      "bytes": 2215
+    },
+    "components/wrong-signature/export-0.noble": {
+      "sha256": "f9c112e77b3512d995263b2da604c20897c586b158af7f230e290ce05b5ab2e3",
+      "bytes": 15
+    },
+    "components/wrong-signature/export-1.noble": {
+      "sha256": "0f1239af8b1afe0dea2564ae8a11c581294dc3fd0fba306fe9b3a11901ce3b56",
+      "bytes": 17
+    },
+    "components/wrong-signature/export-2.noble": {
+      "sha256": "ce3f57c9732dae0d37279e0f0ce94b1a6a4d4ba0b6e265f7f8f027fcc07b0bd4",
+      "bytes": 17
+    },
+    "components/wrong-signature/export-3.noble": {
+      "sha256": "f9c112e77b3512d995263b2da604c20897c586b158af7f230e290ce05b5ab2e3",
+      "bytes": 15
+    },
+    "components/wrong-signature/module.wat": {
+      "sha256": "5848abdefb5acf6f73bf330a12e0d17bea917734ab011581adc904b6d33dd852",
+      "bytes": 7880
+    },
+    "components/wrong-signature/report.json": {
+      "sha256": "4ea382e896c8be38513a66398a3e97bd2702f30ea1d6cc3bf8aab24aed49954b",
+      "bytes": 2424
+    },
+    "components/wrong-signature/world.wit": {
+      "sha256": "e31b33bc91ed88bffb7ad3768b4d3f0c66f274b55cb22b72dd923cdc05d9c280",
+      "bytes": 506
+    },
+    "commands/0011-wrong-signature-wasm-validate.stdout": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "commands/0011-wrong-signature-wasm-validate.stderr": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "commands/0012-wrong-signature-wit-inspect.stdout": {
+      "sha256": "b53b4362d4d0459e9ea096428c2a54871dd6ef6705b624f317adcd3652be10cf",
+      "bytes": 567
+    },
+    "commands/0012-wrong-signature-wit-inspect.stderr": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "inputs/bad-import-identity-publisher.noble": {
+      "sha256": "2a12746da1c365fc05bf670addc8c2787f1b9e0a566d4d3abdf979929b636a5c",
+      "bytes": 17
+    },
+    "inputs/bad-import-identity-observer.noble": {
+      "sha256": "0f1239af8b1afe0dea2564ae8a11c581294dc3fd0fba306fe9b3a11901ce3b56",
+      "bytes": 17
+    },
+    "inputs/bad-import-identity-withdraw.noble": {
+      "sha256": "fac47c6d388473a049bfab6e9282378c94023da37c2380d1a816e275498d175c",
+      "bytes": 22
+    },
+    "inputs/bad-import-identity-publish-and-trap.noble": {
+      "sha256": "fad51c5690164e5ba8f4587b0fc1850347d556be4fe14001ca8dc5c1cc523577",
+      "bytes": 32
+    },
+    "commands/0013-bad-import-identity-compile.stdout": {
+      "sha256": "359c0efdbcc8600227fc3ff898991dbbb8f91f9894f561c9cc39b01c15d44ee7",
+      "bytes": 2483
+    },
+    "commands/0013-bad-import-identity-compile.stderr": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "components/bad-import-identity/component.wasm": {
+      "sha256": "0ce38e02d8b3ecbbcc47c08cac6c6d0420da05924c34344ee7b7e6163fa3697d",
+      "bytes": 4034
+    },
+    "components/bad-import-identity/core.wasm": {
+      "sha256": "c22416be84a2e8db50c21574f2f6c25d323377af145fdd5ce98adb63589f6f84",
+      "bytes": 2290
+    },
+    "components/bad-import-identity/export-0.noble": {
+      "sha256": "2a12746da1c365fc05bf670addc8c2787f1b9e0a566d4d3abdf979929b636a5c",
+      "bytes": 17
+    },
+    "components/bad-import-identity/export-1.noble": {
+      "sha256": "0f1239af8b1afe0dea2564ae8a11c581294dc3fd0fba306fe9b3a11901ce3b56",
+      "bytes": 17
+    },
+    "components/bad-import-identity/export-2.noble": {
+      "sha256": "fac47c6d388473a049bfab6e9282378c94023da37c2380d1a816e275498d175c",
+      "bytes": 22
+    },
+    "components/bad-import-identity/export-3.noble": {
+      "sha256": "fad51c5690164e5ba8f4587b0fc1850347d556be4fe14001ca8dc5c1cc523577",
+      "bytes": 32
+    },
+    "components/bad-import-identity/module.wat": {
+      "sha256": "33ef22cce12a3cedaa3c6533220c8ae0d2d5046475077b0a148c739c73073b30",
+      "bytes": 8520
+    },
+    "components/bad-import-identity/report.json": {
+      "sha256": "cbef5f6a2887a9f6dd026aa3480d0f0268a1b8cf3cc112167b634fe657be0eb7",
+      "bytes": 2482
+    },
+    "components/bad-import-identity/world.wit": {
+      "sha256": "ac3ef5e4db79abf387bd6950451675e998202f0adc02f8e6340e26446f230762",
+      "bytes": 509
+    },
+    "commands/0014-bad-import-identity-wasm-validate.stdout": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "commands/0014-bad-import-identity-wasm-validate.stderr": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "commands/0015-bad-import-identity-wit-inspect.stdout": {
+      "sha256": "267aaa97f2533e8e02b439641f9b00ec273bfb7eb274dd0598d7942f3db6eb30",
+      "bytes": 570
+    },
+    "commands/0015-bad-import-identity-wit-inspect.stderr": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "inputs/bad-import-arguments-publisher.noble": {
+      "sha256": "2a12746da1c365fc05bf670addc8c2787f1b9e0a566d4d3abdf979929b636a5c",
+      "bytes": 17
+    },
+    "inputs/bad-import-arguments-observer.noble": {
+      "sha256": "0f1239af8b1afe0dea2564ae8a11c581294dc3fd0fba306fe9b3a11901ce3b56",
+      "bytes": 17
+    },
+    "inputs/bad-import-arguments-withdraw.noble": {
+      "sha256": "83fca4104884efc173139f37ed12b0e862ca52cea132ca4412de04538a909223",
+      "bytes": 30
+    },
+    "inputs/bad-import-arguments-publish-and-trap.noble": {
+      "sha256": "fad51c5690164e5ba8f4587b0fc1850347d556be4fe14001ca8dc5c1cc523577",
+      "bytes": 32
+    },
+    "commands/0016-bad-import-arguments-compile.stdout": {
+      "sha256": "88c88aaefaf1c1535880d73bddd422ef4d9f13ce8f58f92628b6185a4eb1bb9e",
+      "bytes": 2500
+    },
+    "commands/0016-bad-import-arguments-compile.stderr": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "components/bad-import-arguments/component.wasm": {
+      "sha256": "747bc7e94623f12cc805f8bb1ab419e9460659b55407523e65d8db80242c6146",
+      "bytes": 4042
+    },
+    "components/bad-import-arguments/core.wasm": {
+      "sha256": "e23fb0a69bd1bae03ec7a57f7ae0ae4a56700d541824444ac0f5321f021ac871",
+      "bytes": 2298
+    },
+    "components/bad-import-arguments/export-0.noble": {
+      "sha256": "2a12746da1c365fc05bf670addc8c2787f1b9e0a566d4d3abdf979929b636a5c",
+      "bytes": 17
+    },
+    "components/bad-import-arguments/export-1.noble": {
+      "sha256": "0f1239af8b1afe0dea2564ae8a11c581294dc3fd0fba306fe9b3a11901ce3b56",
+      "bytes": 17
+    },
+    "components/bad-import-arguments/export-2.noble": {
+      "sha256": "83fca4104884efc173139f37ed12b0e862ca52cea132ca4412de04538a909223",
+      "bytes": 30
+    },
+    "components/bad-import-arguments/export-3.noble": {
+      "sha256": "fad51c5690164e5ba8f4587b0fc1850347d556be4fe14001ca8dc5c1cc523577",
+      "bytes": 32
+    },
+    "components/bad-import-arguments/module.wat": {
+      "sha256": "177ce852fb92dd25e03c78ee773716243e5f2269dc9461ef33133e7132c552a2",
+      "bytes": 8537
+    },
+    "components/bad-import-arguments/report.json": {
+      "sha256": "de38d582fe5e621cc6a0b1c72ecc14266fd4e5188771aaae71d895661a66137d",
+      "bytes": 2499
+    },
+    "components/bad-import-arguments/world.wit": {
+      "sha256": "ac3ef5e4db79abf387bd6950451675e998202f0adc02f8e6340e26446f230762",
+      "bytes": 509
+    },
+    "commands/0017-bad-import-arguments-wasm-validate.stdout": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "commands/0017-bad-import-arguments-wasm-validate.stderr": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "commands/0018-bad-import-arguments-wit-inspect.stdout": {
+      "sha256": "267aaa97f2533e8e02b439641f9b00ec273bfb7eb274dd0598d7942f3db6eb30",
+      "bytes": 570
+    },
+    "commands/0018-bad-import-arguments-wit-inspect.stderr": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "inputs/missing-fail-publisher.noble": {
+      "sha256": "2a12746da1c365fc05bf670addc8c2787f1b9e0a566d4d3abdf979929b636a5c",
+      "bytes": 17
+    },
+    "inputs/missing-fail-observer.noble": {
+      "sha256": "0f1239af8b1afe0dea2564ae8a11c581294dc3fd0fba306fe9b3a11901ce3b56",
+      "bytes": 17
+    },
+    "inputs/missing-fail-withdraw.noble": {
+      "sha256": "ce3f57c9732dae0d37279e0f0ce94b1a6a4d4ba0b6e265f7f8f027fcc07b0bd4",
+      "bytes": 17
+    },
+    "inputs/missing-fail-publish-and-trap.noble": {
+      "sha256": "2a12746da1c365fc05bf670addc8c2787f1b9e0a566d4d3abdf979929b636a5c",
+      "bytes": 17
+    },
+    "commands/0019-missing-fail-compile.stdout": {
+      "sha256": "c5753785ad441c18bd73ec11f545fcd19157e8ad1bb882e0d327077db7bdbc13",
+      "bytes": 2436
+    },
+    "commands/0019-missing-fail-compile.stderr": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "components/missing-fail/component.wasm": {
+      "sha256": "bb9c691b8a31be620bcc850b1e34c5a0d483a86e3be1cbba4fd5b39e2800c327",
+      "bytes": 3995
+    },
+    "components/missing-fail/core.wasm": {
+      "sha256": "7f845984340f83b0179a8bfcdcea799d904a52dc304f1ad049c83416ed1cfc96",
+      "bytes": 2251
+    },
+    "components/missing-fail/export-0.noble": {
+      "sha256": "2a12746da1c365fc05bf670addc8c2787f1b9e0a566d4d3abdf979929b636a5c",
+      "bytes": 17
+    },
+    "components/missing-fail/export-1.noble": {
+      "sha256": "0f1239af8b1afe0dea2564ae8a11c581294dc3fd0fba306fe9b3a11901ce3b56",
+      "bytes": 17
+    },
+    "components/missing-fail/export-2.noble": {
+      "sha256": "ce3f57c9732dae0d37279e0f0ce94b1a6a4d4ba0b6e265f7f8f027fcc07b0bd4",
+      "bytes": 17
+    },
+    "components/missing-fail/export-3.noble": {
+      "sha256": "2a12746da1c365fc05bf670addc8c2787f1b9e0a566d4d3abdf979929b636a5c",
+      "bytes": 17
+    },
+    "components/missing-fail/module.wat": {
+      "sha256": "a915c90d57277bbefc9fe0cf6cbd3a95daa4cbcd2406e933a1a942b0aa7533f5",
+      "bytes": 8258
+    },
+    "components/missing-fail/report.json": {
+      "sha256": "cc6d864aae8e03f1100ea2c1f01e52b20586a2b284a00bd9156b3d313ac935b6",
+      "bytes": 2435
+    },
+    "components/missing-fail/world.wit": {
+      "sha256": "ac3ef5e4db79abf387bd6950451675e998202f0adc02f8e6340e26446f230762",
+      "bytes": 509
+    },
+    "commands/0020-missing-fail-wasm-validate.stdout": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "commands/0020-missing-fail-wasm-validate.stderr": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "commands/0021-missing-fail-wit-inspect.stdout": {
+      "sha256": "267aaa97f2533e8e02b439641f9b00ec273bfb7eb274dd0598d7942f3db6eb30",
+      "bytes": 570
+    },
+    "commands/0021-missing-fail-wit-inspect.stderr": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "inputs/selected-descriptor.json": {
+      "sha256": "fbf57500594dc7f6bd15c59d3cca626ced61a4b3902ca38bf100e481059aafb7",
+      "bytes": 151
+    },
+    "inputs/descriptor-variants/wrong-protocol-version.json": {
+      "sha256": "c19ae631d341f071e42c1c176102d169ad7664ab8e7c0e33e1b85c6d7a798725",
+      "bytes": 107
+    },
+    "inputs/descriptor-variants/unknown-field.json": {
+      "sha256": "244f5372d40c2dadb4b43e358e70b6a579055a0bb8c2602fd56c253825642f68",
+      "bytes": 117
+    },
+    "inputs/descriptor-variants/wrong-ready-type.json": {
+      "sha256": "478573c93da55e122aaa966eda20da4eedad62c8196b45aa62cf6e14fb8cbd2d",
+      "bytes": 109
+    },
+    "inputs/descriptor-variants/invalid-name.json": {
+      "sha256": "3507cf572f67033285af497008e1ff30a712866ce599acb91328bce87763f71f",
+      "bytes": 103
+    },
+    "inputs/descriptor-variants/duplicate-name.json": {
+      "sha256": "07ffe2125e49d0eb2d5ad3d6d5e946c425f0ace4e54713456b0eb7d58621a89e",
+      "bytes": 151
+    },
+    "inputs/descriptor-variants/zero-rounds.json": {
+      "sha256": "21fc34a2826553b7f2658e03d2811a75ae4a95d076d689d23ca8f64f16e599c3",
+      "bytes": 59
+    },
+    "inputs/descriptor-variants/three-rounds.json": {
+      "sha256": "27c89e0aa45ccb57abf8f2c0fd1b28e9f632e2bcff7aa47d1e37752d66af7f65",
+      "bytes": 192
+    },
+    "inputs/descriptor-variants/nonterminal-trap.json": {
+      "sha256": "185f77772e8b5a1c247b161d4a3affabf4812ef62a3f7fb9f9b7595ff1883609",
+      "bytes": 151
+    },
+    "inputs/descriptor-variants/513-byte-input.json": {
+      "sha256": "0846a1dd0ec28887497732947c62396a19796a2c74590eead7a3358217f4f607",
+      "bytes": 513
+    },
+    "inputs/descriptor-variants/depth-four.json": {
+      "sha256": "47796f3782169e0ca98b03c1299438494e1d7d66fb461774cbeb25e49f55eb40",
+      "bytes": 119
+    },
+    "inputs/descriptor-variants/invalid-utf8.json": {
+      "sha256": "706306a64b3dfcb66db2d49636319be90c7b20b233f850485268c6357d543316",
+      "bytes": 103
+    },
+    "inputs/descriptor-variants/duplicate-object-key.json": {
+      "sha256": "85149581c80def724059a73acd973a6f588de6a5ea44ef1c483051d137ff0225",
+      "bytes": 153
+    },
+    "inputs/descriptor-variants/duplicate-round-key.json": {
+      "sha256": "28e7fce1f736f8937fb05d2efb0605d3645bb4d3f737c96183ee8e0cddc39c5e",
+      "bytes": 121
+    },
+    "inputs/descriptor-variants/trailing-content.json": {
+      "sha256": "b1db19f5f980b6db35ee7286dcb1ef344ec1621954a533358d7c44bd178e2a1d",
+      "bytes": 153
+    },
+    "inputs/strict-json/valid-escaped-ascii-keys-and-values.json": {
+      "sha256": "50a497e447162e4f449c1a3b4931a8e2df13008a8581684b731561780290e6d0",
+      "bytes": 176
+    },
+    "inputs/strict-json/decoded-duplicate-root-key.json": {
+      "sha256": "18b68151f053f05db59303e3384efa8fd1c9ae2debcb07b9f08d5948654d455f",
+      "bytes": 202
+    },
+    "inputs/strict-json/decoded-duplicate-round-key.json": {
+      "sha256": "98e1c39518d8feacae680e5ee6c5da296216e819afbfd47dc9cf7faff15d691c",
+      "bytes": 171
+    },
+    "inputs/strict-json/valid-surrogate-pair-then-protocol-refusal.json": {
+      "sha256": "36a8c5a057cb1643ae9dfc0e03d3eab3b4b3fd4b0a54a9c1bf3f8573ef4c7bd4",
+      "bytes": 163
+    },
+    "inputs/strict-json/unpaired-high-surrogate.json": {
+      "sha256": "9b55f4c5c5c8ddb5a85d401a795e6174e59ecfea62609cc5bdb40a149bc16fb7",
+      "bytes": 157
+    },
+    "inputs/strict-json/unpaired-low-surrogate.json": {
+      "sha256": "02d8129e3182408b36a122e0c19b84da5bf11ee466fea00074cc51d5cc31da14",
+      "bytes": 157
+    },
+    "inputs/strict-json/invalid-unicode-hex.json": {
+      "sha256": "fe1d12d540048aadfa77ce101b681d439df29fec107e6511164644059d035f2c",
+      "bytes": 157
+    },
+    "inputs/strict-json/invalid-json-escape.json": {
+      "sha256": "e641eb4e09f9abcbbeaeac1249103efd20f17764201f9a3165134c1bee65bfe5",
+      "bytes": 153
+    },
+    "inputs/strict-json/unescaped-control-newline.json": {
+      "sha256": "3d9889cbc4adf1b91e893377eadc885bb05ac2058cd5dd58a887d0db9babfb34",
+      "bytes": 152
+    },
+    "inputs/strict-json/unescaped-control-nul.json": {
+      "sha256": "2d08ae84b573414efb5e9de8ede5650251f8b7696887f97a133927eb0c18051a",
+      "bytes": 152
+    },
+    "inputs/one-round-reservation.json": {
+      "sha256": "fb0d4a43a19a15a4410fd9dbc8b400072e66499bfc501ec3409dd85b75ca0ee8",
+      "bytes": 107
+    },
+    "inputs/selected-workload.json": {
+      "sha256": "25f8979ce9fc0dacb80acf77105bb767acdca686bcf5bf0790ff39253ff55765",
+      "bytes": 23207
+    },
+    "commands/0022-independent-monitored-wasmtime-peer.stdout": {
+      "sha256": "e9edc3f01d0bb0c5ffd5c59cf7038e89720969ec820f0e4f8746a50eb597b7e4",
+      "bytes": 42178
+    },
+    "commands/0022-independent-monitored-wasmtime-peer.stderr": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    }
+  },
+  "commands": [
+    {
+      "id": 1,
+      "label": "publisher-compile",
+      "executable": "executables/cli",
+      "executable_sha256": "9ecbac84d84f28eda5cecb5d688003e087b4dc20b29640f51c3431a547fb4f51",
+      "arguments": [
+        "component",
+        "compile",
+        "/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/inputs/selected-syndicate.wit",
+        "service",
+        "/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/components/publisher",
+        "publisher=/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/inputs/publisher-publisher.noble",
+        "observer=/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/inputs/publisher-observer.noble",
+        "withdraw=/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/inputs/publisher-withdraw.noble",
+        "publish-and-trap=/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/inputs/publisher-publish-and-trap.noble"
+      ],
+      "cwd": "/home/brittonr/git/noble",
+      "timeout_ms": 180000,
+      "stdout": "commands/0001-publisher-compile.stdout",
+      "stderr": "commands/0001-publisher-compile.stderr",
+      "status": 0,
+      "signal": null,
+      "error": null
+    },
+    {
+      "id": 2,
+      "label": "publisher-wasm-validate",
+      "executable": "executables/wasm_tools",
+      "executable_sha256": "30b6ccb08b58d6159f196eb3d21beea1dcfcf9ec2948a791e32aad95f6d91d2f",
+      "arguments": [
+        "validate",
+        "/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/components/publisher/component.wasm"
+      ],
+      "cwd": "/home/brittonr/git/noble",
+      "timeout_ms": 180000,
+      "stdout": "commands/0002-publisher-wasm-validate.stdout",
+      "stderr": "commands/0002-publisher-wasm-validate.stderr",
+      "status": 0,
+      "signal": null,
+      "error": null
+    },
+    {
+      "id": 3,
+      "label": "publisher-wit-inspect",
+      "executable": "executables/wasm_tools",
+      "executable_sha256": "30b6ccb08b58d6159f196eb3d21beea1dcfcf9ec2948a791e32aad95f6d91d2f",
+      "arguments": [
+        "component",
+        "wit",
+        "/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/components/publisher/component.wasm"
+      ],
+      "cwd": "/home/brittonr/git/noble",
+      "timeout_ms": 180000,
+      "stdout": "commands/0003-publisher-wit-inspect.stdout",
+      "stderr": "commands/0003-publisher-wit-inspect.stderr",
+      "status": 0,
+      "signal": null,
+      "error": null
+    },
+    {
+      "id": 4,
+      "label": "subscriber-compile",
+      "executable": "executables/cli",
+      "executable_sha256": "9ecbac84d84f28eda5cecb5d688003e087b4dc20b29640f51c3431a547fb4f51",
+      "arguments": [
+        "component",
+        "compile",
+        "/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/inputs/selected-syndicate.wit",
+        "service",
+        "/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/components/subscriber",
+        "publisher=/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/inputs/subscriber-publisher.noble",
+        "observer=/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/inputs/subscriber-observer.noble",
+        "withdraw=/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/inputs/subscriber-withdraw.noble",
+        "publish-and-trap=/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/inputs/subscriber-publish-and-trap.noble"
+      ],
+      "cwd": "/home/brittonr/git/noble",
+      "timeout_ms": 180000,
+      "stdout": "commands/0004-subscriber-compile.stdout",
+      "stderr": "commands/0004-subscriber-compile.stderr",
+      "status": 0,
+      "signal": null,
+      "error": null
+    },
+    {
+      "id": 5,
+      "label": "subscriber-wasm-validate",
+      "executable": "executables/wasm_tools",
+      "executable_sha256": "30b6ccb08b58d6159f196eb3d21beea1dcfcf9ec2948a791e32aad95f6d91d2f",
+      "arguments": [
+        "validate",
+        "/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/components/subscriber/component.wasm"
+      ],
+      "cwd": "/home/brittonr/git/noble",
+      "timeout_ms": 180000,
+      "stdout": "commands/0005-subscriber-wasm-validate.stdout",
+      "stderr": "commands/0005-subscriber-wasm-validate.stderr",
+      "status": 0,
+      "signal": null,
+      "error": null
+    },
+    {
+      "id": 6,
+      "label": "subscriber-wit-inspect",
+      "executable": "executables/wasm_tools",
+      "executable_sha256": "30b6ccb08b58d6159f196eb3d21beea1dcfcf9ec2948a791e32aad95f6d91d2f",
+      "arguments": [
+        "component",
+        "wit",
+        "/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/components/subscriber/component.wasm"
+      ],
+      "cwd": "/home/brittonr/git/noble",
+      "timeout_ms": 180000,
+      "stdout": "commands/0006-subscriber-wit-inspect.stdout",
+      "stderr": "commands/0006-subscriber-wit-inspect.stderr",
+      "status": 0,
+      "signal": null,
+      "error": null
+    },
+    {
+      "id": 7,
+      "label": "wrong-version-compile",
+      "executable": "executables/cli",
+      "executable_sha256": "9ecbac84d84f28eda5cecb5d688003e087b4dc20b29640f51c3431a547fb4f51",
+      "arguments": [
+        "component",
+        "compile",
+        "/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/inputs/wrong-version.wit",
+        "service",
+        "/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/components/wrong-version",
+        "publisher=/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/inputs/wrong-version-publisher.noble",
+        "observer=/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/inputs/wrong-version-observer.noble",
+        "withdraw=/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/inputs/wrong-version-withdraw.noble",
+        "publish-and-trap=/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/inputs/wrong-version-publish-and-trap.noble"
+      ],
+      "cwd": "/home/brittonr/git/noble",
+      "timeout_ms": 180000,
+      "stdout": "commands/0007-wrong-version-compile.stdout",
+      "stderr": "commands/0007-wrong-version-compile.stderr",
+      "status": 0,
+      "signal": null,
+      "error": null
+    },
+    {
+      "id": 8,
+      "label": "wrong-version-wasm-validate",
+      "executable": "executables/wasm_tools",
+      "executable_sha256": "30b6ccb08b58d6159f196eb3d21beea1dcfcf9ec2948a791e32aad95f6d91d2f",
+      "arguments": [
+        "validate",
+        "/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/components/wrong-version/component.wasm"
+      ],
+      "cwd": "/home/brittonr/git/noble",
+      "timeout_ms": 180000,
+      "stdout": "commands/0008-wrong-version-wasm-validate.stdout",
+      "stderr": "commands/0008-wrong-version-wasm-validate.stderr",
+      "status": 0,
+      "signal": null,
+      "error": null
+    },
+    {
+      "id": 9,
+      "label": "wrong-version-wit-inspect",
+      "executable": "executables/wasm_tools",
+      "executable_sha256": "30b6ccb08b58d6159f196eb3d21beea1dcfcf9ec2948a791e32aad95f6d91d2f",
+      "arguments": [
+        "component",
+        "wit",
+        "/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/components/wrong-version/component.wasm"
+      ],
+      "cwd": "/home/brittonr/git/noble",
+      "timeout_ms": 180000,
+      "stdout": "commands/0009-wrong-version-wit-inspect.stdout",
+      "stderr": "commands/0009-wrong-version-wit-inspect.stderr",
+      "status": 0,
+      "signal": null,
+      "error": null
+    },
+    {
+      "id": 10,
+      "label": "wrong-signature-compile",
+      "executable": "executables/cli",
+      "executable_sha256": "9ecbac84d84f28eda5cecb5d688003e087b4dc20b29640f51c3431a547fb4f51",
+      "arguments": [
+        "component",
+        "compile",
+        "/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/inputs/wrong-signature.wit",
+        "service",
+        "/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/components/wrong-signature",
+        "publisher=/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/inputs/wrong-signature-publisher.noble",
+        "observer=/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/inputs/wrong-signature-observer.noble",
+        "withdraw=/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/inputs/wrong-signature-withdraw.noble",
+        "publish-and-trap=/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/inputs/wrong-signature-publish-and-trap.noble"
+      ],
+      "cwd": "/home/brittonr/git/noble",
+      "timeout_ms": 180000,
+      "stdout": "commands/0010-wrong-signature-compile.stdout",
+      "stderr": "commands/0010-wrong-signature-compile.stderr",
+      "status": 0,
+      "signal": null,
+      "error": null
+    },
+    {
+      "id": 11,
+      "label": "wrong-signature-wasm-validate",
+      "executable": "executables/wasm_tools",
+      "executable_sha256": "30b6ccb08b58d6159f196eb3d21beea1dcfcf9ec2948a791e32aad95f6d91d2f",
+      "arguments": [
+        "validate",
+        "/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/components/wrong-signature/component.wasm"
+      ],
+      "cwd": "/home/brittonr/git/noble",
+      "timeout_ms": 180000,
+      "stdout": "commands/0011-wrong-signature-wasm-validate.stdout",
+      "stderr": "commands/0011-wrong-signature-wasm-validate.stderr",
+      "status": 0,
+      "signal": null,
+      "error": null
+    },
+    {
+      "id": 12,
+      "label": "wrong-signature-wit-inspect",
+      "executable": "executables/wasm_tools",
+      "executable_sha256": "30b6ccb08b58d6159f196eb3d21beea1dcfcf9ec2948a791e32aad95f6d91d2f",
+      "arguments": [
+        "component",
+        "wit",
+        "/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/components/wrong-signature/component.wasm"
+      ],
+      "cwd": "/home/brittonr/git/noble",
+      "timeout_ms": 180000,
+      "stdout": "commands/0012-wrong-signature-wit-inspect.stdout",
+      "stderr": "commands/0012-wrong-signature-wit-inspect.stderr",
+      "status": 0,
+      "signal": null,
+      "error": null
+    },
+    {
+      "id": 13,
+      "label": "bad-import-identity-compile",
+      "executable": "executables/cli",
+      "executable_sha256": "9ecbac84d84f28eda5cecb5d688003e087b4dc20b29640f51c3431a547fb4f51",
+      "arguments": [
+        "component",
+        "compile",
+        "/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/inputs/selected-syndicate.wit",
+        "service",
+        "/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/components/bad-import-identity",
+        "publisher=/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/inputs/bad-import-identity-publisher.noble",
+        "observer=/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/inputs/bad-import-identity-observer.noble",
+        "withdraw=/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/inputs/bad-import-identity-withdraw.noble",
+        "publish-and-trap=/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/inputs/bad-import-identity-publish-and-trap.noble"
+      ],
+      "cwd": "/home/brittonr/git/noble",
+      "timeout_ms": 180000,
+      "stdout": "commands/0013-bad-import-identity-compile.stdout",
+      "stderr": "commands/0013-bad-import-identity-compile.stderr",
+      "status": 0,
+      "signal": null,
+      "error": null
+    },
+    {
+      "id": 14,
+      "label": "bad-import-identity-wasm-validate",
+      "executable": "executables/wasm_tools",
+      "executable_sha256": "30b6ccb08b58d6159f196eb3d21beea1dcfcf9ec2948a791e32aad95f6d91d2f",
+      "arguments": [
+        "validate",
+        "/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/components/bad-import-identity/component.wasm"
+      ],
+      "cwd": "/home/brittonr/git/noble",
+      "timeout_ms": 180000,
+      "stdout": "commands/0014-bad-import-identity-wasm-validate.stdout",
+      "stderr": "commands/0014-bad-import-identity-wasm-validate.stderr",
+      "status": 0,
+      "signal": null,
+      "error": null
+    },
+    {
+      "id": 15,
+      "label": "bad-import-identity-wit-inspect",
+      "executable": "executables/wasm_tools",
+      "executable_sha256": "30b6ccb08b58d6159f196eb3d21beea1dcfcf9ec2948a791e32aad95f6d91d2f",
+      "arguments": [
+        "component",
+        "wit",
+        "/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/components/bad-import-identity/component.wasm"
+      ],
+      "cwd": "/home/brittonr/git/noble",
+      "timeout_ms": 180000,
+      "stdout": "commands/0015-bad-import-identity-wit-inspect.stdout",
+      "stderr": "commands/0015-bad-import-identity-wit-inspect.stderr",
+      "status": 0,
+      "signal": null,
+      "error": null
+    },
+    {
+      "id": 16,
+      "label": "bad-import-arguments-compile",
+      "executable": "executables/cli",
+      "executable_sha256": "9ecbac84d84f28eda5cecb5d688003e087b4dc20b29640f51c3431a547fb4f51",
+      "arguments": [
+        "component",
+        "compile",
+        "/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/inputs/selected-syndicate.wit",
+        "service",
+        "/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/components/bad-import-arguments",
+        "publisher=/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/inputs/bad-import-arguments-publisher.noble",
+        "observer=/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/inputs/bad-import-arguments-observer.noble",
+        "withdraw=/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/inputs/bad-import-arguments-withdraw.noble",
+        "publish-and-trap=/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/inputs/bad-import-arguments-publish-and-trap.noble"
+      ],
+      "cwd": "/home/brittonr/git/noble",
+      "timeout_ms": 180000,
+      "stdout": "commands/0016-bad-import-arguments-compile.stdout",
+      "stderr": "commands/0016-bad-import-arguments-compile.stderr",
+      "status": 0,
+      "signal": null,
+      "error": null
+    },
+    {
+      "id": 17,
+      "label": "bad-import-arguments-wasm-validate",
+      "executable": "executables/wasm_tools",
+      "executable_sha256": "30b6ccb08b58d6159f196eb3d21beea1dcfcf9ec2948a791e32aad95f6d91d2f",
+      "arguments": [
+        "validate",
+        "/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/components/bad-import-arguments/component.wasm"
+      ],
+      "cwd": "/home/brittonr/git/noble",
+      "timeout_ms": 180000,
+      "stdout": "commands/0017-bad-import-arguments-wasm-validate.stdout",
+      "stderr": "commands/0017-bad-import-arguments-wasm-validate.stderr",
+      "status": 0,
+      "signal": null,
+      "error": null
+    },
+    {
+      "id": 18,
+      "label": "bad-import-arguments-wit-inspect",
+      "executable": "executables/wasm_tools",
+      "executable_sha256": "30b6ccb08b58d6159f196eb3d21beea1dcfcf9ec2948a791e32aad95f6d91d2f",
+      "arguments": [
+        "component",
+        "wit",
+        "/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/components/bad-import-arguments/component.wasm"
+      ],
+      "cwd": "/home/brittonr/git/noble",
+      "timeout_ms": 180000,
+      "stdout": "commands/0018-bad-import-arguments-wit-inspect.stdout",
+      "stderr": "commands/0018-bad-import-arguments-wit-inspect.stderr",
+      "status": 0,
+      "signal": null,
+      "error": null
+    },
+    {
+      "id": 19,
+      "label": "missing-fail-compile",
+      "executable": "executables/cli",
+      "executable_sha256": "9ecbac84d84f28eda5cecb5d688003e087b4dc20b29640f51c3431a547fb4f51",
+      "arguments": [
+        "component",
+        "compile",
+        "/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/inputs/selected-syndicate.wit",
+        "service",
+        "/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/components/missing-fail",
+        "publisher=/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/inputs/missing-fail-publisher.noble",
+        "observer=/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/inputs/missing-fail-observer.noble",
+        "withdraw=/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/inputs/missing-fail-withdraw.noble",
+        "publish-and-trap=/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/inputs/missing-fail-publish-and-trap.noble"
+      ],
+      "cwd": "/home/brittonr/git/noble",
+      "timeout_ms": 180000,
+      "stdout": "commands/0019-missing-fail-compile.stdout",
+      "stderr": "commands/0019-missing-fail-compile.stderr",
+      "status": 0,
+      "signal": null,
+      "error": null
+    },
+    {
+      "id": 20,
+      "label": "missing-fail-wasm-validate",
+      "executable": "executables/wasm_tools",
+      "executable_sha256": "30b6ccb08b58d6159f196eb3d21beea1dcfcf9ec2948a791e32aad95f6d91d2f",
+      "arguments": [
+        "validate",
+        "/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/components/missing-fail/component.wasm"
+      ],
+      "cwd": "/home/brittonr/git/noble",
+      "timeout_ms": 180000,
+      "stdout": "commands/0020-missing-fail-wasm-validate.stdout",
+      "stderr": "commands/0020-missing-fail-wasm-validate.stderr",
+      "status": 0,
+      "signal": null,
+      "error": null
+    },
+    {
+      "id": 21,
+      "label": "missing-fail-wit-inspect",
+      "executable": "executables/wasm_tools",
+      "executable_sha256": "30b6ccb08b58d6159f196eb3d21beea1dcfcf9ec2948a791e32aad95f6d91d2f",
+      "arguments": [
+        "component",
+        "wit",
+        "/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/components/missing-fail/component.wasm"
+      ],
+      "cwd": "/home/brittonr/git/noble",
+      "timeout_ms": 180000,
+      "stdout": "commands/0021-missing-fail-wit-inspect.stdout",
+      "stderr": "commands/0021-missing-fail-wit-inspect.stderr",
+      "status": 0,
+      "signal": null,
+      "error": null
+    },
+    {
+      "id": 22,
+      "label": "independent-monitored-wasmtime-peer",
+      "executable": "executables/peer",
+      "executable_sha256": "4112153cb39f156b688a9c30522af8012622b8d4c1368a1e9b410ef68c919310",
+      "arguments": [
+        "/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/components/publisher/component.wasm",
+        "/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/components/subscriber/component.wasm",
+        "scenario",
+        "/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/m8/inputs/selected-workload.json"
+      ],
+      "cwd": "/home/brittonr/git/noble",
+      "timeout_ms": 300000,
+      "stdout": "commands/0022-independent-monitored-wasmtime-peer.stdout",
+      "stderr": "commands/0022-independent-monitored-wasmtime-peer.stderr",
+      "status": 0,
+      "signal": null,
+      "error": null
+    }
+  ],
+  "components": {
+    "publisher": {
+      "artifact": "components/publisher/component.wasm",
+      "sha256": "6341b110b6c4595822d6e84814167836d6f58d8ae8436403bb72d53ccdd02074",
+      "compile": 1,
+      "validation": 2,
+      "inspection": 3,
+      "source_exports": [
+        {
+          "name": "publisher",
+          "sha256": "2a12746da1c365fc05bf670addc8c2787f1b9e0a566d4d3abdf979929b636a5c"
+        },
+        {
+          "name": "observer",
+          "sha256": "0f1239af8b1afe0dea2564ae8a11c581294dc3fd0fba306fe9b3a11901ce3b56"
+        },
+        {
+          "name": "withdraw",
+          "sha256": "ce3f57c9732dae0d37279e0f0ce94b1a6a4d4ba0b6e265f7f8f027fcc07b0bd4"
+        },
+        {
+          "name": "publish-and-trap",
+          "sha256": "fad51c5690164e5ba8f4587b0fc1850347d556be4fe14001ca8dc5c1cc523577"
+        }
+      ],
+      "resolved_imports": null
+    },
+    "subscriber": {
+      "artifact": "components/subscriber/component.wasm",
+      "sha256": "e0d9d4bc11f996cbd4a2f055357433cc96b6424608ceb4729928c26e9b6a907b",
+      "compile": 4,
+      "validation": 5,
+      "inspection": 6,
+      "source_exports": [
+        {
+          "name": "publisher",
+          "sha256": "2a12746da1c365fc05bf670addc8c2787f1b9e0a566d4d3abdf979929b636a5c"
+        },
+        {
+          "name": "observer",
+          "sha256": "0f1239af8b1afe0dea2564ae8a11c581294dc3fd0fba306fe9b3a11901ce3b56"
+        },
+        {
+          "name": "withdraw",
+          "sha256": "12c140bb99126835a90c00c66efeb1ba1cba56f18c1796a59d8c1c8480e77327"
+        },
+        {
+          "name": "publish-and-trap",
+          "sha256": "fad51c5690164e5ba8f4587b0fc1850347d556be4fe14001ca8dc5c1cc523577"
+        }
+      ],
+      "resolved_imports": null
+    },
+    "wrong-version": {
+      "artifact": "components/wrong-version/component.wasm",
+      "sha256": "c289dfb203725d22cd250503b30bb69cfa21ad96e945aa3070b1126e3d28b85b",
+      "compile": 7,
+      "validation": 8,
+      "inspection": 9,
+      "source_exports": [
+        {
+          "name": "publisher",
+          "sha256": "2a12746da1c365fc05bf670addc8c2787f1b9e0a566d4d3abdf979929b636a5c"
+        },
+        {
+          "name": "observer",
+          "sha256": "0f1239af8b1afe0dea2564ae8a11c581294dc3fd0fba306fe9b3a11901ce3b56"
+        },
+        {
+          "name": "withdraw",
+          "sha256": "ce3f57c9732dae0d37279e0f0ce94b1a6a4d4ba0b6e265f7f8f027fcc07b0bd4"
+        },
+        {
+          "name": "publish-and-trap",
+          "sha256": "fad51c5690164e5ba8f4587b0fc1850347d556be4fe14001ca8dc5c1cc523577"
+        }
+      ],
+      "resolved_imports": null
+    },
+    "wrong-signature": {
+      "artifact": "components/wrong-signature/component.wasm",
+      "sha256": "822d779d58cce584aa8023bd26fd0aba6e4176628e933a603719785231feb533",
+      "compile": 10,
+      "validation": 11,
+      "inspection": 12,
+      "source_exports": [
+        {
+          "name": "publisher",
+          "sha256": "f9c112e77b3512d995263b2da604c20897c586b158af7f230e290ce05b5ab2e3"
+        },
+        {
+          "name": "observer",
+          "sha256": "0f1239af8b1afe0dea2564ae8a11c581294dc3fd0fba306fe9b3a11901ce3b56"
+        },
+        {
+          "name": "withdraw",
+          "sha256": "ce3f57c9732dae0d37279e0f0ce94b1a6a4d4ba0b6e265f7f8f027fcc07b0bd4"
+        },
+        {
+          "name": "publish-and-trap",
+          "sha256": "f9c112e77b3512d995263b2da604c20897c586b158af7f230e290ce05b5ab2e3"
+        }
+      ],
+      "resolved_imports": null
+    },
+    "bad-import-identity": {
+      "artifact": "components/bad-import-identity/component.wasm",
+      "sha256": "0ce38e02d8b3ecbbcc47c08cac6c6d0420da05924c34344ee7b7e6163fa3697d",
+      "compile": 13,
+      "validation": 14,
+      "inspection": 15,
+      "source_exports": [
+        {
+          "name": "publisher",
+          "sha256": "2a12746da1c365fc05bf670addc8c2787f1b9e0a566d4d3abdf979929b636a5c"
+        },
+        {
+          "name": "observer",
+          "sha256": "0f1239af8b1afe0dea2564ae8a11c581294dc3fd0fba306fe9b3a11901ce3b56"
+        },
+        {
+          "name": "withdraw",
+          "sha256": "fac47c6d388473a049bfab6e9282378c94023da37c2380d1a816e275498d175c"
+        },
+        {
+          "name": "publish-and-trap",
+          "sha256": "fad51c5690164e5ba8f4587b0fc1850347d556be4fe14001ca8dc5c1cc523577"
+        }
+      ],
+      "resolved_imports": null
+    },
+    "bad-import-arguments": {
+      "artifact": "components/bad-import-arguments/component.wasm",
+      "sha256": "747bc7e94623f12cc805f8bb1ab419e9460659b55407523e65d8db80242c6146",
+      "compile": 16,
+      "validation": 17,
+      "inspection": 18,
+      "source_exports": [
+        {
+          "name": "publisher",
+          "sha256": "2a12746da1c365fc05bf670addc8c2787f1b9e0a566d4d3abdf979929b636a5c"
+        },
+        {
+          "name": "observer",
+          "sha256": "0f1239af8b1afe0dea2564ae8a11c581294dc3fd0fba306fe9b3a11901ce3b56"
+        },
+        {
+          "name": "withdraw",
+          "sha256": "83fca4104884efc173139f37ed12b0e862ca52cea132ca4412de04538a909223"
+        },
+        {
+          "name": "publish-and-trap",
+          "sha256": "fad51c5690164e5ba8f4587b0fc1850347d556be4fe14001ca8dc5c1cc523577"
+        }
+      ],
+      "resolved_imports": null
+    },
+    "missing-fail": {
+      "artifact": "components/missing-fail/component.wasm",
+      "sha256": "bb9c691b8a31be620bcc850b1e34c5a0d483a86e3be1cbba4fd5b39e2800c327",
+      "compile": 19,
+      "validation": 20,
+      "inspection": 21,
+      "source_exports": [
+        {
+          "name": "publisher",
+          "sha256": "2a12746da1c365fc05bf670addc8c2787f1b9e0a566d4d3abdf979929b636a5c"
+        },
+        {
+          "name": "observer",
+          "sha256": "0f1239af8b1afe0dea2564ae8a11c581294dc3fd0fba306fe9b3a11901ce3b56"
+        },
+        {
+          "name": "withdraw",
+          "sha256": "ce3f57c9732dae0d37279e0f0ce94b1a6a4d4ba0b6e265f7f8f027fcc07b0bd4"
+        },
+        {
+          "name": "publish-and-trap",
+          "sha256": "2a12746da1c365fc05bf670addc8c2787f1b9e0a566d4d3abdf979929b636a5c"
+        }
+      ],
+      "resolved_imports": null
+    }
+  },
+  "cases": [
+    {
+      "id": "S-CASE-18",
+      "input": {
+        "harness": "production-finite-service-projector",
+        "descriptor": {
+          "protocol": "noble:choreography/service@1.0.0",
+          "rounds": [
+            {
+              "name": "clock",
+              "ready": false,
+              "exit": "withdraw"
+            },
+            {
+              "name": "alarm",
+              "ready": true,
+              "exit": "trap"
+            }
+          ]
+        },
+        "descriptor_utf8": "{\"protocol\":\"noble:choreography/service@1.0.0\",\"rounds\":[{\"name\":\"clock\",\"ready\":false,\"exit\":\"withdraw\"},{\"name\":\"alarm\",\"ready\":true,\"exit\":\"trap\"}]}",
+        "descriptor_bytes": 151,
+        "world": "noble:syndicate/service@1.0.0"
+      },
+      "expected": {
+        "stage": "projection",
+        "outcome": "admitted",
+        "guest_requests": 0,
+        "protected_operations": 0,
+        "global_actions": [
+          {
+            "step": 0,
+            "round": 0,
+            "role": "subscriber",
+            "export": "observer",
+            "name": "clock",
+            "ready": false,
+            "result": false
+          },
+          {
+            "step": 1,
+            "round": 0,
+            "role": "publisher",
+            "export": "publisher",
+            "name": "clock",
+            "ready": false,
+            "result": true
+          },
+          {
+            "step": 2,
+            "round": 0,
+            "role": "subscriber",
+            "export": "observer",
+            "name": "clock",
+            "ready": false,
+            "result": true
+          },
+          {
+            "step": 3,
+            "round": 0,
+            "role": "publisher",
+            "export": "withdraw",
+            "name": "clock",
+            "result": true
+          },
+          {
+            "step": 4,
+            "round": 0,
+            "role": "subscriber",
+            "export": "observer",
+            "name": "clock",
+            "ready": false,
+            "result": false
+          },
+          {
+            "step": 5,
+            "round": 1,
+            "role": "subscriber",
+            "export": "observer",
+            "name": "alarm",
+            "ready": true,
+            "result": false
+          },
+          {
+            "step": 6,
+            "round": 1,
+            "role": "publisher",
+            "export": "publish-and-trap",
+            "name": "alarm",
+            "ready": true,
+            "result": "trap-after-publication"
+          },
+          {
+            "step": 7,
+            "round": 1,
+            "role": "subscriber",
+            "export": "observer",
+            "name": "alarm",
+            "ready": true,
+            "result": false
+          }
+        ],
+        "publisher_steps": [
+          1,
+          3,
+          6
+        ],
+        "subscriber_steps": [
+          0,
+          2,
+          4,
+          5,
+          7
+        ],
+        "descriptor_grants_authority": false,
+        "new_wit_world_created": false
+      },
+      "result": "passed",
+      "evidence": [
+        {
+          "command": 22
+        }
+      ],
+      "variants": []
+    },
+    {
+      "id": "WI-19",
+      "input": {
+        "harness": "compiled-monitored-choreography-service",
+        "descriptor": {
+          "protocol": "noble:choreography/service@1.0.0",
+          "rounds": [
+            {
+              "name": "clock",
+              "ready": false,
+              "exit": "withdraw"
+            },
+            {
+              "name": "alarm",
+              "ready": true,
+              "exit": "trap"
+            }
+          ]
+        },
+        "descriptor_utf8": "{\"protocol\":\"noble:choreography/service@1.0.0\",\"rounds\":[{\"name\":\"clock\",\"ready\":false,\"exit\":\"withdraw\"},{\"name\":\"alarm\",\"ready\":true,\"exit\":\"trap\"}]}",
+        "world": "noble:syndicate/service@1.0.0",
+        "instances": [
+          "separately-compiled-noble-publisher",
+          "separately-compiled-noble-subscriber"
+        ],
+        "peer": "independent-typed-wasmtime-linker",
+        "dispatch_steps": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "all_imports_use_production_monitor": true
+      },
+      "expected": {
+        "stage": "independent-component-peer",
+        "outcome": "complete-projected-plan",
+        "publisher_exports": [
+          "publisher",
+          "withdraw",
+          "publish-and-trap"
+        ],
+        "subscriber_exports": [
+          "observer",
+          "observer",
+          "observer",
+          "observer",
+          "observer"
+        ],
+        "observer_membership": [
+          false,
+          true,
+          false,
+          false,
+          false
+        ],
+        "typed_events": [
+          {
+            "kind": "add",
+            "name": "clock",
+            "ready": false
+          },
+          {
+            "kind": "remove",
+            "name": "clock",
+            "ready": false
+          },
+          {
+            "kind": "add",
+            "name": "alarm",
+            "ready": true
+          },
+          {
+            "kind": "remove",
+            "name": "alarm",
+            "ready": true
+          }
+        ],
+        "trap_import_sequence": [
+          "publish",
+          "fail"
+        ],
+        "trap_publish_import_succeeded": true,
+        "trap_fail_import_observed": true,
+        "compiled_invocation_error_observed": true,
+        "earlier_authorization_trap_satisfies_step": false,
+        "compiled_trap_observed": true,
+        "publisher_trap_reported_success": false,
+        "subscriber_observes_absence_after_trap": true,
+        "remaining_publisher_assertions": 0,
+        "subscriber_still_active": true,
+        "false_readiness_is_distinct_from_absence": true,
+        "new_wit_world_created": false,
+        "guest_facet_authority_from_descriptor": false,
+        "host_only_fixture_satisfies_case": false
+      },
+      "result": "passed",
+      "evidence": [
+        {
+          "command": 22
+        }
+      ],
+      "variants": []
+    },
+    {
+      "id": "S-CASE-19",
+      "input": {
+        "harness": "production-choreography-admission-and-monitor-refusals",
+        "baseline": {
+          "protocol": "noble:choreography/service@1.0.0",
+          "rounds": [
+            {
+              "name": "clock",
+              "ready": false,
+              "exit": "withdraw"
+            },
+            {
+              "name": "alarm",
+              "ready": true,
+              "exit": "trap"
+            }
+          ]
+        },
+        "descriptor_encoding": "strict-utf8-json",
+        "max_bytes": 512,
+        "max_container_depth": 3,
+        "baseline_utf8": "{\"protocol\":\"noble:choreography/service@1.0.0\",\"rounds\":[{\"name\":\"clock\",\"ready\":false,\"exit\":\"withdraw\"},{\"name\":\"alarm\",\"ready\":true,\"exit\":\"trap\"}]}",
+        "baseline_bytes": 151,
+        "pre_session_mutations": [
+          "wrong-protocol-version",
+          "unknown-field",
+          "wrong-ready-type",
+          "invalid-name",
+          "duplicate-name",
+          "zero-rounds",
+          "three-rounds",
+          "nonterminal-trap",
+          "513-byte-input",
+          "depth-four",
+          "invalid-utf8",
+          "duplicate-object-key",
+          "duplicate-round-key",
+          "trailing-content",
+          "nonempty-dataspace"
+        ],
+        "descriptor_byte_variants": {
+          "wrong-protocol-version": {
+            "utf8": "{\"protocol\":\"noble:choreography/service@2.0.0\",\"rounds\":[{\"name\":\"clock\",\"ready\":false,\"exit\":\"withdraw\"}]}"
+          },
+          "unknown-field": {
+            "utf8": "{\"protocol\":\"noble:choreography/service@1.0.0\",\"rounds\":[{\"name\":\"clock\",\"ready\":false,\"exit\":\"withdraw\",\"extra\":0}]}"
+          },
+          "wrong-ready-type": {
+            "utf8": "{\"protocol\":\"noble:choreography/service@1.0.0\",\"rounds\":[{\"name\":\"clock\",\"ready\":\"false\",\"exit\":\"withdraw\"}]}"
+          },
+          "invalid-name": {
+            "utf8": "{\"protocol\":\"noble:choreography/service@1.0.0\",\"rounds\":[{\"name\":\"!\",\"ready\":false,\"exit\":\"withdraw\"}]}"
+          },
+          "duplicate-name": {
+            "utf8": "{\"protocol\":\"noble:choreography/service@1.0.0\",\"rounds\":[{\"name\":\"clock\",\"ready\":false,\"exit\":\"withdraw\"},{\"name\":\"clock\",\"ready\":true,\"exit\":\"trap\"}]}"
+          },
+          "zero-rounds": {
+            "utf8": "{\"protocol\":\"noble:choreography/service@1.0.0\",\"rounds\":[]}"
+          },
+          "three-rounds": {
+            "utf8": "{\"protocol\":\"noble:choreography/service@1.0.0\",\"rounds\":[{\"name\":\"a\",\"ready\":false,\"exit\":\"withdraw\"},{\"name\":\"b\",\"ready\":false,\"exit\":\"withdraw\"},{\"name\":\"c\",\"ready\":true,\"exit\":\"withdraw\"}]}"
+          },
+          "nonterminal-trap": {
+            "utf8": "{\"protocol\":\"noble:choreography/service@1.0.0\",\"rounds\":[{\"name\":\"clock\",\"ready\":false,\"exit\":\"trap\"},{\"name\":\"alarm\",\"ready\":true,\"exit\":\"withdraw\"}]}"
+          },
+          "513-byte-input": {
+            "prefix": "baseline_utf8",
+            "append_ascii_space_count": 362,
+            "total_bytes": 513
+          },
+          "depth-four": {
+            "utf8": "{\"protocol\":\"noble:choreography/service@1.0.0\",\"rounds\":[{\"name\":\"clock\",\"ready\":false,\"exit\":\"withdraw\",\"extra\":[0]}]}"
+          },
+          "invalid-utf8": {
+            "prefix_utf8": "{\"protocol\":\"noble:choreography/service@1.0.0\",\"rounds\":[{\"name\":\"",
+            "insert_hex": "ff",
+            "suffix_utf8": "\",\"ready\":false,\"exit\":\"withdraw\"}]}"
+          },
+          "duplicate-object-key": {
+            "utf8": "{\"protocol\":\"noble:choreography/service@1.0.0\",\"protocol\":\"noble:choreography/service@1.0.0\",\"rounds\":[{\"name\":\"clock\",\"ready\":false,\"exit\":\"withdraw\"}]}"
+          },
+          "duplicate-round-key": {
+            "utf8": "{\"protocol\":\"noble:choreography/service@1.0.0\",\"rounds\":[{\"name\":\"clock\",\"ready\":false,\"ready\":false,\"exit\":\"withdraw\"}]}"
+          },
+          "trailing-content": {
+            "prefix": "baseline_utf8",
+            "append_utf8": "{}"
+          }
+        },
+        "pre_export_mutations": [
+          "wrong-role",
+          "out-of-order",
+          "replayed-step",
+          "wrong-export-publisher-instead-of-publish-and-trap",
+          "wrong-name",
+          "wrong-ready",
+          "foreign-facet",
+          "retired-facet",
+          "forged-rights",
+          "false-ready-mistaken-for-absence"
+        ],
+        "in_flight_mutations": [
+          "wrong-import-identity",
+          "wrong-import-arguments",
+          "missing-fail-after-trap-publication"
+        ],
+        "in_flight_injection_role": "publisher",
+        "baseline_cleanup_assertion_owned_before_in_flight_refusal": true
+      },
+      "expected": {
+        "stage": "production-boundaries",
+        "outcome": "reject-all-declared-mutations",
+        "pre_session": {
+          "typed_descriptors_created": 0,
+          "facet_rights_created": 0,
+          "guest_requests": 0,
+          "protected_operations": 0,
+          "dataspace_unchanged": true,
+          "byte_variant_rejection_stage": {
+            "513-byte-input": "pre-parse-length",
+            "depth-four": "pre-parse-depth",
+            "invalid-utf8": "pre-parse-utf8",
+            "duplicate-object-key": "typed-deserialize",
+            "duplicate-round-key": "typed-deserialize",
+            "trailing-content": "parser-end"
+          }
+        },
+        "pre_export": {
+          "cursor_unchanged": true,
+          "dataspace_unchanged": true,
+          "events_unchanged": true,
+          "rights_unchanged": true,
+          "guest_requests_unchanged": true,
+          "protected_operations_unchanged": true
+        },
+        "in_flight": {
+          "unauthorized_m7_operations": 0,
+          "unauthorized_protected_operations": 0,
+          "session_cursor_unchanged": true,
+          "mandatory_trap_cleanup_permitted": true,
+          "owned_assertions_retracted_on_trap": true,
+          "typed_removal_permitted": true,
+          "choreography_completed": false
+        }
+      },
+      "result": "passed",
+      "evidence": [
+        {
+          "command": 22
+        }
+      ],
+      "variants": [
+        {
+          "name": "wrong-protocol-version",
+          "observed": {
+            "after": [
+              0,
+              0,
+              0
+            ],
+            "before": [
+              0,
+              0,
+              0
+            ],
+            "error": "Protocol",
+            "facet_rights_created": 0,
+            "guest_requests": 0,
+            "input_sha256": "c19ae631d341f071e42c1c176102d169ad7664ab8e7c0e33e1b85c6d7a798725",
+            "name": "wrong-protocol-version",
+            "outcome": "reject",
+            "protected_operations": 0,
+            "stage": "version",
+            "typed_descriptors_created": 0
+          },
+          "result": "passed"
+        },
+        {
+          "name": "unknown-field",
+          "observed": {
+            "after": [
+              0,
+              0,
+              0
+            ],
+            "before": [
+              0,
+              0,
+              0
+            ],
+            "error": "Descriptor",
+            "facet_rights_created": 0,
+            "guest_requests": 0,
+            "input_sha256": "244f5372d40c2dadb4b43e358e70b6a579055a0bb8c2602fd56c253825642f68",
+            "name": "unknown-field",
+            "outcome": "reject",
+            "protected_operations": 0,
+            "stage": "typed-deserialize",
+            "typed_descriptors_created": 0
+          },
+          "result": "passed"
+        },
+        {
+          "name": "wrong-ready-type",
+          "observed": {
+            "after": [
+              0,
+              0,
+              0
+            ],
+            "before": [
+              0,
+              0,
+              0
+            ],
+            "error": "Descriptor",
+            "facet_rights_created": 0,
+            "guest_requests": 0,
+            "input_sha256": "478573c93da55e122aaa966eda20da4eedad62c8196b45aa62cf6e14fb8cbd2d",
+            "name": "wrong-ready-type",
+            "outcome": "reject",
+            "protected_operations": 0,
+            "stage": "typed-deserialize",
+            "typed_descriptors_created": 0
+          },
+          "result": "passed"
+        },
+        {
+          "name": "invalid-name",
+          "observed": {
+            "after": [
+              0,
+              0,
+              0
+            ],
+            "before": [
+              0,
+              0,
+              0
+            ],
+            "error": "Descriptor",
+            "facet_rights_created": 0,
+            "guest_requests": 0,
+            "input_sha256": "3507cf572f67033285af497008e1ff30a712866ce599acb91328bce87763f71f",
+            "name": "invalid-name",
+            "outcome": "reject",
+            "protected_operations": 0,
+            "stage": "typed-deserialize",
+            "typed_descriptors_created": 0
+          },
+          "result": "passed"
+        },
+        {
+          "name": "duplicate-name",
+          "observed": {
+            "after": [
+              0,
+              0,
+              0
+            ],
+            "before": [
+              0,
+              0,
+              0
+            ],
+            "error": "Descriptor",
+            "facet_rights_created": 0,
+            "guest_requests": 0,
+            "input_sha256": "07ffe2125e49d0eb2d5ad3d6d5e946c425f0ace4e54713456b0eb7d58621a89e",
+            "name": "duplicate-name",
+            "outcome": "reject",
+            "protected_operations": 0,
+            "stage": "typed-deserialize",
+            "typed_descriptors_created": 0
+          },
+          "result": "passed"
+        },
+        {
+          "name": "zero-rounds",
+          "observed": {
+            "after": [
+              0,
+              0,
+              0
+            ],
+            "before": [
+              0,
+              0,
+              0
+            ],
+            "error": "Descriptor",
+            "facet_rights_created": 0,
+            "guest_requests": 0,
+            "input_sha256": "21fc34a2826553b7f2658e03d2811a75ae4a95d076d689d23ca8f64f16e599c3",
+            "name": "zero-rounds",
+            "outcome": "reject",
+            "protected_operations": 0,
+            "stage": "typed-deserialize",
+            "typed_descriptors_created": 0
+          },
+          "result": "passed"
+        },
+        {
+          "name": "three-rounds",
+          "observed": {
+            "after": [
+              0,
+              0,
+              0
+            ],
+            "before": [
+              0,
+              0,
+              0
+            ],
+            "error": "Descriptor",
+            "facet_rights_created": 0,
+            "guest_requests": 0,
+            "input_sha256": "27c89e0aa45ccb57abf8f2c0fd1b28e9f632e2bcff7aa47d1e37752d66af7f65",
+            "name": "three-rounds",
+            "outcome": "reject",
+            "protected_operations": 0,
+            "stage": "typed-deserialize",
+            "typed_descriptors_created": 0
+          },
+          "result": "passed"
+        },
+        {
+          "name": "nonterminal-trap",
+          "observed": {
+            "after": [
+              0,
+              0,
+              0
+            ],
+            "before": [
+              0,
+              0,
+              0
+            ],
+            "error": "Descriptor",
+            "facet_rights_created": 0,
+            "guest_requests": 0,
+            "input_sha256": "185f77772e8b5a1c247b161d4a3affabf4812ef62a3f7fb9f9b7595ff1883609",
+            "name": "nonterminal-trap",
+            "outcome": "reject",
+            "protected_operations": 0,
+            "stage": "typed-deserialize",
+            "typed_descriptors_created": 0
+          },
+          "result": "passed"
+        },
+        {
+          "name": "513-byte-input",
+          "observed": {
+            "after": [
+              0,
+              0,
+              0
+            ],
+            "before": [
+              0,
+              0,
+              0
+            ],
+            "error": "ByteLimit",
+            "facet_rights_created": 0,
+            "guest_requests": 0,
+            "input_sha256": "0846a1dd0ec28887497732947c62396a19796a2c74590eead7a3358217f4f607",
+            "name": "513-byte-input",
+            "outcome": "reject",
+            "protected_operations": 0,
+            "stage": "pre-parse-length",
+            "typed_descriptors_created": 0
+          },
+          "result": "passed"
+        },
+        {
+          "name": "depth-four",
+          "observed": {
+            "after": [
+              0,
+              0,
+              0
+            ],
+            "before": [
+              0,
+              0,
+              0
+            ],
+            "error": "DepthLimit",
+            "facet_rights_created": 0,
+            "guest_requests": 0,
+            "input_sha256": "47796f3782169e0ca98b03c1299438494e1d7d66fb461774cbeb25e49f55eb40",
+            "name": "depth-four",
+            "outcome": "reject",
+            "protected_operations": 0,
+            "stage": "pre-parse-depth",
+            "typed_descriptors_created": 0
+          },
+          "result": "passed"
+        },
+        {
+          "name": "invalid-utf8",
+          "observed": {
+            "after": [
+              0,
+              0,
+              0
+            ],
+            "before": [
+              0,
+              0,
+              0
+            ],
+            "error": "Utf8",
+            "facet_rights_created": 0,
+            "guest_requests": 0,
+            "input_sha256": "706306a64b3dfcb66db2d49636319be90c7b20b233f850485268c6357d543316",
+            "name": "invalid-utf8",
+            "outcome": "reject",
+            "protected_operations": 0,
+            "stage": "pre-parse-utf8",
+            "typed_descriptors_created": 0
+          },
+          "result": "passed"
+        },
+        {
+          "name": "duplicate-object-key",
+          "observed": {
+            "after": [
+              0,
+              0,
+              0
+            ],
+            "before": [
+              0,
+              0,
+              0
+            ],
+            "error": "Descriptor",
+            "facet_rights_created": 0,
+            "guest_requests": 0,
+            "input_sha256": "85149581c80def724059a73acd973a6f588de6a5ea44ef1c483051d137ff0225",
+            "name": "duplicate-object-key",
+            "outcome": "reject",
+            "protected_operations": 0,
+            "stage": "typed-deserialize",
+            "typed_descriptors_created": 0
+          },
+          "result": "passed"
+        },
+        {
+          "name": "duplicate-round-key",
+          "observed": {
+            "after": [
+              0,
+              0,
+              0
+            ],
+            "before": [
+              0,
+              0,
+              0
+            ],
+            "error": "Descriptor",
+            "facet_rights_created": 0,
+            "guest_requests": 0,
+            "input_sha256": "28e7fce1f736f8937fb05d2efb0605d3645bb4d3f737c96183ee8e0cddc39c5e",
+            "name": "duplicate-round-key",
+            "outcome": "reject",
+            "protected_operations": 0,
+            "stage": "typed-deserialize",
+            "typed_descriptors_created": 0
+          },
+          "result": "passed"
+        },
+        {
+          "name": "trailing-content",
+          "observed": {
+            "after": [
+              0,
+              0,
+              0
+            ],
+            "before": [
+              0,
+              0,
+              0
+            ],
+            "error": "ParserEnd",
+            "facet_rights_created": 0,
+            "guest_requests": 0,
+            "input_sha256": "b1db19f5f980b6db35ee7286dcb1ef344ec1621954a533358d7c44bd178e2a1d",
+            "name": "trailing-content",
+            "outcome": "reject",
+            "protected_operations": 0,
+            "stage": "parser-end",
+            "typed_descriptors_created": 0
+          },
+          "result": "passed"
+        },
+        {
+          "name": "nonempty-dataspace",
+          "observed": {
+            "after": [
+              1,
+              0,
+              0
+            ],
+            "before": [
+              1,
+              0,
+              0
+            ],
+            "error": "Nonempty",
+            "facet_rights_created": 0,
+            "guest_requests": 0,
+            "input_sha256": null,
+            "name": "nonempty-dataspace",
+            "outcome": "reject",
+            "protected_operations": 0,
+            "stage": "pre-session",
+            "typed_descriptors_created": 0
+          },
+          "result": "passed"
+        },
+        {
+          "name": "wrong-role",
+          "observed": {
+            "after": {
+              "cursor": 0,
+              "dataspace": {
+                "assertions": 0,
+                "facets": 2,
+                "interests": 0
+              },
+              "events": [],
+              "events_len": 0,
+              "guest_requests": 0,
+              "pending": false,
+              "protected_operations": 0,
+              "refused_imports": 0,
+              "rights": {
+                "publisher": {
+                  "facet": "Facet(1)",
+                  "observe": false,
+                  "publish": true
+                },
+                "subscriber": {
+                  "facet": "Facet(2)",
+                  "observe": true,
+                  "publish": false
+                }
+              }
+            },
+            "attempt": {
+              "export": "observer",
+              "facet": "Facet(1)",
+              "name": "clock",
+              "ready": false,
+              "role": "publisher"
+            },
+            "before": {
+              "cursor": 0,
+              "dataspace": {
+                "assertions": 0,
+                "facets": 2,
+                "interests": 0
+              },
+              "events": [],
+              "events_len": 0,
+              "guest_requests": 0,
+              "pending": false,
+              "protected_operations": 0,
+              "refused_imports": 0,
+              "rights": {
+                "publisher": {
+                  "facet": "Facet(1)",
+                  "observe": false,
+                  "publish": true
+                },
+                "subscriber": {
+                  "facet": "Facet(2)",
+                  "observe": true,
+                  "publish": false
+                }
+              }
+            },
+            "error": "Some(Denied)",
+            "guest_invoked": false,
+            "name": "wrong-role",
+            "outcome": "reject",
+            "stage": "pre-export"
+          },
+          "result": "passed"
+        },
+        {
+          "name": "out-of-order",
+          "observed": {
+            "after": {
+              "cursor": 0,
+              "dataspace": {
+                "assertions": 0,
+                "facets": 2,
+                "interests": 0
+              },
+              "events": [],
+              "events_len": 0,
+              "guest_requests": 0,
+              "pending": false,
+              "protected_operations": 0,
+              "refused_imports": 0,
+              "rights": {
+                "publisher": {
+                  "facet": "Facet(1)",
+                  "observe": false,
+                  "publish": true
+                },
+                "subscriber": {
+                  "facet": "Facet(2)",
+                  "observe": true,
+                  "publish": false
+                }
+              }
+            },
+            "attempt": {
+              "export": "publisher",
+              "facet": "Facet(1)",
+              "name": "clock",
+              "ready": false,
+              "role": "publisher"
+            },
+            "before": {
+              "cursor": 0,
+              "dataspace": {
+                "assertions": 0,
+                "facets": 2,
+                "interests": 0
+              },
+              "events": [],
+              "events_len": 0,
+              "guest_requests": 0,
+              "pending": false,
+              "protected_operations": 0,
+              "refused_imports": 0,
+              "rights": {
+                "publisher": {
+                  "facet": "Facet(1)",
+                  "observe": false,
+                  "publish": true
+                },
+                "subscriber": {
+                  "facet": "Facet(2)",
+                  "observe": true,
+                  "publish": false
+                }
+              }
+            },
+            "error": "Some(Denied)",
+            "guest_invoked": false,
+            "name": "out-of-order",
+            "outcome": "reject",
+            "stage": "pre-export"
+          },
+          "result": "passed"
+        },
+        {
+          "name": "replayed-step",
+          "observed": {
+            "after": {
+              "cursor": 1,
+              "dataspace": {
+                "assertions": 0,
+                "facets": 2,
+                "interests": 1
+              },
+              "events": [],
+              "events_len": 0,
+              "guest_requests": 1,
+              "pending": false,
+              "protected_operations": 1,
+              "refused_imports": 0,
+              "rights": {
+                "publisher": {
+                  "facet": "Facet(1)",
+                  "observe": false,
+                  "publish": true
+                },
+                "subscriber": {
+                  "facet": "Facet(2)",
+                  "observe": true,
+                  "publish": false
+                }
+              }
+            },
+            "attempt": {
+              "export": "observer",
+              "facet": "Facet(2)",
+              "name": "clock",
+              "ready": false,
+              "role": "subscriber"
+            },
+            "before": {
+              "cursor": 1,
+              "dataspace": {
+                "assertions": 0,
+                "facets": 2,
+                "interests": 1
+              },
+              "events": [],
+              "events_len": 0,
+              "guest_requests": 1,
+              "pending": false,
+              "protected_operations": 1,
+              "refused_imports": 0,
+              "rights": {
+                "publisher": {
+                  "facet": "Facet(1)",
+                  "observe": false,
+                  "publish": true
+                },
+                "subscriber": {
+                  "facet": "Facet(2)",
+                  "observe": true,
+                  "publish": false
+                }
+              }
+            },
+            "error": "Some(Denied)",
+            "guest_invoked": false,
+            "name": "replayed-step",
+            "outcome": "reject",
+            "stage": "pre-export"
+          },
+          "result": "passed"
+        },
+        {
+          "name": "wrong-export-publisher-instead-of-publish-and-trap",
+          "observed": {
+            "after": {
+              "cursor": 6,
+              "dataspace": {
+                "assertions": 0,
+                "facets": 2,
+                "interests": 2
+              },
+              "events": [
+                {
+                  "kind": "add",
+                  "name": "clock",
+                  "observer": "Facet(2)",
+                  "ready": false
+                },
+                {
+                  "kind": "remove",
+                  "name": "clock",
+                  "observer": "Facet(2)",
+                  "ready": false
+                }
+              ],
+              "events_len": 2,
+              "guest_requests": 6,
+              "pending": false,
+              "protected_operations": 6,
+              "refused_imports": 0,
+              "rights": {
+                "publisher": {
+                  "facet": "Facet(1)",
+                  "observe": false,
+                  "publish": true
+                },
+                "subscriber": {
+                  "facet": "Facet(2)",
+                  "observe": true,
+                  "publish": false
+                }
+              }
+            },
+            "attempt": {
+              "export": "publisher",
+              "facet": "Facet(1)",
+              "name": "alarm",
+              "ready": true,
+              "role": "publisher"
+            },
+            "before": {
+              "cursor": 6,
+              "dataspace": {
+                "assertions": 0,
+                "facets": 2,
+                "interests": 2
+              },
+              "events": [
+                {
+                  "kind": "add",
+                  "name": "clock",
+                  "observer": "Facet(2)",
+                  "ready": false
+                },
+                {
+                  "kind": "remove",
+                  "name": "clock",
+                  "observer": "Facet(2)",
+                  "ready": false
+                }
+              ],
+              "events_len": 2,
+              "guest_requests": 6,
+              "pending": false,
+              "protected_operations": 6,
+              "refused_imports": 0,
+              "rights": {
+                "publisher": {
+                  "facet": "Facet(1)",
+                  "observe": false,
+                  "publish": true
+                },
+                "subscriber": {
+                  "facet": "Facet(2)",
+                  "observe": true,
+                  "publish": false
+                }
+              }
+            },
+            "error": "Some(Denied)",
+            "guest_invoked": false,
+            "name": "wrong-export-publisher-instead-of-publish-and-trap",
+            "outcome": "reject",
+            "stage": "pre-export"
+          },
+          "result": "passed"
+        },
+        {
+          "name": "wrong-name",
+          "observed": {
+            "after": {
+              "cursor": 0,
+              "dataspace": {
+                "assertions": 0,
+                "facets": 2,
+                "interests": 0
+              },
+              "events": [],
+              "events_len": 0,
+              "guest_requests": 0,
+              "pending": false,
+              "protected_operations": 0,
+              "refused_imports": 0,
+              "rights": {
+                "publisher": {
+                  "facet": "Facet(1)",
+                  "observe": false,
+                  "publish": true
+                },
+                "subscriber": {
+                  "facet": "Facet(2)",
+                  "observe": true,
+                  "publish": false
+                }
+              }
+            },
+            "attempt": {
+              "export": "observer",
+              "facet": "Facet(2)",
+              "name": "alarm",
+              "ready": false,
+              "role": "subscriber"
+            },
+            "before": {
+              "cursor": 0,
+              "dataspace": {
+                "assertions": 0,
+                "facets": 2,
+                "interests": 0
+              },
+              "events": [],
+              "events_len": 0,
+              "guest_requests": 0,
+              "pending": false,
+              "protected_operations": 0,
+              "refused_imports": 0,
+              "rights": {
+                "publisher": {
+                  "facet": "Facet(1)",
+                  "observe": false,
+                  "publish": true
+                },
+                "subscriber": {
+                  "facet": "Facet(2)",
+                  "observe": true,
+                  "publish": false
+                }
+              }
+            },
+            "error": "Some(Denied)",
+            "guest_invoked": false,
+            "name": "wrong-name",
+            "outcome": "reject",
+            "stage": "pre-export"
+          },
+          "result": "passed"
+        },
+        {
+          "name": "wrong-ready",
+          "observed": {
+            "after": {
+              "cursor": 0,
+              "dataspace": {
+                "assertions": 0,
+                "facets": 2,
+                "interests": 0
+              },
+              "events": [],
+              "events_len": 0,
+              "guest_requests": 0,
+              "pending": false,
+              "protected_operations": 0,
+              "refused_imports": 0,
+              "rights": {
+                "publisher": {
+                  "facet": "Facet(1)",
+                  "observe": false,
+                  "publish": true
+                },
+                "subscriber": {
+                  "facet": "Facet(2)",
+                  "observe": true,
+                  "publish": false
+                }
+              }
+            },
+            "attempt": {
+              "export": "observer",
+              "facet": "Facet(2)",
+              "name": "clock",
+              "ready": true,
+              "role": "subscriber"
+            },
+            "before": {
+              "cursor": 0,
+              "dataspace": {
+                "assertions": 0,
+                "facets": 2,
+                "interests": 0
+              },
+              "events": [],
+              "events_len": 0,
+              "guest_requests": 0,
+              "pending": false,
+              "protected_operations": 0,
+              "refused_imports": 0,
+              "rights": {
+                "publisher": {
+                  "facet": "Facet(1)",
+                  "observe": false,
+                  "publish": true
+                },
+                "subscriber": {
+                  "facet": "Facet(2)",
+                  "observe": true,
+                  "publish": false
+                }
+              }
+            },
+            "error": "Some(Denied)",
+            "guest_invoked": false,
+            "name": "wrong-ready",
+            "outcome": "reject",
+            "stage": "pre-export"
+          },
+          "result": "passed"
+        },
+        {
+          "name": "foreign-facet",
+          "observed": {
+            "after": {
+              "cursor": 0,
+              "dataspace": {
+                "assertions": 0,
+                "facets": 2,
+                "interests": 0
+              },
+              "events": [],
+              "events_len": 0,
+              "guest_requests": 0,
+              "pending": false,
+              "protected_operations": 0,
+              "refused_imports": 0,
+              "rights": {
+                "publisher": {
+                  "facet": "Facet(1)",
+                  "observe": false,
+                  "publish": true
+                },
+                "subscriber": {
+                  "facet": "Facet(2)",
+                  "observe": true,
+                  "publish": false
+                }
+              }
+            },
+            "attempt": {
+              "export": "observer",
+              "facet": "Facet(2)",
+              "name": "clock",
+              "ready": false,
+              "role": "subscriber"
+            },
+            "before": {
+              "cursor": 0,
+              "dataspace": {
+                "assertions": 0,
+                "facets": 2,
+                "interests": 0
+              },
+              "events": [],
+              "events_len": 0,
+              "guest_requests": 0,
+              "pending": false,
+              "protected_operations": 0,
+              "refused_imports": 0,
+              "rights": {
+                "publisher": {
+                  "facet": "Facet(1)",
+                  "observe": false,
+                  "publish": true
+                },
+                "subscriber": {
+                  "facet": "Facet(2)",
+                  "observe": true,
+                  "publish": false
+                }
+              }
+            },
+            "error": "Some(Denied)",
+            "guest_invoked": false,
+            "name": "foreign-facet",
+            "outcome": "reject",
+            "stage": "pre-export"
+          },
+          "result": "passed"
+        },
+        {
+          "name": "retired-facet",
+          "observed": {
+            "after": {
+              "cursor": 7,
+              "dataspace": {
+                "assertions": 0,
+                "facets": 1,
+                "interests": 2
+              },
+              "events": [
+                {
+                  "kind": "add",
+                  "name": "clock",
+                  "observer": "Facet(2)",
+                  "ready": false
+                },
+                {
+                  "kind": "remove",
+                  "name": "clock",
+                  "observer": "Facet(2)",
+                  "ready": false
+                },
+                {
+                  "kind": "add",
+                  "name": "alarm",
+                  "observer": "Facet(2)",
+                  "ready": true
+                },
+                {
+                  "kind": "remove",
+                  "name": "alarm",
+                  "observer": "Facet(2)",
+                  "ready": true
+                }
+              ],
+              "events_len": 4,
+              "guest_requests": 8,
+              "pending": false,
+              "protected_operations": 7,
+              "refused_imports": 0,
+              "rights": {
+                "publisher": {
+                  "facet": "Facet(1)",
+                  "observe": false,
+                  "publish": true
+                },
+                "subscriber": {
+                  "facet": "Facet(2)",
+                  "observe": true,
+                  "publish": false
+                }
+              }
+            },
+            "attempt": {
+              "export": "publisher",
+              "facet": "Facet(1)",
+              "name": "alarm",
+              "ready": true,
+              "role": "publisher"
+            },
+            "before": {
+              "cursor": 7,
+              "dataspace": {
+                "assertions": 0,
+                "facets": 1,
+                "interests": 2
+              },
+              "events": [
+                {
+                  "kind": "add",
+                  "name": "clock",
+                  "observer": "Facet(2)",
+                  "ready": false
+                },
+                {
+                  "kind": "remove",
+                  "name": "clock",
+                  "observer": "Facet(2)",
+                  "ready": false
+                },
+                {
+                  "kind": "add",
+                  "name": "alarm",
+                  "observer": "Facet(2)",
+                  "ready": true
+                },
+                {
+                  "kind": "remove",
+                  "name": "alarm",
+                  "observer": "Facet(2)",
+                  "ready": true
+                }
+              ],
+              "events_len": 4,
+              "guest_requests": 8,
+              "pending": false,
+              "protected_operations": 7,
+              "refused_imports": 0,
+              "rights": {
+                "publisher": {
+                  "facet": "Facet(1)",
+                  "observe": false,
+                  "publish": true
+                },
+                "subscriber": {
+                  "facet": "Facet(2)",
+                  "observe": true,
+                  "publish": false
+                }
+              }
+            },
+            "error": "Some(Denied)",
+            "guest_invoked": false,
+            "name": "retired-facet",
+            "outcome": "reject",
+            "stage": "pre-export"
+          },
+          "result": "passed"
+        },
+        {
+          "name": "forged-rights",
+          "observed": {
+            "after": {
+              "cursor": 1,
+              "dataspace": {
+                "assertions": 0,
+                "facets": 2,
+                "interests": 1
+              },
+              "events": [],
+              "events_len": 0,
+              "guest_requests": 1,
+              "pending": false,
+              "protected_operations": 1,
+              "refused_imports": 0,
+              "rights": {
+                "publisher": {
+                  "facet": "Facet(1)",
+                  "observe": false,
+                  "publish": true
+                },
+                "subscriber": {
+                  "facet": "Facet(2)",
+                  "observe": true,
+                  "publish": false
+                }
+              }
+            },
+            "attempt": {
+              "export": "publisher",
+              "facet": "Facet(2)",
+              "name": "clock",
+              "ready": false,
+              "role": "subscriber"
+            },
+            "before": {
+              "cursor": 1,
+              "dataspace": {
+                "assertions": 0,
+                "facets": 2,
+                "interests": 1
+              },
+              "events": [],
+              "events_len": 0,
+              "guest_requests": 1,
+              "pending": false,
+              "protected_operations": 1,
+              "refused_imports": 0,
+              "rights": {
+                "publisher": {
+                  "facet": "Facet(1)",
+                  "observe": false,
+                  "publish": true
+                },
+                "subscriber": {
+                  "facet": "Facet(2)",
+                  "observe": true,
+                  "publish": false
+                }
+              }
+            },
+            "error": "Some(Denied)",
+            "guest_invoked": false,
+            "name": "forged-rights",
+            "outcome": "reject",
+            "stage": "pre-export"
+          },
+          "result": "passed"
+        },
+        {
+          "name": "false-ready-mistaken-for-absence",
+          "observed": {
+            "after": {
+              "cursor": 2,
+              "dataspace": {
+                "assertions": 1,
+                "facets": 2,
+                "interests": 1
+              },
+              "events": [
+                {
+                  "kind": "add",
+                  "name": "clock",
+                  "observer": "Facet(2)",
+                  "ready": false
+                }
+              ],
+              "events_len": 1,
+              "guest_requests": 2,
+              "pending": false,
+              "protected_operations": 2,
+              "refused_imports": 0,
+              "rights": {
+                "publisher": {
+                  "facet": "Facet(1)",
+                  "observe": false,
+                  "publish": true
+                },
+                "subscriber": {
+                  "facet": "Facet(2)",
+                  "observe": true,
+                  "publish": false
+                }
+              }
+            },
+            "attempt": {
+              "export": "observer",
+              "facet": "Facet(2)",
+              "name": "clock",
+              "ready": true,
+              "role": "subscriber"
+            },
+            "before": {
+              "cursor": 2,
+              "dataspace": {
+                "assertions": 1,
+                "facets": 2,
+                "interests": 1
+              },
+              "events": [
+                {
+                  "kind": "add",
+                  "name": "clock",
+                  "observer": "Facet(2)",
+                  "ready": false
+                }
+              ],
+              "events_len": 1,
+              "guest_requests": 2,
+              "pending": false,
+              "protected_operations": 2,
+              "refused_imports": 0,
+              "rights": {
+                "publisher": {
+                  "facet": "Facet(1)",
+                  "observe": false,
+                  "publish": true
+                },
+                "subscriber": {
+                  "facet": "Facet(2)",
+                  "observe": true,
+                  "publish": false
+                }
+              }
+            },
+            "error": "Some(Denied)",
+            "guest_invoked": false,
+            "name": "false-ready-mistaken-for-absence",
+            "outcome": "reject",
+            "stage": "pre-export"
+          },
+          "result": "passed"
+        },
+        {
+          "name": "wrong-import-identity",
+          "observed": {
+            "after": {
+              "cursor": 3,
+              "dataspace": {
+                "assertions": 0,
+                "facets": 1,
+                "interests": 1
+              },
+              "events": [
+                {
+                  "kind": "add",
+                  "name": "clock",
+                  "observer": "Facet(2)",
+                  "ready": false
+                },
+                {
+                  "kind": "remove",
+                  "name": "clock",
+                  "observer": "Facet(2)",
+                  "ready": false
+                }
+              ],
+              "events_len": 2,
+              "guest_requests": 3,
+              "pending": false,
+              "protected_operations": 3,
+              "refused_imports": 1,
+              "rights": {
+                "publisher": {
+                  "facet": "Facet(1)",
+                  "observe": false,
+                  "publish": true
+                },
+                "subscriber": {
+                  "facet": "Facet(2)",
+                  "observe": true,
+                  "publish": false
+                }
+              }
+            },
+            "before": {
+              "cursor": 3,
+              "dataspace": {
+                "assertions": 1,
+                "facets": 2,
+                "interests": 1
+              },
+              "events": [
+                {
+                  "kind": "add",
+                  "name": "clock",
+                  "observer": "Facet(2)",
+                  "ready": false
+                }
+              ],
+              "events_len": 1,
+              "guest_requests": 3,
+              "pending": false,
+              "protected_operations": 3,
+              "refused_imports": 0,
+              "rights": {
+                "publisher": {
+                  "facet": "Facet(1)",
+                  "observe": false,
+                  "publish": true
+                },
+                "subscriber": {
+                  "facet": "Facet(2)",
+                  "observe": true,
+                  "publish": false
+                }
+              }
+            },
+            "before_finish": {
+              "cursor": 3,
+              "dataspace": {
+                "assertions": 1,
+                "facets": 2,
+                "interests": 1
+              },
+              "events": [
+                {
+                  "kind": "add",
+                  "name": "clock",
+                  "observer": "Facet(2)",
+                  "ready": false
+                }
+              ],
+              "events_len": 1,
+              "guest_requests": 3,
+              "pending": true,
+              "protected_operations": 3,
+              "refused_imports": 1,
+              "rights": {
+                "publisher": {
+                  "facet": "Facet(1)",
+                  "observe": false,
+                  "publish": true
+                },
+                "subscriber": {
+                  "facet": "Facet(2)",
+                  "observe": true,
+                  "publish": false
+                }
+              }
+            },
+            "choreography_completed": false,
+            "guest_invocation_error": "error while executing at wasm backtrace:\n    0:    0x887 - <unknown>!<wasm function 0>\n    1:    0x650 - <unknown>!<wasm function 21>: production M8 monitor refused/trapped import: ImportRefused",
+            "imports": [
+              {
+                "accepted": false,
+                "error": "ImportRefused",
+                "identity": "noble:syndicate/dataspace@1.0.0#publish",
+                "monitored": true,
+                "name": "clock",
+                "operation": "publish",
+                "ready": true,
+                "role": "publisher"
+              }
+            ],
+            "monitor_finalization_error": "Some(Invocation)",
+            "name": "wrong-import-identity",
+            "outcome": "reject",
+            "owned_assertion_before": true,
+            "previously_owned_assertions_retracted": true,
+            "publisher_retired": true,
+            "reported_success": false,
+            "typed_removal": {
+              "kind": "remove",
+              "name": "clock",
+              "observer": "Facet(2)",
+              "ready": false
+            },
+            "unauthorized_m7_operations": 0,
+            "unauthorized_protected_operations": 0
+          },
+          "result": "passed"
+        },
+        {
+          "name": "wrong-import-arguments",
+          "observed": {
+            "after": {
+              "cursor": 3,
+              "dataspace": {
+                "assertions": 0,
+                "facets": 1,
+                "interests": 1
+              },
+              "events": [
+                {
+                  "kind": "add",
+                  "name": "clock",
+                  "observer": "Facet(2)",
+                  "ready": false
+                },
+                {
+                  "kind": "remove",
+                  "name": "clock",
+                  "observer": "Facet(2)",
+                  "ready": false
+                }
+              ],
+              "events_len": 2,
+              "guest_requests": 3,
+              "pending": false,
+              "protected_operations": 3,
+              "refused_imports": 1,
+              "rights": {
+                "publisher": {
+                  "facet": "Facet(1)",
+                  "observe": false,
+                  "publish": true
+                },
+                "subscriber": {
+                  "facet": "Facet(2)",
+                  "observe": true,
+                  "publish": false
+                }
+              }
+            },
+            "before": {
+              "cursor": 3,
+              "dataspace": {
+                "assertions": 1,
+                "facets": 2,
+                "interests": 1
+              },
+              "events": [
+                {
+                  "kind": "add",
+                  "name": "clock",
+                  "observer": "Facet(2)",
+                  "ready": false
+                }
+              ],
+              "events_len": 1,
+              "guest_requests": 3,
+              "pending": false,
+              "protected_operations": 3,
+              "refused_imports": 0,
+              "rights": {
+                "publisher": {
+                  "facet": "Facet(1)",
+                  "observe": false,
+                  "publish": true
+                },
+                "subscriber": {
+                  "facet": "Facet(2)",
+                  "observe": true,
+                  "publish": false
+                }
+              }
+            },
+            "before_finish": {
+              "cursor": 3,
+              "dataspace": {
+                "assertions": 1,
+                "facets": 2,
+                "interests": 1
+              },
+              "events": [
+                {
+                  "kind": "add",
+                  "name": "clock",
+                  "observer": "Facet(2)",
+                  "ready": false
+                }
+              ],
+              "events_len": 1,
+              "guest_requests": 3,
+              "pending": true,
+              "protected_operations": 3,
+              "refused_imports": 1,
+              "rights": {
+                "publisher": {
+                  "facet": "Facet(1)",
+                  "observe": false,
+                  "publish": true
+                },
+                "subscriber": {
+                  "facet": "Facet(2)",
+                  "observe": true,
+                  "publish": false
+                }
+              }
+            },
+            "choreography_completed": false,
+            "guest_invocation_error": "error while executing at wasm backtrace:\n    0:    0x8a9 - <unknown>!<wasm function 2>\n    1:    0x64a - <unknown>!<wasm function 21>: production M8 monitor refused/trapped import: ImportRefused",
+            "imports": [
+              {
+                "accepted": false,
+                "error": "ImportRefused",
+                "identity": "noble:syndicate/dataspace@1.0.0#retract",
+                "monitored": true,
+                "name": "other",
+                "operation": "retract",
+                "role": "publisher"
+              }
+            ],
+            "monitor_finalization_error": "Some(Invocation)",
+            "name": "wrong-import-arguments",
+            "outcome": "reject",
+            "owned_assertion_before": true,
+            "previously_owned_assertions_retracted": true,
+            "publisher_retired": true,
+            "reported_success": false,
+            "typed_removal": {
+              "kind": "remove",
+              "name": "clock",
+              "observer": "Facet(2)",
+              "ready": false
+            },
+            "unauthorized_m7_operations": 0,
+            "unauthorized_protected_operations": 0
+          },
+          "result": "passed"
+        },
+        {
+          "name": "missing-fail-after-trap-publication",
+          "observed": {
+            "after": {
+              "cursor": 6,
+              "dataspace": {
+                "assertions": 0,
+                "facets": 1,
+                "interests": 2
+              },
+              "events": [
+                {
+                  "kind": "add",
+                  "name": "clock",
+                  "observer": "Facet(2)",
+                  "ready": false
+                },
+                {
+                  "kind": "remove",
+                  "name": "clock",
+                  "observer": "Facet(2)",
+                  "ready": false
+                },
+                {
+                  "kind": "add",
+                  "name": "alarm",
+                  "observer": "Facet(2)",
+                  "ready": true
+                },
+                {
+                  "kind": "remove",
+                  "name": "alarm",
+                  "observer": "Facet(2)",
+                  "ready": true
+                }
+              ],
+              "events_len": 4,
+              "guest_requests": 7,
+              "pending": false,
+              "protected_operations": 7,
+              "refused_imports": 0,
+              "rights": {
+                "publisher": {
+                  "facet": "Facet(1)",
+                  "observe": false,
+                  "publish": true
+                },
+                "subscriber": {
+                  "facet": "Facet(2)",
+                  "observe": true,
+                  "publish": false
+                }
+              }
+            },
+            "before": {
+              "cursor": 6,
+              "dataspace": {
+                "assertions": 0,
+                "facets": 2,
+                "interests": 2
+              },
+              "events": [
+                {
+                  "kind": "add",
+                  "name": "clock",
+                  "observer": "Facet(2)",
+                  "ready": false
+                },
+                {
+                  "kind": "remove",
+                  "name": "clock",
+                  "observer": "Facet(2)",
+                  "ready": false
+                }
+              ],
+              "events_len": 2,
+              "guest_requests": 6,
+              "pending": false,
+              "protected_operations": 6,
+              "refused_imports": 0,
+              "rights": {
+                "publisher": {
+                  "facet": "Facet(1)",
+                  "observe": false,
+                  "publish": true
+                },
+                "subscriber": {
+                  "facet": "Facet(2)",
+                  "observe": true,
+                  "publish": false
+                }
+              }
+            },
+            "before_finish": {
+              "cursor": 6,
+              "dataspace": {
+                "assertions": 1,
+                "facets": 2,
+                "interests": 2
+              },
+              "events": [
+                {
+                  "kind": "add",
+                  "name": "clock",
+                  "observer": "Facet(2)",
+                  "ready": false
+                },
+                {
+                  "kind": "remove",
+                  "name": "clock",
+                  "observer": "Facet(2)",
+                  "ready": false
+                },
+                {
+                  "kind": "add",
+                  "name": "alarm",
+                  "observer": "Facet(2)",
+                  "ready": true
+                }
+              ],
+              "events_len": 3,
+              "guest_requests": 7,
+              "pending": true,
+              "protected_operations": 7,
+              "refused_imports": 0,
+              "rights": {
+                "publisher": {
+                  "facet": "Facet(1)",
+                  "observe": false,
+                  "publish": true
+                },
+                "subscriber": {
+                  "facet": "Facet(2)",
+                  "observe": true,
+                  "publish": false
+                }
+              }
+            },
+            "choreography_completed": false,
+            "guest_invocation_error": null,
+            "imports": [
+              {
+                "accepted": true,
+                "identity": "noble:syndicate/dataspace@1.0.0#publish",
+                "monitored": true,
+                "name": "alarm",
+                "operation": "publish",
+                "ready": true,
+                "result": true,
+                "role": "publisher"
+              }
+            ],
+            "monitor_finalization_error": "Some(Invocation)",
+            "name": "missing-fail-after-trap-publication",
+            "outcome": "reject",
+            "owned_assertion_before": true,
+            "previously_owned_assertions_retracted": true,
+            "publisher_retired": true,
+            "reported_success": false,
+            "typed_removal": {
+              "kind": "remove",
+              "name": "alarm",
+              "observer": "Facet(2)",
+              "ready": true
+            },
+            "unauthorized_m7_operations": 0,
+            "unauthorized_protected_operations": 0
+          },
+          "result": "passed"
+        }
+      ],
+      "strict_json_edges": 10,
+      "one_round_reservations": 3
+    },
+    {
+      "id": "WI-20",
+      "input": {
+        "harness": "monitored-component-boundary-refusals",
+        "world": "noble:syndicate/service@1.0.0",
+        "pre_export_mutations": [
+          "wrong-wit-version",
+          "wrong-wit-signature",
+          "wrong-export-at-trap-step",
+          "wrong-component-role",
+          "foreign-facet",
+          "forged-rights",
+          "replayed-export",
+          "false-ready-pair-confused-with-absence"
+        ],
+        "post_start_mutations": [
+          "wrong-import-after-admitted-export",
+          "missing-fail-after-publish-and-trap-publication"
+        ],
+        "post_start_injection_role": "publisher",
+        "already_owned_assertion_before_post_start_refusal": true
+      },
+      "expected": {
+        "stage": "typed-component-boundary",
+        "outcome": "reject-all-declared-mutations",
+        "pre_export": {
+          "guest_invoked": false,
+          "cursor_unchanged": true,
+          "dataspace_unchanged": true,
+          "events_unchanged": true,
+          "rights_unchanged": true,
+          "guest_requests_unchanged": true,
+          "protected_operations_unchanged": true
+        },
+        "post_start": {
+          "unauthorized_m7_operations": 0,
+          "unauthorized_protected_operations": 0,
+          "cursor_unchanged": true,
+          "facet_retired_on_protocol_failure": true,
+          "previously_owned_assertions_retracted": true,
+          "typed_removal_permitted": true,
+          "reported_success": false
+        },
+        "direct_m7_profile_bypass": false
+      },
+      "result": "passed",
+      "evidence": [
+        {
+          "command": 22
+        }
+      ],
+      "variants": [
+        {
+          "name": "wrong-wit-version",
+          "observed": {
+            "after": {
+              "cursor": 0,
+              "dataspace": {
+                "assertions": 0,
+                "facets": 0,
+                "interests": 0
+              },
+              "events": [],
+              "guest_requests": 0,
+              "pending": false,
+              "protected_operations": 0,
+              "rights": {}
+            },
+            "before": {
+              "cursor": 0,
+              "dataspace": {
+                "assertions": 0,
+                "facets": 0,
+                "interests": 0
+              },
+              "events": [],
+              "guest_requests": 0,
+              "pending": false,
+              "protected_operations": 0,
+              "rights": {}
+            },
+            "component_sha256": "c289dfb203725d22cd250503b30bb69cfa21ad96e945aa3070b1126e3d28b85b",
+            "error": "component import identity does not exactly match noble:syndicate/dataspace@1.0.0",
+            "facet_rights_created": 0,
+            "guest_invoked": false,
+            "name": "wrong-wit-version",
+            "outcome": "reject",
+            "stage": "link"
+          },
+          "result": "passed"
+        },
+        {
+          "name": "wrong-wit-signature",
+          "observed": {
+            "after": {
+              "cursor": 0,
+              "dataspace": {
+                "assertions": 0,
+                "facets": 0,
+                "interests": 0
+              },
+              "events": [],
+              "guest_requests": 0,
+              "pending": false,
+              "protected_operations": 0,
+              "rights": {}
+            },
+            "before": {
+              "cursor": 0,
+              "dataspace": {
+                "assertions": 0,
+                "facets": 0,
+                "interests": 0
+              },
+              "events": [],
+              "guest_requests": 0,
+              "pending": false,
+              "protected_operations": 0,
+              "rights": {}
+            },
+            "component_sha256": "822d779d58cce584aa8023bd26fd0aba6e4176628e933a603719785231feb533",
+            "error": "component imports instance `noble:syndicate/dataspace@1.0.0`, but a matching implementation was not found in the linker: instance export `publish` has the wrong type: type mismatch with parameters: expected `string` found `s64`",
+            "facet_rights_created": 0,
+            "guest_invoked": false,
+            "name": "wrong-wit-signature",
+            "outcome": "reject",
+            "stage": "link"
+          },
+          "result": "passed"
+        },
+        {
+          "name": "wrong-export-at-trap-step",
+          "observed": {
+            "after": {
+              "cursor": 6,
+              "dataspace": {
+                "assertions": 0,
+                "facets": 2,
+                "interests": 2
+              },
+              "events": [
+                {
+                  "kind": "add",
+                  "name": "clock",
+                  "observer": "Facet(2)",
+                  "ready": false
+                },
+                {
+                  "kind": "remove",
+                  "name": "clock",
+                  "observer": "Facet(2)",
+                  "ready": false
+                }
+              ],
+              "events_len": 2,
+              "guest_requests": 6,
+              "pending": false,
+              "protected_operations": 6,
+              "refused_imports": 0,
+              "rights": {
+                "publisher": {
+                  "facet": "Facet(1)",
+                  "observe": false,
+                  "publish": true
+                },
+                "subscriber": {
+                  "facet": "Facet(2)",
+                  "observe": true,
+                  "publish": false
+                }
+              }
+            },
+            "attempt": {
+              "export": "publisher",
+              "facet": "Facet(1)",
+              "name": "alarm",
+              "ready": true,
+              "role": "publisher"
+            },
+            "before": {
+              "cursor": 6,
+              "dataspace": {
+                "assertions": 0,
+                "facets": 2,
+                "interests": 2
+              },
+              "events": [
+                {
+                  "kind": "add",
+                  "name": "clock",
+                  "observer": "Facet(2)",
+                  "ready": false
+                },
+                {
+                  "kind": "remove",
+                  "name": "clock",
+                  "observer": "Facet(2)",
+                  "ready": false
+                }
+              ],
+              "events_len": 2,
+              "guest_requests": 6,
+              "pending": false,
+              "protected_operations": 6,
+              "refused_imports": 0,
+              "rights": {
+                "publisher": {
+                  "facet": "Facet(1)",
+                  "observe": false,
+                  "publish": true
+                },
+                "subscriber": {
+                  "facet": "Facet(2)",
+                  "observe": true,
+                  "publish": false
+                }
+              }
+            },
+            "error": "Some(Denied)",
+            "guest_invoked": false,
+            "name": "wrong-export-at-trap-step",
+            "outcome": "reject",
+            "stage": "pre-export"
+          },
+          "result": "passed"
+        },
+        {
+          "name": "wrong-component-role",
+          "observed": {
+            "after": {
+              "cursor": 0,
+              "dataspace": {
+                "assertions": 0,
+                "facets": 2,
+                "interests": 0
+              },
+              "events": [],
+              "events_len": 0,
+              "guest_requests": 0,
+              "pending": false,
+              "protected_operations": 0,
+              "refused_imports": 0,
+              "rights": {
+                "publisher": {
+                  "facet": "Facet(1)",
+                  "observe": false,
+                  "publish": true
+                },
+                "subscriber": {
+                  "facet": "Facet(2)",
+                  "observe": true,
+                  "publish": false
+                }
+              }
+            },
+            "attempt": {
+              "export": "observer",
+              "facet": "Facet(1)",
+              "name": "clock",
+              "ready": false,
+              "role": "publisher"
+            },
+            "before": {
+              "cursor": 0,
+              "dataspace": {
+                "assertions": 0,
+                "facets": 2,
+                "interests": 0
+              },
+              "events": [],
+              "events_len": 0,
+              "guest_requests": 0,
+              "pending": false,
+              "protected_operations": 0,
+              "refused_imports": 0,
+              "rights": {
+                "publisher": {
+                  "facet": "Facet(1)",
+                  "observe": false,
+                  "publish": true
+                },
+                "subscriber": {
+                  "facet": "Facet(2)",
+                  "observe": true,
+                  "publish": false
+                }
+              }
+            },
+            "error": "Some(Denied)",
+            "guest_invoked": false,
+            "name": "wrong-component-role",
+            "outcome": "reject",
+            "stage": "pre-export"
+          },
+          "result": "passed"
+        },
+        {
+          "name": "foreign-facet",
+          "observed": {
+            "after": {
+              "cursor": 0,
+              "dataspace": {
+                "assertions": 0,
+                "facets": 2,
+                "interests": 0
+              },
+              "events": [],
+              "events_len": 0,
+              "guest_requests": 0,
+              "pending": false,
+              "protected_operations": 0,
+              "refused_imports": 0,
+              "rights": {
+                "publisher": {
+                  "facet": "Facet(1)",
+                  "observe": false,
+                  "publish": true
+                },
+                "subscriber": {
+                  "facet": "Facet(2)",
+                  "observe": true,
+                  "publish": false
+                }
+              }
+            },
+            "attempt": {
+              "export": "observer",
+              "facet": "Facet(2)",
+              "name": "clock",
+              "ready": false,
+              "role": "subscriber"
+            },
+            "before": {
+              "cursor": 0,
+              "dataspace": {
+                "assertions": 0,
+                "facets": 2,
+                "interests": 0
+              },
+              "events": [],
+              "events_len": 0,
+              "guest_requests": 0,
+              "pending": false,
+              "protected_operations": 0,
+              "refused_imports": 0,
+              "rights": {
+                "publisher": {
+                  "facet": "Facet(1)",
+                  "observe": false,
+                  "publish": true
+                },
+                "subscriber": {
+                  "facet": "Facet(2)",
+                  "observe": true,
+                  "publish": false
+                }
+              }
+            },
+            "error": "Some(Denied)",
+            "guest_invoked": false,
+            "name": "foreign-facet",
+            "outcome": "reject",
+            "stage": "pre-export"
+          },
+          "result": "passed"
+        },
+        {
+          "name": "forged-rights",
+          "observed": {
+            "after": {
+              "cursor": 1,
+              "dataspace": {
+                "assertions": 0,
+                "facets": 2,
+                "interests": 1
+              },
+              "events": [],
+              "events_len": 0,
+              "guest_requests": 1,
+              "pending": false,
+              "protected_operations": 1,
+              "refused_imports": 0,
+              "rights": {
+                "publisher": {
+                  "facet": "Facet(1)",
+                  "observe": false,
+                  "publish": true
+                },
+                "subscriber": {
+                  "facet": "Facet(2)",
+                  "observe": true,
+                  "publish": false
+                }
+              }
+            },
+            "attempt": {
+              "export": "publisher",
+              "facet": "Facet(2)",
+              "name": "clock",
+              "ready": false,
+              "role": "subscriber"
+            },
+            "before": {
+              "cursor": 1,
+              "dataspace": {
+                "assertions": 0,
+                "facets": 2,
+                "interests": 1
+              },
+              "events": [],
+              "events_len": 0,
+              "guest_requests": 1,
+              "pending": false,
+              "protected_operations": 1,
+              "refused_imports": 0,
+              "rights": {
+                "publisher": {
+                  "facet": "Facet(1)",
+                  "observe": false,
+                  "publish": true
+                },
+                "subscriber": {
+                  "facet": "Facet(2)",
+                  "observe": true,
+                  "publish": false
+                }
+              }
+            },
+            "error": "Some(Denied)",
+            "guest_invoked": false,
+            "name": "forged-rights",
+            "outcome": "reject",
+            "stage": "pre-export"
+          },
+          "result": "passed"
+        },
+        {
+          "name": "replayed-export",
+          "observed": {
+            "after": {
+              "cursor": 1,
+              "dataspace": {
+                "assertions": 0,
+                "facets": 2,
+                "interests": 1
+              },
+              "events": [],
+              "events_len": 0,
+              "guest_requests": 1,
+              "pending": false,
+              "protected_operations": 1,
+              "refused_imports": 0,
+              "rights": {
+                "publisher": {
+                  "facet": "Facet(1)",
+                  "observe": false,
+                  "publish": true
+                },
+                "subscriber": {
+                  "facet": "Facet(2)",
+                  "observe": true,
+                  "publish": false
+                }
+              }
+            },
+            "attempt": {
+              "export": "observer",
+              "facet": "Facet(2)",
+              "name": "clock",
+              "ready": false,
+              "role": "subscriber"
+            },
+            "before": {
+              "cursor": 1,
+              "dataspace": {
+                "assertions": 0,
+                "facets": 2,
+                "interests": 1
+              },
+              "events": [],
+              "events_len": 0,
+              "guest_requests": 1,
+              "pending": false,
+              "protected_operations": 1,
+              "refused_imports": 0,
+              "rights": {
+                "publisher": {
+                  "facet": "Facet(1)",
+                  "observe": false,
+                  "publish": true
+                },
+                "subscriber": {
+                  "facet": "Facet(2)",
+                  "observe": true,
+                  "publish": false
+                }
+              }
+            },
+            "error": "Some(Denied)",
+            "guest_invoked": false,
+            "name": "replayed-export",
+            "outcome": "reject",
+            "stage": "pre-export"
+          },
+          "result": "passed"
+        },
+        {
+          "name": "false-ready-pair-confused-with-absence",
+          "observed": {
+            "after": {
+              "cursor": 2,
+              "dataspace": {
+                "assertions": 1,
+                "facets": 2,
+                "interests": 1
+              },
+              "events": [
+                {
+                  "kind": "add",
+                  "name": "clock",
+                  "observer": "Facet(2)",
+                  "ready": false
+                }
+              ],
+              "events_len": 1,
+              "guest_requests": 2,
+              "pending": false,
+              "protected_operations": 2,
+              "refused_imports": 0,
+              "rights": {
+                "publisher": {
+                  "facet": "Facet(1)",
+                  "observe": false,
+                  "publish": true
+                },
+                "subscriber": {
+                  "facet": "Facet(2)",
+                  "observe": true,
+                  "publish": false
+                }
+              }
+            },
+            "attempt": {
+              "export": "observer",
+              "facet": "Facet(2)",
+              "name": "clock",
+              "ready": true,
+              "role": "subscriber"
+            },
+            "before": {
+              "cursor": 2,
+              "dataspace": {
+                "assertions": 1,
+                "facets": 2,
+                "interests": 1
+              },
+              "events": [
+                {
+                  "kind": "add",
+                  "name": "clock",
+                  "observer": "Facet(2)",
+                  "ready": false
+                }
+              ],
+              "events_len": 1,
+              "guest_requests": 2,
+              "pending": false,
+              "protected_operations": 2,
+              "refused_imports": 0,
+              "rights": {
+                "publisher": {
+                  "facet": "Facet(1)",
+                  "observe": false,
+                  "publish": true
+                },
+                "subscriber": {
+                  "facet": "Facet(2)",
+                  "observe": true,
+                  "publish": false
+                }
+              }
+            },
+            "error": "Some(Denied)",
+            "guest_invoked": false,
+            "name": "false-ready-pair-confused-with-absence",
+            "outcome": "reject",
+            "stage": "pre-export"
+          },
+          "result": "passed"
+        },
+        {
+          "name": "wrong-import-after-admitted-export",
+          "observed": {
+            "after": {
+              "cursor": 3,
+              "dataspace": {
+                "assertions": 0,
+                "facets": 1,
+                "interests": 1
+              },
+              "events": [
+                {
+                  "kind": "add",
+                  "name": "clock",
+                  "observer": "Facet(2)",
+                  "ready": false
+                },
+                {
+                  "kind": "remove",
+                  "name": "clock",
+                  "observer": "Facet(2)",
+                  "ready": false
+                }
+              ],
+              "events_len": 2,
+              "guest_requests": 3,
+              "pending": false,
+              "protected_operations": 3,
+              "refused_imports": 1,
+              "rights": {
+                "publisher": {
+                  "facet": "Facet(1)",
+                  "observe": false,
+                  "publish": true
+                },
+                "subscriber": {
+                  "facet": "Facet(2)",
+                  "observe": true,
+                  "publish": false
+                }
+              }
+            },
+            "before": {
+              "cursor": 3,
+              "dataspace": {
+                "assertions": 1,
+                "facets": 2,
+                "interests": 1
+              },
+              "events": [
+                {
+                  "kind": "add",
+                  "name": "clock",
+                  "observer": "Facet(2)",
+                  "ready": false
+                }
+              ],
+              "events_len": 1,
+              "guest_requests": 3,
+              "pending": false,
+              "protected_operations": 3,
+              "refused_imports": 0,
+              "rights": {
+                "publisher": {
+                  "facet": "Facet(1)",
+                  "observe": false,
+                  "publish": true
+                },
+                "subscriber": {
+                  "facet": "Facet(2)",
+                  "observe": true,
+                  "publish": false
+                }
+              }
+            },
+            "before_finish": {
+              "cursor": 3,
+              "dataspace": {
+                "assertions": 1,
+                "facets": 2,
+                "interests": 1
+              },
+              "events": [
+                {
+                  "kind": "add",
+                  "name": "clock",
+                  "observer": "Facet(2)",
+                  "ready": false
+                }
+              ],
+              "events_len": 1,
+              "guest_requests": 3,
+              "pending": true,
+              "protected_operations": 3,
+              "refused_imports": 1,
+              "rights": {
+                "publisher": {
+                  "facet": "Facet(1)",
+                  "observe": false,
+                  "publish": true
+                },
+                "subscriber": {
+                  "facet": "Facet(2)",
+                  "observe": true,
+                  "publish": false
+                }
+              }
+            },
+            "choreography_completed": false,
+            "guest_invocation_error": "error while executing at wasm backtrace:\n    0:    0x887 - <unknown>!<wasm function 0>\n    1:    0x650 - <unknown>!<wasm function 21>: production M8 monitor refused/trapped import: ImportRefused",
+            "imports": [
+              {
+                "accepted": false,
+                "error": "ImportRefused",
+                "identity": "noble:syndicate/dataspace@1.0.0#publish",
+                "monitored": true,
+                "name": "clock",
+                "operation": "publish",
+                "ready": true,
+                "role": "publisher"
+              }
+            ],
+            "monitor_finalization_error": "Some(Invocation)",
+            "name": "wrong-import-after-admitted-export",
+            "outcome": "reject",
+            "owned_assertion_before": true,
+            "previously_owned_assertions_retracted": true,
+            "publisher_retired": true,
+            "reported_success": false,
+            "typed_removal": {
+              "kind": "remove",
+              "name": "clock",
+              "observer": "Facet(2)",
+              "ready": false
+            },
+            "unauthorized_m7_operations": 0,
+            "unauthorized_protected_operations": 0
+          },
+          "result": "passed"
+        },
+        {
+          "name": "missing-fail-after-publish-and-trap-publication",
+          "observed": {
+            "after": {
+              "cursor": 6,
+              "dataspace": {
+                "assertions": 0,
+                "facets": 1,
+                "interests": 2
+              },
+              "events": [
+                {
+                  "kind": "add",
+                  "name": "clock",
+                  "observer": "Facet(2)",
+                  "ready": false
+                },
+                {
+                  "kind": "remove",
+                  "name": "clock",
+                  "observer": "Facet(2)",
+                  "ready": false
+                },
+                {
+                  "kind": "add",
+                  "name": "alarm",
+                  "observer": "Facet(2)",
+                  "ready": true
+                },
+                {
+                  "kind": "remove",
+                  "name": "alarm",
+                  "observer": "Facet(2)",
+                  "ready": true
+                }
+              ],
+              "events_len": 4,
+              "guest_requests": 7,
+              "pending": false,
+              "protected_operations": 7,
+              "refused_imports": 0,
+              "rights": {
+                "publisher": {
+                  "facet": "Facet(1)",
+                  "observe": false,
+                  "publish": true
+                },
+                "subscriber": {
+                  "facet": "Facet(2)",
+                  "observe": true,
+                  "publish": false
+                }
+              }
+            },
+            "before": {
+              "cursor": 6,
+              "dataspace": {
+                "assertions": 0,
+                "facets": 2,
+                "interests": 2
+              },
+              "events": [
+                {
+                  "kind": "add",
+                  "name": "clock",
+                  "observer": "Facet(2)",
+                  "ready": false
+                },
+                {
+                  "kind": "remove",
+                  "name": "clock",
+                  "observer": "Facet(2)",
+                  "ready": false
+                }
+              ],
+              "events_len": 2,
+              "guest_requests": 6,
+              "pending": false,
+              "protected_operations": 6,
+              "refused_imports": 0,
+              "rights": {
+                "publisher": {
+                  "facet": "Facet(1)",
+                  "observe": false,
+                  "publish": true
+                },
+                "subscriber": {
+                  "facet": "Facet(2)",
+                  "observe": true,
+                  "publish": false
+                }
+              }
+            },
+            "before_finish": {
+              "cursor": 6,
+              "dataspace": {
+                "assertions": 1,
+                "facets": 2,
+                "interests": 2
+              },
+              "events": [
+                {
+                  "kind": "add",
+                  "name": "clock",
+                  "observer": "Facet(2)",
+                  "ready": false
+                },
+                {
+                  "kind": "remove",
+                  "name": "clock",
+                  "observer": "Facet(2)",
+                  "ready": false
+                },
+                {
+                  "kind": "add",
+                  "name": "alarm",
+                  "observer": "Facet(2)",
+                  "ready": true
+                }
+              ],
+              "events_len": 3,
+              "guest_requests": 7,
+              "pending": true,
+              "protected_operations": 7,
+              "refused_imports": 0,
+              "rights": {
+                "publisher": {
+                  "facet": "Facet(1)",
+                  "observe": false,
+                  "publish": true
+                },
+                "subscriber": {
+                  "facet": "Facet(2)",
+                  "observe": true,
+                  "publish": false
+                }
+              }
+            },
+            "choreography_completed": false,
+            "guest_invocation_error": null,
+            "imports": [
+              {
+                "accepted": true,
+                "identity": "noble:syndicate/dataspace@1.0.0#publish",
+                "monitored": true,
+                "name": "alarm",
+                "operation": "publish",
+                "ready": true,
+                "result": true,
+                "role": "publisher"
+              }
+            ],
+            "monitor_finalization_error": "Some(Invocation)",
+            "name": "missing-fail-after-publish-and-trap-publication",
+            "outcome": "reject",
+            "owned_assertion_before": true,
+            "previously_owned_assertions_retracted": true,
+            "publisher_retired": true,
+            "reported_success": false,
+            "typed_removal": {
+              "kind": "remove",
+              "name": "alarm",
+              "observer": "Facet(2)",
+              "ready": true
+            },
+            "unauthorized_m7_operations": 0,
+            "unauthorized_protected_operations": 0
+          },
+          "result": "passed"
+        }
+      ]
+    }
+  ],
+  "integrity_failures": [],
+  "assumptions": [
+    "The supplied binaries, pinned Wasmtime/Node/wasm-tools and OS are trusted execution tools; recorded hashes are provenance, not semantics.",
+    "The separately compiled Noble components are linked by an independent typed peer; every M8 import is checked through production choreography policy and then M7 host dataspace policy.",
+    "Authentic host-assigned role/facet bindings, actual Store isolation, trap authenticity and physical cleanup remain host/engine assumptions.",
+    "This selected local synchronous profile does not imply general choreography, fairness, async scheduling, transport, durability, or universal source-to-Wasm refinement."
+  ],
+  "peer": {
+    "command": 22,
+    "engine": "wasmtime-40.0.2",
+    "schema": "noble-m8-peer/v1",
+    "components": {
+      "distinct": true,
+      "publisher_sha256": "6341b110b6c4595822d6e84814167836d6f58d8ae8436403bb72d53ccdd02074",
+      "separate_stores": true,
+      "shared_memory_enabled": false,
+      "subscriber_sha256": "e0d9d4bc11f996cbd4a2f055357433cc96b6424608ceb4729928c26e9b6a907b",
+      "threads_enabled": false
+    }
+  },
+  "summary": {
+    "required_cases": 4,
+    "executed_cases": 4,
+    "passed_cases": 4,
+    "failed_cases": [],
+    "missing_cases": [],
+    "variants": 38,
+    "strict_json_edges": 10,
+    "one_round_reservations": 3,
+    "commands": 22,
+    "integrity_failures": 0
+  }
+}

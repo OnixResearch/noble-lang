@@ -44,6 +44,89 @@
       },
       "expected":{"stage":"independent-component-peer","outcome":"each-step-matches","shared_mutable_noble_memory":false,"host_bound_facet_rights":true,"typed_observer_events":[{"kind":"add","name":"clock","ready":true},{"kind":"remove","name":"clock","ready":true},{"kind":"add","name":"clock","ready":false},{"kind":"remove","name":"clock","ready":false},{"kind":"add","name":"alarm","ready":false},{"kind":"remove","name":"alarm","ready":false}],"publisher_trap_reported_success":false,"remaining_publisher_assertions":0,"subscriber_still_active":true},
       "state":{"implementation":"implemented","execution":"passed","proof":"open","trust":"explicit"},"evidence":[{"claim":"Two separately compiled Noble component participants exercise exact-pair true/false membership, typed add/remove, withdrawal and compiled publish-then-trap cleanup through the independent Wasmtime peer.","subject":"S-CASE-17","revision":"0.1.0-draft.5","kind":"test","result":"passed","source_revision":"sha256:693530f98a2fc35bdd636d4c08b931d40b6d37d70c1ddd46d872b670ffd7a8ad","configuration":{"profile":"Syndicate-Sync-Service-M7","receipt":"../../verification/m7/acceptance.json","receipt_sha256":"22c7415d476c2361cd13e1f994f3c23b9485aa0333c356d8d1fff21af8989582","case":"S-CASE-17","variants":[]},"assumptions":["The independent peer supplies Wasmtime linking and typed conversion, while production Noble dataspace and host policy decide admission, facet rights and retirements.","Trusted host serialization, callback authenticity, Wasmtime ABI and engine correctness remain external embedding obligations; this is not distributed or general Syndicate refinement."]}]
+    },
+    {
+      "id":"S-CASE-18","profile":"Choreography-Service-M8","kind":"static",
+      "requirements":["S-CONC-09"],
+      "input":{
+        "harness":"production-finite-service-projector",
+        "descriptor":{"protocol":"noble:choreography/service@1.0.0","rounds":[{"name":"clock","ready":false,"exit":"withdraw"},{"name":"alarm","ready":true,"exit":"trap"}]},
+        "descriptor_utf8":"{\"protocol\":\"noble:choreography/service@1.0.0\",\"rounds\":[{\"name\":\"clock\",\"ready\":false,\"exit\":\"withdraw\"},{\"name\":\"alarm\",\"ready\":true,\"exit\":\"trap\"}]}",
+        "descriptor_bytes":151,
+        "world":"noble:syndicate/service@1.0.0"
+      },
+      "expected":{
+        "stage":"projection","outcome":"admitted","guest_requests":0,"protected_operations":0,
+        "global_actions":[
+          {"step":0,"round":0,"role":"subscriber","export":"observer","name":"clock","ready":false,"result":false},
+          {"step":1,"round":0,"role":"publisher","export":"publisher","name":"clock","ready":false,"result":true},
+          {"step":2,"round":0,"role":"subscriber","export":"observer","name":"clock","ready":false,"result":true},
+          {"step":3,"round":0,"role":"publisher","export":"withdraw","name":"clock","result":true},
+          {"step":4,"round":0,"role":"subscriber","export":"observer","name":"clock","ready":false,"result":false},
+          {"step":5,"round":1,"role":"subscriber","export":"observer","name":"alarm","ready":true,"result":false},
+          {"step":6,"round":1,"role":"publisher","export":"publish-and-trap","name":"alarm","ready":true,"result":"trap-after-publication"},
+          {"step":7,"round":1,"role":"subscriber","export":"observer","name":"alarm","ready":true,"result":false}
+        ],
+        "publisher_steps":[1,3,6],"subscriber_steps":[0,2,4,5,7],
+        "descriptor_grants_authority":false,"new_wit_world_created":false
+      },
+      "state":{"implementation":"implemented","execution":"passed","proof":"open","trust":"explicit"},
+      "evidence":[{
+        "claim":"The production finite projector yields the exact eight global actions and order-preserving role projections without guest requests, protected operations or descriptor-derived authority.",
+        "subject":"S-CASE-18","revision":"0.1.0-draft.5","kind":"test","result":"passed",
+        "source_revision":"sha256:471c7003e4ca76a5cc4b4cca9af1ae49ea7b8d939c91aa93c378c3b9e7a5b0a9",
+        "configuration":{"profile":"Choreography-Service-M8","receipt":"../../verification/m8/acceptance.json","receipt_sha256":"a02c47bda7f69040ee6f0a0bb2ca9019e0bfe615efb08dfdaa7388bc5da3bf0d","case":"S-CASE-18","variants":[]},
+        "assumptions":["Static projection and checked receipt bytes do not prove compiled execution, host authority or universal Rust correspondence; those claims require separately scoped gates."]
+      }]
+    },
+    {
+      "id":"S-CASE-19","profile":"Choreography-Service-M8","kind":"runtime",
+      "requirements":["S-CONC-09"],
+      "input":{
+        "harness":"production-choreography-admission-and-monitor-refusals",
+        "baseline":{"protocol":"noble:choreography/service@1.0.0","rounds":[{"name":"clock","ready":false,"exit":"withdraw"},{"name":"alarm","ready":true,"exit":"trap"}]},
+        "descriptor_encoding":"strict-utf8-json",
+        "max_bytes":512,"max_container_depth":3,
+        "baseline_utf8":"{\"protocol\":\"noble:choreography/service@1.0.0\",\"rounds\":[{\"name\":\"clock\",\"ready\":false,\"exit\":\"withdraw\"},{\"name\":\"alarm\",\"ready\":true,\"exit\":\"trap\"}]}",
+        "baseline_bytes":151,
+        "pre_session_mutations":["wrong-protocol-version","unknown-field","wrong-ready-type","invalid-name","duplicate-name","zero-rounds","three-rounds","nonterminal-trap","513-byte-input","depth-four","invalid-utf8","duplicate-object-key","duplicate-round-key","trailing-content","nonempty-dataspace"],
+        "descriptor_byte_variants":{
+          "wrong-protocol-version":{"utf8":"{\"protocol\":\"noble:choreography/service@2.0.0\",\"rounds\":[{\"name\":\"clock\",\"ready\":false,\"exit\":\"withdraw\"}]}"},
+          "unknown-field":{"utf8":"{\"protocol\":\"noble:choreography/service@1.0.0\",\"rounds\":[{\"name\":\"clock\",\"ready\":false,\"exit\":\"withdraw\",\"extra\":0}]}"},
+          "wrong-ready-type":{"utf8":"{\"protocol\":\"noble:choreography/service@1.0.0\",\"rounds\":[{\"name\":\"clock\",\"ready\":\"false\",\"exit\":\"withdraw\"}]}"},
+          "invalid-name":{"utf8":"{\"protocol\":\"noble:choreography/service@1.0.0\",\"rounds\":[{\"name\":\"!\",\"ready\":false,\"exit\":\"withdraw\"}]}"},
+          "duplicate-name":{"utf8":"{\"protocol\":\"noble:choreography/service@1.0.0\",\"rounds\":[{\"name\":\"clock\",\"ready\":false,\"exit\":\"withdraw\"},{\"name\":\"clock\",\"ready\":true,\"exit\":\"trap\"}]}"},
+          "zero-rounds":{"utf8":"{\"protocol\":\"noble:choreography/service@1.0.0\",\"rounds\":[]}"},
+          "three-rounds":{"utf8":"{\"protocol\":\"noble:choreography/service@1.0.0\",\"rounds\":[{\"name\":\"a\",\"ready\":false,\"exit\":\"withdraw\"},{\"name\":\"b\",\"ready\":false,\"exit\":\"withdraw\"},{\"name\":\"c\",\"ready\":true,\"exit\":\"withdraw\"}]}"},
+          "nonterminal-trap":{"utf8":"{\"protocol\":\"noble:choreography/service@1.0.0\",\"rounds\":[{\"name\":\"clock\",\"ready\":false,\"exit\":\"trap\"},{\"name\":\"alarm\",\"ready\":true,\"exit\":\"withdraw\"}]}"},
+          "513-byte-input":{"prefix":"baseline_utf8","append_ascii_space_count":362,"total_bytes":513},
+          "depth-four":{"utf8":"{\"protocol\":\"noble:choreography/service@1.0.0\",\"rounds\":[{\"name\":\"clock\",\"ready\":false,\"exit\":\"withdraw\",\"extra\":[0]}]}"},
+          "invalid-utf8":{"prefix_utf8":"{\"protocol\":\"noble:choreography/service@1.0.0\",\"rounds\":[{\"name\":\"","insert_hex":"ff","suffix_utf8":"\",\"ready\":false,\"exit\":\"withdraw\"}]}"},
+          "duplicate-object-key":{"utf8":"{\"protocol\":\"noble:choreography/service@1.0.0\",\"protocol\":\"noble:choreography/service@1.0.0\",\"rounds\":[{\"name\":\"clock\",\"ready\":false,\"exit\":\"withdraw\"}]}"},
+          "duplicate-round-key":{"utf8":"{\"protocol\":\"noble:choreography/service@1.0.0\",\"rounds\":[{\"name\":\"clock\",\"ready\":false,\"ready\":false,\"exit\":\"withdraw\"}]}"},
+          "trailing-content":{"prefix":"baseline_utf8","append_utf8":"{}"}
+        },
+        "pre_export_mutations":["wrong-role","out-of-order","replayed-step","wrong-export-publisher-instead-of-publish-and-trap","wrong-name","wrong-ready","foreign-facet","retired-facet","forged-rights","false-ready-mistaken-for-absence"],
+        "in_flight_mutations":["wrong-import-identity","wrong-import-arguments","missing-fail-after-trap-publication"],
+        "in_flight_injection_role":"publisher",
+        "baseline_cleanup_assertion_owned_before_in_flight_refusal":true
+      },
+      "expected":{
+        "stage":"production-boundaries","outcome":"reject-all-declared-mutations",
+        "pre_session":{"typed_descriptors_created":0,"facet_rights_created":0,"guest_requests":0,"protected_operations":0,"dataspace_unchanged":true,"byte_variant_rejection_stage":{"513-byte-input":"pre-parse-length","depth-four":"pre-parse-depth","invalid-utf8":"pre-parse-utf8","duplicate-object-key":"typed-deserialize","duplicate-round-key":"typed-deserialize","trailing-content":"parser-end"}},
+        "pre_export":{"cursor_unchanged":true,"dataspace_unchanged":true,"events_unchanged":true,"rights_unchanged":true,"guest_requests_unchanged":true,"protected_operations_unchanged":true},
+        "in_flight":{"unauthorized_m7_operations":0,"unauthorized_protected_operations":0,"session_cursor_unchanged":true,"mandatory_trap_cleanup_permitted":true,"owned_assertions_retracted_on_trap":true,"typed_removal_permitted":true,"choreography_completed":false}
+      },
+      "state":{"implementation":"implemented","execution":"passed","proof":"open","trust":"explicit"},
+      "evidence":[{
+        "claim":"All 28 declared descriptor, admission, pre-export and in-flight mutations execute against production boundaries; pre-export denials preserve state and counters, while in-flight refusals permit only mandatory retirement and removal.",
+        "subject":"S-CASE-19","revision":"0.1.0-draft.5","kind":"test","result":"passed",
+        "source_revision":"sha256:471c7003e4ca76a5cc4b4cca9af1ae49ea7b8d939c91aa93c378c3b9e7a5b0a9",
+        "configuration":{"profile":"Choreography-Service-M8","receipt":"../../verification/m8/acceptance.json","receipt_sha256":"a02c47bda7f69040ee6f0a0bb2ca9019e0bfe615efb08dfdaa7388bc5da3bf0d","case":"S-CASE-19","variants":[
+          "wrong-protocol-version","unknown-field","wrong-ready-type","invalid-name","duplicate-name","zero-rounds","three-rounds","nonterminal-trap","513-byte-input","depth-four","invalid-utf8","duplicate-object-key","duplicate-round-key","trailing-content","nonempty-dataspace","wrong-role","out-of-order","replayed-step","wrong-export-publisher-instead-of-publish-and-trap","wrong-name","wrong-ready","foreign-facet","retired-facet","forged-rights","false-ready-mistaken-for-absence","wrong-import-identity","wrong-import-arguments","missing-fail-after-trap-publication"
+        ]},
+        "assumptions":["Trusted host serialization, authentic facet bindings and Wasmtime callback/trap behavior remain external; the 28 executed controls are not a universal parser or monitor refinement theorem."]
+      }]
     }
   ]
 }

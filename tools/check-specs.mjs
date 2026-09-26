@@ -1076,7 +1076,7 @@ export function validate(bundle, { ignoreLedger = false } = {}) {
       done.add(id);
     }
     for (const id of nodes.keys()) walk(id);
-    check(nodes.has(status.next_milestone), 'roadmap next milestone missing');
+    check(status.next_milestone === null || nodes.has(status.next_milestone), 'roadmap next milestone missing');
     if (!ignoreLedger) {
       check(JSON.stringify(parse(bundle, 'specs/requirements.json')) === JSON.stringify(deriveLedger(bundle)), 'requirement ledger stale or incomplete; run --refresh-ledger after intentional changes');
     }
@@ -1148,6 +1148,9 @@ function selfTest(base) {
   }, 'greenfield obligation');
   run('roadmap-cycle', b => changeJson(b, 'specs/roadmap.json', p => p.milestones[0].depends_on.push('M8')), 'roadmap cycle');
   run('missing-milestone', b => changeJson(b, 'specs/roadmap.json', p => p.milestones[1].depends_on.push('M99')), 'roadmap missing dependency');
+  run('alternate-selected-next-milestone', b => changeJson(b, 'specs/STATUS.json', p =>
+    p.next_milestone = p.next_milestone === null ? 'M8' : null), null);
+  run('unknown-next-milestone', b => changeJson(b, 'specs/STATUS.json', p => p.next_milestone = 'M99'), 'roadmap next milestone missing');
   run('missing-ledger-row', b => changeJson(b, 'specs/requirements.json', p => p.requirements.pop()), 'requirement ledger');
   run('removed-normative-document', b => changeJson(b, 'specs/spec-family.json', p => p.normative_documents = p.normative_documents.filter(d => d.id !== 'SPEC-V002')), 'required document missing');
   run('duplicate-case', b => changeJson(b, 'specs/conformance/cases.json', p => p.cases.push(p.cases[0])), 'duplicate or missing case');

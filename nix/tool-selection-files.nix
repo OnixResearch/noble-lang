@@ -64,6 +64,8 @@
   "verification/m6/peer/Cargo.lock"
   "verification/m7/peer/Cargo.toml"
   "verification/m7/peer/Cargo.lock"
+  "verification/m8/assurance.mjs"
+  "verification/m8/peer/Cargo.toml"
   "crates/noble-wasm/wit/bootstrap.wit"
   "crates/noble-wasm/wit/async.wit"
   "crates/noble-wasm/wit/syndicate.wit"

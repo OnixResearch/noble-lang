@@ -8,7 +8,7 @@
       "output_format": "json",
       "source": {
         "path": "policy/architecture.ncl",
-        "blake3": "18d9a9b5e5f7ca55b60389003e03332855ae04014a7cc32fdfdbd5be4ce1c6d1",
+        "blake3": "2f80ef0fbec1bcc75a91696b5ada8aeba797d51b53de6bddaf4623e011494de2",
         "bytes": 15709
       },
       "dependencies": [
@@ -20,7 +20,7 @@
       ],
       "output": {
         "path": "policy/architecture.json",
-        "blake3": "c9e505706e8821ccf700038c36b9405cce3127e48da587b59fae409e6304cd3a",
+        "blake3": "5428a86e4cc9a610356d6f0f7e120c5ba9e5a76cc8d428893203f855a0cea6a9",
         "bytes": 13931
       },
       "selector": "",

@@ -59,6 +59,7 @@ const evidence = {
   mode, result: 'running', commands: [], extractions: {},
   assumptions: [
     'Selected Charon/Aeneas, Rust, Lean, Node, host OS and Nix store integrity are trusted tooling boundaries.',
+    'After reviewed output-directory and unordered short-name-map normalization, canonical LLBC binds all other nonspan structure and ordinary spans. Only four reviewed synthetic expansion span.Value[1].data.end.col fields vary: kernel lib.rs:24 8/19, contracts lib.rs:9 8/19, core macros/mod.rs:434 8/25, wasm lib.rs:13 8/19. Exact source SHA, generated Lean hashes and strict roots remain checked; raw LLBC bytes and hashes are retained.',
     'Clean locked Lean dependency sources are checked before and after; upstream compiled dependency caches remain trusted.',
     'Local Rust declarations are joined by compiler IDs with Aeneas output. Expanded type aliases and compiler-generated destructor/vtable scaffolding are separately accounted, not authored-body exemptions or independent refinement evidence.',
     'Exactly the five unchanged inherited kernel copy/format helpers remain local opaque models, not extracted Rust bodies.',
@@ -309,12 +310,14 @@ try {
         staged[checked] = sha(actual);
       }
     }
-    extractionBindings[lane.id] = { canonical_llbc_sha256: canonicalLlbcHash(raw[lane.id].llbc),
+    const normalizedSpans = [];
+    extractionBindings[lane.id] = { canonical_llbc_sha256: canonicalLlbcHash(raw[lane.id].llbc, normalizedSpans),
       translation_sha256: fileSha(path.join(generated, 'translation.json')), comparisons,
       generated: generatedFiles[lane.id] };
     // Physical artifact bytes remain independently retained and hashed, but their
     // output path and unordered name-map serialization cannot define a lock.
-    evidence.extractions[lane.id] = { llbc_sha256: fileSha(llbc), ...extractionBindings[lane.id] };
+    evidence.extractions[lane.id] = { llbc_sha256: fileSha(llbc), ...extractionBindings[lane.id],
+      synthetic_expansion_spans: normalizedSpans };
     save('translation-inventory.json', accounts);
     save('extraction-progress.json', evidence.extractions);
   }

@@ -4,8 +4,8 @@
   schema_version | String = "noble-native-assurance-policy/v1",
   owner | String = "noble-maintainers",
   scope_note | String =
-    "Four-crate workspace scope: noble-kernel, noble-contracts, noble-wasm and noble-cli on x86_64-unknown-linux-gnu. This records native Rust and dependency scope, not whole-program soundness or Wasm runtime correspondence. Owned WAT assets and Node/wasm-tools/Binaryen subprocesses used by Core-Bootstrap and Component-Sync-Bootstrap are separately byte-bound by tool selection; their semantics are unproved and are not Rust inventory subjects or native linked dependencies. The independent Wasmtime peer is a separate verification-only Cargo workspace, pinned with its complete Cargo.lock and source/vendor NAR identities in verification/m5/pins.json; its engine, native resource lifetime and host credential provenance are explicit assumptions, not production dependency or unsafe-code discharge.",
-  required_packages | Array String = [ "noble-kernel", "noble-contracts", "noble-wasm", "noble-cli" ],
+    "Five-crate workspace scope: noble-kernel, noble-contracts, noble-wasm, noble-cli and noble-syndicate on x86_64-unknown-linux-gnu. This records native Rust and dependency scope, not whole-program soundness or Wasm runtime correspondence. Owned WAT assets and Node/wasm-tools/Binaryen subprocesses are separately byte-bound by tool selection; their semantics are unproved and are not Rust inventory subjects or native linked dependencies. The independent Wasmtime verification peers are separate Cargo workspaces, with the M8 peer's external Cargo lock derived exactly from the reviewed M7 peer lock and selected source/vendor NAR identities. Engine behavior, native resource lifetime and host credential provenance remain explicit assumptions, not production dependency or unsafe-code discharge.",
+  required_packages | Array String = [ "noble-kernel", "noble-contracts", "noble-wasm", "noble-cli", "noble-syndicate" ],
   required_targets | Array { triple | String, features | Array String, default_features | Bool } = [
     { triple = "x86_64-unknown-linux-gnu", features = [], default_features = true },
   ],
@@ -65,6 +65,10 @@
       scope = "noble-cli",
       argument = "Shell-only orchestration and unprotected console output. The workspace forbids unsafe_code in this crate too.",
     },
+    {
+      scope = "noble-syndicate",
+      argument = "Safe std composition-root policy serializes bounded M7 table access with a Mutex and host-owned AtomicU64 session identity. The workspace forbids unsafe_code; compiler accounting must confirm no owned unsafe or foreign-item facts and no third-party production dependencies. Host-assigned facets and engine trap authenticity remain explicit assumptions; source inventory leaves new choreography/parser/refinement bodies open.",
+    },
   ],
   target_assumptions | Array { target | String, word_bits | Number, assumptions | Array String } = [
     {
@@ -75,7 +79,7 @@
         "strict provenance is the required Miri model",
         "no target-specific native library is linked",
         "Core-Bootstrap managed-linear-memory execution, Component-Sync-Bootstrap and the two M3 Wasm experiments are separately scoped guest execution, not additional claimed native Rust targets",
-        "The verification-only Wasmtime peer and its dependencies are not included in the four-crate production unsafe-code or native dependency inventory",
+        "Verification-only Wasmtime peers and their dependencies are not included in the five-crate production unsafe-code or native dependency inventory",
       ],
     },
   ],

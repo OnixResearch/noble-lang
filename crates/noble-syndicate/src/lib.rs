@@ -19,7 +19,28 @@ macro_rules! attempt {
     };
 }
 
-type Shared = std::sync::Arc<std::sync::Mutex<noble_kernel::dataspace::Table>>;
+type Shared = std::sync::Arc<std::sync::Mutex<HostTable>>;
+
+struct HostTable {
+    table: noble_kernel::dataspace::Table,
+    choreography_active: bool,
+}
+
+impl std::ops::Deref for HostTable {
+    type Target = noble_kernel::dataspace::Table;
+
+    fn deref(&self) -> &Self::Target {
+        &self.table
+    }
+}
+
+impl std::ops::DerefMut for HostTable {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.table
+    }
+}
+
+pub mod choreography;
 
 pub const SELECTED_LIMITS: noble_kernel::dataspace::Limits = noble_kernel::dataspace::Limits {
     facets: 8,
@@ -35,6 +56,7 @@ pub enum Error {
     WrongProfile,
     Retired,
     UnsupportedSharedGuestMemory,
+    ChoreographyActive,
 }
 
 impl From<noble_kernel::dataspace::Error> for Error {
@@ -93,13 +115,22 @@ pub struct Profile {
 impl Profile {
     pub fn new(limits: noble_kernel::dataspace::Limits) -> Result<Self, Error> {
         Ok(Self {
-            table: std::sync::Arc::new(std::sync::Mutex::new(attempt!(
-                noble_kernel::dataspace::Table::new(limits)
-            ))),
+            table: std::sync::Arc::new(std::sync::Mutex::new(HostTable {
+                table: attempt!(noble_kernel::dataspace::Table::new(limits)),
+                choreography_active: false,
+            })),
         })
     }
 
-    fn table(&self) -> Result<std::sync::MutexGuard<'_, noble_kernel::dataspace::Table>, Error> {
+    fn table(&self) -> Result<std::sync::MutexGuard<'_, HostTable>, Error> {
+        let guard = attempt!(self.table_unchecked());
+        if guard.choreography_active {
+            return Err(Error::ChoreographyActive);
+        }
+        Ok(guard)
+    }
+
+    fn table_unchecked(&self) -> Result<std::sync::MutexGuard<'_, HostTable>, Error> {
         self.table.lock().map_err(|_| Error::Poisoned)
     }
 
@@ -208,6 +239,6 @@ impl Profile {
     }
 
     pub fn counts(&self) -> Result<(u32, u32, u32), Error> {
-        Ok(attempt!(self.table()).counts())
+        Ok(attempt!(self.table_unchecked()).counts())
     }
 }

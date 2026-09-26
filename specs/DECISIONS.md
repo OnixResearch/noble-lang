@@ -188,6 +188,27 @@ that accepted local service does not close general Syndicate or WASI.
 
 Choreography must target the selected concurrency layer. Durability must record observable nondeterminism and ambiguous outcomes. Neither is part of the first core milestone.
 
+The archived [M8 change](../.cairn/archive/2026-09-26-m8-choreography-projection/design.md)
+freezes one finite publisher/subscriber projection over M7. Its
+`noble:choreography/service@1.0.0` identity names data, not a new WIT world
+or authority; the existing `noble:syndicate@1.0.0` boundary remains
+unchanged. Untrusted descriptor bytes use strict UTF-8 JSON at most 512
+bytes/depth three with exact typed keys, duplicate/unknown-key and
+trailing non-whitespace refusal; no transport or general JSON protocol
+is selected.
+Only one exclusive empty-dataspace session with one or two rounds
+is selected. Export identity and host-bound facet/role are pre-admitted
+before the guest runs; every import is monitored with a single pending
+export and M7 cleanup retained after in-flight traps. The terminal trap
+must actually publish, fail and retire, not return success. The separate
+[M8 completion evidence](../verification/m8/evidence.json) promotes
+S-CASE-18/19 and WI-19/20 only for four selected cases, 38 hostile
+variants and ten strict JSON boundaries, with three one-round reservations.
+Fresh M7 seven-case, 16-variant regressions and 17 assurance commands/11
+gates pass; strict Lean proofs still concern only three pure M7 dataspace
+functions. M8 parser, projector, monitor, adapter, host and engine
+refinement, durability and general choreography remain open.
+
 ## Open decisions
 
 1. Complete inference, candidate encoding, recursive checking, and declaration syntax.
@@ -195,7 +216,8 @@ Choreography must target the selected concurrency layer. Durability must record 
 3. Internal Wasm calling convention, generic lowering, memory management, and session recovery.
 4. Exact component type mapping, borrowed exports, async lifetimes/interfaces, scheduler and interruption limits, stream buffering policy, and tested toolchain pins.
 5. Full Syndicate transitions and general Preserves adaptation beyond the
-   accepted bounded M7 local service, plus separate choreography projection
-   and durability contracts. M7's selected implementation, execution and
-   scoped formal/assurance evidence are retained separately; these broader
-   design obligations remain open.
+   accepted bounded M7 local service, general/user-defined choreography
+   beyond the accepted finite M8 selection, and durability contracts.
+   M7 and M8 implementation/execution evidence and retained scoped M7
+   formal roots remain separate; M8 parser/projector/monitor/adapter/host/
+   engine correspondence and these broader obligations are open.

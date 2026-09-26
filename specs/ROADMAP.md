@@ -2,8 +2,9 @@
 
 Revision: 0.1.0-draft.5
 
-**M5, M6 and M7 are complete for their separately bounded component and
-local-service profiles; M8 remains open.**
+**M5, M6, M7 and M8 are complete for their separately bounded component,
+local-service and finite-choreography profiles; their broader profiles and
+refinement obligations remain open.**
 M1, M2, MC1 and the bounded M3 representation experiment are implemented. M4
 connects accepted source to compiled managed-linear-memory Wasm and persistent
 sessions, with retained CORE/DX execution, extraction, regression and quality
@@ -89,6 +90,53 @@ Optional calculator proof claims additionally require applicable MC1/MC2 support
 
 If M7 uses native async, that slice also depends on M6. No full concurrency claim can rely on unspecified async behavior.
 
+### M8 selected choreography projection (bounded acceptance complete)
+
+The archived [M8 Cairn change](../.cairn/archive/2026-09-26-m8-choreography-projection/proposal.md)
+selects `Choreography-Service-M8` over completed M7: the versioned
+`noble:choreography/service@1.0.0` **data descriptor**, one or two finite
+publisher/subscriber rounds, exact deterministic global order and role-local
+projections. The untrusted descriptor input is strict UTF-8 JSON bounded
+to 512 bytes and depth three, with exact typed keys, no duplicate/unknown
+keys or trailing non-whitespace content; no transport or general JSON
+protocol is selected.
+The descriptor is neither a new WIT world nor authority;
+M7's `noble:syndicate@1.0.0` synchronous imports/exports remain unchanged.
+One exclusive session on an empty M7 dataspace reserves two facets, one
+concurrent assertion, two interests and four immediate/owed-removal events.
+A trusted host pre-admits export identity, caller facet/role and exact pair
+before guest invocation; each import and completion is separately monitored
+under serialized pending-export state. A terminal compiled publish-and-trap
+must show both imports, actual trap/retirement, typed add/remove and
+subscriber absence, not publisher success. Pre-export refusal has zero state
+or request effects; an in-flight refusal may legitimately retire the facet.
+The [safety cases](conformance/safety-cases.json) S-CASE-18/19 and
+[component cases](conformance/wit-wasi-cases.json) WI-19/20 are
+`implemented/passed` for the selected canonical observations and all
+38 hostile variants, including ten strict JSON boundaries and three
+one-round capacity reservations. The
+[M8 completion record](../verification/m8/evidence.json) binds the
+[fresh compiled acceptance](../verification/m8/acceptance.json) to the
+[source build](../verification/m8/build.json), with separately compiled
+Noble participants, independent typed Wasmtime peer and seven-case,
+16-variant fresh M7 regression. The
+[whole-crate extraction](../verification/m8/extraction.json) retains only
+three pure M7 dataspace Rust functions at compiler DefIDs 31/32/33 and nine
+strict Lean theorem roots; all 265 inherited refusal controls pass. The
+[17-command, 11-gate pre-promotion assurance](../verification/m8/assurance.json)
+passes workspace Rust, Clippy, published Octet deny-all and complete Nix flake;
+the separate final archived-source documents/Cairn Nix receipt is
+`verification/m8/nix-checks.json`. On this host the selected Nix commands
+used `--option builders ''` for local builds instead of the unusable remote
+grpc/aspen daemon lock; signed substitutes, sandbox, pinned tools and gate
+timeouts remained unchanged. The isolated user-store pilot hit a pinned
+Valence source tarball HTTP 404 and was not accepted as a gate.
+
+All 2,087 authored-production-body refinements, including parser, projector, monitor, adapter, host and engine
+correspondence, remain open. No user-defined protocols, distributed
+transport, durability, fairness, full Syndicate, universal compiler/engine
+claim or new WIT authority is selected.
+
 ### M7 selected local synchronous service (bounded acceptance complete)
 
 The archived [M7 Cairn change](../.cairn/archive/2026-09-25-m7-syndicate-service/proposal.md)
@@ -117,8 +165,9 @@ earlier regressions, workspace Rust tests/Clippy, published Octet deny-all,
 full Nix flake and Cairn/documents. The separate final archived-source
 documents/Cairn Nix receipt is `verification/m7/nix-checks.json`. The 2,006
 authored-body inventory refinements remain open. General Syndicate/Preserves,
-fairness, transport, durability, M8 and universal compiler/engine
-correspondence remain outside this accepted selection.
+fairness, transport, durability, general choreography beyond the separately
+accepted bounded M8 slice, and universal compiler/engine correspondence remain
+outside this historical M7 selection.
 
 ### M6 native-async implementation and closeout
 
@@ -205,8 +254,9 @@ The [retained runtime archive](../verification/m6/runtime.tar.gz) and
 and permission modes, not execution-time inode identity.
 
 At M6 completion the [source inventory](../verification/source-inventory.md)
-covered 25 units with 1,939 open authored-body obligations; the current M7
-renewal covers 29 units with 2,006 still open. Historical milestone receipts
+covered 25 units with 1,939 open authored-body obligations; the historical M7
+renewal covered 29 units with 2,006 open. The current M8 renewal covers
+30 units with 2,087 still open. Historical milestone receipts
 keep their historical inventories. Neither extraction nor this native execution
 closes the broader frontend, kernel, compiler or backend proof obligations.
 
@@ -232,7 +282,7 @@ MW1 requires a worker-interface checker, declared schemas/modules, an explicit p
 
 The MW1 case set is WORKER-02 through WORKER-07 and WORKER-09 through WORKER-12. Async-dependent rows in WORKER-09 remain MW2 obligations rather than false MW1 coverage. MW2 executes WORKER-01 and WORKER-08 plus those deferred rows. Reports retain a result for every applicable matrix entry.
 
-Neither milestone blocks M1 through M4, MC1/MC2, or the calculator. These tests do not select worker scheduling, task leases, distributed retries, or durability. M6's completed local WORKER-08 slice did not establish the separate M7 service acceptance, and the completed bounded M7 service does not close M8 or the broader worker milestones.
+Neither milestone blocks M1 through M4, MC1/MC2, or the calculator. These tests do not select worker scheduling, task leases, distributed retries, or durability. M6's completed local WORKER-08 slice did not establish M7 service acceptance, and neither the separately accepted bounded M7 service nor M8 choreography closes the broader worker milestones.
 
 ## M1 architecture and quality gates
 

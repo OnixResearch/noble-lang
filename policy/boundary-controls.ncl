@@ -65,6 +65,7 @@ let case = fun case_id mutation_value statement_value std_value lint_value obser
     "noble-wasm:lib+test:crates/noble-wasm/src/lib.rs:domain-core",
     "noble-syndicate:lib:crates/noble-syndicate/src/lib.rs:composition-root",
     "noble-syndicate:lib+test:crates/noble-syndicate/src/lib.rs:composition-root",
+    "noble-syndicate:test+test:crates/noble-syndicate/tests/choreography.rs:test",
     "noble-syndicate:test+test:crates/noble-syndicate/tests/service.rs:test",
   ],
   acyclic_extra_units | Array String = [

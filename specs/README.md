@@ -9,8 +9,8 @@ The twelve normative documents now live under `.cairn/specs/`. Their old paths c
 The repository now contains the bounded checker, experimental MC1 contract frontend,
 M3 compiled-program representation experiment, M4 source-to-Wasm Core-Bootstrap,
 MC2 first-class certified companions, the M5 synchronous component subset and
-the completed bounded M6 native-async boundary and separately accepted M7
-local synchronous service.
+the completed bounded M6 native-async boundary, separately accepted M7
+local synchronous service, and accepted finite M8 choreography projection.
 M4 uses the selected managed-linear-memory backend:
 source is resolved and inferred, independently accepted by the kernel, rechecked
 for lowering, then executed as compiled Wasm. Persistent sessions retain compiled
@@ -59,10 +59,25 @@ nine strict Lean roots. The scoped [assurance](../verification/m7/assurance.json
 passes sixteen pre-promotion build, execution, prior-regression and quality
 commands; the archived-source document/Cairn Nix result is separate at
 `verification/m7/nix-checks.json`. This is not general Syndicate, Preserves,
-Component-Draft or WASI conformance. The current
-[source inventory](../verification/source-inventory.md) covers 29 units and
-retains 2,006 open authored production body obligations. Historical M4, MC2,
+Component-Draft or WASI conformance. At M7 closeout the historical
+[source inventory](../verification/source-inventory.md) covered 29 units and
+retained 2,006 open authored production body obligations. Historical M4, MC2,
 M5 and M6 receipts retain their own source counts and assurance scopes.
+The separately accepted [M8 completion record](../verification/m8/evidence.json)
+binds the finite one/two-round `Choreography-Service-M8` descriptor projection,
+serialized host-owned M7 admission and monitored compiled participant imports.
+S-CASE-18/19 and WI-19/20 pass four selected cases, 38 hostile variants, ten
+strict JSON edges and three one-round quota reservations; the
+[seventeen-command pre-promotion assurance](../verification/m8/assurance.json)
+checks eleven source-bound gates including fresh M7 regression. Its
+[dated Cairn archive](../.cairn/archive/2026-09-26-m8-choreography-projection/proposal.md)
+and separate post-promotion Nix result `verification/m8/nix-checks.json`
+bind the later archived specifications. The current
+[source inventory](../verification/source-inventory.md) covers 30 units and
+retains 2,087 open authored production body obligations. M8 does not
+establish universal parser/projector/monitor/host/engine refinement, new WIT,
+user-defined choreography or durability.
+
 Amendment sections below record design adoption,
 not automatic completion.
 
@@ -187,7 +202,8 @@ The core owns language semantics. Profile documents add explicit boundary contra
 
 The new revision preserves inherited requirement IDs. Reports must include the document revision, not only the ID. DEC-N001 consolidates decisions previously spread across the core, safety, verification, and WIT registers.
 
-Syndicate/Synit with Preserves remains the selected concurrency direction. Its full normative profile is still open and does not block the core. Choreography and durability remain later, optional work.
+Syndicate/Synit with Preserves remains the selected concurrency direction. Its full normative profile is still open and does not block the core. Finite selected M8 choreography is accepted only in its recorded scope;
+general/user-defined choreography and durability remain optional, open work.
 
 ## Validation
 

@@ -2,7 +2,7 @@
   "revision": "0.1.0-draft.5",
   "validator": {
     "file": "tools/check-specs.mjs",
-    "sha256": "7241f8aa9bfd5df176bc326a664fd5350de1172d564693f613368754f6b5f195",
+    "sha256": "4d8873e9064398538950ae8eb381dcdc1ff226daabcb4c3b9fa6dea1516fb49b",
     "adapter": {
       "file": "tools/cairn-specs.mjs",
       "sha256": "e491c5e371ac9b9238289cbb8904b458cddad137fa5c466ba525a6a3f31c46d5"
@@ -15,9 +15,9 @@
     "node_api": "26.3.0"
   },
   "documents": 12,
-  "requirements": 485,
-  "scenarios": 151,
-  "scenarios_executed": 74,
+  "requirements": 487,
+  "scenarios": 155,
+  "scenarios_executed": 78,
   "open_test_design": 193,
   "proof_obligations": 30,
   "completed_proofs": 3,
@@ -119,6 +119,16 @@
     },
     {
       "name": "missing-milestone",
+      "expected": "reject",
+      "result": "passed"
+    },
+    {
+      "name": "alternate-selected-next-milestone",
+      "expected": "accept",
+      "result": "passed"
+    },
+    {
+      "name": "unknown-next-milestone",
       "expected": "reject",
       "result": "passed"
     },
@@ -1327,6 +1337,26 @@
       "sha256": "457d15787b82722282c352037c3ca82aded6aaac13cd2b50d473b2e4e41a210c"
     },
     {
+      "file": ".cairn/archive/2026-09-26-m8-choreography-projection/design.md",
+      "sha256": "3ef7caa33d3e5721b2671d4659f4c2ddcc47b59fa1c7a724a6659fc4c2a11319"
+    },
+    {
+      "file": ".cairn/archive/2026-09-26-m8-choreography-projection/proposal.md",
+      "sha256": "46ba98ead4a41615c076e8bdc94cd5fad2001cb13d9f106be0f48b09cbb635c3"
+    },
+    {
+      "file": ".cairn/archive/2026-09-26-m8-choreography-projection/specs/safety/spec.md",
+      "sha256": "e068a600451a56f7e196ff72641871805dda932429d4482c16e3111241d59495"
+    },
+    {
+      "file": ".cairn/archive/2026-09-26-m8-choreography-projection/specs/wit-wasi/spec.md",
+      "sha256": "e853b04ebcaeafcf3b541583a7d7048acf421c1840130025f92f1e102edcd2f0"
+    },
+    {
+      "file": ".cairn/archive/2026-09-26-m8-choreography-projection/tasks.md",
+      "sha256": "717b55581937722c5dd1eced4df13bd9a999747ba62aba726f78f139fb372627"
+    },
+    {
       "file": ".cairn/MIGRATION.md",
       "sha256": "e05f953b21ae5551711f99b85588b966a04c83f751e6faabdcadd9c6f38184f4"
     },
@@ -1368,7 +1398,7 @@
     },
     {
       "file": ".cairn/specs/safety/spec.md",
-      "sha256": "5db78d6f9255da47c5678145f7da072f6bbeff6fbd5818ebbf9d0e0047248275"
+      "sha256": "d7327a3fec8c08212da7f07b52a5346325cb6fb3bb5f015c0ed00f7ab559514a"
     },
     {
       "file": ".cairn/specs/verification-toolchain/spec.md",
@@ -1380,7 +1410,7 @@
     },
     {
       "file": ".cairn/specs/wit-wasi/spec.md",
-      "sha256": "a3ff332b2e84068cd34f375c603d87c1a67b0f6bd78cb012871fcd5913ba91f7"
+      "sha256": "2caec07607b46dc3ed665bcbaa898a194ad22c50f50a39d05fdfcb022064fe67"
     },
     {
       "file": "noble-project-handoff-2026-09-12/reference/baseline/PROGRAM-CONTRACTS.md",
@@ -1412,7 +1442,7 @@
     },
     {
       "file": "README.md",
-      "sha256": "579518650823cab6e15a941e00e2b4e49fad556309870a6d618d763dffd2a4ee"
+      "sha256": "0b9872b6d1a30ebdc361b1c65afd9b2a56781143bfaff9bd30e85090946f6612"
     },
     {
       "file": "specs/BACKEND-EXPERIMENTS.md",
@@ -1460,7 +1490,7 @@
     },
     {
       "file": "specs/conformance/safety-cases.json",
-      "sha256": "61c6aa4d159f330eeb19a6b0bc2adb5d9e8656d400a4407aaa3a526fb5e311bf"
+      "sha256": "9e65a55370b43e6481c2dbec1b1d6a08879ff2155c6a9d052c1f41b33202232d"
     },
     {
       "file": "specs/conformance/verification-cases.json",
@@ -1468,7 +1498,7 @@
     },
     {
       "file": "specs/conformance/wit-wasi-cases.json",
-      "sha256": "e9e9b00480c2da32704cd1c4d2e5a9252b619fa1c567ba8551da9f91dd582365"
+      "sha256": "a2dc1c578011b7da4b7873a139723823cb977c1e6ca7576d990337d24f3147ff"
     },
     {
       "file": "specs/conformance/worker-cases.json",
@@ -1480,7 +1510,7 @@
     },
     {
       "file": "specs/DECISIONS.md",
-      "sha256": "12ab3b648bc92da8933b98759e81ac3ae9e8e00c943523a9416d3f31093861a5"
+      "sha256": "d7d0d4c7949dc27664978559bf66247ed5951d43f6f55f5b803dad7bb727d003"
     },
     {
       "file": "specs/DEVELOPER-EXPERIENCE.md",
@@ -1500,11 +1530,11 @@
     },
     {
       "file": "specs/README.md",
-      "sha256": "dc2de5d7d5cc605c0591ec5efadac18631db99d18f1e677950deb77779ffd019"
+      "sha256": "e2c2fb987b4095e35d8cf66c33c2072ba4d1dc241f25bb5d1380128a79ea810c"
     },
     {
       "file": "specs/requirements.json",
-      "sha256": "0eb0304878faa5aec4e2ab4e89944689512b2b9f8cab103ac212b7ecc06e8274"
+      "sha256": "a52b26810c5b2a618d00f5e171e363f5d166a5345c34f015f24ee103c78531f6"
     },
     {
       "file": "specs/RESOURCE-ADAPTERS.md",
@@ -1516,15 +1546,15 @@
     },
     {
       "file": "specs/roadmap.json",
-      "sha256": "7e52101965c2bfe25381aa829449745d6a35fd35e01d8b2bed12a685de1016ca"
+      "sha256": "90cdfb6fd6ad347780e1eceb827b0b93e2b63fa016d11ad71d4c3d37a9e991f8"
     },
     {
       "file": "specs/ROADMAP.md",
-      "sha256": "a21e6295765a217e3898421994201acbf14f1e2519b5ee3635d011ab7e2bb72c"
+      "sha256": "e249b626fde413f6c33f3da7529356d0ebe22ab73552d7032740dd19778ccc83"
     },
     {
       "file": "specs/SAFETY.md",
-      "sha256": "6916c452bbdbc1cb439a311fcf09987f757975502b5cacb2d691737c40298b9b"
+      "sha256": "7e32dee3dc5c91bc55b284adf6ed78b925571f0b99f49e4e14306036f66c1641"
     },
     {
       "file": "specs/SOURCES.md",
@@ -1540,7 +1570,7 @@
     },
     {
       "file": "specs/STATUS.json",
-      "sha256": "6453c0b57612efa87ead8989ccbaaf5636d99265fc966a9dd79b81c2ab49f70c"
+      "sha256": "806e6212c59b8e2a0ab04cad99b836c756db6f0f1814123dcb6b3174df3fc437"
     },
     {
       "file": "specs/VERIFICATION-TOOLCHAIN.md",
@@ -1560,7 +1590,7 @@
     },
     {
       "file": "specs/WIT-WASI.md",
-      "sha256": "fcacdc31dc541f23728987c63d26aa165817e36ef58494cae3f7b356afff6a17"
+      "sha256": "44075b12c0d9aea2b53cdf8ff22da0009211f79340ec450484e7d734e4b4f99e"
     },
     {
       "file": "specs/WORKER-CONFORMANCE.md",
@@ -1648,7 +1678,7 @@
     },
     {
       "file": "verification/source-inventory.md",
-      "sha256": "f042eb10d3a3d569a38250fbd897e92fed022f4dd64f4b665945d18fe36d9ba2"
+      "sha256": "f4e5a0210357a40e8296c7990ad378f868e7ad0683b18ec8d2e0ea66ac2043c3"
     },
     {
       "file": "verification/tool-selection.md",

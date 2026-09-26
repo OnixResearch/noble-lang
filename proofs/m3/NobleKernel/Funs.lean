@@ -21096,6 +21096,28 @@ def dataspace.table.actions.Table.counts
   let i3 ← lift (UScalar.cast .U32 i2)
   ok (live, i1, i3)
 
+/-- [noble_kernel::dataspace::table::actions::{noble_kernel::dataspace::Table}::contains_pair]:
+    Source: 'crates/noble-kernel/src/dataspace/table/actions.rs', lines 274:4-276:5
+    Visibility: public -/
+def dataspace.table.actions.Table.contains_pair
+  (self : dataspace.Table) («name» : Str) (ready : Bool) : Result Bool := do
+  dataspace.table.Table.asserted self «name» ready none
+
+/-- [noble_kernel::dataspace::table::actions::{noble_kernel::dataspace::Table}::remaining_capacity]:
+    Source: 'crates/noble-kernel/src/dataspace/table/actions.rs', lines 280:4-287:5
+    Visibility: public -/
+def dataspace.table.actions.Table.remaining_capacity
+  (self : dataspace.Table) : Result dataspace.Limits := do
+  let i := alloc.vec.Vec.len self.scopes
+  let i1 ← lift (core.num.Usize.saturating_sub self.limits.facets i)
+  let i2 := alloc.vec.Vec.len self.assertions
+  let i3 ← lift (core.num.Usize.saturating_sub self.limits.assertions i2)
+  let i4 := alloc.vec.Vec.len self.interests
+  let i5 ← lift (core.num.Usize.saturating_sub self.limits.interests i4)
+  let i6 := alloc.vec.Vec.len self.events
+  let i7 ← lift (core.num.Usize.saturating_sub self.limits.events i6)
+  ok { facets := i1, assertions := i3, interests := i5, events := i7 }
+
 /-- [noble_kernel::dataspace::table::{noble_kernel::dataspace::Table}::new]:
     Source: 'crates/noble-kernel/src/dataspace/table.rs', lines 10:4-31:5
     Visibility: public -/

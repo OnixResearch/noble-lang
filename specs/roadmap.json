@@ -512,11 +512,34 @@
     },
     {
       "id": "M8",
-      "name": "optional-higher-layers",
+      "name": "bounded-choreography-projection",
       "depends_on": [
         "M7"
       ],
-      "status": "not-started"
+      "status": "completed",
+      "contract": "../.cairn/archive/2026-09-26-m8-choreography-projection/proposal.md",
+      "scope": "Selected Choreography-Service-M8 versioned finite data descriptor admitted only from strict UTF-8 JSON (512 bytes, depth three, exact typed keys, duplicate/unknown-key and trailing non-whitespace refusal) and deterministic publisher/subscriber projection over the unchanged M7 synchronous service; general choreography remains open.",
+      "implementation": "Production strict descriptor parser/projector and serialized host-owned monitor compose existing M7 dataspace and WIT service decisions with two separately compiled Noble participants and independent typed Wasmtime linking; no new WIT world or guest authority.",
+      "required_requirements": ["S-CONC-09","WI-SYN-05"],
+      "acceptance_cases": ["S-CASE-18","S-CASE-19","WI-19","WI-20"],
+      "acceptance_status": "passed",
+      "acceptance_scope": "All four selected canonical cases and 38 hostile variants pass against source-bound compiled components and an independent typed peer, including ten strict JSON edges and three one-round reservations; fresh M7 regression retains seven cases and sixteen variants. All 17 pre-promotion commands and eleven gates pass, including published Octet deny-all and full Nix flake; a distinct final documents/Cairn Nix receipt binds archived staged source.",
+      "verification_scope": "Fresh whole-crate actual-Rust extraction binds 562 files and retains three pure M7 dataspace functions at compiler DefIDs 31/32/33 and nine strict Lean roots with 265 refusal controls. M8 parser, projector, monitor, adapter, host and engine correspondence and all 2087 authored-production-body inventory refinements remain open.",
+      "completion_record": "../verification/m8/evidence.json",
+      "lifecycle_record": "../.cairn/archive/2026-09-26-m8-choreography-projection/tasks.md",
+      "evidence_records": {
+        "build": "../verification/m8/build.json",
+        "runtime_acceptance": "../verification/m8/acceptance.json",
+        "extraction": "../verification/m8/extraction.json",
+        "extraction_lock": "../verification/m4/extraction-lock.json",
+        "assurance": "../verification/m8/assurance.json",
+        "final_nix_checks": "../verification/m8/nix-checks.json"
+      },
+      "non_claims": [
+        "Not a new WIT world or authority, general/user-defined choreography, native async, remote transport, fairness, durability, full Syndicate/Preserves or universal host/compiler/engine refinement.",
+        "Not a proof of parser, projector, monitor, adapter, host or engine correctness; retained strict Lean roots establish only three scoped pure M7 Rust function correspondences.",
+        "Not a discharge of all 2087 authored-production-body refinement obligations, prior milestone evidence or distinct final archived-source documents/Cairn Nix verification."
+      ]
     }
   ]
 }

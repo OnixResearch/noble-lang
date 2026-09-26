@@ -3289,6 +3289,23 @@
       "test_design": "scenario-described-not-executed"
     },
     {
+      "id": "S-CONC-09",
+      "document": "../.cairn/specs/safety/spec.md",
+      "document_id": "SPEC-S001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "S-CASE-18",
+        "S-CASE-19",
+        "WI-19",
+        "WI-20"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
       "id": "S-DECODE-01",
       "document": "../.cairn/specs/safety/spec.md",
       "document_id": "SPEC-S001",
@@ -6362,6 +6379,21 @@
       ],
       "scenarios": [
         "WI-18"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "WI-SYN-05",
+      "document": "../.cairn/specs/wit-wasi/spec.md",
+      "document_id": "SPEC-W001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "WI-19",
+        "WI-20"
       ],
       "test_design": "scenario-described-not-executed"
     },

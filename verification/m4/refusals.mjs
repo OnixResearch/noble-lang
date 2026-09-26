@@ -25,8 +25,49 @@ export function refusals({ raw, accounts, sources, tools, packet, packets, audit
     path.basename(repacked.translated.options.dest_file));
   repacked.translated.short_names.reverse();
   equal(canonicalLlbcHash(repacked), llbcHash, 'LLBC-BINDING', 'physical repacking changed semantic binding');
+  // Repeat-discovery control: flip exactly the four observed zero/full-token
+  // macro expansion end columns in the actual three extracted LLBC artifacts.
+  // An ordinary multi-line span remains part of the canonical binding.
+  function findSpan(value, fileId, line, singleLine) {
+    if (!value || typeof value !== 'object') return null;
+    const data = value.Value?.[1]?.data;
+    if (data?.file_id === fileId && data.beg?.line === line && data.beg?.col === 8 &&
+        (data.end?.line === line) === singleLine) return data.end;
+    for (const nested of Object.values(value)) {
+      const found = findSpan(nested, fileId, line, singleLine);
+      if (found) return found;
+    }
+    return null;
+  }
+  const syntheticExpansionSpans = [];
+  for (const lane of lanes) {
+    const source = raw[lane.id].llbc;
+    const actual = [];
+    const binding = canonicalLlbcHash(source, actual);
+    const changed = [];
+    try {
+      for (const span of actual) {
+        const fileId = source.translated.files.find(file => file?.name?.Local === span.source)?.id;
+        const end = findSpan(source.translated.fun_decls, fileId, span.line, true);
+        if (!end || end.col !== span.observed_end_col) fail('REFUSAL', `missing ${lane.id} expansion`);
+        changed.push({ end, original: end.col });
+        end.col = end.col === 8 ? span.canonical_end_col : 8;
+      }
+      equal(canonicalLlbcHash(source), binding, 'LLBC-BINDING', `${lane.id} repeat discovery`);
+    } finally {
+      for (const { end, original } of changed) end.col = original;
+    }
+    syntheticExpansionSpans.push(...actual.map(span => ({ lane: lane.id, ...span })));
+  }
+  const ordinaryEnd = findSpan(repacked.translated.fun_decls,
+    repacked.translated.files.find(file => file?.name?.Local === 'crates/noble-wasm/src/lib.rs')?.id, 13, false);
+  if (!ordinaryEnd) fail('REFUSAL', 'missing ordinary multi-line span');
+  ordinaryEnd.col += 1;
+  if (canonicalLlbcHash(repacked) === llbcHash) fail('REFUSAL', 'ordinary span mutation was accepted');
   save('llbc-normalization.json', { result: 'passed', canonical_llbc_sha256: llbcHash,
-    normalized: ['output-directory', 'short-name-map-order'], semantic_fields: 'retained' });
+    normalized: ['output-directory', 'short-name-map-order', 'four-exact-synthetic-expansion-end-columns'],
+    synthetic_expansion_spans: syntheticExpansionSpans, ordinary_spans: 'retained',
+    semantic_fields: 'retained' });
   reject('changed-llbc-body-binding', 'LLBC-BINDING', () => {
     const changed = copied().llbc;
     changed.translated.fun_decls[subject.def_id].body = 'Opaque';

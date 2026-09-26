@@ -78,7 +78,7 @@
   ],
   "owner": "noble-maintainers",
   "schema_version": "noble-source-inventory-policy/v1",
-  "scope_note": "Reviewed M7 complete compiler inventory: noble-kernel, noble-contracts and noble-wasm remain domain-core; noble-cli and the selected noble-syndicate host own assembly, consumer I/O and host-only participant policy as composition roots. Production-role library/binary test configurations remain accounted. The independent Wasmtime peer is separate verification-only workspace. All new authored dataspace and host Rust bodies carry open extraction/refinement obligations here; the separately compiled pure Lean proofs do not discharge unrelated bodies, WIT runtime, third-party Wasmtime, host provenance or whole-program correctness.",
+  "scope_note": "Reviewed M8 complete compiler inventory: noble-kernel, noble-contracts and noble-wasm remain domain-core; noble-cli and noble-syndicate are composition roots. The no-provider production choreography projector, strict bounded JSON ingress, fixed-size indexed event view, and full M7 dataspace quota reservation add authored bodies with open extraction/refinement obligations here. The independent typed Wasmtime M8 peer is verification-only outside the production workspace. Retained M7 strict Lean roots remain separately bound; they do not discharge M8 projection, host or engine obligations, universal source-to-component refinement or whole-program correctness.",
   "subjects": [
     {
       "category": "body",
@@ -38047,6 +38047,2454 @@
       "package": "noble-wasm",
       "qualified_path": "noble_wasm::{use#0}",
       "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-kernel",
+      "qualified_path": "noble_kernel::dataspace::table::actions::<impl dataspace::Table>::contains_pair",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-kernel",
+      "qualified_path": "noble_kernel::dataspace::table::actions::<impl dataspace::Table>::remaining_capacity",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Error as std::convert::From<Error>>::from",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<HostTable as std::ops::Deref>::deref",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<HostTable as std::ops::DerefMut>::deref_mut",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::Export::wit_name",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::json::Decoder::<'_>::root",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::json::Decoder::<'_>::round",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::json::Decoder::<'_>::rounds",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::json::parse",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Named source constant initializer; this inventory does not discharge extraction or refinement.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::MAX_DESCRIPTOR_BYTES",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::Name::as_str",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::Name::checked",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Named source constant initializer; this inventory does not discharge extraction or refinement.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::PROTOCOL",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Named source constant initializer; this inventory does not discharge extraction or refinement.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::WORLD",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::Profile::table_unchecked",
+      "refinement": "open"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Error as std::clone::Clone>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Error as std::clone::Clone>::clone",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Error as std::clone::TrivialClone>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Error as std::cmp::Eq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Error as std::cmp::Eq>::assert_fields_are_eq",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Error as std::cmp::PartialEq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Error as std::cmp::PartialEq>::eq",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Error as std::fmt::Debug>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Error as std::fmt::Debug>::fmt",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Error as std::marker::Copy>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Error as std::marker::StructuralPartialEq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Exit as std::clone::Clone>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Exit as std::clone::Clone>::clone",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Exit as std::clone::TrivialClone>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Exit as std::cmp::Eq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Exit as std::cmp::Eq>::assert_fields_are_eq",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Exit as std::cmp::PartialEq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Exit as std::cmp::PartialEq>::eq",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Exit as std::fmt::Debug>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Exit as std::fmt::Debug>::fmt",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Exit as std::marker::Copy>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Exit as std::marker::StructuralPartialEq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Expected as std::clone::Clone>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Expected as std::clone::Clone>::clone",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Expected as std::clone::TrivialClone>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Expected as std::cmp::Eq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Expected as std::cmp::Eq>::assert_fields_are_eq",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Expected as std::cmp::PartialEq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Expected as std::cmp::PartialEq>::eq",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Expected as std::fmt::Debug>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Expected as std::fmt::Debug>::fmt",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Expected as std::marker::Copy>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Expected as std::marker::StructuralPartialEq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Export as std::clone::Clone>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Export as std::clone::Clone>::clone",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Export as std::clone::TrivialClone>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Export as std::cmp::Eq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Export as std::cmp::Eq>::assert_fields_are_eq",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Export as std::cmp::PartialEq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Export as std::cmp::PartialEq>::eq",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Export as std::fmt::Debug>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Export as std::fmt::Debug>::fmt",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Export as std::marker::Copy>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Export as std::marker::StructuralPartialEq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Name as std::clone::Clone>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Name as std::clone::Clone>::clone",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Name as std::clone::TrivialClone>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Name as std::cmp::Eq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Name as std::cmp::Eq>::assert_fields_are_eq",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Name as std::cmp::PartialEq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Name as std::cmp::PartialEq>::eq",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Name as std::fmt::Debug>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Name as std::fmt::Debug>::fmt",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Name as std::marker::Copy>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Name as std::marker::StructuralPartialEq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Role as std::clone::Clone>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Role as std::clone::Clone>::clone",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Role as std::clone::TrivialClone>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Role as std::cmp::Eq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Role as std::cmp::Eq>::assert_fields_are_eq",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Role as std::cmp::PartialEq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Role as std::cmp::PartialEq>::eq",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Role as std::fmt::Debug>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Role as std::fmt::Debug>::fmt",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Role as std::marker::Copy>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Role as std::marker::StructuralPartialEq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Round as std::clone::Clone>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Round as std::clone::Clone>::clone",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Round as std::cmp::Eq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Round as std::cmp::Eq>::assert_fields_are_eq",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Round as std::cmp::PartialEq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Round as std::cmp::PartialEq>::eq",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Round as std::fmt::Debug>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Round as std::fmt::Debug>::fmt",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Round as std::marker::StructuralPartialEq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source declaration, implementation block, module, macro, type or import marker; body obligations are classified separately.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::Error as std::convert::From<Error>>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source declaration, implementation block, module, macro, type or import marker; body obligations are classified separately.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<HostTable as std::ops::Deref>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source declaration, implementation block, module, macro, type or import marker; body obligations are classified separately.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<HostTable as std::ops::Deref>::Target",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source declaration, implementation block, module, macro, type or import marker; body obligations are classified separately.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<HostTable as std::ops::DerefMut>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source declaration, implementation block, module, macro, type or import marker; body obligations are classified separately.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source declaration, implementation block, module, macro, type or import marker; body obligations are classified separately.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::{use#0}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source declaration, implementation block, module, macro, type or import marker; body obligations are classified separately.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::{use#1}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source declaration, implementation block, module, macro, type or import marker; body obligations are classified separately.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::{use#10}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source declaration, implementation block, module, macro, type or import marker; body obligations are classified separately.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::{use#2}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source declaration, implementation block, module, macro, type or import marker; body obligations are classified separately.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::{use#3}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source declaration, implementation block, module, macro, type or import marker; body obligations are classified separately.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::{use#4}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source declaration, implementation block, module, macro, type or import marker; body obligations are classified separately.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::{use#5}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source declaration, implementation block, module, macro, type or import marker; body obligations are classified separately.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::{use#6}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source declaration, implementation block, module, macro, type or import marker; body obligations are classified separately.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::{use#7}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source declaration, implementation block, module, macro, type or import marker; body obligations are classified separately.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::{use#8}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source declaration, implementation block, module, macro, type or import marker; body obligations are classified separately.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::{use#9}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source declaration, implementation block, module, macro, type or import marker; body obligations are classified separately.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::Error",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source declaration, implementation block, module, macro, type or import marker; body obligations are classified separately.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::Exit",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source declaration, implementation block, module, macro, type or import marker; body obligations are classified separately.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::Expected",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source declaration, implementation block, module, macro, type or import marker; body obligations are classified separately.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::Export",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source declaration, implementation block, module, macro, type or import marker; body obligations are classified separately.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::json",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source declaration, implementation block, module, macro, type or import marker; body obligations are classified separately.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::json::{use#0}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source declaration, implementation block, module, macro, type or import marker; body obligations are classified separately.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::json::Decoder",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source declaration, implementation block, module, macro, type or import marker; body obligations are classified separately.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::json::Decoder<'_>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source declaration, implementation block, module, macro, type or import marker; body obligations are classified separately.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::json::Parsed",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source declaration, implementation block, module, macro, type or import marker; body obligations are classified separately.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::Name",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source declaration, implementation block, module, macro, type or import marker; body obligations are classified separately.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::Role",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source declaration, implementation block, module, macro, type or import marker; body obligations are classified separately.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::Round",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source declaration, implementation block, module, macro, type or import marker; body obligations are classified separately.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::HostTable",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Anonymous closure carrying authored source-body semantics; inherited extraction and refinement obligations remain open. Its effects remain in compiler architecture evaluation.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble-syndicate::closure@crates/noble-syndicate/src/choreography/json/scan.rs:2362:2368",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Anonymous closure carrying authored source-body semantics; inherited extraction and refinement obligations remain open. Its effects remain in compiler architecture evaluation.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble-syndicate::closure@crates/noble-syndicate/src/choreography/json/scan.rs:4223:4230",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Anonymous closure carrying authored source-body semantics; inherited extraction and refinement obligations remain open. Its effects remain in compiler architecture evaluation.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble-syndicate::closure@crates/noble-syndicate/src/choreography/json/scan.rs:7672:7678",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Anonymous closure carrying authored source-body semantics; inherited extraction and refinement obligations remain open. Its effects remain in compiler architecture evaluation.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble-syndicate::closure@crates/noble-syndicate/src/choreography/json/scan.rs:7881:7887",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Anonymous closure carrying authored source-body semantics; inherited extraction and refinement obligations remain open. Its effects remain in compiler architecture evaluation.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble-syndicate::closure@crates/noble-syndicate/src/choreography/monitor.rs:3894:3904",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Anonymous closure carrying authored source-body semantics; inherited extraction and refinement obligations remain open. Its effects remain in compiler architecture evaluation.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble-syndicate::closure@crates/noble-syndicate/src/choreography/monitor/admit.rs:1645:1651",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Anonymous closure carrying authored source-body semantics; inherited extraction and refinement obligations remain open. Its effects remain in compiler architecture evaluation.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble-syndicate::closure@crates/noble-syndicate/src/choreography/monitor/admit.rs:3489:3492",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Anonymous closure carrying authored source-body semantics; inherited extraction and refinement obligations remain open. Its effects remain in compiler architecture evaluation.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble-syndicate::closure@crates/noble-syndicate/src/choreography/monitor/drive.rs:428:432",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Anonymous closure carrying authored source-body semantics; inherited extraction and refinement obligations remain open. Its effects remain in compiler architecture evaluation.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble-syndicate::closure@crates/noble-syndicate/src/choreography/monitor/drive.rs:5035:5041",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Anonymous closure carrying authored source-body semantics; inherited extraction and refinement obligations remain open. Its effects remain in compiler architecture evaluation.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble-syndicate::closure@crates/noble-syndicate/src/choreography/monitor/drive.rs:5440:5446",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Anonymous closure carrying authored source-body semantics; inherited extraction and refinement obligations remain open. Its effects remain in compiler architecture evaluation.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble-syndicate::closure@crates/noble-syndicate/src/choreography/monitor/drive.rs:5838:5844",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Anonymous closure carrying authored source-body semantics; inherited extraction and refinement obligations remain open. Its effects remain in compiler architecture evaluation.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble-syndicate::closure@crates/noble-syndicate/src/choreography/monitor/drive.rs:8470:8477",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Anonymous closure carrying authored source-body semantics; inherited extraction and refinement obligations remain open. Its effects remain in compiler architecture evaluation.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble-syndicate::closure@crates/noble-syndicate/src/choreography/projection.rs:1882:1890",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Anonymous closure carrying authored source-body semantics; inherited extraction and refinement obligations remain open. Its effects remain in compiler architecture evaluation.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble-syndicate::closure@crates/noble-syndicate/src/choreography/projection.rs:1939:1946",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Anonymous closure carrying authored source-body semantics; inherited extraction and refinement obligations remain open. Its effects remain in compiler architecture evaluation.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble-syndicate::closure@crates/noble-syndicate/src/choreography/projection.rs:3030:3037",
+      "refinement": "open"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::EventRecord as std::clone::Clone>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::EventRecord as std::clone::Clone>::clone",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::EventRecord as std::clone::TrivialClone>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::EventRecord as std::cmp::Eq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::EventRecord as std::cmp::Eq>::assert_fields_are_eq",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::EventRecord as std::cmp::PartialEq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::EventRecord as std::cmp::PartialEq>::eq",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::EventRecord as std::fmt::Debug>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::EventRecord as std::fmt::Debug>::fmt",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::EventRecord as std::marker::Copy>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::EventRecord as std::marker::StructuralPartialEq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::Import<'a> as std::clone::Clone>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::Import<'a> as std::clone::Clone>::clone",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::Import<'a> as std::clone::TrivialClone>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::Import<'a> as std::cmp::Eq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::Import<'a> as std::cmp::Eq>::assert_fields_are_eq",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::Import<'a> as std::cmp::PartialEq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::Import<'a> as std::cmp::PartialEq>::eq",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::Import<'a> as std::fmt::Debug>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::Import<'a> as std::fmt::Debug>::fmt",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::Import<'a> as std::marker::Copy>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::Import<'a> as std::marker::StructuralPartialEq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::ImportResult as std::clone::Clone>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::ImportResult as std::clone::Clone>::clone",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::ImportResult as std::clone::TrivialClone>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::ImportResult as std::cmp::Eq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::ImportResult as std::cmp::Eq>::assert_fields_are_eq",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::ImportResult as std::cmp::PartialEq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::ImportResult as std::cmp::PartialEq>::eq",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::ImportResult as std::fmt::Debug>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::ImportResult as std::fmt::Debug>::fmt",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::ImportResult as std::marker::Copy>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::ImportResult as std::marker::StructuralPartialEq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source declaration, implementation block, module, macro, type or import marker; body obligations are classified separately.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::Inner as std::ops::Drop>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::Inner as std::ops::Drop>::drop",
+      "refinement": "open"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::InvocationOutcome as std::clone::Clone>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::InvocationOutcome as std::clone::Clone>::clone",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::InvocationOutcome as std::clone::TrivialClone>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::InvocationOutcome as std::cmp::Eq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::InvocationOutcome as std::cmp::Eq>::assert_fields_are_eq",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::InvocationOutcome as std::cmp::PartialEq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::InvocationOutcome as std::cmp::PartialEq>::eq",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::InvocationOutcome as std::fmt::Debug>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::InvocationOutcome as std::fmt::Debug>::fmt",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::InvocationOutcome as std::marker::Copy>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::InvocationOutcome as std::marker::StructuralPartialEq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::ParticipantToken as std::clone::Clone>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::ParticipantToken as std::clone::Clone>::clone",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::Phase as std::clone::Clone>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::Phase as std::clone::Clone>::clone",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::Phase as std::clone::TrivialClone>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::Phase as std::cmp::Eq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::Phase as std::cmp::Eq>::assert_fields_are_eq",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::Phase as std::cmp::PartialEq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::Phase as std::cmp::PartialEq>::eq",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::Phase as std::fmt::Debug>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::Phase as std::fmt::Debug>::fmt",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::Phase as std::marker::Copy>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::Phase as std::marker::StructuralPartialEq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::Snapshot as std::clone::Clone>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::Snapshot as std::clone::Clone>::clone",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::Snapshot as std::cmp::Eq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::Snapshot as std::cmp::Eq>::assert_fields_are_eq",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::Snapshot as std::cmp::PartialEq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::Snapshot as std::cmp::PartialEq>::eq",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::Snapshot as std::fmt::Debug>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::Snapshot as std::fmt::Debug>::fmt",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::Snapshot as std::marker::StructuralPartialEq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::WitBinding<'a> as std::clone::Clone>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::WitBinding<'a> as std::clone::Clone>::clone",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::WitBinding<'a> as std::clone::TrivialClone>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::WitBinding<'a> as std::cmp::Eq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::WitBinding<'a> as std::cmp::Eq>::assert_fields_are_eq",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::WitBinding<'a> as std::cmp::PartialEq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::WitBinding<'a> as std::cmp::PartialEq>::eq",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::WitBinding<'a> as std::fmt::Debug>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::WitBinding<'a> as std::fmt::Debug>::fmt",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::WitBinding<'a> as std::marker::Copy>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::monitor::WitBinding<'a> as std::marker::StructuralPartialEq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::projection::Action as std::clone::Clone>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::projection::Action as std::clone::Clone>::clone",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::projection::Action as std::clone::TrivialClone>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::projection::Action as std::cmp::Eq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::projection::Action as std::cmp::Eq>::assert_fields_are_eq",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::projection::Action as std::cmp::PartialEq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::projection::Action as std::cmp::PartialEq>::eq",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::projection::Action as std::fmt::Debug>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::projection::Action as std::fmt::Debug>::fmt",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::projection::Action as std::marker::Copy>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::projection::Action as std::marker::StructuralPartialEq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::projection::Plan as std::fmt::Debug>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::<choreography::projection::Plan as std::fmt::Debug>::fmt",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source declaration, implementation block, module, macro, type or import marker; body obligations are classified separately.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::json::scan",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source declaration, implementation block, module, macro, type or import marker; body obligations are classified separately.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::json::scan::<impl choreography::json::Decoder<'_>>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::json::scan::<impl choreography::json::Decoder<'_>>::boolean",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::json::scan::<impl choreography::json::Decoder<'_>>::hex_quad",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::json::scan::<impl choreography::json::Decoder<'_>>::put",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::json::scan::<impl choreography::json::Decoder<'_>>::require",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::json::scan::<impl choreography::json::Decoder<'_>>::string",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::json::scan::<impl choreography::json::Decoder<'_>>::take",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::json::scan::<impl choreography::json::Decoder<'_>>::unicode",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::json::scan::<impl choreography::json::Decoder<'_>>::whitespace",
+      "refinement": "open"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source declaration, implementation block, module, macro, type or import marker; body obligations are classified separately.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::json::scan::DepthState",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::json::scan::DepthState::feed",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::json::scan::advance_depth",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::json::scan::continues_quote",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::json::scan::preflight",
+      "refinement": "open"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source declaration, implementation block, module, macro, type or import marker; body obligations are classified separately.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::json::scan::{use#0}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source declaration, implementation block, module, macro, type or import marker; body obligations are classified separately.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::monitor",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source declaration, implementation block, module, macro, type or import marker; body obligations are classified separately.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::monitor::EventRecord",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source declaration, implementation block, module, macro, type or import marker; body obligations are classified separately.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::monitor::Import",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source declaration, implementation block, module, macro, type or import marker; body obligations are classified separately.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::monitor::ImportResult",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source declaration, implementation block, module, macro, type or import marker; body obligations are classified separately.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::monitor::Inner",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::monitor::Inner::cleanup",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::monitor::Inner::participant",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::monitor::Inner::retire",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::monitor::Inner::set_phase",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::monitor::Inner::valid",
+      "refinement": "open"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source declaration, implementation block, module, macro, type or import marker; body obligations are classified separately.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::monitor::InvocationOutcome",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Named source static initializer; this inventory does not discharge extraction or refinement.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::monitor::NEXT_SESSION",
+      "refinement": "open"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source declaration, implementation block, module, macro, type or import marker; body obligations are classified separately.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::monitor::ParticipantToken",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::monitor::ParticipantToken::facet",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::monitor::ParticipantToken::role",
+      "refinement": "open"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source declaration, implementation block, module, macro, type or import marker; body obligations are classified separately.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::monitor::Pending",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source declaration, implementation block, module, macro, type or import marker; body obligations are classified separately.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::monitor::Phase",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source declaration, implementation block, module, macro, type or import marker; body obligations are classified separately.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::monitor::Session",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source declaration, implementation block, module, macro, type or import marker; body obligations are classified separately.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::monitor::Snapshot",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source declaration, implementation block, module, macro, type or import marker; body obligations are classified separately.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::monitor::WitBinding",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Named source constant initializer; this inventory does not discharge extraction or refinement.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::monitor::WitBinding::<'static>::SERVICE",
+      "refinement": "open"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source declaration, implementation block, module, macro, type or import marker; body obligations are classified separately.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::monitor::WitBinding<'static>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source declaration, implementation block, module, macro, type or import marker; body obligations are classified separately.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::monitor::admit",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source declaration, implementation block, module, macro, type or import marker; body obligations are classified separately.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::monitor::admit::<impl choreography::monitor::Session>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::monitor::admit::<impl choreography::monitor::Session>::admit",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::monitor::admit::<impl choreography::monitor::Session>::lock",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::monitor::admit::<impl choreography::monitor::Session>::snapshot",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::monitor::admit::<impl choreography::monitor::Session>::token",
+      "refinement": "open"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source declaration, implementation block, module, macro, type or import marker; body obligations are classified separately.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::monitor::admit::{use#0}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source declaration, implementation block, module, macro, type or import marker; body obligations are classified separately.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::monitor::drive",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source declaration, implementation block, module, macro, type or import marker; body obligations are classified separately.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::monitor::drive::<impl choreography::monitor::Session>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::monitor::drive::<impl choreography::monitor::Session>::begin",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::monitor::drive::<impl choreography::monitor::Session>::complete",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::monitor::drive::<impl choreography::monitor::Session>::event",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::monitor::drive::<impl choreography::monitor::Session>::finish",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::monitor::drive::<impl choreography::monitor::Session>::import",
+      "refinement": "open"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source declaration, implementation block, module, macro, type or import marker; body obligations are classified separately.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::monitor::drive::{use#0}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source declaration, implementation block, module, macro, type or import marker; body obligations are classified separately.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::monitor::{use#0}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source declaration, implementation block, module, macro, type or import marker; body obligations are classified separately.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::projection",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source declaration, implementation block, module, macro, type or import marker; body obligations are classified separately.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::projection::Action",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Named source constant initializer; this inventory does not discharge extraction or refinement.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::projection::Action::EMPTY",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::projection::Action::export",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::projection::Action::ready",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::projection::Action::result",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::projection::Action::role",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::projection::Action::round",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::projection::Action::step",
+      "refinement": "open"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source declaration, implementation block, module, macro, type or import marker; body obligations are classified separately.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::projection::Plan",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::projection::Plan::append_round",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::projection::Plan::append_withdraw",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::projection::Plan::checked_round",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::projection::Plan::from_descriptor",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::projection::Plan::global",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::projection::Plan::name",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::projection::Plan::publisher_steps",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::projection::Plan::push",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::projection::Plan::round",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::projection::Plan::round_count",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::projection::Plan::subscriber_steps",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::projection::project",
+      "refinement": "open"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source declaration, implementation block, module, macro, type or import marker; body obligations are classified separately.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::projection::{use#0}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source declaration, implementation block, module, macro, type or import marker; body obligations are classified separately.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::{use#11}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source declaration, implementation block, module, macro, type or import marker; body obligations are classified separately.",
+      "package": "noble-syndicate",
+      "qualified_path": "noble_syndicate::choreography::{use#12}",
+      "refinement": "not-applicable"
     }
   ],
   "test_subjects": [
@@ -39125,7 +41573,51 @@
     "source::std",
     "source::test",
     "source::unreserved_migration_spellings_only_work_after_explicit_binding",
-    "source::{use#0}"
+    "source::{use#0}",
+    "choreography::TWO",
+    "choreography::begin_import_finish",
+    "choreography::main",
+    "choreography::main::test",
+    "choreography::std",
+    "choreography::{use#0}",
+    "choreography::admission",
+    "choreography::admission::foreign_token_and_wrong_export_do_not_start_a_guest_call",
+    "choreography::admission::one_round_still_reserves_the_full_session_quota",
+    "choreography::admission::preflight_rejects_insufficient_quota_or_nonempty_profile",
+    "choreography::admission::retired_facets_still_consume_preflight_capacity",
+    "choreography::admission::test",
+    "choreography::admission::{use#0}",
+    "choreography::failures",
+    "choreography::failures::in_flight_refusal",
+    "choreography::failures::missing_fail_after_publication_is_not_a_successful_trap_step",
+    "choreography::failures::pre_export_refusal_is_side_effect_free_and_inflight_refusal_retires",
+    "choreography::failures::pre_export_refusals",
+    "choreography::failures::test",
+    "choreography::failures::{use#0}",
+    "choreography::flow",
+    "choreography::flow::alarm_observation",
+    "choreography::flow::checked_events",
+    "choreography::flow::clock_publication",
+    "choreography::flow::clock_withdrawal",
+    "choreography::flow::projected_actions",
+    "choreography::flow::projected_false_ready_and_terminal_compiled_failure",
+    "choreography::flow::test",
+    "choreography::flow::trapped_publication",
+    "choreography::flow::{use#0}",
+    "choreography::ingress",
+    "choreography::ingress::decoded_keys_escapes_and_unicode_are_checked_before_projection",
+    "choreography::ingress::malformed_descriptors_never_create_facets",
+    "choreography::ingress::test",
+    "noble-syndicate::closure@crates/noble-syndicate/tests/choreography/admission.rs:2057:3574",
+    "noble-syndicate::closure@crates/noble-syndicate/tests/choreography/admission.rs:23:2047",
+    "noble-syndicate::closure@crates/noble-syndicate/tests/choreography/admission.rs:3584:5299",
+    "noble-syndicate::closure@crates/noble-syndicate/tests/choreography/admission.rs:5309:6212",
+    "noble-syndicate::closure@crates/noble-syndicate/tests/choreography/failures.rs:3238:3902",
+    "noble-syndicate::closure@crates/noble-syndicate/tests/choreography/failures.rs:3912:6131",
+    "noble-syndicate::closure@crates/noble-syndicate/tests/choreography/flow.rs:6509:8186",
+    "noble-syndicate::closure@crates/noble-syndicate/tests/choreography/flow.rs:751:759",
+    "noble-syndicate::closure@crates/noble-syndicate/tests/choreography/ingress.rs:2368:4823",
+    "noble-syndicate::closure@crates/noble-syndicate/tests/choreography/ingress.rs:8:2358"
   ],
   "tools": [
     {

@@ -238,10 +238,10 @@ let contracts = import "./architecture.contracts.ncl" in
   admission = null,
   waivers = [],
   collection_limits = {
-    # M7 has 29 real units (five packages); the acyclic boundary control adds
+    # M8 has 30 real units (five packages); the acyclic boundary control adds
     # two shell-library units. Retain every target and test shard.
-    max_units = 31,
-    max_shards = 31,
+    max_units = 32,
+    max_shards = 32,
     # M7's kernel dataspace module pushes both kernel library shards over the
     # earlier 1024 module-fact cap. Preserve complete compiler coverage.
     max_modules = 2048,

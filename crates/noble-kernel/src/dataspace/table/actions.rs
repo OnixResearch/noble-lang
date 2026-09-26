@@ -269,4 +269,20 @@ impl super::super::Table {
             self.interests.len() as u32,
         )
     }
+
+    /// Read-only exact-pair membership for host pre-export admission.
+    pub fn contains_pair(&self, name: &str, ready: bool) -> bool {
+        self.asserted(name, ready, None)
+    }
+
+    /// Remaining slots include retired scopes that still occupy the bounded
+    /// facet table; admission must reserve against physical, not live, slots.
+    pub fn remaining_capacity(&self) -> Limits {
+        Limits {
+            facets: self.limits.facets.saturating_sub(self.scopes.len()),
+            assertions: self.limits.assertions.saturating_sub(self.assertions.len()),
+            interests: self.limits.interests.saturating_sub(self.interests.len()),
+            events: self.limits.events.saturating_sub(self.events.len()),
+        }
+    }
 }

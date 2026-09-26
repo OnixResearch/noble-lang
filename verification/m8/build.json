@@ -1,0 +1,431 @@
+{
+  "schema": "noble-m8-build/v1",
+  "result": "built",
+  "source_root": "/home/brittonr/git/noble",
+  "artifact_directory": "/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/build",
+  "sources": {
+    "verification/m8/assurance.mjs": {
+      "sha256": "8a6ddb6051b85b5017f4b89bcc0da0de84f0c5c2d341b06f814300dcd08702d0",
+      "bytes": 24467,
+      "snapshot": "verification/m8/assurance.mjs"
+    },
+    "verification/m8/build.mjs": {
+      "sha256": "8efa73e49985a9b9640c35b817b09cfaf6022ede74591faeb04b0024aed46be1",
+      "bytes": 10680,
+      "snapshot": "verification/m8/build.mjs"
+    },
+    "verification/m8/final-documents.mjs": {
+      "sha256": "b050e1bb19c93d70e681735d5dd7bc879971f36cd8f62676c705d9a72238022c",
+      "bytes": 23426,
+      "snapshot": "verification/m8/final-documents.mjs"
+    },
+    "verification/m8/gate.mjs": {
+      "sha256": "7eea4e1cc8f6b5faad28a17b47613f1a48eec1bd9f235853463c25481c5932d8",
+      "bytes": 37338,
+      "snapshot": "verification/m8/gate.mjs"
+    },
+    "verification/m8/peer/Cargo.toml": {
+      "sha256": "4e18fb85bc469b42cc01860b7a7e7c76e417af3fe1a5cf08f1d070e61edfec06",
+      "bytes": 516,
+      "snapshot": "verification/m8/peer/Cargo.toml"
+    },
+    "verification/m8/peer/src/main.rs": {
+      "sha256": "d9642779819fd9fc31a8f8acb004e32833005e42fd0f9abc5e1c693794e4c622",
+      "bytes": 44130,
+      "snapshot": "verification/m8/peer/src/main.rs"
+    },
+    "verification/m8/source-projection.mjs": {
+      "sha256": "30862a4d3f6805a71ba69f9a0c9a78ff48cbfb53fb5d78b0b3d423fb70bfec18",
+      "bytes": 3785,
+      "snapshot": "verification/m8/source-projection.mjs"
+    },
+    "nix/aeneas-string-escaping.patch": {
+      "sha256": "3d2a88e02e55b491aa7d53573cd0256c58ffb4e549a8ff9a0134c2eaef07cc70",
+      "bytes": 527,
+      "snapshot": "nix/aeneas-string-escaping.patch"
+    },
+    "nix/boundary-controls.nix": {
+      "sha256": "e605d6bfd90185d596218a68a545b1facdb8672665e2ce516b290ef3e9f17369",
+      "bytes": 8498,
+      "snapshot": "nix/boundary-controls.nix"
+    },
+    "nix/boundary-fixture-tests.nix": {
+      "sha256": "463ec287a302ae3f7fa637d0411609dc6b5d38724b8fef457d482e860250ee81",
+      "bytes": 4154,
+      "snapshot": "nix/boundary-fixture-tests.nix"
+    },
+    "nix/boundary-fixture.nix": {
+      "sha256": "f8954b2043ea19f1e6565fdcd39b16e79c145235144f4db7dcd9983bb09d66e4",
+      "bytes": 3892,
+      "snapshot": "nix/boundary-fixture.nix"
+    },
+    "nix/boundary-observation-tests.nix": {
+      "sha256": "ff637ff7b8afbd055552dc778496c27df04b7e6112698a4a68058841ff188ffd",
+      "bytes": 17639,
+      "snapshot": "nix/boundary-observation-tests.nix"
+    },
+    "nix/boundary-observation.nix": {
+      "sha256": "649554c520269864dccf37231e7d83060381599277d71177af7bde3f4aedd029",
+      "bytes": 6778,
+      "snapshot": "nix/boundary-observation.nix"
+    },
+    "nix/boundary-read-observation.nix": {
+      "sha256": "1b77e12b65db5cda8422a617757a49ac03dec2ca837d24aa8b95d919ed79a31c",
+      "bytes": 2168,
+      "snapshot": "nix/boundary-read-observation.nix"
+    },
+    "nix/extract-kernel-app.nix": {
+      "sha256": "9232431c726731af44365e7d4a62d6a3d1d278f9165ce7aca91927220c77d42c",
+      "bytes": 12523,
+      "snapshot": "nix/extract-kernel-app.nix"
+    },
+    "nix/lean-backend.nix": {
+      "sha256": "e8e7a11450465b4f62cbf1ff4b97f3189d8d7bce1e0d68a6763b04c2ca97210c",
+      "bytes": 1273,
+      "snapshot": "nix/lean-backend.nix"
+    },
+    "nix/lean-dependency-check.nix": {
+      "sha256": "92390712899ed9e248c5032924ec0d3242e64c45abc3c6fbd7984b9f9164ed40",
+      "bytes": 1605,
+      "snapshot": "nix/lean-dependency-check.nix"
+    },
+    "nix/lean-git-source.nix": {
+      "sha256": "6f1c242ba257062b660ef26e69d47fddceb097b5ddf0e17c3a31b1c464efbf65",
+      "bytes": 1301,
+      "snapshot": "nix/lean-git-source.nix"
+    },
+    "nix/lean-git-tar.nix": {
+      "sha256": "235c650f56a0b9c814b63065487f8a5b57347dd5520e92666964fa1d3d50589c",
+      "bytes": 1687,
+      "snapshot": "nix/lean-git-tar.nix"
+    },
+    "nix/lean-offline-probe.nix": {
+      "sha256": "c26e123a07936b84a214b85928b2f7a9016c067de9ce28331e459ef648e6f78c",
+      "bytes": 679,
+      "snapshot": "nix/lean-offline-probe.nix"
+    },
+    "nix/lean-release.nix": {
+      "sha256": "7d88aa27b4f8a5d1c0036ed98a1e2db1f5485b782b462eaaae51b8b7b6c46485",
+      "bytes": 672,
+      "snapshot": "nix/lean-release.nix"
+    },
+    "nix/m1-acceptance-tests.nix": {
+      "sha256": "93611a9ab3943d536633377637280b0e759ae841b616ff087a0c86f739850c4f",
+      "bytes": 5281,
+      "snapshot": "nix/m1-acceptance-tests.nix"
+    },
+    "nix/m1-acceptance.nix": {
+      "sha256": "3cd3df9b2bf5d3e389805fde0d63bab4c7a5636831bb785985ff9789431eb71c",
+      "bytes": 3745,
+      "snapshot": "nix/m1-acceptance.nix"
+    },
+    "nix/m3-wasm-app.nix": {
+      "sha256": "a83a2ea157787803e0fabdf089a7549ffd5737f42a657bf1df383d1908676ad5",
+      "bytes": 941,
+      "snapshot": "nix/m3-wasm-app.nix"
+    },
+    "nix/native-assurance-app.nix": {
+      "sha256": "53f9ebc9f8894e5c039301b15b1ef20c47ab80cc90524c9f4fc91e88cd98e7ae",
+      "bytes": 3865,
+      "snapshot": "nix/native-assurance-app.nix"
+    },
+    "nix/native-assurance-derive.nix": {
+      "sha256": "4d762e0885adeea1b298bf0fbeb795781ac92c667e701608ca2832bcaf3b4df6",
+      "bytes": 3111,
+      "snapshot": "nix/native-assurance-derive.nix"
+    },
+    "nix/native-assurance-tests.nix": {
+      "sha256": "fff58e969420613acd47f89f6ee0ad488efb98b0d6849efd3470c264c27c099d",
+      "bytes": 9263,
+      "snapshot": "nix/native-assurance-tests.nix"
+    },
+    "nix/native-assurance.nix": {
+      "sha256": "410bba678f8ed866e282a6223e2d9ea793ba01c966539355b02716492909bb9e",
+      "bytes": 5885,
+      "snapshot": "nix/native-assurance.nix"
+    },
+    "nix/octet-controls-tests.nix": {
+      "sha256": "a9bd734ece125061bee8cc98830494ff7c13dab946f8006970664f486bcba342",
+      "bytes": 13379,
+      "snapshot": "nix/octet-controls-tests.nix"
+    },
+    "nix/octet-controls.nix": {
+      "sha256": "e62577083ec9825455446c21c3290b6d42c6ac852f9696405d369ed421184b8c",
+      "bytes": 7262,
+      "snapshot": "nix/octet-controls.nix"
+    },
+    "nix/offline-inputs.nix": {
+      "sha256": "9d35078501b7e138659434fe98baff1b9e0128973d454500c344161e193d69c7",
+      "bytes": 1826,
+      "snapshot": "nix/offline-inputs.nix"
+    },
+    "nix/source-inventory-app.nix": {
+      "sha256": "1cf9825cb11d4fbf59d62369a36fe0922d2c4c3ee31cafabdd63378b9fee0c83",
+      "bytes": 4231,
+      "snapshot": "nix/source-inventory-app.nix"
+    },
+    "nix/source-inventory-derive.nix": {
+      "sha256": "c214567c74eb9755aeeb228c0e50c98d2fd2f28e178f2635d7e7b80baa4bac9f",
+      "bytes": 3827,
+      "snapshot": "nix/source-inventory-derive.nix"
+    },
+    "nix/source-inventory-tests.nix": {
+      "sha256": "ab2b627b6471049b0543936db1363918b55ee88daede9e94652982132e0d23c9",
+      "bytes": 10950,
+      "snapshot": "nix/source-inventory-tests.nix"
+    },
+    "nix/source-inventory.nix": {
+      "sha256": "d7088648d8de5f0778a61e7b8c51b2e4e3751f53f66676dbd28bc4bee7e97464",
+      "bytes": 7352,
+      "snapshot": "nix/source-inventory.nix"
+    },
+    "nix/tool-selection-app.nix": {
+      "sha256": "4cb3cecb6786f7edd9e5372dfd94beedd046edb655cdb24ce64697c771e01dce",
+      "bytes": 2675,
+      "snapshot": "nix/tool-selection-app.nix"
+    },
+    "nix/tool-selection-files.nix": {
+      "sha256": "e34ee71c6153827bd701d0204e39925398cb60e4724107b7540d3a923c22c569",
+      "bytes": 3531,
+      "snapshot": "nix/tool-selection-files.nix"
+    },
+    "nix/tool-selection-observation.nix": {
+      "sha256": "8ac379f27c18076508aa9f0b7013a523fc16805afb01826da048a0b88ec9acb5",
+      "bytes": 1946,
+      "snapshot": "nix/tool-selection-observation.nix"
+    },
+    "nix/tool-selection-tests.nix": {
+      "sha256": "516009dec508abfcb85d7ca7467a43d3bb153019efbf17774c5a55d7a66cd030",
+      "bytes": 9434,
+      "snapshot": "nix/tool-selection-tests.nix"
+    },
+    "nix/tool-selection.nix": {
+      "sha256": "b5914af88676f69f2f7a0edb56ac0526fd7b63ca35d2e7efe12d69dbfc7ff8d2",
+      "bytes": 11718,
+      "snapshot": "nix/tool-selection.nix"
+    },
+    ".cairn/changes/m8-choreography-projection/design.md": {
+      "sha256": "3ef7caa33d3e5721b2671d4659f4c2ddcc47b59fa1c7a724a6659fc4c2a11319",
+      "bytes": 9792,
+      "snapshot": ".cairn/changes/m8-choreography-projection/design.md"
+    },
+    ".cairn/changes/m8-choreography-projection/metadata.json": {
+      "sha256": "a6fd5ca231a3bb7b2746437ddfeea40804e0b37172b383ad5cf5ca2bf064d0a9",
+      "bytes": 105,
+      "snapshot": ".cairn/changes/m8-choreography-projection/metadata.json"
+    },
+    ".cairn/changes/m8-choreography-projection/proposal.md": {
+      "sha256": "46ba98ead4a41615c076e8bdc94cd5fad2001cb13d9f106be0f48b09cbb635c3",
+      "bytes": 2739,
+      "snapshot": ".cairn/changes/m8-choreography-projection/proposal.md"
+    },
+    ".cairn/changes/m8-choreography-projection/specs/safety/spec.md": {
+      "sha256": "e068a600451a56f7e196ff72641871805dda932429d4482c16e3111241d59495",
+      "bytes": 7457,
+      "snapshot": ".cairn/changes/m8-choreography-projection/specs/safety/spec.md"
+    },
+    ".cairn/changes/m8-choreography-projection/specs/wit-wasi/spec.md": {
+      "sha256": "e853b04ebcaeafcf3b541583a7d7048acf421c1840130025f92f1e102edcd2f0",
+      "bytes": 3248,
+      "snapshot": ".cairn/changes/m8-choreography-projection/specs/wit-wasi/spec.md"
+    },
+    ".cairn/changes/m8-choreography-projection/tasks.md": {
+      "sha256": "a658e0d0a79b0b19912e1db8b2135d90ff682dcb8f175d9744a99cdefc07e57e",
+      "bytes": 2371,
+      "snapshot": ".cairn/changes/m8-choreography-projection/tasks.md"
+    },
+    "specs/conformance/safety-cases.json": {
+      "sha256": "f9536c4610eaff902e1b5984b2fb75bcf2326c14a2ae135e1bfb02496909165e",
+      "bytes": 22036,
+      "snapshot": "specs/conformance/safety-cases.json"
+    },
+    "specs/conformance/wit-wasi-cases.json": {
+      "sha256": "5173a64c23cf069bb68fd63d1958e81382b3c8973f5bfbe2a88862e21967dcc3",
+      "bytes": 30039,
+      "snapshot": "specs/conformance/wit-wasi-cases.json"
+    },
+    ".cairn/specs/safety/spec.md": {
+      "sha256": "d7327a3fec8c08212da7f07b52a5346325cb6fb3bb5f015c0ed00f7ab559514a",
+      "bytes": 61598,
+      "snapshot": ".cairn/specs/safety/spec.md"
+    },
+    ".cairn/specs/wit-wasi/spec.md": {
+      "sha256": "2caec07607b46dc3ed665bcbaa898a194ad22c50f50a39d05fdfcb022064fe67",
+      "bytes": 80723,
+      "snapshot": ".cairn/specs/wit-wasi/spec.md"
+    },
+    "policy/tool-selection.json": {
+      "sha256": "311fb6ab6c55fae3c199b0c419698043be4d078c4fe07fbb5d9297f2b6f9ed49",
+      "bytes": 19069,
+      "snapshot": "policy/tool-selection.json"
+    },
+    "policy/architecture.ncl": {
+      "sha256": "5fc93ddc73de52fbf50e0298d75be92e3d0dc9b5bfec9fa6b01d2104ae730b8b",
+      "bytes": 15709,
+      "snapshot": "policy/architecture.ncl"
+    },
+    "policy/source-inventory.json": {
+      "sha256": "1c0f58ce73d857b48542e5b8467e76b4578399bd2ee10d5e3a0ff9729235b7da",
+      "bytes": 1846934,
+      "snapshot": "policy/source-inventory.json"
+    },
+    "verification/m4/extraction-lock.json": {
+      "sha256": "579bf5c5481e9f24c94fc8d2f5c2a145c17f3a3c112c3cc1be955bb5e0bb5b9c",
+      "bytes": 67971119,
+      "snapshot": "verification/m4/extraction-lock.json"
+    },
+    "verification/m7/peer/Cargo.lock": {
+      "sha256": "6a90a8cccc740d6c6f8d4126ee3ca7190cdb948d13b364ed91f7af8c300b8b80",
+      "bytes": 26132,
+      "snapshot": "verification/m7/peer/Cargo.lock"
+    }
+  },
+  "binaries": {
+    "cli": {
+      "path": "/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/build/m7/base/executables/cli",
+      "sha256": "9ecbac84d84f28eda5cecb5d688003e087b4dc20b29640f51c3431a547fb4f51",
+      "source": "fresh-m7-build"
+    },
+    "m5_peer": {
+      "path": "/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/build/m7/base/executables/m5_peer",
+      "sha256": "ab70a18c5be330e1c4ccd912f82846e7b1281c4be1bb86fc864508454844ef3a",
+      "source": "fresh-m7-build"
+    },
+    "peer": {
+      "path": "/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/build/m7/base/executables/peer",
+      "sha256": "3cd14c03a0b8afe3cb61e8a113083933353a756714b9394b5d3b32bd18a6bd16",
+      "source": "fresh-m7-build"
+    },
+    "task_tests": {
+      "path": "/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/build/m7/base/executables/task_tests",
+      "sha256": "4b054d27b05495d1433f300b06422a03df766deb930acc939fd3bd8b4b939388",
+      "source": "fresh-m7-build"
+    },
+    "resource_tests": {
+      "path": "/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/build/m7/base/executables/resource_tests",
+      "sha256": "7c670881654fb295e37d4ef107add8e01fa40431ae0bd8ab4fd0be52be4aea88",
+      "source": "fresh-m7-build"
+    },
+    "authority_tests": {
+      "path": "/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/build/m7/base/executables/authority_tests",
+      "sha256": "e753cdbc44f03293caa28c7f9b9fafab72d7d4e96e626a9392f7ce2405cd98c4",
+      "source": "fresh-m7-build"
+    },
+    "m7_peer": {
+      "path": "/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/build/m7/executables/m7-peer",
+      "sha256": "6963a530bae4f011bcac69c9ed8c8dd2f38daa393b2d64fc5f14c4a9ed1fbf41",
+      "source": "fresh-m7-build"
+    },
+    "mc2_tests": {
+      "path": "/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/build/m7/executables/mc2-core-control-tests",
+      "sha256": "95554dcdd228de6075db837a450ca8e81c50aa7976b10bf4eeeb6a184a139d82",
+      "source": "fresh-m7-build"
+    },
+    "m8_peer": {
+      "path": "/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/build/executables/m8-peer",
+      "sha256": "4112153cb39f156b688a9c30522af8012622b8d4c1368a1e9b410ef68c919310",
+      "bytes": 203622552,
+      "source": "independent-current-source-cargo-build",
+      "command": "m8-independent-peer-build"
+    }
+  },
+  "commands": [
+    {
+      "label": "fresh-full-workspace-m7-build",
+      "executable": "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node",
+      "executable_sha256": "ad2d5c03bb247d3690f8baf48b2aac572fe0ed5252b4c5bdcfa7987a169b8f3b",
+      "argv": [
+        "/home/brittonr/git/noble/verification/m7/build.mjs",
+        "/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/build/m7"
+      ],
+      "cwd": "/home/brittonr/git/noble",
+      "stdout": "commands/001-fresh-full-workspace-m7-build.stdout",
+      "stderr": "commands/001-fresh-full-workspace-m7-build.stderr",
+      "timeout_ms": 3900000,
+      "status": 0,
+      "signal": null,
+      "error": null,
+      "stdout_sha256": "96925c69f0dee6ccae8ef0882916dd5fa8b1f28a1beae6a3d4eb08c699b50af5",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "m8-independent-peer-build",
+      "executable": "/nix/store/1yvh3d6y3fj3xk2dgwczrp1dj5svd92c-rust-default-1.96.0-nightly-2026-03-21/bin/cargo",
+      "executable_sha256": "862f9dd92f6d1065dbda15da68138db4432ad85581bceadf568ba2749171ddd4",
+      "argv": [
+        "build",
+        "--manifest-path",
+        "verification/m8/peer/Cargo.toml",
+        "--locked",
+        "--offline",
+        "--message-format=json",
+        "--config",
+        "source.crates-io.replace-with=\"m6-vendor\"",
+        "--config",
+        "source.m6-vendor.directory=\"/nix/store/4drsk5fp0k4s82psjch6vlsfyqs1mxgq-wasmtime-40.0.2-vendor/source-registry-0\""
+      ],
+      "cwd": "/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/build/m7/base/workspace",
+      "stdout": "commands/002-m8-independent-peer-build.stdout",
+      "stderr": "commands/002-m8-independent-peer-build.stderr",
+      "timeout_ms": 3900000,
+      "status": 0,
+      "signal": null,
+      "error": null,
+      "stdout_sha256": "c021500e4b0e88cdc0b02a4416a4dca19dbc925cf3da63f906f7d669757867f5",
+      "stderr_sha256": "2929a5ca2e3ffb670471b3e6921ce3e7559295791495227d5adf58a38bfdf991"
+    },
+    {
+      "label": "m8-independent-peer-clippy",
+      "executable": "/nix/store/1yvh3d6y3fj3xk2dgwczrp1dj5svd92c-rust-default-1.96.0-nightly-2026-03-21/bin/cargo",
+      "executable_sha256": "862f9dd92f6d1065dbda15da68138db4432ad85581bceadf568ba2749171ddd4",
+      "argv": [
+        "clippy",
+        "--manifest-path",
+        "verification/m8/peer/Cargo.toml",
+        "--all-targets",
+        "--locked",
+        "--offline",
+        "--config",
+        "source.crates-io.replace-with=\"m6-vendor\"",
+        "--config",
+        "source.m6-vendor.directory=\"/nix/store/4drsk5fp0k4s82psjch6vlsfyqs1mxgq-wasmtime-40.0.2-vendor/source-registry-0\"",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "cwd": "/var/tmp/noble-m8-refrozen-20260924/assurance-native-cairn-fresh-20260926/build/m7/base/workspace",
+      "stdout": "commands/003-m8-independent-peer-clippy.stdout",
+      "stderr": "commands/003-m8-independent-peer-clippy.stderr",
+      "timeout_ms": 3900000,
+      "status": 0,
+      "signal": null,
+      "error": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "d915b5ff5ad4f119038e1d4af4e6e4c4939ac031f661cc782266a59a087ca9ec"
+    }
+  ],
+  "base": {
+    "receipt": "m7/build.json",
+    "sha256": "d8328d942f5414a52d180b885480b469ed02708ec6b15c47f17d22e2e9988dea",
+    "source_revision": "sha256:9f874bebff1d883d89d4944f60128d8a3eca96785bb6ec0132059211cd5df2dc",
+    "full_workspace_source_revision": "sha256:10ca6e8f1d73998722fd1d4e3f11c5b9dcae90f3a60b748137baedeb64be693a"
+  },
+  "lock_derivation": {
+    "source": "verification/m7/peer/Cargo.lock",
+    "source_sha256": "6a90a8cccc740d6c6f8d4126ee3ca7190cdb948d13b364ed91f7af8c300b8b80",
+    "transformation": "replace unique local package noble-m7-peer with noble-m8-peer",
+    "derived_sha256": "d74354cc13e52fdea2752f6de7c9feb1a3738d124da2abcce4285a4925f5ecd1",
+    "snapshot": "verification/m8/peer/Cargo.lock"
+  },
+  "integrity_failures": [],
+  "assumptions": [
+    "Pinned Cargo/Rust/Node/Nix/vendor tools and binary provenance remain trusted; hashes alone prove no compiler or engine semantics.",
+    "The inherited M7 build freshly compiles the full current workspace and previous peers, not M8 acceptance."
+  ],
+  "non_claims": [
+    "M8 runtime acceptance",
+    "universal projection/host/engine refinement",
+    "historical M7 re-acceptance"
+  ],
+  "source_revision": "sha256:471c7003e4ca76a5cc4b4cca9af1ae49ea7b8d939c91aa93c378c3b9e7a5b0a9"
+}

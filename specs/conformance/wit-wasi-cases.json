@@ -49,6 +49,67 @@
       },
       "expected":{"stage":"typed-component-peer","outcome":"compiled-boundary-and-roundtrips","native_async_used":false,"exact_versioned_import_effects":true,"roundtrip_preserves_both_ready_values":true,"exact_pair_membership_distinguishes_false_from_absence":true,"host_event_trace_distinguishes_add_remove":true,"trap_invocation_success":false,"retired_publisher_assertions":0,"host_only_fixture_satisfies_case":false,"forged_controls_create_authority":false},
       "state":{"implementation":"implemented","execution":"passed","proof":"open","trust":"explicit"},"evidence":[{"claim":"Two separately compiled Noble components and an independently typed Wasmtime peer exercise the versioned four-import/four-export service, both readiness roundtrips and declared invalid-version/signature/authority controls.","subject":"WI-18","revision":"0.1.0-draft.5","kind":"test","result":"passed","source_revision":"sha256:693530f98a2fc35bdd636d4c08b931d40b6d37d70c1ddd46d872b670ffd7a8ad","configuration":{"profile":"Syndicate-Sync-Service-M7","receipt":"../../verification/m7/acceptance.json","receipt_sha256":"22c7415d476c2361cd13e1f994f3c23b9485aa0333c356d8d1fff21af8989582","case":"WI-18","variants":["wrong-wit-version","wrong-signature","invalid-preserves-tag","invalid-preserves-schema","resource-shaped-payload"]},"assumptions":["The independent peer supplies Wasmtime linking and typed conversion, while production Noble dataspace and host policy decide admission, facet rights and retirements.","Trusted host serialization, callback authenticity, Wasmtime ABI and engine correctness remain external embedding obligations; this is not distributed or general Syndicate refinement."]}]
+    },
+    {
+      "id":"WI-19","profile":"Choreography-Service-M8","kind":"runtime",
+      "requirements":["WI-SYN-05","S-CONC-09"],
+      "input":{
+        "harness":"compiled-monitored-choreography-service",
+        "descriptor":{"protocol":"noble:choreography/service@1.0.0","rounds":[{"name":"clock","ready":false,"exit":"withdraw"},{"name":"alarm","ready":true,"exit":"trap"}]},
+        "descriptor_utf8":"{\"protocol\":\"noble:choreography/service@1.0.0\",\"rounds\":[{\"name\":\"clock\",\"ready\":false,\"exit\":\"withdraw\"},{\"name\":\"alarm\",\"ready\":true,\"exit\":\"trap\"}]}",
+        "world":"noble:syndicate/service@1.0.0",
+        "instances":["separately-compiled-noble-publisher","separately-compiled-noble-subscriber"],
+        "peer":"independent-typed-wasmtime-linker",
+        "dispatch_steps":[0,1,2,3,4,5,6,7],
+        "all_imports_use_production_monitor":true
+      },
+      "expected":{
+        "stage":"independent-component-peer","outcome":"complete-projected-plan",
+        "publisher_exports":["publisher","withdraw","publish-and-trap"],
+        "subscriber_exports":["observer","observer","observer","observer","observer"],
+        "observer_membership":[false,true,false,false,false],
+        "typed_events":[{"kind":"add","name":"clock","ready":false},{"kind":"remove","name":"clock","ready":false},{"kind":"add","name":"alarm","ready":true},{"kind":"remove","name":"alarm","ready":true}],
+        "trap_import_sequence":["publish","fail"],"trap_publish_import_succeeded":true,"trap_fail_import_observed":true,"compiled_invocation_error_observed":true,"earlier_authorization_trap_satisfies_step":false,"compiled_trap_observed":true,"publisher_trap_reported_success":false,
+        "subscriber_observes_absence_after_trap":true,"remaining_publisher_assertions":0,"subscriber_still_active":true,
+        "false_readiness_is_distinct_from_absence":true,"new_wit_world_created":false,"guest_facet_authority_from_descriptor":false,
+        "host_only_fixture_satisfies_case":false
+      },
+      "state":{"implementation":"implemented","execution":"passed","proof":"open","trust":"explicit"},
+      "evidence":[{
+        "claim":"Separately compiled Noble publisher and subscriber components execute all eight projected calls through an independent typed Wasmtime peer with production-monitored imports, exact false-readiness membership and a real terminal publish/fail/trap/retirement trace.",
+        "subject":"WI-19","revision":"0.1.0-draft.5","kind":"test","result":"passed",
+        "source_revision":"sha256:471c7003e4ca76a5cc4b4cca9af1ae49ea7b8d939c91aa93c378c3b9e7a5b0a9",
+        "configuration":{"profile":"Choreography-Service-M8","receipt":"../../verification/m8/acceptance.json","receipt_sha256":"a02c47bda7f69040ee6f0a0bb2ca9019e0bfe615efb08dfdaa7388bc5da3bf0d","case":"WI-19","variants":[]},
+        "assumptions":["The peer independently supplies typed component linking, but host-issued role/facet authenticity, Store isolation, Wasmtime ABI and engine behavior remain trusted boundaries."]
+      }]
+    },
+    {
+      "id":"WI-20","profile":"Choreography-Service-M8","kind":"runtime",
+      "requirements":["WI-SYN-05","S-CONC-09"],
+      "input":{
+        "harness":"monitored-component-boundary-refusals",
+        "world":"noble:syndicate/service@1.0.0",
+        "pre_export_mutations":["wrong-wit-version","wrong-wit-signature","wrong-export-at-trap-step","wrong-component-role","foreign-facet","forged-rights","replayed-export","false-ready-pair-confused-with-absence"],
+        "post_start_mutations":["wrong-import-after-admitted-export","missing-fail-after-publish-and-trap-publication"],
+        "post_start_injection_role":"publisher",
+        "already_owned_assertion_before_post_start_refusal":true
+      },
+      "expected":{
+        "stage":"typed-component-boundary","outcome":"reject-all-declared-mutations",
+        "pre_export":{"guest_invoked":false,"cursor_unchanged":true,"dataspace_unchanged":true,"events_unchanged":true,"rights_unchanged":true,"guest_requests_unchanged":true,"protected_operations_unchanged":true},
+        "post_start":{"unauthorized_m7_operations":0,"unauthorized_protected_operations":0,"cursor_unchanged":true,"facet_retired_on_protocol_failure":true,"previously_owned_assertions_retracted":true,"typed_removal_permitted":true,"reported_success":false},
+        "direct_m7_profile_bypass":false
+      },
+      "state":{"implementation":"implemented","execution":"passed","proof":"open","trust":"explicit"},
+      "evidence":[{
+        "claim":"All ten declared component boundary variants reject through actual production monitor and typed linking; the compiled @1.0.1 WIT control rejects before facet or guest effects, and post-start refusals retain mandatory cleanup without cursor advancement.",
+        "subject":"WI-20","revision":"0.1.0-draft.5","kind":"test","result":"passed",
+        "source_revision":"sha256:471c7003e4ca76a5cc4b4cca9af1ae49ea7b8d939c91aa93c378c3b9e7a5b0a9",
+        "configuration":{"profile":"Choreography-Service-M8","receipt":"../../verification/m8/acceptance.json","receipt_sha256":"a02c47bda7f69040ee6f0a0bb2ca9019e0bfe615efb08dfdaa7388bc5da3bf0d","case":"WI-20","variants":[
+          "wrong-wit-version","wrong-wit-signature","wrong-export-at-trap-step","wrong-component-role","foreign-facet","forged-rights","replayed-export","false-ready-pair-confused-with-absence","wrong-import-after-admitted-export","missing-fail-after-publish-and-trap-publication"
+        ]},
+        "assumptions":["Typed Wasmtime link rejection and callback/trap reporting remain engine/host assumptions; finite executed controls do not prove universal ABI, parser, monitor or compiler correspondence."]
+      }]
     }
   ]
 }

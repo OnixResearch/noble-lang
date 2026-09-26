@@ -156,12 +156,12 @@ receipts do not substitute for that later source-bound acceptance.
 
 MC1's 36-case regression and M3's four-configuration regression have passed in
 their own scopes. They do not replace those M4 gates. The current inventory's
-2,006 authored production body obligations remain open in the
+2,087 authored production body obligations remain open in the
 [reviewed inventory](verification/source-inventory.md).
 Neither extraction nor executed examples establish universal frontend, kernel,
 compiler or backend refinement; PO-17/18 and SO-07 remain open. MC2 adds optional
-checked companions; M5, M6 and M7's bounded resource/component/service boundaries
-remain separate.
+checked companions; M5/M6 component, M7 service and the finite M8
+choreography boundaries remain separate.
 
 ## Compiling synchronous WIT components
 
@@ -397,11 +397,43 @@ separately passed prior regressions, workspace Rust checks, published Octet
 deny-all, complete Nix flake and pre-promotion Cairn/documents. The
 [archived Cairn change](.cairn/archive/2026-09-25-m7-syndicate-service/proposal.md)
 preserves the selected contract; `verification/m7/nix-checks.json` separately
-binds the final promoted document/Cairn source. All 2,006 current authored
-production bodies remain open inventory refinement obligations. This bounded
+binds the final promoted document/Cairn source. At M7 closeout, all 2,006 then-classified authored production bodies
+remained open inventory refinement obligations. This bounded
 synchronous selection is not general Syndicate/Preserves, native async, full
 Component-Draft/WASI, fairness, distributed exactly-once or universal
 host/engine/backend refinement.
+
+## M8 finite local choreography projection
+
+The separate [M8 completion record](verification/m8/evidence.json) accepts only
+`Choreography-Service-M8`: one or two ordered rounds over the existing
+M7 publisher/subscriber service. A bounded strict UTF-8 JSON descriptor
+(maximum 512 bytes, depth three) is statically projected before serialized
+host-owned role/facet admission and monitored imports; no new WIT world or
+general protocol language is accepted. The four promoted
+[S-CASE-18/19](specs/conformance/safety-cases.json) and
+[WI-19/20](specs/conformance/wit-wasi-cases.json) cover 38 hostile variants,
+ten strict JSON edges and three one-round quota reservations, including
+separately compiled Noble participants linked by an independent typed
+Wasmtime peer.
+
+The source-bound [build](verification/m8/build.json),
+[acceptance](verification/m8/acceptance.json) and
+[independent extraction](verification/m8/extraction.json) remain distinct.
+The [fresh assurance](verification/m8/assurance.json) executes 17 commands
+and verifies eleven gates, including M7's seven-case/sixteen-variant
+regression, published deny-all, workspace Rust quality and full Nix flake.
+The Nix commands select local builders with `--option builders ''`; sandbox
+and signature requirements remain enabled, with no remote-builder claim.
+The renewed whole-crate check retains nine strict Lean roots only for three
+pure M7 dataspace functions at compiler DefIDs 31/32/33, with 265 inherited
+refusal controls; it does not prove the M8 parser, monitor or engine. The
+[dated Cairn archive](.cairn/archive/2026-09-26-m8-choreography-projection/proposal.md)
+and separate post-promotion staged-source Nix receipt `verification/m8/nix-checks.json`
+bind the final documents and Cairn checks. All 2,087 inventoried authored
+production bodies remain open refinement obligations. General/user-defined
+choreography, transport, durability, native async and universal
+compiler/host/engine correspondence remain outside this selection.
 
 ## Using MC1 contracts
 
