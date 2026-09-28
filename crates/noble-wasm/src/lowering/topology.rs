@@ -11,22 +11,53 @@ pub(crate) fn order(
     root: crate::signatures::Interface,
 ) -> Result<(), crate::Diagnostic> {
     let (mut done, mut remaining) = initial_queue(&plan.nodes);
+    let mut failure = None;
     while remaining != 0 {
-        let progressed = attempt!(schedule_round(candidate, plan, &mut done));
-        if progressed == 0 {
-            // Successful kernel admission rules out quotation cycles. Never
-            // replace an unexpected cycle with an empty or partial program.
-            return Err(crate::Diagnostic::Defective);
+        match schedule_step(candidate, plan, &mut done, remaining) {
+            Ok(next) => remaining = next,
+            Err(problem) => {
+                failure = Some(problem);
+                break;
+            }
         }
-        remaining = match remaining.checked_sub(progressed) {
-            Some(remaining) => remaining,
-            None => return Err(crate::Diagnostic::Defective),
-        };
     }
-    if !attempt!(ready(&candidate.body, plan, &done)) {
+    if let Some(problem) = failure {
+        return Err(problem);
+    }
+    finish_order(candidate, plan, root, &done)
+}
+
+fn finish_order(
+    candidate: &noble_kernel::untrusted::Candidate,
+    plan: &mut crate::lowering::Plan,
+    root: crate::signatures::Interface,
+    done: &[bool],
+) -> Result<(), crate::Diagnostic> {
+    if !attempt!(ready(&candidate.body, plan, done)) {
         return Err(crate::Diagnostic::Defective);
     }
     append(plan, None, root, candidate.body.len())
+}
+
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; pinned March and August const trials report E0015 for schedule_round and E0658 for Option::ok_or; reassess when these scheduling APIs are const-capable."
+)]
+fn schedule_step(
+    candidate: &noble_kernel::untrusted::Candidate,
+    plan: &mut crate::lowering::Plan,
+    done: &mut [bool],
+    remaining: usize,
+) -> Result<usize, crate::Diagnostic> {
+    let progressed = attempt!(schedule_round(candidate, plan, done));
+    if progressed == 0 {
+        // Successful kernel admission rules out quotation cycles. Never
+        // replace an unexpected cycle with an empty or partial program.
+        return Err(crate::Diagnostic::Defective);
+    }
+    remaining
+        .checked_sub(progressed)
+        .ok_or(crate::Diagnostic::Defective)
 }
 
 fn initial_queue(nodes: &[Option<crate::lowering::Operation>]) -> (alloc::vec::Vec<bool>, usize) {
@@ -51,10 +82,6 @@ const fn is_quotation(operation: Option<crate::lowering::Operation>) -> bool {
     }
 }
 
-#[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-maintainers; malformed nodes, missing dependencies and table limits propagate typed diagnostics, while the outer no-progress check rejects unexpected cycles without panicking."
-)]
 fn schedule_round(
     candidate: &noble_kernel::untrusted::Candidate,
     plan: &mut crate::lowering::Plan,
@@ -62,26 +89,48 @@ fn schedule_round(
 ) -> Result<usize, crate::Diagnostic> {
     let mut progressed = 0usize;
     let mut index = 0usize;
+    let mut failure = None;
     while index < plan.nodes.len() {
         if !done[index] {
-            let interface = match plan.nodes[index] {
-                Some(crate::lowering::Operation::Program(interface)) => interface,
-                Some(_) | None => return Err(crate::Diagnostic::Defective),
-            };
-            let owner = match u32::try_from(index) {
-                Ok(owner) => owner,
-                Err(_) => return Err(crate::Diagnostic::Defective),
-            };
-            let entries = attempt!(body(candidate, Some(owner)));
-            if attempt!(ready(entries, plan, done)) {
-                attempt!(append(plan, Some(owner), interface, entries.len()));
-                done[index] = true;
-                progressed += 1;
+            if let Err(problem) = schedule_node(candidate, plan, done, index, &mut progressed) {
+                failure = Some(problem);
+                break;
             }
         }
         index += 1;
     }
-    Ok(progressed)
+    match failure {
+        Some(problem) => Err(problem),
+        None => Ok(progressed),
+    }
+}
+
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; pinned March const trial reports E0277 and August reports E0658 for Vec Index, with E0015 for body, ready and append; reassess when these checked scheduling APIs are const-capable."
+)]
+fn schedule_node(
+    candidate: &noble_kernel::untrusted::Candidate,
+    plan: &mut crate::lowering::Plan,
+    done: &mut [bool],
+    index: usize,
+    progressed: &mut usize,
+) -> Result<(), crate::Diagnostic> {
+    let interface = match plan.nodes[index] {
+        Some(crate::lowering::Operation::Program(interface)) => interface,
+        Some(_) | None => return Err(crate::Diagnostic::Defective),
+    };
+    let owner = match u32::try_from(index) {
+        Ok(owner) => owner,
+        Err(_) => return Err(crate::Diagnostic::Defective),
+    };
+    let entries = attempt!(body(candidate, Some(owner)));
+    if attempt!(ready(entries, plan, done)) {
+        attempt!(append(plan, Some(owner), interface, entries.len()));
+        done[index] = true;
+        *progressed += 1;
+    }
+    Ok(())
 }
 
 fn ready(
@@ -90,17 +139,36 @@ fn ready(
     done: &[bool],
 ) -> Result<bool, crate::Diagnostic> {
     let mut index = 0usize;
+    let mut result = Ok(true);
     while index < body.len() {
-        let operation = attempt!(plan.operation(body[index]));
-        if is_quotation(Some(operation)) {
-            let child = attempt!(crate::admission::index(body[index]));
-            match done.get(child) {
-                Some(true) => {}
-                Some(false) => return Ok(false),
-                None => return Err(crate::Diagnostic::Defective),
+        match ready_node(body[index], plan, done) {
+            Ok(true) => index += 1,
+            outcome => {
+                result = outcome;
+                break;
             }
         }
-        index += 1;
+    }
+    result
+}
+
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; pinned March and August const trials report E0015 for Plan::operation and admission::index and E0658 for slice::get; reassess when these checked lookup APIs are const-capable."
+)]
+fn ready_node(
+    node: noble_kernel::untrusted::NodeId,
+    plan: &crate::lowering::Plan,
+    done: &[bool],
+) -> Result<bool, crate::Diagnostic> {
+    let operation = attempt!(plan.operation(node));
+    if is_quotation(Some(operation)) {
+        let child = attempt!(crate::admission::index(node));
+        match done.get(child) {
+            Some(true) => {}
+            Some(false) => return Ok(false),
+            None => return Err(crate::Diagnostic::Defective),
+        }
     }
     Ok(true)
 }

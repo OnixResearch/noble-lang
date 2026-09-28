@@ -28,6 +28,9 @@ impl Clone for crate::shapes::Pattern {
             crate::shapes::Pattern::Evidence => crate::shapes::Pattern::Evidence,
             crate::shapes::Pattern::Certified => crate::shapes::Pattern::Certified,
             crate::shapes::Pattern::Resource(kind) => crate::shapes::Pattern::Resource(*kind),
+            crate::shapes::Pattern::Nominal(id, shape) => {
+                crate::shapes::Pattern::Nominal(*id, alloc::boxed::Box::new((**shape).clone()))
+            }
             crate::shapes::Pattern::Var(variable) => crate::shapes::Pattern::Var(*variable),
             crate::shapes::Pattern::StackVar(variable) => {
                 crate::shapes::Pattern::StackVar(*variable)
@@ -158,6 +161,13 @@ impl core::fmt::Debug for crate::shapes::Pattern {
             crate::shapes::Pattern::Resource(kind) => {
                 attempt!(core::fmt::Formatter::write_str(f, "Resource("));
                 attempt!(core::fmt::Debug::fmt(kind, f));
+                core::fmt::Formatter::write_str(f, ")")
+            }
+            crate::shapes::Pattern::Nominal(id, shape) => {
+                attempt!(core::fmt::Formatter::write_str(f, "Nominal("));
+                attempt!(core::fmt::Debug::fmt(id, f));
+                attempt!(core::fmt::Formatter::write_str(f, ", "));
+                attempt!(core::fmt::Debug::fmt(&**shape, f));
                 core::fmt::Formatter::write_str(f, ")")
             }
             crate::shapes::Pattern::Var(variable) => {

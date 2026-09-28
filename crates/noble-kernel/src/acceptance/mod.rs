@@ -8,6 +8,7 @@ mod frames;
 mod nodes;
 mod parts;
 mod preflight;
+mod schemes;
 mod validate;
 
 enum Fail {

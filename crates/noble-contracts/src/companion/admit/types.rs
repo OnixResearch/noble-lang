@@ -19,6 +19,7 @@ const fn ty_tag(ty: &noble_kernel::types::Ty) -> u64 {
         noble_kernel::types::Ty::List(_) => 11,
         noble_kernel::types::Ty::Program(_, _, _) => 12,
         noble_kernel::types::Ty::Resource(_) => 13,
+        noble_kernel::types::Ty::Nominal(_, _) => 14,
     }
 }
 
@@ -62,6 +63,21 @@ pub(in crate::companion) fn fold(
                 }
             }
             noble_kernel::types::Ty::Resource(kind) => fold.absorb(u64::from(kind.0)),
+            noble_kernel::types::Ty::Nominal(id, shape) => {
+                fold.absorb(id.module);
+                fold.absorb(u64::from(id.ordinal));
+                match shape.as_ref() {
+                    noble_kernel::types::NominalShape::Opaque(base) => {
+                        fold.absorb(1);
+                        pending.push(base);
+                    }
+                    noble_kernel::types::NominalShape::Variant(left, right) => {
+                        fold.absorb(2);
+                        pending.push(right);
+                        pending.push(left);
+                    }
+                }
+            }
             noble_kernel::types::Ty::Unit
             | noble_kernel::types::Ty::Bool
             | noble_kernel::types::Ty::I64

@@ -4,6 +4,8 @@
 )]
 
 mod contracts;
+mod identity;
+mod interfaces;
 mod materialization;
 
 #[derive(Clone, Copy)]
@@ -11,6 +13,7 @@ struct Admission<'a> {
     input_bytes: u32,
     limits: noble_kernel::untrusted::Limits,
     environment: &'a noble_kernel::contracts::Env,
+    linked_slots: &'a [u32],
 }
 
 struct Assembly {
@@ -92,12 +95,23 @@ pub(super) fn emit(
         Ok(bytes) => bytes,
         Err(error) => return Err(super::Error::at(crate::source::Stage::Check, error)),
     };
-    let expected = match interfaces(&state, &mut environment, meter) {
+    let expected = match interfaces::collect(&state, &mut environment, meter) {
         Ok(expected) => expected,
         Err(error) => return Err(super::Error::at(crate::source::Stage::Check, error)),
     };
     let span = state.span;
-    let assembly = attempt!(assemble(state, expected, &environment, input_bytes, meter));
+    let linked_slots = identity::selected_slots(&state, &environment);
+    let limits = match allowance(state.bodies.len(), state.span, meter) {
+        Ok(limits) => limits,
+        Err(error) => return Err(super::Error::at(crate::source::Stage::Check, error)),
+    };
+    let admission = Admission {
+        input_bytes,
+        limits,
+        environment: &environment,
+        linked_slots: &linked_slots,
+    };
+    let assembly = attempt!(assemble(state, expected, admission, meter));
     let (body, request) = match assembly.root {
         Some(root) => root,
         None => {
@@ -119,52 +133,6 @@ pub(super) fn emit(
     ))
 }
 
-fn interfaces(
-    state: &super::inference::State,
-    environment: &mut noble_kernel::contracts::Env,
-    meter: &mut crate::Meter,
-) -> Result<alloc::vec::Vec<noble_kernel::untrusted::Expected>, crate::Diagnostic> {
-    let mut expected = alloc::vec::Vec::with_capacity(state.bodies.len());
-    let mut at = 0usize;
-    let mut failure = None;
-    while at < state.bodies.len() {
-        match install_interface(&state.bodies[at], &state.arena, environment, meter) {
-            Ok(interface) => expected.push(interface),
-            Err(problem) => {
-                failure = Some(problem);
-                break;
-            }
-        }
-        at += 1;
-    }
-    match failure {
-        Some(problem) => Err(problem),
-        None => Ok(expected),
-    }
-}
-
-fn install_interface(
-    body: &super::inference::Body,
-    arena: &crate::inference::Arena,
-    environment: &mut noble_kernel::contracts::Env,
-    meter: &mut crate::Meter,
-) -> Result<noble_kernel::untrusted::Expected, crate::Diagnostic> {
-    let interface = attempt!(materialization::interface(arena, body, meter));
-    if body.identity.is_some() {
-        let scheme = attempt!(contracts::scheme(&interface, body.span, meter));
-        let deps = attempt!(materialization::dependencies(body, meter));
-        environment.defs.reserve(1);
-        environment.kinds.reserve(1);
-        environment.deps.reserve(1);
-        environment.defs.push(scheme);
-        environment
-            .kinds
-            .push(noble_kernel::contracts::Behavior::Named);
-        environment.deps.push(deps);
-    }
-    Ok(interface)
-}
-
 #[expect(
     clippy::while_let_on_iterator,
     reason = "Owner: noble-maintainers; the explicit owned iterator avoids the pinned architecture collector's UnsupportedExpansion for Desugaring(ForLoop); retain complete required compiler facts until that desugaring is supported."
@@ -176,19 +144,9 @@ fn install_interface(
 fn assemble(
     state: super::inference::State,
     expected: alloc::vec::Vec<noble_kernel::untrusted::Expected>,
-    environment: &noble_kernel::contracts::Env,
-    input_bytes: u32,
+    admission: Admission<'_>,
     meter: &mut crate::Meter,
 ) -> Result<Assembly, super::Error> {
-    let limits = match allowance(state.bodies.len(), state.span, meter) {
-        Ok(limits) => limits,
-        Err(error) => return Err(super::Error::at(crate::source::Stage::Check, error)),
-    };
-    let admission = Admission {
-        input_bytes,
-        limits,
-        environment,
-    };
     let mut assembly = Assembly {
         definition_base: state.definition_base,
         definitions: alloc::vec::Vec::with_capacity(state.bodies.len().saturating_sub(1)),
@@ -268,7 +226,10 @@ fn checked(
         limits: admission.limits,
     };
     let span = draft.span;
-    let identity = draft.identity;
+    let identity = draft
+        .identity
+        .map(|id| identity::specialization(id, admission.environment, admission.linked_slots));
+    let draft_owner = draft.owner;
     let (body, spans) = match materialization::body(draft, arena, meter) {
         Ok(body) => body,
         Err(error) => return Err(super::Error::at(crate::source::Stage::Check, error)),
@@ -278,13 +239,11 @@ fn checked(
     if let Err(error) = meter.charge(admission.limits.work.saturating_mul(2), span) {
         return Err(super::Error::at(crate::source::Stage::Acceptance, error));
     }
-    if let Err(error) = crate::program::check(
-        admission.environment,
-        &body.candidate,
-        &request,
-        &spans,
-        span,
-    ) {
+    let mut caller_environment = admission.environment.clone();
+    caller_environment.caller_module = draft_owner;
+    if let Err(error) =
+        crate::program::check(&caller_environment, &body.candidate, &request, &spans, span)
+    {
         return Err(super::Error::at(crate::source::Stage::Acceptance, error));
     }
     Ok(CheckedBody {

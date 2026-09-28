@@ -97,16 +97,37 @@ impl Pool {
 
     pub(crate) fn emit(&self, out: &mut crate::output::Buffer) -> Result<(), crate::Diagnostic> {
         let mut index = 0usize;
+        let mut failure = None;
         while index < self.keys.len() {
-            attempt!(out.append(b";; signature "));
-            attempt!(out.index(index));
-            attempt!(out.append(b" = "));
-            attempt!(out.append(&self.keys[index]));
-            attempt!(out.append(b"\n"));
-            index += 1;
+            match signature_line(out, index, &self.keys[index]) {
+                Ok(()) => index += 1,
+                Err(problem) => {
+                    failure = Some(problem);
+                    break;
+                }
+            }
         }
-        Ok(())
+        match failure {
+            Some(problem) => Err(problem),
+            None => Ok(()),
+        }
     }
+}
+
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-maintainers; signature serialization mutates only the fresh bounded compiler sink, not the borrowed interned key."
+)]
+fn signature_line(
+    out: &mut crate::output::Buffer,
+    index: usize,
+    key: &[u8],
+) -> Result<(), crate::Diagnostic> {
+    attempt!(out.append(b";; signature "));
+    attempt!(out.index(index));
+    attempt!(out.append(b" = "));
+    attempt!(out.append(key));
+    out.append(b"\n")
 }
 
 #[expect(

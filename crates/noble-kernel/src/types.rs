@@ -4,15 +4,31 @@
 //! operation recurses and no walk grows without a local bound. Stacks are
 //! ordered bottom-first, matching the specification's "top on the right".
 
+mod data;
 mod impls;
 mod size;
 
-/// Local bound for one type walk; beyond it every predicate fails closed.
+/// Local bound for one type walk; beyond it the predicate fails closed.
 const WORK_CAP: usize = 512;
 
 /// Stable identity of a resource kind supplied by the environment.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct ResourceKind(pub u32);
+
+/// Immutable resolved module identity and declaration ordinal.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct NominalTypeId {
+    pub module: u64,
+    pub ordinal: u32,
+}
+
+/// Exact, independently checked representation of a nominal type.
+#[derive(Clone, Debug, PartialEq)]
+#[cfg_attr(test, derive(Eq))]
+pub enum NominalShape {
+    Opaque(alloc::boxed::Box<Ty>),
+    Variant(alloc::boxed::Box<Ty>, alloc::boxed::Box<Ty>),
+}
 
 /// Stable identity of one host-operation effect.
 ///
@@ -188,6 +204,9 @@ pub enum Ty {
     ),
     /// An opaque resource kind; never data-eligible.
     Resource(ResourceKind),
+    /// Resolved nominal identity with its exact opaque representation or two
+    /// ordered variant payloads. The descriptor is checked against `Env`.
+    Nominal(NominalTypeId, alloc::boxed::Box<NominalShape>),
 }
 
 impl Ty {
@@ -202,48 +221,6 @@ impl Ty {
             alloc::boxed::Box::new(stack_out),
             effects,
         )
-    }
-
-    /// The recursive `Data` eligibility predicate.
-    ///
-    /// A resource anywhere inside a payload makes the whole value ineligible,
-    /// including through `Pair`, `Sum`, and `List` alternatives. A walk that
-    /// exceeds the local bound fails closed.
-    #[expect(
-        tigerstyle::fragile_exhaustive_enum_match,
-        reason = "Owner: noble-maintainers; each Ty constructor must explicitly declare whether Data eligibility inspects children, accepts directly or rejects resources; new types must not inherit a fallback eligibility rule."
-    )]
-    pub fn is_data(&self) -> bool {
-        let mut work: alloc::vec::Vec<Ty> = alloc::vec::Vec::with_capacity(8);
-        work.push(self.clone());
-        let mut is_data = true;
-        while let Some(node) = work.pop() {
-            if work.len() >= WORK_CAP {
-                is_data = false;
-                break;
-            }
-            match node {
-                Ty::Resource(_) => {
-                    is_data = false;
-                    break;
-                }
-                Ty::Pair(left, right) | Ty::Sum(left, right) => {
-                    work.push(*left);
-                    work.push(*right);
-                }
-                Ty::List(item) => work.push(*item),
-                Ty::Unit
-                | Ty::Bool
-                | Ty::I64
-                | Ty::Text
-                | Ty::Syntax
-                | Ty::Contract
-                | Ty::Evidence
-                | Ty::Certified
-                | Ty::Program(_, _, _) => {}
-            }
-        }
-        is_data
     }
 
     /// A size measure used by the declared type-size limit.

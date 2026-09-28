@@ -61,5 +61,5 @@ fn assemble(wat: &[u8]) -> Result<std::vec::Vec<u8>, std::string::String> {
     let directory = attempt!(
         crate::workflow::artifacts::Temporary::create().map_err(|failure| failure.message)
     );
-    crate::core::assemble_wat(&directory.path, wat)
+    crate::core::worker::assembly::assemble_wat(&directory.path, wat)
 }

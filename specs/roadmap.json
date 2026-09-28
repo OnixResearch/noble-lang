@@ -540,6 +540,46 @@
         "Not a proof of parser, projector, monitor, adapter, host or engine correctness; retained strict Lean roots establish only three scoped pure M7 Rust function correspondences.",
         "Not a discharge of all 2087 authored-production-body refinement obligations, prior milestone evidence or distinct final archived-source documents/Cairn Nix verification."
       ]
+    },
+    {
+      "id": "DXM1",
+      "name": "bounded-declared-modules",
+      "depends_on": [
+        "M4"
+      ],
+      "status": "completed",
+      "contract": "../.cairn/archive/2026-09-28-2026-09-26-declared-modules-v1/proposal.md",
+      "scope": "Selected opt-in Declared-Modules-v1 finite source-only module/type declarations: session-local immutable versioned registry and import/export identities, opaque types and exactly two-constructor variants, explicit typed test.emit adapter, and compiled managed-linear-memory Wasm; general types, Result, local bindings, portable package/cache, capability modules and resources in runtime remain open.",
+      "implementation": "Actual source parser/registry/independent nominal-kernel checking, transitive resource eligibility, linked effect and binding admission, finite declaration lowering and two advertised opt-in entry points for bounded compile and framed session; unflagged ordinary noble run and M4–M8 historical semantics stay unchanged.",
+      "required_requirements": [
+        "DX-TYPE-01",
+        "DX-TYPE-02",
+        "DX-MODULE-01",
+        "DX-MODULE-02"
+      ],
+      "acceptance_cases": [
+        "DX-03",
+        "DX-08",
+        "DX-09"
+      ],
+      "acceptance_status": "passed",
+      "acceptance_scope": "All three canonical cases pass 23 selected source-bound rows (DX-03 nine static; DX-08 six linker variants in both optimization modes; DX-09 one denied version-A compiled guest request in both modes after version-B alias rebind), with 39 actual case/supplemental rows and 27 planned scenarios, independent kernel adversarial peer, retained Core/M4–M8 regressions, all 22 pre-promotion assurance commands and fourteen gates including published Octet deny-all and complete signed/sandbox Nix flake; independent staged-source documents/Cairn Nix gate is separately retained.",
+      "verification_scope": "Current 32-unit compiler-derived inventory retains all 2595 authored production-body refinement obligations open; renewed 630-source whole-crate check passes all 268 actual refusals and only nine inherited Lean roots for exactly three pure M7 dataspace functions. Nominal/module/checker/compiler/adapter/host/engine refinement remains unproved.",
+      "completion_record": "../verification/declared-modules-v1/evidence.json",
+      "lifecycle_record": "../.cairn/archive/2026-09-28-2026-09-26-declared-modules-v1/tasks.md",
+      "evidence_records": {
+        "build": "../verification/declared-modules-v1/build.json",
+        "compiled_acceptance": "../verification/declared-modules-v1/acceptance.json",
+        "extraction": "../verification/declared-modules-v1/extraction.json",
+        "extraction_lock": "../verification/m4/extraction-lock.json",
+        "assurance": "../verification/declared-modules-v1/assurance.json",
+        "final_nix_checks": "../verification/declared-modules-v1/nix-checks.json"
+      },
+      "non_claims": [
+        "Not general nominal invariant protocols DX-TYPE-03/04, module state/effect closure DX-MODULE-03/04, Result/local syntax, portable module packaging/cache, general capability interfaces, cross-host execution or MA1/MW1/MW2 gate completion.",
+        "Not nominal/module/source/backend/host/engine Lean refinement: exactly nine inherited strict roots for three pure M7 dataspace functions survive current source check, and all 2595 authored-body inventory refinements remain open.",
+        "Not a substitute for final staged-source documents/Cairn Nix archive checks or the separately retained M4–M8 milestone evidence."
+      ]
     }
   ]
 }

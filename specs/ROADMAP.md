@@ -2,9 +2,9 @@
 
 Revision: 0.1.0-draft.5
 
-**M5, M6, M7 and M8 are complete for their separately bounded component,
-local-service and finite-choreography profiles; their broader profiles and
-refinement obligations remain open.**
+**M5, M6, M7, M8 and DXM1 are complete only for their separately bounded
+component, local-service, finite-choreography and opt-in declared-module
+profiles; broader language, platform and refinement obligations remain open.**
 M1, M2, MC1 and the bounded M3 representation experiment are implemented. M4
 connects accepted source to compiled managed-linear-memory Wasm and persistent
 sessions, with retained CORE/DX execution, extraction, regression and quality
@@ -132,10 +132,34 @@ grpc/aspen daemon lock; signed substitutes, sandbox, pinned tools and gate
 timeouts remained unchanged. The isolated user-store pilot hit a pinned
 Valence source tarball HTTP 404 and was not accepted as a gate.
 
-All 2,087 authored-production-body refinements, including parser, projector, monitor, adapter, host and engine
-correspondence, remain open. No user-defined protocols, distributed
+At M8 closeout, all 2,087 then-inventoried authored-production-body
+refinements, including parser, projector, monitor, adapter, host and engine
+correspondence, remained open. No user-defined protocols, distributed
 transport, durability, fairness, full Syndicate, universal compiler/engine
 claim or new WIT authority is selected.
+
+### DXM1 selected declared modules (bounded acceptance complete)
+
+The [archived native change](../.cairn/archive/2026-09-28-2026-09-26-declared-modules-v1/proposal.md)
+and [completion record](../verification/declared-modules-v1/evidence.json)
+select only finite `Declared-Modules-v1` source units. Opt-in `noble compile`
+and framed `noble session` admit source opaque declarations, two-constructor
+variants, immutable versioned session-local registry/import/export identities,
+explicit typed `test.emit` adapter bindings and independently checked
+managed-memory Wasm. Ordinary `noble run` has no such opt-in.
+DX-03/08/09 pass 23 canonical rows (nine source/static, twelve zero-execution
+link in off/on, two actual compiled denied-version-A after version-B display
+rebind), within 39 actual source-bound case/supplemental rows and 27 planned
+scenarios. The [22-command/14-gate pre-promotion assurance](../verification/declared-modules-v1/assurance.json)
+retains Core/M4–M8 regressions, 32-unit source coverage, independent
+630-source/268-refusal M4 extraction, all-workspace Rust, published Octet
+deny-all and complete signed/sandbox Nix flake. A distinct final staged-source
+documents/Cairn receipt is `verification/declared-modules-v1/nix-checks.json`.
+Only the inherited three pure M7 dataspace functions have nine strict Lean
+roots. All 2,595 current authored production-body refinement obligations
+remain open; no nominal/module, host or engine proof is claimed. General
+Result, local names, invariant-bearing types, portable packages/cache,
+capability modules and MA/MW entry gates are unaffected.
 
 ### M7 selected local synchronous service (bounded acceptance complete)
 
@@ -255,8 +279,9 @@ and permission modes, not execution-time inode identity.
 
 At M6 completion the [source inventory](../verification/source-inventory.md)
 covered 25 units with 1,939 open authored-body obligations; the historical M7
-renewal covered 29 units with 2,006 open. The current M8 renewal covers
-30 units with 2,087 still open. Historical milestone receipts
+renewal covered 29 units with 2,006 open. At M8 closeout the then-current
+renewal covered 30 units with 2,087 open; the current DXM1 renewal checks
+32 units with 2,595 still open. Historical milestone receipts
 keep their historical inventories. Neither extraction nor this native execution
 closes the broader frontend, kernel, compiler or backend proof obligations.
 
@@ -278,7 +303,7 @@ unaccepted. That local evidence does not promote MW1 or MW2.
 | MW1 — Worker interfaces and admission | M4, M5 and explicit language/service gates | Generated worker admission, typed dispatch, round trips, hostile-input rejection, bounded execution, and authority-separated observations |
 | MW2 — Worker cancellation slice | MW1, M6 | Actual worker/shell execution, both cancellation/delivery orders, late callbacks, and accounted native retirement |
 
-MW1 requires a worker-interface checker, declared schemas/modules, an explicit preparation service, package encoding, and a bounded execution profile. These are open entry gates, not completed capabilities. MW2 additionally requires concrete native-async task interfaces. M2 establishes finite candidate limits in its own subset. M6 owns RA-ASYNC-02 through RA-ASYNC-05 regardless of the worker harness.
+MW1 requires a worker-interface checker, declared schemas/modules, an explicit preparation service, package encoding, and a bounded execution profile. The finite DXM1 session-local module selection alone does not close these broader entry gates or make MW1 a completed capability. MW2 additionally requires concrete native-async task interfaces. M2 establishes finite candidate limits in its own subset. M6 owns RA-ASYNC-02 through RA-ASYNC-05 regardless of the worker harness.
 
 The MW1 case set is WORKER-02 through WORKER-07 and WORKER-09 through WORKER-12. Async-dependent rows in WORKER-09 remain MW2 obligations rather than false MW1 coverage. MW2 executes WORKER-01 and WORKER-08 plus those deferred rows. Reports retain a result for every applicable matrix entry.
 
@@ -415,7 +440,7 @@ Document checks do not run these workflows, bounded
 trials do not prove universal properties, and the two examples do not establish
 that all documentation executes.
 
-After M4, local bindings require a stack-only comparison plus lexical-scope, lowering, and capture-identity contracts. Capability-aware modules require explicit linking, operation contracts, and dependency identity rules. Neither changes bootstrap grammar.
+After M4, local bindings require a stack-only comparison plus lexical-scope, lowering, and capture-identity contracts. DXM1 separately completes a finite opt-in versioned local module and test.emit adapter slice with exact source-bound DX-03/08/09 evidence; general capability-aware modules still require their wider interfaces, portable dependency identity and explicit policy. Neither changes ordinary bootstrap grammar.
 
 Resource protocol types require M5 and guest declaration/module interfaces. Their gate covers successful transitions, error ownership, invalid reuse, runtime validation, and ambiguous outcomes. Behavioral proof claims also require the corresponding host models; MC1 remains resource-free.
 

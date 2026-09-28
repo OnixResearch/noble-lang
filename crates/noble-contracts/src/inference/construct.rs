@@ -15,6 +15,19 @@ impl<'a> super::build::State<'a> {
             noble_kernel::types::Ty::Contract => super::Term::Contract,
             noble_kernel::types::Ty::Evidence => super::Term::Evidence,
             noble_kernel::types::Ty::Certified => super::Term::Certified,
+            noble_kernel::types::Ty::Nominal(id, shape) => {
+                if !arena
+                    .nominals
+                    .iter()
+                    .any(|(known, checked)| known == id && checked == shape.as_ref())
+                {
+                    return Err(crate::invalid(
+                        span,
+                        "unregistered nominal type or changed representation",
+                    ));
+                }
+                super::Term::Nominal(*id)
+            }
             noble_kernel::types::Ty::Pair(a, b) | noble_kernel::types::Ty::Sum(a, b) => {
                 self.steps
                     .push(if matches!(ty, noble_kernel::types::Ty::Pair(_, _)) {
@@ -86,6 +99,19 @@ impl<'a> super::build::State<'a> {
             noble_kernel::shapes::Pattern::Contract => super::Term::Contract,
             noble_kernel::shapes::Pattern::Evidence => super::Term::Evidence,
             noble_kernel::shapes::Pattern::Certified => super::Term::Certified,
+            noble_kernel::shapes::Pattern::Nominal(id, shape) => {
+                if !arena
+                    .nominals
+                    .iter()
+                    .any(|(known, checked)| known == id && checked == shape.as_ref())
+                {
+                    return Err(crate::invalid(
+                        span,
+                        "unregistered nominal pattern or changed representation",
+                    ));
+                }
+                super::Term::Nominal(*id)
+            }
             noble_kernel::shapes::Pattern::Pair(a, b)
             | noble_kernel::shapes::Pattern::Sum(a, b) => {
                 self.steps.push(

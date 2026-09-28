@@ -31,7 +31,8 @@ pub(super) fn sum_cases(
         | noble_kernel::types::Ty::Pair(_, _)
         | noble_kernel::types::Ty::List(_)
         | noble_kernel::types::Ty::Program(_, _, _)
-        | noble_kernel::types::Ty::Resource(_) => return None,
+        | noble_kernel::types::Ty::Resource(_)
+        | noble_kernel::types::Ty::Nominal(_, _) => return None,
     };
     let (p1_in, p1_out, e_set) = super::as_program(&now[now.len() - 2])?;
     let (p2_in, p2_out, f_set) = super::as_program(&super::top(now)?)?;
@@ -136,7 +137,8 @@ pub(super) fn list_cases(
         | noble_kernel::types::Ty::Pair(_, _)
         | noble_kernel::types::Ty::Sum(_, _)
         | noble_kernel::types::Ty::Program(_, _, _)
-        | noble_kernel::types::Ty::Resource(_) => return None,
+        | noble_kernel::types::Ty::Resource(_)
+        | noble_kernel::types::Ty::Nominal(_, _) => return None,
     };
     let (p1_in, p1_out, e_set) = super::as_program(&now[now.len() - 2])?;
     let (p2_in, p2_out, f_set) = super::as_program(&super::top(now)?)?;

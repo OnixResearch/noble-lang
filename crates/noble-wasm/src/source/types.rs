@@ -10,6 +10,8 @@ enum Shape {
     Scalar(u32),
     Pair(u32, u32),
     Sum(u32, u32),
+    NominalOpaque(noble_kernel::types::NominalTypeId, u32),
+    NominalVariant(noble_kernel::types::NominalTypeId, u32, u32),
     List(u32),
     Program(u32, u32, u32),
     Syntax,
@@ -116,6 +118,26 @@ impl Registry {
         if let Some(problem) = failure {
             return Err(problem);
         }
+        attempt!(self.finish(compiler, work));
+        Ok(result)
+    }
+
+    pub(super) fn single(
+        &mut self,
+        ty: &noble_kernel::types::Ty,
+        compiler: &mut super::Compiler,
+        work: &mut super::Work,
+    ) -> Result<u32, crate::Diagnostic> {
+        let id = attempt!(self.intern(ty, work));
+        attempt!(self.finish(compiler, work));
+        Ok(id)
+    }
+
+    fn finish(
+        &mut self,
+        compiler: &mut super::Compiler,
+        work: &mut super::Work,
+    ) -> Result<(), crate::Diagnostic> {
         let mut failure = None;
         while self.shapes.len() < self.keys.len() {
             match self.next_shape(compiler, work) {
@@ -128,7 +150,7 @@ impl Registry {
         }
         match failure {
             Some(problem) => Err(problem),
-            None => Ok(result),
+            None => Ok(()),
         }
     }
 
@@ -161,6 +183,16 @@ impl Registry {
                 attempt!(self.intern(&left, work)),
                 attempt!(self.intern(&right, work)),
             ),
+            noble_kernel::types::Ty::Nominal(id, shape) => match *shape {
+                noble_kernel::types::NominalShape::Opaque(value) => {
+                    Shape::NominalOpaque(id, attempt!(self.intern(&value, work)))
+                }
+                noble_kernel::types::NominalShape::Variant(left, right) => Shape::NominalVariant(
+                    id,
+                    attempt!(self.intern(&left, work)),
+                    attempt!(self.intern(&right, work)),
+                ),
+            },
             noble_kernel::types::Ty::List(item) => Shape::List(attempt!(self.intern(&item, work))),
             noble_kernel::types::Ty::Program(input, output, effects) => Shape::Program(
                 attempt!(compiler.signature(&input, work)),

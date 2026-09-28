@@ -19,25 +19,42 @@ set_option maxRecDepth 2048
 namespace noble_kernel
 
 /-- [noble_kernel::types::EffId]
-    Source: 'crates/noble-kernel/src/types.rs', lines 26:0-26:26
+    Source: 'crates/noble-kernel/src/types.rs', lines 42:0-42:26
     Visibility: public -/
 @[reducible]
 def types.EffId := Std.U32
 
 /-- [noble_kernel::types::EffSet]
-    Source: 'crates/noble-kernel/src/types.rs', lines 30:0-30:42
+    Source: 'crates/noble-kernel/src/types.rs', lines 46:0-46:42
     Visibility: public -/
 @[reducible]
 def types.EffSet := alloc.vec.Vec types.EffId
 
+/-- [noble_kernel::types::NominalTypeId]
+    Source: 'crates/noble-kernel/src/types.rs', lines 20:0-23:1
+    Visibility: public -/
+structure types.NominalTypeId where
+  module : Std.U64
+  ordinal : Std.U32
+
 /-- [noble_kernel::types::ResourceKind]
-    Source: 'crates/noble-kernel/src/types.rs', lines 15:0-15:33
+    Source: 'crates/noble-kernel/src/types.rs', lines 16:0-16:33
     Visibility: public -/
 @[reducible]
 def types.ResourceKind := Std.U32
 
+mutual
+
+/-- [noble_kernel::types::NominalShape]
+    Source: 'crates/noble-kernel/src/types.rs', lines 28:0-31:1
+    Visibility: public -/
+@[discriminant isize]
+inductive types.NominalShape where
+| Opaque : types.Ty → types.NominalShape
+| Variant : types.Ty → types.Ty → types.NominalShape
+
 /-- [noble_kernel::types::Ty]
-    Source: 'crates/noble-kernel/src/types.rs', lines 157:0-191:1
+    Source: 'crates/noble-kernel/src/types.rs', lines 173:0-210:1
     Visibility: public -/
 @[discriminant isize]
 inductive types.Ty where
@@ -58,6 +75,9 @@ inductive types.Ty where
   types.EffSet →
   types.Ty
 | ResourceType : types.ResourceKind → types.Ty
+| NominalType : types.NominalTypeId → types.NominalShape → types.Ty
+
+end
 
 /-- [noble_kernel::untrusted::Interface]
     Source: 'crates/noble-kernel/src/untrusted.rs', lines 139:0-146:1
@@ -74,7 +94,7 @@ structure untrusted.Interface where
 def untrusted.NodeId := Std.U32
 
 /-- [noble_kernel::acceptance::Frame]
-    Source: 'crates/noble-kernel/src/acceptance/mod.rs', lines 21:0-30:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/mod.rs', lines 22:0-31:1 -/
 structure acceptance.Frame where
   depth : Std.U32
   origin : Option untrusted.NodeId
@@ -158,7 +178,7 @@ inductive untrusted.Lit where
 | UnitLit : untrusted.Lit
 
 /-- [noble_kernel::contracts::Definition]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 11:0-11:31
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 12:0-12:31
     Visibility: public -/
 @[reducible]
 def contracts.Definition := Std.U32
@@ -191,7 +211,7 @@ inductive words.VariableKind where
 | Effect : words.VariableKind
 
 /-- [noble_kernel::shapes::EffectSlot]
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 80:0-85:1
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 85:0-90:1
     Visibility: public -/
 @[discriminant isize]
 inductive shapes.EffectSlot where
@@ -199,7 +219,7 @@ inductive shapes.EffectSlot where
 | Var : words.Variable → shapes.EffectSlot
 
 /-- [noble_kernel::shapes::Pattern]
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 26:0-61:1
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 26:0-66:1
     Visibility: public -/
 @[discriminant isize]
 inductive shapes.Pattern where
@@ -220,6 +240,10 @@ inductive shapes.Pattern where
   alloc.vec.Vec shapes.EffectSlot →
   shapes.Pattern
 | ResourcePattern : types.ResourceKind → shapes.Pattern
+| NominalPattern :
+  types.NominalTypeId →
+  types.NominalShape →
+  shapes.Pattern
 | VarPattern : words.Variable → shapes.Pattern
 | StackVarPattern : words.Variable → shapes.Pattern
 
@@ -233,7 +257,7 @@ structure words.Scheme where
   effects : alloc.vec.Vec shapes.EffectSlot
 
 /-- [noble_kernel::untrusted::Constraint]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 206:0-228:1
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 206:0-234:1
     Visibility: public -/
 @[discriminant isize]
 inductive untrusted.Constraint where
@@ -246,10 +270,13 @@ inductive untrusted.Constraint where
 | InstantiationArity : untrusted.Constraint
 | MalformedReference : untrusted.NodeId → untrusted.Constraint
 | UnknownDefinition : contracts.Definition → untrusted.Constraint
+| InvalidType : untrusted.Constraint
+| InvalidContract : untrusted.Constraint
+| PrivateDefinition : contracts.Definition → untrusted.Constraint
 | CyclicWitness : untrusted.Constraint
 
 /-- [noble_kernel::untrusted::Diagnostic]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 232:0-247:1
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 238:0-253:1
     Visibility: public -/
 structure untrusted.Diagnostic where
   node : Option untrusted.NodeId
@@ -261,19 +288,39 @@ structure untrusted.Diagnostic where
   truncated : Bool
 
 /-- [noble_kernel::acceptance::parts::Site]
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 14:0-17:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 16:0-19:1 -/
 structure acceptance.parts.Site where
   node : Option untrusted.NodeId
   «def» : Option contracts.Definition
 
+/-- [noble_kernel::contracts::BoundAdapter]
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 132:0-139:1
+    Visibility: public -/
+structure contracts.BoundAdapter where
+  definition : contracts.Definition
+  adapter_identity : String
+  adapter_slot : Std.U32
+  input : alloc.vec.Vec types.Ty
+  output : alloc.vec.Vec types.Ty
+  effects : types.EffSet
+
+/-- [noble_kernel::contracts::NominalDecl]
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 104:0-111:1
+    Visibility: public -/
+structure contracts.NominalDecl where
+  id : types.NominalTypeId
+  shape : types.NominalShape
+  exported : Bool
+  «public» : Array Bool 2#usize
+
 /-- [noble_kernel::contracts::SchemaId]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 21:0-21:29
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 22:0-22:29
     Visibility: public -/
 @[reducible]
 def contracts.SchemaId := Std.U32
 
 /-- [noble_kernel::contracts::SchemaDecl]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 83:0-90:1
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 93:0-100:1
     Visibility: public -/
 structure contracts.SchemaDecl where
   id : contracts.SchemaId
@@ -281,7 +328,7 @@ structure contracts.SchemaDecl where
   recursive : Bool
 
 /-- [noble_kernel::contracts::Behavior]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 30:0-75:1
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 31:0-85:1
     Visibility: public -/
 @[discriminant isize]
 inductive contracts.Behavior where
@@ -306,20 +353,32 @@ inductive contracts.Behavior where
 | ConsBehavior : contracts.Behavior
 | ListCaseBehavior : contracts.Behavior
 | TestEmitBehavior : contracts.Behavior
+| BoundEmitBehavior : Std.U32 → contracts.Behavior
+| NominalNewBehavior : types.NominalTypeId → contracts.Behavior
+| NominalIntoBehavior : types.NominalTypeId → contracts.Behavior
+| NominalLeftBehavior : types.NominalTypeId → contracts.Behavior
+| NominalRightBehavior : types.NominalTypeId → contracts.Behavior
+| NominalMatchBehavior : types.NominalTypeId → contracts.Behavior
 | NamedBehavior : contracts.Behavior
 
 /-- [noble_kernel::contracts::Env]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 94:0-106:1
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 154:0-180:1
     Visibility: public -/
 structure contracts.Env where
   defs : alloc.vec.Vec words.Scheme
   kinds : alloc.vec.Vec contracts.Behavior
   deps : alloc.vec.Vec (alloc.vec.Vec contracts.Definition)
   schemas : alloc.vec.Vec contracts.SchemaDecl
+  nominals : alloc.vec.Vec contracts.NominalDecl
+  resource_kinds : alloc.vec.Vec types.ResourceKind
+  caller_module : Option Std.U64
+  declared_modules : Bool
+  definition_owners : alloc.vec.Vec (Option Std.U64)
+  bound_adapters : alloc.vec.Vec contracts.BoundAdapter
   effects : alloc.vec.Vec types.EffId
 
 /-- [noble_kernel::acceptance::parts::Ctx]
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 7:0-10:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 9:0-12:1 -/
 structure acceptance.parts.Ctx where
   request : untrusted.Request
   env : contracts.Env
@@ -349,7 +408,7 @@ inductive untrusted.LimitKind where
 | Diagnostics : untrusted.LimitKind
 
 /-- [noble_kernel::acceptance::Fail]
-    Source: 'crates/noble-kernel/src/acceptance/mod.rs', lines 13:0-18:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/mod.rs', lines 14:0-19:1 -/
 @[discriminant isize]
 inductive acceptance.Fail where
 | Invalid : untrusted.Diagnostic → acceptance.Fail
@@ -384,6 +443,35 @@ inductive types.size.Step where
 structure types.size.Walk where
   todo : alloc.vec.Vec (types.Ty × Bool)
   sizes : alloc.vec.Vec Std.U32
+
+/-- [noble_kernel::contracts::nominal::validation::valid_program_components::{closure}]
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 258:23-258:60 -/
+@[reducible]
+def contracts.nominal.validation.valid_program_components.closure := Std.U32
+
+/-- [noble_kernel::contracts::nominal::type::walk::work::State]
+    Source: 'crates/noble-kernel/src/contracts/nominal/type/walk/work.rs', lines 4:0-7:1 -/
+structure contracts.nominal.type.walk.work.State where
+  pending : alloc.vec.Vec types.Ty
+  visited : Std.U32
+
+/-- [noble_kernel::contracts::nominal::type::walk::ShapeStep]
+    Source: 'crates/noble-kernel/src/contracts/nominal/type/walk.rs', lines 230:0-234:1 -/
+@[discriminant isize]
+inductive contracts.nominal.type.walk.ShapeStep where
+| Continue :
+  contracts.nominal.type.walk.work.State →
+  contracts.nominal.type.walk.ShapeStep
+| Done : contracts.nominal.type.walk.ShapeStep
+| Failed : contracts.nominal.type.walk.ShapeStep
+
+/-- [noble_kernel::contracts::nominal::type::walk::Scope]
+    Source: 'crates/noble-kernel/src/contracts/nominal/type/walk.rs', lines 5:0-10:1 -/
+structure contracts.nominal.type.walk.Scope where
+  max_nodes : Std.U32
+  payload_only : Bool
+  prior : Std.Usize
+  caller : Option Std.U64
 
 /-- [noble_kernel::words::{noble_kernel::words::Scheme}::subst_effects::{closure}]
     Source: 'crates/noble-kernel/src/words.rs', lines 256:46-256:75 -/
@@ -432,13 +520,13 @@ structure untrusted.Derivation where
   interface : untrusted.Interface
 
 /-- [noble_kernel::acceptance::State]
-    Source: 'crates/noble-kernel/src/acceptance/mod.rs', lines 32:0-35:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/mod.rs', lines 33:0-36:1 -/
 structure acceptance.State where
   work : Std.U32
   derivations : alloc.vec.Vec untrusted.Derivation
 
 /-- [noble_kernel::acceptance::Machine]
-    Source: 'crates/noble-kernel/src/acceptance/mod.rs', lines 39:0-43:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/mod.rs', lines 40:0-44:1 -/
 structure acceptance.Machine where
   state : acceptance.State
   frames : alloc.vec.Vec acceptance.Frame
@@ -452,7 +540,7 @@ structure untrusted.Checked where
   derivations : alloc.vec.Vec untrusted.Derivation
 
 /-- [noble_kernel::untrusted::Outcome]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 251:0-262:1
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 257:0-268:1
     Visibility: public -/
 @[discriminant isize]
 inductive untrusted.Outcome where
@@ -463,7 +551,7 @@ inductive untrusted.Outcome where
 | InternalFailure : untrusted.Outcome
 
 /-- [noble_kernel::shapes::Defect]
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 89:0-94:1
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 94:0-99:1
     Visibility: public -/
 @[discriminant isize]
 inductive shapes.Defect where
@@ -471,7 +559,7 @@ inductive shapes.Defect where
 | KindMismatch : shapes.Defect
 
 /-- [noble_kernel::shapes::Step]
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 100:0-104:1 -/
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 105:0-109:1 -/
 @[discriminant isize]
 inductive shapes.Step where
 | Pattern : shapes.Pattern → shapes.Step
@@ -489,6 +577,63 @@ structure acceptance.validate.DepWalk where
   colors : alloc.vec.Vec Std.U8
   stack : alloc.vec.Vec contracts.Definition
   spent : Std.U32
+
+/-- [noble_kernel::contracts::nominal::inspection::{noble_kernel::contracts::Env}::enqueue_program_pattern::{closure}]
+    Source: 'crates/noble-kernel/src/contracts/nominal/inspection.rs', lines 147:51-147:87 -/
+@[reducible]
+def contracts.nominal.inspection.Env.enqueue_program_pattern.closure := Std.U32
+
+/-- [noble_kernel::contracts::nominal::inspection::PatternLimits]
+    Source: 'crates/noble-kernel/src/contracts/nominal/inspection.rs', lines 3:0-6:1 -/
+structure contracts.nominal.inspection.PatternLimits where
+  remaining : Std.U32
+  max_nodes : Std.U32
+
+/-- [noble_kernel::contracts::nominal::payload::Frame]
+    Source: 'crates/noble-kernel/src/contracts/nominal/payload.rs', lines 4:0-7:1 -/
+structure contracts.nominal.payload.Frame where
+  ty : types.Ty
+  is_complete : Bool
+
+/-- [noble_kernel::contracts::nominal::payload::Build]
+    Source: 'crates/noble-kernel/src/contracts/nominal/payload.rs', lines 9:0-13:1 -/
+structure contracts.nominal.payload.Build where
+  work : alloc.vec.Vec contracts.nominal.payload.Frame
+  built : alloc.vec.Vec shapes.Pattern
+  entered : Std.Usize
+
+/-- [noble_kernel::acceptance::preflight::NominalBudget]
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 146:0-150:1 -/
+structure acceptance.preflight.NominalBudget where
+  count : Std.U64
+  node_bound : Option Std.U64
+  work_bound : Std.U64
+
+/-- [noble_kernel::acceptance::preflight::nominal_payload_size::{closure}]
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 229:22-229:61 -/
+@[reducible]
+def acceptance.preflight.nominal_payload_size.closure := Unit
+
+/-- [noble_kernel::acceptance::preflight::NominalFailure]
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 117:0-119:1 -/
+structure acceptance.preflight.NominalFailure where
+  is_invalid_type : Bool
+
+/-- [noble_kernel::acceptance::nodes::visibility::Access]
+    Source: 'crates/noble-kernel/src/acceptance/nodes/visibility.rs', lines 100:0-106:1 -/
+@[discriminant isize]
+inductive acceptance.nodes.visibility.Access where
+| New : acceptance.nodes.visibility.Access
+| Into : acceptance.nodes.visibility.Access
+| Left : acceptance.nodes.visibility.Access
+| Right : acceptance.nodes.visibility.Access
+| Match : acceptance.nodes.visibility.Access
+
+/-- [noble_kernel::acceptance::nodes::visibility::public_operation_visible::{closure}]
+    Source: 'crates/noble-kernel/src/acceptance/nodes/visibility.rs', lines 158:56-158:94 -/
+@[reducible]
+def acceptance.nodes.visibility.public_operation_visible.closure :=
+  contracts.Env
 
 /-- [noble_kernel::async_tasks::domain::Obligations]
     Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 72:0-76:1
@@ -1307,6 +1452,41 @@ structure authority.permit.WitnessSnapshot where
     Visibility: public -/
 structure authority.report.UntrustedReceipt where
   description : authority.report.ReceiptDescription
+
+/-- [noble_kernel::contracts::NominalError]
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 124:0-128:1
+    Visibility: public -/
+@[discriminant isize]
+inductive contracts.NominalError where
+| DuplicateIdentity : contracts.NominalError
+| InvalidRepresentation : contracts.NominalError
+| TooManyDefinitions : contracts.NominalError
+
+/-- [noble_kernel::contracts::NominalOps]
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 115:0-121:1
+    Visibility: public -/
+structure contracts.NominalOps where
+  new : Option contracts.Definition
+  into : Option contracts.Definition
+  left : Option contracts.Definition
+  right : Option contracts.Definition
+  matcher : Option contracts.Definition
+
+/-- [noble_kernel::contracts::nominal::has_definition_space::{closure}]
+    Source: 'crates/noble-kernel/src/contracts/nominal.rs', lines 81:18-81:43 -/
+@[reducible]
+def contracts.nominal.has_definition_space.closure := Unit
+
+/-- [noble_kernel::contracts::BoundEmitRegistration]
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 142:0-149:1
+    Visibility: public -/
+structure contracts.BoundEmitRegistration where
+  adapter_identity : String
+  adapter_slot : Std.U32
+  owner : Std.U64
+  input : alloc.vec.Vec types.Ty
+  output : alloc.vec.Vec types.Ty
+  effects : types.EffSet
 
 /-- [noble_kernel::dataspace::Error]
     Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 18:0-26:1

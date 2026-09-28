@@ -46,6 +46,7 @@ pub(super) fn apply(node: crate::shapes::Pattern, mut walk: super::Walk) -> supe
         | crate::shapes::Pattern::Evidence
         | crate::shapes::Pattern::Certified
         | crate::shapes::Pattern::Resource(_) => Err(crate::words::InstError::KindMismatch),
+        crate::shapes::Pattern::Nominal(_, _) => Err(crate::words::InstError::KindMismatch),
     };
     match built {
         Ok(segment) => {

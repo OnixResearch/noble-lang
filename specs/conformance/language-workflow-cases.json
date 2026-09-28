@@ -11,24 +11,74 @@
       "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
     },
     {
-      "id": "DX-08", "profile": "Module-Design", "kind": "admission",
+      "id": "DX-08", "profile": "Declared-Modules-v1", "kind": "admission",
       "requirements": ["DX-MODULE-01", "DX-MODULE-02"],
-      "input": {"harness": "explicit-module-linking", "required_operation": "test.emit : Text -- ! {test.emit}", "variants": [
+      "input": {"harness": "real-source-module-import-and-explicit-linking-with-no-guest-execution", "source_contract": "module source declares require emit Text -- ! test.emit; exports and versioned imports resolve before an explicitly requested invocation", "required_operation": "test.emit : Text -- ! {test.emit}", "variants": [
         {"binding": "matching-declared-operation", "outcome": "link-without-execution"},
         {"binding": "missing", "outcome": "reject"},
         {"binding": "wrong-input-type", "outcome": "reject"},
         {"binding": "incompatible-effect-bound", "outcome": "reject"},
-        {"binding": "import-time-host-initializer", "outcome": "reject-implicit-execution"}
+        {"binding": "import-time-host-initializer", "outcome": "reject-implicit-execution"},
+        {"binding": "non-ASCII-declaration-name", "outcome": "reject-before-link"}
       ]},
-      "expected": {"stage": "link-admission", "outcome": "each-variant-matches", "guest_requests": 0, "protected_operations": 0, "ambient_fallback_calls": 0, "acquired_authority": false},
-      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+      "expected": {"stage": "link-admission", "outcome": "each-variant-matches", "guest_requests": 0, "host_requests": 0, "protected_operations": 0, "ambient_fallback_calls": 0, "acquired_authority": false},
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [{
+          "kind": "test",
+          "subject": "DX-08",
+          "claim": "All six real-source module/link variants pass under both optimization modes: compatible explicit binding links without execution, while missing/wrong type/effect, import-time execution and non-ASCII declaration identifiers refuse before guest/host requests or authority acquisition.",
+          "revision": "0.1.0-draft.5",
+          "source_revision": "sha256:e1098bfb81f9d05d4d648705235f31505218a4d789571ba342b9c5209a68ad65",
+          "result": "passed",
+          "configuration": {
+            "profile": "Declared-Modules-v1",
+            "case": "DX-08",
+            "receipt": "../../verification/declared-modules-v1/acceptance.json",
+            "receipt_sha256": "2fcd3d43192291e46a7f1bfeb0eebf0d594c865f7975316fd111a6e089648465",
+            "variants": [
+              "import-time-host-initializer",
+              "incompatible-effect-bound",
+              "matching-declared-operation",
+              "missing",
+              "non-ASCII-declaration-name",
+              "wrong-input-type"
+            ],
+            "rows": 12
+          },
+          "assumptions": [
+            "Selected pinned compiler, independent production-kernel peer, managed-linear-memory Wasm, host test.emit adapter, Wasmtime/Node engine and runtime ABI are trusted at their recorded source/tool byte identities.",
+            "Current whole-crate extraction retains only inherited scoped pure M7 Lean theorem roots; nominal/module frontend, compiled runtime, adapter/host and engine refinement and all current authored-body inventory obligations remain open."
+          ]
+        }]
     },
     {
-      "id": "DX-09", "profile": "Module-Design", "kind": "runtime",
+      "id": "DX-09", "profile": "Declared-Modules-v1", "kind": "runtime",
       "requirements": ["DX-MODULE-02"],
-      "input": {"harness": "linked-module-authority-and-resolution", "original_binding": "version-A", "rebound_display_name": "version-B", "existing_program": "resolved-to-version-A", "operation": "test.emit", "authority": "denied", "declared_effects": ["test.emit"]},
+      "input": {"harness": "compiled-noble-wasm-linked-module-authority-and-resolution", "original_binding": "version-A", "rebound_display_name": "version-B", "existing_program": "compiled-and-resolved-to-version-A", "operation": "test.emit", "authority": "independent-host-denial", "declared_effects": ["test.emit"]},
       "expected": {"stage": "runtime", "outcome": "denied-request-for-version-A", "guest_requests": 1, "protected_operations": 0, "version_B_invoked": false, "effect_request_recorded": true},
-      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [{
+          "kind": "test",
+          "subject": "DX-09",
+          "claim": "The compiled retained version-A program runs under both optimization modes after version-B display alias rebound; the independently denying host records exactly one A test.emit request, zero protected operations and no version-B invocation.",
+          "revision": "0.1.0-draft.5",
+          "source_revision": "sha256:e1098bfb81f9d05d4d648705235f31505218a4d789571ba342b9c5209a68ad65",
+          "result": "passed",
+          "configuration": {
+            "profile": "Declared-Modules-v1",
+            "case": "DX-09",
+            "receipt": "../../verification/declared-modules-v1/acceptance.json",
+            "receipt_sha256": "2fcd3d43192291e46a7f1bfeb0eebf0d594c865f7975316fd111a6e089648465",
+            "variants": [
+              "A-denied-after-B-alias-rebind"
+            ],
+            "rows": 2
+          },
+          "assumptions": [
+            "Selected pinned compiler, independent production-kernel peer, managed-linear-memory Wasm, host test.emit adapter, Wasmtime/Node engine and runtime ABI are trusted at their recorded source/tool byte identities.",
+            "Current whole-crate extraction retains only inherited scoped pure M7 Lean theorem roots; nominal/module frontend, compiled runtime, adapter/host and engine refinement and all current authored-body inventory obligations remain open."
+          ]
+        }]
     },
     {
       "id": "DX-10", "profile": "Property-Test-Design", "kind": "review",

@@ -28,6 +28,7 @@ pub(super) struct Body {
     pub output: u32,
     pub effect: u32,
     pub identity: Option<u64>,
+    pub owner: Option<u64>,
     pub span: crate::Span,
 }
 
@@ -190,8 +191,20 @@ fn initial(
     inputs: &[noble_kernel::types::Ty],
     meter: &mut crate::Meter,
 ) -> Result<State, crate::Diagnostic> {
-    let mut arena =
-        crate::inference::Arena::source(session.effect_universe(), session.bindings.is_some());
+    let mut arena = crate::inference::Arena::source(
+        session.effect_universe(),
+        session.bindings.is_some() || session.declared.is_some(),
+    );
+    if let Some(context) = &session.declared {
+        let mut nominals = alloc::vec::Vec::with_capacity(context.environment.nominals.len());
+        let mut at = 0usize;
+        while at < context.environment.nominals.len() {
+            let declaration = &context.environment.nominals[at];
+            nominals.push((declaration.id, declaration.shape.clone()));
+            at += 1;
+        }
+        arena.nominals = nominals;
+    }
     #[expect(
         tigerstyle::fragile_exhaustive_enum_match,
         reason = "Owner: noble-maintainers; declarations must retain quantified stack holes while executable submissions use their supplied stack; any new inference mode must make this choice explicitly."
@@ -214,6 +227,7 @@ fn initial(
         output: input,
         effect,
         identity: None,
+        owner: session.declared.as_ref().and_then(|context| context.owner),
         span: tree.span,
     });
     Ok(State {

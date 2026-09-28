@@ -5,7 +5,7 @@
     "sha256": "4d8873e9064398538950ae8eb381dcdc1ff226daabcb4c3b9fa6dea1516fb49b",
     "adapter": {
       "file": "tools/cairn-specs.mjs",
-      "sha256": "e491c5e371ac9b9238289cbb8904b458cddad137fa5c466ba525a6a3f31c46d5"
+      "sha256": "da58b3ac6cc49d564191c237bb758820d69ea808ce820d421868c4644a1a0e41"
     }
   },
   "lane": "document-validation-only",
@@ -1357,6 +1357,22 @@
       "sha256": "717b55581937722c5dd1eced4df13bd9a999747ba62aba726f78f139fb372627"
     },
     {
+      "file": ".cairn/changes/2026-09-26-declared-modules-v1/design.md",
+      "sha256": "2c2dc4af920b8e245801aab85bf72914c6fa13abe68b0b2d8d0580dddf1fc0a4"
+    },
+    {
+      "file": ".cairn/changes/2026-09-26-declared-modules-v1/proposal.md",
+      "sha256": "3e2bb0335000394a3167b6b37e0765e7019f3348516321e9ca0462195e3cfe2a"
+    },
+    {
+      "file": ".cairn/changes/2026-09-26-declared-modules-v1/specs/developer-experience/spec.md",
+      "sha256": "995b02e17b9308a082a1476db0169c8d9d98c22371b779704643bb19528eb800"
+    },
+    {
+      "file": ".cairn/changes/2026-09-26-declared-modules-v1/tasks.md",
+      "sha256": "6f878d29608008113188881492d91bfc298b0c673ca7acdad4225259f23f61b9"
+    },
+    {
       "file": ".cairn/MIGRATION.md",
       "sha256": "e05f953b21ae5551711f99b85588b966a04c83f751e6faabdcadd9c6f38184f4"
     },
@@ -1378,7 +1394,7 @@
     },
     {
       "file": ".cairn/specs/developer-experience/spec.md",
-      "sha256": "1183c749c9a1a5220becf38e1047313567f06047336b168530e9f8a49fbfbb07"
+      "sha256": "78ae1e8ed08ae67fdecabd2c4527d5332245b56af480008b681495d7a49bc820"
     },
     {
       "file": ".cairn/specs/evidence/spec.md",
@@ -1470,7 +1486,7 @@
     },
     {
       "file": "specs/conformance/developer-experience-cases.json",
-      "sha256": "f5417d3c44a0fd0773ca64d9db4f8bd5e05fc0a7271907303fa2734a22798ede"
+      "sha256": "46e00b6b9f8c865eee99c3149404ddd8317e4ede158801f7d8eff5f43b33d87f"
     },
     {
       "file": "specs/conformance/identity-cases.json",
@@ -1478,7 +1494,7 @@
     },
     {
       "file": "specs/conformance/language-workflow-cases.json",
-      "sha256": "51690891967fe3d63600d3c7dc23452485fbb9c3fff4438567766838996bb4de"
+      "sha256": "814134341f998d264b517989230e2a271fbf7849104fe38c4cb829b6af0bfd07"
     },
     {
       "file": "specs/conformance/octet-adoption-cases.json",

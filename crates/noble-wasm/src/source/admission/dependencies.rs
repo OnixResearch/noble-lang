@@ -120,7 +120,7 @@ fn is_ready(
     if let Some(problem) = failure {
         return Err(problem);
     }
-    attempt!(edges(listed, &seen, work));
+    attempt!(edges(&submission.environment, listed, &seen, work));
     Ok(is_ready)
 }
 
@@ -150,11 +150,13 @@ fn inspect_node(
     if !seen.contains(&def) {
         seen.push(def);
     }
-    if def.0 >= 24 {
-        let target = attempt!(super::definition_index(submission, def));
-        Ok(done[target])
-    } else {
-        Ok(true)
+    match submission.environment.kind(def) {
+        Some(noble_kernel::contracts::Behavior::Named) => {
+            let target = attempt!(super::definition_index(submission, def));
+            Ok(done[target])
+        }
+        Some(_) => Ok(true),
+        None => Err(crate::Diagnostic::Invalid),
     }
 }
 
@@ -163,6 +165,7 @@ fn inspect_node(
     reason = "Owner: noble-maintainers; each bounded edge comparison is reserved in the shared meter; missing, invented and duplicate edges are expected rejection paths and must return Invalid rather than panic."
 )]
 fn edges(
+    env: &noble_kernel::contracts::Env,
     listed: &[noble_kernel::contracts::Definition],
     seen: &[noble_kernel::contracts::Definition],
     work: &mut super::super::Work,
@@ -184,7 +187,7 @@ fn edges(
     }
     edge = 0;
     while edge < seen.len() {
-        match seen_edge(listed, seen[edge], work) {
+        match seen_edge(env, listed, seen[edge], work) {
             Ok(()) => edge += 1,
             Err(problem) => {
                 failure = Some(problem);
@@ -220,12 +223,13 @@ fn listed_edge(
 }
 
 fn seen_edge(
+    env: &noble_kernel::contracts::Env,
     listed: &[noble_kernel::contracts::Definition],
     definition: noble_kernel::contracts::Definition,
     work: &mut super::super::Work,
 ) -> Result<(), crate::Diagnostic> {
     attempt!(work.entries(listed.len().saturating_add(1)));
-    if definition.0 >= 24 && !listed.contains(&definition) {
+    if definition.0 >= super::super::builtin_count(env) && !listed.contains(&definition) {
         Err(crate::Diagnostic::Invalid)
     } else {
         Ok(())

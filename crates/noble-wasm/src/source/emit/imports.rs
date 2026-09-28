@@ -3,11 +3,28 @@
     reason = "Owner: noble-maintainers; emission mutates only the fresh private output sink; checked plans and caller inputs remain immutable and no partial output escapes preparation."
 )]
 
-pub(super) fn write(out: &mut crate::output::Buffer) -> Result<(), crate::Diagnostic> {
-    attempt!(out.append(b"(module\n(type $entry (func (param i32)))\n(import \"noble\" \"memory\" (memory 16 16))\n(import \"noble\" \"table\" (table 16384 16384 funcref))\n(import \"noble\" \"test_emit\" (func $host_emit (param i32 i32) (result i32)))\n(import \"noble\" \"test_abort\" (func $host_abort (result i32)))\n"));
+pub(super) fn write(
+    out: &mut crate::output::Buffer,
+    plan: &super::super::plan::Layout,
+) -> Result<(), crate::Diagnostic> {
+    attempt!(out.append(b"(module\n(type $entry (func (param i32)))\n(import \"noble\" \"memory\" (memory 16 16))\n(import \"noble\" \"table\" (table 16384 16384 funcref))\n"));
+    if !plan.declared_modules {
+        attempt!(out.append(
+            b"(import \"noble\" \"test_emit\" (func $host_emit (param i32 i32) (result i32)))\n"
+        ));
+    }
+    attempt!(out.append(b"(import \"noble\" \"test_abort\" (func $host_abort (result i32)))\n"));
+    if plan.has_bound_emit {
+        attempt!(out.append(b"(import \"noble\" \"test_emit_bound\" (func $host_emit_bound (param i32 i32 i32) (result i32)))\n"));
+    }
     attempt!(globals(out));
     attempt!(global_import(out, b"allocated_total", b"i64"));
     attempt!(global_import(out, b"released_total", b"i64"));
+    if plan.declared_modules {
+        // The historical source fragment retains $op_emit; this local stub
+        // never invokes a host and is unreachable under declared acceptance.
+        attempt!(out.append(b"(func $host_emit (param i32 i32) (result i32) (i32.const 1))\n"));
+    }
     out.append(b"(export \"memory\" (memory 0))\n(global $source_reflection i32 (i32.const 1))\n")
 }
 
@@ -64,7 +81,10 @@ fn fragment(out: &mut crate::output::Buffer, text: &str) -> Result<(), crate::Di
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; immutable manifest-root runtime fragments are appended in their required order to the private bounded sink; output exhaustion propagates a diagnostic and no producer invariant needs an assertion."
 )]
-pub(super) fn runtime(out: &mut crate::output::Buffer) -> Result<(), crate::Diagnostic> {
+pub(super) fn runtime(
+    out: &mut crate::output::Buffer,
+    plan: &super::super::plan::Layout,
+) -> Result<(), crate::Diagnostic> {
     attempt!(fragment(
         out,
         include_str!(concat!(
@@ -98,13 +118,13 @@ pub(super) fn runtime(out: &mut crate::output::Buffer) -> Result<(), crate::Diag
         out,
         include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/runtime/data.wat"))
     ));
-    attempt!(fragment(
-        out,
-        include_str!(concat!(
-            env!("CARGO_MANIFEST_DIR"),
-            "/runtime/reflection.wat"
-        ))
-    ));
+    if plan.has_nominals {
+        attempt!(fragment(out, include_str!("nominal.wat")));
+    }
+    if plan.has_bound_emit {
+        attempt!(fragment(out, include_str!("bound-emit.wat")));
+    }
+    attempt!(super::reflection::write(out, plan.declared_modules));
     attempt!(fragment(
         out,
         include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/runtime/source.wat"))

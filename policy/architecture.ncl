@@ -125,14 +125,14 @@ let contracts = import "./architecture.contracts.ncl" in
         "noble::<workflow::artifacts::Temporary as std::ops::Drop>::drop",
         "noble::build::artifacts::emit",
         "noble::component::artifacts::emit",
-        "noble::core::assemble_wat",
+        "noble::core::assembly::assemble_wat",
         "noble::core::companions::controls::checker::LeanConsumer::run",
         "noble::core::companions::controls::exercise",
         "noble::core::companions::entry::read_bounded",
-        "noble::core::execute",
+        "noble::core::entry::execute",
         "noble::core::framing::read_file",
         "noble::core::framing::write_new",
-        "noble::core::worker::configuration",
+        "noble::core::worker::configuration::build",
         "noble::sandbox::Environment::discover",
         "noble::sandbox::runtime::executable",
         "noble::sandbox::runtime::installation",
@@ -223,9 +223,9 @@ let contracts = import "./architecture.contracts.ncl" in
         "noble::core::companions::controls::exercise",
         "noble::core::companions::entry::run",
         "noble::core::companions::reporting::emit",
-        "noble::core::compile",
+        "noble::core::compilation::compile",
         "noble::core::output::print",
-        "noble::core::run",
+        "noble::core::entry::run",
         "noble::main",
         "noble::workflow::print_report",
         "noble::write_outcome",
@@ -238,10 +238,10 @@ let contracts = import "./architecture.contracts.ncl" in
   admission = null,
   waivers = [],
   collection_limits = {
-    # M8 has 30 real units (five packages); the acyclic boundary control adds
-    # two shell-library units. Retain every target and test shard.
-    max_units = 32,
-    max_shards = 32,
+    # Declared modules retain 32 real all-target units (five packages); the
+    # acyclic boundary control adds two shell-library units.
+    max_units = 34,
+    max_shards = 34,
     # M7's kernel dataspace module pushes both kernel library shards over the
     # earlier 1024 module-fact cap. Preserve complete compiler coverage.
     max_modules = 2048,
@@ -251,7 +251,9 @@ let contracts = import "./architecture.contracts.ncl" in
     max_implementations = 1024,
     max_signatures = 4096,
     max_calls = 8192,
-    max_constructors = 4096,
+    # Complete selected collection observed 4,801 constructors in each
+    # contracts library shard; preserve positive headroom without clipping.
+    max_constructors = 8192,
     max_effects = 4096,
     max_expansions = 4096,
     # M5's frontend saturates the previous 1024 compiler-observed attribute/
@@ -265,7 +267,9 @@ let contracts = import "./architecture.contracts.ncl" in
     max_value_flow_steps = 65536,
     max_value_flow_rounds = 64,
     max_unknowns = 4096,
-    max_spans = 8192,
+    # Complete selected collection observed 8,573 spans in each contracts
+    # library shard; the former 8,192 cap produced invalid references.
+    max_spans = 16384,
     max_span_bytes = 1048576,
     max_shard_bytes = 16777216,
     max_artifact_bytes = 67108864,

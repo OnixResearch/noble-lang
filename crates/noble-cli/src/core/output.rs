@@ -1,3 +1,5 @@
+mod declared;
+
 #[derive(Clone, Copy)]
 pub(super) struct ErrorContext {
     pub stage: &'static str,
@@ -54,8 +56,12 @@ pub(super) struct Report {
 }
 
 impl Report {
-    pub fn failure(failure: &Failure) -> Self {
-        Self::static_report(failure.context, &failure.message, 0, None)
+    pub fn failure(failure: &Failure, declared: bool) -> Self {
+        if declared {
+            Self::declared_static(failure.context, &failure.message, 0, None)
+        } else {
+            Self::static_report(failure.context, &failure.message, 0, None)
+        }
     }
 
     pub fn source_error(error: &noble_contracts::source::Error, submission: u64) -> Self {
@@ -213,6 +219,7 @@ const fn source_stage(stage: noble_contracts::source::Stage) -> &'static str {
     match stage {
         noble_contracts::source::Stage::Parse => "parse",
         noble_contracts::source::Stage::Resolve => "resolve",
+        noble_contracts::source::Stage::Link => "link",
         noble_contracts::source::Stage::Check => "check",
         noble_contracts::source::Stage::Acceptance => "acceptance",
     }
@@ -226,9 +233,9 @@ const fn source_outcome(error: &noble_contracts::source::Error) -> &'static str 
         return match error.stage() {
             noble_contracts::source::Stage::Resolve => "unbound-word",
             noble_contracts::source::Stage::Check => "type-reject",
-            noble_contracts::source::Stage::Parse | noble_contracts::source::Stage::Acceptance => {
-                "reject"
-            }
+            noble_contracts::source::Stage::Parse
+            | noble_contracts::source::Stage::Link
+            | noble_contracts::source::Stage::Acceptance => "reject",
         };
     }
     diagnostic_kind(error.diagnostic().kind)
@@ -236,7 +243,7 @@ const fn source_outcome(error: &noble_contracts::source::Error) -> &'static str 
 
 const fn exit(outcome: &str) -> u8 {
     match outcome.as_bytes() {
-        b"normal" | b"defined" | b"ready" => 0,
+        b"normal" | b"defined" | b"linked" | b"ready" => 0,
         b"unsupported" => 4,
         b"exhausted" | b"runtime-exhausted" => 5,
         b"trap" => 1,

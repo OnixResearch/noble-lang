@@ -98,6 +98,9 @@ impl Traversal {
             noble_kernel::types::Ty::Resource(kind) => {
                 noble_kernel::shapes::Pattern::Resource(*kind)
             }
+            noble_kernel::types::Ty::Nominal(id, shape) => {
+                noble_kernel::shapes::Pattern::Nominal(*id, shape.clone())
+            }
             noble_kernel::types::Ty::Pair(_, _) | noble_kernel::types::Ty::Sum(_, _) => {
                 self.pending.reserve(3);
                 self.pending

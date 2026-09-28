@@ -54,6 +54,10 @@ def U32.Insts.CoreConvertTryFromU64TryFromIntError.try_from
     (value : U64) : Result (core.result.Result U32 core.num.error.TryFromIntError) :=
   core.num.tryFromUScalar .U32 value
 
+@[rust_fun "core::ops::bit::{core::ops::bit::Not<&'0 bool, bool>}::not"]
+def Shared0Bool.Insts.CoreOpsBitNotBool.not (value : Bool) : Result Bool :=
+  ok (!value)
+
 /-- Taking the magnitude in `Int` handles `i64::MIN` without signed overflow. -/
 @[rust_fun "core::num::{i64}::unsigned_abs"]
 def core.num.I64.unsigned_abs (value : I64) : Result U64 :=
@@ -108,6 +112,17 @@ def core.slice.iter.Iter.Insts.CoreIterTraitsIteratorIteratorSharedAT.fold
   _root_.noble_contracts.core.slice.iter.Iter.Insts.CoreIterTraitsIteratorIteratorSharedAT.fold
     inst iterator initial function
 
+-- `any` threads the callback's state through each visited element and returns
+-- an iterator positioned just after the first match, or at the end.
+@[rust_fun
+  "core::slice::iter::{core::iter::traits::iterator::Iterator<core::slice::iter::Iter<'a, @T>, &'a @T>}::any"]
+def core.slice.iter.Iter.Insts.CoreIterTraitsIteratorIteratorSharedAT.any
+    {T F : Type} (inst : core.ops.function.FnMut F T Bool)
+    (iterator : core.slice.iter.Iter T) (function : F) :
+    Result (Bool × core.slice.iter.Iter T) :=
+  _root_.noble_contracts.core.slice.iter.Iter.Insts.CoreIterTraitsIteratorIteratorSharedAT.any
+    inst iterator function
+
 /-- Reuse the frontend's state-threaded traversal: the returned iterator has
 consumed the matching item and the index is relative to its initial cursor. -/
 @[rust_fun
@@ -152,9 +167,19 @@ def Pair.Insts.CoreCmpPartialEqPair.eq
   let equal ← first.eq left.1 right.1
   if equal then second.eq left.2 right.2 else ok false
 
+@[rust_fun "alloc::boxed::{core::convert::AsRef<Box<@T>, @T>}::as_ref"]
+def Box.Insts.CoreConvertAsRef.as_ref {T : Type} (_A : Type)
+    (value : T) : Result T :=
+  ok value
+
 @[rust_fun "alloc::string::{alloc::string::String}::as_bytes"]
 def alloc.string.String.as_bytes (text : String) : Result (Slice U8) :=
   _root_.noble_contracts.alloc.string.String.as_bytes text
+
+-- Rust's `String::len` counts UTF-8 bytes, not Unicode scalar values.
+@[rust_fun "alloc::string::{alloc::string::String}::len"]
+def alloc.string.String.len (value : String) : Result Usize :=
+  _root_.noble_contracts.alloc.string.String.len value
 
 @[rust_fun "alloc::string::{core::clone::Clone<alloc::string::String>}::clone"]
 def alloc.string.String.Insts.CoreCloneClone.clone (text : String) : Result String :=
@@ -188,5 +213,14 @@ def alloc.vec.Vec.pop {T : Type} (A : Type) (vector : alloc.vec.Vec T) :
 def alloc.vec.Vec.is_empty {T : Type} (A : Type) (vector : alloc.vec.Vec T) :
     Result Bool :=
   _root_.noble_kernel.alloc.vec.Vec.is_empty A vector
+
+-- Slice equality checks length first, then invokes the supplied element
+-- comparison in order; its failures propagate without visiting later items.
+@[rust_fun
+  "alloc::vec::partial_eq::{core::cmp::PartialEq<alloc::vec::Vec<@T>, [@U; @N]>}::ne"]
+def alloc.vec.Vec.Insts.CoreCmpPartialEqArray.ne
+    {T U : Type} (_A : Type) {N : Usize} (inst : core.cmp.PartialEq T U)
+    (left : alloc.vec.Vec T) (right : Array U N) : Result Bool :=
+  core.slice.cmp.PartialEqSlice.ne inst left.slice right.to_slice
 
 end noble_wasm

@@ -1,0 +1,114 @@
+{
+  "schema": "noble-declared-modules-evidence/v1",
+  "milestone": "DXM1",
+  "date": "2026-09-28",
+  "result": "passed",
+  "scope": "Selected opt-in finite Declared-Modules-v1 session-local source opaque/two-arm nominal types, immutable versioned modules/imports/exports, explicit typed test.emit host bindings, real checked compiled managed-memory Wasm; general profiles and nominal proof remain open.",
+  "requirements": [
+    "DX-TYPE-01",
+    "DX-TYPE-02",
+    "DX-MODULE-01",
+    "DX-MODULE-02"
+  ],
+  "cases": [
+    "DX-03",
+    "DX-08",
+    "DX-09"
+  ],
+  "source_revision": "sha256:e1098bfb81f9d05d4d648705235f31505218a4d789571ba342b9c5209a68ad65",
+  "pre_promotion_assurance_sha256": "9cc5df94ba1a6f2d9792cf2f060dcd6bb047fdcb5172c6af9f5669d9adeafe4e",
+  "acceptance_sha256": "2fcd3d43192291e46a7f1bfeb0eebf0d594c865f7975316fd111a6e089648465",
+  "build_sha256": "ccd2da13407918113801a5ace110fd6cee4075f06c985f383bee0e66619e9107",
+  "extraction_sha256": "2849724f8eb8c2527e6ee83ef9a7f15ca954e961965edd61a1aca8e33aff365c",
+  "compiler_inventory": {
+    "units": 32,
+    "authored_body_obligations": 2595,
+    "open_refinement_obligations": 2595,
+    "generated_paths": 2131,
+    "structural_paths": 1090,
+    "production_paths": 5816,
+    "production_item_facts": 5926,
+    "exclusively_test_paths": 1333,
+    "exclusively_test_item_facts": 1668,
+    "macro_origins": 32,
+    "dependency_edges": 7,
+    "selected_tools": 13,
+    "waivers": 0
+  },
+  "compiled_acceptance": {
+    "receipt": "acceptance.json",
+    "result": "passed",
+    "source_revision": "sha256:e1098bfb81f9d05d4d648705235f31505218a4d789571ba342b9c5209a68ad65",
+    "canonical_case_rows": {
+      "DX-03": 9,
+      "DX-08": 12,
+      "DX-09": 2
+    },
+    "total_case_rows": 39,
+    "planned_scenarios": 27,
+    "recorded_commands": 92,
+    "resource_operations": [
+      "dup",
+      "drop",
+      "capture"
+    ],
+    "independent_source_derived_kernel_peer_sha256": "6d40bae1aca2ec5864edd61ebac314b0e97840f18cd7961114749016862fbb95",
+    "production_cli_sha256": "dfb9818927cb880ec5787402945193ff1a8a10bc574e8a1a6b3126b969e68d57",
+    "host_authorization": "One version-A guest request independently denied after B alias rebound; zero protected operations and zero B invocations in both optimization modes."
+  },
+  "extraction": {
+    "receipt": "extraction.json",
+    "source_files": 630,
+    "reviewed_lock": "../m4/extraction-lock.json",
+    "reviewed_lock_sha256": "1942596d2aa448ad36914b570bd6740c8c981f351d4d3ea3e73c1523695e6ed9",
+    "strict_formal_roots": 9,
+    "actual_pure_M7_dataspace_functions": 3,
+    "total_mutation_refusals": 268,
+    "nominal_module_theorems": 0
+  },
+  "assurance": {
+    "receipt": "assurance.json",
+    "commands": 22,
+    "verified_gates": 14,
+    "complete_nix_flake": {
+      "label": "complete-nix-flake-check",
+      "status": 0,
+      "passed": true,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "0a2a55cf87bfe5df780beb05ed4b3f82e644cb88f9d6475c14a27a3f8a665523"
+    },
+    "signed_substitutes_and_sandbox": true,
+    "published_octal_deny_all": {
+      "label": "published-octet-precommit",
+      "status": 0,
+      "passed": true,
+      "stdout_sha256": "3134388a59fbb1dd2f719efee5fd4896104037d80135fdb284073a84fce18c97",
+      "stderr_sha256": "5c88f9becf113c2a408ef31df3543a7c8df273b1ab7f7c3eaee6916331d469e9"
+    }
+  },
+  "post_promotion_documents": {
+    "receipt": "nix-checks.json",
+    "scope": "Independent staged-source Nix documents and Cairn checks; not pre-promotion runtime replay."
+  },
+  "assumptions": [
+    "Selected source, reviewed inventory/policy and extraction lock, pinned compiler/proof tools, independent production-kernel peer, managed-linear-memory Wasm ABI, host adapter policy and runtime engine retain their receipt-bound identities.",
+    "Signed substitutes, sandbox and local Nix builders are required under the pinned read-only private client configuration; the external host, toolchain and ABI remain trusted boundaries."
+  ],
+  "non_claims": [
+    "No nominal type, module, frontend/backend, host adapter or engine refinement theorem; nine retained strict Lean roots only concern three inherited pure M7 dataspace functions.",
+    "All 2595 current authored production-body inventory refinement obligations remain open, without exception or waiver.",
+    "No general Result combinators, local bindings, portable semantic identity/cache/package transport, resource-positive runtime, general capability modules, MA1/MW1/MW2 closeout or cross-host authority claim."
+  ],
+  "native_cairn_archive": {
+    "path": ".cairn/archive/2026-09-28-2026-09-26-declared-modules-v1",
+    "date": "2026-09-28",
+    "change_started": "2026-09-26-declared-modules-v1",
+    "tool_revision": "15f00875562025e7ea7e0d1f4af24d1a2e2ac06f",
+    "metadata_sha256": "a6fd5ca231a3bb7b2746437ddfeea40804e0b37172b383ad5cf5ca2bf064d0a9",
+    "tasks_sha256": "a5f4d62f221e7d41a25bd55dafb20c25306cc3f8409cf07166861f72360aec50",
+    "archive_command": "bun tools/cairn.mjs archive 2026-09-26-declared-modules-v1 --root . --execute",
+    "date_source": "CAIRN_ARCHIVE_DATE explicitly set from observed date +%F at actual native Cairn archive --execute",
+    "committed": false,
+    "pushed": false
+  }
+}

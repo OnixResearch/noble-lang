@@ -1,0 +1,219 @@
+//! Canonical nominal and required-operation contracts; no candidate controls this table.
+
+mod inspection;
+mod payload;
+mod schemes;
+mod r#type {
+    pub(in super::super) mod walk;
+}
+mod validation;
+
+pub(super) fn append(
+    mut env: super::Env,
+    scheme: crate::words::Scheme,
+    kind: super::Behavior,
+    owner: u64,
+) -> Result<(super::Env, super::Definition), super::NominalError> {
+    let index = match u32::try_from(env.defs.len()) {
+        Ok(index) => index,
+        Err(_) => return Err(super::NominalError::TooManyDefinitions),
+    };
+    env.defs.push(scheme);
+    env.kinds.push(kind);
+    env.deps.push(alloc::vec::Vec::new());
+    env.definition_owners.push(Some(owner));
+    Ok((env, super::Definition(index)))
+}
+
+pub(super) fn register(
+    env: super::Env,
+    decl: super::NominalDecl,
+) -> Result<(super::Env, super::NominalOps), super::NominalError> {
+    if env.nominal(decl.id).is_some() {
+        return Err(super::NominalError::DuplicateIdentity);
+    }
+    if !valid_representation(&env, &decl) {
+        return Err(super::NominalError::InvalidRepresentation);
+    }
+    if !has_definition_space(&env, &decl) {
+        return Err(super::NominalError::TooManyDefinitions);
+    }
+    let (mut env, ops) = attempt!(register_ops(env, &decl));
+    env.nominals.push(decl);
+    env.declared_modules = true;
+    Ok((env, ops))
+}
+
+fn register_ops(
+    env: super::Env,
+    decl: &super::NominalDecl,
+) -> Result<(super::Env, super::NominalOps), super::NominalError> {
+    if matches!(decl.shape, crate::types::NominalShape::Opaque(_)) {
+        opaque_ops(env, decl)
+    } else if matches!(decl.shape, crate::types::NominalShape::Variant(_, _)) {
+        variant_ops(env, decl)
+    } else {
+        Err(super::NominalError::InvalidRepresentation)
+    }
+}
+
+fn valid_representation(env: &super::Env, decl: &super::NominalDecl) -> bool {
+    if let crate::types::NominalShape::Opaque(representation) = &decl.shape {
+        return env.valid_nominal_payload(representation, 512);
+    }
+    if let crate::types::NominalShape::Variant(left, right) = &decl.shape {
+        return env.valid_nominal_payload(left, 512) && env.valid_nominal_payload(right, 512);
+    }
+    false
+}
+
+fn has_definition_space(env: &super::Env, decl: &super::NominalDecl) -> bool {
+    let count = if matches!(decl.shape, crate::types::NominalShape::Opaque(_)) {
+        2usize
+    } else if matches!(decl.shape, crate::types::NominalShape::Variant(_, _)) {
+        3
+    } else {
+        return false;
+    };
+    env.defs
+        .len()
+        .checked_add(count)
+        .and_then(|n| u32::try_from(n).ok())
+        .is_some()
+}
+
+fn opaque_ops(
+    env: super::Env,
+    decl: &super::NominalDecl,
+) -> Result<(super::Env, super::NominalOps), super::NominalError> {
+    let (env, new) = attempt!(append_conversion(env, decl, false));
+    let (env, into) = attempt!(append_conversion(env, decl, true));
+    Ok((
+        env,
+        super::NominalOps {
+            new: Some(new),
+            into: Some(into),
+            left: None,
+            right: None,
+            matcher: None,
+        },
+    ))
+}
+
+fn append_conversion(
+    env: super::Env,
+    decl: &super::NominalDecl,
+    into: bool,
+) -> Result<(super::Env, super::Definition), super::NominalError> {
+    let Some(scheme) = schemes::conversion(decl, into) else {
+        return Err(super::NominalError::InvalidRepresentation);
+    };
+    let kind = if into {
+        super::Behavior::NominalInto(decl.id)
+    } else {
+        super::Behavior::NominalNew(decl.id)
+    };
+    append(env, scheme, kind, decl.id.module)
+}
+
+fn variant_ops(
+    env: super::Env,
+    decl: &super::NominalDecl,
+) -> Result<(super::Env, super::NominalOps), super::NominalError> {
+    let (env, left) = attempt!(append_arm(env, decl, false));
+    let (env, right) = attempt!(append_arm(env, decl, true));
+    let (env, matcher) = attempt!(append_matcher(env, decl));
+    Ok((
+        env,
+        super::NominalOps {
+            new: None,
+            into: None,
+            left: Some(left),
+            right: Some(right),
+            matcher: Some(matcher),
+        },
+    ))
+}
+
+fn append_arm(
+    env: super::Env,
+    decl: &super::NominalDecl,
+    right: bool,
+) -> Result<(super::Env, super::Definition), super::NominalError> {
+    let Some(scheme) = schemes::arm(decl, right) else {
+        return Err(super::NominalError::InvalidRepresentation);
+    };
+    let kind = if right {
+        super::Behavior::NominalRight(decl.id)
+    } else {
+        super::Behavior::NominalLeft(decl.id)
+    };
+    append(env, scheme, kind, decl.id.module)
+}
+
+fn append_matcher(
+    env: super::Env,
+    decl: &super::NominalDecl,
+) -> Result<(super::Env, super::Definition), super::NominalError> {
+    let Some(scheme) = schemes::matcher(decl) else {
+        return Err(super::NominalError::InvalidRepresentation);
+    };
+    append(
+        env,
+        scheme,
+        super::Behavior::NominalMatch(decl.id),
+        decl.id.module,
+    )
+}
+
+pub(super) fn register_bound_emit(
+    env: super::Env,
+    registration: super::BoundEmitRegistration,
+) -> Result<(super::Env, super::Definition), super::NominalError> {
+    let registration = attempt!(checked_bound_registration(&env, registration));
+    let (mut env, def) = attempt!(append(
+        env,
+        schemes::emit_scheme(),
+        super::Behavior::BoundEmit(registration.adapter_slot),
+        registration.owner,
+    ));
+    env.bound_adapters.push(bound_adapter(def, registration));
+    env.declared_modules = true;
+    Ok((env, def))
+}
+
+fn checked_bound_registration(
+    env: &super::Env,
+    registration: super::BoundEmitRegistration,
+) -> Result<super::BoundEmitRegistration, super::NominalError> {
+    if registration.adapter_identity.is_empty()
+        || registration.input.as_slice() != [crate::types::Ty::Text]
+    {
+        return Err(super::NominalError::InvalidRepresentation);
+    }
+    if !registration.output.is_empty() || registration.effects.as_slice() != [super::TEST_EMIT] {
+        return Err(super::NominalError::InvalidRepresentation);
+    }
+    let mut index = 0;
+    while index < env.bound_adapters.len() {
+        if env.bound_adapters[index].adapter_slot == registration.adapter_slot {
+            return Err(super::NominalError::InvalidRepresentation);
+        }
+        index += 1;
+    }
+    Ok(registration)
+}
+
+fn bound_adapter(
+    definition: super::Definition,
+    row: super::BoundEmitRegistration,
+) -> super::BoundAdapter {
+    super::BoundAdapter {
+        definition,
+        adapter_identity: row.adapter_identity,
+        adapter_slot: row.adapter_slot,
+        input: row.input,
+        output: row.output,
+        effects: row.effects,
+    }
+}

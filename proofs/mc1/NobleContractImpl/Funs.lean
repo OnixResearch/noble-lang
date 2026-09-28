@@ -49,15 +49,6 @@ def U32.Insts.CoreStrTraitsFromStrParseIntError : core.str.traits.FromStr
   from_str := U32.Insts.CoreStrTraitsFromStrParseIntError.from_str
 }
 
-/-- Trait implementation: [core::option::{impl core::fmt::Debug for core::option::Option<T>}]
-    Source: '/rustc/library/core/src/option.rs', lines 592:15-592:20
-    Name pattern: [core::fmt::Debug<core::option::Option<@T>>] -/
-@[reducible, rust_trait_impl "core::fmt::Debug<core::option::Option<@T>>"]
-def core.option.Option.Insts.CoreFmtDebug {T : Type} (fmtDebugInst :
-  core.fmt.Debug T) : core.fmt.Debug (Option T) := {
-  fmt := core.option.Option.Insts.CoreFmtDebug.fmt fmtDebugInst
-}
-
 /-- Trait implementation: [core::option::{impl core::clone::Clone for core::option::Option<T>}]
     Source: '/rustc/library/core/src/option.rs', lines 2266:0-2270:40
     Name pattern: [core::clone::Clone<core::option::Option<@T>>] -/
@@ -65,6 +56,24 @@ def core.option.Option.Insts.CoreFmtDebug {T : Type} (fmtDebugInst :
 def core.option.Option.Insts.CoreCloneClone {T : Type} (cloneCloneInst :
   core.clone.Clone T) : core.clone.Clone (Option T) := {
   clone := core.option.Option.Insts.CoreCloneClone.clone cloneCloneInst
+}
+
+/-- Trait implementation: [core::option::{impl core::marker::Copy for core::option::Option<T>}]
+    Source: '/rustc/library/core/src/option.rs', lines 592:9-592:13
+    Name pattern: [core::marker::Copy<core::option::Option<@T>>] -/
+@[reducible, rust_trait_impl "core::marker::Copy<core::option::Option<@T>>"]
+def core.option.Option.Insts.CoreMarkerCopy {T : Type} (markerCopyInst :
+  core.marker.Copy T) : core.marker.Copy (Option T) := {
+  cloneInst := core.option.Option.Insts.CoreCloneClone markerCopyInst.cloneInst
+}
+
+/-- Trait implementation: [core::option::{impl core::fmt::Debug for core::option::Option<T>}]
+    Source: '/rustc/library/core/src/option.rs', lines 592:15-592:20
+    Name pattern: [core::fmt::Debug<core::option::Option<@T>>] -/
+@[reducible, rust_trait_impl "core::fmt::Debug<core::option::Option<@T>>"]
+def core.option.Option.Insts.CoreFmtDebug {T : Type} (fmtDebugInst :
+  core.fmt.Debug T) : core.fmt.Debug (Option T) := {
+  fmt := core.option.Option.Insts.CoreFmtDebug.fmt fmtDebugInst
 }
 
 /-- Trait implementation: [core::option::{impl core::cmp::PartialEq<core::option::Option<T>> for core::option::Option<T>}]
@@ -118,6 +127,26 @@ def core.ops.range.RangeUsize.Insts.CoreSliceIndexSliceIndexStrStr :
   index := core.ops.range.RangeUsize.Insts.CoreSliceIndexSliceIndexStrStr.index
   index_mut :=
     core.ops.range.RangeUsize.Insts.CoreSliceIndexSliceIndexStrStr.index_mut
+}
+
+/-- Trait implementation: [core::str::traits::{impl core::slice::index::SliceIndex<str, str> for core::ops::range::RangeTo<usize>}]
+    Source: '/rustc/library/core/src/str/traits.rs', lines 420:0-420:57
+    Name pattern: [core::slice::index::SliceIndex<core::ops::range::RangeTo<usize>, str, str>] -/
+@[reducible, rust_trait_impl
+  "core::slice::index::SliceIndex<core::ops::range::RangeTo<usize>, str, str>"]
+def core.ops.range.RangeToUsize.Insts.CoreSliceIndexSliceIndexStrStr :
+  core.slice.index.SliceIndex (core.ops.range.RangeTo Std.Usize) Str Str := {
+  get := core.ops.range.RangeToUsize.Insts.CoreSliceIndexSliceIndexStrStr.get
+  get_mut :=
+    core.ops.range.RangeToUsize.Insts.CoreSliceIndexSliceIndexStrStr.get_mut
+  get_unchecked :=
+    core.ops.range.RangeToUsize.Insts.CoreSliceIndexSliceIndexStrStr.get_unchecked
+  get_unchecked_mut :=
+    core.ops.range.RangeToUsize.Insts.CoreSliceIndexSliceIndexStrStr.get_unchecked_mut
+  index :=
+    core.ops.range.RangeToUsize.Insts.CoreSliceIndexSliceIndexStrStr.index
+  index_mut :=
+    core.ops.range.RangeToUsize.Insts.CoreSliceIndexSliceIndexStrStr.index_mut
 }
 
 /-- Trait implementation: [core::str::traits::{impl core::slice::index::SliceIndex<str, str> for core::ops::range::RangeFrom<usize>}]
@@ -180,6 +209,17 @@ def alloc.string.String.Insts.CoreCloneClone : core.clone.Clone String := {
   clone := alloc.string.String.Insts.CoreCloneClone.clone
 }
 
+/-- Trait implementation: [alloc::string::{impl core::cmp::PartialEq<str> for alloc::string::String}]
+    Source: '/rustc/library/alloc/src/string.rs', lines 2701:8-2701:37
+    Name pattern: [core::cmp::PartialEq<alloc::string::String, str>] -/
+@[reducible, rust_trait_impl
+  "core::cmp::PartialEq<alloc::string::String, str>"]
+def alloc.string.String.Insts.CoreCmpPartialEqStr : core.cmp.PartialEq String
+  Str := {
+  eq := alloc.string.String.Insts.CoreCmpPartialEqStr.eq
+  ne := alloc.string.String.Insts.CoreCmpPartialEqStr.ne
+}
+
 /-- Trait implementation: [alloc::string::{impl core::fmt::Debug for alloc::string::String}]
     Source: '/rustc/library/alloc/src/string.rs', lines 2754:0-2754:26
     Name pattern: [core::fmt::Debug<alloc::string::String>] -/
@@ -208,7 +248,7 @@ def alloc.vec.Vec.Insts.CoreDefaultDefault (T : Type) : core.default.Default
 }
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::Definition}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 10:9-10:14
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 11:9-11:14
     Name pattern: [core::clone::Clone<noble_kernel::contracts::Definition>] -/
 @[reducible, rust_trait_impl
   "core::clone::Clone<noble_kernel::contracts::Definition>"]
@@ -218,7 +258,7 @@ def noble_kernel.contracts.Definition.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::marker::Copy for noble_kernel::contracts::Definition}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 10:16-10:20
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 11:16-11:20
     Name pattern: [core::marker::Copy<noble_kernel::contracts::Definition>] -/
 @[reducible, rust_trait_impl
   "core::marker::Copy<noble_kernel::contracts::Definition>"]
@@ -228,7 +268,7 @@ def noble_kernel.contracts.Definition.Insts.CoreMarkerCopy : core.marker.Copy
 }
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::Definition}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 10:22-10:27
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 11:22-11:27
     Name pattern: [core::fmt::Debug<noble_kernel::contracts::Definition>] -/
 @[reducible, rust_trait_impl
   "core::fmt::Debug<noble_kernel::contracts::Definition>"]
@@ -238,7 +278,7 @@ def noble_kernel.contracts.Definition.Insts.CoreFmtDebug : core.fmt.Debug
 }
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::cmp::PartialEq<noble_kernel::contracts::Definition> for noble_kernel::contracts::Definition}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 10:29-10:38
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 11:29-11:38
     Name pattern: [core::cmp::PartialEq<noble_kernel::contracts::Definition, noble_kernel::contracts::Definition>] -/
 @[reducible, rust_trait_impl
   "core::cmp::PartialEq<noble_kernel::contracts::Definition, noble_kernel::contracts::Definition>"]
@@ -251,12 +291,22 @@ impl_def noble_kernel.contracts.Definition.Insts.CoreCmpPartialEqDefinition :
 }
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::Env}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 93:16-93:21
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 153:16-153:21
     Name pattern: [core::fmt::Debug<noble_kernel::contracts::Env>] -/
 @[reducible, rust_trait_impl "core::fmt::Debug<noble_kernel::contracts::Env>"]
 def noble_kernel.contracts.Env.Insts.CoreFmtDebug : core.fmt.Debug
   noble_kernel.contracts.Env := {
   fmt := noble_kernel.contracts.Env.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::contracts::{impl core::default::Default for noble_kernel::contracts::Env}]
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 153:23-153:30
+    Name pattern: [core::default::Default<noble_kernel::contracts::Env>] -/
+@[reducible, rust_trait_impl
+  "core::default::Default<noble_kernel::contracts::Env>"]
+def noble_kernel.contracts.Env.Insts.CoreDefaultDefault : core.default.Default
+  noble_kernel.contracts.Env := {
+  default := noble_kernel.contracts.Env.Insts.CoreDefaultDefault.default
 }
 
 /-- Trait implementation: [noble_kernel::execution::{impl core::fmt::Debug for noble_kernel::execution::Submission}]
@@ -270,7 +320,7 @@ def noble_kernel.execution.Submission.Insts.CoreFmtDebug : core.fmt.Debug
 }
 
 /-- Trait implementation: [noble_kernel::types::impls::{impl core::clone::Clone for noble_kernel::types::Ty}]
-    Source: 'crates/noble-kernel/src/types/impls.rs', lines 29:0-29:31
+    Source: 'crates/noble-kernel/src/types/impls.rs', lines 28:0-28:31
     Name pattern: [core::clone::Clone<noble_kernel::types::Ty>] -/
 @[reducible, rust_trait_impl "core::clone::Clone<noble_kernel::types::Ty>"]
 def noble_kernel.types.Ty.Insts.CoreCloneClone : core.clone.Clone
@@ -279,7 +329,7 @@ def noble_kernel.types.Ty.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [noble_kernel::types::impls::{impl core::cmp::PartialEq<noble_kernel::types::Ty> for noble_kernel::types::Ty}]
-    Source: 'crates/noble-kernel/src/types/impls.rs', lines 153:0-153:35
+    Source: 'crates/noble-kernel/src/types/impls.rs', lines 175:0-175:35
     Name pattern: [core::cmp::PartialEq<noble_kernel::types::Ty, noble_kernel::types::Ty>] -/
 @[reducible, rust_trait_impl
   "core::cmp::PartialEq<noble_kernel::types::Ty, noble_kernel::types::Ty>"]
@@ -291,7 +341,7 @@ impl_def noble_kernel.types.Ty.Insts.CoreCmpPartialEqTy : core.cmp.PartialEq
 }
 
 /-- Trait implementation: [noble_kernel::types::impls::{impl core::fmt::Debug for noble_kernel::types::Ty}]
-    Source: 'crates/noble-kernel/src/types/impls.rs', lines 202:0-202:42
+    Source: 'crates/noble-kernel/src/types/impls.rs', lines 224:0-224:42
     Name pattern: [core::fmt::Debug<noble_kernel::types::Ty>] -/
 @[reducible, rust_trait_impl "core::fmt::Debug<noble_kernel::types::Ty>"]
 def noble_kernel.types.Ty.Insts.CoreFmtDebug : core.fmt.Debug
@@ -300,7 +350,7 @@ def noble_kernel.types.Ty.Insts.CoreFmtDebug : core.fmt.Debug
 }
 
 /-- Trait implementation: [noble_kernel::types::{impl core::clone::Clone for noble_kernel::types::ResourceKind}]
-    Source: 'crates/noble-kernel/src/types.rs', lines 14:9-14:14
+    Source: 'crates/noble-kernel/src/types.rs', lines 15:9-15:14
     Name pattern: [core::clone::Clone<noble_kernel::types::ResourceKind>] -/
 @[reducible, rust_trait_impl
   "core::clone::Clone<noble_kernel::types::ResourceKind>"]
@@ -310,7 +360,7 @@ def noble_kernel.types.ResourceKind.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [noble_kernel::types::{impl core::fmt::Debug for noble_kernel::types::ResourceKind}]
-    Source: 'crates/noble-kernel/src/types.rs', lines 14:22-14:27
+    Source: 'crates/noble-kernel/src/types.rs', lines 15:22-15:27
     Name pattern: [core::fmt::Debug<noble_kernel::types::ResourceKind>] -/
 @[reducible, rust_trait_impl
   "core::fmt::Debug<noble_kernel::types::ResourceKind>"]
@@ -320,7 +370,7 @@ def noble_kernel.types.ResourceKind.Insts.CoreFmtDebug : core.fmt.Debug
 }
 
 /-- Trait implementation: [noble_kernel::types::{impl core::cmp::PartialEq<noble_kernel::types::ResourceKind> for noble_kernel::types::ResourceKind}]
-    Source: 'crates/noble-kernel/src/types.rs', lines 14:29-14:38
+    Source: 'crates/noble-kernel/src/types.rs', lines 15:29-15:38
     Name pattern: [core::cmp::PartialEq<noble_kernel::types::ResourceKind, noble_kernel::types::ResourceKind>] -/
 @[reducible, rust_trait_impl
   "core::cmp::PartialEq<noble_kernel::types::ResourceKind, noble_kernel::types::ResourceKind>"]
@@ -332,8 +382,44 @@ impl_def noble_kernel.types.ResourceKind.Insts.CoreCmpPartialEqResourceKind :
     noble_kernel.types.ResourceKind.Insts.CoreCmpPartialEqResourceKind
 }
 
+/-- Trait implementation: [noble_kernel::types::{impl core::cmp::PartialEq<noble_kernel::types::NominalTypeId> for noble_kernel::types::NominalTypeId}]
+    Source: 'crates/noble-kernel/src/types.rs', lines 19:29-19:38
+    Name pattern: [core::cmp::PartialEq<noble_kernel::types::NominalTypeId, noble_kernel::types::NominalTypeId>] -/
+@[reducible, rust_trait_impl
+  "core::cmp::PartialEq<noble_kernel::types::NominalTypeId, noble_kernel::types::NominalTypeId>"]
+impl_def noble_kernel.types.NominalTypeId.Insts.CoreCmpPartialEqNominalTypeId :
+  core.cmp.PartialEq noble_kernel.types.NominalTypeId
+  noble_kernel.types.NominalTypeId := {
+  eq := noble_kernel.types.NominalTypeId.Insts.CoreCmpPartialEqNominalTypeId.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    noble_kernel.types.NominalTypeId.Insts.CoreCmpPartialEqNominalTypeId
+}
+
+/-- Trait implementation: [noble_kernel::types::{impl core::clone::Clone for noble_kernel::types::NominalShape}]
+    Source: 'crates/noble-kernel/src/types.rs', lines 26:9-26:14
+    Name pattern: [core::clone::Clone<noble_kernel::types::NominalShape>] -/
+@[reducible, rust_trait_impl
+  "core::clone::Clone<noble_kernel::types::NominalShape>"]
+def noble_kernel.types.NominalShape.Insts.CoreCloneClone : core.clone.Clone
+  noble_kernel.types.NominalShape := {
+  clone := noble_kernel.types.NominalShape.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::types::{impl core::cmp::PartialEq<noble_kernel::types::NominalShape> for noble_kernel::types::NominalShape}]
+    Source: 'crates/noble-kernel/src/types.rs', lines 26:23-26:32
+    Name pattern: [core::cmp::PartialEq<noble_kernel::types::NominalShape, noble_kernel::types::NominalShape>] -/
+@[reducible, rust_trait_impl
+  "core::cmp::PartialEq<noble_kernel::types::NominalShape, noble_kernel::types::NominalShape>"]
+impl_def noble_kernel.types.NominalShape.Insts.CoreCmpPartialEqNominalShape :
+  core.cmp.PartialEq noble_kernel.types.NominalShape
+  noble_kernel.types.NominalShape := {
+  eq := noble_kernel.types.NominalShape.Insts.CoreCmpPartialEqNominalShape.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    noble_kernel.types.NominalShape.Insts.CoreCmpPartialEqNominalShape
+}
+
 /-- Trait implementation: [noble_kernel::types::{impl core::clone::Clone for noble_kernel::types::EffId}]
-    Source: 'crates/noble-kernel/src/types.rs', lines 25:9-25:14
+    Source: 'crates/noble-kernel/src/types.rs', lines 41:9-41:14
     Name pattern: [core::clone::Clone<noble_kernel::types::EffId>] -/
 @[reducible, rust_trait_impl "core::clone::Clone<noble_kernel::types::EffId>"]
 def noble_kernel.types.EffId.Insts.CoreCloneClone : core.clone.Clone
@@ -342,7 +428,7 @@ def noble_kernel.types.EffId.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [noble_kernel::types::{impl core::marker::Copy for noble_kernel::types::EffId}]
-    Source: 'crates/noble-kernel/src/types.rs', lines 25:16-25:20
+    Source: 'crates/noble-kernel/src/types.rs', lines 41:16-41:20
     Name pattern: [core::marker::Copy<noble_kernel::types::EffId>] -/
 @[reducible, rust_trait_impl "core::marker::Copy<noble_kernel::types::EffId>"]
 def noble_kernel.types.EffId.Insts.CoreMarkerCopy : core.marker.Copy
@@ -351,12 +437,24 @@ def noble_kernel.types.EffId.Insts.CoreMarkerCopy : core.marker.Copy
 }
 
 /-- Trait implementation: [noble_kernel::types::{impl core::fmt::Debug for noble_kernel::types::EffId}]
-    Source: 'crates/noble-kernel/src/types.rs', lines 25:22-25:27
+    Source: 'crates/noble-kernel/src/types.rs', lines 41:22-41:27
     Name pattern: [core::fmt::Debug<noble_kernel::types::EffId>] -/
 @[reducible, rust_trait_impl "core::fmt::Debug<noble_kernel::types::EffId>"]
 def noble_kernel.types.EffId.Insts.CoreFmtDebug : core.fmt.Debug
   noble_kernel.types.EffId := {
   fmt := noble_kernel.types.EffId.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::types::{impl core::cmp::PartialEq<noble_kernel::types::EffId> for noble_kernel::types::EffId}]
+    Source: 'crates/noble-kernel/src/types.rs', lines 41:29-41:38
+    Name pattern: [core::cmp::PartialEq<noble_kernel::types::EffId, noble_kernel::types::EffId>] -/
+@[reducible, rust_trait_impl
+  "core::cmp::PartialEq<noble_kernel::types::EffId, noble_kernel::types::EffId>"]
+impl_def noble_kernel.types.EffId.Insts.CoreCmpPartialEqEffId :
+  core.cmp.PartialEq noble_kernel.types.EffId noble_kernel.types.EffId := {
+  eq := noble_kernel.types.EffId.Insts.CoreCmpPartialEqEffId.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    noble_kernel.types.EffId.Insts.CoreCmpPartialEqEffId
 }
 
 /-- Trait implementation: [noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Lit}]
@@ -497,7 +595,7 @@ def companion.admit.check_ghost_eligibility_loop.body
   if index1 < i
   then
     let nt ← Slice.index_usize s index1
-    let b ← noble_kernel.types.Ty.is_data nt.ty
+    let b ← noble_kernel.types.data.Ty.is_data nt.ty
     if b
     then
       let index2 ← lift (core.num.Usize.saturating_add index1 1#usize)
@@ -619,7 +717,7 @@ def rendering.types.stack_entries
 partial_fixpoint
 
 /-- [noble_contracts::rendering::types::value]:
-    Source: 'crates/noble-contracts/src/rendering/types.rs', lines 76:0-115:1 -/
+    Source: 'crates/noble-contracts/src/rendering/types.rs', lines 76:0-118:1 -/
 def rendering.types.value
   (out : String) (ty : noble_kernel.types.Ty) : Result String := do
   match ty with
@@ -666,10 +764,13 @@ def rendering.types.value
     else rendering.rejected out (toStr "unsupported host effect in contract")
   | noble_kernel.types.Ty.ResourceType _ =>
     rendering.rejected out (toStr "unsupported resource in contract")
+  | noble_kernel.types.Ty.NominalType _ _ =>
+    rendering.rejected out (toStr
+      "unsupported nominal type in companion contract")
 partial_fixpoint
 
 /-- [noble_contracts::rendering::types::binary]:
-    Source: 'crates/noble-contracts/src/rendering/types.rs', lines 121:0-134:1 -/
+    Source: 'crates/noble-contracts/src/rendering/types.rs', lines 124:0-137:1 -/
 def rendering.types.binary
   (out : String) («name» : Str) (a : noble_kernel.types.Ty)
   (b : noble_kernel.types.Ty) :
@@ -1654,7 +1755,7 @@ def companion.digest.Fold.new
 def companion.digest.DOMAIN_STATEMENT : Std.U64 := 6004496033387466324#u64
 
 /-- [noble_contracts::companion::admit::types::ty_tag]:
-    Source: 'crates/noble-contracts/src/companion/admit/types.rs', lines 7:0-23:1 -/
+    Source: 'crates/noble-contracts/src/companion/admit/types.rs', lines 7:0-24:1 -/
 def companion.admit.types.ty_tag
   (ty : noble_kernel.types.Ty) : Result Std.U64 := do
   match ty with
@@ -1671,9 +1772,10 @@ def companion.admit.types.ty_tag
   | noble_kernel.types.Ty.ListType _ => ok 11#u64
   | noble_kernel.types.Ty.ProgramType _ _ _ => ok 12#u64
   | noble_kernel.types.Ty.ResourceType _ => ok 13#u64
+  | noble_kernel.types.Ty.NominalType _ _ => ok 14#u64
 
 /-- [noble_contracts::companion::admit::types::fold]: loop body 1:
-    Source: 'crates/noble-contracts/src/companion/admit/types.rs', lines 49:16-52:17 -/
+    Source: 'crates/noble-contracts/src/companion/admit/types.rs', lines 50:16-53:17 -/
 @[rust_loop_body]
 def companion.admit.types.fold_loop0_loop0.body
   (effects : noble_kernel.types.EffSet) (fold : companion.digest.Fold)
@@ -1693,7 +1795,7 @@ def companion.admit.types.fold_loop0_loop0.body
   else ok (done fold)
 
 /-- [noble_contracts::companion::admit::types::fold]: loop 1:
-    Source: 'crates/noble-contracts/src/companion/admit/types.rs', lines 49:16-52:17 -/
+    Source: 'crates/noble-contracts/src/companion/admit/types.rs', lines 50:16-53:17 -/
 @[rust_loop]
 def companion.admit.types.fold_loop0_loop0
   (fold : companion.digest.Fold) (effects : noble_kernel.types.EffSet)
@@ -1706,7 +1808,7 @@ def companion.admit.types.fold_loop0_loop0
     (fold, «at»)
 
 /-- [noble_contracts::companion::admit::types::fold]: loop body 2:
-    Source: 'crates/noble-contracts/src/companion/admit/types.rs', lines 54:16-57:17 -/
+    Source: 'crates/noble-contracts/src/companion/admit/types.rs', lines 55:16-58:17 -/
 @[rust_loop_body]
 def companion.admit.types.fold_loop0_loop1.body
   (output : alloc.vec.Vec noble_kernel.types.Ty)
@@ -1725,7 +1827,7 @@ def companion.admit.types.fold_loop0_loop1.body
   else ok (done pending)
 
 /-- [noble_contracts::companion::admit::types::fold]: loop 2:
-    Source: 'crates/noble-contracts/src/companion/admit/types.rs', lines 54:16-57:17 -/
+    Source: 'crates/noble-contracts/src/companion/admit/types.rs', lines 55:16-58:17 -/
 @[rust_loop]
 def companion.admit.types.fold_loop0_loop1
   (pending : alloc.vec.Vec noble_kernel.types.Ty)
@@ -1738,7 +1840,7 @@ def companion.admit.types.fold_loop0_loop1
     (pending, «at»)
 
 /-- [noble_contracts::companion::admit::types::fold]: loop body 3:
-    Source: 'crates/noble-contracts/src/companion/admit/types.rs', lines 59:16-62:17 -/
+    Source: 'crates/noble-contracts/src/companion/admit/types.rs', lines 60:16-63:17 -/
 @[rust_loop_body]
 def companion.admit.types.fold_loop0_loop2.body
   (input : alloc.vec.Vec noble_kernel.types.Ty)
@@ -1757,7 +1859,7 @@ def companion.admit.types.fold_loop0_loop2.body
   else ok (done pending)
 
 /-- [noble_contracts::companion::admit::types::fold]: loop 3:
-    Source: 'crates/noble-contracts/src/companion/admit/types.rs', lines 59:16-62:17 -/
+    Source: 'crates/noble-contracts/src/companion/admit/types.rs', lines 60:16-63:17 -/
 @[rust_loop]
 def companion.admit.types.fold_loop0_loop2
   (pending : alloc.vec.Vec noble_kernel.types.Ty)
@@ -1770,7 +1872,7 @@ def companion.admit.types.fold_loop0_loop2
     (pending, «at»)
 
 /-- [noble_contracts::companion::admit::types::fold]: loop body 0:
-    Source: 'crates/noble-contracts/src/companion/admit/types.rs', lines 36:4-74:5 -/
+    Source: 'crates/noble-contracts/src/companion/admit/types.rs', lines 37:4-90:5 -/
 @[rust_loop_body]
 def companion.admit.types.fold_loop0.body
   (pending : alloc.vec.Vec noble_kernel.types.Ty)
@@ -1825,9 +1927,24 @@ def companion.admit.types.fold_loop0.body
       let i1 ← lift (core.convert.num.FromU64U32.from kind)
       let fold2 ← companion.digest.Fold.absorb fold1 i1
       ok (cont (pending1, fold2))
+    | noble_kernel.types.Ty.NominalType id shape =>
+      let fold2 ← companion.digest.Fold.absorb fold1 id.module
+      let i1 ← lift (core.convert.num.FromU64U32.from id.ordinal)
+      let fold3 ← companion.digest.Fold.absorb fold2 i1
+      let ns ← Box.Insts.CoreConvertAsRef.as_ref Global shape
+      match ns with
+      | noble_kernel.types.NominalShape.Opaque base =>
+        let fold4 ← companion.digest.Fold.absorb fold3 1#u64
+        let pending2 ← alloc.vec.Vec.push pending1 base
+        ok (cont (pending2, fold4))
+      | noble_kernel.types.NominalShape.Variant left right =>
+        let fold4 ← companion.digest.Fold.absorb fold3 2#u64
+        let pending2 ← alloc.vec.Vec.push pending1 right
+        let pending3 ← alloc.vec.Vec.push pending2 left
+        ok (cont (pending3, fold4))
 
 /-- [noble_contracts::companion::admit::types::fold]: loop 0:
-    Source: 'crates/noble-contracts/src/companion/admit/types.rs', lines 36:4-74:5 -/
+    Source: 'crates/noble-contracts/src/companion/admit/types.rs', lines 37:4-90:5 -/
 @[rust_loop]
 def companion.admit.types.fold_loop0
   (pending : alloc.vec.Vec noble_kernel.types.Ty)
@@ -1840,7 +1957,7 @@ def companion.admit.types.fold_loop0
     (pending, fold)
 
 /-- [noble_contracts::companion::admit::types::fold]:
-    Source: 'crates/noble-contracts/src/companion/admit/types.rs', lines 30:0-75:1 -/
+    Source: 'crates/noble-contracts/src/companion/admit/types.rs', lines 31:0-91:1 -/
 def companion.admit.types.fold
   (fold : companion.digest.Fold) (ty : noble_kernel.types.Ty) :
   Result companion.digest.Fold
@@ -2909,6 +3026,7 @@ def companion.admit.recognize.is_increment_program_type
       else ok false
     else ok false
   | noble_kernel.types.Ty.ResourceType _ => ok false
+  | noble_kernel.types.Ty.NominalType _ _ => ok false
 
 /-- [noble_contracts::companion::admit::recognize::is_parameter_zero]:
     Source: 'crates/noble-contracts/src/companion/admit/recognize.rs', lines 75:0-80:1 -/
@@ -9315,7 +9433,7 @@ def internal (span : Span) : Result Diagnostic := do
     "inconsistent frontend arena")
 
 /-- [noble_contracts::source::environment]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 246:0-269:1 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 257:0-281:1 -/
 def source.environment
   : Result (core.result.Result noble_kernel.contracts.Env Diagnostic) := do
   let r ← noble_kernel.contracts.environment
@@ -9373,9 +9491,18 @@ def source.environment
       let v3 ←
         alloc.vec.Vec.push env.deps (alloc.vec.Vec.new
           noble_kernel.contracts.Definition)
-      let v4 ← alloc.vec.Vec.push env.effects 1#u32
+      let v4 ← alloc.vec.Vec.push env.definition_owners none
+      let v5 ← alloc.vec.Vec.push env.effects 1#u32
       ok (core.result.Result.Ok
-        { env with defs := v1, kinds := v2, deps := v3, effects := v4 })
+        {
+          env
+            with
+            defs := v1,
+            kinds := v2,
+            deps := v3,
+            definition_owners := v4,
+            effects := v5
+        })
   | core.result.Result.Err _ =>
     let d ← internal { start := 0#u32, «end» := 0#u32 }
     ok (core.result.Result.Err d)
@@ -9501,7 +9628,7 @@ def component.context.World.build_context
       component.ASYNC_ABI
 
 /-- [noble_contracts::component::error]:
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 251:0-256:1 -/
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 250:0-255:1 -/
 def component.error
   (stage : component.Stage) (kind : DiagnosticKind) (message : Str) :
   Result component.Error
@@ -9510,7 +9637,7 @@ def component.error
   ok { stage, diagnostic := d }
 
 /-- [noble_contracts::component::exhausted]:
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 263:0-269:1 -/
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 262:0-268:1 -/
 def component.exhausted : Result component.Error := do
   component.error component.Stage.Wit DiagnosticKind.Exhausted (toStr
     "bounded WIT compiler limit exceeded")
@@ -9730,7 +9857,7 @@ def program.bootstrap_word
   program.words.bootstrap word
 
 /-- [noble_contracts::component::invalid]:
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 257:0-259:1 -/
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 256:0-258:1 -/
 def component.invalid (message : Str) : Result component.Error := do
   component.error component.Stage.Wit DiagnosticKind.Invalid message
 
@@ -10315,9 +10442,8 @@ def component.bindings.make
       let v5 ← component.context.World.build_context world
       ok (core.result.Result.Ok
         {
-          environment := environment1,
+          environment := { environment1 with resource_kinds := v4 },
           words := words1,
-          resources := v4,
           effects,
           key := v5
         })
@@ -11071,7 +11197,7 @@ def component.parser.cursor.Cursor.take
     ok (core.result.Result.Err failure, self1)
 
 /-- [noble_contracts::component::unsupported]:
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 260:0-262:1 -/
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 259:0-261:1 -/
 def component.unsupported (message : Str) : Result component.Error := do
   component.error component.Stage.Wit DiagnosticKind.Unsupported message
 
@@ -15909,7 +16035,7 @@ def component.World.environment
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::without_test_hosts]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 143:4-151:5
+    Source: 'crates/noble-contracts/src/source.rs', lines 150:4-159:5
     Visibility: public -/
 def source.Session.without_test_hosts : Result source.Session := do
   ok
@@ -15918,11 +16044,12 @@ def source.Session.without_test_hosts : Result source.Session := do
       history := (alloc.vec.Vec.new Std.U8),
       generation := 0#u64,
       hosts := false,
-      bindings := none
+      bindings := none,
+      declared := none
     }
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::with_bindings]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 156:4-161:5 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 164:4-169:5 -/
 def source.Session.with_bindings
   (bindings : component.Bindings) : Result source.Session := do
   let s ← source.Session.without_test_hosts
@@ -15952,12 +16079,9 @@ def component.Bindings.Insts.CoreCloneClone.clone
   let v ←
     alloc.vec.CloneVec.clone (BuiltinClone (String ×
       noble_kernel.contracts.Definition)) self.words
-  let v1 ←
-    alloc.vec.CloneVec.clone
-      noble_kernel.types.ResourceKind.Insts.CoreCloneClone self.resources
   let i ← lift (core.clone.impls.CloneU64.clone self.effects)
-  let v2 ← alloc.vec.CloneVec.clone core.clone.CloneU8 self.key
-  ok { environment := e, words := v, resources := v1, effects := i, key := v2 }
+  let v1 ← alloc.vec.CloneVec.clone core.clone.CloneU8 self.key
+  ok { environment := e, words := v, effects := i, key := v1 }
 
 /-- Trait implementation: [noble_contracts::component::{impl core::clone::Clone for noble_contracts::component::Bindings}]
     Source: 'crates/noble-contracts/src/component/mod.rs', lines 228:9-228:14 -/
@@ -15980,16 +16104,13 @@ def component.Bindings.Insts.CoreFmtDebug.fmt
     Dyn.mk _ (core.fmt.DebugVec (Pair.Insts.CoreFmtDebug
       alloc.string.String.Insts.CoreFmtDebug
       noble_kernel.contracts.Definition.Insts.CoreFmtDebug)) self.words
-  let dyn2 :=
-    Dyn.mk _ (core.fmt.DebugVec
-      noble_kernel.types.ResourceKind.Insts.CoreFmtDebug) self.resources
-  let dyn3 := Dyn.mk _ core.fmt.DebugU64 self.effects
-  let dyn4 :=
+  let dyn2 := Dyn.mk _ core.fmt.DebugU64 self.effects
+  let dyn3 :=
     Dyn.mk _ (core.fmt.DebugShared (core.fmt.DebugVec core.fmt.DebugU8))
       self.key
-  core.fmt.Formatter.debug_struct_field5_finish f (toStr "Bindings") (toStr
-    "environment") dyn (toStr "words") dyn1 (toStr "resources") dyn2 (toStr
-    "effects") dyn3 (toStr "key") dyn4
+  core.fmt.Formatter.debug_struct_field4_finish f (toStr "Bindings") (toStr
+    "environment") dyn (toStr "words") dyn1 (toStr "effects") dyn2 (toStr
+    "key") dyn3
 
 /-- Trait implementation: [noble_contracts::component::{impl core::fmt::Debug for noble_contracts::component::Bindings}]
     Source: 'crates/noble-contracts/src/component/mod.rs', lines 228:16-228:21 -/
@@ -16000,14 +16121,14 @@ def component.Bindings.Insts.CoreFmtDebug : core.fmt.Debug component.Bindings
 }
 
 /-- [noble_contracts::component::{impl core::clone::Clone for noble_contracts::component::Stage}::clone]:
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 237:9-237:14
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 236:9-236:14
     Visibility: public -/
 def component.Stage.Insts.CoreCloneClone.clone
   (self : component.Stage) : Result component.Stage := do
   ok self
 
 /-- Trait implementation: [noble_contracts::component::{impl core::clone::Clone for noble_contracts::component::Stage}]
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 237:9-237:14 -/
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 236:9-236:14 -/
 @[reducible]
 def component.Stage.Insts.CoreCloneClone : core.clone.Clone component.Stage
   := {
@@ -16015,7 +16136,7 @@ def component.Stage.Insts.CoreCloneClone : core.clone.Clone component.Stage
 }
 
 /-- Trait implementation: [noble_contracts::component::{impl core::marker::Copy for noble_contracts::component::Stage}]
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 237:16-237:20 -/
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 236:16-236:20 -/
 @[reducible]
 def component.Stage.Insts.CoreMarkerCopy : core.marker.Copy component.Stage
   := {
@@ -16023,7 +16144,7 @@ def component.Stage.Insts.CoreMarkerCopy : core.marker.Copy component.Stage
 }
 
 /-- [noble_contracts::component::{impl core::fmt::Debug for noble_contracts::component::Stage}::fmt]:
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 237:22-237:27
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 236:22-236:27
     Visibility: public -/
 def component.Stage.Insts.CoreFmtDebug.fmt
   (self : component.Stage) (f : core.fmt.Formatter) :
@@ -16037,21 +16158,21 @@ def component.Stage.Insts.CoreFmtDebug.fmt
     core.fmt.Formatter.write_str f (toStr "Acceptance")
 
 /-- Trait implementation: [noble_contracts::component::{impl core::fmt::Debug for noble_contracts::component::Stage}]
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 237:22-237:27 -/
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 236:22-236:27 -/
 @[reducible]
 def component.Stage.Insts.CoreFmtDebug : core.fmt.Debug component.Stage := {
   fmt := component.Stage.Insts.CoreFmtDebug.fmt
 }
 
 /-- Trait implementation: [noble_contracts::component::{impl core::marker::StructuralPartialEq for noble_contracts::component::Stage}]
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 237:29-237:38 -/
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 236:29-236:38 -/
 @[reducible]
 def component.Stage.Insts.CoreMarkerStructuralPartialEq :
   core.marker.StructuralPartialEq component.Stage := {
 }
 
 /-- [noble_contracts::component::{impl core::cmp::PartialEq<noble_contracts::component::Stage> for noble_contracts::component::Stage}::eq]:
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 237:29-237:38
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 236:29-236:38
     Visibility: public -/
 def component.Stage.Insts.CoreCmpPartialEqStage.eq
   (self : component.Stage) (other : component.Stage) : Result Bool := do
@@ -16060,7 +16181,7 @@ def component.Stage.Insts.CoreCmpPartialEqStage.eq
   ok (self1 = other1)
 
 /-- Trait implementation: [noble_contracts::component::{impl core::cmp::PartialEq<noble_contracts::component::Stage> for noble_contracts::component::Stage}]
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 237:29-237:38 -/
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 236:29-236:38 -/
 @[reducible]
 impl_def component.Stage.Insts.CoreCmpPartialEqStage : core.cmp.PartialEq
   component.Stage component.Stage := {
@@ -16070,14 +16191,14 @@ impl_def component.Stage.Insts.CoreCmpPartialEqStage : core.cmp.PartialEq
 }
 
 /-- [noble_contracts::component::{impl core::cmp::Eq for noble_contracts::component::Stage}::assert_fields_are_eq]:
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 237:40-237:42
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 236:40-236:42
     Visibility: public -/
 def component.Stage.Insts.CoreCmpEq.assert_fields_are_eq
   (self : component.Stage) : Result Unit := do
   ok ()
 
 /-- Trait implementation: [noble_contracts::component::{impl core::cmp::Eq for noble_contracts::component::Stage}]
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 237:40-237:42 -/
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 236:40-236:42 -/
 @[reducible]
 def component.Stage.Insts.CoreCmpEq : core.cmp.Eq component.Stage := {
   partialEqInst := component.Stage.Insts.CoreCmpPartialEqStage
@@ -16111,7 +16232,7 @@ def Diagnostic.Insts.CoreCloneClone.clone
   ok { kind := dk, span := s, message := s1, ordinary_typing := o }
 
 /-- [noble_contracts::component::{impl core::clone::Clone for noble_contracts::component::Error}::clone]:
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 245:9-245:14
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 244:9-244:14
     Visibility: public -/
 def component.Error.Insts.CoreCloneClone.clone
   (self : component.Error) : Result component.Error := do
@@ -16120,7 +16241,7 @@ def component.Error.Insts.CoreCloneClone.clone
   ok { stage := s, diagnostic := d }
 
 /-- Trait implementation: [noble_contracts::component::{impl core::clone::Clone for noble_contracts::component::Error}]
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 245:9-245:14 -/
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 244:9-244:14 -/
 @[reducible]
 def component.Error.Insts.CoreCloneClone : core.clone.Clone component.Error
   := {
@@ -16195,7 +16316,7 @@ def Diagnostic.Insts.CoreFmtDebug : core.fmt.Debug Diagnostic := {
 }
 
 /-- [noble_contracts::component::{impl core::fmt::Debug for noble_contracts::component::Error}::fmt]:
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 245:16-245:21
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 244:16-244:21
     Visibility: public -/
 def component.Error.Insts.CoreFmtDebug.fmt
   (self : component.Error) (f : core.fmt.Formatter) :
@@ -16209,35 +16330,35 @@ def component.Error.Insts.CoreFmtDebug.fmt
     "stage") dyn (toStr "diagnostic") dyn1
 
 /-- Trait implementation: [noble_contracts::component::{impl core::fmt::Debug for noble_contracts::component::Error}]
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 245:16-245:21 -/
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 244:16-244:21 -/
 @[reducible]
 def component.Error.Insts.CoreFmtDebug : core.fmt.Debug component.Error := {
   fmt := component.Error.Insts.CoreFmtDebug.fmt
 }
 
 /-- [noble_contracts::component::{noble_contracts::component::CheckedExport}::world_context]:
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 279:4-281:5
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 278:4-280:5
     Visibility: public -/
 def component.CheckedExport.world_context
   (self : component.CheckedExport) : Result (Slice Std.U8) := do
   ok (alloc.vec.Vec.deref self.world)
 
 /-- [noble_contracts::component::{noble_contracts::component::CheckedExport}::index]:
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 286:4-288:5
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 285:4-287:5
     Visibility: public -/
 def component.CheckedExport.impl.index
   (self : component.CheckedExport) : Result Std.Usize := do
   ok self.index
 
 /-- [noble_contracts::component::{noble_contracts::component::CheckedExport}::source]:
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 289:4-291:5
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 288:4-290:5
     Visibility: public -/
 def component.CheckedExport.source
   (self : component.CheckedExport) : Result (Slice Std.U8) := do
   ok (alloc.vec.Vec.deref self.source_bytes)
 
 /-- [noble_contracts::source::{noble_contracts::source::Prepared}::submission]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 104:4-106:5
+    Source: 'crates/noble-contracts/src/source.rs', lines 109:4-111:5
     Visibility: public -/
 def source.Prepared.impl.submission
   (self : source.Prepared) :
@@ -16246,7 +16367,7 @@ def source.Prepared.impl.submission
   core.option.Option.as_ref self.submission
 
 /-- [noble_contracts::component::{noble_contracts::component::CheckedExport}::submission]:
-    Source: 'crates/noble-contracts/src/component/mod.rs', lines 292:4-294:5
+    Source: 'crates/noble-contracts/src/component/mod.rs', lines 291:4-293:5
     Visibility: public -/
 def component.CheckedExport.submission
   (self : component.CheckedExport) :
@@ -16346,27 +16467,27 @@ def component.parser.Function.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- [noble_contracts::source::{noble_contracts::source::Prepared}::is_definition]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 110:4-112:5
+    Source: 'crates/noble-contracts/src/source.rs', lines 115:4-117:5
     Visibility: public -/
 def source.Prepared.is_definition (self : source.Prepared) : Result Bool := do
   ok (core.option.Option.is_some self.definition)
 
 /-- [noble_contracts::source::{noble_contracts::source::Prepared}::output]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 107:4-109:5
+    Source: 'crates/noble-contracts/src/source.rs', lines 112:4-114:5
     Visibility: public -/
 def source.Prepared.impl.output
   (self : source.Prepared) : Result (Slice noble_kernel.types.Ty) := do
   alloc.vec.Vec.as_slice Global self.output
 
 /-- [noble_contracts::source::{noble_contracts::source::Error}::diagnostic]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 34:4-36:5
+    Source: 'crates/noble-contracts/src/source.rs', lines 38:4-40:5
     Visibility: public -/
 def source.Error.impl.diagnostic
   (self : source.Error) : Result Diagnostic := do
   ok self.diagnostic
 
 /-- [noble_contracts::source::{noble_contracts::source::Error}::at]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 37:4-39:5 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 41:4-43:5 -/
 def source.Error.at
   (stage : source.Stage) (diagnostic : Diagnostic) : Result source.Error := do
   ok { stage, diagnostic }
@@ -16404,7 +16525,7 @@ def index
     ok (core.result.Result.Err d)
 
 /-- [noble_contracts::source::resolution::named_at]:
-    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 156:0-180:1 -/
+    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 200:0-224:1 -/
 def source.resolution.named_at
   (word : Slice Std.U8) (session : source.Session) («at» : Std.Usize)
   (span : Span) (meter : Meter) :
@@ -16451,7 +16572,7 @@ def source.resolution.named_at
     ok (core.result.Result.Err failure, meter1)
 
 /-- [noble_contracts::source::resolution::imported]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 128:4-145:5 -/
+    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 172:4-189:5 -/
 @[rust_loop_body]
 def source.resolution.imported_loop.body
   (word : Slice Std.U8) (bindings : component.Bindings) (span : Span)
@@ -16486,7 +16607,7 @@ def source.resolution.imported_loop.body
     | core.result.Result.Err problem => ok (done (meter, none, some problem))
 
 /-- [noble_contracts::source::resolution::imported]: loop 0:
-    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 128:4-145:5 -/
+    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 172:4-189:5 -/
 @[rust_loop]
 def source.resolution.imported_loop
   (word : Slice Std.U8) (bindings : component.Bindings) (span : Span)
@@ -16499,7 +16620,7 @@ def source.resolution.imported_loop
     (meter, «at»)
 
 /-- [noble_contracts::source::resolution::imported]:
-    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 119:0-150:1 -/
+    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 163:0-194:1 -/
 def source.resolution.imported
   (word : Slice Std.U8) (bindings : component.Bindings) (span : Span)
   (meter : Meter) :
@@ -16516,14 +16637,95 @@ def source.resolution.imported
 def invalid (span : Span) (message : Str) : Result Diagnostic := do
   Diagnostic.new DiagnosticKind.Invalid span message
 
+/-- [noble_contracts::source::resolution::declared_lookup]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 130:4-141:5 -/
+@[rust_loop_body]
+def source.resolution.declared_lookup_loop.body
+  (word : Slice Std.U8) (v : alloc.vec.Vec (String × source.Target))
+  (span : Span) (meter : Meter) («at» : Std.Usize) :
+  Result (ControlFlow (Meter × Std.Usize) (Meter × (Option source.Target) ×
+    (Option Diagnostic)))
+  := do
+  if «at» > 0#usize
+  then
+    let at1 ← «at» - 1#usize
+    let entry ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice (String ×
+        source.Target)) v at1
+    let (r, meter1) ← metering.Meter.charge meter 1#u32 span
+    match r with
+    | core.result.Result.Ok _ =>
+      let (s, t) := entry
+      let s1 ← alloc.string.String.as_bytes s
+      let b ← core.slice.cmp.PartialEqSlice.eq core.cmp.PartialEqU8 s1 word
+      if b
+      then ok (done (meter1, some t, none))
+      else ok (cont (meter1, at1))
+    | core.result.Result.Err problem => ok (done (meter1, none, some problem))
+  else ok (done (meter, none, none))
+
+/-- [noble_contracts::source::resolution::declared_lookup]: loop 0:
+    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 130:4-141:5 -/
+@[rust_loop]
+def source.resolution.declared_lookup_loop
+  (word : Slice Std.U8) (v : alloc.vec.Vec (String × source.Target))
+  (span : Span) (meter : Meter) («at» : Std.Usize) :
+  Result (Meter × (Option source.Target) × (Option Diagnostic))
+  := do
+  loop
+    (fun (meter1, at1) => source.resolution.declared_lookup_loop.body word v
+      span meter1 at1)
+    (meter, «at»)
+
+/-- [noble_contracts::source::resolution::declared_lookup]:
+    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 120:0-157:1 -/
+def source.resolution.declared_lookup
+  (word : Slice Std.U8) (declaration : Option Str)
+  (context : source.declared.Context) (span : Span) (meter : Meter) :
+  Result ((core.result.Result source.Target Diagnostic) × Meter)
+  := do
+  let «at» := alloc.vec.Vec.len context.words
+  let (meter1, found, failure) ←
+    source.resolution.declared_lookup_loop word context.words span meter «at»
+  match failure with
+  | none =>
+    match found with
+    | none =>
+      let o ← program.bootstrap_word word
+      match o with
+      | none =>
+        let b := core.option.Option.is_some declaration
+        if b
+        then
+          let d ← invalid span (toStr "unbound or recursive module word")
+          ok (core.result.Result.Err d, meter1)
+        else
+          let d ← invalid span (toStr "unbound or unexported module word")
+          ok (core.result.Result.Err d, meter1)
+      | some definition =>
+        if definition < 22#u32
+        then
+          ok (core.result.Result.Ok (source.Target.Builtin definition), meter1)
+        else
+          let b := core.option.Option.is_some declaration
+          if b
+          then
+            let d ← invalid span (toStr "unbound or recursive module word")
+            ok (core.result.Result.Err d, meter1)
+          else
+            let d ← invalid span (toStr "unbound or unexported module word")
+            ok (core.result.Result.Err d, meter1)
+    | some target => ok (core.result.Result.Ok target, meter1)
+  | some problem => ok (core.result.Result.Err problem, meter1)
+
 /-- [noble_contracts::source::resolution::lookup]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 61:4-74:5 -/
+    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 64:4-77:5 -/
 @[rust_loop_body]
 def source.resolution.lookup_loop.body
   (word : Slice Std.U8) (v : alloc.vec.Vec source.Named)
   (v1 : alloc.vec.Vec Std.U8) (i : Std.U64) (b : Bool)
-  (o : Option component.Bindings) (span : Span) (meter : Meter)
-  («at» : Std.Usize) :
+  (o : Option component.Bindings) (o1 : Option source.declared.Context)
+  (span : Span) (meter : Meter) («at» : Std.Usize) :
   Result (ControlFlow (Meter × Std.Usize) (Meter × (Option source.Target) ×
     (Option Diagnostic)))
   := do
@@ -16537,113 +16739,91 @@ def source.resolution.lookup_loop.body
           history := v1,
           generation := i,
           hosts := b,
-          bindings := o
+          bindings := o,
+          declared := o1
         } at1 span meter
     match r with
-    | core.result.Result.Ok o1 =>
-      match o1 with
+    | core.result.Result.Ok o2 =>
+      match o2 with
       | none => ok (cont (meter1, at1))
-      | some _ => ok (done (meter1, o1, none))
+      | some _ => ok (done (meter1, o2, none))
     | core.result.Result.Err problem => ok (done (meter1, none, some problem))
   else ok (done (meter, none, none))
 
 /-- [noble_contracts::source::resolution::lookup]: loop 0:
-    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 61:4-74:5 -/
+    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 64:4-77:5 -/
 @[rust_loop]
 def source.resolution.lookup_loop
   (word : Slice Std.U8) (v : alloc.vec.Vec source.Named)
   (v1 : alloc.vec.Vec Std.U8) (i : Std.U64) (b : Bool)
-  (o : Option component.Bindings) (span : Span) (meter : Meter)
-  («at» : Std.Usize) :
+  (o : Option component.Bindings) (o1 : Option source.declared.Context)
+  (span : Span) (meter : Meter) («at» : Std.Usize) :
   Result (Meter × (Option source.Target) × (Option Diagnostic))
   := do
   loop
-    (fun (meter1, at1) => source.resolution.lookup_loop.body word v v1 i b o
+    (fun (meter1, at1) => source.resolution.lookup_loop.body word v v1 i b o o1
       span meter1 at1)
     (meter, «at»)
 
 /-- [noble_contracts::source::resolution::lookup]:
-    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 51:0-113:1 -/
+    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 51:0-115:1 -/
 def source.resolution.lookup
   (word : Slice Std.U8) (declaration : Option Str) (session : source.Session)
   (span : Span) (meter : Meter) :
   Result ((core.result.Result source.Target Diagnostic) × Meter)
   := do
-  let «at» := alloc.vec.Vec.len session.definitions
-  let (meter1, found, failure) ←
-    source.resolution.lookup_loop word session.definitions session.history
-      session.generation session.hosts session.bindings span meter «at»
-  match failure with
+  match session.declared with
   | none =>
-    match found with
+    let «at» := alloc.vec.Vec.len session.definitions
+    let (meter1, found, failure) ←
+      source.resolution.lookup_loop word session.definitions session.history
+        session.generation session.hosts session.bindings session.declared span
+        meter «at»
+    match failure with
     | none =>
-      match session.bindings with
+      match found with
       | none =>
-        let o ← program.bootstrap_word word
-        match o with
+        match session.bindings with
         | none =>
-          let is_recursive ←
+          let o ← program.bootstrap_word word
+          match o with
+          | none =>
             match declaration with
-            | none => ok false
+            | none =>
+              let b ←
+                Slice.Insts.CoreCmpPartialEqArray.eq core.cmp.PartialEqU8 word
+                  (Array.make 6#usize [
+                    105#u8, 109#u8, 112#u8, 111#u8, 114#u8, 116#u8
+                    ])
+              if b
+              then
+                let d ←
+                  Diagnostic.new DiagnosticKind.Unsupported span (toStr
+                    "module imports are outside Core-Bootstrap")
+                ok (core.result.Result.Err d, meter1)
+              else
+                let d ←
+                  Diagnostic.new DiagnosticKind.Invalid span (toStr
+                    "unbound word in immutable namespace snapshot")
+                ok (core.result.Result.Err d, meter1)
             | some «name» =>
-              do
               let s ← core.str.Str.as_bytes «name»
-              core.slice.cmp.PartialEqSlice.eq core.cmp.PartialEqU8 s word
-          if is_recursive
-          then
-            let d ←
-              Diagnostic.new DiagnosticKind.Unsupported span (toStr
-                "recursive definitions require a signature and are outside Core-Bootstrap")
-            ok (core.result.Result.Err d, meter1)
-          else
-            let b ←
-              Slice.Insts.CoreCmpPartialEqArray.eq core.cmp.PartialEqU8 word
-                (Array.make 6#usize [
-                  105#u8, 109#u8, 112#u8, 111#u8, 114#u8, 116#u8
-                  ])
-            if b
-            then
-              let d ←
-                Diagnostic.new DiagnosticKind.Unsupported span (toStr
-                  "module imports are outside Core-Bootstrap")
-              ok (core.result.Result.Err d, meter1)
-            else
-              let d ←
-                invalid span (toStr
-                  "unbound word in immutable namespace snapshot")
-              ok (core.result.Result.Err d, meter1)
-        | some definition =>
-          if definition < 22#u32
-          then
-            ok (core.result.Result.Ok (source.Target.Builtin definition),
-              meter1)
-          else
-            if session.hosts
-            then
-              ok (core.result.Result.Ok (source.Target.Builtin definition),
-                meter1)
-            else
-              let is_recursive ←
-                match declaration with
-                | none => ok false
-                | some «name» =>
-                  do
-                  let s ← core.str.Str.as_bytes «name»
-                  core.slice.cmp.PartialEqSlice.eq core.cmp.PartialEqU8 s word
-              if is_recursive
+              let b ←
+                core.slice.cmp.PartialEqSlice.eq core.cmp.PartialEqU8 s word
+              if b
               then
                 let d ←
                   Diagnostic.new DiagnosticKind.Unsupported span (toStr
                     "recursive definitions require a signature and are outside Core-Bootstrap")
                 ok (core.result.Result.Err d, meter1)
               else
-                let b ←
+                let b1 ←
                   Slice.Insts.CoreCmpPartialEqArray.eq core.cmp.PartialEqU8
                     word
                     (Array.make 6#usize [
                       105#u8, 109#u8, 112#u8, 111#u8, 114#u8, 116#u8
                       ])
-                if b
+                if b1
                 then
                   let d ←
                     Diagnostic.new DiagnosticKind.Unsupported span (toStr
@@ -16651,83 +16831,116 @@ def source.resolution.lookup
                   ok (core.result.Result.Err d, meter1)
                 else
                   let d ←
-                    invalid span (toStr
+                    Diagnostic.new DiagnosticKind.Invalid span (toStr
                       "unbound word in immutable namespace snapshot")
                   ok (core.result.Result.Err d, meter1)
-      | some bindings =>
-        let (r, meter2) ←
-          source.resolution.imported word bindings span meter1
-        match r with
-        | core.result.Result.Ok value =>
-          match value with
-          | none =>
-            let o ← program.bootstrap_word word
-            match o with
-            | none =>
-              let is_recursive ←
-                match declaration with
-                | none => ok false
-                | some «name» =>
-                  do
-                  let s ← core.str.Str.as_bytes «name»
-                  core.slice.cmp.PartialEqSlice.eq core.cmp.PartialEqU8 s word
-              if is_recursive
-              then
-                let d ←
-                  Diagnostic.new DiagnosticKind.Unsupported span (toStr
-                    "recursive definitions require a signature and are outside Core-Bootstrap")
-                ok (core.result.Result.Err d, meter2)
-              else
-                let b ←
-                  Slice.Insts.CoreCmpPartialEqArray.eq core.cmp.PartialEqU8
-                    word
-                    (Array.make 6#usize [
-                      105#u8, 109#u8, 112#u8, 111#u8, 114#u8, 116#u8
-                      ])
-                if b
-                then
-                  let d ←
-                    Diagnostic.new DiagnosticKind.Unsupported span (toStr
-                      "module imports are outside Core-Bootstrap")
-                  ok (core.result.Result.Err d, meter2)
-                else
-                  let d ←
-                    invalid span (toStr
-                      "unbound word in immutable namespace snapshot")
-                  ok (core.result.Result.Err d, meter2)
-            | some definition =>
-              if definition < 22#u32
+          | some definition =>
+            if definition < 22#u32
+            then
+              ok (core.result.Result.Ok (source.Target.Builtin definition),
+                meter1)
+            else
+              if session.hosts
               then
                 ok (core.result.Result.Ok (source.Target.Builtin definition),
-                  meter2)
+                  meter1)
               else
-                if session.hosts
-                then
-                  ok (core.result.Result.Ok (source.Target.Builtin definition),
-                    meter2)
-                else
-                  let is_recursive ←
-                    match declaration with
-                    | none => ok false
-                    | some «name» =>
-                      do
-                      let s ← core.str.Str.as_bytes «name»
-                      core.slice.cmp.PartialEqSlice.eq core.cmp.PartialEqU8 s
+                match declaration with
+                | none =>
+                  let b ←
+                    Slice.Insts.CoreCmpPartialEqArray.eq core.cmp.PartialEqU8
+                      word
+                      (Array.make 6#usize [
+                        105#u8, 109#u8, 112#u8, 111#u8, 114#u8, 116#u8
+                        ])
+                  if b
+                  then
+                    let d ←
+                      Diagnostic.new DiagnosticKind.Unsupported span (toStr
+                        "module imports are outside Core-Bootstrap")
+                    ok (core.result.Result.Err d, meter1)
+                  else
+                    let d ←
+                      Diagnostic.new DiagnosticKind.Invalid span (toStr
+                        "unbound word in immutable namespace snapshot")
+                    ok (core.result.Result.Err d, meter1)
+                | some «name» =>
+                  let s ← core.str.Str.as_bytes «name»
+                  let b ←
+                    core.slice.cmp.PartialEqSlice.eq core.cmp.PartialEqU8 s
+                      word
+                  if b
+                  then
+                    let d ←
+                      Diagnostic.new DiagnosticKind.Unsupported span (toStr
+                        "recursive definitions require a signature and are outside Core-Bootstrap")
+                    ok (core.result.Result.Err d, meter1)
+                  else
+                    let b1 ←
+                      Slice.Insts.CoreCmpPartialEqArray.eq core.cmp.PartialEqU8
                         word
-                  if is_recursive
+                        (Array.make 6#usize [
+                          105#u8, 109#u8, 112#u8, 111#u8, 114#u8, 116#u8
+                          ])
+                    if b1
+                    then
+                      let d ←
+                        Diagnostic.new DiagnosticKind.Unsupported span (toStr
+                          "module imports are outside Core-Bootstrap")
+                      ok (core.result.Result.Err d, meter1)
+                    else
+                      let d ←
+                        Diagnostic.new DiagnosticKind.Invalid span (toStr
+                          "unbound word in immutable namespace snapshot")
+                      ok (core.result.Result.Err d, meter1)
+        | some bindings =>
+          let (r, meter2) ←
+            source.resolution.imported word bindings span meter1
+          match r with
+          | core.result.Result.Ok value =>
+            match value with
+            | none =>
+              let o ← program.bootstrap_word word
+              match o with
+              | none =>
+                match declaration with
+                | none =>
+                  let b ←
+                    Slice.Insts.CoreCmpPartialEqArray.eq core.cmp.PartialEqU8
+                      word
+                      (Array.make 6#usize [
+                        105#u8, 109#u8, 112#u8, 111#u8, 114#u8, 116#u8
+                        ])
+                  if b
+                  then
+                    let d ←
+                      Diagnostic.new DiagnosticKind.Unsupported span (toStr
+                        "module imports are outside Core-Bootstrap")
+                    ok (core.result.Result.Err d, meter2)
+                  else
+                    let d ←
+                      Diagnostic.new DiagnosticKind.Invalid span (toStr
+                        "unbound word in immutable namespace snapshot")
+                    ok (core.result.Result.Err d, meter2)
+                | some «name» =>
+                  let s ← core.str.Str.as_bytes «name»
+                  let b ←
+                    core.slice.cmp.PartialEqSlice.eq core.cmp.PartialEqU8 s
+                      word
+                  if b
                   then
                     let d ←
                       Diagnostic.new DiagnosticKind.Unsupported span (toStr
                         "recursive definitions require a signature and are outside Core-Bootstrap")
                     ok (core.result.Result.Err d, meter2)
                   else
-                    let b ←
+                    let b1 ←
                       Slice.Insts.CoreCmpPartialEqArray.eq core.cmp.PartialEqU8
                         word
                         (Array.make 6#usize [
                           105#u8, 109#u8, 112#u8, 111#u8, 114#u8, 116#u8
                           ])
-                    if b
+                    if b1
                     then
                       let d ←
                         Diagnostic.new DiagnosticKind.Unsupported span (toStr
@@ -16735,14 +16948,76 @@ def source.resolution.lookup
                       ok (core.result.Result.Err d, meter2)
                     else
                       let d ←
-                        invalid span (toStr
+                        Diagnostic.new DiagnosticKind.Invalid span (toStr
                           "unbound word in immutable namespace snapshot")
                       ok (core.result.Result.Err d, meter2)
-          | some target => ok (core.result.Result.Ok target, meter2)
-        | core.result.Result.Err failure1 =>
-          ok (core.result.Result.Err failure1, meter2)
-    | some target => ok (core.result.Result.Ok target, meter1)
-  | some problem => ok (core.result.Result.Err problem, meter1)
+              | some definition =>
+                if definition < 22#u32
+                then
+                  ok (core.result.Result.Ok (source.Target.Builtin definition),
+                    meter2)
+                else
+                  if session.hosts
+                  then
+                    ok (core.result.Result.Ok (source.Target.Builtin
+                      definition), meter2)
+                  else
+                    match declaration with
+                    | none =>
+                      let b ←
+                        Slice.Insts.CoreCmpPartialEqArray.eq
+                          core.cmp.PartialEqU8 word
+                          (Array.make 6#usize [
+                            105#u8, 109#u8, 112#u8, 111#u8, 114#u8, 116#u8
+                            ])
+                      if b
+                      then
+                        let d ←
+                          Diagnostic.new DiagnosticKind.Unsupported span (toStr
+                            "module imports are outside Core-Bootstrap")
+                        ok (core.result.Result.Err d, meter2)
+                      else
+                        let d ←
+                          Diagnostic.new DiagnosticKind.Invalid span (toStr
+                            "unbound word in immutable namespace snapshot")
+                        ok (core.result.Result.Err d, meter2)
+                    | some «name» =>
+                      let s ← core.str.Str.as_bytes «name»
+                      let b ←
+                        core.slice.cmp.PartialEqSlice.eq core.cmp.PartialEqU8 s
+                          word
+                      if b
+                      then
+                        let d ←
+                          Diagnostic.new DiagnosticKind.Unsupported span (toStr
+                            "recursive definitions require a signature and are outside Core-Bootstrap")
+                        ok (core.result.Result.Err d, meter2)
+                      else
+                        let b1 ←
+                          Slice.Insts.CoreCmpPartialEqArray.eq
+                            core.cmp.PartialEqU8 word
+                            (Array.make 6#usize [
+                              105#u8, 109#u8, 112#u8, 111#u8, 114#u8, 116#u8
+                              ])
+                        if b1
+                        then
+                          let d ←
+                            Diagnostic.new DiagnosticKind.Unsupported span
+                              (toStr
+                              "module imports are outside Core-Bootstrap")
+                          ok (core.result.Result.Err d, meter2)
+                        else
+                          let d ←
+                            Diagnostic.new DiagnosticKind.Invalid span (toStr
+                              "unbound word in immutable namespace snapshot")
+                          ok (core.result.Result.Err d, meter2)
+            | some target => ok (core.result.Result.Ok target, meter2)
+          | core.result.Result.Err failure1 =>
+            ok (core.result.Result.Err failure1, meter2)
+      | some target => ok (core.result.Result.Ok target, meter1)
+    | some problem => ok (core.result.Result.Err problem, meter1)
+  | some context =>
+    source.resolution.declared_lookup word declaration context span meter
 
 /-- [noble_contracts::source::resolution::resolve_node]:
     Source: 'crates/noble-contracts/src/source/resolution.rs', lines 33:0-45:1 -/
@@ -16843,9 +17118,31 @@ def source.resolution.resolve
       meter1)
 
 /-- [noble_contracts::source::exhausted]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 236:0-238:1 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 247:0-249:1 -/
 def source.exhausted (span : Span) (message : Str) : Result Diagnostic := do
   Diagnostic.new DiagnosticKind.Exhausted span message
+
+/-- [noble_contracts::source::resolution::comparison::same_definition::{impl core::ops::function::FnOnce<(&'_ noble_contracts::source::declared::Context,), core::option::Option<u64>> for noble_contracts::source::resolution::comparison::same_definition::{closure}}::call_once]:
+    Source: 'crates/noble-contracts/src/source/resolution/comparison.rs', lines 243:62-243:85 -/
+def
+  source.resolution.comparison.same_definition.closure.Insts.CoreOpsFunctionFnOnceTupleSharedContextOptionU64.call_once
+  (c : source.resolution.comparison.same_definition.closure)
+  (tupled_args : source.declared.Context) :
+  Result (Option Std.U64)
+  := do
+  ok tupled_args.owner
+
+/-- Trait implementation: [noble_contracts::source::resolution::comparison::same_definition::{impl core::ops::function::FnOnce<(&'_ noble_contracts::source::declared::Context,), core::option::Option<u64>> for noble_contracts::source::resolution::comparison::same_definition::{closure}}]
+    Source: 'crates/noble-contracts/src/source/resolution/comparison.rs', lines 243:62-243:85 -/
+@[reducible]
+def
+  source.resolution.comparison.same_definition.closure.Insts.CoreOpsFunctionFnOnceTupleSharedContextOptionU64
+  : core.ops.function.FnOnce
+  source.resolution.comparison.same_definition.closure source.declared.Context
+  (Option Std.U64) := {
+  call_once :=
+    source.resolution.comparison.same_definition.closure.Insts.CoreOpsFunctionFnOnceTupleSharedContextOptionU64.call_once
+}
 
 /-- [noble_contracts::offset]:
     Source: 'crates/noble-contracts/src/lib.rs', lines 251:0-260:1 -/
@@ -16863,7 +17160,7 @@ def offset
     ok (core.result.Result.Err d)
 
 /-- [noble_contracts::source::{noble_contracts::source::Tree}::node]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 75:4-80:5 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 79:4-84:5 -/
 def source.Tree.node
   (self : source.Tree) (id : Std.U32) :
   Result (core.result.Result source.Node Diagnostic)
@@ -17207,9 +17504,9 @@ def source.resolution.comparison.same_body
   | none => ok (core.result.Result.Ok is_same, meter1)
   | some problem => ok (core.result.Result.Err problem, meter1)
 
-/-- [noble_contracts::source::resolution::same_definition]:
-    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 232:0-254:1 -/
-def source.resolution.same_definition
+/-- [noble_contracts::source::resolution::comparison::same_definition]:
+    Source: 'crates/noble-contracts/src/source/resolution/comparison.rs', lines 230:0-252:1 -/
+def source.resolution.comparison.same_definition
   (tree : source.Tree) («at» : Std.Usize) (session : source.Session)
   (meter : Meter) :
   Result ((core.result.Result (Option Std.U64) Diagnostic) × Meter)
@@ -17226,43 +17523,56 @@ def source.resolution.same_definition
       let d ← internal tree.span
       ok (core.result.Result.Err d, meter1)
     | some definition =>
-      let (r1, meter2) ←
-        source.resolution.comparison.same_body tree definition.tree session
-          meter1
-      match r1 with
-      | core.result.Result.Ok value =>
-        if value
-        then ok (core.result.Result.Ok (some definition.identity), meter2)
-        else ok (core.result.Result.Ok none, meter2)
-      | core.result.Result.Err failure =>
-        ok (core.result.Result.Err failure, meter2)
+      massert (¬ (definition.identity = 0#u64))
+      let o1 ← core.option.Option.as_ref session.declared
+      let o2 ←
+        core.option.Option.and_then
+          source.resolution.comparison.same_definition.closure.Insts.CoreOpsFunctionFnOnceTupleSharedContextOptionU64
+          o1 ()
+      let b ←
+        core.cmp.PartialEq.ne.trait_default
+          (core.option.Option.Insts.CoreCmpPartialEqOption
+          core.cmp.PartialEqU64) definition.owner o2
+      if b
+      then ok (core.result.Result.Ok none, meter1)
+      else
+        let (r1, meter2) ←
+          source.resolution.comparison.same_body tree definition.tree session
+            meter1
+        match r1 with
+        | core.result.Result.Ok value =>
+          if value
+          then ok (core.result.Result.Ok (some definition.identity), meter2)
+          else ok (core.result.Result.Ok none, meter2)
+        | core.result.Result.Err failure =>
+          ok (core.result.Result.Err failure, meter2)
   | core.result.Result.Err failure =>
     ok (core.result.Result.Err failure, meter1)
 
-/-- [noble_contracts::source::resolution::identity::{impl core::ops::function::FnOnce<(u64,), core::option::Option<u64>> for noble_contracts::source::resolution::identity::{closure}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 218:18-218:40 -/
+/-- [noble_contracts::source::resolution::comparison::identity::{impl core::ops::function::FnOnce<(u64,), core::option::Option<u64>> for noble_contracts::source::resolution::comparison::identity::{closure}}::call_once]:
+    Source: 'crates/noble-contracts/src/source/resolution/comparison.rs', lines 216:18-216:40 -/
 def
-  source.resolution.identity.closure.Insts.CoreOpsFunctionFnOnceTupleU64OptionU64.call_once
-  (c : source.resolution.identity.closure) (tupled_args : Std.U64) :
+  source.resolution.comparison.identity.closure.Insts.CoreOpsFunctionFnOnceTupleU64OptionU64.call_once
+  (c : source.resolution.comparison.identity.closure) (tupled_args : Std.U64) :
   Result (Option Std.U64)
   := do
   ok (U64.checked_add tupled_args 1#u64)
 
-/-- Trait implementation: [noble_contracts::source::resolution::identity::{impl core::ops::function::FnOnce<(u64,), core::option::Option<u64>> for noble_contracts::source::resolution::identity::{closure}}]
-    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 218:18-218:40 -/
+/-- Trait implementation: [noble_contracts::source::resolution::comparison::identity::{impl core::ops::function::FnOnce<(u64,), core::option::Option<u64>> for noble_contracts::source::resolution::comparison::identity::{closure}}]
+    Source: 'crates/noble-contracts/src/source/resolution/comparison.rs', lines 216:18-216:40 -/
 @[reducible]
 def
-  source.resolution.identity.closure.Insts.CoreOpsFunctionFnOnceTupleU64OptionU64
-  : core.ops.function.FnOnce source.resolution.identity.closure Std.U64 (Option
-  Std.U64) := {
+  source.resolution.comparison.identity.closure.Insts.CoreOpsFunctionFnOnceTupleU64OptionU64
+  : core.ops.function.FnOnce source.resolution.comparison.identity.closure
+  Std.U64 (Option Std.U64) := {
   call_once :=
-    source.resolution.identity.closure.Insts.CoreOpsFunctionFnOnceTupleU64OptionU64.call_once
+    source.resolution.comparison.identity.closure.Insts.CoreOpsFunctionFnOnceTupleU64OptionU64.call_once
 }
 
-/-- [noble_contracts::source::resolution::identity]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 196:4-209:5 -/
+/-- [noble_contracts::source::resolution::comparison::identity]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/resolution/comparison.rs', lines 194:4-207:5 -/
 @[rust_loop_body]
-def source.resolution.identity_loop.body
+def source.resolution.comparison.identity_loop.body
   (tree : source.Tree) (session : source.Session) (meter : Meter)
   («at» : Std.Usize) :
   Result (ControlFlow (Meter × Std.Usize) ((alloc.vec.Vec source.Named) ×
@@ -17272,7 +17582,7 @@ def source.resolution.identity_loop.body
   if «at» < i
   then
     let (r, meter1) ←
-      source.resolution.same_definition tree «at» session meter
+      source.resolution.comparison.same_definition tree «at» session meter
     match r with
     | core.result.Result.Ok o =>
       match o with
@@ -17283,28 +17593,28 @@ def source.resolution.identity_loop.body
       ok (done (session.definitions, meter1, none, some problem))
   else ok (done (session.definitions, meter, none, none))
 
-/-- [noble_contracts::source::resolution::identity]: loop 0:
-    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 196:4-209:5 -/
+/-- [noble_contracts::source::resolution::comparison::identity]: loop 0:
+    Source: 'crates/noble-contracts/src/source/resolution/comparison.rs', lines 194:4-207:5 -/
 @[rust_loop]
-def source.resolution.identity_loop
+def source.resolution.comparison.identity_loop
   (tree : source.Tree) (session : source.Session) (meter : Meter)
   («at» : Std.Usize) :
   Result ((alloc.vec.Vec source.Named) × Meter × (Option Std.U64) × (Option
     Diagnostic))
   := do
   loop
-    (fun (meter1, at1) => source.resolution.identity_loop.body tree session
-      meter1 at1)
+    (fun (meter1, at1) => source.resolution.comparison.identity_loop.body tree
+      session meter1 at1)
     (meter, «at»)
 
-/-- [noble_contracts::source::resolution::identity]:
-    Source: 'crates/noble-contracts/src/source/resolution.rs', lines 188:0-226:1 -/
-def source.resolution.identity
+/-- [noble_contracts::source::resolution::comparison::identity]:
+    Source: 'crates/noble-contracts/src/source/resolution/comparison.rs', lines 186:0-224:1 -/
+def source.resolution.comparison.identity
   (tree : source.Tree) (session : source.Session) (meter : Meter) :
   Result ((core.result.Result Std.U64 Diagnostic) × Meter)
   := do
   let (v, meter1, found, failure) ←
-    source.resolution.identity_loop tree session meter 0#usize
+    source.resolution.comparison.identity_loop tree session meter 0#usize
   match failure with
   | none =>
     match found with
@@ -17314,7 +17624,7 @@ def source.resolution.identity
       let o ← core.result.Result.ok r
       let o1 ←
         core.option.Option.and_then
-          source.resolution.identity.closure.Insts.CoreOpsFunctionFnOnceTupleU64OptionU64
+          source.resolution.comparison.identity.closure.Insts.CoreOpsFunctionFnOnceTupleU64OptionU64
           o ()
       match o1 with
       | none =>
@@ -17326,15 +17636,36 @@ def source.resolution.identity
     | some identity => ok (core.result.Result.Ok identity, meter1)
   | some problem => ok (core.result.Result.Err problem, meter1)
 
+/-- [noble_contracts::source::preparation::declaration::{impl core::ops::function::FnOnce<(&'_ noble_contracts::source::declared::Context,), core::option::Option<u64>> for noble_contracts::source::preparation::declaration::{closure}}::call_once]:
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 145:54-145:77 -/
+def
+  source.preparation.declaration.closure.Insts.CoreOpsFunctionFnOnceTupleSharedContextOptionU64.call_once
+  (c : source.preparation.declaration.closure)
+  (tupled_args : source.declared.Context) :
+  Result (Option Std.U64)
+  := do
+  ok tupled_args.owner
+
+/-- Trait implementation: [noble_contracts::source::preparation::declaration::{impl core::ops::function::FnOnce<(&'_ noble_contracts::source::declared::Context,), core::option::Option<u64>> for noble_contracts::source::preparation::declaration::{closure}}]
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 145:54-145:77 -/
+@[reducible]
+def
+  source.preparation.declaration.closure.Insts.CoreOpsFunctionFnOnceTupleSharedContextOptionU64
+  : core.ops.function.FnOnce source.preparation.declaration.closure
+  source.declared.Context (Option Std.U64) := {
+  call_once :=
+    source.preparation.declaration.closure.Insts.CoreOpsFunctionFnOnceTupleSharedContextOptionU64.call_once
+}
+
 /-- [noble_contracts::source::preparation::declaration]:
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 116:0-139:1 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 124:0-150:1 -/
 def source.preparation.declaration
   (tree : source.Tree) («name» : String) (source_bytes : Slice Std.U8)
   (session : source.Session) (meter : Meter) :
   Result ((core.result.Result (source.Named × (alloc.vec.Vec Std.U8))
     Diagnostic) × Meter)
   := do
-  let (r, meter1) ← source.resolution.identity tree session meter
+  let (r, meter1) ← source.resolution.comparison.identity tree session meter
   match r with
   | core.result.Result.Ok value =>
     let i := Slice.len source_bytes
@@ -17355,8 +17686,14 @@ def source.preparation.declaration
         let addition2 ←
           alloc.vec.Vec.extend_from_slice core.clone.CloneU8 addition1
             source_bytes
-        ok (core.result.Result.Ok ({ «name», identity := value, tree },
-          addition2), meter2)
+        let o ← core.option.Option.as_ref session.declared
+        let o1 ←
+          core.option.Option.and_then
+            source.preparation.declaration.closure.Insts.CoreOpsFunctionFnOnceTupleSharedContextOptionU64
+            o ()
+        ok (core.result.Result.Ok
+          ({ «name», identity := value, owner := o1, tree }, addition2),
+          meter2)
       | core.result.Result.Err failure =>
         ok (core.result.Result.Err failure, meter2)
     | core.result.Result.Err failure =>
@@ -17365,7 +17702,7 @@ def source.preparation.declaration
     ok (core.result.Result.Err failure, meter1)
 
 /-- [noble_contracts::source::preparation::{noble_contracts::source::Session}::retained]:
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 98:4-113:5 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 106:4-121:5 -/
 def source.preparation.Session.retained
   (self : source.Session) (extra : Std.Usize) (span : Span) (meter : Meter) :
   Result ((core.result.Result Unit Diagnostic) × Meter)
@@ -17392,21 +17729,28 @@ def source.preparation.Session.retained
     ok (core.result.Result.Err failure, meter)
 
 /-- [noble_contracts::source::preparation::{noble_contracts::source::Session}::environment]:
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 87:4-92:5 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 92:4-100:5 -/
 def source.preparation.Session.environment
   (self : source.Session) :
   Result (core.result.Result noble_kernel.contracts.Env Diagnostic)
   := do
-  match self.bindings with
-  | none => source.environment
-  | some bindings =>
+  match self.declared with
+  | none =>
+    match self.bindings with
+    | none => source.environment
+    | some bindings =>
+      let e ←
+        noble_kernel.contracts.Env.Insts.CoreCloneClone.clone
+          bindings.environment
+      ok (core.result.Result.Ok e)
+  | some declared =>
     let e ←
       noble_kernel.contracts.Env.Insts.CoreCloneClone.clone
-        bindings.environment
+        declared.environment
     ok (core.result.Result.Ok e)
 
 /-- [noble_contracts::source::preparation::{noble_contracts::source::Session}::prepare::{impl core::ops::function::FnOnce<(&'_ noble_contracts::component::Bindings,), alloc::vec::Vec<u8>> for noble_contracts::source::preparation::{noble_contracts::source::Session}::prepare::{closure}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 75:49-75:80 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 80:49-80:80 -/
 def
   source.preparation.Session.prepare.closure.Insts.CoreOpsFunctionFnOnceTupleSharedBindingsVecU8.call_once
   (c : source.preparation.Session.prepare.closure)
@@ -17416,7 +17760,7 @@ def
   alloc.vec.CloneVec.clone core.clone.CloneU8 tupled_args.key
 
 /-- Trait implementation: [noble_contracts::source::preparation::{noble_contracts::source::Session}::prepare::{impl core::ops::function::FnOnce<(&'_ noble_contracts::component::Bindings,), alloc::vec::Vec<u8>> for noble_contracts::source::preparation::{noble_contracts::source::Session}::prepare::{closure}}]
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 75:49-75:80 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 80:49-80:80 -/
 @[reducible]
 def
   source.preparation.Session.prepare.closure.Insts.CoreOpsFunctionFnOnceTupleSharedBindingsVecU8
@@ -17431,17 +17775,21 @@ def
 @[global_simps, irreducible] def syntax.TYPE_CAP : Std.U32 := 256#u32
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::effect_universe]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 163:4-174:5 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 171:4-185:5 -/
 def source.Session.effect_universe
   (self : source.Session) : Result Std.U64 := do
-  match self.bindings with
-  | none => if self.hosts
-            then ok 3#u64
-            else ok 0#u64
-  | some bindings => ok bindings.effects
+  let b := core.option.Option.is_some self.declared
+  if b
+  then ok 1#u64
+  else
+    match self.bindings with
+    | none => if self.hosts
+              then ok 3#u64
+              else ok 0#u64
+    | some bindings => ok bindings.effects
 
 /-- [noble_contracts::source::preflight::host_effects]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 255:4-270:5 -/
+    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 277:4-292:5 -/
 @[rust_loop_body]
 def source.preflight.host_effects_loop.body
   («universe» : Std.U64) (span : Span)
@@ -17472,7 +17820,7 @@ def source.preflight.host_effects_loop.body
   else ok (done (meter, none))
 
 /-- [noble_contracts::source::preflight::host_effects]: loop 0:
-    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 255:4-270:5 -/
+    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 277:4-292:5 -/
 @[rust_loop]
 def source.preflight.host_effects_loop
   («universe» : Std.U64) (span : Span) (meter : Meter)
@@ -17485,7 +17833,7 @@ def source.preflight.host_effects_loop
     (meter, «at»)
 
 /-- [noble_contracts::source::preflight::host_effects]:
-    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 246:0-275:1 -/
+    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 268:0-297:1 -/
 def source.preflight.host_effects
   (effects : noble_kernel.types.EffSet) («universe» : Std.U64) (span : Span)
   (meter : Meter) :
@@ -17520,7 +17868,7 @@ def metering.Meter.node
   | core.result.Result.Err _ => ok (r, self1)
 
 /-- [noble_contracts::source::preflight::{noble_contracts::source::preflight::Traversal}::schedule]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 222:8-234:9 -/
+    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 244:8-256:9 -/
 @[rust_loop_body]
 def source.preflight.Traversal.schedule_loop.body
   (count : Std.Usize) (output : Bool) (depth : Std.U32) (span : Span)
@@ -17547,7 +17895,7 @@ def source.preflight.Traversal.schedule_loop.body
   else ok (done (v, meter, none))
 
 /-- [noble_contracts::source::preflight::{noble_contracts::source::preflight::Traversal}::schedule]: loop 0:
-    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 222:8-234:9 -/
+    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 244:8-256:9 -/
 @[rust_loop]
 def source.preflight.Traversal.schedule_loop
   (v : alloc.vec.Vec source.preflight.Visit) (count : Std.Usize)
@@ -17562,7 +17910,7 @@ def source.preflight.Traversal.schedule_loop
     (v, meter, «at»)
 
 /-- [noble_contracts::source::preflight::{noble_contracts::source::preflight::Traversal}::schedule]:
-    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 211:4-239:5 -/
+    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 233:4-261:5 -/
 def source.preflight.Traversal.schedule
   (self : source.preflight.Traversal) (count : Std.Usize) (output : Bool)
   (depth : Std.U32) (span : Span) (meter : Meter) :
@@ -17578,12 +17926,59 @@ def source.preflight.Traversal.schedule
   | some problem =>
     ok (core.result.Result.Err problem, { self with pending := v1 }, meter1)
 
+/-- [noble_contracts::source::preflight::{noble_contracts::source::preflight::Traversal}::expand::{closure}::{impl core::ops::function::FnOnce<(&'_ noble_kernel::contracts::NominalDecl,), bool> for noble_contracts::source::preflight::{noble_contracts::source::preflight::Traversal}::expand::{closure}::{closure}<'_0>}::call_once]:
+    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 174:37-174:65 -/
+def
+  source.preflight.Traversal.expand.closure.closure.Insts.CoreOpsFunctionFnOnceTupleSharedNominalDeclBool.call_once
+  (c : source.preflight.Traversal.expand.closure.closure)
+  (tupled_args : noble_kernel.contracts.NominalDecl) :
+  Result Bool
+  := do
+  noble_kernel.types.NominalShape.Insts.CoreCmpPartialEqNominalShape.eq
+    tupled_args.shape c
+
+/-- Trait implementation: [noble_contracts::source::preflight::{noble_contracts::source::preflight::Traversal}::expand::{closure}::{impl core::ops::function::FnOnce<(&'_ noble_kernel::contracts::NominalDecl,), bool> for noble_contracts::source::preflight::{noble_contracts::source::preflight::Traversal}::expand::{closure}::{closure}<'_0>}]
+    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 174:37-174:65 -/
+@[reducible]
+def
+  source.preflight.Traversal.expand.closure.closure.Insts.CoreOpsFunctionFnOnceTupleSharedNominalDeclBool
+  : core.ops.function.FnOnce source.preflight.Traversal.expand.closure.closure
+  noble_kernel.contracts.NominalDecl Bool := {
+  call_once :=
+    source.preflight.Traversal.expand.closure.closure.Insts.CoreOpsFunctionFnOnceTupleSharedNominalDeclBool.call_once
+}
+
+/-- [noble_contracts::source::preflight::{noble_contracts::source::preflight::Traversal}::expand::{impl core::ops::function::FnOnce<(&'_ noble_contracts::source::declared::Context,), bool> for noble_contracts::source::preflight::{noble_contracts::source::preflight::Traversal}::expand::{closure}<'_0, '_1>}::call_once]:
+    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 170:57-175:17 -/
+def
+  source.preflight.Traversal.expand.closure.Insts.CoreOpsFunctionFnOnceTupleSharedContextBool.call_once
+  (c : source.preflight.Traversal.expand.closure)
+  (tupled_args : source.declared.Context) :
+  Result Bool
+  := do
+  let (nti, ns) := c
+  let o ← noble_kernel.contracts.Env.nominal tupled_args.environment nti
+  core.option.Option.is_some_and
+    source.preflight.Traversal.expand.closure.closure.Insts.CoreOpsFunctionFnOnceTupleSharedNominalDeclBool
+    o ns
+
+/-- Trait implementation: [noble_contracts::source::preflight::{noble_contracts::source::preflight::Traversal}::expand::{impl core::ops::function::FnOnce<(&'_ noble_contracts::source::declared::Context,), bool> for noble_contracts::source::preflight::{noble_contracts::source::preflight::Traversal}::expand::{closure}<'_0, '_1>}]
+    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 170:57-175:17 -/
+@[reducible]
+def
+  source.preflight.Traversal.expand.closure.Insts.CoreOpsFunctionFnOnceTupleSharedContextBool
+  : core.ops.function.FnOnce source.preflight.Traversal.expand.closure
+  source.declared.Context Bool := {
+  call_once :=
+    source.preflight.Traversal.expand.closure.Insts.CoreOpsFunctionFnOnceTupleSharedContextBool.call_once
+}
+
 /-- [noble_contracts::inference::STACK_CAP]
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 234:0-234:38 -/
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 183:0-183:38 -/
 @[global_simps, irreducible] def inference.STACK_CAP : Std.U32 := 256#u32
 
 /-- [noble_contracts::source::preflight::{noble_contracts::source::preflight::Traversal}::expand]:
-    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 138:4-209:5 -/
+    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 139:4-231:5 -/
 def source.preflight.Traversal.expand
   (self : source.preflight.Traversal) (ty : noble_kernel.types.Ty)
   (depth : Std.U32) (session : source.Session) (span : Span) (meter : Meter) :
@@ -17693,22 +18088,41 @@ def source.preflight.Traversal.expand
       ok (core.result.Result.Err failure, self, meter)
   | noble_kernel.types.Ty.ResourceType kind =>
     let is_known ←
-      match session.bindings with
-      | none => ok false
-      | some bindings =>
-        if depth = 0#u32
-        then
-          let s := alloc.vec.Vec.deref bindings.resources
-          core.slice.Slice.contains
-            noble_kernel.types.ResourceKind.Insts.CoreCmpPartialEqResourceKind
-            s kind
-        else ok false
+      match session.declared with
+      | none =>
+        match session.bindings with
+        | none => ok false
+        | some bindings =>
+          if depth = 0#u32
+          then
+            let s := alloc.vec.Vec.deref bindings.environment.resource_kinds
+            core.slice.Slice.contains
+              noble_kernel.types.ResourceKind.Insts.CoreCmpPartialEqResourceKind
+              s kind
+          else ok false
+      | some context =>
+        let s := alloc.vec.Vec.deref context.environment.resource_kinds
+        core.slice.Slice.contains
+          noble_kernel.types.ResourceKind.Insts.CoreCmpPartialEqResourceKind s
+          kind
     if is_known
     then ok (core.result.Result.Ok (), self, meter)
     else
       let d ←
         invalid span (toStr
           "resource input is not a declared top-level component owner")
+      ok (core.result.Result.Err d, self, meter)
+  | noble_kernel.types.Ty.NominalType id shape =>
+    let o ← core.option.Option.as_ref session.declared
+    let b ←
+      core.option.Option.is_some_and
+        source.preflight.Traversal.expand.closure.Insts.CoreOpsFunctionFnOnceTupleSharedContextBool
+        o (id, shape)
+    if b
+    then ok (core.result.Result.Ok (), self, meter)
+    else
+      let d ←
+        invalid span (toStr "unregistered or changed nominal input schema")
       ok (core.result.Result.Err d, self, meter)
 
 /-- [noble_contracts::source::preflight::paths::child]:
@@ -17757,6 +18171,9 @@ def source.preflight.paths.child
     | noble_kernel.types.Ty.ResourceType _ =>
       let d ← internal span
       ok (core.result.Result.Err d)
+    | noble_kernel.types.Ty.NominalType _ _ =>
+      let d ← internal span
+      ok (core.result.Result.Err d)
   | source.preflight.PathStep.Right =>
     match ty with
     | noble_kernel.types.Ty.UnitType =>
@@ -17793,6 +18210,9 @@ def source.preflight.paths.child
       let d ← internal span
       ok (core.result.Result.Err d)
     | noble_kernel.types.Ty.ResourceType _ =>
+      let d ← internal span
+      ok (core.result.Result.Err d)
+    | noble_kernel.types.Ty.NominalType _ _ =>
       let d ← internal span
       ok (core.result.Result.Err d)
   | source.preflight.PathStep.Item =>
@@ -17832,6 +18252,9 @@ def source.preflight.paths.child
       let d ← internal span
       ok (core.result.Result.Err d)
     | noble_kernel.types.Ty.ResourceType _ =>
+      let d ← internal span
+      ok (core.result.Result.Err d)
+    | noble_kernel.types.Ty.NominalType _ _ =>
       let d ← internal span
       ok (core.result.Result.Err d)
   | source.preflight.PathStep.Input index1 =>
@@ -17881,6 +18304,9 @@ def source.preflight.paths.child
     | noble_kernel.types.Ty.ResourceType _ =>
       let d ← internal span
       ok (core.result.Result.Err d)
+    | noble_kernel.types.Ty.NominalType _ _ =>
+      let d ← internal span
+      ok (core.result.Result.Err d)
   | source.preflight.PathStep.Output index1 =>
     match ty with
     | noble_kernel.types.Ty.UnitType =>
@@ -17926,6 +18352,9 @@ def source.preflight.paths.child
                 ok (core.result.Result.Err d)
       | some child => ok (core.result.Result.Ok child)
     | noble_kernel.types.Ty.ResourceType _ =>
+      let d ← internal span
+      ok (core.result.Result.Err d)
+    | noble_kernel.types.Ty.NominalType _ _ =>
       let d ← internal span
       ok (core.result.Result.Err d)
 
@@ -17977,7 +18406,7 @@ def source.preflight.paths.locate
   | some problem => ok (core.result.Result.Err problem)
 
 /-- [noble_contracts::source::preflight::{noble_contracts::source::preflight::Traversal}::visit]:
-    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 91:4-132:5 -/
+    Source: 'crates/noble-contracts/src/source/preflight.rs', lines 91:4-133:5 -/
 def source.preflight.Traversal.visit
   (self : source.preflight.Traversal) (entry : source.preflight.Visit)
   (root : noble_kernel.types.Ty) (session : source.Session) (span : Span)
@@ -18018,6 +18447,7 @@ def source.preflight.Traversal.visit
               let i1 := alloc.vec.Vec.len output
               ok (core.num.Usize.saturating_add i i1)
             | noble_kernel.types.Ty.ResourceType _ => ok 0#usize
+            | noble_kernel.types.Ty.NominalType _ _ => ok 0#usize
           let i ←
             lift (core.num.Usize.saturating_add self.type_nodes children)
           let r4 ← offset syntax.TYPE_CAP span
@@ -18163,69 +18593,8 @@ def source.preflight.check
   | core.result.Result.Err failure =>
     ok (core.result.Result.Err failure, meter)
 
-/-- [noble_contracts::source::parsing::declaration_body]:
-    Source: 'crates/noble-contracts/src/source/parsing.rs', lines 143:0-173:1 -/
-def source.parsing.declaration_body
-  (frame : source.parsing.Frame) (nodes : Slice source.Node) (span : Span) :
-  Result ((core.result.Result (alloc.vec.Vec Std.U32) Diagnostic) × (Slice
-    source.Node))
-  := do
-  let i := alloc.vec.Vec.len frame.body
-  if i != 1#usize
-  then
-    let d ←
-      invalid span (toStr
-        "definition submission contains trailing expressions")
-    ok (core.result.Result.Err d, nodes)
-  else
-    let s := alloc.vec.Vec.deref frame.body
-    let o ← core.slice.Slice.first s
-    match o with
-    | none => let d ← internal span
-              ok (core.result.Result.Err d, nodes)
-    | some id =>
-      let r ← offset id span
-      match r with
-      | core.result.Result.Ok value =>
-        let (o1, get_mut_back) ←
-          core.slice.Slice.get_mut (core.slice.index.SliceIndexUsizeSlice
-            source.Node) nodes value
-        match o1 with
-        | none =>
-          let d ← internal span
-          let nodes1 := get_mut_back none
-          ok (core.result.Result.Err d, nodes1)
-        | some n =>
-          match n.kind with
-          | source.Kind.Literal _ =>
-            let d ← internal span
-            let nodes1 := get_mut_back o1
-            ok (core.result.Result.Err d, nodes1)
-          | source.Kind.Text _ =>
-            let d ← internal span
-            let nodes1 := get_mut_back o1
-            ok (core.result.Result.Err d, nodes1)
-          | source.Kind.Word _ =>
-            let d ← internal span
-            let nodes1 := get_mut_back o1
-            ok (core.result.Result.Err d, nodes1)
-          | source.Kind.Call _ =>
-            let d ← internal span
-            let nodes1 := get_mut_back o1
-            ok (core.result.Result.Err d, nodes1)
-          | source.Kind.Quotation body =>
-            let (v, body1) ←
-              core.mem.take (alloc.vec.Vec.Insts.CoreDefaultDefault Std.U32)
-                body
-            let nodes1 :=
-              get_mut_back (some
-                { n with kind := (source.Kind.Quotation body1) })
-            ok (core.result.Result.Ok v, nodes1)
-      | core.result.Result.Err failure =>
-        ok (core.result.Result.Err failure, nodes)
-
 /-- [noble_contracts::source::lexer::{noble_contracts::source::lexer::Scanner<'a>}::span]:
-    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 158:4-163:5 -/
+    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 169:4-174:5 -/
 def source.lexer.Scanner.span
   (self : source.lexer.Scanner) (start : Std.Usize) :
   Result (core.result.Result Span Diagnostic)
@@ -18241,7 +18610,7 @@ def source.lexer.Scanner.span
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_contracts::source::lexer::whitespace]:
-    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 184:0-186:1 -/
+    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 195:0-197:1 -/
 def source.lexer.whitespace (byte : Std.U8) : Result Bool := do
   match byte with
   | 32#uscalar => ok true
@@ -18399,11 +18768,13 @@ def source.lexer.tokens.initial (byte : Std.U8) : Result Bool := do
     | _ => ok false
 
 /-- [noble_contracts::source::lexer::tokens::word]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/lexer/tokens.rs', lines 79:4-92:5 -/
+    Source: 'crates/noble-contracts/src/source/lexer/tokens.rs', lines 81:4-98:5 -/
 @[rust_loop_body]
 def source.lexer.tokens.word_loop.body
-  (bytes : Slice Std.U8) (span : Span) (meter : Meter) («at» : Std.Usize) :
-  Result (ControlFlow (Meter × Std.Usize) (Meter × (Option Diagnostic)))
+  (bytes : Slice Std.U8) (span : Span) (meter : Meter) (declared : Bool)
+  («at» : Std.Usize) :
+  Result (ControlFlow (Meter × Bool × Std.Usize) (Meter × (Option
+    Diagnostic)))
   := do
   let o ←
     core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice Std.U8) bytes
@@ -18418,43 +18789,60 @@ def source.lexer.tokens.word_loop.body
       let b ← source.lexer.tokens.initial byte
       if b
       then let at1 ← «at» + 1#usize
-           ok (cont (meter1, at1))
+           ok (cont (meter1, declared, at1))
       else
         let b1 ← core.num.U8.is_ascii_digit byte
         if b1
         then let at1 ← «at» + 1#usize
-             ok (cont (meter1, at1))
+             ok (cont (meter1, declared, at1))
         else
-          if byte != 46#u8
-          then
-            let d ←
-              invalid span (toStr
-                "word contains a character outside the ASCII token grammar")
-            ok (done (meter1, some d))
-          else let at1 ← «at» + 1#usize
-               ok (cont (meter1, at1))
+          if byte = 46#u8
+          then let at1 ← «at» + 1#usize
+               ok (cont (meter1, declared, at1))
+          else
+            if declared
+            then
+              let b2 ←
+                match byte with
+                | 64#uscalar => ok true
+                | 44#uscalar => ok true
+                | _ => ok false
+              if b2
+              then let at1 ← «at» + 1#usize
+                   ok (cont (meter1, true, at1))
+              else
+                let d ←
+                  invalid span (toStr
+                    "word contains a character outside the ASCII token grammar")
+                ok (done (meter1, some d))
+            else
+              let d ←
+                invalid span (toStr
+                  "word contains a character outside the ASCII token grammar")
+              ok (done (meter1, some d))
     | core.result.Result.Err problem => ok (done (meter1, some problem))
 
 /-- [noble_contracts::source::lexer::tokens::word]: loop 0:
-    Source: 'crates/noble-contracts/src/source/lexer/tokens.rs', lines 79:4-92:5 -/
+    Source: 'crates/noble-contracts/src/source/lexer/tokens.rs', lines 81:4-98:5 -/
 @[rust_loop]
 def source.lexer.tokens.word_loop
-  (bytes : Slice Std.U8) (span : Span) (meter : Meter) («at» : Std.Usize) :
+  (bytes : Slice Std.U8) (span : Span) (meter : Meter) (declared : Bool)
+  («at» : Std.Usize) :
   Result (Meter × (Option Diagnostic))
   := do
   loop
-    (fun (meter1, at1) => source.lexer.tokens.word_loop.body bytes span meter1
-      at1)
-    (meter, «at»)
+    (fun (meter1, declared1, at1) => source.lexer.tokens.word_loop.body bytes
+      span meter1 declared1 at1)
+    (meter, declared, «at»)
 
 /-- [noble_contracts::source::lexer::tokens::word]:
-    Source: 'crates/noble-contracts/src/source/lexer/tokens.rs', lines 72:0-97:1 -/
+    Source: 'crates/noble-contracts/src/source/lexer/tokens.rs', lines 73:0-103:1 -/
 def source.lexer.tokens.word
-  (bytes : Slice Std.U8) (span : Span) (meter : Meter) :
+  (bytes : Slice Std.U8) (span : Span) (meter : Meter) (declared : Bool) :
   Result ((core.result.Result Unit Diagnostic) × Meter)
   := do
   let (meter1, failure) ←
-    source.lexer.tokens.word_loop bytes span meter 0#usize
+    source.lexer.tokens.word_loop bytes span meter declared 0#usize
   match failure with
   | none => ok (core.result.Result.Ok (), meter1)
   | some problem => ok (core.result.Result.Err problem, meter1)
@@ -18474,7 +18862,7 @@ def P.Insts.CoreOpsFunctionFnOnceTupleU8Bool : core.ops.function.FnOnce (Std.U8
 }
 
 /-- [noble_contracts::source::lexer::tokens::classify]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/lexer/tokens.rs', lines 39:4-46:5 -/
+    Source: 'crates/noble-contracts/src/source/lexer/tokens.rs', lines 40:4-47:5 -/
 @[rust_loop_body]
 def source.lexer.tokens.classify_loop.body
   (span : Span) (digits : Slice Std.U8) (meter : Meter) (is_decimal : Bool)
@@ -18499,7 +18887,7 @@ def source.lexer.tokens.classify_loop.body
       ok (done (meter1, is_decimal, some problem))
 
 /-- [noble_contracts::source::lexer::tokens::classify]: loop 0:
-    Source: 'crates/noble-contracts/src/source/lexer/tokens.rs', lines 39:4-46:5 -/
+    Source: 'crates/noble-contracts/src/source/lexer/tokens.rs', lines 40:4-47:5 -/
 @[rust_loop]
 def source.lexer.tokens.classify_loop
   (span : Span) (meter : Meter) (digits : Slice Std.U8) (is_decimal : Bool)
@@ -18512,9 +18900,9 @@ def source.lexer.tokens.classify_loop
     (meter, is_decimal, «at»)
 
 /-- [noble_contracts::source::lexer::tokens::classify]:
-    Source: 'crates/noble-contracts/src/source/lexer/tokens.rs', lines 13:0-66:1 -/
+    Source: 'crates/noble-contracts/src/source/lexer/tokens.rs', lines 13:0-67:1 -/
 def source.lexer.tokens.classify
-  (bytes : Slice Std.U8) (span : Span) (meter : Meter) :
+  (bytes : Slice Std.U8) (span : Span) (meter : Meter) (declared : Bool) :
   Result ((core.result.Result source.lexer.TokenKind Diagnostic) × Meter)
   := do
   let b ←
@@ -18605,7 +18993,7 @@ def source.lexer.tokens.classify
                 if b6
                 then
                   let (r, meter2) ←
-                    source.lexer.tokens.word bytes span meter1
+                    source.lexer.tokens.word bytes span meter1 declared
                   match r with
                   | core.result.Result.Ok _ =>
                     let v ← alloc.slice.Slice.to_vec core.clone.CloneU8 bytes
@@ -18627,7 +19015,8 @@ def source.lexer.tokens.classify
             let b5 ← lift (core.option.Option.unwrap_or o3 false)
             if b5
             then
-              let (r, meter2) ← source.lexer.tokens.word bytes span meter1
+              let (r, meter2) ←
+                source.lexer.tokens.word bytes span meter1 declared
               match r with
               | core.result.Result.Ok _ =>
                 let v ← alloc.slice.Slice.to_vec core.clone.CloneU8 bytes
@@ -18643,7 +19032,7 @@ def source.lexer.tokens.classify
         | some problem => ok (core.result.Result.Err problem, meter1)
 
 /-- [noble_contracts::source::lexer::{noble_contracts::source::lexer::Scanner<'a>}::word]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 137:18-146:9 -/
+    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 148:18-157:9 -/
 @[rust_loop_body]
 def source.lexer.Scanner.word_loop.body
   (s : Slice Std.U8) (s1 : Span) (start : Std.Usize) (meter : Meter) :
@@ -18677,7 +19066,7 @@ def source.lexer.Scanner.word_loop.body
     | core.result.Result.Err problem => ok (done (start, meter1, some problem))
 
 /-- [noble_contracts::source::lexer::{noble_contracts::source::lexer::Scanner<'a>}::word]: loop 0:
-    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 137:18-146:9 -/
+    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 148:18-157:9 -/
 @[rust_loop]
 def source.lexer.Scanner.word_loop
   (s : Slice Std.U8) (start : Std.Usize) (s1 : Span) (meter : Meter) :
@@ -18689,7 +19078,7 @@ def source.lexer.Scanner.word_loop
     (start, meter)
 
 /-- [noble_contracts::source::lexer::{noble_contracts::source::lexer::Scanner<'a>}::word]:
-    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 134:4-156:5 -/
+    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 145:4-167:5 -/
 def source.lexer.Scanner.word
   (self : source.lexer.Scanner) (meter : Meter) :
   Result ((core.result.Result source.lexer.TokenKind Diagnostic) ×
@@ -18710,7 +19099,8 @@ def source.lexer.Scanner.word
         let d ← internal value
         ok (core.result.Result.Err d, { self with «at» := i }, meter1)
       | some bytes =>
-        let (r1, meter2) ← source.lexer.tokens.classify bytes value meter1
+        let (r1, meter2) ←
+          source.lexer.tokens.classify bytes value meter1 self.declared
         ok (r1, { self with «at» := i }, meter2)
     | core.result.Result.Err failure1 =>
       ok (core.result.Result.Err failure1, { self with «at» := i }, meter1)
@@ -18718,7 +19108,7 @@ def source.lexer.Scanner.word
     ok (core.result.Result.Err problem, { self with «at» := i }, meter1)
 
 /-- [noble_contracts::source::lexer::{noble_contracts::source::lexer::Scanner<'a>}::comment]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 118:8-127:9 -/
+    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 129:8-138:9 -/
 @[rust_loop_body]
 def source.lexer.Scanner.comment_loop.body
   (s : Slice Std.U8) (s1 : Span) (i : Std.Usize) (meter : Meter) :
@@ -18744,7 +19134,7 @@ def source.lexer.Scanner.comment_loop.body
     | core.result.Result.Err problem => ok (done (i, meter1, some problem))
 
 /-- [noble_contracts::source::lexer::{noble_contracts::source::lexer::Scanner<'a>}::comment]: loop 0:
-    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 118:8-127:9 -/
+    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 129:8-138:9 -/
 @[rust_loop]
 def source.lexer.Scanner.comment_loop
   (s : Slice Std.U8) (i : Std.Usize) (s1 : Span) (meter : Meter) :
@@ -18755,7 +19145,7 @@ def source.lexer.Scanner.comment_loop
     (i, meter)
 
 /-- [noble_contracts::source::lexer::{noble_contracts::source::lexer::Scanner<'a>}::comment]:
-    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 116:4-132:5 -/
+    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 127:4-143:5 -/
 def source.lexer.Scanner.comment
   (self : source.lexer.Scanner) (meter : Meter) :
   Result ((core.result.Result Unit Diagnostic) × source.lexer.Scanner ×
@@ -18769,7 +19159,7 @@ def source.lexer.Scanner.comment
     ok (core.result.Result.Err problem, { self with «at» := i }, meter1)
 
 /-- [noble_contracts::source::lexer::{noble_contracts::source::lexer::Scanner<'a>}::skip_step]:
-    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 103:4-114:5 -/
+    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 114:4-125:5 -/
 def source.lexer.Scanner.skip_step
   (self : source.lexer.Scanner) (byte : Std.U8) (meter : Meter) :
   Result ((core.result.Result Bool Diagnostic) × source.lexer.Scanner ×
@@ -18797,7 +19187,7 @@ def source.lexer.Scanner.skip_step
     ok (core.result.Result.Err failure, self, meter1)
 
 /-- [noble_contracts::source::lexer::{noble_contracts::source::lexer::Scanner<'a>}::skip]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 83:8-92:9 -/
+    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 94:8-103:9 -/
 @[rust_loop_body]
 def source.lexer.Scanner.skip_loop.body
   (self : source.lexer.Scanner) (meter : Meter) :
@@ -18820,7 +19210,7 @@ def source.lexer.Scanner.skip_loop.body
     | core.result.Result.Err problem => ok (done (self1, meter1, some problem))
 
 /-- [noble_contracts::source::lexer::{noble_contracts::source::lexer::Scanner<'a>}::skip]: loop 0:
-    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 83:8-92:9 -/
+    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 94:8-103:9 -/
 @[rust_loop]
 def source.lexer.Scanner.skip_loop
   (self : source.lexer.Scanner) (meter : Meter) :
@@ -18831,7 +19221,7 @@ def source.lexer.Scanner.skip_loop
     (self, meter)
 
 /-- [noble_contracts::source::lexer::{noble_contracts::source::lexer::Scanner<'a>}::skip]:
-    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 81:4-97:5 -/
+    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 92:4-108:5 -/
 def source.lexer.Scanner.skip
   (self : source.lexer.Scanner) (meter : Meter) :
   Result ((core.result.Result Unit Diagnostic) × source.lexer.Scanner ×
@@ -18843,7 +19233,7 @@ def source.lexer.Scanner.skip
   | some problem => ok (core.result.Result.Err problem, self1, meter1)
 
 /-- [noble_contracts::source::lexer::{noble_contracts::source::lexer::Scanner<'a>}::byte]:
-    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 169:4-181:5 -/
+    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 180:4-192:5 -/
 def source.lexer.Scanner.byte
   (self : source.lexer.Scanner) (meter : Meter) :
   Result ((core.result.Result Std.U8 Diagnostic) × source.lexer.Scanner ×
@@ -19292,7 +19682,7 @@ def source.lexer.text.Scanner.text
   | some problem => ok (core.result.Result.Err problem, self1, meter1)
 
 /-- [noble_contracts::source::lexer::{noble_contracts::source::lexer::Scanner<'a>}::next]:
-    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 55:4-79:5
+    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 66:4-90:5
     Visibility: public -/
 def source.lexer.Scanner.next
   (self : source.lexer.Scanner) (meter : Meter) :
@@ -19371,7 +19761,7 @@ def source.lexer.Scanner.next
     ok (core.result.Result.Err failure, self1, meter1)
 
 /-- [noble_contracts::source::parsing::opening]:
-    Source: 'crates/noble-contracts/src/source/parsing.rs', lines 92:0-136:1 -/
+    Source: 'crates/noble-contracts/src/source/parsing.rs', lines 122:0-166:1 -/
 def source.parsing.opening
   (lexer : source.lexer.Scanner) (span : Span) (meter : Meter) :
   Result ((core.result.Result ((Option String) × (Option source.lexer.Token))
@@ -19485,8 +19875,69 @@ def source.parsing.opening
   | core.result.Result.Err failure =>
     ok (core.result.Result.Err failure, lexer1, meter1)
 
+/-- [noble_contracts::source::parsing::declaration_body]:
+    Source: 'crates/noble-contracts/src/source/parsing.rs', lines 173:0-203:1 -/
+def source.parsing.declaration_body
+  (frame : source.parsing.Frame) (nodes : Slice source.Node) (span : Span) :
+  Result ((core.result.Result (alloc.vec.Vec Std.U32) Diagnostic) × (Slice
+    source.Node))
+  := do
+  let i := alloc.vec.Vec.len frame.body
+  if i != 1#usize
+  then
+    let d ←
+      invalid span (toStr
+        "definition submission contains trailing expressions")
+    ok (core.result.Result.Err d, nodes)
+  else
+    let s := alloc.vec.Vec.deref frame.body
+    let o ← core.slice.Slice.first s
+    match o with
+    | none => let d ← internal span
+              ok (core.result.Result.Err d, nodes)
+    | some id =>
+      let r ← offset id span
+      match r with
+      | core.result.Result.Ok value =>
+        let (o1, get_mut_back) ←
+          core.slice.Slice.get_mut (core.slice.index.SliceIndexUsizeSlice
+            source.Node) nodes value
+        match o1 with
+        | none =>
+          let d ← internal span
+          let nodes1 := get_mut_back none
+          ok (core.result.Result.Err d, nodes1)
+        | some n =>
+          match n.kind with
+          | source.Kind.Literal _ =>
+            let d ← internal span
+            let nodes1 := get_mut_back o1
+            ok (core.result.Result.Err d, nodes1)
+          | source.Kind.Text _ =>
+            let d ← internal span
+            let nodes1 := get_mut_back o1
+            ok (core.result.Result.Err d, nodes1)
+          | source.Kind.Word _ =>
+            let d ← internal span
+            let nodes1 := get_mut_back o1
+            ok (core.result.Result.Err d, nodes1)
+          | source.Kind.Call _ =>
+            let d ← internal span
+            let nodes1 := get_mut_back o1
+            ok (core.result.Result.Err d, nodes1)
+          | source.Kind.Quotation body =>
+            let (v, body1) ←
+              core.mem.take (alloc.vec.Vec.Insts.CoreDefaultDefault Std.U32)
+                body
+            let nodes1 :=
+              get_mut_back (some
+                { n with kind := (source.Kind.Quotation body1) })
+            ok (core.result.Result.Ok v, nodes1)
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, nodes)
+
 /-- [noble_contracts::source::parsing::append]:
-    Source: 'crates/noble-contracts/src/source/parsing.rs', lines 249:0-263:1 -/
+    Source: 'crates/noble-contracts/src/source/parsing.rs', lines 279:0-293:1 -/
 def source.parsing.append
   (node : source.Node) (state : source.parsing.State) (meter : Meter) :
   Result ((core.result.Result Unit Diagnostic) × source.parsing.State ×
@@ -19518,7 +19969,7 @@ def source.parsing.append
   | core.result.Result.Err _ => ok (r, state, meter1)
 
 /-- [noble_contracts::source::parsing::step]:
-    Source: 'crates/noble-contracts/src/source/parsing.rs', lines 179:0-243:1 -/
+    Source: 'crates/noble-contracts/src/source/parsing.rs', lines 209:0-273:1 -/
 def source.parsing.step
   (token : source.lexer.Token) (state : source.parsing.State) (meter : Meter) :
   Result ((core.result.Result Unit Diagnostic) × source.parsing.State ×
@@ -19585,7 +20036,7 @@ def source.parsing.step
   | core.result.Result.Err _ => ok (r, state, meter1)
 
 /-- [noble_contracts::source::parsing::advance]:
-    Source: 'crates/noble-contracts/src/source/parsing.rs', lines 78:0-86:1 -/
+    Source: 'crates/noble-contracts/src/source/parsing.rs', lines 108:0-116:1 -/
 def source.parsing.advance
   (token : source.lexer.Token) (state : source.parsing.State)
   (lexer : source.lexer.Scanner) (meter : Meter) :
@@ -19600,8 +20051,192 @@ def source.parsing.advance
   | core.result.Result.Err failure =>
     ok (core.result.Result.Err failure, state1, lexer, meter1)
 
+/-- [noble_contracts::source::parsing::scan_tokens::{closure}::{impl core::ops::function::FnOnce<(usize,), bool> for noble_contracts::source::parsing::scan_tokens::{closure}::{closure}<'_0>}::call_once]:
+    Source: 'crates/noble-contracts/src/source/parsing.rs', lines 97:21-97:52 -/
+def
+  source.parsing.scan_tokens.closure.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeBool.call_once
+  (c : source.parsing.scan_tokens.closure.closure) (tupled_args : Std.Usize) :
+  Result Bool
+  := do
+  let i := alloc.vec.Vec.len c
+  ok (tupled_args < i)
+
+/-- Trait implementation: [noble_contracts::source::parsing::scan_tokens::{closure}::{impl core::ops::function::FnOnce<(usize,), bool> for noble_contracts::source::parsing::scan_tokens::{closure}::{closure}<'_0>}]
+    Source: 'crates/noble-contracts/src/source/parsing.rs', lines 97:21-97:52 -/
+@[reducible]
+def
+  source.parsing.scan_tokens.closure.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeBool
+  : core.ops.function.FnOnce source.parsing.scan_tokens.closure.closure
+  Std.Usize Bool := {
+  call_once :=
+    source.parsing.scan_tokens.closure.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeBool.call_once
+}
+
+/-- [noble_contracts::source::parsing::scan_tokens::{impl core::ops::function::FnMut<(&'_ u32,), bool> for noble_contracts::source::parsing::scan_tokens::{closure}<'_0>}::call_mut]:
+    Source: 'crates/noble-contracts/src/source/parsing.rs', lines 95:34-97:53 -/
+def
+  source.parsing.scan_tokens.closure.Insts.CoreOpsFunctionFnMutTupleSharedU32Bool.call_mut
+  (c : source.parsing.scan_tokens.closure) (tupled_args : Std.U32) :
+  Result (Bool × source.parsing.scan_tokens.closure)
+  := do
+  let r ←
+    Usize.Insts.CoreConvertTryFromU32TryFromIntError.try_from tupled_args
+  let o ← core.result.Result.ok r
+  let b ←
+    core.option.Option.is_some_and
+      source.parsing.scan_tokens.closure.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeBool
+      o c
+  ok (b, c)
+
+/-- [noble_contracts::source::parsing::scan_tokens::{impl core::ops::function::FnOnce<(&'_ u32,), bool> for noble_contracts::source::parsing::scan_tokens::{closure}<'_0>}::call_once]:
+    Source: 'crates/noble-contracts/src/source/parsing.rs', lines 95:34-97:53 -/
+def
+  source.parsing.scan_tokens.closure.Insts.CoreOpsFunctionFnOnceTupleSharedU32Bool.call_once
+  (c : source.parsing.scan_tokens.closure) (i : Std.U32) : Result Bool := do
+  let (b, _) ←
+    source.parsing.scan_tokens.closure.Insts.CoreOpsFunctionFnMutTupleSharedU32Bool.call_mut
+      c i
+  ok b
+
+/-- Trait implementation: [noble_contracts::source::parsing::scan_tokens::{impl core::ops::function::FnOnce<(&'_ u32,), bool> for noble_contracts::source::parsing::scan_tokens::{closure}<'_0>}]
+    Source: 'crates/noble-contracts/src/source/parsing.rs', lines 95:34-97:53 -/
+@[reducible]
+def
+  source.parsing.scan_tokens.closure.Insts.CoreOpsFunctionFnOnceTupleSharedU32Bool
+  : core.ops.function.FnOnce source.parsing.scan_tokens.closure Std.U32 Bool
+  := {
+  call_once :=
+    source.parsing.scan_tokens.closure.Insts.CoreOpsFunctionFnOnceTupleSharedU32Bool.call_once
+}
+
+/-- Trait implementation: [noble_contracts::source::parsing::scan_tokens::{impl core::ops::function::FnMut<(&'_ u32,), bool> for noble_contracts::source::parsing::scan_tokens::{closure}<'_0>}]
+    Source: 'crates/noble-contracts/src/source/parsing.rs', lines 95:34-97:53 -/
+@[reducible]
+def
+  source.parsing.scan_tokens.closure.Insts.CoreOpsFunctionFnMutTupleSharedU32Bool
+  : core.ops.function.FnMut source.parsing.scan_tokens.closure Std.U32 Bool
+  := {
+  FnOnceInst :=
+    source.parsing.scan_tokens.closure.Insts.CoreOpsFunctionFnOnceTupleSharedU32Bool
+  call_mut :=
+    source.parsing.scan_tokens.closure.Insts.CoreOpsFunctionFnMutTupleSharedU32Bool.call_mut
+}
+
+/-- [noble_contracts::source::parsing::scan_tokens]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/parsing.rs', lines 69:4-106:1 -/
+@[rust_loop_body]
+def source.parsing.scan_tokens_loop.body
+  (span : Span) («name» : Option String)
+  (next : core.result.Result (Option source.lexer.Token) Diagnostic)
+  (lexer : source.lexer.Scanner) (meter : Meter) (state : source.parsing.State)
+  :
+  Result (ControlFlow ((core.result.Result (Option source.lexer.Token)
+    Diagnostic) × source.lexer.Scanner × Meter × source.parsing.State)
+    ((core.result.Result (source.Tree × (Option String)) Diagnostic) × (Slice
+    Std.U8) × Std.Usize × Span × Bool × Meter))
+  := do
+  match next with
+  | core.result.Result.Ok token =>
+    match token with
+    | none =>
+      let i := alloc.vec.Vec.len state.frames
+      if i != 1#usize
+      then
+        let d ← invalid span (toStr "unclosed quotation")
+        ok (done (core.result.Result.Err d, lexer.source, lexer.at, lexer.full,
+          lexer.declared, meter))
+      else
+        let (o, _) ← alloc.vec.Vec.pop Global state.frames
+        match o with
+        | none =>
+          let d ← internal span
+          ok (done (core.result.Result.Err d, lexer.source, lexer.at,
+            lexer.full, lexer.declared, meter))
+        | some frame =>
+          massert (frame.start = 0#u32)
+          let b := core.option.Option.is_some «name»
+          if b
+          then
+            let (s, deref_mut_back) ←
+              lift (alloc.vec.Vec.deref_mut state.nodes)
+            let (r, s1) ← source.parsing.declaration_body frame s span
+            match r with
+            | core.result.Result.Ok value =>
+              let s2 := alloc.vec.Vec.deref value
+              let i1 ← core.slice.Slice.iter s2
+              let v := deref_mut_back s1
+              let (b1, _) ←
+                core.slice.iter.Iter.Insts.CoreIterTraitsIteratorIteratorSharedAT.all
+                  source.parsing.scan_tokens.closure.Insts.CoreOpsFunctionFnMutTupleSharedU32Bool
+                  i1 v
+              massert b1
+              ok (done (core.result.Result.Ok
+                ({ nodes := v, body := value, span }, «name»), lexer.source,
+                lexer.at, lexer.full, lexer.declared, meter))
+            | core.result.Result.Err failure =>
+              ok (done (core.result.Result.Err failure, lexer.source, 
+                lexer.at, lexer.full, lexer.declared, meter))
+          else
+            let s := alloc.vec.Vec.deref frame.body
+            let i1 ← core.slice.Slice.iter s
+            let (b1, _) ←
+              core.slice.iter.Iter.Insts.CoreIterTraitsIteratorIteratorSharedAT.all
+                source.parsing.scan_tokens.closure.Insts.CoreOpsFunctionFnMutTupleSharedU32Bool
+                i1 state.nodes
+            massert b1
+            ok (done (core.result.Result.Ok
+              ({ nodes := state.nodes, body := frame.body, span }, «name»),
+              lexer.source, lexer.at, lexer.full, lexer.declared, meter))
+    | some token1 =>
+      let (next1, state1, lexer1, meter1) ←
+        source.parsing.advance token1 state lexer meter
+      ok (cont (next1, lexer1, meter1, state1))
+  | core.result.Result.Err problem =>
+    ok (done (core.result.Result.Err problem, lexer.source, lexer.at,
+      lexer.full, lexer.declared, meter))
+
+/-- [noble_contracts::source::parsing::scan_tokens]: loop 0:
+    Source: 'crates/noble-contracts/src/source/parsing.rs', lines 69:4-106:1 -/
+@[rust_loop]
+def source.parsing.scan_tokens_loop
+  (next : core.result.Result (Option source.lexer.Token) Diagnostic)
+  (lexer : source.lexer.Scanner) (span : Span) (meter : Meter)
+  («name» : Option String) (state : source.parsing.State) :
+  Result ((core.result.Result (source.Tree × (Option String)) Diagnostic) ×
+    (Slice Std.U8) × Std.Usize × Span × Bool × Meter)
+  := do
+  loop
+    (fun (next1, lexer1, meter1, state1) =>
+      source.parsing.scan_tokens_loop.body span «name» next1 lexer1 meter1
+      state1)
+    (next, lexer, meter, state)
+
+/-- [noble_contracts::source::parsing::scan_tokens]:
+    Source: 'crates/noble-contracts/src/source/parsing.rs', lines 51:0-106:1 -/
+def source.parsing.scan_tokens
+  (first : Option source.lexer.Token) (lexer : source.lexer.Scanner)
+  (span : Span) (meter : Meter) («name» : Option String) :
+  Result ((core.result.Result (source.Tree × (Option String)) Diagnostic) ×
+    source.lexer.Scanner × Meter)
+  := do
+  let (r, meter1) ← metering.Meter.node meter span
+  match r with
+  | core.result.Result.Ok _ =>
+    let v := alloc.vec.Vec.with_capacity source.parsing.Frame 1#usize
+    let v1 ←
+      alloc.vec.Vec.push v
+        ({ body := (alloc.vec.Vec.new Std.U32), start := 0#u32 } :
+        source.parsing.Frame)
+    let (r1, s, i, s1, b, meter2) ←
+      source.parsing.scan_tokens_loop (core.result.Result.Ok first) lexer span
+        meter1 «name»
+        { frames := v1, nodes := (alloc.vec.Vec.new source.Node) }
+    ok (r1, { source := s, «at» := i, full := s1, declared := b }, meter2)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, lexer, meter1)
+
 /-- [noble_contracts::source::lexer::{noble_contracts::source::lexer::Scanner<'a>}::new]:
-    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 30:4-53:5
+    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 31:4-55:5
     Visibility: public -/
 def source.lexer.Scanner.new
   (source_bytes : Slice Std.U8) (meter : Meter) :
@@ -19635,132 +20270,102 @@ def source.lexer.Scanner.new
             {
               source := source_bytes,
               «at» := 0#usize,
-              full := { start := 0#u32, «end» := value }
+              full := { start := 0#u32, «end» := value },
+              declared := false
             }, meter1)
       | core.result.Result.Err failure =>
         ok (core.result.Result.Err failure, meter1)
   | core.result.Result.Err failure =>
     ok (core.result.Result.Err failure, meter)
 
-/-- [noble_contracts::source::parsing::parse]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/parsing.rs', lines 44:4-52:5 -/
-@[rust_loop_body]
-def source.parsing.parse_loop.body
-  (next : Option source.lexer.Token) (meter : Meter)
-  (lexer : source.lexer.Scanner) (state : source.parsing.State) :
-  Result (ControlFlow ((Option source.lexer.Token) × Meter ×
-    source.lexer.Scanner × source.parsing.State) (Meter ×
-    source.parsing.State × (Option Diagnostic)))
+/-- [noble_contracts::source::lexer::{noble_contracts::source::lexer::Scanner<'a>}::new_declared]:
+    Source: 'crates/noble-contracts/src/source/lexer.rs', lines 57:4-64:5
+    Visibility: public -/
+def source.lexer.Scanner.new_declared
+  (source_bytes : Slice Std.U8) (meter : Meter) :
+  Result ((core.result.Result source.lexer.Scanner Diagnostic) × Meter)
   := do
-  match next with
-  | none => ok (done (meter, state, none))
-  | some token =>
-    let (r, state1, lexer1, meter1) ←
-      source.parsing.advance token state lexer meter
-    match r with
-    | core.result.Result.Ok token1 =>
-      ok (cont (token1, meter1, lexer1, state1))
-    | core.result.Result.Err problem =>
-      ok (done (meter1, state1, some problem))
+  let (r, meter1) ← source.lexer.Scanner.new source_bytes meter
+  match r with
+  | core.result.Result.Ok s =>
+    ok (core.result.Result.Ok { s with declared := true }, meter1)
+  | core.result.Result.Err _ => ok (r, meter1)
 
-/-- [noble_contracts::source::parsing::parse]: loop 0:
-    Source: 'crates/noble-contracts/src/source/parsing.rs', lines 44:4-52:5 -/
-@[rust_loop]
-def source.parsing.parse_loop
-  (next : Option source.lexer.Token) (meter : Meter)
-  (lexer : source.lexer.Scanner) (state : source.parsing.State) :
-  Result (Meter × source.parsing.State × (Option Diagnostic))
+/-- [noble_contracts::source::parsing::parse_impl]:
+    Source: 'crates/noble-contracts/src/source/parsing.rs', lines 30:0-49:1 -/
+def source.parsing.parse_impl
+  (source_bytes : Slice Std.U8) (meter : Meter) (declared : Bool) :
+  Result ((core.result.Result (source.Tree × (Option String)) Diagnostic) ×
+    Meter)
   := do
-  loop
-    (fun (next1, meter1, lexer1, state1) => source.parsing.parse_loop.body
-      next1 meter1 lexer1 state1)
-    (next, meter, lexer, state)
+  if declared
+  then
+    let (r, meter1) ← source.lexer.Scanner.new_declared source_bytes meter
+    match r with
+    | core.result.Result.Ok s =>
+      let i := Slice.len source_bytes
+      let r1 ← index i { start := 0#u32, «end» := 0#u32 }
+      match r1 with
+      | core.result.Result.Ok value =>
+        let (r2, lexer, meter2) ←
+          source.parsing.opening s { start := 0#u32, «end» := value } meter1
+        match r2 with
+        | core.result.Result.Ok value1 =>
+          let («name», first) := value1
+          let (r3, _, meter3) ←
+            source.parsing.scan_tokens first lexer
+              { start := 0#u32, «end» := value } meter2 «name»
+          ok (r3, meter3)
+        | core.result.Result.Err failure =>
+          ok (core.result.Result.Err failure, meter2)
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, meter1)
+    | core.result.Result.Err failure =>
+      ok (core.result.Result.Err failure, meter1)
+  else
+    let (r, meter1) ← source.lexer.Scanner.new source_bytes meter
+    match r with
+    | core.result.Result.Ok s =>
+      let i := Slice.len source_bytes
+      let r1 ← index i { start := 0#u32, «end» := 0#u32 }
+      match r1 with
+      | core.result.Result.Ok value =>
+        let (r2, lexer, meter2) ←
+          source.parsing.opening s { start := 0#u32, «end» := value } meter1
+        match r2 with
+        | core.result.Result.Ok value1 =>
+          let («name», first) := value1
+          let (r3, _, meter3) ←
+            source.parsing.scan_tokens first lexer
+              { start := 0#u32, «end» := value } meter2 «name»
+          ok (r3, meter3)
+        | core.result.Result.Err failure =>
+          ok (core.result.Result.Err failure, meter2)
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, meter1)
+    | core.result.Result.Err failure =>
+      ok (core.result.Result.Err failure, meter1)
+
+/-- [noble_contracts::source::parsing::parse_declared]:
+    Source: 'crates/noble-contracts/src/source/parsing.rs', lines 23:0-28:1 -/
+def source.parsing.parse_declared
+  (source_bytes : Slice Std.U8) (meter : Meter) :
+  Result ((core.result.Result (source.Tree × (Option String)) Diagnostic) ×
+    Meter)
+  := do
+  source.parsing.parse_impl source_bytes meter true
 
 /-- [noble_contracts::source::parsing::parse]:
-    Source: 'crates/noble-contracts/src/source/parsing.rs', lines 20:0-76:1 -/
+    Source: 'crates/noble-contracts/src/source/parsing.rs', lines 16:0-21:1 -/
 def source.parsing.parse
   (source_bytes : Slice Std.U8) (meter : Meter) :
   Result ((core.result.Result (source.Tree × (Option String)) Diagnostic) ×
     Meter)
   := do
-  let (r, meter1) ← source.lexer.Scanner.new source_bytes meter
-  match r with
-  | core.result.Result.Ok s =>
-    let i := Slice.len source_bytes
-    let r1 ← index i { start := 0#u32, «end» := 0#u32 }
-    match r1 with
-    | core.result.Result.Ok value =>
-      let (r2, lexer, meter2) ←
-        source.parsing.opening s { start := 0#u32, «end» := value } meter1
-      match r2 with
-      | core.result.Result.Ok value1 =>
-        let («name», first) := value1
-        let (r3, meter3) ←
-          metering.Meter.node meter2 { start := 0#u32, «end» := value }
-        match r3 with
-        | core.result.Result.Ok _ =>
-          let v := alloc.vec.Vec.with_capacity source.parsing.Frame 1#usize
-          let v1 ←
-            alloc.vec.Vec.push v
-              ({ body := (alloc.vec.Vec.new Std.U32), start := 0#u32 } :
-              source.parsing.Frame)
-          let (meter4, state, failure) ←
-            source.parsing.parse_loop first meter3 lexer
-              { frames := v1, nodes := (alloc.vec.Vec.new source.Node) }
-          match failure with
-          | none =>
-            let i1 := alloc.vec.Vec.len state.frames
-            if i1 != 1#usize
-            then
-              let d ←
-                invalid { start := 0#u32, «end» := value } (toStr
-                  "unclosed quotation")
-              ok (core.result.Result.Err d, meter4)
-            else
-              let (o, _) ← alloc.vec.Vec.pop Global state.frames
-              match o with
-              | none =>
-                let d ← internal { start := 0#u32, «end» := value }
-                ok (core.result.Result.Err d, meter4)
-              | some frame =>
-                let b := core.option.Option.is_some «name»
-                if b
-                then
-                  let (s1, deref_mut_back) ←
-                    lift (alloc.vec.Vec.deref_mut state.nodes)
-                  let (r4, s2) ←
-                    source.parsing.declaration_body frame s1
-                      { start := 0#u32, «end» := value }
-                  match r4 with
-                  | core.result.Result.Ok value2 =>
-                    let v2 := deref_mut_back s2
-                    ok (core.result.Result.Ok
-                      ({
-                         nodes := v2,
-                         body := value2,
-                         span := { start := 0#u32, «end» := value }
-                       }, «name»), meter4)
-                  | core.result.Result.Err failure1 =>
-                    ok (core.result.Result.Err failure1, meter4)
-                else
-                  ok (core.result.Result.Ok
-                    ({
-                       nodes := state.nodes,
-                       body := frame.body,
-                       span := { start := 0#u32, «end» := value }
-                     }, «name»), meter4)
-          | some problem => ok (core.result.Result.Err problem, meter4)
-        | core.result.Result.Err failure =>
-          ok (core.result.Result.Err failure, meter3)
-      | core.result.Result.Err failure =>
-        ok (core.result.Result.Err failure, meter2)
-    | core.result.Result.Err failure =>
-      ok (core.result.Result.Err failure, meter1)
-  | core.result.Result.Err failure =>
-    ok (core.result.Result.Err failure, meter1)
+  source.parsing.parse_impl source_bytes meter false
 
 /-- [noble_contracts::source::inference::validation::{noble_contracts::source::inference::validation::Traversal}::value_group]:
-    Source: 'crates/noble-contracts/src/source/inference/validation.rs', lines 219:4-257:5 -/
+    Source: 'crates/noble-contracts/src/source/inference/validation.rs', lines 220:4-258:5 -/
 def source.inference.validation.Traversal.value_group
   (self : source.inference.validation.Traversal) (term : inference.Term)
   (group : Option Std.Usize) (span : Span) (meter : Meter) :
@@ -19783,6 +20388,7 @@ def source.inference.validation.Traversal.value_group
     | inference.Term.EvidenceTerm => ok false
     | inference.Term.CertifiedTerm => ok false
     | inference.Term.ResourceTerm _ => ok false
+    | inference.Term.NominalTerm _ => ok false
     | inference.Term.PairTerm _ _ => ok false
     | inference.Term.SumTerm _ _ => ok false
     | inference.Term.ListTerm _ => ok false
@@ -19854,7 +20460,7 @@ def source.inference.validation.Traversal.value_group
           ok (core.result.Result.Ok group, { self with sizes := v }, meter)
 
 /-- [noble_contracts::inference::{noble_contracts::inference::Arena}::get]:
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 101:4-106:5 -/
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 107:4-112:5 -/
 def inference.Arena.get
   (self : inference.Arena) (id : Std.U32) (span : Span) :
   Result (core.result.Result inference.Term Diagnostic)
@@ -19873,7 +20479,7 @@ def inference.Arena.get
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_contracts::inference::{noble_contracts::inference::Arena}::root_step]:
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 147:4-173:5 -/
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 153:4-180:5 -/
 def inference.Arena.root_step
   (self : inference.Arena) (id : Std.U32) (span : Span) (meter : Meter) :
   Result ((core.result.Result (Option Std.U32) Diagnostic) × Meter)
@@ -19898,6 +20504,7 @@ def inference.Arena.root_step
       | inference.Term.CertifiedTerm => ok (core.result.Result.Ok none, meter1)
       | inference.Term.ResourceTerm _ =>
         ok (core.result.Result.Ok none, meter1)
+      | inference.Term.NominalTerm _ => ok (core.result.Result.Ok none, meter1)
       | inference.Term.PairTerm _ _ => ok (core.result.Result.Ok none, meter1)
       | inference.Term.SumTerm _ _ => ok (core.result.Result.Ok none, meter1)
       | inference.Term.ListTerm _ => ok (core.result.Result.Ok none, meter1)
@@ -19911,13 +20518,15 @@ def inference.Arena.root_step
     ok (core.result.Result.Err failure, meter1)
 
 /-- [noble_contracts::inference::{noble_contracts::inference::Arena}::root]: loop body 0:
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 117:8-130:9 -/
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 123:8-136:9 -/
 @[rust_loop_body]
 def inference.Arena.root_loop.body
   (v : alloc.vec.Vec inference.Term) (b : Bool) (i : Std.U64) (b1 : Bool)
-  (v1 : alloc.vec.Vec inference.effects.Effect) (v2 : alloc.vec.Vec Std.U64)
-  (v3 : alloc.vec.Vec (Std.U32 × Std.U32))
-  (v4 : alloc.vec.Vec (Std.U32 × Std.U32)) (span : Span) (id : Std.U32)
+  (v1 : alloc.vec.Vec (noble_kernel.types.NominalTypeId ×
+  noble_kernel.types.NominalShape))
+  (v2 : alloc.vec.Vec inference.effects.Effect) (v3 : alloc.vec.Vec Std.U64)
+  (v4 : alloc.vec.Vec (Std.U32 × Std.U32))
+  (v5 : alloc.vec.Vec (Std.U32 × Std.U32)) (span : Span) (id : Std.U32)
   (meter : Meter) (remaining : Std.Usize) :
   Result (ControlFlow (Std.U32 × Meter × Std.Usize) (Std.U32 × Meter × Bool
     × (Option Diagnostic)))
@@ -19931,10 +20540,11 @@ def inference.Arena.root_loop.body
           effectful := b,
           effect_universe := i,
           resources := b1,
-          effects := v1,
-          effect_bounds := v2,
-          effect_equations := v3,
-          program_effects := v4
+          nominals := v1,
+          effects := v2,
+          effect_bounds := v3,
+          effect_equations := v4,
+          program_effects := v5
         } id span meter
     match r with
     | core.result.Result.Ok o =>
@@ -19948,23 +20558,25 @@ def inference.Arena.root_loop.body
   else ok (done (id, meter, false, none))
 
 /-- [noble_contracts::inference::{noble_contracts::inference::Arena}::root]: loop 0:
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 117:8-130:9 -/
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 123:8-136:9 -/
 @[rust_loop]
 def inference.Arena.root_loop
   (v : alloc.vec.Vec inference.Term) (b : Bool) (i : Std.U64) (b1 : Bool)
-  (v1 : alloc.vec.Vec inference.effects.Effect) (v2 : alloc.vec.Vec Std.U64)
-  (v3 : alloc.vec.Vec (Std.U32 × Std.U32))
-  (v4 : alloc.vec.Vec (Std.U32 × Std.U32)) (id : Std.U32) (span : Span)
+  (v1 : alloc.vec.Vec (noble_kernel.types.NominalTypeId ×
+  noble_kernel.types.NominalShape))
+  (v2 : alloc.vec.Vec inference.effects.Effect) (v3 : alloc.vec.Vec Std.U64)
+  (v4 : alloc.vec.Vec (Std.U32 × Std.U32))
+  (v5 : alloc.vec.Vec (Std.U32 × Std.U32)) (id : Std.U32) (span : Span)
   (meter : Meter) (remaining : Std.Usize) :
   Result (Std.U32 × Meter × Bool × (Option Diagnostic))
   := do
   loop
     (fun (id1, meter1, remaining1) => inference.Arena.root_loop.body v b i b1
-      v1 v2 v3 v4 span id1 meter1 remaining1)
+      v1 v2 v3 v4 v5 span id1 meter1 remaining1)
     (id, meter, remaining)
 
 /-- [noble_contracts::inference::{noble_contracts::inference::Arena}::root]:
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 108:4-141:5 -/
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 114:4-147:5 -/
 def inference.Arena.root
   (self : inference.Arena) (id : Std.U32) (span : Span) (meter : Meter) :
   Result ((core.result.Result Std.U32 Diagnostic) × Meter)
@@ -19973,8 +20585,8 @@ def inference.Arena.root
   let remaining ← lift (core.num.Usize.saturating_add i 1#usize)
   let (id1, meter1, is_found, failure) ←
     inference.Arena.root_loop self.terms self.effectful self.effect_universe
-      self.resources self.effects self.effect_bounds self.effect_equations
-      self.program_effects id span meter remaining
+      self.resources self.nominals self.effects self.effect_bounds
+      self.effect_equations self.program_effects id span meter remaining
   match failure with
   | none =>
     if is_found
@@ -19984,7 +20596,7 @@ def inference.Arena.root
   | some problem => ok (core.result.Result.Err problem, meter1)
 
 /-- [noble_contracts::source::inference::validation::{noble_contracts::source::inference::validation::Traversal}::visit]:
-    Source: 'crates/noble-contracts/src/source/inference/validation.rs', lines 138:4-213:5 -/
+    Source: 'crates/noble-contracts/src/source/inference/validation.rs', lines 138:4-214:5 -/
 def source.inference.validation.Traversal.visit
   (self : source.inference.validation.Traversal) (arena : inference.Arena)
   (visit : source.inference.validation.Visit) (span : Span) (meter : Meter) :
@@ -20031,6 +20643,8 @@ def source.inference.validation.Traversal.visit
             | inference.Term.CertifiedTerm =>
               ok (core.result.Result.Ok (), self1, meter4)
             | inference.Term.ResourceTerm _ =>
+              ok (core.result.Result.Ok (), self1, meter4)
+            | inference.Term.NominalTerm _ =>
               ok (core.result.Result.Ok (), self1, meter4)
             | inference.Term.PairTerm a b =>
               let v ← alloc.vec.Vec.reserve Global self1.pending 2#usize
@@ -20337,7 +20951,7 @@ def source.inference.validation.open
   | some problem => ok (core.result.Result.Err problem, meter1)
 
 /-- [noble_contracts::inference::{noble_contracts::inference::Arena}::add]:
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 89:4-99:5
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 95:4-105:5
     Visibility: public -/
 def inference.Arena.add
   (self : inference.Arena) (term : inference.Term) (span : Span)
@@ -20394,7 +21008,7 @@ def inference.effects.Arena.effect_empty
     0#u64) span meter
 
 /-- [noble_contracts::source::inference::traversal::quotation]:
-    Source: 'crates/noble-contracts/src/source/inference/traversal.rs', lines 142:0-168:1 -/
+    Source: 'crates/noble-contracts/src/source/inference/traversal.rs', lines 143:0-169:1 -/
 def source.inference.traversal.quotation
   (node : Std.U32) (frame : source.inference.Frame)
   (state : source.inference.State) (span : Span) (meter : Meter) :
@@ -20428,9 +21042,9 @@ def source.inference.traversal.quotation
     ok (core.result.Result.Err failure, { state with arena := a }, meter1)
 
 /-- [noble_contracts::source::inference::traversal::named]:
-    Source: 'crates/noble-contracts/src/source/inference/traversal.rs', lines 100:0-136:1 -/
+    Source: 'crates/noble-contracts/src/source/inference/traversal.rs', lines 100:0-137:1 -/
 def source.inference.traversal.named
-  (call : source.inference.operations.Call) (identity : Std.U64)
+  (call : source.inference.operations.Call) (definition : source.Named)
   (frame : source.inference.Frame) (state : source.inference.State)
   (meter : Meter) :
   Result ((core.result.Result source.inference.Frame Diagnostic) ×
@@ -20452,7 +21066,8 @@ def source.inference.traversal.named
              input := frame.stack,
              output := frame.stack,
              effect := value,
-             identity := (some identity),
+             identity := (some definition.identity),
+             owner := definition.owner,
              span := call.span
            } : source.inference.Body)
       let o ← core.option.Option.or frame.caller (some call.span)
@@ -20514,8 +21129,8 @@ def source.inference.traversal.child
           let d ← internal node.span
           ok (core.result.Result.Err d, state, meter)
         | some definition =>
-          source.inference.traversal.named { id, span := node.span }
-            definition.identity frame state meter
+          source.inference.traversal.named { id, span := node.span } definition
+            frame state meter
       | core.result.Result.Err failure =>
         ok (core.result.Result.Err failure, state, meter)
   | source.Kind.Quotation _ =>
@@ -20589,7 +21204,7 @@ def source.inference.operations.contextualize
       ok { error with span := caller1, message := message6 }
 
 /-- [noble_contracts::source::inference::add]:
-    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 232:0-246:1 -/
+    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 246:0-260:1 -/
 def source.inference.add
   (body : Std.Usize) (draft : source.inference.Draft)
   (state : source.inference.State) (meter : Meter) :
@@ -20645,7 +21260,7 @@ impl_def DiagnosticKind.Insts.CoreCmpPartialEqDiagnosticKind :
 }
 
 /-- [noble_contracts::inference::unify::sort]:
-    Source: 'crates/noble-contracts/src/inference/unify.rs', lines 204:0-223:1 -/
+    Source: 'crates/noble-contracts/src/inference/unify.rs', lines 207:0-227:1 -/
 def inference.unify.sort (term : inference.Term) : Result inference.Sort := do
   match term with
   | inference.Term.HoleTerm sort => ok sort
@@ -20659,6 +21274,7 @@ def inference.unify.sort (term : inference.Term) : Result inference.Sort := do
   | inference.Term.EvidenceTerm => ok inference.Sort.Value
   | inference.Term.CertifiedTerm => ok inference.Sort.Value
   | inference.Term.ResourceTerm _ => ok inference.Sort.Value
+  | inference.Term.NominalTerm _ => ok inference.Sort.Value
   | inference.Term.PairTerm _ _ => ok inference.Sort.Value
   | inference.Term.SumTerm _ _ => ok inference.Sort.Value
   | inference.Term.ListTerm _ => ok inference.Sort.Value
@@ -20667,7 +21283,7 @@ def inference.unify.sort (term : inference.Term) : Result inference.Sort := do
   | inference.Term.PushTerm _ _ => ok inference.Sort.Stack
 
 /-- [noble_contracts::inference::unify::{noble_contracts::inference::Arena}::occurs_step]:
-    Source: 'crates/noble-contracts/src/inference/unify.rs', lines 44:4-83:5 -/
+    Source: 'crates/noble-contracts/src/inference/unify.rs', lines 44:4-84:5 -/
 def inference.unify.Arena.occurs_step
   (self : inference.Arena) («variable» : Std.U32) (id : Std.U32)
   (pending : alloc.vec.Vec Std.U32) (span : Span) (meter : Meter) :
@@ -20711,6 +21327,8 @@ def inference.unify.Arena.occurs_step
           | inference.Term.CertifiedTerm =>
             ok (core.result.Result.Ok pending, meter2)
           | inference.Term.ResourceTerm _ =>
+            ok (core.result.Result.Ok pending, meter2)
+          | inference.Term.NominalTerm _ =>
             ok (core.result.Result.Ok pending, meter2)
           | inference.Term.PairTerm a b =>
             let pending1 ← alloc.vec.Vec.push pending a
@@ -20891,7 +21509,7 @@ def inference.effects.Arena.program_effect
   | some problem => ok (core.result.Result.Err problem, meter1)
 
 /-- [noble_contracts::inference::unify::{noble_contracts::inference::Arena}::unify_step]:
-    Source: 'crates/noble-contracts/src/inference/unify.rs', lines 123:4-201:5 -/
+    Source: 'crates/noble-contracts/src/inference/unify.rs', lines 124:4-204:5 -/
 def inference.unify.Arena.unify_step
   (self : inference.Arena) (left : Std.U32) (right : Std.U32)
   (pending : alloc.vec.Vec (Std.U32 × Std.U32)) (span : Span) (meter : Meter)
@@ -20932,6 +21550,7 @@ def inference.unify.Arena.unify_step
                   | inference.Term.EvidenceTerm => ok false
                   | inference.Term.CertifiedTerm => ok false
                   | inference.Term.ResourceTerm _ => ok false
+                  | inference.Term.NominalTerm _ => ok false
                   | inference.Term.PairTerm _ _ => ok false
                   | inference.Term.SumTerm _ _ => ok false
                   | inference.Term.ListTerm _ => ok false
@@ -20953,6 +21572,7 @@ def inference.unify.Arena.unify_step
                     | inference.Term.EvidenceTerm => ok false
                     | inference.Term.CertifiedTerm => ok false
                     | inference.Term.ResourceTerm _ => ok false
+                    | inference.Term.NominalTerm _ => ok false
                     | inference.Term.PairTerm _ _ => ok false
                     | inference.Term.SumTerm _ _ => ok false
                     | inference.Term.ListTerm _ => ok false
@@ -21077,6 +21697,12 @@ def inference.unify.Arena.unify_step
                                     "program type or stack witness cannot be resolved")
                                 ok (core.result.Result.Err d,
                                   { self with effect_equations := v }, meter6)
+                              | inference.Term.NominalTerm _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
                               | inference.Term.PairTerm _ _ =>
                                 let d ←
                                   invalid span (toStr
@@ -21179,6 +21805,12 @@ def inference.unify.Arena.unify_step
                                 ok (core.result.Result.Err d,
                                   { self with effect_equations := v }, meter6)
                               | inference.Term.ResourceTerm _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.NominalTerm _ =>
                                 let d ←
                                   invalid span (toStr
                                     "program type or stack witness cannot be resolved")
@@ -21291,6 +21923,12 @@ def inference.unify.Arena.unify_step
                                     "program type or stack witness cannot be resolved")
                                 ok (core.result.Result.Err d,
                                   { self with effect_equations := v }, meter6)
+                              | inference.Term.NominalTerm _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
                               | inference.Term.PairTerm _ _ =>
                                 let d ←
                                   invalid span (toStr
@@ -21393,6 +22031,12 @@ def inference.unify.Arena.unify_step
                                 ok (core.result.Result.Err d,
                                   { self with effect_equations := v }, meter6)
                               | inference.Term.ResourceTerm _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.NominalTerm _ =>
                                 let d ←
                                   invalid span (toStr
                                     "program type or stack witness cannot be resolved")
@@ -21505,6 +22149,12 @@ def inference.unify.Arena.unify_step
                                     "program type or stack witness cannot be resolved")
                                 ok (core.result.Result.Err d,
                                   { self with effect_equations := v }, meter6)
+                              | inference.Term.NominalTerm _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
                               | inference.Term.PairTerm _ _ =>
                                 let d ←
                                   invalid span (toStr
@@ -21607,6 +22257,12 @@ def inference.unify.Arena.unify_step
                                 ok (core.result.Result.Err d,
                                   { self with effect_equations := v }, meter6)
                               | inference.Term.ResourceTerm _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.NominalTerm _ =>
                                 let d ←
                                   invalid span (toStr
                                     "program type or stack witness cannot be resolved")
@@ -21719,6 +22375,12 @@ def inference.unify.Arena.unify_step
                                     "program type or stack witness cannot be resolved")
                                 ok (core.result.Result.Err d,
                                   { self with effect_equations := v }, meter6)
+                              | inference.Term.NominalTerm _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
                               | inference.Term.PairTerm _ _ =>
                                 let d ←
                                   invalid span (toStr
@@ -21826,6 +22488,12 @@ def inference.unify.Arena.unify_step
                                     "program type or stack witness cannot be resolved")
                                 ok (core.result.Result.Err d,
                                   { self with effect_equations := v }, meter6)
+                              | inference.Term.NominalTerm _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
                               | inference.Term.PairTerm _ _ =>
                                 let d ←
                                   invalid span (toStr
@@ -21928,6 +22596,12 @@ def inference.unify.Arena.unify_step
                                 ok (core.result.Result.Ok pending,
                                   { self with effect_equations := v }, meter6)
                               | inference.Term.ResourceTerm _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.NominalTerm _ =>
                                 let d ←
                                   invalid span (toStr
                                     "program type or stack witness cannot be resolved")
@@ -22053,6 +22727,138 @@ def inference.unify.Arena.unify_step
                                   ok (core.result.Result.Err d,
                                     { self with effect_equations := v },
                                     meter6)
+                              | inference.Term.NominalTerm _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.PairTerm _ _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.SumTerm _ _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.ListTerm _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.ProgramTerm _ _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.EmptyTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.PushTerm _ _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                            | inference.Term.NominalTerm a =>
+                              match value3 with
+                              | inference.Term.HoleTerm _ =>
+                                let (r8, self1, meter7) ←
+                                  inference.unify.Arena.bind
+                                    { self with effect_equations := v } value1
+                                    value span meter6
+                                match r8 with
+                                | core.result.Result.Ok _ =>
+                                  ok (core.result.Result.Ok pending, self1,
+                                    meter7)
+                                | core.result.Result.Err failure =>
+                                  ok (core.result.Result.Err failure, self1,
+                                    meter7)
+                              | inference.Term.LinkTerm _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.UnitTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.BoolTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.I64Term =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.TextTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.SyntaxTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.ContractTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.EvidenceTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.CertifiedTerm =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.ResourceTerm _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.NominalTerm b3 =>
+                                let b4 ←
+                                  noble_kernel.types.NominalTypeId.Insts.CoreCmpPartialEqNominalTypeId.eq
+                                    a b3
+                                if b4
+                                then
+                                  ok (core.result.Result.Ok pending,
+                                    { self with effect_equations := v },
+                                    meter6)
+                                else
+                                  let d ←
+                                    invalid span (toStr
+                                      "program type or stack witness cannot be resolved")
+                                  ok (core.result.Result.Err d,
+                                    { self with effect_equations := v },
+                                    meter6)
                               | inference.Term.PairTerm _ _ =>
                                 let d ←
                                   invalid span (toStr
@@ -22158,6 +22964,12 @@ def inference.unify.Arena.unify_step
                                 ok (core.result.Result.Err d,
                                   { self with effect_equations := v }, meter6)
                               | inference.Term.ResourceTerm _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.NominalTerm _ =>
                                 let d ←
                                   invalid span (toStr
                                     "program type or stack witness cannot be resolved")
@@ -22274,6 +23086,12 @@ def inference.unify.Arena.unify_step
                                     "program type or stack witness cannot be resolved")
                                 ok (core.result.Result.Err d,
                                   { self with effect_equations := v }, meter6)
+                              | inference.Term.NominalTerm _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
                               | inference.Term.PairTerm _ _ =>
                                 let d ←
                                   invalid span (toStr
@@ -22385,6 +23203,12 @@ def inference.unify.Arena.unify_step
                                     "program type or stack witness cannot be resolved")
                                 ok (core.result.Result.Err d,
                                   { self with effect_equations := v }, meter6)
+                              | inference.Term.NominalTerm _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
                               | inference.Term.PairTerm _ _ =>
                                 let d ←
                                   invalid span (toStr
@@ -22489,6 +23313,12 @@ def inference.unify.Arena.unify_step
                                 ok (core.result.Result.Err d,
                                   { self with effect_equations := v }, meter6)
                               | inference.Term.ResourceTerm _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.NominalTerm _ =>
                                 let d ←
                                   invalid span (toStr
                                     "program type or stack witness cannot be resolved")
@@ -22605,6 +23435,12 @@ def inference.unify.Arena.unify_step
                                     "program type or stack witness cannot be resolved")
                                 ok (core.result.Result.Err d,
                                   { self with effect_equations := v }, meter6)
+                              | inference.Term.NominalTerm _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
                               | inference.Term.PairTerm _ _ =>
                                 let d ←
                                   invalid span (toStr
@@ -22707,6 +23543,12 @@ def inference.unify.Arena.unify_step
                                 ok (core.result.Result.Err d,
                                   { self with effect_equations := v }, meter6)
                               | inference.Term.ResourceTerm _ =>
+                                let d ←
+                                  invalid span (toStr
+                                    "program type or stack witness cannot be resolved")
+                                ok (core.result.Result.Err d,
+                                  { self with effect_equations := v }, meter6)
+                              | inference.Term.NominalTerm _ =>
                                 let d ←
                                   invalid span (toStr
                                     "program type or stack witness cannot be resolved")
@@ -22839,6 +23681,11 @@ def inference.unify.Arena.unify_step
                             invalid span (toStr
                               "program type or stack witness cannot be resolved")
                           ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.NominalTerm _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
                         | inference.Term.PairTerm _ _ =>
                           let d ←
                             invalid span (toStr
@@ -22923,6 +23770,11 @@ def inference.unify.Arena.unify_step
                               "program type or stack witness cannot be resolved")
                           ok (core.result.Result.Err d, self, meter3)
                         | inference.Term.ResourceTerm _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.NominalTerm _ =>
                           let d ←
                             invalid span (toStr
                               "program type or stack witness cannot be resolved")
@@ -23015,6 +23867,11 @@ def inference.unify.Arena.unify_step
                             invalid span (toStr
                               "program type or stack witness cannot be resolved")
                           ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.NominalTerm _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
                         | inference.Term.PairTerm _ _ =>
                           let d ←
                             invalid span (toStr
@@ -23099,6 +23956,11 @@ def inference.unify.Arena.unify_step
                               "program type or stack witness cannot be resolved")
                           ok (core.result.Result.Err d, self, meter3)
                         | inference.Term.ResourceTerm _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.NominalTerm _ =>
                           let d ←
                             invalid span (toStr
                               "program type or stack witness cannot be resolved")
@@ -23191,6 +24053,11 @@ def inference.unify.Arena.unify_step
                             invalid span (toStr
                               "program type or stack witness cannot be resolved")
                           ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.NominalTerm _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
                         | inference.Term.PairTerm _ _ =>
                           let d ←
                             invalid span (toStr
@@ -23275,6 +24142,11 @@ def inference.unify.Arena.unify_step
                               "program type or stack witness cannot be resolved")
                           ok (core.result.Result.Err d, self, meter3)
                         | inference.Term.ResourceTerm _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.NominalTerm _ =>
                           let d ←
                             invalid span (toStr
                               "program type or stack witness cannot be resolved")
@@ -23367,6 +24239,11 @@ def inference.unify.Arena.unify_step
                             invalid span (toStr
                               "program type or stack witness cannot be resolved")
                           ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.NominalTerm _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
                         | inference.Term.PairTerm _ _ =>
                           let d ←
                             invalid span (toStr
@@ -23455,6 +24332,11 @@ def inference.unify.Arena.unify_step
                             invalid span (toStr
                               "program type or stack witness cannot be resolved")
                           ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.NominalTerm _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
                         | inference.Term.PairTerm _ _ =>
                           let d ←
                             invalid span (toStr
@@ -23539,6 +24421,11 @@ def inference.unify.Arena.unify_step
                         | inference.Term.CertifiedTerm =>
                           ok (core.result.Result.Ok pending, self, meter3)
                         | inference.Term.ResourceTerm _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.NominalTerm _ =>
                           let d ←
                             invalid span (toStr
                               "program type or stack witness cannot be resolved")
@@ -23640,6 +24527,113 @@ def inference.unify.Arena.unify_step
                               invalid span (toStr
                                 "program type or stack witness cannot be resolved")
                             ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.NominalTerm _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.PairTerm _ _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.SumTerm _ _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.ListTerm _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.ProgramTerm _ _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.EmptyTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.PushTerm _ _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.NominalTerm a =>
+                        match value3 with
+                        | inference.Term.HoleTerm _ =>
+                          let (r5, self1, meter4) ←
+                            inference.unify.Arena.bind self value1 value span
+                              meter3
+                          match r5 with
+                          | core.result.Result.Ok _ =>
+                            ok (core.result.Result.Ok pending, self1, meter4)
+                          | core.result.Result.Err failure =>
+                            ok (core.result.Result.Err failure, self1, meter4)
+                        | inference.Term.LinkTerm _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.UnitTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.BoolTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.I64Term =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.TextTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.SyntaxTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.ContractTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.EvidenceTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.CertifiedTerm =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.ResourceTerm _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.NominalTerm b3 =>
+                          let b4 ←
+                            noble_kernel.types.NominalTypeId.Insts.CoreCmpPartialEqNominalTypeId.eq
+                              a b3
+                          if b4
+                          then ok (core.result.Result.Ok pending, self, meter3)
+                          else
+                            let d ←
+                              invalid span (toStr
+                                "program type or stack witness cannot be resolved")
+                            ok (core.result.Result.Err d, self, meter3)
                         | inference.Term.PairTerm _ _ =>
                           let d ←
                             invalid span (toStr
@@ -23727,6 +24721,11 @@ def inference.unify.Arena.unify_step
                               "program type or stack witness cannot be resolved")
                           ok (core.result.Result.Err d, self, meter3)
                         | inference.Term.ResourceTerm _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.NominalTerm _ =>
                           let d ←
                             invalid span (toStr
                               "program type or stack witness cannot be resolved")
@@ -23821,6 +24820,11 @@ def inference.unify.Arena.unify_step
                             invalid span (toStr
                               "program type or stack witness cannot be resolved")
                           ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.NominalTerm _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
                         | inference.Term.PairTerm _ _ =>
                           let d ←
                             invalid span (toStr
@@ -23911,6 +24915,11 @@ def inference.unify.Arena.unify_step
                             invalid span (toStr
                               "program type or stack witness cannot be resolved")
                           ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.NominalTerm _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
                         | inference.Term.PairTerm _ _ =>
                           let d ←
                             invalid span (toStr
@@ -23996,6 +25005,11 @@ def inference.unify.Arena.unify_step
                               "program type or stack witness cannot be resolved")
                           ok (core.result.Result.Err d, self, meter3)
                         | inference.Term.ResourceTerm _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.NominalTerm _ =>
                           let d ←
                             invalid span (toStr
                               "program type or stack witness cannot be resolved")
@@ -24090,6 +25104,11 @@ def inference.unify.Arena.unify_step
                             invalid span (toStr
                               "program type or stack witness cannot be resolved")
                           ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.NominalTerm _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
                         | inference.Term.PairTerm _ _ =>
                           let d ←
                             invalid span (toStr
@@ -24174,6 +25193,11 @@ def inference.unify.Arena.unify_step
                               "program type or stack witness cannot be resolved")
                           ok (core.result.Result.Err d, self, meter3)
                         | inference.Term.ResourceTerm _ =>
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
+                        | inference.Term.NominalTerm _ =>
                           let d ←
                             invalid span (toStr
                               "program type or stack witness cannot be resolved")
@@ -24291,6 +25315,11 @@ def inference.unify.Arena.unify_step
                           invalid span (toStr
                             "program type or stack witness cannot be resolved")
                         ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.NominalTerm _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
                       | inference.Term.PairTerm _ _ =>
                         let d ←
                           invalid span (toStr
@@ -24375,6 +25404,11 @@ def inference.unify.Arena.unify_step
                             "program type or stack witness cannot be resolved")
                         ok (core.result.Result.Err d, self, meter3)
                       | inference.Term.ResourceTerm _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.NominalTerm _ =>
                         let d ←
                           invalid span (toStr
                             "program type or stack witness cannot be resolved")
@@ -24467,6 +25501,11 @@ def inference.unify.Arena.unify_step
                           invalid span (toStr
                             "program type or stack witness cannot be resolved")
                         ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.NominalTerm _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
                       | inference.Term.PairTerm _ _ =>
                         let d ←
                           invalid span (toStr
@@ -24551,6 +25590,11 @@ def inference.unify.Arena.unify_step
                             "program type or stack witness cannot be resolved")
                         ok (core.result.Result.Err d, self, meter3)
                       | inference.Term.ResourceTerm _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.NominalTerm _ =>
                         let d ←
                           invalid span (toStr
                             "program type or stack witness cannot be resolved")
@@ -24643,6 +25687,11 @@ def inference.unify.Arena.unify_step
                           invalid span (toStr
                             "program type or stack witness cannot be resolved")
                         ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.NominalTerm _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
                       | inference.Term.PairTerm _ _ =>
                         let d ←
                           invalid span (toStr
@@ -24727,6 +25776,11 @@ def inference.unify.Arena.unify_step
                             "program type or stack witness cannot be resolved")
                         ok (core.result.Result.Err d, self, meter3)
                       | inference.Term.ResourceTerm _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.NominalTerm _ =>
                         let d ←
                           invalid span (toStr
                             "program type or stack witness cannot be resolved")
@@ -24819,6 +25873,11 @@ def inference.unify.Arena.unify_step
                           invalid span (toStr
                             "program type or stack witness cannot be resolved")
                         ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.NominalTerm _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
                       | inference.Term.PairTerm _ _ =>
                         let d ←
                           invalid span (toStr
@@ -24907,6 +25966,11 @@ def inference.unify.Arena.unify_step
                           invalid span (toStr
                             "program type or stack witness cannot be resolved")
                         ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.NominalTerm _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
                       | inference.Term.PairTerm _ _ =>
                         let d ←
                           invalid span (toStr
@@ -24991,6 +26055,11 @@ def inference.unify.Arena.unify_step
                       | inference.Term.CertifiedTerm =>
                         ok (core.result.Result.Ok pending, self, meter3)
                       | inference.Term.ResourceTerm _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.NominalTerm _ =>
                         let d ←
                           invalid span (toStr
                             "program type or stack witness cannot be resolved")
@@ -25092,6 +26161,113 @@ def inference.unify.Arena.unify_step
                             invalid span (toStr
                               "program type or stack witness cannot be resolved")
                           ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.NominalTerm _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.PairTerm _ _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.SumTerm _ _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.ListTerm _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.ProgramTerm _ _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.EmptyTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.PushTerm _ _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.NominalTerm a =>
+                      match value3 with
+                      | inference.Term.HoleTerm _ =>
+                        let (r5, self1, meter4) ←
+                          inference.unify.Arena.bind self value1 value span
+                            meter3
+                        match r5 with
+                        | core.result.Result.Ok _ =>
+                          ok (core.result.Result.Ok pending, self1, meter4)
+                        | core.result.Result.Err failure =>
+                          ok (core.result.Result.Err failure, self1, meter4)
+                      | inference.Term.LinkTerm _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.UnitTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.BoolTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.I64Term =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.TextTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.SyntaxTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.ContractTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.EvidenceTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.CertifiedTerm =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.ResourceTerm _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.NominalTerm b2 =>
+                        let b3 ←
+                          noble_kernel.types.NominalTypeId.Insts.CoreCmpPartialEqNominalTypeId.eq
+                            a b2
+                        if b3
+                        then ok (core.result.Result.Ok pending, self, meter3)
+                        else
+                          let d ←
+                            invalid span (toStr
+                              "program type or stack witness cannot be resolved")
+                          ok (core.result.Result.Err d, self, meter3)
                       | inference.Term.PairTerm _ _ =>
                         let d ←
                           invalid span (toStr
@@ -25179,6 +26355,11 @@ def inference.unify.Arena.unify_step
                             "program type or stack witness cannot be resolved")
                         ok (core.result.Result.Err d, self, meter3)
                       | inference.Term.ResourceTerm _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.NominalTerm _ =>
                         let d ←
                           invalid span (toStr
                             "program type or stack witness cannot be resolved")
@@ -25273,6 +26454,11 @@ def inference.unify.Arena.unify_step
                           invalid span (toStr
                             "program type or stack witness cannot be resolved")
                         ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.NominalTerm _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
                       | inference.Term.PairTerm _ _ =>
                         let d ←
                           invalid span (toStr
@@ -25363,6 +26549,11 @@ def inference.unify.Arena.unify_step
                           invalid span (toStr
                             "program type or stack witness cannot be resolved")
                         ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.NominalTerm _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
                       | inference.Term.PairTerm _ _ =>
                         let d ←
                           invalid span (toStr
@@ -25448,6 +26639,11 @@ def inference.unify.Arena.unify_step
                             "program type or stack witness cannot be resolved")
                         ok (core.result.Result.Err d, self, meter3)
                       | inference.Term.ResourceTerm _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.NominalTerm _ =>
                         let d ←
                           invalid span (toStr
                             "program type or stack witness cannot be resolved")
@@ -25542,6 +26738,11 @@ def inference.unify.Arena.unify_step
                           invalid span (toStr
                             "program type or stack witness cannot be resolved")
                         ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.NominalTerm _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
                       | inference.Term.PairTerm _ _ =>
                         let d ←
                           invalid span (toStr
@@ -25626,6 +26827,11 @@ def inference.unify.Arena.unify_step
                             "program type or stack witness cannot be resolved")
                         ok (core.result.Result.Err d, self, meter3)
                       | inference.Term.ResourceTerm _ =>
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
+                      | inference.Term.NominalTerm _ =>
                         let d ←
                           invalid span (toStr
                             "program type or stack witness cannot be resolved")
@@ -25742,6 +26948,11 @@ def inference.unify.Arena.unify_step
                         invalid span (toStr
                           "program type or stack witness cannot be resolved")
                       ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.NominalTerm _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
                     | inference.Term.PairTerm _ _ =>
                       let d ←
                         invalid span (toStr
@@ -25826,6 +27037,11 @@ def inference.unify.Arena.unify_step
                           "program type or stack witness cannot be resolved")
                       ok (core.result.Result.Err d, self, meter3)
                     | inference.Term.ResourceTerm _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.NominalTerm _ =>
                       let d ←
                         invalid span (toStr
                           "program type or stack witness cannot be resolved")
@@ -25918,6 +27134,11 @@ def inference.unify.Arena.unify_step
                         invalid span (toStr
                           "program type or stack witness cannot be resolved")
                       ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.NominalTerm _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
                     | inference.Term.PairTerm _ _ =>
                       let d ←
                         invalid span (toStr
@@ -26002,6 +27223,11 @@ def inference.unify.Arena.unify_step
                           "program type or stack witness cannot be resolved")
                       ok (core.result.Result.Err d, self, meter3)
                     | inference.Term.ResourceTerm _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.NominalTerm _ =>
                       let d ←
                         invalid span (toStr
                           "program type or stack witness cannot be resolved")
@@ -26094,6 +27320,11 @@ def inference.unify.Arena.unify_step
                         invalid span (toStr
                           "program type or stack witness cannot be resolved")
                       ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.NominalTerm _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
                     | inference.Term.PairTerm _ _ =>
                       let d ←
                         invalid span (toStr
@@ -26178,6 +27409,11 @@ def inference.unify.Arena.unify_step
                           "program type or stack witness cannot be resolved")
                       ok (core.result.Result.Err d, self, meter3)
                     | inference.Term.ResourceTerm _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.NominalTerm _ =>
                       let d ←
                         invalid span (toStr
                           "program type or stack witness cannot be resolved")
@@ -26270,6 +27506,11 @@ def inference.unify.Arena.unify_step
                         invalid span (toStr
                           "program type or stack witness cannot be resolved")
                       ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.NominalTerm _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
                     | inference.Term.PairTerm _ _ =>
                       let d ←
                         invalid span (toStr
@@ -26358,6 +27599,11 @@ def inference.unify.Arena.unify_step
                         invalid span (toStr
                           "program type or stack witness cannot be resolved")
                       ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.NominalTerm _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
                     | inference.Term.PairTerm _ _ =>
                       let d ←
                         invalid span (toStr
@@ -26442,6 +27688,11 @@ def inference.unify.Arena.unify_step
                     | inference.Term.CertifiedTerm =>
                       ok (core.result.Result.Ok pending, self, meter3)
                     | inference.Term.ResourceTerm _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.NominalTerm _ =>
                       let d ←
                         invalid span (toStr
                           "program type or stack witness cannot be resolved")
@@ -26543,6 +27794,113 @@ def inference.unify.Arena.unify_step
                           invalid span (toStr
                             "program type or stack witness cannot be resolved")
                         ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.NominalTerm _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.PairTerm _ _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.SumTerm _ _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.ListTerm _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.ProgramTerm _ _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.EmptyTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.PushTerm _ _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                  | inference.Term.NominalTerm a =>
+                    match value3 with
+                    | inference.Term.HoleTerm _ =>
+                      let (r5, self1, meter4) ←
+                        inference.unify.Arena.bind self value1 value span
+                          meter3
+                      match r5 with
+                      | core.result.Result.Ok _ =>
+                        ok (core.result.Result.Ok pending, self1, meter4)
+                      | core.result.Result.Err failure =>
+                        ok (core.result.Result.Err failure, self1, meter4)
+                    | inference.Term.LinkTerm _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.UnitTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.BoolTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.I64Term =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.TextTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.SyntaxTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.ContractTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.EvidenceTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.CertifiedTerm =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.ResourceTerm _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.NominalTerm b1 =>
+                      let b2 ←
+                        noble_kernel.types.NominalTypeId.Insts.CoreCmpPartialEqNominalTypeId.eq
+                          a b1
+                      if b2
+                      then ok (core.result.Result.Ok pending, self, meter3)
+                      else
+                        let d ←
+                          invalid span (toStr
+                            "program type or stack witness cannot be resolved")
+                        ok (core.result.Result.Err d, self, meter3)
                     | inference.Term.PairTerm _ _ =>
                       let d ←
                         invalid span (toStr
@@ -26630,6 +27988,11 @@ def inference.unify.Arena.unify_step
                           "program type or stack witness cannot be resolved")
                       ok (core.result.Result.Err d, self, meter3)
                     | inference.Term.ResourceTerm _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.NominalTerm _ =>
                       let d ←
                         invalid span (toStr
                           "program type or stack witness cannot be resolved")
@@ -26724,6 +28087,11 @@ def inference.unify.Arena.unify_step
                         invalid span (toStr
                           "program type or stack witness cannot be resolved")
                       ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.NominalTerm _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
                     | inference.Term.PairTerm _ _ =>
                       let d ←
                         invalid span (toStr
@@ -26814,6 +28182,11 @@ def inference.unify.Arena.unify_step
                         invalid span (toStr
                           "program type or stack witness cannot be resolved")
                       ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.NominalTerm _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
                     | inference.Term.PairTerm _ _ =>
                       let d ←
                         invalid span (toStr
@@ -26899,6 +28272,11 @@ def inference.unify.Arena.unify_step
                           "program type or stack witness cannot be resolved")
                       ok (core.result.Result.Err d, self, meter3)
                     | inference.Term.ResourceTerm _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.NominalTerm _ =>
                       let d ←
                         invalid span (toStr
                           "program type or stack witness cannot be resolved")
@@ -26993,6 +28371,11 @@ def inference.unify.Arena.unify_step
                         invalid span (toStr
                           "program type or stack witness cannot be resolved")
                       ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.NominalTerm _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
                     | inference.Term.PairTerm _ _ =>
                       let d ←
                         invalid span (toStr
@@ -27081,6 +28464,11 @@ def inference.unify.Arena.unify_step
                         invalid span (toStr
                           "program type or stack witness cannot be resolved")
                       ok (core.result.Result.Err d, self, meter3)
+                    | inference.Term.NominalTerm _ =>
+                      let d ←
+                        invalid span (toStr
+                          "program type or stack witness cannot be resolved")
+                      ok (core.result.Result.Err d, self, meter3)
                     | inference.Term.PairTerm _ _ =>
                       let d ←
                         invalid span (toStr
@@ -27122,7 +28510,7 @@ def inference.unify.Arena.unify_step
     ok (core.result.Result.Err failure, self, meter1)
 
 /-- [noble_contracts::inference::unify::{noble_contracts::inference::Arena}::unify]: loop body 0:
-    Source: 'crates/noble-contracts/src/inference/unify.rs', lines 103:8-113:9
+    Source: 'crates/noble-contracts/src/inference/unify.rs', lines 104:8-114:9
     Visibility: public -/
 @[rust_loop_body]
 def inference.unify.Arena.unify_loop.body
@@ -27146,7 +28534,7 @@ def inference.unify.Arena.unify_loop.body
   | core.result.Result.Err _ => ok (done (self, meter, outcome))
 
 /-- [noble_contracts::inference::unify::{noble_contracts::inference::Arena}::unify]: loop 0:
-    Source: 'crates/noble-contracts/src/inference/unify.rs', lines 103:8-113:9
+    Source: 'crates/noble-contracts/src/inference/unify.rs', lines 104:8-114:9
     Visibility: public -/
 @[rust_loop]
 def inference.unify.Arena.unify_loop
@@ -27161,7 +28549,7 @@ def inference.unify.Arena.unify_loop
     (outcome, self, meter)
 
 /-- [noble_contracts::inference::unify::{noble_contracts::inference::Arena}::unify]:
-    Source: 'crates/noble-contracts/src/inference/unify.rs', lines 93:4-116:5
+    Source: 'crates/noble-contracts/src/inference/unify.rs', lines 94:4-117:5
     Visibility: public -/
 def inference.unify.Arena.unify
   (self : inference.Arena) (left : Std.U32) (right : Std.U32) (span : Span)
@@ -27178,132 +28566,8 @@ def inference.unify.Arena.unify
   | core.result.Result.Err failure =>
     ok (core.result.Result.Err failure, self1, meter1)
 
-/-- [noble_contracts::inference::effects::{noble_contracts::inference::Arena}::effect_hole]:
-    Source: 'crates/noble-contracts/src/inference/effects.rs', lines 41:4-47:5
-    Visibility: public -/
-def inference.effects.Arena.effect_hole
-  (self : inference.Arena) (span : Span) (meter : Meter) :
-  Result ((core.result.Result Std.U32 Diagnostic) × inference.Arena × Meter)
-  := do
-  inference.effects.Arena.add_effect self inference.effects.Effect.Hole span
-    meter
-
-/-- [noble_contracts::inference::{noble_contracts::inference::Arena}::variable]:
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 206:4-231:5 -/
-def inference.Arena.variable
-  (self : inference.Arena) (kind : Option noble_kernel.words.VariableKind)
-  (span : Span) (meter : Meter) :
-  Result ((core.result.Result inference.Variable Diagnostic) × inference.Arena
-    × Meter)
-  := do
-  let (r, meter1) ← metering.Meter.charge meter 1#u32 span
-  match r with
-  | core.result.Result.Ok _ =>
-    match kind with
-    | none =>
-      let d ← internal span
-      ok (core.result.Result.Err d, self, meter1)
-    | some vk =>
-      match vk with
-      | noble_kernel.words.VariableKind.Stack =>
-        let (r1, self1, meter2) ←
-          inference.Arena.add self (inference.Term.HoleTerm
-            inference.Sort.Stack) span meter1
-        match r1 with
-        | core.result.Result.Ok value =>
-          ok (core.result.Result.Ok (inference.Variable.Stack value), self1,
-            meter2)
-        | core.result.Result.Err failure =>
-          ok (core.result.Result.Err failure, self1, meter2)
-      | noble_kernel.words.VariableKind.Value =>
-        let (r1, self1, meter2) ←
-          inference.Arena.add self (inference.Term.HoleTerm
-            inference.Sort.Value) span meter1
-        match r1 with
-        | core.result.Result.Ok value =>
-          ok (core.result.Result.Ok (inference.Variable.Value value), self1,
-            meter2)
-        | core.result.Result.Err failure =>
-          ok (core.result.Result.Err failure, self1, meter2)
-      | noble_kernel.words.VariableKind.Effect =>
-        if self.effectful
-        then
-          let (r1, self1, meter2) ←
-            inference.effects.Arena.effect_hole self span meter1
-          match r1 with
-          | core.result.Result.Ok value =>
-            ok (core.result.Result.Ok (inference.Variable.EffectValue value),
-              self1, meter2)
-          | core.result.Result.Err failure =>
-            ok (core.result.Result.Err failure, self1, meter2)
-        else ok (core.result.Result.Ok inference.Variable.Effect, self, meter1)
-  | core.result.Result.Err failure =>
-    ok (core.result.Result.Err failure, self, meter1)
-
-/-- [noble_contracts::inference::{noble_contracts::inference::Arena}::variables]: loop body 0:
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 184:8-195:9
-    Visibility: public -/
-@[rust_loop_body]
-def inference.Arena.variables_loop.body
-  (kinds : Slice noble_kernel.words.VariableKind) (span : Span)
-  (self : inference.Arena) (meter : Meter)
-  («variables» : alloc.vec.Vec inference.Variable) («at» : Std.Usize) :
-  Result (ControlFlow (inference.Arena × Meter × (alloc.vec.Vec
-    inference.Variable) × Std.Usize) (inference.Arena × Meter ×
-    (alloc.vec.Vec inference.Variable) × (Option Diagnostic)))
-  := do
-  let i := Slice.len kinds
-  if «at» < i
-  then
-    let o ←
-      core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice
-        noble_kernel.words.VariableKind) kinds «at»
-    let (r, self1, meter1) ← inference.Arena.variable self o span meter
-    match r with
-    | core.result.Result.Ok «variable» =>
-      let variables1 ← alloc.vec.Vec.push «variables» «variable»
-      let at1 ← «at» + 1#usize
-      ok (cont (self1, meter1, variables1, at1))
-    | core.result.Result.Err problem =>
-      ok (done (self1, meter1, «variables», some problem))
-  else ok (done (self, meter, «variables», none))
-
-/-- [noble_contracts::inference::{noble_contracts::inference::Arena}::variables]: loop 0:
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 184:8-195:9
-    Visibility: public -/
-@[rust_loop]
-def inference.Arena.variables_loop
-  (self : inference.Arena) (kinds : Slice noble_kernel.words.VariableKind)
-  (span : Span) (meter : Meter)
-  («variables» : alloc.vec.Vec inference.Variable) («at» : Std.Usize) :
-  Result (inference.Arena × Meter × (alloc.vec.Vec inference.Variable) ×
-    (Option Diagnostic))
-  := do
-  loop
-    (fun (self1, meter1, variables1, at1) =>
-      inference.Arena.variables_loop.body kinds span self1 meter1 variables1
-      at1)
-    (self, meter, «variables», «at»)
-
-/-- [noble_contracts::inference::{noble_contracts::inference::Arena}::variables]:
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 175:4-200:5
-    Visibility: public -/
-def inference.Arena.variables
-  (self : inference.Arena) (kinds : Slice noble_kernel.words.VariableKind)
-  (span : Span) (meter : Meter) :
-  Result ((core.result.Result (alloc.vec.Vec inference.Variable) Diagnostic) ×
-    inference.Arena × Meter)
-  := do
-  let i := Slice.len kinds
-  let «variables» := alloc.vec.Vec.with_capacity inference.Variable i
-  let (self1, meter1, variables1, failure) ←
-    inference.Arena.variables_loop self kinds span meter «variables» 0#usize
-  match failure with
-  | none => ok (core.result.Result.Ok variables1, self1, meter1)
-  | some problem => ok (core.result.Result.Err problem, self1, meter1)
-
 /-- [noble_contracts::inference::materialize::rendering::{noble_contracts::inference::materialize::rendering::Traversal}::term]:
-    Source: 'crates/noble-contracts/src/inference/materialize/rendering.rs', lines 78:4-133:5 -/
+    Source: 'crates/noble-contracts/src/inference/materialize/rendering.rs', lines 78:4-134:5 -/
 def inference.materialize.rendering.Traversal.term
   (self : inference.materialize.rendering.Traversal) (id : Std.U32)
   (arena : inference.Arena) (span : Span) (meter : Meter) :
@@ -27353,6 +28617,9 @@ def inference.materialize.rendering.Traversal.term
         ok (core.result.Result.Ok (), { self with text := s }, meter1)
       | inference.Term.ResourceTerm _ =>
         let s ← alloc.string.String.push_str self.text (toStr "Resource")
+        ok (core.result.Result.Ok (), { self with text := s }, meter1)
+      | inference.Term.NominalTerm _ =>
+        let s ← alloc.string.String.push_str self.text (toStr "Nominal")
         ok (core.result.Result.Ok (), { self with text := s }, meter1)
       | inference.Term.PairTerm a b =>
         let v ←
@@ -27524,7 +28791,7 @@ def inference.materialize.rendering.describe
   | some problem => ok (core.result.Result.Err problem, meter1)
 
 /-- [noble_contracts::inference::materialize::{noble_contracts::inference::Arena}::join_message]:
-    Source: 'crates/noble-contracts/src/inference/materialize.rs', lines 211:4-225:5
+    Source: 'crates/noble-contracts/src/inference/materialize.rs', lines 231:4-245:5
     Visibility: public -/
 def inference.materialize.Arena.join_message
   (self : inference.Arena) (expected : Std.U32) (actual : Std.U32)
@@ -27553,7 +28820,7 @@ def inference.materialize.Arena.join_message
   | core.result.Result.Err _ => ok (r, meter1)
 
 /-- [noble_contracts::inference::variable_at]:
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 236:0-245:1 -/
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 185:0-194:1 -/
 def inference.variable_at
   («variables» : Slice inference.Variable) (id : Std.U32) (span : Span) :
   Result (core.result.Result inference.Variable Diagnostic)
@@ -27715,8 +28982,133 @@ def inference.effects.Arena.effect_pattern
     | some problem => ok (core.result.Result.Err problem, self2, meter2)
   | core.result.Result.Err _ => ok (r, self1, meter1)
 
+/-- [noble_contracts::inference::effects::{noble_contracts::inference::Arena}::effect_hole]:
+    Source: 'crates/noble-contracts/src/inference/effects.rs', lines 41:4-47:5
+    Visibility: public -/
+def inference.effects.Arena.effect_hole
+  (self : inference.Arena) (span : Span) (meter : Meter) :
+  Result ((core.result.Result Std.U32 Diagnostic) × inference.Arena × Meter)
+  := do
+  inference.effects.Arena.add_effect self inference.effects.Effect.Hole span
+    meter
+
+/-- [noble_contracts::inference::build::{noble_contracts::inference::Arena}::variable]:
+    Source: 'crates/noble-contracts/src/inference/build/mod.rs', lines 169:4-194:5 -/
+def inference.build.Arena.variable
+  (self : inference.Arena) (kind : Option noble_kernel.words.VariableKind)
+  (span : Span) (meter : Meter) :
+  Result ((core.result.Result inference.Variable Diagnostic) × inference.Arena
+    × Meter)
+  := do
+  let (r, meter1) ← metering.Meter.charge meter 1#u32 span
+  match r with
+  | core.result.Result.Ok _ =>
+    match kind with
+    | none =>
+      let d ← internal span
+      ok (core.result.Result.Err d, self, meter1)
+    | some vk =>
+      match vk with
+      | noble_kernel.words.VariableKind.Stack =>
+        let (r1, self1, meter2) ←
+          inference.Arena.add self (inference.Term.HoleTerm
+            inference.Sort.Stack) span meter1
+        match r1 with
+        | core.result.Result.Ok value =>
+          ok (core.result.Result.Ok (inference.Variable.Stack value), self1,
+            meter2)
+        | core.result.Result.Err failure =>
+          ok (core.result.Result.Err failure, self1, meter2)
+      | noble_kernel.words.VariableKind.Value =>
+        let (r1, self1, meter2) ←
+          inference.Arena.add self (inference.Term.HoleTerm
+            inference.Sort.Value) span meter1
+        match r1 with
+        | core.result.Result.Ok value =>
+          ok (core.result.Result.Ok (inference.Variable.Value value), self1,
+            meter2)
+        | core.result.Result.Err failure =>
+          ok (core.result.Result.Err failure, self1, meter2)
+      | noble_kernel.words.VariableKind.Effect =>
+        if self.effectful
+        then
+          let (r1, self1, meter2) ←
+            inference.effects.Arena.effect_hole self span meter1
+          match r1 with
+          | core.result.Result.Ok value =>
+            ok (core.result.Result.Ok (inference.Variable.EffectValue value),
+              self1, meter2)
+          | core.result.Result.Err failure =>
+            ok (core.result.Result.Err failure, self1, meter2)
+        else ok (core.result.Result.Ok inference.Variable.Effect, self, meter1)
+  | core.result.Result.Err failure =>
+    ok (core.result.Result.Err failure, self, meter1)
+
+/-- [noble_contracts::inference::build::{noble_contracts::inference::Arena}::variables]: loop body 0:
+    Source: 'crates/noble-contracts/src/inference/build/mod.rs', lines 147:8-158:9
+    Visibility: public -/
+@[rust_loop_body]
+def inference.build.Arena.variables_loop.body
+  (kinds : Slice noble_kernel.words.VariableKind) (span : Span)
+  (self : inference.Arena) (meter : Meter)
+  («variables» : alloc.vec.Vec inference.Variable) («at» : Std.Usize) :
+  Result (ControlFlow (inference.Arena × Meter × (alloc.vec.Vec
+    inference.Variable) × Std.Usize) (inference.Arena × Meter ×
+    (alloc.vec.Vec inference.Variable) × (Option Diagnostic)))
+  := do
+  let i := Slice.len kinds
+  if «at» < i
+  then
+    let o ←
+      core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice
+        noble_kernel.words.VariableKind) kinds «at»
+    let (r, self1, meter1) ← inference.build.Arena.variable self o span meter
+    match r with
+    | core.result.Result.Ok «variable» =>
+      let variables1 ← alloc.vec.Vec.push «variables» «variable»
+      let at1 ← «at» + 1#usize
+      ok (cont (self1, meter1, variables1, at1))
+    | core.result.Result.Err problem =>
+      ok (done (self1, meter1, «variables», some problem))
+  else ok (done (self, meter, «variables», none))
+
+/-- [noble_contracts::inference::build::{noble_contracts::inference::Arena}::variables]: loop 0:
+    Source: 'crates/noble-contracts/src/inference/build/mod.rs', lines 147:8-158:9
+    Visibility: public -/
+@[rust_loop]
+def inference.build.Arena.variables_loop
+  (self : inference.Arena) (kinds : Slice noble_kernel.words.VariableKind)
+  (span : Span) (meter : Meter)
+  («variables» : alloc.vec.Vec inference.Variable) («at» : Std.Usize) :
+  Result (inference.Arena × Meter × (alloc.vec.Vec inference.Variable) ×
+    (Option Diagnostic))
+  := do
+  loop
+    (fun (self1, meter1, variables1, at1) =>
+      inference.build.Arena.variables_loop.body kinds span self1 meter1
+      variables1 at1)
+    (self, meter, «variables», «at»)
+
+/-- [noble_contracts::inference::build::{noble_contracts::inference::Arena}::variables]:
+    Source: 'crates/noble-contracts/src/inference/build/mod.rs', lines 138:4-163:5
+    Visibility: public -/
+def inference.build.Arena.variables
+  (self : inference.Arena) (kinds : Slice noble_kernel.words.VariableKind)
+  (span : Span) (meter : Meter) :
+  Result ((core.result.Result (alloc.vec.Vec inference.Variable) Diagnostic) ×
+    inference.Arena × Meter)
+  := do
+  let i := Slice.len kinds
+  let «variables» := alloc.vec.Vec.with_capacity inference.Variable i
+  let (self1, meter1, variables1, failure) ←
+    inference.build.Arena.variables_loop self kinds span meter «variables»
+      0#usize
+  match failure with
+  | none => ok (core.result.Result.Ok variables1, self1, meter1)
+  | some problem => ok (core.result.Result.Err problem, self1, meter1)
+
 /-- [noble_contracts::inference::build::require_id]:
-    Source: 'crates/noble-contracts/src/inference/build.rs', lines 248:0-253:1 -/
+    Source: 'crates/noble-contracts/src/inference/build/mod.rs', lines 201:0-206:1 -/
 def inference.build.require_id
   (value : Option Std.U32) (span : Span) :
   Result (core.result.Result Std.U32 Diagnostic)
@@ -27750,7 +29142,7 @@ def inference.effects.Arena.program
     ok (core.result.Result.Err failure, self, meter1)
 
 /-- [noble_contracts::inference::pure_effect]:
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 274:0-297:1 -/
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 223:0-246:1 -/
 def inference.pure_effect
   (effect : Option noble_kernel.shapes.EffectSlot)
   («variables» : Slice inference.Variable) (span : Span) (meter : Meter) :
@@ -27789,7 +29181,7 @@ def inference.pure_effect
   | core.result.Result.Err _ => ok (r, meter1)
 
 /-- [noble_contracts::inference::pure_effects]: loop body 0:
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 255:4-263:5 -/
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 204:4-212:5 -/
 @[rust_loop_body]
 def inference.pure_effects_loop.body
   (effects : Slice noble_kernel.shapes.EffectSlot)
@@ -27812,7 +29204,7 @@ def inference.pure_effects_loop.body
   else ok (done (meter, none))
 
 /-- [noble_contracts::inference::pure_effects]: loop 0:
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 255:4-263:5 -/
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 204:4-212:5 -/
 @[rust_loop]
 def inference.pure_effects_loop
   (effects : Slice noble_kernel.shapes.EffectSlot)
@@ -27826,7 +29218,7 @@ def inference.pure_effects_loop
     (meter, «at»)
 
 /-- [noble_contracts::inference::pure_effects]:
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 247:0-268:1 -/
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 196:0-217:1 -/
 def inference.pure_effects
   (effects : Slice noble_kernel.shapes.EffectSlot)
   («variables» : Slice inference.Variable) (span : Span) (meter : Meter) :
@@ -27838,8 +29230,70 @@ def inference.pure_effects
   | none => ok (core.result.Result.Ok (), meter1)
   | some problem => ok (core.result.Result.Err problem, meter1)
 
+/-- [noble_contracts::inference::construct::{noble_contracts::inference::build::State<'a>}::build_pattern::{impl core::ops::function::FnMut<(&'_ (noble_kernel::types::NominalTypeId, noble_kernel::types::NominalShape),), bool> for noble_contracts::inference::construct::{noble_contracts::inference::build::State<'a>}::build_pattern::{closure}<'a, '_1, '_2, '_3>}::call_mut]:
+    Source: 'crates/noble-contracts/src/inference/construct.rs', lines 106:25-106:84 -/
+def
+  inference.construct.State.build_pattern.closure.Insts.CoreOpsFunctionFnMutTupleSharedPairNominalTypeIdNominalShapeBool.call_mut
+  (c : inference.construct.State.build_pattern.closure)
+  (tupled_args : (noble_kernel.types.NominalTypeId ×
+  noble_kernel.types.NominalShape)) :
+  Result (Bool × inference.construct.State.build_pattern.closure)
+  := do
+  let (nti, ns) := c
+  let (known, checked) := tupled_args
+  let b ←
+    noble_kernel.types.NominalTypeId.Insts.CoreCmpPartialEqNominalTypeId.eq
+      known nti
+  if b
+  then
+    let ns1 ← Box.Insts.CoreConvertAsRef.as_ref Global ns
+    let b1 ←
+      noble_kernel.types.NominalShape.Insts.CoreCmpPartialEqNominalShape.eq
+        checked ns1
+    ok (b1, c)
+  else ok (false, c)
+
+/-- [noble_contracts::inference::construct::{noble_contracts::inference::build::State<'a>}::build_pattern::{impl core::ops::function::FnOnce<(&'_ (noble_kernel::types::NominalTypeId, noble_kernel::types::NominalShape),), bool> for noble_contracts::inference::construct::{noble_contracts::inference::build::State<'a>}::build_pattern::{closure}<'a, '_1, '_2, '_3>}::call_once]:
+    Source: 'crates/noble-contracts/src/inference/construct.rs', lines 106:25-106:84 -/
+def
+  inference.construct.State.build_pattern.closure.Insts.CoreOpsFunctionFnOnceTupleSharedPairNominalTypeIdNominalShapeBool.call_once
+  (c : inference.construct.State.build_pattern.closure)
+  (p : (noble_kernel.types.NominalTypeId × noble_kernel.types.NominalShape)) :
+  Result Bool
+  := do
+  let (b, _) ←
+    inference.construct.State.build_pattern.closure.Insts.CoreOpsFunctionFnMutTupleSharedPairNominalTypeIdNominalShapeBool.call_mut
+      c p
+  ok b
+
+/-- Trait implementation: [noble_contracts::inference::construct::{noble_contracts::inference::build::State<'a>}::build_pattern::{impl core::ops::function::FnOnce<(&'_ (noble_kernel::types::NominalTypeId, noble_kernel::types::NominalShape),), bool> for noble_contracts::inference::construct::{noble_contracts::inference::build::State<'a>}::build_pattern::{closure}<'a, '_1, '_2, '_3>}]
+    Source: 'crates/noble-contracts/src/inference/construct.rs', lines 106:25-106:84 -/
+@[reducible]
+def
+  inference.construct.State.build_pattern.closure.Insts.CoreOpsFunctionFnOnceTupleSharedPairNominalTypeIdNominalShapeBool
+  : core.ops.function.FnOnce inference.construct.State.build_pattern.closure
+  (noble_kernel.types.NominalTypeId × noble_kernel.types.NominalShape) Bool
+  := {
+  call_once :=
+    inference.construct.State.build_pattern.closure.Insts.CoreOpsFunctionFnOnceTupleSharedPairNominalTypeIdNominalShapeBool.call_once
+}
+
+/-- Trait implementation: [noble_contracts::inference::construct::{noble_contracts::inference::build::State<'a>}::build_pattern::{impl core::ops::function::FnMut<(&'_ (noble_kernel::types::NominalTypeId, noble_kernel::types::NominalShape),), bool> for noble_contracts::inference::construct::{noble_contracts::inference::build::State<'a>}::build_pattern::{closure}<'a, '_1, '_2, '_3>}]
+    Source: 'crates/noble-contracts/src/inference/construct.rs', lines 106:25-106:84 -/
+@[reducible]
+def
+  inference.construct.State.build_pattern.closure.Insts.CoreOpsFunctionFnMutTupleSharedPairNominalTypeIdNominalShapeBool
+  : core.ops.function.FnMut inference.construct.State.build_pattern.closure
+  (noble_kernel.types.NominalTypeId × noble_kernel.types.NominalShape) Bool
+  := {
+  FnOnceInst :=
+    inference.construct.State.build_pattern.closure.Insts.CoreOpsFunctionFnOnceTupleSharedPairNominalTypeIdNominalShapeBool
+  call_mut :=
+    inference.construct.State.build_pattern.closure.Insts.CoreOpsFunctionFnMutTupleSharedPairNominalTypeIdNominalShapeBool.call_mut
+}
+
 /-- [noble_contracts::inference::construct::{noble_contracts::inference::build::State<'a>}::build_pattern]:
-    Source: 'crates/noble-contracts/src/inference/construct.rs', lines 72:4-148:5 -/
+    Source: 'crates/noble-contracts/src/inference/construct.rs', lines 85:4-174:5 -/
 def inference.construct.State.build_pattern
   (self : inference.build.State) (arena : inference.Arena)
   (pattern : noble_kernel.shapes.Pattern)
@@ -27982,6 +29436,28 @@ def inference.construct.State.build_pattern
         invalid span (toStr
           "resource pattern requires a component environment")
       ok (core.result.Result.Err d, arena, meter)
+  | noble_kernel.shapes.Pattern.NominalPattern id shape =>
+    let s := alloc.vec.Vec.deref arena.nominals
+    let i ← core.slice.Slice.iter s
+    let (b, _) ←
+      core.slice.iter.Iter.Insts.CoreIterTraitsIteratorIteratorSharedAT.any
+        inference.construct.State.build_pattern.closure.Insts.CoreOpsFunctionFnMutTupleSharedPairNominalTypeIdNominalShapeBool
+        i (id, shape)
+    if b
+    then
+      let (r, arena1, meter1) ←
+        inference.Arena.add arena (inference.Term.NominalTerm id) span meter
+      match r with
+      | core.result.Result.Ok value =>
+        let v ← alloc.vec.Vec.push self.values value
+        ok (core.result.Result.Ok { self with values := v }, arena1, meter1)
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, arena1, meter1)
+    else
+      let d ←
+        invalid span (toStr
+          "unregistered nominal pattern or changed representation")
+      ok (core.result.Result.Err d, arena, meter)
   | noble_kernel.shapes.Pattern.VarPattern «variable» =>
     let r ← inference.variable_at «variables» «variable» span
     match r with
@@ -28084,8 +29560,70 @@ def inference.effects.Arena.effect_constant
       bits) span meter1
   | some problem => ok (core.result.Result.Err problem, self1, meter1)
 
+/-- [noble_contracts::inference::construct::{noble_contracts::inference::build::State<'a>}::build_ty::{impl core::ops::function::FnMut<(&'_ (noble_kernel::types::NominalTypeId, noble_kernel::types::NominalShape),), bool> for noble_contracts::inference::construct::{noble_contracts::inference::build::State<'a>}::build_ty::{closure}<'a, '_1, '_2, '_3>}::call_mut]:
+    Source: 'crates/noble-contracts/src/inference/construct.rs', lines 22:25-22:84 -/
+def
+  inference.construct.State.build_ty.closure.Insts.CoreOpsFunctionFnMutTupleSharedPairNominalTypeIdNominalShapeBool.call_mut
+  (c : inference.construct.State.build_ty.closure)
+  (tupled_args : (noble_kernel.types.NominalTypeId ×
+  noble_kernel.types.NominalShape)) :
+  Result (Bool × inference.construct.State.build_ty.closure)
+  := do
+  let (nti, ns) := c
+  let (known, checked) := tupled_args
+  let b ←
+    noble_kernel.types.NominalTypeId.Insts.CoreCmpPartialEqNominalTypeId.eq
+      known nti
+  if b
+  then
+    let ns1 ← Box.Insts.CoreConvertAsRef.as_ref Global ns
+    let b1 ←
+      noble_kernel.types.NominalShape.Insts.CoreCmpPartialEqNominalShape.eq
+        checked ns1
+    ok (b1, c)
+  else ok (false, c)
+
+/-- [noble_contracts::inference::construct::{noble_contracts::inference::build::State<'a>}::build_ty::{impl core::ops::function::FnOnce<(&'_ (noble_kernel::types::NominalTypeId, noble_kernel::types::NominalShape),), bool> for noble_contracts::inference::construct::{noble_contracts::inference::build::State<'a>}::build_ty::{closure}<'a, '_1, '_2, '_3>}::call_once]:
+    Source: 'crates/noble-contracts/src/inference/construct.rs', lines 22:25-22:84 -/
+def
+  inference.construct.State.build_ty.closure.Insts.CoreOpsFunctionFnOnceTupleSharedPairNominalTypeIdNominalShapeBool.call_once
+  (c : inference.construct.State.build_ty.closure)
+  (p : (noble_kernel.types.NominalTypeId × noble_kernel.types.NominalShape)) :
+  Result Bool
+  := do
+  let (b, _) ←
+    inference.construct.State.build_ty.closure.Insts.CoreOpsFunctionFnMutTupleSharedPairNominalTypeIdNominalShapeBool.call_mut
+      c p
+  ok b
+
+/-- Trait implementation: [noble_contracts::inference::construct::{noble_contracts::inference::build::State<'a>}::build_ty::{impl core::ops::function::FnOnce<(&'_ (noble_kernel::types::NominalTypeId, noble_kernel::types::NominalShape),), bool> for noble_contracts::inference::construct::{noble_contracts::inference::build::State<'a>}::build_ty::{closure}<'a, '_1, '_2, '_3>}]
+    Source: 'crates/noble-contracts/src/inference/construct.rs', lines 22:25-22:84 -/
+@[reducible]
+def
+  inference.construct.State.build_ty.closure.Insts.CoreOpsFunctionFnOnceTupleSharedPairNominalTypeIdNominalShapeBool
+  : core.ops.function.FnOnce inference.construct.State.build_ty.closure
+  (noble_kernel.types.NominalTypeId × noble_kernel.types.NominalShape) Bool
+  := {
+  call_once :=
+    inference.construct.State.build_ty.closure.Insts.CoreOpsFunctionFnOnceTupleSharedPairNominalTypeIdNominalShapeBool.call_once
+}
+
+/-- Trait implementation: [noble_contracts::inference::construct::{noble_contracts::inference::build::State<'a>}::build_ty::{impl core::ops::function::FnMut<(&'_ (noble_kernel::types::NominalTypeId, noble_kernel::types::NominalShape),), bool> for noble_contracts::inference::construct::{noble_contracts::inference::build::State<'a>}::build_ty::{closure}<'a, '_1, '_2, '_3>}]
+    Source: 'crates/noble-contracts/src/inference/construct.rs', lines 22:25-22:84 -/
+@[reducible]
+def
+  inference.construct.State.build_ty.closure.Insts.CoreOpsFunctionFnMutTupleSharedPairNominalTypeIdNominalShapeBool
+  : core.ops.function.FnMut inference.construct.State.build_ty.closure
+  (noble_kernel.types.NominalTypeId × noble_kernel.types.NominalShape) Bool
+  := {
+  FnOnceInst :=
+    inference.construct.State.build_ty.closure.Insts.CoreOpsFunctionFnOnceTupleSharedPairNominalTypeIdNominalShapeBool
+  call_mut :=
+    inference.construct.State.build_ty.closure.Insts.CoreOpsFunctionFnMutTupleSharedPairNominalTypeIdNominalShapeBool.call_mut
+}
+
 /-- [noble_contracts::inference::construct::{noble_contracts::inference::build::State<'a>}::build_ty]:
-    Source: 'crates/noble-contracts/src/inference/construct.rs', lines 2:4-70:5 -/
+    Source: 'crates/noble-contracts/src/inference/construct.rs', lines 2:4-83:5 -/
 def inference.construct.State.build_ty
   (self : inference.build.State) (arena : inference.Arena)
   (ty : noble_kernel.types.Ty) (span : Span) (meter : Meter) :
@@ -28228,10 +29766,32 @@ def inference.construct.State.build_ty
         Diagnostic.new DiagnosticKind.Unsupported span (toStr
           "host resources are outside the pure fragment")
       ok (core.result.Result.Err d, arena, meter)
+  | noble_kernel.types.Ty.NominalType id shape =>
+    let s := alloc.vec.Vec.deref arena.nominals
+    let i ← core.slice.Slice.iter s
+    let (b, _) ←
+      core.slice.iter.Iter.Insts.CoreIterTraitsIteratorIteratorSharedAT.any
+        inference.construct.State.build_ty.closure.Insts.CoreOpsFunctionFnMutTupleSharedPairNominalTypeIdNominalShapeBool
+        i (id, shape)
+    if b
+    then
+      let (r, arena1, meter1) ←
+        inference.Arena.add arena (inference.Term.NominalTerm id) span meter
+      match r with
+      | core.result.Result.Ok value =>
+        let v ← alloc.vec.Vec.push self.values value
+        ok (core.result.Result.Ok { self with values := v }, arena1, meter1)
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, arena1, meter1)
+    else
+      let d ←
+        invalid span (toStr
+          "unregistered nominal type or changed representation")
+      ok (core.result.Result.Err d, arena, meter)
 
-/-- [noble_contracts::inference::build::stack_pattern_step]:
-    Source: 'crates/noble-contracts/src/inference/build.rs', lines 261:0-280:1 -/
-def inference.build.stack_pattern_step
+/-- [noble_contracts::inference::build::stack::pattern_step]:
+    Source: 'crates/noble-contracts/src/inference/build/stack.rs', lines 109:0-128:1 -/
+def inference.build.stack.pattern_step
   (stack : Slice noble_kernel.shapes.Pattern) (start : Std.Usize)
   («at» : Std.Usize) (state : inference.build.State) (span : Span) :
   Result (core.result.Result inference.build.State Diagnostic)
@@ -28254,9 +29814,9 @@ def inference.build.stack_pattern_step
       ok (core.result.Result.Ok { state with steps := v2 })
     else ok (core.result.Result.Ok { state with steps := v1 })
 
-/-- [noble_contracts::inference::build::stack_ty_step]:
-    Source: 'crates/noble-contracts/src/inference/build.rs', lines 224:0-242:1 -/
-def inference.build.stack_ty_step
+/-- [noble_contracts::inference::build::stack::ty_step]:
+    Source: 'crates/noble-contracts/src/inference/build/stack.rs', lines 84:0-102:1 -/
+def inference.build.stack.ty_step
   (stack : Slice noble_kernel.types.Ty) («at» : Std.Usize)
   (state : inference.build.State) (span : Span) :
   Result (core.result.Result inference.build.State Diagnostic)
@@ -28278,9 +29838,9 @@ def inference.build.stack_ty_step
       ok (core.result.Result.Ok { state with steps := v2 })
     else ok (core.result.Result.Ok { state with steps := v1 })
 
-/-- [noble_contracts::inference::build::{noble_contracts::inference::Arena}::build_stack_pattern]:
-    Source: 'crates/noble-contracts/src/inference/build.rs', lines 170:4-216:5 -/
-def inference.build.Arena.build_stack_pattern
+/-- [noble_contracts::inference::build::stack::{noble_contracts::inference::Arena}::build_stack_pattern]:
+    Source: 'crates/noble-contracts/src/inference/build/stack.rs', lines 28:4-77:5 -/
+def inference.build.stack.Arena.build_stack_pattern
   (self : inference.Arena) (stack : Slice noble_kernel.shapes.Pattern)
   (state : inference.build.State) («variables» : Slice inference.Variable)
   (span : Span) (meter : Meter) :
@@ -28569,6 +30129,26 @@ def inference.build.Arena.build_stack_pattern
           ok (core.result.Result.Ok { state with values := v }, self1, meter1)
       | core.result.Result.Err failure =>
         ok (core.result.Result.Err failure, self1, meter1)
+    | noble_kernel.shapes.Pattern.NominalPattern _ _ =>
+      let (r, self1, meter1) ←
+        inference.Arena.add self inference.Term.EmptyTerm span meter
+      match r with
+      | core.result.Result.Ok value =>
+        let v ← alloc.vec.Vec.push state.values value
+        let i := Slice.len stack
+        if i > 0#usize
+        then
+          let i1 := Slice.len stack
+          let i2 ← i1 - 1#usize
+          let v1 ←
+            alloc.vec.Vec.push state.steps
+              (inference.build.Step.StackPatternParts stack 0#usize i2)
+          ok (core.result.Result.Ok { steps := v1, values := v }, self1,
+            meter1)
+        else
+          ok (core.result.Result.Ok { state with values := v }, self1, meter1)
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, self1, meter1)
     | noble_kernel.shapes.Pattern.VarPattern _ =>
       let (r, self1, meter1) ←
         inference.Arena.add self inference.Term.EmptyTerm span meter
@@ -28620,9 +30200,9 @@ def inference.build.Arena.build_stack_pattern
       | core.result.Result.Err failure =>
         ok (core.result.Result.Err failure, self, meter)
 
-/-- [noble_contracts::inference::build::{noble_contracts::inference::Arena}::build_stack_ty]:
-    Source: 'crates/noble-contracts/src/inference/build.rs', lines 149:4-163:5 -/
-def inference.build.Arena.build_stack_ty
+/-- [noble_contracts::inference::build::stack::{noble_contracts::inference::Arena}::build_stack_ty]:
+    Source: 'crates/noble-contracts/src/inference/build/stack.rs', lines 6:4-22:5 -/
+def inference.build.stack.Arena.build_stack_ty
   (self : inference.Arena) (stack : Slice noble_kernel.types.Ty)
   (state : inference.build.State) (span : Span) (meter : Meter) :
   Result ((core.result.Result inference.build.State Diagnostic) ×
@@ -28647,7 +30227,7 @@ def inference.build.Arena.build_stack_ty
     ok (core.result.Result.Err failure, self1, meter1)
 
 /-- [noble_contracts::inference::build::{noble_contracts::inference::Arena}::build_step]:
-    Source: 'crates/noble-contracts/src/inference/build.rs', lines 83:4-142:5 -/
+    Source: 'crates/noble-contracts/src/inference/build/mod.rs', lines 77:4-136:5 -/
 def inference.build.Arena.build_step
   (self : inference.Arena) (step : inference.build.Step)
   (state : inference.build.State) («variables» : Slice inference.Variable)
@@ -28665,16 +30245,16 @@ def inference.build.Arena.build_step
       inference.construct.State.build_pattern state self pattern «variables»
         span meter1
     | inference.build.Step.StackTy stack =>
-      inference.build.Arena.build_stack_ty self stack state span meter1
+      inference.build.stack.Arena.build_stack_ty self stack state span meter1
     | inference.build.Step.StackPattern stack =>
-      inference.build.Arena.build_stack_pattern self stack state «variables»
-        span meter1
+      inference.build.stack.Arena.build_stack_pattern self stack state
+        «variables» span meter1
     | inference.build.Step.StackTyParts stack «at» =>
-      let r1 ← inference.build.stack_ty_step stack «at» state span
+      let r1 ← inference.build.stack.ty_step stack «at» state span
       ok (r1, self, meter1)
     | inference.build.Step.StackPatternParts stack start «at» =>
       let r1 ←
-        inference.build.stack_pattern_step stack start «at» state span
+        inference.build.stack.pattern_step stack start «at» state span
       ok (r1, self, meter1)
     | inference.build.Step.Pair =>
       let (o, v) ← alloc.vec.Vec.pop Global state.values
@@ -28800,46 +30380,53 @@ def inference.build.Arena.build_step
     ok (core.result.Result.Err failure, self, meter1)
 
 /-- [noble_contracts::inference::build::{noble_contracts::inference::Arena}::build]: loop body 0:
-    Source: 'crates/noble-contracts/src/inference/build.rs', lines 63:8-71:9 -/
+    Source: 'crates/noble-contracts/src/inference/build/mod.rs', lines 64:8-71:5 -/
 @[rust_loop_body]
 def inference.build.Arena.build_loop.body
   («variables» : Slice inference.Variable) (span : Span)
-  (outcome : core.result.Result inference.build.State Diagnostic)
-  (self : inference.Arena) (meter : Meter) :
-  Result (ControlFlow ((core.result.Result inference.build.State Diagnostic) ×
-    inference.Arena × Meter) (inference.Arena × Meter × (core.result.Result
-    inference.build.State Diagnostic)))
+  (v : alloc.vec.Vec inference.build.Step) (self : inference.Arena)
+  (meter : Meter) (v1 : alloc.vec.Vec Std.U32) :
+  Result (ControlFlow ((alloc.vec.Vec inference.build.Step) × inference.Arena
+    × Meter × (alloc.vec.Vec Std.U32)) ((core.result.Result Std.U32
+    Diagnostic) × inference.Arena × Meter))
   := do
-  match outcome with
-  | core.result.Result.Ok s =>
-    let (o, v) ← alloc.vec.Vec.pop Global s.steps
-    match o with
-    | none =>
-      ok (done (self, meter, core.result.Result.Ok { s with steps := v }))
-    | some step =>
-      let (outcome1, self1, meter1) ←
-        inference.build.Arena.build_step self step { s with steps := v }
-          «variables» span meter
-      ok (cont (outcome1, self1, meter1))
-  | core.result.Result.Err _ => ok (done (self, meter, outcome))
+  let (o, v2) ← alloc.vec.Vec.pop Global v
+  match o with
+  | none =>
+    let i := alloc.vec.Vec.len v1
+    if i != 1#usize
+    then
+      let d ← internal span
+      ok (done (core.result.Result.Err d, self, meter))
+    else
+      let (o1, _) ← alloc.vec.Vec.pop Global v1
+      let r ← inference.build.require_id o1 span
+      ok (done (r, self, meter))
+  | some step =>
+    let (r, self1, meter1) ←
+      inference.build.Arena.build_step self step { steps := v2, values := v1 }
+        «variables» span meter
+    match r with
+    | core.result.Result.Ok s => ok (cont (s.steps, self1, meter1, s.values))
+    | core.result.Result.Err failure =>
+      ok (done (core.result.Result.Err failure, self1, meter1))
 
 /-- [noble_contracts::inference::build::{noble_contracts::inference::Arena}::build]: loop 0:
-    Source: 'crates/noble-contracts/src/inference/build.rs', lines 63:8-71:9 -/
+    Source: 'crates/noble-contracts/src/inference/build/mod.rs', lines 64:8-71:5 -/
 @[rust_loop]
 def inference.build.Arena.build_loop
-  (outcome : core.result.Result inference.build.State Diagnostic)
-  (self : inference.Arena) («variables» : Slice inference.Variable)
-  (span : Span) (meter : Meter) :
-  Result (inference.Arena × Meter × (core.result.Result inference.build.State
-    Diagnostic))
+  (v : alloc.vec.Vec inference.build.Step) (self : inference.Arena)
+  («variables» : Slice inference.Variable) (span : Span) (meter : Meter)
+  (v1 : alloc.vec.Vec Std.U32) :
+  Result ((core.result.Result Std.U32 Diagnostic) × inference.Arena × Meter)
   := do
   loop
-    (fun (outcome1, self1, meter1) => inference.build.Arena.build_loop.body
-      «variables» span outcome1 self1 meter1)
-    (outcome, self, meter)
+    (fun (v2, self1, meter1, v3) => inference.build.Arena.build_loop.body
+      «variables» span v2 self1 meter1 v3)
+    (v, self, meter, v1)
 
 /-- [noble_contracts::inference::build::{noble_contracts::inference::Arena}::build]:
-    Source: 'crates/noble-contracts/src/inference/build.rs', lines 50:4-77:5 -/
+    Source: 'crates/noble-contracts/src/inference/build/mod.rs', lines 52:4-71:5 -/
 def inference.build.Arena.build
   (self : inference.Arena) (root : inference.build.Step)
   («variables» : Slice inference.Variable) (span : Span) (meter : Meter) :
@@ -28847,25 +30434,11 @@ def inference.build.Arena.build
   := do
   let v := alloc.vec.Vec.with_capacity inference.build.Step 1#usize
   let v1 ← alloc.vec.Vec.push v root
-  let (self1, meter1, outcome) ←
-    inference.build.Arena.build_loop (core.result.Result.Ok
-      { steps := v1, values := (alloc.vec.Vec.new Std.U32) }) self
-      «variables» span meter
-  match outcome with
-  | core.result.Result.Ok s =>
-    let i := alloc.vec.Vec.len s.values
-    if i != 1#usize
-    then let d ← internal span
-         ok (core.result.Result.Err d, self1, meter1)
-    else
-      let (o, _) ← alloc.vec.Vec.pop Global s.values
-      let r ← inference.build.require_id o span
-      ok (r, self1, meter1)
-  | core.result.Result.Err failure =>
-    ok (core.result.Result.Err failure, self1, meter1)
+  inference.build.Arena.build_loop v1 self «variables» span meter
+    (alloc.vec.Vec.new Std.U32)
 
 /-- [noble_contracts::inference::build::{noble_contracts::inference::Arena}::pattern_stack]:
-    Source: 'crates/noble-contracts/src/inference/build.rs', lines 40:4-48:5
+    Source: 'crates/noble-contracts/src/inference/build/mod.rs', lines 42:4-50:5
     Visibility: public -/
 def inference.build.Arena.pattern_stack
   (self : inference.Arena) (stack : Slice noble_kernel.shapes.Pattern)
@@ -28892,7 +30465,7 @@ def source.inference.operations.builtin
   | some scheme =>
     let s := alloc.vec.Vec.deref scheme.var_kinds
     let (r, a, meter1) ←
-      inference.Arena.variables state.arena s call.span meter
+      inference.build.Arena.variables state.arena s call.span meter
     match r with
     | core.result.Result.Ok value =>
       let s1 := alloc.vec.Vec.deref scheme.stack_in
@@ -28977,7 +30550,7 @@ def source.inference.operations.builtin
         meter1)
 
 /-- [noble_contracts::inference::build::{noble_contracts::inference::Arena}::ty]:
-    Source: 'crates/noble-contracts/src/inference/build.rs', lines 31:4-38:5
+    Source: 'crates/noble-contracts/src/inference/build/mod.rs', lines 33:4-40:5
     Visibility: public -/
 def inference.build.Arena.ty
   (self : inference.Arena) (ty : noble_kernel.types.Ty) (span : Span)
@@ -29113,7 +30686,7 @@ def source.inference.operations.literal
     ok (core.result.Result.Err d, frame, state, meter)
 
 /-- [noble_contracts::source::inference::items]:
-    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 118:0-129:1 -/
+    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 119:0-130:1 -/
 def source.inference.items
   (tree : source.Tree) (body_key : source.inference.BodyKey) :
   Result (core.result.Result (Slice Std.U32) Diagnostic)
@@ -29145,7 +30718,7 @@ def source.inference.items
     | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_contracts::source::inference::{noble_contracts::source::inference::Scope<'_0>}::tree]:
-    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 92:4-110:5 -/
+    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 93:4-111:5 -/
 def source.inference.Scope.tree
   (self : source.inference.Scope) (tree_key : source.inference.TreeKey)
   (span : Span) :
@@ -29551,8 +31124,29 @@ def source.inference.traversal.visit
       ok (core.result.Result.Err failure, parents, state, meter1)
   | core.result.Result.Err _ => ok (r, parents, state, meter1)
 
+/-- [noble_contracts::source::inference::initial::{impl core::ops::function::FnOnce<(&'_ noble_contracts::source::declared::Context,), core::option::Option<u64>> for noble_contracts::source::inference::initial::{closure}}::call_once]:
+    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 230:50-230:73 -/
+def
+  source.inference.initial.closure.Insts.CoreOpsFunctionFnOnceTupleSharedContextOptionU64.call_once
+  (c : source.inference.initial.closure)
+  (tupled_args : source.declared.Context) :
+  Result (Option Std.U64)
+  := do
+  ok tupled_args.owner
+
+/-- Trait implementation: [noble_contracts::source::inference::initial::{impl core::ops::function::FnOnce<(&'_ noble_contracts::source::declared::Context,), core::option::Option<u64>> for noble_contracts::source::inference::initial::{closure}}]
+    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 230:50-230:73 -/
+@[reducible]
+def
+  source.inference.initial.closure.Insts.CoreOpsFunctionFnOnceTupleSharedContextOptionU64
+  : core.ops.function.FnOnce source.inference.initial.closure
+  source.declared.Context (Option Std.U64) := {
+  call_once :=
+    source.inference.initial.closure.Insts.CoreOpsFunctionFnOnceTupleSharedContextOptionU64.call_once
+}
+
 /-- [noble_contracts::inference::{noble_contracts::inference::Arena}::new]:
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 68:4-79:5
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 73:4-85:5
     Visibility: public -/
 def inference.Arena.new : Result inference.Arena := do
   ok
@@ -29561,6 +31155,11 @@ def inference.Arena.new : Result inference.Arena := do
       effectful := false,
       effect_universe := 0#u64,
       resources := false,
+      nominals :=
+        (alloc.vec.Vec.new
+          (noble_kernel.types.NominalTypeId
+          ×
+          noble_kernel.types.NominalShape)),
       effects := (alloc.vec.Vec.new inference.effects.Effect),
       effect_bounds := (alloc.vec.Vec.new Std.U64),
       effect_equations := (alloc.vec.Vec.new (Std.U32 × Std.U32)),
@@ -29568,7 +31167,7 @@ def inference.Arena.new : Result inference.Arena := do
     }
 
 /-- [noble_contracts::inference::{noble_contracts::inference::Arena}::source]:
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 81:4-87:5
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 87:4-93:5
     Visibility: public -/
 def inference.Arena.source
   (effect_universe : Std.U64) (resources : Bool) : Result inference.Arena := do
@@ -29576,7 +31175,7 @@ def inference.Arena.source
   ok { arena with effectful := true, effect_universe, resources }
 
 /-- [noble_contracts::inference::build::{noble_contracts::inference::Arena}::stack]:
-    Source: 'crates/noble-contracts/src/inference/build.rs', lines 22:4-29:5
+    Source: 'crates/noble-contracts/src/inference/build/mod.rs', lines 24:4-31:5
     Visibility: public -/
 def inference.build.Arena.stack
   (self : inference.Arena) (stack : Slice noble_kernel.types.Ty) (span : Span)
@@ -29587,8 +31186,48 @@ def inference.build.Arena.stack
   inference.build.Arena.build self (inference.build.Step.StackTy stack) s span
     meter
 
+/-- [noble_contracts::source::inference::initial]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 201:8-205:9 -/
+@[rust_loop_body]
+def source.inference.initial_loop.body
+  (v : alloc.vec.Vec noble_kernel.contracts.NominalDecl)
+  (nominals : alloc.vec.Vec (noble_kernel.types.NominalTypeId ×
+  noble_kernel.types.NominalShape)) («at» : Std.Usize) :
+  Result (ControlFlow ((alloc.vec.Vec (noble_kernel.types.NominalTypeId ×
+    noble_kernel.types.NominalShape)) × Std.Usize) (alloc.vec.Vec
+    (noble_kernel.types.NominalTypeId × noble_kernel.types.NominalShape)))
+  := do
+  let i := alloc.vec.Vec.len v
+  if «at» < i
+  then
+    let declaration ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        noble_kernel.contracts.NominalDecl) v «at»
+    let ns ←
+      noble_kernel.types.NominalShape.Insts.CoreCloneClone.clone
+        declaration.shape
+    let nominals1 ← alloc.vec.Vec.push nominals (declaration.id, ns)
+    let at1 ← «at» + 1#usize
+    ok (cont (nominals1, at1))
+  else ok (done nominals)
+
+/-- [noble_contracts::source::inference::initial]: loop 0:
+    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 201:8-205:9 -/
+@[rust_loop]
+def source.inference.initial_loop
+  (v : alloc.vec.Vec noble_kernel.contracts.NominalDecl)
+  (nominals : alloc.vec.Vec (noble_kernel.types.NominalTypeId ×
+  noble_kernel.types.NominalShape)) («at» : Std.Usize) :
+  Result (alloc.vec.Vec (noble_kernel.types.NominalTypeId ×
+    noble_kernel.types.NominalShape))
+  := do
+  loop
+    (fun (nominals1, at1) => source.inference.initial_loop.body v nominals1
+      at1)
+    (nominals, «at»)
+
 /-- [noble_contracts::source::inference::initial]:
-    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 186:0-226:1 -/
+    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 187:0-240:1 -/
 def source.inference.initial
   (tree : source.Tree) (session : source.Session)
   (mode : source.inference.Mode) (inputs : Slice noble_kernel.types.Ty)
@@ -29597,87 +31236,206 @@ def source.inference.initial
   := do
   let i ← source.Session.effect_universe session
   let b := core.option.Option.is_some session.bindings
-  let arena ← inference.Arena.source i b
-  match mode with
-  | source.inference.Mode.Declaration =>
-    let (r, arena1, meter1) ←
-      inference.Arena.add arena (inference.Term.HoleTerm inference.Sort.Stack)
-        tree.span meter
-    match r with
-    | core.result.Result.Ok value =>
-      let (r1, arena2, meter2) ←
-        inference.effects.Arena.effect_empty arena1 tree.span meter1
-      match r1 with
-      | core.result.Result.Ok value1 =>
-        let (r2, meter3) ← metering.Meter.node meter2 tree.span
-        match r2 with
-        | core.result.Result.Ok _ =>
-          let bodies :=
-            alloc.vec.Vec.with_capacity source.inference.Body 1#usize
-          let bodies1 ←
-            alloc.vec.Vec.push bodies
-              ({
-                 nodes := (alloc.vec.Vec.new source.inference.Draft),
-                 root := (alloc.vec.Vec.new noble_kernel.untrusted.NodeId),
-                 input := value,
-                 output := value,
-                 effect := value1,
-                 identity := none,
-                 span := tree.span
-               } : source.inference.Body)
-          ok (core.result.Result.Ok
-            {
-              arena := arena2,
-              bodies := bodies1,
-              span := tree.span,
-              text_bytes := 0#u32,
-              definition_base := 24#usize
-            }, meter3)
+  let b1 ←
+    if b
+    then ok true
+    else ok (core.option.Option.is_some session.declared)
+  let arena ← inference.Arena.source i b1
+  match session.declared with
+  | none =>
+    match mode with
+    | source.inference.Mode.Declaration =>
+      let (r, arena1, meter1) ←
+        inference.Arena.add arena (inference.Term.HoleTerm
+          inference.Sort.Stack) tree.span meter
+      match r with
+      | core.result.Result.Ok value =>
+        let (r1, arena2, meter2) ←
+          inference.effects.Arena.effect_empty arena1 tree.span meter1
+        match r1 with
+        | core.result.Result.Ok value1 =>
+          let (r2, meter3) ← metering.Meter.node meter2 tree.span
+          match r2 with
+          | core.result.Result.Ok _ =>
+            let bodies :=
+              alloc.vec.Vec.with_capacity source.inference.Body 1#usize
+            let o ← core.option.Option.as_ref none
+            let o1 ←
+              core.option.Option.and_then
+                source.inference.initial.closure.Insts.CoreOpsFunctionFnOnceTupleSharedContextOptionU64
+                o ()
+            let bodies1 ←
+              alloc.vec.Vec.push bodies
+                ({
+                   nodes := (alloc.vec.Vec.new source.inference.Draft),
+                   root := (alloc.vec.Vec.new noble_kernel.untrusted.NodeId),
+                   input := value,
+                   output := value,
+                   effect := value1,
+                   identity := none,
+                   owner := o1,
+                   span := tree.span
+                 } : source.inference.Body)
+            ok (core.result.Result.Ok
+              {
+                arena := arena2,
+                bodies := bodies1,
+                span := tree.span,
+                text_bytes := 0#u32,
+                definition_base := 24#usize
+              }, meter3)
+          | core.result.Result.Err failure =>
+            ok (core.result.Result.Err failure, meter3)
         | core.result.Result.Err failure =>
-          ok (core.result.Result.Err failure, meter3)
+          ok (core.result.Result.Err failure, meter2)
       | core.result.Result.Err failure =>
-        ok (core.result.Result.Err failure, meter2)
-    | core.result.Result.Err failure =>
-      ok (core.result.Result.Err failure, meter1)
-  | source.inference.Mode.Submission =>
-    let (r, arena1, meter1) ←
-      inference.build.Arena.stack arena inputs tree.span meter
-    match r with
-    | core.result.Result.Ok value =>
-      let (r1, arena2, meter2) ←
-        inference.effects.Arena.effect_empty arena1 tree.span meter1
-      match r1 with
-      | core.result.Result.Ok value1 =>
-        let (r2, meter3) ← metering.Meter.node meter2 tree.span
-        match r2 with
-        | core.result.Result.Ok _ =>
-          let bodies :=
-            alloc.vec.Vec.with_capacity source.inference.Body 1#usize
-          let bodies1 ←
-            alloc.vec.Vec.push bodies
-              ({
-                 nodes := (alloc.vec.Vec.new source.inference.Draft),
-                 root := (alloc.vec.Vec.new noble_kernel.untrusted.NodeId),
-                 input := value,
-                 output := value,
-                 effect := value1,
-                 identity := none,
-                 span := tree.span
-               } : source.inference.Body)
-          ok (core.result.Result.Ok
-            {
-              arena := arena2,
-              bodies := bodies1,
-              span := tree.span,
-              text_bytes := 0#u32,
-              definition_base := 24#usize
-            }, meter3)
+        ok (core.result.Result.Err failure, meter1)
+    | source.inference.Mode.Submission =>
+      let (r, arena1, meter1) ←
+        inference.build.Arena.stack arena inputs tree.span meter
+      match r with
+      | core.result.Result.Ok value =>
+        let (r1, arena2, meter2) ←
+          inference.effects.Arena.effect_empty arena1 tree.span meter1
+        match r1 with
+        | core.result.Result.Ok value1 =>
+          let (r2, meter3) ← metering.Meter.node meter2 tree.span
+          match r2 with
+          | core.result.Result.Ok _ =>
+            let bodies :=
+              alloc.vec.Vec.with_capacity source.inference.Body 1#usize
+            let o ← core.option.Option.as_ref none
+            let o1 ←
+              core.option.Option.and_then
+                source.inference.initial.closure.Insts.CoreOpsFunctionFnOnceTupleSharedContextOptionU64
+                o ()
+            let bodies1 ←
+              alloc.vec.Vec.push bodies
+                ({
+                   nodes := (alloc.vec.Vec.new source.inference.Draft),
+                   root := (alloc.vec.Vec.new noble_kernel.untrusted.NodeId),
+                   input := value,
+                   output := value,
+                   effect := value1,
+                   identity := none,
+                   owner := o1,
+                   span := tree.span
+                 } : source.inference.Body)
+            ok (core.result.Result.Ok
+              {
+                arena := arena2,
+                bodies := bodies1,
+                span := tree.span,
+                text_bytes := 0#u32,
+                definition_base := 24#usize
+              }, meter3)
+          | core.result.Result.Err failure =>
+            ok (core.result.Result.Err failure, meter3)
         | core.result.Result.Err failure =>
-          ok (core.result.Result.Err failure, meter3)
+          ok (core.result.Result.Err failure, meter2)
       | core.result.Result.Err failure =>
-        ok (core.result.Result.Err failure, meter2)
-    | core.result.Result.Err failure =>
-      ok (core.result.Result.Err failure, meter1)
+        ok (core.result.Result.Err failure, meter1)
+  | some context =>
+    let i1 := alloc.vec.Vec.len context.environment.nominals
+    let nominals :=
+      alloc.vec.Vec.with_capacity (noble_kernel.types.NominalTypeId ×
+        noble_kernel.types.NominalShape) i1
+    let nominals1 ←
+      source.inference.initial_loop context.environment.nominals nominals
+        0#usize
+    match mode with
+    | source.inference.Mode.Declaration =>
+      let (r, arena1, meter1) ←
+        inference.Arena.add { arena with nominals := nominals1 }
+          (inference.Term.HoleTerm inference.Sort.Stack) tree.span meter
+      match r with
+      | core.result.Result.Ok value =>
+        let (r1, arena2, meter2) ←
+          inference.effects.Arena.effect_empty arena1 tree.span meter1
+        match r1 with
+        | core.result.Result.Ok value1 =>
+          let (r2, meter3) ← metering.Meter.node meter2 tree.span
+          match r2 with
+          | core.result.Result.Ok _ =>
+            let bodies :=
+              alloc.vec.Vec.with_capacity source.inference.Body 1#usize
+            let o ← core.option.Option.as_ref session.declared
+            let o1 ←
+              core.option.Option.and_then
+                source.inference.initial.closure.Insts.CoreOpsFunctionFnOnceTupleSharedContextOptionU64
+                o ()
+            let bodies1 ←
+              alloc.vec.Vec.push bodies
+                ({
+                   nodes := (alloc.vec.Vec.new source.inference.Draft),
+                   root := (alloc.vec.Vec.new noble_kernel.untrusted.NodeId),
+                   input := value,
+                   output := value,
+                   effect := value1,
+                   identity := none,
+                   owner := o1,
+                   span := tree.span
+                 } : source.inference.Body)
+            ok (core.result.Result.Ok
+              {
+                arena := arena2,
+                bodies := bodies1,
+                span := tree.span,
+                text_bytes := 0#u32,
+                definition_base := 24#usize
+              }, meter3)
+          | core.result.Result.Err failure =>
+            ok (core.result.Result.Err failure, meter3)
+        | core.result.Result.Err failure =>
+          ok (core.result.Result.Err failure, meter2)
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, meter1)
+    | source.inference.Mode.Submission =>
+      let (r, arena1, meter1) ←
+        inference.build.Arena.stack { arena with nominals := nominals1 } inputs
+          tree.span meter
+      match r with
+      | core.result.Result.Ok value =>
+        let (r1, arena2, meter2) ←
+          inference.effects.Arena.effect_empty arena1 tree.span meter1
+        match r1 with
+        | core.result.Result.Ok value1 =>
+          let (r2, meter3) ← metering.Meter.node meter2 tree.span
+          match r2 with
+          | core.result.Result.Ok _ =>
+            let bodies :=
+              alloc.vec.Vec.with_capacity source.inference.Body 1#usize
+            let o ← core.option.Option.as_ref session.declared
+            let o1 ←
+              core.option.Option.and_then
+                source.inference.initial.closure.Insts.CoreOpsFunctionFnOnceTupleSharedContextOptionU64
+                o ()
+            let bodies1 ←
+              alloc.vec.Vec.push bodies
+                ({
+                   nodes := (alloc.vec.Vec.new source.inference.Draft),
+                   root := (alloc.vec.Vec.new noble_kernel.untrusted.NodeId),
+                   input := value,
+                   output := value,
+                   effect := value1,
+                   identity := none,
+                   owner := o1,
+                   span := tree.span
+                 } : source.inference.Body)
+            ok (core.result.Result.Ok
+              {
+                arena := arena2,
+                bodies := bodies1,
+                span := tree.span,
+                text_bytes := 0#u32,
+                definition_base := 24#usize
+              }, meter3)
+          | core.result.Result.Err failure =>
+            ok (core.result.Result.Err failure, meter3)
+        | core.result.Result.Err failure =>
+          ok (core.result.Result.Err failure, meter2)
+      | core.result.Result.Err failure =>
+        ok (core.result.Result.Err failure, meter1)
 
 /-- [noble_contracts::inference::effects::{noble_contracts::inference::Arena}::effect_bound]:
     Source: 'crates/noble-contracts/src/inference/effects.rs', lines 222:4-227:5 -/
@@ -30017,9 +31775,11 @@ def inference.effects.solve.run_loop1.body
   (arena : inference.Arena) (span : Span) (meter : Meter) («at» : Std.Usize)
   :
   Result (ControlFlow (Meter × Std.Usize) ((alloc.vec.Vec inference.Term) ×
-    Bool × Std.U64 × Bool × (alloc.vec.Vec inference.effects.Effect) ×
-    (alloc.vec.Vec Std.U64) × (alloc.vec.Vec (Std.U32 × Std.U32)) ×
-    (alloc.vec.Vec (Std.U32 × Std.U32)) × Meter × (Option Diagnostic)))
+    Bool × Std.U64 × Bool × (alloc.vec.Vec (noble_kernel.types.NominalTypeId
+    × noble_kernel.types.NominalShape)) × (alloc.vec.Vec
+    inference.effects.Effect) × (alloc.vec.Vec Std.U64) × (alloc.vec.Vec
+    (Std.U32 × Std.U32)) × (alloc.vec.Vec (Std.U32 × Std.U32)) × Meter ×
+    (Option Diagnostic)))
   := do
   let i := alloc.vec.Vec.len arena.effects
   if «at» < i
@@ -30032,11 +31792,11 @@ def inference.effects.solve.run_loop1.body
       ok (cont (meter1, at1))
     | core.result.Result.Err problem =>
       ok (done (arena.terms, arena.effectful, arena.effect_universe,
-        arena.resources, arena.effects, arena.effect_bounds,
+        arena.resources, arena.nominals, arena.effects, arena.effect_bounds,
         arena.effect_equations, arena.program_effects, meter1, some problem))
   else
     ok (done (arena.terms, arena.effectful, arena.effect_universe,
-      arena.resources, arena.effects, arena.effect_bounds,
+      arena.resources, arena.nominals, arena.effects, arena.effect_bounds,
       arena.effect_equations, arena.program_effects, meter, none))
 
 /-- [noble_contracts::inference::effects::solve::run]: loop 1:
@@ -30046,9 +31806,11 @@ def inference.effects.solve.run_loop1
   (arena : inference.Arena) (span : Span) (meter : Meter) («at» : Std.Usize)
   :
   Result ((alloc.vec.Vec inference.Term) × Bool × Std.U64 × Bool ×
-    (alloc.vec.Vec inference.effects.Effect) × (alloc.vec.Vec Std.U64) ×
-    (alloc.vec.Vec (Std.U32 × Std.U32)) × (alloc.vec.Vec (Std.U32 ×
-    Std.U32)) × Meter × (Option Diagnostic))
+    (alloc.vec.Vec (noble_kernel.types.NominalTypeId ×
+    noble_kernel.types.NominalShape)) × (alloc.vec.Vec
+    inference.effects.Effect) × (alloc.vec.Vec Std.U64) × (alloc.vec.Vec
+    (Std.U32 × Std.U32)) × (alloc.vec.Vec (Std.U32 × Std.U32)) × Meter ×
+    (Option Diagnostic))
   := do
   loop
     (fun (meter1, at1) => inference.effects.solve.run_loop1.body arena span
@@ -30065,7 +31827,7 @@ def inference.effects.solve.run
     inference.effects.solve.run_loop0 arena span meter true
   match failure with
   | none =>
-    let (v, b, i, b1, v1, v2, v3, v4, meter2, failure1) ←
+    let (v, b, i, b1, v1, v2, v3, v4, v5, meter2, failure1) ←
       inference.effects.solve.run_loop1 arena1 span meter1 0#usize
     match failure1 with
     | none =>
@@ -30075,10 +31837,11 @@ def inference.effects.solve.run
           effectful := b,
           effect_universe := i,
           resources := b1,
-          effects := v1,
-          effect_bounds := v2,
-          effect_equations := v3,
-          program_effects := v4
+          nominals := v1,
+          effects := v2,
+          effect_bounds := v3,
+          effect_equations := v4,
+          program_effects := v5
         }, meter2)
     | some problem =>
       ok (core.result.Result.Err problem,
@@ -30087,10 +31850,11 @@ def inference.effects.solve.run
           effectful := b,
           effect_universe := i,
           resources := b1,
-          effects := v1,
-          effect_bounds := v2,
-          effect_equations := v3,
-          program_effects := v4
+          nominals := v1,
+          effects := v2,
+          effect_bounds := v3,
+          effect_equations := v4,
+          program_effects := v5
         }, meter2)
   | some problem => ok (core.result.Result.Err problem, arena1, meter1)
 
@@ -30104,7 +31868,7 @@ def inference.effects.Arena.solve_effects
   inference.effects.solve.run self span meter
 
 /-- [noble_contracts::source::inference::infer]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 164:4-169:5 -/
+    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 165:4-170:5 -/
 @[rust_loop_body]
 def source.inference.infer_loop.body
   (tree : source.Tree) (s : source.Session)
@@ -30112,15 +31876,19 @@ def source.inference.infer_loop.body
   (v1 : alloc.vec.Vec noble_kernel.contracts.Behavior)
   (v2 : alloc.vec.Vec (alloc.vec.Vec noble_kernel.contracts.Definition))
   (v3 : alloc.vec.Vec noble_kernel.contracts.SchemaDecl)
-  (v4 : alloc.vec.Vec noble_kernel.types.EffId)
+  (v4 : alloc.vec.Vec noble_kernel.contracts.NominalDecl)
+  (v5 : alloc.vec.Vec noble_kernel.types.ResourceKind) (o : Option Std.U64)
+  (b : Bool) (v6 : alloc.vec.Vec (Option Std.U64))
+  (v7 : alloc.vec.Vec noble_kernel.contracts.BoundAdapter)
+  (v8 : alloc.vec.Vec noble_kernel.types.EffId)
   (frames : alloc.vec.Vec source.inference.Frame) (meter : Meter)
   (state : source.inference.State) :
   Result (ControlFlow ((alloc.vec.Vec source.inference.Frame) × Meter ×
     source.inference.State) (Meter × source.inference.State × (Option
     Diagnostic)))
   := do
-  let (o, frames1) ← alloc.vec.Vec.pop Global frames
-  match o with
+  let (o1, frames1) ← alloc.vec.Vec.pop Global frames
+  match o1 with
   | none => ok (done (meter, state, none))
   | some frame =>
     let (r, frames2, state1, meter1) ←
@@ -30129,7 +31897,18 @@ def source.inference.infer_loop.body
           root := tree,
           session := s,
           environment :=
-            { defs := v, kinds := v1, deps := v2, schemas := v3, effects := v4
+            {
+              defs := v,
+              kinds := v1,
+              deps := v2,
+              schemas := v3,
+              nominals := v4,
+              resource_kinds := v5,
+              caller_module := o,
+              declared_modules := b,
+              definition_owners := v6,
+              bound_adapters := v7,
+              effects := v8
             }
         } meter
     match r with
@@ -30138,7 +31917,7 @@ def source.inference.infer_loop.body
       ok (done (meter1, state1, some problem))
 
 /-- [noble_contracts::source::inference::infer]: loop 0:
-    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 164:4-169:5 -/
+    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 165:4-170:5 -/
 @[rust_loop]
 def source.inference.infer_loop
   (frames : alloc.vec.Vec source.inference.Frame) (tree : source.Tree)
@@ -30146,17 +31925,21 @@ def source.inference.infer_loop
   (v1 : alloc.vec.Vec noble_kernel.contracts.Behavior)
   (v2 : alloc.vec.Vec (alloc.vec.Vec noble_kernel.contracts.Definition))
   (v3 : alloc.vec.Vec noble_kernel.contracts.SchemaDecl)
-  (v4 : alloc.vec.Vec noble_kernel.types.EffId) (meter : Meter)
+  (v4 : alloc.vec.Vec noble_kernel.contracts.NominalDecl)
+  (v5 : alloc.vec.Vec noble_kernel.types.ResourceKind) (o : Option Std.U64)
+  (b : Bool) (v6 : alloc.vec.Vec (Option Std.U64))
+  (v7 : alloc.vec.Vec noble_kernel.contracts.BoundAdapter)
+  (v8 : alloc.vec.Vec noble_kernel.types.EffId) (meter : Meter)
   (state : source.inference.State) :
   Result (Meter × source.inference.State × (Option Diagnostic))
   := do
   loop
     (fun (frames1, meter1, state1) => source.inference.infer_loop.body tree s v
-      v1 v2 v3 v4 frames1 meter1 state1)
+      v1 v2 v3 v4 v5 o b v6 v7 v8 frames1 meter1 state1)
     (frames, meter, state)
 
 /-- [noble_contracts::source::inference::infer]:
-    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 135:0-176:1 -/
+    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 136:0-177:1 -/
 def source.inference.infer
   (scope : source.inference.Scope) (mode : source.inference.Mode)
   (inputs : Slice noble_kernel.types.Ty) (meter : Meter) :
@@ -30197,7 +31980,10 @@ def source.inference.infer
           source.inference.infer_loop frames1 scope.root scope.session
             scope.environment.defs scope.environment.kinds
             scope.environment.deps scope.environment.schemas
-            scope.environment.effects meter2
+            scope.environment.nominals scope.environment.resource_kinds
+            scope.environment.caller_module scope.environment.declared_modules
+            scope.environment.definition_owners
+            scope.environment.bound_adapters scope.environment.effects meter2
             { value with definition_base := i }
         match failure with
         | none =>
@@ -30219,6 +32005,226 @@ def source.inference.infer
     | core.result.Result.Err failure =>
       ok (core.result.Result.Err failure, meter2)
   | core.result.Result.Err _ => ok (r, meter1)
+
+/-- [noble_contracts::source::emission::allowance::{impl core::ops::function::FnOnce<(u32,), core::option::Option<u32>> for noble_contracts::source::emission::allowance::{closure}<'_0>}::call_once]:
+    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 187:18-187:55 -/
+def
+  source.emission.allowance.closure.Insts.CoreOpsFunctionFnOnceTupleU32OptionU32.call_once
+  (c : source.emission.allowance.closure) (tupled_args : Std.U32) :
+  Result (Option Std.U32)
+  := do
+  ok (U32.checked_div c.work tupled_args)
+
+/-- Trait implementation: [noble_contracts::source::emission::allowance::{impl core::ops::function::FnOnce<(u32,), core::option::Option<u32>> for noble_contracts::source::emission::allowance::{closure}<'_0>}]
+    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 187:18-187:55 -/
+@[reducible]
+def
+  source.emission.allowance.closure.Insts.CoreOpsFunctionFnOnceTupleU32OptionU32
+  : core.ops.function.FnOnce source.emission.allowance.closure Std.U32 (Option
+  Std.U32) := {
+  call_once :=
+    source.emission.allowance.closure.Insts.CoreOpsFunctionFnOnceTupleU32OptionU32.call_once
+}
+
+/-- [noble_contracts::source::emission::allowance]:
+    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 177:0-201:1 -/
+def source.emission.allowance
+  (body_count : Std.Usize) (span : Span) (meter : Meter) :
+  Result (core.result.Result noble_kernel.untrusted.Limits Diagnostic)
+  := do
+  let r ← index body_count span
+  match r with
+  | core.result.Result.Ok value =>
+    let o ← lift (U32.checked_mul value 4#u32)
+    let o1 ←
+      core.option.Option.and_then
+        source.emission.allowance.closure.Insts.CoreOpsFunctionFnOnceTupleU32OptionU32
+        o meter
+    match o1 with
+    | none => let d ← internal span
+              ok (core.result.Result.Err d)
+    | some allowance =>
+      ok (core.result.Result.Ok
+        {
+          bytes := meter.limits.bytes,
+          nodes := meter.limits.nodes,
+          depth := meter.limits.depth,
+          type_size := syntax.TYPE_CAP,
+          stack_height := inference.STACK_CAP,
+          work := allowance,
+          diagnostics := 8#u32
+        })
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::source::emission::identity::fold_bytes]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/emission/identity.rs', lines 45:4-48:5 -/
+@[rust_loop_body]
+def source.emission.identity.fold_bytes_loop.body
+  (bytes : Slice Std.U8) (hash : Std.U64) («at» : Std.Usize) :
+  Result (ControlFlow (Std.U64 × Std.Usize) Std.U64)
+  := do
+  let i := Slice.len bytes
+  if «at» < i
+  then
+    let i1 ← Slice.index_usize bytes «at»
+    let i2 ← lift (core.convert.num.FromU64U8.from i1)
+    let i3 ← lift (hash ^^^ i2)
+    let hash1 ← lift (core.num.U64.wrapping_mul i3 1099511628211#u64)
+    let at1 ← «at» + 1#usize
+    ok (cont (hash1, at1))
+  else ok (done hash)
+
+/-- [noble_contracts::source::emission::identity::fold_bytes]: loop 0:
+    Source: 'crates/noble-contracts/src/source/emission/identity.rs', lines 45:4-48:5 -/
+@[rust_loop]
+def source.emission.identity.fold_bytes_loop
+  (hash : Std.U64) (bytes : Slice Std.U8) («at» : Std.Usize) :
+  Result Std.U64
+  := do
+  loop
+    (fun (hash1, at1) => source.emission.identity.fold_bytes_loop.body bytes
+      hash1 at1)
+    (hash, «at»)
+
+/-- [noble_contracts::source::emission::identity::fold_bytes]:
+    Source: 'crates/noble-contracts/src/source/emission/identity.rs', lines 43:0-50:1 -/
+@[reducible]
+def source.emission.identity.fold_bytes
+  (hash : Std.U64) (bytes : Slice Std.U8) : Result Std.U64 := do
+  source.emission.identity.fold_bytes_loop hash bytes 0#usize
+
+/-- [noble_contracts::source::emission::identity::hash_adapter]:
+    Source: 'crates/noble-contracts/src/source/emission/identity.rs', lines 36:0-41:1 -/
+def source.emission.identity.hash_adapter
+  (hash : Std.U64) (adapter : noble_kernel.contracts.BoundAdapter) :
+  Result Std.U64
+  := do
+  let slot_bytes ← lift (core.num.U32.to_le_bytes adapter.adapter_slot)
+  let s ← lift (Array.to_slice slot_bytes)
+  let hash1 ← source.emission.identity.fold_bytes hash s
+  let s1 ← alloc.string.String.as_bytes adapter.adapter_identity
+  let hash2 ← source.emission.identity.fold_bytes hash1 s1
+  let i ← lift (hash2 ^^^ 255#u64)
+  ok (core.num.U64.wrapping_mul i 1099511628211#u64)
+
+/-- [noble_contracts::source::emission::identity::hash_selected_slot]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/emission/identity.rs', lines 25:4-32:5 -/
+@[rust_loop_body]
+def source.emission.identity.hash_selected_slot_loop.body
+  (environment : noble_kernel.contracts.Env) (slot : Std.U32) (hash : Std.U64)
+  (adapter_at : Std.Usize) (is_found : Bool) :
+  Result (ControlFlow (Std.U64 × Std.Usize × Bool) Std.U64)
+  := do
+  let i := alloc.vec.Vec.len environment.bound_adapters
+  if adapter_at < i
+  then
+    if is_found
+    then ok (done hash)
+    else
+      let adapter ←
+        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+          noble_kernel.contracts.BoundAdapter) environment.bound_adapters
+          adapter_at
+      let (hash1, is_found1) ←
+        if adapter.adapter_slot = slot
+        then
+          do
+          let hash2 ← source.emission.identity.hash_adapter hash adapter
+          ok (hash2, true)
+        else ok (hash, false)
+      let adapter_at1 ← adapter_at + 1#usize
+      ok (cont (hash1, adapter_at1, is_found1))
+  else ok (done hash)
+
+/-- [noble_contracts::source::emission::identity::hash_selected_slot]: loop 0:
+    Source: 'crates/noble-contracts/src/source/emission/identity.rs', lines 25:4-32:5 -/
+@[rust_loop]
+def source.emission.identity.hash_selected_slot_loop
+  (hash : Std.U64) (environment : noble_kernel.contracts.Env) (slot : Std.U32)
+  (adapter_at : Std.Usize) (is_found : Bool) :
+  Result Std.U64
+  := do
+  loop
+    (fun (hash1, adapter_at1, is_found1) =>
+      source.emission.identity.hash_selected_slot_loop.body environment slot
+      hash1 adapter_at1 is_found1)
+    (hash, adapter_at, is_found)
+
+/-- [noble_contracts::source::emission::identity::hash_selected_slot]:
+    Source: 'crates/noble-contracts/src/source/emission/identity.rs', lines 22:0-34:1 -/
+@[reducible]
+def source.emission.identity.hash_selected_slot
+  (hash : Std.U64) (environment : noble_kernel.contracts.Env) (slot : Std.U32)
+  :
+  Result Std.U64
+  := do
+  source.emission.identity.hash_selected_slot_loop hash environment slot
+    0#usize false
+
+/-- [noble_contracts::source::emission::identity::specialization]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/emission/identity.rs', lines 15:4-18:5 -/
+@[rust_loop_body]
+def source.emission.identity.specialization_loop.body
+  (environment : noble_kernel.contracts.Env) (selected : Slice Std.U32)
+  (hash : Std.U64) («at» : Std.Usize) :
+  Result (ControlFlow (Std.U64 × Std.Usize) Std.U64)
+  := do
+  let i := Slice.len selected
+  if «at» < i
+  then
+    let i1 ← Slice.index_usize selected «at»
+    let hash1 ←
+      source.emission.identity.hash_selected_slot hash environment i1
+    let at1 ← «at» + 1#usize
+    ok (cont (hash1, at1))
+  else ok (done hash)
+
+/-- [noble_contracts::source::emission::identity::specialization]: loop 0:
+    Source: 'crates/noble-contracts/src/source/emission/identity.rs', lines 15:4-18:5 -/
+@[rust_loop]
+def source.emission.identity.specialization_loop
+  (environment : noble_kernel.contracts.Env) (selected : Slice Std.U32)
+  (hash : Std.U64) («at» : Std.Usize) :
+  Result Std.U64
+  := do
+  loop
+    (fun (hash1, at1) => source.emission.identity.specialization_loop.body
+      environment selected hash1 at1)
+    (hash, «at»)
+
+/-- [noble_contracts::source::emission::identity::specialization]:
+    Source: 'crates/noble-contracts/src/source/emission/identity.rs', lines 5:0-20:1 -/
+def source.emission.identity.specialization
+  (identity : Std.U64) (environment : noble_kernel.contracts.Env)
+  (selected : Slice Std.U32) :
+  Result Std.U64
+  := do
+  let b ← core.slice.Slice.is_empty selected
+  if b
+  then ok identity
+  else
+    let hash ← lift (14695981039346656037#u64 ^^^ identity)
+    source.emission.identity.specialization_loop environment selected hash
+      0#usize
+
+/-- [noble_contracts::source::emission::checked::{impl core::ops::function::FnOnce<(u64,), u64> for noble_contracts::source::emission::checked::{closure}<'_0, '_1>}::call_once]:
+    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 231:13-231:93 -/
+def
+  source.emission.checked.closure.Insts.CoreOpsFunctionFnOnceTupleU64U64.call_once
+  (c : source.emission.checked.closure) (tupled_args : Std.U64) :
+  Result Std.U64
+  := do
+  let (e, s) := c
+  source.emission.identity.specialization tupled_args e s
+
+/-- Trait implementation: [noble_contracts::source::emission::checked::{impl core::ops::function::FnOnce<(u64,), u64> for noble_contracts::source::emission::checked::{closure}<'_0, '_1>}]
+    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 231:13-231:93 -/
+@[reducible]
+def source.emission.checked.closure.Insts.CoreOpsFunctionFnOnceTupleU64U64 :
+  core.ops.function.FnOnce source.emission.checked.closure Std.U64 Std.U64 := {
+  call_once :=
+    source.emission.checked.closure.Insts.CoreOpsFunctionFnOnceTupleU64U64.call_once
+}
 
 /-- [noble_contracts::inference::effects::solve::value]: loop body 0:
     Source: 'crates/noble-contracts/src/inference/effects/solve.rs', lines 168:4-174:5 -/
@@ -30283,8 +32289,47 @@ def inference.effects.Arena.effect_value
   := do
   inference.effects.solve.value self id span
 
+/-- [noble_contracts::inference::materialize::{noble_contracts::inference::Arena}::visit]: loop body 0:
+    Source: 'crates/noble-contracts/src/inference/materialize.rs', lines 180:16-187:17 -/
+@[rust_loop_body]
+def inference.materialize.Arena.visit_loop.body
+  (self : inference.Arena) (id : noble_kernel.types.NominalTypeId)
+  («at» : Std.Usize) :
+  Result (ControlFlow Std.Usize (Option noble_kernel.types.NominalShape))
+  := do
+  let i := alloc.vec.Vec.len self.nominals
+  if «at» < i
+  then
+    let (known, candidate) ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        (noble_kernel.types.NominalTypeId × noble_kernel.types.NominalShape))
+        self.nominals «at»
+    let b ←
+      noble_kernel.types.NominalTypeId.Insts.CoreCmpPartialEqNominalTypeId.eq
+        known id
+    if b
+    then
+      let ns ←
+        noble_kernel.types.NominalShape.Insts.CoreCloneClone.clone candidate
+      ok (done (some ns))
+    else let at1 ← «at» + 1#usize
+         ok (cont at1)
+  else ok (done none)
+
+/-- [noble_contracts::inference::materialize::{noble_contracts::inference::Arena}::visit]: loop 0:
+    Source: 'crates/noble-contracts/src/inference/materialize.rs', lines 180:16-187:17 -/
+@[rust_loop]
+def inference.materialize.Arena.visit_loop
+  (self : inference.Arena) (id : noble_kernel.types.NominalTypeId)
+  («at» : Std.Usize) :
+  Result (Option noble_kernel.types.NominalShape)
+  := do
+  loop
+    (fun at1 => inference.materialize.Arena.visit_loop.body self id at1)
+    «at»
+
 /-- [noble_contracts::inference::materialize::{noble_contracts::inference::Arena}::visit]:
-    Source: 'crates/noble-contracts/src/inference/materialize.rs', lines 149:4-203:5 -/
+    Source: 'crates/noble-contracts/src/inference/materialize.rs', lines 149:4-223:5 -/
 def inference.materialize.Arena.visit
   (self : inference.Arena) (id : Std.U32) (state : inference.materialize.State)
   (span : Span) (meter : Meter) :
@@ -30350,6 +32395,17 @@ def inference.materialize.Arena.visit
           alloc.vec.Vec.push state.values (inference.materialize.Material.Value
             (noble_kernel.types.Ty.ResourceType kind) 1#u32)
         ok (core.result.Result.Ok { state with values := v }, meter1)
+      | inference.Term.NominalTerm id1 =>
+        let shape ← inference.materialize.Arena.visit_loop self id1 0#usize
+        match shape with
+        | none => let d ← internal span
+                  ok (core.result.Result.Err d, meter1)
+        | some shape1 =>
+          let v ←
+            alloc.vec.Vec.push state.values
+              (inference.materialize.Material.Value
+              (noble_kernel.types.Ty.NominalType id1 shape1) 1#u32)
+          ok (core.result.Result.Ok { state with values := v }, meter1)
       | inference.Term.PairTerm a b =>
         if self.effectful
         then
@@ -30466,7 +32522,7 @@ def inference.materialize.State.pop
   | some value => ok (core.result.Result.Ok value, { self with values := v })
 
 /-- [noble_contracts::inference::finish::push]:
-    Source: 'crates/noble-contracts/src/inference/finish.rs', lines 109:0-137:1 -/
+    Source: 'crates/noble-contracts/src/inference/finish.rs', lines 110:0-138:1 -/
 def inference.finish.push
   (stack : inference.materialize.Material)
   (value : inference.materialize.Material) (span : Span) :
@@ -30500,7 +32556,7 @@ def inference.finish.push
       ok (core.result.Result.Err d)
 
 /-- [noble_contracts::inference::finish::type_size]:
-    Source: 'crates/noble-contracts/src/inference/finish.rs', lines 143:0-153:1 -/
+    Source: 'crates/noble-contracts/src/inference/finish.rs', lines 144:0-154:1 -/
 def inference.finish.type_size
   (constructors : Std.U32) (span : Span) :
   Result (core.result.Result Std.U32 Diagnostic)
@@ -30514,7 +32570,7 @@ def inference.finish.type_size
   else ok (core.result.Result.Ok constructors)
 
 /-- [noble_contracts::inference::finish::program]:
-    Source: 'crates/noble-contracts/src/inference/finish.rs', lines 84:0-103:1 -/
+    Source: 'crates/noble-contracts/src/inference/finish.rs', lines 85:0-104:1 -/
 def inference.finish.program
   (inputs : inference.materialize.Material)
   (outputs : inference.materialize.Material)
@@ -30542,7 +32598,7 @@ def inference.finish.program
       | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_contracts::inference::finish::pair]:
-    Source: 'crates/noble-contracts/src/inference/finish.rs', lines 54:0-78:1 -/
+    Source: 'crates/noble-contracts/src/inference/finish.rs', lines 55:0-79:1 -/
 def inference.finish.pair
   (is_pair : Bool) (a : inference.materialize.Material)
   (b : inference.materialize.Material) (span : Span) :
@@ -30573,7 +32629,7 @@ def inference.finish.pair
     ok (core.result.Result.Err d)
 
 /-- [noble_contracts::inference::finish::list]:
-    Source: 'crates/noble-contracts/src/inference/finish.rs', lines 41:0-52:1 -/
+    Source: 'crates/noble-contracts/src/inference/finish.rs', lines 42:0-53:1 -/
 def inference.finish.list
   (item : inference.materialize.Material) (span : Span) :
   Result (core.result.Result inference.materialize.Material Diagnostic)
@@ -30592,7 +32648,7 @@ def inference.finish.list
     ok (core.result.Result.Err d)
 
 /-- [noble_contracts::inference::finish::{noble_contracts::inference::materialize::State}::finish]:
-    Source: 'crates/noble-contracts/src/inference/finish.rs', lines 2:4-38:5 -/
+    Source: 'crates/noble-contracts/src/inference/finish.rs', lines 2:4-39:5 -/
 def inference.finish.State.finish
   (self : inference.materialize.State) (term : inference.Term)
   (effects : noble_kernel.types.EffSet) (span : Span) :
@@ -30633,6 +32689,9 @@ def inference.finish.State.finish
       let failure ← internal span
       ok (core.result.Result.Err failure)
     | inference.Term.ResourceTerm _ =>
+      let failure ← internal span
+      ok (core.result.Result.Err failure)
+    | inference.Term.NominalTerm _ =>
       let failure ← internal span
       ok (core.result.Result.Err failure)
     | inference.Term.PairTerm _ _ =>
@@ -31052,7 +33111,7 @@ def metering.Meter.new (limits : Limits) : Result Meter := do
   ok { limits, work := limits.work, nodes := 0#u32 }
 
 /-- [noble_contracts::program::rejection_shapes]:
-    Source: 'crates/noble-contracts/src/program.rs', lines 273:0-288:1 -/
+    Source: 'crates/noble-contracts/src/program.rs', lines 282:0-297:1 -/
 def program.rejection_shapes
   (diagnostic : noble_kernel.untrusted.Diagnostic)
   (request : noble_kernel.untrusted.Request) (span : Span) :
@@ -31089,7 +33148,7 @@ def program.rejection_shapes
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_contracts::program::check]:
-    Source: 'crates/noble-contracts/src/program.rs', lines 212:0-271:1 -/
+    Source: 'crates/noble-contracts/src/program.rs', lines 212:0-280:1 -/
 def program.check
   (env : noble_kernel.contracts.Env)
   (candidate : noble_kernel.untrusted.Candidate)
@@ -31133,6 +33192,15 @@ def program.check
         | noble_kernel.untrusted.Constraint.UnknownDefinition _ =>
           ok (diagnostic.constraint, toStr
             "kernel rejected the ordinary typing witness")
+        | noble_kernel.untrusted.Constraint.InvalidType =>
+          ok (noble_kernel.untrusted.Constraint.InvalidType, toStr
+            "kernel rejected an unregistered or mismatched nominal type")
+        | noble_kernel.untrusted.Constraint.InvalidContract =>
+          ok (noble_kernel.untrusted.Constraint.InvalidContract, toStr
+            "kernel rejected a changed module operation or adapter contract")
+        | noble_kernel.untrusted.Constraint.PrivateDefinition _ =>
+          ok (diagnostic.constraint, toStr
+            "kernel rejected a private module operation")
         | noble_kernel.untrusted.Constraint.CyclicWitness =>
           ok (noble_kernel.untrusted.Constraint.CyclicWitness, toStr
             "kernel rejected a cyclic witness")
@@ -31187,6 +33255,15 @@ def program.check
           | noble_kernel.untrusted.Constraint.UnknownDefinition _ =>
             ok (diagnostic.constraint, toStr
               "kernel rejected the ordinary typing witness")
+          | noble_kernel.untrusted.Constraint.InvalidType =>
+            ok (noble_kernel.untrusted.Constraint.InvalidType, toStr
+              "kernel rejected an unregistered or mismatched nominal type")
+          | noble_kernel.untrusted.Constraint.InvalidContract =>
+            ok (noble_kernel.untrusted.Constraint.InvalidContract, toStr
+              "kernel rejected a changed module operation or adapter contract")
+          | noble_kernel.untrusted.Constraint.PrivateDefinition _ =>
+            ok (diagnostic.constraint, toStr
+              "kernel rejected a private module operation")
           | noble_kernel.untrusted.Constraint.CyclicWitness =>
             ok (noble_kernel.untrusted.Constraint.CyclicWitness, toStr
               "kernel rejected a cyclic witness")
@@ -31219,7 +33296,7 @@ def program.check
     ok (core.result.Result.Err d)
 
 /-- [noble_contracts::source::emission::checked]:
-    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 249:0-296:1 -/
+    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 207:0-255:1 -/
 def source.emission.checked
   (draft : source.inference.Body)
   (expected : Option noble_kernel.untrusted.Expected) (arena : inference.Arena)
@@ -31233,6 +33310,10 @@ def source.emission.checked
     let e ← source.Error.at source.Stage.Check d
     ok (core.result.Result.Err e, meter)
   | some expected1 =>
+    let identity ←
+      core.option.Option.map
+        source.emission.checked.closure.Insts.CoreOpsFunctionFnOnceTupleU64U64
+        draft.identity (admission.environment, admission.linked_slots)
     let (r, meter1) ← source.emission.materialization.body draft arena meter
     match r with
     | core.result.Result.Ok body =>
@@ -31241,9 +33322,14 @@ def source.emission.checked
       let (r1, meter2) ← metering.Meter.charge meter1 i draft.span
       match r1 with
       | core.result.Result.Ok _ =>
+        let caller_environment ←
+          noble_kernel.contracts.Env.Insts.CoreCloneClone.clone
+            admission.environment
         let s := alloc.vec.Vec.deref spans
         let r2 ←
-          program.check admission.environment body1.candidate
+          program.check
+            { caller_environment with caller_module := draft.owner }
+            body1.candidate
             {
               input_bytes := admission.input_bytes,
               expected := expected1,
@@ -31260,7 +33346,7 @@ def source.emission.checked
                   expected := expected1,
                   limits := admission.limits
                 },
-              identity := draft.identity,
+              identity,
               span := draft.span
             }, meter2)
         | core.result.Result.Err error =>
@@ -31273,58 +33359,8 @@ def source.emission.checked
       let e ← source.Error.at source.Stage.Check error
       ok (core.result.Result.Err e, meter1)
 
-/-- [noble_contracts::source::emission::allowance::{impl core::ops::function::FnOnce<(u32,), core::option::Option<u32>> for noble_contracts::source::emission::allowance::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 229:18-229:55 -/
-def
-  source.emission.allowance.closure.Insts.CoreOpsFunctionFnOnceTupleU32OptionU32.call_once
-  (c : source.emission.allowance.closure) (tupled_args : Std.U32) :
-  Result (Option Std.U32)
-  := do
-  ok (U32.checked_div c.work tupled_args)
-
-/-- Trait implementation: [noble_contracts::source::emission::allowance::{impl core::ops::function::FnOnce<(u32,), core::option::Option<u32>> for noble_contracts::source::emission::allowance::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 229:18-229:55 -/
-@[reducible]
-def
-  source.emission.allowance.closure.Insts.CoreOpsFunctionFnOnceTupleU32OptionU32
-  : core.ops.function.FnOnce source.emission.allowance.closure Std.U32 (Option
-  Std.U32) := {
-  call_once :=
-    source.emission.allowance.closure.Insts.CoreOpsFunctionFnOnceTupleU32OptionU32.call_once
-}
-
-/-- [noble_contracts::source::emission::allowance]:
-    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 219:0-243:1 -/
-def source.emission.allowance
-  (body_count : Std.Usize) (span : Span) (meter : Meter) :
-  Result (core.result.Result noble_kernel.untrusted.Limits Diagnostic)
-  := do
-  let r ← index body_count span
-  match r with
-  | core.result.Result.Ok value =>
-    let o ← lift (U32.checked_mul value 4#u32)
-    let o1 ←
-      core.option.Option.and_then
-        source.emission.allowance.closure.Insts.CoreOpsFunctionFnOnceTupleU32OptionU32
-        o meter
-    match o1 with
-    | none => let d ← internal span
-              ok (core.result.Result.Err d)
-    | some allowance =>
-      ok (core.result.Result.Ok
-        {
-          bytes := meter.limits.bytes,
-          nodes := meter.limits.nodes,
-          depth := meter.limits.depth,
-          type_size := syntax.TYPE_CAP,
-          stack_height := inference.STACK_CAP,
-          work := allowance,
-          diagnostics := 8#u32
-        })
-  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
-
 /-- [noble_contracts::source::emission::{noble_contracts::source::emission::Assembly}::install]:
-    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 37:4-69:5 -/
+    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 40:4-72:5 -/
 def source.emission.Assembly.install
   (self : source.emission.Assembly) (checked : source.emission.CheckedBody)
   (position : Std.Usize) (downstream_work : Std.U32) :
@@ -31366,11 +33402,12 @@ def source.emission.Assembly.install
       ok (core.result.Result.Err e, self)
 
 /-- [noble_contracts::source::emission::assemble]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 202:4-212:5 -/
+    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 160:4-170:5 -/
 @[rust_loop_body]
 def source.emission.assemble_loop.body
-  (environment : noble_kernel.contracts.Env) (input_bytes : Std.U32)
-  (limits : noble_kernel.untrusted.Limits) (arena : inference.Arena)
+  (i : Std.U32) (l : noble_kernel.untrusted.Limits)
+  (e : noble_kernel.contracts.Env) (s : Slice Std.U32)
+  (arena : inference.Arena)
   (drafts : alloc.vec.into_iter.IntoIter source.inference.Body) (meter : Meter)
   (assembly : source.emission.Assembly)
   (expected : alloc.vec.into_iter.IntoIter noble_kernel.untrusted.Expected)
@@ -31387,7 +33424,8 @@ def source.emission.assemble_loop.body
     let (o1, expected1) ← alloc.vec.into_iter.IteratorIntoIter.next expected
     let (r, meter1) ←
       source.emission.checked draft o1 arena
-        { input_bytes, limits, environment } meter
+        { input_bytes := i, limits := l, environment := e, linked_slots := s }
+        meter
     let (meter2, assembly1, result) ←
       match r with
       | core.result.Result.Ok body =>
@@ -31406,54 +33444,46 @@ def source.emission.assemble_loop.body
       ok (done (meter2, assembly1, some problem))
 
 /-- [noble_contracts::source::emission::assemble]: loop 0:
-    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 202:4-212:5 -/
+    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 160:4-170:5 -/
 @[rust_loop]
 def source.emission.assemble_loop
-  (drafts : alloc.vec.into_iter.IntoIter source.inference.Body)
-  (environment : noble_kernel.contracts.Env) (input_bytes : Std.U32)
-  (meter : Meter) (limits : noble_kernel.untrusted.Limits)
-  (assembly : source.emission.Assembly)
+  (drafts : alloc.vec.into_iter.IntoIter source.inference.Body) (i : Std.U32)
+  (l : noble_kernel.untrusted.Limits) (e : noble_kernel.contracts.Env)
+  (s : Slice Std.U32) (meter : Meter) (assembly : source.emission.Assembly)
   (expected : alloc.vec.into_iter.IntoIter noble_kernel.untrusted.Expected)
   (arena : inference.Arena) (position : Std.Usize) :
   Result (Meter × source.emission.Assembly × (Option source.Error))
   := do
   loop
     (fun (drafts1, meter1, assembly1, expected1, position1) =>
-      source.emission.assemble_loop.body environment input_bytes limits arena
-      drafts1 meter1 assembly1 expected1 position1)
+      source.emission.assemble_loop.body i l e s arena drafts1 meter1 assembly1
+      expected1 position1)
     (drafts, meter, assembly, expected, position)
 
 /-- [noble_contracts::source::emission::assemble]:
-    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 176:0-217:1 -/
+    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 144:0-175:1 -/
 def source.emission.assemble
   (state : source.inference.State)
   (expected : alloc.vec.Vec noble_kernel.untrusted.Expected)
-  (environment : noble_kernel.contracts.Env) (input_bytes : Std.U32)
-  (meter : Meter) :
+  (admission : source.emission.Admission) (meter : Meter) :
   Result ((core.result.Result source.emission.Assembly source.Error) × Meter)
   := do
   let i := alloc.vec.Vec.len state.bodies
-  let r ← source.emission.allowance i state.span meter
-  match r with
-  | core.result.Result.Ok limits =>
-    let i1 := alloc.vec.Vec.len state.bodies
-    let i2 ← lift (core.num.Usize.saturating_sub i1 1#usize)
-    let v := alloc.vec.Vec.with_capacity noble_kernel.execution.Definition i2
-    let expected1 ← alloc.vec.IntoIteratorVec.into_iter expected
-    let drafts ← alloc.vec.IntoIteratorVec.into_iter state.bodies
-    let (meter1, assembly, failure) ←
-      source.emission.assemble_loop drafts environment input_bytes meter limits
-        {
-          definition_base := state.definition_base,
-          definitions := v,
-          root := none
-        } expected1 state.arena 0#usize
-    match failure with
-    | none => ok (core.result.Result.Ok assembly, meter1)
-    | some problem => ok (core.result.Result.Err problem, meter1)
-  | core.result.Result.Err error =>
-    let e ← source.Error.at source.Stage.Check error
-    ok (core.result.Result.Err e, meter)
+  let i1 ← lift (core.num.Usize.saturating_sub i 1#usize)
+  let v := alloc.vec.Vec.with_capacity noble_kernel.execution.Definition i1
+  let expected1 ← alloc.vec.IntoIteratorVec.into_iter expected
+  let drafts ← alloc.vec.IntoIteratorVec.into_iter state.bodies
+  let (meter1, assembly, failure) ←
+    source.emission.assemble_loop drafts admission.input_bytes admission.limits
+      admission.environment admission.linked_slots meter
+      {
+        definition_base := state.definition_base,
+        definitions := v,
+        root := none
+      } expected1 state.arena 0#usize
+  match failure with
+  | none => ok (core.result.Result.Ok assembly, meter1)
+  | some problem => ok (core.result.Result.Err problem, meter1)
 
 /-- [noble_contracts::source::emission::materialization::dependency]: loop body 0:
     Source: 'crates/noble-contracts/src/source/emission/materialization.rs', lines 49:8-56:9 -/
@@ -31713,7 +33743,7 @@ def source.emission.contracts.effect_slots
   | some problem => ok (core.result.Result.Err problem, meter1)
 
 /-- [noble_contracts::source::emission::contracts::patterns::{noble_contracts::source::emission::contracts::patterns::Traversal}::take]:
-    Source: 'crates/noble-contracts/src/source/emission/contracts/patterns.rs', lines 227:4-235:5 -/
+    Source: 'crates/noble-contracts/src/source/emission/contracts/patterns.rs', lines 230:4-238:5 -/
 def source.emission.contracts.patterns.Traversal.take
   (self : source.emission.contracts.patterns.Traversal) (span : Span) :
   Result ((core.result.Result noble_kernel.shapes.Pattern Diagnostic) ×
@@ -31727,7 +33757,7 @@ def source.emission.contracts.patterns.Traversal.take
   | some value => ok (core.result.Result.Ok value, { self with values := v })
 
 /-- [noble_contracts::source::emission::contracts::patterns::{noble_contracts::source::emission::contracts::patterns::Traversal}::program]:
-    Source: 'crates/noble-contracts/src/source/emission/contracts/patterns.rs', lines 193:4-221:5 -/
+    Source: 'crates/noble-contracts/src/source/emission/contracts/patterns.rs', lines 196:4-224:5 -/
 def source.emission.contracts.patterns.Traversal.program
   (self : source.emission.contracts.patterns.Traversal)
   (root : noble_kernel.types.Ty) (depth : Std.Usize) (span : Span)
@@ -31808,11 +33838,14 @@ def source.emission.contracts.patterns.Traversal.program
     | noble_kernel.types.Ty.ResourceType _ =>
       let d ← internal span
       ok (core.result.Result.Err d, { self with path := v }, meter)
+    | noble_kernel.types.Ty.NominalType _ _ =>
+      let d ← internal span
+      ok (core.result.Result.Err d, { self with path := v }, meter)
   | core.result.Result.Err failure =>
     ok (core.result.Result.Err failure, { self with path := v }, meter)
 
 /-- [noble_contracts::source::emission::contracts::patterns::{noble_contracts::source::emission::contracts::patterns::Traversal}::finish]:
-    Source: 'crates/noble-contracts/src/source/emission/contracts/patterns.rs', lines 154:4-187:5 -/
+    Source: 'crates/noble-contracts/src/source/emission/contracts/patterns.rs', lines 157:4-190:5 -/
 def source.emission.contracts.patterns.Traversal.finish
   (self : source.emission.contracts.patterns.Traversal)
   (step : source.emission.contracts.patterns.Step)
@@ -31863,7 +33896,7 @@ def source.emission.contracts.patterns.Traversal.finish
       meter
 
 /-- [noble_contracts::source::emission::contracts::patterns::{noble_contracts::source::emission::contracts::patterns::Traversal}::schedule]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/emission/contracts/patterns.rs', lines 143:8-151:9 -/
+    Source: 'crates/noble-contracts/src/source/emission/contracts/patterns.rs', lines 146:8-154:9 -/
 @[rust_loop_body]
 def source.emission.contracts.patterns.Traversal.schedule_loop.body
   (is_output : Bool) (depth : Std.Usize)
@@ -31886,7 +33919,7 @@ def source.emission.contracts.patterns.Traversal.schedule_loop.body
   else ok (done v)
 
 /-- [noble_contracts::source::emission::contracts::patterns::{noble_contracts::source::emission::contracts::patterns::Traversal}::schedule]: loop 0:
-    Source: 'crates/noble-contracts/src/source/emission/contracts/patterns.rs', lines 143:8-151:9 -/
+    Source: 'crates/noble-contracts/src/source/emission/contracts/patterns.rs', lines 146:8-154:9 -/
 @[rust_loop]
 def source.emission.contracts.patterns.Traversal.schedule_loop
   (v : alloc.vec.Vec source.emission.contracts.patterns.Step)
@@ -31900,7 +33933,7 @@ def source.emission.contracts.patterns.Traversal.schedule_loop
     (v, «at»)
 
 /-- [noble_contracts::source::emission::contracts::patterns::{noble_contracts::source::emission::contracts::patterns::Traversal}::schedule]:
-    Source: 'crates/noble-contracts/src/source/emission/contracts/patterns.rs', lines 139:4-152:5 -/
+    Source: 'crates/noble-contracts/src/source/emission/contracts/patterns.rs', lines 142:4-155:5 -/
 def source.emission.contracts.patterns.Traversal.schedule
   (self : source.emission.contracts.patterns.Traversal) (count : Std.Usize)
   (is_output : Bool) :
@@ -31914,7 +33947,7 @@ def source.emission.contracts.patterns.Traversal.schedule
   ok { self with pending := v1 }
 
 /-- [noble_contracts::source::emission::contracts::patterns::{noble_contracts::source::emission::contracts::patterns::Traversal}::visit]:
-    Source: 'crates/noble-contracts/src/source/emission/contracts/patterns.rs', lines 83:4-137:5 -/
+    Source: 'crates/noble-contracts/src/source/emission/contracts/patterns.rs', lines 83:4-140:5 -/
 def source.emission.contracts.patterns.Traversal.visit
   (self : source.emission.contracts.patterns.Traversal)
   (ty : noble_kernel.types.Ty) (depth : Std.Usize) :
@@ -31983,6 +34016,9 @@ def source.emission.contracts.patterns.Traversal.visit
     ok (none, self2)
   | noble_kernel.types.Ty.ResourceType kind =>
     ok (some (noble_kernel.shapes.Pattern.ResourcePattern kind), self)
+  | noble_kernel.types.Ty.NominalType id shape =>
+    let ns ← noble_kernel.types.NominalShape.Insts.CoreCloneClone.clone shape
+    ok (some (noble_kernel.shapes.Pattern.NominalPattern id ns), self)
 
 /-- [noble_contracts::source::emission::contracts::patterns::{noble_contracts::source::emission::contracts::patterns::Traversal}::step]:
     Source: 'crates/noble-contracts/src/source/emission/contracts/patterns.rs', lines 52:4-77:5 -/
@@ -32213,9 +34249,9 @@ def source.emission.contracts.scheme
   | core.result.Result.Err failure =>
     ok (core.result.Result.Err failure, meter1)
 
-/-- [noble_contracts::source::emission::install_interface]:
-    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 146:0-166:1 -/
-def source.emission.install_interface
+/-- [noble_contracts::source::emission::interfaces::install_interface]:
+    Source: 'crates/noble-contracts/src/source/emission/interfaces.rs', lines 25:0-46:1 -/
+def source.emission.interfaces.install_interface
   (body : source.inference.Body) (arena : inference.Arena)
   (environment : noble_kernel.contracts.Env) (meter : Meter) :
   Result ((core.result.Result noble_kernel.untrusted.Expected Diagnostic) ×
@@ -32243,8 +34279,14 @@ def source.emission.install_interface
           let v4 ←
             alloc.vec.Vec.push v1 noble_kernel.contracts.Behavior.NamedBehavior
           let v5 ← alloc.vec.Vec.push v2 value2
-          ok (r, { environment with defs := v3, kinds := v4, deps := v5 },
-            meter3)
+          let v6 ←
+            alloc.vec.Vec.push environment.definition_owners body.owner
+          ok (r,
+            {
+              environment
+                with
+                defs := v3, kinds := v4, deps := v5, definition_owners := v6
+            }, meter3)
         | core.result.Result.Err failure =>
           ok (core.result.Result.Err failure, environment, meter3)
       | core.result.Result.Err failure =>
@@ -32252,10 +34294,10 @@ def source.emission.install_interface
     else ok (r, environment, meter1)
   | core.result.Result.Err _ => ok (r, environment, meter1)
 
-/-- [noble_contracts::source::emission::interfaces]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 130:4-139:5 -/
+/-- [noble_contracts::source::emission::interfaces::collect]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/emission/interfaces.rs', lines 9:4-18:5 -/
 @[rust_loop_body]
-def source.emission.interfaces_loop.body
+def source.emission.interfaces.collect_loop.body
   (a : inference.Arena) (v : alloc.vec.Vec source.inference.Body)
   (environment : noble_kernel.contracts.Env) (meter : Meter)
   (expected : alloc.vec.Vec noble_kernel.untrusted.Expected)
@@ -32272,7 +34314,7 @@ def source.emission.interfaces_loop.body
       alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
         source.inference.Body) v «at»
     let (r, environment1, meter1) ←
-      source.emission.install_interface b a environment meter
+      source.emission.interfaces.install_interface b a environment meter
     match r with
     | core.result.Result.Ok interface =>
       let expected1 ← alloc.vec.Vec.push expected interface
@@ -32282,10 +34324,10 @@ def source.emission.interfaces_loop.body
       ok (done (environment1, meter1, expected, some problem))
   else ok (done (environment, meter, expected, none))
 
-/-- [noble_contracts::source::emission::interfaces]: loop 0:
-    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 130:4-139:5 -/
+/-- [noble_contracts::source::emission::interfaces::collect]: loop 0:
+    Source: 'crates/noble-contracts/src/source/emission/interfaces.rs', lines 9:4-18:5 -/
 @[rust_loop]
-def source.emission.interfaces_loop
+def source.emission.interfaces.collect_loop
   (a : inference.Arena) (v : alloc.vec.Vec source.inference.Body)
   (environment : noble_kernel.contracts.Env) (meter : Meter)
   (expected : alloc.vec.Vec noble_kernel.untrusted.Expected)
@@ -32295,13 +34337,13 @@ def source.emission.interfaces_loop
   := do
   loop
     (fun (environment1, meter1, expected1, at1) =>
-      source.emission.interfaces_loop.body a v environment1 meter1 expected1
-      at1)
+      source.emission.interfaces.collect_loop.body a v environment1 meter1
+      expected1 at1)
     (environment, meter, expected, «at»)
 
-/-- [noble_contracts::source::emission::interfaces]:
-    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 122:0-144:1 -/
-def source.emission.interfaces
+/-- [noble_contracts::source::emission::interfaces::collect]:
+    Source: 'crates/noble-contracts/src/source/emission/interfaces.rs', lines 1:0-23:1 -/
+def source.emission.interfaces.collect
   (state : source.inference.State) (environment : noble_kernel.contracts.Env)
   (meter : Meter) :
   Result ((core.result.Result (alloc.vec.Vec noble_kernel.untrusted.Expected)
@@ -32310,11 +34352,159 @@ def source.emission.interfaces
   let i := alloc.vec.Vec.len state.bodies
   let expected := alloc.vec.Vec.with_capacity noble_kernel.untrusted.Expected i
   let (environment1, meter1, expected1, failure) ←
-    source.emission.interfaces_loop state.arena state.bodies environment meter
-      expected 0#usize
+    source.emission.interfaces.collect_loop state.arena state.bodies
+      environment meter expected 0#usize
   match failure with
   | none => ok (core.result.Result.Ok expected1, environment1, meter1)
   | some problem => ok (core.result.Result.Err problem, environment1, meter1)
+
+/-- [noble_contracts::source::emission::identity::selected_slot]:
+    Source: 'crates/noble-contracts/src/source/emission/identity.rs', lines 84:0-96:1 -/
+def source.emission.identity.selected_slot
+  (node : source.inference.Draft) (environment : noble_kernel.contracts.Env) :
+  Result (Option Std.U32)
+  := do
+  match node.kind with
+  | source.inference.DraftKind.Literal _ => ok none
+  | source.inference.DraftKind.Invocation definition =>
+    let o ← noble_kernel.contracts.Env.kind environment definition
+    match o with
+    | none => ok none
+    | some b =>
+      match b with
+      | noble_kernel.contracts.Behavior.DupBehavior => ok none
+      | noble_kernel.contracts.Behavior.DropBehavior => ok none
+      | noble_kernel.contracts.Behavior.SwapBehavior => ok none
+      | noble_kernel.contracts.Behavior.DipBehavior => ok none
+      | noble_kernel.contracts.Behavior.ArithBehavior => ok none
+      | noble_kernel.contracts.Behavior.EqualsBehavior => ok none
+      | noble_kernel.contracts.Behavior.QuoteBehavior => ok none
+      | noble_kernel.contracts.Behavior.ComposeBehavior => ok none
+      | noble_kernel.contracts.Behavior.RunBehavior => ok none
+      | noble_kernel.contracts.Behavior.ReflectBehavior => ok none
+      | noble_kernel.contracts.Behavior.UnitBehavior => ok none
+      | noble_kernel.contracts.Behavior.PairBehavior => ok none
+      | noble_kernel.contracts.Behavior.UnpairBehavior => ok none
+      | noble_kernel.contracts.Behavior.InlBehavior => ok none
+      | noble_kernel.contracts.Behavior.InrBehavior => ok none
+      | noble_kernel.contracts.Behavior.CaseBehavior => ok none
+      | noble_kernel.contracts.Behavior.IfBehavior => ok none
+      | noble_kernel.contracts.Behavior.NilBehavior => ok none
+      | noble_kernel.contracts.Behavior.ConsBehavior => ok none
+      | noble_kernel.contracts.Behavior.ListCaseBehavior => ok none
+      | noble_kernel.contracts.Behavior.TestEmitBehavior => ok none
+      | noble_kernel.contracts.Behavior.BoundEmitBehavior slot =>
+        ok (some slot)
+      | noble_kernel.contracts.Behavior.NominalNewBehavior _ => ok none
+      | noble_kernel.contracts.Behavior.NominalIntoBehavior _ => ok none
+      | noble_kernel.contracts.Behavior.NominalLeftBehavior _ => ok none
+      | noble_kernel.contracts.Behavior.NominalRightBehavior _ => ok none
+      | noble_kernel.contracts.Behavior.NominalMatchBehavior _ => ok none
+      | noble_kernel.contracts.Behavior.NamedBehavior => ok none
+  | source.inference.DraftKind.Quotation _ => ok none
+
+/-- [noble_contracts::source::emission::identity::append_selected_nodes]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/emission/identity.rs', lines 73:4-80:5 -/
+@[rust_loop_body]
+def source.emission.identity.append_selected_nodes_loop.body
+  (nodes : Slice source.inference.Draft)
+  (environment : noble_kernel.contracts.Env) (selected : alloc.vec.Vec Std.U32)
+  (node_at : Std.Usize) :
+  Result (ControlFlow ((alloc.vec.Vec Std.U32) × Std.Usize) (alloc.vec.Vec
+    Std.U32))
+  := do
+  let i := Slice.len nodes
+  if node_at < i
+  then
+    let d ← Slice.index_usize nodes node_at
+    let o ← source.emission.identity.selected_slot d environment
+    let selected1 ←
+      match o with
+      | none => ok selected
+      | some slot =>
+        do
+        let s := alloc.vec.Vec.deref selected
+        let b ← core.slice.Slice.contains core.cmp.PartialEqU32 s slot
+        if b
+        then ok selected
+        else alloc.vec.Vec.push selected slot
+    let node_at1 ← node_at + 1#usize
+    ok (cont (selected1, node_at1))
+  else ok (done selected)
+
+/-- [noble_contracts::source::emission::identity::append_selected_nodes]: loop 0:
+    Source: 'crates/noble-contracts/src/source/emission/identity.rs', lines 73:4-80:5 -/
+@[rust_loop]
+def source.emission.identity.append_selected_nodes_loop
+  (selected : alloc.vec.Vec Std.U32) (nodes : Slice source.inference.Draft)
+  (environment : noble_kernel.contracts.Env) (node_at : Std.Usize) :
+  Result (alloc.vec.Vec Std.U32)
+  := do
+  loop
+    (fun (selected1, node_at1) =>
+      source.emission.identity.append_selected_nodes_loop.body nodes
+      environment selected1 node_at1)
+    (selected, node_at)
+
+/-- [noble_contracts::source::emission::identity::append_selected_nodes]:
+    Source: 'crates/noble-contracts/src/source/emission/identity.rs', lines 67:0-82:1 -/
+@[reducible]
+def source.emission.identity.append_selected_nodes
+  (selected : alloc.vec.Vec Std.U32) (nodes : Slice source.inference.Draft)
+  (environment : noble_kernel.contracts.Env) :
+  Result (alloc.vec.Vec Std.U32)
+  := do
+  source.emission.identity.append_selected_nodes_loop selected nodes
+    environment 0#usize
+
+/-- [noble_contracts::source::emission::identity::selected_slots]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/emission/identity.rs', lines 58:4-61:5 -/
+@[rust_loop_body]
+def source.emission.identity.selected_slots_loop.body
+  (state : source.inference.State) (environment : noble_kernel.contracts.Env)
+  (selected : alloc.vec.Vec Std.U32) (body_at : Std.Usize) :
+  Result (ControlFlow ((alloc.vec.Vec Std.U32) × Std.Usize) (alloc.vec.Vec
+    Std.U32))
+  := do
+  let i := alloc.vec.Vec.len state.bodies
+  if body_at < i
+  then
+    let b ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        source.inference.Body) state.bodies body_at
+    let s := alloc.vec.Vec.deref b.nodes
+    let selected1 ←
+      source.emission.identity.append_selected_nodes selected s environment
+    let body_at1 ← body_at + 1#usize
+    ok (cont (selected1, body_at1))
+  else ok (done selected)
+
+/-- [noble_contracts::source::emission::identity::selected_slots]: loop 0:
+    Source: 'crates/noble-contracts/src/source/emission/identity.rs', lines 58:4-61:5 -/
+@[rust_loop]
+def source.emission.identity.selected_slots_loop
+  (state : source.inference.State) (environment : noble_kernel.contracts.Env)
+  (selected : alloc.vec.Vec Std.U32) (body_at : Std.Usize) :
+  Result (alloc.vec.Vec Std.U32)
+  := do
+  loop
+    (fun (selected1, body_at1) =>
+      source.emission.identity.selected_slots_loop.body state environment
+      selected1 body_at1)
+    (selected, body_at)
+
+/-- [noble_contracts::source::emission::identity::selected_slots]:
+    Source: 'crates/noble-contracts/src/source/emission/identity.rs', lines 52:0-65:1 -/
+def source.emission.identity.selected_slots
+  (state : source.inference.State) (environment : noble_kernel.contracts.Env) :
+  Result (alloc.vec.Vec Std.U32)
+  := do
+  let selected ←
+    source.emission.identity.selected_slots_loop state environment
+      (alloc.vec.Vec.new Std.U32) 0#usize
+  let (s, deref_mut_back) ← lift (alloc.vec.Vec.deref_mut selected)
+  let s1 ← core.slice.Slice.sort_unstable core.cmp.OrdU32 s
+  ok (deref_mut_back s1)
 
 /-- [noble_contracts::inference::effects::solve::close_term]:
     Source: 'crates/noble-contracts/src/inference/effects/solve.rs', lines 202:0-222:1 -/
@@ -32354,6 +34544,8 @@ def inference.effects.solve.close_term
         ok (core.result.Result.Ok (), term, meter1)
       | inference.Term.ResourceTerm _ =>
         ok (core.result.Result.Ok (), term, meter1)
+      | inference.Term.NominalTerm _ =>
+        ok (core.result.Result.Ok (), term, meter1)
       | inference.Term.PairTerm _ _ =>
         ok (core.result.Result.Ok (), term, meter1)
       | inference.Term.SumTerm _ _ =>
@@ -32375,9 +34567,10 @@ def inference.effects.solve.close_loop.body
   :
   Result (ControlFlow (inference.Arena × Meter × Std.Usize) ((alloc.vec.Vec
     inference.Term) × Bool × Std.U64 × Bool × (alloc.vec.Vec
-    inference.effects.Effect) × (alloc.vec.Vec Std.U64) × (alloc.vec.Vec
-    (Std.U32 × Std.U32)) × (alloc.vec.Vec (Std.U32 × Std.U32)) × Meter ×
-    (Option Diagnostic)))
+    (noble_kernel.types.NominalTypeId × noble_kernel.types.NominalShape)) ×
+    (alloc.vec.Vec inference.effects.Effect) × (alloc.vec.Vec Std.U64) ×
+    (alloc.vec.Vec (Std.U32 × Std.U32)) × (alloc.vec.Vec (Std.U32 ×
+    Std.U32)) × Meter × (Option Diagnostic)))
   := do
   let i := alloc.vec.Vec.len arena.terms
   if «at» < i
@@ -32397,11 +34590,11 @@ def inference.effects.solve.close_loop.body
       let s1 := get_mut_back o1
       let v := deref_mut_back s1
       ok (done (v, arena.effectful, arena.effect_universe, arena.resources,
-        arena.effects, arena.effect_bounds, arena.effect_equations,
-        arena.program_effects, meter1, some problem))
+        arena.nominals, arena.effects, arena.effect_bounds,
+        arena.effect_equations, arena.program_effects, meter1, some problem))
   else
     ok (done (arena.terms, arena.effectful, arena.effect_universe,
-      arena.resources, arena.effects, arena.effect_bounds,
+      arena.resources, arena.nominals, arena.effects, arena.effect_bounds,
       arena.effect_equations, arena.program_effects, meter, none))
 
 /-- [noble_contracts::inference::effects::solve::close]: loop 0:
@@ -32411,9 +34604,11 @@ def inference.effects.solve.close_loop
   (arena : inference.Arena) (span : Span) (meter : Meter) («at» : Std.Usize)
   :
   Result ((alloc.vec.Vec inference.Term) × Bool × Std.U64 × Bool ×
-    (alloc.vec.Vec inference.effects.Effect) × (alloc.vec.Vec Std.U64) ×
-    (alloc.vec.Vec (Std.U32 × Std.U32)) × (alloc.vec.Vec (Std.U32 ×
-    Std.U32)) × Meter × (Option Diagnostic))
+    (alloc.vec.Vec (noble_kernel.types.NominalTypeId ×
+    noble_kernel.types.NominalShape)) × (alloc.vec.Vec
+    inference.effects.Effect) × (alloc.vec.Vec Std.U64) × (alloc.vec.Vec
+    (Std.U32 × Std.U32)) × (alloc.vec.Vec (Std.U32 × Std.U32)) × Meter ×
+    (Option Diagnostic))
   := do
   loop
     (fun (arena1, meter1, at1) => inference.effects.solve.close_loop.body span
@@ -32426,7 +34621,7 @@ def inference.effects.solve.close
   (arena : inference.Arena) (span : Span) (meter : Meter) :
   Result ((core.result.Result Unit Diagnostic) × inference.Arena × Meter)
   := do
-  let (v, b, i, b1, v1, v2, v3, v4, meter1, failure) ←
+  let (v, b, i, b1, v1, v2, v3, v4, v5, meter1, failure) ←
     inference.effects.solve.close_loop arena span meter 0#usize
   match failure with
   | none =>
@@ -32436,10 +34631,11 @@ def inference.effects.solve.close
         effectful := b,
         effect_universe := i,
         resources := b1,
-        effects := v1,
-        effect_bounds := v2,
-        effect_equations := v3,
-        program_effects := v4
+        nominals := v1,
+        effects := v2,
+        effect_bounds := v3,
+        effect_equations := v4,
+        program_effects := v5
       }, meter1)
   | some problem =>
     ok (core.result.Result.Err problem,
@@ -32448,10 +34644,11 @@ def inference.effects.solve.close
         effectful := b,
         effect_universe := i,
         resources := b1,
-        effects := v1,
-        effect_bounds := v2,
-        effect_equations := v3,
-        program_effects := v4
+        nominals := v1,
+        effects := v2,
+        effect_bounds := v3,
+        effect_equations := v4,
+        program_effects := v5
       }, meter1)
 
 /-- [noble_contracts::inference::effects::{noble_contracts::inference::Arena}::close]:
@@ -32464,7 +34661,7 @@ def inference.effects.Arena.close
   inference.effects.solve.close self span meter
 
 /-- [noble_contracts::source::emission::emit]:
-    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 76:0-120:1 -/
+    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 79:0-134:1 -/
 def source.emission.emit
   (state : source.inference.State) (environment : noble_kernel.contracts.Env)
   (input_bytes : Std.Usize) (meter : Meter) :
@@ -32479,34 +34676,51 @@ def source.emission.emit
     match r1 with
     | core.result.Result.Ok bytes =>
       let (r2, environment1, meter2) ←
-        source.emission.interfaces { state with arena := a } environment meter1
+        source.emission.interfaces.collect { state with arena := a }
+          environment meter1
       match r2 with
       | core.result.Result.Ok expected =>
-        let (r3, meter3) ←
-          source.emission.assemble { state with arena := a } expected
-            environment1 bytes meter2
+        let linked_slots ←
+          source.emission.identity.selected_slots { state with arena := a }
+            environment1
+        let i := alloc.vec.Vec.len state.bodies
+        let r3 ← source.emission.allowance i state.span meter2
         match r3 with
-        | core.result.Result.Ok value =>
-          match value.root with
-          | none =>
-            let d ← internal state.span
-            let e ← source.Error.at source.Stage.Check d
-            ok (core.result.Result.Err e, meter3)
-          | some root =>
-            let (body, request) := root
-            let output ←
-              alloc.vec.CloneVec.clone
-                noble_kernel.types.Ty.Insts.CoreCloneClone
-                request.expected.stack_out
-            ok (core.result.Result.Ok
-              ({
-                 environment := environment1,
-                 definitions := value.definitions,
-                 body,
-                 request
-               }, output), meter3)
-        | core.result.Result.Err failure =>
-          ok (core.result.Result.Err failure, meter3)
+        | core.result.Result.Ok limits =>
+          let s := alloc.vec.Vec.deref linked_slots
+          let (r4, meter3) ←
+            source.emission.assemble { state with arena := a } expected
+              {
+                input_bytes := bytes,
+                limits,
+                environment := environment1,
+                linked_slots := s
+              } meter2
+          match r4 with
+          | core.result.Result.Ok value =>
+            match value.root with
+            | none =>
+              let d ← internal state.span
+              let e ← source.Error.at source.Stage.Check d
+              ok (core.result.Result.Err e, meter3)
+            | some root =>
+              let (body, request) := root
+              let output ←
+                alloc.vec.CloneVec.clone
+                  noble_kernel.types.Ty.Insts.CoreCloneClone
+                  request.expected.stack_out
+              ok (core.result.Result.Ok
+                ({
+                   environment := environment1,
+                   definitions := value.definitions,
+                   body,
+                   request
+                 }, output), meter3)
+          | core.result.Result.Err failure =>
+            ok (core.result.Result.Err failure, meter3)
+        | core.result.Result.Err error =>
+          let e ← source.Error.at source.Stage.Check error
+          ok (core.result.Result.Err e, meter2)
       | core.result.Result.Err error =>
         let e ← source.Error.at source.Stage.Check error
         ok (core.result.Result.Err e, meter2)
@@ -32518,7 +34732,7 @@ def source.emission.emit
     ok (core.result.Result.Err e, meter1)
 
 /-- [noble_contracts::source::preparation::{noble_contracts::source::Session}::prepare]:
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 7:4-81:5
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 7:4-86:5
     Visibility: public -/
 def source.preparation.Session.prepare
   (self : source.Session) (source_bytes : Slice Std.U8)
@@ -32526,46 +34740,57 @@ def source.preparation.Session.prepare
   Result (core.result.Result source.Prepared source.Error)
   := do
   let meter ← metering.Meter.new limits
-  let (r, meter1) ← source.parsing.parse source_bytes meter
-  match r with
-  | core.result.Result.Ok parsed =>
-    let (tree, «name») := parsed
+  let b := core.option.Option.is_some self.declared
+  let (meter1, parsed) ←
+    if b
+    then
+      do
+      let (parsed1, meter2) ←
+        source.parsing.parse_declared source_bytes meter
+      ok (meter2, parsed1)
+    else
+      do
+      let (parsed1, meter2) ← source.parsing.parse source_bytes meter
+      ok (meter2, parsed1)
+  match parsed with
+  | core.result.Result.Ok parsed1 =>
+    let (tree, «name») := parsed1
     let o ←
       core.option.Option.as_deref
         alloc.string.String.Insts.CoreOpsDerefDerefStr «name»
-    let (r1, tree1, meter2) ← source.resolution.resolve tree o self meter1
-    match r1 with
+    let (r, tree1, meter2) ← source.resolution.resolve tree o self meter1
+    match r with
     | core.result.Result.Ok _ =>
-      let (r2, meter3) ← source.preflight.check inputs self tree1.span meter2
-      match r2 with
+      let (r1, meter3) ← source.preflight.check inputs self tree1.span meter2
+      match r1 with
       | core.result.Result.Ok _ =>
-        let b := core.option.Option.is_some «name»
+        let b1 := core.option.Option.is_some «name»
         let (extra, mode) ←
-          if b
+          if b1
           then
             do
             let i := Slice.len source_bytes
             let i1 ← lift (core.num.Usize.saturating_add i 4#usize)
             ok (i1, source.inference.Mode.Declaration)
           else ok (0#usize, source.inference.Mode.Submission)
-        let (r3, meter4) ←
+        let (r2, meter4) ←
           source.preparation.Session.retained self extra tree1.span meter3
-        match r3 with
+        match r2 with
         | core.result.Result.Ok _ =>
-          let r4 ← source.preparation.Session.environment self
-          match r4 with
+          let r3 ← source.preparation.Session.environment self
+          match r3 with
           | core.result.Result.Ok environment =>
-            let (r5, meter5) ←
+            let (r4, meter5) ←
               source.inference.infer
                 { root := tree1, session := self, environment } mode inputs
                 meter4
-            match r5 with
+            match r4 with
             | core.result.Result.Ok state =>
               match «name» with
               | none =>
                 let i := Slice.len source_bytes
-                let (r6, _) ← source.emission.emit state environment i meter5
-                match r6 with
+                let (r5, _) ← source.emission.emit state environment i meter5
+                match r5 with
                 | core.result.Result.Ok value =>
                   let (submission, output) := value
                   let v ←
@@ -32589,10 +34814,10 @@ def source.preparation.Session.prepare
                 | core.result.Result.Err failure =>
                   ok (core.result.Result.Err failure)
               | some name1 =>
-                let (r6, _) ←
+                let (r5, _) ←
                   source.preparation.declaration tree1 name1 source_bytes self
                     meter5
-                match r6 with
+                match r5 with
                 | core.result.Result.Ok p =>
                   let (definition, bytes) := p
                   let output ←
@@ -35608,7 +37833,7 @@ def predicate.resolving.visit
     ok (core.result.Result.Err failure, state, arena, meter)
 
 /-- [noble_contracts::predicate::unary::list]:
-    Source: 'crates/noble-contracts/src/predicate/unary.rs', lines 192:0-247:1 -/
+    Source: 'crates/noble-contracts/src/predicate/unary.rs', lines 194:0-250:1 -/
 def predicate.unary.list
   (op : predicate.Op) (operand : predicate.application.Operand) (span : Span) :
   Result (core.result.Result (ExprKind × noble_kernel.types.Ty) Diagnostic)
@@ -35716,9 +37941,12 @@ def predicate.unary.list
   | noble_kernel.types.Ty.ResourceType _ =>
     let d ← invalid span (toStr "list operation requires a List value")
     ok (core.result.Result.Err d)
+  | noble_kernel.types.Ty.NominalType _ _ =>
+    let d ← invalid span (toStr "list operation requires a List value")
+    ok (core.result.Result.Err d)
 
 /-- [noble_contracts::predicate::unary::sum]:
-    Source: 'crates/noble-contracts/src/predicate/unary.rs', lines 133:0-185:1 -/
+    Source: 'crates/noble-contracts/src/predicate/unary.rs', lines 134:0-187:1 -/
 def predicate.unary.sum
   (op : predicate.Op) (operand : predicate.application.Operand) (span : Span) :
   Result (core.result.Result (ExprKind × noble_kernel.types.Ty) Diagnostic)
@@ -35825,9 +38053,12 @@ def predicate.unary.sum
   | noble_kernel.types.Ty.ResourceType _ =>
     let d ← invalid span (toStr "sum operation requires a Sum value")
     ok (core.result.Result.Err d)
+  | noble_kernel.types.Ty.NominalType _ _ =>
+    let d ← invalid span (toStr "sum operation requires a Sum value")
+    ok (core.result.Result.Err d)
 
 /-- [noble_contracts::predicate::unary::inject]:
-    Source: 'crates/noble-contracts/src/predicate/unary.rs', lines 99:0-126:1 -/
+    Source: 'crates/noble-contracts/src/predicate/unary.rs', lines 100:0-127:1 -/
 def predicate.unary.inject
   (op : predicate.Op) (operand : predicate.application.Operand)
   (annotation : Option noble_kernel.types.Ty) (span : Span) :
@@ -35877,7 +38108,7 @@ def predicate.unary.inject
         noble_kernel.types.Ty.SumType other t))
 
 /-- [noble_contracts::predicate::unary::pair]:
-    Source: 'crates/noble-contracts/src/predicate/unary.rs', lines 64:0-93:1 -/
+    Source: 'crates/noble-contracts/src/predicate/unary.rs', lines 64:0-94:1 -/
 def predicate.unary.pair
   (op : predicate.Op) (operand : predicate.application.Operand) (span : Span) :
   Result (core.result.Result (ExprKind × noble_kernel.types.Ty) Diagnostic)
@@ -35952,6 +38183,9 @@ def predicate.unary.pair
     let d ← invalid span (toStr "pair projection requires a Pair value")
     ok (core.result.Result.Err d)
   | noble_kernel.types.Ty.ResourceType _ =>
+    let d ← invalid span (toStr "pair projection requires a Pair value")
+    ok (core.result.Result.Err d)
+  | noble_kernel.types.Ty.NominalType _ _ =>
     let d ← invalid span (toStr "pair projection requires a Pair value")
     ok (core.result.Result.Err d)
 
@@ -36199,7 +38433,7 @@ def predicate.unary.apply
     ok (core.result.Result.Err d, meter)
 
 /-- [noble_contracts::predicate::structural::step]:
-    Source: 'crates/noble-contracts/src/predicate/structural.rs', lines 33:0-52:1 -/
+    Source: 'crates/noble-contracts/src/predicate/structural.rs', lines 33:0-53:1 -/
 def predicate.structural.step
   (ty : noble_kernel.types.Ty) (traversal : predicate.structural.Traversal)
   (span : Span) (meter : Meter) :
@@ -36259,6 +38493,11 @@ def predicate.structural.step
         Diagnostic.new DiagnosticKind.Unsupported span (toStr
           "eq operands and maps input/result must be scalar or structural data, without nested Program, Syntax, companion, or resource types")
       ok (core.result.Result.Err d, traversal, meter1)
+    | noble_kernel.types.Ty.NominalType _ _ =>
+      let d ←
+        Diagnostic.new DiagnosticKind.Unsupported span (toStr
+          "eq operands and maps input/result must be scalar or structural data, without nested Program, Syntax, companion, or resource types")
+      ok (core.result.Result.Err d, traversal, meter1)
   | core.result.Result.Err _ => ok (r, traversal, meter1)
 
 /-- [noble_contracts::predicate::structural::check]: loop body 0:
@@ -36307,7 +38546,7 @@ def predicate.structural.check
   | some error => ok (core.result.Result.Err error, meter1)
 
 /-- [noble_contracts::predicate::mapping::apply]:
-    Source: 'crates/noble-contracts/src/predicate/mapping.rs', lines 5:0-69:1 -/
+    Source: 'crates/noble-contracts/src/predicate/mapping.rs', lines 5:0-70:1 -/
 def predicate.mapping.apply
   (operands : (predicate.application.Operand × predicate.application.Operand
   × predicate.application.Operand)) (span : Span) (meter : Meter) :
@@ -36437,9 +38676,13 @@ def predicate.mapping.apply
     let d ←
       invalid span (toStr "maps first argument must have a Program type")
     ok (core.result.Result.Err d, meter)
+  | noble_kernel.types.Ty.NominalType _ _ =>
+    let d ←
+      invalid span (toStr "maps first argument must have a Program type")
+    ok (core.result.Result.Err d, meter)
 
 /-- [noble_contracts::predicate::binary::cons]:
-    Source: 'crates/noble-contracts/src/predicate/binary.rs', lines 195:0-228:1 -/
+    Source: 'crates/noble-contracts/src/predicate/binary.rs', lines 195:0-229:1 -/
 def predicate.binary.cons
   (operands : (predicate.application.Operand × predicate.application.Operand))
   (span : Span) (meter : Meter) :
@@ -36501,6 +38744,10 @@ def predicate.binary.cons
       invalid span (toStr "cons requires an item and a list of that item type")
     ok (core.result.Result.Err d, meter)
   | noble_kernel.types.Ty.ResourceType _ =>
+    let d ←
+      invalid span (toStr "cons requires an item and a list of that item type")
+    ok (core.result.Result.Err d, meter)
+  | noble_kernel.types.Ty.NominalType _ _ =>
     let d ←
       invalid span (toStr "cons requires an item and a list of that item type")
     ok (core.result.Result.Err d, meter)
@@ -39191,7 +41438,7 @@ def program.words.apply
   | some scheme =>
     let s := alloc.vec.Vec.deref scheme.var_kinds
     let (r, arena1, meter1) ←
-      inference.Arena.variables arena s call.span meter
+      inference.build.Arena.variables arena s call.span meter
     match r with
     | core.result.Result.Ok value =>
       let s1 := alloc.vec.Vec.deref scheme.effects
@@ -40608,14 +42855,14 @@ def inference.Term.Insts.CoreMarkerCopy : core.marker.Copy inference.Term := {
 }
 
 /-- [noble_contracts::inference::{impl core::clone::Clone for noble_contracts::inference::Variable}::clone]:
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 42:9-42:14
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 43:9-43:14
     Visibility: public -/
 def inference.Variable.Insts.CoreCloneClone.clone
   (self : inference.Variable) : Result inference.Variable := do
   ok self
 
 /-- Trait implementation: [noble_contracts::inference::{impl core::clone::Clone for noble_contracts::inference::Variable}]
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 42:9-42:14 -/
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 43:9-43:14 -/
 @[reducible]
 def inference.Variable.Insts.CoreCloneClone : core.clone.Clone
   inference.Variable := {
@@ -40623,7 +42870,7 @@ def inference.Variable.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [noble_contracts::inference::{impl core::marker::Copy for noble_contracts::inference::Variable}]
-    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 42:16-42:20 -/
+    Source: 'crates/noble-contracts/src/inference/mod.rs', lines 43:16-43:20 -/
 @[reducible]
 def inference.Variable.Insts.CoreMarkerCopy : core.marker.Copy
   inference.Variable := {
@@ -41500,15 +43747,11924 @@ def program.Form.Insts.CoreMarkerCopy : core.marker.Copy program.Form := {
   cloneInst := program.Form.Insts.CoreCloneClone
 }
 
+/-- [noble_contracts::source::declared::strip_qualified]:
+    Source: 'crates/noble-contracts/src/source/declared.rs', lines 66:0-76:1 -/
+def source.declared.strip_qualified
+  (text : Str) («prefix» : Slice Std.U8) (separator : Std.U8) :
+  Result (Option Str)
+  := do
+  let bytes ← core.str.Str.as_bytes text
+  let boundary := Slice.len «prefix»
+  let b ← core.slice.Slice.starts_with core.cmp.PartialEqU8 bytes «prefix»
+  if b
+  then
+    let o ←
+      core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice Std.U8) bytes
+        boundary
+    let b1 ←
+      core.option.Option.Insts.CoreCmpPartialEqOption.eq
+        (core.cmp.PartialEqShared core.cmp.PartialEqU8) o (some separator)
+    if b1
+    then
+      let next ← lift (core.num.Usize.saturating_add boundary 1#usize)
+      let s ←
+        Str.Insts.CoreOpsIndexIndex.index
+          core.ops.range.RangeFromUsize.Insts.CoreSliceIndexSliceIndexStrStr
+          text { start := next }
+      ok (some s)
+    else ok none
+  else ok none
+
+/-- [noble_contracts::source::declared::links::has_word::{impl core::ops::function::FnMut<(&'_ (alloc::string::String, noble_contracts::source::Target),), bool> for noble_contracts::source::declared::links::has_word::{closure}<'_0, '_1>}::call_mut]:
+    Source: 'crates/noble-contracts/src/source/declared/links.rs', lines 33:17-33:41 -/
+def
+  source.declared.links.has_word.closure.Insts.CoreOpsFunctionFnMutTupleSharedPairStringTargetBool.call_mut
+  (c : source.declared.links.has_word.closure)
+  (tupled_args : (String × source.Target)) :
+  Result (Bool × source.declared.links.has_word.closure)
+  := do
+  let («name», _) := tupled_args
+  let b ← alloc.string.String.Insts.CoreCmpPartialEqStr.eq «name» c
+  ok (b, c)
+
+/-- [noble_contracts::source::declared::links::has_word::{impl core::ops::function::FnOnce<(&'_ (alloc::string::String, noble_contracts::source::Target),), bool> for noble_contracts::source::declared::links::has_word::{closure}<'_0, '_1>}::call_once]:
+    Source: 'crates/noble-contracts/src/source/declared/links.rs', lines 33:17-33:41 -/
+def
+  source.declared.links.has_word.closure.Insts.CoreOpsFunctionFnOnceTupleSharedPairStringTargetBool.call_once
+  (c : source.declared.links.has_word.closure) (p : (String × source.Target))
+  :
+  Result Bool
+  := do
+  let (b, _) ←
+    source.declared.links.has_word.closure.Insts.CoreOpsFunctionFnMutTupleSharedPairStringTargetBool.call_mut
+      c p
+  ok b
+
+/-- Trait implementation: [noble_contracts::source::declared::links::has_word::{impl core::ops::function::FnOnce<(&'_ (alloc::string::String, noble_contracts::source::Target),), bool> for noble_contracts::source::declared::links::has_word::{closure}<'_0, '_1>}]
+    Source: 'crates/noble-contracts/src/source/declared/links.rs', lines 33:17-33:41 -/
+@[reducible]
+def
+  source.declared.links.has_word.closure.Insts.CoreOpsFunctionFnOnceTupleSharedPairStringTargetBool
+  : core.ops.function.FnOnce source.declared.links.has_word.closure (String ×
+  source.Target) Bool := {
+  call_once :=
+    source.declared.links.has_word.closure.Insts.CoreOpsFunctionFnOnceTupleSharedPairStringTargetBool.call_once
+}
+
+/-- Trait implementation: [noble_contracts::source::declared::links::has_word::{impl core::ops::function::FnMut<(&'_ (alloc::string::String, noble_contracts::source::Target),), bool> for noble_contracts::source::declared::links::has_word::{closure}<'_0, '_1>}]
+    Source: 'crates/noble-contracts/src/source/declared/links.rs', lines 33:17-33:41 -/
+@[reducible]
+def
+  source.declared.links.has_word.closure.Insts.CoreOpsFunctionFnMutTupleSharedPairStringTargetBool
+  : core.ops.function.FnMut source.declared.links.has_word.closure (String ×
+  source.Target) Bool := {
+  FnOnceInst :=
+    source.declared.links.has_word.closure.Insts.CoreOpsFunctionFnOnceTupleSharedPairStringTargetBool
+  call_mut :=
+    source.declared.links.has_word.closure.Insts.CoreOpsFunctionFnMutTupleSharedPairStringTargetBool.call_mut
+}
+
+/-- [noble_contracts::source::declared::links::has_word]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/declared/links.rs', lines 29:4-35:5 -/
+@[rust_loop_body]
+def source.declared.links.has_word_loop.body
+  (module : source.declared.Module) (word : Str) (entry_slot : Std.Usize)
+  (is_found : Bool) :
+  Result (ControlFlow (Std.Usize × Bool) Bool)
+  := do
+  let i := alloc.vec.Vec.len module.exports
+  if entry_slot < i
+  then
+    if is_found
+    then ok (done true)
+    else
+      let e ←
+        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+          source.declared.Export) module.exports entry_slot
+      let s := alloc.vec.Vec.deref e.words
+      let i1 ← core.slice.Slice.iter s
+      let (is_found1, _) ←
+        core.slice.iter.Iter.Insts.CoreIterTraitsIteratorIteratorSharedAT.any
+          source.declared.links.has_word.closure.Insts.CoreOpsFunctionFnMutTupleSharedPairStringTargetBool
+          i1 word
+      let entry_slot1 ← entry_slot + 1#usize
+      ok (cont (entry_slot1, is_found1))
+  else ok (done is_found)
+
+/-- [noble_contracts::source::declared::links::has_word]: loop 0:
+    Source: 'crates/noble-contracts/src/source/declared/links.rs', lines 29:4-35:5 -/
+@[rust_loop]
+def source.declared.links.has_word_loop
+  (module : source.declared.Module) (word : Str) (entry_slot : Std.Usize)
+  (is_found : Bool) :
+  Result Bool
+  := do
+  loop
+    (fun (entry_slot1, is_found1) => source.declared.links.has_word_loop.body
+      module word entry_slot1 is_found1)
+    (entry_slot, is_found)
+
+/-- [noble_contracts::source::declared::links::has_word]:
+    Source: 'crates/noble-contracts/src/source/declared/links.rs', lines 26:0-37:1 -/
+@[reducible]
+def source.declared.links.has_word
+  (module : source.declared.Module) (word : Str) : Result Bool := do
+  source.declared.links.has_word_loop module word 0#usize false
+
+/-- [noble_contracts::source::declared::links::alias_word]:
+    Source: 'crates/noble-contracts/src/source/declared/links.rs', lines 10:0-15:1 -/
+def source.declared.links.alias_word
+  (module : source.declared.Module) («alias» : Slice Std.U8) («name» : Str)
+  :
+  Result Bool
+  := do
+  let o ← source.declared.strip_qualified «name» «alias» 46#u8
+  match o with
+  | none => ok false
+  | some word => source.declared.links.has_word module word
+
+/-- [noble_contracts::source::declared::links::alias_conflicts_definition]:
+    Source: 'crates/noble-contracts/src/source/declared/links.rs', lines 3:0-9:1 -/
+def source.declared.links.alias_conflicts_definition
+  (module : source.declared.Module) («alias» : Str)
+  (definition : source.Named) :
+  Result Bool
+  := do
+  let b := core.option.Option.is_none definition.owner
+  if b
+  then
+    let s ← core.str.Str.as_bytes «alias»
+    let s1 ←
+      alloc.string.String.Insts.CoreOpsDerefDerefStr.deref definition.name
+    source.declared.links.alias_word module s s1
+  else ok false
+
+/-- [noble_contracts::source::declared::split_once_ascii]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/declared.rs', lines 81:4-83:5 -/
+@[rust_loop_body]
+def source.declared.split_once_ascii_loop.body
+  (separator : Std.U8) (bytes : Slice Std.U8) («at» : Std.Usize) :
+  Result (ControlFlow Std.Usize Std.Usize)
+  := do
+  let i := Slice.len bytes
+  if «at» < i
+  then
+    let i1 ← Slice.index_usize bytes «at»
+    if i1 != separator
+    then let at1 ← «at» + 1#usize
+         ok (cont at1)
+    else ok (done «at»)
+  else ok (done «at»)
+
+/-- [noble_contracts::source::declared::split_once_ascii]: loop 0:
+    Source: 'crates/noble-contracts/src/source/declared.rs', lines 81:4-83:5 -/
+@[rust_loop]
+def source.declared.split_once_ascii_loop
+  (separator : Std.U8) (bytes : Slice Std.U8) («at» : Std.Usize) :
+  Result Std.Usize
+  := do
+  loop
+    (fun at1 => source.declared.split_once_ascii_loop.body separator bytes at1)
+    «at»
+
+/-- [noble_contracts::source::declared::split_once_ascii]:
+    Source: 'crates/noble-contracts/src/source/declared.rs', lines 78:0-90:1 -/
+def source.declared.split_once_ascii
+  (text : Str) (separator : Std.U8) : Result (Option (Str × Str)) := do
+  let bytes ← core.str.Str.as_bytes text
+  let «at» ← source.declared.split_once_ascii_loop separator bytes 0#usize
+  let i := Slice.len bytes
+  if «at» < i
+  then
+    let s ←
+      Str.Insts.CoreOpsIndexIndex.index
+        core.ops.range.RangeToUsize.Insts.CoreSliceIndexSliceIndexStrStr text
+        { «end» := «at» }
+    let i1 ← lift (core.num.Usize.saturating_add «at» 1#usize)
+    let s1 ←
+      Str.Insts.CoreOpsIndexIndex.index
+        core.ops.range.RangeFromUsize.Insts.CoreSliceIndexSliceIndexStrStr text
+        { start := i1 }
+    ok (some (s, s1))
+  else ok none
+
+/-- [noble_contracts::source::declared::links::module_word]:
+    Source: 'crates/noble-contracts/src/source/declared/links.rs', lines 16:0-24:1 -/
+def source.declared.links.module_word
+  (module : source.declared.Module) («name» : Str) : Result Bool := do
+  let s ← alloc.string.String.as_bytes module.name
+  let o ← source.declared.strip_qualified «name» s 64#u8
+  match o with
+  | none => ok false
+  | some rest =>
+    let o1 ← source.declared.split_once_ascii rest 46#u8
+    match o1 with
+    | none => ok false
+    | some p =>
+      let (version, word) := p
+      let r ←
+        core.str.Str.parse U32.Insts.CoreStrTraitsFromStrParseIntError version
+      let o2 ← core.result.Result.ok r
+      let b ←
+        core.option.Option.Insts.CoreCmpPartialEqOption.eq
+          core.cmp.PartialEqU32 o2 (some module.version)
+      if b
+      then source.declared.links.has_word module word
+      else ok false
+
+/-- [noble_contracts::source::declared::parsing::reserved_name]:
+    Source: 'crates/noble-contracts/src/source/declared/parsing.rs', lines 85:0-109:1 -/
+def source.declared.parsing.reserved_name («name» : Str) : Result Bool := do
+  let b ← Str.Insts.CoreCmpPartialEqStr.eq «name» (toStr "def")
+  if b
+  then ok true
+  else
+    let b1 ← Str.Insts.CoreCmpPartialEqStr.eq «name» (toStr "module")
+    if b1
+    then ok true
+    else
+      let b2 ← Str.Insts.CoreCmpPartialEqStr.eq «name» (toStr "import")
+      if b2
+      then ok true
+      else
+        let b3 ← Str.Insts.CoreCmpPartialEqStr.eq «name» (toStr "as")
+        if b3
+        then ok true
+        else
+          let b4 ← Str.Insts.CoreCmpPartialEqStr.eq «name» (toStr "opaque")
+          if b4
+          then ok true
+          else
+            let b5 ←
+              Str.Insts.CoreCmpPartialEqStr.eq «name» (toStr "variant")
+            if b5
+            then ok true
+            else
+              let b6 ←
+                Str.Insts.CoreCmpPartialEqStr.eq «name» (toStr "require")
+              if b6
+              then ok true
+              else
+                let b7 ←
+                  Str.Insts.CoreCmpPartialEqStr.eq «name» (toStr "export")
+                if b7
+                then ok true
+                else
+                  let b8 ←
+                    Str.Insts.CoreCmpPartialEqStr.eq «name» (toStr "public")
+                  if b8
+                  then ok true
+                  else
+                    let b9 ←
+                      Str.Insts.CoreCmpPartialEqStr.eq «name» (toStr
+                        "private")
+                    if b9
+                    then ok true
+                    else
+                      let b10 ←
+                        Str.Insts.CoreCmpPartialEqStr.eq «name» (toStr
+                          "true")
+                      if b10
+                      then ok true
+                      else
+                        let b11 ←
+                          Str.Insts.CoreCmpPartialEqStr.eq «name» (toStr
+                            "false")
+                        if b11
+                        then ok true
+                        else
+                          let b12 ←
+                            Str.Insts.CoreCmpPartialEqStr.eq «name» (toStr
+                              "I64")
+                          if b12
+                          then ok true
+                          else
+                            let b13 ←
+                              Str.Insts.CoreCmpPartialEqStr.eq «name» (toStr
+                                "Bool")
+                            if b13
+                            then ok true
+                            else
+                              let b14 ←
+                                Str.Insts.CoreCmpPartialEqStr.eq «name»
+                                  (toStr "Text")
+                              if b14
+                              then ok true
+                              else
+                                let b15 ←
+                                  Str.Insts.CoreCmpPartialEqStr.eq «name»
+                                    (toStr "Unit")
+                                if b15
+                                then ok true
+                                else
+                                  let b16 ←
+                                    Str.Insts.CoreCmpPartialEqStr.eq «name»
+                                      (toStr "Pair")
+                                  if b16
+                                  then ok true
+                                  else
+                                    let b17 ←
+                                      Str.Insts.CoreCmpPartialEqStr.eq «name»
+                                        (toStr "Sum")
+                                    if b17
+                                    then ok true
+                                    else
+                                      let b18 ←
+                                        Str.Insts.CoreCmpPartialEqStr.eq
+                                          «name» (toStr "List")
+                                      if b18
+                                      then ok true
+                                      else
+                                        let b19 ←
+                                          Str.Insts.CoreCmpPartialEqStr.eq
+                                            «name» (toStr "Resource")
+                                        if b19
+                                        then ok true
+                                        else ok false
+
+/-- [noble_contracts::source::declared::parsing::name::{impl core::ops::function::FnMut<(u8,), bool> for noble_contracts::source::declared::parsing::name::{closure}}::call_mut]:
+    Source: 'crates/noble-contracts/src/source/declared/parsing.rs', lines 81:21-81:63 -/
+def
+  source.declared.parsing.name.closure.Insts.CoreOpsFunctionFnMutTupleU8Bool.call_mut
+  (c : source.declared.parsing.name.closure) (tupled_args : Std.U8) :
+  Result (Bool × source.declared.parsing.name.closure)
+  := do
+  let b ← core.num.U8.is_ascii_alphanumeric tupled_args
+  if b
+  then ok (true, c)
+  else ok (tupled_args = 95#u8, c)
+
+/-- [noble_contracts::source::declared::parsing::name::{impl core::ops::function::FnOnce<(u8,), bool> for noble_contracts::source::declared::parsing::name::{closure}}::call_once]:
+    Source: 'crates/noble-contracts/src/source/declared/parsing.rs', lines 81:21-81:63 -/
+def
+  source.declared.parsing.name.closure.Insts.CoreOpsFunctionFnOnceTupleU8Bool.call_once
+  (c : source.declared.parsing.name.closure) (i : Std.U8) : Result Bool := do
+  let (b, _) ←
+    source.declared.parsing.name.closure.Insts.CoreOpsFunctionFnMutTupleU8Bool.call_mut
+      c i
+  ok b
+
+/-- Trait implementation: [noble_contracts::source::declared::parsing::name::{impl core::ops::function::FnOnce<(u8,), bool> for noble_contracts::source::declared::parsing::name::{closure}}]
+    Source: 'crates/noble-contracts/src/source/declared/parsing.rs', lines 81:21-81:63 -/
+@[reducible]
+def source.declared.parsing.name.closure.Insts.CoreOpsFunctionFnOnceTupleU8Bool
+  : core.ops.function.FnOnce source.declared.parsing.name.closure Std.U8 Bool
+  := {
+  call_once :=
+    source.declared.parsing.name.closure.Insts.CoreOpsFunctionFnOnceTupleU8Bool.call_once
+}
+
+/-- Trait implementation: [noble_contracts::source::declared::parsing::name::{impl core::ops::function::FnMut<(u8,), bool> for noble_contracts::source::declared::parsing::name::{closure}}]
+    Source: 'crates/noble-contracts/src/source/declared/parsing.rs', lines 81:21-81:63 -/
+@[reducible]
+def source.declared.parsing.name.closure.Insts.CoreOpsFunctionFnMutTupleU8Bool
+  : core.ops.function.FnMut source.declared.parsing.name.closure Std.U8 Bool
+  := {
+  FnOnceInst :=
+    source.declared.parsing.name.closure.Insts.CoreOpsFunctionFnOnceTupleU8Bool
+  call_mut :=
+    source.declared.parsing.name.closure.Insts.CoreOpsFunctionFnMutTupleU8Bool.call_mut
+}
+
+/-- [noble_contracts::source::declared::parsing::name]:
+    Source: 'crates/noble-contracts/src/source/declared/parsing.rs', lines 77:0-83:1 -/
+def source.declared.parsing.name («name» : Str) : Result Bool := do
+  let bytes ← core.str.Str.bytes «name»
+  let (first, bytes1) ←
+    core.str.iter.Bytes.Insts.CoreIterTraitsIteratorIteratorU8.next bytes
+  let (bytes2, b) ←
+    match first with
+    | none => ok (bytes1, false)
+    | some i =>
+      if 97#u8 <= i
+      then
+        if i <= 122#u8
+        then ok (bytes1, true)
+        else
+          if 65#u8 <= i
+          then
+            if i <= 90#u8
+            then ok (bytes1, true)
+            else
+              do
+              let b1 ← match i with
+                         | 95#uscalar => ok true
+                         | _ => ok false
+              ok (bytes1, b1)
+          else
+            do
+            let b1 ← match i with
+                       | 95#uscalar => ok true
+                       | _ => ok false
+            ok (bytes1, b1)
+      else
+        if 65#u8 <= i
+        then
+          if i <= 90#u8
+          then ok (bytes1, true)
+          else
+            do
+            let b1 ← match i with
+                       | 95#uscalar => ok true
+                       | _ => ok false
+            ok (bytes1, b1)
+        else
+          do
+          let b1 ← match i with
+                     | 95#uscalar => ok true
+                     | _ => ok false
+          ok (bytes1, b1)
+  if b
+  then
+    let (b1, _) ←
+      core.str.iter.Bytes.Insts.CoreIterTraitsIteratorIteratorU8.all
+        source.declared.parsing.name.closure.Insts.CoreOpsFunctionFnMutTupleU8Bool
+        bytes2 ()
+    if b1
+    then let b2 ← source.declared.parsing.reserved_name «name»
+         ok (¬ b2)
+    else ok false
+  else ok false
+
+/-- [noble_contracts::source::declared::links::valid_binding]:
+    Source: 'crates/noble-contracts/src/source/declared/links.rs', lines 38:0-43:1 -/
+def source.declared.links.valid_binding
+  (binding : source.declared.BoundOperation) : Result Bool := do
+  let s ←
+    alloc.string.String.Insts.CoreOpsDerefDerefStr.deref binding.module_name
+  let b ← source.declared.parsing.name s
+  if b
+  then
+    if binding.module_version != 0#u32
+    then
+      let b1 ←
+        alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq
+          binding.operation (toStr "test.emit")
+      if b1
+      then
+        let b2 ← alloc.string.String.is_empty binding.adapter_identity
+        ok (¬ b2)
+      else ok false
+    else ok false
+  else ok false
+
+/-- [noble_contracts::source::declared::links::duplicate_binding]:
+    Source: 'crates/noble-contracts/src/source/declared/links.rs', lines 44:0-52:1 -/
+def source.declared.links.duplicate_binding
+  (binding : source.declared.BoundOperation)
+  (previous : source.declared.BoundOperation) :
+  Result Bool
+  := do
+  let b ←
+    alloc.string.String.Insts.CoreCmpPartialEqString.eq previous.module_name
+      binding.module_name
+  if b
+  then
+    if previous.module_version = binding.module_version
+    then
+      let b1 ←
+        alloc.string.String.Insts.CoreCmpPartialEqString.eq previous.operation
+          binding.operation
+      if b1
+      then ok true
+      else ok (previous.adapter_slot = binding.adapter_slot)
+    else ok (previous.adapter_slot = binding.adapter_slot)
+  else ok (previous.adapter_slot = binding.adapter_slot)
+
+/-- [noble_contracts::source::declared::parsing::parse_diagnostic]:
+    Source: 'crates/noble-contracts/src/source/declared/parsing.rs', lines 49:0-51:1 -/
+def source.declared.parsing.parse_diagnostic
+  (span : Span) (reason : Str) : Result Diagnostic := do
+  invalid span reason
+
+/-- [noble_contracts::source::declared::parsing::word::{impl core::ops::function::FnOnce<(core::str::error::Utf8Error,), noble_contracts::Diagnostic> for noble_contracts::source::declared::parsing::word::{closure}<'_0>}::call_once]:
+    Source: 'crates/noble-contracts/src/source/declared/parsing.rs', lines 74:40-74:88 -/
+def
+  source.declared.parsing.word.closure.Insts.CoreOpsFunctionFnOnceTupleUtf8ErrorDiagnostic.call_once
+  (c : source.declared.parsing.word.closure)
+  (tupled_args : core.str.error.Utf8Error) :
+  Result Diagnostic
+  := do
+  source.declared.parsing.parse_diagnostic c (toStr "invalid UTF-8 word")
+
+/-- Trait implementation: [noble_contracts::source::declared::parsing::word::{impl core::ops::function::FnOnce<(core::str::error::Utf8Error,), noble_contracts::Diagnostic> for noble_contracts::source::declared::parsing::word::{closure}<'_0>}]
+    Source: 'crates/noble-contracts/src/source/declared/parsing.rs', lines 74:40-74:88 -/
+@[reducible]
+def
+  source.declared.parsing.word.closure.Insts.CoreOpsFunctionFnOnceTupleUtf8ErrorDiagnostic
+  : core.ops.function.FnOnce source.declared.parsing.word.closure
+  core.str.error.Utf8Error Diagnostic := {
+  call_once :=
+    source.declared.parsing.word.closure.Insts.CoreOpsFunctionFnOnceTupleUtf8ErrorDiagnostic.call_once
+}
+
+/-- [noble_contracts::source::declared::parsing::word]:
+    Source: 'crates/noble-contracts/src/source/declared/parsing.rs', lines 63:0-75:1 -/
+def source.declared.parsing.word
+  (token : Option source.lexer.Token) (span : Span) :
+  Result (core.result.Result Str Diagnostic)
+  := do
+  match token with
+  | none =>
+    let d ←
+      source.declared.parsing.parse_diagnostic span (toStr
+        "expected declaration word")
+    ok (core.result.Result.Err d)
+  | some t =>
+    match t.kind with
+    | source.lexer.TokenKind.Open =>
+      let d ←
+        source.declared.parsing.parse_diagnostic span (toStr
+          "expected declaration word")
+      ok (core.result.Result.Err d)
+    | source.lexer.TokenKind.Close =>
+      let d ←
+        source.declared.parsing.parse_diagnostic span (toStr
+          "expected declaration word")
+      ok (core.result.Result.Err d)
+    | source.lexer.TokenKind.Def =>
+      let d ←
+        source.declared.parsing.parse_diagnostic span (toStr
+          "expected declaration word")
+      ok (core.result.Result.Err d)
+    | source.lexer.TokenKind.Literal _ =>
+      let d ←
+        source.declared.parsing.parse_diagnostic span (toStr
+          "expected declaration word")
+      ok (core.result.Result.Err d)
+    | source.lexer.TokenKind.Text _ =>
+      let d ←
+        source.declared.parsing.parse_diagnostic span (toStr
+          "expected declaration word")
+      ok (core.result.Result.Err d)
+    | source.lexer.TokenKind.Word bytes =>
+      let s := alloc.vec.Vec.deref bytes
+      let r ← core.str.converts.from_utf8 s
+      core.result.Result.map_err
+        source.declared.parsing.word.closure.Insts.CoreOpsFunctionFnOnceTupleUtf8ErrorDiagnostic
+        r span
+
+/-- [noble_contracts::source::declared::parsing::{noble_contracts::source::declared::parsing::Cursor<'a>}::next]:
+    Source: 'crates/noble-contracts/src/source/declared/parsing.rs', lines 155:4-159:5 -/
+def source.declared.parsing.Cursor.next
+  (self : source.declared.parsing.Cursor) :
+  Result (core.result.Result (source.declared.parsing.Cursor × Str)
+    Diagnostic)
+  := do
+  let o ←
+    core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice
+      source.lexer.Token) self.tokens self.at
+  let r ← source.declared.parsing.word o self.span
+  match r with
+  | core.result.Result.Ok value =>
+    let i ← self.at + 1#usize
+    ok (core.result.Result.Ok ({ self with «at» := i }, value))
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::source::declared::parsing::{noble_contracts::source::declared::parsing::Cursor<'a>}::ident]:
+    Source: 'crates/noble-contracts/src/source/declared/parsing.rs', lines 160:4-170:5 -/
+def source.declared.parsing.Cursor.ident
+  (self : source.declared.parsing.Cursor) :
+  Result (core.result.Result (source.declared.parsing.Cursor × String)
+    Diagnostic)
+  := do
+  let r ← source.declared.parsing.Cursor.next self
+  match r with
+  | core.result.Result.Ok p =>
+    let (c, value) := p
+    let b ← source.declared.parsing.name value
+    if b
+    then
+      let s ← alloc.string.String.Insts.CoreConvertFromShared0Str.from value
+      ok (core.result.Result.Ok (c, s))
+    else
+      let d ←
+        source.declared.parsing.parse_diagnostic self.span (toStr
+          "invalid or reserved declaration name")
+      ok (core.result.Result.Err d)
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::source::declared::quotation_step]:
+    Source: 'crates/noble-contracts/src/source/declared.rs', lines 92:0-106:1 -/
+def source.declared.quotation_step
+  (depth : Std.U32) (token : source.lexer.Token) :
+  Result (Option (Std.U32 × Bool))
+  := do
+  match token.kind with
+  | source.lexer.TokenKind.Open =>
+    let o ← lift (U32.checked_add depth 1#u32)
+    match o with
+    | none => ok none
+    | some next_depth => ok (some (next_depth, false))
+  | source.lexer.TokenKind.Close =>
+    match token.kind with
+    | source.lexer.TokenKind.Open => ok (some (depth, false))
+    | source.lexer.TokenKind.Close =>
+      let o ← lift (U32.checked_sub depth 1#u32)
+      match o with
+      | none => ok none
+      | some next_depth => ok (some (next_depth, next_depth = 0#u32))
+    | source.lexer.TokenKind.Def => ok (some (depth, false))
+    | source.lexer.TokenKind.Literal _ => ok (some (depth, false))
+    | source.lexer.TokenKind.Text _ => ok (some (depth, false))
+    | source.lexer.TokenKind.Word _ => ok (some (depth, false))
+  | source.lexer.TokenKind.Def =>
+    match token.kind with
+    | source.lexer.TokenKind.Open => ok (some (depth, false))
+    | source.lexer.TokenKind.Close =>
+      let o ← lift (U32.checked_sub depth 1#u32)
+      match o with
+      | none => ok none
+      | some next_depth => ok (some (next_depth, next_depth = 0#u32))
+    | source.lexer.TokenKind.Def => ok (some (depth, false))
+    | source.lexer.TokenKind.Literal _ => ok (some (depth, false))
+    | source.lexer.TokenKind.Text _ => ok (some (depth, false))
+    | source.lexer.TokenKind.Word _ => ok (some (depth, false))
+  | source.lexer.TokenKind.Literal _ =>
+    match token.kind with
+    | source.lexer.TokenKind.Open => ok (some (depth, false))
+    | source.lexer.TokenKind.Close =>
+      let o ← lift (U32.checked_sub depth 1#u32)
+      match o with
+      | none => ok none
+      | some next_depth => ok (some (next_depth, next_depth = 0#u32))
+    | source.lexer.TokenKind.Def => ok (some (depth, false))
+    | source.lexer.TokenKind.Literal _ => ok (some (depth, false))
+    | source.lexer.TokenKind.Text _ => ok (some (depth, false))
+    | source.lexer.TokenKind.Word _ => ok (some (depth, false))
+  | source.lexer.TokenKind.Text _ =>
+    match token.kind with
+    | source.lexer.TokenKind.Open => ok (some (depth, false))
+    | source.lexer.TokenKind.Close =>
+      let o ← lift (U32.checked_sub depth 1#u32)
+      match o with
+      | none => ok none
+      | some next_depth => ok (some (next_depth, next_depth = 0#u32))
+    | source.lexer.TokenKind.Def => ok (some (depth, false))
+    | source.lexer.TokenKind.Literal _ => ok (some (depth, false))
+    | source.lexer.TokenKind.Text _ => ok (some (depth, false))
+    | source.lexer.TokenKind.Word _ => ok (some (depth, false))
+  | source.lexer.TokenKind.Word _ =>
+    match token.kind with
+    | source.lexer.TokenKind.Open => ok (some (depth, false))
+    | source.lexer.TokenKind.Close =>
+      let o ← lift (U32.checked_sub depth 1#u32)
+      match o with
+      | none => ok none
+      | some next_depth => ok (some (next_depth, next_depth = 0#u32))
+    | source.lexer.TokenKind.Def => ok (some (depth, false))
+    | source.lexer.TokenKind.Literal _ => ok (some (depth, false))
+    | source.lexer.TokenKind.Text _ => ok (some (depth, false))
+    | source.lexer.TokenKind.Word _ => ok (some (depth, false))
+
+/-- [noble_contracts::source::declared::parsing::body::definition_step::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::source::declared::parsing::body::definition_step::{closure}<'_0>}::call_once]:
+    Source: 'crates/noble-contracts/src/source/declared/parsing/body.rs', lines 82:20-82:95 -/
+def
+  source.declared.parsing.body.definition_step.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnostic.call_once
+  (c : source.declared.parsing.body.definition_step.closure) (_ : Unit) :
+  Result Diagnostic
+  := do
+  source.declared.parsing.parse_diagnostic c (toStr
+    "invalid module quotation nesting")
+
+/-- Trait implementation: [noble_contracts::source::declared::parsing::body::definition_step::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::source::declared::parsing::body::definition_step::{closure}<'_0>}]
+    Source: 'crates/noble-contracts/src/source/declared/parsing/body.rs', lines 82:20-82:95 -/
+@[reducible]
+def
+  source.declared.parsing.body.definition_step.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnostic
+  : core.ops.function.FnOnce
+  source.declared.parsing.body.definition_step.closure Unit Diagnostic := {
+  call_once :=
+    source.declared.parsing.body.definition_step.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnostic.call_once
+}
+
+/-- [noble_contracts::source::declared::parsing::body::definition_step]:
+    Source: 'crates/noble-contracts/src/source/declared/parsing/body.rs', lines 69:0-95:1 -/
+def source.declared.parsing.body.definition_step
+  (cursor : source.declared.parsing.Cursor) (depth : Std.U32) (limits : Limits)
+  :
+  Result (core.result.Result (source.declared.parsing.Cursor × Std.U32 ×
+    (Option Std.Usize)) Diagnostic)
+  := do
+  let o ←
+    core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice
+      source.lexer.Token) cursor.tokens cursor.at
+  match o with
+  | none =>
+    let d ←
+      source.declared.parsing.parse_diagnostic cursor.span (toStr
+        "unclosed module definition")
+    ok (core.result.Result.Err d)
+  | some token =>
+    let i ← cursor.at + 1#usize
+    let o1 ← source.declared.quotation_step depth token
+    let r ←
+      core.option.Option.ok_or_else
+        source.declared.parsing.body.definition_step.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnostic
+        o1 cursor.span
+    match r with
+    | core.result.Result.Ok value =>
+      let (depth1, is_closed) := value
+      if depth1 > limits.depth
+      then
+        let d ←
+          source.declared.parsing.parse_diagnostic cursor.span (toStr
+            "module quotation depth exceeded")
+        ok (core.result.Result.Err d)
+      else
+        if is_closed
+        then
+          let r1 ← offset token.span.end cursor.span
+          match r1 with
+          | core.result.Result.Ok value1 =>
+            ok (core.result.Result.Ok ({ cursor with «at» := i }, depth1,
+              some value1))
+          | core.result.Result.Err failure =>
+            ok (core.result.Result.Err failure)
+        else
+          ok (core.result.Result.Ok ({ cursor with «at» := i }, depth1,
+            none))
+    | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::source::declared::parsing::body::definition_end]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/declared/parsing/body.rs', lines 41:4-55:5 -/
+@[rust_loop_body]
+def source.declared.parsing.body.definition_end_loop.body
+  (limits : Limits) (s : Slice source.lexer.Token) (i : Std.Usize) (s1 : Span)
+  (depth : Std.U32) («end» : Option Std.Usize) (problem : Option Diagnostic)
+  :
+  Result (ControlFlow ((Slice source.lexer.Token) × Std.Usize × Span ×
+    Std.U32 × (Option Std.Usize) × (Option Diagnostic)) ((Slice
+    source.lexer.Token) × Std.Usize × Span × (Option Std.Usize) × (Option
+    Diagnostic)))
+  := do
+  let b := core.option.Option.is_none «end»
+  if b
+  then
+    let b1 := core.option.Option.is_none problem
+    if b1
+    then
+      let r ←
+        source.declared.parsing.body.definition_step
+          { tokens := s, «at» := i, span := s1 } depth limits
+      match r with
+      | core.result.Result.Ok t =>
+        let (c, next_depth, completed) := t
+        ok (cont (c.tokens, c.at, c.span, next_depth, completed, problem))
+      | core.result.Result.Err error =>
+        ok (cont (s, i, s1, depth, «end», some error))
+    else ok (done (s, i, s1, «end», problem))
+  else ok (done (s, i, s1, «end», problem))
+
+/-- [noble_contracts::source::declared::parsing::body::definition_end]: loop 0:
+    Source: 'crates/noble-contracts/src/source/declared/parsing/body.rs', lines 41:4-55:5 -/
+@[rust_loop]
+def source.declared.parsing.body.definition_end_loop
+  (limits : Limits) (s : Slice source.lexer.Token) (i : Std.Usize) (s1 : Span)
+  (depth : Std.U32) («end» : Option Std.Usize) (problem : Option Diagnostic)
+  :
+  Result ((Slice source.lexer.Token) × Std.Usize × Span × (Option Std.Usize)
+    × (Option Diagnostic))
+  := do
+  loop
+    (fun (s2, i1, s3, depth1, end1, problem1) =>
+      source.declared.parsing.body.definition_end_loop.body limits s2 i1 s3
+      depth1 end1 problem1)
+    (s, i, s1, depth, «end», problem)
+
+/-- [noble_contracts::source::declared::parsing::body::definition_end]:
+    Source: 'crates/noble-contracts/src/source/declared/parsing/body.rs', lines 33:0-63:1 -/
+def source.declared.parsing.body.definition_end
+  (cursor : source.declared.parsing.Cursor) (limits : Limits) :
+  Result (core.result.Result (source.declared.parsing.Cursor × Std.Usize)
+    Diagnostic)
+  := do
+  let (s, i, s1, «end», problem) ←
+    source.declared.parsing.body.definition_end_loop limits cursor.tokens
+      cursor.at cursor.span 0#u32 none none
+  match problem with
+  | none =>
+    match «end» with
+    | none => let d ← internal s1
+              ok (core.result.Result.Err d)
+    | some end1 =>
+      ok (core.result.Result.Ok ({ tokens := s, «at» := i, span := s1 },
+        end1))
+  | some error => ok (core.result.Result.Err error)
+
+/-- [noble_contracts::source::declared::parsing::open_at]:
+    Source: 'crates/noble-contracts/src/source/declared/parsing.rs', lines 53:0-61:1 -/
+def source.declared.parsing.open_at
+  (tokens : Slice source.lexer.Token) («at» : Std.Usize) : Result Bool := do
+  let o ←
+    core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice
+      source.lexer.Token) tokens «at»
+  match o with
+  | none => ok false
+  | some token =>
+    match token.kind with
+    | source.lexer.TokenKind.Open => ok true
+    | source.lexer.TokenKind.Close => ok false
+    | source.lexer.TokenKind.Def => ok false
+    | source.lexer.TokenKind.Literal _ => ok false
+    | source.lexer.TokenKind.Text _ => ok false
+    | source.lexer.TokenKind.Word _ => ok false
+
+/-- [noble_contracts::source::declared::parsing::body::open_definition]:
+    Source: 'crates/noble-contracts/src/source/declared/parsing/body.rs', lines 20:0-28:1 -/
+def source.declared.parsing.body.open_definition
+  (cursor : source.declared.parsing.Cursor) :
+  Result (core.result.Result source.declared.parsing.Cursor Diagnostic)
+  := do
+  let b ← source.declared.parsing.open_at cursor.tokens cursor.at
+  if b
+  then ok (core.result.Result.Ok cursor)
+  else
+    let d ←
+      source.declared.parsing.parse_diagnostic cursor.span (toStr
+        "definition body must be bracketed")
+    ok (core.result.Result.Err d)
+
+/-- [noble_contracts::source::declared::parsing::body::parse]:
+    Source: 'crates/noble-contracts/src/source/declared/parsing/body.rs', lines 3:0-18:1 -/
+def source.declared.parsing.body.parse
+  (input_bytes : Slice Std.U8) (limits : Limits)
+  (cursor : source.declared.parsing.Cursor) (token : source.lexer.Token) :
+  Result (core.result.Result (source.declared.parsing.Cursor ×
+    source.declared.parsing.Member) Diagnostic)
+  := do
+  let r ← offset token.span.start cursor.span
+  match r with
+  | core.result.Result.Ok value =>
+    let r1 ← source.declared.parsing.Cursor.ident cursor
+    match r1 with
+    | core.result.Result.Ok p =>
+      let (c, _) := p
+      let r2 ← source.declared.parsing.body.open_definition c
+      match r2 with
+      | core.result.Result.Ok c1 =>
+        let r3 ← source.declared.parsing.body.definition_end c1 limits
+        match r3 with
+        | core.result.Result.Ok p1 =>
+          let (c2, «end») := p1
+          let s ←
+            core.slice.index.Slice.index
+              (core.slice.index.SliceIndexRangeUsizeSlice Std.U8) input_bytes
+              { start := value, «end» }
+          let v ← alloc.slice.Slice.to_vec core.clone.CloneU8 s
+          ok (core.result.Result.Ok (c2,
+            source.declared.parsing.Member.Definition v))
+        | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+      | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+    | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::source::declared::parsing::{noble_contracts::source::declared::parsing::Cursor<'a>}::expected]:
+    Source: 'crates/noble-contracts/src/source/declared/parsing.rs', lines 171:4-179:5 -/
+def source.declared.parsing.Cursor.expected
+  (self : source.declared.parsing.Cursor) (expected : Str) :
+  Result (core.result.Result source.declared.parsing.Cursor Diagnostic)
+  := do
+  let r ← source.declared.parsing.Cursor.next self
+  match r with
+  | core.result.Result.Ok p =>
+    let (c, actual) := p
+    let b ← Str.Insts.CoreCmpPartialEqStr.eq actual expected
+    if b
+    then ok (core.result.Result.Ok c)
+    else
+      let d ←
+        source.declared.parsing.parse_diagnostic self.span (toStr
+          "invalid declaration signature")
+      ok (core.result.Result.Err d)
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::source::declared::parsing::imports::parse]:
+    Source: 'crates/noble-contracts/src/source/declared/parsing/imports.rs', lines 3:0-21:1 -/
+def source.declared.parsing.imports.parse
+  (cursor : source.declared.parsing.Cursor) («name» : String)
+  (version : Std.U32) :
+  Result (core.result.Result source.declared.parsing.ParsedUnit Diagnostic)
+  := do
+  let r ← source.declared.parsing.Cursor.expected cursor (toStr "as")
+  match r with
+  | core.result.Result.Ok c =>
+    let r1 ← source.declared.parsing.Cursor.ident c
+    match r1 with
+    | core.result.Result.Ok p =>
+      let (c1, «alias») := p
+      let i := Slice.len c1.tokens
+      let b ← lift (core.cmp.impls.PartialEqUsize.eq c1.at i)
+      if b
+      then
+        ok (core.result.Result.Ok (source.declared.parsing.ParsedUnit.Import
+          «name» version «alias»))
+      else
+        let d ←
+          source.declared.parsing.parse_diagnostic c1.span (toStr
+            "import declaration contains trailing expressions")
+        ok (core.result.Result.Err d)
+    | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::source::declared::parsing::members::exported_name]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 208:4-210:5 -/
+@[rust_loop_body]
+def source.declared.parsing.members.exported_name_loop.body
+  (bytes : Slice Std.U8) (split : Std.Usize) :
+  Result (ControlFlow Std.Usize Std.Usize)
+  := do
+  let i := Slice.len bytes
+  if split < i
+  then
+    let i1 ← Slice.index_usize bytes split
+    if i1 != 46#u8
+    then let split1 ← split + 1#usize
+         ok (cont split1)
+    else ok (done split)
+  else ok (done split)
+
+/-- [noble_contracts::source::declared::parsing::members::exported_name]: loop 0:
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 208:4-210:5 -/
+@[rust_loop]
+def source.declared.parsing.members.exported_name_loop
+  (bytes : Slice Std.U8) (split : Std.Usize) : Result Std.Usize := do
+  loop
+    (fun split1 => source.declared.parsing.members.exported_name_loop.body
+      bytes split1)
+    split
+
+/-- [noble_contracts::source::declared::parsing::members::exported_name]:
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 205:0-220:1 -/
+def source.declared.parsing.members.exported_name
+  (target : Str) : Result Bool := do
+  let bytes ← core.str.Str.as_bytes target
+  let split ←
+    source.declared.parsing.members.exported_name_loop bytes 0#usize
+  let base ←
+    Str.Insts.CoreOpsIndexIndex.index
+      core.ops.range.RangeToUsize.Insts.CoreSliceIndexSliceIndexStrStr target
+      { «end» := split }
+  let b ← source.declared.parsing.name base
+  if b
+  then
+    let i := Slice.len bytes
+    if split = i
+    then ok true
+    else
+      let o ← lift (Usize.checked_add split 1#usize)
+      match o with
+      | none => ok false
+      | some next =>
+        let s ←
+          Str.Insts.CoreOpsIndexIndex.index
+            core.ops.range.RangeFromUsize.Insts.CoreSliceIndexSliceIndexStrStr
+            target { start := next }
+        source.declared.parsing.name s
+  else ok false
+
+/-- [noble_contracts::source::declared::parsing::members::export]:
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 188:0-203:1 -/
+def source.declared.parsing.members.export
+  (cursor : source.declared.parsing.Cursor) :
+  Result (core.result.Result (source.declared.parsing.Cursor ×
+    source.declared.parsing.Member) Diagnostic)
+  := do
+  let r ← source.declared.parsing.Cursor.next cursor
+  match r with
+  | core.result.Result.Ok p =>
+    let (c, target) := p
+    let b ← source.declared.parsing.members.exported_name target
+    if b
+    then
+      let s ← alloc.string.String.Insts.CoreConvertFromShared0Str.from target
+      ok (core.result.Result.Ok (c, source.declared.parsing.Member.Export s))
+    else
+      let d ←
+        source.declared.parsing.parse_diagnostic cursor.span (toStr
+          "invalid exported schema, operation or definition")
+      ok (core.result.Result.Err d)
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::source::declared::parsing::members::require]:
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 169:0-186:1 -/
+def source.declared.parsing.members.require
+  (cursor : source.declared.parsing.Cursor) :
+  Result (core.result.Result (source.declared.parsing.Cursor ×
+    source.declared.parsing.Member) Diagnostic)
+  := do
+  let r ← source.declared.parsing.Cursor.ident cursor
+  match r with
+  | core.result.Result.Ok p =>
+    let (c, «name») := p
+    let r1 ← source.declared.parsing.Cursor.next c
+    match r1 with
+    | core.result.Result.Ok p1 =>
+      let (c1, input) := p1
+      let input1 ←
+        alloc.string.String.Insts.CoreConvertFromShared0Str.from input
+      let r2 ← source.declared.parsing.Cursor.expected c1 (toStr "--")
+      match r2 with
+      | core.result.Result.Ok c2 =>
+        let r3 ← source.declared.parsing.Cursor.expected c2 (toStr "!")
+        match r3 with
+        | core.result.Result.Ok c3 =>
+          let r4 ← source.declared.parsing.Cursor.next c3
+          match r4 with
+          | core.result.Result.Ok p2 =>
+            let (c4, operation) := p2
+            let s ←
+              alloc.string.String.Insts.CoreConvertFromShared0Str.from
+                operation
+            ok (core.result.Result.Ok (c4,
+              source.declared.parsing.Member.Require «name» input1 s))
+          | core.result.Result.Err failure =>
+            ok (core.result.Result.Err failure)
+        | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+      | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+    | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::source::declared::parsing::visibility]:
+    Source: 'crates/noble-contracts/src/source/declared/parsing.rs', lines 135:0-146:1 -/
+def source.declared.parsing.visibility
+  (text : Str) (span : Span) :
+  Result (core.result.Result Bool Diagnostic)
+  := do
+  let b ← Str.Insts.CoreCmpPartialEqStr.eq text (toStr "public")
+  if b
+  then ok (core.result.Result.Ok true)
+  else
+    let b1 ← Str.Insts.CoreCmpPartialEqStr.eq text (toStr "private")
+    if b1
+    then ok (core.result.Result.Ok false)
+    else
+      let d ←
+        source.declared.parsing.parse_diagnostic span (toStr
+          "expected public or private visibility")
+      ok (core.result.Result.Err d)
+
+/-- [noble_contracts::source::declared::parsing::{noble_contracts::source::declared::parsing::Cursor<'a>}::public]:
+    Source: 'crates/noble-contracts/src/source/declared/parsing.rs', lines 180:4-184:5 -/
+def source.declared.parsing.Cursor.public
+  (self : source.declared.parsing.Cursor) :
+  Result (core.result.Result (source.declared.parsing.Cursor × Bool)
+    Diagnostic)
+  := do
+  let r ← source.declared.parsing.Cursor.next self
+  match r with
+  | core.result.Result.Ok p =>
+    let (c, value) := p
+    let r1 ← source.declared.parsing.visibility value self.span
+    match r1 with
+    | core.result.Result.Ok value1 => ok (core.result.Result.Ok (c, value1))
+    | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::source::declared::parsing::members::variant_arm]:
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 151:0-167:1 -/
+def source.declared.parsing.members.variant_arm
+  (cursor : source.declared.parsing.Cursor) :
+  Result (core.result.Result (source.declared.parsing.Cursor × String ×
+    String × Bool) Diagnostic)
+  := do
+  let r ← source.declared.parsing.Cursor.ident cursor
+  match r with
+  | core.result.Result.Ok p =>
+    let (c, left) := p
+    let r1 ← source.declared.parsing.Cursor.next c
+    match r1 with
+    | core.result.Result.Ok p1 =>
+      let (c1, left_type) := p1
+      let left_type1 ←
+        alloc.string.String.Insts.CoreConvertFromShared0Str.from left_type
+      let r2 ← source.declared.parsing.Cursor.public c1
+      match r2 with
+      | core.result.Result.Ok p2 =>
+        let (c2, left_public) := p2
+        ok (core.result.Result.Ok (c2, left, left_type1, left_public))
+      | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+    | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::source::declared::parsing::members::variant]:
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 131:0-149:1 -/
+def source.declared.parsing.members.variant
+  (cursor : source.declared.parsing.Cursor) :
+  Result (core.result.Result (source.declared.parsing.Cursor ×
+    source.declared.parsing.Member) Diagnostic)
+  := do
+  let r ← source.declared.parsing.Cursor.ident cursor
+  match r with
+  | core.result.Result.Ok p =>
+    let (c, «name») := p
+    let r1 ← source.declared.parsing.members.variant_arm c
+    match r1 with
+    | core.result.Result.Ok t =>
+      let (c1, left, left_type, left_public) := t
+      let r2 ← source.declared.parsing.members.variant_arm c1
+      match r2 with
+      | core.result.Result.Ok t1 =>
+        let (c2, right, right_type, right_public) := t1
+        ok (core.result.Result.Ok (c2, source.declared.parsing.Member.Variant
+          «name» left left_type left_public right right_type right_public))
+      | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+    | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::source::declared::parsing::members::opaque]:
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 121:0-129:1 -/
+def source.declared.parsing.members.opaque
+  (cursor : source.declared.parsing.Cursor) :
+  Result (core.result.Result (source.declared.parsing.Cursor ×
+    source.declared.parsing.Member) Diagnostic)
+  := do
+  let r ← source.declared.parsing.Cursor.ident cursor
+  match r with
+  | core.result.Result.Ok p =>
+    let (c, «name») := p
+    let r1 ← source.declared.parsing.Cursor.next c
+    match r1 with
+    | core.result.Result.Ok p1 =>
+      let (c1, base) := p1
+      let base1 ←
+        alloc.string.String.Insts.CoreConvertFromShared0Str.from base
+      let r2 ← source.declared.parsing.Cursor.public c1
+      match r2 with
+      | core.result.Result.Ok p2 =>
+        let (c2, «public») := p2
+        ok (core.result.Result.Ok (c2, source.declared.parsing.Member.Opaque
+          «name» base1 «public»))
+      | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+    | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::source::declared::parsing::members::parse_word_member]:
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 98:0-119:1 -/
+def source.declared.parsing.members.parse_word_member
+  (cursor : source.declared.parsing.Cursor) (spelling : Slice Std.U8)
+  (span : Span) :
+  Result (core.result.Result (source.declared.parsing.Cursor ×
+    source.declared.parsing.Member) Diagnostic)
+  := do
+  let b ←
+    Slice.Insts.CoreCmpPartialEqArray.eq core.cmp.PartialEqU8 spelling
+      (Array.make 6#usize [ 111#u8, 112#u8, 97#u8, 113#u8, 117#u8, 101#u8 ])
+  if b
+  then source.declared.parsing.members.opaque cursor
+  else
+    let b1 ←
+      Slice.Insts.CoreCmpPartialEqArray.eq core.cmp.PartialEqU8 spelling
+        (Array.make 7#usize [
+          118#u8, 97#u8, 114#u8, 105#u8, 97#u8, 110#u8, 116#u8
+          ])
+    if b1
+    then source.declared.parsing.members.variant cursor
+    else
+      let b2 ←
+        Slice.Insts.CoreCmpPartialEqArray.eq core.cmp.PartialEqU8 spelling
+          (Array.make 7#usize [
+            114#u8, 101#u8, 113#u8, 117#u8, 105#u8, 114#u8, 101#u8
+            ])
+      if b2
+      then source.declared.parsing.members.require cursor
+      else
+        let b3 ←
+          Slice.Insts.CoreCmpPartialEqArray.eq core.cmp.PartialEqU8 spelling
+            (Array.make 6#usize [
+              101#u8, 120#u8, 112#u8, 111#u8, 114#u8, 116#u8
+              ])
+        if b3
+        then source.declared.parsing.members.export cursor
+        else
+          let d ←
+            source.declared.parsing.parse_diagnostic span (toStr
+              "unknown module declaration or initializer")
+          ok (core.result.Result.Err d)
+
+/-- [noble_contracts::source::declared::parsing::members::parse_member]:
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 79:0-96:1 -/
+def source.declared.parsing.members.parse_member
+  (input_bytes : Slice Std.U8) (limits : Limits)
+  (cursor : source.declared.parsing.Cursor) (token : source.lexer.Token) :
+  Result (core.result.Result (source.declared.parsing.Cursor ×
+    source.declared.parsing.Member) Diagnostic)
+  := do
+  let i ← cursor.at + 1#usize
+  match token.kind with
+  | source.lexer.TokenKind.Open =>
+    match token.kind with
+    | source.lexer.TokenKind.Open =>
+      let d ←
+        source.declared.parsing.parse_diagnostic token.span (toStr
+          "unknown module declaration or initializer")
+      ok (core.result.Result.Err d)
+    | source.lexer.TokenKind.Close =>
+      let d ←
+        source.declared.parsing.parse_diagnostic token.span (toStr
+          "unknown module declaration or initializer")
+      ok (core.result.Result.Err d)
+    | source.lexer.TokenKind.Def =>
+      source.declared.parsing.body.parse input_bytes limits
+        { cursor with «at» := i } token
+    | source.lexer.TokenKind.Literal _ =>
+      let d ←
+        source.declared.parsing.parse_diagnostic token.span (toStr
+          "unknown module declaration or initializer")
+      ok (core.result.Result.Err d)
+    | source.lexer.TokenKind.Text _ =>
+      let d ←
+        source.declared.parsing.parse_diagnostic token.span (toStr
+          "unknown module declaration or initializer")
+      ok (core.result.Result.Err d)
+    | source.lexer.TokenKind.Word _ =>
+      let d ←
+        source.declared.parsing.parse_diagnostic token.span (toStr
+          "unknown module declaration or initializer")
+      ok (core.result.Result.Err d)
+  | source.lexer.TokenKind.Close =>
+    match token.kind with
+    | source.lexer.TokenKind.Open =>
+      let d ←
+        source.declared.parsing.parse_diagnostic token.span (toStr
+          "unknown module declaration or initializer")
+      ok (core.result.Result.Err d)
+    | source.lexer.TokenKind.Close =>
+      let d ←
+        source.declared.parsing.parse_diagnostic token.span (toStr
+          "unknown module declaration or initializer")
+      ok (core.result.Result.Err d)
+    | source.lexer.TokenKind.Def =>
+      source.declared.parsing.body.parse input_bytes limits
+        { cursor with «at» := i } token
+    | source.lexer.TokenKind.Literal _ =>
+      let d ←
+        source.declared.parsing.parse_diagnostic token.span (toStr
+          "unknown module declaration or initializer")
+      ok (core.result.Result.Err d)
+    | source.lexer.TokenKind.Text _ =>
+      let d ←
+        source.declared.parsing.parse_diagnostic token.span (toStr
+          "unknown module declaration or initializer")
+      ok (core.result.Result.Err d)
+    | source.lexer.TokenKind.Word _ =>
+      let d ←
+        source.declared.parsing.parse_diagnostic token.span (toStr
+          "unknown module declaration or initializer")
+      ok (core.result.Result.Err d)
+  | source.lexer.TokenKind.Def =>
+    match token.kind with
+    | source.lexer.TokenKind.Open =>
+      let d ←
+        source.declared.parsing.parse_diagnostic token.span (toStr
+          "unknown module declaration or initializer")
+      ok (core.result.Result.Err d)
+    | source.lexer.TokenKind.Close =>
+      let d ←
+        source.declared.parsing.parse_diagnostic token.span (toStr
+          "unknown module declaration or initializer")
+      ok (core.result.Result.Err d)
+    | source.lexer.TokenKind.Def =>
+      source.declared.parsing.body.parse input_bytes limits
+        { cursor with «at» := i } token
+    | source.lexer.TokenKind.Literal _ =>
+      let d ←
+        source.declared.parsing.parse_diagnostic token.span (toStr
+          "unknown module declaration or initializer")
+      ok (core.result.Result.Err d)
+    | source.lexer.TokenKind.Text _ =>
+      let d ←
+        source.declared.parsing.parse_diagnostic token.span (toStr
+          "unknown module declaration or initializer")
+      ok (core.result.Result.Err d)
+    | source.lexer.TokenKind.Word _ =>
+      let d ←
+        source.declared.parsing.parse_diagnostic token.span (toStr
+          "unknown module declaration or initializer")
+      ok (core.result.Result.Err d)
+  | source.lexer.TokenKind.Literal _ =>
+    match token.kind with
+    | source.lexer.TokenKind.Open =>
+      let d ←
+        source.declared.parsing.parse_diagnostic token.span (toStr
+          "unknown module declaration or initializer")
+      ok (core.result.Result.Err d)
+    | source.lexer.TokenKind.Close =>
+      let d ←
+        source.declared.parsing.parse_diagnostic token.span (toStr
+          "unknown module declaration or initializer")
+      ok (core.result.Result.Err d)
+    | source.lexer.TokenKind.Def =>
+      source.declared.parsing.body.parse input_bytes limits
+        { cursor with «at» := i } token
+    | source.lexer.TokenKind.Literal _ =>
+      let d ←
+        source.declared.parsing.parse_diagnostic token.span (toStr
+          "unknown module declaration or initializer")
+      ok (core.result.Result.Err d)
+    | source.lexer.TokenKind.Text _ =>
+      let d ←
+        source.declared.parsing.parse_diagnostic token.span (toStr
+          "unknown module declaration or initializer")
+      ok (core.result.Result.Err d)
+    | source.lexer.TokenKind.Word _ =>
+      let d ←
+        source.declared.parsing.parse_diagnostic token.span (toStr
+          "unknown module declaration or initializer")
+      ok (core.result.Result.Err d)
+  | source.lexer.TokenKind.Text _ =>
+    match token.kind with
+    | source.lexer.TokenKind.Open =>
+      let d ←
+        source.declared.parsing.parse_diagnostic token.span (toStr
+          "unknown module declaration or initializer")
+      ok (core.result.Result.Err d)
+    | source.lexer.TokenKind.Close =>
+      let d ←
+        source.declared.parsing.parse_diagnostic token.span (toStr
+          "unknown module declaration or initializer")
+      ok (core.result.Result.Err d)
+    | source.lexer.TokenKind.Def =>
+      source.declared.parsing.body.parse input_bytes limits
+        { cursor with «at» := i } token
+    | source.lexer.TokenKind.Literal _ =>
+      let d ←
+        source.declared.parsing.parse_diagnostic token.span (toStr
+          "unknown module declaration or initializer")
+      ok (core.result.Result.Err d)
+    | source.lexer.TokenKind.Text _ =>
+      let d ←
+        source.declared.parsing.parse_diagnostic token.span (toStr
+          "unknown module declaration or initializer")
+      ok (core.result.Result.Err d)
+    | source.lexer.TokenKind.Word _ =>
+      let d ←
+        source.declared.parsing.parse_diagnostic token.span (toStr
+          "unknown module declaration or initializer")
+      ok (core.result.Result.Err d)
+  | source.lexer.TokenKind.Word bytes =>
+    let s := alloc.vec.Vec.deref bytes
+    source.declared.parsing.members.parse_word_member
+      { cursor with «at» := i } s token.span
+
+/-- [noble_contracts::source::declared::parsing::members::collect_body::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_contracts::Diagnostic> for noble_contracts::source::declared::parsing::members::collect_body::{closure}<'_0>}::call_once]:
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 45:17-45:97 -/
+def
+  source.declared.parsing.members.collect_body.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorDiagnostic.call_once
+  (c : source.declared.parsing.members.collect_body.closure)
+  (tupled_args : core.num.error.TryFromIntError) :
+  Result Diagnostic
+  := do
+  source.declared.parsing.parse_diagnostic c (toStr
+    "member limit exceeds the host address space")
+
+/-- Trait implementation: [noble_contracts::source::declared::parsing::members::collect_body::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_contracts::Diagnostic> for noble_contracts::source::declared::parsing::members::collect_body::{closure}<'_0>}]
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 45:17-45:97 -/
+@[reducible]
+def
+  source.declared.parsing.members.collect_body.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorDiagnostic
+  : core.ops.function.FnOnce
+  source.declared.parsing.members.collect_body.closure
+  core.num.error.TryFromIntError Diagnostic := {
+  call_once :=
+    source.declared.parsing.members.collect_body.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorDiagnostic.call_once
+}
+
+/-- [noble_contracts::source::declared::parsing::members::collect_body]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 52:4-71:5 -/
+@[rust_loop_body]
+def source.declared.parsing.members.collect_body_loop.body
+  (input_bytes : Slice Std.U8) (i : Std.U32) (i1 : Std.U32) (i2 : Std.U32)
+  (i3 : Std.U32) (tokens : Slice source.lexer.Token)
+  (members : alloc.vec.Vec source.declared.parsing.Member)
+  (tokens1 : Slice source.lexer.Token) (i4 : Std.Usize) (span : Span)
+  (is_closed : Bool) (problem : Option Diagnostic) :
+  Result (ControlFlow ((alloc.vec.Vec source.declared.parsing.Member) × (Slice
+    source.lexer.Token) × Std.Usize × Span × Bool × (Option Diagnostic))
+    ((alloc.vec.Vec source.declared.parsing.Member) × (Slice
+    source.lexer.Token) × Std.Usize × Span × Bool × (Option Diagnostic)))
+  := do
+  let i5 := Slice.len tokens
+  if i4 < i5
+  then
+    if is_closed
+    then ok (done (members, tokens1, i4, span, true, problem))
+    else
+      let b := core.option.Option.is_none problem
+      if b
+      then
+        let token ← Slice.index_usize tokens i4
+        match token.kind with
+        | source.lexer.TokenKind.Open =>
+          let r ←
+            source.declared.parsing.members.parse_member input_bytes
+              { bytes := i, nodes := i1, depth := i2, work := i3 }
+              { tokens, «at» := i4, span } token
+          match r with
+          | core.result.Result.Ok p =>
+            let (c, member) := p
+            let members1 ← alloc.vec.Vec.push members member
+            ok (cont (members1, c.tokens, c.at, c.span, false, problem))
+          | core.result.Result.Err error =>
+            ok (cont (members, tokens1, i4, span, false, some error))
+        | source.lexer.TokenKind.Close =>
+          let i6 ← i4 + 1#usize
+          ok (cont (members, tokens1, i6, span, true, problem))
+        | source.lexer.TokenKind.Def =>
+          let r ←
+            source.declared.parsing.members.parse_member input_bytes
+              { bytes := i, nodes := i1, depth := i2, work := i3 }
+              { tokens, «at» := i4, span } token
+          match r with
+          | core.result.Result.Ok p =>
+            let (c, member) := p
+            let members1 ← alloc.vec.Vec.push members member
+            ok (cont (members1, c.tokens, c.at, c.span, false, problem))
+          | core.result.Result.Err error =>
+            ok (cont (members, tokens1, i4, span, false, some error))
+        | source.lexer.TokenKind.Literal _ =>
+          let r ←
+            source.declared.parsing.members.parse_member input_bytes
+              { bytes := i, nodes := i1, depth := i2, work := i3 }
+              { tokens, «at» := i4, span } token
+          match r with
+          | core.result.Result.Ok p =>
+            let (c, member) := p
+            let members1 ← alloc.vec.Vec.push members member
+            ok (cont (members1, c.tokens, c.at, c.span, false, problem))
+          | core.result.Result.Err error =>
+            ok (cont (members, tokens1, i4, span, false, some error))
+        | source.lexer.TokenKind.Text _ =>
+          let r ←
+            source.declared.parsing.members.parse_member input_bytes
+              { bytes := i, nodes := i1, depth := i2, work := i3 }
+              { tokens, «at» := i4, span } token
+          match r with
+          | core.result.Result.Ok p =>
+            let (c, member) := p
+            let members1 ← alloc.vec.Vec.push members member
+            ok (cont (members1, c.tokens, c.at, c.span, false, problem))
+          | core.result.Result.Err error =>
+            ok (cont (members, tokens1, i4, span, false, some error))
+        | source.lexer.TokenKind.Word _ =>
+          let r ←
+            source.declared.parsing.members.parse_member input_bytes
+              { bytes := i, nodes := i1, depth := i2, work := i3 }
+              { tokens, «at» := i4, span } token
+          match r with
+          | core.result.Result.Ok p =>
+            let (c, member) := p
+            let members1 ← alloc.vec.Vec.push members member
+            ok (cont (members1, c.tokens, c.at, c.span, false, problem))
+          | core.result.Result.Err error =>
+            ok (cont (members, tokens1, i4, span, false, some error))
+      else ok (done (members, tokens1, i4, span, false, problem))
+  else ok (done (members, tokens1, i4, span, is_closed, problem))
+
+/-- [noble_contracts::source::declared::parsing::members::collect_body]: loop 0:
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 52:4-71:5 -/
+@[rust_loop]
+def source.declared.parsing.members.collect_body_loop
+  (input_bytes : Slice Std.U8) (i : Std.U32) (i1 : Std.U32) (i2 : Std.U32)
+  (i3 : Std.U32) (members : alloc.vec.Vec source.declared.parsing.Member)
+  (tokens : Slice source.lexer.Token) (tokens1 : Slice source.lexer.Token)
+  (i4 : Std.Usize) (span : Span) (is_closed : Bool)
+  (problem : Option Diagnostic) :
+  Result ((alloc.vec.Vec source.declared.parsing.Member) × (Slice
+    source.lexer.Token) × Std.Usize × Span × Bool × (Option Diagnostic))
+  := do
+  loop
+    (fun (members1, tokens2, i5, span1, is_closed1, problem1) =>
+      source.declared.parsing.members.collect_body_loop.body input_bytes i i1
+      i2 i3 tokens members1 tokens2 i5 span1 is_closed1 problem1)
+    (members, tokens1, i4, span, is_closed, problem)
+
+/-- [noble_contracts::source::declared::parsing::members::collect_body]:
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 38:0-77:1 -/
+def source.declared.parsing.members.collect_body
+  (input_bytes : Slice Std.U8) (limits : Limits)
+  (cursor : source.declared.parsing.Cursor) :
+  Result (core.result.Result (source.declared.parsing.Cursor × (alloc.vec.Vec
+    source.declared.parsing.Member)) Diagnostic)
+  := do
+  let r ←
+    Usize.Insts.CoreConvertTryFromU32TryFromIntError.try_from limits.nodes
+  let r1 ←
+    core.result.Result.map_err
+      source.declared.parsing.members.collect_body.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorDiagnostic
+      r cursor.span
+  match r1 with
+  | core.result.Result.Ok value =>
+    let i := Slice.len cursor.tokens
+    let member_count ←
+      core.cmp.Ord.min.trait_default core.cmp.OrdUsize value i
+    let members :=
+      alloc.vec.Vec.with_capacity source.declared.parsing.Member member_count
+    let (members1, s, i1, s1, is_closed, problem) ←
+      source.declared.parsing.members.collect_body_loop input_bytes
+        limits.bytes limits.nodes limits.depth limits.work members
+        cursor.tokens cursor.tokens cursor.at cursor.span false none
+    match problem with
+    | none =>
+      if is_closed
+      then
+        ok (core.result.Result.Ok ({ tokens := s, «at» := i1, span := s1 },
+          members1))
+      else
+        let d ←
+          source.declared.parsing.parse_diagnostic cursor.span (toStr
+            "unclosed module body")
+        ok (core.result.Result.Err d)
+    | some problem1 => ok (core.result.Result.Err problem1)
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::source::declared::parsing::members::open_body]:
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 24:0-33:1 -/
+def source.declared.parsing.members.open_body
+  (cursor : source.declared.parsing.Cursor) :
+  Result (core.result.Result source.declared.parsing.Cursor Diagnostic)
+  := do
+  let b ← source.declared.parsing.open_at cursor.tokens cursor.at
+  if b
+  then
+    let i ← cursor.at + 1#usize
+    ok (core.result.Result.Ok { cursor with «at» := i })
+  else
+    let d ←
+      source.declared.parsing.parse_diagnostic cursor.span (toStr
+        "module body must be one bracketed declaration block")
+    ok (core.result.Result.Err d)
+
+/-- [noble_contracts::source::declared::parsing::members::parse]:
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 1:0-22:1 -/
+def source.declared.parsing.members.parse
+  (input_bytes : Slice Std.U8) (limits : Limits)
+  (cursor : source.declared.parsing.Cursor) («name» : String)
+  (version : Std.U32) :
+  Result (core.result.Result source.declared.parsing.ParsedUnit Diagnostic)
+  := do
+  let r ← source.declared.parsing.members.open_body cursor
+  match r with
+  | core.result.Result.Ok c =>
+    let r1 ←
+      source.declared.parsing.members.collect_body input_bytes limits c
+    match r1 with
+    | core.result.Result.Ok p =>
+      let (c1, members) := p
+      let i := Slice.len c1.tokens
+      if c1.at != i
+      then
+        let d ←
+          source.declared.parsing.parse_diagnostic cursor.span (toStr
+            "module contains trailing expressions")
+        ok (core.result.Result.Err d)
+      else
+        ok (core.result.Result.Ok (source.declared.parsing.ParsedUnit.Module
+          «name» version members))
+    | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::source::declared::parsing::valid_version::{impl core::ops::function::FnMut<(u8,), bool> for noble_contracts::source::declared::parsing::valid_version::{closure}}::call_mut]:
+    Source: 'crates/noble-contracts/src/source/declared/parsing.rs', lines 116:31-116:53 -/
+def
+  source.declared.parsing.valid_version.closure.Insts.CoreOpsFunctionFnMutTupleU8Bool.call_mut
+  (c : source.declared.parsing.valid_version.closure) (tupled_args : Std.U8) :
+  Result (Bool × source.declared.parsing.valid_version.closure)
+  := do
+  let b ← core.num.U8.is_ascii_digit tupled_args
+  ok (b, c)
+
+/-- [noble_contracts::source::declared::parsing::valid_version::{impl core::ops::function::FnOnce<(u8,), bool> for noble_contracts::source::declared::parsing::valid_version::{closure}}::call_once]:
+    Source: 'crates/noble-contracts/src/source/declared/parsing.rs', lines 116:31-116:53 -/
+def
+  source.declared.parsing.valid_version.closure.Insts.CoreOpsFunctionFnOnceTupleU8Bool.call_once
+  (c : source.declared.parsing.valid_version.closure) (i : Std.U8) :
+  Result Bool
+  := do
+  let (b, _) ←
+    source.declared.parsing.valid_version.closure.Insts.CoreOpsFunctionFnMutTupleU8Bool.call_mut
+      c i
+  ok b
+
+/-- Trait implementation: [noble_contracts::source::declared::parsing::valid_version::{impl core::ops::function::FnOnce<(u8,), bool> for noble_contracts::source::declared::parsing::valid_version::{closure}}]
+    Source: 'crates/noble-contracts/src/source/declared/parsing.rs', lines 116:31-116:53 -/
+@[reducible]
+def
+  source.declared.parsing.valid_version.closure.Insts.CoreOpsFunctionFnOnceTupleU8Bool
+  : core.ops.function.FnOnce source.declared.parsing.valid_version.closure
+  Std.U8 Bool := {
+  call_once :=
+    source.declared.parsing.valid_version.closure.Insts.CoreOpsFunctionFnOnceTupleU8Bool.call_once
+}
+
+/-- Trait implementation: [noble_contracts::source::declared::parsing::valid_version::{impl core::ops::function::FnMut<(u8,), bool> for noble_contracts::source::declared::parsing::valid_version::{closure}}]
+    Source: 'crates/noble-contracts/src/source/declared/parsing.rs', lines 116:31-116:53 -/
+@[reducible]
+def
+  source.declared.parsing.valid_version.closure.Insts.CoreOpsFunctionFnMutTupleU8Bool
+  : core.ops.function.FnMut source.declared.parsing.valid_version.closure
+  Std.U8 Bool := {
+  FnOnceInst :=
+    source.declared.parsing.valid_version.closure.Insts.CoreOpsFunctionFnOnceTupleU8Bool
+  call_mut :=
+    source.declared.parsing.valid_version.closure.Insts.CoreOpsFunctionFnMutTupleU8Bool.call_mut
+}
+
+/-- [noble_contracts::source::declared::parsing::valid_version]:
+    Source: 'crates/noble-contracts/src/source/declared/parsing.rs', lines 114:0-118:1 -/
+def source.declared.parsing.valid_version (version : Str) : Result Bool := do
+  let b ← core.str.Str.is_empty version
+  if b
+  then ok false
+  else
+    let b1 ← core.str.Str.bytes version
+    let (b2, _) ←
+      core.str.iter.Bytes.Insts.CoreIterTraitsIteratorIteratorU8.all
+        source.declared.parsing.valid_version.closure.Insts.CoreOpsFunctionFnMutTupleU8Bool
+        b1 ()
+    if b2
+    then
+      let s ← core.str.Str.as_bytes version
+      let o ← core.slice.Slice.first s
+      core.cmp.PartialEq.ne.trait_default
+        (core.option.Option.Insts.CoreCmpPartialEqOption
+        (core.cmp.PartialEqShared core.cmp.PartialEqU8)) o (some 48#u8)
+    else ok false
+
+/-- [noble_contracts::source::declared::parsing::versioned::{impl core::ops::function::FnOnce<(core::num::error::ParseIntError,), noble_contracts::Diagnostic> for noble_contracts::source::declared::parsing::versioned::{closure#1}<'_0>}::call_once]:
+    Source: 'crates/noble-contracts/src/source/declared/parsing.rs', lines 131:17-131:71 -/
+def
+  source.declared.parsing.versioned.closure_1.Insts.CoreOpsFunctionFnOnceTupleParseIntErrorDiagnostic.call_once
+  (c : source.declared.parsing.versioned.closure_1)
+  (tupled_args : core.num.error.ParseIntError) :
+  Result Diagnostic
+  := do
+  source.declared.parsing.parse_diagnostic c (toStr "module version overflows")
+
+/-- Trait implementation: [noble_contracts::source::declared::parsing::versioned::{impl core::ops::function::FnOnce<(core::num::error::ParseIntError,), noble_contracts::Diagnostic> for noble_contracts::source::declared::parsing::versioned::{closure#1}<'_0>}]
+    Source: 'crates/noble-contracts/src/source/declared/parsing.rs', lines 131:17-131:71 -/
+@[reducible]
+def
+  source.declared.parsing.versioned.closure_1.Insts.CoreOpsFunctionFnOnceTupleParseIntErrorDiagnostic
+  : core.ops.function.FnOnce source.declared.parsing.versioned.closure_1
+  core.num.error.ParseIntError Diagnostic := {
+  call_once :=
+    source.declared.parsing.versioned.closure_1.Insts.CoreOpsFunctionFnOnceTupleParseIntErrorDiagnostic.call_once
+}
+
+/-- [noble_contracts::source::declared::parsing::versioned::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::source::declared::parsing::versioned::{closure}<'_0>}::call_once]:
+    Source: 'crates/noble-contracts/src/source/declared/parsing.rs', lines 125:20-125:77 -/
+def
+  source.declared.parsing.versioned.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnostic.call_once
+  (c : source.declared.parsing.versioned.closure) (_ : Unit) :
+  Result Diagnostic
+  := do
+  source.declared.parsing.parse_diagnostic c (toStr
+    "module requires name@version")
+
+/-- Trait implementation: [noble_contracts::source::declared::parsing::versioned::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::source::declared::parsing::versioned::{closure}<'_0>}]
+    Source: 'crates/noble-contracts/src/source/declared/parsing.rs', lines 125:20-125:77 -/
+@[reducible]
+def
+  source.declared.parsing.versioned.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnostic
+  : core.ops.function.FnOnce source.declared.parsing.versioned.closure Unit
+  Diagnostic := {
+  call_once :=
+    source.declared.parsing.versioned.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnostic.call_once
+}
+
+/-- [noble_contracts::source::declared::parsing::versioned]:
+    Source: 'crates/noble-contracts/src/source/declared/parsing.rs', lines 120:0-133:1 -/
+def source.declared.parsing.versioned
+  (text : Str) (span : Span) :
+  Result (core.result.Result (String × Std.U32) Diagnostic)
+  := do
+  let o ← source.declared.split_once_ascii text 64#u8
+  let r ←
+    core.option.Option.ok_or_else
+      source.declared.parsing.versioned.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnostic
+      o span
+  match r with
+  | core.result.Result.Ok p =>
+    let (name_part, version) := p
+    let b ← source.declared.parsing.name name_part
+    if b
+    then
+      let b1 ← source.declared.parsing.valid_version version
+      if b1
+      then
+        let r1 ←
+          core.str.Str.parse U32.Insts.CoreStrTraitsFromStrParseIntError
+            version
+        let r2 ←
+          core.result.Result.map_err
+            source.declared.parsing.versioned.closure_1.Insts.CoreOpsFunctionFnOnceTupleParseIntErrorDiagnostic
+            r1 span
+        match r2 with
+        | core.result.Result.Ok value =>
+          let s ←
+            alloc.string.String.Insts.CoreConvertFromShared0Str.from name_part
+          ok (core.result.Result.Ok (s, value))
+        | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+      else
+        let d ←
+          source.declared.parsing.parse_diagnostic span (toStr
+            "invalid module name or version")
+        ok (core.result.Result.Err d)
+    else
+      let d ←
+        source.declared.parsing.parse_diagnostic span (toStr
+          "invalid module name or version")
+      ok (core.result.Result.Err d)
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::source::declared::parsing::token_slots::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_contracts::Diagnostic> for noble_contracts::source::declared::parsing::token_slots::{closure#1}}::call_once]:
+    Source: 'crates/noble-contracts/src/source/declared/parsing.rs', lines 283:17-288:9 -/
+def
+  source.declared.parsing.token_slots.closure_1.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorDiagnostic.call_once
+  (c : source.declared.parsing.token_slots.closure_1)
+  (tupled_args : core.num.error.TryFromIntError) :
+  Result Diagnostic
+  := do
+  source.declared.parsing.parse_diagnostic { start := 0#u32, «end» := 0#u32 }
+    (toStr "token limit exceeds the host address space")
+
+/-- Trait implementation: [noble_contracts::source::declared::parsing::token_slots::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_contracts::Diagnostic> for noble_contracts::source::declared::parsing::token_slots::{closure#1}}]
+    Source: 'crates/noble-contracts/src/source/declared/parsing.rs', lines 283:17-288:9 -/
+@[reducible]
+def
+  source.declared.parsing.token_slots.closure_1.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorDiagnostic
+  : core.ops.function.FnOnce source.declared.parsing.token_slots.closure_1
+  core.num.error.TryFromIntError Diagnostic := {
+  call_once :=
+    source.declared.parsing.token_slots.closure_1.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorDiagnostic.call_once
+}
+
+/-- [noble_contracts::source::declared::parsing::token_slots::{impl core::ops::function::FnOnce<(usize,), usize> for noble_contracts::source::declared::parsing::token_slots::{closure}<'_0>}::call_once]:
+    Source: 'crates/noble-contracts/src/source/declared/parsing.rs', lines 282:13-282:54 -/
+def
+  source.declared.parsing.token_slots.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeUsize.call_once
+  (c : source.declared.parsing.token_slots.closure) (tupled_args : Std.Usize) :
+  Result Std.Usize
+  := do
+  core.cmp.Ord.min.trait_default core.cmp.OrdUsize tupled_args c
+
+/-- Trait implementation: [noble_contracts::source::declared::parsing::token_slots::{impl core::ops::function::FnOnce<(usize,), usize> for noble_contracts::source::declared::parsing::token_slots::{closure}<'_0>}]
+    Source: 'crates/noble-contracts/src/source/declared/parsing.rs', lines 282:13-282:54 -/
+@[reducible]
+def
+  source.declared.parsing.token_slots.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeUsize
+  : core.ops.function.FnOnce source.declared.parsing.token_slots.closure
+  Std.Usize Std.Usize := {
+  call_once :=
+    source.declared.parsing.token_slots.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeUsize.call_once
+}
+
+/-- [noble_contracts::source::declared::parsing::token_slots]:
+    Source: 'crates/noble-contracts/src/source/declared/parsing.rs', lines 280:0-289:1 -/
+def source.declared.parsing.token_slots
+  (limits : Limits) (source_bytes : Std.Usize) :
+  Result (core.result.Result Std.Usize Diagnostic)
+  := do
+  let r ←
+    Usize.Insts.CoreConvertTryFromU32TryFromIntError.try_from limits.nodes
+  let r1 ←
+    core.result.Result.map
+      source.declared.parsing.token_slots.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeUsize
+      r source_bytes
+  core.result.Result.map_err
+    source.declared.parsing.token_slots.closure_1.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorDiagnostic
+    r1 ()
+
+/-- [noble_contracts::source::declared::parsing::scan]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/declared/parsing.rs', lines 257:4-278:1 -/
+@[rust_loop_body]
+def source.declared.parsing.scan_loop.body
+  (input_bytes : Slice Std.U8)
+  (next : core.result.Result (Option source.lexer.Token) Diagnostic)
+  (meter : Meter) (scanner : source.lexer.Scanner)
+  (tokens : alloc.vec.Vec source.lexer.Token) :
+  Result (ControlFlow ((core.result.Result (Option source.lexer.Token)
+    Diagnostic) × Meter × source.lexer.Scanner × (alloc.vec.Vec
+    source.lexer.Token)) (core.result.Result ((alloc.vec.Vec
+    source.lexer.Token) × Span) Diagnostic))
+  := do
+  match next with
+  | core.result.Result.Ok token =>
+    match token with
+    | none =>
+      let i := Slice.len input_bytes
+      let r ← index i { start := 0#u32, «end» := 0#u32 }
+      match r with
+      | core.result.Result.Ok value =>
+        ok (done (core.result.Result.Ok (tokens,
+          { start := 0#u32, «end» := value })))
+      | core.result.Result.Err failure =>
+        ok (done (core.result.Result.Err failure))
+    | some token1 =>
+      let tokens1 ← alloc.vec.Vec.push tokens token1
+      let (next1, scanner1, meter1) ← source.lexer.Scanner.next scanner meter
+      ok (cont (next1, meter1, scanner1, tokens1))
+  | core.result.Result.Err problem =>
+    ok (done (core.result.Result.Err problem))
+
+/-- [noble_contracts::source::declared::parsing::scan]: loop 0:
+    Source: 'crates/noble-contracts/src/source/declared/parsing.rs', lines 257:4-278:1 -/
+@[rust_loop]
+def source.declared.parsing.scan_loop
+  (next : core.result.Result (Option source.lexer.Token) Diagnostic)
+  (input_bytes : Slice Std.U8) (meter : Meter) (scanner : source.lexer.Scanner)
+  (tokens : alloc.vec.Vec source.lexer.Token) :
+  Result (core.result.Result ((alloc.vec.Vec source.lexer.Token) × Span)
+    Diagnostic)
+  := do
+  loop
+    (fun (next1, meter1, scanner1, tokens1) =>
+      source.declared.parsing.scan_loop.body input_bytes next1 meter1 scanner1
+      tokens1)
+    (next, meter, scanner, tokens)
+
+/-- [noble_contracts::source::declared::parsing::scan]:
+    Source: 'crates/noble-contracts/src/source/declared/parsing.rs', lines 244:0-278:1 -/
+def source.declared.parsing.scan
+  (input_bytes : Slice Std.U8) (limits : Limits) :
+  Result (core.result.Result ((alloc.vec.Vec source.lexer.Token) × Span)
+    Diagnostic)
+  := do
+  let meter ← metering.Meter.new limits
+  let (r, meter1) ← source.lexer.Scanner.new_declared input_bytes meter
+  match r with
+  | core.result.Result.Ok s =>
+    let i := Slice.len input_bytes
+    let r1 ← source.declared.parsing.token_slots limits i
+    match r1 with
+    | core.result.Result.Ok value =>
+      let tokens := alloc.vec.Vec.with_capacity source.lexer.Token value
+      let (next, scanner, meter2) ← source.lexer.Scanner.next s meter1
+      source.declared.parsing.scan_loop next input_bytes meter2 scanner tokens
+    | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::source::declared::parsing::declaration_word]:
+    Source: 'crates/noble-contracts/src/source/declared/parsing.rs', lines 235:0-239:1 -/
+def source.declared.parsing.declaration_word
+  (token : Option source.lexer.Token) (spelling : Slice Std.U8) :
+  Result Bool
+  := do
+  match token with
+  | none => ok false
+  | some t =>
+    match t.kind with
+    | source.lexer.TokenKind.Open => ok false
+    | source.lexer.TokenKind.Close => ok false
+    | source.lexer.TokenKind.Def => ok false
+    | source.lexer.TokenKind.Literal _ => ok false
+    | source.lexer.TokenKind.Text _ => ok false
+    | source.lexer.TokenKind.Word bytes =>
+      let s ← alloc.vec.Vec.as_slice Global bytes
+      let b ←
+        core.slice.cmp.PartialEqSlice.eq core.cmp.PartialEqU8 s spelling
+      if b
+      then ok true
+      else ok false
+
+/-- [noble_contracts::source::declared::parsing::ordinary_unit]:
+    Source: 'crates/noble-contracts/src/source/declared/parsing.rs', lines 221:0-233:1 -/
+def source.declared.parsing.ordinary_unit
+  (first : Option source.lexer.Token) :
+  Result source.declared.parsing.ParsedUnit
+  := do
+  let b ←
+    match first with
+    | none => ok false
+    | some t =>
+      match t.kind with
+      | source.lexer.TokenKind.Open => ok false
+      | source.lexer.TokenKind.Close => ok false
+      | source.lexer.TokenKind.Def => ok true
+      | source.lexer.TokenKind.Literal _ => ok false
+      | source.lexer.TokenKind.Text _ => ok false
+      | source.lexer.TokenKind.Word _ => ok false
+  if b
+  then ok source.declared.parsing.ParsedUnit.Definition
+  else ok source.declared.parsing.ParsedUnit.Expression
+
+/-- [noble_contracts::source::declared::parsing::parse_declaration]:
+    Source: 'crates/noble-contracts/src/source/declared/parsing.rs', lines 206:0-219:1 -/
+def source.declared.parsing.parse_declaration
+  (input_bytes : Slice Std.U8) (limits : Limits)
+  (cursor : source.declared.parsing.Cursor) (is_import : Bool) :
+  Result (core.result.Result source.declared.parsing.ParsedUnit Diagnostic)
+  := do
+  let r ← source.declared.parsing.Cursor.next cursor
+  match r with
+  | core.result.Result.Ok p =>
+    let (c, version_word) := p
+    let r1 ← source.declared.parsing.versioned version_word cursor.span
+    match r1 with
+    | core.result.Result.Ok value =>
+      let («name», version) := value
+      if is_import
+      then source.declared.parsing.imports.parse c «name» version
+      else
+        source.declared.parsing.members.parse input_bytes limits c «name»
+          version
+    | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::source::declared::parsing::parse]:
+    Source: 'crates/noble-contracts/src/source/declared/parsing.rs', lines 187:0-204:1 -/
+def source.declared.parsing.parse
+  (input_bytes : Slice Std.U8) (limits : Limits) :
+  Result (core.result.Result source.declared.parsing.ParsedUnit Diagnostic)
+  := do
+  let r ← source.declared.parsing.scan input_bytes limits
+  match r with
+  | core.result.Result.Ok value =>
+    let (tokens, span) := value
+    let s := alloc.vec.Vec.deref tokens
+    let first ← core.slice.Slice.first s
+    let s1 ←
+      lift (Array.to_slice
+        (Array.make 6#usize [ 109#u8, 111#u8, 100#u8, 117#u8, 108#u8, 101#u8 ]))
+    let is_module ← source.declared.parsing.declaration_word first s1
+    let s2 ←
+      lift (Array.to_slice
+        (Array.make 6#usize [ 105#u8, 109#u8, 112#u8, 111#u8, 114#u8, 116#u8 ]))
+    let is_import ← source.declared.parsing.declaration_word first s2
+    if is_module
+    then
+      let s3 := alloc.vec.Vec.deref tokens
+      source.declared.parsing.parse_declaration input_bytes limits
+        { tokens := s3, «at» := 1#usize, span } is_import
+    else
+      if is_import
+      then
+        let s3 := alloc.vec.Vec.deref tokens
+        source.declared.parsing.parse_declaration input_bytes limits
+          { tokens := s3, «at» := 1#usize, span } true
+      else
+        let pu ← source.declared.parsing.ordinary_unit first
+        ok (core.result.Result.Ok pu)
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::source::declared::SPAN]
+    Source: 'crates/noble-contracts/src/source/declared.rs', lines 9:0-9:59 -/
+@[global_simps, irreducible]
+def source.declared.SPAN : Span := { start := 0#u32, «end» := 0#u32 }
+
+/-- [noble_contracts::source::declared::error]:
+    Source: 'crates/noble-contracts/src/source/declared.rs', lines 55:0-57:1 -/
+def source.declared.error
+  (stage : source.Stage) (reason : Str) : Result source.Error := do
+  let d ← invalid source.declared.SPAN reason
+  source.Error.at stage d
+
+/-- [noble_contracts::source::declared::state::namespace::words::capacity_error]:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace/words.rs', lines 11:0-16:1 -/
+def source.declared.state.namespace.words.capacity_error
+  : Result source.Error := do
+  source.declared.error source.Stage.Check (toStr
+    "qualified module words exceed the host address space")
+
+/-- [noble_contracts::source::declared::state::namespace::words::qualified_capacity::{impl core::ops::function::FnOnce<(usize,), core::option::Option<usize>> for noble_contracts::source::declared::state::namespace::words::qualified_capacity::{closure}<'_0>}::call_once]:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace/words.rs', lines 26:18-26:61 -/
+def
+  source.declared.state.namespace.words.qualified_capacity.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeOptionUsize.call_once
+  (c : source.declared.state.namespace.words.qualified_capacity.closure)
+  (tupled_args : Std.Usize) :
+  Result (Option Std.Usize)
+  := do
+  ok (Usize.checked_add tupled_args c)
+
+/-- Trait implementation: [noble_contracts::source::declared::state::namespace::words::qualified_capacity::{impl core::ops::function::FnOnce<(usize,), core::option::Option<usize>> for noble_contracts::source::declared::state::namespace::words::qualified_capacity::{closure}<'_0>}]
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace/words.rs', lines 26:18-26:61 -/
+@[reducible]
+def
+  source.declared.state.namespace.words.qualified_capacity.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeOptionUsize
+  : core.ops.function.FnOnce
+  source.declared.state.namespace.words.qualified_capacity.closure Std.Usize
+  (Option Std.Usize) := {
+  call_once :=
+    source.declared.state.namespace.words.qualified_capacity.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeOptionUsize.call_once
+}
+
+/-- [noble_contracts::source::declared::state::namespace::words::qualified_capacity]:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace/words.rs', lines 22:0-34:1 -/
+def source.declared.state.namespace.words.qualified_capacity
+  (parts : source.declared.state.namespace.words.QualifiedParts) :
+  Result (core.result.Result Std.Usize source.Error)
+  := do
+  let o ← lift (Usize.checked_add parts.prefix_bytes parts.separator_bytes)
+  let o1 ←
+    core.option.Option.and_then
+      source.declared.state.namespace.words.qualified_capacity.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeOptionUsize
+      o parts.name_bytes
+  match o1 with
+  | none =>
+    let e ← source.declared.state.namespace.words.capacity_error
+    ok (core.result.Result.Err e)
+  | some bytes =>
+    let i ← lift (IScalar.hcast .Usize core.num.Isize.MAX)
+    if bytes > i
+    then
+      let e ← source.declared.state.namespace.words.capacity_error
+      ok (core.result.Result.Err e)
+    else ok (core.result.Result.Ok bytes)
+
+/-- [noble_contracts::source::declared::state::namespace::words::add_export_count::{impl core::ops::function::FnOnce<(usize,), core::option::Option<usize>> for noble_contracts::source::declared::state::namespace::words::add_export_count::{closure}<'_0, '_1>}::call_once]:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace/words.rs', lines 42:31-42:96 -/
+def
+  source.declared.state.namespace.words.add_export_count.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeOptionUsize.call_once
+  (c : source.declared.state.namespace.words.add_export_count.closure)
+  (tupled_args : Std.Usize) :
+  Result (Option Std.Usize)
+  := do
+  let (m, i) := c
+  let e ←
+    alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+      source.declared.Export) m.exports i
+  let i1 := alloc.vec.Vec.len e.words
+  ok (Usize.checked_add tupled_args i1)
+
+/-- Trait implementation: [noble_contracts::source::declared::state::namespace::words::add_export_count::{impl core::ops::function::FnOnce<(usize,), core::option::Option<usize>> for noble_contracts::source::declared::state::namespace::words::add_export_count::{closure}<'_0, '_1>}]
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace/words.rs', lines 42:31-42:96 -/
+@[reducible]
+def
+  source.declared.state.namespace.words.add_export_count.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeOptionUsize
+  : core.ops.function.FnOnce
+  source.declared.state.namespace.words.add_export_count.closure Std.Usize
+  (Option Std.Usize) := {
+  call_once :=
+    source.declared.state.namespace.words.add_export_count.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeOptionUsize.call_once
+}
+
+/-- [noble_contracts::source::declared::state::namespace::words::add_export_count]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace/words.rs', lines 41:4-44:5 -/
+@[rust_loop_body]
+def source.declared.state.namespace.words.add_export_count_loop.body
+  (module : source.declared.Module) (count : Option Std.Usize)
+  (entry_slot : Std.Usize) :
+  Result (ControlFlow ((Option Std.Usize) × Std.Usize) (Option Std.Usize))
+  := do
+  let i := alloc.vec.Vec.len module.exports
+  if entry_slot < i
+  then
+    let b := core.option.Option.is_some count
+    if b
+    then
+      let count1 ←
+        core.option.Option.and_then
+          source.declared.state.namespace.words.add_export_count.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeOptionUsize
+          count (module, entry_slot)
+      let entry_slot1 ← entry_slot + 1#usize
+      ok (cont (count1, entry_slot1))
+    else ok (done count)
+  else ok (done count)
+
+/-- [noble_contracts::source::declared::state::namespace::words::add_export_count]: loop 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace/words.rs', lines 41:4-44:5 -/
+@[rust_loop]
+def source.declared.state.namespace.words.add_export_count_loop
+  (count : Option Std.Usize) (module : source.declared.Module)
+  (entry_slot : Std.Usize) :
+  Result (Option Std.Usize)
+  := do
+  loop
+    (fun (count1, entry_slot1) =>
+      source.declared.state.namespace.words.add_export_count_loop.body module
+      count1 entry_slot1)
+    (count, entry_slot)
+
+/-- [noble_contracts::source::declared::state::namespace::words::add_export_count]:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace/words.rs', lines 36:0-46:1 -/
+@[reducible]
+def source.declared.state.namespace.words.add_export_count
+  (count : Option Std.Usize) (module : source.declared.Module) :
+  Result (Option Std.Usize)
+  := do
+  source.declared.state.namespace.words.add_export_count_loop count module
+    0#usize
+
+/-- [noble_contracts::source::declared::state::namespace::words::checked_word_count]:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace/words.rs', lines 52:0-63:1 -/
+def source.declared.state.namespace.words.checked_word_count
+  (count : Option Std.Usize) :
+  Result (core.result.Result Std.Usize source.Error)
+  := do
+  match count with
+  | none =>
+    let e ← source.declared.state.namespace.words.capacity_error
+    ok (core.result.Result.Err e)
+  | some count1 =>
+    let o ← lift (Usize.checked_mul count1 32#usize)
+    match o with
+    | none =>
+      let e ← source.declared.state.namespace.words.capacity_error
+      ok (core.result.Result.Err e)
+    | some bytes =>
+      let i ← lift (IScalar.hcast .Usize core.num.Isize.MAX)
+      if bytes > i
+      then
+        let e ← source.declared.state.namespace.words.capacity_error
+        ok (core.result.Result.Err e)
+      else ok (core.result.Result.Ok count1)
+
+/-- [noble_contracts::source::declared::state::namespace::words::word_capacity]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace/words.rs', lines 68:4-74:5 -/
+@[rust_loop_body]
+def source.declared.state.namespace.words.word_capacity_loop0.body
+  (v : alloc.vec.Vec source.declared.Module)
+  (v1 : alloc.vec.Vec source.declared.Alias) (count : Option Std.Usize)
+  (alias_slot : Std.Usize) :
+  Result (ControlFlow ((Option Std.Usize) × Std.Usize) (Option Std.Usize))
+  := do
+  let i := alloc.vec.Vec.len v1
+  if alias_slot < i
+  then
+    let b := core.option.Option.is_some count
+    if b
+    then
+      let a ←
+        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+          source.declared.Alias) v1 alias_slot
+      let i1 := alloc.vec.Vec.len v
+      let count1 ←
+        if a.module < i1
+        then
+          do
+          let m ←
+            alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+              source.declared.Module) v a.module
+          source.declared.state.namespace.words.add_export_count count m
+        else ok count
+      let alias_slot1 ← alias_slot + 1#usize
+      ok (cont (count1, alias_slot1))
+    else ok (done count)
+  else ok (done count)
+
+/-- [noble_contracts::source::declared::state::namespace::words::word_capacity]: loop 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace/words.rs', lines 68:4-74:5 -/
+@[rust_loop]
+def source.declared.state.namespace.words.word_capacity_loop0
+  (v : alloc.vec.Vec source.declared.Module)
+  (v1 : alloc.vec.Vec source.declared.Alias) (count : Option Std.Usize)
+  (alias_slot : Std.Usize) :
+  Result (Option Std.Usize)
+  := do
+  loop
+    (fun (count1, alias_slot1) =>
+      source.declared.state.namespace.words.word_capacity_loop0.body v v1
+      count1 alias_slot1)
+    (count, alias_slot)
+
+/-- [noble_contracts::source::declared::state::namespace::words::word_capacity]: loop body 1:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace/words.rs', lines 76:4-79:5 -/
+@[rust_loop_body]
+def source.declared.state.namespace.words.word_capacity_loop1.body
+  (v : alloc.vec.Vec source.declared.Module) (count : Option Std.Usize)
+  (module_slot : Std.Usize) :
+  Result (ControlFlow ((Option Std.Usize) × Std.Usize) (Option Std.Usize))
+  := do
+  let i := alloc.vec.Vec.len v
+  if module_slot < i
+  then
+    let b := core.option.Option.is_some count
+    if b
+    then
+      let m ←
+        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+          source.declared.Module) v module_slot
+      let count1 ←
+        source.declared.state.namespace.words.add_export_count count m
+      let module_slot1 ← module_slot + 1#usize
+      ok (cont (count1, module_slot1))
+    else ok (done count)
+  else ok (done count)
+
+/-- [noble_contracts::source::declared::state::namespace::words::word_capacity]: loop 1:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace/words.rs', lines 76:4-79:5 -/
+@[rust_loop]
+def source.declared.state.namespace.words.word_capacity_loop1
+  (v : alloc.vec.Vec source.declared.Module) (count : Option Std.Usize)
+  (module_slot : Std.Usize) :
+  Result (Option Std.Usize)
+  := do
+  loop
+    (fun (count1, module_slot1) =>
+      source.declared.state.namespace.words.word_capacity_loop1.body v count1
+      module_slot1)
+    (count, module_slot)
+
+/-- [noble_contracts::source::declared::state::namespace::words::word_capacity]:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace/words.rs', lines 65:0-81:1 -/
+def source.declared.state.namespace.words.word_capacity
+  (session : source.declared.state.ModuleSession) :
+  Result (core.result.Result Std.Usize source.Error)
+  := do
+  let i := alloc.vec.Vec.len session.source.definitions
+  let count ←
+    source.declared.state.namespace.words.word_capacity_loop0 session.modules
+      session.aliases (some i) 0#usize
+  let count1 ←
+    source.declared.state.namespace.words.word_capacity_loop1 session.modules
+      count 0#usize
+  source.declared.state.namespace.words.checked_word_count count1
+
+/-- [noble_contracts::source::declared::state::namespace::words::alias_qualified]:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace/words.rs', lines 83:0-97:1 -/
+def source.declared.state.namespace.words.alias_qualified
+  («alias» : source.declared.Alias) («name» : Str) :
+  Result (core.result.Result String source.Error)
+  := do
+  let i ← alloc.string.String.len «alias».spelling
+  let i1 ← core.str.Str.len «name»
+  let r ←
+    source.declared.state.namespace.words.qualified_capacity
+      { prefix_bytes := i, separator_bytes := 1#usize, name_bytes := i1 }
+  match r with
+  | core.result.Result.Ok value =>
+    let qualified ← alloc.string.String.with_capacity value
+    let s ←
+      alloc.string.String.Insts.CoreOpsDerefDerefStr.deref «alias».spelling
+    let qualified1 ← alloc.string.String.push_str qualified s
+    let qualified2 ← alloc.string.String.push qualified1 '.'
+    let qualified3 ← alloc.string.String.push_str qualified2 «name»
+    ok (core.result.Result.Ok qualified3)
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::source::declared::decimal_digit]:
+    Source: 'crates/noble-contracts/src/source/declared.rs', lines 123:0-136:1 -/
+def source.declared.decimal_digit (digit : Std.U32) : Result Char := do
+  match digit with
+  | 0#uscalar => ok '0'
+  | 1#uscalar => ok '1'
+  | 2#uscalar => ok '2'
+  | 3#uscalar => ok '3'
+  | 4#uscalar => ok '4'
+  | 5#uscalar => ok '5'
+  | 6#uscalar => ok '6'
+  | 7#uscalar => ok '7'
+  | 8#uscalar => ok '8'
+  | _ => ok '9'
+
+/-- [noble_contracts::source::declared::append_decimal]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/declared.rs', lines 110:4-112:5 -/
+@[rust_loop_body]
+def source.declared.append_decimal_loop0.body
+  (value : Std.U32) (divisor : Std.U32) :
+  Result (ControlFlow Std.U32 Std.U32)
+  := do
+  let i ← value / divisor
+  if i >= 10#u32
+  then let divisor1 ← divisor * 10#u32
+       ok (cont divisor1)
+  else ok (done divisor)
+
+/-- [noble_contracts::source::declared::append_decimal]: loop 0:
+    Source: 'crates/noble-contracts/src/source/declared.rs', lines 110:4-112:5 -/
+@[rust_loop]
+def source.declared.append_decimal_loop0
+  (value : Std.U32) (divisor : Std.U32) : Result Std.U32 := do
+  loop
+    (fun divisor1 => source.declared.append_decimal_loop0.body value divisor1)
+    divisor
+
+/-- [noble_contracts::source::declared::append_decimal]: loop body 1:
+    Source: 'crates/noble-contracts/src/source/declared.rs', lines 114:4-119:5 -/
+@[rust_loop_body]
+def source.declared.append_decimal_loop1.body
+  (out : String) (divisor : Std.U32) (remaining : Std.U32) :
+  Result (ControlFlow (String × Std.U32 × Std.U32) String)
+  := do
+  if divisor != 0#u32
+  then
+    let digit ← remaining / divisor
+    let remaining1 ← remaining % divisor
+    let c ← source.declared.decimal_digit digit
+    let out1 ← alloc.string.String.push out c
+    let divisor1 ← divisor / 10#u32
+    ok (cont (out1, divisor1, remaining1))
+  else ok (done out)
+
+/-- [noble_contracts::source::declared::append_decimal]: loop 1:
+    Source: 'crates/noble-contracts/src/source/declared.rs', lines 114:4-119:5 -/
+@[rust_loop]
+def source.declared.append_decimal_loop1
+  (out : String) (divisor : Std.U32) (remaining : Std.U32) :
+  Result String
+  := do
+  loop
+    (fun (out1, divisor1, remaining1) =>
+      source.declared.append_decimal_loop1.body out1 divisor1 remaining1)
+    (out, divisor, remaining)
+
+/-- [noble_contracts::source::declared::append_decimal]:
+    Source: 'crates/noble-contracts/src/source/declared.rs', lines 108:0-121:1 -/
+def source.declared.append_decimal
+  (out : String) (value : Std.U32) : Result String := do
+  let divisor ← source.declared.append_decimal_loop0 value 1#u32
+  source.declared.append_decimal_loop1 out divisor value
+
+/-- [noble_contracts::source::declared::state::namespace::words::module_qualified]:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace/words.rs', lines 99:0-119:1 -/
+def source.declared.state.namespace.words.module_qualified
+  (module : source.declared.Module) («name» : Str)
+  (version_width : Std.Usize) :
+  Result (core.result.Result String source.Error)
+  := do
+  let o ← lift (Usize.checked_add version_width 2#usize)
+  match o with
+  | none =>
+    let e ← source.declared.state.namespace.words.capacity_error
+    ok (core.result.Result.Err e)
+  | some separator_bytes =>
+    let i ← alloc.string.String.len module.name
+    let i1 ← core.str.Str.len «name»
+    let r ←
+      source.declared.state.namespace.words.qualified_capacity
+        { prefix_bytes := i, separator_bytes, name_bytes := i1 }
+    match r with
+    | core.result.Result.Ok value =>
+      let qualified ← alloc.string.String.with_capacity value
+      let s ←
+        alloc.string.String.Insts.CoreOpsDerefDerefStr.deref module.name
+      let qualified1 ← alloc.string.String.push_str qualified s
+      let qualified2 ← alloc.string.String.push qualified1 '@'
+      let qualified3 ←
+        source.declared.append_decimal qualified2 module.version
+      let qualified4 ← alloc.string.String.push qualified3 '.'
+      let qualified5 ← alloc.string.String.push_str qualified4 «name»
+      ok (core.result.Result.Ok qualified5)
+    | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::source::declared::state::namespace::words::project_alias_export]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace/words.rs', lines 168:4-175:5 -/
+@[rust_loop_body]
+def source.declared.state.namespace.words.project_alias_export_loop.body
+  («alias» : source.declared.Alias) («export» : source.declared.Export)
+  (words : alloc.vec.Vec (String × source.Target)) (word_slot : Std.Usize)
+  (failure : Option source.Error) :
+  Result (ControlFlow ((alloc.vec.Vec (String × source.Target)) × Std.Usize
+    × (Option source.Error)) ((alloc.vec.Vec (String × source.Target)) ×
+    (Option source.Error)))
+  := do
+  let i := alloc.vec.Vec.len «export».words
+  if word_slot < i
+  then
+    let b := core.option.Option.is_none failure
+    if b
+    then
+      let («name», target) ←
+        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice (String ×
+          source.Target)) «export».words word_slot
+      let s ← alloc.string.String.Insts.CoreOpsDerefDerefStr.deref «name»
+      let r ←
+        source.declared.state.namespace.words.alias_qualified «alias» s
+      let (words1, failure1) ←
+        match r with
+        | core.result.Result.Ok qualified =>
+          do
+          let words2 ← alloc.vec.Vec.push words (qualified, target)
+          ok (words2, failure)
+        | core.result.Result.Err problem => ok (words, some problem)
+      let word_slot1 ← word_slot + 1#usize
+      ok (cont (words1, word_slot1, failure1))
+    else ok (done (words, failure))
+  else ok (done (words, failure))
+
+/-- [noble_contracts::source::declared::state::namespace::words::project_alias_export]: loop 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace/words.rs', lines 168:4-175:5 -/
+@[rust_loop]
+def source.declared.state.namespace.words.project_alias_export_loop
+  («alias» : source.declared.Alias) («export» : source.declared.Export)
+  (words : alloc.vec.Vec (String × source.Target)) (word_slot : Std.Usize)
+  (failure : Option source.Error) :
+  Result ((alloc.vec.Vec (String × source.Target)) × (Option source.Error))
+  := do
+  loop
+    (fun (words1, word_slot1, failure1) =>
+      source.declared.state.namespace.words.project_alias_export_loop.body
+      «alias» «export» words1 word_slot1 failure1)
+    (words, word_slot, failure)
+
+/-- [noble_contracts::source::declared::state::namespace::words::project_alias_export]:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace/words.rs', lines 161:0-180:1 -/
+def source.declared.state.namespace.words.project_alias_export
+  («alias» : source.declared.Alias) («export» : source.declared.Export)
+  (words : alloc.vec.Vec (String × source.Target)) :
+  Result (core.result.Result (alloc.vec.Vec (String × source.Target))
+    source.Error)
+  := do
+  let (words1, failure) ←
+    source.declared.state.namespace.words.project_alias_export_loop «alias»
+      «export» words 0#usize none
+  match failure with
+  | none => ok (core.result.Result.Ok words1)
+  | some problem => ok (core.result.Result.Err problem)
+
+/-- [noble_contracts::source::declared::state::namespace::words::project_alias_module]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace/words.rs', lines 151:4-157:5 -/
+@[rust_loop_body]
+def source.declared.state.namespace.words.project_alias_module_loop.body
+  («alias» : source.declared.Alias) (module : source.declared.Module)
+  (entry_slot : Std.Usize)
+  (outcome : core.result.Result (alloc.vec.Vec (String × source.Target))
+  source.Error) :
+  Result (ControlFlow (Std.Usize × (core.result.Result (alloc.vec.Vec (String
+    × source.Target)) source.Error)) (core.result.Result (alloc.vec.Vec
+    (String × source.Target)) source.Error))
+  := do
+  let i := alloc.vec.Vec.len module.exports
+  if entry_slot < i
+  then
+    let b ← core.result.Result.is_ok outcome
+    if b
+    then
+      let outcome1 ←
+        match outcome with
+        | core.result.Result.Ok words =>
+          do
+          let e ←
+            alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+              source.declared.Export) module.exports entry_slot
+          source.declared.state.namespace.words.project_alias_export «alias»
+            e words
+        | core.result.Result.Err _ => ok outcome
+      let entry_slot1 ← entry_slot + 1#usize
+      ok (cont (entry_slot1, outcome1))
+    else ok (done outcome)
+  else ok (done outcome)
+
+/-- [noble_contracts::source::declared::state::namespace::words::project_alias_module]: loop 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace/words.rs', lines 151:4-157:5 -/
+@[rust_loop]
+def source.declared.state.namespace.words.project_alias_module_loop
+  («alias» : source.declared.Alias) (module : source.declared.Module)
+  (entry_slot : Std.Usize)
+  (outcome : core.result.Result (alloc.vec.Vec (String × source.Target))
+  source.Error) :
+  Result (core.result.Result (alloc.vec.Vec (String × source.Target))
+    source.Error)
+  := do
+  loop
+    (fun (entry_slot1, outcome1) =>
+      source.declared.state.namespace.words.project_alias_module_loop.body
+      «alias» module entry_slot1 outcome1)
+    (entry_slot, outcome)
+
+/-- [noble_contracts::source::declared::state::namespace::words::project_alias_module]:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace/words.rs', lines 144:0-159:1 -/
+@[reducible]
+def source.declared.state.namespace.words.project_alias_module
+  («alias» : source.declared.Alias) (module : source.declared.Module)
+  (words : alloc.vec.Vec (String × source.Target)) :
+  Result (core.result.Result (alloc.vec.Vec (String × source.Target))
+    source.Error)
+  := do
+  source.declared.state.namespace.words.project_alias_module_loop «alias»
+    module 0#usize (core.result.Result.Ok words)
+
+/-- [noble_contracts::source::declared::state::namespace::words::append_alias_exports]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace/words.rs', lines 127:4-140:5 -/
+@[rust_loop_body]
+def source.declared.state.namespace.words.append_alias_exports_loop.body
+  (session : source.declared.state.ModuleSession) (alias_slot : Std.Usize)
+  (outcome : core.result.Result (alloc.vec.Vec (String × source.Target))
+  source.Error) :
+  Result (ControlFlow (Std.Usize × (core.result.Result (alloc.vec.Vec (String
+    × source.Target)) source.Error)) (core.result.Result (alloc.vec.Vec
+    (String × source.Target)) source.Error))
+  := do
+  let i := alloc.vec.Vec.len session.aliases
+  if alias_slot < i
+  then
+    let b ← core.result.Result.is_ok outcome
+    if b
+    then
+      let a ←
+        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+          source.declared.Alias) session.aliases alias_slot
+      let i1 := alloc.vec.Vec.len session.modules
+      let outcome1 ←
+        if a.module < i1
+        then
+          match outcome with
+          | core.result.Result.Ok words =>
+            do
+            let m ←
+              alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+                source.declared.Module) session.modules a.module
+            source.declared.state.namespace.words.project_alias_module a m
+              words
+          | core.result.Result.Err _ => ok outcome
+        else ok outcome
+      let alias_slot1 ← alias_slot + 1#usize
+      ok (cont (alias_slot1, outcome1))
+    else ok (done outcome)
+  else ok (done outcome)
+
+/-- [noble_contracts::source::declared::state::namespace::words::append_alias_exports]: loop 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace/words.rs', lines 127:4-140:5 -/
+@[rust_loop]
+def source.declared.state.namespace.words.append_alias_exports_loop
+  (session : source.declared.state.ModuleSession) (alias_slot : Std.Usize)
+  (outcome : core.result.Result (alloc.vec.Vec (String × source.Target))
+  source.Error) :
+  Result (core.result.Result (alloc.vec.Vec (String × source.Target))
+    source.Error)
+  := do
+  loop
+    (fun (alias_slot1, outcome1) =>
+      source.declared.state.namespace.words.append_alias_exports_loop.body
+      session alias_slot1 outcome1)
+    (alias_slot, outcome)
+
+/-- [noble_contracts::source::declared::state::namespace::words::append_alias_exports]:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace/words.rs', lines 121:0-142:1 -/
+@[reducible]
+def source.declared.state.namespace.words.append_alias_exports
+  (session : source.declared.state.ModuleSession)
+  (words : alloc.vec.Vec (String × source.Target)) :
+  Result (core.result.Result (alloc.vec.Vec (String × source.Target))
+    source.Error)
+  := do
+  source.declared.state.namespace.words.append_alias_exports_loop session
+    0#usize (core.result.Result.Ok words)
+
+/-- [noble_contracts::source::declared::state::namespace::words::project_versioned_export]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace/words.rs', lines 235:4-242:5 -/
+@[rust_loop_body]
+def source.declared.state.namespace.words.project_versioned_export_loop.body
+  (module : source.declared.Module) («export» : source.declared.Export)
+  (version_width : Std.Usize) (words : alloc.vec.Vec (String × source.Target))
+  (word_slot : Std.Usize) (failure : Option source.Error) :
+  Result (ControlFlow ((alloc.vec.Vec (String × source.Target)) × Std.Usize
+    × (Option source.Error)) ((alloc.vec.Vec (String × source.Target)) ×
+    (Option source.Error)))
+  := do
+  let i := alloc.vec.Vec.len «export».words
+  if word_slot < i
+  then
+    let b := core.option.Option.is_none failure
+    if b
+    then
+      let («name», target) ←
+        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice (String ×
+          source.Target)) «export».words word_slot
+      let s ← alloc.string.String.Insts.CoreOpsDerefDerefStr.deref «name»
+      let r ←
+        source.declared.state.namespace.words.module_qualified module s
+          version_width
+      let (words1, failure1) ←
+        match r with
+        | core.result.Result.Ok qualified =>
+          do
+          let words2 ← alloc.vec.Vec.push words (qualified, target)
+          ok (words2, failure)
+        | core.result.Result.Err problem => ok (words, some problem)
+      let word_slot1 ← word_slot + 1#usize
+      ok (cont (words1, word_slot1, failure1))
+    else ok (done (words, failure))
+  else ok (done (words, failure))
+
+/-- [noble_contracts::source::declared::state::namespace::words::project_versioned_export]: loop 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace/words.rs', lines 235:4-242:5 -/
+@[rust_loop]
+def source.declared.state.namespace.words.project_versioned_export_loop
+  (module : source.declared.Module) («export» : source.declared.Export)
+  (version_width : Std.Usize) (words : alloc.vec.Vec (String × source.Target))
+  (word_slot : Std.Usize) (failure : Option source.Error) :
+  Result ((alloc.vec.Vec (String × source.Target)) × (Option source.Error))
+  := do
+  loop
+    (fun (words1, word_slot1, failure1) =>
+      source.declared.state.namespace.words.project_versioned_export_loop.body
+      module «export» version_width words1 word_slot1 failure1)
+    (words, word_slot, failure)
+
+/-- [noble_contracts::source::declared::state::namespace::words::project_versioned_export]:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace/words.rs', lines 227:0-247:1 -/
+def source.declared.state.namespace.words.project_versioned_export
+  (module : source.declared.Module) («export» : source.declared.Export)
+  (version_width : Std.Usize) (words : alloc.vec.Vec (String × source.Target))
+  :
+  Result (core.result.Result (alloc.vec.Vec (String × source.Target))
+    source.Error)
+  := do
+  let (words1, failure) ←
+    source.declared.state.namespace.words.project_versioned_export_loop module
+      «export» version_width words 0#usize none
+  match failure with
+  | none => ok (core.result.Result.Ok words1)
+  | some problem => ok (core.result.Result.Err problem)
+
+/-- [noble_contracts::source::declared::state::namespace::words::decimal_width]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace/words.rs', lines 201:4-204:5 -/
+@[rust_loop_body]
+def source.declared.state.namespace.words.decimal_width_loop.body
+  (width : Std.Usize) (remaining : Std.U32) :
+  Result (ControlFlow (Std.Usize × Std.U32) Std.Usize)
+  := do
+  if remaining >= 10#u32
+  then
+    let width1 ← width + 1#usize
+    let remaining1 ← remaining / 10#u32
+    ok (cont (width1, remaining1))
+  else ok (done width)
+
+/-- [noble_contracts::source::declared::state::namespace::words::decimal_width]: loop 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace/words.rs', lines 201:4-204:5 -/
+@[rust_loop]
+def source.declared.state.namespace.words.decimal_width_loop
+  (width : Std.Usize) (remaining : Std.U32) : Result Std.Usize := do
+  loop
+    (fun (width1, remaining1) =>
+      source.declared.state.namespace.words.decimal_width_loop.body width1
+      remaining1)
+    (width, remaining)
+
+/-- [noble_contracts::source::declared::state::namespace::words::decimal_width]:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace/words.rs', lines 198:0-206:1 -/
+@[reducible]
+def source.declared.state.namespace.words.decimal_width
+  (version : Std.U32) : Result Std.Usize := do
+  source.declared.state.namespace.words.decimal_width_loop 1#usize version
+
+/-- [noble_contracts::source::declared::state::namespace::words::project_versioned_module]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace/words.rs', lines 215:4-223:5 -/
+@[rust_loop_body]
+def source.declared.state.namespace.words.project_versioned_module_loop.body
+  (s : String) (i : Std.U32) (i1 : Std.U64)
+  (v : alloc.vec.Vec source.declared.Export) (o : Option Std.U32)
+  (v1 : alloc.vec.Vec Std.U8) (version_width : Std.Usize)
+  (entry_slot : Std.Usize)
+  (outcome : core.result.Result (alloc.vec.Vec (String × source.Target))
+  source.Error) :
+  Result (ControlFlow (Std.Usize × (core.result.Result (alloc.vec.Vec (String
+    × source.Target)) source.Error)) (core.result.Result (alloc.vec.Vec
+    (String × source.Target)) source.Error))
+  := do
+  let i2 := alloc.vec.Vec.len v
+  if entry_slot < i2
+  then
+    let b ← core.result.Result.is_ok outcome
+    if b
+    then
+      let outcome1 ←
+        match outcome with
+        | core.result.Result.Ok words =>
+          do
+          let e ←
+            alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+              source.declared.Export) v entry_slot
+          source.declared.state.namespace.words.project_versioned_export
+            {
+              «name» := s,
+              version := i,
+              identity := i1,
+              exports := v,
+              adapter_slot := o,
+              source := v1
+            } e version_width words
+        | core.result.Result.Err _ => ok outcome
+      let entry_slot1 ← entry_slot + 1#usize
+      ok (cont (entry_slot1, outcome1))
+    else ok (done outcome)
+  else ok (done outcome)
+
+/-- [noble_contracts::source::declared::state::namespace::words::project_versioned_module]: loop 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace/words.rs', lines 215:4-223:5 -/
+@[rust_loop]
+def source.declared.state.namespace.words.project_versioned_module_loop
+  (s : String) (i : Std.U32) (i1 : Std.U64)
+  (v : alloc.vec.Vec source.declared.Export) (o : Option Std.U32)
+  (v1 : alloc.vec.Vec Std.U8) (version_width : Std.Usize)
+  (entry_slot : Std.Usize)
+  (outcome : core.result.Result (alloc.vec.Vec (String × source.Target))
+  source.Error) :
+  Result (core.result.Result (alloc.vec.Vec (String × source.Target))
+    source.Error)
+  := do
+  loop
+    (fun (entry_slot1, outcome1) =>
+      source.declared.state.namespace.words.project_versioned_module_loop.body
+      s i i1 v o v1 version_width entry_slot1 outcome1)
+    (entry_slot, outcome)
+
+/-- [noble_contracts::source::declared::state::namespace::words::project_versioned_module]:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace/words.rs', lines 208:0-225:1 -/
+def source.declared.state.namespace.words.project_versioned_module
+  (module : source.declared.Module)
+  (words : alloc.vec.Vec (String × source.Target)) :
+  Result (core.result.Result (alloc.vec.Vec (String × source.Target))
+    source.Error)
+  := do
+  let version_width ←
+    source.declared.state.namespace.words.decimal_width module.version
+  source.declared.state.namespace.words.project_versioned_module_loop
+    module.name module.version module.identity module.exports
+    module.adapter_slot module.source version_width 0#usize
+    (core.result.Result.Ok words)
+
+/-- [noble_contracts::source::declared::state::namespace::words::append_versioned_exports]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace/words.rs', lines 188:4-194:5 -/
+@[rust_loop_body]
+def source.declared.state.namespace.words.append_versioned_exports_loop.body
+  (session : source.declared.state.ModuleSession) (module_slot : Std.Usize)
+  (outcome : core.result.Result (alloc.vec.Vec (String × source.Target))
+  source.Error) :
+  Result (ControlFlow (Std.Usize × (core.result.Result (alloc.vec.Vec (String
+    × source.Target)) source.Error)) (core.result.Result (alloc.vec.Vec
+    (String × source.Target)) source.Error))
+  := do
+  let i := alloc.vec.Vec.len session.modules
+  if module_slot < i
+  then
+    let b ← core.result.Result.is_ok outcome
+    if b
+    then
+      let outcome1 ←
+        match outcome with
+        | core.result.Result.Ok words =>
+          do
+          let m ←
+            alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+              source.declared.Module) session.modules module_slot
+          source.declared.state.namespace.words.project_versioned_module m
+            words
+        | core.result.Result.Err _ => ok outcome
+      let module_slot1 ← module_slot + 1#usize
+      ok (cont (module_slot1, outcome1))
+    else ok (done outcome)
+  else ok (done outcome)
+
+/-- [noble_contracts::source::declared::state::namespace::words::append_versioned_exports]: loop 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace/words.rs', lines 188:4-194:5 -/
+@[rust_loop]
+def source.declared.state.namespace.words.append_versioned_exports_loop
+  (session : source.declared.state.ModuleSession) (module_slot : Std.Usize)
+  (outcome : core.result.Result (alloc.vec.Vec (String × source.Target))
+  source.Error) :
+  Result (core.result.Result (alloc.vec.Vec (String × source.Target))
+    source.Error)
+  := do
+  loop
+    (fun (module_slot1, outcome1) =>
+      source.declared.state.namespace.words.append_versioned_exports_loop.body
+      session module_slot1 outcome1)
+    (module_slot, outcome)
+
+/-- [noble_contracts::source::declared::state::namespace::words::append_versioned_exports]:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace/words.rs', lines 182:0-196:1 -/
+@[reducible]
+def source.declared.state.namespace.words.append_versioned_exports
+  (session : source.declared.state.ModuleSession)
+  (words : alloc.vec.Vec (String × source.Target)) :
+  Result (core.result.Result (alloc.vec.Vec (String × source.Target))
+    source.Error)
+  := do
+  source.declared.state.namespace.words.append_versioned_exports_loop session
+    0#usize (core.result.Result.Ok words)
+
+/-- [noble_contracts::source::declared::state::namespace::words::{noble_contracts::source::declared::state::ModuleSession}::outside_words]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace/words.rs', lines 256:8-264:9 -/
+@[rust_loop_body]
+def source.declared.state.namespace.words.ModuleSession.outside_words_loop.body
+  (self : source.declared.state.ModuleSession)
+  (words : alloc.vec.Vec (String × source.Target))
+  (definition_slot : Std.Usize) :
+  Result (ControlFlow ((alloc.vec.Vec (String × source.Target)) × Std.Usize)
+    ((alloc.vec.Vec source.declared.BoundOperation) × (alloc.vec.Vec
+    source.declared.Module) × (alloc.vec.Vec source.declared.Alias) × Std.U64
+    × (alloc.vec.Vec source.Named) × (alloc.vec.Vec Std.U8) × Std.U64 ×
+    Bool × (Option component.Bindings) × (Option source.declared.Context) ×
+    (alloc.vec.Vec (String × source.Target))))
+  := do
+  let i := alloc.vec.Vec.len self.source.definitions
+  if definition_slot < i
+  then
+    let n ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice source.Named)
+        self.source.definitions definition_slot
+    let b := core.option.Option.is_none n.owner
+    let words1 ←
+      if b
+      then
+        do
+        let s ← alloc.string.String.Insts.CoreCloneClone.clone n.name
+        let i1 ← lift (UScalar.cast .U32 definition_slot)
+        alloc.vec.Vec.push words (s, source.Target.Named i1)
+      else ok words
+    let definition_slot1 ← definition_slot + 1#usize
+    ok (cont (words1, definition_slot1))
+  else
+    ok (done (self.bindings, self.modules, self.aliases, self.generation,
+      self.source.definitions, self.source.history, self.source.generation,
+      self.source.hosts, self.source.bindings, self.source.declared, words))
+
+/-- [noble_contracts::source::declared::state::namespace::words::{noble_contracts::source::declared::state::ModuleSession}::outside_words]: loop 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace/words.rs', lines 256:8-264:9 -/
+@[rust_loop]
+def source.declared.state.namespace.words.ModuleSession.outside_words_loop
+  (self : source.declared.state.ModuleSession)
+  (words : alloc.vec.Vec (String × source.Target))
+  (definition_slot : Std.Usize) :
+  Result ((alloc.vec.Vec source.declared.BoundOperation) × (alloc.vec.Vec
+    source.declared.Module) × (alloc.vec.Vec source.declared.Alias) × Std.U64
+    × (alloc.vec.Vec source.Named) × (alloc.vec.Vec Std.U8) × Std.U64 ×
+    Bool × (Option component.Bindings) × (Option source.declared.Context) ×
+    (alloc.vec.Vec (String × source.Target)))
+  := do
+  loop
+    (fun (words1, definition_slot1) =>
+      source.declared.state.namespace.words.ModuleSession.outside_words_loop.body
+      self words1 definition_slot1)
+    (words, definition_slot)
+
+/-- [noble_contracts::source::declared::state::namespace::words::{noble_contracts::source::declared::state::ModuleSession}::outside_words]:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace/words.rs', lines 250:4-273:5 -/
+def source.declared.state.namespace.words.ModuleSession.outside_words
+  (self : source.declared.state.ModuleSession) :
+  Result (core.result.Result source.declared.state.ModuleSession source.Error)
+  := do
+  let r ← source.declared.state.namespace.words.word_capacity self
+  match r with
+  | core.result.Result.Ok value =>
+    let words := alloc.vec.Vec.with_capacity (String × source.Target) value
+    let (v, v1, v2, i, v3, v4, i1, b, o, o1, words1) ←
+      source.declared.state.namespace.words.ModuleSession.outside_words_loop
+        self words 0#usize
+    let r1 ←
+      source.declared.state.namespace.words.append_alias_exports
+        {
+          bindings := v,
+          modules := v1,
+          aliases := v2,
+          generation := i,
+          source :=
+            {
+              definitions := v3,
+              history := v4,
+              generation := i1,
+              hosts := b,
+              bindings := o,
+              declared := o1
+            }
+        } words1
+    match r1 with
+    | core.result.Result.Ok value1 =>
+      let r2 ←
+        source.declared.state.namespace.words.append_versioned_exports
+          {
+            bindings := v,
+            modules := v1,
+            aliases := v2,
+            generation := i,
+            source :=
+              {
+                definitions := v3,
+                history := v4,
+                generation := i1,
+                hosts := b,
+                bindings := o,
+                declared := o1
+              }
+          } value1
+      match r2 with
+      | core.result.Result.Ok value2 =>
+        match o1 with
+        | none =>
+          ok (core.result.Result.Ok
+            {
+              bindings := v,
+              modules := v1,
+              aliases := v2,
+              generation := i,
+              source :=
+                {
+                  definitions := v3,
+                  history := v4,
+                  generation := i1,
+                  hosts := b,
+                  bindings := o,
+                  declared := none
+                }
+            })
+        | some context =>
+          ok (core.result.Result.Ok
+            {
+              bindings := v,
+              modules := v1,
+              aliases := v2,
+              generation := i,
+              source :=
+                {
+                  definitions := v3,
+                  history := v4,
+                  generation := i1,
+                  hosts := b,
+                  bindings := o,
+                  declared :=
+                    (some
+                      {
+                        environment :=
+                          { context.environment with caller_module := none },
+                        words := value2,
+                        owner := none
+                      })
+                }
+            })
+      | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+    | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::source::declared::state::namespace::{noble_contracts::source::declared::state::ModuleSession}::resolve_type::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::declared::state::namespace::{noble_contracts::source::declared::state::ModuleSession}::resolve_type::{closure}}::call_once]:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace.rs', lines 54:22-59:9 -/
+def
+  source.declared.state.namespace.ModuleSession.resolve_type.closure.Insts.CoreOpsFunctionFnOnceTupleError.call_once
+  (c : source.declared.state.namespace.ModuleSession.resolve_type.closure)
+  (_ : Unit) :
+  Result source.Error
+  := do
+  source.declared.error source.Stage.Resolve (toStr
+    "unknown or unexported versioned type")
+
+/-- Trait implementation: [noble_contracts::source::declared::state::namespace::{noble_contracts::source::declared::state::ModuleSession}::resolve_type::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::declared::state::namespace::{noble_contracts::source::declared::state::ModuleSession}::resolve_type::{closure}}]
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace.rs', lines 54:22-59:9 -/
+@[reducible]
+def
+  source.declared.state.namespace.ModuleSession.resolve_type.closure.Insts.CoreOpsFunctionFnOnceTupleError
+  : core.ops.function.FnOnce
+  source.declared.state.namespace.ModuleSession.resolve_type.closure Unit
+  source.Error := {
+  call_once :=
+    source.declared.state.namespace.ModuleSession.resolve_type.closure.Insts.CoreOpsFunctionFnOnceTupleError.call_once
+}
+
+/-- [noble_contracts::source::declared::state::namespace::{noble_contracts::source::declared::state::ModuleSession}::resolve_type::{impl core::ops::function::FnOnce<(core::num::error::ParseIntError,), noble_contracts::source::Error> for noble_contracts::source::declared::state::namespace::{noble_contracts::source::declared::state::ModuleSession}::resolve_type::{closure#2}}::call_once]:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace.rs', lines 14:66-17:13 -/
+def
+  source.declared.state.namespace.ModuleSession.resolve_type.closure_2.Insts.CoreOpsFunctionFnOnceTupleParseIntErrorError.call_once
+  (c : source.declared.state.namespace.ModuleSession.resolve_type.closure_2)
+  (tupled_args : core.num.error.ParseIntError) :
+  Result source.Error
+  := do
+  source.declared.error source.Stage.Resolve (toStr
+    "invalid type module version")
+
+/-- Trait implementation: [noble_contracts::source::declared::state::namespace::{noble_contracts::source::declared::state::ModuleSession}::resolve_type::{impl core::ops::function::FnOnce<(core::num::error::ParseIntError,), noble_contracts::source::Error> for noble_contracts::source::declared::state::namespace::{noble_contracts::source::declared::state::ModuleSession}::resolve_type::{closure#2}}]
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace.rs', lines 14:66-17:13 -/
+@[reducible]
+def
+  source.declared.state.namespace.ModuleSession.resolve_type.closure_2.Insts.CoreOpsFunctionFnOnceTupleParseIntErrorError
+  : core.ops.function.FnOnce
+  source.declared.state.namespace.ModuleSession.resolve_type.closure_2
+  core.num.error.ParseIntError source.Error := {
+  call_once :=
+    source.declared.state.namespace.ModuleSession.resolve_type.closure_2.Insts.CoreOpsFunctionFnOnceTupleParseIntErrorError.call_once
+}
+
+/-- [noble_contracts::source::declared::state::namespace::{noble_contracts::source::declared::state::ModuleSession}::resolve_type::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::declared::state::namespace::{noble_contracts::source::declared::state::ModuleSession}::resolve_type::{closure#1}}::call_once]:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace.rs', lines 9:24-12:13 -/
+def
+  source.declared.state.namespace.ModuleSession.resolve_type.closure_1.Insts.CoreOpsFunctionFnOnceTupleError.call_once
+  (c : source.declared.state.namespace.ModuleSession.resolve_type.closure_1)
+  (_ : Unit) :
+  Result source.Error
+  := do
+  source.declared.error source.Stage.Resolve (toStr
+    "expected versioned exported type")
+
+/-- Trait implementation: [noble_contracts::source::declared::state::namespace::{noble_contracts::source::declared::state::ModuleSession}::resolve_type::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::declared::state::namespace::{noble_contracts::source::declared::state::ModuleSession}::resolve_type::{closure#1}}]
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace.rs', lines 9:24-12:13 -/
+@[reducible]
+def
+  source.declared.state.namespace.ModuleSession.resolve_type.closure_1.Insts.CoreOpsFunctionFnOnceTupleError
+  : core.ops.function.FnOnce
+  source.declared.state.namespace.ModuleSession.resolve_type.closure_1 Unit
+  source.Error := {
+  call_once :=
+    source.declared.state.namespace.ModuleSession.resolve_type.closure_1.Insts.CoreOpsFunctionFnOnceTupleError.call_once
+}
+
+/-- [noble_contracts::source::declared::state::namespace::{noble_contracts::source::declared::state::ModuleSession}::resolve_type]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace.rs', lines 32:12-39:13
+    Visibility: public -/
+@[rust_loop_body]
+def source.declared.state.namespace.ModuleSession.resolve_type_loop0.body
+  (v : alloc.vec.Vec source.declared.Module)
+  (v1 : alloc.vec.Vec source.declared.Alias) (module : Str)
+  («at» : Std.Usize) :
+  Result (ControlFlow Std.Usize (Option source.declared.Module))
+  := do
+  if «at» != 0#usize
+  then
+    let at1 ← «at» - 1#usize
+    let «alias» ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        source.declared.Alias) v1 at1
+    let b ←
+      alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq
+        «alias».spelling module
+    if b
+    then
+      let s := alloc.vec.Vec.deref v
+      let found ←
+        core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice
+          source.declared.Module) s «alias».module
+      ok (done found)
+    else ok (cont at1)
+  else ok (done none)
+
+/-- [noble_contracts::source::declared::state::namespace::{noble_contracts::source::declared::state::ModuleSession}::resolve_type]: loop 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace.rs', lines 32:12-39:13
+    Visibility: public -/
+@[rust_loop]
+def source.declared.state.namespace.ModuleSession.resolve_type_loop0
+  (v : alloc.vec.Vec source.declared.Module)
+  (v1 : alloc.vec.Vec source.declared.Alias) (module : Str)
+  («at» : Std.Usize) :
+  Result (Option source.declared.Module)
+  := do
+  loop
+    (fun at1 =>
+      source.declared.state.namespace.ModuleSession.resolve_type_loop0.body v
+      v1 module at1)
+    «at»
+
+/-- [noble_contracts::source::declared::state::namespace::{noble_contracts::source::declared::state::ModuleSession}::resolve_type]: loop body 1:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace.rs', lines 45:12-52:13
+    Visibility: public -/
+@[rust_loop_body]
+def source.declared.state.namespace.ModuleSession.resolve_type_loop1.body
+  (type_name : Str) (entry : source.declared.Module) («at» : Std.Usize) :
+  Result (ControlFlow Std.Usize (Option noble_kernel.types.Ty))
+  := do
+  let i := alloc.vec.Vec.len entry.exports
+  if «at» < i
+  then
+    let «export» ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        source.declared.Export) entry.exports «at»
+    let b ←
+      alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq «export».name
+        type_name
+    if b
+    then
+      let ty ←
+        core.option.Option.Insts.CoreCloneClone.clone
+          noble_kernel.types.Ty.Insts.CoreCloneClone «export».ty
+      ok (done ty)
+    else let at1 ← «at» + 1#usize
+         ok (cont at1)
+  else ok (done none)
+
+/-- [noble_contracts::source::declared::state::namespace::{noble_contracts::source::declared::state::ModuleSession}::resolve_type]: loop 1:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace.rs', lines 45:12-52:13
+    Visibility: public -/
+@[rust_loop]
+def source.declared.state.namespace.ModuleSession.resolve_type_loop1
+  (type_name : Str) (entry : source.declared.Module) («at» : Std.Usize) :
+  Result (Option noble_kernel.types.Ty)
+  := do
+  loop
+    (fun at1 =>
+      source.declared.state.namespace.ModuleSession.resolve_type_loop1.body
+      type_name entry at1)
+    «at»
+
+/-- [noble_contracts::source::declared::state::namespace::{noble_contracts::source::declared::state::ModuleSession}::resolve_type]: loop body 2:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace.rs', lines 20:12-27:13
+    Visibility: public -/
+@[rust_loop_body]
+def source.declared.state.namespace.ModuleSession.resolve_type_loop2.body
+  (self : source.declared.state.ModuleSession) («name» : Str)
+  (version : Std.U32) («at» : Std.Usize) :
+  Result (ControlFlow Std.Usize (Option source.declared.Module))
+  := do
+  let i := alloc.vec.Vec.len self.modules
+  if «at» < i
+  then
+    let entry ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        source.declared.Module) self.modules «at»
+    let b ←
+      alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq entry.name
+        «name»
+    if b
+    then
+      if entry.version = version
+      then ok (done (some entry))
+      else let at1 ← «at» + 1#usize
+           ok (cont at1)
+    else let at1 ← «at» + 1#usize
+         ok (cont at1)
+  else ok (done none)
+
+/-- [noble_contracts::source::declared::state::namespace::{noble_contracts::source::declared::state::ModuleSession}::resolve_type]: loop 2:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace.rs', lines 20:12-27:13
+    Visibility: public -/
+@[rust_loop]
+def source.declared.state.namespace.ModuleSession.resolve_type_loop2
+  (self : source.declared.state.ModuleSession) («name» : Str)
+  (version : Std.U32) («at» : Std.Usize) :
+  Result (Option source.declared.Module)
+  := do
+  loop
+    (fun at1 =>
+      source.declared.state.namespace.ModuleSession.resolve_type_loop2.body
+      self «name» version at1)
+    «at»
+
+/-- [noble_contracts::source::declared::state::namespace::{noble_contracts::source::declared::state::ModuleSession}::resolve_type]: loop body 3:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace.rs', lines 45:12-52:13
+    Visibility: public -/
+@[rust_loop_body]
+def source.declared.state.namespace.ModuleSession.resolve_type_loop3.body
+  (type_name : Str) (entry : source.declared.Module) («at» : Std.Usize) :
+  Result (ControlFlow Std.Usize (Option noble_kernel.types.Ty))
+  := do
+  let i := alloc.vec.Vec.len entry.exports
+  if «at» < i
+  then
+    let «export» ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        source.declared.Export) entry.exports «at»
+    let b ←
+      alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq «export».name
+        type_name
+    if b
+    then
+      let ty ←
+        core.option.Option.Insts.CoreCloneClone.clone
+          noble_kernel.types.Ty.Insts.CoreCloneClone «export».ty
+      ok (done ty)
+    else let at1 ← «at» + 1#usize
+         ok (cont at1)
+  else ok (done none)
+
+/-- [noble_contracts::source::declared::state::namespace::{noble_contracts::source::declared::state::ModuleSession}::resolve_type]: loop 3:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace.rs', lines 45:12-52:13
+    Visibility: public -/
+@[rust_loop]
+def source.declared.state.namespace.ModuleSession.resolve_type_loop3
+  (type_name : Str) (entry : source.declared.Module) («at» : Std.Usize) :
+  Result (Option noble_kernel.types.Ty)
+  := do
+  loop
+    (fun at1 =>
+      source.declared.state.namespace.ModuleSession.resolve_type_loop3.body
+      type_name entry at1)
+    «at»
+
+/-- [noble_contracts::source::declared::state::namespace::{noble_contracts::source::declared::state::ModuleSession}::resolve_type]:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace.rs', lines 4:4-60:5
+    Visibility: public -/
+def source.declared.state.namespace.ModuleSession.resolve_type
+  (self : source.declared.state.ModuleSession) (spelling : Str) :
+  Result (core.result.Result noble_kernel.types.Ty source.Error)
+  := do
+  let o ← source.declared.split_once_ascii spelling 46#u8
+  let r ←
+    core.option.Option.ok_or_else
+      source.declared.state.namespace.ModuleSession.resolve_type.closure_1.Insts.CoreOpsFunctionFnOnceTupleError
+      o ()
+  match r with
+  | core.result.Result.Ok p =>
+    let (module, type_name) := p
+    let o1 ← source.declared.split_once_ascii module 64#u8
+    match o1 with
+    | none =>
+      let «at» := alloc.vec.Vec.len self.aliases
+      let located ←
+        source.declared.state.namespace.ModuleSession.resolve_type_loop0
+          self.modules self.aliases module «at»
+      match located with
+      | none =>
+        core.option.Option.ok_or_else
+          source.declared.state.namespace.ModuleSession.resolve_type.closure.Insts.CoreOpsFunctionFnOnceTupleError
+          none ()
+      | some entry =>
+        let ty ←
+          source.declared.state.namespace.ModuleSession.resolve_type_loop1
+            type_name entry 0#usize
+        core.option.Option.ok_or_else
+          source.declared.state.namespace.ModuleSession.resolve_type.closure.Insts.CoreOpsFunctionFnOnceTupleError
+          ty ()
+    | some p1 =>
+      let («name», version) := p1
+      let r1 ←
+        core.str.Str.parse U32.Insts.CoreStrTraitsFromStrParseIntError version
+      let r2 ←
+        core.result.Result.map_err
+          source.declared.state.namespace.ModuleSession.resolve_type.closure_2.Insts.CoreOpsFunctionFnOnceTupleParseIntErrorError
+          r1 ()
+      match r2 with
+      | core.result.Result.Ok value =>
+        let located ←
+          source.declared.state.namespace.ModuleSession.resolve_type_loop2 self
+            «name» value 0#usize
+        match located with
+        | none =>
+          core.option.Option.ok_or_else
+            source.declared.state.namespace.ModuleSession.resolve_type.closure.Insts.CoreOpsFunctionFnOnceTupleError
+            none ()
+        | some entry =>
+          let ty ←
+            source.declared.state.namespace.ModuleSession.resolve_type_loop3
+              type_name entry 0#usize
+          core.option.Option.ok_or_else
+            source.declared.state.namespace.ModuleSession.resolve_type.closure.Insts.CoreOpsFunctionFnOnceTupleError
+            ty ()
+      | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::source::declared::state::namespace::{noble_contracts::source::declared::state::ModuleSession}::bindings]:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace.rs', lines 62:4-64:5
+    Visibility: public -/
+def source.declared.state.namespace.ModuleSession.bindings
+  (self : source.declared.state.ModuleSession) :
+  Result (Slice source.declared.BoundOperation)
+  := do
+  ok (alloc.vec.Vec.deref self.bindings)
+
+/-- [noble_contracts::source::declared::state::namespace::{noble_contracts::source::declared::state::ModuleSession}::retained::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_contracts::source::Error> for noble_contracts::source::declared::state::namespace::{noble_contracts::source::declared::state::ModuleSession}::retained::{closure#1}}::call_once]:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace.rs', lines 92:73-97:9 -/
+def
+  source.declared.state.namespace.ModuleSession.retained.closure_1.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorError.call_once
+  (c : source.declared.state.namespace.ModuleSession.retained.closure_1)
+  (tupled_args : core.num.error.TryFromIntError) :
+  Result source.Error
+  := do
+  source.declared.error source.Stage.Check (toStr
+    "retained byte limit exceeds the host address space")
+
+/-- Trait implementation: [noble_contracts::source::declared::state::namespace::{noble_contracts::source::declared::state::ModuleSession}::retained::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_contracts::source::Error> for noble_contracts::source::declared::state::namespace::{noble_contracts::source::declared::state::ModuleSession}::retained::{closure#1}}]
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace.rs', lines 92:73-97:9 -/
+@[reducible]
+def
+  source.declared.state.namespace.ModuleSession.retained.closure_1.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorError
+  : core.ops.function.FnOnce
+  source.declared.state.namespace.ModuleSession.retained.closure_1
+  core.num.error.TryFromIntError source.Error := {
+  call_once :=
+    source.declared.state.namespace.ModuleSession.retained.closure_1.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorError.call_once
+}
+
+/-- [noble_contracts::source::declared::state::namespace::{noble_contracts::source::declared::state::ModuleSession}::retained::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::declared::state::namespace::{noble_contracts::source::declared::state::ModuleSession}::retained::{closure}}::call_once]:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace.rs', lines 88:24-91:13 -/
+def
+  source.declared.state.namespace.ModuleSession.retained.closure.Insts.CoreOpsFunctionFnOnceTupleError.call_once
+  (c : source.declared.state.namespace.ModuleSession.retained.closure)
+  (_ : Unit) :
+  Result source.Error
+  := do
+  source.declared.error source.Stage.Check (toStr
+    "retained namespace byte count overflow")
+
+/-- Trait implementation: [noble_contracts::source::declared::state::namespace::{noble_contracts::source::declared::state::ModuleSession}::retained::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::declared::state::namespace::{noble_contracts::source::declared::state::ModuleSession}::retained::{closure}}]
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace.rs', lines 88:24-91:13 -/
+@[reducible]
+def
+  source.declared.state.namespace.ModuleSession.retained.closure.Insts.CoreOpsFunctionFnOnceTupleError
+  : core.ops.function.FnOnce
+  source.declared.state.namespace.ModuleSession.retained.closure Unit
+  source.Error := {
+  call_once :=
+    source.declared.state.namespace.ModuleSession.retained.closure.Insts.CoreOpsFunctionFnOnceTupleError.call_once
+}
+
+/-- [noble_contracts::source::declared::state::namespace::{noble_contracts::source::declared::state::ModuleSession}::retained]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace.rs', lines 70:8-79:9 -/
+@[rust_loop_body]
+def source.declared.state.namespace.ModuleSession.retained_loop.body
+  (self : source.declared.state.ModuleSession) (module_bytes : Std.Usize)
+  (index1 : Std.Usize) :
+  Result (ControlFlow (Std.Usize × Std.Usize) (source.Session × Std.Usize ×
+    Bool))
+  := do
+  let i := alloc.vec.Vec.len self.modules
+  if index1 < i
+  then
+    let m ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        source.declared.Module) self.modules index1
+    let i1 := alloc.vec.Vec.len m.source
+    let o ← lift (Usize.checked_add module_bytes i1)
+    match o with
+    | none => ok (done (self.source, module_bytes, true))
+    | some total => let index2 ← index1 + 1#usize
+                    ok (cont (total, index2))
+  else ok (done (self.source, module_bytes, false))
+
+/-- [noble_contracts::source::declared::state::namespace::{noble_contracts::source::declared::state::ModuleSession}::retained]: loop 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace.rs', lines 70:8-79:9 -/
+@[rust_loop]
+def source.declared.state.namespace.ModuleSession.retained_loop
+  (self : source.declared.state.ModuleSession) (module_bytes : Std.Usize)
+  (index1 : Std.Usize) :
+  Result (source.Session × Std.Usize × Bool)
+  := do
+  loop
+    (fun (module_bytes1, index2) =>
+      source.declared.state.namespace.ModuleSession.retained_loop.body self
+      module_bytes1 index2)
+    (module_bytes, index1)
+
+/-- [noble_contracts::source::declared::state::namespace::{noble_contracts::source::declared::state::ModuleSession}::retained]:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace.rs', lines 66:4-105:5 -/
+def source.declared.state.namespace.ModuleSession.retained
+  (self : source.declared.state.ModuleSession) (limits : Limits) :
+  Result (core.result.Result Unit source.Error)
+  := do
+  let (s, module_bytes, has_overflow) ←
+    source.declared.state.namespace.ModuleSession.retained_loop self 0#usize
+      0#usize
+  if has_overflow
+  then
+    let e ←
+      source.declared.error source.Stage.Check (toStr
+        "retained module byte count overflow")
+    ok (core.result.Result.Err e)
+  else
+    let i := alloc.vec.Vec.len s.history
+    let o ← lift (Usize.checked_add module_bytes i)
+    let r ←
+      core.option.Option.ok_or_else
+        source.declared.state.namespace.ModuleSession.retained.closure.Insts.CoreOpsFunctionFnOnceTupleError
+        o ()
+    match r with
+    | core.result.Result.Ok value =>
+      let r1 ←
+        Usize.Insts.CoreConvertTryFromU32TryFromIntError.try_from limits.bytes
+      let r2 ←
+        core.result.Result.map_err
+          source.declared.state.namespace.ModuleSession.retained.closure_1.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorError
+          r1 ()
+      match r2 with
+      | core.result.Result.Ok value1 =>
+        if value > value1
+        then
+          let e ←
+            source.declared.error source.Stage.Check (toStr
+              "retained module and definition byte limit exceeded")
+          ok (core.result.Result.Err e)
+        else ok (core.result.Result.Ok ())
+      | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+    | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::source::declared::state::namespace::{noble_contracts::source::declared::state::ModuleSession}::aliased_word_at]:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace.rs', lines 122:4-129:5 -/
+def source.declared.state.namespace.ModuleSession.aliased_word_at
+  (self : source.declared.state.ModuleSession) (alias_at : Std.Usize)
+  («name» : Str) :
+  Result Bool
+  := do
+  let «alias» ←
+    alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+      source.declared.Alias) self.aliases alias_at
+  let s := alloc.vec.Vec.deref self.modules
+  let o ←
+    core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice
+      source.declared.Module) s «alias».module
+  match o with
+  | none => ok false
+  | some module =>
+    let s1 ← alloc.string.String.as_bytes «alias».spelling
+    source.declared.links.alias_word module s1 «name»
+
+/-- [noble_contracts::source::declared::state::namespace::{noble_contracts::source::declared::state::ModuleSession}::reserved_word]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace.rs', lines 110:8-113:9 -/
+@[rust_loop_body]
+def source.declared.state.namespace.ModuleSession.reserved_word_loop0.body
+  (self : source.declared.state.ModuleSession) («name» : Str)
+  (alias_at : Std.Usize) (is_found : Bool) :
+  Result (ControlFlow (Std.Usize × Bool) ((alloc.vec.Vec
+    source.declared.Module) × Bool))
+  := do
+  let i := alloc.vec.Vec.len self.aliases
+  if alias_at < i
+  then
+    if is_found
+    then ok (done (self.modules, true))
+    else
+      let is_found1 ←
+        source.declared.state.namespace.ModuleSession.aliased_word_at self
+          alias_at «name»
+      let alias_at1 ← alias_at + 1#usize
+      ok (cont (alias_at1, is_found1))
+  else ok (done (self.modules, is_found))
+
+/-- [noble_contracts::source::declared::state::namespace::{noble_contracts::source::declared::state::ModuleSession}::reserved_word]: loop 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace.rs', lines 110:8-113:9 -/
+@[rust_loop]
+def source.declared.state.namespace.ModuleSession.reserved_word_loop0
+  (self : source.declared.state.ModuleSession) («name» : Str)
+  (alias_at : Std.Usize) (is_found : Bool) :
+  Result ((alloc.vec.Vec source.declared.Module) × Bool)
+  := do
+  loop
+    (fun (alias_at1, is_found1) =>
+      source.declared.state.namespace.ModuleSession.reserved_word_loop0.body
+      self «name» alias_at1 is_found1)
+    (alias_at, is_found)
+
+/-- [noble_contracts::source::declared::state::namespace::{noble_contracts::source::declared::state::ModuleSession}::reserved_word]: loop body 1:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace.rs', lines 115:8-118:9 -/
+@[rust_loop_body]
+def source.declared.state.namespace.ModuleSession.reserved_word_loop1.body
+  (v : alloc.vec.Vec source.declared.Module) («name» : Str) (is_found : Bool)
+  (module_at : Std.Usize) :
+  Result (ControlFlow (Bool × Std.Usize) Bool)
+  := do
+  let i := alloc.vec.Vec.len v
+  if module_at < i
+  then
+    if is_found
+    then ok (done true)
+    else
+      let m ←
+        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+          source.declared.Module) v module_at
+      let is_found1 ← source.declared.links.module_word m «name»
+      let module_at1 ← module_at + 1#usize
+      ok (cont (is_found1, module_at1))
+  else ok (done is_found)
+
+/-- [noble_contracts::source::declared::state::namespace::{noble_contracts::source::declared::state::ModuleSession}::reserved_word]: loop 1:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace.rs', lines 115:8-118:9 -/
+@[rust_loop]
+def source.declared.state.namespace.ModuleSession.reserved_word_loop1
+  (v : alloc.vec.Vec source.declared.Module) («name» : Str) (is_found : Bool)
+  (module_at : Std.Usize) :
+  Result Bool
+  := do
+  loop
+    (fun (is_found1, module_at1) =>
+      source.declared.state.namespace.ModuleSession.reserved_word_loop1.body v
+      «name» is_found1 module_at1)
+    (is_found, module_at)
+
+/-- [noble_contracts::source::declared::state::namespace::{noble_contracts::source::declared::state::ModuleSession}::reserved_word]:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace.rs', lines 107:4-120:5 -/
+def source.declared.state.namespace.ModuleSession.reserved_word
+  (self : source.declared.state.ModuleSession) («name» : Str) :
+  Result Bool
+  := do
+  let (v, is_found) ←
+    source.declared.state.namespace.ModuleSession.reserved_word_loop0 self
+      «name» 0#usize false
+  source.declared.state.namespace.ModuleSession.reserved_word_loop1 v «name»
+    is_found 0#usize
+
+/-- [noble_contracts::source::declared::MODULE_CAP]
+    Source: 'crates/noble-contracts/src/source/declared.rs', lines 10:0-10:30 -/
+@[global_simps, irreducible]
+def source.declared.MODULE_CAP : Std.Usize := 128#usize
+
+/-- [noble_contracts::source::declared::state::namespace::{noble_contracts::source::declared::state::ModuleSession}::alias_conflicts]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace.rs', lines 168:8-175:9 -/
+@[rust_loop_body]
+def source.declared.state.namespace.ModuleSession.alias_conflicts_loop.body
+  (self : source.declared.state.ModuleSession) (index1 : Std.Usize)
+  («alias» : Str) («at» : Std.Usize) (is_conflicting : Bool) :
+  Result (ControlFlow (Std.Usize × Bool) Bool)
+  := do
+  let i := alloc.vec.Vec.len self.source.definitions
+  if «at» < i
+  then
+    if is_conflicting
+    then ok (done true)
+    else
+      let m ←
+        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+          source.declared.Module) self.modules index1
+      let n ←
+        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+          source.Named) self.source.definitions «at»
+      let is_conflicting1 ←
+        source.declared.links.alias_conflicts_definition m «alias» n
+      let at1 ← «at» + 1#usize
+      ok (cont (at1, is_conflicting1))
+  else ok (done is_conflicting)
+
+/-- [noble_contracts::source::declared::state::namespace::{noble_contracts::source::declared::state::ModuleSession}::alias_conflicts]: loop 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace.rs', lines 168:8-175:9 -/
+@[rust_loop]
+def source.declared.state.namespace.ModuleSession.alias_conflicts_loop
+  (self : source.declared.state.ModuleSession) (index1 : Std.Usize)
+  («alias» : Str) («at» : Std.Usize) (is_conflicting : Bool) :
+  Result Bool
+  := do
+  loop
+    (fun (at1, is_conflicting1) =>
+      source.declared.state.namespace.ModuleSession.alias_conflicts_loop.body
+      self index1 «alias» at1 is_conflicting1)
+    («at», is_conflicting)
+
+/-- [noble_contracts::source::declared::state::namespace::{noble_contracts::source::declared::state::ModuleSession}::alias_conflicts]:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace.rs', lines 165:4-177:5 -/
+@[reducible]
+def source.declared.state.namespace.ModuleSession.alias_conflicts
+  (self : source.declared.state.ModuleSession) (index1 : Std.Usize)
+  («alias» : Str) :
+  Result Bool
+  := do
+  source.declared.state.namespace.ModuleSession.alias_conflicts_loop self
+    index1 «alias» 0#usize false
+
+/-- [noble_contracts::source::declared::state::namespace::{noble_contracts::source::declared::state::ModuleSession}::import::{impl core::ops::function::FnMut<(&'_ noble_contracts::source::declared::Alias,), bool> for noble_contracts::source::declared::state::namespace::{noble_contracts::source::declared::state::ModuleSession}::import::{closure}<'_0>}::call_mut]:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace.rs', lines 151:28-151:59 -/
+def
+  source.declared.state.namespace.ModuleSession.import.closure.Insts.CoreOpsFunctionFnMutTupleSharedAliasBool.call_mut
+  (c : source.declared.state.namespace.ModuleSession.import.closure)
+  (tupled_args : source.declared.Alias) :
+  Result (Bool × source.declared.state.namespace.ModuleSession.import.closure)
+  := do
+  let b ←
+    core.cmp.PartialEq.ne.trait_default
+      alloc.string.String.Insts.CoreCmpPartialEqString tupled_args.spelling c
+  ok (b, c)
+
+/-- [noble_contracts::source::declared::state::namespace::{noble_contracts::source::declared::state::ModuleSession}::import::{impl core::ops::function::FnOnce<(&'_ noble_contracts::source::declared::Alias,), bool> for noble_contracts::source::declared::state::namespace::{noble_contracts::source::declared::state::ModuleSession}::import::{closure}<'_0>}::call_once]:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace.rs', lines 151:28-151:59 -/
+def
+  source.declared.state.namespace.ModuleSession.import.closure.Insts.CoreOpsFunctionFnOnceTupleSharedAliasBool.call_once
+  (c : source.declared.state.namespace.ModuleSession.import.closure)
+  (a : source.declared.Alias) :
+  Result Bool
+  := do
+  let (b, _) ←
+    source.declared.state.namespace.ModuleSession.import.closure.Insts.CoreOpsFunctionFnMutTupleSharedAliasBool.call_mut
+      c a
+  ok b
+
+/-- Trait implementation: [noble_contracts::source::declared::state::namespace::{noble_contracts::source::declared::state::ModuleSession}::import::{impl core::ops::function::FnOnce<(&'_ noble_contracts::source::declared::Alias,), bool> for noble_contracts::source::declared::state::namespace::{noble_contracts::source::declared::state::ModuleSession}::import::{closure}<'_0>}]
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace.rs', lines 151:28-151:59 -/
+@[reducible]
+def
+  source.declared.state.namespace.ModuleSession.import.closure.Insts.CoreOpsFunctionFnOnceTupleSharedAliasBool
+  : core.ops.function.FnOnce
+  source.declared.state.namespace.ModuleSession.import.closure
+  source.declared.Alias Bool := {
+  call_once :=
+    source.declared.state.namespace.ModuleSession.import.closure.Insts.CoreOpsFunctionFnOnceTupleSharedAliasBool.call_once
+}
+
+/-- Trait implementation: [noble_contracts::source::declared::state::namespace::{noble_contracts::source::declared::state::ModuleSession}::import::{impl core::ops::function::FnMut<(&'_ noble_contracts::source::declared::Alias,), bool> for noble_contracts::source::declared::state::namespace::{noble_contracts::source::declared::state::ModuleSession}::import::{closure}<'_0>}]
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace.rs', lines 151:28-151:59 -/
+@[reducible]
+def
+  source.declared.state.namespace.ModuleSession.import.closure.Insts.CoreOpsFunctionFnMutTupleSharedAliasBool
+  : core.ops.function.FnMut
+  source.declared.state.namespace.ModuleSession.import.closure
+  source.declared.Alias Bool := {
+  FnOnceInst :=
+    source.declared.state.namespace.ModuleSession.import.closure.Insts.CoreOpsFunctionFnOnceTupleSharedAliasBool
+  call_mut :=
+    source.declared.state.namespace.ModuleSession.import.closure.Insts.CoreOpsFunctionFnMutTupleSharedAliasBool.call_mut
+}
+
+/-- [noble_contracts::source::declared::state::namespace::{noble_contracts::source::declared::state::ModuleSession}::import::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::declared::state::namespace::{noble_contracts::source::declared::state::ModuleSession}::import::{closure#2}}::call_once]:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace.rs', lines 141:24-144:13 -/
+def
+  source.declared.state.namespace.ModuleSession.import.closure_2.Insts.CoreOpsFunctionFnOnceTupleError.call_once
+  (c : source.declared.state.namespace.ModuleSession.import.closure_2)
+  (_ : Unit) :
+  Result source.Error
+  := do
+  source.declared.error source.Stage.Resolve (toStr
+    "missing immutable module version")
+
+/-- Trait implementation: [noble_contracts::source::declared::state::namespace::{noble_contracts::source::declared::state::ModuleSession}::import::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::declared::state::namespace::{noble_contracts::source::declared::state::ModuleSession}::import::{closure#2}}]
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace.rs', lines 141:24-144:13 -/
+@[reducible]
+def
+  source.declared.state.namespace.ModuleSession.import.closure_2.Insts.CoreOpsFunctionFnOnceTupleError
+  : core.ops.function.FnOnce
+  source.declared.state.namespace.ModuleSession.import.closure_2 Unit
+  source.Error := {
+  call_once :=
+    source.declared.state.namespace.ModuleSession.import.closure_2.Insts.CoreOpsFunctionFnOnceTupleError.call_once
+}
+
+/-- [noble_contracts::source::declared::state::namespace::{noble_contracts::source::declared::state::ModuleSession}::import::{impl core::ops::function::FnMut<(&'_ noble_contracts::source::declared::Module,), bool> for noble_contracts::source::declared::state::namespace::{noble_contracts::source::declared::state::ModuleSession}::import::{closure#1}<'_0, '_1, '_2>}::call_mut]:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace.rs', lines 140:22-140:79 -/
+def
+  source.declared.state.namespace.ModuleSession.import.closure_1.Insts.CoreOpsFunctionFnMutTupleSharedModuleBool.call_mut
+  (c : source.declared.state.namespace.ModuleSession.import.closure_1)
+  (tupled_args : source.declared.Module) :
+  Result (Bool ×
+    source.declared.state.namespace.ModuleSession.import.closure_1)
+  := do
+  let (s, i) := c
+  let b ←
+    alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq tupled_args.name s
+  if b
+  then ok (tupled_args.version = i, c)
+  else ok (false, c)
+
+/-- [noble_contracts::source::declared::state::namespace::{noble_contracts::source::declared::state::ModuleSession}::import::{impl core::ops::function::FnOnce<(&'_ noble_contracts::source::declared::Module,), bool> for noble_contracts::source::declared::state::namespace::{noble_contracts::source::declared::state::ModuleSession}::import::{closure#1}<'_0, '_1, '_2>}::call_once]:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace.rs', lines 140:22-140:79 -/
+def
+  source.declared.state.namespace.ModuleSession.import.closure_1.Insts.CoreOpsFunctionFnOnceTupleSharedModuleBool.call_once
+  (c : source.declared.state.namespace.ModuleSession.import.closure_1)
+  (m : source.declared.Module) :
+  Result Bool
+  := do
+  let (b, _) ←
+    source.declared.state.namespace.ModuleSession.import.closure_1.Insts.CoreOpsFunctionFnMutTupleSharedModuleBool.call_mut
+      c m
+  ok b
+
+/-- Trait implementation: [noble_contracts::source::declared::state::namespace::{noble_contracts::source::declared::state::ModuleSession}::import::{impl core::ops::function::FnOnce<(&'_ noble_contracts::source::declared::Module,), bool> for noble_contracts::source::declared::state::namespace::{noble_contracts::source::declared::state::ModuleSession}::import::{closure#1}<'_0, '_1, '_2>}]
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace.rs', lines 140:22-140:79 -/
+@[reducible]
+def
+  source.declared.state.namespace.ModuleSession.import.closure_1.Insts.CoreOpsFunctionFnOnceTupleSharedModuleBool
+  : core.ops.function.FnOnce
+  source.declared.state.namespace.ModuleSession.import.closure_1
+  source.declared.Module Bool := {
+  call_once :=
+    source.declared.state.namespace.ModuleSession.import.closure_1.Insts.CoreOpsFunctionFnOnceTupleSharedModuleBool.call_once
+}
+
+/-- Trait implementation: [noble_contracts::source::declared::state::namespace::{noble_contracts::source::declared::state::ModuleSession}::import::{impl core::ops::function::FnMut<(&'_ noble_contracts::source::declared::Module,), bool> for noble_contracts::source::declared::state::namespace::{noble_contracts::source::declared::state::ModuleSession}::import::{closure#1}<'_0, '_1, '_2>}]
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace.rs', lines 140:22-140:79 -/
+@[reducible]
+def
+  source.declared.state.namespace.ModuleSession.import.closure_1.Insts.CoreOpsFunctionFnMutTupleSharedModuleBool
+  : core.ops.function.FnMut
+  source.declared.state.namespace.ModuleSession.import.closure_1
+  source.declared.Module Bool := {
+  FnOnceInst :=
+    source.declared.state.namespace.ModuleSession.import.closure_1.Insts.CoreOpsFunctionFnOnceTupleSharedModuleBool
+  call_mut :=
+    source.declared.state.namespace.ModuleSession.import.closure_1.Insts.CoreOpsFunctionFnMutTupleSharedModuleBool.call_mut
+}
+
+/-- [noble_contracts::source::declared::state::namespace::{noble_contracts::source::declared::state::ModuleSession}::import]:
+    Source: 'crates/noble-contracts/src/source/declared/state/namespace.rs', lines 131:4-163:5 -/
+def source.declared.state.namespace.ModuleSession.import
+  (self : source.declared.state.ModuleSession) («name» : Str)
+  (version : Std.U32) («alias» : String) :
+  Result (core.result.Result source.declared.state.ModuleSession source.Error)
+  := do
+  let s := alloc.vec.Vec.deref self.modules
+  let i ← core.slice.Slice.iter s
+  let (o, _) ←
+    core.slice.iter.Iter.Insts.CoreIterTraitsIteratorIteratorSharedAT.position
+      source.declared.state.namespace.ModuleSession.import.closure_1.Insts.CoreOpsFunctionFnMutTupleSharedModuleBool
+      i («name», version)
+  let r ←
+    core.option.Option.ok_or_else
+      source.declared.state.namespace.ModuleSession.import.closure_2.Insts.CoreOpsFunctionFnOnceTupleError
+      o ()
+  match r with
+  | core.result.Result.Ok value =>
+    let s1 ← alloc.string.String.as_str «alias»
+    let b ←
+      source.declared.state.namespace.ModuleSession.alias_conflicts self value
+        s1
+    if b
+    then
+      let e ←
+        source.declared.error source.Stage.Resolve (toStr
+          "import alias conflicts with an existing definition")
+      ok (core.result.Result.Err e)
+    else
+      let v ←
+        alloc.vec.Vec.retain Global
+          source.declared.state.namespace.ModuleSession.import.closure.Insts.CoreOpsFunctionFnMutTupleSharedAliasBool
+          self.aliases «alias»
+      let i1 := alloc.vec.Vec.len v
+      if i1 >= source.declared.MODULE_CAP
+      then
+        let e ←
+          source.declared.error source.Stage.Check (toStr
+            "module alias count exceeded")
+        ok (core.result.Result.Err e)
+      else
+        let v1 ←
+          alloc.vec.Vec.push v ({ spelling := «alias», module := value } :
+            source.declared.Alias)
+        source.declared.state.namespace.words.ModuleSession.outside_words
+          { self with aliases := v1 }
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::source::declared::{impl core::clone::Clone for noble_contracts::source::declared::Alias}::clone]:
+    Source: 'crates/noble-contracts/src/source/declared.rs', lines 49:9-49:14
+    Visibility: public -/
+def source.declared.Alias.Insts.CoreCloneClone.clone
+  (self : source.declared.Alias) : Result source.declared.Alias := do
+  let s ← alloc.string.String.Insts.CoreCloneClone.clone self.spelling
+  let i ← lift (core.clone.impls.CloneUsize.clone self.module)
+  ok { spelling := s, module := i }
+
+/-- Trait implementation: [noble_contracts::source::declared::{impl core::clone::Clone for noble_contracts::source::declared::Alias}]
+    Source: 'crates/noble-contracts/src/source/declared.rs', lines 49:9-49:14 -/
+@[reducible]
+def source.declared.Alias.Insts.CoreCloneClone : core.clone.Clone
+  source.declared.Alias := {
+  clone := source.declared.Alias.Insts.CoreCloneClone.clone
+}
+
+/-- [noble_contracts::source::declared::{impl core::clone::Clone for noble_contracts::source::declared::Export}::clone]:
+    Source: 'crates/noble-contracts/src/source/declared.rs', lines 32:9-32:14
+    Visibility: public -/
+def source.declared.Export.Insts.CoreCloneClone.clone
+  (self : source.declared.Export) : Result source.declared.Export := do
+  let s ← alloc.string.String.Insts.CoreCloneClone.clone self.name
+  let o ←
+    core.option.Option.Insts.CoreCloneClone.clone
+      noble_kernel.types.Ty.Insts.CoreCloneClone self.ty
+  let v ←
+    alloc.vec.CloneVec.clone (BuiltinClone (String × source.Target))
+      self.words
+  ok { «name» := s, ty := o, words := v }
+
+/-- Trait implementation: [noble_contracts::source::declared::{impl core::clone::Clone for noble_contracts::source::declared::Export}]
+    Source: 'crates/noble-contracts/src/source/declared.rs', lines 32:9-32:14 -/
+@[reducible]
+def source.declared.Export.Insts.CoreCloneClone : core.clone.Clone
+  source.declared.Export := {
+  clone := source.declared.Export.Insts.CoreCloneClone.clone
+}
+
+/-- [noble_contracts::source::declared::{impl core::clone::Clone for noble_contracts::source::declared::Module}::clone]:
+    Source: 'crates/noble-contracts/src/source/declared.rs', lines 39:9-39:14
+    Visibility: public -/
+def source.declared.Module.Insts.CoreCloneClone.clone
+  (self : source.declared.Module) : Result source.declared.Module := do
+  let s ← alloc.string.String.Insts.CoreCloneClone.clone self.name
+  let i ← lift (core.clone.impls.CloneU32.clone self.version)
+  let i1 ← lift (core.clone.impls.CloneU64.clone self.identity)
+  let v ←
+    alloc.vec.CloneVec.clone source.declared.Export.Insts.CoreCloneClone
+      self.exports
+  let o ←
+    core.option.Option.Insts.CoreCloneClone.clone core.clone.CloneU32
+      self.adapter_slot
+  let v1 ← alloc.vec.CloneVec.clone core.clone.CloneU8 self.source
+  ok
+    {
+      «name» := s,
+      version := i,
+      identity := i1,
+      exports := v,
+      adapter_slot := o,
+      source := v1
+    }
+
+/-- Trait implementation: [noble_contracts::source::declared::{impl core::clone::Clone for noble_contracts::source::declared::Module}]
+    Source: 'crates/noble-contracts/src/source/declared.rs', lines 39:9-39:14 -/
+@[reducible]
+def source.declared.Module.Insts.CoreCloneClone : core.clone.Clone
+  source.declared.Module := {
+  clone := source.declared.Module.Insts.CoreCloneClone.clone
+}
+
+/-- [noble_contracts::source::{impl core::clone::Clone for noble_contracts::source::Target}::clone]:
+    Source: 'crates/noble-contracts/src/source.rs', lines 46:9-46:14
+    Visibility: public -/
+def source.Target.Insts.CoreCloneClone.clone
+  (self : source.Target) : Result source.Target := do
+  ok self
+
+/-- [noble_contracts::source::{impl core::clone::Clone for noble_contracts::source::Kind}::clone]:
+    Source: 'crates/noble-contracts/src/source.rs', lines 52:9-52:14
+    Visibility: public -/
+def source.Kind.Insts.CoreCloneClone.clone
+  (self : source.Kind) : Result source.Kind := do
+  match self with
+  | source.Kind.Literal __self_0 =>
+    let l ← noble_kernel.untrusted.Lit.Insts.CoreCloneClone.clone __self_0
+    ok (source.Kind.Literal l)
+  | source.Kind.Text __self_0 =>
+    let v ← alloc.vec.CloneVec.clone core.clone.CloneU8 __self_0
+    ok (source.Kind.Text v)
+  | source.Kind.Word __self_0 =>
+    let v ← alloc.vec.CloneVec.clone core.clone.CloneU8 __self_0
+    ok (source.Kind.Word v)
+  | source.Kind.Call __self_0 =>
+    let t ← source.Target.Insts.CoreCloneClone.clone __self_0
+    ok (source.Kind.Call t)
+  | source.Kind.Quotation __self_0 =>
+    let v ← alloc.vec.CloneVec.clone core.clone.CloneU32 __self_0
+    ok (source.Kind.Quotation v)
+
+/-- [noble_contracts::source::{impl core::clone::Clone for noble_contracts::source::Node}::clone]:
+    Source: 'crates/noble-contracts/src/source.rs', lines 61:9-61:14
+    Visibility: public -/
+def source.Node.Insts.CoreCloneClone.clone
+  (self : source.Node) : Result source.Node := do
+  let k ← source.Kind.Insts.CoreCloneClone.clone self.kind
+  let s ← Span.Insts.CoreCloneClone.clone self.span
+  ok { kind := k, span := s }
+
+/-- Trait implementation: [noble_contracts::source::{impl core::clone::Clone for noble_contracts::source::Node}]
+    Source: 'crates/noble-contracts/src/source.rs', lines 61:9-61:14 -/
+@[reducible]
+def source.Node.Insts.CoreCloneClone : core.clone.Clone source.Node := {
+  clone := source.Node.Insts.CoreCloneClone.clone
+}
+
+/-- [noble_contracts::source::{impl core::clone::Clone for noble_contracts::source::Tree}::clone]:
+    Source: 'crates/noble-contracts/src/source.rs', lines 67:9-67:14
+    Visibility: public -/
+def source.Tree.Insts.CoreCloneClone.clone
+  (self : source.Tree) : Result source.Tree := do
+  let v ←
+    alloc.vec.CloneVec.clone source.Node.Insts.CoreCloneClone self.nodes
+  let v1 ← alloc.vec.CloneVec.clone core.clone.CloneU32 self.body
+  let s ← Span.Insts.CoreCloneClone.clone self.span
+  ok { nodes := v, body := v1, span := s }
+
+/-- [noble_contracts::source::{impl core::clone::Clone for noble_contracts::source::Named}::clone]:
+    Source: 'crates/noble-contracts/src/source.rs', lines 87:9-87:14
+    Visibility: public -/
+def source.Named.Insts.CoreCloneClone.clone
+  (self : source.Named) : Result source.Named := do
+  let s ← alloc.string.String.Insts.CoreCloneClone.clone self.name
+  let i ← lift (core.clone.impls.CloneU64.clone self.identity)
+  let o ←
+    core.option.Option.Insts.CoreCloneClone.clone core.clone.CloneU64
+      self.owner
+  let t ← source.Tree.Insts.CoreCloneClone.clone self.tree
+  ok { «name» := s, identity := i, owner := o, tree := t }
+
+/-- Trait implementation: [noble_contracts::source::{impl core::clone::Clone for noble_contracts::source::Named}]
+    Source: 'crates/noble-contracts/src/source.rs', lines 87:9-87:14 -/
+@[reducible]
+def source.Named.Insts.CoreCloneClone : core.clone.Clone source.Named := {
+  clone := source.Named.Insts.CoreCloneClone.clone
+}
+
+/-- [noble_contracts::source::declared::{impl core::clone::Clone for noble_contracts::source::declared::Context}::clone]:
+    Source: 'crates/noble-contracts/src/source/declared.rs', lines 25:9-25:14
+    Visibility: public -/
+def source.declared.Context.Insts.CoreCloneClone.clone
+  (self : source.declared.Context) : Result source.declared.Context := do
+  let e ←
+    noble_kernel.contracts.Env.Insts.CoreCloneClone.clone self.environment
+  let v ←
+    alloc.vec.CloneVec.clone (BuiltinClone (String × source.Target))
+      self.words
+  let o ←
+    core.option.Option.Insts.CoreCloneClone.clone core.clone.CloneU64
+      self.owner
+  ok { environment := e, words := v, owner := o }
+
+/-- Trait implementation: [noble_contracts::source::declared::{impl core::clone::Clone for noble_contracts::source::declared::Context}]
+    Source: 'crates/noble-contracts/src/source/declared.rs', lines 25:9-25:14 -/
+@[reducible]
+def source.declared.Context.Insts.CoreCloneClone : core.clone.Clone
+  source.declared.Context := {
+  clone := source.declared.Context.Insts.CoreCloneClone.clone
+}
+
+/-- [noble_contracts::source::declared::{impl core::clone::Clone for noble_contracts::source::declared::BoundOperation}::clone]:
+    Source: 'crates/noble-contracts/src/source/declared.rs', lines 13:9-13:14
+    Visibility: public -/
+def source.declared.BoundOperation.Insts.CoreCloneClone.clone
+  (self : source.declared.BoundOperation) :
+  Result source.declared.BoundOperation
+  := do
+  let s ← alloc.string.String.Insts.CoreCloneClone.clone self.module_name
+  let i ← lift (core.clone.impls.CloneU32.clone self.module_version)
+  let s1 ← alloc.string.String.Insts.CoreCloneClone.clone self.operation
+  let s2 ←
+    alloc.string.String.Insts.CoreCloneClone.clone self.adapter_identity
+  let i1 ← lift (core.clone.impls.CloneU32.clone self.adapter_slot)
+  let v ←
+    alloc.vec.CloneVec.clone noble_kernel.types.Ty.Insts.CoreCloneClone
+      self.input
+  let v1 ←
+    alloc.vec.CloneVec.clone noble_kernel.types.Ty.Insts.CoreCloneClone
+      self.output
+  let v2 ←
+    alloc.vec.CloneVec.clone noble_kernel.types.EffId.Insts.CoreCloneClone
+      self.effects
+  ok
+    {
+      module_name := s,
+      module_version := i,
+      operation := s1,
+      adapter_identity := s2,
+      adapter_slot := i1,
+      input := v,
+      output := v1,
+      effects := v2
+    }
+
+/-- Trait implementation: [noble_contracts::source::declared::{impl core::clone::Clone for noble_contracts::source::declared::BoundOperation}]
+    Source: 'crates/noble-contracts/src/source/declared.rs', lines 13:9-13:14 -/
+@[reducible]
+def source.declared.BoundOperation.Insts.CoreCloneClone : core.clone.Clone
+  source.declared.BoundOperation := {
+  clone := source.declared.BoundOperation.Insts.CoreCloneClone.clone
+}
+
+/-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModuleSession}::snapshot]:
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 231:4-246:5 -/
+def source.declared.state.ModuleSession.snapshot
+  (self : source.declared.state.ModuleSession) :
+  Result source.declared.state.ModuleSession
+  := do
+  let v ←
+    alloc.vec.CloneVec.clone source.Named.Insts.CoreCloneClone
+      self.source.definitions
+  let v1 ← alloc.vec.CloneVec.clone core.clone.CloneU8 self.source.history
+  let o ←
+    core.option.Option.Insts.CoreCloneClone.clone
+      source.declared.Context.Insts.CoreCloneClone self.source.declared
+  let v2 ←
+    alloc.vec.CloneVec.clone
+      source.declared.BoundOperation.Insts.CoreCloneClone self.bindings
+  let v3 ←
+    alloc.vec.CloneVec.clone source.declared.Module.Insts.CoreCloneClone
+      self.modules
+  let v4 ←
+    alloc.vec.CloneVec.clone source.declared.Alias.Insts.CoreCloneClone
+      self.aliases
+  ok
+    {
+      self
+        with
+        bindings := v2,
+        modules := v3,
+        aliases := v4,
+        source :=
+          {
+            self.source
+              with
+              definitions := v,
+              history := v1,
+              hosts := false,
+              bindings := none,
+              declared := o
+          }
+    }
+
+/-- [noble_contracts::source::{noble_contracts::source::Session}::is_current_namespace]:
+    Source: 'crates/noble-contracts/src/source.rs', lines 232:4-244:5 -/
+def source.Session.is_current_namespace
+  (self : source.Session) (prepared : source.Prepared) : Result Bool := do
+  if prepared.generation != self.generation
+  then ok false
+  else
+    if prepared.hosts != self.hosts
+    then ok false
+    else
+      let b ←
+        alloc.vec.partial_eq.PartialEqVec.ne core.cmp.PartialEqU8
+          prepared.history self.history
+      if b
+      then ok false
+      else
+        match self.bindings with
+        | none =>
+          match prepared.boundary with
+          | none => ok true
+          | some _ => ok false
+        | some bindings =>
+          match prepared.boundary with
+          | none => ok false
+          | some boundary =>
+            alloc.vec.partial_eq.PartialEqVec.eq core.cmp.PartialEqU8
+              bindings.key boundary
+
+/-- [noble_contracts::source::{noble_contracts::source::Session}::commit]:
+    Source: 'crates/noble-contracts/src/source.rs', lines 200:4-226:5
+    Visibility: public -/
+def source.Session.commit
+  (self : source.Session) (prepared : source.Prepared) :
+  Result ((core.result.Result Unit source.Error) × source.Session)
+  := do
+  let b ← source.Session.is_current_namespace self prepared
+  if b
+  then
+    let o ← lift (U64.checked_add self.generation 1#u64)
+    match o with
+    | none =>
+      let d ←
+        source.exhausted { start := 0#u32, «end» := 0#u32 } (toStr
+          "session generation limit exceeded")
+      let e ← source.Error.at source.Stage.Acceptance d
+      ok (core.result.Result.Err e, self)
+    | some next =>
+      match prepared.definition with
+      | none => ok (core.result.Result.Ok (), { self with generation := next })
+      | some definition =>
+        let v ← alloc.vec.Vec.push self.definitions definition
+        let s := alloc.vec.Vec.deref prepared.addition
+        let v1 ←
+          alloc.vec.Vec.extend_from_slice core.clone.CloneU8 self.history s
+        ok (core.result.Result.Ok (),
+          { self with definitions := v, history := v1, generation := next })
+  else
+    let d ←
+      invalid { start := 0#u32, «end» := 0#u32 } (toStr
+        "stale preparation belongs to a different namespace snapshot")
+    let e ← source.Error.at source.Stage.Acceptance d
+    ok (core.result.Result.Err e, self)
+
+/-- [noble_contracts::source::declared::state::{impl core::cmp::PartialEq<noble_contracts::source::declared::state::ModuleKind> for noble_contracts::source::declared::state::ModuleKind}::eq]:
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 16:29-16:38
+    Visibility: public -/
+def source.declared.state.ModuleKind.Insts.CoreCmpPartialEqModuleKind.eq
+  (self : source.declared.state.ModuleKind)
+  (other : source.declared.state.ModuleKind) :
+  Result Bool
+  := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  ok (self1 = other1)
+
+/-- [noble_contracts::source::declared::state::register::retained_bytes]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/register.rs', lines 105:4-108:5 -/
+@[rust_loop_body]
+def source.declared.state.register.retained_bytes_loop.body
+  (session : source.declared.state.ModuleSession) (bytes : Std.Usize)
+  («at» : Std.Usize) :
+  Result (ControlFlow (Std.Usize × Std.Usize) Std.Usize)
+  := do
+  let i := alloc.vec.Vec.len session.modules
+  if «at» < i
+  then
+    let m ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        source.declared.Module) session.modules «at»
+    let i1 := alloc.vec.Vec.len m.source
+    let bytes1 ← lift (core.num.Usize.saturating_add bytes i1)
+    let at1 ← «at» + 1#usize
+    ok (cont (bytes1, at1))
+  else ok (done bytes)
+
+/-- [noble_contracts::source::declared::state::register::retained_bytes]: loop 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/register.rs', lines 105:4-108:5 -/
+@[rust_loop]
+def source.declared.state.register.retained_bytes_loop
+  (session : source.declared.state.ModuleSession) (bytes : Std.Usize)
+  («at» : Std.Usize) :
+  Result Std.Usize
+  := do
+  loop
+    (fun (bytes1, at1) =>
+      source.declared.state.register.retained_bytes_loop.body session bytes1
+      at1)
+    (bytes, «at»)
+
+/-- [noble_contracts::source::declared::state::register::retained_bytes]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register.rs', lines 102:0-110:1 -/
+@[reducible]
+def source.declared.state.register.retained_bytes
+  (session : source.declared.state.ModuleSession) (start : Std.Usize) :
+  Result Std.Usize
+  := do
+  source.declared.state.register.retained_bytes_loop session start 0#usize
+
+/-- [noble_contracts::source::declared::state::register::{noble_contracts::source::declared::state::ModuleSession}::register::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::declared::state::register::{noble_contracts::source::declared::state::ModuleSession}::register::{closure#3}}::call_once]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register.rs', lines 55:24-58:13 -/
+def
+  source.declared.state.register.ModuleSession.register.closure_3.Insts.CoreOpsFunctionFnOnceTupleError.call_once
+  (c : source.declared.state.register.ModuleSession.register.closure_3)
+  (_ : Unit) :
+  Result source.Error
+  := do
+  source.declared.error source.Stage.Check (toStr
+    "module identity limit exceeded")
+
+/-- Trait implementation: [noble_contracts::source::declared::state::register::{noble_contracts::source::declared::state::ModuleSession}::register::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::declared::state::register::{noble_contracts::source::declared::state::ModuleSession}::register::{closure#3}}]
+    Source: 'crates/noble-contracts/src/source/declared/state/register.rs', lines 55:24-58:13 -/
+@[reducible]
+def
+  source.declared.state.register.ModuleSession.register.closure_3.Insts.CoreOpsFunctionFnOnceTupleError
+  : core.ops.function.FnOnce
+  source.declared.state.register.ModuleSession.register.closure_3 Unit
+  source.Error := {
+  call_once :=
+    source.declared.state.register.ModuleSession.register.closure_3.Insts.CoreOpsFunctionFnOnceTupleError.call_once
+}
+
+/-- [noble_contracts::source::declared::state::register::{noble_contracts::source::declared::state::ModuleSession}::register::{impl core::ops::function::FnOnce<(u64,), core::option::Option<u64>> for noble_contracts::source::declared::state::register::{noble_contracts::source::declared::state::ModuleSession}::register::{closure#2}}::call_once]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register.rs', lines 54:22-54:42 -/
+def
+  source.declared.state.register.ModuleSession.register.closure_2.Insts.CoreOpsFunctionFnOnceTupleU64OptionU64.call_once
+  (c : source.declared.state.register.ModuleSession.register.closure_2)
+  (tupled_args : Std.U64) :
+  Result (Option Std.U64)
+  := do
+  ok (U64.checked_add tupled_args 1#u64)
+
+/-- Trait implementation: [noble_contracts::source::declared::state::register::{noble_contracts::source::declared::state::ModuleSession}::register::{impl core::ops::function::FnOnce<(u64,), core::option::Option<u64>> for noble_contracts::source::declared::state::register::{noble_contracts::source::declared::state::ModuleSession}::register::{closure#2}}]
+    Source: 'crates/noble-contracts/src/source/declared/state/register.rs', lines 54:22-54:42 -/
+@[reducible]
+def
+  source.declared.state.register.ModuleSession.register.closure_2.Insts.CoreOpsFunctionFnOnceTupleU64OptionU64
+  : core.ops.function.FnOnce
+  source.declared.state.register.ModuleSession.register.closure_2 Std.U64
+  (Option Std.U64) := {
+  call_once :=
+    source.declared.state.register.ModuleSession.register.closure_2.Insts.CoreOpsFunctionFnOnceTupleU64OptionU64.call_once
+}
+
+/-- [noble_contracts::source::declared::state::register::{noble_contracts::source::declared::state::ModuleSession}::register::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_contracts::source::Error> for noble_contracts::source::declared::state::register::{noble_contracts::source::declared::state::ModuleSession}::register::{closure#1}}::call_once]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register.rs', lines 40:86-45:9 -/
+def
+  source.declared.state.register.ModuleSession.register.closure_1.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorError.call_once
+  (c : source.declared.state.register.ModuleSession.register.closure_1)
+  (tupled_args : core.num.error.TryFromIntError) :
+  Result source.Error
+  := do
+  source.declared.error source.Stage.Check (toStr
+    "retained module source byte limit exceeds address space")
+
+/-- Trait implementation: [noble_contracts::source::declared::state::register::{noble_contracts::source::declared::state::ModuleSession}::register::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_contracts::source::Error> for noble_contracts::source::declared::state::register::{noble_contracts::source::declared::state::ModuleSession}::register::{closure#1}}]
+    Source: 'crates/noble-contracts/src/source/declared/state/register.rs', lines 40:86-45:9 -/
+@[reducible]
+def
+  source.declared.state.register.ModuleSession.register.closure_1.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorError
+  : core.ops.function.FnOnce
+  source.declared.state.register.ModuleSession.register.closure_1
+  core.num.error.TryFromIntError source.Error := {
+  call_once :=
+    source.declared.state.register.ModuleSession.register.closure_1.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorError.call_once
+}
+
+/-- [noble_contracts::source::declared::state::register::{noble_contracts::source::declared::state::ModuleSession}::register::{impl core::ops::function::FnMut<(&'_ noble_contracts::source::declared::Module,), bool> for noble_contracts::source::declared::state::register::{noble_contracts::source::declared::state::ModuleSession}::register::{closure}<'_0, '_1>}::call_mut]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register.rs', lines 32:21-32:94 -/
+def
+  source.declared.state.register.ModuleSession.register.closure.Insts.CoreOpsFunctionFnMutTupleSharedModuleBool.call_mut
+  (c : source.declared.state.register.ModuleSession.register.closure)
+  (tupled_args : source.declared.Module) :
+  Result (Bool ×
+    source.declared.state.register.ModuleSession.register.closure)
+  := do
+  let (s, i) := c
+  let b ←
+    alloc.string.String.Insts.CoreCmpPartialEqString.eq tupled_args.name s
+  if b
+  then ok (tupled_args.version = i, c)
+  else ok (false, c)
+
+/-- [noble_contracts::source::declared::state::register::{noble_contracts::source::declared::state::ModuleSession}::register::{impl core::ops::function::FnOnce<(&'_ noble_contracts::source::declared::Module,), bool> for noble_contracts::source::declared::state::register::{noble_contracts::source::declared::state::ModuleSession}::register::{closure}<'_0, '_1>}::call_once]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register.rs', lines 32:21-32:94 -/
+def
+  source.declared.state.register.ModuleSession.register.closure.Insts.CoreOpsFunctionFnOnceTupleSharedModuleBool.call_once
+  (c : source.declared.state.register.ModuleSession.register.closure)
+  (m : source.declared.Module) :
+  Result Bool
+  := do
+  let (b, _) ←
+    source.declared.state.register.ModuleSession.register.closure.Insts.CoreOpsFunctionFnMutTupleSharedModuleBool.call_mut
+      c m
+  ok b
+
+/-- Trait implementation: [noble_contracts::source::declared::state::register::{noble_contracts::source::declared::state::ModuleSession}::register::{impl core::ops::function::FnOnce<(&'_ noble_contracts::source::declared::Module,), bool> for noble_contracts::source::declared::state::register::{noble_contracts::source::declared::state::ModuleSession}::register::{closure}<'_0, '_1>}]
+    Source: 'crates/noble-contracts/src/source/declared/state/register.rs', lines 32:21-32:94 -/
+@[reducible]
+def
+  source.declared.state.register.ModuleSession.register.closure.Insts.CoreOpsFunctionFnOnceTupleSharedModuleBool
+  : core.ops.function.FnOnce
+  source.declared.state.register.ModuleSession.register.closure
+  source.declared.Module Bool := {
+  call_once :=
+    source.declared.state.register.ModuleSession.register.closure.Insts.CoreOpsFunctionFnOnceTupleSharedModuleBool.call_once
+}
+
+/-- Trait implementation: [noble_contracts::source::declared::state::register::{noble_contracts::source::declared::state::ModuleSession}::register::{impl core::ops::function::FnMut<(&'_ noble_contracts::source::declared::Module,), bool> for noble_contracts::source::declared::state::register::{noble_contracts::source::declared::state::ModuleSession}::register::{closure}<'_0, '_1>}]
+    Source: 'crates/noble-contracts/src/source/declared/state/register.rs', lines 32:21-32:94 -/
+@[reducible]
+def
+  source.declared.state.register.ModuleSession.register.closure.Insts.CoreOpsFunctionFnMutTupleSharedModuleBool
+  : core.ops.function.FnMut
+  source.declared.state.register.ModuleSession.register.closure
+  source.declared.Module Bool := {
+  FnOnceInst :=
+    source.declared.state.register.ModuleSession.register.closure.Insts.CoreOpsFunctionFnOnceTupleSharedModuleBool
+  call_mut :=
+    source.declared.state.register.ModuleSession.register.closure.Insts.CoreOpsFunctionFnMutTupleSharedModuleBool.call_mut
+}
+
+/-- [noble_contracts::source::declared::state::register::schema::names::checked_type_slots::{impl core::ops::function::FnOnce<(usize,), core::option::Option<usize>> for noble_contracts::source::declared::state::register::schema::names::checked_type_slots::{closure}}::call_once]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema/names.rs', lines 251:36-255:5 -/
+def
+  source.declared.state.register.schema.names.checked_type_slots.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeOptionUsize.call_once
+  (c : source.declared.state.register.schema.names.checked_type_slots.closure)
+  (tupled_args : Std.Usize) :
+  Result (Option Std.Usize)
+  := do
+  ok (Usize.checked_mul tupled_args 64#usize)
+
+/-- Trait implementation: [noble_contracts::source::declared::state::register::schema::names::checked_type_slots::{impl core::ops::function::FnOnce<(usize,), core::option::Option<usize>> for noble_contracts::source::declared::state::register::schema::names::checked_type_slots::{closure}}]
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema/names.rs', lines 251:36-255:5 -/
+@[reducible]
+def
+  source.declared.state.register.schema.names.checked_type_slots.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeOptionUsize
+  : core.ops.function.FnOnce
+  source.declared.state.register.schema.names.checked_type_slots.closure
+  Std.Usize (Option Std.Usize) := {
+  call_once :=
+    source.declared.state.register.schema.names.checked_type_slots.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeOptionUsize.call_once
+}
+
+/-- [noble_contracts::source::declared::state::register::schema::names::checked_type_slots]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema/names.rs', lines 250:0-263:1 -/
+def source.declared.state.register.schema.names.checked_type_slots
+  (total : Option Std.Usize) :
+  Result (core.result.Result Std.Usize source.Error)
+  := do
+  let byte_slots ←
+    core.option.Option.and_then
+      source.declared.state.register.schema.names.checked_type_slots.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeOptionUsize
+      total ()
+  match total with
+  | none =>
+    let e ←
+      source.declared.error source.Stage.Check (toStr
+        "schema name capacity overflow")
+    ok (core.result.Result.Err e)
+  | some type_slots =>
+    match byte_slots with
+    | none =>
+      let e ←
+        source.declared.error source.Stage.Check (toStr
+          "schema name capacity overflow")
+      ok (core.result.Result.Err e)
+    | some bytes =>
+      let i ← lift (IScalar.hcast .Usize core.num.Isize.MAX)
+      if bytes <= i
+      then ok (core.result.Result.Ok type_slots)
+      else
+        let e ←
+          source.declared.error source.Stage.Check (toStr
+            "schema name capacity overflow")
+        ok (core.result.Result.Err e)
+
+/-- [noble_contracts::source::declared::state::register::schema::names::module_capacity::{impl core::ops::function::FnOnce<(usize,), core::option::Option<usize>> for noble_contracts::source::declared::state::register::schema::names::module_capacity::{closure}<'_0, '_1>}::call_once]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema/names.rs', lines 240:27-240:96 -/
+def
+  source.declared.state.register.schema.names.module_capacity.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeOptionUsize.call_once
+  (c : source.declared.state.register.schema.names.module_capacity.closure)
+  (tupled_args : Std.Usize) :
+  Result (Option Std.Usize)
+  := do
+  let (ms, i) := c
+  let m ←
+    alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+      source.declared.Module) ms.modules i
+  let i1 := alloc.vec.Vec.len m.exports
+  ok (Usize.checked_add tupled_args i1)
+
+/-- Trait implementation: [noble_contracts::source::declared::state::register::schema::names::module_capacity::{impl core::ops::function::FnOnce<(usize,), core::option::Option<usize>> for noble_contracts::source::declared::state::register::schema::names::module_capacity::{closure}<'_0, '_1>}]
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema/names.rs', lines 240:27-240:96 -/
+@[reducible]
+def
+  source.declared.state.register.schema.names.module_capacity.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeOptionUsize
+  : core.ops.function.FnOnce
+  source.declared.state.register.schema.names.module_capacity.closure Std.Usize
+  (Option Std.Usize) := {
+  call_once :=
+    source.declared.state.register.schema.names.module_capacity.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeOptionUsize.call_once
+}
+
+/-- [noble_contracts::source::declared::state::register::schema::names::module_capacity]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema/names.rs', lines 238:4-242:5 -/
+@[rust_loop_body]
+def source.declared.state.register.schema.names.module_capacity_loop.body
+  (session : source.declared.state.ModuleSession) (total : Option Std.Usize)
+  (module_slot : Std.Usize) :
+  Result (ControlFlow ((Option Std.Usize) × Std.Usize) (Option Std.Usize))
+  := do
+  let i := alloc.vec.Vec.len session.modules
+  if module_slot < i
+  then
+    let total1 ←
+      core.option.Option.and_then
+        source.declared.state.register.schema.names.module_capacity.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeOptionUsize
+        total (session, module_slot)
+    let module_slot1 ← module_slot + 1#usize
+    ok (cont (total1, module_slot1))
+  else ok (done total)
+
+/-- [noble_contracts::source::declared::state::register::schema::names::module_capacity]: loop 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema/names.rs', lines 238:4-242:5 -/
+@[rust_loop]
+def source.declared.state.register.schema.names.module_capacity_loop
+  (session : source.declared.state.ModuleSession) (total : Option Std.Usize)
+  (module_slot : Std.Usize) :
+  Result (Option Std.Usize)
+  := do
+  loop
+    (fun (total1, module_slot1) =>
+      source.declared.state.register.schema.names.module_capacity_loop.body
+      session total1 module_slot1)
+    (total, module_slot)
+
+/-- [noble_contracts::source::declared::state::register::schema::names::module_capacity]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema/names.rs', lines 233:0-244:1 -/
+@[reducible]
+def source.declared.state.register.schema.names.module_capacity
+  (session : source.declared.state.ModuleSession) (total : Option Std.Usize) :
+  Result (Option Std.Usize)
+  := do
+  source.declared.state.register.schema.names.module_capacity_loop session
+    total 0#usize
+
+/-- [noble_contracts::source::declared::state::register::schema::names::alias_capacity::{impl core::ops::function::FnOnce<(usize,), core::option::Option<usize>> for noble_contracts::source::declared::state::register::schema::names::alias_capacity::{closure}<'_0>}::call_once]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema/names.rs', lines 227:31-227:71 -/
+def
+  source.declared.state.register.schema.names.alias_capacity.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeOptionUsize.call_once
+  (c : source.declared.state.register.schema.names.alias_capacity.closure)
+  (tupled_args : Std.Usize) :
+  Result (Option Std.Usize)
+  := do
+  ok (Usize.checked_add tupled_args c)
+
+/-- Trait implementation: [noble_contracts::source::declared::state::register::schema::names::alias_capacity::{impl core::ops::function::FnOnce<(usize,), core::option::Option<usize>> for noble_contracts::source::declared::state::register::schema::names::alias_capacity::{closure}<'_0>}]
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema/names.rs', lines 227:31-227:71 -/
+@[reducible]
+def
+  source.declared.state.register.schema.names.alias_capacity.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeOptionUsize
+  : core.ops.function.FnOnce
+  source.declared.state.register.schema.names.alias_capacity.closure Std.Usize
+  (Option Std.Usize) := {
+  call_once :=
+    source.declared.state.register.schema.names.alias_capacity.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeOptionUsize.call_once
+}
+
+/-- [noble_contracts::source::declared::state::register::schema::names::alias_capacity]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema/names.rs', lines 220:4-229:5 -/
+@[rust_loop_body]
+def source.declared.state.register.schema.names.alias_capacity_loop.body
+  (session : source.declared.state.ModuleSession) (total : Option Std.Usize)
+  (alias_slot : Std.Usize) :
+  Result (ControlFlow ((Option Std.Usize) × Std.Usize) (Option Std.Usize))
+  := do
+  let i := alloc.vec.Vec.len session.aliases
+  if alias_slot < i
+  then
+    let a ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        source.declared.Alias) session.aliases alias_slot
+    let i1 := alloc.vec.Vec.len session.modules
+    let entries_count ←
+      if a.module < i1
+      then
+        do
+        let m ←
+          alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+            source.declared.Module) session.modules a.module
+        ok (alloc.vec.Vec.len m.exports)
+      else ok 0#usize
+    let total1 ←
+      core.option.Option.and_then
+        source.declared.state.register.schema.names.alias_capacity.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeOptionUsize
+        total entries_count
+    let alias_slot1 ← alias_slot + 1#usize
+    ok (cont (total1, alias_slot1))
+  else ok (done total)
+
+/-- [noble_contracts::source::declared::state::register::schema::names::alias_capacity]: loop 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema/names.rs', lines 220:4-229:5 -/
+@[rust_loop]
+def source.declared.state.register.schema.names.alias_capacity_loop
+  (session : source.declared.state.ModuleSession) (total : Option Std.Usize)
+  (alias_slot : Std.Usize) :
+  Result (Option Std.Usize)
+  := do
+  loop
+    (fun (total1, alias_slot1) =>
+      source.declared.state.register.schema.names.alias_capacity_loop.body
+      session total1 alias_slot1)
+    (total, alias_slot)
+
+/-- [noble_contracts::source::declared::state::register::schema::names::alias_capacity]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema/names.rs', lines 215:0-231:1 -/
+@[reducible]
+def source.declared.state.register.schema.names.alias_capacity
+  (session : source.declared.state.ModuleSession) (total : Option Std.Usize) :
+  Result (Option Std.Usize)
+  := do
+  source.declared.state.register.schema.names.alias_capacity_loop session total
+    0#usize
+
+/-- [noble_contracts::source::declared::state::register::schema::names::capacity]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema/names.rs', lines 207:0-213:1 -/
+def source.declared.state.register.schema.names.capacity
+  (session : source.declared.state.ModuleSession) (schema_count : Std.Usize) :
+  Result (core.result.Result Std.Usize source.Error)
+  := do
+  let total ←
+    source.declared.state.register.schema.names.alias_capacity session (some
+      schema_count)
+  let o ←
+    source.declared.state.register.schema.names.module_capacity session total
+  source.declared.state.register.schema.names.checked_type_slots o
+
+/-- [noble_contracts::source::declared::state::register::schema::names::version_width]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema/names.rs', lines 154:4-157:5 -/
+@[rust_loop_body]
+def source.declared.state.register.schema.names.version_width_loop.body
+  (remaining : Std.U32) (width : Std.Usize) :
+  Result (ControlFlow (Std.U32 × Std.Usize) Std.Usize)
+  := do
+  if remaining >= 10#u32
+  then
+    let width1 ← width + 1#usize
+    let remaining1 ← remaining / 10#u32
+    ok (cont (remaining1, width1))
+  else ok (done width)
+
+/-- [noble_contracts::source::declared::state::register::schema::names::version_width]: loop 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema/names.rs', lines 154:4-157:5 -/
+@[rust_loop]
+def source.declared.state.register.schema.names.version_width_loop
+  (remaining : Std.U32) (width : Std.Usize) : Result Std.Usize := do
+  loop
+    (fun (remaining1, width1) =>
+      source.declared.state.register.schema.names.version_width_loop.body
+      remaining1 width1)
+    (remaining, width)
+
+/-- [noble_contracts::source::declared::state::register::schema::names::version_width]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema/names.rs', lines 152:0-159:1 -/
+@[reducible]
+def source.declared.state.register.schema.names.version_width
+  (remaining : Std.U32) : Result Std.Usize := do
+  source.declared.state.register.schema.names.version_width_loop remaining
+    1#usize
+
+/-- [noble_contracts::source::declared::state::register::schema::names::bounded_spelling_capacity]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema/names.rs', lines 197:0-205:1 -/
+def source.declared.state.register.schema.names.bounded_spelling_capacity
+  (capacity_bytes : Option Std.Usize) : Result (Option Std.Usize) := do
+  match capacity_bytes with
+  | none => ok none
+  | some capacity_bytes1 =>
+    let i ← lift (IScalar.hcast .Usize core.num.Isize.MAX)
+    if capacity_bytes1 > i
+    then ok none
+    else ok capacity_bytes
+
+/-- [noble_contracts::source::declared::state::register::schema::names::qualified_capacity::{impl core::ops::function::FnOnce<(usize,), core::option::Option<usize>> for noble_contracts::source::declared::state::register::schema::names::qualified_capacity::{closure#2}<'_0>}::call_once]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema/names.rs', lines 187:18-187:64 -/
+def
+  source.declared.state.register.schema.names.qualified_capacity.closure_2.Insts.CoreOpsFunctionFnOnceTupleUsizeOptionUsize.call_once
+  (c :
+  source.declared.state.register.schema.names.qualified_capacity.closure_2)
+  (tupled_args : Std.Usize) :
+  Result (Option Std.Usize)
+  := do
+  let i ← alloc.string.String.len c.name
+  ok (Usize.checked_add tupled_args i)
+
+/-- Trait implementation: [noble_contracts::source::declared::state::register::schema::names::qualified_capacity::{impl core::ops::function::FnOnce<(usize,), core::option::Option<usize>> for noble_contracts::source::declared::state::register::schema::names::qualified_capacity::{closure#2}<'_0>}]
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema/names.rs', lines 187:18-187:64 -/
+@[reducible]
+def
+  source.declared.state.register.schema.names.qualified_capacity.closure_2.Insts.CoreOpsFunctionFnOnceTupleUsizeOptionUsize
+  : core.ops.function.FnOnce
+  source.declared.state.register.schema.names.qualified_capacity.closure_2
+  Std.Usize (Option Std.Usize) := {
+  call_once :=
+    source.declared.state.register.schema.names.qualified_capacity.closure_2.Insts.CoreOpsFunctionFnOnceTupleUsizeOptionUsize.call_once
+}
+
+/-- [noble_contracts::source::declared::state::register::schema::names::qualified_capacity::{impl core::ops::function::FnOnce<(usize,), core::option::Option<usize>> for noble_contracts::source::declared::state::register::schema::names::qualified_capacity::{closure#1}}::call_once]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema/names.rs', lines 186:18-186:48 -/
+def
+  source.declared.state.register.schema.names.qualified_capacity.closure_1.Insts.CoreOpsFunctionFnOnceTupleUsizeOptionUsize.call_once
+  (c :
+  source.declared.state.register.schema.names.qualified_capacity.closure_1)
+  (tupled_args : Std.Usize) :
+  Result (Option Std.Usize)
+  := do
+  ok (Usize.checked_add tupled_args 1#usize)
+
+/-- Trait implementation: [noble_contracts::source::declared::state::register::schema::names::qualified_capacity::{impl core::ops::function::FnOnce<(usize,), core::option::Option<usize>> for noble_contracts::source::declared::state::register::schema::names::qualified_capacity::{closure#1}}]
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema/names.rs', lines 186:18-186:48 -/
+@[reducible]
+def
+  source.declared.state.register.schema.names.qualified_capacity.closure_1.Insts.CoreOpsFunctionFnOnceTupleUsizeOptionUsize
+  : core.ops.function.FnOnce
+  source.declared.state.register.schema.names.qualified_capacity.closure_1
+  Std.Usize (Option Std.Usize) := {
+  call_once :=
+    source.declared.state.register.schema.names.qualified_capacity.closure_1.Insts.CoreOpsFunctionFnOnceTupleUsizeOptionUsize.call_once
+}
+
+/-- [noble_contracts::source::declared::state::register::schema::names::qualified_capacity::{impl core::ops::function::FnOnce<(usize,), core::option::Option<usize>> for noble_contracts::source::declared::state::register::schema::names::qualified_capacity::{closure}<'_0>}::call_once]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema/names.rs', lines 185:18-185:60 -/
+def
+  source.declared.state.register.schema.names.qualified_capacity.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeOptionUsize.call_once
+  (c : source.declared.state.register.schema.names.qualified_capacity.closure)
+  (tupled_args : Std.Usize) :
+  Result (Option Std.Usize)
+  := do
+  ok (Usize.checked_add tupled_args c)
+
+/-- Trait implementation: [noble_contracts::source::declared::state::register::schema::names::qualified_capacity::{impl core::ops::function::FnOnce<(usize,), core::option::Option<usize>> for noble_contracts::source::declared::state::register::schema::names::qualified_capacity::{closure}<'_0>}]
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema/names.rs', lines 185:18-185:60 -/
+@[reducible]
+def
+  source.declared.state.register.schema.names.qualified_capacity.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeOptionUsize
+  : core.ops.function.FnOnce
+  source.declared.state.register.schema.names.qualified_capacity.closure
+  Std.Usize (Option Std.Usize) := {
+  call_once :=
+    source.declared.state.register.schema.names.qualified_capacity.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeOptionUsize.call_once
+}
+
+/-- [noble_contracts::source::declared::state::register::schema::names::qualified_capacity]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema/names.rs', lines 176:0-195:1 -/
+def source.declared.state.register.schema.names.qualified_capacity
+  (module : source.declared.Module) («export» : source.declared.Export)
+  (version_width : Std.Usize) :
+  Result (core.result.Result Std.Usize source.Error)
+  := do
+  let i ← alloc.string.String.len module.name
+  let o ← lift (Usize.checked_add i 1#usize)
+  let o1 ←
+    core.option.Option.and_then
+      source.declared.state.register.schema.names.qualified_capacity.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeOptionUsize
+      o version_width
+  let o2 ←
+    core.option.Option.and_then
+      source.declared.state.register.schema.names.qualified_capacity.closure_1.Insts.CoreOpsFunctionFnOnceTupleUsizeOptionUsize
+      o1 ()
+  let capacity_bytes ←
+    core.option.Option.and_then
+      source.declared.state.register.schema.names.qualified_capacity.closure_2.Insts.CoreOpsFunctionFnOnceTupleUsizeOptionUsize
+      o2 «export»
+  let o3 ←
+    source.declared.state.register.schema.names.bounded_spelling_capacity
+      capacity_bytes
+  match o3 with
+  | none =>
+    let e ←
+      source.declared.error source.Stage.Check (toStr
+        "qualified export word length overflow")
+    ok (core.result.Result.Err e)
+  | some capacity_bytes1 => ok (core.result.Result.Ok capacity_bytes1)
+
+/-- [noble_contracts::source::declared::state::register::schema::names::qualified_spelling]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema/names.rs', lines 161:0-174:1 -/
+def source.declared.state.register.schema.names.qualified_spelling
+  (module : source.declared.Module) («export» : source.declared.Export)
+  (version_width : Std.Usize) :
+  Result (core.result.Result String source.Error)
+  := do
+  let r ←
+    source.declared.state.register.schema.names.qualified_capacity module
+      «export» version_width
+  match r with
+  | core.result.Result.Ok value =>
+    let spelling ← alloc.string.String.with_capacity value
+    let s ← alloc.string.String.Insts.CoreOpsDerefDerefStr.deref module.name
+    let spelling1 ← alloc.string.String.push_str spelling s
+    let spelling2 ← alloc.string.String.push spelling1 '@'
+    let spelling3 ← source.declared.append_decimal spelling2 module.version
+    let spelling4 ← alloc.string.String.push spelling3 '.'
+    let s1 ←
+      alloc.string.String.Insts.CoreOpsDerefDerefStr.deref «export».name
+    let spelling5 ← alloc.string.String.push_str spelling4 s1
+    ok (core.result.Result.Ok spelling5)
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::source::declared::state::register::schema::names::append_qualified_type]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema/names.rs', lines 137:0-150:1 -/
+def source.declared.state.register.schema.names.append_qualified_type
+  (local_types : alloc.vec.Vec (String × noble_kernel.types.Ty))
+  (module : source.declared.Module) («export» : source.declared.Export)
+  (version_width : Std.Usize) :
+  Result (core.result.Result (alloc.vec.Vec (String × noble_kernel.types.Ty))
+    source.Error)
+  := do
+  match «export».ty with
+  | none => ok (core.result.Result.Ok local_types)
+  | some ty =>
+    let r ←
+      source.declared.state.register.schema.names.qualified_spelling module
+        «export» version_width
+    match r with
+    | core.result.Result.Ok value =>
+      let t ← noble_kernel.types.Ty.Insts.CoreCloneClone.clone ty
+      let local_types1 ← alloc.vec.Vec.push local_types (value, t)
+      ok (core.result.Result.Ok local_types1)
+    | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::source::declared::state::register::schema::names::qualified_exports]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema/names.rs', lines 122:4-133:5 -/
+@[rust_loop_body]
+def source.declared.state.register.schema.names.qualified_exports_loop.body
+  (s : String) (i : Std.U32) (i1 : Std.U64)
+  (v : alloc.vec.Vec source.declared.Export) (o : Option Std.U32)
+  (v1 : alloc.vec.Vec Std.U8) (version_width : Std.Usize)
+  (entry_slot : Std.Usize)
+  (outcome : core.result.Result (alloc.vec.Vec (String ×
+  noble_kernel.types.Ty)) source.Error) :
+  Result (ControlFlow (Std.Usize × (core.result.Result (alloc.vec.Vec (String
+    × noble_kernel.types.Ty)) source.Error)) (core.result.Result
+    (alloc.vec.Vec (String × noble_kernel.types.Ty)) source.Error))
+  := do
+  let i2 := alloc.vec.Vec.len v
+  if entry_slot < i2
+  then
+    let b ← core.result.Result.is_ok outcome
+    if b
+    then
+      let outcome1 ←
+        match outcome with
+        | core.result.Result.Ok local_types =>
+          do
+          let e ←
+            alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+              source.declared.Export) v entry_slot
+          source.declared.state.register.schema.names.append_qualified_type
+            local_types
+            {
+              «name» := s,
+              version := i,
+              identity := i1,
+              exports := v,
+              adapter_slot := o,
+              source := v1
+            } e version_width
+        | core.result.Result.Err _ => ok outcome
+      let entry_slot1 ← entry_slot + 1#usize
+      ok (cont (entry_slot1, outcome1))
+    else ok (done outcome)
+  else ok (done outcome)
+
+/-- [noble_contracts::source::declared::state::register::schema::names::qualified_exports]: loop 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema/names.rs', lines 122:4-133:5 -/
+@[rust_loop]
+def source.declared.state.register.schema.names.qualified_exports_loop
+  (s : String) (i : Std.U32) (i1 : Std.U64)
+  (v : alloc.vec.Vec source.declared.Export) (o : Option Std.U32)
+  (v1 : alloc.vec.Vec Std.U8) (version_width : Std.Usize)
+  (entry_slot : Std.Usize)
+  (outcome : core.result.Result (alloc.vec.Vec (String ×
+  noble_kernel.types.Ty)) source.Error) :
+  Result (core.result.Result (alloc.vec.Vec (String × noble_kernel.types.Ty))
+    source.Error)
+  := do
+  loop
+    (fun (entry_slot1, outcome1) =>
+      source.declared.state.register.schema.names.qualified_exports_loop.body s
+      i i1 v o v1 version_width entry_slot1 outcome1)
+    (entry_slot, outcome)
+
+/-- [noble_contracts::source::declared::state::register::schema::names::qualified_exports]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema/names.rs', lines 114:0-135:1 -/
+def source.declared.state.register.schema.names.qualified_exports
+  (module : source.declared.Module)
+  (local_types : alloc.vec.Vec (String × noble_kernel.types.Ty)) :
+  Result (core.result.Result (alloc.vec.Vec (String × noble_kernel.types.Ty))
+    source.Error)
+  := do
+  let version_width ←
+    source.declared.state.register.schema.names.version_width module.version
+  source.declared.state.register.schema.names.qualified_exports_loop
+    module.name module.version module.identity module.exports
+    module.adapter_slot module.source version_width 0#usize
+    (core.result.Result.Ok local_types)
+
+/-- [noble_contracts::source::declared::state::register::schema::names::from_modules]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema/names.rs', lines 104:4-110:5 -/
+@[rust_loop_body]
+def source.declared.state.register.schema.names.from_modules_loop.body
+  (session : source.declared.state.ModuleSession) (module_slot : Std.Usize)
+  (outcome : core.result.Result (alloc.vec.Vec (String ×
+  noble_kernel.types.Ty)) source.Error) :
+  Result (ControlFlow (Std.Usize × (core.result.Result (alloc.vec.Vec (String
+    × noble_kernel.types.Ty)) source.Error)) (core.result.Result
+    (alloc.vec.Vec (String × noble_kernel.types.Ty)) source.Error))
+  := do
+  let i := alloc.vec.Vec.len session.modules
+  if module_slot < i
+  then
+    let b ← core.result.Result.is_ok outcome
+    if b
+    then
+      let outcome1 ←
+        match outcome with
+        | core.result.Result.Ok local_types =>
+          do
+          let m ←
+            alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+              source.declared.Module) session.modules module_slot
+          source.declared.state.register.schema.names.qualified_exports m
+            local_types
+        | core.result.Result.Err _ => ok outcome
+      let module_slot1 ← module_slot + 1#usize
+      ok (cont (module_slot1, outcome1))
+    else ok (done outcome)
+  else ok (done outcome)
+
+/-- [noble_contracts::source::declared::state::register::schema::names::from_modules]: loop 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema/names.rs', lines 104:4-110:5 -/
+@[rust_loop]
+def source.declared.state.register.schema.names.from_modules_loop
+  (session : source.declared.state.ModuleSession) (module_slot : Std.Usize)
+  (outcome : core.result.Result (alloc.vec.Vec (String ×
+  noble_kernel.types.Ty)) source.Error) :
+  Result (core.result.Result (alloc.vec.Vec (String × noble_kernel.types.Ty))
+    source.Error)
+  := do
+  loop
+    (fun (module_slot1, outcome1) =>
+      source.declared.state.register.schema.names.from_modules_loop.body
+      session module_slot1 outcome1)
+    (module_slot, outcome)
+
+/-- [noble_contracts::source::declared::state::register::schema::names::from_modules]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema/names.rs', lines 97:0-112:1 -/
+@[reducible]
+def source.declared.state.register.schema.names.from_modules
+  (session : source.declared.state.ModuleSession)
+  (local_types : alloc.vec.Vec (String × noble_kernel.types.Ty)) :
+  Result (core.result.Result (alloc.vec.Vec (String × noble_kernel.types.Ty))
+    source.Error)
+  := do
+  source.declared.state.register.schema.names.from_modules_loop session 0#usize
+    (core.result.Result.Ok local_types)
+
+/-- [noble_contracts::source::declared::state::register::schema::names::alias_spelling::{impl core::ops::function::FnOnce<(usize,), core::option::Option<usize>> for noble_contracts::source::declared::state::register::schema::names::alias_spelling::{closure}<'_0>}::call_once]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema/names.rs', lines 83:22-83:68 -/
+def
+  source.declared.state.register.schema.names.alias_spelling.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeOptionUsize.call_once
+  (c : source.declared.state.register.schema.names.alias_spelling.closure)
+  (tupled_args : Std.Usize) :
+  Result (Option Std.Usize)
+  := do
+  let i ← alloc.string.String.len c.name
+  ok (Usize.checked_add tupled_args i)
+
+/-- Trait implementation: [noble_contracts::source::declared::state::register::schema::names::alias_spelling::{impl core::ops::function::FnOnce<(usize,), core::option::Option<usize>> for noble_contracts::source::declared::state::register::schema::names::alias_spelling::{closure}<'_0>}]
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema/names.rs', lines 83:22-83:68 -/
+@[reducible]
+def
+  source.declared.state.register.schema.names.alias_spelling.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeOptionUsize
+  : core.ops.function.FnOnce
+  source.declared.state.register.schema.names.alias_spelling.closure Std.Usize
+  (Option Std.Usize) := {
+  call_once :=
+    source.declared.state.register.schema.names.alias_spelling.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeOptionUsize.call_once
+}
+
+/-- [noble_contracts::source::declared::state::register::schema::names::alias_spelling]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema/names.rs', lines 74:0-95:1 -/
+def source.declared.state.register.schema.names.alias_spelling
+  («alias» : source.declared.Alias) («export» : source.declared.Export) :
+  Result (core.result.Result String source.Error)
+  := do
+  let i ← alloc.string.String.len «alias».spelling
+  let o ← lift (Usize.checked_add i 1#usize)
+  let o1 ←
+    core.option.Option.and_then
+      source.declared.state.register.schema.names.alias_spelling.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeOptionUsize
+      o «export»
+  let o2 ←
+    source.declared.state.register.schema.names.bounded_spelling_capacity o1
+  match o2 with
+  | none =>
+    let e ←
+      source.declared.error source.Stage.Check (toStr
+        "aliased export word length overflow")
+    ok (core.result.Result.Err e)
+  | some capacity_bytes =>
+    let spelling ← alloc.string.String.with_capacity capacity_bytes
+    let s ←
+      alloc.string.String.Insts.CoreOpsDerefDerefStr.deref «alias».spelling
+    let spelling1 ← alloc.string.String.push_str spelling s
+    let spelling2 ← alloc.string.String.push spelling1 '.'
+    let s1 ←
+      alloc.string.String.Insts.CoreOpsDerefDerefStr.deref «export».name
+    let spelling3 ← alloc.string.String.push_str spelling2 s1
+    ok (core.result.Result.Ok spelling3)
+
+/-- [noble_contracts::source::declared::state::register::schema::names::append_alias_type]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema/names.rs', lines 60:0-72:1 -/
+def source.declared.state.register.schema.names.append_alias_type
+  (local_types : alloc.vec.Vec (String × noble_kernel.types.Ty))
+  («alias» : source.declared.Alias) («export» : source.declared.Export) :
+  Result (core.result.Result (alloc.vec.Vec (String × noble_kernel.types.Ty))
+    source.Error)
+  := do
+  match «export».ty with
+  | none => ok (core.result.Result.Ok local_types)
+  | some ty =>
+    let r ←
+      source.declared.state.register.schema.names.alias_spelling «alias»
+        «export»
+    match r with
+    | core.result.Result.Ok value =>
+      let t ← noble_kernel.types.Ty.Insts.CoreCloneClone.clone ty
+      let local_types1 ← alloc.vec.Vec.push local_types (value, t)
+      ok (core.result.Result.Ok local_types1)
+    | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::source::declared::state::register::schema::names::alias_export_types]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema/names.rs', lines 50:4-56:5 -/
+@[rust_loop_body]
+def source.declared.state.register.schema.names.alias_export_types_loop.body
+  (module : source.declared.Module) («alias» : source.declared.Alias)
+  (entry_slot : Std.Usize)
+  (outcome : core.result.Result (alloc.vec.Vec (String ×
+  noble_kernel.types.Ty)) source.Error) :
+  Result (ControlFlow (Std.Usize × (core.result.Result (alloc.vec.Vec (String
+    × noble_kernel.types.Ty)) source.Error)) (core.result.Result
+    (alloc.vec.Vec (String × noble_kernel.types.Ty)) source.Error))
+  := do
+  let i := alloc.vec.Vec.len module.exports
+  if entry_slot < i
+  then
+    let b ← core.result.Result.is_ok outcome
+    if b
+    then
+      let outcome1 ←
+        match outcome with
+        | core.result.Result.Ok local_types =>
+          do
+          let e ←
+            alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+              source.declared.Export) module.exports entry_slot
+          source.declared.state.register.schema.names.append_alias_type
+            local_types «alias» e
+        | core.result.Result.Err _ => ok outcome
+      let entry_slot1 ← entry_slot + 1#usize
+      ok (cont (entry_slot1, outcome1))
+    else ok (done outcome)
+  else ok (done outcome)
+
+/-- [noble_contracts::source::declared::state::register::schema::names::alias_export_types]: loop 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema/names.rs', lines 50:4-56:5 -/
+@[rust_loop]
+def source.declared.state.register.schema.names.alias_export_types_loop
+  (module : source.declared.Module) («alias» : source.declared.Alias)
+  (entry_slot : Std.Usize)
+  (outcome : core.result.Result (alloc.vec.Vec (String ×
+  noble_kernel.types.Ty)) source.Error) :
+  Result (core.result.Result (alloc.vec.Vec (String × noble_kernel.types.Ty))
+    source.Error)
+  := do
+  loop
+    (fun (entry_slot1, outcome1) =>
+      source.declared.state.register.schema.names.alias_export_types_loop.body
+      module «alias» entry_slot1 outcome1)
+    (entry_slot, outcome)
+
+/-- [noble_contracts::source::declared::state::register::schema::names::alias_export_types]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema/names.rs', lines 42:0-58:1 -/
+@[reducible]
+def source.declared.state.register.schema.names.alias_export_types
+  (module : source.declared.Module) («alias» : source.declared.Alias)
+  (local_types : alloc.vec.Vec (String × noble_kernel.types.Ty)) :
+  Result (core.result.Result (alloc.vec.Vec (String × noble_kernel.types.Ty))
+    source.Error)
+  := do
+  source.declared.state.register.schema.names.alias_export_types_loop module
+    «alias» 0#usize (core.result.Result.Ok local_types)
+
+/-- [noble_contracts::source::declared::state::register::schema::names::alias_exports]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema/names.rs', lines 29:0-40:1 -/
+def source.declared.state.register.schema.names.alias_exports
+  (session : source.declared.state.ModuleSession) (alias_slot : Std.Usize)
+  (local_types : alloc.vec.Vec (String × noble_kernel.types.Ty)) :
+  Result (core.result.Result (alloc.vec.Vec (String × noble_kernel.types.Ty))
+    source.Error)
+  := do
+  let «alias» ←
+    alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+      source.declared.Alias) session.aliases alias_slot
+  let s := alloc.vec.Vec.deref session.modules
+  let o ←
+    core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice
+      source.declared.Module) s «alias».module
+  match o with
+  | none => ok (core.result.Result.Ok local_types)
+  | some module =>
+    source.declared.state.register.schema.names.alias_export_types module
+      «alias» local_types
+
+/-- [noble_contracts::source::declared::state::register::schema::names::from_aliases]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema/names.rs', lines 19:4-25:5 -/
+@[rust_loop_body]
+def source.declared.state.register.schema.names.from_aliases_loop.body
+  (session : source.declared.state.ModuleSession) (alias_slot : Std.Usize)
+  (outcome : core.result.Result (alloc.vec.Vec (String ×
+  noble_kernel.types.Ty)) source.Error) :
+  Result (ControlFlow (Std.Usize × (core.result.Result (alloc.vec.Vec (String
+    × noble_kernel.types.Ty)) source.Error)) (core.result.Result
+    (alloc.vec.Vec (String × noble_kernel.types.Ty)) source.Error))
+  := do
+  let i := alloc.vec.Vec.len session.aliases
+  if alias_slot < i
+  then
+    let b ← core.result.Result.is_ok outcome
+    if b
+    then
+      let outcome1 ←
+        match outcome with
+        | core.result.Result.Ok local_types =>
+          source.declared.state.register.schema.names.alias_exports session
+            alias_slot local_types
+        | core.result.Result.Err _ => ok outcome
+      let alias_slot1 ← alias_slot + 1#usize
+      ok (cont (alias_slot1, outcome1))
+    else ok (done outcome)
+  else ok (done outcome)
+
+/-- [noble_contracts::source::declared::state::register::schema::names::from_aliases]: loop 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema/names.rs', lines 19:4-25:5 -/
+@[rust_loop]
+def source.declared.state.register.schema.names.from_aliases_loop
+  (session : source.declared.state.ModuleSession) (alias_slot : Std.Usize)
+  (outcome : core.result.Result (alloc.vec.Vec (String ×
+  noble_kernel.types.Ty)) source.Error) :
+  Result (core.result.Result (alloc.vec.Vec (String × noble_kernel.types.Ty))
+    source.Error)
+  := do
+  loop
+    (fun (alias_slot1, outcome1) =>
+      source.declared.state.register.schema.names.from_aliases_loop.body
+      session alias_slot1 outcome1)
+    (alias_slot, outcome)
+
+/-- [noble_contracts::source::declared::state::register::schema::names::from_aliases]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema/names.rs', lines 12:0-27:1 -/
+@[reducible]
+def source.declared.state.register.schema.names.from_aliases
+  (session : source.declared.state.ModuleSession)
+  (local_types : alloc.vec.Vec (String × noble_kernel.types.Ty)) :
+  Result (core.result.Result (alloc.vec.Vec (String × noble_kernel.types.Ty))
+    source.Error)
+  := do
+  source.declared.state.register.schema.names.from_aliases_loop session 0#usize
+    (core.result.Result.Ok local_types)
+
+/-- [noble_contracts::source::declared::state::register::schema::names::available]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema/names.rs', lines 1:0-10:1 -/
+def source.declared.state.register.schema.names.available
+  (session : source.declared.state.ModuleSession) (schema_count : Std.Usize) :
+  Result (core.result.Result (alloc.vec.Vec (String × noble_kernel.types.Ty))
+    source.Error)
+  := do
+  let r ←
+    source.declared.state.register.schema.names.capacity session schema_count
+  match r with
+  | core.result.Result.Ok value =>
+    let local_types :=
+      alloc.vec.Vec.with_capacity (String × noble_kernel.types.Ty) value
+    let r1 ←
+      source.declared.state.register.schema.names.from_aliases session
+        local_types
+    match r1 with
+    | core.result.Result.Ok value1 =>
+      source.declared.state.register.schema.names.from_modules session value1
+    | core.result.Result.Err _ => ok r1
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::source::declared::state::register::schema::{noble_contracts::source::declared::state::register::schema::Resolution<'a>}::start]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema.rs', lines 79:4-97:5 -/
+def source.declared.state.register.schema.Resolution.start
+  (session : source.declared.state.ModuleSession)
+  (collected : source.declared.state.register.collection.Collected)
+  (identity : Std.U64) (limits : Limits) :
+  Result (core.result.Result source.declared.state.register.schema.Resolution
+    source.Error)
+  := do
+  let i := alloc.vec.Vec.len collected.schemas
+  let resolved ←
+    alloc.vec.from_elem (core.option.Option.Insts.CoreCloneClone (BuiltinClone
+      (noble_kernel.types.Ty × noble_kernel.contracts.NominalOps))) none i
+  let i1 := alloc.vec.Vec.len collected.schemas
+  let r ← source.declared.state.register.schema.names.available session i1
+  match r with
+  | core.result.Result.Ok value =>
+    let m ← metering.Meter.new limits
+    ok (core.result.Result.Ok
+      {
+        session := (some session),
+        local_types := value,
+        resolved,
+        type_nodes := 0#usize,
+        meter := m,
+        identity,
+        limits,
+        collected
+      })
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::source::declared::state::register::schema::{noble_contracts::source::declared::state::register::schema::Resolution<'a>}::finish::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::declared::state::register::schema::{noble_contracts::source::declared::state::register::schema::Resolution<'a>}::finish::{closure}<'a>}::call_once]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema.rs', lines 73:62-75:9 -/
+def
+  source.declared.state.register.schema.Resolution.finish.closure.Insts.CoreOpsFunctionFnOnceTupleError.call_once
+  (c : source.declared.state.register.schema.Resolution.finish.closure)
+  (_ : Unit) :
+  Result source.Error
+  := do
+  source.declared.error source.Stage.Check (toStr "missing module session")
+
+/-- Trait implementation: [noble_contracts::source::declared::state::register::schema::{noble_contracts::source::declared::state::register::schema::Resolution<'a>}::finish::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::declared::state::register::schema::{noble_contracts::source::declared::state::register::schema::Resolution<'a>}::finish::{closure}<'a>}]
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema.rs', lines 73:62-75:9 -/
+@[reducible]
+def
+  source.declared.state.register.schema.Resolution.finish.closure.Insts.CoreOpsFunctionFnOnceTupleError
+  : core.ops.function.FnOnce
+  source.declared.state.register.schema.Resolution.finish.closure Unit
+  source.Error := {
+  call_once :=
+    source.declared.state.register.schema.Resolution.finish.closure.Insts.CoreOpsFunctionFnOnceTupleError.call_once
+}
+
+/-- [noble_contracts::source::declared::state::register::schema::{noble_contracts::source::declared::state::register::schema::Resolution<'a>}::finish]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema.rs', lines 63:4-77:5 -/
+def source.declared.state.register.schema.Resolution.finish
+  (self : source.declared.state.register.schema.Resolution) :
+  Result (core.result.Result (source.declared.state.ModuleSession ×
+    (alloc.vec.Vec (Option (noble_kernel.types.Ty ×
+    noble_kernel.contracts.NominalOps))) × Meter) source.Error)
+  := do
+  let (o, _) := core.option.Option.take self.session
+  let r ←
+    core.option.Option.ok_or_else
+      source.declared.state.register.schema.Resolution.finish.closure.Insts.CoreOpsFunctionFnOnceTupleError
+      o ()
+  match r with
+  | core.result.Result.Ok value =>
+    ok (core.result.Result.Ok (value, self.resolved, self.meter))
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::source::declared::state::register::schema::{noble_contracts::source::declared::state::register::schema::Resolution<'a>}::advance_one::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::declared::state::register::schema::{noble_contracts::source::declared::state::register::schema::Resolution<'a>}::advance_one::{closure#1}<'a>}::call_once]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema.rs', lines 153:63-158:13 -/
+def
+  source.declared.state.register.schema.Resolution.advance_one.closure_1.Insts.CoreOpsFunctionFnOnceTupleError.call_once
+  (c : source.declared.state.register.schema.Resolution.advance_one.closure_1)
+  (_ : Unit) :
+  Result source.Error
+  := do
+  source.declared.error source.Stage.Check (toStr "missing module session")
+
+/-- Trait implementation: [noble_contracts::source::declared::state::register::schema::{noble_contracts::source::declared::state::register::schema::Resolution<'a>}::advance_one::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::declared::state::register::schema::{noble_contracts::source::declared::state::register::schema::Resolution<'a>}::advance_one::{closure#1}<'a>}]
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema.rs', lines 153:63-158:13 -/
+@[reducible]
+def
+  source.declared.state.register.schema.Resolution.advance_one.closure_1.Insts.CoreOpsFunctionFnOnceTupleError
+  : core.ops.function.FnOnce
+  source.declared.state.register.schema.Resolution.advance_one.closure_1 Unit
+  source.Error := {
+  call_once :=
+    source.declared.state.register.schema.Resolution.advance_one.closure_1.Insts.CoreOpsFunctionFnOnceTupleError.call_once
+}
+
+/-- [noble_contracts::source::declared::state::register::schema::{noble_contracts::source::declared::state::register::schema::Resolution<'a>}::advance_one::{impl core::ops::function::FnOnce<(usize,), bool> for noble_contracts::source::declared::state::register::schema::{noble_contracts::source::declared::state::register::schema::Resolution<'a>}::advance_one::{closure}<'a, '_1>}::call_once]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema.rs', lines 137:60-137:91 -/
+def
+  source.declared.state.register.schema.Resolution.advance_one.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeBool.call_once
+  (c : source.declared.state.register.schema.Resolution.advance_one.closure)
+  (tupled_args : Std.Usize) :
+  Result Bool
+  := do
+  ok (c > tupled_args)
+
+/-- Trait implementation: [noble_contracts::source::declared::state::register::schema::{noble_contracts::source::declared::state::register::schema::Resolution<'a>}::advance_one::{impl core::ops::function::FnOnce<(usize,), bool> for noble_contracts::source::declared::state::register::schema::{noble_contracts::source::declared::state::register::schema::Resolution<'a>}::advance_one::{closure}<'a, '_1>}]
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema.rs', lines 137:60-137:91 -/
+@[reducible]
+def
+  source.declared.state.register.schema.Resolution.advance_one.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeBool
+  : core.ops.function.FnOnce
+  source.declared.state.register.schema.Resolution.advance_one.closure
+  Std.Usize Bool := {
+  call_once :=
+    source.declared.state.register.schema.Resolution.advance_one.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeBool.call_once
+}
+
+/-- [noble_contracts::source::declared::diagnostic]:
+    Source: 'crates/noble-contracts/src/source/declared.rs', lines 58:0-60:1 -/
+def source.declared.diagnostic
+  (stage : source.Stage) (problem : Diagnostic) : Result source.Error := do
+  source.Error.at stage problem
+
+/-- [noble_contracts::source::declared::types::contains_ascii_whitespace]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/declared/types.rs', lines 226:4-229:5 -/
+@[rust_loop_body]
+def source.declared.types.contains_ascii_whitespace_loop.body
+  (bytes : Slice Std.U8) («at» : Std.Usize) (is_found : Bool) :
+  Result (ControlFlow (Std.Usize × Bool) Bool)
+  := do
+  let i := Slice.len bytes
+  if «at» < i
+  then
+    if is_found
+    then ok (done true)
+    else
+      let i1 ← Slice.index_usize bytes «at»
+      let is_found1 ← core.num.U8.is_ascii_whitespace i1
+      let at1 ← «at» + 1#usize
+      ok (cont (at1, is_found1))
+  else ok (done is_found)
+
+/-- [noble_contracts::source::declared::types::contains_ascii_whitespace]: loop 0:
+    Source: 'crates/noble-contracts/src/source/declared/types.rs', lines 226:4-229:5 -/
+@[rust_loop]
+def source.declared.types.contains_ascii_whitespace_loop
+  (bytes : Slice Std.U8) («at» : Std.Usize) (is_found : Bool) :
+  Result Bool
+  := do
+  loop
+    (fun (at1, is_found1) =>
+      source.declared.types.contains_ascii_whitespace_loop.body bytes at1
+      is_found1)
+    («at», is_found)
+
+/-- [noble_contracts::source::declared::types::contains_ascii_whitespace]:
+    Source: 'crates/noble-contracts/src/source/declared/types.rs', lines 223:0-231:1 -/
+@[reducible]
+def source.declared.types.contains_ascii_whitespace
+  (bytes : Slice Std.U8) : Result Bool := do
+  source.declared.types.contains_ascii_whitespace_loop bytes 0#usize false
+
+/-- [noble_contracts::source::declared::types::{noble_contracts::source::declared::types::Parser<'_0>}::expect]:
+    Source: 'crates/noble-contracts/src/source/declared/types.rs', lines 200:4-209:5 -/
+def source.declared.types.Parser.expect
+  (self : source.declared.types.Parser) (byte : Std.U8) :
+  Result (core.result.Result Unit Diagnostic)
+  := do
+  let o ←
+    core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice Std.U8)
+      self.text self.at
+  let b ←
+    core.option.Option.Insts.CoreCmpPartialEqOption.eq
+      (core.cmp.PartialEqShared core.cmp.PartialEqU8) o (some byte)
+  if b
+  then ok (core.result.Result.Ok ())
+  else
+    let d ← invalid self.span (toStr "malformed generic type argument list")
+    ok (core.result.Result.Err d)
+
+/-- [noble_contracts::source::declared::types::{noble_contracts::source::declared::types::Parser<'_0>}::fold]:
+    Source: 'crates/noble-contracts/src/source/declared/types.rs', lines 144:4-198:5 -/
+def source.declared.types.Parser.fold
+  (self : source.declared.types.Parser) (ty : noble_kernel.types.Ty) :
+  Result (core.result.Result (source.declared.types.Parser × (Option
+    source.declared.types.ParsedType)) Diagnostic)
+  := do
+  let (o, v) ← alloc.vec.Vec.pop Global self.pending
+  match o with
+  | none =>
+    let i := Slice.len self.text
+    if self.at != i
+    then
+      let d ← invalid self.span (toStr "trailing characters in type word")
+      ok (core.result.Result.Err d)
+    else
+      ok (core.result.Result.Ok ({ self with pending := v }, some
+        { ty, nodes := self.nodes }))
+  | some f =>
+    match f with
+    | source.declared.types.Frame.List =>
+      let r ←
+        source.declared.types.Parser.expect { self with pending := v } 62#u8
+      match r with
+      | core.result.Result.Ok _ =>
+        let i ← self.at + 1#usize
+        ok (core.result.Result.Ok
+          ({
+             self
+               with
+               «at» := i,
+               pending := v,
+               value := (some (noble_kernel.types.Ty.ListType ty))
+           }, none))
+      | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+    | source.declared.types.Frame.PairLeft =>
+      let r ←
+        source.declared.types.Parser.expect { self with pending := v } 44#u8
+      match r with
+      | core.result.Result.Ok _ =>
+        let i ← self.at + 1#usize
+        let v1 ←
+          alloc.vec.Vec.push v (source.declared.types.Frame.PairRight ty)
+        ok (core.result.Result.Ok ({ self with «at» := i, pending := v1 },
+          none))
+      | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+    | source.declared.types.Frame.SumLeft =>
+      let r ←
+        source.declared.types.Parser.expect { self with pending := v } 44#u8
+      match r with
+      | core.result.Result.Ok _ =>
+        let i ← self.at + 1#usize
+        let v1 ←
+          alloc.vec.Vec.push v (source.declared.types.Frame.SumRight ty)
+        ok (core.result.Result.Ok ({ self with «at» := i, pending := v1 },
+          none))
+      | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+    | source.declared.types.Frame.PairRight left =>
+      let r ←
+        source.declared.types.Parser.expect { self with pending := v } 62#u8
+      match r with
+      | core.result.Result.Ok _ =>
+        let i ← self.at + 1#usize
+        ok (core.result.Result.Ok
+          ({
+             self
+               with
+               «at» := i,
+               pending := v,
+               value := (some (noble_kernel.types.Ty.PairType left ty))
+           }, none))
+      | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+    | source.declared.types.Frame.SumRight left =>
+      let r ←
+        source.declared.types.Parser.expect { self with pending := v } 62#u8
+      match r with
+      | core.result.Result.Ok _ =>
+        let i ← self.at + 1#usize
+        ok (core.result.Result.Ok
+          ({
+             self
+               with
+               «at» := i,
+               pending := v,
+               value := (some (noble_kernel.types.Ty.SumType left ty))
+           }, none))
+      | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+    | source.declared.types.Frame.Unknown =>
+      let d ← invalid self.span (toStr "unknown generic type constructor")
+      ok (core.result.Result.Err d)
+
+/-- [noble_contracts::source::declared::types::type_name_byte]:
+    Source: 'crates/noble-contracts/src/source/declared/types.rs', lines 215:0-221:1 -/
+def source.declared.types.type_name_byte
+  (text : Slice Std.U8) («at» : Std.Usize) : Result Bool := do
+  let o ←
+    core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice Std.U8) text
+      «at»
+  match o with
+  | none => ok false
+  | some byte =>
+    let b ← core.num.U8.is_ascii_alphanumeric byte
+    if b
+    then ok true
+    else
+      if byte = 46#u8
+      then ok true
+      else if byte = 95#u8
+           then ok true
+           else ok (byte = 64#u8)
+
+/-- [noble_contracts::source::declared::types::{noble_contracts::source::declared::types::Parser<'_0>}::read_type::{impl core::ops::function::FnOnce<(core::str::error::Utf8Error,), noble_contracts::Diagnostic> for noble_contracts::source::declared::types::{noble_contracts::source::declared::types::Parser<'_0>}::read_type::{closure}<'_0, '_1>}::call_once]:
+    Source: 'crates/noble-contracts/src/source/declared/types.rs', lines 88:21-88:71 -/
+def
+  source.declared.types.Parser.read_type.closure.Insts.CoreOpsFunctionFnOnceTupleUtf8ErrorDiagnostic.call_once
+  (c : source.declared.types.Parser.read_type.closure)
+  (tupled_args : core.str.error.Utf8Error) :
+  Result Diagnostic
+  := do
+  invalid c (toStr "invalid type name")
+
+/-- Trait implementation: [noble_contracts::source::declared::types::{noble_contracts::source::declared::types::Parser<'_0>}::read_type::{impl core::ops::function::FnOnce<(core::str::error::Utf8Error,), noble_contracts::Diagnostic> for noble_contracts::source::declared::types::{noble_contracts::source::declared::types::Parser<'_0>}::read_type::{closure}<'_0, '_1>}]
+    Source: 'crates/noble-contracts/src/source/declared/types.rs', lines 88:21-88:71 -/
+@[reducible]
+def
+  source.declared.types.Parser.read_type.closure.Insts.CoreOpsFunctionFnOnceTupleUtf8ErrorDiagnostic
+  : core.ops.function.FnOnce source.declared.types.Parser.read_type.closure
+  core.str.error.Utf8Error Diagnostic := {
+  call_once :=
+    source.declared.types.Parser.read_type.closure.Insts.CoreOpsFunctionFnOnceTupleUtf8ErrorDiagnostic.call_once
+}
+
+/-- [noble_contracts::source::declared::types::{noble_contracts::source::declared::types::Parser<'_0>}::read_type]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/declared/types.rs', lines 84:8-86:9 -/
+@[rust_loop_body]
+def source.declared.types.Parser.read_type_loop0.body
+  (s : Slice Std.U8) (start : Std.Usize) :
+  Result (ControlFlow Std.Usize Std.Usize)
+  := do
+  let b ← source.declared.types.type_name_byte s start
+  if b
+  then let i ← start + 1#usize
+       ok (cont i)
+  else ok (done start)
+
+/-- [noble_contracts::source::declared::types::{noble_contracts::source::declared::types::Parser<'_0>}::read_type]: loop 0:
+    Source: 'crates/noble-contracts/src/source/declared/types.rs', lines 84:8-86:9 -/
+@[rust_loop]
+def source.declared.types.Parser.read_type_loop0
+  (s : Slice Std.U8) (start : Std.Usize) : Result Std.Usize := do
+  loop
+    (fun start1 => source.declared.types.Parser.read_type_loop0.body s start1)
+    start
+
+/-- [noble_contracts::source::declared::types::{noble_contracts::source::declared::types::Parser<'_0>}::read_type]: loop body 1:
+    Source: 'crates/noble-contracts/src/source/declared/types.rs', lines 124:20-131:21 -/
+@[rust_loop_body]
+def source.declared.types.Parser.read_type_loop1.body
+  (s : Slice (String × noble_kernel.types.Ty)) («name» : Str)
+  («at» : Std.Usize) :
+  Result (ControlFlow Std.Usize (Option noble_kernel.types.Ty))
+  := do
+  if «at» != 0#usize
+  then
+    let at1 ← «at» - 1#usize
+    let (known, ty) ← Slice.index_usize s at1
+    let b ← alloc.string.String.Insts.CoreCmpPartialEqStr.eq known «name»
+    if b
+    then
+      let t ← noble_kernel.types.Ty.Insts.CoreCloneClone.clone ty
+      ok (done (some t))
+    else ok (cont at1)
+  else ok (done none)
+
+/-- [noble_contracts::source::declared::types::{noble_contracts::source::declared::types::Parser<'_0>}::read_type]: loop 1:
+    Source: 'crates/noble-contracts/src/source/declared/types.rs', lines 124:20-131:21 -/
+@[rust_loop]
+def source.declared.types.Parser.read_type_loop1
+  (s : Slice (String × noble_kernel.types.Ty)) («name» : Str)
+  («at» : Std.Usize) :
+  Result (Option noble_kernel.types.Ty)
+  := do
+  loop
+    (fun at1 => source.declared.types.Parser.read_type_loop1.body s «name»
+      at1)
+    «at»
+
+/-- [noble_contracts::source::declared::types::{noble_contracts::source::declared::types::Parser<'_0>}::read_type]:
+    Source: 'crates/noble-contracts/src/source/declared/types.rs', lines 78:4-142:5 -/
+def source.declared.types.Parser.read_type
+  (self : source.declared.types.Parser) :
+  Result (core.result.Result source.declared.types.Parser Diagnostic)
+  := do
+  let i := alloc.vec.Vec.len self.pending
+  if i >= 64#usize
+  then
+    let d ← invalid self.span (toStr "type constructor limit exceeded")
+    ok (core.result.Result.Err d)
+  else
+    if self.nodes >= 256#usize
+    then
+      let d ← invalid self.span (toStr "type constructor limit exceeded")
+      ok (core.result.Result.Err d)
+    else
+      let i1 ← self.nodes + 1#usize
+      let i2 ← source.declared.types.Parser.read_type_loop0 self.text self.at
+      let s ←
+        core.slice.index.Slice.index
+          (core.slice.index.SliceIndexRangeUsizeSlice Std.U8) self.text
+          { start := self.at, «end» := i2 }
+      let r ← core.str.converts.from_utf8 s
+      let r1 ←
+        core.result.Result.map_err
+          source.declared.types.Parser.read_type.closure.Insts.CoreOpsFunctionFnOnceTupleUtf8ErrorDiagnostic
+          r self.span
+      match r1 with
+      | core.result.Result.Ok value =>
+        let b ← core.str.Str.is_empty value
+        if b
+        then
+          let d ← invalid self.span (toStr "type constructor missing name")
+          ok (core.result.Result.Err d)
+        else
+          let o ←
+            core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice Std.U8)
+              self.text i2
+          let b1 ←
+            core.option.Option.Insts.CoreCmpPartialEqOption.eq
+              (core.cmp.PartialEqShared core.cmp.PartialEqU8) o (some 60#u8)
+          if b1
+          then
+            let i3 ← i2 + 1#usize
+            let b2 ←
+              Str.Insts.CoreCmpPartialEqStr.eq value (toStr "Resource")
+            if b2
+            then
+              let s1 ←
+                lift (Array.to_slice
+                  (Array.make 12#usize [
+                    116#u8, 101#u8, 115#u8, 116#u8, 46#u8, 99#u8, 111#u8,
+                    117#u8, 110#u8, 116#u8, 101#u8, 114#u8
+                    ]))
+              let i4 := Slice.len s1
+              let i5 ← lift (core.num.Usize.saturating_add i3 i4)
+              let o1 ←
+                core.slice.Slice.get
+                  (core.slice.index.SliceIndexRangeUsizeSlice Std.U8) 
+                  self.text { start := i3, «end» := i5 }
+              let s2 ←
+                lift (Array.to_slice
+                  (Array.make 12#usize [
+                    116#u8, 101#u8, 115#u8, 116#u8, 46#u8, 99#u8, 111#u8,
+                    117#u8, 110#u8, 116#u8, 101#u8, 114#u8
+                    ]))
+              let b3 ←
+                core.cmp.PartialEq.ne.trait_default
+                  (core.option.Option.Insts.CoreCmpPartialEqOption
+                  (core.cmp.PartialEqShared (Slice.Insts.CoreCmpPartialEqSlice
+                  core.cmp.PartialEqU8))) o1 (some s2)
+              if b3
+              then
+                let d ←
+                  invalid self.span (toStr "unregistered resource kind")
+                ok (core.result.Result.Err d)
+              else
+                let s3 ←
+                  lift (Array.to_slice
+                    (Array.make 12#usize [
+                      116#u8, 101#u8, 115#u8, 116#u8, 46#u8, 99#u8, 111#u8,
+                      117#u8, 110#u8, 116#u8, 101#u8, 114#u8
+                      ]))
+                let i6 := Slice.len s3
+                let i7 ← i3 + i6
+                let r2 ←
+                  source.declared.types.Parser.expect
+                    { self with «at» := i7, nodes := i1 } 62#u8
+                match r2 with
+                | core.result.Result.Ok _ =>
+                  let i8 ← i7 + 1#usize
+                  ok (core.result.Result.Ok
+                    {
+                      self
+                        with
+                        «at» := i8,
+                        nodes := i1,
+                        value :=
+                          (some (noble_kernel.types.Ty.ResourceType 0#u32))
+                    })
+                | core.result.Result.Err failure =>
+                  ok (core.result.Result.Err failure)
+            else
+              let b3 ← Str.Insts.CoreCmpPartialEqStr.eq value (toStr "List")
+              if b3
+              then
+                let v ←
+                  alloc.vec.Vec.push self.pending
+                    source.declared.types.Frame.List
+                ok (core.result.Result.Ok
+                  { self with «at» := i3, nodes := i1, pending := v })
+              else
+                let b4 ←
+                  Str.Insts.CoreCmpPartialEqStr.eq value (toStr "Pair")
+                if b4
+                then
+                  let v ←
+                    alloc.vec.Vec.push self.pending
+                      source.declared.types.Frame.PairLeft
+                  ok (core.result.Result.Ok
+                    { self with «at» := i3, nodes := i1, pending := v })
+                else
+                  let b5 ←
+                    Str.Insts.CoreCmpPartialEqStr.eq value (toStr "Sum")
+                  if b5
+                  then
+                    let v ←
+                      alloc.vec.Vec.push self.pending
+                        source.declared.types.Frame.SumLeft
+                    ok (core.result.Result.Ok
+                      { self with «at» := i3, nodes := i1, pending := v })
+                  else
+                    let v ←
+                      alloc.vec.Vec.push self.pending
+                        source.declared.types.Frame.Unknown
+                    ok (core.result.Result.Ok
+                      { self with «at» := i3, nodes := i1, pending := v })
+          else
+            let b2 ← Str.Insts.CoreCmpPartialEqStr.eq value (toStr "I64")
+            if b2
+            then
+              ok (core.result.Result.Ok
+                {
+                  self
+                    with
+                    «at» := i2,
+                    nodes := i1,
+                    value := (some noble_kernel.types.Ty.I64Type)
+                })
+            else
+              let b3 ← Str.Insts.CoreCmpPartialEqStr.eq value (toStr "Bool")
+              if b3
+              then
+                ok (core.result.Result.Ok
+                  {
+                    self
+                      with
+                      «at» := i2,
+                      nodes := i1,
+                      value := (some noble_kernel.types.Ty.BoolType)
+                  })
+              else
+                let b4 ←
+                  Str.Insts.CoreCmpPartialEqStr.eq value (toStr "Text")
+                if b4
+                then
+                  ok (core.result.Result.Ok
+                    {
+                      self
+                        with
+                        «at» := i2,
+                        nodes := i1,
+                        value := (some noble_kernel.types.Ty.TextType)
+                    })
+                else
+                  let b5 ←
+                    Str.Insts.CoreCmpPartialEqStr.eq value (toStr "Unit")
+                  if b5
+                  then
+                    ok (core.result.Result.Ok
+                      {
+                        self
+                          with
+                          «at» := i2,
+                          nodes := i1,
+                          value := (some noble_kernel.types.Ty.UnitType)
+                      })
+                  else
+                    let «at» := Slice.len self.names
+                    let found ←
+                      source.declared.types.Parser.read_type_loop1 self.names
+                        value «at»
+                    match found with
+                    | none =>
+                      let d ←
+                        invalid self.span (toStr
+                          "unknown or cyclic nominal type")
+                      ok (core.result.Result.Err d)
+                    | some _ =>
+                      ok (core.result.Result.Ok
+                        { self with «at» := i2, nodes := i1, value := found })
+      | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::source::declared::types::{noble_contracts::source::declared::types::Parser<'_0>}::parse_step]:
+    Source: 'crates/noble-contracts/src/source/declared/types.rs', lines 68:4-76:5 -/
+def source.declared.types.Parser.parse_step
+  (self : source.declared.types.Parser) :
+  Result (core.result.Result (source.declared.types.Parser × (Option
+    source.declared.types.ParsedType)) Diagnostic)
+  := do
+  let b := core.option.Option.is_none self.value
+  if b
+  then
+    let r ← source.declared.types.Parser.read_type self
+    match r with
+    | core.result.Result.Ok p =>
+      let (o, o1) := core.option.Option.take p.value
+      match o with
+      | none => ok (core.result.Result.Ok ({ p with value := o1 }, none))
+      | some ty => source.declared.types.Parser.fold { p with value := o1 } ty
+    | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+  else
+    let (o, o1) := core.option.Option.take self.value
+    match o with
+    | none => ok (core.result.Result.Ok ({ self with value := o1 }, none))
+    | some ty => source.declared.types.Parser.fold { self with value := o1 } ty
+
+/-- [noble_contracts::source::declared::types::{noble_contracts::source::declared::types::Parser<'_0>}::parse::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::source::declared::types::{noble_contracts::source::declared::types::Parser<'_0>}::parse::{closure}<'_0, '_1>}::call_once]:
+    Source: 'crates/noble-contracts/src/source/declared/types.rs', lines 65:29-65:53 -/
+def
+  source.declared.types.Parser.parse.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnostic.call_once
+  (c : source.declared.types.Parser.parse.closure) (_ : Unit) :
+  Result Diagnostic
+  := do
+  internal c
+
+/-- Trait implementation: [noble_contracts::source::declared::types::{noble_contracts::source::declared::types::Parser<'_0>}::parse::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::source::declared::types::{noble_contracts::source::declared::types::Parser<'_0>}::parse::{closure}<'_0, '_1>}]
+    Source: 'crates/noble-contracts/src/source/declared/types.rs', lines 65:29-65:53 -/
+@[reducible]
+def
+  source.declared.types.Parser.parse.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnostic
+  : core.ops.function.FnOnce source.declared.types.Parser.parse.closure Unit
+  Diagnostic := {
+  call_once :=
+    source.declared.types.Parser.parse.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnostic.call_once
+}
+
+/-- [noble_contracts::source::declared::types::{noble_contracts::source::declared::types::Parser<'_0>}::parse]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/declared/types.rs', lines 50:8-61:9 -/
+@[rust_loop_body]
+def source.declared.types.Parser.parse_loop.body
+  (s : Slice Std.U8) (i : Std.Usize) (i1 : Std.Usize) (span : Span)
+  (s1 : Slice (String × noble_kernel.types.Ty))
+  (v : alloc.vec.Vec source.declared.types.Frame)
+  (o : Option noble_kernel.types.Ty)
+  (completed : Option source.declared.types.ParsedType) :
+  Result (ControlFlow ((Slice Std.U8) × Std.Usize × Std.Usize × Span ×
+    (Slice (String × noble_kernel.types.Ty)) × (alloc.vec.Vec
+    source.declared.types.Frame) × (Option noble_kernel.types.Ty) × (Option
+    source.declared.types.ParsedType)) ((Option
+    source.declared.types.ParsedType) × (Option Diagnostic)))
+  := do
+  let b := core.option.Option.is_none completed
+  if b
+  then
+    let r ←
+      source.declared.types.Parser.parse_step
+        {
+          text := s,
+          «at» := i,
+          nodes := i1,
+          span,
+          names := s1,
+          pending := v,
+          value := o
+        }
+    match r with
+    | core.result.Result.Ok p =>
+      let (p1, result) := p
+      ok (cont (p1.text, p1.at, p1.nodes, p1.span, p1.names, p1.pending,
+        p1.value, result))
+    | core.result.Result.Err problem => ok (done (completed, some problem))
+  else ok (done (completed, none))
+
+/-- [noble_contracts::source::declared::types::{noble_contracts::source::declared::types::Parser<'_0>}::parse]: loop 0:
+    Source: 'crates/noble-contracts/src/source/declared/types.rs', lines 50:8-61:9 -/
+@[rust_loop]
+def source.declared.types.Parser.parse_loop
+  (s : Slice Std.U8) (i : Std.Usize) (i1 : Std.Usize) (span : Span)
+  (s1 : Slice (String × noble_kernel.types.Ty))
+  (v : alloc.vec.Vec source.declared.types.Frame)
+  (o : Option noble_kernel.types.Ty)
+  (completed : Option source.declared.types.ParsedType) :
+  Result ((Option source.declared.types.ParsedType) × (Option Diagnostic))
+  := do
+  loop
+    (fun (s2, i2, i3, span1, s3, v1, o1, completed1) =>
+      source.declared.types.Parser.parse_loop.body s2 i2 i3 span1 s3 v1 o1
+      completed1)
+    (s, i, i1, span, s1, v, o, completed)
+
+/-- [noble_contracts::source::declared::types::{noble_contracts::source::declared::types::Parser<'_0>}::parse]:
+    Source: 'crates/noble-contracts/src/source/declared/types.rs', lines 46:4-66:5 -/
+def source.declared.types.Parser.parse
+  (self : source.declared.types.Parser) :
+  Result (core.result.Result source.declared.types.ParsedType Diagnostic)
+  := do
+  let (completed, failure) ←
+    source.declared.types.Parser.parse_loop self.text self.at self.nodes
+      self.span self.names self.pending self.value none
+  match failure with
+  | none =>
+    core.option.Option.ok_or_else
+      source.declared.types.Parser.parse.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnostic
+      completed self.span
+  | some problem => ok (core.result.Result.Err problem)
+
+/-- [noble_contracts::source::declared::types::parse]:
+    Source: 'crates/noble-contracts/src/source/declared/types.rs', lines 6:0-24:1 -/
+def source.declared.types.parse
+  (word : Str) (types : Slice (String × noble_kernel.types.Ty)) (span : Span)
+  :
+  Result (core.result.Result source.declared.types.ParsedType Diagnostic)
+  := do
+  let s ← core.str.Str.as_bytes word
+  let b ← source.declared.types.contains_ascii_whitespace s
+  if b
+  then
+    let d ← invalid span (toStr "type word contains whitespace")
+    ok (core.result.Result.Err d)
+  else
+    source.declared.types.Parser.parse
+      {
+        text := s,
+        «at» := 0#usize,
+        nodes := 0#usize,
+        span,
+        names := types,
+        pending := (alloc.vec.Vec.new source.declared.types.Frame),
+        value := none
+      }
+
+/-- [noble_contracts::source::declared::state::register::schema::types::shape]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema/types.rs', lines 45:0-85:1 -/
+def source.declared.state.register.schema.types.shape
+  (schema : source.declared.Schema)
+  (local_types : Slice (String × noble_kernel.types.Ty)) :
+  Result (core.result.Result (noble_kernel.types.NominalShape × Std.Usize)
+    Diagnostic)
+  := do
+  match schema.kind with
+  | source.declared.SchemaKind.Opaque base _ =>
+    let s ← alloc.string.String.Insts.CoreOpsDerefDerefStr.deref base
+    let r ← source.declared.types.parse s local_types source.declared.SPAN
+    match r with
+    | core.result.Result.Ok value =>
+      ok (core.result.Result.Ok (noble_kernel.types.NominalShape.Opaque
+        value.ty, value.nodes))
+    | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+  | source.declared.SchemaKind.Variant _ left_type _ _ right_type _ =>
+    let s ← alloc.string.String.Insts.CoreOpsDerefDerefStr.deref left_type
+    let r ← source.declared.types.parse s local_types source.declared.SPAN
+    match r with
+    | core.result.Result.Ok value =>
+      let s1 ←
+        alloc.string.String.Insts.CoreOpsDerefDerefStr.deref right_type
+      let r1 ←
+        source.declared.types.parse s1 local_types source.declared.SPAN
+      match r1 with
+      | core.result.Result.Ok value1 =>
+        let i ← lift (core.num.Usize.saturating_add value.nodes value1.nodes)
+        ok (core.result.Result.Ok (noble_kernel.types.NominalShape.Variant
+          value.ty value1.ty, i))
+      | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+    | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::source::declared::state::register::schema::types::type_word_len]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema/types.rs', lines 34:0-43:1 -/
+def source.declared.state.register.schema.types.type_word_len
+  (schema : source.declared.Schema) : Result Std.Usize := do
+  match schema.kind with
+  | source.declared.SchemaKind.Opaque base _ => alloc.string.String.len base
+  | source.declared.SchemaKind.Variant _ left_type _ _ right_type _ =>
+    let i ← alloc.string.String.len left_type
+    let i1 ← alloc.string.String.len right_type
+    ok (core.num.Usize.saturating_add i i1)
+
+/-- [noble_contracts::source::declared::state::register::schema::types::parse_shape]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema/types.rs', lines 1:0-32:1 -/
+def source.declared.state.register.schema.types.parse_shape
+  (schema : source.declared.Schema)
+  (local_types : Slice (String × noble_kernel.types.Ty)) (meter : Meter) :
+  Result (Meter × (core.result.Result (Option (noble_kernel.types.NominalShape
+    × Std.Usize)) source.Error))
+  := do
+  let word_len ←
+    source.declared.state.register.schema.types.type_word_len schema
+  let b ← alloc.string.String.is_empty schema.name
+  massert (¬ b)
+  massert (word_len > 0#usize)
+  let r ←
+    core.convert.num.ptr_try_from_impls.TryFromU32Usize.try_from word_len
+  match r with
+  | core.result.Result.Ok bytes =>
+    let (r1, meter1) ← metering.Meter.charge meter bytes source.declared.SPAN
+    match r1 with
+    | core.result.Result.Ok _ =>
+      let r2 ←
+        source.declared.state.register.schema.types.shape schema local_types
+      let o ← core.result.Result.ok r2
+      ok (meter1, core.result.Result.Ok o)
+    | core.result.Result.Err problem =>
+      let e ← source.declared.diagnostic source.Stage.Check problem
+      ok (meter1, core.result.Result.Err e)
+  | core.result.Result.Err _ =>
+    let e ←
+      source.declared.error source.Stage.Check (toStr
+        "type word length overflow")
+    ok (meter, core.result.Result.Err e)
+
+/-- [noble_contracts::source::declared::state::register::schema::types::matches_operation]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema/types.rs', lines 142:0-153:1 -/
+def source.declared.state.register.schema.types.matches_operation
+  («export» : Str) (schema : source.declared.Schema)
+  (suffixes : Array Str 2#usize) :
+  Result (Array Bool 2#usize)
+  := do
+  let o ← source.declared.split_once_ascii «export» 46#u8
+  match o with
+  | none => ok (Array.repeat 2#usize false)
+  | some p =>
+    let (base, suffix) := p
+    let b ← Shared0Str.Insts.CoreCmpPartialEqString.eq base schema.name
+    if b
+    then
+      let s ← Array.index_usize suffixes 0#usize
+      let b1 ← Str.Insts.CoreCmpPartialEqStr.eq suffix s
+      let s1 ← Array.index_usize suffixes 1#usize
+      let b2 ← Str.Insts.CoreCmpPartialEqStr.eq suffix s1
+      ok (Array.make 2#usize [ b1, b2 ])
+    else ok (Array.repeat 2#usize false)
+
+/-- [noble_contracts::source::declared::state::register::schema::types::exported_operations]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema/types.rs', lines 123:4-134:5 -/
+@[rust_loop_body]
+def source.declared.state.register.schema.types.exported_operations_loop.body
+  (schema : source.declared.Schema) (exports : Slice String)
+  (suffixes : Array Str 2#usize) (declared_public : Array Bool 2#usize)
+  («public» : Array Bool 2#usize) (entry_index : Std.Usize) :
+  Result (ControlFlow ((Array Bool 2#usize) × Std.Usize) (Array Bool 2#usize))
+  := do
+  let i := Slice.len exports
+  if entry_index < i
+  then
+    let b ← Array.index_usize declared_public 0#usize
+    if b
+    then
+      let b1 ← Array.index_usize «public» 0#usize
+      if b1
+      then
+        let b2 ← Array.index_usize declared_public 1#usize
+        if b2
+        then
+          let b3 ← Array.index_usize «public» 1#usize
+          if b3
+          then ok (done «public»)
+          else
+            let s ← Slice.index_usize exports entry_index
+            let s1 ← alloc.string.String.Insts.CoreOpsDerefDerefStr.deref s
+            let matched ←
+              source.declared.state.register.schema.types.matches_operation s1
+                schema suffixes
+            if b
+            then
+              let b4 ← Array.index_usize matched 0#usize
+              if b4
+              then
+                let (_, index_mut_back) ←
+                  Array.index_mut_usize «public» 0#usize
+                let public1 ←
+                  if b2
+                  then
+                    do
+                    let b5 ← Array.index_usize matched 1#usize
+                    if b5
+                    then
+                      let public2 := index_mut_back true
+                      Array.update public2 1#usize true
+                    else ok (index_mut_back true)
+                  else ok (index_mut_back true)
+                let entry_index1 ← entry_index + 1#usize
+                ok (cont (public1, entry_index1))
+              else
+                if b2
+                then
+                  let b5 ← Array.index_usize matched 1#usize
+                  if b5
+                  then
+                    let a ← Array.update «public» 1#usize true
+                    let entry_index1 ← entry_index + 1#usize
+                    ok (cont (a, entry_index1))
+                  else
+                    let entry_index1 ← entry_index + 1#usize
+                    ok (cont («public», entry_index1))
+                else
+                  let entry_index1 ← entry_index + 1#usize
+                  ok (cont («public», entry_index1))
+            else
+              if b2
+              then
+                let b4 ← Array.index_usize matched 1#usize
+                if b4
+                then
+                  let a ← Array.update «public» 1#usize true
+                  let entry_index1 ← entry_index + 1#usize
+                  ok (cont (a, entry_index1))
+                else
+                  let entry_index1 ← entry_index + 1#usize
+                  ok (cont («public», entry_index1))
+              else
+                let entry_index1 ← entry_index + 1#usize
+                ok (cont («public», entry_index1))
+        else ok (done «public»)
+      else
+        let s ← Slice.index_usize exports entry_index
+        let s1 ← alloc.string.String.Insts.CoreOpsDerefDerefStr.deref s
+        let matched ←
+          source.declared.state.register.schema.types.matches_operation s1
+            schema suffixes
+        if b
+        then
+          let b2 ← Array.index_usize matched 0#usize
+          if b2
+          then
+            let (_, index_mut_back) ←
+              Array.index_mut_usize «public» 0#usize
+            let b3 ← Array.index_usize declared_public 1#usize
+            let public1 ←
+              if b3
+              then
+                do
+                let b4 ← Array.index_usize matched 1#usize
+                if b4
+                then
+                  let public2 := index_mut_back true
+                  Array.update public2 1#usize true
+                else ok (index_mut_back true)
+              else ok (index_mut_back true)
+            let entry_index1 ← entry_index + 1#usize
+            ok (cont (public1, entry_index1))
+          else
+            let b3 ← Array.index_usize declared_public 1#usize
+            if b3
+            then
+              let b4 ← Array.index_usize matched 1#usize
+              if b4
+              then
+                let a ← Array.update «public» 1#usize true
+                let entry_index1 ← entry_index + 1#usize
+                ok (cont (a, entry_index1))
+              else
+                let entry_index1 ← entry_index + 1#usize
+                ok (cont («public», entry_index1))
+            else
+              let entry_index1 ← entry_index + 1#usize
+              ok (cont («public», entry_index1))
+        else
+          let b2 ← Array.index_usize declared_public 1#usize
+          if b2
+          then
+            let b3 ← Array.index_usize matched 1#usize
+            if b3
+            then
+              let a ← Array.update «public» 1#usize true
+              let entry_index1 ← entry_index + 1#usize
+              ok (cont (a, entry_index1))
+            else
+              let entry_index1 ← entry_index + 1#usize
+              ok (cont («public», entry_index1))
+          else
+            let entry_index1 ← entry_index + 1#usize
+            ok (cont («public», entry_index1))
+    else
+      let b1 ← Array.index_usize declared_public 1#usize
+      if b1
+      then
+        let b2 ← Array.index_usize «public» 1#usize
+        if b2
+        then ok (done «public»)
+        else
+          let s ← Slice.index_usize exports entry_index
+          let s1 ← alloc.string.String.Insts.CoreOpsDerefDerefStr.deref s
+          let matched ←
+            source.declared.state.register.schema.types.matches_operation s1
+              schema suffixes
+          if b
+          then
+            let b3 ← Array.index_usize matched 0#usize
+            if b3
+            then
+              let (_, index_mut_back) ←
+                Array.index_mut_usize «public» 0#usize
+              let public1 ←
+                if b1
+                then
+                  do
+                  let b4 ← Array.index_usize matched 1#usize
+                  if b4
+                  then
+                    let public2 := index_mut_back true
+                    Array.update public2 1#usize true
+                  else ok (index_mut_back true)
+                else ok (index_mut_back true)
+              let entry_index1 ← entry_index + 1#usize
+              ok (cont (public1, entry_index1))
+            else
+              if b1
+              then
+                let b4 ← Array.index_usize matched 1#usize
+                if b4
+                then
+                  let a ← Array.update «public» 1#usize true
+                  let entry_index1 ← entry_index + 1#usize
+                  ok (cont (a, entry_index1))
+                else
+                  let entry_index1 ← entry_index + 1#usize
+                  ok (cont («public», entry_index1))
+              else
+                let entry_index1 ← entry_index + 1#usize
+                ok (cont («public», entry_index1))
+          else
+            if b1
+            then
+              let b3 ← Array.index_usize matched 1#usize
+              if b3
+              then
+                let a ← Array.update «public» 1#usize true
+                let entry_index1 ← entry_index + 1#usize
+                ok (cont (a, entry_index1))
+              else
+                let entry_index1 ← entry_index + 1#usize
+                ok (cont («public», entry_index1))
+            else
+              let entry_index1 ← entry_index + 1#usize
+              ok (cont («public», entry_index1))
+      else ok (done «public»)
+  else ok (done «public»)
+
+/-- [noble_contracts::source::declared::state::register::schema::types::exported_operations]: loop 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema/types.rs', lines 123:4-134:5 -/
+@[rust_loop]
+def source.declared.state.register.schema.types.exported_operations_loop
+  (schema : source.declared.Schema) (exports : Slice String)
+  (suffixes : Array Str 2#usize) (declared_public : Array Bool 2#usize)
+  («public» : Array Bool 2#usize) (entry_index : Std.Usize) :
+  Result (Array Bool 2#usize)
+  := do
+  loop
+    (fun (public1, entry_index1) =>
+      source.declared.state.register.schema.types.exported_operations_loop.body
+      schema exports suffixes declared_public public1 entry_index1)
+    («public», entry_index)
+
+/-- [noble_contracts::source::declared::state::register::schema::types::exported_operations]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema/types.rs', lines 115:0-136:1 -/
+def source.declared.state.register.schema.types.exported_operations
+  (schema : source.declared.Schema) (exports : Slice String)
+  (suffixes : Array Str 2#usize) (declared_public : Array Bool 2#usize) :
+  Result (Array Bool 2#usize)
+  := do
+  let «public» := Array.repeat 2#usize false
+  source.declared.state.register.schema.types.exported_operations_loop schema
+    exports suffixes declared_public «public» 0#usize
+
+/-- [noble_contracts::source::declared::state::register::schema::types::public_operations]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema/types.rs', lines 87:0-113:1 -/
+def source.declared.state.register.schema.types.public_operations
+  (schema : source.declared.Schema) (exports : Slice String)
+  (is_exported : Bool) :
+  Result (Array Bool 2#usize)
+  := do
+  if is_exported
+  then
+    let (sk, s, s1, declared_public) ←
+      match schema.kind with
+      | source.declared.SchemaKind.Opaque _ «public» =>
+        let a := Array.repeat 2#usize «public»
+        ok (schema.kind, toStr "new", toStr "into", a)
+      | source.declared.SchemaKind.Variant left _ left_public right _
+        right_public =>
+        do
+        let s2 ← alloc.string.String.as_str left
+        let s3 ← alloc.string.String.as_str right
+        ok (schema.kind, s2, s3,
+          (Array.make 2#usize [ left_public, right_public ] : Array Bool
+          2#usize))
+    let s2 ← Array.index_usize (Array.make 2#usize [ s, s1 ]) 0#usize
+    let b ← core.str.Str.is_empty s2
+    massert (¬ b)
+    let s3 ← Array.index_usize (Array.make 2#usize [ s, s1 ]) 1#usize
+    let b1 ← core.str.Str.is_empty s3
+    massert (¬ b1)
+    source.declared.state.register.schema.types.exported_operations
+      { schema with kind := sk } exports (Array.make 2#usize [ s, s1 ])
+      declared_public
+  else ok (Array.repeat 2#usize false)
+
+/-- [noble_contracts::source::declared::scalar_payload]:
+    Source: 'crates/noble-contracts/src/source/declared.rs', lines 289:0-297:1 -/
+def source.declared.scalar_payload
+  (ty : noble_kernel.types.Ty) : Result Bool := do
+  match ty with
+  | noble_kernel.types.Ty.UnitType => ok true
+  | noble_kernel.types.Ty.BoolType => ok true
+  | noble_kernel.types.Ty.I64Type => ok true
+  | noble_kernel.types.Ty.TextType => ok true
+  | noble_kernel.types.Ty.SyntaxType => ok false
+  | noble_kernel.types.Ty.ContractType => ok false
+  | noble_kernel.types.Ty.EvidenceType => ok false
+  | noble_kernel.types.Ty.CertifiedType => ok false
+  | noble_kernel.types.Ty.PairType _ _ => ok false
+  | noble_kernel.types.Ty.SumType _ _ => ok false
+  | noble_kernel.types.Ty.ListType _ => ok false
+  | noble_kernel.types.Ty.ProgramType _ _ _ => ok false
+  | noble_kernel.types.Ty.ResourceType _ => ok false
+  | noble_kernel.types.Ty.NominalType _ _ => ok false
+
+/-- [noble_contracts::source::declared::nominal_exposure::{impl core::ops::function::FnOnce<(&'_ noble_kernel::contracts::NominalDecl,), bool> for noble_contracts::source::declared::nominal_exposure::{closure}<'a>}::call_once]:
+    Source: 'crates/noble-contracts/src/source/declared.rs', lines 281:21-281:55 -/
+def
+  source.declared.nominal_exposure.closure.Insts.CoreOpsFunctionFnOnceTupleSharedNominalDeclBool.call_once
+  (c : source.declared.nominal_exposure.closure)
+  (tupled_args : noble_kernel.contracts.NominalDecl) :
+  Result Bool
+  := do
+  ok tupled_args.exported
+
+/-- Trait implementation: [noble_contracts::source::declared::nominal_exposure::{impl core::ops::function::FnOnce<(&'_ noble_kernel::contracts::NominalDecl,), bool> for noble_contracts::source::declared::nominal_exposure::{closure}<'a>}]
+    Source: 'crates/noble-contracts/src/source/declared.rs', lines 281:21-281:55 -/
+@[reducible]
+def
+  source.declared.nominal_exposure.closure.Insts.CoreOpsFunctionFnOnceTupleSharedNominalDeclBool
+  : core.ops.function.FnOnce source.declared.nominal_exposure.closure
+  noble_kernel.contracts.NominalDecl Bool := {
+  call_once :=
+    source.declared.nominal_exposure.closure.Insts.CoreOpsFunctionFnOnceTupleSharedNominalDeclBool.call_once
+}
+
+/-- [noble_contracts::source::declared::nominal_exposure]:
+    Source: 'crates/noble-contracts/src/source/declared.rs', lines 275:0-287:1 -/
+def source.declared.nominal_exposure
+  (id : noble_kernel.types.NominalTypeId)
+  (environment : noble_kernel.contracts.Env) :
+  Result source.declared.Exposure
+  := do
+  let o ← noble_kernel.contracts.Env.nominal environment id
+  let b ←
+    core.option.Option.is_some_and
+      source.declared.nominal_exposure.closure.Insts.CoreOpsFunctionFnOnceTupleSharedNominalDeclBool
+      o ()
+  if b
+  then ok source.declared.Exposure.Public
+  else ok source.declared.Exposure.Hidden
+
+/-- [noble_contracts::source::declared::exposed_node]:
+    Source: 'crates/noble-contracts/src/source/declared.rs', lines 254:0-273:1 -/
+def source.declared.exposed_node
+  (ty : noble_kernel.types.Ty) (environment : noble_kernel.contracts.Env) :
+  Result source.declared.Exposure
+  := do
+  let b ← source.declared.scalar_payload ty
+  if b
+  then ok source.declared.Exposure.Public
+  else
+    match ty with
+    | noble_kernel.types.Ty.UnitType => ok source.declared.Exposure.Hidden
+    | noble_kernel.types.Ty.BoolType => ok source.declared.Exposure.Hidden
+    | noble_kernel.types.Ty.I64Type => ok source.declared.Exposure.Hidden
+    | noble_kernel.types.Ty.TextType => ok source.declared.Exposure.Hidden
+    | noble_kernel.types.Ty.SyntaxType => ok source.declared.Exposure.Hidden
+    | noble_kernel.types.Ty.ContractType => ok source.declared.Exposure.Hidden
+    | noble_kernel.types.Ty.EvidenceType => ok source.declared.Exposure.Hidden
+    | noble_kernel.types.Ty.CertifiedType => ok source.declared.Exposure.Hidden
+    | noble_kernel.types.Ty.PairType left right =>
+      ok (source.declared.Exposure.Binary left right)
+    | noble_kernel.types.Ty.SumType left right =>
+      ok (source.declared.Exposure.Binary left right)
+    | noble_kernel.types.Ty.ListType item =>
+      ok (source.declared.Exposure.Unary item)
+    | noble_kernel.types.Ty.ProgramType _ _ _ =>
+      ok source.declared.Exposure.Hidden
+    | noble_kernel.types.Ty.ResourceType _ =>
+      ok source.declared.Exposure.Hidden
+    | noble_kernel.types.Ty.NominalType id _ =>
+      source.declared.nominal_exposure id environment
+
+/-- [noble_contracts::source::declared::CONSTRUCTOR_CAP]
+    Source: 'crates/noble-contracts/src/source/declared.rs', lines 11:0-11:35 -/
+@[global_simps, irreducible]
+def source.declared.CONSTRUCTOR_CAP : Std.Usize := 256#usize
+
+/-- [noble_contracts::source::declared::exposure_step]:
+    Source: 'crates/noble-contracts/src/source/declared.rs', lines 222:0-252:1 -/
+def source.declared.exposure_step
+  (state : source.declared.ExposureState)
+  (environment : noble_kernel.contracts.Env) :
+  Result (Option source.declared.ExposureState)
+  := do
+  let (o, v) ← alloc.vec.Vec.pop Global state.pending
+  match o with
+  | none => ok (some { state with pending := v })
+  | some ty =>
+    if state.remaining = 0#usize
+    then ok none
+    else
+      let i ← state.remaining - 1#usize
+      let e ← source.declared.exposed_node ty environment
+      match e with
+      | source.declared.Exposure.Public =>
+        ok (some { pending := v, remaining := i })
+      | source.declared.Exposure.Binary left right =>
+        if source.declared.CONSTRUCTOR_CAP < 2#usize
+        then ok none
+        else
+          let i1 := alloc.vec.Vec.len v
+          let i2 ←
+            lift (core.num.Usize.saturating_sub source.declared.CONSTRUCTOR_CAP
+              2#usize)
+          if i1 > i2
+          then ok none
+          else
+            let v1 ← alloc.vec.Vec.push v right
+            let v2 ← alloc.vec.Vec.push v1 left
+            ok (some { pending := v2, remaining := i })
+      | source.declared.Exposure.Unary item =>
+        let i1 := alloc.vec.Vec.len v
+        if i1 = source.declared.CONSTRUCTOR_CAP
+        then ok none
+        else
+          let v1 ← alloc.vec.Vec.push v item
+          ok (some { pending := v1, remaining := i })
+      | source.declared.Exposure.Hidden => ok none
+
+/-- [noble_contracts::source::declared::walk_exposure]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/declared.rs', lines 201:4-213:5 -/
+@[rust_loop_body]
+def source.declared.walk_exposure_loop.body
+  (environment : noble_kernel.contracts.Env)
+  (state : Option source.declared.ExposureState) (has_work : Bool) :
+  Result (ControlFlow ((Option source.declared.ExposureState) × Bool) (Option
+    source.declared.ExposureState))
+  := do
+  if has_work
+  then
+    match state with
+    | none => ok (cont (none, false))
+    | some es =>
+      let b ← alloc.vec.Vec.is_empty Global es.pending
+      if b
+      then ok (cont (state, false))
+      else
+        let state1 ← source.declared.exposure_step es environment
+        ok (cont (state1, true))
+  else ok (done state)
+
+/-- [noble_contracts::source::declared::walk_exposure]: loop 0:
+    Source: 'crates/noble-contracts/src/source/declared.rs', lines 201:4-213:5 -/
+@[rust_loop]
+def source.declared.walk_exposure_loop
+  (environment : noble_kernel.contracts.Env)
+  (state : Option source.declared.ExposureState) (has_work : Bool) :
+  Result (Option source.declared.ExposureState)
+  := do
+  loop
+    (fun (state1, has_work1) => source.declared.walk_exposure_loop.body
+      environment state1 has_work1)
+    (state, has_work)
+
+/-- [noble_contracts::source::declared::walk_exposure]:
+    Source: 'crates/noble-contracts/src/source/declared.rs', lines 192:0-215:1 -/
+def source.declared.walk_exposure
+  (pending : alloc.vec.Vec noble_kernel.types.Ty)
+  (environment : noble_kernel.contracts.Env) :
+  Result Bool
+  := do
+  let o ← lift (Usize.checked_sub source.declared.CONSTRUCTOR_CAP 1#usize)
+  match o with
+  | none => ok false
+  | some remaining =>
+    let state ←
+      source.declared.walk_exposure_loop environment (some
+        { pending, remaining }) true
+    ok (core.option.Option.is_some state)
+
+/-- [noble_contracts::source::declared::exposed_payload]:
+    Source: 'crates/noble-contracts/src/source/declared.rs', lines 169:0-181:1 -/
+def source.declared.exposed_payload
+  (root : noble_kernel.types.Ty) (environment : noble_kernel.contracts.Env) :
+  Result Bool
+  := do
+  let e ← source.declared.exposed_node root environment
+  match e with
+  | source.declared.Exposure.Public => ok true
+  | source.declared.Exposure.Binary left right =>
+    let v ← alloc.vec.FromVecArray.from (Array.make 2#usize [ right, left ])
+    source.declared.walk_exposure v environment
+  | source.declared.Exposure.Unary item =>
+    let v ← alloc.vec.FromVecArray.from (Array.make 1#usize [ item ])
+    source.declared.walk_exposure v environment
+  | source.declared.Exposure.Hidden => ok false
+
+/-- [noble_contracts::source::declared::state::register::schema::nominals::check_exposure]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema/nominals.rs', lines 96:0-118:1 -/
+def source.declared.state.register.schema.nominals.check_exposure
+  (shape : noble_kernel.types.NominalShape) («public» : Array Bool 2#usize)
+  (environment : noble_kernel.contracts.Env) :
+  Result (core.result.Result Unit source.Error)
+  := do
+  let exposed ←
+    match shape with
+    | noble_kernel.types.NominalShape.Opaque base =>
+      do
+      let is_allowed ← source.declared.exposed_payload base environment
+      ok (Array.make 2#usize [ is_allowed, is_allowed ] : Array Bool 2#usize)
+    | noble_kernel.types.NominalShape.Variant left right =>
+      do
+      let b ← source.declared.exposed_payload left environment
+      let b1 ← source.declared.exposed_payload right environment
+      ok (Array.make 2#usize [ b, b1 ] : Array Bool 2#usize)
+  let b ← Array.index_usize «public» 0#usize
+  if b
+  then
+    let b1 ← Array.index_usize exposed 0#usize
+    if b1
+    then
+      let b2 ← Array.index_usize «public» 1#usize
+      if b2
+      then
+        let b3 ← Array.index_usize exposed 1#usize
+        if b3
+        then ok (core.result.Result.Ok ())
+        else
+          let e ←
+            source.declared.error source.Stage.Link (toStr
+              "exported constructor exposes private or unsupported payload")
+          ok (core.result.Result.Err e)
+      else ok (core.result.Result.Ok ())
+    else
+      let e ←
+        source.declared.error source.Stage.Link (toStr
+          "exported constructor exposes private or unsupported payload")
+      ok (core.result.Result.Err e)
+  else
+    let b1 ← Array.index_usize «public» 1#usize
+    if b1
+    then
+      let b2 ← Array.index_usize exposed 1#usize
+      if b2
+      then ok (core.result.Result.Ok ())
+      else
+        let e ←
+          source.declared.error source.Stage.Link (toStr
+            "exported constructor exposes private or unsupported payload")
+        ok (core.result.Result.Err e)
+    else ok (core.result.Result.Ok ())
+
+/-- [noble_contracts::source::declared::state::register::schema::nominals::install_nominal::{impl core::ops::function::FnOnce<(noble_kernel::contracts::NominalError,), noble_contracts::source::Error> for noble_contracts::source::declared::state::register::schema::nominals::install_nominal::{closure}}::call_once]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema/nominals.rs', lines 83:87-88:5 -/
+def
+  source.declared.state.register.schema.nominals.install_nominal.closure.Insts.CoreOpsFunctionFnOnceTupleNominalErrorError.call_once
+  (c : source.declared.state.register.schema.nominals.install_nominal.closure)
+  (tupled_args : noble_kernel.contracts.NominalError) :
+  Result source.Error
+  := do
+  source.declared.error source.Stage.Check (toStr
+    "invalid or recursive nominal schema")
+
+/-- Trait implementation: [noble_contracts::source::declared::state::register::schema::nominals::install_nominal::{impl core::ops::function::FnOnce<(noble_kernel::contracts::NominalError,), noble_contracts::source::Error> for noble_contracts::source::declared::state::register::schema::nominals::install_nominal::{closure}}]
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema/nominals.rs', lines 83:87-88:5 -/
+@[reducible]
+def
+  source.declared.state.register.schema.nominals.install_nominal.closure.Insts.CoreOpsFunctionFnOnceTupleNominalErrorError
+  : core.ops.function.FnOnce
+  source.declared.state.register.schema.nominals.install_nominal.closure
+  noble_kernel.contracts.NominalError source.Error := {
+  call_once :=
+    source.declared.state.register.schema.nominals.install_nominal.closure.Insts.CoreOpsFunctionFnOnceTupleNominalErrorError.call_once
+}
+
+/-- [noble_contracts::source::declared::state::register::schema::nominals::install_nominal]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema/nominals.rs', lines 66:0-91:1 -/
+def source.declared.state.register.schema.nominals.install_nominal
+  (session : source.declared.state.ModuleSession)
+  (declaration : noble_kernel.contracts.NominalDecl) :
+  Result (core.result.Result (source.declared.state.ModuleSession ×
+    noble_kernel.contracts.NominalOps) source.Error)
+  := do
+  let (o, as_mut_back) ← core.option.Option.as_mut session.source.declared
+  match o with
+  | none =>
+    let e ←
+      source.declared.error source.Stage.Check (toStr
+        "missing declared context")
+    ok (core.result.Result.Err e)
+  | some context =>
+    let (environment, _) ←
+      core.mem.take noble_kernel.contracts.Env.Insts.CoreDefaultDefault
+        context.environment
+    let r ←
+      noble_kernel.contracts.Env.declare_nominal environment declaration
+    let r1 ←
+      core.result.Result.map_err
+        source.declared.state.register.schema.nominals.install_nominal.closure.Insts.CoreOpsFunctionFnOnceTupleNominalErrorError
+        r ()
+    match r1 with
+    | core.result.Result.Ok value =>
+      let (environment1, ops) := value
+      let o1 := as_mut_back (some { context with environment := environment1 })
+      ok (core.result.Result.Ok
+        ({ session with source := { session.source with declared := o1 } },
+        ops))
+    | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::source::declared::state::register::schema::nominals::commit]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema/nominals.rs', lines 38:0-64:1 -/
+def source.declared.state.register.schema.nominals.commit
+  (session : source.declared.state.ModuleSession)
+  (candidate : source.declared.state.register.schema.nominals.Candidate)
+  («public» : Array Bool 2#usize) (is_exported : Bool) :
+  Result (core.result.Result (source.declared.state.ModuleSession ×
+    noble_kernel.types.Ty × noble_kernel.contracts.NominalOps) source.Error)
+  := do
+  let i ← lift (UScalar.cast .U32 candidate.ordinal)
+  let ns ←
+    noble_kernel.types.NominalShape.Insts.CoreCloneClone.clone candidate.shape
+  let r ←
+    source.declared.state.register.schema.nominals.install_nominal session
+      {
+        id := { module := candidate.identity, ordinal := i },
+        shape := ns,
+        exported := is_exported,
+        «public»
+      }
+  match r with
+  | core.result.Result.Ok value =>
+    let (session1, ops) := value
+    ok (core.result.Result.Ok (session1, noble_kernel.types.Ty.NominalType
+      { module := candidate.identity, ordinal := i } candidate.shape, ops))
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::source::declared::state::register::schema::nominals::declare::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::declared::state::register::schema::nominals::declare::{closure}}::call_once]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema/nominals.rs', lines 29:24-32:13 -/
+def
+  source.declared.state.register.schema.nominals.declare.closure.Insts.CoreOpsFunctionFnOnceTupleError.call_once
+  (c : source.declared.state.register.schema.nominals.declare.closure)
+  (_ : Unit) :
+  Result source.Error
+  := do
+  source.declared.error source.Stage.Check (toStr "missing declared context")
+
+/-- Trait implementation: [noble_contracts::source::declared::state::register::schema::nominals::declare::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::declared::state::register::schema::nominals::declare::{closure}}]
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema/nominals.rs', lines 29:24-32:13 -/
+@[reducible]
+def
+  source.declared.state.register.schema.nominals.declare.closure.Insts.CoreOpsFunctionFnOnceTupleError
+  : core.ops.function.FnOnce
+  source.declared.state.register.schema.nominals.declare.closure Unit
+  source.Error := {
+  call_once :=
+    source.declared.state.register.schema.nominals.declare.closure.Insts.CoreOpsFunctionFnOnceTupleError.call_once
+}
+
+/-- [noble_contracts::source::declared::state::register::schema::nominals::declare]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema/nominals.rs', lines 11:0-36:1 -/
+def source.declared.state.register.schema.nominals.declare
+  (session : source.declared.state.ModuleSession)
+  (candidate : source.declared.state.register.schema.nominals.Candidate) :
+  Result (core.result.Result (source.declared.state.ModuleSession ×
+    noble_kernel.types.Ty × noble_kernel.contracts.NominalOps) source.Error)
+  := do
+  let is_exported ←
+    core.slice.Slice.contains alloc.string.String.Insts.CoreCmpPartialEqString
+      candidate.exports candidate.schema.name
+  let «public» ←
+    source.declared.state.register.schema.types.public_operations
+      candidate.schema candidate.exports is_exported
+  let o ← core.option.Option.as_ref session.source.declared
+  let r ←
+    core.option.Option.ok_or_else
+      source.declared.state.register.schema.nominals.declare.closure.Insts.CoreOpsFunctionFnOnceTupleError
+      o ()
+  match r with
+  | core.result.Result.Ok value =>
+    let r1 ←
+      source.declared.state.register.schema.nominals.check_exposure
+        candidate.shape «public» value.environment
+    match r1 with
+    | core.result.Result.Ok _ =>
+      source.declared.state.register.schema.nominals.commit session candidate
+        «public» is_exported
+    | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::source::declared::state::register::schema::{noble_contracts::source::declared::state::register::schema::Resolution<'a>}::advance_one]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema.rs', lines 124:4-172:5 -/
+def source.declared.state.register.schema.Resolution.advance_one
+  (self : source.declared.state.register.schema.Resolution)
+  (ordinal : Std.Usize) :
+  Result (source.declared.state.register.schema.Resolution ×
+    (core.result.Result Bool source.Error))
+  := do
+  let o ←
+    alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice (Option
+      (noble_kernel.types.Ty × noble_kernel.contracts.NominalOps)))
+      self.resolved ordinal
+  let b := core.option.Option.is_some o
+  if b
+  then ok (self, core.result.Result.Ok false)
+  else
+    let schema ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        source.declared.Schema) self.collected.schemas ordinal
+    let s := alloc.vec.Vec.deref self.local_types
+    let (meter, parsed) ←
+      source.declared.state.register.schema.types.parse_shape schema s
+        self.meter
+    match parsed with
+    | core.result.Result.Ok parsed1 =>
+      match parsed1 with
+      | none => ok ({ self with meter }, core.result.Result.Ok false)
+      | some p =>
+        let (shape, nodes) := p
+        let i ← lift (core.num.Usize.saturating_add self.type_nodes nodes)
+        let i1 ← lift (core.num.Usize.saturating_add i 1#usize)
+        let r ←
+          Usize.Insts.CoreConvertTryFromU32TryFromIntError.try_from
+            self.limits.nodes
+        let b1 ←
+          core.result.Result.is_ok_and
+            source.declared.state.register.schema.Resolution.advance_one.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeBool
+            r i1
+        if b1
+        then
+          let e ←
+            source.declared.error source.Stage.Check (toStr
+              "module type constructor count exceeded")
+          ok ({ self with type_nodes := i1, meter }, core.result.Result.Err e)
+        else
+          let s1 := alloc.vec.Vec.deref self.collected.exports
+          let (o1, o2) := core.option.Option.take self.session
+          let r1 ←
+            core.option.Option.ok_or_else
+              source.declared.state.register.schema.Resolution.advance_one.closure_1.Insts.CoreOpsFunctionFnOnceTupleError
+              o1 ()
+          match r1 with
+          | core.result.Result.Ok session =>
+            let r2 ←
+              source.declared.state.register.schema.nominals.declare session
+                {
+                  schema,
+                  exports := s1,
+                  shape,
+                  identity := self.identity,
+                  ordinal
+                }
+            match r2 with
+            | core.result.Result.Ok result =>
+              let (session1, ty, ops) := result
+              let s2 ←
+                alloc.string.String.Insts.CoreCloneClone.clone schema.name
+              let t ← noble_kernel.types.Ty.Insts.CoreCloneClone.clone ty
+              let v ← alloc.vec.Vec.push self.local_types (s2, t)
+              let (_, index_mut_back) ←
+                alloc.vec.Vec.index_mut (core.slice.index.SliceIndexUsizeSlice
+                  (Option (noble_kernel.types.Ty ×
+                  noble_kernel.contracts.NominalOps))) self.resolved ordinal
+              let v1 := index_mut_back (some (ty, ops))
+              ok
+                ({
+                   self
+                     with
+                     session := (some session1),
+                     local_types := v,
+                     resolved := v1,
+                     type_nodes := i1,
+                     meter
+                 }, core.result.Result.Ok true)
+            | core.result.Result.Err problem =>
+              ok ({ self with session := o2, type_nodes := i1, meter },
+                core.result.Result.Err problem)
+          | core.result.Result.Err problem =>
+            ok ({ self with session := o2, type_nodes := i1, meter },
+              core.result.Result.Err problem)
+    | core.result.Result.Err problem =>
+      ok ({ self with meter }, core.result.Result.Err problem)
+
+/-- [noble_contracts::source::declared::state::register::schema::{noble_contracts::source::declared::state::register::schema::Resolution<'a>}::advance]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema.rs', lines 104:8-113:9 -/
+@[rust_loop_body]
+def source.declared.state.register.schema.Resolution.advance_loop.body
+  (count : Std.Usize) (o : Option source.declared.state.ModuleSession)
+  (v : alloc.vec.Vec (String × noble_kernel.types.Ty))
+  (v1 : alloc.vec.Vec (Option (noble_kernel.types.Ty ×
+  noble_kernel.contracts.NominalOps))) (i : Std.Usize) (m : Meter)
+  (i1 : Std.U64) (l : Limits)
+  (c : source.declared.state.register.collection.Collected)
+  (completed : Std.Usize) (ordinal : Std.Usize) (failure : Option source.Error)
+  :
+  Result (ControlFlow ((Option source.declared.state.ModuleSession) ×
+    (alloc.vec.Vec (String × noble_kernel.types.Ty)) × (alloc.vec.Vec (Option
+    (noble_kernel.types.Ty × noble_kernel.contracts.NominalOps))) × Std.Usize
+    × Meter × Std.U64 × Limits ×
+    source.declared.state.register.collection.Collected × Std.Usize ×
+    Std.Usize × (Option source.Error)) ((Option
+    source.declared.state.ModuleSession) × (alloc.vec.Vec (String ×
+    noble_kernel.types.Ty)) × (alloc.vec.Vec (Option (noble_kernel.types.Ty ×
+    noble_kernel.contracts.NominalOps))) × Std.Usize × Meter × Std.U64 ×
+    Limits × source.declared.state.register.collection.Collected × Std.Usize
+    × (Option source.Error)))
+  := do
+  if ordinal < count
+  then
+    let b := core.option.Option.is_none failure
+    if b
+    then
+      let (r, progress) ←
+        source.declared.state.register.schema.Resolution.advance_one
+          {
+            session := o,
+            local_types := v,
+            resolved := v1,
+            type_nodes := i,
+            meter := m,
+            identity := i1,
+            limits := l,
+            collected := c
+          } ordinal
+      let (completed1, failure1) ←
+        match progress with
+        | core.result.Result.Ok b1 =>
+          do
+          let i2 ← if b1
+                     then completed + 1#usize
+                     else ok completed
+          ok (i2, failure)
+        | core.result.Result.Err problem => ok (completed, some problem)
+      let ordinal1 ← ordinal + 1#usize
+      ok (cont (r.session, r.local_types, r.resolved, r.type_nodes, r.meter,
+        r.identity, r.limits, r.collected, completed1, ordinal1, failure1))
+    else ok (done (o, v, v1, i, m, i1, l, c, completed, failure))
+  else ok (done (o, v, v1, i, m, i1, l, c, completed, failure))
+
+/-- [noble_contracts::source::declared::state::register::schema::{noble_contracts::source::declared::state::register::schema::Resolution<'a>}::advance]: loop 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema.rs', lines 104:8-113:9 -/
+@[rust_loop]
+def source.declared.state.register.schema.Resolution.advance_loop
+  (o : Option source.declared.state.ModuleSession)
+  (v : alloc.vec.Vec (String × noble_kernel.types.Ty))
+  (v1 : alloc.vec.Vec (Option (noble_kernel.types.Ty ×
+  noble_kernel.contracts.NominalOps))) (i : Std.Usize) (m : Meter)
+  (i1 : Std.U64) (l : Limits)
+  (c : source.declared.state.register.collection.Collected)
+  (completed : Std.Usize) (ordinal : Std.Usize) (count : Std.Usize)
+  (failure : Option source.Error) :
+  Result ((Option source.declared.state.ModuleSession) × (alloc.vec.Vec
+    (String × noble_kernel.types.Ty)) × (alloc.vec.Vec (Option
+    (noble_kernel.types.Ty × noble_kernel.contracts.NominalOps))) × Std.Usize
+    × Meter × Std.U64 × Limits ×
+    source.declared.state.register.collection.Collected × Std.Usize × (Option
+    source.Error))
+  := do
+  loop
+    (fun (o1, v2, v3, i2, m1, i3, l1, c1, completed1, ordinal1, failure1) =>
+      source.declared.state.register.schema.Resolution.advance_loop.body count
+      o1 v2 v3 i2 m1 i3 l1 c1 completed1 ordinal1 failure1)
+    (o, v, v1, i, m, i1, l, c, completed, ordinal, failure)
+
+/-- [noble_contracts::source::declared::state::register::schema::{noble_contracts::source::declared::state::register::schema::Resolution<'a>}::advance]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema.rs', lines 99:4-119:5 -/
+def source.declared.state.register.schema.Resolution.advance
+  (self : source.declared.state.register.schema.Resolution) :
+  Result (source.declared.state.register.schema.Resolution ×
+    (core.result.Result Std.Usize source.Error))
+  := do
+  let count := alloc.vec.Vec.len self.collected.schemas
+  let (o, v, v1, i, m, i1, l, c, completed, failure) ←
+    source.declared.state.register.schema.Resolution.advance_loop self.session
+      self.local_types self.resolved self.type_nodes self.meter self.identity
+      self.limits self.collected 0#usize 0#usize count none
+  match failure with
+  | none =>
+    ok
+      ({
+         session := o,
+         local_types := v,
+         resolved := v1,
+         type_nodes := i,
+         meter := m,
+         identity := i1,
+         limits := l,
+         collected := c
+       }, core.result.Result.Ok completed)
+  | some problem =>
+    ok
+      ({
+         session := o,
+         local_types := v,
+         resolved := v1,
+         type_nodes := i,
+         meter := m,
+         identity := i1,
+         limits := l,
+         collected := c
+       }, core.result.Result.Err problem)
+
+/-- [noble_contracts::source::declared::state::register::schema::{noble_contracts::source::declared::state::register::schema::Resolution<'a>}::run]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema.rs', lines 40:8-53:9 -/
+@[rust_loop_body]
+def source.declared.state.register.schema.Resolution.run_loop.body
+  (o : Option source.declared.state.ModuleSession)
+  (v : alloc.vec.Vec (String × noble_kernel.types.Ty))
+  (v1 : alloc.vec.Vec (Option (noble_kernel.types.Ty ×
+  noble_kernel.contracts.NominalOps))) (i : Std.Usize) (m : Meter)
+  (i1 : Std.U64) (l : Limits)
+  (c : source.declared.state.register.collection.Collected) (count : Std.Usize)
+  (failure : Option source.Error) :
+  Result (ControlFlow ((Option source.declared.state.ModuleSession) ×
+    (alloc.vec.Vec (String × noble_kernel.types.Ty)) × (alloc.vec.Vec (Option
+    (noble_kernel.types.Ty × noble_kernel.contracts.NominalOps))) × Std.Usize
+    × Meter × Std.U64 × Limits ×
+    source.declared.state.register.collection.Collected × Std.Usize × (Option
+    source.Error)) ((Option source.declared.state.ModuleSession) ×
+    (alloc.vec.Vec (String × noble_kernel.types.Ty)) × (alloc.vec.Vec (Option
+    (noble_kernel.types.Ty × noble_kernel.contracts.NominalOps))) × Std.Usize
+    × Meter × Std.U64 × Limits × (alloc.vec.Vec source.declared.Schema) ×
+    (alloc.vec.Vec (String × (alloc.vec.Vec Std.U8) × source.Tree)) ×
+    (alloc.vec.Vec (String × String × String)) × (alloc.vec.Vec String) ×
+    (alloc.vec.Vec String) × (Option source.Error)))
+  := do
+  let i2 := alloc.vec.Vec.len c.schemas
+  if count < i2
+  then
+    let b := core.option.Option.is_none failure
+    if b
+    then
+      let (r, progress) ←
+        source.declared.state.register.schema.Resolution.advance
+          {
+            session := o,
+            local_types := v,
+            resolved := v1,
+            type_nodes := i,
+            meter := m,
+            identity := i1,
+            limits := l,
+            collected := c
+          }
+      match progress with
+      | core.result.Result.Ok completed =>
+        if completed != 0#usize
+        then
+          let count1 ← count + completed
+          ok (cont (r.session, r.local_types, r.resolved, r.type_nodes,
+            r.meter, r.identity, r.limits, r.collected, count1, failure))
+        else
+          let e ←
+            source.declared.error source.Stage.Resolve (toStr
+              "unknown or cyclic nominal payload type")
+          ok (cont (r.session, r.local_types, r.resolved, r.type_nodes,
+            r.meter, r.identity, r.limits, r.collected, count, some e))
+      | core.result.Result.Err problem =>
+        ok (cont (r.session, r.local_types, r.resolved, r.type_nodes, 
+          r.meter, r.identity, r.limits, r.collected, count, some problem))
+    else
+      ok (done (o, v, v1, i, m, i1, l, c.schemas, c.definitions,
+        c.requirements, c.exports, c.names, failure))
+  else
+    ok (done (o, v, v1, i, m, i1, l, c.schemas, c.definitions, c.requirements,
+      c.exports, c.names, failure))
+
+/-- [noble_contracts::source::declared::state::register::schema::{noble_contracts::source::declared::state::register::schema::Resolution<'a>}::run]: loop 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema.rs', lines 40:8-53:9 -/
+@[rust_loop]
+def source.declared.state.register.schema.Resolution.run_loop
+  (o : Option source.declared.state.ModuleSession)
+  (v : alloc.vec.Vec (String × noble_kernel.types.Ty))
+  (v1 : alloc.vec.Vec (Option (noble_kernel.types.Ty ×
+  noble_kernel.contracts.NominalOps))) (i : Std.Usize) (m : Meter)
+  (i1 : Std.U64) (l : Limits)
+  (c : source.declared.state.register.collection.Collected) (count : Std.Usize)
+  (failure : Option source.Error) :
+  Result ((Option source.declared.state.ModuleSession) × (alloc.vec.Vec
+    (String × noble_kernel.types.Ty)) × (alloc.vec.Vec (Option
+    (noble_kernel.types.Ty × noble_kernel.contracts.NominalOps))) × Std.Usize
+    × Meter × Std.U64 × Limits × (alloc.vec.Vec source.declared.Schema) ×
+    (alloc.vec.Vec (String × (alloc.vec.Vec Std.U8) × source.Tree)) ×
+    (alloc.vec.Vec (String × String × String)) × (alloc.vec.Vec String) ×
+    (alloc.vec.Vec String) × (Option source.Error))
+  := do
+  loop
+    (fun (o1, v2, v3, i2, m1, i3, l1, c1, count1, failure1) =>
+      source.declared.state.register.schema.Resolution.run_loop.body o1 v2 v3
+      i2 m1 i3 l1 c1 count1 failure1)
+    (o, v, v1, i, m, i1, l, c, count, failure)
+
+/-- [noble_contracts::source::declared::state::register::schema::{noble_contracts::source::declared::state::register::schema::Resolution<'a>}::run]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema.rs', lines 37:4-58:5 -/
+def source.declared.state.register.schema.Resolution.run
+  (self : source.declared.state.register.schema.Resolution) :
+  Result (core.result.Result source.declared.state.register.schema.Resolution
+    source.Error)
+  := do
+  let (o, v, v1, i, m, i1, l, v2, v3, v4, v5, v6, failure) ←
+    source.declared.state.register.schema.Resolution.run_loop self.session
+      self.local_types self.resolved self.type_nodes self.meter self.identity
+      self.limits self.collected 0#usize none
+  match failure with
+  | none =>
+    ok (core.result.Result.Ok
+      {
+        session := o,
+        local_types := v,
+        resolved := v1,
+        type_nodes := i,
+        meter := m,
+        identity := i1,
+        limits := l,
+        collected :=
+          {
+            schemas := v2,
+            definitions := v3,
+            requirements := v4,
+            exports := v5,
+            names := v6
+          }
+      })
+  | some problem => ok (core.result.Result.Err problem)
+
+/-- [noble_contracts::source::declared::state::register::schema::resolve]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema.rs', lines 8:0-23:1 -/
+def source.declared.state.register.schema.resolve
+  (session : source.declared.state.ModuleSession)
+  (collected : source.declared.state.register.collection.Collected)
+  (identity : Std.U64) (limits : Limits) :
+  Result (core.result.Result (source.declared.state.ModuleSession ×
+    (alloc.vec.Vec (Option (noble_kernel.types.Ty ×
+    noble_kernel.contracts.NominalOps))) × Meter) source.Error)
+  := do
+  let r ←
+    source.declared.state.register.schema.Resolution.start session collected
+      identity limits
+  match r with
+  | core.result.Result.Ok r1 =>
+    let r2 ← source.declared.state.register.schema.Resolution.run r1
+    match r2 with
+    | core.result.Result.Ok r3 =>
+      source.declared.state.register.schema.Resolution.finish r3
+    | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::source::declared::state::register::exports::take_words]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/exports.rs', lines 59:0-83:1 -/
+def source.declared.state.register.exports.take_words
+  (session : source.declared.state.ModuleSession)
+  (collected : source.declared.state.register.collection.Collected) :
+  Result (core.result.Result (source.declared.state.ModuleSession ×
+    (alloc.vec.Vec (String × source.Target))) source.Error)
+  := do
+  let (o, as_mut_back) ← core.option.Option.as_mut session.source.declared
+  match o with
+  | none =>
+    let e ←
+      source.declared.error source.Stage.Check (toStr
+        "missing declared context")
+    ok (core.result.Result.Err e)
+  | some context =>
+    let (words, v) ←
+      core.mem.take (alloc.vec.Vec.Insts.CoreDefaultDefault (String ×
+        source.Target)) context.words
+    let i := alloc.vec.Vec.len collected.schemas
+    let i1 ← core.num.Usize.saturating_mul i 3#usize
+    let i2 := alloc.vec.Vec.len collected.requirements
+    let word_slots ← lift (core.num.Usize.saturating_add i1 i2)
+    let words1 ← alloc.vec.Vec.reserve Global words word_slots
+    let o1 := as_mut_back (some { context with words := v })
+    ok (core.result.Result.Ok
+      ({ session with source := { session.source with declared := o1 } },
+      words1))
+
+/-- [noble_contracts::source::declared::state::register::exports::initial]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/exports.rs', lines 41:0-57:1 -/
+def source.declared.state.register.exports.initial
+  (session : source.declared.state.ModuleSession)
+  (collected : source.declared.state.register.collection.Collected) :
+  Result (core.result.Result source.declared.state.register.exports.Installed
+    source.Error)
+  := do
+  let i := alloc.vec.Vec.len collected.schemas
+  let i1 := alloc.vec.Vec.len collected.definitions
+  let i2 ← lift (core.num.Usize.saturating_add i i1)
+  let local_exports := alloc.vec.Vec.with_capacity source.declared.Export i2
+  let r ← source.declared.state.register.exports.take_words session collected
+  match r with
+  | core.result.Result.Ok value =>
+    let (session1, words) := value
+    ok (core.result.Result.Ok { session := session1, local_exports, words })
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::source::declared::state::register::schema::nominals::public_for_id]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema/nominals.rs', lines 133:0-146:1 -/
+def source.declared.state.register.schema.nominals.public_for_id
+  (session : source.declared.state.ModuleSession)
+  (id : noble_kernel.types.NominalTypeId) :
+  Result (core.result.Result (Array Bool 2#usize) source.Error)
+  := do
+  let o ← core.option.Option.as_ref session.source.declared
+  match o with
+  | none =>
+    let e ←
+      source.declared.error source.Stage.Check (toStr
+        "unregistered nominal schema")
+    ok (core.result.Result.Err e)
+  | some context =>
+    let o1 ← noble_kernel.contracts.Env.nominal context.environment id
+    match o1 with
+    | none =>
+      let e ←
+        source.declared.error source.Stage.Check (toStr
+          "unregistered nominal schema")
+      ok (core.result.Result.Err e)
+    | some declaration => ok (core.result.Result.Ok declaration.public)
+
+/-- [noble_contracts::source::declared::state::register::schema::nominals::nominal_public]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/schema/nominals.rs', lines 120:0-131:1 -/
+def source.declared.state.register.schema.nominals.nominal_public
+  (session : source.declared.state.ModuleSession) (ty : noble_kernel.types.Ty)
+  :
+  Result (core.result.Result (Array Bool 2#usize) source.Error)
+  := do
+  match ty with
+  | noble_kernel.types.Ty.UnitType =>
+    let e ←
+      source.declared.error source.Stage.Check (toStr
+        "schema resolved to nonnominal type")
+    ok (core.result.Result.Err e)
+  | noble_kernel.types.Ty.BoolType =>
+    let e ←
+      source.declared.error source.Stage.Check (toStr
+        "schema resolved to nonnominal type")
+    ok (core.result.Result.Err e)
+  | noble_kernel.types.Ty.I64Type =>
+    let e ←
+      source.declared.error source.Stage.Check (toStr
+        "schema resolved to nonnominal type")
+    ok (core.result.Result.Err e)
+  | noble_kernel.types.Ty.TextType =>
+    let e ←
+      source.declared.error source.Stage.Check (toStr
+        "schema resolved to nonnominal type")
+    ok (core.result.Result.Err e)
+  | noble_kernel.types.Ty.SyntaxType =>
+    let e ←
+      source.declared.error source.Stage.Check (toStr
+        "schema resolved to nonnominal type")
+    ok (core.result.Result.Err e)
+  | noble_kernel.types.Ty.ContractType =>
+    let e ←
+      source.declared.error source.Stage.Check (toStr
+        "schema resolved to nonnominal type")
+    ok (core.result.Result.Err e)
+  | noble_kernel.types.Ty.EvidenceType =>
+    let e ←
+      source.declared.error source.Stage.Check (toStr
+        "schema resolved to nonnominal type")
+    ok (core.result.Result.Err e)
+  | noble_kernel.types.Ty.CertifiedType =>
+    let e ←
+      source.declared.error source.Stage.Check (toStr
+        "schema resolved to nonnominal type")
+    ok (core.result.Result.Err e)
+  | noble_kernel.types.Ty.PairType _ _ =>
+    let e ←
+      source.declared.error source.Stage.Check (toStr
+        "schema resolved to nonnominal type")
+    ok (core.result.Result.Err e)
+  | noble_kernel.types.Ty.SumType _ _ =>
+    let e ←
+      source.declared.error source.Stage.Check (toStr
+        "schema resolved to nonnominal type")
+    ok (core.result.Result.Err e)
+  | noble_kernel.types.Ty.ListType _ =>
+    let e ←
+      source.declared.error source.Stage.Check (toStr
+        "schema resolved to nonnominal type")
+    ok (core.result.Result.Err e)
+  | noble_kernel.types.Ty.ProgramType _ _ _ =>
+    let e ←
+      source.declared.error source.Stage.Check (toStr
+        "schema resolved to nonnominal type")
+    ok (core.result.Result.Err e)
+  | noble_kernel.types.Ty.ResourceType _ =>
+    let e ←
+      source.declared.error source.Stage.Check (toStr
+        "schema resolved to nonnominal type")
+    ok (core.result.Result.Err e)
+  | noble_kernel.types.Ty.NominalType id _ =>
+    source.declared.state.register.schema.nominals.public_for_id session id
+
+/-- [noble_contracts::source::declared::state::register::publication::constructor_capacity::{impl core::ops::function::FnOnce<(usize,), core::option::Option<usize>> for noble_contracts::source::declared::state::register::publication::constructor_capacity::{closure}<'_0>}::call_once]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/publication.rs', lines 143:18-143:59 -/
+def
+  source.declared.state.register.publication.constructor_capacity.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeOptionUsize.call_once
+  (c : source.declared.state.register.publication.constructor_capacity.closure)
+  (tupled_args : Std.Usize) :
+  Result (Option Std.Usize)
+  := do
+  let i ← core.str.Str.len c
+  ok (Usize.checked_add tupled_args i)
+
+/-- Trait implementation: [noble_contracts::source::declared::state::register::publication::constructor_capacity::{impl core::ops::function::FnOnce<(usize,), core::option::Option<usize>> for noble_contracts::source::declared::state::register::publication::constructor_capacity::{closure}<'_0>}]
+    Source: 'crates/noble-contracts/src/source/declared/state/register/publication.rs', lines 143:18-143:59 -/
+@[reducible]
+def
+  source.declared.state.register.publication.constructor_capacity.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeOptionUsize
+  : core.ops.function.FnOnce
+  source.declared.state.register.publication.constructor_capacity.closure
+  Std.Usize (Option Std.Usize) := {
+  call_once :=
+    source.declared.state.register.publication.constructor_capacity.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeOptionUsize.call_once
+}
+
+/-- [noble_contracts::source::declared::state::register::publication::constructor_capacity]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/publication.rs', lines 135:0-153:1 -/
+def source.declared.state.register.publication.constructor_capacity
+  (schema : source.declared.Schema) (suffix : Str) :
+  Result (core.result.Result Std.Usize source.Error)
+  := do
+  let i ← alloc.string.String.len schema.name
+  let o ← lift (Usize.checked_add i 1#usize)
+  let capacity_bytes ←
+    core.option.Option.and_then
+      source.declared.state.register.publication.constructor_capacity.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeOptionUsize
+      o suffix
+  match capacity_bytes with
+  | none =>
+    let e ←
+      source.declared.error source.Stage.Check (toStr
+        "constructor word length overflow")
+    ok (core.result.Result.Err e)
+  | some capacity_bytes1 =>
+    let i1 ← lift (IScalar.hcast .Usize core.num.Isize.MAX)
+    if capacity_bytes1 <= i1
+    then ok (core.result.Result.Ok capacity_bytes1)
+    else
+      let e ←
+        source.declared.error source.Stage.Check (toStr
+          "constructor word length overflow")
+      ok (core.result.Result.Err e)
+
+/-- [noble_contracts::source::declared::state::register::publication::constructor_spelling]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/publication.rs', lines 124:0-134:1 -/
+def source.declared.state.register.publication.constructor_spelling
+  (schema : source.declared.Schema) (suffix : Str) :
+  Result (core.result.Result String source.Error)
+  := do
+  let r ←
+    source.declared.state.register.publication.constructor_capacity schema
+      suffix
+  match r with
+  | core.result.Result.Ok value =>
+    let spelling ← alloc.string.String.with_capacity value
+    let s ← alloc.string.String.Insts.CoreOpsDerefDerefStr.deref schema.name
+    let spelling1 ← alloc.string.String.push_str spelling s
+    let spelling2 ← alloc.string.String.push spelling1 '.'
+    let spelling3 ← alloc.string.String.push_str spelling2 suffix
+    ok (core.result.Result.Ok spelling3)
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::source::declared::state::register::publication::{noble_contracts::source::declared::state::register::publication::WordBuilder}::add]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/publication.rs', lines 105:4-121:5 -/
+def source.declared.state.register.publication.WordBuilder.add
+  (self : source.declared.state.register.publication.WordBuilder)
+  (schema : source.declared.Schema) (suffix : Str)
+  (definition : Option noble_kernel.contracts.Definition) (is_external : Bool)
+  :
+  Result (core.result.Result
+    source.declared.state.register.publication.WordBuilder source.Error)
+  := do
+  match definition with
+  | none => ok (core.result.Result.Ok self)
+  | some definition1 =>
+    let r ←
+      source.declared.state.register.publication.constructor_spelling schema
+        suffix
+    match r with
+    | core.result.Result.Ok value =>
+      let self1 ←
+        if is_external
+        then
+          do
+          let s ← alloc.string.String.Insts.CoreCloneClone.clone value
+          let v ←
+            alloc.vec.Vec.push self.exported_words (s, source.Target.Builtin
+              definition1)
+          ok { self with exported_words := v }
+        else ok self
+      let v ←
+        alloc.vec.Vec.push self1.words (value, source.Target.Builtin
+          definition1)
+      ok (core.result.Result.Ok { self1 with words := v })
+    | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::source::declared::state::register::publication::operations]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/publication.rs', lines 184:0-231:1 -/
+def source.declared.state.register.publication.operations
+  (schema : source.declared.Schema) (ops : noble_kernel.contracts.NominalOps)
+  («public» : Array Bool 2#usize) (is_visible : Bool)
+  (words : alloc.vec.Vec (String × source.Target)) :
+  Result (core.result.Result
+    source.declared.state.register.publication.WordBuilder source.Error)
+  := do
+  let left_val := core.option.Option.is_some ops.new
+  let (sk, right_val) ←
+    match schema.kind with
+    | source.declared.SchemaKind.Opaque _ _ => ok (schema.kind, true)
+    | source.declared.SchemaKind.Variant _ _ _ _ _ _ => ok (schema.kind, false)
+  massert (left_val = right_val)
+  let left_val1 := core.option.Option.is_some ops.matcher
+  let right_val1 ←
+    match sk with
+    | source.declared.SchemaKind.Opaque _ _ => ok false
+    | source.declared.SchemaKind.Variant _ _ _ _ _ _ => ok true
+  massert (left_val1 = right_val1)
+  let v := alloc.vec.Vec.with_capacity (String × source.Target) 3#usize
+  let (s, o, s1, o1) ←
+    match sk with
+    | source.declared.SchemaKind.Opaque _ _ =>
+      ok (toStr "new", ops.new, toStr "into", ops.into)
+    | source.declared.SchemaKind.Variant left _ _ right _ _ =>
+      do
+      let s2 ← alloc.string.String.as_str left
+      let s3 ← alloc.string.String.as_str right
+      ok (s2, ops.left, s3, ops.right)
+  let b ← Array.index_usize «public» 0#usize
+  let r ←
+    source.declared.state.register.publication.WordBuilder.add
+      { words, exported_words := v } { schema with kind := sk } s o b
+  match r with
+  | core.result.Result.Ok value =>
+    let b1 ← Array.index_usize «public» 1#usize
+    let r1 ←
+      source.declared.state.register.publication.WordBuilder.add value
+        { schema with kind := sk } s1 o1 b1
+    match r1 with
+    | core.result.Result.Ok value1 =>
+      let b2 ←
+        match sk with
+        | source.declared.SchemaKind.Opaque _ _ => ok false
+        | source.declared.SchemaKind.Variant _ _ _ _ _ _ => ok true
+      if b2
+      then
+        let b3 ←
+          if is_visible
+          then if b
+               then ok b1
+               else ok false
+          else ok false
+        source.declared.state.register.publication.WordBuilder.add value1
+          { schema with kind := sk } (toStr "match") ops.matcher b3
+      else ok r1
+    | core.result.Result.Err _ => ok r1
+  | core.result.Result.Err _ => ok r
+
+/-- [noble_contracts::source::declared::state::register::publication::{noble_contracts::source::declared::state::register::publication::WordBuilder}::record_export]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/publication.rs', lines 83:4-103:5 -/
+def source.declared.state.register.publication.WordBuilder.record_export
+  (self : source.declared.state.register.publication.WordBuilder)
+  (schema : Str) (session : source.declared.state.ModuleSession)
+  (local_exports : alloc.vec.Vec source.declared.Export)
+  (ty : noble_kernel.types.Ty) (is_visible : Bool) :
+  Result source.declared.state.register.exports.Installed
+  := do
+  if is_visible
+  then
+    let s ← alloc.string.String.Insts.CoreConvertFromShared0Str.from schema
+    let t ← noble_kernel.types.Ty.Insts.CoreCloneClone.clone ty
+    let local_exports1 ←
+      alloc.vec.Vec.push local_exports
+        ({ «name» := s, ty := (some t), words := self.exported_words } :
+        source.declared.Export)
+    ok { session, local_exports := local_exports1, words := self.words }
+  else ok { session, local_exports, words := self.words }
+
+/-- [noble_contracts::source::declared::state::register::publication::schema_operation]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/publication.rs', lines 171:0-182:1 -/
+def source.declared.state.register.publication.schema_operation
+  (exported : Str) (schema : source.declared.Schema) :
+  Result (Option Bool)
+  := do
+  let o ← source.declared.split_once_ascii exported 46#u8
+  match o with
+  | none => ok none
+  | some p =>
+    let (base, operation) := p
+    let b ← Shared0Str.Insts.CoreCmpPartialEqString.eq base schema.name
+    if b
+    then let b1 ← core.str.Str.is_empty operation
+         ok (some b1)
+    else ok none
+
+/-- [noble_contracts::source::declared::state::register::publication::{noble_contracts::source::declared::state::register::publication::WordBuilder}::has_exported_word::{impl core::ops::function::FnMut<(&'_ (alloc::string::String, noble_contracts::source::Target),), bool> for noble_contracts::source::declared::state::register::publication::{noble_contracts::source::declared::state::register::publication::WordBuilder}::has_exported_word::{closure}<'_0, '_1>}::call_mut]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/publication.rs', lines 80:17-80:54 -/
+def
+  source.declared.state.register.publication.WordBuilder.has_exported_word.closure.Insts.CoreOpsFunctionFnMutTupleSharedPairStringTargetBool.call_mut
+  (c :
+  source.declared.state.register.publication.WordBuilder.has_exported_word.closure)
+  (tupled_args : (String × source.Target)) :
+  Result (Bool ×
+    source.declared.state.register.publication.WordBuilder.has_exported_word.closure)
+  := do
+  let («name», _) := tupled_args
+  let s ← alloc.string.String.as_str «name»
+  let b ← Str.Insts.CoreCmpPartialEqStr.eq s c
+  ok (b, c)
+
+/-- [noble_contracts::source::declared::state::register::publication::{noble_contracts::source::declared::state::register::publication::WordBuilder}::has_exported_word::{impl core::ops::function::FnOnce<(&'_ (alloc::string::String, noble_contracts::source::Target),), bool> for noble_contracts::source::declared::state::register::publication::{noble_contracts::source::declared::state::register::publication::WordBuilder}::has_exported_word::{closure}<'_0, '_1>}::call_once]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/publication.rs', lines 80:17-80:54 -/
+def
+  source.declared.state.register.publication.WordBuilder.has_exported_word.closure.Insts.CoreOpsFunctionFnOnceTupleSharedPairStringTargetBool.call_once
+  (c :
+  source.declared.state.register.publication.WordBuilder.has_exported_word.closure)
+  (p : (String × source.Target)) :
+  Result Bool
+  := do
+  let (b, _) ←
+    source.declared.state.register.publication.WordBuilder.has_exported_word.closure.Insts.CoreOpsFunctionFnMutTupleSharedPairStringTargetBool.call_mut
+      c p
+  ok b
+
+/-- Trait implementation: [noble_contracts::source::declared::state::register::publication::{noble_contracts::source::declared::state::register::publication::WordBuilder}::has_exported_word::{impl core::ops::function::FnOnce<(&'_ (alloc::string::String, noble_contracts::source::Target),), bool> for noble_contracts::source::declared::state::register::publication::{noble_contracts::source::declared::state::register::publication::WordBuilder}::has_exported_word::{closure}<'_0, '_1>}]
+    Source: 'crates/noble-contracts/src/source/declared/state/register/publication.rs', lines 80:17-80:54 -/
+@[reducible]
+def
+  source.declared.state.register.publication.WordBuilder.has_exported_word.closure.Insts.CoreOpsFunctionFnOnceTupleSharedPairStringTargetBool
+  : core.ops.function.FnOnce
+  source.declared.state.register.publication.WordBuilder.has_exported_word.closure
+  (String × source.Target) Bool := {
+  call_once :=
+    source.declared.state.register.publication.WordBuilder.has_exported_word.closure.Insts.CoreOpsFunctionFnOnceTupleSharedPairStringTargetBool.call_once
+}
+
+/-- Trait implementation: [noble_contracts::source::declared::state::register::publication::{noble_contracts::source::declared::state::register::publication::WordBuilder}::has_exported_word::{impl core::ops::function::FnMut<(&'_ (alloc::string::String, noble_contracts::source::Target),), bool> for noble_contracts::source::declared::state::register::publication::{noble_contracts::source::declared::state::register::publication::WordBuilder}::has_exported_word::{closure}<'_0, '_1>}]
+    Source: 'crates/noble-contracts/src/source/declared/state/register/publication.rs', lines 80:17-80:54 -/
+@[reducible]
+def
+  source.declared.state.register.publication.WordBuilder.has_exported_word.closure.Insts.CoreOpsFunctionFnMutTupleSharedPairStringTargetBool
+  : core.ops.function.FnMut
+  source.declared.state.register.publication.WordBuilder.has_exported_word.closure
+  (String × source.Target) Bool := {
+  FnOnceInst :=
+    source.declared.state.register.publication.WordBuilder.has_exported_word.closure.Insts.CoreOpsFunctionFnOnceTupleSharedPairStringTargetBool
+  call_mut :=
+    source.declared.state.register.publication.WordBuilder.has_exported_word.closure.Insts.CoreOpsFunctionFnMutTupleSharedPairStringTargetBool.call_mut
+}
+
+/-- [noble_contracts::source::declared::state::register::publication::{noble_contracts::source::declared::state::register::publication::WordBuilder}::has_exported_word]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/publication.rs', lines 77:4-81:5 -/
+def source.declared.state.register.publication.WordBuilder.has_exported_word
+  (self : source.declared.state.register.publication.WordBuilder)
+  (exported : Str) :
+  Result Bool
+  := do
+  let s := alloc.vec.Vec.deref self.exported_words
+  let i ← core.slice.Slice.iter s
+  let (b, _) ←
+    core.slice.iter.Iter.Insts.CoreIterTraitsIteratorIteratorSharedAT.any
+      source.declared.state.register.publication.WordBuilder.has_exported_word.closure.Insts.CoreOpsFunctionFnMutTupleSharedPairStringTargetBool
+      i exported
+  ok b
+
+/-- [noble_contracts::source::declared::state::register::publication::{noble_contracts::source::declared::state::register::publication::WordBuilder}::export_rejection]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/publication.rs', lines 52:4-72:5 -/
+def source.declared.state.register.publication.WordBuilder.export_rejection
+  (self : source.declared.state.register.publication.WordBuilder)
+  (schema : source.declared.Schema) (exported : Str) (is_visible : Bool) :
+  Result (Option source.declared.state.register.publication.ExportRejection)
+  := do
+  let o ←
+    source.declared.state.register.publication.schema_operation exported schema
+  match o with
+  | none => ok none
+  | some empty_operation =>
+    if is_visible
+    then
+      let b ←
+        source.declared.state.register.publication.WordBuilder.has_exported_word
+          self exported
+      if b
+      then
+        if empty_operation
+        then
+          ok (some
+            source.declared.state.register.publication.ExportRejection.EmptyConstructor)
+        else ok none
+      else
+        ok (some
+          source.declared.state.register.publication.ExportRejection.MissingPublicConstructor)
+    else
+      ok (some
+        source.declared.state.register.publication.ExportRejection.RequiresExportedSchema)
+
+/-- [noble_contracts::source::declared::state::register::publication::validate_step]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/publication.rs', lines 155:0-166:1 -/
+def source.declared.state.register.publication.validate_step
+  (builder : source.declared.state.register.publication.WordBuilder)
+  (schema : source.declared.Schema) (exports : Slice String)
+  (index1 : Std.Usize) (is_visible : Bool) :
+  Result (core.result.Result
+    source.declared.state.register.publication.WordBuilder
+    source.declared.state.register.publication.ExportRejection)
+  := do
+  let s ← Slice.index_usize exports index1
+  let s1 ← alloc.string.String.Insts.CoreOpsDerefDerefStr.deref s
+  let o ←
+    source.declared.state.register.publication.WordBuilder.export_rejection
+      builder schema s1 is_visible
+  match o with
+  | none => ok (core.result.Result.Ok builder)
+  | some rejection => ok (core.result.Result.Err rejection)
+
+/-- [noble_contracts::source::declared::state::register::publication::{noble_contracts::source::declared::state::register::publication::WordBuilder}::validate]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/publication.rs', lines 24:8-31:9 -/
+@[rust_loop_body]
+def source.declared.state.register.publication.WordBuilder.validate_loop.body
+  (schema : source.declared.Schema) (exports : Slice String)
+  (is_visible : Bool) (remaining : Std.Usize) (index1 : Std.Usize)
+  (outcome : core.result.Result
+  source.declared.state.register.publication.WordBuilder
+  source.declared.state.register.publication.ExportRejection) :
+  Result (ControlFlow (Std.Usize × Std.Usize × (core.result.Result
+    source.declared.state.register.publication.WordBuilder
+    source.declared.state.register.publication.ExportRejection))
+    (core.result.Result source.declared.state.register.publication.WordBuilder
+    source.declared.state.register.publication.ExportRejection))
+  := do
+  if remaining != 0#usize
+  then
+    let b ← core.result.Result.is_ok outcome
+    if b
+    then
+      let outcome1 ←
+        match outcome with
+        | core.result.Result.Ok builder =>
+          source.declared.state.register.publication.validate_step builder
+            schema exports index1 is_visible
+        | core.result.Result.Err _ => ok outcome
+      let index2 ← index1 + 1#usize
+      let remaining1 ← remaining - 1#usize
+      ok (cont (remaining1, index2, outcome1))
+    else ok (done outcome)
+  else ok (done outcome)
+
+/-- [noble_contracts::source::declared::state::register::publication::{noble_contracts::source::declared::state::register::publication::WordBuilder}::validate]: loop 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/publication.rs', lines 24:8-31:9 -/
+@[rust_loop]
+def source.declared.state.register.publication.WordBuilder.validate_loop
+  (schema : source.declared.Schema) (exports : Slice String)
+  (is_visible : Bool) (remaining : Std.Usize) (index1 : Std.Usize)
+  (outcome : core.result.Result
+  source.declared.state.register.publication.WordBuilder
+  source.declared.state.register.publication.ExportRejection) :
+  Result (core.result.Result
+    source.declared.state.register.publication.WordBuilder
+    source.declared.state.register.publication.ExportRejection)
+  := do
+  loop
+    (fun (remaining1, index2, outcome1) =>
+      source.declared.state.register.publication.WordBuilder.validate_loop.body
+      schema exports is_visible remaining1 index2 outcome1)
+    (remaining, index1, outcome)
+
+/-- [noble_contracts::source::declared::state::register::publication::{noble_contracts::source::declared::state::register::publication::WordBuilder}::validate]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/publication.rs', lines 15:4-47:5 -/
+def source.declared.state.register.publication.WordBuilder.validate
+  (self : source.declared.state.register.publication.WordBuilder)
+  (schema : source.declared.Schema) (exports : Slice String)
+  (is_visible : Bool) :
+  Result (core.result.Result
+    source.declared.state.register.publication.WordBuilder source.Error)
+  := do
+  let remaining := Slice.len exports
+  let outcome ←
+    source.declared.state.register.publication.WordBuilder.validate_loop schema
+      exports is_visible remaining 0#usize (core.result.Result.Ok self)
+  match outcome with
+  | core.result.Result.Ok builder => ok (core.result.Result.Ok builder)
+  | core.result.Result.Err er =>
+    match er with
+    |
+      source.declared.state.register.publication.ExportRejection.RequiresExportedSchema
+      =>
+      let e ←
+        source.declared.error source.Stage.Resolve (toStr
+          "constructor export requires exported schema")
+      ok (core.result.Result.Err e)
+    |
+      source.declared.state.register.publication.ExportRejection.MissingPublicConstructor
+      =>
+      let e ←
+        source.declared.error source.Stage.Resolve (toStr
+          "export references private or missing constructor")
+      ok (core.result.Result.Err e)
+    |
+      source.declared.state.register.publication.ExportRejection.EmptyConstructor
+      =>
+      let e ←
+        source.declared.error source.Stage.Resolve (toStr
+          "empty exported constructor")
+      ok (core.result.Result.Err e)
+
+/-- [noble_contracts::source::declared::state::register::exports::install_schema]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/exports.rs', lines 85:0-113:1 -/
+def source.declared.state.register.exports.install_schema
+  (installed : source.declared.state.register.exports.Installed)
+  (schema : source.declared.Schema)
+  (entry : (noble_kernel.types.Ty × noble_kernel.contracts.NominalOps))
+  (exports : Slice String) :
+  Result (core.result.Result source.declared.state.register.exports.Installed
+    source.Error)
+  := do
+  let (ty, ops) := entry
+  let b ← alloc.string.String.is_empty schema.name
+  massert (¬ b)
+  let b1 ←
+    match ty with
+    | noble_kernel.types.Ty.UnitType => ok false
+    | noble_kernel.types.Ty.BoolType => ok false
+    | noble_kernel.types.Ty.I64Type => ok false
+    | noble_kernel.types.Ty.TextType => ok false
+    | noble_kernel.types.Ty.SyntaxType => ok false
+    | noble_kernel.types.Ty.ContractType => ok false
+    | noble_kernel.types.Ty.EvidenceType => ok false
+    | noble_kernel.types.Ty.CertifiedType => ok false
+    | noble_kernel.types.Ty.PairType _ _ => ok false
+    | noble_kernel.types.Ty.SumType _ _ => ok false
+    | noble_kernel.types.Ty.ListType _ => ok false
+    | noble_kernel.types.Ty.ProgramType _ _ _ => ok false
+    | noble_kernel.types.Ty.ResourceType _ => ok false
+    | noble_kernel.types.Ty.NominalType _ _ => ok true
+  massert b1
+  let is_visible ←
+    core.slice.Slice.contains alloc.string.String.Insts.CoreCmpPartialEqString
+      exports schema.name
+  let r ←
+    source.declared.state.register.schema.nominals.nominal_public
+      installed.session ty
+  match r with
+  | core.result.Result.Ok value =>
+    let r1 ←
+      source.declared.state.register.publication.operations schema ops value
+        is_visible installed.words
+    match r1 with
+    | core.result.Result.Ok value1 =>
+      let r2 ←
+        source.declared.state.register.publication.WordBuilder.validate value1
+          schema exports is_visible
+      match r2 with
+      | core.result.Result.Ok value2 =>
+        let s ←
+          alloc.string.String.Insts.CoreOpsDerefDerefStr.deref schema.name
+        let i ←
+          source.declared.state.register.publication.WordBuilder.record_export
+            value2 s installed.session installed.local_exports ty is_visible
+        ok (core.result.Result.Ok i)
+      | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+    | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::source::declared::state::register::exports::install_at]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/exports.rs', lines 26:0-39:1 -/
+def source.declared.state.register.exports.install_at
+  (installed : source.declared.state.register.exports.Installed)
+  (schema : source.declared.Schema)
+  (entry : Option (Option (noble_kernel.types.Ty ×
+  noble_kernel.contracts.NominalOps))) (exports : Slice String) :
+  Result (core.result.Result source.declared.state.register.exports.Installed
+    source.Error)
+  := do
+  match entry with
+  | none =>
+    let e ←
+      source.declared.error source.Stage.Check (toStr "unresolved schema")
+    ok (core.result.Result.Err e)
+  | some o =>
+    match o with
+    | none =>
+      let e ←
+        source.declared.error source.Stage.Check (toStr "unresolved schema")
+      ok (core.result.Result.Err e)
+    | some entry1 =>
+      source.declared.state.register.exports.install_schema installed schema
+        entry1 exports
+
+/-- [noble_contracts::source::declared::state::register::exports::install]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/exports.rs', lines 15:4-22:5 -/
+@[rust_loop_body]
+def source.declared.state.register.exports.install_loop.body
+  (collected : source.declared.state.register.collection.Collected)
+  (resolved : alloc.vec.Vec (Option (noble_kernel.types.Ty ×
+  noble_kernel.contracts.NominalOps))) (index1 : Std.Usize)
+  (outcome : core.result.Result
+  source.declared.state.register.exports.Installed source.Error) :
+  Result (ControlFlow (Std.Usize × (core.result.Result
+    source.declared.state.register.exports.Installed source.Error))
+    (core.result.Result source.declared.state.register.exports.Installed
+    source.Error))
+  := do
+  let i := alloc.vec.Vec.len collected.schemas
+  if index1 < i
+  then
+    let b ← core.result.Result.is_ok outcome
+    if b
+    then
+      let schema ←
+        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+          source.declared.Schema) collected.schemas index1
+      let outcome1 ←
+        match outcome with
+        | core.result.Result.Ok installed =>
+          do
+          let s := alloc.vec.Vec.deref resolved
+          let o ←
+            core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice (Option
+              (noble_kernel.types.Ty × noble_kernel.contracts.NominalOps))) s
+              index1
+          let s1 := alloc.vec.Vec.deref collected.exports
+          source.declared.state.register.exports.install_at installed schema o
+            s1
+        | core.result.Result.Err _ => ok outcome
+      let index2 ← index1 + 1#usize
+      ok (cont (index2, outcome1))
+    else ok (done outcome)
+  else ok (done outcome)
+
+/-- [noble_contracts::source::declared::state::register::exports::install]: loop 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/exports.rs', lines 15:4-22:5 -/
+@[rust_loop]
+def source.declared.state.register.exports.install_loop
+  (collected : source.declared.state.register.collection.Collected)
+  (resolved : alloc.vec.Vec (Option (noble_kernel.types.Ty ×
+  noble_kernel.contracts.NominalOps))) (index1 : Std.Usize)
+  (outcome : core.result.Result
+  source.declared.state.register.exports.Installed source.Error) :
+  Result (core.result.Result source.declared.state.register.exports.Installed
+    source.Error)
+  := do
+  loop
+    (fun (index2, outcome1) =>
+      source.declared.state.register.exports.install_loop.body collected
+      resolved index2 outcome1)
+    (index1, outcome)
+
+/-- [noble_contracts::source::declared::state::register::exports::install]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/exports.rs', lines 7:0-24:1 -/
+def source.declared.state.register.exports.install
+  (session : source.declared.state.ModuleSession)
+  (collected : source.declared.state.register.collection.Collected)
+  (resolved : alloc.vec.Vec (Option (noble_kernel.types.Ty ×
+  noble_kernel.contracts.NominalOps))) :
+  Result (core.result.Result source.declared.state.register.exports.Installed
+    source.Error)
+  := do
+  let r ← source.declared.state.register.exports.initial session collected
+  match r with
+  | core.result.Result.Ok _ =>
+    source.declared.state.register.exports.install_loop collected resolved
+      0#usize r
+  | core.result.Result.Err _ => ok r
+
+/-- [noble_contracts::source::declared::state::register::definitions::definition_limits]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/definitions.rs', lines 142:0-157:1 -/
+def source.declared.state.register.definitions.definition_limits
+  (count : Std.U32) (limits : Limits) : Result (Option Limits) := do
+  let budget ← lift (core.num.U32.saturating_add count 1#u32)
+  let o ← lift (U32.checked_div limits.nodes budget)
+  match o with
+  | none => ok none
+  | some nodes =>
+    let o1 ← lift (U32.checked_div limits.work budget)
+    match o1 with
+    | none => ok none
+    | some work =>
+      let i ← core.num.U32.saturating_mul count 4#u32
+      let i1 ← lift (core.num.U32.saturating_add limits.bytes i)
+      ok (some { limits with bytes := i1, nodes, work })
+
+/-- [noble_contracts::source::declared::state::register::definitions::contains_word]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/definitions.rs', lines 135:4-138:5 -/
+@[rust_loop_body]
+def source.declared.state.register.definitions.contains_word_loop.body
+  (words : Slice (String × source.Target)) (word : Str)
+  (entry_index : Std.Usize) (has_word : Bool) :
+  Result (ControlFlow (Std.Usize × Bool) Bool)
+  := do
+  let i := Slice.len words
+  if entry_index < i
+  then
+    if has_word
+    then ok (done true)
+    else
+      let (s, _) ← Slice.index_usize words entry_index
+      let s1 ← alloc.string.String.as_str s
+      let has_word1 ← Str.Insts.CoreCmpPartialEqStr.eq s1 word
+      let entry_index1 ← entry_index + 1#usize
+      ok (cont (entry_index1, has_word1))
+  else ok (done has_word)
+
+/-- [noble_contracts::source::declared::state::register::definitions::contains_word]: loop 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/definitions.rs', lines 135:4-138:5 -/
+@[rust_loop]
+def source.declared.state.register.definitions.contains_word_loop
+  (words : Slice (String × source.Target)) (word : Str)
+  (entry_index : Std.Usize) (has_word : Bool) :
+  Result Bool
+  := do
+  loop
+    (fun (entry_index1, has_word1) =>
+      source.declared.state.register.definitions.contains_word_loop.body words
+      word entry_index1 has_word1)
+    (entry_index, has_word)
+
+/-- [noble_contracts::source::declared::state::register::definitions::contains_word]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/definitions.rs', lines 132:0-140:1 -/
+@[reducible]
+def source.declared.state.register.definitions.contains_word
+  (words : Slice (String × source.Target)) (word : Str) : Result Bool := do
+  source.declared.state.register.definitions.contains_word_loop words word
+    0#usize false
+
+/-- [noble_contracts::source::declared::state::register::definitions::contains_exported_word]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/definitions.rs', lines 125:4-128:5 -/
+@[rust_loop_body]
+def source.declared.state.register.definitions.contains_exported_word_loop.body
+  (exports : Slice source.declared.Export) (word : Str)
+  (entry_index : Std.Usize) (has_word : Bool) :
+  Result (ControlFlow (Std.Usize × Bool) Bool)
+  := do
+  let i := Slice.len exports
+  if entry_index < i
+  then
+    if has_word
+    then ok (done true)
+    else
+      let e ← Slice.index_usize exports entry_index
+      let s := alloc.vec.Vec.deref e.words
+      let has_word1 ←
+        source.declared.state.register.definitions.contains_word s word
+      let entry_index1 ← entry_index + 1#usize
+      ok (cont (entry_index1, has_word1))
+  else ok (done has_word)
+
+/-- [noble_contracts::source::declared::state::register::definitions::contains_exported_word]: loop 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/definitions.rs', lines 125:4-128:5 -/
+@[rust_loop]
+def source.declared.state.register.definitions.contains_exported_word_loop
+  (exports : Slice source.declared.Export) (word : Str)
+  (entry_index : Std.Usize) (has_word : Bool) :
+  Result Bool
+  := do
+  loop
+    (fun (entry_index1, has_word1) =>
+      source.declared.state.register.definitions.contains_exported_word_loop.body
+      exports word entry_index1 has_word1)
+    (entry_index, has_word)
+
+/-- [noble_contracts::source::declared::state::register::definitions::contains_exported_word]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/definitions.rs', lines 122:0-130:1 -/
+@[reducible]
+def source.declared.state.register.definitions.contains_exported_word
+  (exports : Slice source.declared.Export) (word : Str) : Result Bool := do
+  source.declared.state.register.definitions.contains_exported_word_loop
+    exports word 0#usize false
+
+/-- [noble_contracts::source::declared::state::register::definitions::conflicts_with_definition]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/definitions.rs', lines 100:0-120:1 -/
+def source.declared.state.register.definitions.conflicts_with_definition
+  (definition : source.Named) («name» : Str) (version : Std.U32)
+  (local_exports : Slice source.declared.Export) :
+  Result Bool
+  := do
+  let b := core.option.Option.is_some definition.owner
+  if b
+  then ok false
+  else
+    let s ← alloc.string.String.as_str definition.name
+    let s1 ← core.str.Str.as_bytes «name»
+    let o ← source.declared.strip_qualified s s1 64#u8
+    match o with
+    | none => ok false
+    | some qualified =>
+      let o1 ← source.declared.split_once_ascii qualified 46#u8
+      match o1 with
+      | none => ok false
+      | some p =>
+        let (declared_version, word) := p
+        let r ←
+          core.str.Str.parse U32.Insts.CoreStrTraitsFromStrParseIntError
+            declared_version
+        let o2 ← core.result.Result.ok r
+        let b1 ←
+          core.option.Option.Insts.CoreCmpPartialEqOption.eq
+            core.cmp.PartialEqU32 o2 (some version)
+        if b1
+        then
+          source.declared.state.register.definitions.contains_exported_word
+            local_exports word
+        else ok false
+
+/-- [noble_contracts::source::declared::state::register::definitions::{noble_contracts::source::declared::state::register::definitions::Work<'_0>}::conflicts::{impl core::ops::function::FnMut<(&'_ noble_contracts::source::Named,), bool> for noble_contracts::source::declared::state::register::definitions::{noble_contracts::source::declared::state::register::definitions::Work<'_0>}::conflicts::{closure}<'_0, '_1, '_2>}::call_mut]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/definitions.rs', lines 90:46-92:9 -/
+def
+  source.declared.state.register.definitions.Work.conflicts.closure.Insts.CoreOpsFunctionFnMutTupleSharedNamedBool.call_mut
+  (c : source.declared.state.register.definitions.Work.conflicts.closure)
+  (tupled_args : source.Named) :
+  Result (Bool ×
+    source.declared.state.register.definitions.Work.conflicts.closure)
+  := do
+  let s := alloc.vec.Vec.deref c.local_exports
+  let b ←
+    source.declared.state.register.definitions.conflicts_with_definition
+      tupled_args c.name c.version s
+  ok (b, c)
+
+/-- [noble_contracts::source::declared::state::register::definitions::{noble_contracts::source::declared::state::register::definitions::Work<'_0>}::conflicts::{impl core::ops::function::FnOnce<(&'_ noble_contracts::source::Named,), bool> for noble_contracts::source::declared::state::register::definitions::{noble_contracts::source::declared::state::register::definitions::Work<'_0>}::conflicts::{closure}<'_0, '_1, '_2>}::call_once]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/definitions.rs', lines 90:46-92:9 -/
+def
+  source.declared.state.register.definitions.Work.conflicts.closure.Insts.CoreOpsFunctionFnOnceTupleSharedNamedBool.call_once
+  (c : source.declared.state.register.definitions.Work.conflicts.closure)
+  (n : source.Named) :
+  Result Bool
+  := do
+  let (b, _) ←
+    source.declared.state.register.definitions.Work.conflicts.closure.Insts.CoreOpsFunctionFnMutTupleSharedNamedBool.call_mut
+      c n
+  ok b
+
+/-- Trait implementation: [noble_contracts::source::declared::state::register::definitions::{noble_contracts::source::declared::state::register::definitions::Work<'_0>}::conflicts::{impl core::ops::function::FnOnce<(&'_ noble_contracts::source::Named,), bool> for noble_contracts::source::declared::state::register::definitions::{noble_contracts::source::declared::state::register::definitions::Work<'_0>}::conflicts::{closure}<'_0, '_1, '_2>}]
+    Source: 'crates/noble-contracts/src/source/declared/state/register/definitions.rs', lines 90:46-92:9 -/
+@[reducible]
+def
+  source.declared.state.register.definitions.Work.conflicts.closure.Insts.CoreOpsFunctionFnOnceTupleSharedNamedBool
+  : core.ops.function.FnOnce
+  source.declared.state.register.definitions.Work.conflicts.closure
+  source.Named Bool := {
+  call_once :=
+    source.declared.state.register.definitions.Work.conflicts.closure.Insts.CoreOpsFunctionFnOnceTupleSharedNamedBool.call_once
+}
+
+/-- Trait implementation: [noble_contracts::source::declared::state::register::definitions::{noble_contracts::source::declared::state::register::definitions::Work<'_0>}::conflicts::{impl core::ops::function::FnMut<(&'_ noble_contracts::source::Named,), bool> for noble_contracts::source::declared::state::register::definitions::{noble_contracts::source::declared::state::register::definitions::Work<'_0>}::conflicts::{closure}<'_0, '_1, '_2>}]
+    Source: 'crates/noble-contracts/src/source/declared/state/register/definitions.rs', lines 90:46-92:9 -/
+@[reducible]
+def
+  source.declared.state.register.definitions.Work.conflicts.closure.Insts.CoreOpsFunctionFnMutTupleSharedNamedBool
+  : core.ops.function.FnMut
+  source.declared.state.register.definitions.Work.conflicts.closure
+  source.Named Bool := {
+  FnOnceInst :=
+    source.declared.state.register.definitions.Work.conflicts.closure.Insts.CoreOpsFunctionFnOnceTupleSharedNamedBool
+  call_mut :=
+    source.declared.state.register.definitions.Work.conflicts.closure.Insts.CoreOpsFunctionFnMutTupleSharedNamedBool.call_mut
+}
+
+/-- [noble_contracts::source::declared::state::register::definitions::{noble_contracts::source::declared::state::register::definitions::Work<'_0>}::conflicts]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/definitions.rs', lines 89:4-93:5 -/
+def source.declared.state.register.definitions.Work.conflicts
+  (self : source.declared.state.register.definitions.Work)
+  (session : source.declared.state.ModuleSession) :
+  Result Bool
+  := do
+  let s := alloc.vec.Vec.deref session.source.definitions
+  let i ← core.slice.Slice.iter s
+  let (b, _) ←
+    core.slice.iter.Iter.Insts.CoreIterTraitsIteratorIteratorSharedAT.any
+      source.declared.state.register.definitions.Work.conflicts.closure.Insts.CoreOpsFunctionFnMutTupleSharedNamedBool
+      i self
+  ok b
+
+/-- [noble_contracts::source::declared::state::register::definitions::finish]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/definitions.rs', lines 66:0-86:1 -/
+def source.declared.state.register.definitions.finish
+  (session : source.declared.state.ModuleSession)
+  (work : source.declared.state.register.definitions.Work)
+  (history_start : Std.Usize) :
+  Result (core.result.Result (source.declared.state.ModuleSession ×
+    (alloc.vec.Vec source.declared.Export)) source.Error)
+  := do
+  let b ←
+    source.declared.state.register.definitions.Work.conflicts work session
+  if b
+  then
+    let e ←
+      source.declared.error source.Stage.Resolve (toStr
+        "module export conflicts with a qualified definition")
+    ok (core.result.Result.Err e)
+  else
+    let v ←
+      alloc.vec.Vec.truncate Global session.source.history history_start
+    ok (core.result.Result.Ok
+      ({ session with source := { session.source with history := v } },
+      work.local_exports))
+
+/-- [noble_contracts::source::declared::state::register::definitions::install::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::declared::state::register::definitions::install::{closure#1}}::call_once]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/definitions.rs', lines 33:86-38:5 -/
+def
+  source.declared.state.register.definitions.install.closure_1.Insts.CoreOpsFunctionFnOnceTupleError.call_once
+  (c : source.declared.state.register.definitions.install.closure_1) 
+  (_ : Unit) :
+  Result source.Error
+  := do
+  source.declared.error source.Stage.Check (toStr
+    "invalid definition resource budget")
+
+/-- Trait implementation: [noble_contracts::source::declared::state::register::definitions::install::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::declared::state::register::definitions::install::{closure#1}}]
+    Source: 'crates/noble-contracts/src/source/declared/state/register/definitions.rs', lines 33:86-38:5 -/
+@[reducible]
+def
+  source.declared.state.register.definitions.install.closure_1.Insts.CoreOpsFunctionFnOnceTupleError
+  : core.ops.function.FnOnce
+  source.declared.state.register.definitions.install.closure_1 Unit
+  source.Error := {
+  call_once :=
+    source.declared.state.register.definitions.install.closure_1.Insts.CoreOpsFunctionFnOnceTupleError.call_once
+}
+
+/-- [noble_contracts::source::declared::state::register::definitions::install::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_contracts::source::Error> for noble_contracts::source::declared::state::register::definitions::install::{closure}}::call_once]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/definitions.rs', lines 30:71-32:5 -/
+def
+  source.declared.state.register.definitions.install.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorError.call_once
+  (c : source.declared.state.register.definitions.install.closure)
+  (tupled_args : core.num.error.TryFromIntError) :
+  Result source.Error
+  := do
+  source.declared.error source.Stage.Check (toStr "definition count overflow")
+
+/-- Trait implementation: [noble_contracts::source::declared::state::register::definitions::install::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_contracts::source::Error> for noble_contracts::source::declared::state::register::definitions::install::{closure}}]
+    Source: 'crates/noble-contracts/src/source/declared/state/register/definitions.rs', lines 30:71-32:5 -/
+@[reducible]
+def
+  source.declared.state.register.definitions.install.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorError
+  : core.ops.function.FnOnce
+  source.declared.state.register.definitions.install.closure
+  core.num.error.TryFromIntError source.Error := {
+  call_once :=
+    source.declared.state.register.definitions.install.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorError.call_once
+}
+
+/-- [noble_contracts::source::declared::state::register::definitions::commit_definition]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/definitions.rs', lines 202:0-229:1 -/
+def source.declared.state.register.definitions.commit_definition
+  (session : source.declared.state.ModuleSession)
+  (definition_bytes : Slice Std.U8) (limits : Limits) :
+  Result (core.result.Result (source.declared.state.ModuleSession ×
+    source.Target) source.Error)
+  := do
+  let s ← lift (Array.to_slice (Std.Array.empty noble_kernel.types.Ty))
+  let r ←
+    source.preparation.Session.prepare session.source definition_bytes s limits
+  match r with
+  | core.result.Result.Ok value =>
+    let b ← source.Prepared.is_definition value
+    if b
+    then
+      let o ← source.Prepared.impl.submission value
+      let b1 := core.option.Option.is_some o
+      if b1
+      then
+        let e ←
+          source.declared.error source.Stage.Check (toStr
+            "module definition has executable initializer")
+        ok (core.result.Result.Err e)
+      else
+        let (r1, s1) ← source.Session.commit session.source value
+        match r1 with
+        | core.result.Result.Ok _ =>
+          let i := alloc.vec.Vec.len s1.definitions
+          let o1 ← lift (Usize.checked_sub i 1#usize)
+          match o1 with
+          | none =>
+            let e ←
+              source.declared.error source.Stage.Check (toStr
+                "missing declared definition")
+            ok (core.result.Result.Err e)
+          | some index1 =>
+            let i1 ← lift (UScalar.cast .U32 index1)
+            ok (core.result.Result.Ok ({ session with source := s1 },
+              source.Target.Named i1))
+        | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+    else
+      let e ←
+        source.declared.error source.Stage.Check (toStr
+          "module definition has executable initializer")
+      ok (core.result.Result.Err e)
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::source::declared::state::register::definitions::exported_definition]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/definitions.rs', lines 191:0-200:1 -/
+def source.declared.state.register.definitions.exported_definition
+  («name» : Str) (target : source.Target) :
+  Result source.declared.Export
+  := do
+  let s ← alloc.string.String.Insts.CoreConvertFromShared0Str.from «name»
+  let y ←
+    lift (Std.Array.to_slice (Array.make 1#usize [ (s, target) ] : Array
+      (String × source.Target) 1#usize))
+  let ret := alloc.slice.Slice.into_vec y
+  ok { «name» := s, ty := none, words := ret }
+
+/-- [noble_contracts::source::declared::state::register::definitions::install_one]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/definitions.rs', lines 166:0-189:1 -/
+def source.declared.state.register.definitions.install_one
+  (session : source.declared.state.ModuleSession)
+  (input : source.declared.state.register.definitions.DefinitionInput)
+  (local_exports : alloc.vec.Vec source.declared.Export) :
+  Result (core.result.Result (source.declared.state.ModuleSession ×
+    (alloc.vec.Vec source.declared.Export)) source.Error)
+  := do
+  let s := alloc.vec.Vec.deref input.source
+  let r ←
+    source.declared.state.register.definitions.commit_definition session s
+      input.limits
+  match r with
+  | core.result.Result.Ok value =>
+    let (session1, target) := value
+    let (o, as_mut_back) ← core.option.Option.as_mut session1.source.declared
+    match o with
+    | none =>
+      let e ←
+        source.declared.error source.Stage.Check (toStr
+          "missing declared context")
+      ok (core.result.Result.Err e)
+    | some context =>
+      let b ←
+        core.slice.Slice.contains
+          alloc.string.String.Insts.CoreCmpPartialEqString input.exports
+          input.name
+      let local_exports1 ←
+        if b
+        then
+          do
+          let s1 ←
+            alloc.string.String.Insts.CoreOpsDerefDerefStr.deref input.name
+          let e ←
+            source.declared.state.register.definitions.exported_definition s1
+              target
+          alloc.vec.Vec.push local_exports e
+        else ok local_exports
+      let v ← alloc.vec.Vec.push context.words (input.name, target)
+      let o1 := as_mut_back (some { context with words := v })
+      ok (core.result.Result.Ok
+        ({ session1 with source := { session1.source with declared := o1 } },
+        local_exports1))
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::source::declared::state::register::definitions::graph::{noble_contracts::source::declared::state::register::definitions::graph::Schedule<'a>}::commit::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::declared::state::register::definitions::graph::{noble_contracts::source::declared::state::register::definitions::graph::Schedule<'a>}::commit::{closure#1}<'a>}::call_once]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/definitions/graph.rs', lines 199:59-201:9 -/
+def
+  source.declared.state.register.definitions.graph.Schedule.commit.closure_1.Insts.CoreOpsFunctionFnOnceTupleError.call_once
+  (c :
+  source.declared.state.register.definitions.graph.Schedule.commit.closure_1)
+  (_ : Unit) :
+  Result source.Error
+  := do
+  source.declared.error source.Stage.Check (toStr "missing module session")
+
+/-- Trait implementation: [noble_contracts::source::declared::state::register::definitions::graph::{noble_contracts::source::declared::state::register::definitions::graph::Schedule<'a>}::commit::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::declared::state::register::definitions::graph::{noble_contracts::source::declared::state::register::definitions::graph::Schedule<'a>}::commit::{closure#1}<'a>}]
+    Source: 'crates/noble-contracts/src/source/declared/state/register/definitions/graph.rs', lines 199:59-201:9 -/
+@[reducible]
+def
+  source.declared.state.register.definitions.graph.Schedule.commit.closure_1.Insts.CoreOpsFunctionFnOnceTupleError
+  : core.ops.function.FnOnce
+  source.declared.state.register.definitions.graph.Schedule.commit.closure_1
+  Unit source.Error := {
+  call_once :=
+    source.declared.state.register.definitions.graph.Schedule.commit.closure_1.Insts.CoreOpsFunctionFnOnceTupleError.call_once
+}
+
+/-- [noble_contracts::source::declared::state::register::definitions::graph::{noble_contracts::source::declared::state::register::definitions::graph::Schedule<'a>}::commit::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::declared::state::register::definitions::graph::{noble_contracts::source::declared::state::register::definitions::graph::Schedule<'a>}::commit::{closure}<'a>}::call_once]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/definitions/graph.rs', lines 190:89-195:9 -/
+def
+  source.declared.state.register.definitions.graph.Schedule.commit.closure.Insts.CoreOpsFunctionFnOnceTupleError.call_once
+  (c :
+  source.declared.state.register.definitions.graph.Schedule.commit.closure)
+  (_ : Unit) :
+  Result source.Error
+  := do
+  source.declared.error source.Stage.Check (toStr
+    "missing ready module definition")
+
+/-- Trait implementation: [noble_contracts::source::declared::state::register::definitions::graph::{noble_contracts::source::declared::state::register::definitions::graph::Schedule<'a>}::commit::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::declared::state::register::definitions::graph::{noble_contracts::source::declared::state::register::definitions::graph::Schedule<'a>}::commit::{closure}<'a>}]
+    Source: 'crates/noble-contracts/src/source/declared/state/register/definitions/graph.rs', lines 190:89-195:9 -/
+@[reducible]
+def
+  source.declared.state.register.definitions.graph.Schedule.commit.closure.Insts.CoreOpsFunctionFnOnceTupleError
+  : core.ops.function.FnOnce
+  source.declared.state.register.definitions.graph.Schedule.commit.closure Unit
+  source.Error := {
+  call_once :=
+    source.declared.state.register.definitions.graph.Schedule.commit.closure.Insts.CoreOpsFunctionFnOnceTupleError.call_once
+}
+
+/-- [noble_contracts::source::declared::state::register::definitions::graph::{noble_contracts::source::declared::state::register::definitions::graph::Schedule<'a>}::commit]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/definitions/graph.rs', lines 189:4-222:5 -/
+def source.declared.state.register.definitions.graph.Schedule.commit
+  (self : source.declared.state.register.definitions.graph.Schedule)
+  (position : Std.Usize) :
+  Result (source.declared.state.register.definitions.graph.Schedule ×
+    (core.result.Result Unit source.Error))
+  := do
+  let (o, index_mut_back) ←
+    alloc.vec.Vec.index_mut (core.slice.index.SliceIndexUsizeSlice (Option
+      (String × (alloc.vec.Vec Std.U8) × source.Tree))) self.pending position
+  let (o1, o2) := core.option.Option.take o
+  let r ←
+    core.option.Option.ok_or_else
+      source.declared.state.register.definitions.graph.Schedule.commit.closure.Insts.CoreOpsFunctionFnOnceTupleError
+      o1 ()
+  match r with
+  | core.result.Result.Ok definition =>
+    let («name», definition_bytes, _) := definition
+    let (o3, o4) := core.option.Option.take self.session
+    let r1 ←
+      core.option.Option.ok_or_else
+        source.declared.state.register.definitions.graph.Schedule.commit.closure_1.Insts.CoreOpsFunctionFnOnceTupleError
+        o3 ()
+    match r1 with
+    | core.result.Result.Ok session =>
+      let (v, v1) ←
+        core.mem.take (alloc.vec.Vec.Insts.CoreDefaultDefault
+          source.declared.Export) self.work.local_exports
+      let installed ←
+        source.declared.state.register.definitions.install_one session
+          {
+            «name»,
+            source := definition_bytes,
+            limits := self.limits,
+            exports := self.work.exports
+          } v
+      match installed with
+      | core.result.Result.Ok installed1 =>
+        let (session1, local_exports) := installed1
+        let v2 := index_mut_back o2
+        ok
+          ({
+             self
+               with
+               session := (some session1),
+               work := { self.work with local_exports },
+               pending := v2
+           }, core.result.Result.Ok ())
+      | core.result.Result.Err problem =>
+        let v2 := index_mut_back o2
+        ok
+          ({
+             self
+               with
+               session := o4,
+               work := { self.work with local_exports := v1 },
+               pending := v2
+           }, core.result.Result.Err problem)
+    | core.result.Result.Err problem =>
+      let v := index_mut_back o2
+      ok ({ self with session := o4, pending := v }, core.result.Result.Err
+        problem)
+  | core.result.Result.Err problem =>
+    let v := index_mut_back o2
+    ok ({ self with pending := v }, core.result.Result.Err problem)
+
+/-- [noble_contracts::source::declared::state::register::definitions::scheduling::charge_dependency]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/definitions/scheduling.rs', lines 95:0-104:1 -/
+def source.declared.state.register.definitions.scheduling.charge_dependency
+  (meter : Meter) :
+  Result (Meter × (core.result.Result Unit source.Error))
+  := do
+  let (r, meter1) ← metering.Meter.charge meter 1#u32 source.declared.SPAN
+  match r with
+  | core.result.Result.Ok _ => ok (meter1, core.result.Result.Ok ())
+  | core.result.Result.Err problem =>
+    let e ← source.declared.diagnostic source.Stage.Check problem
+    ok (meter1, core.result.Result.Err e)
+
+/-- [noble_contracts::source::declared::state::register::definitions::scheduling::checked_match]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/definitions/scheduling.rs', lines 79:0-90:1 -/
+def source.declared.state.register.definitions.scheduling.checked_match
+  (word : Slice Std.U8) («name» : Str) (meter : Meter) :
+  Result (Meter × (core.result.Result Bool source.Error))
+  := do
+  let (meter1, charged) ←
+    source.declared.state.register.definitions.scheduling.charge_dependency
+      meter
+  match charged with
+  | core.result.Result.Ok _ =>
+    let s ← core.str.Str.as_bytes «name»
+    let b ← core.slice.cmp.PartialEqSlice.eq core.cmp.PartialEqU8 s word
+    ok (meter1, core.result.Result.Ok b)
+  | core.result.Result.Err problem =>
+    ok (meter1, core.result.Result.Err problem)
+
+/-- [noble_contracts::source::declared::state::register::definitions::scheduling::dependency]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/definitions/scheduling.rs', lines 60:4-69:5 -/
+@[rust_loop_body]
+def source.declared.state.register.definitions.scheduling.dependency_loop.body
+  (word : Slice Std.U8) (names : Slice String) (meter : Meter)
+  (index1 : Std.Usize) (found : Option Std.Usize)
+  (failure : Option source.Error) :
+  Result (ControlFlow (Meter × Std.Usize × (Option Std.Usize) × (Option
+    source.Error)) (Meter × (Option Std.Usize) × (Option source.Error)))
+  := do
+  let i := Slice.len names
+  if index1 < i
+  then
+    let b := core.option.Option.is_none found
+    if b
+    then
+      let b1 := core.option.Option.is_none failure
+      if b1
+      then
+        let s ← Slice.index_usize names index1
+        let s1 ← alloc.string.String.Insts.CoreOpsDerefDerefStr.deref s
+        let (next, «matches») ←
+          source.declared.state.register.definitions.scheduling.checked_match
+            word s1 meter
+        let (found1, failure1) ←
+          match «matches» with
+          | core.result.Result.Ok b2 =>
+            do
+            let o ← if b2
+                      then ok (some index1)
+                      else ok found
+            ok (o, failure)
+          | core.result.Result.Err problem => ok (found, some problem)
+        let index2 ← index1 + 1#usize
+        ok (cont (next, index2, found1, failure1))
+      else ok (done (meter, found, failure))
+    else ok (done (meter, found, failure))
+  else ok (done (meter, found, failure))
+
+/-- [noble_contracts::source::declared::state::register::definitions::scheduling::dependency]: loop 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/definitions/scheduling.rs', lines 60:4-69:5 -/
+@[rust_loop]
+def source.declared.state.register.definitions.scheduling.dependency_loop
+  (word : Slice Std.U8) (names : Slice String) (meter : Meter)
+  (index1 : Std.Usize) (found : Option Std.Usize)
+  (failure : Option source.Error) :
+  Result (Meter × (Option Std.Usize) × (Option source.Error))
+  := do
+  loop
+    (fun (meter1, index2, found1, failure1) =>
+      source.declared.state.register.definitions.scheduling.dependency_loop.body
+      word names meter1 index2 found1 failure1)
+    (meter, index1, found, failure)
+
+/-- [noble_contracts::source::declared::state::register::definitions::scheduling::dependency]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/definitions/scheduling.rs', lines 52:0-74:1 -/
+def source.declared.state.register.definitions.scheduling.dependency
+  (word : Slice Std.U8) (names : Slice String) (meter : Meter) :
+  Result (Meter × (core.result.Result (Option Std.Usize) source.Error))
+  := do
+  let (meter1, found, failure) ←
+    source.declared.state.register.definitions.scheduling.dependency_loop word
+      names meter 0#usize none none
+  match failure with
+  | none => ok (meter1, core.result.Result.Ok found)
+  | some problem => ok (meter1, core.result.Result.Err problem)
+
+/-- [noble_contracts::source::declared::state::register::definitions::scheduling::blocked_at]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/definitions/scheduling.rs', lines 31:0-50:1 -/
+def source.declared.state.register.definitions.scheduling.blocked_at
+  (node : source.Node) (names : Slice String) (installed : Slice Bool)
+  (meter : Meter) :
+  Result (Meter × (core.result.Result Bool source.Error))
+  := do
+  let (meter1, charged) ←
+    source.declared.state.register.definitions.scheduling.charge_dependency
+      meter
+  match charged with
+  | core.result.Result.Ok _ =>
+    match node.kind with
+    | source.Kind.Literal _ => ok (meter1, core.result.Result.Ok false)
+    | source.Kind.Text _ => ok (meter1, core.result.Result.Ok false)
+    | source.Kind.Word word =>
+      let s := alloc.vec.Vec.deref word
+      let (meter2, found) ←
+        source.declared.state.register.definitions.scheduling.dependency s
+          names meter1
+      match found with
+      | core.result.Result.Ok o =>
+        match o with
+        | none => ok (meter2, core.result.Result.Ok false)
+        | some index1 =>
+          let b ← Slice.index_usize installed index1
+          ok (meter2, core.result.Result.Ok (¬ b))
+      | core.result.Result.Err problem =>
+        ok (meter2, core.result.Result.Err problem)
+    | source.Kind.Call _ => ok (meter1, core.result.Result.Ok false)
+    | source.Kind.Quotation _ => ok (meter1, core.result.Result.Ok false)
+  | core.result.Result.Err problem =>
+    ok (meter1, core.result.Result.Err problem)
+
+/-- [noble_contracts::source::declared::state::register::definitions::scheduling::blocked]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/definitions/scheduling.rs', lines 12:4-20:5 -/
+@[rust_loop_body]
+def source.declared.state.register.definitions.scheduling.blocked_loop.body
+  (tree : source.Tree) (names : Slice String) (installed : Slice Bool)
+  (meter : Meter) (node_at : Std.Usize) (is_blocked : Bool)
+  (failure : Option source.Error) :
+  Result (ControlFlow (Meter × Std.Usize × Bool × (Option source.Error))
+    (Meter × Bool × (Option source.Error)))
+  := do
+  let i := alloc.vec.Vec.len tree.nodes
+  if node_at < i
+  then
+    if is_blocked
+    then ok (done (meter, true, failure))
+    else
+      let b := core.option.Option.is_none failure
+      if b
+      then
+        let n ←
+          alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+            source.Node) tree.nodes node_at
+        let (next, result) ←
+          source.declared.state.register.definitions.scheduling.blocked_at n
+            names installed meter
+        let (is_blocked1, failure1) ←
+          match result with
+          | core.result.Result.Ok blocked => ok (blocked, failure)
+          | core.result.Result.Err problem => ok (false, some problem)
+        let node_at1 ← node_at + 1#usize
+        ok (cont (next, node_at1, is_blocked1, failure1))
+      else ok (done (meter, false, failure))
+  else ok (done (meter, is_blocked, failure))
+
+/-- [noble_contracts::source::declared::state::register::definitions::scheduling::blocked]: loop 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/definitions/scheduling.rs', lines 12:4-20:5 -/
+@[rust_loop]
+def source.declared.state.register.definitions.scheduling.blocked_loop
+  (tree : source.Tree) (names : Slice String) (installed : Slice Bool)
+  (meter : Meter) (node_at : Std.Usize) (is_blocked : Bool)
+  (failure : Option source.Error) :
+  Result (Meter × Bool × (Option source.Error))
+  := do
+  loop
+    (fun (meter1, node_at1, is_blocked1, failure1) =>
+      source.declared.state.register.definitions.scheduling.blocked_loop.body
+      tree names installed meter1 node_at1 is_blocked1 failure1)
+    (meter, node_at, is_blocked, failure)
+
+/-- [noble_contracts::source::declared::state::register::definitions::scheduling::blocked]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/definitions/scheduling.rs', lines 3:0-26:1 -/
+def source.declared.state.register.definitions.scheduling.blocked
+  (tree : source.Tree) (names : Slice String) (installed : Slice Bool)
+  (meter : Meter) :
+  Result (Meter × (core.result.Result Bool source.Error))
+  := do
+  let (meter1, is_blocked, failure) ←
+    source.declared.state.register.definitions.scheduling.blocked_loop tree
+      names installed meter 0#usize false none
+  match failure with
+  | none => ok (meter1, core.result.Result.Ok is_blocked)
+  | some problem => ok (meter1, core.result.Result.Err problem)
+
+/-- [noble_contracts::source::declared::state::register::definitions::graph::{noble_contracts::source::declared::state::register::definitions::graph::Schedule<'a>}::ready]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/definitions/graph.rs', lines 165:4-183:5 -/
+def source.declared.state.register.definitions.graph.Schedule.ready
+  (self : source.declared.state.register.definitions.graph.Schedule)
+  (position : Std.Usize) :
+  Result (source.declared.state.register.definitions.graph.Schedule ×
+    (core.result.Result Bool source.Error))
+  := do
+  let o ←
+    alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice (Option (String
+      × (alloc.vec.Vec Std.U8) × source.Tree))) self.pending position
+  let o1 ← core.option.Option.as_ref o
+  match o1 with
+  | none =>
+    let e ←
+      source.declared.error source.Stage.Check (toStr
+        "missing definition graph node")
+    ok (self, core.result.Result.Err e)
+  | some t =>
+    let (_, _, tree) := t
+    let s := alloc.vec.Vec.deref self.names
+    let s1 := alloc.vec.Vec.deref self.installed
+    let (meter, blocked) ←
+      source.declared.state.register.definitions.scheduling.blocked tree s s1
+        self.work.meter
+    match blocked with
+    | core.result.Result.Ok is_blocked =>
+      ok ({ self with work := { self.work with meter } }, core.result.Result.Ok
+        (¬ is_blocked))
+    | core.result.Result.Err _ =>
+      ok ({ self with work := { self.work with meter } }, blocked)
+
+/-- [noble_contracts::source::declared::state::register::definitions::graph::{noble_contracts::source::declared::state::register::definitions::graph::Schedule<'a>}::pass_at]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/definitions/graph.rs', lines 122:4-159:5 -/
+def source.declared.state.register.definitions.graph.Schedule.pass_at
+  (self : source.declared.state.register.definitions.graph.Schedule)
+  (position : source.declared.state.register.definitions.graph.PassPosition) :
+  Result (source.declared.state.register.definitions.graph.Schedule ×
+    (core.result.Result Std.Usize source.Error))
+  := do
+  let b ←
+    alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice Bool)
+      self.installed position.index
+  if b
+  then ok (self, core.result.Result.Ok position.completed)
+  else
+    let (s, ready) ←
+      source.declared.state.register.definitions.graph.Schedule.ready self
+        position.index
+    match ready with
+    | core.result.Result.Ok b1 =>
+      if b1
+      then
+        let (s1, installed) ←
+          source.declared.state.register.definitions.graph.Schedule.commit s
+            position.index
+        match installed with
+        | core.result.Result.Ok _ =>
+          let o ← lift (Usize.checked_add position.completed 1#usize)
+          match o with
+          | none =>
+            let e ←
+              source.declared.error source.Stage.Check (toStr
+                "definition count overflow")
+            ok (s1, core.result.Result.Err e)
+          | some completed =>
+            let (_, index_mut_back) ←
+              alloc.vec.Vec.index_mut (core.slice.index.SliceIndexUsizeSlice
+                Bool) s1.installed position.index
+            let v := index_mut_back true
+            ok ({ s1 with installed := v }, core.result.Result.Ok completed)
+        | core.result.Result.Err problem =>
+          ok (s1, core.result.Result.Err problem)
+      else ok (s, core.result.Result.Ok position.completed)
+    | core.result.Result.Err problem => ok (s, core.result.Result.Err problem)
+
+/-- [noble_contracts::source::declared::state::register::definitions::graph::{noble_contracts::source::declared::state::register::definitions::graph::Schedule<'a>}::pass]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/definitions/graph.rs', lines 99:8-110:9 -/
+@[rust_loop_body]
+def source.declared.state.register.definitions.graph.Schedule.pass_loop.body
+  (count : Std.Usize) (o : Option source.declared.state.ModuleSession)
+  (v : alloc.vec.Vec (String × (alloc.vec.Vec Std.U8) × source.Tree))
+  (s : Slice String) (v1 : alloc.vec.Vec source.declared.Export) (s1 : Str)
+  (i : Std.U32) (l : Limits) (m : Meter) (v2 : alloc.vec.Vec String)
+  (v3 : alloc.vec.Vec (Option (String × (alloc.vec.Vec Std.U8) ×
+  source.Tree))) (v4 : alloc.vec.Vec Bool) (i1 : Std.Usize) (l1 : Limits)
+  (completed : Std.Usize) (position : Std.Usize)
+  (failure : Option source.Error) :
+  Result (ControlFlow ((Option source.declared.state.ModuleSession) ×
+    (alloc.vec.Vec (String × (alloc.vec.Vec Std.U8) × source.Tree)) × (Slice
+    String) × (alloc.vec.Vec source.declared.Export) × Str × Std.U32 ×
+    Limits × Meter × (alloc.vec.Vec String) × (alloc.vec.Vec (Option (String
+    × (alloc.vec.Vec Std.U8) × source.Tree))) × (alloc.vec.Vec Bool) ×
+    Std.Usize × Limits × Std.Usize × Std.Usize × (Option source.Error))
+    ((Option source.declared.state.ModuleSession) × (alloc.vec.Vec (String ×
+    (alloc.vec.Vec Std.U8) × source.Tree)) × (Slice String) × (alloc.vec.Vec
+    source.declared.Export) × Str × Std.U32 × Limits × Meter ×
+    (alloc.vec.Vec String) × (alloc.vec.Vec (Option (String × (alloc.vec.Vec
+    Std.U8) × source.Tree))) × (alloc.vec.Vec Bool) × Std.Usize × Limits ×
+    Std.Usize × (Option source.Error)))
+  := do
+  if position < count
+  then
+    let b := core.option.Option.is_none failure
+    if b
+    then
+      let (s2, progress) ←
+        source.declared.state.register.definitions.graph.Schedule.pass_at
+          {
+            session := o,
+            work :=
+              {
+                definitions := v,
+                exports := s,
+                local_exports := v1,
+                «name» := s1,
+                version := i,
+                limits := l,
+                meter := m
+              },
+            names := v2,
+            pending := v3,
+            installed := v4,
+            remaining := i1,
+            limits := l1
+          } { index := position, completed }
+      let (completed1, failure1) ←
+        match progress with
+        | core.result.Result.Ok advanced => ok (advanced, failure)
+        | core.result.Result.Err problem => ok (completed, some problem)
+      let position1 ← position + 1#usize
+      ok (cont (s2.session, s2.work.definitions, s2.work.exports,
+        s2.work.local_exports, s2.work.name, s2.work.version, s2.work.limits,
+        s2.work.meter, s2.names, s2.pending, s2.installed, s2.remaining,
+        s2.limits, completed1, position1, failure1))
+    else
+      ok (done (o, v, s, v1, s1, i, l, m, v2, v3, v4, i1, l1, completed,
+        failure))
+  else
+    ok (done (o, v, s, v1, s1, i, l, m, v2, v3, v4, i1, l1, completed,
+      failure))
+
+/-- [noble_contracts::source::declared::state::register::definitions::graph::{noble_contracts::source::declared::state::register::definitions::graph::Schedule<'a>}::pass]: loop 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/definitions/graph.rs', lines 99:8-110:9 -/
+@[rust_loop]
+def source.declared.state.register.definitions.graph.Schedule.pass_loop
+  (o : Option source.declared.state.ModuleSession)
+  (v : alloc.vec.Vec (String × (alloc.vec.Vec Std.U8) × source.Tree))
+  (s : Slice String) (v1 : alloc.vec.Vec source.declared.Export) (s1 : Str)
+  (i : Std.U32) (l : Limits) (m : Meter) (v2 : alloc.vec.Vec String)
+  (v3 : alloc.vec.Vec (Option (String × (alloc.vec.Vec Std.U8) ×
+  source.Tree))) (v4 : alloc.vec.Vec Bool) (i1 : Std.Usize) (l1 : Limits)
+  (completed : Std.Usize) (position : Std.Usize) (count : Std.Usize)
+  (failure : Option source.Error) :
+  Result ((Option source.declared.state.ModuleSession) × (alloc.vec.Vec
+    (String × (alloc.vec.Vec Std.U8) × source.Tree)) × (Slice String) ×
+    (alloc.vec.Vec source.declared.Export) × Str × Std.U32 × Limits × Meter
+    × (alloc.vec.Vec String) × (alloc.vec.Vec (Option (String ×
+    (alloc.vec.Vec Std.U8) × source.Tree))) × (alloc.vec.Vec Bool) ×
+    Std.Usize × Limits × Std.Usize × (Option source.Error))
+  := do
+  loop
+    (fun (o1, v5, s2, v6, s3, i2, l2, m1, v7, v8, v9, i3, l3, completed1,
+      position1, failure1) =>
+      source.declared.state.register.definitions.graph.Schedule.pass_loop.body
+      count o1 v5 s2 v6 s3 i2 l2 m1 v7 v8 v9 i3 l3 completed1 position1
+      failure1)
+    (o, v, s, v1, s1, i, l, m, v2, v3, v4, i1, l1, completed, position,
+      failure)
+
+/-- [noble_contracts::source::declared::state::register::definitions::graph::{noble_contracts::source::declared::state::register::definitions::graph::Schedule<'a>}::pass]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/definitions/graph.rs', lines 94:4-116:5 -/
+def source.declared.state.register.definitions.graph.Schedule.pass
+  (self : source.declared.state.register.definitions.graph.Schedule) :
+  Result (source.declared.state.register.definitions.graph.Schedule ×
+    (core.result.Result Std.Usize source.Error))
+  := do
+  let count := alloc.vec.Vec.len self.pending
+  let (o, v, s, v1, s1, i, l, m, v2, v3, v4, i1, l1, completed, failure) ←
+    source.declared.state.register.definitions.graph.Schedule.pass_loop
+      self.session self.work.definitions self.work.exports
+      self.work.local_exports self.work.name self.work.version self.work.limits
+      self.work.meter self.names self.pending self.installed self.remaining
+      self.limits 0#usize 0#usize count none
+  match failure with
+  | none =>
+    ok
+      ({
+         session := o,
+         work :=
+           {
+             definitions := v,
+             exports := s,
+             local_exports := v1,
+             «name» := s1,
+             version := i,
+             limits := l,
+             meter := m
+           },
+         names := v2,
+         pending := v3,
+         installed := v4,
+         remaining := i1,
+         limits := l1
+       }, core.result.Result.Ok completed)
+  | some problem =>
+    ok
+      ({
+         session := o,
+         work :=
+           {
+             definitions := v,
+             exports := s,
+             local_exports := v1,
+             «name» := s1,
+             version := i,
+             limits := l,
+             meter := m
+           },
+         names := v2,
+         pending := v3,
+         installed := v4,
+         remaining := i1,
+         limits := l1
+       }, core.result.Result.Err problem)
+
+/-- [noble_contracts::source::declared::state::register::definitions::graph::{noble_contracts::source::declared::state::register::definitions::graph::Schedule<'a>}::run_pass]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/definitions/graph.rs', lines 75:4-92:5 -/
+def source.declared.state.register.definitions.graph.Schedule.run_pass
+  (self : source.declared.state.register.definitions.graph.Schedule) :
+  Result (source.declared.state.register.definitions.graph.Schedule ×
+    (core.result.Result Unit source.Error))
+  := do
+  let (s, progress) ←
+    source.declared.state.register.definitions.graph.Schedule.pass self
+  match progress with
+  | core.result.Result.Ok completed =>
+    if completed != 0#usize
+    then
+      let i ← s.remaining - completed
+      ok ({ s with remaining := i }, core.result.Result.Ok ())
+    else
+      let e ←
+        source.declared.error source.Stage.Resolve (toStr
+          "cyclic local module definitions")
+      ok (s, core.result.Result.Err e)
+  | core.result.Result.Err problem => ok (s, core.result.Result.Err problem)
+
+/-- [noble_contracts::source::declared::state::register::definitions::graph::{noble_contracts::source::declared::state::register::definitions::graph::Schedule<'a>}::run::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::declared::state::register::definitions::graph::{noble_contracts::source::declared::state::register::definitions::graph::Schedule<'a>}::run::{closure}<'a>}::call_once]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/definitions/graph.rs', lines 65:55-67:9 -/
+def
+  source.declared.state.register.definitions.graph.Schedule.run.closure.Insts.CoreOpsFunctionFnOnceTupleError.call_once
+  (c : source.declared.state.register.definitions.graph.Schedule.run.closure)
+  (_ : Unit) :
+  Result source.Error
+  := do
+  source.declared.error source.Stage.Check (toStr "missing module session")
+
+/-- Trait implementation: [noble_contracts::source::declared::state::register::definitions::graph::{noble_contracts::source::declared::state::register::definitions::graph::Schedule<'a>}::run::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::declared::state::register::definitions::graph::{noble_contracts::source::declared::state::register::definitions::graph::Schedule<'a>}::run::{closure}<'a>}]
+    Source: 'crates/noble-contracts/src/source/declared/state/register/definitions/graph.rs', lines 65:55-67:9 -/
+@[reducible]
+def
+  source.declared.state.register.definitions.graph.Schedule.run.closure.Insts.CoreOpsFunctionFnOnceTupleError
+  : core.ops.function.FnOnce
+  source.declared.state.register.definitions.graph.Schedule.run.closure Unit
+  source.Error := {
+  call_once :=
+    source.declared.state.register.definitions.graph.Schedule.run.closure.Insts.CoreOpsFunctionFnOnceTupleError.call_once
+}
+
+/-- [noble_contracts::source::declared::state::register::definitions::graph::{noble_contracts::source::declared::state::register::definitions::graph::Schedule<'a>}::run]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/definitions/graph.rs', lines 55:8-61:9 -/
+@[rust_loop_body]
+def source.declared.state.register.definitions.graph.Schedule.run_loop.body
+  (o : Option source.declared.state.ModuleSession)
+  (v : alloc.vec.Vec (String × (alloc.vec.Vec Std.U8) × source.Tree))
+  (s : Slice String) (v1 : alloc.vec.Vec source.declared.Export) (s1 : Str)
+  (i : Std.U32) (l : Limits) (m : Meter) (v2 : alloc.vec.Vec String)
+  (v3 : alloc.vec.Vec (Option (String × (alloc.vec.Vec Std.U8) ×
+  source.Tree))) (v4 : alloc.vec.Vec Bool) (i1 : Std.Usize) (l1 : Limits)
+  (failure : Option source.Error) :
+  Result (ControlFlow ((Option source.declared.state.ModuleSession) ×
+    (alloc.vec.Vec (String × (alloc.vec.Vec Std.U8) × source.Tree)) × (Slice
+    String) × (alloc.vec.Vec source.declared.Export) × Str × Std.U32 ×
+    Limits × Meter × (alloc.vec.Vec String) × (alloc.vec.Vec (Option (String
+    × (alloc.vec.Vec Std.U8) × source.Tree))) × (alloc.vec.Vec Bool) ×
+    Std.Usize × Limits × (Option source.Error)) ((Option
+    source.declared.state.ModuleSession) × (alloc.vec.Vec (String ×
+    (alloc.vec.Vec Std.U8) × source.Tree)) × (Slice String) × (alloc.vec.Vec
+    source.declared.Export) × Str × Std.U32 × Limits × Meter × (Option
+    source.Error)))
+  := do
+  if i1 != 0#usize
+  then
+    let b := core.option.Option.is_none failure
+    if b
+    then
+      let (s2, progress) ←
+        source.declared.state.register.definitions.graph.Schedule.run_pass
+          {
+            session := o,
+            work :=
+              {
+                definitions := v,
+                exports := s,
+                local_exports := v1,
+                «name» := s1,
+                version := i,
+                limits := l,
+                meter := m
+              },
+            names := v2,
+            pending := v3,
+            installed := v4,
+            remaining := i1,
+            limits := l1
+          }
+      match progress with
+      | core.result.Result.Ok _ =>
+        ok (cont (s2.session, s2.work.definitions, s2.work.exports,
+          s2.work.local_exports, s2.work.name, s2.work.version, s2.work.limits,
+          s2.work.meter, s2.names, s2.pending, s2.installed, s2.remaining,
+          s2.limits, failure))
+      | core.result.Result.Err problem =>
+        ok (cont (s2.session, s2.work.definitions, s2.work.exports,
+          s2.work.local_exports, s2.work.name, s2.work.version, s2.work.limits,
+          s2.work.meter, s2.names, s2.pending, s2.installed, s2.remaining,
+          s2.limits, some problem))
+    else ok (done (o, v, s, v1, s1, i, l, m, failure))
+  else ok (done (o, v, s, v1, s1, i, l, m, failure))
+
+/-- [noble_contracts::source::declared::state::register::definitions::graph::{noble_contracts::source::declared::state::register::definitions::graph::Schedule<'a>}::run]: loop 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/definitions/graph.rs', lines 55:8-61:9 -/
+@[rust_loop]
+def source.declared.state.register.definitions.graph.Schedule.run_loop
+  (o : Option source.declared.state.ModuleSession)
+  (v : alloc.vec.Vec (String × (alloc.vec.Vec Std.U8) × source.Tree))
+  (s : Slice String) (v1 : alloc.vec.Vec source.declared.Export) (s1 : Str)
+  (i : Std.U32) (l : Limits) (m : Meter) (v2 : alloc.vec.Vec String)
+  (v3 : alloc.vec.Vec (Option (String × (alloc.vec.Vec Std.U8) ×
+  source.Tree))) (v4 : alloc.vec.Vec Bool) (i1 : Std.Usize) (l1 : Limits)
+  (failure : Option source.Error) :
+  Result ((Option source.declared.state.ModuleSession) × (alloc.vec.Vec
+    (String × (alloc.vec.Vec Std.U8) × source.Tree)) × (Slice String) ×
+    (alloc.vec.Vec source.declared.Export) × Str × Std.U32 × Limits × Meter
+    × (Option source.Error))
+  := do
+  loop
+    (fun (o1, v5, s2, v6, s3, i2, l2, m1, v7, v8, v9, i3, l3, failure1) =>
+      source.declared.state.register.definitions.graph.Schedule.run_loop.body
+      o1 v5 s2 v6 s3 i2 l2 m1 v7 v8 v9 i3 l3 failure1)
+    (o, v, s, v1, s1, i, l, m, v2, v3, v4, i1, l1, failure)
+
+/-- [noble_contracts::source::declared::state::register::definitions::graph::{noble_contracts::source::declared::state::register::definitions::graph::Schedule<'a>}::run]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/definitions/graph.rs', lines 50:4-69:5 -/
+def source.declared.state.register.definitions.graph.Schedule.run
+  (self : source.declared.state.register.definitions.graph.Schedule) :
+  Result (core.result.Result (source.declared.state.ModuleSession ×
+    source.declared.state.register.definitions.Work) source.Error)
+  := do
+  let (o, v, s, v1, s1, i, l, m, failure) ←
+    source.declared.state.register.definitions.graph.Schedule.run_loop
+      self.session self.work.definitions self.work.exports
+      self.work.local_exports self.work.name self.work.version self.work.limits
+      self.work.meter self.names self.pending self.installed self.remaining
+      self.limits none
+  match failure with
+  | none =>
+    let r ←
+      core.option.Option.ok_or_else
+        source.declared.state.register.definitions.graph.Schedule.run.closure.Insts.CoreOpsFunctionFnOnceTupleError
+        o ()
+    match r with
+    | core.result.Result.Ok value =>
+      ok (core.result.Result.Ok (value,
+        {
+          definitions := v,
+          exports := s,
+          local_exports := v1,
+          «name» := s1,
+          version := i,
+          limits := l,
+          meter := m
+        }))
+    | core.result.Result.Err failure1 => ok (core.result.Result.Err failure1)
+  | some problem => ok (core.result.Result.Err problem)
+
+/-- [noble_contracts::source::declared::state::register::definitions::reserve_words]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/definitions.rs', lines 49:0-64:1 -/
+def source.declared.state.register.definitions.reserve_words
+  (session : source.declared.state.ModuleSession)
+  (definition_count : Std.Usize) :
+  Result (core.result.Result source.declared.state.ModuleSession source.Error)
+  := do
+  let (o, as_mut_back) ← core.option.Option.as_mut session.source.declared
+  match o with
+  | none =>
+    let e ←
+      source.declared.error source.Stage.Check (toStr
+        "missing declared context")
+    ok (core.result.Result.Err e)
+  | some context =>
+    let v ← alloc.vec.Vec.reserve Global context.words definition_count
+    let o1 := as_mut_back (some { context with words := v })
+    ok (core.result.Result.Ok
+      { session with source := { session.source with declared := o1 } })
+
+/-- [noble_contracts::source::declared::state::register::definitions::graph::{noble_contracts::source::declared::state::register::definitions::graph::Schedule<'a>}::setup::{impl core::ops::function::FnMut<(), core::option::Option<(alloc::string::String, alloc::vec::Vec<u8>, noble_contracts::source::Tree)>> for noble_contracts::source::declared::state::register::definitions::graph::{noble_contracts::source::declared::state::register::definitions::graph::Schedule<'a>}::setup::{closure}<'a>}::call_mut]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/definitions/graph.rs', lines 31:35-31:42 -/
+def
+  source.declared.state.register.definitions.graph.Schedule.setup.closure.Insts.CoreOpsFunctionFnMutTupleOptionTupleStringVecU8Tree.call_mut
+  (c : source.declared.state.register.definitions.graph.Schedule.setup.closure)
+  (_ : Unit) :
+  Result ((Option (String × (alloc.vec.Vec Std.U8) × source.Tree)) ×
+    source.declared.state.register.definitions.graph.Schedule.setup.closure)
+  := do
+  ok (none, ())
+
+/-- [noble_contracts::source::declared::state::register::definitions::graph::{noble_contracts::source::declared::state::register::definitions::graph::Schedule<'a>}::setup::{impl core::ops::function::FnOnce<(), core::option::Option<(alloc::string::String, alloc::vec::Vec<u8>, noble_contracts::source::Tree)>> for noble_contracts::source::declared::state::register::definitions::graph::{noble_contracts::source::declared::state::register::definitions::graph::Schedule<'a>}::setup::{closure}<'a>}::call_once]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/definitions/graph.rs', lines 31:35-31:42 -/
+def
+  source.declared.state.register.definitions.graph.Schedule.setup.closure.Insts.CoreOpsFunctionFnOnceTupleOptionTupleStringVecU8Tree.call_once
+  (c : source.declared.state.register.definitions.graph.Schedule.setup.closure)
+  (_ : Unit) :
+  Result (Option (String × (alloc.vec.Vec Std.U8) × source.Tree))
+  := do
+  let (o, _) ←
+    source.declared.state.register.definitions.graph.Schedule.setup.closure.Insts.CoreOpsFunctionFnMutTupleOptionTupleStringVecU8Tree.call_mut
+      () ()
+  ok o
+
+/-- Trait implementation: [noble_contracts::source::declared::state::register::definitions::graph::{noble_contracts::source::declared::state::register::definitions::graph::Schedule<'a>}::setup::{impl core::ops::function::FnOnce<(), core::option::Option<(alloc::string::String, alloc::vec::Vec<u8>, noble_contracts::source::Tree)>> for noble_contracts::source::declared::state::register::definitions::graph::{noble_contracts::source::declared::state::register::definitions::graph::Schedule<'a>}::setup::{closure}<'a>}]
+    Source: 'crates/noble-contracts/src/source/declared/state/register/definitions/graph.rs', lines 31:35-31:42 -/
+@[reducible]
+def
+  source.declared.state.register.definitions.graph.Schedule.setup.closure.Insts.CoreOpsFunctionFnOnceTupleOptionTupleStringVecU8Tree
+  : core.ops.function.FnOnce
+  source.declared.state.register.definitions.graph.Schedule.setup.closure Unit
+  (Option (String × (alloc.vec.Vec Std.U8) × source.Tree)) := {
+  call_once :=
+    source.declared.state.register.definitions.graph.Schedule.setup.closure.Insts.CoreOpsFunctionFnOnceTupleOptionTupleStringVecU8Tree.call_once
+}
+
+/-- Trait implementation: [noble_contracts::source::declared::state::register::definitions::graph::{noble_contracts::source::declared::state::register::definitions::graph::Schedule<'a>}::setup::{impl core::ops::function::FnMut<(), core::option::Option<(alloc::string::String, alloc::vec::Vec<u8>, noble_contracts::source::Tree)>> for noble_contracts::source::declared::state::register::definitions::graph::{noble_contracts::source::declared::state::register::definitions::graph::Schedule<'a>}::setup::{closure}<'a>}]
+    Source: 'crates/noble-contracts/src/source/declared/state/register/definitions/graph.rs', lines 31:35-31:42 -/
+@[reducible]
+def
+  source.declared.state.register.definitions.graph.Schedule.setup.closure.Insts.CoreOpsFunctionFnMutTupleOptionTupleStringVecU8Tree
+  : core.ops.function.FnMut
+  source.declared.state.register.definitions.graph.Schedule.setup.closure Unit
+  (Option (String × (alloc.vec.Vec Std.U8) × source.Tree)) := {
+  FnOnceInst :=
+    source.declared.state.register.definitions.graph.Schedule.setup.closure.Insts.CoreOpsFunctionFnOnceTupleOptionTupleStringVecU8Tree
+  call_mut :=
+    source.declared.state.register.definitions.graph.Schedule.setup.closure.Insts.CoreOpsFunctionFnMutTupleOptionTupleStringVecU8Tree.call_mut
+}
+
+/-- [noble_contracts::source::declared::state::register::definitions::graph::{noble_contracts::source::declared::state::register::definitions::graph::Schedule<'a>}::setup]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/definitions/graph.rs', lines 26:8-29:9 -/
+@[rust_loop_body]
+def source.declared.state.register.definitions.graph.Schedule.setup_loop0.body
+  (v : alloc.vec.Vec (String × (alloc.vec.Vec Std.U8) × source.Tree))
+  (count : Std.Usize) (names : alloc.vec.Vec String) («at» : Std.Usize) :
+  Result (ControlFlow ((alloc.vec.Vec String) × Std.Usize) (alloc.vec.Vec
+    String))
+  := do
+  if «at» < count
+  then
+    let (s, _, _) ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice (String ×
+        (alloc.vec.Vec Std.U8) × source.Tree)) v «at»
+    let s1 ← alloc.string.String.Insts.CoreCloneClone.clone s
+    let names1 ← alloc.vec.Vec.push names s1
+    let at1 ← «at» + 1#usize
+    ok (cont (names1, at1))
+  else ok (done names)
+
+/-- [noble_contracts::source::declared::state::register::definitions::graph::{noble_contracts::source::declared::state::register::definitions::graph::Schedule<'a>}::setup]: loop 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/definitions/graph.rs', lines 26:8-29:9 -/
+@[rust_loop]
+def source.declared.state.register.definitions.graph.Schedule.setup_loop0
+  (v : alloc.vec.Vec (String × (alloc.vec.Vec Std.U8) × source.Tree))
+  (count : Std.Usize) (names : alloc.vec.Vec String) («at» : Std.Usize) :
+  Result (alloc.vec.Vec String)
+  := do
+  loop
+    (fun (names1, at1) =>
+      source.declared.state.register.definitions.graph.Schedule.setup_loop0.body
+      v count names1 at1)
+    (names, «at»)
+
+/-- [noble_contracts::source::declared::state::register::definitions::graph::{noble_contracts::source::declared::state::register::definitions::graph::Schedule<'a>}::setup]: loop body 1:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/definitions/graph.rs', lines 34:8-37:9 -/
+@[rust_loop_body]
+def source.declared.state.register.definitions.graph.Schedule.setup_loop1.body
+  (pending : alloc.vec.Vec (Option (String × (alloc.vec.Vec Std.U8) ×
+  source.Tree)))
+  (definitions : alloc.vec.Vec (String × (alloc.vec.Vec Std.U8) ×
+  source.Tree)) («at» : Std.Usize) :
+  Result (ControlFlow ((alloc.vec.Vec (Option (String × (alloc.vec.Vec Std.U8)
+    × source.Tree))) × (alloc.vec.Vec (String × (alloc.vec.Vec Std.U8) ×
+    source.Tree)) × Std.Usize) (alloc.vec.Vec (Option (String ×
+    (alloc.vec.Vec Std.U8) × source.Tree))))
+  := do
+  if «at» != 0#usize
+  then
+    let at1 ← «at» - 1#usize
+    let (o, definitions1) ← alloc.vec.Vec.pop Global definitions
+    let (_, index_mut_back) ←
+      alloc.vec.Vec.index_mut (core.slice.index.SliceIndexUsizeSlice (Option
+        (String × (alloc.vec.Vec Std.U8) × source.Tree))) pending at1
+    let pending1 := index_mut_back o
+    ok (cont (pending1, definitions1, at1))
+  else ok (done pending)
+
+/-- [noble_contracts::source::declared::state::register::definitions::graph::{noble_contracts::source::declared::state::register::definitions::graph::Schedule<'a>}::setup]: loop 1:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/definitions/graph.rs', lines 34:8-37:9 -/
+@[rust_loop]
+def source.declared.state.register.definitions.graph.Schedule.setup_loop1
+  (pending : alloc.vec.Vec (Option (String × (alloc.vec.Vec Std.U8) ×
+  source.Tree)))
+  (definitions : alloc.vec.Vec (String × (alloc.vec.Vec Std.U8) ×
+  source.Tree)) («at» : Std.Usize) :
+  Result (alloc.vec.Vec (Option (String × (alloc.vec.Vec Std.U8) ×
+    source.Tree)))
+  := do
+  loop
+    (fun (pending1, definitions1, at1) =>
+      source.declared.state.register.definitions.graph.Schedule.setup_loop1.body
+      pending1 definitions1 at1)
+    (pending, definitions, «at»)
+
+/-- [noble_contracts::source::declared::state::register::definitions::graph::{noble_contracts::source::declared::state::register::definitions::graph::Schedule<'a>}::setup]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/definitions/graph.rs', lines 17:4-48:5 -/
+def source.declared.state.register.definitions.graph.Schedule.setup
+  (session : source.declared.state.ModuleSession)
+  (work : source.declared.state.register.definitions.Work) (limits : Limits) :
+  Result (core.result.Result
+    source.declared.state.register.definitions.graph.Schedule source.Error)
+  := do
+  let i := alloc.vec.Vec.len work.definitions
+  let r ← source.declared.state.register.definitions.reserve_words session i
+  match r with
+  | core.result.Result.Ok value =>
+    let count := alloc.vec.Vec.len work.definitions
+    let names := alloc.vec.Vec.with_capacity String count
+    let names1 ←
+      source.declared.state.register.definitions.graph.Schedule.setup_loop0
+        work.definitions count names 0#usize
+    let pending :=
+      alloc.vec.Vec.with_capacity (Option (String × (alloc.vec.Vec Std.U8) ×
+        source.Tree)) count
+    let pending1 ←
+      alloc.vec.Vec.resize_with Global
+        source.declared.state.register.definitions.graph.Schedule.setup.closure.Insts.CoreOpsFunctionFnMutTupleOptionTupleStringVecU8Tree
+        pending count ()
+    let (definitions, v) ←
+      core.mem.take (alloc.vec.Vec.Insts.CoreDefaultDefault (String ×
+        (alloc.vec.Vec Std.U8) × source.Tree)) work.definitions
+    let pending2 ←
+      source.declared.state.register.definitions.graph.Schedule.setup_loop1
+        pending1 definitions count
+    let remaining := alloc.vec.Vec.len pending2
+    let v1 ← alloc.vec.from_elem core.clone.CloneBool false remaining
+    ok (core.result.Result.Ok
+      {
+        session := (some value),
+        work := { work with definitions := v },
+        names := names1,
+        pending := pending2,
+        installed := v1,
+        remaining,
+        limits
+      })
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::source::declared::state::register::definitions::install]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/definitions.rs', lines 20:0-43:1 -/
+def source.declared.state.register.definitions.install
+  (session : source.declared.state.ModuleSession)
+  (work : source.declared.state.register.definitions.Work) :
+  Result (core.result.Result (source.declared.state.ModuleSession ×
+    (alloc.vec.Vec source.declared.Export)) source.Error)
+  := do
+  let i := alloc.vec.Vec.len work.definitions
+  let r ← core.convert.num.ptr_try_from_impls.TryFromU32Usize.try_from i
+  let r1 ←
+    core.result.Result.map_err
+      source.declared.state.register.definitions.install.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorError
+      r ()
+  match r1 with
+  | core.result.Result.Ok value =>
+    let o ←
+      source.declared.state.register.definitions.definition_limits value
+        work.limits
+    let r2 ←
+      core.option.Option.ok_or_else
+        source.declared.state.register.definitions.install.closure_1.Insts.CoreOpsFunctionFnOnceTupleError
+        o ()
+    match r2 with
+    | core.result.Result.Ok value1 =>
+      let history_start := alloc.vec.Vec.len session.source.history
+      let r3 ←
+        source.declared.state.register.definitions.graph.Schedule.setup session
+          work value1
+      match r3 with
+      | core.result.Result.Ok s =>
+        let r4 ←
+          source.declared.state.register.definitions.graph.Schedule.run s
+        match r4 with
+        | core.result.Result.Ok p =>
+          let (session1, w) := p
+          source.declared.state.register.definitions.finish session1 w
+            history_start
+        | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+      | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+    | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::source::declared::state::register::collection::{noble_contracts::source::declared::state::register::collection::Collected}::validate]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/collection.rs', lines 201:8-207:9 -/
+@[rust_loop_body]
+def source.declared.state.register.collection.Collected.validate_loop0.body
+  (self : source.declared.state.register.collection.Collected)
+  (constructors : Std.Usize) (schema_index : Std.Usize) :
+  Result (ControlFlow (Std.Usize × Std.Usize) ((alloc.vec.Vec
+    source.declared.Schema) × (alloc.vec.Vec (String × (alloc.vec.Vec Std.U8)
+    × source.Tree)) × (alloc.vec.Vec String) × Std.Usize))
+  := do
+  let i := alloc.vec.Vec.len self.schemas
+  if schema_index < i
+  then
+    let s ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        source.declared.Schema) self.schemas schema_index
+    let i1 ←
+      match s.kind with
+      | source.declared.SchemaKind.Opaque _ _ => ok 2#usize
+      | source.declared.SchemaKind.Variant _ _ _ _ _ _ => ok 3#usize
+    let constructors1 ← constructors + i1
+    let schema_index1 ← schema_index + 1#usize
+    ok (cont (constructors1, schema_index1))
+  else ok (done (self.schemas, self.definitions, self.exports, constructors))
+
+/-- [noble_contracts::source::declared::state::register::collection::{noble_contracts::source::declared::state::register::collection::Collected}::validate]: loop 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/collection.rs', lines 201:8-207:9 -/
+@[rust_loop]
+def source.declared.state.register.collection.Collected.validate_loop0
+  (self : source.declared.state.register.collection.Collected)
+  (constructors : Std.Usize) (schema_index : Std.Usize) :
+  Result ((alloc.vec.Vec source.declared.Schema) × (alloc.vec.Vec (String ×
+    (alloc.vec.Vec Std.U8) × source.Tree)) × (alloc.vec.Vec String) ×
+    Std.Usize)
+  := do
+  loop
+    (fun (constructors1, schema_index1) =>
+      source.declared.state.register.collection.Collected.validate_loop0.body
+      self constructors1 schema_index1)
+    (constructors, schema_index)
+
+/-- [noble_contracts::source::declared::state::register::collection::{noble_contracts::source::declared::state::register::collection::Collected}::validate]: loop body 2:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/collection.rs', lines 222:12-227:13 -/
+@[rust_loop_body]
+def
+  source.declared.state.register.collection.Collected.validate_loop1_loop0.body
+  (exported_bytes : Slice Std.U8) (split : Std.Usize) :
+  Result (ControlFlow Std.Usize Std.Usize)
+  := do
+  let i := Slice.len exported_bytes
+  if split < i
+  then
+    let i1 ← Slice.index_usize exported_bytes split
+    if i1 = 46#u8
+    then ok (done split)
+    else let split1 ← split + 1#usize
+         ok (cont split1)
+  else ok (done split)
+
+/-- [noble_contracts::source::declared::state::register::collection::{noble_contracts::source::declared::state::register::collection::Collected}::validate]: loop 2:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/collection.rs', lines 222:12-227:13 -/
+@[rust_loop]
+def source.declared.state.register.collection.Collected.validate_loop1_loop0
+  (exported_bytes : Slice Std.U8) (split : Std.Usize) : Result Std.Usize := do
+  loop
+    (fun split1 =>
+      source.declared.state.register.collection.Collected.validate_loop1_loop0.body
+      exported_bytes split1)
+    split
+
+/-- [noble_contracts::source::declared::state::register::collection::{noble_contracts::source::declared::state::register::collection::Collected}::validate]: loop body 3:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/collection.rs', lines 231:12-237:13 -/
+@[rust_loop_body]
+def
+  source.declared.state.register.collection.Collected.validate_loop1_loop1.body
+  (v : alloc.vec.Vec source.declared.Schema) (schema : Str)
+  (index1 : Std.Usize) :
+  Result (ControlFlow Std.Usize Bool)
+  := do
+  let i := alloc.vec.Vec.len v
+  if index1 < i
+  then
+    let s ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        source.declared.Schema) v index1
+    let b ←
+      alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq s.name schema
+    if b
+    then ok (done true)
+    else let index2 ← index1 + 1#usize
+         ok (cont index2)
+  else ok (done false)
+
+/-- [noble_contracts::source::declared::state::register::collection::{noble_contracts::source::declared::state::register::collection::Collected}::validate]: loop 3:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/collection.rs', lines 231:12-237:13 -/
+@[rust_loop]
+def source.declared.state.register.collection.Collected.validate_loop1_loop1
+  (v : alloc.vec.Vec source.declared.Schema) (schema : Str)
+  (index1 : Std.Usize) :
+  Result Bool
+  := do
+  loop
+    (fun index2 =>
+      source.declared.state.register.collection.Collected.validate_loop1_loop1.body
+      v schema index2)
+    index1
+
+/-- [noble_contracts::source::declared::state::register::collection::{noble_contracts::source::declared::state::register::collection::Collected}::validate]: loop body 4:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/collection.rs', lines 240:16-246:17 -/
+@[rust_loop_body]
+def
+  source.declared.state.register.collection.Collected.validate_loop1_loop2.body
+  (v : alloc.vec.Vec (String × (alloc.vec.Vec Std.U8) × source.Tree))
+  (exported : String) (index1 : Std.Usize) :
+  Result (ControlFlow Std.Usize Bool)
+  := do
+  let i := alloc.vec.Vec.len v
+  if index1 < i
+  then
+    let (s, _, _) ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice (String ×
+        (alloc.vec.Vec Std.U8) × source.Tree)) v index1
+    let b ← alloc.string.String.Insts.CoreCmpPartialEqString.eq s exported
+    if b
+    then ok (done true)
+    else let index2 ← index1 + 1#usize
+         ok (cont index2)
+  else ok (done false)
+
+/-- [noble_contracts::source::declared::state::register::collection::{noble_contracts::source::declared::state::register::collection::Collected}::validate]: loop 4:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/collection.rs', lines 240:16-246:17 -/
+@[rust_loop]
+def source.declared.state.register.collection.Collected.validate_loop1_loop2
+  (v : alloc.vec.Vec (String × (alloc.vec.Vec Std.U8) × source.Tree))
+  (exported : String) (index1 : Std.Usize) :
+  Result Bool
+  := do
+  loop
+    (fun index2 =>
+      source.declared.state.register.collection.Collected.validate_loop1_loop2.body
+      v exported index2)
+    index1
+
+/-- [noble_contracts::source::declared::state::register::collection::{noble_contracts::source::declared::state::register::collection::Collected}::validate]: loop body 1:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/collection.rs', lines 218:8-253:9 -/
+@[rust_loop_body]
+def source.declared.state.register.collection.Collected.validate_loop1.body
+  (v : alloc.vec.Vec source.declared.Schema)
+  (v1 : alloc.vec.Vec (String × (alloc.vec.Vec Std.U8) × source.Tree))
+  (v2 : alloc.vec.Vec String) (position : Std.Usize) :
+  Result (ControlFlow Std.Usize Bool)
+  := do
+  let i := alloc.vec.Vec.len v2
+  if position < i
+  then
+    let exported ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice String) v2
+        position
+    let exported_bytes ← alloc.string.String.as_bytes exported
+    let split ←
+      source.declared.state.register.collection.Collected.validate_loop1_loop0
+        exported_bytes 0#usize
+    let schema ←
+      alloc.string.String.Insts.CoreOpsIndexIndex.index
+        core.ops.range.RangeToUsize.Insts.CoreSliceIndexSliceIndexStrStr
+        exported { «end» := split }
+    let has_declaration ←
+      source.declared.state.register.collection.Collected.validate_loop1_loop1
+        v schema 0#usize
+    if has_declaration
+    then let position1 ← position + 1#usize
+         ok (cont position1)
+    else
+      let has_declaration1 ←
+        source.declared.state.register.collection.Collected.validate_loop1_loop2
+          v1 exported 0#usize
+      if has_declaration1
+      then let position1 ← position + 1#usize
+           ok (cont position1)
+      else ok (done true)
+  else ok (done false)
+
+/-- [noble_contracts::source::declared::state::register::collection::{noble_contracts::source::declared::state::register::collection::Collected}::validate]: loop 1:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/collection.rs', lines 218:8-253:9 -/
+@[rust_loop]
+def source.declared.state.register.collection.Collected.validate_loop1
+  (v : alloc.vec.Vec source.declared.Schema)
+  (v1 : alloc.vec.Vec (String × (alloc.vec.Vec Std.U8) × source.Tree))
+  (v2 : alloc.vec.Vec String) (position : Std.Usize) :
+  Result Bool
+  := do
+  loop
+    (fun position1 =>
+      source.declared.state.register.collection.Collected.validate_loop1.body v
+      v1 v2 position1)
+    position
+
+/-- [noble_contracts::source::declared::state::register::collection::{noble_contracts::source::declared::state::register::collection::Collected}::validate]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/collection.rs', lines 198:4-261:5 -/
+def source.declared.state.register.collection.Collected.validate
+  (self : source.declared.state.register.collection.Collected) :
+  Result (core.result.Result Unit source.Error)
+  := do
+  let (v, v1, v2, constructors) ←
+    source.declared.state.register.collection.Collected.validate_loop0 self
+      0#usize 0#usize
+  if constructors > source.declared.CONSTRUCTOR_CAP
+  then
+    let e ←
+      source.declared.error source.Stage.Check (toStr
+        "module schema/definition count exceeded")
+    ok (core.result.Result.Err e)
+  else
+    let i := alloc.vec.Vec.len v1
+    if i > source.declared.CONSTRUCTOR_CAP
+    then
+      let e ←
+        source.declared.error source.Stage.Check (toStr
+          "module schema/definition count exceeded")
+      ok (core.result.Result.Err e)
+    else
+      let has_missing_export ←
+        source.declared.state.register.collection.Collected.validate_loop1 v v1
+          v2 0#usize
+      if has_missing_export
+      then
+        let e ←
+          source.declared.error source.Stage.Resolve (toStr
+            "export references missing declaration")
+        ok (core.result.Result.Err e)
+      else ok (core.result.Result.Ok ())
+
+/-- [noble_contracts::source::declared::state::register::collection::{noble_contracts::source::declared::state::register::collection::Collected}::add_definition::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::declared::state::register::collection::{noble_contracts::source::declared::state::register::collection::Collected}::add_definition::{closure#1}}::call_once]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/collection.rs', lines 183:58-186:9 -/
+def
+  source.declared.state.register.collection.Collected.add_definition.closure_1.Insts.CoreOpsFunctionFnOnceTupleError.call_once
+  (c :
+  source.declared.state.register.collection.Collected.add_definition.closure_1)
+  (_ : Unit) :
+  Result source.Error
+  := do
+  source.declared.error source.Stage.Parse (toStr
+    "module definition missing name")
+
+/-- Trait implementation: [noble_contracts::source::declared::state::register::collection::{noble_contracts::source::declared::state::register::collection::Collected}::add_definition::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::declared::state::register::collection::{noble_contracts::source::declared::state::register::collection::Collected}::add_definition::{closure#1}}]
+    Source: 'crates/noble-contracts/src/source/declared/state/register/collection.rs', lines 183:58-186:9 -/
+@[reducible]
+def
+  source.declared.state.register.collection.Collected.add_definition.closure_1.Insts.CoreOpsFunctionFnOnceTupleError
+  : core.ops.function.FnOnce
+  source.declared.state.register.collection.Collected.add_definition.closure_1
+  Unit source.Error := {
+  call_once :=
+    source.declared.state.register.collection.Collected.add_definition.closure_1.Insts.CoreOpsFunctionFnOnceTupleError.call_once
+}
+
+/-- [noble_contracts::source::declared::state::register::collection::{noble_contracts::source::declared::state::register::collection::Collected}::add_definition::{impl core::ops::function::FnOnce<(noble_contracts::Diagnostic,), noble_contracts::source::Error> for noble_contracts::source::declared::state::register::collection::{noble_contracts::source::declared::state::register::collection::Collected}::add_definition::{closure}}::call_once]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/collection.rs', lines 180:58-182:9 -/
+def
+  source.declared.state.register.collection.Collected.add_definition.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnosticError.call_once
+  (c :
+  source.declared.state.register.collection.Collected.add_definition.closure)
+  (tupled_args : Diagnostic) :
+  Result source.Error
+  := do
+  source.declared.diagnostic source.Stage.Parse tupled_args
+
+/-- Trait implementation: [noble_contracts::source::declared::state::register::collection::{noble_contracts::source::declared::state::register::collection::Collected}::add_definition::{impl core::ops::function::FnOnce<(noble_contracts::Diagnostic,), noble_contracts::source::Error> for noble_contracts::source::declared::state::register::collection::{noble_contracts::source::declared::state::register::collection::Collected}::add_definition::{closure}}]
+    Source: 'crates/noble-contracts/src/source/declared/state/register/collection.rs', lines 180:58-182:9 -/
+@[reducible]
+def
+  source.declared.state.register.collection.Collected.add_definition.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnosticError
+  : core.ops.function.FnOnce
+  source.declared.state.register.collection.Collected.add_definition.closure
+  Diagnostic source.Error := {
+  call_once :=
+    source.declared.state.register.collection.Collected.add_definition.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnosticError.call_once
+}
+
+/-- [noble_contracts::source::declared::state::register::collection::{noble_contracts::source::declared::state::register::collection::Collected}::add_definition]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/collection.rs', lines 173:4-196:5 -/
+def source.declared.state.register.collection.Collected.add_definition
+  (self : source.declared.state.register.collection.Collected)
+  (bytes : alloc.vec.Vec Std.U8) (limits : Limits) :
+  Result (core.result.Result
+    source.declared.state.register.collection.Collected source.Error)
+  := do
+  let meter ← metering.Meter.new limits
+  let s := alloc.vec.Vec.deref bytes
+  let (parsed, _) ← source.parsing.parse_declared s meter
+  let r ←
+    core.result.Result.map_err
+      source.declared.state.register.collection.Collected.add_definition.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnosticError
+      parsed ()
+  match r with
+  | core.result.Result.Ok value =>
+    let (tree, parsed_name) := value
+    let r1 ←
+      core.option.Option.ok_or_else
+        source.declared.state.register.collection.Collected.add_definition.closure_1.Insts.CoreOpsFunctionFnOnceTupleError
+        parsed_name ()
+    match r1 with
+    | core.result.Result.Ok value1 =>
+      let s1 := alloc.vec.Vec.deref self.names
+      let b ←
+        core.slice.Slice.contains
+          alloc.string.String.Insts.CoreCmpPartialEqString s1 value1
+      if b
+      then
+        let e ←
+          source.declared.error source.Stage.Resolve (toStr
+            "duplicate module definition")
+        ok (core.result.Result.Err e)
+      else
+        let s2 ← alloc.string.String.Insts.CoreCloneClone.clone value1
+        let v ← alloc.vec.Vec.push self.names s2
+        let v1 ← alloc.vec.Vec.push self.definitions (value1, bytes, tree)
+        ok (core.result.Result.Ok { self with definitions := v1, names := v })
+    | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::source::declared::state::register::collection::{noble_contracts::source::declared::state::register::collection::Collected}::add_requirement]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/collection.rs', lines 154:4-171:5 -/
+def source.declared.state.register.collection.Collected.add_requirement
+  (self : source.declared.state.register.collection.Collected)
+  (requirement : (String × String × String)) :
+  Result (core.result.Result
+    source.declared.state.register.collection.Collected source.Error)
+  := do
+  let s := alloc.vec.Vec.deref self.names
+  let (s1, _, _) := requirement
+  let b ←
+    core.slice.Slice.contains alloc.string.String.Insts.CoreCmpPartialEqString
+      s s1
+  if b
+  then
+    let e ←
+      source.declared.error source.Stage.Resolve (toStr
+        "duplicate required operation")
+    ok (core.result.Result.Err e)
+  else
+    let s2 ← alloc.string.String.Insts.CoreCloneClone.clone s1
+    let v ← alloc.vec.Vec.push self.names s2
+    let v1 ← alloc.vec.Vec.push self.requirements requirement
+    ok (core.result.Result.Ok { self with requirements := v1, names := v })
+
+/-- [noble_contracts::source::declared::state::register::collection::{noble_contracts::source::declared::state::register::collection::Collected}::insert_schema]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/collection.rs', lines 142:4-152:5 -/
+def source.declared.state.register.collection.Collected.insert_schema
+  (self : source.declared.state.register.collection.Collected)
+  («name» : String) (kind : source.declared.SchemaKind) :
+  Result source.declared.state.register.collection.Collected
+  := do
+  let registered_name ←
+    alloc.string.String.Insts.CoreCloneClone.clone «name»
+  let v ← alloc.vec.Vec.push self.names registered_name
+  let v1 ←
+    alloc.vec.Vec.push self.schemas ({ «name», kind } :
+      source.declared.Schema)
+  ok { self with schemas := v1, names := v }
+
+/-- [noble_contracts::source::declared::state::register::collection::{noble_contracts::source::declared::state::register::collection::Collected}::add_variant]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/collection.rs', lines 109:4-140:5 -/
+def source.declared.state.register.collection.Collected.add_variant
+  (self : source.declared.state.register.collection.Collected)
+  («name» : String) (left_arm : (String × String × Bool))
+  (right_arm : (String × String × Bool)) :
+  Result (core.result.Result
+    source.declared.state.register.collection.Collected source.Error)
+  := do
+  let (left, left_type, left_public) := left_arm
+  let (right, right_type, right_public) := right_arm
+  let s := alloc.vec.Vec.deref self.names
+  let b ←
+    core.slice.Slice.contains alloc.string.String.Insts.CoreCmpPartialEqString
+      s «name»
+  if b
+  then
+    let e ←
+      source.declared.error source.Stage.Resolve (toStr
+        "duplicate constructor or module declaration")
+    ok (core.result.Result.Err e)
+  else
+    let b1 ← alloc.string.String.Insts.CoreCmpPartialEqString.eq left right
+    if b1
+    then
+      let e ←
+        source.declared.error source.Stage.Resolve (toStr
+          "duplicate constructor or module declaration")
+      ok (core.result.Result.Err e)
+    else
+      let c ←
+        source.declared.state.register.collection.Collected.insert_schema self
+          «name» (source.declared.SchemaKind.Variant left left_type
+          left_public right right_type right_public)
+      ok (core.result.Result.Ok c)
+
+/-- [noble_contracts::source::declared::state::register::collection::{noble_contracts::source::declared::state::register::collection::Collected}::add_opaque]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/collection.rs', lines 91:4-103:5 -/
+def source.declared.state.register.collection.Collected.add_opaque
+  (self : source.declared.state.register.collection.Collected)
+  (declaration : source.declared.state.register.collection.OpaqueDeclaration) :
+  Result (core.result.Result
+    source.declared.state.register.collection.Collected source.Error)
+  := do
+  let s := alloc.vec.Vec.deref self.names
+  let b ←
+    core.slice.Slice.contains alloc.string.String.Insts.CoreCmpPartialEqString
+      s declaration.name
+  if b
+  then
+    let e ←
+      source.declared.error source.Stage.Resolve (toStr
+        "duplicate module declaration")
+    ok (core.result.Result.Err e)
+  else
+    let c ←
+      source.declared.state.register.collection.Collected.insert_schema self
+        declaration.name (source.declared.SchemaKind.Opaque declaration.base
+        declaration.public)
+    ok (core.result.Result.Ok c)
+
+/-- [noble_contracts::source::declared::state::register::collection::{noble_contracts::source::declared::state::register::collection::Collected}::add_export]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/collection.rs', lines 80:4-89:5 -/
+def source.declared.state.register.collection.Collected.add_export
+  (self : source.declared.state.register.collection.Collected)
+  («name» : String) :
+  Result (core.result.Result
+    source.declared.state.register.collection.Collected source.Error)
+  := do
+  let s := alloc.vec.Vec.deref self.exports
+  let b ←
+    core.slice.Slice.contains alloc.string.String.Insts.CoreCmpPartialEqString
+      s «name»
+  if b
+  then
+    let e ←
+      source.declared.error source.Stage.Resolve (toStr "duplicate export")
+    ok (core.result.Result.Err e)
+  else
+    let v ← alloc.vec.Vec.push self.exports «name»
+    ok (core.result.Result.Ok { self with exports := v })
+
+/-- [noble_contracts::source::declared::state::register::collection::{noble_contracts::source::declared::state::register::collection::Collected}::collect]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/collection.rs', lines 38:8-74:9 -/
+@[rust_loop_body]
+def source.declared.state.register.collection.Collected.collect_loop.body
+  (limits : Limits) (members : alloc.vec.Vec source.declared.parsing.Member)
+  (collected : core.result.Result
+  source.declared.state.register.collection.Collected source.Error) :
+  Result (ControlFlow ((alloc.vec.Vec source.declared.parsing.Member) ×
+    (core.result.Result source.declared.state.register.collection.Collected
+    source.Error)) (core.result.Result
+    source.declared.state.register.collection.Collected source.Error))
+  := do
+  let (o, members1) ← alloc.vec.Vec.pop Global members
+  match o with
+  | none => ok (done collected)
+  | some member =>
+    let (members2, collected1) ←
+      match collected with
+      | core.result.Result.Ok collected2 =>
+        do
+        let r ←
+          match member with
+          | source.declared.parsing.Member.Opaque «name» base «public» =>
+            source.declared.state.register.collection.Collected.add_opaque
+              collected2 { «name», base, «public» }
+          | source.declared.parsing.Member.Variant «name» left left_type
+            left_public right right_type right_public =>
+            source.declared.state.register.collection.Collected.add_variant
+              collected2 «name» (left, left_type, left_public) (right,
+              right_type, right_public)
+          | source.declared.parsing.Member.Require «name» input operation =>
+            source.declared.state.register.collection.Collected.add_requirement
+              collected2 («name», input, operation)
+          | source.declared.parsing.Member.Export «name» =>
+            source.declared.state.register.collection.Collected.add_export
+              collected2 «name»
+          | source.declared.parsing.Member.Definition bytes =>
+            source.declared.state.register.collection.Collected.add_definition
+              collected2 bytes limits
+        ok (members1, r)
+      | core.result.Result.Err _ => ok (members1, collected)
+    let b ← core.result.Result.is_err collected1
+    if b
+    then ok (done collected1)
+    else ok (cont (members2, collected1))
+
+/-- [noble_contracts::source::declared::state::register::collection::{noble_contracts::source::declared::state::register::collection::Collected}::collect]: loop 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/collection.rs', lines 38:8-74:9 -/
+@[rust_loop]
+def source.declared.state.register.collection.Collected.collect_loop
+  (members : alloc.vec.Vec source.declared.parsing.Member) (limits : Limits)
+  (collected : core.result.Result
+  source.declared.state.register.collection.Collected source.Error) :
+  Result (core.result.Result
+    source.declared.state.register.collection.Collected source.Error)
+  := do
+  loop
+    (fun (members1, collected1) =>
+      source.declared.state.register.collection.Collected.collect_loop.body
+      limits members1 collected1)
+    (members, collected)
+
+/-- [noble_contracts::source::declared::state::register::collection::{noble_contracts::source::declared::state::register::collection::Collected}::collect]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/collection.rs', lines 24:4-78:5 -/
+def source.declared.state.register.collection.Collected.collect
+  (members : alloc.vec.Vec source.declared.parsing.Member) (limits : Limits) :
+  Result (core.result.Result
+    source.declared.state.register.collection.Collected source.Error)
+  := do
+  let count := alloc.vec.Vec.len members
+  let v := alloc.vec.Vec.with_capacity source.declared.Schema count
+  let v1 :=
+    alloc.vec.Vec.with_capacity (String × (alloc.vec.Vec Std.U8) ×
+      source.Tree) count
+  let v2 := alloc.vec.Vec.with_capacity (String × String × String) count
+  let v3 := alloc.vec.Vec.with_capacity String count
+  let v4 := alloc.vec.Vec.with_capacity String count
+  let (s, deref_mut_back) ← lift (alloc.vec.Vec.deref_mut members)
+  let s1 ← lift (core.slice.Slice.reverse s)
+  let members1 := deref_mut_back s1
+  let collected ←
+    source.declared.state.register.collection.Collected.collect_loop members1
+      limits (core.result.Result.Ok
+      {
+        schemas := v,
+        definitions := v1,
+        requirements := v2,
+        exports := v3,
+        names := v4
+      })
+  match collected with
+  | core.result.Result.Ok value =>
+    let r ←
+      source.declared.state.register.collection.Collected.validate value
+    match r with
+    | core.result.Result.Ok _ => ok collected
+    | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+  | core.result.Result.Err _ => ok collected
+
+/-- [noble_contracts::source::declared::state::register::adapter::finish]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/adapter.rs', lines 111:0-126:1 -/
+def source.declared.state.register.adapter.finish
+  (session : source.declared.state.ModuleSession) (identity : Std.U64)
+  (words : alloc.vec.Vec (String × source.Target)) :
+  Result (core.result.Result source.declared.state.ModuleSession source.Error)
+  := do
+  let (o, as_mut_back) ← core.option.Option.as_mut session.source.declared
+  match o with
+  | none =>
+    let e ←
+      source.declared.error source.Stage.Check (toStr
+        "missing declared context")
+    ok (core.result.Result.Err e)
+  | some context =>
+    let o1 :=
+      as_mut_back (some
+        {
+          environment :=
+            { context.environment with caller_module := (some identity) },
+          words,
+          owner := (some identity)
+        })
+    ok (core.result.Result.Ok
+      { session with source := { session.source with declared := o1 } })
+
+/-- [noble_contracts::source::declared::state::register::adapter::{noble_contracts::source::declared::state::register::adapter::BindingStep}::new]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/adapter.rs', lines 59:4-77:5 -/
+def source.declared.state.register.adapter.BindingStep.new
+  (session : source.declared.state.ModuleSession) («name» : String)
+  (version_and_identity : (Std.U32 × Std.U64))
+  (requirements : alloc.vec.Vec (String × String × String))
+  (words : alloc.vec.Vec (String × source.Target)) :
+  Result source.declared.state.register.adapter.BindingStep
+  := do
+  let (version, identity) := version_and_identity
+  ok
+    {
+      session,
+      words,
+      adapter_slot := none,
+      «name»,
+      version,
+      identity,
+      requirements,
+      index := 0#usize
+    }
+
+/-- [noble_contracts::source::declared::state::register::adapter::binding_index::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::declared::state::register::adapter::binding_index::{closure#1}}::call_once]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/adapter.rs', lines 173:20-178:9 -/
+def
+  source.declared.state.register.adapter.binding_index.closure_1.Insts.CoreOpsFunctionFnOnceTupleError.call_once
+  (c : source.declared.state.register.adapter.binding_index.closure_1)
+  (_ : Unit) :
+  Result source.Error
+  := do
+  source.declared.error source.Stage.Link (toStr
+    "missing bound adapter for required operation")
+
+/-- Trait implementation: [noble_contracts::source::declared::state::register::adapter::binding_index::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::declared::state::register::adapter::binding_index::{closure#1}}]
+    Source: 'crates/noble-contracts/src/source/declared/state/register/adapter.rs', lines 173:20-178:9 -/
+@[reducible]
+def
+  source.declared.state.register.adapter.binding_index.closure_1.Insts.CoreOpsFunctionFnOnceTupleError
+  : core.ops.function.FnOnce
+  source.declared.state.register.adapter.binding_index.closure_1 Unit
+  source.Error := {
+  call_once :=
+    source.declared.state.register.adapter.binding_index.closure_1.Insts.CoreOpsFunctionFnOnceTupleError.call_once
+}
+
+/-- [noble_contracts::source::declared::state::register::adapter::binding_index::{impl core::ops::function::FnMut<(&'_ noble_contracts::source::declared::BoundOperation,), bool> for noble_contracts::source::declared::state::register::adapter::binding_index::{closure}<'_0, '_1, '_2, '_3>}::call_mut]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/adapter.rs', lines 168:18-172:9 -/
+def
+  source.declared.state.register.adapter.binding_index.closure.Insts.CoreOpsFunctionFnMutTupleSharedBoundOperationBool.call_mut
+  (c : source.declared.state.register.adapter.binding_index.closure)
+  (tupled_args : source.declared.BoundOperation) :
+  Result (Bool × source.declared.state.register.adapter.binding_index.closure)
+  := do
+  let (s, i, s1) := c
+  let b ←
+    alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq
+      tupled_args.module_name s
+  if b
+  then
+    if tupled_args.module_version = i
+    then
+      let s2 ← alloc.string.String.as_str s1
+      let b1 ←
+        alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq
+          tupled_args.operation s2
+      ok (b1, c)
+    else ok (false, c)
+  else ok (false, c)
+
+/-- [noble_contracts::source::declared::state::register::adapter::binding_index::{impl core::ops::function::FnOnce<(&'_ noble_contracts::source::declared::BoundOperation,), bool> for noble_contracts::source::declared::state::register::adapter::binding_index::{closure}<'_0, '_1, '_2, '_3>}::call_once]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/adapter.rs', lines 168:18-172:9 -/
+def
+  source.declared.state.register.adapter.binding_index.closure.Insts.CoreOpsFunctionFnOnceTupleSharedBoundOperationBool.call_once
+  (c : source.declared.state.register.adapter.binding_index.closure)
+  (bo : source.declared.BoundOperation) :
+  Result Bool
+  := do
+  let (b, _) ←
+    source.declared.state.register.adapter.binding_index.closure.Insts.CoreOpsFunctionFnMutTupleSharedBoundOperationBool.call_mut
+      c bo
+  ok b
+
+/-- Trait implementation: [noble_contracts::source::declared::state::register::adapter::binding_index::{impl core::ops::function::FnOnce<(&'_ noble_contracts::source::declared::BoundOperation,), bool> for noble_contracts::source::declared::state::register::adapter::binding_index::{closure}<'_0, '_1, '_2, '_3>}]
+    Source: 'crates/noble-contracts/src/source/declared/state/register/adapter.rs', lines 168:18-172:9 -/
+@[reducible]
+def
+  source.declared.state.register.adapter.binding_index.closure.Insts.CoreOpsFunctionFnOnceTupleSharedBoundOperationBool
+  : core.ops.function.FnOnce
+  source.declared.state.register.adapter.binding_index.closure
+  source.declared.BoundOperation Bool := {
+  call_once :=
+    source.declared.state.register.adapter.binding_index.closure.Insts.CoreOpsFunctionFnOnceTupleSharedBoundOperationBool.call_once
+}
+
+/-- Trait implementation: [noble_contracts::source::declared::state::register::adapter::binding_index::{impl core::ops::function::FnMut<(&'_ noble_contracts::source::declared::BoundOperation,), bool> for noble_contracts::source::declared::state::register::adapter::binding_index::{closure}<'_0, '_1, '_2, '_3>}]
+    Source: 'crates/noble-contracts/src/source/declared/state/register/adapter.rs', lines 168:18-172:9 -/
+@[reducible]
+def
+  source.declared.state.register.adapter.binding_index.closure.Insts.CoreOpsFunctionFnMutTupleSharedBoundOperationBool
+  : core.ops.function.FnMut
+  source.declared.state.register.adapter.binding_index.closure
+  source.declared.BoundOperation Bool := {
+  FnOnceInst :=
+    source.declared.state.register.adapter.binding_index.closure.Insts.CoreOpsFunctionFnOnceTupleSharedBoundOperationBool
+  call_mut :=
+    source.declared.state.register.adapter.binding_index.closure.Insts.CoreOpsFunctionFnMutTupleSharedBoundOperationBool.call_mut
+}
+
+/-- [noble_contracts::source::declared::state::register::adapter::binding_index]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/adapter.rs', lines 150:0-179:1 -/
+def source.declared.state.register.adapter.binding_index
+  (session : source.declared.state.ModuleSession) («name» : Str)
+  (version : Std.U32) (requirement : (String × String × String)) :
+  Result (core.result.Result Std.Usize source.Error)
+  := do
+  let b ← core.str.Str.is_empty «name»
+  massert (¬ b)
+  massert (version != 0#u32)
+  let (_, input, operation) := requirement
+  let b1 ←
+    core.cmp.impls.PartialEqShared.ne
+      alloc.string.String.Insts.CoreCmpPartialEqStr input (toStr "Text")
+  if b1
+  then
+    let e ←
+      source.declared.error source.Stage.Link (toStr
+        "unsupported or mismatched required operation contract")
+    ok (core.result.Result.Err e)
+  else
+    let b2 ←
+      core.cmp.impls.PartialEqShared.ne
+        alloc.string.String.Insts.CoreCmpPartialEqStr operation (toStr
+        "test.emit")
+    if b2
+    then
+      let e ←
+        source.declared.error source.Stage.Link (toStr
+          "unsupported or mismatched required operation contract")
+      ok (core.result.Result.Err e)
+    else
+      let s := alloc.vec.Vec.deref session.bindings
+      let i ← core.slice.Slice.iter s
+      let (o, _) ←
+        core.slice.iter.Iter.Insts.CoreIterTraitsIteratorIteratorSharedAT.position
+          source.declared.state.register.adapter.binding_index.closure.Insts.CoreOpsFunctionFnMutTupleSharedBoundOperationBool
+          i («name», version, operation)
+      core.option.Option.ok_or_else
+        source.declared.state.register.adapter.binding_index.closure_1.Insts.CoreOpsFunctionFnOnceTupleError
+        o ()
+
+/-- [noble_contracts::source::declared::state::register::adapter::bound_registration]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/adapter.rs', lines 128:0-148:1 -/
+def source.declared.state.register.adapter.bound_registration
+  (session : source.declared.state.ModuleSession) («name» : Str)
+  (version : Std.U32) (identity : Std.U64)
+  (requirement : (String × String × String)) :
+  Result (core.result.Result (noble_kernel.contracts.BoundEmitRegistration ×
+    Std.U32) source.Error)
+  := do
+  let r ←
+    source.declared.state.register.adapter.binding_index session «name»
+      version requirement
+  match r with
+  | core.result.Result.Ok value =>
+    let binding ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        source.declared.BoundOperation) session.bindings value
+    let s ←
+      alloc.string.String.Insts.CoreCloneClone.clone binding.adapter_identity
+    let v ←
+      alloc.vec.CloneVec.clone noble_kernel.types.Ty.Insts.CoreCloneClone
+        binding.input
+    let v1 ←
+      alloc.vec.CloneVec.clone noble_kernel.types.Ty.Insts.CoreCloneClone
+        binding.output
+    let s1 := alloc.vec.Vec.deref binding.effects
+    let es ← noble_kernel.types.EffSet.from_ids s1
+    ok (core.result.Result.Ok
+      ({
+         adapter_identity := s,
+         adapter_slot := binding.adapter_slot,
+         owner := identity,
+         input := v,
+         output := v1,
+         effects := es
+       }, binding.adapter_slot))
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::source::declared::state::register::adapter::install_registration::{impl core::ops::function::FnOnce<(noble_kernel::contracts::NominalError,), noble_contracts::source::Error> for noble_contracts::source::declared::state::register::adapter::install_registration::{closure}}::call_once]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/adapter.rs', lines 216:70-221:9 -/
+def
+  source.declared.state.register.adapter.install_registration.closure.Insts.CoreOpsFunctionFnOnceTupleNominalErrorError.call_once
+  (c : source.declared.state.register.adapter.install_registration.closure)
+  (tupled_args : noble_kernel.contracts.NominalError) :
+  Result source.Error
+  := do
+  source.declared.error source.Stage.Link (toStr
+    "bound adapter input, output or effect differs from required operation")
+
+/-- Trait implementation: [noble_contracts::source::declared::state::register::adapter::install_registration::{impl core::ops::function::FnOnce<(noble_kernel::contracts::NominalError,), noble_contracts::source::Error> for noble_contracts::source::declared::state::register::adapter::install_registration::{closure}}]
+    Source: 'crates/noble-contracts/src/source/declared/state/register/adapter.rs', lines 216:70-221:9 -/
+@[reducible]
+def
+  source.declared.state.register.adapter.install_registration.closure.Insts.CoreOpsFunctionFnOnceTupleNominalErrorError
+  : core.ops.function.FnOnce
+  source.declared.state.register.adapter.install_registration.closure
+  noble_kernel.contracts.NominalError source.Error := {
+  call_once :=
+    source.declared.state.register.adapter.install_registration.closure.Insts.CoreOpsFunctionFnOnceTupleNominalErrorError.call_once
+}
+
+/-- [noble_contracts::source::declared::state::register::adapter::install_registration]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/adapter.rs', lines 198:0-224:1 -/
+def source.declared.state.register.adapter.install_registration
+  (session : source.declared.state.ModuleSession)
+  (registration : noble_kernel.contracts.BoundEmitRegistration) :
+  Result (core.result.Result (source.declared.state.ModuleSession ×
+    noble_kernel.contracts.Definition) source.Error)
+  := do
+  let (o, as_mut_back) ← core.option.Option.as_mut session.source.declared
+  match o with
+  | none =>
+    let e ←
+      source.declared.error source.Stage.Check (toStr
+        "missing declared context")
+    ok (core.result.Result.Err e)
+  | some context =>
+    let (environment, _) ←
+      core.mem.take noble_kernel.contracts.Env.Insts.CoreDefaultDefault
+        context.environment
+    let r ←
+      noble_kernel.contracts.Env.declare_bound_emit environment registration
+    let r1 ←
+      core.result.Result.map_err
+        source.declared.state.register.adapter.install_registration.closure.Insts.CoreOpsFunctionFnOnceTupleNominalErrorError
+        r ()
+    match r1 with
+    | core.result.Result.Ok value =>
+      let (environment1, target) := value
+      let o1 := as_mut_back (some { context with environment := environment1 })
+      ok (core.result.Result.Ok
+        ({ session with source := { session.source with declared := o1 } },
+        target))
+    | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::source::declared::state::register::adapter::declare_word]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/adapter.rs', lines 181:0-196:1 -/
+def source.declared.state.register.adapter.declare_word
+  (session : source.declared.state.ModuleSession)
+  (registration : noble_kernel.contracts.BoundEmitRegistration)
+  (spelling : String) (words : alloc.vec.Vec (String × source.Target)) :
+  Result (core.result.Result (source.declared.state.ModuleSession ×
+    (alloc.vec.Vec (String × source.Target))) source.Error)
+  := do
+  let r ←
+    source.declared.state.register.adapter.install_registration session
+      registration
+  match r with
+  | core.result.Result.Ok value =>
+    let (session1, target) := value
+    let words1 ←
+      alloc.vec.Vec.push words (spelling, source.Target.Builtin target)
+    ok (core.result.Result.Ok (session1, words1))
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::source::declared::state::register::adapter::install_bound_step]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/adapter.rs', lines 91:0-109:1 -/
+def source.declared.state.register.adapter.install_bound_step
+  (state : source.declared.state.register.adapter.BindingStep)
+  (registration : noble_kernel.contracts.BoundEmitRegistration)
+  (slot : Std.U32) :
+  Result (core.result.Result source.declared.state.register.adapter.BindingStep
+    source.Error)
+  := do
+  let spelling ← alloc.string.String.new
+  let ((s, s1, s2), index_mut_back) ←
+    alloc.vec.Vec.index_mut (core.slice.index.SliceIndexUsizeSlice (String ×
+      String × String)) state.requirements state.index
+  let (spelling1, s3) := core.mem.swap spelling s
+  let r ←
+    source.declared.state.register.adapter.declare_word state.session
+      registration spelling1 state.words
+  match r with
+  | core.result.Result.Ok value =>
+    let (session, words) := value
+    let i ← state.index + 1#usize
+    let v := index_mut_back (s3, s1, s2)
+    ok (core.result.Result.Ok
+      {
+        state
+          with
+          session,
+          words,
+          adapter_slot := (some slot),
+          requirements := v,
+          index := i
+      })
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::source::declared::state::register::adapter::apply_requirement_step]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/adapter.rs', lines 80:0-89:1 -/
+def source.declared.state.register.adapter.apply_requirement_step
+  (state : source.declared.state.register.adapter.BindingStep) :
+  Result (core.result.Result source.declared.state.register.adapter.BindingStep
+    source.Error)
+  := do
+  let s ← alloc.string.String.Insts.CoreOpsDerefDerefStr.deref state.name
+  let t ←
+    alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice (String ×
+      String × String)) state.requirements state.index
+  let r ←
+    source.declared.state.register.adapter.bound_registration state.session s
+      state.version state.identity t
+  match r with
+  | core.result.Result.Ok value =>
+    let (registration, slot) := value
+    source.declared.state.register.adapter.install_bound_step state
+      registration slot
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::source::declared::state::register::adapter::install_requirements]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/adapter.rs', lines 31:4-37:5 -/
+@[rust_loop_body]
+def source.declared.state.register.adapter.install_requirements_loop.body
+  (remaining : Std.Usize)
+  (outcome : core.result.Result
+  source.declared.state.register.adapter.BindingStep source.Error) :
+  Result (ControlFlow (Std.Usize × (core.result.Result
+    source.declared.state.register.adapter.BindingStep source.Error))
+    (core.result.Result source.declared.state.register.adapter.BindingStep
+    source.Error))
+  := do
+  if remaining != 0#usize
+  then
+    let b ← core.result.Result.is_ok outcome
+    if b
+    then
+      let outcome1 ←
+        match outcome with
+        | core.result.Result.Ok state =>
+          source.declared.state.register.adapter.apply_requirement_step state
+        | core.result.Result.Err _ => ok outcome
+      let remaining1 ← remaining - 1#usize
+      ok (cont (remaining1, outcome1))
+    else ok (done outcome)
+  else ok (done outcome)
+
+/-- [noble_contracts::source::declared::state::register::adapter::install_requirements]: loop 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/adapter.rs', lines 31:4-37:5 -/
+@[rust_loop]
+def source.declared.state.register.adapter.install_requirements_loop
+  (remaining : Std.Usize)
+  (outcome : core.result.Result
+  source.declared.state.register.adapter.BindingStep source.Error) :
+  Result (core.result.Result source.declared.state.register.adapter.BindingStep
+    source.Error)
+  := do
+  loop
+    (fun (remaining1, outcome1) =>
+      source.declared.state.register.adapter.install_requirements_loop.body
+      remaining1 outcome1)
+    (remaining, outcome)
+
+/-- [noble_contracts::source::declared::state::register::adapter::install_requirements]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/adapter.rs', lines 28:0-39:1 -/
+def source.declared.state.register.adapter.install_requirements
+  (step : source.declared.state.register.adapter.BindingStep) :
+  Result (core.result.Result source.declared.state.register.adapter.BindingStep
+    source.Error)
+  := do
+  let remaining := alloc.vec.Vec.len step.requirements
+  source.declared.state.register.adapter.install_requirements_loop remaining
+    (core.result.Result.Ok step)
+
+/-- [noble_contracts::source::declared::state::register::adapter::install]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/adapter.rs', lines 1:0-26:1 -/
+def source.declared.state.register.adapter.install
+  (session : source.declared.state.ModuleSession)
+  (name_and_version : (String × Std.U32)) (identity : Std.U64)
+  (requirements : alloc.vec.Vec (String × String × String))
+  (words : alloc.vec.Vec (String × source.Target)) :
+  Result (core.result.Result (source.declared.state.ModuleSession × String ×
+    (Option Std.U32)) source.Error)
+  := do
+  let («name», version) := name_and_version
+  let step ←
+    source.declared.state.register.adapter.BindingStep.new session «name»
+      (version, identity) requirements words
+  let r ← source.declared.state.register.adapter.install_requirements step
+  match r with
+  | core.result.Result.Ok value =>
+    let r1 ←
+      source.declared.state.register.adapter.finish value.session identity
+        value.words
+    match r1 with
+    | core.result.Result.Ok value1 =>
+      ok (core.result.Result.Ok (value1, value.name, value.adapter_slot))
+    | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::source::declared::state::register::{noble_contracts::source::declared::state::ModuleSession}::register]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register.rs', lines 18:4-99:5 -/
+def source.declared.state.register.ModuleSession.register
+  (self : source.declared.state.ModuleSession)
+  (request : source.declared.state.register.Registration) :
+  Result (core.result.Result source.declared.state.ModuleSession source.Error)
+  := do
+  let b ← core.slice.Slice.is_empty request.inputs
+  if b
+  then
+    let i := alloc.vec.Vec.len self.modules
+    if i >= source.declared.MODULE_CAP
+    then
+      let e ←
+        source.declared.error source.Stage.Resolve (toStr
+          "duplicate module version or module count exceeded")
+      ok (core.result.Result.Err e)
+    else
+      let s := alloc.vec.Vec.deref self.modules
+      let i1 ← core.slice.Slice.iter s
+      let (b1, _) ←
+        core.slice.iter.Iter.Insts.CoreIterTraitsIteratorIteratorSharedAT.any
+          source.declared.state.register.ModuleSession.register.closure.Insts.CoreOpsFunctionFnMutTupleSharedModuleBool
+          i1 (request.name, request.version)
+      if b1
+      then
+        let e ←
+          source.declared.error source.Stage.Resolve (toStr
+            "duplicate module version or module count exceeded")
+        ok (core.result.Result.Err e)
+      else
+        let i2 := Slice.len request.source
+        let retained_bytes ←
+          source.declared.state.register.retained_bytes self i2
+        let r ←
+          Usize.Insts.CoreConvertTryFromU32TryFromIntError.try_from
+            request.limits.bytes
+        let r1 ←
+          core.result.Result.map_err
+            source.declared.state.register.ModuleSession.register.closure_1.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorError
+            r ()
+        match r1 with
+        | core.result.Result.Ok value =>
+          if retained_bytes > value
+          then
+            let e ←
+              source.declared.error source.Stage.Check (toStr
+                "retained module source byte limit exceeded")
+            ok (core.result.Result.Err e)
+          else
+            let i3 := alloc.vec.Vec.len self.modules
+            let r2 ←
+              U64.Insts.CoreConvertTryFromUsizeTryFromIntError.try_from i3
+            let o ← core.result.Result.ok r2
+            let o1 ←
+              core.option.Option.and_then
+                source.declared.state.register.ModuleSession.register.closure_2.Insts.CoreOpsFunctionFnOnceTupleU64OptionU64
+                o ()
+            let r3 ←
+              core.option.Option.ok_or_else
+                source.declared.state.register.ModuleSession.register.closure_3.Insts.CoreOpsFunctionFnOnceTupleError
+                o1 ()
+            match r3 with
+            | core.result.Result.Ok value1 =>
+              let (v, _) ←
+                core.mem.take (alloc.vec.Vec.Insts.CoreDefaultDefault
+                  source.declared.parsing.Member) request.members
+              let r4 ←
+                source.declared.state.register.collection.Collected.collect v
+                  request.limits
+              match r4 with
+              | core.result.Result.Ok value2 =>
+                let r5 ←
+                  source.declared.state.namespace.words.ModuleSession.outside_words
+                    self
+                match r5 with
+                | core.result.Result.Ok value3 =>
+                  let r6 ←
+                    source.declared.state.register.schema.resolve value3 value2
+                      value1 request.limits
+                  match r6 with
+                  | core.result.Result.Ok value4 =>
+                    let (next, resolved, meter) := value4
+                    let r7 ←
+                      source.declared.state.register.exports.install next
+                        value2 resolved
+                    match r7 with
+                    | core.result.Result.Ok value5 =>
+                      let r8 ←
+                        source.declared.state.register.adapter.install
+                          value5.session (request.name, request.version) value1
+                          value2.requirements value5.words
+                      match r8 with
+                      | core.result.Result.Ok value6 =>
+                        let (next1, «name», adapter_slot) := value6
+                        let s1 := alloc.vec.Vec.deref value2.exports
+                        let s2 ←
+                          alloc.string.String.Insts.CoreOpsDerefDerefStr.deref
+                            «name»
+                        let r9 ←
+                          source.declared.state.register.definitions.install
+                            next1
+                            {
+                              definitions := value2.definitions,
+                              exports := s1,
+                              local_exports := value5.local_exports,
+                              «name» := s2,
+                              version := request.version,
+                              limits := request.limits,
+                              meter
+                            }
+                        match r9 with
+                        | core.result.Result.Ok value7 =>
+                          let (next2, local_exports) := value7
+                          let v1 ←
+                            alloc.slice.Slice.to_vec core.clone.CloneU8
+                              request.source
+                          let v2 ←
+                            alloc.vec.Vec.push next2.modules
+                              ({
+                                 «name»,
+                                 version := request.version,
+                                 identity := value1,
+                                 exports := local_exports,
+                                 adapter_slot,
+                                 source := v1
+                               } : source.declared.Module)
+                          source.declared.state.namespace.words.ModuleSession.outside_words
+                            { next2 with modules := v2 }
+                        | core.result.Result.Err failure =>
+                          ok (core.result.Result.Err failure)
+                      | core.result.Result.Err failure =>
+                        ok (core.result.Result.Err failure)
+                    | core.result.Result.Err failure =>
+                      ok (core.result.Result.Err failure)
+                  | core.result.Result.Err failure =>
+                    ok (core.result.Result.Err failure)
+                | core.result.Result.Err _ => ok r5
+              | core.result.Result.Err failure =>
+                ok (core.result.Result.Err failure)
+            | core.result.Result.Err failure =>
+              ok (core.result.Result.Err failure)
+        | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+  else
+    let e ←
+      source.declared.error source.Stage.Check (toStr
+        "module registration does not consume runtime input")
+    ok (core.result.Result.Err e)
+
+/-- [noble_contracts::source::declared::state::prepare::{noble_contracts::source::declared::state::ModuleSession}::stage_unit::{impl core::ops::function::FnOnce<(&'_ noble_contracts::source::Named,), bool> for noble_contracts::source::declared::state::prepare::{noble_contracts::source::declared::state::ModuleSession}::stage_unit::{closure}<'_0>}::call_once]:
+    Source: 'crates/noble-contracts/src/source/declared/state/prepare.rs', lines 92:33-92:82 -/
+def
+  source.declared.state.prepare.ModuleSession.stage_unit.closure.Insts.CoreOpsFunctionFnOnceTupleSharedNamedBool.call_once
+  (c : source.declared.state.prepare.ModuleSession.stage_unit.closure)
+  (tupled_args : source.Named) :
+  Result Bool
+  := do
+  let s ←
+    alloc.string.String.Insts.CoreOpsDerefDerefStr.deref tupled_args.name
+  source.declared.state.namespace.ModuleSession.reserved_word c s
+
+/-- Trait implementation: [noble_contracts::source::declared::state::prepare::{noble_contracts::source::declared::state::ModuleSession}::stage_unit::{impl core::ops::function::FnOnce<(&'_ noble_contracts::source::Named,), bool> for noble_contracts::source::declared::state::prepare::{noble_contracts::source::declared::state::ModuleSession}::stage_unit::{closure}<'_0>}]
+    Source: 'crates/noble-contracts/src/source/declared/state/prepare.rs', lines 92:33-92:82 -/
+@[reducible]
+def
+  source.declared.state.prepare.ModuleSession.stage_unit.closure.Insts.CoreOpsFunctionFnOnceTupleSharedNamedBool
+  : core.ops.function.FnOnce
+  source.declared.state.prepare.ModuleSession.stage_unit.closure source.Named
+  Bool := {
+  call_once :=
+    source.declared.state.prepare.ModuleSession.stage_unit.closure.Insts.CoreOpsFunctionFnOnceTupleSharedNamedBool.call_once
+}
+
+/-- [noble_contracts::source::declared::state::prepare::{noble_contracts::source::declared::state::ModuleSession}::stage_unit]:
+    Source: 'crates/noble-contracts/src/source/declared/state/prepare.rs', lines 42:4-109:5 -/
+def source.declared.state.prepare.ModuleSession.stage_unit
+  (self : source.declared.state.ModuleSession)
+  (unit : source.declared.parsing.ParsedUnit) (input_bytes : Slice Std.U8)
+  (inputs : Slice noble_kernel.types.Ty) (limits : Limits) :
+  Result (core.result.Result (source.declared.state.ModuleSession ×
+    source.declared.state.ModuleKind × (Option
+    noble_kernel.execution.Submission) × (alloc.vec.Vec
+    noble_kernel.types.Ty)) source.Error)
+  := do
+  match unit with
+  | source.declared.parsing.ParsedUnit.Module «name» version members =>
+    let r ←
+      source.declared.state.register.ModuleSession.register self
+        { «name», version, members, source := input_bytes, inputs, limits }
+    match r with
+    | core.result.Result.Ok value =>
+      ok (core.result.Result.Ok (value,
+        source.declared.state.ModuleKind.Module, none, alloc.vec.Vec.new
+        noble_kernel.types.Ty))
+    | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+  | source.declared.parsing.ParsedUnit.Import «name» version «alias» =>
+    let s ← alloc.string.String.Insts.CoreOpsDerefDerefStr.deref «name»
+    let r ←
+      source.declared.state.namespace.ModuleSession.import self s version
+        «alias»
+    match r with
+    | core.result.Result.Ok value =>
+      let output ←
+        alloc.slice.Slice.to_vec noble_kernel.types.Ty.Insts.CoreCloneClone
+          inputs
+      ok (core.result.Result.Ok (value,
+        source.declared.state.ModuleKind.Import, none, output))
+    | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+  | source.declared.parsing.ParsedUnit.Definition =>
+    let r ←
+      source.preparation.Session.prepare self.source input_bytes inputs limits
+    match r with
+    | core.result.Result.Ok value =>
+      let b ← source.Prepared.is_definition value
+      let kind ←
+        if b
+        then ok source.declared.state.ModuleKind.Definition
+        else ok source.declared.state.ModuleKind.Expression
+      let o ← core.option.Option.as_ref value.definition
+      let b1 ←
+        core.option.Option.is_some_and
+          source.declared.state.prepare.ModuleSession.stage_unit.closure.Insts.CoreOpsFunctionFnOnceTupleSharedNamedBool
+          o self
+      if b1
+      then
+        let e ←
+          source.declared.error source.Stage.Resolve (toStr
+            "definition conflicts with a qualified module export")
+        ok (core.result.Result.Err e)
+      else
+        let (submission, o1) := core.option.Option.take value.submission
+        let (output, v) ←
+          core.mem.take (alloc.vec.Vec.Insts.CoreDefaultDefault
+            noble_kernel.types.Ty) value.output
+        let (r1, s) ←
+          source.Session.commit self.source
+            { value with submission := o1, output := v }
+        match r1 with
+        | core.result.Result.Ok _ =>
+          let b2 ←
+            source.declared.state.ModuleKind.Insts.CoreCmpPartialEqModuleKind.eq
+              kind source.declared.state.ModuleKind.Definition
+          if b2
+          then
+            let r2 ←
+              source.declared.state.namespace.words.ModuleSession.outside_words
+                { self with source := s }
+            match r2 with
+            | core.result.Result.Ok value1 =>
+              ok (core.result.Result.Ok (value1, kind, submission, output))
+            | core.result.Result.Err failure =>
+              ok (core.result.Result.Err failure)
+          else
+            ok (core.result.Result.Ok ({ self with source := s }, kind,
+              submission, output))
+        | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+    | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+  | source.declared.parsing.ParsedUnit.Expression =>
+    let r ←
+      source.preparation.Session.prepare self.source input_bytes inputs limits
+    match r with
+    | core.result.Result.Ok value =>
+      let b ← source.Prepared.is_definition value
+      let kind ←
+        if b
+        then ok source.declared.state.ModuleKind.Definition
+        else ok source.declared.state.ModuleKind.Expression
+      let o ← core.option.Option.as_ref value.definition
+      let b1 ←
+        core.option.Option.is_some_and
+          source.declared.state.prepare.ModuleSession.stage_unit.closure.Insts.CoreOpsFunctionFnOnceTupleSharedNamedBool
+          o self
+      if b1
+      then
+        let e ←
+          source.declared.error source.Stage.Resolve (toStr
+            "definition conflicts with a qualified module export")
+        ok (core.result.Result.Err e)
+      else
+        let (submission, o1) := core.option.Option.take value.submission
+        let (output, v) ←
+          core.mem.take (alloc.vec.Vec.Insts.CoreDefaultDefault
+            noble_kernel.types.Ty) value.output
+        let (r1, s) ←
+          source.Session.commit self.source
+            { value with submission := o1, output := v }
+        match r1 with
+        | core.result.Result.Ok _ =>
+          let b2 ←
+            source.declared.state.ModuleKind.Insts.CoreCmpPartialEqModuleKind.eq
+              kind source.declared.state.ModuleKind.Definition
+          if b2
+          then
+            let r2 ←
+              source.declared.state.namespace.words.ModuleSession.outside_words
+                { self with source := s }
+            match r2 with
+            | core.result.Result.Ok value1 =>
+              ok (core.result.Result.Ok (value1, kind, submission, output))
+            | core.result.Result.Err failure =>
+              ok (core.result.Result.Err failure)
+          else
+            ok (core.result.Result.Ok ({ self with source := s }, kind,
+              submission, output))
+        | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+    | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::source::declared::state::prepare::{noble_contracts::source::declared::state::ModuleSession}::prepare::{impl core::ops::function::FnOnce<(noble_contracts::Diagnostic,), noble_contracts::source::Error> for noble_contracts::source::declared::state::prepare::{noble_contracts::source::declared::state::ModuleSession}::prepare::{closure#1}}::call_once]:
+    Source: 'crates/noble-contracts/src/source/declared/state/prepare.rs', lines 21:81-23:13 -/
+def
+  source.declared.state.prepare.ModuleSession.prepare.closure_1.Insts.CoreOpsFunctionFnOnceTupleDiagnosticError.call_once
+  (c : source.declared.state.prepare.ModuleSession.prepare.closure_1)
+  (tupled_args : Diagnostic) :
+  Result source.Error
+  := do
+  source.declared.diagnostic source.Stage.Parse tupled_args
+
+/-- Trait implementation: [noble_contracts::source::declared::state::prepare::{noble_contracts::source::declared::state::ModuleSession}::prepare::{impl core::ops::function::FnOnce<(noble_contracts::Diagnostic,), noble_contracts::source::Error> for noble_contracts::source::declared::state::prepare::{noble_contracts::source::declared::state::ModuleSession}::prepare::{closure#1}}]
+    Source: 'crates/noble-contracts/src/source/declared/state/prepare.rs', lines 21:81-23:13 -/
+@[reducible]
+def
+  source.declared.state.prepare.ModuleSession.prepare.closure_1.Insts.CoreOpsFunctionFnOnceTupleDiagnosticError
+  : core.ops.function.FnOnce
+  source.declared.state.prepare.ModuleSession.prepare.closure_1 Diagnostic
+  source.Error := {
+  call_once :=
+    source.declared.state.prepare.ModuleSession.prepare.closure_1.Insts.CoreOpsFunctionFnOnceTupleDiagnosticError.call_once
+}
+
+/-- [noble_contracts::source::declared::state::prepare::{noble_contracts::source::declared::state::ModuleSession}::prepare::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_contracts::source::Error> for noble_contracts::source::declared::state::prepare::{noble_contracts::source::declared::state::ModuleSession}::prepare::{closure}}::call_once]:
+    Source: 'crates/noble-contracts/src/source/declared/state/prepare.rs', lines 8:73-13:9 -/
+def
+  source.declared.state.prepare.ModuleSession.prepare.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorError.call_once
+  (c : source.declared.state.prepare.ModuleSession.prepare.closure)
+  (tupled_args : core.num.error.TryFromIntError) :
+  Result source.Error
+  := do
+  source.declared.error source.Stage.Parse (toStr
+    "source byte limit exceeds the host address space")
+
+/-- Trait implementation: [noble_contracts::source::declared::state::prepare::{noble_contracts::source::declared::state::ModuleSession}::prepare::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_contracts::source::Error> for noble_contracts::source::declared::state::prepare::{noble_contracts::source::declared::state::ModuleSession}::prepare::{closure}}]
+    Source: 'crates/noble-contracts/src/source/declared/state/prepare.rs', lines 8:73-13:9 -/
+@[reducible]
+def
+  source.declared.state.prepare.ModuleSession.prepare.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorError
+  : core.ops.function.FnOnce
+  source.declared.state.prepare.ModuleSession.prepare.closure
+  core.num.error.TryFromIntError source.Error := {
+  call_once :=
+    source.declared.state.prepare.ModuleSession.prepare.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorError.call_once
+}
+
+/-- [noble_contracts::source::declared::state::prepare::{noble_contracts::source::declared::state::ModuleSession}::prepare]:
+    Source: 'crates/noble-contracts/src/source/declared/state/prepare.rs', lines 2:4-40:5
+    Visibility: public -/
+def source.declared.state.prepare.ModuleSession.prepare
+  (self : source.declared.state.ModuleSession) (input_bytes : Slice Std.U8)
+  (inputs : Slice noble_kernel.types.Ty) (limits : Limits) :
+  Result (core.result.Result source.declared.state.ModulePrepared source.Error)
+  := do
+  let r ←
+    Usize.Insts.CoreConvertTryFromU32TryFromIntError.try_from limits.bytes
+  let r1 ←
+    core.result.Result.map_err
+      source.declared.state.prepare.ModuleSession.prepare.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorError
+      r ()
+  match r1 with
+  | core.result.Result.Ok value =>
+    let i := Slice.len input_bytes
+    if i > value
+    then
+      let e ←
+        source.declared.error source.Stage.Parse (toStr
+          "source byte limit exceeded")
+      ok (core.result.Result.Err e)
+    else
+      let r2 ← source.declared.parsing.parse input_bytes limits
+      let r3 ←
+        core.result.Result.map_err
+          source.declared.state.prepare.ModuleSession.prepare.closure_1.Insts.CoreOpsFunctionFnOnceTupleDiagnosticError
+          r2 ()
+      match r3 with
+      | core.result.Result.Ok value1 =>
+        let ms ← source.declared.state.ModuleSession.snapshot self
+        let r4 ←
+          source.declared.state.prepare.ModuleSession.stage_unit ms value1
+            input_bytes inputs limits
+        match r4 with
+        | core.result.Result.Ok value2 =>
+          let (staged, kind, submission, output) := value2
+          let r5 ←
+            source.declared.state.namespace.ModuleSession.retained staged
+              limits
+          match r5 with
+          | core.result.Result.Ok _ =>
+            let v ←
+              alloc.vec.CloneVec.clone
+                source.declared.Module.Insts.CoreCloneClone self.modules
+            let v1 ←
+              alloc.vec.CloneVec.clone
+                source.declared.Alias.Insts.CoreCloneClone self.aliases
+            let v2 ←
+              alloc.vec.CloneVec.clone core.clone.CloneU8 self.source.history
+            ok (core.result.Result.Ok
+              {
+                kind,
+                generation := self.generation,
+                previous_modules := v,
+                previous_aliases := v1,
+                previous_history := v2,
+                staged,
+                submission,
+                output
+              })
+          | core.result.Result.Err failure =>
+            ok (core.result.Result.Err failure)
+        | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+      | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::source::declared::{impl core::cmp::PartialEq<noble_contracts::source::declared::Alias> for noble_contracts::source::declared::Alias}::eq]:
+    Source: 'crates/noble-contracts/src/source/declared.rs', lines 49:23-49:32
+    Visibility: public -/
+def source.declared.Alias.Insts.CoreCmpPartialEqAlias.eq
+  (self : source.declared.Alias) (other : source.declared.Alias) :
+  Result Bool
+  := do
+  let b ←
+    alloc.string.String.Insts.CoreCmpPartialEqString.eq self.spelling
+      other.spelling
+  if b
+  then ok (self.module = other.module)
+  else ok false
+
+/-- Trait implementation: [noble_contracts::source::declared::{impl core::cmp::PartialEq<noble_contracts::source::declared::Alias> for noble_contracts::source::declared::Alias}]
+    Source: 'crates/noble-contracts/src/source/declared.rs', lines 49:23-49:32 -/
+@[reducible]
+impl_def source.declared.Alias.Insts.CoreCmpPartialEqAlias : core.cmp.PartialEq
+  source.declared.Alias source.declared.Alias := {
+  eq := source.declared.Alias.Insts.CoreCmpPartialEqAlias.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    source.declared.Alias.Insts.CoreCmpPartialEqAlias
+}
+
+/-- [noble_contracts::source::{impl core::cmp::PartialEq<noble_contracts::source::Target> for noble_contracts::source::Target}::eq]:
+    Source: 'crates/noble-contracts/src/source.rs', lines 46:29-46:38
+    Visibility: public -/
+def source.Target.Insts.CoreCmpPartialEqTarget.eq
+  (self : source.Target) (other : source.Target) : Result Bool := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  if self1 = other1
+  then
+    match self with
+    | source.Target.Builtin __self_0 =>
+      match other with
+      | source.Target.Builtin __arg1_0 =>
+        lift (core.cmp.impls.PartialEqU32.eq __self_0 __arg1_0)
+      | source.Target.Named _ => fail panic
+    | source.Target.Named __self_0 =>
+      match other with
+      | source.Target.Builtin _ => fail panic
+      | source.Target.Named __arg1_0 =>
+        lift (core.cmp.impls.PartialEqU32.eq __self_0 __arg1_0)
+  else ok false
+
+/-- Trait implementation: [noble_contracts::source::{impl core::cmp::PartialEq<noble_contracts::source::Target> for noble_contracts::source::Target}]
+    Source: 'crates/noble-contracts/src/source.rs', lines 46:29-46:38 -/
+@[reducible]
+impl_def source.Target.Insts.CoreCmpPartialEqTarget : core.cmp.PartialEq
+  source.Target source.Target := {
+  eq := source.Target.Insts.CoreCmpPartialEqTarget.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    source.Target.Insts.CoreCmpPartialEqTarget
+}
+
+/-- [noble_contracts::source::declared::{impl core::cmp::PartialEq<noble_contracts::source::declared::Export> for noble_contracts::source::declared::Export}::eq]:
+    Source: 'crates/noble-contracts/src/source/declared.rs', lines 32:23-32:32
+    Visibility: public -/
+def source.declared.Export.Insts.CoreCmpPartialEqExport.eq
+  (self : source.declared.Export) (other : source.declared.Export) :
+  Result Bool
+  := do
+  let b ←
+    alloc.string.String.Insts.CoreCmpPartialEqString.eq self.name other.name
+  if b
+  then
+    let b1 ←
+      core.option.Option.Insts.CoreCmpPartialEqOption.eq
+        noble_kernel.types.Ty.Insts.CoreCmpPartialEqTy self.ty other.ty
+    if b1
+    then
+      alloc.vec.partial_eq.PartialEqVec.eq (Pair.Insts.CoreCmpPartialEqPair
+        alloc.string.String.Insts.CoreCmpPartialEqString
+        source.Target.Insts.CoreCmpPartialEqTarget) self.words other.words
+    else ok false
+  else ok false
+
+/-- Trait implementation: [noble_contracts::source::declared::{impl core::cmp::PartialEq<noble_contracts::source::declared::Export> for noble_contracts::source::declared::Export}]
+    Source: 'crates/noble-contracts/src/source/declared.rs', lines 32:23-32:32 -/
+@[reducible]
+impl_def source.declared.Export.Insts.CoreCmpPartialEqExport :
+  core.cmp.PartialEq source.declared.Export source.declared.Export := {
+  eq := source.declared.Export.Insts.CoreCmpPartialEqExport.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    source.declared.Export.Insts.CoreCmpPartialEqExport
+}
+
+/-- [noble_contracts::source::declared::{impl core::cmp::PartialEq<noble_contracts::source::declared::Module> for noble_contracts::source::declared::Module}::eq]:
+    Source: 'crates/noble-contracts/src/source/declared.rs', lines 39:23-39:32
+    Visibility: public -/
+def source.declared.Module.Insts.CoreCmpPartialEqModule.eq
+  (self : source.declared.Module) (other : source.declared.Module) :
+  Result Bool
+  := do
+  if self.version = other.version
+  then
+    if self.identity = other.identity
+    then
+      let b ←
+        alloc.string.String.Insts.CoreCmpPartialEqString.eq self.name
+          other.name
+      if b
+      then
+        let b1 ←
+          alloc.vec.partial_eq.PartialEqVec.eq
+            source.declared.Export.Insts.CoreCmpPartialEqExport self.exports
+            other.exports
+        if b1
+        then
+          let b2 ←
+            core.option.Option.Insts.CoreCmpPartialEqOption.eq
+              core.cmp.PartialEqU32 self.adapter_slot other.adapter_slot
+          if b2
+          then
+            alloc.vec.partial_eq.PartialEqVec.eq core.cmp.PartialEqU8
+              self.source other.source
+          else ok false
+        else ok false
+      else ok false
+    else ok false
+  else ok false
+
+/-- Trait implementation: [noble_contracts::source::declared::{impl core::cmp::PartialEq<noble_contracts::source::declared::Module> for noble_contracts::source::declared::Module}]
+    Source: 'crates/noble-contracts/src/source/declared.rs', lines 39:23-39:32 -/
+@[reducible]
+impl_def source.declared.Module.Insts.CoreCmpPartialEqModule :
+  core.cmp.PartialEq source.declared.Module source.declared.Module := {
+  eq := source.declared.Module.Insts.CoreCmpPartialEqModule.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    source.declared.Module.Insts.CoreCmpPartialEqModule
+}
+
+/-- [noble_contracts::source::declared::{impl core::cmp::PartialEq<noble_contracts::source::declared::BoundOperation> for noble_contracts::source::declared::BoundOperation}::eq]:
+    Source: 'crates/noble-contracts/src/source/declared.rs', lines 13:23-13:32
+    Visibility: public -/
+def source.declared.BoundOperation.Insts.CoreCmpPartialEqBoundOperation.eq
+  (self : source.declared.BoundOperation)
+  (other : source.declared.BoundOperation) :
+  Result Bool
+  := do
+  if self.module_version = other.module_version
+  then
+    if self.adapter_slot = other.adapter_slot
+    then
+      let b ←
+        alloc.string.String.Insts.CoreCmpPartialEqString.eq self.module_name
+          other.module_name
+      if b
+      then
+        let b1 ←
+          alloc.string.String.Insts.CoreCmpPartialEqString.eq self.operation
+            other.operation
+        if b1
+        then
+          let b2 ←
+            alloc.string.String.Insts.CoreCmpPartialEqString.eq
+              self.adapter_identity other.adapter_identity
+          if b2
+          then
+            let b3 ←
+              alloc.vec.partial_eq.PartialEqVec.eq
+                noble_kernel.types.Ty.Insts.CoreCmpPartialEqTy self.input
+                other.input
+            if b3
+            then
+              let b4 ←
+                alloc.vec.partial_eq.PartialEqVec.eq
+                  noble_kernel.types.Ty.Insts.CoreCmpPartialEqTy self.output
+                  other.output
+              if b4
+              then
+                alloc.vec.partial_eq.PartialEqVec.eq
+                  noble_kernel.types.EffId.Insts.CoreCmpPartialEqEffId
+                  self.effects other.effects
+              else ok false
+            else ok false
+          else ok false
+        else ok false
+      else ok false
+    else ok false
+  else ok false
+
+/-- Trait implementation: [noble_contracts::source::declared::{impl core::cmp::PartialEq<noble_contracts::source::declared::BoundOperation> for noble_contracts::source::declared::BoundOperation}]
+    Source: 'crates/noble-contracts/src/source/declared.rs', lines 13:23-13:32 -/
+@[reducible]
+impl_def source.declared.BoundOperation.Insts.CoreCmpPartialEqBoundOperation :
+  core.cmp.PartialEq source.declared.BoundOperation
+  source.declared.BoundOperation := {
+  eq := source.declared.BoundOperation.Insts.CoreCmpPartialEqBoundOperation.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    source.declared.BoundOperation.Insts.CoreCmpPartialEqBoundOperation
+}
+
+/-- [noble_contracts::source::declared::state::prepare::{noble_contracts::source::declared::state::ModuleSession}::commit]:
+    Source: 'crates/noble-contracts/src/source/declared/state/prepare.rs', lines 113:4-142:5
+    Visibility: public -/
+def source.declared.state.prepare.ModuleSession.commit
+  (self : source.declared.state.ModuleSession)
+  (prepared : source.declared.state.ModulePrepared) :
+  Result (source.declared.state.ModuleSession × (core.result.Result Unit
+    source.Error))
+  := do
+  let (s, ms, is_current_snapshot) ←
+    if self.generation = prepared.generation
+    then
+      do
+      let b ←
+        alloc.vec.partial_eq.PartialEqVec.eq
+          source.declared.BoundOperation.Insts.CoreCmpPartialEqBoundOperation
+          self.bindings prepared.staged.bindings
+      let (s1, b1) ←
+        if b
+        then
+          do
+          let b2 ←
+            alloc.vec.partial_eq.PartialEqVec.eq
+              source.declared.Module.Insts.CoreCmpPartialEqModule self.modules
+              prepared.previous_modules
+          if b2
+          then
+            let b3 ←
+              alloc.vec.partial_eq.PartialEqVec.eq
+                source.declared.Alias.Insts.CoreCmpPartialEqAlias self.aliases
+                prepared.previous_aliases
+            if b3
+            then
+              let is_current_snapshot1 ←
+                alloc.vec.partial_eq.PartialEqVec.eq core.cmp.PartialEqU8
+                  self.source.history prepared.previous_history
+              ok (self.source, is_current_snapshot1)
+            else ok (self.source, false)
+          else ok (self.source, false)
+        else ok (self.source, false)
+      ok (s1, prepared.staged, b1)
+    else ok (self.source, prepared.staged, false)
+  if is_current_snapshot
+  then
+    let o ← lift (U64.checked_add self.generation 1#u64)
+    match o with
+    | none =>
+      let e ←
+        source.declared.error source.Stage.Acceptance (toStr
+          "generation limit exceeded")
+      ok ({ self with source := s }, core.result.Result.Err e)
+    | some next =>
+      ok ({ ms with generation := next }, core.result.Result.Ok ())
+  else
+    let e ←
+      source.declared.error source.Stage.Acceptance (toStr
+        "stale or foreign module namespace snapshot")
+    ok ({ self with source := s }, core.result.Result.Err e)
+
+/-- [noble_contracts::source::declared::state::{impl core::clone::Clone for noble_contracts::source::declared::state::ModuleKind}::clone]:
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 16:9-16:14
+    Visibility: public -/
+def source.declared.state.ModuleKind.Insts.CoreCloneClone.clone
+  (self : source.declared.state.ModuleKind) :
+  Result source.declared.state.ModuleKind
+  := do
+  ok self
+
+/-- Trait implementation: [noble_contracts::source::declared::state::{impl core::clone::Clone for noble_contracts::source::declared::state::ModuleKind}]
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 16:9-16:14 -/
+@[reducible]
+def source.declared.state.ModuleKind.Insts.CoreCloneClone : core.clone.Clone
+  source.declared.state.ModuleKind := {
+  clone := source.declared.state.ModuleKind.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_contracts::source::declared::state::{impl core::marker::Copy for noble_contracts::source::declared::state::ModuleKind}]
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 16:16-16:20 -/
+@[reducible]
+def source.declared.state.ModuleKind.Insts.CoreMarkerCopy : core.marker.Copy
+  source.declared.state.ModuleKind := {
+  cloneInst := source.declared.state.ModuleKind.Insts.CoreCloneClone
+}
+
+/-- [noble_contracts::source::declared::state::{impl core::fmt::Debug for noble_contracts::source::declared::state::ModuleKind}::fmt]:
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 16:22-16:27
+    Visibility: public -/
+def source.declared.state.ModuleKind.Insts.CoreFmtDebug.fmt
+  (self : source.declared.state.ModuleKind) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | source.declared.state.ModuleKind.Module =>
+    core.fmt.Formatter.write_str f (toStr "Module")
+  | source.declared.state.ModuleKind.Import =>
+    core.fmt.Formatter.write_str f (toStr "Import")
+  | source.declared.state.ModuleKind.Definition =>
+    core.fmt.Formatter.write_str f (toStr "Definition")
+  | source.declared.state.ModuleKind.Expression =>
+    core.fmt.Formatter.write_str f (toStr "Expression")
+
+/-- Trait implementation: [noble_contracts::source::declared::state::{impl core::fmt::Debug for noble_contracts::source::declared::state::ModuleKind}]
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 16:22-16:27 -/
+@[reducible]
+def source.declared.state.ModuleKind.Insts.CoreFmtDebug : core.fmt.Debug
+  source.declared.state.ModuleKind := {
+  fmt := source.declared.state.ModuleKind.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_contracts::source::declared::state::{impl core::marker::StructuralPartialEq for noble_contracts::source::declared::state::ModuleKind}]
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 16:29-16:38 -/
+@[reducible]
+def source.declared.state.ModuleKind.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq source.declared.state.ModuleKind := {
+}
+
+/-- Trait implementation: [noble_contracts::source::declared::state::{impl core::cmp::PartialEq<noble_contracts::source::declared::state::ModuleKind> for noble_contracts::source::declared::state::ModuleKind}]
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 16:29-16:38 -/
+@[reducible]
+impl_def source.declared.state.ModuleKind.Insts.CoreCmpPartialEqModuleKind :
+  core.cmp.PartialEq source.declared.state.ModuleKind
+  source.declared.state.ModuleKind := {
+  eq := source.declared.state.ModuleKind.Insts.CoreCmpPartialEqModuleKind.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    source.declared.state.ModuleKind.Insts.CoreCmpPartialEqModuleKind
+}
+
+/-- [noble_contracts::source::declared::state::{impl core::cmp::Eq for noble_contracts::source::declared::state::ModuleKind}::assert_fields_are_eq]:
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 16:40-16:42
+    Visibility: public -/
+def source.declared.state.ModuleKind.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : source.declared.state.ModuleKind) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_contracts::source::declared::state::{impl core::cmp::Eq for noble_contracts::source::declared::state::ModuleKind}]
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 16:40-16:42 -/
+@[reducible]
+def source.declared.state.ModuleKind.Insts.CoreCmpEq : core.cmp.Eq
+  source.declared.state.ModuleKind := {
+  partialEqInst :=
+    source.declared.state.ModuleKind.Insts.CoreCmpPartialEqModuleKind
+  assert_fields_are_eq :=
+    source.declared.state.ModuleKind.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_contracts::source::{impl core::fmt::Debug for noble_contracts::source::Target}::fmt]:
+    Source: 'crates/noble-contracts/src/source.rs', lines 46:22-46:27
+    Visibility: public -/
+def source.Target.Insts.CoreFmtDebug.fmt
+  (self : source.Target) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | source.Target.Builtin __self_0 =>
+    let __self_01 := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU32) __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Builtin") __self_01
+  | source.Target.Named __self_0 =>
+    let __self_01 := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU32) __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Named") __self_01
+
+/-- Trait implementation: [noble_contracts::source::{impl core::fmt::Debug for noble_contracts::source::Target}]
+    Source: 'crates/noble-contracts/src/source.rs', lines 46:22-46:27 -/
+@[reducible]
+def source.Target.Insts.CoreFmtDebug : core.fmt.Debug source.Target := {
+  fmt := source.Target.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_contracts::source::{impl core::fmt::Debug for noble_contracts::source::Kind}::fmt]:
+    Source: 'crates/noble-contracts/src/source.rs', lines 52:16-52:21
+    Visibility: public -/
+def source.Kind.Insts.CoreFmtDebug.fmt
+  (self : source.Kind) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | source.Kind.Literal __self_0 =>
+    let __self_01 :=
+      Dyn.mk _ (core.fmt.DebugShared
+        noble_kernel.untrusted.Lit.Insts.CoreFmtDebug) __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Literal") __self_01
+  | source.Kind.Text __self_0 =>
+    let __self_01 :=
+      Dyn.mk _ (core.fmt.DebugShared (core.fmt.DebugVec core.fmt.DebugU8))
+        __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Text") __self_01
+  | source.Kind.Word __self_0 =>
+    let __self_01 :=
+      Dyn.mk _ (core.fmt.DebugShared (core.fmt.DebugVec core.fmt.DebugU8))
+        __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Word") __self_01
+  | source.Kind.Call __self_0 =>
+    let __self_01 :=
+      Dyn.mk _ (core.fmt.DebugShared source.Target.Insts.CoreFmtDebug) __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Call") __self_01
+  | source.Kind.Quotation __self_0 =>
+    let __self_01 :=
+      Dyn.mk _ (core.fmt.DebugShared (core.fmt.DebugVec core.fmt.DebugU32))
+        __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Quotation")
+      __self_01
+
+/-- Trait implementation: [noble_contracts::source::{impl core::fmt::Debug for noble_contracts::source::Kind}]
+    Source: 'crates/noble-contracts/src/source.rs', lines 52:16-52:21 -/
+@[reducible]
+def source.Kind.Insts.CoreFmtDebug : core.fmt.Debug source.Kind := {
+  fmt := source.Kind.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_contracts::source::{impl core::fmt::Debug for noble_contracts::source::Node}::fmt]:
+    Source: 'crates/noble-contracts/src/source.rs', lines 61:16-61:21
+    Visibility: public -/
+def source.Node.Insts.CoreFmtDebug.fmt
+  (self : source.Node) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ source.Kind.Insts.CoreFmtDebug self.kind
+  let dyn1 := Dyn.mk _ (core.fmt.DebugShared Span.Insts.CoreFmtDebug) self.span
+  core.fmt.Formatter.debug_struct_field2_finish f (toStr "Node") (toStr "kind")
+    dyn (toStr "span") dyn1
+
+/-- Trait implementation: [noble_contracts::source::{impl core::fmt::Debug for noble_contracts::source::Node}]
+    Source: 'crates/noble-contracts/src/source.rs', lines 61:16-61:21 -/
+@[reducible]
+def source.Node.Insts.CoreFmtDebug : core.fmt.Debug source.Node := {
+  fmt := source.Node.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_contracts::source::{impl core::fmt::Debug for noble_contracts::source::Tree}::fmt]:
+    Source: 'crates/noble-contracts/src/source.rs', lines 67:16-67:21
+    Visibility: public -/
+def source.Tree.Insts.CoreFmtDebug.fmt
+  (self : source.Tree) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn :=
+    Dyn.mk _ (core.fmt.DebugVec source.Node.Insts.CoreFmtDebug) self.nodes
+  let dyn1 := Dyn.mk _ (core.fmt.DebugVec core.fmt.DebugU32) self.body
+  let dyn2 := Dyn.mk _ (core.fmt.DebugShared Span.Insts.CoreFmtDebug) self.span
+  core.fmt.Formatter.debug_struct_field3_finish f (toStr "Tree") (toStr
+    "nodes") dyn (toStr "body") dyn1 (toStr "span") dyn2
+
+/-- Trait implementation: [noble_contracts::source::{impl core::fmt::Debug for noble_contracts::source::Tree}]
+    Source: 'crates/noble-contracts/src/source.rs', lines 67:16-67:21 -/
+@[reducible]
+def source.Tree.Insts.CoreFmtDebug : core.fmt.Debug source.Tree := {
+  fmt := source.Tree.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_contracts::source::{impl core::fmt::Debug for noble_contracts::source::Named}::fmt]:
+    Source: 'crates/noble-contracts/src/source.rs', lines 87:16-87:21
+    Visibility: public -/
+def source.Named.Insts.CoreFmtDebug.fmt
+  (self : source.Named) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ alloc.string.String.Insts.CoreFmtDebug self.name
+  let dyn1 := Dyn.mk _ core.fmt.DebugU64 self.identity
+  let dyn2 :=
+    Dyn.mk _ (core.option.Option.Insts.CoreFmtDebug core.fmt.DebugU64)
+      self.owner
+  let dyn3 :=
+    Dyn.mk _ (core.fmt.DebugShared source.Tree.Insts.CoreFmtDebug) self.tree
+  core.fmt.Formatter.debug_struct_field4_finish f (toStr "Named") (toStr
+    "name") dyn (toStr "identity") dyn1 (toStr "owner") dyn2 (toStr "tree")
+    dyn3
+
+/-- Trait implementation: [noble_contracts::source::{impl core::fmt::Debug for noble_contracts::source::Named}]
+    Source: 'crates/noble-contracts/src/source.rs', lines 87:16-87:21 -/
+@[reducible]
+def source.Named.Insts.CoreFmtDebug : core.fmt.Debug source.Named := {
+  fmt := source.Named.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_contracts::source::declared::{impl core::fmt::Debug for noble_contracts::source::declared::Context}::fmt]:
+    Source: 'crates/noble-contracts/src/source/declared.rs', lines 25:16-25:21
+    Visibility: public -/
+def source.declared.Context.Insts.CoreFmtDebug.fmt
+  (self : source.declared.Context) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn :=
+    Dyn.mk _ noble_kernel.contracts.Env.Insts.CoreFmtDebug self.environment
+  let dyn1 :=
+    Dyn.mk _ (core.fmt.DebugVec (Pair.Insts.CoreFmtDebug
+      alloc.string.String.Insts.CoreFmtDebug source.Target.Insts.CoreFmtDebug))
+      self.words
+  let dyn2 :=
+    Dyn.mk _ (core.fmt.DebugShared (core.option.Option.Insts.CoreFmtDebug
+      core.fmt.DebugU64)) self.owner
+  core.fmt.Formatter.debug_struct_field3_finish f (toStr "Context") (toStr
+    "environment") dyn (toStr "words") dyn1 (toStr "owner") dyn2
+
+/-- Trait implementation: [noble_contracts::source::declared::{impl core::fmt::Debug for noble_contracts::source::declared::Context}]
+    Source: 'crates/noble-contracts/src/source/declared.rs', lines 25:16-25:21 -/
+@[reducible]
+def source.declared.Context.Insts.CoreFmtDebug : core.fmt.Debug
+  source.declared.Context := {
+  fmt := source.declared.Context.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_contracts::source::{impl core::fmt::Debug for noble_contracts::source::Session}::fmt]:
+    Source: 'crates/noble-contracts/src/source.rs', lines 123:9-123:14
+    Visibility: public -/
+def source.Session.Insts.CoreFmtDebug.fmt
+  (self : source.Session) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn :=
+    Dyn.mk _ (core.fmt.DebugVec source.Named.Insts.CoreFmtDebug)
+      self.definitions
+  let dyn1 := Dyn.mk _ (core.fmt.DebugVec core.fmt.DebugU8) self.history
+  let dyn2 := Dyn.mk _ core.fmt.DebugU64 self.generation
+  let dyn3 := Dyn.mk _ core.fmt.DebugBool self.hosts
+  let dyn4 :=
+    Dyn.mk _ (core.option.Option.Insts.CoreFmtDebug
+      component.Bindings.Insts.CoreFmtDebug) self.bindings
+  let dyn5 :=
+    Dyn.mk _ (core.fmt.DebugShared (core.option.Option.Insts.CoreFmtDebug
+      source.declared.Context.Insts.CoreFmtDebug)) self.declared
+  let values :=
+    Array.to_slice (Array.make 6#usize [ dyn, dyn1, dyn2, dyn3, dyn4, dyn5 ])
+  let s ←
+    lift (Array.to_slice
+      (Array.make 6#usize [
+        toStr "definitions", toStr "history", toStr "generation", toStr
+        "hosts", toStr "bindings", toStr "declared"
+        ]))
+  core.fmt.Formatter.debug_struct_fields_finish f (toStr "Session") s values
+
+/-- Trait implementation: [noble_contracts::source::{impl core::fmt::Debug for noble_contracts::source::Session}]
+    Source: 'crates/noble-contracts/src/source.rs', lines 123:9-123:14 -/
+@[reducible]
+def source.Session.Insts.CoreFmtDebug : core.fmt.Debug source.Session := {
+  fmt := source.Session.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_contracts::source::declared::{impl core::fmt::Debug for noble_contracts::source::declared::Alias}::fmt]:
+    Source: 'crates/noble-contracts/src/source/declared.rs', lines 49:16-49:21
+    Visibility: public -/
+def source.declared.Alias.Insts.CoreFmtDebug.fmt
+  (self : source.declared.Alias) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ alloc.string.String.Insts.CoreFmtDebug self.spelling
+  let dyn1 := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugUsize) self.module
+  core.fmt.Formatter.debug_struct_field2_finish f (toStr "Alias") (toStr
+    "spelling") dyn (toStr "module") dyn1
+
+/-- Trait implementation: [noble_contracts::source::declared::{impl core::fmt::Debug for noble_contracts::source::declared::Alias}]
+    Source: 'crates/noble-contracts/src/source/declared.rs', lines 49:16-49:21 -/
+@[reducible]
+def source.declared.Alias.Insts.CoreFmtDebug : core.fmt.Debug
+  source.declared.Alias := {
+  fmt := source.declared.Alias.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_contracts::source::declared::{impl core::fmt::Debug for noble_contracts::source::declared::Export}::fmt]:
+    Source: 'crates/noble-contracts/src/source/declared.rs', lines 32:16-32:21
+    Visibility: public -/
+def source.declared.Export.Insts.CoreFmtDebug.fmt
+  (self : source.declared.Export) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ alloc.string.String.Insts.CoreFmtDebug self.name
+  let dyn1 :=
+    Dyn.mk _ (core.option.Option.Insts.CoreFmtDebug
+      noble_kernel.types.Ty.Insts.CoreFmtDebug) self.ty
+  let dyn2 :=
+    Dyn.mk _ (core.fmt.DebugShared (core.fmt.DebugVec (Pair.Insts.CoreFmtDebug
+      alloc.string.String.Insts.CoreFmtDebug
+      source.Target.Insts.CoreFmtDebug))) self.words
+  core.fmt.Formatter.debug_struct_field3_finish f (toStr "Export") (toStr
+    "name") dyn (toStr "ty") dyn1 (toStr "words") dyn2
+
+/-- Trait implementation: [noble_contracts::source::declared::{impl core::fmt::Debug for noble_contracts::source::declared::Export}]
+    Source: 'crates/noble-contracts/src/source/declared.rs', lines 32:16-32:21 -/
+@[reducible]
+def source.declared.Export.Insts.CoreFmtDebug : core.fmt.Debug
+  source.declared.Export := {
+  fmt := source.declared.Export.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_contracts::source::declared::{impl core::fmt::Debug for noble_contracts::source::declared::Module}::fmt]:
+    Source: 'crates/noble-contracts/src/source/declared.rs', lines 39:16-39:21
+    Visibility: public -/
+def source.declared.Module.Insts.CoreFmtDebug.fmt
+  (self : source.declared.Module) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ alloc.string.String.Insts.CoreFmtDebug self.name
+  let dyn1 := Dyn.mk _ core.fmt.DebugU32 self.version
+  let dyn2 := Dyn.mk _ core.fmt.DebugU64 self.identity
+  let dyn3 :=
+    Dyn.mk _ (core.fmt.DebugVec source.declared.Export.Insts.CoreFmtDebug)
+      self.exports
+  let dyn4 :=
+    Dyn.mk _ (core.option.Option.Insts.CoreFmtDebug core.fmt.DebugU32)
+      self.adapter_slot
+  let dyn5 :=
+    Dyn.mk _ (core.fmt.DebugShared (core.fmt.DebugVec core.fmt.DebugU8))
+      self.source
+  let values :=
+    Array.to_slice (Array.make 6#usize [ dyn, dyn1, dyn2, dyn3, dyn4, dyn5 ])
+  let s ←
+    lift (Array.to_slice
+      (Array.make 6#usize [
+        toStr "name", toStr "version", toStr "identity", toStr "exports", toStr
+        "adapter_slot", toStr "source"
+        ]))
+  core.fmt.Formatter.debug_struct_fields_finish f (toStr "Module") s values
+
+/-- Trait implementation: [noble_contracts::source::declared::{impl core::fmt::Debug for noble_contracts::source::declared::Module}]
+    Source: 'crates/noble-contracts/src/source/declared.rs', lines 39:16-39:21 -/
+@[reducible]
+def source.declared.Module.Insts.CoreFmtDebug : core.fmt.Debug
+  source.declared.Module := {
+  fmt := source.declared.Module.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_contracts::source::declared::{impl core::fmt::Debug for noble_contracts::source::declared::BoundOperation}::fmt]:
+    Source: 'crates/noble-contracts/src/source/declared.rs', lines 13:16-13:21
+    Visibility: public -/
+def source.declared.BoundOperation.Insts.CoreFmtDebug.fmt
+  (self : source.declared.BoundOperation) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ alloc.string.String.Insts.CoreFmtDebug self.module_name
+  let dyn1 := Dyn.mk _ core.fmt.DebugU32 self.module_version
+  let dyn2 := Dyn.mk _ alloc.string.String.Insts.CoreFmtDebug self.operation
+  let dyn3 :=
+    Dyn.mk _ alloc.string.String.Insts.CoreFmtDebug self.adapter_identity
+  let dyn4 := Dyn.mk _ core.fmt.DebugU32 self.adapter_slot
+  let dyn5 :=
+    Dyn.mk _ (core.fmt.DebugVec noble_kernel.types.Ty.Insts.CoreFmtDebug)
+      self.input
+  let dyn6 :=
+    Dyn.mk _ (core.fmt.DebugVec noble_kernel.types.Ty.Insts.CoreFmtDebug)
+      self.output
+  let dyn7 :=
+    Dyn.mk _ (core.fmt.DebugShared (core.fmt.DebugVec
+      noble_kernel.types.EffId.Insts.CoreFmtDebug)) self.effects
+  let values :=
+    Array.to_slice
+      (Array.make 8#usize [ dyn, dyn1, dyn2, dyn3, dyn4, dyn5, dyn6, dyn7 ])
+  let s ←
+    lift (Array.to_slice
+      (Array.make 8#usize [
+        toStr "module_name", toStr "module_version", toStr "operation", toStr
+        "adapter_identity", toStr "adapter_slot", toStr "input", toStr
+        "output", toStr "effects"
+        ]))
+  core.fmt.Formatter.debug_struct_fields_finish f (toStr "BoundOperation") s
+    values
+
+/-- Trait implementation: [noble_contracts::source::declared::{impl core::fmt::Debug for noble_contracts::source::declared::BoundOperation}]
+    Source: 'crates/noble-contracts/src/source/declared.rs', lines 13:16-13:21 -/
+@[reducible]
+def source.declared.BoundOperation.Insts.CoreFmtDebug : core.fmt.Debug
+  source.declared.BoundOperation := {
+  fmt := source.declared.BoundOperation.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_contracts::source::declared::state::{impl core::fmt::Debug for noble_contracts::source::declared::state::ModuleSession}::fmt]:
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 24:9-24:14
+    Visibility: public -/
+def source.declared.state.ModuleSession.Insts.CoreFmtDebug.fmt
+  (self : source.declared.state.ModuleSession) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn :=
+    Dyn.mk _ (core.fmt.DebugVec
+      source.declared.BoundOperation.Insts.CoreFmtDebug) self.bindings
+  let dyn1 :=
+    Dyn.mk _ (core.fmt.DebugVec source.declared.Module.Insts.CoreFmtDebug)
+      self.modules
+  let dyn2 :=
+    Dyn.mk _ (core.fmt.DebugVec source.declared.Alias.Insts.CoreFmtDebug)
+      self.aliases
+  let dyn3 := Dyn.mk _ core.fmt.DebugU64 self.generation
+  let dyn4 :=
+    Dyn.mk _ (core.fmt.DebugShared source.Session.Insts.CoreFmtDebug)
+      self.source
+  core.fmt.Formatter.debug_struct_field5_finish f (toStr "ModuleSession")
+    (toStr "bindings") dyn (toStr "modules") dyn1 (toStr "aliases") dyn2 (toStr
+    "generation") dyn3 (toStr "source") dyn4
+
+/-- Trait implementation: [noble_contracts::source::declared::state::{impl core::fmt::Debug for noble_contracts::source::declared::state::ModuleSession}]
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 24:9-24:14 -/
+@[reducible]
+def source.declared.state.ModuleSession.Insts.CoreFmtDebug : core.fmt.Debug
+  source.declared.state.ModuleSession := {
+  fmt := source.declared.state.ModuleSession.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_contracts::source::declared::state::{impl core::fmt::Debug for noble_contracts::source::declared::state::ModulePrepared}::fmt]:
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 33:9-33:14
+    Visibility: public -/
+def source.declared.state.ModulePrepared.Insts.CoreFmtDebug.fmt
+  (self : source.declared.state.ModulePrepared) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn :=
+    Dyn.mk _ source.declared.state.ModuleKind.Insts.CoreFmtDebug self.kind
+  let dyn1 := Dyn.mk _ core.fmt.DebugU64 self.generation
+  let dyn2 :=
+    Dyn.mk _ (core.fmt.DebugVec source.declared.Module.Insts.CoreFmtDebug)
+      self.previous_modules
+  let dyn3 :=
+    Dyn.mk _ (core.fmt.DebugVec source.declared.Alias.Insts.CoreFmtDebug)
+      self.previous_aliases
+  let dyn4 :=
+    Dyn.mk _ (core.fmt.DebugVec core.fmt.DebugU8) self.previous_history
+  let dyn5 :=
+    Dyn.mk _ source.declared.state.ModuleSession.Insts.CoreFmtDebug self.staged
+  let dyn6 :=
+    Dyn.mk _ (core.option.Option.Insts.CoreFmtDebug
+      noble_kernel.execution.Submission.Insts.CoreFmtDebug) self.submission
+  let dyn7 :=
+    Dyn.mk _ (core.fmt.DebugShared (core.fmt.DebugVec
+      noble_kernel.types.Ty.Insts.CoreFmtDebug)) self.output
+  let values :=
+    Array.to_slice
+      (Array.make 8#usize [ dyn, dyn1, dyn2, dyn3, dyn4, dyn5, dyn6, dyn7 ])
+  let s ←
+    lift (Array.to_slice
+      (Array.make 8#usize [
+        toStr "kind", toStr "generation", toStr "previous_modules", toStr
+        "previous_aliases", toStr "previous_history", toStr "staged", toStr
+        "submission", toStr "output"
+        ]))
+  core.fmt.Formatter.debug_struct_fields_finish f (toStr "ModulePrepared") s
+    values
+
+/-- Trait implementation: [noble_contracts::source::declared::state::{impl core::fmt::Debug for noble_contracts::source::declared::state::ModulePrepared}]
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 33:9-33:14 -/
+@[reducible]
+def source.declared.state.ModulePrepared.Insts.CoreFmtDebug : core.fmt.Debug
+  source.declared.state.ModulePrepared := {
+  fmt := source.declared.state.ModulePrepared.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::kind]:
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 46:4-48:5
+    Visibility: public -/
+def source.declared.state.ModulePrepared.impl.kind
+  (self : source.declared.state.ModulePrepared) :
+  Result source.declared.state.ModuleKind
+  := do
+  ok self.kind
+
+/-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::submission]:
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 49:4-51:5
+    Visibility: public -/
+def source.declared.state.ModulePrepared.impl.submission
+  (self : source.declared.state.ModulePrepared) :
+  Result (Option noble_kernel.execution.Submission)
+  := do
+  core.option.Option.as_ref self.submission
+
+/-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::output]:
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 52:4-54:5
+    Visibility: public -/
+def source.declared.state.ModulePrepared.impl.output
+  (self : source.declared.state.ModulePrepared) :
+  Result (Slice noble_kernel.types.Ty)
+  := do
+  alloc.vec.Vec.as_slice Global self.output
+
+/-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::bindings]:
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 55:4-57:5
+    Visibility: public -/
+def source.declared.state.ModulePrepared.bindings
+  (self : source.declared.state.ModulePrepared) :
+  Result (Slice source.declared.BoundOperation)
+  := do
+  ok (alloc.vec.Vec.deref self.staged.bindings)
+
+/-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::resolved_module::{impl core::ops::function::FnOnce<(u64,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::resolved_module::{closure}<'_0>}::call_once]:
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 84:45-84:70 -/
+def
+  source.declared.state.ModulePrepared.resolved_module.closure.Insts.CoreOpsFunctionFnOnceTupleU64Bool.call_once
+  (c : source.declared.state.ModulePrepared.resolved_module.closure)
+  (tupled_args : Std.U64) :
+  Result Bool
+  := do
+  ok (tupled_args != c)
+
+/-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::resolved_module::{impl core::ops::function::FnOnce<(u64,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::resolved_module::{closure}<'_0>}]
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 84:45-84:70 -/
+@[reducible]
+def
+  source.declared.state.ModulePrepared.resolved_module.closure.Insts.CoreOpsFunctionFnOnceTupleU64Bool
+  : core.ops.function.FnOnce
+  source.declared.state.ModulePrepared.resolved_module.closure Std.U64 Bool
+  := {
+  call_once :=
+    source.declared.state.ModulePrepared.resolved_module.closure.Insts.CoreOpsFunctionFnOnceTupleU64Bool.call_once
+}
+
+/-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::resolved_module]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 71:16-91:17
+    Visibility: public -/
+@[rust_loop_body]
+def source.declared.state.ModulePrepared.resolved_module_loop0.body
+  (submission : noble_kernel.execution.Submission) (owner : Option Std.U64)
+  (definition_at : Std.Usize) :
+  Result (ControlFlow ((Option Std.U64) × Std.Usize) ((Option Std.U64) ×
+    Bool))
+  := do
+  let i := alloc.vec.Vec.len submission.definitions
+  if definition_at < i
+  then
+    let definition ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        noble_kernel.execution.Definition) submission.definitions definition_at
+    let i1 := definition.definition
+    let r ← Usize.Insts.CoreConvertTryFromU32TryFromIntError.try_from i1
+    match r with
+    | core.result.Result.Ok index1 =>
+      let s := alloc.vec.Vec.deref submission.environment.definition_owners
+      let o ←
+        core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice (Option
+          Std.U64)) s index1
+      let o1 ←
+        core.option.OptionShared0T.copied
+          (core.option.Option.Insts.CoreMarkerCopy core.marker.CopyU64) o
+      let o2 ← core.option.OptionOption.flatten o1
+      match o2 with
+      | none =>
+        let definition_at1 ← definition_at + 1#usize
+        ok (cont (owner, definition_at1))
+      | some id =>
+        let b ←
+          core.option.Option.is_some_and
+            source.declared.state.ModulePrepared.resolved_module.closure.Insts.CoreOpsFunctionFnOnceTupleU64Bool
+            owner id
+        if b
+        then ok (done (owner, true))
+        else
+          let definition_at1 ← definition_at + 1#usize
+          ok (cont (o2, definition_at1))
+    | core.result.Result.Err _ => ok (done (owner, true))
+  else ok (done (owner, false))
+
+/-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::resolved_module]: loop 0:
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 71:16-91:17
+    Visibility: public -/
+@[rust_loop]
+def source.declared.state.ModulePrepared.resolved_module_loop0
+  (submission : noble_kernel.execution.Submission) (owner : Option Std.U64)
+  (definition_at : Std.Usize) :
+  Result ((Option Std.U64) × Bool)
+  := do
+  loop
+    (fun (owner1, definition_at1) =>
+      source.declared.state.ModulePrepared.resolved_module_loop0.body
+      submission owner1 definition_at1)
+    (owner, definition_at)
+
+/-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::resolved_module]: loop body 1:
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 97:16-104:17
+    Visibility: public -/
+@[rust_loop_body]
+def source.declared.state.ModulePrepared.resolved_module_loop1.body
+  (ms : source.declared.state.ModuleSession) (owner : Option Std.U64)
+  (module_at : Std.Usize) :
+  Result (ControlFlow Std.Usize (Option source.declared.Module))
+  := do
+  let i := alloc.vec.Vec.len ms.modules
+  if module_at < i
+  then
+    let module ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        source.declared.Module) ms.modules module_at
+    let b ←
+      core.option.Option.Insts.CoreCmpPartialEqOption.eq core.cmp.PartialEqU64
+        (some module.identity) owner
+    if b
+    then ok (done (some module))
+    else let module_at1 ← module_at + 1#usize
+         ok (cont module_at1)
+  else ok (done none)
+
+/-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::resolved_module]: loop 1:
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 97:16-104:17
+    Visibility: public -/
+@[rust_loop]
+def source.declared.state.ModulePrepared.resolved_module_loop1
+  (ms : source.declared.state.ModuleSession) (owner : Option Std.U64)
+  (module_at : Std.Usize) :
+  Result (Option source.declared.Module)
+  := do
+  loop
+    (fun module_at1 =>
+      source.declared.state.ModulePrepared.resolved_module_loop1.body ms owner
+      module_at1)
+    module_at
+
+/-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::resolved_module]: loop body 2:
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 71:16-91:17
+    Visibility: public -/
+@[rust_loop_body]
+def source.declared.state.ModulePrepared.resolved_module_loop2.body
+  (submission : noble_kernel.execution.Submission) (owner : Option Std.U64)
+  (definition_at : Std.Usize) :
+  Result (ControlFlow ((Option Std.U64) × Std.Usize) ((Option Std.U64) ×
+    Bool))
+  := do
+  let i := alloc.vec.Vec.len submission.definitions
+  if definition_at < i
+  then
+    let definition ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        noble_kernel.execution.Definition) submission.definitions definition_at
+    let i1 := definition.definition
+    let r ← Usize.Insts.CoreConvertTryFromU32TryFromIntError.try_from i1
+    match r with
+    | core.result.Result.Ok index1 =>
+      let s := alloc.vec.Vec.deref submission.environment.definition_owners
+      let o ←
+        core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice (Option
+          Std.U64)) s index1
+      let o1 ←
+        core.option.OptionShared0T.copied
+          (core.option.Option.Insts.CoreMarkerCopy core.marker.CopyU64) o
+      let o2 ← core.option.OptionOption.flatten o1
+      match o2 with
+      | none =>
+        let definition_at1 ← definition_at + 1#usize
+        ok (cont (owner, definition_at1))
+      | some id =>
+        let b ←
+          core.option.Option.is_some_and
+            source.declared.state.ModulePrepared.resolved_module.closure.Insts.CoreOpsFunctionFnOnceTupleU64Bool
+            owner id
+        if b
+        then ok (done (owner, true))
+        else
+          let definition_at1 ← definition_at + 1#usize
+          ok (cont (o2, definition_at1))
+    | core.result.Result.Err _ => ok (done (owner, true))
+  else ok (done (owner, false))
+
+/-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::resolved_module]: loop 2:
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 71:16-91:17
+    Visibility: public -/
+@[rust_loop]
+def source.declared.state.ModulePrepared.resolved_module_loop2
+  (submission : noble_kernel.execution.Submission) (owner : Option Std.U64)
+  (definition_at : Std.Usize) :
+  Result ((Option Std.U64) × Bool)
+  := do
+  loop
+    (fun (owner1, definition_at1) =>
+      source.declared.state.ModulePrepared.resolved_module_loop2.body
+      submission owner1 definition_at1)
+    (owner, definition_at)
+
+/-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::resolved_module]: loop body 3:
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 97:16-104:17
+    Visibility: public -/
+@[rust_loop_body]
+def source.declared.state.ModulePrepared.resolved_module_loop3.body
+  (ms : source.declared.state.ModuleSession) (owner : Option Std.U64)
+  (module_at : Std.Usize) :
+  Result (ControlFlow Std.Usize (Option source.declared.Module))
+  := do
+  let i := alloc.vec.Vec.len ms.modules
+  if module_at < i
+  then
+    let module ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        source.declared.Module) ms.modules module_at
+    let b ←
+      core.option.Option.Insts.CoreCmpPartialEqOption.eq core.cmp.PartialEqU64
+        (some module.identity) owner
+    if b
+    then ok (done (some module))
+    else let module_at1 ← module_at + 1#usize
+         ok (cont module_at1)
+  else ok (done none)
+
+/-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::resolved_module]: loop 3:
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 97:16-104:17
+    Visibility: public -/
+@[rust_loop]
+def source.declared.state.ModulePrepared.resolved_module_loop3
+  (ms : source.declared.state.ModuleSession) (owner : Option Std.U64)
+  (module_at : Std.Usize) :
+  Result (Option source.declared.Module)
+  := do
+  loop
+    (fun module_at1 =>
+      source.declared.state.ModulePrepared.resolved_module_loop3.body ms owner
+      module_at1)
+    module_at
+
+/-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::resolved_module]:
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 58:4-109:5
+    Visibility: public -/
+def source.declared.state.ModulePrepared.resolved_module
+  (self : source.declared.state.ModulePrepared) :
+  Result (Option (Std.U64 × String × Std.U32))
+  := do
+  match self.kind with
+  | source.declared.state.ModuleKind.Module =>
+    let s := alloc.vec.Vec.deref self.staged.modules
+    let o ← core.slice.Slice.last s
+    match o with
+    | none => ok none
+    | some value =>
+      let s1 ← alloc.string.String.Insts.CoreCloneClone.clone value.name
+      ok (some (value.identity, s1, value.version))
+  | source.declared.state.ModuleKind.Import =>
+    let s := alloc.vec.Vec.deref self.staged.aliases
+    let o ← core.slice.Slice.last s
+    match o with
+    | none => ok none
+    | some value =>
+      let s1 := alloc.vec.Vec.deref self.staged.modules
+      let o1 ←
+        core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice
+          source.declared.Module) s1 value.module
+      match o1 with
+      | none => ok none
+      | some value1 =>
+        let s2 ← alloc.string.String.Insts.CoreCloneClone.clone value1.name
+        ok (some (value1.identity, s2, value1.version))
+  | source.declared.state.ModuleKind.Definition =>
+    let o ← core.option.Option.as_ref self.submission
+    match o with
+    | none => ok none
+    | some value =>
+      let (owner, is_invalid_owner) ←
+        source.declared.state.ModulePrepared.resolved_module_loop0 value none
+          0#usize
+      if is_invalid_owner
+      then ok none
+      else
+        let found ←
+          source.declared.state.ModulePrepared.resolved_module_loop1
+            self.staged owner 0#usize
+        match found with
+        | none => ok none
+        | some value1 =>
+          let s ← alloc.string.String.Insts.CoreCloneClone.clone value1.name
+          ok (some (value1.identity, s, value1.version))
+  | source.declared.state.ModuleKind.Expression =>
+    let o ← core.option.Option.as_ref self.submission
+    match o with
+    | none => ok none
+    | some value =>
+      let (owner, is_invalid_owner) ←
+        source.declared.state.ModulePrepared.resolved_module_loop2 value none
+          0#usize
+      if is_invalid_owner
+      then ok none
+      else
+        let found ←
+          source.declared.state.ModulePrepared.resolved_module_loop3
+            self.staged owner 0#usize
+        match found with
+        | none => ok none
+        | some value1 =>
+          let s ← alloc.string.String.Insts.CoreCloneClone.clone value1.name
+          ok (some (value1.identity, s, value1.version))
+
+/-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::binding_for_slot]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 161:8-166:9 -/
+@[rust_loop_body]
+def source.declared.state.ModulePrepared.binding_for_slot_loop.body
+  (self : source.declared.state.ModulePrepared) (slot : Std.U32)
+  («at» : Std.Usize) (matched_at : Option Std.Usize) :
+  Result (ControlFlow (Std.Usize × (Option Std.Usize)) ((alloc.vec.Vec
+    source.declared.BoundOperation) × (Option Std.Usize)))
+  := do
+  let i := alloc.vec.Vec.len self.staged.bindings
+  if «at» < i
+  then
+    let b := core.option.Option.is_none matched_at
+    if b
+    then
+      let bo ←
+        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+          source.declared.BoundOperation) self.staged.bindings «at»
+      let matched_at1 ←
+        if bo.adapter_slot = slot
+        then ok (some «at»)
+        else ok matched_at
+      let at1 ← «at» + 1#usize
+      ok (cont (at1, matched_at1))
+    else ok (done (self.staged.bindings, matched_at))
+  else ok (done (self.staged.bindings, matched_at))
+
+/-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::binding_for_slot]: loop 0:
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 161:8-166:9 -/
+@[rust_loop]
+def source.declared.state.ModulePrepared.binding_for_slot_loop
+  (self : source.declared.state.ModulePrepared) (slot : Std.U32)
+  («at» : Std.Usize) (matched_at : Option Std.Usize) :
+  Result ((alloc.vec.Vec source.declared.BoundOperation) × (Option Std.Usize))
+  := do
+  loop
+    (fun (at1, matched_at1) =>
+      source.declared.state.ModulePrepared.binding_for_slot_loop.body self slot
+      at1 matched_at1)
+    («at», matched_at)
+
+/-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::binding_for_slot]:
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 158:4-171:5 -/
+def source.declared.state.ModulePrepared.binding_for_slot
+  (self : source.declared.state.ModulePrepared) (slot : Std.U32) :
+  Result (Option source.declared.BoundOperation)
+  := do
+  let (v, matched_at) ←
+    source.declared.state.ModulePrepared.binding_for_slot_loop self slot
+      0#usize none
+  match matched_at with
+  | none => ok none
+  | some index1 =>
+    let s := alloc.vec.Vec.deref v
+    core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice
+      source.declared.BoundOperation) s index1
+
+/-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::linked_binding::{impl core::ops::function::FnOnce<(u32,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::linked_binding::{closure}<'_0>}::call_once]:
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 124:52-124:79 -/
+def
+  source.declared.state.ModulePrepared.linked_binding.closure.Insts.CoreOpsFunctionFnOnceTupleU32Bool.call_once
+  (c : source.declared.state.ModulePrepared.linked_binding.closure)
+  (tupled_args : Std.U32) :
+  Result Bool
+  := do
+  ok (tupled_args != c)
+
+/-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::linked_binding::{impl core::ops::function::FnOnce<(u32,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::linked_binding::{closure}<'_0>}]
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 124:52-124:79 -/
+@[reducible]
+def
+  source.declared.state.ModulePrepared.linked_binding.closure.Insts.CoreOpsFunctionFnOnceTupleU32Bool
+  : core.ops.function.FnOnce
+  source.declared.state.ModulePrepared.linked_binding.closure Std.U32 Bool := {
+  call_once :=
+    source.declared.state.ModulePrepared.linked_binding.closure.Insts.CoreOpsFunctionFnOnceTupleU32Bool.call_once
+}
+
+/-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::linked_binding]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 145:8-152:9
+    Visibility: public -/
+@[rust_loop_body]
+def source.declared.state.ModulePrepared.linked_binding_loop0.body
+  (ms : source.declared.state.ModuleSession) (module : String)
+  (version : Std.U32) (module_at : Std.Usize) :
+  Result (ControlFlow Std.Usize ((alloc.vec.Vec source.declared.BoundOperation)
+    × (alloc.vec.Vec source.declared.Module) × (alloc.vec.Vec
+    source.declared.Alias) × Std.U64 × source.Session × (Option
+    source.declared.Module)))
+  := do
+  let i := alloc.vec.Vec.len ms.modules
+  if module_at < i
+  then
+    let entry ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        source.declared.Module) ms.modules module_at
+    let b ←
+      alloc.string.String.Insts.CoreCmpPartialEqString.eq entry.name module
+    if b
+    then
+      if entry.version = version
+      then
+        ok (done (ms.bindings, ms.modules, ms.aliases, ms.generation,
+          ms.source, some entry))
+      else let module_at1 ← module_at + 1#usize
+           ok (cont module_at1)
+    else let module_at1 ← module_at + 1#usize
+         ok (cont module_at1)
+  else
+    ok (done (ms.bindings, ms.modules, ms.aliases, ms.generation, ms.source,
+      none))
+
+/-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::linked_binding]: loop 0:
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 145:8-152:9
+    Visibility: public -/
+@[rust_loop]
+def source.declared.state.ModulePrepared.linked_binding_loop0
+  (ms : source.declared.state.ModuleSession) (module : String)
+  (version : Std.U32) (module_at : Std.Usize) :
+  Result ((alloc.vec.Vec source.declared.BoundOperation) × (alloc.vec.Vec
+    source.declared.Module) × (alloc.vec.Vec source.declared.Alias) × Std.U64
+    × source.Session × (Option source.declared.Module))
+  := do
+  loop
+    (fun module_at1 =>
+      source.declared.state.ModulePrepared.linked_binding_loop0.body ms module
+      version module_at1)
+    module_at
+
+/-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::linked_binding]: loop body 2:
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 118:16-132:17
+    Visibility: public -/
+@[rust_loop_body]
+def source.declared.state.ModulePrepared.linked_binding_loop1_loop0.body
+  (e : noble_kernel.contracts.Env)
+  (definition : noble_kernel.execution.Definition) (selected : Option Std.U32)
+  (node_at : Std.Usize) :
+  Result (ControlFlow ((Option Std.U32) × Std.Usize) ((Option Std.U32) ×
+    Bool))
+  := do
+  let i := alloc.vec.Vec.len definition.body.candidate.nodes
+  if node_at < i
+  then
+    let node ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        noble_kernel.untrusted.Node) definition.body.candidate.nodes node_at
+    match node with
+    | noble_kernel.untrusted.Node.Literal _ _ =>
+      let node_at1 ← node_at + 1#usize
+      ok (cont (selected, node_at1))
+    | noble_kernel.untrusted.Node.Invocation «def» _ =>
+      let o ← noble_kernel.contracts.Env.kind e «def»
+      match o with
+      | none =>
+        let node_at1 ← node_at + 1#usize
+        ok (cont (selected, node_at1))
+      | some b =>
+        match b with
+        | noble_kernel.contracts.Behavior.DupBehavior =>
+          let node_at1 ← node_at + 1#usize
+          ok (cont (selected, node_at1))
+        | noble_kernel.contracts.Behavior.DropBehavior =>
+          let node_at1 ← node_at + 1#usize
+          ok (cont (selected, node_at1))
+        | noble_kernel.contracts.Behavior.SwapBehavior =>
+          let node_at1 ← node_at + 1#usize
+          ok (cont (selected, node_at1))
+        | noble_kernel.contracts.Behavior.DipBehavior =>
+          let node_at1 ← node_at + 1#usize
+          ok (cont (selected, node_at1))
+        | noble_kernel.contracts.Behavior.ArithBehavior =>
+          let node_at1 ← node_at + 1#usize
+          ok (cont (selected, node_at1))
+        | noble_kernel.contracts.Behavior.EqualsBehavior =>
+          let node_at1 ← node_at + 1#usize
+          ok (cont (selected, node_at1))
+        | noble_kernel.contracts.Behavior.QuoteBehavior =>
+          let node_at1 ← node_at + 1#usize
+          ok (cont (selected, node_at1))
+        | noble_kernel.contracts.Behavior.ComposeBehavior =>
+          let node_at1 ← node_at + 1#usize
+          ok (cont (selected, node_at1))
+        | noble_kernel.contracts.Behavior.RunBehavior =>
+          let node_at1 ← node_at + 1#usize
+          ok (cont (selected, node_at1))
+        | noble_kernel.contracts.Behavior.ReflectBehavior =>
+          let node_at1 ← node_at + 1#usize
+          ok (cont (selected, node_at1))
+        | noble_kernel.contracts.Behavior.UnitBehavior =>
+          let node_at1 ← node_at + 1#usize
+          ok (cont (selected, node_at1))
+        | noble_kernel.contracts.Behavior.PairBehavior =>
+          let node_at1 ← node_at + 1#usize
+          ok (cont (selected, node_at1))
+        | noble_kernel.contracts.Behavior.UnpairBehavior =>
+          let node_at1 ← node_at + 1#usize
+          ok (cont (selected, node_at1))
+        | noble_kernel.contracts.Behavior.InlBehavior =>
+          let node_at1 ← node_at + 1#usize
+          ok (cont (selected, node_at1))
+        | noble_kernel.contracts.Behavior.InrBehavior =>
+          let node_at1 ← node_at + 1#usize
+          ok (cont (selected, node_at1))
+        | noble_kernel.contracts.Behavior.CaseBehavior =>
+          let node_at1 ← node_at + 1#usize
+          ok (cont (selected, node_at1))
+        | noble_kernel.contracts.Behavior.IfBehavior =>
+          let node_at1 ← node_at + 1#usize
+          ok (cont (selected, node_at1))
+        | noble_kernel.contracts.Behavior.NilBehavior =>
+          let node_at1 ← node_at + 1#usize
+          ok (cont (selected, node_at1))
+        | noble_kernel.contracts.Behavior.ConsBehavior =>
+          let node_at1 ← node_at + 1#usize
+          ok (cont (selected, node_at1))
+        | noble_kernel.contracts.Behavior.ListCaseBehavior =>
+          let node_at1 ← node_at + 1#usize
+          ok (cont (selected, node_at1))
+        | noble_kernel.contracts.Behavior.TestEmitBehavior =>
+          let node_at1 ← node_at + 1#usize
+          ok (cont (selected, node_at1))
+        | noble_kernel.contracts.Behavior.BoundEmitBehavior slot =>
+          let b1 ←
+            core.option.Option.is_some_and
+              source.declared.state.ModulePrepared.linked_binding.closure.Insts.CoreOpsFunctionFnOnceTupleU32Bool
+              selected slot
+          if b1
+          then ok (done (selected, true))
+          else
+            let node_at1 ← node_at + 1#usize
+            ok (cont (some slot, node_at1))
+        | noble_kernel.contracts.Behavior.NominalNewBehavior _ =>
+          let node_at1 ← node_at + 1#usize
+          ok (cont (selected, node_at1))
+        | noble_kernel.contracts.Behavior.NominalIntoBehavior _ =>
+          let node_at1 ← node_at + 1#usize
+          ok (cont (selected, node_at1))
+        | noble_kernel.contracts.Behavior.NominalLeftBehavior _ =>
+          let node_at1 ← node_at + 1#usize
+          ok (cont (selected, node_at1))
+        | noble_kernel.contracts.Behavior.NominalRightBehavior _ =>
+          let node_at1 ← node_at + 1#usize
+          ok (cont (selected, node_at1))
+        | noble_kernel.contracts.Behavior.NominalMatchBehavior _ =>
+          let node_at1 ← node_at + 1#usize
+          ok (cont (selected, node_at1))
+        | noble_kernel.contracts.Behavior.NamedBehavior =>
+          let node_at1 ← node_at + 1#usize
+          ok (cont (selected, node_at1))
+    | noble_kernel.untrusted.Node.Quotation _ _ =>
+      let node_at1 ← node_at + 1#usize
+      ok (cont (selected, node_at1))
+  else ok (done (selected, false))
+
+/-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::linked_binding]: loop 2:
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 118:16-132:17
+    Visibility: public -/
+@[rust_loop]
+def source.declared.state.ModulePrepared.linked_binding_loop1_loop0
+  (e : noble_kernel.contracts.Env) (selected : Option Std.U32)
+  (definition : noble_kernel.execution.Definition) (node_at : Std.Usize) :
+  Result ((Option Std.U32) × Bool)
+  := do
+  loop
+    (fun (selected1, node_at1) =>
+      source.declared.state.ModulePrepared.linked_binding_loop1_loop0.body e
+      definition selected1 node_at1)
+    (selected, node_at)
+
+/-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::linked_binding]: loop body 1:
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 115:12-134:13
+    Visibility: public -/
+@[rust_loop_body]
+def source.declared.state.ModulePrepared.linked_binding_loop1.body
+  (submission : noble_kernel.execution.Submission) (selected : Option Std.U32)
+  (definition_at : Std.Usize) (is_ambiguous : Bool) :
+  Result (ControlFlow ((Option Std.U32) × Std.Usize × Bool) ((Option Std.U32)
+    × Bool))
+  := do
+  let i := alloc.vec.Vec.len submission.definitions
+  if definition_at < i
+  then
+    if is_ambiguous
+    then ok (done (selected, true))
+    else
+      let definition ←
+        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+          noble_kernel.execution.Definition) submission.definitions
+          definition_at
+      let (selected1, is_ambiguous1) ←
+        source.declared.state.ModulePrepared.linked_binding_loop1_loop0
+          submission.environment selected definition 0#usize
+      let definition_at1 ← definition_at + 1#usize
+      ok (cont (selected1, definition_at1, is_ambiguous1))
+  else ok (done (selected, is_ambiguous))
+
+/-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::linked_binding]: loop 1:
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 115:12-134:13
+    Visibility: public -/
+@[rust_loop]
+def source.declared.state.ModulePrepared.linked_binding_loop1
+  (submission : noble_kernel.execution.Submission) (selected : Option Std.U32)
+  (definition_at : Std.Usize) (is_ambiguous : Bool) :
+  Result ((Option Std.U32) × Bool)
+  := do
+  loop
+    (fun (selected1, definition_at1, is_ambiguous1) =>
+      source.declared.state.ModulePrepared.linked_binding_loop1.body submission
+      selected1 definition_at1 is_ambiguous1)
+    (selected, definition_at, is_ambiguous)
+
+/-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::linked_binding]: loop body 3:
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 145:8-152:9
+    Visibility: public -/
+@[rust_loop_body]
+def source.declared.state.ModulePrepared.linked_binding_loop2.body
+  (ms : source.declared.state.ModuleSession) (module : String)
+  (version : Std.U32) (module_at : Std.Usize) :
+  Result (ControlFlow Std.Usize ((alloc.vec.Vec source.declared.BoundOperation)
+    × (alloc.vec.Vec source.declared.Module) × (alloc.vec.Vec
+    source.declared.Alias) × Std.U64 × source.Session × (Option
+    source.declared.Module)))
+  := do
+  let i := alloc.vec.Vec.len ms.modules
+  if module_at < i
+  then
+    let entry ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        source.declared.Module) ms.modules module_at
+    let b ←
+      alloc.string.String.Insts.CoreCmpPartialEqString.eq entry.name module
+    if b
+    then
+      if entry.version = version
+      then
+        ok (done (ms.bindings, ms.modules, ms.aliases, ms.generation,
+          ms.source, some entry))
+      else let module_at1 ← module_at + 1#usize
+           ok (cont module_at1)
+    else let module_at1 ← module_at + 1#usize
+         ok (cont module_at1)
+  else
+    ok (done (ms.bindings, ms.modules, ms.aliases, ms.generation, ms.source,
+      none))
+
+/-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::linked_binding]: loop 3:
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 145:8-152:9
+    Visibility: public -/
+@[rust_loop]
+def source.declared.state.ModulePrepared.linked_binding_loop2
+  (ms : source.declared.state.ModuleSession) (module : String)
+  (version : Std.U32) (module_at : Std.Usize) :
+  Result ((alloc.vec.Vec source.declared.BoundOperation) × (alloc.vec.Vec
+    source.declared.Module) × (alloc.vec.Vec source.declared.Alias) × Std.U64
+    × source.Session × (Option source.declared.Module))
+  := do
+  loop
+    (fun module_at1 =>
+      source.declared.state.ModulePrepared.linked_binding_loop2.body ms module
+      version module_at1)
+    module_at
+
+/-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::linked_binding]:
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 110:4-156:5
+    Visibility: public -/
+def source.declared.state.ModulePrepared.linked_binding
+  (self : source.declared.state.ModulePrepared) :
+  Result (Option source.declared.BoundOperation)
+  := do
+  let o ← core.option.Option.as_ref self.submission
+  match o with
+  | none =>
+    let o1 ← source.declared.state.ModulePrepared.resolved_module self
+    match o1 with
+    | none => ok none
+    | some value =>
+      let (_, module, version) := value
+      let (v, v1, v2, i, s, linked) ←
+        source.declared.state.ModulePrepared.linked_binding_loop0 self.staged
+          module version 0#usize
+      match linked with
+      | none => ok none
+      | some value1 =>
+        match value1.adapter_slot with
+        | none => ok none
+        | some value2 =>
+          source.declared.state.ModulePrepared.binding_for_slot
+            {
+              self
+                with
+                staged :=
+                  {
+                    bindings := v,
+                    modules := v1,
+                    aliases := v2,
+                    generation := i,
+                    source := s
+                  }
+            } value2
+  | some submission =>
+    let (selected, is_ambiguous) ←
+      source.declared.state.ModulePrepared.linked_binding_loop1 submission none
+        0#usize false
+    if is_ambiguous
+    then ok none
+    else
+      match selected with
+      | none =>
+        let o1 ← source.declared.state.ModulePrepared.resolved_module self
+        match o1 with
+        | none => ok none
+        | some value =>
+          let (_, module, version) := value
+          let (v, v1, v2, i, s, linked) ←
+            source.declared.state.ModulePrepared.linked_binding_loop2
+              self.staged module version 0#usize
+          match linked with
+          | none => ok none
+          | some value1 =>
+            match value1.adapter_slot with
+            | none => ok none
+            | some value2 =>
+              source.declared.state.ModulePrepared.binding_for_slot
+                {
+                  self
+                    with
+                    staged :=
+                      {
+                        bindings := v,
+                        modules := v1,
+                        aliases := v2,
+                        generation := i,
+                        source := s
+                      }
+                } value2
+      | some slot =>
+        source.declared.state.ModulePrepared.binding_for_slot self slot
+
+/-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModuleSession}::new::{impl core::ops::function::FnOnce<(noble_kernel::shapes::Defect,), noble_contracts::source::Error> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModuleSession}::new::{closure}}::call_once]:
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 210:21-210:96 -/
+def
+  source.declared.state.ModuleSession.new.closure.Insts.CoreOpsFunctionFnOnceTupleDefectError.call_once
+  (c : source.declared.state.ModuleSession.new.closure)
+  (tupled_args : noble_kernel.shapes.Defect) :
+  Result source.Error
+  := do
+  source.declared.error source.Stage.Check (toStr "invalid kernel environment")
+
+/-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModuleSession}::new::{impl core::ops::function::FnOnce<(noble_kernel::shapes::Defect,), noble_contracts::source::Error> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModuleSession}::new::{closure}}]
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 210:21-210:96 -/
+@[reducible]
+def
+  source.declared.state.ModuleSession.new.closure.Insts.CoreOpsFunctionFnOnceTupleDefectError
+  : core.ops.function.FnOnce source.declared.state.ModuleSession.new.closure
+  noble_kernel.shapes.Defect source.Error := {
+  call_once :=
+    source.declared.state.ModuleSession.new.closure.Insts.CoreOpsFunctionFnOnceTupleDefectError.call_once
+}
+
+/-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModuleSession}::new]: loop body 1:
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 191:12-197:13
+    Visibility: public -/
+@[rust_loop_body]
+def source.declared.state.ModuleSession.new_loop0_loop0.body
+  (bindings : Slice source.declared.BoundOperation) (index1 : Std.Usize)
+  (prior : Std.Usize) :
+  Result (ControlFlow Std.Usize Bool)
+  := do
+  if prior < index1
+  then
+    let bo ← Slice.index_usize bindings index1
+    let bo1 ← Slice.index_usize bindings prior
+    let b ← source.declared.links.duplicate_binding bo bo1
+    if b
+    then ok (done true)
+    else let prior1 ← prior + 1#usize
+         ok (cont prior1)
+  else ok (done false)
+
+/-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModuleSession}::new]: loop 1:
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 191:12-197:13
+    Visibility: public -/
+@[rust_loop]
+def source.declared.state.ModuleSession.new_loop0_loop0
+  (bindings : Slice source.declared.BoundOperation) (index1 : Std.Usize)
+  (prior : Std.Usize) :
+  Result Bool
+  := do
+  loop
+    (fun prior1 => source.declared.state.ModuleSession.new_loop0_loop0.body
+      bindings index1 prior1)
+    prior
+
+/-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModuleSession}::new]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 185:8-202:9
+    Visibility: public -/
+@[rust_loop_body]
+def source.declared.state.ModuleSession.new_loop0.body
+  (bindings : Slice source.declared.BoundOperation) (index1 : Std.Usize) :
+  Result (ControlFlow Std.Usize Bool)
+  := do
+  let i := Slice.len bindings
+  if index1 < i
+  then
+    let bo ← Slice.index_usize bindings index1
+    let b ← source.declared.links.valid_binding bo
+    if b
+    then
+      let is_invalid_binding ←
+        source.declared.state.ModuleSession.new_loop0_loop0 bindings index1
+          0#usize
+      if is_invalid_binding
+      then ok (done true)
+      else let index2 ← index1 + 1#usize
+           ok (cont index2)
+    else ok (done true)
+  else ok (done false)
+
+/-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModuleSession}::new]: loop 0:
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 185:8-202:9
+    Visibility: public -/
+@[rust_loop]
+def source.declared.state.ModuleSession.new_loop0
+  (bindings : Slice source.declared.BoundOperation) (index1 : Std.Usize) :
+  Result Bool
+  := do
+  loop
+    (fun index2 => source.declared.state.ModuleSession.new_loop0.body bindings
+      index2)
+    index1
+
+/-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModuleSession}::new]:
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 176:4-225:5
+    Visibility: public -/
+def source.declared.state.ModuleSession.new
+  (bindings : Slice source.declared.BoundOperation) :
+  Result (core.result.Result source.declared.state.ModuleSession source.Error)
+  := do
+  let i := Slice.len bindings
+  if i > source.declared.MODULE_CAP
+  then
+    let e ←
+      source.declared.error source.Stage.Check (toStr
+        "too many bound operations")
+    ok (core.result.Result.Err e)
+  else
+    let is_invalid_binding ←
+      source.declared.state.ModuleSession.new_loop0 bindings 0#usize
+    if is_invalid_binding
+    then
+      let e ←
+        source.declared.error source.Stage.Link (toStr
+          "invalid, duplicate or mismatched adapter binding")
+      ok (core.result.Result.Err e)
+    else
+      let r ← noble_kernel.contracts.environment
+      let r1 ←
+        core.result.Result.map_err
+          source.declared.state.ModuleSession.new.closure.Insts.CoreOpsFunctionFnOnceTupleDefectError
+          r ()
+      match r1 with
+      | core.result.Result.Ok value =>
+        let source_session ← source.Session.without_test_hosts
+        let v ←
+          alloc.slice.Slice.to_vec
+            source.declared.BoundOperation.Insts.CoreCloneClone bindings
+        ok (core.result.Result.Ok
+          {
+            bindings := v,
+            modules := (alloc.vec.Vec.new source.declared.Module),
+            aliases := (alloc.vec.Vec.new source.declared.Alias),
+            generation := 0#u64,
+            source :=
+              {
+                source_session
+                  with
+                  declared :=
+                    (some
+                      {
+                        environment := { value with declared_modules := true },
+                        words := (alloc.vec.Vec.new (String × source.Target)),
+                        owner := none
+                      })
+              }
+          })
+      | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModuleSession}::generation]:
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 227:4-229:5
+    Visibility: public -/
+def source.declared.state.ModuleSession.impl.generation
+  (self : source.declared.state.ModuleSession) : Result Std.U64 := do
+  ok self.generation
+
+/-- Trait implementation: [noble_contracts::source::declared::{impl core::marker::StructuralPartialEq for noble_contracts::source::declared::BoundOperation}]
+    Source: 'crates/noble-contracts/src/source/declared.rs', lines 13:23-13:32 -/
+@[reducible]
+def source.declared.BoundOperation.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq source.declared.BoundOperation := {
+}
+
+/-- Trait implementation: [noble_contracts::source::declared::{impl core::marker::StructuralPartialEq for noble_contracts::source::declared::Export}]
+    Source: 'crates/noble-contracts/src/source/declared.rs', lines 32:23-32:32 -/
+@[reducible]
+def source.declared.Export.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq source.declared.Export := {
+}
+
+/-- Trait implementation: [noble_contracts::source::declared::{impl core::marker::StructuralPartialEq for noble_contracts::source::declared::Module}]
+    Source: 'crates/noble-contracts/src/source/declared.rs', lines 39:23-39:32 -/
+@[reducible]
+def source.declared.Module.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq source.declared.Module := {
+}
+
+/-- Trait implementation: [noble_contracts::source::declared::{impl core::marker::StructuralPartialEq for noble_contracts::source::declared::Alias}]
+    Source: 'crates/noble-contracts/src/source/declared.rs', lines 49:23-49:32 -/
+@[reducible]
+def source.declared.Alias.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq source.declared.Alias := {
+}
+
 /-- [noble_contracts::source::emission::{impl core::clone::Clone for noble_contracts::source::emission::Admission<'a>}::clone]:
-    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 9:9-9:14
+    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 11:9-11:14
     Visibility: public -/
 def source.emission.Admission.Insts.CoreCloneClone.clone
   (self : source.emission.Admission) : Result source.emission.Admission := do
   ok self
 
 /-- Trait implementation: [noble_contracts::source::emission::{impl core::clone::Clone for noble_contracts::source::emission::Admission<'a>}]
-    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 9:9-9:14 -/
+    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 11:9-11:14 -/
 @[reducible]
 def source.emission.Admission.Insts.CoreCloneClone : core.clone.Clone
   source.emission.Admission := {
@@ -41516,7 +55672,7 @@ def source.emission.Admission.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [noble_contracts::source::emission::{impl core::marker::Copy for noble_contracts::source::emission::Admission<'a>}]
-    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 9:16-9:20 -/
+    Source: 'crates/noble-contracts/src/source/emission/mod.rs', lines 11:16-11:20 -/
 @[reducible]
 def source.emission.Admission.Insts.CoreMarkerCopy : core.marker.Copy
   source.emission.Admission := {
@@ -41524,14 +55680,14 @@ def source.emission.Admission.Insts.CoreMarkerCopy : core.marker.Copy
 }
 
 /-- [noble_contracts::source::inference::{impl core::clone::Clone for noble_contracts::source::inference::Origin}::clone]:
-    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 42:9-42:14
+    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 43:9-43:14
     Visibility: public -/
 def source.inference.Origin.Insts.CoreCloneClone.clone
   (self : source.inference.Origin) : Result source.inference.Origin := do
   ok self
 
 /-- Trait implementation: [noble_contracts::source::inference::{impl core::clone::Clone for noble_contracts::source::inference::Origin}]
-    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 42:9-42:14 -/
+    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 43:9-43:14 -/
 @[reducible]
 def source.inference.Origin.Insts.CoreCloneClone : core.clone.Clone
   source.inference.Origin := {
@@ -41539,7 +55695,7 @@ def source.inference.Origin.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [noble_contracts::source::inference::{impl core::marker::Copy for noble_contracts::source::inference::Origin}]
-    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 42:16-42:20 -/
+    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 43:16-43:20 -/
 @[reducible]
 def source.inference.Origin.Insts.CoreMarkerCopy : core.marker.Copy
   source.inference.Origin := {
@@ -41547,14 +55703,14 @@ def source.inference.Origin.Insts.CoreMarkerCopy : core.marker.Copy
 }
 
 /-- [noble_contracts::source::inference::{impl core::clone::Clone for noble_contracts::source::inference::TreeKey}::clone]:
-    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 49:9-49:14
+    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 50:9-50:14
     Visibility: public -/
 def source.inference.TreeKey.Insts.CoreCloneClone.clone
   (self : source.inference.TreeKey) : Result source.inference.TreeKey := do
   ok self
 
 /-- Trait implementation: [noble_contracts::source::inference::{impl core::clone::Clone for noble_contracts::source::inference::TreeKey}]
-    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 49:9-49:14 -/
+    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 50:9-50:14 -/
 @[reducible]
 def source.inference.TreeKey.Insts.CoreCloneClone : core.clone.Clone
   source.inference.TreeKey := {
@@ -41562,7 +55718,7 @@ def source.inference.TreeKey.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [noble_contracts::source::inference::{impl core::marker::Copy for noble_contracts::source::inference::TreeKey}]
-    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 49:16-49:20 -/
+    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 50:16-50:20 -/
 @[reducible]
 def source.inference.TreeKey.Insts.CoreMarkerCopy : core.marker.Copy
   source.inference.TreeKey := {
@@ -41570,14 +55726,14 @@ def source.inference.TreeKey.Insts.CoreMarkerCopy : core.marker.Copy
 }
 
 /-- [noble_contracts::source::inference::{impl core::clone::Clone for noble_contracts::source::inference::BodyKey}::clone]:
-    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 55:9-55:14
+    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 56:9-56:14
     Visibility: public -/
 def source.inference.BodyKey.Insts.CoreCloneClone.clone
   (self : source.inference.BodyKey) : Result source.inference.BodyKey := do
   ok self
 
 /-- Trait implementation: [noble_contracts::source::inference::{impl core::clone::Clone for noble_contracts::source::inference::BodyKey}]
-    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 55:9-55:14 -/
+    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 56:9-56:14 -/
 @[reducible]
 def source.inference.BodyKey.Insts.CoreCloneClone : core.clone.Clone
   source.inference.BodyKey := {
@@ -41585,7 +55741,7 @@ def source.inference.BodyKey.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [noble_contracts::source::inference::{impl core::marker::Copy for noble_contracts::source::inference::BodyKey}]
-    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 55:16-55:20 -/
+    Source: 'crates/noble-contracts/src/source/inference/mod.rs', lines 56:16-56:20 -/
 @[reducible]
 def source.inference.BodyKey.Insts.CoreMarkerCopy : core.marker.Copy
   source.inference.BodyKey := {
@@ -41666,28 +55822,28 @@ def source.resolution.comparison.Entry.Insts.CoreMarkerCopy : core.marker.Copy
 }
 
 /-- [noble_contracts::source::{impl core::clone::Clone for noble_contracts::source::Stage}::clone]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 16:9-16:14
+    Source: 'crates/noble-contracts/src/source.rs', lines 19:9-19:14
     Visibility: public -/
 def source.Stage.Insts.CoreCloneClone.clone
   (self : source.Stage) : Result source.Stage := do
   ok self
 
 /-- Trait implementation: [noble_contracts::source::{impl core::clone::Clone for noble_contracts::source::Stage}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 16:9-16:14 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 19:9-19:14 -/
 @[reducible]
 def source.Stage.Insts.CoreCloneClone : core.clone.Clone source.Stage := {
   clone := source.Stage.Insts.CoreCloneClone.clone
 }
 
 /-- Trait implementation: [noble_contracts::source::{impl core::marker::Copy for noble_contracts::source::Stage}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 16:16-16:20 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 19:16-19:20 -/
 @[reducible]
 def source.Stage.Insts.CoreMarkerCopy : core.marker.Copy source.Stage := {
   cloneInst := source.Stage.Insts.CoreCloneClone
 }
 
 /-- [noble_contracts::source::{impl core::fmt::Debug for noble_contracts::source::Stage}::fmt]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 16:22-16:27
+    Source: 'crates/noble-contracts/src/source.rs', lines 19:22-19:27
     Visibility: public -/
 def source.Stage.Insts.CoreFmtDebug.fmt
   (self : source.Stage) (f : core.fmt.Formatter) :
@@ -41696,26 +55852,27 @@ def source.Stage.Insts.CoreFmtDebug.fmt
   match self with
   | source.Stage.Parse => core.fmt.Formatter.write_str f (toStr "Parse")
   | source.Stage.Resolve => core.fmt.Formatter.write_str f (toStr "Resolve")
+  | source.Stage.Link => core.fmt.Formatter.write_str f (toStr "Link")
   | source.Stage.Check => core.fmt.Formatter.write_str f (toStr "Check")
   | source.Stage.Acceptance =>
     core.fmt.Formatter.write_str f (toStr "Acceptance")
 
 /-- Trait implementation: [noble_contracts::source::{impl core::fmt::Debug for noble_contracts::source::Stage}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 16:22-16:27 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 19:22-19:27 -/
 @[reducible]
 def source.Stage.Insts.CoreFmtDebug : core.fmt.Debug source.Stage := {
   fmt := source.Stage.Insts.CoreFmtDebug.fmt
 }
 
 /-- Trait implementation: [noble_contracts::source::{impl core::marker::StructuralPartialEq for noble_contracts::source::Stage}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 16:29-16:38 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 19:29-19:38 -/
 @[reducible]
 def source.Stage.Insts.CoreMarkerStructuralPartialEq :
   core.marker.StructuralPartialEq source.Stage := {
 }
 
 /-- [noble_contracts::source::{impl core::cmp::PartialEq<noble_contracts::source::Stage> for noble_contracts::source::Stage}::eq]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 16:29-16:38
+    Source: 'crates/noble-contracts/src/source.rs', lines 19:29-19:38
     Visibility: public -/
 def source.Stage.Insts.CoreCmpPartialEqStage.eq
   (self : source.Stage) (other : source.Stage) : Result Bool := do
@@ -41724,7 +55881,7 @@ def source.Stage.Insts.CoreCmpPartialEqStage.eq
   ok (self1 = other1)
 
 /-- Trait implementation: [noble_contracts::source::{impl core::cmp::PartialEq<noble_contracts::source::Stage> for noble_contracts::source::Stage}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 16:29-16:38 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 19:29-19:38 -/
 @[reducible]
 impl_def source.Stage.Insts.CoreCmpPartialEqStage : core.cmp.PartialEq
   source.Stage source.Stage := {
@@ -41734,14 +55891,14 @@ impl_def source.Stage.Insts.CoreCmpPartialEqStage : core.cmp.PartialEq
 }
 
 /-- [noble_contracts::source::{impl core::cmp::Eq for noble_contracts::source::Stage}::assert_fields_are_eq]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 16:40-16:42
+    Source: 'crates/noble-contracts/src/source.rs', lines 19:40-19:42
     Visibility: public -/
 def source.Stage.Insts.CoreCmpEq.assert_fields_are_eq
   (self : source.Stage) : Result Unit := do
   ok ()
 
 /-- Trait implementation: [noble_contracts::source::{impl core::cmp::Eq for noble_contracts::source::Stage}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 16:40-16:42 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 19:40-19:42 -/
 @[reducible]
 def source.Stage.Insts.CoreCmpEq : core.cmp.Eq source.Stage := {
   partialEqInst := source.Stage.Insts.CoreCmpPartialEqStage
@@ -41749,7 +55906,7 @@ def source.Stage.Insts.CoreCmpEq : core.cmp.Eq source.Stage := {
 }
 
 /-- [noble_contracts::source::{impl core::clone::Clone for noble_contracts::source::Error}::clone]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 24:9-24:14
+    Source: 'crates/noble-contracts/src/source.rs', lines 28:9-28:14
     Visibility: public -/
 def source.Error.Insts.CoreCloneClone.clone
   (self : source.Error) : Result source.Error := do
@@ -41758,14 +55915,14 @@ def source.Error.Insts.CoreCloneClone.clone
   ok { stage := s, diagnostic := d }
 
 /-- Trait implementation: [noble_contracts::source::{impl core::clone::Clone for noble_contracts::source::Error}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 24:9-24:14 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 28:9-28:14 -/
 @[reducible]
 def source.Error.Insts.CoreCloneClone : core.clone.Clone source.Error := {
   clone := source.Error.Insts.CoreCloneClone.clone
 }
 
 /-- [noble_contracts::source::{impl core::fmt::Debug for noble_contracts::source::Error}::fmt]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 24:16-24:21
+    Source: 'crates/noble-contracts/src/source.rs', lines 28:16-28:21
     Visibility: public -/
 def source.Error.Insts.CoreFmtDebug.fmt
   (self : source.Error) (f : core.fmt.Formatter) :
@@ -41779,228 +55936,70 @@ def source.Error.Insts.CoreFmtDebug.fmt
     "stage") dyn (toStr "diagnostic") dyn1
 
 /-- Trait implementation: [noble_contracts::source::{impl core::fmt::Debug for noble_contracts::source::Error}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 24:16-24:21 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 28:16-28:21 -/
 @[reducible]
 def source.Error.Insts.CoreFmtDebug : core.fmt.Debug source.Error := {
   fmt := source.Error.Insts.CoreFmtDebug.fmt
 }
 
 /-- [noble_contracts::source::{noble_contracts::source::Error}::stage]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 31:4-33:5
+    Source: 'crates/noble-contracts/src/source.rs', lines 35:4-37:5
     Visibility: public -/
 def source.Error.impl.stage (self : source.Error) : Result source.Stage := do
   ok self.stage
 
-/-- [noble_contracts::source::{impl core::clone::Clone for noble_contracts::source::Target}::clone]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 42:9-42:14
-    Visibility: public -/
-def source.Target.Insts.CoreCloneClone.clone
-  (self : source.Target) : Result source.Target := do
-  ok self
-
 /-- Trait implementation: [noble_contracts::source::{impl core::clone::Clone for noble_contracts::source::Target}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 42:9-42:14 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 46:9-46:14 -/
 @[reducible]
 def source.Target.Insts.CoreCloneClone : core.clone.Clone source.Target := {
   clone := source.Target.Insts.CoreCloneClone.clone
 }
 
 /-- Trait implementation: [noble_contracts::source::{impl core::marker::Copy for noble_contracts::source::Target}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 42:16-42:20 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 46:16-46:20 -/
 @[reducible]
 def source.Target.Insts.CoreMarkerCopy : core.marker.Copy source.Target := {
   cloneInst := source.Target.Insts.CoreCloneClone
 }
 
-/-- [noble_contracts::source::{impl core::fmt::Debug for noble_contracts::source::Target}::fmt]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 42:22-42:27
-    Visibility: public -/
-def source.Target.Insts.CoreFmtDebug.fmt
-  (self : source.Target) (f : core.fmt.Formatter) :
-  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
-  := do
-  match self with
-  | source.Target.Builtin __self_0 =>
-    let __self_01 := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU32) __self_0
-    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Builtin") __self_01
-  | source.Target.Named __self_0 =>
-    let __self_01 := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU32) __self_0
-    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Named") __self_01
-
-/-- Trait implementation: [noble_contracts::source::{impl core::fmt::Debug for noble_contracts::source::Target}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 42:22-42:27 -/
+/-- Trait implementation: [noble_contracts::source::{impl core::marker::StructuralPartialEq for noble_contracts::source::Target}]
+    Source: 'crates/noble-contracts/src/source.rs', lines 46:29-46:38 -/
 @[reducible]
-def source.Target.Insts.CoreFmtDebug : core.fmt.Debug source.Target := {
-  fmt := source.Target.Insts.CoreFmtDebug.fmt
+def source.Target.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq source.Target := {
 }
 
-/-- [noble_contracts::source::{impl core::clone::Clone for noble_contracts::source::Kind}::clone]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 48:9-48:14
+/-- [noble_contracts::source::{impl core::cmp::Eq for noble_contracts::source::Target}::assert_fields_are_eq]:
+    Source: 'crates/noble-contracts/src/source.rs', lines 46:40-46:42
     Visibility: public -/
-def source.Kind.Insts.CoreCloneClone.clone
-  (self : source.Kind) : Result source.Kind := do
-  match self with
-  | source.Kind.Literal __self_0 =>
-    let l ← noble_kernel.untrusted.Lit.Insts.CoreCloneClone.clone __self_0
-    ok (source.Kind.Literal l)
-  | source.Kind.Text __self_0 =>
-    let v ← alloc.vec.CloneVec.clone core.clone.CloneU8 __self_0
-    ok (source.Kind.Text v)
-  | source.Kind.Word __self_0 =>
-    let v ← alloc.vec.CloneVec.clone core.clone.CloneU8 __self_0
-    ok (source.Kind.Word v)
-  | source.Kind.Call __self_0 =>
-    let t ← source.Target.Insts.CoreCloneClone.clone __self_0
-    ok (source.Kind.Call t)
-  | source.Kind.Quotation __self_0 =>
-    let v ← alloc.vec.CloneVec.clone core.clone.CloneU32 __self_0
-    ok (source.Kind.Quotation v)
+def source.Target.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : source.Target) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_contracts::source::{impl core::cmp::Eq for noble_contracts::source::Target}]
+    Source: 'crates/noble-contracts/src/source.rs', lines 46:40-46:42 -/
+@[reducible]
+def source.Target.Insts.CoreCmpEq : core.cmp.Eq source.Target := {
+  partialEqInst := source.Target.Insts.CoreCmpPartialEqTarget
+  assert_fields_are_eq := source.Target.Insts.CoreCmpEq.assert_fields_are_eq
+}
 
 /-- Trait implementation: [noble_contracts::source::{impl core::clone::Clone for noble_contracts::source::Kind}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 48:9-48:14 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 52:9-52:14 -/
 @[reducible]
 def source.Kind.Insts.CoreCloneClone : core.clone.Clone source.Kind := {
   clone := source.Kind.Insts.CoreCloneClone.clone
 }
 
-/-- [noble_contracts::source::{impl core::fmt::Debug for noble_contracts::source::Kind}::fmt]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 48:16-48:21
-    Visibility: public -/
-def source.Kind.Insts.CoreFmtDebug.fmt
-  (self : source.Kind) (f : core.fmt.Formatter) :
-  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
-  := do
-  match self with
-  | source.Kind.Literal __self_0 =>
-    let __self_01 :=
-      Dyn.mk _ (core.fmt.DebugShared
-        noble_kernel.untrusted.Lit.Insts.CoreFmtDebug) __self_0
-    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Literal") __self_01
-  | source.Kind.Text __self_0 =>
-    let __self_01 :=
-      Dyn.mk _ (core.fmt.DebugShared (core.fmt.DebugVec core.fmt.DebugU8))
-        __self_0
-    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Text") __self_01
-  | source.Kind.Word __self_0 =>
-    let __self_01 :=
-      Dyn.mk _ (core.fmt.DebugShared (core.fmt.DebugVec core.fmt.DebugU8))
-        __self_0
-    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Word") __self_01
-  | source.Kind.Call __self_0 =>
-    let __self_01 :=
-      Dyn.mk _ (core.fmt.DebugShared source.Target.Insts.CoreFmtDebug) __self_0
-    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Call") __self_01
-  | source.Kind.Quotation __self_0 =>
-    let __self_01 :=
-      Dyn.mk _ (core.fmt.DebugShared (core.fmt.DebugVec core.fmt.DebugU32))
-        __self_0
-    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Quotation")
-      __self_01
-
-/-- Trait implementation: [noble_contracts::source::{impl core::fmt::Debug for noble_contracts::source::Kind}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 48:16-48:21 -/
-@[reducible]
-def source.Kind.Insts.CoreFmtDebug : core.fmt.Debug source.Kind := {
-  fmt := source.Kind.Insts.CoreFmtDebug.fmt
-}
-
-/-- [noble_contracts::source::{impl core::clone::Clone for noble_contracts::source::Node}::clone]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 57:9-57:14
-    Visibility: public -/
-def source.Node.Insts.CoreCloneClone.clone
-  (self : source.Node) : Result source.Node := do
-  let k ← source.Kind.Insts.CoreCloneClone.clone self.kind
-  let s ← Span.Insts.CoreCloneClone.clone self.span
-  ok { kind := k, span := s }
-
-/-- Trait implementation: [noble_contracts::source::{impl core::clone::Clone for noble_contracts::source::Node}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 57:9-57:14 -/
-@[reducible]
-def source.Node.Insts.CoreCloneClone : core.clone.Clone source.Node := {
-  clone := source.Node.Insts.CoreCloneClone.clone
-}
-
-/-- [noble_contracts::source::{impl core::fmt::Debug for noble_contracts::source::Node}::fmt]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 57:16-57:21
-    Visibility: public -/
-def source.Node.Insts.CoreFmtDebug.fmt
-  (self : source.Node) (f : core.fmt.Formatter) :
-  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
-  := do
-  let dyn := Dyn.mk _ source.Kind.Insts.CoreFmtDebug self.kind
-  let dyn1 := Dyn.mk _ (core.fmt.DebugShared Span.Insts.CoreFmtDebug) self.span
-  core.fmt.Formatter.debug_struct_field2_finish f (toStr "Node") (toStr "kind")
-    dyn (toStr "span") dyn1
-
-/-- Trait implementation: [noble_contracts::source::{impl core::fmt::Debug for noble_contracts::source::Node}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 57:16-57:21 -/
-@[reducible]
-def source.Node.Insts.CoreFmtDebug : core.fmt.Debug source.Node := {
-  fmt := source.Node.Insts.CoreFmtDebug.fmt
-}
-
-/-- [noble_contracts::source::{impl core::clone::Clone for noble_contracts::source::Tree}::clone]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 63:9-63:14
-    Visibility: public -/
-def source.Tree.Insts.CoreCloneClone.clone
-  (self : source.Tree) : Result source.Tree := do
-  let v ←
-    alloc.vec.CloneVec.clone source.Node.Insts.CoreCloneClone self.nodes
-  let v1 ← alloc.vec.CloneVec.clone core.clone.CloneU32 self.body
-  let s ← Span.Insts.CoreCloneClone.clone self.span
-  ok { nodes := v, body := v1, span := s }
-
 /-- Trait implementation: [noble_contracts::source::{impl core::clone::Clone for noble_contracts::source::Tree}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 63:9-63:14 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 67:9-67:14 -/
 @[reducible]
 def source.Tree.Insts.CoreCloneClone : core.clone.Clone source.Tree := {
   clone := source.Tree.Insts.CoreCloneClone.clone
 }
 
-/-- [noble_contracts::source::{impl core::fmt::Debug for noble_contracts::source::Tree}::fmt]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 63:16-63:21
-    Visibility: public -/
-def source.Tree.Insts.CoreFmtDebug.fmt
-  (self : source.Tree) (f : core.fmt.Formatter) :
-  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
-  := do
-  let dyn :=
-    Dyn.mk _ (core.fmt.DebugVec source.Node.Insts.CoreFmtDebug) self.nodes
-  let dyn1 := Dyn.mk _ (core.fmt.DebugVec core.fmt.DebugU32) self.body
-  let dyn2 := Dyn.mk _ (core.fmt.DebugShared Span.Insts.CoreFmtDebug) self.span
-  core.fmt.Formatter.debug_struct_field3_finish f (toStr "Tree") (toStr
-    "nodes") dyn (toStr "body") dyn1 (toStr "span") dyn2
-
-/-- Trait implementation: [noble_contracts::source::{impl core::fmt::Debug for noble_contracts::source::Tree}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 63:16-63:21 -/
-@[reducible]
-def source.Tree.Insts.CoreFmtDebug : core.fmt.Debug source.Tree := {
-  fmt := source.Tree.Insts.CoreFmtDebug.fmt
-}
-
-/-- [noble_contracts::source::{impl core::fmt::Debug for noble_contracts::source::Named}::fmt]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 83:9-83:14
-    Visibility: public -/
-def source.Named.Insts.CoreFmtDebug.fmt
-  (self : source.Named) (f : core.fmt.Formatter) :
-  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
-  := do
-  let dyn := Dyn.mk _ alloc.string.String.Insts.CoreFmtDebug self.name
-  let dyn1 := Dyn.mk _ core.fmt.DebugU64 self.identity
-  let dyn2 :=
-    Dyn.mk _ (core.fmt.DebugShared source.Tree.Insts.CoreFmtDebug) self.tree
-  core.fmt.Formatter.debug_struct_field3_finish f (toStr "Named") (toStr
-    "name") dyn (toStr "identity") dyn1 (toStr "tree") dyn2
-
-/-- Trait implementation: [noble_contracts::source::{impl core::fmt::Debug for noble_contracts::source::Named}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 83:9-83:14 -/
-@[reducible]
-def source.Named.Insts.CoreFmtDebug : core.fmt.Debug source.Named := {
-  fmt := source.Named.Insts.CoreFmtDebug.fmt
-}
-
 /-- [noble_contracts::source::{impl core::fmt::Debug for noble_contracts::source::Prepared}::fmt]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 91:9-91:14
+    Source: 'crates/noble-contracts/src/source.rs', lines 96:9-96:14
     Visibility: public -/
 def source.Prepared.Insts.CoreFmtDebug.fmt
   (self : source.Prepared) (f : core.fmt.Formatter) :
@@ -42035,41 +56034,14 @@ def source.Prepared.Insts.CoreFmtDebug.fmt
   core.fmt.Formatter.debug_struct_fields_finish f (toStr "Prepared") s values
 
 /-- Trait implementation: [noble_contracts::source::{impl core::fmt::Debug for noble_contracts::source::Prepared}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 91:9-91:14 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 96:9-96:14 -/
 @[reducible]
 def source.Prepared.Insts.CoreFmtDebug : core.fmt.Debug source.Prepared := {
   fmt := source.Prepared.Insts.CoreFmtDebug.fmt
 }
 
-/-- [noble_contracts::source::{impl core::fmt::Debug for noble_contracts::source::Session}::fmt]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 118:9-118:14
-    Visibility: public -/
-def source.Session.Insts.CoreFmtDebug.fmt
-  (self : source.Session) (f : core.fmt.Formatter) :
-  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
-  := do
-  let dyn :=
-    Dyn.mk _ (core.fmt.DebugVec source.Named.Insts.CoreFmtDebug)
-      self.definitions
-  let dyn1 := Dyn.mk _ (core.fmt.DebugVec core.fmt.DebugU8) self.history
-  let dyn2 := Dyn.mk _ core.fmt.DebugU64 self.generation
-  let dyn3 := Dyn.mk _ core.fmt.DebugBool self.hosts
-  let dyn4 :=
-    Dyn.mk _ (core.fmt.DebugShared (core.option.Option.Insts.CoreFmtDebug
-      component.Bindings.Insts.CoreFmtDebug)) self.bindings
-  core.fmt.Formatter.debug_struct_field5_finish f (toStr "Session") (toStr
-    "definitions") dyn (toStr "history") dyn1 (toStr "generation") dyn2 (toStr
-    "hosts") dyn3 (toStr "bindings") dyn4
-
-/-- Trait implementation: [noble_contracts::source::{impl core::fmt::Debug for noble_contracts::source::Session}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 118:9-118:14 -/
-@[reducible]
-def source.Session.Insts.CoreFmtDebug : core.fmt.Debug source.Session := {
-  fmt := source.Session.Insts.CoreFmtDebug.fmt
-}
-
 /-- [noble_contracts::source::{noble_contracts::source::Session}::new]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 134:4-142:5
+    Source: 'crates/noble-contracts/src/source.rs', lines 140:4-149:5
     Visibility: public -/
 def source.Session.new : Result source.Session := do
   ok
@@ -42078,18 +56050,19 @@ def source.Session.new : Result source.Session := do
       history := (alloc.vec.Vec.new Std.U8),
       generation := 0#u64,
       hosts := true,
-      bindings := none
+      bindings := none,
+      declared := none
     }
 
 /-- [noble_contracts::source::{impl core::default::Default for noble_contracts::source::Session}::default]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 128:4-130:5
+    Source: 'crates/noble-contracts/src/source.rs', lines 134:4-136:5
     Visibility: public -/
 def source.Session.Insts.CoreDefaultDefault.default
   : Result source.Session := do
   source.Session.new
 
 /-- Trait implementation: [noble_contracts::source::{impl core::default::Default for noble_contracts::source::Session}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 127:0-131:1 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 133:0-137:1 -/
 @[reducible]
 def source.Session.Insts.CoreDefaultDefault : core.default.Default
   source.Session := {
@@ -42097,74 +56070,11 @@ def source.Session.Insts.CoreDefaultDefault : core.default.Default
 }
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::generation]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 152:4-154:5
+    Source: 'crates/noble-contracts/src/source.rs', lines 160:4-162:5
     Visibility: public -/
 def source.Session.impl.generation
   (self : source.Session) : Result Std.U64 := do
   ok self.generation
-
-/-- [noble_contracts::source::{noble_contracts::source::Session}::is_current_namespace]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 221:4-233:5 -/
-def source.Session.is_current_namespace
-  (self : source.Session) (prepared : source.Prepared) : Result Bool := do
-  if prepared.generation != self.generation
-  then ok false
-  else
-    if prepared.hosts != self.hosts
-    then ok false
-    else
-      let b ←
-        alloc.vec.partial_eq.PartialEqVec.ne core.cmp.PartialEqU8
-          prepared.history self.history
-      if b
-      then ok false
-      else
-        match self.bindings with
-        | none =>
-          match prepared.boundary with
-          | none => ok true
-          | some _ => ok false
-        | some bindings =>
-          match prepared.boundary with
-          | none => ok false
-          | some boundary =>
-            alloc.vec.partial_eq.PartialEqVec.eq core.cmp.PartialEqU8
-              bindings.key boundary
-
-/-- [noble_contracts::source::{noble_contracts::source::Session}::commit]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 189:4-215:5
-    Visibility: public -/
-def source.Session.commit
-  (self : source.Session) (prepared : source.Prepared) :
-  Result ((core.result.Result Unit source.Error) × source.Session)
-  := do
-  let b ← source.Session.is_current_namespace self prepared
-  if b
-  then
-    let o ← lift (U64.checked_add self.generation 1#u64)
-    match o with
-    | none =>
-      let d ←
-        source.exhausted { start := 0#u32, «end» := 0#u32 } (toStr
-          "session generation limit exceeded")
-      let e ← source.Error.at source.Stage.Acceptance d
-      ok (core.result.Result.Err e, self)
-    | some next =>
-      match prepared.definition with
-      | none => ok (core.result.Result.Ok (), { self with generation := next })
-      | some definition =>
-        let v ← alloc.vec.Vec.push self.definitions definition
-        let s := alloc.vec.Vec.deref prepared.addition
-        let v1 ←
-          alloc.vec.Vec.extend_from_slice core.clone.CloneU8 self.history s
-        ok (core.result.Result.Ok (),
-          { self with definitions := v, history := v1, generation := next })
-  else
-    let d ←
-      invalid { start := 0#u32, «end» := 0#u32 } (toStr
-        "stale preparation belongs to a different namespace snapshot")
-    let e ← source.Error.at source.Stage.Acceptance d
-    ok (core.result.Result.Err e, self)
 
 /-- [noble_contracts::syntax::typing::{impl core::clone::Clone for noble_contracts::syntax::typing::Context<'a>}::clone]:
     Source: 'crates/noble-contracts/src/syntax/typing.rs', lines 1:9-1:14

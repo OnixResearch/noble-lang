@@ -14,6 +14,7 @@ pub(super) fn classify(
     bytes: &[u8],
     span: crate::Span,
     meter: &mut crate::Meter,
+    declared: bool,
 ) -> Result<super::TokenKind, crate::Diagnostic> {
     if bytes == b"def" {
         return Ok(super::TokenKind::Def);
@@ -61,7 +62,7 @@ pub(super) fn classify(
             "token is neither a complete I64 literal nor an ASCII word",
         ));
     }
-    attempt!(word(bytes, span, meter));
+    attempt!(word(bytes, span, meter, declared));
     Ok(super::TokenKind::Word(bytes.to_vec()))
 }
 
@@ -73,6 +74,7 @@ fn word(
     bytes: &[u8],
     span: crate::Span,
     meter: &mut crate::Meter,
+    declared: bool,
 ) -> Result<(), crate::Diagnostic> {
     let mut at = 0usize;
     let mut failure = None;
@@ -81,7 +83,11 @@ fn word(
             failure = Some(problem);
             break;
         }
-        if !initial(byte) && !byte.is_ascii_digit() && byte != b'.' {
+        if !(initial(byte)
+            || byte.is_ascii_digit()
+            || byte == b'.'
+            || (declared && matches!(byte, b'@' | b',')))
+        {
             failure = Some(crate::invalid(
                 span,
                 "word contains a character outside the ASCII token grammar",

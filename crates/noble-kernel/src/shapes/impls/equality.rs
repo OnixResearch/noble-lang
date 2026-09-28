@@ -74,6 +74,10 @@ fn compare(
             crate::shapes::Pattern::Resource(first_kind),
             crate::shapes::Pattern::Resource(second_kind),
         ) => first_kind == second_kind,
+        (
+            crate::shapes::Pattern::Nominal(first_id, first_shape),
+            crate::shapes::Pattern::Nominal(second_id, second_shape),
+        ) => first_id == second_id && first_shape == second_shape,
         (crate::shapes::Pattern::Var(first_var), crate::shapes::Pattern::Var(second_var)) => {
             first_var == second_var
         }

@@ -222,6 +222,12 @@ pub enum Constraint {
     MalformedReference(NodeId),
     /// A definition identity is not in the environment.
     UnknownDefinition(crate::contracts::Definition),
+    /// A type or pattern descriptor differs from its declared canonical schema.
+    InvalidType,
+    /// A nominal operation's or bound adapter's contract was forged.
+    InvalidContract,
+    /// An invocation is private to a different owner or has no binding.
+    PrivateDefinition(crate::contracts::Definition),
     /// An instantiation witness refers to itself, directly or through a
     /// chain of reference bindings (B-CHECK-05).
     CyclicWitness,

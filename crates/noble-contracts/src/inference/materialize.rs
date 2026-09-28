@@ -174,6 +174,26 @@ impl super::Arena {
             super::Term::Resource(kind) => {
                 Material::Value(noble_kernel::types::Ty::Resource(kind), 1)
             }
+            super::Term::Nominal(id) => {
+                let mut shape = None;
+                let mut at = 0usize;
+                while at < self.nominals.len() {
+                    let (known, candidate) = &self.nominals[at];
+                    if *known == id {
+                        shape = Some(candidate.clone());
+                        break;
+                    }
+                    at += 1;
+                }
+                let shape = match shape {
+                    Some(shape) => shape,
+                    None => return Err(crate::internal(span)),
+                };
+                Material::Value(
+                    noble_kernel::types::Ty::Nominal(id, alloc::boxed::Box::new(shape)),
+                    1,
+                )
+            }
             super::Term::Empty => Material::Stack(alloc::vec::Vec::new(), 0),
             super::Term::Pair(a, b)
             | super::Term::Sum(a, b)

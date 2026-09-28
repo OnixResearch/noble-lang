@@ -34,14 +34,21 @@ impl Buffer {
     pub(crate) fn number(&mut self, mut value: u64) -> Result<(), crate::Diagnostic> {
         let mut digits = [0u8; 20];
         let mut start = digits.len();
+        let mut is_defective = false;
         loop {
             start = match start.checked_sub(1) {
                 Some(start) => start,
-                None => return Err(crate::Diagnostic::Defective),
+                None => {
+                    is_defective = true;
+                    break;
+                }
             };
             let digit = match u8::try_from(value % 10) {
                 Ok(digit) => digit,
-                Err(_) => return Err(crate::Diagnostic::Defective),
+                Err(_) => {
+                    is_defective = true;
+                    break;
+                }
             };
             digits[start] = b'0' + digit;
             value /= 10;
@@ -49,7 +56,11 @@ impl Buffer {
                 break;
             }
         }
-        self.append(&digits[start..])
+        if is_defective {
+            Err(crate::Diagnostic::Defective)
+        } else {
+            self.append(&digits[start..])
+        }
     }
 
     pub(crate) fn index(&mut self, value: usize) -> Result<(), crate::Diagnostic> {

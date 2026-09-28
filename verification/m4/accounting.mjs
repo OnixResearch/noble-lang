@@ -19,20 +19,26 @@ export function exactBytes(actual, expected, detail) {
   if (!Buffer.from(actual).equals(Buffer.from(expected))) fail('GENERATED', detail);
 }
 
-// The two independent discoveries of identical sources/tooling differed only in
-// four macro-expansion span end columns: zero width versus the full macro token.
+// Independent discoveries of identical sources/tooling differed only in these
+// seven macro-expansion span end columns: zero width versus the full macro token.
 // Bind the exact source site and one occurrence per site; do not erase ordinary
 // spans, the rest of these spans, any body, or any extraction option.
 const syntheticExpansionSites = {
   noble_kernel: [
     { file: 'crates/noble-kernel/src/lib.rs', crate: 'noble_kernel', line: 24, end: 19,
       source: '        match $step {' },
+    { file: '/rustc/library/core/src/macros/mod.rs', crate: 'core', line: 434, end: 25,
+      source: null },
+    { file: 'crates/noble-kernel/src/contracts/nominal/schemes.rs', crate: 'noble_kernel', line: 5, end: 24,
+      source: '        match $candidate {' },
   ],
   noble_contracts: [
     { file: 'crates/noble-contracts/src/lib.rs', crate: 'noble_contracts', line: 9, end: 19,
       source: '        match $step {' },
     { file: '/rustc/library/core/src/macros/mod.rs', crate: 'core', line: 434, end: 25,
       source: null },
+    { file: 'crates/noble-contracts/src/source/declared/state.rs', crate: 'noble_contracts', line: 7, end: 24,
+      source: '        match $candidate {' },
   ],
   noble_wasm: [
     { file: 'crates/noble-wasm/src/lib.rs', crate: 'noble_wasm', line: 13, end: 19,
@@ -103,21 +109,63 @@ export const inheritedOpaque = [
   'noble_kernel::types::impls::clone_stack',
   'noble_kernel::types::impls::debug_stack',
 ];
-// These source files contain the five inherited opaque helpers. Changing them
-// requires a separately reviewed model renewal, not widening this allowance.
-// MC2 adds inert Contract/Evidence/Certified leaf branches; shape equality was
-// also moved to its owned module. The five helper bodies remain byte-identical
-// to the M4 baseline; their copy/format abstraction is unchanged.
+// Reviewed renewal: the original complete-file hashes were
+// types/impls.rs=f834b36f972feb518dfcdaf9c9f4f05c2ecc787a18f937a7f2e6d1a0898f0c3e
+// shapes/impls.rs=c7aec68c0201b14d978d4d3b7b9906794176088e0b3b3ca8912090ad1a505203.
+// Finite nominal Clone/Debug branches and one nominal equality arm were added.
+// The latest renewal directly clones and formats ordered nominal payloads and
+// enqueues their structural equality pairs rather than introducing mutual
+// trait-implementation recursion through NominalShape's derived methods.
+// Pattern::Nominal's new formatting arm writes the same default debug fields
+// directly rather than creating a borrowed debug-tuple builder.
+// All five inherited opaque helper implementations below retain their
+// independently compared, separately pinned original body bytes.
+// Cloning a finite stack still preserves order and invokes each element's
+// structural Clone; nominal identity and shape are copied, not re-resolved.
+// Formatting remains observational and propagates formatter failure; pretty
+// layout and allocator success remain outside the extracted claim.
+// Selected rustfmt and the 300-line cap renew the complete-file source pin;
+// both inherited opaque helper bodies retain their exact reviewed hashes.
 export const inheritedOpaqueSources = {
-  'crates/noble-kernel/src/types/impls.rs': 'f834b36f972feb518dfcdaf9c9f4f05c2ecc787a18f937a7f2e6d1a0898f0c3e',
-  'crates/noble-kernel/src/shapes/impls.rs': 'c7aec68c0201b14d978d4d3b7b9906794176088e0b3b3ca8912090ad1a505203',
+  'crates/noble-kernel/src/types/impls.rs': '27f120e09d1931e4c52919988316e2324e33bc9a1c707ca02478178c43d30f7d',
+  'crates/noble-kernel/src/shapes/impls.rs': '47b18106144c0004abec92a0fb3ef3364797bee3b57e774e39e6a2b55970b30a',
 };
+export const inheritedOpaqueBodies = {
+  'crates/noble-kernel/src/types/impls.rs': {
+    clone_stack: '5ae77f5a6d771ef94aec049717bb2f6a8d350dcb258ac22e28ec604d58d3f6e7',
+    debug_stack: '631e7abdd5d4a1210a72d195f021f3de8f5b99fb41e5e4def25b29073124f04e',
+  },
+  'crates/noble-kernel/src/shapes/impls.rs': {
+    clone_parts: '934493f41ceb76c80f78b1800bf9a38b3c619d0ba0217c54db9e7e19142beb26',
+    debug_parts: 'c93c255598269fbc11e74206efca41ac2729955b8c948ec5ae7a481f2e942e9d',
+    debug_slots: '8295e5745e323de390d59d074d1e348c2345111badc8cf82d1adcb73c8bb9527',
+  },
+};
+
+function opaqueBody(source, name) {
+  const declaration = new RegExp(`(?:^|\\n)fn ${name}\\(`, 'g');
+  const matches = [...source.matchAll(declaration)];
+  if (matches.length !== 1) fail('OPAQUE-MODEL', `${name}: missing or duplicate helper`);
+  const start = matches[0].index + (matches[0][0].startsWith('\n') ? 1 : 0);
+  const opening = source.indexOf('{', start);
+  if (opening < 0) fail('OPAQUE-MODEL', `${name}: missing function body`);
+  let depth = 0;
+  for (let at = opening; at < source.length; at++) {
+    if (source[at] === '{') depth++;
+    else if (source[at] === '}' && --depth === 0) return source.slice(start, at + 1);
+  }
+  fail('OPAQUE-MODEL', `${name}: unterminated function body`);
+}
 const kinds = { functions: 'fun_decls', types: 'type_decls', globals: 'global_decls',
   trait_decls: 'trait_decls', trait_impls: 'trait_impls' };
 
 export function sourcePolicy(sourceFiles, readSource) {
   for (const [file, expected] of Object.entries(inheritedOpaqueSources)) {
     equal(sourceFiles[file], expected, 'OPAQUE-SOURCE', file);
+    const source = readSource(file);
+    for (const [name, reviewed] of Object.entries(inheritedOpaqueBodies[file])) {
+      equal(sha(opaqueBody(source, name)), reviewed, 'OPAQUE-MODEL', `${file}::${name}`);
+    }
   }
   for (const file of Object.keys(sourceFiles).filter(file =>
     lanes.some(lane => file.startsWith(`crates/${lane.package}/src/`)) && file.endsWith('.rs'))) {
@@ -132,7 +180,10 @@ export function sourcePolicy(sourceFiles, readSource) {
     for (const match of text.matchAll(/#\[\s*(cfg(?:_attr)?)\s*\(([^\n]*)/g)) {
       const allowed = match[1] === 'cfg' && inheritedOpaqueSources[file] && match[2] === 'test)]' ||
         match[1] === 'cfg_attr' && ['crates/noble-kernel/src/words.rs',
-          'crates/noble-kernel/src/untrusted.rs'].includes(file) && match[2] === 'test, derive(PartialEq, Eq))]';
+          'crates/noble-kernel/src/untrusted.rs'].includes(file) && match[2] === 'test, derive(PartialEq, Eq))]' ||
+        match[1] === 'cfg_attr' && file === 'crates/noble-kernel/src/types.rs' &&
+          match[2] === 'test, derive(Eq))]' &&
+          text.slice(match.index + match[0].length).startsWith('\npub enum NominalShape {');
       if (!allowed) fail('SOURCE-FILTER', `${file}: unreviewed conditional source selection`);
     }
   }

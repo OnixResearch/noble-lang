@@ -71,7 +71,18 @@ function readValue(engine, runtime, kind, value, depth) {
     }
     if (kind === 10) return { type: 'Syntax', ...readRecipe(engine, runtime, runtime.cell_a(handle), depth + 1) };
     if (kind === 11) return { type: 'Text', value: readText(engine, runtime.cell_x(handle), runtime.cell_y(handle)) };
-    if (kind === 12 || kind === 13) return { type: 'Sum', variant: kind === 12 ? 'left' : 'right', value: readBoxed(engine, runtime, runtime.cell_a(handle), depth + 1) };
+    if (kind === 12 || kind === 13) {
+      const marker = runtime.cell_w(handle);
+      if (marker === 0) return { type: 'Sum', variant: kind === 12 ? 'left' : 'right',
+        value: readBoxed(engine, runtime, runtime.cell_a(handle), depth + 1) };
+      if (engine.profile !== 'Declared-Modules-v1') fail('nominal value is outside Core-Bootstrap');
+      if (marker !== 1 && marker !== 2) fail('invalid nominal representation marker');
+      if (marker === 1 && kind !== 12) fail('opaque wrapper uses an invalid sum tag');
+      const module = (BigInt(runtime.cell_y(handle) >>> 0) << 32n) | BigInt(runtime.cell_x(handle) >>> 0);
+      return { type: 'Nominal', module: String(module), ordinal: runtime.cell_z(handle),
+        shape: marker === 1 ? 'opaque' : 'variant', variant: marker === 1 ? null : kind === 12 ? 'left' : 'right',
+        value: readBoxed(engine, runtime, runtime.cell_a(handle), depth + 1) };
+    }
     if (kind === 14) return { type: 'Contract', statement: String(BigInt.asUintN(64, runtime.cell_payload(handle))),
       index: runtime.cell_x(handle), claim_kind: runtime.cell_y(handle), revision: runtime.cell_z(handle) };
     if (kind === 15) return { type: 'Evidence', index: Number(runtime.cell_payload(handle)),
@@ -126,12 +137,24 @@ function readRecipe(engine, runtime, root, depth) {
         const program = readBoxed(engine, runtime, child, depth + 1);
         if (program.type !== 'Program') fail('quotation recipe has no program');
         result.push({ quotation: program.recipe, interface: program.interface, witnesses: program.witnesses });
-      } else if (atom === 8) result.push({ literal: {
+      }
+      else if (atom === 8) result.push({ literal: {
         ...readBoxed(engine, runtime, child, depth + 1),
         schema: readSignature(engine, runtime, runtime.cell_y(handle)),
       } });
+      else if (atom >= 26 && atom <= 31 && engine.profile !== 'Declared-Modules-v1') {
+        fail('nominal or bound operation recipe is outside Core-Bootstrap');
+      }
+      else if (atom >= 26 && atom <= 30) result.push({ invoke: {
+        nominal_module: String(BigInt.asUintN(64, value)),
+        nominal_ordinal: runtime.cell_n(handle),
+        operation: ['new', 'into', 'left', 'right', 'match'][atom - 26],
+      } });
+      else if (atom === 31) result.push({ invoke: {
+        operation: 'test.emit', adapter_slot: integer(Number(value), 63, 'adapter slot'),
+      } });
       else fail(`unsupported recipe atom: ${atom}`);
-      if (atom === 2 || atom === 15) {
+      if (atom === 2 || atom === 15 || atom >= 26 && atom <= 31) {
         witnesses.push({
           node: result.length - 1,
           stack_in: readSignature(engine, runtime, runtime.cell_y(handle)),

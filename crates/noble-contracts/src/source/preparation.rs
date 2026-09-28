@@ -11,7 +11,12 @@ impl super::Session {
         limits: crate::Limits,
     ) -> Result<super::Prepared, super::Error> {
         let mut meter = crate::Meter::new(limits);
-        let (mut tree, name) = match super::parsing::parse(source_bytes, &mut meter) {
+        let parsed = if self.declared.is_some() {
+            super::parsing::parse_declared(source_bytes, &mut meter)
+        } else {
+            super::parsing::parse(source_bytes, &mut meter)
+        };
+        let (mut tree, name) = match parsed {
             Ok(parsed) => parsed,
             Err(error) => return Err(super::Error::at(super::Stage::Parse, error)),
         };
@@ -85,6 +90,9 @@ impl super::Session {
         reason = "Owner: noble-maintainers; preparation owns a runtime clone of the retained binding environment or builds the checked bootstrap environment, both allocating operations."
     )]
     fn environment(&self) -> Result<noble_kernel::contracts::Env, crate::Diagnostic> {
+        if let Some(declared) = &self.declared {
+            return Ok(declared.environment.clone());
+        }
         match &self.bindings {
             Some(bindings) => Ok(bindings.environment.clone()),
             None => super::environment(),
@@ -122,7 +130,9 @@ fn declaration(
 ) -> Result<(super::Named, alloc::vec::Vec<u8>), crate::Diagnostic> {
     // Inference has solved the open graph, including every dependency body.
     // No Unit instance decides generic validity.
-    let identity = attempt!(super::resolution::identity(&tree, session, meter));
+    let identity = attempt!(super::resolution::comparison::identity(
+        &tree, session, meter
+    ));
     let count = attempt!(crate::index(source_bytes.len(), tree.span));
     attempt!(meter.charge(count.saturating_add(4), tree.span));
     let mut addition = alloc::vec::Vec::with_capacity(source_bytes.len().saturating_add(4));
@@ -132,6 +142,7 @@ fn declaration(
         super::Named {
             name,
             identity,
+            owner: session.declared.as_ref().and_then(|context| context.owner),
             tree,
         },
         addition,

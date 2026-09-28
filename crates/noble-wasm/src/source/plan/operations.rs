@@ -3,6 +3,9 @@
     reason = "Owner: noble-maintainers; lowering mutates only the unpublished prospective compiler, preparation-owned meter and fresh plan buffers; caller-owned submissions and checked interfaces remain immutable."
 )]
 
+mod nominal;
+mod quotation;
+
 #[derive(Clone, Copy)]
 pub(super) struct Input<'a> {
     pub(super) submission: &'a noble_kernel::execution::Submission,
@@ -126,21 +129,17 @@ fn lower_node(
                 None => return Err(crate::Diagnostic::Defective),
             }
         }
-        noble_kernel::untrusted::Node::Invocation { def, .. } if def.0 == 8 => {
-            attempt!(quote(interface, compiler, work))
-        }
-        noble_kernel::untrusted::Node::Invocation { def, .. } if def.0 < 24 => {
-            super::Action::Word(def.0)
-        }
         noble_kernel::untrusted::Node::Invocation { def, .. } => {
-            let target = attempt!(super::super::admission::definition_index(
-                input.submission,
-                *def
-            ));
-            super::Action::Call(
-                input.arenas[target].root,
-                input.submission.definitions[target].identity,
-            )
+            attempt!(input.lower_invocation(
+                *def,
+                nominal::Output {
+                    compiler,
+                    layout,
+                    work,
+                    env: &input.submission.environment,
+                    interface,
+                },
+            ))
         }
     };
     Ok(super::Operation {
@@ -151,33 +150,90 @@ fn lower_node(
     })
 }
 
-#[expect(
-    tigerstyle::assertion_density,
-    tigerstyle::missing_const_fn,
-    reason = "Owner: noble-maintainers; quotation lowering interns the captured witness and exact Program signatures in the allocating prospective pool; missing operands, effects and metering failures return diagnostics instead of assertions."
-)]
-fn quote(
-    interface: &noble_kernel::untrusted::Interface,
-    compiler: &mut super::super::Compiler,
-    work: &mut super::super::Work,
-) -> Result<super::Action, crate::Diagnostic> {
-    let captured = match interface.stack_in.last() {
-        Some(value) => value,
-        None => return Err(crate::Diagnostic::Invalid),
-    };
-    let witness = attempt!(compiler.signature(core::slice::from_ref(captured), work));
-    match interface.stack_out.last() {
-        Some(noble_kernel::types::Ty::Program(input, output, effects)) => {
-            if !effects.is_empty() {
-                return Err(crate::Diagnostic::Invalid);
-            }
-            Ok(super::Action::Quote(
-                attempt!(compiler.signature(input, work)),
-                attempt!(compiler.signature(output, work)),
-                witness,
-            ))
+impl Input<'_> {
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-maintainers; private invocation dispatch reads the dynamic definition environment and may intern quotation signatures or nominal witnesses into the mutable prospective compiler, so it cannot be const."
+    )]
+    fn lower_invocation(
+        self,
+        def: noble_kernel::contracts::Definition,
+        output: nominal::Output<'_>,
+    ) -> Result<super::Action, crate::Diagnostic> {
+        if def.0 == 8 {
+            return quotation::lower(output.interface, output.compiler, output.work);
         }
-        Some(_) | None => Err(crate::Diagnostic::Invalid),
+        if def.0 < super::super::builtin_count(&self.submission.environment) {
+            return Ok(super::Action::Word(def.0));
+        }
+        match self.submission.environment.kind(def) {
+            Some(noble_kernel::contracts::Behavior::Named) => self.named_call(def),
+            Some(kind) => match kind {
+                noble_kernel::contracts::Behavior::BoundEmit(slot) => output.bound_action(slot),
+                noble_kernel::contracts::Behavior::NominalNew(id) => output.new_action(id),
+                noble_kernel::contracts::Behavior::NominalInto(id) => {
+                    let ty = attempt!(nominal::Output::checked_input(
+                        output.env,
+                        output.interface,
+                        id,
+                        1,
+                    ));
+                    output.into_action(id, ty)
+                }
+                noble_kernel::contracts::Behavior::NominalLeft(id) => {
+                    output.variant_action(true, id)
+                }
+                noble_kernel::contracts::Behavior::NominalRight(id) => {
+                    output.variant_action(false, id)
+                }
+                noble_kernel::contracts::Behavior::NominalMatch(id) => {
+                    let ty = attempt!(nominal::Output::checked_input(
+                        output.env,
+                        output.interface,
+                        id,
+                        3,
+                    ));
+                    output.match_action(id, ty)
+                }
+                noble_kernel::contracts::Behavior::Dup
+                | noble_kernel::contracts::Behavior::Drop
+                | noble_kernel::contracts::Behavior::Swap
+                | noble_kernel::contracts::Behavior::Dip
+                | noble_kernel::contracts::Behavior::Arith
+                | noble_kernel::contracts::Behavior::Equals
+                | noble_kernel::contracts::Behavior::Quote
+                | noble_kernel::contracts::Behavior::Compose
+                | noble_kernel::contracts::Behavior::Run
+                | noble_kernel::contracts::Behavior::Reflect
+                | noble_kernel::contracts::Behavior::Unit
+                | noble_kernel::contracts::Behavior::Pair
+                | noble_kernel::contracts::Behavior::Unpair
+                | noble_kernel::contracts::Behavior::Inl
+                | noble_kernel::contracts::Behavior::Inr
+                | noble_kernel::contracts::Behavior::Case
+                | noble_kernel::contracts::Behavior::If
+                | noble_kernel::contracts::Behavior::Nil
+                | noble_kernel::contracts::Behavior::Cons
+                | noble_kernel::contracts::Behavior::ListCase
+                | noble_kernel::contracts::Behavior::TestEmit
+                | noble_kernel::contracts::Behavior::Named => Err(crate::Diagnostic::Invalid),
+            },
+            None => Err(crate::Diagnostic::Invalid),
+        }
+    }
+
+    fn named_call(
+        self,
+        def: noble_kernel::contracts::Definition,
+    ) -> Result<super::Action, crate::Diagnostic> {
+        let target = attempt!(super::super::admission::definition_index(
+            self.submission,
+            def
+        ));
+        Ok(super::Action::Call(
+            self.arenas[target].root,
+            self.submission.definitions[target].identity,
+        ))
     }
 }
 

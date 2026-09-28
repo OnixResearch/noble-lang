@@ -229,7 +229,6 @@ impl World {
 pub(crate) struct Bindings {
     pub(crate) environment: noble_kernel::contracts::Env,
     pub(crate) words: alloc::vec::Vec<(alloc::string::String, noble_kernel::contracts::Definition)>,
-    pub(crate) resources: alloc::vec::Vec<noble_kernel::types::ResourceKind>,
     pub(crate) effects: u64,
     pub(crate) key: alloc::vec::Vec<u8>,
 }

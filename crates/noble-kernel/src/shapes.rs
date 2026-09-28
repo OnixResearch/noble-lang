@@ -54,6 +54,11 @@ pub enum Pattern {
     ),
     /// An opaque resource kind.
     Resource(crate::types::ResourceKind),
+    /// A concrete resolved nominal descriptor (no type variables inside).
+    Nominal(
+        crate::types::NominalTypeId,
+        alloc::boxed::Box<crate::types::NominalShape>,
+    ),
     /// A value-type variable.
     Var(crate::words::Variable),
     /// A whole-stack variable standing for zero or more stack positions.
@@ -237,7 +242,8 @@ fn require_pattern(
         | Pattern::Contract
         | Pattern::Evidence
         | Pattern::Certified
-        | Pattern::Resource(_) => Ok(work),
+        | Pattern::Resource(_)
+        | Pattern::Nominal(_, _) => Ok(work),
     }
 }
 

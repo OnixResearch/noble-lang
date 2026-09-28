@@ -1,0 +1,11 @@
+{
+  "schema": "noble-declared-module-abi/v1",
+  "base_profile": "Core-Bootstrap",
+  "profile": "Declared-Modules-v1",
+  "host_functions": [
+    {"name":"test_emit_bound","params":["i32","i32","i32"],"result":"i32","contract":"Checked module adapter slot, UTF-8 memory offset and length. The host counts every invocation and retains a bounded adapter/effect request trace. At trace exhaustion the attempted request is denied before protected work and the receipt explicitly reports incomplete trace and unrecorded effect count. Denial returns nonzero. No re-entry."}
+  ],
+  "nominal_cells": "Kinds 12/13 retain structural Sum when w=0. In this opt-in profile kind12/w=1 is an opaque wrapper and kind12/13/w=2 is a two-arm variant. a=boxed payload; x/y=low/high u32 of resolved module identity; z=declaration ordinal. Checked emitted operations validate marker, tag and identity before elimination.",
+  "nominal_recipe_atoms": {"26":"opaque new","27":"opaque into","28":"variant left","29":"variant right","30":"exhaustive match","31":"bound test.emit adapter slot"},
+  "nominal_recipe_witness": "Atoms 26..30 retain module u64 in payload and declaration ordinal in n; atom 31 retains adapter slot in payload. All retain ordered input/output signatures in y/z and effect bitmask in w."
+}

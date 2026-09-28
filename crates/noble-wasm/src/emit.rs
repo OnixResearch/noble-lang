@@ -88,23 +88,52 @@ fn program_globals(
     plan: &crate::lowering::Plan,
 ) -> Result<(), crate::Diagnostic> {
     let mut index = 0usize;
+    let mut failure = None;
     while index < plan.programs.len() {
-        attempt!(out.append(b"(global "));
-        attempt!(out.program_global(plan.programs[index].owner));
-        attempt!(out.append(b" (mut i32) (i32.const 0))\n"));
-        index += 1;
+        match write_program_global(out, plan.programs[index].owner) {
+            Ok(()) => index += 1,
+            Err(problem) => {
+                failure = Some(problem);
+                break;
+            }
+        }
     }
-    Ok(())
+    match failure {
+        Some(problem) => Err(problem),
+        None => Ok(()),
+    }
+}
+
+fn write_program_global(
+    out: &mut crate::output::Buffer,
+    owner: Option<u32>,
+) -> Result<(), crate::Diagnostic> {
+    attempt!(out.append(b"(global "));
+    attempt!(out.program_global(owner));
+    out.append(b" (mut i32) (i32.const 0))\n")
 }
 
 fn table_entries(out: &mut crate::output::Buffer, count: u32) -> Result<(), crate::Diagnostic> {
     let mut function = 3u32;
+    let mut failure = None;
     while function < count {
-        attempt!(out.append(b" $f"));
-        attempt!(out.number(u64::from(function)));
-        function += 1;
+        match table_entry(out, function) {
+            Ok(()) => function += 1,
+            Err(problem) => {
+                failure = Some(problem);
+                break;
+            }
+        }
+    }
+    if let Some(problem) = failure {
+        return Err(problem);
     }
     out.append(b")\n")
+}
+
+fn table_entry(out: &mut crate::output::Buffer, function: u32) -> Result<(), crate::Diagnostic> {
+    attempt!(out.append(b" $f"));
+    out.number(u64::from(function))
 }
 
 fn functions(
@@ -113,11 +142,20 @@ fn functions(
     plan: &crate::lowering::Plan,
 ) -> Result<(), crate::Diagnostic> {
     let mut index = 0usize;
+    let mut failure = None;
     while index < plan.programs.len() {
-        attempt!(body_functions(out, candidate, plan, &plan.programs[index]));
-        index += 1;
+        match body_functions(out, candidate, plan, &plan.programs[index]) {
+            Ok(()) => index += 1,
+            Err(problem) => {
+                failure = Some(problem);
+                break;
+            }
+        }
     }
-    Ok(())
+    match failure {
+        Some(problem) => Err(problem),
+        None => Ok(()),
+    }
 }
 
 #[expect(

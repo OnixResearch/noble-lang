@@ -80,9 +80,8 @@ fn empty_nodes(node_count: usize) -> alloc::vec::Vec<Option<Operation>> {
 }
 
 #[expect(
-    tigerstyle::assertion_density,
     tigerstyle::mutating_input_in_pure,
-    reason = "Owner: noble-maintainers; invalid derivation indices and unsupported nodes return diagnostics; only the freshly owned private signature pool is mutated, never the borrowed candidate or checked result."
+    reason = "Owner: noble-maintainers; only the freshly owned private signature pool is mutated, never the borrowed candidate or checked result."
 )]
 fn lower_nodes(
     candidate: &noble_kernel::untrusted::Candidate,
@@ -91,24 +90,50 @@ fn lower_nodes(
 ) -> Result<alloc::vec::Vec<Option<Operation>>, crate::Diagnostic> {
     let mut nodes = empty_nodes(candidate.nodes.len());
     let mut index = 0usize;
+    let mut failure = None;
     while index < checked.derivations.len() {
-        let derivation = &checked.derivations[index];
-        let node_index = attempt!(crate::admission::index(derivation.node));
-        let existing = match nodes.get(node_index) {
-            Some(existing) => *existing,
-            None => return Err(crate::Diagnostic::Defective),
-        };
-        // A witness belongs to its immutable node, not a use site. Repeated
-        // occurrences retain body order but need only one checked lowering.
-        if existing.is_none() {
-            attempt!(pool.interface(&derivation.interface));
-            let node = attempt!(crate::admission::node(candidate, derivation.node));
-            let operation = attempt!(operation(node, &derivation.interface, pool));
-            nodes[node_index] = Some(operation);
+        match lower_derivation(candidate, &checked.derivations[index], pool, &mut nodes) {
+            Ok(()) => index += 1,
+            Err(problem) => {
+                failure = Some(problem);
+                break;
+            }
         }
-        index += 1;
     }
-    Ok(nodes)
+    match failure {
+        Some(problem) => Err(problem),
+        None => Ok(nodes),
+    }
+}
+
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-maintainers; each checked derivation mutates only the fresh private node table and signature pool, never the borrowed candidate or witness."
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; pinned March and August const trials report E0015 for Pool::interface and admission::index and E0658 for slice::get; reassess when these checked APIs are const-capable."
+)]
+fn lower_derivation(
+    candidate: &noble_kernel::untrusted::Candidate,
+    derivation: &noble_kernel::untrusted::Derivation,
+    pool: &mut crate::signatures::Pool,
+    nodes: &mut [Option<Operation>],
+) -> Result<(), crate::Diagnostic> {
+    let node_index = attempt!(crate::admission::index(derivation.node));
+    let existing = match nodes.get(node_index) {
+        Some(existing) => *existing,
+        None => return Err(crate::Diagnostic::Defective),
+    };
+    // A witness belongs to its immutable node, not a use site. Repeated
+    // occurrences retain body order but need only one checked lowering.
+    if existing.is_none() {
+        attempt!(pool.interface(&derivation.interface));
+        let node = attempt!(crate::admission::node(candidate, derivation.node));
+        let operation = attempt!(operation(node, &derivation.interface, pool));
+        nodes[node_index] = Some(operation);
+    }
+    Ok(())
 }
 
 #[expect(
@@ -165,20 +190,31 @@ const fn scalar_capture(stack: &[noble_kernel::types::Ty]) -> Result<(), crate::
     tigerstyle::raw_arithmetic_overflow,
     reason = "Owner: noble-maintainers; slot_count >= 2 is checked before subtracting two, and the bounded scan examines exactly those top two equality operands."
 )]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; pinned March const trial reports E0277 and August reports E0658 for Vec Index, with E0015 for scalar_operands; reassess when these APIs are const-capable."
+)]
 fn scalar_equality(checked: &noble_kernel::untrusted::Interface) -> Result<(), crate::Diagnostic> {
     let slot_count = checked.stack_in.len();
     if slot_count < 2 {
         return Err(crate::Diagnostic::Defective);
     }
-    let mut index = slot_count - 2;
-    while index < slot_count {
-        match &checked.stack_in[index] {
+    scalar_operands(&checked.stack_in[slot_count - 2..])
+}
+
+fn scalar_operands(stack: &[noble_kernel::types::Ty]) -> Result<(), crate::Diagnostic> {
+    let mut index = 0usize;
+    let mut result = Ok(());
+    while index < stack.len() {
+        match &stack[index] {
             noble_kernel::types::Ty::I64
             | noble_kernel::types::Ty::Bool
-            | noble_kernel::types::Ty::Unit => {}
-            _ => return Err(crate::Diagnostic::Unsupported),
+            | noble_kernel::types::Ty::Unit => index += 1,
+            _ => {
+                result = Err(crate::Diagnostic::Unsupported);
+                break;
+            }
         }
-        index += 1;
     }
-    Ok(())
+    result
 }

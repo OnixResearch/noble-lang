@@ -1,7 +1,9 @@
 //! Pure helpers for the acceptance machine: charges, limits, joins, and
 //! diagnostics. No helper recurses or mutates its inputs.
 
+pub(crate) mod effects;
 pub(crate) mod instantiate;
+mod multiset;
 
 /// The request and environment a check runs against.
 pub(crate) struct Ctx<'a> {
@@ -44,12 +46,11 @@ pub(crate) fn scheme_cost(scheme: &crate::words::Scheme) -> Result<u32, super::F
 }
 
 pub(crate) fn join_cost(interface: &crate::untrusted::Interface) -> Result<u32, super::Fail> {
-    let count = match u32::try_from(
-        interface
-            .stack_in
-            .len()
-            .saturating_add(interface.stack_out.len()),
-    ) {
+    let entries = interface
+        .stack_in
+        .len()
+        .saturating_add(interface.stack_out.len());
+    let count = match u32::try_from(entries) {
         Ok(count) => count,
         Err(_) => return Err(super::Fail::Exhausted(crate::untrusted::LimitKind::Work)),
     };
@@ -75,12 +76,40 @@ pub(crate) fn limits_of(stack: &[crate::types::Ty], ctx: &Ctx) -> Result<(), sup
             crate::untrusted::LimitKind::StackHeight,
         ));
     }
+    if !valid_stack_types(stack, ctx.env) {
+        return Err(invalid_without_stacks(
+            site(None, None),
+            crate::untrusted::Constraint::InvalidType,
+        ));
+    }
     match crate::words::bounds::check_sizes(stack, ctx.request.limits.type_size) {
         Ok(()) => Ok(()),
         Err(_) => Err(super::Fail::Exhausted(
             crate::untrusted::LimitKind::TypeSize,
         )),
     }
+}
+
+/// Check each stack entry without carrying a borrowed entry across the loop.
+pub(crate) fn valid_stack_types(stack: &[crate::types::Ty], env: &crate::contracts::Env) -> bool {
+    let mut index = 0;
+    let mut is_every_type_valid = true;
+    while index < stack.len() {
+        if !valid_stack_type_at(stack, index, env) {
+            is_every_type_valid = false;
+            break;
+        }
+        index += 1;
+    }
+    is_every_type_valid
+}
+
+fn valid_stack_type_at(
+    stack: &[crate::types::Ty],
+    index: usize,
+    env: &crate::contracts::Env,
+) -> bool {
+    env.valid_type(&stack[index], 512)
 }
 
 /// The failing definition of a node, when it is an invocation.
@@ -157,7 +186,7 @@ pub(crate) fn mismatch_constraint(
     expected: &[crate::types::Ty],
     actual: &[crate::types::Ty],
 ) -> crate::untrusted::Constraint {
-    if expected.len() == actual.len() && same_multiset(expected, actual) {
+    if expected.len() == actual.len() && multiset::same(expected, actual) {
         crate::untrusted::Constraint::StackOrder
     } else {
         crate::untrusted::Constraint::StackJoin
@@ -179,59 +208,21 @@ pub(crate) fn tail_copy(
     }
 }
 
-fn same_multiset(left: &[crate::types::Ty], right: &[crate::types::Ty]) -> bool {
-    if left.len() != right.len() {
-        return false;
-    }
-    let mut used = alloc::vec![false; right.len()];
-    let mut is_matched = true;
-    let mut item_index = 0;
-    while is_matched && item_index < left.len() {
-        match find_unused(right, &used, &left[item_index]) {
-            Some(index) => {
-                used[index] = true;
-                item_index += 1;
-            }
-            None => is_matched = false,
-        }
-    }
-    is_matched
-}
-
-/// The first unused index in `right` holding `item`, when one exists.
-fn find_unused(
-    right: &[crate::types::Ty],
-    used: &[bool],
-    item: &crate::types::Ty,
-) -> Option<usize> {
-    let mut found = None;
-    let mut index = 0;
-    while index < right.len() {
-        if !used[index] && &right[index] == item {
-            found = Some(index);
-            break;
-        }
-        index += 1;
-    }
-    found
-}
-
-/// The first derived identity outside the allowed bound.
-pub(crate) fn first_extra(
-    derived: &crate::types::EffSet,
-    allowed: &crate::types::EffSet,
-) -> Option<crate::types::EffId> {
-    let ids = derived.as_slice();
-    let mut index = 0;
-    let mut extra: Option<crate::types::EffId> = None;
-    while index < ids.len() {
-        if !allowed.contains(ids[index]) {
-            extra = Some(ids[index]);
-            break;
-        }
-        index += 1;
-    }
-    extra
+/// Report a failure with no stack comparison, without charging or truncating
+/// a diagnostic budget: both stack segments are empty by construction.
+pub(crate) const fn invalid_without_stacks(
+    at: Site,
+    constraint: crate::untrusted::Constraint,
+) -> super::Fail {
+    super::Fail::Invalid(crate::untrusted::Diagnostic {
+        node: at.node,
+        def: at.def,
+        expected: alloc::vec::Vec::new(),
+        actual: alloc::vec::Vec::new(),
+        constraint,
+        provenance_available: false,
+        truncated: false,
+    })
 }
 
 #[expect(
@@ -241,14 +232,12 @@ pub(crate) fn first_extra(
 pub(crate) fn invalid(
     ctx: &Ctx,
     at: Site,
-    expected: alloc::vec::Vec<crate::types::Ty>,
-    actual: alloc::vec::Vec<crate::types::Ty>,
+    mut expected: alloc::vec::Vec<crate::types::Ty>,
+    mut actual: alloc::vec::Vec<crate::types::Ty>,
     constraint: crate::untrusted::Constraint,
 ) -> super::Fail {
     let budget = usize::try_from(ctx.request.limits.diagnostics).unwrap_or(0);
     let mut is_truncated = false;
-    let mut expected = expected;
-    let mut actual = actual;
     if expected.len().saturating_add(actual.len()) > budget {
         is_truncated = true;
         let keep_expected = budget.saturating_sub(actual.len());
@@ -267,34 +256,4 @@ pub(crate) fn invalid(
         provenance_available: false,
         truncated: is_truncated,
     })
-}
-
-#[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-maintainers; first_unknown bounds both scans by their slice lengths and returns the first missing identity or None; absence is an ordinary diagnostic result, not an assertion failure."
-)]
-pub(crate) fn first_unknown(
-    needed: &[crate::types::EffId],
-    known: &[crate::types::EffId],
-) -> Option<crate::types::EffId> {
-    let mut index = 0;
-    let mut found: Option<crate::types::EffId> = None;
-    while index < needed.len() {
-        let id = needed[index];
-        let mut is_known = false;
-        let mut known_index = 0;
-        while known_index < known.len() {
-            if known[known_index] == id {
-                is_known = true;
-                break;
-            }
-            known_index += 1;
-        }
-        if !is_known {
-            found = Some(id);
-            break;
-        }
-        index += 1;
-    }
-    found
 }

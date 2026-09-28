@@ -11,16 +11,33 @@ pub(crate) fn write(
     attempt!(out.append(b"(func $init_programs (local $recipe i32) (local $atom i32)\n"));
     attempt!(failure_return(out));
     let mut index = 0usize;
+    let mut failure = None;
     while index < plan.programs.len() {
-        let program = &plan.programs[index];
-        attempt!(out.append(b"(local.set $recipe (i32.const 0))\n"));
-        let body = attempt!(crate::lowering::topology::body(candidate, program.owner));
-        attempt!(body_recipe(out, body, plan));
-        attempt!(create_program(out, program));
-        attempt!(failure_return(out));
-        index += 1;
+        match initialize_program(out, candidate, plan, &plan.programs[index]) {
+            Ok(()) => index += 1,
+            Err(problem) => {
+                failure = Some(problem);
+                break;
+            }
+        }
+    }
+    if let Some(problem) = failure {
+        return Err(problem);
     }
     out.append(b")\n")
+}
+
+fn initialize_program(
+    out: &mut crate::output::Buffer,
+    candidate: &noble_kernel::untrusted::Candidate,
+    plan: &crate::lowering::Plan,
+    program: &crate::lowering::Program,
+) -> Result<(), crate::Diagnostic> {
+    attempt!(out.append(b"(local.set $recipe (i32.const 0))\n"));
+    let body = attempt!(crate::lowering::topology::body(candidate, program.owner));
+    attempt!(body_recipe(out, body, plan));
+    attempt!(create_program(out, program));
+    failure_return(out)
 }
 
 fn body_recipe(
@@ -29,18 +46,38 @@ fn body_recipe(
     plan: &crate::lowering::Plan,
 ) -> Result<(), crate::Diagnostic> {
     let mut position = 0usize;
+    let mut failure = None;
     while position < body.len() {
-        let node = body[position];
-        let operation = attempt!(plan.operation(node));
-        attempt!(atom(out, operation, node.0));
-        attempt!(failure_return(out));
-        if position == 0 {
-            attempt!(out.append(b"(local.set $recipe (local.get $atom))\n"));
-        } else {
-            attempt!(out.append(b"(local.set $recipe (call $concat_recipe (local.get $recipe) (local.get $atom)))\n"));
-            attempt!(failure_return(out));
+        match recipe_atom(out, plan, body[position], position == 0) {
+            Ok(()) => position += 1,
+            Err(problem) => {
+                failure = Some(problem);
+                break;
+            }
         }
-        position += 1;
+    }
+    match failure {
+        Some(problem) => Err(problem),
+        None => Ok(()),
+    }
+}
+
+fn recipe_atom(
+    out: &mut crate::output::Buffer,
+    plan: &crate::lowering::Plan,
+    node: noble_kernel::untrusted::NodeId,
+    first: bool,
+) -> Result<(), crate::Diagnostic> {
+    let operation = attempt!(plan.operation(node));
+    attempt!(atom(out, operation, node.0));
+    attempt!(failure_return(out));
+    if first {
+        attempt!(out.append(b"(local.set $recipe (local.get $atom))\n"));
+    } else {
+        attempt!(out.append(
+            b"(local.set $recipe (call $concat_recipe (local.get $recipe) (local.get $atom)))\n"
+        ));
+        attempt!(failure_return(out));
     }
     Ok(())
 }

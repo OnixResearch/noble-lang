@@ -13,15 +13,30 @@ struct State {
     nodes: alloc::vec::Vec<super::Node>,
 }
 
-#[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-maintainers; scanning and each syntax transition are metered, quotation balance and declaration arity are checked, and the first parse diagnostic is returned after the bounded loop."
-)]
 pub(super) fn parse(
     source_bytes: &[u8],
     meter: &mut crate::Meter,
 ) -> Result<(super::Tree, Option<alloc::string::String>), crate::Diagnostic> {
-    let mut lexer = attempt!(super::lexer::Scanner::new(source_bytes, meter));
+    parse_impl(source_bytes, meter, false)
+}
+
+pub(super) fn parse_declared(
+    source_bytes: &[u8],
+    meter: &mut crate::Meter,
+) -> Result<(super::Tree, Option<alloc::string::String>), crate::Diagnostic> {
+    parse_impl(source_bytes, meter, true)
+}
+
+fn parse_impl(
+    source_bytes: &[u8],
+    meter: &mut crate::Meter,
+    declared: bool,
+) -> Result<(super::Tree, Option<alloc::string::String>), crate::Diagnostic> {
+    let mut lexer = if declared {
+        attempt!(super::lexer::Scanner::new_declared(source_bytes, meter))
+    } else {
+        attempt!(super::lexer::Scanner::new(source_bytes, meter))
+    };
     let span = crate::Span {
         start: 0,
         end: attempt!(crate::index(
@@ -30,6 +45,16 @@ pub(super) fn parse(
         )),
     };
     let (name, first) = attempt!(opening(&mut lexer, span, meter));
+    scan_tokens(first, &mut lexer, span, meter, name)
+}
+
+fn scan_tokens(
+    first: Option<super::lexer::Token>,
+    lexer: &mut super::lexer::Scanner<'_>,
+    span: crate::Span,
+    meter: &mut crate::Meter,
+    name: Option<alloc::string::String>,
+) -> Result<(super::Tree, Option<alloc::string::String>), crate::Diagnostic> {
     attempt!(meter.node(span));
     let mut state = State {
         frames: alloc::vec::Vec::with_capacity(1),
@@ -39,16 +64,16 @@ pub(super) fn parse(
         body: alloc::vec::Vec::new(),
         start: 0,
     });
-    let mut next = first;
+    let mut next = Ok(first);
     let mut failure = None;
-    while let Some(token) = next {
-        match advance(token, &mut state, &mut lexer, meter) {
-            Ok(token) => next = token,
-            Err(problem) => {
-                failure = Some(problem);
-                break;
-            }
+    while let Some(token) = match next {
+        Ok(token) => token,
+        Err(problem) => {
+            failure = Some(problem);
+            None
         }
+    } {
+        next = advance(token, &mut state, lexer, meter);
     }
     if let Some(problem) = failure {
         return Err(problem);
@@ -60,11 +85,16 @@ pub(super) fn parse(
         Some(frame) => frame,
         None => return Err(crate::internal(span)),
     };
+    // The initial root frame is never closed or replaced by quotation steps.
+    debug_assert_eq!(frame.start, 0);
     let body = if name.is_some() {
         attempt!(declaration_body(frame, &mut state.nodes, span))
     } else {
         frame.body
     };
+    debug_assert!(body.iter().all(|index| usize::try_from(*index)
+        .ok()
+        .is_some_and(|node| node < state.nodes.len())));
     Ok((
         super::Tree {
             nodes: state.nodes,

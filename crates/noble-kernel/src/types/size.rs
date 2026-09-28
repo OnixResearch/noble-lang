@@ -60,6 +60,10 @@ pub(super) fn walk_step(mut walk: Walk) -> (Walk, Step) {
 const fn count_children(node: &crate::types::Ty) -> usize {
     match node {
         crate::types::Ty::Pair(_, _) | crate::types::Ty::Sum(_, _) => 2,
+        crate::types::Ty::Nominal(_, shape) => match &**shape {
+            crate::types::NominalShape::Opaque(_) => 1,
+            crate::types::NominalShape::Variant(_, _) => 2,
+        },
         crate::types::Ty::List(_) => 1,
         crate::types::Ty::Program(stack_in, stack_out, _) => {
             (**stack_in).len() + (**stack_out).len()
@@ -145,6 +149,18 @@ fn queue_children(
             while index < stack_out.len() {
                 todo.push((stack_out[index].clone(), false));
                 index += 1;
+            }
+        }
+        crate::types::Ty::Nominal(_, shape) => {
+            todo.push((node.clone(), true));
+            match &**shape {
+                crate::types::NominalShape::Opaque(representation) => {
+                    todo.push(((**representation).clone(), false));
+                }
+                crate::types::NominalShape::Variant(left, right) => {
+                    todo.push(((**left).clone(), false));
+                    todo.push(((**right).clone(), false));
+                }
             }
         }
         crate::types::Ty::Unit

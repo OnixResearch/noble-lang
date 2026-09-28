@@ -61,7 +61,7 @@ pub(super) fn complete_frame(
         ));
     }
     if !frame.effects.is_subset_of(&frame.claimed_effects) {
-        let id = super::parts::first_extra(&frame.effects, &frame.claimed_effects)
+        let id = super::parts::effects::first_extra(&frame.effects, &frame.claimed_effects)
             .unwrap_or(crate::types::EffId(0));
         return Err(super::parts::invalid(
             ctx,

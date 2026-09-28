@@ -45,7 +45,7 @@ fn main() -> std::process::ExitCode {
         .first()
         .is_some_and(|argument| argument == "run" || argument == "session" || argument == "compile")
     {
-        return core::run(&arguments);
+        return core::entry::run(&arguments);
     }
     if arguments
         .first()

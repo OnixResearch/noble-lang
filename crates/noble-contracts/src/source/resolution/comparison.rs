@@ -176,3 +176,77 @@ fn same_target(
         | (crate::source::Target::Named(_), crate::source::Target::Builtin(_)) => Ok(false),
     }
 }
+
+/// Intern canonical resolved composition, not source spelling or formatting.
+/// Identity is session-local: no portable hash/serialization claim is made.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; canonical comparisons consume work in installation order and preserve the first matching identity; new identities use checked conversion and increment rather than unchecked arithmetic."
+)]
+pub(crate) fn identity(
+    tree: &crate::source::Tree,
+    session: &crate::source::Session,
+    meter: &mut crate::Meter,
+) -> Result<u64, crate::Diagnostic> {
+    let mut at = 0usize;
+    let mut found = None;
+    let mut failure = None;
+    while at < session.definitions.len() {
+        match same_definition(tree, at, session, meter) {
+            Ok(Some(identity)) => {
+                found = Some(identity);
+                break;
+            }
+            Ok(None) => {}
+            Err(problem) => {
+                failure = Some(problem);
+                break;
+            }
+        }
+        at += 1;
+    }
+    if let Some(problem) = failure {
+        return Err(problem);
+    }
+    if let Some(identity) = found {
+        return Ok(identity);
+    }
+    match u64::try_from(session.definitions.len())
+        .ok()
+        .and_then(|id| id.checked_add(1))
+    {
+        Some(identity) => Ok(identity),
+        None => Err(crate::source::exhausted(
+            tree.span,
+            "definition identity limit exceeded",
+        )),
+    }
+}
+
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; definition identity comparison performs non-const metered structural traversal and returns owned diagnostics on invalid namespace entries."
+)]
+fn same_definition(
+    tree: &crate::source::Tree,
+    at: usize,
+    session: &crate::source::Session,
+    meter: &mut crate::Meter,
+) -> Result<Option<u64>, crate::Diagnostic> {
+    attempt!(meter.charge(1, tree.span));
+    let definition = match session.definitions.get(at) {
+        Some(definition) => definition,
+        None => return Err(crate::internal(tree.span)),
+    };
+    // Namespace identities are assigned from the one-based definition index.
+    debug_assert_ne!(definition.identity, 0);
+    if definition.owner != session.declared.as_ref().and_then(|context| context.owner) {
+        return Ok(None);
+    }
+    let is_same = attempt!(same_body(tree, &definition.tree, session, meter));
+    if is_same {
+        Ok(Some(definition.identity))
+    } else {
+        Ok(None)
+    }
+}

@@ -2,11 +2,12 @@
 
 Tasks 2.3 and 2.4 established the inventory mechanism. The `source-coverage` check collects the compiler-derived inventory and compares it with a reviewed classification.
 
-The current checked-in classification is the **M8 finite choreography
-renewal dated 2026-09-26**, covering all 30 expected compiler units.
+The current checked-in classification is the **bounded DXM1 declared-module
+renewal dated 2026-09-28**, covering all 32 expected compiler units.
 [The current JSON export](../policy/source-inventory.json) records conservative
-accounting; the [fresh M8 assurance](m8/assurance.json) passes the complete
-Nix `source-coverage`, boundary/deny-all, policy and quality checks. The
+accounting; the [fresh DXM1 assurance](declared-modules-v1/assurance.json)
+passes the complete Nix `source-coverage`, boundary/deny-all, policy and
+quality checks. The
 previous [M6 quality archive](m6/quality-archive.json) retains its separately
 bound historical observation. Neither quality gate nor compiler
 classification is universal refinement or runtime acceptance.
@@ -68,9 +69,9 @@ Each compiler-derived production subject is reviewed as one of three categories.
 Bodies additionally carry a refinement status: `proved` or `open`.
 Only bodies enter the extraction, modeling, exception, proof, and open counts.
 
-The complete 30-unit current observation contains 2,087 authored-body paths,
-2,026 generated paths and 939 structural paths: 5,052 unique production paths
-covering 5,153 compiler item facts. A path shared by an authored body and
+The complete 32-unit current observation contains 2,595 authored-body paths,
+2,131 generated paths and 1,090 structural paths: 5,816 unique production
+paths covering 5,926 compiler item facts. A path shared by an authored body and
 generated items retains the body obligation. The difference between item and
 path counts also includes
 compiler observations of different item kinds under one qualified path.
@@ -82,7 +83,7 @@ erase authored semantics. The correction restores explicit obligations; it does
 not extract, model or prove those bodies, and removing a stale offset is not a
 discharge of its semantic obligation.
 
-All 2,087 body dispositions and refinements remain `open` in this inventory.
+All 2,595 body dispositions and refinements remain `open` in this inventory.
 It does not import or discharge the separately bound kernel, MC1, Wasm-emitter
 or M4/MC2/M5 frontend/compiler/companion/resource evidence, the bounded M6
 async extraction, the three pure selected M7 dataspace functions, or bounded
@@ -108,16 +109,36 @@ coverage identity was
 `a4b1f589e2a6b5eabdc9a37d3fa97e7ed546674b5a04066eefad396621166113`,
 and architecture receipt was
 `a6812cfe862898b1e5c93914756261a42b55b2a7c36c3acd67a8b334efb1333d`.
-These remain historical M5 counts and bindings, not the current M8 expectation.
+These remain historical M5 counts and bindings, not the current DXM1 expectation.
 
 ## Compiler review observation
 
-The current M8 [seventeen-command assurance](m8/assurance.json)
+The current DXM1 [22-command, fourteen-gate assurance](declared-modules-v1/assurance.json)
+independently passes complete signed/sandbox Nix flake checks over frozen
+pre-promotion source, including published Octet deny-all. The compiler
+collector and reviewed coverage check all 32 expected and observed units,
+with no missing/duplicate identities or approved exceptions, on the selected
+`x86_64-unknown-linux-gnu` default-feature configuration. All 2,595
+authored production bodies remain open source-inventory refinement obligations;
+2,131 generated and 1,090 structural paths are separate accounting, not
+proved bodies. The 5,816 unique production paths comprise 5,926 compiler
+item facts; 1,333 exclusively test-role paths comprise 1,668 facts. The
+compiler IR identity is `d3042d0bced94e4e3b06e15152fbf92f2ac625a642685ddbdfe5ba35e1e4e89c`, coverage identity is
+`8d51c4c1f83f7b51b532f9d430416fe7454b51002780cb230a95cdce44930b59`, and reviewed compiler architecture receipt
+SHA-256 is `b73ab1c2e60ef4fb0900ab18392dbc52cb09c47a1d910f07aef22e1ee800a3ab`. The separately checked
+[completion evidence](declared-modules-v1/evidence.json) records 32 macro
+origins, seven production dependency edges, thirteen selected tools and
+zero approved exceptions or waivers. Independent source-bound assurance,
+scoped runtime tests and inherited strict Lean proofs remain distinct.
+
+### Historical M8 compiler review observation
+
+The historical M8 [seventeen-command assurance](m8/assurance.json)
 independently passes full Nix flake checks over frozen pre-promotion source.
-Its `source-coverage` output checks all 30 expected and observed compiler
+Its `source-coverage` output checks all 30 then-expected and observed compiler
 units with no missing, unexpected or duplicated identities, valid shards,
 one selected `x86_64-unknown-linux-gnu` default-feature configuration,
-and 2,087 open authored production bodies. The fresh compiler architecture
+and 2,087 open authored production bodies. That fresh compiler architecture
 IR identity is
 `57602668008355ffbf03f0e953303ea1b234a447be97502478127458de719da2`,
 the matching unit-coverage identity is
@@ -199,7 +220,7 @@ The inherited source comparison, policy/tool-selection freshness checks, and
 strict Octet gate remain separate acceptance controls; this document is not
 their execution receipt. Closure identities include source byte offsets, so even
 comment or help-text edits can require renewal. All 25 expected M6 workspace
-units were mandatory; the current M8 renewal requires all 30. An acyclic
+units were mandatory; the current DXM1 renewal requires all 32. An acyclic
 boundary control must additionally retain both
 units of its synthetic shell library; collection capacity is not permission to
 omit real or synthetic test targets.
@@ -252,9 +273,23 @@ monitor, adapter, host or engine theorem is claimed. The
 [M8 assurance](m8/assurance.json) separately passes seventeen commands
 and eleven gates, including fresh M7 seven-case/sixteen-variant regression,
 workspace Rust checks, published deny-all and complete Nix flake. All
-2,087 current authored production bodies remain open inventory refinement
-obligations; bounded compiled execution and proof roots do not discharge
-them.
+2,087 then-current authored production bodies remained open inventory
+refinement obligations; bounded compiled execution and proof roots did not
+discharge them.
+
+DXM1 separately [checks 630 actual reviewed source files](declared-modules-v1/extraction.json)
+under the renewed shared [lock](m4/extraction-lock.json). All 268 inherited
+and renewed mutation controls refuse the planted defects (34 earlier, 21
+M5, 176 M6 and 37 M7); no stale generated Lean source is admitted. Exactly
+three compiler-ID-joined pure M7 dataspace functions at DefIDs 31/32/33
+retain nine strict Lean roots; there is no new nominal, module, adapter,
+host or Wasm-engine theorem. The [DXM1 assurance](declared-modules-v1/assurance.json)
+separately passes actual DX-03/08/09 compiled-source acceptance, M4–M8
+regressions, workspace Rust/Clippy, complete published Octet deny-all and
+full Nix flake. All 2,595 current authored production body obligations remain
+open. Anonymous authored closures remain open, including the observed
+`nominal/inspection.rs:5810:5817` source-offset body; that reviewed
+classification is not a generated-body exception or proof discharge.
 
 ## Rejection controls
 

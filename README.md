@@ -155,9 +155,8 @@ strict actual-Rust resource roots and 52 refusal controls. Archived M4 and MC2
 receipts do not substitute for that later source-bound acceptance.
 
 MC1's 36-case regression and M3's four-configuration regression have passed in
-their own scopes. They do not replace those M4 gates. The current inventory's
-2,087 authored production body obligations remain open in the
-[reviewed inventory](verification/source-inventory.md).
+their own scopes. They do not replace those M4 gates. The current 32-unit inventory's 2,595 authored production body obligations
+remain open in the [reviewed inventory](verification/source-inventory.md).
 Neither extraction nor executed examples establish universal frontend, kernel,
 compiler or backend refinement; PO-17/18 and SO-07 remain open. MC2 adds optional
 checked companions; M5/M6 component, M7 service and the finite M8
@@ -430,10 +429,48 @@ pure M7 dataspace functions at compiler DefIDs 31/32/33, with 265 inherited
 refusal controls; it does not prove the M8 parser, monitor or engine. The
 [dated Cairn archive](.cairn/archive/2026-09-26-m8-choreography-projection/proposal.md)
 and separate post-promotion staged-source Nix receipt `verification/m8/nix-checks.json`
-bind the final documents and Cairn checks. All 2,087 inventoried authored
-production bodies remain open refinement obligations. General/user-defined
+bind the final documents and Cairn checks. At M8 closeout, all 2,087
+then-inventoried authored production bodies remained open refinement obligations. General/user-defined
 choreography, transport, durability, native async and universal
 compiler/host/engine correspondence remain outside this selection.
+
+## Declared-Modules-v1 (DXM1)
+
+The opt-in [bounded DXM1 completion record](verification/declared-modules-v1/evidence.json)
+selects finite UTF-8 source declarations: private/public opaque types, exactly
+two-constructor variants, immutable versioned session-local modules and
+imports, explicit exports and one typed `test.emit` application adapter.
+Ordinary Core-Bootstrap/M4–M8 source, ABI and CLI retain their historical
+meaning. Module registration and linking have no guest or host invocation;
+only an explicit accepted invocation can request the independently authorized
+host operation. The opt-in CLI forms are:
+
+```sh
+noble compile SOURCE --declared-modules --bindings HOST_FILE [--module MODULE_FILE ...]
+noble session --framed --declared-modules --bindings HOST_FILE
+```
+
+`HOST_FILE` explicitly binds a versioned semantic `test.emit` operation to a
+matching typed adapter, for example `bind ledger@1 test.emit version-A Text -- ! test.emit allow`.
+Unflagged `noble run` remains Core-Bootstrap; the advertised opt-in
+entry points are `compile` and framed `session`, and no module loads ambiently.
+The [source-bound acceptance](verification/declared-modules-v1/acceptance.json)
+passes DX-03/08/09: nine source-derived static rows, twelve zero-execution
+link-admission rows in two optimization modes and two compiled-Wasm rows
+where the retained version-A operation is denied after a version-B display
+alias rebind, with one A request, no protected operation and no B call.
+The [22-command, 14-gate assurance](verification/declared-modules-v1/assurance.json)
+includes current 32-unit compiler inventory (all 2,595 authored bodies
+remain open), whole-crate 630-source/268-refusal extraction check, published
+Octet deny-all, workspace Rust quality and full signed/sandbox Nix flake.
+The [reviewed M4 lock](verification/m4/extraction-lock.json) retains nine
+strict Lean theorem roots only for three inherited pure M7 dataspace Rust
+functions, **not** nominal, module, frontend/backend, host, ABI or engine
+refinement. A separately published post-promotion `verification/declared-modules-v1/nix-checks.json`
+binds staged native archive/documents/Cairn source. General Result programs,
+local bindings, invariant-bearing constructors, portable package/cache keys,
+resource-positive nominal runtime, capability modules and MA/MW gates stay
+open.
 
 ## Using MC1 contracts
 

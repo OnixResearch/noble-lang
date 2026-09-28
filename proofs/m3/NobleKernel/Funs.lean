@@ -36,6 +36,15 @@ def core.option.Option.Insts.CoreFmtDebug {T : Type} (fmtDebugInst :
   fmt := core.option.Option.Insts.CoreFmtDebug.fmt fmtDebugInst
 }
 
+/-- Trait implementation: [core::option::{impl core::clone::Clone for core::option::Option<T>}]
+    Source: '/rustc/library/core/src/option.rs', lines 2266:0-2270:40
+    Name pattern: [core::clone::Clone<core::option::Option<@T>>] -/
+@[reducible, rust_trait_impl "core::clone::Clone<core::option::Option<@T>>"]
+def core.option.Option.Insts.CoreCloneClone {T : Type} (cloneCloneInst :
+  core.clone.Clone T) : core.clone.Clone (Option T) := {
+  clone := core.option.Option.Insts.CoreCloneClone.clone cloneCloneInst
+}
+
 /-- Trait implementation: [core::option::{impl core::cmp::PartialEq<core::option::Option<T>> for core::option::Option<T>}]
     Source: '/rustc/library/core/src/option.rs', lines 2434:0-2434:56
     Name pattern: [core::cmp::PartialEq<core::option::Option<@T>, core::option::Option<@T>>] -/
@@ -96,6 +105,15 @@ impl_def Str.Insts.CoreCmpPartialEqStr : core.cmp.PartialEq Str Str := {
   ne := core.cmp.PartialEq.ne.trait_default Str.Insts.CoreCmpPartialEqStr
 }
 
+/-- Trait implementation: [alloc::boxed::{impl core::fmt::Debug for alloc::boxed::Box<T>}]
+    Source: '/rustc/library/alloc/src/boxed.rs', lines 2277:0-2277:67
+    Name pattern: [core::fmt::Debug<Box<@T>>] -/
+@[reducible, rust_trait_impl "core::fmt::Debug<Box<@T>>"]
+def Box.Insts.CoreFmtDebug {T : Type} (A : Type) (corefmtDebugInst :
+  core.fmt.Debug T) : core.fmt.Debug T := {
+  fmt := Box.Insts.CoreFmtDebug.fmt A corefmtDebugInst
+}
+
 /-- Trait implementation: [alloc::string::{impl core::fmt::Debug for alloc::string::String}]
     Source: '/rustc/library/alloc/src/string.rs', lines 2754:0-2754:26
     Name pattern: [core::fmt::Debug<alloc::string::String>] -/
@@ -120,27 +138,27 @@ def untrusted.NodeId.Insts.CoreCloneClone : core.clone.Clone untrusted.NodeId
 }
 
 /-- [noble_kernel::types::{noble_kernel::types::EffSet}::empty]:
-    Source: 'crates/noble-kernel/src/types.rs', lines 34:4-36:5
+    Source: 'crates/noble-kernel/src/types.rs', lines 50:4-52:5
     Visibility: public -/
 def types.EffSet.empty : Result types.EffSet := do
   ok (alloc.vec.Vec.new types.EffId)
 
 /-- [noble_kernel::types::{impl core::clone::Clone for noble_kernel::types::EffId}::clone]:
-    Source: 'crates/noble-kernel/src/types.rs', lines 25:9-25:14
+    Source: 'crates/noble-kernel/src/types.rs', lines 41:9-41:14
     Visibility: public -/
 def types.EffId.Insts.CoreCloneClone.clone
   (self : types.EffId) : Result types.EffId := do
   ok self
 
 /-- Trait implementation: [noble_kernel::types::{impl core::clone::Clone for noble_kernel::types::EffId}]
-    Source: 'crates/noble-kernel/src/types.rs', lines 25:9-25:14 -/
+    Source: 'crates/noble-kernel/src/types.rs', lines 41:9-41:14 -/
 @[reducible]
 def types.EffId.Insts.CoreCloneClone : core.clone.Clone types.EffId := {
   clone := types.EffId.Insts.CoreCloneClone.clone
 }
 
 /-- [noble_kernel::types::{impl core::clone::Clone for noble_kernel::types::EffSet}::clone]:
-    Source: 'crates/noble-kernel/src/types.rs', lines 29:9-29:14
+    Source: 'crates/noble-kernel/src/types.rs', lines 45:9-45:14
     Visibility: public -/
 def types.EffSet.Insts.CoreCloneClone.clone
   (self : types.EffSet) : Result types.EffSet := do
@@ -148,7 +166,7 @@ def types.EffSet.Insts.CoreCloneClone.clone
   ok v
 
 /-- [noble_kernel::types::impls::{impl core::clone::Clone for noble_kernel::types::Ty}::clone]:
-    Source: 'crates/noble-kernel/src/types/impls.rs', lines 30:4-58:5
+    Source: 'crates/noble-kernel/src/types/impls.rs', lines 29:4-73:5
     Visibility: public -/
 def types.Ty.Insts.CoreCloneClone.clone
   (self : types.Ty) : Result types.Ty := do
@@ -180,10 +198,23 @@ def types.Ty.Insts.CoreCloneClone.clone
     let es ← types.EffSet.Insts.CoreCloneClone.clone effects
     ok (types.Ty.ProgramType v v1 es)
   | types.Ty.ResourceType _ => ok self
+  | types.Ty.NominalType id shape =>
+    let ns ←
+      match shape with
+      | types.NominalShape.Opaque representation =>
+        do
+        let t ← types.Ty.Insts.CoreCloneClone.clone representation
+        ok (types.NominalShape.Opaque t)
+      | types.NominalShape.Variant left right =>
+        do
+        let t ← types.Ty.Insts.CoreCloneClone.clone left
+        let t1 ← types.Ty.Insts.CoreCloneClone.clone right
+        ok (types.NominalShape.Variant t t1)
+    ok (types.Ty.NominalType id ns)
 partial_fixpoint
 
 /-- Trait implementation: [noble_kernel::types::impls::{impl core::clone::Clone for noble_kernel::types::Ty}]
-    Source: 'crates/noble-kernel/src/types/impls.rs', lines 29:0-59:1 -/
+    Source: 'crates/noble-kernel/src/types/impls.rs', lines 28:0-74:1 -/
 @[reducible]
 def types.Ty.Insts.CoreCloneClone : core.clone.Clone types.Ty := {
   clone := types.Ty.Insts.CoreCloneClone.clone
@@ -269,14 +300,14 @@ def words.Inst.Insts.CoreCloneClone.clone
   ok { bindings := v }
 
 /-- [noble_kernel::types::{impl core::cmp::PartialEq<noble_kernel::types::EffId> for noble_kernel::types::EffId}::eq]:
-    Source: 'crates/noble-kernel/src/types.rs', lines 25:29-25:38
+    Source: 'crates/noble-kernel/src/types.rs', lines 41:29-41:38
     Visibility: public -/
 def types.EffId.Insts.CoreCmpPartialEqEffId.eq
   (self : types.EffId) (other : types.EffId) : Result Bool := do
   ok (self = other)
 
 /-- [noble_kernel::types::{noble_kernel::types::EffSet}::contains]: loop body 0:
-    Source: 'crates/noble-kernel/src/types.rs', lines 73:8-79:9
+    Source: 'crates/noble-kernel/src/types.rs', lines 89:8-95:9
     Visibility: public -/
 @[rust_loop_body]
 def types.EffSet.contains_loop.body
@@ -297,7 +328,7 @@ def types.EffSet.contains_loop.body
   else ok (done false)
 
 /-- [noble_kernel::types::{noble_kernel::types::EffSet}::contains]: loop 0:
-    Source: 'crates/noble-kernel/src/types.rs', lines 73:8-79:9
+    Source: 'crates/noble-kernel/src/types.rs', lines 89:8-95:9
     Visibility: public -/
 @[rust_loop]
 def types.EffSet.contains_loop
@@ -309,7 +340,7 @@ def types.EffSet.contains_loop
     (self, index)
 
 /-- [noble_kernel::types::{noble_kernel::types::EffSet}::contains]:
-    Source: 'crates/noble-kernel/src/types.rs', lines 70:4-81:5
+    Source: 'crates/noble-kernel/src/types.rs', lines 86:4-97:5
     Visibility: public -/
 @[reducible]
 def types.EffSet.contains
@@ -317,7 +348,7 @@ def types.EffSet.contains
   types.EffSet.contains_loop self id 0#usize
 
 /-- [noble_kernel::types::{noble_kernel::types::EffSet}::is_subset_of]: loop body 0:
-    Source: 'crates/noble-kernel/src/types.rs', lines 116:8-122:9
+    Source: 'crates/noble-kernel/src/types.rs', lines 132:8-138:9
     Visibility: public -/
 @[rust_loop_body]
 def types.EffSet.is_subset_of_loop.body
@@ -338,7 +369,7 @@ def types.EffSet.is_subset_of_loop.body
   else ok (done true)
 
 /-- [noble_kernel::types::{noble_kernel::types::EffSet}::is_subset_of]: loop 0:
-    Source: 'crates/noble-kernel/src/types.rs', lines 116:8-122:9
+    Source: 'crates/noble-kernel/src/types.rs', lines 132:8-138:9
     Visibility: public -/
 @[rust_loop]
 def types.EffSet.is_subset_of_loop
@@ -351,7 +382,7 @@ def types.EffSet.is_subset_of_loop
     (self, index)
 
 /-- [noble_kernel::types::{noble_kernel::types::EffSet}::is_subset_of]:
-    Source: 'crates/noble-kernel/src/types.rs', lines 113:4-124:5
+    Source: 'crates/noble-kernel/src/types.rs', lines 129:4-140:5
     Visibility: public -/
 @[reducible]
 def types.EffSet.is_subset_of
@@ -359,7 +390,7 @@ def types.EffSet.is_subset_of
   types.EffSet.is_subset_of_loop self other 0#usize
 
 /-- Trait implementation: [noble_kernel::types::{impl core::cmp::PartialEq<noble_kernel::types::EffId> for noble_kernel::types::EffId}]
-    Source: 'crates/noble-kernel/src/types.rs', lines 25:29-25:38 -/
+    Source: 'crates/noble-kernel/src/types.rs', lines 41:29-41:38 -/
 @[reducible]
 impl_def types.EffId.Insts.CoreCmpPartialEqEffId : core.cmp.PartialEq
   types.EffId types.EffId := {
@@ -369,26 +400,37 @@ impl_def types.EffId.Insts.CoreCmpPartialEqEffId : core.cmp.PartialEq
 }
 
 /-- [noble_kernel::types::{impl core::cmp::PartialEq<noble_kernel::types::EffSet> for noble_kernel::types::EffSet}::eq]:
-    Source: 'crates/noble-kernel/src/types.rs', lines 29:23-29:32
+    Source: 'crates/noble-kernel/src/types.rs', lines 45:23-45:32
     Visibility: public -/
 def types.EffSet.Insts.CoreCmpPartialEqEffSet.eq
   (self : types.EffSet) (other : types.EffSet) : Result Bool := do
   alloc.vec.partial_eq.PartialEqVec.eq types.EffId.Insts.CoreCmpPartialEqEffId
     self other
 
+/-- [noble_kernel::types::{impl core::cmp::PartialEq<noble_kernel::types::NominalTypeId> for noble_kernel::types::NominalTypeId}::eq]:
+    Source: 'crates/noble-kernel/src/types.rs', lines 19:29-19:38
+    Visibility: public -/
+def types.NominalTypeId.Insts.CoreCmpPartialEqNominalTypeId.eq
+  (self : types.NominalTypeId) (other : types.NominalTypeId) :
+  Result Bool
+  := do
+  if self.module = other.module
+  then ok (self.ordinal = other.ordinal)
+  else ok false
+
 /-- [noble_kernel::types::{impl core::cmp::PartialEq<noble_kernel::types::ResourceKind> for noble_kernel::types::ResourceKind}::eq]:
-    Source: 'crates/noble-kernel/src/types.rs', lines 14:29-14:38
+    Source: 'crates/noble-kernel/src/types.rs', lines 15:29-15:38
     Visibility: public -/
 def types.ResourceKind.Insts.CoreCmpPartialEqResourceKind.eq
   (self : types.ResourceKind) (other : types.ResourceKind) : Result Bool := do
   ok (self = other)
 
 /-- [noble_kernel::types::WORK_CAP]
-    Source: 'crates/noble-kernel/src/types.rs', lines 11:0-11:28 -/
+    Source: 'crates/noble-kernel/src/types.rs', lines 12:0-12:28 -/
 @[global_simps, irreducible] def types.WORK_CAP : Std.Usize := 512#usize
 
 /-- [noble_kernel::types::impls::push_type_program]: loop body 0:
-    Source: 'crates/noble-kernel/src/types/impls.rs', lines 73:4-76:5 -/
+    Source: 'crates/noble-kernel/src/types/impls.rs', lines 88:4-91:5 -/
 @[rust_loop_body]
 def types.impls.push_type_program_loop0.body
   (first_in : Slice types.Ty) (second_in : Slice types.Ty)
@@ -413,7 +455,7 @@ def types.impls.push_type_program_loop0.body
   else ok (done (work, is_comparable))
 
 /-- [noble_kernel::types::impls::push_type_program]: loop 0:
-    Source: 'crates/noble-kernel/src/types/impls.rs', lines 73:4-76:5 -/
+    Source: 'crates/noble-kernel/src/types/impls.rs', lines 88:4-91:5 -/
 @[rust_loop]
 def types.impls.push_type_program_loop0
   (work : alloc.vec.Vec (types.Ty × types.Ty)) (first_in : Slice types.Ty)
@@ -427,7 +469,7 @@ def types.impls.push_type_program_loop0
     (work, is_comparable, index)
 
 /-- [noble_kernel::types::impls::push_type_program]: loop body 1:
-    Source: 'crates/noble-kernel/src/types/impls.rs', lines 78:4-81:5 -/
+    Source: 'crates/noble-kernel/src/types/impls.rs', lines 93:4-96:5 -/
 @[rust_loop_body]
 def types.impls.push_type_program_loop1.body
   (first_out : Slice types.Ty) (second_out : Slice types.Ty)
@@ -452,7 +494,7 @@ def types.impls.push_type_program_loop1.body
   else ok (done (work, is_comparable))
 
 /-- [noble_kernel::types::impls::push_type_program]: loop 1:
-    Source: 'crates/noble-kernel/src/types/impls.rs', lines 78:4-81:5 -/
+    Source: 'crates/noble-kernel/src/types/impls.rs', lines 93:4-96:5 -/
 @[rust_loop]
 def types.impls.push_type_program_loop1
   (work : alloc.vec.Vec (types.Ty × types.Ty)) (first_out : Slice types.Ty)
@@ -466,7 +508,7 @@ def types.impls.push_type_program_loop1
     (work, is_comparable, index)
 
 /-- [noble_kernel::types::impls::push_type_program]:
-    Source: 'crates/noble-kernel/src/types/impls.rs', lines 62:0-83:1 -/
+    Source: 'crates/noble-kernel/src/types/impls.rs', lines 77:0-98:1 -/
 def types.impls.push_type_program
   (work : alloc.vec.Vec (types.Ty × types.Ty)) (first_in : Slice types.Ty)
   (first_out : Slice types.Ty) (second_in : Slice types.Ty)
@@ -492,309 +534,327 @@ def types.impls.push_type_program
     0#usize
 
 /-- [noble_kernel::types::impls::ty_eq]: loop body 0:
-    Source: 'crates/noble-kernel/src/types/impls.rs', lines 96:4-148:5 -/
+    Source: 'crates/noble-kernel/src/types/impls.rs', lines 109:4-173:1 -/
 @[rust_loop_body]
 def types.impls.ty_eq_loop.body
-  (work : alloc.vec.Vec (types.Ty × types.Ty)) (is_mismatch : Bool) :
-  Result (ControlFlow ((alloc.vec.Vec (types.Ty × types.Ty)) × Bool) Bool)
+  (work : alloc.vec.Vec (types.Ty × types.Ty)) :
+  Result (ControlFlow (alloc.vec.Vec (types.Ty × types.Ty)) Bool)
   := do
   let b ← alloc.vec.Vec.is_empty Global work
   if b
-  then ok (done is_mismatch)
+  then ok (done true)
   else
     let i := alloc.vec.Vec.len work
     if i >= types.WORK_CAP
-    then ok (done true)
+    then ok (done false)
     else
-      let (pair, work1) ← alloc.vec.Vec.pop Global work
-      let (work2, is_step_equal) ←
-        match pair with
-        | none => ok (work1, true)
-        | some p =>
-          let (first, second) := p
-          match first with
-          | types.Ty.UnitType =>
-            do
-            let b1 ←
-              match second with
-              | types.Ty.UnitType => ok true
-              | types.Ty.BoolType => ok false
-              | types.Ty.I64Type => ok false
-              | types.Ty.TextType => ok false
-              | types.Ty.SyntaxType => ok false
-              | types.Ty.ContractType => ok false
-              | types.Ty.EvidenceType => ok false
-              | types.Ty.CertifiedType => ok false
-              | types.Ty.PairType _ _ => ok false
-              | types.Ty.SumType _ _ => ok false
-              | types.Ty.ListType _ => ok false
-              | types.Ty.ProgramType _ _ _ => ok false
-              | types.Ty.ResourceType _ => ok false
-            ok (work1, b1)
-          | types.Ty.BoolType =>
-            do
-            let b1 ←
-              match second with
-              | types.Ty.UnitType => ok false
-              | types.Ty.BoolType => ok true
-              | types.Ty.I64Type => ok false
-              | types.Ty.TextType => ok false
-              | types.Ty.SyntaxType => ok false
-              | types.Ty.ContractType => ok false
-              | types.Ty.EvidenceType => ok false
-              | types.Ty.CertifiedType => ok false
-              | types.Ty.PairType _ _ => ok false
-              | types.Ty.SumType _ _ => ok false
-              | types.Ty.ListType _ => ok false
-              | types.Ty.ProgramType _ _ _ => ok false
-              | types.Ty.ResourceType _ => ok false
-            ok (work1, b1)
-          | types.Ty.I64Type =>
-            do
-            let b1 ←
-              match second with
-              | types.Ty.UnitType => ok false
-              | types.Ty.BoolType => ok false
-              | types.Ty.I64Type => ok true
-              | types.Ty.TextType => ok false
-              | types.Ty.SyntaxType => ok false
-              | types.Ty.ContractType => ok false
-              | types.Ty.EvidenceType => ok false
-              | types.Ty.CertifiedType => ok false
-              | types.Ty.PairType _ _ => ok false
-              | types.Ty.SumType _ _ => ok false
-              | types.Ty.ListType _ => ok false
-              | types.Ty.ProgramType _ _ _ => ok false
-              | types.Ty.ResourceType _ => ok false
-            ok (work1, b1)
-          | types.Ty.TextType =>
-            do
-            let b1 ←
-              match second with
-              | types.Ty.UnitType => ok false
-              | types.Ty.BoolType => ok false
-              | types.Ty.I64Type => ok false
-              | types.Ty.TextType => ok true
-              | types.Ty.SyntaxType => ok false
-              | types.Ty.ContractType => ok false
-              | types.Ty.EvidenceType => ok false
-              | types.Ty.CertifiedType => ok false
-              | types.Ty.PairType _ _ => ok false
-              | types.Ty.SumType _ _ => ok false
-              | types.Ty.ListType _ => ok false
-              | types.Ty.ProgramType _ _ _ => ok false
-              | types.Ty.ResourceType _ => ok false
-            ok (work1, b1)
-          | types.Ty.SyntaxType =>
-            do
-            let b1 ←
-              match second with
-              | types.Ty.UnitType => ok false
-              | types.Ty.BoolType => ok false
-              | types.Ty.I64Type => ok false
-              | types.Ty.TextType => ok false
-              | types.Ty.SyntaxType => ok true
-              | types.Ty.ContractType => ok false
-              | types.Ty.EvidenceType => ok false
-              | types.Ty.CertifiedType => ok false
-              | types.Ty.PairType _ _ => ok false
-              | types.Ty.SumType _ _ => ok false
-              | types.Ty.ListType _ => ok false
-              | types.Ty.ProgramType _ _ _ => ok false
-              | types.Ty.ResourceType _ => ok false
-            ok (work1, b1)
-          | types.Ty.ContractType =>
-            do
-            let b1 ←
-              match second with
-              | types.Ty.UnitType => ok false
-              | types.Ty.BoolType => ok false
-              | types.Ty.I64Type => ok false
-              | types.Ty.TextType => ok false
-              | types.Ty.SyntaxType => ok false
-              | types.Ty.ContractType => ok true
-              | types.Ty.EvidenceType => ok false
-              | types.Ty.CertifiedType => ok false
-              | types.Ty.PairType _ _ => ok false
-              | types.Ty.SumType _ _ => ok false
-              | types.Ty.ListType _ => ok false
-              | types.Ty.ProgramType _ _ _ => ok false
-              | types.Ty.ResourceType _ => ok false
-            ok (work1, b1)
-          | types.Ty.EvidenceType =>
-            do
-            let b1 ←
-              match second with
-              | types.Ty.UnitType => ok false
-              | types.Ty.BoolType => ok false
-              | types.Ty.I64Type => ok false
-              | types.Ty.TextType => ok false
-              | types.Ty.SyntaxType => ok false
-              | types.Ty.ContractType => ok false
-              | types.Ty.EvidenceType => ok true
-              | types.Ty.CertifiedType => ok false
-              | types.Ty.PairType _ _ => ok false
-              | types.Ty.SumType _ _ => ok false
-              | types.Ty.ListType _ => ok false
-              | types.Ty.ProgramType _ _ _ => ok false
-              | types.Ty.ResourceType _ => ok false
-            ok (work1, b1)
-          | types.Ty.CertifiedType =>
-            do
-            let b1 ←
-              match second with
-              | types.Ty.UnitType => ok false
-              | types.Ty.BoolType => ok false
-              | types.Ty.I64Type => ok false
-              | types.Ty.TextType => ok false
-              | types.Ty.SyntaxType => ok false
-              | types.Ty.ContractType => ok false
-              | types.Ty.EvidenceType => ok false
-              | types.Ty.CertifiedType => ok true
-              | types.Ty.PairType _ _ => ok false
-              | types.Ty.SumType _ _ => ok false
-              | types.Ty.ListType _ => ok false
-              | types.Ty.ProgramType _ _ _ => ok false
-              | types.Ty.ResourceType _ => ok false
-            ok (work1, b1)
-          | types.Ty.PairType first_head first_tail =>
-            match second with
-            | types.Ty.UnitType => ok (work1, false)
-            | types.Ty.BoolType => ok (work1, false)
-            | types.Ty.I64Type => ok (work1, false)
-            | types.Ty.TextType => ok (work1, false)
-            | types.Ty.SyntaxType => ok (work1, false)
-            | types.Ty.ContractType => ok (work1, false)
-            | types.Ty.EvidenceType => ok (work1, false)
-            | types.Ty.CertifiedType => ok (work1, false)
-            | types.Ty.PairType second_head second_tail =>
-              do
-              let work3 ← alloc.vec.Vec.push work1 (first_head, second_head)
-              let work4 ← alloc.vec.Vec.push work3 (first_tail, second_tail)
-              ok (work4, true)
-            | types.Ty.SumType _ _ => ok (work1, false)
-            | types.Ty.ListType _ => ok (work1, false)
-            | types.Ty.ProgramType _ _ _ => ok (work1, false)
-            | types.Ty.ResourceType _ => ok (work1, false)
-          | types.Ty.SumType first_head first_tail =>
-            match second with
-            | types.Ty.UnitType => ok (work1, false)
-            | types.Ty.BoolType => ok (work1, false)
-            | types.Ty.I64Type => ok (work1, false)
-            | types.Ty.TextType => ok (work1, false)
-            | types.Ty.SyntaxType => ok (work1, false)
-            | types.Ty.ContractType => ok (work1, false)
-            | types.Ty.EvidenceType => ok (work1, false)
-            | types.Ty.CertifiedType => ok (work1, false)
-            | types.Ty.PairType _ _ => ok (work1, false)
-            | types.Ty.SumType second_head second_tail =>
-              do
-              let work3 ← alloc.vec.Vec.push work1 (first_head, second_head)
-              let work4 ← alloc.vec.Vec.push work3 (first_tail, second_tail)
-              ok (work4, true)
-            | types.Ty.ListType _ => ok (work1, false)
-            | types.Ty.ProgramType _ _ _ => ok (work1, false)
-            | types.Ty.ResourceType _ => ok (work1, false)
-          | types.Ty.ListType first_item =>
-            match second with
-            | types.Ty.UnitType => ok (work1, false)
-            | types.Ty.BoolType => ok (work1, false)
-            | types.Ty.I64Type => ok (work1, false)
-            | types.Ty.TextType => ok (work1, false)
-            | types.Ty.SyntaxType => ok (work1, false)
-            | types.Ty.ContractType => ok (work1, false)
-            | types.Ty.EvidenceType => ok (work1, false)
-            | types.Ty.CertifiedType => ok (work1, false)
-            | types.Ty.PairType _ _ => ok (work1, false)
-            | types.Ty.SumType _ _ => ok (work1, false)
-            | types.Ty.ListType second_item =>
-              do
-              let work3 ← alloc.vec.Vec.push work1 (first_item, second_item)
-              ok (work3, true)
-            | types.Ty.ProgramType _ _ _ => ok (work1, false)
-            | types.Ty.ResourceType _ => ok (work1, false)
-          | types.Ty.ProgramType a_in a_out a_eff =>
-            match second with
-            | types.Ty.UnitType => ok (work1, false)
-            | types.Ty.BoolType => ok (work1, false)
-            | types.Ty.I64Type => ok (work1, false)
-            | types.Ty.TextType => ok (work1, false)
-            | types.Ty.SyntaxType => ok (work1, false)
-            | types.Ty.ContractType => ok (work1, false)
-            | types.Ty.EvidenceType => ok (work1, false)
-            | types.Ty.CertifiedType => ok (work1, false)
-            | types.Ty.PairType _ _ => ok (work1, false)
-            | types.Ty.SumType _ _ => ok (work1, false)
-            | types.Ty.ListType _ => ok (work1, false)
-            | types.Ty.ProgramType b_in b_out b_eff =>
-              do
+      let (o, work1) ← alloc.vec.Vec.pop Global work
+      match o with
+      | none => ok (done true)
+      | some p =>
+        let (first, second) := p
+        match first with
+        | types.Ty.UnitType =>
+          match second with
+          | types.Ty.UnitType => ok (cont work1)
+          | types.Ty.BoolType => ok (done false)
+          | types.Ty.I64Type => ok (done false)
+          | types.Ty.TextType => ok (done false)
+          | types.Ty.SyntaxType => ok (done false)
+          | types.Ty.ContractType => ok (done false)
+          | types.Ty.EvidenceType => ok (done false)
+          | types.Ty.CertifiedType => ok (done false)
+          | types.Ty.PairType _ _ => ok (done false)
+          | types.Ty.SumType _ _ => ok (done false)
+          | types.Ty.ListType _ => ok (done false)
+          | types.Ty.ProgramType _ _ _ => ok (done false)
+          | types.Ty.ResourceType _ => ok (done false)
+          | types.Ty.NominalType _ _ => ok (done false)
+        | types.Ty.BoolType =>
+          match second with
+          | types.Ty.UnitType => ok (done false)
+          | types.Ty.BoolType => ok (cont work1)
+          | types.Ty.I64Type => ok (done false)
+          | types.Ty.TextType => ok (done false)
+          | types.Ty.SyntaxType => ok (done false)
+          | types.Ty.ContractType => ok (done false)
+          | types.Ty.EvidenceType => ok (done false)
+          | types.Ty.CertifiedType => ok (done false)
+          | types.Ty.PairType _ _ => ok (done false)
+          | types.Ty.SumType _ _ => ok (done false)
+          | types.Ty.ListType _ => ok (done false)
+          | types.Ty.ProgramType _ _ _ => ok (done false)
+          | types.Ty.ResourceType _ => ok (done false)
+          | types.Ty.NominalType _ _ => ok (done false)
+        | types.Ty.I64Type =>
+          match second with
+          | types.Ty.UnitType => ok (done false)
+          | types.Ty.BoolType => ok (done false)
+          | types.Ty.I64Type => ok (cont work1)
+          | types.Ty.TextType => ok (done false)
+          | types.Ty.SyntaxType => ok (done false)
+          | types.Ty.ContractType => ok (done false)
+          | types.Ty.EvidenceType => ok (done false)
+          | types.Ty.CertifiedType => ok (done false)
+          | types.Ty.PairType _ _ => ok (done false)
+          | types.Ty.SumType _ _ => ok (done false)
+          | types.Ty.ListType _ => ok (done false)
+          | types.Ty.ProgramType _ _ _ => ok (done false)
+          | types.Ty.ResourceType _ => ok (done false)
+          | types.Ty.NominalType _ _ => ok (done false)
+        | types.Ty.TextType =>
+          match second with
+          | types.Ty.UnitType => ok (done false)
+          | types.Ty.BoolType => ok (done false)
+          | types.Ty.I64Type => ok (done false)
+          | types.Ty.TextType => ok (cont work1)
+          | types.Ty.SyntaxType => ok (done false)
+          | types.Ty.ContractType => ok (done false)
+          | types.Ty.EvidenceType => ok (done false)
+          | types.Ty.CertifiedType => ok (done false)
+          | types.Ty.PairType _ _ => ok (done false)
+          | types.Ty.SumType _ _ => ok (done false)
+          | types.Ty.ListType _ => ok (done false)
+          | types.Ty.ProgramType _ _ _ => ok (done false)
+          | types.Ty.ResourceType _ => ok (done false)
+          | types.Ty.NominalType _ _ => ok (done false)
+        | types.Ty.SyntaxType =>
+          match second with
+          | types.Ty.UnitType => ok (done false)
+          | types.Ty.BoolType => ok (done false)
+          | types.Ty.I64Type => ok (done false)
+          | types.Ty.TextType => ok (done false)
+          | types.Ty.SyntaxType => ok (cont work1)
+          | types.Ty.ContractType => ok (done false)
+          | types.Ty.EvidenceType => ok (done false)
+          | types.Ty.CertifiedType => ok (done false)
+          | types.Ty.PairType _ _ => ok (done false)
+          | types.Ty.SumType _ _ => ok (done false)
+          | types.Ty.ListType _ => ok (done false)
+          | types.Ty.ProgramType _ _ _ => ok (done false)
+          | types.Ty.ResourceType _ => ok (done false)
+          | types.Ty.NominalType _ _ => ok (done false)
+        | types.Ty.ContractType =>
+          match second with
+          | types.Ty.UnitType => ok (done false)
+          | types.Ty.BoolType => ok (done false)
+          | types.Ty.I64Type => ok (done false)
+          | types.Ty.TextType => ok (done false)
+          | types.Ty.SyntaxType => ok (done false)
+          | types.Ty.ContractType => ok (cont work1)
+          | types.Ty.EvidenceType => ok (done false)
+          | types.Ty.CertifiedType => ok (done false)
+          | types.Ty.PairType _ _ => ok (done false)
+          | types.Ty.SumType _ _ => ok (done false)
+          | types.Ty.ListType _ => ok (done false)
+          | types.Ty.ProgramType _ _ _ => ok (done false)
+          | types.Ty.ResourceType _ => ok (done false)
+          | types.Ty.NominalType _ _ => ok (done false)
+        | types.Ty.EvidenceType =>
+          match second with
+          | types.Ty.UnitType => ok (done false)
+          | types.Ty.BoolType => ok (done false)
+          | types.Ty.I64Type => ok (done false)
+          | types.Ty.TextType => ok (done false)
+          | types.Ty.SyntaxType => ok (done false)
+          | types.Ty.ContractType => ok (done false)
+          | types.Ty.EvidenceType => ok (cont work1)
+          | types.Ty.CertifiedType => ok (done false)
+          | types.Ty.PairType _ _ => ok (done false)
+          | types.Ty.SumType _ _ => ok (done false)
+          | types.Ty.ListType _ => ok (done false)
+          | types.Ty.ProgramType _ _ _ => ok (done false)
+          | types.Ty.ResourceType _ => ok (done false)
+          | types.Ty.NominalType _ _ => ok (done false)
+        | types.Ty.CertifiedType =>
+          match second with
+          | types.Ty.UnitType => ok (done false)
+          | types.Ty.BoolType => ok (done false)
+          | types.Ty.I64Type => ok (done false)
+          | types.Ty.TextType => ok (done false)
+          | types.Ty.SyntaxType => ok (done false)
+          | types.Ty.ContractType => ok (done false)
+          | types.Ty.EvidenceType => ok (done false)
+          | types.Ty.CertifiedType => ok (cont work1)
+          | types.Ty.PairType _ _ => ok (done false)
+          | types.Ty.SumType _ _ => ok (done false)
+          | types.Ty.ListType _ => ok (done false)
+          | types.Ty.ProgramType _ _ _ => ok (done false)
+          | types.Ty.ResourceType _ => ok (done false)
+          | types.Ty.NominalType _ _ => ok (done false)
+        | types.Ty.PairType first_head first_tail =>
+          match second with
+          | types.Ty.UnitType => ok (done false)
+          | types.Ty.BoolType => ok (done false)
+          | types.Ty.I64Type => ok (done false)
+          | types.Ty.TextType => ok (done false)
+          | types.Ty.SyntaxType => ok (done false)
+          | types.Ty.ContractType => ok (done false)
+          | types.Ty.EvidenceType => ok (done false)
+          | types.Ty.CertifiedType => ok (done false)
+          | types.Ty.PairType second_head second_tail =>
+            let work2 ← alloc.vec.Vec.push work1 (first_head, second_head)
+            let work3 ← alloc.vec.Vec.push work2 (first_tail, second_tail)
+            ok (cont work3)
+          | types.Ty.SumType _ _ => ok (done false)
+          | types.Ty.ListType _ => ok (done false)
+          | types.Ty.ProgramType _ _ _ => ok (done false)
+          | types.Ty.ResourceType _ => ok (done false)
+          | types.Ty.NominalType _ _ => ok (done false)
+        | types.Ty.SumType first_head first_tail =>
+          match second with
+          | types.Ty.UnitType => ok (done false)
+          | types.Ty.BoolType => ok (done false)
+          | types.Ty.I64Type => ok (done false)
+          | types.Ty.TextType => ok (done false)
+          | types.Ty.SyntaxType => ok (done false)
+          | types.Ty.ContractType => ok (done false)
+          | types.Ty.EvidenceType => ok (done false)
+          | types.Ty.CertifiedType => ok (done false)
+          | types.Ty.PairType _ _ => ok (done false)
+          | types.Ty.SumType second_head second_tail =>
+            let work2 ← alloc.vec.Vec.push work1 (first_head, second_head)
+            let work3 ← alloc.vec.Vec.push work2 (first_tail, second_tail)
+            ok (cont work3)
+          | types.Ty.ListType _ => ok (done false)
+          | types.Ty.ProgramType _ _ _ => ok (done false)
+          | types.Ty.ResourceType _ => ok (done false)
+          | types.Ty.NominalType _ _ => ok (done false)
+        | types.Ty.ListType first_item =>
+          match second with
+          | types.Ty.UnitType => ok (done false)
+          | types.Ty.BoolType => ok (done false)
+          | types.Ty.I64Type => ok (done false)
+          | types.Ty.TextType => ok (done false)
+          | types.Ty.SyntaxType => ok (done false)
+          | types.Ty.ContractType => ok (done false)
+          | types.Ty.EvidenceType => ok (done false)
+          | types.Ty.CertifiedType => ok (done false)
+          | types.Ty.PairType _ _ => ok (done false)
+          | types.Ty.SumType _ _ => ok (done false)
+          | types.Ty.ListType second_item =>
+            let work2 ← alloc.vec.Vec.push work1 (first_item, second_item)
+            ok (cont work2)
+          | types.Ty.ProgramType _ _ _ => ok (done false)
+          | types.Ty.ResourceType _ => ok (done false)
+          | types.Ty.NominalType _ _ => ok (done false)
+        | types.Ty.ProgramType a_in a_out a_eff =>
+          match second with
+          | types.Ty.UnitType => ok (done false)
+          | types.Ty.BoolType => ok (done false)
+          | types.Ty.I64Type => ok (done false)
+          | types.Ty.TextType => ok (done false)
+          | types.Ty.SyntaxType => ok (done false)
+          | types.Ty.ContractType => ok (done false)
+          | types.Ty.EvidenceType => ok (done false)
+          | types.Ty.CertifiedType => ok (done false)
+          | types.Ty.PairType _ _ => ok (done false)
+          | types.Ty.SumType _ _ => ok (done false)
+          | types.Ty.ListType _ => ok (done false)
+          | types.Ty.ProgramType b_in b_out b_eff =>
+            let b1 ← types.EffSet.Insts.CoreCmpPartialEqEffSet.eq a_eff b_eff
+            if b1
+            then
               let s := alloc.vec.Vec.deref a_in
               let s1 := alloc.vec.Vec.deref a_out
               let s2 := alloc.vec.Vec.deref b_in
               let s3 := alloc.vec.Vec.deref b_out
               let (next, is_program_equal) ←
                 types.impls.push_type_program work1 s s1 s2 s3
-              let b1 ←
-                if is_program_equal
-                then types.EffSet.Insts.CoreCmpPartialEqEffSet.eq a_eff b_eff
-                else ok false
-              ok (next, b1)
-            | types.Ty.ResourceType _ => ok (work1, false)
-          | types.Ty.ResourceType first_kind =>
-            do
+              if is_program_equal
+              then ok (cont next)
+              else ok (done false)
+            else ok (done false)
+          | types.Ty.ResourceType _ => ok (done false)
+          | types.Ty.NominalType _ _ => ok (done false)
+        | types.Ty.ResourceType first_kind =>
+          match second with
+          | types.Ty.UnitType => ok (done false)
+          | types.Ty.BoolType => ok (done false)
+          | types.Ty.I64Type => ok (done false)
+          | types.Ty.TextType => ok (done false)
+          | types.Ty.SyntaxType => ok (done false)
+          | types.Ty.ContractType => ok (done false)
+          | types.Ty.EvidenceType => ok (done false)
+          | types.Ty.CertifiedType => ok (done false)
+          | types.Ty.PairType _ _ => ok (done false)
+          | types.Ty.SumType _ _ => ok (done false)
+          | types.Ty.ListType _ => ok (done false)
+          | types.Ty.ProgramType _ _ _ => ok (done false)
+          | types.Ty.ResourceType second_kind =>
             let b1 ←
-              match second with
-              | types.Ty.UnitType => ok false
-              | types.Ty.BoolType => ok false
-              | types.Ty.I64Type => ok false
-              | types.Ty.TextType => ok false
-              | types.Ty.SyntaxType => ok false
-              | types.Ty.ContractType => ok false
-              | types.Ty.EvidenceType => ok false
-              | types.Ty.CertifiedType => ok false
-              | types.Ty.PairType _ _ => ok false
-              | types.Ty.SumType _ _ => ok false
-              | types.Ty.ListType _ => ok false
-              | types.Ty.ProgramType _ _ _ => ok false
-              | types.Ty.ResourceType second_kind =>
-                types.ResourceKind.Insts.CoreCmpPartialEqResourceKind.eq
-                  first_kind second_kind
-            ok (work1, b1)
-      if is_step_equal
-      then ok (cont (work2, is_mismatch))
-      else ok (cont (work2, true))
+              types.ResourceKind.Insts.CoreCmpPartialEqResourceKind.eq
+                first_kind second_kind
+            if b1
+            then ok (cont work1)
+            else ok (done false)
+          | types.Ty.NominalType _ _ => ok (done false)
+        | types.Ty.NominalType first_id first_shape =>
+          match second with
+          | types.Ty.UnitType => ok (done false)
+          | types.Ty.BoolType => ok (done false)
+          | types.Ty.I64Type => ok (done false)
+          | types.Ty.TextType => ok (done false)
+          | types.Ty.SyntaxType => ok (done false)
+          | types.Ty.ContractType => ok (done false)
+          | types.Ty.EvidenceType => ok (done false)
+          | types.Ty.CertifiedType => ok (done false)
+          | types.Ty.PairType _ _ => ok (done false)
+          | types.Ty.SumType _ _ => ok (done false)
+          | types.Ty.ListType _ => ok (done false)
+          | types.Ty.ProgramType _ _ _ => ok (done false)
+          | types.Ty.ResourceType _ => ok (done false)
+          | types.Ty.NominalType second_id second_shape =>
+            let b1 ←
+              types.NominalTypeId.Insts.CoreCmpPartialEqNominalTypeId.eq
+                first_id second_id
+            if b1
+            then
+              match first_shape with
+              | types.NominalShape.Opaque first1 =>
+                match second_shape with
+                | types.NominalShape.Opaque second1 =>
+                  let work2 ← alloc.vec.Vec.push work1 (first1, second1)
+                  ok (cont work2)
+                | types.NominalShape.Variant _ _ => ok (done false)
+              | types.NominalShape.Variant first_left first_right =>
+                match second_shape with
+                | types.NominalShape.Opaque _ => ok (done false)
+                | types.NominalShape.Variant second_left second_right =>
+                  let work2 ←
+                    alloc.vec.Vec.push work1 (first_right, second_right)
+                  let work3 ←
+                    alloc.vec.Vec.push work2 (first_left, second_left)
+                  ok (cont work3)
+            else ok (done false)
 
 /-- [noble_kernel::types::impls::ty_eq]: loop 0:
-    Source: 'crates/noble-kernel/src/types/impls.rs', lines 96:4-148:5 -/
+    Source: 'crates/noble-kernel/src/types/impls.rs', lines 109:4-173:1 -/
 @[rust_loop]
 def types.impls.ty_eq_loop
-  (work : alloc.vec.Vec (types.Ty × types.Ty)) (is_mismatch : Bool) :
-  Result Bool
-  := do
+  (work : alloc.vec.Vec (types.Ty × types.Ty)) : Result Bool := do
   loop
-    (fun (work1, is_mismatch1) => types.impls.ty_eq_loop.body work1
-      is_mismatch1)
-    (work, is_mismatch)
+    (fun work1 => types.impls.ty_eq_loop.body work1)
+    work
 
 /-- [noble_kernel::types::impls::ty_eq]:
-    Source: 'crates/noble-kernel/src/types/impls.rs', lines 91:0-150:1 -/
+    Source: 'crates/noble-kernel/src/types/impls.rs', lines 106:0-173:1 -/
 def types.impls.ty_eq (left : types.Ty) (right : types.Ty) : Result Bool := do
   let work := alloc.vec.Vec.with_capacity (types.Ty × types.Ty) 8#usize
   let t ← types.Ty.Insts.CoreCloneClone.clone left
   let t1 ← types.Ty.Insts.CoreCloneClone.clone right
   let work1 ← alloc.vec.Vec.push work (t, t1)
-  let is_mismatch ← types.impls.ty_eq_loop work1 false
-  ok (¬ is_mismatch)
+  types.impls.ty_eq_loop work1
 
 /-- [noble_kernel::types::impls::{impl core::cmp::PartialEq<noble_kernel::types::Ty> for noble_kernel::types::Ty}::eq]:
-    Source: 'crates/noble-kernel/src/types/impls.rs', lines 154:4-156:5
+    Source: 'crates/noble-kernel/src/types/impls.rs', lines 176:4-178:5
     Visibility: public -/
 def types.Ty.Insts.CoreCmpPartialEqTy.eq
   (self : types.Ty) (other : types.Ty) : Result Bool := do
   types.impls.ty_eq self other
 
 /-- Trait implementation: [noble_kernel::types::impls::{impl core::cmp::PartialEq<noble_kernel::types::Ty> for noble_kernel::types::Ty}]
-    Source: 'crates/noble-kernel/src/types/impls.rs', lines 153:0-157:1 -/
+    Source: 'crates/noble-kernel/src/types/impls.rs', lines 175:0-179:1 -/
 @[reducible]
 impl_def types.Ty.Insts.CoreCmpPartialEqTy : core.cmp.PartialEq types.Ty
   types.Ty := {
@@ -803,7 +863,7 @@ impl_def types.Ty.Insts.CoreCmpPartialEqTy : core.cmp.PartialEq types.Ty
 }
 
 /-- [noble_kernel::acceptance::parts::invalid]:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 241:0-270:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 232:0-259:1 -/
 def acceptance.parts.invalid
   (ctx : acceptance.parts.Ctx) («at» : acceptance.parts.Site)
   (expected : alloc.vec.Vec types.Ty) (actual : alloc.vec.Vec types.Ty)
@@ -863,55 +923,10 @@ def acceptance.parts.invalid
         truncated := false
       })
 
-/-- [noble_kernel::types::{noble_kernel::types::EffSet}::as_slice]:
-    Source: 'crates/noble-kernel/src/types.rs', lines 127:4-129:5
-    Visibility: public -/
-def types.EffSet.as_slice
-  (self : types.EffSet) : Result (Slice types.EffId) := do
-  ok (alloc.vec.Vec.deref self)
-
-/-- [noble_kernel::acceptance::parts::first_extra]: loop body 0:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 227:4-233:5 -/
+/-- [noble_kernel::acceptance::parts::multiset::find_unused]: loop body 0:
+    Source: 'crates/noble-kernel/src/acceptance/parts/multiset.rs', lines 30:4-36:5 -/
 @[rust_loop_body]
-def acceptance.parts.first_extra_loop.body
-  (allowed : types.EffSet) (ids : Slice types.EffId) (index : Std.Usize) :
-  Result (ControlFlow Std.Usize (Option types.EffId))
-  := do
-  let i := Slice.len ids
-  if index < i
-  then
-    let ei ← Slice.index_usize ids index
-    let b ← types.EffSet.contains allowed ei
-    if b
-    then let index1 ← index + 1#usize
-         ok (cont index1)
-    else ok (done (some ei))
-  else ok (done none)
-
-/-- [noble_kernel::acceptance::parts::first_extra]: loop 0:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 227:4-233:5 -/
-@[rust_loop]
-def acceptance.parts.first_extra_loop
-  (allowed : types.EffSet) (ids : Slice types.EffId) (index : Std.Usize) :
-  Result (Option types.EffId)
-  := do
-  loop
-    (fun index1 => acceptance.parts.first_extra_loop.body allowed ids index1)
-    index
-
-/-- [noble_kernel::acceptance::parts::first_extra]:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 220:0-235:1 -/
-def acceptance.parts.first_extra
-  (derived : types.EffSet) (allowed : types.EffSet) :
-  Result (Option types.EffId)
-  := do
-  let ids ← types.EffSet.as_slice derived
-  acceptance.parts.first_extra_loop allowed ids 0#usize
-
-/-- [noble_kernel::acceptance::parts::find_unused]: loop body 0:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 209:4-215:5 -/
-@[rust_loop_body]
-def acceptance.parts.find_unused_loop.body
+def acceptance.parts.multiset.find_unused_loop.body
   (right : Slice types.Ty) (used : Slice Bool) (item : types.Ty)
   (index : Std.Usize) :
   Result (ControlFlow Std.Usize (Option Std.Usize))
@@ -932,32 +947,32 @@ def acceptance.parts.find_unused_loop.body
            ok (cont index1)
   else ok (done none)
 
-/-- [noble_kernel::acceptance::parts::find_unused]: loop 0:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 209:4-215:5 -/
+/-- [noble_kernel::acceptance::parts::multiset::find_unused]: loop 0:
+    Source: 'crates/noble-kernel/src/acceptance/parts/multiset.rs', lines 30:4-36:5 -/
 @[rust_loop]
-def acceptance.parts.find_unused_loop
+def acceptance.parts.multiset.find_unused_loop
   (right : Slice types.Ty) (used : Slice Bool) (item : types.Ty)
   (index : Std.Usize) :
   Result (Option Std.Usize)
   := do
   loop
-    (fun index1 => acceptance.parts.find_unused_loop.body right used item
-      index1)
+    (fun index1 => acceptance.parts.multiset.find_unused_loop.body right used
+      item index1)
     index
 
-/-- [noble_kernel::acceptance::parts::find_unused]:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 202:0-217:1 -/
+/-- [noble_kernel::acceptance::parts::multiset::find_unused]:
+    Source: 'crates/noble-kernel/src/acceptance/parts/multiset.rs', lines 23:0-38:1 -/
 @[reducible]
-def acceptance.parts.find_unused
+def acceptance.parts.multiset.find_unused
   (right : Slice types.Ty) (used : Slice Bool) (item : types.Ty) :
   Result (Option Std.Usize)
   := do
-  acceptance.parts.find_unused_loop right used item 0#usize
+  acceptance.parts.multiset.find_unused_loop right used item 0#usize
 
-/-- [noble_kernel::acceptance::parts::same_multiset]: loop body 0:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 189:4-197:5 -/
+/-- [noble_kernel::acceptance::parts::multiset::same]: loop body 0:
+    Source: 'crates/noble-kernel/src/acceptance/parts/multiset.rs', lines 10:4-18:5 -/
 @[rust_loop_body]
-def acceptance.parts.same_multiset_loop.body
+def acceptance.parts.multiset.same_loop.body
   (left : Slice types.Ty) (right : Slice types.Ty) (used : alloc.vec.Vec Bool)
   (is_matched : Bool) (item_index : Std.Usize) :
   Result (ControlFlow ((alloc.vec.Vec Bool) × Bool × Std.Usize) Bool)
@@ -969,7 +984,7 @@ def acceptance.parts.same_multiset_loop.body
     then
       let s := alloc.vec.Vec.deref used
       let t ← Slice.index_usize left item_index
-      let o ← acceptance.parts.find_unused right s t
+      let o ← acceptance.parts.multiset.find_unused right s t
       match o with
       | none => ok (cont (used, false, item_index))
       | some index =>
@@ -982,23 +997,23 @@ def acceptance.parts.same_multiset_loop.body
     else ok (done true)
   else ok (done false)
 
-/-- [noble_kernel::acceptance::parts::same_multiset]: loop 0:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 189:4-197:5 -/
+/-- [noble_kernel::acceptance::parts::multiset::same]: loop 0:
+    Source: 'crates/noble-kernel/src/acceptance/parts/multiset.rs', lines 10:4-18:5 -/
 @[rust_loop]
-def acceptance.parts.same_multiset_loop
+def acceptance.parts.multiset.same_loop
   (left : Slice types.Ty) (right : Slice types.Ty) (used : alloc.vec.Vec Bool)
   (is_matched : Bool) (item_index : Std.Usize) :
   Result Bool
   := do
   loop
     (fun (used1, is_matched1, item_index1) =>
-      acceptance.parts.same_multiset_loop.body left right used1 is_matched1
+      acceptance.parts.multiset.same_loop.body left right used1 is_matched1
       item_index1)
     (used, is_matched, item_index)
 
-/-- [noble_kernel::acceptance::parts::same_multiset]:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 182:0-199:1 -/
-def acceptance.parts.same_multiset
+/-- [noble_kernel::acceptance::parts::multiset::same]:
+    Source: 'crates/noble-kernel/src/acceptance/parts/multiset.rs', lines 3:0-20:1 -/
+def acceptance.parts.multiset.same
   (left : Slice types.Ty) (right : Slice types.Ty) : Result Bool := do
   let i := Slice.len left
   let i1 := Slice.len right
@@ -1007,10 +1022,10 @@ def acceptance.parts.same_multiset
   else
     let i2 := Slice.len right
     let used ← alloc.vec.from_elem core.clone.CloneBool false i2
-    acceptance.parts.same_multiset_loop left right used true 0#usize
+    acceptance.parts.multiset.same_loop left right used true 0#usize
 
 /-- [noble_kernel::acceptance::parts::mismatch_constraint]:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 156:0-165:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 185:0-194:1 -/
 def acceptance.parts.mismatch_constraint
   (expected : Slice types.Ty) (actual : Slice types.Ty) :
   Result untrusted.Constraint
@@ -1019,14 +1034,14 @@ def acceptance.parts.mismatch_constraint
   let i1 := Slice.len actual
   if i = i1
   then
-    let b ← acceptance.parts.same_multiset expected actual
+    let b ← acceptance.parts.multiset.same expected actual
     if b
     then ok untrusted.Constraint.StackOrder
     else ok untrusted.Constraint.StackJoin
   else ok untrusted.Constraint.StackJoin
 
 /-- [noble_kernel::types::{noble_kernel::types::EffSet}::union]: loop body 0:
-    Source: 'crates/noble-kernel/src/types.rs', lines 92:8-108:9
+    Source: 'crates/noble-kernel/src/types.rs', lines 108:8-124:9
     Visibility: public -/
 @[rust_loop_body]
 def types.EffSet.union_loop.body
@@ -1163,7 +1178,7 @@ def types.EffSet.union_loop.body
     else ok (done out)
 
 /-- [noble_kernel::types::{noble_kernel::types::EffSet}::union]: loop 0:
-    Source: 'crates/noble-kernel/src/types.rs', lines 92:8-108:9
+    Source: 'crates/noble-kernel/src/types.rs', lines 108:8-124:9
     Visibility: public -/
 @[rust_loop]
 def types.EffSet.union_loop
@@ -1177,7 +1192,7 @@ def types.EffSet.union_loop
     (out, left, right)
 
 /-- [noble_kernel::types::{noble_kernel::types::EffSet}::union]:
-    Source: 'crates/noble-kernel/src/types.rs', lines 84:4-110:5
+    Source: 'crates/noble-kernel/src/types.rs', lines 100:4-126:5
     Visibility: public -/
 def types.EffSet.union
   (self : types.EffSet) (other : types.EffSet) : Result types.EffSet := do
@@ -1189,7 +1204,7 @@ def types.EffSet.union
   ok out1
 
 /-- [noble_kernel::acceptance::parts::tail_copy]:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 171:0-180:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 200:0-209:1 -/
 def acceptance.parts.tail_copy
   (stack : Slice types.Ty) (needed : Std.Usize) :
   Result (alloc.vec.Vec types.Ty)
@@ -1207,7 +1222,7 @@ def acceptance.parts.tail_copy
   else alloc.slice.Slice.to_vec types.Ty.Insts.CoreCloneClone stack
 
 /-- [noble_kernel::acceptance::parts::match_tail]: loop body 0:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 143:4-151:5 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 172:4-180:5 -/
 @[rust_loop_body]
 def acceptance.parts.match_tail_loop.body
   (stack : Slice types.Ty) (expected : Slice types.Ty) (tail_start : Std.Usize)
@@ -1234,7 +1249,7 @@ def acceptance.parts.match_tail_loop.body
   else ok (done none)
 
 /-- [noble_kernel::acceptance::parts::match_tail]: loop 0:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 143:4-151:5 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 172:4-180:5 -/
 @[rust_loop]
 def acceptance.parts.match_tail_loop
   (stack : Slice types.Ty) (expected : Slice types.Ty) (tail_start : Std.Usize)
@@ -1247,7 +1262,7 @@ def acceptance.parts.match_tail_loop
     index
 
 /-- [noble_kernel::acceptance::parts::match_tail]:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 133:0-153:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 162:0-182:1 -/
 def acceptance.parts.match_tail
   (stack : Slice types.Ty) (expected : Slice types.Ty) :
   Result (Option untrusted.Constraint)
@@ -1263,7 +1278,7 @@ def acceptance.parts.match_tail
     acceptance.parts.match_tail_loop stack expected tail_start 0#usize
 
 /-- [noble_kernel::types::size::queue_children]: loop body 0:
-    Source: 'crates/noble-kernel/src/types/size.rs', lines 140:12-143:13 -/
+    Source: 'crates/noble-kernel/src/types/size.rs', lines 144:12-147:13 -/
 @[rust_loop_body]
 def types.size.queue_children_loop0.body
   (stack_in : alloc.vec.Vec types.Ty) (todo : alloc.vec.Vec (types.Ty × Bool))
@@ -1284,7 +1299,7 @@ def types.size.queue_children_loop0.body
   else ok (done todo)
 
 /-- [noble_kernel::types::size::queue_children]: loop 0:
-    Source: 'crates/noble-kernel/src/types/size.rs', lines 140:12-143:13 -/
+    Source: 'crates/noble-kernel/src/types/size.rs', lines 144:12-147:13 -/
 @[rust_loop]
 def types.size.queue_children_loop0
   (todo : alloc.vec.Vec (types.Ty × Bool)) (stack_in : alloc.vec.Vec types.Ty)
@@ -1297,7 +1312,7 @@ def types.size.queue_children_loop0
     (todo, index)
 
 /-- [noble_kernel::types::size::queue_children]: loop body 1:
-    Source: 'crates/noble-kernel/src/types/size.rs', lines 145:12-148:13 -/
+    Source: 'crates/noble-kernel/src/types/size.rs', lines 149:12-152:13 -/
 @[rust_loop_body]
 def types.size.queue_children_loop1.body
   (stack_out : alloc.vec.Vec types.Ty)
@@ -1318,7 +1333,7 @@ def types.size.queue_children_loop1.body
   else ok (done todo)
 
 /-- [noble_kernel::types::size::queue_children]: loop 1:
-    Source: 'crates/noble-kernel/src/types/size.rs', lines 145:12-148:13 -/
+    Source: 'crates/noble-kernel/src/types/size.rs', lines 149:12-152:13 -/
 @[rust_loop]
 def types.size.queue_children_loop1
   (todo : alloc.vec.Vec (types.Ty × Bool))
@@ -1331,7 +1346,7 @@ def types.size.queue_children_loop1
     (todo, index)
 
 /-- [noble_kernel::types::size::queue_children]:
-    Source: 'crates/noble-kernel/src/types/size.rs', lines 119:0-161:1 -/
+    Source: 'crates/noble-kernel/src/types/size.rs', lines 123:0-177:1 -/
 def types.size.queue_children
   (node : types.Ty) (todo : alloc.vec.Vec (types.Ty × Bool))
   (sizes : alloc.vec.Vec Std.U32) :
@@ -1393,9 +1408,23 @@ def types.size.queue_children
   | types.Ty.ResourceType _ =>
     let sizes1 ← alloc.vec.Vec.push sizes 1#u32
     ok (todo, sizes1)
+  | types.Ty.NominalType _ shape =>
+    let t ← types.Ty.Insts.CoreCloneClone.clone node
+    let todo1 ← alloc.vec.Vec.push todo (t, true)
+    match shape with
+    | types.NominalShape.Opaque representation =>
+      let t1 ← types.Ty.Insts.CoreCloneClone.clone representation
+      let todo2 ← alloc.vec.Vec.push todo1 (t1, false)
+      ok (todo2, sizes)
+    | types.NominalShape.Variant left right =>
+      let t1 ← types.Ty.Insts.CoreCloneClone.clone left
+      let todo2 ← alloc.vec.Vec.push todo1 (t1, false)
+      let t2 ← types.Ty.Insts.CoreCloneClone.clone right
+      let todo3 ← alloc.vec.Vec.push todo2 (t2, false)
+      ok (todo3, sizes)
 
 /-- [noble_kernel::types::size::take_sizes]: loop body 0:
-    Source: 'crates/noble-kernel/src/types/size.rs', lines 93:4-102:5 -/
+    Source: 'crates/noble-kernel/src/types/size.rs', lines 97:4-106:5 -/
 @[rust_loop_body]
 def types.size.take_sizes_loop.body
   (count : Std.Usize) (sizes : alloc.vec.Vec Std.U32) (total : Std.U32)
@@ -1415,7 +1444,7 @@ def types.size.take_sizes_loop.body
   else ok (done (sizes, total, false))
 
 /-- [noble_kernel::types::size::take_sizes]: loop 0:
-    Source: 'crates/noble-kernel/src/types/size.rs', lines 93:4-102:5 -/
+    Source: 'crates/noble-kernel/src/types/size.rs', lines 97:4-106:5 -/
 @[rust_loop]
 def types.size.take_sizes_loop
   (sizes : alloc.vec.Vec Std.U32) (count : Std.Usize) (total : Std.U32)
@@ -1428,7 +1457,7 @@ def types.size.take_sizes_loop
     (sizes, total, step)
 
 /-- [noble_kernel::types::size::take_sizes]:
-    Source: 'crates/noble-kernel/src/types/size.rs', lines 86:0-108:1 -/
+    Source: 'crates/noble-kernel/src/types/size.rs', lines 90:0-112:1 -/
 def types.size.take_sizes
   (sizes : alloc.vec.Vec Std.U32) (count : Std.Usize) :
   Result ((alloc.vec.Vec Std.U32) × (Option Std.U32))
@@ -1440,7 +1469,7 @@ def types.size.take_sizes
   else ok (sizes1, some total)
 
 /-- [noble_kernel::types::size::count_children]:
-    Source: 'crates/noble-kernel/src/types/size.rs', lines 60:0-77:1 -/
+    Source: 'crates/noble-kernel/src/types/size.rs', lines 60:0-81:1 -/
 def types.size.count_children (node : types.Ty) : Result Std.Usize := do
   match node with
   | types.Ty.UnitType => ok 0#usize
@@ -1459,6 +1488,10 @@ def types.size.count_children (node : types.Ty) : Result Std.Usize := do
     let i1 := alloc.vec.Vec.len stack_out
     i + i1
   | types.Ty.ResourceType _ => ok 0#usize
+  | types.Ty.NominalType _ shape =>
+    match shape with
+    | types.NominalShape.Opaque _ => ok 1#usize
+    | types.NominalShape.Variant _ _ => ok 2#usize
 
 /-- [noble_kernel::types::size::walk_step]:
     Source: 'crates/noble-kernel/src/types/size.rs', lines 28:0-53:1 -/
@@ -1516,7 +1549,7 @@ def types.Ty.size_loop
     (outcome, walk)
 
 /-- [noble_kernel::types::{noble_kernel::types::Ty}::size]:
-    Source: 'crates/noble-kernel/src/types.rs', lines 254:4-270:5
+    Source: 'crates/noble-kernel/src/types.rs', lines 231:4-247:5
     Visibility: public -/
 def types.Ty.size (self : types.Ty) : Result (Option Std.U32) := do
   let v := alloc.vec.Vec.with_capacity (types.Ty × Bool) 8#usize
@@ -1582,8 +1615,968 @@ def words.bounds.check_sizes
   | none => ok (core.result.Result.Ok ())
   | some problem => ok (core.result.Result.Err problem)
 
+/-- [noble_kernel::acceptance::parts::invalid_without_stacks]:
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 213:0-226:1 -/
+def acceptance.parts.invalid_without_stacks
+  («at» : acceptance.parts.Site) (constraint : untrusted.Constraint) :
+  Result acceptance.Fail
+  := do
+  ok (acceptance.Fail.Invalid
+    {
+      node := «at».node,
+      «def» := «at».def,
+      expected := (alloc.vec.Vec.new types.Ty),
+      actual := (alloc.vec.Vec.new types.Ty),
+      constraint,
+      provenance_available := false,
+      truncated := false
+    })
+
+/-- Trait implementation: [noble_kernel::types::{impl core::cmp::PartialEq<noble_kernel::types::ResourceKind> for noble_kernel::types::ResourceKind}]
+    Source: 'crates/noble-kernel/src/types.rs', lines 15:29-15:38 -/
+@[reducible]
+impl_def types.ResourceKind.Insts.CoreCmpPartialEqResourceKind :
+  core.cmp.PartialEq types.ResourceKind types.ResourceKind := {
+  eq := types.ResourceKind.Insts.CoreCmpPartialEqResourceKind.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    types.ResourceKind.Insts.CoreCmpPartialEqResourceKind
+}
+
+/-- [noble_kernel::types::{noble_kernel::types::EffSet}::as_slice]:
+    Source: 'crates/noble-kernel/src/types.rs', lines 143:4-145:5
+    Visibility: public -/
+def types.EffSet.as_slice
+  (self : types.EffSet) : Result (Slice types.EffId) := do
+  ok (alloc.vec.Vec.deref self)
+
+/-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::knows_effect]: loop body 0:
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 227:8-234:5
+    Visibility: public -/
+@[rust_loop_body]
+def contracts.Env.knows_effect_loop.body
+  (self : contracts.Env) (id : types.EffId) (index : Std.Usize) :
+  Result (ControlFlow Std.Usize Bool)
+  := do
+  let i := alloc.vec.Vec.len self.effects
+  if index < i
+  then
+    let ei ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice types.EffId)
+        self.effects index
+    let b ← types.EffId.Insts.CoreCmpPartialEqEffId.eq ei id
+    if b
+    then ok (done true)
+    else let index1 ← index + 1#usize
+         ok (cont index1)
+  else ok (done false)
+
+/-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::knows_effect]: loop 0:
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 227:8-234:5
+    Visibility: public -/
+@[rust_loop]
+def contracts.Env.knows_effect_loop
+  (self : contracts.Env) (id : types.EffId) (index : Std.Usize) :
+  Result Bool
+  := do
+  loop
+    (fun index1 => contracts.Env.knows_effect_loop.body self id index1)
+    index
+
+/-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::knows_effect]:
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 225:4-234:5
+    Visibility: public -/
+@[reducible]
+def contracts.Env.knows_effect
+  (self : contracts.Env) (id : types.EffId) : Result Bool := do
+  contracts.Env.knows_effect_loop self id 0#usize
+
+/-- [noble_kernel::contracts::nominal::validation::valid_program_components::{impl core::ops::function::FnOnce<(u64,), bool> for noble_kernel::contracts::nominal::validation::valid_program_components::{closure}<'_0>}::call_once]:
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 258:23-258:60 -/
+def
+  contracts.nominal.validation.valid_program_components.closure.Insts.CoreOpsFunctionFnOnceTupleU64Bool.call_once
+  (c : contracts.nominal.validation.valid_program_components.closure)
+  (tupled_args : Std.U64) :
+  Result Bool
+  := do
+  let i ← lift (core.convert.num.FromU64U32.from c)
+  ok (tupled_args <= i)
+
+/-- Trait implementation: [noble_kernel::contracts::nominal::validation::valid_program_components::{impl core::ops::function::FnOnce<(u64,), bool> for noble_kernel::contracts::nominal::validation::valid_program_components::{closure}<'_0>}]
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 258:23-258:60 -/
+@[reducible]
+def
+  contracts.nominal.validation.valid_program_components.closure.Insts.CoreOpsFunctionFnOnceTupleU64Bool
+  : core.ops.function.FnOnce
+  contracts.nominal.validation.valid_program_components.closure Std.U64 Bool
+  := {
+  call_once :=
+    contracts.nominal.validation.valid_program_components.closure.Insts.CoreOpsFunctionFnOnceTupleU64Bool.call_once
+}
+
+/-- [noble_kernel::contracts::nominal::validation::valid_program_components]: loop body 0:
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 252:4-255:5 -/
+@[rust_loop_body]
+def contracts.nominal.validation.valid_program_components_loop.body
+  (env : contracts.Env) (ids : Slice types.EffId) (index : Std.Usize)
+  (is_effect_set_known : Bool) :
+  Result (ControlFlow (Std.Usize × Bool) Bool)
+  := do
+  let i := Slice.len ids
+  if index < i
+  then
+    if is_effect_set_known
+    then
+      let ei ← Slice.index_usize ids index
+      let is_effect_set_known1 ← contracts.Env.knows_effect env ei
+      let index1 ← index + 1#usize
+      ok (cont (index1, is_effect_set_known1))
+    else ok (done false)
+  else ok (done is_effect_set_known)
+
+/-- [noble_kernel::contracts::nominal::validation::valid_program_components]: loop 0:
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 252:4-255:5 -/
+@[rust_loop]
+def contracts.nominal.validation.valid_program_components_loop
+  (env : contracts.Env) (ids : Slice types.EffId) (index : Std.Usize)
+  (is_effect_set_known : Bool) :
+  Result Bool
+  := do
+  loop
+    (fun (index1, is_effect_set_known1) =>
+      contracts.nominal.validation.valid_program_components_loop.body env ids
+      index1 is_effect_set_known1)
+    (index, is_effect_set_known)
+
+/-- [noble_kernel::contracts::nominal::validation::valid_program_components]:
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 242:0-259:1 -/
+def contracts.nominal.validation.valid_program_components
+  (env : contracts.Env) (stack_in : Slice types.Ty)
+  (stack_out : Slice types.Ty) (effects : types.EffSet) (max_nodes : Std.U32) :
+  Result Bool
+  := do
+  let ids ← types.EffSet.as_slice effects
+  let is_effect_set_known ←
+    contracts.nominal.validation.valid_program_components_loop env ids 0#usize
+      true
+  if is_effect_set_known
+  then
+    let i := Slice.len stack_in
+    let i1 := Slice.len stack_out
+    let i2 ← lift (core.num.Usize.saturating_add i i1)
+    let r ← U64.Insts.CoreConvertTryFromUsizeTryFromIntError.try_from i2
+    core.result.Result.is_ok_and
+      contracts.nominal.validation.valid_program_components.closure.Insts.CoreOpsFunctionFnOnceTupleU64Bool
+      r max_nodes
+  else ok false
+
+/-- [noble_kernel::types::{impl core::cmp::PartialEq<noble_kernel::types::NominalShape> for noble_kernel::types::NominalShape}::eq]:
+    Source: 'crates/noble-kernel/src/types.rs', lines 26:23-26:32
+    Visibility: public -/
+def types.NominalShape.Insts.CoreCmpPartialEqNominalShape.eq
+  (self : types.NominalShape) (other : types.NominalShape) : Result Bool := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  if self1 = other1
+  then
+    match self with
+    | types.NominalShape.Opaque __self_0 =>
+      match other with
+      | types.NominalShape.Opaque __arg1_0 =>
+        types.Ty.Insts.CoreCmpPartialEqTy.eq __self_0 __arg1_0
+      | types.NominalShape.Variant _ _ => fail panic
+    | types.NominalShape.Variant __self_0 __self_1 =>
+      match other with
+      | types.NominalShape.Opaque _ => fail panic
+      | types.NominalShape.Variant __arg1_0 __arg1_1 =>
+        let b ← types.Ty.Insts.CoreCmpPartialEqTy.eq __self_0 __arg1_0
+        if b
+        then types.Ty.Insts.CoreCmpPartialEqTy.eq __self_1 __arg1_1
+        else ok false
+  else ok false
+
+/-- Trait implementation: [noble_kernel::types::{impl core::cmp::PartialEq<noble_kernel::types::NominalShape> for noble_kernel::types::NominalShape}]
+    Source: 'crates/noble-kernel/src/types.rs', lines 26:23-26:32 -/
+@[reducible]
+impl_def types.NominalShape.Insts.CoreCmpPartialEqNominalShape :
+  core.cmp.PartialEq types.NominalShape types.NominalShape := {
+  eq := types.NominalShape.Insts.CoreCmpPartialEqNominalShape.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    types.NominalShape.Insts.CoreCmpPartialEqNominalShape
+}
+
+/-- Trait implementation: [noble_kernel::types::{impl core::cmp::PartialEq<noble_kernel::types::NominalTypeId> for noble_kernel::types::NominalTypeId}]
+    Source: 'crates/noble-kernel/src/types.rs', lines 19:29-19:38 -/
+@[reducible]
+impl_def types.NominalTypeId.Insts.CoreCmpPartialEqNominalTypeId :
+  core.cmp.PartialEq types.NominalTypeId types.NominalTypeId := {
+  eq := types.NominalTypeId.Insts.CoreCmpPartialEqNominalTypeId.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    types.NominalTypeId.Insts.CoreCmpPartialEqNominalTypeId
+}
+
+/-- [noble_kernel::contracts::nominal::type::walk::is_shape_leaf]:
+    Source: 'crates/noble-kernel/src/contracts/nominal/type/walk.rs', lines 281:0-294:1 -/
+def contracts.nominal.type.walk.is_shape_leaf
+  (ty : types.Ty) : Result Bool := do
+  match ty with
+  | types.Ty.UnitType => ok true
+  | types.Ty.BoolType => ok true
+  | types.Ty.I64Type => ok true
+  | types.Ty.TextType => ok true
+  | types.Ty.SyntaxType => ok true
+  | types.Ty.ContractType => ok true
+  | types.Ty.EvidenceType => ok true
+  | types.Ty.CertifiedType => ok true
+  | types.Ty.PairType _ _ => ok false
+  | types.Ty.SumType _ _ => ok false
+  | types.Ty.ListType _ => ok false
+  | types.Ty.ProgramType _ _ _ => ok false
+  | types.Ty.ResourceType _ => ok true
+  | types.Ty.NominalType _ _ => ok false
+
+/-- [noble_kernel::contracts::nominal::type::walk::work::{noble_kernel::contracts::nominal::type::walk::work::State<'a>}::with_pair]:
+    Source: 'crates/noble-kernel/src/contracts/nominal/type/walk/work.rs', lines 23:4-31:5 -/
+def contracts.nominal.type.walk.work.State.with_pair
+  (self : contracts.nominal.type.walk.work.State) (left : types.Ty)
+  (right : types.Ty) :
+  Result contracts.nominal.type.walk.work.State
+  := do
+  let v ← alloc.vec.Vec.push self.pending left
+  let v1 ← alloc.vec.Vec.push v right
+  ok { self with pending := v1 }
+
+/-- [noble_kernel::contracts::nominal::type::walk::work::{noble_kernel::contracts::nominal::type::walk::work::State<'a>}::with_type]:
+    Source: 'crates/noble-kernel/src/contracts/nominal/type/walk/work.rs', lines 18:4-21:5 -/
+def contracts.nominal.type.walk.work.State.with_type
+  (self : contracts.nominal.type.walk.work.State) (ty : types.Ty) :
+  Result contracts.nominal.type.walk.work.State
+  := do
+  let v ← alloc.vec.Vec.push self.pending ty
+  ok { self with pending := v }
+
+/-- [noble_kernel::contracts::nominal::type::walk::work::{noble_kernel::contracts::nominal::type::walk::work::State<'a>}::with_descriptor]:
+    Source: 'crates/noble-kernel/src/contracts/nominal/type/walk/work.rs', lines 45:4-53:5 -/
+def contracts.nominal.type.walk.work.State.with_descriptor
+  (self : contracts.nominal.type.walk.work.State) (shape : types.NominalShape)
+  :
+  Result (Option contracts.nominal.type.walk.work.State)
+  := do
+  match shape with
+  | types.NominalShape.Opaque ty =>
+    let s ← contracts.nominal.type.walk.work.State.with_type self ty
+    ok (some s)
+  | types.NominalShape.Variant left right =>
+    let s ← contracts.nominal.type.walk.work.State.with_pair self left right
+    ok (some s)
+
+/-- [noble_kernel::contracts::nominal::type::walk::work::{noble_kernel::contracts::nominal::type::walk::work::State<'a>}::with_program]:
+    Source: 'crates/noble-kernel/src/contracts/nominal/type/walk/work.rs', lines 33:4-43:5 -/
+def contracts.nominal.type.walk.work.State.with_program
+  (self : contracts.nominal.type.walk.work.State) (input : Slice types.Ty)
+  (output : Slice types.Ty) :
+  Result contracts.nominal.type.walk.work.State
+  := do
+  let i := Slice.len input
+  let i1 := Slice.len output
+  let i2 ← lift (core.num.Usize.saturating_add i i1)
+  let v ← alloc.vec.Vec.reserve Global self.pending i2
+  let i3 ← core.slice.Slice.iter input
+  let v1 ←
+    alloc.vec.Vec.Insts.CoreIterTraitsCollectExtend.extend Global
+      (core.iter.traits.collect.IntoIterator.Blanket
+      (core.iter.traits.iterator.IteratorSliceIter types.Ty)) v i3
+  let i4 ← core.slice.Slice.iter output
+  let v2 ←
+    alloc.vec.Vec.Insts.CoreIterTraitsCollectExtend.extend Global
+      (core.iter.traits.collect.IntoIterator.Blanket
+      (core.iter.traits.iterator.IteratorSliceIter types.Ty)) v1 i4
+  ok { self with pending := v2 }
+
+/-- [noble_kernel::contracts::nominal::type::walk::enqueue_shape]:
+    Source: 'crates/noble-kernel/src/contracts/nominal/type/walk.rs', lines 269:0-279:1 -/
+def contracts.nominal.type.walk.enqueue_shape
+  (ty : types.Ty) (state : contracts.nominal.type.walk.work.State) :
+  Result (Option contracts.nominal.type.walk.work.State)
+  := do
+  match ty with
+  | types.Ty.UnitType =>
+    let b ← contracts.nominal.type.walk.is_shape_leaf types.Ty.UnitType
+    core.bool.Bool.then_some b state
+  | types.Ty.BoolType =>
+    let b ← contracts.nominal.type.walk.is_shape_leaf types.Ty.BoolType
+    core.bool.Bool.then_some b state
+  | types.Ty.I64Type =>
+    let b ← contracts.nominal.type.walk.is_shape_leaf types.Ty.I64Type
+    core.bool.Bool.then_some b state
+  | types.Ty.TextType =>
+    let b ← contracts.nominal.type.walk.is_shape_leaf types.Ty.TextType
+    core.bool.Bool.then_some b state
+  | types.Ty.SyntaxType =>
+    let b ← contracts.nominal.type.walk.is_shape_leaf types.Ty.SyntaxType
+    core.bool.Bool.then_some b state
+  | types.Ty.ContractType =>
+    let b ← contracts.nominal.type.walk.is_shape_leaf types.Ty.ContractType
+    core.bool.Bool.then_some b state
+  | types.Ty.EvidenceType =>
+    let b ← contracts.nominal.type.walk.is_shape_leaf types.Ty.EvidenceType
+    core.bool.Bool.then_some b state
+  | types.Ty.CertifiedType =>
+    let b ← contracts.nominal.type.walk.is_shape_leaf types.Ty.CertifiedType
+    core.bool.Bool.then_some b state
+  | types.Ty.PairType left right =>
+    let s ← contracts.nominal.type.walk.work.State.with_pair state left right
+    ok (some s)
+  | types.Ty.SumType left right =>
+    let s ← contracts.nominal.type.walk.work.State.with_pair state left right
+    ok (some s)
+  | types.Ty.ListType item =>
+    let s ← contracts.nominal.type.walk.work.State.with_type state item
+    ok (some s)
+  | types.Ty.ProgramType input output _ =>
+    let s := alloc.vec.Vec.deref input
+    let s1 := alloc.vec.Vec.deref output
+    let s2 ← contracts.nominal.type.walk.work.State.with_program state s s1
+    ok (some s2)
+  | types.Ty.ResourceType _ =>
+    let b ← contracts.nominal.type.walk.is_shape_leaf ty
+    core.bool.Bool.then_some b state
+  | types.Ty.NominalType _ nested =>
+    contracts.nominal.type.walk.work.State.with_descriptor state nested
+
+/-- [noble_kernel::contracts::nominal::type::walk::program_children_fit]:
+    Source: 'crates/noble-kernel/src/contracts/nominal/type/walk.rs', lines 257:0-263:1 -/
+def contracts.nominal.type.walk.program_children_fit
+  (ty : types.Ty) (max_nodes : Std.U32) : Result Bool := do
+  match ty with
+  | types.Ty.UnitType => ok true
+  | types.Ty.BoolType => ok true
+  | types.Ty.I64Type => ok true
+  | types.Ty.TextType => ok true
+  | types.Ty.SyntaxType => ok true
+  | types.Ty.ContractType => ok true
+  | types.Ty.EvidenceType => ok true
+  | types.Ty.CertifiedType => ok true
+  | types.Ty.PairType _ _ => ok true
+  | types.Ty.SumType _ _ => ok true
+  | types.Ty.ListType _ => ok true
+  | types.Ty.ProgramType input output _ =>
+    let i := alloc.vec.Vec.len input
+    let i1 := alloc.vec.Vec.len output
+    let child_count ← lift (core.num.Usize.saturating_add i i1)
+    let i2 ← lift (UScalar.cast .U128 child_count)
+    let i3 ← lift (UScalar.cast .U128 max_nodes)
+    ok (i2 <= i3)
+  | types.Ty.ResourceType _ => ok true
+  | types.Ty.NominalType _ _ => ok true
+
+/-- [noble_kernel::contracts::nominal::type::walk::bounded_step]:
+    Source: 'crates/noble-kernel/src/contracts/nominal/type/walk.rs', lines 240:0-255:1 -/
+def contracts.nominal.type.walk.bounded_step
+  (state : contracts.nominal.type.walk.work.State) (max_nodes : Std.U32) :
+  Result contracts.nominal.type.walk.ShapeStep
+  := do
+  let (o, v) ← alloc.vec.Vec.pop Global state.pending
+  match o with
+  | none => ok contracts.nominal.type.walk.ShapeStep.Done
+  | some ty =>
+    if state.visited >= max_nodes
+    then ok contracts.nominal.type.walk.ShapeStep.Failed
+    else
+      let i := alloc.vec.Vec.len v
+      if i >= 512#usize
+      then ok contracts.nominal.type.walk.ShapeStep.Failed
+      else
+        let i1 ← state.visited + 1#u32
+        let b ← contracts.nominal.type.walk.program_children_fit ty max_nodes
+        if b
+        then
+          let o1 ←
+            contracts.nominal.type.walk.enqueue_shape ty
+              { pending := v, visited := i1 }
+          match o1 with
+          | none => ok contracts.nominal.type.walk.ShapeStep.Failed
+          | some s => ok (contracts.nominal.type.walk.ShapeStep.Continue s)
+        else ok contracts.nominal.type.walk.ShapeStep.Failed
+
+/-- [noble_kernel::contracts::nominal::type::walk::work::{noble_kernel::contracts::nominal::type::walk::work::State<'a>}::for_descriptor]:
+    Source: 'crates/noble-kernel/src/contracts/nominal/type/walk/work.rs', lines 10:4-16:5 -/
+def contracts.nominal.type.walk.work.State.for_descriptor
+  (shape : types.NominalShape) :
+  Result (Option contracts.nominal.type.walk.work.State)
+  := do
+  let v := alloc.vec.Vec.with_capacity types.Ty 4#usize
+  contracts.nominal.type.walk.work.State.with_descriptor
+    { pending := v, visited := 0#u32 } shape
+
+/-- [noble_kernel::contracts::nominal::type::walk::bounded_shape]: loop body 0:
+    Source: 'crates/noble-kernel/src/contracts/nominal/type/walk.rs', lines 217:4-226:5 -/
+@[rust_loop_body]
+def contracts.nominal.type.walk.bounded_shape_loop.body
+  (max_nodes : Std.U32) (state : Option contracts.nominal.type.walk.work.State)
+  (is_bounded : Bool) :
+  Result (ControlFlow ((Option contracts.nominal.type.walk.work.State) × Bool)
+    Bool)
+  := do
+  match state with
+  | none => ok (done is_bounded)
+  | some s =>
+    let ss ← contracts.nominal.type.walk.bounded_step s max_nodes
+    match ss with
+    | contracts.nominal.type.walk.ShapeStep.Continue s1 =>
+      ok (cont (some s1, is_bounded))
+    | contracts.nominal.type.walk.ShapeStep.Done =>
+      ok (cont (none, is_bounded))
+    | contracts.nominal.type.walk.ShapeStep.Failed => ok (cont (none, false))
+
+/-- [noble_kernel::contracts::nominal::type::walk::bounded_shape]: loop 0:
+    Source: 'crates/noble-kernel/src/contracts/nominal/type/walk.rs', lines 217:4-226:5 -/
+@[rust_loop]
+def contracts.nominal.type.walk.bounded_shape_loop
+  (state : Option contracts.nominal.type.walk.work.State) (max_nodes : Std.U32)
+  (is_bounded : Bool) :
+  Result Bool
+  := do
+  loop
+    (fun (state1, is_bounded1) =>
+      contracts.nominal.type.walk.bounded_shape_loop.body max_nodes state1
+      is_bounded1)
+    (state, is_bounded)
+
+/-- [noble_kernel::contracts::nominal::type::walk::bounded_shape]:
+    Source: 'crates/noble-kernel/src/contracts/nominal/type/walk.rs', lines 211:0-228:1 -/
+def contracts.nominal.type.walk.bounded_shape
+  (shape : types.NominalShape) (max_nodes : Std.U32) : Result Bool := do
+  let o ← contracts.nominal.type.walk.work.State.for_descriptor shape
+  match o with
+  | none => ok false
+  | some _ => contracts.nominal.type.walk.bounded_shape_loop o max_nodes true
+
+/-- [noble_kernel::contracts::nominal::type::walk::{noble_kernel::contracts::Env}::enqueue_known_nominal]: loop body 0:
+    Source: 'crates/noble-kernel/src/contracts/nominal/type/walk.rs', lines 170:8-172:9 -/
+@[rust_loop_body]
+def contracts.nominal.type.walk.Env.enqueue_known_nominal_loop.body
+  (self : contracts.Env) (id : types.NominalTypeId) (i : Std.Usize)
+  (index : Std.Usize) :
+  Result (ControlFlow Std.Usize (contracts.Env × Std.Usize))
+  := do
+  if index < i
+  then
+    let nd ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        contracts.NominalDecl) self.nominals index
+    let b ←
+      core.cmp.PartialEq.ne.trait_default
+        types.NominalTypeId.Insts.CoreCmpPartialEqNominalTypeId nd.id id
+    if b
+    then let index1 ← index + 1#usize
+         ok (cont index1)
+    else ok (done (self, index))
+  else ok (done (self, index))
+
+/-- [noble_kernel::contracts::nominal::type::walk::{noble_kernel::contracts::Env}::enqueue_known_nominal]: loop 0:
+    Source: 'crates/noble-kernel/src/contracts/nominal/type/walk.rs', lines 170:8-172:9 -/
+@[rust_loop]
+def contracts.nominal.type.walk.Env.enqueue_known_nominal_loop
+  (self : contracts.Env) (id : types.NominalTypeId) (i : Std.Usize)
+  (index : Std.Usize) :
+  Result (contracts.Env × Std.Usize)
+  := do
+  loop
+    (fun index1 =>
+      contracts.nominal.type.walk.Env.enqueue_known_nominal_loop.body self id i
+      index1)
+    index
+
+/-- [noble_kernel::contracts::nominal::type::walk::{noble_kernel::contracts::Env}::enqueue_known_nominal]:
+    Source: 'crates/noble-kernel/src/contracts/nominal/type/walk.rs', lines 159:4-185:5 -/
+def contracts.nominal.type.walk.Env.enqueue_known_nominal
+  (self : contracts.Env) (id : types.NominalTypeId)
+  (shape : types.NominalShape) (state : contracts.nominal.type.walk.work.State)
+  (scope : contracts.nominal.type.walk.Scope) :
+  Result (Option contracts.nominal.type.walk.work.State)
+  := do
+  let i ← lift (core.num.U32.saturating_sub scope.max_nodes state.visited)
+  let b ← contracts.nominal.type.walk.bounded_shape shape i
+  if b
+  then
+    let (self1, index) ←
+      contracts.nominal.type.walk.Env.enqueue_known_nominal_loop self id
+        scope.prior 0#usize
+    if index = scope.prior
+    then ok none
+    else
+      let decl ←
+        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+          contracts.NominalDecl) self1.nominals index
+      let (decl1, is_visible) ←
+        if scope.payload_only
+        then ok (decl, true)
+        else
+          do
+          let (b1, b2) ←
+            if decl.exported
+            then ok (true, true)
+            else
+              do
+              let is_visible1 ←
+                core.option.Option.Insts.CoreCmpPartialEqOption.eq
+                  core.cmp.PartialEqU64 scope.caller (some id.module)
+              ok (false, is_visible1)
+          ok ({ decl with exported := b1 }, b2)
+      let b1 ←
+        core.cmp.impls.PartialEqShared.ne
+          types.NominalShape.Insts.CoreCmpPartialEqNominalShape decl1.shape
+          shape
+      if b1
+      then ok none
+      else
+        if is_visible
+        then
+          if scope.payload_only
+          then
+            contracts.nominal.type.walk.work.State.with_descriptor state shape
+          else ok (some state)
+        else ok none
+  else ok none
+
+/-- [noble_kernel::contracts::nominal::type::walk::{noble_kernel::contracts::Env}::enqueue_checked_type]:
+    Source: 'crates/noble-kernel/src/contracts/nominal/type/walk.rs', lines 111:4-157:5 -/
+def contracts.nominal.type.walk.Env.enqueue_checked_type
+  (self : contracts.Env) (ty : types.Ty)
+  (state : contracts.nominal.type.walk.work.State)
+  (scope : contracts.nominal.type.walk.Scope) :
+  Result (Option contracts.nominal.type.walk.work.State)
+  := do
+  match ty with
+  | types.Ty.UnitType => ok (some state)
+  | types.Ty.BoolType => ok (some state)
+  | types.Ty.I64Type => ok (some state)
+  | types.Ty.TextType => ok (some state)
+  | types.Ty.SyntaxType =>
+    if scope.payload_only
+    then ok none
+    else ok (some state)
+  | types.Ty.ContractType =>
+    if scope.payload_only
+    then ok none
+    else ok (some state)
+  | types.Ty.EvidenceType =>
+    if scope.payload_only
+    then ok none
+    else ok (some state)
+  | types.Ty.CertifiedType =>
+    if scope.payload_only
+    then ok none
+    else ok (some state)
+  | types.Ty.PairType left right =>
+    let s ← contracts.nominal.type.walk.work.State.with_pair state left right
+    ok (some s)
+  | types.Ty.SumType left right =>
+    let s ← contracts.nominal.type.walk.work.State.with_pair state left right
+    ok (some s)
+  | types.Ty.ListType item =>
+    let s ← contracts.nominal.type.walk.work.State.with_type state item
+    ok (some s)
+  | types.Ty.ProgramType input output effects =>
+    if scope.payload_only
+    then ok none
+    else
+      let s := alloc.vec.Vec.deref input
+      let s1 := alloc.vec.Vec.deref output
+      let b ←
+        contracts.nominal.validation.valid_program_components self s s1 effects
+          scope.max_nodes
+      if b
+      then
+        let i := alloc.vec.Vec.len input
+        let i1 := alloc.vec.Vec.len output
+        let child_count ← lift (core.num.Usize.saturating_add i i1)
+        let i2 := alloc.vec.Vec.len state.pending
+        let o ← lift (Usize.checked_add i2 child_count)
+        let b1 := core.option.Option.is_some o
+        if b1
+        then
+          let s2 := alloc.vec.Vec.deref input
+          let s3 := alloc.vec.Vec.deref output
+          let s4 ←
+            contracts.nominal.type.walk.work.State.with_program state s2 s3
+          ok (some s4)
+        else ok none
+      else ok none
+  | types.Ty.ResourceType kind =>
+    let s := alloc.vec.Vec.deref self.resource_kinds
+    let b ←
+      core.slice.Slice.contains
+        types.ResourceKind.Insts.CoreCmpPartialEqResourceKind s kind
+    core.bool.Bool.then_some b state
+  | types.Ty.NominalType id shape =>
+    contracts.nominal.type.walk.Env.enqueue_known_nominal self id shape state
+      scope
+
+/-- [noble_kernel::contracts::nominal::type::walk::{noble_kernel::contracts::Env}::advance_checked_type]:
+    Source: 'crates/noble-kernel/src/contracts/nominal/type/walk.rs', lines 92:4-105:5 -/
+def contracts.nominal.type.walk.Env.advance_checked_type
+  (self : contracts.Env) (state : contracts.nominal.type.walk.work.State)
+  (scope : contracts.nominal.type.walk.Scope) :
+  Result (Option contracts.nominal.type.walk.work.State)
+  := do
+  let (o, v) ← alloc.vec.Vec.pop Global state.pending
+  match o with
+  | none => ok (some { state with pending := v })
+  | some next =>
+    if state.visited >= scope.max_nodes
+    then ok none
+    else
+      let i := alloc.vec.Vec.len v
+      if i >= 512#usize
+      then ok none
+      else
+        let i1 ← state.visited + 1#u32
+        contracts.nominal.type.walk.Env.enqueue_checked_type self next
+          { pending := v, visited := i1 } scope
+
+/-- [noble_kernel::contracts::nominal::type::walk::{noble_kernel::contracts::Env}::walk_type]: loop body 0:
+    Source: 'crates/noble-kernel/src/contracts/nominal/type/walk.rs', lines 76:8-88:9 -/
+@[rust_loop_body]
+def contracts.nominal.type.walk.Env.walk_type_loop0.body
+  (self : contracts.Env) (max_nodes : Std.U32) (payload_only : Bool)
+  (prior : Std.Usize) (caller : Option Std.U64)
+  (state : Option contracts.nominal.type.walk.work.State) (has_work : Bool) :
+  Result (ControlFlow ((Option contracts.nominal.type.walk.work.State) × Bool)
+    (Option contracts.nominal.type.walk.work.State))
+  := do
+  if has_work
+  then
+    match state with
+    | none => ok (cont (none, false))
+    | some s =>
+      let b ← alloc.vec.Vec.is_empty Global s.pending
+      if b
+      then ok (cont (state, false))
+      else
+        let state1 ←
+          contracts.nominal.type.walk.Env.advance_checked_type self s
+            { max_nodes, payload_only, prior, caller }
+        ok (cont (state1, true))
+  else ok (done state)
+
+/-- [noble_kernel::contracts::nominal::type::walk::{noble_kernel::contracts::Env}::walk_type]: loop 0:
+    Source: 'crates/noble-kernel/src/contracts/nominal/type/walk.rs', lines 76:8-88:9 -/
+@[rust_loop]
+def contracts.nominal.type.walk.Env.walk_type_loop0
+  (self : contracts.Env) (max_nodes : Std.U32) (payload_only : Bool)
+  (prior : Std.Usize) (caller : Option Std.U64)
+  (state : Option contracts.nominal.type.walk.work.State) (has_work : Bool) :
+  Result (Option contracts.nominal.type.walk.work.State)
+  := do
+  loop
+    (fun (state1, has_work1) =>
+      contracts.nominal.type.walk.Env.walk_type_loop0.body self max_nodes
+      payload_only prior caller state1 has_work1)
+    (state, has_work)
+
+/-- [noble_kernel::contracts::nominal::type::walk::{noble_kernel::contracts::Env}::walk_type]: loop body 1:
+    Source: 'crates/noble-kernel/src/contracts/nominal/type/walk.rs', lines 76:8-88:9 -/
+@[rust_loop_body]
+def contracts.nominal.type.walk.Env.walk_type_loop1.body
+  (self : contracts.Env) (max_nodes : Std.U32) (payload_only : Bool)
+  (prior : Std.Usize) (caller : Option Std.U64)
+  (state : Option contracts.nominal.type.walk.work.State) (has_work : Bool) :
+  Result (ControlFlow ((Option contracts.nominal.type.walk.work.State) × Bool)
+    (Option contracts.nominal.type.walk.work.State))
+  := do
+  if has_work
+  then
+    match state with
+    | none => ok (cont (none, false))
+    | some s =>
+      let b ← alloc.vec.Vec.is_empty Global s.pending
+      if b
+      then ok (cont (state, false))
+      else
+        let state1 ←
+          contracts.nominal.type.walk.Env.advance_checked_type self s
+            { max_nodes, payload_only, prior, caller }
+        ok (cont (state1, true))
+  else ok (done state)
+
+/-- [noble_kernel::contracts::nominal::type::walk::{noble_kernel::contracts::Env}::walk_type]: loop 1:
+    Source: 'crates/noble-kernel/src/contracts/nominal/type/walk.rs', lines 76:8-88:9 -/
+@[rust_loop]
+def contracts.nominal.type.walk.Env.walk_type_loop1
+  (self : contracts.Env) (max_nodes : Std.U32) (payload_only : Bool)
+  (prior : Std.Usize) (caller : Option Std.U64)
+  (state : Option contracts.nominal.type.walk.work.State) (has_work : Bool) :
+  Result (Option contracts.nominal.type.walk.work.State)
+  := do
+  loop
+    (fun (state1, has_work1) =>
+      contracts.nominal.type.walk.Env.walk_type_loop1.body self max_nodes
+      payload_only prior caller state1 has_work1)
+    (state, has_work)
+
+/-- [noble_kernel::contracts::nominal::type::walk::{noble_kernel::contracts::Env}::walk_type]: loop body 2:
+    Source: 'crates/noble-kernel/src/contracts/nominal/type/walk.rs', lines 76:8-88:9 -/
+@[rust_loop_body]
+def contracts.nominal.type.walk.Env.walk_type_loop2.body
+  (self : contracts.Env) (max_nodes : Std.U32) (payload_only : Bool)
+  (prior : Std.Usize) (caller : Option Std.U64)
+  (state : Option contracts.nominal.type.walk.work.State) (has_work : Bool) :
+  Result (ControlFlow ((Option contracts.nominal.type.walk.work.State) × Bool)
+    (Option contracts.nominal.type.walk.work.State))
+  := do
+  if has_work
+  then
+    match state with
+    | none => ok (cont (none, false))
+    | some s =>
+      let b ← alloc.vec.Vec.is_empty Global s.pending
+      if b
+      then ok (cont (state, false))
+      else
+        let state1 ←
+          contracts.nominal.type.walk.Env.advance_checked_type self s
+            { max_nodes, payload_only, prior, caller }
+        ok (cont (state1, true))
+  else ok (done state)
+
+/-- [noble_kernel::contracts::nominal::type::walk::{noble_kernel::contracts::Env}::walk_type]: loop 2:
+    Source: 'crates/noble-kernel/src/contracts/nominal/type/walk.rs', lines 76:8-88:9 -/
+@[rust_loop]
+def contracts.nominal.type.walk.Env.walk_type_loop2
+  (self : contracts.Env) (max_nodes : Std.U32) (payload_only : Bool)
+  (prior : Std.Usize) (caller : Option Std.U64)
+  (state : Option contracts.nominal.type.walk.work.State) (has_work : Bool) :
+  Result (Option contracts.nominal.type.walk.work.State)
+  := do
+  loop
+    (fun (state1, has_work1) =>
+      contracts.nominal.type.walk.Env.walk_type_loop2.body self max_nodes
+      payload_only prior caller state1 has_work1)
+    (state, has_work)
+
+/-- [noble_kernel::contracts::nominal::type::walk::{noble_kernel::contracts::Env}::walk_type]: loop body 3:
+    Source: 'crates/noble-kernel/src/contracts/nominal/type/walk.rs', lines 76:8-88:9 -/
+@[rust_loop_body]
+def contracts.nominal.type.walk.Env.walk_type_loop3.body
+  (self : contracts.Env) (max_nodes : Std.U32) (payload_only : Bool)
+  (prior : Std.Usize) (caller : Option Std.U64)
+  (state : Option contracts.nominal.type.walk.work.State) (has_work : Bool) :
+  Result (ControlFlow ((Option contracts.nominal.type.walk.work.State) × Bool)
+    (Option contracts.nominal.type.walk.work.State))
+  := do
+  if has_work
+  then
+    match state with
+    | none => ok (cont (none, false))
+    | some s =>
+      let b ← alloc.vec.Vec.is_empty Global s.pending
+      if b
+      then ok (cont (state, false))
+      else
+        let state1 ←
+          contracts.nominal.type.walk.Env.advance_checked_type self s
+            { max_nodes, payload_only, prior, caller }
+        ok (cont (state1, true))
+  else ok (done state)
+
+/-- [noble_kernel::contracts::nominal::type::walk::{noble_kernel::contracts::Env}::walk_type]: loop 3:
+    Source: 'crates/noble-kernel/src/contracts/nominal/type/walk.rs', lines 76:8-88:9 -/
+@[rust_loop]
+def contracts.nominal.type.walk.Env.walk_type_loop3
+  (self : contracts.Env) (max_nodes : Std.U32) (payload_only : Bool)
+  (prior : Std.Usize) (caller : Option Std.U64)
+  (state : Option contracts.nominal.type.walk.work.State) (has_work : Bool) :
+  Result (Option contracts.nominal.type.walk.work.State)
+  := do
+  loop
+    (fun (state1, has_work1) =>
+      contracts.nominal.type.walk.Env.walk_type_loop3.body self max_nodes
+      payload_only prior caller state1 has_work1)
+    (state, has_work)
+
+/-- [noble_kernel::contracts::nominal::type::walk::{noble_kernel::contracts::Env}::walk_type]: loop body 4:
+    Source: 'crates/noble-kernel/src/contracts/nominal/type/walk.rs', lines 76:8-88:9 -/
+@[rust_loop_body]
+def contracts.nominal.type.walk.Env.walk_type_loop4.body
+  (self : contracts.Env) (max_nodes : Std.U32) (payload_only : Bool)
+  (prior : Std.Usize) (caller : Option Std.U64)
+  (state : Option contracts.nominal.type.walk.work.State) (has_work : Bool) :
+  Result (ControlFlow ((Option contracts.nominal.type.walk.work.State) × Bool)
+    (Option contracts.nominal.type.walk.work.State))
+  := do
+  if has_work
+  then
+    match state with
+    | none => ok (cont (none, false))
+    | some s =>
+      let b ← alloc.vec.Vec.is_empty Global s.pending
+      if b
+      then ok (cont (state, false))
+      else
+        let state1 ←
+          contracts.nominal.type.walk.Env.advance_checked_type self s
+            { max_nodes, payload_only, prior, caller }
+        ok (cont (state1, true))
+  else ok (done state)
+
+/-- [noble_kernel::contracts::nominal::type::walk::{noble_kernel::contracts::Env}::walk_type]: loop 4:
+    Source: 'crates/noble-kernel/src/contracts/nominal/type/walk.rs', lines 76:8-88:9 -/
+@[rust_loop]
+def contracts.nominal.type.walk.Env.walk_type_loop4
+  (self : contracts.Env) (max_nodes : Std.U32) (payload_only : Bool)
+  (prior : Std.Usize) (caller : Option Std.U64)
+  (state : Option contracts.nominal.type.walk.work.State) (has_work : Bool) :
+  Result (Option contracts.nominal.type.walk.work.State)
+  := do
+  loop
+    (fun (state1, has_work1) =>
+      contracts.nominal.type.walk.Env.walk_type_loop4.body self max_nodes
+      payload_only prior caller state1 has_work1)
+    (state, has_work)
+
+/-- [noble_kernel::contracts::nominal::type::walk::{noble_kernel::contracts::Env}::walk_type]:
+    Source: 'crates/noble-kernel/src/contracts/nominal/type/walk.rs', lines 39:4-90:5 -/
+def contracts.nominal.type.walk.Env.walk_type
+  (self : contracts.Env) (ty : types.Ty) (max_nodes : Std.U32)
+  (payload_only : Bool) (prior : Std.Usize) (caller : Option Std.U64) :
+  Result Bool
+  := do
+  match ty with
+  | types.Ty.UnitType => ok (max_nodes > 0#u32)
+  | types.Ty.BoolType => ok (max_nodes > 0#u32)
+  | types.Ty.I64Type => ok (max_nodes > 0#u32)
+  | types.Ty.TextType => ok (max_nodes > 0#u32)
+  | types.Ty.SyntaxType =>
+    if max_nodes > 0#u32
+    then ok (¬ payload_only)
+    else ok false
+  | types.Ty.ContractType =>
+    if max_nodes > 0#u32
+    then ok (¬ payload_only)
+    else ok false
+  | types.Ty.EvidenceType =>
+    if max_nodes > 0#u32
+    then ok (¬ payload_only)
+    else ok false
+  | types.Ty.CertifiedType =>
+    if max_nodes > 0#u32
+    then ok (¬ payload_only)
+    else ok false
+  | types.Ty.PairType _ _ =>
+    let pending := alloc.vec.Vec.with_capacity types.Ty 1#usize
+    let pending1 ← alloc.vec.Vec.push pending ty
+    let state ←
+      contracts.nominal.type.walk.Env.walk_type_loop0 self max_nodes
+        payload_only prior caller (some
+        { pending := pending1, visited := 0#u32 }) true
+    ok (core.option.Option.is_some state)
+  | types.Ty.SumType _ _ =>
+    let pending := alloc.vec.Vec.with_capacity types.Ty 1#usize
+    let pending1 ← alloc.vec.Vec.push pending ty
+    let state ←
+      contracts.nominal.type.walk.Env.walk_type_loop1 self max_nodes
+        payload_only prior caller (some
+        { pending := pending1, visited := 0#u32 }) true
+    ok (core.option.Option.is_some state)
+  | types.Ty.ListType _ =>
+    let pending := alloc.vec.Vec.with_capacity types.Ty 1#usize
+    let pending1 ← alloc.vec.Vec.push pending ty
+    let state ←
+      contracts.nominal.type.walk.Env.walk_type_loop2 self max_nodes
+        payload_only prior caller (some
+        { pending := pending1, visited := 0#u32 }) true
+    ok (core.option.Option.is_some state)
+  | types.Ty.ProgramType _ _ _ =>
+    let pending := alloc.vec.Vec.with_capacity types.Ty 1#usize
+    let pending1 ← alloc.vec.Vec.push pending ty
+    let state ←
+      contracts.nominal.type.walk.Env.walk_type_loop3 self max_nodes
+        payload_only prior caller (some
+        { pending := pending1, visited := 0#u32 }) true
+    ok (core.option.Option.is_some state)
+  | types.Ty.ResourceType kind =>
+    if max_nodes > 0#u32
+    then
+      let s := alloc.vec.Vec.deref self.resource_kinds
+      core.slice.Slice.contains
+        types.ResourceKind.Insts.CoreCmpPartialEqResourceKind s kind
+    else ok false
+  | types.Ty.NominalType _ _ =>
+    let pending := alloc.vec.Vec.with_capacity types.Ty 1#usize
+    let pending1 ← alloc.vec.Vec.push pending ty
+    let state ←
+      contracts.nominal.type.walk.Env.walk_type_loop4 self max_nodes
+        payload_only prior caller (some
+        { pending := pending1, visited := 0#u32 }) true
+    ok (core.option.Option.is_some state)
+
+/-- [noble_kernel::contracts::nominal::type::walk::{noble_kernel::contracts::Env}::valid_type]:
+    Source: 'crates/noble-kernel/src/contracts/nominal/type/walk.rs', lines 15:4-23:5
+    Visibility: public -/
+def contracts.nominal.type.walk.Env.valid_type
+  (self : contracts.Env) (ty : types.Ty) (max_nodes : Std.U32) :
+  Result Bool
+  := do
+  let i := alloc.vec.Vec.len self.nominals
+  contracts.nominal.type.walk.Env.walk_type self ty max_nodes false i
+    self.caller_module
+
+/-- [noble_kernel::acceptance::parts::valid_stack_type_at]:
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 107:0-113:1 -/
+def acceptance.parts.valid_stack_type_at
+  (stack : Slice types.Ty) (index : Std.Usize) (env : contracts.Env) :
+  Result Bool
+  := do
+  let t ← Slice.index_usize stack index
+  contracts.nominal.type.walk.Env.valid_type env t 512#u32
+
+/-- [noble_kernel::acceptance::parts::valid_stack_types]: loop body 0:
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 97:4-103:5 -/
+@[rust_loop_body]
+def acceptance.parts.valid_stack_types_loop.body
+  (stack : Slice types.Ty) (env : contracts.Env) (index : Std.Usize) :
+  Result (ControlFlow Std.Usize Bool)
+  := do
+  let i := Slice.len stack
+  if index < i
+  then
+    let b ← acceptance.parts.valid_stack_type_at stack index env
+    if b
+    then let index1 ← index + 1#usize
+         ok (cont index1)
+    else ok (done false)
+  else ok (done true)
+
+/-- [noble_kernel::acceptance::parts::valid_stack_types]: loop 0:
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 97:4-103:5 -/
+@[rust_loop]
+def acceptance.parts.valid_stack_types_loop
+  (stack : Slice types.Ty) (env : contracts.Env) (index : Std.Usize) :
+  Result Bool
+  := do
+  loop
+    (fun index1 => acceptance.parts.valid_stack_types_loop.body stack env
+      index1)
+    index
+
+/-- [noble_kernel::acceptance::parts::valid_stack_types]:
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 94:0-105:1 -/
+@[reducible]
+def acceptance.parts.valid_stack_types
+  (stack : Slice types.Ty) (env : contracts.Env) : Result Bool := do
+  acceptance.parts.valid_stack_types_loop stack env 0#usize
+
+/-- [noble_kernel::acceptance::parts::site]:
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 21:0-26:1 -/
+def acceptance.parts.site
+  (node : Option untrusted.NodeId) («def» : Option contracts.Definition) :
+  Result acceptance.parts.Site
+  := do
+  ok { node, «def» }
+
 /-- [noble_kernel::acceptance::parts::limits_of]:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 64:0-84:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 65:0-91:1 -/
 def acceptance.parts.limits_of
   (stack : Slice types.Ty) (ctx : acceptance.parts.Ctx) :
   Result (core.result.Result Unit acceptance.Fail)
@@ -1599,18 +2592,27 @@ def acceptance.parts.limits_of
       ok (core.result.Result.Err (acceptance.Fail.Exhausted
         untrusted.LimitKind.StackHeight))
     else
-      let r1 ← words.bounds.check_sizes stack ctx.request.limits.type_size
-      match r1 with
-      | core.result.Result.Ok _ => ok (core.result.Result.Ok ())
-      | core.result.Result.Err _ =>
-        ok (core.result.Result.Err (acceptance.Fail.Exhausted
-          untrusted.LimitKind.TypeSize))
+      let b ← acceptance.parts.valid_stack_types stack ctx.env
+      if b
+      then
+        let r1 ← words.bounds.check_sizes stack ctx.request.limits.type_size
+        match r1 with
+        | core.result.Result.Ok _ => ok (core.result.Result.Ok ())
+        | core.result.Result.Err _ =>
+          ok (core.result.Result.Err (acceptance.Fail.Exhausted
+            untrusted.LimitKind.TypeSize))
+      else
+        let s ← acceptance.parts.site none none
+        let f ←
+          acceptance.parts.invalid_without_stacks s
+            untrusted.Constraint.InvalidType
+        ok (core.result.Result.Err f)
   | core.result.Result.Err _ =>
     ok (core.result.Result.Err (acceptance.Fail.Exhausted
       untrusted.LimitKind.StackHeight))
 
 /-- [noble_kernel::acceptance::parts::join]:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 104:0-126:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 133:0-155:1 -/
 def acceptance.parts.join
   (frame : acceptance.Frame) (interface : untrusted.Interface)
   («at» : acceptance.parts.Site) (ctx : acceptance.parts.Ctx) :
@@ -1645,7 +2647,7 @@ def acceptance.parts.join
     ok (core.result.Result.Err f)
 
 /-- [noble_kernel::acceptance::parts::definition_of]:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 87:0-101:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 116:0-130:1 -/
 def acceptance.parts.definition_of
   (candidate : untrusted.Candidate) (node : untrusted.NodeId) :
   Result (Option contracts.Definition)
@@ -1667,30 +2669,23 @@ def acceptance.parts.definition_of
   | core.result.Result.Err _ => ok none
 
 /-- [noble_kernel::acceptance::parts::join_cost]:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 46:0-57:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 48:0-58:1 -/
 def acceptance.parts.join_cost
   (interface : untrusted.Interface) :
   Result (core.result.Result Std.U32 acceptance.Fail)
   := do
   let i := alloc.vec.Vec.len interface.stack_in
   let i1 := alloc.vec.Vec.len interface.stack_out
-  let i2 ← lift (core.num.Usize.saturating_add i i1)
-  let r ← core.convert.num.ptr_try_from_impls.TryFromU32Usize.try_from i2
+  let entries ← lift (core.num.Usize.saturating_add i i1)
+  let r ←
+    core.convert.num.ptr_try_from_impls.TryFromU32Usize.try_from entries
   match r with
   | core.result.Result.Ok count =>
-    let i3 ← lift (core.num.U32.saturating_add count 1#u32)
-    ok (core.result.Result.Ok i3)
+    let i2 ← lift (core.num.U32.saturating_add count 1#u32)
+    ok (core.result.Result.Ok i2)
   | core.result.Result.Err _ =>
     ok (core.result.Result.Err (acceptance.Fail.Exhausted
       untrusted.LimitKind.Work))
-
-/-- [noble_kernel::acceptance::parts::site]:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 19:0-24:1 -/
-def acceptance.parts.site
-  (node : Option untrusted.NodeId) («def» : Option contracts.Definition) :
-  Result acceptance.parts.Site
-  := do
-  ok { node, «def» }
 
 /-- [noble_kernel::words::{noble_kernel::words::Scheme}::subst_effects::{impl core::ops::function::FnOnce<(&'_ noble_kernel::types::EffSet,), alloc::vec::Vec<noble_kernel::types::EffId>> for noble_kernel::words::{noble_kernel::words::Scheme}::subst_effects::{closure}}::call_once]:
     Source: 'crates/noble-kernel/src/words.rs', lines 256:46-256:75 -/
@@ -1752,7 +2747,7 @@ def capacity.at_least
   else ok count
 
 /-- [noble_kernel::types::{noble_kernel::types::EffSet}::from_ids]: loop body 1:
-    Source: 'crates/noble-kernel/src/types.rs', lines 51:12-60:13
+    Source: 'crates/noble-kernel/src/types.rs', lines 67:12-76:13
     Visibility: public -/
 @[rust_loop_body]
 def types.EffSet.from_ids_loop0_loop0.body
@@ -1784,7 +2779,7 @@ def types.EffSet.from_ids_loop0_loop0.body
   else ok (done (sorted, id, is_placed))
 
 /-- [noble_kernel::types::{noble_kernel::types::EffSet}::from_ids]: loop 1:
-    Source: 'crates/noble-kernel/src/types.rs', lines 51:12-60:13
+    Source: 'crates/noble-kernel/src/types.rs', lines 67:12-76:13
     Visibility: public -/
 @[rust_loop]
 def types.EffSet.from_ids_loop0_loop0
@@ -1798,7 +2793,7 @@ def types.EffSet.from_ids_loop0_loop0
     (sorted, id, position, is_placed)
 
 /-- [noble_kernel::types::{noble_kernel::types::EffSet}::from_ids]: loop body 0:
-    Source: 'crates/noble-kernel/src/types.rs', lines 47:8-65:9
+    Source: 'crates/noble-kernel/src/types.rs', lines 63:8-81:9
     Visibility: public -/
 @[rust_loop_body]
 def types.EffSet.from_ids_loop0.body
@@ -1822,7 +2817,7 @@ def types.EffSet.from_ids_loop0.body
   else ok (done sorted)
 
 /-- [noble_kernel::types::{noble_kernel::types::EffSet}::from_ids]: loop 0:
-    Source: 'crates/noble-kernel/src/types.rs', lines 47:8-65:9
+    Source: 'crates/noble-kernel/src/types.rs', lines 63:8-81:9
     Visibility: public -/
 @[rust_loop]
 def types.EffSet.from_ids_loop0
@@ -1836,7 +2831,7 @@ def types.EffSet.from_ids_loop0
     (sorted, index)
 
 /-- [noble_kernel::types::{noble_kernel::types::EffSet}::from_ids]:
-    Source: 'crates/noble-kernel/src/types.rs', lines 43:4-67:5
+    Source: 'crates/noble-kernel/src/types.rs', lines 59:4-83:5
     Visibility: public -/
 def types.EffSet.from_ids (ids : Slice types.EffId) : Result types.EffSet := do
   let i := Slice.len ids
@@ -1846,7 +2841,7 @@ def types.EffSet.from_ids (ids : Slice types.EffId) : Result types.EffSet := do
   ok sorted1
 
 /-- [noble_kernel::shapes::{impl core::clone::Clone for noble_kernel::shapes::EffectSlot}::clone]:
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 79:9-79:14
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 84:9-84:14
     Visibility: public -/
 def shapes.EffectSlot.Insts.CoreCloneClone.clone
   (self : shapes.EffectSlot) : Result shapes.EffectSlot := do
@@ -2004,8 +2999,22 @@ def words.Inst.value
       | words.Binding.Effect _ => ok none
       | words.Binding.Ref _ => ok none
 
+/-- [noble_kernel::types::{impl core::clone::Clone for noble_kernel::types::NominalShape}::clone]:
+    Source: 'crates/noble-kernel/src/types.rs', lines 26:9-26:14
+    Visibility: public -/
+def types.NominalShape.Insts.CoreCloneClone.clone
+  (self : types.NominalShape) : Result types.NominalShape := do
+  match self with
+  | types.NominalShape.Opaque __self_0 =>
+    let t ← types.Ty.Insts.CoreCloneClone.clone __self_0
+    ok (types.NominalShape.Opaque t)
+  | types.NominalShape.Variant __self_0 __self_1 =>
+    let t ← types.Ty.Insts.CoreCloneClone.clone __self_0
+    let t1 ← types.Ty.Insts.CoreCloneClone.clone __self_1
+    ok (types.NominalShape.Variant t t1)
+
 /-- [noble_kernel::shapes::impls::clone_slots]: loop body 0:
-    Source: 'crates/noble-kernel/src/shapes/impls.rs', lines 61:4-64:5 -/
+    Source: 'crates/noble-kernel/src/shapes/impls.rs', lines 64:4-67:5 -/
 @[rust_loop_body]
 def shapes.impls.clone_slots_loop.body
   (stack : Slice shapes.EffectSlot) (out : alloc.vec.Vec shapes.EffectSlot)
@@ -2024,7 +3033,7 @@ def shapes.impls.clone_slots_loop.body
   else ok (done out)
 
 /-- [noble_kernel::shapes::impls::clone_slots]: loop 0:
-    Source: 'crates/noble-kernel/src/shapes/impls.rs', lines 61:4-64:5 -/
+    Source: 'crates/noble-kernel/src/shapes/impls.rs', lines 64:4-67:5 -/
 @[rust_loop]
 def shapes.impls.clone_slots_loop
   (stack : Slice shapes.EffectSlot) (out : alloc.vec.Vec shapes.EffectSlot)
@@ -2037,7 +3046,7 @@ def shapes.impls.clone_slots_loop
     (out, index)
 
 /-- [noble_kernel::shapes::impls::clone_slots]:
-    Source: 'crates/noble-kernel/src/shapes/impls.rs', lines 57:0-66:1 -/
+    Source: 'crates/noble-kernel/src/shapes/impls.rs', lines 60:0-69:1 -/
 def shapes.impls.clone_slots
   (stack : Slice shapes.EffectSlot) :
   Result (alloc.vec.Vec shapes.EffectSlot)
@@ -2047,7 +3056,7 @@ def shapes.impls.clone_slots
   shapes.impls.clone_slots_loop stack out 0#usize
 
 /-- [noble_kernel::shapes::impls::{impl core::clone::Clone for noble_kernel::shapes::Pattern}::clone]:
-    Source: 'crates/noble-kernel/src/shapes/impls.rs', lines 20:4-54:5
+    Source: 'crates/noble-kernel/src/shapes/impls.rs', lines 20:4-57:5
     Visibility: public -/
 def shapes.Pattern.Insts.CoreCloneClone.clone
   (self : shapes.Pattern) : Result shapes.Pattern := do
@@ -2080,6 +3089,9 @@ def shapes.Pattern.Insts.CoreCloneClone.clone
     let v2 ← shapes.impls.clone_slots s2
     ok (shapes.Pattern.ProgramPattern v v1 v2)
   | shapes.Pattern.ResourcePattern _ => ok self
+  | shapes.Pattern.NominalPattern id shape =>
+    let ns ← types.NominalShape.Insts.CoreCloneClone.clone shape
+    ok (shapes.Pattern.NominalPattern id ns)
   | shapes.Pattern.VarPattern _ => ok self
   | shapes.Pattern.StackVarPattern _ => ok self
 partial_fixpoint
@@ -2141,7 +3153,7 @@ def words.subst.schedule.queue
     0#usize
 
 /-- [noble_kernel::words::subst::part_task]:
-    Source: 'crates/noble-kernel/src/words/subst.rs', lines 233:0-281:1 -/
+    Source: 'crates/noble-kernel/src/words/subst.rs', lines 233:0-284:1 -/
 def words.subst.part_task
   (node : shapes.Pattern) (inst : words.Inst) (walk : words.subst.Walk) :
   Result (words.subst.Walk × (core.result.Result Unit words.InstError))
@@ -2232,6 +3244,14 @@ def words.subst.part_task
     let ret := alloc.slice.Slice.into_vec y
     let v ← alloc.vec.Vec.push walk.segments ret
     ok ({ walk with segments := v }, core.result.Result.Ok ())
+  | shapes.Pattern.NominalPattern id shape =>
+    let y ←
+      lift (Std.Array.to_slice
+        (Array.make 1#usize [ types.Ty.NominalType id shape ] : Array types.Ty
+        1#usize))
+    let ret := alloc.slice.Slice.into_vec y
+    let v ← alloc.vec.Vec.push walk.segments ret
+    ok ({ walk with segments := v }, core.result.Result.Ok ())
   | shapes.Pattern.VarPattern var =>
     let o ← words.Inst.value inst var
     match o with
@@ -2254,7 +3274,7 @@ def words.subst.part_task
       ok ({ walk with work := v1 }, core.result.Result.Ok ())
 
 /-- [noble_kernel::types::{noble_kernel::types::Ty}::program]:
-    Source: 'crates/noble-kernel/src/types.rs', lines 195:4-205:5
+    Source: 'crates/noble-kernel/src/types.rs', lines 214:4-224:5
     Visibility: public -/
 def types.Ty.program
   (stack_in : alloc.vec.Vec types.Ty) (stack_out : alloc.vec.Vec types.Ty)
@@ -2445,6 +3465,8 @@ def words.subst.expand_task
         ok (walk1, core.result.Result.Err problem)
   | shapes.Pattern.ResourcePattern _ =>
     ok (walk, core.result.Result.Err words.InstError.KindMismatch)
+  | shapes.Pattern.NominalPattern _ _ =>
+    ok (walk, core.result.Result.Err words.InstError.KindMismatch)
   | shapes.Pattern.VarPattern _ =>
     ok (walk, core.result.Result.Err words.InstError.KindMismatch)
   | shapes.Pattern.StackVarPattern _ =>
@@ -2527,7 +3549,7 @@ def P.Insts.CoreOpsFunctionFnOnceTupleVecTyResultVecTyInstError :
 }
 
 /-- [noble_kernel::words::subst::finish::apply]:
-    Source: 'crates/noble-kernel/src/words/subst/finish.rs', lines 7:0-57:1 -/
+    Source: 'crates/noble-kernel/src/words/subst/finish.rs', lines 7:0-58:1 -/
 def words.subst.finish.apply
   (node : shapes.Pattern) (walk : words.subst.Walk) :
   Result (words.subst.Walk × (core.result.Result Unit words.InstError))
@@ -2726,6 +3748,21 @@ def words.subst.finish.apply
         ok ({ walk with segments := v1 }, core.result.Result.Err
           words.InstError.KindMismatch)
   | shapes.Pattern.ResourcePattern _ =>
+    let (o, v) ← alloc.vec.Vec.pop Global walk.segments
+    let (o1, v1) ← alloc.vec.Vec.pop Global v
+    match o with
+    | none =>
+      ok ({ walk with segments := v1 }, core.result.Result.Err
+        words.InstError.OversizedType)
+    | some _ =>
+      match o1 with
+      | none =>
+        ok ({ walk with segments := v1 }, core.result.Result.Err
+          words.InstError.OversizedType)
+      | some _ =>
+        ok ({ walk with segments := v1 }, core.result.Result.Err
+          words.InstError.KindMismatch)
+  | shapes.Pattern.NominalPattern _ _ =>
     let (o, v) ← alloc.vec.Vec.pop Global walk.segments
     let (o1, v1) ← alloc.vec.Vec.pop Global v
     match o with
@@ -3028,6 +4065,15 @@ def words.Scheme.subst_stack_loop.body
           ok (out2, core.result.Result.Ok ())
         | core.result.Result.Err problem =>
           ok (out, core.result.Result.Err problem)
+      | shapes.Pattern.NominalPattern _ _ =>
+        do
+        let r ← words.subst.Scheme.subst_pattern self p1 inst
+        match r with
+        | core.result.Result.Ok ty =>
+          let out2 ← alloc.vec.Vec.push out ty
+          ok (out2, core.result.Result.Ok ())
+        | core.result.Result.Err problem =>
+          ok (out, core.result.Result.Err problem)
       | shapes.Pattern.VarPattern _ =>
         do
         let r ← words.subst.Scheme.subst_pattern self p1 inst
@@ -3089,11 +4135,11 @@ def words.Scheme.subst_stack
   | none => ok (core.result.Result.Ok out1)
   | some problem => ok (core.result.Result.Err problem)
 
-/-- [noble_kernel::types::{noble_kernel::types::Ty}::is_data]: loop body 0:
-    Source: 'crates/noble-kernel/src/types.rs', lines 220:8-245:9
+/-- [noble_kernel::types::data::{noble_kernel::types::Ty}::is_data]: loop body 0:
+    Source: 'crates/noble-kernel/src/types/data.rs', lines 14:8-46:9
     Visibility: public -/
 @[rust_loop_body]
-def types.Ty.is_data_loop.body
+def types.data.Ty.is_data_loop.body
   (work : alloc.vec.Vec types.Ty) :
   Result (ControlFlow (alloc.vec.Vec types.Ty) Bool)
   := do
@@ -3127,29 +4173,46 @@ def types.Ty.is_data_loop.body
         ok (cont work2)
       | types.Ty.ProgramType _ _ _ => ok (cont work1)
       | types.Ty.ResourceType _ => ok (done false)
+      | types.Ty.NominalType _ shape =>
+        match shape with
+        | types.NominalShape.Opaque representation =>
+          let work2 ← alloc.vec.Vec.push work1 representation
+          ok (cont work2)
+        | types.NominalShape.Variant left right =>
+          let work2 ← alloc.vec.Vec.push work1 left
+          let work3 ← alloc.vec.Vec.push work2 right
+          ok (cont work3)
 
-/-- [noble_kernel::types::{noble_kernel::types::Ty}::is_data]: loop 0:
-    Source: 'crates/noble-kernel/src/types.rs', lines 220:8-245:9
+/-- [noble_kernel::types::data::{noble_kernel::types::Ty}::is_data]: loop 0:
+    Source: 'crates/noble-kernel/src/types/data.rs', lines 14:8-46:9
     Visibility: public -/
 @[rust_loop]
-def types.Ty.is_data_loop (work : alloc.vec.Vec types.Ty) : Result Bool := do
+def types.data.Ty.is_data_loop
+  (work : alloc.vec.Vec types.Ty) : Result Bool := do
   loop
-    (fun work1 => types.Ty.is_data_loop.body work1)
+    (fun work1 => types.data.Ty.is_data_loop.body work1)
     work
 
-/-- [noble_kernel::types::{noble_kernel::types::Ty}::is_data]:
-    Source: 'crates/noble-kernel/src/types.rs', lines 216:4-247:5
+/-- [noble_kernel::types::data::{noble_kernel::types::Ty}::is_data]:
+    Source: 'crates/noble-kernel/src/types/data.rs', lines 10:4-48:5
     Visibility: public -/
-def types.Ty.is_data (self : types.Ty) : Result Bool := do
+def types.data.Ty.is_data (self : types.Ty) : Result Bool := do
   let work := alloc.vec.Vec.with_capacity types.Ty 8#usize
   let t ← types.Ty.Insts.CoreCloneClone.clone self
   let work1 ← alloc.vec.Vec.push work t
-  types.Ty.is_data_loop work1
+  types.data.Ty.is_data_loop work1
 
-/-- [noble_kernel::acceptance::parts::first_unknown]: loop body 1:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 286:8-292:9 -/
+/-- [noble_kernel::acceptance::parts::instantiate::instantiation_invalid]:
+    Source: 'crates/noble-kernel/src/acceptance/parts/instantiate.rs', lines 288:0-290:1 -/
+def acceptance.parts.instantiate.instantiation_invalid
+  («at» : acceptance.parts.Site) : Result acceptance.Fail := do
+  acceptance.parts.invalid_without_stacks «at»
+    untrusted.Constraint.InstantiationKind
+
+/-- [noble_kernel::acceptance::parts::effects::first_unknown]: loop body 1:
+    Source: 'crates/noble-kernel/src/acceptance/parts/effects.rs', lines 35:8-41:9 -/
 @[rust_loop_body]
-def acceptance.parts.first_unknown_loop0_loop0.body
+def acceptance.parts.effects.first_unknown_loop0_loop0.body
   (known : Slice types.EffId) (id : types.EffId) (known_index : Std.Usize) :
   Result (ControlFlow Std.Usize Bool)
   := do
@@ -3164,22 +4227,23 @@ def acceptance.parts.first_unknown_loop0_loop0.body
          ok (cont known_index1)
   else ok (done false)
 
-/-- [noble_kernel::acceptance::parts::first_unknown]: loop 1:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 286:8-292:9 -/
+/-- [noble_kernel::acceptance::parts::effects::first_unknown]: loop 1:
+    Source: 'crates/noble-kernel/src/acceptance/parts/effects.rs', lines 35:8-41:9 -/
 @[rust_loop]
-def acceptance.parts.first_unknown_loop0_loop0
+def acceptance.parts.effects.first_unknown_loop0_loop0
   (known : Slice types.EffId) (id : types.EffId) (known_index : Std.Usize) :
   Result Bool
   := do
   loop
-    (fun known_index1 => acceptance.parts.first_unknown_loop0_loop0.body known
-      id known_index1)
+    (fun known_index1 =>
+      acceptance.parts.effects.first_unknown_loop0_loop0.body known id
+      known_index1)
     known_index
 
-/-- [noble_kernel::acceptance::parts::first_unknown]: loop body 0:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 282:4-298:5 -/
+/-- [noble_kernel::acceptance::parts::effects::first_unknown]: loop body 0:
+    Source: 'crates/noble-kernel/src/acceptance/parts/effects.rs', lines 31:4-47:5 -/
 @[rust_loop_body]
-def acceptance.parts.first_unknown_loop0.body
+def acceptance.parts.effects.first_unknown_loop0.body
   (needed : Slice types.EffId) (known : Slice types.EffId) (index : Std.Usize)
   :
   Result (ControlFlow Std.Usize (Option types.EffId))
@@ -3189,46 +4253,37 @@ def acceptance.parts.first_unknown_loop0.body
   then
     let id ← Slice.index_usize needed index
     let is_known ←
-      acceptance.parts.first_unknown_loop0_loop0 known id 0#usize
+      acceptance.parts.effects.first_unknown_loop0_loop0 known id 0#usize
     if is_known
     then let index1 ← index + 1#usize
          ok (cont index1)
     else ok (done (some id))
   else ok (done none)
 
-/-- [noble_kernel::acceptance::parts::first_unknown]: loop 0:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 282:4-298:5 -/
+/-- [noble_kernel::acceptance::parts::effects::first_unknown]: loop 0:
+    Source: 'crates/noble-kernel/src/acceptance/parts/effects.rs', lines 31:4-47:5 -/
 @[rust_loop]
-def acceptance.parts.first_unknown_loop0
+def acceptance.parts.effects.first_unknown_loop0
   (needed : Slice types.EffId) (known : Slice types.EffId) (index : Std.Usize)
   :
   Result (Option types.EffId)
   := do
   loop
-    (fun index1 => acceptance.parts.first_unknown_loop0.body needed known
-      index1)
+    (fun index1 => acceptance.parts.effects.first_unknown_loop0.body needed
+      known index1)
     index
 
-/-- [noble_kernel::acceptance::parts::first_unknown]:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 276:0-300:1 -/
+/-- [noble_kernel::acceptance::parts::effects::first_unknown]:
+    Source: 'crates/noble-kernel/src/acceptance/parts/effects.rs', lines 25:0-49:1 -/
 @[reducible]
-def acceptance.parts.first_unknown
+def acceptance.parts.effects.first_unknown
   (needed : Slice types.EffId) (known : Slice types.EffId) :
   Result (Option types.EffId)
   := do
-  acceptance.parts.first_unknown_loop0 needed known 0#usize
-
-/-- [noble_kernel::acceptance::parts::instantiate::instantiation_invalid]:
-    Source: 'crates/noble-kernel/src/acceptance/parts/instantiate.rs', lines 247:0-255:1 -/
-def acceptance.parts.instantiate.instantiation_invalid
-  («at» : acceptance.parts.Site) (ctx : acceptance.parts.Ctx) :
-  Result acceptance.Fail
-  := do
-  acceptance.parts.invalid ctx «at» (alloc.vec.Vec.new types.Ty)
-    (alloc.vec.Vec.new types.Ty) untrusted.Constraint.InstantiationKind
+  acceptance.parts.effects.first_unknown_loop0 needed known 0#usize
 
 /-- [noble_kernel::acceptance::parts::instantiate::project]:
-    Source: 'crates/noble-kernel/src/acceptance/parts/instantiate.rs', lines 187:0-245:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts/instantiate.rs', lines 236:0-286:1 -/
 def acceptance.parts.instantiate.project
   (scheme : words.Scheme) (inst : words.Inst)
   (data_var : Option words.Variable) («at» : acceptance.parts.Site)
@@ -3258,22 +4313,15 @@ def acceptance.parts.instantiate.project
             match r4 with
             | core.result.Result.Ok _ =>
               let s5 ← types.EffSet.as_slice effects
-              let effect_ids ←
-                alloc.slice.Slice.to_vec types.EffId.Insts.CoreCloneClone s5
               let s6 := alloc.vec.Vec.deref ctx.env.effects
-              let known ←
-                alloc.slice.Slice.to_vec types.EffId.Insts.CoreCloneClone s6
-              let s7 := alloc.vec.Vec.deref effect_ids
-              let s8 := alloc.vec.Vec.deref known
-              let unknown ← acceptance.parts.first_unknown s7 s8
+              let unknown ← acceptance.parts.effects.first_unknown s5 s6
               match unknown with
               | none =>
                 ok (core.result.Result.Ok
                   { stack_in := stack, stack_out := stack1, effects })
               | some id =>
                 let f ←
-                  acceptance.parts.invalid ctx «at» (alloc.vec.Vec.new
-                    types.Ty) (alloc.vec.Vec.new types.Ty)
+                  acceptance.parts.invalid_without_stacks «at»
                     (untrusted.Constraint.UnknownEffect id)
                 ok (core.result.Result.Err f)
             | core.result.Result.Err failure =>
@@ -3281,20 +4329,19 @@ def acceptance.parts.instantiate.project
           | core.result.Result.Err failure =>
             ok (core.result.Result.Err failure)
         | core.result.Result.Err _ =>
-          let f ←
-            acceptance.parts.instantiate.instantiation_invalid «at» ctx
+          let f ← acceptance.parts.instantiate.instantiation_invalid «at»
           ok (core.result.Result.Err f)
       | core.result.Result.Err _ =>
-        let f ← acceptance.parts.instantiate.instantiation_invalid «at» ctx
+        let f ← acceptance.parts.instantiate.instantiation_invalid «at»
         ok (core.result.Result.Err f)
     | core.result.Result.Err _ =>
-      let f ← acceptance.parts.instantiate.instantiation_invalid «at» ctx
+      let f ← acceptance.parts.instantiate.instantiation_invalid «at»
       ok (core.result.Result.Err f)
   | some var =>
     let o ← words.Inst.value inst var
     match o with
     | none =>
-      let f ← acceptance.parts.instantiate.instantiation_invalid «at» ctx
+      let f ← acceptance.parts.instantiate.instantiation_invalid «at»
       ok (core.result.Result.Err f)
     | some ty =>
       let ty1 ← types.Ty.Insts.CoreCloneClone.clone ty
@@ -3319,31 +4366,23 @@ def acceptance.parts.instantiate.project
               match r4 with
               | core.result.Result.Ok _ =>
                 let s5 ← types.EffSet.as_slice effects
-                let effect_ids ←
-                  alloc.slice.Slice.to_vec types.EffId.Insts.CoreCloneClone s5
                 let s6 := alloc.vec.Vec.deref ctx.env.effects
-                let known ←
-                  alloc.slice.Slice.to_vec types.EffId.Insts.CoreCloneClone s6
-                let s7 := alloc.vec.Vec.deref effect_ids
-                let s8 := alloc.vec.Vec.deref known
-                let unknown ← acceptance.parts.first_unknown s7 s8
+                let unknown ← acceptance.parts.effects.first_unknown s5 s6
                 match unknown with
                 | none =>
-                  let b ← types.Ty.is_data ty1
+                  let b ← types.data.Ty.is_data ty1
                   if b
                   then
                     ok (core.result.Result.Ok
                       { stack_in := stack, stack_out := stack1, effects })
                   else
                     let f ←
-                      acceptance.parts.invalid ctx «at» (alloc.vec.Vec.new
-                        types.Ty) (alloc.vec.Vec.new types.Ty)
+                      acceptance.parts.invalid_without_stacks «at»
                         (untrusted.Constraint.Eligibility ty1)
                     ok (core.result.Result.Err f)
                 | some id =>
                   let f ←
-                    acceptance.parts.invalid ctx «at» (alloc.vec.Vec.new
-                      types.Ty) (alloc.vec.Vec.new types.Ty)
+                    acceptance.parts.invalid_without_stacks «at»
                       (untrusted.Constraint.UnknownEffect id)
                   ok (core.result.Result.Err f)
               | core.result.Result.Err failure =>
@@ -3351,19 +4390,17 @@ def acceptance.parts.instantiate.project
             | core.result.Result.Err failure =>
               ok (core.result.Result.Err failure)
           | core.result.Result.Err _ =>
-            let f ←
-              acceptance.parts.instantiate.instantiation_invalid «at» ctx
+            let f ← acceptance.parts.instantiate.instantiation_invalid «at»
             ok (core.result.Result.Err f)
         | core.result.Result.Err _ =>
-          let f ←
-            acceptance.parts.instantiate.instantiation_invalid «at» ctx
+          let f ← acceptance.parts.instantiate.instantiation_invalid «at»
           ok (core.result.Result.Err f)
       | core.result.Result.Err _ =>
-        let f ← acceptance.parts.instantiate.instantiation_invalid «at» ctx
+        let f ← acceptance.parts.instantiate.instantiation_invalid «at»
         ok (core.result.Result.Err f)
 
 /-- [noble_kernel::types::{noble_kernel::types::EffSet}::len]:
-    Source: 'crates/noble-kernel/src/types.rs', lines 132:4-134:5
+    Source: 'crates/noble-kernel/src/types.rs', lines 148:4-150:5
     Visibility: public -/
 def types.EffSet.len (self : types.EffSet) : Result (Option Std.U64) := do
   let i := alloc.vec.Vec.len self
@@ -3517,7 +4554,7 @@ def words.Scheme.check_inst
     | some problem => ok (core.result.Result.Err problem)
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::len]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 140:4-142:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 237:4-239:5
     Visibility: public -/
 def contracts.Env.len (self : contracts.Env) : Result (Option Std.U64) := do
   let i := alloc.vec.Vec.len self.defs
@@ -3525,7 +4562,7 @@ def contracts.Env.len (self : contracts.Env) : Result (Option Std.U64) := do
   core.result.Result.ok r
 
 /-- [noble_kernel::acceptance::parts::instantiate::check_bounds]:
-    Source: 'crates/noble-kernel/src/acceptance/parts/instantiate.rs', lines 141:0-181:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts/instantiate.rs', lines 189:0-226:1 -/
 def acceptance.parts.instantiate.check_bounds
   (scheme : words.Scheme) (inst : words.Inst) («at» : acceptance.parts.Site)
   (ctx : acceptance.parts.Ctx) :
@@ -3545,15 +4582,14 @@ def acceptance.parts.instantiate.check_bounds
     | core.result.Result.Err ie =>
       match ie with
       | words.InstError.KindMismatch =>
-        let f ← acceptance.parts.instantiate.instantiation_invalid «at» ctx
+        let f ← acceptance.parts.instantiate.instantiation_invalid «at»
         ok (core.result.Result.Err f)
       | words.InstError.UnknownVariable =>
-        let f ← acceptance.parts.instantiate.instantiation_invalid «at» ctx
+        let f ← acceptance.parts.instantiate.instantiation_invalid «at»
         ok (core.result.Result.Err f)
       | words.InstError.ArityMismatch =>
         let f ←
-          acceptance.parts.invalid ctx «at» (alloc.vec.Vec.new types.Ty)
-            (alloc.vec.Vec.new types.Ty)
+          acceptance.parts.invalid_without_stacks «at»
             untrusted.Constraint.InstantiationArity
         ok (core.result.Result.Err f)
       | words.InstError.OversizedStack =>
@@ -3566,10 +4602,10 @@ def acceptance.parts.instantiate.check_bounds
         ok (core.result.Result.Err (acceptance.Fail.Exhausted
           untrusted.LimitKind.TypeSize))
       | words.InstError.CyclicWitness =>
-        let f ← acceptance.parts.instantiate.instantiation_invalid «at» ctx
+        let f ← acceptance.parts.instantiate.instantiation_invalid «at»
         ok (core.result.Result.Err f)
       | words.InstError.WalkExhausted =>
-        let f ← acceptance.parts.instantiate.instantiation_invalid «at» ctx
+        let f ← acceptance.parts.instantiate.instantiation_invalid «at»
         ok (core.result.Result.Err f)
 
 /-- [noble_kernel::words::resolve::carries_kind]:
@@ -3825,7 +4861,7 @@ def words.resolve.bindings
   | some problem => ok (core.result.Result.Err problem)
 
 /-- [noble_kernel::acceptance::parts::instantiate::resolve_witness]:
-    Source: 'crates/noble-kernel/src/acceptance/parts/instantiate.rs', lines 100:0-135:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts/instantiate.rs', lines 150:0-179:1 -/
 def acceptance.parts.instantiate.resolve_witness
   (scheme : words.Scheme) (inst : words.Inst) («at» : acceptance.parts.Site)
   (ctx : acceptance.parts.Ctx) :
@@ -3840,15 +4876,15 @@ def acceptance.parts.instantiate.resolve_witness
   | core.result.Result.Err ie =>
     match ie with
     | words.InstError.KindMismatch =>
-      let f ← acceptance.parts.instantiate.instantiation_invalid «at» ctx
+      let f ← acceptance.parts.instantiate.instantiation_invalid «at»
       ok (core.result.Result.Err f)
     | words.InstError.UnknownVariable =>
-      let f ← acceptance.parts.instantiate.instantiation_invalid «at» ctx
+      let f ← acceptance.parts.instantiate.instantiation_invalid «at»
       ok (core.result.Result.Err f)
     | words.InstError.ArityMismatch =>
       let f ←
-        acceptance.parts.invalid ctx «at» (alloc.vec.Vec.new types.Ty)
-          (alloc.vec.Vec.new types.Ty) untrusted.Constraint.InstantiationArity
+        acceptance.parts.invalid_without_stacks «at»
+          untrusted.Constraint.InstantiationArity
       ok (core.result.Result.Err f)
     | words.InstError.OversizedStack =>
       ok (core.result.Result.Err (acceptance.Fail.Exhausted
@@ -3861,15 +4897,98 @@ def acceptance.parts.instantiate.resolve_witness
         untrusted.LimitKind.TypeSize))
     | words.InstError.CyclicWitness =>
       let f ←
-        acceptance.parts.invalid ctx «at» (alloc.vec.Vec.new types.Ty)
-          (alloc.vec.Vec.new types.Ty) untrusted.Constraint.CyclicWitness
+        acceptance.parts.invalid_without_stacks «at»
+          untrusted.Constraint.CyclicWitness
       ok (core.result.Result.Err f)
     | words.InstError.WalkExhausted =>
       ok (core.result.Result.Err (acceptance.Fail.Exhausted
         untrusted.LimitKind.Work))
 
+/-- [noble_kernel::acceptance::parts::instantiate::valid_effect_bindings]: loop body 0:
+    Source: 'crates/noble-kernel/src/acceptance/parts/instantiate.rs', lines 135:4-141:5 -/
+@[rust_loop_body]
+def acceptance.parts.instantiate.valid_effect_bindings_loop.body
+  (env : contracts.Env) (ids : Slice types.EffId) (index : Std.Usize) :
+  Result (ControlFlow Std.Usize Bool)
+  := do
+  let i := Slice.len ids
+  if index < i
+  then
+    let ei ← Slice.index_usize ids index
+    let b ← contracts.Env.knows_effect env ei
+    if b
+    then let index1 ← index + 1#usize
+         ok (cont index1)
+    else ok (done false)
+  else ok (done true)
+
+/-- [noble_kernel::acceptance::parts::instantiate::valid_effect_bindings]: loop 0:
+    Source: 'crates/noble-kernel/src/acceptance/parts/instantiate.rs', lines 135:4-141:5 -/
+@[rust_loop]
+def acceptance.parts.instantiate.valid_effect_bindings_loop
+  (env : contracts.Env) (ids : Slice types.EffId) (index : Std.Usize) :
+  Result Bool
+  := do
+  loop
+    (fun index1 => acceptance.parts.instantiate.valid_effect_bindings_loop.body
+      env ids index1)
+    index
+
+/-- [noble_kernel::acceptance::parts::instantiate::valid_effect_bindings]:
+    Source: 'crates/noble-kernel/src/acceptance/parts/instantiate.rs', lines 131:0-143:1 -/
+def acceptance.parts.instantiate.valid_effect_bindings
+  (effects : types.EffSet) (env : contracts.Env) : Result Bool := do
+  let ids ← types.EffSet.as_slice effects
+  acceptance.parts.instantiate.valid_effect_bindings_loop env ids 0#usize
+
+/-- [noble_kernel::acceptance::parts::instantiate::valid_bindings]: loop body 0:
+    Source: 'crates/noble-kernel/src/acceptance/parts/instantiate.rs', lines 115:4-127:5 -/
+@[rust_loop_body]
+def acceptance.parts.instantiate.valid_bindings_loop.body
+  (bindings : Slice words.Binding) (env : contracts.Env) (index : Std.Usize) :
+  Result (ControlFlow Std.Usize Bool)
+  := do
+  let i := Slice.len bindings
+  if index < i
+  then
+    let b ← Slice.index_usize bindings index
+    let is_valid ←
+      match b with
+      | words.Binding.Stack stack =>
+        let s := alloc.vec.Vec.deref stack
+        acceptance.parts.valid_stack_types s env
+      | words.Binding.Value ty =>
+        contracts.nominal.type.walk.Env.valid_type env ty 512#u32
+      | words.Binding.Effect effects =>
+        acceptance.parts.instantiate.valid_effect_bindings effects env
+      | words.Binding.Ref _ => ok true
+    if is_valid
+    then let index1 ← index + 1#usize
+         ok (cont index1)
+    else ok (done false)
+  else ok (done true)
+
+/-- [noble_kernel::acceptance::parts::instantiate::valid_bindings]: loop 0:
+    Source: 'crates/noble-kernel/src/acceptance/parts/instantiate.rs', lines 115:4-127:5 -/
+@[rust_loop]
+def acceptance.parts.instantiate.valid_bindings_loop
+  (bindings : Slice words.Binding) (env : contracts.Env) (index : Std.Usize) :
+  Result Bool
+  := do
+  loop
+    (fun index1 => acceptance.parts.instantiate.valid_bindings_loop.body
+      bindings env index1)
+    index
+
+/-- [noble_kernel::acceptance::parts::instantiate::valid_bindings]:
+    Source: 'crates/noble-kernel/src/acceptance/parts/instantiate.rs', lines 112:0-129:1 -/
+@[reducible]
+def acceptance.parts.instantiate.valid_bindings
+  (bindings : Slice words.Binding) (env : contracts.Env) : Result Bool := do
+  acceptance.parts.instantiate.valid_bindings_loop bindings env 0#usize
+
 /-- [noble_kernel::acceptance::parts::instantiate::apply]:
-    Source: 'crates/noble-kernel/src/acceptance/parts/instantiate.rs', lines 86:0-97:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts/instantiate.rs', lines 92:0-109:1 -/
 def acceptance.parts.instantiate.apply
   (scheme : words.Scheme) (inst : words.Inst)
   (data_var : Option words.Variable) («at» : acceptance.parts.Site)
@@ -3877,24 +4996,33 @@ def acceptance.parts.instantiate.apply
   Result (core.result.Result (untrusted.Interface × words.Inst)
     acceptance.Fail)
   := do
-  let r ← acceptance.parts.instantiate.check_bounds scheme inst «at» ctx
-  match r with
-  | core.result.Result.Ok _ =>
-    let r1 ←
-      acceptance.parts.instantiate.resolve_witness scheme inst «at» ctx
-    match r1 with
-    | core.result.Result.Ok value =>
-      let r2 ←
-        acceptance.parts.instantiate.project scheme value data_var «at» ctx
-      match r2 with
-      | core.result.Result.Ok value1 =>
-        ok (core.result.Result.Ok (value1, value))
+  let s ← alloc.vec.Vec.as_slice Global inst.bindings
+  let b ← acceptance.parts.instantiate.valid_bindings s ctx.env
+  if b
+  then
+    let r ← acceptance.parts.instantiate.check_bounds scheme inst «at» ctx
+    match r with
+    | core.result.Result.Ok _ =>
+      let r1 ←
+        acceptance.parts.instantiate.resolve_witness scheme inst «at» ctx
+      match r1 with
+      | core.result.Result.Ok value =>
+        let r2 ←
+          acceptance.parts.instantiate.project scheme value data_var «at» ctx
+        match r2 with
+        | core.result.Result.Ok value1 =>
+          ok (core.result.Result.Ok (value1, value))
+        | core.result.Result.Err failure => ok (core.result.Result.Err failure)
       | core.result.Result.Err failure => ok (core.result.Result.Err failure)
     | core.result.Result.Err failure => ok (core.result.Result.Err failure)
-  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+  else
+    let f ←
+      acceptance.parts.invalid_without_stacks «at»
+        untrusted.Constraint.InvalidType
+    ok (core.result.Result.Err f)
 
 /-- [noble_kernel::shapes::{noble_kernel::shapes::Pattern}::program]:
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 65:4-75:5
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 70:4-80:5
     Visibility: public -/
 def shapes.Pattern.program
   (stack_in : alloc.vec.Vec shapes.Pattern)
@@ -3947,6 +5075,45 @@ def acceptance.parts.instantiate.quotation_scheme : Result words.Scheme := do
       stack_out := ret5,
       effects := (alloc.vec.Vec.new shapes.EffectSlot)
     }
+
+/-- [noble_kernel::acceptance::parts::effects::first_extra]: loop body 0:
+    Source: 'crates/noble-kernel/src/acceptance/parts/effects.rs', lines 11:4-17:5 -/
+@[rust_loop_body]
+def acceptance.parts.effects.first_extra_loop.body
+  (allowed : types.EffSet) (ids : Slice types.EffId) (index : Std.Usize) :
+  Result (ControlFlow Std.Usize (Option types.EffId))
+  := do
+  let i := Slice.len ids
+  if index < i
+  then
+    let ei ← Slice.index_usize ids index
+    let b ← types.EffSet.contains allowed ei
+    if b
+    then let index1 ← index + 1#usize
+         ok (cont index1)
+    else ok (done (some ei))
+  else ok (done none)
+
+/-- [noble_kernel::acceptance::parts::effects::first_extra]: loop 0:
+    Source: 'crates/noble-kernel/src/acceptance/parts/effects.rs', lines 11:4-17:5 -/
+@[rust_loop]
+def acceptance.parts.effects.first_extra_loop
+  (allowed : types.EffSet) (ids : Slice types.EffId) (index : Std.Usize) :
+  Result (Option types.EffId)
+  := do
+  loop
+    (fun index1 => acceptance.parts.effects.first_extra_loop.body allowed ids
+      index1)
+    index
+
+/-- [noble_kernel::acceptance::parts::effects::first_extra]:
+    Source: 'crates/noble-kernel/src/acceptance/parts/effects.rs', lines 4:0-19:1 -/
+def acceptance.parts.effects.first_extra
+  (derived : types.EffSet) (allowed : types.EffSet) :
+  Result (Option types.EffId)
+  := do
+  let ids ← types.EffSet.as_slice derived
+  acceptance.parts.effects.first_extra_loop allowed ids 0#usize
 
 /-- [noble_kernel::acceptance::frames::complete_frame]:
     Source: 'crates/noble-kernel/src/acceptance/frames.rs', lines 48:0-117:1 -/
@@ -4029,7 +5196,8 @@ def acceptance.frames.complete_frame
             ok (core.result.Result.Err acceptance.Fail.Internal)
     else
       let o ←
-        acceptance.parts.first_extra frame.effects frame.claimed_effects
+        acceptance.parts.effects.first_extra frame.effects
+          frame.claimed_effects
       let id ← lift (core.option.Option.unwrap_or o 0#u32)
       let s ← acceptance.parts.site frame.origin none
       let f ←
@@ -4058,7 +5226,7 @@ def words.VariableKind.Insts.CoreCmpPartialEqVariableKind.eq
   ok (self1 = other1)
 
 /-- [noble_kernel::shapes::require_kind]:
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 111:0-129:1 -/
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 116:0-134:1 -/
 def shapes.require_kind
   (kinds : Slice words.VariableKind) (var : words.Variable)
   (expected : words.VariableKind) :
@@ -4082,7 +5250,7 @@ def shapes.require_kind
     ok (core.result.Result.Err shapes.Defect.UnknownVariable)
 
 /-- [noble_kernel::shapes::require_pattern]:
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 201:0-242:1 -/
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 206:0-248:1 -/
 def shapes.require_pattern
   (kinds : Slice words.VariableKind) (pattern : shapes.Pattern)
   (work : alloc.vec.Vec shapes.Step) :
@@ -4114,6 +5282,7 @@ def shapes.require_pattern
     let work3 ← alloc.vec.Vec.push work2 (shapes.Step.Slots effects)
     ok (core.result.Result.Ok work3)
   | shapes.Pattern.ResourcePattern _ => ok (core.result.Result.Ok work)
+  | shapes.Pattern.NominalPattern _ _ => ok (core.result.Result.Ok work)
   | shapes.Pattern.VarPattern var =>
     let r ← shapes.require_kind kinds var words.VariableKind.Value
     match r with
@@ -4126,7 +5295,7 @@ def shapes.require_pattern
     | core.result.Result.Err problem => ok (core.result.Result.Err problem)
 
 /-- [noble_kernel::shapes::require_parts]: loop body 0:
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 170:4-185:5 -/
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 175:4-190:5 -/
 @[rust_loop_body]
 def shapes.require_parts_loop.body
   (kinds : Slice words.VariableKind) (parts : alloc.vec.Vec shapes.Pattern)
@@ -4219,6 +5388,11 @@ def shapes.require_parts_loop.body
         let p1 ← shapes.Pattern.Insts.CoreCloneClone.clone p
         let work2 ← alloc.vec.Vec.push work (shapes.Step.Pattern p1)
         ok (work2, core.result.Result.Ok ())
+      | shapes.Pattern.NominalPattern _ _ =>
+        do
+        let p1 ← shapes.Pattern.Insts.CoreCloneClone.clone p
+        let work2 ← alloc.vec.Vec.push work (shapes.Step.Pattern p1)
+        ok (work2, core.result.Result.Ok ())
       | shapes.Pattern.VarPattern _ =>
         do
         let p1 ← shapes.Pattern.Insts.CoreCloneClone.clone p
@@ -4236,7 +5410,7 @@ def shapes.require_parts_loop.body
   else ok (done (work, none))
 
 /-- [noble_kernel::shapes::require_parts]: loop 0:
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 170:4-185:5 -/
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 175:4-190:5 -/
 @[rust_loop]
 def shapes.require_parts_loop
   (kinds : Slice words.VariableKind) (parts : alloc.vec.Vec shapes.Pattern)
@@ -4249,7 +5423,7 @@ def shapes.require_parts_loop
     (work, index)
 
 /-- [noble_kernel::shapes::require_parts]:
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 163:0-190:1 -/
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 168:0-195:1 -/
 def shapes.require_parts
   (kinds : Slice words.VariableKind) (parts : alloc.vec.Vec shapes.Pattern)
   (work : alloc.vec.Vec shapes.Step) :
@@ -4261,7 +5435,7 @@ def shapes.require_parts
   | some problem => ok (core.result.Result.Err problem)
 
 /-- [noble_kernel::shapes::require_slots]: loop body 0:
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 139:4-151:5 -/
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 144:4-156:5 -/
 @[rust_loop_body]
 def shapes.require_slots_loop.body
   (kinds : Slice words.VariableKind) (slots : Slice shapes.EffectSlot)
@@ -4285,7 +5459,7 @@ def shapes.require_slots_loop.body
   else ok (done none)
 
 /-- [noble_kernel::shapes::require_slots]: loop 0:
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 139:4-151:5 -/
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 144:4-156:5 -/
 @[rust_loop]
 def shapes.require_slots_loop
   (kinds : Slice words.VariableKind) (slots : Slice shapes.EffectSlot)
@@ -4297,7 +5471,7 @@ def shapes.require_slots_loop
     index
 
 /-- [noble_kernel::shapes::require_slots]:
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 136:0-156:1 -/
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 141:0-161:1 -/
 def shapes.require_slots
   (kinds : Slice words.VariableKind) (slots : Slice shapes.EffectSlot) :
   Result (core.result.Result Unit shapes.Defect)
@@ -4308,7 +5482,7 @@ def shapes.require_slots
   | some problem => ok (core.result.Result.Err problem)
 
 /-- Trait implementation: [noble_kernel::shapes::{impl core::clone::Clone for noble_kernel::shapes::EffectSlot}]
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 79:9-79:14 -/
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 84:9-84:14 -/
 @[reducible]
 def shapes.EffectSlot.Insts.CoreCloneClone : core.clone.Clone shapes.EffectSlot
   := {
@@ -4320,14 +5494,14 @@ def shapes.EffectSlot.Insts.CoreCloneClone : core.clone.Clone shapes.EffectSlot
 @[global_simps, irreducible] def shapes.WORK_CAP : Std.Usize := 512#usize
 
 /-- Trait implementation: [noble_kernel::shapes::impls::{impl core::clone::Clone for noble_kernel::shapes::Pattern}]
-    Source: 'crates/noble-kernel/src/shapes/impls.rs', lines 19:0-55:1 -/
+    Source: 'crates/noble-kernel/src/shapes/impls.rs', lines 19:0-58:1 -/
 @[reducible]
 def shapes.Pattern.Insts.CoreCloneClone : core.clone.Clone shapes.Pattern := {
   clone := shapes.Pattern.Insts.CoreCloneClone.clone
 }
 
 /-- [noble_kernel::shapes::validate]: loop body 0:
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 264:4-284:5
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 270:4-290:5
     Visibility: public -/
 @[rust_loop_body]
 def shapes.validate_loop.body
@@ -4360,7 +5534,7 @@ def shapes.validate_loop.body
       | core.result.Result.Err problem => ok (done (some problem))
 
 /-- [noble_kernel::shapes::validate]: loop 0:
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 264:4-284:5
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 270:4-290:5
     Visibility: public -/
 @[rust_loop]
 def shapes.validate_loop
@@ -4372,7 +5546,7 @@ def shapes.validate_loop
     work
 
 /-- [noble_kernel::shapes::validate]:
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 253:0-289:1
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 259:0-295:1
     Visibility: public -/
 def shapes.validate
   (kinds : Slice words.VariableKind) (stack_in : Slice shapes.Pattern)
@@ -4501,14 +5675,14 @@ def acceptance.validate.colored_slot
   | core.result.Result.Err _ => ok none
 
 /-- [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::Definition}::clone]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 10:9-10:14
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 11:9-11:14
     Visibility: public -/
 def contracts.Definition.Insts.CoreCloneClone.clone
   (self : contracts.Definition) : Result contracts.Definition := do
   ok self
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::Definition}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 10:9-10:14 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 11:9-11:14 -/
 @[reducible]
 def contracts.Definition.Insts.CoreCloneClone : core.clone.Clone
   contracts.Definition := {
@@ -4696,7 +5870,11 @@ def acceptance.validate.dep_root
 def acceptance.validate.dependencies_loop.body
   (v : alloc.vec.Vec words.Scheme) (v1 : alloc.vec.Vec contracts.Behavior)
   (v2 : alloc.vec.Vec (alloc.vec.Vec contracts.Definition))
-  (v3 : alloc.vec.Vec contracts.SchemaDecl) (v4 : alloc.vec.Vec types.EffId)
+  (v3 : alloc.vec.Vec contracts.SchemaDecl)
+  (v4 : alloc.vec.Vec contracts.NominalDecl)
+  (v5 : alloc.vec.Vec types.ResourceKind) (o : Option Std.U64) (b : Bool)
+  (v6 : alloc.vec.Vec (Option Std.U64))
+  (v7 : alloc.vec.Vec contracts.BoundAdapter) (v8 : alloc.vec.Vec types.EffId)
   (limits : untrusted.Limits) (count : Std.Usize)
   (walk : acceptance.validate.DepWalk) (failure : Option acceptance.Fail)
   (root : Std.Usize) :
@@ -4713,8 +5891,19 @@ def acceptance.validate.dependencies_loop.body
       let i1 ← lift (UScalar.cast .U32 root)
       let (next, step) ←
         acceptance.validate.dep_root
-          { defs := v, kinds := v1, deps := v2, schemas := v3, effects := v4 }
-          i1 walk limits
+          {
+            defs := v,
+            kinds := v1,
+            deps := v2,
+            schemas := v3,
+            nominals := v4,
+            resource_kinds := v5,
+            caller_module := o,
+            declared_modules := b,
+            definition_owners := v6,
+            bound_adapters := v7,
+            effects := v8
+          } i1 walk limits
       match step with
       | core.result.Result.Ok _ =>
         let root1 ← root + 1#usize
@@ -4730,7 +5919,11 @@ def acceptance.validate.dependencies_loop.body
 def acceptance.validate.dependencies_loop
   (v : alloc.vec.Vec words.Scheme) (v1 : alloc.vec.Vec contracts.Behavior)
   (v2 : alloc.vec.Vec (alloc.vec.Vec contracts.Definition))
-  (v3 : alloc.vec.Vec contracts.SchemaDecl) (v4 : alloc.vec.Vec types.EffId)
+  (v3 : alloc.vec.Vec contracts.SchemaDecl)
+  (v4 : alloc.vec.Vec contracts.NominalDecl)
+  (v5 : alloc.vec.Vec types.ResourceKind) (o : Option Std.U64) (b : Bool)
+  (v6 : alloc.vec.Vec (Option Std.U64))
+  (v7 : alloc.vec.Vec contracts.BoundAdapter) (v8 : alloc.vec.Vec types.EffId)
   (limits : untrusted.Limits) (count : Std.Usize)
   (walk : acceptance.validate.DepWalk) (failure : Option acceptance.Fail)
   (root : Std.Usize) :
@@ -4738,7 +5931,7 @@ def acceptance.validate.dependencies_loop
   := do
   loop
     (fun (walk1, failure1, root1) => acceptance.validate.dependencies_loop.body
-      v v1 v2 v3 v4 limits count walk1 failure1 root1)
+      v v1 v2 v3 v4 v5 o b v6 v7 v8 limits count walk1 failure1 root1)
     (walk, failure, root)
 
 /-- [noble_kernel::acceptance::validate::dependencies]:
@@ -4753,82 +5946,4375 @@ def acceptance.validate.dependencies
   let v1 := alloc.vec.Vec.with_capacity contracts.Definition i
   let failure ←
     acceptance.validate.dependencies_loop env.defs env.kinds env.deps
-      env.schemas env.effects limits count
-      { colors := v, stack := v1, spent := 0#u32 } none 0#usize
+      env.schemas env.nominals env.resource_kinds env.caller_module
+      env.declared_modules env.definition_owners env.bound_adapters env.effects
+      limits count { colors := v, stack := v1, spent := 0#u32 } none 0#usize
   match failure with
   | none => ok (core.result.Result.Ok ())
   | some problem => ok (core.result.Result.Err problem)
 
-/-- [noble_kernel::acceptance::preflight::check_allowed_effects]:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 67:0-82:1 -/
-def acceptance.preflight.check_allowed_effects
-  (context : acceptance.parts.Ctx) :
+/-- [noble_kernel::contracts::nominal::inspection::{noble_kernel::contracts::Env}::enqueue_program_pattern::{impl core::ops::function::FnOnce<(u64,), bool> for noble_kernel::contracts::nominal::inspection::{noble_kernel::contracts::Env}::enqueue_program_pattern::{closure}<'_0>}::call_once]:
+    Source: 'crates/noble-kernel/src/contracts/nominal/inspection.rs', lines 147:51-147:87 -/
+def
+  contracts.nominal.inspection.Env.enqueue_program_pattern.closure.Insts.CoreOpsFunctionFnOnceTupleU64Bool.call_once
+  (c : contracts.nominal.inspection.Env.enqueue_program_pattern.closure)
+  (tupled_args : Std.U64) :
+  Result Bool
+  := do
+  let i ← lift (core.convert.num.FromU64U32.from c)
+  ok (tupled_args > i)
+
+/-- Trait implementation: [noble_kernel::contracts::nominal::inspection::{noble_kernel::contracts::Env}::enqueue_program_pattern::{impl core::ops::function::FnOnce<(u64,), bool> for noble_kernel::contracts::nominal::inspection::{noble_kernel::contracts::Env}::enqueue_program_pattern::{closure}<'_0>}]
+    Source: 'crates/noble-kernel/src/contracts/nominal/inspection.rs', lines 147:51-147:87 -/
+@[reducible]
+def
+  contracts.nominal.inspection.Env.enqueue_program_pattern.closure.Insts.CoreOpsFunctionFnOnceTupleU64Bool
+  : core.ops.function.FnOnce
+  contracts.nominal.inspection.Env.enqueue_program_pattern.closure Std.U64 Bool
+  := {
+  call_once :=
+    contracts.nominal.inspection.Env.enqueue_program_pattern.closure.Insts.CoreOpsFunctionFnOnceTupleU64Bool.call_once
+}
+
+/-- [noble_kernel::contracts::nominal::inspection::{noble_kernel::contracts::Env}::enqueue_program_pattern]: loop body 0:
+    Source: 'crates/noble-kernel/src/contracts/nominal/inspection.rs', lines 137:8-142:9 -/
+@[rust_loop_body]
+def contracts.nominal.inspection.Env.enqueue_program_pattern_loop.body
+  (self : contracts.Env) (effects : Slice shapes.EffectSlot)
+  (index : Std.Usize) (is_effect_set_known : Bool) :
+  Result (ControlFlow (Std.Usize × Bool) Bool)
+  := do
+  let i := Slice.len effects
+  if index < i
+  then
+    if is_effect_set_known
+    then
+      let es ← Slice.index_usize effects index
+      let is_effect_set_known1 ←
+        match es with
+        | shapes.EffectSlot.Effect id => contracts.Env.knows_effect self id
+        | shapes.EffectSlot.Var _ => ok true
+      let index1 ← index + 1#usize
+      ok (cont (index1, is_effect_set_known1))
+    else ok (done false)
+  else ok (done is_effect_set_known)
+
+/-- [noble_kernel::contracts::nominal::inspection::{noble_kernel::contracts::Env}::enqueue_program_pattern]: loop 0:
+    Source: 'crates/noble-kernel/src/contracts/nominal/inspection.rs', lines 137:8-142:9 -/
+@[rust_loop]
+def contracts.nominal.inspection.Env.enqueue_program_pattern_loop
+  (self : contracts.Env) (effects : Slice shapes.EffectSlot)
+  (index : Std.Usize) (is_effect_set_known : Bool) :
+  Result Bool
+  := do
+  loop
+    (fun (index1, is_effect_set_known1) =>
+      contracts.nominal.inspection.Env.enqueue_program_pattern_loop.body self
+      effects index1 is_effect_set_known1)
+    (index, is_effect_set_known)
+
+/-- [noble_kernel::contracts::nominal::inspection::{noble_kernel::contracts::Env}::enqueue_program_pattern]:
+    Source: 'crates/noble-kernel/src/contracts/nominal/inspection.rs', lines 127:4-158:5 -/
+def contracts.nominal.inspection.Env.enqueue_program_pattern
+  (self : contracts.Env) (input : Slice shapes.Pattern)
+  (output : Slice shapes.Pattern) (effects : Slice shapes.EffectSlot)
+  (work : alloc.vec.Vec shapes.Pattern) (max_nodes : Std.U32) :
+  Result (Option (alloc.vec.Vec shapes.Pattern))
+  := do
+  let is_effect_set_known ←
+    contracts.nominal.inspection.Env.enqueue_program_pattern_loop self effects
+      0#usize true
+  if is_effect_set_known
+  then
+    let i := Slice.len input
+    let i1 := Slice.len output
+    let child_count ← lift (core.num.Usize.saturating_add i i1)
+    let r ←
+      U64.Insts.CoreConvertTryFromUsizeTryFromIntError.try_from child_count
+    let b ←
+      core.result.Result.map_or
+        contracts.nominal.inspection.Env.enqueue_program_pattern.closure.Insts.CoreOpsFunctionFnOnceTupleU64Bool
+        r true max_nodes
+    if b
+    then ok none
+    else
+      let i2 := alloc.vec.Vec.len work
+      let o ← lift (Usize.checked_add i2 child_count)
+      let b1 := core.option.Option.is_some o
+      if b1
+      then
+        let work1 ← alloc.vec.Vec.reserve Global work child_count
+        let i3 ← core.slice.Slice.iter input
+        let work2 ←
+          alloc.vec.Vec.Insts.CoreIterTraitsCollectExtend.extend Global
+            (core.iter.traits.collect.IntoIterator.Blanket
+            (core.iter.traits.iterator.IteratorSliceIter shapes.Pattern)) work1
+            i3
+        let i4 ← core.slice.Slice.iter output
+        let work3 ←
+          alloc.vec.Vec.Insts.CoreIterTraitsCollectExtend.extend Global
+            (core.iter.traits.collect.IntoIterator.Blanket
+            (core.iter.traits.iterator.IteratorSliceIter shapes.Pattern)) work2
+            i4
+        ok (some work3)
+      else ok none
+  else ok none
+
+/-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::nominal]: loop body 0:
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 186:8-188:9
+    Visibility: public -/
+@[rust_loop_body]
+def contracts.Env.nominal_loop.body
+  (self : contracts.Env) (id : types.NominalTypeId) (index : Std.Usize) :
+  Result (ControlFlow Std.Usize ((alloc.vec.Vec contracts.NominalDecl) ×
+    Std.Usize))
+  := do
+  let i := alloc.vec.Vec.len self.nominals
+  if index < i
+  then
+    let nd ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        contracts.NominalDecl) self.nominals index
+    let b ←
+      core.cmp.PartialEq.ne.trait_default
+        types.NominalTypeId.Insts.CoreCmpPartialEqNominalTypeId nd.id id
+    if b
+    then let index1 ← index + 1#usize
+         ok (cont index1)
+    else ok (done (self.nominals, index))
+  else ok (done (self.nominals, index))
+
+/-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::nominal]: loop 0:
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 186:8-188:9
+    Visibility: public -/
+@[rust_loop]
+def contracts.Env.nominal_loop
+  (self : contracts.Env) (id : types.NominalTypeId) (index : Std.Usize) :
+  Result ((alloc.vec.Vec contracts.NominalDecl) × Std.Usize)
+  := do
+  loop
+    (fun index1 => contracts.Env.nominal_loop.body self id index1)
+    index
+
+/-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::nominal]:
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 184:4-190:5
+    Visibility: public -/
+def contracts.Env.nominal
+  (self : contracts.Env) (id : types.NominalTypeId) :
+  Result (Option contracts.NominalDecl)
+  := do
+  let (v, index) ← contracts.Env.nominal_loop self id 0#usize
+  let s := alloc.vec.Vec.deref v
+  core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice
+    contracts.NominalDecl) s index
+
+/-- [noble_kernel::contracts::nominal::inspection::{noble_kernel::contracts::Env}::nominal_shape_matches]:
+    Source: 'crates/noble-kernel/src/contracts/nominal/inspection.rs', lines 68:4-74:5 -/
+def contracts.nominal.inspection.Env.nominal_shape_matches
+  (self : contracts.Env) (id : types.NominalTypeId)
+  (shape : types.NominalShape) :
+  Result Bool
+  := do
+  let o ← contracts.Env.nominal self id
+  match o with
+  | none => ok false
+  | some decl =>
+    let b ←
+      types.NominalShape.Insts.CoreCmpPartialEqNominalShape.eq decl.shape shape
+    if b
+    then ok true
+    else ok false
+
+/-- [noble_kernel::contracts::nominal::inspection::{noble_kernel::contracts::Env}::enqueue_pattern]:
+    Source: 'crates/noble-kernel/src/contracts/nominal/inspection.rs', lines 80:4-125:5 -/
+def contracts.nominal.inspection.Env.enqueue_pattern
+  (self : contracts.Env) (pattern : shapes.Pattern)
+  (work : alloc.vec.Vec shapes.Pattern)
+  (limits : contracts.nominal.inspection.PatternLimits) :
+  Result (Option (alloc.vec.Vec shapes.Pattern))
+  := do
+  match pattern with
+  | shapes.Pattern.UnitPattern => ok (some work)
+  | shapes.Pattern.BoolPattern => ok (some work)
+  | shapes.Pattern.I64Pattern => ok (some work)
+  | shapes.Pattern.TextPattern => ok (some work)
+  | shapes.Pattern.SyntaxPattern => ok (some work)
+  | shapes.Pattern.ContractPattern => ok (some work)
+  | shapes.Pattern.EvidencePattern => ok (some work)
+  | shapes.Pattern.CertifiedPattern => ok (some work)
+  | shapes.Pattern.PairPattern left right =>
+    let work1 ← alloc.vec.Vec.push work left
+    let work2 ← alloc.vec.Vec.push work1 right
+    ok (some work2)
+  | shapes.Pattern.SumPattern left right =>
+    let work1 ← alloc.vec.Vec.push work left
+    let work2 ← alloc.vec.Vec.push work1 right
+    ok (some work2)
+  | shapes.Pattern.ListPattern item =>
+    let work1 ← alloc.vec.Vec.push work item
+    ok (some work1)
+  | shapes.Pattern.ProgramPattern input output effects =>
+    let s := alloc.vec.Vec.deref input
+    let s1 := alloc.vec.Vec.deref output
+    let s2 := alloc.vec.Vec.deref effects
+    contracts.nominal.inspection.Env.enqueue_program_pattern self s s1 s2 work
+      limits.max_nodes
+  | shapes.Pattern.ResourcePattern kind =>
+    let s := alloc.vec.Vec.deref self.resource_kinds
+    let b ←
+      core.slice.Slice.contains
+        types.ResourceKind.Insts.CoreCmpPartialEqResourceKind s kind
+    core.bool.Bool.then_some b work
+  | shapes.Pattern.NominalPattern id shape =>
+    let b ← contracts.nominal.type.walk.bounded_shape shape limits.remaining
+    if b
+    then
+      let ns ← Box.Insts.CoreConvertAsRef.as_ref Global shape
+      let is_matches_shape ←
+        contracts.nominal.inspection.Env.nominal_shape_matches self id ns
+      if is_matches_shape
+      then ok (some work)
+      else ok none
+    else ok none
+  | shapes.Pattern.VarPattern _ => ok (some work)
+  | shapes.Pattern.StackVarPattern _ => ok (some work)
+
+/-- [noble_kernel::contracts::nominal::inspection::{noble_kernel::contracts::Env}::valid_pattern]: loop body 0:
+    Source: 'crates/noble-kernel/src/contracts/nominal/inspection.rs', lines 35:8-60:9 -/
+@[rust_loop_body]
+def contracts.nominal.inspection.Env.valid_pattern_loop0.body
+  (self : contracts.Env) (max_nodes : Std.U32)
+  (state : Option (alloc.vec.Vec shapes.Pattern)) (visited : Std.U32)
+  (is_valid : Bool) :
+  Result (ControlFlow ((Option (alloc.vec.Vec shapes.Pattern)) × Std.U32 ×
+    Bool) Bool)
+  := do
+  match state with
+  | none => ok (done is_valid)
+  | some work =>
+    let (o, work1) ← alloc.vec.Vec.pop Global work
+    match o with
+    | none => ok (cont (none, visited, is_valid))
+    | some next =>
+      if visited < max_nodes
+      then
+        let i := alloc.vec.Vec.len work1
+        if i < 512#usize
+        then
+          let visited1 ← visited + 1#u32
+          let i1 ← lift (core.num.U32.saturating_sub max_nodes visited1)
+          let o1 ←
+            contracts.nominal.inspection.Env.enqueue_pattern self next work1
+              { remaining := i1, max_nodes }
+          match o1 with
+          | none => ok (cont (none, visited1, false))
+          | some _ => ok (cont (o1, visited1, is_valid))
+        else ok (cont (none, visited, false))
+      else ok (cont (none, visited, false))
+
+/-- [noble_kernel::contracts::nominal::inspection::{noble_kernel::contracts::Env}::valid_pattern]: loop 0:
+    Source: 'crates/noble-kernel/src/contracts/nominal/inspection.rs', lines 35:8-60:9 -/
+@[rust_loop]
+def contracts.nominal.inspection.Env.valid_pattern_loop0
+  (state : Option (alloc.vec.Vec shapes.Pattern)) (self : contracts.Env)
+  (max_nodes : Std.U32) (visited : Std.U32) (is_valid : Bool) :
+  Result Bool
+  := do
+  loop
+    (fun (state1, visited1, is_valid1) =>
+      contracts.nominal.inspection.Env.valid_pattern_loop0.body self max_nodes
+      state1 visited1 is_valid1)
+    (state, visited, is_valid)
+
+/-- [noble_kernel::contracts::nominal::inspection::{noble_kernel::contracts::Env}::valid_pattern]: loop body 1:
+    Source: 'crates/noble-kernel/src/contracts/nominal/inspection.rs', lines 35:8-60:9 -/
+@[rust_loop_body]
+def contracts.nominal.inspection.Env.valid_pattern_loop1.body
+  (self : contracts.Env) (max_nodes : Std.U32)
+  (state : Option (alloc.vec.Vec shapes.Pattern)) (visited : Std.U32)
+  (is_valid : Bool) :
+  Result (ControlFlow ((Option (alloc.vec.Vec shapes.Pattern)) × Std.U32 ×
+    Bool) Bool)
+  := do
+  match state with
+  | none => ok (done is_valid)
+  | some work =>
+    let (o, work1) ← alloc.vec.Vec.pop Global work
+    match o with
+    | none => ok (cont (none, visited, is_valid))
+    | some next =>
+      if visited < max_nodes
+      then
+        let i := alloc.vec.Vec.len work1
+        if i < 512#usize
+        then
+          let visited1 ← visited + 1#u32
+          let i1 ← lift (core.num.U32.saturating_sub max_nodes visited1)
+          let o1 ←
+            contracts.nominal.inspection.Env.enqueue_pattern self next work1
+              { remaining := i1, max_nodes }
+          match o1 with
+          | none => ok (cont (none, visited1, false))
+          | some _ => ok (cont (o1, visited1, is_valid))
+        else ok (cont (none, visited, false))
+      else ok (cont (none, visited, false))
+
+/-- [noble_kernel::contracts::nominal::inspection::{noble_kernel::contracts::Env}::valid_pattern]: loop 1:
+    Source: 'crates/noble-kernel/src/contracts/nominal/inspection.rs', lines 35:8-60:9 -/
+@[rust_loop]
+def contracts.nominal.inspection.Env.valid_pattern_loop1
+  (state : Option (alloc.vec.Vec shapes.Pattern)) (self : contracts.Env)
+  (max_nodes : Std.U32) (visited : Std.U32) (is_valid : Bool) :
+  Result Bool
+  := do
+  loop
+    (fun (state1, visited1, is_valid1) =>
+      contracts.nominal.inspection.Env.valid_pattern_loop1.body self max_nodes
+      state1 visited1 is_valid1)
+    (state, visited, is_valid)
+
+/-- [noble_kernel::contracts::nominal::inspection::{noble_kernel::contracts::Env}::valid_pattern]: loop body 2:
+    Source: 'crates/noble-kernel/src/contracts/nominal/inspection.rs', lines 35:8-60:9 -/
+@[rust_loop_body]
+def contracts.nominal.inspection.Env.valid_pattern_loop2.body
+  (self : contracts.Env) (max_nodes : Std.U32)
+  (state : Option (alloc.vec.Vec shapes.Pattern)) (visited : Std.U32)
+  (is_valid : Bool) :
+  Result (ControlFlow ((Option (alloc.vec.Vec shapes.Pattern)) × Std.U32 ×
+    Bool) Bool)
+  := do
+  match state with
+  | none => ok (done is_valid)
+  | some work =>
+    let (o, work1) ← alloc.vec.Vec.pop Global work
+    match o with
+    | none => ok (cont (none, visited, is_valid))
+    | some next =>
+      if visited < max_nodes
+      then
+        let i := alloc.vec.Vec.len work1
+        if i < 512#usize
+        then
+          let visited1 ← visited + 1#u32
+          let i1 ← lift (core.num.U32.saturating_sub max_nodes visited1)
+          let o1 ←
+            contracts.nominal.inspection.Env.enqueue_pattern self next work1
+              { remaining := i1, max_nodes }
+          match o1 with
+          | none => ok (cont (none, visited1, false))
+          | some _ => ok (cont (o1, visited1, is_valid))
+        else ok (cont (none, visited, false))
+      else ok (cont (none, visited, false))
+
+/-- [noble_kernel::contracts::nominal::inspection::{noble_kernel::contracts::Env}::valid_pattern]: loop 2:
+    Source: 'crates/noble-kernel/src/contracts/nominal/inspection.rs', lines 35:8-60:9 -/
+@[rust_loop]
+def contracts.nominal.inspection.Env.valid_pattern_loop2
+  (state : Option (alloc.vec.Vec shapes.Pattern)) (self : contracts.Env)
+  (max_nodes : Std.U32) (visited : Std.U32) (is_valid : Bool) :
+  Result Bool
+  := do
+  loop
+    (fun (state1, visited1, is_valid1) =>
+      contracts.nominal.inspection.Env.valid_pattern_loop2.body self max_nodes
+      state1 visited1 is_valid1)
+    (state, visited, is_valid)
+
+/-- [noble_kernel::contracts::nominal::inspection::{noble_kernel::contracts::Env}::valid_pattern]: loop body 3:
+    Source: 'crates/noble-kernel/src/contracts/nominal/inspection.rs', lines 35:8-60:9 -/
+@[rust_loop_body]
+def contracts.nominal.inspection.Env.valid_pattern_loop3.body
+  (self : contracts.Env) (max_nodes : Std.U32)
+  (state : Option (alloc.vec.Vec shapes.Pattern)) (visited : Std.U32)
+  (is_valid : Bool) :
+  Result (ControlFlow ((Option (alloc.vec.Vec shapes.Pattern)) × Std.U32 ×
+    Bool) Bool)
+  := do
+  match state with
+  | none => ok (done is_valid)
+  | some work =>
+    let (o, work1) ← alloc.vec.Vec.pop Global work
+    match o with
+    | none => ok (cont (none, visited, is_valid))
+    | some next =>
+      if visited < max_nodes
+      then
+        let i := alloc.vec.Vec.len work1
+        if i < 512#usize
+        then
+          let visited1 ← visited + 1#u32
+          let i1 ← lift (core.num.U32.saturating_sub max_nodes visited1)
+          let o1 ←
+            contracts.nominal.inspection.Env.enqueue_pattern self next work1
+              { remaining := i1, max_nodes }
+          match o1 with
+          | none => ok (cont (none, visited1, false))
+          | some _ => ok (cont (o1, visited1, is_valid))
+        else ok (cont (none, visited, false))
+      else ok (cont (none, visited, false))
+
+/-- [noble_kernel::contracts::nominal::inspection::{noble_kernel::contracts::Env}::valid_pattern]: loop 3:
+    Source: 'crates/noble-kernel/src/contracts/nominal/inspection.rs', lines 35:8-60:9 -/
+@[rust_loop]
+def contracts.nominal.inspection.Env.valid_pattern_loop3
+  (state : Option (alloc.vec.Vec shapes.Pattern)) (self : contracts.Env)
+  (max_nodes : Std.U32) (visited : Std.U32) (is_valid : Bool) :
+  Result Bool
+  := do
+  loop
+    (fun (state1, visited1, is_valid1) =>
+      contracts.nominal.inspection.Env.valid_pattern_loop3.body self max_nodes
+      state1 visited1 is_valid1)
+    (state, visited, is_valid)
+
+/-- [noble_kernel::contracts::nominal::inspection::{noble_kernel::contracts::Env}::valid_pattern]: loop body 4:
+    Source: 'crates/noble-kernel/src/contracts/nominal/inspection.rs', lines 35:8-60:9 -/
+@[rust_loop_body]
+def contracts.nominal.inspection.Env.valid_pattern_loop4.body
+  (self : contracts.Env) (max_nodes : Std.U32)
+  (state : Option (alloc.vec.Vec shapes.Pattern)) (visited : Std.U32)
+  (is_valid : Bool) :
+  Result (ControlFlow ((Option (alloc.vec.Vec shapes.Pattern)) × Std.U32 ×
+    Bool) Bool)
+  := do
+  match state with
+  | none => ok (done is_valid)
+  | some work =>
+    let (o, work1) ← alloc.vec.Vec.pop Global work
+    match o with
+    | none => ok (cont (none, visited, is_valid))
+    | some next =>
+      if visited < max_nodes
+      then
+        let i := alloc.vec.Vec.len work1
+        if i < 512#usize
+        then
+          let visited1 ← visited + 1#u32
+          let i1 ← lift (core.num.U32.saturating_sub max_nodes visited1)
+          let o1 ←
+            contracts.nominal.inspection.Env.enqueue_pattern self next work1
+              { remaining := i1, max_nodes }
+          match o1 with
+          | none => ok (cont (none, visited1, false))
+          | some _ => ok (cont (o1, visited1, is_valid))
+        else ok (cont (none, visited, false))
+      else ok (cont (none, visited, false))
+
+/-- [noble_kernel::contracts::nominal::inspection::{noble_kernel::contracts::Env}::valid_pattern]: loop 4:
+    Source: 'crates/noble-kernel/src/contracts/nominal/inspection.rs', lines 35:8-60:9 -/
+@[rust_loop]
+def contracts.nominal.inspection.Env.valid_pattern_loop4
+  (state : Option (alloc.vec.Vec shapes.Pattern)) (self : contracts.Env)
+  (max_nodes : Std.U32) (visited : Std.U32) (is_valid : Bool) :
+  Result Bool
+  := do
+  loop
+    (fun (state1, visited1, is_valid1) =>
+      contracts.nominal.inspection.Env.valid_pattern_loop4.body self max_nodes
+      state1 visited1 is_valid1)
+    (state, visited, is_valid)
+
+/-- [noble_kernel::contracts::nominal::inspection::{noble_kernel::contracts::Env}::valid_pattern]:
+    Source: 'crates/noble-kernel/src/contracts/nominal/inspection.rs', lines 9:4-62:5 -/
+def contracts.nominal.inspection.Env.valid_pattern
+  (self : contracts.Env) (pattern : shapes.Pattern) (max_nodes : Std.U32) :
+  Result Bool
+  := do
+  match pattern with
+  | shapes.Pattern.UnitPattern => ok (max_nodes > 0#u32)
+  | shapes.Pattern.BoolPattern => ok (max_nodes > 0#u32)
+  | shapes.Pattern.I64Pattern => ok (max_nodes > 0#u32)
+  | shapes.Pattern.TextPattern => ok (max_nodes > 0#u32)
+  | shapes.Pattern.SyntaxPattern => ok (max_nodes > 0#u32)
+  | shapes.Pattern.ContractPattern => ok (max_nodes > 0#u32)
+  | shapes.Pattern.EvidencePattern => ok (max_nodes > 0#u32)
+  | shapes.Pattern.CertifiedPattern => ok (max_nodes > 0#u32)
+  | shapes.Pattern.PairPattern _ _ =>
+    let work := alloc.vec.Vec.with_capacity shapes.Pattern 1#usize
+    let work1 ← alloc.vec.Vec.push work pattern
+    contracts.nominal.inspection.Env.valid_pattern_loop0 (some work1) self
+      max_nodes 0#u32 true
+  | shapes.Pattern.SumPattern _ _ =>
+    let work := alloc.vec.Vec.with_capacity shapes.Pattern 1#usize
+    let work1 ← alloc.vec.Vec.push work pattern
+    contracts.nominal.inspection.Env.valid_pattern_loop1 (some work1) self
+      max_nodes 0#u32 true
+  | shapes.Pattern.ListPattern _ =>
+    let work := alloc.vec.Vec.with_capacity shapes.Pattern 1#usize
+    let work1 ← alloc.vec.Vec.push work pattern
+    contracts.nominal.inspection.Env.valid_pattern_loop2 (some work1) self
+      max_nodes 0#u32 true
+  | shapes.Pattern.ProgramPattern _ _ _ =>
+    let work := alloc.vec.Vec.with_capacity shapes.Pattern 1#usize
+    let work1 ← alloc.vec.Vec.push work pattern
+    contracts.nominal.inspection.Env.valid_pattern_loop3 (some work1) self
+      max_nodes 0#u32 true
+  | shapes.Pattern.ResourcePattern kind =>
+    if max_nodes > 0#u32
+    then
+      let s := alloc.vec.Vec.deref self.resource_kinds
+      core.slice.Slice.contains
+        types.ResourceKind.Insts.CoreCmpPartialEqResourceKind s kind
+    else ok false
+  | shapes.Pattern.NominalPattern _ _ =>
+    let work := alloc.vec.Vec.with_capacity shapes.Pattern 1#usize
+    let work1 ← alloc.vec.Vec.push work pattern
+    contracts.nominal.inspection.Env.valid_pattern_loop4 (some work1) self
+      max_nodes 0#u32 true
+  | shapes.Pattern.VarPattern _ => ok (max_nodes > 0#u32)
+  | shapes.Pattern.StackVarPattern _ => ok (max_nodes > 0#u32)
+
+/-- [noble_kernel::acceptance::schemes::has_invalid_stack_pattern]: loop body 0:
+    Source: 'crates/noble-kernel/src/acceptance/schemes.rs', lines 52:4-58:5 -/
+@[rust_loop_body]
+def acceptance.schemes.has_invalid_stack_pattern_loop.body
+  (patterns : Slice shapes.Pattern) (env : contracts.Env) (index : Std.Usize) :
+  Result (ControlFlow Std.Usize Bool)
+  := do
+  let i := Slice.len patterns
+  if index < i
+  then
+    let p ← Slice.index_usize patterns index
+    let b ← contracts.nominal.inspection.Env.valid_pattern env p 512#u32
+    if b
+    then let index1 ← index + 1#usize
+         ok (cont index1)
+    else ok (done true)
+  else ok (done false)
+
+/-- [noble_kernel::acceptance::schemes::has_invalid_stack_pattern]: loop 0:
+    Source: 'crates/noble-kernel/src/acceptance/schemes.rs', lines 52:4-58:5 -/
+@[rust_loop]
+def acceptance.schemes.has_invalid_stack_pattern_loop
+  (patterns : Slice shapes.Pattern) (env : contracts.Env) (index : Std.Usize) :
+  Result Bool
+  := do
+  loop
+    (fun index1 => acceptance.schemes.has_invalid_stack_pattern_loop.body
+      patterns env index1)
+    index
+
+/-- [noble_kernel::acceptance::schemes::has_invalid_stack_pattern]:
+    Source: 'crates/noble-kernel/src/acceptance/schemes.rs', lines 46:0-60:1 -/
+@[reducible]
+def acceptance.schemes.has_invalid_stack_pattern
+  (patterns : Slice shapes.Pattern) (env : contracts.Env) : Result Bool := do
+  acceptance.schemes.has_invalid_stack_pattern_loop patterns env 0#usize
+
+/-- [noble_kernel::acceptance::schemes::has_invalid_pattern]:
+    Source: 'crates/noble-kernel/src/acceptance/schemes.rs', lines 41:0-44:1 -/
+def acceptance.schemes.has_invalid_pattern
+  (scheme : words.Scheme) (env : contracts.Env) : Result Bool := do
+  let s := alloc.vec.Vec.deref scheme.stack_in
+  let b ← acceptance.schemes.has_invalid_stack_pattern s env
+  if b
+  then ok true
+  else
+    let s1 := alloc.vec.Vec.deref scheme.stack_out
+    acceptance.schemes.has_invalid_stack_pattern s1 env
+
+/-- [noble_kernel::acceptance::schemes::invalid_scheme_pattern]:
+    Source: 'crates/noble-kernel/src/acceptance/schemes.rs', lines 31:0-39:1 -/
+def acceptance.schemes.invalid_scheme_pattern
+  (index : Std.Usize) : Result acceptance.Fail := do
+  let r ← core.convert.num.ptr_try_from_impls.TryFromU32Usize.try_from index
+  match r with
+  | core.result.Result.Ok index1 =>
+    let s ← acceptance.parts.site none (some index1)
+    acceptance.parts.invalid_without_stacks s untrusted.Constraint.InvalidType
+  | core.result.Result.Err _ =>
+    ok (acceptance.Fail.Exhausted untrusted.LimitKind.Nodes)
+
+/-- [noble_kernel::acceptance::schemes::validate_scheme]:
+    Source: 'crates/noble-kernel/src/acceptance/schemes.rs', lines 18:0-29:1 -/
+def acceptance.schemes.validate_scheme
+  (ctx : acceptance.parts.Ctx) (index : Std.Usize) :
   Result (core.result.Result Unit acceptance.Fail)
   := do
-  let s ← types.EffSet.as_slice context.request.expected.allowed_effects
-  let allowed_effects ←
-    alloc.slice.Slice.to_vec types.EffId.Insts.CoreCloneClone s
-  let s1 := alloc.vec.Vec.deref context.env.effects
-  let known ← alloc.slice.Slice.to_vec types.EffId.Insts.CoreCloneClone s1
-  let s2 := alloc.vec.Vec.deref allowed_effects
-  let s3 := alloc.vec.Vec.deref known
-  let unknown ← acceptance.parts.first_unknown s2 s3
-  match unknown with
-  | none => ok (core.result.Result.Ok ())
-  | some id =>
-    let s4 ← acceptance.parts.site none none
-    let f ←
-      acceptance.parts.invalid context s4 (alloc.vec.Vec.new types.Ty)
-        (alloc.vec.Vec.new types.Ty) (untrusted.Constraint.UnknownEffect id)
-    ok (core.result.Result.Err f)
+  let scheme ←
+    alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice words.Scheme)
+      ctx.env.defs index
+  let r ← words.Scheme.validate scheme
+  let b ← core.result.Result.is_err r
+  if b
+  then
+    ok (core.result.Result.Err (acceptance.Fail.Unsupported
+      untrusted.UnsupportedKind.SchemeForm))
+  else
+    let b1 ← acceptance.schemes.has_invalid_pattern scheme ctx.env
+    if b1
+    then
+      let f ← acceptance.schemes.invalid_scheme_pattern index
+      ok (core.result.Result.Err f)
+    else ok (core.result.Result.Ok ())
 
-/-- [noble_kernel::acceptance::preflight::validate_schemes]: loop body 0:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 50:4-59:5 -/
+/-- [noble_kernel::acceptance::schemes::validate]: loop body 0:
+    Source: 'crates/noble-kernel/src/acceptance/schemes.rs', lines 10:10-11:45 -/
 @[rust_loop_body]
-def acceptance.preflight.validate_schemes_loop.body
-  (env : contracts.Env) (index : Std.Usize) :
-  Result (ControlFlow Std.Usize (Option acceptance.Fail))
+def acceptance.schemes.validate_loop.body
+  (env : contracts.Env) (request : untrusted.Request) (env1 : contracts.Env)
+  (index : Std.Usize) :
+  Result (ControlFlow Std.Usize (core.result.Result Unit acceptance.Fail))
   := do
   let i := alloc.vec.Vec.len env.defs
   if index < i
   then
-    let scheme ←
-      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice words.Scheme)
-        env.defs index
-    let r ← words.Scheme.validate scheme
-    let b ← core.result.Result.is_err r
-    if b
-    then
-      ok (done (some (acceptance.Fail.Unsupported
-        untrusted.UnsupportedKind.SchemeForm)))
-    else let index1 ← index + 1#usize
-         ok (cont index1)
-  else ok (done none)
+    let r ← acceptance.schemes.validate_scheme { request, env := env1 } index
+    match r with
+    | core.result.Result.Ok _ =>
+      let index1 ← index + 1#usize
+      ok (cont index1)
+    | core.result.Result.Err _ => ok (done r)
+  else ok (done (core.result.Result.Ok ()))
 
-/-- [noble_kernel::acceptance::preflight::validate_schemes]: loop 0:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 50:4-59:5 -/
+/-- [noble_kernel::acceptance::schemes::validate]: loop 0:
+    Source: 'crates/noble-kernel/src/acceptance/schemes.rs', lines 10:10-11:45 -/
 @[rust_loop]
-def acceptance.preflight.validate_schemes_loop
-  (env : contracts.Env) (index : Std.Usize) :
-  Result (Option acceptance.Fail)
-  := do
-  loop
-    (fun index1 => acceptance.preflight.validate_schemes_loop.body env index1)
-    index
-
-/-- [noble_kernel::acceptance::preflight::validate_schemes]:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 47:0-64:1 -/
-def acceptance.preflight.validate_schemes
-  (env : contracts.Env) :
+def acceptance.schemes.validate_loop
+  (env : contracts.Env) (request : untrusted.Request) (env1 : contracts.Env)
+  (index : Std.Usize) :
   Result (core.result.Result Unit acceptance.Fail)
   := do
-  let failure ← acceptance.preflight.validate_schemes_loop env 0#usize
-  match failure with
-  | none => ok (core.result.Result.Ok ())
-  | some problem => ok (core.result.Result.Err problem)
+  loop
+    (fun index1 => acceptance.schemes.validate_loop.body env request env1
+      index1)
+    index
+
+/-- [noble_kernel::acceptance::schemes::validate]:
+    Source: 'crates/noble-kernel/src/acceptance/schemes.rs', lines 4:0-15:1 -/
+@[reducible]
+def acceptance.schemes.validate
+  (env : contracts.Env) (request : untrusted.Request) :
+  Result (core.result.Result Unit acceptance.Fail)
+  := do
+  acceptance.schemes.validate_loop env request env 0#usize
+
+/-- [noble_kernel::contracts::index]:
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 247:0-249:1 -/
+def contracts.index
+  («def» : contracts.Definition) : Result (Option Std.Usize) := do
+  let r ← Usize.Insts.CoreConvertTryFromU32TryFromIntError.try_from «def»
+  core.result.Result.ok r
+
+/-- [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::Behavior}::clone]:
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 30:9-30:14
+    Visibility: public -/
+def contracts.Behavior.Insts.CoreCloneClone.clone
+  (self : contracts.Behavior) : Result contracts.Behavior := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::Behavior}]
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 30:9-30:14 -/
+@[reducible]
+def contracts.Behavior.Insts.CoreCloneClone : core.clone.Clone
+  contracts.Behavior := {
+  clone := contracts.Behavior.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::contracts::{impl core::marker::Copy for noble_kernel::contracts::Behavior}]
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 30:16-30:20 -/
+@[reducible]
+def contracts.Behavior.Insts.CoreMarkerCopy : core.marker.Copy
+  contracts.Behavior := {
+  cloneInst := contracts.Behavior.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::kind]:
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 217:4-222:5
+    Visibility: public -/
+def contracts.Env.kind
+  (self : contracts.Env) («def» : contracts.Definition) :
+  Result (Option contracts.Behavior)
+  := do
+  let o ← contracts.index «def»
+  match o with
+  | none => ok none
+  | some index =>
+    let s := alloc.vec.Vec.deref self.kinds
+    let o1 ←
+      core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice
+        contracts.Behavior) s index
+    core.option.OptionShared0T.copied contracts.Behavior.Insts.CoreMarkerCopy
+      o1
+
+/-- [noble_kernel::contracts::{impl core::cmp::PartialEq<noble_kernel::contracts::Behavior> for noble_kernel::contracts::Behavior}::eq]:
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 30:29-30:38
+    Visibility: public -/
+def contracts.Behavior.Insts.CoreCmpPartialEqBehavior.eq
+  (self : contracts.Behavior) (other : contracts.Behavior) : Result Bool := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  if self1 = other1
+  then
+    match self with
+    | contracts.Behavior.DupBehavior => ok true
+    | contracts.Behavior.DropBehavior => ok true
+    | contracts.Behavior.SwapBehavior => ok true
+    | contracts.Behavior.DipBehavior => ok true
+    | contracts.Behavior.ArithBehavior => ok true
+    | contracts.Behavior.EqualsBehavior => ok true
+    | contracts.Behavior.QuoteBehavior => ok true
+    | contracts.Behavior.ComposeBehavior => ok true
+    | contracts.Behavior.RunBehavior => ok true
+    | contracts.Behavior.ReflectBehavior => ok true
+    | contracts.Behavior.UnitBehavior => ok true
+    | contracts.Behavior.PairBehavior => ok true
+    | contracts.Behavior.UnpairBehavior => ok true
+    | contracts.Behavior.InlBehavior => ok true
+    | contracts.Behavior.InrBehavior => ok true
+    | contracts.Behavior.CaseBehavior => ok true
+    | contracts.Behavior.IfBehavior => ok true
+    | contracts.Behavior.NilBehavior => ok true
+    | contracts.Behavior.ConsBehavior => ok true
+    | contracts.Behavior.ListCaseBehavior => ok true
+    | contracts.Behavior.TestEmitBehavior => ok true
+    | contracts.Behavior.BoundEmitBehavior __self_0 =>
+      match other with
+      | contracts.Behavior.DupBehavior => ok true
+      | contracts.Behavior.DropBehavior => ok true
+      | contracts.Behavior.SwapBehavior => ok true
+      | contracts.Behavior.DipBehavior => ok true
+      | contracts.Behavior.ArithBehavior => ok true
+      | contracts.Behavior.EqualsBehavior => ok true
+      | contracts.Behavior.QuoteBehavior => ok true
+      | contracts.Behavior.ComposeBehavior => ok true
+      | contracts.Behavior.RunBehavior => ok true
+      | contracts.Behavior.ReflectBehavior => ok true
+      | contracts.Behavior.UnitBehavior => ok true
+      | contracts.Behavior.PairBehavior => ok true
+      | contracts.Behavior.UnpairBehavior => ok true
+      | contracts.Behavior.InlBehavior => ok true
+      | contracts.Behavior.InrBehavior => ok true
+      | contracts.Behavior.CaseBehavior => ok true
+      | contracts.Behavior.IfBehavior => ok true
+      | contracts.Behavior.NilBehavior => ok true
+      | contracts.Behavior.ConsBehavior => ok true
+      | contracts.Behavior.ListCaseBehavior => ok true
+      | contracts.Behavior.TestEmitBehavior => ok true
+      | contracts.Behavior.BoundEmitBehavior __arg1_0 =>
+        lift (core.cmp.impls.PartialEqU32.eq __self_0 __arg1_0)
+      | contracts.Behavior.NominalNewBehavior _ => ok true
+      | contracts.Behavior.NominalIntoBehavior _ => ok true
+      | contracts.Behavior.NominalLeftBehavior _ => ok true
+      | contracts.Behavior.NominalRightBehavior _ => ok true
+      | contracts.Behavior.NominalMatchBehavior _ => ok true
+      | contracts.Behavior.NamedBehavior => ok true
+    | contracts.Behavior.NominalNewBehavior __self_0 =>
+      match other with
+      | contracts.Behavior.DupBehavior => ok true
+      | contracts.Behavior.DropBehavior => ok true
+      | contracts.Behavior.SwapBehavior => ok true
+      | contracts.Behavior.DipBehavior => ok true
+      | contracts.Behavior.ArithBehavior => ok true
+      | contracts.Behavior.EqualsBehavior => ok true
+      | contracts.Behavior.QuoteBehavior => ok true
+      | contracts.Behavior.ComposeBehavior => ok true
+      | contracts.Behavior.RunBehavior => ok true
+      | contracts.Behavior.ReflectBehavior => ok true
+      | contracts.Behavior.UnitBehavior => ok true
+      | contracts.Behavior.PairBehavior => ok true
+      | contracts.Behavior.UnpairBehavior => ok true
+      | contracts.Behavior.InlBehavior => ok true
+      | contracts.Behavior.InrBehavior => ok true
+      | contracts.Behavior.CaseBehavior => ok true
+      | contracts.Behavior.IfBehavior => ok true
+      | contracts.Behavior.NilBehavior => ok true
+      | contracts.Behavior.ConsBehavior => ok true
+      | contracts.Behavior.ListCaseBehavior => ok true
+      | contracts.Behavior.TestEmitBehavior => ok true
+      | contracts.Behavior.BoundEmitBehavior _ => ok true
+      | contracts.Behavior.NominalNewBehavior __arg1_0 =>
+        types.NominalTypeId.Insts.CoreCmpPartialEqNominalTypeId.eq __self_0
+          __arg1_0
+      | contracts.Behavior.NominalIntoBehavior _ => ok true
+      | contracts.Behavior.NominalLeftBehavior _ => ok true
+      | contracts.Behavior.NominalRightBehavior _ => ok true
+      | contracts.Behavior.NominalMatchBehavior _ => ok true
+      | contracts.Behavior.NamedBehavior => ok true
+    | contracts.Behavior.NominalIntoBehavior __self_0 =>
+      match other with
+      | contracts.Behavior.DupBehavior => ok true
+      | contracts.Behavior.DropBehavior => ok true
+      | contracts.Behavior.SwapBehavior => ok true
+      | contracts.Behavior.DipBehavior => ok true
+      | contracts.Behavior.ArithBehavior => ok true
+      | contracts.Behavior.EqualsBehavior => ok true
+      | contracts.Behavior.QuoteBehavior => ok true
+      | contracts.Behavior.ComposeBehavior => ok true
+      | contracts.Behavior.RunBehavior => ok true
+      | contracts.Behavior.ReflectBehavior => ok true
+      | contracts.Behavior.UnitBehavior => ok true
+      | contracts.Behavior.PairBehavior => ok true
+      | contracts.Behavior.UnpairBehavior => ok true
+      | contracts.Behavior.InlBehavior => ok true
+      | contracts.Behavior.InrBehavior => ok true
+      | contracts.Behavior.CaseBehavior => ok true
+      | contracts.Behavior.IfBehavior => ok true
+      | contracts.Behavior.NilBehavior => ok true
+      | contracts.Behavior.ConsBehavior => ok true
+      | contracts.Behavior.ListCaseBehavior => ok true
+      | contracts.Behavior.TestEmitBehavior => ok true
+      | contracts.Behavior.BoundEmitBehavior _ => ok true
+      | contracts.Behavior.NominalNewBehavior _ => ok true
+      | contracts.Behavior.NominalIntoBehavior __arg1_0 =>
+        types.NominalTypeId.Insts.CoreCmpPartialEqNominalTypeId.eq __self_0
+          __arg1_0
+      | contracts.Behavior.NominalLeftBehavior _ => ok true
+      | contracts.Behavior.NominalRightBehavior _ => ok true
+      | contracts.Behavior.NominalMatchBehavior _ => ok true
+      | contracts.Behavior.NamedBehavior => ok true
+    | contracts.Behavior.NominalLeftBehavior __self_0 =>
+      match other with
+      | contracts.Behavior.DupBehavior => ok true
+      | contracts.Behavior.DropBehavior => ok true
+      | contracts.Behavior.SwapBehavior => ok true
+      | contracts.Behavior.DipBehavior => ok true
+      | contracts.Behavior.ArithBehavior => ok true
+      | contracts.Behavior.EqualsBehavior => ok true
+      | contracts.Behavior.QuoteBehavior => ok true
+      | contracts.Behavior.ComposeBehavior => ok true
+      | contracts.Behavior.RunBehavior => ok true
+      | contracts.Behavior.ReflectBehavior => ok true
+      | contracts.Behavior.UnitBehavior => ok true
+      | contracts.Behavior.PairBehavior => ok true
+      | contracts.Behavior.UnpairBehavior => ok true
+      | contracts.Behavior.InlBehavior => ok true
+      | contracts.Behavior.InrBehavior => ok true
+      | contracts.Behavior.CaseBehavior => ok true
+      | contracts.Behavior.IfBehavior => ok true
+      | contracts.Behavior.NilBehavior => ok true
+      | contracts.Behavior.ConsBehavior => ok true
+      | contracts.Behavior.ListCaseBehavior => ok true
+      | contracts.Behavior.TestEmitBehavior => ok true
+      | contracts.Behavior.BoundEmitBehavior _ => ok true
+      | contracts.Behavior.NominalNewBehavior _ => ok true
+      | contracts.Behavior.NominalIntoBehavior _ => ok true
+      | contracts.Behavior.NominalLeftBehavior __arg1_0 =>
+        types.NominalTypeId.Insts.CoreCmpPartialEqNominalTypeId.eq __self_0
+          __arg1_0
+      | contracts.Behavior.NominalRightBehavior _ => ok true
+      | contracts.Behavior.NominalMatchBehavior _ => ok true
+      | contracts.Behavior.NamedBehavior => ok true
+    | contracts.Behavior.NominalRightBehavior __self_0 =>
+      match other with
+      | contracts.Behavior.DupBehavior => ok true
+      | contracts.Behavior.DropBehavior => ok true
+      | contracts.Behavior.SwapBehavior => ok true
+      | contracts.Behavior.DipBehavior => ok true
+      | contracts.Behavior.ArithBehavior => ok true
+      | contracts.Behavior.EqualsBehavior => ok true
+      | contracts.Behavior.QuoteBehavior => ok true
+      | contracts.Behavior.ComposeBehavior => ok true
+      | contracts.Behavior.RunBehavior => ok true
+      | contracts.Behavior.ReflectBehavior => ok true
+      | contracts.Behavior.UnitBehavior => ok true
+      | contracts.Behavior.PairBehavior => ok true
+      | contracts.Behavior.UnpairBehavior => ok true
+      | contracts.Behavior.InlBehavior => ok true
+      | contracts.Behavior.InrBehavior => ok true
+      | contracts.Behavior.CaseBehavior => ok true
+      | contracts.Behavior.IfBehavior => ok true
+      | contracts.Behavior.NilBehavior => ok true
+      | contracts.Behavior.ConsBehavior => ok true
+      | contracts.Behavior.ListCaseBehavior => ok true
+      | contracts.Behavior.TestEmitBehavior => ok true
+      | contracts.Behavior.BoundEmitBehavior _ => ok true
+      | contracts.Behavior.NominalNewBehavior _ => ok true
+      | contracts.Behavior.NominalIntoBehavior _ => ok true
+      | contracts.Behavior.NominalLeftBehavior _ => ok true
+      | contracts.Behavior.NominalRightBehavior __arg1_0 =>
+        types.NominalTypeId.Insts.CoreCmpPartialEqNominalTypeId.eq __self_0
+          __arg1_0
+      | contracts.Behavior.NominalMatchBehavior _ => ok true
+      | contracts.Behavior.NamedBehavior => ok true
+    | contracts.Behavior.NominalMatchBehavior __self_0 =>
+      match other with
+      | contracts.Behavior.DupBehavior => ok true
+      | contracts.Behavior.DropBehavior => ok true
+      | contracts.Behavior.SwapBehavior => ok true
+      | contracts.Behavior.DipBehavior => ok true
+      | contracts.Behavior.ArithBehavior => ok true
+      | contracts.Behavior.EqualsBehavior => ok true
+      | contracts.Behavior.QuoteBehavior => ok true
+      | contracts.Behavior.ComposeBehavior => ok true
+      | contracts.Behavior.RunBehavior => ok true
+      | contracts.Behavior.ReflectBehavior => ok true
+      | contracts.Behavior.UnitBehavior => ok true
+      | contracts.Behavior.PairBehavior => ok true
+      | contracts.Behavior.UnpairBehavior => ok true
+      | contracts.Behavior.InlBehavior => ok true
+      | contracts.Behavior.InrBehavior => ok true
+      | contracts.Behavior.CaseBehavior => ok true
+      | contracts.Behavior.IfBehavior => ok true
+      | contracts.Behavior.NilBehavior => ok true
+      | contracts.Behavior.ConsBehavior => ok true
+      | contracts.Behavior.ListCaseBehavior => ok true
+      | contracts.Behavior.TestEmitBehavior => ok true
+      | contracts.Behavior.BoundEmitBehavior _ => ok true
+      | contracts.Behavior.NominalNewBehavior _ => ok true
+      | contracts.Behavior.NominalIntoBehavior _ => ok true
+      | contracts.Behavior.NominalLeftBehavior _ => ok true
+      | contracts.Behavior.NominalRightBehavior _ => ok true
+      | contracts.Behavior.NominalMatchBehavior __arg1_0 =>
+        types.NominalTypeId.Insts.CoreCmpPartialEqNominalTypeId.eq __self_0
+          __arg1_0
+      | contracts.Behavior.NamedBehavior => ok true
+    | contracts.Behavior.NamedBehavior => ok true
+  else ok false
+
+/-- Trait implementation: [noble_kernel::contracts::{impl core::cmp::PartialEq<noble_kernel::contracts::Behavior> for noble_kernel::contracts::Behavior}]
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 30:29-30:38 -/
+@[reducible]
+impl_def contracts.Behavior.Insts.CoreCmpPartialEqBehavior : core.cmp.PartialEq
+  contracts.Behavior contracts.Behavior := {
+  eq := contracts.Behavior.Insts.CoreCmpPartialEqBehavior.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    contracts.Behavior.Insts.CoreCmpPartialEqBehavior
+}
+
+/-- [noble_kernel::contracts::{impl core::cmp::PartialEq<noble_kernel::contracts::Definition> for noble_kernel::contracts::Definition}::eq]:
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 11:29-11:38
+    Visibility: public -/
+def contracts.Definition.Insts.CoreCmpPartialEqDefinition.eq
+  (self : contracts.Definition) (other : contracts.Definition) :
+  Result Bool
+  := do
+  ok (self = other)
+
+/-- Trait implementation: [noble_kernel::contracts::{impl core::cmp::PartialEq<noble_kernel::contracts::Definition> for noble_kernel::contracts::Definition}]
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 11:29-11:38 -/
+@[reducible]
+impl_def contracts.Definition.Insts.CoreCmpPartialEqDefinition :
+  core.cmp.PartialEq contracts.Definition contracts.Definition := {
+  eq := contracts.Definition.Insts.CoreCmpPartialEqDefinition.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    contracts.Definition.Insts.CoreCmpPartialEqDefinition
+}
+
+/-- [noble_kernel::contracts::nominal::validation::bound_adapters_unique]: loop body 1:
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 232:8-236:9 -/
+@[rust_loop_body]
+def contracts.nominal.validation.bound_adapters_unique_loop0_loop0.body
+  (v : alloc.vec.Vec contracts.BoundAdapter) (index : Std.Usize)
+  (definition : contracts.Definition) (slot : Std.U32) (is_unique : Bool)
+  (prior : Std.Usize) :
+  Result (ControlFlow (Bool × Std.Usize) Bool)
+  := do
+  if prior < index
+  then
+    if is_unique
+    then
+      let prev ←
+        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+          contracts.BoundAdapter) v prior
+      let is_unique1 ←
+        if prev.adapter_slot != slot
+        then
+          core.cmp.PartialEq.ne.trait_default
+            contracts.Definition.Insts.CoreCmpPartialEqDefinition
+            prev.definition definition
+        else ok false
+      let prior1 ← prior + 1#usize
+      ok (cont (is_unique1, prior1))
+    else ok (done false)
+  else ok (done is_unique)
+
+/-- [noble_kernel::contracts::nominal::validation::bound_adapters_unique]: loop 1:
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 232:8-236:9 -/
+@[rust_loop]
+def contracts.nominal.validation.bound_adapters_unique_loop0_loop0
+  (v : alloc.vec.Vec contracts.BoundAdapter) (index : Std.Usize)
+  (is_unique : Bool) (definition : contracts.Definition) (slot : Std.U32)
+  (prior : Std.Usize) :
+  Result Bool
+  := do
+  loop
+    (fun (is_unique1, prior1) =>
+      contracts.nominal.validation.bound_adapters_unique_loop0_loop0.body v
+      index definition slot is_unique1 prior1)
+    (is_unique, prior)
+
+/-- [noble_kernel::contracts::nominal::validation::bound_adapters_unique]: loop body 0:
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 227:4-238:5 -/
+@[rust_loop_body]
+def contracts.nominal.validation.bound_adapters_unique_loop0.body
+  (env : contracts.Env) (index : Std.Usize) (is_unique : Bool) :
+  Result (ControlFlow (Std.Usize × Bool) Bool)
+  := do
+  let i := alloc.vec.Vec.len env.bound_adapters
+  if index < i
+  then
+    if is_unique
+    then
+      let ba ←
+        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+          contracts.BoundAdapter) env.bound_adapters index
+      let o ← contracts.Env.kind env ba.definition
+      let is_unique1 ←
+        core.option.Option.Insts.CoreCmpPartialEqOption.eq
+          contracts.Behavior.Insts.CoreCmpPartialEqBehavior o (some
+          (contracts.Behavior.BoundEmitBehavior ba.adapter_slot))
+      let is_unique2 ←
+        contracts.nominal.validation.bound_adapters_unique_loop0_loop0
+          env.bound_adapters index is_unique1 ba.definition ba.adapter_slot
+          0#usize
+      let index1 ← index + 1#usize
+      ok (cont (index1, is_unique2))
+    else ok (done false)
+  else ok (done is_unique)
+
+/-- [noble_kernel::contracts::nominal::validation::bound_adapters_unique]: loop 0:
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 227:4-238:5 -/
+@[rust_loop]
+def contracts.nominal.validation.bound_adapters_unique_loop0
+  (env : contracts.Env) (index : Std.Usize) (is_unique : Bool) :
+  Result Bool
+  := do
+  loop
+    (fun (index1, is_unique1) =>
+      contracts.nominal.validation.bound_adapters_unique_loop0.body env index1
+      is_unique1)
+    (index, is_unique)
+
+/-- [noble_kernel::contracts::nominal::validation::bound_adapters_unique]:
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 224:0-240:1 -/
+@[reducible]
+def contracts.nominal.validation.bound_adapters_unique
+  (env : contracts.Env) : Result Bool := do
+  contracts.nominal.validation.bound_adapters_unique_loop0 env 0#usize true
+
+/-- [noble_kernel::contracts::TEST_EMIT]
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 15:0-15:66
+    Visibility: public -/
+@[global_simps, irreducible] def contracts.TEST_EMIT : types.EffId := 0#u32
+
+/-- [noble_kernel::contracts::nominal::validation::bound_row_contract]:
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 56:0-73:1 -/
+def contracts.nominal.validation.bound_row_contract
+  (row : contracts.BoundAdapter) : Result Bool := do
+  let b ← alloc.string.String.is_empty row.adapter_identity
+  if b
+  then ok false
+  else
+    let i := alloc.vec.Vec.len row.input
+    if i != 1#usize
+    then ok false
+    else
+      let t ←
+        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice types.Ty)
+          row.input 0#usize
+      let b1 ←
+        core.cmp.PartialEq.ne.trait_default types.Ty.Insts.CoreCmpPartialEqTy t
+          types.Ty.TextType
+      if b1
+      then ok false
+      else
+        let b2 ← alloc.vec.Vec.is_empty Global row.output
+        if b2
+        then
+          let s ← types.EffSet.as_slice row.effects
+          let i1 := Slice.len s
+          if i1 != 1#usize
+          then ok false
+          else types.EffSet.contains row.effects contracts.TEST_EMIT
+        else ok false
+
+/-- [noble_kernel::contracts::nominal::validation::bound_row_matches]:
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 36:0-50:1 -/
+def contracts.nominal.validation.bound_row_matches
+  (env : contracts.Env) (index : Std.Usize) («def» : contracts.Definition)
+  (slot : Std.U32) :
+  Result Bool
+  := do
+  let row ←
+    alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+      contracts.BoundAdapter) env.bound_adapters index
+  let b ←
+    core.cmp.PartialEq.ne.trait_default
+      contracts.Definition.Insts.CoreCmpPartialEqDefinition row.definition
+      «def»
+  if b
+  then ok false
+  else
+    if row.adapter_slot != slot
+    then ok false
+    else contracts.nominal.validation.bound_row_contract row
+
+/-- [noble_kernel::contracts::nominal::validation::{noble_kernel::contracts::Env}::matching_bound_rows]: loop body 0:
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 22:8-27:9 -/
+@[rust_loop_body]
+def contracts.nominal.validation.Env.matching_bound_rows_loop.body
+  (self : contracts.Env) («def» : contracts.Definition) (slot : Std.U32)
+  («matches» : Std.U8) (row_index : Std.Usize) :
+  Result (ControlFlow (Std.U8 × Std.Usize) Std.U8)
+  := do
+  let i := alloc.vec.Vec.len self.bound_adapters
+  if row_index < i
+  then
+    let b ←
+      contracts.nominal.validation.bound_row_matches self row_index «def»
+        slot
+    let matches1 ←
+      if b
+      then ok (core.num.U8.saturating_add «matches» 1#u8)
+      else ok «matches»
+    let row_index1 ← row_index + 1#usize
+    ok (cont (matches1, row_index1))
+  else ok (done «matches»)
+
+/-- [noble_kernel::contracts::nominal::validation::{noble_kernel::contracts::Env}::matching_bound_rows]: loop 0:
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 22:8-27:9 -/
+@[rust_loop]
+def contracts.nominal.validation.Env.matching_bound_rows_loop
+  (self : contracts.Env) («def» : contracts.Definition) (slot : Std.U32)
+  («matches» : Std.U8) (row_index : Std.Usize) :
+  Result Std.U8
+  := do
+  loop
+    (fun (matches1, row_index1) =>
+      contracts.nominal.validation.Env.matching_bound_rows_loop.body self
+      «def» slot matches1 row_index1)
+    («matches», row_index)
+
+/-- [noble_kernel::contracts::nominal::validation::{noble_kernel::contracts::Env}::matching_bound_rows]:
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 19:4-29:5 -/
+@[reducible]
+def contracts.nominal.validation.Env.matching_bound_rows
+  (self : contracts.Env) («def» : contracts.Definition) (slot : Std.U32) :
+  Result Std.U8
+  := do
+  contracts.nominal.validation.Env.matching_bound_rows_loop self «def» slot
+    0#u8 0#usize
+
+/-- Trait implementation: [noble_kernel::words::{impl core::cmp::PartialEq<noble_kernel::words::VariableKind> for noble_kernel::words::VariableKind}]
+    Source: 'crates/noble-kernel/src/words.rs', lines 21:29-21:38 -/
+@[reducible]
+impl_def words.VariableKind.Insts.CoreCmpPartialEqVariableKind :
+  core.cmp.PartialEq words.VariableKind words.VariableKind := {
+  eq := words.VariableKind.Insts.CoreCmpPartialEqVariableKind.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    words.VariableKind.Insts.CoreCmpPartialEqVariableKind
+}
+
+/-- [noble_kernel::words::{impl core::cmp::PartialEq<noble_kernel::words::Variable> for noble_kernel::words::Variable}::eq]:
+    Source: 'crates/noble-kernel/src/words.rs', lines 17:29-17:38
+    Visibility: public -/
+def words.Variable.Insts.CoreCmpPartialEqVariable.eq
+  (self : words.Variable) (other : words.Variable) : Result Bool := do
+  ok (self = other)
+
+/-- Trait implementation: [noble_kernel::words::{impl core::cmp::PartialEq<noble_kernel::words::Variable> for noble_kernel::words::Variable}]
+    Source: 'crates/noble-kernel/src/words.rs', lines 17:29-17:38 -/
+@[reducible]
+impl_def words.Variable.Insts.CoreCmpPartialEqVariable : core.cmp.PartialEq
+  words.Variable words.Variable := {
+  eq := words.Variable.Insts.CoreCmpPartialEqVariable.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    words.Variable.Insts.CoreCmpPartialEqVariable
+}
+
+/-- [noble_kernel::shapes::{impl core::cmp::PartialEq<noble_kernel::shapes::EffectSlot> for noble_kernel::shapes::EffectSlot}::eq]:
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 84:23-84:32
+    Visibility: public -/
+def shapes.EffectSlot.Insts.CoreCmpPartialEqEffectSlot.eq
+  (self : shapes.EffectSlot) (other : shapes.EffectSlot) : Result Bool := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  if self1 = other1
+  then
+    match self with
+    | shapes.EffectSlot.Effect __self_0 =>
+      match other with
+      | shapes.EffectSlot.Effect __arg1_0 =>
+        types.EffId.Insts.CoreCmpPartialEqEffId.eq __self_0 __arg1_0
+      | shapes.EffectSlot.Var _ => fail panic
+    | shapes.EffectSlot.Var __self_0 =>
+      match other with
+      | shapes.EffectSlot.Effect _ => fail panic
+      | shapes.EffectSlot.Var __arg1_0 =>
+        words.Variable.Insts.CoreCmpPartialEqVariable.eq __self_0 __arg1_0
+  else ok false
+
+/-- Trait implementation: [noble_kernel::shapes::{impl core::cmp::PartialEq<noble_kernel::shapes::EffectSlot> for noble_kernel::shapes::EffectSlot}]
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 84:23-84:32 -/
+@[reducible]
+impl_def shapes.EffectSlot.Insts.CoreCmpPartialEqEffectSlot :
+  core.cmp.PartialEq shapes.EffectSlot shapes.EffectSlot := {
+  eq := shapes.EffectSlot.Insts.CoreCmpPartialEqEffectSlot.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    shapes.EffectSlot.Insts.CoreCmpPartialEqEffectSlot
+}
+
+/-- [noble_kernel::shapes::impls::equality::push_pattern_program]: loop body 0:
+    Source: 'crates/noble-kernel/src/shapes/impls/equality.rs', lines 18:4-21:5 -/
+@[rust_loop_body]
+def shapes.impls.equality.push_pattern_program_loop0.body
+  (first_in : Slice shapes.Pattern) (second_in : Slice shapes.Pattern)
+  (work : alloc.vec.Vec (shapes.Pattern × shapes.Pattern))
+  (is_comparable : Bool) (index : Std.Usize) :
+  Result (ControlFlow ((alloc.vec.Vec (shapes.Pattern × shapes.Pattern)) ×
+    Bool × Std.Usize) ((alloc.vec.Vec (shapes.Pattern × shapes.Pattern)) ×
+    Bool))
+  := do
+  let i := Slice.len first_in
+  if index < i
+  then
+    if is_comparable
+    then
+      let p ← Slice.index_usize first_in index
+      let p1 ← shapes.Pattern.Insts.CoreCloneClone.clone p
+      let p2 ← Slice.index_usize second_in index
+      let p3 ← shapes.Pattern.Insts.CoreCloneClone.clone p2
+      let work1 ← alloc.vec.Vec.push work (p1, p3)
+      let index1 ← index + 1#usize
+      ok (cont (work1, true, index1))
+    else ok (done (work, false))
+  else ok (done (work, is_comparable))
+
+/-- [noble_kernel::shapes::impls::equality::push_pattern_program]: loop 0:
+    Source: 'crates/noble-kernel/src/shapes/impls/equality.rs', lines 18:4-21:5 -/
+@[rust_loop]
+def shapes.impls.equality.push_pattern_program_loop0
+  (work : alloc.vec.Vec (shapes.Pattern × shapes.Pattern))
+  (first_in : Slice shapes.Pattern) (second_in : Slice shapes.Pattern)
+  (is_comparable : Bool) (index : Std.Usize) :
+  Result ((alloc.vec.Vec (shapes.Pattern × shapes.Pattern)) × Bool)
+  := do
+  loop
+    (fun (work1, is_comparable1, index1) =>
+      shapes.impls.equality.push_pattern_program_loop0.body first_in second_in
+      work1 is_comparable1 index1)
+    (work, is_comparable, index)
+
+/-- [noble_kernel::shapes::impls::equality::push_pattern_program]: loop body 1:
+    Source: 'crates/noble-kernel/src/shapes/impls/equality.rs', lines 23:4-26:5 -/
+@[rust_loop_body]
+def shapes.impls.equality.push_pattern_program_loop1.body
+  (first_out : Slice shapes.Pattern) (second_out : Slice shapes.Pattern)
+  (work : alloc.vec.Vec (shapes.Pattern × shapes.Pattern))
+  (is_comparable : Bool) (index : Std.Usize) :
+  Result (ControlFlow ((alloc.vec.Vec (shapes.Pattern × shapes.Pattern)) ×
+    Bool × Std.Usize) ((alloc.vec.Vec (shapes.Pattern × shapes.Pattern)) ×
+    Bool))
+  := do
+  let i := Slice.len first_out
+  if index < i
+  then
+    if is_comparable
+    then
+      let p ← Slice.index_usize first_out index
+      let p1 ← shapes.Pattern.Insts.CoreCloneClone.clone p
+      let p2 ← Slice.index_usize second_out index
+      let p3 ← shapes.Pattern.Insts.CoreCloneClone.clone p2
+      let work1 ← alloc.vec.Vec.push work (p1, p3)
+      let index1 ← index + 1#usize
+      ok (cont (work1, true, index1))
+    else ok (done (work, false))
+  else ok (done (work, is_comparable))
+
+/-- [noble_kernel::shapes::impls::equality::push_pattern_program]: loop 1:
+    Source: 'crates/noble-kernel/src/shapes/impls/equality.rs', lines 23:4-26:5 -/
+@[rust_loop]
+def shapes.impls.equality.push_pattern_program_loop1
+  (work : alloc.vec.Vec (shapes.Pattern × shapes.Pattern))
+  (first_out : Slice shapes.Pattern) (second_out : Slice shapes.Pattern)
+  (is_comparable : Bool) (index : Std.Usize) :
+  Result ((alloc.vec.Vec (shapes.Pattern × shapes.Pattern)) × Bool)
+  := do
+  loop
+    (fun (work1, is_comparable1, index1) =>
+      shapes.impls.equality.push_pattern_program_loop1.body first_out
+      second_out work1 is_comparable1 index1)
+    (work, is_comparable, index)
+
+/-- [noble_kernel::shapes::impls::equality::push_pattern_program]:
+    Source: 'crates/noble-kernel/src/shapes/impls/equality.rs', lines 4:0-28:1 -/
+def shapes.impls.equality.push_pattern_program
+  (work : alloc.vec.Vec (shapes.Pattern × shapes.Pattern))
+  (first_in : Slice shapes.Pattern) (first_out : Slice shapes.Pattern)
+  (second_in : Slice shapes.Pattern) (second_out : Slice shapes.Pattern) :
+  Result ((alloc.vec.Vec (shapes.Pattern × shapes.Pattern)) × Bool)
+  := do
+  let i := Slice.len first_in
+  let i1 := Slice.len second_in
+  let is_comparable ←
+    if i = i1
+    then
+      let i2 := Slice.len first_out
+      let i3 := Slice.len second_out
+      if i2 = i3
+      then let i4 := alloc.vec.Vec.len work
+           ok (i4 < shapes.WORK_CAP)
+      else ok false
+    else ok false
+  let (work1, is_comparable1) ←
+    shapes.impls.equality.push_pattern_program_loop0 work first_in second_in
+      is_comparable 0#usize
+  shapes.impls.equality.push_pattern_program_loop1 work1 first_out second_out
+    is_comparable1 0#usize
+
+/-- [noble_kernel::shapes::impls::equality::compare]:
+    Source: 'crates/noble-kernel/src/shapes/impls/equality.rs', lines 56:0-115:1 -/
+def shapes.impls.equality.compare
+  (first : shapes.Pattern) (second : shapes.Pattern)
+  (work : alloc.vec.Vec (shapes.Pattern × shapes.Pattern)) :
+  Result ((alloc.vec.Vec (shapes.Pattern × shapes.Pattern)) × Bool)
+  := do
+  match first with
+  | shapes.Pattern.UnitPattern =>
+    match second with
+    | shapes.Pattern.UnitPattern => ok (work, true)
+    | shapes.Pattern.BoolPattern => ok (work, false)
+    | shapes.Pattern.I64Pattern => ok (work, false)
+    | shapes.Pattern.TextPattern => ok (work, false)
+    | shapes.Pattern.SyntaxPattern => ok (work, false)
+    | shapes.Pattern.ContractPattern => ok (work, false)
+    | shapes.Pattern.EvidencePattern => ok (work, false)
+    | shapes.Pattern.CertifiedPattern => ok (work, false)
+    | shapes.Pattern.PairPattern _ _ => ok (work, false)
+    | shapes.Pattern.SumPattern _ _ => ok (work, false)
+    | shapes.Pattern.ListPattern _ => ok (work, false)
+    | shapes.Pattern.ProgramPattern _ _ _ => ok (work, false)
+    | shapes.Pattern.ResourcePattern _ => ok (work, false)
+    | shapes.Pattern.NominalPattern _ _ => ok (work, false)
+    | shapes.Pattern.VarPattern _ => ok (work, false)
+    | shapes.Pattern.StackVarPattern _ => ok (work, false)
+  | shapes.Pattern.BoolPattern =>
+    match second with
+    | shapes.Pattern.UnitPattern => ok (work, false)
+    | shapes.Pattern.BoolPattern => ok (work, true)
+    | shapes.Pattern.I64Pattern => ok (work, false)
+    | shapes.Pattern.TextPattern => ok (work, false)
+    | shapes.Pattern.SyntaxPattern => ok (work, false)
+    | shapes.Pattern.ContractPattern => ok (work, false)
+    | shapes.Pattern.EvidencePattern => ok (work, false)
+    | shapes.Pattern.CertifiedPattern => ok (work, false)
+    | shapes.Pattern.PairPattern _ _ => ok (work, false)
+    | shapes.Pattern.SumPattern _ _ => ok (work, false)
+    | shapes.Pattern.ListPattern _ => ok (work, false)
+    | shapes.Pattern.ProgramPattern _ _ _ => ok (work, false)
+    | shapes.Pattern.ResourcePattern _ => ok (work, false)
+    | shapes.Pattern.NominalPattern _ _ => ok (work, false)
+    | shapes.Pattern.VarPattern _ => ok (work, false)
+    | shapes.Pattern.StackVarPattern _ => ok (work, false)
+  | shapes.Pattern.I64Pattern =>
+    match second with
+    | shapes.Pattern.UnitPattern => ok (work, false)
+    | shapes.Pattern.BoolPattern => ok (work, false)
+    | shapes.Pattern.I64Pattern => ok (work, true)
+    | shapes.Pattern.TextPattern => ok (work, false)
+    | shapes.Pattern.SyntaxPattern => ok (work, false)
+    | shapes.Pattern.ContractPattern => ok (work, false)
+    | shapes.Pattern.EvidencePattern => ok (work, false)
+    | shapes.Pattern.CertifiedPattern => ok (work, false)
+    | shapes.Pattern.PairPattern _ _ => ok (work, false)
+    | shapes.Pattern.SumPattern _ _ => ok (work, false)
+    | shapes.Pattern.ListPattern _ => ok (work, false)
+    | shapes.Pattern.ProgramPattern _ _ _ => ok (work, false)
+    | shapes.Pattern.ResourcePattern _ => ok (work, false)
+    | shapes.Pattern.NominalPattern _ _ => ok (work, false)
+    | shapes.Pattern.VarPattern _ => ok (work, false)
+    | shapes.Pattern.StackVarPattern _ => ok (work, false)
+  | shapes.Pattern.TextPattern =>
+    match second with
+    | shapes.Pattern.UnitPattern => ok (work, false)
+    | shapes.Pattern.BoolPattern => ok (work, false)
+    | shapes.Pattern.I64Pattern => ok (work, false)
+    | shapes.Pattern.TextPattern => ok (work, true)
+    | shapes.Pattern.SyntaxPattern => ok (work, false)
+    | shapes.Pattern.ContractPattern => ok (work, false)
+    | shapes.Pattern.EvidencePattern => ok (work, false)
+    | shapes.Pattern.CertifiedPattern => ok (work, false)
+    | shapes.Pattern.PairPattern _ _ => ok (work, false)
+    | shapes.Pattern.SumPattern _ _ => ok (work, false)
+    | shapes.Pattern.ListPattern _ => ok (work, false)
+    | shapes.Pattern.ProgramPattern _ _ _ => ok (work, false)
+    | shapes.Pattern.ResourcePattern _ => ok (work, false)
+    | shapes.Pattern.NominalPattern _ _ => ok (work, false)
+    | shapes.Pattern.VarPattern _ => ok (work, false)
+    | shapes.Pattern.StackVarPattern _ => ok (work, false)
+  | shapes.Pattern.SyntaxPattern =>
+    match second with
+    | shapes.Pattern.UnitPattern => ok (work, false)
+    | shapes.Pattern.BoolPattern => ok (work, false)
+    | shapes.Pattern.I64Pattern => ok (work, false)
+    | shapes.Pattern.TextPattern => ok (work, false)
+    | shapes.Pattern.SyntaxPattern => ok (work, true)
+    | shapes.Pattern.ContractPattern => ok (work, false)
+    | shapes.Pattern.EvidencePattern => ok (work, false)
+    | shapes.Pattern.CertifiedPattern => ok (work, false)
+    | shapes.Pattern.PairPattern _ _ => ok (work, false)
+    | shapes.Pattern.SumPattern _ _ => ok (work, false)
+    | shapes.Pattern.ListPattern _ => ok (work, false)
+    | shapes.Pattern.ProgramPattern _ _ _ => ok (work, false)
+    | shapes.Pattern.ResourcePattern _ => ok (work, false)
+    | shapes.Pattern.NominalPattern _ _ => ok (work, false)
+    | shapes.Pattern.VarPattern _ => ok (work, false)
+    | shapes.Pattern.StackVarPattern _ => ok (work, false)
+  | shapes.Pattern.ContractPattern =>
+    match second with
+    | shapes.Pattern.UnitPattern => ok (work, false)
+    | shapes.Pattern.BoolPattern => ok (work, false)
+    | shapes.Pattern.I64Pattern => ok (work, false)
+    | shapes.Pattern.TextPattern => ok (work, false)
+    | shapes.Pattern.SyntaxPattern => ok (work, false)
+    | shapes.Pattern.ContractPattern => ok (work, true)
+    | shapes.Pattern.EvidencePattern => ok (work, false)
+    | shapes.Pattern.CertifiedPattern => ok (work, false)
+    | shapes.Pattern.PairPattern _ _ => ok (work, false)
+    | shapes.Pattern.SumPattern _ _ => ok (work, false)
+    | shapes.Pattern.ListPattern _ => ok (work, false)
+    | shapes.Pattern.ProgramPattern _ _ _ => ok (work, false)
+    | shapes.Pattern.ResourcePattern _ => ok (work, false)
+    | shapes.Pattern.NominalPattern _ _ => ok (work, false)
+    | shapes.Pattern.VarPattern _ => ok (work, false)
+    | shapes.Pattern.StackVarPattern _ => ok (work, false)
+  | shapes.Pattern.EvidencePattern =>
+    match second with
+    | shapes.Pattern.UnitPattern => ok (work, false)
+    | shapes.Pattern.BoolPattern => ok (work, false)
+    | shapes.Pattern.I64Pattern => ok (work, false)
+    | shapes.Pattern.TextPattern => ok (work, false)
+    | shapes.Pattern.SyntaxPattern => ok (work, false)
+    | shapes.Pattern.ContractPattern => ok (work, false)
+    | shapes.Pattern.EvidencePattern => ok (work, true)
+    | shapes.Pattern.CertifiedPattern => ok (work, false)
+    | shapes.Pattern.PairPattern _ _ => ok (work, false)
+    | shapes.Pattern.SumPattern _ _ => ok (work, false)
+    | shapes.Pattern.ListPattern _ => ok (work, false)
+    | shapes.Pattern.ProgramPattern _ _ _ => ok (work, false)
+    | shapes.Pattern.ResourcePattern _ => ok (work, false)
+    | shapes.Pattern.NominalPattern _ _ => ok (work, false)
+    | shapes.Pattern.VarPattern _ => ok (work, false)
+    | shapes.Pattern.StackVarPattern _ => ok (work, false)
+  | shapes.Pattern.CertifiedPattern =>
+    match second with
+    | shapes.Pattern.UnitPattern => ok (work, false)
+    | shapes.Pattern.BoolPattern => ok (work, false)
+    | shapes.Pattern.I64Pattern => ok (work, false)
+    | shapes.Pattern.TextPattern => ok (work, false)
+    | shapes.Pattern.SyntaxPattern => ok (work, false)
+    | shapes.Pattern.ContractPattern => ok (work, false)
+    | shapes.Pattern.EvidencePattern => ok (work, false)
+    | shapes.Pattern.CertifiedPattern => ok (work, true)
+    | shapes.Pattern.PairPattern _ _ => ok (work, false)
+    | shapes.Pattern.SumPattern _ _ => ok (work, false)
+    | shapes.Pattern.ListPattern _ => ok (work, false)
+    | shapes.Pattern.ProgramPattern _ _ _ => ok (work, false)
+    | shapes.Pattern.ResourcePattern _ => ok (work, false)
+    | shapes.Pattern.NominalPattern _ _ => ok (work, false)
+    | shapes.Pattern.VarPattern _ => ok (work, false)
+    | shapes.Pattern.StackVarPattern _ => ok (work, false)
+  | shapes.Pattern.PairPattern first_head first_tail =>
+    match second with
+    | shapes.Pattern.UnitPattern => ok (work, false)
+    | shapes.Pattern.BoolPattern => ok (work, false)
+    | shapes.Pattern.I64Pattern => ok (work, false)
+    | shapes.Pattern.TextPattern => ok (work, false)
+    | shapes.Pattern.SyntaxPattern => ok (work, false)
+    | shapes.Pattern.ContractPattern => ok (work, false)
+    | shapes.Pattern.EvidencePattern => ok (work, false)
+    | shapes.Pattern.CertifiedPattern => ok (work, false)
+    | shapes.Pattern.PairPattern second_head second_tail =>
+      let work1 ← alloc.vec.Vec.push work (first_head, second_head)
+      let work2 ← alloc.vec.Vec.push work1 (first_tail, second_tail)
+      ok (work2, true)
+    | shapes.Pattern.SumPattern _ _ => ok (work, false)
+    | shapes.Pattern.ListPattern _ => ok (work, false)
+    | shapes.Pattern.ProgramPattern _ _ _ => ok (work, false)
+    | shapes.Pattern.ResourcePattern _ => ok (work, false)
+    | shapes.Pattern.NominalPattern _ _ => ok (work, false)
+    | shapes.Pattern.VarPattern _ => ok (work, false)
+    | shapes.Pattern.StackVarPattern _ => ok (work, false)
+  | shapes.Pattern.SumPattern first_head first_tail =>
+    match second with
+    | shapes.Pattern.UnitPattern => ok (work, false)
+    | shapes.Pattern.BoolPattern => ok (work, false)
+    | shapes.Pattern.I64Pattern => ok (work, false)
+    | shapes.Pattern.TextPattern => ok (work, false)
+    | shapes.Pattern.SyntaxPattern => ok (work, false)
+    | shapes.Pattern.ContractPattern => ok (work, false)
+    | shapes.Pattern.EvidencePattern => ok (work, false)
+    | shapes.Pattern.CertifiedPattern => ok (work, false)
+    | shapes.Pattern.PairPattern _ _ => ok (work, false)
+    | shapes.Pattern.SumPattern second_head second_tail =>
+      let work1 ← alloc.vec.Vec.push work (first_head, second_head)
+      let work2 ← alloc.vec.Vec.push work1 (first_tail, second_tail)
+      ok (work2, true)
+    | shapes.Pattern.ListPattern _ => ok (work, false)
+    | shapes.Pattern.ProgramPattern _ _ _ => ok (work, false)
+    | shapes.Pattern.ResourcePattern _ => ok (work, false)
+    | shapes.Pattern.NominalPattern _ _ => ok (work, false)
+    | shapes.Pattern.VarPattern _ => ok (work, false)
+    | shapes.Pattern.StackVarPattern _ => ok (work, false)
+  | shapes.Pattern.ListPattern first_item =>
+    match second with
+    | shapes.Pattern.UnitPattern => ok (work, false)
+    | shapes.Pattern.BoolPattern => ok (work, false)
+    | shapes.Pattern.I64Pattern => ok (work, false)
+    | shapes.Pattern.TextPattern => ok (work, false)
+    | shapes.Pattern.SyntaxPattern => ok (work, false)
+    | shapes.Pattern.ContractPattern => ok (work, false)
+    | shapes.Pattern.EvidencePattern => ok (work, false)
+    | shapes.Pattern.CertifiedPattern => ok (work, false)
+    | shapes.Pattern.PairPattern _ _ => ok (work, false)
+    | shapes.Pattern.SumPattern _ _ => ok (work, false)
+    | shapes.Pattern.ListPattern second_item =>
+      let work1 ← alloc.vec.Vec.push work (first_item, second_item)
+      ok (work1, true)
+    | shapes.Pattern.ProgramPattern _ _ _ => ok (work, false)
+    | shapes.Pattern.ResourcePattern _ => ok (work, false)
+    | shapes.Pattern.NominalPattern _ _ => ok (work, false)
+    | shapes.Pattern.VarPattern _ => ok (work, false)
+    | shapes.Pattern.StackVarPattern _ => ok (work, false)
+  | shapes.Pattern.ProgramPattern a_in a_out a_eff =>
+    match second with
+    | shapes.Pattern.UnitPattern => ok (work, false)
+    | shapes.Pattern.BoolPattern => ok (work, false)
+    | shapes.Pattern.I64Pattern => ok (work, false)
+    | shapes.Pattern.TextPattern => ok (work, false)
+    | shapes.Pattern.SyntaxPattern => ok (work, false)
+    | shapes.Pattern.ContractPattern => ok (work, false)
+    | shapes.Pattern.EvidencePattern => ok (work, false)
+    | shapes.Pattern.CertifiedPattern => ok (work, false)
+    | shapes.Pattern.PairPattern _ _ => ok (work, false)
+    | shapes.Pattern.SumPattern _ _ => ok (work, false)
+    | shapes.Pattern.ListPattern _ => ok (work, false)
+    | shapes.Pattern.ProgramPattern b_in b_out b_eff =>
+      let s := alloc.vec.Vec.deref a_in
+      let s1 := alloc.vec.Vec.deref a_out
+      let s2 := alloc.vec.Vec.deref b_in
+      let s3 := alloc.vec.Vec.deref b_out
+      let (next, is_program_equal) ←
+        shapes.impls.equality.push_pattern_program work s s1 s2 s3
+      if is_program_equal
+      then
+        let is_equal ←
+          alloc.vec.partial_eq.PartialEqVec.eq
+            shapes.EffectSlot.Insts.CoreCmpPartialEqEffectSlot a_eff b_eff
+        ok (next, is_equal)
+      else ok (next, false)
+    | shapes.Pattern.ResourcePattern _ => ok (work, false)
+    | shapes.Pattern.NominalPattern _ _ => ok (work, false)
+    | shapes.Pattern.VarPattern _ => ok (work, false)
+    | shapes.Pattern.StackVarPattern _ => ok (work, false)
+  | shapes.Pattern.ResourcePattern first_kind =>
+    match second with
+    | shapes.Pattern.UnitPattern => ok (work, false)
+    | shapes.Pattern.BoolPattern => ok (work, false)
+    | shapes.Pattern.I64Pattern => ok (work, false)
+    | shapes.Pattern.TextPattern => ok (work, false)
+    | shapes.Pattern.SyntaxPattern => ok (work, false)
+    | shapes.Pattern.ContractPattern => ok (work, false)
+    | shapes.Pattern.EvidencePattern => ok (work, false)
+    | shapes.Pattern.CertifiedPattern => ok (work, false)
+    | shapes.Pattern.PairPattern _ _ => ok (work, false)
+    | shapes.Pattern.SumPattern _ _ => ok (work, false)
+    | shapes.Pattern.ListPattern _ => ok (work, false)
+    | shapes.Pattern.ProgramPattern _ _ _ => ok (work, false)
+    | shapes.Pattern.ResourcePattern second_kind =>
+      let is_equal ←
+        types.ResourceKind.Insts.CoreCmpPartialEqResourceKind.eq first_kind
+          second_kind
+      ok (work, is_equal)
+    | shapes.Pattern.NominalPattern _ _ => ok (work, false)
+    | shapes.Pattern.VarPattern _ => ok (work, false)
+    | shapes.Pattern.StackVarPattern _ => ok (work, false)
+  | shapes.Pattern.NominalPattern first_id first_shape =>
+    match second with
+    | shapes.Pattern.UnitPattern => ok (work, false)
+    | shapes.Pattern.BoolPattern => ok (work, false)
+    | shapes.Pattern.I64Pattern => ok (work, false)
+    | shapes.Pattern.TextPattern => ok (work, false)
+    | shapes.Pattern.SyntaxPattern => ok (work, false)
+    | shapes.Pattern.ContractPattern => ok (work, false)
+    | shapes.Pattern.EvidencePattern => ok (work, false)
+    | shapes.Pattern.CertifiedPattern => ok (work, false)
+    | shapes.Pattern.PairPattern _ _ => ok (work, false)
+    | shapes.Pattern.SumPattern _ _ => ok (work, false)
+    | shapes.Pattern.ListPattern _ => ok (work, false)
+    | shapes.Pattern.ProgramPattern _ _ _ => ok (work, false)
+    | shapes.Pattern.ResourcePattern _ => ok (work, false)
+    | shapes.Pattern.NominalPattern second_id second_shape =>
+      let b ←
+        types.NominalTypeId.Insts.CoreCmpPartialEqNominalTypeId.eq first_id
+          second_id
+      if b
+      then
+        let is_equal ←
+          types.NominalShape.Insts.CoreCmpPartialEqNominalShape.eq first_shape
+            second_shape
+        ok (work, is_equal)
+      else ok (work, false)
+    | shapes.Pattern.VarPattern _ => ok (work, false)
+    | shapes.Pattern.StackVarPattern _ => ok (work, false)
+  | shapes.Pattern.VarPattern first_var =>
+    match second with
+    | shapes.Pattern.UnitPattern => ok (work, false)
+    | shapes.Pattern.BoolPattern => ok (work, false)
+    | shapes.Pattern.I64Pattern => ok (work, false)
+    | shapes.Pattern.TextPattern => ok (work, false)
+    | shapes.Pattern.SyntaxPattern => ok (work, false)
+    | shapes.Pattern.ContractPattern => ok (work, false)
+    | shapes.Pattern.EvidencePattern => ok (work, false)
+    | shapes.Pattern.CertifiedPattern => ok (work, false)
+    | shapes.Pattern.PairPattern _ _ => ok (work, false)
+    | shapes.Pattern.SumPattern _ _ => ok (work, false)
+    | shapes.Pattern.ListPattern _ => ok (work, false)
+    | shapes.Pattern.ProgramPattern _ _ _ => ok (work, false)
+    | shapes.Pattern.ResourcePattern _ => ok (work, false)
+    | shapes.Pattern.NominalPattern _ _ => ok (work, false)
+    | shapes.Pattern.VarPattern second_var =>
+      let is_equal ←
+        words.Variable.Insts.CoreCmpPartialEqVariable.eq first_var second_var
+      ok (work, is_equal)
+    | shapes.Pattern.StackVarPattern _ => ok (work, false)
+  | shapes.Pattern.StackVarPattern first_var =>
+    match second with
+    | shapes.Pattern.UnitPattern => ok (work, false)
+    | shapes.Pattern.BoolPattern => ok (work, false)
+    | shapes.Pattern.I64Pattern => ok (work, false)
+    | shapes.Pattern.TextPattern => ok (work, false)
+    | shapes.Pattern.SyntaxPattern => ok (work, false)
+    | shapes.Pattern.ContractPattern => ok (work, false)
+    | shapes.Pattern.EvidencePattern => ok (work, false)
+    | shapes.Pattern.CertifiedPattern => ok (work, false)
+    | shapes.Pattern.PairPattern _ _ => ok (work, false)
+    | shapes.Pattern.SumPattern _ _ => ok (work, false)
+    | shapes.Pattern.ListPattern _ => ok (work, false)
+    | shapes.Pattern.ProgramPattern _ _ _ => ok (work, false)
+    | shapes.Pattern.ResourcePattern _ => ok (work, false)
+    | shapes.Pattern.NominalPattern _ _ => ok (work, false)
+    | shapes.Pattern.VarPattern _ => ok (work, false)
+    | shapes.Pattern.StackVarPattern second_var =>
+      let is_equal ←
+        words.Variable.Insts.CoreCmpPartialEqVariable.eq first_var second_var
+      ok (work, is_equal)
+
+/-- [noble_kernel::shapes::impls::equality::pattern_eq]: loop body 0:
+    Source: 'crates/noble-kernel/src/shapes/impls/equality.rs', lines 34:4-44:5 -/
+@[rust_loop_body]
+def shapes.impls.equality.pattern_eq_loop.body
+  (work : alloc.vec.Vec (shapes.Pattern × shapes.Pattern)) (is_equal : Bool) :
+  Result (ControlFlow ((alloc.vec.Vec (shapes.Pattern × shapes.Pattern)) ×
+    Bool) Bool)
+  := do
+  let b ← alloc.vec.Vec.is_empty Global work
+  if b
+  then ok (done is_equal)
+  else
+    let i := alloc.vec.Vec.len work
+    if i >= shapes.WORK_CAP
+    then ok (done false)
+    else
+      let (o, work1) ← alloc.vec.Vec.pop Global work
+      match o with
+      | none => ok (cont (work1, is_equal))
+      | some p =>
+        let (first, second) := p
+        let (next, is_step_equal) ←
+          shapes.impls.equality.compare first second work1
+        if is_equal
+        then ok (cont (next, is_step_equal))
+        else ok (cont (next, false))
+
+/-- [noble_kernel::shapes::impls::equality::pattern_eq]: loop 0:
+    Source: 'crates/noble-kernel/src/shapes/impls/equality.rs', lines 34:4-44:5 -/
+@[rust_loop]
+def shapes.impls.equality.pattern_eq_loop
+  (work : alloc.vec.Vec (shapes.Pattern × shapes.Pattern)) (is_equal : Bool) :
+  Result Bool
+  := do
+  loop
+    (fun (work1, is_equal1) => shapes.impls.equality.pattern_eq_loop.body work1
+      is_equal1)
+    (work, is_equal)
+
+/-- [noble_kernel::shapes::impls::equality::pattern_eq]:
+    Source: 'crates/noble-kernel/src/shapes/impls/equality.rs', lines 30:0-46:1 -/
+def shapes.impls.equality.pattern_eq
+  (left : shapes.Pattern) (right : shapes.Pattern) : Result Bool := do
+  let work :=
+    alloc.vec.Vec.with_capacity (shapes.Pattern × shapes.Pattern) 8#usize
+  let p ← shapes.Pattern.Insts.CoreCloneClone.clone left
+  let p1 ← shapes.Pattern.Insts.CoreCloneClone.clone right
+  let work1 ← alloc.vec.Vec.push work (p, p1)
+  shapes.impls.equality.pattern_eq_loop work1 true
+
+/-- [noble_kernel::shapes::impls::{impl core::cmp::PartialEq<noble_kernel::shapes::Pattern> for noble_kernel::shapes::Pattern}::eq]:
+    Source: 'crates/noble-kernel/src/shapes/impls.rs', lines 72:4-74:5
+    Visibility: public -/
+def shapes.Pattern.Insts.CoreCmpPartialEqPattern.eq
+  (self : shapes.Pattern) (other : shapes.Pattern) : Result Bool := do
+  shapes.impls.equality.pattern_eq self other
+
+/-- Trait implementation: [noble_kernel::shapes::impls::{impl core::cmp::PartialEq<noble_kernel::shapes::Pattern> for noble_kernel::shapes::Pattern}]
+    Source: 'crates/noble-kernel/src/shapes/impls.rs', lines 71:0-75:1 -/
+@[reducible]
+impl_def shapes.Pattern.Insts.CoreCmpPartialEqPattern : core.cmp.PartialEq
+  shapes.Pattern shapes.Pattern := {
+  eq := shapes.Pattern.Insts.CoreCmpPartialEqPattern.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    shapes.Pattern.Insts.CoreCmpPartialEqPattern
+}
+
+/-- [noble_kernel::contracts::nominal::schemes::stack]:
+    Source: 'crates/noble-kernel/src/contracts/nominal/schemes.rs', lines 12:0-14:1 -/
+def contracts.nominal.schemes.stack
+  (index : Std.U32) : Result shapes.Pattern := do
+  ok (shapes.Pattern.StackVarPattern index)
+
+/-- [noble_kernel::contracts::nominal::schemes::valid_emit_scheme]:
+    Source: 'crates/noble-kernel/src/contracts/nominal/schemes.rs', lines 122:0-127:1 -/
+def contracts.nominal.schemes.valid_emit_scheme
+  (actual : words.Scheme) : Result Bool := do
+  let s ← alloc.vec.Vec.as_slice Global actual.var_kinds
+  let b ←
+    Shared0Slice.Insts.CoreCmpPartialEqArray.eq
+      words.VariableKind.Insts.CoreCmpPartialEqVariableKind s
+      (Array.make 1#usize [ words.VariableKind.Stack ])
+  if b
+  then
+    let s1 ← alloc.vec.Vec.as_slice Global actual.stack_in
+    let p ← contracts.nominal.schemes.stack 0#u32
+    let b1 ←
+      Shared0Slice.Insts.CoreCmpPartialEqArray.eq
+        shapes.Pattern.Insts.CoreCmpPartialEqPattern s1
+        (Array.make 2#usize [ p, shapes.Pattern.TextPattern ])
+    if b1
+    then
+      let s2 ← alloc.vec.Vec.as_slice Global actual.stack_out
+      let b2 ←
+        Shared0Slice.Insts.CoreCmpPartialEqArray.eq
+          shapes.Pattern.Insts.CoreCmpPartialEqPattern s2
+          (Array.make 1#usize [ p ])
+      if b2
+      then
+        let s3 ← alloc.vec.Vec.as_slice Global actual.effects
+        Shared0Slice.Insts.CoreCmpPartialEqArray.eq
+          shapes.EffectSlot.Insts.CoreCmpPartialEqEffectSlot s3
+          (Array.make 1#usize [ shapes.EffectSlot.Effect contracts.TEST_EMIT ])
+      else ok false
+    else ok false
+  else ok false
+
+/-- [noble_kernel::contracts::nominal::validation::bound_definition_matches]:
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 211:0-222:1 -/
+def contracts.nominal.validation.bound_definition_matches
+  (env : contracts.Env) (index : Std.Usize) (slot : Std.U32) :
+  Result Bool
+  := do
+  let s ←
+    alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice words.Scheme)
+      env.defs index
+  let b ← contracts.nominal.schemes.valid_emit_scheme s
+  if b
+  then
+    let r ←
+      core.convert.num.ptr_try_from_impls.TryFromU32Usize.try_from index
+    match r with
+    | core.result.Result.Ok «def» =>
+      let i ←
+        contracts.nominal.validation.Env.matching_bound_rows env «def» slot
+      let b1 ← match i with
+                 | 1#uscalar => ok true
+                 | _ => ok false
+      if b1
+      then
+        let s1 := alloc.vec.Vec.deref env.definition_owners
+        let o ←
+          core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice (Option
+            Std.U64)) s1 index
+        match o with
+        | none => ok false
+        | some o1 => match o1 with
+                     | none => ok false
+                     | some _ => ok true
+      else ok false
+    | core.result.Result.Err _ => ok false
+  else ok false
+
+/-- [noble_kernel::contracts::nominal::schemes::match_handler]:
+    Source: 'crates/noble-kernel/src/contracts/nominal/schemes.rs', lines 103:0-111:1 -/
+def contracts.nominal.schemes.match_handler
+  (arm : shapes.Pattern) (effect : Std.U32) : Result shapes.Pattern := do
+  let p ← contracts.nominal.schemes.stack 0#u32
+  let y ←
+    lift (Std.Array.to_slice (Array.make 2#usize [ p, arm ] : Array
+      shapes.Pattern 2#usize))
+  let ret := alloc.slice.Slice.into_vec y
+  let p1 ← contracts.nominal.schemes.stack 1#u32
+  let y1 ←
+    lift (Std.Array.to_slice (Array.make 1#usize [ p1 ] : Array shapes.Pattern
+      1#usize))
+  let ret1 := alloc.slice.Slice.into_vec y1
+  let y2 ←
+    lift (Std.Array.to_slice
+      (Array.make 1#usize [ shapes.EffectSlot.Var effect ] : Array
+      shapes.EffectSlot 1#usize))
+  let ret2 := alloc.slice.Slice.into_vec y2
+  shapes.Pattern.program ret ret1 ret2
+
+/-- [noble_kernel::contracts::nominal::schemes::declared_pattern]:
+    Source: 'crates/noble-kernel/src/contracts/nominal/schemes.rs', lines 16:0-18:1 -/
+def contracts.nominal.schemes.declared_pattern
+  (decl : contracts.NominalDecl) : Result shapes.Pattern := do
+  let ns ← types.NominalShape.Insts.CoreCloneClone.clone decl.shape
+  ok (shapes.Pattern.NominalPattern decl.id ns)
+
+/-- [noble_kernel::contracts::nominal::schemes::match_input]:
+    Source: 'crates/noble-kernel/src/contracts/nominal/schemes.rs', lines 90:0-101:1 -/
+def contracts.nominal.schemes.match_input
+  (decl : contracts.NominalDecl) (left : shapes.Pattern)
+  (right : shapes.Pattern) :
+  Result (alloc.vec.Vec shapes.Pattern)
+  := do
+  let p ← contracts.nominal.schemes.stack 0#u32
+  let p1 ← contracts.nominal.schemes.declared_pattern decl
+  let p2 ← contracts.nominal.schemes.match_handler left 2#u32
+  let p3 ← contracts.nominal.schemes.match_handler right 3#u32
+  let y ←
+    lift (Std.Array.to_slice (Array.make 4#usize [ p, p1, p2, p3 ] : Array
+      shapes.Pattern 4#usize))
+  ok (alloc.slice.Slice.into_vec y)
+
+/-- [noble_kernel::contracts::nominal::schemes::match_variables]:
+    Source: 'crates/noble-kernel/src/contracts/nominal/schemes.rs', lines 81:0-88:1 -/
+def contracts.nominal.schemes.match_variables
+  : Result (alloc.vec.Vec words.VariableKind) := do
+  let y ←
+    lift (Std.Array.to_slice
+      (Array.make 4#usize [
+         words.VariableKind.Stack, words.VariableKind.Stack,
+         words.VariableKind.Effect, words.VariableKind.Effect
+         ] : Array words.VariableKind 4#usize))
+  ok (alloc.slice.Slice.into_vec y)
+
+/-- [noble_kernel::contracts::nominal::payload::complete_list]:
+    Source: 'crates/noble-kernel/src/contracts/nominal/payload.rs', lines 147:0-157:1 -/
+def contracts.nominal.payload.complete_list
+  (state : contracts.nominal.payload.Build) :
+  Result (Option contracts.nominal.payload.Build)
+  := do
+  let (o, v) ← alloc.vec.Vec.pop Global state.built
+  match o with
+  | none => ok none
+  | some item =>
+    let v1 ← alloc.vec.Vec.push v (shapes.Pattern.ListPattern item)
+    ok (some { state with built := v1 })
+
+/-- [noble_kernel::contracts::nominal::payload::pair_pattern]:
+    Source: 'crates/noble-kernel/src/contracts/nominal/payload.rs', lines 159:0-169:1 -/
+def contracts.nominal.payload.pair_pattern
+  (left : shapes.Pattern) (right : shapes.Pattern) (is_sum : Bool) :
+  Result shapes.Pattern
+  := do
+  if is_sum
+  then ok (shapes.Pattern.SumPattern left right)
+  else ok (shapes.Pattern.PairPattern left right)
+
+/-- [noble_kernel::contracts::nominal::payload::complete_pair]:
+    Source: 'crates/noble-kernel/src/contracts/nominal/payload.rs', lines 134:0-145:1 -/
+def contracts.nominal.payload.complete_pair
+  (is_sum : Bool) (state : contracts.nominal.payload.Build) :
+  Result (Option contracts.nominal.payload.Build)
+  := do
+  let (o, v) ← alloc.vec.Vec.pop Global state.built
+  match o with
+  | none => ok none
+  | some right =>
+    let (o1, v1) ← alloc.vec.Vec.pop Global v
+    match o1 with
+    | none => ok none
+    | some left =>
+      let p ← contracts.nominal.payload.pair_pattern left right is_sum
+      let v2 ← alloc.vec.Vec.push v1 p
+      ok (some { state with built := v2 })
+
+/-- [noble_kernel::contracts::nominal::payload::complete]:
+    Source: 'crates/noble-kernel/src/contracts/nominal/payload.rs', lines 121:0-128:1 -/
+def contracts.nominal.payload.complete
+  (ty : types.Ty) (state : contracts.nominal.payload.Build) :
+  Result (Option contracts.nominal.payload.Build)
+  := do
+  match ty with
+  | types.Ty.UnitType => ok none
+  | types.Ty.BoolType => ok none
+  | types.Ty.I64Type => ok none
+  | types.Ty.TextType => ok none
+  | types.Ty.SyntaxType => ok none
+  | types.Ty.ContractType => ok none
+  | types.Ty.EvidenceType => ok none
+  | types.Ty.CertifiedType => ok none
+  | types.Ty.PairType _ _ =>
+    contracts.nominal.payload.complete_pair false state
+  | types.Ty.SumType _ _ => contracts.nominal.payload.complete_pair true state
+  | types.Ty.ListType _ => contracts.nominal.payload.complete_list state
+  | types.Ty.ProgramType _ _ _ => ok none
+  | types.Ty.ResourceType _ => ok none
+  | types.Ty.NominalType _ _ => ok none
+
+/-- [noble_kernel::contracts::nominal::payload::leaf_pattern]:
+    Source: 'crates/noble-kernel/src/contracts/nominal/payload.rs', lines 102:0-115:1 -/
+def contracts.nominal.payload.leaf_pattern
+  (ty : types.Ty) : Result (Option shapes.Pattern) := do
+  match ty with
+  | types.Ty.UnitType => ok (some shapes.Pattern.UnitPattern)
+  | types.Ty.BoolType => ok (some shapes.Pattern.BoolPattern)
+  | types.Ty.I64Type => ok (some shapes.Pattern.I64Pattern)
+  | types.Ty.TextType => ok (some shapes.Pattern.TextPattern)
+  | types.Ty.SyntaxType => ok none
+  | types.Ty.ContractType => ok none
+  | types.Ty.EvidenceType => ok none
+  | types.Ty.CertifiedType => ok none
+  | types.Ty.PairType _ _ => ok none
+  | types.Ty.SumType _ _ => ok none
+  | types.Ty.ListType _ => ok none
+  | types.Ty.ProgramType _ _ _ => ok none
+  | types.Ty.ResourceType kind =>
+    ok (some (shapes.Pattern.ResourcePattern kind))
+  | types.Ty.NominalType id shape =>
+    let ns ← types.NominalShape.Insts.CoreCloneClone.clone shape
+    ok (some (shapes.Pattern.NominalPattern id ns))
+
+/-- [noble_kernel::contracts::nominal::payload::enter]:
+    Source: 'crates/noble-kernel/src/contracts/nominal/payload.rs', lines 65:0-100:1 -/
+def contracts.nominal.payload.enter
+  (ty : types.Ty) (state : contracts.nominal.payload.Build) :
+  Result (Option contracts.nominal.payload.Build)
+  := do
+  massert (state.entered > 0#usize)
+  massert (state.entered <= 512#usize)
+  let i := alloc.vec.Vec.len state.built
+  massert (i <= state.entered)
+  match ty with
+  | types.Ty.UnitType =>
+    let o ← contracts.nominal.payload.leaf_pattern types.Ty.UnitType
+    match o with
+    | none => ok none
+    | some pattern =>
+      let v ← alloc.vec.Vec.push state.built pattern
+      ok (some { state with built := v })
+  | types.Ty.BoolType =>
+    let o ← contracts.nominal.payload.leaf_pattern types.Ty.BoolType
+    match o with
+    | none => ok none
+    | some pattern =>
+      let v ← alloc.vec.Vec.push state.built pattern
+      ok (some { state with built := v })
+  | types.Ty.I64Type =>
+    let o ← contracts.nominal.payload.leaf_pattern types.Ty.I64Type
+    match o with
+    | none => ok none
+    | some pattern =>
+      let v ← alloc.vec.Vec.push state.built pattern
+      ok (some { state with built := v })
+  | types.Ty.TextType =>
+    let o ← contracts.nominal.payload.leaf_pattern types.Ty.TextType
+    match o with
+    | none => ok none
+    | some pattern =>
+      let v ← alloc.vec.Vec.push state.built pattern
+      ok (some { state with built := v })
+  | types.Ty.SyntaxType =>
+    let o ← contracts.nominal.payload.leaf_pattern types.Ty.SyntaxType
+    match o with
+    | none => ok none
+    | some pattern =>
+      let v ← alloc.vec.Vec.push state.built pattern
+      ok (some { state with built := v })
+  | types.Ty.ContractType =>
+    let o ← contracts.nominal.payload.leaf_pattern types.Ty.ContractType
+    match o with
+    | none => ok none
+    | some pattern =>
+      let v ← alloc.vec.Vec.push state.built pattern
+      ok (some { state with built := v })
+  | types.Ty.EvidenceType =>
+    let o ← contracts.nominal.payload.leaf_pattern types.Ty.EvidenceType
+    match o with
+    | none => ok none
+    | some pattern =>
+      let v ← alloc.vec.Vec.push state.built pattern
+      ok (some { state with built := v })
+  | types.Ty.CertifiedType =>
+    let o ← contracts.nominal.payload.leaf_pattern types.Ty.CertifiedType
+    match o with
+    | none => ok none
+    | some pattern =>
+      let v ← alloc.vec.Vec.push state.built pattern
+      ok (some { state with built := v })
+  | types.Ty.PairType left right =>
+    let v ←
+      alloc.vec.Vec.push state.work ({ ty, is_complete := true } :
+        contracts.nominal.payload.Frame)
+    let v1 ←
+      alloc.vec.Vec.push v ({ ty := right, is_complete := false } :
+        contracts.nominal.payload.Frame)
+    let v2 ←
+      alloc.vec.Vec.push v1 ({ ty := left, is_complete := false } :
+        contracts.nominal.payload.Frame)
+    ok (some { state with work := v2 })
+  | types.Ty.SumType left right =>
+    let v ←
+      alloc.vec.Vec.push state.work ({ ty, is_complete := true } :
+        contracts.nominal.payload.Frame)
+    let v1 ←
+      alloc.vec.Vec.push v ({ ty := right, is_complete := false } :
+        contracts.nominal.payload.Frame)
+    let v2 ←
+      alloc.vec.Vec.push v1 ({ ty := left, is_complete := false } :
+        contracts.nominal.payload.Frame)
+    ok (some { state with work := v2 })
+  | types.Ty.ListType item =>
+    let v ←
+      alloc.vec.Vec.push state.work ({ ty, is_complete := true } :
+        contracts.nominal.payload.Frame)
+    let v1 ←
+      alloc.vec.Vec.push v ({ ty := item, is_complete := false } :
+        contracts.nominal.payload.Frame)
+    ok (some { state with work := v1 })
+  | types.Ty.ProgramType _ _ _ =>
+    let o ← contracts.nominal.payload.leaf_pattern ty
+    match o with
+    | none => ok none
+    | some pattern =>
+      let v ← alloc.vec.Vec.push state.built pattern
+      ok (some { state with built := v })
+  | types.Ty.ResourceType _ =>
+    let o ← contracts.nominal.payload.leaf_pattern ty
+    match o with
+    | none => ok none
+    | some pattern =>
+      let v ← alloc.vec.Vec.push state.built pattern
+      ok (some { state with built := v })
+  | types.Ty.NominalType _ _ =>
+    let o ← contracts.nominal.payload.leaf_pattern ty
+    match o with
+    | none => ok none
+    | some pattern =>
+      let v ← alloc.vec.Vec.push state.built pattern
+      ok (some { state with built := v })
+
+/-- [noble_kernel::contracts::nominal::payload::advance]:
+    Source: 'crates/noble-kernel/src/contracts/nominal/payload.rs', lines 50:0-59:1 -/
+def contracts.nominal.payload.advance
+  (frame : contracts.nominal.payload.Frame)
+  (state : contracts.nominal.payload.Build) :
+  Result (Option contracts.nominal.payload.Build)
+  := do
+  if frame.is_complete
+  then contracts.nominal.payload.complete frame.ty state
+  else
+    if state.entered >= 512#usize
+    then ok none
+    else
+      let i ← state.entered + 1#usize
+      contracts.nominal.payload.enter frame.ty { state with entered := i }
+
+/-- [noble_kernel::contracts::nominal::payload::{noble_kernel::contracts::nominal::payload::Build<'a>}::new]:
+    Source: 'crates/noble-kernel/src/contracts/nominal/payload.rs', lines 16:4-28:5 -/
+def contracts.nominal.payload.Build.new
+  (ty : types.Ty) : Result contracts.nominal.payload.Build := do
+  let work :=
+    alloc.vec.Vec.with_capacity contracts.nominal.payload.Frame 1#usize
+  let built := alloc.vec.Vec.with_capacity shapes.Pattern 8#usize
+  let work1 ←
+    alloc.vec.Vec.push work ({ ty, is_complete := false } :
+      contracts.nominal.payload.Frame)
+  ok { work := work1, built, entered := 0#usize }
+
+/-- [noble_kernel::contracts::nominal::payload::pattern]: loop body 0:
+    Source: 'crates/noble-kernel/src/contracts/nominal/payload.rs', lines 35:4-46:5 -/
+@[rust_loop_body]
+def contracts.nominal.payload.pattern_loop.body
+  (state : Option contracts.nominal.payload.Build)
+  (result : Option shapes.Pattern) :
+  Result (ControlFlow ((Option contracts.nominal.payload.Build) × (Option
+    shapes.Pattern)) (Option shapes.Pattern))
+  := do
+  match state with
+  | none => ok (done result)
+  | some b =>
+    let (o, v) ← alloc.vec.Vec.pop Global b.work
+    match o with
+    | none =>
+      let i := alloc.vec.Vec.len b.built
+      if i = 1#usize
+      then
+        let (result1, _) ← alloc.vec.Vec.pop Global b.built
+        ok (cont (none, result1))
+      else ok (cont (none, result))
+    | some f =>
+      let i := alloc.vec.Vec.len v
+      if i < 512#usize
+      then
+        let state1 ← contracts.nominal.payload.advance f { b with work := v }
+        ok (cont (state1, result))
+      else ok (cont (none, result))
+
+/-- [noble_kernel::contracts::nominal::payload::pattern]: loop 0:
+    Source: 'crates/noble-kernel/src/contracts/nominal/payload.rs', lines 35:4-46:5 -/
+@[rust_loop]
+def contracts.nominal.payload.pattern_loop
+  (state : Option contracts.nominal.payload.Build)
+  (result : Option shapes.Pattern) :
+  Result (Option shapes.Pattern)
+  := do
+  loop
+    (fun (state1, result1) => contracts.nominal.payload.pattern_loop.body
+      state1 result1)
+    (state, result)
+
+/-- [noble_kernel::contracts::nominal::payload::pattern]:
+    Source: 'crates/noble-kernel/src/contracts/nominal/payload.rs', lines 32:0-48:1 -/
+def contracts.nominal.payload.pattern
+  (ty : types.Ty) : Result (Option shapes.Pattern) := do
+  let b ← contracts.nominal.payload.Build.new ty
+  contracts.nominal.payload.pattern_loop (some b) none
+
+/-- [noble_kernel::contracts::nominal::schemes::matcher]:
+    Source: 'crates/noble-kernel/src/contracts/nominal/schemes.rs', lines 64:0-79:1 -/
+def contracts.nominal.schemes.matcher
+  (decl : contracts.NominalDecl) : Result (Option words.Scheme) := do
+  match decl.shape with
+  | types.NominalShape.Opaque _ => ok none
+  | types.NominalShape.Variant left right =>
+    let o ← contracts.nominal.payload.pattern left
+    match o with
+    | none => ok none
+    | some value =>
+      let o1 ← contracts.nominal.payload.pattern right
+      match o1 with
+      | none => ok none
+      | some value1 =>
+        let v ← contracts.nominal.schemes.match_variables
+        let v1 ← contracts.nominal.schemes.match_input decl value value1
+        let p ← contracts.nominal.schemes.stack 1#u32
+        let y ←
+          lift (Std.Array.to_slice (Array.make 1#usize [ p ] : Array
+            shapes.Pattern 1#usize))
+        let ret := alloc.slice.Slice.into_vec y
+        let y1 ←
+          lift (Std.Array.to_slice
+            (Array.make 2#usize [
+               shapes.EffectSlot.Var 2#u32, shapes.EffectSlot.Var 3#u32
+               ] : Array shapes.EffectSlot 2#usize))
+        let ret1 := alloc.slice.Slice.into_vec y1
+        ok (some
+          { var_kinds := v, stack_in := v1, stack_out := ret, effects := ret1 })
+
+/-- [noble_kernel::contracts::nominal::schemes::arm]:
+    Source: 'crates/noble-kernel/src/contracts/nominal/schemes.rs', lines 46:0-62:1 -/
+def contracts.nominal.schemes.arm
+  (decl : contracts.NominalDecl) (right : Bool) :
+  Result (Option words.Scheme)
+  := do
+  match decl.shape with
+  | types.NominalShape.Opaque _ => ok none
+  | types.NominalShape.Variant left other =>
+    let representation ←
+      if right
+      then contracts.nominal.payload.pattern other
+      else contracts.nominal.payload.pattern left
+    match representation with
+    | none => ok none
+    | some value =>
+      let y ←
+        lift (Std.Array.to_slice
+          (Array.make 1#usize [ words.VariableKind.Stack ] : Array
+          words.VariableKind 1#usize))
+      let ret := alloc.slice.Slice.into_vec y
+      let p ← contracts.nominal.schemes.stack 0#u32
+      let y1 ←
+        lift (Std.Array.to_slice (Array.make 2#usize [ p, value ] : Array
+          shapes.Pattern 2#usize))
+      let ret1 := alloc.slice.Slice.into_vec y1
+      let p1 ← contracts.nominal.schemes.declared_pattern decl
+      let y2 ←
+        lift (Std.Array.to_slice (Array.make 2#usize [ p, p1 ] : Array
+          shapes.Pattern 2#usize))
+      let ret2 := alloc.slice.Slice.into_vec y2
+      ok (some
+        {
+          var_kinds := ret,
+          stack_in := ret1,
+          stack_out := ret2,
+          effects := (alloc.vec.Vec.new shapes.EffectSlot)
+        })
+
+/-- [noble_kernel::contracts::nominal::schemes::conversion_scheme]:
+    Source: 'crates/noble-kernel/src/contracts/nominal/schemes.rs', lines 34:0-44:1 -/
+def contracts.nominal.schemes.conversion_scheme
+  (input : shapes.Pattern) (output : shapes.Pattern) :
+  Result words.Scheme
+  := do
+  let y ←
+    lift (Std.Array.to_slice (Array.make 1#usize [ words.VariableKind.Stack ] :
+      Array words.VariableKind 1#usize))
+  let ret := alloc.slice.Slice.into_vec y
+  let p ← contracts.nominal.schemes.stack 0#u32
+  let y1 ←
+    lift (Std.Array.to_slice (Array.make 2#usize [ p, input ] : Array
+      shapes.Pattern 2#usize))
+  let ret1 := alloc.slice.Slice.into_vec y1
+  let y2 ←
+    lift (Std.Array.to_slice (Array.make 2#usize [ p, output ] : Array
+      shapes.Pattern 2#usize))
+  let ret2 := alloc.slice.Slice.into_vec y2
+  ok
+    {
+      var_kinds := ret,
+      stack_in := ret1,
+      stack_out := ret2,
+      effects := (alloc.vec.Vec.new shapes.EffectSlot)
+    }
+
+/-- [noble_kernel::contracts::nominal::schemes::conversion]:
+    Source: 'crates/noble-kernel/src/contracts/nominal/schemes.rs', lines 20:0-32:1 -/
+def contracts.nominal.schemes.conversion
+  (decl : contracts.NominalDecl) (into : Bool) :
+  Result (Option words.Scheme)
+  := do
+  match decl.shape with
+  | types.NominalShape.Opaque ty =>
+    let o ← contracts.nominal.payload.pattern ty
+    match o with
+    | none => ok none
+    | some value =>
+      if into
+      then
+        let p ← contracts.nominal.schemes.declared_pattern decl
+        let s ← contracts.nominal.schemes.conversion_scheme p value
+        ok (some s)
+      else
+        let p ← contracts.nominal.schemes.declared_pattern decl
+        let s ← contracts.nominal.schemes.conversion_scheme value p
+        ok (some s)
+  | types.NominalShape.Variant _ _ => ok none
+
+/-- [noble_kernel::contracts::nominal::schemes::expected_scheme]:
+    Source: 'crates/noble-kernel/src/contracts/nominal/schemes.rs', lines 136:0-174:1 -/
+def contracts.nominal.schemes.expected_scheme
+  (decl : contracts.NominalDecl) (kind : contracts.Behavior) :
+  Result (Option words.Scheme)
+  := do
+  match kind with
+  | contracts.Behavior.DupBehavior => ok none
+  | contracts.Behavior.DropBehavior => ok none
+  | contracts.Behavior.SwapBehavior => ok none
+  | contracts.Behavior.DipBehavior => ok none
+  | contracts.Behavior.ArithBehavior => ok none
+  | contracts.Behavior.EqualsBehavior => ok none
+  | contracts.Behavior.QuoteBehavior => ok none
+  | contracts.Behavior.ComposeBehavior => ok none
+  | contracts.Behavior.RunBehavior => ok none
+  | contracts.Behavior.ReflectBehavior => ok none
+  | contracts.Behavior.UnitBehavior => ok none
+  | contracts.Behavior.PairBehavior => ok none
+  | contracts.Behavior.UnpairBehavior => ok none
+  | contracts.Behavior.InlBehavior => ok none
+  | contracts.Behavior.InrBehavior => ok none
+  | contracts.Behavior.CaseBehavior => ok none
+  | contracts.Behavior.IfBehavior => ok none
+  | contracts.Behavior.NilBehavior => ok none
+  | contracts.Behavior.ConsBehavior => ok none
+  | contracts.Behavior.ListCaseBehavior => ok none
+  | contracts.Behavior.TestEmitBehavior => ok none
+  | contracts.Behavior.BoundEmitBehavior _ => ok none
+  | contracts.Behavior.NominalNewBehavior id =>
+    let b ←
+      types.NominalTypeId.Insts.CoreCmpPartialEqNominalTypeId.eq decl.id id
+    if b
+    then
+      let (ns, b1) ←
+        match decl.shape with
+        | types.NominalShape.Opaque _ => ok (decl.shape, true)
+        | types.NominalShape.Variant _ _ => ok (decl.shape, false)
+      if b1
+      then contracts.nominal.schemes.conversion { decl with shape := ns } false
+      else ok none
+    else ok none
+  | contracts.Behavior.NominalIntoBehavior id =>
+    let b ←
+      types.NominalTypeId.Insts.CoreCmpPartialEqNominalTypeId.eq decl.id id
+    if b
+    then
+      let (ns, b1) ←
+        match decl.shape with
+        | types.NominalShape.Opaque _ => ok (decl.shape, true)
+        | types.NominalShape.Variant _ _ => ok (decl.shape, false)
+      if b1
+      then contracts.nominal.schemes.conversion { decl with shape := ns } true
+      else ok none
+    else ok none
+  | contracts.Behavior.NominalLeftBehavior id =>
+    let b ←
+      types.NominalTypeId.Insts.CoreCmpPartialEqNominalTypeId.eq decl.id id
+    if b
+    then
+      let (ns, b1) ←
+        match decl.shape with
+        | types.NominalShape.Opaque _ => ok (decl.shape, false)
+        | types.NominalShape.Variant _ _ => ok (decl.shape, true)
+      if b1
+      then contracts.nominal.schemes.arm { decl with shape := ns } false
+      else ok none
+    else ok none
+  | contracts.Behavior.NominalRightBehavior id =>
+    let b ←
+      types.NominalTypeId.Insts.CoreCmpPartialEqNominalTypeId.eq decl.id id
+    if b
+    then
+      let (ns, b1) ←
+        match decl.shape with
+        | types.NominalShape.Opaque _ => ok (decl.shape, false)
+        | types.NominalShape.Variant _ _ => ok (decl.shape, true)
+      if b1
+      then contracts.nominal.schemes.arm { decl with shape := ns } true
+      else ok none
+    else ok none
+  | contracts.Behavior.NominalMatchBehavior id =>
+    let b ←
+      types.NominalTypeId.Insts.CoreCmpPartialEqNominalTypeId.eq decl.id id
+    if b
+    then
+      let (ns, b1) ←
+        match decl.shape with
+        | types.NominalShape.Opaque _ => ok (decl.shape, false)
+        | types.NominalShape.Variant _ _ => ok (decl.shape, true)
+      if b1
+      then contracts.nominal.schemes.matcher { decl with shape := ns }
+      else ok none
+    else ok none
+  | contracts.Behavior.NamedBehavior => ok none
+
+/-- [noble_kernel::contracts::nominal::schemes::same_scheme]:
+    Source: 'crates/noble-kernel/src/contracts/nominal/schemes.rs', lines 129:0-134:1 -/
+def contracts.nominal.schemes.same_scheme
+  (actual : words.Scheme) (expected : words.Scheme) : Result Bool := do
+  let b ←
+    alloc.vec.partial_eq.PartialEqVec.eq
+      words.VariableKind.Insts.CoreCmpPartialEqVariableKind actual.var_kinds
+      expected.var_kinds
+  if b
+  then
+    let b1 ←
+      alloc.vec.partial_eq.PartialEqVec.eq
+        shapes.Pattern.Insts.CoreCmpPartialEqPattern actual.stack_in
+        expected.stack_in
+    if b1
+    then
+      let b2 ←
+        alloc.vec.partial_eq.PartialEqVec.eq
+          shapes.Pattern.Insts.CoreCmpPartialEqPattern actual.stack_out
+          expected.stack_out
+      if b2
+      then
+        alloc.vec.partial_eq.PartialEqVec.eq
+          shapes.EffectSlot.Insts.CoreCmpPartialEqEffectSlot actual.effects
+          expected.effects
+      else ok false
+    else ok false
+  else ok false
+
+/-- [noble_kernel::contracts::nominal::validation::declared_definition_matches]:
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 193:0-209:1 -/
+def contracts.nominal.validation.declared_definition_matches
+  (env : contracts.Env) (index : Std.Usize) (kind : contracts.Behavior)
+  (id : types.NominalTypeId) :
+  Result Bool
+  := do
+  let s := alloc.vec.Vec.deref env.definition_owners
+  let o ←
+    core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice (Option
+      Std.U64)) s index
+  let b ←
+    core.cmp.PartialEq.ne.trait_default
+      (core.option.Option.Insts.CoreCmpPartialEqOption
+      (core.cmp.PartialEqShared
+      (core.option.Option.Insts.CoreCmpPartialEqOption core.cmp.PartialEqU64)))
+      o (some (some id.module))
+  if b
+  then ok false
+  else
+    let o1 ← contracts.Env.nominal env id
+    match o1 with
+    | none => ok false
+    | some decl =>
+      let o2 ← contracts.nominal.schemes.expected_scheme decl kind
+      match o2 with
+      | none => ok false
+      | some scheme =>
+        let s1 ←
+          alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+            words.Scheme) env.defs index
+        contracts.nominal.schemes.same_scheme s1 scheme
+
+/-- [noble_kernel::contracts::nominal::validation::operation_identity_slot]:
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 150:0-169:1 -/
+def contracts.nominal.validation.operation_identity_slot
+  (kind : contracts.Behavior) :
+  Result (Option (types.NominalTypeId × Std.Usize))
+  := do
+  match kind with
+  | contracts.Behavior.DupBehavior => ok none
+  | contracts.Behavior.DropBehavior => ok none
+  | contracts.Behavior.SwapBehavior => ok none
+  | contracts.Behavior.DipBehavior => ok none
+  | contracts.Behavior.ArithBehavior => ok none
+  | contracts.Behavior.EqualsBehavior => ok none
+  | contracts.Behavior.QuoteBehavior => ok none
+  | contracts.Behavior.ComposeBehavior => ok none
+  | contracts.Behavior.RunBehavior => ok none
+  | contracts.Behavior.ReflectBehavior => ok none
+  | contracts.Behavior.UnitBehavior => ok none
+  | contracts.Behavior.PairBehavior => ok none
+  | contracts.Behavior.UnpairBehavior => ok none
+  | contracts.Behavior.InlBehavior => ok none
+  | contracts.Behavior.InrBehavior => ok none
+  | contracts.Behavior.CaseBehavior => ok none
+  | contracts.Behavior.IfBehavior => ok none
+  | contracts.Behavior.NilBehavior => ok none
+  | contracts.Behavior.ConsBehavior => ok none
+  | contracts.Behavior.ListCaseBehavior => ok none
+  | contracts.Behavior.TestEmitBehavior => ok none
+  | contracts.Behavior.BoundEmitBehavior _ => ok none
+  | contracts.Behavior.NominalNewBehavior id => ok (some (id, 0#usize))
+  | contracts.Behavior.NominalIntoBehavior id => ok (some (id, 1#usize))
+  | contracts.Behavior.NominalLeftBehavior id => ok (some (id, 2#usize))
+  | contracts.Behavior.NominalRightBehavior id => ok (some (id, 3#usize))
+  | contracts.Behavior.NominalMatchBehavior id => ok (some (id, 4#usize))
+  | contracts.Behavior.NamedBehavior => ok none
+
+/-- [noble_kernel::contracts::nominal::validation::definitions_match]: loop body 0:
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 174:4-185:5 -/
+@[rust_loop_body]
+def contracts.nominal.validation.definitions_match_loop.body
+  (env : contracts.Env) (index : Std.Usize) (is_matching : Bool) :
+  Result (ControlFlow (Std.Usize × Bool) Bool)
+  := do
+  let i := alloc.vec.Vec.len env.kinds
+  if index < i
+  then
+    if is_matching
+    then
+      let kind ←
+        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+          contracts.Behavior) env.kinds index
+      let is_matched ←
+        match kind with
+        | contracts.Behavior.DupBehavior =>
+          do
+          let o ←
+            contracts.nominal.validation.operation_identity_slot
+              contracts.Behavior.DupBehavior
+          match o with
+          | none => ok true
+          | some p =>
+            let (id, _) := p
+            contracts.nominal.validation.declared_definition_matches env index
+              contracts.Behavior.DupBehavior id
+        | contracts.Behavior.DropBehavior =>
+          do
+          let o ←
+            contracts.nominal.validation.operation_identity_slot
+              contracts.Behavior.DropBehavior
+          match o with
+          | none => ok true
+          | some p =>
+            let (id, _) := p
+            contracts.nominal.validation.declared_definition_matches env index
+              contracts.Behavior.DropBehavior id
+        | contracts.Behavior.SwapBehavior =>
+          do
+          let o ←
+            contracts.nominal.validation.operation_identity_slot
+              contracts.Behavior.SwapBehavior
+          match o with
+          | none => ok true
+          | some p =>
+            let (id, _) := p
+            contracts.nominal.validation.declared_definition_matches env index
+              contracts.Behavior.SwapBehavior id
+        | contracts.Behavior.DipBehavior =>
+          do
+          let o ←
+            contracts.nominal.validation.operation_identity_slot
+              contracts.Behavior.DipBehavior
+          match o with
+          | none => ok true
+          | some p =>
+            let (id, _) := p
+            contracts.nominal.validation.declared_definition_matches env index
+              contracts.Behavior.DipBehavior id
+        | contracts.Behavior.ArithBehavior =>
+          do
+          let o ←
+            contracts.nominal.validation.operation_identity_slot
+              contracts.Behavior.ArithBehavior
+          match o with
+          | none => ok true
+          | some p =>
+            let (id, _) := p
+            contracts.nominal.validation.declared_definition_matches env index
+              contracts.Behavior.ArithBehavior id
+        | contracts.Behavior.EqualsBehavior =>
+          do
+          let o ←
+            contracts.nominal.validation.operation_identity_slot
+              contracts.Behavior.EqualsBehavior
+          match o with
+          | none => ok true
+          | some p =>
+            let (id, _) := p
+            contracts.nominal.validation.declared_definition_matches env index
+              contracts.Behavior.EqualsBehavior id
+        | contracts.Behavior.QuoteBehavior =>
+          do
+          let o ←
+            contracts.nominal.validation.operation_identity_slot
+              contracts.Behavior.QuoteBehavior
+          match o with
+          | none => ok true
+          | some p =>
+            let (id, _) := p
+            contracts.nominal.validation.declared_definition_matches env index
+              contracts.Behavior.QuoteBehavior id
+        | contracts.Behavior.ComposeBehavior =>
+          do
+          let o ←
+            contracts.nominal.validation.operation_identity_slot
+              contracts.Behavior.ComposeBehavior
+          match o with
+          | none => ok true
+          | some p =>
+            let (id, _) := p
+            contracts.nominal.validation.declared_definition_matches env index
+              contracts.Behavior.ComposeBehavior id
+        | contracts.Behavior.RunBehavior =>
+          do
+          let o ←
+            contracts.nominal.validation.operation_identity_slot
+              contracts.Behavior.RunBehavior
+          match o with
+          | none => ok true
+          | some p =>
+            let (id, _) := p
+            contracts.nominal.validation.declared_definition_matches env index
+              contracts.Behavior.RunBehavior id
+        | contracts.Behavior.ReflectBehavior =>
+          do
+          let o ←
+            contracts.nominal.validation.operation_identity_slot
+              contracts.Behavior.ReflectBehavior
+          match o with
+          | none => ok true
+          | some p =>
+            let (id, _) := p
+            contracts.nominal.validation.declared_definition_matches env index
+              contracts.Behavior.ReflectBehavior id
+        | contracts.Behavior.UnitBehavior =>
+          do
+          let o ←
+            contracts.nominal.validation.operation_identity_slot
+              contracts.Behavior.UnitBehavior
+          match o with
+          | none => ok true
+          | some p =>
+            let (id, _) := p
+            contracts.nominal.validation.declared_definition_matches env index
+              contracts.Behavior.UnitBehavior id
+        | contracts.Behavior.PairBehavior =>
+          do
+          let o ←
+            contracts.nominal.validation.operation_identity_slot
+              contracts.Behavior.PairBehavior
+          match o with
+          | none => ok true
+          | some p =>
+            let (id, _) := p
+            contracts.nominal.validation.declared_definition_matches env index
+              contracts.Behavior.PairBehavior id
+        | contracts.Behavior.UnpairBehavior =>
+          do
+          let o ←
+            contracts.nominal.validation.operation_identity_slot
+              contracts.Behavior.UnpairBehavior
+          match o with
+          | none => ok true
+          | some p =>
+            let (id, _) := p
+            contracts.nominal.validation.declared_definition_matches env index
+              contracts.Behavior.UnpairBehavior id
+        | contracts.Behavior.InlBehavior =>
+          do
+          let o ←
+            contracts.nominal.validation.operation_identity_slot
+              contracts.Behavior.InlBehavior
+          match o with
+          | none => ok true
+          | some p =>
+            let (id, _) := p
+            contracts.nominal.validation.declared_definition_matches env index
+              contracts.Behavior.InlBehavior id
+        | contracts.Behavior.InrBehavior =>
+          do
+          let o ←
+            contracts.nominal.validation.operation_identity_slot
+              contracts.Behavior.InrBehavior
+          match o with
+          | none => ok true
+          | some p =>
+            let (id, _) := p
+            contracts.nominal.validation.declared_definition_matches env index
+              contracts.Behavior.InrBehavior id
+        | contracts.Behavior.CaseBehavior =>
+          do
+          let o ←
+            contracts.nominal.validation.operation_identity_slot
+              contracts.Behavior.CaseBehavior
+          match o with
+          | none => ok true
+          | some p =>
+            let (id, _) := p
+            contracts.nominal.validation.declared_definition_matches env index
+              contracts.Behavior.CaseBehavior id
+        | contracts.Behavior.IfBehavior =>
+          do
+          let o ←
+            contracts.nominal.validation.operation_identity_slot
+              contracts.Behavior.IfBehavior
+          match o with
+          | none => ok true
+          | some p =>
+            let (id, _) := p
+            contracts.nominal.validation.declared_definition_matches env index
+              contracts.Behavior.IfBehavior id
+        | contracts.Behavior.NilBehavior =>
+          do
+          let o ←
+            contracts.nominal.validation.operation_identity_slot
+              contracts.Behavior.NilBehavior
+          match o with
+          | none => ok true
+          | some p =>
+            let (id, _) := p
+            contracts.nominal.validation.declared_definition_matches env index
+              contracts.Behavior.NilBehavior id
+        | contracts.Behavior.ConsBehavior =>
+          do
+          let o ←
+            contracts.nominal.validation.operation_identity_slot
+              contracts.Behavior.ConsBehavior
+          match o with
+          | none => ok true
+          | some p =>
+            let (id, _) := p
+            contracts.nominal.validation.declared_definition_matches env index
+              contracts.Behavior.ConsBehavior id
+        | contracts.Behavior.ListCaseBehavior =>
+          do
+          let o ←
+            contracts.nominal.validation.operation_identity_slot
+              contracts.Behavior.ListCaseBehavior
+          match o with
+          | none => ok true
+          | some p =>
+            let (id, _) := p
+            contracts.nominal.validation.declared_definition_matches env index
+              contracts.Behavior.ListCaseBehavior id
+        | contracts.Behavior.TestEmitBehavior =>
+          do
+          let o ←
+            contracts.nominal.validation.operation_identity_slot
+              contracts.Behavior.TestEmitBehavior
+          match o with
+          | none => ok true
+          | some p =>
+            let (id, _) := p
+            contracts.nominal.validation.declared_definition_matches env index
+              contracts.Behavior.TestEmitBehavior id
+        | contracts.Behavior.BoundEmitBehavior slot =>
+          contracts.nominal.validation.bound_definition_matches env index slot
+        | contracts.Behavior.NominalNewBehavior _ =>
+          do
+          let o ← contracts.nominal.validation.operation_identity_slot kind
+          match o with
+          | none => ok true
+          | some p =>
+            let (id, _) := p
+            contracts.nominal.validation.declared_definition_matches env index
+              kind id
+        | contracts.Behavior.NominalIntoBehavior _ =>
+          do
+          let o ← contracts.nominal.validation.operation_identity_slot kind
+          match o with
+          | none => ok true
+          | some p =>
+            let (id, _) := p
+            contracts.nominal.validation.declared_definition_matches env index
+              kind id
+        | contracts.Behavior.NominalLeftBehavior _ =>
+          do
+          let o ← contracts.nominal.validation.operation_identity_slot kind
+          match o with
+          | none => ok true
+          | some p =>
+            let (id, _) := p
+            contracts.nominal.validation.declared_definition_matches env index
+              kind id
+        | contracts.Behavior.NominalRightBehavior _ =>
+          do
+          let o ← contracts.nominal.validation.operation_identity_slot kind
+          match o with
+          | none => ok true
+          | some p =>
+            let (id, _) := p
+            contracts.nominal.validation.declared_definition_matches env index
+              kind id
+        | contracts.Behavior.NominalMatchBehavior _ =>
+          do
+          let o ← contracts.nominal.validation.operation_identity_slot kind
+          match o with
+          | none => ok true
+          | some p =>
+            let (id, _) := p
+            contracts.nominal.validation.declared_definition_matches env index
+              kind id
+        | contracts.Behavior.NamedBehavior =>
+          do
+          let o ←
+            contracts.nominal.validation.operation_identity_slot
+              contracts.Behavior.NamedBehavior
+          match o with
+          | none => ok true
+          | some p =>
+            let (id, _) := p
+            contracts.nominal.validation.declared_definition_matches env index
+              contracts.Behavior.NamedBehavior id
+      let index1 ← index + 1#usize
+      ok (cont (index1, is_matched))
+    else ok (done false)
+  else ok (done is_matching)
+
+/-- [noble_kernel::contracts::nominal::validation::definitions_match]: loop 0:
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 174:4-185:5 -/
+@[rust_loop]
+def contracts.nominal.validation.definitions_match_loop
+  (env : contracts.Env) (index : Std.Usize) (is_matching : Bool) :
+  Result Bool
+  := do
+  loop
+    (fun (index1, is_matching1) =>
+      contracts.nominal.validation.definitions_match_loop.body env index1
+      is_matching1)
+    (index, is_matching)
+
+/-- [noble_kernel::contracts::nominal::validation::definitions_match]:
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 171:0-187:1 -/
+@[reducible]
+def contracts.nominal.validation.definitions_match
+  (env : contracts.Env) : Result Bool := do
+  contracts.nominal.validation.definitions_match_loop env 0#usize true
+
+/-- [noble_kernel::contracts::nominal::validation::operation_slot]:
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 136:0-148:1 -/
+def contracts.nominal.validation.operation_slot
+  (kind : contracts.Behavior) (id : types.NominalTypeId) :
+  Result (Option Std.Usize)
+  := do
+  let o ← contracts.nominal.validation.operation_identity_slot kind
+  match o with
+  | none => ok none
+  | some p =>
+    let (found, slot) := p
+    if found.module = id.module
+    then if found.ordinal = id.ordinal
+         then ok (some slot)
+         else ok none
+    else ok none
+
+/-- [noble_kernel::contracts::nominal::validation::declaration_counts_match]: loop body 0:
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 120:4-125:5 -/
+@[rust_loop_body]
+def contracts.nominal.validation.declaration_counts_match_loop.body
+  (env : contracts.Env) (decl : contracts.NominalDecl)
+  (actual : Array Std.U8 5#usize) (index : Std.Usize) :
+  Result (ControlFlow ((Array Std.U8 5#usize) × Std.Usize)
+    (contracts.NominalDecl × (Array Std.U8 5#usize)))
+  := do
+  let i := alloc.vec.Vec.len env.kinds
+  if index < i
+  then
+    let b ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        contracts.Behavior) env.kinds index
+    let o ← contracts.nominal.validation.operation_slot b decl.id
+    let actual1 ←
+      match o with
+      | none => ok actual
+      | some which =>
+        do
+        let i1 ← Array.index_usize actual which
+        let i2 ← lift (core.num.U8.saturating_add i1 1#u8)
+        Array.update actual which i2
+    let index1 ← index + 1#usize
+    ok (cont (actual1, index1))
+  else ok (done (decl, actual))
+
+/-- [noble_kernel::contracts::nominal::validation::declaration_counts_match]: loop 0:
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 120:4-125:5 -/
+@[rust_loop]
+def contracts.nominal.validation.declaration_counts_match_loop
+  (env : contracts.Env) (decl : contracts.NominalDecl)
+  (actual : Array Std.U8 5#usize) (index : Std.Usize) :
+  Result (contracts.NominalDecl × (Array Std.U8 5#usize))
+  := do
+  loop
+    (fun (actual1, index1) =>
+      contracts.nominal.validation.declaration_counts_match_loop.body env decl
+      actual1 index1)
+    (actual, index)
+
+/-- [noble_kernel::contracts::nominal::validation::declaration_counts_match]:
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 117:0-134:1 -/
+def contracts.nominal.validation.declaration_counts_match
+  (env : contracts.Env) (decl : contracts.NominalDecl) : Result Bool := do
+  let actual := Array.repeat 5#usize 0#u8
+  let (decl1, actual1) ←
+    contracts.nominal.validation.declaration_counts_match_loop env decl actual
+      0#usize
+  let (ns, b) ←
+    match decl1.shape with
+    | types.NominalShape.Opaque _ => ok (decl1.shape, true)
+    | types.NominalShape.Variant _ _ => ok (decl1.shape, false)
+  if b
+  then
+    core.array.equality.PartialEqArray.eq core.cmp.PartialEqU8 actual1
+      (Array.make 5#usize [ 1#u8, 1#u8, 0#u8, 0#u8, 0#u8 ])
+  else
+    let b1 ←
+      match ns with
+      | types.NominalShape.Opaque _ => ok false
+      | types.NominalShape.Variant _ _ => ok true
+    if b1
+    then
+      core.array.equality.PartialEqArray.eq core.cmp.PartialEqU8 actual1
+        (Array.make 5#usize [ 0#u8, 0#u8, 1#u8, 1#u8, 1#u8 ])
+    else ok false
+
+/-- [noble_kernel::contracts::nominal::validation::counts_match]: loop body 0:
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 110:4-113:5 -/
+@[rust_loop_body]
+def contracts.nominal.validation.counts_match_loop.body
+  (env : contracts.Env) (index : Std.Usize) (is_matching : Bool) :
+  Result (ControlFlow (Std.Usize × Bool) Bool)
+  := do
+  let i := alloc.vec.Vec.len env.nominals
+  if index < i
+  then
+    if is_matching
+    then
+      let nd ←
+        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+          contracts.NominalDecl) env.nominals index
+      let is_matching1 ←
+        contracts.nominal.validation.declaration_counts_match env nd
+      let index1 ← index + 1#usize
+      ok (cont (index1, is_matching1))
+    else ok (done false)
+  else ok (done is_matching)
+
+/-- [noble_kernel::contracts::nominal::validation::counts_match]: loop 0:
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 110:4-113:5 -/
+@[rust_loop]
+def contracts.nominal.validation.counts_match_loop
+  (env : contracts.Env) (index : Std.Usize) (is_matching : Bool) :
+  Result Bool
+  := do
+  loop
+    (fun (index1, is_matching1) =>
+      contracts.nominal.validation.counts_match_loop.body env index1
+      is_matching1)
+    (index, is_matching)
+
+/-- [noble_kernel::contracts::nominal::validation::counts_match]:
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 107:0-115:1 -/
+@[reducible]
+def contracts.nominal.validation.counts_match
+  (env : contracts.Env) : Result Bool := do
+  contracts.nominal.validation.counts_match_loop env 0#usize true
+
+/-- [noble_kernel::contracts::bootstrap::scheme]:
+    Source: 'crates/noble-kernel/src/contracts/bootstrap.rs', lines 44:0-56:1 -/
+def contracts.bootstrap.scheme
+  (var_kinds : alloc.vec.Vec words.VariableKind)
+  (stack_in : alloc.vec.Vec shapes.Pattern)
+  (stack_out : alloc.vec.Vec shapes.Pattern)
+  (effects : alloc.vec.Vec shapes.EffectSlot) :
+  Result words.Scheme
+  := do
+  ok { var_kinds, stack_in, stack_out, effects }
+
+/-- [noble_kernel::contracts::bootstrap::program]:
+    Source: 'crates/noble-kernel/src/contracts/bootstrap.rs', lines 36:0-42:1 -/
+def contracts.bootstrap.program
+  (item_in : alloc.vec.Vec shapes.Pattern)
+  (item_out : alloc.vec.Vec shapes.Pattern)
+  (effects : alloc.vec.Vec shapes.EffectSlot) :
+  Result shapes.Pattern
+  := do
+  shapes.Pattern.program item_in item_out effects
+
+/-- [noble_kernel::contracts::bootstrap::effect_var]:
+    Source: 'crates/noble-kernel/src/contracts/bootstrap.rs', lines 20:0-22:1 -/
+def contracts.bootstrap.effect_var
+  (index : Std.U32) : Result shapes.EffectSlot := do
+  ok (shapes.EffectSlot.Var index)
+
+/-- [noble_kernel::contracts::bootstrap::stack_var]:
+    Source: 'crates/noble-kernel/src/contracts/bootstrap.rs', lines 12:0-14:1 -/
+def contracts.bootstrap.stack_var
+  (index : Std.U32) : Result shapes.Pattern := do
+  ok (shapes.Pattern.StackVarPattern index)
+
+/-- [noble_kernel::contracts::bootstrap::SYNTAX]
+    Source: 'crates/noble-kernel/src/contracts/bootstrap.rs', lines 10:0-10:70 -/
+@[global_simps, irreducible]
+def contracts.bootstrap.SYNTAX : shapes.Pattern := shapes.Pattern.SyntaxPattern
+
+/-- [noble_kernel::contracts::bootstrap::reflect]:
+    Source: 'crates/noble-kernel/src/contracts/bootstrap.rs', lines 213:0-232:1 -/
+def contracts.bootstrap.reflect : Result words.Scheme := do
+  let y ←
+    lift (Std.Array.to_slice
+      (Array.make 4#usize [
+         words.VariableKind.Stack, words.VariableKind.Stack,
+         words.VariableKind.Stack, words.VariableKind.Effect
+         ] : Array words.VariableKind 4#usize))
+  let ret := alloc.slice.Slice.into_vec y
+  let p ← contracts.bootstrap.stack_var 0#u32
+  let p1 ← contracts.bootstrap.stack_var 1#u32
+  let y1 ←
+    lift (Std.Array.to_slice (Array.make 1#usize [ p1 ] : Array shapes.Pattern
+      1#usize))
+  let ret1 := alloc.slice.Slice.into_vec y1
+  let p2 ← contracts.bootstrap.stack_var 2#u32
+  let y2 ←
+    lift (Std.Array.to_slice (Array.make 1#usize [ p2 ] : Array shapes.Pattern
+      1#usize))
+  let ret2 := alloc.slice.Slice.into_vec y2
+  let es ← contracts.bootstrap.effect_var 3#u32
+  let y3 ←
+    lift (Std.Array.to_slice (Array.make 1#usize [ es ] : Array
+      shapes.EffectSlot 1#usize))
+  let ret3 := alloc.slice.Slice.into_vec y3
+  let p3 ← contracts.bootstrap.program ret1 ret2 ret3
+  let y4 ←
+    lift (Std.Array.to_slice (Array.make 2#usize [ p, p3 ] : Array
+      shapes.Pattern 2#usize))
+  let ret4 := alloc.slice.Slice.into_vec y4
+  let y5 ←
+    lift (Std.Array.to_slice
+      (Array.make 2#usize [ p, contracts.bootstrap.SYNTAX ] : Array
+      shapes.Pattern 2#usize))
+  let ret5 := alloc.slice.Slice.into_vec y5
+  contracts.bootstrap.scheme ret ret4 ret5 (alloc.vec.Vec.new
+    shapes.EffectSlot)
+
+/-- [noble_kernel::contracts::bootstrap::run]:
+    Source: 'crates/noble-kernel/src/contracts/bootstrap.rs', lines 193:0-211:1 -/
+def contracts.bootstrap.run : Result words.Scheme := do
+  let y ←
+    lift (Std.Array.to_slice
+      (Array.make 3#usize [
+         words.VariableKind.Stack, words.VariableKind.Stack,
+         words.VariableKind.Effect
+         ] : Array words.VariableKind 3#usize))
+  let ret := alloc.slice.Slice.into_vec y
+  let p ← contracts.bootstrap.stack_var 0#u32
+  let y1 ←
+    lift (Std.Array.to_slice (Array.make 1#usize [ p ] : Array shapes.Pattern
+      1#usize))
+  let ret1 := alloc.slice.Slice.into_vec y1
+  let p1 ← contracts.bootstrap.stack_var 1#u32
+  let y2 ←
+    lift (Std.Array.to_slice (Array.make 1#usize [ p1 ] : Array shapes.Pattern
+      1#usize))
+  let ret2 := alloc.slice.Slice.into_vec y2
+  let es ← contracts.bootstrap.effect_var 2#u32
+  let y3 ←
+    lift (Std.Array.to_slice (Array.make 1#usize [ es ] : Array
+      shapes.EffectSlot 1#usize))
+  let ret3 := alloc.slice.Slice.into_vec y3
+  let p2 ← contracts.bootstrap.program ret1 ret2 ret3
+  let y4 ←
+    lift (Std.Array.to_slice (Array.make 2#usize [ p, p2 ] : Array
+      shapes.Pattern 2#usize))
+  let ret4 := alloc.slice.Slice.into_vec y4
+  let y5 ←
+    lift (Std.Array.to_slice (Array.make 1#usize [ p1 ] : Array shapes.Pattern
+      1#usize))
+  let ret5 := alloc.slice.Slice.into_vec y5
+  let y6 ←
+    lift (Std.Array.to_slice (Array.make 1#usize [ es ] : Array
+      shapes.EffectSlot 1#usize))
+  let ret6 := alloc.slice.Slice.into_vec y6
+  contracts.bootstrap.scheme ret ret4 ret5 ret6
+
+/-- [noble_kernel::contracts::bootstrap::compose]:
+    Source: 'crates/noble-kernel/src/contracts/bootstrap.rs', lines 158:0-191:1 -/
+def contracts.bootstrap.compose : Result words.Scheme := do
+  let y ←
+    lift (Std.Array.to_slice
+      (Array.make 6#usize [
+         words.VariableKind.Stack, words.VariableKind.Stack,
+         words.VariableKind.Stack, words.VariableKind.Stack,
+         words.VariableKind.Effect, words.VariableKind.Effect
+         ] : Array words.VariableKind 6#usize))
+  let ret := alloc.slice.Slice.into_vec y
+  let p ← contracts.bootstrap.stack_var 0#u32
+  let p1 ← contracts.bootstrap.stack_var 1#u32
+  let y1 ←
+    lift (Std.Array.to_slice (Array.make 1#usize [ p1 ] : Array shapes.Pattern
+      1#usize))
+  let ret1 := alloc.slice.Slice.into_vec y1
+  let p2 ← contracts.bootstrap.stack_var 2#u32
+  let y2 ←
+    lift (Std.Array.to_slice (Array.make 1#usize [ p2 ] : Array shapes.Pattern
+      1#usize))
+  let ret2 := alloc.slice.Slice.into_vec y2
+  let es ← contracts.bootstrap.effect_var 4#u32
+  let y3 ←
+    lift (Std.Array.to_slice (Array.make 1#usize [ es ] : Array
+      shapes.EffectSlot 1#usize))
+  let ret3 := alloc.slice.Slice.into_vec y3
+  let p3 ← contracts.bootstrap.program ret1 ret2 ret3
+  let y4 ←
+    lift (Std.Array.to_slice (Array.make 1#usize [ p2 ] : Array shapes.Pattern
+      1#usize))
+  let ret4 := alloc.slice.Slice.into_vec y4
+  let p4 ← contracts.bootstrap.stack_var 3#u32
+  let y5 ←
+    lift (Std.Array.to_slice (Array.make 1#usize [ p4 ] : Array shapes.Pattern
+      1#usize))
+  let ret5 := alloc.slice.Slice.into_vec y5
+  let es1 ← contracts.bootstrap.effect_var 5#u32
+  let y6 ←
+    lift (Std.Array.to_slice (Array.make 1#usize [ es1 ] : Array
+      shapes.EffectSlot 1#usize))
+  let ret6 := alloc.slice.Slice.into_vec y6
+  let p5 ← contracts.bootstrap.program ret4 ret5 ret6
+  let y7 ←
+    lift (Std.Array.to_slice (Array.make 3#usize [ p, p3, p5 ] : Array
+      shapes.Pattern 3#usize))
+  let ret7 := alloc.slice.Slice.into_vec y7
+  let y8 ←
+    lift (Std.Array.to_slice (Array.make 1#usize [ p1 ] : Array shapes.Pattern
+      1#usize))
+  let ret8 := alloc.slice.Slice.into_vec y8
+  let y9 ←
+    lift (Std.Array.to_slice (Array.make 1#usize [ p4 ] : Array shapes.Pattern
+      1#usize))
+  let ret9 := alloc.slice.Slice.into_vec y9
+  let y10 ←
+    lift (Std.Array.to_slice (Array.make 2#usize [ es, es1 ] : Array
+      shapes.EffectSlot 2#usize))
+  let ret10 := alloc.slice.Slice.into_vec y10
+  let p6 ← contracts.bootstrap.program ret8 ret9 ret10
+  let y11 ←
+    lift (Std.Array.to_slice (Array.make 2#usize [ p, p6 ] : Array
+      shapes.Pattern 2#usize))
+  let ret11 := alloc.slice.Slice.into_vec y11
+  contracts.bootstrap.scheme ret ret7 ret11 (alloc.vec.Vec.new
+    shapes.EffectSlot)
+
+/-- [noble_kernel::contracts::bootstrap::value_var]:
+    Source: 'crates/noble-kernel/src/contracts/bootstrap.rs', lines 16:0-18:1 -/
+def contracts.bootstrap.value_var
+  (index : Std.U32) : Result shapes.Pattern := do
+  ok (shapes.Pattern.VarPattern index)
+
+/-- [noble_kernel::contracts::bootstrap::quote]:
+    Source: 'crates/noble-kernel/src/contracts/bootstrap.rs', lines 138:0-156:1 -/
+def contracts.bootstrap.quote : Result words.Scheme := do
+  let y ←
+    lift (Std.Array.to_slice
+      (Array.make 3#usize [
+         words.VariableKind.Stack, words.VariableKind.Value,
+         words.VariableKind.Stack
+         ] : Array words.VariableKind 3#usize))
+  let ret := alloc.slice.Slice.into_vec y
+  let p ← contracts.bootstrap.stack_var 0#u32
+  let p1 ← contracts.bootstrap.value_var 1#u32
+  let y1 ←
+    lift (Std.Array.to_slice (Array.make 2#usize [ p, p1 ] : Array
+      shapes.Pattern 2#usize))
+  let ret1 := alloc.slice.Slice.into_vec y1
+  let p2 ← contracts.bootstrap.stack_var 2#u32
+  let y2 ←
+    lift (Std.Array.to_slice (Array.make 1#usize [ p2 ] : Array shapes.Pattern
+      1#usize))
+  let ret2 := alloc.slice.Slice.into_vec y2
+  let y3 ←
+    lift (Std.Array.to_slice (Array.make 2#usize [ p2, p1 ] : Array
+      shapes.Pattern 2#usize))
+  let ret3 := alloc.slice.Slice.into_vec y3
+  let p3 ←
+    contracts.bootstrap.program ret2 ret3 (alloc.vec.Vec.new shapes.EffectSlot)
+  let y4 ←
+    lift (Std.Array.to_slice (Array.make 2#usize [ p, p3 ] : Array
+      shapes.Pattern 2#usize))
+  let ret4 := alloc.slice.Slice.into_vec y4
+  contracts.bootstrap.scheme ret ret1 ret4 (alloc.vec.Vec.new
+    shapes.EffectSlot)
+
+/-- [noble_kernel::contracts::bootstrap::I64]
+    Source: 'crates/noble-kernel/src/contracts/bootstrap.rs', lines 8:0-8:64 -/
+@[global_simps, irreducible]
+def contracts.bootstrap.I64 : shapes.Pattern := shapes.Pattern.I64Pattern
+
+/-- [noble_kernel::contracts::bootstrap::BOOL]
+    Source: 'crates/noble-kernel/src/contracts/bootstrap.rs', lines 7:0-7:66 -/
+@[global_simps, irreducible]
+def contracts.bootstrap.BOOL : shapes.Pattern := shapes.Pattern.BoolPattern
+
+/-- [noble_kernel::contracts::bootstrap::equals]:
+    Source: 'crates/noble-kernel/src/contracts/bootstrap.rs', lines 129:0-136:1 -/
+def contracts.bootstrap.equals : Result words.Scheme := do
+  let y ←
+    lift (Std.Array.to_slice (Array.make 1#usize [ words.VariableKind.Stack ] :
+      Array words.VariableKind 1#usize))
+  let ret := alloc.slice.Slice.into_vec y
+  let p ← contracts.bootstrap.stack_var 0#u32
+  let y1 ←
+    lift (Std.Array.to_slice
+      (Array.make 3#usize [
+         p, contracts.bootstrap.I64, contracts.bootstrap.I64
+         ] : Array shapes.Pattern 3#usize))
+  let ret1 := alloc.slice.Slice.into_vec y1
+  let y2 ←
+    lift (Std.Array.to_slice
+      (Array.make 2#usize [ p, contracts.bootstrap.BOOL ] : Array
+      shapes.Pattern 2#usize))
+  let ret2 := alloc.slice.Slice.into_vec y2
+  contracts.bootstrap.scheme ret ret1 ret2 (alloc.vec.Vec.new
+    shapes.EffectSlot)
+
+/-- [noble_kernel::contracts::bootstrap::arith]:
+    Source: 'crates/noble-kernel/src/contracts/bootstrap.rs', lines 117:0-124:1 -/
+def contracts.bootstrap.arith : Result words.Scheme := do
+  let y ←
+    lift (Std.Array.to_slice (Array.make 1#usize [ words.VariableKind.Stack ] :
+      Array words.VariableKind 1#usize))
+  let ret := alloc.slice.Slice.into_vec y
+  let p ← contracts.bootstrap.stack_var 0#u32
+  let y1 ←
+    lift (Std.Array.to_slice
+      (Array.make 3#usize [
+         p, contracts.bootstrap.I64, contracts.bootstrap.I64
+         ] : Array shapes.Pattern 3#usize))
+  let ret1 := alloc.slice.Slice.into_vec y1
+  let y2 ←
+    lift (Std.Array.to_slice (Array.make 2#usize [ p, contracts.bootstrap.I64 ]
+      : Array shapes.Pattern 2#usize))
+  let ret2 := alloc.slice.Slice.into_vec y2
+  contracts.bootstrap.scheme ret ret1 ret2 (alloc.vec.Vec.new
+    shapes.EffectSlot)
+
+/-- [noble_kernel::contracts::bootstrap::dip]:
+    Source: 'crates/noble-kernel/src/contracts/bootstrap.rs', lines 95:0-115:1 -/
+def contracts.bootstrap.dip : Result words.Scheme := do
+  let y ←
+    lift (Std.Array.to_slice
+      (Array.make 4#usize [
+         words.VariableKind.Stack, words.VariableKind.Value,
+         words.VariableKind.Stack, words.VariableKind.Effect
+         ] : Array words.VariableKind 4#usize))
+  let ret := alloc.slice.Slice.into_vec y
+  let p ← contracts.bootstrap.stack_var 0#u32
+  let p1 ← contracts.bootstrap.value_var 1#u32
+  let y1 ←
+    lift (Std.Array.to_slice (Array.make 1#usize [ p ] : Array shapes.Pattern
+      1#usize))
+  let ret1 := alloc.slice.Slice.into_vec y1
+  let p2 ← contracts.bootstrap.stack_var 2#u32
+  let y2 ←
+    lift (Std.Array.to_slice (Array.make 1#usize [ p2 ] : Array shapes.Pattern
+      1#usize))
+  let ret2 := alloc.slice.Slice.into_vec y2
+  let es ← contracts.bootstrap.effect_var 3#u32
+  let y3 ←
+    lift (Std.Array.to_slice (Array.make 1#usize [ es ] : Array
+      shapes.EffectSlot 1#usize))
+  let ret3 := alloc.slice.Slice.into_vec y3
+  let p3 ← contracts.bootstrap.program ret1 ret2 ret3
+  let y4 ←
+    lift (Std.Array.to_slice (Array.make 3#usize [ p, p1, p3 ] : Array
+      shapes.Pattern 3#usize))
+  let ret4 := alloc.slice.Slice.into_vec y4
+  let y5 ←
+    lift (Std.Array.to_slice (Array.make 2#usize [ p2, p1 ] : Array
+      shapes.Pattern 2#usize))
+  let ret5 := alloc.slice.Slice.into_vec y5
+  let y6 ←
+    lift (Std.Array.to_slice (Array.make 1#usize [ es ] : Array
+      shapes.EffectSlot 1#usize))
+  let ret6 := alloc.slice.Slice.into_vec y6
+  contracts.bootstrap.scheme ret ret4 ret5 ret6
+
+/-- [noble_kernel::contracts::bootstrap::swap]:
+    Source: 'crates/noble-kernel/src/contracts/bootstrap.rs', lines 82:0-93:1 -/
+def contracts.bootstrap.swap : Result words.Scheme := do
+  let y ←
+    lift (Std.Array.to_slice
+      (Array.make 3#usize [
+         words.VariableKind.Stack, words.VariableKind.Value,
+         words.VariableKind.Value
+         ] : Array words.VariableKind 3#usize))
+  let ret := alloc.slice.Slice.into_vec y
+  let p ← contracts.bootstrap.stack_var 0#u32
+  let p1 ← contracts.bootstrap.value_var 1#u32
+  let p2 ← contracts.bootstrap.value_var 2#u32
+  let y1 ←
+    lift (Std.Array.to_slice (Array.make 3#usize [ p, p1, p2 ] : Array
+      shapes.Pattern 3#usize))
+  let ret1 := alloc.slice.Slice.into_vec y1
+  let y2 ←
+    lift (Std.Array.to_slice (Array.make 3#usize [ p, p2, p1 ] : Array
+      shapes.Pattern 3#usize))
+  let ret2 := alloc.slice.Slice.into_vec y2
+  contracts.bootstrap.scheme ret ret1 ret2 (alloc.vec.Vec.new
+    shapes.EffectSlot)
+
+/-- [noble_kernel::contracts::bootstrap::drop]:
+    Source: 'crates/noble-kernel/src/contracts/bootstrap.rs', lines 70:0-80:1 -/
+def contracts.bootstrap.drop : Result words.Scheme := do
+  let y ←
+    lift (Std.Array.to_slice
+      (Array.make 2#usize [
+         words.VariableKind.Stack, words.VariableKind.Value
+         ] : Array words.VariableKind 2#usize))
+  let ret := alloc.slice.Slice.into_vec y
+  let p ← contracts.bootstrap.stack_var 0#u32
+  let p1 ← contracts.bootstrap.value_var 1#u32
+  let y1 ←
+    lift (Std.Array.to_slice (Array.make 2#usize [ p, p1 ] : Array
+      shapes.Pattern 2#usize))
+  let ret1 := alloc.slice.Slice.into_vec y1
+  let y2 ←
+    lift (Std.Array.to_slice (Array.make 1#usize [ p ] : Array shapes.Pattern
+      1#usize))
+  let ret2 := alloc.slice.Slice.into_vec y2
+  contracts.bootstrap.scheme ret ret1 ret2 (alloc.vec.Vec.new
+    shapes.EffectSlot)
+
+/-- [noble_kernel::contracts::bootstrap::dup]:
+    Source: 'crates/noble-kernel/src/contracts/bootstrap.rs', lines 58:0-68:1 -/
+def contracts.bootstrap.dup : Result words.Scheme := do
+  let y ←
+    lift (Std.Array.to_slice
+      (Array.make 2#usize [
+         words.VariableKind.Stack, words.VariableKind.Value
+         ] : Array words.VariableKind 2#usize))
+  let ret := alloc.slice.Slice.into_vec y
+  let p ← contracts.bootstrap.stack_var 0#u32
+  let p1 ← contracts.bootstrap.value_var 1#u32
+  let y1 ←
+    lift (Std.Array.to_slice (Array.make 2#usize [ p, p1 ] : Array
+      shapes.Pattern 2#usize))
+  let ret1 := alloc.slice.Slice.into_vec y1
+  let y2 ←
+    lift (Std.Array.to_slice (Array.make 3#usize [ p, p1, p1 ] : Array
+      shapes.Pattern 3#usize))
+  let ret2 := alloc.slice.Slice.into_vec y2
+  contracts.bootstrap.scheme ret ret1 ret2 (alloc.vec.Vec.new
+    shapes.EffectSlot)
+
+/-- [noble_kernel::contracts::bootstrap::TEXT]
+    Source: 'crates/noble-kernel/src/contracts/bootstrap.rs', lines 9:0-9:66 -/
+@[global_simps, irreducible]
+def contracts.bootstrap.TEXT : shapes.Pattern := shapes.Pattern.TextPattern
+
+/-- [noble_kernel::contracts::bootstrap::UNIT]
+    Source: 'crates/noble-kernel/src/contracts/bootstrap.rs', lines 6:0-6:66 -/
+@[global_simps, irreducible]
+def contracts.bootstrap.UNIT : shapes.Pattern := shapes.Pattern.UnitPattern
+
+/-- [noble_kernel::contracts::bootstrap::data::test_emit]:
+    Source: 'crates/noble-kernel/src/contracts/bootstrap/data.rs', lines 226:0-235:1 -/
+def contracts.bootstrap.data.test_emit : Result words.Scheme := do
+  let y ←
+    lift (Std.Array.to_slice (Array.make 1#usize [ words.VariableKind.Stack ] :
+      Array words.VariableKind 1#usize))
+  let ret := alloc.slice.Slice.into_vec y
+  let p ← contracts.bootstrap.stack_var 0#u32
+  let y1 ←
+    lift (Std.Array.to_slice
+      (Array.make 2#usize [ p, contracts.bootstrap.TEXT ] : Array
+      shapes.Pattern 2#usize))
+  let ret1 := alloc.slice.Slice.into_vec y1
+  let y2 ←
+    lift (Std.Array.to_slice
+      (Array.make 2#usize [ p, contracts.bootstrap.UNIT ] : Array
+      shapes.Pattern 2#usize))
+  let ret2 := alloc.slice.Slice.into_vec y2
+  let y3 ←
+    lift (Std.Array.to_slice
+      (Array.make 1#usize [ shapes.EffectSlot.Effect contracts.TEST_EMIT ] :
+      Array shapes.EffectSlot 1#usize))
+  let ret3 := alloc.slice.Slice.into_vec y3
+  contracts.bootstrap.scheme ret ret1 ret2 ret3
+
+/-- [noble_kernel::contracts::bootstrap::list]:
+    Source: 'crates/noble-kernel/src/contracts/bootstrap.rs', lines 32:0-34:1 -/
+def contracts.bootstrap.list
+  (item : shapes.Pattern) : Result shapes.Pattern := do
+  ok (shapes.Pattern.ListPattern item)
+
+/-- [noble_kernel::contracts::bootstrap::data::list_case]:
+    Source: 'crates/noble-kernel/src/contracts/bootstrap/data.rs', lines 194:0-224:1 -/
+def contracts.bootstrap.data.list_case : Result words.Scheme := do
+  let y ←
+    lift (Std.Array.to_slice
+      (Array.make 5#usize [
+         words.VariableKind.Stack, words.VariableKind.Value,
+         words.VariableKind.Stack, words.VariableKind.Effect,
+         words.VariableKind.Effect
+         ] : Array words.VariableKind 5#usize))
+  let ret := alloc.slice.Slice.into_vec y
+  let p ← contracts.bootstrap.stack_var 0#u32
+  let p1 ← contracts.bootstrap.list (shapes.Pattern.VarPattern 1#u32)
+  let y1 ←
+    lift (Std.Array.to_slice (Array.make 1#usize [ p ] : Array shapes.Pattern
+      1#usize))
+  let ret1 := alloc.slice.Slice.into_vec y1
+  let p2 ← contracts.bootstrap.stack_var 2#u32
+  let y2 ←
+    lift (Std.Array.to_slice (Array.make 1#usize [ p2 ] : Array shapes.Pattern
+      1#usize))
+  let ret2 := alloc.slice.Slice.into_vec y2
+  let es ← contracts.bootstrap.effect_var 3#u32
+  let y3 ←
+    lift (Std.Array.to_slice (Array.make 1#usize [ es ] : Array
+      shapes.EffectSlot 1#usize))
+  let ret3 := alloc.slice.Slice.into_vec y3
+  let p3 ← contracts.bootstrap.program ret1 ret2 ret3
+  let p4 ← contracts.bootstrap.value_var 1#u32
+  let y4 ←
+    lift (Std.Array.to_slice (Array.make 3#usize [ p, p4, p1 ] : Array
+      shapes.Pattern 3#usize))
+  let ret4 := alloc.slice.Slice.into_vec y4
+  let y5 ←
+    lift (Std.Array.to_slice (Array.make 1#usize [ p2 ] : Array shapes.Pattern
+      1#usize))
+  let ret5 := alloc.slice.Slice.into_vec y5
+  let es1 ← contracts.bootstrap.effect_var 4#u32
+  let y6 ←
+    lift (Std.Array.to_slice (Array.make 1#usize [ es1 ] : Array
+      shapes.EffectSlot 1#usize))
+  let ret6 := alloc.slice.Slice.into_vec y6
+  let p5 ← contracts.bootstrap.program ret4 ret5 ret6
+  let y7 ←
+    lift (Std.Array.to_slice (Array.make 4#usize [ p, p1, p3, p5 ] : Array
+      shapes.Pattern 4#usize))
+  let ret7 := alloc.slice.Slice.into_vec y7
+  let y8 ←
+    lift (Std.Array.to_slice (Array.make 1#usize [ p2 ] : Array shapes.Pattern
+      1#usize))
+  let ret8 := alloc.slice.Slice.into_vec y8
+  let y9 ←
+    lift (Std.Array.to_slice (Array.make 2#usize [ es, es1 ] : Array
+      shapes.EffectSlot 2#usize))
+  let ret9 := alloc.slice.Slice.into_vec y9
+  contracts.bootstrap.scheme ret ret7 ret8 ret9
+
+/-- [noble_kernel::contracts::bootstrap::data::cons]:
+    Source: 'crates/noble-kernel/src/contracts/bootstrap/data.rs', lines 175:0-192:1 -/
+def contracts.bootstrap.data.cons : Result words.Scheme := do
+  let y ←
+    lift (Std.Array.to_slice
+      (Array.make 2#usize [
+         words.VariableKind.Stack, words.VariableKind.Value
+         ] : Array words.VariableKind 2#usize))
+  let ret := alloc.slice.Slice.into_vec y
+  let p ← contracts.bootstrap.stack_var 0#u32
+  let p1 ← contracts.bootstrap.value_var 1#u32
+  let p2 ← contracts.bootstrap.list (shapes.Pattern.VarPattern 1#u32)
+  let y1 ←
+    lift (Std.Array.to_slice (Array.make 3#usize [ p, p1, p2 ] : Array
+      shapes.Pattern 3#usize))
+  let ret1 := alloc.slice.Slice.into_vec y1
+  let y2 ←
+    lift (Std.Array.to_slice (Array.make 2#usize [ p, p2 ] : Array
+      shapes.Pattern 2#usize))
+  let ret2 := alloc.slice.Slice.into_vec y2
+  contracts.bootstrap.scheme ret ret1 ret2 (alloc.vec.Vec.new
+    shapes.EffectSlot)
+
+/-- [noble_kernel::contracts::bootstrap::data::nil]:
+    Source: 'crates/noble-kernel/src/contracts/bootstrap/data.rs', lines 160:0-173:1 -/
+def contracts.bootstrap.data.nil : Result words.Scheme := do
+  let y ←
+    lift (Std.Array.to_slice
+      (Array.make 2#usize [
+         words.VariableKind.Stack, words.VariableKind.Value
+         ] : Array words.VariableKind 2#usize))
+  let ret := alloc.slice.Slice.into_vec y
+  let p ← contracts.bootstrap.stack_var 0#u32
+  let y1 ←
+    lift (Std.Array.to_slice (Array.make 1#usize [ p ] : Array shapes.Pattern
+      1#usize))
+  let ret1 := alloc.slice.Slice.into_vec y1
+  let p1 ← contracts.bootstrap.list (shapes.Pattern.VarPattern 1#u32)
+  let y2 ←
+    lift (Std.Array.to_slice (Array.make 2#usize [ p, p1 ] : Array
+      shapes.Pattern 2#usize))
+  let ret2 := alloc.slice.Slice.into_vec y2
+  contracts.bootstrap.scheme ret ret1 ret2 (alloc.vec.Vec.new
+    shapes.EffectSlot)
+
+/-- [noble_kernel::contracts::bootstrap::data::if_word]:
+    Source: 'crates/noble-kernel/src/contracts/bootstrap/data.rs', lines 133:0-158:1 -/
+def contracts.bootstrap.data.if_word : Result words.Scheme := do
+  let y ←
+    lift (Std.Array.to_slice
+      (Array.make 4#usize [
+         words.VariableKind.Stack, words.VariableKind.Stack,
+         words.VariableKind.Effect, words.VariableKind.Effect
+         ] : Array words.VariableKind 4#usize))
+  let ret := alloc.slice.Slice.into_vec y
+  let p ← contracts.bootstrap.stack_var 0#u32
+  let y1 ←
+    lift (Std.Array.to_slice (Array.make 1#usize [ p ] : Array shapes.Pattern
+      1#usize))
+  let ret1 := alloc.slice.Slice.into_vec y1
+  let p1 ← contracts.bootstrap.stack_var 1#u32
+  let y2 ←
+    lift (Std.Array.to_slice (Array.make 1#usize [ p1 ] : Array shapes.Pattern
+      1#usize))
+  let ret2 := alloc.slice.Slice.into_vec y2
+  let es ← contracts.bootstrap.effect_var 2#u32
+  let y3 ←
+    lift (Std.Array.to_slice (Array.make 1#usize [ es ] : Array
+      shapes.EffectSlot 1#usize))
+  let ret3 := alloc.slice.Slice.into_vec y3
+  let p2 ← contracts.bootstrap.program ret1 ret2 ret3
+  let y4 ←
+    lift (Std.Array.to_slice (Array.make 1#usize [ p ] : Array shapes.Pattern
+      1#usize))
+  let ret4 := alloc.slice.Slice.into_vec y4
+  let y5 ←
+    lift (Std.Array.to_slice (Array.make 1#usize [ p1 ] : Array shapes.Pattern
+      1#usize))
+  let ret5 := alloc.slice.Slice.into_vec y5
+  let es1 ← contracts.bootstrap.effect_var 3#u32
+  let y6 ←
+    lift (Std.Array.to_slice (Array.make 1#usize [ es1 ] : Array
+      shapes.EffectSlot 1#usize))
+  let ret6 := alloc.slice.Slice.into_vec y6
+  let p3 ← contracts.bootstrap.program ret4 ret5 ret6
+  let y7 ←
+    lift (Std.Array.to_slice
+      (Array.make 4#usize [ p, contracts.bootstrap.BOOL, p2, p3 ] : Array
+      shapes.Pattern 4#usize))
+  let ret7 := alloc.slice.Slice.into_vec y7
+  let y8 ←
+    lift (Std.Array.to_slice (Array.make 1#usize [ p1 ] : Array shapes.Pattern
+      1#usize))
+  let ret8 := alloc.slice.Slice.into_vec y8
+  let y9 ←
+    lift (Std.Array.to_slice (Array.make 2#usize [ es, es1 ] : Array
+      shapes.EffectSlot 2#usize))
+  let ret9 := alloc.slice.Slice.into_vec y9
+  contracts.bootstrap.scheme ret ret7 ret8 ret9
+
+/-- [noble_kernel::contracts::bootstrap::sum]:
+    Source: 'crates/noble-kernel/src/contracts/bootstrap.rs', lines 28:0-30:1 -/
+def contracts.bootstrap.sum
+  (left : shapes.Pattern) (right : shapes.Pattern) :
+  Result shapes.Pattern
+  := do
+  ok (shapes.Pattern.SumPattern left right)
+
+/-- [noble_kernel::contracts::bootstrap::data::case]:
+    Source: 'crates/noble-kernel/src/contracts/bootstrap/data.rs', lines 101:0-131:1 -/
+def contracts.bootstrap.data.case : Result words.Scheme := do
+  let y ←
+    lift (Std.Array.to_slice
+      (Array.make 6#usize [
+         words.VariableKind.Stack, words.VariableKind.Value,
+         words.VariableKind.Value, words.VariableKind.Stack,
+         words.VariableKind.Effect, words.VariableKind.Effect
+         ] : Array words.VariableKind 6#usize))
+  let ret := alloc.slice.Slice.into_vec y
+  let p ← contracts.bootstrap.stack_var 0#u32
+  let p1 ←
+    contracts.bootstrap.sum (shapes.Pattern.VarPattern 1#u32)
+      (shapes.Pattern.VarPattern 2#u32)
+  let p2 ← contracts.bootstrap.value_var 1#u32
+  let y1 ←
+    lift (Std.Array.to_slice (Array.make 2#usize [ p, p2 ] : Array
+      shapes.Pattern 2#usize))
+  let ret1 := alloc.slice.Slice.into_vec y1
+  let p3 ← contracts.bootstrap.stack_var 3#u32
+  let y2 ←
+    lift (Std.Array.to_slice (Array.make 1#usize [ p3 ] : Array shapes.Pattern
+      1#usize))
+  let ret2 := alloc.slice.Slice.into_vec y2
+  let es ← contracts.bootstrap.effect_var 4#u32
+  let y3 ←
+    lift (Std.Array.to_slice (Array.make 1#usize [ es ] : Array
+      shapes.EffectSlot 1#usize))
+  let ret3 := alloc.slice.Slice.into_vec y3
+  let p4 ← contracts.bootstrap.program ret1 ret2 ret3
+  let p5 ← contracts.bootstrap.value_var 2#u32
+  let y4 ←
+    lift (Std.Array.to_slice (Array.make 2#usize [ p, p5 ] : Array
+      shapes.Pattern 2#usize))
+  let ret4 := alloc.slice.Slice.into_vec y4
+  let y5 ←
+    lift (Std.Array.to_slice (Array.make 1#usize [ p3 ] : Array shapes.Pattern
+      1#usize))
+  let ret5 := alloc.slice.Slice.into_vec y5
+  let es1 ← contracts.bootstrap.effect_var 5#u32
+  let y6 ←
+    lift (Std.Array.to_slice (Array.make 1#usize [ es1 ] : Array
+      shapes.EffectSlot 1#usize))
+  let ret6 := alloc.slice.Slice.into_vec y6
+  let p6 ← contracts.bootstrap.program ret4 ret5 ret6
+  let y7 ←
+    lift (Std.Array.to_slice (Array.make 4#usize [ p, p1, p4, p6 ] : Array
+      shapes.Pattern 4#usize))
+  let ret7 := alloc.slice.Slice.into_vec y7
+  let y8 ←
+    lift (Std.Array.to_slice (Array.make 1#usize [ p3 ] : Array shapes.Pattern
+      1#usize))
+  let ret8 := alloc.slice.Slice.into_vec y8
+  let y9 ←
+    lift (Std.Array.to_slice (Array.make 2#usize [ es, es1 ] : Array
+      shapes.EffectSlot 2#usize))
+  let ret9 := alloc.slice.Slice.into_vec y9
+  contracts.bootstrap.scheme ret ret7 ret8 ret9
+
+/-- [noble_kernel::contracts::bootstrap::data::inr]:
+    Source: 'crates/noble-kernel/src/contracts/bootstrap/data.rs', lines 82:0-99:1 -/
+def contracts.bootstrap.data.inr : Result words.Scheme := do
+  let y ←
+    lift (Std.Array.to_slice
+      (Array.make 3#usize [
+         words.VariableKind.Stack, words.VariableKind.Value,
+         words.VariableKind.Value
+         ] : Array words.VariableKind 3#usize))
+  let ret := alloc.slice.Slice.into_vec y
+  let p ← contracts.bootstrap.stack_var 0#u32
+  let p1 ← contracts.bootstrap.value_var 2#u32
+  let y1 ←
+    lift (Std.Array.to_slice (Array.make 2#usize [ p, p1 ] : Array
+      shapes.Pattern 2#usize))
+  let ret1 := alloc.slice.Slice.into_vec y1
+  let p2 ←
+    contracts.bootstrap.sum (shapes.Pattern.VarPattern 1#u32)
+      (shapes.Pattern.VarPattern 2#u32)
+  let y2 ←
+    lift (Std.Array.to_slice (Array.make 2#usize [ p, p2 ] : Array
+      shapes.Pattern 2#usize))
+  let ret2 := alloc.slice.Slice.into_vec y2
+  contracts.bootstrap.scheme ret ret1 ret2 (alloc.vec.Vec.new
+    shapes.EffectSlot)
+
+/-- [noble_kernel::contracts::bootstrap::data::inl]:
+    Source: 'crates/noble-kernel/src/contracts/bootstrap/data.rs', lines 63:0-80:1 -/
+def contracts.bootstrap.data.inl : Result words.Scheme := do
+  let y ←
+    lift (Std.Array.to_slice
+      (Array.make 3#usize [
+         words.VariableKind.Stack, words.VariableKind.Value,
+         words.VariableKind.Value
+         ] : Array words.VariableKind 3#usize))
+  let ret := alloc.slice.Slice.into_vec y
+  let p ← contracts.bootstrap.stack_var 0#u32
+  let p1 ← contracts.bootstrap.value_var 1#u32
+  let y1 ←
+    lift (Std.Array.to_slice (Array.make 2#usize [ p, p1 ] : Array
+      shapes.Pattern 2#usize))
+  let ret1 := alloc.slice.Slice.into_vec y1
+  let p2 ←
+    contracts.bootstrap.sum (shapes.Pattern.VarPattern 1#u32)
+      (shapes.Pattern.VarPattern 2#u32)
+  let y2 ←
+    lift (Std.Array.to_slice (Array.make 2#usize [ p, p2 ] : Array
+      shapes.Pattern 2#usize))
+  let ret2 := alloc.slice.Slice.into_vec y2
+  contracts.bootstrap.scheme ret ret1 ret2 (alloc.vec.Vec.new
+    shapes.EffectSlot)
+
+/-- [noble_kernel::contracts::bootstrap::pair]:
+    Source: 'crates/noble-kernel/src/contracts/bootstrap.rs', lines 24:0-26:1 -/
+def contracts.bootstrap.pair
+  (left : shapes.Pattern) (right : shapes.Pattern) :
+  Result shapes.Pattern
+  := do
+  ok (shapes.Pattern.PairPattern left right)
+
+/-- [noble_kernel::contracts::bootstrap::data::unpair]:
+    Source: 'crates/noble-kernel/src/contracts/bootstrap/data.rs', lines 40:0-61:1 -/
+def contracts.bootstrap.data.unpair : Result words.Scheme := do
+  let y ←
+    lift (Std.Array.to_slice
+      (Array.make 3#usize [
+         words.VariableKind.Stack, words.VariableKind.Value,
+         words.VariableKind.Value
+         ] : Array words.VariableKind 3#usize))
+  let ret := alloc.slice.Slice.into_vec y
+  let p ← contracts.bootstrap.stack_var 0#u32
+  let p1 ←
+    contracts.bootstrap.pair (shapes.Pattern.VarPattern 1#u32)
+      (shapes.Pattern.VarPattern 2#u32)
+  let y1 ←
+    lift (Std.Array.to_slice (Array.make 2#usize [ p, p1 ] : Array
+      shapes.Pattern 2#usize))
+  let ret1 := alloc.slice.Slice.into_vec y1
+  let p2 ← contracts.bootstrap.value_var 1#u32
+  let p3 ← contracts.bootstrap.value_var 2#u32
+  let y2 ←
+    lift (Std.Array.to_slice (Array.make 3#usize [ p, p2, p3 ] : Array
+      shapes.Pattern 3#usize))
+  let ret2 := alloc.slice.Slice.into_vec y2
+  contracts.bootstrap.scheme ret ret1 ret2 (alloc.vec.Vec.new
+    shapes.EffectSlot)
+
+/-- [noble_kernel::contracts::bootstrap::data::pair_word]:
+    Source: 'crates/noble-kernel/src/contracts/bootstrap/data.rs', lines 17:0-38:1 -/
+def contracts.bootstrap.data.pair_word : Result words.Scheme := do
+  let y ←
+    lift (Std.Array.to_slice
+      (Array.make 3#usize [
+         words.VariableKind.Stack, words.VariableKind.Value,
+         words.VariableKind.Value
+         ] : Array words.VariableKind 3#usize))
+  let ret := alloc.slice.Slice.into_vec y
+  let p ← contracts.bootstrap.stack_var 0#u32
+  let p1 ← contracts.bootstrap.value_var 1#u32
+  let p2 ← contracts.bootstrap.value_var 2#u32
+  let y1 ←
+    lift (Std.Array.to_slice (Array.make 3#usize [ p, p1, p2 ] : Array
+      shapes.Pattern 3#usize))
+  let ret1 := alloc.slice.Slice.into_vec y1
+  let p3 ←
+    contracts.bootstrap.pair (shapes.Pattern.VarPattern 1#u32)
+      (shapes.Pattern.VarPattern 2#u32)
+  let y2 ←
+    lift (Std.Array.to_slice (Array.make 2#usize [ p, p3 ] : Array
+      shapes.Pattern 2#usize))
+  let ret2 := alloc.slice.Slice.into_vec y2
+  contracts.bootstrap.scheme ret ret1 ret2 (alloc.vec.Vec.new
+    shapes.EffectSlot)
+
+/-- [noble_kernel::contracts::bootstrap::data::unit]:
+    Source: 'crates/noble-kernel/src/contracts/bootstrap/data.rs', lines 8:0-15:1 -/
+def contracts.bootstrap.data.unit : Result words.Scheme := do
+  let y ←
+    lift (Std.Array.to_slice (Array.make 1#usize [ words.VariableKind.Stack ] :
+      Array words.VariableKind 1#usize))
+  let ret := alloc.slice.Slice.into_vec y
+  let p ← contracts.bootstrap.stack_var 0#u32
+  let y1 ←
+    lift (Std.Array.to_slice (Array.make 1#usize [ p ] : Array shapes.Pattern
+      1#usize))
+  let ret1 := alloc.slice.Slice.into_vec y1
+  let y2 ←
+    lift (Std.Array.to_slice
+      (Array.make 2#usize [ p, contracts.bootstrap.UNIT ] : Array
+      shapes.Pattern 2#usize))
+  let ret2 := alloc.slice.Slice.into_vec y2
+  contracts.bootstrap.scheme ret ret1 ret2 (alloc.vec.Vec.new
+    shapes.EffectSlot)
+
+/-- [noble_kernel::contracts::bootstrap::data::table]:
+    Source: 'crates/noble-kernel/src/contracts/bootstrap/data.rs', lines 238:0-264:1
+    Visibility: public -/
+def contracts.bootstrap.data.table
+  : Result (alloc.vec.Vec (contracts.Behavior × words.Scheme)) := do
+  let s ← contracts.bootstrap.dup
+  let s1 ← contracts.bootstrap.drop
+  let s2 ← contracts.bootstrap.swap
+  let s3 ← contracts.bootstrap.dip
+  let s4 ← contracts.bootstrap.arith
+  let s5 ← contracts.bootstrap.equals
+  let s6 ← contracts.bootstrap.quote
+  let s7 ← contracts.bootstrap.compose
+  let s8 ← contracts.bootstrap.run
+  let s9 ← contracts.bootstrap.reflect
+  let s10 ← contracts.bootstrap.data.unit
+  let s11 ← contracts.bootstrap.data.pair_word
+  let s12 ← contracts.bootstrap.data.unpair
+  let s13 ← contracts.bootstrap.data.inl
+  let s14 ← contracts.bootstrap.data.inr
+  let s15 ← contracts.bootstrap.data.case
+  let s16 ← contracts.bootstrap.data.if_word
+  let s17 ← contracts.bootstrap.data.nil
+  let s18 ← contracts.bootstrap.data.cons
+  let s19 ← contracts.bootstrap.data.list_case
+  let s20 ← contracts.bootstrap.data.test_emit
+  let y ←
+    lift (Std.Array.to_slice
+      (Array.make 23#usize [
+         (contracts.Behavior.DupBehavior, s), (contracts.Behavior.DropBehavior,
+         s1), (contracts.Behavior.SwapBehavior, s2),
+         (contracts.Behavior.DipBehavior, s3),
+         (contracts.Behavior.ArithBehavior, s4),
+         (contracts.Behavior.ArithBehavior, s4),
+         (contracts.Behavior.ArithBehavior, s4),
+         (contracts.Behavior.EqualsBehavior, s5),
+         (contracts.Behavior.QuoteBehavior, s6),
+         (contracts.Behavior.ComposeBehavior, s7),
+         (contracts.Behavior.RunBehavior, s8),
+         (contracts.Behavior.ReflectBehavior, s9),
+         (contracts.Behavior.UnitBehavior, s10),
+         (contracts.Behavior.PairBehavior, s11),
+         (contracts.Behavior.UnpairBehavior, s12),
+         (contracts.Behavior.InlBehavior, s13),
+         (contracts.Behavior.InrBehavior, s14),
+         (contracts.Behavior.CaseBehavior, s15),
+         (contracts.Behavior.IfBehavior, s16), (contracts.Behavior.NilBehavior,
+         s17), (contracts.Behavior.ConsBehavior, s18),
+         (contracts.Behavior.ListCaseBehavior, s19),
+         (contracts.Behavior.TestEmitBehavior, s20)
+         ] : Array (contracts.Behavior × words.Scheme) 23#usize))
+  ok (alloc.slice.Slice.into_vec y)
+
+/-- [noble_kernel::contracts::nominal::validation::fixed_definitions_match]: loop body 0:
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 98:4-103:5 -/
+@[rust_loop_body]
+def contracts.nominal.validation.fixed_definitions_match_loop.body
+  (v : alloc.vec.Vec words.Scheme) (v1 : alloc.vec.Vec contracts.Behavior)
+  (fixed : alloc.vec.Vec (contracts.Behavior × words.Scheme))
+  (index : Std.Usize) (is_matching : Bool) :
+  Result (ControlFlow (Std.Usize × Bool) Bool)
+  := do
+  let i := alloc.vec.Vec.len fixed
+  if index < i
+  then
+    if is_matching
+    then
+      let (behavior, scheme) ←
+        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+          (contracts.Behavior × words.Scheme)) fixed index
+      let b ←
+        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+          contracts.Behavior) v1 index
+      let b1 ←
+        contracts.Behavior.Insts.CoreCmpPartialEqBehavior.eq b behavior
+      let is_matching1 ←
+        if b1
+        then
+          do
+          let s ←
+            alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+              words.Scheme) v index
+          contracts.nominal.schemes.same_scheme s scheme
+        else ok false
+      let index1 ← index + 1#usize
+      ok (cont (index1, is_matching1))
+    else ok (done false)
+  else ok (done is_matching)
+
+/-- [noble_kernel::contracts::nominal::validation::fixed_definitions_match]: loop 0:
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 98:4-103:5 -/
+@[rust_loop]
+def contracts.nominal.validation.fixed_definitions_match_loop
+  (v : alloc.vec.Vec words.Scheme) (v1 : alloc.vec.Vec contracts.Behavior)
+  (fixed : alloc.vec.Vec (contracts.Behavior × words.Scheme))
+  (index : Std.Usize) (is_matching : Bool) :
+  Result Bool
+  := do
+  loop
+    (fun (index1, is_matching1) =>
+      contracts.nominal.validation.fixed_definitions_match_loop.body v v1 fixed
+      index1 is_matching1)
+    (index, is_matching)
+
+/-- [noble_kernel::contracts::nominal::validation::fixed_definitions_match]:
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 91:0-105:1 -/
+def contracts.nominal.validation.fixed_definitions_match
+  (env : contracts.Env) : Result Bool := do
+  let fixed ← contracts.bootstrap.data.table
+  let i := alloc.vec.Vec.len env.defs
+  let i1 := alloc.vec.Vec.len fixed
+  if i < i1
+  then ok false
+  else
+    contracts.nominal.validation.fixed_definitions_match_loop env.defs
+      env.kinds fixed 0#usize true
+
+/-- [noble_kernel::contracts::FIXTURE_RESOURCE]
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 18:0-18:87
+    Visibility: public -/
+@[global_simps, irreducible]
+def contracts.FIXTURE_RESOURCE : types.ResourceKind := 0#u32
+
+/-- [noble_kernel::contracts::nominal::validation::bootstrap_matches]:
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 79:0-89:1 -/
+def contracts.nominal.validation.bootstrap_matches
+  (env : contracts.Env) : Result Bool := do
+  if env.declared_modules
+  then
+    let i := alloc.vec.Vec.len env.resource_kinds
+    if i = 1#usize
+    then
+      let rk ←
+        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+          types.ResourceKind) env.resource_kinds 0#usize
+      let i1 := contracts.FIXTURE_RESOURCE
+      if rk = i1
+      then
+        let i2 := alloc.vec.Vec.len env.effects
+        if i2 = 1#usize
+        then
+          let ei ←
+            alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+              types.EffId) env.effects 0#usize
+          let i3 := contracts.TEST_EMIT
+          if ei = i3
+          then
+            let i4 := alloc.vec.Vec.len env.definition_owners
+            let i5 := alloc.vec.Vec.len env.defs
+            if i4 = i5
+            then
+              let i6 := alloc.vec.Vec.len env.deps
+              let i7 := alloc.vec.Vec.len env.defs
+              ok (i6 = i7)
+            else ok false
+          else ok false
+        else ok false
+      else ok false
+    else ok false
+  else ok true
+
+/-- [noble_kernel::contracts::nominal::validation::{noble_kernel::contracts::Env}::validate_contracts]:
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 4:4-17:5 -/
+def contracts.nominal.validation.Env.validate_contracts
+  (self : contracts.Env) : Result Bool := do
+  let i := alloc.vec.Vec.len self.kinds
+  let i1 := alloc.vec.Vec.len self.defs
+  if i != i1
+  then ok false
+  else
+    let i2 := alloc.vec.Vec.len self.bound_adapters
+    let i3 := alloc.vec.Vec.len self.defs
+    if i2 > i3
+    then ok false
+    else
+      let b ← alloc.vec.Vec.is_empty Global self.nominals
+      if b
+      then
+        let b1 ← alloc.vec.Vec.is_empty Global self.bound_adapters
+        if b1
+        then
+          let b2 ← contracts.nominal.validation.bootstrap_matches self
+          if b2
+          then
+            if self.declared_modules
+            then
+              let b3 ←
+                contracts.nominal.validation.fixed_definitions_match self
+              if b3
+              then
+                let b4 ← contracts.nominal.validation.counts_match self
+                if b4
+                then
+                  let b5 ←
+                    contracts.nominal.validation.definitions_match self
+                  if b5
+                  then contracts.nominal.validation.bound_adapters_unique self
+                  else ok false
+                else ok false
+              else ok false
+            else
+              let b3 ← contracts.nominal.validation.counts_match self
+              if b3
+              then
+                let b4 ← contracts.nominal.validation.definitions_match self
+                if b4
+                then contracts.nominal.validation.bound_adapters_unique self
+                else ok false
+              else ok false
+          else ok false
+        else
+          if self.declared_modules
+          then
+            let b2 ← contracts.nominal.validation.bootstrap_matches self
+            if b2
+            then
+              let b3 ←
+                contracts.nominal.validation.fixed_definitions_match self
+              if b3
+              then
+                let b4 ← contracts.nominal.validation.counts_match self
+                if b4
+                then
+                  let b5 ←
+                    contracts.nominal.validation.definitions_match self
+                  if b5
+                  then contracts.nominal.validation.bound_adapters_unique self
+                  else ok false
+                else ok false
+              else ok false
+            else ok false
+          else ok false
+      else
+        if self.declared_modules
+        then
+          let b1 ← contracts.nominal.validation.bootstrap_matches self
+          if b1
+          then
+            let b2 ←
+              contracts.nominal.validation.fixed_definitions_match self
+            if b2
+            then
+              let b3 ← contracts.nominal.validation.counts_match self
+              if b3
+              then
+                let b4 ← contracts.nominal.validation.definitions_match self
+                if b4
+                then contracts.nominal.validation.bound_adapters_unique self
+                else ok false
+              else ok false
+            else ok false
+          else ok false
+        else ok false
+
+/-- [noble_kernel::acceptance::preflight::exhausted_nominal_budget]:
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 152:0-162:1 -/
+def acceptance.preflight.exhausted_nominal_budget
+  (budget : acceptance.preflight.NominalBudget) :
+  Result (Option untrusted.LimitKind)
+  := do
+  match budget.node_bound with
+  | none =>
+    if budget.count > budget.work_bound
+    then ok (some untrusted.LimitKind.Work)
+    else ok none
+  | some nodes =>
+    if budget.count > nodes
+    then ok (some untrusted.LimitKind.Nodes)
+    else
+      if budget.count > budget.work_bound
+      then ok (some untrusted.LimitKind.Work)
+      else ok none
+
+/-- [noble_kernel::acceptance::preflight::declared_definition_budget]:
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 185:0-200:1 -/
+def acceptance.preflight.declared_definition_budget
+  (env : contracts.Env) (request : untrusted.Request) :
+  Result (core.result.Result Unit acceptance.Fail)
+  := do
+  let i := alloc.vec.Vec.len env.defs
+  let i1 ← lift (core.num.Usize.saturating_sub i 23#usize)
+  let r ← U64.Insts.CoreConvertTryFromUsizeTryFromIntError.try_from i1
+  match r with
+  | core.result.Result.Ok additions =>
+    let i2 ← lift (core.convert.num.FromU64U32.from request.limits.nodes)
+    let i3 ← lift (core.convert.num.FromU64U32.from request.limits.work)
+    let o ←
+      acceptance.preflight.exhausted_nominal_budget
+        { count := additions, node_bound := (some i2), work_bound := i3 }
+    match o with
+    | none => ok (core.result.Result.Ok ())
+    | some kind => ok (core.result.Result.Err (acceptance.Fail.Exhausted kind))
+  | core.result.Result.Err _ =>
+    ok (core.result.Result.Err (acceptance.Fail.Exhausted
+      untrusted.LimitKind.Nodes))
+
+/-- [noble_kernel::acceptance::preflight::nominal_budget]:
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 164:0-183:1 -/
+def acceptance.preflight.nominal_budget
+  (env : contracts.Env) (request : untrusted.Request) :
+  Result (core.result.Result Unit acceptance.Fail)
+  := do
+  if env.declared_modules
+  then
+    let r ← acceptance.preflight.declared_definition_budget env request
+    match r with
+    | core.result.Result.Ok _ =>
+      let i := alloc.vec.Vec.len env.nominals
+      let i1 := alloc.vec.Vec.len env.bound_adapters
+      let total ← lift (core.num.Usize.saturating_add i i1)
+      let r1 ←
+        U64.Insts.CoreConvertTryFromUsizeTryFromIntError.try_from total
+      match r1 with
+      | core.result.Result.Ok count =>
+        let i2 ← lift (core.convert.num.FromU64U32.from request.limits.work)
+        let o ←
+          acceptance.preflight.exhausted_nominal_budget
+            { count, node_bound := none, work_bound := i2 }
+        match o with
+        | none => ok (core.result.Result.Ok ())
+        | some kind =>
+          ok (core.result.Result.Err (acceptance.Fail.Exhausted kind))
+      | core.result.Result.Err _ =>
+        ok (core.result.Result.Err (acceptance.Fail.Exhausted
+          untrusted.LimitKind.Work))
+    | core.result.Result.Err _ => ok r
+  else
+    let i := alloc.vec.Vec.len env.nominals
+    let i1 := alloc.vec.Vec.len env.bound_adapters
+    let total ← lift (core.num.Usize.saturating_add i i1)
+    let r ← U64.Insts.CoreConvertTryFromUsizeTryFromIntError.try_from total
+    match r with
+    | core.result.Result.Ok count =>
+      let i2 ← lift (core.convert.num.FromU64U32.from request.limits.work)
+      let o ←
+        acceptance.preflight.exhausted_nominal_budget
+          { count, node_bound := none, work_bound := i2 }
+      match o with
+      | none => ok (core.result.Result.Ok ())
+      | some kind =>
+        ok (core.result.Result.Err (acceptance.Fail.Exhausted kind))
+    | core.result.Result.Err _ =>
+      ok (core.result.Result.Err (acceptance.Fail.Exhausted
+        untrusted.LimitKind.Work))
+
+/-- [noble_kernel::contracts::nominal::type::walk::{noble_kernel::contracts::Env}::validate_decl]: loop body 0:
+    Source: 'crates/noble-kernel/src/contracts/nominal/type/walk.rs', lines 193:8-195:9 -/
+@[rust_loop_body]
+def contracts.nominal.type.walk.Env.validate_decl_loop.body
+  (v : alloc.vec.Vec contracts.NominalDecl) (index : Std.Usize)
+  (decl : contracts.NominalDecl) (prior : Std.Usize) :
+  Result (ControlFlow Std.Usize (contracts.NominalDecl × Std.Usize))
+  := do
+  if prior < index
+  then
+    let nd ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        contracts.NominalDecl) v prior
+    let b ←
+      core.cmp.PartialEq.ne.trait_default
+        types.NominalTypeId.Insts.CoreCmpPartialEqNominalTypeId nd.id 
+        decl.id
+    if b
+    then let prior1 ← prior + 1#usize
+         ok (cont prior1)
+    else ok (done (decl, prior))
+  else ok (done (decl, prior))
+
+/-- [noble_kernel::contracts::nominal::type::walk::{noble_kernel::contracts::Env}::validate_decl]: loop 0:
+    Source: 'crates/noble-kernel/src/contracts/nominal/type/walk.rs', lines 193:8-195:9 -/
+@[rust_loop]
+def contracts.nominal.type.walk.Env.validate_decl_loop
+  (v : alloc.vec.Vec contracts.NominalDecl) (index : Std.Usize)
+  (decl : contracts.NominalDecl) (prior : Std.Usize) :
+  Result (contracts.NominalDecl × Std.Usize)
+  := do
+  loop
+    (fun prior1 => contracts.nominal.type.walk.Env.validate_decl_loop.body v
+      index decl prior1)
+    prior
+
+/-- [noble_kernel::contracts::nominal::type::walk::{noble_kernel::contracts::Env}::validate_decl]:
+    Source: 'crates/noble-kernel/src/contracts/nominal/type/walk.rs', lines 187:4-207:5 -/
+def contracts.nominal.type.walk.Env.validate_decl
+  (self : contracts.Env) (index : Std.Usize) (max_nodes : Std.U32) :
+  Result Bool
+  := do
+  let s := alloc.vec.Vec.deref self.nominals
+  let o ←
+    core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice
+      contracts.NominalDecl) s index
+  match o with
+  | none => ok false
+  | some decl =>
+    let (decl1, prior) ←
+      contracts.nominal.type.walk.Env.validate_decl_loop self.nominals index
+        decl 0#usize
+    if prior < index
+    then ok false
+    else
+      match decl1.shape with
+      | types.NominalShape.Opaque ty =>
+        contracts.nominal.type.walk.Env.walk_type self ty max_nodes true index
+          none
+      | types.NominalShape.Variant left right =>
+        let b ←
+          contracts.nominal.type.walk.Env.walk_type self left max_nodes true
+            index none
+        if b
+        then
+          contracts.nominal.type.walk.Env.walk_type self right max_nodes true
+            index none
+        else ok false
+
+/-- [noble_kernel::acceptance::preflight::nominal_size_within_limit]:
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 236:0-247:1 -/
+def acceptance.preflight.nominal_size_within_limit
+  (payload_node_count : Option Std.U32) (limits : untrusted.Limits) :
+  Result Bool
+  := do
+  match payload_node_count with
+  | none => ok false
+  | some payload_node_count1 =>
+    let o ← lift (U32.checked_add payload_node_count1 1#u32)
+    match o with
+    | none => ok false
+    | some total_node_count => ok (total_node_count <= limits.type_size)
+
+/-- [noble_kernel::acceptance::preflight::nominal_payload_size::{impl core::ops::function::FnOnce<((u32, u32),), core::option::Option<u32>> for noble_kernel::acceptance::preflight::nominal_payload_size::{closure}}::call_once]:
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 229:22-229:61 -/
+def
+  acceptance.preflight.nominal_payload_size.closure.Insts.CoreOpsFunctionFnOnceTuplePairU32U32OptionU32.call_once
+  (c : acceptance.preflight.nominal_payload_size.closure)
+  (tupled_args : (Std.U32 × Std.U32)) :
+  Result (Option Std.U32)
+  := do
+  let (left, right) := tupled_args
+  ok (U32.checked_add left right)
+
+/-- Trait implementation: [noble_kernel::acceptance::preflight::nominal_payload_size::{impl core::ops::function::FnOnce<((u32, u32),), core::option::Option<u32>> for noble_kernel::acceptance::preflight::nominal_payload_size::{closure}}]
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 229:22-229:61 -/
+@[reducible]
+def
+  acceptance.preflight.nominal_payload_size.closure.Insts.CoreOpsFunctionFnOnceTuplePairU32U32OptionU32
+  : core.ops.function.FnOnce acceptance.preflight.nominal_payload_size.closure
+  (Std.U32 × Std.U32) (Option Std.U32) := {
+  call_once :=
+    acceptance.preflight.nominal_payload_size.closure.Insts.CoreOpsFunctionFnOnceTuplePairU32U32OptionU32.call_once
+}
+
+/-- [noble_kernel::acceptance::preflight::nominal_payload_size]:
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 221:0-232:1 -/
+def acceptance.preflight.nominal_payload_size
+  (shape : types.NominalShape) : Result (Option Std.U32) := do
+  match shape with
+  | types.NominalShape.Opaque representation => types.Ty.size representation
+  | types.NominalShape.Variant left right =>
+    let o ← types.Ty.size left
+    let o1 ← types.Ty.size right
+    let o2 ← core.option.Option.zip o o1
+    core.option.Option.and_then
+      acceptance.preflight.nominal_payload_size.closure.Insts.CoreOpsFunctionFnOnceTuplePairU32U32OptionU32
+      o2 ()
+
+/-- [noble_kernel::acceptance::preflight::nominal_failure_at]:
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 203:0-219:1 -/
+def acceptance.preflight.nominal_failure_at
+  (env : contracts.Env) (limits : untrusted.Limits) (index : Std.Usize) :
+  Result (Option acceptance.preflight.NominalFailure)
+  := do
+  let b ← contracts.nominal.type.walk.Env.validate_decl env index 512#u32
+  if b
+  then
+    let nd ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        contracts.NominalDecl) env.nominals index
+    let o ← acceptance.preflight.nominal_payload_size nd.shape
+    let b1 ← acceptance.preflight.nominal_size_within_limit o limits
+    if b1
+    then ok none
+    else ok (some { is_invalid_type := false })
+  else ok (some { is_invalid_type := true })
+
+/-- [noble_kernel::acceptance::preflight::first_nominal_failure]: loop body 0:
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 136:4-143:1 -/
+@[rust_loop_body]
+def acceptance.preflight.first_nominal_failure_loop.body
+  (env : contracts.Env) (limits : untrusted.Limits) (index : Std.Usize) :
+  Result (ControlFlow Std.Usize (Option acceptance.preflight.NominalFailure))
+  := do
+  let i := alloc.vec.Vec.len env.nominals
+  if index < i
+  then
+    let o ← acceptance.preflight.nominal_failure_at env limits index
+    match o with
+    | none => let index1 ← index + 1#usize
+              ok (cont index1)
+    | some _ => ok (done o)
+  else ok (done none)
+
+/-- [noble_kernel::acceptance::preflight::first_nominal_failure]: loop 0:
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 136:4-143:1 -/
+@[rust_loop]
+def acceptance.preflight.first_nominal_failure_loop
+  (env : contracts.Env) (limits : untrusted.Limits) (index : Std.Usize) :
+  Result (Option acceptance.preflight.NominalFailure)
+  := do
+  loop
+    (fun index1 => acceptance.preflight.first_nominal_failure_loop.body env
+      limits index1)
+    index
+
+/-- [noble_kernel::acceptance::preflight::first_nominal_failure]:
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 131:0-143:1 -/
+@[reducible]
+def acceptance.preflight.first_nominal_failure
+  (env : contracts.Env) (limits : untrusted.Limits) :
+  Result (Option acceptance.preflight.NominalFailure)
+  := do
+  acceptance.preflight.first_nominal_failure_loop env limits 0#usize
+
+/-- [noble_kernel::acceptance::preflight::nominal_failure]:
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 121:0-129:1 -/
+def acceptance.preflight.nominal_failure
+  (failure : acceptance.preflight.NominalFailure) :
+  Result acceptance.Fail
+  := do
+  if failure.is_invalid_type
+  then
+    let s ← acceptance.parts.site none none
+    acceptance.parts.invalid_without_stacks s untrusted.Constraint.InvalidType
+  else ok (acceptance.Fail.Exhausted untrusted.LimitKind.TypeSize)
+
+/-- [noble_kernel::acceptance::preflight::validate_nominals]:
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 99:0-114:1 -/
+def acceptance.preflight.validate_nominals
+  (env : contracts.Env) (request : untrusted.Request) :
+  Result (core.result.Result Unit acceptance.Fail)
+  := do
+  let r ← acceptance.preflight.nominal_budget env request
+  match r with
+  | core.result.Result.Ok _ =>
+    let o ← acceptance.preflight.first_nominal_failure env request.limits
+    match o with
+    | none =>
+      let b ← contracts.nominal.validation.Env.validate_contracts env
+      if b
+      then ok (core.result.Result.Ok ())
+      else
+        let s ← acceptance.parts.site none none
+        let f ←
+          acceptance.parts.invalid_without_stacks s
+            untrusted.Constraint.InvalidContract
+        ok (core.result.Result.Err f)
+    | some failure =>
+      let f ← acceptance.preflight.nominal_failure failure
+      ok (core.result.Result.Err f)
+  | core.result.Result.Err _ => ok r
+
+/-- [noble_kernel::acceptance::preflight::ambient_emit]: loop body 0:
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 87:4-95:5 -/
+@[rust_loop_body]
+def acceptance.preflight.ambient_emit_loop.body
+  (env : contracts.Env) (candidate : untrusted.Candidate) (index : Std.Usize) :
+  Result (ControlFlow Std.Usize (Option (Std.Usize × contracts.Definition)))
+  := do
+  let i := alloc.vec.Vec.len candidate.nodes
+  if index < i
+  then
+    let n ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        untrusted.Node) candidate.nodes index
+    match n with
+    | untrusted.Node.Literal _ _ =>
+      let index1 ← index + 1#usize
+      ok (cont index1)
+    | untrusted.Node.Invocation «def» _ =>
+      let o ← contracts.Env.kind env «def»
+      let b ←
+        core.option.Option.Insts.CoreCmpPartialEqOption.eq
+          contracts.Behavior.Insts.CoreCmpPartialEqBehavior o (some
+          contracts.Behavior.TestEmitBehavior)
+      if b
+      then ok (done (some (index, «def»)))
+      else let index1 ← index + 1#usize
+           ok (cont index1)
+    | untrusted.Node.Quotation _ _ =>
+      let index1 ← index + 1#usize
+      ok (cont index1)
+  else ok (done none)
+
+/-- [noble_kernel::acceptance::preflight::ambient_emit]: loop 0:
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 87:4-95:5 -/
+@[rust_loop]
+def acceptance.preflight.ambient_emit_loop
+  (env : contracts.Env) (candidate : untrusted.Candidate) (index : Std.Usize) :
+  Result (Option (Std.Usize × contracts.Definition))
+  := do
+  loop
+    (fun index1 => acceptance.preflight.ambient_emit_loop.body env candidate
+      index1)
+    index
+
+/-- [noble_kernel::acceptance::preflight::ambient_emit]:
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 81:0-97:1 -/
+@[reducible]
+def acceptance.preflight.ambient_emit
+  (env : contracts.Env) (candidate : untrusted.Candidate) :
+  Result (Option (Std.Usize × contracts.Definition))
+  := do
+  acceptance.preflight.ambient_emit_loop env candidate 0#usize
+
+/-- [noble_kernel::acceptance::preflight::reject_ambient_emit]:
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 60:0-78:1 -/
+def acceptance.preflight.reject_ambient_emit
+  (env : contracts.Env) (candidate : untrusted.Candidate) :
+  Result (core.result.Result Unit acceptance.Fail)
+  := do
+  if env.declared_modules
+  then
+    let o ← acceptance.preflight.ambient_emit env candidate
+    match o with
+    | none => ok (core.result.Result.Ok ())
+    | some p =>
+      let (index, «def») := p
+      let r ←
+        core.convert.num.ptr_try_from_impls.TryFromU32Usize.try_from index
+      match r with
+      | core.result.Result.Ok index1 =>
+        let s ← acceptance.parts.site (some index1) (some «def»)
+        let f ←
+          acceptance.parts.invalid_without_stacks s
+            (untrusted.Constraint.PrivateDefinition «def»)
+        ok (core.result.Result.Err f)
+      | core.result.Result.Err _ =>
+        ok (core.result.Result.Err (acceptance.Fail.Exhausted
+          untrusted.LimitKind.Nodes))
+  else
+    let b ← alloc.vec.Vec.is_empty Global env.nominals
+    if b
+    then
+      let b1 ← alloc.vec.Vec.is_empty Global env.bound_adapters
+      if b1
+      then ok (core.result.Result.Ok ())
+      else
+        let o ← acceptance.preflight.ambient_emit env candidate
+        match o with
+        | none => ok (core.result.Result.Ok ())
+        | some p =>
+          let (index, «def») := p
+          let r ←
+            core.convert.num.ptr_try_from_impls.TryFromU32Usize.try_from index
+          match r with
+          | core.result.Result.Ok index1 =>
+            let s ← acceptance.parts.site (some index1) (some «def»)
+            let f ←
+              acceptance.parts.invalid_without_stacks s
+                (untrusted.Constraint.PrivateDefinition «def»)
+            ok (core.result.Result.Err f)
+          | core.result.Result.Err _ =>
+            ok (core.result.Result.Err (acceptance.Fail.Exhausted
+              untrusted.LimitKind.Nodes))
+    else
+      let o ← acceptance.preflight.ambient_emit env candidate
+      match o with
+      | none => ok (core.result.Result.Ok ())
+      | some p =>
+        let (index, «def») := p
+        let r ←
+          core.convert.num.ptr_try_from_impls.TryFromU32Usize.try_from index
+        match r with
+        | core.result.Result.Ok index1 =>
+          let s ← acceptance.parts.site (some index1) (some «def»)
+          let f ←
+            acceptance.parts.invalid_without_stacks s
+              (untrusted.Constraint.PrivateDefinition «def»)
+          ok (core.result.Result.Err f)
+        | core.result.Result.Err _ =>
+          ok (core.result.Result.Err (acceptance.Fail.Exhausted
+            untrusted.LimitKind.Nodes))
 
 /-- [noble_kernel::acceptance::preflight::check_request]:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 9:0-44:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 9:0-56:1 -/
 def acceptance.preflight.check_request
   (env : contracts.Env) (request : untrusted.Request)
   (candidate : untrusted.Candidate) :
@@ -4860,25 +10346,48 @@ def acceptance.preflight.check_request
             ok (core.result.Result.Err (acceptance.Fail.Exhausted
               untrusted.LimitKind.Nodes))
           else
-            let r1 ← acceptance.preflight.validate_schemes env
+            let r1 ← acceptance.validate.dependencies env request.limits
             match r1 with
             | core.result.Result.Ok _ =>
-              let r2 ← acceptance.validate.dependencies env request.limits
+              let r2 ← acceptance.validate.schemas env request.limits
               match r2 with
               | core.result.Result.Ok _ =>
-                let r3 ← acceptance.validate.schemas env request.limits
+                let r3 ← acceptance.preflight.validate_nominals env request
                 match r3 with
                 | core.result.Result.Ok _ =>
-                  let s := alloc.vec.Vec.deref request.expected.stack_in
-                  let r4 ← acceptance.parts.limits_of s { request, env }
+                  let r4 ←
+                    acceptance.preflight.reject_ambient_emit env candidate
                   match r4 with
                   | core.result.Result.Ok _ =>
-                    let s1 := alloc.vec.Vec.deref request.expected.stack_out
-                    let r5 ← acceptance.parts.limits_of s1 { request, env }
+                    let r5 ← acceptance.schemes.validate env request
                     match r5 with
                     | core.result.Result.Ok _ =>
-                      acceptance.preflight.check_allowed_effects
-                        { request, env }
+                      let s := alloc.vec.Vec.deref request.expected.stack_in
+                      let r6 ← acceptance.parts.limits_of s { request, env }
+                      match r6 with
+                      | core.result.Result.Ok _ =>
+                        let s1 :=
+                          alloc.vec.Vec.deref request.expected.stack_out
+                        let r7 ←
+                          acceptance.parts.limits_of s1 { request, env }
+                        match r7 with
+                        | core.result.Result.Ok _ =>
+                          let s2 ←
+                            types.EffSet.as_slice
+                              request.expected.allowed_effects
+                          let s3 := alloc.vec.Vec.deref env.effects
+                          let unknown ←
+                            acceptance.parts.effects.first_unknown s2 s3
+                          match unknown with
+                          | none => ok (core.result.Result.Ok ())
+                          | some id =>
+                            let s4 ← acceptance.parts.site none none
+                            let f ←
+                              acceptance.parts.invalid_without_stacks s4
+                                (untrusted.Constraint.UnknownEffect id)
+                            ok (core.result.Result.Err f)
+                        | core.result.Result.Err _ => ok r7
+                      | core.result.Result.Err _ => ok r6
                     | core.result.Result.Err _ => ok r5
                   | core.result.Result.Err _ => ok r4
                 | core.result.Result.Err _ => ok r3
@@ -4916,7 +10425,7 @@ def untrusted.Node.Insts.CoreCloneClone.clone
     ok (untrusted.Node.Quotation v i)
 
 /-- [noble_kernel::acceptance::nodes::node_of]:
-    Source: 'crates/noble-kernel/src/acceptance/nodes.rs', lines 11:0-38:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/nodes.rs', lines 13:0-40:1 -/
 def acceptance.nodes.node_of
   (candidate : untrusted.Candidate) (node_id : untrusted.NodeId)
   (context : acceptance.parts.Ctx) :
@@ -4949,7 +10458,7 @@ def acceptance.nodes.node_of
     ok (core.result.Result.Err f)
 
 /-- [noble_kernel::acceptance::parts::charge]:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 31:0-36:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 33:0-38:1 -/
 def acceptance.parts.charge
   (work : Std.U32) (cost : Std.U32) :
   Result (core.result.Result Std.U32 acceptance.Fail)
@@ -4962,7 +10471,7 @@ def acceptance.parts.charge
   | some remaining => ok (core.result.Result.Ok remaining)
 
 /-- [noble_kernel::acceptance::parts::scheme_cost]:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 38:0-44:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 40:0-46:1 -/
 def acceptance.parts.scheme_cost
   (scheme : words.Scheme) :
   Result (core.result.Result Std.U32 acceptance.Fail)
@@ -4980,7 +10489,7 @@ def acceptance.parts.scheme_cost
       untrusted.LimitKind.Work))
 
 /-- [noble_kernel::acceptance::nodes::open_quotation]:
-    Source: 'crates/noble-kernel/src/acceptance/nodes.rs', lines 95:0-143:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/nodes.rs', lines 98:0-146:1 -/
 def acceptance.nodes.open_quotation
   (frame : acceptance.Frame) (node_id : untrusted.NodeId)
   (node : untrusted.Node) (context : acceptance.parts.Ctx) :
@@ -5046,7 +10555,7 @@ def acceptance.nodes.open_quotation
     | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_kernel::acceptance::halted]:
-    Source: 'crates/noble-kernel/src/acceptance/mod.rs', lines 138:0-141:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/mod.rs', lines 139:0-142:1 -/
 def acceptance.halted
   (machine : acceptance.Machine)
   (outcome : core.result.Result untrusted.Interface acceptance.Fail) :
@@ -5055,7 +10564,7 @@ def acceptance.halted
   ok { machine with outcome := (some outcome) }
 
 /-- [noble_kernel::acceptance::open_current]:
-    Source: 'crates/noble-kernel/src/acceptance/mod.rs', lines 238:0-257:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/mod.rs', lines 239:0-258:1 -/
 def acceptance.open_current
   (machine : acceptance.Machine) (frame : acceptance.Frame)
   (node_id : untrusted.NodeId) (node : untrusted.Node)
@@ -5099,56 +10608,8 @@ def words.Scheme.Insts.CoreCloneClone.clone
       self.effects
   ok { var_kinds := v, stack_in := v1, stack_out := v2, effects := v3 }
 
-/-- [noble_kernel::contracts::index]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 150:0-152:1 -/
-def contracts.index
-  («def» : contracts.Definition) : Result (Option Std.Usize) := do
-  let r ← Usize.Insts.CoreConvertTryFromU32TryFromIntError.try_from «def»
-  core.result.Result.ok r
-
-/-- [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::Behavior}::clone]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 29:9-29:14
-    Visibility: public -/
-def contracts.Behavior.Insts.CoreCloneClone.clone
-  (self : contracts.Behavior) : Result contracts.Behavior := do
-  ok self
-
-/-- Trait implementation: [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::Behavior}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 29:9-29:14 -/
-@[reducible]
-def contracts.Behavior.Insts.CoreCloneClone : core.clone.Clone
-  contracts.Behavior := {
-  clone := contracts.Behavior.Insts.CoreCloneClone.clone
-}
-
-/-- Trait implementation: [noble_kernel::contracts::{impl core::marker::Copy for noble_kernel::contracts::Behavior}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 29:16-29:20 -/
-@[reducible]
-def contracts.Behavior.Insts.CoreMarkerCopy : core.marker.Copy
-  contracts.Behavior := {
-  cloneInst := contracts.Behavior.Insts.CoreCloneClone
-}
-
-/-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::kind]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 118:4-123:5
-    Visibility: public -/
-def contracts.Env.kind
-  (self : contracts.Env) («def» : contracts.Definition) :
-  Result (Option contracts.Behavior)
-  := do
-  let o ← contracts.index «def»
-  match o with
-  | none => ok none
-  | some index =>
-    let s := alloc.vec.Vec.deref self.kinds
-    let o1 ←
-      core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice
-        contracts.Behavior) s index
-    core.option.OptionShared0T.copied contracts.Behavior.Insts.CoreMarkerCopy
-      o1
-
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::scheme]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 110:4-115:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 209:4-214:5
     Visibility: public -/
 def contracts.Env.scheme
   (self : contracts.Env) («def» : contracts.Definition) :
@@ -5163,7 +10624,7 @@ def contracts.Env.scheme
       index
 
 /-- [noble_kernel::acceptance::parts::instantiate::data_slot]:
-    Source: 'crates/noble-kernel/src/acceptance/parts/instantiate.rs', lines 50:0-78:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts/instantiate.rs', lines 50:0-84:1 -/
 def acceptance.parts.instantiate.data_slot
   (behavior : Option contracts.Behavior) : Result (Option words.Variable) := do
   match behavior with
@@ -5191,6 +10652,12 @@ def acceptance.parts.instantiate.data_slot
     | contracts.Behavior.ConsBehavior => ok none
     | contracts.Behavior.ListCaseBehavior => ok none
     | contracts.Behavior.TestEmitBehavior => ok none
+    | contracts.Behavior.BoundEmitBehavior _ => ok none
+    | contracts.Behavior.NominalNewBehavior _ => ok none
+    | contracts.Behavior.NominalIntoBehavior _ => ok none
+    | contracts.Behavior.NominalLeftBehavior _ => ok none
+    | contracts.Behavior.NominalRightBehavior _ => ok none
+    | contracts.Behavior.NominalMatchBehavior _ => ok none
     | contracts.Behavior.NamedBehavior => ok none
 
 /-- [noble_kernel::acceptance::parts::instantiate::literal_scheme]:
@@ -5225,8 +10692,482 @@ def acceptance.parts.instantiate.literal_scheme
       effects := (alloc.vec.Vec.new shapes.EffectSlot)
     }
 
+/-- [noble_kernel::contracts::nominal::type::walk::{noble_kernel::contracts::Env}::public_payload]:
+    Source: 'crates/noble-kernel/src/contracts/nominal/type/walk.rs', lines 27:4-29:5
+    Visibility: public -/
+def contracts.nominal.type.walk.Env.public_payload
+  (self : contracts.Env) (ty : types.Ty) (max_nodes : Std.U32) :
+  Result Bool
+  := do
+  let i := alloc.vec.Vec.len self.nominals
+  contracts.nominal.type.walk.Env.walk_type self ty max_nodes false i none
+
+/-- [noble_kernel::acceptance::nodes::visibility::variant_payloads]:
+    Source: 'crates/noble-kernel/src/acceptance/nodes/visibility.rs', lines 195:0-207:1 -/
+def acceptance.nodes.visibility.variant_payloads
+  (left : types.Ty) (right : types.Ty) («public» : Array Bool 2#usize)
+  (access : acceptance.nodes.visibility.Access) :
+  Result (Option (types.Ty × (Option types.Ty)))
+  := do
+  match access with
+  | acceptance.nodes.visibility.Access.New => ok none
+  | acceptance.nodes.visibility.Access.Into => ok none
+  | acceptance.nodes.visibility.Access.Left =>
+    let b ← Array.index_usize «public» 0#usize
+    if b
+    then ok (some (left, none))
+    else ok none
+  | acceptance.nodes.visibility.Access.Right =>
+    let b ← Array.index_usize «public» 1#usize
+    if b
+    then ok (some (right, none))
+    else ok none
+  | acceptance.nodes.visibility.Access.Match =>
+    let b ← Array.index_usize «public» 0#usize
+    if b
+    then
+      let b1 ← Array.index_usize «public» 1#usize
+      if b1
+      then ok (some (left, some right))
+      else ok none
+    else ok none
+
+/-- [noble_kernel::acceptance::nodes::visibility::opaque_payload]:
+    Source: 'crates/noble-kernel/src/acceptance/nodes/visibility.rs', lines 183:0-193:1 -/
+def acceptance.nodes.visibility.opaque_payload
+  (ty : types.Ty) («public» : Array Bool 2#usize)
+  (access : acceptance.nodes.visibility.Access) :
+  Result (Option (types.Ty × (Option types.Ty)))
+  := do
+  match access with
+  | acceptance.nodes.visibility.Access.New =>
+    let b ← Array.index_usize «public» 0#usize
+    if b
+    then ok (some (ty, none))
+    else ok none
+  | acceptance.nodes.visibility.Access.Into =>
+    let b ← Array.index_usize «public» 1#usize
+    if b
+    then ok (some (ty, none))
+    else ok none
+  | acceptance.nodes.visibility.Access.Left => ok none
+  | acceptance.nodes.visibility.Access.Right => ok none
+  | acceptance.nodes.visibility.Access.Match => ok none
+
+/-- [noble_kernel::acceptance::nodes::visibility::public_payloads]:
+    Source: 'crates/noble-kernel/src/acceptance/nodes/visibility.rs', lines 167:0-181:1 -/
+def acceptance.nodes.visibility.public_payloads
+  (decl : contracts.NominalDecl) (access : acceptance.nodes.visibility.Access)
+  :
+  Result (Option (types.Ty × (Option types.Ty)))
+  := do
+  if decl.exported
+  then
+    match decl.shape with
+    | types.NominalShape.Opaque ty =>
+      acceptance.nodes.visibility.opaque_payload ty decl.public access
+    | types.NominalShape.Variant left right =>
+      acceptance.nodes.visibility.variant_payloads left right decl.public
+        access
+  else ok none
+
+/-- [noble_kernel::acceptance::nodes::visibility::public_operation_visible::{impl core::ops::function::FnOnce<(&'_ alloc::boxed::Box<noble_kernel::types::Ty>,), bool> for noble_kernel::acceptance::nodes::visibility::public_operation_visible::{closure}<'_0>}::call_once]:
+    Source: 'crates/noble-kernel/src/acceptance/nodes/visibility.rs', lines 158:56-158:94 -/
+def
+  acceptance.nodes.visibility.public_operation_visible.closure.Insts.CoreOpsFunctionFnOnceTupleSharedBoxTyBool.call_once
+  (c : acceptance.nodes.visibility.public_operation_visible.closure)
+  (tupled_args : types.Ty) :
+  Result Bool
+  := do
+  contracts.nominal.type.walk.Env.public_payload c tupled_args 512#u32
+
+/-- Trait implementation: [noble_kernel::acceptance::nodes::visibility::public_operation_visible::{impl core::ops::function::FnOnce<(&'_ alloc::boxed::Box<noble_kernel::types::Ty>,), bool> for noble_kernel::acceptance::nodes::visibility::public_operation_visible::{closure}<'_0>}]
+    Source: 'crates/noble-kernel/src/acceptance/nodes/visibility.rs', lines 158:56-158:94 -/
+@[reducible]
+def
+  acceptance.nodes.visibility.public_operation_visible.closure.Insts.CoreOpsFunctionFnOnceTupleSharedBoxTyBool
+  : core.ops.function.FnOnce
+  acceptance.nodes.visibility.public_operation_visible.closure types.Ty Bool
+  := {
+  call_once :=
+    acceptance.nodes.visibility.public_operation_visible.closure.Insts.CoreOpsFunctionFnOnceTupleSharedBoxTyBool.call_once
+}
+
+/-- [noble_kernel::acceptance::nodes::visibility::public_operation_visible]:
+    Source: 'crates/noble-kernel/src/acceptance/nodes/visibility.rs', lines 150:0-159:1 -/
+def acceptance.nodes.visibility.public_operation_visible
+  (env : contracts.Env) (decl : contracts.NominalDecl)
+  (access : acceptance.nodes.visibility.Access) :
+  Result Bool
+  := do
+  let o ← acceptance.nodes.visibility.public_payloads decl access
+  match o with
+  | none => ok false
+  | some p =>
+    let (first, second) := p
+    let b ← contracts.nominal.type.walk.Env.public_payload env first 512#u32
+    if b
+    then
+      core.option.Option.is_none_or
+        acceptance.nodes.visibility.public_operation_visible.closure.Insts.CoreOpsFunctionFnOnceTupleSharedBoxTyBool
+        second env
+    else ok false
+
+/-- [noble_kernel::acceptance::nodes::visibility::caller_is_owner]:
+    Source: 'crates/noble-kernel/src/acceptance/nodes/visibility.rs', lines 53:0-58:1 -/
+def acceptance.nodes.visibility.caller_is_owner
+  (caller_module : Option Std.U64) (owner_module : Std.U64) : Result Bool := do
+  match caller_module with
+  | none => ok false
+  | some caller_module1 => ok (caller_module1 = owner_module)
+
+/-- [noble_kernel::acceptance::nodes::visibility::nominal_visible]: loop body 0:
+    Source: 'crates/noble-kernel/src/acceptance/nodes/visibility.rs', lines 139:4-146:5 -/
+@[rust_loop_body]
+def acceptance.nodes.visibility.nominal_visible_loop.body
+  (v : alloc.vec.Vec words.Scheme) (v1 : alloc.vec.Vec contracts.Behavior)
+  (v2 : alloc.vec.Vec (alloc.vec.Vec contracts.Definition))
+  (v3 : alloc.vec.Vec contracts.SchemaDecl)
+  (v4 : alloc.vec.Vec contracts.NominalDecl)
+  (v5 : alloc.vec.Vec types.ResourceKind) (o : Option Std.U64) (b : Bool)
+  (v6 : alloc.vec.Vec (Option Std.U64))
+  (v7 : alloc.vec.Vec contracts.BoundAdapter) (v8 : alloc.vec.Vec types.EffId)
+  (i : Std.U64) (i1 : Std.U32) (access : acceptance.nodes.visibility.Access)
+  (index : Std.Usize) :
+  Result (ControlFlow Std.Usize Bool)
+  := do
+  let i2 := alloc.vec.Vec.len v4
+  if index < i2
+  then
+    let decl ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        contracts.NominalDecl) v4 index
+    let b1 ←
+      types.NominalTypeId.Insts.CoreCmpPartialEqNominalTypeId.eq decl.id
+        { module := i, ordinal := i1 }
+    if b1
+    then
+      let is_visible ←
+        acceptance.nodes.visibility.public_operation_visible
+          {
+            defs := v,
+            kinds := v1,
+            deps := v2,
+            schemas := v3,
+            nominals := v4,
+            resource_kinds := v5,
+            caller_module := o,
+            declared_modules := b,
+            definition_owners := v6,
+            bound_adapters := v7,
+            effects := v8
+          } decl access
+      ok (done is_visible)
+    else let index1 ← index + 1#usize
+         ok (cont index1)
+  else ok (done false)
+
+/-- [noble_kernel::acceptance::nodes::visibility::nominal_visible]: loop 0:
+    Source: 'crates/noble-kernel/src/acceptance/nodes/visibility.rs', lines 139:4-146:5 -/
+@[rust_loop]
+def acceptance.nodes.visibility.nominal_visible_loop
+  (v : alloc.vec.Vec words.Scheme) (v1 : alloc.vec.Vec contracts.Behavior)
+  (v2 : alloc.vec.Vec (alloc.vec.Vec contracts.Definition))
+  (v3 : alloc.vec.Vec contracts.SchemaDecl)
+  (v4 : alloc.vec.Vec contracts.NominalDecl)
+  (v5 : alloc.vec.Vec types.ResourceKind) (o : Option Std.U64) (b : Bool)
+  (v6 : alloc.vec.Vec (Option Std.U64))
+  (v7 : alloc.vec.Vec contracts.BoundAdapter) (v8 : alloc.vec.Vec types.EffId)
+  (i : Std.U64) (i1 : Std.U32) (access : acceptance.nodes.visibility.Access)
+  (index : Std.Usize) :
+  Result Bool
+  := do
+  loop
+    (fun index1 => acceptance.nodes.visibility.nominal_visible_loop.body v v1
+      v2 v3 v4 v5 o b v6 v7 v8 i i1 access index1)
+    index
+
+/-- [noble_kernel::acceptance::nodes::visibility::nominal_visible]:
+    Source: 'crates/noble-kernel/src/acceptance/nodes/visibility.rs', lines 129:0-148:1 -/
+def acceptance.nodes.visibility.nominal_visible
+  (env : contracts.Env) (id : types.NominalTypeId)
+  (access : acceptance.nodes.visibility.Access) :
+  Result Bool
+  := do
+  let b ←
+    acceptance.nodes.visibility.caller_is_owner env.caller_module id.module
+  if b
+  then ok true
+  else
+    acceptance.nodes.visibility.nominal_visible_loop env.defs env.kinds
+      env.deps env.schemas env.nominals env.resource_kinds env.caller_module
+      env.declared_modules env.definition_owners env.bound_adapters env.effects
+      id.module id.ordinal access 0#usize
+
+/-- [noble_kernel::acceptance::nodes::visibility::nominal_access]:
+    Source: 'crates/noble-kernel/src/acceptance/nodes/visibility.rs', lines 108:0-127:1 -/
+def acceptance.nodes.visibility.nominal_access
+  (kind : contracts.Behavior) :
+  Result (Option (types.NominalTypeId × acceptance.nodes.visibility.Access))
+  := do
+  match kind with
+  | contracts.Behavior.DupBehavior => ok none
+  | contracts.Behavior.DropBehavior => ok none
+  | contracts.Behavior.SwapBehavior => ok none
+  | contracts.Behavior.DipBehavior => ok none
+  | contracts.Behavior.ArithBehavior => ok none
+  | contracts.Behavior.EqualsBehavior => ok none
+  | contracts.Behavior.QuoteBehavior => ok none
+  | contracts.Behavior.ComposeBehavior => ok none
+  | contracts.Behavior.RunBehavior => ok none
+  | contracts.Behavior.ReflectBehavior => ok none
+  | contracts.Behavior.UnitBehavior => ok none
+  | contracts.Behavior.PairBehavior => ok none
+  | contracts.Behavior.UnpairBehavior => ok none
+  | contracts.Behavior.InlBehavior => ok none
+  | contracts.Behavior.InrBehavior => ok none
+  | contracts.Behavior.CaseBehavior => ok none
+  | contracts.Behavior.IfBehavior => ok none
+  | contracts.Behavior.NilBehavior => ok none
+  | contracts.Behavior.ConsBehavior => ok none
+  | contracts.Behavior.ListCaseBehavior => ok none
+  | contracts.Behavior.TestEmitBehavior => ok none
+  | contracts.Behavior.BoundEmitBehavior _ => ok none
+  | contracts.Behavior.NominalNewBehavior id =>
+    ok (some (id, acceptance.nodes.visibility.Access.New))
+  | contracts.Behavior.NominalIntoBehavior id =>
+    ok (some (id, acceptance.nodes.visibility.Access.Into))
+  | contracts.Behavior.NominalLeftBehavior id =>
+    ok (some (id, acceptance.nodes.visibility.Access.Left))
+  | contracts.Behavior.NominalRightBehavior id =>
+    ok (some (id, acceptance.nodes.visibility.Access.Right))
+  | contracts.Behavior.NominalMatchBehavior id =>
+    ok (some (id, acceptance.nodes.visibility.Access.Match))
+  | contracts.Behavior.NamedBehavior => ok none
+
+/-- [noble_kernel::acceptance::nodes::visibility::aggregate_behavior_visible]:
+    Source: 'crates/noble-kernel/src/acceptance/nodes/visibility.rs', lines 80:0-95:1 -/
+def acceptance.nodes.visibility.aggregate_behavior_visible
+  (kind : contracts.Behavior) : Result Bool := do
+  match kind with
+  | contracts.Behavior.DupBehavior => ok false
+  | contracts.Behavior.DropBehavior => ok false
+  | contracts.Behavior.SwapBehavior => ok false
+  | contracts.Behavior.DipBehavior => ok false
+  | contracts.Behavior.ArithBehavior => ok false
+  | contracts.Behavior.EqualsBehavior => ok false
+  | contracts.Behavior.QuoteBehavior => ok false
+  | contracts.Behavior.ComposeBehavior => ok false
+  | contracts.Behavior.RunBehavior => ok false
+  | contracts.Behavior.ReflectBehavior => ok false
+  | contracts.Behavior.UnitBehavior => ok true
+  | contracts.Behavior.PairBehavior => ok true
+  | contracts.Behavior.UnpairBehavior => ok true
+  | contracts.Behavior.InlBehavior => ok true
+  | contracts.Behavior.InrBehavior => ok true
+  | contracts.Behavior.CaseBehavior => ok true
+  | contracts.Behavior.IfBehavior => ok true
+  | contracts.Behavior.NilBehavior => ok true
+  | contracts.Behavior.ConsBehavior => ok true
+  | contracts.Behavior.ListCaseBehavior => ok true
+  | contracts.Behavior.TestEmitBehavior => ok false
+  | contracts.Behavior.BoundEmitBehavior _ => ok false
+  | contracts.Behavior.NominalNewBehavior _ => ok false
+  | contracts.Behavior.NominalIntoBehavior _ => ok false
+  | contracts.Behavior.NominalLeftBehavior _ => ok false
+  | contracts.Behavior.NominalRightBehavior _ => ok false
+  | contracts.Behavior.NominalMatchBehavior _ => ok false
+  | contracts.Behavior.NamedBehavior => ok true
+
+/-- [noble_kernel::acceptance::nodes::visibility::stack_behavior_visible]:
+    Source: 'crates/noble-kernel/src/acceptance/nodes/visibility.rs', lines 64:0-78:1 -/
+def acceptance.nodes.visibility.stack_behavior_visible
+  (kind : contracts.Behavior) : Result Bool := do
+  match kind with
+  | contracts.Behavior.DupBehavior => ok true
+  | contracts.Behavior.DropBehavior => ok true
+  | contracts.Behavior.SwapBehavior => ok true
+  | contracts.Behavior.DipBehavior => ok true
+  | contracts.Behavior.ArithBehavior => ok true
+  | contracts.Behavior.EqualsBehavior => ok true
+  | contracts.Behavior.QuoteBehavior => ok true
+  | contracts.Behavior.ComposeBehavior => ok true
+  | contracts.Behavior.RunBehavior => ok true
+  | contracts.Behavior.ReflectBehavior => ok true
+  | contracts.Behavior.UnitBehavior => ok false
+  | contracts.Behavior.PairBehavior => ok false
+  | contracts.Behavior.UnpairBehavior => ok false
+  | contracts.Behavior.InlBehavior => ok false
+  | contracts.Behavior.InrBehavior => ok false
+  | contracts.Behavior.CaseBehavior => ok false
+  | contracts.Behavior.IfBehavior => ok false
+  | contracts.Behavior.NilBehavior => ok false
+  | contracts.Behavior.ConsBehavior => ok false
+  | contracts.Behavior.ListCaseBehavior => ok false
+  | contracts.Behavior.TestEmitBehavior => ok false
+  | contracts.Behavior.BoundEmitBehavior _ => ok false
+  | contracts.Behavior.NominalNewBehavior _ => ok false
+  | contracts.Behavior.NominalIntoBehavior _ => ok false
+  | contracts.Behavior.NominalLeftBehavior _ => ok false
+  | contracts.Behavior.NominalRightBehavior _ => ok false
+  | contracts.Behavior.NominalMatchBehavior _ => ok false
+  | contracts.Behavior.NamedBehavior => ok false
+
+/-- [noble_kernel::acceptance::nodes::visibility::ordinary_visible]:
+    Source: 'crates/noble-kernel/src/acceptance/nodes/visibility.rs', lines 60:0-62:1 -/
+def acceptance.nodes.visibility.ordinary_visible
+  (kind : contracts.Behavior) : Result Bool := do
+  let b ← acceptance.nodes.visibility.stack_behavior_visible kind
+  if b
+  then ok true
+  else acceptance.nodes.visibility.aggregate_behavior_visible kind
+
+/-- [noble_kernel::acceptance::nodes::visibility::bound_emit_visible]:
+    Source: 'crates/noble-kernel/src/acceptance/nodes/visibility.rs', lines 43:0-51:1 -/
+def acceptance.nodes.visibility.bound_emit_visible
+  (env : contracts.Env) («def» : contracts.Definition) : Result Bool := do
+  let r ← Usize.Insts.CoreConvertTryFromU32TryFromIntError.try_from «def»
+  match r with
+  | core.result.Result.Ok index =>
+    let s := alloc.vec.Vec.deref env.definition_owners
+    let o ←
+      core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice (Option
+        Std.U64)) s index
+    match o with
+    | none => ok false
+    | some o1 =>
+      match o1 with
+      | none => ok false
+      | some owner =>
+        acceptance.nodes.visibility.caller_is_owner env.caller_module owner
+  | core.result.Result.Err _ => ok false
+
+/-- [noble_kernel::acceptance::nodes::visibility::visible_behavior]:
+    Source: 'crates/noble-kernel/src/acceptance/nodes/visibility.rs', lines 22:0-40:1 -/
+def acceptance.nodes.visibility.visible_behavior
+  (env : contracts.Env) («def» : contracts.Definition)
+  (kind : contracts.Behavior) :
+  Result Bool
+  := do
+  let o ← acceptance.nodes.visibility.nominal_access kind
+  match o with
+  | none =>
+    match kind with
+    | contracts.Behavior.DupBehavior =>
+      acceptance.nodes.visibility.ordinary_visible
+        contracts.Behavior.DupBehavior
+    | contracts.Behavior.DropBehavior =>
+      acceptance.nodes.visibility.ordinary_visible
+        contracts.Behavior.DropBehavior
+    | contracts.Behavior.SwapBehavior =>
+      acceptance.nodes.visibility.ordinary_visible
+        contracts.Behavior.SwapBehavior
+    | contracts.Behavior.DipBehavior =>
+      acceptance.nodes.visibility.ordinary_visible
+        contracts.Behavior.DipBehavior
+    | contracts.Behavior.ArithBehavior =>
+      acceptance.nodes.visibility.ordinary_visible
+        contracts.Behavior.ArithBehavior
+    | contracts.Behavior.EqualsBehavior =>
+      acceptance.nodes.visibility.ordinary_visible
+        contracts.Behavior.EqualsBehavior
+    | contracts.Behavior.QuoteBehavior =>
+      acceptance.nodes.visibility.ordinary_visible
+        contracts.Behavior.QuoteBehavior
+    | contracts.Behavior.ComposeBehavior =>
+      acceptance.nodes.visibility.ordinary_visible
+        contracts.Behavior.ComposeBehavior
+    | contracts.Behavior.RunBehavior =>
+      acceptance.nodes.visibility.ordinary_visible
+        contracts.Behavior.RunBehavior
+    | contracts.Behavior.ReflectBehavior =>
+      acceptance.nodes.visibility.ordinary_visible
+        contracts.Behavior.ReflectBehavior
+    | contracts.Behavior.UnitBehavior =>
+      acceptance.nodes.visibility.ordinary_visible
+        contracts.Behavior.UnitBehavior
+    | contracts.Behavior.PairBehavior =>
+      acceptance.nodes.visibility.ordinary_visible
+        contracts.Behavior.PairBehavior
+    | contracts.Behavior.UnpairBehavior =>
+      acceptance.nodes.visibility.ordinary_visible
+        contracts.Behavior.UnpairBehavior
+    | contracts.Behavior.InlBehavior =>
+      acceptance.nodes.visibility.ordinary_visible
+        contracts.Behavior.InlBehavior
+    | contracts.Behavior.InrBehavior =>
+      acceptance.nodes.visibility.ordinary_visible
+        contracts.Behavior.InrBehavior
+    | contracts.Behavior.CaseBehavior =>
+      acceptance.nodes.visibility.ordinary_visible
+        contracts.Behavior.CaseBehavior
+    | contracts.Behavior.IfBehavior =>
+      acceptance.nodes.visibility.ordinary_visible
+        contracts.Behavior.IfBehavior
+    | contracts.Behavior.NilBehavior =>
+      acceptance.nodes.visibility.ordinary_visible
+        contracts.Behavior.NilBehavior
+    | contracts.Behavior.ConsBehavior =>
+      acceptance.nodes.visibility.ordinary_visible
+        contracts.Behavior.ConsBehavior
+    | contracts.Behavior.ListCaseBehavior =>
+      acceptance.nodes.visibility.ordinary_visible
+        contracts.Behavior.ListCaseBehavior
+    | contracts.Behavior.TestEmitBehavior =>
+      if env.declared_modules
+      then ok false
+      else
+        let b ← alloc.vec.Vec.is_empty Global env.nominals
+        if b
+        then
+          let b1 ← alloc.vec.Vec.is_empty Global env.bound_adapters
+          if b1
+          then ok (core.option.Option.is_none env.caller_module)
+          else ok false
+        else ok false
+    | contracts.Behavior.BoundEmitBehavior _ =>
+      acceptance.nodes.visibility.bound_emit_visible env «def»
+    | contracts.Behavior.NominalNewBehavior _ =>
+      acceptance.nodes.visibility.ordinary_visible kind
+    | contracts.Behavior.NominalIntoBehavior _ =>
+      acceptance.nodes.visibility.ordinary_visible kind
+    | contracts.Behavior.NominalLeftBehavior _ =>
+      acceptance.nodes.visibility.ordinary_visible kind
+    | contracts.Behavior.NominalRightBehavior _ =>
+      acceptance.nodes.visibility.ordinary_visible kind
+    | contracts.Behavior.NominalMatchBehavior _ =>
+      acceptance.nodes.visibility.ordinary_visible kind
+    | contracts.Behavior.NamedBehavior =>
+      acceptance.nodes.visibility.ordinary_visible
+        contracts.Behavior.NamedBehavior
+  | some p =>
+    let (id, access) := p
+    acceptance.nodes.visibility.nominal_visible env id access
+
+/-- [noble_kernel::acceptance::nodes::visibility::check]:
+    Source: 'crates/noble-kernel/src/acceptance/nodes/visibility.rs', lines 3:0-19:1 -/
+def acceptance.nodes.visibility.check
+  («def» : contracts.Definition) (node : untrusted.NodeId)
+  (context : acceptance.parts.Ctx) :
+  Result (core.result.Result Unit acceptance.Fail)
+  := do
+  let o ← contracts.Env.kind context.env «def»
+  match o with
+  | none => ok (core.result.Result.Ok ())
+  | some kind =>
+    let b ←
+      acceptance.nodes.visibility.visible_behavior context.env «def» kind
+    if b
+    then ok (core.result.Result.Ok ())
+    else
+      let s ← acceptance.parts.site (some node) (some «def»)
+      let f ←
+        acceptance.parts.invalid_without_stacks s
+          (untrusted.Constraint.PrivateDefinition «def»)
+      ok (core.result.Result.Err f)
+
 /-- [noble_kernel::acceptance::nodes::fold_node]:
-    Source: 'crates/noble-kernel/src/acceptance/nodes.rs', lines 43:0-86:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/nodes.rs', lines 45:0-89:1 -/
 def acceptance.nodes.fold_node
   (frame : acceptance.Frame) (node_id : untrusted.NodeId)
   (node : untrusted.Node) (context : acceptance.parts.Ctx) :
@@ -5259,48 +11200,53 @@ def acceptance.nodes.fold_node
       | core.result.Result.Err failure => ok (core.result.Result.Err failure)
     | core.result.Result.Err failure => ok (core.result.Result.Err failure)
   | untrusted.Node.Invocation «def» inst =>
-    let o ← contracts.Env.scheme context.env «def»
-    match o with
-    | none =>
-      let s ← acceptance.parts.site (some node_id) (some «def»)
-      let f ←
-        acceptance.parts.invalid context s (alloc.vec.Vec.new types.Ty)
-          (alloc.vec.Vec.new types.Ty) (untrusted.Constraint.UnknownDefinition
-          «def»)
-      ok (core.result.Result.Err f)
-    | some scheme =>
-      let scheme1 ← words.Scheme.Insts.CoreCloneClone.clone scheme
-      let «at» ← acceptance.parts.site (some node_id) (some «def»)
-      let o1 ← contracts.Env.kind context.env «def»
-      let data_var ← acceptance.parts.instantiate.data_slot o1
-      let r ← acceptance.parts.scheme_cost scheme1
-      match r with
-      | core.result.Result.Ok value =>
-        let r1 ←
-          acceptance.parts.instantiate.apply scheme1 inst data_var «at»
-            context
+    let r ← acceptance.nodes.visibility.check «def» node_id context
+    match r with
+    | core.result.Result.Ok _ =>
+      let o ← contracts.Env.scheme context.env «def»
+      match o with
+      | none =>
+        let s ← acceptance.parts.site (some node_id) (some «def»)
+        let f ←
+          acceptance.parts.invalid context s (alloc.vec.Vec.new types.Ty)
+            (alloc.vec.Vec.new types.Ty)
+            (untrusted.Constraint.UnknownDefinition «def»)
+        ok (core.result.Result.Err f)
+      | some scheme =>
+        let scheme1 ← words.Scheme.Insts.CoreCloneClone.clone scheme
+        let «at» ← acceptance.parts.site (some node_id) (some «def»)
+        let o1 ← contracts.Env.kind context.env «def»
+        let data_var ← acceptance.parts.instantiate.data_slot o1
+        let r1 ← acceptance.parts.scheme_cost scheme1
         match r1 with
-        | core.result.Result.Ok value1 =>
-          let (interface, _) := value1
-          let r2 ← acceptance.parts.join_cost interface
+        | core.result.Result.Ok value =>
+          let r2 ←
+            acceptance.parts.instantiate.apply scheme1 inst data_var «at»
+              context
           match r2 with
-          | core.result.Result.Ok value2 =>
-            let cost ← lift (core.num.U32.saturating_add value value2)
-            let r3 ← acceptance.parts.join frame interface «at» context
+          | core.result.Result.Ok value1 =>
+            let (interface, _) := value1
+            let r3 ← acceptance.parts.join_cost interface
             match r3 with
-            | core.result.Result.Ok value3 =>
-              ok (core.result.Result.Ok (cost, value3, interface))
+            | core.result.Result.Ok value2 =>
+              let cost ← lift (core.num.U32.saturating_add value value2)
+              let r4 ← acceptance.parts.join frame interface «at» context
+              match r4 with
+              | core.result.Result.Ok value3 =>
+                ok (core.result.Result.Ok (cost, value3, interface))
+              | core.result.Result.Err failure =>
+                ok (core.result.Result.Err failure)
             | core.result.Result.Err failure =>
               ok (core.result.Result.Err failure)
           | core.result.Result.Err failure =>
             ok (core.result.Result.Err failure)
         | core.result.Result.Err failure => ok (core.result.Result.Err failure)
-      | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+    | core.result.Result.Err failure => ok (core.result.Result.Err failure)
   | untrusted.Node.Quotation _ _ =>
     ok (core.result.Result.Err acceptance.Fail.Internal)
 
 /-- [noble_kernel::acceptance::fold_current]:
-    Source: 'crates/noble-kernel/src/acceptance/mod.rs', lines 206:0-231:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/mod.rs', lines 207:0-232:1 -/
 def acceptance.fold_current
   (machine : acceptance.Machine) (frame : acceptance.Frame)
   (node_id : untrusted.NodeId) (node : untrusted.Node)
@@ -5331,7 +11277,7 @@ def acceptance.fold_current
     acceptance.halted machine (core.result.Result.Err problem)
 
 /-- [noble_kernel::acceptance::close_frame]:
-    Source: 'crates/noble-kernel/src/acceptance/mod.rs', lines 156:0-195:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/mod.rs', lines 157:0-196:1 -/
 def acceptance.close_frame
   (machine : acceptance.Machine) (frame : acceptance.Frame)
   (candidate : untrusted.Candidate) (context : acceptance.parts.Ctx) :
@@ -5374,7 +11320,7 @@ def acceptance.close_frame
       problem)
 
 /-- [noble_kernel::acceptance::step]:
-    Source: 'crates/noble-kernel/src/acceptance/mod.rs', lines 110:0-135:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/mod.rs', lines 111:0-136:1 -/
 def acceptance.step
   (machine : acceptance.Machine) (candidate : untrusted.Candidate)
   (context : acceptance.parts.Ctx) :
@@ -5413,7 +11359,7 @@ def acceptance.step
           problem)
 
 /-- [noble_kernel::acceptance::run]: loop body 0:
-    Source: 'crates/noble-kernel/src/acceptance/mod.rs', lines 84:4-86:5 -/
+    Source: 'crates/noble-kernel/src/acceptance/mod.rs', lines 85:4-87:5 -/
 @[rust_loop_body]
 def acceptance.run_loop.body
   (env : contracts.Env) (i : Std.U32) (e : untrusted.Expected) (i1 : Std.U32)
@@ -5450,7 +11396,7 @@ def acceptance.run_loop.body
   else ok (done (machine.state, machine.outcome))
 
 /-- [noble_kernel::acceptance::run]: loop 0:
-    Source: 'crates/noble-kernel/src/acceptance/mod.rs', lines 84:4-86:5 -/
+    Source: 'crates/noble-kernel/src/acceptance/mod.rs', lines 85:4-87:5 -/
 @[rust_loop]
 def acceptance.run_loop
   (env : contracts.Env) (i : Std.U32) (e : untrusted.Expected) (i1 : Std.U32)
@@ -5466,7 +11412,7 @@ def acceptance.run_loop
     machine
 
 /-- [noble_kernel::acceptance::run]:
-    Source: 'crates/noble-kernel/src/acceptance/mod.rs', lines 64:0-95:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/mod.rs', lines 65:0-96:1 -/
 def acceptance.run
   (env : contracts.Env) (request : untrusted.Request)
   (candidate : untrusted.Candidate) :
@@ -5509,7 +11455,7 @@ def acceptance.run
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_kernel::acceptance::check]:
-    Source: 'crates/noble-kernel/src/acceptance/mod.rs', lines 46:0-58:1
+    Source: 'crates/noble-kernel/src/acceptance/mod.rs', lines 47:0-59:1
     Visibility: public -/
 def acceptance.check
   (env : contracts.Env) (request : untrusted.Request)
@@ -5528,15 +11474,40 @@ def acceptance.check
     | acceptance.Fail.Exhausted limit => ok (untrusted.Outcome.Exhausted limit)
     | acceptance.Fail.Internal => ok untrusted.Outcome.InternalFailure
 
+/-- [noble_kernel::acceptance::nodes::visibility::{impl core::clone::Clone for noble_kernel::acceptance::nodes::visibility::Access}::clone]:
+    Source: 'crates/noble-kernel/src/acceptance/nodes/visibility.rs', lines 99:9-99:14
+    Visibility: public -/
+def acceptance.nodes.visibility.Access.Insts.CoreCloneClone.clone
+  (self : acceptance.nodes.visibility.Access) :
+  Result acceptance.nodes.visibility.Access
+  := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::acceptance::nodes::visibility::{impl core::clone::Clone for noble_kernel::acceptance::nodes::visibility::Access}]
+    Source: 'crates/noble-kernel/src/acceptance/nodes/visibility.rs', lines 99:9-99:14 -/
+@[reducible]
+def acceptance.nodes.visibility.Access.Insts.CoreCloneClone : core.clone.Clone
+  acceptance.nodes.visibility.Access := {
+  clone := acceptance.nodes.visibility.Access.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::acceptance::nodes::visibility::{impl core::marker::Copy for noble_kernel::acceptance::nodes::visibility::Access}]
+    Source: 'crates/noble-kernel/src/acceptance/nodes/visibility.rs', lines 99:16-99:20 -/
+@[reducible]
+def acceptance.nodes.visibility.Access.Insts.CoreMarkerCopy : core.marker.Copy
+  acceptance.nodes.visibility.Access := {
+  cloneInst := acceptance.nodes.visibility.Access.Insts.CoreCloneClone
+}
+
 /-- [noble_kernel::acceptance::parts::{impl core::clone::Clone for noble_kernel::acceptance::parts::Site}::clone]:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 13:9-13:14
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 15:9-15:14
     Visibility: public -/
 def acceptance.parts.Site.Insts.CoreCloneClone.clone
   (self : acceptance.parts.Site) : Result acceptance.parts.Site := do
   ok self
 
 /-- Trait implementation: [noble_kernel::acceptance::parts::{impl core::clone::Clone for noble_kernel::acceptance::parts::Site}]
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 13:9-13:14 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 15:9-15:14 -/
 @[reducible]
 def acceptance.parts.Site.Insts.CoreCloneClone : core.clone.Clone
   acceptance.parts.Site := {
@@ -5544,7 +11515,7 @@ def acceptance.parts.Site.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [noble_kernel::acceptance::parts::{impl core::marker::Copy for noble_kernel::acceptance::parts::Site}]
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 13:16-13:20 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 15:16-15:20 -/
 @[reducible]
 def acceptance.parts.Site.Insts.CoreMarkerCopy : core.marker.Copy
   acceptance.parts.Site := {
@@ -12092,16 +18063,6 @@ def authority.facts.Authority.validate_quota
           else
             ok (core.result.Result.Err authority.permit.Denial.QuotaExhausted)
 
-/-- Trait implementation: [noble_kernel::types::{impl core::cmp::PartialEq<noble_kernel::types::ResourceKind> for noble_kernel::types::ResourceKind}]
-    Source: 'crates/noble-kernel/src/types.rs', lines 14:29-14:38 -/
-@[reducible]
-impl_def types.ResourceKind.Insts.CoreCmpPartialEqResourceKind :
-  core.cmp.PartialEq types.ResourceKind types.ResourceKind := {
-  eq := types.ResourceKind.Insts.CoreCmpPartialEqResourceKind.eq
-  ne := core.cmp.PartialEq.ne.trait_default
-    types.ResourceKind.Insts.CoreCmpPartialEqResourceKind
-}
-
 /-- [noble_kernel::authority::EXECUTE_RIGHT]
     Source: 'crates/noble-kernel/src/authority/mod.rs', lines 31:0-31:33
     Visibility: public -/
@@ -13181,7 +19142,7 @@ def authority.OperationContract.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- [noble_kernel::types::{impl core::fmt::Debug for noble_kernel::types::EffId}::fmt]:
-    Source: 'crates/noble-kernel/src/types.rs', lines 25:22-25:27
+    Source: 'crates/noble-kernel/src/types.rs', lines 41:22-41:27
     Visibility: public -/
 def types.EffId.Insts.CoreFmtDebug.fmt
   (self : types.EffId) (f : core.fmt.Formatter) :
@@ -13191,7 +19152,7 @@ def types.EffId.Insts.CoreFmtDebug.fmt
   core.fmt.Formatter.debug_tuple_field1_finish f (toStr "EffId") dyn
 
 /-- Trait implementation: [noble_kernel::types::{impl core::fmt::Debug for noble_kernel::types::EffId}]
-    Source: 'crates/noble-kernel/src/types.rs', lines 25:22-25:27 -/
+    Source: 'crates/noble-kernel/src/types.rs', lines 41:22-41:27 -/
 @[reducible]
 def types.EffId.Insts.CoreFmtDebug : core.fmt.Debug types.EffId := {
   fmt := types.EffId.Insts.CoreFmtDebug.fmt
@@ -13694,7 +19655,7 @@ def authority.Profile.Insts.CoreMarkerCopy : core.marker.Copy authority.Profile
 }
 
 /-- [noble_kernel::types::{impl core::fmt::Debug for noble_kernel::types::ResourceKind}::fmt]:
-    Source: 'crates/noble-kernel/src/types.rs', lines 14:22-14:27
+    Source: 'crates/noble-kernel/src/types.rs', lines 15:22-15:27
     Visibility: public -/
 def types.ResourceKind.Insts.CoreFmtDebug.fmt
   (self : types.ResourceKind) (f : core.fmt.Formatter) :
@@ -13704,7 +19665,7 @@ def types.ResourceKind.Insts.CoreFmtDebug.fmt
   core.fmt.Formatter.debug_tuple_field1_finish f (toStr "ResourceKind") dyn
 
 /-- Trait implementation: [noble_kernel::types::{impl core::fmt::Debug for noble_kernel::types::ResourceKind}]
-    Source: 'crates/noble-kernel/src/types.rs', lines 14:22-14:27 -/
+    Source: 'crates/noble-kernel/src/types.rs', lines 15:22-15:27 -/
 @[reducible]
 def types.ResourceKind.Insts.CoreFmtDebug : core.fmt.Debug types.ResourceKind
   := {
@@ -13917,7 +19878,7 @@ def authority.SetupError.Insts.CoreCmpEq : core.cmp.Eq authority.SetupError
 }
 
 /-- [noble_kernel::types::{impl core::clone::Clone for noble_kernel::types::ResourceKind}::clone]:
-    Source: 'crates/noble-kernel/src/types.rs', lines 14:9-14:14
+    Source: 'crates/noble-kernel/src/types.rs', lines 15:9-15:14
     Visibility: public -/
 def types.ResourceKind.Insts.CoreCloneClone.clone
   (self : types.ResourceKind) : Result types.ResourceKind := do
@@ -17130,852 +23091,430 @@ def authority.report.UntrustedReceipt.impl.description
   := do
   ok self.description
 
-/-- [noble_kernel::contracts::bootstrap::scheme]:
-    Source: 'crates/noble-kernel/src/contracts/bootstrap.rs', lines 44:0-56:1 -/
-def contracts.bootstrap.scheme
-  (var_kinds : alloc.vec.Vec words.VariableKind)
-  (stack_in : alloc.vec.Vec shapes.Pattern)
-  (stack_out : alloc.vec.Vec shapes.Pattern)
-  (effects : alloc.vec.Vec shapes.EffectSlot) :
-  Result words.Scheme
-  := do
-  ok { var_kinds, stack_in, stack_out, effects }
-
-/-- [noble_kernel::contracts::bootstrap::stack_var]:
-    Source: 'crates/noble-kernel/src/contracts/bootstrap.rs', lines 12:0-14:1 -/
-def contracts.bootstrap.stack_var
-  (index : Std.U32) : Result shapes.Pattern := do
-  ok (shapes.Pattern.StackVarPattern index)
-
-/-- [noble_kernel::contracts::bootstrap::UNIT]
-    Source: 'crates/noble-kernel/src/contracts/bootstrap.rs', lines 6:0-6:66 -/
-@[global_simps, irreducible]
-def contracts.bootstrap.UNIT : shapes.Pattern := shapes.Pattern.UnitPattern
-
-/-- [noble_kernel::contracts::bootstrap::data::unit]:
-    Source: 'crates/noble-kernel/src/contracts/bootstrap/data.rs', lines 8:0-15:1 -/
-def contracts.bootstrap.data.unit : Result words.Scheme := do
+/-- [noble_kernel::contracts::nominal::schemes::emit_scheme]:
+    Source: 'crates/noble-kernel/src/contracts/nominal/schemes.rs', lines 113:0-120:1 -/
+def contracts.nominal.schemes.emit_scheme : Result words.Scheme := do
   let y ←
     lift (Std.Array.to_slice (Array.make 1#usize [ words.VariableKind.Stack ] :
       Array words.VariableKind 1#usize))
   let ret := alloc.slice.Slice.into_vec y
-  let p ← contracts.bootstrap.stack_var 0#u32
+  let p ← contracts.nominal.schemes.stack 0#u32
   let y1 ←
+    lift (Std.Array.to_slice
+      (Array.make 2#usize [ p, shapes.Pattern.TextPattern ] : Array
+      shapes.Pattern 2#usize))
+  let ret1 := alloc.slice.Slice.into_vec y1
+  let y2 ←
     lift (Std.Array.to_slice (Array.make 1#usize [ p ] : Array shapes.Pattern
       1#usize))
-  let ret1 := alloc.slice.Slice.into_vec y1
-  let y2 ←
-    lift (Std.Array.to_slice
-      (Array.make 2#usize [ p, contracts.bootstrap.UNIT ] : Array
-      shapes.Pattern 2#usize))
-  let ret2 := alloc.slice.Slice.into_vec y2
-  contracts.bootstrap.scheme ret ret1 ret2 (alloc.vec.Vec.new
-    shapes.EffectSlot)
-
-/-- [noble_kernel::contracts::bootstrap::pair]:
-    Source: 'crates/noble-kernel/src/contracts/bootstrap.rs', lines 24:0-26:1 -/
-def contracts.bootstrap.pair
-  (left : shapes.Pattern) (right : shapes.Pattern) :
-  Result shapes.Pattern
-  := do
-  ok (shapes.Pattern.PairPattern left right)
-
-/-- [noble_kernel::contracts::bootstrap::value_var]:
-    Source: 'crates/noble-kernel/src/contracts/bootstrap.rs', lines 16:0-18:1 -/
-def contracts.bootstrap.value_var
-  (index : Std.U32) : Result shapes.Pattern := do
-  ok (shapes.Pattern.VarPattern index)
-
-/-- [noble_kernel::contracts::bootstrap::data::pair_word]:
-    Source: 'crates/noble-kernel/src/contracts/bootstrap/data.rs', lines 17:0-38:1 -/
-def contracts.bootstrap.data.pair_word : Result words.Scheme := do
-  let y ←
-    lift (Std.Array.to_slice
-      (Array.make 3#usize [
-         words.VariableKind.Stack, words.VariableKind.Value,
-         words.VariableKind.Value
-         ] : Array words.VariableKind 3#usize))
-  let ret := alloc.slice.Slice.into_vec y
-  let p ← contracts.bootstrap.stack_var 0#u32
-  let p1 ← contracts.bootstrap.value_var 1#u32
-  let p2 ← contracts.bootstrap.value_var 2#u32
-  let y1 ←
-    lift (Std.Array.to_slice (Array.make 3#usize [ p, p1, p2 ] : Array
-      shapes.Pattern 3#usize))
-  let ret1 := alloc.slice.Slice.into_vec y1
-  let p3 ←
-    contracts.bootstrap.pair (shapes.Pattern.VarPattern 1#u32)
-      (shapes.Pattern.VarPattern 2#u32)
-  let y2 ←
-    lift (Std.Array.to_slice (Array.make 2#usize [ p, p3 ] : Array
-      shapes.Pattern 2#usize))
-  let ret2 := alloc.slice.Slice.into_vec y2
-  contracts.bootstrap.scheme ret ret1 ret2 (alloc.vec.Vec.new
-    shapes.EffectSlot)
-
-/-- [noble_kernel::contracts::bootstrap::data::unpair]:
-    Source: 'crates/noble-kernel/src/contracts/bootstrap/data.rs', lines 40:0-61:1 -/
-def contracts.bootstrap.data.unpair : Result words.Scheme := do
-  let y ←
-    lift (Std.Array.to_slice
-      (Array.make 3#usize [
-         words.VariableKind.Stack, words.VariableKind.Value,
-         words.VariableKind.Value
-         ] : Array words.VariableKind 3#usize))
-  let ret := alloc.slice.Slice.into_vec y
-  let p ← contracts.bootstrap.stack_var 0#u32
-  let p1 ←
-    contracts.bootstrap.pair (shapes.Pattern.VarPattern 1#u32)
-      (shapes.Pattern.VarPattern 2#u32)
-  let y1 ←
-    lift (Std.Array.to_slice (Array.make 2#usize [ p, p1 ] : Array
-      shapes.Pattern 2#usize))
-  let ret1 := alloc.slice.Slice.into_vec y1
-  let p2 ← contracts.bootstrap.value_var 1#u32
-  let p3 ← contracts.bootstrap.value_var 2#u32
-  let y2 ←
-    lift (Std.Array.to_slice (Array.make 3#usize [ p, p2, p3 ] : Array
-      shapes.Pattern 3#usize))
-  let ret2 := alloc.slice.Slice.into_vec y2
-  contracts.bootstrap.scheme ret ret1 ret2 (alloc.vec.Vec.new
-    shapes.EffectSlot)
-
-/-- [noble_kernel::contracts::bootstrap::sum]:
-    Source: 'crates/noble-kernel/src/contracts/bootstrap.rs', lines 28:0-30:1 -/
-def contracts.bootstrap.sum
-  (left : shapes.Pattern) (right : shapes.Pattern) :
-  Result shapes.Pattern
-  := do
-  ok (shapes.Pattern.SumPattern left right)
-
-/-- [noble_kernel::contracts::bootstrap::data::inl]:
-    Source: 'crates/noble-kernel/src/contracts/bootstrap/data.rs', lines 63:0-80:1 -/
-def contracts.bootstrap.data.inl : Result words.Scheme := do
-  let y ←
-    lift (Std.Array.to_slice
-      (Array.make 3#usize [
-         words.VariableKind.Stack, words.VariableKind.Value,
-         words.VariableKind.Value
-         ] : Array words.VariableKind 3#usize))
-  let ret := alloc.slice.Slice.into_vec y
-  let p ← contracts.bootstrap.stack_var 0#u32
-  let p1 ← contracts.bootstrap.value_var 1#u32
-  let y1 ←
-    lift (Std.Array.to_slice (Array.make 2#usize [ p, p1 ] : Array
-      shapes.Pattern 2#usize))
-  let ret1 := alloc.slice.Slice.into_vec y1
-  let p2 ←
-    contracts.bootstrap.sum (shapes.Pattern.VarPattern 1#u32)
-      (shapes.Pattern.VarPattern 2#u32)
-  let y2 ←
-    lift (Std.Array.to_slice (Array.make 2#usize [ p, p2 ] : Array
-      shapes.Pattern 2#usize))
-  let ret2 := alloc.slice.Slice.into_vec y2
-  contracts.bootstrap.scheme ret ret1 ret2 (alloc.vec.Vec.new
-    shapes.EffectSlot)
-
-/-- [noble_kernel::contracts::bootstrap::data::inr]:
-    Source: 'crates/noble-kernel/src/contracts/bootstrap/data.rs', lines 82:0-99:1 -/
-def contracts.bootstrap.data.inr : Result words.Scheme := do
-  let y ←
-    lift (Std.Array.to_slice
-      (Array.make 3#usize [
-         words.VariableKind.Stack, words.VariableKind.Value,
-         words.VariableKind.Value
-         ] : Array words.VariableKind 3#usize))
-  let ret := alloc.slice.Slice.into_vec y
-  let p ← contracts.bootstrap.stack_var 0#u32
-  let p1 ← contracts.bootstrap.value_var 2#u32
-  let y1 ←
-    lift (Std.Array.to_slice (Array.make 2#usize [ p, p1 ] : Array
-      shapes.Pattern 2#usize))
-  let ret1 := alloc.slice.Slice.into_vec y1
-  let p2 ←
-    contracts.bootstrap.sum (shapes.Pattern.VarPattern 1#u32)
-      (shapes.Pattern.VarPattern 2#u32)
-  let y2 ←
-    lift (Std.Array.to_slice (Array.make 2#usize [ p, p2 ] : Array
-      shapes.Pattern 2#usize))
-  let ret2 := alloc.slice.Slice.into_vec y2
-  contracts.bootstrap.scheme ret ret1 ret2 (alloc.vec.Vec.new
-    shapes.EffectSlot)
-
-/-- [noble_kernel::contracts::bootstrap::program]:
-    Source: 'crates/noble-kernel/src/contracts/bootstrap.rs', lines 36:0-42:1 -/
-def contracts.bootstrap.program
-  (item_in : alloc.vec.Vec shapes.Pattern)
-  (item_out : alloc.vec.Vec shapes.Pattern)
-  (effects : alloc.vec.Vec shapes.EffectSlot) :
-  Result shapes.Pattern
-  := do
-  shapes.Pattern.program item_in item_out effects
-
-/-- [noble_kernel::contracts::bootstrap::effect_var]:
-    Source: 'crates/noble-kernel/src/contracts/bootstrap.rs', lines 20:0-22:1 -/
-def contracts.bootstrap.effect_var
-  (index : Std.U32) : Result shapes.EffectSlot := do
-  ok (shapes.EffectSlot.Var index)
-
-/-- [noble_kernel::contracts::bootstrap::data::case]:
-    Source: 'crates/noble-kernel/src/contracts/bootstrap/data.rs', lines 101:0-131:1 -/
-def contracts.bootstrap.data.case : Result words.Scheme := do
-  let y ←
-    lift (Std.Array.to_slice
-      (Array.make 6#usize [
-         words.VariableKind.Stack, words.VariableKind.Value,
-         words.VariableKind.Value, words.VariableKind.Stack,
-         words.VariableKind.Effect, words.VariableKind.Effect
-         ] : Array words.VariableKind 6#usize))
-  let ret := alloc.slice.Slice.into_vec y
-  let p ← contracts.bootstrap.stack_var 0#u32
-  let p1 ←
-    contracts.bootstrap.sum (shapes.Pattern.VarPattern 1#u32)
-      (shapes.Pattern.VarPattern 2#u32)
-  let p2 ← contracts.bootstrap.value_var 1#u32
-  let y1 ←
-    lift (Std.Array.to_slice (Array.make 2#usize [ p, p2 ] : Array
-      shapes.Pattern 2#usize))
-  let ret1 := alloc.slice.Slice.into_vec y1
-  let p3 ← contracts.bootstrap.stack_var 3#u32
-  let y2 ←
-    lift (Std.Array.to_slice (Array.make 1#usize [ p3 ] : Array shapes.Pattern
-      1#usize))
-  let ret2 := alloc.slice.Slice.into_vec y2
-  let es ← contracts.bootstrap.effect_var 4#u32
-  let y3 ←
-    lift (Std.Array.to_slice (Array.make 1#usize [ es ] : Array
-      shapes.EffectSlot 1#usize))
-  let ret3 := alloc.slice.Slice.into_vec y3
-  let p4 ← contracts.bootstrap.program ret1 ret2 ret3
-  let p5 ← contracts.bootstrap.value_var 2#u32
-  let y4 ←
-    lift (Std.Array.to_slice (Array.make 2#usize [ p, p5 ] : Array
-      shapes.Pattern 2#usize))
-  let ret4 := alloc.slice.Slice.into_vec y4
-  let y5 ←
-    lift (Std.Array.to_slice (Array.make 1#usize [ p3 ] : Array shapes.Pattern
-      1#usize))
-  let ret5 := alloc.slice.Slice.into_vec y5
-  let es1 ← contracts.bootstrap.effect_var 5#u32
-  let y6 ←
-    lift (Std.Array.to_slice (Array.make 1#usize [ es1 ] : Array
-      shapes.EffectSlot 1#usize))
-  let ret6 := alloc.slice.Slice.into_vec y6
-  let p6 ← contracts.bootstrap.program ret4 ret5 ret6
-  let y7 ←
-    lift (Std.Array.to_slice (Array.make 4#usize [ p, p1, p4, p6 ] : Array
-      shapes.Pattern 4#usize))
-  let ret7 := alloc.slice.Slice.into_vec y7
-  let y8 ←
-    lift (Std.Array.to_slice (Array.make 1#usize [ p3 ] : Array shapes.Pattern
-      1#usize))
-  let ret8 := alloc.slice.Slice.into_vec y8
-  let y9 ←
-    lift (Std.Array.to_slice (Array.make 2#usize [ es, es1 ] : Array
-      shapes.EffectSlot 2#usize))
-  let ret9 := alloc.slice.Slice.into_vec y9
-  contracts.bootstrap.scheme ret ret7 ret8 ret9
-
-/-- [noble_kernel::contracts::bootstrap::BOOL]
-    Source: 'crates/noble-kernel/src/contracts/bootstrap.rs', lines 7:0-7:66 -/
-@[global_simps, irreducible]
-def contracts.bootstrap.BOOL : shapes.Pattern := shapes.Pattern.BoolPattern
-
-/-- [noble_kernel::contracts::bootstrap::data::if_word]:
-    Source: 'crates/noble-kernel/src/contracts/bootstrap/data.rs', lines 133:0-158:1 -/
-def contracts.bootstrap.data.if_word : Result words.Scheme := do
-  let y ←
-    lift (Std.Array.to_slice
-      (Array.make 4#usize [
-         words.VariableKind.Stack, words.VariableKind.Stack,
-         words.VariableKind.Effect, words.VariableKind.Effect
-         ] : Array words.VariableKind 4#usize))
-  let ret := alloc.slice.Slice.into_vec y
-  let p ← contracts.bootstrap.stack_var 0#u32
-  let y1 ←
-    lift (Std.Array.to_slice (Array.make 1#usize [ p ] : Array shapes.Pattern
-      1#usize))
-  let ret1 := alloc.slice.Slice.into_vec y1
-  let p1 ← contracts.bootstrap.stack_var 1#u32
-  let y2 ←
-    lift (Std.Array.to_slice (Array.make 1#usize [ p1 ] : Array shapes.Pattern
-      1#usize))
-  let ret2 := alloc.slice.Slice.into_vec y2
-  let es ← contracts.bootstrap.effect_var 2#u32
-  let y3 ←
-    lift (Std.Array.to_slice (Array.make 1#usize [ es ] : Array
-      shapes.EffectSlot 1#usize))
-  let ret3 := alloc.slice.Slice.into_vec y3
-  let p2 ← contracts.bootstrap.program ret1 ret2 ret3
-  let y4 ←
-    lift (Std.Array.to_slice (Array.make 1#usize [ p ] : Array shapes.Pattern
-      1#usize))
-  let ret4 := alloc.slice.Slice.into_vec y4
-  let y5 ←
-    lift (Std.Array.to_slice (Array.make 1#usize [ p1 ] : Array shapes.Pattern
-      1#usize))
-  let ret5 := alloc.slice.Slice.into_vec y5
-  let es1 ← contracts.bootstrap.effect_var 3#u32
-  let y6 ←
-    lift (Std.Array.to_slice (Array.make 1#usize [ es1 ] : Array
-      shapes.EffectSlot 1#usize))
-  let ret6 := alloc.slice.Slice.into_vec y6
-  let p3 ← contracts.bootstrap.program ret4 ret5 ret6
-  let y7 ←
-    lift (Std.Array.to_slice
-      (Array.make 4#usize [ p, contracts.bootstrap.BOOL, p2, p3 ] : Array
-      shapes.Pattern 4#usize))
-  let ret7 := alloc.slice.Slice.into_vec y7
-  let y8 ←
-    lift (Std.Array.to_slice (Array.make 1#usize [ p1 ] : Array shapes.Pattern
-      1#usize))
-  let ret8 := alloc.slice.Slice.into_vec y8
-  let y9 ←
-    lift (Std.Array.to_slice (Array.make 2#usize [ es, es1 ] : Array
-      shapes.EffectSlot 2#usize))
-  let ret9 := alloc.slice.Slice.into_vec y9
-  contracts.bootstrap.scheme ret ret7 ret8 ret9
-
-/-- [noble_kernel::contracts::bootstrap::list]:
-    Source: 'crates/noble-kernel/src/contracts/bootstrap.rs', lines 32:0-34:1 -/
-def contracts.bootstrap.list
-  (item : shapes.Pattern) : Result shapes.Pattern := do
-  ok (shapes.Pattern.ListPattern item)
-
-/-- [noble_kernel::contracts::bootstrap::data::nil]:
-    Source: 'crates/noble-kernel/src/contracts/bootstrap/data.rs', lines 160:0-173:1 -/
-def contracts.bootstrap.data.nil : Result words.Scheme := do
-  let y ←
-    lift (Std.Array.to_slice
-      (Array.make 2#usize [
-         words.VariableKind.Stack, words.VariableKind.Value
-         ] : Array words.VariableKind 2#usize))
-  let ret := alloc.slice.Slice.into_vec y
-  let p ← contracts.bootstrap.stack_var 0#u32
-  let y1 ←
-    lift (Std.Array.to_slice (Array.make 1#usize [ p ] : Array shapes.Pattern
-      1#usize))
-  let ret1 := alloc.slice.Slice.into_vec y1
-  let p1 ← contracts.bootstrap.list (shapes.Pattern.VarPattern 1#u32)
-  let y2 ←
-    lift (Std.Array.to_slice (Array.make 2#usize [ p, p1 ] : Array
-      shapes.Pattern 2#usize))
-  let ret2 := alloc.slice.Slice.into_vec y2
-  contracts.bootstrap.scheme ret ret1 ret2 (alloc.vec.Vec.new
-    shapes.EffectSlot)
-
-/-- [noble_kernel::contracts::bootstrap::data::cons]:
-    Source: 'crates/noble-kernel/src/contracts/bootstrap/data.rs', lines 175:0-192:1 -/
-def contracts.bootstrap.data.cons : Result words.Scheme := do
-  let y ←
-    lift (Std.Array.to_slice
-      (Array.make 2#usize [
-         words.VariableKind.Stack, words.VariableKind.Value
-         ] : Array words.VariableKind 2#usize))
-  let ret := alloc.slice.Slice.into_vec y
-  let p ← contracts.bootstrap.stack_var 0#u32
-  let p1 ← contracts.bootstrap.value_var 1#u32
-  let p2 ← contracts.bootstrap.list (shapes.Pattern.VarPattern 1#u32)
-  let y1 ←
-    lift (Std.Array.to_slice (Array.make 3#usize [ p, p1, p2 ] : Array
-      shapes.Pattern 3#usize))
-  let ret1 := alloc.slice.Slice.into_vec y1
-  let y2 ←
-    lift (Std.Array.to_slice (Array.make 2#usize [ p, p2 ] : Array
-      shapes.Pattern 2#usize))
-  let ret2 := alloc.slice.Slice.into_vec y2
-  contracts.bootstrap.scheme ret ret1 ret2 (alloc.vec.Vec.new
-    shapes.EffectSlot)
-
-/-- [noble_kernel::contracts::bootstrap::data::list_case]:
-    Source: 'crates/noble-kernel/src/contracts/bootstrap/data.rs', lines 194:0-224:1 -/
-def contracts.bootstrap.data.list_case : Result words.Scheme := do
-  let y ←
-    lift (Std.Array.to_slice
-      (Array.make 5#usize [
-         words.VariableKind.Stack, words.VariableKind.Value,
-         words.VariableKind.Stack, words.VariableKind.Effect,
-         words.VariableKind.Effect
-         ] : Array words.VariableKind 5#usize))
-  let ret := alloc.slice.Slice.into_vec y
-  let p ← contracts.bootstrap.stack_var 0#u32
-  let p1 ← contracts.bootstrap.list (shapes.Pattern.VarPattern 1#u32)
-  let y1 ←
-    lift (Std.Array.to_slice (Array.make 1#usize [ p ] : Array shapes.Pattern
-      1#usize))
-  let ret1 := alloc.slice.Slice.into_vec y1
-  let p2 ← contracts.bootstrap.stack_var 2#u32
-  let y2 ←
-    lift (Std.Array.to_slice (Array.make 1#usize [ p2 ] : Array shapes.Pattern
-      1#usize))
-  let ret2 := alloc.slice.Slice.into_vec y2
-  let es ← contracts.bootstrap.effect_var 3#u32
-  let y3 ←
-    lift (Std.Array.to_slice (Array.make 1#usize [ es ] : Array
-      shapes.EffectSlot 1#usize))
-  let ret3 := alloc.slice.Slice.into_vec y3
-  let p3 ← contracts.bootstrap.program ret1 ret2 ret3
-  let p4 ← contracts.bootstrap.value_var 1#u32
-  let y4 ←
-    lift (Std.Array.to_slice (Array.make 3#usize [ p, p4, p1 ] : Array
-      shapes.Pattern 3#usize))
-  let ret4 := alloc.slice.Slice.into_vec y4
-  let y5 ←
-    lift (Std.Array.to_slice (Array.make 1#usize [ p2 ] : Array shapes.Pattern
-      1#usize))
-  let ret5 := alloc.slice.Slice.into_vec y5
-  let es1 ← contracts.bootstrap.effect_var 4#u32
-  let y6 ←
-    lift (Std.Array.to_slice (Array.make 1#usize [ es1 ] : Array
-      shapes.EffectSlot 1#usize))
-  let ret6 := alloc.slice.Slice.into_vec y6
-  let p5 ← contracts.bootstrap.program ret4 ret5 ret6
-  let y7 ←
-    lift (Std.Array.to_slice (Array.make 4#usize [ p, p1, p3, p5 ] : Array
-      shapes.Pattern 4#usize))
-  let ret7 := alloc.slice.Slice.into_vec y7
-  let y8 ←
-    lift (Std.Array.to_slice (Array.make 1#usize [ p2 ] : Array shapes.Pattern
-      1#usize))
-  let ret8 := alloc.slice.Slice.into_vec y8
-  let y9 ←
-    lift (Std.Array.to_slice (Array.make 2#usize [ es, es1 ] : Array
-      shapes.EffectSlot 2#usize))
-  let ret9 := alloc.slice.Slice.into_vec y9
-  contracts.bootstrap.scheme ret ret7 ret8 ret9
-
-/-- [noble_kernel::contracts::TEST_EMIT]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 14:0-14:66
-    Visibility: public -/
-@[global_simps, irreducible] def contracts.TEST_EMIT : types.EffId := 0#u32
-
-/-- [noble_kernel::contracts::bootstrap::TEXT]
-    Source: 'crates/noble-kernel/src/contracts/bootstrap.rs', lines 9:0-9:66 -/
-@[global_simps, irreducible]
-def contracts.bootstrap.TEXT : shapes.Pattern := shapes.Pattern.TextPattern
-
-/-- [noble_kernel::contracts::bootstrap::data::test_emit]:
-    Source: 'crates/noble-kernel/src/contracts/bootstrap/data.rs', lines 226:0-235:1 -/
-def contracts.bootstrap.data.test_emit : Result words.Scheme := do
-  let y ←
-    lift (Std.Array.to_slice (Array.make 1#usize [ words.VariableKind.Stack ] :
-      Array words.VariableKind 1#usize))
-  let ret := alloc.slice.Slice.into_vec y
-  let p ← contracts.bootstrap.stack_var 0#u32
-  let y1 ←
-    lift (Std.Array.to_slice
-      (Array.make 2#usize [ p, contracts.bootstrap.TEXT ] : Array
-      shapes.Pattern 2#usize))
-  let ret1 := alloc.slice.Slice.into_vec y1
-  let y2 ←
-    lift (Std.Array.to_slice
-      (Array.make 2#usize [ p, contracts.bootstrap.UNIT ] : Array
-      shapes.Pattern 2#usize))
   let ret2 := alloc.slice.Slice.into_vec y2
   let y3 ←
     lift (Std.Array.to_slice
       (Array.make 1#usize [ shapes.EffectSlot.Effect contracts.TEST_EMIT ] :
       Array shapes.EffectSlot 1#usize))
   let ret3 := alloc.slice.Slice.into_vec y3
-  contracts.bootstrap.scheme ret ret1 ret2 ret3
+  ok { var_kinds := ret, stack_in := ret1, stack_out := ret2, effects := ret3 }
 
-/-- [noble_kernel::contracts::bootstrap::SYNTAX]
-    Source: 'crates/noble-kernel/src/contracts/bootstrap.rs', lines 10:0-10:70 -/
-@[global_simps, irreducible]
-def contracts.bootstrap.SYNTAX : shapes.Pattern := shapes.Pattern.SyntaxPattern
+/-- [noble_kernel::contracts::nominal::type::walk::{noble_kernel::contracts::Env}::valid_nominal_payload]:
+    Source: 'crates/noble-kernel/src/contracts/nominal/type/walk.rs', lines 31:4-37:5 -/
+def contracts.nominal.type.walk.Env.valid_nominal_payload
+  (self : contracts.Env) (ty : types.Ty) (max_nodes : Std.U32) :
+  Result Bool
+  := do
+  let i := alloc.vec.Vec.len self.nominals
+  contracts.nominal.type.walk.Env.walk_type self ty max_nodes true i none
 
-/-- [noble_kernel::contracts::bootstrap::reflect]:
-    Source: 'crates/noble-kernel/src/contracts/bootstrap.rs', lines 213:0-232:1 -/
-def contracts.bootstrap.reflect : Result words.Scheme := do
-  let y ←
-    lift (Std.Array.to_slice
-      (Array.make 4#usize [
-         words.VariableKind.Stack, words.VariableKind.Stack,
-         words.VariableKind.Stack, words.VariableKind.Effect
-         ] : Array words.VariableKind 4#usize))
-  let ret := alloc.slice.Slice.into_vec y
-  let p ← contracts.bootstrap.stack_var 0#u32
-  let p1 ← contracts.bootstrap.stack_var 1#u32
-  let y1 ←
-    lift (Std.Array.to_slice (Array.make 1#usize [ p1 ] : Array shapes.Pattern
-      1#usize))
-  let ret1 := alloc.slice.Slice.into_vec y1
-  let p2 ← contracts.bootstrap.stack_var 2#u32
-  let y2 ←
-    lift (Std.Array.to_slice (Array.make 1#usize [ p2 ] : Array shapes.Pattern
-      1#usize))
-  let ret2 := alloc.slice.Slice.into_vec y2
-  let es ← contracts.bootstrap.effect_var 3#u32
-  let y3 ←
-    lift (Std.Array.to_slice (Array.make 1#usize [ es ] : Array
-      shapes.EffectSlot 1#usize))
-  let ret3 := alloc.slice.Slice.into_vec y3
-  let p3 ← contracts.bootstrap.program ret1 ret2 ret3
-  let y4 ←
-    lift (Std.Array.to_slice (Array.make 2#usize [ p, p3 ] : Array
-      shapes.Pattern 2#usize))
-  let ret4 := alloc.slice.Slice.into_vec y4
-  let y5 ←
-    lift (Std.Array.to_slice
-      (Array.make 2#usize [ p, contracts.bootstrap.SYNTAX ] : Array
-      shapes.Pattern 2#usize))
-  let ret5 := alloc.slice.Slice.into_vec y5
-  contracts.bootstrap.scheme ret ret4 ret5 (alloc.vec.Vec.new
-    shapes.EffectSlot)
+/-- [noble_kernel::contracts::nominal::append]:
+    Source: 'crates/noble-kernel/src/contracts/nominal.rs', lines 11:0-26:1 -/
+def contracts.nominal.append
+  (env : contracts.Env) (scheme : words.Scheme) (kind : contracts.Behavior)
+  (owner : Std.U64) :
+  Result (core.result.Result (contracts.Env × contracts.Definition)
+    contracts.NominalError)
+  := do
+  let i := alloc.vec.Vec.len env.defs
+  let r ← core.convert.num.ptr_try_from_impls.TryFromU32Usize.try_from i
+  match r with
+  | core.result.Result.Ok index =>
+    let v ← alloc.vec.Vec.push env.defs scheme
+    let v1 ← alloc.vec.Vec.push env.kinds kind
+    let v2 ←
+      alloc.vec.Vec.push env.deps (alloc.vec.Vec.new contracts.Definition)
+    let v3 ← alloc.vec.Vec.push env.definition_owners (some owner)
+    ok (core.result.Result.Ok
+      ({ env with defs := v, kinds := v1, deps := v2, definition_owners := v3 },
+      index))
+  | core.result.Result.Err _ =>
+    ok (core.result.Result.Err contracts.NominalError.TooManyDefinitions)
 
-/-- [noble_kernel::contracts::bootstrap::run]:
-    Source: 'crates/noble-kernel/src/contracts/bootstrap.rs', lines 193:0-211:1 -/
-def contracts.bootstrap.run : Result words.Scheme := do
-  let y ←
-    lift (Std.Array.to_slice
-      (Array.make 3#usize [
-         words.VariableKind.Stack, words.VariableKind.Stack,
-         words.VariableKind.Effect
-         ] : Array words.VariableKind 3#usize))
-  let ret := alloc.slice.Slice.into_vec y
-  let p ← contracts.bootstrap.stack_var 0#u32
-  let y1 ←
-    lift (Std.Array.to_slice (Array.make 1#usize [ p ] : Array shapes.Pattern
-      1#usize))
-  let ret1 := alloc.slice.Slice.into_vec y1
-  let p1 ← contracts.bootstrap.stack_var 1#u32
-  let y2 ←
-    lift (Std.Array.to_slice (Array.make 1#usize [ p1 ] : Array shapes.Pattern
-      1#usize))
-  let ret2 := alloc.slice.Slice.into_vec y2
-  let es ← contracts.bootstrap.effect_var 2#u32
-  let y3 ←
-    lift (Std.Array.to_slice (Array.make 1#usize [ es ] : Array
-      shapes.EffectSlot 1#usize))
-  let ret3 := alloc.slice.Slice.into_vec y3
-  let p2 ← contracts.bootstrap.program ret1 ret2 ret3
-  let y4 ←
-    lift (Std.Array.to_slice (Array.make 2#usize [ p, p2 ] : Array
-      shapes.Pattern 2#usize))
-  let ret4 := alloc.slice.Slice.into_vec y4
-  let y5 ←
-    lift (Std.Array.to_slice (Array.make 1#usize [ p1 ] : Array shapes.Pattern
-      1#usize))
-  let ret5 := alloc.slice.Slice.into_vec y5
-  let y6 ←
-    lift (Std.Array.to_slice (Array.make 1#usize [ es ] : Array
-      shapes.EffectSlot 1#usize))
-  let ret6 := alloc.slice.Slice.into_vec y6
-  contracts.bootstrap.scheme ret ret4 ret5 ret6
+/-- [noble_kernel::contracts::nominal::has_definition_space::{impl core::ops::function::FnOnce<(usize,), core::option::Option<u32>> for noble_kernel::contracts::nominal::has_definition_space::{closure}}::call_once]:
+    Source: 'crates/noble-kernel/src/contracts/nominal.rs', lines 81:18-81:43 -/
+def
+  contracts.nominal.has_definition_space.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeOptionU32.call_once
+  (c : contracts.nominal.has_definition_space.closure)
+  (tupled_args : Std.Usize) :
+  Result (Option Std.U32)
+  := do
+  let r ←
+    core.convert.num.ptr_try_from_impls.TryFromU32Usize.try_from tupled_args
+  core.result.Result.ok r
 
-/-- [noble_kernel::contracts::bootstrap::compose]:
-    Source: 'crates/noble-kernel/src/contracts/bootstrap.rs', lines 158:0-191:1 -/
-def contracts.bootstrap.compose : Result words.Scheme := do
-  let y ←
-    lift (Std.Array.to_slice
-      (Array.make 6#usize [
-         words.VariableKind.Stack, words.VariableKind.Stack,
-         words.VariableKind.Stack, words.VariableKind.Stack,
-         words.VariableKind.Effect, words.VariableKind.Effect
-         ] : Array words.VariableKind 6#usize))
-  let ret := alloc.slice.Slice.into_vec y
-  let p ← contracts.bootstrap.stack_var 0#u32
-  let p1 ← contracts.bootstrap.stack_var 1#u32
-  let y1 ←
-    lift (Std.Array.to_slice (Array.make 1#usize [ p1 ] : Array shapes.Pattern
-      1#usize))
-  let ret1 := alloc.slice.Slice.into_vec y1
-  let p2 ← contracts.bootstrap.stack_var 2#u32
-  let y2 ←
-    lift (Std.Array.to_slice (Array.make 1#usize [ p2 ] : Array shapes.Pattern
-      1#usize))
-  let ret2 := alloc.slice.Slice.into_vec y2
-  let es ← contracts.bootstrap.effect_var 4#u32
-  let y3 ←
-    lift (Std.Array.to_slice (Array.make 1#usize [ es ] : Array
-      shapes.EffectSlot 1#usize))
-  let ret3 := alloc.slice.Slice.into_vec y3
-  let p3 ← contracts.bootstrap.program ret1 ret2 ret3
-  let y4 ←
-    lift (Std.Array.to_slice (Array.make 1#usize [ p2 ] : Array shapes.Pattern
-      1#usize))
-  let ret4 := alloc.slice.Slice.into_vec y4
-  let p4 ← contracts.bootstrap.stack_var 3#u32
-  let y5 ←
-    lift (Std.Array.to_slice (Array.make 1#usize [ p4 ] : Array shapes.Pattern
-      1#usize))
-  let ret5 := alloc.slice.Slice.into_vec y5
-  let es1 ← contracts.bootstrap.effect_var 5#u32
-  let y6 ←
-    lift (Std.Array.to_slice (Array.make 1#usize [ es1 ] : Array
-      shapes.EffectSlot 1#usize))
-  let ret6 := alloc.slice.Slice.into_vec y6
-  let p5 ← contracts.bootstrap.program ret4 ret5 ret6
-  let y7 ←
-    lift (Std.Array.to_slice (Array.make 3#usize [ p, p3, p5 ] : Array
-      shapes.Pattern 3#usize))
-  let ret7 := alloc.slice.Slice.into_vec y7
-  let y8 ←
-    lift (Std.Array.to_slice (Array.make 1#usize [ p1 ] : Array shapes.Pattern
-      1#usize))
-  let ret8 := alloc.slice.Slice.into_vec y8
-  let y9 ←
-    lift (Std.Array.to_slice (Array.make 1#usize [ p4 ] : Array shapes.Pattern
-      1#usize))
-  let ret9 := alloc.slice.Slice.into_vec y9
-  let y10 ←
-    lift (Std.Array.to_slice (Array.make 2#usize [ es, es1 ] : Array
-      shapes.EffectSlot 2#usize))
-  let ret10 := alloc.slice.Slice.into_vec y10
-  let p6 ← contracts.bootstrap.program ret8 ret9 ret10
-  let y11 ←
-    lift (Std.Array.to_slice (Array.make 2#usize [ p, p6 ] : Array
-      shapes.Pattern 2#usize))
-  let ret11 := alloc.slice.Slice.into_vec y11
-  contracts.bootstrap.scheme ret ret7 ret11 (alloc.vec.Vec.new
-    shapes.EffectSlot)
+/-- Trait implementation: [noble_kernel::contracts::nominal::has_definition_space::{impl core::ops::function::FnOnce<(usize,), core::option::Option<u32>> for noble_kernel::contracts::nominal::has_definition_space::{closure}}]
+    Source: 'crates/noble-kernel/src/contracts/nominal.rs', lines 81:18-81:43 -/
+@[reducible]
+def
+  contracts.nominal.has_definition_space.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeOptionU32
+  : core.ops.function.FnOnce contracts.nominal.has_definition_space.closure
+  Std.Usize (Option Std.U32) := {
+  call_once :=
+    contracts.nominal.has_definition_space.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeOptionU32.call_once
+}
 
-/-- [noble_kernel::contracts::bootstrap::quote]:
-    Source: 'crates/noble-kernel/src/contracts/bootstrap.rs', lines 138:0-156:1 -/
-def contracts.bootstrap.quote : Result words.Scheme := do
-  let y ←
-    lift (Std.Array.to_slice
-      (Array.make 3#usize [
-         words.VariableKind.Stack, words.VariableKind.Value,
-         words.VariableKind.Stack
-         ] : Array words.VariableKind 3#usize))
-  let ret := alloc.slice.Slice.into_vec y
-  let p ← contracts.bootstrap.stack_var 0#u32
-  let p1 ← contracts.bootstrap.value_var 1#u32
-  let y1 ←
-    lift (Std.Array.to_slice (Array.make 2#usize [ p, p1 ] : Array
-      shapes.Pattern 2#usize))
-  let ret1 := alloc.slice.Slice.into_vec y1
-  let p2 ← contracts.bootstrap.stack_var 2#u32
-  let y2 ←
-    lift (Std.Array.to_slice (Array.make 1#usize [ p2 ] : Array shapes.Pattern
-      1#usize))
-  let ret2 := alloc.slice.Slice.into_vec y2
-  let y3 ←
-    lift (Std.Array.to_slice (Array.make 2#usize [ p2, p1 ] : Array
-      shapes.Pattern 2#usize))
-  let ret3 := alloc.slice.Slice.into_vec y3
-  let p3 ←
-    contracts.bootstrap.program ret2 ret3 (alloc.vec.Vec.new shapes.EffectSlot)
-  let y4 ←
-    lift (Std.Array.to_slice (Array.make 2#usize [ p, p3 ] : Array
-      shapes.Pattern 2#usize))
-  let ret4 := alloc.slice.Slice.into_vec y4
-  contracts.bootstrap.scheme ret ret1 ret4 (alloc.vec.Vec.new
-    shapes.EffectSlot)
+/-- [noble_kernel::contracts::nominal::has_definition_space]:
+    Source: 'crates/noble-kernel/src/contracts/nominal.rs', lines 70:0-83:1 -/
+def contracts.nominal.has_definition_space
+  (env : contracts.Env) (decl : contracts.NominalDecl) : Result Bool := do
+  let (ns, b) ←
+    match decl.shape with
+    | types.NominalShape.Opaque _ => ok (decl.shape, true)
+    | types.NominalShape.Variant _ _ => ok (decl.shape, false)
+  if b
+  then
+    let i := alloc.vec.Vec.len env.defs
+    let o ← lift (Usize.checked_add i 2#usize)
+    let o1 ←
+      core.option.Option.and_then
+        contracts.nominal.has_definition_space.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeOptionU32
+        o ()
+    ok (core.option.Option.is_some o1)
+  else
+    let b1 ←
+      match ns with
+      | types.NominalShape.Opaque _ => ok false
+      | types.NominalShape.Variant _ _ => ok true
+    if b1
+    then
+      let i := alloc.vec.Vec.len env.defs
+      let o ← lift (Usize.checked_add i 3#usize)
+      let o1 ←
+        core.option.Option.and_then
+          contracts.nominal.has_definition_space.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeOptionU32
+          o ()
+      ok (core.option.Option.is_some o1)
+    else ok false
 
-/-- [noble_kernel::contracts::bootstrap::I64]
-    Source: 'crates/noble-kernel/src/contracts/bootstrap.rs', lines 8:0-8:64 -/
-@[global_simps, irreducible]
-def contracts.bootstrap.I64 : shapes.Pattern := shapes.Pattern.I64Pattern
+/-- [noble_kernel::contracts::nominal::valid_representation]:
+    Source: 'crates/noble-kernel/src/contracts/nominal.rs', lines 60:0-68:1 -/
+def contracts.nominal.valid_representation
+  (env : contracts.Env) (decl : contracts.NominalDecl) : Result Bool := do
+  match decl.shape with
+  | types.NominalShape.Opaque representation =>
+    contracts.nominal.type.walk.Env.valid_nominal_payload env representation
+      512#u32
+  | types.NominalShape.Variant _ _ =>
+    match decl.shape with
+    | types.NominalShape.Opaque _ => ok false
+    | types.NominalShape.Variant left right =>
+      let b ←
+        contracts.nominal.type.walk.Env.valid_nominal_payload env left 512#u32
+      if b
+      then
+        contracts.nominal.type.walk.Env.valid_nominal_payload env right 512#u32
+      else ok false
 
-/-- [noble_kernel::contracts::bootstrap::equals]:
-    Source: 'crates/noble-kernel/src/contracts/bootstrap.rs', lines 129:0-136:1 -/
-def contracts.bootstrap.equals : Result words.Scheme := do
-  let y ←
-    lift (Std.Array.to_slice (Array.make 1#usize [ words.VariableKind.Stack ] :
-      Array words.VariableKind 1#usize))
-  let ret := alloc.slice.Slice.into_vec y
-  let p ← contracts.bootstrap.stack_var 0#u32
-  let y1 ←
-    lift (Std.Array.to_slice
-      (Array.make 3#usize [
-         p, contracts.bootstrap.I64, contracts.bootstrap.I64
-         ] : Array shapes.Pattern 3#usize))
-  let ret1 := alloc.slice.Slice.into_vec y1
-  let y2 ←
-    lift (Std.Array.to_slice
-      (Array.make 2#usize [ p, contracts.bootstrap.BOOL ] : Array
-      shapes.Pattern 2#usize))
-  let ret2 := alloc.slice.Slice.into_vec y2
-  contracts.bootstrap.scheme ret ret1 ret2 (alloc.vec.Vec.new
-    shapes.EffectSlot)
+/-- [noble_kernel::contracts::nominal::append_matcher]:
+    Source: 'crates/noble-kernel/src/contracts/nominal.rs', lines 154:0-167:1 -/
+def contracts.nominal.append_matcher
+  (env : contracts.Env) (decl : contracts.NominalDecl) :
+  Result (core.result.Result (contracts.Env × contracts.Definition)
+    contracts.NominalError)
+  := do
+  let o ← contracts.nominal.schemes.matcher decl
+  match o with
+  | none =>
+    ok (core.result.Result.Err contracts.NominalError.InvalidRepresentation)
+  | some scheme =>
+    contracts.nominal.append env scheme
+      (contracts.Behavior.NominalMatchBehavior decl.id) decl.id.module
 
-/-- [noble_kernel::contracts::bootstrap::arith]:
-    Source: 'crates/noble-kernel/src/contracts/bootstrap.rs', lines 117:0-124:1 -/
-def contracts.bootstrap.arith : Result words.Scheme := do
-  let y ←
-    lift (Std.Array.to_slice (Array.make 1#usize [ words.VariableKind.Stack ] :
-      Array words.VariableKind 1#usize))
-  let ret := alloc.slice.Slice.into_vec y
-  let p ← contracts.bootstrap.stack_var 0#u32
-  let y1 ←
-    lift (Std.Array.to_slice
-      (Array.make 3#usize [
-         p, contracts.bootstrap.I64, contracts.bootstrap.I64
-         ] : Array shapes.Pattern 3#usize))
-  let ret1 := alloc.slice.Slice.into_vec y1
-  let y2 ←
-    lift (Std.Array.to_slice (Array.make 2#usize [ p, contracts.bootstrap.I64 ]
-      : Array shapes.Pattern 2#usize))
-  let ret2 := alloc.slice.Slice.into_vec y2
-  contracts.bootstrap.scheme ret ret1 ret2 (alloc.vec.Vec.new
-    shapes.EffectSlot)
+/-- [noble_kernel::contracts::nominal::append_arm]:
+    Source: 'crates/noble-kernel/src/contracts/nominal.rs', lines 138:0-152:1 -/
+def contracts.nominal.append_arm
+  (env : contracts.Env) (decl : contracts.NominalDecl) (right : Bool) :
+  Result (core.result.Result (contracts.Env × contracts.Definition)
+    contracts.NominalError)
+  := do
+  let o ← contracts.nominal.schemes.arm decl right
+  match o with
+  | none =>
+    ok (core.result.Result.Err contracts.NominalError.InvalidRepresentation)
+  | some scheme =>
+    let kind ←
+      if right
+      then ok (contracts.Behavior.NominalRightBehavior decl.id)
+      else ok (contracts.Behavior.NominalLeftBehavior decl.id)
+    contracts.nominal.append env scheme kind decl.id.module
 
-/-- [noble_kernel::contracts::bootstrap::dip]:
-    Source: 'crates/noble-kernel/src/contracts/bootstrap.rs', lines 95:0-115:1 -/
-def contracts.bootstrap.dip : Result words.Scheme := do
-  let y ←
-    lift (Std.Array.to_slice
-      (Array.make 4#usize [
-         words.VariableKind.Stack, words.VariableKind.Value,
-         words.VariableKind.Stack, words.VariableKind.Effect
-         ] : Array words.VariableKind 4#usize))
-  let ret := alloc.slice.Slice.into_vec y
-  let p ← contracts.bootstrap.stack_var 0#u32
-  let p1 ← contracts.bootstrap.value_var 1#u32
-  let y1 ←
-    lift (Std.Array.to_slice (Array.make 1#usize [ p ] : Array shapes.Pattern
-      1#usize))
-  let ret1 := alloc.slice.Slice.into_vec y1
-  let p2 ← contracts.bootstrap.stack_var 2#u32
-  let y2 ←
-    lift (Std.Array.to_slice (Array.make 1#usize [ p2 ] : Array shapes.Pattern
-      1#usize))
-  let ret2 := alloc.slice.Slice.into_vec y2
-  let es ← contracts.bootstrap.effect_var 3#u32
-  let y3 ←
-    lift (Std.Array.to_slice (Array.make 1#usize [ es ] : Array
-      shapes.EffectSlot 1#usize))
-  let ret3 := alloc.slice.Slice.into_vec y3
-  let p3 ← contracts.bootstrap.program ret1 ret2 ret3
-  let y4 ←
-    lift (Std.Array.to_slice (Array.make 3#usize [ p, p1, p3 ] : Array
-      shapes.Pattern 3#usize))
-  let ret4 := alloc.slice.Slice.into_vec y4
-  let y5 ←
-    lift (Std.Array.to_slice (Array.make 2#usize [ p2, p1 ] : Array
-      shapes.Pattern 2#usize))
-  let ret5 := alloc.slice.Slice.into_vec y5
-  let y6 ←
-    lift (Std.Array.to_slice (Array.make 1#usize [ es ] : Array
-      shapes.EffectSlot 1#usize))
-  let ret6 := alloc.slice.Slice.into_vec y6
-  contracts.bootstrap.scheme ret ret4 ret5 ret6
+/-- [noble_kernel::contracts::nominal::variant_ops]:
+    Source: 'crates/noble-kernel/src/contracts/nominal.rs', lines 119:0-136:1 -/
+def contracts.nominal.variant_ops
+  (env : contracts.Env) (decl : contracts.NominalDecl) :
+  Result (core.result.Result (contracts.Env × contracts.NominalOps)
+    contracts.NominalError)
+  := do
+  let r ← contracts.nominal.append_arm env decl false
+  match r with
+  | core.result.Result.Ok value =>
+    let (env1, left) := value
+    let r1 ← contracts.nominal.append_arm env1 decl true
+    match r1 with
+    | core.result.Result.Ok value1 =>
+      let (env2, right) := value1
+      let r2 ← contracts.nominal.append_matcher env2 decl
+      match r2 with
+      | core.result.Result.Ok value2 =>
+        let (env3, matcher) := value2
+        ok (core.result.Result.Ok (env3,
+          {
+            new := none,
+            into := none,
+            left := (some left),
+            right := (some right),
+            matcher := (some matcher)
+          }))
+      | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+    | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
-/-- [noble_kernel::contracts::bootstrap::swap]:
-    Source: 'crates/noble-kernel/src/contracts/bootstrap.rs', lines 82:0-93:1 -/
-def contracts.bootstrap.swap : Result words.Scheme := do
-  let y ←
-    lift (Std.Array.to_slice
-      (Array.make 3#usize [
-         words.VariableKind.Stack, words.VariableKind.Value,
-         words.VariableKind.Value
-         ] : Array words.VariableKind 3#usize))
-  let ret := alloc.slice.Slice.into_vec y
-  let p ← contracts.bootstrap.stack_var 0#u32
-  let p1 ← contracts.bootstrap.value_var 1#u32
-  let p2 ← contracts.bootstrap.value_var 2#u32
-  let y1 ←
-    lift (Std.Array.to_slice (Array.make 3#usize [ p, p1, p2 ] : Array
-      shapes.Pattern 3#usize))
-  let ret1 := alloc.slice.Slice.into_vec y1
-  let y2 ←
-    lift (Std.Array.to_slice (Array.make 3#usize [ p, p2, p1 ] : Array
-      shapes.Pattern 3#usize))
-  let ret2 := alloc.slice.Slice.into_vec y2
-  contracts.bootstrap.scheme ret ret1 ret2 (alloc.vec.Vec.new
-    shapes.EffectSlot)
+/-- [noble_kernel::contracts::nominal::append_conversion]:
+    Source: 'crates/noble-kernel/src/contracts/nominal.rs', lines 103:0-117:1 -/
+def contracts.nominal.append_conversion
+  (env : contracts.Env) (decl : contracts.NominalDecl) (into : Bool) :
+  Result (core.result.Result (contracts.Env × contracts.Definition)
+    contracts.NominalError)
+  := do
+  let o ← contracts.nominal.schemes.conversion decl into
+  match o with
+  | none =>
+    ok (core.result.Result.Err contracts.NominalError.InvalidRepresentation)
+  | some scheme =>
+    let kind ←
+      if into
+      then ok (contracts.Behavior.NominalIntoBehavior decl.id)
+      else ok (contracts.Behavior.NominalNewBehavior decl.id)
+    contracts.nominal.append env scheme kind decl.id.module
 
-/-- [noble_kernel::contracts::bootstrap::drop]:
-    Source: 'crates/noble-kernel/src/contracts/bootstrap.rs', lines 70:0-80:1 -/
-def contracts.bootstrap.drop : Result words.Scheme := do
-  let y ←
-    lift (Std.Array.to_slice
-      (Array.make 2#usize [
-         words.VariableKind.Stack, words.VariableKind.Value
-         ] : Array words.VariableKind 2#usize))
-  let ret := alloc.slice.Slice.into_vec y
-  let p ← contracts.bootstrap.stack_var 0#u32
-  let p1 ← contracts.bootstrap.value_var 1#u32
-  let y1 ←
-    lift (Std.Array.to_slice (Array.make 2#usize [ p, p1 ] : Array
-      shapes.Pattern 2#usize))
-  let ret1 := alloc.slice.Slice.into_vec y1
-  let y2 ←
-    lift (Std.Array.to_slice (Array.make 1#usize [ p ] : Array shapes.Pattern
-      1#usize))
-  let ret2 := alloc.slice.Slice.into_vec y2
-  contracts.bootstrap.scheme ret ret1 ret2 (alloc.vec.Vec.new
-    shapes.EffectSlot)
+/-- [noble_kernel::contracts::nominal::opaque_ops]:
+    Source: 'crates/noble-kernel/src/contracts/nominal.rs', lines 85:0-101:1 -/
+def contracts.nominal.opaque_ops
+  (env : contracts.Env) (decl : contracts.NominalDecl) :
+  Result (core.result.Result (contracts.Env × contracts.NominalOps)
+    contracts.NominalError)
+  := do
+  let r ← contracts.nominal.append_conversion env decl false
+  match r with
+  | core.result.Result.Ok value =>
+    let (env1, new) := value
+    let r1 ← contracts.nominal.append_conversion env1 decl true
+    match r1 with
+    | core.result.Result.Ok value1 =>
+      let (env2, into) := value1
+      ok (core.result.Result.Ok (env2,
+        {
+          new := (some new),
+          into := (some into),
+          left := none,
+          right := none,
+          matcher := none
+        }))
+    | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
-/-- [noble_kernel::contracts::bootstrap::dup]:
-    Source: 'crates/noble-kernel/src/contracts/bootstrap.rs', lines 58:0-68:1 -/
-def contracts.bootstrap.dup : Result words.Scheme := do
-  let y ←
-    lift (Std.Array.to_slice
-      (Array.make 2#usize [
-         words.VariableKind.Stack, words.VariableKind.Value
-         ] : Array words.VariableKind 2#usize))
-  let ret := alloc.slice.Slice.into_vec y
-  let p ← contracts.bootstrap.stack_var 0#u32
-  let p1 ← contracts.bootstrap.value_var 1#u32
-  let y1 ←
-    lift (Std.Array.to_slice (Array.make 2#usize [ p, p1 ] : Array
-      shapes.Pattern 2#usize))
-  let ret1 := alloc.slice.Slice.into_vec y1
-  let y2 ←
-    lift (Std.Array.to_slice (Array.make 3#usize [ p, p1, p1 ] : Array
-      shapes.Pattern 3#usize))
-  let ret2 := alloc.slice.Slice.into_vec y2
-  contracts.bootstrap.scheme ret ret1 ret2 (alloc.vec.Vec.new
-    shapes.EffectSlot)
+/-- [noble_kernel::contracts::nominal::register_ops]:
+    Source: 'crates/noble-kernel/src/contracts/nominal.rs', lines 47:0-58:1 -/
+def contracts.nominal.register_ops
+  (env : contracts.Env) (decl : contracts.NominalDecl) :
+  Result (core.result.Result (contracts.Env × contracts.NominalOps)
+    contracts.NominalError)
+  := do
+  let (ns, b) ←
+    match decl.shape with
+    | types.NominalShape.Opaque _ => ok (decl.shape, true)
+    | types.NominalShape.Variant _ _ => ok (decl.shape, false)
+  if b
+  then contracts.nominal.opaque_ops env { decl with shape := ns }
+  else
+    let b1 ←
+      match ns with
+      | types.NominalShape.Opaque _ => ok false
+      | types.NominalShape.Variant _ _ => ok true
+    if b1
+    then contracts.nominal.variant_ops env { decl with shape := ns }
+    else
+      ok (core.result.Result.Err contracts.NominalError.InvalidRepresentation)
 
-/-- [noble_kernel::contracts::bootstrap::data::table]:
-    Source: 'crates/noble-kernel/src/contracts/bootstrap/data.rs', lines 238:0-264:1
-    Visibility: public -/
-def contracts.bootstrap.data.table
-  : Result (alloc.vec.Vec (contracts.Behavior × words.Scheme)) := do
-  let s ← contracts.bootstrap.dup
-  let s1 ← contracts.bootstrap.drop
-  let s2 ← contracts.bootstrap.swap
-  let s3 ← contracts.bootstrap.dip
-  let s4 ← contracts.bootstrap.arith
-  let s5 ← contracts.bootstrap.equals
-  let s6 ← contracts.bootstrap.quote
-  let s7 ← contracts.bootstrap.compose
-  let s8 ← contracts.bootstrap.run
-  let s9 ← contracts.bootstrap.reflect
-  let s10 ← contracts.bootstrap.data.unit
-  let s11 ← contracts.bootstrap.data.pair_word
-  let s12 ← contracts.bootstrap.data.unpair
-  let s13 ← contracts.bootstrap.data.inl
-  let s14 ← contracts.bootstrap.data.inr
-  let s15 ← contracts.bootstrap.data.case
-  let s16 ← contracts.bootstrap.data.if_word
-  let s17 ← contracts.bootstrap.data.nil
-  let s18 ← contracts.bootstrap.data.cons
-  let s19 ← contracts.bootstrap.data.list_case
-  let s20 ← contracts.bootstrap.data.test_emit
-  let y ←
-    lift (Std.Array.to_slice
-      (Array.make 23#usize [
-         (contracts.Behavior.DupBehavior, s), (contracts.Behavior.DropBehavior,
-         s1), (contracts.Behavior.SwapBehavior, s2),
-         (contracts.Behavior.DipBehavior, s3),
-         (contracts.Behavior.ArithBehavior, s4),
-         (contracts.Behavior.ArithBehavior, s4),
-         (contracts.Behavior.ArithBehavior, s4),
-         (contracts.Behavior.EqualsBehavior, s5),
-         (contracts.Behavior.QuoteBehavior, s6),
-         (contracts.Behavior.ComposeBehavior, s7),
-         (contracts.Behavior.RunBehavior, s8),
-         (contracts.Behavior.ReflectBehavior, s9),
-         (contracts.Behavior.UnitBehavior, s10),
-         (contracts.Behavior.PairBehavior, s11),
-         (contracts.Behavior.UnpairBehavior, s12),
-         (contracts.Behavior.InlBehavior, s13),
-         (contracts.Behavior.InrBehavior, s14),
-         (contracts.Behavior.CaseBehavior, s15),
-         (contracts.Behavior.IfBehavior, s16), (contracts.Behavior.NilBehavior,
-         s17), (contracts.Behavior.ConsBehavior, s18),
-         (contracts.Behavior.ListCaseBehavior, s19),
-         (contracts.Behavior.TestEmitBehavior, s20)
-         ] : Array (contracts.Behavior × words.Scheme) 23#usize))
-  ok (alloc.slice.Slice.into_vec y)
+/-- [noble_kernel::contracts::nominal::register]:
+    Source: 'crates/noble-kernel/src/contracts/nominal.rs', lines 28:0-45:1 -/
+def contracts.nominal.register
+  (env : contracts.Env) (decl : contracts.NominalDecl) :
+  Result (core.result.Result (contracts.Env × contracts.NominalOps)
+    contracts.NominalError)
+  := do
+  let o ← contracts.Env.nominal env decl.id
+  let b := core.option.Option.is_some o
+  if b
+  then ok (core.result.Result.Err contracts.NominalError.DuplicateIdentity)
+  else
+    let b1 ← contracts.nominal.valid_representation env decl
+    if b1
+    then
+      let b2 ← contracts.nominal.has_definition_space env decl
+      if b2
+      then
+        let r ← contracts.nominal.register_ops env decl
+        match r with
+        | core.result.Result.Ok value =>
+          let (env1, ops) := value
+          let v ← alloc.vec.Vec.push env1.nominals decl
+          ok (core.result.Result.Ok
+            ({ env1 with nominals := v, declared_modules := true }, ops))
+        | core.result.Result.Err _ => ok r
+      else
+        ok (core.result.Result.Err contracts.NominalError.TooManyDefinitions)
+    else
+      ok (core.result.Result.Err contracts.NominalError.InvalidRepresentation)
+
+/-- [noble_kernel::contracts::nominal::bound_adapter]:
+    Source: 'crates/noble-kernel/src/contracts/nominal.rs', lines 207:0-219:1 -/
+def contracts.nominal.bound_adapter
+  (definition : contracts.Definition) (row : contracts.BoundEmitRegistration) :
+  Result contracts.BoundAdapter
+  := do
+  ok
+    {
+      definition,
+      adapter_identity := row.adapter_identity,
+      adapter_slot := row.adapter_slot,
+      input := row.input,
+      output := row.output,
+      effects := row.effects
+    }
+
+/-- [noble_kernel::contracts::nominal::checked_bound_registration]: loop body 0:
+    Source: 'crates/noble-kernel/src/contracts/nominal.rs', lines 198:4-205:1 -/
+@[rust_loop_body]
+def contracts.nominal.checked_bound_registration_loop.body
+  (env : contracts.Env) (s : String) (i : Std.U32) (i1 : Std.U64)
+  (v : alloc.vec.Vec types.Ty) (v1 : alloc.vec.Vec types.Ty)
+  (es : types.EffSet) (index : Std.Usize) :
+  Result (ControlFlow Std.Usize (core.result.Result
+    contracts.BoundEmitRegistration contracts.NominalError))
+  := do
+  let i2 := alloc.vec.Vec.len env.bound_adapters
+  if index < i2
+  then
+    let ba ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        contracts.BoundAdapter) env.bound_adapters index
+    if ba.adapter_slot = i
+    then
+      ok (done (core.result.Result.Err
+        contracts.NominalError.InvalidRepresentation))
+    else let index1 ← index + 1#usize
+         ok (cont index1)
+  else
+    ok (done (core.result.Result.Ok
+      {
+        adapter_identity := s,
+        adapter_slot := i,
+        owner := i1,
+        input := v,
+        output := v1,
+        effects := es
+      }))
+
+/-- [noble_kernel::contracts::nominal::checked_bound_registration]: loop 0:
+    Source: 'crates/noble-kernel/src/contracts/nominal.rs', lines 198:4-205:1 -/
+@[rust_loop]
+def contracts.nominal.checked_bound_registration_loop
+  (env : contracts.Env) (s : String) (i : Std.U32) (i1 : Std.U64)
+  (v : alloc.vec.Vec types.Ty) (v1 : alloc.vec.Vec types.Ty)
+  (es : types.EffSet) (index : Std.Usize) :
+  Result (core.result.Result contracts.BoundEmitRegistration
+    contracts.NominalError)
+  := do
+  loop
+    (fun index1 => contracts.nominal.checked_bound_registration_loop.body env s
+      i i1 v v1 es index1)
+    index
+
+/-- [noble_kernel::contracts::nominal::checked_bound_registration]:
+    Source: 'crates/noble-kernel/src/contracts/nominal.rs', lines 185:0-205:1 -/
+def contracts.nominal.checked_bound_registration
+  (env : contracts.Env) (registration : contracts.BoundEmitRegistration) :
+  Result (core.result.Result contracts.BoundEmitRegistration
+    contracts.NominalError)
+  := do
+  let b ← alloc.string.String.is_empty registration.adapter_identity
+  if b
+  then ok (core.result.Result.Err contracts.NominalError.InvalidRepresentation)
+  else
+    let s ← alloc.vec.Vec.as_slice Global registration.input
+    let b1 ←
+      Shared0Slice.Insts.CoreCmpPartialEqArray.ne
+        types.Ty.Insts.CoreCmpPartialEqTy s
+        (Array.make 1#usize [ types.Ty.TextType ])
+    if b1
+    then
+      ok (core.result.Result.Err contracts.NominalError.InvalidRepresentation)
+    else
+      let b2 ← alloc.vec.Vec.is_empty Global registration.output
+      if b2
+      then
+        let s1 ← types.EffSet.as_slice registration.effects
+        let b3 ←
+          Shared0Slice.Insts.CoreCmpPartialEqArray.ne
+            types.EffId.Insts.CoreCmpPartialEqEffId s1
+            (Array.make 1#usize [ contracts.TEST_EMIT ])
+        if b3
+        then
+          ok (core.result.Result.Err
+            contracts.NominalError.InvalidRepresentation)
+        else
+          contracts.nominal.checked_bound_registration_loop env
+            registration.adapter_identity registration.adapter_slot
+            registration.owner registration.input registration.output
+            registration.effects 0#usize
+      else
+        ok (core.result.Result.Err
+          contracts.NominalError.InvalidRepresentation)
+
+/-- [noble_kernel::contracts::nominal::register_bound_emit]:
+    Source: 'crates/noble-kernel/src/contracts/nominal.rs', lines 169:0-183:1 -/
+def contracts.nominal.register_bound_emit
+  (env : contracts.Env) (registration : contracts.BoundEmitRegistration) :
+  Result (core.result.Result (contracts.Env × contracts.Definition)
+    contracts.NominalError)
+  := do
+  let r ← contracts.nominal.checked_bound_registration env registration
+  match r with
+  | core.result.Result.Ok value =>
+    let s ← contracts.nominal.schemes.emit_scheme
+    let r1 ←
+      contracts.nominal.append env s (contracts.Behavior.BoundEmitBehavior
+        value.adapter_slot) value.owner
+    match r1 with
+    | core.result.Result.Ok value1 =>
+      let (env1, «def») := value1
+      let ba ← contracts.nominal.bound_adapter «def» value
+      let v ← alloc.vec.Vec.push env1.bound_adapters ba
+      ok (core.result.Result.Ok
+        ({ env1 with declared_modules := true, bound_adapters := v }, «def»))
+    | core.result.Result.Err _ => ok r1
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::marker::Copy for noble_kernel::contracts::Definition}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 10:16-10:20 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 11:16-11:20 -/
 @[reducible]
 def contracts.Definition.Insts.CoreMarkerCopy : core.marker.Copy
   contracts.Definition := {
@@ -17983,7 +23522,7 @@ def contracts.Definition.Insts.CoreMarkerCopy : core.marker.Copy
 }
 
 /-- [noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::Definition}::fmt]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 10:22-10:27
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 11:22-11:27
     Visibility: public -/
 def contracts.Definition.Insts.CoreFmtDebug.fmt
   (self : contracts.Definition) (f : core.fmt.Formatter) :
@@ -17993,7 +23532,7 @@ def contracts.Definition.Insts.CoreFmtDebug.fmt
   core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Definition") dyn
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::Definition}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 10:22-10:27 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 11:22-11:27 -/
 @[reducible]
 def contracts.Definition.Insts.CoreFmtDebug : core.fmt.Debug
   contracts.Definition := {
@@ -18001,40 +23540,21 @@ def contracts.Definition.Insts.CoreFmtDebug : core.fmt.Debug
 }
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::marker::StructuralPartialEq for noble_kernel::contracts::Definition}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 10:29-10:38 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 11:29-11:38 -/
 @[reducible]
 def contracts.Definition.Insts.CoreMarkerStructuralPartialEq :
   core.marker.StructuralPartialEq contracts.Definition := {
 }
 
-/-- [noble_kernel::contracts::{impl core::cmp::PartialEq<noble_kernel::contracts::Definition> for noble_kernel::contracts::Definition}::eq]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 10:29-10:38
-    Visibility: public -/
-def contracts.Definition.Insts.CoreCmpPartialEqDefinition.eq
-  (self : contracts.Definition) (other : contracts.Definition) :
-  Result Bool
-  := do
-  ok (self = other)
-
-/-- Trait implementation: [noble_kernel::contracts::{impl core::cmp::PartialEq<noble_kernel::contracts::Definition> for noble_kernel::contracts::Definition}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 10:29-10:38 -/
-@[reducible]
-impl_def contracts.Definition.Insts.CoreCmpPartialEqDefinition :
-  core.cmp.PartialEq contracts.Definition contracts.Definition := {
-  eq := contracts.Definition.Insts.CoreCmpPartialEqDefinition.eq
-  ne := core.cmp.PartialEq.ne.trait_default
-    contracts.Definition.Insts.CoreCmpPartialEqDefinition
-}
-
 /-- [noble_kernel::contracts::{impl core::cmp::Eq for noble_kernel::contracts::Definition}::assert_fields_are_eq]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 10:40-10:42
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 11:40-11:42
     Visibility: public -/
 def contracts.Definition.Insts.CoreCmpEq.assert_fields_are_eq
   (self : contracts.Definition) : Result Unit := do
   ok ()
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::cmp::Eq for noble_kernel::contracts::Definition}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 10:40-10:42 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 11:40-11:42 -/
 @[reducible]
 def contracts.Definition.Insts.CoreCmpEq : core.cmp.Eq contracts.Definition
   := {
@@ -18043,21 +23563,15 @@ def contracts.Definition.Insts.CoreCmpEq : core.cmp.Eq contracts.Definition
     contracts.Definition.Insts.CoreCmpEq.assert_fields_are_eq
 }
 
-/-- [noble_kernel::contracts::FIXTURE_RESOURCE]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 17:0-17:87
-    Visibility: public -/
-@[global_simps, irreducible]
-def contracts.FIXTURE_RESOURCE : types.ResourceKind := 0#u32
-
 /-- [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::SchemaId}::clone]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 20:9-20:14
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 21:9-21:14
     Visibility: public -/
 def contracts.SchemaId.Insts.CoreCloneClone.clone
   (self : contracts.SchemaId) : Result contracts.SchemaId := do
   ok self
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::SchemaId}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 20:9-20:14 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 21:9-21:14 -/
 @[reducible]
 def contracts.SchemaId.Insts.CoreCloneClone : core.clone.Clone
   contracts.SchemaId := {
@@ -18065,7 +23579,7 @@ def contracts.SchemaId.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::marker::Copy for noble_kernel::contracts::SchemaId}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 20:16-20:20 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 21:16-21:20 -/
 @[reducible]
 def contracts.SchemaId.Insts.CoreMarkerCopy : core.marker.Copy
   contracts.SchemaId := {
@@ -18073,7 +23587,7 @@ def contracts.SchemaId.Insts.CoreMarkerCopy : core.marker.Copy
 }
 
 /-- [noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::SchemaId}::fmt]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 20:22-20:27
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 21:22-21:27
     Visibility: public -/
 def contracts.SchemaId.Insts.CoreFmtDebug.fmt
   (self : contracts.SchemaId) (f : core.fmt.Formatter) :
@@ -18083,7 +23597,7 @@ def contracts.SchemaId.Insts.CoreFmtDebug.fmt
   core.fmt.Formatter.debug_tuple_field1_finish f (toStr "SchemaId") dyn
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::SchemaId}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 20:22-20:27 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 21:22-21:27 -/
 @[reducible]
 def contracts.SchemaId.Insts.CoreFmtDebug : core.fmt.Debug contracts.SchemaId
   := {
@@ -18091,21 +23605,21 @@ def contracts.SchemaId.Insts.CoreFmtDebug : core.fmt.Debug contracts.SchemaId
 }
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::marker::StructuralPartialEq for noble_kernel::contracts::SchemaId}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 20:29-20:38 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 21:29-21:38 -/
 @[reducible]
 def contracts.SchemaId.Insts.CoreMarkerStructuralPartialEq :
   core.marker.StructuralPartialEq contracts.SchemaId := {
 }
 
 /-- [noble_kernel::contracts::{impl core::cmp::PartialEq<noble_kernel::contracts::SchemaId> for noble_kernel::contracts::SchemaId}::eq]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 20:29-20:38
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 21:29-21:38
     Visibility: public -/
 def contracts.SchemaId.Insts.CoreCmpPartialEqSchemaId.eq
   (self : contracts.SchemaId) (other : contracts.SchemaId) : Result Bool := do
   ok (self = other)
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::cmp::PartialEq<noble_kernel::contracts::SchemaId> for noble_kernel::contracts::SchemaId}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 20:29-20:38 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 21:29-21:38 -/
 @[reducible]
 impl_def contracts.SchemaId.Insts.CoreCmpPartialEqSchemaId : core.cmp.PartialEq
   contracts.SchemaId contracts.SchemaId := {
@@ -18115,14 +23629,14 @@ impl_def contracts.SchemaId.Insts.CoreCmpPartialEqSchemaId : core.cmp.PartialEq
 }
 
 /-- [noble_kernel::contracts::{impl core::cmp::Eq for noble_kernel::contracts::SchemaId}::assert_fields_are_eq]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 20:40-20:42
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 21:40-21:42
     Visibility: public -/
 def contracts.SchemaId.Insts.CoreCmpEq.assert_fields_are_eq
   (self : contracts.SchemaId) : Result Unit := do
   ok ()
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::cmp::Eq for noble_kernel::contracts::SchemaId}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 20:40-20:42 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 21:40-21:42 -/
 @[reducible]
 def contracts.SchemaId.Insts.CoreCmpEq : core.cmp.Eq contracts.SchemaId := {
   partialEqInst := contracts.SchemaId.Insts.CoreCmpPartialEqSchemaId
@@ -18130,39 +23644,115 @@ def contracts.SchemaId.Insts.CoreCmpEq : core.cmp.Eq contracts.SchemaId := {
     contracts.SchemaId.Insts.CoreCmpEq.assert_fields_are_eq
 }
 
-/-- [noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::Behavior}::fmt::__OFFSET]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 29:22-29:27 -/
-@[global_simps, irreducible]
-def contracts.DebugBehavior.fmt.__OFFSET : Array Std.Usize 23#usize :=
-  Array.make 23#usize [
-    0#usize, 3#usize, 7#usize, 11#usize, 14#usize, 19#usize, 25#usize,
-    30#usize, 37#usize, 40#usize, 47#usize, 51#usize, 55#usize, 61#usize,
-    64#usize, 67#usize, 71#usize, 73#usize, 76#usize, 80#usize, 88#usize,
-    96#usize, 101#usize
-    ]
+/-- [noble_kernel::types::{impl core::fmt::Debug for noble_kernel::types::NominalTypeId}::fmt]:
+    Source: 'crates/noble-kernel/src/types.rs', lines 19:22-19:27
+    Visibility: public -/
+def types.NominalTypeId.Insts.CoreFmtDebug.fmt
+  (self : types.NominalTypeId) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ core.fmt.DebugU64 self.module
+  let dyn1 := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU32) self.ordinal
+  core.fmt.Formatter.debug_struct_field2_finish f (toStr "NominalTypeId")
+    (toStr "module") dyn (toStr "ordinal") dyn1
 
-/-- [noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::Behavior}::fmt::__NAMES]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 29:22-29:27 -/
-@[global_simps, irreducible]
-def contracts.DebugBehavior.fmt.__NAMES : Str :=
-  toStr
-    "DupDropSwapDipArithEqualsQuoteComposeRunReflectUnitPairUnpairInlInrCaseIfNilConsListCaseTestEmitNamed"
+/-- Trait implementation: [noble_kernel::types::{impl core::fmt::Debug for noble_kernel::types::NominalTypeId}]
+    Source: 'crates/noble-kernel/src/types.rs', lines 19:22-19:27 -/
+@[reducible]
+def types.NominalTypeId.Insts.CoreFmtDebug : core.fmt.Debug types.NominalTypeId
+  := {
+  fmt := types.NominalTypeId.Insts.CoreFmtDebug.fmt
+}
 
 /-- [noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::Behavior}::fmt]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 29:22-29:27
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 30:22-30:27
     Visibility: public -/
 def contracts.Behavior.Insts.CoreFmtDebug.fmt
   (self : contracts.Behavior) (f : core.fmt.Formatter) :
   Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
   := do
-  let self1 := read_discriminant self
-  let __d ← lift (IScalar.hcast .Usize self1)
-  let s ← lift (Array.to_slice contracts.DebugBehavior.fmt.__OFFSET)
-  core.fmt.Formatter.debug_c_like_enum_write_str f
-    contracts.DebugBehavior.fmt.__NAMES s __d
+  match self with
+  | contracts.Behavior.DupBehavior =>
+    core.fmt.Formatter.write_str f (toStr "Dup")
+  | contracts.Behavior.DropBehavior =>
+    core.fmt.Formatter.write_str f (toStr "Drop")
+  | contracts.Behavior.SwapBehavior =>
+    core.fmt.Formatter.write_str f (toStr "Swap")
+  | contracts.Behavior.DipBehavior =>
+    core.fmt.Formatter.write_str f (toStr "Dip")
+  | contracts.Behavior.ArithBehavior =>
+    core.fmt.Formatter.write_str f (toStr "Arith")
+  | contracts.Behavior.EqualsBehavior =>
+    core.fmt.Formatter.write_str f (toStr "Equals")
+  | contracts.Behavior.QuoteBehavior =>
+    core.fmt.Formatter.write_str f (toStr "Quote")
+  | contracts.Behavior.ComposeBehavior =>
+    core.fmt.Formatter.write_str f (toStr "Compose")
+  | contracts.Behavior.RunBehavior =>
+    core.fmt.Formatter.write_str f (toStr "Run")
+  | contracts.Behavior.ReflectBehavior =>
+    core.fmt.Formatter.write_str f (toStr "Reflect")
+  | contracts.Behavior.UnitBehavior =>
+    core.fmt.Formatter.write_str f (toStr "Unit")
+  | contracts.Behavior.PairBehavior =>
+    core.fmt.Formatter.write_str f (toStr "Pair")
+  | contracts.Behavior.UnpairBehavior =>
+    core.fmt.Formatter.write_str f (toStr "Unpair")
+  | contracts.Behavior.InlBehavior =>
+    core.fmt.Formatter.write_str f (toStr "Inl")
+  | contracts.Behavior.InrBehavior =>
+    core.fmt.Formatter.write_str f (toStr "Inr")
+  | contracts.Behavior.CaseBehavior =>
+    core.fmt.Formatter.write_str f (toStr "Case")
+  | contracts.Behavior.IfBehavior =>
+    core.fmt.Formatter.write_str f (toStr "If")
+  | contracts.Behavior.NilBehavior =>
+    core.fmt.Formatter.write_str f (toStr "Nil")
+  | contracts.Behavior.ConsBehavior =>
+    core.fmt.Formatter.write_str f (toStr "Cons")
+  | contracts.Behavior.ListCaseBehavior =>
+    core.fmt.Formatter.write_str f (toStr "ListCase")
+  | contracts.Behavior.TestEmitBehavior =>
+    core.fmt.Formatter.write_str f (toStr "TestEmit")
+  | contracts.Behavior.BoundEmitBehavior __self_0 =>
+    let __self_01 := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU32) __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "BoundEmit")
+      __self_01
+  | contracts.Behavior.NominalNewBehavior __self_0 =>
+    let __self_01 :=
+      Dyn.mk _ (core.fmt.DebugShared types.NominalTypeId.Insts.CoreFmtDebug)
+        __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "NominalNew")
+      __self_01
+  | contracts.Behavior.NominalIntoBehavior __self_0 =>
+    let __self_01 :=
+      Dyn.mk _ (core.fmt.DebugShared types.NominalTypeId.Insts.CoreFmtDebug)
+        __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "NominalInto")
+      __self_01
+  | contracts.Behavior.NominalLeftBehavior __self_0 =>
+    let __self_01 :=
+      Dyn.mk _ (core.fmt.DebugShared types.NominalTypeId.Insts.CoreFmtDebug)
+        __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "NominalLeft")
+      __self_01
+  | contracts.Behavior.NominalRightBehavior __self_0 =>
+    let __self_01 :=
+      Dyn.mk _ (core.fmt.DebugShared types.NominalTypeId.Insts.CoreFmtDebug)
+        __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "NominalRight")
+      __self_01
+  | contracts.Behavior.NominalMatchBehavior __self_0 =>
+    let __self_01 :=
+      Dyn.mk _ (core.fmt.DebugShared types.NominalTypeId.Insts.CoreFmtDebug)
+        __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "NominalMatch")
+      __self_01
+  | contracts.Behavior.NamedBehavior =>
+    core.fmt.Formatter.write_str f (toStr "Named")
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::Behavior}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 29:22-29:27 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 30:22-30:27 -/
 @[reducible]
 def contracts.Behavior.Insts.CoreFmtDebug : core.fmt.Debug contracts.Behavior
   := {
@@ -18170,40 +23760,21 @@ def contracts.Behavior.Insts.CoreFmtDebug : core.fmt.Debug contracts.Behavior
 }
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::marker::StructuralPartialEq for noble_kernel::contracts::Behavior}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 29:29-29:38 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 30:29-30:38 -/
 @[reducible]
 def contracts.Behavior.Insts.CoreMarkerStructuralPartialEq :
   core.marker.StructuralPartialEq contracts.Behavior := {
 }
 
-/-- [noble_kernel::contracts::{impl core::cmp::PartialEq<noble_kernel::contracts::Behavior> for noble_kernel::contracts::Behavior}::eq]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 29:29-29:38
-    Visibility: public -/
-def contracts.Behavior.Insts.CoreCmpPartialEqBehavior.eq
-  (self : contracts.Behavior) (other : contracts.Behavior) : Result Bool := do
-  let self1 := read_discriminant self
-  let other1 := read_discriminant other
-  ok (self1 = other1)
-
-/-- Trait implementation: [noble_kernel::contracts::{impl core::cmp::PartialEq<noble_kernel::contracts::Behavior> for noble_kernel::contracts::Behavior}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 29:29-29:38 -/
-@[reducible]
-impl_def contracts.Behavior.Insts.CoreCmpPartialEqBehavior : core.cmp.PartialEq
-  contracts.Behavior contracts.Behavior := {
-  eq := contracts.Behavior.Insts.CoreCmpPartialEqBehavior.eq
-  ne := core.cmp.PartialEq.ne.trait_default
-    contracts.Behavior.Insts.CoreCmpPartialEqBehavior
-}
-
 /-- [noble_kernel::contracts::{impl core::cmp::Eq for noble_kernel::contracts::Behavior}::assert_fields_are_eq]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 29:40-29:42
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 30:40-30:42
     Visibility: public -/
 def contracts.Behavior.Insts.CoreCmpEq.assert_fields_are_eq
   (self : contracts.Behavior) : Result Unit := do
   ok ()
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::cmp::Eq for noble_kernel::contracts::Behavior}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 29:40-29:42 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 30:40-30:42 -/
 @[reducible]
 def contracts.Behavior.Insts.CoreCmpEq : core.cmp.Eq contracts.Behavior := {
   partialEqInst := contracts.Behavior.Insts.CoreCmpPartialEqBehavior
@@ -18212,7 +23783,7 @@ def contracts.Behavior.Insts.CoreCmpEq : core.cmp.Eq contracts.Behavior := {
 }
 
 /-- [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::SchemaDecl}::clone]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 82:9-82:14
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 92:9-92:14
     Visibility: public -/
 def contracts.SchemaDecl.Insts.CoreCloneClone.clone
   (self : contracts.SchemaDecl) : Result contracts.SchemaDecl := do
@@ -18222,7 +23793,7 @@ def contracts.SchemaDecl.Insts.CoreCloneClone.clone
   ok { id := si, scheme := s, recursive := b }
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::SchemaDecl}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 82:9-82:14 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 92:9-92:14 -/
 @[reducible]
 def contracts.SchemaDecl.Insts.CoreCloneClone : core.clone.Clone
   contracts.SchemaDecl := {
@@ -18268,7 +23839,7 @@ def words.Variable.Insts.CoreFmtDebug : core.fmt.Debug words.Variable := {
 }
 
 /-- [noble_kernel::shapes::{impl core::fmt::Debug for noble_kernel::shapes::EffectSlot}::fmt]:
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 79:16-79:21
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 84:16-84:21
     Visibility: public -/
 def shapes.EffectSlot.Insts.CoreFmtDebug.fmt
   (self : shapes.EffectSlot) (f : core.fmt.Formatter) :
@@ -18286,15 +23857,210 @@ def shapes.EffectSlot.Insts.CoreFmtDebug.fmt
     core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Var") __self_01
 
 /-- Trait implementation: [noble_kernel::shapes::{impl core::fmt::Debug for noble_kernel::shapes::EffectSlot}]
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 79:16-79:21 -/
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 84:16-84:21 -/
 @[reducible]
 def shapes.EffectSlot.Insts.CoreFmtDebug : core.fmt.Debug shapes.EffectSlot
   := {
   fmt := shapes.EffectSlot.Insts.CoreFmtDebug.fmt
 }
 
+/-- [noble_kernel::types::{impl core::fmt::Debug for noble_kernel::types::EffSet}::fmt]:
+    Source: 'crates/noble-kernel/src/types.rs', lines 45:16-45:21
+    Visibility: public -/
+def types.EffSet.Insts.CoreFmtDebug.fmt
+  (self : types.EffSet) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn :=
+    Dyn.mk _ (core.fmt.DebugShared (core.fmt.DebugVec
+      types.EffId.Insts.CoreFmtDebug)) self
+  core.fmt.Formatter.debug_tuple_field1_finish f (toStr "EffSet") dyn
+
+/-- [noble_kernel::types::impls::{impl core::fmt::Debug for noble_kernel::types::Ty}::fmt]:
+    Source: 'crates/noble-kernel/src/types/impls.rs', lines 233:4-296:5
+    Visibility: public -/
+def types.Ty.Insts.CoreFmtDebug.fmt
+  (self : types.Ty) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | types.Ty.UnitType => core.fmt.Formatter.write_str f (toStr "Unit")
+  | types.Ty.BoolType => core.fmt.Formatter.write_str f (toStr "Bool")
+  | types.Ty.I64Type => core.fmt.Formatter.write_str f (toStr "I64")
+  | types.Ty.TextType => core.fmt.Formatter.write_str f (toStr "Text")
+  | types.Ty.SyntaxType => core.fmt.Formatter.write_str f (toStr "Syntax")
+  | types.Ty.ContractType => core.fmt.Formatter.write_str f (toStr "Contract")
+  | types.Ty.EvidenceType => core.fmt.Formatter.write_str f (toStr "Evidence")
+  | types.Ty.CertifiedType =>
+    core.fmt.Formatter.write_str f (toStr "Certified")
+  | types.Ty.PairType left right =>
+    let (r, f1) ← core.fmt.Formatter.write_str f (toStr "Pair(")
+    match r with
+    | core.result.Result.Ok _ =>
+      let (r1, f2) ← types.Ty.Insts.CoreFmtDebug.fmt left f1
+      match r1 with
+      | core.result.Result.Ok _ =>
+        let (r2, f3) ← core.fmt.Formatter.write_str f2 (toStr ", ")
+        match r2 with
+        | core.result.Result.Ok _ =>
+          let (r3, f4) ← types.Ty.Insts.CoreFmtDebug.fmt right f3
+          match r3 with
+          | core.result.Result.Ok _ =>
+            core.fmt.Formatter.write_str f4 (toStr ")")
+          | core.result.Result.Err _ => ok (r3, f4)
+        | core.result.Result.Err _ => ok (r2, f3)
+      | core.result.Result.Err _ => ok (r1, f2)
+    | core.result.Result.Err _ => ok (r, f1)
+  | types.Ty.SumType left right =>
+    let (r, f1) ← core.fmt.Formatter.write_str f (toStr "Sum(")
+    match r with
+    | core.result.Result.Ok _ =>
+      let (r1, f2) ← types.Ty.Insts.CoreFmtDebug.fmt left f1
+      match r1 with
+      | core.result.Result.Ok _ =>
+        let (r2, f3) ← core.fmt.Formatter.write_str f2 (toStr ", ")
+        match r2 with
+        | core.result.Result.Ok _ =>
+          let (r3, f4) ← types.Ty.Insts.CoreFmtDebug.fmt right f3
+          match r3 with
+          | core.result.Result.Ok _ =>
+            core.fmt.Formatter.write_str f4 (toStr ")")
+          | core.result.Result.Err _ => ok (r3, f4)
+        | core.result.Result.Err _ => ok (r2, f3)
+      | core.result.Result.Err _ => ok (r1, f2)
+    | core.result.Result.Err _ => ok (r, f1)
+  | types.Ty.ListType item =>
+    let (r, f1) ← core.fmt.Formatter.write_str f (toStr "List(")
+    match r with
+    | core.result.Result.Ok _ =>
+      let (r1, f2) ← types.Ty.Insts.CoreFmtDebug.fmt item f1
+      match r1 with
+      | core.result.Result.Ok _ => core.fmt.Formatter.write_str f2 (toStr ")")
+      | core.result.Result.Err _ => ok (r1, f2)
+    | core.result.Result.Err _ => ok (r, f1)
+  | types.Ty.ProgramType stack_in stack_out effects =>
+    let (r, f1) ← core.fmt.Formatter.write_str f (toStr "Program(")
+    match r with
+    | core.result.Result.Ok _ =>
+      let s ← alloc.vec.Vec.as_slice Global stack_in
+      let (r1, f2) ← types.impls.debug_stack s f1
+      match r1 with
+      | core.result.Result.Ok _ =>
+        let (r2, f3) ← core.fmt.Formatter.write_str f2 (toStr ", ")
+        match r2 with
+        | core.result.Result.Ok _ =>
+          let s1 ← alloc.vec.Vec.as_slice Global stack_out
+          let (r3, f4) ← types.impls.debug_stack s1 f3
+          match r3 with
+          | core.result.Result.Ok _ =>
+            let (r4, f5) ← core.fmt.Formatter.write_str f4 (toStr ", ")
+            match r4 with
+            | core.result.Result.Ok _ =>
+              let (r5, f6) ← types.EffSet.Insts.CoreFmtDebug.fmt effects f5
+              match r5 with
+              | core.result.Result.Ok _ =>
+                core.fmt.Formatter.write_str f6 (toStr ")")
+              | core.result.Result.Err _ => ok (r5, f6)
+            | core.result.Result.Err _ => ok (r4, f5)
+          | core.result.Result.Err _ => ok (r3, f4)
+        | core.result.Result.Err _ => ok (r2, f3)
+      | core.result.Result.Err _ => ok (r1, f2)
+    | core.result.Result.Err _ => ok (r, f1)
+  | types.Ty.ResourceType kind =>
+    let (r, f1) ← core.fmt.Formatter.write_str f (toStr "Resource(")
+    match r with
+    | core.result.Result.Ok _ =>
+      let (r1, f2) ← types.ResourceKind.Insts.CoreFmtDebug.fmt kind f1
+      match r1 with
+      | core.result.Result.Ok _ => core.fmt.Formatter.write_str f2 (toStr ")")
+      | core.result.Result.Err _ => ok (r1, f2)
+    | core.result.Result.Err _ => ok (r, f1)
+  | types.Ty.NominalType id shape =>
+    let (r, f1) ← core.fmt.Formatter.write_str f (toStr "Nominal(")
+    match r with
+    | core.result.Result.Ok _ =>
+      let (r1, f2) ← types.NominalTypeId.Insts.CoreFmtDebug.fmt id f1
+      match r1 with
+      | core.result.Result.Ok _ =>
+        let (r2, f3) ← core.fmt.Formatter.write_str f2 (toStr ", ")
+        match r2 with
+        | core.result.Result.Ok _ =>
+          match shape with
+          | types.NominalShape.Opaque representation =>
+            let (r3, f4) ← core.fmt.Formatter.write_str f3 (toStr "Opaque(")
+            match r3 with
+            | core.result.Result.Ok _ =>
+              let (r4, f5) ←
+                types.Ty.Insts.CoreFmtDebug.fmt representation f4
+              match r4 with
+              | core.result.Result.Ok _ =>
+                let (r5, f6) ← core.fmt.Formatter.write_str f5 (toStr ")")
+                match r5 with
+                | core.result.Result.Ok _ =>
+                  core.fmt.Formatter.write_str f6 (toStr ")")
+                | core.result.Result.Err _ => ok (r5, f6)
+              | core.result.Result.Err _ => ok (r4, f5)
+            | core.result.Result.Err _ => ok (r3, f4)
+          | types.NominalShape.Variant left right =>
+            let (r3, f4) ← core.fmt.Formatter.write_str f3 (toStr "Variant(")
+            match r3 with
+            | core.result.Result.Ok _ =>
+              let (r4, f5) ← types.Ty.Insts.CoreFmtDebug.fmt left f4
+              match r4 with
+              | core.result.Result.Ok _ =>
+                let (r5, f6) ← core.fmt.Formatter.write_str f5 (toStr ", ")
+                match r5 with
+                | core.result.Result.Ok _ =>
+                  let (r6, f7) ← types.Ty.Insts.CoreFmtDebug.fmt right f6
+                  match r6 with
+                  | core.result.Result.Ok _ =>
+                    let (r7, f8) ←
+                      core.fmt.Formatter.write_str f7 (toStr ")")
+                    match r7 with
+                    | core.result.Result.Ok _ =>
+                      core.fmt.Formatter.write_str f8 (toStr ")")
+                    | core.result.Result.Err _ => ok (r7, f8)
+                  | core.result.Result.Err _ => ok (r6, f7)
+                | core.result.Result.Err _ => ok (r5, f6)
+              | core.result.Result.Err _ => ok (r4, f5)
+            | core.result.Result.Err _ => ok (r3, f4)
+        | core.result.Result.Err _ => ok (r2, f3)
+      | core.result.Result.Err _ => ok (r1, f2)
+    | core.result.Result.Err _ => ok (r, f1)
+partial_fixpoint
+
+/-- Trait implementation: [noble_kernel::types::impls::{impl core::fmt::Debug for noble_kernel::types::Ty}]
+    Source: 'crates/noble-kernel/src/types/impls.rs', lines 224:0-297:1 -/
+@[reducible]
+def types.Ty.Insts.CoreFmtDebug : core.fmt.Debug types.Ty := {
+  fmt := types.Ty.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_kernel::types::{impl core::fmt::Debug for noble_kernel::types::NominalShape}::fmt]:
+    Source: 'crates/noble-kernel/src/types.rs', lines 26:16-26:21
+    Visibility: public -/
+def types.NominalShape.Insts.CoreFmtDebug.fmt
+  (self : types.NominalShape) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | types.NominalShape.Opaque __self_0 =>
+    let __self_01 :=
+      Dyn.mk _ (core.fmt.DebugShared (Box.Insts.CoreFmtDebug Global
+        types.Ty.Insts.CoreFmtDebug)) __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Opaque") __self_01
+  | types.NominalShape.Variant __self_0 __self_1 =>
+    let __self_01 :=
+      Dyn.mk _ (Box.Insts.CoreFmtDebug Global types.Ty.Insts.CoreFmtDebug)
+        __self_0
+    let __self_11 :=
+      Dyn.mk _ (core.fmt.DebugShared (Box.Insts.CoreFmtDebug Global
+        types.Ty.Insts.CoreFmtDebug)) __self_1
+    core.fmt.Formatter.debug_tuple_field2_finish f (toStr "Variant") __self_01
+      __self_11
+
 /-- [noble_kernel::shapes::impls::{impl core::fmt::Debug for noble_kernel::shapes::Pattern}::fmt]:
-    Source: 'crates/noble-kernel/src/shapes/impls.rs', lines 148:4-202:5
+    Source: 'crates/noble-kernel/src/shapes/impls.rs', lines 151:4-212:5
     Visibility: public -/
 def shapes.Pattern.Insts.CoreFmtDebug.fmt
   (self : shapes.Pattern) (f : core.fmt.Formatter) :
@@ -18396,6 +24162,24 @@ def shapes.Pattern.Insts.CoreFmtDebug.fmt
       | core.result.Result.Ok _ => core.fmt.Formatter.write_str f2 (toStr ")")
       | core.result.Result.Err _ => ok (r1, f2)
     | core.result.Result.Err _ => ok (r, f1)
+  | shapes.Pattern.NominalPattern id shape =>
+    let (r, f1) ← core.fmt.Formatter.write_str f (toStr "Nominal(")
+    match r with
+    | core.result.Result.Ok _ =>
+      let (r1, f2) ← types.NominalTypeId.Insts.CoreFmtDebug.fmt id f1
+      match r1 with
+      | core.result.Result.Ok _ =>
+        let (r2, f3) ← core.fmt.Formatter.write_str f2 (toStr ", ")
+        match r2 with
+        | core.result.Result.Ok _ =>
+          let (r3, f4) ← types.NominalShape.Insts.CoreFmtDebug.fmt shape f3
+          match r3 with
+          | core.result.Result.Ok _ =>
+            core.fmt.Formatter.write_str f4 (toStr ")")
+          | core.result.Result.Err _ => ok (r3, f4)
+        | core.result.Result.Err _ => ok (r2, f3)
+      | core.result.Result.Err _ => ok (r1, f2)
+    | core.result.Result.Err _ => ok (r, f1)
   | shapes.Pattern.VarPattern «variable» =>
     let (r, f1) ← core.fmt.Formatter.write_str f (toStr "Var(")
     match r with
@@ -18417,7 +24201,7 @@ def shapes.Pattern.Insts.CoreFmtDebug.fmt
 partial_fixpoint
 
 /-- Trait implementation: [noble_kernel::shapes::impls::{impl core::fmt::Debug for noble_kernel::shapes::Pattern}]
-    Source: 'crates/noble-kernel/src/shapes/impls.rs', lines 139:0-203:1 -/
+    Source: 'crates/noble-kernel/src/shapes/impls.rs', lines 142:0-213:1 -/
 @[reducible]
 def shapes.Pattern.Insts.CoreFmtDebug : core.fmt.Debug shapes.Pattern := {
   fmt := shapes.Pattern.Insts.CoreFmtDebug.fmt
@@ -18454,7 +24238,7 @@ def words.Scheme.Insts.CoreFmtDebug : core.fmt.Debug words.Scheme := {
 }
 
 /-- [noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::SchemaDecl}::fmt]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 82:16-82:21
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 92:16-92:21
     Visibility: public -/
 def contracts.SchemaDecl.Insts.CoreFmtDebug.fmt
   (self : contracts.SchemaDecl) (f : core.fmt.Formatter) :
@@ -18467,11 +24251,292 @@ def contracts.SchemaDecl.Insts.CoreFmtDebug.fmt
     "id") dyn (toStr "scheme") dyn1 (toStr "recursive") dyn2
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::SchemaDecl}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 82:16-82:21 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 92:16-92:21 -/
 @[reducible]
 def contracts.SchemaDecl.Insts.CoreFmtDebug : core.fmt.Debug
   contracts.SchemaDecl := {
   fmt := contracts.SchemaDecl.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_kernel::types::{impl core::clone::Clone for noble_kernel::types::NominalTypeId}::clone]:
+    Source: 'crates/noble-kernel/src/types.rs', lines 19:9-19:14
+    Visibility: public -/
+def types.NominalTypeId.Insts.CoreCloneClone.clone
+  (self : types.NominalTypeId) : Result types.NominalTypeId := do
+  ok self
+
+/-- [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::NominalDecl}::clone]:
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 103:9-103:14
+    Visibility: public -/
+def contracts.NominalDecl.Insts.CoreCloneClone.clone
+  (self : contracts.NominalDecl) : Result contracts.NominalDecl := do
+  let nti ← types.NominalTypeId.Insts.CoreCloneClone.clone self.id
+  let ns ← types.NominalShape.Insts.CoreCloneClone.clone self.shape
+  let b ← lift (core.clone.impls.CloneBool.clone self.exported)
+  let a ← core.array.CloneArray.clone core.clone.CloneBool self.public
+  ok { id := nti, shape := ns, exported := b, «public» := a }
+
+/-- Trait implementation: [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::NominalDecl}]
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 103:9-103:14 -/
+@[reducible]
+def contracts.NominalDecl.Insts.CoreCloneClone : core.clone.Clone
+  contracts.NominalDecl := {
+  clone := contracts.NominalDecl.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::types::{impl core::fmt::Debug for noble_kernel::types::NominalShape}]
+    Source: 'crates/noble-kernel/src/types.rs', lines 26:16-26:21 -/
+@[reducible]
+def types.NominalShape.Insts.CoreFmtDebug : core.fmt.Debug types.NominalShape
+  := {
+  fmt := types.NominalShape.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::NominalDecl}::fmt]:
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 103:16-103:21
+    Visibility: public -/
+def contracts.NominalDecl.Insts.CoreFmtDebug.fmt
+  (self : contracts.NominalDecl) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ types.NominalTypeId.Insts.CoreFmtDebug self.id
+  let dyn1 := Dyn.mk _ types.NominalShape.Insts.CoreFmtDebug self.shape
+  let dyn2 := Dyn.mk _ core.fmt.DebugBool self.exported
+  let dyn3 :=
+    Dyn.mk _ (core.fmt.DebugShared (Array.Insts.CoreFmtDebug 2#usize
+      core.fmt.DebugBool)) self.public
+  core.fmt.Formatter.debug_struct_field4_finish f (toStr "NominalDecl") (toStr
+    "id") dyn (toStr "shape") dyn1 (toStr "exported") dyn2 (toStr "public")
+    dyn3
+
+/-- Trait implementation: [noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::NominalDecl}]
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 103:16-103:21 -/
+@[reducible]
+def contracts.NominalDecl.Insts.CoreFmtDebug : core.fmt.Debug
+  contracts.NominalDecl := {
+  fmt := contracts.NominalDecl.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::NominalOps}::clone]:
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 114:9-114:14
+    Visibility: public -/
+def contracts.NominalOps.Insts.CoreCloneClone.clone
+  (self : contracts.NominalOps) : Result contracts.NominalOps := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::NominalOps}]
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 114:9-114:14 -/
+@[reducible]
+def contracts.NominalOps.Insts.CoreCloneClone : core.clone.Clone
+  contracts.NominalOps := {
+  clone := contracts.NominalOps.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::contracts::{impl core::marker::Copy for noble_kernel::contracts::NominalOps}]
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 114:16-114:20 -/
+@[reducible]
+def contracts.NominalOps.Insts.CoreMarkerCopy : core.marker.Copy
+  contracts.NominalOps := {
+  cloneInst := contracts.NominalOps.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::NominalOps}::fmt]:
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 114:22-114:27
+    Visibility: public -/
+def contracts.NominalOps.Insts.CoreFmtDebug.fmt
+  (self : contracts.NominalOps) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn :=
+    Dyn.mk _ (core.option.Option.Insts.CoreFmtDebug
+      contracts.Definition.Insts.CoreFmtDebug) self.new
+  let dyn1 :=
+    Dyn.mk _ (core.option.Option.Insts.CoreFmtDebug
+      contracts.Definition.Insts.CoreFmtDebug) self.into
+  let dyn2 :=
+    Dyn.mk _ (core.option.Option.Insts.CoreFmtDebug
+      contracts.Definition.Insts.CoreFmtDebug) self.left
+  let dyn3 :=
+    Dyn.mk _ (core.option.Option.Insts.CoreFmtDebug
+      contracts.Definition.Insts.CoreFmtDebug) self.right
+  let dyn4 :=
+    Dyn.mk _ (core.fmt.DebugShared (core.option.Option.Insts.CoreFmtDebug
+      contracts.Definition.Insts.CoreFmtDebug)) self.matcher
+  core.fmt.Formatter.debug_struct_field5_finish f (toStr "NominalOps") (toStr
+    "new") dyn (toStr "into") dyn1 (toStr "left") dyn2 (toStr "right") dyn3
+    (toStr "matcher") dyn4
+
+/-- Trait implementation: [noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::NominalOps}]
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 114:22-114:27 -/
+@[reducible]
+def contracts.NominalOps.Insts.CoreFmtDebug : core.fmt.Debug
+  contracts.NominalOps := {
+  fmt := contracts.NominalOps.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::NominalError}::clone]:
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 123:9-123:14
+    Visibility: public -/
+def contracts.NominalError.Insts.CoreCloneClone.clone
+  (self : contracts.NominalError) : Result contracts.NominalError := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::NominalError}]
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 123:9-123:14 -/
+@[reducible]
+def contracts.NominalError.Insts.CoreCloneClone : core.clone.Clone
+  contracts.NominalError := {
+  clone := contracts.NominalError.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::contracts::{impl core::marker::Copy for noble_kernel::contracts::NominalError}]
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 123:16-123:20 -/
+@[reducible]
+def contracts.NominalError.Insts.CoreMarkerCopy : core.marker.Copy
+  contracts.NominalError := {
+  cloneInst := contracts.NominalError.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::NominalError}::fmt]:
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 123:22-123:27
+    Visibility: public -/
+def contracts.NominalError.Insts.CoreFmtDebug.fmt
+  (self : contracts.NominalError) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | contracts.NominalError.DuplicateIdentity =>
+    core.fmt.Formatter.write_str f (toStr "DuplicateIdentity")
+  | contracts.NominalError.InvalidRepresentation =>
+    core.fmt.Formatter.write_str f (toStr "InvalidRepresentation")
+  | contracts.NominalError.TooManyDefinitions =>
+    core.fmt.Formatter.write_str f (toStr "TooManyDefinitions")
+
+/-- Trait implementation: [noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::NominalError}]
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 123:22-123:27 -/
+@[reducible]
+def contracts.NominalError.Insts.CoreFmtDebug : core.fmt.Debug
+  contracts.NominalError := {
+  fmt := contracts.NominalError.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::contracts::{impl core::marker::StructuralPartialEq for noble_kernel::contracts::NominalError}]
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 123:29-123:38 -/
+@[reducible]
+def contracts.NominalError.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq contracts.NominalError := {
+}
+
+/-- [noble_kernel::contracts::{impl core::cmp::PartialEq<noble_kernel::contracts::NominalError> for noble_kernel::contracts::NominalError}::eq]:
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 123:29-123:38
+    Visibility: public -/
+def contracts.NominalError.Insts.CoreCmpPartialEqNominalError.eq
+  (self : contracts.NominalError) (other : contracts.NominalError) :
+  Result Bool
+  := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  ok (self1 = other1)
+
+/-- Trait implementation: [noble_kernel::contracts::{impl core::cmp::PartialEq<noble_kernel::contracts::NominalError> for noble_kernel::contracts::NominalError}]
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 123:29-123:38 -/
+@[reducible]
+impl_def contracts.NominalError.Insts.CoreCmpPartialEqNominalError :
+  core.cmp.PartialEq contracts.NominalError contracts.NominalError := {
+  eq := contracts.NominalError.Insts.CoreCmpPartialEqNominalError.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    contracts.NominalError.Insts.CoreCmpPartialEqNominalError
+}
+
+/-- [noble_kernel::contracts::{impl core::cmp::Eq for noble_kernel::contracts::NominalError}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 123:40-123:42
+    Visibility: public -/
+def contracts.NominalError.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : contracts.NominalError) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::contracts::{impl core::cmp::Eq for noble_kernel::contracts::NominalError}]
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 123:40-123:42 -/
+@[reducible]
+def contracts.NominalError.Insts.CoreCmpEq : core.cmp.Eq contracts.NominalError
+  := {
+  partialEqInst := contracts.NominalError.Insts.CoreCmpPartialEqNominalError
+  assert_fields_are_eq :=
+    contracts.NominalError.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::BoundAdapter}::clone]:
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 131:9-131:14
+    Visibility: public -/
+def contracts.BoundAdapter.Insts.CoreCloneClone.clone
+  (self : contracts.BoundAdapter) : Result contracts.BoundAdapter := do
+  let d ← contracts.Definition.Insts.CoreCloneClone.clone self.definition
+  let s ←
+    alloc.string.String.Insts.CoreCloneClone.clone self.adapter_identity
+  let i ← lift (core.clone.impls.CloneU32.clone self.adapter_slot)
+  let v ← alloc.vec.CloneVec.clone types.Ty.Insts.CoreCloneClone self.input
+  let v1 ← alloc.vec.CloneVec.clone types.Ty.Insts.CoreCloneClone self.output
+  let es ← types.EffSet.Insts.CoreCloneClone.clone self.effects
+  ok
+    {
+      definition := d,
+      adapter_identity := s,
+      adapter_slot := i,
+      input := v,
+      output := v1,
+      effects := es
+    }
+
+/-- Trait implementation: [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::BoundAdapter}]
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 131:9-131:14 -/
+@[reducible]
+def contracts.BoundAdapter.Insts.CoreCloneClone : core.clone.Clone
+  contracts.BoundAdapter := {
+  clone := contracts.BoundAdapter.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::types::{impl core::fmt::Debug for noble_kernel::types::EffSet}]
+    Source: 'crates/noble-kernel/src/types.rs', lines 45:16-45:21 -/
+@[reducible]
+def types.EffSet.Insts.CoreFmtDebug : core.fmt.Debug types.EffSet := {
+  fmt := types.EffSet.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::BoundAdapter}::fmt]:
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 131:16-131:21
+    Visibility: public -/
+def contracts.BoundAdapter.Insts.CoreFmtDebug.fmt
+  (self : contracts.BoundAdapter) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ contracts.Definition.Insts.CoreFmtDebug self.definition
+  let dyn1 :=
+    Dyn.mk _ alloc.string.String.Insts.CoreFmtDebug self.adapter_identity
+  let dyn2 := Dyn.mk _ core.fmt.DebugU32 self.adapter_slot
+  let dyn3 :=
+    Dyn.mk _ (core.fmt.DebugVec types.Ty.Insts.CoreFmtDebug) self.input
+  let dyn4 :=
+    Dyn.mk _ (core.fmt.DebugVec types.Ty.Insts.CoreFmtDebug) self.output
+  let dyn5 :=
+    Dyn.mk _ (core.fmt.DebugShared types.EffSet.Insts.CoreFmtDebug)
+      self.effects
+  let values :=
+    Array.to_slice (Array.make 6#usize [ dyn, dyn1, dyn2, dyn3, dyn4, dyn5 ])
+  let s ←
+    lift (Array.to_slice
+      (Array.make 6#usize [
+        toStr "definition", toStr "adapter_identity", toStr "adapter_slot",
+        toStr "input", toStr "output", toStr "effects"
+        ]))
+  core.fmt.Formatter.debug_struct_fields_finish f (toStr "BoundAdapter") s
+    values
+
+/-- Trait implementation: [noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::BoundAdapter}]
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 131:16-131:21 -/
+@[reducible]
+def contracts.BoundAdapter.Insts.CoreFmtDebug : core.fmt.Debug
+  contracts.BoundAdapter := {
+  fmt := contracts.BoundAdapter.Insts.CoreFmtDebug.fmt
 }
 
 /-- Trait implementation: [noble_kernel::words::{impl core::clone::Clone for noble_kernel::words::Scheme}]
@@ -18481,8 +24546,16 @@ def words.Scheme.Insts.CoreCloneClone : core.clone.Clone words.Scheme := {
   clone := words.Scheme.Insts.CoreCloneClone.clone
 }
 
+/-- Trait implementation: [noble_kernel::types::{impl core::clone::Clone for noble_kernel::types::ResourceKind}]
+    Source: 'crates/noble-kernel/src/types.rs', lines 15:9-15:14 -/
+@[reducible]
+def types.ResourceKind.Insts.CoreCloneClone : core.clone.Clone
+  types.ResourceKind := {
+  clone := types.ResourceKind.Insts.CoreCloneClone.clone
+}
+
 /-- [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::Env}::clone]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 93:9-93:14
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 153:9-153:14
     Visibility: public -/
 def contracts.Env.Insts.CoreCloneClone.clone
   (self : contracts.Env) : Result contracts.Env := do
@@ -18497,18 +24570,47 @@ def contracts.Env.Insts.CoreCloneClone.clone
     alloc.vec.CloneVec.clone contracts.SchemaDecl.Insts.CoreCloneClone
       self.schemas
   let v4 ←
+    alloc.vec.CloneVec.clone contracts.NominalDecl.Insts.CoreCloneClone
+      self.nominals
+  let v5 ←
+    alloc.vec.CloneVec.clone types.ResourceKind.Insts.CoreCloneClone
+      self.resource_kinds
+  let o ←
+    core.option.Option.Insts.CoreCloneClone.clone core.clone.CloneU64
+      self.caller_module
+  let b ← lift (core.clone.impls.CloneBool.clone self.declared_modules)
+  let v6 ←
+    alloc.vec.CloneVec.clone (core.option.Option.Insts.CoreCloneClone
+      core.clone.CloneU64) self.definition_owners
+  let v7 ←
+    alloc.vec.CloneVec.clone contracts.BoundAdapter.Insts.CoreCloneClone
+      self.bound_adapters
+  let v8 ←
     alloc.vec.CloneVec.clone types.EffId.Insts.CoreCloneClone self.effects
-  ok { defs := v, kinds := v1, deps := v2, schemas := v3, effects := v4 }
+  ok
+    {
+      defs := v,
+      kinds := v1,
+      deps := v2,
+      schemas := v3,
+      nominals := v4,
+      resource_kinds := v5,
+      caller_module := o,
+      declared_modules := b,
+      definition_owners := v6,
+      bound_adapters := v7,
+      effects := v8
+    }
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::Env}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 93:9-93:14 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 153:9-153:14 -/
 @[reducible]
 def contracts.Env.Insts.CoreCloneClone : core.clone.Clone contracts.Env := {
   clone := contracts.Env.Insts.CoreCloneClone.clone
 }
 
 /-- [noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::Env}::fmt]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 93:16-93:21
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 153:16-153:21
     Visibility: public -/
 def contracts.Env.Insts.CoreFmtDebug.fmt
   (self : contracts.Env) (f : core.fmt.Formatter) :
@@ -18526,111 +24628,121 @@ def contracts.Env.Insts.CoreFmtDebug.fmt
     Dyn.mk _ (core.fmt.DebugVec contracts.SchemaDecl.Insts.CoreFmtDebug)
       self.schemas
   let dyn4 :=
+    Dyn.mk _ (core.fmt.DebugVec contracts.NominalDecl.Insts.CoreFmtDebug)
+      self.nominals
+  let dyn5 :=
+    Dyn.mk _ (core.fmt.DebugVec types.ResourceKind.Insts.CoreFmtDebug)
+      self.resource_kinds
+  let dyn6 :=
+    Dyn.mk _ (core.option.Option.Insts.CoreFmtDebug core.fmt.DebugU64)
+      self.caller_module
+  let dyn7 := Dyn.mk _ core.fmt.DebugBool self.declared_modules
+  let dyn8 :=
+    Dyn.mk _ (core.fmt.DebugVec (core.option.Option.Insts.CoreFmtDebug
+      core.fmt.DebugU64)) self.definition_owners
+  let dyn9 :=
+    Dyn.mk _ (core.fmt.DebugVec contracts.BoundAdapter.Insts.CoreFmtDebug)
+      self.bound_adapters
+  let dyn10 :=
     Dyn.mk _ (core.fmt.DebugShared (core.fmt.DebugVec
       types.EffId.Insts.CoreFmtDebug)) self.effects
-  core.fmt.Formatter.debug_struct_field5_finish f (toStr "Env") (toStr "defs")
-    dyn (toStr "kinds") dyn1 (toStr "deps") dyn2 (toStr "schemas") dyn3 (toStr
-    "effects") dyn4
+  let values :=
+    Array.to_slice
+      (Array.make 11#usize [
+        dyn, dyn1, dyn2, dyn3, dyn4, dyn5, dyn6, dyn7, dyn8, dyn9, dyn10
+        ])
+  let s ←
+    lift (Array.to_slice
+      (Array.make 11#usize [
+        toStr "defs", toStr "kinds", toStr "deps", toStr "schemas", toStr
+        "nominals", toStr "resource_kinds", toStr "caller_module", toStr
+        "declared_modules", toStr "definition_owners", toStr "bound_adapters",
+        toStr "effects"
+        ]))
+  core.fmt.Formatter.debug_struct_fields_finish f (toStr "Env") s values
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::Env}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 93:16-93:21 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 153:16-153:21 -/
 @[reducible]
 def contracts.Env.Insts.CoreFmtDebug : core.fmt.Debug contracts.Env := {
   fmt := contracts.Env.Insts.CoreFmtDebug.fmt
 }
 
-/-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::knows_effect]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 129:8-135:9
+/-- [noble_kernel::contracts::{impl core::default::Default for noble_kernel::contracts::Env}::default]:
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 153:23-153:30
     Visibility: public -/
-@[rust_loop_body]
-def contracts.Env.knows_effect_loop.body
-  (self : contracts.Env) (id : types.EffId) (index : Std.Usize) :
-  Result (ControlFlow Std.Usize Bool)
-  := do
-  let i := alloc.vec.Vec.len self.effects
-  if index < i
-  then
-    let ei ←
-      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice types.EffId)
-        self.effects index
-    let b ← types.EffId.Insts.CoreCmpPartialEqEffId.eq ei id
-    if b
-    then ok (done true)
-    else let index1 ← index + 1#usize
-         ok (cont index1)
-  else ok (done false)
+def contracts.Env.Insts.CoreDefaultDefault.default : Result contracts.Env := do
+  let v ← alloc.vec.Vec.Insts.CoreDefaultDefault.default words.Scheme
+  let v1 ← alloc.vec.Vec.Insts.CoreDefaultDefault.default contracts.Behavior
+  let v2 ←
+    alloc.vec.Vec.Insts.CoreDefaultDefault.default (alloc.vec.Vec
+      contracts.Definition)
+  let v3 ←
+    alloc.vec.Vec.Insts.CoreDefaultDefault.default contracts.SchemaDecl
+  let v4 ←
+    alloc.vec.Vec.Insts.CoreDefaultDefault.default contracts.NominalDecl
+  let v5 ← alloc.vec.Vec.Insts.CoreDefaultDefault.default types.ResourceKind
+  let o ← core.option.Option.Insts.CoreDefaultDefault.default Std.U64
+  let b ← core.default.DefaultBool.default
+  let v6 ← alloc.vec.Vec.Insts.CoreDefaultDefault.default (Option Std.U64)
+  let v7 ←
+    alloc.vec.Vec.Insts.CoreDefaultDefault.default contracts.BoundAdapter
+  let v8 ← alloc.vec.Vec.Insts.CoreDefaultDefault.default types.EffId
+  ok
+    {
+      defs := v,
+      kinds := v1,
+      deps := v2,
+      schemas := v3,
+      nominals := v4,
+      resource_kinds := v5,
+      caller_module := o,
+      declared_modules := b,
+      definition_owners := v6,
+      bound_adapters := v7,
+      effects := v8
+    }
 
-/-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::knows_effect]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 129:8-135:9
-    Visibility: public -/
-@[rust_loop]
-def contracts.Env.knows_effect_loop
-  (self : contracts.Env) (id : types.EffId) (index : Std.Usize) :
-  Result Bool
-  := do
-  loop
-    (fun index1 => contracts.Env.knows_effect_loop.body self id index1)
-    index
-
-/-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::knows_effect]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 126:4-137:5
-    Visibility: public -/
+/-- Trait implementation: [noble_kernel::contracts::{impl core::default::Default for noble_kernel::contracts::Env}]
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 153:23-153:30 -/
 @[reducible]
-def contracts.Env.knows_effect
-  (self : contracts.Env) (id : types.EffId) : Result Bool := do
-  contracts.Env.knows_effect_loop self id 0#usize
+def contracts.Env.Insts.CoreDefaultDefault : core.default.Default contracts.Env
+  := {
+  default := contracts.Env.Insts.CoreDefaultDefault.default
+}
+
+/-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::declare_nominal]:
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 194:4-196:5
+    Visibility: public -/
+def contracts.Env.declare_nominal
+  (self : contracts.Env) (decl : contracts.NominalDecl) :
+  Result (core.result.Result (contracts.Env × contracts.NominalOps)
+    contracts.NominalError)
+  := do
+  contracts.nominal.register self decl
+
+/-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::declare_bound_emit]:
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 201:4-206:5
+    Visibility: public -/
+def contracts.Env.declare_bound_emit
+  (self : contracts.Env) (registration : contracts.BoundEmitRegistration) :
+  Result (core.result.Result (contracts.Env × contracts.Definition)
+    contracts.NominalError)
+  := do
+  contracts.nominal.register_bound_emit self registration
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::is_empty]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 145:4-147:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 242:4-244:5
     Visibility: public -/
 def contracts.Env.is_empty (self : contracts.Env) : Result Bool := do
   let i := alloc.vec.Vec.len self.defs
   ok (i = 0#usize)
 
-/-- [noble_kernel::contracts::environment]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 166:4-177:5
-    Visibility: public -/
-@[rust_loop_body]
-def contracts.environment_loop0.body
-  (table : alloc.vec.Vec (contracts.Behavior × words.Scheme))
-  (kinds : alloc.vec.Vec contracts.Behavior) (index : Std.Usize) :
-  Result (ControlFlow ((alloc.vec.Vec contracts.Behavior) × Std.Usize)
-    ((alloc.vec.Vec contracts.Behavior) × (Option shapes.Defect)))
-  := do
-  let i := alloc.vec.Vec.len table
-  if index < i
-  then
-    let (b, s) ←
-      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-        (contracts.Behavior × words.Scheme)) table index
-    let r ← words.Scheme.validate s
-    match r with
-    | core.result.Result.Ok _ =>
-      let kinds1 ← alloc.vec.Vec.push kinds b
-      let index1 ← index + 1#usize
-      ok (cont (kinds1, index1))
-    | core.result.Result.Err problem => ok (done (kinds, some problem))
-  else ok (done (kinds, none))
-
-/-- [noble_kernel::contracts::environment]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 166:4-177:5
-    Visibility: public -/
-@[rust_loop]
-def contracts.environment_loop0
-  (table : alloc.vec.Vec (contracts.Behavior × words.Scheme))
-  (kinds : alloc.vec.Vec contracts.Behavior) (index : Std.Usize) :
-  Result ((alloc.vec.Vec contracts.Behavior) × (Option shapes.Defect))
-  := do
-  loop
-    (fun (kinds1, index1) => contracts.environment_loop0.body table kinds1
-      index1)
-    (kinds, index)
-
 /-- [noble_kernel::contracts::environment]: loop body 1:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 182:4-190:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 272:4-280:5
     Visibility: public -/
 @[rust_loop_body]
-def contracts.environment_loop1.body
+def contracts.environment_loop0_loop0.body
   (table : alloc.vec.Vec (contracts.Behavior × words.Scheme))
   (defs : alloc.vec.Vec words.Scheme)
   (deps : alloc.vec.Vec (alloc.vec.Vec contracts.Definition))
@@ -18654,10 +24766,10 @@ def contracts.environment_loop1.body
   else ok (done (defs, deps))
 
 /-- [noble_kernel::contracts::environment]: loop 1:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 182:4-190:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 272:4-280:5
     Visibility: public -/
 @[rust_loop]
-def contracts.environment_loop1
+def contracts.environment_loop0_loop0
   (table : alloc.vec.Vec (contracts.Behavior × words.Scheme))
   (defs : alloc.vec.Vec words.Scheme)
   (deps : alloc.vec.Vec (alloc.vec.Vec contracts.Definition))
@@ -18666,12 +24778,86 @@ def contracts.environment_loop1
     contracts.Definition)))
   := do
   loop
-    (fun (defs1, deps1, table_index1) => contracts.environment_loop1.body table
-      defs1 deps1 table_index1)
+    (fun (defs1, deps1, table_index1) => contracts.environment_loop0_loop0.body
+      table defs1 deps1 table_index1)
     (defs, deps, table_index)
 
+/-- [noble_kernel::contracts::environment]: loop body 0:
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 262:4-294:1
+    Visibility: public -/
+@[rust_loop_body]
+def contracts.environment_loop0.body
+  (table : alloc.vec.Vec (contracts.Behavior × words.Scheme))
+  (defs : alloc.vec.Vec words.Scheme)
+  (deps : alloc.vec.Vec (alloc.vec.Vec contracts.Definition))
+  (kinds : alloc.vec.Vec contracts.Behavior) (index : Std.Usize) :
+  Result (ControlFlow ((alloc.vec.Vec contracts.Behavior) × Std.Usize)
+    (core.result.Result contracts.Env shapes.Defect))
+  := do
+  let i := alloc.vec.Vec.len table
+  if index < i
+  then
+    let (b, s) ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        (contracts.Behavior × words.Scheme)) table index
+    let r ← words.Scheme.validate s
+    match r with
+    | core.result.Result.Ok _ =>
+      let kinds1 ← alloc.vec.Vec.push kinds b
+      let index1 ← index + 1#usize
+      ok (cont (kinds1, index1))
+    | core.result.Result.Err problem =>
+      ok (done (core.result.Result.Err problem))
+  else
+    let (defs1, deps1) ←
+      contracts.environment_loop0_loop0 table defs deps 0#usize
+    let y ←
+      lift (Std.Array.to_slice
+        (Array.make 1#usize [ contracts.FIXTURE_RESOURCE ] : Array
+        types.ResourceKind 1#usize))
+    let ret := alloc.slice.Slice.into_vec y
+    let i1 := alloc.vec.Vec.len table
+    let v ←
+      alloc.vec.from_elem (core.option.Option.Insts.CoreCloneClone
+        core.clone.CloneU64) none i1
+    let y1 ←
+      lift (Std.Array.to_slice (Array.make 1#usize [ contracts.TEST_EMIT ] :
+        Array types.EffId 1#usize))
+    let ret1 := alloc.slice.Slice.into_vec y1
+    ok (done (core.result.Result.Ok
+      {
+        defs := defs1,
+        kinds,
+        deps := deps1,
+        schemas := (alloc.vec.Vec.new contracts.SchemaDecl),
+        nominals := (alloc.vec.Vec.new contracts.NominalDecl),
+        resource_kinds := ret,
+        caller_module := none,
+        declared_modules := false,
+        definition_owners := v,
+        bound_adapters := (alloc.vec.Vec.new contracts.BoundAdapter),
+        effects := ret1
+      }))
+
+/-- [noble_kernel::contracts::environment]: loop 0:
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 262:4-294:1
+    Visibility: public -/
+@[rust_loop]
+def contracts.environment_loop0
+  (table : alloc.vec.Vec (contracts.Behavior × words.Scheme))
+  (defs : alloc.vec.Vec words.Scheme)
+  (kinds : alloc.vec.Vec contracts.Behavior)
+  (deps : alloc.vec.Vec (alloc.vec.Vec contracts.Definition))
+  (index : Std.Usize) :
+  Result (core.result.Result contracts.Env shapes.Defect)
+  := do
+  loop
+    (fun (kinds1, index1) => contracts.environment_loop0.body table defs deps
+      kinds1 index1)
+    (kinds, index)
+
 /-- [noble_kernel::contracts::environment]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 159:0-198:1
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 256:0-294:1
     Visibility: public -/
 def contracts.environment
   : Result (core.result.Result contracts.Env shapes.Defect) := do
@@ -18680,23 +24866,7 @@ def contracts.environment
   let kinds := alloc.vec.Vec.with_capacity contracts.Behavior 32#usize
   let deps :=
     alloc.vec.Vec.with_capacity (alloc.vec.Vec contracts.Definition) 32#usize
-  let (kinds1, defect) ← contracts.environment_loop0 table kinds 0#usize
-  match defect with
-  | none =>
-    let (defs1, deps1) ← contracts.environment_loop1 table defs deps 0#usize
-    let y ←
-      lift (Std.Array.to_slice (Array.make 1#usize [ contracts.TEST_EMIT ] :
-        Array types.EffId 1#usize))
-    let ret := alloc.slice.Slice.into_vec y
-    ok (core.result.Result.Ok
-      {
-        defs := defs1,
-        kinds := kinds1,
-        deps := deps1,
-        schemas := (alloc.vec.Vec.new contracts.SchemaDecl),
-        effects := ret
-      })
-  | some problem => ok (core.result.Result.Err problem)
+  contracts.environment_loop0 table defs kinds deps 0#usize
 
 /-- [noble_kernel::dataspace::MAX_WIRE_BYTES]
     Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 9:0-9:37
@@ -21585,133 +27755,6 @@ def execution.Body.Insts.CoreCloneClone.clone
 @[reducible]
 def execution.Body.Insts.CoreCloneClone : core.clone.Clone execution.Body := {
   clone := execution.Body.Insts.CoreCloneClone.clone
-}
-
-/-- [noble_kernel::types::{impl core::fmt::Debug for noble_kernel::types::EffSet}::fmt]:
-    Source: 'crates/noble-kernel/src/types.rs', lines 29:16-29:21
-    Visibility: public -/
-def types.EffSet.Insts.CoreFmtDebug.fmt
-  (self : types.EffSet) (f : core.fmt.Formatter) :
-  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
-  := do
-  let dyn :=
-    Dyn.mk _ (core.fmt.DebugShared (core.fmt.DebugVec
-      types.EffId.Insts.CoreFmtDebug)) self
-  core.fmt.Formatter.debug_tuple_field1_finish f (toStr "EffSet") dyn
-
-/-- Trait implementation: [noble_kernel::types::{impl core::fmt::Debug for noble_kernel::types::EffSet}]
-    Source: 'crates/noble-kernel/src/types.rs', lines 29:16-29:21 -/
-@[reducible]
-def types.EffSet.Insts.CoreFmtDebug : core.fmt.Debug types.EffSet := {
-  fmt := types.EffSet.Insts.CoreFmtDebug.fmt
-}
-
-/-- [noble_kernel::types::impls::{impl core::fmt::Debug for noble_kernel::types::Ty}::fmt]:
-    Source: 'crates/noble-kernel/src/types/impls.rs', lines 211:4-255:5
-    Visibility: public -/
-def types.Ty.Insts.CoreFmtDebug.fmt
-  (self : types.Ty) (f : core.fmt.Formatter) :
-  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
-  := do
-  match self with
-  | types.Ty.UnitType => core.fmt.Formatter.write_str f (toStr "Unit")
-  | types.Ty.BoolType => core.fmt.Formatter.write_str f (toStr "Bool")
-  | types.Ty.I64Type => core.fmt.Formatter.write_str f (toStr "I64")
-  | types.Ty.TextType => core.fmt.Formatter.write_str f (toStr "Text")
-  | types.Ty.SyntaxType => core.fmt.Formatter.write_str f (toStr "Syntax")
-  | types.Ty.ContractType => core.fmt.Formatter.write_str f (toStr "Contract")
-  | types.Ty.EvidenceType => core.fmt.Formatter.write_str f (toStr "Evidence")
-  | types.Ty.CertifiedType =>
-    core.fmt.Formatter.write_str f (toStr "Certified")
-  | types.Ty.PairType left right =>
-    let (r, f1) ← core.fmt.Formatter.write_str f (toStr "Pair(")
-    match r with
-    | core.result.Result.Ok _ =>
-      let (r1, f2) ← types.Ty.Insts.CoreFmtDebug.fmt left f1
-      match r1 with
-      | core.result.Result.Ok _ =>
-        let (r2, f3) ← core.fmt.Formatter.write_str f2 (toStr ", ")
-        match r2 with
-        | core.result.Result.Ok _ =>
-          let (r3, f4) ← types.Ty.Insts.CoreFmtDebug.fmt right f3
-          match r3 with
-          | core.result.Result.Ok _ =>
-            core.fmt.Formatter.write_str f4 (toStr ")")
-          | core.result.Result.Err _ => ok (r3, f4)
-        | core.result.Result.Err _ => ok (r2, f3)
-      | core.result.Result.Err _ => ok (r1, f2)
-    | core.result.Result.Err _ => ok (r, f1)
-  | types.Ty.SumType left right =>
-    let (r, f1) ← core.fmt.Formatter.write_str f (toStr "Sum(")
-    match r with
-    | core.result.Result.Ok _ =>
-      let (r1, f2) ← types.Ty.Insts.CoreFmtDebug.fmt left f1
-      match r1 with
-      | core.result.Result.Ok _ =>
-        let (r2, f3) ← core.fmt.Formatter.write_str f2 (toStr ", ")
-        match r2 with
-        | core.result.Result.Ok _ =>
-          let (r3, f4) ← types.Ty.Insts.CoreFmtDebug.fmt right f3
-          match r3 with
-          | core.result.Result.Ok _ =>
-            core.fmt.Formatter.write_str f4 (toStr ")")
-          | core.result.Result.Err _ => ok (r3, f4)
-        | core.result.Result.Err _ => ok (r2, f3)
-      | core.result.Result.Err _ => ok (r1, f2)
-    | core.result.Result.Err _ => ok (r, f1)
-  | types.Ty.ListType item =>
-    let (r, f1) ← core.fmt.Formatter.write_str f (toStr "List(")
-    match r with
-    | core.result.Result.Ok _ =>
-      let (r1, f2) ← types.Ty.Insts.CoreFmtDebug.fmt item f1
-      match r1 with
-      | core.result.Result.Ok _ => core.fmt.Formatter.write_str f2 (toStr ")")
-      | core.result.Result.Err _ => ok (r1, f2)
-    | core.result.Result.Err _ => ok (r, f1)
-  | types.Ty.ProgramType stack_in stack_out effects =>
-    let (r, f1) ← core.fmt.Formatter.write_str f (toStr "Program(")
-    match r with
-    | core.result.Result.Ok _ =>
-      let s ← alloc.vec.Vec.as_slice Global stack_in
-      let (r1, f2) ← types.impls.debug_stack s f1
-      match r1 with
-      | core.result.Result.Ok _ =>
-        let (r2, f3) ← core.fmt.Formatter.write_str f2 (toStr ", ")
-        match r2 with
-        | core.result.Result.Ok _ =>
-          let s1 ← alloc.vec.Vec.as_slice Global stack_out
-          let (r3, f4) ← types.impls.debug_stack s1 f3
-          match r3 with
-          | core.result.Result.Ok _ =>
-            let (r4, f5) ← core.fmt.Formatter.write_str f4 (toStr ", ")
-            match r4 with
-            | core.result.Result.Ok _ =>
-              let (r5, f6) ← types.EffSet.Insts.CoreFmtDebug.fmt effects f5
-              match r5 with
-              | core.result.Result.Ok _ =>
-                core.fmt.Formatter.write_str f6 (toStr ")")
-              | core.result.Result.Err _ => ok (r5, f6)
-            | core.result.Result.Err _ => ok (r4, f5)
-          | core.result.Result.Err _ => ok (r3, f4)
-        | core.result.Result.Err _ => ok (r2, f3)
-      | core.result.Result.Err _ => ok (r1, f2)
-    | core.result.Result.Err _ => ok (r, f1)
-  | types.Ty.ResourceType kind =>
-    let (r, f1) ← core.fmt.Formatter.write_str f (toStr "Resource(")
-    match r with
-    | core.result.Result.Ok _ =>
-      let (r1, f2) ← types.ResourceKind.Insts.CoreFmtDebug.fmt kind f1
-      match r1 with
-      | core.result.Result.Ok _ => core.fmt.Formatter.write_str f2 (toStr ")")
-      | core.result.Result.Err _ => ok (r1, f2)
-    | core.result.Result.Err _ => ok (r, f1)
-partial_fixpoint
-
-/-- Trait implementation: [noble_kernel::types::impls::{impl core::fmt::Debug for noble_kernel::types::Ty}]
-    Source: 'crates/noble-kernel/src/types/impls.rs', lines 202:0-256:1 -/
-@[reducible]
-def types.Ty.Insts.CoreFmtDebug : core.fmt.Debug types.Ty := {
-  fmt := types.Ty.Insts.CoreFmtDebug.fmt
 }
 
 /-- [noble_kernel::words::{impl core::fmt::Debug for noble_kernel::words::Binding}::fmt]:
@@ -25419,541 +31462,22 @@ def resources.table.Table.validate
     ok (core.result.Result.Ok decision.record)
   | core.result.Result.Err error => ok (core.result.Result.Err error)
 
-/-- [noble_kernel::shapes::impls::equality::push_pattern_program]: loop body 0:
-    Source: 'crates/noble-kernel/src/shapes/impls/equality.rs', lines 18:4-21:5 -/
-@[rust_loop_body]
-def shapes.impls.equality.push_pattern_program_loop0.body
-  (first_in : Slice shapes.Pattern) (second_in : Slice shapes.Pattern)
-  (work : alloc.vec.Vec (shapes.Pattern × shapes.Pattern))
-  (is_comparable : Bool) (index : Std.Usize) :
-  Result (ControlFlow ((alloc.vec.Vec (shapes.Pattern × shapes.Pattern)) ×
-    Bool × Std.Usize) ((alloc.vec.Vec (shapes.Pattern × shapes.Pattern)) ×
-    Bool))
-  := do
-  let i := Slice.len first_in
-  if index < i
-  then
-    if is_comparable
-    then
-      let p ← Slice.index_usize first_in index
-      let p1 ← shapes.Pattern.Insts.CoreCloneClone.clone p
-      let p2 ← Slice.index_usize second_in index
-      let p3 ← shapes.Pattern.Insts.CoreCloneClone.clone p2
-      let work1 ← alloc.vec.Vec.push work (p1, p3)
-      let index1 ← index + 1#usize
-      ok (cont (work1, true, index1))
-    else ok (done (work, false))
-  else ok (done (work, is_comparable))
-
-/-- [noble_kernel::shapes::impls::equality::push_pattern_program]: loop 0:
-    Source: 'crates/noble-kernel/src/shapes/impls/equality.rs', lines 18:4-21:5 -/
-@[rust_loop]
-def shapes.impls.equality.push_pattern_program_loop0
-  (work : alloc.vec.Vec (shapes.Pattern × shapes.Pattern))
-  (first_in : Slice shapes.Pattern) (second_in : Slice shapes.Pattern)
-  (is_comparable : Bool) (index : Std.Usize) :
-  Result ((alloc.vec.Vec (shapes.Pattern × shapes.Pattern)) × Bool)
-  := do
-  loop
-    (fun (work1, is_comparable1, index1) =>
-      shapes.impls.equality.push_pattern_program_loop0.body first_in second_in
-      work1 is_comparable1 index1)
-    (work, is_comparable, index)
-
-/-- [noble_kernel::shapes::impls::equality::push_pattern_program]: loop body 1:
-    Source: 'crates/noble-kernel/src/shapes/impls/equality.rs', lines 23:4-26:5 -/
-@[rust_loop_body]
-def shapes.impls.equality.push_pattern_program_loop1.body
-  (first_out : Slice shapes.Pattern) (second_out : Slice shapes.Pattern)
-  (work : alloc.vec.Vec (shapes.Pattern × shapes.Pattern))
-  (is_comparable : Bool) (index : Std.Usize) :
-  Result (ControlFlow ((alloc.vec.Vec (shapes.Pattern × shapes.Pattern)) ×
-    Bool × Std.Usize) ((alloc.vec.Vec (shapes.Pattern × shapes.Pattern)) ×
-    Bool))
-  := do
-  let i := Slice.len first_out
-  if index < i
-  then
-    if is_comparable
-    then
-      let p ← Slice.index_usize first_out index
-      let p1 ← shapes.Pattern.Insts.CoreCloneClone.clone p
-      let p2 ← Slice.index_usize second_out index
-      let p3 ← shapes.Pattern.Insts.CoreCloneClone.clone p2
-      let work1 ← alloc.vec.Vec.push work (p1, p3)
-      let index1 ← index + 1#usize
-      ok (cont (work1, true, index1))
-    else ok (done (work, false))
-  else ok (done (work, is_comparable))
-
-/-- [noble_kernel::shapes::impls::equality::push_pattern_program]: loop 1:
-    Source: 'crates/noble-kernel/src/shapes/impls/equality.rs', lines 23:4-26:5 -/
-@[rust_loop]
-def shapes.impls.equality.push_pattern_program_loop1
-  (work : alloc.vec.Vec (shapes.Pattern × shapes.Pattern))
-  (first_out : Slice shapes.Pattern) (second_out : Slice shapes.Pattern)
-  (is_comparable : Bool) (index : Std.Usize) :
-  Result ((alloc.vec.Vec (shapes.Pattern × shapes.Pattern)) × Bool)
-  := do
-  loop
-    (fun (work1, is_comparable1, index1) =>
-      shapes.impls.equality.push_pattern_program_loop1.body first_out
-      second_out work1 is_comparable1 index1)
-    (work, is_comparable, index)
-
-/-- [noble_kernel::shapes::impls::equality::push_pattern_program]:
-    Source: 'crates/noble-kernel/src/shapes/impls/equality.rs', lines 4:0-28:1 -/
-def shapes.impls.equality.push_pattern_program
-  (work : alloc.vec.Vec (shapes.Pattern × shapes.Pattern))
-  (first_in : Slice shapes.Pattern) (first_out : Slice shapes.Pattern)
-  (second_in : Slice shapes.Pattern) (second_out : Slice shapes.Pattern) :
-  Result ((alloc.vec.Vec (shapes.Pattern × shapes.Pattern)) × Bool)
-  := do
-  let i := Slice.len first_in
-  let i1 := Slice.len second_in
-  let is_comparable ←
-    if i = i1
-    then
-      let i2 := Slice.len first_out
-      let i3 := Slice.len second_out
-      if i2 = i3
-      then let i4 := alloc.vec.Vec.len work
-           ok (i4 < shapes.WORK_CAP)
-      else ok false
-    else ok false
-  let (work1, is_comparable1) ←
-    shapes.impls.equality.push_pattern_program_loop0 work first_in second_in
-      is_comparable 0#usize
-  shapes.impls.equality.push_pattern_program_loop1 work1 first_out second_out
-    is_comparable1 0#usize
-
-/-- [noble_kernel::words::{impl core::cmp::PartialEq<noble_kernel::words::Variable> for noble_kernel::words::Variable}::eq]:
-    Source: 'crates/noble-kernel/src/words.rs', lines 17:29-17:38
-    Visibility: public -/
-def words.Variable.Insts.CoreCmpPartialEqVariable.eq
-  (self : words.Variable) (other : words.Variable) : Result Bool := do
-  ok (self = other)
-
-/-- Trait implementation: [noble_kernel::words::{impl core::cmp::PartialEq<noble_kernel::words::Variable> for noble_kernel::words::Variable}]
-    Source: 'crates/noble-kernel/src/words.rs', lines 17:29-17:38 -/
-@[reducible]
-impl_def words.Variable.Insts.CoreCmpPartialEqVariable : core.cmp.PartialEq
-  words.Variable words.Variable := {
-  eq := words.Variable.Insts.CoreCmpPartialEqVariable.eq
-  ne := core.cmp.PartialEq.ne.trait_default
-    words.Variable.Insts.CoreCmpPartialEqVariable
-}
-
-/-- [noble_kernel::shapes::{impl core::cmp::PartialEq<noble_kernel::shapes::EffectSlot> for noble_kernel::shapes::EffectSlot}::eq]:
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 79:23-79:32
-    Visibility: public -/
-def shapes.EffectSlot.Insts.CoreCmpPartialEqEffectSlot.eq
-  (self : shapes.EffectSlot) (other : shapes.EffectSlot) : Result Bool := do
-  let self1 := read_discriminant self
-  let other1 := read_discriminant other
-  if self1 = other1
-  then
-    match self with
-    | shapes.EffectSlot.Effect __self_0 =>
-      match other with
-      | shapes.EffectSlot.Effect __arg1_0 =>
-        types.EffId.Insts.CoreCmpPartialEqEffId.eq __self_0 __arg1_0
-      | shapes.EffectSlot.Var _ => fail panic
-    | shapes.EffectSlot.Var __self_0 =>
-      match other with
-      | shapes.EffectSlot.Effect _ => fail panic
-      | shapes.EffectSlot.Var __arg1_0 =>
-        words.Variable.Insts.CoreCmpPartialEqVariable.eq __self_0 __arg1_0
-  else ok false
-
-/-- Trait implementation: [noble_kernel::shapes::{impl core::cmp::PartialEq<noble_kernel::shapes::EffectSlot> for noble_kernel::shapes::EffectSlot}]
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 79:23-79:32 -/
-@[reducible]
-impl_def shapes.EffectSlot.Insts.CoreCmpPartialEqEffectSlot :
-  core.cmp.PartialEq shapes.EffectSlot shapes.EffectSlot := {
-  eq := shapes.EffectSlot.Insts.CoreCmpPartialEqEffectSlot.eq
-  ne := core.cmp.PartialEq.ne.trait_default
-    shapes.EffectSlot.Insts.CoreCmpPartialEqEffectSlot
-}
-
-/-- [noble_kernel::shapes::impls::equality::compare]:
-    Source: 'crates/noble-kernel/src/shapes/impls/equality.rs', lines 56:0-111:1 -/
-def shapes.impls.equality.compare
-  (first : shapes.Pattern) (second : shapes.Pattern)
-  (work : alloc.vec.Vec (shapes.Pattern × shapes.Pattern)) :
-  Result ((alloc.vec.Vec (shapes.Pattern × shapes.Pattern)) × Bool)
-  := do
-  match first with
-  | shapes.Pattern.UnitPattern =>
-    match second with
-    | shapes.Pattern.UnitPattern => ok (work, true)
-    | shapes.Pattern.BoolPattern => ok (work, false)
-    | shapes.Pattern.I64Pattern => ok (work, false)
-    | shapes.Pattern.TextPattern => ok (work, false)
-    | shapes.Pattern.SyntaxPattern => ok (work, false)
-    | shapes.Pattern.ContractPattern => ok (work, false)
-    | shapes.Pattern.EvidencePattern => ok (work, false)
-    | shapes.Pattern.CertifiedPattern => ok (work, false)
-    | shapes.Pattern.PairPattern _ _ => ok (work, false)
-    | shapes.Pattern.SumPattern _ _ => ok (work, false)
-    | shapes.Pattern.ListPattern _ => ok (work, false)
-    | shapes.Pattern.ProgramPattern _ _ _ => ok (work, false)
-    | shapes.Pattern.ResourcePattern _ => ok (work, false)
-    | shapes.Pattern.VarPattern _ => ok (work, false)
-    | shapes.Pattern.StackVarPattern _ => ok (work, false)
-  | shapes.Pattern.BoolPattern =>
-    match second with
-    | shapes.Pattern.UnitPattern => ok (work, false)
-    | shapes.Pattern.BoolPattern => ok (work, true)
-    | shapes.Pattern.I64Pattern => ok (work, false)
-    | shapes.Pattern.TextPattern => ok (work, false)
-    | shapes.Pattern.SyntaxPattern => ok (work, false)
-    | shapes.Pattern.ContractPattern => ok (work, false)
-    | shapes.Pattern.EvidencePattern => ok (work, false)
-    | shapes.Pattern.CertifiedPattern => ok (work, false)
-    | shapes.Pattern.PairPattern _ _ => ok (work, false)
-    | shapes.Pattern.SumPattern _ _ => ok (work, false)
-    | shapes.Pattern.ListPattern _ => ok (work, false)
-    | shapes.Pattern.ProgramPattern _ _ _ => ok (work, false)
-    | shapes.Pattern.ResourcePattern _ => ok (work, false)
-    | shapes.Pattern.VarPattern _ => ok (work, false)
-    | shapes.Pattern.StackVarPattern _ => ok (work, false)
-  | shapes.Pattern.I64Pattern =>
-    match second with
-    | shapes.Pattern.UnitPattern => ok (work, false)
-    | shapes.Pattern.BoolPattern => ok (work, false)
-    | shapes.Pattern.I64Pattern => ok (work, true)
-    | shapes.Pattern.TextPattern => ok (work, false)
-    | shapes.Pattern.SyntaxPattern => ok (work, false)
-    | shapes.Pattern.ContractPattern => ok (work, false)
-    | shapes.Pattern.EvidencePattern => ok (work, false)
-    | shapes.Pattern.CertifiedPattern => ok (work, false)
-    | shapes.Pattern.PairPattern _ _ => ok (work, false)
-    | shapes.Pattern.SumPattern _ _ => ok (work, false)
-    | shapes.Pattern.ListPattern _ => ok (work, false)
-    | shapes.Pattern.ProgramPattern _ _ _ => ok (work, false)
-    | shapes.Pattern.ResourcePattern _ => ok (work, false)
-    | shapes.Pattern.VarPattern _ => ok (work, false)
-    | shapes.Pattern.StackVarPattern _ => ok (work, false)
-  | shapes.Pattern.TextPattern =>
-    match second with
-    | shapes.Pattern.UnitPattern => ok (work, false)
-    | shapes.Pattern.BoolPattern => ok (work, false)
-    | shapes.Pattern.I64Pattern => ok (work, false)
-    | shapes.Pattern.TextPattern => ok (work, true)
-    | shapes.Pattern.SyntaxPattern => ok (work, false)
-    | shapes.Pattern.ContractPattern => ok (work, false)
-    | shapes.Pattern.EvidencePattern => ok (work, false)
-    | shapes.Pattern.CertifiedPattern => ok (work, false)
-    | shapes.Pattern.PairPattern _ _ => ok (work, false)
-    | shapes.Pattern.SumPattern _ _ => ok (work, false)
-    | shapes.Pattern.ListPattern _ => ok (work, false)
-    | shapes.Pattern.ProgramPattern _ _ _ => ok (work, false)
-    | shapes.Pattern.ResourcePattern _ => ok (work, false)
-    | shapes.Pattern.VarPattern _ => ok (work, false)
-    | shapes.Pattern.StackVarPattern _ => ok (work, false)
-  | shapes.Pattern.SyntaxPattern =>
-    match second with
-    | shapes.Pattern.UnitPattern => ok (work, false)
-    | shapes.Pattern.BoolPattern => ok (work, false)
-    | shapes.Pattern.I64Pattern => ok (work, false)
-    | shapes.Pattern.TextPattern => ok (work, false)
-    | shapes.Pattern.SyntaxPattern => ok (work, true)
-    | shapes.Pattern.ContractPattern => ok (work, false)
-    | shapes.Pattern.EvidencePattern => ok (work, false)
-    | shapes.Pattern.CertifiedPattern => ok (work, false)
-    | shapes.Pattern.PairPattern _ _ => ok (work, false)
-    | shapes.Pattern.SumPattern _ _ => ok (work, false)
-    | shapes.Pattern.ListPattern _ => ok (work, false)
-    | shapes.Pattern.ProgramPattern _ _ _ => ok (work, false)
-    | shapes.Pattern.ResourcePattern _ => ok (work, false)
-    | shapes.Pattern.VarPattern _ => ok (work, false)
-    | shapes.Pattern.StackVarPattern _ => ok (work, false)
-  | shapes.Pattern.ContractPattern =>
-    match second with
-    | shapes.Pattern.UnitPattern => ok (work, false)
-    | shapes.Pattern.BoolPattern => ok (work, false)
-    | shapes.Pattern.I64Pattern => ok (work, false)
-    | shapes.Pattern.TextPattern => ok (work, false)
-    | shapes.Pattern.SyntaxPattern => ok (work, false)
-    | shapes.Pattern.ContractPattern => ok (work, true)
-    | shapes.Pattern.EvidencePattern => ok (work, false)
-    | shapes.Pattern.CertifiedPattern => ok (work, false)
-    | shapes.Pattern.PairPattern _ _ => ok (work, false)
-    | shapes.Pattern.SumPattern _ _ => ok (work, false)
-    | shapes.Pattern.ListPattern _ => ok (work, false)
-    | shapes.Pattern.ProgramPattern _ _ _ => ok (work, false)
-    | shapes.Pattern.ResourcePattern _ => ok (work, false)
-    | shapes.Pattern.VarPattern _ => ok (work, false)
-    | shapes.Pattern.StackVarPattern _ => ok (work, false)
-  | shapes.Pattern.EvidencePattern =>
-    match second with
-    | shapes.Pattern.UnitPattern => ok (work, false)
-    | shapes.Pattern.BoolPattern => ok (work, false)
-    | shapes.Pattern.I64Pattern => ok (work, false)
-    | shapes.Pattern.TextPattern => ok (work, false)
-    | shapes.Pattern.SyntaxPattern => ok (work, false)
-    | shapes.Pattern.ContractPattern => ok (work, false)
-    | shapes.Pattern.EvidencePattern => ok (work, true)
-    | shapes.Pattern.CertifiedPattern => ok (work, false)
-    | shapes.Pattern.PairPattern _ _ => ok (work, false)
-    | shapes.Pattern.SumPattern _ _ => ok (work, false)
-    | shapes.Pattern.ListPattern _ => ok (work, false)
-    | shapes.Pattern.ProgramPattern _ _ _ => ok (work, false)
-    | shapes.Pattern.ResourcePattern _ => ok (work, false)
-    | shapes.Pattern.VarPattern _ => ok (work, false)
-    | shapes.Pattern.StackVarPattern _ => ok (work, false)
-  | shapes.Pattern.CertifiedPattern =>
-    match second with
-    | shapes.Pattern.UnitPattern => ok (work, false)
-    | shapes.Pattern.BoolPattern => ok (work, false)
-    | shapes.Pattern.I64Pattern => ok (work, false)
-    | shapes.Pattern.TextPattern => ok (work, false)
-    | shapes.Pattern.SyntaxPattern => ok (work, false)
-    | shapes.Pattern.ContractPattern => ok (work, false)
-    | shapes.Pattern.EvidencePattern => ok (work, false)
-    | shapes.Pattern.CertifiedPattern => ok (work, true)
-    | shapes.Pattern.PairPattern _ _ => ok (work, false)
-    | shapes.Pattern.SumPattern _ _ => ok (work, false)
-    | shapes.Pattern.ListPattern _ => ok (work, false)
-    | shapes.Pattern.ProgramPattern _ _ _ => ok (work, false)
-    | shapes.Pattern.ResourcePattern _ => ok (work, false)
-    | shapes.Pattern.VarPattern _ => ok (work, false)
-    | shapes.Pattern.StackVarPattern _ => ok (work, false)
-  | shapes.Pattern.PairPattern first_head first_tail =>
-    match second with
-    | shapes.Pattern.UnitPattern => ok (work, false)
-    | shapes.Pattern.BoolPattern => ok (work, false)
-    | shapes.Pattern.I64Pattern => ok (work, false)
-    | shapes.Pattern.TextPattern => ok (work, false)
-    | shapes.Pattern.SyntaxPattern => ok (work, false)
-    | shapes.Pattern.ContractPattern => ok (work, false)
-    | shapes.Pattern.EvidencePattern => ok (work, false)
-    | shapes.Pattern.CertifiedPattern => ok (work, false)
-    | shapes.Pattern.PairPattern second_head second_tail =>
-      let work1 ← alloc.vec.Vec.push work (first_head, second_head)
-      let work2 ← alloc.vec.Vec.push work1 (first_tail, second_tail)
-      ok (work2, true)
-    | shapes.Pattern.SumPattern _ _ => ok (work, false)
-    | shapes.Pattern.ListPattern _ => ok (work, false)
-    | shapes.Pattern.ProgramPattern _ _ _ => ok (work, false)
-    | shapes.Pattern.ResourcePattern _ => ok (work, false)
-    | shapes.Pattern.VarPattern _ => ok (work, false)
-    | shapes.Pattern.StackVarPattern _ => ok (work, false)
-  | shapes.Pattern.SumPattern first_head first_tail =>
-    match second with
-    | shapes.Pattern.UnitPattern => ok (work, false)
-    | shapes.Pattern.BoolPattern => ok (work, false)
-    | shapes.Pattern.I64Pattern => ok (work, false)
-    | shapes.Pattern.TextPattern => ok (work, false)
-    | shapes.Pattern.SyntaxPattern => ok (work, false)
-    | shapes.Pattern.ContractPattern => ok (work, false)
-    | shapes.Pattern.EvidencePattern => ok (work, false)
-    | shapes.Pattern.CertifiedPattern => ok (work, false)
-    | shapes.Pattern.PairPattern _ _ => ok (work, false)
-    | shapes.Pattern.SumPattern second_head second_tail =>
-      let work1 ← alloc.vec.Vec.push work (first_head, second_head)
-      let work2 ← alloc.vec.Vec.push work1 (first_tail, second_tail)
-      ok (work2, true)
-    | shapes.Pattern.ListPattern _ => ok (work, false)
-    | shapes.Pattern.ProgramPattern _ _ _ => ok (work, false)
-    | shapes.Pattern.ResourcePattern _ => ok (work, false)
-    | shapes.Pattern.VarPattern _ => ok (work, false)
-    | shapes.Pattern.StackVarPattern _ => ok (work, false)
-  | shapes.Pattern.ListPattern first_item =>
-    match second with
-    | shapes.Pattern.UnitPattern => ok (work, false)
-    | shapes.Pattern.BoolPattern => ok (work, false)
-    | shapes.Pattern.I64Pattern => ok (work, false)
-    | shapes.Pattern.TextPattern => ok (work, false)
-    | shapes.Pattern.SyntaxPattern => ok (work, false)
-    | shapes.Pattern.ContractPattern => ok (work, false)
-    | shapes.Pattern.EvidencePattern => ok (work, false)
-    | shapes.Pattern.CertifiedPattern => ok (work, false)
-    | shapes.Pattern.PairPattern _ _ => ok (work, false)
-    | shapes.Pattern.SumPattern _ _ => ok (work, false)
-    | shapes.Pattern.ListPattern second_item =>
-      let work1 ← alloc.vec.Vec.push work (first_item, second_item)
-      ok (work1, true)
-    | shapes.Pattern.ProgramPattern _ _ _ => ok (work, false)
-    | shapes.Pattern.ResourcePattern _ => ok (work, false)
-    | shapes.Pattern.VarPattern _ => ok (work, false)
-    | shapes.Pattern.StackVarPattern _ => ok (work, false)
-  | shapes.Pattern.ProgramPattern a_in a_out a_eff =>
-    match second with
-    | shapes.Pattern.UnitPattern => ok (work, false)
-    | shapes.Pattern.BoolPattern => ok (work, false)
-    | shapes.Pattern.I64Pattern => ok (work, false)
-    | shapes.Pattern.TextPattern => ok (work, false)
-    | shapes.Pattern.SyntaxPattern => ok (work, false)
-    | shapes.Pattern.ContractPattern => ok (work, false)
-    | shapes.Pattern.EvidencePattern => ok (work, false)
-    | shapes.Pattern.CertifiedPattern => ok (work, false)
-    | shapes.Pattern.PairPattern _ _ => ok (work, false)
-    | shapes.Pattern.SumPattern _ _ => ok (work, false)
-    | shapes.Pattern.ListPattern _ => ok (work, false)
-    | shapes.Pattern.ProgramPattern b_in b_out b_eff =>
-      let s := alloc.vec.Vec.deref a_in
-      let s1 := alloc.vec.Vec.deref a_out
-      let s2 := alloc.vec.Vec.deref b_in
-      let s3 := alloc.vec.Vec.deref b_out
-      let (next, is_program_equal) ←
-        shapes.impls.equality.push_pattern_program work s s1 s2 s3
-      if is_program_equal
-      then
-        let is_equal ←
-          alloc.vec.partial_eq.PartialEqVec.eq
-            shapes.EffectSlot.Insts.CoreCmpPartialEqEffectSlot a_eff b_eff
-        ok (next, is_equal)
-      else ok (next, false)
-    | shapes.Pattern.ResourcePattern _ => ok (work, false)
-    | shapes.Pattern.VarPattern _ => ok (work, false)
-    | shapes.Pattern.StackVarPattern _ => ok (work, false)
-  | shapes.Pattern.ResourcePattern first_kind =>
-    match second with
-    | shapes.Pattern.UnitPattern => ok (work, false)
-    | shapes.Pattern.BoolPattern => ok (work, false)
-    | shapes.Pattern.I64Pattern => ok (work, false)
-    | shapes.Pattern.TextPattern => ok (work, false)
-    | shapes.Pattern.SyntaxPattern => ok (work, false)
-    | shapes.Pattern.ContractPattern => ok (work, false)
-    | shapes.Pattern.EvidencePattern => ok (work, false)
-    | shapes.Pattern.CertifiedPattern => ok (work, false)
-    | shapes.Pattern.PairPattern _ _ => ok (work, false)
-    | shapes.Pattern.SumPattern _ _ => ok (work, false)
-    | shapes.Pattern.ListPattern _ => ok (work, false)
-    | shapes.Pattern.ProgramPattern _ _ _ => ok (work, false)
-    | shapes.Pattern.ResourcePattern second_kind =>
-      let is_equal ←
-        types.ResourceKind.Insts.CoreCmpPartialEqResourceKind.eq first_kind
-          second_kind
-      ok (work, is_equal)
-    | shapes.Pattern.VarPattern _ => ok (work, false)
-    | shapes.Pattern.StackVarPattern _ => ok (work, false)
-  | shapes.Pattern.VarPattern first_var =>
-    match second with
-    | shapes.Pattern.UnitPattern => ok (work, false)
-    | shapes.Pattern.BoolPattern => ok (work, false)
-    | shapes.Pattern.I64Pattern => ok (work, false)
-    | shapes.Pattern.TextPattern => ok (work, false)
-    | shapes.Pattern.SyntaxPattern => ok (work, false)
-    | shapes.Pattern.ContractPattern => ok (work, false)
-    | shapes.Pattern.EvidencePattern => ok (work, false)
-    | shapes.Pattern.CertifiedPattern => ok (work, false)
-    | shapes.Pattern.PairPattern _ _ => ok (work, false)
-    | shapes.Pattern.SumPattern _ _ => ok (work, false)
-    | shapes.Pattern.ListPattern _ => ok (work, false)
-    | shapes.Pattern.ProgramPattern _ _ _ => ok (work, false)
-    | shapes.Pattern.ResourcePattern _ => ok (work, false)
-    | shapes.Pattern.VarPattern second_var =>
-      let is_equal ←
-        words.Variable.Insts.CoreCmpPartialEqVariable.eq first_var second_var
-      ok (work, is_equal)
-    | shapes.Pattern.StackVarPattern _ => ok (work, false)
-  | shapes.Pattern.StackVarPattern first_var =>
-    match second with
-    | shapes.Pattern.UnitPattern => ok (work, false)
-    | shapes.Pattern.BoolPattern => ok (work, false)
-    | shapes.Pattern.I64Pattern => ok (work, false)
-    | shapes.Pattern.TextPattern => ok (work, false)
-    | shapes.Pattern.SyntaxPattern => ok (work, false)
-    | shapes.Pattern.ContractPattern => ok (work, false)
-    | shapes.Pattern.EvidencePattern => ok (work, false)
-    | shapes.Pattern.CertifiedPattern => ok (work, false)
-    | shapes.Pattern.PairPattern _ _ => ok (work, false)
-    | shapes.Pattern.SumPattern _ _ => ok (work, false)
-    | shapes.Pattern.ListPattern _ => ok (work, false)
-    | shapes.Pattern.ProgramPattern _ _ _ => ok (work, false)
-    | shapes.Pattern.ResourcePattern _ => ok (work, false)
-    | shapes.Pattern.VarPattern _ => ok (work, false)
-    | shapes.Pattern.StackVarPattern second_var =>
-      let is_equal ←
-        words.Variable.Insts.CoreCmpPartialEqVariable.eq first_var second_var
-      ok (work, is_equal)
-
-/-- [noble_kernel::shapes::impls::equality::pattern_eq]: loop body 0:
-    Source: 'crates/noble-kernel/src/shapes/impls/equality.rs', lines 34:4-44:5 -/
-@[rust_loop_body]
-def shapes.impls.equality.pattern_eq_loop.body
-  (work : alloc.vec.Vec (shapes.Pattern × shapes.Pattern)) (is_equal : Bool) :
-  Result (ControlFlow ((alloc.vec.Vec (shapes.Pattern × shapes.Pattern)) ×
-    Bool) Bool)
-  := do
-  let b ← alloc.vec.Vec.is_empty Global work
-  if b
-  then ok (done is_equal)
-  else
-    let i := alloc.vec.Vec.len work
-    if i >= shapes.WORK_CAP
-    then ok (done false)
-    else
-      let (o, work1) ← alloc.vec.Vec.pop Global work
-      match o with
-      | none => ok (cont (work1, is_equal))
-      | some p =>
-        let (first, second) := p
-        let (next, is_step_equal) ←
-          shapes.impls.equality.compare first second work1
-        if is_equal
-        then ok (cont (next, is_step_equal))
-        else ok (cont (next, false))
-
-/-- [noble_kernel::shapes::impls::equality::pattern_eq]: loop 0:
-    Source: 'crates/noble-kernel/src/shapes/impls/equality.rs', lines 34:4-44:5 -/
-@[rust_loop]
-def shapes.impls.equality.pattern_eq_loop
-  (work : alloc.vec.Vec (shapes.Pattern × shapes.Pattern)) (is_equal : Bool) :
-  Result Bool
-  := do
-  loop
-    (fun (work1, is_equal1) => shapes.impls.equality.pattern_eq_loop.body work1
-      is_equal1)
-    (work, is_equal)
-
-/-- [noble_kernel::shapes::impls::equality::pattern_eq]:
-    Source: 'crates/noble-kernel/src/shapes/impls/equality.rs', lines 30:0-46:1 -/
-def shapes.impls.equality.pattern_eq
-  (left : shapes.Pattern) (right : shapes.Pattern) : Result Bool := do
-  let work :=
-    alloc.vec.Vec.with_capacity (shapes.Pattern × shapes.Pattern) 8#usize
-  let p ← shapes.Pattern.Insts.CoreCloneClone.clone left
-  let p1 ← shapes.Pattern.Insts.CoreCloneClone.clone right
-  let work1 ← alloc.vec.Vec.push work (p, p1)
-  shapes.impls.equality.pattern_eq_loop work1 true
-
-/-- [noble_kernel::shapes::impls::{impl core::cmp::PartialEq<noble_kernel::shapes::Pattern> for noble_kernel::shapes::Pattern}::eq]:
-    Source: 'crates/noble-kernel/src/shapes/impls.rs', lines 69:4-71:5
-    Visibility: public -/
-def shapes.Pattern.Insts.CoreCmpPartialEqPattern.eq
-  (self : shapes.Pattern) (other : shapes.Pattern) : Result Bool := do
-  shapes.impls.equality.pattern_eq self other
-
-/-- Trait implementation: [noble_kernel::shapes::impls::{impl core::cmp::PartialEq<noble_kernel::shapes::Pattern> for noble_kernel::shapes::Pattern}]
-    Source: 'crates/noble-kernel/src/shapes/impls.rs', lines 68:0-72:1 -/
-@[reducible]
-impl_def shapes.Pattern.Insts.CoreCmpPartialEqPattern : core.cmp.PartialEq
-  shapes.Pattern shapes.Pattern := {
-  eq := shapes.Pattern.Insts.CoreCmpPartialEqPattern.eq
-  ne := core.cmp.PartialEq.ne.trait_default
-    shapes.Pattern.Insts.CoreCmpPartialEqPattern
-}
-
 /-- Trait implementation: [noble_kernel::shapes::{impl core::marker::StructuralPartialEq for noble_kernel::shapes::EffectSlot}]
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 79:23-79:32 -/
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 84:23-84:32 -/
 @[reducible]
 def shapes.EffectSlot.Insts.CoreMarkerStructuralPartialEq :
   core.marker.StructuralPartialEq shapes.EffectSlot := {
 }
 
 /-- [noble_kernel::shapes::{impl core::cmp::Eq for noble_kernel::shapes::EffectSlot}::assert_fields_are_eq]:
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 79:34-79:36
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 84:34-84:36
     Visibility: public -/
 def shapes.EffectSlot.Insts.CoreCmpEq.assert_fields_are_eq
   (self : shapes.EffectSlot) : Result Unit := do
   ok ()
 
 /-- Trait implementation: [noble_kernel::shapes::{impl core::cmp::Eq for noble_kernel::shapes::EffectSlot}]
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 79:34-79:36 -/
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 84:34-84:36 -/
 @[reducible]
 def shapes.EffectSlot.Insts.CoreCmpEq : core.cmp.Eq shapes.EffectSlot := {
   partialEqInst := shapes.EffectSlot.Insts.CoreCmpPartialEqEffectSlot
@@ -25962,28 +31486,28 @@ def shapes.EffectSlot.Insts.CoreCmpEq : core.cmp.Eq shapes.EffectSlot := {
 }
 
 /-- [noble_kernel::shapes::{impl core::clone::Clone for noble_kernel::shapes::Defect}::clone]:
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 88:9-88:14
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 93:9-93:14
     Visibility: public -/
 def shapes.Defect.Insts.CoreCloneClone.clone
   (self : shapes.Defect) : Result shapes.Defect := do
   ok self
 
 /-- Trait implementation: [noble_kernel::shapes::{impl core::clone::Clone for noble_kernel::shapes::Defect}]
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 88:9-88:14 -/
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 93:9-93:14 -/
 @[reducible]
 def shapes.Defect.Insts.CoreCloneClone : core.clone.Clone shapes.Defect := {
   clone := shapes.Defect.Insts.CoreCloneClone.clone
 }
 
 /-- Trait implementation: [noble_kernel::shapes::{impl core::marker::Copy for noble_kernel::shapes::Defect}]
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 88:16-88:20 -/
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 93:16-93:20 -/
 @[reducible]
 def shapes.Defect.Insts.CoreMarkerCopy : core.marker.Copy shapes.Defect := {
   cloneInst := shapes.Defect.Insts.CoreCloneClone
 }
 
 /-- [noble_kernel::shapes::{impl core::fmt::Debug for noble_kernel::shapes::Defect}::fmt]:
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 88:22-88:27
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 93:22-93:27
     Visibility: public -/
 def shapes.Defect.Insts.CoreFmtDebug.fmt
   (self : shapes.Defect) (f : core.fmt.Formatter) :
@@ -25996,21 +31520,21 @@ def shapes.Defect.Insts.CoreFmtDebug.fmt
     core.fmt.Formatter.write_str f (toStr "KindMismatch")
 
 /-- Trait implementation: [noble_kernel::shapes::{impl core::fmt::Debug for noble_kernel::shapes::Defect}]
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 88:22-88:27 -/
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 93:22-93:27 -/
 @[reducible]
 def shapes.Defect.Insts.CoreFmtDebug : core.fmt.Debug shapes.Defect := {
   fmt := shapes.Defect.Insts.CoreFmtDebug.fmt
 }
 
 /-- Trait implementation: [noble_kernel::shapes::{impl core::marker::StructuralPartialEq for noble_kernel::shapes::Defect}]
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 88:29-88:38 -/
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 93:29-93:38 -/
 @[reducible]
 def shapes.Defect.Insts.CoreMarkerStructuralPartialEq :
   core.marker.StructuralPartialEq shapes.Defect := {
 }
 
 /-- [noble_kernel::shapes::{impl core::cmp::PartialEq<noble_kernel::shapes::Defect> for noble_kernel::shapes::Defect}::eq]:
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 88:29-88:38
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 93:29-93:38
     Visibility: public -/
 def shapes.Defect.Insts.CoreCmpPartialEqDefect.eq
   (self : shapes.Defect) (other : shapes.Defect) : Result Bool := do
@@ -26019,7 +31543,7 @@ def shapes.Defect.Insts.CoreCmpPartialEqDefect.eq
   ok (self1 = other1)
 
 /-- Trait implementation: [noble_kernel::shapes::{impl core::cmp::PartialEq<noble_kernel::shapes::Defect> for noble_kernel::shapes::Defect}]
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 88:29-88:38 -/
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 93:29-93:38 -/
 @[reducible]
 impl_def shapes.Defect.Insts.CoreCmpPartialEqDefect : core.cmp.PartialEq
   shapes.Defect shapes.Defect := {
@@ -26029,30 +31553,22 @@ impl_def shapes.Defect.Insts.CoreCmpPartialEqDefect : core.cmp.PartialEq
 }
 
 /-- [noble_kernel::shapes::{impl core::cmp::Eq for noble_kernel::shapes::Defect}::assert_fields_are_eq]:
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 88:40-88:42
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 93:40-93:42
     Visibility: public -/
 def shapes.Defect.Insts.CoreCmpEq.assert_fields_are_eq
   (self : shapes.Defect) : Result Unit := do
   ok ()
 
 /-- Trait implementation: [noble_kernel::shapes::{impl core::cmp::Eq for noble_kernel::shapes::Defect}]
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 88:40-88:42 -/
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 93:40-93:42 -/
 @[reducible]
 def shapes.Defect.Insts.CoreCmpEq : core.cmp.Eq shapes.Defect := {
   partialEqInst := shapes.Defect.Insts.CoreCmpPartialEqDefect
   assert_fields_are_eq := shapes.Defect.Insts.CoreCmpEq.assert_fields_are_eq
 }
 
-/-- Trait implementation: [noble_kernel::types::{impl core::clone::Clone for noble_kernel::types::ResourceKind}]
-    Source: 'crates/noble-kernel/src/types.rs', lines 14:9-14:14 -/
-@[reducible]
-def types.ResourceKind.Insts.CoreCloneClone : core.clone.Clone
-  types.ResourceKind := {
-  clone := types.ResourceKind.Insts.CoreCloneClone.clone
-}
-
 /-- Trait implementation: [noble_kernel::types::{impl core::marker::Copy for noble_kernel::types::ResourceKind}]
-    Source: 'crates/noble-kernel/src/types.rs', lines 14:16-14:20 -/
+    Source: 'crates/noble-kernel/src/types.rs', lines 15:16-15:20 -/
 @[reducible]
 def types.ResourceKind.Insts.CoreMarkerCopy : core.marker.Copy
   types.ResourceKind := {
@@ -26060,21 +31576,21 @@ def types.ResourceKind.Insts.CoreMarkerCopy : core.marker.Copy
 }
 
 /-- Trait implementation: [noble_kernel::types::{impl core::marker::StructuralPartialEq for noble_kernel::types::ResourceKind}]
-    Source: 'crates/noble-kernel/src/types.rs', lines 14:29-14:38 -/
+    Source: 'crates/noble-kernel/src/types.rs', lines 15:29-15:38 -/
 @[reducible]
 def types.ResourceKind.Insts.CoreMarkerStructuralPartialEq :
   core.marker.StructuralPartialEq types.ResourceKind := {
 }
 
 /-- [noble_kernel::types::{impl core::cmp::Eq for noble_kernel::types::ResourceKind}::assert_fields_are_eq]:
-    Source: 'crates/noble-kernel/src/types.rs', lines 14:40-14:42
+    Source: 'crates/noble-kernel/src/types.rs', lines 15:40-15:42
     Visibility: public -/
 def types.ResourceKind.Insts.CoreCmpEq.assert_fields_are_eq
   (self : types.ResourceKind) : Result Unit := do
   ok ()
 
 /-- Trait implementation: [noble_kernel::types::{impl core::cmp::Eq for noble_kernel::types::ResourceKind}]
-    Source: 'crates/noble-kernel/src/types.rs', lines 14:40-14:42 -/
+    Source: 'crates/noble-kernel/src/types.rs', lines 15:40-15:42 -/
 @[reducible]
 def types.ResourceKind.Insts.CoreCmpEq : core.cmp.Eq types.ResourceKind := {
   partialEqInst := types.ResourceKind.Insts.CoreCmpPartialEqResourceKind
@@ -26082,29 +31598,83 @@ def types.ResourceKind.Insts.CoreCmpEq : core.cmp.Eq types.ResourceKind := {
     types.ResourceKind.Insts.CoreCmpEq.assert_fields_are_eq
 }
 
+/-- Trait implementation: [noble_kernel::types::{impl core::clone::Clone for noble_kernel::types::NominalTypeId}]
+    Source: 'crates/noble-kernel/src/types.rs', lines 19:9-19:14 -/
+@[reducible]
+def types.NominalTypeId.Insts.CoreCloneClone : core.clone.Clone
+  types.NominalTypeId := {
+  clone := types.NominalTypeId.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::types::{impl core::marker::Copy for noble_kernel::types::NominalTypeId}]
+    Source: 'crates/noble-kernel/src/types.rs', lines 19:16-19:20 -/
+@[reducible]
+def types.NominalTypeId.Insts.CoreMarkerCopy : core.marker.Copy
+  types.NominalTypeId := {
+  cloneInst := types.NominalTypeId.Insts.CoreCloneClone
+}
+
+/-- Trait implementation: [noble_kernel::types::{impl core::marker::StructuralPartialEq for noble_kernel::types::NominalTypeId}]
+    Source: 'crates/noble-kernel/src/types.rs', lines 19:29-19:38 -/
+@[reducible]
+def types.NominalTypeId.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq types.NominalTypeId := {
+}
+
+/-- [noble_kernel::types::{impl core::cmp::Eq for noble_kernel::types::NominalTypeId}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/types.rs', lines 19:40-19:42
+    Visibility: public -/
+def types.NominalTypeId.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : types.NominalTypeId) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::types::{impl core::cmp::Eq for noble_kernel::types::NominalTypeId}]
+    Source: 'crates/noble-kernel/src/types.rs', lines 19:40-19:42 -/
+@[reducible]
+def types.NominalTypeId.Insts.CoreCmpEq : core.cmp.Eq types.NominalTypeId := {
+  partialEqInst := types.NominalTypeId.Insts.CoreCmpPartialEqNominalTypeId
+  assert_fields_are_eq :=
+    types.NominalTypeId.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- Trait implementation: [noble_kernel::types::{impl core::clone::Clone for noble_kernel::types::NominalShape}]
+    Source: 'crates/noble-kernel/src/types.rs', lines 26:9-26:14 -/
+@[reducible]
+def types.NominalShape.Insts.CoreCloneClone : core.clone.Clone
+  types.NominalShape := {
+  clone := types.NominalShape.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::types::{impl core::marker::StructuralPartialEq for noble_kernel::types::NominalShape}]
+    Source: 'crates/noble-kernel/src/types.rs', lines 26:23-26:32 -/
+@[reducible]
+def types.NominalShape.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq types.NominalShape := {
+}
+
 /-- Trait implementation: [noble_kernel::types::{impl core::marker::Copy for noble_kernel::types::EffId}]
-    Source: 'crates/noble-kernel/src/types.rs', lines 25:16-25:20 -/
+    Source: 'crates/noble-kernel/src/types.rs', lines 41:16-41:20 -/
 @[reducible]
 def types.EffId.Insts.CoreMarkerCopy : core.marker.Copy types.EffId := {
   cloneInst := types.EffId.Insts.CoreCloneClone
 }
 
 /-- Trait implementation: [noble_kernel::types::{impl core::marker::StructuralPartialEq for noble_kernel::types::EffId}]
-    Source: 'crates/noble-kernel/src/types.rs', lines 25:29-25:38 -/
+    Source: 'crates/noble-kernel/src/types.rs', lines 41:29-41:38 -/
 @[reducible]
 def types.EffId.Insts.CoreMarkerStructuralPartialEq :
   core.marker.StructuralPartialEq types.EffId := {
 }
 
 /-- [noble_kernel::types::{impl core::cmp::Eq for noble_kernel::types::EffId}::assert_fields_are_eq]:
-    Source: 'crates/noble-kernel/src/types.rs', lines 25:40-25:42
+    Source: 'crates/noble-kernel/src/types.rs', lines 41:40-41:42
     Visibility: public -/
 def types.EffId.Insts.CoreCmpEq.assert_fields_are_eq
   (self : types.EffId) : Result Unit := do
   ok ()
 
 /-- Trait implementation: [noble_kernel::types::{impl core::cmp::Eq for noble_kernel::types::EffId}]
-    Source: 'crates/noble-kernel/src/types.rs', lines 25:40-25:42 -/
+    Source: 'crates/noble-kernel/src/types.rs', lines 41:40-41:42 -/
 @[reducible]
 def types.EffId.Insts.CoreCmpEq : core.cmp.Eq types.EffId := {
   partialEqInst := types.EffId.Insts.CoreCmpPartialEqEffId
@@ -26112,21 +31682,21 @@ def types.EffId.Insts.CoreCmpEq : core.cmp.Eq types.EffId := {
 }
 
 /-- Trait implementation: [noble_kernel::types::{impl core::clone::Clone for noble_kernel::types::EffSet}]
-    Source: 'crates/noble-kernel/src/types.rs', lines 29:9-29:14 -/
+    Source: 'crates/noble-kernel/src/types.rs', lines 45:9-45:14 -/
 @[reducible]
 def types.EffSet.Insts.CoreCloneClone : core.clone.Clone types.EffSet := {
   clone := types.EffSet.Insts.CoreCloneClone.clone
 }
 
 /-- Trait implementation: [noble_kernel::types::{impl core::marker::StructuralPartialEq for noble_kernel::types::EffSet}]
-    Source: 'crates/noble-kernel/src/types.rs', lines 29:23-29:32 -/
+    Source: 'crates/noble-kernel/src/types.rs', lines 45:23-45:32 -/
 @[reducible]
 def types.EffSet.Insts.CoreMarkerStructuralPartialEq :
   core.marker.StructuralPartialEq types.EffSet := {
 }
 
 /-- Trait implementation: [noble_kernel::types::{impl core::cmp::PartialEq<noble_kernel::types::EffSet> for noble_kernel::types::EffSet}]
-    Source: 'crates/noble-kernel/src/types.rs', lines 29:23-29:32 -/
+    Source: 'crates/noble-kernel/src/types.rs', lines 45:23-45:32 -/
 @[reducible]
 impl_def types.EffSet.Insts.CoreCmpPartialEqEffSet : core.cmp.PartialEq
   types.EffSet types.EffSet := {
@@ -26136,14 +31706,14 @@ impl_def types.EffSet.Insts.CoreCmpPartialEqEffSet : core.cmp.PartialEq
 }
 
 /-- [noble_kernel::types::{impl core::cmp::Eq for noble_kernel::types::EffSet}::assert_fields_are_eq]:
-    Source: 'crates/noble-kernel/src/types.rs', lines 29:34-29:36
+    Source: 'crates/noble-kernel/src/types.rs', lines 45:34-45:36
     Visibility: public -/
 def types.EffSet.Insts.CoreCmpEq.assert_fields_are_eq
   (self : types.EffSet) : Result Unit := do
   ok ()
 
 /-- Trait implementation: [noble_kernel::types::{impl core::cmp::Eq for noble_kernel::types::EffSet}]
-    Source: 'crates/noble-kernel/src/types.rs', lines 29:34-29:36 -/
+    Source: 'crates/noble-kernel/src/types.rs', lines 45:34-45:36 -/
 @[reducible]
 def types.EffSet.Insts.CoreCmpEq : core.cmp.Eq types.EffSet := {
   partialEqInst := types.EffSet.Insts.CoreCmpPartialEqEffSet
@@ -26151,14 +31721,14 @@ def types.EffSet.Insts.CoreCmpEq : core.cmp.Eq types.EffSet := {
 }
 
 /-- [noble_kernel::types::{noble_kernel::types::EffSet}::is_empty]:
-    Source: 'crates/noble-kernel/src/types.rs', lines 137:4-139:5
+    Source: 'crates/noble-kernel/src/types.rs', lines 153:4-155:5
     Visibility: public -/
 def types.EffSet.is_empty (self : types.EffSet) : Result Bool := do
   let i := alloc.vec.Vec.len self
   ok (i = 0#usize)
 
 /-- [noble_kernel::types::stack_is_data]: loop body 0:
-    Source: 'crates/noble-kernel/src/types.rs', lines 276:4-282:5
+    Source: 'crates/noble-kernel/src/types.rs', lines 253:4-259:5
     Visibility: public -/
 @[rust_loop_body]
 def types.stack_is_data_loop.body
@@ -26169,7 +31739,7 @@ def types.stack_is_data_loop.body
   if index < i
   then
     let t ← Slice.index_usize stack index
-    let b ← types.Ty.is_data t
+    let b ← types.data.Ty.is_data t
     if b
     then let index1 ← index + 1#usize
          ok (cont index1)
@@ -26177,7 +31747,7 @@ def types.stack_is_data_loop.body
   else ok (done true)
 
 /-- [noble_kernel::types::stack_is_data]: loop 0:
-    Source: 'crates/noble-kernel/src/types.rs', lines 276:4-282:5
+    Source: 'crates/noble-kernel/src/types.rs', lines 253:4-259:5
     Visibility: public -/
 @[rust_loop]
 def types.stack_is_data_loop
@@ -26187,7 +31757,7 @@ def types.stack_is_data_loop
     index
 
 /-- [noble_kernel::types::stack_is_data]:
-    Source: 'crates/noble-kernel/src/types.rs', lines 273:0-284:1
+    Source: 'crates/noble-kernel/src/types.rs', lines 250:0-261:1
     Visibility: public -/
 @[reducible]
 def types.stack_is_data (stack : Slice types.Ty) : Result Bool := do
@@ -26793,6 +32363,12 @@ def untrusted.Constraint.Insts.CoreCloneClone.clone
   | untrusted.Constraint.UnknownDefinition __self_0 =>
     let d ← contracts.Definition.Insts.CoreCloneClone.clone __self_0
     ok (untrusted.Constraint.UnknownDefinition d)
+  | untrusted.Constraint.InvalidType => ok untrusted.Constraint.InvalidType
+  | untrusted.Constraint.InvalidContract =>
+    ok untrusted.Constraint.InvalidContract
+  | untrusted.Constraint.PrivateDefinition __self_0 =>
+    let d ← contracts.Definition.Insts.CoreCloneClone.clone __self_0
+    ok (untrusted.Constraint.PrivateDefinition d)
   | untrusted.Constraint.CyclicWitness => ok untrusted.Constraint.CyclicWitness
 
 /-- Trait implementation: [noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::Constraint}]
@@ -26846,6 +32422,16 @@ def untrusted.Constraint.Insts.CoreFmtDebug.fmt
         __self_0
     core.fmt.Formatter.debug_tuple_field1_finish f (toStr "UnknownDefinition")
       __self_01
+  | untrusted.Constraint.InvalidType =>
+    core.fmt.Formatter.write_str f (toStr "InvalidType")
+  | untrusted.Constraint.InvalidContract =>
+    core.fmt.Formatter.write_str f (toStr "InvalidContract")
+  | untrusted.Constraint.PrivateDefinition __self_0 =>
+    let __self_01 :=
+      Dyn.mk _ (core.fmt.DebugShared contracts.Definition.Insts.CoreFmtDebug)
+        __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "PrivateDefinition")
+      __self_01
   | untrusted.Constraint.CyclicWitness =>
     core.fmt.Formatter.write_str f (toStr "CyclicWitness")
 
@@ -26890,6 +32476,9 @@ def untrusted.Constraint.Insts.CoreCmpPartialEqConstraint.eq
       | untrusted.Constraint.InstantiationArity => ok true
       | untrusted.Constraint.MalformedReference _ => ok true
       | untrusted.Constraint.UnknownDefinition _ => ok true
+      | untrusted.Constraint.InvalidType => ok true
+      | untrusted.Constraint.InvalidContract => ok true
+      | untrusted.Constraint.PrivateDefinition _ => ok true
       | untrusted.Constraint.CyclicWitness => ok true
     | untrusted.Constraint.Eligibility __self_0 =>
       match other with
@@ -26903,6 +32492,9 @@ def untrusted.Constraint.Insts.CoreCmpPartialEqConstraint.eq
       | untrusted.Constraint.InstantiationArity => ok true
       | untrusted.Constraint.MalformedReference _ => ok true
       | untrusted.Constraint.UnknownDefinition _ => ok true
+      | untrusted.Constraint.InvalidType => ok true
+      | untrusted.Constraint.InvalidContract => ok true
+      | untrusted.Constraint.PrivateDefinition _ => ok true
       | untrusted.Constraint.CyclicWitness => ok true
     | untrusted.Constraint.UnknownEffect __self_0 =>
       match other with
@@ -26916,6 +32508,9 @@ def untrusted.Constraint.Insts.CoreCmpPartialEqConstraint.eq
       | untrusted.Constraint.InstantiationArity => ok true
       | untrusted.Constraint.MalformedReference _ => ok true
       | untrusted.Constraint.UnknownDefinition _ => ok true
+      | untrusted.Constraint.InvalidType => ok true
+      | untrusted.Constraint.InvalidContract => ok true
+      | untrusted.Constraint.PrivateDefinition _ => ok true
       | untrusted.Constraint.CyclicWitness => ok true
     | untrusted.Constraint.InstantiationKind => ok true
     | untrusted.Constraint.InstantiationArity => ok true
@@ -26931,6 +32526,9 @@ def untrusted.Constraint.Insts.CoreCmpPartialEqConstraint.eq
       | untrusted.Constraint.MalformedReference __arg1_0 =>
         untrusted.NodeId.Insts.CoreCmpPartialEqNodeId.eq __self_0 __arg1_0
       | untrusted.Constraint.UnknownDefinition _ => ok true
+      | untrusted.Constraint.InvalidType => ok true
+      | untrusted.Constraint.InvalidContract => ok true
+      | untrusted.Constraint.PrivateDefinition _ => ok true
       | untrusted.Constraint.CyclicWitness => ok true
     | untrusted.Constraint.UnknownDefinition __self_0 =>
       match other with
@@ -26943,6 +32541,28 @@ def untrusted.Constraint.Insts.CoreCmpPartialEqConstraint.eq
       | untrusted.Constraint.InstantiationArity => ok true
       | untrusted.Constraint.MalformedReference _ => ok true
       | untrusted.Constraint.UnknownDefinition __arg1_0 =>
+        contracts.Definition.Insts.CoreCmpPartialEqDefinition.eq __self_0
+          __arg1_0
+      | untrusted.Constraint.InvalidType => ok true
+      | untrusted.Constraint.InvalidContract => ok true
+      | untrusted.Constraint.PrivateDefinition _ => ok true
+      | untrusted.Constraint.CyclicWitness => ok true
+    | untrusted.Constraint.InvalidType => ok true
+    | untrusted.Constraint.InvalidContract => ok true
+    | untrusted.Constraint.PrivateDefinition __self_0 =>
+      match other with
+      | untrusted.Constraint.StackJoin => ok true
+      | untrusted.Constraint.StackOrder => ok true
+      | untrusted.Constraint.EffectInclusion _ => ok true
+      | untrusted.Constraint.Eligibility _ => ok true
+      | untrusted.Constraint.UnknownEffect _ => ok true
+      | untrusted.Constraint.InstantiationKind => ok true
+      | untrusted.Constraint.InstantiationArity => ok true
+      | untrusted.Constraint.MalformedReference _ => ok true
+      | untrusted.Constraint.UnknownDefinition _ => ok true
+      | untrusted.Constraint.InvalidType => ok true
+      | untrusted.Constraint.InvalidContract => ok true
+      | untrusted.Constraint.PrivateDefinition __arg1_0 =>
         contracts.Definition.Insts.CoreCmpPartialEqDefinition.eq __self_0
           __arg1_0
       | untrusted.Constraint.CyclicWitness => ok true
@@ -26960,7 +32580,7 @@ impl_def untrusted.Constraint.Insts.CoreCmpPartialEqConstraint :
 }
 
 /-- [noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::Diagnostic}::clone]:
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 231:9-231:14
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 237:9-237:14
     Visibility: public -/
 def untrusted.Diagnostic.Insts.CoreCloneClone.clone
   (self : untrusted.Diagnostic) : Result untrusted.Diagnostic := do
@@ -26988,7 +32608,7 @@ def untrusted.Diagnostic.Insts.CoreCloneClone.clone
     }
 
 /-- Trait implementation: [noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::Diagnostic}]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 231:9-231:14 -/
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 237:9-237:14 -/
 @[reducible]
 def untrusted.Diagnostic.Insts.CoreCloneClone : core.clone.Clone
   untrusted.Diagnostic := {
@@ -26996,7 +32616,7 @@ def untrusted.Diagnostic.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- [noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Diagnostic}::fmt]:
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 231:16-231:21
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 237:16-237:21
     Visibility: public -/
 def untrusted.Diagnostic.Insts.CoreFmtDebug.fmt
   (self : untrusted.Diagnostic) (f : core.fmt.Formatter) :
@@ -27027,7 +32647,7 @@ def untrusted.Diagnostic.Insts.CoreFmtDebug.fmt
   core.fmt.Formatter.debug_struct_fields_finish f (toStr "Diagnostic") s values
 
 /-- Trait implementation: [noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Diagnostic}]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 231:16-231:21 -/
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 237:16-237:21 -/
 @[reducible]
 def untrusted.Diagnostic.Insts.CoreFmtDebug : core.fmt.Debug
   untrusted.Diagnostic := {
@@ -27035,7 +32655,7 @@ def untrusted.Diagnostic.Insts.CoreFmtDebug : core.fmt.Debug
 }
 
 /-- [noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::Outcome}::clone]:
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 250:9-250:14
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 256:9-256:14
     Visibility: public -/
 def untrusted.Outcome.Insts.CoreCloneClone.clone
   (self : untrusted.Outcome) : Result untrusted.Outcome := do
@@ -27055,7 +32675,7 @@ def untrusted.Outcome.Insts.CoreCloneClone.clone
   | untrusted.Outcome.InternalFailure => ok untrusted.Outcome.InternalFailure
 
 /-- Trait implementation: [noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::Outcome}]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 250:9-250:14 -/
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 256:9-256:14 -/
 @[reducible]
 def untrusted.Outcome.Insts.CoreCloneClone : core.clone.Clone untrusted.Outcome
   := {
@@ -27063,7 +32683,7 @@ def untrusted.Outcome.Insts.CoreCloneClone : core.clone.Clone untrusted.Outcome
 }
 
 /-- [noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Outcome}::fmt]:
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 250:16-250:21
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 256:16-256:21
     Visibility: public -/
 def untrusted.Outcome.Insts.CoreFmtDebug.fmt
   (self : untrusted.Outcome) (f : core.fmt.Formatter) :
@@ -27096,7 +32716,7 @@ def untrusted.Outcome.Insts.CoreFmtDebug.fmt
     core.fmt.Formatter.write_str f (toStr "InternalFailure")
 
 /-- Trait implementation: [noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Outcome}]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 250:16-250:21 -/
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 256:16-256:21 -/
 @[reducible]
 def untrusted.Outcome.Insts.CoreFmtDebug : core.fmt.Debug untrusted.Outcome
   := {
@@ -27144,16 +32764,6 @@ def words.Variable.Insts.CoreCmpEq : core.cmp.Eq words.Variable := {
 @[reducible]
 def words.VariableKind.Insts.CoreMarkerStructuralPartialEq :
   core.marker.StructuralPartialEq words.VariableKind := {
-}
-
-/-- Trait implementation: [noble_kernel::words::{impl core::cmp::PartialEq<noble_kernel::words::VariableKind> for noble_kernel::words::VariableKind}]
-    Source: 'crates/noble-kernel/src/words.rs', lines 21:29-21:38 -/
-@[reducible]
-impl_def words.VariableKind.Insts.CoreCmpPartialEqVariableKind :
-  core.cmp.PartialEq words.VariableKind words.VariableKind := {
-  eq := words.VariableKind.Insts.CoreCmpPartialEqVariableKind.eq
-  ne := core.cmp.PartialEq.ne.trait_default
-    words.VariableKind.Insts.CoreCmpPartialEqVariableKind
 }
 
 /-- [noble_kernel::words::{impl core::cmp::Eq for noble_kernel::words::VariableKind}::assert_fields_are_eq]:

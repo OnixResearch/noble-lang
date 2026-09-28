@@ -1,3 +1,5 @@
+mod replay;
+
 #[expect(
     tigerstyle::missing_const_fn,
     reason = "Owner: noble-maintainers; exact scheme identity uses non-const structural PartialEq on owned vectors; retaining complete comparisons is required for environment admission."
@@ -32,70 +34,111 @@ pub(super) fn check(
     submission: &noble_kernel::execution::Submission,
 ) -> Result<(), crate::Diagnostic> {
     let env = &submission.environment;
-    if env.defs.len() > super::super::DEFINITION_LIMIT.saturating_add(24)
+    let maximum_rows = super::super::DEFINITION_LIMIT.saturating_add(24);
+    if env.defs.len() > maximum_rows
         || submission.definitions.len() > super::super::DEFINITION_LIMIT
     {
         return Err(crate::Diagnostic::Exhausted);
     }
-    if env.defs.len() < 23 || env.kinds.len() != env.defs.len() || env.deps.len() != env.defs.len()
+    if env.defs.len() < 23 {
+        return Err(crate::Diagnostic::Invalid);
+    }
+    if env.kinds.len() != env.defs.len() {
+        return Err(crate::Diagnostic::Invalid);
+    }
+    if env.deps.len() != env.defs.len() {
+        return Err(crate::Diagnostic::Invalid);
+    }
+    if env.definition_owners.len() != env.defs.len() {
+        return Err(crate::Diagnostic::Invalid);
+    }
+    if env.nominals.len() > super::super::DEFINITION_LIMIT
+        || env.bound_adapters.len() > super::super::DEFINITION_LIMIT
     {
         return Err(crate::Diagnostic::Invalid);
     }
-    if !env.schemas.is_empty() {
+    let has_noncanonical_core_declarations =
+        !env.declared_modules && (!env.nominals.is_empty() || !env.bound_adapters.is_empty());
+    let has_invalid_metadata = !env.schemas.is_empty()
+        || env.caller_module.is_some()
+        || env.resource_kinds != [noble_kernel::contracts::FIXTURE_RESOURCE];
+    if has_invalid_metadata || has_noncanonical_core_declarations {
         return Err(crate::Diagnostic::Invalid);
     }
-    let mut fixed = match noble_kernel::contracts::environment() {
-        Ok(value) => value,
-        Err(_) => return Err(crate::Diagnostic::Defective),
-    };
-    fixed.defs[22].stack_out = alloc::vec![noble_kernel::shapes::Pattern::StackVar(
-        noble_kernel::words::Variable(0)
-    )];
-    let mut index = 0usize;
-    let mut is_matching = true;
-    while index < 23 {
-        if !same_scheme(&env.defs[index], &fixed.defs[index])
-            || env.kinds[index] != fixed.kinds[index]
-            || !env.deps[index].is_empty()
-        {
-            is_matching = false;
-            break;
-        }
-        index += 1;
-    }
-    if !is_matching {
-        return Err(crate::Diagnostic::Invalid);
-    }
-    let count = if env.defs.len() == 23 { 23 } else { 24 };
-    if count == 24
-        && (!same_scheme(&env.defs[23], &abort_scheme())
-            || env.kinds[23] != noble_kernel::contracts::Behavior::Named
-            || !env.deps[23].is_empty())
-    {
-        return Err(crate::Diagnostic::Invalid);
-    }
+    let (fixed, count) = attempt!(canonical_prefix(env));
     let effects = if count == 23 {
         alloc::vec![noble_kernel::types::EffId(0)]
     } else {
         alloc::vec![noble_kernel::types::EffId(0), noble_kernel::types::EffId(1)]
     };
-    if env.effects != effects
-        || submission.definitions.len() != env.defs.len().saturating_sub(count)
-    {
+    if env.effects != effects {
         return Err(crate::Diagnostic::Invalid);
     }
-    while index < env.defs.len() {
-        if index >= count && env.kinds[index] != noble_kernel::contracts::Behavior::Named {
-            is_matching = false;
+    replay::check(
+        env,
+        fixed,
+        replay::ExpectedRows {
+            prefix: count,
+            named: submission.definitions.len(),
+        },
+    )
+}
+
+fn canonical_prefix(
+    env: &noble_kernel::contracts::Env,
+) -> Result<(noble_kernel::contracts::Env, usize), crate::Diagnostic> {
+    let mut fixed = attempt!(bootstrap(env));
+    attempt!(check_builtin_rows(env, &fixed));
+    let has_abort = env.defs.len() > 23
+        && env.kinds[23] == noble_kernel::contracts::Behavior::Named
+        && same_scheme(&env.defs[23], &abort_scheme())
+        && env.definition_owners[23].is_none()
+        && env.deps[23].is_empty();
+    if has_abort {
+        fixed.defs.push(abort_scheme());
+        fixed.kinds.push(noble_kernel::contracts::Behavior::Named);
+        fixed.deps.push(alloc::vec::Vec::new());
+        fixed.definition_owners.push(None);
+    }
+    Ok((fixed, if has_abort { 24 } else { 23 }))
+}
+
+fn bootstrap(
+    env: &noble_kernel::contracts::Env,
+) -> Result<noble_kernel::contracts::Env, crate::Diagnostic> {
+    let mut fixed =
+        attempt!(noble_kernel::contracts::environment().map_err(|_| crate::Diagnostic::Defective));
+    if env.declared_modules {
+        fixed.declared_modules = true;
+    } else {
+        // Core source sessions retain the historical omission of the fixed
+        // host operation's Unit result. Declared sessions retain the kernel's
+        // canonical contract, but cannot invoke that ambient operation.
+        fixed.defs[22].stack_out = alloc::vec![noble_kernel::shapes::Pattern::StackVar(
+            noble_kernel::words::Variable(0)
+        )];
+    }
+    Ok(fixed)
+}
+
+fn check_builtin_rows(
+    env: &noble_kernel::contracts::Env,
+    fixed: &noble_kernel::contracts::Env,
+) -> Result<(), crate::Diagnostic> {
+    let mut index = 0usize;
+    let mut result = Ok(());
+    while index < 23 {
+        let has_incorrect_contract = !same_scheme(&env.defs[index], &fixed.defs[index])
+            || env.kinds[index] != fixed.kinds[index];
+        let has_supplied_metadata =
+            !env.deps[index].is_empty() || env.definition_owners[index].is_some();
+        if has_incorrect_contract || has_supplied_metadata {
+            result = Err(crate::Diagnostic::Invalid);
             break;
         }
         index += 1;
     }
-    if is_matching {
-        Ok(())
-    } else {
-        Err(crate::Diagnostic::Invalid)
-    }
+    result
 }
 
 #[expect(
@@ -143,8 +186,12 @@ pub(super) fn exact_contract(
     reason = "Owner: noble-maintainers; explicit row and component bounds precede saturating work accounting; oversized environments and unrepresentable costs must exhaust the shared budget rather than panic."
 )]
 pub(super) fn work(environment: &noble_kernel::contracts::Env) -> Result<u64, crate::Diagnostic> {
-    if environment.defs.len() > super::super::DEFINITION_LIMIT.saturating_add(24)
-        || environment.deps.len() > super::super::DEFINITION_LIMIT.saturating_add(24)
+    let maximum_rows = super::super::DEFINITION_LIMIT.saturating_add(24);
+    if environment.defs.len() > maximum_rows || environment.deps.len() > maximum_rows {
+        return Err(crate::Diagnostic::Exhausted);
+    }
+    if environment.nominals.len() > super::super::DEFINITION_LIMIT
+        || environment.bound_adapters.len() > super::super::DEFINITION_LIMIT
     {
         return Err(crate::Diagnostic::Exhausted);
     }
@@ -166,6 +213,22 @@ pub(super) fn work(environment: &noble_kernel::contracts::Env) -> Result<u64, cr
     if let Some(problem) = failure {
         return Err(problem);
     }
+    let mut row_index = 0usize;
+    while row_index < environment.bound_adapters.len() {
+        let row = &environment.bound_adapters[row_index];
+        if row.adapter_identity.len() > 65_536 {
+            failure = Some(crate::Diagnostic::Exhausted);
+            break;
+        }
+        cost = cost
+            .saturating_add(row.adapter_identity.len() as u64)
+            .saturating_add(1024);
+        row_index += 1;
+    }
+    if let Some(problem) = failure {
+        return Err(problem);
+    }
+    cost = cost.saturating_add((environment.nominals.len() as u64).saturating_mul(2048));
     index = 0;
     while index < environment.deps.len() {
         if environment.deps[index].len() > environment.defs.len() {

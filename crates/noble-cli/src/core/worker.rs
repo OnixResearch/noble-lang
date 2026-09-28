@@ -1,3 +1,5 @@
+pub(crate) mod assembly;
+mod configuration;
 mod process;
 mod protocol;
 
@@ -5,11 +7,13 @@ const NODE: &str = "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/b
 const HOST: &str = concat!(
     include_str!("runtime/preamble.mjs"),
     include_str!("runtime/values.mjs"),
+    include_str!("runtime/engine-host.mjs"),
     include_str!("runtime/engine.mjs"),
     include_str!("runtime/protocol.mjs"),
 );
 const SELECTION: &str = include_str!("runtime/config.json");
 const ABI: &str = include_str!("runtime/abi.json");
+const DECLARED_ABI: &str = include_str!("runtime/declared-abi.json");
 
 pub(super) struct Engine {
     child: std::process::Child,
@@ -20,7 +24,7 @@ pub(super) struct Engine {
 
 impl Engine {
     pub fn start(options: &super::arguments::Options) -> Result<Self, super::output::Failure> {
-        let config = attempt!(configuration(options));
+        let config = attempt!(configuration::build(options));
         let (send, replies) = std::sync::mpsc::sync_channel(1);
         let mut engine = Self {
             child: attempt!(launch(&config)),
@@ -258,39 +262,4 @@ fn launch(config: &str) -> Result<std::process::Child, super::output::Failure> {
                 std::format!("cannot start selected Node engine: {error}"),
             )
         })
-}
-
-#[expect(
-    tigerstyle::missing_const_fn,
-    reason = "Owner: noble-maintainers; configuration canonicalizes the caller's artifact directory and allocates the worker's JSON configuration. Host filesystem observations and owned JSON encoding cannot be const."
-)]
-#[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-maintainers; configuration propagates artifact-directory canonicalization failures before worker launch. Filesystem state is fallible external input, not an assertion precondition."
-)]
-fn configuration(
-    options: &super::arguments::Options,
-) -> Result<std::string::String, super::output::Failure> {
-    let destination = match &options.emit {
-        Some(path) => Some(attempt!(
-            std::fs::canonicalize(path).map_err(super::framing::io_error)
-        )),
-        None => None,
-    };
-    let destination = destination
-        .as_ref()
-        .map(|path| path.to_string_lossy().into_owned());
-    Ok(crate::workflow::encoding::object([
-        ("selection", crate::workflow::encoding::string(SELECTION)),
-        ("abi", crate::workflow::encoding::string(ABI)),
-        (
-            "optimized",
-            crate::workflow::encoding::Json::Bool(options.optimized),
-        ),
-        (
-            "artifacts",
-            crate::workflow::encoding::optional_string(destination.as_deref()),
-        ),
-    ])
-    .encode())
 }

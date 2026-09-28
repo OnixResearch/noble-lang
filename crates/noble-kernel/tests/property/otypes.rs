@@ -30,6 +30,11 @@ pub enum Type {
     /// Required stack, result stack, latent identities.
     Program(Vec<Type>, Vec<Type>, Vec<u32>),
     Resource,
+    Nominal(
+        noble_kernel::types::NominalTypeId,
+        Box<Type>,
+        Option<Box<Type>>,
+    ),
 }
 
 /// Each pending destination is filled exactly once before the mirror is
@@ -50,6 +55,22 @@ impl<'a> Mirror<'a> {
             noble_kernel::types::Ty::Evidence => *destination = Type::Evidence,
             noble_kernel::types::Ty::Certified => *destination = Type::Certified,
             noble_kernel::types::Ty::Resource(_) => *destination = Type::Resource,
+            noble_kernel::types::Ty::Nominal(id, shape) => match shape.as_ref() {
+                noble_kernel::types::NominalShape::Opaque(representation) => {
+                    *destination = Type::Nominal(*id, Box::new(Type::Unit), None);
+                    if let Type::Nominal(_, inner, _) = destination {
+                        self.pending.push((representation, inner));
+                    }
+                }
+                noble_kernel::types::NominalShape::Variant(left, right) => {
+                    *destination =
+                        Type::Nominal(*id, Box::new(Type::Unit), Some(Box::new(Type::Unit)));
+                    if let Type::Nominal(_, inner, Some(other)) = destination {
+                        self.pending.push((right, other));
+                        self.pending.push((left, inner));
+                    }
+                }
+            },
             noble_kernel::types::Ty::Pair(left, right) => {
                 *destination = Type::Pair(Box::new(Type::Unit), Box::new(Type::Unit));
                 if let Type::Pair(first, second) = destination {
@@ -112,7 +133,8 @@ pub fn oty(ty: &noble_kernel::types::Ty) -> Type {
         noble_kernel::types::Ty::Pair(..)
         | noble_kernel::types::Ty::Sum(..)
         | noble_kernel::types::Ty::List(_)
-        | noble_kernel::types::Ty::Program(..) => {}
+        | noble_kernel::types::Ty::Program(..)
+        | noble_kernel::types::Ty::Nominal(..) => {}
     }
     let mut mirrored = Type::Unit;
     let mut walk = Mirror {
@@ -139,6 +161,7 @@ pub fn oty_stack(stack: &[noble_kernel::types::Ty]) -> Vec<Type> {
 pub fn is_data(ty: &Type) -> bool {
     match ty {
         Type::Resource => return false,
+        Type::Nominal(_, _, _) => {}
         Type::Unit
         | Type::Bool
         | Type::I64
@@ -164,6 +187,12 @@ pub fn is_data(ty: &Type) -> bool {
             Type::List(item) => {
                 pending.reserve(1);
                 pending.push(item);
+            }
+            Type::Nominal(_, representation, alternative) => {
+                pending.push(representation);
+                if let Some(other) = alternative {
+                    pending.push(other);
+                }
             }
             Type::Unit
             | Type::Bool

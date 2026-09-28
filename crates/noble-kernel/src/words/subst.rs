@@ -250,6 +250,9 @@ fn part_task(node: crate::shapes::Pattern, inst: &crate::words::Inst, mut walk: 
         crate::shapes::Pattern::Resource(kind) => walk
             .segments
             .push(alloc::vec![crate::types::Ty::Resource(kind)]),
+        crate::shapes::Pattern::Nominal(id, shape) => walk
+            .segments
+            .push(alloc::vec![crate::types::Ty::Nominal(id, shape)]),
         crate::shapes::Pattern::Var(var) => {
             let ty = match inst.value(var) {
                 Some(ty) => ty.clone(),

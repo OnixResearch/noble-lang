@@ -8,6 +8,8 @@ mod support;
 
 #[path = "acceptance/controls.rs"]
 mod controls;
+#[path = "acceptance/nominal.rs"]
+mod nominal;
 #[path = "acceptance/programs.rs"]
 mod programs;
 #[path = "acceptance/sums.rs"]

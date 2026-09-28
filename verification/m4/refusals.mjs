@@ -25,7 +25,7 @@ export function refusals({ raw, accounts, sources, tools, packet, packets, audit
     path.basename(repacked.translated.options.dest_file));
   repacked.translated.short_names.reverse();
   equal(canonicalLlbcHash(repacked), llbcHash, 'LLBC-BINDING', 'physical repacking changed semantic binding');
-  // Repeat-discovery control: flip exactly the four observed zero/full-token
+  // Repeat-discovery control: flip exactly the seven observed zero/full-token
   // macro expansion end columns in the actual three extracted LLBC artifacts.
   // An ordinary multi-line span remains part of the canonical binding.
   function findSpan(value, fileId, line, singleLine) {
@@ -59,13 +59,38 @@ export function refusals({ raw, accounts, sources, tools, packet, packets, audit
     }
     syntheticExpansionSpans.push(...actual.map(span => ({ lane: lane.id, ...span })));
   }
+  for (const { lane, source: file, line, label } of [
+    { lane: 'kernel', source: '/rustc/library/core/src/macros/mod.rs', line: 434,
+      label: 'kernel-core-macro' },
+    { lane: 'kernel', source: 'crates/noble-kernel/src/contracts/nominal/schemes.rs', line: 5,
+      label: 'kernel-nominal-schemes-macro' },
+    { lane: 'contracts', source: 'crates/noble-contracts/src/source/declared/state.rs', line: 7,
+      label: 'contracts-declared-state-macro' },
+  ]) {
+    const llbc = raw[lane].llbc;
+    const site = syntheticExpansionSpans.find(span =>
+      span.lane === lane && span.source === file && span.line === line);
+    const fileId = llbc.translated.files.find(entry => entry?.name?.Local === file)?.id;
+    const end = findSpan(llbc.translated.fun_decls, fileId, line, true);
+    if (!site || !end || end.col !== site.observed_end_col)
+      fail('REFUSAL', `missing ${label} expansion control`);
+    reject(`changed-${label}-expansion-end`, 'LLBC-SPAN', () => {
+      const original = end.col;
+      try {
+        end.col = site.canonical_end_col + 1;
+        canonicalLlbcHash(llbc);
+      } finally {
+        end.col = original;
+      }
+    });
+  }
   const ordinaryEnd = findSpan(repacked.translated.fun_decls,
     repacked.translated.files.find(file => file?.name?.Local === 'crates/noble-wasm/src/lib.rs')?.id, 13, false);
   if (!ordinaryEnd) fail('REFUSAL', 'missing ordinary multi-line span');
   ordinaryEnd.col += 1;
   if (canonicalLlbcHash(repacked) === llbcHash) fail('REFUSAL', 'ordinary span mutation was accepted');
   save('llbc-normalization.json', { result: 'passed', canonical_llbc_sha256: llbcHash,
-    normalized: ['output-directory', 'short-name-map-order', 'four-exact-synthetic-expansion-end-columns'],
+    normalized: ['output-directory', 'short-name-map-order', 'seven-exact-synthetic-expansion-end-columns'],
     synthetic_expansion_spans: syntheticExpansionSpans, ordinary_spans: 'retained',
     semantic_fields: 'retained' });
   reject('changed-llbc-body-binding', 'LLBC-BINDING', () => {

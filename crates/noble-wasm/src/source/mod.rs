@@ -19,6 +19,17 @@ const MEMORY_BYTES: u32 = 1_048_576;
 const NODE_LIMIT: usize = 4096;
 const DEFINITION_LIMIT: usize = 256;
 
+// The optional Core source `test.abort` occupies slot 23 only when its effect
+// is installed. Declared modules always reserve exactly the first 23 kernel
+// definitions and use slot 23 for their first validated declaration.
+fn builtin_count(env: &noble_kernel::contracts::Env) -> u32 {
+    if !env.declared_modules && env.effects.contains(&noble_kernel::types::EffId(1)) {
+        24
+    } else {
+        23
+    }
+}
+
 struct Work {
     remaining: u64,
 }

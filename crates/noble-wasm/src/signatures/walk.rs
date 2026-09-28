@@ -36,10 +36,11 @@ pub(super) fn encode(
     };
     walk.work.push(Step::Stack(copy_roots(stack)));
     let mut failure = None;
-    while !walk.work.is_empty() && failure.is_none() {
-        let (next, error) = advance(walk);
-        walk = next;
-        failure = error;
+    while !walk.work.is_empty() {
+        if let Err(error) = advance(&mut walk) {
+            failure = Some(error);
+            break;
+        }
     }
     match failure {
         Some(error) => Err(error),
@@ -59,24 +60,21 @@ fn copy_roots(stack: &[noble_kernel::types::Ty]) -> alloc::vec::Vec<noble_kernel
 
 #[expect(
     tigerstyle::missing_const_fn,
+    tigerstyle::mutating_input_in_pure,
     tigerstyle::raw_arithmetic_overflow,
-    reason = "Owner: noble-maintainers; traversal consumes allocating Ty values and writes a Vec-backed sink. WORK_LIMIT is 4096, so its fixed six-slot reserve cannot underflow; zero fuel is rejected before decrement."
+    reason = "Owner: noble-maintainers; traversal mutates only the private owned worklist and Vec-backed sink. WORK_LIMIT is 4096, so its fixed six-slot reserve cannot underflow; zero fuel is rejected before decrement."
 )]
-fn advance(mut walk: State) -> (State, Option<crate::Diagnostic>) {
+fn advance(walk: &mut State) -> Result<(), crate::Diagnostic> {
     if walk.fuel == 0 || walk.work.len() > WORK_LIMIT - 6 {
-        return (walk, Some(crate::Diagnostic::Exhausted));
+        return Err(crate::Diagnostic::Exhausted);
     }
     walk.fuel -= 1;
-    let result = match walk.work.pop() {
+    match walk.work.pop() {
         None => Ok(()),
         Some(Step::Byte(byte)) => walk.out.append(&[byte]),
         Some(Step::Effects(effects)) => emit_effects(&effects, &mut walk.out),
         Some(Step::Stack(entries)) => push_stack(entries, &mut walk.work, &mut walk.out),
         Some(Step::Type(ty)) => push_type(ty, &mut walk.work, &mut walk.out, walk.extended),
-    };
-    match result {
-        Ok(()) => (walk, None),
-        Err(error) => (walk, Some(error)),
     }
 }
 
@@ -122,22 +120,10 @@ fn push_type(
     out: &mut crate::output::Buffer,
     extended: bool,
 ) -> Result<(), crate::Diagnostic> {
-    if !extended {
-        match &ty {
-            noble_kernel::types::Ty::Text | noble_kernel::types::Ty::Sum(_, _) => {
-                return Err(crate::Diagnostic::Unsupported);
-            }
-            noble_kernel::types::Ty::Contract
-            | noble_kernel::types::Ty::Evidence
-            | noble_kernel::types::Ty::Certified => {
-                return Err(crate::Diagnostic::Unsupported);
-            }
-            noble_kernel::types::Ty::Program(_, _, effects) if !effects.is_empty() => {
-                return Err(crate::Diagnostic::Unsupported);
-            }
-            _ => {}
-        }
+    if !extended && unavailable_in_core(&ty) {
+        return Err(crate::Diagnostic::Unsupported);
     }
+    let is_pair = matches!(&ty, noble_kernel::types::Ty::Pair(_, _));
     match ty {
         noble_kernel::types::Ty::Unit => attempt!(out.append(b"Unit")),
         noble_kernel::types::Ty::Bool => attempt!(out.append(b"Bool")),
@@ -148,8 +134,30 @@ fn push_type(
         noble_kernel::types::Ty::Evidence => attempt!(out.append(b"Evidence")),
         noble_kernel::types::Ty::Certified => attempt!(out.append(b"Certified")),
         noble_kernel::types::Ty::Resource(_) => return Err(crate::Diagnostic::Unsupported),
-        noble_kernel::types::Ty::Pair(left, right) => {
-            attempt!(out.append(b"Pair("));
+        noble_kernel::types::Ty::Nominal(id, shape) => {
+            attempt!(out.append(b"Nominal("));
+            attempt!(out.number(id.module));
+            attempt!(out.append(b":"));
+            attempt!(out.number(u64::from(id.ordinal)));
+            match *shape {
+                noble_kernel::types::NominalShape::Opaque(value) => {
+                    attempt!(out.append(b",Opaque("));
+                    work.push(Step::Byte(b')'));
+                    work.push(Step::Byte(b')'));
+                    work.push(Step::Type(*value));
+                }
+                noble_kernel::types::NominalShape::Variant(left, right) => {
+                    attempt!(out.append(b",Variant("));
+                    work.push(Step::Byte(b')'));
+                    work.push(Step::Byte(b')'));
+                    work.push(Step::Type(*right));
+                    work.push(Step::Byte(b','));
+                    work.push(Step::Type(*left));
+                }
+            }
+        }
+        noble_kernel::types::Ty::Pair(left, right) | noble_kernel::types::Ty::Sum(left, right) => {
+            attempt!(out.append(if is_pair { b"Pair(" } else { b"Sum(" }));
             work.push(Step::Byte(b')'));
             work.push(Step::Type(*right));
             work.push(Step::Byte(b','));
@@ -159,13 +167,6 @@ fn push_type(
             attempt!(out.append(b"List("));
             work.push(Step::Byte(b')'));
             work.push(Step::Type(*item));
-        }
-        noble_kernel::types::Ty::Sum(left, right) => {
-            attempt!(out.append(b"Sum("));
-            work.push(Step::Byte(b')'));
-            work.push(Step::Type(*right));
-            work.push(Step::Byte(b','));
-            work.push(Step::Type(*left));
         }
         noble_kernel::types::Ty::Program(input_stack, output_stack, effects) => {
             attempt!(out.append(b"Program("));
@@ -183,6 +184,33 @@ fn push_type(
 }
 
 #[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; Core signature refusal must inspect program effects via EffSet::is_empty, which is nonconst over the kernel-owned effect set; the borrowed classifier cannot be const."
+)]
+fn unavailable_in_core(ty: &noble_kernel::types::Ty) -> bool {
+    match ty {
+        noble_kernel::types::Ty::Text
+        | noble_kernel::types::Ty::Sum(_, _)
+        | noble_kernel::types::Ty::Contract
+        | noble_kernel::types::Ty::Evidence
+        | noble_kernel::types::Ty::Certified
+        | noble_kernel::types::Ty::Nominal(_, _) => true,
+        noble_kernel::types::Ty::Program(_, _, effects) => !effects.is_empty(),
+        noble_kernel::types::Ty::Unit
+        | noble_kernel::types::Ty::Bool
+        | noble_kernel::types::Ty::I64
+        | noble_kernel::types::Ty::Syntax
+        | noble_kernel::types::Ty::Resource(_)
+        | noble_kernel::types::Ty::Pair(_, _)
+        | noble_kernel::types::Ty::List(_) => false,
+    }
+}
+
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; the bounded effect scan propagates Buffer::append failures as Diagnostic instead of asserting on effect data; reassess when the heuristic understands fallible validators."
+)]
+#[expect(
     tigerstyle::mutating_input_in_pure,
     reason = "Owner: noble-maintainers; effect serialization writes only the walk's fresh owned emission sink, leaving caller-owned effects unchanged."
 )]
@@ -196,12 +224,33 @@ fn emit_effects(
     }
     attempt!(out.append(b"!{"));
     let mut index = 0usize;
+    let mut failure = None;
     while index < effects.as_slice().len() {
-        if index != 0 {
-            attempt!(out.append(b","));
+        match emit_effect(out, effects.as_slice()[index].0, index != 0) {
+            Ok(()) => index += 1,
+            Err(problem) => {
+                failure = Some(problem);
+                break;
+            }
         }
-        attempt!(out.number(u64::from(effects.as_slice()[index].0)));
-        index += 1;
+    }
+    if let Some(problem) = failure {
+        return Err(problem);
     }
     out.append(b"}")
+}
+
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-maintainers; effect serialization mutates only the fresh owned emission sink, not the borrowed effect identity."
+)]
+fn emit_effect(
+    out: &mut crate::output::Buffer,
+    effect: u32,
+    separated: bool,
+) -> Result<(), crate::Diagnostic> {
+    if separated {
+        attempt!(out.append(b","));
+    }
+    out.number(u64::from(effect))
 }

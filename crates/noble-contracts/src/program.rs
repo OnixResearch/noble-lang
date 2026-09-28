@@ -240,6 +240,15 @@ pub(crate) fn check(
                 noble_kernel::untrusted::Constraint::CyclicWitness => {
                     "kernel rejected a cyclic witness"
                 }
+                noble_kernel::untrusted::Constraint::InvalidType => {
+                    "kernel rejected an unregistered or mismatched nominal type"
+                }
+                noble_kernel::untrusted::Constraint::InvalidContract => {
+                    "kernel rejected a changed module operation or adapter contract"
+                }
+                noble_kernel::untrusted::Constraint::PrivateDefinition(_) => {
+                    "kernel rejected a private module operation"
+                }
                 noble_kernel::untrusted::Constraint::EffectInclusion(_)
                 | noble_kernel::untrusted::Constraint::UnknownEffect(_)
                 | noble_kernel::untrusted::Constraint::InstantiationKind

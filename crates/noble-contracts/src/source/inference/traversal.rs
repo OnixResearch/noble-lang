@@ -82,7 +82,7 @@ fn child(
                     id: *id,
                     span: node.span,
                 },
-                definition.identity,
+                definition,
                 frame,
                 state,
                 meter,
@@ -99,7 +99,7 @@ fn child(
 )]
 fn named(
     call: super::operations::Call,
-    identity: u64,
+    definition: &crate::source::Named,
     frame: &super::Frame,
     state: &mut super::State,
     meter: &mut crate::Meter,
@@ -117,7 +117,8 @@ fn named(
         input,
         output: input,
         effect,
-        identity: Some(identity),
+        identity: Some(definition.identity),
+        owner: definition.owner,
         span,
     });
     Ok(super::Frame {

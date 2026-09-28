@@ -22,18 +22,47 @@
       "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
     },
     {
-      "id": "DX-03", "profile": "Declared-Types-Draft", "kind": "static",
+      "id": "DX-03", "profile": "Declared-Modules-v1", "kind": "static",
       "requirements": ["DX-TYPE-01", "DX-TYPE-02"],
-      "input": {"harness": "declared-types-structured-not-source-grammar", "variants": [
+      "input": {"harness": "real-source-module-declarations-through-independent-kernel-acceptance", "source_contract": "opaque UserId I64 private; opaque OrderId I64 public; variant Status Ready I64 public Failed Text private; opaque CounterOwner Resource<test.counter> private; all declarations appear in bounded source module bodies and resolve exact module/version identities", "variants": [
         {"case": "UserId-to-OrderId-same-I64-layout", "outcome": "reject"},
         {"case": "UserId-to-UserId", "outcome": "accept"},
         {"case": "private-constructor-from-outside-module", "outcome": "reject"},
+        {"case": "private-arm-match-from-outside-module", "outcome": "reject"},
         {"case": "variant-elimination-missing-constructor", "outcome": "reject"},
         {"case": "variant-elimination-all-constructors-compatible-stacks", "outcome": "accept"},
         {"case": "opaque-resource-wrapper-dup-drop-or-capture", "outcome": "reject-each-operation"}
       ]},
       "expected": {"stage": "static", "outcome": "each-variant-matches", "guest_requests": 0, "protected_operations": 0},
-      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [{
+          "kind": "test",
+          "subject": "DX-03",
+          "claim": "Nine real-source static checks cover seven declared nominal/variant/resource variants, private constructors and arms, same-layout distinct identities, exhaustive matching and dup/drop/capture refusals; guest requests and protected operations are zero. Independent production-kernel peer checks hostile candidates; this is neither nominal Lean refinement nor general recursion.",
+          "revision": "0.1.0-draft.5",
+          "source_revision": "sha256:e1098bfb81f9d05d4d648705235f31505218a4d789571ba342b9c5209a68ad65",
+          "result": "passed",
+          "configuration": {
+            "profile": "Declared-Modules-v1",
+            "case": "DX-03",
+            "receipt": "../../verification/declared-modules-v1/acceptance.json",
+            "receipt_sha256": "2fcd3d43192291e46a7f1bfeb0eebf0d594c865f7975316fd111a6e089648465",
+            "variants": [
+              "UserId-to-OrderId-same-I64-layout",
+              "UserId-to-UserId",
+              "opaque-resource-wrapper-dup-drop-or-capture",
+              "private-arm-match-from-outside-module",
+              "private-constructor-from-outside-module",
+              "variant-elimination-all-constructors-compatible-stacks",
+              "variant-elimination-missing-constructor"
+            ],
+            "rows": 9
+          },
+          "assumptions": [
+            "Selected pinned compiler, independent production-kernel peer, managed-linear-memory Wasm, host test.emit adapter, Wasmtime/Node engine and runtime ABI are trusted at their recorded source/tool byte identities.",
+            "Current whole-crate extraction retains only inherited scoped pure M7 Lean theorem roots; nominal/module frontend, compiled runtime, adapter/host and engine refinement and all current authored-body inventory obligations remain open."
+          ]
+        }]
     },
     {
       "id": "DX-04", "profile": "Result-Library-Draft", "kind": "runtime",

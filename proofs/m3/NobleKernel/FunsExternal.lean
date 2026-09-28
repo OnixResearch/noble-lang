@@ -4,14 +4,16 @@
 -- (with `-split-files`), renamed to "FunsExternal.lean", in which we replaced
 -- every axiom with a faithful, total Lean implementation.
 --
--- Every definition below mirrors the Rust std semantics on the reachable
--- domain:
+-- These models preserve reachable Rust value/effect behavior only within
+-- the inherited Aeneas abstractions:
 --   * functions which are total in Rust are total here;
 --   * fallible conversions return `.Ok`/`.Err` like `core::convert::TryFrom`;
---   * the formatting helpers follow the Aeneas model of the formatting
---     machinery (`core.fmt.Formatter` is an opaque type and `write_str`/
---     `write_fmt` return the formatter unchanged), so a formatting step has
---     no observable effect;
+--   * formatting helpers match only the inherited abstract Aeneas
+--     `Formatter` observation: `Formatter` is opaque, `write_str`/`write_fmt`
+--     return it unchanged, and `core.fmt.Arguments := Unit` erases inputs.
+--     Supplied `Debug` implementations still run and may fail; these models
+--     do NOT establish exact Rust formatting bytes or nominal string-output
+--     refinement;
 --   * `types.impls.clone_stack`/`shapes.impls.clone_parts` are the crate's
 --     `#[charon::opaque]` copy loops. Their Rust bodies deep-copy the slice
 --     elements one at a time; in the functional model the (terminating)
@@ -48,6 +50,33 @@ set_option maxHeartbeats 1000000
 set_option maxRecDepth 2048
 
 namespace noble_kernel
+
+/-! ## core::array -/
+
+/-- A shared slice and an array compare by length and then by the supplied
+    element `PartialEq`, in the same order as slice equality. -/
+@[rust_fun
+  "core::array::equality::{core::cmp::PartialEq<&'0 [@T], [@U; @N]>}::eq"]
+def Shared0Slice.Insts.CoreCmpPartialEqArray.eq
+  {T U : Type} {N : Usize} (inst : core.cmp.PartialEq T U)
+  (left : Slice T) (right : Array U N) : Result Bool :=
+  core.slice.cmp.PartialEqSlice.eq inst left right.to_slice
+
+/-- Length mismatch is unequal; otherwise stop at the first unequal pair,
+    propagating the supplied element comparison's failure. -/
+@[rust_fun
+  "core::array::equality::{core::cmp::PartialEq<&'0 [@T], [@U; @N]>}::ne"]
+def Shared0Slice.Insts.CoreCmpPartialEqArray.ne
+  {T U : Type} {N : Usize} (inst : core.cmp.PartialEq T U)
+  (left : Slice T) (right : Array U N) : Result Bool :=
+  core.slice.cmp.PartialEqSlice.ne inst left right.to_slice
+
+/-! ## core::bool -/
+
+@[rust_fun "core::bool::{bool}::then_some"]
+def core.bool.Bool.then_some {T : Type} (condition : Bool) (value : T) :
+  Result (Option T) :=
+  if condition then ok (some value) else ok none
 
 /-! ## core::cmp -/
 
@@ -90,6 +119,22 @@ def core.fmt.Formatter.debug_c_like_enum_write_str (f : core.fmt.Formatter)
   (_ : Str) (_ : Slice Usize) (_ : Usize) :
   Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter) :=
   ok (.Ok (), f)
+
+/-- Formatter writes are erased by Aeneas, but the two payload formatters
+    execute in order, passing on their formatter and stopping on an error. -/
+@[rust_fun "core::fmt::{core::fmt::Formatter<'a>}::debug_tuple_field2_finish"]
+def core.fmt.Formatter.debug_tuple_field2_finish
+  (formatter : core.fmt.Formatter) (label : Str)
+  (first second : Dyn (fun T => core.fmt.Debug T)) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter) := do
+  let (result, formatter) ← core.fmt.Formatter.write_str formatter label
+  match result with
+  | .Err error => ok (.Err error, formatter)
+  | .Ok () =>
+    let (result, formatter) ← first.inst.fmt first.value formatter
+    match result with
+    | .Err error => ok (.Err error, formatter)
+    | .Ok () => second.inst.fmt second.value formatter
 
 /-- [core::option::{impl core::fmt::Debug for core::option::Option<T>}::fmt]:
     `None` writes `"None"`; `Some(v)` writes `"Some("`, formats `v` and
@@ -142,6 +187,14 @@ def core.num.Usize.saturating_mul (x y : Usize) : Result Usize :=
 
 /-! ## core::option -/
 
+@[rust_fun "core::option::{core::option::Option<@T>}::is_none_or"]
+def core.option.Option.is_none_or {T F : Type}
+  (inst : core.ops.function.FnOnce F T Bool)
+  (value : Option T) (predicate : F) : Result Bool :=
+  match value with
+  | none => ok true
+  | some payload => inst.call_once predicate payload
+
 /-- Shared option references preserve the optional value in the functional model. -/
 @[rust_fun "core::option::{core::option::Option<@T>}::as_ref"]
 def core.option.Option.as_ref {T : Type} (value : Option T) : Result (Option T) :=
@@ -171,6 +224,21 @@ def core.option.Option.map
       let u ← opsfunctionFnOnceFTupleTUInst.call_once f v
       ok (some u)
 
+@[rust_fun "core::option::{core::option::Option<@T>}::and_then"]
+def core.option.Option.and_then {T U F : Type}
+  (inst : core.ops.function.FnOnce F T (Option U))
+  (value : Option T) (function : F) : Result (Option U) :=
+  match value with
+  | none => ok none
+  | some payload => inst.call_once function payload
+
+@[rust_fun "core::option::{core::option::Option<@T>}::zip"]
+def core.option.Option.zip {T U : Type} (left : Option T) (right : Option U) :
+  Result (Option (T × U)) :=
+  match left, right with
+  | some a, some b => ok (some (a, b))
+  | _, _ => ok none
+
 /-- [core::option::{core::option::Option<&'_0 T>}::copied]:
     copying through a share is the identity in the extracted model
     (`&T` is represented by `T` itself and `T : Copy`). -/
@@ -193,7 +261,40 @@ def core.option.Option.Insts.CoreCloneClone.clone
       let v1 ← cloneCloneInst.clone v
       ok (some v1)
 
+@[rust_fun
+  "core::option::{core::default::Default<core::option::Option<@T>>}::default"]
+def core.option.Option.Insts.CoreDefaultDefault.default (T : Type) :
+  Result (Option T) :=
+  ok none
+
+@[rust_fun
+  "core::option::{core::ops::try_trait::Try<core::option::Option<@T>>}::branch"]
+def core.option.Option.Insts.CoreOpsTry_traitTry.branch {T : Type}
+  (value : Option T) :
+  Result (core.ops.control_flow.ControlFlow (Option core.convert.Infallible) T) :=
+  match value with
+  | some payload => ok (.Continue payload)
+  | none => ok (.Break none)
+
+/-- The only possible residual for `Option` is `None`: `Infallible`
+    has no inhabitants, so a `Some` residual cannot occur. -/
+@[rust_fun
+  "core::option::{core::ops::try_trait::FromResidual<core::option::Option<@T>, core::option::Option<core::convert::Infallible>>}::from_residual"]
+def core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionInfallible.from_residual
+  (T : Type) (residual : Option core.convert.Infallible) : Result (Option T) :=
+  match residual with
+  | none => ok none
+  | some impossible => impossible.casesOn
+
 /-! ## core::result -/
+
+@[rust_fun "core::result::{core::result::Result<@T, @E>}::is_ok_and"]
+def core.result.Result.is_ok_and {T E F : Type}
+  (inst : core.ops.function.FnOnce F T Bool)
+  (value : core.result.Result T E) (predicate : F) : Result Bool :=
+  match value with
+  | .Ok payload => inst.call_once predicate payload
+  | .Err _ => pure false
 
 /-- [core::result::{impl core::fmt::Debug for Result<T, E>}::fmt].
     Under the existing Aeneas formatter abstraction, the constructor name
@@ -242,6 +343,14 @@ def core.result.Result.ok
     | .Ok v => pure (some v)
     | .Err _ => pure none
 
+@[rust_fun "core::result::{core::result::Result<@T, @E>}::map_or"]
+def core.result.Result.map_or {T E U F : Type}
+  (inst : core.ops.function.FnOnce F T U)
+  (value : core.result.Result T E) (fallback : U) (function : F) : Result U :=
+  match value with
+  | .Ok payload => inst.call_once function payload
+  | .Err _ => pure fallback
+
 /-- [core::result::{core::result::Result<T, E>}::unwrap_or]. -/
 @[rust_fun "core::result::{core::result::Result<@T, @E>}::unwrap_or"]
 def core.result.Result.unwrap_or
@@ -286,11 +395,35 @@ def Str.Insts.CoreFmtDebug.fmt (_ : Str) (formatter : core.fmt.Formatter) :
 @[rust_fun "core::str::{str}::as_bytes"]
 def core.str.Str.as_bytes (value : Str) : Result (Slice U8) := ok value
 
+/-! ## alloc::boxed -/
+
+/-- Box is its payload in the value-only model; Rust dispatches inequality
+    to that payload's `PartialEq::ne`, rather than negating its `eq`. -/
+@[rust_fun "alloc::boxed::{core::cmp::PartialEq<Box<@T>, Box<@T>>}::ne"]
+def Box.Insts.CoreCmpPartialEqBox.ne {T : Type} (_A : Type)
+  (inst : core.cmp.PartialEq T T) (left right : T) : Result Bool :=
+  inst.ne left right
+
+@[rust_fun "alloc::boxed::{core::fmt::Debug<Box<@T>>}::fmt"]
+def Box.Insts.CoreFmtDebug.fmt {T : Type} (_A : Type)
+  (inst : core.fmt.Debug T) (value : T) (formatter : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter) :=
+  inst.fmt value formatter
+
+@[rust_fun "alloc::boxed::{core::convert::AsRef<Box<@T>, @T>}::as_ref"]
+def Box.Insts.CoreConvertAsRef.as_ref {T : Type} (_A : Type) (value : T) :
+  Result T :=
+  ok value
+
 /-! ## alloc::string -/
 
 @[rust_fun "alloc::string::{core::cmp::PartialEq<alloc::string::String, alloc::string::String>}::eq"]
 def alloc.string.String.Insts.CoreCmpPartialEqString.eq (left right : String) : Result Bool :=
   ok (left == right)
+
+@[rust_fun "alloc::string::{alloc::string::String}::is_empty"]
+def alloc.string.String.is_empty (value : String) : Result Bool :=
+  ok value.isEmpty
 
 @[rust_fun "alloc::string::{core::clone::Clone<alloc::string::String>}::clone"]
 def alloc.string.String.Insts.CoreCloneClone.clone (value : String) : Result String := ok value
@@ -328,6 +461,13 @@ def alloc.string.String.Insts.CoreConvertFromShared0Str.from (value : Str) : Res
   | none => fail .panic
 
 /-! ## alloc::vec -/
+
+/-- The value-only Vec representation erases spare capacity, but a requested
+    element count beyond `usize::MAX` still panics as in Rust. -/
+@[rust_fun "alloc::vec::{alloc::vec::Vec<@T>}::reserve"]
+def alloc.vec.Vec.reserve {T : Type} (_A : Type)
+  (value : alloc.vec.Vec T) (additional : Usize) : Result (alloc.vec.Vec T) :=
+  if value.val.length + additional.val ≤ Usize.max then ok value else fail .panic
 
 /-- [alloc::vec::{alloc::vec::Vec<T>}::try_reserve_exact].
     As with the pinned Aeneas `Vec.with_capacity` model, capacity/storage
@@ -425,6 +565,11 @@ def alloc.vec.Vec.is_empty
   {T : Type} (A : Type) : alloc.vec.Vec T → Result Bool :=
   fun v => ok (v.val.isEmpty)
 
+@[rust_fun "alloc::vec::{core::default::Default<alloc::vec::Vec<@T>>}::default"]
+def alloc.vec.Vec.Insts.CoreDefaultDefault.default (T : Type) :
+  Result (alloc.vec.Vec T) :=
+  ok (_root_.Aeneas.Std.alloc.vec.Vec.new T)
+
 /- [alloc::vec::{impl core::iter::traits::collect::Extend<T> for
     alloc::vec::Vec<T>}::extend]:
     drains the iterator and appends every item, failing only if the
@@ -500,7 +645,7 @@ def types.impls.debug_stack
 /-- [core::slice::{core::slice::Slice<@T>}::last]:
     `None` when empty, else the last element; the slice is unchanged, so
     the Aeneas `Slice` witness list answers directly. -/
-@[rust_fun "core::slice::{core::slice::Slice<@T>}::last"]
+@[rust_fun "core::slice::{[@T]}::last"]
 def core.slice.Slice.last {T : Type} : Slice T → Result (Option T) :=
   fun s => ok s.val.getLast?
 

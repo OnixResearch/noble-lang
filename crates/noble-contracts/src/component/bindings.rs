@@ -34,10 +34,10 @@ pub(super) fn make(world: &super::World) -> Result<super::Bindings, super::Error
     if let Some(problem) = failure {
         return Err(problem);
     }
+    environment.resource_kinds = resource_kinds(world);
     Ok(super::Bindings {
         environment,
         words,
-        resources: resource_kinds(world),
         effects,
         key: world.build_context(),
     })

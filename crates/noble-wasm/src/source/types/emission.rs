@@ -52,15 +52,16 @@ pub(super) fn shape(
             attempt!(out.append(b"\n"));
         }
         super::Shape::Sum(left, right) => {
-            attempt!(out.append(b"(if (i32.and (i32.ne (local.get $tag) (i32.const 12)) (i32.ne (local.get $tag) (i32.const 13))) (then (return (i32.const 0))))\n"));
-            attempt!(live(out));
-            attempt!(
-                out.append(b"(if (result i32) (i32.eq (local.get $tag) (i32.const 12)) (then ")
-            );
-            attempt!(child(out, left, b"a"));
-            attempt!(out.append(b") (else "));
-            attempt!(child(out, right, b"a"));
-            attempt!(out.append(b"))\n"));
+            attempt!(sum(out, SumCases { left, right }));
+        }
+        super::Shape::NominalOpaque(id, value) => {
+            attempt!(reference(out, 12));
+            attempt!(nominal_identity(out, id, 1));
+            attempt!(child(out, value, b"a"));
+            attempt!(out.append(b"\n"));
+        }
+        super::Shape::NominalVariant(id, left, right) => {
+            attempt!(nominal_variant(out, id, SumCases { left, right }));
         }
         super::Shape::List(item) => {
             attempt!(out.append(b"(if (i32.and (i32.ne (local.get $tag) (i32.const 6)) (i32.ne (local.get $tag) (i32.const 7))) (then (return (i32.const 0))))\n"));
@@ -71,6 +72,56 @@ pub(super) fn shape(
         }
     }
     out.append(b")\n")
+}
+
+struct SumCases {
+    left: u32,
+    right: u32,
+}
+
+fn sum(out: &mut crate::output::Buffer, cases: SumCases) -> Result<(), crate::Diagnostic> {
+    attempt!(out.append(b"(if (i32.and (i32.ne (local.get $tag) (i32.const 12)) (i32.ne (local.get $tag) (i32.const 13))) (then (return (i32.const 0))))\n"));
+    attempt!(live(out));
+    attempt!(out.append(
+        b"(if (i32.ne (call $w (local.get $h)) (i32.const 0)) (then (return (i32.const 0))))\n"
+    ));
+    attempt!(out.append(b"(if (result i32) (i32.eq (local.get $tag) (i32.const 12)) (then "));
+    attempt!(child(out, cases.left, b"a"));
+    attempt!(out.append(b") (else "));
+    attempt!(child(out, cases.right, b"a"));
+    out.append(b"))\n")
+}
+
+fn nominal_variant(
+    out: &mut crate::output::Buffer,
+    id: noble_kernel::types::NominalTypeId,
+    cases: SumCases,
+) -> Result<(), crate::Diagnostic> {
+    attempt!(out.append(b"(if (i32.and (i32.ne (local.get $tag) (i32.const 12)) (i32.ne (local.get $tag) (i32.const 13))) (then (return (i32.const 0))))\n"));
+    attempt!(live(out));
+    attempt!(nominal_identity(out, id, 2));
+    attempt!(out.append(b"(if (result i32) (i32.eq (local.get $tag) (i32.const 12)) (then "));
+    attempt!(child(out, cases.left, b"a"));
+    attempt!(out.append(b") (else "));
+    attempt!(child(out, cases.right, b"a"));
+    out.append(b"))\n")
+}
+
+fn nominal_identity(
+    out: &mut crate::output::Buffer,
+    id: noble_kernel::types::NominalTypeId,
+    marker: u32,
+) -> Result<(), crate::Diagnostic> {
+    let [a, b, c, d, e, f, g, h] = id.module.to_le_bytes();
+    attempt!(out.append(b"(if (i32.or (i32.ne (call $x (local.get $h)) "));
+    attempt!(out.i32(u32::from_le_bytes([a, b, c, d])));
+    attempt!(out.append(b") (i32.or (i32.ne (call $y (local.get $h)) "));
+    attempt!(out.i32(u32::from_le_bytes([e, f, g, h])));
+    attempt!(out.append(b") (i32.or (i32.ne (call $z (local.get $h)) "));
+    attempt!(out.i32(id.ordinal));
+    attempt!(out.append(b") (i32.ne (call $w (local.get $h)) "));
+    attempt!(out.i32(marker));
+    out.append(b")))) (then (return (i32.const 0))))\n")
 }
 
 fn live(out: &mut crate::output::Buffer) -> Result<(), crate::Diagnostic> {

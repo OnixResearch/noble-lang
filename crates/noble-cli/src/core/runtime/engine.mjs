@@ -1,9 +1,10 @@
 export class CoreEngine {
-  constructor(selection, abi, { optimized = false, artifacts = null } = {}) {
+  constructor(selection, abi, { optimized = false, artifacts = null, bindings = [], declared_modules = false, declared_extension = null } = {}) {
     this.selection = selection;
     this.abi = abi;
+    configureDeclaredAbi(this, abi, declared_modules, declared_extension, bindings);
     this.optimized = optimized;
-    this.trace = [];
+    initializeHostState(this, bindings);
     this.pending = null;
     this.parked = null;
     this.poisoned = false;
@@ -16,23 +17,10 @@ export class CoreEngine {
     this.memory = new WebAssembly.Memory(abi.memory);
     this.table = new WebAssembly.Table(abi.table);
     this.shared = Object.create(null);
-    this.shared[abi.memory.name] = this.memory;
-    this.shared[abi.table.name] = this.table;
-    for (const global of abi.globals) {
-      this.shared[global.name] = new WebAssembly.Global({ value: global.type, mutable: true },
-        global.type === 'i64' ? BigInt(global.value) : global.value);
-    }
-    this.shared.test_emit = (offset, count) => {
-      const text = readText(this, offset, count);
-      if (this.trace.length >= 4096) return 1;
-      this.trace.push(`test.emit:${text}`);
-      return 0;
-    };
-    this.shared.test_abort = () => {
-      if (this.trace.length < 4096) this.trace.push('test.abort');
-      return 0;
-    };
+    installSharedGlobals(this, abi);
+    installTestHosts(this, declared_modules);
     this.save('tools.json', this.tools);
+    if (this.declaredExtension) this.save('declared-abi.json', this.declaredExtension);
   }
 
   checkTools() {
@@ -98,7 +86,7 @@ export class CoreEngine {
     if (this.pending || this.poisoned) fail('session is pending or poisoned');
     const imports = WebAssembly.Module.imports(module);
     const globals = new Set(this.abi.globals.map(global => global.name));
-    const functions = new Set(this.abi.host_functions.map(fn => fn.name));
+    const functions = new Set(this.hostFunctions.map(fn => fn.name));
     for (const entry of imports) {
       const allowed = entry.module === this.abi.module && (
         entry.kind === 'memory' && entry.name === this.abi.memory.name
@@ -108,20 +96,40 @@ export class CoreEngine {
       if (!allowed) fail(`undeclared module import: ${JSON.stringify(entry)}`);
     }
     const requests = this.trace.length;
+    const boundRequests = this.boundRequests.length;
+    const hostRequestsTotal = this.hostRequestsTotal;
+    const boundRequestsTotal = this.boundRequestsTotal;
+    const ambientFallbackCalls = this.ambientFallbackCalls;
+    const protectedOperations = this.protectedOperations;
     const sp = this.shared.sp.value;
     const instance = new WebAssembly.Instance(module, { [this.abi.module]: this.shared });
-    if (requests !== this.trace.length || sp !== this.shared.sp.value) fail('instantiation executed candidate body');
+    if (requests !== this.trace.length || boundRequests !== this.boundRequests.length
+      || hostRequestsTotal !== this.hostRequestsTotal || boundRequestsTotal !== this.boundRequestsTotal
+      || ambientFallbackCalls !== this.ambientFallbackCalls
+      || protectedOperations !== this.protectedOperations || sp !== this.shared.sp.value) {
+      fail('instantiation executed candidate body');
+    }
     // Shared table entries keep callable instances alive; do not retain inert
     // modules in an unbounded side list across otherwise empty submissions.
     this.pending = { instance, module, record: { ...record, imports }, traceStart: requests };
-    return { schema: 'noble-core-report/v1', profile: 'Core-Bootstrap', backend: 'managed-linear-memory',
+    return { schema: 'noble-core-report/v1', profile: this.profile, backend: 'managed-linear-memory',
       stage: 'wasm', outcome: 'ready', module: this.pending.record, guest_requests: 0, protected_operations: 0,
+      ...(this.profile === 'Declared-Modules-v1' ? { host_requests: 0, acquired_authority: false, ambient_fallback_calls: 0 } : {}),
       candidate_prepare_requests: 0 };
   }
 
   execute({ inputs = [], limits = {} } = {}) {
     if (!this.pending || this.poisoned) fail('no prepared module or poisoned session');
     const { instance, record, traceStart } = this.pending;
+    const boundStart = this.boundRequests.length;
+    const boundTotalStart = this.boundRequestsTotal;
+    const hostStart = this.hostRequestsTotal;
+    const traceExhaustedStart = this.boundTraceExhausted;
+    const adapterStarts = this.profile === 'Declared-Modules-v1'
+      ? new Map(Array.from(this.boundAdapters, ([slot, binding]) => [slot, binding.invocations]))
+      : null;
+    const protectedStart = this.protectedOperations;
+    const fallbackStart = this.ambientFallbackCalls;
     this.lastTraceStart = traceStart;
     this.pending = null;
     const runtime = instance.exports;
@@ -148,11 +156,35 @@ export class CoreEngine {
     const outcome = status === 0 ? 'normal' : status === 1 || status === 2 ? 'runtime-exhausted' : 'trap';
     let stack = [];
     if (status === 0) stack = readStack(this, runtime);
-    const report = { schema: 'noble-core-report/v1', profile: 'Core-Bootstrap', backend: 'managed-linear-memory',
+    const isDeclared = this.profile === 'Declared-Modules-v1';
+    const boundRequests = isDeclared ? this.boundRequests.slice(boundStart) : null;
+    const adapterInvocations = isDeclared
+      ? Array.from(this.boundAdapters.entries(), ([slot, binding]) => ({
+        slot, module: binding.module, version: binding.version,
+        adapter_identity: binding.adapter,
+        count: binding.invocations - adapterStarts.get(slot),
+      })) : null;
+    const unrecordedBound = this.boundRequestsTotal - boundTotalStart - (boundRequests?.length ?? 0);
+    const report = { schema: 'noble-core-report/v1', profile: this.profile, backend: 'managed-linear-memory',
       submission: record.submission ?? null, stage: 'wasm', outcome, status,
       quota_reason: this.abi.quota_reason[String(metrics.quota_reason)] ?? null, stack,
-      request_trace: this.trace.slice(traceStart), guest_requests: this.trace.length - traceStart,
-      protected_operations: 0, candidate_prepare_requests: 0, native_trap: nativeTrap,
+      request_trace: isDeclared
+        ? boundRequests : this.trace.slice(traceStart),
+      guest_requests: isDeclared ? this.hostRequestsTotal - hostStart : this.trace.length - traceStart,
+      ...(isDeclared ? {
+        host_requests: this.hostRequestsTotal - hostStart,
+        effect_requests: boundRequests.map(request => request.effect),
+        effect_requests_unrecorded: unrecordedBound,
+        request_trace_complete: unrecordedBound === 0,
+        ...(this.boundTraceExhausted !== traceExhaustedStart
+          ? { request_trace_terminal: { ...this.boundTraceTerminal,
+            denied_requests: this.boundTraceExhausted - traceExhaustedStart } } : {}),
+        adapter_invocations: adapterInvocations,
+        ambient_fallback_calls: this.ambientFallbackCalls - fallbackStart,
+        acquired_authority: false,
+      } : {}),
+      protected_operations: this.protectedOperations - protectedStart,
+      candidate_prepare_requests: 0, native_trap: nativeTrap,
       session_state: this.poisoned ? 'terminated-after-runtime-failure' : 'retained',
       metrics, module: record };
     if (record.stem) this.save(`${record.stem}-execution.json`, report);
@@ -171,7 +203,7 @@ export class CoreEngine {
     }
     let stack = [];
     if (!status && runtime) stack = readStack(this, runtime);
-    return { schema: 'noble-core-report/v1', profile: 'Core-Bootstrap', backend: 'managed-linear-memory',
+    return { schema: 'noble-core-report/v1', profile: this.profile, backend: 'managed-linear-memory',
       stage: 'wasm', outcome: status ? 'injection-refused' : 'pushed', status, stack,
       guest_requests: 0, protected_operations: 0, candidate_prepare_requests: 0,
       session_state: 'retained' };
@@ -231,7 +263,7 @@ export class CoreEngine {
   observe(index) {
     const runtime = this.runtime();
     const status = runtime.observe(integer(index, 128, 'stack index'));
-    return { schema: 'noble-core-report/v1', profile: 'Core-Bootstrap', backend: 'managed-linear-memory',
+    return { schema: 'noble-core-report/v1', profile: this.profile, backend: 'managed-linear-memory',
       stage: 'wasm', outcome: status ? 'observation-failed' : 'observed', status, index,
       events: status ? [] : readReflection(this, runtime),
       guest_requests: 0, protected_operations: 0, candidate_prepare_requests: 0 };
@@ -241,7 +273,7 @@ export class CoreEngine {
   project(handle) {
     const runtime = this.runtime();
     const subject = runtime.certified_subject(integer(handle, this.abi.limits_maximum.session_cells, 'cell handle'));
-    return { schema: 'noble-core-report/v1', profile: 'Core-Bootstrap', backend: 'managed-linear-memory',
+    return { schema: 'noble-core-report/v1', profile: this.profile, backend: 'managed-linear-memory',
       stage: 'wasm', outcome: subject ? 'projected' : 'projection-failed', handle, subject,
       identity_unchanged: subject !== 0,
       guest_requests: 0, protected_operations: 0, candidate_prepare_requests: 0 };

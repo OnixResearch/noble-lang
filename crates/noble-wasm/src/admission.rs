@@ -44,49 +44,75 @@ pub(crate) fn check(
 
 fn root_types(stack: &[noble_kernel::types::Ty]) -> Result<(), crate::Diagnostic> {
     let mut index = 0usize;
+    let mut is_unsupported = false;
     while index < stack.len() {
         match &stack[index] {
             noble_kernel::types::Ty::Program(_, _, _) => {}
-            _ => return Err(crate::Diagnostic::Unsupported),
+            _ => {
+                is_unsupported = true;
+                break;
+            }
         }
         index += 1;
     }
-    Ok(())
+    if is_unsupported {
+        Err(crate::Diagnostic::Unsupported)
+    } else {
+        Ok(())
+    }
 }
 
 fn root_quotations(
     candidate: &noble_kernel::untrusted::Candidate,
 ) -> Result<(), crate::Diagnostic> {
     let mut index = 0usize;
+    let mut result = Ok(());
     while index < candidate.body.len() {
         match node(candidate, candidate.body[index]) {
-            Ok(noble_kernel::untrusted::Node::Quotation { .. }) => {}
-            Ok(_) => return Err(crate::Diagnostic::Unsupported),
-            Err(failure) => return Err(failure),
+            Ok(noble_kernel::untrusted::Node::Quotation { .. }) => index += 1,
+            Ok(_) => {
+                result = Err(crate::Diagnostic::Unsupported);
+                break;
+            }
+            Err(problem) => {
+                result = Err(problem);
+                break;
+            }
         }
-        index += 1;
     }
-    Ok(())
+    result
 }
 
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; pinned March and August const trials report E0015 for the non-const quotation_bounds call; reassess when quotation bounds are const-capable."
+)]
 fn bounds(candidate: &noble_kernel::untrusted::Candidate) -> Result<(), crate::Diagnostic> {
     if candidate.nodes.len() > crate::NODE_LIMIT
         || candidate.body.len() > crate::BODY_OPERATION_LIMIT
     {
         return Err(crate::Diagnostic::Exhausted);
     }
+    quotation_bounds(candidate)
+}
+
+fn quotation_bounds(
+    candidate: &noble_kernel::untrusted::Candidate,
+) -> Result<(), crate::Diagnostic> {
     let mut bodies = 1usize;
     let mut index = 0usize;
+    let mut result = Ok(());
     while index < candidate.nodes.len() {
         if let noble_kernel::untrusted::Node::Quotation { body, .. } = &candidate.nodes[index] {
             if body.len() > crate::BODY_OPERATION_LIMIT || bodies >= crate::BODY_LIMIT {
-                return Err(crate::Diagnostic::Exhausted);
+                result = Err(crate::Diagnostic::Exhausted);
+                break;
             }
             bodies += 1;
         }
         index += 1;
     }
-    Ok(())
+    result
 }
 
 pub(crate) fn index(node: noble_kernel::untrusted::NodeId) -> Result<usize, crate::Diagnostic> {

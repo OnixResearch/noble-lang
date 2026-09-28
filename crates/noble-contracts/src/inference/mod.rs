@@ -31,6 +31,7 @@ pub(crate) enum Term {
     Evidence,
     Certified,
     Resource(noble_kernel::types::ResourceKind),
+    Nominal(noble_kernel::types::NominalTypeId),
     Pair(u32, u32),
     Sum(u32, u32),
     List(u32),
@@ -58,6 +59,10 @@ pub(crate) struct Arena {
     effectful: bool,
     effect_universe: u64,
     resources: bool,
+    pub(crate) nominals: alloc::vec::Vec<(
+        noble_kernel::types::NominalTypeId,
+        noble_kernel::types::NominalShape,
+    )>,
     effects: alloc::vec::Vec<effects::Effect>,
     effect_bounds: alloc::vec::Vec<u64>,
     effect_equations: alloc::vec::Vec<(u32, u32)>,
@@ -71,6 +76,7 @@ impl Arena {
             effectful: false,
             effect_universe: 0,
             resources: false,
+            nominals: alloc::vec::Vec::new(),
             effects: alloc::vec::Vec::new(),
             effect_bounds: alloc::vec::Vec::new(),
             effect_equations: alloc::vec::Vec::new(),
@@ -163,70 +169,13 @@ impl Arena {
             | Term::Evidence
             | Term::Certified
             | Term::Resource(_)
+            | Term::Nominal(_)
             | Term::Pair(_, _)
             | Term::Sum(_, _)
             | Term::List(_)
             | Term::Program(_, _)
             | Term::Empty
             | Term::Push(_, _) => Ok(None),
-        }
-    }
-
-    pub fn variables(
-        &mut self,
-        kinds: &[noble_kernel::words::VariableKind],
-        span: crate::Span,
-        meter: &mut crate::Meter,
-    ) -> Result<alloc::vec::Vec<Variable>, crate::Diagnostic> {
-        let mut variables = alloc::vec::Vec::with_capacity(kinds.len());
-        let mut at = 0usize;
-        let mut failure = None;
-        while at < kinds.len() {
-            match self.variable(kinds.get(at), span, meter) {
-                Ok(variable) => {
-                    variables.push(variable);
-                    at += 1;
-                }
-                Err(problem) => {
-                    failure = Some(problem);
-                    break;
-                }
-            }
-        }
-        match failure {
-            Some(problem) => Err(problem),
-            None => Ok(variables),
-        }
-    }
-
-    #[expect(
-        tigerstyle::missing_const_fn,
-        reason = "Owner: noble-maintainers; creating a value or stack witness allocates a term in the arena."
-    )]
-    fn variable(
-        &mut self,
-        kind: Option<&noble_kernel::words::VariableKind>,
-        span: crate::Span,
-        meter: &mut crate::Meter,
-    ) -> Result<Variable, crate::Diagnostic> {
-        attempt!(meter.charge(1, span));
-        match kind {
-            Some(noble_kernel::words::VariableKind::Value) => Ok(Variable::Value(attempt!(
-                self.add(Term::Hole(Sort::Value), span, meter)
-            ))),
-            Some(noble_kernel::words::VariableKind::Stack) => Ok(Variable::Stack(attempt!(
-                self.add(Term::Hole(Sort::Stack), span, meter)
-            ))),
-            Some(noble_kernel::words::VariableKind::Effect) => {
-                if self.effectful {
-                    Ok(Variable::EffectValue(attempt!(
-                        self.effect_hole(span, meter)
-                    )))
-                } else {
-                    Ok(Variable::Effect)
-                }
-            }
-            None => Err(crate::internal(span)),
         }
     }
 }

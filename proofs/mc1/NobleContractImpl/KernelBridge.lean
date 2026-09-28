@@ -74,6 +74,24 @@ def mapVec {α β : Type} (f : α → β) (v : alloc.vec.Vec α) : alloc.vec.Vec
     (mapVec f v).val = v.val.map f := by
   simp only [mapVec, mapSlice, alloc.vec.Vec.val, Slice.val, mapListN_toList]
 
+def toNominalTypeId (x : noble_kernel.types.NominalTypeId) :
+    _root_.noble_kernel.types.NominalTypeId :=
+  { module := x.module, ordinal := x.ordinal }
+
+def fromNominalTypeId (x : _root_.noble_kernel.types.NominalTypeId) :
+    noble_kernel.types.NominalTypeId :=
+  { module := x.module, ordinal := x.ordinal }
+
+@[simp] theorem fromNominalTypeId_toNominalTypeId (x : noble_kernel.types.NominalTypeId) :
+    fromNominalTypeId (toNominalTypeId x) = x := by
+  cases x
+  rfl
+
+@[simp] theorem toNominalTypeId_fromNominalTypeId (x : _root_.noble_kernel.types.NominalTypeId) :
+    toNominalTypeId (fromNominalTypeId x) = x := by
+  cases x
+  rfl
+
 mutual
   def toTy : noble_kernel.types.Ty → _root_.noble_kernel.types.Ty
     | .UnitType => .UnitType
@@ -89,13 +107,25 @@ mutual
     | .ListType a => .ListType (toTy a)
     | .ProgramType i o e => .ProgramType (toTyVec i) (toTyVec o) e
     | .ResourceType k => .ResourceType k
+    | .NominalType id shape => .NominalType (toNominalTypeId id) (toNominalShape shape)
     termination_by x => sizeOf x
     decreasing_by
       all_goals
         simp only [noble_kernel.types.Ty.PairType.sizeOf_spec,
         noble_kernel.types.Ty.SumType.sizeOf_spec,
         noble_kernel.types.Ty.ListType.sizeOf_spec,
-        noble_kernel.types.Ty.ProgramType.sizeOf_spec]
+        noble_kernel.types.Ty.ProgramType.sizeOf_spec,
+        noble_kernel.types.Ty.NominalType.sizeOf_spec]
+        omega
+
+  def toNominalShape : noble_kernel.types.NominalShape → _root_.noble_kernel.types.NominalShape
+    | .Opaque ty => .Opaque (toTy ty)
+    | .Variant left right => .Variant (toTy left) (toTy right)
+    termination_by x => sizeOf x
+    decreasing_by
+      all_goals
+        simp only [noble_kernel.types.NominalShape.Opaque.sizeOf_spec,
+          noble_kernel.types.NominalShape.Variant.sizeOf_spec]
         omega
 
   def toTyVec (v : alloc.vec.Vec noble_kernel.types.Ty) : alloc.vec.Vec _root_.noble_kernel.types.Ty :=
@@ -140,13 +170,25 @@ mutual
     | .ListType a => .ListType (fromTy a)
     | .ProgramType i o e => .ProgramType (fromTyVec i) (fromTyVec o) e
     | .ResourceType k => .ResourceType k
+    | .NominalType id shape => .NominalType (fromNominalTypeId id) (fromNominalShape shape)
     termination_by x => sizeOf x
     decreasing_by
       all_goals
         simp only [_root_.noble_kernel.types.Ty.PairType.sizeOf_spec,
         _root_.noble_kernel.types.Ty.SumType.sizeOf_spec,
         _root_.noble_kernel.types.Ty.ListType.sizeOf_spec,
-        _root_.noble_kernel.types.Ty.ProgramType.sizeOf_spec]
+        _root_.noble_kernel.types.Ty.ProgramType.sizeOf_spec,
+        _root_.noble_kernel.types.Ty.NominalType.sizeOf_spec]
+        omega
+
+  def fromNominalShape : _root_.noble_kernel.types.NominalShape → noble_kernel.types.NominalShape
+    | .Opaque ty => .Opaque (fromTy ty)
+    | .Variant left right => .Variant (fromTy left) (fromTy right)
+    termination_by x => sizeOf x
+    decreasing_by
+      all_goals
+        simp only [_root_.noble_kernel.types.NominalShape.Opaque.sizeOf_spec,
+          _root_.noble_kernel.types.NominalShape.Variant.sizeOf_spec]
         omega
 
   def fromTyVec (v : alloc.vec.Vec _root_.noble_kernel.types.Ty) : alloc.vec.Vec noble_kernel.types.Ty :=
@@ -205,13 +247,31 @@ mutual
       simp only [toTy, fromTy, fromTyVec_toTyVec i, fromTyVec_toTyVec o]
     | ResourceType k =>
       simp only [toTy, fromTy]
+    | NominalType id shape =>
+      simp only [toTy, fromTy, fromNominalTypeId_toNominalTypeId,
+        fromNominalShape_toNominalShape shape]
     termination_by sizeOf x
     decreasing_by
       all_goals
         simp only [noble_kernel.types.Ty.PairType.sizeOf_spec,
         noble_kernel.types.Ty.SumType.sizeOf_spec,
         noble_kernel.types.Ty.ListType.sizeOf_spec,
-        noble_kernel.types.Ty.ProgramType.sizeOf_spec]
+        noble_kernel.types.Ty.ProgramType.sizeOf_spec,
+        noble_kernel.types.Ty.NominalType.sizeOf_spec]
+        omega
+
+  theorem fromNominalShape_toNominalShape (x : noble_kernel.types.NominalShape) :
+      fromNominalShape (toNominalShape x) = x := by
+    cases x with
+    | Opaque ty =>
+      simp only [toNominalShape, fromNominalShape, fromTy_toTy ty]
+    | Variant left right =>
+      simp only [toNominalShape, fromNominalShape, fromTy_toTy left, fromTy_toTy right]
+    termination_by sizeOf x
+    decreasing_by
+      all_goals
+        simp only [noble_kernel.types.NominalShape.Opaque.sizeOf_spec,
+          noble_kernel.types.NominalShape.Variant.sizeOf_spec]
         omega
 
   theorem fromTyVec_toTyVec (v : alloc.vec.Vec noble_kernel.types.Ty) :
@@ -247,7 +307,7 @@ mutual
         omega
 end
 
-attribute [simp] fromTy_toTy fromTyVec_toTyVec
+attribute [simp] fromTy_toTy fromNominalShape_toNominalShape fromTyVec_toTyVec
   fromTySlice_toTySlice fromTyListN_toTyListN
 
 mutual
@@ -279,13 +339,31 @@ mutual
       simp only [fromTy, toTy, toTyVec_fromTyVec i, toTyVec_fromTyVec o]
     | ResourceType k =>
       simp only [fromTy, toTy]
+    | NominalType id shape =>
+      simp only [fromTy, toTy, toNominalTypeId_fromNominalTypeId,
+        toNominalShape_fromNominalShape shape]
     termination_by sizeOf x
     decreasing_by
       all_goals
         simp only [_root_.noble_kernel.types.Ty.PairType.sizeOf_spec,
         _root_.noble_kernel.types.Ty.SumType.sizeOf_spec,
         _root_.noble_kernel.types.Ty.ListType.sizeOf_spec,
-        _root_.noble_kernel.types.Ty.ProgramType.sizeOf_spec]
+        _root_.noble_kernel.types.Ty.ProgramType.sizeOf_spec,
+        _root_.noble_kernel.types.Ty.NominalType.sizeOf_spec]
+        omega
+
+  theorem toNominalShape_fromNominalShape (x : _root_.noble_kernel.types.NominalShape) :
+      toNominalShape (fromNominalShape x) = x := by
+    cases x with
+    | Opaque ty =>
+      simp only [fromNominalShape, toNominalShape, toTy_fromTy ty]
+    | Variant left right =>
+      simp only [fromNominalShape, toNominalShape, toTy_fromTy left, toTy_fromTy right]
+    termination_by sizeOf x
+    decreasing_by
+      all_goals
+        simp only [_root_.noble_kernel.types.NominalShape.Opaque.sizeOf_spec,
+          _root_.noble_kernel.types.NominalShape.Variant.sizeOf_spec]
         omega
 
   theorem toTyVec_fromTyVec (v : alloc.vec.Vec _root_.noble_kernel.types.Ty) :
@@ -321,7 +399,7 @@ mutual
         omega
 end
 
-attribute [simp] toTy_fromTy toTyVec_fromTyVec
+attribute [simp] toTy_fromTy toNominalShape_fromNominalShape toTyVec_fromTyVec
   toTySlice_fromTySlice toTyListN_fromTyListN
 
 def toVariableKind : noble_kernel.words.VariableKind → _root_.noble_kernel.words.VariableKind
@@ -373,6 +451,7 @@ mutual
     | .ListPattern a => .ListPattern (toPattern a)
     | .ProgramPattern i o e => .ProgramPattern (toPatternVec i) (toPatternVec o) (mapVec toEffectSlot e)
     | .ResourcePattern k => .ResourcePattern k
+    | .NominalPattern id shape => .NominalPattern (toNominalTypeId id) (toNominalShape shape)
     | .VarPattern id => .VarPattern id
     | .StackVarPattern id => .StackVarPattern id
     termination_by x => sizeOf x
@@ -426,6 +505,7 @@ mutual
     | .ListPattern a => .ListPattern (fromPattern a)
     | .ProgramPattern i o e => .ProgramPattern (fromPatternVec i) (fromPatternVec o) (mapVec fromEffectSlot e)
     | .ResourcePattern k => .ResourcePattern k
+    | .NominalPattern id shape => .NominalPattern (fromNominalTypeId id) (fromNominalShape shape)
     | .VarPattern id => .VarPattern id
     | .StackVarPattern id => .StackVarPattern id
     termination_by x => sizeOf x
@@ -493,6 +573,9 @@ mutual
       simp only [toPattern, fromPattern, fromPatternVec_toPatternVec i, fromPatternVec_toPatternVec o, mapVec_mapVec, fromEffectSlot_toEffectSlot, mapVec_id]
     | ResourcePattern k =>
       simp only [toPattern, fromPattern]
+    | NominalPattern id shape =>
+      simp only [toPattern, fromPattern, fromNominalTypeId_toNominalTypeId,
+        fromNominalShape_toNominalShape]
     | VarPattern id =>
       simp only [toPattern, fromPattern]
     | StackVarPattern id =>
@@ -571,6 +654,9 @@ mutual
       simp only [fromPattern, toPattern, toPatternVec_fromPatternVec i, toPatternVec_fromPatternVec o, mapVec_mapVec, toEffectSlot_fromEffectSlot, mapVec_id]
     | ResourcePattern k =>
       simp only [fromPattern, toPattern]
+    | NominalPattern id shape =>
+      simp only [fromPattern, toPattern, toNominalTypeId_fromNominalTypeId,
+        toNominalShape_fromNominalShape]
     | VarPattern id =>
       simp only [fromPattern, toPattern]
     | StackVarPattern id =>
@@ -664,6 +750,12 @@ def toBehavior : noble_kernel.contracts.Behavior → _root_.noble_kernel.contrac
   | .ConsBehavior => .ConsBehavior
   | .ListCaseBehavior => .ListCaseBehavior
   | .TestEmitBehavior => .TestEmitBehavior
+  | .BoundEmitBehavior slot => .BoundEmitBehavior slot
+  | .NominalNewBehavior id => .NominalNewBehavior (toNominalTypeId id)
+  | .NominalIntoBehavior id => .NominalIntoBehavior (toNominalTypeId id)
+  | .NominalLeftBehavior id => .NominalLeftBehavior (toNominalTypeId id)
+  | .NominalRightBehavior id => .NominalRightBehavior (toNominalTypeId id)
+  | .NominalMatchBehavior id => .NominalMatchBehavior (toNominalTypeId id)
   | .NamedBehavior => .NamedBehavior
 
 def fromBehavior : _root_.noble_kernel.contracts.Behavior → noble_kernel.contracts.Behavior
@@ -688,6 +780,12 @@ def fromBehavior : _root_.noble_kernel.contracts.Behavior → noble_kernel.contr
   | .ConsBehavior => .ConsBehavior
   | .ListCaseBehavior => .ListCaseBehavior
   | .TestEmitBehavior => .TestEmitBehavior
+  | .BoundEmitBehavior slot => .BoundEmitBehavior slot
+  | .NominalNewBehavior id => .NominalNewBehavior (fromNominalTypeId id)
+  | .NominalIntoBehavior id => .NominalIntoBehavior (fromNominalTypeId id)
+  | .NominalLeftBehavior id => .NominalLeftBehavior (fromNominalTypeId id)
+  | .NominalRightBehavior id => .NominalRightBehavior (fromNominalTypeId id)
+  | .NominalMatchBehavior id => .NominalMatchBehavior (fromNominalTypeId id)
   | .NamedBehavior => .NamedBehavior
 
 @[simp] theorem fromBehavior_toBehavior (x : noble_kernel.contracts.Behavior) :
@@ -718,11 +816,137 @@ def fromSchemaDecl (x : _root_.noble_kernel.contracts.SchemaDecl) : noble_kernel
   cases x
   simp [toSchemaDecl, fromSchemaDecl]
 
+def toNominalDecl (x : noble_kernel.contracts.NominalDecl) :
+    _root_.noble_kernel.contracts.NominalDecl :=
+  { id := toNominalTypeId x.id
+    shape := toNominalShape x.shape
+    exported := x.exported
+    «public» := x.«public» }
+
+def fromNominalDecl (x : _root_.noble_kernel.contracts.NominalDecl) :
+    noble_kernel.contracts.NominalDecl :=
+  { id := fromNominalTypeId x.id
+    shape := fromNominalShape x.shape
+    exported := x.exported
+    «public» := x.«public» }
+
+@[simp] theorem fromNominalDecl_toNominalDecl (x : noble_kernel.contracts.NominalDecl) :
+    fromNominalDecl (toNominalDecl x) = x := by
+  cases x
+  simp [fromNominalDecl, toNominalDecl]
+
+@[simp] theorem toNominalDecl_fromNominalDecl (x : _root_.noble_kernel.contracts.NominalDecl) :
+    toNominalDecl (fromNominalDecl x) = x := by
+  cases x
+  simp [toNominalDecl, fromNominalDecl]
+
+def toBoundAdapter (x : noble_kernel.contracts.BoundAdapter) :
+    _root_.noble_kernel.contracts.BoundAdapter :=
+  { definition := x.definition
+    adapter_identity := x.adapter_identity
+    adapter_slot := x.adapter_slot
+    input := toTyVec x.input
+    output := toTyVec x.output
+    effects := x.effects }
+
+def fromBoundAdapter (x : _root_.noble_kernel.contracts.BoundAdapter) :
+    noble_kernel.contracts.BoundAdapter :=
+  { definition := x.definition
+    adapter_identity := x.adapter_identity
+    adapter_slot := x.adapter_slot
+    input := fromTyVec x.input
+    output := fromTyVec x.output
+    effects := x.effects }
+
+@[simp] theorem fromBoundAdapter_toBoundAdapter (x : noble_kernel.contracts.BoundAdapter) :
+    fromBoundAdapter (toBoundAdapter x) = x := by
+  cases x
+  simp [fromBoundAdapter, toBoundAdapter]
+
+@[simp] theorem toBoundAdapter_fromBoundAdapter (x : _root_.noble_kernel.contracts.BoundAdapter) :
+    toBoundAdapter (fromBoundAdapter x) = x := by
+  cases x
+  simp [toBoundAdapter, fromBoundAdapter]
+
+def toBoundEmitRegistration (x : noble_kernel.contracts.BoundEmitRegistration) :
+    _root_.noble_kernel.contracts.BoundEmitRegistration :=
+  { adapter_identity := x.adapter_identity
+    adapter_slot := x.adapter_slot
+    owner := x.owner
+    input := toTyVec x.input
+    output := toTyVec x.output
+    effects := x.effects }
+
+def fromBoundEmitRegistration (x : _root_.noble_kernel.contracts.BoundEmitRegistration) :
+    noble_kernel.contracts.BoundEmitRegistration :=
+  { adapter_identity := x.adapter_identity
+    adapter_slot := x.adapter_slot
+    owner := x.owner
+    input := fromTyVec x.input
+    output := fromTyVec x.output
+    effects := x.effects }
+
+@[simp] theorem fromBoundEmitRegistration_toBoundEmitRegistration
+    (x : noble_kernel.contracts.BoundEmitRegistration) :
+    fromBoundEmitRegistration (toBoundEmitRegistration x) = x := by
+  cases x
+  simp [fromBoundEmitRegistration, toBoundEmitRegistration]
+
+@[simp] theorem toBoundEmitRegistration_fromBoundEmitRegistration
+    (x : _root_.noble_kernel.contracts.BoundEmitRegistration) :
+    toBoundEmitRegistration (fromBoundEmitRegistration x) = x := by
+  cases x
+  simp [toBoundEmitRegistration, fromBoundEmitRegistration]
+
+def toNominalOps (x : noble_kernel.contracts.NominalOps) :
+    _root_.noble_kernel.contracts.NominalOps :=
+  { new := x.new, into := x.into, left := x.left, right := x.right, matcher := x.matcher }
+
+def fromNominalOps (x : _root_.noble_kernel.contracts.NominalOps) :
+    noble_kernel.contracts.NominalOps :=
+  { new := x.new, into := x.into, left := x.left, right := x.right, matcher := x.matcher }
+
+@[simp] theorem fromNominalOps_toNominalOps (x : noble_kernel.contracts.NominalOps) :
+    fromNominalOps (toNominalOps x) = x := by
+  cases x
+  rfl
+
+@[simp] theorem toNominalOps_fromNominalOps (x : _root_.noble_kernel.contracts.NominalOps) :
+    toNominalOps (fromNominalOps x) = x := by
+  cases x
+  rfl
+
+def toNominalError : noble_kernel.contracts.NominalError →
+    _root_.noble_kernel.contracts.NominalError
+  | .DuplicateIdentity => .DuplicateIdentity
+  | .InvalidRepresentation => .InvalidRepresentation
+  | .TooManyDefinitions => .TooManyDefinitions
+
+def fromNominalError : _root_.noble_kernel.contracts.NominalError →
+    noble_kernel.contracts.NominalError
+  | .DuplicateIdentity => .DuplicateIdentity
+  | .InvalidRepresentation => .InvalidRepresentation
+  | .TooManyDefinitions => .TooManyDefinitions
+
+@[simp] theorem fromNominalError_toNominalError (x : noble_kernel.contracts.NominalError) :
+    fromNominalError (toNominalError x) = x := by
+  cases x <;> rfl
+
+@[simp] theorem toNominalError_fromNominalError (x : _root_.noble_kernel.contracts.NominalError) :
+    toNominalError (fromNominalError x) = x := by
+  cases x <;> rfl
+
 def toEnv (x : noble_kernel.contracts.Env) : _root_.noble_kernel.contracts.Env :=
   { defs := mapVec toScheme x.defs
     kinds := mapVec toBehavior x.kinds
     deps := x.deps
     schemas := mapVec toSchemaDecl x.schemas
+    nominals := mapVec toNominalDecl x.nominals
+    resource_kinds := x.resource_kinds
+    caller_module := x.caller_module
+    declared_modules := x.declared_modules
+    definition_owners := x.definition_owners
+    bound_adapters := mapVec toBoundAdapter x.bound_adapters
     effects := x.effects }
 
 def fromEnv (x : _root_.noble_kernel.contracts.Env) : noble_kernel.contracts.Env :=
@@ -730,6 +954,12 @@ def fromEnv (x : _root_.noble_kernel.contracts.Env) : noble_kernel.contracts.Env
     kinds := mapVec fromBehavior x.kinds
     deps := x.deps
     schemas := mapVec fromSchemaDecl x.schemas
+    nominals := mapVec fromNominalDecl x.nominals
+    resource_kinds := x.resource_kinds
+    caller_module := x.caller_module
+    declared_modules := x.declared_modules
+    definition_owners := x.definition_owners
+    bound_adapters := mapVec fromBoundAdapter x.bound_adapters
     effects := x.effects }
 
 @[simp] theorem fromEnv_toEnv (x : noble_kernel.contracts.Env) :
@@ -1052,6 +1282,9 @@ def toConstraint : noble_kernel.untrusted.Constraint → _root_.noble_kernel.unt
   | .InstantiationArity => .InstantiationArity
   | .MalformedReference id => .MalformedReference id
   | .UnknownDefinition id => .UnknownDefinition id
+  | .InvalidType => .InvalidType
+  | .InvalidContract => .InvalidContract
+  | .PrivateDefinition id => .PrivateDefinition id
   | .CyclicWitness => .CyclicWitness
 
 def fromConstraint : _root_.noble_kernel.untrusted.Constraint → noble_kernel.untrusted.Constraint
@@ -1064,6 +1297,9 @@ def fromConstraint : _root_.noble_kernel.untrusted.Constraint → noble_kernel.u
   | .InstantiationArity => .InstantiationArity
   | .MalformedReference id => .MalformedReference id
   | .UnknownDefinition id => .UnknownDefinition id
+  | .InvalidType => .InvalidType
+  | .InvalidContract => .InvalidContract
+  | .PrivateDefinition id => .PrivateDefinition id
   | .CyclicWitness => .CyclicWitness
 
 @[simp] theorem fromConstraint_toConstraint (x : noble_kernel.untrusted.Constraint) :
@@ -1254,11 +1490,48 @@ def noble_kernel.contracts.Env.Insts.CoreFmtDebug.fmt
     Result (core.result.Result Unit core.fmt.Error × core.fmt.Formatter) :=
   _root_.noble_kernel.contracts.Env.Insts.CoreFmtDebug.fmt (toEnv env) formatter
 
+def noble_kernel.contracts.Env.Insts.CoreDefaultDefault.default :
+    Result noble_kernel.contracts.Env := do
+  let env ← _root_.noble_kernel.contracts.Env.Insts.CoreDefaultDefault.default
+  ok (fromEnv env)
+
+def noble_kernel.contracts.Env.nominal (env : noble_kernel.contracts.Env)
+    (id : noble_kernel.types.NominalTypeId) :
+    Result (Option noble_kernel.contracts.NominalDecl) := do
+  let decl ← _root_.noble_kernel.contracts.Env.nominal (toEnv env) (toNominalTypeId id)
+  ok (decl.map fromNominalDecl)
+
+def noble_kernel.contracts.Env.declare_nominal (env : noble_kernel.contracts.Env)
+    (decl : noble_kernel.contracts.NominalDecl) :
+    Result (core.result.Result (noble_kernel.contracts.Env ×
+      noble_kernel.contracts.NominalOps) noble_kernel.contracts.NominalError) := do
+  let result ← _root_.noble_kernel.contracts.Env.declare_nominal
+    (toEnv env) (toNominalDecl decl)
+  match result with
+  | .Ok (registered, ops) => ok (.Ok (fromEnv registered, fromNominalOps ops))
+  | .Err error => ok (.Err (fromNominalError error))
+
+def noble_kernel.contracts.Env.declare_bound_emit (env : noble_kernel.contracts.Env)
+    (registration : noble_kernel.contracts.BoundEmitRegistration) :
+    Result (core.result.Result (noble_kernel.contracts.Env ×
+      noble_kernel.contracts.Definition) noble_kernel.contracts.NominalError) := do
+  let result ← _root_.noble_kernel.contracts.Env.declare_bound_emit
+    (toEnv env) (toBoundEmitRegistration registration)
+  match result with
+  | .Ok (registered, definition) => ok (.Ok (fromEnv registered, definition))
+  | .Err error => ok (.Err (fromNominalError error))
+
 def noble_kernel.contracts.Env.scheme (env : noble_kernel.contracts.Env)
     (definition : noble_kernel.contracts.Definition) :
     Result (Option noble_kernel.words.Scheme) := do
   let scheme ← _root_.noble_kernel.contracts.Env.scheme (toEnv env) definition
   ok (scheme.map fromScheme)
+
+def noble_kernel.contracts.Env.kind (env : noble_kernel.contracts.Env)
+    (definition : noble_kernel.contracts.Definition) :
+    Result (Option noble_kernel.contracts.Behavior) := do
+  let kind ← _root_.noble_kernel.contracts.Env.kind (toEnv env) definition
+  ok (kind.map fromBehavior)
 
 def noble_kernel.contracts.environment :
     Result (core.result.Result noble_kernel.contracts.Env noble_kernel.shapes.Defect) := do
@@ -1298,6 +1571,9 @@ def noble_kernel.types.Ty.Insts.CoreFmtDebug.fmt
     Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter) :=
   _root_.noble_kernel.types.Ty.Insts.CoreFmtDebug.fmt (toTy ty) formatter
 
+def noble_kernel.types.data.Ty.is_data (ty : noble_kernel.types.Ty) : Result Bool :=
+  _root_.noble_kernel.types.data.Ty.is_data (toTy ty)
+
 def noble_kernel.types.ResourceKind.Insts.CoreCloneClone.clone
     (kind : noble_kernel.types.ResourceKind) : Result noble_kernel.types.ResourceKind :=
   _root_.noble_kernel.types.ResourceKind.Insts.CoreCloneClone.clone kind
@@ -1311,6 +1587,22 @@ def noble_kernel.types.ResourceKind.Insts.CoreCmpPartialEqResourceKind.eq
     (left right : noble_kernel.types.ResourceKind) : Result Bool :=
   _root_.noble_kernel.types.ResourceKind.Insts.CoreCmpPartialEqResourceKind.eq left right
 
+def noble_kernel.types.NominalTypeId.Insts.CoreCmpPartialEqNominalTypeId.eq
+    (left right : noble_kernel.types.NominalTypeId) : Result Bool :=
+  _root_.noble_kernel.types.NominalTypeId.Insts.CoreCmpPartialEqNominalTypeId.eq
+    (toNominalTypeId left) (toNominalTypeId right)
+
+def noble_kernel.types.NominalShape.Insts.CoreCloneClone.clone
+    (shape : noble_kernel.types.NominalShape) : Result noble_kernel.types.NominalShape := do
+  let cloned ← _root_.noble_kernel.types.NominalShape.Insts.CoreCloneClone.clone
+    (toNominalShape shape)
+  ok (fromNominalShape cloned)
+
+def noble_kernel.types.NominalShape.Insts.CoreCmpPartialEqNominalShape.eq
+    (left right : noble_kernel.types.NominalShape) : Result Bool :=
+  _root_.noble_kernel.types.NominalShape.Insts.CoreCmpPartialEqNominalShape.eq
+    (toNominalShape left) (toNominalShape right)
+
 def noble_kernel.types.EffId.Insts.CoreCloneClone.clone (effect : noble_kernel.types.EffId) :
     Result noble_kernel.types.EffId :=
   _root_.noble_kernel.types.EffId.Insts.CoreCloneClone.clone effect
@@ -1319,6 +1611,10 @@ def noble_kernel.types.EffId.Insts.CoreFmtDebug.fmt
     (effect : noble_kernel.types.EffId) (formatter : core.fmt.Formatter) :
     Result (core.result.Result Unit core.fmt.Error × core.fmt.Formatter) :=
   _root_.noble_kernel.types.EffId.Insts.CoreFmtDebug.fmt effect formatter
+
+def noble_kernel.types.EffId.Insts.CoreCmpPartialEqEffId.eq
+    (left right : noble_kernel.types.EffId) : Result Bool :=
+  _root_.noble_kernel.types.EffId.Insts.CoreCmpPartialEqEffId.eq left right
 
 def noble_kernel.types.EffSet.empty : Result noble_kernel.types.EffSet :=
   _root_.noble_kernel.types.EffSet.empty
@@ -1342,9 +1638,6 @@ def noble_kernel.types.Ty.program
 
 def noble_kernel.types.Ty.size (ty : noble_kernel.types.Ty) : Result (Option U32) :=
   _root_.noble_kernel.types.Ty.size (toTy ty)
-
-def noble_kernel.types.Ty.is_data (ty : noble_kernel.types.Ty) : Result Bool :=
-  _root_.noble_kernel.types.Ty.is_data (toTy ty)
 
 def noble_kernel.untrusted.CANDIDATE_FORMAT : Result U32 :=
   ok _root_.noble_kernel.untrusted.CANDIDATE_FORMAT

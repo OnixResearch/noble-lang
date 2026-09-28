@@ -93,6 +93,7 @@ pub(super) fn value_type(
         | noble_kernel::types::Ty::Evidence
         | noble_kernel::types::Ty::Certified
         | noble_kernel::types::Ty::Pair(_, _)
+        | noble_kernel::types::Ty::Nominal(_, _)
         | noble_kernel::types::Ty::Program(_, _, _) => Err(crate::Diagnostic::Unsupported),
     }
 }

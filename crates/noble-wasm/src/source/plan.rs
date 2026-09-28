@@ -17,6 +17,12 @@ pub(super) enum Action {
     Word(u32),
     Quote(u32, u32, u32),
     Call(usize, u64),
+    NominalNew(u64, u32, u32),
+    NominalInto(u64, u32, u32),
+    NominalLeft(u64, u32, u32),
+    NominalRight(u64, u32, u32),
+    NominalMatch(u64, u32, u32, u32, u32),
+    EmitBound(u32),
 }
 
 pub(super) struct Operation {
@@ -48,6 +54,9 @@ pub(super) struct Layout {
     pub(super) input_types: alloc::vec::Vec<u32>,
     pub(super) output_types: alloc::vec::Vec<u32>,
     pub(super) text_witness: u32,
+    pub(super) declared_modules: bool,
+    pub(super) has_nominals: bool,
+    pub(super) has_bound_emit: bool,
 }
 
 struct Arena {
@@ -135,6 +144,9 @@ fn start(
         input_types: alloc::vec::Vec::new(),
         output_types: alloc::vec::Vec::new(),
         text_witness: 0,
+        declared_modules: submission.environment.declared_modules,
+        has_nominals: !submission.environment.nominals.is_empty(),
+        has_bound_emit: !submission.environment.bound_adapters.is_empty(),
     };
     Ok((layout, arenas))
 }

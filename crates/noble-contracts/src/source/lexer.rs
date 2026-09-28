@@ -24,6 +24,7 @@ pub(super) struct Scanner<'a> {
     source: &'a [u8],
     at: usize,
     full: crate::Span,
+    declared: bool,
 }
 
 impl<'a> Scanner<'a> {
@@ -49,7 +50,17 @@ impl<'a> Scanner<'a> {
             source: source_bytes,
             at: 0,
             full,
+            declared: false,
         })
+    }
+
+    pub fn new_declared(
+        source_bytes: &'a [u8],
+        meter: &mut crate::Meter,
+    ) -> Result<Self, crate::Diagnostic> {
+        let mut scanner = attempt!(Self::new(source_bytes, meter));
+        scanner.declared = true;
+        Ok(scanner)
     }
 
     pub fn next(&mut self, meter: &mut crate::Meter) -> Result<Option<Token>, crate::Diagnostic> {
@@ -152,7 +163,7 @@ impl<'a> Scanner<'a> {
             Some(bytes) => bytes,
             None => return Err(crate::internal(span)),
         };
-        tokens::classify(bytes, span, meter)
+        tokens::classify(bytes, span, meter, self.declared)
     }
 
     fn span(&self, start: usize) -> Result<crate::Span, crate::Diagnostic> {

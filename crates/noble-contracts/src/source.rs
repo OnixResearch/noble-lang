@@ -5,6 +5,7 @@
 //! one shared inference term. Every executable specialization is subsequently
 //! checked by the kernel against its exact concrete environment contract.
 
+mod declared;
 mod emission;
 mod inference;
 mod lexer;
@@ -13,10 +14,13 @@ mod preflight;
 mod preparation;
 mod resolution;
 
+pub use declared::{BoundOperation, ModuleKind, ModulePrepared, ModuleSession};
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Stage {
     Parse,
     Resolve,
+    Link,
     Check,
     Acceptance,
 }
@@ -39,7 +43,7 @@ impl Error {
     }
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Target {
     Builtin(u32),
     Named(u32),
@@ -80,10 +84,11 @@ impl Tree {
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 struct Named {
     name: alloc::string::String,
     identity: u64,
+    owner: Option<u64>,
     tree: Tree,
 }
 
@@ -122,6 +127,7 @@ pub struct Session {
     generation: u64,
     hosts: bool,
     bindings: Option<crate::component::Bindings>,
+    declared: Option<declared::Context>,
 }
 
 impl Default for Session {
@@ -138,6 +144,7 @@ impl Session {
             generation: 0,
             hosts: true,
             bindings: None,
+            declared: None,
         }
     }
     pub const fn without_test_hosts() -> Self {
@@ -147,6 +154,7 @@ impl Session {
             generation: 0,
             hosts: false,
             bindings: None,
+            declared: None,
         }
     }
     pub const fn generation(&self) -> u64 {
@@ -161,6 +169,9 @@ impl Session {
     }
 
     const fn effect_universe(&self) -> u64 {
+        if self.declared.is_some() {
+            return 1;
+        }
         match &self.bindings {
             Some(bindings) => bindings.effects,
             None => {
@@ -264,6 +275,7 @@ pub(crate) fn environment() -> Result<noble_kernel::contracts::Env, crate::Diagn
     });
     env.kinds.push(noble_kernel::contracts::Behavior::Named);
     env.deps.push(alloc::vec::Vec::new());
+    env.definition_owners.push(None);
     env.effects.push(noble_kernel::types::EffId(1));
     Ok(env)
 }

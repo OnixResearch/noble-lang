@@ -161,6 +161,20 @@ pub(super) fn check(
     if let Some(problem) = failure {
         return Err(problem);
     }
+    index = 0;
+    while index < submission.environment.nominals.len() {
+        let shape = &submission.environment.nominals[index].shape;
+        match nominal_shape(shape, work) {
+            Ok(()) => index += 1,
+            Err(problem) => {
+                failure = Some(problem);
+                break;
+            }
+        }
+    }
+    if let Some(problem) = failure {
+        return Err(problem);
+    }
     attempt!(expected(
         &submission.request.expected,
         submission.request.limits,
@@ -184,5 +198,22 @@ pub(super) fn check(
     match failure {
         Some(problem) => Err(problem),
         None => Ok(()),
+    }
+}
+
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; pinned March and August const trials reject concrete::ty as nonconst (E0015) for both opaque and variant shapes; reassess when concrete::ty becomes const-capable."
+)]
+fn nominal_shape(
+    shape: &noble_kernel::types::NominalShape,
+    work: &mut super::Work,
+) -> Result<(), crate::Diagnostic> {
+    match shape {
+        noble_kernel::types::NominalShape::Opaque(ty) => concrete::ty(ty, TYPE_LIMIT, work),
+        noble_kernel::types::NominalShape::Variant(left, right) => {
+            attempt!(concrete::ty(left, TYPE_LIMIT, work));
+            concrete::ty(right, TYPE_LIMIT, work)
+        }
     }
 }

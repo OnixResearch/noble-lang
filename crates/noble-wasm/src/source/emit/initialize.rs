@@ -15,16 +15,32 @@ fn atom(
     witness: u32,
 ) -> Result<(), crate::Diagnostic> {
     let action = operation.action;
-    let (tag, value, child) = match action {
-        super::super::plan::Action::I64(value) => (1, value, None),
-        super::super::plan::Action::Bool(value) => (4, i64::from(value), None),
-        super::super::plan::Action::Unit => (5, 0, None),
-        super::super::plan::Action::Program(child) => (3, 0, Some(child)),
-        super::super::plan::Action::Word(definition) => (2, i64::from(definition), None),
-        super::super::plan::Action::Quote(_, _, _) => (2, 8, None),
+    let (tag, value, child, ordinal) = match action {
+        super::super::plan::Action::I64(value) => (1, value, None, 0),
+        super::super::plan::Action::Bool(value) => (4, i64::from(value), None, 0),
+        super::super::plan::Action::Unit => (5, 0, None, 0),
+        super::super::plan::Action::Program(child) => (3, 0, Some(child), 0),
+        super::super::plan::Action::Word(definition) => (2, i64::from(definition), None, 0),
+        super::super::plan::Action::Quote(_, _, _) => (2, 8, None, 0),
         super::super::plan::Action::Call(_, identity) => {
-            (15, i64::from_le_bytes(identity.to_le_bytes()), None)
+            (15, i64::from_le_bytes(identity.to_le_bytes()), None, 0)
         }
+        super::super::plan::Action::NominalNew(module, ordinal, _) => {
+            (26, i64::from_le_bytes(module.to_le_bytes()), None, ordinal)
+        }
+        super::super::plan::Action::NominalInto(module, ordinal, _) => {
+            (27, i64::from_le_bytes(module.to_le_bytes()), None, ordinal)
+        }
+        super::super::plan::Action::NominalLeft(module, ordinal, _) => {
+            (28, i64::from_le_bytes(module.to_le_bytes()), None, ordinal)
+        }
+        super::super::plan::Action::NominalRight(module, ordinal, _) => {
+            (29, i64::from_le_bytes(module.to_le_bytes()), None, ordinal)
+        }
+        super::super::plan::Action::NominalMatch(module, ordinal, _, _, _) => {
+            (30, i64::from_le_bytes(module.to_le_bytes()), None, ordinal)
+        }
+        super::super::plan::Action::EmitBound(slot) => (31, i64::from(slot), None, 0),
         super::super::plan::Action::Text(address, length) => {
             return text_atom(out, (address, length), witness);
         }
@@ -38,7 +54,7 @@ fn atom(
     }
     attempt!(out.append(b" (i32.const 0) (i32.const 0) "));
     attempt!(out.i32(tag));
-    if tag == 2 || tag == 15 {
+    if tag == 2 || tag == 15 || tag.wrapping_sub(26) <= 5 {
         attempt!(out.append(b" "));
         attempt!(out.i32(operation.input));
         attempt!(out.append(b" "));
@@ -48,7 +64,8 @@ fn atom(
     } else {
         attempt!(out.append(b" (i32.const 0) (i32.const 0) (i32.const 0)"));
     }
-    attempt!(out.append(b" (i32.const 0)"));
+    attempt!(out.append(b" "));
+    attempt!(out.i32(ordinal));
     out.append(b"))\n")
 }
 

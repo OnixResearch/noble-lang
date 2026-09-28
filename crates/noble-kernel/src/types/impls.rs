@@ -7,7 +7,6 @@
 //! yet. These bodies call the concrete methods instead: an element clone goes
 //! through the local `Clone` impl and nested formatting goes through the local
 //! `Debug` impl, so the translated module stays acyclic.
-
 /// Deep-copy one type stack, one element at a time.
 ///
 /// The extraction treats this helper as an assumption: Aeneas would
@@ -54,6 +53,22 @@ impl Clone for crate::types::Ty {
                 effects.clone(),
             ),
             crate::types::Ty::Resource(kind) => crate::types::Ty::Resource(*kind),
+            crate::types::Ty::Nominal(id, shape) => crate::types::Ty::Nominal(
+                *id,
+                alloc::boxed::Box::new(match &**shape {
+                    crate::types::NominalShape::Opaque(representation) => {
+                        crate::types::NominalShape::Opaque(alloc::boxed::Box::new(
+                            (**representation).clone(),
+                        ))
+                    }
+                    crate::types::NominalShape::Variant(left, right) => {
+                        crate::types::NominalShape::Variant(
+                            alloc::boxed::Box::new((**left).clone()),
+                            alloc::boxed::Box::new((**right).clone()),
+                        )
+                    }
+                }),
+            ),
         }
     }
 }
@@ -89,67 +104,74 @@ fn push_type_program(
     reason = "Owner: noble-maintainers; ty_eq returns false for constructor, stack-length, effect or local-work mismatches; unequal types and exhausted comparisons must remain boolean results rather than panic paths."
 )]
 fn ty_eq(left: &crate::types::Ty, right: &crate::types::Ty) -> bool {
-    let mut work: alloc::vec::Vec<(crate::types::Ty, crate::types::Ty)> =
-        alloc::vec::Vec::with_capacity(8);
+    let mut work = alloc::vec::Vec::with_capacity(8);
     work.push((left.clone(), right.clone()));
-    let mut is_mismatch = false;
     while !work.is_empty() {
         if work.len() >= super::WORK_CAP {
-            is_mismatch = true;
-            break;
+            return false;
         }
-        let pair = work.pop();
-        let is_step_equal = match pair {
-            Some((first, second)) => match (first, second) {
-                (crate::types::Ty::Unit, crate::types::Ty::Unit) => true,
-                (crate::types::Ty::Bool, crate::types::Ty::Bool) => true,
-                (crate::types::Ty::I64, crate::types::Ty::I64) => true,
-                (crate::types::Ty::Text, crate::types::Ty::Text) => true,
-                (crate::types::Ty::Syntax, crate::types::Ty::Syntax) => true,
-                (crate::types::Ty::Contract, crate::types::Ty::Contract) => true,
-                (crate::types::Ty::Evidence, crate::types::Ty::Evidence) => true,
-                (crate::types::Ty::Certified, crate::types::Ty::Certified) => true,
-                (
-                    crate::types::Ty::Resource(first_kind),
-                    crate::types::Ty::Resource(second_kind),
-                ) => first_kind == second_kind,
-                (
-                    crate::types::Ty::Pair(first_head, first_tail),
-                    crate::types::Ty::Pair(second_head, second_tail),
-                )
-                | (
-                    crate::types::Ty::Sum(first_head, first_tail),
-                    crate::types::Ty::Sum(second_head, second_tail),
-                ) => {
-                    work.push((*first_head, *second_head));
-                    work.push((*first_tail, *second_tail));
-                    true
-                }
-                (crate::types::Ty::List(first_item), crate::types::Ty::List(second_item)) => {
-                    work.push((*first_item, *second_item));
-                    true
-                }
-                (
-                    crate::types::Ty::Program(a_in, a_out, a_eff),
-                    crate::types::Ty::Program(b_in, b_out, b_eff),
-                ) => {
-                    let (next, is_program_equal) =
-                        push_type_program(work, &a_in, &a_out, &b_in, &b_out);
-                    work = next;
-                    is_program_equal && a_eff == b_eff
-                }
-                _ => false,
-            },
-            None => true,
+        let Some((first, second)) = work.pop() else {
+            break;
         };
-        if !is_step_equal {
-            is_mismatch = true;
+        match (first, second) {
+            (crate::types::Ty::Unit, crate::types::Ty::Unit)
+            | (crate::types::Ty::Bool, crate::types::Ty::Bool)
+            | (crate::types::Ty::I64, crate::types::Ty::I64)
+            | (crate::types::Ty::Text, crate::types::Ty::Text)
+            | (crate::types::Ty::Syntax, crate::types::Ty::Syntax)
+            | (crate::types::Ty::Contract, crate::types::Ty::Contract)
+            | (crate::types::Ty::Evidence, crate::types::Ty::Evidence)
+            | (crate::types::Ty::Certified, crate::types::Ty::Certified) => {}
+            (crate::types::Ty::Resource(first_kind), crate::types::Ty::Resource(second_kind))
+                if first_kind == second_kind => {}
+            (
+                crate::types::Ty::Nominal(first_id, first_shape),
+                crate::types::Ty::Nominal(second_id, second_shape),
+            ) if first_id == second_id => match (*first_shape, *second_shape) {
+                (
+                    crate::types::NominalShape::Opaque(first),
+                    crate::types::NominalShape::Opaque(second),
+                ) => work.push((*first, *second)),
+                (
+                    crate::types::NominalShape::Variant(first_left, first_right),
+                    crate::types::NominalShape::Variant(second_left, second_right),
+                ) => {
+                    work.push((*first_right, *second_right));
+                    work.push((*first_left, *second_left));
+                }
+                _ => return false,
+            },
+            (
+                crate::types::Ty::Pair(first_head, first_tail),
+                crate::types::Ty::Pair(second_head, second_tail),
+            )
+            | (
+                crate::types::Ty::Sum(first_head, first_tail),
+                crate::types::Ty::Sum(second_head, second_tail),
+            ) => {
+                work.push((*first_head, *second_head));
+                work.push((*first_tail, *second_tail));
+            }
+            (crate::types::Ty::List(first_item), crate::types::Ty::List(second_item)) => {
+                work.push((*first_item, *second_item));
+            }
+            (
+                crate::types::Ty::Program(a_in, a_out, a_eff),
+                crate::types::Ty::Program(b_in, b_out, b_eff),
+            ) if a_eff == b_eff => {
+                let (next, is_program_equal) =
+                    push_type_program(work, &a_in, &a_out, &b_in, &b_out);
+                work = next;
+                if !is_program_equal {
+                    return false;
+                }
+            }
+            _ => return false,
         }
     }
-    !is_mismatch
+    true
 }
 
-/// Equality: the explicit pairwise walk above.
 impl PartialEq for crate::types::Ty {
     fn eq(&self, other: &crate::types::Ty) -> bool {
         ty_eq(self, other)
@@ -249,6 +271,25 @@ impl core::fmt::Debug for crate::types::Ty {
             crate::types::Ty::Resource(kind) => {
                 attempt!(core::fmt::Formatter::write_str(f, "Resource("));
                 attempt!(core::fmt::Debug::fmt(kind, f));
+                core::fmt::Formatter::write_str(f, ")")
+            }
+            crate::types::Ty::Nominal(id, shape) => {
+                attempt!(core::fmt::Formatter::write_str(f, "Nominal("));
+                attempt!(core::fmt::Debug::fmt(id, f));
+                attempt!(core::fmt::Formatter::write_str(f, ", "));
+                match &**shape {
+                    crate::types::NominalShape::Opaque(representation) => {
+                        attempt!(core::fmt::Formatter::write_str(f, "Opaque("));
+                        attempt!(core::fmt::Debug::fmt(&**representation, f));
+                    }
+                    crate::types::NominalShape::Variant(left, right) => {
+                        attempt!(core::fmt::Formatter::write_str(f, "Variant("));
+                        attempt!(core::fmt::Debug::fmt(&**left, f));
+                        attempt!(core::fmt::Formatter::write_str(f, ", "));
+                        attempt!(core::fmt::Debug::fmt(&**right, f));
+                    }
+                }
+                attempt!(core::fmt::Formatter::write_str(f, ")"));
                 core::fmt::Formatter::write_str(f, ")")
             }
         }

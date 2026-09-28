@@ -66,13 +66,79 @@ impl Encoding {
                 literal(&mut self.out, lit, body, node)
             }
             noble_kernel::untrusted::Node::Invocation { def, .. } => {
-                if def.0 < 24 {
+                if def.0 < super::super::builtin_count(&submission.environment) {
                     attempt!(self.out.append(b"b"));
                     attempt!(self.out.number(u64::from(def.0)));
                 } else {
-                    attempt!(self.out.append(b"d"));
-                    let index = attempt!(super::definition_index(submission, *def));
-                    attempt!(self.out.number(submission.definitions[index].identity));
+                    match submission.environment.kind(*def) {
+                        Some(noble_kernel::contracts::Behavior::Named) => {
+                            attempt!(self.out.append(b"d"));
+                            let index = attempt!(super::definition_index(submission, *def));
+                            attempt!(self.out.number(submission.definitions[index].identity));
+                        }
+                        Some(noble_kernel::contracts::Behavior::BoundEmit(slot)) => {
+                            let mut found = None;
+                            let mut at = 0usize;
+                            while at < submission.environment.bound_adapters.len() {
+                                let row = &submission.environment.bound_adapters[at];
+                                if row.definition == *def && row.adapter_slot == slot {
+                                    found = Some(row);
+                                    break;
+                                }
+                                at += 1;
+                            }
+                            let binding = match found {
+                                Some(binding) => binding,
+                                None => return Err(crate::Diagnostic::Invalid),
+                            };
+                            attempt!(work.entries(binding.adapter_identity.len()));
+                            attempt!(self.out.append(b"a"));
+                            attempt!(self.out.number(u64::from(slot)));
+                            attempt!(self.out.append(b":"));
+                            attempt!(self.out.index(binding.adapter_identity.len()));
+                            attempt!(self.out.append(b":"));
+                            attempt!(self.out.append(binding.adapter_identity.as_bytes()));
+                        }
+                        Some(kind) => {
+                            let (tag, id) = match kind {
+                                noble_kernel::contracts::Behavior::NominalNew(id) => (b'N', id),
+                                noble_kernel::contracts::Behavior::NominalInto(id) => (b'I', id),
+                                noble_kernel::contracts::Behavior::NominalLeft(id) => (b'L', id),
+                                noble_kernel::contracts::Behavior::NominalRight(id) => (b'R', id),
+                                noble_kernel::contracts::Behavior::NominalMatch(id) => (b'M', id),
+                                noble_kernel::contracts::Behavior::Dup
+                                | noble_kernel::contracts::Behavior::Drop
+                                | noble_kernel::contracts::Behavior::Swap
+                                | noble_kernel::contracts::Behavior::Dip
+                                | noble_kernel::contracts::Behavior::Arith
+                                | noble_kernel::contracts::Behavior::Equals
+                                | noble_kernel::contracts::Behavior::Quote
+                                | noble_kernel::contracts::Behavior::Compose
+                                | noble_kernel::contracts::Behavior::Run
+                                | noble_kernel::contracts::Behavior::Reflect
+                                | noble_kernel::contracts::Behavior::Unit
+                                | noble_kernel::contracts::Behavior::Pair
+                                | noble_kernel::contracts::Behavior::Unpair
+                                | noble_kernel::contracts::Behavior::Inl
+                                | noble_kernel::contracts::Behavior::Inr
+                                | noble_kernel::contracts::Behavior::Case
+                                | noble_kernel::contracts::Behavior::If
+                                | noble_kernel::contracts::Behavior::Nil
+                                | noble_kernel::contracts::Behavior::Cons
+                                | noble_kernel::contracts::Behavior::ListCase
+                                | noble_kernel::contracts::Behavior::TestEmit
+                                | noble_kernel::contracts::Behavior::Named
+                                | noble_kernel::contracts::Behavior::BoundEmit(_) => {
+                                    return Err(crate::Diagnostic::Invalid);
+                                }
+                            };
+                            attempt!(self.out.append(&[tag]));
+                            attempt!(self.out.number(id.module));
+                            attempt!(self.out.append(b":"));
+                            attempt!(self.out.number(u64::from(id.ordinal)));
+                        }
+                        None => return Err(crate::Diagnostic::Invalid),
+                    }
                 }
                 self.out.append(b";")
             }

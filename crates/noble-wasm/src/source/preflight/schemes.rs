@@ -29,6 +29,7 @@ const fn pattern_children(
         | noble_kernel::shapes::Pattern::Evidence
         | noble_kernel::shapes::Pattern::Certified
         | noble_kernel::shapes::Pattern::Resource(_)
+        | noble_kernel::shapes::Pattern::Nominal(_, _)
         | noble_kernel::shapes::Pattern::Var(_)
         | noble_kernel::shapes::Pattern::StackVar(_) => Ok(0),
     }
@@ -96,13 +97,31 @@ fn pattern_at<'a>(
     }
 }
 
-fn pattern_child_count(
-    root: &noble_kernel::shapes::Pattern,
-    path: &[usize],
-    work: &mut super::super::Work,
-) -> Result<usize, crate::Diagnostic> {
-    attempt!(work.entries(path.len().saturating_add(1)));
-    pattern_children(attempt!(pattern_at(root, path)))
+impl super::super::Work {
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-maintainers; this charged pattern lookup traverses borrowed boxed and vector children, validates nominal types with the mutable shared meter, and cannot be const."
+    )]
+    fn pattern_child_count(
+        &mut self,
+        root: &noble_kernel::shapes::Pattern,
+        path: &[usize],
+    ) -> Result<usize, crate::Diagnostic> {
+        attempt!(self.entries(path.len().saturating_add(1)));
+        let node = attempt!(pattern_at(root, path));
+        if let noble_kernel::shapes::Pattern::Nominal(_, shape) = node {
+            match shape.as_ref() {
+                noble_kernel::types::NominalShape::Opaque(ty) => {
+                    attempt!(super::concrete::ty(ty, super::TYPE_LIMIT, self));
+                }
+                noble_kernel::types::NominalShape::Variant(left, right) => {
+                    attempt!(super::concrete::ty(left, super::TYPE_LIMIT, self));
+                    attempt!(super::concrete::ty(right, super::TYPE_LIMIT, self));
+                }
+            }
+        }
+        pattern_children(node)
+    }
 }
 
 #[expect(
@@ -115,7 +134,7 @@ fn pattern_step(
     path: &mut alloc::vec::Vec<usize>,
     work: &mut super::super::Work,
 ) -> Result<bool, crate::Diagnostic> {
-    let children = attempt!(pattern_child_count(root, path, work));
+    let children = attempt!(work.pattern_child_count(root, path));
     if children != 0 {
         if path.len() >= super::PATH_LIMIT {
             return Err(crate::Diagnostic::Exhausted);
@@ -126,7 +145,7 @@ fn pattern_step(
     let mut sibling = None;
     let mut failure = None;
     while let Some(child) = path.pop() {
-        match pattern_child_count(root, path, work) {
+        match work.pattern_child_count(root, path) {
             Ok(count) => {
                 let next_child = child.saturating_add(1);
                 if next_child < count {

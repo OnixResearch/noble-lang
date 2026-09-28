@@ -231,6 +231,10 @@ def core.num.U64.checked_shl (value : U64) (shift : U32) : Result (Option U64) :
 def core.num.U32.saturating_mul (left right : U32) : Result U32 :=
   UScalar.tryMk .U32 (min U32.max (left.val * right.val))
 
+@[rust_fun "core::num::{usize}::saturating_mul"]
+def core.num.Usize.saturating_mul (left right : Usize) : Result Usize :=
+  _root_.noble_kernel.core.num.Usize.saturating_mul left right
+
 @[rust_fun
   "core::ops::range::{core::clone::Clone<core::ops::range::Range<@Idx>>}::clone"]
 def core.ops.range.Range.Insts.CoreCloneClone.clone {Idx : Type}
@@ -322,10 +326,38 @@ def core.option.Option.Insts.CoreFmtDebug.fmt
 def core.option.Option.as_ref {T : Type} (value : Option T) : Result (Option T) :=
   ok value
 
+/-- A mutable borrow cannot change the `Option` discriminant. If there was
+no borrowed payload, or no replacement is returned, preserve the receiver. -/
+@[rust_fun "core::option::{core::option::Option<@T>}::as_mut"]
+def core.option.Option.as_mut {T : Type} (value : Option T) :
+    Result (Option T × (Option T → Option T)) :=
+  ok (value, fun replacement =>
+    match value, replacement with
+    | some _, some updated => some updated
+    | _, _ => value)
+
+@[rust_fun "core::option::{core::option::Option<@T>}::is_some_and"]
+def core.option.Option.is_some_and {T F : Type}
+    (inst : core.ops.function.FnOnce F T Bool)
+    (value : Option T) (predicate : F) : Result Bool :=
+  match value with
+  | none => ok false
+  | some payload => inst.call_once predicate payload
+
 @[rust_fun "core::option::{core::option::Option<@T>}::map"]
 def core.option.Option.map {T U F : Type} (inst : core.ops.function.FnOnce F T U)
     (value : Option T) (function : F) : Result (Option U) :=
   _root_.noble_kernel.core.option.Option.map inst value function
+
+@[rust_fun "core::option::{core::option::Option<@T>}::ok_or_else"]
+def core.option.Option.ok_or_else {T E F : Type}
+    (inst : core.ops.function.FnOnce F Unit E)
+    (value : Option T) (function : F) : Result (core.result.Result T E) :=
+  match value with
+  | some payload => ok (.Ok payload)
+  | none => do
+    let error ← inst.call_once function ()
+    ok (.Err error)
 
 @[rust_fun "core::option::{core::option::Option<@T>}::as_deref"]
 def core.option.Option.as_deref {T U : Type} (inst : core.ops.deref.Deref T U)
@@ -348,6 +380,29 @@ def core.option.Option.or {T : Type} (value fallback : Option T) : Result (Optio
   | none => ok fallback
   | some _ => ok value
 
+@[rust_fun
+  "core::option::{core::ops::try_trait::Try<core::option::Option<@T>>}::branch"]
+def core.option.Option.Insts.CoreOpsTry_traitTry.branch {T : Type}
+    (value : Option T) :
+    Result (core.ops.control_flow.ControlFlow (Option core.convert.Infallible) T) :=
+  match value with
+  | some payload => ok (.Continue payload)
+  | none => ok (.Break none)
+
+@[rust_fun
+  "core::option::{core::ops::try_trait::FromResidual<core::option::Option<@T>, core::option::Option<core::convert::Infallible>>}::from_residual"]
+def core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionInfallible.from_residual
+    (T : Type) (residual : Option core.convert.Infallible) : Result (Option T) :=
+  match residual with
+  | none => ok none
+  | some impossible => impossible.casesOn
+
+@[rust_fun
+  "core::option::{core::option::Option<core::option::Option<@T>>}::flatten"]
+def core.option.OptionOption.flatten {T : Type} (value : Option (Option T)) :
+    Result (Option T) :=
+  ok value.join
+
 @[rust_fun "core::option::{core::option::Option<&'0 @T>}::copied"]
 def core.option.OptionShared0T.copied {T : Type} (inst : core.marker.Copy T)
     (value : Option T) : Result (Option T) :=
@@ -368,6 +423,11 @@ def Box.Insts.CoreFmtDebug.fmt {T : Type} (_ : Type)
     Result (core.result.Result Unit core.fmt.Error × core.fmt.Formatter) :=
   inst.fmt value formatter
 
+@[rust_fun "alloc::boxed::{core::convert::AsRef<Box<@T>, @T>}::as_ref"]
+def Box.Insts.CoreConvertAsRef.as_ref {T : Type} (_A : Type)
+    (value : T) : Result T :=
+  ok value
+
 @[rust_fun "core::option::{core::clone::Clone<core::option::Option<@T>>}::clone"]
 def core.option.Option.Insts.CoreCloneClone.clone
     {T : Type} (inst : core.clone.Clone T) (value : Option T) : Result (Option T) :=
@@ -378,10 +438,29 @@ def core.result.Result.is_err
     {T E : Type} (value : core.result.Result T E) : Result Bool :=
   _root_.noble_kernel.core.result.Result.is_err value
 
+@[rust_fun "core::result::{core::result::Result<@T, @E>}::is_ok_and"]
+def core.result.Result.is_ok_and {T E F : Type}
+    (inst : core.ops.function.FnOnce F T Bool)
+    (value : core.result.Result T E) (predicate : F) : Result Bool :=
+  match value with
+  | .Ok payload => inst.call_once predicate payload
+  | .Err _ => pure false
+
 @[rust_fun "core::result::{core::result::Result<@T, @E>}::ok"]
 def core.result.Result.ok
     {T E : Type} (value : core.result.Result T E) : Result (Option T) :=
   _root_.noble_kernel.core.result.Result.ok value
+
+@[rust_fun "core::result::{core::result::Result<@T, @E>}::map"]
+def core.result.Result.map {T E U F : Type}
+    (inst : core.ops.function.FnOnce F T U)
+    (value : core.result.Result T E) (function : F) :
+    Result (core.result.Result U E) :=
+  match value with
+  | .Err error => pure (.Err error)
+  | .Ok payload => do
+    let mapped ← inst.call_once function payload
+    pure (.Ok mapped)
 
 /-- Evaluate `Default` before replacing the destination, preserving failure,
 divergence, and any effects of the supplied implementation. -/
@@ -408,6 +487,50 @@ def core.slice.Slice.first {T : Type} (slice : Slice T) : Result (Option T) :=
 @[rust_fun "core::slice::{[@T]}::last"]
 def core.slice.Slice.last {T : Type} (slice : Slice T) : Result (Option T) :=
   _root_.noble_kernel.core.slice.Slice.last slice
+
+private def prefixEq {T : Type} (inst : core.cmp.PartialEq T T) {n m : Nat} :
+    ListN T n → ListN T m → Result Bool
+  | _, .nil => ok true
+  | .nil, .cons _ _ => ok false
+  | .cons left lefts, .cons right rights => do
+    if ← inst.eq left right then prefixEq inst lefts rights else ok false
+
+@[rust_fun "core::slice::{[@T]}::starts_with"]
+def core.slice.Slice.starts_with {T : Type} (inst : core.cmp.PartialEq T T)
+    (value needle : Slice T) : Result Bool :=
+  prefixEq inst value.list needle.list
+
+/-- A stable insertion order is one of the orders permitted by Rust's
+`sort_unstable`: the API does not specify the order of equal keys. Invoke the
+supplied `Ord` comparison only until the insertion point and propagate failure.
+The length witness prevents a sorted slice from changing storage size. -/
+private def insertSorted {T : Type} (inst : core.cmp.Ord T) (item : T) :
+    (items : List T) → Result { sorted : List T // sorted.length = items.length + 1 }
+  | [] => ok ⟨[item], by simp⟩
+  | first :: rest => do
+    let order ← inst.cmp item first
+    if order == .gt then
+      let inserted ← insertSorted inst item rest
+      ok ⟨first :: inserted.val, by simp [inserted.property]⟩
+    else
+      ok ⟨item :: first :: rest, by simp⟩
+
+private def sortItems {T : Type} (inst : core.cmp.Ord T) {n : Nat} :
+    (items : ListN T n) → Result { sorted : List T // sorted.length = n }
+  | .nil => ok ⟨[], rfl⟩
+  | .cons first rest => do
+    let sorted ← sortItems inst rest
+    let inserted ← insertSorted inst first sorted.val
+    ok ⟨inserted.val, by simp [inserted.property, sorted.property]⟩
+
+@[rust_fun "core::slice::{[@T]}::sort_unstable"]
+def core.slice.Slice.sort_unstable {T : Type} (inst : core.cmp.Ord T)
+    (slice : Slice T) : Result (Slice T) :=
+  if slice.length ≤ 1 then
+    ok slice
+  else do
+    let sorted ← sortItems inst slice.list
+    ok (.from sorted.val (by rw [sorted.property]; exact slice.bound))
 
 /-- Traverse existing slice storage without materializing another list. Every
 callback receives the state returned by its predecessor; skipped items do not
@@ -459,6 +582,16 @@ def core.slice.iter.Iter.Insts.CoreIterTraitsIteratorIteratorSharedAT.any
   ok (result, { iterator with i := cursor })
 
 @[rust_fun
+  "core::slice::iter::{core::iter::traits::iterator::Iterator<core::slice::iter::Iter<'a, @T>, &'a @T>}::all"]
+def core.slice.iter.Iter.Insts.CoreIterTraitsIteratorIteratorSharedAT.all
+    {T F : Type} (inst : core.ops.function.FnMut F T Bool)
+    (iterator : core.slice.iter.Iter T) (function : F) :
+    Result (Bool × core.slice.iter.Iter T) := do
+  let (result, cursor) ←
+    scanIterator inst false iterator.slice.list iterator.i iterator.i function
+  ok (result, { iterator with i := cursor })
+
+@[rust_fun
   "core::slice::iter::{core::iter::traits::iterator::Iterator<core::slice::iter::Iter<'a, @T>, &'a @T>}::position"]
 def core.slice.iter.Iter.Insts.CoreIterTraitsIteratorIteratorSharedAT.position
     {T P : Type} (inst : core.ops.function.FnMut P T Bool)
@@ -482,6 +615,14 @@ def core.str.iter.Bytes.Insts.CoreIterTraitsIteratorIteratorU8.all
   let (result, cursor) ←
     scanIterator inst false iterator.iter.slice.list iterator.iter.i iterator.iter.i function
   ok (result, { iter := { iterator.iter with i := cursor } })
+
+@[rust_fun
+  "core::str::iter::{core::iter::traits::iterator::Iterator<core::str::iter::Bytes<'0>, u8>}::next"]
+def core.str.iter.Bytes.Insts.CoreIterTraitsIteratorIteratorU8.next
+    (iterator : core.str.iter.Bytes) :
+    Result (Option U8 × core.str.iter.Bytes) := do
+  let (value, iter) ← core.slice.iter.IteratorSliceIter.next iterator.iter
+  ok (value, { iter := iter })
 
 /-- A returned mutable borrow updates only the last element. As in Aeneas's
 `get_mut` boundary, returning `none` through the backward function leaves the
@@ -514,6 +655,55 @@ def alloc.vec.Vec.truncate {T : Type} (A : Type) (vector : alloc.vec.Vec T)
 def alloc.vec.Vec.as_slice {T : Type} (A : Type) (vector : alloc.vec.Vec T) :
     Result (Slice T) :=
   _root_.noble_kernel.alloc.vec.Vec.as_slice A vector
+
+/-- The `FnMut` callback is threaded left to right, including over elements
+which are removed. Its returned closure state affects every later decision. -/
+private def retainedItems {T F : Type} (inst : core.ops.function.FnMut F T Bool)
+    (function : F) {n : Nat} :
+    (items : ListN T n) → Result { retained : List T // retained.length ≤ n }
+  | .nil => ok ⟨[], by simp⟩
+  | .cons item rest => do
+    let (keep, function) ← inst.call_mut function item
+    let retained ← retainedItems inst function rest
+    if keep then
+      ok ⟨item :: retained.val, by have := retained.property; simp; omega⟩
+    else
+      ok ⟨retained.val, by have := retained.property; simp; omega⟩
+
+@[rust_fun "alloc::vec::{alloc::vec::Vec<@T>}::retain"]
+def alloc.vec.Vec.retain {T : Type} (_A : Type) {F : Type}
+    (inst : core.ops.function.FnMut F T Bool)
+    (vector : alloc.vec.Vec T) (function : F) : Result (alloc.vec.Vec T) := do
+  let retained ← retainedItems inst function vector.slice.list
+  ok (.from retained.val (by
+    have h := retained.property
+    have bound := vector.slice.bound
+    omega))
+
+private def generatedItems {T F : Type} (inst : core.ops.function.FnMut F Unit T)
+    (function : F) :
+    (amount : Nat) → Result { generated : List T // generated.length = amount }
+  | 0 => ok ⟨[], rfl⟩
+  | amount + 1 => do
+    let (item, function) ← inst.call_mut function ()
+    let generated ← generatedItems inst function amount
+    ok ⟨item :: generated.val, by simp [generated.property]⟩
+
+@[rust_fun "alloc::vec::{alloc::vec::Vec<@T>}::resize_with"]
+def alloc.vec.Vec.resize_with {T : Type} (_A : Type) {F : Type}
+    (inst : core.ops.function.FnMut F Unit T)
+    (vector : alloc.vec.Vec T) (length : Usize) (function : F) :
+    Result (alloc.vec.Vec T) :=
+  if length.val < vector.val.length then
+    _root_.noble_kernel.alloc.vec.Vec.truncate T vector length
+  else if length.val = vector.val.length then
+    ok vector
+  else do
+    let generated ← generatedItems inst function (length.val - vector.val.length)
+    ok (.from (vector.val ++ generated.val) (by
+      have generatedLength := generated.property
+      simp only [List.length_append, generatedLength]
+      scalar_tac))
 
 @[rust_fun "alloc::vec::{alloc::vec::Vec<@T>}::pop"]
 def alloc.vec.Vec.pop {T : Type} (A : Type) (vector : alloc.vec.Vec T) :
@@ -763,6 +953,51 @@ def core.ops.range.RangeFromUsize.Insts.CoreSliceIndexSliceIndexStrStr.get_unche
   core.ops.range.RangeUsize.Insts.CoreSliceIndexSliceIndexStrStr.get_unchecked_mut
     { start := range.start, «end» := Slice.len pointer.v } pointer
 
+@[rust_fun
+  "core::str::traits::{core::slice::index::SliceIndex<core::ops::range::RangeTo<usize>, str, str>}::get"]
+def core.ops.range.RangeToUsize.Insts.CoreSliceIndexSliceIndexStrStr.get
+    (range : core.ops.range.RangeTo Usize) (value : Str) : Result (Option Str) :=
+  core.ops.range.RangeUsize.Insts.CoreSliceIndexSliceIndexStrStr.get
+    { start := 0#usize, «end» := range.end } value
+
+@[rust_fun
+  "core::str::traits::{core::slice::index::SliceIndex<core::ops::range::RangeTo<usize>, str, str>}::get_mut"]
+def core.ops.range.RangeToUsize.Insts.CoreSliceIndexSliceIndexStrStr.get_mut
+    (range : core.ops.range.RangeTo Usize) (value : Str) :
+    Result (Option Str × (Option Str → Str)) :=
+  core.ops.range.RangeUsize.Insts.CoreSliceIndexSliceIndexStrStr.get_mut
+    { start := 0#usize, «end» := range.end } value
+
+@[rust_fun
+  "core::str::traits::{core::slice::index::SliceIndex<core::ops::range::RangeTo<usize>, str, str>}::index"]
+def core.ops.range.RangeToUsize.Insts.CoreSliceIndexSliceIndexStrStr.index
+    (range : core.ops.range.RangeTo Usize) (value : Str) : Result Str :=
+  core.ops.range.RangeUsize.Insts.CoreSliceIndexSliceIndexStrStr.index
+    { start := 0#usize, «end» := range.end } value
+
+@[rust_fun
+  "core::str::traits::{core::slice::index::SliceIndex<core::ops::range::RangeTo<usize>, str, str>}::index_mut"]
+def core.ops.range.RangeToUsize.Insts.CoreSliceIndexSliceIndexStrStr.index_mut
+    (range : core.ops.range.RangeTo Usize) (value : Str) : Result (Str × (Str → Str)) :=
+  core.ops.range.RangeUsize.Insts.CoreSliceIndexSliceIndexStrStr.index_mut
+    { start := 0#usize, «end» := range.end } value
+
+@[rust_fun
+  "core::str::traits::{core::slice::index::SliceIndex<core::ops::range::RangeTo<usize>, str, str>}::get_unchecked"]
+def core.ops.range.RangeToUsize.Insts.CoreSliceIndexSliceIndexStrStr.get_unchecked
+    (range : core.ops.range.RangeTo Usize) (pointer : ConstRawPtr Str) :
+    Result (ConstRawPtr Str) :=
+  core.ops.range.RangeUsize.Insts.CoreSliceIndexSliceIndexStrStr.get_unchecked
+    { start := 0#usize, «end» := range.end } pointer
+
+@[rust_fun
+  "core::str::traits::{core::slice::index::SliceIndex<core::ops::range::RangeTo<usize>, str, str>}::get_unchecked_mut"]
+def core.ops.range.RangeToUsize.Insts.CoreSliceIndexSliceIndexStrStr.get_unchecked_mut
+    (range : core.ops.range.RangeTo Usize) (pointer : MutRawPtr Str) :
+    Result (MutRawPtr Str) :=
+  core.ops.range.RangeUsize.Insts.CoreSliceIndexSliceIndexStrStr.get_unchecked_mut
+    { start := 0#usize, «end» := range.end } pointer
+
 /-! ## Owned UTF-8 strings -/
 
 @[rust_fun "core::str::{str}::len"]
@@ -782,6 +1017,13 @@ def core.str.Str.get {I Output : Type}
     (inst : core.slice.index.SliceIndex I Str Output) (value : Str) (index : I) :
     Result (Option Output) :=
   inst.get index value
+
+@[rust_fun
+  "core::str::traits::{core::ops::index::Index<str, @I, @Clause0_Output>}::index"]
+def Str.Insts.CoreOpsIndexIndex.index {I Output : Type}
+    (inst : core.slice.index.SliceIndex I Str Output)
+    (value : Str) (index : I) : Result Output :=
+  inst.index index value
 
 @[rust_fun "core::str::{str}::bytes"]
 def core.str.Str.bytes (value : Str) : Result core.str.iter.Bytes :=
@@ -821,6 +1063,10 @@ def alloc.string.String.from_utf8 (bytes : alloc.vec.Vec U8) :
 def alloc.string.String.Insts.CoreCmpPartialEqString.eq
     (left right : String) : Result Bool :=
   ok (left == right)
+
+@[rust_fun "alloc::string::{alloc::string::String}::is_empty"]
+def alloc.string.String.is_empty (value : String) : Result Bool :=
+  ok value.isEmpty
 
 @[rust_fun "alloc::string::{alloc::string::String}::with_capacity"]
 def alloc.string.String.with_capacity (capacity : Usize) : Result String :=
@@ -872,6 +1118,19 @@ def alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq
     fail .integerOverflow
 
 @[rust_fun
+  "alloc::string::{core::cmp::PartialEq<alloc::string::String, str>}::eq"]
+def alloc.string.String.Insts.CoreCmpPartialEqStr.eq
+    (left : String) (right : Str) : Result Bool :=
+  alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq left right
+
+@[rust_fun
+  "alloc::string::{core::cmp::PartialEq<alloc::string::String, str>}::ne"]
+def alloc.string.String.Insts.CoreCmpPartialEqStr.ne
+    (left : String) (right : Str) : Result Bool := do
+  let equal ← alloc.string.String.Insts.CoreCmpPartialEqStr.eq left right
+  ok (!equal)
+
+@[rust_fun
   "alloc::string::{core::cmp::PartialEq<&'0 str, alloc::string::String>}::eq"]
 def Shared0Str.Insts.CoreCmpPartialEqString.eq
     (left : Str) (right : String) : Result Bool :=
@@ -904,6 +1163,14 @@ def core.char.methods.Char.encode_utf8 (value : Char) (buffer : Slice U8) :
 @[rust_fun "alloc::string::{alloc::string::String}::as_str"]
 def alloc.string.String.as_str (value : String) : Result Str :=
   alloc.string.String.as_bytes value
+
+@[rust_fun
+  "alloc::string::{core::ops::index::Index<alloc::string::String, @I, @Clause0_Output>}::index"]
+def alloc.string.String.Insts.CoreOpsIndexIndex.index {I Output : Type}
+    (inst : core.slice.index.SliceIndex I Str Output)
+    (value : String) (index : I) : Result Output := do
+  let borrowed ← alloc.string.String.as_str value
+  inst.index index borrowed
 
 @[rust_fun "alloc::string::{alloc::string::String}::len"]
 def alloc.string.String.len (value : String) : Result Usize :=

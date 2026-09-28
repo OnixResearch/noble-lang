@@ -59,11 +59,11 @@ const evidence = {
   mode, result: 'running', commands: [], extractions: {},
   assumptions: [
     'Selected Charon/Aeneas, Rust, Lean, Node, host OS and Nix store integrity are trusted tooling boundaries.',
-    'After reviewed output-directory and unordered short-name-map normalization, canonical LLBC binds all other nonspan structure and ordinary spans. Only four reviewed synthetic expansion span.Value[1].data.end.col fields vary: kernel lib.rs:24 8/19, contracts lib.rs:9 8/19, core macros/mod.rs:434 8/25, wasm lib.rs:13 8/19. Exact source SHA, generated Lean hashes and strict roots remain checked; raw LLBC bytes and hashes are retained.',
+    'After reviewed output-directory and unordered short-name-map normalization, canonical LLBC binds all other nonspan structure and ordinary spans. Only seven reviewed synthetic expansion span.Value[1].data.end.col fields vary: kernel lib.rs:24 8/19, kernel core macros/mod.rs:434 8/25, kernel contracts/nominal/schemes.rs:5 8/24, contracts lib.rs:9 8/19, contracts core macros/mod.rs:434 8/25, contracts source/declared/state.rs:7 8/24, wasm lib.rs:13 8/19. Exact source SHA, generated Lean hashes and strict roots remain checked; raw LLBC bytes and hashes are retained.',
     'Clean locked Lean dependency sources are checked before and after; upstream compiled dependency caches remain trusted.',
     'Local Rust declarations are joined by compiler IDs with Aeneas output. Expanded type aliases and compiler-generated destructor/vtable scaffolding are separately accounted, not authored-body exemptions or independent refinement evidence.',
-    'Exactly the five unchanged inherited kernel copy/format helpers remain local opaque models, not extracted Rust bodies.',
-    'Standard-library models abstract allocator failure, allocation identity, spare capacity and formatting layout; new external declarations are separately enumerated and audited.',
+    'Exactly five inherited kernel copy/format helpers remain local opaque models, not extracted Rust bodies. Their implementations are byte-identical to the prior reviewed sources and independently body-pinned; new finite nominal Clone/Debug element branches preserve structural copy and observation-only formatting assumptions, not allocator or formatting-byte refinement.',
+    'Standard-library models abstract allocator failure, allocation identity and spare capacity. Inherited formatter models abstract layout and core::fmt::Arguments as Unit; data-bearing formatted-string results cannot be justified by this representation and alloc::fmt::format is refused as an external. New external declarations are separately enumerated and audited.',
     'Layout-free collection models erase destructor effects and type-layout allocation limits. Extracted resource accounting is data, not a native release. The pure extraction uses the Global allocator; split_off does not model arbitrary effectful allocator Clone implementations.',
     'Mutable UTF-8 string backward updates assume the unchanged byte length and valid UTF-8 guaranteed by safe Rust borrowed str values; arbitrary mathematical replacements outside that representation invariant are not a Rust behavior claim.',
     'The inherited M4 native-evaluation allowance covers only generated/inherited literal UTF-8 byte-array size obligations; strict bridge/projection theorems cannot use it.',
@@ -77,6 +77,7 @@ const evidence = {
   ],
   non_claims: [
     'No universal frontend inference, immutable namespace/session, acceptance-to-execution or backend refinement theorem.',
+    'No nominal string-output or new formatted-string semantic refinement follows from the inherited formatter abstraction; these remain open and require separate actual compiled-output evidence.',
     'No trust is conferred by the public untrusted kernel execution metadata or by a source/frontend acceptance flag.',
     'No WAT/Wasm runtime, optimizer, assembler, engine, loader, host environment or ABI correctness theorem.',
     'No physical host/native release, arbitrary authority-system refinement or externally authenticated observation theorem.',
@@ -256,6 +257,8 @@ try {
     lean: tool('lean', 'lean'), lake: tool('lean', 'lake'), node: process.execPath, git };
   evidence.tools = Object.fromEntries(Object.entries(binaries).map(([name, binary]) => [name, identity(binary)]));
   if (expectedLock) equal(evidence.tools, expectedLock.tools, 'TOOL', 'reviewed binary identity drift');
+  run('opaque-model-review', binaries.node, ['--test', 'verification/m4/opaque-model-review.test.mjs'],
+    workspace, {}, false, 30_000);
   evidence.versions = Object.fromEntries(Object.entries(binaries).map(([name, binary]) => [name,
     run(`${name}-version`, binary, name === 'charon' ? ['version'] : name === 'aeneas' ? ['-version'] :
       name === 'rustc' ? ['--version', '--verbose'] : ['--version'], workspace, {}, false, 30_000).output]));
@@ -288,6 +291,14 @@ try {
     run(`${lane.id}-aeneas`, binaries.aeneas, [...selection.configuration.aeneas_args,
       '-split-files', '-gen-lib-entry', '-all-computable', '-dest', generated, llbc], workspace,
     {}, false, selection.configuration.translator_timeout_seconds * 1000);
+    // Aeneas represents core::fmt::Arguments as Unit, discarding the format
+    // string and its arguments. No model of alloc::fmt::format can recover
+    // data-bearing names from that representation. Refuse such an external
+    // rather than silently admitting a fabricated string implementation.
+    const externals = fs.readFileSync(path.join(generated, 'FunsExternal_Template.lean'), 'utf8');
+    if (/\baxiom\s+alloc\.fmt\.format\b/.test(externals)) {
+      fail('FORMAT-ERASURE', `${lane.id}: alloc::fmt::format cannot preserve erased arguments`);
+    }
     raw[lane.id] = { llbc: json(llbc), translation: json(path.join(generated, 'translation.json')) };
     accounts[lane.id] = account(lane, raw[lane.id].llbc, raw[lane.id].translation, sourceFiles);
     generatedFiles[lane.id] = Object.fromEntries(fs.readdirSync(generated).sort().map(file => {

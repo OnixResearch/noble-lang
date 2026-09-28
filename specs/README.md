@@ -10,7 +10,8 @@ The repository now contains the bounded checker, experimental MC1 contract front
 M3 compiled-program representation experiment, M4 source-to-Wasm Core-Bootstrap,
 MC2 first-class certified companions, the M5 synchronous component subset and
 the completed bounded M6 native-async boundary, separately accepted M7
-local synchronous service, and accepted finite M8 choreography projection.
+local synchronous service, accepted finite M8 choreography projection, and
+separately accepted opt-in bounded DXM1 declared-module and nominal source.
 M4 uses the selected managed-linear-memory backend:
 source is resolved and inferred, independently accepted by the kernel, rechecked
 for lowering, then executed as compiled Wasm. Persistent sessions retain compiled
@@ -72,11 +73,30 @@ strict JSON edges and three one-round quota reservations; the
 checks eleven source-bound gates including fresh M7 regression. Its
 [dated Cairn archive](../.cairn/archive/2026-09-26-m8-choreography-projection/proposal.md)
 and separate post-promotion Nix result `verification/m8/nix-checks.json`
-bind the later archived specifications. The current
-[source inventory](../verification/source-inventory.md) covers 30 units and
-retains 2,087 open authored production body obligations. M8 does not
+bind the later archived specifications. At M8 closeout the then-current
+[source inventory](../verification/source-inventory.md) covered 30 units and
+retained 2,087 open authored production body obligations. M8 does not
 establish universal parser/projector/monitor/host/engine refinement, new WIT,
 user-defined choreography or durability.
+
+The opt-in [DXM1 completion record](../verification/declared-modules-v1/evidence.json)
+selects only finite versioned session-local source module identities, opaque
+types and two-constructor variants, explicit imports/exports and typed
+`test.emit` adapters; it does not change ordinary M4–M8 behavior. The
+[compiled acceptance](../verification/declared-modules-v1/acceptance.json)
+passes all selected DX-03/08/09 variants in 23 canonical result rows: nine
+source/static checks, twelve zero-invocation linker checks and two real
+Wasm denied-version-A runs after B alias rebind. The
+[22-command/14-gate assurance](../verification/declared-modules-v1/assurance.json)
+checks source-bound current 32-unit inventory, 630-source whole-crate M4
+lock (268 mutation refusals), inherited regressions, published Octet and
+complete signed/sandbox Nix. All 2,595 currently inventoried authored
+production bodies remain open refinement obligations; nine strict Lean roots
+still concern exactly three inherited pure M7 dataspace functions, not
+nominal/module code. The separate post-promotion staged-source documents/Cairn
+receipt is `verification/declared-modules-v1/nix-checks.json`. General
+Result/local bindings, portable package/cache, invariant-bearing constructors,
+capability modules and MA/MW entry gates remain open.
 
 Amendment sections below record design adoption,
 not automatic completion.
@@ -115,12 +135,13 @@ not automatic completion.
 ## Developer-experience amendment to draft.5
 
 Select the bounded contracts in SPEC-DX001. M2 adds stack diagnostics; holes and
-guest declarations do not expand Core-Bootstrap. Implementation and execution
+general guest declarations beyond bounded opt-in DXM1 do not expand
+Core-Bootstrap. Implementation and execution
 status is scenario-specific, not a consequence of adopting this amendment.
 
 The second group selects local names, capability-aware modules, property testing,
-resource protocol types, and compiler-backed documentation. Syntax and
-later-profile gates remain open. Property and documentation checks accompany
+resource protocol types, and compiler-backed documentation. General syntax and
+later-profile gates remain open outside finite opt-in DXM1. Property and documentation checks accompany
 M2/M4 without adding kernel mechanisms.
 
 M4's retained runtime acceptance passed [DX-10's property harness](../verification/m4/property.mjs)

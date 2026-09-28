@@ -3,7 +3,7 @@
     reason = "Owner: noble-maintainers; resolution rewrites only freshly parsed preparation-owned word nodes into call targets and advances bounded comparison worklists/meter; source bytes and the borrowed committed definitions/namespace remain unchanged."
 )]
 
-mod comparison;
+pub(crate) mod comparison;
 
 pub(super) fn resolve(
     tree: &mut super::Tree,
@@ -55,6 +55,9 @@ fn lookup(
     span: crate::Span,
     meter: &mut crate::Meter,
 ) -> Result<super::Target, crate::Diagnostic> {
+    if let Some(context) = &session.declared {
+        return declared_lookup(word, declaration, context, span, meter);
+    }
     let mut at = session.definitions.len();
     let mut found = None;
     let mut failure = None;
@@ -88,16 +91,14 @@ fn lookup(
             return Ok(super::Target::Builtin(definition.0));
         }
     }
-    let is_recursive = match declaration {
-        Some(name) => name.as_bytes() == word,
-        None => false,
-    };
-    if is_recursive {
-        return Err(crate::Diagnostic::new(
-            crate::DiagnosticKind::Unsupported,
-            span,
-            "recursive definitions require a signature and are outside Core-Bootstrap",
-        ));
+    if let Some(name) = declaration {
+        if name.as_bytes() == word {
+            return Err(crate::Diagnostic::new(
+                crate::DiagnosticKind::Unsupported,
+                span,
+                "recursive definitions require a signature and are outside Core-Bootstrap",
+            ));
+        }
     }
     if word == b"import" {
         return Err(crate::Diagnostic::new(
@@ -106,10 +107,53 @@ fn lookup(
             "module imports are outside Core-Bootstrap",
         ));
     }
-    Err(crate::invalid(
+    Err(crate::Diagnostic::new(
+        crate::DiagnosticKind::Invalid,
         span,
         "unbound word in immutable namespace snapshot",
     ))
+}
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; reverse namespace lookup charges Meter before each exact word comparison and preserves first budget error then builtin/unbound precedence; guest failures must not panic; reassess fallible-check density."
+)]
+fn declared_lookup(
+    word: &[u8],
+    declaration: Option<&str>,
+    context: &super::declared::Context,
+    span: crate::Span,
+    meter: &mut crate::Meter,
+) -> Result<super::Target, crate::Diagnostic> {
+    let mut at = context.words.len();
+    let mut found = None;
+    let mut failure = None;
+    while at > 0 {
+        at -= 1;
+        let entry = &context.words[at];
+        if let Err(problem) = meter.charge(1, span) {
+            failure = Some(problem);
+            break;
+        }
+        if entry.0.as_bytes() == word {
+            found = Some(entry.1);
+            break;
+        }
+    }
+    if let Some(problem) = failure {
+        return Err(problem);
+    }
+    if let Some(target) = found {
+        return Ok(target);
+    }
+    if let Some(definition) = crate::program::bootstrap_word(word) {
+        if definition.0 < 22 {
+            return Ok(super::Target::Builtin(definition.0));
+        }
+    }
+    if declaration.is_some() {
+        return Err(crate::invalid(span, "unbound or recursive module word"));
+    }
+    Err(crate::invalid(span, "unbound or unexported module word"))
 }
 
 #[expect(
@@ -174,80 +218,6 @@ fn named_at(
     ));
     if definition.name.as_bytes() == word {
         Ok(Some(super::Target::Named(attempt!(crate::index(at, span)))))
-    } else {
-        Ok(None)
-    }
-}
-
-/// Intern canonical resolved composition, not source spelling or formatting.
-/// Identity is session-local: no portable hash/serialization claim is made.
-#[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-maintainers; canonical comparisons consume work in installation order and preserve the first matching identity; new identities use checked conversion and increment rather than unchecked arithmetic."
-)]
-pub(super) fn identity(
-    tree: &super::Tree,
-    session: &super::Session,
-    meter: &mut crate::Meter,
-) -> Result<u64, crate::Diagnostic> {
-    let mut at = 0usize;
-    let mut found = None;
-    let mut failure = None;
-    while at < session.definitions.len() {
-        match same_definition(tree, at, session, meter) {
-            Ok(Some(identity)) => {
-                found = Some(identity);
-                break;
-            }
-            Ok(None) => {}
-            Err(problem) => {
-                failure = Some(problem);
-                break;
-            }
-        }
-        at += 1;
-    }
-    if let Some(problem) = failure {
-        return Err(problem);
-    }
-    if let Some(identity) = found {
-        return Ok(identity);
-    }
-    match u64::try_from(session.definitions.len())
-        .ok()
-        .and_then(|id| id.checked_add(1))
-    {
-        Some(identity) => Ok(identity),
-        None => Err(super::exhausted(
-            tree.span,
-            "definition identity limit exceeded",
-        )),
-    }
-}
-
-#[expect(
-    tigerstyle::missing_const_fn,
-    reason = "Owner: noble-maintainers; definition identity comparison performs non-const metered structural traversal and returns owned diagnostics on invalid namespace entries."
-)]
-fn same_definition(
-    tree: &super::Tree,
-    at: usize,
-    session: &super::Session,
-    meter: &mut crate::Meter,
-) -> Result<Option<u64>, crate::Diagnostic> {
-    attempt!(meter.charge(1, tree.span));
-    let definition = match session.definitions.get(at) {
-        Some(definition) => definition,
-        None => return Err(crate::internal(tree.span)),
-    };
-    let is_same = attempt!(comparison::same_body(
-        tree,
-        &definition.tree,
-        session,
-        meter
-    ));
-    if is_same {
-        Ok(Some(definition.identity))
     } else {
         Ok(None)
     }

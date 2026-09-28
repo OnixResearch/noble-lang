@@ -7,6 +7,7 @@ mod functions;
 mod imports;
 mod initialize;
 mod metadata;
+mod reflection;
 
 fn global(out: &mut crate::output::Buffer, id: usize) -> Result<(), crate::Diagnostic> {
     attempt!(out.append(b"$s"));
@@ -90,8 +91,8 @@ pub(super) fn module(
     generation: u32,
 ) -> Result<alloc::vec::Vec<u8>, crate::Diagnostic> {
     let mut out = crate::output::Buffer::new(32_768);
-    attempt!(imports::write(&mut out));
-    attempt!(imports::runtime(&mut out));
+    attempt!(imports::write(&mut out, plan));
+    attempt!(imports::runtime(&mut out, plan));
     attempt!(plan.types.emit(&mut out));
     attempt!(programs(&mut out, &plan.programs));
     if generation == 0 {

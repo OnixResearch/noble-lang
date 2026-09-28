@@ -1,11 +1,23 @@
+pub(in crate::core) mod bindings;
+
 pub(super) struct Options {
     pub source: Option<std::path::PathBuf>,
     pub compile_only: bool,
-    pub inputs: std::vec::Vec<noble_kernel::types::Ty>,
+    pub inputs: std::vec::Vec<InputType>,
+    pub modules: std::vec::Vec<std::path::PathBuf>,
+    pub declared_modules: bool,
+    pub bindings: Option<std::path::PathBuf>,
+    pub manifest: Option<bindings::Manifest>,
     pub framed: bool,
     pub optimized: bool,
     pub emit: Option<std::path::PathBuf>,
     pub limits: noble_contracts::Limits,
+}
+
+#[octet::sealed_enum]
+pub(super) enum InputType {
+    Concrete(noble_kernel::types::Ty),
+    Nominal(std::string::String),
 }
 
 #[expect(
@@ -27,6 +39,10 @@ pub(super) fn parse(arguments: &[std::ffi::OsString]) -> Result<Options, super::
             .first()
             .is_some_and(|argument| argument == "compile"),
         inputs: std::vec::Vec::new(),
+        modules: std::vec::Vec::new(),
+        declared_modules: false,
+        bindings: None,
+        manifest: None,
         framed: false,
         optimized: false,
         emit: None,
@@ -39,14 +55,14 @@ pub(super) fn parse(arguments: &[std::ffi::OsString]) -> Result<Options, super::
             .ok_or_else(usage))));
         at = attempt!(at.checked_add(1).ok_or_else(usage));
     }
-    let mut seen = [""; 7];
+    let mut seen = [""; 9];
     let mut seen_count = 0_usize;
     while at < arguments.len() {
         let name = attempt!(arguments[at].to_str().ok_or_else(usage));
-        if name != "--input-type" && seen.contains(&name) {
+        if name != "--input-type" && name != "--module" && seen.contains(&name) {
             return Err(usage());
         }
-        if name != "--input-type" {
+        if name != "--input-type" && name != "--module" {
             *attempt!(seen.get_mut(seen_count).ok_or_else(usage)) = name;
             seen_count = attempt!(seen_count.checked_add(1).ok_or_else(usage));
         }
@@ -55,9 +71,30 @@ pub(super) fn parse(arguments: &[std::ffi::OsString]) -> Result<Options, super::
             options.framed = true;
             continue;
         }
+        if name == "--declared-modules" {
+            options.declared_modules = true;
+            continue;
+        }
         let value = attempt!(arguments.get(at).ok_or_else(usage));
         at = attempt!(at.checked_add(1).ok_or_else(usage));
         attempt!(set(&mut options, name, value, maximum));
+    }
+    if options.declared_modules != options.bindings.is_some() {
+        return Err(usage());
+    }
+    if !options.declared_modules && !options.modules.is_empty() {
+        return Err(usage());
+    }
+    if !options.declared_modules
+        && options
+            .inputs
+            .iter()
+            .any(|input| matches!(input, InputType::Nominal(_)))
+    {
+        return Err(usage());
+    }
+    if let Some(path) = &options.bindings {
+        options.manifest = Some(attempt!(bindings::load(path)));
     }
     Ok(options)
 }
@@ -79,10 +116,13 @@ fn set(
     match name {
         "--input-type" if options.compile_only => {
             let ty = match value.to_str() {
-                Some("I64") => noble_kernel::types::Ty::I64,
-                Some("Bool") => noble_kernel::types::Ty::Bool,
-                Some("Text") => noble_kernel::types::Ty::Text,
-                Some("Unit") => noble_kernel::types::Ty::Unit,
+                Some("I64") => InputType::Concrete(noble_kernel::types::Ty::I64),
+                Some("Bool") => InputType::Concrete(noble_kernel::types::Ty::Bool),
+                Some("Text") => InputType::Concrete(noble_kernel::types::Ty::Text),
+                Some("Unit") => InputType::Concrete(noble_kernel::types::Ty::Unit),
+                Some(name) if name.len() <= 128 && name.contains('@') && name.contains('.') => {
+                    InputType::Nominal(name.into())
+                }
                 Some(_) | None => return Err(usage()),
             };
             if options.inputs.len() >= 128 {
@@ -90,12 +130,16 @@ fn set(
             }
             options.inputs.push(ty);
         }
+        "--module" if options.compile_only && options.modules.len() < 64 => {
+            options.modules.push(std::path::PathBuf::from(value));
+        }
         "--opt" => match value.to_str() {
             Some("off") => options.optimized = false,
             Some("on") => options.optimized = true,
             Some(_) | None => return Err(usage()),
         },
         "--emit" => options.emit = Some(std::path::PathBuf::from(value)),
+        "--bindings" => options.bindings = Some(std::path::PathBuf::from(value)),
         "--source-bytes" => options.limits.bytes = attempt!(limit(value, maximum.bytes)),
         "--source-nodes" => options.limits.nodes = attempt!(limit(value, maximum.nodes)),
         "--source-depth" => options.limits.depth = attempt!(limit(value, maximum.depth)),

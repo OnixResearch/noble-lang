@@ -1,5 +1,7 @@
 //! Node lookup and literal, invocation, and quotation folding.
 
+mod visibility;
+
 /// Fetch one node, rejecting a reference outside the finite arena.
 ///
 /// The node returns owned: a reference into the candidate arena cannot be
@@ -59,6 +61,7 @@ pub(super) fn fold_node(
             Ok((cost, joined, interface))
         }
         crate::untrusted::Node::Invocation { def, inst } => {
+            attempt!(visibility::check(*def, node_id, context));
             let scheme = match context.env.scheme(*def) {
                 Some(scheme) => scheme.clone(),
                 None => {

@@ -52,7 +52,7 @@ The user requested integration of the [external study](../review/EXTERNAL-DESIGN
 | ND-19 | Use checked branch facts and Rust domain types | Better diagnostics without implicit union joins or a new guest type system |
 | ND-20 | Preserve ownership and explicit contract snapshots | No unmanaged guest escape regime, GC cleanup substitution, or disabled boundary checks |
 
-WIT marshaling remains explicit. General guest borrows, scoped futures, general runtime assertion syntax, guest nominal declarations, and units of measure remain later work. Self-hosting and a Zena compiler dependency are not selected.
+WIT marshaling remains explicit. General guest borrows, scoped futures, general runtime assertion syntax, invariant-bearing nominal declarations beyond finite DXM1, and units of measure remain later work. Self-hosting and a Zena compiler dependency are not selected.
 
 ## Aeneas-first implementation
 
@@ -83,7 +83,7 @@ The user's whole-project direction replaces the earlier checker-only preference 
 | ID | Decision | Consequence |
 |---|---|---|
 | ND-31 | Require stack-aware diagnostics; select non-executable editor holes | Diagnostics join M2; hole grammar remains open and holes cannot pass admission |
-| ND-32 | Select opaque domain types and exhaustive variants within the existing data mechanism | Declaration/module gates remain open; wrappers preserve resource eligibility |
+| ND-32 | Select opaque domain types and exhaustive variants within the existing data mechanism | Finite opt-in DXM1 declaration/module gates now pass; general invariant/library interfaces remain open and wrappers preserve resource eligibility |
 | ND-33 | Provide Result composition through ordinary library programs | No exception effect, implicit resource discard, or new propagation syntax |
 | ND-34 | Use resolved recipes for dependency tools, semantic diffs, and evidence caches | Cache reuse binds exact claims and assumptions; hashes do not grant authority |
 | ND-35 | Select explicit scripted test-host substitution | Preserve effects and authorization; no real-host fallback or general effect handlers |
@@ -100,7 +100,7 @@ The user's whole-project direction replaces the earlier checker-only preference 
 | ND-39 | Select later resource protocol types | Transitions account for every owner and retain runtime checks; ambiguous outcomes do not imply retry safety |
 | ND-40 | Require compiler-backed documentation examples | Static and runtime observations remain separate; failures and unexecuted examples stay visible |
 
-SPEC-DX001 sections 6–10 define these additions. Local bindings and modules follow M4. Protocol types also require M5 and declaration interfaces. Property and documentation harnesses accompany the applicable M2/M4 checks. No concrete binding, module, or protocol syntax is selected.
+SPEC-DX001 sections 6–10 define these additions. Local bindings and modules follow M4. Protocol types also require M5 and declaration interfaces. Property and documentation harnesses accompany the applicable M2/M4 checks. Local-binding and resource-protocol syntax remain unselected. Finite opt-in DXM1 versioned module syntax is separately accepted by source-bound evidence.
 
 ## Exact-calculator amendment
 
@@ -209,9 +209,28 @@ gates pass; strict Lean proofs still concern only three pure M7 dataspace
 functions. M8 parser, projector, monitor, adapter, host and engine
 refinement, durability and general choreography remain open.
 
+## Bounded declared modules (DXM1)
+
+The [archived native change](../.cairn/archive/2026-09-28-2026-09-26-declared-modules-v1/proposal.md)
+and [independent completion record](../verification/declared-modules-v1/evidence.json)
+select only opt-in `Declared-Modules-v1` source units: bounded opaque types and
+exactly two-constructor variants, immutable session-local versioned module
+identities, explicit exports/imports and typed `test.emit` adapter bindings.
+The ordinary M4–M8 profiles retain their original meanings; `noble compile`
+and framed `noble session` require explicit module/bindings flags, while
+`noble run` has no such opt-in. Source-bound DX-03/08/09 executes nine
+static, twelve link-admission and two compiled-denial rows, respectively;
+source-derived independent kernel controls and host authorization retain
+their distinct trust boundaries. Whole-crate extraction retains only nine
+strict Lean roots for three inherited pure M7 dataspace functions, not a
+nominal/module theorem. All 2,595 current authored production-body
+refinement obligations remain open. General Result/local bindings, unit
+invariants, portable package/cache transport, general capability modules
+and later MA/MW entry gates are unaffected.
+
 ## Open decisions
 
-1. Complete inference, candidate encoding, recursive checking, and declaration syntax.
+1. General inference, candidate encoding, recursive checking, and declaration syntax beyond finite DXM1.
 2. Canonical semantic bytes, recursion identity, and portable package transport.
 3. Internal Wasm calling convention, generic lowering, memory management, and session recovery.
 4. Exact component type mapping, borrowed exports, async lifetimes/interfaces, scheduler and interruption limits, stream buffering policy, and tested toolchain pins.

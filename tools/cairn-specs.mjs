@@ -217,7 +217,7 @@ export function toLegacy(markdown, name) {
   return rebaseLinks(stripScenarioRegions(stripped), canonicalPath(name), `specs/${name}`, reverseMapping);
 }
 
-function view(markdown, name) {
+export function view(markdown, name) {
   return `<!-- Generated compatibility view. Edit ${canonicalPath(name)} instead. -->\n` + toLegacy(markdown, name);
 }
 

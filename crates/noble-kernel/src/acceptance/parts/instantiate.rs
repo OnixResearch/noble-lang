@@ -72,6 +72,12 @@ pub(crate) const fn data_slot(
         | Some(crate::contracts::Behavior::Cons)
         | Some(crate::contracts::Behavior::ListCase)
         | Some(crate::contracts::Behavior::TestEmit)
+        | Some(crate::contracts::Behavior::BoundEmit(_))
+        | Some(crate::contracts::Behavior::NominalNew(_))
+        | Some(crate::contracts::Behavior::NominalInto(_))
+        | Some(crate::contracts::Behavior::NominalLeft(_))
+        | Some(crate::contracts::Behavior::NominalRight(_))
+        | Some(crate::contracts::Behavior::NominalMatch(_))
         | Some(crate::contracts::Behavior::Named)
         | None => None,
     }
@@ -90,13 +96,57 @@ pub(crate) fn apply(
     at: super::Site,
     ctx: &super::Ctx,
 ) -> Result<(crate::untrusted::Interface, crate::words::Inst), super::super::Fail> {
+    if !valid_bindings(inst.bindings.as_slice(), ctx.env) {
+        return Err(super::invalid_without_stacks(
+            at,
+            crate::untrusted::Constraint::InvalidType,
+        ));
+    }
     attempt!(check_bounds(scheme, inst, at, ctx));
     let resolved = attempt!(resolve_witness(scheme, inst, at, ctx));
     let interface = attempt!(project(scheme, &resolved, data_var, at, ctx));
     Ok((interface, resolved))
 }
 
+/// Reject malformed types and unknown effect identities before resolving refs.
+fn valid_bindings(bindings: &[crate::words::Binding], env: &crate::contracts::Env) -> bool {
+    let mut index = 0;
+    let mut is_every_binding_valid = true;
+    while index < bindings.len() {
+        let is_valid = match &bindings[index] {
+            crate::words::Binding::Value(ty) => env.valid_type(ty, 512),
+            crate::words::Binding::Stack(stack) => super::valid_stack_types(stack, env),
+            crate::words::Binding::Effect(effects) => valid_effect_bindings(effects, env),
+            crate::words::Binding::Ref(_) => true,
+        };
+        if !is_valid {
+            is_every_binding_valid = false;
+            break;
+        }
+        index += 1;
+    }
+    is_every_binding_valid
+}
+
+fn valid_effect_bindings(effects: &crate::types::EffSet, env: &crate::contracts::Env) -> bool {
+    let ids = effects.as_slice();
+    let mut index = 0;
+    let mut is_every_effect_known = true;
+    while index < ids.len() {
+        if !env.knows_effect(ids[index]) {
+            is_every_effect_known = false;
+            break;
+        }
+        index += 1;
+    }
+    is_every_effect_known
+}
+
 /// Resolve one witness's reference bindings under the declared work limit.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; both pinned Rust compilers reject const Vec dereference, runtime resolve::bindings, and the owned Result destructor (E0015/E0277/E0493/E0658); reassess when those operations become const without changing typed witness failures."
+)]
 fn resolve_witness(
     scheme: &crate::words::Scheme,
     inst: &crate::words::Inst,
@@ -105,21 +155,15 @@ fn resolve_witness(
 ) -> Result<crate::words::Inst, super::super::Fail> {
     match crate::words::resolve::bindings(&scheme.var_kinds, inst, ctx.request.limits.work) {
         Ok((resolved, _spent)) => Ok(resolved),
-        Err(crate::words::InstError::CyclicWitness) => Err(super::invalid(
-            ctx,
+        Err(crate::words::InstError::CyclicWitness) => Err(super::invalid_without_stacks(
             at,
-            alloc::vec::Vec::new(),
-            alloc::vec::Vec::new(),
             crate::untrusted::Constraint::CyclicWitness,
         )),
         Err(crate::words::InstError::WalkExhausted) => Err(super::super::Fail::Exhausted(
             crate::untrusted::LimitKind::Work,
         )),
-        Err(crate::words::InstError::ArityMismatch) => Err(super::invalid(
-            ctx,
+        Err(crate::words::InstError::ArityMismatch) => Err(super::invalid_without_stacks(
             at,
-            alloc::vec::Vec::new(),
-            alloc::vec::Vec::new(),
             crate::untrusted::Constraint::InstantiationArity,
         )),
         Err(crate::words::InstError::OversizedStack) => Err(super::super::Fail::Exhausted(
@@ -130,13 +174,17 @@ fn resolve_witness(
             crate::untrusted::LimitKind::TypeSize,
         )),
         Err(crate::words::InstError::KindMismatch)
-        | Err(crate::words::InstError::UnknownVariable) => Err(instantiation_invalid(at, ctx)),
+        | Err(crate::words::InstError::UnknownVariable) => Err(instantiation_invalid(at)),
     }
 }
 
 #[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; check_bounds maps witness kind, arity and resource-limit failures to the acceptance protocol's typed outcomes; malformed external witnesses must never be asserted valid."
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; both pinned Rust compilers reject non-const Env::len and Scheme::check_inst (E0015); reassess when these bounded checks become const without changing typed rejection order."
 )]
 fn check_bounds(
     scheme: &crate::words::Scheme,
@@ -162,12 +210,9 @@ fn check_bounds(
         Err(crate::words::InstError::KindMismatch)
         | Err(crate::words::InstError::UnknownVariable)
         | Err(crate::words::InstError::CyclicWitness)
-        | Err(crate::words::InstError::WalkExhausted) => Err(instantiation_invalid(at, ctx)),
-        Err(crate::words::InstError::ArityMismatch) => Err(super::invalid(
-            ctx,
+        | Err(crate::words::InstError::WalkExhausted) => Err(instantiation_invalid(at)),
+        Err(crate::words::InstError::ArityMismatch) => Err(super::invalid_without_stacks(
             at,
-            alloc::vec::Vec::new(),
-            alloc::vec::Vec::new(),
             crate::untrusted::Constraint::InstantiationArity,
         )),
         Err(crate::words::InstError::OversizedStack) => Err(super::super::Fail::Exhausted(
@@ -184,6 +229,10 @@ fn check_bounds(
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; project validates substitutions, stack limits, effect identities and Data eligibility in that order and rejects through typed diagnostics rather than panics."
 )]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; both pinned Rust compilers reject runtime Inst::value, Ty::clone, Vec dereference, substitutions and owned Result destruction (E0015/E0277/E0493/E0658); reassess when they become const without changing typed validation."
+)]
 fn project(
     scheme: &crate::words::Scheme,
     inst: &crate::words::Inst,
@@ -196,43 +245,35 @@ fn project(
     let eligible: Option<crate::types::Ty> = match data_var {
         Some(var) => match inst.value(var) {
             Some(ty) => Some(ty.clone()),
-            None => return Err(instantiation_invalid(at, ctx)),
+            None => return Err(instantiation_invalid(at)),
         },
         None => None,
     };
     let stack_in = match scheme.subst_stack(&scheme.stack_in, inst) {
         Ok(stack) => stack,
-        Err(_) => return Err(instantiation_invalid(at, ctx)),
+        Err(_) => return Err(instantiation_invalid(at)),
     };
     let stack_out = match scheme.subst_stack(&scheme.stack_out, inst) {
         Ok(stack) => stack,
-        Err(_) => return Err(instantiation_invalid(at, ctx)),
+        Err(_) => return Err(instantiation_invalid(at)),
     };
     let effects = match scheme.subst_effects(&scheme.effects, inst) {
         Ok(effects) => effects,
-        Err(_) => return Err(instantiation_invalid(at, ctx)),
+        Err(_) => return Err(instantiation_invalid(at)),
     };
     attempt!(super::limits_of(&stack_in, ctx));
     attempt!(super::limits_of(&stack_out, ctx));
-    let effect_ids: alloc::vec::Vec<crate::types::EffId> = effects.as_slice().to_vec();
-    let known: alloc::vec::Vec<crate::types::EffId> = ctx.env.effects.to_vec();
-    let unknown = super::first_unknown(&effect_ids, &known);
+    let unknown = super::effects::first_unknown(effects.as_slice(), &ctx.env.effects);
     if let Some(id) = unknown {
-        return Err(super::invalid(
-            ctx,
+        return Err(super::invalid_without_stacks(
             at,
-            alloc::vec::Vec::new(),
-            alloc::vec::Vec::new(),
             crate::untrusted::Constraint::UnknownEffect(id),
         ));
     }
     if let Some(ty) = eligible {
         if !ty.is_data() {
-            return Err(super::invalid(
-                ctx,
+            return Err(super::invalid_without_stacks(
                 at,
-                alloc::vec::Vec::new(),
-                alloc::vec::Vec::new(),
                 crate::untrusted::Constraint::Eligibility(ty),
             ));
         }
@@ -244,12 +285,6 @@ fn project(
     })
 }
 
-fn instantiation_invalid(at: super::Site, ctx: &super::Ctx) -> super::super::Fail {
-    super::invalid(
-        ctx,
-        at,
-        alloc::vec::Vec::new(),
-        alloc::vec::Vec::new(),
-        crate::untrusted::Constraint::InstantiationKind,
-    )
+const fn instantiation_invalid(at: super::Site) -> super::super::Fail {
+    super::invalid_without_stacks(at, crate::untrusted::Constraint::InstantiationKind)
 }

@@ -107,6 +107,7 @@ impl Traversal {
         let children = match ty {
             noble_kernel::types::Ty::Pair(_, _) | noble_kernel::types::Ty::Sum(_, _) => 2,
             noble_kernel::types::Ty::List(_) => 1,
+            noble_kernel::types::Ty::Nominal(_, _) => 0,
             noble_kernel::types::Ty::Program(input, output, _) => {
                 input.len().saturating_add(output.len())
             }
@@ -146,9 +147,15 @@ impl Traversal {
         let next_depth = depth.saturating_add(1);
         match ty {
             noble_kernel::types::Ty::Resource(kind) => {
-                let is_known = match &session.bindings {
-                    Some(bindings) => depth == 0 && bindings.resources.contains(kind),
-                    None => false,
+                let is_known = if let Some(context) = &session.declared {
+                    context.environment.resource_kinds.contains(kind)
+                } else {
+                    match &session.bindings {
+                        Some(bindings) => {
+                            depth == 0 && bindings.environment.resource_kinds.contains(kind)
+                        }
+                        None => false,
+                    }
                 };
                 if is_known {
                     Ok(())
@@ -156,6 +163,21 @@ impl Traversal {
                     Err(crate::invalid(
                         span,
                         "resource input is not a declared top-level component owner",
+                    ))
+                }
+            }
+            noble_kernel::types::Ty::Nominal(id, shape) => {
+                if session.declared.as_ref().is_some_and(|context| {
+                    context
+                        .environment
+                        .nominal(*id)
+                        .is_some_and(|decl| decl.shape == **shape)
+                }) {
+                    Ok(())
+                } else {
+                    Err(crate::invalid(
+                        span,
+                        "unregistered or changed nominal input schema",
                     ))
                 }
             }
