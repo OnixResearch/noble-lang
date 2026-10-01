@@ -144,8 +144,7 @@ impl<'a> Resolution<'a> {
         } = &schema.kind
         {
             if !parameters.is_empty() {
-                let result = self.declare_generic(ordinal, parameters, left_type, right_type);
-                return (self, result);
+                return self.declare_generic(ordinal, parameters, left_type, right_type);
             }
         }
         let environment = self
@@ -205,12 +204,12 @@ impl<'a> Resolution<'a> {
     }
 
     fn declare_generic(
-        &mut self,
+        mut self,
         ordinal: usize,
         parameters: &[alloc::string::String],
         left_type: &str,
         right_type: &str,
-    ) -> Result<bool, crate::source::Error> {
+    ) -> (Self, Result<bool, crate::source::Error>) {
         let parameter_index = |spelling: &str| -> Result<u8, crate::source::Error> {
             parameters
                 .iter()
@@ -223,10 +222,15 @@ impl<'a> Resolution<'a> {
                     )
                 })
         };
-        let payload_params = [
-            attempt!(parameter_index(left_type)),
-            attempt!(parameter_index(right_type)),
-        ];
+        let left = match parameter_index(left_type) {
+            Ok(index) => index,
+            Err(problem) => return (self, Err(problem)),
+        };
+        let right = match parameter_index(right_type) {
+            Ok(index) => index,
+            Err(problem) => return (self, Err(problem)),
+        };
+        let payload_params = [left, right];
         let schema = &self.collected.schemas[ordinal];
         let exported = self.collected.exports.contains(&schema.name);
         let public = types::public_operations(schema, &self.collected.exports, exported);
@@ -235,16 +239,22 @@ impl<'a> Resolution<'a> {
             ordinal: ordinal as u32,
         };
         let Some(session) = self.session.as_mut() else {
-            return Err(crate::source::declared::error(
-                crate::source::Stage::Check,
-                "missing module session",
-            ));
+            return (
+                self,
+                Err(crate::source::declared::error(
+                    crate::source::Stage::Check,
+                    "missing module session",
+                )),
+            );
         };
         let Some(context) = session.source.declared.as_mut() else {
-            return Err(crate::source::declared::error(
-                crate::source::Stage::Check,
-                "missing declared context",
-            ));
+            return (
+                self,
+                Err(crate::source::declared::error(
+                    crate::source::Stage::Check,
+                    "missing declared context",
+                )),
+            );
         };
         let declaration = noble_kernel::contracts::GenericVariantDecl {
             id,
@@ -253,17 +263,23 @@ impl<'a> Resolution<'a> {
             public,
         };
         let environment = core::mem::take(&mut context.environment);
-        let (environment, ops) = attempt!(environment
-            .declare_generic_variant(declaration)
-            .map_err(|_| {
-                crate::source::declared::error(
-                    crate::source::Stage::Check,
-                    "invalid generic variant schema",
-                )
-            }));
+        // As before, a refused declaration consumes the taken environment and
+        // leaves its default in the context; the error aborts this resolution.
+        let (environment, ops) = match environment.declare_generic_variant(declaration) {
+            Ok(declared) => declared,
+            Err(_) => {
+                return (
+                    self,
+                    Err(crate::source::declared::error(
+                        crate::source::Stage::Check,
+                        "invalid generic variant schema",
+                    )),
+                );
+            }
+        };
         context.environment = environment;
         self.local_generics.push((schema.name.clone(), id));
         self.resolved[ordinal] = Some(ResolvedSchema::Generic(id, ops));
-        Ok(true)
+        (self, Ok(true))
     }
 }

@@ -55,7 +55,8 @@ pub(super) fn trace(
     submission: &noble_kernel::execution::Submission,
     dependencies: &[crate::intrinsic::ResolvedSourceModule],
 ) -> Result<alloc::vec::Vec<crate::intrinsic::NamedUseOrigin>, crate::source::Error> {
-    let span = request.session.source.definitions.get(root_source_index as usize)
+    let span = usize::try_from(root_source_index).ok()
+        .and_then(|index| request.session.source.definitions.get(index))
         .map_or(crate::Span { start: 0, end: 0 }, |definition| definition.tree.span);
     let candidate = &submission.body.candidate;
     let [root] = candidate.body.as_slice() else {
@@ -65,7 +66,7 @@ pub(super) fn trace(
         return Err(mismatch(span, "named contract root is not a single source invocation"));
     }
     let Some(noble_kernel::untrusted::Node::Invocation { def, .. }) =
-        candidate.nodes.get(root.0 as usize) else {
+        usize::try_from(root.0).ok().and_then(|index| candidate.nodes.get(index)) else {
         return Err(mismatch(span, "named contract root does not invoke its subject"));
     };
     let mut preceding = None;
@@ -86,7 +87,8 @@ pub(super) fn trace(
     let mut seen = alloc::vec![false; submission.definitions.len()];
     let mut result = alloc::vec::Vec::with_capacity(submission.definitions.len());
     while let Some(use_site) = pending.pop() {
-        let Some(named) = request.session.source.definitions.get(use_site.source_index as usize) else {
+        let Some(named) = usize::try_from(use_site.source_index).ok()
+            .and_then(|index| request.session.source.definitions.get(index)) else {
             return Err(mismatch(span, "named invocation has no resolved source definition"));
         };
         let original = attempt!(super::source_origin(request, named, span));
@@ -148,7 +150,8 @@ pub(super) fn trace(
             }
             let source_node = attempt!(tree.node(*source_id).map_err(|problem|
                 crate::source::declared::diagnostic(crate::source::Stage::Check, problem)));
-            let Some(accepted) = candidate.nodes.get(accepted_id.0 as usize) else {
+            let Some(accepted) = usize::try_from(accepted_id.0).ok()
+                .and_then(|index| candidate.nodes.get(index)) else {
                 return Err(mismatch(original.definition.span,
                     "named body has an invalid accepted node"));
             };
@@ -166,7 +169,8 @@ pub(super) fn trace(
                         .ok_or_else(|| mismatch(original.definition.span,
                             "named source occurrence span overflows"))?;
                     if start < original.definition.body_span.start || end > original.definition.body_span.end ||
-                        original.module_source.get(start as usize..end as usize).is_none() {
+                        usize::try_from(start).ok().zip(usize::try_from(end).ok())
+                            .and_then(|(start, end)| original.module_source.get(start..end)).is_none() {
                         return Err(mismatch(original.definition.span,
                             "named invocation is outside its original body"));
                     }

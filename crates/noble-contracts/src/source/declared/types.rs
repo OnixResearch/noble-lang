@@ -203,13 +203,16 @@ impl Parser<'_> {
                 "Program requires input, output and effects",
             ));
         }
+        let nested = attempt!(self.depth.checked_add(1).ok_or_else(|| {
+            crate::invalid(self.span, "type constructor nesting limit exceeded")
+        }));
         let (inputs, input_nodes) = attempt!(parse_program_stack(
             fields[0],
             self.names,
             self.families,
             self.environment,
             self.span,
-            self.depth + 1,
+            nested,
         ));
         let (outputs, output_nodes) = attempt!(parse_program_stack(
             fields[1],
@@ -217,7 +220,7 @@ impl Parser<'_> {
             self.families,
             self.environment,
             self.span,
-            self.depth + 1,
+            nested,
         ));
         let effects = match fields[2] {
             "pure" => noble_kernel::types::EffSet::empty(),
@@ -246,7 +249,9 @@ impl Parser<'_> {
         if self.nodes > 256 {
             return Err(crate::invalid(self.span, "type constructor limit exceeded"));
         }
-        self.at = end + 1;
+        self.at = attempt!(end
+            .checked_add(1)
+            .ok_or_else(|| crate::invalid(self.span, "unclosed Program type")));
         self.value = Some(noble_kernel::types::Ty::program(inputs, outputs, effects));
         Ok(self)
     }
@@ -384,8 +389,14 @@ fn split_top_level(
                     .ok_or_else(|| crate::invalid(span, "unbalanced type argument")));
             }
             byte if byte == separator && depth == 0 => {
+                // Parts end at distinct separator bytes, so this bound is never reached.
+                if parts.len() >= word.len() {
+                    return Err(crate::invalid(span, "unbalanced or oversized type argument"));
+                }
                 parts.push(&word[start..at]);
-                start = at + 1;
+                start = attempt!(at
+                    .checked_add(1)
+                    .ok_or_else(|| crate::invalid(span, "unbalanced or oversized type argument")));
             }
             _ => {}
         }

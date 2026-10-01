@@ -174,6 +174,11 @@ fn binding_block(
         if bindings.iter().any(|known: &super::Binding| known.name == name) {
             return Err(super::parse_diagnostic(span, "duplicate stack binding"));
         }
+        // Each binding consumes two tokens, so this bound is never reached
+        // before the duplicate or unclosed-block diagnostics.
+        if bindings.len() >= next.tokens.len() {
+            return Err(super::parse_diagnostic(span, "stack bindings exceed their token block"));
+        }
         bindings.push(super::Binding {
             name,
             ty: alloc::string::String::from(ty),
@@ -294,7 +299,10 @@ fn proof(
         _ => return Err(super::parse_diagnostic(head.span, "expected proof for or : claim")),
     };
     let (cursor, term) = attempt!(logical(cursor));
-    let end = cursor.tokens[cursor.at - 1].span.end;
+    let Some(last) = cursor.at.checked_sub(1).and_then(|index| cursor.tokens.get(index)) else {
+        return Err(super::parse_diagnostic(span, "proof term has no closing token"));
+    };
+    let end = last.span.end;
     Ok((
         cursor,
         super::Member::Proof(super::Proof {
@@ -342,6 +350,10 @@ fn signature(
             ));
         }
         let (next, word) = attempt!(cursor.next());
+        // Each word consumes one token of this bracketed interface.
+        if words.len() >= next.tokens.len() {
+            return Err(super::parse_diagnostic(next.span, "signature interface exceeds its token block"));
+        }
         words.push(alloc::string::String::from(word));
         cursor = next;
     }

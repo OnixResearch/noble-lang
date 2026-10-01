@@ -193,6 +193,10 @@ impl<'a> Scanner<'a> {
                 }
                 _ => LogicalKind::Atom(attempt!(self.logical_atom(meter))),
             };
+            // Every logical token, including a nonempty atom, consumes a source byte.
+            if tokens.len() >= self.source.len() {
+                return Err(crate::invalid(self.full, "logical body exceeds its source bytes"));
+            }
             tokens.push(LogicalToken {
                 kind,
                 span: attempt!(self.span(token_start)),

@@ -73,8 +73,9 @@ pub(super) fn stage(request: Request<'_>) -> Result<Staged, crate::source::Error
                 crate::intrinsic::PendingGoal::Contract { contract: alloc::boxed::Box::new(contract) }
             }
         };
-        let mut term = proof.term.clone();
-        attempt!(resolve_uses(&request, &mut term, &obligations, &mut dependencies));
+        let (term, resolved) =
+            attempt!(resolve_uses(&request, proof.term.clone(), &obligations, dependencies));
+        dependencies = resolved;
         obligations.push(crate::intrinsic::ProofObligation {
             revision: proof.revision, name: proof.name.clone(), goal, term, span: proof.span,
         });
@@ -89,7 +90,7 @@ pub(super) fn stage(request: Request<'_>) -> Result<Staged, crate::source::Error
             crate::source::Stage::Check, "proof dependency byte count overflow",
         ))?;
     }
-    if copied > limit / obligations.len() {
+    if copied.checked_mul(obligations.len()).is_none_or(|total| total > limit) {
         return Err(crate::source::declared::error(
             crate::source::Stage::Check, "proof dependency snapshot byte budget exhausted",
         ));
@@ -128,15 +129,51 @@ fn dependency_bytes(
     Ok(total)
 }
 
+/// Contract binding types reach `pure_type` only from `types::parse_with_families`.
+/// Its reader refuses a type word once 64 frames are pending, so at most 63
+/// constructors nest on any path. A left-first walk then holds at most one
+/// pending right sibling per ancestor plus the two children just pushed,
+/// which is 64 slots.
+const TYPE_STACK: usize = 64;
+
+/// Contract stacks admit only Type0 data built from the four base types.
+/// The reader also caps a type at 256 words, which bounds the visits.
 fn pure_type(ty: &noble_kernel::types::Ty) -> bool {
     use noble_kernel::types::Ty;
-    match ty {
-        Ty::Unit | Ty::Bool | Ty::I64 | Ty::Text => true,
-        Ty::Pair(left, right) | Ty::Sum(left, right) => pure_type(left) && pure_type(right),
-        Ty::List(item) => pure_type(item),
-        Ty::Syntax | Ty::Contract | Ty::Evidence | Ty::Certified | Ty::Program(..)
-        | Ty::Resource(..) | Ty::Nominal(..) | Ty::GenericNominal(..) => false,
+    let mut pending: [Option<&Ty>; TYPE_STACK] = [None; TYPE_STACK];
+    pending[0] = Some(ty);
+    let mut open = 1usize;
+    let mut remaining = 256usize;
+    while let Some(top) = open.checked_sub(1) {
+        let Some(next) = pending.get_mut(top).and_then(Option::take) else {
+            return false;
+        };
+        open = top;
+        let Some(after) = remaining.checked_sub(1) else {
+            return false;
+        };
+        remaining = after;
+        let children = match next {
+            Ty::Unit | Ty::Bool | Ty::I64 | Ty::Text => [None, None],
+            // Right is stored first so left is visited first, as with `&&`.
+            Ty::Pair(left, right) | Ty::Sum(left, right) => [Some(&**right), Some(&**left)],
+            Ty::List(item) => [Some(&**item), None],
+            Ty::Syntax | Ty::Contract | Ty::Evidence | Ty::Certified | Ty::Program(..)
+            | Ty::Resource(..) | Ty::Nominal(..) | Ty::GenericNominal(..) => return false,
+        };
+        for child in children.into_iter().flatten() {
+            // The bound above means this check never refuses a parsed type.
+            let Some(slot) = pending.get_mut(open) else {
+                return false;
+            };
+            *slot = Some(child);
+            open = match open.checked_add(1) {
+                Some(next_open) => next_open,
+                None => return false,
+            };
+        }
     }
+    true
 }
 
 fn types(
@@ -239,7 +276,8 @@ fn bind_subject(
         return Err(at(crate::source::Stage::Resolve, contract.subject_span,
             "contract subject is not an accepted source definition"));
     };
-    let Some(definition) = request.session.source.definitions.get(*index as usize) else {
+    let Some(definition) = usize::try_from(*index).ok()
+        .and_then(|index| request.session.source.definitions.get(index)) else {
         return Err(crate::source::declared::error(crate::source::Stage::Check, "missing resolved contract subject"));
     };
     let original = attempt!(source_origin(request, definition, contract.subject_span));
@@ -295,6 +333,12 @@ fn bind_subject(
                 full_source: module.source.clone(),
             }
         };
+        // At most one retained module per accepted definition.
+        if source_dependencies.len() >= submission.definitions.len() {
+            return Err(crate::source::declared::error(
+                crate::source::Stage::Check, "subject dependency modules exceed accepted definitions",
+            ));
+        }
         source_dependencies.push(dependency);
     }
     let named_uses = if contract.revision == 2 {
@@ -370,52 +414,87 @@ fn imported_module<'a>(
         "missing imported proof module version"))
 }
 
+/// Logical bodies nest at most 64 lists deep (`lexer::next_logical_body`);
+/// one more frame holds the term root.
+const USE_FRAMES: usize = 65;
+
+/// Resolves every `(use name)` in pre-order, left to right. The term and the
+/// module's dependency list are owned and returned; the first error wins, as
+/// in the earlier recursive walk.
 fn resolve_uses(
     request: &Request<'_>,
-    term: &mut crate::intrinsic::Form,
+    mut term: crate::intrinsic::Form,
     prior: &[crate::intrinsic::ProofObligation],
-    dependencies: &mut alloc::vec::Vec<crate::intrinsic::ProofDependency>,
-) -> Result<(), crate::source::Error> {
-    use crate::intrinsic::FormKind;
-    let FormKind::List(items) = &mut term.kind else { return Ok(()); };
-    if matches!(items.first().map(|form| &form.kind), Some(FormKind::Atom(name)) if name == "use") {
-        if items.len() != 2 {
-            return Err(at(crate::source::Stage::Resolve, term.span,
-                "use requires one resolved proof name"));
-        }
-        let reference_span = items[1].span;
-        let FormKind::Atom(reference) = &mut items[1].kind else {
-            return Err(at(crate::source::Stage::Resolve, reference_span,
-                "use requires a proof identifier"));
-        };
-        if let Some((scope, name)) = reference.split_once('.') {
-            let (scope, name) = (alloc::string::String::from(scope), alloc::string::String::from(name));
-            if is_current(request, &scope) {
-                if !prior.iter().any(|proof| proof.name == name) {
-                    return Err(at(crate::source::Stage::Resolve, reference_span,
-                        "forward or cyclic local proof use"));
-                }
-                *reference = name;
-            } else {
-                let module = attempt!(imported_module(request.session, &scope, reference_span));
-                let Some(published) = module.proofs.iter().find(|proof| proof.reference.name == name && proof.reference.exported) else {
-                    return Err(at(crate::source::Stage::Resolve, reference_span,
-                        "unknown or private imported proof"));
+    mut dependencies: alloc::vec::Vec<crate::intrinsic::ProofDependency>,
+) -> Result<
+    (crate::intrinsic::Form, alloc::vec::Vec<crate::intrinsic::ProofDependency>),
+    crate::source::Error,
+> {
+    use crate::intrinsic::{Form, FormKind};
+    {
+        // Inline stack of child iterators: one frame per open list, no heap
+        // frame and no up-front copy of a list's children.
+        let mut frames: [Option<core::slice::IterMut<'_, Form>>; USE_FRAMES] =
+            [const { None }; USE_FRAMES];
+        frames[0] = Some(core::slice::from_mut(&mut term).iter_mut());
+        let mut open = 1usize;
+        while let Some(top) = open.checked_sub(1) {
+            let next = frames.get_mut(top).and_then(Option::as_mut).and_then(|items| items.next());
+            let Some(Form { kind, span }) = next else {
+                open = top;
+                continue;
+            };
+            let FormKind::List(items) = kind else {
+                continue;
+            };
+            let is_use = matches!(items.first().map(|form| &form.kind),
+                Some(FormKind::Atom(name)) if name == "use");
+            if !is_use {
+                let Some(slot) = frames.get_mut(open) else {
+                    return Err(at(crate::source::Stage::Resolve, *span,
+                        "logical nesting exceeds supported depth"));
                 };
-                if !dependencies.iter().any(|proof| proof.name == *reference) {
-                    let mut dependency = published.reference.clone();
-                    dependency.name = reference.clone();
-                    dependencies.push(dependency);
-                }
+                *slot = Some(items.iter_mut());
+                open = attempt!(open.checked_add(1).ok_or_else(|| at(crate::source::Stage::Resolve,
+                    *span, "logical nesting exceeds supported depth")));
+                continue;
             }
-        } else if !prior.iter().any(|proof| proof.name == *reference) {
-            return Err(at(crate::source::Stage::Resolve, reference_span,
-                "unknown, forward or cyclic proof use"));
+            if items.len() != 2 {
+                return Err(at(crate::source::Stage::Resolve, *span,
+                    "use requires one resolved proof name"));
+            }
+            let reference_span = items[1].span;
+            let FormKind::Atom(reference) = &mut items[1].kind else {
+                return Err(at(crate::source::Stage::Resolve, reference_span,
+                    "use requires a proof identifier"));
+            };
+            if let Some((scope, name)) = reference.split_once('.') {
+                if is_current(request, scope) {
+                    if !prior.iter().any(|proof| proof.name == name) {
+                        return Err(at(crate::source::Stage::Resolve, reference_span,
+                            "forward or cyclic local proof use"));
+                    }
+                    // Keep only the local name, in place, as the recursive form did.
+                    let qualifier = scope.len();
+                    reference.replace_range(..=qualifier, "");
+                } else {
+                    let module = attempt!(imported_module(request.session, scope, reference_span));
+                    let Some(published) = module.proofs.iter()
+                        .find(|proof| proof.reference.name == name && proof.reference.exported) else {
+                        return Err(at(crate::source::Stage::Resolve, reference_span,
+                            "unknown or private imported proof"));
+                    };
+                    if !dependencies.iter().any(|proof| proof.name == *reference) {
+                        let mut dependency = published.reference.clone();
+                        dependency.name = reference.clone();
+                        dependencies.push(dependency);
+                    }
+                }
+            } else if !prior.iter().any(|proof| proof.name == *reference) {
+                return Err(at(crate::source::Stage::Resolve, reference_span,
+                    "unknown, forward or cyclic proof use"));
+            }
         }
-        return Ok(());
     }
-    for item in items {
-        attempt!(resolve_uses(request, item, prior, dependencies));
-    }
-    Ok(())
+    Ok((term, dependencies))
 }

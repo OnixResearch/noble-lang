@@ -36,12 +36,18 @@ impl super::Arena {
         meter: &mut crate::Meter,
     ) -> Result<alloc::vec::Vec<alloc::string::String>, crate::Diagnostic> {
         let mut suffix = alloc::vec::Vec::new();
+        // Every pushed entry follows its own successful unit work charge.
+        let work_limit = attempt!(crate::offset(meter.limits.work, span));
         loop {
             attempt!(meter.charge(1, span));
             id = attempt!(self.root(id, span, meter));
             match attempt!(self.get(id, span)) {
                 super::Term::Push(stack, value) => {
-                    suffix.push(attempt!(self.describe_stack(value, span, meter)));
+                    let described = attempt!(self.describe_stack(value, span, meter));
+                    if suffix.len() >= work_limit {
+                        return Err(crate::internal(span));
+                    }
+                    suffix.push(described);
                     id = stack;
                 }
                 super::Term::Hole(super::Sort::Stack) | super::Term::Empty

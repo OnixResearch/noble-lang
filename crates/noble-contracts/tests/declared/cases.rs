@@ -558,9 +558,9 @@ fn callback_cannot_publish_invalid_source_or_substituted_claim() -> Result<(), S
 #[test]
 fn retained_proof_dependency_budget_rejects_atomically() -> Result<(), String> {
     let source = b"module logic@1 [ proof 1 base : [ (Pi (x I64) (Eq I64 x x)) ] [ (intro (x I64) (refl x)) ] proof 1 derived : [ (Pi (x I64) (Eq I64 x x)) ] [ (intro (x I64) (apply (use base) x)) ] export derived ]";
-    let bytes = u32::try_from(source.len() * 2)
+    let exact_bytes = u32::try_from(source.len() * 3)
         .map_err(|_| "proof dependency fixture exceeds u32 byte limit")?;
-    let limits = noble_contracts::Limits { bytes, ..super::LIMITS };
+    let limits = noble_contracts::Limits { bytes: exact_bytes - 1, ..super::LIMITS };
     let mut session = noble_contracts::source::ModuleSession::new(&[])
         .map_err(|error| format!("{error:?}"))?;
     session = super::commit(session, b"module anchor@1 [ export alive def alive [ 1 ] ]")?;
@@ -578,12 +578,80 @@ fn retained_proof_dependency_budget_rejects_atomically() -> Result<(), String> {
         }
         Ok(checked)
     });
-    assert!(matches!(outcome, Err(error) if error.stage() == noble_contracts::source::Stage::Acceptance));
+    assert!(matches!(outcome, Err(error) if
+        error.stage() == noble_contracts::source::Stage::Acceptance &&
+        error.diagnostic().message == "proof publication dependency budget exhausted"));
     assert_eq!(session.generation(), prior);
     assert!(session.prepare(b"import logic@1 as absent", &[], super::LIMITS).is_err());
     let retained = session.prepare(b"anchor@1.alive", &[], super::LIMITS)
         .map_err(|error| format!("{error:?}"))?;
     assert_eq!(retained.output(), &[noble_kernel::types::Ty::I64]);
+    let exact = noble_contracts::Limits { bytes: exact_bytes, ..super::LIMITS };
+    let prepared = session.prepare(source, &[], exact)
+        .map_err(|error| format!("{error:?}"))?;
+    let (published, result) = session.commit_verified(prepared, |batch| {
+        let mut checked = noble_contracts::intrinsic::check_batch(batch, exact)
+            .map_err(|error| format!("{error:?}"))?;
+        for proof in &mut checked {
+            proof.model_revision = "a".repeat(64);
+            proof.checker_revision = "b".repeat(64);
+        }
+        Ok(checked)
+    });
+    result.map_err(|error| format!("{error:?}"))?;
+    assert_eq!(published.generation(), prior + 1);
+    let usable = published.prepare(b"import logic@1 as accepted", &[], super::LIMITS)
+        .map_err(|error| format!("{error:?}"))?;
+    assert!(usable.proof_obligations().is_none());
+    Ok(())
+}
+
+#[test]
+fn imported_proof_dependency_budget_counts_each_obligation() -> Result<(), String> {
+    let source = b"module proofs@1 [
+      # The retained, immutable module source is copied with every imported proof.
+      # This deliberately long original source makes the per-proof dependency
+      # budget the first limit to exhaust, ahead of the aggregate module source
+      # budget when two short importing proofs are checked at the boundary.
+      proof 1 base : [ (Pi (x I64) (Eq I64 x x)) ] [ (intro (x I64) (refl x)) ]
+      export base
+    ]";
+    let module = noble_contracts::source::ModuleSession::new(&[])
+        .map_err(|error| format!("{error:?}"))?;
+    let staged = module.prepare(source, &[], super::LIMITS)
+        .map_err(|error| format!("{error:?}"))?;
+    let (published, result) = module.commit_verified(staged, |batch| {
+        let mut checked = noble_contracts::intrinsic::check_batch(batch, super::LIMITS)
+            .map_err(|error| format!("{error:?}"))?;
+        for proof in &mut checked {
+            proof.model_revision = "a".repeat(64);
+            proof.checker_revision = "b".repeat(64);
+        }
+        Ok(checked)
+    });
+    result.map_err(|error| format!("{error:?}"))?;
+    let imported = super::commit(published, b"import proofs@1 as p")?;
+    let dependent = b"module derived@1 [
+      proof 1 first : [ (Pi (x I64) (Eq I64 x x)) ] [ (intro (x I64) (apply (use p.base) x)) ]
+      proof 1 second : [ (Pi (x I64) (Eq I64 x x)) ] [ (intro (x I64) (apply (use p.base) x)) ]
+    ]";
+    let staged = imported.prepare(dependent, &[], super::LIMITS)
+        .map_err(|error| format!("{error:?}"))?;
+    let batch = staged.proof_obligations().ok_or("missing imported proof obligations")?;
+    assert_eq!(batch.obligations.len(), 2);
+    let [dependency] = batch.dependencies.as_slice() else {
+        return Err("expected one deduplicated imported proof".into());
+    };
+    assert!(!dependency.source.is_empty(), "imported proof has no retained source");
+    let exact_bytes = u32::try_from(dependency.source.len() * batch.obligations.len())
+        .map_err(|_| "imported proof fixture exceeds u32 byte limit")?;
+    let exact = noble_contracts::Limits { bytes: exact_bytes, ..super::LIMITS };
+    imported.prepare(dependent, &[], exact).map_err(|error| format!("{error:?}"))?;
+    let short = noble_contracts::Limits { bytes: exact_bytes - 1, ..exact };
+    let refused = imported.prepare(dependent, &[], short)
+        .expect_err("one byte below the replicated dependency must fail");
+    assert_eq!(refused.stage(), noble_contracts::source::Stage::Check);
+    assert_eq!(refused.diagnostic().message, "proof dependency snapshot byte budget exhausted");
     Ok(())
 }
 
@@ -903,9 +971,19 @@ fn local_named_proof_use_is_ordered_and_not_an_executable_word() -> Result<(), S
     assert_eq!(batch.obligations[0].name, "base");
     assert_eq!(batch.obligations[1].name, "derived");
     assert!(batch.dependencies.is_empty(), "local proof may not impersonate imported metadata");
-    let checked = noble_contracts::intrinsic::check_batch(batch, super::LIMITS)
+    let exact = noble_contracts::Limits {
+        bytes: u32::try_from(source.len()).map_err(|_| "proof source exceeds u32 byte limit")?,
+        ..super::LIMITS
+    };
+    let checked = noble_contracts::intrinsic::check_batch(batch, exact)
         .map_err(|error| format!("{error:?}"))?;
     assert_eq!(checked[0].claim, checked[1].claim);
+    let short = noble_contracts::Limits { bytes: exact.bytes - 1, ..exact };
+    let refused = noble_contracts::intrinsic::check_batch(batch, short)
+        .expect_err("one byte below retained source length must exhaust proof budget");
+    assert_eq!(refused.kind, noble_contracts::DiagnosticKind::Exhausted);
+    assert_eq!(refused.span, noble_contracts::Span { start: 0, end: 0 });
+    assert_eq!(refused.message, "proof size, depth or work limit exhausted");
     let forward = b"module bad@1 [ proof 1 derived : [ (Pi (x I64) (Eq I64 x x)) ] [ (intro (x I64) (apply (use base) x)) ] proof 1 base : [ (Pi (x I64) (Eq I64 x x)) ] [ (intro (x I64) (refl x)) ] ]";
     assert!(matches!(session.prepare(forward, &[], super::LIMITS), Err(error)
         if error.stage() == noble_contracts::source::Stage::Resolve));

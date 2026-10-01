@@ -30,7 +30,9 @@ fn form(
                     kind: crate::intrinsic::FormKind::Atom(alloc::string::String::from(text)),
                     span: token.span,
                 },
-                at + 1,
+                attempt!(at.checked_add(1).ok_or_else(|| {
+                    crate::invalid(token.span, "logical token position exceeds address space")
+                })),
             ))
         }
         LogicalKind::Colon | LogicalKind::Comma => {
@@ -40,12 +42,16 @@ fn form(
                     kind: crate::intrinsic::FormKind::Atom(alloc::string::String::from(spelling)),
                     span: token.span,
                 },
-                at + 1,
+                attempt!(at.checked_add(1).ok_or_else(|| {
+                    crate::invalid(token.span, "logical token position exceeds address space")
+                })),
             ))
         }
         LogicalKind::OpenParen => {
             let mut items = alloc::vec::Vec::new();
-            let mut next = at + 1;
+            let mut next = attempt!(at.checked_add(1).ok_or_else(|| {
+                crate::invalid(token.span, "logical token position exceeds address space")
+            }));
             loop {
                 let Some(current) = tokens.get(next) else {
                     return Err(crate::invalid(token.span, "unclosed logical parenthesis"));
@@ -59,10 +65,17 @@ fn form(
                                 end: current.span.end,
                             },
                         },
-                        next + 1,
+                        attempt!(next.checked_add(1).ok_or_else(|| {
+                            crate::invalid(current.span, "logical token position exceeds address space")
+                        })),
                     ));
                 }
                 let (item, after) = attempt!(form(tokens, next, span));
+                // Every item consumes at least one token, so this bound never
+                // precedes the ordinary unclosed/unmatched diagnostics.
+                if items.len() >= tokens.len() {
+                    return Err(crate::invalid(token.span, "logical list exceeds its token body"));
+                }
                 items.push(item);
                 next = after;
             }

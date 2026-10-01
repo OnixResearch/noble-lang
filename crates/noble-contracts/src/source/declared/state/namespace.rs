@@ -80,9 +80,22 @@ impl super::ModuleSession {
                     break;
                 }
                 if let Some(value) = &export.ty {
+                    // One entry per scanned export, so this bound is never reached.
+                    if types.len() >= entry.exports.len() {
+                        return Err(super::super::error(
+                            crate::source::Stage::Resolve,
+                            "type export scan exceeds module exports",
+                        ));
+                    }
                     types.push((export.name.clone(), value.clone()));
                 }
                 if let Some(id) = export.generic {
+                    if families.len() >= entry.exports.len() {
+                        return Err(super::super::error(
+                            crate::source::Stage::Resolve,
+                            "type export scan exceeds module exports",
+                        ));
+                    }
                     families.push((export.name.clone(), id));
                 }
                 at += 1;

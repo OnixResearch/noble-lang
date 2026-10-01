@@ -435,11 +435,18 @@ fn malformed_families_forged_shapes_and_resource_arguments_fail_closed() -> Resu
     );
     assert!(!env.valid_generic_instance(&forged_arguments));
     reject_type(&env, forged_arguments)?;
+    let unknown_id = NominalTypeId {
+        module: id.module,
+        ordinal: id
+            .ordinal
+            .checked_add(1)
+            .ok_or_else(|| "generic family ordinal has no successor".to_string())?,
+    };
+    if env.generic_variant(unknown_id).is_some() {
+        return Err("successor generic family ordinal is registered, not unknown".to_string());
+    }
     let unknown = Ty::GenericNominal(
-        NominalTypeId {
-            module: id.module,
-            ordinal: id.ordinal + 1,
-        },
+        unknown_id,
         args,
         Box::new(NominalShape::Variant(Box::new(Ty::I64), Box::new(Ty::Text))),
     );

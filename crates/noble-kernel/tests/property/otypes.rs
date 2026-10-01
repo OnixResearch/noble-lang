@@ -77,34 +77,39 @@ impl<'a> Mirror<'a> {
                     }
                 }
             },
-            noble_kernel::types::Ty::GenericNominal(id, arguments, shape) => {
-                let alternative = matches!(
-                    shape.as_ref(),
-                    noble_kernel::types::NominalShape::Variant(_, _)
-                )
-                .then(|| Box::new(Type::Unit));
-                *destination = Type::GenericNominal(
-                    *id,
-                    Box::new([Type::Unit, Type::Unit]),
-                    Box::new(Type::Unit),
-                    alternative,
-                );
-                if let Type::GenericNominal(_, mirrored, first, second) = destination {
-                    let [argument_left, argument_right] = mirrored.as_mut();
-                    self.pending.push((&arguments[1], argument_right));
-                    self.pending.push((&arguments[0], argument_left));
-                    match (shape.as_ref(), second.as_mut()) {
-                        (noble_kernel::types::NominalShape::Opaque(representation), None) => {
-                            self.pending.push((representation, first));
-                        }
-                        (noble_kernel::types::NominalShape::Variant(left, right), Some(other)) => {
-                            self.pending.push((right, other));
-                            self.pending.push((left, first));
-                        }
-                        _ => unreachable!("mirror shape determines its alternative"),
+            // The kernel shape alone selects the mirrored alternative, so each
+            // arm builds its own destination and needs no impossible fallback.
+            noble_kernel::types::Ty::GenericNominal(id, arguments, shape) => match shape.as_ref() {
+                noble_kernel::types::NominalShape::Opaque(representation) => {
+                    *destination = Type::GenericNominal(
+                        *id,
+                        Box::new([Type::Unit, Type::Unit]),
+                        Box::new(Type::Unit),
+                        None,
+                    );
+                    if let Type::GenericNominal(_, mirrored, first, None) = destination {
+                        let [argument_left, argument_right] = mirrored.as_mut();
+                        self.pending.push((&arguments[1], argument_right));
+                        self.pending.push((&arguments[0], argument_left));
+                        self.pending.push((representation, first));
                     }
                 }
-            }
+                noble_kernel::types::NominalShape::Variant(left, right) => {
+                    *destination = Type::GenericNominal(
+                        *id,
+                        Box::new([Type::Unit, Type::Unit]),
+                        Box::new(Type::Unit),
+                        Some(Box::new(Type::Unit)),
+                    );
+                    if let Type::GenericNominal(_, mirrored, first, Some(other)) = destination {
+                        let [argument_left, argument_right] = mirrored.as_mut();
+                        self.pending.push((&arguments[1], argument_right));
+                        self.pending.push((&arguments[0], argument_left));
+                        self.pending.push((right, other));
+                        self.pending.push((left, first));
+                    }
+                }
+            },
             noble_kernel::types::Ty::Pair(left, right) => {
                 *destination = Type::Pair(Box::new(Type::Unit), Box::new(Type::Unit));
                 if let Type::Pair(first, second) = destination {

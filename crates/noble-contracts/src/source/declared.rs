@@ -215,7 +215,11 @@ pub(crate) fn verify_named_call_origin<'a>(
         .ok_or_else(|| crate::invalid(source_span, "named call source span overflows")));
     let absolute_end = attempt!(caller_span.start.checked_add(node.span.end)
         .ok_or_else(|| crate::invalid(source_span, "named call source span overflows")));
-    let original_word = module_source.get(absolute_start as usize..absolute_end as usize)
+    let source_start = usize::try_from(absolute_start)
+        .map_err(|_| crate::invalid(source_span, "named call source span exceeds address space"))?;
+    let source_end = usize::try_from(absolute_end)
+        .map_err(|_| crate::invalid(source_span, "named call source span exceeds address space"))?;
+    let original_word = module_source.get(source_start..source_end)
         .ok_or_else(|| crate::invalid(source_span, "named call lies outside retained module"))?;
     if source_span != (crate::Span { start: absolute_start, end: absolute_end }) ||
         absolute_start <= body_span.start || absolute_end >= body_span.end ||

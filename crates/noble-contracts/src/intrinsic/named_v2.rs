@@ -4,7 +4,7 @@ use alloc::{format, string::{String, ToString}, vec::Vec};
 use noble_kernel::{acceptance, contracts::{Behavior, Definition}, execution, shapes::Pattern,
     types::{EffSet, Ty}, untrusted::{self, Lit, Node, Outcome}, words::Inst};
 use crate::{Diagnostic, Limits, Span};
-use super::{ContractGoal, Form, Meter, NamedUseOrigin, ProofKind, ProofObligation, CheckedProof,
+use super::{ContractGoal, Form, Meter, Transition, NamedUseOrigin, ProofKind, ProofObligation, CheckedProof,
     atom, operation, reject};
 
 struct Graph<'a> {
@@ -27,7 +27,7 @@ fn checked(body: &execution::Body, request: &untrusted::Request,
     -> Result<untrusted::Checked, Diagnostic> {
     let count = body.candidate.nodes.len();
     if !body.texts.is_empty() || count != body.candidate.body.len() ||
-        count == 0 || count > 2 || count > request.limits.nodes as usize ||
+        count == 0 || count > 2 || u32::try_from(count).map_or(true, |n| n > request.limits.nodes) ||
         body.candidate.format != untrusted::CANDIDATE_FORMAT ||
         body.candidate.revision != untrusted::SEMANTIC_REVISION {
         return Err(invalid(span, "named proof has orphan nodes, text or wrong recipe revision"));
@@ -47,7 +47,7 @@ fn checked(body: &execution::Body, request: &untrusted::Request,
             return Err(invalid(span, "quoted named proof is outside selected v2 rule"));
         }
     }
-    if seen != (1u8 << count) - 1 {
+    if Some(seen) != (1u8 << count).checked_sub(1) {
         return Err(invalid(span, "named proof has unreachable candidate node"));
     }
     let Outcome::Accepted(result) = acceptance::check(environment, request, &body.candidate) else {
@@ -72,7 +72,7 @@ fn node(body: &execution::Body, index: usize, span: Span) -> Result<&Node, Diagn
 fn empty_inst(inst: &Inst) -> bool { inst.bindings.is_empty() }
 fn named_scheme(env: &noble_kernel::contracts::Env, slot: Definition, owner: u64) -> bool {
     env.kind(slot) == Some(Behavior::Named) &&
-        env.definition_owners.get(slot.0 as usize) == Some(&Some(owner)) &&
+        usize::try_from(slot.0).ok().and_then(|index| env.definition_owners.get(index)) == Some(&Some(owner)) &&
         env.scheme(slot).is_some_and(|scheme| scheme.var_kinds.is_empty() &&
             scheme.stack_in == [Pattern::I64] && scheme.stack_out == [Pattern::I64] &&
             scheme.effects.is_empty())
@@ -281,7 +281,7 @@ fn verify(goal: &ContractGoal, limits: Limits) -> Result<Graph<'_>, Diagnostic> 
         first_use.definition.0.checked_add(1) != Some(second_use.definition.0) ||
         usize::try_from(second_use.definition.0).ok()
             .and_then(|last| last.checked_add(1)) != Some(env.defs.len()) ||
-        env.deps.get(selected.definition.0 as usize).map(Vec::as_slice) !=
+        usize::try_from(selected.definition.0).ok().and_then(|index| env.deps.get(index)).map(Vec::as_slice) !=
             Some(&[first_use.definition, second_use.definition][..]) {
         return Err(invalid(span, "selected subject definition, owner or closed graph differs"));
     }
@@ -336,7 +336,7 @@ fn verify(goal: &ContractGoal, limits: Limits) -> Result<Graph<'_>, Diagnostic> 
         if definition.identity != use_record.definition_identity ||
             !named_scheme(env, definition.definition, use_record.definition_owner) ||
             !unary(&definition.expected) ||
-            env.deps.get(definition.definition.0 as usize).map(Vec::as_slice) != Some(&[Definition(4)][..]) {
+            usize::try_from(definition.definition.0).ok().and_then(|index| env.deps.get(index)).map(Vec::as_slice) != Some(&[Definition(4)][..]) {
             return Err(invalid(use_record.definition_span, "named step identity, scheme or dependencies differ"));
         }
     }
@@ -379,7 +379,7 @@ fn verify(goal: &ContractGoal, limits: Limits) -> Result<Graph<'_>, Diagnostic> 
     Ok(Graph { first_use, second_use })
 }
 
-fn bytes(out: &mut String, source: &[u8]) {
+fn bytes(mut out: String, source: &[u8]) -> String {
     out.push('[');
     for (index, byte) in source.iter().enumerate() {
         if index != 0 { out.push(','); }
@@ -388,27 +388,28 @@ fn bytes(out: &mut String, source: &[u8]) {
         out.push(')');
     }
     out.push(']');
+    out
 }
-fn provenance(out: &mut String, goal: &ContractGoal, origin: &NamedUseOrigin)
-    -> Result<(),Diagnostic> {
+fn provenance(mut out: String, goal: &ContractGoal, origin: &NamedUseOrigin)
+    -> Result<String,Diagnostic> {
     let module = goal.subject.source_dependencies.get(origin.module_index)
         .ok_or_else(|| invalid(origin.definition_span,"named module is absent"))?;
     out.push_str("{ moduleName := ");
     out.push_str(&format!("{:?}",module.module));
     out.push_str(&format!(", moduleVersion := {}, moduleSource := ",module.version));
-    bytes(out,&module.full_source);
+    out = bytes(out,&module.full_source);
     out.push_str(&format!(", definitionSlot := {}, definitionName := {:?}, definitionSource := ",
         origin.definition_ordinal,origin.definition_name));
-    bytes(out, at(origin.definition_span,&module.full_source)?);
+    out = bytes(out, at(origin.definition_span,&module.full_source)?);
     out.push_str(" }");
-    Ok(())
+    Ok(out)
 }
 fn statement(goal: &ContractGoal, graph: &Graph<'_>, limits: Limits) -> Result<String,Diagnostic> {
     let mut out = String::from("import NobleContracts.NamedV2\nopen NobleContracts\nnamespace NamedV2Obligation\nopen NobleContracts.NamedV1\n");
     out.push_str("private def caller : Provenance := ");
-    provenance(&mut out,goal,&goal.subject.named_uses[0])?;
+    out = provenance(out,goal,&goal.subject.named_uses[0])?;
     out.push_str("\nprivate def callee : Provenance := ");
-    provenance(&mut out,goal,graph.first_use)?;
+    out = provenance(out,goal,graph.first_use)?;
     for (name,record) in [("A",graph.first_use),("B",graph.second_use)] {
         let occurrence = record.source_node.ok_or_else(|| invalid(record.definition_span,
             "named source occurrence is absent"))?;
@@ -424,7 +425,11 @@ fn statement(goal: &ContractGoal, graph: &Graph<'_>, limits: Limits) -> Result<S
     out.push_str("private theorem typedRoot : NamedV1.CodeTyped env root [.i64] [.i64] := by\n  exact .cons (NamedV1.OpTyped.call (entry := entryA) (s := []) (by rfl) (by simp [Entry.matches, entryA, useA]) typedA) (.cons (NamedV1.OpTyped.call (entry := entryB) (s := []) (by rfl) (by simp [Entry.matches, entryB, useB]) typedB) .nil)\n");
     out.push_str("def subject : Subject :=\n  { provenance := caller, env, root, dependencies := [useA.slot, useB.slot], rank := 1,\n    closure, checkedEntries := by\n      intro entry he\n      simp only [env, List.mem_cons, List.mem_nil_iff, or_false] at he\n      rcases he with rfl | rfl\n      · exact typedA\n      · exact typedB,\n    input := [.i64], output := [.i64], typed := typedRoot }\n");
     out.push_str("def claim : Prop := NobleContracts.NamedV2.exportedNamedClaim subject []\n  (fun before after params => NobleContracts.NamedV2.Holds₂ subject.env (.bool true) before after params)\n  (fun before after params => NobleContracts.NamedV2.Holds₂ subject.env (.eq (.output 0) (.add (.input 0) (.i64 2))) before after params)\nend NamedV2Obligation\n");
-    if out.len() > limits.work as usize || out.len() > limits.bytes as usize * 128 {
+    let is_within_work = u32::try_from(out.len()).is_ok_and(|len| len <= limits.work);
+    let is_within_bytes = u64::try_from(out.len()).ok()
+        .zip(u64::from(limits.bytes).checked_mul(128))
+        .is_some_and(|(len, cap)| len <= cap);
+    if !is_within_work || !is_within_bytes {
         return Err(invalid(goal.contract_span,"named proof statement exceeds bounded source budget"));
     }
     Ok(out)
@@ -454,8 +459,9 @@ fn selected_assertion(goal: &ContractGoal) -> Result<(),Diagnostic> {
     }
     Ok(())
 }
-pub(super) fn check_contract(obligation: &ProofObligation, goal: &ContractGoal,
-    meter: &mut Meter) -> Result<CheckedProof,Diagnostic> {
+pub(super) fn check_contract<'m>(obligation: &ProofObligation, goal: &ContractGoal,
+    mut meter: Meter<'m>) -> Transition<'m,CheckedProof> {
+    let result = (|| -> Result<CheckedProof,Diagnostic> {
     selected_assertion(goal)?;
     let _ = verify(goal,meter.limits)?;
     // A source proof explicitly supplies both ordered call slices and their
@@ -472,8 +478,12 @@ pub(super) fn check_contract(obligation: &ProofObligation, goal: &ContractGoal,
     operation(&rule[2],"by-exact-tail",0)?;
     operation(&rule[3],"named-true-eq-wrap",0)?;
     let lean_term = String::from("(NobleContracts.NamedV2.twoStepClaim NamedV2Obligation.subject NamedV2Obligation.useA NamedV2Obligation.useB NamedV2Obligation.entryA NamedV2Obligation.entryB (by rfl) (by rfl) (by rfl) (by decide) (by decide) (by rfl) (by rfl) (by simp [NamedV1.Entry.matches, NamedV2Obligation.entryA, NamedV2Obligation.useA]) (by simp [NamedV1.Entry.matches, NamedV2Obligation.entryB, NamedV2Obligation.useB]) (by rfl) (by rfl))");
-    meter.charge(lean_term.len(),obligation.span)?;
+    let (next,charged) = meter.charge(lean_term.len(),obligation.span);
+    meter = next;
+    charged?;
     Ok(CheckedProof {name:obligation.name.clone(),kind:ProofKind::NamedContract,
         lean_term,claim:String::from("NamedV2Obligation.claim"),
         model_revision:String::new(),checker_revision:String::new()})
+    })();
+    (meter,result)
 }

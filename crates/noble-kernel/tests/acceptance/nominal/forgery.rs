@@ -72,13 +72,14 @@ fn scripted_clock_contract_rejects_forged_rows_and_preserves_owner_visibility() 
     env.caller_module=Some(31);
     assert!(matches!(super::check(&env,request.clone(),candidate.clone()),
         noble_kernel::untrusted::Outcome::Accepted(_)));
+    let clock_index=required!(usize::try_from(clock.0),"scripted clock definition index");
     for mutation in 0..5 {
         let mut forged=env.clone();
         match mutation {
             0=>forged.bound_adapters[0].input.push(Ty::Unit),
             1=>forged.bound_adapters[0].output.clear(),
             2=>forged.bound_adapters[0].effects=super::super::support::ids(&[0]),
-            3=>forged.defs[usize::try_from(clock.0).unwrap()].effects.clear(),
+            3=>required!(forged.defs.get_mut(clock_index),"scripted clock definition").effects.clear(),
             _=>forged.bound_adapters[0].adapter_slot=6,
         }
         super::rejected(super::check(&forged,request.clone(),candidate.clone()),

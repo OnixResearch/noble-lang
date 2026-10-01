@@ -258,8 +258,18 @@ impl super::ModuleSession {
         // A fan-out of local uses can otherwise duplicate nested proofs
         // exponentially. Charge the exact source bytes and nodes that would
         // be copied before each copy is made.
-        let mut remaining_bytes = usize::try_from(prepared.limits.bytes).unwrap_or(usize::MAX);
-        let mut remaining_nodes = usize::try_from(prepared.limits.nodes).unwrap_or(usize::MAX);
+        let (Ok(mut remaining_bytes), Ok(mut remaining_nodes)) = (
+            usize::try_from(prepared.limits.bytes),
+            usize::try_from(prepared.limits.nodes),
+        ) else {
+            return (
+                self,
+                Err(crate::source::declared::error(
+                    crate::source::Stage::Acceptance,
+                    "proof publication dependency budget exceeds address space",
+                )),
+            );
+        };
         for obligation in &batch.obligations {
             if remaining_bytes.checked_sub(batch.source.len()).is_none()
                 || remaining_nodes == 0
@@ -275,16 +285,20 @@ impl super::ModuleSession {
             remaining_bytes -= batch.source.len();
             remaining_nodes -= 1;
             for imported in &batch.dependencies {
-                if uses(&obligation.term, &imported.name)
-                    && !charge_dependency(imported, &mut remaining_bytes, &mut remaining_nodes)
-                {
-                    return (
-                        self,
-                        Err(crate::source::declared::error(
-                            crate::source::Stage::Acceptance,
-                            "proof publication dependency budget exhausted",
-                        )),
-                    );
+                if uses(&obligation.term, &imported.name) {
+                    let Some((bytes, nodes)) =
+                        charge_dependency(imported, remaining_bytes, remaining_nodes)
+                    else {
+                        return (
+                            self,
+                            Err(crate::source::declared::error(
+                                crate::source::Stage::Acceptance,
+                                "proof publication dependency budget exhausted",
+                            )),
+                        );
+                    };
+                    remaining_bytes = bytes;
+                    remaining_nodes = nodes;
                 }
             }
             // Earlier obligations are budgeted when materialized below;
@@ -301,18 +315,38 @@ impl super::ModuleSession {
         };
         for (obligation, result) in batch.obligations.iter().zip(checked) {
             let mut dependencies = alloc::vec::Vec::new();
+            // At most one clone per imported or earlier local proof.
+            let dependency_bound = batch.dependencies.len().saturating_add(module.proofs.len());
             for imported in &batch.dependencies {
                 if uses(&obligation.term, &imported.name) {
+                    if dependencies.len() >= dependency_bound {
+                        return (
+                            self,
+                            Err(crate::source::declared::error(
+                                crate::source::Stage::Acceptance,
+                                "proof publication dependency budget exhausted",
+                            )),
+                        );
+                    }
                     dependencies.push(imported.clone());
                 }
             }
             for local in &module.proofs {
                 if uses(&obligation.term, &local.reference.name) {
-                    if !charge_dependency(
-                        &local.reference,
-                        &mut remaining_bytes,
-                        &mut remaining_nodes,
-                    ) {
+                    let Some((bytes, nodes)) =
+                        charge_dependency(&local.reference, remaining_bytes, remaining_nodes)
+                    else {
+                        return (
+                            self,
+                            Err(crate::source::declared::error(
+                                crate::source::Stage::Acceptance,
+                                "proof publication dependency budget exhausted",
+                            )),
+                        );
+                    };
+                    remaining_bytes = bytes;
+                    remaining_nodes = nodes;
+                    if dependencies.len() >= dependency_bound {
                         return (
                             self,
                             Err(crate::source::declared::error(
@@ -348,25 +382,49 @@ fn revision(value: &str) -> bool {
     value.len() == 64 && value.bytes().all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
 }
 
+/// Charges a retained dependency and its transitive closure in the same
+/// pre-order as the published copy, returning the remaining byte and node
+/// budgets, or `None` once either is exhausted.
 fn charge_dependency(
     dependency: &crate::intrinsic::ProofDependency,
-    remaining_bytes: &mut usize,
-    remaining_nodes: &mut usize,
-) -> bool {
-    let (Some(bytes), Some(nodes)) = (
-        remaining_bytes.checked_sub(dependency.source.len()),
-        remaining_nodes.checked_sub(1),
-    ) else {
-        return false;
-    };
-    *remaining_bytes = bytes;
-    *remaining_nodes = nodes;
-    for earlier in &dependency.dependencies {
-        if !charge_dependency(earlier, remaining_bytes, remaining_nodes) {
-            return false;
+    remaining_bytes: usize,
+    remaining_nodes: usize,
+) -> Option<(usize, usize)> {
+    const INLINE: usize = 32;
+    let mut inline: [Option<&crate::intrinsic::ProofDependency>; INLINE] = [None; INLINE];
+    let mut inline_len = 0usize;
+    let mut spill = alloc::vec::Vec::new();
+    let (mut bytes, mut nodes) = (remaining_bytes, remaining_nodes);
+    let mut current = Some(dependency);
+    while let Some(next) = current {
+        bytes = bytes.checked_sub(next.source.len())?;
+        nodes = nodes.checked_sub(1)?;
+        // Every queued proof costs a node. Refuse excessive fan-out before
+        // putting any of its children into scratch storage.
+        let waiting = inline_len.checked_add(spill.len())?;
+        if waiting.checked_add(next.dependencies.len())? > nodes {
+            return None;
         }
+        // The first child runs next; the rest wait in reverse order. A leaf or
+        // unary chain has no heap allocation, unlike a one-element Vec seed.
+        for child in next.dependencies.iter().skip(1).rev() {
+            if inline_len < INLINE && spill.is_empty() {
+                inline[inline_len] = Some(child);
+                inline_len = inline_len.saturating_add(1);
+            } else {
+                if spill.len() >= nodes { return None; }
+                spill.push(child);
+            }
+        }
+        current = next.dependencies.first()
+            .or_else(|| spill.pop())
+            .or_else(|| {
+                let top = inline_len.checked_sub(1)?;
+                inline_len = top;
+                inline[top].take()
+            });
     }
-    true
+    Some((bytes, nodes))
 }
 
 fn uses(form: &crate::intrinsic::Form, name: &str) -> bool {
