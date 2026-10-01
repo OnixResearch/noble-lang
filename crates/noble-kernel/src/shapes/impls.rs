@@ -31,6 +31,13 @@ impl Clone for crate::shapes::Pattern {
             crate::shapes::Pattern::Nominal(id, shape) => {
                 crate::shapes::Pattern::Nominal(*id, alloc::boxed::Box::new((**shape).clone()))
             }
+            crate::shapes::Pattern::GenericNominal(id, args, mapping) => {
+                crate::shapes::Pattern::GenericNominal(
+                    *id,
+                    alloc::boxed::Box::new([args[0].clone(), args[1].clone()]),
+                    *mapping,
+                )
+            }
             crate::shapes::Pattern::Var(variable) => crate::shapes::Pattern::Var(*variable),
             crate::shapes::Pattern::StackVar(variable) => {
                 crate::shapes::Pattern::StackVar(*variable)
@@ -168,6 +175,15 @@ impl core::fmt::Debug for crate::shapes::Pattern {
                 attempt!(core::fmt::Debug::fmt(id, f));
                 attempt!(core::fmt::Formatter::write_str(f, ", "));
                 attempt!(core::fmt::Debug::fmt(&**shape, f));
+                core::fmt::Formatter::write_str(f, ")")
+            }
+            crate::shapes::Pattern::GenericNominal(id, args, mapping) => {
+                attempt!(core::fmt::Formatter::write_str(f, "GenericNominal("));
+                attempt!(core::fmt::Debug::fmt(id, f));
+                attempt!(core::fmt::Formatter::write_str(f, ", "));
+                attempt!(debug_parts(args.as_slice(), f));
+                attempt!(core::fmt::Formatter::write_str(f, ", "));
+                attempt!(core::fmt::Debug::fmt(mapping, f));
                 core::fmt::Formatter::write_str(f, ")")
             }
             crate::shapes::Pattern::Var(variable) => {

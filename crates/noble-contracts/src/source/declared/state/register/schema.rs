@@ -2,8 +2,15 @@ mod names;
 pub(super) mod nominals;
 mod types;
 
-pub(super) type Resolved =
-    alloc::vec::Vec<Option<(noble_kernel::types::Ty, noble_kernel::contracts::NominalOps)>>;
+pub(super) enum ResolvedSchema {
+    Concrete(noble_kernel::types::Ty, noble_kernel::contracts::NominalOps),
+    Generic(
+        noble_kernel::types::NominalTypeId,
+        noble_kernel::contracts::NominalOps,
+    ),
+}
+
+pub(super) type Resolved = alloc::vec::Vec<Option<ResolvedSchema>>;
 
 pub(super) fn resolve(
     session: crate::source::declared::ModuleSession,
@@ -25,6 +32,7 @@ pub(super) fn resolve(
 struct Resolution<'a> {
     session: Option<crate::source::declared::ModuleSession>,
     local_types: alloc::vec::Vec<(alloc::string::String, noble_kernel::types::Ty)>,
+    local_generics: alloc::vec::Vec<(alloc::string::String, noble_kernel::types::NominalTypeId)>,
     resolved: Resolved,
     type_nodes: usize,
     meter: crate::Meter,
@@ -82,10 +90,12 @@ impl<'a> Resolution<'a> {
         identity: u64,
         limits: crate::Limits,
     ) -> Result<Self, crate::source::Error> {
-        let resolved: Resolved = alloc::vec![None; collected.schemas.len()];
+        let mut resolved: Resolved = alloc::vec::Vec::with_capacity(collected.schemas.len());
+        resolved.resize_with(collected.schemas.len(), || None);
         let local_types = attempt!(names::available(&session, collected.schemas.len()));
         Ok(Self {
             local_types,
+            local_generics: alloc::vec::Vec::new(),
             session: Some(session),
             resolved,
             type_nodes: 0,
@@ -126,7 +136,30 @@ impl<'a> Resolution<'a> {
             return (self, Ok(false));
         }
         let schema = &self.collected.schemas[ordinal];
-        let (meter, parsed) = types::parse_shape(schema, &self.local_types, self.meter);
+        if let crate::source::declared::SchemaKind::Variant {
+            parameters,
+            left_type,
+            right_type,
+            ..
+        } = &schema.kind
+        {
+            if !parameters.is_empty() {
+                let result = self.declare_generic(ordinal, parameters, left_type, right_type);
+                return (self, result);
+            }
+        }
+        let environment = self
+            .session
+            .as_ref()
+            .and_then(|session| session.source.declared.as_ref())
+            .map(|context| &context.environment);
+        let (meter, parsed) = types::parse_shape(
+            schema,
+            &self.local_types,
+            &self.local_generics,
+            environment,
+            self.meter,
+        );
         self.meter = meter;
         let parsed = match parsed {
             Ok(parsed) => parsed,
@@ -165,9 +198,72 @@ impl<'a> Resolution<'a> {
             };
             self.session = Some(session);
             self.local_types.push((schema.name.clone(), ty.clone()));
-            self.resolved[ordinal] = Some((ty, ops));
+            self.resolved[ordinal] = Some(ResolvedSchema::Concrete(ty, ops));
             return (self, Ok(true));
         }
         (self, Ok(false))
+    }
+
+    fn declare_generic(
+        &mut self,
+        ordinal: usize,
+        parameters: &[alloc::string::String],
+        left_type: &str,
+        right_type: &str,
+    ) -> Result<bool, crate::source::Error> {
+        let parameter_index = |spelling: &str| -> Result<u8, crate::source::Error> {
+            parameters
+                .iter()
+                .position(|name| name == spelling)
+                .and_then(|index| u8::try_from(index).ok())
+                .ok_or_else(|| {
+                    crate::source::declared::error(
+                        crate::source::Stage::Resolve,
+                        "generic variant payload must name a declared type parameter",
+                    )
+                })
+        };
+        let payload_params = [
+            attempt!(parameter_index(left_type)),
+            attempt!(parameter_index(right_type)),
+        ];
+        let schema = &self.collected.schemas[ordinal];
+        let exported = self.collected.exports.contains(&schema.name);
+        let public = types::public_operations(schema, &self.collected.exports, exported);
+        let id = noble_kernel::types::NominalTypeId {
+            module: self.identity,
+            ordinal: ordinal as u32,
+        };
+        let Some(session) = self.session.as_mut() else {
+            return Err(crate::source::declared::error(
+                crate::source::Stage::Check,
+                "missing module session",
+            ));
+        };
+        let Some(context) = session.source.declared.as_mut() else {
+            return Err(crate::source::declared::error(
+                crate::source::Stage::Check,
+                "missing declared context",
+            ));
+        };
+        let declaration = noble_kernel::contracts::GenericVariantDecl {
+            id,
+            payload_params,
+            exported,
+            public,
+        };
+        let environment = core::mem::take(&mut context.environment);
+        let (environment, ops) = attempt!(environment
+            .declare_generic_variant(declaration)
+            .map_err(|_| {
+                crate::source::declared::error(
+                    crate::source::Stage::Check,
+                    "invalid generic variant schema",
+                )
+            }));
+        context.environment = environment;
+        self.local_generics.push((schema.name.clone(), id));
+        self.resolved[ordinal] = Some(ResolvedSchema::Generic(id, ops));
+        Ok(true)
     }
 }

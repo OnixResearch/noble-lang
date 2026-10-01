@@ -170,6 +170,8 @@ impl Input<'_> {
             Some(noble_kernel::contracts::Behavior::Named) => self.named_call(def),
             Some(kind) => match kind {
                 noble_kernel::contracts::Behavior::BoundEmit(slot) => output.bound_action(slot),
+                noble_kernel::contracts::Behavior::BoundClock(slot) =>
+                    output.clock_action(slot),
                 noble_kernel::contracts::Behavior::NominalNew(id) => output.new_action(id),
                 noble_kernel::contracts::Behavior::NominalInto(id) => {
                     let ty = attempt!(nominal::Output::checked_input(
@@ -194,6 +196,15 @@ impl Input<'_> {
                         3,
                     ));
                     output.match_action(id, ty)
+                }
+                noble_kernel::contracts::Behavior::GenericLeft(id) => {
+                    output.generic_variant_action(true, id)
+                }
+                noble_kernel::contracts::Behavior::GenericRight(id) => {
+                    output.generic_variant_action(false, id)
+                }
+                noble_kernel::contracts::Behavior::GenericMatch(id) => {
+                    output.generic_match_action(id)
                 }
                 noble_kernel::contracts::Behavior::Dup
                 | noble_kernel::contracts::Behavior::Drop

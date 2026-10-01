@@ -211,7 +211,9 @@ This is a scenario design, not an execution result. The case's `state` and `evid
 ### Requirement: K-VERIFY-01
 r[K-VERIFY-01]
 
-**K-VERIFY-01.** Formal verification SHALL be a core development commitment under [SPEC-V001](../verification/spec.md). Ordinary programs MUST retain the existing source forms and `Program<S,T,e>` interface. Handwritten behavioral proofs, a runtime prover, dependent types, and new proof punctuation are not required by this commitment.
+**K-VERIFY-01.**
+
+Formal verification SHALL be a core development commitment under SPEC-V001. Ordinary programs MUST retain the existing source expression forms and `Program<S,T,e>` interface; neither handwritten behavioral proofs nor runtime provers nor computational dependent types are required for ordinary execution. The optional `Intrinsic-Proofs-Draft` adds explicitly checked, erased, nonexecuting proof *declarations in Noble source*, including proof-level dependent logical universals and equality, under SPEC-V002. It does not add a fourth executable expression form or silently extend ordinary rank-1 program typing.
 
 
 <!-- cairn:scenario-links:start -->
@@ -1095,6 +1097,14 @@ This is a scenario design, not an execution result. The case's `state` and `evid
 
 This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
 
+#### Scenario: ADAPT-18 for K-CONTROL-01
+
+- GIVEN the `Backend-Experiment` profile and every field of `input` in [ADAPT-18](../../../specs/conformance/adaptation-cases.json)
+- WHEN the `runtime` procedure for case `ADAPT-18` runs against those inputs
+- THEN the observations match every field of `expected` in case `ADAPT-18`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
 <!-- cairn:scenario-links:end -->
 
 ### 7.4 Recursive collections
@@ -1217,6 +1227,14 @@ r[K-EFFECT-01]
 - GIVEN the `Core-Bootstrap` profile and every field of `input` in [CORE-06](../../../specs/conformance/cases.json)
 - WHEN the `runtime` procedure for case `CORE-06` runs against those inputs
 - THEN the observations match every field of `expected` in case `CORE-06`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: ADAPT-18 for K-EFFECT-01
+
+- GIVEN the `Backend-Experiment` profile and every field of `input` in [ADAPT-18](../../../specs/conformance/adaptation-cases.json)
+- WHEN the `runtime` procedure for case `ADAPT-18` runs against those inputs
+- THEN the observations match every field of `expected` in case `ADAPT-18`
 
 This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
 
@@ -3099,3 +3117,79 @@ The language's public name, file extension, package namespace, release governanc
 ---
 
 *End of SPEC-0001, revision 0.1.0-draft.5.*
+
+### Requirement: K-PROOF-01
+r[K-PROOF-01]
+
+**K-PROOF-01.**
+
+In the opt-in `Intrinsic-Proofs-Draft`, `proof 1 Name for QualifiedContract [ ProofTerm ]` and `proof 1 Name : [ Proposition ] [ ProofTerm ]` MUST be versioned, nonexecuting members of actual UTF-8 `.noble` `module Name@Version [ ... ]` source. `contract 1 Name [ subject QualifiedDefinition input [ Name Type ... ] output [ Name Type ... ] requires [ LogicalTerm ] ensures [ LogicalTerm ] ]` is the module-local contract declaration used by `for`; all fields occur exactly once in the specified order. A `for` proof binds the exact accepted subject definition/recipe and independently elaborated MC1-v1 partial-correctness claim, not a copied executable body or producer-provided theorem. A standalone proposition cannot introduce a program claim. Local/imported contract, word and proof names MUST resolve in the same immutable versioned module namespace; proof/contract export and import MUST respect visibility, exact identity and dependency closure. Any invalid proof declaration rejects its complete module submission before guest execution and MUST NOT mutate a previously accepted snapshot.
+
+Only the `Name` of a `contract` or `proof` declaration and the target component of proof/contract references and exports MAY include `-`: these logical identifiers MUST match `[A-Za-z_][A-Za-z0-9_-]*` and MUST exclude the existing reserved names. Ordinary module names, definition names, import aliases, executable words and contract `input`/`output` binder names MUST retain their existing identifier rules; qualified module/alias scopes are ordinary identifiers.
+
+Within bracketed `requires`, `ensures`, proposition and proof bodies only, a balanced logical lexer mode recognizes `(`/`)`, `:` and `,` as delimiters while preserving `#` line comments; ordinary word/quotation lexing and the `def` body are unchanged. The declaration grammar, mode boundary, lexical scope, single-form closure, trailing-token rejection and source spans in the change design are normative for this optional profile. No raw Lean, guest macros, tactics, proof interpolation or executable expression inside proof bodies is permitted. The existing standalone experimental `.noble-contract` MC1 grammar remains available unchanged, but is not an implementation of Noble-source proofs.
+
+An additive selected named-call revision uses `contract 2 Name [ subject QualifiedDefinition input [ Name Type ... ] output [ Name Type ... ] requires [ LogicalTerm ] ensures [ LogicalTerm ] ]` and ONLY `proof 2 Name for QualifiedContract2 [ ProofTerm ]`. The contract fields, order, MC1 logical vocabulary and binder grammar are identical to revision 1; selected parameter types are empty and there is NO source `params [ ... ]` field. A revision-2 `for` reference MUST resolve a revision-2 contract; cross-revision references and `proof 2 Name : [ Proposition ] [ ProofTerm ]` MUST be refused. Revision 1 declarations and their existing acceptance semantics remain unchanged. Revision 2 adds only finite immutable named-definition calls from an accepted pure subject; it does not license arbitrary programs, quotation, reflection or generated call bodies.
+
+
+<!-- cairn:scenario-links:start -->
+#### Scenario: CONTRACT-17 for K-PROOF-01
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [CONTRACT-17](../../../specs/conformance/contract-cases.json)
+- WHEN the `static` procedure for case `CONTRACT-17` runs against those inputs
+- THEN the observations match every field of `expected` in case `CONTRACT-17`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: CONTRACT-18 for K-PROOF-01
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [CONTRACT-18](../../../specs/conformance/contract-cases.json)
+- WHEN the `admission` procedure for case `CONTRACT-18` runs against those inputs
+- THEN the observations match every field of `expected` in case `CONTRACT-18`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: CONTRACT-19 for K-PROOF-01
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [CONTRACT-19](../../../specs/conformance/contract-cases.json)
+- WHEN the `static` procedure for case `CONTRACT-19` runs against those inputs
+- THEN the observations match every field of `expected` in case `CONTRACT-19`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: CONTRACT-22 for K-PROOF-01
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [CONTRACT-22](../../../specs/conformance/contract-cases.json)
+- WHEN the `runtime` procedure for case `CONTRACT-22` runs against those inputs
+- THEN the observations match every field of `expected` in case `CONTRACT-22`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: CONTRACT-26 for K-PROOF-01
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [CONTRACT-26](../../../specs/conformance/contract-cases.json)
+- WHEN the `admission` procedure for case `CONTRACT-26` runs against those inputs
+- THEN the observations match every field of `expected` in case `CONTRACT-26`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+<!-- cairn:scenario-links:end -->
+
+### Requirement: K-PROOF-02
+r[K-PROOF-02]
+
+**K-PROOF-02.**
+
+`Intrinsic-Proofs-Draft` MUST separate the proof-level `Type0`/`Prop` calculus from ordinary value/stack typing. A proof-level `A:Type0` ranges over an independently checked inductive `PureTyCode`, decoded by `El`, with only `Unit`, `Bool`, `I64`, `Text` and recursive `Pair`, `Sum`, `List` pure data constructors; `x:A` ranges over total values of `El(A)`. The Lean target MUST quantify over `PureTyCode`, NOT unconstrained Lean `Type`; `Type0 : Type1`, never `Type0 : Type0`, and no quantified Type1 or impredicative universe is admitted. Every type instantiation/substitution MUST retain a valid code and recursive eligibility, rejecting resources, capabilities, program values, syntax, effectful/opaque representations, partial logical values and unsound equality. No proof-level type/value variable becomes a runtime stack value, independent rank-1 instantiation, effect-free authority, or erased required runtime input. Proof annotations MUST NOT bypass ordinary stack/effect/resource acceptance or grant host authorization.
+
+
+<!-- cairn:scenario-links:start -->
+#### Scenario: CONTRACT-17 for K-PROOF-02
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [CONTRACT-17](../../../specs/conformance/contract-cases.json)
+- WHEN the `static` procedure for case `CONTRACT-17` runs against those inputs
+- THEN the observations match every field of `expected` in case `CONTRACT-17`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+<!-- cairn:scenario-links:end -->

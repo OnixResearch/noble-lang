@@ -4,7 +4,7 @@
 )]
 
 mod text;
-mod tokens;
+pub(super) mod tokens;
 
 pub(super) enum TokenKind {
     Open,
@@ -13,6 +13,21 @@ pub(super) enum TokenKind {
     Literal(noble_kernel::untrusted::Lit),
     Text(alloc::vec::Vec<u8>),
     Word(alloc::vec::Vec<u8>),
+    ProofColon,
+    LogicalBody(alloc::vec::Vec<LogicalToken>),
+}
+
+pub(super) enum LogicalKind {
+    OpenParen,
+    CloseParen,
+    Colon,
+    Comma,
+    Atom(alloc::vec::Vec<u8>),
+}
+
+pub(super) struct LogicalToken {
+    pub kind: LogicalKind,
+    pub span: crate::Span,
 }
 
 pub(super) struct Token {
@@ -87,6 +102,122 @@ impl<'a> Scanner<'a> {
             kind,
             span: attempt!(self.span(start)),
         }))
+    }
+
+    /// The `:` separator is a declaration token only after `proof 1 Name`.
+    pub fn next_proof_head(
+        &mut self,
+        meter: &mut crate::Meter,
+    ) -> Result<Option<Token>, crate::Diagnostic> {
+        attempt!(self.skip(meter));
+        if self.source.get(self.at) != Some(&b':') {
+            return self.next(meter);
+        }
+        let start = self.at;
+        attempt!(meter.node(self.full));
+        self.at += 1;
+        Ok(Some(Token {
+            kind: TokenKind::ProofColon,
+            span: attempt!(self.span(start)),
+        }))
+    }
+
+    /// Consume one *complete* bracketed logical body. Ordinary `next` never
+    /// recognizes parentheses, so malformed proof text cannot escape into a
+    /// definition or alter executable word tokenization.
+    pub fn next_logical_body(&mut self, meter: &mut crate::Meter) -> Result<Token, crate::Diagnostic> {
+        attempt!(self.skip(meter));
+        let start = self.at;
+        if !self.declared || self.source.get(start) != Some(&b'[') {
+            return Err(crate::invalid(self.full, "expected bracketed logical body"));
+        }
+        attempt!(meter.node(self.full));
+        attempt!(meter.depth(1, self.full));
+        self.at += 1;
+        let mut tokens = alloc::vec::Vec::new();
+        let mut parens = 0u32;
+        loop {
+            attempt!(self.skip(meter));
+            let token_start = self.at;
+            let Some(byte) = self.source.get(self.at).copied() else {
+                return Err(crate::invalid(self.full, "unclosed logical body"));
+            };
+            if byte == b']' {
+                if parens != 0 {
+                    return Err(crate::invalid(
+                        attempt!(self.span(token_start)),
+                        "unclosed logical parenthesis",
+                    ));
+                }
+                attempt!(meter.node(self.full));
+                self.at += 1;
+                return Ok(Token {
+                    kind: TokenKind::LogicalBody(tokens),
+                    span: attempt!(self.span(start)),
+                });
+            }
+            attempt!(meter.node(self.full));
+            let kind = match byte {
+                b'(' => {
+                    parens = attempt!(parens.checked_add(1).ok_or_else(|| {
+                        crate::invalid(self.full, "logical nesting exceeds finite format")
+                    }));
+                    if parens > 64 {
+                        return Err(crate::invalid(
+                            attempt!(self.span(token_start)),
+                            "logical nesting exceeds supported depth",
+                        ));
+                    }
+                    attempt!(meter.depth(parens.saturating_add(1), self.full));
+                    self.at += 1;
+                    LogicalKind::OpenParen
+                }
+                b')' => {
+                    let Some(next) = parens.checked_sub(1) else {
+                        return Err(crate::invalid(self.full, "unmatched logical parenthesis"));
+                    };
+                    parens = next;
+                    self.at += 1;
+                    LogicalKind::CloseParen
+                }
+                b':' => {
+                    self.at += 1;
+                    LogicalKind::Colon
+                }
+                b',' => {
+                    self.at += 1;
+                    LogicalKind::Comma
+                }
+                b'[' | b'"' | b'\\' => {
+                    return Err(crate::invalid(self.full, "invalid logical delimiter or escape"));
+                }
+                _ => LogicalKind::Atom(attempt!(self.logical_atom(meter))),
+            };
+            tokens.push(LogicalToken {
+                kind,
+                span: attempt!(self.span(token_start)),
+            });
+        }
+    }
+
+    fn logical_atom(&mut self, meter: &mut crate::Meter) -> Result<alloc::vec::Vec<u8>, crate::Diagnostic> {
+        let start = self.at;
+        while let Some(byte) = self.source.get(self.at).copied() {
+            if whitespace(byte) || matches!(byte, b'#' | b'[' | b']' | b'(' | b')' | b':' | b',') {
+                break;
+            }
+            if !(byte.is_ascii_alphanumeric()
+                || matches!(byte, b'_' | b'+' | b'-' | b'*' | b'/' | b'=' | b'<' | b'>' | b'?' | b'!' | b'.' | b'@'))
+            {
+                return Err(crate::invalid(self.full, "unsupported logical atom"));
+            }
+            attempt!(meter.charge(1, self.full));
+            self.at += 1;
+        }
+        if self.at == start {
+            return Err(crate::invalid(self.full, "unsupported logical atom"));
+        }
+        Ok(self.source[start..self.at].to_vec())
     }
 
     fn skip(&mut self, meter: &mut crate::Meter) -> Result<(), crate::Diagnostic> {

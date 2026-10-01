@@ -23,6 +23,54 @@ pub(super) struct Engine {
 }
 
 impl Engine {
+    /// A fresh engine for exactly one artifact decision; no persistent table
+    /// entries or effect authority can survive a previous submission.
+    pub fn start_admission(optimized: bool) -> Result<Self, super::output::Failure> {
+        let config = configuration::admission(optimized);
+        let (send, replies) = std::sync::mpsc::sync_channel(1);
+        let mut engine = Self {
+            child: attempt!(launch(&config)),
+            replies,
+            reader: None,
+            has_failed: false,
+        };
+        let stream = attempt!(engine.child.stdout.take().ok_or_else(protocol::error));
+        engine.reader = Some(attempt!(std::thread::Builder::new()
+            .name("noble-artifact-output".into())
+            .spawn(move || protocol::receive(stream, send))
+            .map_err(super::framing::io_error)));
+        let ready = attempt!(engine.reply());
+        if ready.outcome != "ready" {
+            engine.has_failed = true;
+            return Err(super::output::Failure::new(
+                super::output::ErrorContext { stage: "wasm", outcome: "unsupported" },
+                ready.json,
+            ));
+        }
+        Ok(engine)
+    }
+
+    pub fn admit(
+        &mut self,
+        artifact: &[u8],
+        wat: &[u8],
+        source: &[u8],
+        claimed: &[&str],
+        allowed: &[&str],
+    ) -> Result<super::output::Report, super::output::Failure> {
+        let claims = crate::workflow::encoding::strings(claimed).encode();
+        let policy = crate::workflow::encoding::strings(allowed).encode();
+        let header = std::format!(
+            "admit {} {} {} {} {}\n",
+            artifact.len(), wat.len(), source.len(), claims.len(), policy.len()
+        );
+        attempt!(self.write(header.as_bytes()));
+        for bytes in [artifact, wat, source, claims.as_bytes(), policy.as_bytes()] {
+            attempt!(self.write(bytes));
+        }
+        self.reply()
+    }
+
     pub fn start(options: &super::arguments::Options) -> Result<Self, super::output::Failure> {
         let config = attempt!(configuration::build(options));
         let (send, replies) = std::sync::mpsc::sync_channel(1);

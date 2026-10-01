@@ -24,22 +24,24 @@ pub enum ModuleKind {
 #[derive(Debug)]
 pub struct ModuleSession {
     bindings: alloc::vec::Vec<super::BoundOperation>,
-    modules: alloc::vec::Vec<super::Module>,
+    pub(super) modules: alloc::vec::Vec<super::Module>,
     aliases: alloc::vec::Vec<super::Alias>,
     generation: u64,
-    source: crate::source::Session,
+    pub(super) source: crate::source::Session,
 }
 
 #[derive(Debug)]
 pub struct ModulePrepared {
     kind: ModuleKind,
     generation: u64,
+    limits: crate::Limits,
     previous_modules: alloc::vec::Vec<super::Module>,
     previous_aliases: alloc::vec::Vec<super::Alias>,
     previous_history: alloc::vec::Vec<u8>,
     staged: ModuleSession,
     submission: Option<noble_kernel::execution::Submission>,
     output: alloc::vec::Vec<noble_kernel::types::Ty>,
+    pending: Option<crate::intrinsic::ProofBatch>,
 }
 
 impl ModulePrepared {
@@ -51,6 +53,20 @@ impl ModulePrepared {
     }
     pub const fn output(&self) -> &[noble_kernel::types::Ty] {
         self.output.as_slice()
+    }
+    /// Uncommitted source obligations, never evidence of proof acceptance.
+    pub const fn proof_obligations(&self) -> Option<&crate::intrinsic::ProofBatch> {
+        self.pending.as_ref()
+    }
+    /// Typed, non-executable contract metadata for the newly staged module,
+    /// including modules with no proof; this is not a proof receipt.
+    pub fn contract_goals(&self) -> impl Iterator<Item = &crate::intrinsic::ContractGoal> {
+        self.staged
+            .modules
+            .last()
+            .filter(|_| self.kind == ModuleKind::Module)
+            .into_iter()
+            .flat_map(|module| module.contracts.iter().map(|entry| &entry.goal))
     }
     pub fn bindings(&self) -> &[super::BoundOperation] {
         &self.staged.bindings
@@ -118,9 +134,10 @@ impl ModulePrepared {
                 while node_at < definition.body.candidate.nodes.len() {
                     let node = &definition.body.candidate.nodes[node_at];
                     if let noble_kernel::untrusted::Node::Invocation { def, .. } = node {
-                        if let Some(noble_kernel::contracts::Behavior::BoundEmit(slot)) =
-                            submission.environment.kind(*def)
-                        {
+                        if let Some(
+                            noble_kernel::contracts::Behavior::BoundEmit(slot)
+                            | noble_kernel::contracts::Behavior::BoundClock(slot),
+                        ) = submission.environment.kind(*def) {
                             if selected.is_some_and(|previous| previous != slot) {
                                 is_ambiguous = true;
                                 break;

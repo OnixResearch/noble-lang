@@ -10,7 +10,7 @@ pub(super) fn check_request(
     env: &crate::contracts::Env,
     request: &crate::untrusted::Request,
     candidate: &crate::untrusted::Candidate,
-) -> Result<(), super::Fail> {
+) -> Result<u32, super::Fail> {
     if candidate.format != crate::untrusted::CANDIDATE_FORMAT
         || candidate.revision != crate::untrusted::SEMANTIC_REVISION
     {
@@ -28,9 +28,11 @@ pub(super) fn check_request(
     if node_count > u64::from(request.limits.nodes) {
         return Err(super::Fail::Exhausted(crate::untrusted::LimitKind::Nodes));
     }
-    attempt!(super::validate::dependencies(env, &request.limits));
-    attempt!(super::validate::schemas(env, &request.limits));
-    attempt!(validate_nominals(env, request));
+    // The validation stages and body consume one request-local work allowance.
+    // Do not restart it when crossing a preflight or machine boundary.
+    let remaining = attempt!(super::validate::dependencies(env, request.limits.work));
+    let remaining = attempt!(super::validate::schemas(env, remaining));
+    let remaining = attempt!(validate_nominals(env, request, remaining));
     attempt!(reject_ambient_emit(env, candidate));
     attempt!(super::schemes::validate(env, request));
     let context = super::parts::Ctx { request, env };
@@ -51,7 +53,7 @@ pub(super) fn check_request(
             super::parts::site(None, None),
             crate::untrusted::Constraint::UnknownEffect(id),
         )),
-        None => Ok(()),
+        None => Ok(remaining),
     }
 }
 
@@ -61,7 +63,11 @@ fn reject_ambient_emit(
     env: &crate::contracts::Env,
     candidate: &crate::untrusted::Candidate,
 ) -> Result<(), super::Fail> {
-    if !env.declared_modules && env.nominals.is_empty() && env.bound_adapters.is_empty() {
+    if !env.declared_modules
+        && env.nominals.is_empty()
+        && env.generic_variants.is_empty()
+        && env.bound_adapters.is_empty()
+    {
         return Ok(());
     }
     let Some((index, def)) = ambient_emit(env, candidate) else {
@@ -99,10 +105,16 @@ fn ambient_emit(
 fn validate_nominals(
     env: &crate::contracts::Env,
     request: &crate::untrusted::Request,
-) -> Result<(), super::Fail> {
-    attempt!(nominal_budget(env, request));
+    remaining: u32,
+) -> Result<u32, super::Fail> {
+    let remaining = attempt!(nominal_budget(env, request, remaining));
     if let Some(failure) = first_nominal_failure(env, &request.limits) {
         return Err(nominal_failure(failure));
+    }
+    if !env.valid_generic_declarations() {
+        return Err(nominal_failure(NominalFailure {
+            is_invalid_type: true,
+        }));
     }
     if !env.validate_contracts() {
         return Err(super::parts::invalid_without_stacks(
@@ -110,7 +122,7 @@ fn validate_nominals(
             crate::untrusted::Constraint::InvalidContract,
         ));
     }
-    Ok(())
+    Ok(remaining)
 }
 
 /// Preserve the first invalid declaration before checking contract coherence.
@@ -142,61 +154,47 @@ fn first_nominal_failure(
     None
 }
 
-/// The node bound applies to new definitions only; both paths charge work.
-struct NominalBudget {
-    count: u64,
-    node_bound: Option<u64>,
-    work_bound: u64,
-}
-
-const fn exhausted_nominal_budget(budget: &NominalBudget) -> Option<crate::untrusted::LimitKind> {
-    if let Some(nodes) = budget.node_bound {
-        if budget.count > nodes {
-            return Some(crate::untrusted::LimitKind::Nodes);
-        }
-    }
-    if budget.count > budget.work_bound {
-        return Some(crate::untrusted::LimitKind::Work);
-    }
-    None
-}
-
+/// New definitions keep their separate node bound; their work charge is
+/// carried into the nominal scan and the candidate body.
 fn nominal_budget(
     env: &crate::contracts::Env,
     request: &crate::untrusted::Request,
-) -> Result<(), super::Fail> {
-    if env.declared_modules {
-        attempt!(declared_definition_budget(env, request));
-    }
-    let total = env.nominals.len().saturating_add(env.bound_adapters.len());
+    remaining: u32,
+) -> Result<u32, super::Fail> {
+    let remaining = if env.declared_modules {
+        attempt!(declared_definition_budget(env, request, remaining))
+    } else {
+        remaining
+    };
+    let total = env
+        .nominals
+        .len()
+        .saturating_add(env.generic_variants.len())
+        .saturating_add(env.bound_adapters.len());
     let Ok(count) = u64::try_from(total) else {
         return Err(super::Fail::Exhausted(crate::untrusted::LimitKind::Work));
     };
-    if let Some(kind) = exhausted_nominal_budget(&NominalBudget {
-        count,
-        node_bound: None,
-        work_bound: u64::from(request.limits.work),
-    }) {
-        return Err(super::Fail::Exhausted(kind));
-    }
-    Ok(())
+    let Ok(cost) = u32::try_from(count) else {
+        return Err(super::Fail::Exhausted(crate::untrusted::LimitKind::Work));
+    };
+    super::parts::charge(remaining, cost)
 }
 
 fn declared_definition_budget(
     env: &crate::contracts::Env,
     request: &crate::untrusted::Request,
-) -> Result<(), super::Fail> {
+    remaining: u32,
+) -> Result<u32, super::Fail> {
     let Ok(additions) = u64::try_from(env.defs.len().saturating_sub(23)) else {
         return Err(super::Fail::Exhausted(crate::untrusted::LimitKind::Nodes));
     };
-    if let Some(kind) = exhausted_nominal_budget(&NominalBudget {
-        count: additions,
-        node_bound: Some(u64::from(request.limits.nodes)),
-        work_bound: u64::from(request.limits.work),
-    }) {
-        return Err(super::Fail::Exhausted(kind));
+    if additions > u64::from(request.limits.nodes) {
+        return Err(super::Fail::Exhausted(crate::untrusted::LimitKind::Nodes));
     }
-    Ok(())
+    let Ok(cost) = u32::try_from(additions) else {
+        return Err(super::Fail::Exhausted(crate::untrusted::LimitKind::Work));
+    };
+    super::parts::charge(remaining, cost)
 }
 
 /// Validate one declaration's representation before checking its size.

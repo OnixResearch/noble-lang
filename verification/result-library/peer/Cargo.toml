@@ -1,0 +1,15 @@
+[package]
+name = "noble-result-library-peer"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[workspace]
+
+[dependencies]
+anyhow = "=1.0.100"
+serde_json = "=1.0.140"
+sha2 = "=0.10.2"
+noble-contracts = { path = "../../../crates/noble-contracts" }
+noble-kernel = { path = "../../../crates/noble-kernel" }
+noble-wasm = { path = "../../../crates/noble-wasm" }

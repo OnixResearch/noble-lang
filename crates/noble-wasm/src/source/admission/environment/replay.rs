@@ -6,6 +6,7 @@ pub(super) struct ExpectedRows {
 struct Cursor {
     fixed: noble_kernel::contracts::Env,
     next_nominal: usize,
+    next_generic: usize,
     named: usize,
 }
 
@@ -17,10 +18,12 @@ pub(super) fn check(
     let replay = attempt!(Cursor {
         fixed,
         next_nominal: 0,
+        next_generic: 0,
         named: 0,
     }
     .check_rows(env, &expected));
     let has_all_declarations = replay.next_nominal == env.nominals.len()
+        && replay.next_generic == env.generic_variants.len()
         && replay.fixed.bound_adapters.len() == env.bound_adapters.len();
     let has_all_definitions =
         replay.fixed.defs.len() == env.defs.len() && replay.named == expected.named;
@@ -73,6 +76,15 @@ impl Cursor {
                     return Err(crate::Diagnostic::Invalid);
                 }
                 self = attempt!(self.append_nominal(decl));
+            } else if let noble_kernel::contracts::Behavior::GenericLeft(id) = env.kinds[index] {
+                let decl = match env.generic_variants.get(self.next_generic) {
+                    Some(decl) => decl,
+                    None => return Err(crate::Diagnostic::Invalid),
+                };
+                if decl.id != id {
+                    return Err(crate::Diagnostic::Invalid);
+                }
+                self = attempt!(self.append_generic_variant(decl));
             } else {
                 self = attempt!(self.append_non_nominal(env, index));
             }
@@ -113,7 +125,10 @@ impl Cursor {
         if let noble_kernel::contracts::Behavior::BoundEmit(slot) = env.kinds[index] {
             return self.append_bound_emit(env, index, slot);
         }
-        // Builtins and derived nominal operations cannot begin a declaration.
+        if let noble_kernel::contracts::Behavior::BoundClock(slot) = env.kinds[index] {
+            return self.append_bound_clock(env, index, slot);
+        }
+        // Builtins and derived nominal/family operations cannot begin a declaration.
         Err(crate::Diagnostic::Invalid)
     }
 
@@ -162,6 +177,35 @@ impl Cursor {
         Ok(self)
     }
 
+    fn append_bound_clock(
+        mut self,
+        env: &noble_kernel::contracts::Env,
+        index: usize,
+        slot: u32,
+    ) -> Result<Self, crate::Diagnostic> {
+        let def = noble_kernel::contracts::Definition(
+            u32::try_from(index).map_err(|_| crate::Diagnostic::Invalid)?
+        );
+        let row = env.bound_adapters.iter().find(|row| row.definition == def
+            && row.adapter_slot == slot).ok_or(crate::Diagnostic::Invalid)?;
+        let owner = env.definition_owners[index].ok_or(crate::Diagnostic::Invalid)?;
+        let registration = noble_kernel::contracts::BoundClockRegistration {
+            adapter_identity: row.adapter_identity.clone(),
+            adapter_slot: slot,
+            owner,
+            input: row.input.clone(),
+            output: row.output.clone(),
+            effects: row.effects.clone(),
+        };
+        let (fixed, actual) = self.fixed.declare_bound_clock(registration)
+            .map_err(|_| crate::Diagnostic::Invalid)?;
+        if actual != def {
+            return Err(crate::Diagnostic::Invalid);
+        }
+        self.fixed = fixed;
+        Ok(self)
+    }
+
     fn append_nominal(
         mut self,
         decl: &noble_kernel::contracts::NominalDecl,
@@ -172,6 +216,19 @@ impl Cursor {
             .map_err(|_| crate::Diagnostic::Invalid));
         self.fixed = fixed;
         self.next_nominal += 1;
+        Ok(self)
+    }
+
+    fn append_generic_variant(
+        mut self,
+        decl: &noble_kernel::contracts::GenericVariantDecl,
+    ) -> Result<Self, crate::Diagnostic> {
+        let (fixed, _) = attempt!(self
+            .fixed
+            .declare_generic_variant(decl.clone())
+            .map_err(|_| crate::Diagnostic::Invalid));
+        self.fixed = fixed;
+        self.next_generic += 1;
         Ok(self)
     }
 }

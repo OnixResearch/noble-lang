@@ -179,6 +179,35 @@
           "Passing examples and controls are not proofs; no universal refinement, live-resource or ambient-credential-host claim, MC2/M5 completion, or PO-17, PO-18 or SO-07 discharge."
         ]
       }]
+    },
+    {
+      "id": "DX-13", "profile": "Property-Test-Design", "kind": "review",
+      "requirements": ["DX-PROPERTY-02", "VC-OWNER-01", "EV-BIND-01"],
+      "input": {"harness": "optional-qcue-inspired-finite-oracle-plan-review", "fragment": "resource-free-Core-Bootstrap-and-supported-MC2-pure-claims", "source": "4ad/qcue@c71183b0a5d3319dde1d611b6e6f77a6eab29418/doc/oracle.md", "controls": ["independent-finite-model-not-Noble-checker", "normal-return-and-precondition-model", "finite-vocabulary-and-budget-explicit", "positive-and-false-law-negative-control", "seeded-replay-and-same-failure-shrink", "resolved-identity-preserving-source-transform", "recipe-observation-preserving-transform", "unsupported-transform-rejected", "owner-law-immutable-under-candidate-change", "external-proof-and-admission-separate"], "excluded": ["CUE-runtime-or-Go-dependency", "live-open-refinement", "higher-rank-or-impredicative-types", "proof-time-native-execution", "second-proof-kernel"]},
+      "expected": {"stage": "experiment-plan-review", "outcome": "all-method-controls-present-and-exclusions-enforced", "model_results_are_universal_proof": false, "model_results_authorize_release": false, "historical_dx10_receipt_covers_this": false, "actual_oracle_execution_claimed": false},
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "not-applicable", "trust": "explicit"},
+      "evidence": [{
+        "kind": "review", "subject": "DX-13",
+        "claim": "The ten optional finite-oracle method controls and five exclusions were independently reviewed against the pinned qcue source and Noble's native design. Concrete methodology counterexamples distinguish example-preserving false laws, false premises, invalid shrinking, changed identity/recipe/effects and model agreement from proof/release authority. No Noble oracle, candidate, proof or release was executed.",
+        "revision": "0.1.0-draft.5", "source_revision": "sha256:e6f17df11ca58b85ca456283c56a0a3fa6f81ae30c128bba0fdd3e47104020fd", "result": "passed",
+        "configuration": {
+          "receipt": "../../verification/dx13/acceptance.json",
+          "receipt_sha256": "90f7db19696c0f64e7076920233162575b10c19e61504fca108c07d7b7e95f8e",
+          "review": "../../verification/dx13/review.json",
+          "runner": "../../verification/dx13/review.mjs",
+          "prepromotion_case_sha256": "84a2b06dbcf7224782393db33bd1f75e4c309ce9c5d28fd13651b2366e82dd6f",
+          "qcue_revision": "c71183b0a5d3319dde1d611b6e6f77a6eab29418",
+          "qcue_oracle_git_blob": "44d503f8d3199c859b394b6fdfabed99b7f3e20f",
+          "qcue_oracle_sha256": "ab0df2c1d14212efe6f9ebb620e79ec1227adfa79f7df80d8ebe4bae682f8a0e",
+          "method_controls_reviewed": 10, "exclusions_reviewed": 5,
+          "actual_oracle_execution_claimed": false
+        },
+        "assumptions": [
+          "The reviewed qcue commit is unsigned; its pinned Git blob and SHA-256 bind comparative source bytes, not independent owner approval or a Noble runtime dependency.",
+          "The original source-bound receipt precedes promotion of this case and related documents; review judgments remain human-authored and the executable counterexamples exercise methodology only.",
+          "No MC2 owner-frozen law, actual Noble finite oracle measurement, strict proof, candidate execution, universal theorem, release authorization, backend or host refinement is claimed. Historical DX-10 is separate."
+        ]
+      }]
     }
   ]
 }

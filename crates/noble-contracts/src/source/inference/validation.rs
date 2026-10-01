@@ -196,7 +196,23 @@ impl Traversal {
                     group,
                 });
             }
+            crate::inference::Term::GenericNominal(_, a, b) => {
+                self.pending.push(Visit {
+                    id: a,
+                    depth: visit.depth.saturating_add(1),
+                    height: 0,
+                    group,
+                });
+                self.pending.push(Visit {
+                    id: b,
+                    depth: visit.depth.saturating_add(1),
+                    height: 0,
+                    group,
+                });
+            }
             crate::inference::Term::Hole(_)
+            | crate::inference::Term::RigidValue(_)
+            | crate::inference::Term::RigidStack(_)
             | crate::inference::Term::Unit
             | crate::inference::Term::Bool
             | crate::inference::Term::I64
@@ -228,6 +244,7 @@ impl Traversal {
             term,
             crate::inference::Term::Push(_, _)
                 | crate::inference::Term::Empty
+                | crate::inference::Term::RigidStack(_)
                 | crate::inference::Term::Hole(crate::inference::Sort::Stack)
         ) {
             return Ok(group);

@@ -2,6 +2,10 @@
 mod bindings;
 #[path = "declared/cases.rs"]
 mod cases;
+#[path = "declared/named.rs"]
+mod named;
+#[path = "declared/origin.rs"]
+mod origin;
 
 const LIMITS: noble_contracts::Limits = noble_contracts::Limits {
     bytes: 65_536,

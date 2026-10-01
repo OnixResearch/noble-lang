@@ -58,9 +58,15 @@ This is a scenario design, not an execution result. The case's `state` and `evid
 ### Requirement: DX-HOLE-01
 r[DX-HOLE-01]
 
-**DX-HOLE-01.** Editor holes MUST remain incomplete syntax, not executable values or trusted witnesses. Analysis MUST report known input/output stack constraints and effect constraints, including unresolved variables. Every admission path MUST reject a candidate containing a hole. Analysis MUST NOT execute the candidate body.
+**DX-HOLE-01.**
 
-Hole punctuation and editor transport remain open. Structured syntax fixtures do not select new source grammar. Hole support follows M2 and does not block the first checker.
+Editor holes MUST remain incomplete syntax, not executable values or trusted witnesses. Analysis MUST report known input/output stack constraints and effect constraints, including unresolved variables. Every admission path MUST reject a candidate containing a hole. Analysis MUST NOT execute the candidate body.
+
+The selected `Editor-Draft` profile transports incomplete syntax only as versioned `noble-editor/v1` structured nodes for signed I64 integer, Boolean, single source word, nested quotation and hole. Its JSON envelope and typed AST are editor-only; hole punctuation is NOT selected for executable `.noble` source, and a hole MUST NOT be represented as a kernel node or executable candidate. Transport MUST reject unsupported versions, missing/unknown/duplicate object fields, incorrect JSON types, invalid word encoding, trailing data and exceeded byte/node/depth/work budgets before admission. Rendering a hole-free AST MUST produce single lexically valid source tokens for ordinary parse, source preparation, independent kernel acceptance and compiled managed-Wasm execution, rather than use a second trusted backend.
+
+Editor analysis MUST use the same resolved source namespace and operator scheme constraints as ordinary source inference. At each hole it MUST preserve the incoming stack, the constrained yet unresolved outgoing stack and the unknown possible effects, not default the hole to a pure/empty operation. The finite `1, hole, +` witness MUST report the `I64 I64` required outgoing suffix induced by the actual `+` scheme, and the minimal additional `I64` suffix conditional on retaining the known incoming `I64`, while retaining unresolved stack/effect variables. This conditional suffix MUST NOT assert that the hole preserves or does not consume its input. Direct, nested-quotation and serialized hole-bearing admission MUST reject before an accepted program, guest/host requests or protected operations. The complete editor tree `1, 2, +` MUST remain admissible to the ordinary compiled path and produce `I64(3)`.
+
+These selected finite observations neither execute a hole nor establish universal frontend, backend, host or proof refinement; all nonselected editor syntax and application authoring tools remain open.
 
 
 <!-- cairn:scenario-links:start -->
@@ -82,7 +88,11 @@ This is a scenario design, not an execution result. The case's `state` and `evid
 
 <!-- cairn:scenario-links:end -->
 
-## 2. Opaque domain types and exhaustive variants
+#### Scenario: DX-02 editor analysis and admission
+
+- GIVEN DX-02's exact structured nodes, four variants, bounded versioned transport, a hole-free positive control and hostile malformed/collision/oversized controls
+- WHEN editor analysis, direct and nested admission, serialized JSON ingress and ordinary source/kernel/Wasm admission run against their exact inputs
+- THEN source-derived hole stack and unresolved effect constraints are reported without execution, every hole-bearing admission rejects before accepted candidate or guest/host requests, and the hole-free positive control executes to `I64(3)`; neither transcript nor status substitutes for source-bound observation
 
 ### Requirement: DX-TYPE-01
 r[DX-TYPE-01]
@@ -156,9 +166,11 @@ This is a scenario design, not an execution result. The case's `state` and `evid
 ### Requirement: DX-TYPE-04
 r[DX-TYPE-04]
 
-**DX-TYPE-04.** A declaration owner MUST enumerate every admitted construction path and the invariant each path establishes. Constructors, conversions, defaults, decoders, and package imports MUST preserve that invariant. A public field, wrapper tag, or representation alias MUST NOT bypass validation. Invalid inputs MUST remain errors rather than sentinel or default values that appear valid.
+**DX-TYPE-04.**
 
-Use ordinary opaque declarations and explicit fallible library constructors. These requirements add no general refinement inference, dependent type system, or proof search. Nominal data remains subject to recursive eligibility. It does not become a capability merely because its name includes authorization.
+A declaration owner MUST enumerate every admitted construction path and the invariant each path establishes. Constructors, conversions, defaults, decoders, and package imports MUST preserve that invariant. A public field, wrapper tag, or representation alias MUST NOT bypass validation. Invalid inputs MUST remain errors rather than sentinel or default values that appear valid.
+
+Use ordinary opaque declarations and explicit fallible library constructors. These requirements add no general refinement inference, computational dependent program type system, or runtime proof search. The separate optional `Intrinsic-Proofs-Draft` selects predicative dependent *logical* proof declarations without changing this ordinary domain-data invariant. Nominal data remains subject to recursive eligibility. It does not become a capability merely because its name includes authorization.
 
 
 <!-- cairn:scenario-links:start -->
@@ -180,12 +192,12 @@ This is a scenario design, not an execution result. The case's `state` and `evid
 
 <!-- cairn:scenario-links:end -->
 
-## 3. Fallible composition as a library
-
 ### Requirement: DX-RESULT-01
 r[DX-RESULT-01]
 
-**DX-RESULT-01.** The Result library MUST provide success mapping, error mapping, fallible chaining, and recovery through ordinary checked programs. Result MUST remain an ordinary variant, not an exception effect or new expression form.
+**DX-RESULT-01.**
+
+The Result library MUST provide success mapping, error mapping, fallible chaining, and recovery through ordinary checked programs. Result MUST remain an ordinary two-arm variant, not an exception effect, an IO monad, or a new expression form. The selected design is four operations on `Result<A,E> = Ok(A) | Err(E)`: `map-ok` transforms `Ok(A)` by a checked `A -> B` callback and carries `Err(E)` unchanged; `map-error` transforms `Err(E)` by an `E -> F` callback and carries `Ok(A)` unchanged; `and-then` invokes an `A -> Result<B,E>` callback only on `Ok(A)`; and `or-else` invokes an `E -> Result<A,F>` callback only on `Err(E)`. These are schematic stack-interface descriptions, not accepted generic variant declaration syntax or a newly implemented module. Concrete exported names, module/version identity, source signatures, and generic schema instantiation MUST pass the existing declaration/library interface gate before acceptance; DXM1's finite monomorphic two-constructor variants alone do not establish that gate.
 
 
 <!-- cairn:scenario-links:start -->
@@ -202,9 +214,9 @@ This is a scenario design, not an execution result. The case's `state` and `evid
 ### Requirement: DX-RESULT-02
 r[DX-RESULT-02]
 
-**DX-RESULT-02.** Each combinator MUST declare its ordered stack interface and conservative latent effect bound. Execution MUST invoke only the selected branch. Both branches MUST account for every owned input without implicit duplication or discard.
+**DX-RESULT-02.**
 
-Names and concrete signatures remain open until the schema/library interface gate. The initial slice uses resource-free values. Resource-bearing acceptance requires the ownership profile and explicit release behavior. No combinator may add an unchecked early-return path.
+Each combinator MUST declare its complete ordered stack interface and conservative latent effect bound, including the callback's possible effects even if this invocation bypasses it. It MUST invoke the callback exactly once for the selected arm and never for the other arm; `and-then` and `or-else` MUST preserve an already selected `Err` or `Ok` without unwrapping it into an implicit early return. Both branches MUST account for every owned input and every callback output without implicit duplication or discard, including on ordinary error results and abnormal outcomes. Neither unselected-callback evaluation nor speculative host requests are permitted. The resource-free first slice uses ordinary `Data` payloads; admitting a resource-bearing payload requires the separate ownership/retirement profile, an explicit complete owner transition for each arm, and real boundary evidence. No new propagation syntax, IO monad, hidden exception path, or claim of implementation follows from this design.
 
 
 <!-- cairn:scenario-links:start -->
@@ -217,8 +229,6 @@ Names and concrete signatures remain open until the schema/library interface gat
 This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
 
 <!-- cairn:scenario-links:end -->
-
-## 4. Identity-based development tools
 
 ### Requirement: DX-IDENTITY-01
 r[DX-IDENTITY-01]
@@ -470,9 +480,13 @@ This is a scenario design, not an execution result. The case's `state` and `evid
 ### Requirement: DX-PROPERTY-02
 r[DX-PROPERTY-02]
 
-**DX-PROPERTY-02.** Shrinking MUST preserve the property's input domain and reproduce the same failure predicate before accepting a smaller counterexample. Shrinking MUST be bounded and retain the original failure if reduction fails. Reports MUST distinguish passed trials, counterexamples, discarded inputs, exhaustion, unsupported cases, and harness errors.
+**DX-PROPERTY-02.**
+
+Shrinking MUST preserve the property's input domain and reproduce the same failure predicate before accepting a smaller counterexample. Shrinking MUST be bounded and retain the original failure if reduction fails. Reports MUST distinguish passed trials, counterexamples, discarded inputs, exhaustion, unsupported cases, and harness errors.
 
 The first properties cover compatible program composition, retained recipe structure, and result/effect agreement with the reference model for bounded bootstrap cases. Observable disagreement requires a counterexample, not merely an exhausted budget. Seeds alone are insufficient replay records. Random testing does not establish a universal theorem, and a shared implementation bug can invalidate a differential oracle.
+
+An optional later MC2 pure-fragment law experiment MAY add a finite semantic oracle independently implemented from Noble's checker, prover and selected Wasm lowerer. Its declared finite input vocabulary and bounds MUST be recorded, including exact normal-return predicate and preconditions, independent expected values/recipes and the empty host-effect trace, hostile false-law and false-premise controls, a reproducible seed or saved minimized counterexample, and allowed source/recipe-preservation transformations that actually preserve resolved identity. Tests compare this model with actual accepted resource-free programs and separately with externally checked proof/admission outcomes; model agreement MUST NOT become an accepted theorem or release authorization. Preserve the immutable owner law and distinct release gate of VC-OWNER-01. This design takes only finite-model and metamorphic testing methods from pinned qcue; it does not import CUE's open live refinement, higher-rank or impredicative types, proof-time native execution, a second kernel, or its Go dependency. qcue itself reports that raw source export/reimport leaves one separately attached live-interface conformance proof pending. Existing DX-10/M4 property execution remains its historical bounded scope, not evidence for this optional experiment.
 
 
 <!-- cairn:scenario-links:start -->
@@ -484,9 +498,15 @@ The first properties cover compatible program composition, retained recipe struc
 
 This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
 
-<!-- cairn:scenario-links:end -->
+#### Scenario: DX-13 for DX-PROPERTY-02
 
-## 9. Resource protocol types
+- GIVEN the `Property-Test-Design` profile and every field of `input` in [DX-13](../../../specs/conformance/language-workflow-cases.json)
+- WHEN the `review` procedure for case `DX-13` runs against those inputs
+- THEN the observations match every field of `expected` in case `DX-13`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+<!-- cairn:scenario-links:end -->
 
 ### Requirement: DX-PROTOCOL-01
 r[DX-PROTOCOL-01]
@@ -613,4 +633,74 @@ Property and documentation harnesses accompany the applicable M2/M4 acceptance w
 
 [Developer-experience scenarios](../../../specs/conformance/developer-experience-cases.json) and [language-workflow scenarios](../../../specs/conformance/language-workflow-cases.json) retain their exact expected inputs and case-specific evidence. DX-03, DX-08 and DX-09 pass only the selected [source-bound DXM1 receipt](../../../verification/declared-modules-v1/acceptance.json): nine static rows, twelve off/on zero-execution linker rows and two real compiled-Wasm denial rows. The accepted M4 DX-10/12 workflows retain their own evidence. Other designs and all new nominal/module refinement proofs remain open. New semantic functions inherit the Aeneas-first inventory and proof requirements.
 
-No slice closes its gate through document validation alone. Dependent types, general effect handlers, macros, and replacement concurrency semantics remain unselected.
+No slice closes its gate through document validation alone. General computational dependent types for ordinary runtime programs, general effect handlers, macros, and replacement concurrency semantics remain unselected. The separate optional `Intrinsic-Proofs-Draft` selects proof-level dependent Pi and Eq in nonexecuting Noble module declarations; ordinary expressions remain the existing three forms.
+
+### Requirement: DX-PURE-PAR-01
+r[DX-PURE-PAR-01]
+
+**DX-PURE-PAR-01.**
+
+A future independent fork/join study MAY consider only finite checked subprograms with an explicit admissibility decision before execution: both branches must be resource-free, host-effect-free, independent under their actual ordered stack/capture interfaces, and have no live task, authority, borrow or native-pin obligation. All branch work and retained results MUST be bounded and precharged against an explicit quota; unknown cost or insufficient reservation rejects before either branch starts. Joining MUST be deterministic in declared left-then-right result order. An ordinary `Result` error is normal data and returns in that branch's ordered slot; for abnormal trap or metering exhaustion, wait for both bounded branches to settle, report the left abnormal outcome if present, otherwise the right, never publish a partial successful join, and retain all work charges until settlement. A precharge refusal precedes both branches. Any admissible execution MUST preserve the sequential reference's successful values, ordered recipe/identity observations and empty host-effect trace, with distinct recorded quota/trap outcomes rather than an unconditional equivalence claim. The study starts only after the language and schema/interface gates needed to express both branches; it adds no general guest spawn, channels, GPU backend, effectful parallel calls or M6 async executor behavior. It MUST NOT treat copyable channel endpoints, unsafe Array aliasing, `IO.within` without cancellation, fail-stop OOM, unreviewed foreign C/JS or process termination as a substitute for Noble's owner/retirement and bounded-admission contracts.
+
+
+<!-- cairn:scenario-links:start -->
+#### Scenario: ADAPT-18 for DX-PURE-PAR-01
+
+- GIVEN the `Backend-Experiment` profile and every field of `input` in [ADAPT-18](../../../specs/conformance/adaptation-cases.json)
+- WHEN the `runtime` procedure for case `ADAPT-18` runs against those inputs
+- THEN the observations match every field of `expected` in case `ADAPT-18`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+<!-- cairn:scenario-links:end -->
+
+#### Scenario: ADAPT-18 deferred pure join admission
+
+- GIVEN finite checked independent resource-free pure branch pairs, effectful and owner-bearing controls, and precharged bounded work
+- WHEN an optional study compares sequential reference and permitted fork/join schedules, errors, traps, quotas, results and retained recipes
+- THEN only admissible pairs may run in parallel, their ordered successful observations agree, and rejected or exhausted pairs acquire no task or authority
+
+### Requirement: DX-PROOF-01
+r[DX-PROOF-01]
+
+**DX-PROOF-01.**
+
+`Intrinsic-Proofs-Draft` tooling MUST retain source spans and exact resolved identities across Noble `.noble` module proof/contract parse, binder scope, Type0 code eligibility, proposition elaboration, equality-motive typing, reviewed-rule premises, MC1 claim export, restricted Lean translation, independent proof checking and optional admission. A diagnostic MUST distinguish lexical/mode or delimiter failure, unsupported logical form/type, unsatisfied goal, unproved bridge/join, changed subject/law, disallowed assumption, exhausted budget, checker/translator internal failure and unavailable independent recheck. It MUST state that an accepted source proof is not a proof of termination, runtime Wasm, backend or host authorization. Editor holes may expose constraints but MUST NOT become proof terms, axioms or accepted evidence; diagnostics and explanation MUST NOT execute a guest body, host operation, proof macro or tactic. Proof erasure MUST preserve inspectable separate evidence metadata without creating executable proof values.
+
+For `contract 2` / `proof 2 ... for`, diagnostics MUST distinguish revision mismatch/unsupported colon form, changed imported version or lexical occurrence, wrong owner/span/ordinal, reused or missing fresh specialization slot, incomplete typing/instantiation, orphan or unreachable graph row, failed typed pre/post or exact named claim, and unavailable host source authentication. A checked synthetic Lean fixture MUST be labeled separately from a reusable reviewed rule instantiated with authenticated source, admitted Noble source, owner law and runtime artifact; accepted revision-1 reports and receipts remain unchanged.
+
+
+<!-- cairn:scenario-links:start -->
+#### Scenario: CONTRACT-19 for DX-PROOF-01
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [CONTRACT-19](../../../specs/conformance/contract-cases.json)
+- WHEN the `static` procedure for case `CONTRACT-19` runs against those inputs
+- THEN the observations match every field of `expected` in case `CONTRACT-19`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: CONTRACT-21 for DX-PROOF-01
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [CONTRACT-21](../../../specs/conformance/contract-cases.json)
+- WHEN the `admission` procedure for case `CONTRACT-21` runs against those inputs
+- THEN the observations match every field of `expected` in case `CONTRACT-21`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: CONTRACT-25 for DX-PROOF-01
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [CONTRACT-25](../../../specs/conformance/contract-cases.json)
+- WHEN the `static` procedure for case `CONTRACT-25` runs against those inputs
+- THEN the observations match every field of `expected` in case `CONTRACT-25`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: CONTRACT-26 for DX-PROOF-01
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [CONTRACT-26](../../../specs/conformance/contract-cases.json)
+- WHEN the `admission` procedure for case `CONTRACT-26` runs against those inputs
+- THEN the observations match every field of `expected` in case `CONTRACT-26`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+<!-- cairn:scenario-links:end -->

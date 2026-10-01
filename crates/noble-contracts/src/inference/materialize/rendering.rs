@@ -87,6 +87,8 @@ impl Traversal {
         let text = match term {
             crate::inference::Term::Hole(crate::inference::Sort::Stack) => "?stack",
             crate::inference::Term::Hole(crate::inference::Sort::Value) => "?value",
+            crate::inference::Term::RigidValue(_) => "forall-value",
+            crate::inference::Term::RigidStack(_) => "forall-stack",
             crate::inference::Term::Unit => "Unit",
             crate::inference::Term::Bool => "Bool",
             crate::inference::Term::I64 => "I64",
@@ -97,6 +99,13 @@ impl Traversal {
             crate::inference::Term::Certified => "Certified",
             crate::inference::Term::Resource(_) => "Resource",
             crate::inference::Term::Nominal(_) => "Nominal",
+            crate::inference::Term::GenericNominal(_, a, b) => {
+                self.pending.push(Part::Close);
+                self.pending.push(Part::Term(b));
+                self.pending.push(Part::Comma);
+                self.pending.push(Part::Term(a));
+                "Nominal<"
+            }
             crate::inference::Term::Empty => "[]",
             crate::inference::Term::Link(_) => return Err(crate::internal(span)),
             crate::inference::Term::Push(stack, value) => {

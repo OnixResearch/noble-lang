@@ -221,6 +221,7 @@ fn cons(
         | noble_kernel::types::Ty::Evidence
         | noble_kernel::types::Ty::Certified
         | noble_kernel::types::Ty::Nominal(_, _)
+        | noble_kernel::types::Ty::GenericNominal(_, _, _)
         | noble_kernel::types::Ty::Resource(_) => Err(crate::invalid(
             span,
             "cons requires an item and a list of that item type",

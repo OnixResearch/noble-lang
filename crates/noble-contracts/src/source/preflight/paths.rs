@@ -48,6 +48,10 @@ fn child(
             noble_kernel::types::Ty::Pair(_, right) | noble_kernel::types::Ty::Sum(_, right),
         ) => Ok(right),
         (super::PathStep::Item, noble_kernel::types::Ty::List(item)) => Ok(item),
+        (
+            super::PathStep::GenericArgument(index),
+            noble_kernel::types::Ty::GenericNominal(_, arguments, _),
+        ) => arguments.get(index).ok_or_else(|| crate::internal(span)),
         (super::PathStep::Input(index), noble_kernel::types::Ty::Program(input, _, _)) => {
             match input.get(index) {
                 Some(child) => Ok(child),

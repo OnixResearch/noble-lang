@@ -21,6 +21,8 @@ pub(crate) enum Sort {
 #[octet::sealed_enum]
 pub(crate) enum Term {
     Hole(Sort),
+    RigidValue(u32),
+    RigidStack(u32),
     Link(u32),
     Unit,
     Bool,
@@ -32,6 +34,7 @@ pub(crate) enum Term {
     Certified,
     Resource(noble_kernel::types::ResourceKind),
     Nominal(noble_kernel::types::NominalTypeId),
+    GenericNominal(noble_kernel::types::NominalTypeId, u32, u32),
     Pair(u32, u32),
     Sum(u32, u32),
     List(u32),
@@ -63,9 +66,12 @@ pub(crate) struct Arena {
         noble_kernel::types::NominalTypeId,
         noble_kernel::types::NominalShape,
     )>,
+    pub(crate) generic_nominals: alloc::vec::Vec<noble_kernel::contracts::GenericVariantDecl>,
+    rigid_count: u32,
     effects: alloc::vec::Vec<effects::Effect>,
     effect_bounds: alloc::vec::Vec<u64>,
     effect_equations: alloc::vec::Vec<(u32, u32)>,
+    rigid_effect_goals: alloc::vec::Vec<(u32, u32)>,
     program_effects: alloc::vec::Vec<(u32, u32)>,
 }
 
@@ -77,9 +83,12 @@ impl Arena {
             effect_universe: 0,
             resources: false,
             nominals: alloc::vec::Vec::new(),
+            generic_nominals: alloc::vec::Vec::new(),
+            rigid_count: 0,
             effects: alloc::vec::Vec::new(),
             effect_bounds: alloc::vec::Vec::new(),
             effect_equations: alloc::vec::Vec::new(),
+            rigid_effect_goals: alloc::vec::Vec::new(),
             program_effects: alloc::vec::Vec::new(),
         }
     }
@@ -160,6 +169,8 @@ impl Arena {
         match attempt!(self.get(id, span)) {
             Term::Link(next) => Ok(Some(next)),
             Term::Hole(_)
+            | Term::RigidValue(_)
+            | Term::RigidStack(_)
             | Term::Unit
             | Term::Bool
             | Term::I64
@@ -170,6 +181,7 @@ impl Arena {
             | Term::Certified
             | Term::Resource(_)
             | Term::Nominal(_)
+            | Term::GenericNominal(_, _, _)
             | Term::Pair(_, _)
             | Term::Sum(_, _)
             | Term::List(_)

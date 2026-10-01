@@ -1,0 +1,40 @@
+{
+  "schema": "noble-release-policy-review/v1",
+  "cases": ["WI-17", "S-CASE-15"],
+  "selection": "independent-source-bound-review-only",
+  "observations": [
+    {
+      "id": "sync-slice-is-not-full-profile",
+      "source": "verification/m5/evidence.json",
+      "observation": "M5 passed its pinned synchronous typed component and owned-resource selection. Its stated scope excludes WASI, native async and full Component-Draft; its selected memory32/UTF-8 pin is genuine, not a missing pin.",
+      "counterexample": "Advertising M5's successful Rust/Wasmtime component peer as full standard WASI/Component-Draft would promote a selected sync world beyond the evidence."
+    },
+    {
+      "id": "async-slice-is-executed-but-not-stable-wasi",
+      "source": "verification/m6/acceptance.json",
+      "observation": "M6 passed WI-11/WI-12/WI-16 native async paths. Its separately pinned official 0.3.0-rc-2025-09-16 clock probe is peer-only; the selected linker rejected stable 0.3.0, not silently substituted it.",
+      "counterexample": "Claiming M6 native async is unexecuted discards real receipts; claiming its prerelease peer-only clock is Noble-compiled stable WASI incorrectly enlarges them."
+    },
+    {
+      "id": "component-boundary-and-safety-gap",
+      "source": ".cairn/specs/wit-wasi/spec.md",
+      "observation": "WI-ARCH-01 through WI-ARCH-04 separate component artifact, WIT IDL, Noble-internal semantics and host authority. WI-SAFE-03 requires full-profile boundary coverage beyond the selected M5/M6 lanes; ledger SO-01/SO-07 and other broader safety obligations remain open.",
+      "counterexample": "A WIT import shape or a link success by itself confers neither host authority nor assurance of malformed values, all async cancellation paths or full loader correctness."
+    },
+    {
+      "id": "higher-rank-is-open-not-prohibited",
+      "source": ".cairn/specs/safety/spec.md",
+      "observation": "S-GATE-03 permits future higher-rank features only after rules preserving safety and matching proof obligations. The current language defines rank-1 schemes only; S-VERIFY-03 forbids treating unsupported or an open proof as success. V-SAFE-04 requires declarative rules, acceptance, correspondence and affected safety theorems in release evidence.",
+      "counterexample": "A valid rank-1 checker theorem cannot license an unsupported higher-rank program as stable-safe; unsupported is not a proof of unsafety or a permanent feature ban."
+    }
+  ],
+  "boundaries": {
+    "component_full_profile_admitted": false,
+    "stable_wasi_0_3_selected": false,
+    "m6_async_execution_not_run": false,
+    "higher_rank_stable_safe_admitted": false,
+    "higher_rank_permanently_forbidden": false,
+    "review_discharge_proof": false,
+    "review_implements_release": false
+  }
+}

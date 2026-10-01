@@ -239,7 +239,15 @@ fn preload_module(
         Checked::Ready(prepared) => prepared,
         Checked::Reported(exit) => return Ok(Checked::Reported(exit)),
     };
-    let (next, outcome) = frontend.commit(prepared);
+    let (next, outcome) = if prepared.proof_obligations().is_some() {
+        frontend.commit_verified(prepared, |batch| {
+            crate::workflow::intrinsic::verify_batch(
+                batch, &module, limits, crate::workflow::DEFAULT_TIMEOUT
+            ).map_err(|error| std::format!("{}: {}",error.code,error.message))
+        })
+    } else {
+        frontend.commit(prepared)
+    };
     match outcome {
         Ok(()) => Ok(Checked::Ready(next)),
         Err(error) => {

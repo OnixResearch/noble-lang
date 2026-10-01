@@ -165,6 +165,91 @@ fn generic_definitions_check_open_constraints_without_execution() -> Result<(), 
 }
 
 #[test]
+fn conditional_branch_joins_reject_incompatible_outputs_with_located_shapes() -> Result<(), String>
+{
+    let session = noble_contracts::source::Session::new();
+    for (source, expected_end, expected_shape, actual_shape) in [
+        (
+            b"true [ 1 ] [ \"x\" ] if".as_slice(),
+            21,
+            "Program<?stack -- ?stack Text>",
+            "Program<?stack -- ?stack I64>",
+        ),
+        (
+            b"true [ 1 ] [ 1 2 ] if".as_slice(),
+            21,
+            "Program<?stack -- ?stack I64 I64>",
+            "Program<?stack I64 -- ?stack I64 I64>",
+        ),
+        (
+            b"true [ 1 \"x\" ] [ \"x\" 1 ] if".as_slice(),
+            27,
+            "Program<?stack -- ?stack Text I64>",
+            "Program<?stack -- ?stack I64 Text>",
+        ),
+    ] {
+        let error = session
+            .prepare(source, &[], limits())
+            .expect_err("incompatible conditional outputs must not be accepted");
+        assert_eq!(error.stage(), noble_contracts::source::Stage::Check);
+        assert_eq!(
+            error.diagnostic().kind,
+            noble_contracts::DiagnosticKind::Invalid
+        );
+        let join = error
+            .diagnostic()
+            .join()
+            .ok_or("branch rejection has no structured join shapes")?;
+        assert_eq!(join.word, "if");
+        assert_ne!(join.expected_stack, join.actual_stack);
+        assert!(join.expected_stack.contains(expected_shape));
+        assert!(join.actual_stack.contains(actual_shape));
+        assert_eq!(
+            error.diagnostic().span,
+            noble_contracts::Span {
+                start: expected_end - 2,
+                end: expected_end,
+            }
+        );
+    }
+    assert_eq!(
+        prepare(&session, b"true [ 1 ] [ 2 ] if")?.output(),
+        &[noble_kernel::types::Ty::I64]
+    );
+    Ok(())
+}
+
+#[test]
+fn typed_source_resource_input_rejects_dup_with_exact_eligibility() -> Result<(), String> {
+    let session = noble_contracts::source::ModuleSession::new(&[])
+        .map_err(|error| format!("{error:?}"))?;
+    let resource = noble_kernel::types::Ty::Resource(noble_kernel::contracts::FIXTURE_RESOURCE);
+    let error = session
+        .prepare(b"dup", core::slice::from_ref(&resource), limits())
+        .expect_err("resource duplication must not produce a candidate");
+    assert_eq!(error.stage(), noble_contracts::source::Stage::Acceptance);
+    assert_eq!(
+        error.diagnostic().kind,
+        noble_contracts::DiagnosticKind::Invalid
+    );
+    let join = error
+        .diagnostic()
+        .join()
+        .ok_or("resource rejection has no structured word diagnostic")?;
+    assert_eq!(join.word, "dup");
+    assert_eq!(join.expected_stack, "S Data");
+    assert_eq!(join.actual_stack, format!("S {resource:?}"));
+    assert_eq!(join.constraint, "eligibility:Data");
+    assert_eq!(join.value_origin, None);
+    assert_eq!(
+        error.diagnostic().span,
+        noble_contracts::Span { start: 0, end: 3 }
+    );
+    println!("DX-01 checked exact Resource<test.counter> source: {error:?}");
+    Ok(())
+}
+
+#[test]
 fn effects_are_latent_until_execution_and_union_both_composed_bodies() -> Result<(), String> {
     let session = noble_contracts::source::Session::new();
     let dropped = prepare(&session, b"[ \"audit\" test.emit ] drop")?;

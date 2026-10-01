@@ -6,6 +6,7 @@
 //! checked by the kernel against its exact concrete environment contract.
 
 mod declared;
+pub mod editor;
 mod emission;
 mod inference;
 mod lexer;
@@ -15,6 +16,11 @@ mod preparation;
 mod resolution;
 
 pub use declared::{BoundOperation, ModuleKind, ModulePrepared, ModuleSession};
+pub(crate) use declared::{DefinitionOrigin, verify_definition_origin, verify_named_call_origin, verify_named_export};
+
+/// Immutable source authority for the versioned Result interface. The same
+/// declaration bytes are checked through ordinary module registration.
+pub const RESULT_LIBRARY_SOURCE: &[u8] = include_bytes!("fixtures/result.noble");
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Stage {
@@ -56,6 +62,7 @@ enum Kind {
     Word(alloc::vec::Vec<u8>),
     Call(Target),
     Quotation(alloc::vec::Vec<u32>),
+    EditorHole,
 }
 
 #[derive(Clone, Debug)]
@@ -90,6 +97,7 @@ struct Named {
     identity: u64,
     owner: Option<u64>,
     tree: Tree,
+    signature: Option<noble_kernel::words::Scheme>,
 }
 
 /// An immutable preparation. A declaration deliberately has no executable root.
@@ -168,9 +176,13 @@ impl Session {
         }
     }
 
-    const fn effect_universe(&self) -> u64 {
-        if self.declared.is_some() {
-            return 1;
+    fn effect_universe(&self) -> u64 {
+        if let Some(context) = &self.declared {
+            return if context.environment.effects.contains(&noble_kernel::contracts::TEST_CLOCK) {
+                1 | (1 << noble_kernel::contracts::TEST_CLOCK.0)
+            } else {
+                1
+            };
         }
         match &self.bindings {
             Some(bindings) => bindings.effects,

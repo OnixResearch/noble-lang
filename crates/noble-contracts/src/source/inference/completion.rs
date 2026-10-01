@@ -8,6 +8,18 @@ pub(super) fn complete(
     state: &mut super::State,
     meter: &mut crate::Meter,
 ) -> Result<(), crate::Diagnostic> {
+    if let Some((output, effects, rigid)) = frame.signature {
+        attempt!(state.arena.unify(frame.stack, output, frame.span, meter));
+        if rigid {
+            attempt!(state
+                .arena
+                .require_rigid_effect(frame.effect, effects, frame.span, meter));
+        } else {
+            attempt!(state
+                .arena
+                .equate_effects(frame.effect, effects, frame.span, meter));
+        }
+    }
     if !matches!(frame.origin, super::Origin::Quotation(_)) {
         let body = match state.bodies.get_mut(frame.body) {
             Some(body) => body,

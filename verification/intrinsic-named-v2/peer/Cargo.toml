@@ -1,0 +1,13 @@
+[package]
+name = "noble-intrinsic-named-v2-peer"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[workspace]
+
+[dependencies]
+noble-contracts = { path = "../../../crates/noble-contracts" }
+noble-kernel = { path = "../../../crates/noble-kernel" }
+serde_json = "=1.0.140"
+sha2 = "=0.10.2"

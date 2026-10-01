@@ -10,6 +10,14 @@ pub(super) struct Collected {
         alloc::string::String,
         alloc::string::String,
     )>,
+    pub signatures: alloc::vec::Vec<(
+        alloc::string::String,
+        alloc::string::String,
+        alloc::vec::Vec<alloc::string::String>,
+    )>,
+    pub contracts: alloc::vec::Vec<crate::source::declared::parsing::Contract>,
+    pub proofs: alloc::vec::Vec<crate::source::declared::parsing::Proof>,
+    pub definition_spans: alloc::vec::Vec<crate::source::declared::DefinitionSource>,
     pub exports: alloc::vec::Vec<alloc::string::String>,
     names: alloc::vec::Vec<alloc::string::String>,
 }
@@ -30,6 +38,10 @@ impl Collected {
             schemas: alloc::vec::Vec::with_capacity(count),
             definitions: alloc::vec::Vec::with_capacity(count),
             requirements: alloc::vec::Vec::with_capacity(count),
+            signatures: alloc::vec::Vec::with_capacity(count),
+            contracts: alloc::vec::Vec::with_capacity(count),
+            proofs: alloc::vec::Vec::with_capacity(count),
+            definition_spans: alloc::vec::Vec::with_capacity(count),
             exports: alloc::vec::Vec::with_capacity(count),
             names: alloc::vec::Vec::with_capacity(count),
         });
@@ -46,6 +58,7 @@ impl Collected {
                     }
                     crate::source::declared::parsing::Member::Variant {
                         name,
+                        parameters,
                         left,
                         left_type,
                         left_public,
@@ -54,6 +67,7 @@ impl Collected {
                         right_public,
                     } => collected.add_variant(
                         name,
+                        parameters,
                         (left, left_type, left_public),
                         (right, right_type, right_public),
                     ),
@@ -62,8 +76,24 @@ impl Collected {
                         input,
                         operation,
                     } => collected.add_requirement((name, input, operation)),
-                    crate::source::declared::parsing::Member::Definition(bytes) => {
-                        collected.add_definition(bytes, limits)
+                    crate::source::declared::parsing::Member::Signature {
+                        name,
+                        binders,
+                        words,
+                    } => collected.add_signature(name, binders, words),
+                    crate::source::declared::parsing::Member::Definition {
+                        name,
+                        bytes,
+                        span,
+                        body_span,
+                    } => {
+                        collected.add_definition(name, bytes, span, body_span, limits)
+                    }
+                    crate::source::declared::parsing::Member::Contract(contract) => {
+                        collected.add_contract(contract)
+                    }
+                    crate::source::declared::parsing::Member::Proof(proof) => {
+                        collected.add_proof(proof)
                     }
                 },
                 Err(problem) => Err(problem),
@@ -88,6 +118,36 @@ impl Collected {
         Ok(self)
     }
 
+    fn add_contract(
+        mut self,
+        contract: crate::source::declared::parsing::Contract,
+    ) -> Result<Self, crate::source::Error> {
+        if self.names.contains(&contract.name) {
+            return Err(crate::source::declared::error(
+                crate::source::Stage::Resolve,
+                "duplicate module contract",
+            ));
+        }
+        self.names.push(contract.name.clone());
+        self.contracts.push(contract);
+        Ok(self)
+    }
+
+    fn add_proof(
+        mut self,
+        proof: crate::source::declared::parsing::Proof,
+    ) -> Result<Self, crate::source::Error> {
+        if self.names.contains(&proof.name) {
+            return Err(crate::source::declared::error(
+                crate::source::Stage::Resolve,
+                "duplicate module proof",
+            ));
+        }
+        self.names.push(proof.name.clone());
+        self.proofs.push(proof);
+        Ok(self)
+    }
+
     fn add_opaque(self, declaration: OpaqueDeclaration) -> Result<Self, crate::source::Error> {
         let OpaqueDeclaration { name, base, public } = declaration;
         if self.names.contains(&name) {
@@ -109,6 +169,7 @@ impl Collected {
     fn add_variant(
         self,
         name: alloc::string::String,
+        parameters: alloc::vec::Vec<alloc::string::String>,
         left_arm: (alloc::string::String, alloc::string::String, bool),
         right_arm: (alloc::string::String, alloc::string::String, bool),
     ) -> Result<Self, crate::source::Error> {
@@ -129,6 +190,7 @@ impl Collected {
         Ok(self.insert_schema(
             name,
             crate::source::declared::SchemaKind::Variant {
+                parameters,
                 left,
                 left_type,
                 left_public,
@@ -170,9 +232,28 @@ impl Collected {
         Ok(self)
     }
 
+    fn add_signature(
+        mut self,
+        name: alloc::string::String,
+        binders: alloc::string::String,
+        words: alloc::vec::Vec<alloc::string::String>,
+    ) -> Result<Self, crate::source::Error> {
+        if self.signatures.iter().any(|(known, _, _)| known == &name) {
+            return Err(crate::source::declared::error(
+                crate::source::Stage::Resolve,
+                "duplicate source signature",
+            ));
+        }
+        self.signatures.push((name, binders, words));
+        Ok(self)
+    }
+
     fn add_definition(
         mut self,
+        name: alloc::string::String,
         bytes: alloc::vec::Vec<u8>,
+        span: crate::Span,
+        body_span: crate::Span,
         limits: crate::Limits,
     ) -> Result<Self, crate::source::Error> {
         let mut meter = crate::Meter::new(limits);
@@ -184,18 +265,38 @@ impl Collected {
             crate::source::Stage::Parse,
             "module definition missing name"
         )));
-        if self.names.contains(&parsed_name) {
+        if parsed_name != name {
+            return Err(crate::source::declared::error(
+                crate::source::Stage::Parse,
+                "module and ordinary definition names differ",
+            ));
+        }
+        if self.names.contains(&name) {
             return Err(crate::source::declared::error(
                 crate::source::Stage::Resolve,
                 "duplicate module definition",
             ));
         }
-        self.names.push(parsed_name.clone());
-        self.definitions.push((parsed_name, bytes, tree));
+        self.names.push(name.clone());
+        self.definition_spans.push(crate::source::declared::DefinitionSource {
+            name: name.clone(), span, body_span,
+        });
+        self.definitions.push((name, bytes, tree));
         Ok(self)
     }
 
     fn validate(&self) -> Result<(), crate::source::Error> {
+        if self.signatures.iter().any(|(name, _, _)| {
+            !self
+                .definitions
+                .iter()
+                .any(|(defined, _, _)| defined == name)
+        }) {
+            return Err(crate::source::declared::error(
+                crate::source::Stage::Resolve,
+                "signature has no matching source definition",
+            ));
+        }
         let mut constructors = 0usize;
         let mut schema_index = 0;
         while schema_index < self.schemas.len() {
@@ -244,6 +345,10 @@ impl Collected {
                     }
                     index += 1;
                 }
+            }
+            if !has_declaration {
+                has_declaration = self.contracts.iter().any(|contract| contract.name == *exported)
+                    || self.proofs.iter().any(|proof| proof.name == *exported);
             }
             if !has_declaration {
                 has_missing_export = true;

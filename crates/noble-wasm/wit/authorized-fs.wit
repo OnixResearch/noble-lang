@@ -1,0 +1,10 @@
+package noble-test:authorized-fs@1.0.0;
+
+interface fs {
+  read: func(path: string) -> result<list<u8>, string>;
+}
+
+world bounded {
+  import fs;
+  export read-file: func() -> result<list<u8>, string>;
+}

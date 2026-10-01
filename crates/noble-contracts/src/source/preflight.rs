@@ -35,6 +35,7 @@ pub(super) enum PathStep {
     Left,
     Right,
     Item,
+    GenericArgument(usize),
     Input(usize),
     Output(usize),
 }
@@ -108,6 +109,7 @@ impl Traversal {
             noble_kernel::types::Ty::Pair(_, _) | noble_kernel::types::Ty::Sum(_, _) => 2,
             noble_kernel::types::Ty::List(_) => 1,
             noble_kernel::types::Ty::Nominal(_, _) => 0,
+            noble_kernel::types::Ty::GenericNominal(_, _, _) => 0,
             noble_kernel::types::Ty::Program(input, output, _) => {
                 input.len().saturating_add(output.len())
             }
@@ -178,6 +180,20 @@ impl Traversal {
                     Err(crate::invalid(
                         span,
                         "unregistered or changed nominal input schema",
+                    ))
+                }
+            }
+            noble_kernel::types::Ty::GenericNominal(_, _, _) => {
+                if session
+                    .declared
+                    .as_ref()
+                    .is_some_and(|context| context.environment.valid_generic_instance(ty))
+                {
+                    Ok(())
+                } else {
+                    Err(crate::invalid(
+                        span,
+                        "unregistered or changed generic nominal input schema",
                     ))
                 }
             }

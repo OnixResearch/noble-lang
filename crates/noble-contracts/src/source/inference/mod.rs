@@ -38,6 +38,14 @@ pub(super) struct State {
     pub span: crate::Span,
     text_bytes: u32,
     pub(super) definition_base: usize,
+    pub(super) holes: alloc::vec::Vec<Hole>,
+}
+
+pub(super) struct Hole {
+    pub input: u32,
+    pub output: u32,
+    pub effect: u32,
+    pub span: crate::Span,
 }
 
 #[derive(Clone, Copy)]
@@ -59,9 +67,11 @@ enum BodyKey {
     Quotation(u32),
 }
 
+#[derive(Clone, Copy)]
 pub(super) enum Mode {
     Declaration,
     Submission,
+    EditorAnalysis,
 }
 
 struct Frame {
@@ -76,12 +86,14 @@ struct Frame {
     origin: Origin,
     span: crate::Span,
     caller: Option<crate::Span>,
+    signature: Option<(u32, u32, bool)>,
 }
 
 pub(super) struct Scope<'a> {
     pub(super) root: &'a super::Tree,
     pub(super) session: &'a super::Session,
     pub(super) environment: &'a noble_kernel::contracts::Env,
+    pub(super) root_signature: Option<&'a noble_kernel::words::Scheme>,
 }
 
 impl Scope<'_> {
@@ -141,6 +153,24 @@ pub(super) fn infer(
 ) -> Result<State, crate::Diagnostic> {
     let tree = scope.root;
     let mut state = attempt!(initial(tree, scope.session, mode, inputs, meter));
+    let signature = match scope.root_signature {
+        Some(scheme) => {
+            let input = match state.bodies.first() {
+                Some(body) => body.input,
+                None => return Err(crate::internal(tree.span)),
+            };
+            let (output, effects) = attempt!(apply_signature(
+                &mut state.arena,
+                scheme,
+                input,
+                true,
+                tree.span,
+                meter,
+            ));
+            Some((output, effects, true))
+        }
+        None => None,
+    };
     state.definition_base = scope.environment.defs.len();
     attempt!(meter.node(tree.span));
     let mut frames = alloc::vec::Vec::with_capacity(1);
@@ -160,10 +190,14 @@ pub(super) fn infer(
         origin: Origin::Root,
         span: tree.span,
         caller: None,
+        signature,
     });
     let mut failure = None;
     while let Some(frame) = frames.pop() {
-        if let Err(problem) = traversal::visit(frame, &mut frames, &mut state, &scope, meter) {
+        if let Err(problem) = traversal::visit(
+            frame, &mut frames, &mut state, &scope,
+            matches!(mode, Mode::EditorAnalysis), meter
+        ) {
             failure = Some(problem);
             break;
         }
@@ -174,6 +208,26 @@ pub(super) fn infer(
     attempt!(state.arena.solve_effects(tree.span, meter));
     attempt!(validation::open(&state, meter));
     Ok(state)
+}
+
+fn apply_signature(
+    arena: &mut crate::inference::Arena,
+    scheme: &noble_kernel::words::Scheme,
+    input: u32,
+    rigid: bool,
+    span: crate::Span,
+    meter: &mut crate::Meter,
+) -> Result<(u32, u32), crate::Diagnostic> {
+    let variables = if rigid {
+        attempt!(arena.rigid_variables(&scheme.var_kinds, span, meter))
+    } else {
+        attempt!(arena.variables(&scheme.var_kinds, span, meter))
+    };
+    let expected_input = attempt!(arena.pattern_stack(&scheme.stack_in, &variables, span, meter));
+    attempt!(arena.unify(input, expected_input, span, meter));
+    let expected_output = attempt!(arena.pattern_stack(&scheme.stack_out, &variables, span, meter));
+    let effects = attempt!(arena.effect_pattern(&scheme.effects, &variables, span, meter));
+    Ok((expected_output, effects))
 }
 
 #[expect(
@@ -204,6 +258,7 @@ fn initial(
             at += 1;
         }
         arena.nominals = nominals;
+        arena.generic_nominals = context.environment.generic_variants.clone();
     }
     #[expect(
         tigerstyle::fragile_exhaustive_enum_match,
@@ -211,6 +266,18 @@ fn initial(
     )]
     let input = match mode {
         Mode::Submission => attempt!(arena.stack(inputs, tree.span, meter)),
+        Mode::EditorAnalysis => {
+            let mut stack = attempt!(arena.add(
+                crate::inference::Term::Hole(crate::inference::Sort::Stack),
+                tree.span,
+                meter
+            ));
+            for ty in inputs {
+                let item = attempt!(arena.ty(ty, tree.span, meter));
+                stack = attempt!(arena.add(crate::inference::Term::Push(stack, item), tree.span, meter));
+            }
+            stack
+        }
         Mode::Declaration => attempt!(arena.add(
             crate::inference::Term::Hole(crate::inference::Sort::Stack),
             tree.span,
@@ -236,6 +303,7 @@ fn initial(
         span: tree.span,
         text_bytes: 0,
         definition_base: 24,
+        holes: alloc::vec::Vec::new(),
     })
 }
 

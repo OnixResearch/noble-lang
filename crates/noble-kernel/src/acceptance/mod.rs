@@ -67,11 +67,11 @@ fn run(
     request: &crate::untrusted::Request,
     candidate: &crate::untrusted::Candidate,
 ) -> Result<crate::untrusted::Checked, Fail> {
-    attempt!(preflight::check_request(env, request, candidate));
+    let remaining = attempt!(preflight::check_request(env, request, candidate));
     let context = parts::Ctx { request, env };
     let mut machine = Machine {
         state: State {
-            work: request.limits.work,
+            work: remaining,
             derivations: alloc::vec::Vec::with_capacity(
                 usize::try_from(request.limits.nodes.min(64)).unwrap_or(0),
             ),

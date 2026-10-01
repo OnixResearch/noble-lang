@@ -186,13 +186,14 @@ fn same_target(
 pub(crate) fn identity(
     tree: &crate::source::Tree,
     session: &crate::source::Session,
+    signature: Option<&noble_kernel::words::Scheme>,
     meter: &mut crate::Meter,
 ) -> Result<u64, crate::Diagnostic> {
     let mut at = 0usize;
     let mut found = None;
     let mut failure = None;
     while at < session.definitions.len() {
-        match same_definition(tree, at, session, meter) {
+        match same_definition(tree, signature, at, session, meter) {
             Ok(Some(identity)) => {
                 found = Some(identity);
                 break;
@@ -229,6 +230,7 @@ pub(crate) fn identity(
 )]
 fn same_definition(
     tree: &crate::source::Tree,
+    signature: Option<&noble_kernel::words::Scheme>,
     at: usize,
     session: &crate::source::Session,
     meter: &mut crate::Meter,
@@ -243,10 +245,29 @@ fn same_definition(
     if definition.owner != session.declared.as_ref().and_then(|context| context.owner) {
         return Ok(None);
     }
+    if !same_signature(definition.signature.as_ref(), signature) {
+        return Ok(None);
+    }
     let is_same = attempt!(same_body(tree, &definition.tree, session, meter));
     if is_same {
         Ok(Some(definition.identity))
     } else {
         Ok(None)
+    }
+}
+
+fn same_signature(
+    previous: Option<&noble_kernel::words::Scheme>,
+    next: Option<&noble_kernel::words::Scheme>,
+) -> bool {
+    match (previous, next) {
+        (None, None) => true,
+        (Some(previous), Some(next)) => {
+            previous.var_kinds == next.var_kinds
+                && previous.stack_in == next.stack_in
+                && previous.stack_out == next.stack_out
+                && previous.effects == next.effects
+        }
+        (None, Some(_)) | (Some(_), None) => false,
     }
 }

@@ -195,7 +195,8 @@ fn declaration_body(
                 super::Kind::Literal(_)
                 | super::Kind::Text(_)
                 | super::Kind::Word(_)
-                | super::Kind::Call(_),
+                | super::Kind::Call(_)
+                | super::Kind::EditorHole,
             ..
         })
         | None => Err(crate::internal(span)),
@@ -261,6 +262,9 @@ fn step(
         super::lexer::TokenKind::Literal(lit) => super::Kind::Literal(lit),
         super::lexer::TokenKind::Text(bytes) => super::Kind::Text(bytes),
         super::lexer::TokenKind::Word(word) => super::Kind::Word(word),
+        super::lexer::TokenKind::ProofColon | super::lexer::TokenKind::LogicalBody(_) => {
+            return Err(crate::invalid(token.span, "logical token outside a proof declaration"));
+        }
     };
     append(
         super::Node {

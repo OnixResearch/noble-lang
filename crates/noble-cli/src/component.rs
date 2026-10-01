@@ -1,17 +1,43 @@
 //! Bounded Component Model compiler shell; execution belongs to the linked host.
 mod artifacts;
+mod authorized_fs;
+mod bounded_region;
+mod callback_owner;
+mod identity;
+mod quota;
 mod report;
 
 pub(crate) const USAGE: &str = "usage:
   noble component bindings WIT WORLD
   noble component check-effect WIT WORLD WORD CLAIMED_EFFECT ...
   noble component compile WIT WORLD NEW_DIR EXPORT=SOURCE ...
+  noble component compile-checked-u64 WIT WORLD NEW_DIR EXPORT=SOURCE ...
+  noble component read-region COMPONENT HOST_BUFFER_HEX OFFSET LENGTH
+  noble component callback-owner COMPONENT MODE WIT WORLD EXPORT=SOURCE ...
+  noble component read-fs COMPONENT HOST_PREOPENED_FILE READ_RIGHT WIT WORLD EXPORT=SOURCE ...
+  noble component quota-core CORE_WASM EXPORT FUEL ALLOCATION_BYTES WIT WORLD EXPORT=SOURCE ...
 
 Component-Sync-Bootstrap and Component-Async-Bootstrap generate typed WIT
 bindings and independently check all export bodies before emitting a component.
 Every selected world export must be supplied exactly once. Exports use isolated
 parameter/result stacks. Native async calls preserve sequential Noble order;
 borrowed exports and async borrowing are rejected. NEW_DIR must not exist.
+read-region links the separate noble-test:bounded-region/bounded@1.0.0 world.
+The invoker selects at most 4096 immutable bytes as hex; the component gets
+one owned region and signed relative offset/length, never a native address.
+The report distinguishes bounds refusal, protected region reads and owner
+release. Native host/engine correspondence and general proof remain open.
+callback-owner independently rebuilds and byte-matches its selected WIT,
+world and complete Noble export-source recipe before guest invocation. The
+host selects the callback claim (authentic, retired generation, live wrong
+kind, or live wrong context); retained resource-table validation must precede
+publication of the imported owned token to the compiled guest.
+quota-core rebuilds the complete Noble WIT/world/export-source recipe and
+requires byte-for-byte matching Core Wasm before accepting a private guest
+allocator diagnostic. It runs the matched import-free Core with host-selected
+Wasmtime fuel and the separate generated-heap byte limit.
+Only a matching engine fuel trap or generated allocator quota diagnostic is
+reported as a specified quota failure; other traps remain distinct.
 Host resource, task-retirement and authorization contracts remain the
 responsibility of the linked host profile.";
 
@@ -25,6 +51,18 @@ pub(crate) struct Source {
     reason = "Owner: noble-maintainers; all component refusals become structured diagnostics and a failing exit code; caller arguments and tool failures must not trigger assertion panics."
 )]
 pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
+    if arguments.get(1).is_some_and(|argument| argument == "read-region") {
+        return bounded_region::run(arguments);
+    }
+    if arguments.get(1).is_some_and(|argument| argument == "callback-owner") {
+        return callback_owner::run(arguments);
+    }
+    if arguments.get(1).is_some_and(|argument| argument == "read-fs") {
+        return authorized_fs::run(arguments);
+    }
+    if arguments.get(1).is_some_and(|argument| argument == "quota-core") {
+        return quota::run(arguments);
+    }
     let (document, exit) = match execute(arguments) {
         Ok(document) => (document, 0),
         Err(error) => {
@@ -69,12 +107,13 @@ fn execute(
         65_536,
         "component-wit-input",
     ));
-    let world = attempt!(noble_contracts::component::World::parse(
-        &wit,
-        selected_world,
-        crate::core::SOURCE_LIMITS
-    )
-    .map_err(report::diagnostic));
+    let world = attempt!(if mode == "compile-checked-u64" {
+        noble_contracts::component::World::parse_checked_u64(
+            &wit, selected_world, crate::core::SOURCE_LIMITS)
+    } else {
+        noble_contracts::component::World::parse(
+            &wit, selected_world, crate::core::SOURCE_LIMITS)
+    }.map_err(report::diagnostic));
     match mode {
         "bindings" if arguments.len() == 4 => Ok(report::bindings(&world)),
         "check-effect" if arguments.len() >= 5 && arguments.len() <= 69 => {
@@ -99,7 +138,7 @@ fn execute(
                 ("guest_requests", crate::workflow::encoding::Json::Number(0)),
             ]))
         }
-        "compile" if arguments.len() >= 5 && arguments.len() <= 69 => {
+        "compile" | "compile-checked-u64" if arguments.len() >= 5 && arguments.len() <= 69 => {
             let output = std::path::Path::new(attempt!(arguments.get(4).ok_or_else(usage)));
             let sources = attempt!(sources(&arguments[5..]));
             compile(output, &world, &sources)

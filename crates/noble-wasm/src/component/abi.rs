@@ -23,6 +23,7 @@ pub(super) const fn lane_count(ty: noble_contracts::component::Type) -> usize {
     match ty {
         noble_contracts::component::Type::Boolean
         | noble_contracts::component::Type::S64
+        | noble_contracts::component::Type::CheckedU64
         | noble_contracts::component::Type::StreamU8
         | noble_contracts::component::Type::FutureS64
         | noble_contracts::component::Type::FutureResultS64String
@@ -42,7 +43,8 @@ pub(super) const fn lane(
         return Err(crate::Diagnostic::Defective);
     }
     match ty {
-        noble_contracts::component::Type::S64 => Ok(Lane::I64),
+        noble_contracts::component::Type::S64
+        | noble_contracts::component::Type::CheckedU64 => Ok(Lane::I64),
         noble_contracts::component::Type::ResultS64String if at == 1 => Ok(Lane::I64),
         noble_contracts::component::Type::Boolean
         | noble_contracts::component::Type::String
@@ -94,6 +96,7 @@ pub(super) fn value_type(
         | noble_kernel::types::Ty::Certified
         | noble_kernel::types::Ty::Pair(_, _)
         | noble_kernel::types::Ty::Nominal(_, _)
+        | noble_kernel::types::Ty::GenericNominal(_, _, _)
         | noble_kernel::types::Ty::Program(_, _, _) => Err(crate::Diagnostic::Unsupported),
     }
 }
@@ -106,7 +109,8 @@ pub(super) const fn memory_layout(ty: noble_contracts::component::Type) -> (u32,
         | noble_contracts::component::Type::StreamU8
         | noble_contracts::component::Type::FutureS64
         | noble_contracts::component::Type::FutureResultS64String => (4, 4),
-        noble_contracts::component::Type::S64 => (8, 8),
+        noble_contracts::component::Type::S64
+        | noble_contracts::component::Type::CheckedU64 => (8, 8),
         noble_contracts::component::Type::String | noble_contracts::component::Type::Bytes => {
             (4, 8)
         }

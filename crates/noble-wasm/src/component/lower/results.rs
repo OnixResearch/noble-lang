@@ -13,6 +13,10 @@ pub(super) fn validate(
             attempt!(read_lane(value, 0, buffer));
             buffer.append(b" i32.const 1 i32.gt_u if unreachable end\n")
         }
+        noble_contracts::component::Type::CheckedU64 => {
+            attempt!(read_lane(value, 0, buffer));
+            buffer.append(b" i64.const 9223372036854775807 i64.gt_u if unreachable end\n")
+        }
         noble_contracts::component::Type::S64
         | noble_contracts::component::Type::StreamU8
         | noble_contracts::component::Type::FutureS64
@@ -87,7 +91,7 @@ pub(super) fn load(
             attempt!(buffer.append(b" i32.load8_u\n"));
             capture_lane(value, 0, buffer)
         }
-        Some(noble_contracts::component::Type::S64) => {
+        Some(noble_contracts::component::Type::S64 | noble_contracts::component::Type::CheckedU64) => {
             attempt!(super::super::abi::get(buffer, area));
             attempt!(buffer.append(b" i64.load\n"));
             capture_lane(value, 0, buffer)
@@ -151,6 +155,7 @@ pub(super) fn load(
     reason = "Owner: noble-maintainers; the complete result stack, exact type, value validity, copy and storage operations are checked before emission completes; partial trusted result publication is not an assertion-based fallback."
 )]
 pub(super) fn finish(
+    world: &noble_contracts::component::World,
     result: Option<noble_contracts::component::Type>,
     asynchronous: bool,
     state: &mut super::State,
@@ -168,7 +173,7 @@ pub(super) fn finish(
     if !state.stack.is_empty() {
         return Err(crate::Diagnostic::Invalid);
     }
-    if value.ty != ty.noble() {
+    if world.noble_type(ty).as_ref() != Some(&value.ty) {
         return Err(crate::Diagnostic::Invalid);
     }
     attempt!(validate(ty, &value, &mut state.code));
@@ -218,6 +223,7 @@ fn copy_result(
         }
         noble_contracts::component::Type::Boolean
         | noble_contracts::component::Type::S64
+        | noble_contracts::component::Type::CheckedU64
         | noble_contracts::component::Type::StreamU8
         | noble_contracts::component::Type::FutureS64
         | noble_contracts::component::Type::FutureResultS64String
@@ -240,7 +246,8 @@ pub(super) fn store(
     attempt!(read_lane(value, 0, buffer));
     match ty {
         noble_contracts::component::Type::Boolean => buffer.append(b" i32.store8\n"),
-        noble_contracts::component::Type::S64 => buffer.append(b" i64.store\n"),
+        noble_contracts::component::Type::S64
+        | noble_contracts::component::Type::CheckedU64 => buffer.append(b" i64.store\n"),
         noble_contracts::component::Type::Own(_)
         | noble_contracts::component::Type::Borrow(_)
         | noble_contracts::component::Type::StreamU8

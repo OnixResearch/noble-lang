@@ -95,6 +95,8 @@ macro_rules! declare {
 mod eligibility;
 #[path = "nominal/forgery.rs"]
 mod forgery;
+#[path = "nominal/generic.rs"]
+mod generic;
 #[path = "nominal/identity.rs"]
 mod identity;
 #[path = "nominal/matching.rs"]

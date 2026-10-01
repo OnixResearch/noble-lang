@@ -1,9 +1,11 @@
 //! Bounded lexical classification of declaration units.
 mod body;
 mod imports;
+mod logic;
 mod members;
 
-// These are the complete syntactic forms of a Declared-Modules-v1 unit.
+// Module/import unit forms are unchanged; only logical contract/proof
+// declarations admit the additive explicit revision 2.
 #[octet::sealed_enum]
 pub(super) enum ParsedUnit {
     Module {
@@ -20,7 +22,7 @@ pub(super) enum ParsedUnit {
     Expression,
 }
 
-// The v1 declaration grammar is closed; extending it requires updating registration.
+// Member kinds remain closed; new logical revisions retain the same member fields.
 #[octet::sealed_enum]
 pub(super) enum Member {
     Opaque {
@@ -30,6 +32,7 @@ pub(super) enum Member {
     },
     Variant {
         name: alloc::string::String,
+        parameters: alloc::vec::Vec<alloc::string::String>,
         left: alloc::string::String,
         left_type: alloc::string::String,
         left_public: bool,
@@ -42,8 +45,51 @@ pub(super) enum Member {
         input: alloc::string::String,
         operation: alloc::string::String,
     },
+    Signature {
+        name: alloc::string::String,
+        binders: alloc::string::String,
+        words: alloc::vec::Vec<alloc::string::String>,
+    },
     Export(alloc::string::String),
-    Definition(alloc::vec::Vec<u8>),
+    Definition {
+        name: alloc::string::String,
+        bytes: alloc::vec::Vec<u8>,
+        span: crate::Span,
+        body_span: crate::Span,
+    },
+    Contract(Contract),
+    Proof(Proof),
+}
+
+pub(super) struct Binding {
+    pub name: alloc::string::String,
+    pub ty: alloc::string::String,
+    pub span: crate::Span,
+}
+
+pub(super) struct Contract {
+    pub revision: u32,
+    pub name: alloc::string::String,
+    pub subject: alloc::string::String,
+    pub subject_span: crate::Span,
+    pub inputs: alloc::vec::Vec<Binding>,
+    pub outputs: alloc::vec::Vec<Binding>,
+    pub requires: crate::intrinsic::Form,
+    pub ensures: crate::intrinsic::Form,
+    pub span: crate::Span,
+}
+
+pub(super) enum ProofClaim {
+    For(alloc::string::String, crate::Span),
+    Pure(crate::intrinsic::Form),
+}
+
+pub(super) struct Proof {
+    pub revision: u32,
+    pub name: alloc::string::String,
+    pub claim: ProofClaim,
+    pub term: crate::intrinsic::Form,
+    pub span: crate::Span,
 }
 
 fn parse_diagnostic(span: crate::Span, reason: &str) -> crate::Diagnostic {
@@ -82,6 +128,15 @@ pub(super) fn name(name: &str) -> bool {
         && !reserved_name(name)
 }
 
+// Intrinsic declaration identifiers include hyphenated proof/theorem names,
+// without widening ordinary definition, type, module, or alias identifiers.
+pub(super) fn logical_name(name: &str) -> bool {
+    let mut bytes = name.bytes();
+    matches!(bytes.next(), Some(b'a'..=b'z' | b'A'..=b'Z' | b'_'))
+        && bytes.all(|c| c.is_ascii_alphanumeric() || matches!(c, b'_' | b'-'))
+        && !reserved_name(name)
+}
+
 fn reserved_name(name: &str) -> bool {
     matches!(
         name,
@@ -92,6 +147,7 @@ fn reserved_name(name: &str) -> bool {
             | "opaque"
             | "variant"
             | "require"
+            | "signature"
             | "export"
             | "public"
             | "private"
@@ -105,6 +161,8 @@ fn reserved_name(name: &str) -> bool {
             | "Sum"
             | "List"
             | "Resource"
+            | "Program"
+            | "Syntax"
     )
 }
 #[expect(
@@ -165,6 +223,14 @@ impl<'a> Cursor<'a> {
                 span,
                 "invalid or reserved declaration name",
             ));
+        }
+        Ok((cursor, alloc::string::String::from(value)))
+    }
+    fn logical_ident(self) -> Result<(Self, alloc::string::String), crate::Diagnostic> {
+        let span = self.span;
+        let (cursor, value) = attempt!(self.next());
+        if !logical_name(value) {
+            return Err(parse_diagnostic(span, "invalid logical declaration name"));
         }
         Ok((cursor, alloc::string::String::from(value)))
     }
@@ -237,6 +303,72 @@ fn declaration_word(token: Option<&crate::source::lexer::Token>, spelling: &[u8]
         kind: crate::source::lexer::TokenKind::Word(bytes), ..
     }) if bytes.as_slice().eq(spelling))
 }
+
+#[derive(Clone, Copy)]
+enum ScanContext {
+    Member,
+    ExportTarget,
+    ContractVersion,
+    ContractName,
+    ContractOpen,
+    ContractBody,
+    ContractLogical,
+    ProofVersion,
+    ProofName,
+    ProofHeader,
+    ProofTarget,
+    ProofProposition,
+    ProofTerm,
+}
+
+fn logical_revision(token: &crate::source::lexer::Token) -> Option<u32> {
+    if token.span.end.checked_sub(token.span.start) != Some(1) {
+        return None;
+    }
+    match &token.kind {
+        crate::source::lexer::TokenKind::Literal(noble_kernel::untrusted::Lit::I64(1)) => Some(1),
+        crate::source::lexer::TokenKind::Literal(noble_kernel::untrusted::Lit::I64(2)) => Some(2),
+        _ => None,
+    }
+}
+
+fn word_is(token: &crate::source::lexer::Token, spelling: &[u8]) -> bool {
+    matches!(&token.kind, crate::source::lexer::TokenKind::Word(bytes) if bytes == spelling)
+}
+
+fn scan_context(
+    context: ScanContext,
+    token: &crate::source::lexer::Token,
+    before_depth: u32,
+    after_depth: u32,
+) -> ScanContext {
+    use crate::source::lexer::TokenKind;
+    use ScanContext as C;
+    match context {
+        C::Member if before_depth == 1 && word_is(token, b"export") => C::ExportTarget,
+        C::ExportTarget => C::Member,
+        C::Member if before_depth == 1 && word_is(token, b"contract") => C::ContractVersion,
+        C::Member if before_depth == 1 && word_is(token, b"proof") => C::ProofVersion,
+        C::Member => C::Member,
+        C::ContractVersion if logical_revision(token).is_some() => C::ContractName,
+        C::ContractName if matches!(&token.kind, TokenKind::Word(_)) => C::ContractOpen,
+        C::ContractOpen if matches!(&token.kind, TokenKind::Open) => C::ContractBody,
+        C::ContractBody if after_depth == 1 => C::Member,
+        C::ContractBody if before_depth == 2 && word_is(token, b"requires") => C::ContractLogical,
+        C::ContractBody if before_depth == 2 && word_is(token, b"ensures") => C::ContractLogical,
+        C::ContractBody => C::ContractBody,
+        C::ContractLogical => C::ContractBody,
+        C::ProofVersion if logical_revision(token).is_some() => C::ProofName,
+        C::ProofName if matches!(&token.kind, TokenKind::Word(_)) => C::ProofHeader,
+        C::ProofHeader if matches!(&token.kind, TokenKind::ProofColon) => C::ProofProposition,
+        C::ProofHeader if word_is(token, b"for") => C::ProofTarget,
+        C::ProofTarget if matches!(&token.kind, TokenKind::Word(_)) => C::ProofTerm,
+        C::ProofProposition => C::ProofTerm,
+        C::ProofTerm => C::Member,
+        _ => C::Member,
+    }
+}
+
 #[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; bounded Scanner.next and Meter preserve the first lexical Diagnostic before checked-span construction; guest errors must not panic; reassess fallible-check density."
@@ -252,6 +384,8 @@ fn scan(
     ));
     let initial_slots = attempt!(token_slots(limits, input_bytes.len()));
     let mut tokens = alloc::vec::Vec::with_capacity(initial_slots);
+    let mut context = ScanContext::Member;
+    let mut depth = 0u32;
     let mut next = scanner.next(&mut meter);
     let mut failure = None;
     while let Some(token) = match next {
@@ -261,8 +395,27 @@ fn scan(
             None
         }
     } {
+        let before_depth = depth;
+        depth = match &token.kind {
+            crate::source::lexer::TokenKind::Open => match depth.checked_add(1) {
+                Some(next) => next,
+                None => {
+                    failure = Some(parse_diagnostic(token.span, "module nesting exceeds finite format"));
+                    break;
+                }
+            },
+            crate::source::lexer::TokenKind::Close => depth.saturating_sub(1),
+            _ => depth,
+        };
+        context = scan_context(context, &token, before_depth, depth);
         tokens.push(token);
-        next = scanner.next(&mut meter);
+        next = match context {
+            ScanContext::ContractLogical
+            | ScanContext::ProofProposition
+            | ScanContext::ProofTerm => scanner.next_logical_body(&mut meter).map(Some),
+            ScanContext::ProofHeader => scanner.next_proof_head(&mut meter),
+            _ => scanner.next(&mut meter),
+        };
     }
     if let Some(problem) = failure {
         return Err(problem);

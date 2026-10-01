@@ -13,6 +13,8 @@ path = "src/main.rs"
 noble-kernel = { path = "../noble-kernel" }
 noble-contracts = { path = "../noble-contracts" }
 noble-wasm = { path = "../noble-wasm" }
+anyhow = "=1.0.100"
+wasmtime = { path = "/nix/store/26a8xzacbx01hidm70lpyphyw926zhc5-source/crates/wasmtime", default-features = false, features = ["std", "runtime", "cranelift", "component-model", "gc", "gc-drc"] }
 
 [lints]
 workspace = true

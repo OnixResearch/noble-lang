@@ -1,0 +1,8 @@
+package noble-test:quotas@1.0.0;
+
+world quotas {
+  export compute: func() -> s64;
+  export emit-fifty-six: func() -> string;
+  export emit-fifty-seven: func() -> string;
+  export emit-sixty-five: func() -> string;
+}

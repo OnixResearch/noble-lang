@@ -259,7 +259,29 @@ pub(crate) fn check(
                 }
             };
             let mut problem = crate::invalid(at, message);
-            if let Ok(shapes) = rejection_shapes(&diagnostic, request, at) {
+            if let (
+                Some(definition),
+                noble_kernel::untrusted::Constraint::Eligibility(ty),
+            ) = (diagnostic.def, &diagnostic.constraint)
+            {
+                let mut word = alloc::string::String::new();
+                append_bootstrap_spelling(definition, &mut word);
+                let required = alloc::string::String::from("S Data");
+                let actual = alloc::format!("S {ty:?}");
+                problem.message.push_str("; word ");
+                problem.message.push_str(&word);
+                problem.message.push_str("; required ");
+                problem.message.push_str(&required);
+                problem.message.push_str("; actual ");
+                problem.message.push_str(&actual);
+                problem = problem.with_join(crate::JoinDiagnostic {
+                    word,
+                    expected_stack: required,
+                    actual_stack: actual,
+                    constraint: "eligibility:Data",
+                    value_origin: None,
+                });
+            } else if let Ok(shapes) = rejection_shapes(&diagnostic, request, at) {
                 problem.message.push_str("; ");
                 problem.message.push_str(&shapes);
             }

@@ -1,8 +1,10 @@
 //! Source/session orchestration; execution occurs only in the selected Wasm engine.
 
 mod arguments;
+pub(crate) mod artifact;
 pub(crate) mod companions;
 mod declared;
+pub(crate) mod editor;
 pub(crate) mod entry;
 mod framing;
 mod output;
@@ -23,12 +25,19 @@ pub(crate) const EVIDENCE_LIMITS: noble_contracts::Limits = noble_contracts::Lim
 };
 
 pub const USAGE: &str = "usage:
+  noble editor analyze|admit JSON_FILE [--emit NEW_DIR (admit only)]
+  JSON_FILE: editor AST format 1, nodes integer/boolean/word/quotation/hole
+  noble admit-artifact WASM --effects CLAIMS_JSON [--source HOST_SOURCE] [--allow-effects test.emit,test.abort,test.clock] [--opt off|on]
+  CLAIMS_JSON: {\"claimed_effects\":[]}; optional source/digest/allowed/trusted_correspondence are ignored
+  --source and --allow-effects are selected by the host invoker, never by candidate claims.
+  Admission rebuilds selected source and compares final Wasm bytes before fresh isolated execution.
   noble run SOURCE [--opt off|on] [--emit NEW_DIR]
   noble compile SOURCE [--input-type I64|Bool|Text|Unit ...]
   noble compile SOURCE --declared-modules --bindings HOST_FILE [--module MODULE_FILE ...] [--input-type MODULE@VERSION.TYPE ...]
   noble session [--framed] [--opt off|on] [--emit NEW_DIR]
   noble session --framed --declared-modules --bindings HOST_FILE [--opt off|on] [--emit NEW_DIR]
   HOST_FILE: bind MODULE@VERSION test.emit ADAPTER Text -- ! test.emit allow|deny
+             bind MODULE@VERSION test.clock ADAPTER -- I64 ! test.clock allow|deny script I64[,I64...]
   Declared-Modules-v1 module/import/definition units link without running guest code.
   Preparation limits: --source-bytes N --source-nodes N --source-depth N --source-work N
 

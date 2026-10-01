@@ -1,0 +1,249 @@
+{
+  "schema_version": 1,
+  "revision": "0.1.0-draft.5",
+  "origin": "external-study-adaptations-new-unexecuted-designs",
+  "cases": [
+    {
+      "id": "ADAPT-01", "profile": "Core-Bootstrap", "kind": "static",
+      "requirements": ["B-CHECK-06", "B-DIAG-01", "K-CONTROL-01"],
+      "input": {"harness": "branch-join-diagnostics", "variants": [
+        {"source": "true [ 1 ] [ \"x\" ] if", "failure": "output-type"},
+        {"source": "true [ 1 ] [ 1 2 ] if", "failure": "output-arity"},
+        {"source": "true [ 1 \"x\" ] [ \"x\" 1 ] if", "failure": "output-order"}
+      ]},
+      "expected": {"stage": "static", "outcome": "reject-each-variant", "implicit_union_join": false, "diagnostic_fields": ["join", "expected_stack", "actual_stack", "source_location"], "guest_requests": 0, "protected_operations": 0},
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [{"kind": "test", "subject": "ADAPT-01", "claim": "At the frozen DX-01/kernel source revision, all three exact hostile conditional branch sources reject statically with distinct rendered output type, arity and order conflicts, located structured join diagnostics and zero guest/protected operations; a compatible typed branch executes normally. Earlier source-bound acceptance.json and current.json snapshots remain unchanged. This scoped run does not establish a universal checker proof.", "revision": "0.1.0-draft.5", "source_revision": "sha256:7160adf7a16e5d4ebc7b0403e2a1c07ffd167fca910bf48e421131441c0554f6", "result": "passed", "configuration": {"receipt": "../../verification/adapt-01/current-frozen.json", "case_id": "ADAPT-01", "profile": "Core-Bootstrap"}}]
+    },
+    {
+      "id": "ADAPT-02", "profile": "Resources-Draft", "kind": "static",
+      "requirements": ["B-CHECK-06", "K-TYPE-02", "K-DATA-01", "K-CONTROL-01"],
+      "input": {"harness": "checked-sum-payload-elimination", "input_type": "Sum<Resource<test.counter>,I64>", "left_branch": "[ test.release 0 ]", "right_branch": "[ 1 + ]", "host_contract": "test.release : S Resource<test.counter> -- S ! {test.release}"},
+      "expected": {"stage": "static", "outcome": "accept", "output_stack": ["I64"], "effects": ["test.release"], "sum_is_data": false, "sum_is_capturable": false, "right_payload_is_data": true, "resource_branch_accounts_for_owner": true, "guest_requests": 0, "protected_operations": 0},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "ADAPT-03", "profile": "Core-Bootstrap", "kind": "admission",
+      "requirements": ["B-CHECK-06", "B-IMPL-03", "K-TYPE-02"],
+      "input": {"harness": "forged-branch-witness", "checked_input": "Resource<test.counter>", "advertised_refinement": "Data", "candidate_operation": "quote", "predicate_result": true},
+      "expected": {"stage": "acceptance", "outcome": "reject", "accepted_program_created": false, "guest_requests": 0, "protected_operations": 0},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "ADAPT-04", "profile": "Decoder-Experiment", "kind": "adapter",
+      "requirements": ["S-DECODE-01", "S-DECODE-02", "S-DECODE-03", "VT-NATIVE-02", "VT-NATIVE-03"],
+      "input": {"harness": "owned-versus-byte-view-decoder", "format": "experiment-only-not-canonical-Noble-encoding", "layout": ["version:u8=1", "tag:u8=0", "reserved:u16le=0", "length:u32le", "payload:bytes[length]"], "max_payload_bytes": 16, "trailing_bytes": "reject", "implementations": ["owned-reference", "optional-zerocopy-adapter"], "variants": [
+        {"id": "valid", "hex": "0100000003000000616263", "outcome": "candidate", "payload_hex": "616263"},
+        {"id": "short-header", "hex": "01000000", "outcome": "reject"},
+        {"id": "short-payload", "hex": "0100000004000000616263", "outcome": "reject"},
+        {"id": "unknown-version", "hex": "0200000003000000616263", "outcome": "reject"},
+        {"id": "unknown-tag", "hex": "01ff000003000000616263", "outcome": "reject"},
+        {"id": "reserved-bits", "hex": "0100010003000000616263", "outcome": "reject"},
+        {"id": "length-limit", "hex": "01000000ffffffff", "outcome": "reject"},
+        {"id": "trailing-byte", "hex": "010000000000000000", "outcome": "reject"}
+      ], "start_offsets": [0, 1]},
+      "expected": {"stage": "decoding", "outcome": "paired-results-match-each-variant-at-each-offset", "accepted_program_created": false, "unchecked_length_allocation": false, "unselected_adapter": "not-run-not-passed"},
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [{
+        "kind": "test", "subject": "ADAPT-04",
+        "claim": "An isolated compiled safe Rust owned decoder and borrowed zero-copy byte-slice view agree on the exact eight canonical records at both offsets 0 and 1; the 16-byte inclusive/17-byte rejected boundaries, strict Miri and borrow-escape compile failures were observed. The optional zerocopy crate/derive adapter is unselected, not-run and not passed; no decoded bytes become an accepted Noble program.",
+        "revision": "0.1.0-draft.5", "source_revision": "sha256:a6214bcb3dbc247531b5d287825b4c27e96635d89ed05b385d441887b05d2d15", "result": "passed",
+        "configuration": {
+          "receipt": "../../verification/decoder-experiment/acceptance.json",
+          "receipt_sha256": "a5f7082514426975068da5dc40891878d5308c1bbe41847524578db4a0acc176",
+          "gate": "../../verification/decoder-experiment/gate.mjs",
+          "prepromotion_case_sha256": "bfb89b2cdd2a59844f99018313a5e73d57e30932024b1ca62bb837ace1181d83",
+          "binary_sha256": "73501ccfb05b9db7a1b25280dc94c911b24496cf3afac312b30cf602cea61dcb",
+          "target": "x86_64-unknown-linux-gnu", "miri_flags": "-Zmiri-strict-provenance",
+          "canonical_matrix": "8 variants x 2 offsets x owned/byte-view",
+          "zerocopy_dependency": "unselected-not-run-not-passed",
+          "canonical_noble_encoding_selected": false
+        },
+        "assumptions": [
+          "The external test harness, pinned Rust toolchain, source-bound receipt and scoped strict Miri are trusted observations, not a proof of all Rust/backend targets.",
+          "Safe Rust borrowed slices borrow stable Rust-owned bytes only; foreign memory mutation requires its own reviewed ownership contract, otherwise this adapter refuses the event.",
+          "No zerocopy crate, native-layout canonical serialization, semantic acceptance, authority or Wasm correspondence is claimed."
+        ]
+      }]
+    },
+    {
+      "id": "ADAPT-05", "profile": "Decoder-Experiment", "kind": "adapter",
+      "requirements": ["S-DECODE-02", "VT-NATIVE-02"],
+      "input": {"harness": "external-buffer-lifetime", "initial_payload_hex": "616263", "callback_payload_hex": "646566", "variants": [
+        {"storage": "unprotected-external-view", "event": "callback-mutates-payload", "outcome": "reject-before-view-escapes"},
+        {"storage": "unprotected-external-view", "event": "suspension", "outcome": "reject-before-view-escapes"},
+        {"storage": "safely-copied-complete-record", "event": "callback-mutates-source", "outcome": "retain-616263"},
+        {"storage": "header-copy-with-unprotected-payload", "event": "callback-mutates-payload", "outcome": "reject-before-view-escapes"}
+      ]},
+      "expected": {"stage": "adapter", "outcome": "each-storage-contract-enforced", "immutable_marker_freezes_external_storage": false, "use_after_invalidation": false},
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [{
+        "kind": "test", "subject": "ADAPT-05",
+        "claim": "All four external-buffer lifetime variants ran in the isolated compiled decoder: callback mutation, suspension and copied-header-only paths refuse before borrowed view escape; a bounded complete-record snapshot retains abc after its original mutable buffer changes to def. Scoped strict Miri and compile-fail lifetime/mutation controls passed.",
+        "revision": "0.1.0-draft.5", "source_revision": "sha256:a6214bcb3dbc247531b5d287825b4c27e96635d89ed05b385d441887b05d2d15", "result": "passed",
+        "configuration": {
+          "receipt": "../../verification/decoder-experiment/acceptance.json",
+          "receipt_sha256": "a5f7082514426975068da5dc40891878d5308c1bbe41847524578db4a0acc176",
+          "gate": "../../verification/decoder-experiment/gate.mjs",
+          "prepromotion_case_sha256": "bfb89b2cdd2a59844f99018313a5e73d57e30932024b1ca62bb837ace1181d83",
+          "compile_fail_codes": ["E0515", "E0502"], "miri_tests_passed": 3,
+          "external_unprotected_view": "refused-before-view-escape"
+        },
+        "assumptions": [
+          "Callback/suspension refusal is a scoped adapter decision before any view escapes, not a claim that external memory is immutable.",
+          "A complete-record copy succeeds only after the source supplies a bounded safe read; copied header alone does not stabilize the payload.",
+          "No unsafe external view, zerocopy dependency, canonical Noble encoding or live authority is selected."
+        ]
+      }]
+    },
+    {
+      "id": "ADAPT-06", "profile": "Core-Bootstrap", "kind": "admission",
+      "requirements": ["S-DECODE-01", "B-IMPL-03"],
+      "input": {"harness": "layout-valid-forged-candidate", "representation_valid": true, "source": "\"audit\" test.emit", "input_stack": [], "output_stack": [], "host_contracts": {"test.emit": "Text -- ! {test.emit}"}, "non_effect_derivations": "valid", "advertised_effects": [], "required_effects": ["test.emit"]},
+      "expected": {"stage": "acceptance", "outcome": "reject", "accepted_program_created": false, "guest_requests": 0, "protected_operations": 0},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "ADAPT-07", "profile": "Implementation-Policy", "kind": "review",
+      "requirements": ["S-DECODE-03"],
+      "input": {"harness": "native-bytes-identity-shortcut", "proposal": "Use IntoBytes output of a native-layout struct as ProgramValueId input", "canonical_schema_selected": false},
+      "expected": {"stage": "design-review", "outcome": "reject", "canonical_encoding_gate_closed": false, "dependency_selected": false},
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "not-applicable", "trust": "explicit"},
+      "evidence": [{
+        "kind": "review", "subject": "ADAPT-07",
+        "claim": "Rejected using native-layout IntoBytes output as ProgramValueId identity. An executed safe Rust layout probe exhibited different offsets for the same logical fields under reordered repr(C) structs; explicit version/tag/LE/bounds and semantic subject/recipe identity are separate from native representation. No canonical format or zerocopy dependency was selected.",
+        "revision": "0.1.0-draft.5", "source_revision": "sha256:a52d60cced990e74f559ebe9747e9b4703ab7675a3e70ee3ef5cced8d0ffa00f", "result": "passed",
+        "configuration": {
+          "receipt": "../../verification/decoder-experiment/adapt07-review.json",
+          "receipt_sha256": "68ff71edb81c818d2810d0c514f5a9464f69960a44954cc083c58a70d8cc8824",
+          "review_probe": "../../verification/decoder-experiment/native-layout-review.rs",
+          "prepromotion_case_sha256": "3655e1d821cc5953d5534ef94fc5ee054e46cba990320ba8a7237980a4a0fa9a",
+          "layout_offsets": {"tag_then_length": [0, 4], "length_then_tag": [4, 0]},
+          "canonical_encoding_gate_closed": false, "dependency_selected": false
+        },
+        "assumptions": [
+          "The native layout probe is a bounded design counterexample, not a zerocopy IntoBytes derive or proof about every target ABI.",
+          "No canonical Noble binary schema, accepted program identity or runtime dependency is established by this review."
+        ]
+      }]
+    },
+    {
+      "id": "ADAPT-08", "profile": "Backend-Experiment", "kind": "static",
+      "requirements": ["BE-ARITY-01", "B-DIAG-01"],
+      "input": {"harness": "hidden-argument-dropping-adapter", "interface_scope": "closed-complete-stacks", "producer_output": ["Resource<test.counter>", "I64"], "consumer_input": ["I64"], "promised_output": ["I64"], "proposed_adaptation": "discard-owner-slot"},
+      "expected": {"stage": "backend-interface-check", "outcome": "reject", "artifact_emitted": false, "guest_requests": 0, "protected_operations": 0},
+      "state":{"implementation":"implemented","execution":"passed","proof":"open","trust":"explicit"},"evidence":[{"kind":"test","subject":"ADAPT-08","claim":"All declared ADAPT-08 variants pass in both representations under optimization off and on; exact outputs, recipes and boundary outcomes are retained.","revision":"0.1.0-draft.5","source_revision":"sha256:291a87c00f9f9bd8960c83bf6201342ee4de49fbb647a6f37d3d2bcfe4f2c446","result":"passed","configuration":{"receipt":"../../verification/m3-wasm/evidence.json","raw_report":"../../verification/m3-wasm/runtime.tar.gz:report.json","workload_sha256":"5a5a75c990ce2b441bd1b467f9be69b8c294fc0fb9c3c2370b22df5368db6968","representations":["wasm-gc","managed-linear-memory"],"optimizations":["off","on"],"scope":"m3-resource-free-bounded-compiled-program-experiment"},"assumptions":["Pinned Nix/Rust build, owned WAT runtime, wasm-tools, Binaryen, Node/V8 and host oracles are trusted.","Exact declared variants and quota/cleanup controls only; not a general M4 compiler or whole-language conformance.","Tests do not discharge PO-17, PO-18 or SO-07; physical GC and isolated engine memory remain unknown."]}]
+    },
+    {
+      "id": "ADAPT-09", "profile": "Backend-Experiment", "kind": "runtime",
+      "requirements": ["BE-DYNAMIC-01", "BE-LIMIT-01", "BE-REFLECT-01", "BE-REPORT-01"],
+      "input": {"harness": "bounded-runtime-composition-trees", "candidate": "each-supported-comparison-candidate", "operands": "post-compilation-inputs", "compiler_service": "disabled", "initial": {"type": "I64", "value": "20"}, "leaves": "runtime-supplied alternating increment and double programs, starting with increment", "limits": {"recipe_leaves": 256, "composition_depth": 256, "allocation_bytes": "record-with-run", "execution_stack_bytes": "record-with-run"}, "variants": [
+        {"shape": "left", "leaf_count": 255, "outcome": "normal"},
+        {"shape": "left", "leaf_count": 256, "outcome": "normal"},
+        {"shape": "left", "leaf_count": 257, "outcome": "construction-quota"},
+        {"shape": "right", "leaf_count": 255, "outcome": "normal"},
+        {"shape": "right", "leaf_count": 256, "outcome": "normal"},
+        {"shape": "right", "leaf_count": 257, "outcome": "construction-quota"},
+        {"shape": "balanced", "leaf_count": 255, "outcome": "normal"},
+        {"shape": "balanced", "leaf_count": 256, "outcome": "normal"},
+        {"shape": "balanced", "leaf_count": 257, "outcome": "construction-quota"}
+      ], "normal_result_oracle": "left fold from 20: even zero-based leaf adds 1; odd leaf multiplies by 2; each operation wraps as I64"},
+      "expected": {"stage": "builder-and-run", "outcome": "all-declared-variants-accounted", "normal_recipes": "same-ordered-leaves-for-equal-leaf-count", "candidate_prepare_requests": 0, "guest_requests": 0, "protected_operations": 0, "new_wasm_types_per_tree": 0, "quota_is_success": false, "cleanup_accounted": true},
+      "state":{"implementation":"implemented","execution":"passed","proof":"open","trust":"explicit"},"evidence":[{"kind":"test","subject":"ADAPT-09","claim":"All declared ADAPT-09 variants pass in both representations under optimization off and on; exact outputs, recipes and boundary outcomes are retained.","revision":"0.1.0-draft.5","source_revision":"sha256:291a87c00f9f9bd8960c83bf6201342ee4de49fbb647a6f37d3d2bcfe4f2c446","result":"passed","configuration":{"receipt":"../../verification/m3-wasm/evidence.json","raw_report":"../../verification/m3-wasm/runtime.tar.gz:report.json","workload_sha256":"5a5a75c990ce2b441bd1b467f9be69b8c294fc0fb9c3c2370b22df5368db6968","representations":["wasm-gc","managed-linear-memory"],"optimizations":["off","on"],"scope":"m3-resource-free-bounded-compiled-program-experiment"},"assumptions":["Pinned Nix/Rust build, owned WAT runtime, wasm-tools, Binaryen, Node/V8 and host oracles are trusted.","Exact declared variants and quota/cleanup controls only; not a general M4 compiler or whole-language conformance.","Tests do not discharge PO-17, PO-18 or SO-07; physical GC and isolated engine memory remain unknown."]}]
+    },
+    {
+      "id": "ADAPT-10", "profile": "Backend-Experiment", "kind": "runtime",
+      "requirements": ["BE-DYNAMIC-01", "BE-REFLECT-01", "P-RECIPE-01", "P-RECIPE-02"],
+      "input": {"harness": "optimized-program-reachability", "compiler_service": "disabled", "capture": "post-compilation I64 input", "constructor": "quote", "debug_metadata": "stripped", "variants": [
+        {"path": "collection-retrieval", "observation": "run-pushes-captured-I64-and-reflect-retains-literal"},
+        {"path": "returned-program", "observation": "run-pushes-captured-I64-and-reflect-retains-literal"},
+        {"path": "reflection-only", "observation": "reflect-retains-literal-without-execution"}
+      ]},
+      "expected": {"stage": "runtime", "outcome": "preserve-each-observation", "reflection_uses_addresses": false, "candidate_prepare_requests": 0, "guest_requests": 0, "protected_operations": 0},
+      "state":{"implementation":"implemented","execution":"passed","proof":"open","trust":"explicit"},"evidence":[{"kind":"test","subject":"ADAPT-10","claim":"All declared ADAPT-10 variants pass in both representations under optimization off and on; exact outputs, recipes and boundary outcomes are retained.","revision":"0.1.0-draft.5","source_revision":"sha256:291a87c00f9f9bd8960c83bf6201342ee4de49fbb647a6f37d3d2bcfe4f2c446","result":"passed","configuration":{"receipt":"../../verification/m3-wasm/evidence.json","raw_report":"../../verification/m3-wasm/runtime.tar.gz:report.json","workload_sha256":"5a5a75c990ce2b441bd1b467f9be69b8c294fc0fb9c3c2370b22df5368db6968","representations":["wasm-gc","managed-linear-memory"],"optimizations":["off","on"],"scope":"m3-resource-free-bounded-compiled-program-experiment"},"assumptions":["Pinned Nix/Rust build, owned WAT runtime, wasm-tools, Binaryen, Node/V8 and host oracles are trusted.","Exact declared variants and quota/cleanup controls only; not a general M4 compiler or whole-language conformance.","Tests do not discharge PO-17, PO-18 or SO-07; physical GC and isolated engine memory remain unknown."]}]
+    },
+    {
+      "id": "ADAPT-11", "profile": "Component-Sync-Bootstrap", "kind": "adapter",
+      "requirements": ["BE-BOUNDARY-01", "WI-WIT-07", "S-DECODE-02"],
+      "input": {"harness": "independent-peer-string-list-conversion", "variants": [
+        {"value": "string:héllo", "fault": "none", "outcome": "lossless-round-trip"},
+        {"value": "list<u8>:0,127,255", "fault": "none", "outcome": "lossless-round-trip"},
+        {"value": "string:héllo", "fault": "allocation-quota", "outcome": "defined-failure-with-cleanup"},
+        {"value": "list<u8>:0,127,255", "fault": "allocation-quota", "outcome": "defined-failure-with-cleanup"},
+        {"value": "string:invalid-UTF8", "fault": "malformed-peer-bytes", "outcome": "reject-with-cleanup"},
+        {"value": "list<u8>:truncated", "fault": "malformed-peer-range", "outcome": "reject-with-cleanup"}
+      ]},
+      "expected": {"stage": "component-boundary", "outcome": "each-conversion-accounted", "record": ["ABI_revision", "allocations", "copies", "buffer_owners", "cleanup"], "partial_trusted_values_published": 0, "internal_gc_implies_zero_copy": false, "m3_probe_closes_m5": false},
+      "state":{"implementation":"implemented","execution":"passed","proof":"open","trust":"explicit"}, "evidence":[{"claim":"All declared variants pass on the recorded M5 execution paths; this case is not a universal refinement claim.","subject":"ADAPT-11","revision":"0.1.0-draft.5","kind":"test","result":"passed","source_revision":"sha256:b72a0fecc46eeb45b10f8ecd11b7a52e8eaa9fe57a463739c26b8edc6753c21d","configuration":{"profile":"Component-Sync-Bootstrap","receipt":"../../verification/m5/acceptance.json","gate":"verification/m5/gate.mjs","case":"ADAPT-11","variants":["string:héllo|none","list<u8>:0,127,255|none","string:héllo|allocation-quota","list<u8>:0,127,255|allocation-quota","string:invalid-UTF8|malformed-peer-bytes","list<u8>:truncated|malformed-peer-range"],"binary_sha256":"7caad3c901bf56c57e94baee35278889dc84a61a4ed2c110f7fe6786f1dcea1a"},"assumptions":["Selected Rust/tool/engine behavior is trusted; the receipt distinguishes independent typed-peer execution, native decision tests and hostile raw-core probes.","Authentic host facts, callbacks and physical native release remain explicit boundaries; native async and universal component refinement are not claimed."]}]
+    },
+    {
+      "id": "ADAPT-12", "profile": "Implementation-Policy", "kind": "review",
+      "requirements": ["BE-COMPARE-01", "BE-CONFIG-01", "BE-REPORT-01", "EV-GATE-01"],
+      "input": {"harness": "backend-selection-record-policy", "synthetic_records_only": true, "variants": [
+        {"working_candidates": 1, "m3_execution_gates": "passed", "other_candidate": "evidenced-blocker", "metrics": "scoped-or-explicitly-unknown", "pins": "recorded", "outcome": "eligible-for-selection"},
+        {"working_candidates": 0, "m3_execution_gates": "not-run", "other_candidate": "evidenced-blocker", "metrics": "unknown", "pins": "recorded", "outcome": "cannot-close-M3"},
+        {"working_candidates": 1, "m3_execution_gates": "passed", "other_candidate": "unsupported-recorded-as-fastest", "metrics": "fabricated-zero", "pins": "recorded", "outcome": "reject-report"},
+        {"working_candidates": 1, "m3_execution_gates": "passed", "other_candidate": "evidenced-blocker", "metrics": "present", "pins": "missing", "outcome": "reject-report"},
+        {"working_candidates": 1, "m3_execution_gates": "failed", "other_candidate": "evidenced-blocker", "metrics": "fast", "pins": "recorded", "outcome": "cannot-close-M3"}
+      ]},
+      "expected": {"stage": "selection-review", "outcome": "enforce-each-record-policy", "two_production_backends_required": false, "backend_selected_by_fixture": false},
+      "state":{"implementation":"implemented","execution":"passed","proof":"not-applicable","trust":"explicit"},"evidence":[{"kind":"test","subject":"ADAPT-12","claim":"All five synthetic selection-policy controls pass through the same validator as actual results; fixtures do not select a backend.","revision":"0.1.0-draft.5","source_revision":"sha256:291a87c00f9f9bd8960c83bf6201342ee4de49fbb647a6f37d3d2bcfe4f2c446","result":"passed","configuration":{"receipt":"../../verification/m3-wasm/evidence.json","raw_report":"../../verification/m3-wasm/runtime.tar.gz:report.json","workload_sha256":"5a5a75c990ce2b441bd1b467f9be69b8c294fc0fb9c3c2370b22df5368db6968","representations":["wasm-gc","managed-linear-memory"],"optimizations":["off","on"],"scope":"m3-resource-free-bounded-compiled-program-experiment"},"assumptions":["Pinned Nix/Rust build, owned WAT runtime, wasm-tools, Binaryen, Node/V8 and host oracles are trusted.","Exact declared variants and quota/cleanup controls only; not a general M4 compiler or whole-language conformance.","Tests do not discharge PO-17, PO-18 or SO-07; physical GC and isolated engine memory remain unknown."]}]
+    },
+    {
+      "id": "ADAPT-13", "profile": "Implementation-Policy", "kind": "review",
+      "requirements": ["VT-NATIVE-01", "VT-NATIVE-02", "VT-NATIVE-03", "EV-GATE-02"],
+      "input": {"harness": "native-boundary-evidence-policy", "variants": [
+        {"safety_argument": "missing", "miri": "passed-scoped", "outcome": "reject-claim"},
+        {"safety_argument": "cited-with-assumptions", "miri": "required-but-unsupported", "outcome": "required-lane-unmet"},
+        {"safety_argument": "cited-with-assumptions", "miri": "upstream-only", "outcome": "Noble-lane-unmet"},
+        {"safety_argument": "cited-with-assumptions", "miri": "passed-scoped-pinned", "outcome": "scoped-evidence-only"}
+      ]},
+      "expected": {"stage": "assurance-review", "outcome": "enforce-each-evidence-boundary", "wasm_correspondence_proven": false, "all_targets_covered": false},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "not-applicable", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "ADAPT-14", "profile": "Contract-Design", "kind": "review",
+      "requirements": ["VC-LOGIC-06"],
+      "input": {"harness": "initial-final-contract-counterexample", "before": {"type": "I64", "value": "100"}, "amount": {"type": "I64", "value": "10"}, "after": {"type": "I64", "value": "110"}, "preconditions": "nonnegative balances and amount; addition stays in signed-I64 range", "snapshot_condition": "after = before + amount", "incorrect_condition": "after = after + amount"},
+      "expected": {"stage": "contract-design", "outcome": "distinguish-initial-and-final", "snapshot_condition": true, "incorrect_condition": false, "universal_proof_claimed": false},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "not-applicable", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "ADAPT-15", "profile": "Core-Bootstrap", "kind": "admission",
+      "requirements": ["VC-ADMIT-05", "S-DECODE-01"],
+      "input": {"harness": "mandatory-admission-check-all-build-modes", "candidate": "layout-valid-forged-empty-effects-for-test.emit", "source": "\"audit\" test.emit", "input_stack": [], "output_stack": [], "host_contracts": {"test.emit": "Text -- ! {test.emit}"}, "non_effect_derivations": "valid", "advertised_effects": [], "variants": [
+        {"build": "debug", "optional_proof": "absent", "outcome": "reject"},
+        {"build": "release", "optional_proof": "absent", "outcome": "reject"},
+        {"build": "debug", "optional_proof": "unrelated-valid-proof", "outcome": "reject"},
+        {"build": "release", "optional_proof": "unrelated-valid-proof", "outcome": "reject"}
+      ]},
+      "expected": {"stage": "acceptance", "outcome": "reject-in-all-modes", "accepted_program_created": false, "guest_requests": 0, "protected_operations": 0},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "ADAPT-16", "profile": "Implementation-Policy", "kind": "review",
+      "requirements": ["B-IMPL-03", "S-DECODE-01", "VT-NATIVE-02"],
+      "input": {"harness": "rust-public-api-compile-fail", "variants": [
+        {"attempt": "pass ProgramValueId where BuildKey is required without conversion", "outcome": "compile-fail"},
+        {"attempt": "construct AcceptedProgram through public fields", "outcome": "compile-fail"},
+        {"attempt": "return borrowed byte view beyond backing owner's lifetime", "outcome": "compile-fail"}
+      ]},
+      "expected": {"stage": "Rust-test-harness", "outcome": "reject-each-forbidden-public-api-use", "guest_nominal_syntax_added": false},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "not-applicable", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "ADAPT-17", "profile": "Backend-Experiment", "kind": "runtime",
+      "requirements": ["BE-LAYOUT-01", "BE-DYNAMIC-01", "BE-REFLECT-01", "BE-LIMIT-01"],
+      "input": {"harness": "optional-managed-linear-memory-finite-adt-anf-call-lowering", "candidates": ["selected-managed-memory-baseline", "type-directed-finite-adt-anf-call-lowering"], "optimization": ["off", "on"], "runtime_inputs": "post-compilation", "compiler_service": "disabled", "workloads": ["two-arm-variant-both-arms", "nested-pair-list", "runtime-captured-quote-and-composition", "reflection-only-reachable-recipe"], "controls": ["allocation-limit-minus-one-at-and-plus-one", "construction-quota", "invocation-quota", "runtime-trap-after-ordered-effect-prefix", "malformed-host-boundary-rejection"], "configuration": ["immutable-source-and-tool-revisions", "target-and-Wasm-features", "bounded-workload", "explicit-guest-and-engine-limits", "ABI-revision-if-boundary-used"]},
+      "expected": {"stage": "compiled-Wasm-experiment", "outcome": "every-candidate-configuration-and-control-recorded", "compare": ["complete-ordered-value-stack", "ordered-host-request-prefix", "semantic-program-identity", "normalized-observable-recipe", "allocation-charges", "retained-linear-memory", "engine-process-memory-or-unsupported", "quota-stage", "trap", "cleanup"], "resource_positive_wit_ownership_claim": false, "performance_result_proves_equivalence": false, "m3_acceptance_changed": false, "candidate_prepare_requests": 0},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "ADAPT-18", "profile": "Backend-Experiment", "kind": "runtime",
+      "requirements": ["DX-PURE-PAR-01", "K-CONTROL-01", "BE-LIMIT-01", "K-EFFECT-01"],
+      "input": {"harness": "deferred-independent-pure-fork-join-study", "prerequisites": ["complete-branch-language-and-schema-gates", "DX-04-generic-Result-schema-and-library-signature-gate-before-Result-error-variants", "finite-independent-check", "bounded-precharge"], "reference": "checked-sequential-left-then-right", "positive": ["two-independent-resource-free-pure-branches", "left-normal-right-normal", "left-error-right-normal", "left-normal-right-error", "left-trap-right-normal", "left-normal-right-trap", "precharged-capacity-exact-bound"], "negative": ["host-effect-in-either-branch", "branch-with-resource-or-native-pin", "overlapping-stack-or-capture-owner", "unknown-cost", "insufficient-precharge", "copyable-channel-as-cleanup", "uncancelled-host-work"], "limits": ["tasks", "branch-work", "results", "retiring-work"]},
+      "expected": {"stage": "admission-and-optional-runtime", "outcome": "each-positive-and-negative-variant-accounted", "admission_negative": "reject-before-branch-start-or-owner-transfer", "normal_join_order": "left-then-right-with-ordinary-Result-error-in-place", "failure_trap_quota_precedence": "precharge-before-start-then-left-abnormal-before-right-abnormal-after-both-settle", "partial_join_published": false, "retained_work_charged_until_settlement": true, "effect_trace": [], "result_recipe_identity": "same-as-sequential-reference-on-success", "quota_or_trap_is_success": false, "general_spawn_or_gpu_selected": false, "m6_async_acceptance_changed": false},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    }
+  ]
+}

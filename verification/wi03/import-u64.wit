@@ -1,0 +1,8 @@
+package noble-test:unsigned@1.0.0;
+interface source {
+  get: func() -> u64;
+}
+world demo {
+  import source;
+  export echo: func(value: u64) -> u64;
+}

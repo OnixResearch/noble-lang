@@ -34,7 +34,7 @@ async function protocol(config) {
     emit('ready', { outcome: 'ready', tools: engine.tools });
     let pending = Buffer.alloc(0), command = null;
     for await (const chunk of process.stdin) {
-      if (pending.length + chunk.length > MAX_FRAME + 65536 + 256) fail('engine input frame limit exceeded');
+      if (pending.length + chunk.length > 2 * MAX_FRAME + 65536 + 4096) fail('engine input frame limit exceeded');
       pending = Buffer.concat([pending, chunk]);
       while (pending.length) {
         if (command === null) {
@@ -71,11 +71,21 @@ async function protocol(config) {
             catch (error) { emit('internal-failure', reportError(error)); return; }
             continue;
           } else {
-            const match = /^compile ([0-9]+) ([0-9]+) ([0-9]+)$/.exec(header);
-            if (!match) fail('invalid engine command');
-            command = { kind: 'compile', wat: integer(Number(match[1]), MAX_FRAME, 'WAT frame'),
-              source: integer(Number(match[2]), 65536, 'source frame'),
-              submission: integer(Number(match[3]), Number.MAX_SAFE_INTEGER, 'submission') };
+            const admission = /^admit ([0-9]+) ([0-9]+) ([0-9]+) ([0-9]+) ([0-9]+)$/.exec(header);
+            if (admission) {
+              command = { kind: 'admit',
+                artifact: integer(Number(admission[1]), MAX_FRAME, 'artifact frame'),
+                wat: integer(Number(admission[2]), MAX_FRAME, 'WAT frame'),
+                source: integer(Number(admission[3]), 65536, 'source frame'),
+                claims: integer(Number(admission[4]), 1024, 'claim frame'),
+                allowed: integer(Number(admission[5]), 1024, 'host-policy frame') };
+            } else {
+              const match = /^compile ([0-9]+) ([0-9]+) ([0-9]+)$/.exec(header);
+              if (!match) fail('invalid engine command');
+              command = { kind: 'compile', wat: integer(Number(match[1]), MAX_FRAME, 'WAT frame'),
+                source: integer(Number(match[2]), 65536, 'source frame'),
+                submission: integer(Number(match[3]), Number.MAX_SAFE_INTEGER, 'submission') };
+            }
           }
         }
         if (command.kind === 'execute') {
@@ -105,6 +115,25 @@ async function protocol(config) {
           catch (error) { emit('internal-failure', reportError(error)); return; }
           try { emit('pushed', engine.push(inputs)); }
           catch (error) { emit('internal-failure', reportError(error)); return; }
+          continue;
+        }
+        if (command.kind === 'admit') {
+          const total = command.artifact + command.wat + command.source + command.claims + command.allowed;
+          if (pending.length < total) break;
+          const artifact = pending.subarray(0, command.artifact);
+          const wat = pending.subarray(command.artifact, command.artifact + command.wat);
+          const source = pending.subarray(command.artifact + command.wat,
+            command.artifact + command.wat + command.source);
+          const claims = pending.subarray(command.artifact + command.wat + command.source,
+            command.artifact + command.wat + command.source + command.claims);
+          const allowed = pending.subarray(command.artifact + command.wat + command.source + command.claims, total);
+          pending = pending.subarray(total);
+          command = null;
+          try {
+            const report = engine.admit(artifact, wat, source,
+              JSON.parse(utf8.decode(claims)), JSON.parse(utf8.decode(allowed)), source.length > 0);
+            emit(report.outcome, report);
+          } catch (error) { emit('internal-failure', reportError(error)); return; }
           continue;
         }
         if (pending.length < command.wat + command.source) break;

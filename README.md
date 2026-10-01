@@ -6,7 +6,7 @@ Noble is a statically typed concatenative language designed for first-class, ins
 
 **Implementation direction: Rust → Charon → Aeneas → Lean 4.** This route is mandatory for the entire semantic kernel and the target for all Noble-owned production Rust. Host effects require explicit proof boundaries. See [the toolchain policy](.cairn/specs/verification-toolchain/spec.md).
 
-**Application verification:** the optional [contract profile](.cairn/specs/program-contracts/spec.md) has an MC1 frontend, versioned source/IR, Lean rules, and the `noble verify` / `noble explain-proof` CLI. MC2 adds first-class runtime evidence companions and proof-required admission on the selected Core-Bootstrap Wasm runtime. Their evidence scopes remain separate; ordinary execution does not require an application proof.
+**Application verification:** the optional [contract profile](.cairn/specs/program-contracts/spec.md) has an MC1 frontend, versioned source/IR, Lean rules, and the `noble verify` / `noble explain-proof` CLI. MC2 adds first-class runtime evidence companions and proof-required admission on the selected Core-Bootstrap Wasm runtime. Their evidence scopes remain separate; ordinary execution does not require an application proof. [Optional Lean and proof-data references](specs/SOURCES.md#optional-lean-and-proof-data-references) are research pointers only; they add no dependency or proof evidence.
 
 ```text
 (contract 1 increment
@@ -71,10 +71,24 @@ Preparation budgets can be reduced with `--source-bytes`, `--source-nodes`,
 step ceilings are recorded in [the ABI](crates/noble-cli/src/core/runtime/abi.json).
 The bounded persistent arena does not reclaim individual cells; it eventually
 reports exhaustion. There is no unbounded-memory or GC-reclamation claim.
+Kernel dependency and schema work accounting returns typed `Work` exhaustion
+rather than wrapping if a charge would overspend the remaining allowance or
+its final balance is inconsistent.
 
 The CLI writes `noble-core-report/v1` JSON lines. Stack order is bottom-to-top;
 `I64` values use decimal strings. Program and Syntax observations include exact
 normalized recipes and complete structural witnesses.
+On a static stack/program join rejection, the report also gives the rejected
+word in `join`, both rendered witness shapes in `expected_stack` and
+`actual_stack`, and the byte range of the source word in `source_location`.
+These fields describe the failed type equation; they do not coerce mismatched
+`if` branch outputs into an implicit union or execute either branch.
+The same refusal exposes `word_or_join`, `required_stack`, `constraint`,
+`source_span`, and `value_origin_or_unavailable`. A provable literal origin is
+reported as a byte span; when an origin cannot be established (including an
+externally supplied resource), it is explicitly `"unavailable"`. The
+independent kernel's Data-eligibility refusal remains a static acceptance
+result, not a guest operation or an invented resource-capable CLI input.
 
 | Outcome | Exit | Meaning |
 |---|---:|---|
@@ -91,11 +105,11 @@ branches and execute only the selected branch. Pair/Sum/List values, Programs
 and Syntax can be captured by `quote`; `compose` preserves ordered interfaces,
 captures, resolved identities and conservative latent effects. `reflect` returns
 an exact normalized recipe, not executable source or a runtime interpreter.
-Its only host words are resource-free `test.emit` (`Text --`) and `test.abort`.
-Resources, imports, recursive definitions and advanced inference are not
-implemented by this runtime. The optional MC2 companion and proof-required
-build commands are described below. Running a program is not application proof
-acceptance.
+Core-Bootstrap's only host words are resource-free `test.emit` (`Text --`) and
+`test.abort`. Resources, imports, recursive definitions and advanced inference
+are not implemented by the Core-Bootstrap runtime. The optional MC2 companion
+and proof-required build commands are described below. Running a program is
+not application proof acceptance.
 
 Preparation is fail-closed: parsing, resolution, inference, independent kernel
 acceptance and backend rechecking precede candidate-body execution. A rejected
@@ -155,8 +169,10 @@ strict actual-Rust resource roots and 52 refusal controls. Archived M4 and MC2
 receipts do not substitute for that later source-bound acceptance.
 
 MC1's 36-case regression and M3's four-configuration regression have passed in
-their own scopes. They do not replace those M4 gates. The current 32-unit inventory's 2,595 authored production body obligations
-remain open in the [reviewed inventory](verification/source-inventory.md).
+their own scopes. They do not replace those M4 gates. The
+[reviewed inventory](verification/source-inventory.md) describes the later
+DXM1 renewal's then-current 32 compiler units and 2,595 open authored-body
+obligations; it is not renewed for the current Result source.
 Neither extraction nor executed examples establish universal frontend, kernel,
 compiler or backend refinement; PO-17/18 and SO-07 remain open. MC2 adds optional
 checked companions; M5/M6 component, M7 service and the finite M8
@@ -452,6 +468,17 @@ noble session --framed --declared-modules --bindings HOST_FILE
 
 `HOST_FILE` explicitly binds a versioned semantic `test.emit` operation to a
 matching typed adapter, for example `bind ledger@1 test.emit version-A Text -- ! test.emit allow`.
+Separately, an opt-in declared module may require `now -- I64 ! test.clock` and
+bind it with `bind clock@1 test.clock version-1 -- I64 ! test.clock allow script 42`.
+This is a finite scripted test-host substitution, not an ambient or real clock:
+the checked operation and its declared effect enter compiled Wasm, and the
+host callback consumes each scripted value at most once. Denial, a missing or
+incompatible binding, an exhausted script and an unexpected operation fail
+explicitly with no real-host fallback. Execution reports retain `substitutions`,
+`adapter_versions`, `scripted_inputs`, `host_requests` and
+`real_host_evidence: false`; this local host control is not a formal refinement
+or real-clock evidence. The historical DXM1 receipt below covers only the
+earlier `test.emit` adapter, not this scripted extension.
 Unflagged `noble run` remains Core-Bootstrap; the advertised opt-in
 entry points are `compile` and framed `session`, and no module loads ambiently.
 The [source-bound acceptance](verification/declared-modules-v1/acceptance.json)
@@ -460,17 +487,59 @@ link-admission rows in two optimization modes and two compiled-Wasm rows
 where the retained version-A operation is denied after a version-B display
 alias rebind, with one A request, no protected operation and no B call.
 The [22-command, 14-gate assurance](verification/declared-modules-v1/assurance.json)
-includes current 32-unit compiler inventory (all 2,595 authored bodies
-remain open), whole-crate 630-source/268-refusal extraction check, published
+included its then-current 32-unit compiler inventory (all 2,595
+then-inventoried authored-body obligations remained open), whole-crate
+630-source/268-refusal extraction check, published
 Octet deny-all, workspace Rust quality and full signed/sandbox Nix flake.
 The [reviewed M4 lock](verification/m4/extraction-lock.json) retains nine
 strict Lean theorem roots only for three inherited pure M7 dataspace Rust
 functions, **not** nominal, module, frontend/backend, host, ABI or engine
 refinement. A separately published post-promotion `verification/declared-modules-v1/nix-checks.json`
-binds staged native archive/documents/Cairn source. General Result programs,
-local bindings, invariant-bearing constructors, portable package/cache keys,
+binds staged native archive/documents/Cairn source. Generic packages beyond
+the selected `result@1` library, resource-positive Result payloads, local
+bindings, invariant-bearing constructors, portable package/cache keys,
 resource-positive nominal runtime, capability modules and MA/MW gates stay
 open.
+
+## Selected Result library (DX-04)
+
+The [production `result@1` source](crates/noble-contracts/src/fixtures/result.noble)
+is an ordinary versioned, public two-arm `Result<A,E>` variant, not a new
+expression form or exception effect. It exports `map_ok`, `map_error`,
+`and_then` and `or_else` with rank-1 checked stack signatures that
+conservatively include a callback's declared effects even on a bypassed arm.
+Load that source as the first declared-module frame, then this separately
+registered example module:
+
+```noble
+module program_cases@1 [
+  signature make_program forall<S:stack> [ S -- S result@1.Result<Program<I64,I64,pure>,Text> ! pure ]
+  export make_program
+  def make_program [ [ 1 + ] result@1.Result.Ok ]
+]
+```
+
+The following expression is a separate frame; its compiled off/on executions
+return `Ok(3)` without guest or host requests:
+
+```noble
+program_cases@1.make_program [ 2 swap run ] result@1.map_ok
+```
+
+The [DX-04 acceptance receipt](verification/result-library/acceptance.json)
+retains the actual framed sources, compiled Wasm and selected `test.emit`
+adapter traces for all eight canonical paths under both optimization modes,
+three static negatives, first-class `Program` and reflected `Syntax` payloads,
+and an independent kernel peer's hostile environment refusals. The raw
+commands, emissions and frozen executables remain in the receipt's
+`/var/tmp` output directory. The `forall` binders are rank-1 declaration
+signatures, **not** first-class universal values. A `Program` may describe a
+resource-typed interface without capturing a live resource; resource-bearing
+`Result` payloads and quotation captures are still refused. Resource-positive
+ownership/retirement, MC2 proof-required admission, portable packages and
+universal compiler/host/engine refinement remain separate and open. This
+Result gate hashes current source bytes but does **not** renew DXM1's earlier
+compiler-derived Octet inventory, extraction or whole-crate proof.
 
 ## Using MC1 contracts
 

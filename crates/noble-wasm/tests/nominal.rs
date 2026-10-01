@@ -8,6 +8,15 @@ const LIMITS: noble_contracts::Limits = noble_contracts::Limits {
     work: 2_000_000,
 };
 
+fn wasm_diagnostic(error: noble_wasm::Diagnostic) -> &'static str {
+    match error {
+        noble_wasm::Diagnostic::Invalid => "invalid",
+        noble_wasm::Diagnostic::Exhausted => "exhausted",
+        noble_wasm::Diagnostic::Unsupported => "unsupported",
+        noble_wasm::Diagnostic::Defective => "defective",
+    }
+}
+
 fn module_submission(
     module: &[u8],
     expression: &[u8],
@@ -48,19 +57,101 @@ fn source_submission() -> Result<noble_kernel::execution::Submission, String> {
     )
 }
 
+fn result_session() -> Result<noble_contracts::source::ModuleSession, String> {
+    let session = noble_contracts::source::ModuleSession::new(&[])
+        .map_err(|error| error.diagnostic().message.clone())?;
+    let module = session
+        .prepare(noble_contracts::source::RESULT_LIBRARY_SOURCE, &[], LIMITS)
+        .map_err(|error| error.diagnostic().message.clone())?;
+    let (session, outcome) = session.commit(module);
+    outcome.map_err(|error| error.diagnostic().message.clone())?;
+    Ok(session)
+}
+
+fn result_submission() -> Result<noble_kernel::execution::Submission, String> {
+    let session = result_session()?;
+    let ty = session
+        .resolve_type("result@1.Result<I64,Text>")
+        .map_err(|error| error.diagnostic().message.clone())?;
+    let imported = session
+        .prepare(b"import result@1 as choice", &[], LIMITS)
+        .map_err(|error| error.diagnostic().message.clone())?;
+    let (session, outcome) = session.commit(imported);
+    outcome.map_err(|error| error.diagnostic().message.clone())?;
+    let constructor = session
+        .prepare(
+            b"module result_cases@1 [ signature make_ok forall<S:stack> [ S -- S result@1.Result<I64,Text> ! pure ] export make_ok def make_ok [ 2 result@1.Result.Ok ] ]",
+            &[],
+            LIMITS,
+        )
+        .map_err(|error| error.diagnostic().message.clone())?;
+    let (session, outcome) = session.commit(constructor);
+    outcome.map_err(|error| error.diagnostic().message.clone())?;
+    let prepared = session
+        .prepare(b"result_cases@1.make_ok [ 1 + ] choice.map_ok", &[], LIMITS)
+        .map_err(|error| error.diagnostic().message.clone())?;
+    if prepared.output() != core::slice::from_ref(&ty) {
+        return Err("generic Result compiled to a different ordered instance".into());
+    }
+    prepared
+        .submission()
+        .cloned()
+        .ok_or_else(|| "missing generic Result submission".into())
+}
+
+#[test]
+fn forged_generic_result_instances_are_rejected() -> Result<(), String> {
+    let submission = result_submission()?;
+    noble_wasm::source::Compiler::new()
+        .prepare(&submission)
+        .map_err(|error| {
+            format!(
+                "generic Result refused by Wasm compiler: {}",
+                wasm_diagnostic(error)
+            )
+        })?;
+
+    let mut wrong_order = submission.clone();
+    wrong_order.environment.generic_variants[0]
+        .payload_params
+        .swap(0, 1);
+    assert!(
+        noble_wasm::source::Compiler::new()
+            .prepare(&wrong_order)
+            .err()
+            == Some(noble_wasm::Diagnostic::Invalid),
+        "a declaration with reversed generic payload arguments was accepted"
+    );
+    let mut wrong_shape = submission;
+    let noble_kernel::types::Ty::GenericNominal(_, _, shape) =
+        &mut wrong_shape.request.expected.stack_out[0]
+    else {
+        return Err("generic output lost its concrete family instance".into());
+    };
+    **shape = noble_kernel::types::NominalShape::Variant(
+        Box::new(noble_kernel::types::Ty::Text),
+        Box::new(noble_kernel::types::Ty::I64),
+    );
+    assert!(
+        noble_wasm::source::Compiler::new()
+            .prepare(&wrong_shape)
+            .err()
+            == Some(noble_wasm::Diagnostic::Invalid),
+        "a mismatched concrete generic representation was accepted"
+    );
+    Ok(())
+}
+
 #[test]
 fn admitted_nominal_compiles_but_forged_bindings_and_shapes_do_not() -> Result<(), String> {
     let submission = source_submission()?;
     noble_wasm::source::Compiler::new()
         .prepare(&submission)
         .map_err(|error| {
-            let kind = match error {
-                noble_wasm::Diagnostic::Invalid => "invalid",
-                noble_wasm::Diagnostic::Exhausted => "exhausted",
-                noble_wasm::Diagnostic::Unsupported => "unsupported",
-                noble_wasm::Diagnostic::Defective => "defective",
-            };
-            format!("valid source refused by compiler: {kind}")
+            format!(
+                "valid source refused by compiler: {}",
+                wasm_diagnostic(error)
+            )
         })?;
 
     let mut changed_slot = submission.clone();

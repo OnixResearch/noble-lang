@@ -9,9 +9,42 @@ pub(super) enum Effect {
     Hole,
     Constant(u64),
     Union(u32, u32),
+    Rigid(u32),
 }
 
 impl super::Arena {
+    /// Preserve unknown editor effects even when the current finite host
+    /// universe is empty; a hole never certifies purity.
+    pub(crate) fn editor_effect(
+        &self,
+        id: u32,
+        span: crate::Span,
+        meter: &mut crate::Meter,
+    ) -> Result<(alloc::vec::Vec<u32>, bool), crate::Diagnostic> {
+        let mut pending = alloc::vec![id];
+        let mut bits = 0u64;
+        let mut unknown = false;
+        while let Some(id) = pending.pop() {
+            attempt!(meter.charge(1, span));
+            match self.effects.get(attempt!(crate::offset(id, span))) {
+                Some(Effect::Constant(value)) => bits |= value,
+                Some(Effect::Hole | Effect::Rigid(_)) => unknown = true,
+                Some(Effect::Union(left, right)) => {
+                    pending.push(*left);
+                    pending.push(*right);
+                }
+                None => return Err(crate::internal(span)),
+            }
+        }
+        let mut known = alloc::vec::Vec::new();
+        for bit in 0..64 {
+            if bits & (1u64 << bit) != 0 {
+                known.push(bit);
+            }
+        }
+        Ok((known, unknown))
+    }
+
     #[expect(
         tigerstyle::missing_const_fn,
         reason = "Owner: noble-maintainers; node charging and appending effect/bound entries allocate or return owned diagnostics."
@@ -32,6 +65,7 @@ impl super::Arena {
             Effect::Constant(bits) => bits,
             Effect::Hole => self.effect_universe,
             Effect::Union(_, _) => self.effect_universe,
+            Effect::Rigid(_) => self.effect_universe,
         };
         self.effects.push(effect);
         self.effect_bounds.push(bound);
@@ -44,6 +78,18 @@ impl super::Arena {
         meter: &mut crate::Meter,
     ) -> Result<u32, crate::Diagnostic> {
         self.add_effect(Effect::Hole, span, meter)
+    }
+
+    pub fn rigid_effect(
+        &mut self,
+        identity: u32,
+        span: crate::Span,
+        meter: &mut crate::Meter,
+    ) -> Result<u32, crate::Diagnostic> {
+        if identity >= 64 {
+            return Err(crate::invalid(span, "rigid effect binder count exceeded"));
+        }
+        self.add_effect(Effect::Rigid(identity), span, meter)
     }
 
     pub fn effect_empty(
@@ -104,6 +150,31 @@ impl super::Arena {
         } else {
             self.add_effect(Effect::Union(left, right), span, meter)
         }
+    }
+
+    /// An annotated source interface cannot hide an effect of its body.
+    pub fn equate_effects(
+        &mut self,
+        body: u32,
+        declared: u32,
+        span: crate::Span,
+        meter: &mut crate::Meter,
+    ) -> Result<(), crate::Diagnostic> {
+        attempt!(meter.node(span));
+        self.effect_equations.push((body, declared));
+        Ok(())
+    }
+
+    pub fn require_rigid_effect(
+        &mut self,
+        body: u32,
+        declared: u32,
+        span: crate::Span,
+        meter: &mut crate::Meter,
+    ) -> Result<(), crate::Diagnostic> {
+        attempt!(meter.node(span));
+        self.rigid_effect_goals.push((body, declared));
+        Ok(())
     }
 
     pub fn effect_pattern(
@@ -255,6 +326,7 @@ impl super::Arena {
         span: crate::Span,
         meter: &mut crate::Meter,
     ) -> Result<(), crate::Diagnostic> {
+        attempt!(solve::rigid(self, span, meter));
         solve::run(self, span, meter)
     }
 

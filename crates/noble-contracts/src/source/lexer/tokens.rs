@@ -10,7 +10,7 @@ const fn initial(byte: u8) -> bool {
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; decimal and ASCII grammar scans charge each byte and reject malformed tokens with diagnostics, while checked integer parsing preserves the signed-I64 boundary."
 )]
-pub(super) fn classify(
+pub(in crate::source) fn classify(
     bytes: &[u8],
     span: crate::Span,
     meter: &mut crate::Meter,
@@ -86,7 +86,7 @@ fn word(
         if !(initial(byte)
             || byte.is_ascii_digit()
             || byte == b'.'
-            || (declared && matches!(byte, b'@' | b',')))
+            || (declared && matches!(byte, b'@' | b',' | b':')))
         {
             failure = Some(crate::invalid(
                 span,

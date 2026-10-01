@@ -53,12 +53,15 @@ pub(super) fn check(
         return Err(crate::Diagnostic::Invalid);
     }
     if env.nominals.len() > super::super::DEFINITION_LIMIT
+        || env.generic_variants.len() > super::super::DEFINITION_LIMIT
         || env.bound_adapters.len() > super::super::DEFINITION_LIMIT
     {
         return Err(crate::Diagnostic::Invalid);
     }
-    let has_noncanonical_core_declarations =
-        !env.declared_modules && (!env.nominals.is_empty() || !env.bound_adapters.is_empty());
+    let has_noncanonical_core_declarations = !env.declared_modules
+        && (!env.nominals.is_empty()
+            || !env.generic_variants.is_empty()
+            || !env.bound_adapters.is_empty());
     let has_invalid_metadata = !env.schemas.is_empty()
         || env.caller_module.is_some()
         || env.resource_kinds != [noble_kernel::contracts::FIXTURE_RESOURCE];
@@ -71,6 +74,10 @@ pub(super) fn check(
     } else {
         alloc::vec![noble_kernel::types::EffId(0), noble_kernel::types::EffId(1)]
     };
+    let mut effects = effects;
+    if env.kinds.iter().any(|kind| matches!(kind, noble_kernel::contracts::Behavior::BoundClock(_))) {
+        effects.push(noble_kernel::contracts::TEST_CLOCK);
+    }
     if env.effects != effects {
         return Err(crate::Diagnostic::Invalid);
     }
@@ -191,6 +198,7 @@ pub(super) fn work(environment: &noble_kernel::contracts::Env) -> Result<u64, cr
         return Err(crate::Diagnostic::Exhausted);
     }
     if environment.nominals.len() > super::super::DEFINITION_LIMIT
+        || environment.generic_variants.len() > super::super::DEFINITION_LIMIT
         || environment.bound_adapters.len() > super::super::DEFINITION_LIMIT
     {
         return Err(crate::Diagnostic::Exhausted);
@@ -228,7 +236,13 @@ pub(super) fn work(environment: &noble_kernel::contracts::Env) -> Result<u64, cr
     if let Some(problem) = failure {
         return Err(problem);
     }
-    cost = cost.saturating_add((environment.nominals.len() as u64).saturating_mul(2048));
+    cost = cost.saturating_add(
+        (environment
+            .nominals
+            .len()
+            .saturating_add(environment.generic_variants.len()) as u64)
+            .saturating_mul(2048),
+    );
     index = 0;
     while index < environment.deps.len() {
         if environment.deps[index].len() > environment.defs.len() {

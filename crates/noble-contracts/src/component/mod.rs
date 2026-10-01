@@ -21,6 +21,7 @@ pub const FUTURE_RESULT_S64_STRING_KIND: noble_kernel::types::ResourceKind =
     noble_kernel::types::ResourceKind(u32::MAX);
 
 const BINDING_SCHEMA: &str = "WIT-Bounded-v3:bool,s64,string,list<u8>,result<s64,string>,result<list<u8>,string>,own,borrow,stream<u8>,future<s64>,future<result<s64,string>>";
+const CHECKED_U64_SCHEMA: &str = "checked-u64-to-I64:0..=9223372036854775807";
 const SYNC_ABI: &str = "Canonical-Sync-cm32p2";
 const ASYNC_ABI: &str = "Canonical-Async-Legacy-Lower-WaitableSet-LiftStackful-TaskReturn-v1";
 
@@ -47,6 +48,8 @@ impl Profile {
 pub enum Type {
     Boolean,
     S64,
+    /// WIT u64, only in a host-selected, range-checked I64 boundary recipe.
+    CheckedU64,
     String,
     Bytes,
     ResultS64String,
@@ -68,6 +71,7 @@ impl Type {
             Self::Own(kind) | Self::Borrow(kind) => Some(kind),
             Self::Boolean
             | Self::S64
+            | Self::CheckedU64
             | Self::String
             | Self::Bytes
             | Self::ResultS64String
@@ -78,10 +82,11 @@ impl Type {
     /// Bytes use checked u8 conversions at the boundary, never I64 truncation.
     /// Borrow maps to its guest owner only; no borrow token enters guest types.
     /// Streams and futures use the same move-only discipline as owned resources.
-    pub fn noble(self) -> noble_kernel::types::Ty {
-        match self {
+    pub fn noble(self) -> Option<noble_kernel::types::Ty> {
+        Some(match self {
             Self::Boolean => noble_kernel::types::Ty::Bool,
             Self::S64 => noble_kernel::types::Ty::I64,
+            Self::CheckedU64 => return None,
             Self::String => noble_kernel::types::Ty::Text,
             Self::Bytes => {
                 noble_kernel::types::Ty::List(alloc::boxed::Box::new(noble_kernel::types::Ty::I64))
@@ -102,7 +107,7 @@ impl Type {
                 noble_kernel::types::Ty::Resource(FUTURE_RESULT_S64_STRING_KIND)
             }
             Self::Own(kind) | Self::Borrow(kind) => noble_kernel::types::Ty::Resource(kind),
-        }
+        })
     }
 }
 
@@ -135,18 +140,18 @@ pub struct Operation {
 }
 
 impl Operation {
-    pub fn input_types(&self) -> alloc::vec::Vec<noble_kernel::types::Ty> {
+    pub fn input_types(&self, world: &World) -> Option<alloc::vec::Vec<noble_kernel::types::Ty>> {
         let mut result = alloc::vec::Vec::with_capacity(self.parameters.len());
         let mut at = 0usize;
         while at < self.parameters.len() {
-            result.push(self.parameters[at].noble());
+            result.push(world.noble_type(self.parameters[at])?);
             at = at.saturating_add(1);
         }
-        result
+        Some(result)
     }
     /// Thread borrowed owners before results, in original parameter order.
     /// Owned parameters are NOT returned unless WIT explicitly returns ownership.
-    pub fn output_types(&self) -> alloc::vec::Vec<noble_kernel::types::Ty> {
+    pub fn output_types(&self, world: &World) -> Option<alloc::vec::Vec<noble_kernel::types::Ty>> {
         let mut result = alloc::vec::Vec::with_capacity(
             self.parameters.len().saturating_add(self.results.len()),
         );
@@ -159,10 +164,10 @@ impl Operation {
         }
         at = 0;
         while at < self.results.len() {
-            result.push(self.results[at].noble());
+            result.push(world.noble_type(self.results[at])?);
             at = at.saturating_add(1);
         }
-        result
+        Some(result)
     }
 }
 
@@ -175,12 +180,29 @@ pub struct World {
     exports: alloc::vec::Vec<Operation>,
     resources: alloc::vec::Vec<Resource>,
     asynchronous: bool,
+    checked_u64: bool,
     limits: crate::Limits,
 }
 
 impl World {
     pub fn parse(wit: &[u8], world: &str, limits: crate::Limits) -> Result<Self, Error> {
-        parser::parse(wit, world, limits)
+        parser::parse(wit, world, limits, false)
+    }
+    /// Select the partial, checked u64↔I64 boundary explicitly. WIT values
+    /// outside the signed range trap before becoming Noble values or results.
+    pub fn parse_checked_u64(wit: &[u8], world: &str, limits: crate::Limits) -> Result<Self, Error> {
+        parser::parse(wit, world, limits, true)
+    }
+    pub const fn checked_u64(&self) -> bool {
+        self.checked_u64
+    }
+    /// A checked unsigned projection requires the selected world's authority.
+    pub fn noble_type(&self, ty: Type) -> Option<noble_kernel::types::Ty> {
+        match ty {
+            Type::CheckedU64 if self.checked_u64 => Some(noble_kernel::types::Ty::I64),
+            Type::CheckedU64 => None,
+            _ => ty.noble(),
+        }
     }
     pub fn identity(&self) -> &str {
         &self.identity

@@ -193,6 +193,16 @@ impl Registry {
                     attempt!(self.intern(&right, work)),
                 ),
             },
+            noble_kernel::types::Ty::GenericNominal(id, _, shape) => match *shape {
+                noble_kernel::types::NominalShape::Variant(left, right) => Shape::NominalVariant(
+                    id,
+                    attempt!(self.intern(&left, work)),
+                    attempt!(self.intern(&right, work)),
+                ),
+                noble_kernel::types::NominalShape::Opaque(_) => {
+                    return Err(crate::Diagnostic::Invalid);
+                }
+            },
             noble_kernel::types::Ty::List(item) => Shape::List(attempt!(self.intern(&item, work))),
             noble_kernel::types::Ty::Program(input, output, effects) => Shape::Program(
                 attempt!(compiler.signature(&input, work)),

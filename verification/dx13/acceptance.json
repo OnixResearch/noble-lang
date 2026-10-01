@@ -1,0 +1,41 @@
+{
+  "schema": "noble-dx13-review-receipt/v1",
+  "case": "DX-13",
+  "result": "passed",
+  "kind": "review",
+  "claim": "Ten finite-oracle method controls and five exclusions independently reviewed against pinned qcue source and Noble native design; concrete arithmetic, premise, shrink, identity, recipe/effect and proof-authority counterexamples were classified. No Noble oracle, proof, candidate or release ran.",
+  "source": {
+    "qcue_commit": "c71183b0a5d3319dde1d611b6e6f77a6eab29418",
+    "qcue_tree": "93fbc7d749f259b6063cf87f1bcb549a1c1eb32f",
+    "oracle_git_blob": "44d503f8d3199c859b394b6fdfabed99b7f3e20f",
+    "oracle_sha256": "ab0df2c1d14212efe6f9ebb620e79ec1227adfa79f7df80d8ebe4bae682f8a0e",
+    "implementation_sha256": "05a56e4a571d74d6107620359dad9fdcaff72dd368f000dd8574e38eb9565549",
+    "github_commit_signature": "unsigned"
+  },
+  "inputs_sha256": {
+    "review": "e6f17df11ca58b85ca456283c56a0a3fa6f81ae30c128bba0fdd3e47104020fd",
+    "runner": "8a9ca7979ea3ee8b2b8899c6451a674b4b1fe0fd0f4530e6e0103e02db23c029",
+    "case": "84a2b06dbcf7224782393db33bd1f75e4c309ce9c5d28fd13651b2366e82dd6f",
+    "native": "6301b19e2aea766f86b5596e0a3cdcf18f3d8279c228ab30c7cf18115eae66ba",
+    "change": "27ea7df7e4ea7e167247cae1dc65c7eb5f3a54128806de74b582ec6fb9e8ad50",
+    "decisions": "aaab1d74770ec07da76047a9a52a2482ff4123a8aaa09074eec187162fe3c742"
+  },
+  "counts": {
+    "method_controls": 10,
+    "exclusions": 5,
+    "methodological_counterexample_groups": 6
+  },
+  "assumptions": [
+    "GitHub HTTPS supplies the pinned Git object bytes; commit is unsigned, so the preselected revision is trusted as comparative source, not independent owner authorization.",
+    "Review judgment in review.json is human-authored; the script checks source bindings and concrete boundary counterexamples, not full semantic validity of prose.",
+    "No actual Noble MC2 finite oracle, candidate execution, strict proof, owner-law release, universal theorem or backend/host authority is claimed. DX-10 is independent historical work."
+  ],
+  "scope": {
+    "actual_oracle_execution_claimed": false,
+    "model_results_are_universal_proof": false,
+    "model_results_authorize_release": false,
+    "historical_dx10_receipt_covers_this": false,
+    "owner_law_exists": false,
+    "proof": "not-applicable"
+  }
+}

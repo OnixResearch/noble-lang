@@ -1,0 +1,81 @@
+{
+  "schema": "noble-dx13-plan-review/v1",
+  "case": "DX-13",
+  "selection": "methodology-review-only",
+  "source": {
+    "revision": "4ad/qcue@c71183b0a5d3319dde1d611b6e6f77a6eab29418",
+    "oracle_blob_git_sha1": "44d503f8d3199c859b394b6fdfabed99b7f3e20f",
+    "oracle_sha256": "ab0df2c1d14212efe6f9ebb620e79ec1227adfa79f7df80d8ebe4bae682f8a0e",
+    "implementation_sha256": "05a56e4a571d74d6107620359dad9fdcaff72dd368f000dd8574e38eb9565549"
+  },
+  "method_controls": [
+    {
+      "id": "independent-finite-model-not-Noble-checker",
+      "method": "A separately authored BigInt wrapping-I64 function and explicit expected recipe/empty effects supply expected values. Neither Noble's contract evaluator, compiler, Lean proof producer nor selected Wasm lowerer may compute expected observations. Compare only after independent source acceptance.",
+      "counterexample": "Calling Noble's evaluator for both expected and actual returns correlated agreement, not an independent oracle.",
+      "qcue_basis": "Models: expected values are computed with Go Boolean folds and independent packet-domain bitsets, not implementation inference/subsumption helpers. Noble uses a distinct mathematical I64 model rather than importing those CUE semantics."
+    },
+    {
+      "id": "normal-return-and-precondition-model",
+      "method": "A law trial records the exact initial I64 input, resolved candidate identity, whether the precondition is established, normal return versus trap/exhaustion, final I64 value, exact accepted recipe and ordered empty host-effect trace. A false or unestablished premise is out of domain, never a passed theorem; abnormal return does not falsify a normal-return-only law or prove termination.",
+      "counterexample": "Replacing requires true by requires false admits no positive sample and must not be counted as law agreement.",
+      "qcue_basis": "Implementation: result annotations are proof goals and cannot materialize a missing body; unfinished demanded packets remain incomplete. Noble's normal-return boundary is separately specified by MC2."
+    },
+    {
+      "id": "finite-vocabulary-and-budget-explicit",
+      "method": "A future selected run declares a finite accepted source vocabulary, concrete I64 input set including 1 and at least one other input, test-host mapping, schema/model/compiler versions, max trial/shrink steps, seed and timeout before measuring. An exhausted budget is reported as exhaustion rather than pass, disagreement or proof.",
+      "counterexample": "Sampling only x=1 fails to distinguish an example-preserving special case from increment for all I64 inputs.",
+      "qcue_basis": "Models and Running: qcue enumerates finite vocabularies with explicit cardinalities and separate fast/extended timeouts; its results do not establish arbitrary proof-search completeness."
+    },
+    {
+      "id": "positive-and-false-law-negative-control",
+      "method": "The planned positive law is wrap64(x+1) on normal returns under established I64 typing; separately test a false identity law, an example-preserving special-case program, and an unestablished/false premise. Positive and hostile claims retain distinct outcomes and witness inputs, not a single coverage count.",
+      "counterexample": "For x=1 the special-case output is 2, but x=2 returns 2 instead of required 3; one matching example proves nothing.",
+      "qcue_basis": "Models: cardinality/duality self-checks and positive/negative finite identity-implementation controls challenge the oracle itself."
+    },
+    {
+      "id": "seeded-replay-and-same-failure-shrink",
+      "method": "Record source/dependency/model/generator/shrinker revisions, seed, selected vocabulary, limits, environment and witness observations. Shrink only within an independently accepted input domain while preserving the same mismatch predicate; retain original witness on invalid shrink or budget exhaustion.",
+      "counterexample": "Shrinking x=2 to x=1 loses the special-case mismatch, so the original x=2 witness must remain.",
+      "qcue_basis": "Preservation and shrinking: saved corpus inputs reproduce failures; local semantic reductions preserve mismatches but are not globally minimal."
+    },
+    {
+      "id": "resolved-identity-preserving-source-transform",
+      "method": "After each candidate transformation independently reparse/resolve and compare versioned module/definition identity, captures, import generation and source-binding evidence before comparing observations. Only a demonstrably identity-preserving transform may be counted; a merely equal example output is insufficient.",
+      "counterexample": "Rebinding the same lexical word text to a different module version or changing a closure capture invalidates identity even if x=1 still returns 2.",
+      "qcue_basis": "Preservation and shrinking: transformed results compare with independent oracles. Implementation: qcue raw source export/reimport of a separately attached live interface can leave conformance pending, so no automatic source-round-trip guarantee transfers to Noble."
+    },
+    {
+      "id": "recipe-observation-preserving-transform",
+      "method": "Check the entire resolved ordered recipe/captures/interface, not just output; compare final value and empty ordered host-effect trace to the independent model for every in-domain normal return. No recipe-changing transform is licensed by finite result equality.",
+      "counterexample": "Two programs return 2 at x=1 but differ in retained recipe or capture; they cannot share proof/artifact identity.",
+      "qcue_basis": "Preservation and shrinking: regrouping, copying and export results are rechecked against the independent oracle, not merely against the old evaluator output."
+    },
+    {
+      "id": "unsupported-transform-rejected",
+      "method": "Classify unknown rewrite, changed binding, effect introduction, resource/host operation or unproved export/reimport as unsupported; never treat unsupported as passed coverage or as a permitted identity-preserving transformation.",
+      "counterexample": "A rewritten program invoking test.emit is outside the empty-effect pure fragment even if its return value agrees.",
+      "qcue_basis": "Implementation: unsupported search remains pending and does not become semantic bottom; attached live-interface raw export/reimport remains pending."
+    },
+    {
+      "id": "owner-law-immutable-under-candidate-change",
+      "method": "This method is conditional on VC-OWNER-01: a separately authenticated owner-approved revision must be frozen before candidate edits and selected outside candidate argv/source/proof. Compare law/interface/preconditions/model/host/quota assumptions independently; no such owner snapshot exists for this review and no release is evaluated.",
+      "counterexample": "Candidate supplies weaker ensures true plus a matching hash or changes requires to false: a self-selected law/hash is not owner authority.",
+      "qcue_basis": "No qcue owner-law authority is imported; qcue's independent finite expected model motivates only a proposed challenge."
+    },
+    {
+      "id": "external-proof-and-admission-separate",
+      "method": "Record finite model agreement, strict Lean exact-theorem acceptance, MC2 recipe/artifact correspondence, release-owner policy and host authority as separate claims. The first cannot authorize any of the latter; missing owner policy keeps proof-required release blocked.",
+      "counterexample": "A matching finite sample and valid Lean proof of a candidate-authored requires false theorem confer neither owner approval nor host rights.",
+      "qcue_basis": "Oracle conclusion explicitly disclaims arbitrary proof-search completeness; implementation distinguishes successful computation, pending search, separate coverage and body obligations."
+    }
+  ],
+  "exclusions": [
+    {"id":"CUE-runtime-or-Go-dependency","disposition":"Borrow finite methodology only; Noble retains its own language, wrapping-I64 model, Rust/Lean tool selection and execution host. qcue's Go runner/CUE module are not imported.","hostile":"A proposed expected result computed by invoking CUE is outside this Noble experiment."},
+    {"id":"live-open-refinement","disposition":"Only closed resource-free accepted MC2 pure claims qualify. qcue's live-description/attached-interface export gap supplies a negative boundary, not an admitted feature.","hostile":"A raw-exported live-interface proof remaining pending cannot count as passed preservation."},
+    {"id":"higher-rank-or-impredicative-types","disposition":"No CUE quantified type binder or higher-rank value is added to Noble's finite MC2 I64 fragment.","hostile":"A polymorphic callback obligation is unsupported by this finite pure-I64 plan."},
+    {"id":"proof-time-native-execution","disposition":"Independent mathematical expected observations do not run candidate source, native host callbacks or foreign functions while proving. Actual candidate observations, if later selected, need isolated explicit test hosts and separate evidence.","hostile":"Calling a native implementation to manufacture a proof premise invalidates independence."},
+    {"id":"second-proof-kernel","disposition":"Finite model agreement is a diagnostic; only the existing pinned strict Lean consumer may independently check exact proof text, and neither result supplants owner release policy.","hostile":"Labelling finite sample agreement an accepted theorem or release is rejected."}
+  ],
+  "scope": {"actual_oracle_execution_claimed":false,"model_results_are_universal_proof":false,"model_results_authorize_release":false,"historical_dx10_receipt_covers_this":false,"owner_law_exists":false,"proof":"not-applicable"}
+}

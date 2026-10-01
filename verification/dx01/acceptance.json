@@ -1,0 +1,59 @@
+{
+  "schema": "noble-diagnostic-case-receipt/v1",
+  "case_id": "DX-01",
+  "revision": "0.1.0-draft.5",
+  "scope": "Two actual compiled Core-Bootstrap CLI source refusals and one independently checked source submission with a WIT-declared counter resource input; no resource-capable CLI is claimed, and no general checker proof is claimed",
+  "source_revision": "sha256:27094bb14d32d22aef9f5b30eabc84ae7cd3b687919bd0faeb495addf588ea53",
+  "source_revision_algorithm": "SHA-256 of ordered sha256sum lines for the thirteen source_files entries, including paths",
+  "source_files": {
+    "crates/noble-contracts/src/lib.rs": "c5f78cea53b8c4ff22b98a62956dbbfc2dde80208431ab10c115bdc3e802b375",
+    "crates/noble-contracts/src/inference/materialize.rs": "d734f10dc1269ae740a6aecb173c57088140003e7c56eaf72322265006015c2c",
+    "crates/noble-contracts/src/source/inference/operations.rs": "dacf4026042552c45719028e56cf52b9606fc02a5d479b99b8c711f8e1577a82",
+    "crates/noble-contracts/src/program.rs": "bf7bc901641630c918ecd326c62c2a7ee7c8c6ff841be922159fd5c2dad39e64",
+    "crates/noble-cli/src/core/output.rs": "a0f8417691a28d0502c8d2c08ab979d04defa122c7b7ab4e455d23f1745fee8e",
+    "crates/noble-contracts/tests/source.rs": "11404768f89688ff6f050d9d195b90c9ef35b7c8c7826544b1f3bca3a956d7f8",
+    "crates/noble-contracts/tests/component/eligibility.rs": "aca47c3a3913a9d812904fc786c0951b1080583bfc7373390f304f8233d02af4",
+    "crates/noble-cli/tests/smoke.rs": "5f3cd7741b56eecaa44266cb4a0dc24fc5480ea9449bd651116c2efdba30dc18",
+    "Cargo.lock": "918fbf668c6de38a4e9eb108d52ab51b1141e24a516b046014f0eb3d26e8b693",
+    "crates/noble-kernel/src/acceptance/mod.rs": "43e7f01b3b78f727033dc14e69867d6a4373f1ea9db4cac516cab63cc2a9fb89",
+    "crates/noble-kernel/src/acceptance/preflight.rs": "8e240102219d908bcb92f8963ca3576af1ff9a7c6b4bde282492bda4ae2a33e5",
+    "crates/noble-kernel/src/acceptance/validate.rs": "0b1830f0f12cf5326d4841f44a90aad4445b42137fbe5dae71bea3c48096c9d9",
+    "crates/noble-kernel/src/untrusted.rs": "3c2335ad6d918aa0298a79d7aefdcb43cff27fbaf844001216582a08ccd1174e"
+  },
+  "executable": {"path": "target/debug/noble", "sha256": "2e830701c43888d5c928250a68e47622e34db27aaf0c8ad8d99665e0b52e4b15"},
+  "fresh_build": "cargo build -j 4 -p noble-cli --bin noble: passed after the concurrent kernel acceptance edits and before the recorded CLI replay",
+  "cli_run": {
+    "argv": ["target/debug/noble", "session"],
+    "stdin_utf8": "1 true +\ntrue [ 1 ] [ false ] if\n",
+    "exit_code": 2,
+    "stdout_sha256": "a80c598fa816dbef1939cddb67bad5ea78b00270b1863fbf044672ed02ae3f82",
+    "stderr_utf8": "",
+    "reports": [
+      {"source": "1 true +", "failure": "word-input-type", "stage": "check", "outcome": "type-reject", "word_or_join": "+", "required_stack": "?stack I64 I64", "actual_stack": "[] I64 Bool", "constraint": "stack-type", "source_span": {"start": 7, "end": 8}, "value_origin_or_unavailable": {"start": 2, "end": 6}, "guest_requests": 0, "protected_operations": 0},
+      {"source": "true [ 1 ] [ false ] if", "failure": "branch-output-type", "stage": "check", "outcome": "type-reject", "word_or_join": "if", "required_stack": "?stack Bool Program<?stack -- ?stack Bool> Program<?stack -- ?stack Bool>", "actual_stack": "[] Bool Program<?stack -- ?stack I64> Program<?stack -- ?stack Bool>", "constraint": "branch-join", "source_span": {"start": 21, "end": 23}, "value_origin_or_unavailable": "unavailable", "guest_requests": 0, "protected_operations": 0}
+    ]
+  },
+  "typed_source_check": {
+    "path": "component::World::parse(WIT, main).session().prepare(source, [Ty::Resource(world.resources()[0].kind)], limits)",
+    "wit": "package test:counter@1.0.0; interface handles { resource counter; } world main { import handles; }",
+    "source": "dup",
+    "input_stack": ["Resource<test.counter>"],
+    "resolved_resource": "Resource(ResourceKind(1))",
+    "stage": "acceptance",
+    "outcome": "invalid",
+    "word_or_join": "dup",
+    "required_stack": "S Data",
+    "actual_stack": "S Resource(ResourceKind(1))",
+    "constraint": "eligibility:Data",
+    "source_span": {"start": 0, "end": 3},
+    "value_origin_or_unavailable": "unavailable",
+    "guest_requests": 0,
+    "protected_operations": 0,
+    "operation_observation": "Production source preparation and independent kernel acceptance returned Err before producing a candidate; no guest runtime or protected host operation was instantiated. The source API does not emit a CLI runtime counter."
+  },
+  "targeted_tests": [
+    "cargo test -p noble-cli --test smoke word_and_branch_failures_report_constraints_and_honest_value_origins -- --exact: passed 1/1",
+    "cargo test -p noble-contracts --test component source_resource_input_rejects_dup_with_eligibility_diagnostic -- --nocapture: passed 1/1"
+  ],
+  "proof": "open"
+}

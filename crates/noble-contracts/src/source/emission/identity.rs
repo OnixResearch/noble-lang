@@ -86,7 +86,8 @@ fn selected_slot(
     environment: &noble_kernel::contracts::Env,
 ) -> Option<u32> {
     if let crate::source::inference::DraftKind::Invocation(definition) = &node.kind {
-        if let Some(noble_kernel::contracts::Behavior::BoundEmit(slot)) =
+        if let Some(noble_kernel::contracts::Behavior::BoundEmit(slot)
+            | noble_kernel::contracts::Behavior::BoundClock(slot)) =
             environment.kind(*definition)
         {
             return Some(slot);

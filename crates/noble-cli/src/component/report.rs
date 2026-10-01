@@ -54,11 +54,11 @@ pub(super) fn bindings(
         ("world", crate::workflow::encoding::string(world.identity())),
         (
             "imports",
-            crate::workflow::encoding::Json::Array(world.imports().iter().map(operation).collect()),
+            crate::workflow::encoding::Json::Array(world.imports().iter().map(|op| operation(world, op)).collect()),
         ),
         (
             "exports",
-            crate::workflow::encoding::Json::Array(world.exports().iter().map(operation).collect()),
+            crate::workflow::encoding::Json::Array(world.exports().iter().map(|op| operation(world, op)).collect()),
         ),
         (
             "resources",
@@ -96,7 +96,7 @@ pub(super) fn bindings(
     ])
 }
 
-fn operation(operation: &noble_contracts::component::Operation) -> crate::workflow::encoding::Json {
+fn operation(world: &noble_contracts::component::World, operation: &noble_contracts::component::Operation) -> crate::workflow::encoding::Json {
     crate::workflow::encoding::object([
         (
             "identity",
@@ -111,8 +111,22 @@ fn operation(operation: &noble_contracts::component::Operation) -> crate::workfl
             "export",
             crate::workflow::encoding::string(&operation.export_name),
         ),
-        ("input_types", types(&operation.input_types())),
-        ("output_types", types(&operation.output_types())),
+        (
+            "input_types",
+            types(
+                &operation
+                    .input_types(world)
+                    .expect("resolved world input types"),
+            ),
+        ),
+        (
+            "output_types",
+            types(
+                &operation
+                    .output_types(world)
+                    .expect("resolved world output types"),
+            ),
+        ),
         (
             "wit_parameters",
             crate::workflow::encoding::Json::Array(
@@ -192,6 +206,10 @@ pub(super) fn compiled(
         (
             "profile",
             crate::workflow::encoding::string(world.profile().name()),
+        ),
+        (
+            "checked_u64_boundary",
+            crate::workflow::encoding::Json::Bool(world.checked_u64()),
         ),
         ("outcome", crate::workflow::encoding::string("compiled")),
         ("world", crate::workflow::encoding::string(world.identity())),

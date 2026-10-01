@@ -15,7 +15,7 @@ Scenario clauses declare designs; the conformance ledger records execution and e
 Document: SPEC-BE001  
 Revision: 0.1.0-draft.5  
 Depends on: SPEC-0001, SPEC-B001 and SPEC-S001 at 0.1.0-draft.5  
-Status: Required M3 investigation, not a selected ABI or completed backend
+Status: Bounded M3 comparison complete with managed-linear-memory selected for M4; optional post-M3 layout study unexecuted, universal backend refinement open
 
 ## Scope and selection
 
@@ -118,6 +118,14 @@ This is a scenario design, not an execution result. The case's `state` and `evid
 
 This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
 
+#### Scenario: ADAPT-17 for BE-DYNAMIC-01
+
+- GIVEN the `Backend-Experiment` profile and every field of `input` in [ADAPT-17](../../../specs/conformance/adaptation-cases.json)
+- WHEN the `runtime` procedure for case `ADAPT-17` runs against those inputs
+- THEN the observations match every field of `expected` in case `ADAPT-17`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
 <!-- cairn:scenario-links:end -->
 
 ### Requirement: BE-ARITY-01
@@ -178,6 +186,14 @@ This is a scenario design, not an execution result. The case's `state` and `evid
 
 This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
 
+#### Scenario: ADAPT-17 for BE-REFLECT-01
+
+- GIVEN the `Backend-Experiment` profile and every field of `input` in [ADAPT-17](../../../specs/conformance/adaptation-cases.json)
+- WHEN the `runtime` procedure for case `ADAPT-17` runs against those inputs
+- THEN the observations match every field of `expected` in case `ADAPT-17`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
 <!-- cairn:scenario-links:end -->
 
 ### Requirement: BE-LIMIT-01
@@ -196,6 +212,22 @@ The comparison uses left-associated, right-associated, and balanced trees over t
 - GIVEN the `Backend-Experiment` profile and every field of `input` in [ADAPT-09](../../../specs/conformance/adaptation-cases.json)
 - WHEN the `runtime` procedure for case `ADAPT-09` runs against those inputs
 - THEN the observations match every field of `expected` in case `ADAPT-09`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: ADAPT-17 for BE-LIMIT-01
+
+- GIVEN the `Backend-Experiment` profile and every field of `input` in [ADAPT-17](../../../specs/conformance/adaptation-cases.json)
+- WHEN the `runtime` procedure for case `ADAPT-17` runs against those inputs
+- THEN the observations match every field of `expected` in case `ADAPT-17`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: ADAPT-18 for BE-LIMIT-01
+
+- GIVEN the `Backend-Experiment` profile and every field of `input` in [ADAPT-18](../../../specs/conformance/adaptation-cases.json)
+- WHEN the `runtime` procedure for case `ADAPT-18` runs against those inputs
+- THEN the observations match every field of `expected` in case `ADAPT-18`
 
 This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
 
@@ -285,3 +317,30 @@ This is a scenario design, not an execution result. The case's `state` and `evid
 - GIVEN candidate records with exact configurations and declared workload outcomes
 - WHEN the selection policy evaluates passing, blocked, missing-pin, fabricated-metric and failed-correctness records
 - THEN only correctly executed candidates with valid scoped evidence are eligible and no failed or unsupported record becomes a performance success
+
+### Requirement: BE-LAYOUT-01
+r[BE-LAYOUT-01]
+
+**BE-LAYOUT-01.**
+
+An optional post-M3 experiment MAY compare the selected managed-linear-memory Wasm lowering with a type-directed finite algebraic-data layout and A-normal/call-lowering alternative over the same accepted, resource-free typed programs. Each candidate MUST retain exact ordered stack/call semantics, checked source and instantiated interface, resolved schema/program identity, observable normalized recipes and captures, and effect/request ordering. It MUST compare runtime-supplied inputs after compilation under matching declared limits and pinned compiler/optimizer/engine/feature configurations, both optimization off and on. The record MUST distinguish normal results, traps and construction/invocation quota failures; record guest logical allocation charges and retained linear-memory bytes separately, expose cleanup, and mark unavailable engine/process memory observations unknown or unsupported rather than report zero. It MUST include finite two-arm variant, nested product/list, runtime quotation/composition and reflection shapes, plus hostile quota and malformed-boundary controls. Type-directed specialization MUST NOT smuggle a new source-preparation step, change portable program identity, omit a dynamically reachable recipe, or erase a checked effect/owner obligation.
+
+Any later resource/component-positive candidate MUST independently preserve WIT canonical lowering/lifting, exact ABI ownership/post-return or trap cleanup, native-pin retirement and host authorization; resource-free measurements MUST NOT be advertised as this evidence. No unconditional observational equivalence, universal backend theorem or performance win follows from Bend's published examples or a faster finite trial. M3's existing completed WasmGC-versus-managed-memory results remain historical and unchanged; this study is not a reopened M3 gate.
+
+
+<!-- cairn:scenario-links:start -->
+#### Scenario: ADAPT-17 for BE-LAYOUT-01
+
+- GIVEN the `Backend-Experiment` profile and every field of `input` in [ADAPT-17](../../../specs/conformance/adaptation-cases.json)
+- WHEN the `runtime` procedure for case `ADAPT-17` runs against those inputs
+- THEN the observations match every field of `expected` in case `ADAPT-17`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+<!-- cairn:scenario-links:end -->
+
+#### Scenario: ADAPT-17 finite layout comparison
+
+- GIVEN identical checked resource-free workloads, fixed post-compilation inputs, two pinned managed-memory lowerings and declared resource limits
+- WHEN both configurations execute optimized and unoptimized runs with reflection, normal paths, traps and quota boundaries
+- THEN each run records complete ordered value/recipe/effect and allocation/quota observations; discrepancies remain visible, with no resource-positive or universal-proof promotion

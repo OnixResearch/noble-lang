@@ -3,11 +3,30 @@ pub(super) struct ParsedType {
     pub nodes: usize,
 }
 
-pub(super) fn parse(
+pub(super) fn parse_with_families(
     word: &str,
     types: &[(alloc::string::String, noble_kernel::types::Ty)],
+    families: &[(alloc::string::String, noble_kernel::types::NominalTypeId)],
+    environment: Option<&noble_kernel::contracts::Env>,
     span: crate::Span,
 ) -> Result<ParsedType, crate::Diagnostic> {
+    parse_with_depth(word, types, families, environment, span, 0)
+}
+
+fn parse_with_depth(
+    word: &str,
+    types: &[(alloc::string::String, noble_kernel::types::Ty)],
+    families: &[(alloc::string::String, noble_kernel::types::NominalTypeId)],
+    environment: Option<&noble_kernel::contracts::Env>,
+    span: crate::Span,
+    depth: u32,
+) -> Result<ParsedType, crate::Diagnostic> {
+    if depth >= 32 {
+        return Err(crate::invalid(
+            span,
+            "type constructor nesting limit exceeded",
+        ));
+    }
     if contains_ascii_whitespace(word.as_bytes()) {
         return Err(crate::invalid(span, "type word contains whitespace"));
     }
@@ -17,6 +36,9 @@ pub(super) fn parse(
         nodes: 0,
         span,
         names: types,
+        families,
+        environment,
+        depth,
         pending: alloc::vec::Vec::new(),
         value: None,
     }
@@ -29,6 +51,9 @@ struct Parser<'a> {
     nodes: usize,
     span: crate::Span,
     names: &'a [(alloc::string::String, noble_kernel::types::Ty)],
+    families: &'a [(alloc::string::String, noble_kernel::types::NominalTypeId)],
+    environment: Option<&'a noble_kernel::contracts::Env>,
+    depth: u32,
     pending: alloc::vec::Vec<Frame>,
     value: Option<noble_kernel::types::Ty>,
 }
@@ -39,6 +64,8 @@ enum Frame {
     SumLeft,
     PairRight(noble_kernel::types::Ty),
     SumRight(noble_kernel::types::Ty),
+    GenericLeft(noble_kernel::types::NominalTypeId),
+    GenericRight(noble_kernel::types::NominalTypeId, noble_kernel::types::Ty),
     Unknown,
 }
 
@@ -91,7 +118,9 @@ impl Parser<'_> {
         }
         if self.text.get(self.at) == Some(&b'<') {
             self.at += 1;
-            if name == "Resource" {
+            if name == "Program" {
+                self = attempt!(self.read_program());
+            } else if name == "Resource" {
                 let kind = b"test.counter";
                 if self.text.get(self.at..self.at.saturating_add(kind.len()))
                     != Some(kind.as_slice())
@@ -105,11 +134,15 @@ impl Parser<'_> {
                     noble_kernel::types::ResourceKind(0),
                 ));
             } else {
+                let family = self
+                    .families
+                    .iter()
+                    .find_map(|(known, id)| (known == name).then_some(*id));
                 self.pending.push(match name {
                     "List" => Frame::List,
                     "Pair" => Frame::PairLeft,
                     "Sum" => Frame::SumLeft,
-                    _ => Frame::Unknown,
+                    _ => family.map_or(Frame::Unknown, Frame::GenericLeft),
                 });
             }
         } else {
@@ -118,6 +151,7 @@ impl Parser<'_> {
                 "Bool" => noble_kernel::types::Ty::Bool,
                 "Text" => noble_kernel::types::Ty::Text,
                 "Unit" => noble_kernel::types::Ty::Unit,
+                "Syntax" => noble_kernel::types::Ty::Syntax,
                 _ => {
                     let mut found = None;
                     let mut at = self.names.len();
@@ -141,6 +175,82 @@ impl Parser<'_> {
         Ok(self)
     }
 
+    fn read_program(mut self) -> Result<Self, crate::Diagnostic> {
+        let start = self.at;
+        let mut depth = 0usize;
+        let mut end = None;
+        while self.at < self.text.len() {
+            match self.text[self.at] {
+                b'<' => depth += 1,
+                b'>' if depth == 0 => {
+                    end = Some(self.at);
+                    break;
+                }
+                b'>' => depth -= 1,
+                _ => {}
+            }
+            self.at += 1;
+        }
+        let Some(end) = end else {
+            return Err(crate::invalid(self.span, "unclosed Program type"));
+        };
+        let inner = attempt!(core::str::from_utf8(&self.text[start..end])
+            .map_err(|_| crate::invalid(self.span, "invalid Program type encoding")));
+        let fields = attempt!(split_top_level(inner, b',', self.span));
+        if fields.len() != 3 {
+            return Err(crate::invalid(
+                self.span,
+                "Program requires input, output and effects",
+            ));
+        }
+        let (inputs, input_nodes) = attempt!(parse_program_stack(
+            fields[0],
+            self.names,
+            self.families,
+            self.environment,
+            self.span,
+            self.depth + 1,
+        ));
+        let (outputs, output_nodes) = attempt!(parse_program_stack(
+            fields[1],
+            self.names,
+            self.families,
+            self.environment,
+            self.span,
+            self.depth + 1,
+        ));
+        let effects = match fields[2] {
+            "pure" => noble_kernel::types::EffSet::empty(),
+            "test.emit"
+                if self.environment.is_some_and(|environment| {
+                    environment
+                        .effects
+                        .contains(&noble_kernel::contracts::TEST_EMIT)
+                }) =>
+            {
+                noble_kernel::types::EffSet::from_ids(&[noble_kernel::contracts::TEST_EMIT])
+            }
+            "test.clock"
+                if self.environment.is_some_and(|environment| {
+                    environment.effects.contains(&noble_kernel::contracts::TEST_CLOCK)
+                }) =>
+            {
+                noble_kernel::types::EffSet::from_ids(&[noble_kernel::contracts::TEST_CLOCK])
+            }
+            _ => return Err(crate::invalid(self.span, "unknown Program effect bound")),
+        };
+        self.nodes = self
+            .nodes
+            .saturating_add(input_nodes)
+            .saturating_add(output_nodes);
+        if self.nodes > 256 {
+            return Err(crate::invalid(self.span, "type constructor limit exceeded"));
+        }
+        self.at = end + 1;
+        self.value = Some(noble_kernel::types::Ty::program(inputs, outputs, effects));
+        Ok(self)
+    }
+
     fn fold(
         mut self,
         ty: noble_kernel::types::Ty,
@@ -160,6 +270,22 @@ impl Parser<'_> {
                 attempt!(self.expect(b','));
                 self.at += 1;
                 self.pending.push(Frame::SumRight(ty));
+            }
+            Some(Frame::GenericLeft(id)) => {
+                attempt!(self.expect(b','));
+                self.at += 1;
+                self.pending.push(Frame::GenericRight(id, ty));
+            }
+            Some(Frame::GenericRight(id, left)) => {
+                attempt!(self.expect(b'>'));
+                self.at += 1;
+                self.value = Some(attempt!(self
+                    .environment
+                    .and_then(|environment| environment.generic_instance(id, [left, ty]))
+                    .ok_or_else(|| crate::invalid(
+                        self.span,
+                        "invalid or unsupported generic variant instance",
+                    ))));
             }
             Some(Frame::PairRight(left)) => {
                 attempt!(self.expect(b'>'));
@@ -207,6 +333,74 @@ impl Parser<'_> {
             ))
         }
     }
+}
+
+fn parse_program_stack(
+    word: &str,
+    types: &[(alloc::string::String, noble_kernel::types::Ty)],
+    families: &[(alloc::string::String, noble_kernel::types::NominalTypeId)],
+    environment: Option<&noble_kernel::contracts::Env>,
+    span: crate::Span,
+    depth: u32,
+) -> Result<(alloc::vec::Vec<noble_kernel::types::Ty>, usize), crate::Diagnostic> {
+    if word == "empty" {
+        return Ok((alloc::vec::Vec::new(), 0));
+    }
+    let parts = attempt!(split_top_level(word, b'+', span));
+    if parts.len() > 256 {
+        return Err(crate::invalid(span, "Program stack height limit exceeded"));
+    }
+    let mut stack = alloc::vec::Vec::with_capacity(parts.len());
+    let mut nodes = 0usize;
+    for part in parts {
+        let parsed = attempt!(parse_with_depth(
+            part,
+            types,
+            families,
+            environment,
+            span,
+            depth,
+        ));
+        nodes = nodes.saturating_add(parsed.nodes);
+        stack.push(parsed.ty);
+    }
+    Ok((stack, nodes))
+}
+
+fn split_top_level(
+    word: &str,
+    separator: u8,
+    span: crate::Span,
+) -> Result<alloc::vec::Vec<&str>, crate::Diagnostic> {
+    let mut parts = alloc::vec::Vec::new();
+    let mut start = 0usize;
+    let mut depth = 0usize;
+    for (at, byte) in word.bytes().enumerate() {
+        match byte {
+            b'<' => depth = depth.saturating_add(1),
+            b'>' => {
+                depth = attempt!(depth
+                    .checked_sub(1)
+                    .ok_or_else(|| crate::invalid(span, "unbalanced type argument")));
+            }
+            byte if byte == separator && depth == 0 => {
+                parts.push(&word[start..at]);
+                start = at + 1;
+            }
+            _ => {}
+        }
+    }
+    if depth != 0 || parts.len() > 256 {
+        return Err(crate::invalid(
+            span,
+            "unbalanced or oversized type argument",
+        ));
+    }
+    parts.push(&word[start..]);
+    if parts.iter().any(|part| part.is_empty()) {
+        return Err(crate::invalid(span, "empty type argument"));
+    }
+    Ok(parts)
 }
 #[expect(
     tigerstyle::missing_const_fn,

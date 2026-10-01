@@ -1076,6 +1076,223 @@
           ]
         }
       ]
+    },
+    {
+      "id": "CONTRACT-16",
+      "profile": "Contracts-Draft",
+      "kind": "admission",
+      "requirements": ["VC-OWNER-01", "VC-SCOPE-01", "VC-LOGIC-02", "VC-ADMIT-03", "EV-BIND-01"],
+      "input": {
+        "harness": "independent-owner-law-proof-required-release",
+        "fragment": "MC2-v1-resource-free-Core-Bootstrap",
+        "owner_law": {"revision": "owner-law-v1-immutable-before-candidate-edit", "subject_interface": "I64 -- I64 ! {}", "declaration": "OwnerLaw.increment", "expected_statement": "for every I64 input x, each normal return of submitted increment(x) equals wrap64(x+1)", "assumptions": ["well-typed-I64-input", "wrapping-I64-semantics", "normal-return-only", "quota-and-host-availability-not-proved"], "proof_library": "independently-selected-MC2-pure-library", "consumer_policy": "proof-required-release"},
+        "submission": {"program": "compiled-wrapping-I64-increment", "resolved_recipe": "bound-only-at-release", "proof_artifact": "independently-checked-exact-OwnerLaw.increment", "emitted_artifact": "bound-only-at-release"},
+        "candidate_author_can_edit_owner_law": false,
+        "variants": [
+          {"change": "candidate-special-cases-example-input-1-then-returns-identity-for-other-inputs", "expected": "reject"},
+          {"change": "candidate-changes-owner-law-or-expected-statement-to-easier-identity", "expected": "reject"},
+          {"change": "candidate-substitutes-unrelated-or-stale-valid-proof-artifact", "expected": "reject"},
+          {"change": "candidate-substitutes-false-or-unestablished-precondition", "expected": "reject"},
+          {"change": "owner-approves-new-law-revision-and-fresh-exact-proof", "expected": "eligible-after-independent-check"},
+          {"change": "ordinary-well-typed-program-without-proof-policy", "expected": "ordinary-admission-unchanged"}
+        ]
+      },
+      "expected": {"stage": "proof-required-release-admission", "outcome": "each-variant-matches", "owner_law_independent": true, "theorem_statement_and_assumptions_compared": true, "exact_checked_proof_and_artifact_binding_required": true, "proof_author_status_is_authority": false, "pure_fragment_only": true, "compiler_backend_host_proof_claimed": false, "guest_requests": 0, "protected_operations": 0},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "CONTRACT-17", "profile": "Intrinsic-Proofs-Draft", "kind": "static",
+      "requirements": ["K-PROOF-01", "K-PROOF-02", "VC-INTRINSIC-02", "V-INTRINSIC-02"],
+      "input": {"harness": "actual-noble-module-predicative-type-universal", "source": "module logic@1 [ proof 1 poly-refl : [ (Pi (A Type0) (Pi (x A) (Eq A x x))) ] [ (intro (A Type0) (intro (x A) (refl x))) ] ]", "positive_type_instances": ["I64", "Bool", "Pair<I64,List<Bool>>"], "negative_type_instances": ["Resource<test.counter>", "Program<I64,I64,pure>", "Syntax", "Pair<I64,Resource<test.counter>>", "Type1", "forged-PureTyCode"], "variants": ["positive-identity-and-instantiation", "wrong-type-witness", "Type0-as-Type0", "unrestricted-Lean-Type-binder", "wrong-dependent-motive", "partial-value-as-Eq-witness", "proof-lexer-escape-into-def"]},
+      "expected": {"stage": "module-parse-source-proof-acceptance-and-independent-check", "outcome": "positive-identity-is-eligible-only-under-checked-PureTyCode-all-hostile-variants-reject", "lean_binder": "PureTyCode-and-El-not-unrestricted-Type", "proof_level_only": true, "guest_requests": 0, "protected_operations": 0, "candidate_executions": 0, "source_translation_correspondence_proved_by-test": false},
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [{
+        "claim": "Selected real .noble polymorphic identity and I64/Bool/Pair/List instances independently check under pinned PureTyCode/El; all declared hostile variants refuse before guest work. Source translation soundness remains open.",
+        "subject": "CONTRACT-17", "revision": "0.1.0-draft.5", "kind": "test", "result": "passed",
+        "source_revision": "sha256:3658d2e6c8c3c9115f7fa88975a904a2eca28219a0b1b8f7fe85e9a7b57d9e2b",
+        "configuration": {"fragment": "Intrinsic-Proofs-Draft", "case_id": "CONTRACT-17", "receipt": "../../verification/intrinsic-proofs/acceptance.json", "receipt_sha256": "2a7e3a9d98f7a1f8ec6326e0bfe13088ee3deae6bb2ce1fa111444c21d86876c", "external_raw_output": "/home/brittonr/.cache/noble-proof-tmp/intrinsic-acceptance-20260929-worker-b-final2/", "workload_sha256": "98260d1d1a90f80f51550708f00d55acd5fecef29d56cd5cbcd9fab033e8e9db", "binary_sha256": "7b0034f14a6712e287bb0a49bf485e162580bad6670b0ff4e7320367ea5d408c", "kernel_peer_sha256": "4fd75df882f0c44b7562443a3c0c69888da03efee39e3aebe1ecace94d3500a0", "gate_sha256": "99d467daec5a23d00e5296298d935c8aa14ca1643aa1f435c77af6d8c23e20b3"},
+        "assumptions": ["Pinned strict Lean kernel/model and isolation tools remain trusted.", "Finite source acceptance does not prove source translation soundness or PureTyCode/domain fidelity generally."]
+      }]
+    },
+    {
+      "id": "CONTRACT-18", "profile": "Intrinsic-Proofs-Draft", "kind": "admission",
+      "requirements": ["K-PROOF-01", "VC-INTRINSIC-01", "VC-INTRINSIC-03", "V-INTRINSIC-01", "V-INTRINSIC-02"],
+      "input": {"harness": "noble-source-increment-proof-to-exact-mc1-claim", "source": "module arithmetic@1 [ def increment [ 1 + ] contract 1 increment-law [ subject increment input [ x I64 ] output [ y I64 ] requires [ true ] ensures [ (eq (out y) (add (in x) 1)) ] ] proof 1 increment-correct for increment-law [ (export-unary-I64 (intro (tail Stack) (intro (x I64) (pc-sequence (pc-exact (exec-literal 1)) (pc-exact (exec-add)) (bridge (by-exact-append-assoc)) (join (by-exact-result))))) (mc1-true-eq-wrap)) ] ]", "model_rules": ["exec_lit_iff", "exec_add_iff", "pc_exact", "pc_sequence", "List.append_assoc", "exportedClaim_unaryI64", "exportedClaim_consequence", "holds_true", "holds_eq"], "vectors": [{"input": "41", "expected": "42"}, {"input": "9223372036854775807", "expected": "-9223372036854775808"}], "variants": ["exact-source-proof", "missing-bridge", "missing-join", "foreign-append-rewrite", "swapped-add-operands", "forged-intermediate-equality", "unrelated-final-equality", "PC-without-exportedClaim-bridge", "changed-ensures-expression"]},
+      "expected": {"stage": "module-proof-independent-exact-claim-check", "outcome": "exact-reviewed-rule-derivation-accepted-only-for-matching-subject-and-exported-claim-all-hostile-variants-reject", "normal_return_only": true, "wrapping_i64": true, "translation_correctness_claimed": false, "backend_proof_claimed": false, "guest_requests": 0, "protected_operations": 0, "candidate_executions": 0},
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [{
+        "claim": "Actual [ 1 + ] .noble source and exact MC1 wrapping I64 normal-return proof independently check the bridge, join and exported typed claim; declared altered proofs and claims refuse before guest work.",
+        "subject": "CONTRACT-18", "revision": "0.1.0-draft.5", "kind": "test", "result": "passed",
+        "source_revision": "sha256:3658d2e6c8c3c9115f7fa88975a904a2eca28219a0b1b8f7fe85e9a7b57d9e2b",
+        "configuration": {"fragment": "Intrinsic-Proofs-Draft", "case_id": "CONTRACT-18", "receipt": "../../verification/intrinsic-proofs/acceptance.json", "receipt_sha256": "2a7e3a9d98f7a1f8ec6326e0bfe13088ee3deae6bb2ce1fa111444c21d86876c", "external_raw_output": "/home/brittonr/.cache/noble-proof-tmp/intrinsic-acceptance-20260929-worker-b-final2/", "workload_sha256": "98260d1d1a90f80f51550708f00d55acd5fecef29d56cd5cbcd9fab033e8e9db", "binary_sha256": "7b0034f14a6712e287bb0a49bf485e162580bad6670b0ff4e7320367ea5d408c", "kernel_peer_sha256": "4fd75df882f0c44b7562443a3c0c69888da03efee39e3aebe1ecace94d3500a0", "gate_sha256": "99d467daec5a23d00e5296298d935c8aa14ca1643aa1f435c77af6d8c23e20b3"},
+        "assumptions": ["Pinned strict Lean consumer, model/rules, source CLI and trusted-host observation remain authentic.", "Normal-return partial correctness is not termination, backend correspondence, source translation or actual Rust refinement."]
+      }]
+    },
+    {
+      "id": "CONTRACT-19", "profile": "Intrinsic-Proofs-Draft", "kind": "static",
+      "requirements": ["K-PROOF-01", "VC-INTRINSIC-02", "VC-INTRINSIC-05", "DX-PROOF-01"],
+      "input": {"harness": "reject-forged-proof-source-and-lexer-confusion", "source": "module hostile@1 [ proof 1 bogus : [ (Eq I64 0 1) ] [ (refl 0) ] ]", "variants": ["false-Eq", "axiom", "admit", "sorry", "raw-Lean-declaration", "Lean-by-tactic", "unchecked-native-decision", "partial-list-head", "unknown-rule", "proof-parenthesis-escape-into-def", "editor-hole"]},
+      "expected": {"stage": "module-parse-and-proof-check", "outcome": "reject-every-variant-before-publication-or-execution", "unchecked_premises": 0, "guest_requests": 0, "protected_operations": 0},
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [{
+        "claim": "Every selected forged, tactic, axiom, partial-selector, parser-escape and editor-hole .noble proof variant refuses before module publication or guest work.",
+        "subject": "CONTRACT-19", "revision": "0.1.0-draft.5", "kind": "test", "result": "passed",
+        "source_revision": "sha256:3658d2e6c8c3c9115f7fa88975a904a2eca28219a0b1b8f7fe85e9a7b57d9e2b",
+        "configuration": {"fragment": "Intrinsic-Proofs-Draft", "case_id": "CONTRACT-19", "receipt": "../../verification/intrinsic-proofs/acceptance.json", "receipt_sha256": "2a7e3a9d98f7a1f8ec6326e0bfe13088ee3deae6bb2ce1fa111444c21d86876c", "external_raw_output": "/home/brittonr/.cache/noble-proof-tmp/intrinsic-acceptance-20260929-worker-b-final2/", "workload_sha256": "98260d1d1a90f80f51550708f00d55acd5fecef29d56cd5cbcd9fab033e8e9db", "binary_sha256": "7b0034f14a6712e287bb0a49bf485e162580bad6670b0ff4e7320367ea5d408c", "kernel_peer_sha256": "4fd75df882f0c44b7562443a3c0c69888da03efee39e3aebe1ecace94d3500a0", "gate_sha256": "99d467daec5a23d00e5296298d935c8aa14ca1643aa1f435c77af6d8c23e20b3"},
+        "assumptions": ["Finite declared hostile corpus, pinned checker, sandbox and host invocation are the observed boundary.", "This does not prove general parser completeness or source calculus consistency."]
+      }]
+    },
+    {
+      "id": "CONTRACT-20", "profile": "Intrinsic-Proofs-Draft", "kind": "admission",
+      "requirements": ["VC-INTRINSIC-01", "VC-INTRINSIC-03", "VC-INTRINSIC-05", "VC-ID-02", "V-INTRINSIC-02"],
+      "input": {"harness": "exact-proof-dependency-and-owner-law-binding", "owner_law": "immutable-before-candidate-edit-VC-OWNER-01-increment-law", "variants": ["valid-new-source-and-current-exact-law", "same-example-output-but-incorrect-general-program", "candidate-requires-false", "candidate-weakens-ensures-to-true", "candidate-changes-model-assumptions", "candidate-changes-recipe", "changed-capture", "changed-module-version", "stale-theorem-identity", "owner-approved-revision-with-new-exact-proof"]},
+      "expected": {"stage": "independent-proof-required-release", "outcome": "only-unchanged-law-exact-current-subject-and-fresh-approved-revision-eligible-after-independent-check", "candidate_authored_contract_is_release_authority": false, "false_precondition_rejected_by_owner_policy": true, "guest_requests": 0, "protected_operations": 0, "guest_requests_on_refusal": 0, "protected_operations_on_refusal": 0},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "CONTRACT-21", "profile": "Intrinsic-Proofs-Draft", "kind": "admission",
+      "requirements": ["VC-INTRINSIC-05", "V-INTRINSIC-02", "DX-PROOF-01"],
+      "input": {"harness": "bounded-total-proof-checking", "variants": ["well-formed-small-polymorphic-proof", "cyclic-use-dependencies", "oversized-type-code", "over-nesting", "normalization-work-exhaustion", "substitution-work-exhaustion", "proof-timeout", "internal-checker-error", "partial-selector-used-in-Eq", "invalid-import-transitive-axiom"]},
+      "expected": {"stage": "bounded-proof-acceptance", "outcome": "small-supported-term-eligible-all-other-variants-reject-with-distinct-outcomes", "timeouts_accepted": false, "unchecked_use_cycles": 0, "guest_requests": 0, "protected_operations": 0},
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [{
+        "claim": "Small supported proof accepts while each declared bounded hostile variant refuses; actual owned pinned Lean consumer SIGKILL returns intrinsic-checker-process-failure, distinct from ordinary proof rejection, timeout and missing checker, before any guest work.",
+        "subject": "CONTRACT-21", "revision": "0.1.0-draft.5", "kind": "test", "result": "passed",
+        "source_revision": "sha256:3658d2e6c8c3c9115f7fa88975a904a2eca28219a0b1b8f7fe85e9a7b57d9e2b",
+        "configuration": {"fragment": "Intrinsic-Proofs-Draft", "case_id": "CONTRACT-21", "receipt": "../../verification/intrinsic-proofs/acceptance.json", "receipt_sha256": "2a7e3a9d98f7a1f8ec6326e0bfe13088ee3deae6bb2ce1fa111444c21d86876c", "external_raw_output": "/home/brittonr/.cache/noble-proof-tmp/intrinsic-acceptance-20260929-worker-b-final2/", "workload_sha256": "98260d1d1a90f80f51550708f00d55acd5fecef29d56cd5cbcd9fab033e8e9db", "binary_sha256": "7b0034f14a6712e287bb0a49bf485e162580bad6670b0ff4e7320367ea5d408c", "kernel_peer_sha256": "4fd75df882f0c44b7562443a3c0c69888da03efee39e3aebe1ecace94d3500a0", "gate_sha256": "99d467daec5a23d00e5296298d935c8aa14ca1643aa1f435c77af6d8c23e20b3"},
+        "assumptions": ["Signal targets only the identified own pinned consumer descendant, with observed PID and ancestry revalidation.", "Finite resource/fault variants do not prove checker normalization, global totality or formal Rust refinement."]
+      }]
+    },
+    {
+      "id": "CONTRACT-22", "profile": "Intrinsic-Proofs-Draft", "kind": "runtime",
+      "requirements": ["K-PROOF-01", "VC-INTRINSIC-04", "V-INTRINSIC-01"],
+      "input": {"harness": "proof-erasure-and-proof-free-ordinary-program", "variants": ["same-accepted-program-with-and-without-intrinsic-proof", "proof-only-change", "explicit-MC2-evidence-inspection", "ordinary-quote-compose-run-reflect", "proof-rejection-while-prior-module-snapshot-remains"]},
+      "expected": {"stage": "compiled-ordinary-program-and-evidence-observation", "outcome": "same-unchanged-program-recipe-identity-and-ordinary-observations-with-no-guest-proof-term-or-proof-service", "proof_only_guest_effects": 0, "runtime_prover_calls": 0, "prior_snapshot_preserved_on_refusal": true, "proof_artifact_metadata_separate": true},
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [{
+        "claim": "Selected off/on actual .noble proof modules compile to byte-equal Wasm and matching executable DefinitionId/recipe and quote/compose/run/reflect observations; rejected proof preserves the prior snapshot and independent MC2 evidence operations remain separately checked.",
+        "subject": "CONTRACT-22", "revision": "0.1.0-draft.5", "kind": "test", "result": "passed",
+        "source_revision": "sha256:3658d2e6c8c3c9115f7fa88975a904a2eca28219a0b1b8f7fe85e9a7b57d9e2b",
+        "configuration": {"fragment": "Intrinsic-Proofs-Draft", "case_id": "CONTRACT-22", "receipt": "../../verification/intrinsic-proofs/acceptance.json", "receipt_sha256": "2a7e3a9d98f7a1f8ec6326e0bfe13088ee3deae6bb2ce1fa111444c21d86876c", "external_raw_output": "/home/brittonr/.cache/noble-proof-tmp/intrinsic-acceptance-20260929-worker-b-final2/", "workload_sha256": "98260d1d1a90f80f51550708f00d55acd5fecef29d56cd5cbcd9fab033e8e9db", "binary_sha256": "7b0034f14a6712e287bb0a49bf485e162580bad6670b0ff4e7320367ea5d408c", "kernel_peer_sha256": "4fd75df882f0c44b7562443a3c0c69888da03efee39e3aebe1ecace94d3500a0", "gate_sha256": "99d467daec5a23d00e5296298d935c8aa14ca1643aa1f435c77af6d8c23e20b3", "unreported_mc2_request_counters": ["certify", "inspect"]},
+        "assumptions": ["Proof-bearing source hash differs, while only separately compared executable metadata and actual Wasm bytes match.", "Legacy MC2 certify/inspect omit request counters: unreported is not measured zero.", "Finite compiled observations are not a general proof erasure, Wasm backend or host-authorization theorem."]
+      }]
+    },
+    {
+      "id": "CONTRACT-23", "profile": "Intrinsic-Proofs-Draft", "kind": "admission",
+      "requirements": ["VC-INTRINSIC-03", "VC-INTRINSIC-04", "VC-OWNER-01", "V-INTRINSIC-02"],
+      "input": {"harness": "proof-is-not-authorization", "variants": ["positive-owner-law-and-applicable-guard-and-matching-artifact-and-host-policy", "unmet-precondition", "vacuous-candidate-law", "unrelated-Wasm-artifact", "stale-build", "denied-host-authority", "ordinary-proof-free-policy"]},
+      "expected": {"stage": "release-and-invocation-admission", "outcome": "only-complete-independent-policy-path-eligible-ordinary-proof-free-policy-remains-ordinary", "guest_requests": 0, "protected_operations": 0, "failed_path_candidate_executions": 0, "failed_path_protected_operations": 0, "proof_grants_host_authority": false, "backend_correspondence_proved": false},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "CONTRACT-24", "profile": "Intrinsic-Proofs-Draft", "kind": "review",
+      "requirements": ["VC-INTRINSIC-03", "V-INTRINSIC-01", "V-INTRINSIC-02"],
+      "input": {"harness": "separate-lean-and-aeneas-assurance-lanes", "variants": ["exact-strict-Lean-claim-check", "valid-Lean-proof-from-broken-Noble-translation", "Aeneas-extraction-only", "actual-Rust-checker-refinement", "stale-reviewed-rule", "foreign-Aeneas-external-model", "unsound-extracted-model", "producer-only-status"]},
+      "expected": {"stage": "independent-assurance-review", "outcome": "label-each-claim-and-leave-source-translation-and-implementation-refinement-open-until-separate-proofs", "aeneas_typechecks_noble_proof": false, "lean_success_proves_translation": false, "proof": "open"},
+      "state": {"implementation": "partial", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [{
+        "claim": "Source-bound assurance review labels strict Lean exact-claim checks separately from broken Noble translation, Aeneas extraction and actual Rust refinement; source-to-accepted-recipe correspondence and all formal assurance obligations remain open.",
+        "subject": "CONTRACT-24", "revision": "0.1.0-draft.5", "kind": "review", "result": "passed",
+        "source_revision": "sha256:3658d2e6c8c3c9115f7fa88975a904a2eca28219a0b1b8f7fe85e9a7b57d9e2b",
+        "configuration": {"fragment": "Intrinsic-Proofs-Draft", "case_id": "CONTRACT-24", "receipt": "../../verification/intrinsic-proofs/acceptance.json", "receipt_sha256": "2a7e3a9d98f7a1f8ec6326e0bfe13088ee3deae6bb2ce1fa111444c21d86876c", "external_raw_output": "/home/brittonr/.cache/noble-proof-tmp/intrinsic-acceptance-20260929-worker-b-final2/", "workload_sha256": "98260d1d1a90f80f51550708f00d55acd5fecef29d56cd5cbcd9fab033e8e9db", "binary_sha256": "7b0034f14a6712e287bb0a49bf485e162580bad6670b0ff4e7320367ea5d408c", "gate_sha256": "99d467daec5a23d00e5296298d935c8aa14ca1643aa1f435c77af6d8c23e20b3"},
+        "assumptions": ["This is a bounded claim-label review, not an independent human formal proof or Aeneas typecheck of Noble terms.", "Lean acceptance does not certify translation, Rust checker/model refinement, backend correspondence or host authority."]
+      }]
+    },
+    {
+      "id": "CONTRACT-25", "profile": "Intrinsic-Proofs-Draft", "kind": "static",
+      "requirements": ["VC-INTRINSIC-02", "V-INTRINSIC-02", "DX-PROOF-01"],
+      "input": {"harness": "dependent-equality-elimination-and-source-scope", "source": "module logic@1 [ proof 1 poly-refl : [ (Pi (A Type0) (Pi (x A) (Eq A x x))) ] [ (intro (A Type0) (intro (x A) (refl x))) ] ]", "variants": ["apply-proof-to-valid-List-I64-code", "subst-with-typed-motive-and-checked-premise", "subst-with-wrong-motive-type", "subst-with-forged-equality", "binder-capture", "foreign-private-proof-import", "reuse-after-module-rebind", "Eq-transferred-to-undefined-MC1-eq-without-Holds"]},
+      "expected": {"stage": "dependent-proof-source-acceptance", "outcome": "eligible-apply-and-subst-accepted-hostile-scope-motive-and-undefined-eq-rejected", "capture_avoiding_substitution": true, "independently_checked_type_codes": true, "guest_requests": 0, "protected_operations": 0},
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [{
+        "claim": "Actual .noble proof application to checked List I64, typed dependent Eq substitution and immutable exported proof use accept; forged Eq, wrong motive, binder capture, private/stale import and undefined MC1 equality transfers refuse.",
+        "subject": "CONTRACT-25", "revision": "0.1.0-draft.5", "kind": "test", "result": "passed",
+        "source_revision": "sha256:3658d2e6c8c3c9115f7fa88975a904a2eca28219a0b1b8f7fe85e9a7b57d9e2b",
+        "configuration": {"fragment": "Intrinsic-Proofs-Draft", "case_id": "CONTRACT-25", "receipt": "../../verification/intrinsic-proofs/acceptance.json", "receipt_sha256": "2a7e3a9d98f7a1f8ec6326e0bfe13088ee3deae6bb2ce1fa111444c21d86876c", "external_raw_output": "/home/brittonr/.cache/noble-proof-tmp/intrinsic-acceptance-20260929-worker-b-final2/", "workload_sha256": "98260d1d1a90f80f51550708f00d55acd5fecef29d56cd5cbcd9fab033e8e9db", "binary_sha256": "7b0034f14a6712e287bb0a49bf485e162580bad6670b0ff4e7320367ea5d408c", "kernel_peer_sha256": "4fd75df882f0c44b7562443a3c0c69888da03efee39e3aebe1ecace94d3500a0", "gate_sha256": "99d467daec5a23d00e5296298d935c8aa14ca1643aa1f435c77af6d8c23e20b3"},
+        "assumptions": ["Pinned independent Lean model and immutable module source/import closure remain authentic.", "Selected equality, substitution and scope tests do not prove the full source calculus, runtime equality for undefined programs or Rust refinement."]
+      }]
+    },
+    {
+      "id": "CONTRACT-26",
+      "profile": "Intrinsic-Proofs-Draft",
+      "kind": "admission",
+      "requirements": ["K-PROOF-01", "VC-INTRINSIC-01", "VC-INTRINSIC-03", "VC-INTRINSIC-04", "VC-INTRINSIC-05", "V-INTRINSIC-01", "V-INTRINSIC-02", "DX-PROOF-01"],
+      "input": {
+        "harness": "actual-named-two-call-source-proof-and-host-origin-admission",
+        "source_units": [
+          "module Definitions@5 [ export step def step [ 1 + ] ]",
+          "import Definitions@5 as d",
+          "module Subject@3 [ export twice def twice [ d.step d.step ] contract 2 twice-law [ subject twice input [ x I64 ] output [ y I64 ] requires [ true ] ensures [ (eq (out y) (add (in x) 2)) ] ] proof 2 twice-correct for twice-law [ (export-named-unary-I64 (pc-named-call 0 (exec-literal-1) (exec-add)) (pc-named-call 1 (exec-literal-1) (exec-add)) (by-exact-tail) (named-true-eq-wrap)) ] ]"
+        ],
+        "proof_term_shape": "export-named-unary-I64-with-ordered-pc-named-call-0-and-1-each-checked-exec-literal-1-and-exec-add-then-by-exact-tail-and-named-true-eq-wrap",
+        "submission_root": "one-authenticated-invocation-of-Subject@3.twice-separate-from-twice-definition-body",
+        "subject_body": "two-d.step-call-occurrences-in-accepted-Subject@3.twice-definition",
+        "import_provenance": "each-use-resolves-to-original-exported-Definitions@5.step-[1 +]",
+        "specialization": "two-distinct-fresh-rows-and-slots-with-complete-per-use-Inst-typing-and-unique-original-lexical-occurrence-span-ordinal",
+        "expected_claim": "NamedV2.exportedNamedClaim-over-authenticated-twice-definition-body-paramTypes-empty-StackTyped-before-and-empty-params-true-Holds2-pre-preserved-universal-tail-named-Exec-typed-after-and-Holds2-eq-output0-wrap64(input0+2)",
+        "reviewed_rule": "NamedV2.twoStepClaim-instantiated-on-actual-accepted-subject-useA-useB-entryA-entryB-not-synthetic-Examples.proof",
+        "positive_vectors": [{"input": "41", "output": "43"}, {"input": "9223372036854775807", "output": "-9223372036854775807"}],
+        "variants": [
+          {"change": "positive-authenticated-two-call-body-two-fresh-step-specializations-exact-source-bound-claim", "expected": "eligible-only-after-independent-source-graph-rule-and-strict-claim-check"},
+          {"change": "wrong-second-body-call-or-replaced-literal", "expected": "reject"},
+          {"change": "reuse-one-specialization-slot-or-occurrence-for-two-calls", "expected": "reject"},
+          {"change": "wrong-row-owner-or-call-byte-span-or-lexical-ordinal", "expected": "reject"},
+          {"change": "call-byte-span-covers-only-d-instead-of-full-d.step-original-token", "expected": "reject-before-proof-claim"},
+          {"change": "call-byte-span-covers-wrong-original-word-token-with-ordered-nonempty-span", "expected": "reject-before-proof-claim"},
+          {"change": "missing-or-partial-per-use-Inst-and-typed-derivation", "expected": "reject"},
+          {"change": "orphan-extra-or-unreachable-graph-row-even-if-ExactClosure-shaped", "expected": "reject"},
+          {"change": "replay-previously-prepared-Definitions@5-source-bound-goal-graph-and-claim-after-d-alias-rebind-to-Definitions@6-with-identical-d.step-token-text", "expected": "reject-stale-@5-replay-before-proof-claim-fresh-authenticated-@6-source-and-new-exact-proof-remain-eligible"},
+          {"change": "requires-false-or-weakened-ensures-against-selected-exact-True-plus-two-rule", "expected": "reject-at-selected-exact-assertion-preparation-or-proof-check-not-owner-frozen-release"},
+          {"change": "false-x-plus-two-theorem-or-NamedV1-Satisfies-instead-of-typed-claim", "expected": "reject"},
+          {"change": "proof-2-for-contract-1-or-proof-1-for-contract-2", "expected": "reject"},
+          {"change": "proof-2-colon-standalone-or-params-field", "expected": "reject"},
+          {"change": "quote-or-reflect-program-identity-substituted-for-named-definition-body-or-submitted-invocation", "expected": "reject"},
+          {"change": "proof-only-change-compared-to-unchanged-executable-definition", "expected": "same-executable-recipe-and-artifact-only-after-actual-erasure-observation"}
+        ]
+      },
+      "expected": {
+        "stage": "module-source-graph-proof-and-independent-named-claim-admission",
+        "outcome": "positive-only-after-complete-actual-host-check-each-hostile-variant-refuses",
+        "normal_return_only": true,
+        "param_types": [],
+        "wrapping_i64": true,
+        "source_origin_and_complete_graph_required": true,
+        "synthetic_model_fixture_is_host_admission": false,
+        "named_v1_satisfies_is_sufficient": false,
+        "proof_erasure_observed_separately": true,
+        "owner_frozen_law_or_artifact_or_host_authority_proved": false,
+        "candidate_executions_on_refusal": 0,
+        "guest_requests": 0,
+        "protected_operations": 0,
+        "guest_requests_on_refusal": 0,
+        "protected_operations_on_refusal": 0
+      },
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [{
+        "claim": "CONTRACT-26 actual versioned two-call Noble source authenticates both fresh imported step specializations and the accepted definition-body graph; the independently generated typed wrapping x+2 claim passes the pinned strict Lean check. All 15 canonical positive/hostile variants pass, with separately compiled off/on proof-erasure and runtime observations. This is finite source-bound acceptance, not a formal source-translation, Rust refinement, general backend or owner-law release theorem.",
+        "subject": "CONTRACT-26",
+        "revision": "0.1.0-draft.5",
+        "kind": "test",
+        "result": "passed",
+        "source_revision": "sha256:2cf21cf0d37efb805a7eb88ce1cd42e1c42c23014ffb9341b204edcd3ec068d3",
+        "configuration": {
+          "fragment": "Intrinsic-Proofs-Draft-named-v2",
+          "case_id": "CONTRACT-26",
+          "receipt": "../../verification/intrinsic-named-v2/acceptance.json",
+          "receipt_sha256": "8ab64cf2856164dc3ed7f6126361ffa256593f2867dc2b150e93bc3fde5db4c0",
+          "external_raw_output": "/home/brittonr/.cache/noble-proof-tmp/named-v2-contract26-gate-20260929-final2/",
+          "workload_sha256": "6a5e59b8fc1ae7c227eec31cc3663f019412bc92c55b61daca3117f2e5150f06",
+          "reviewed_cli_sha256": "eadc1f634777d02dec6881a1322891422590bc1be31b6f7e13a4aac5ea7ec351",
+          "graph_peer_sha256": "5084cf0b5c51a4485aaf60470c780f0b9fef1701088d7fd27a5039e0fc3f0194",
+          "generated_claim_sha256": "6a1b9ef89ca9f121be753f97281c6f5e949cf39d42b814513941dc3cf77aaad2",
+          "variants": 15,
+          "commands": 97
+        },
+        "assumptions": [
+          "Pinned strict Lean kernel/model and reviewed source CLI, graph peer, host observation and isolation tools remain trusted.",
+          "Finite checked source origin, typed claim, bounded runtime and erasure observations do not prove general translation soundness, actual Rust refinement, backend correspondence, owner-frozen release or host authority."
+        ]
+      }]
     }
   ]
 }

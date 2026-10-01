@@ -39,18 +39,6 @@
  (if (i32.gt_u (i32.mul (global.get $sp) (i32.const 16)) (local.get $operands))
   (then (call $quota (i32.const 4))))
  (global.get $failure))
-(func $op_emit (local $text i32)
- (local.set $text (i32.wrap_i64 (call $pop_kind (i32.const 11))))
- (if (global.get $failure) (then (return)))
- ;; A native host throw also leaves the session poisoned. Successful return is
- ;; the only place this provisional host-call failure may be cleared.
- (global.set $failure (i32.const 5))
- (if (i32.eqz (call $host_emit (call $x (local.get $text)) (call $y (local.get $text))))
-  (then (global.set $failure (i32.const 0)))))
-(func $op_abort
- (if (global.get $failure) (then (return)))
- (call $fail (i32.const 6))
- (drop (call $host_abort)))
 (func (export "push_i64") (param $value i64) (result i32)
  (call $push_i64 (local.get $value)) (global.get $failure))
 (func (export "push_bool") (param $value i32) (result i32)

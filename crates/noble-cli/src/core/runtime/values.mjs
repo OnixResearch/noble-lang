@@ -52,8 +52,8 @@ function readValue(engine, runtime, kind, value, depth) {
     if (kind === 4) return { type: 'Program', interface: {
       stack_in: readSignature(engine, runtime, runtime.cell_y(handle)),
       stack_out: readSignature(engine, runtime, runtime.cell_z(handle)),
-      effects: [0, 1].filter(bit => Number(runtime.cell_payload(handle)) & (1 << bit))
-        .map(bit => bit === 0 ? 'test.emit' : 'test.abort'),
+      effects: [0, 1, 2].filter(bit => Number(runtime.cell_payload(handle)) & (1 << bit))
+        .map(bit => ['test.emit', 'test.abort', 'test.clock'][bit]),
     }, ...readRecipe(engine, runtime, runtime.cell_c(handle), depth + 1) };
     if (kind === 5) return { type: 'Pair', value: [readBoxed(engine, runtime, runtime.cell_a(handle), depth + 1), readBoxed(engine, runtime, runtime.cell_b(handle), depth + 1)] };
     if (kind === 6 || kind === 7) {
@@ -142,7 +142,7 @@ function readRecipe(engine, runtime, root, depth) {
         ...readBoxed(engine, runtime, child, depth + 1),
         schema: readSignature(engine, runtime, runtime.cell_y(handle)),
       } });
-      else if (atom >= 26 && atom <= 31 && engine.profile !== 'Declared-Modules-v1') {
+      else if (atom >= 26 && atom <= 32 && engine.profile !== 'Declared-Modules-v1') {
         fail('nominal or bound operation recipe is outside Core-Bootstrap');
       }
       else if (atom >= 26 && atom <= 30) result.push({ invoke: {
@@ -153,14 +153,17 @@ function readRecipe(engine, runtime, root, depth) {
       else if (atom === 31) result.push({ invoke: {
         operation: 'test.emit', adapter_slot: integer(Number(value), 63, 'adapter slot'),
       } });
+      else if (atom === 32) result.push({ invoke: {
+        operation: 'test.clock', adapter_slot: integer(Number(value), 63, 'adapter slot'),
+      } });
       else fail(`unsupported recipe atom: ${atom}`);
-      if (atom === 2 || atom === 15 || atom >= 26 && atom <= 31) {
+      if (atom === 2 || atom === 15 || atom >= 26 && atom <= 32) {
         witnesses.push({
           node: result.length - 1,
           stack_in: readSignature(engine, runtime, runtime.cell_y(handle)),
           stack_out: readSignature(engine, runtime, runtime.cell_z(handle)),
-          effects: [0, 1].filter(bit => runtime.cell_w(handle) & (1 << bit))
-            .map(bit => bit === 0 ? 'test.emit' : 'test.abort'),
+          effects: [0, 1, 2].filter(bit => runtime.cell_w(handle) & (1 << bit))
+            .map(bit => ['test.emit', 'test.abort', 'test.clock'][bit]),
         });
       }
     }

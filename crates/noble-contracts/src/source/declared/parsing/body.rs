@@ -8,23 +8,37 @@ pub(super) fn parse<'a>(
 ) -> Result<(super::Cursor<'a>, super::Member), crate::Diagnostic> {
     let span = cursor.span;
     let start = attempt!(crate::offset(token.span.start, span));
-    let (cursor, _) = attempt!(cursor.ident());
-    let cursor = attempt!(open_definition(cursor));
+    let (cursor, name) = attempt!(cursor.ident());
+    let (cursor, opening) = attempt!(open_definition(cursor));
     let (cursor, end) = attempt!(definition_end(cursor, limits));
+    let end_span = attempt!(crate::index(end, span));
     Ok((
         cursor,
-        super::Member::Definition(input_bytes[start..end].to_vec()),
+        super::Member::Definition {
+            name,
+            bytes: input_bytes[start..end].to_vec(),
+            span: crate::Span { start: token.span.start, end: end_span },
+            body_span: crate::Span { start: opening.start, end: end_span },
+        },
     ))
 }
 
-fn open_definition(cursor: super::Cursor<'_>) -> Result<super::Cursor<'_>, crate::Diagnostic> {
-    if !super::open_at(cursor.tokens, cursor.at) {
+fn open_definition(
+    cursor: super::Cursor<'_>,
+) -> Result<(super::Cursor<'_>, crate::Span), crate::Diagnostic> {
+    let Some(token) = cursor.tokens.get(cursor.at) else {
+        return Err(super::parse_diagnostic(
+            cursor.span,
+            "definition body must be bracketed",
+        ));
+    };
+    if !matches!(&token.kind, crate::source::lexer::TokenKind::Open) {
         return Err(super::parse_diagnostic(
             cursor.span,
             "definition body must be bracketed",
         ));
     }
-    Ok(cursor)
+    Ok((cursor, token.span))
 }
 #[expect(
     tigerstyle::assertion_density,

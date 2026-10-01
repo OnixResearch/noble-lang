@@ -207,6 +207,13 @@ pub enum Ty {
     /// Resolved nominal identity with its exact opaque representation or two
     /// ordered variant payloads. The descriptor is checked against `Env`.
     Nominal(NominalTypeId, alloc::boxed::Box<NominalShape>),
+    /// A two-parameter variant family, its ordered arguments and its
+    /// independently checked canonical descriptor.
+    GenericNominal(
+        NominalTypeId,
+        alloc::boxed::Box<[Ty; 2]>,
+        alloc::boxed::Box<NominalShape>,
+    ),
 }
 
 impl Ty {

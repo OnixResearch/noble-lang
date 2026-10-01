@@ -28,6 +28,30 @@ impl<'a> super::build::State<'a> {
                 }
                 super::Term::Nominal(*id)
             }
+            noble_kernel::types::Ty::GenericNominal(id, arguments, shape) => {
+                let Some(declaration) = arena.generic_nominals.iter().find(|decl| decl.id == *id)
+                else {
+                    return Err(crate::invalid(span, "unregistered generic nominal family"));
+                };
+                let expected = noble_kernel::types::NominalShape::Variant(
+                    alloc::boxed::Box::new(
+                        arguments[usize::from(declaration.payload_params[0])].clone(),
+                    ),
+                    alloc::boxed::Box::new(
+                        arguments[usize::from(declaration.payload_params[1])].clone(),
+                    ),
+                );
+                if **shape != expected {
+                    return Err(crate::invalid(
+                        span,
+                        "changed generic nominal representation",
+                    ));
+                }
+                self.steps.push(super::build::Step::GenericNominal(*id));
+                self.steps.push(super::build::Step::Ty(&arguments[1]));
+                self.steps.push(super::build::Step::Ty(&arguments[0]));
+                return Ok(self);
+            }
             noble_kernel::types::Ty::Pair(a, b) | noble_kernel::types::Ty::Sum(a, b) => {
                 self.steps
                     .push(if matches!(ty, noble_kernel::types::Ty::Pair(_, _)) {
@@ -111,6 +135,17 @@ impl<'a> super::build::State<'a> {
                     ));
                 }
                 super::Term::Nominal(*id)
+            }
+            noble_kernel::shapes::Pattern::GenericNominal(id, arguments, payload_params) => {
+                if !arena.generic_nominals.iter().any(|declaration| {
+                    declaration.id == *id && declaration.payload_params == *payload_params
+                }) {
+                    return Err(crate::invalid(span, "unregistered generic nominal pattern"));
+                }
+                self.steps.push(super::build::Step::GenericNominal(*id));
+                self.steps.push(super::build::Step::Pattern(&arguments[1]));
+                self.steps.push(super::build::Step::Pattern(&arguments[0]));
+                return Ok(self);
             }
             noble_kernel::shapes::Pattern::Pair(a, b)
             | noble_kernel::shapes::Pattern::Sum(a, b) => {

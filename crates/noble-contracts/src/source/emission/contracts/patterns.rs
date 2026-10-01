@@ -4,6 +4,7 @@ enum Step {
     Sum,
     List,
     Program(usize),
+    GenericNominal(noble_kernel::types::NominalTypeId, [u8; 2]),
 }
 
 struct Traversal {
@@ -18,6 +19,7 @@ struct Traversal {
 )]
 pub(super) fn convert(
     root: &noble_kernel::types::Ty,
+    environment: &noble_kernel::contracts::Env,
     span: crate::Span,
     meter: &mut crate::Meter,
 ) -> Result<noble_kernel::shapes::Pattern, crate::Diagnostic> {
@@ -30,7 +32,7 @@ pub(super) fn convert(
         .push(Step::Visit(crate::source::preflight::PathStep::Root, 0));
     let mut failure = None;
     while let Some(step) = walk.pending.pop() {
-        if let Err(problem) = walk.step(step, root, span, meter) {
+        if let Err(problem) = walk.step(step, root, environment, span, meter) {
             failure = Some(problem);
             break;
         }
@@ -53,6 +55,7 @@ impl Traversal {
         &mut self,
         step: Step,
         root: &noble_kernel::types::Ty,
+        environment: &noble_kernel::contracts::Env,
         span: crate::Span,
         meter: &mut crate::Meter,
     ) -> Result<(), crate::Diagnostic> {
@@ -64,7 +67,7 @@ impl Traversal {
                 let ty = attempt!(crate::source::preflight::paths::locate(
                     root, &self.path, span
                 ));
-                match self.visit(ty, depth) {
+                match attempt!(self.visit(ty, environment, depth, span)) {
                     Some(value) => value,
                     None => return Ok(()),
                 }
@@ -83,8 +86,10 @@ impl Traversal {
     fn visit(
         &mut self,
         ty: &noble_kernel::types::Ty,
+        environment: &noble_kernel::contracts::Env,
         depth: usize,
-    ) -> Option<noble_kernel::shapes::Pattern> {
+        span: crate::Span,
+    ) -> Result<Option<noble_kernel::shapes::Pattern>, crate::Diagnostic> {
         let next_depth = depth.saturating_add(1);
         let value = match ty {
             noble_kernel::types::Ty::Unit => noble_kernel::shapes::Pattern::Unit,
@@ -100,6 +105,26 @@ impl Traversal {
             }
             noble_kernel::types::Ty::Nominal(id, shape) => {
                 noble_kernel::shapes::Pattern::Nominal(*id, shape.clone())
+            }
+            noble_kernel::types::Ty::GenericNominal(id, _, _) => {
+                let Some(decl) = environment.generic_variant(*id) else {
+                    return Err(crate::invalid(span, "unknown generic nominal family"));
+                };
+                if !environment.valid_generic_instance(ty) {
+                    return Err(crate::invalid(span, "invalid generic nominal instance"));
+                }
+                self.pending.reserve(3);
+                self.pending
+                    .push(Step::GenericNominal(*id, decl.payload_params));
+                self.pending.push(Step::Visit(
+                    crate::source::preflight::PathStep::GenericArgument(1),
+                    next_depth,
+                ));
+                self.pending.push(Step::Visit(
+                    crate::source::preflight::PathStep::GenericArgument(0),
+                    next_depth,
+                ));
+                return Ok(None);
             }
             noble_kernel::types::Ty::Pair(_, _) | noble_kernel::types::Ty::Sum(_, _) => {
                 self.pending.reserve(3);
@@ -117,7 +142,7 @@ impl Traversal {
                     crate::source::preflight::PathStep::Left,
                     next_depth,
                 ));
-                return None;
+                return Ok(None);
             }
             noble_kernel::types::Ty::List(_) => {
                 self.pending.reserve(2);
@@ -126,17 +151,17 @@ impl Traversal {
                     crate::source::preflight::PathStep::Item,
                     next_depth,
                 ));
-                return None;
+                return Ok(None);
             }
             noble_kernel::types::Ty::Program(input, output, _) => {
                 self.pending.reserve(1);
                 self.pending.push(Step::Program(depth));
                 self.schedule(output.len(), true);
                 self.schedule(input.len(), false);
-                return None;
+                return Ok(None);
             }
         };
-        Some(value)
+        Ok(Some(value))
     }
 
     fn schedule(&mut self, count: usize, is_output: bool) {
@@ -184,6 +209,15 @@ impl Traversal {
             Step::List => Ok(noble_kernel::shapes::Pattern::List(alloc::boxed::Box::new(
                 attempt!(self.take(span)),
             ))),
+            Step::GenericNominal(id, payload_params) => {
+                let second = attempt!(self.take(span));
+                let first = attempt!(self.take(span));
+                Ok(noble_kernel::shapes::Pattern::GenericNominal(
+                    id,
+                    alloc::boxed::Box::new([first, second]),
+                    payload_params,
+                ))
+            }
             Step::Program(depth) => self.program(root, depth, span, meter),
             Step::Visit(_, _) => Err(crate::internal(span)),
         }

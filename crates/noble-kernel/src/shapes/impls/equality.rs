@@ -78,6 +78,16 @@ fn compare(
             crate::shapes::Pattern::Nominal(first_id, first_shape),
             crate::shapes::Pattern::Nominal(second_id, second_shape),
         ) => first_id == second_id && first_shape == second_shape,
+        (
+            crate::shapes::Pattern::GenericNominal(first_id, first_args, first_mapping),
+            crate::shapes::Pattern::GenericNominal(second_id, second_args, second_mapping),
+        ) if first_id == second_id && first_mapping == second_mapping => {
+            let [first_left, first_right] = *first_args;
+            let [second_left, second_right] = *second_args;
+            work.push((first_left, second_left));
+            work.push((first_right, second_right));
+            true
+        }
         (crate::shapes::Pattern::Var(first_var), crate::shapes::Pattern::Var(second_var)) => {
             first_var == second_var
         }

@@ -69,9 +69,9 @@ Each compiler-derived production subject is reviewed as one of three categories.
 Bodies additionally carry a refinement status: `proved` or `open`.
 Only bodies enter the extraction, modeling, exception, proof, and open counts.
 
-The complete 32-unit current observation contains 2,595 authored-body paths,
-2,131 generated paths and 1,090 structural paths: 5,816 unique production
-paths covering 5,926 compiler item facts. A path shared by an authored body and
+The last compiler-derived DXM1-reviewed 32-unit observation contains 2,595
+authored-body paths, 2,131 generated paths and 1,090 structural paths: 5,816
+unique production paths covering 5,926 compiler item facts. A path shared by an authored body and
 generated items retains the body obligation. The difference between item and
 path counts also includes
 compiler observations of different item kinds under one qualified path.

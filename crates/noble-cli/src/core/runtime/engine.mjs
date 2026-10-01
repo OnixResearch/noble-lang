@@ -1,3 +1,14 @@
+// A raw WebAssembly.Module is not an admission capability. Only the selected
+// compiler path and the byte-exact artifact path may cross into install().
+const installationCapability = Symbol('compiler-validated module');
+
+const artifactEffects = new Map([
+  ['test_emit', 'test.emit'],
+  ['test_abort', 'test.abort'],
+  ['test_emit_bound', 'test.emit'],
+  ['test_clock_bound', 'test.clock'],
+]);
+
 export class CoreEngine {
   constructor(selection, abi, { optimized = false, artifacts = null, bindings = [], declared_modules = false, declared_extension = null } = {}) {
     this.selection = selection;
@@ -79,10 +90,112 @@ export class CoreEngine {
     const module = new WebAssembly.Module(bytes);
     this.compilations += 1;
     return this.install(module, { submission, wasm_sha256: sha256(bytes), source_sha256: sha256(source),
-      wat_sha256: sha256(wat), optimized: this.optimized, compilations: this.compilations, stem });
+      wat_sha256: sha256(wat), optimized: this.optimized, compilations: this.compilations, stem },
+    installationCapability);
   }
 
-  install(module, record = {}) {
+  // Candidate claims and source paths are data. Only the CLI invoker selects
+  // source and allowed effects; neither can be inherited from the manifest.
+  admit(bytes, wat, source, claimedEffects, allowedEffects, sourceSelected) {
+    const refusal = (outcome, diagnostic, actualImports = []) => ({
+      schema: 'noble-artifact-admission/v1', profile: 'Wasm-Draft',
+      stage: 'admission', outcome, diagnostic, actual_imports: actualImports,
+      claimed_effects: claimedEffects, allowed_effects: allowedEffects,
+      guest_requests: 0, protected_operations: 0,
+    });
+    if (this.pending || this.compilations || this.poisoned) {
+      return refusal('stale-session-reject', 'artifact admission requires a fresh engine');
+    }
+    if (!Buffer.isBuffer(bytes) || bytes.length > MAX_FRAME || !Array.isArray(claimedEffects)
+      || !Array.isArray(allowedEffects) || !Buffer.isBuffer(wat) || !Buffer.isBuffer(source)) {
+      return refusal('invalid-artifact', 'invalid bounded admission request');
+    }
+    let module;
+    try {
+      rejectStartSection(bytes);
+      module = new WebAssembly.Module(bytes);
+    } catch (error) {
+      return refusal('invalid-artifact', String(error));
+    }
+    const imports = WebAssembly.Module.imports(module);
+    const actual = new Set();
+    const names = new Set();
+    const globals = new Set(this.abi.globals.map(global => global.name));
+    for (const entry of imports) {
+      const name = `${entry.module}.${entry.name}:${entry.kind}`;
+      if (names.has(name)) return refusal('invalid-artifact', 'duplicate module import');
+      names.add(name);
+      if (entry.module !== this.abi.module) {
+        return refusal('invalid-artifact', 'unknown module import');
+      }
+      if (entry.kind === 'function') {
+        const effect = artifactEffects.get(entry.name);
+        if (!effect || !this.hostFunctions.some(host => host.name === entry.name)
+          || actual.has(effect)) {
+          return refusal('invalid-artifact', 'unknown or ambiguous function import');
+        }
+        actual.add(effect);
+      } else if (!(entry.kind === 'memory' && entry.name === this.abi.memory.name
+        || entry.kind === 'table' && entry.name === this.abi.table.name
+        || entry.kind === 'global' && globals.has(entry.name))) {
+        return refusal('invalid-artifact', 'unknown non-function import');
+      }
+    }
+    const actualImports = [...actual].sort();
+    const declared = new Set(claimedEffects);
+    if (declared.size !== claimedEffects.length
+      || claimedEffects.some(effect => !['test.emit', 'test.abort', 'test.clock'].includes(effect))
+      || actualImports.length !== declared.size
+      || actualImports.some(effect => !declared.has(effect))) {
+      return refusal('effect-manifest-reject', 'candidate effects do not match validated binary imports', actualImports);
+    }
+    const allowed = new Set(allowedEffects);
+    if (allowed.size !== allowedEffects.length
+      || allowedEffects.some(effect => !['test.emit', 'test.abort', 'test.clock'].includes(effect))
+      || actualImports.some(effect => !allowed.has(effect))) {
+      return refusal('effect-policy-reject', 'host did not allow the required effects', actualImports);
+    }
+    if (!sourceSelected || !wat.length || !source.length || wat.length > MAX_FRAME || source.length > 65536) {
+      return refusal('correspondence-reject', 'host-selected source is required', actualImports);
+    }
+    const stem = 'admitted-module';
+    this.save(`${stem}.wat`, wat);
+    this.save(`${stem}.noble`, source);
+    const watPath = path.join(this.directory, `${stem}.wat`);
+    let wasmPath = path.join(this.directory, `${stem}.wasm`);
+    this.tool('wasm_tools', ['parse', watPath, '-o', wasmPath], `${stem}-assemble`);
+    this.tool('wasm_tools', ['validate', wasmPath], `${stem}-validate`);
+    if (this.optimized) {
+      const optimized = path.join(this.directory, `${stem}-optimized.wasm`);
+      this.tool('wasm_opt', [wasmPath, ...this.selection.optimizer_flags, '-o', optimized], `${stem}-optimize`);
+      wasmPath = optimized;
+      this.tool('wasm_tools', ['validate', wasmPath], `${stem}-validate-optimized`);
+    }
+    const rebuilt = fs.readFileSync(wasmPath);
+    if (rebuilt.length > MAX_FRAME || !bytes.equals(rebuilt)) {
+      return refusal('correspondence-reject', 'final artifact bytes differ from independent host-selected compilation', actualImports);
+    }
+    // All candidate checks precede instantiation. Even a module with no start
+    // function may mutate imported memory/table through active segments.
+    // The admitted bytes are independently rebuilt and this engine is fresh.
+    rejectStartSection(bytes);
+    this.compilations += 1;
+    const ready = this.install(module, {
+      submission: 1, wasm_sha256: sha256(bytes), source_sha256: sha256(source),
+      wat_sha256: sha256(wat), optimized: this.optimized, compilations: this.compilations,
+      actual_imports: actualImports, claimed_effects: claimedEffects,
+      allowed_effects: allowedEffects, correspondence: 'byte-exact',
+    }, installationCapability);
+    if (ready.outcome !== 'ready') return ready;
+    return { ...this.execute(), admission: {
+      actual_imports: actualImports, claimed_effects: claimedEffects,
+      allowed_effects: allowedEffects, correspondence: 'byte-exact',
+      optimized: this.optimized,
+    } };
+  }
+
+  install(module, record = {}, capability) {
+    if (capability !== installationCapability) fail('raw module installation is not artifact admission');
     if (this.pending || this.poisoned) fail('session is pending or poisoned');
     const imports = WebAssembly.Module.imports(module);
     const globals = new Set(this.abi.globals.map(global => global.name));
@@ -114,7 +227,8 @@ export class CoreEngine {
     this.pending = { instance, module, record: { ...record, imports }, traceStart: requests };
     return { schema: 'noble-core-report/v1', profile: this.profile, backend: 'managed-linear-memory',
       stage: 'wasm', outcome: 'ready', module: this.pending.record, guest_requests: 0, protected_operations: 0,
-      ...(this.profile === 'Declared-Modules-v1' ? { host_requests: 0, acquired_authority: false, ambient_fallback_calls: 0 } : {}),
+      ...(this.profile === 'Declared-Modules-v1' ? { host_requests: 0, acquired_authority: false,
+        ambient_fallback_calls: 0, real_host_evidence: false, real_host_fallback_calls: 0 } : {}),
       candidate_prepare_requests: 0 };
   }
 
@@ -180,11 +294,32 @@ export class CoreEngine {
           ? { request_trace_terminal: { ...this.boundTraceTerminal,
             denied_requests: this.boundTraceExhausted - traceExhaustedStart } } : {}),
         adapter_invocations: adapterInvocations,
+        substitutions: adapterInvocations.map(binding => ({
+          module: binding.module, version: binding.version,
+          operation: this.boundAdapters.get(binding.slot).operation,
+          adapter_identity: binding.adapter_identity, slot: binding.slot,
+        })),
+        adapter_versions: adapterInvocations.map(binding => ({
+          module: binding.module, version: binding.version,
+          adapter_identity: binding.adapter_identity,
+        })),
+        scripted_inputs: Array.from(this.boundAdapters.values()).filter(binding =>
+          binding.operation === 'test.clock').map(binding => ({
+            module: binding.module, version: binding.version,
+            adapter_identity: binding.adapter, operation: binding.operation,
+            values: binding.script,
+          })),
+        declared_effect_preserved: boundRequests.every(request => {
+          const binding = this.boundAdapters.get(request.slot);
+          return binding && request.effect === binding.operation;
+        }),
         ambient_fallback_calls: this.ambientFallbackCalls - fallbackStart,
+        real_host_fallback_calls: 0,
+        real_host_evidence: false,
         acquired_authority: false,
       } : {}),
       protected_operations: this.protectedOperations - protectedStart,
-      candidate_prepare_requests: 0, native_trap: nativeTrap,
+      candidate_prepare_requests: 0, runtime_prover_calls: 0, native_trap: nativeTrap,
       session_state: this.poisoned ? 'terminated-after-runtime-failure' : 'retained',
       metrics, module: record };
     if (record.stem) this.save(`${record.stem}-execution.json`, report);

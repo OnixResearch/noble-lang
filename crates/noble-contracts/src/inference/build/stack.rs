@@ -61,7 +61,8 @@ impl super::super::Arena {
                 | noble_kernel::shapes::Pattern::Program(_, _, _)
                 | noble_kernel::shapes::Pattern::Var(_)
                 | noble_kernel::shapes::Pattern::Resource(_)
-                | noble_kernel::shapes::Pattern::Nominal(_, _),
+                | noble_kernel::shapes::Pattern::Nominal(_, _)
+                | noble_kernel::shapes::Pattern::GenericNominal(_, _, _),
             )
             | None => attempt!(self.add(super::super::Term::Empty, span, meter)),
         };

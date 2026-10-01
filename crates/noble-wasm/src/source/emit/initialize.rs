@@ -41,6 +41,7 @@ fn atom(
             (30, i64::from_le_bytes(module.to_le_bytes()), None, ordinal)
         }
         super::super::plan::Action::EmitBound(slot) => (31, i64::from(slot), None, 0),
+        super::super::plan::Action::ClockBound(slot) => (32, i64::from(slot), None, 0),
         super::super::plan::Action::Text(address, length) => {
             return text_atom(out, (address, length), witness);
         }
@@ -54,7 +55,7 @@ fn atom(
     }
     attempt!(out.append(b" (i32.const 0) (i32.const 0) "));
     attempt!(out.i32(tag));
-    if tag == 2 || tag == 15 || tag.wrapping_sub(26) <= 5 {
+    if tag == 2 || tag == 15 || tag.wrapping_sub(26) <= 6 {
         attempt!(out.append(b" "));
         attempt!(out.i32(operation.input));
         attempt!(out.append(b" "));

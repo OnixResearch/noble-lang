@@ -22,6 +22,7 @@ const MAX_VERSION_BYTES: usize = 32;
 enum RawType {
     Bool,
     S64,
+    U64,
     String,
     Bytes,
     ResultS64String,
@@ -77,10 +78,11 @@ pub(super) fn parse(
     wit: &[u8],
     selected: &str,
     limits: crate::Limits,
+    checked_u64: bool,
 ) -> Result<super::World, super::Error> {
     let mut parser = attempt!(lexer::cursor(wit, limits));
     let package = attempt!(parser.package());
-    resolve::world(package, wit, selected, limits)
+    resolve::world(package, wit, selected, limits, checked_u64)
 }
 
 impl Cursor<'_> {
