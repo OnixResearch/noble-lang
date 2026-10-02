@@ -115,7 +115,7 @@ fn execute(
             &wit, selected_world, crate::core::SOURCE_LIMITS)
     }.map_err(report::diagnostic));
     match mode {
-        "bindings" if arguments.len() == 4 => Ok(report::bindings(&world)),
+        "bindings" if arguments.len() == 4 => report::bindings(&world),
         "check-effect" if arguments.len() >= 5 && arguments.len() <= 69 => {
             let word = attempt!(text(arguments, 4));
             let claimed = attempt!(arguments[5..]

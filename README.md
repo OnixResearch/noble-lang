@@ -25,6 +25,40 @@ This is the actual [increment fixture](verification/mc1/increment.noble-contract
 
 **Octet adoption:** [the boundary-contract map](specs/OCTET-ADOPTION.md) adds typed authorization/receipt rules and explicit Rust architecture gates. Octet evidence stays separate from Noble semantic proofs.
 
+**WIP STRICT development note (not acceptance):** This review branch builds on
+the earlier `review/strict-contracts-unverified-20261001` commit `22771b58`
+and carries strict source fixes in `noble-contracts` and `noble-cli`, including
+the four original contracts findings: three recursive walks are iterative,
+and proof publication charges each obligation's dependencies before one
+exact-size copy. The earlier
+exploratory Octet snapshot
+(`/home/brittonr/.cache/octet-final-integration-tmp/noble-artifacts-final`) is
+historical and tainted, not a selected-policy receipt: an unselected live Octet
+build with test-context, ambient-clock, physically confined
+diagnostic-normalization and const-arithmetic fixes ran the full `--workspace` check
+(`--all-targets --all-features --offline --keep-going`) under a scratch
+40-unit/32 MiB-shard policy. Cargo exited 0 with zero source-lint denies, but
+the status is `integration-failure`: 2,531 function-address errors (1,778
+without a reviewed identity baseline, 745 unsupported macro contexts, 8
+duplicate locators), and architecture collection is incomplete (36 of 39
+expected units observed, 3 saturated shards, six coverage/shard issues). A
+newer independent disposable-copy run with Octet's v2 function-address
+canonicalizer is recorded at
+`/home/brittonr/.cache/octet-canonical-noble-Y8m5iA/artifacts`. It used the
+same unselected 40-unit/32 MiB-shard scratch policy and full workspace Cargo
+scope: Octet exited 2 (`integration-failure`), Cargo exited 0, and source-lint
+denies remained zero. Its 2,530 function-address errors are 1,778 missing
+reviewed identities, 744 unsupported macro contexts, and 8 duplicate locators.
+Architecture remains incomplete (36 of 39 expected units observed, 3 saturated
+shards, six coverage/shard issues). Neither exploratory result is a PASS or an
+approved policy receipt. The selected gate remains blocked
+by the 34-unit architecture cap, nine unapproved tool SHA rebindings and
+production lock/vendor divergence; see the
+[Octet adoption map](specs/OCTET-ADOPTION.md). The
+[MPG thesis](https://mpg.is/thesis.html) and
+[OllamaHoles](https://github.com/Tritlo/OllamaHoles) are unapproved editor
+hole-fit research pointers, not implemented or accepted functionality.
+
 ## Running Core-Bootstrap source
 
 `noble run` resolves and infers actual source, constructs an untrusted candidate,
@@ -592,7 +626,7 @@ Failed proof checking is not disproof. Missing tools, wrong Lean pins, and unava
 
 - The production `no_std` [frontend](crates/noble-contracts/src/lib.rs) accepts `(contract 1 ...)` and exports contract IR revision 1. Ordinary typing comes from the inherited `noble-kernel` acceptance path, not witness inference. Export consumes an immutable `Prepared` containing that accepted candidate and resolved claim.
 - The pure fragment supports explicit initial/final observations, universally quantified ghost parameters, total logical definitions, scalar/structural predicates, and higher-order `maps` claims. Ghost values cannot supply executable captures. `I64` addition, subtraction, and multiplication wrap at 64 bits; ordering is signed. Text literals, observable `Program`/`Syntax` equality, host/resource contracts, and total-correctness or prefix-safety claims are unsupported. See the [versioned grammar, logical partiality, and limits](.cairn/specs/program-contracts/spec.md#81-delivered-mc1-source-and-ir).
-- Pure proof checking validates forms, parses and rewrites typed code/propositions, infers and checks proof terms, and emits Lean text with metered iterative walks; substitution is charged before expansion, and excess work or size returns `Exhausted`. Its owned meter carries work state even through a failed child so that introduction wrapper charges preserve diagnostic precedence. Publication charges copied transitive proof dependencies in pre-order, uses one bounded scratch buffer instead of reserving each node's fan-out, and grows checked output only after the obligation has consumed its node charge. This is **not** an end-to-end deep-stack guarantee: derived drop, clone, and equality on the checker's boxed Code/Proposition ASTs remain recursive. The `.noble` source lexer has a hard logical nesting cap of 64 independent of caller Limits; directly constructed public Form/ProofBatch values with raised limits have overflowed on deep AST drop, while deep Code clone or equality can overflow sooner. Public Form values and the editor also need separate lifecycle/stack review. A scratch-only, tainted Octet diagnostic still reports four unresolved strict keys: recursive traversal in `source/declared/signatures.rs`, `source/editor.rs`, and `source/declared/parsing/logic.rs`, plus loop allocation in `source/declared/state/prepare.rs`. Resolving those designs or changing the selected policy requires explicit owner review; this diagnostic is not selected assurance.
+- Pure proof checking validates forms, parses and rewrites typed code/propositions, infers and checks proof terms, and emits Lean text with metered iterative walks; substitution is charged before expansion, and excess work or size returns `Exhausted`. Its owned meter carries work state even through a failed child so that introduction wrapper charges preserve diagnostic precedence. Publication charges copied transitive proof dependencies in pre-order, uses one bounded scratch buffer instead of reserving each node's fan-out, and grows checked output only after the obligation has consumed its node charge. This is **not** an end-to-end deep-stack guarantee: derived drop, clone, and equality on the checker's boxed Code/Proposition ASTs remain recursive. The `.noble` source lexer has a hard logical nesting cap of 64 independent of caller Limits; directly constructed public Form/ProofBatch values with raised limits have overflowed on deep AST drop, while deep Code clone or equality can overflow sooner. Public Form values and the editor also need separate lifecycle/stack review. An October 1, 2026 pre-fix scratch-only, tainted Octet run recorded four STRICT keys in `source/declared/signatures.rs`, `source/editor.rs`, `source/declared/parsing/logic.rs`, and `source/declared/state/prepare.rs`. That historical finding predates the uncommitted source fixes described in the WIP STRICT development note above; the selected deterministic-core gate remains blocked by its 34-unit architecture cap, and neither exploratory run is selected assurance.
 - The substitution budget charges the input body, **not** each copy of an expanding Code argument. An adversarial 12,702-byte proof source has been measured to allocate 531,767 times and reach 12.7 MB of live heap before its invalid proof is rejected. Tightening that peak-resource behavior changes the existing ProofWork/refusal contract and requires separate review; the iterative walks do not solve it.
 - Strict [application/rule proofs](proofs/mc1/NobleContracts.lean) concern the reviewed pure normal-return model, including increment, composition, and a universally quantified runtime-capture family. They do not prove current invocation preconditions, successful resource-bounded execution, host behavior, or termination.
 - The separate [implementation correspondence lane](proofs/mc1/NobleContractImpl.lean) contains actual-source extraction, universal node/body projection preservation, and source-bound full preparation/export equations for the increment, composed, capture-family, structural, syntax, and signed-wrap fixtures. Those full-source equations use a separately reported native-evaluation assumption. They are **not universal frontend/compiler correctness**, and their modules are not imported by the strict application library.

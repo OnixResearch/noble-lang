@@ -32,8 +32,10 @@ fn direct_contract_uses_unique_lexical_origin_not_kernel_slot() -> Result<(), St
     assert_eq!(subject.source_dependencies[0].full_source.as_slice(), SOURCE);
     let root = subject.accepted_submission.body.candidate.body.first()
         .ok_or("missing selected subject invocation")?;
+    let root = usize::try_from(root.0)
+        .map_err(|_| "selected subject node exceeds host address space")?;
     let selected = subject.accepted_submission.body.candidate.nodes
-        .get(root.0 as usize).ok_or("missing selected subject node")?;
+        .get(root).ok_or("missing selected subject node")?;
     let noble_kernel::untrusted::Node::Invocation { def, .. } = selected else {
         return Err("subject is not a kernel-checked named invocation".into());
     };

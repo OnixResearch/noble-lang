@@ -558,9 +558,13 @@ fn callback_cannot_publish_invalid_source_or_substituted_claim() -> Result<(), S
 #[test]
 fn retained_proof_dependency_budget_rejects_atomically() -> Result<(), String> {
     let source = b"module logic@1 [ proof 1 base : [ (Pi (x I64) (Eq I64 x x)) ] [ (intro (x I64) (refl x)) ] proof 1 derived : [ (Pi (x I64) (Eq I64 x x)) ] [ (intro (x I64) (apply (use base) x)) ] export derived ]";
-    let exact_bytes = u32::try_from(source.len() * 3)
+    let replicated = source.len().checked_mul(3)
+        .ok_or("proof dependency fixture overflows host byte count")?;
+    let exact_bytes = u32::try_from(replicated)
         .map_err(|_| "proof dependency fixture exceeds u32 byte limit")?;
-    let limits = noble_contracts::Limits { bytes: exact_bytes - 1, ..super::LIMITS };
+    let short_bytes = exact_bytes.checked_sub(1)
+        .ok_or("proof dependency fixture has no byte below its exact budget")?;
+    let limits = noble_contracts::Limits { bytes: short_bytes, ..super::LIMITS };
     let mut session = noble_contracts::source::ModuleSession::new(&[])
         .map_err(|error| format!("{error:?}"))?;
     session = super::commit(session, b"module anchor@1 [ export alive def alive [ 1 ] ]")?;
@@ -599,7 +603,8 @@ fn retained_proof_dependency_budget_rejects_atomically() -> Result<(), String> {
         Ok(checked)
     });
     result.map_err(|error| format!("{error:?}"))?;
-    assert_eq!(published.generation(), prior + 1);
+    let next_generation = prior.checked_add(1).ok_or("fixture generation cannot advance")?;
+    assert_eq!(published.generation(), next_generation);
     let usable = published.prepare(b"import logic@1 as accepted", &[], super::LIMITS)
         .map_err(|error| format!("{error:?}"))?;
     assert!(usable.proof_obligations().is_none());
@@ -643,11 +648,15 @@ fn imported_proof_dependency_budget_counts_each_obligation() -> Result<(), Strin
         return Err("expected one deduplicated imported proof".into());
     };
     assert!(!dependency.source.is_empty(), "imported proof has no retained source");
-    let exact_bytes = u32::try_from(dependency.source.len() * batch.obligations.len())
+    let replicated = dependency.source.len().checked_mul(batch.obligations.len())
+        .ok_or("imported proof fixture overflows host byte count")?;
+    let exact_bytes = u32::try_from(replicated)
         .map_err(|_| "imported proof fixture exceeds u32 byte limit")?;
     let exact = noble_contracts::Limits { bytes: exact_bytes, ..super::LIMITS };
     imported.prepare(dependent, &[], exact).map_err(|error| format!("{error:?}"))?;
-    let short = noble_contracts::Limits { bytes: exact_bytes - 1, ..exact };
+    let short_bytes = exact_bytes.checked_sub(1)
+        .ok_or("imported proof fixture has no byte below its exact budget")?;
+    let short = noble_contracts::Limits { bytes: short_bytes, ..exact };
     let refused = imported.prepare(dependent, &[], short)
         .expect_err("one byte below the replicated dependency must fail");
     assert_eq!(refused.stage(), noble_contracts::source::Stage::Check);
@@ -730,7 +739,8 @@ fn direct_mc1_contract_rejects_inconsistent_public_binding_and_recipe() -> Resul
     let mut changed = contract.clone();
     let at = changed.subject.module_source.windows(b"def increment [ 1 + ]".len())
         .position(|window|window == b"def increment [ 1 + ]").ok_or("missing source occurrence")?;
-    changed.subject.module_source[at+b"def increment [ ".len()] = b'2';
+    let literal = at.checked_add(b"def increment [ ".len()).ok_or("source literal offset overflows")?;
+    changed.subject.module_source[literal] = b'2';
     changed.subject.definition_source = b"def increment [ 2 + ]".to_vec();
     changed.subject.source_dependencies[0].full_source = changed.subject.module_source.clone();
     assert!(prepare_contract(&changed,super::LIMITS).is_err(),"source changed but accepted recipe stayed old");
@@ -753,7 +763,8 @@ fn direct_mc1_contract_rejects_inconsistent_public_binding_and_recipe() -> Resul
     let definition = changed.subject.accepted_submission.definitions.iter_mut()
         .find(|definition|definition.identity == changed.subject.definition_identity)
         .ok_or("missing accepted specialization")?;
-    let first = definition.body.candidate.body[0].0 as usize;
+    let first = usize::try_from(definition.body.candidate.body[0].0)
+        .map_err(|_| "accepted literal node exceeds host address space")?;
     let Node::Literal {lit,..} = &mut definition.body.candidate.nodes[first] else {
         return Err("missing literal".into());
     };
@@ -763,7 +774,8 @@ fn direct_mc1_contract_rejects_inconsistent_public_binding_and_recipe() -> Resul
     let definition = changed.subject.accepted_submission.definitions.iter_mut()
         .find(|definition|definition.identity == changed.subject.definition_identity)
         .ok_or("missing accepted specialization")?;
-    let first = definition.body.candidate.body[0].0 as usize;
+    let first = usize::try_from(definition.body.candidate.body[0].0)
+        .map_err(|_| "accepted literal node exceeds host address space")?;
     let Node::Literal {inst,..} = &mut definition.body.candidate.nodes[first] else {
         return Err("missing literal".into());
     };
@@ -773,7 +785,8 @@ fn direct_mc1_contract_rejects_inconsistent_public_binding_and_recipe() -> Resul
     let definition = changed.subject.accepted_submission.definitions.iter_mut()
         .find(|definition|definition.identity == changed.subject.definition_identity)
         .ok_or("missing accepted specialization")?;
-    let second = definition.body.candidate.body[1].0 as usize;
+    let second = usize::try_from(definition.body.candidate.body[1].0)
+        .map_err(|_| "accepted add node exceeds host address space")?;
     let Node::Invocation {inst,..} = &mut definition.body.candidate.nodes[second] else {
         return Err("missing add".into());
     };
@@ -792,7 +805,8 @@ fn direct_mc1_contract_rejects_inconsistent_public_binding_and_recipe() -> Resul
     definition.definition.0 += 1;
     assert!(prepare_contract(&changed,super::LIMITS).is_err(),"wrong specialization slot");
     let mut changed = contract.clone();
-    let root = changed.subject.accepted_submission.body.candidate.body[0].0 as usize;
+    let root = usize::try_from(changed.subject.accepted_submission.body.candidate.body[0].0)
+        .map_err(|_| "accepted root node exceeds host address space")?;
     let Node::Invocation {inst,..} = &mut changed.subject.accepted_submission.body.candidate.nodes[root] else {
         return Err("missing root invocation".into());
     };
@@ -978,7 +992,9 @@ fn local_named_proof_use_is_ordered_and_not_an_executable_word() -> Result<(), S
     let checked = noble_contracts::intrinsic::check_batch(batch, exact)
         .map_err(|error| format!("{error:?}"))?;
     assert_eq!(checked[0].claim, checked[1].claim);
-    let short = noble_contracts::Limits { bytes: exact.bytes - 1, ..exact };
+    let short_bytes = exact.bytes.checked_sub(1)
+        .ok_or("proof source has no byte below its exact budget")?;
+    let short = noble_contracts::Limits { bytes: short_bytes, ..exact };
     let refused = noble_contracts::intrinsic::check_batch(batch, short)
         .expect_err("one byte below retained source length must exhaust proof budget");
     assert_eq!(refused.kind, noble_contracts::DiagnosticKind::Exhausted);

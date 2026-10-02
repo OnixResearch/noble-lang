@@ -71,13 +71,14 @@ fn named_v2_rejects_partial_word_wrong_token_and_alias_rebind() -> Result<(),Str
     let mut partial = goal.clone();
     let span = partial.subject.named_uses[1].source_span
         .as_mut().ok_or("first original word span")?;
-    span.end = span.start + 1;
+    span.end = span.start.checked_add(1).ok_or("first original word span start overflows")?;
     assert!(intrinsic::prepare_named_contract(&partial,LIMITS).is_err(),
         "partial d is not the original d.step source word");
     let mut other_token = goal.clone();
     let original_body = other_token.subject.named_uses[0].body_span;
+    let bracket_end = original_body.start.checked_add(1).ok_or("original body span start overflows")?;
     other_token.subject.named_uses[1].source_span = Some(noble_contracts::Span {
-        start:original_body.start,end:original_body.start+1,
+        start:original_body.start,end:bracket_end,
     });
     assert!(intrinsic::prepare_named_contract(&other_token,LIMITS).is_err(),
         "nonempty bracket position is not the original caller word");
@@ -97,7 +98,8 @@ fn named_v2_rejects_partial_word_wrong_token_and_alias_rebind() -> Result<(),Str
     let exported = b"export step";
     let start = source.windows(exported.len()).position(|word|word == exported)
         .ok_or("original donor has explicit export")?;
-    source[start..start+exported.len()].fill(b' ');
+    let end = start.checked_add(exported.len()).ok_or("explicit export range overflows")?;
+    source[start..end].fill(b' ');
     assert!(intrinsic::prepare_named_contract(&hidden,LIMITS).is_err(),
         "a same-position hidden original step cannot become an imported callee");
     Ok(())
@@ -110,7 +112,7 @@ fn named_v2_rejects_wrong_inst_and_unreachable_graph() -> Result<(),String> {
     let selected = inst.subject.named_uses[0].definition;
     let body = &mut inst.subject.accepted_submission.definitions.iter_mut()
         .find(|definition|definition.definition == selected).ok_or("selected definition")?.body.candidate;
-    let at = body.body[0].0 as usize;
+    let at = usize::try_from(body.body[0].0).map_err(|_| "first call node exceeds host address space")?;
     let Node::Invocation {inst:bindings,..} = &mut body.nodes[at] else {return Err("missing first call".into())};
     bindings.bindings.push(noble_kernel::words::Binding::Stack(vec![Ty::I64]));
     assert!(intrinsic::prepare_named_contract(&inst,LIMITS).is_err(),"forged per-call Inst");

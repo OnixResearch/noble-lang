@@ -67,17 +67,55 @@ impl Emitter {
         Ok(self)
     }
 
-    /// Quotation recursion remains limited only by caller-supplied depth;
-    /// this owned transition does not make high-depth input stack-safe.
-    /// Each quotation owns its child ID `Vec` in the tree.
     fn body(
         mut self,
         nodes: &[Node],
-        depth: u32,
     ) -> Result<(Self, Vec<u32>), crate::Diagnostic> {
-        attempt!(self.meter.depth(depth, self.builder.tree.span));
-        let mut body = Vec::new();
-        for node in nodes {
+        struct Frame<'a> {
+            nodes: &'a [Node],
+            next: usize,
+            start: u32,
+            depth: u32,
+            value_start: usize,
+        }
+        let span = self.builder.tree.span;
+        attempt!(self.meter.depth(0, span));
+        let mut frames = alloc::vec![Frame {
+            nodes, next: 0, start: 0, depth: 0, value_start: 0,
+        }];
+        let mut values = Vec::new();
+        loop {
+            let Some(frame) = frames.last_mut() else {
+                return Err(crate::internal(span));
+            };
+            if frame.next == frame.nodes.len() {
+                let Some(frame) = frames.pop() else {
+                    return Err(crate::internal(span));
+                };
+                let Some(parent) = frames.last_mut() else {
+                    return Ok((self, values));
+                };
+                self = attempt!(self.append(b"]"));
+                let id = attempt!(crate::index(self.builder.tree.nodes.len(), span));
+                let end = attempt!(crate::index(self.builder.source.len(), span));
+                self.builder.tree.nodes.push(super::Node {
+                    kind: super::Kind::Quotation(values.split_off(frame.value_start)),
+                    span: crate::Span { start: frame.start, end },
+                });
+                let Some(parent_items) = values.len().checked_sub(parent.value_start) else {
+                    return Err(crate::internal(span));
+                };
+                if parent_items >= parent.nodes.len() {
+                    return Err(super::exhausted(span, "editor node limit exceeded"));
+                }
+                if values.len() >= self.builder.tree.nodes.len() {
+                    return Err(crate::internal(span));
+                }
+                values.push(id);
+                continue;
+            }
+            let node = &frame.nodes[frame.next];
+            frame.next += 1;
             attempt!(self.meter.node(self.builder.tree.span));
             let start = attempt!(crate::index(self.builder.source.len(), self.builder.tree.span));
             let kind = match node {
@@ -108,25 +146,33 @@ impl Emitter {
                 }
                 Node::Quotation(children) => {
                     self = attempt!(self.append(b"["));
-                    let (next, children) = attempt!(self.body(children, depth.saturating_add(1)));
-                    self = attempt!(next.append(b"]"));
-                    super::Kind::Quotation(children)
+                    let depth = frame.depth.saturating_add(1);
+                    attempt!(self.meter.depth(depth, span));
+                    frames.push(Frame {
+                        nodes: children, next: 0, start, depth, value_start: values.len(),
+                    });
+                    continue;
                 }
             };
             let id = attempt!(crate::index(self.builder.tree.nodes.len(), self.builder.tree.span));
             let end = attempt!(crate::index(self.builder.source.len(), self.builder.tree.span));
             // The node budget is charged above, and each input contributes at
             // most one body entry; do not reserve for rejected candidates.
-            if body.len() >= nodes.len() {
+            let Some(body_items) = values.len().checked_sub(frame.value_start) else {
+                return Err(crate::internal(span));
+            };
+            if body_items >= frame.nodes.len() {
                 return Err(super::exhausted(self.builder.tree.span, "editor node limit exceeded"));
             }
             self.builder.tree.nodes.push(super::Node {
                 kind,
                 span: crate::Span { start, end },
             });
-            body.push(id);
+            if values.len() >= self.builder.tree.nodes.len() {
+                return Err(crate::internal(span));
+            }
+            values.push(id);
         }
-        Ok((self, body))
     }
 }
 
@@ -147,7 +193,7 @@ impl Candidate {
             },
             meter: crate::Meter::new(limits),
         };
-        let (Emitter { mut builder, meter }, body) = attempt!(emitter.body(&self.nodes, 0)
+        let (Emitter { mut builder, meter }, body) = attempt!(emitter.body(&self.nodes)
             .map_err(|error| super::Error::at(super::Stage::Parse, error)));
         builder.tree.body = body;
         builder.tree.span.end = attempt!(crate::index(builder.source.len(), span)
@@ -225,5 +271,30 @@ impl super::Session {
             attempt!(state.arena.editor_effect(root.effect, root.span, &mut meter)
                 .map_err(|error| super::Error::at(super::Stage::Check, error)));
         Ok(Analysis { holes, known_effects, unresolved_effect })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn deep_quotation_emission_respects_configured_depth_without_call_stack_recursion() {
+        let mut node = Node::Integer(7);
+        for _ in 0..512 {
+            node = Node::Quotation(alloc::vec![node]);
+        }
+        let candidate = Candidate { format: FORMAT, nodes: alloc::vec![node] };
+        let mut limits = crate::Limits { depth: 512, ..crate::Limits::default() };
+        let source = candidate.admitted_source(limits).expect("iterative quotation emission");
+        assert_eq!(source.iter().filter(|&&byte| byte == b'[').count(), 512);
+        assert_eq!(source.iter().filter(|&&byte| byte == b']').count(), 512);
+        assert!(source.starts_with(b"[ [ "));
+        assert!(source.ends_with(b"] ] "));
+
+        limits.depth = 511;
+        let error = candidate.admitted_source(limits).expect_err("depth limit");
+        assert_eq!(error.stage(), super::super::Stage::Parse);
+        assert_eq!(error.diagnostic().message, "frontend depth limit exceeded");
     }
 }

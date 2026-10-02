@@ -314,13 +314,13 @@ mod tests {
             && matches!(value, Json::String(outcome) if outcome == "guest-returned-denied")));
         let actual = granted.owner.as_ref().unwrap().handle();
         let mut wrong = actual;
-        wrong.context = ownership::Context(actual.context.0 + 1);
+        wrong.context = ownership::Context(actual.context.0.checked_add(1).unwrap());
         assert_eq!(granted.read(wrong, "main.rs"), Err("invalid-handle"));
         wrong = actual;
-        wrong.generation += 1;
+        wrong.generation = wrong.generation.checked_add(1).unwrap();
         assert_eq!(granted.read(wrong, "main.rs"), Err("invalid-handle"));
         wrong = actual;
-        wrong.kind = ResourceKind(actual.kind.0 + 1);
+        wrong.kind = ResourceKind(actual.kind.0.checked_add(1).unwrap());
         assert_eq!(granted.read(wrong, "main.rs"), Err("invalid-handle"));
         assert_eq!(granted.read(actual, "../main.rs"), Err("invalid-path"));
         assert_eq!(granted.protected_operations, 0);

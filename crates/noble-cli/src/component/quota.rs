@@ -62,8 +62,8 @@ fn text_result(store: &mut Store<wasmtime::StoreLimits>, instance: &Instance, ar
     let area = usize::try_from(area)?;
     let record = data.get(area..area.checked_add(8).context("result area overflow")?)
         .context("invalid result area")?;
-    let pointer = u32::from_le_bytes(record[0..4].try_into()?) as usize;
-    let length = u32::from_le_bytes(record[4..8].try_into()?) as usize;
+    let pointer = usize::try_from(u32::from_le_bytes(record[0..4].try_into()?))?;
+    let length = usize::try_from(u32::from_le_bytes(record[4..8].try_into()?))?;
     ensure!(pointer >= HEAP_START, "result is not in the generated heap");
     let text = data.get(pointer..pointer.checked_add(length).context("result length overflow")?)
         .context("invalid result text range")?;
@@ -171,7 +171,7 @@ fn execute(arguments: &[OsString]) -> Result<Json> {
         }
     };
     let after = metrics(&mut store, &instance)?;
-    ensure!(after.live_bytes == 0 && after.cleanups == before.cleanups + 1,
+    ensure!(after.live_bytes == 0 && before.cleanups.checked_add(1) == Some(after.cleanups),
         "guest cleanup did not discharge generated heap");
     Ok(encoding::object([
         ("schema", encoding::string("noble-runtime-quota/v1")),

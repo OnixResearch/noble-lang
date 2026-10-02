@@ -200,8 +200,16 @@ fn intrinsic_axioms(stdout: &str, protocol: &str) -> Result<std::vec::Vec<std::s
         } else if let Some((_,name)) = line.split_once(&axiom_marker) {
             let name = name.trim();
             if !accepted || !["propext","Classical.choice","Quot.sound"].contains(&name)
-                || axioms.iter().any(|old|old==name) || axioms.len()>=3 {
+                || axioms.iter().any(|old|old==name) {
                 return Err(super::output::Failure::error("intrinsic-consumer-protocol","invalid transitive axiom report".into()));
+            }
+            // Distinct allowlisted axioms never exceed three; this separate
+            // exit makes that growth bound explicit ahead of the push.
+            if axioms.len() >= 3 {
+                return Err(super::output::Failure::error(
+                    "intrinsic-consumer-protocol",
+                    "invalid transitive axiom report".into(),
+                ));
             }
             axioms.push(name.into());
         }

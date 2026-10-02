@@ -151,6 +151,17 @@ impl super::Session {
                     ).collect()
                 )));
             }
+            // Each goal is a distinct contract declaration within `source`, so
+            // this bound is never reached; it is a separate exit ahead of each push.
+            if contract_reports.len() >= source.len() {
+                return Err(super::output::Failure::new(
+                    super::output::ErrorContext {
+                        stage: "check",
+                        outcome: "internal-failure",
+                    },
+                    "contract reports exceed the submitted source",
+                ));
+            }
             contract_reports.push(crate::workflow::encoding::Json::Object(fields));
         }
         let contracts = crate::workflow::encoding::Json::Array(contract_reports);

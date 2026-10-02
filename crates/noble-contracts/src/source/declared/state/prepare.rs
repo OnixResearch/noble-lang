@@ -313,28 +313,33 @@ impl super::ModuleSession {
                 )),
             );
         };
+        // Each published proof owns exactly the dependencies its term uses.
+        // Select and charge all of them before copying any, then copy each
+        // once into a list allocated at its exact length. A selection indexes
+        // the imported proofs followed by the earlier local proofs; the first
+        // `INLINE` stay on the stack and one spill buffer serves the batch.
+        const INLINE: usize = 32;
+        let mut inline = [0usize; INLINE];
+        let mut spill = alloc::vec::Vec::new();
+        let imported_count = batch.dependencies.len();
         for (obligation, result) in batch.obligations.iter().zip(checked) {
-            let mut dependencies = alloc::vec::Vec::new();
-            // At most one clone per imported or earlier local proof.
-            let dependency_bound = batch.dependencies.len().saturating_add(module.proofs.len());
-            for imported in &batch.dependencies {
-                if uses(&obligation.term, &imported.name) {
-                    if dependencies.len() >= dependency_bound {
-                        return (
-                            self,
-                            Err(crate::source::declared::error(
-                                crate::source::Stage::Acceptance,
-                                "proof publication dependency budget exhausted",
-                            )),
-                        );
-                    }
-                    dependencies.push(imported.clone());
+            // At most one selection per imported or earlier local proof.
+            let dependency_bound = imported_count.saturating_add(module.proofs.len());
+            let candidates = batch
+                .dependencies
+                .iter()
+                .chain(module.proofs.iter().map(|local| &local.reference));
+            let mut selected = 0usize;
+            spill.clear();
+            for (index, candidate) in candidates.enumerate() {
+                if !uses(&obligation.term, &candidate.name) {
+                    continue;
                 }
-            }
-            for local in &module.proofs {
-                if uses(&obligation.term, &local.reference.name) {
+                // Imported closures were charged above; each local closure is
+                // charged here, in candidate order, before anything is copied.
+                if index >= imported_count {
                     let Some((bytes, nodes)) =
-                        charge_dependency(&local.reference, remaining_bytes, remaining_nodes)
+                        charge_dependency(candidate, remaining_bytes, remaining_nodes)
                     else {
                         return (
                             self,
@@ -346,7 +351,21 @@ impl super::ModuleSession {
                     };
                     remaining_bytes = bytes;
                     remaining_nodes = nodes;
-                    if dependencies.len() >= dependency_bound {
+                }
+                if selected >= dependency_bound {
+                    return (
+                        self,
+                        Err(crate::source::declared::error(
+                            crate::source::Stage::Acceptance,
+                            "proof publication dependency budget exhausted",
+                        )),
+                    );
+                }
+                if selected < INLINE {
+                    inline[selected] = index;
+                } else {
+                    // One entry per selection, so this bound is never reached.
+                    if spill.len() >= dependency_bound {
                         return (
                             self,
                             Err(crate::source::declared::error(
@@ -355,8 +374,17 @@ impl super::ModuleSession {
                             )),
                         );
                     }
-                    dependencies.push(local.reference.clone());
+                    spill.push(index);
                 }
+                selected = selected.saturating_add(1);
+            }
+            let mut dependencies = alloc::vec::Vec::with_capacity(selected);
+            for &index in inline[..selected.min(INLINE)].iter().chain(&spill) {
+                let dependency = match index.checked_sub(imported_count) {
+                    None => &batch.dependencies[index],
+                    Some(local) => &module.proofs[local].reference,
+                };
+                dependencies.push(dependency.clone());
             }
             module.proofs.push(crate::source::declared::PublishedProof {
                 reference: crate::intrinsic::ProofDependency {

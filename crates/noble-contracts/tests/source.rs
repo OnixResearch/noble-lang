@@ -171,19 +171,19 @@ fn conditional_branch_joins_reject_incompatible_outputs_with_located_shapes() ->
     for (source, expected_end, expected_shape, actual_shape) in [
         (
             b"true [ 1 ] [ \"x\" ] if".as_slice(),
-            21,
+            21_u32,
             "Program<?stack -- ?stack Text>",
             "Program<?stack -- ?stack I64>",
         ),
         (
             b"true [ 1 ] [ 1 2 ] if".as_slice(),
-            21,
+            21_u32,
             "Program<?stack -- ?stack I64 I64>",
             "Program<?stack I64 -- ?stack I64 I64>",
         ),
         (
             b"true [ 1 \"x\" ] [ \"x\" 1 ] if".as_slice(),
-            27,
+            27_u32,
             "Program<?stack -- ?stack Text I64>",
             "Program<?stack -- ?stack I64 Text>",
         ),
@@ -204,10 +204,13 @@ fn conditional_branch_joins_reject_incompatible_outputs_with_located_shapes() ->
         assert_ne!(join.expected_stack, join.actual_stack);
         assert!(join.expected_stack.contains(expected_shape));
         assert!(join.actual_stack.contains(actual_shape));
+        let expected_start = expected_end
+            .checked_sub(2)
+            .ok_or("branch join fixture ends before its two-byte `if` word")?;
         assert_eq!(
             error.diagnostic().span,
             noble_contracts::Span {
-                start: expected_end - 2,
+                start: expected_start,
                 end: expected_end,
             }
         );

@@ -5,81 +5,99 @@ pub(super) fn parse(
     tokens: &[crate::source::lexer::LogicalToken],
     span: crate::Span,
 ) -> Result<crate::intrinsic::Form, crate::Diagnostic> {
-    let (form, next) = attempt!(form(tokens, 0, span));
-    if next != tokens.len() {
-        return Err(crate::invalid(tokens[next].span, "logical body contains a trailing form"));
-    }
-    Ok(form)
-}
-
-fn form(
-    tokens: &[crate::source::lexer::LogicalToken],
-    at: usize,
-    span: crate::Span,
-) -> Result<(crate::intrinsic::Form, usize), crate::Diagnostic> {
     use crate::source::lexer::LogicalKind;
-    let Some(token) = tokens.get(at) else {
+    let Some(_) = tokens.first() else {
         return Err(crate::invalid(span, "logical body must contain exactly one form"));
     };
-    match &token.kind {
-        LogicalKind::Atom(bytes) => {
-            let text = attempt!(core::str::from_utf8(bytes)
-                .map_err(|_| crate::invalid(token.span, "invalid logical UTF-8 atom")));
-            Ok((
+    let mut frames: alloc::vec::Vec<(crate::Span, usize)> = alloc::vec::Vec::new();
+    let mut values: alloc::vec::Vec<crate::intrinsic::Form> = alloc::vec::Vec::new();
+    for (at, token) in tokens.iter().enumerate() {
+        let form = match &token.kind {
+            LogicalKind::OpenParen => {
+                if frames.len() >= 64 {
+                    return Err(crate::invalid(token.span, "logical nesting exceeds supported depth"));
+                }
+                frames.push((token.span, values.len()));
+                continue;
+            }
+            LogicalKind::CloseParen => {
+                let Some((opening, start)) = frames.pop() else {
+                    return Err(crate::invalid(token.span, "unmatched logical parenthesis"));
+                };
+                crate::intrinsic::Form {
+                    kind: crate::intrinsic::FormKind::List(values.split_off(start)),
+                    span: crate::Span { start: opening.start, end: token.span.end },
+                }
+            }
+            LogicalKind::Atom(bytes) => {
+                let text = attempt!(core::str::from_utf8(bytes)
+                    .map_err(|_| crate::invalid(token.span, "invalid logical UTF-8 atom")));
                 crate::intrinsic::Form {
                     kind: crate::intrinsic::FormKind::Atom(alloc::string::String::from(text)),
                     span: token.span,
-                },
-                attempt!(at.checked_add(1).ok_or_else(|| {
-                    crate::invalid(token.span, "logical token position exceeds address space")
-                })),
-            ))
-        }
-        LogicalKind::Colon | LogicalKind::Comma => {
-            let spelling = if matches!(&token.kind, LogicalKind::Colon) { ":" } else { "," };
-            Ok((
+                }
+            }
+            LogicalKind::Colon | LogicalKind::Comma => {
+                let spelling = if matches!(&token.kind, LogicalKind::Colon) { ":" } else { "," };
                 crate::intrinsic::Form {
                     kind: crate::intrinsic::FormKind::Atom(alloc::string::String::from(spelling)),
                     span: token.span,
-                },
-                attempt!(at.checked_add(1).ok_or_else(|| {
-                    crate::invalid(token.span, "logical token position exceeds address space")
-                })),
-            ))
-        }
-        LogicalKind::OpenParen => {
-            let mut items = alloc::vec::Vec::new();
-            let mut next = attempt!(at.checked_add(1).ok_or_else(|| {
-                crate::invalid(token.span, "logical token position exceeds address space")
-            }));
-            loop {
-                let Some(current) = tokens.get(next) else {
-                    return Err(crate::invalid(token.span, "unclosed logical parenthesis"));
-                };
-                if matches!(&current.kind, LogicalKind::CloseParen) {
-                    return Ok((
-                        crate::intrinsic::Form {
-                            kind: crate::intrinsic::FormKind::List(items),
-                            span: crate::Span {
-                                start: token.span.start,
-                                end: current.span.end,
-                            },
-                        },
-                        attempt!(next.checked_add(1).ok_or_else(|| {
-                            crate::invalid(current.span, "logical token position exceeds address space")
-                        })),
-                    ));
                 }
-                let (item, after) = attempt!(form(tokens, next, span));
-                // Every item consumes at least one token, so this bound never
-                // precedes the ordinary unclosed/unmatched diagnostics.
-                if items.len() >= tokens.len() {
-                    return Err(crate::invalid(token.span, "logical list exceeds its token body"));
-                }
-                items.push(item);
-                next = after;
             }
+        };
+        let next = attempt!(at.checked_add(1).ok_or_else(|| {
+            crate::invalid(token.span, "logical token position exceeds address space")
+        }));
+        if frames.is_empty() && next == tokens.len() {
+            return Ok(form);
         }
-        LogicalKind::CloseParen => Err(crate::invalid(token.span, "unmatched logical parenthesis")),
+        if frames.is_empty() {
+            return Err(crate::invalid(tokens[next].span, "logical body contains a trailing form"));
+        }
+        if values.len() >= tokens.len() {
+            return Err(crate::invalid(token.span, "logical list exceeds its token body"));
+        }
+        values.push(form);
+    }
+    Err(crate::invalid(frames.last().map_or(span, |frame| frame.0), "unclosed logical parenthesis"))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::source::lexer::{LogicalKind, LogicalToken};
+
+    #[test]
+    fn nested_form_preserves_order_and_rejects_excess_depth() {
+        let span = crate::Span { start: 0, end: 1 };
+        let tokens = [
+            LogicalToken { kind: LogicalKind::OpenParen, span },
+            LogicalToken { kind: LogicalKind::Atom(alloc::vec![b'a']), span },
+            LogicalToken { kind: LogicalKind::OpenParen, span },
+            LogicalToken { kind: LogicalKind::Atom(alloc::vec![b'b']), span },
+            LogicalToken { kind: LogicalKind::CloseParen, span },
+            LogicalToken { kind: LogicalKind::CloseParen, span },
+        ];
+        let form = parse(&tokens, span).expect("nested form");
+        let crate::intrinsic::FormKind::List(items) = form.kind else {
+            panic!("expected outer list");
+        };
+        let crate::intrinsic::FormKind::Atom(first) = &items[0].kind else {
+            panic!("expected first atom");
+        };
+        assert_eq!(first, "a");
+        let crate::intrinsic::FormKind::List(inner) = &items[1].kind else {
+            panic!("expected inner list");
+        };
+        let crate::intrinsic::FormKind::Atom(second) = &inner[0].kind else {
+            panic!("expected nested atom");
+        };
+        assert_eq!(second, "b");
+
+        let deep: alloc::vec::Vec<_> = (0..65)
+            .map(|_| LogicalToken { kind: LogicalKind::OpenParen, span })
+            .collect();
+        let error = parse(&deep, span).expect_err("nesting bound");
+        assert_eq!(error.message, "logical nesting exceeds supported depth");
     }
 }

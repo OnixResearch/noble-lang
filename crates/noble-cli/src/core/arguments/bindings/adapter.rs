@@ -125,7 +125,13 @@ impl Signature {
                         Some(digits) => (digits, true),
                         None => (value, false),
                     };
-                    if script.len() >= 16 || digits.is_empty()
+                    // The value-count bound is a separate exit ahead of each push.
+                    if script.len() >= 16 {
+                        return Err(super::invalid(
+                            "binding script is noncanonical or exceeds 16 values",
+                        ));
+                    }
+                    if digits.is_empty()
                         || !digits.bytes().all(|digit| digit.is_ascii_digit())
                         || digits.starts_with('0') && (digits.len() > 1 || negative) {
                         return Err(super::invalid("binding script is noncanonical or exceeds 16 values"));

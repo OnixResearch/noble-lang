@@ -8,8 +8,8 @@ const SUBJECT: &str = "module Subject@3 [ def twice [ d.step d.step ] contract 2
 
 struct Fixture(PathBuf);
 impl Fixture {
-    fn new(label: &str) -> std::io::Result<Self> {
-        let base = std::env::temp_dir().join(format!("noble-named-v2-{label}-{}",std::process::id()));
+    fn new(temporary: &Path, label: &str) -> std::io::Result<Self> {
+        let base = temporary.join(format!("noble-named-v2-{label}-{}",std::process::id()));
         std::fs::create_dir(&base)?;
         std::fs::write(base.join("definitions.noble"),DEFINITIONS)?;
         std::fs::write(base.join("import.noble"),IMPORT)?;
@@ -19,10 +19,10 @@ impl Fixture {
         let target=self.0.join("subject.noble");
         std::fs::write(&target,source)?;
         let mut cmd=Command::new(env!("CARGO_BIN_EXE_noble"));
-        cmd.args(["verify-module",target.to_str().expect("UTF-8 test temp path"),
-            "--module",self.0.join("definitions.noble").to_str().expect("UTF-8 test temp path"),
-            "--module",self.0.join("import.noble").to_str().expect("UTF-8 test temp path"),
-            "--timeout-ms","600000"]);
+        cmd.arg("verify-module").arg(&target)
+            .arg("--module").arg(self.0.join("definitions.noble"))
+            .arg("--module").arg(self.0.join("import.noble"))
+            .args(["--timeout-ms","600000"]);
         cmd.env("NOBLE_CONTRACT_LIBRARY",library_path());
         Ok(cmd)
     }
@@ -33,23 +33,52 @@ fn library_path()->PathBuf {
 impl Drop for Fixture {
     fn drop(&mut self) { let _=std::fs::remove_dir_all(&self.0); }
 }
-fn configured() -> bool {
-    ["NOBLE_LEAN","NOBLE_BWRAP","NOBLE_PRLIMIT","NOBLE_SYSTEMD_RUN"]
-        .iter().all(|key|std::env::var_os(key).is_some())
-}
 fn run(cmd:&mut Command)->Result<(bool,String),Box<dyn std::error::Error>> {
     let output=cmd.output()?;
     Ok((output.status.success(),String::from_utf8(output.stdout)?))
 }
+/// Copies the trusted Lean library tree for the hostile model mutation. Like the
+/// CLI's rule-library loader, it refuses symlinks (a descent cycle or an escape
+/// from the reviewed root) and charges every path, Lean or not, to 512 paths and
+/// Lean source to 4 MiB, so a tree past either bound could not be loaded anyway.
+/// Refusing every special file, which could block a copy, is a stricter test-copy guard.
 fn copy_lean_tree(from:&Path,to:&Path)->std::io::Result<()> {
+    const PATH_BUDGET:usize=512;
+    const SOURCE_BUDGET:u64=4_194_304;
+    let refuse=|reason:String| std::io::Error::new(std::io::ErrorKind::InvalidData,reason);
     std::fs::create_dir_all(to)?;
-    for entry in std::fs::read_dir(from)? {
+    let mut remaining_paths=PATH_BUDGET;
+    let mut remaining_bytes=SOURCE_BUDGET;
+    let mut pending = vec![(to.to_path_buf(), std::fs::read_dir(from)?)];
+    while let Some((destination, entries)) = pending.last_mut() {
+        let Some(entry) = entries.next() else {
+            pending.pop();
+            continue;
+        };
         let entry=entry?;
         let path=entry.path();
-        let destination=to.join(entry.file_name());
-        if path.is_dir() { copy_lean_tree(&path,&destination)?; }
-        else if path.extension().is_some_and(|ext| ext=="lean") {
-            std::fs::copy(path,destination)?;
+        let Some(paths)=remaining_paths.checked_sub(1) else {
+            return Err(refuse(format!("{} exceeds the {PATH_BUDGET}-path library budget",path.display())));
+        };
+        remaining_paths=paths;
+        let target=destination.join(entry.file_name());
+        let kind=entry.file_type()?;
+        if kind.is_dir() {
+            std::fs::create_dir_all(&target)?;
+            pending.push((target, std::fs::read_dir(&path)?));
+            continue;
+        }
+        if !kind.is_file() {
+            return Err(refuse(format!("{} is a symlink or special file, not reviewed source",path.display())));
+        }
+        if path.extension().is_none_or(|ext| ext!="lean") {
+            continue;
+        }
+        let size=entry.metadata()?.len();
+        remaining_bytes=remaining_bytes.checked_sub(size).ok_or_else(||
+            refuse(format!("{} exceeds the {SOURCE_BUDGET}-byte library budget",path.display())))?;
+        if std::fs::copy(&path,&target)?!=size {
+            return Err(refuse(format!("{} changed while it was copied",path.display())));
         }
     }
     Ok(())
@@ -57,7 +86,7 @@ fn copy_lean_tree(from:&Path,to:&Path)->std::io::Result<()> {
 
 #[test]
 fn wrong_output_weak_claim_and_cross_version_cannot_verify() -> Result<(),Box<dyn std::error::Error>> {
-    let fixture=Fixture::new("refusals")?;
+    let fixture=Fixture::new(&std::env::temp_dir(), "refusals")?;
     for (label,source) in [
         ("wrong output",SUBJECT.replace("(add (in x) 2)","(add (in x) 3)")),
         ("weak claim",SUBJECT.replace("(eq (out y) (add (in x) 2))","true")),
@@ -73,8 +102,9 @@ fn wrong_output_weak_claim_and_cross_version_cannot_verify() -> Result<(),Box<dy
 
 #[test]
 fn exact_named_source_uses_pinned_kernel_and_library() -> Result<(),Box<dyn std::error::Error>> {
-    if !configured() { return Ok(()); }
-    let fixture=Fixture::new("consumer")?;
+    if ["NOBLE_LEAN","NOBLE_BWRAP","NOBLE_PRLIMIT","NOBLE_SYSTEMD_RUN"]
+        .iter().any(|key| std::env::var_os(key).is_none()) { return Ok(()); }
+    let fixture=Fixture::new(&std::env::temp_dir(), "consumer")?;
     let (passed,report)=run(&mut fixture.command(SUBJECT)?)?;
     assert!(passed,"actual named source was not independently proved: {report}");
     assert!(report.contains("\"claim\":\"NamedV2Obligation.claim\""),"wrong selected claim: {report}");
@@ -102,7 +132,8 @@ fn exact_named_source_uses_pinned_kernel_and_library() -> Result<(),Box<dyn std:
 
 #[test]
 fn framed_session_publishes_only_the_strict_named_proof() -> Result<(),Box<dyn std::error::Error>> {
-    if !configured() { return Ok(()); }
+    if ["NOBLE_LEAN","NOBLE_BWRAP","NOBLE_PRLIMIT","NOBLE_SYSTEMD_RUN"]
+        .iter().any(|key| std::env::var_os(key).is_none()) { return Ok(()); }
     let mut child=Command::new(env!("CARGO_BIN_EXE_noble"))
         .args(["session","--framed","--declared-modules","--bindings","/dev/null"])
         .env("NOBLE_CONTRACT_LIBRARY",library_path())
@@ -167,8 +198,9 @@ fn named_consumer(pid:u32,lean:&Path)->bool {
 #[cfg(target_os="linux")]
 #[test]
 fn dying_real_named_consumer_cannot_report_acceptance() -> Result<(),Box<dyn std::error::Error>> {
-    if !configured() { return Ok(()); }
-    let fixture=Fixture::new("consumer-fault")?;
+    if ["NOBLE_LEAN","NOBLE_BWRAP","NOBLE_PRLIMIT","NOBLE_SYSTEMD_RUN"]
+        .iter().any(|key| std::env::var_os(key).is_none()) { return Ok(()); }
+    let fixture=Fixture::new(&std::env::temp_dir(), "consumer-fault")?;
     let lean=std::fs::canonicalize(std::env::var_os("NOBLE_LEAN").ok_or("Lean not configured")?)?;
     let mut child=fixture.command(SUBJECT)?
         .stdout(std::process::Stdio::piped())
@@ -187,7 +219,7 @@ fn dying_real_named_consumer_cannot_report_acceptance() -> Result<(),Box<dyn std
         std::thread::sleep(std::time::Duration::from_millis(10));
     }
     if !killed {
-        let _=child.kill();
+        child.kill()?;
         let output=child.wait_with_output()?;
         return Err(format!("exact pinned named consumer was never observed: {}",String::from_utf8_lossy(&output.stdout)).into());
     }

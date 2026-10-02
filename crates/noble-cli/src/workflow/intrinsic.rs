@@ -181,20 +181,46 @@ fn validate_dependency_revision(
     named_model: &str,
     checker: &str,
     named_checker: &str,
+    depth_limit: usize,
 ) -> Result<(),output::Failure> {
-    let (selected_model,selected_checker) = match (&dependency.declaration.goal,dependency.declaration.revision) {
-        (PendingGoal::Contract {contract},2) if contract.revision == 2 => (named_model,named_checker),
-        (PendingGoal::Contract {contract},1) if contract.revision == 1 => (model,checker),
-        (PendingGoal::Pure {..},1) => (model,checker),
-        _ => return Err(output::Failure::unsupported("intrinsic-stale-proof",
-            std::format!("proof {} has unsupported revision",dependency.name))),
-    };
-    if dependency.model_revision!=selected_model || dependency.checker_revision!=selected_checker {
-        return Err(output::Failure::unsupported("intrinsic-stale-proof",
-            std::format!("proof {} was accepted under different model/checker sources",dependency.name)));
-    }
-    for prerequisite in &dependency.dependencies {
-        validate_dependency_revision(prerequisite,model,named_model,checker,named_checker)?;
+    // check_batch_with_budgets has already metered the dependency tree and
+    // its depth. Keep only iterators over unvisited siblings, not a copy of
+    // the tree or an argv-sized reservation.
+    let mut siblings = std::vec::Vec::new();
+    let mut current = Some(dependency);
+    while let Some(node) = current {
+        let (selected_model,selected_checker) = match (&node.declaration.goal,node.declaration.revision) {
+            (PendingGoal::Contract {contract},2) if contract.revision == 2 => (named_model,named_checker),
+            (PendingGoal::Contract {contract},1) if contract.revision == 1 => (model,checker),
+            (PendingGoal::Pure {..},1) => (model,checker),
+            _ => return Err(output::Failure::unsupported("intrinsic-stale-proof",
+                std::format!("proof {} has unsupported revision",node.name))),
+        };
+        if node.model_revision!=selected_model || node.checker_revision!=selected_checker {
+            return Err(output::Failure::unsupported("intrinsic-stale-proof",
+                std::format!("proof {} was accepted under different model/checker sources",node.name)));
+        }
+        let mut children = node.dependencies.iter();
+        if let Some(first) = children.next() {
+            if !children.as_slice().is_empty() {
+                if siblings.len() >= depth_limit {
+                    return Err(output::Failure::error("intrinsic-source-exhausted",
+                        std::format!("proof {} dependency depth exceeds checked limit",node.name)));
+                }
+                siblings.push(children);
+            }
+            current = Some(first);
+            continue;
+        }
+        current = None;
+        while let Some(remaining) = siblings.last_mut() {
+            if let Some(next) = remaining.next() {
+                current = Some(next);
+                if remaining.as_slice().is_empty() { siblings.pop(); }
+                break;
+            }
+            siblings.pop();
+        }
     }
     Ok(())
 }
@@ -209,23 +235,24 @@ const ROUND: [u32;64] = [
     0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2,
 ];
 fn digest_block(state: &mut [u32;8],block: &[u8]) {
-    let mut words = [0u32;64];
-    for (i,word) in words.iter_mut().take(16).enumerate() {
-        let offset = i*4;
-        *word = u32::from_be_bytes([block[offset],block[offset+1],block[offset+2],block[offset+3]]);
+    // Every caller supplies one complete block: the fixed buffer, an exact
+    // 64-byte chunk, or one of the two fixed padding blocks.
+    let words: [std::cell::Cell<u32>;64] = std::array::from_fn(|_|std::cell::Cell::new(0));
+    for (word,bytes) in words.iter().take(16).zip(block.chunks_exact(4)) {
+        word.set(u32::from_be_bytes([bytes[0],bytes[1],bytes[2],bytes[3]]));
     }
-    for i in 16..64 {
-        let x=words[i-15]; let y=words[i-2];
+    for window in words.windows(17) {
+        let x=window[1].get(); let y=window[14].get();
         let s0=x.rotate_right(7)^x.rotate_right(18)^(x>>3);
         let s1=y.rotate_right(17)^y.rotate_right(19)^(y>>10);
-        words[i]=words[i-16].wrapping_add(s0).wrapping_add(words[i-7]).wrapping_add(s1);
+        window[16].set(window[0].get().wrapping_add(s0).wrapping_add(window[9].get()).wrapping_add(s1));
     }
     let mut a=state[0];let mut b=state[1];let mut c=state[2];let mut d=state[3];
     let mut e=state[4];let mut f=state[5];let mut g=state[6];let mut h=state[7];
     for i in 0..64 {
         let s1=e.rotate_right(6)^e.rotate_right(11)^e.rotate_right(25);
         let ch=(e&f)^(!e&g);
-        let t1=h.wrapping_add(s1).wrapping_add(ch).wrapping_add(ROUND[i]).wrapping_add(words[i]);
+        let t1=h.wrapping_add(s1).wrapping_add(ch).wrapping_add(ROUND[i]).wrapping_add(words[i].get());
         let s0=a.rotate_right(2)^a.rotate_right(13)^a.rotate_right(22);
         let maj=(a&b)^(a&c)^(b&c);
         let t2=s0.wrapping_add(maj);
@@ -240,11 +267,16 @@ impl Sha256 {
             buffer:[0;64],buffered:0,length:0}
     }
     fn update(&mut self, mut bytes:&[u8]) {
+        // SHA-256's 64-bit length trailer is modulo 2^64 bits. All reviewed
+        // callers hash bounded source, proof wire, or fixed library bytes,
+        // well below the 2^61-byte message limit; no caller can wrap it.
         self.length=self.length.wrapping_add(bytes.len() as u64);
         if self.buffered>0 {
-            let count=(64-self.buffered).min(bytes.len());
-            self.buffer[self.buffered..self.buffered+count].copy_from_slice(&bytes[..count]);
-            self.buffered+=count;
+            let remaining=&mut self.buffer[self.buffered..];
+            let count=remaining.len().min(bytes.len());
+            remaining[..count].copy_from_slice(&bytes[..count]);
+            // count is bounded by the remaining slice; buffered stays <= 64.
+            self.buffered=self.buffered.wrapping_add(count);
             bytes=&bytes[count..];
             if self.buffered==64 {digest_block(&mut self.state,&self.buffer);self.buffered=0;}
             else {return;}
@@ -259,11 +291,19 @@ impl Sha256 {
         let mut suffix=[0u8;128];
         suffix[..self.buffered].copy_from_slice(&self.buffer[..self.buffered]);
         suffix[self.buffered]=0x80;
-        let blocks=if self.buffered<56 {1} else {2};
-        suffix[blocks*64-8..blocks*64].copy_from_slice(&self.length.wrapping_mul(8).to_be_bytes());
-        for block in suffix[..blocks*64].chunks_exact(64) {digest_block(&mut self.state,block);}
+        let padded=if self.buffered<56 {64} else {128};
+        let bits=self.length.wrapping_mul(8);
+        if padded==64 {suffix[56..64].copy_from_slice(&bits.to_be_bytes());}
+        else {suffix[120..128].copy_from_slice(&bits.to_be_bytes());}
+        for block in suffix[..padded].chunks_exact(64) {digest_block(&mut self.state,block);}
+        const HEX: &[u8;16] = b"0123456789abcdef";
         let mut encoded=std::string::String::with_capacity(64);
-        for word in self.state {encoded.push_str(&std::format!("{word:08x}"));}
+        for word in self.state {
+            for byte in word.to_be_bytes() {
+                encoded.push(char::from(HEX[usize::from(byte >> 4)]));
+                encoded.push(char::from(HEX[usize::from(byte & 0x0f)]));
+            }
+        }
         encoded
     }
 }
@@ -350,8 +390,10 @@ pub(crate) fn verify_with_evidence(
         || batch.dependencies.iter().any(has_named_dependency);
     let named_model = if named {named_model_revision()} else {std::string::String::new()};
     let named_checker = if named {named_checker_revision(&checker)} else {std::string::String::new()};
+    let depth_limit=usize::try_from(limits.depth).map_err(|_|output::Failure::error(
+        "intrinsic-source-exhausted","proof dependency depth exceeds address space".into()))?;
     for dependency in &batch.dependencies {
-        validate_dependency_revision(dependency,&model,&named_model,&checker,&named_checker)?;
+        validate_dependency_revision(dependency,&model,&named_model,&checker,&named_checker,depth_limit)?;
     }
     let mut evidence = std::vec::Vec::with_capacity(checked.len());
     for (obligation,proof) in batch.obligations.iter().zip(&checked) {
@@ -571,7 +613,8 @@ fn named_subject_evidence(
     let Outcome::Accepted(derived)=derived else {
         return Err(output::Failure::error("named-report-derivation","accepted body derivation unavailable".into()));
     };
-    let root_node=accepted.body.candidate.nodes.get(root.candidate_node.0 as usize);
+    let root_node=usize::try_from(root.candidate_node.0).ok()
+        .and_then(|index|accepted.body.candidate.nodes.get(index));
     let Some(Node::Invocation {inst:root_inst,..})=root_node else {
         return Err(output::Failure::error("named-report-graph","subject submission root is not an invocation".into()));
     };
@@ -586,7 +629,8 @@ fn named_subject_evidence(
     for (order,use_record) in subject.named_uses.iter().enumerate().skip(1) {
         let module=subject.source_dependencies.get(use_record.module_index)
             .ok_or_else(||output::Failure::error("named-report-graph","original module missing".into()))?;
-        let node=selected.body.candidate.nodes.get(use_record.candidate_node.0 as usize);
+        let node=usize::try_from(use_record.candidate_node.0).ok()
+            .and_then(|index|selected.body.candidate.nodes.get(index));
         let Some(Node::Invocation {def,inst})=node else {
             return Err(output::Failure::error("named-report-graph","named use node is not an invocation".into()));
         };
@@ -673,8 +717,10 @@ fn named_subject_evidence(
     ]))
 }
 fn source_slice(source: &[u8],span:noble_contracts::Span)->Result<&[u8],output::Failure> {
-    source.get(span.start as usize..span.end as usize).ok_or_else(||
-        output::Failure::error("named-report-graph","original source span is outside immutable source".into()))
+    let outside=||output::Failure::error("named-report-graph","original source span is outside immutable source".into());
+    let start=usize::try_from(span.start).map_err(|_|outside())?;
+    let end=usize::try_from(span.end).map_err(|_|outside())?;
+    source.get(start..end).ok_or_else(outside)
 }
 fn span_evidence(span:noble_contracts::Span)->encoding::Json {
     encoding::object([
@@ -731,7 +777,7 @@ fn specialization_evidence(
     };
     let mut nodes=std::vec::Vec::with_capacity(body.body.len());
     for id in &body.body {
-        let node=body.nodes.get(id.0 as usize).ok_or_else(||
+        let node=usize::try_from(id.0).ok().and_then(|index|body.nodes.get(index)).ok_or_else(||
             output::Failure::error("named-report-graph","named step body node missing".into()))?;
         let derived=checked.derivations.iter().find(|item|item.node==*id)
             .ok_or_else(||output::Failure::error("named-report-derivation","named step node derivation missing".into()))?;
@@ -765,6 +811,7 @@ fn specialization_evidence(
 fn execute(arguments: &[std::ffi::OsString], submitted_sha256: &mut Option<std::string::String>) -> Result<Option<encoding::Json>,output::Failure> {
     let path = arguments.get(1).ok_or_else(|| output::Failure::error("usage","verify-module SOURCE [--module FILE ...] [--timeout-ms N]".into()))?;
     let mut modules = std::vec::Vec::new();
+    let mut modules_exceeded = false;
     let mut timeout_ms = super::DEFAULT_TIMEOUT;
     let mut budgets = noble_contracts::intrinsic::ProofBudgets::from_limits(noble_contracts::Limits::default());
     let mut at = 2;
@@ -773,7 +820,13 @@ fn execute(arguments: &[std::ffi::OsString], submitted_sha256: &mut Option<std::
         at += 1;
         let value = arguments.get(at).ok_or_else(|| output::Failure::error("usage","missing option value".into()))?;
         match option {
-            "--module" => modules.push(std::path::PathBuf::from(value)),
+            "--module" => {
+                if modules.len() < super::MODULE_LIMIT {
+                    modules.push(std::path::PathBuf::from(value));
+                } else {
+                    modules_exceeded = true;
+                }
+            }
             "--timeout-ms" => timeout_ms = value.to_str().and_then(|value|value.parse::<u64>().ok())
                 .filter(|value| (1..=super::MAX_TIMEOUT).contains(value))
                 .ok_or_else(|| output::Failure::error("usage","invalid proof deadline".into()))?,
@@ -788,7 +841,7 @@ fn execute(arguments: &[std::ffi::OsString], submitted_sha256: &mut Option<std::
         }
         at += 1;
     }
-    if modules.len() > super::MODULE_LIMIT { return Err(output::Failure::error("module-limit","too many prior module units".into())); }
+    if modules_exceeded { return Err(output::Failure::error("module-limit","too many prior module units".into())); }
     let limits = noble_contracts::Limits::default();
     let mut session = noble_contracts::source::ModuleSession::new(&[]).map_err(|error|source_error(&error))?;
     let target = std::path::PathBuf::from(path);
@@ -810,8 +863,11 @@ fn execute(arguments: &[std::ffi::OsString], submitted_sha256: &mut Option<std::
                     }
                 };
                 if module == &target {
-                    let digest = submitted_sha256.as_deref()
-                        .expect("a verified target module must have been read");
+                    let Some(digest) = submitted_sha256.as_deref() else {
+                        verification_failure=Some(output::Failure::error(
+                            "intrinsic-internal","a verified target module must have been read".into()));
+                        return Err("intrinsic-internal: a verified target module must have been read".into());
+                    };
                     accepted = Some(accepted_report(batch,&verified,&evidence,work,
                         &module.to_string_lossy(),digest));
                 }
@@ -831,10 +887,102 @@ fn execute(arguments: &[std::ffi::OsString], submitted_sha256: &mut Option<std::
 #[cfg(test)]
 mod tests {
     #[test]
+    fn dependency_revisions_preserve_preorder_error_priority() {
+        use noble_contracts::intrinsic::{Form, FormKind, PendingGoal, ProofDependency, ProofObligation};
+
+        fn dependency(name: &str, revision: u32, dependencies: std::vec::Vec<ProofDependency>) -> ProofDependency {
+            let span = noble_contracts::Span { start: 0, end: 1 };
+            let form = Form { kind: FormKind::Atom("true".into()), span };
+            ProofDependency {
+                name: name.into(), module: "fixture".into(), version: 1,
+                source: b"module fixture@1 [ ]".to_vec(),
+                declaration: ProofObligation {
+                    name: name.into(), revision, goal: PendingGoal::Pure { proposition: form.clone() },
+                    term: form, span,
+                },
+                exported: true, dependencies,
+                model_revision: "model".into(), checker_revision: "checker".into(),
+            }
+        }
+        let mut root = dependency("root", 1, vec![
+            dependency("left", 1, vec![
+                dependency("deep", 3, vec![]),
+                dependency("inner-sibling", 3, vec![]),
+            ]),
+            dependency("outer-sibling", 3, vec![]),
+        ]);
+        let check = |root: &ProofDependency| super::validate_dependency_revision(
+            root, "model", "named-model", "checker", "named-checker", 64
+        );
+        assert!(matches!(check(&root), Err(error)
+            if error.code == "intrinsic-stale-proof"
+                && error.message == "proof deep has unsupported revision"));
+        root.declaration.revision = 3;
+        assert!(matches!(check(&root), Err(error)
+            if error.message == "proof root has unsupported revision"));
+        root.declaration.revision = 1;
+        root.dependencies[0].checker_revision = "old-checker".into();
+        assert!(matches!(check(&root), Err(error)
+            if error.message == "proof left was accepted under different model/checker sources"));
+        root.dependencies[0].checker_revision = "checker".into();
+        root.dependencies[0].dependencies[0].declaration.revision = 1;
+        assert!(matches!(check(&root), Err(error)
+            if error.message == "proof inner-sibling has unsupported revision"));
+        root.dependencies[0].dependencies[1].declaration.revision = 1;
+        assert!(matches!(check(&root), Err(error)
+            if error.message == "proof outer-sibling has unsupported revision"));
+        root.dependencies[1].declaration.revision = 1;
+        assert!(check(&root).is_ok());
+
+        let mut bounded = dependency("tip", 1, vec![]);
+        for _ in 0..64 {
+            bounded = dependency("branch", 1, vec![bounded, dependency("sibling", 1, vec![])]);
+        }
+        assert!(check(&bounded).is_ok(), "64 pending siblings fit the checked depth");
+        let over_bound = dependency("extra", 1, vec![bounded, dependency("sibling", 1, vec![])]);
+        assert!(matches!(check(&over_bound), Err(error)
+            if error.code == "intrinsic-source-exhausted"
+                && error.message == "proof branch dependency depth exceeds checked limit"));
+    }
+
+    #[test]
     fn source_identity_sha256_matches_standard_vectors_across_block_boundary() {
         assert_eq!(super::sha256(b""),"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
         assert_eq!(super::sha256(b"abc"),"ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad");
         assert_eq!(super::sha256(&[b'a';64]),"ffe054fe7ae0cb6dc65c3af9b61d5209f439851db43d0ba5997337df154668eb");
+        let multiblock=b"abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq";
+        let multiblock_expected="248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1";
+        assert_eq!(super::sha256(multiblock),multiblock_expected);
+        let mut partitioned=super::Sha256::new();
+        partitioned.update(&multiblock[..17]);
+        partitioned.update(&multiblock[17..55]);
+        partitioned.update(&multiblock[55..]);
+        assert_eq!(partitioned.finish(),multiblock_expected);
+        for (len, expected) in [
+            (55,"9f4390f8d30c2dd92ec9f095b65e2b9ae9b0a925a5258e241c9f1e910f734318"),
+            (56,"b35439a4ac6f0948b6d6f9e3c6af0f5f590ce20f1bde7090ef7970686ec6738a"),
+            (63,"7d3e74a05d7db15bce4ad9ec0658ea98e3f06eeecf16b4c6fff2da457ddc2f34"),
+            (64,"ffe054fe7ae0cb6dc65c3af9b61d5209f439851db43d0ba5997337df154668eb"),
+            (65,"635361c48bb9eab14198e76ea8ab7f1a41685d6ad62aa9146d301d4f17eb0ae0"),
+            (119,"31eba51c313a5c08226adf18d4a359cfdfd8d2e816b13f4af952f7ea6584dcfb"),
+            (120,"2f3d335432c70b580af0e8e1b3674a7c020d683aa5f73aaaedfdc55af904c21c"),
+        ] {
+            let input=std::vec![b'a';len];
+            assert_eq!(super::sha256(&input),expected,"length {len}");
+            for chunk_size in [1,7,55,56,63,64,65] {
+                let mut streamed=super::Sha256::new();
+                for segment in input.chunks(chunk_size) {streamed.update(segment);}
+                assert_eq!(streamed.finish(),expected,"length {len}, chunks {chunk_size}");
+            }
+            for cut in [0,1,3,55,56,63,64,65,len] {
+                if cut>len {continue;}
+                let mut streamed=super::Sha256::new();
+                streamed.update(&input[..cut]);
+                streamed.update(&[]);
+                streamed.update(&input[cut..]);
+                assert_eq!(streamed.finish(),expected,"length {len}, split {cut}");
+            }
+        }
         let mut streamed=super::Sha256::new();
         streamed.update(b"a");
         streamed.update(b"bc");

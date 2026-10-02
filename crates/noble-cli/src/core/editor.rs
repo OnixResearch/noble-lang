@@ -15,15 +15,7 @@ fn fields<'a>(value: &'a Value, expected: &[&str]) -> Result<&'a std::collection
     Ok(fields)
 }
 
-fn decode_node(value: &Value, depth: usize, count: &mut usize) -> Result<Node, String> {
-    *count = count.saturating_add(1);
-    if *count > usize::try_from(super::SOURCE_LIMITS.nodes).unwrap_or(0)
-        || depth > usize::try_from(super::SOURCE_LIMITS.depth).unwrap_or(0)
-    {
-        return Err("editor syntax node or depth limit exceeded".into());
-    }
-    let kind = value.member("kind").and_then(Value::text)
-        .ok_or("editor node kind is missing")?;
+fn decode_terminal_node(value: &Value, kind: &str) -> Result<Node, String> {
     match kind {
         "integer" => {
             let fields = fields(value, &["kind", "value"])?;
@@ -50,22 +42,77 @@ fn decode_node(value: &Value, depth: usize, count: &mut usize) -> Result<Node, S
             fields(value, &["kind"])?;
             Ok(Node::Hole)
         }
-        "quotation" => {
-            let fields = fields(value, &["kind", "nodes"])?;
-            let children = fields.get("nodes").and_then(Value::items)
-                .ok_or("editor quotation nodes must be an array")?;
-            let mut result = Vec::with_capacity(children.len());
-            for child in children {
-                result.push(decode_node(child, depth + 1, count)?);
-            }
-            Ok(Node::Quotation(result))
-        }
         _ => Err("unsupported editor node kind".into()),
     }
 }
 
+fn decode_nodes(nodes: &[Value]) -> Result<Vec<Node>, String> {
+    struct Frame<'a> {
+        nodes: &'a [Value],
+        next: usize,
+        decoded: Vec<Node>,
+    }
+
+    let mut stack: Vec<Frame<'_>> = Vec::new();
+    let mut current = nodes;
+    let mut next = 0_usize;
+    let mut decoded = Vec::with_capacity(nodes.len());
+    let mut count = 0_usize;
+    while next < current.len() || !stack.is_empty() {
+        if next == current.len() {
+            let Some(parent) = stack.pop() else {
+                break;
+            };
+            let Frame { nodes, next: parent_next, decoded: mut parent_decoded } = parent;
+            parent_decoded.push(Node::Quotation(decoded));
+            current = nodes;
+            next = parent_next;
+            decoded = parent_decoded;
+            continue;
+        }
+
+        // Each saved parent is one quotation enclosing the current siblings.
+        let depth = stack.len();
+        let value = &current[next];
+        next = next.saturating_add(1);
+        count = count.saturating_add(1);
+        let nodes_limit = usize::try_from(super::SOURCE_LIMITS.nodes)
+            .map_err(|_| "editor syntax node or depth limit exceeded".to_owned())?;
+        let depth_limit = usize::try_from(super::SOURCE_LIMITS.depth)
+            .map_err(|_| "editor syntax node or depth limit exceeded".to_owned())?;
+        if count > nodes_limit || depth > depth_limit {
+            return Err("editor syntax node or depth limit exceeded".into());
+        }
+        let kind = value.member("kind").and_then(Value::text)
+            .ok_or("editor node kind is missing")?;
+        if kind == "quotation" {
+            let fields = fields(value, &["kind", "nodes"])?;
+            let children = fields.get("nodes").and_then(Value::items)
+                .ok_or("editor quotation nodes must be an array")?;
+            if children.is_empty() {
+                decoded.push(Node::Quotation(std::vec![]));
+                continue;
+            }
+            // A nonempty quotation must visit its first child at the next depth.
+            // Empty quotations have no child and remain valid at the limit.
+            if stack.len() >= depth_limit {
+                return Err("editor syntax node or depth limit exceeded".into());
+            }
+            stack.push(Frame { nodes: current, next, decoded });
+            current = children;
+            next = 0;
+            decoded = Vec::with_capacity(children.len());
+            continue;
+        }
+        decoded.push(decode_terminal_node(value, kind)?);
+    }
+    Ok(decoded)
+}
+
 fn decode(bytes: &[u8]) -> Result<Candidate, String> {
-    if bytes.len() > usize::try_from(super::SOURCE_LIMITS.bytes).unwrap_or(0) {
+    let bytes_limit = usize::try_from(super::SOURCE_LIMITS.bytes)
+        .map_err(|_| "editor JSON byte limit exceeded".to_owned())?;
+    if bytes.len() > bytes_limit {
         return Err("editor JSON byte limit exceeded".into());
     }
     let text = std::str::from_utf8(bytes).map_err(|_| "editor JSON is not UTF-8")?;
@@ -76,12 +123,7 @@ fn decode(bytes: &[u8]) -> Result<Candidate, String> {
     }
     let nodes = envelope.get("nodes").and_then(Value::items)
         .ok_or("editor nodes must be an array")?;
-    let mut count = 0;
-    let mut decoded = Vec::with_capacity(nodes.len());
-    for node in nodes {
-        decoded.push(decode_node(node, 0, &mut count)?);
-    }
-    Ok(Candidate { format: 1, nodes: decoded })
+    Ok(Candidate { format: 1, nodes: decode_nodes(nodes)? })
 }
 
 fn refusal(stage: &str, message: &str) -> Json {

@@ -37,8 +37,8 @@ pub(super) fn backend(error: noble_wasm::Diagnostic) -> crate::workflow::output:
 
 pub(super) fn bindings(
     world: &noble_contracts::component::World,
-) -> crate::workflow::encoding::Json {
-    crate::workflow::encoding::object([
+) -> Result<crate::workflow::encoding::Json, crate::workflow::output::Failure> {
+    Ok(crate::workflow::encoding::object([
         (
             "schema",
             crate::workflow::encoding::string("noble-component/v1"),
@@ -54,11 +54,13 @@ pub(super) fn bindings(
         ("world", crate::workflow::encoding::string(world.identity())),
         (
             "imports",
-            crate::workflow::encoding::Json::Array(world.imports().iter().map(|op| operation(world, op)).collect()),
+            crate::workflow::encoding::Json::Array(world.imports().iter()
+                .map(|op| operation(world, op)).collect::<Result<std::vec::Vec<_>, _>>()?),
         ),
         (
             "exports",
-            crate::workflow::encoding::Json::Array(world.exports().iter().map(|op| operation(world, op)).collect()),
+            crate::workflow::encoding::Json::Array(world.exports().iter()
+                .map(|op| operation(world, op)).collect::<Result<std::vec::Vec<_>, _>>()?),
         ),
         (
             "resources",
@@ -93,11 +95,20 @@ pub(super) fn bindings(
             "component_emitted",
             crate::workflow::encoding::Json::Bool(false),
         ),
-    ])
+    ]))
 }
 
-fn operation(world: &noble_contracts::component::World, operation: &noble_contracts::component::Operation) -> crate::workflow::encoding::Json {
-    crate::workflow::encoding::object([
+fn operation(
+    world: &noble_contracts::component::World,
+    operation: &noble_contracts::component::Operation,
+) -> Result<crate::workflow::encoding::Json, crate::workflow::output::Failure> {
+    let input_types = operation.input_types(world).ok_or_else(|| {
+        crate::workflow::output::Failure::error("component-check", "resolved world input types unavailable".into())
+    })?;
+    let output_types = operation.output_types(world).ok_or_else(|| {
+        crate::workflow::output::Failure::error("component-check", "resolved world output types unavailable".into())
+    })?;
+    Ok(crate::workflow::encoding::object([
         (
             "identity",
             crate::workflow::encoding::string(&operation.identity),
@@ -113,19 +124,11 @@ fn operation(world: &noble_contracts::component::World, operation: &noble_contra
         ),
         (
             "input_types",
-            types(
-                &operation
-                    .input_types(world)
-                    .expect("resolved world input types"),
-            ),
+            types(&input_types),
         ),
         (
             "output_types",
-            types(
-                &operation
-                    .output_types(world)
-                    .expect("resolved world output types"),
-            ),
+            types(&output_types),
         ),
         (
             "wit_parameters",
@@ -154,7 +157,41 @@ fn operation(world: &noble_contracts::component::World, operation: &noble_contra
                 None => std::vec::Vec::new(),
             }),
         ),
-    ])
+    ]))
+}
+
+#[cfg(test)]
+#[test]
+fn mismatched_world_operation_types_refuse_without_panic() {
+    use noble_contracts::component::{Type, World};
+
+    let Ok(world) = World::parse(
+        include_bytes!("../../../noble-wasm/wit/runtime-quotas.wit"),
+        "quotas",
+        crate::core::SOURCE_LIMITS,
+    ) else {
+        panic!("quota fixture world must parse");
+    };
+    let Some(original) = world.exports().first() else {
+        panic!("quota fixture world must export an operation");
+    };
+    let mut altered = original.clone();
+    altered.parameters.push(Type::CheckedU64);
+    assert!(matches!(
+        operation(&world, &altered),
+        Err(error) if error.code == "component-check"
+            && error.message == "resolved world input types unavailable"
+            && error.outcome.name() == "error"
+    ));
+
+    altered.parameters.clear();
+    altered.results.push(Type::CheckedU64);
+    assert!(matches!(
+        operation(&world, &altered),
+        Err(error) if error.code == "component-check"
+            && error.message == "resolved world output types unavailable"
+            && error.outcome.name() == "error"
+    ));
 }
 
 fn types(types: &[noble_kernel::types::Ty]) -> crate::workflow::encoding::Json {

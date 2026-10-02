@@ -47,6 +47,11 @@ fn parse_effects(text: &str) -> Result<std::vec::Vec<&'static str>, Failure> {
         if effects.contains(&effect) {
             return Err(usage());
         }
+        // Accepted effects are distinct members of EFFECTS, so this bound is
+        // never reached; it is a separate exit ahead of each push.
+        if effects.len() >= EFFECTS.len() {
+            return Err(usage());
+        }
         effects.push(effect);
     }
     Ok(effects)
@@ -122,6 +127,11 @@ fn claims(bytes: &[u8]) -> Result<std::vec::Vec<&'static str>, std::string::Stri
         if effects.contains(&effect) {
             return Err("duplicate effect identity".into());
         }
+        // Accepted effects are distinct members of EFFECTS, so this bound is
+        // never reached; it is a separate exit ahead of each push.
+        if effects.len() >= EFFECTS.len() {
+            return Err("too many claimed effects".into());
+        }
         effects.push(effect);
     }
     Ok(effects)
@@ -159,7 +169,13 @@ fn decide(arguments: &[std::ffi::OsString]) -> Result<Report, Failure> {
     } else {
         std::vec::Vec::new()
     };
-    if wat.len() > usize::try_from(ARTIFACT_LIMIT).unwrap_or(0) {
+    let Ok(module_bound) = usize::try_from(ARTIFACT_LIMIT) else {
+        return Ok(refusal(
+            "correspondence-reject",
+            "module bound exceeds the host address space",
+        ));
+    };
+    if wat.len() > module_bound {
         return Ok(refusal("correspondence-reject", "selected source WAT exceeds module bound"));
     }
     let mut engine = attempt!(super::worker::Engine::start_admission(options.optimized));

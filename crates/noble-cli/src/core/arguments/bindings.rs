@@ -235,7 +235,7 @@ fn dispatch(entry: &Entry) -> Result<crate::workflow::encoding::Json, super::sup
         allowed: entry.allowed,
         script: &entry.script,
     };
-    let mut steps = std::vec::Vec::with_capacity(entry.script.len() + 1);
+    let mut steps = std::vec::Vec::with_capacity(entry.script.len().saturating_add(1));
     for index in 0..=entry.script.len() {
         let decision = attempt!(plan.decide("test.clock", index)
             .map_err(|_| invalid("test.clock dispatch contract is invalid")));
