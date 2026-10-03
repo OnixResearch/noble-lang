@@ -8,6 +8,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {spawnSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
+import {selectedVendor} from '../selected-vendor.mjs';
 
 const root=fs.realpathSync(path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../..'));
 const sha=value=>crypto.createHash('sha256').update(value).digest('hex');
@@ -39,12 +40,16 @@ const runtime=JSON.parse(read('crates/noble-cli/src/core/runtime/config.json'));
 const rust=path.join(selected.tool_paths.quality_rust.output,'bin');
 const node=path.join(selected.tool_paths.node.output,'bin/node');
 const wasm=path.join(selected.tool_paths.wasm_tools.output,'bin/wasm-tools');
+const mold=fs.realpathSync(`/etc/profiles/per-user/${path.basename(process.env.HOME)}/bin/mold`);
+const moldHash=sha(fs.readFileSync(mold));
 assert.equal(fs.realpathSync(process.execPath),fs.realpathSync(node),'selected Node required');
 assert.equal(fs.realpathSync(runtime.tools.node.path),fs.realpathSync(node));
 assert.equal(fs.realpathSync(runtime.tools.wasm_tools.path),fs.realpathSync(wasm));
 const inventory=()=>{
   const names=new Set(['Cargo.toml','Cargo.lock','rust-toolchain.toml',
     'policy/tool-selection.json',file,'.cairn/specs/wit-wasi/spec.md',
+    'nix/reviewed-vendor.nix','verification/selected-vendor.mjs',
+    'verification/wi03-final/gate.mjs',
     'crates/noble-kernel/Cargo.toml','crates/noble-contracts/Cargo.toml',
     'crates/noble-wasm/Cargo.toml','crates/noble-cli/Cargo.toml',
     'crates/noble-syndicate/Cargo.toml']);
@@ -104,24 +109,44 @@ assert.ok(parent!==root&&!parent.startsWith(`${root}/`),'external parent require
 fs.mkdirSync(output); // Existing output must fail; never rewrite a previous run.
 assert.equal(fs.realpathSync(output),output,'output symlink');
 fs.mkdirSync(path.join(output,'tmp'));
+const cargoHome=path.join(output,'cargo-home');
+fs.mkdirSync(cargoHome);
+const cargoConfig=path.join(process.env.HOME,'.cargo/config.toml');
+const cargoConfigBytes=fs.readFileSync(cargoConfig);
+const cargoConfigHash=sha(cargoConfigBytes);
+assert.equal(cargoConfigHash,
+  'fd49ee6f0a53eb27d583fc54fdbf3c179e116e02942b7de4d52990896f961377',
+  'Cargo linker config differs from the separately reviewed cc/mold configuration');
+assert.match(cargoConfigBytes.toString(),/linker\s*=\s*"cc"/u,'selected C linker configuration');
+assert.match(cargoConfigBytes.toString(),/link-arg=-fuse-ld=mold/u,'selected mold configuration');
+const isolatedCargoConfig=path.join(cargoHome,'config.toml');
+fs.copyFileSync(cargoConfig,isolatedCargoConfig,fs.constants.COPYFILE_EXCL);
+assert.equal(sha(fs.readFileSync(isolatedCargoConfig)),cargoConfigHash,
+  'isolated Cargo configuration differs from selected config');
 fs.writeFileSync(path.join(output,'prepromotion-wit-wasi-cases.json'),caseBytes,{flag:'wx'});
 fs.writeFileSync(path.join(output,'prepromotion-wit-spec.md'),
   read('.cairn/specs/wit-wasi/spec.md'),{flag:'wx'});
 fs.writeFileSync(path.join(output,'prepromotion-native-tasks.md'),
   read('.cairn/changes/wit-exact-u64-adapter/tasks.md'),{flag:'wx'});
-const env={...process.env,PATH:`${rust}:${selected.component_sync.linker_bin}:${selected.tool_paths.node.output}/bin:${process.env.PATH}`,
-  TMPDIR:path.join(output,'tmp'),RUSTC_WRAPPER:'',RUSTC_WORKSPACE_WRAPPER:'',
-  RUSTFLAGS:'',CARGO_ENCODED_RUSTFLAGS:'',NIX_CONFIG:'min-free = 0',
+const env={HOME:process.env.HOME,USER:process.env.USER??'nobody',
+  PATH:`${path.dirname(mold)}:${rust}:${selected.component_sync.linker_bin}:${selected.tool_paths.node.output}/bin:${process.env.PATH}`,
+  TMPDIR:path.join(output,'tmp'),RUSTC:path.join(rust,'rustc'),RUSTDOC:path.join(rust,'rustdoc'),
+  CC:path.join(selected.component_sync.linker_bin,'cc'),
+  RUSTC_WRAPPER:'',RUSTC_WORKSPACE_WRAPPER:'',CARGO_BUILD_RUSTC_WRAPPER:'',
+  NIX_CONFIG:'min-free = 0',
+  CARGO_HOME:cargoHome,CARGO_NET_OFFLINE:'true',
   CARGO_TARGET_DIR:path.join(output,'target')};
 const commands=[];
 function run(label,executable,args,expected=0,overrides={}){
-  const result=spawnSync(executable,args,{cwd:root,env:{...env,...overrides},timeout:900000,
+  const environment={...env,...overrides};
+  const result=spawnSync(executable,args,{cwd:root,env:environment,timeout:900000,
     maxBuffer:16*1024*1024});
   const stdout=result.stdout??Buffer.alloc(0),stderr=result.stderr??Buffer.alloc(0);
   const stem=`${String(commands.length).padStart(2,'0')}-${label}`;
   fs.writeFileSync(path.join(output,`${stem}.stdout`),stdout,{flag:'wx'});
   fs.writeFileSync(path.join(output,`${stem}.stderr`),stderr,{flag:'wx'});
   commands.push({label,executable,executable_sha256:sha(fs.readFileSync(executable)),args,
+    environment,
     status:result.status,expected_status:expected,signal:result.signal,error:result.error?.message??null,
     stdout:`${stem}.stdout`,stdout_sha256:sha(stdout),stderr:`${stem}.stderr`,stderr_sha256:sha(stderr)});
   assert.equal(result.error,undefined,`${label} launch`);
@@ -136,9 +161,10 @@ function cliReport(label,cli,args,status){
 }
 const cargo=path.join(rust,'cargo');
 const vendor=selected.component_sync.vendor;
+const reviewedVendor=selectedVendor(selected.component_sync);
 const config=['--config','source.crates-io.replace-with="wi03-vendor"',
-  '--config',`source.wi03-vendor.directory="${vendor}/source-registry-0"`];
-run('build-production-cli',cargo,['build','-p','noble-cli','--locked','--offline','-j','4']);
+  '--config',`source.wi03-vendor.directory="${reviewedVendor.directory}"`];
+run('build-production-cli',cargo,['build','-p','noble-cli','--locked','--offline','-j','4',...config]);
 const cli=path.join(output,'target/debug/noble');
 const binary={path:cli,sha256:sha(fs.readFileSync(cli))};
 run('build-independent-peer',cargo,['build','--manifest-path',
@@ -249,7 +275,14 @@ for(const [name,digest] of Object.entries(sources))assert.equal(sha(read(name)),
   `source changed during gate: ${name}`);
 for(const [name,digest] of Object.entries(historical))assert.equal(sha(read(name)),digest,
   `historical receipt changed during gate: ${name}`);
+assert.equal(sha(fs.readFileSync(cargoConfig)),cargoConfigHash,
+  'selected Cargo configuration changed during gate');
+assert.equal(sha(fs.readFileSync(isolatedCargoConfig)),cargoConfigHash,
+  'isolated Cargo configuration changed during gate');
+assert.equal(sha(fs.readFileSync(mold)),moldHash,'reviewed mold linker changed during gate');
 for(const command of commands){
+  assert.equal(command.environment.RUSTC,path.join(rust,'rustc'));
+  assert.equal(command.environment.CARGO_HOME,cargoHome);
   assert.equal(command.error,null);assert.equal(command.signal,null);
   assert.equal(command.status,command.expected_status);
   assert.equal(sha(fs.readFileSync(command.executable)),command.executable_sha256);
@@ -279,11 +312,16 @@ const receipt={schema:'noble-wi03-final-source-body-guard/v1',kind:'test',result
   historical_receipt_sha256:historical,
   prior_prepromotion_receipt:{path:priorFile,sha256:priorDigest,
     source_revision:oldReceipt.source_revision,scope:'historical-only-unpromoted'},
-  tools:{rust:selected.tool_paths.quality_rust,node:{path:node,sha256:sha(fs.readFileSync(node))},
+  tools:{rust:selected.tool_paths.quality_rust,
+    rustc:{path:path.join(rust,'rustc'),sha256:sha(fs.readFileSync(path.join(rust,'rustc')))},
+    cargo_config:{path:cargoConfig,sha256:cargoConfigHash},
+    isolated_cargo_config:{path:isolatedCargoConfig,sha256:cargoConfigHash},
+    mold:{path:mold,sha256:moldHash},
+    node:{path:node,sha256:sha(fs.readFileSync(node))},
     wasm_tools:{path:wasm,sha256:sha(fs.readFileSync(wasm))},
     wasmtime_source:selected.component_sync.wasmtime_source,
     wasmtime_source_nar_hash:selected.component_sync.wasmtime_source_nar_hash,
-    vendor, vendor_nar_hash:selected.component_sync.vendor_nar_hash,
+    vendor, vendor_nar_hash:reviewedVendor.narHash,
     linker_bin:selected.component_sync.linker_bin},
   binaries:{cli:binary,peer:peerBinary},canonical_refusal:refusal,
   implicit_cli_report:implicit,rejected_signatures:rejected,

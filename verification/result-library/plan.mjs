@@ -11,6 +11,7 @@ const libraryFile = 'crates/noble-contracts/src/fixtures/result.noble';
 const sourceFiles = [
   'Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', 'flake.lock', 'flake.nix',
   'policy/tool-selection.json', 'verification/m6/pins.json',
+  'nix/reviewed-vendor.nix', 'verification/selected-vendor.mjs',
   '.cairn/specs/developer-experience/spec.md',
   '.cairn/changes/bend-qcue-scoped-adaptations/design.md',
   '.cairn/changes/bend-qcue-scoped-adaptations/tasks.md', caseFile,

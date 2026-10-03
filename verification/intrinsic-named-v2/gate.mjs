@@ -5,6 +5,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { selectedVendor } from '../selected-vendor.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const hash = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
@@ -131,6 +132,7 @@ try {
   receipt.historical_receipts_unchanged = oldReceipts;
   for (const name of ['Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', 'flake.lock', 'flake.nix',
     'policy/tool-selection.json', 'verification/m6/pins.json',
+    'nix/reviewed-vendor.nix', 'verification/selected-vendor.mjs',
     'specs/conformance/contract-cases.json', '.cairn/changes/intrinsic-noble-proofs/design.md',
     '.cairn/changes/intrinsic-noble-proofs/tasks.md']) snapshotSource(name);
   for (const tree of ['crates/noble-contracts', 'crates/noble-kernel', 'crates/noble-cli',
@@ -164,8 +166,8 @@ try {
   const linker = path.join(pins.linker_bin, 'cc');
   const binutilsLinker = fs.realpathSync(path.join(pins.linker_bin, 'ld'));
   const mold = fs.realpathSync(`/etc/profiles/per-user/${path.basename(process.env.HOME)}/bin/mold`);
-  const vendor = path.join(pins.vendor, 'source-registry-0');
-  assert.ok(fs.statSync(vendor).isDirectory(), 'offline vendor missing');
+  const { directory: vendor, narHash: vendorNarHash } = selectedVendor(pins);
+  receipt.tools.vendor = { original: vendor, nar_hash: vendorNarHash };
   receipt.tools.linker = {original: linker, sha256: watch(linker)};
   receipt.tools.binutils_linker = {original: binutilsLinker, sha256: watch(binutilsLinker)};
   receipt.tools.mold = {original: mold, sha256: watch(mold)};

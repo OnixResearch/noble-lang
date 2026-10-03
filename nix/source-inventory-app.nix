@@ -3,24 +3,45 @@
 {
   pkgs,
   cargoOctet,
+  rust,
+  wasmtimeSource,
+  reviewedVendor,
+  reviewedCargoConfig,
+  selectionFile,
 }:
 let
-  derive = ./source-inventory-derive.nix;
-  comparator = ./source-inventory.nix;
-in
-pkgs.writeShellApplication {
-  name = "source-inventory";
-  runtimeInputs = [
+  derive = pkgs.writeText "noble-source-inventory-derive.nix" (builtins.readFile ./source-inventory-derive.nix);
+  comparator = pkgs.writeText "noble-source-inventory-comparator.nix" (builtins.readFile ./source-inventory.nix);
+  packagedSelection = pkgs.writeText "noble-selected-tool-selection.json" (builtins.readFile selectionFile);
+  selection = builtins.fromJSON (builtins.readFile selectionFile);
+  runtimeTools = [
+    pkgs.bash
     pkgs.coreutils
+    pkgs.diffutils
+    pkgs.findutils
+    pkgs.gnugrep
+    pkgs.gnumake
+    pkgs.gnused
+    pkgs.nix
+    pkgs.stdenv.cc
+    rust
     cargoOctet
   ];
+in
+assert selection.component_sync.wasmtime_source == toString wasmtimeSource;
+assert selection.component_sync.vendor == toString reviewedVendor;
+assert selection.tool_paths.quality_rust.output == toString rust;
+assert selection.tool_paths.octet.output == toString cargoOctet;
+pkgs.writeShellApplication {
+  name = "source-inventory";
+  runtimeInputs = runtimeTools ++ [ wasmtimeSource reviewedVendor ];
   text = ''
     set -euo pipefail
 
+    export PATH=${pkgs.lib.escapeShellArg (pkgs.lib.makeBinPath runtimeTools)}
     derive='${derive}'
     comparator='${comparator}'
 
-    # The caller supplies the Nix CLI, as the runbook invocation already does.
     command -v nix-instantiate >/dev/null || {
       echo "source-inventory: nix-instantiate is required on PATH" >&2
       exit 2
@@ -31,15 +52,29 @@ pkgs.writeShellApplication {
       printf 'builtins.fromJSON (builtins.readFile %s)' "$(printf '%q' "$1")"
     }
 
-    command -v cargo-octet >/dev/null || {
-      echo "source-inventory: cargo-octet is not available" >&2
-      exit 2
-    }
-
     usage() {
       echo "usage: source-inventory collect --root DIR --selection FILE --artifact-dir DIR" >&2
       echo "       source-inventory check --root DIR --selection FILE --inventory FILE --policy FILE --artifact-dir DIR" >&2
       exit 2
+    }
+
+    reviewed_cargo_ancestors() {
+      local ancestor="$1" cargo_config
+      while :; do
+        for cargo_config in "$ancestor/.cargo/config" "$ancestor/.cargo/config.toml"; do
+          if [ -e "$cargo_config" ] || [ -L "$cargo_config" ]; then
+            if [ "$cargo_config" != "/home/brittonr/.cargo/config.toml" ] ||
+              [ ! -f "$cargo_config" ] ||
+              [ "$(realpath -- "$cargo_config")" != "/nix/store/7y0cmn79ilsaq0g7lgpmpa7sqjrkii16-cargo-config.toml" ] ||
+              [ "$(sha256sum "$cargo_config" | cut -d' ' -f1)" != "fd49ee6f0a53eb27d583fc54fdbf3c179e116e02942b7de4d52990896f961377" ]; then
+              echo "source-inventory: workspace or ancestor Cargo config is not reviewed: $cargo_config" >&2
+              return 2
+            fi
+          fi
+        done
+        [ "$ancestor" = / ] && break
+        ancestor=$(dirname -- "$ancestor")
+      done
     }
 
     main() {
@@ -60,21 +95,67 @@ pkgs.writeShellApplication {
       [ -n "$root" ] || usage
       [ -n "$selection" ] || usage
       [ -n "$artifacts" ] || usage
+      cmp -s "$selection" ${pkgs.lib.escapeShellArg (toString packagedSelection)} || {
+        echo "source-inventory: selection differs from selected policy" >&2
+        exit 2
+      }
+      root=$(realpath -- "$root")
+      reviewed_cargo_ancestors "$root"
+      [ -f "$root/crates/noble-cli/Cargo.toml" ] || {
+        echo "source-inventory: root Wasmtime manifest is missing" >&2
+        exit 2
+      }
+      local manifest_wasmtime
+      manifest_wasmtime=$(NIX_REMOTE=dummy:// nix-instantiate --eval --strict --raw \
+        --argstr manifest "$root/crates/noble-cli/Cargo.toml" \
+        --expr '{ manifest }: (builtins.fromTOML (builtins.readFile manifest)).dependencies.wasmtime.path or ""')
+      [ "$manifest_wasmtime" = ${pkgs.lib.escapeShellArg "${wasmtimeSource}/crates/wasmtime"} ] || {
+        echo "source-inventory: root Wasmtime manifest does not use the selected absolute source" >&2
+        exit 2
+      }
+      [ -d "${wasmtimeSource}/crates/wasmtime" ] && [ -d "${reviewedVendor}/source-registry-0" ] || {
+        echo "source-inventory: selected Wasmtime source or reviewed vendor source is missing" >&2
+        exit 2
+      }
+      [ "$(NIX_REMOTE=dummy:// nix hash path --sri --type sha256 ${pkgs.lib.escapeShellArg (toString wasmtimeSource)})" = ${pkgs.lib.escapeShellArg selection.component_sync.wasmtime_source_nar_hash} ] &&
+        [ "$(NIX_REMOTE=dummy:// nix hash path --sri --type sha256 ${pkgs.lib.escapeShellArg (toString reviewedVendor)})" = ${pkgs.lib.escapeShellArg selection.component_sync.vendor_nar_hash} ] || {
+        echo "source-inventory: selected Wasmtime source or reviewed vendor NAR differs from policy" >&2
+        exit 2
+      }
       [ -f "$root/policy/architecture.json" ] || {
         echo "source-inventory: architecture policy export is missing" >&2
         exit 2
       }
       mkdir -p "$artifacts"
+      artifacts=$(realpath -- "$artifacts")
 
       case "$command" in
         collect)
-          mkdir -p "$artifacts/collector"
+          [ ! -e "$artifacts/home" ] && [ ! -e "$artifacts/cargo-home" ] &&
+            [ ! -e "$artifacts/target" ] && [ ! -e "$artifacts/collector" ] &&
+            [ ! -L "$artifacts/home" ] && [ ! -L "$artifacts/cargo-home" ] &&
+            [ ! -L "$artifacts/target" ] && [ ! -L "$artifacts/collector" ] || {
+            echo "source-inventory: collect requires fresh artifact-owned Cargo paths" >&2
+            exit 2
+          }
+          export HOME="$artifacts/home"
+          export CARGO_HOME="$artifacts/cargo-home"
+          export CARGO_TARGET_DIR="$artifacts/target"
+          mkdir -- "$HOME" "$CARGO_HOME" "$artifacts/collector"
+          install -m 0644 ${pkgs.lib.escapeShellArg (toString reviewedCargoConfig)} "$CARGO_HOME/config.toml"
+          local collector_status=0
           (
+            # Cargo reads ancestor configuration. Only the separately reviewed
+            # home config digest above may accompany the original source tree.
             cd "$root"
-            CARGO_TARGET_DIR="$artifacts/target" cargo-octet check --workspace --output-format json \
-              --artifact-dir "$artifacts/collector" -- --all-targets --all-features \
-              > "$artifacts/collector.stdout" 2> "$artifacts/collector.stderr"
-          )
+            env -i PATH="$PATH" HOME="$HOME" CARGO_HOME="$CARGO_HOME" \
+              CARGO_TARGET_DIR="$CARGO_TARGET_DIR" CARGO_BUILD_TARGET_DIR="$CARGO_TARGET_DIR" \
+              CARGO_BUILD_RUSTC_WRAPPER= CARGO_BUILD_JOBS=2 CARGO_NET_OFFLINE=true TMPDIR="$HOME" \
+              cargo-octet check --workspace --output-format json \
+              --artifact-dir "$artifacts/collector" -- --all-targets --all-features --offline
+          ) > "$artifacts/collector.stdout" 2> "$artifacts/collector.stderr" || collector_status=$?
+          reviewed_cargo_ancestors "$root"
+          [ "$collector_status" -eq 0 ] || return "$collector_status"
           NIX_REMOTE=dummy:// nix-instantiate --eval --strict --json --expr '
             import '"$derive"' {
               ir = '"$(read_file "$artifacts/collector/compiler-architecture-ir.json")"';

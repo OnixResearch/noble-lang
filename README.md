@@ -51,9 +51,12 @@ denies remained zero. Its 2,530 function-address errors are 1,778 missing
 reviewed identities, 744 unsupported macro contexts, and 8 duplicate locators.
 Architecture remains incomplete (36 of 39 expected units observed, 3 saturated
 shards, six coverage/shard issues). Neither exploratory result is a PASS or an
-approved policy receipt. The selected gate remains blocked
-by the 34-unit architecture cap, nine unapproved tool SHA rebindings and
-production lock/vendor divergence; see the
+approved policy receipt. Their 40-unit/32 MiB-shard scratch policy and
+function-address failures do not establish the current selected gate's result.
+The reviewed 124-file selection (eight primary vendor locks plus a separate
+test-only boundary lock) addresses the earlier tool SHA
+and production lock/vendor divergence, but the selected Octet gate still
+needs fresh end-to-end evidence and must not be reported as passed; see the
 [Octet adoption map](specs/OCTET-ADOPTION.md). The
 [MPG thesis](https://mpg.is/thesis.html) and
 [OllamaHoles](https://github.com/Tritlo/OllamaHoles) are unapproved editor
@@ -574,6 +577,17 @@ ownership/retirement, MC2 proof-required admission, portable packages and
 universal compiler/host/engine refinement remain separate and open. This
 Result gate hashes current source bytes but does **not** renew DXM1's earlier
 compiler-derived Octet inventory, extraction or whole-crate proof.
+
+For a fresh Result CLI build receipt, run the selected Node on
+`verification/result-library/collect-build.mjs NEW_EXTERNAL_DIRECTORY`. This
+builds the production CLI against the NAR-checked offline M6 vendor with
+selected Rust/mold, records exact Cargo argv and isolated environment, and
+compares source snapshots and Git HEAD before and after building. The Result
+gate verifies both the independently hashed source bytes and that the recorded
+base HEAD is the reviewed checkout's current HEAD, then independently builds
+its peer. A later approved commit requires a new external build receipt even
+if its source bytes are unchanged; a build receipt alone does not renew the
+historical DX-04 acceptance.
 
 ## Using MC1 contracts
 

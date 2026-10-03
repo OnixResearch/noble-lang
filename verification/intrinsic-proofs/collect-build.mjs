@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { root, fileHash } from './record.mjs';
+import { selectedVendor } from '../selected-vendor.mjs';
 
 assert.equal(process.argv.length, 4,
   'usage: SELECTED_NODE verification/intrinsic-proofs/collect-build.mjs NEW_EXTERNAL_DIRECTORY SOURCE_STABLE_CLI_SHA256');
@@ -30,30 +31,41 @@ const cargoHome = path.join(process.env.HOME, '.cargo');
 const cargoConfig = path.join(cargoHome, 'config.toml');
 const cargoConfigBytes = fs.readFileSync(cargoConfig, 'utf8');
 const cargoConfigSha256 = fileHash(cargoConfig);
+assert.equal(cargoConfigSha256,
+  'fd49ee6f0a53eb27d583fc54fdbf3c179e116e02942b7de4d52990896f961377',
+  'Cargo linker configuration differs from the separately reviewed cc/mold config');
 assert.match(cargoConfigBytes, /linker\s*=\s*"cc"/u,
   'reviewed Cargo configuration must select cc');
 assert.match(cargoConfigBytes, /link-arg=-fuse-ld=mold/u,
   'reviewed Cargo configuration must select mold');
-const vendor = path.join(pins.vendor, 'source-registry-0');
-assert.ok(fs.statSync(vendor).isDirectory(), 'missing selected offline Rust vendor');
+const { directory: vendor, narHash: vendorNarHash } = selectedVendor(pins);
 assert.ok(fs.statSync(linker).isFile(), 'missing selected C linker');
 fs.mkdirSync(output);
 fs.mkdirSync(path.join(output, 'tmp'));
+fs.mkdirSync(path.join(output, 'home'));
+const isolatedCargoHome = path.join(output, 'cargo-home');
+fs.mkdirSync(isolatedCargoHome);
+const isolatedCargoConfig = path.join(isolatedCargoHome, 'config.toml');
+fs.copyFileSync(cargoConfig, isolatedCargoConfig, fs.constants.COPYFILE_EXCL);
 const environment = {
   PATH: `${moldDirectory}:${binutilsDirectory}:${pins.linker_bin}:${path.dirname(cargo)}:/run/current-system/sw/bin`,
   COMPILER_PATH: binutilsDirectory,
-  HOME: process.env.HOME,
+  HOME: path.join(output, 'home'),
   TMPDIR: path.join(output, 'tmp'),
-  CARGO_HOME: cargoHome,
-  CARGO_TARGET_DIR: path.join(root, 'target'),
+  CARGO_HOME: isolatedCargoHome,
+  CARGO_TARGET_DIR: path.join(output, 'target'),
   CARGO_NET_OFFLINE: 'true',
   CARGO_BUILD_JOBS: '2',
+  CARGO_INCREMENTAL: '0',
   RUSTC: rustc,
+  RUSTDOC: path.join(path.dirname(rustc), 'rustdoc'),
   CC: linker,
   LD: binutilsLinker,
+  RUSTFLAGS: `-C link-arg=-fuse-ld=mold --remap-path-prefix=${output}=/reviewed-build`,
   RUSTC_WRAPPER: '',
+  RUSTC_WORKSPACE_WRAPPER: '',
   CARGO_BUILD_RUSTC_WRAPPER: '',
-  LANG: 'C.UTF-8', LC_ALL: 'C.UTF-8',
+  LANG: 'C.UTF-8', LC_ALL: 'C.UTF-8', USER: process.env.USER ?? 'nobody',
 };
 
 function walk(directory, sources) {
@@ -71,7 +83,10 @@ function walk(directory, sources) {
 function sourceSnapshot() {
   const sources = {};
   for (const name of ['Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml',
-    'policy/tool-selection.json']) sources[name] = fileHash(path.join(root, name));
+    'policy/tool-selection.json', 'verification/m6/pins.json',
+    'nix/reviewed-vendor.nix', 'verification/selected-vendor.mjs',
+    'verification/intrinsic-proofs/collect-build.mjs'])
+    sources[name] = fileHash(path.join(root, name));
   for (const tree of ['crates/noble-contracts', 'crates/noble-kernel',
     'crates/noble-cli', 'crates/noble-wasm', 'proofs/mc1',
     'verification/intrinsic-proofs/peer']) walk(tree, sources);
@@ -110,10 +125,12 @@ if (JSON.stringify(sources) !== JSON.stringify(sourceSnapshot()))
   failure = 'one or more production/peer source inputs changed during shared build';
 if (fileHash(cargoConfig) !== cargoConfigSha256)
   failure = 'selected Cargo linker configuration changed during shared build';
+if (fileHash(isolatedCargoConfig) !== cargoConfigSha256)
+  failure = 'isolated Cargo linker configuration changed during shared build';
 const binaries = {};
 for (const [name, file] of [
-  ['cli', path.join(root, 'target/debug/noble')],
-  ['kernel_peer', path.join(root, 'target/debug/noble-intrinsic-proofs-peer')],
+  ['cli', path.join(output, 'target/debug/noble')],
+  ['kernel_peer', path.join(output, 'target/debug/noble-intrinsic-proofs-peer')],
 ]) {
   if (!failure) {
     assert.ok(fs.statSync(file).isFile(), `final ${name} binary missing`);
@@ -131,7 +148,9 @@ const receipt = {
     linker: { path: linker, sha256: fileHash(linker) },
     binutils_linker: { path: binutilsLinker, sha256: fileHash(binutilsLinker) },
     mold: { path: mold, sha256: fileHash(mold) },
-    cargo_config: { path: cargoConfig, sha256: cargoConfigSha256 }, vendor },
+    cargo_config: { path: cargoConfig, sha256: cargoConfigSha256 },
+    isolated_cargo_config: { path: isolatedCargoConfig, sha256: fileHash(isolatedCargoConfig) },
+    vendor, vendor_nar_hash: vendorNarHash },
   source_files: sources, commands, binaries,
 };
 const report = path.join(output, 'build.json');

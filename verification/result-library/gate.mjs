@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { selectedVendor } from '../selected-vendor.mjs';
 import { Recorder, root, fileHash, sha256 } from './record.mjs';
 import { preparePlan, bindRevision } from './plan.mjs';
 import { librarySource, programs, bindings, canonicalCases, hostBinding } from './fixtures.mjs';
@@ -31,30 +32,53 @@ const snapshot = (file, name) => {
 };
 
 function buildProvenance(file) {
+  const buildRoot = path.dirname(fs.realpathSync(file));
+  assert.equal(path.resolve(file), path.join(buildRoot, 'build.json'),
+    'CLI build receipt must belong to its fresh isolated output');
   const receipt = JSON.parse(fs.readFileSync(file));
   assert.equal(receipt.schema, 'noble-result-cli-build/v1');
   assert.equal(receipt.result, 'built');
   assert.ok(receipt.binary && Array.isArray(receipt.commands), 'missing build binary/commands');
   assert.equal(path.resolve(receipt.binary.path), path.resolve(process.argv[2]));
+  assert.equal(receipt.binary.path, path.join(buildRoot, 'target/debug/noble'),
+    'CLI executable must be the isolated Cargo build output');
   assert.equal(fileHash(receipt.binary.path), receipt.binary.sha256,
     'supplied CLI differs from the freshly built source artifact');
   assert.match(receipt.sourceRevision, /^[0-9a-f]{40}$/,
     'CLI build must retain the exact Git HEAD alongside its full source hashes');
+  assert.equal(receipt.postSourceRevision, receipt.sourceRevision,
+    'CLI build Git HEAD changed during source-stable build');
+  const head = spawnSync('/run/current-system/sw/bin/git', ['rev-parse', 'HEAD'],
+    { cwd: root, env: { PATH: '/run/current-system/sw/bin' },
+      encoding: 'utf8', timeout: 30_000 });
+  assert.equal(head.status, 0, 'cannot identify current reviewed Git HEAD');
+  assert.equal(receipt.sourceRevision, head.stdout.trim(),
+    'CLI build Git HEAD does not match current reviewed checkout');
   assert.deepEqual(receipt.preSources, receipt.postSources,
     'source changed while the production CLI was built');
+  assert.deepEqual(receipt.sources, receipt.postSources,
+    'CLI source inventory differs from the post-build snapshot');
   const expectedCrates = Object.keys(plan.sources).filter(name => name.startsWith('crates/')).sort();
   const builtCrates = Object.keys(receipt.sources).filter(name => name.startsWith('crates/')).sort();
   assert.deepEqual(builtCrates, expectedCrates,
     'fresh CLI build source inventory differs from reviewed acceptance crates');
+  const requiredInputs = ['Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml',
+    'policy/tool-selection.json', 'verification/m6/pins.json',
+    'nix/reviewed-vendor.nix', 'verification/selected-vendor.mjs',
+    'verification/result-library/collect-build.mjs'];
+  assert.deepEqual(Object.keys(receipt.sources).sort(), [...expectedCrates, ...requiredInputs].sort(),
+    'fresh CLI build omitted or added a source/tool policy input');
   for (const [name, item] of Object.entries(receipt.sources)) {
     assert.ok(plan.sources[name], `unreviewed CLI build source: ${name}`);
     assert.equal(plan.sources[name].sha256, item.sha256,
       `${name}: CLI build and gate did not use identical source bytes`);
   }
-  for (const name of ['Cargo.toml', 'Cargo.lock', librarySource])
+  for (const name of ['Cargo.toml', 'Cargo.lock', librarySource,
+    'verification/result-library/collect-build.mjs'])
     assert.ok(receipt.sources[name], `${name}: absent from fresh CLI build receipt`);
   const selected = JSON.parse(fs.readFileSync(path.join(root, 'policy/tool-selection.json')));
   const m6 = JSON.parse(fs.readFileSync(path.join(root, 'verification/m6/pins.json')));
+  const reviewedVendor = selectedVendor(m6);
   const expectedRust = selected.tool_paths.quality_rust.output;
   for (const tool of ['cargo', 'rustc']) {
     const expected = path.join(expectedRust, 'bin', tool);
@@ -64,14 +88,44 @@ function buildProvenance(file) {
       `${tool}: build tool byte identity changed`);
     record.watch(expected);
   }
-  assert.equal(receipt.tools?.vendor?.path, `${m6.vendor}/source-registry-0`,
+  assert.equal(receipt.tools?.vendor?.path, reviewedVendor.directory,
     'CLI was not built against the reviewed offline vendor');
-  assert.ok(receipt.commands.length > 0, 'no build command evidence');
+  assert.equal(receipt.tools.vendor.nar_hash, reviewedVendor.narHash,
+    'CLI build did not authenticate the reviewed vendor NAR');
+  const linker = fs.realpathSync(path.join(m6.linker_bin, 'ld'));
+  const mold = fs.realpathSync(
+    `/etc/profiles/per-user/${path.basename(process.env.HOME)}/bin/mold`);
+  assert.equal(receipt.tools?.mold?.path, mold, 'CLI did not select reviewed mold linker');
+  assert.equal(receipt.tools.mold.sha256, fileHash(mold), 'selected mold linker bytes changed');
+  record.watch(mold);
+  assert.equal(receipt.commands.length, 1, 'exactly one production CLI build required');
   const commands = receipt.commands.map((command, index) => {
     assert.equal(command.status, 0, `CLI build command ${index} did not succeed`);
     assert.ok(Array.isArray(command.argv) && command.argv.length > 0
       && command.env && typeof command.env === 'object',
     `CLI build command ${index} omitted argv/environment`);
+    assert.deepEqual(command.argv, [path.join(expectedRust, 'bin/cargo'), 'build',
+      '--manifest-path', 'Cargo.toml', '-p', 'noble-cli', '--bin', 'noble',
+      '--locked', '--offline',
+      '--config', 'source.crates-io.replace-with="m6-vendor"',
+      '--config', `source.m6-vendor.directory="${reviewedVendor.directory}"`],
+    'production CLI did not build with exact selected Cargo and locked offline vendor flags');
+    assert.equal(command.cwd, root, 'production CLI build ran outside reviewed source root');
+    assert.deepEqual(command.env, {
+      PATH: `${path.dirname(mold)}:${path.dirname(linker)}:${m6.linker_bin}:${path.join(expectedRust, 'bin')}:/run/current-system/sw/bin`,
+      COMPILER_PATH: path.dirname(linker), HOME: path.join(buildRoot, 'home'),
+      CARGO_HOME: path.join(buildRoot, 'cargo'),
+      CARGO_TARGET_DIR: path.join(buildRoot, 'target'),
+      CARGO_NET_OFFLINE: 'true', CARGO_BUILD_JOBS: '2', CARGO_INCREMENTAL: '0',
+      RUSTC: path.join(expectedRust, 'bin/rustc'),
+      RUSTDOC: path.join(expectedRust, 'bin/rustdoc'),
+      CC: path.join(m6.linker_bin, 'cc'), LD: linker,
+      RUSTFLAGS: '-C link-arg=-fuse-ld=mold',
+      RUSTC_WRAPPER: '', RUSTC_WORKSPACE_WRAPPER: '',
+      CARGO_BUILD_RUSTC_WRAPPER: '',
+      LANG: 'C.UTF-8', LC_ALL: 'C.UTF-8', USER: process.env.USER ?? 'nobody',
+      TMPDIR: path.join(buildRoot, 'tmp'),
+    }, 'production CLI command used an unreviewed Cargo, compiler or linker environment');
     const logs = {};
     for (const stream of ['stdout', 'stderr']) {
       const log = command[stream];
@@ -89,7 +143,9 @@ function buildProvenance(file) {
     git_head: receipt.sourceRevision, binary_sha256: receipt.binary.sha256,
     selected_cargo_sha256: receipt.tools.cargo.sha256,
     selected_rustc_sha256: receipt.tools.rustc.sha256,
-    selected_vendor: receipt.tools.vendor.path, commands };
+    selected_mold_sha256: receipt.tools.mold.sha256,
+    selected_vendor: receipt.tools.vendor.path, selected_vendor_nar_hash: reviewedVendor.narHash,
+    commands };
 }
 
 function buildPeer() {
@@ -103,6 +159,7 @@ function buildPeer() {
   assert.equal(record.watch(cargo), record.receipt.build.selected_cargo_sha256);
   assert.equal(record.watch(rustc), record.receipt.build.selected_rustc_sha256);
   assert.equal(vendor, record.receipt.build.selected_vendor);
+  assert.equal(record.receipt.build.selected_vendor_nar_hash, m6.vendor_nar_hash);
   const manifest = 'verification/result-library/peer/Cargo.toml';
   assert.ok(plan.sources[manifest] && plan.sources['verification/result-library/peer/Cargo.lock'],
     'independent peer manifest/lock omitted from source snapshot');
@@ -110,14 +167,17 @@ function buildPeer() {
   const home = path.join(working, 'home');
   const cargoHome = path.join(working, 'cargo');
   const target = path.join(working, 'target');
-  for (const directory of [home, cargoHome, target]) fs.mkdirSync(directory, { recursive: true });
+  const tmp = path.join(working, 'tmp');
+  for (const directory of [home, cargoHome, target, tmp])
+    fs.mkdirSync(directory, { recursive: true });
   const environment = {
     PATH: `${path.join(rust, 'bin')}:${m6.linker_bin}:/run/current-system/sw/bin`,
     HOME: home, CARGO_HOME: cargoHome, CARGO_TARGET_DIR: target,
+    CARGO_NET_OFFLINE: 'true',
     RUSTC: rustc, RUSTDOC: rustdoc, CARGO_INCREMENTAL: '0',
     RUSTC_WRAPPER: '', RUSTC_WORKSPACE_WRAPPER: '', RUSTFLAGS: '',
     CARGO_ENCODED_RUSTFLAGS: '', LANG: 'C.UTF-8', LC_ALL: 'C.UTF-8',
-    USER: process.env.USER ?? 'nobody', TMPDIR: '/tmp',
+    USER: process.env.USER ?? 'nobody', TMPDIR: tmp,
   };
   const args = ['build', '--manifest-path', manifest, '--locked', '--offline',
     '--config', 'source.crates-io.replace-with="m6-vendor"',

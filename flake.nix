@@ -43,6 +43,23 @@
         binaryen = pkgs.binaryen;
       };
       selectionPolicy = builtins.fromJSON (builtins.readFile ./policy/tool-selection.json);
+      selectedWasmtimeSource = builtins.path {
+        path = /nix/store/26a8xzacbx01hidm70lpyphyw926zhc5-source;
+        name = "source";
+        sha256 = selectionPolicy.component_sync.wasmtime_source_nar_hash;
+      };
+      reviewedVendor = import ./nix/reviewed-vendor.nix {
+        inherit pkgs;
+        root = ./.;
+      };
+      reviewedCargoConfig = pkgs.writeText "noble-reviewed-cargo-config" ''
+        [source.crates-io]
+        replace-with = "reviewed-vendor"
+        [source.reviewed-vendor]
+        directory = "${reviewedVendor}/source-registry-0"
+        [net]
+        offline = true
+      '';
       selectionObservation =
         (import ./nix/tool-selection-observation.nix {
           inherit inputs system;
@@ -124,9 +141,13 @@
         pname = "noble";
         version = (builtins.fromTOML (builtins.readFile ./Cargo.toml)).workspace.package.version;
         inherit src;
-        cargoLock.lockFile = ./Cargo.lock;
-        cargoBuildFlags = [ "--package" "noble-cli" "--bin" "noble" "--all-features" ];
-        cargoTestFlags = [ "--workspace" "--all-targets" "--all-features" ];
+        buildInputs = [ selectedWasmtimeSource reviewedVendor ];
+        cargoVendorDir = "reviewed-vendor";
+        postUnpack = ''
+          ln -s ${reviewedVendor}/source-registry-0 "$sourceRoot/reviewed-vendor"
+        '';
+        cargoBuildFlags = [ "--locked" "--package" "noble-cli" "--bin" "noble" "--all-features" ];
+        cargoTestFlags = [ "--locked" "--workspace" "--all-targets" "--all-features" ];
         nativeCheckInputs = builtins.attrValues wasmVerificationTools;
         strictDeps = true;
       };
@@ -144,6 +165,8 @@
           nickel
           octetGate
           ;
+        wasmtimeSource = selectedWasmtimeSource;
+        inherit reviewedVendor reviewedCargoConfig;
         cargoOctet = octet.packages.${system}.cargo-octet;
         selection = selectionPolicy;
       };
@@ -159,6 +182,7 @@
       };
       # Compiler-derived inventory artifacts. Built in the sandbox by the published collector.
       inventoryArtifacts = pkgs.runCommand "noble-inventory-artifacts" {
+        buildInputs = [ selectedWasmtimeSource reviewedVendor ];
         nativeBuildInputs = [
           rust
           pkgs.stdenv.cc
@@ -170,6 +194,7 @@
         export CARGO_HOME="$HOME/cargo"
         export CARGO_TARGET_DIR="$TMPDIR/target"
         mkdir -p "$CARGO_HOME" "$out"
+        cp ${reviewedCargoConfig} "$CARGO_HOME/config.toml"
         cp -r ${src} source
         chmod -R u+w source
         cd source
@@ -208,7 +233,14 @@
       };
       # Use the published hook, not a copied lint list or a warning-only helper.
       sourceInventory = import ./nix/source-inventory-app.nix {
-        inherit pkgs;
+        inherit
+          pkgs
+          rust
+          reviewedVendor
+          reviewedCargoConfig
+          ;
+        wasmtimeSource = selectedWasmtimeSource;
+        selectionFile = ./policy/tool-selection.json;
         cargoOctet = octet.packages.${system}.cargo-octet;
       };
       extractKernel = import ./nix/extract-kernel-app.nix {
@@ -220,7 +252,14 @@
         selection = selectionPolicy;
       };
       nativeAssurance = import ./nix/native-assurance-app.nix {
-        inherit pkgs;
+        inherit
+          pkgs
+          rust
+          reviewedVendor
+          reviewedCargoConfig
+          ;
+        wasmtimeSource = selectedWasmtimeSource;
+        selectionFile = ./policy/tool-selection.json;
         cargoOctet = octet.packages.${system}.cargo-octet;
       };
       octetGate = pkgs.writeShellApplication {
@@ -240,6 +279,7 @@
         name: inputs: command:
         pkgs.runCommand name
           {
+            buildInputs = [ selectedWasmtimeSource reviewedVendor ];
             nativeBuildInputs = [
               rust
               pkgs.stdenv.cc
@@ -252,6 +292,7 @@
             export CARGO_HOME="$HOME/cargo"
             export CARGO_TARGET_DIR="$TMPDIR/target"
             mkdir -p "$CARGO_HOME" "$out"
+            cp ${reviewedCargoConfig} "$CARGO_HOME/config.toml"
             cp -r ${src} source
             chmod -R u+w source
             cd source
@@ -259,6 +300,8 @@
           '';
     in
     assert selection.enforce;
+    assert toString selectedWasmtimeSource == selectionPolicy.component_sync.wasmtime_source;
+    assert toString reviewedVendor == selectionPolicy.component_sync.vendor;
     {
       packages.${system} = {
         aeneas = selectedAeneas;

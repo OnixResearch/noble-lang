@@ -11,9 +11,11 @@ Miri uses Charon's extraction toolchain, which includes the Miri component.
 The required target is `x86_64-unknown-linux-gnu`, with 64-bit words and all current features.
 The Cargo profiles use unwind and explicit overflow checks.
 The inherited M1 extraction configuration also names its kernel subject, translation arguments, and resource limits.
-The file bindings additionally cover the current four-package workspace and the M2, checker-M3, MC1, and Wasm-emitter proof configurations.
+The file bindings additionally cover the current five-package workspace and the M2, checker-M3, MC1, and Wasm-emitter proof configurations.
 Those bindings do not substitute for actual-source extraction or consumer proof-checking evidence.
-Future Wasmtime, WIT, Verus, and byte-view components remain unselected.
+Wasmtime 40 is selected for both the Noble CLI's direct production Rust dependency
+and the component-verification peer. Further WIT, Verus, and byte-view components
+remain unselected.
 
 ## Ownership
 
@@ -23,7 +25,12 @@ It performs no process execution and emits no execution receipt.
 Every flake output forces its rejection decision before exposing a package or check.
 
 The checker requires eight immutable source revisions with NAR hashes.
-It also compares 42 file digests: the flake declarations and lock, offline-input mapping, pre-commit hook configuration, Rust toolchain, workspace Cargo manifest and lock, all four package manifests, five proof-project configurations, and the M3 vocabulary, eight runtime assets, experiment configuration, and Aeneas source patch.
+The reviewed selection compares 124 file digests across the flake and
+offline inputs, workspace/runtime source, proof projects, selected component
+pins, source-bound verification/build recipes, and all eight Cargo locks
+consumed by the reviewed offline vendor, plus the separate test-only boundary
+fixture lock. These are source identities,
+not an executed proof.
 In particular, the `noble-cli` package manifest binds the `noble` executable name, and the `noble-contracts` manifest binds the frontend's kernel dependency.
 `nix/tool-selection-files.nix` owns the observed file set; `policy/tool-selection-files.ncl` owns the corresponding reviewed hashes imported by the selection policy.
 The JSON export and observed file set must agree exactly. A check does not refresh its own expected values.
@@ -47,6 +54,96 @@ Noble reuses Nix, the pinned Octet components, and the upstream Aeneas pin check
 No provider implementation enters a Noble production crate.
 A new Rust receipt crate does not fit this build-configuration boundary.
 Noble owns the exact selection policy and the Nix composition code.
+
+## Reviewed offline Cargo vendor and intrinsic build
+
+[`nix/reviewed-vendor.nix`](../nix/reviewed-vendor.nix) reads the root Cargo
+lock and the independent M5, M6, M7, intrinsic-proofs, intrinsic-named-v2,
+Result-library, and declared-modules-v1 peer locks: eight locks in all. It
+rejects conflicting or missing registry checksums, checks all 232 distinct
+crate archive SHA-256 values, and produces `source-registry-0` plus a
+lock/archive provenance manifest. The reviewed output
+`/nix/store/f1l57k6wmrq5r7mclybqn1ybbrhyiqsh-noble-reviewed-offline-vendor`
+has NAR `sha256-q2ogc6HJX8hTQWIJgXQJ4cfNwrOhfcvb8OmeduAFAPY=`, pinned
+together in both [`M5`](m5/pins.json) and [`M6`](m6/pins.json).
+[`selectedVendor`](selected-vendor.mjs) verifies that NAR at each migrated
+gate before selecting Cargo's exact offline source replacement. Merely
+having a registry directory is not evidence of the reviewed vendor.
+Sandboxed Rust checks and the published inventory/native-assurance collectors
+declare the same hash-bound Wasmtime source and reviewed vendor, then install
+offline source replacement into an isolated Cargo home. The two direct
+collectors first compare the supplied selection with the packaged policy and
+verify the CLI's absolute Wasmtime manifest path. Collection runs against the
+original workspace, rejects unreviewed workspace and ancestor Cargo config,
+and admits only the separately reviewed
+`/home/brittonr/.cargo/config.toml` SHA-256
+`fd49ee6f0a53eb27d583fc54fdbf3c179e116e02942b7de4d52990896f961377`
+when it resolves to immutable
+`/nix/store/7y0cmn79ilsaq0g7lgpmpa7sqjrkii16-cargo-config.toml`,
+with artifact-owned Cargo home and target; it never copies a curated source
+subset. Their `check` commands read the supplied inventory and policy without
+invoking Cargo. Boundary randomness cases retain their own ninth, test-only lock and
+complete fixture vendor; they do not change the eight-lock reviewed
+production/peer vendor.
+
+On a host with the locked Nix inputs and all fixed-output archives already
+available, re-evaluate the recipe from the repository's locked Nixpkgs and
+realize its derivation offline:
+
+```sh
+export NIX_CONFIG='min-free = 0
+max-free = 0
+builders =
+sandbox = true
+require-sigs = true'
+drv="$(nix eval --offline --impure --raw --expr \
+  'let flake = builtins.getFlake ("path:" + toString ./.);
+       pkgs = import flake.inputs.nixpkgs { system = "x86_64-linux"; };
+   in (import ./nix/reviewed-vendor.nix { inherit pkgs; root = ./.; }).drvPath')"
+nix build --offline --no-link --print-out-paths "$drv^out"
+```
+
+The path-flake expression can see worktree-only files. Git-flake evaluation
+requires the recipe and verifier to be tracked in the same reviewed commit,
+while the source pins must still match those exact committed bytes. Offline
+reconstruction fails closed if a fixed archive is missing.
+Do not substitute a mutable Cargo registry, invoke shared Nix GC, or build
+without at least 5 GiB free disk and 20 GiB `MemAvailable` throughout.
+
+The source-bound intrinsic collector builds the production CLI and its
+independent peer from fresh external Cargo home/target directories. It pins
+the reviewed cc/mold Cargo configuration SHA, exact vendor flags,
+`--locked --offline`, selected compiler, and a full output-path remap.
+`CARGO_ENCODED_RUSTFLAGS` must be absent or it overrides the reviewed
+`RUSTFLAGS` even when empty. A separate bounded `cargo -vv` production CLI
+build used the collector's reviewed environment with only fresh
+output-path substitutions and the same locked vendor. It directly observed
+the CLI `rustc` invocation with
+`-C link-arg=-fuse-ld=mold` and the full output-path remap; its raw binary
+matched the reviewed fingerprint below. This observes compiler arguments
+and selected mold/configuration bytes, not a traced mold process execution.
+From stable reviewed source, use the selected Node and a separately
+reviewed raw CLI fingerprint:
+
+```sh
+scratch="$(mktemp -d -p "$HOME/.cache" noble-intrinsic.XXXXXX)"
+fresh_build="$scratch/build"
+fresh_gate="$scratch/gate"
+node="$(jq -r '.tool_paths.node.output + "/bin/node"' policy/tool-selection.json)"
+"$node" verification/intrinsic-proofs/collect-build.mjs "$fresh_build" \
+  c4fbbb554af054380987c8de87ab1f6cd53d009cf3abde7a4f0e7689742780d9
+"$node" verification/intrinsic-proofs/gate.mjs "$fresh_build/build.json" "$fresh_gate"
+```
+
+The fingerprint above was verified after the final reviewed compiler
+environment: two independent clean remapped-build pairs and the final
+source-bound collector emitted the identical raw CLI SHA. Re-review it
+after any compiler input changes. The collector's `result: built` is build
+provenance only; the gate must separately complete its strict Lean,
+hostile-source, kernel-peer, and runtime observations. Diagnostic smokes and
+selection fixtures do not promote canonical cases or rewrite historical
+receipts. Even a full finite gate receipt does not establish source-to-Lean
+soundness, Rust refinement, or owner law release.
 
 ## Lean release packaging
 

@@ -29,7 +29,8 @@ function walk(directory, files) {
 export function preparePlan(record, scenarios) {
   const sourcePaths = new Set([
     'Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', 'flake.lock', 'flake.nix',
-    'policy/tool-selection.json', 'verification/m6/pins.json', canonicalFile,
+    'policy/tool-selection.json', 'verification/m6/pins.json',
+    'nix/reviewed-vendor.nix', 'verification/selected-vendor.mjs', canonicalFile,
     '.cairn/README.md', '.cairn/changes/intrinsic-noble-proofs/design.md',
     '.cairn/changes/intrinsic-noble-proofs/tasks.md',
     '.cairn/specs/language/spec.md', '.cairn/specs/program-contracts/spec.md',

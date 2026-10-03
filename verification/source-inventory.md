@@ -30,8 +30,13 @@ source-inventory check --root DIR --selection FILE --inventory FILE --policy FIL
 The Nix source-coverage check uses those collection/comparison interfaces:
 
 ```sh
-nix --option min-free 0 --option build-dir /nix/var/nix/builds --builders '' \
-  build .#checks.x86_64-linux.source-coverage -L --out-link "$EVIDENCE/source-coverage"
+export NIX_CONFIG='min-free = 0
+max-free = 0
+builders =
+sandbox = true
+require-sigs = true'
+nix build --offline --no-write-lock-file .#checks.x86_64-linux.source-coverage \
+  -L --out-link "$EVIDENCE/source-coverage"
 ```
 
 ## Ownership and mechanisms
