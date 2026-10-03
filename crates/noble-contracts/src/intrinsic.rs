@@ -428,7 +428,8 @@ fn rewrite_prop(prop: &Proposition, mode: Rewrite<'_>, span: Span, bound: usize)
                                 push_rewrite_frame!(frames,RewriteFrame::Code(argument,true),bound,span)?;
                                 continue;
                             }
-                            Rewrite::Replace(binder,Argument::Code(_)) if *index > binder =>
+                            // Every eliminated binder shifts later Type0 positions, not only Code binders.
+                            Rewrite::Replace(binder,_) if *index > binder =>
                                 index.checked_sub(1).ok_or_else(|| exhausted(span))?,
                             Rewrite::Replace(..) => *index,
                         }
@@ -444,8 +445,7 @@ fn rewrite_prop(prop: &Proposition, mode: Rewrite<'_>, span: Span, bound: usize)
                 Sort::Codes => push_rewritten!(values,Rewritten::Sort(Sort::Codes),bound,span)?,
                 Sort::Value(code) => {
                     push_rewrite_frame!(frames,RewriteFrame::Value,bound,span)?;
-                    let copy = matches!(mode,Rewrite::Replace(_,Argument::Value(_) | Argument::Premise));
-                    push_rewrite_frame!(frames,RewriteFrame::Code(code,copy),bound,span)?;
+                    push_rewrite_frame!(frames,RewriteFrame::Code(code,false),bound,span)?;
                 }
                 Sort::Premise(prop) => {
                     push_rewrite_frame!(frames,RewriteFrame::Premise,bound,span)?;
@@ -464,8 +464,7 @@ fn rewrite_prop(prop: &Proposition, mode: Rewrite<'_>, span: Span, bound: usize)
                 }
                 Proposition::Eq(code,left,right) => {
                     push_rewrite_frame!(frames,RewriteFrame::Eq(*left,*right),bound,span)?;
-                    let copy = matches!(mode,Rewrite::Replace(_,Argument::Value(_) | Argument::Premise));
-                    push_rewrite_frame!(frames,RewriteFrame::Code(code,copy),bound,span)?;
+                    push_rewrite_frame!(frames,RewriteFrame::Code(code,false),bound,span)?;
                 }
             },
             RewriteFrame::Pair | RewriteFrame::Sum => {

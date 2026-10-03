@@ -1006,3 +1006,41 @@ fn local_named_proof_use_is_ordered_and_not_an_executable_word() -> Result<(), S
     assert_eq!(session.generation(), 0);
     Ok(())
 }
+
+#[test]
+fn applying_value_binder_preserves_later_dependent_type_codes() -> Result<(), String> {
+    let source = b"module logic@1 [
+        proof 1 base :
+          [ (Pi (x I64) (Pi (h (Eq I64 x x)) (Pi (A Type0) (Pi (y (Pair (List A) I64)) (Eq (Pair (List A) I64) y y))))) ]
+          [ (intro (x I64) (intro (h (Eq I64 x x)) (intro (A Type0) (intro (y (Pair (List A) I64)) (refl y))))) ]
+        proof 1 derived :
+          [ (Pi (x I64) (Pi (z (Pair (List I64) I64)) (Eq (Pair (List I64) I64) z z))) ]
+          [ (intro (x I64) (intro (z (Pair (List I64) I64)) (apply (apply (apply (apply (use base) x) (refl x)) I64) z))) ]
+    ]";
+    let session = noble_contracts::source::ModuleSession::new(&[])
+        .map_err(|error| format!("{error:?}"))?;
+    let prepared = session.prepare(source, &[], super::LIMITS)
+        .map_err(|error| format!("{error:?}"))?;
+    let checked = noble_contracts::intrinsic::check_batch(
+        prepared.proof_obligations().ok_or("missing dependent proof obligations")?,
+        super::LIMITS,
+    ).map_err(|error| format!("{error:?}"))?;
+    assert_eq!(checked[0].claim, "(∀ (v0 : El .i64), (∀ (v1 : v0 = v0), (∀ (v2 : PureTyCode), (∀ (v3 : El (.pair (.list v2) .i64)), v3 = v3))))");
+    assert_eq!(checked[1].claim, "(∀ (v0 : El .i64), (∀ (v1 : El (.pair (.list .i64) .i64)), v1 = v1))");
+
+    let invalid = b"module bad@1 [
+        proof 1 base :
+          [ (Pi (x I64) (Pi (h (Eq I64 x x)) (Pi (A Type0) (Pi (y (Pair (List A) I64)) (Eq (Pair (List A) I64) y y))))) ]
+          [ (intro (x I64) (intro (h (Eq I64 x x)) (intro (A Type0) (intro (y (Pair (List A) I64)) (refl y))))) ]
+        proof 1 derived :
+          [ (Pi (x I64) (Pi (z (Pair (List I64) I64)) (Pi (w Bool) (Eq (Pair (List I64) I64) z z)))) ]
+          [ (intro (x I64) (intro (z (Pair (List I64) I64)) (intro (w Bool) (apply (apply (apply (apply (use base) x) (refl x)) I64) w)))) ]
+    ]";
+    let prepared = session.prepare(invalid, &[], super::LIMITS)
+        .map_err(|error| format!("{error:?}"))?;
+    assert!(noble_contracts::intrinsic::check_batch(
+        prepared.proof_obligations().ok_or("missing hostile proof obligations")?,
+        super::LIMITS,
+    ).is_err(), "a Bool sibling cannot stand in for the composite value argument");
+    Ok(())
+}
