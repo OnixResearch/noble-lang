@@ -7,6 +7,7 @@ mod declared;
 pub(crate) mod editor;
 pub(crate) mod entry;
 mod framing;
+pub(crate) mod live;
 mod output;
 mod report;
 pub(crate) mod worker;
@@ -25,6 +26,8 @@ pub(crate) const EVIDENCE_LIMITS: noble_contracts::Limits = noble_contracts::Lim
 };
 
 pub const USAGE: &str = "usage:
+  noble live repl [--source ABS_PATH] [--engine v8|interpreter] [--self-edit NAME --expect-generation N]
+  live repl: newline-delimited source, :reload ABS_PATH, or :grant-self-edit NAME N; interpreter is unavailable
   noble editor analyze|admit JSON_FILE [--emit NEW_DIR (admit only)]
   JSON_FILE: editor AST format 1, nodes integer/boolean/word/quotation/hole
   noble admit-artifact WASM --effects CLAIMS_JSON [--source HOST_SOURCE] [--allow-effects test.emit,test.abort,test.clock] [--opt off|on]
@@ -64,10 +67,10 @@ struct Session {
 impl Session {
     fn new(options: &arguments::Options) -> Result<Self, output::Failure> {
         let declared = match &options.manifest {
-            Some(manifest) => Some(attempt!(noble_contracts::source::ModuleSession::new(
-                &manifest.operations()
-            )
-            .map_err(output::Failure::source))),
+            Some(manifest) => Some(attempt!(
+                noble_contracts::source::ModuleSession::new(&manifest.operations())
+                    .map_err(output::Failure::source)
+            )),
             None => None,
         };
         Ok(Self {
@@ -106,10 +109,11 @@ impl Session {
             Err(error) => return Ok(output::Report::source_error(&error, self.submissions)),
         };
         if prepared.is_definition() {
-            attempt!(self
-                .frontend
-                .commit(prepared)
-                .map_err(output::Failure::source));
+            attempt!(
+                self.frontend
+                    .commit(prepared)
+                    .map_err(output::Failure::source)
+            );
             return Ok(output::Report::defined(self.submissions));
         }
         let submission = attempt!(prepared.submission().ok_or_else(|| {
@@ -142,14 +146,16 @@ impl Session {
             return Ok(prepared_report);
         }
         let output_types = prepared.output().to_vec();
-        attempt!(self
-            .compiler
-            .commit(compiled)
-            .map_err(output::Failure::backend));
-        attempt!(self
-            .frontend
-            .commit(prepared)
-            .map_err(output::Failure::source));
+        attempt!(
+            self.compiler
+                .commit(compiled)
+                .map_err(output::Failure::backend)
+        );
+        attempt!(
+            self.frontend
+                .commit(prepared)
+                .map_err(output::Failure::source)
+        );
         let report = attempt!(engine.execute());
         if report.outcome == "normal" {
             self.stack = output_types;

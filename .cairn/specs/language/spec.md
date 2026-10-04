@@ -2053,6 +2053,32 @@ This is a scenario design, not an execution result. The case's `state` and `evid
 
 <!-- cairn:scenario-links:end -->
 
+### Requirement: K-LIVE-02
+r[K-LIVE-02]
+
+**K-LIVE-02.** Only the explicitly opted-in live profile adds `self.generation : S -- S I64 ! {live.observe-generation}` (fresh live effect ID 4) and `self.propose : S I64 Program<[I64] -> [I64] ! {}> -- S Unit ! {live.propose}` (fresh live effect ID 3). `self.generation` observes the host's source-generation snapshot pinned for the current checked invocation through its declared observation effect; it is not an untracked pure callback, the Wasm submission counter, or a guest-selected generation. `self.propose` accepts a checked, resource-free, pure program value that the guest MAY construct at runtime through `quote` and `compose`. Its effectful host import synchronously snapshots only bounded reachable candidate program/recipe/capture cells and bounded referenced bytes from guest memory, without calling back into Wasm or compiling, executing, installing or publishing candidate code. The host MUST compare those retained bytes with the same live cells before post-return reflection and independent interface/recipe admission, refusing a mismatch rather than trusting mutable guest memory. A `Program` or syntax value is not itself a right to edit, and source-controlled text, a reflected recipe or a claimed generation MUST NOT select the authority-bearing originating definition identity.
+
+The checked pure `Program<[I64] -> [I64] ! {}>` interface is necessary but not sufficient for publication. The first host recipe decoder admits only closed I64 literal/capture events and pure resolved builtin arithmetic IDs 4/5/6 (`+`, `-`, `*`) with independently verified root/invocation signature identities and every ordered stack transition. The empty identity recipe `[ ]`, otherwise checked programs using `dup`, `drop`, `swap` or `=`, arbitrary `Syntax`, and unrecognized Program encodings MUST NOT be silently interpreted as admissible source. This limited typed self-edit is not a general code-transformation, crossover, fitness-selection or PushGP language.
+
+<!-- cairn:scenario-links:start -->
+#### Scenario: LIVE-09 for K-LIVE-02
+
+- GIVEN the `Live-Wasm-Draft` profile and every field of `input` in [LIVE-09](../../../specs/conformance/live-wasm-cases.json)
+- WHEN the `runtime` procedure for case `LIVE-09` runs against those inputs
+- THEN the observations match every field of `expected` in case `LIVE-09`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: LIVE-10 for K-LIVE-02
+
+- GIVEN the `Live-Wasm-Draft` profile and every field of `input` in [LIVE-10](../../../specs/conformance/live-wasm-cases.json)
+- WHEN the `runtime` procedure for case `LIVE-10` runs against those inputs
+- THEN the observations match every field of `expected` in case `LIVE-10`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+<!-- cairn:scenario-links:end -->
+
 ### 12.4 Verification evidence and identity
 
 ### Requirement: P-ID-06
@@ -2677,6 +2703,14 @@ This is a scenario design, not an execution result. The case's `state` and `evid
 
 This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
 
+#### Scenario: LIVE-09 for H-LIVE-02
+
+- GIVEN the `Live-Wasm-Draft` profile and every field of `input` in [LIVE-09](../../../specs/conformance/live-wasm-cases.json)
+- WHEN the `runtime` procedure for case `LIVE-09` runs against those inputs
+- THEN the observations match every field of `expected` in case `LIVE-09`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
 <!-- cairn:scenario-links:end -->
 
 ### Requirement: H-LIVE-03
@@ -2706,6 +2740,42 @@ This is a scenario design, not an execution result. The case's `state` and `evid
 - GIVEN the `Live-Wasm-Draft` profile and every field of `input` in [LIVE-06](../../../specs/conformance/live-wasm-cases.json)
 - WHEN the `runtime` procedure for case `LIVE-06` runs against those inputs
 - THEN the observations match every field of `expected` in case `LIVE-06`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: LIVE-10 for H-LIVE-03
+
+- GIVEN the `Live-Wasm-Draft` profile and every field of `input` in [LIVE-10](../../../specs/conformance/live-wasm-cases.json)
+- WHEN the `runtime` procedure for case `LIVE-10` runs against those inputs
+- THEN the observations match every field of `expected` in case `LIVE-10`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+<!-- cairn:scenario-links:end -->
+
+### Requirement: H-LIVE-04
+r[H-LIVE-04]
+
+**H-LIVE-04.** Guest self-edit is an additional, explicitly opted-in `Live-Wasm-Draft` transaction, not direct guest file reload, compiler access or a general code-install capability. Before invocation the host MAY grant exactly one selected existing definition name, its immutable independently checked originating definition identity and an expected source generation. Initial `--self-edit NAME --expect-generation N` and later host-only `:grant-self-edit NAME N` bind all three; a rearmed grant for a newly checked identity MUST NOT authorize an old retained `Program` even when that old program supplies the current generation. The trusted compiler MUST embed the lexically enclosing, already checked named definition's immutable identity in accepted executable metadata for the `live_propose` import; a top-level call without that checked named owner MUST refuse before execution, and a source-controlled name, recipe, integer or Wasm-provided owner field MUST NOT substitute for it. The host validates that identity, selected name, current grant and expected generation before enqueueing the bounded candidate snapshot and records a pending result separately from any later commit/refusal. At most one pending candidate per enclosing top-level invocation is allowed; a duplicate/conflicting request MUST NOT replace it or create a second commit. A grant supports at most one successful generation CAS and cannot silently rearm itself. An unauthorized callback is an actual denied host request subject to H-LIVE-03's terminal policy, not a pre-invocation static refusal or a post-return candidate-admission refusal. No callback may reenter source compilation or publish a definition.
+
+After the enclosing top-level Wasm invocation returns normally, the host MUST process its pending candidate before accepting the next top-level submission. The host decodes only a closed supported immutable recipe into a new source definition for the host-selected name, independently checks its source, identity, ordered type/effect/interface and allowed effects, emits and verifies the exact Wasm bytes, and shadow-stages with no live mutation or candidate-body execution under H-LIVE-02/S-LIVE-01. Publication requires a compare-and-swap of the still-current source generation against the grant's expected generation, checks the grant's originating identity is still current, and atomically installs one accepted generation or explicitly refuses without changing the namespace or grants. In the initial bounded self-edit subset, a dependent definition or incompatible replacement is a refusal without a stale success acknowledgment; this does not discharge K-LIVE-01's broader dependent-rebuild obligation. The published definition MUST record its guest-recipe origin and a digest of its derived source separately from the unchanged selected file's independently recorded bytes and hash; equal source bytes need not produce unequal digests. Self-edit MUST NOT write, falsely acknowledge or silently reload that file. A later explicit host `:reload FILE` is a fresh checked transaction and MAY restore file contents only if the current type/effect/host policy permits; the first profile MUST refuse restoring an effectful file body over a pure guest successor when that increases the current effect ceiling.
+
+Candidate refusal after a normally completed guest invocation MUST NOT roll back legitimate invocation stack changes or prior host requests/effects; it changes no namespace or grant and executes no candidate body. A trap after enqueue cancels the proposal, preserves the already observed host-request prefix and applies H-LIVE-03's terminal runtime policy. In contrast, a statically refused pre-invocation submission retains H-REPL-02's unchanged stack and zero user-body effects. A grant is not recreated by observing the current generation, saving an old program, or replaying a pending receipt.
+
+<!-- cairn:scenario-links:start -->
+#### Scenario: LIVE-09 for H-LIVE-04
+
+- GIVEN the `Live-Wasm-Draft` profile and every field of `input` in [LIVE-09](../../../specs/conformance/live-wasm-cases.json)
+- WHEN the `runtime` procedure for case `LIVE-09` runs against those inputs
+- THEN the observations match every field of `expected` in case `LIVE-09`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: LIVE-10 for H-LIVE-04
+
+- GIVEN the `Live-Wasm-Draft` profile and every field of `input` in [LIVE-10](../../../specs/conformance/live-wasm-cases.json)
+- WHEN the `runtime` procedure for case `LIVE-10` runs against those inputs
+- THEN the observations match every field of `expected` in case `LIVE-10`
 
 This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
 

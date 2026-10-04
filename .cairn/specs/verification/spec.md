@@ -31,6 +31,8 @@ r[V-LIVE-01]
 
 **V-LIVE-01.** `Live-Wasm-Draft` acceptance MUST exercise actual source-to-independent-kernel-to-in-process-binary-to-selected-VM execution and source/module reloads, not only spec parsing, a synthetic evaluator or an old external assembler path. Positive observations MUST include next-new-top-level-call freshness, transitively rebuilt dependent definitions, retained old `Program`/active-frame behavior, unchanged typed stack, source diagnostics, denied host effects and bounded generation retirement. Negative controls MUST include invalid/incompatible types and effects, missing/unstable import snapshot, malformed or feature-unsupported Wasm, start/active initialization attempts, table/memory/retained-code exhaustion, host policy revocation and trap after an effectful prefix. Actual selected VM revision, binary emitter/verifier source, source/import/ABI hashes, limits, stages, requests, retired owners and open correspondence assumptions MUST be recorded. Strict interpretation and semantic preservation cannot be inferred from V8 bytecode execution or green document checks; any actual interpreter engine requires its own pinned conformance and separately evaluated trust/verification boundary. No earlier M4/MC1/MC2/DXM1 evidence or proof attaches automatically to a new generation.
 
+Guest self-edit acceptance additionally MUST invoke a real Wasm guest that constructs a checked runtime-captured pure `Program`, observes its pinned source generation through a declared effect and enqueues a proposal, then show host-only post-return independent admission, identity-bound grant and generation CAS, and next-call freshness without mutating a retained old Program or selected source file. Controls MUST distinguish static pre-invocation refusal, actual callback denial of a saved old owner after rearm, recoverable post-return candidate refusal with preserved completed invocation stack/request prefix, and trap after enqueue with cancelled candidate and terminal policy. A bounded self-edit refusal for dependents does not prove the separate transitive dependent rebuild of LIVE-02.
+
 <!-- cairn:scenario-links:start -->
 #### Scenario: LIVE-04 for V-LIVE-01
 
@@ -45,6 +47,22 @@ This is a scenario design, not an execution result. The case's `state` and `evid
 - GIVEN the `Live-Wasm-Draft` profile and every field of `input` in [LIVE-08](../../../specs/conformance/live-wasm-cases.json)
 - WHEN the `admission` procedure for case `LIVE-08` runs against those inputs
 - THEN the observations match every field of `expected` in case `LIVE-08`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: LIVE-09 for V-LIVE-01
+
+- GIVEN the `Live-Wasm-Draft` profile and every field of `input` in [LIVE-09](../../../specs/conformance/live-wasm-cases.json)
+- WHEN the `runtime` procedure for case `LIVE-09` runs against those inputs
+- THEN the observations match every field of `expected` in case `LIVE-09`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: LIVE-10 for V-LIVE-01
+
+- GIVEN the `Live-Wasm-Draft` profile and every field of `input` in [LIVE-10](../../../specs/conformance/live-wasm-cases.json)
+- WHEN the `runtime` procedure for case `LIVE-10` runs against those inputs
+- THEN the observations match every field of `expected` in case `LIVE-10`
 
 This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
 

@@ -23,6 +23,8 @@ r[EV-LIVE-01]
 
 **EV-LIVE-01.** Live-reload designs MUST remain `implementation: absent`, `execution: not-run`, `proof: open`, `trust: unassessed`, with no test/evidence claim until the distinct opt-in binary emitter, selected VM and transactional reload actually run. Later receipts MUST bind both prior and proposed generation's exact source/import bytes, resolved definition and program-value identities, emitter/ABI/VM revision, validated module bytes, checked ordered stack/effect/capability interfaces, host policy, bounded execution and publication/refusal observation. An old proof or old source-bound receipt MUST NOT be inherited by a new body merely because its name, interface, source path or Wasm module format matches. Historical Core/M4/MC1/MC2/DXM1 evidence remains immutable and says nothing about live execution.
 
+For guest self-edit, the receipt MUST separately identify the host-selected name, independently checked originating definition identity, grant's expected source generation, invocation-pinned generation observation, queued candidate's bounded byte snapshot and post-return snapshot comparison/independently checked recipe/interface, pending versus final commit/refusal, actual prior guest request prefix and stack outcome, derived-source origin/digest, and unchanged selected file bytes/hash. A denied import, trapped invocation and post-return candidate refusal are different outcomes; none is evidence that an unexecuted candidate body ran or that a completed invocation was rolled back.
+
 <!-- cairn:scenario-links:start -->
 #### Scenario: LIVE-06 for EV-LIVE-01
 
@@ -45,6 +47,22 @@ This is a scenario design, not an execution result. The case's `state` and `evid
 - GIVEN the `Live-Wasm-Draft` profile and every field of `input` in [LIVE-08](../../../specs/conformance/live-wasm-cases.json)
 - WHEN the `admission` procedure for case `LIVE-08` runs against those inputs
 - THEN the observations match every field of `expected` in case `LIVE-08`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: LIVE-09 for EV-LIVE-01
+
+- GIVEN the `Live-Wasm-Draft` profile and every field of `input` in [LIVE-09](../../../specs/conformance/live-wasm-cases.json)
+- WHEN the `runtime` procedure for case `LIVE-09` runs against those inputs
+- THEN the observations match every field of `expected` in case `LIVE-09`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: LIVE-10 for EV-LIVE-01
+
+- GIVEN the `Live-Wasm-Draft` profile and every field of `input` in [LIVE-10](../../../specs/conformance/live-wasm-cases.json)
+- WHEN the `runtime` procedure for case `LIVE-10` runs against those inputs
+- THEN the observations match every field of `expected` in case `LIVE-10`
 
 This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
 

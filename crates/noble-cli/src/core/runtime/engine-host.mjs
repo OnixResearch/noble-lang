@@ -22,9 +22,17 @@ function configureDeclaredAbi(engine, abi, declared_modules, declared_extension,
     } else if (declared_extension !== null || !Array.isArray(bindings) || bindings.length !== 0) {
       fail('declared host boundary is unavailable in Core-Bootstrap');
     }
+    if (engine.inProcessLive && (declared_modules
+      || !Array.isArray(abi.live_host_functions)
+      || abi.live_host_functions.length !== 2
+      || abi.live_host_functions.some((fn, index) => fn.name !== ['live_propose', 'live_generation'][index]
+        || fn.params?.join(',') !== ['i64,i64,i32', ''][index]
+        || fn.result !== ['i32', 'i64'][index]))) {
+      fail('invalid live host ABI');
+    }
     engine.hostFunctions = declared_modules
       ? [...abi.host_functions.filter(fn => fn.name !== 'test_emit'), ...engine.declaredExtension.host_functions]
-      : abi.host_functions;
+      : engine.inProcessLive ? [...abi.host_functions, ...abi.live_host_functions] : abi.host_functions;
 
 }
 function initializeHostState(engine, bindings) {

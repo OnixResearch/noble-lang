@@ -68,6 +68,22 @@ This is a scenario design, not an execution result. The case's `state` and `evid
 
 This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
 
+#### Scenario: LIVE-09 for S-LIVE-01
+
+- GIVEN the `Live-Wasm-Draft` profile and every field of `input` in [LIVE-09](../../../specs/conformance/live-wasm-cases.json)
+- WHEN the `runtime` procedure for case `LIVE-09` runs against those inputs
+- THEN the observations match every field of `expected` in case `LIVE-09`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: LIVE-10 for S-LIVE-01
+
+- GIVEN the `Live-Wasm-Draft` profile and every field of `input` in [LIVE-10](../../../specs/conformance/live-wasm-cases.json)
+- WHEN the `runtime` procedure for case `LIVE-10` runs against those inputs
+- THEN the observations match every field of `expected` in case `LIVE-10`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
 <!-- cairn:scenario-links:end -->
 
 ## 2. Safety claim classes

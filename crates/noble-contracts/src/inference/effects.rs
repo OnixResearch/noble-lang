@@ -259,7 +259,7 @@ impl super::Arena {
         Ok(id)
     }
 
-    pub(super) fn program_effect(
+    pub(crate) fn program_effect(
         &self,
         program: u32,
         span: crate::Span,

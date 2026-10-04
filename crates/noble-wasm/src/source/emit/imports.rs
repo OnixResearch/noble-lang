@@ -22,6 +22,12 @@ pub(super) fn write(
     if plan.has_bound_clock {
         attempt!(out.append(b"(import \"noble\" \"test_clock_bound\" (func $host_clock_bound (param i32) (result i32 i64)))\n"));
     }
+    if plan.has_live_propose {
+        attempt!(out.append(b"(import \"noble\" \"live_propose\" (func $host_live_propose (param i64 i64 i32) (result i32)))\n"));
+    }
+    if plan.has_live_generation {
+        attempt!(out.append(b"(import \"noble\" \"live_generation\" (func $host_live_generation (result i64)))\n"));
+    }
     attempt!(globals(out));
     attempt!(global_import(out, b"allocated_total", b"i64"));
     attempt!(global_import(out, b"released_total", b"i64"));
@@ -148,6 +154,27 @@ pub(super) fn runtime(
     }
     if plan.has_bound_clock {
         attempt!(out.append(b"(func $op_clock_bound (param $slot i32) (local $status i32) (local $value i64)\n (global.set $failure (i32.const 5))\n (call $host_clock_bound (local.get $slot))\n (local.set $value)\n (local.set $status)\n (if (i32.eqz (local.get $status)) (then\n   (global.set $failure (i32.const 0))\n   (call $push_i64 (local.get $value)))))\n"));
+    }
+    if plan.has_live_propose {
+        attempt!(out.append(b"(func $op_live_propose (param $owner i64)
+ (local $program i32) (local $expected i64)
+ (local.set $program (i32.wrap_i64 (call $pop_kind (i32.const 4))))
+ (local.set $expected (call $pop_kind (i32.const 1)))
+ (if (global.get $failure) (then (return)))
+ ;; A rejected queue request or a native throw poisons this invocation.
+ (global.set $failure (i32.const 5))
+ (if (i32.eqz (call $host_live_propose (local.get $owner) (local.get $expected) (local.get $program)))
+  (then (global.set $failure (i32.const 0)) (call $push_unit))))
+"));
+    }
+    if plan.has_live_generation {
+        attempt!(out.append(b"(func $op_live_generation (local $current i64)
+ (if (global.get $failure) (then (return)))
+ (global.set $failure (i32.const 5))
+ (local.set $current (call $host_live_generation))
+ (global.set $failure (i32.const 0))
+ (call $push_i64 (local.get $current)))
+"));
     }
     attempt!(super::reflection::write(out, plan.declared_modules));
     attempt!(fragment(

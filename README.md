@@ -87,6 +87,106 @@ resolved bindings. Program values themselves are monomorphic and carry complete
 ordered input/output interfaces and latent effects. Sessions retain real compiled
 Programs, captured values, stack and namespace; they do not replay previous source.
 
+The opt-in, guarded live REPL accepts an absolute path to a regular source file.
+For example, start with `/absolute/math.noble` containing
+`def addone [ 1 + ]`:
+
+```sh
+noble live repl --source /absolute/math.noble --engine v8
+# In the REPL, after the initial ACK:
+20 addone
+```
+
+To replace the definition, save complete new bytes in the same directory with
+a temporary file, fsync that file, and atomically rename it; then, **after** a
+successful reload ACK, submit a new call:
+
+```sh
+# In another shell:
+python3 - <<'PY'
+import os
+from pathlib import Path
+
+source = Path("/absolute/math.noble")
+temporary = source.with_name(source.name + ".tmp")
+with temporary.open("xb") as file:
+    file.write(b"def addone [ 2 + ]\n")
+    file.flush()
+    os.fsync(file.fileno())
+os.replace(temporary, source)
+PY
+
+# Back in the live REPL:
+:reload /absolute/math.noble
+20 addone
+```
+
+Each reply is one JSON line. A successful ACK has schema
+`noble-live-report/v1`, outcome `reload-committed`, the committed
+`source_sha256`, and a `generation`; wait for it before expecting the new
+definition in a new top-level submission. `source_sha256` identifies bytes
+pinned at the prepublication check; optional `source_freshness` only observes
+postpublication path equality, not the latest file at ACK, so any concurrent
+or later save requires another `:reload` (there is no watch). A failed reload
+is nonterminal and retains the previous stack and namespace. Direct host effects
+without a grant are denied. `--engine interpreter` explicitly reports
+`interpreter-unavailable`; it does not silently use V8. This is **guarded
+partial LIVE-01**, not `live watch`, transitive dependent rebuilding/LIVE-02,
+or full live conformance or assurance. The canonical live cases remain
+absent/not-run. Existing `noble run` and `noble session` behavior is unchanged.
+
+An explicitly granted live session can let its selected **named** definition
+propose a checked replacement for its own slot. For example, save
+`def evolve [ dup 18 - quote [ + ] compose self.generation swap self.propose drop 1 + ]`
+in `/absolute/evolve.noble` and start:
+
+```sh
+noble live repl --source /absolute/evolve.noble --engine v8 \
+  --self-edit evolve --expect-generation 1
+# After the file ACK and grant-selected report:
+20 evolve
+# The old body returns 21; the proposal-pending report precedes
+# proposal-committed for source generation 2.
+20 evolve
+# The new, pure body returns 22.
+```
+
+The first invocation constructs the candidate from its *runtime input*:
+`dup 18 -` captures `2` with `quote`, then `compose` combines that captured Program
+with `[ + ]`. In an independent new child, `21 evolve` instead captures `3`;
+after its commit, `20 evolve` returns `23`. `self.generation` is a separately
+accounted live observation effect, and `self.propose` is a proposal effect;
+both are unavailable in ordinary `run` and `session`. The host grants an exact
+selected name, checked originating definition identity and **source**
+generation (not the Wasm submission counter). Later `:grant-self-edit evolve N`
+is an explicit host-only rearm against the then-current checked identity and
+source generation. An old captured Program cannot inherit a rearmed new
+identity's grant. A denied actual guest request terminates the affected live
+session; a static refusal runs no guest code.
+
+A callback only queues a bounded immutable candidate snapshot. After normal
+guest return the host checks a small **pure I64 arithmetic offspring fragment**:
+captured/literal I64 values and `+`, `-`, `*` with exact checked signatures,
+then reparses, independently checks, stages and publishes or refuses. Merely
+having type `Program<[I64] -> [I64] ! {}` is not enough: identity `[ ]`,
+other words, arbitrary quotation/Syntax edits and general evaluation are not
+admitted by this first reifier. A post-return refusal preserves the completed
+invocation's stack and request trace, leaves the generation and grant unchanged,
+and never runs the candidate body. Pending and committed/refused reports are
+distinct bounded tool observations, not standalone source-bound assurance.
+Guest publication **does not write** the selected file: its derived
+`source_sha256` and recipe/snapshot digests have guest origin, separate from
+`selected_file_sha256` and `source_freshness: not-file-backed`. A subsequent
+explicit `:reload FILE` independently checks the file and may refuse, for
+example when restoring the original effectful body would increase the pure
+successor's effect ceiling. Affected dependent definitions still refuse
+replacement before ACK; no stale dependent is acknowledged.
+
+Runtime code construction is inspired by [Push's autoconstructive
+programs](https://faculty.hampshire.edu/lspector/push.html), but Noble here
+does **not** implement Push's per-type stacks, arbitrary code mutation,
+crossover, a fitness-selection loop or general PushGP evolution.
+
 `run SOURCE`, `session`, and `compile SOURCE` accept `--opt off|on` and
 `--emit NEW_DIR`. `--emit` never overwrites an existing destination and retains
 source, reports, emitted WAT, assembled/optimized Wasm and tool observations when

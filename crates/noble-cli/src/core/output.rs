@@ -83,6 +83,7 @@ impl Report {
         Self::static_report(failure.context, &failure.message, submission, None, None)
     }
 
+
     pub fn defined(submission: u64) -> Self {
         Self::static_report(
             ErrorContext {

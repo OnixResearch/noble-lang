@@ -14,7 +14,14 @@ noble-kernel = { path = "../noble-kernel" }
 noble-contracts = { path = "../noble-contracts" }
 noble-wasm = { path = "../noble-wasm" }
 anyhow = "=1.0.100"
+libc = "=0.2.189"
+serde_json = "=1.0.151"
+wat = { version = "=1.243.0", default-features = false }
+wasmparser = { version = "=0.243.0", default-features = false, features = ["std", "features", "validate"] }
 wasmtime = { path = "/nix/store/26a8xzacbx01hidm70lpyphyw926zhc5-source/crates/wasmtime", default-features = false, features = ["std", "runtime", "cranelift", "component-model", "gc", "gc-drc"] }
+
+[dev-dependencies]
+serde_json = "=1.0.151"
 
 [lints]
 workspace = true

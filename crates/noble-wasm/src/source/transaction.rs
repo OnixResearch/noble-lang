@@ -2,6 +2,7 @@
 /// prospective compiler retains its immutable base prefixes, so provenance
 /// requires only these scalar positions and no second whole-state clone.
 pub(super) struct Base {
+    live: bool,
     generation: u32,
     functions: u32,
     text_end_bytes: u32,
@@ -13,6 +14,7 @@ pub(super) struct Base {
 impl Base {
     pub(super) const fn capture(compiler: &super::Compiler) -> Self {
         Self {
+            live: compiler.live,
             generation: compiler.generation,
             functions: compiler.functions,
             text_end_bytes: compiler.text_end,
@@ -23,7 +25,9 @@ impl Base {
     }
 
     const fn positions_match(&self, current: &super::Compiler, next: &super::Compiler) -> bool {
-        self.generation == current.generation
+        self.live == current.live
+            && self.live == next.live
+            && self.generation == current.generation
             && self.functions == current.functions
             && self.text_end_bytes == current.text_end
             && self.signature_count == current.signatures.keys.len()

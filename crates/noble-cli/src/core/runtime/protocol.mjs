@@ -28,7 +28,8 @@ async function protocol(config) {
     request_trace: engine ? engine.trace.slice(engine.lastTraceStart) : [],
     guest_requests: engine ? engine.trace.length - engine.lastTraceStart : 0,
     protected_operations: 0, candidate_prepare_requests: 0,
-    session_state: 'terminated-after-internal-failure' });
+    session_state: engine?.proposalInspectionFailed
+      ? 'terminated-after-proposal-inspection-failure' : 'terminated-after-internal-failure' });
   try {
     engine = new CoreEngine(JSON.parse(config.selection), JSON.parse(config.abi), config);
     emit('ready', { outcome: 'ready', tools: engine.tools });
@@ -49,12 +50,37 @@ async function protocol(config) {
             emit('closed', { outcome: 'closed' });
             return;
           }
-          if (header === 'park' || header === 'restore') {
+          if (engine.staged && header !== 'publish-bin' && header !== 'discard-bin') {
+            fail('staged live reload requires publish or discard');
+          }
+          if (header === 'publish-bin' || header === 'discard-bin') {
+            try {
+              const report = header === 'publish-bin' ? engine.publishBinary() : engine.discardBinary();
+              emit(report.outcome, report);
+            } catch (error) { emit('internal-failure', reportError(error)); return; }
+            continue;
+          }
+          if (header === 'take-live-proposal') {
+            try {
+              const report = engine.takeLiveProposal();
+              emit(report.outcome, report);
+            } catch (error) { emit('internal-failure', reportError(error)); return; }
+            continue;
+          }
+          const grant = /^live-grant ([0-9]+) ([0-9]+) ([0-9]+)$/.exec(header);
+          if (grant) {
+            const decimal = value => {
+              if (!/^(0|[1-9][0-9]{0,19})$/.test(value)
+                || BigInt(value) > 0xffffffffffffffffn) fail('invalid live grant integer');
+              return BigInt(value);
+            };
+            command = { kind: 'live-grant', bytes: integer(Number(grant[1]), 256, 'grant name'),
+              owner: decimal(grant[2]), sourceGeneration: decimal(grant[3]) };
+          } else if (header === 'park' || header === 'restore') {
             const report = header === 'park' ? engine.park() : engine.restore();
             emit(report.outcome, report);
             continue;
-          }
-          if (header === 'execute') {
+          } else if (header === 'execute') {
             command = { kind: 'execute', inputs: 0 };
           } else if (/^execute [0-9]+$/.test(header)) {
             const count = Number(header.slice('execute '.length));
@@ -80,13 +106,24 @@ async function protocol(config) {
                 claims: integer(Number(admission[4]), 1024, 'claim frame'),
                 allowed: integer(Number(admission[5]), 1024, 'host-policy frame') };
             } else {
-              const match = /^compile ([0-9]+) ([0-9]+) ([0-9]+)$/.exec(header);
+              const match = /^(compile|compile-bin|stage-bin) ([0-9]+) ([0-9]+) ([0-9]+)$/.exec(header);
               if (!match) fail('invalid engine command');
-              command = { kind: 'compile', wat: integer(Number(match[1]), MAX_FRAME, 'WAT frame'),
-                source: integer(Number(match[2]), 65536, 'source frame'),
-                submission: integer(Number(match[3]), Number.MAX_SAFE_INTEGER, 'submission') };
+              command = { kind: match[1],
+                bytes: integer(Number(match[2]), MAX_FRAME, 'module frame'),
+                source: integer(Number(match[3]), 65536, 'source frame'),
+                submission: integer(Number(match[4]), Number.MAX_SAFE_INTEGER, 'submission') };
+              if (command.kind !== 'compile' && command.bytes < 8) fail('invalid Wasm frame size');
             }
           }
+        }
+        if (command.kind === 'live-grant') {
+          if (pending.length < command.bytes) break;
+          const name = utf8.decode(pending.subarray(0, command.bytes));
+          pending = pending.subarray(command.bytes);
+          const report = engine.setLiveGrant(name, command.owner, command.sourceGeneration);
+          command = null;
+          emit(report.outcome, report);
+          continue;
         }
         if (command.kind === 'execute') {
           if (pending.length < command.inputs) break;
@@ -136,10 +173,16 @@ async function protocol(config) {
           } catch (error) { emit('internal-failure', reportError(error)); return; }
           continue;
         }
-        if (pending.length < command.wat + command.source) break;
-        const wat = pending.subarray(0, command.wat), source = pending.subarray(command.wat, command.wat + command.source);
-        pending = pending.subarray(command.wat + command.source);
-        try { emit('ready', engine.prepare(wat, source, command.submission)); }
+        if (pending.length < command.bytes + command.source) break;
+        const bytes = pending.subarray(0, command.bytes);
+        const source = pending.subarray(command.bytes, command.bytes + command.source);
+        pending = pending.subarray(command.bytes + command.source);
+        try {
+          const report = command.kind === 'compile' ? engine.prepare(bytes, source, command.submission)
+            : command.kind === 'compile-bin' ? engine.compileBinary(bytes, source, command.submission)
+              : engine.stageBinary(bytes, source, command.submission);
+          emit(report.outcome, report);
+        }
         catch (error) { emit('internal-failure', reportError(error)); return; }
         command = null;
       }

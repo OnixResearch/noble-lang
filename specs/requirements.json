@@ -1209,7 +1209,9 @@
       "scenarios": [
         "LIVE-01",
         "LIVE-03",
-        "LIVE-07"
+        "LIVE-07",
+        "LIVE-09",
+        "LIVE-10"
       ],
       "test_design": "scenario-described-not-executed"
     },
@@ -1601,7 +1603,9 @@
       "scenarios": [
         "LIVE-06",
         "LIVE-07",
-        "LIVE-08"
+        "LIVE-08",
+        "LIVE-09",
+        "LIVE-10"
       ],
       "test_design": "scenario-described-not-executed"
     },
@@ -1844,7 +1848,8 @@
         "LIVE-02",
         "LIVE-03",
         "LIVE-05",
-        "LIVE-08"
+        "LIVE-08",
+        "LIVE-09"
       ],
       "test_design": "scenario-described-not-executed"
     },
@@ -1860,7 +1865,23 @@
       "scenarios": [
         "LIVE-02",
         "LIVE-05",
-        "LIVE-06"
+        "LIVE-06",
+        "LIVE-10"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "H-LIVE-04",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "LIVE-09",
+        "LIVE-10"
       ],
       "test_design": "scenario-described-not-executed"
     },
@@ -2365,6 +2386,21 @@
       "scenarios": [
         "LIVE-01",
         "LIVE-02"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "K-LIVE-02",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "LIVE-09",
+        "LIVE-10"
       ],
       "test_design": "scenario-described-not-executed"
     },
@@ -3955,7 +3991,9 @@
         "LIVE-03",
         "LIVE-04",
         "LIVE-05",
-        "LIVE-06"
+        "LIVE-06",
+        "LIVE-09",
+        "LIVE-10"
       ],
       "test_design": "scenario-described-not-executed"
     },
@@ -4471,7 +4509,9 @@
       ],
       "scenarios": [
         "LIVE-04",
-        "LIVE-08"
+        "LIVE-08",
+        "LIVE-09",
+        "LIVE-10"
       ],
       "test_design": "scenario-described-not-executed"
     },

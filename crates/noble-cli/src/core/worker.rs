@@ -73,9 +73,17 @@ impl Engine {
 
     pub fn start(options: &super::arguments::Options) -> Result<Self, super::output::Failure> {
         let config = attempt!(configuration::build(options));
+        Self::start_with_config(&config)
+    }
+
+    pub fn start_live() -> Result<Self, super::output::Failure> {
+        Self::start_with_config(&configuration::live())
+    }
+
+    fn start_with_config(config: &str) -> Result<Self, super::output::Failure> {
         let (send, replies) = std::sync::mpsc::sync_channel(1);
         let mut engine = Self {
-            child: attempt!(launch(&config)),
+            child: attempt!(launch(config)),
             replies,
             reader: None,
             has_failed: false,
@@ -109,6 +117,74 @@ impl Engine {
         attempt!(self.write(header.as_bytes()));
         attempt!(self.write(wat));
         attempt!(self.write(source));
+        self.reply()
+    }
+
+    /// The checked Rust CLI owns source acceptance and in-process assembly;
+    /// the resident worker accepts only bounded standard Wasm bytes.
+    pub fn prepare_binary(
+        &mut self,
+        binary: &[u8],
+        source: &[u8],
+        submission: u64,
+    ) -> Result<super::output::Report, super::output::Failure> {
+        self.send_binary("compile-bin", binary, source, submission)
+    }
+
+    pub fn stage_binary(
+        &mut self,
+        binary: &[u8],
+        source: &[u8],
+        submission: u64,
+    ) -> Result<super::output::Report, super::output::Failure> {
+        self.send_binary("stage-bin", binary, source, submission)
+    }
+
+    fn send_binary(
+        &mut self,
+        kind: &str,
+        binary: &[u8],
+        source: &[u8],
+        submission: u64,
+    ) -> Result<super::output::Report, super::output::Failure> {
+        let header = std::format!("{kind} {} {} {submission}\n", binary.len(), source.len());
+        attempt!(self.write(header.as_bytes()));
+        attempt!(self.write(binary));
+        attempt!(self.write(source));
+        self.reply()
+    }
+
+    pub fn publish_binary(&mut self) -> Result<super::output::Report, super::output::Failure> {
+        attempt!(self.write(b"publish-bin\n"));
+        self.reply()
+    }
+
+    pub fn discard_binary(&mut self) -> Result<super::output::Report, super::output::Failure> {
+        attempt!(self.write(b"discard-bin\n"));
+        self.reply()
+    }
+
+    /// Only the trusted CLI chooses the exact checked owner and selected-source
+    /// generation. Guest input is never a grant-setting protocol command.
+    pub fn set_live_grant(
+        &mut self,
+        name: &str,
+        owner: u64,
+        source_generation: u64,
+    ) -> Result<super::output::Report, super::output::Failure> {
+        let header = std::format!(
+            "live-grant {} {owner} {source_generation}\n",
+            name.len()
+        );
+        attempt!(self.write(header.as_bytes()));
+        attempt!(self.write(name.as_bytes()));
+        self.reply()
+    }
+
+    /// Retrieve a bounded immutable candidate only after the guest returns.
+    /// Reading this receipt cannot consume the selected owner grant.
+    pub fn take_live_proposal(&mut self) -> Result<super::output::Report, super::output::Failure> {
+        attempt!(self.write(b"take-live-proposal\n"));
         self.reply()
     }
 

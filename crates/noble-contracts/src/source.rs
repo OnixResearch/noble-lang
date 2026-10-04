@@ -13,6 +13,7 @@ mod lexer;
 mod parsing;
 mod preflight;
 mod preparation;
+mod replacement;
 mod resolution;
 
 pub use declared::{BoundOperation, ModuleKind, ModulePrepared, ModuleSession};
@@ -101,11 +102,13 @@ struct Named {
 }
 
 /// An immutable preparation. A declaration deliberately has no executable root.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Prepared {
     generation: u64,
     history: alloc::vec::Vec<u8>,
     hosts: bool,
+    live_selected: Option<alloc::string::String>,
+    limits: crate::Limits,
     boundary: Option<alloc::vec::Vec<u8>>,
     definition: Option<Named>,
     addition: alloc::vec::Vec<u8>,
@@ -116,6 +119,9 @@ pub struct Prepared {
 impl Prepared {
     pub const fn submission(&self) -> Option<&noble_kernel::execution::Submission> {
         self.submission.as_ref()
+    }
+    pub fn definition_name(&self) -> Option<&str> {
+        self.definition.as_ref().map(|definition| definition.name.as_str())
     }
     pub const fn output(&self) -> &[noble_kernel::types::Ty] {
         self.output.as_slice()
@@ -134,6 +140,7 @@ pub struct Session {
     history: alloc::vec::Vec<u8>,
     generation: u64,
     hosts: bool,
+    live_selected: Option<alloc::string::String>,
     bindings: Option<crate::component::Bindings>,
     declared: Option<declared::Context>,
 }
@@ -151,6 +158,7 @@ impl Session {
             history: alloc::vec::Vec::new(),
             generation: 0,
             hosts: true,
+            live_selected: None,
             bindings: None,
             declared: None,
         }
@@ -161,12 +169,144 @@ impl Session {
             history: alloc::vec::Vec::new(),
             generation: 0,
             hosts: false,
+            live_selected: None,
             bindings: None,
             declared: None,
         }
     }
+    /// Only this selected named body's lexical source can request a live edit.
+    /// Ordinary sessions never install either live operation.
+    pub fn new_live(selected_name: &str) -> Self {
+        Self {
+            live_selected: Some(alloc::string::String::from(selected_name)),
+            ..Self::without_test_hosts()
+        }
+    }
     pub const fn generation(&self) -> u64 {
         self.generation
+    }
+    /// Immutable checked source identity, not the namespace generation or a
+    /// caller-supplied name/identity pair.
+    pub fn selected_definition_identity(&self, name: &str) -> Option<u64> {
+        if self.live_selected.as_deref() != Some(name) {
+            return None;
+        }
+        self.definitions.iter().rev().find(|definition| definition.name == name)
+            .map(|definition| definition.identity)
+    }
+
+    /// Check a Core definition against this namespace and build its private
+    /// successor without publishing the definition or changing this session.
+    /// A live reload can compile and stage from the successor before swapping
+    /// it into the selected namespace.
+    pub fn preview_core_definition(&self, prepared: &Prepared) -> Result<Self, Error> {
+        let span = crate::Span { start: 0, end: 0 };
+        if !prepared.is_definition() || self.bindings.is_some() || self.declared.is_some()
+            || !self.is_current_namespace(prepared)
+        {
+            return Err(Error::at(
+                Stage::Acceptance,
+                crate::invalid(span, "live Core preview requires a checked definition"),
+            ));
+        }
+        let Some(replacement) = prepared.definition.as_ref() else {
+            return Err(Error::at(
+                Stage::Acceptance,
+                crate::invalid(span, "live Core preview requires a definition"),
+            ));
+        };
+        let name = &replacement.name;
+        if let Some(previous) = self.definitions.iter().rev().find(|definition| definition.name == *name) {
+            let compatible = replacement::compatible(self, previous, replacement, prepared.limits)
+                .map_err(|diagnostic| Error::at(Stage::Check, diagnostic))?;
+            if !compatible {
+                return Err(Error::at(
+                    Stage::Acceptance,
+                    crate::invalid(span, "live replacement changes the checked stack interface or increases effects"),
+                ));
+            }
+        }
+        // Existing named bodies contain resolved immutable definition indexes.
+        // Until the entire transitive dependent graph can be rebuilt, accepting
+        // a replacement with even one affected body would give a fresh direct
+        // lookup but a stale dependent after the success acknowledgement.
+        for definition in self.definitions.iter().chain(core::iter::once(replacement)) {
+            if definition.tree.nodes.iter().any(|node| match &node.kind {
+                Kind::Call(Target::Named(index)) => self.definitions
+                    .get(*index as usize)
+                    .is_some_and(|referenced| referenced.name == *name),
+                _ => false,
+            }) {
+                return Err(Error::at(
+                    Stage::Acceptance,
+                    crate::invalid(span, "live reload requires unsupported dependent rebuild"),
+                ));
+            }
+        }
+        let mut successor = Self {
+            definitions: self.definitions.clone(),
+            history: self.history.clone(),
+            generation: self.generation,
+            hosts: self.hosts,
+            live_selected: self.live_selected.clone(),
+            bindings: None,
+            declared: None,
+        };
+        successor.commit(prepared.clone())?;
+        Ok(successor)
+    }
+
+    /// A definition declaration has no executable root; checking only an
+    /// empty post-definition submission would miss latent host operations in
+    /// its body. Walk resolved calls (including immutable named dependencies)
+    /// and the kernel's effect schemes before allowing it into a live
+    /// namespace. Only that session's scoped live effects are permitted;
+    /// unavailable schemes and ambient test hosts fail closed.
+    pub fn core_definition_requires_host_effects(&self, prepared: &Prepared) -> bool {
+        let Some(definition) = prepared.definition.as_ref() else {
+            return true;
+        };
+        let environment = match self.environment() {
+            Ok(environment) => environment,
+            Err(_) => return true,
+        };
+        let mut seen = alloc::vec![false; self.definitions.len()];
+        let mut pending = alloc::vec![&definition.tree];
+        while let Some(tree) = pending.pop() {
+            for node in &tree.nodes {
+                match &node.kind {
+                    Kind::Call(Target::Builtin(index)) => {
+                        if environment
+                            .defs
+                            .get(*index as usize)
+                            .is_none_or(|scheme| scheme.effects.iter().any(|effect| {
+                                !matches!(effect,
+                                    noble_kernel::shapes::EffectSlot::Effect(
+                                        noble_kernel::types::EffId(3 | 4)
+                                    ) | noble_kernel::shapes::EffectSlot::Var(_)
+                                        if self.live_selected.is_some())
+                            }))
+                        {
+                            return true;
+                        }
+                    }
+                    Kind::Call(Target::Named(index)) => {
+                        let Some(prior) = self.definitions.get(*index as usize) else {
+                            return true;
+                        };
+                        let Some(visited) = seen.get_mut(*index as usize) else {
+                            return true;
+                        };
+                        if !*visited {
+                            *visited = true;
+                            pending.push(&prior.tree);
+                        }
+                    }
+                    _ => {}
+                }
+            }
+        }
+        false
     }
 
     pub(crate) fn with_bindings(bindings: crate::component::Bindings) -> Self {
@@ -187,7 +327,9 @@ impl Session {
         match &self.bindings {
             Some(bindings) => bindings.effects,
             None => {
-                if self.hosts {
+                if self.live_selected.is_some() {
+                    (1 << 3) | (1 << 4)
+                } else if self.hosts {
                     3
                 } else {
                     0
@@ -244,6 +386,7 @@ impl Session {
     fn is_current_namespace(&self, prepared: &Prepared) -> bool {
         if prepared.generation != self.generation
             || prepared.hosts != self.hosts
+            || prepared.live_selected != self.live_selected
             || prepared.history != self.history
         {
             return false;
@@ -289,5 +432,36 @@ pub(crate) fn environment() -> Result<noble_kernel::contracts::Env, crate::Diagn
     env.deps.push(alloc::vec::Vec::new());
     env.definition_owners.push(None);
     env.effects.push(noble_kernel::types::EffId(1));
+    Ok(env)
+}
+
+fn live_environment() -> Result<noble_kernel::contracts::Env, crate::Diagnostic> {
+    use noble_kernel::shapes::{EffectSlot, Pattern};
+    use noble_kernel::types::EffId;
+    use noble_kernel::words::{Scheme, Variable, VariableKind};
+    let mut env = environment()?;
+    let stack = Pattern::StackVar(Variable(0));
+    let propose = Scheme {
+        var_kinds: alloc::vec![VariableKind::Stack],
+        stack_in: alloc::vec![stack.clone(), Pattern::I64,
+            Pattern::program(alloc::vec![Pattern::I64], alloc::vec![Pattern::I64],
+                alloc::vec::Vec::new())],
+        stack_out: alloc::vec![stack.clone(), Pattern::Unit],
+        effects: alloc::vec![EffectSlot::Effect(EffId(3))],
+    };
+    let generation = Scheme {
+        var_kinds: alloc::vec![VariableKind::Stack],
+        stack_in: alloc::vec![stack.clone()],
+        stack_out: alloc::vec![stack, Pattern::I64],
+        effects: alloc::vec![EffectSlot::Effect(EffId(4))],
+    };
+    for scheme in [propose, generation] {
+        env.defs.push(scheme);
+        env.kinds.push(noble_kernel::contracts::Behavior::Named);
+        env.deps.push(alloc::vec::Vec::new());
+        env.definition_owners.push(None);
+    }
+    env.effects.push(EffId(3));
+    env.effects.push(EffId(4));
     Ok(env)
 }

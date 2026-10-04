@@ -41,6 +41,9 @@ fn main() -> std::process::ExitCode {
     {
         return component::run(&arguments);
     }
+    if arguments.first().is_some_and(|argument| argument == "live") {
+        return core::live::run(&arguments);
+    }
     if arguments
         .first()
         .is_some_and(|argument| argument == "run" || argument == "session" || argument == "compile")

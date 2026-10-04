@@ -42,6 +42,8 @@ fn atom(
         }
         super::super::plan::Action::EmitBound(slot) => (31, i64::from(slot), None, 0),
         super::super::plan::Action::ClockBound(slot) => (32, i64::from(slot), None, 0),
+        super::super::plan::Action::LivePropose(_) => (2, 24, None, 0),
+        super::super::plan::Action::LiveGeneration => (2, 25, None, 0),
         super::super::plan::Action::Text(address, length) => {
             return text_atom(out, (address, length), witness);
         }

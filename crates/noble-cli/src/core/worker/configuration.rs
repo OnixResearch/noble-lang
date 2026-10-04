@@ -18,6 +18,22 @@ pub(super) fn admission(optimized: bool) -> std::string::String {
     ]).encode()
 }
 
+/// The opt-in live worker uses the same selected ABI and resident Node/V8,
+/// but receives already checked binary modules instead of WAT tool requests.
+pub(super) fn live() -> std::string::String {
+    crate::workflow::encoding::object([
+        ("selection", crate::workflow::encoding::string(super::SELECTION)),
+        ("abi", crate::workflow::encoding::string(super::ABI)),
+        ("optimized", crate::workflow::encoding::Json::Bool(false)),
+        ("artifacts", crate::workflow::encoding::Json::Null),
+        ("declared_modules", crate::workflow::encoding::Json::Bool(false)),
+        ("bindings", crate::workflow::encoding::Json::Array(std::vec::Vec::new())),
+        ("declared_extension", crate::workflow::encoding::Json::Null),
+        ("in_process_live", crate::workflow::encoding::Json::Bool(true)),
+    ])
+    .encode()
+}
+
 /// The worker receives a canonical artifact path; its creation precedes launch.
 #[expect(
     tigerstyle::missing_const_fn,

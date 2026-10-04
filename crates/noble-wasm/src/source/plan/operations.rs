@@ -13,6 +13,7 @@ pub(super) struct Input<'a> {
     pub(super) checked: &'a noble_kernel::untrusted::Checked,
     pub(super) arena: &'a super::Arena,
     pub(super) arenas: &'a [super::Arena],
+    pub(super) owner: Option<u64>,
 }
 
 #[expect(
@@ -162,6 +163,15 @@ impl Input<'_> {
     ) -> Result<super::Action, crate::Diagnostic> {
         if def.0 == 8 {
             return quotation::lower(output.interface, output.compiler, output.work);
+        }
+        if def.0 == 24 && super::super::builtin_count(&self.submission.environment) == 26 {
+            return match self.owner {
+                Some(owner) => Ok(super::Action::LivePropose(owner)),
+                None => Err(crate::Diagnostic::Invalid),
+            };
+        }
+        if def.0 == 25 && super::super::builtin_count(&self.submission.environment) == 26 {
+            return Ok(super::Action::LiveGeneration);
         }
         if def.0 < super::super::builtin_count(&self.submission.environment) {
             return Ok(super::Action::Word(def.0));

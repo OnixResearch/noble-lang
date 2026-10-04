@@ -252,6 +252,7 @@ impl ModuleSession {
                 history: self.source.history.clone(),
                 generation: self.source.generation,
                 hosts: false,
+                live_selected: None,
                 bindings: None,
                 declared: self.source.declared.clone(),
             },

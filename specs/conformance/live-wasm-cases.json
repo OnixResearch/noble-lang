@@ -50,6 +50,106 @@
       "input": {"harness": "old-source-proof-and-artifact-replay-during-new-admission", "proof_policy": "proof-required-for-selected-new-subject", "initial_definition": "def addone [ 1 + ]", "new_definition": "def addone [ 2 + ]", "retained_old_program": "[ addone ]", "old_claim": {"subject": "old-resolved-definition-identity", "input": "20", "result": "21"}, "new_claim": {"subject": "new-resolved-definition-identity", "input": "20", "result": "22"}, "variants": ["old-subject-accepted-proof-presented-for-new-subject", "old-source-matched-valid-Wasm-replayed-as-new-bytecode"]},
       "expected": {"stage": "admission", "outcome": "all-replay-variants-reject-before-publication", "old_proof_inherited": false, "guest_requests": 0, "protected_operations": 0, "namespace_stack_and_host_authorizations_unchanged": true, "old_saved_program_still_uses_old_definition": true},
       "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "LIVE-09", "profile": "Live-Wasm-Draft", "kind": "runtime",
+      "requirements": ["K-LIVE-02", "H-LIVE-04", "H-LIVE-02", "S-LIVE-01", "DX-LIVE-01", "V-LIVE-01", "EV-LIVE-01"],
+      "input": {
+        "harness": "actual-wasm-guest-structured-self-edit",
+        "selected_file": {"path": "evolve.noble", "bytes": "def evolve [ dup 18 - quote [ + ] compose self.generation swap self.propose drop 1 + ]"},
+        "host_grant": {"option": "--self-edit evolve --expect-generation 1", "selected_name": "evolve", "owner": "independently-checked-immutable-evolve-definition-identity", "source_generation": 1},
+        "independent_children": [
+          {"initial_submission": "20 evolve", "runtime_capture": "2", "expected_derived_definition": "def evolve [ 2 + ]", "after_commit_submission": "20 evolve"},
+          {"initial_submission": "21 evolve", "runtime_capture": "3", "expected_derived_definition": "def evolve [ 3 + ]", "after_commit_submission": "20 evolve"}
+        ],
+        "after_commit_host_reload": {"command": ":reload evolve.noble", "expected": "refuse-effect-ceiling-increase-from-pure-guest-successor-to-effectful-file-body"},
+        "engine": "selected-resident-v8",
+        "publication_boundary": "after-enclosing-top-level-wasm-return-before-next-top-level-submission"
+      },
+      "expected": {
+        "stage": "wasm-live", "outcome": "each-child-queues-then-commits-input-dependent-guest-derived-generation",
+        "child_stacks_bottom_to_top": [
+          [{"type": "I64", "value": "21"}, {"type": "I64", "value": "22"}],
+          [{"type": "I64", "value": "22"}, {"type": "I64", "value": "23"}]
+        ],
+        "proposal_status_during_callback": "pending-not-committed",
+        "proposal_invocation_request_trace": ["live.observe-generation:1", "live.propose:evolve:queued"],
+        "pending_and_final_commit_receipts_distinct": true,
+        "candidate_body_executions_before_publication": 0,
+        "new_generation_after_return_per_child": 2,
+        "different_runtime_inputs_produce_different_checked_recipe_and_derived_source_digests": true,
+        "old_grant_consumed_only_on_successful_publication": true,
+        "independent_source_type_effect_kernel_byte_and_shadow_checks": true,
+        "guest_source_origin": "bounded-checked-recipe",
+        "derived_source_digest_distinct_from_selected_file_digest": true,
+        "selected_file_bytes_unchanged_by_guest_publication": true,
+        "explicit_host_file_reload_is_separately_checked": true,
+        "effectful_file_restoration_over_pure_guest_successor_refused": true,
+        "guest_generation_unchanged_on_refused_file_reload": true,
+        "guest_file_or_compiler_authority": false,
+        "ordinary_run_session_semantics_unchanged": true
+      },
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "LIVE-10", "profile": "Live-Wasm-Draft", "kind": "runtime",
+      "requirements": ["K-LIVE-02", "H-LIVE-04", "H-LIVE-03", "S-LIVE-01", "DX-LIVE-01", "V-LIVE-01", "EV-LIVE-01"],
+      "input": {
+        "harness": "self-edit-origin-grant-generation-and-refusal-matrix",
+        "initial_file": "def evolve [ 2 quote [ + ] compose self.generation swap self.propose drop 1 + ]",
+        "initial_grant": {"name": "evolve", "checked_owner": "definition-A", "source_generation": 1},
+        "host_rearm": ":grant-self-edit evolve 2",
+        "rearmed_owner": "independently-checked-definition-B",
+        "retained_old_program": "[ evolve ]",
+        "fresh_new_owner_source": "def evolve [ 3 quote [ + ] compose self.generation swap self.propose drop 1 + ]",
+        "identity_rearm_sequence": [
+          "capture [ evolve ] from independently checked effectful definition-A without invoking it",
+          "atomically replace selected evolve.noble file with effectful same-interface-and-effect definition-B",
+          "host :reload evolve.noble publishes checked definition-B as source generation 2",
+          "host :grant-self-edit evolve 2 binds only definition-B",
+          "in separate child run retained definition-A Program with self.generation observing 2",
+          "in another separate child run fresh definition-B with grant bound to B and generation 2"
+        ],
+        "pre_invocation_variants": ["no-grant-at-static-source-admission", "wrong-candidate-program-type", "effectful-candidate-program", "incompatible-candidate-interface", "unbound-self-propose-outside-live-profile", "unnamed-top-level-self-propose-without-checked-origin"],
+        "host_callback_denial_variants": [
+          "wrong-selected-name", "foreign-session-grant",
+          "old-captured-definition-A-after-rearm-for-B-even-with-current-generation",
+          "stale-expected-generation", "replayed-or-conflicting-proposal"
+        ],
+        "post_return_candidate_refusal_variants": [
+          "queued-candidate-capture-cell-byte-changed-before-postreturn-reflection",
+          "checked-pure-identity-[ ]-outside-selected-reifier", "dependent-definition-in-bounded-subset",
+          "tampered-actual-wasm-bytes",
+          "shadow-stage-failure", "table-or-retained-generation-budget",
+          "generation-changed-between-enqueue-and-publication-CAS"
+        ],
+        "trap_after_enqueue": {"source": "def evolve [ 2 quote [ + ] compose self.generation swap self.propose drop 1 + 1 + 1 + 1 + ]", "runtime_step_budget": "measured-child-bound-that-allows-live.propose-callback-then-exhausts-during-pure-continuation", "positive_budget_control": "same-checked-source-normal-return-with-sufficient-steps", "guest_request_prefix": ["live.observe-generation", "live.propose"], "candidate_body_requests": 0, "test_emit_or_abort_granted": false},
+        "new_owner_positive_control": "in-separate-child-definition-B-with-current-generation-and-rearmed-grant-creates-checked-pure-candidate",
+        "old_owner_denial_control": "in-separate-child-retained-definition-A-program-requests-after-rearm-for-B",
+        "snapshot_tamper_control": "hostile-harness-changes-one-snapshotted-reachable-capture-cell-after-callback-and-before-postreturn-reflection; never-a-source-level-mutation-permission",
+        "unsupported_recipe_control": {"candidate": "[ ]", "candidate_type": "Program<[I64] -> [I64] ! {}>", "also_unsupported_checked_same_shape_recipes": ["[ dup drop ]", "recipes-containing-swap-or-eq"], "decoder_supported_events": ["I64-literal", "I64-capture", "resolved-pure-builtin-4-add", "resolved-pure-builtin-5-subtract", "resolved-pure-builtin-6-multiply"], "verify": ["root-signature-identity", "invocation-signature-identity", "ordered-stack-transitions"], "post_return_outcome": "unsupported-reifier-refusal-with-completed-invocation-stack-trace-and-grant-preserved"},
+        "file_provenance_control": "guest-derived-source-digest-does-not-equal-unchanged-selected-file-digest"
+      },
+      "expected": {
+        "stage": "wasm-live", "outcome": "each-boundary-distinguishes-refusal-from-completed-invocation",
+        "pre_invocation_static_refusals": {"guest_requests": 0, "stack_unchanged": true},
+        "host_callback_denials": {"request_count_for_denied_callback": 1, "denied_callback_enqueues_new_candidate": false, "prior_pending_candidate_cancelled_on_terminal_outcome": true, "protected_operations": 0, "prior_request_prefix_preserved": true, "terminal_session_policy_applies": true},
+        "post_invocation_publication_refusals": {"namespace_unchanged": true, "grants_unchanged": true, "candidate_body_executions": 0, "prior_invocation_stack_changes_preserved": true, "prior_invocation_request_prefix_preserved": true, "stale_success_ack": false},
+        "old_retained_program_uses_rearmed_grant": false,
+        "old_retained_program_request_classification": "owner-identity-denied",
+        "new_checked_owner_with_rearmed_grant_can_queue_and_commit": true,
+        "new_owner_positive_result": {"input": "20", "pre_commit_result": "21", "derived_source": "def evolve [ 3 + ]", "post_commit_input": "20", "post_commit_result": "23"},
+        "trap_cancels_pending_candidate": true,
+        "trap_preserves_prior_request_prefix": true,
+        "trap_applies_existing_terminal_session_policy": true,
+        "generation_observation_effect_declared": "live.observe-generation",
+        "typed_pure_program_alone_sufficient_for_publication": false,
+        "general_code_crossover_or_fitness_selection": false,
+        "source_generation_is_wasm_submission_counter": false,
+        "guest_selects_owner_or_permissions": false,
+        "selected_file_changed_by_guest": false
+      },
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
     }
   ]
 }

@@ -89,6 +89,8 @@ impl super::Session {
             generation: self.generation,
             history: self.history.clone(),
             hosts: self.hosts,
+            live_selected: self.live_selected.clone(),
+            limits,
             boundary: self.bindings.as_ref().map(|bindings| bindings.key.clone()),
             definition,
             addition,
@@ -107,6 +109,7 @@ impl super::Session {
         }
         match &self.bindings {
             Some(bindings) => Ok(bindings.environment.clone()),
+            None if self.live_selected.is_some() => super::live_environment(),
             None => super::environment(),
         }
     }
