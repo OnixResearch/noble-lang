@@ -16,6 +16,7 @@ export const SPEC_SLUGS = {
   'PROGRAM-CONTRACTS.md': 'program-contracts',
   'CORE-BOOTSTRAP.md': 'core-bootstrap',
   'BACKEND-EXPERIMENTS.md': 'backend-experiments',
+  'C-BACKEND.md': 'c-backend',
   'RESOURCE-ADAPTERS.md': 'resource-adapters',
   'EVIDENCE.md': 'evidence',
   'DEVELOPER-EXPERIENCE.md': 'developer-experience',

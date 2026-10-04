@@ -1370,6 +1370,24 @@ OCTET-08/09/10 supply M1 policy and evidence controls. OCTET-01 through OCTET-04
 
 These obligations preserve the existing milestone dependencies and the mandatory Charon → Aeneas → Lean route. They add no agent syntax, general refinement inference, or required Verus migration.
 
+## Optional execution backends (specification only)
+
+The [MLIVE milestone](roadmap.json) follows M4 and DXM1 and is specified by
+[the live namespace contract](../.cairn/specs/language/spec.md),
+[the backend boundary](BACKEND-EXPERIMENTS.md) and its
+[active change](../.cairn/changes/live-wasm-reload/proposal.md). It proposes
+an opt-in persistent WebAssembly bytecode VM REPL/watch with atomic next-call
+source reload; the first target reuses selected Node/V8, which may JIT and
+does **not** establish strictly interpreted execution. A genuine interpreter
+engine remains separately unselected. The [MCB milestone](roadmap.json) follows
+M4 only and is specified by [the C11 AOT contract](C-BACKEND.md) and its
+[active change](../.cairn/changes/c-backend/proposal.md); native execution
+requires a pinned sandbox and separately checked source/C/ELF admission.
+Neither opt-in backend exists yet: all [LIVE](conformance/live-wasm-cases.json)
+and [CB](conformance/c-backend-cases.json) cases are absent/not-run and proofs
+open. Ordinary Core `run`/`session`, selected Wasm/Node-V8 and historical M4
+evidence remain unchanged; these designs inherit no M4 execution claim.
+
 ## Estimates
 
 Initial budgets for one engineer are 1–2 days for M1 and 3–5 days each for the M2/M3 feasibility experiments. These are investigation budgets, not completion promises.

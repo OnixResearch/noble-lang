@@ -20,11 +20,43 @@ Status: Selected draft contracts; bounded DX-03/08/09 implementation/execution p
 
 This document selects scoped language and library contracts, including the later worker and Octet amendments. It does not expand the bootstrap type system or change ordinary program execution.
 
+### Requirement: DX-LIVE-01
+r[DX-LIVE-01]
+
+**DX-LIVE-01.** `noble live repl [--source FILE] [--module FILE ...] [--bindings HOST_FILE] [--engine v8|interpreter]` and `noble live watch SOURCE [--module FILE ...] [--bindings HOST_FILE] [--engine v8|interpreter]` are separately opted-in design entry points, not implemented commands. The first profile uses resource-free Core-Bootstrap expressions/definitions and explicit Declared-Modules-v1 declarations/bindings. REPL complete submissions execute only after independent acceptance and in-process Wasm bytecode admission; `:reload FILE` and watch-on-save replace the selected namespace snapshot after a complete atomic transaction without executing module initializers. A `:generation` inspection reports the active source/import generation, engine choice and stable checked stack types; every submission/reload reports accepted/rejected stage and bounded source diagnostics, including failing word, import, signature or limit. `watch` observes only explicitly selected source/module files with scoped host read authority, not arbitrary discovered dependencies; a guest cannot request file reload, host permissions, compilation or ambient import resolution. No flag on ordinary `noble run` or `noble session` silently selects live semantics. The `--engine interpreter` request MUST fail closed until a pinned compatible actual Wasm interpreter is separately implemented and accepted; `v8` runs Wasm bytecode but MUST NOT be labeled strictly interpreted.
 Elm, Gleam, and Idris inspire diagnostics and typed holes. Gleam, Rust, and Roc inspire opaque types and variants. Rust and Gleam inspire fallible composition. Unison inspires identity tooling. Koka and Eff inspire effect substitution.
 
 Factor and Kitten inspire local names. Roc inspires capability-aware modules. QuickCheck and Elm inspire property testing. Austral and Rust inspire resource protocols. Rust and Racket inspire executable documentation.
 
 These names record design inspiration, not audited upstream behavior, dependencies, compatibility claims, or copied implementations. Noble's existing safety and verification contracts govern every adaptation.
+
+
+<!-- cairn:scenario-links:start -->
+#### Scenario: LIVE-01 for DX-LIVE-01
+
+- GIVEN the `Live-Wasm-Draft` profile and every field of `input` in [LIVE-01](../../../specs/conformance/live-wasm-cases.json)
+- WHEN the `runtime` procedure for case `LIVE-01` runs against those inputs
+- THEN the observations match every field of `expected` in case `LIVE-01`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: LIVE-03 for DX-LIVE-01
+
+- GIVEN the `Live-Wasm-Draft` profile and every field of `input` in [LIVE-03](../../../specs/conformance/live-wasm-cases.json)
+- WHEN the `admission` procedure for case `LIVE-03` runs against those inputs
+- THEN the observations match every field of `expected` in case `LIVE-03`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: LIVE-07 for DX-LIVE-01
+
+- GIVEN the `Live-Wasm-Draft` profile and every field of `input` in [LIVE-07](../../../specs/conformance/live-wasm-cases.json)
+- WHEN the `admission` procedure for case `LIVE-07` runs against those inputs
+- THEN the observations match every field of `expected` in case `LIVE-07`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+<!-- cairn:scenario-links:end -->
 
 ## 1. Stack diagnostics and editor holes
 

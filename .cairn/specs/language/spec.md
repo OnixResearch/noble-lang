@@ -2029,6 +2029,30 @@ A name maps to an immutable identity within a namespace snapshot. Updating a sna
 
 This revision does not specify registry discovery, synchronization, garbage collection of code stores, signing policy, or distributed updates. No running program is automatically hot-replaced when a name is rebound.
 
+### Requirement: K-LIVE-01
+r[K-LIVE-01]
+
+**K-LIVE-01.** In the separately opted-in `Live-Wasm-Draft` session, reload MUST construct a new immutable namespace snapshot. It MUST independently re-resolve, recheck, and rebuild every transitively affected dependent definition against the new exact identities before publication; no old definition or already prepared/captured `Program` changes meaning. The next *new top-level source submission* resolves names in the published snapshot; an already accepted invocation and every active frame finish against their original generation, even if reload is requested while they run. No dynamic name lookup is introduced inside a prepared program. Unchanged definitions MAY retain their identities when their canonical resolved bodies and dependency identities are unchanged. Incompatible interfaces or unsupported recursive dependency graphs reject the entire reload; no `Any`, dynamic adapter, or silently changed latent effect is allowed. This opt-in session does not alter K-DEF-01/02, existing `noble session`, or the default no-automatic-hot-replacement policy.
+
+<!-- cairn:scenario-links:start -->
+#### Scenario: LIVE-01 for K-LIVE-01
+
+- GIVEN the `Live-Wasm-Draft` profile and every field of `input` in [LIVE-01](../../../specs/conformance/live-wasm-cases.json)
+- WHEN the `runtime` procedure for case `LIVE-01` runs against those inputs
+- THEN the observations match every field of `expected` in case `LIVE-01`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: LIVE-02 for K-LIVE-01
+
+- GIVEN the `Live-Wasm-Draft` profile and every field of `input` in [LIVE-02](../../../specs/conformance/live-wasm-cases.json)
+- WHEN the `runtime` procedure for case `LIVE-02` runs against those inputs
+- THEN the observations match every field of `expected` in case `LIVE-02`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+<!-- cairn:scenario-links:end -->
+
 ### 12.4 Verification evidence and identity
 
 ### Requirement: P-ID-06
@@ -2067,6 +2091,8 @@ r[W-EXEC-01]
 Compiler-generated adapters, allocation routines, closures, data structures, cleanup support, and dispatch over already compiled operations are permitted support code. The absence of a second VM does not mean the absence of memory management or language support machinery.
 
 A reference evaluator may exist strictly as a testing oracle. It is not evidence that the Wasm requirements have been implemented.
+
+The optional live session below emits and validates **standard Wasm binary bytecode** for a resident WebAssembly VM; it is not a second Noble instruction set or source/recipe evaluator. Bytecode format alone does not establish that a VM interprets rather than JIT-compiles its instructions.
 
 
 <!-- cairn:scenario-links:start -->
@@ -2570,6 +2596,120 @@ This is a scenario design, not an execution result. The case's `state` and `evid
 <!-- cairn:scenario-links:end -->
 
 ### 14.2 Sessions and the REPL
+
+### Requirement: H-LIVE-01
+r[H-LIVE-01]
+
+**H-LIVE-01.** An opt-in persistent `noble live repl` session MUST retain its checked stack values in session-owned storage and accept complete bounded source submissions and explicit `:reload PATH` commands. `noble live watch PATH` MUST request the same reload transaction on a complete on-save file snapshot, never execute incomplete writes, and report each attempt and published generation. An initial source/module snapshot is an exact explicitly selected set of files, not a search of ambient package paths. The tool MUST read a stable bounded byte snapshot of each selected file (including transitive declared imports), reject symlink/path escapes and changed or missing files during snapshot acquisition, and either validate the complete snapshot or retain the previous one. A watcher event alone is not evidence of a complete write: retrying an unstable snapshot MAY occur before admission, with finite retries/time limits and an explicit refusal on exhaustion. Neither watch nor REPL silently changes `noble run`, `noble session`, or `noble session --declared-modules` capture and failure behavior. "Instant" means no process restart, external assembler/optimizer invocation, or deferred stale *next top-level invocation* after a successful publication; it does not promise zero preparation latency. Compilation, verification, waiting for an active invocation safepoint, and bounded cleanup remain observable.
+
+Watch events MUST be serialized with submissions through the generation publication gate. A successful reload acknowledgment MUST be sent only after commit, and every new top-level submission accepted after that acknowledgment MUST resolve the new generation; a competing submission accepted before commit MAY use the old pinned generation and MUST report which one it used. Coalesced or delayed filesystem notifications MUST NOT acknowledge a generation that has not been checked and published. Unstable/missed notifications require explicit timeout/refusal or retry, not a success acknowledgment for stale code.
+
+The watch protocol accepts a completed atomic rename into the selected directory (after verifying the final exact snapshot) or an explicit `:reload` acknowledgment requested by the user after writing is complete. In-place partial writes cannot be distinguished from a stable but unfinished save by elapsed time alone; watch MUST refuse such unsupported updates rather than claim them complete. Freshness is guaranteed only after the successful reload acknowledgment, never merely after a filesystem write or notification.
+
+The host MUST compare the exact requested path-set identities and content hashes once more under the publication gate, after binary preparation and before commit. If an atomic rename supersedes any snapshotted file during compilation, it MUST retry with a finite bound or refuse the stale candidate, never acknowledge the superseded generation as current. An acknowledgment identifies the actual committed content hashes; a later save after that ACK is a distinct pending event and carries no promise of freshness until its own ACK.
+
+<!-- cairn:scenario-links:start -->
+#### Scenario: LIVE-01 for H-LIVE-01
+
+- GIVEN the `Live-Wasm-Draft` profile and every field of `input` in [LIVE-01](../../../specs/conformance/live-wasm-cases.json)
+- WHEN the `runtime` procedure for case `LIVE-01` runs against those inputs
+- THEN the observations match every field of `expected` in case `LIVE-01`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: LIVE-05 for H-LIVE-01
+
+- GIVEN the `Live-Wasm-Draft` profile and every field of `input` in [LIVE-05](../../../specs/conformance/live-wasm-cases.json)
+- WHEN the `runtime` procedure for case `LIVE-05` runs against those inputs
+- THEN the observations match every field of `expected` in case `LIVE-05`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+<!-- cairn:scenario-links:end -->
+
+### Requirement: H-LIVE-02
+r[H-LIVE-02]
+
+**H-LIVE-02.** A reload MUST perform source parsing, immutable resolution, inference, independent kernel acceptance, bounded Wasm emission, byte validation, isolated shadow-VM staging, interface/effect/host-contract checks and complete dependent rebuild *before* an atomic generation publication at a top-level submission boundary. Shadow staging MUST NOT instantiate against the live session's memory, table, mutable globals or host adapters: a Wasm instance can change imported state during initialization even without a start function. Staging cannot execute guest bodies, create host rights or issue candidate-body host requests. The published generation carries an exact immutable source/import snapshot and checked stack/interface/effect signature. Failed parsing, validation, staging, incompatible public type/effect/capability ABI, expired budgets or changed source leaves prior namespace, stack, instances and authorizations unchanged with zero candidate-body host requests; no partial dependent updates. Pending active calls finish with the old generation before a commit safepoint; competing new calls accepted before commit use their pinned old generation, and calls accepted after commit use only the new namespace. Ordinary run failures after publication retain their actual effect prefix and apply the profile's explicit trap recovery policy, not fictitious rollback.
+
+Committed generations MUST use the same persistent selected Node/V8 VM with shared live memory, table and globals; old `Program` cells retain their original immutable table slots and captures, including when nested inside aggregates. Shadow staging only establishes that exact validated no-start, no-active-initializer bytes and matching imports/exports can instantiate without guest execution. Under the top-level safepoint, reserve disjoint bounded table/cell/data slots, then instantiate the *same accepted bytes* against live imports with the no-effect initialization policy and register only fresh checked functions in prevalidated slots. A failed install before publication MUST restore any reserved new slots without altering old slots, stack, namespace, globals, host policy or guest request trace. After the complete no-effect install and final file check, publish one new namespace generation. No arbitrary guest table write, raw user artifact, transient loader callback or body invocation participates in the publication transaction.
+
+When an explicitly selected proof-required admission policy applies, the new checked subject and assumptions MUST receive fresh applicable evidence; an old proof for the prior identity MUST NOT authorize the new generation. Ordinary programs remain proof-optional under their existing policy. Artifact or proof replay mismatch is a prepublication refusal with no candidate-body requests.
+
+<!-- cairn:scenario-links:start -->
+#### Scenario: LIVE-01 for H-LIVE-02
+
+- GIVEN the `Live-Wasm-Draft` profile and every field of `input` in [LIVE-01](../../../specs/conformance/live-wasm-cases.json)
+- WHEN the `runtime` procedure for case `LIVE-01` runs against those inputs
+- THEN the observations match every field of `expected` in case `LIVE-01`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: LIVE-02 for H-LIVE-02
+
+- GIVEN the `Live-Wasm-Draft` profile and every field of `input` in [LIVE-02](../../../specs/conformance/live-wasm-cases.json)
+- WHEN the `runtime` procedure for case `LIVE-02` runs against those inputs
+- THEN the observations match every field of `expected` in case `LIVE-02`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: LIVE-03 for H-LIVE-02
+
+- GIVEN the `Live-Wasm-Draft` profile and every field of `input` in [LIVE-03](../../../specs/conformance/live-wasm-cases.json)
+- WHEN the `admission` procedure for case `LIVE-03` runs against those inputs
+- THEN the observations match every field of `expected` in case `LIVE-03`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: LIVE-05 for H-LIVE-02
+
+- GIVEN the `Live-Wasm-Draft` profile and every field of `input` in [LIVE-05](../../../specs/conformance/live-wasm-cases.json)
+- WHEN the `runtime` procedure for case `LIVE-05` runs against those inputs
+- THEN the observations match every field of `expected` in case `LIVE-05`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: LIVE-08 for H-LIVE-02
+
+- GIVEN the `Live-Wasm-Draft` profile and every field of `input` in [LIVE-08](../../../specs/conformance/live-wasm-cases.json)
+- WHEN the `admission` procedure for case `LIVE-08` runs against those inputs
+- THEN the observations match every field of `expected` in case `LIVE-08`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+<!-- cairn:scenario-links:end -->
+
+### Requirement: H-LIVE-03
+r[H-LIVE-03]
+
+**H-LIVE-03.** Reload MUST preserve only checked session-owned stack values whose entire ordered types, ownership state and representation are valid under the unchanged selected ABI; it MUST NOT run an implicit migration or replay a user body. Resource-bearing live stacks and live host resources are unsupported in the first resource-free profile; their attempted reload fails without retirement or transfer. Retained immutable `Program` values and lexical captures keep their old code, dependency identities, effects and recipes; old code/instances remain alive only while referenced by frames, stack values or captures and are retired under bounded accounting after the last reference. A revoked host grant never becomes valid through old code; all actual guest requests pass independent current host authorization. Code identity is not a host credential, and replacing a source file cannot increase allowed effects or install an ambient import. On abnormal runtime outcome the first live profile ends/poisons the session after reporting the actual effect prefix and bounded retirement, rather than reusing a possibly consumed stack.
+
+<!-- cairn:scenario-links:start -->
+#### Scenario: LIVE-02 for H-LIVE-03
+
+- GIVEN the `Live-Wasm-Draft` profile and every field of `input` in [LIVE-02](../../../specs/conformance/live-wasm-cases.json)
+- WHEN the `runtime` procedure for case `LIVE-02` runs against those inputs
+- THEN the observations match every field of `expected` in case `LIVE-02`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: LIVE-05 for H-LIVE-03
+
+- GIVEN the `Live-Wasm-Draft` profile and every field of `input` in [LIVE-05](../../../specs/conformance/live-wasm-cases.json)
+- WHEN the `runtime` procedure for case `LIVE-05` runs against those inputs
+- THEN the observations match every field of `expected` in case `LIVE-05`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: LIVE-06 for H-LIVE-03
+
+- GIVEN the `Live-Wasm-Draft` profile and every field of `input` in [LIVE-06](../../../specs/conformance/live-wasm-cases.json)
+- WHEN the `runtime` procedure for case `LIVE-06` runs against those inputs
+- THEN the observations match every field of `expected` in case `LIVE-06`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+<!-- cairn:scenario-links:end -->
 
 ### Requirement: H-REPL-01
 r[H-REPL-01]

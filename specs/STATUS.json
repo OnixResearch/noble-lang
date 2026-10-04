@@ -1736,6 +1736,28 @@
       "acceptance": "passed",
       "acceptance_scope": "Selected Declared-Modules-v1 only; a distinct postpromotion staged-source Nix documents/Cairn receipt binds archived canonical source.",
       "completion_record": "../verification/declared-modules-v1/evidence.json"
+    },
+    {
+      "id": "live-wasm-reload",
+      "implementation": "absent",
+      "execution": "not-run",
+      "proof": "open",
+      "trust": "unassessed",
+      "evidence": [],
+      "milestone": "MLIVE",
+      "acceptance": "not-started",
+      "implementation_scope": "Specification only: in-process standard Wasm bytecode emission, resident Node/V8 live namespace transactions, bounded watch/REPL, immutable old Programs and separately gated strict Wasm interpreter; no code exists."
+    },
+    {
+      "id": "c-backend",
+      "implementation": "absent",
+      "execution": "not-run",
+      "proof": "open",
+      "trust": "unassessed",
+      "evidence": [],
+      "milestone": "MCB",
+      "acceptance": "not-started",
+      "implementation_scope": "Specification only: nonselected opt-in C11 AOT with pinned x86_64 Linux native sandbox and exact artifact admission; no compiler, runtime or sandbox implemented."
     }
   ],
   "profile_status": {
@@ -1747,7 +1769,9 @@
     "syndicate": "bounded-local-synchronous-service; full-Syndicate-profile-open",
     "choreography": "selected-bounded-M8-local-synchronous-service; execution-passed; general-choreography-and-refinement-open",
     "durability": "optional-deferred",
-    "declared_modules": "selected-bounded-DXM1-versioned-session-local-declarations-and-test.emit-adapter; execution-passed; proofs-and-general-module-interfaces-open"
+    "declared_modules": "selected-bounded-DXM1-versioned-session-local-declarations-and-test.emit-adapter; execution-passed; proofs-and-general-module-interfaces-open",
+    "live_wasm_reload": "optional-specification-only; absent/not-run; selected historical Node/V8 remains unchanged",
+    "c_backend": "optional-nonselected-C11-AOT-specification-only; absent/not-run; no native execution"
   },
   "next_milestone": null,
   "historical_snapshot": "../noble-project-handoff-2026-09-12/",

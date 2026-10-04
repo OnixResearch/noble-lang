@@ -7,6 +7,7 @@ Status: Record schema and document checks only
 
 ## Independent dimensions
 
+**EV-LIVE-01.** Live-reload designs MUST remain `implementation: absent`, `execution: not-run`, `proof: open`, `trust: unassessed`, with no test/evidence claim until the distinct opt-in binary emitter, selected VM and transactional reload actually run. Later receipts MUST bind both prior and proposed generation's exact source/import bytes, resolved definition and program-value identities, emitter/ABI/VM revision, validated module bytes, checked ordered stack/effect/capability interfaces, host policy, bounded execution and publication/refusal observation. An old proof or old source-bound receipt MUST NOT be inherited by a new body merely because its name, interface, source path or Wasm module format matches. Historical Core/M4/MC1/MC2/DXM1 evidence remains immutable and says nothing about live execution.
 **EV-STATE-01.** Every scenario MUST carry independent implementation, execution, proof, and trust fields. One successful dimension MUST NOT imply success in another.
 
 | Field | Allowed values |

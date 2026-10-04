@@ -580,6 +580,28 @@
         "Not nominal/module/source/backend/host/engine Lean refinement: exactly nine inherited strict roots for three pure M7 dataspace functions survive current source check, and all 2595 authored-body inventory refinements remain open.",
         "Not a substitute for final staged-source documents/Cairn Nix archive checks or the separately retained M4–M8 milestone evidence."
       ]
+    },
+    {
+      "id": "MLIVE",
+      "name": "opt-in-live-wasm-bytecode-reload",
+      "depends_on": ["M4", "DXM1"],
+      "status": "not-started",
+      "scope": "Resource-free Core-Bootstrap plus explicitly selected Declared-Modules-v1; resident Node/V8 Wasm bytecode VM with in-process emission, atomic namespace reload and a separately gated actual Wasm interpreter choice.",
+      "required_requirements": ["K-LIVE-01", "H-LIVE-01", "H-LIVE-02", "H-LIVE-03", "B-LIVE-01", "BE-LIVE-01", "DX-LIVE-01", "S-LIVE-01", "V-LIVE-01", "EV-LIVE-01"],
+      "acceptance_cases": ["LIVE-01", "LIVE-02", "LIVE-03", "LIVE-04", "LIVE-05", "LIVE-06", "LIVE-07", "LIVE-08"],
+      "acceptance_status": "not-started",
+      "non_claims": ["No live CLI, in-process byte emitter, transactional reload, strict interpreter engine, executed LIVE cases, source-to-VM proof or revision to historical M4/MC1/MC2/DXM1 evidence exists."]
+    },
+    {
+      "id": "MCB",
+      "name": "opt-in-c11-native-backend",
+      "depends_on": ["M4"],
+      "status": "not-started",
+      "scope": "Nonselected opt-in resource-free Core-Bootstrap C11 AOT source/native target; native execution requires separate pinned sandbox, authenticated source-to-C-to-ELF correspondence and source-bound comparison against selected Wasm.",
+      "required_requirements": ["CB-SCOPE-01", "CB-BUILD-01", "CB-IDENTITY-01", "CB-NUM-01", "CB-VALUE-01", "CB-ORDER-01", "CB-LIMIT-01", "CB-HOST-01", "CB-SANDBOX-01", "CB-ADMIT-01", "CB-GATE-01"],
+      "acceptance_cases": ["CB-CASE-01", "CB-CASE-02", "CB-CASE-03", "CB-CASE-04", "CB-CASE-05", "CB-CASE-06", "CB-CASE-07", "CB-CASE-08", "CB-CASE-09", "CB-CASE-10"],
+      "acceptance_status": "not-started",
+      "non_claims": ["No C emitter, native runtime, sandbox runner, executed C cases, native artifact assurance, backend proof or selection change exists."]
     }
   ]
 }

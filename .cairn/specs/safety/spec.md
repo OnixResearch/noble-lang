@@ -30,6 +30,46 @@ The target is:
 
 Safety is intentionally separated from total correctness, availability, confidentiality of intentionally released information, distributed exactly-once behavior, and application-specific correctness.
 
+### Requirement: S-LIVE-01
+r[S-LIVE-01]
+
+**S-LIVE-01.** `Live-Wasm-Draft` admission MUST treat source files, generated binary, interpreter/VM inputs and claimed manifests as untrusted until checked against a host-selected exact source/import snapshot, independently accepted kernel derivations, selected emitter revision and actual validated bytecode. Standard Wasm module validation alone MUST NOT prove Noble stack/effect typing, executable provenance or host authority. In-process emission MUST use deterministic pinned binary instruction/section rules and independently compare the actual module's imports/exports, signatures, memory/table bounds, feature set and absence of start/active initialization against the checked contract before isolated staging. A reload refusal MUST execute zero candidate-body guest instructions and host requests and make no mutation to prior live VM state, authorizations or stack. Each invocation MUST enforce finite preparation work and module size, engine fuel or equivalent instruction/step budget, stack depth/call recursion, guest memory/table/cells, retained old-generation instances/captures and wall-clock deadline; exceeding any bound reports a distinct refusal or execution failure, never an unchecked fallback. Isolated staging MAY allocate only within an explicit bounded budget and MUST retire staging state on failure. Ordinary host effects remain independently authorized per request, not imported through source or code identity.
+
+<!-- cairn:scenario-links:start -->
+#### Scenario: LIVE-03 for S-LIVE-01
+
+- GIVEN the `Live-Wasm-Draft` profile and every field of `input` in [LIVE-03](../../../specs/conformance/live-wasm-cases.json)
+- WHEN the `admission` procedure for case `LIVE-03` runs against those inputs
+- THEN the observations match every field of `expected` in case `LIVE-03`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: LIVE-04 for S-LIVE-01
+
+- GIVEN the `Live-Wasm-Draft` profile and every field of `input` in [LIVE-04](../../../specs/conformance/live-wasm-cases.json)
+- WHEN the `admission` procedure for case `LIVE-04` runs against those inputs
+- THEN the observations match every field of `expected` in case `LIVE-04`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: LIVE-05 for S-LIVE-01
+
+- GIVEN the `Live-Wasm-Draft` profile and every field of `input` in [LIVE-05](../../../specs/conformance/live-wasm-cases.json)
+- WHEN the `runtime` procedure for case `LIVE-05` runs against those inputs
+- THEN the observations match every field of `expected` in case `LIVE-05`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: LIVE-06 for S-LIVE-01
+
+- GIVEN the `Live-Wasm-Draft` profile and every field of `input` in [LIVE-06](../../../specs/conformance/live-wasm-cases.json)
+- WHEN the `runtime` procedure for case `LIVE-06` runs against those inputs
+- THEN the observations match every field of `expected` in case `LIVE-06`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+<!-- cairn:scenario-links:end -->
+
 ## 2. Safety claim classes
 
 Noble SHALL distinguish four claim classes.

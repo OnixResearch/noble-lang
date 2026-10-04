@@ -1,0 +1,348 @@
+# Opt-in C backend candidate
+
+<!-- cairn:purpose:start -->
+## Purpose
+
+This accepted specification records Noble draft contracts, not completed implementation.
+Original requirement IDs, explanatory prose, examples, and open decisions remain authoritative.
+Scenario clauses declare designs; the conformance ledger records execution and evidence.
+
+## Requirements
+
+<!-- cairn:purpose:end -->
+
+Document: SPEC-BE002  
+Revision: 0.1.0-draft.5  
+Depends on: SPEC-0001, SPEC-B001, SPEC-BE001, SPEC-S001, SPEC-V001 and IMPL-V001 at 0.1.0-draft.5  
+Status: Proposed C-Backend-Draft contract; implementation, native sandbox, conformance evidence and backend proof absent
+
+## Scope and selection
+
+### Requirement: CB-SCOPE-01
+r[CB-SCOPE-01]
+
+**CB-SCOPE-01.**
+
+`C-Backend-Draft` MUST be a separate, explicit, nonselected ahead-of-time target for independently accepted `Core-Bootstrap` computation. Its first positive subset is the resource-free bootstrap vocabulary (`I64`, `Bool`, `Text`, `Unit`, homogeneous `List`, `Pair`, `Sum`, inert `Syntax`, and monomorphic `Program` values), with nonrecursive checked definitions, resolved invocation, quotation, `quote`, `compose`, `run`, `reflect`, and optionally the *exact* checked `test.emit : Text -- ! {test.emit}` effect identity. The supplied expected stack interface, finite limits, resolved immutable host operation contracts and allowed effect bound MUST be independently checked before emission; current invocation host authority MUST instead be checked at launch and at each mediator request. Generated C, candidate metadata, a C compiler, and native artifact validation are not acceptance checkers. The checker MAY reject any explicitly unsupported profile, architecture, ABI, foreign operation or resource-bearing input; it MUST NOT silently narrow the accepted input or claim full language coverage. No `Resource`, WIT component, declared-module extension, arbitrary FFI, recursion, source/recipe evaluator, VM hot reload, or implicit fallback to C/Wasm is in this first C subset.
+
+`Wasm-Draft`'s production target remains WebAssembly under W-EXEC-01. M4's managed-linear-memory Wasm, selected persistent Node 24.13.0/V8 engine, current CLI/session behavior and historical evidence remain unchanged. C is neither an alternative interpretation of Noble source nor a replacement for live Wasm REPL. This proposal grants no production selection and inherits neither Wasm results nor PO-17/PO-18 proof.
+
+
+<!-- cairn:scenario-links:start -->
+#### Scenario: CB-CASE-01 for CB-SCOPE-01
+
+- GIVEN the `C-Backend-Draft` profile and every field of `input` in [CB-CASE-01](../../../specs/conformance/c-backend-cases.json)
+- WHEN the `runtime` procedure for case `CB-CASE-01` runs against those inputs
+- THEN the observations match every field of `expected` in case `CB-CASE-01`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: CB-CASE-04 for CB-SCOPE-01
+
+- GIVEN the `C-Backend-Draft` profile and every field of `input` in [CB-CASE-04](../../../specs/conformance/c-backend-cases.json)
+- WHEN the `admission` procedure for case `CB-CASE-04` runs against those inputs
+- THEN the observations match every field of `expected` in case `CB-CASE-04`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: CB-CASE-09 for CB-SCOPE-01
+
+- GIVEN the `C-Backend-Draft` profile and every field of `input` in [CB-CASE-09](../../../specs/conformance/c-backend-cases.json)
+- WHEN the `admission` procedure for case `CB-CASE-09` runs against those inputs
+- THEN the observations match every field of `expected` in case `CB-CASE-09`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+<!-- cairn:scenario-links:end -->
+
+### Requirement: CB-BUILD-01
+r[CB-BUILD-01]
+
+**CB-BUILD-01.**
+
+The proposed *only* native invocation is explicit `noble execute --target c --artifact DIR --input INPUT_JSON [--bindings HOST_FILE]`: the invoker reads host-selected typed runtime input and host-owned current authority bindings before launch, independently reapplies CB-ADMIT-01 to the build contract/policy, then runs admitted bytes solely under CB-SANDBOX-01 through CB-HOST-01 private IPC. An allowed `test.emit` effect bound at build is not a runtime grant: the trusted mediator rechecks current invocation authorization on every request, including revocation after earlier requests. Absent `HOST_FILE` grants no protected operation even if the build allows an effect. It MUST report a typed normal outcome, specified trap, classified quota failure, authorization denial or admission/sandbox refusal with non-success status; the native program cannot receive host file paths/FDs or arbitrary process arguments. Neither ordinary `noble run`/`noble session` nor `noble build` opts into native execution implicitly.
+
+The proposed explicit interface is `noble build SOURCE --target c --out DIR --contract CONTRACT_JSON --policy POLICY_JSON [--native]` for host-selected SOURCE and C11 source plus a machine-readable build manifest. The host-owned `CONTRACT_JSON` supplies the exact ordered expected input/output stack interface, resolved immutable definition/schema/test-host contracts and candidate/environment revision; `POLICY_JSON` supplies supported subset, allowed *effect bound*, target/ABI/tool pins and finite checking/emission/runtime limits. Both are bounded, validated independently of candidate-provided metadata and required even for effect-free source (empty allowed bound), not ambient defaults or inferred grants. `--native` additionally invokes only the pinned compiler and linker with an argument vector, never a candidate-provided command or shell. `SOURCE` is the existing positional host-owned source input (not a path supplied by the emitted guest); the existing build grammar without `--target c` MUST remain unchanged. No C artifact runs as a side effect of building. The first possible native target is `x86_64-unknown-linux-gnu`, pinned Linux loader/libc and C11 compiler/linker revisions, fixed options, compile mode and exact runtime/ABI revision. The build manifest MUST record these pins, exact host-selected SOURCE byte digest, the checked candidate/environment and source correspondence, a content digest of the emitted C, compile argv, target, executable digest if built, and finite limits. Native source and binary bytes are distinct artifacts; source-only output MUST NOT be advertised as a runnable binary. Unsupported target/toolchain/ABI/options, absent pin, incompatible architecture or failed build MUST refuse explicitly without switching compilers, linker flags, targets or backends. Missing confinement blocks `noble execute` even when C source or an ELF can be emitted; that output remains nonrunnable. Build-side filesystem and subprocess effects are compiler-service effects, not candidate-body authority.
+
+
+<!-- cairn:scenario-links:start -->
+#### Scenario: CB-CASE-04 for CB-BUILD-01
+
+- GIVEN the `C-Backend-Draft` profile and every field of `input` in [CB-CASE-04](../../../specs/conformance/c-backend-cases.json)
+- WHEN the `admission` procedure for case `CB-CASE-04` runs against those inputs
+- THEN the observations match every field of `expected` in case `CB-CASE-04`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: CB-CASE-10 for CB-BUILD-01
+
+- GIVEN the `C-Backend-Draft` profile and every field of `input` in [CB-CASE-10](../../../specs/conformance/c-backend-cases.json)
+- WHEN the `review` procedure for case `CB-CASE-10` runs against those inputs
+- THEN the observations match every field of `expected` in case `CB-CASE-10`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+<!-- cairn:scenario-links:end -->
+
+### Requirement: CB-IDENTITY-01
+r[CB-IDENTITY-01]
+
+**CB-IDENTITY-01.**
+
+A domain-separated versioned C build key MUST bind exact host-selected SOURCE byte digest *in addition to* canonical semantic recipe and checked candidate revision, independently supplied expected interface, exact resolved definition/schema/host-effect **contract** identities from `CONTRACT_JSON` and acceptance policy, C emitter/runtime revision, target triple, ABI, compiler/linker/sysroot/runtime-byte identities, options, and limit policy. It MUST preserve Noble definition/program identities independently of source spelling, optimizer choice or native layout: renaming a display alias cannot rebind a captured or previously compiled program; a changed referenced resolved operation *contract* changes semantic identity; changed source bytes, option/ABI/compiler change the build key rather than the language identity when the resolved recipe is unchanged. Runtime `HOST_FILE` grants are replaceable/revocable and MUST NOT be part of semantic/build identity: a compatible new authorization is checked per request, while an incompatible host operation contract refuses before launch. Content hashes and self-reported manifests are identifiers, not proof of acceptance, correspondence or authorization. Old artifacts are immutable; a stale artifact for a changed immutable policy, referenced host operation contract, ABI or target MUST be refused before execution.
+
+
+<!-- cairn:scenario-links:start -->
+#### Scenario: CB-CASE-04 for CB-IDENTITY-01
+
+- GIVEN the `C-Backend-Draft` profile and every field of `input` in [CB-CASE-04](../../../specs/conformance/c-backend-cases.json)
+- WHEN the `admission` procedure for case `CB-CASE-04` runs against those inputs
+- THEN the observations match every field of `expected` in case `CB-CASE-04`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: CB-CASE-05 for CB-IDENTITY-01
+
+- GIVEN the `C-Backend-Draft` profile and every field of `input` in [CB-CASE-05](../../../specs/conformance/c-backend-cases.json)
+- WHEN the `admission` procedure for case `CB-CASE-05` runs against those inputs
+- THEN the observations match every field of `expected` in case `CB-CASE-05`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+<!-- cairn:scenario-links:end -->
+
+## Representation and execution
+
+### Requirement: CB-NUM-01
+r[CB-NUM-01]
+
+**CB-NUM-01.**
+
+The C11 representation of `I64` MUST require `CHAR_BIT == 8`, `sizeof(uint64_t) == 8` and `UINT64_MAX == 18446744073709551615`, or reject the target at build admission. Parse range-checked signed Noble literals into 64-bit bit patterns without out-of-range signed C literals or implementation-defined unsigned-to-signed casts. Implement Noble `+`, `-`, `*` using `uint64_t` modulo-2^64 operations, not overflowing signed arithmetic; equality compares bits. Signed ordering (where a checked supported word requires it), serialization and decimal output MUST interpret the high bit and magnitude explicitly, including `0x8000000000000000` as `-9223372036854775808`, without signed overflow, negating `INT64_MIN`, or implementation-defined conversion. Division and floating point remain unsupported. Optimization on/off MUST yield identical Noble observations.
+
+
+<!-- cairn:scenario-links:start -->
+#### Scenario: CB-CASE-01 for CB-NUM-01
+
+- GIVEN the `C-Backend-Draft` profile and every field of `input` in [CB-CASE-01](../../../specs/conformance/c-backend-cases.json)
+- WHEN the `runtime` procedure for case `CB-CASE-01` runs against those inputs
+- THEN the observations match every field of `expected` in case `CB-CASE-01`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+<!-- cairn:scenario-links:end -->
+
+### Requirement: CB-VALUE-01
+r[CB-VALUE-01]
+
+**CB-VALUE-01.**
+
+C11 runtime values MUST use tagged, initialized, type-checked representations for `Unit`, `Bool`, `I64`, UTF-8 `Text`, inert `Syntax`, homogeneous `List`, `Pair`, `Sum` and `Program`; an aggregate holds explicit length/tag and checked offsets, not guessed C struct layout as canonical Noble identity. Reads, writes, length arithmetic, capacity growth and indexes MUST check overflow/bounds before dereference or allocation. Immutable program values MUST capture owned or correctly retained immutable data and exact resolved definition/effect identity, interface witnesses and finite recipe DAG; `quote` and `compose` construct values after compilation without recompiling Noble source. `run` dispatches only accepted compiled operations through the checked complete ordered interface. `reflect` preserves normalized quotation boundaries, full recipe and identity independently of C addresses, allocation order, optimizer or display-name rebinding. Freed captures, dangling pointers, unchecked recursion depth and cycle-forged candidate graphs MUST never become defined Noble values.
+
+
+<!-- cairn:scenario-links:start -->
+#### Scenario: CB-CASE-02 for CB-VALUE-01
+
+- GIVEN the `C-Backend-Draft` profile and every field of `input` in [CB-CASE-02](../../../specs/conformance/c-backend-cases.json)
+- WHEN the `runtime` procedure for case `CB-CASE-02` runs against those inputs
+- THEN the observations match every field of `expected` in case `CB-CASE-02`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: CB-CASE-06 for CB-VALUE-01
+
+- GIVEN the `C-Backend-Draft` profile and every field of `input` in [CB-CASE-06](../../../specs/conformance/c-backend-cases.json)
+- WHEN the `runtime` procedure for case `CB-CASE-06` runs against those inputs
+- THEN the observations match every field of `expected` in case `CB-CASE-06`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+<!-- cairn:scenario-links:end -->
+
+### Requirement: CB-ORDER-01
+r[CB-ORDER-01]
+
+**CB-ORDER-01.**
+
+Every emitted operation MUST evaluate Noble nodes left to right, pop deeper/top operands in their declared order, sequence effects and traps in that order, and commit stack transitions at specified semantic boundaries. C function-argument order, expression side effects, short-circuiting and undefined/unspecified evaluation order MUST NOT choose an observable order. Emission uses explicit temporaries and sequenced statements; neither optimizer mode may reorder host requests around traps, quotation construction, branch selection or reflection. A rejected candidate produces zero candidate-body requests and cannot mutate an existing Wasm session or namespace.
+
+
+<!-- cairn:scenario-links:start -->
+#### Scenario: CB-CASE-02 for CB-ORDER-01
+
+- GIVEN the `C-Backend-Draft` profile and every field of `input` in [CB-CASE-02](../../../specs/conformance/c-backend-cases.json)
+- WHEN the `runtime` procedure for case `CB-CASE-02` runs against those inputs
+- THEN the observations match every field of `expected` in case `CB-CASE-02`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: CB-CASE-03 for CB-ORDER-01
+
+- GIVEN the `C-Backend-Draft` profile and every field of `input` in [CB-CASE-03](../../../specs/conformance/c-backend-cases.json)
+- WHEN the `runtime` procedure for case `CB-CASE-03` runs against those inputs
+- THEN the observations match every field of `expected` in case `CB-CASE-03`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+<!-- cairn:scenario-links:end -->
+
+### Requirement: CB-LIMIT-01
+r[CB-LIMIT-01]
+
+**CB-LIMIT-01.**
+
+The C lowering and runtime MUST assign finite checked limits and distinguished outcomes for input/candidate size, output C/binary bytes, stack slots, aggregate allocation/retained recipe bytes, list length, composition depth, steps, host text buffers, diagnostic output, and process memory/CPU/wall time. Charge before growth/traversal and avoid unbounded native call-stack recursion. An in-budget execution returns exactly its checked stack/recipe/effect trace; an exhausted execution reports its stage and exhausted quota, preserves already-issued effect prefix and performs bounded cleanup; a specified runtime trap is separate from quota and native signal/UB. No host request after a failed bound or fabricated success from partial output. The wrapper MAY terminate an isolated native process on a resource bound; it MUST distinguish that outcome from a language trap and record partial trace safely.
+
+
+<!-- cairn:scenario-links:start -->
+#### Scenario: CB-CASE-06 for CB-LIMIT-01
+
+- GIVEN the `C-Backend-Draft` profile and every field of `input` in [CB-CASE-06](../../../specs/conformance/c-backend-cases.json)
+- WHEN the `runtime` procedure for case `CB-CASE-06` runs against those inputs
+- THEN the observations match every field of `expected` in case `CB-CASE-06`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+<!-- cairn:scenario-links:end -->
+
+## Native trust boundaries
+
+### Requirement: CB-HOST-01
+r[CB-HOST-01]
+
+**CB-HOST-01.**
+
+The only first-subset candidate-body host operation is the independently checked exact `test.emit` identity where explicitly authorized. A versioned C ABI inside the sandbox MUST pass typed, bounds-checked text bytes and a sandbox-local opaque guest context to a checked local shim. The shim copies bounded bytes into a length-delimited request over only the allowlisted private protocol FDs to an **out-of-process trusted host mediator**; no guest pointer, callable function pointer or host authority crosses the process boundary. The mediator independently validates complete frame length/encoding, operation identity, checked effect, invocation identity and *current* authorization before copying request bytes into host-owned storage and dispatching any protected action. Partial/oversized frames, forged operations/contexts, stale or revoked authority and extra trailing bytes fail closed; denied requests remain traceable with zero protected operations. The ABI MUST specify byte encoding, alignment, ownership, guest input stability during synchronous copy, reentrancy policy, return status and cleanup; no shim/mediator retains a guest pointer, and borrowed guest storage cannot escape the native frame. No arbitrary FFI, host pointer cast, direct libc access, process environment, inherited descriptor or ambient filesystem/time/process/network operation is an authorized Noble effect.
+
+
+<!-- cairn:scenario-links:start -->
+#### Scenario: CB-CASE-03 for CB-HOST-01
+
+- GIVEN the `C-Backend-Draft` profile and every field of `input` in [CB-CASE-03](../../../specs/conformance/c-backend-cases.json)
+- WHEN the `runtime` procedure for case `CB-CASE-03` runs against those inputs
+- THEN the observations match every field of `expected` in case `CB-CASE-03`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: CB-CASE-07 for CB-HOST-01
+
+- GIVEN the `C-Backend-Draft` profile and every field of `input` in [CB-CASE-07](../../../specs/conformance/c-backend-cases.json)
+- WHEN the `adapter` procedure for case `CB-CASE-07` runs against those inputs
+- THEN the observations match every field of `expected` in case `CB-CASE-07`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+<!-- cairn:scenario-links:end -->
+
+### Requirement: CB-SANDBOX-01
+r[CB-SANDBOX-01]
+
+**CB-SANDBOX-01.**
+
+Generated ELF is native code and CAN issue direct Linux syscalls regardless of C source or ABI policy. A runnable C profile therefore additionally REQUIRES a separately pinned Linux native sandbox runner, not a C-source allowlist: before loading admitted bytes it closes inherited file descriptors except explicitly enumerated private request/response protocol FDs, starts with no ambient credentials or environment secrets, confines filesystem and mount view, blocks network, clock and process creation/exec and unmediated file/syscall authority, and enforces memory, CPU and wall-clock bounds. The pinned local C runtime/shim, separate launcher/worker, private IPC framing and out-of-process host mediator each have distinct recorded source and trust subjects; the isolated worker MUST NOT share mediator address space, callable host pointers or protected FDs. The loader, dynamic linker/libc or static-link assumptions, startup syscalls, syscall filter, FD protocol, kernel/version prerequisites and target ABI MUST be pinned and tested as a single profile; permitted loader/setup operations MUST NOT be usable by guest computation to open authority. If these restrictions cannot be enforced on the selected host, execution is blocked/nonselected, not safe merely because source validation succeeds. Host-side compiler setup is separate from isolated candidate execution. Hostile direct `openat`, `connect`, `clock_gettime`, `execve`, inherited-FD and escape attempts MUST refuse or terminate with zero protected operations, with a benign authorized `test.emit` control under the same confinement. A native crash cannot become a successful Noble result.
+
+
+<!-- cairn:scenario-links:start -->
+#### Scenario: CB-CASE-08 for CB-SANDBOX-01
+
+- GIVEN the `C-Backend-Draft` profile and every field of `input` in [CB-CASE-08](../../../specs/conformance/c-backend-cases.json)
+- WHEN the `adapter` procedure for case `CB-CASE-08` runs against those inputs
+- THEN the observations match every field of `expected` in case `CB-CASE-08`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+<!-- cairn:scenario-links:end -->
+
+### Requirement: CB-ADMIT-01
+r[CB-ADMIT-01]
+
+**CB-ADMIT-01.**
+
+Before native launch, the invoker MUST independently accept host-selected source/candidate/environment and compare emitted C bytes against its trusted pinned emission of that accepted subject. It MUST separately validate C11 syntax and the exact constrained emitter/runtime inventory; this source validation is not a backend correctness proof. Native ELF MUST separately pass target/ABI/loader checks and byte-for-byte comparison with a trusted reproducible build of that accepted C and pinned toolchain, or a separately reviewed equivalent authenticated trusted-build route. A claimed digest, declared source, manifest flag, parse-valid C, successful compiler exit or signature supplied by the candidate MUST NOT make forged bytes executable. Fail closed for malformed C, altered source/ELF (including executable and inert sections), wrong or stale subject, mismatched compiler/options, target and ABI, absent sandbox, and unexpected imports/relocations before any candidate-body effect. Record exact source, candidate, policy, emitted-C and ELF byte identities and admission decisions as separately scoped evidence. Reproducible-build or trusted-build correspondence is a gate, not an assertion that C lowering is semantically correct.
+
+
+<!-- cairn:scenario-links:start -->
+#### Scenario: CB-CASE-05 for CB-ADMIT-01
+
+- GIVEN the `C-Backend-Draft` profile and every field of `input` in [CB-CASE-05](../../../specs/conformance/c-backend-cases.json)
+- WHEN the `admission` procedure for case `CB-CASE-05` runs against those inputs
+- THEN the observations match every field of `expected` in case `CB-CASE-05`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+<!-- cairn:scenario-links:end -->
+
+### Requirement: CB-GATE-01
+r[CB-GATE-01]
+
+**CB-GATE-01.**
+
+Before any C selection, the project MUST execute actual emitted C compiled under the pinned C11 toolchain in the pinned sandbox and compare it with independently accepted selected managed-linear-memory Wasm executed by the existing Node/V8 profile on the same finite source/runtime inputs. Compare ordered stack values, exact signed I64 text, normalized recipes/identities, ordered capability requests, denied protected operations, effect prefix, traps and quota classification under declared common bounds; exercise both optimizer modes, runtime-built programs, data constructors, empty/boundary/exhausted collections, stale captures, malformed artifacts, direct-syscall adversaries and target/tool mismatches. Record compiler/emitter/runtime/host/runner versions and actual bytes, failures and separately observable limits; an unsupported feature remains unsupported rather than silently routing to Wasm. Passing finite scenarios or C sanitizer/UBSan/ASan runs and adversarial ABI lifetime controls do not prove universal source-to-C semantics, native compiler correctness, loader/host refinement, or confinement completeness. PO-17/PO-18 for the selected Wasm backend do not transfer: C-specific lowering, C compiler, native artifact/loading, ABI, sandbox and host correspondence obligations remain OPEN until independently discharged. Only an explicit later source-bound acceptance gate and selection decision could promote the candidate; document validation alone does not.
+
+
+<!-- cairn:scenario-links:start -->
+#### Scenario: CB-CASE-01 for CB-GATE-01
+
+- GIVEN the `C-Backend-Draft` profile and every field of `input` in [CB-CASE-01](../../../specs/conformance/c-backend-cases.json)
+- WHEN the `runtime` procedure for case `CB-CASE-01` runs against those inputs
+- THEN the observations match every field of `expected` in case `CB-CASE-01`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: CB-CASE-02 for CB-GATE-01
+
+- GIVEN the `C-Backend-Draft` profile and every field of `input` in [CB-CASE-02](../../../specs/conformance/c-backend-cases.json)
+- WHEN the `runtime` procedure for case `CB-CASE-02` runs against those inputs
+- THEN the observations match every field of `expected` in case `CB-CASE-02`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: CB-CASE-03 for CB-GATE-01
+
+- GIVEN the `C-Backend-Draft` profile and every field of `input` in [CB-CASE-03](../../../specs/conformance/c-backend-cases.json)
+- WHEN the `runtime` procedure for case `CB-CASE-03` runs against those inputs
+- THEN the observations match every field of `expected` in case `CB-CASE-03`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: CB-CASE-06 for CB-GATE-01
+
+- GIVEN the `C-Backend-Draft` profile and every field of `input` in [CB-CASE-06](../../../specs/conformance/c-backend-cases.json)
+- WHEN the `runtime` procedure for case `CB-CASE-06` runs against those inputs
+- THEN the observations match every field of `expected` in case `CB-CASE-06`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: CB-CASE-07 for CB-GATE-01
+
+- GIVEN the `C-Backend-Draft` profile and every field of `input` in [CB-CASE-07](../../../specs/conformance/c-backend-cases.json)
+- WHEN the `adapter` procedure for case `CB-CASE-07` runs against those inputs
+- THEN the observations match every field of `expected` in case `CB-CASE-07`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: CB-CASE-08 for CB-GATE-01
+
+- GIVEN the `C-Backend-Draft` profile and every field of `input` in [CB-CASE-08](../../../specs/conformance/c-backend-cases.json)
+- WHEN the `adapter` procedure for case `CB-CASE-08` runs against those inputs
+- THEN the observations match every field of `expected` in case `CB-CASE-08`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: CB-CASE-09 for CB-GATE-01
+
+- GIVEN the `C-Backend-Draft` profile and every field of `input` in [CB-CASE-09](../../../specs/conformance/c-backend-cases.json)
+- WHEN the `admission` procedure for case `CB-CASE-09` runs against those inputs
+- THEN the observations match every field of `expected` in case `CB-CASE-09`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: CB-CASE-10 for CB-GATE-01
+
+- GIVEN the `C-Backend-Draft` profile and every field of `input` in [CB-CASE-10](../../../specs/conformance/c-backend-cases.json)
+- WHEN the `review` procedure for case `CB-CASE-10` runs against those inputs
+- THEN the observations match every field of `expected` in case `CB-CASE-10`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+<!-- cairn:scenario-links:end -->

@@ -26,6 +26,30 @@ Noble SHALL have a small, mechanized semantic core and support optional composit
 
 This document specifies the claims to establish and the boundaries those claims must preserve. [VERIFICATION-TOOLCHAIN.md](../verification-toolchain/spec.md) requires an Aeneas-first Rust implementation, mandatory across the semantic kernel, with Lean 4 reference definitions and refinement proofs. Verus is available only for reviewed non-kernel exceptions. [PROGRAM-CONTRACTS.md](../program-contracts/spec.md) specifies typed contracts, first-class evidence companions, and optional proof-required admission. [SPEC-0001.md](../language/spec.md) integrates these requirements. [SOURCES.md](../../../specs/SOURCES.md) records the inherited text and unavailable historical citation records.
 
+### Requirement: V-LIVE-01
+r[V-LIVE-01]
+
+**V-LIVE-01.** `Live-Wasm-Draft` acceptance MUST exercise actual source-to-independent-kernel-to-in-process-binary-to-selected-VM execution and source/module reloads, not only spec parsing, a synthetic evaluator or an old external assembler path. Positive observations MUST include next-new-top-level-call freshness, transitively rebuilt dependent definitions, retained old `Program`/active-frame behavior, unchanged typed stack, source diagnostics, denied host effects and bounded generation retirement. Negative controls MUST include invalid/incompatible types and effects, missing/unstable import snapshot, malformed or feature-unsupported Wasm, start/active initialization attempts, table/memory/retained-code exhaustion, host policy revocation and trap after an effectful prefix. Actual selected VM revision, binary emitter/verifier source, source/import/ABI hashes, limits, stages, requests, retired owners and open correspondence assumptions MUST be recorded. Strict interpretation and semantic preservation cannot be inferred from V8 bytecode execution or green document checks; any actual interpreter engine requires its own pinned conformance and separately evaluated trust/verification boundary. No earlier M4/MC1/MC2/DXM1 evidence or proof attaches automatically to a new generation.
+
+<!-- cairn:scenario-links:start -->
+#### Scenario: LIVE-04 for V-LIVE-01
+
+- GIVEN the `Live-Wasm-Draft` profile and every field of `input` in [LIVE-04](../../../specs/conformance/live-wasm-cases.json)
+- WHEN the `admission` procedure for case `LIVE-04` runs against those inputs
+- THEN the observations match every field of `expected` in case `LIVE-04`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: LIVE-08 for V-LIVE-01
+
+- GIVEN the `Live-Wasm-Draft` profile and every field of `input` in [LIVE-08](../../../specs/conformance/live-wasm-cases.json)
+- WHEN the `admission` procedure for case `LIVE-08` runs against those inputs
+- THEN the observations match every field of `expected` in case `LIVE-08`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+<!-- cairn:scenario-links:end -->
+
 ### Requirement: V-STATUS-01
 r[V-STATUS-01]
 
