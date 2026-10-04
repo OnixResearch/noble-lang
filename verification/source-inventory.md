@@ -2,12 +2,12 @@
 
 Tasks 2.3 and 2.4 established the inventory mechanism. The `source-coverage` check collects the compiler-derived inventory and compares it with a reviewed classification.
 
-The current checked-in classification is the **bounded DXM1 declared-module
-renewal dated 2026-09-28**, covering all 32 expected compiler units.
-[The current JSON export](../policy/source-inventory.json) records conservative
-accounting; the [fresh DXM1 assurance](declared-modules-v1/assurance.json)
-passes the complete Nix `source-coverage`, boundary/deny-all, policy and
-quality checks. The
+The checked-in classification remains the **bounded DXM1 declared-module
+renewal dated 2026-09-28**, bound to its historical 32-unit observation.
+[Its JSON export](../policy/source-inventory.json) records conservative
+accounting; the [DXM1 assurance](declared-modules-v1/assurance.json)
+passed `source-coverage`, boundary/deny-all, policy and quality checks
+for that earlier source, not the current 39/41-unit candidate. The
 previous [M6 quality archive](m6/quality-archive.json) retains its separately
 bound historical observation. Neither quality gate nor compiler
 classification is universal refinement or runtime acceptance.
@@ -15,6 +15,43 @@ Classification, quality, independent comparison and milestone acceptance are
 separate observations. Later source changes require fresh bound receipts, not
 reuse of this pass. Historical M4, MC2, M5, M6 and M7 evidence retains its original
 scope, counts and bindings.
+
+The historical collector ceiling was 34 units/shards: 32 previously expected
+workspace units plus two acyclic-control units. The separately measured current
+**candidate WIP** ceiling is 41 units/shards: 39 observed workspace units
+plus two acyclic-control units, with no spare unit allowance. Calls and
+constructors are bounded at 16,384, expansions at 8,192, a shard at 32 MiB
+and one canonical IR artifact at 128 MiB. These are collection capacity
+limits, not source or native classification approvals.
+
+The selected patched Octet executable initially collected 39/39 complete units
+on unchanged `570ed67` source using **disposable scratch-only** limits of 48
+units/shards. Renewed actual selected-app runs under the staged 41-unit
+candidate policy collected 39/39 complete workspace units and 41/41 complete
+acyclic-positive units/shards, with zero collection issues in either run;
+their fresh 12-artifact bundles replayed valid with zero diagnostics. Both
+checks exited 1: the normal run had 712 compiler unknowns, two forbidden
+role edges involving `anyhow`/`wasmtime`, and a canonical `Rules.lean` warning;
+the acyclic positive had 385 compiler unknowns. After the selected Octet
+source's diagnostic-path provenance correction, fresh COW runs against the same
+staged 41-unit policy again collected complete 39/39 and 41/41 units and
+shards with zero collection issues. Both exited 1 with the same red finding
+counts, and the normal run retained the original `Rules.lean` warning twice.
+Both corrected 12-artifact bundles replayed valid without diagnostics; replay
+does not change their blocked architecture dispositions.
+Direct pure comparison of the corrected normal IR with the reviewed
+source and native policies still rejects source subject omission/staleness,
+test and macro classification, dependency closure and the two external
+production dependencies. The corrected acyclic reverse-dependency fixture
+also collected 41/41 units and shards, then added exactly one forbidden
+kernel-to-CLI role edge above its 385 compiler unknowns; its bundle replayed
+valid. Neither result revises the checked-in source classification.
+The reviewed source comparator rejected the candidate: 7,162 unique
+production paths against 5,816 reviewed, including 1,437 new and 91 stale
+paths; test subjects, macro origins and dependency closure also need explicit
+review. Complete collection is not an architecture, source or native
+approval. Do not copy the 32-unit source dispositions onto new paths or infer
+acceptance from complete collection. Current `source-coverage` is not a PASS.
 
 This is a named-scope accounting control, not milestone acceptance, an architecture-clean receipt, or a refinement proof.
 

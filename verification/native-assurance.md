@@ -40,6 +40,13 @@ The observed named M1 scope is 6 units, 46 production items, **0** function-safe
 The historical M3 inventory is retained under `verification/m3-wasm/assurance.tar.gz:octet`: 17 units, 2109 item facts across production and test units, zero function-safety/unsafe/foreign facts, and no external production dependencies. Its fixture lock contains eight packages: four then-current workspace packages and the four pinned registry packages. The older M1 counts above describe their original run, not current workspace coverage.
 The separate current boundary randomness fixture lock covers the five-package workspace and 75 checksum-bound registry packages; its 110 total package records do not renew either historical inventory.
 
+The selected Octet's current 39-unit candidate reports two normal production
+dependency edges from `noble-cli` to external `anyhow` and `wasmtime`, while the
+checked-in native classification expects zero. The comparator rejects it as
+`production-dependency-mismatch`. Neither historical zero-dependency receipt
+nor complete compiler collection approves these edges; no native policy
+record has been silently added.
+
 ## Empty owned-unsafe scope
 
 The empty scope is recorded only with positive accounting:

@@ -4,6 +4,7 @@
   flakeNix,
   flakeLock,
   preCommit,
+  selectedGate,
   selectionJson,
   cargoToml,
   architecturePolicyJson,
@@ -32,13 +33,22 @@ let
   lockNarHash = octetNode.locked.narHash;
   lockUrl = octetNode.locked.url or "";
 
-  preCommitOctetLine = filter (
-    line: (match ".*OnixResearch/octet.*" line != null) || (match ".*octet.*" line != null)
-  ) (lines preCommit);
-  preCommitRevLines = filter (line: match "[[:space:]]*rev:[[:space:]]*[0-9a-f]{40}[[:space:]]*" line != null) (
-    lines preCommit
-  );
-  preCommitArgs = filter (line: match ".*args:.*" line != null) (lines preCommit);
+  # Only comments and blank lines are ignorable. Requiring the entire local
+  # repo and hook shape prevents fields on different hooks from being combined.
+  selectedGatePath = builtins.unsafeDiscardStringContext selectedGate;
+  preCommitLines = filter (line: match "[[:space:]]*" line == null && match "[[:space:]]*#.*" line == null) (lines preCommit);
+  expectedPreCommitLines = [
+    "repos:"
+    "  - repo: local"
+    "    hooks:"
+    "      - id: octet-deny-all"
+    "        name: Noble selected Octet deny-all"
+    "        entry: ${selectedGatePath}"
+    "        language: system"
+    "        pass_filenames: false"
+    "        always_run: true"
+    "        args: [\"--workspace\", \"--\", \"--all-targets\", \"--all-features\"]"
+  ];
 
   cargo = fromTOML cargoToml;
   lintTable = cargo.workspace.lints.rust or { };
@@ -82,17 +92,13 @@ let
   targetComplete = all (t: t ? triple && t ? features && t ? default_features) declaredTargets;
 
   diagnostics =
-    # One immutable Octet revision across Nix, the lock, and the deny-all hook.
+    # The reviewed upstream source stays pinned in Nix and the lock. The local
+    # hook uses the selected wrapper rather than fetching an upstream executable.
     require (match ".*OnixResearch/octet\\?rev=${rev}.*" flakeNix != null) "flake-octet-revision-mismatch"
     ++ require (lockRev == rev) "flake-lock-octet-revision-mismatch"
     ++ require (lockNarHash == narHash) "flake-lock-octet-nar-mismatch"
     ++ require (match ".*OnixResearch/octet.*" lockUrl != null) "flake-lock-octet-url-mismatch"
-    ++ require (preCommitOctetLine != [ ]) "precommit-octet-repo-missing"
-    ++ require (preCommitRevLines == [ "    rev: ${rev}" ]) "precommit-octet-revision-mismatch"
-    # The full catalog must run across the workspace, all targets, and all features.
-    ++ require (any (line: match ".*--workspace.*" line != null) preCommitArgs) "precommit-scope-missing"
-    ++ require (any (line: match ".*--all-targets.*" line != null) preCommitArgs) "precommit-targets-missing"
-    ++ require (any (line: match ".*--all-features.*" line != null) preCommitArgs) "precommit-features-missing"
+    ++ require (preCommitLines == expectedPreCommitLines) "precommit-selected-hook-mismatch"
     ++ require (metadata.default_scope or [ ] == [ "--workspace" ]) "octet-metadata-scope-mismatch"
     ++ require (
       metadata.cargo_check_args or [ ] == [

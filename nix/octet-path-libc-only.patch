@@ -1,0 +1,20 @@
+diff --git a/Cargo.lock b/Cargo.lock
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -183,5 +183,6 @@ dependencies = [
+  "hegeltest",
+  "iddqd",
++ "libc",
+  "octet-architecture-ir",
+  "octet-lint-metadata",
+  "octet-standards",
+diff --git a/cargo-octet/Cargo.toml b/cargo-octet/Cargo.toml
+--- a/cargo-octet/Cargo.toml
++++ b/cargo-octet/Cargo.toml
+@@ -25,5 +25,6 @@ octet-lint-metadata = { path = "../crates/octet-lint-metadata" }
+ bounded-exec = { git = "ssh://git@github.com/OnixResearch/bounded-exec.git", rev = "44eb74eb639194665ee820562d5b2ce2c3ff6a94", package = "bounded-exec" }
+ cap-std = "3"
++libc = "0.2"
+ blake3 = "1"
+ serde = { version = "1", features = ["derive"] }
+ serde_json = "1"

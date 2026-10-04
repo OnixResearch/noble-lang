@@ -27,6 +27,8 @@
       rust = pkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml;
       nickel = octet.packages.${system}.nickel-1-17-0;
       standards = octet.packages.${system}.octet-standards;
+      selectedOctet = import ./nix/octet-patched-source.nix { inherit octet pkgs system; };
+      cargoOctet = selectedOctet.patchedWrapped;
       selectedAeneas = aeneas.packages.${system}.aeneas.overrideAttrs (old: {
         # Isolate this input from the flake's containing store path: tool pins
         # must not change recursively whenever the reviewed policy is renewed.
@@ -79,7 +81,7 @@
                 inherit lean nickel;
                 quality_rust = rust;
                 extraction_rust = extractionRust;
-                octet = octet.packages.${system}.cargo-octet;
+                octet = cargoOctet;
                 octet_standards = standards;
                 cairn = cairn.packages.${system}.cairn;
                 upstream_pin_check = aeneas.checks.${system}.check-charon-pin;
@@ -167,7 +169,7 @@
           ;
         wasmtimeSource = selectedWasmtimeSource;
         inherit reviewedVendor reviewedCargoConfig;
-        cargoOctet = octet.packages.${system}.cargo-octet;
+        inherit cargoOctet;
         selection = selectionPolicy;
       };
       sourceInventoryTests = import ./nix/source-inventory-tests.nix { };
@@ -176,6 +178,7 @@
         flakeNix = builtins.readFile ./flake.nix;
         flakeLock = builtins.readFile ./flake.lock;
         preCommit = builtins.readFile ./.pre-commit-config.yaml;
+        selectedGate = "${octetGate}/bin/noble-octet-gate";
         selectionJson = builtins.fromJSON (builtins.readFile ./policy/tool-selection.json);
         cargoToml = builtins.readFile ./Cargo.toml;
         architecturePolicyJson = builtins.readFile ./policy/architecture.json;
@@ -187,7 +190,7 @@
           rust
           pkgs.stdenv.cc
           pkgs.coreutils
-          octet.packages.${system}.cargo-octet
+          cargoOctet
         ];
       } ''
         export HOME="$TMPDIR/home"
@@ -241,7 +244,7 @@
           ;
         wasmtimeSource = selectedWasmtimeSource;
         selectionFile = ./policy/tool-selection.json;
-        cargoOctet = octet.packages.${system}.cargo-octet;
+        inherit cargoOctet;
       };
       extractKernel = import ./nix/extract-kernel-app.nix {
         inherit pkgs;
@@ -260,12 +263,12 @@
           ;
         wasmtimeSource = selectedWasmtimeSource;
         selectionFile = ./policy/tool-selection.json;
-        cargoOctet = octet.packages.${system}.cargo-octet;
+        inherit cargoOctet;
       };
       octetGate = pkgs.writeShellApplication {
         name = "noble-octet-gate";
         runtimeInputs = [
-          octet.packages.${system}.cargo-octet
+          cargoOctet
           rust
         ];
         text = ''
@@ -314,7 +317,7 @@
         node = wasmVerificationTools.node;
         wasm-tools = wasmVerificationTools.wasm_tools;
         binaryen = wasmVerificationTools.binaryen;
-        octet = octet.packages.${system}.cargo-octet;
+        octet = cargoOctet;
         octet-standards = standards;
         octet-gate = octetGate;
         source-inventory = sourceInventory;
@@ -368,7 +371,7 @@
           nickel
           standards
           octetGate
-          octet.packages.${system}.cargo-octet
+          cargoOctet
           pkgs.bun
           pkgs.git
           pkgs.pre-commit

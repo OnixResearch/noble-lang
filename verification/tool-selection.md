@@ -25,9 +25,10 @@ It performs no process execution and emits no execution receipt.
 Every flake output forces its rejection decision before exposing a package or check.
 
 The checker requires eight immutable source revisions with NAR hashes.
-The reviewed selection compares 124 file digests across the flake and
+The reviewed selection compares 129 file digests across the flake and
 offline inputs, workspace/runtime source, proof projects, selected component
-pins, source-bound verification/build recipes, and all eight Cargo locks
+pins, the content-hashed Octet correction recipe and four patches,
+source-bound verification/build recipes, and all eight Cargo locks
 consumed by the reviewed offline vendor, plus the separate test-only boundary
 fixture lock. These are source identities,
 not an executed proof.
@@ -49,6 +50,21 @@ A resolved Git revision remains mandatory even when an upstream `inputRev` names
 The additional M2, checker-M3, MC1 and Wasm-emitter Lake files are exact byte bindings, not a claim that this M1 comparison or a build has independently checked every later proof project.
 
 The selected extractor applies `nix/aeneas-string-escaping.patch` to the pinned Aeneas source: complete string literals use OCaml `String.escaped`, not per-character `Char.escaped`, which leaves embedded double quotes unescaped. The patch is a separately named Nix input, so changing the containing flake path does not recursively change the tool pin. Fresh M3 and MC1 extraction/Lean compilation validate this patched executable; generated Lean is not hand-repaired. The upstream Charon and Lean-library revisions are unchanged.
+
+The Octet flake input and lock retain revision `235255bc4972ced9128fd5b4d1ec66ff7508ded4`.
+`nix/octet-patched-source.nix` applies four content-hashed engine, libc-path,
+locked-metadata, and test-fixture corrections to that source, reusing the
+original Crane artifacts/vendor and the upstream wrapper's post-build/runtime
+inputs. Every `cargo-octet` consumer (gate, inventory, boundary check,
+devShell and exported package) uses `patchedWrapped`; the reviewed tool path
+binds its derivation and output. Nickel and Octet standards stay at their
+original pinned packages.
+This is a selected build identity, not approval of Noble's architecture,
+source classification or native dependency findings. The local system
+pre-commit hook runs the absolute selected `noble-octet-gate` store executable
+from the reviewed devShell; an absent output fails rather than choosing an
+ambient binary from `PATH`. Rebind that exact entry when the selected gate
+derivation changes.
 
 Noble reuses Nix, the pinned Octet components, and the upstream Aeneas pin check.
 No provider implementation enters a Noble production crate.

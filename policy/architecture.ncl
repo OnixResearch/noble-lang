@@ -238,10 +238,13 @@ let contracts = import "./architecture.contracts.ncl" in
   admission = null,
   waivers = [],
   collection_limits = {
-    # Declared modules retain 32 real all-target units (five packages); the
-    # acyclic boundary control adds two shell-library units.
-    max_units = 34,
-    max_shards = 34,
+    # Full current-source collection on Noble HEAD 570ed67be7b9ef79e8bffb247f5ddea78430cf8b
+    # emitted 39 normal shards; positive and reverse acyclic boundary controls
+    # emitted 41 each. Allow exactly 39 + 2 units/shards, with no spare units.
+    # These measured limits are candidate WIP collection capacity, NOT source
+    # or native classification approval and NOT a gate PASS.
+    max_units = 41,
+    max_shards = 41,
     # M7's kernel dataspace module pushes both kernel library shards over the
     # earlier 1024 module-fact cap. Preserve complete compiler coverage.
     max_modules = 2048,
@@ -250,12 +253,12 @@ let contracts = import "./architecture.contracts.ncl" in
     max_traits = 512,
     max_implementations = 1024,
     max_signatures = 4096,
-    max_calls = 8192,
-    # Complete selected collection observed 4,801 constructors in each
-    # contracts library shard; preserve positive headroom without clipping.
-    max_constructors = 8192,
+    # Current-source shard maxima: 11,642 calls, 8,903 constructors and
+    # 4,166 expansions. Preserve complete facts without clipping.
+    max_calls = 16384,
+    max_constructors = 16384,
     max_effects = 4096,
-    max_expansions = 4096,
+    max_expansions = 8192,
     # M5's frontend saturates the previous 1024 compiler-observed attribute/
     # configuration facts per unit. Retain complete collection without widening
     # the single declared target/feature configuration.
@@ -271,8 +274,11 @@ let contracts = import "./architecture.contracts.ncl" in
     # library shard; the former 8,192 cap produced invalid references.
     max_spans = 16384,
     max_span_bytes = 1048576,
-    max_shard_bytes = 16777216,
-    max_artifact_bytes = 67108864,
+    # Maximum current shard is 20,108,151 bytes; canonical normalized IR is
+    # 78,653,995 bytes (pretty IR 94,092,630; boundary IR 76,649,131).
+    # The artifact cap accommodates one canonical IR, not combined outputs.
+    max_shard_bytes = 33554432,
+    max_artifact_bytes = 134217728,
   },
   non_claims = [
     "complete-fcis-proof",

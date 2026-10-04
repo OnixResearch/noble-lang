@@ -73,7 +73,7 @@
     "word_bits": 64
   },
   "file_sha256": {
-    ".pre-commit-config.yaml": "100d0fac74955fbdcda81f6fa5068f6a0ef15d6d2ca31642735da238516300da",
+    ".pre-commit-config.yaml": "ef77a4363ca5900047a4e12cad3846178e3117c55a226e00660a21dcc023cb47",
     "Cargo.lock": "a4673bf747953fc07522879afa912e2a0b41f241db89980f29f8a42fd07b882d",
     "Cargo.toml": "f80e3a51b375873afb46e9b933890e560ab5334c4f98c7e7000b528c50f0a73e",
     "crates/noble-cli/Cargo.toml": "34ca1bfe77974fc57b05b406b17cab83337a96a1d979d5b239f8fddab328ded2",
@@ -109,11 +109,16 @@
     "crates/noble-wasm/wit/syndicate.wit": "ac3ef5e4db79abf387bd6950451675e998202f0adc02f8e6340e26446f230762",
     "dylint.toml": "e25769e8a4ee2f1fff0d98e22744289a3bebe1b676c74dda98d72e0ee70354e4",
     "flake.lock": "3c0558d476937ec8d50f2e2185847ea33ea9d394e5f228f6f103b9fa5ffc3d2d",
-    "flake.nix": "71a150fc3216c12bb7b3fabda7cbe0568102b21ee2163f4615b60faffa64d2ca",
+    "flake.nix": "b63d84f1cdfa567ee442bbb28e771c02222b036b64b6d8916912d675bf6e346a",
     "nix/aeneas-string-escaping.patch": "3d2a88e02e55b491aa7d53573cd0256c58ffb4e549a8ff9a0134c2eaef07cc70",
     "nix/boundary-controls.nix": "80c70cdc8dd6b66e53e7086555b3ebcae91b794f3e0045897b4f1b0415ccf4ae",
     "nix/m3-wasm-app.nix": "a83a2ea157787803e0fabdf089a7549ffd5737f42a657bf1df383d1908676ad5",
     "nix/native-assurance-app.nix": "6d65f50702deb0c6b4af5b85047269c021299aef6b602dab6d263abd3c148ff6",
+    "nix/octet-patched-source.nix": "6dfa03db1e2a72b298c04ddb47470a3568900c9ee0b4b9e841b906eeaed8b405",
+    "nix/octet-path-engine-only.patch": "94d224b22edc2cdef761af90bceb8f1ae2bb840394abef54ca044a3ec360153d",
+    "nix/octet-path-libc-only.patch": "d2869b1b8912c57a294aefc82d4dfa54b17bd1cb645ecf819d9613122c999519",
+    "nix/octet-path-metadata-locked.patch": "706770a709bb9d3fc4df77fcc6c2d628fb7e927b71abbf9f052369d42c876026",
+    "nix/octet-path-test-lock-fixtures.patch": "27e6649ad2838412c0e89c42f3b76462ddee3a0e3835c19ed71c3ed682fcc1e8",
     "nix/offline-inputs.nix": "9d35078501b7e138659434fe98baff1b9e0128973d454500c344161e193d69c7",
     "nix/reviewed-vendor.nix": "ceed86fdf6304847b0d465aeb6ae65dbdb04f46f5dbdec7f6a1bcb48f8ba57b9",
     "nix/source-inventory-app.nix": "20c1f9d87c10cc70c6600457ca8e6b8d7434acc39411cacd9a6b711f61e36959",
@@ -303,8 +308,8 @@
       "output": "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0"
     },
     "octet": {
-      "derivation": "/nix/store/7iqww35i0mvd8bkv0gckq826q6b2kf21-cargo-octet-0.1.0.drv",
-      "output": "/nix/store/vj0sg5rn291z78im7gd2cqzqzd0bq3zy-cargo-octet-0.1.0"
+      "derivation": "/nix/store/22mx126d42hw0x0f21ssd23pahz6awd4-cargo-octet-0.1.0.drv",
+      "output": "/nix/store/lhdxi075p3p8hv5q455vxzrlfqhbd58r-cargo-octet-0.1.0"
     },
     "octet_standards": {
       "derivation": "/nix/store/ackprds206cvvx31x6b1dwarwc812jpv-octet-standards-0.1.0.drv",

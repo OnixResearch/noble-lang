@@ -1,7 +1,13 @@
-# Based on the template from the reviewed Octet revision below.
+# Run from the reviewed devShell. The absolute selected gate path cannot
+# resolve to an ambient PATH binary; if not realized on this host, it fails closed.
+# Upstream Octet's source revision remains pinned in flake.nix and flake.lock.
 repos:
-  - repo: ssh://git@github.com/OnixResearch/octet
-    rev: 235255bc4972ced9128fd5b4d1ec66ff7508ded4
+  - repo: local
     hooks:
       - id: octet-deny-all
+        name: Noble selected Octet deny-all
+        entry: /nix/store/18bpmd4pnam032fa428sdfqnxbvzq1v1-noble-octet-gate/bin/noble-octet-gate
+        language: system
+        pass_filenames: false
+        always_run: true
         args: ["--workspace", "--", "--all-targets", "--all-features"]

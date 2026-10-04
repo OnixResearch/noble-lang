@@ -2,6 +2,7 @@
 { }:
 let
   rev = "235255bc4972ced9128fd5b4d1ec66ff7508ded4";
+  gate = "/nix/store/18bpmd4pnam032fa428sdfqnxbvzq1v1-noble-octet-gate/bin/noble-octet-gate";
   policyBase = {
     mode = "gate";
     waivers = [ ];
@@ -105,6 +106,7 @@ let
   };
   withArchitecture = change: builtins.toJSON (policyBase // change);
   src = {
+    selectedGate = gate;
     flakeNix = ''octet.url = "git+ssh://git@github.com/OnixResearch/octet?rev=${rev}";'';
     flakeLock = builtins.toJSON {
       root = "root";
@@ -119,10 +121,14 @@ let
     };
     preCommit = ''
       repos:
-        - repo: ssh://git@github.com/OnixResearch/octet
-          rev: ${rev}
+        - repo: local
           hooks:
             - id: octet-deny-all
+              name: Noble selected Octet deny-all
+              entry: ${gate}
+              language: system
+              pass_filenames: false
+              always_run: true
               args: ["--workspace", "--", "--all-targets", "--all-features"]
     '';
     selectionJson = {
@@ -145,6 +151,7 @@ let
       flakeNix = overrides.flakeNix or src.flakeNix;
       flakeLock = overrides.flakeLock or src.flakeLock;
       preCommit = overrides.preCommit or src.preCommit;
+      selectedGate = overrides.selectedGate or src.selectedGate;
       selectionJson = overrides.selectionJson or src.selectionJson;
       cargoToml = overrides.cargoToml or src.cargoToml;
       architecturePolicyJson = overrides.architecturePolicyJson or src.architecturePolicyJson;
@@ -192,43 +199,79 @@ let
         };
       };
     } "flake-lock-octet-nar-mismatch")
-    (reject "pre-commit revision" {
+    (reject "pre-commit remote tool" {
       preCommit = ''
         repos:
           - repo: ssh://git@github.com/OnixResearch/octet
-            rev: 0000000000000000000000000000000000000000
             hooks:
               - id: octet-deny-all
+                name: Noble selected Octet deny-all
+                entry: ${gate}
+                language: system
+                pass_filenames: false
+                always_run: true
                 args: ["--workspace", "--", "--all-targets", "--all-features"]
       '';
-    } "precommit-octet-revision-mismatch")
-    (reject "pre-commit missing octet repo" {
+    } "precommit-selected-hook-mismatch")
+    (reject "pre-commit wrong entry" {
       preCommit = ''
         repos:
-          - repo: ssh://git@github.com/Other/other
-            rev: ${rev}
+          - repo: local
+            hooks:
+              - id: octet-deny-all
+                name: Noble selected Octet deny-all
+                entry: cargo-octet
+                language: system
+                pass_filenames: false
+                always_run: true
+                args: ["--workspace", "--", "--all-targets", "--all-features"]
       '';
-    } "precommit-octet-repo-missing")
+    } "precommit-selected-hook-mismatch")
     (reject "pre-commit scope" {
       preCommit = ''
         repos:
-          - repo: ssh://git@github.com/OnixResearch/octet
-            rev: ${rev}
+          - repo: local
             hooks:
               - id: octet-deny-all
+                name: Noble selected Octet deny-all
+                entry: ${gate}
+                language: system
+                pass_filenames: false
+                always_run: true
                 args: ["--", "--all-targets", "--all-features"]
       '';
-    } "precommit-scope-missing")
+    } "precommit-selected-hook-mismatch")
     (reject "pre-commit feature scope" {
       preCommit = ''
         repos:
-          - repo: ssh://git@github.com/OnixResearch/octet
-            rev: ${rev}
+          - repo: local
             hooks:
               - id: octet-deny-all
+                name: Noble selected Octet deny-all
+                entry: ${gate}
+                language: system
+                pass_filenames: false
+                always_run: true
                 args: ["--workspace", "--", "--all-targets"]
       '';
-    } "precommit-features-missing")
+    } "precommit-selected-hook-mismatch")
+    (reject "pre-commit fields split across hooks" {
+      preCommit = ''
+        repos:
+          - repo: local
+            hooks:
+              - id: octet-deny-all
+                name: Noble selected Octet deny-all
+                entry: cargo-octet
+                language: system
+                pass_filenames: false
+                always_run: true
+                args: ["--", "--all-targets"]
+              - id: other-hook
+                entry: ${gate}
+                args: ["--workspace", "--", "--all-targets", "--all-features"]
+      '';
+    } "precommit-selected-hook-mismatch")
     (reject "octet metadata scope" {
       cargoToml = ''
         [workspace.lints.rust]
